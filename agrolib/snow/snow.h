@@ -22,7 +22,6 @@
     #define SOIL_SPECIFIC_HEAT 1.4              /*!<  [KJ kg-1 °C-1] wet soil */
     #define DEFAULT_BULK_DENSITY 1350           /*!<  [kg m-3] */
     #define SOIL_DAMPING_DEPTH 0.3              /*!<  [m] */
-    #define SNOW_DAMPING_DEPTH 0.05             /*!<  [m] */
     #define SNOW_MINIMUM_HEIGHT 1.              /*!<  [mm] */
 
 
@@ -33,9 +32,9 @@
         double soilAlbedo;                      /*!<  [-] bare soil */
         double snowVegetationHeight;            /*!<  [m] height of vegetation */
         double snowWaterHoldingCapacity;        /*!<  [-] percentuale di acqua libera che il manto nevoso può trattenere */
-        double snowMaxWaterContent;             /*!<  [m] acqua libera (torrenti, laghetti) */
         double tempMaxWithSnow;                 /*!<  [°C] */
         double tempMinWithRain;                 /*!<  [°C] */
+        double snowSurfaceDampingDepth;         /*!<  [m] */
 
         Crit3DSnowParameters();
 
@@ -112,8 +111,12 @@
 
 
     double aerodynamicResistanceCampbell77(bool isSnow , double zRefWind, double windSpeed, double vegetativeHeight);
-    double computeInternalEnergy(double initSoilPackTemp,int bulkDensity, double initSWE);
-    double computeSurfaceEnergy(double initSnowSurfaceTemp, double skinThickness);
+
+    double computeInternalEnergy(double soilTemperature,int bulkDensity, double swe);
+    double computeInternalEnergySoil(double soilTemperature, int bulkDensity);
+
+    double computeSurfaceEnergySnow(double surfaceTemperature, double skinThickness);
+    double computeSurfaceEnergySoil(double surfaceTemperature, double skinThickness);
 
 
 #endif // SNOW_H

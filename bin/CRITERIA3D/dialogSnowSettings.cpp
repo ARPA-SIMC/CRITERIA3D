@@ -52,6 +52,13 @@ DialogSnowSettings::DialogSnowSettings(QWidget *parent) : QDialog(parent)
     soilAlbedoValue->setValidator(doubleAlbedoVal);
     soilAlbedoValue->setFixedWidth(70);
 
+    QLabel *dampingDepth = new QLabel(tr("Snow surface damping depth [m] "));
+    snowDampingDepthValue = new QLineEdit();
+    QDoubleValidator* doubleDampingDepthVal = new QDoubleValidator(0.0, 1.0, 2, snowDampingDepthValue);
+    doubleDampingDepthVal->setNotation(QDoubleValidator::StandardNotation);
+    snowDampingDepthValue->setValidator(doubleAlbedoVal);
+    snowDampingDepthValue->setFixedWidth(70);
+
     layoutSettings->addWidget(rainfallThreshold, 0 , 0);
     layoutSettings->addWidget(rainfallThresholdValue, 0 , 1);
     layoutSettings->addWidget(snowThreshold, 1 , 0);
@@ -64,6 +71,8 @@ DialogSnowSettings::DialogSnowSettings(QWidget *parent) : QDialog(parent)
     layoutSettings->addWidget(vegetationHeightValue, 4 , 1);
     layoutSettings->addWidget(soilAlbedo, 5 , 0);
     layoutSettings->addWidget(soilAlbedoValue, 5 , 1);
+    layoutSettings->addWidget(dampingDepth, 6 , 0);
+    layoutSettings->addWidget(snowDampingDepthValue, 6 , 1);
 
     QDialogButtonBox *buttonBox = new QDialogButtonBox(QDialogButtonBox::Ok
                                          | QDialogButtonBox::Cancel);
@@ -268,4 +277,14 @@ double DialogSnowSettings::getSoilAlbedoValue() const
 void DialogSnowSettings::setSoilAlbedoValue(double value)
 {
     soilAlbedoValue->setText(QLocale().toString(value));
+}
+
+double DialogSnowSettings::getSnowDampingDepthValue() const
+{
+    return QLocale().toDouble(snowDampingDepthValue->text());
+}
+
+void DialogSnowSettings::setSnowDampingDepthValue(double value)
+{
+    snowDampingDepthValue->setText(QLocale().toString(value));
 }

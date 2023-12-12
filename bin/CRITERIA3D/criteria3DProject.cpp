@@ -512,11 +512,16 @@ bool Crit3DProject::loadCriteria3DParameters()
             {
                 snowModel.snowParameters.soilAlbedo = parameters->value("soilAlbedo").toDouble();
             }
+            if (parameters->contains("snowSurfaceDampingDepth") && !parameters->value("snowSurfaceDampingDepth").toString().isEmpty())
+            {
+                snowModel.snowParameters.snowSurfaceDampingDepth = parameters->value("snowSurfaceDampingDepth").toDouble();
+            }
             parameters->endGroup();
         }
     }
     return true;
 }
+
 
 bool Crit3DProject::writeCriteria3DParameters()
 {
@@ -538,6 +543,7 @@ bool Crit3DProject::writeCriteria3DParameters()
     parameters->setValue("snow/skinThickness", snowModel.snowParameters.skinThickness);
     parameters->setValue("snow/snowVegetationHeight", snowModel.snowParameters.snowVegetationHeight);
     parameters->setValue("snow/soilAlbedo", snowModel.snowParameters.soilAlbedo);
+    parameters->setValue("snow/snowSurfaceDampingDepth", snowModel.snowParameters.snowSurfaceDampingDepth);
 
     parameters->sync();
     return true;

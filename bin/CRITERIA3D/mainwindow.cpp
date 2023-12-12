@@ -2123,6 +2123,8 @@ void MainWindow::on_actionSnow_settings_triggered()
     dialogSnowSetting.setSurfaceThickValue(myProject.snowModel.snowParameters.skinThickness);
     dialogSnowSetting.setVegetationHeightValue(myProject.snowModel.snowParameters.snowVegetationHeight);
     dialogSnowSetting.setSoilAlbedoValue(myProject.snowModel.snowParameters.soilAlbedo);
+    dialogSnowSetting.setSnowDampingDepthValue(myProject.snowModel.snowParameters.snowSurfaceDampingDepth);
+
 
     dialogSnowSetting.exec();
     if (dialogSnowSetting.result() != QDialog::Accepted)
@@ -2130,19 +2132,15 @@ void MainWindow::on_actionSnow_settings_triggered()
         return;
     }
     else
-    {
-        double tempMaxWithSnow = dialogSnowSetting.getRainfallThresholdValue();
-        double tempMinWithRain = dialogSnowSetting.getSnowThresholdValue();
-        double snowWaterHoldingCapacity = dialogSnowSetting.getWaterHoldingValue();
-        double skinThickness = dialogSnowSetting.getSurfaceThickValue();
-        double snowVegetationHeight = dialogSnowSetting.getVegetationHeightValue();
-        double soilAlbedo = dialogSnowSetting.getSoilAlbedoValue();
-        myProject.snowModel.snowParameters.tempMinWithRain = tempMinWithRain;
-        myProject.snowModel.snowParameters.tempMaxWithSnow = tempMaxWithSnow;
-        myProject.snowModel.snowParameters.snowWaterHoldingCapacity = snowWaterHoldingCapacity;
-        myProject.snowModel.snowParameters.skinThickness = skinThickness;
-        myProject.snowModel.snowParameters.snowVegetationHeight = snowVegetationHeight;
-        myProject.snowModel.snowParameters.soilAlbedo = soilAlbedo;
+    {   
+        myProject.snowModel.snowParameters.tempMinWithRain = dialogSnowSetting.getSnowThresholdValue();
+        myProject.snowModel.snowParameters.tempMaxWithSnow = dialogSnowSetting.getRainfallThresholdValue();
+        myProject.snowModel.snowParameters.snowWaterHoldingCapacity = dialogSnowSetting.getWaterHoldingValue();
+        myProject.snowModel.snowParameters.skinThickness = dialogSnowSetting.getSurfaceThickValue();
+        myProject.snowModel.snowParameters.snowVegetationHeight = dialogSnowSetting.getVegetationHeightValue();
+        myProject.snowModel.snowParameters.soilAlbedo = dialogSnowSetting.getSoilAlbedoValue();
+        myProject.snowModel.snowParameters.snowSurfaceDampingDepth = dialogSnowSetting.getSnowDampingDepthValue();
+
         if (!myProject.writeCriteria3DParameters())
         {
             myProject.logError("Error writing snow parameters");
