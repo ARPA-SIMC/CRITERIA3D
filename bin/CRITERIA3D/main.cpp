@@ -34,13 +34,22 @@ int main(int argc, char *argv[])
     QApplication myApp(argc, argv);
 
     if (! myProject.start(myApp.applicationDirPath()))
+    {
+        QMessageBox::information(nullptr, "Error!", myProject.errorString);
         return -1;
+    }
 
     if (! myProject.loadParameters("parameters.ini"))
+    {
+        QMessageBox::information(nullptr, "Error!", myProject.errorString);
         return -1;
+    }
 
     if (! myProject.loadProject3DSettings())
+    {
+        QMessageBox::information(nullptr, "Error!", myProject.errorString);
         return -1;
+    }
 
     QNetworkProxyFactory::setUseSystemConfiguration(true);
 
