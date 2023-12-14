@@ -13,8 +13,6 @@
 #include "shapeHandler.h"
 #include "crit3dDate.h"
 
-#define REQUIREDMAPLISTCSVINFO 3
-
 #define ERROR_MISSINGPARAMETERS -900
 #define ERROR_WRONGPARAMETER -901
 
