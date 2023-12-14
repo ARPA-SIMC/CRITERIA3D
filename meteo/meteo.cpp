@@ -770,6 +770,7 @@ bool setColorScale(meteoVariable variable, Crit3DColorScale *colorScale)
         case dailyAirTemperatureMin: case dailyAirTemperatureRange:
         case airDewTemperature:
         case snowSurfaceTemperature:
+        case dailyHeatingDegreeDays:
             setTemperatureScale(colorScale);
             break;
         case elaboration:
@@ -802,6 +803,9 @@ bool setColorScale(meteoVariable variable, Crit3DColorScale *colorScale)
         case windVectorIntensity: case windScalarIntensity: case windVectorX: case windVectorY: case dailyWindVectorIntensityAvg: case dailyWindVectorIntensityMax: case dailyWindScalarIntensityAvg: case dailyWindScalarIntensityMax:
         case atmPressure:
             setWindIntensityScale(colorScale);
+            break;
+        case leafAreaIndex:
+            setLAIScale(colorScale);
             break;
         case anomaly:
             setAnomalyScale(colorScale);
@@ -912,6 +916,10 @@ std::string getVariableString(meteoVariable myVar)
         return "Sensible heat (kJ m-2)";
     else if (myVar == latentHeat)
         return "Latent heat (kJ m-2)";
+    else if (myVar == dailyHeatingDegreeDays)
+        return "Heating degree days (°D)";
+    else if (myVar == leafAreaIndex)
+            return "Leaf area index (m2 m-2)";
 
     else if (myVar == noMeteoTerrain)
         return "Elevation (m)";

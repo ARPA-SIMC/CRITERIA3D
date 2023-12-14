@@ -51,14 +51,9 @@ void Crit3DCrop::clear()
     idCrop = "";
     type = HERBACEOUS_ANNUAL;
 
-    /*!
-     * \brief roots
-     */
     roots.clear();
 
-    /*!
-     * \brief crop cycle
-     */
+    // crop cycle
     sowingDoy = NODATA;
     currentSowingDoy = NODATA;
     doyStartSenescence = NODATA;
@@ -74,17 +69,13 @@ void Crit3DCrop::clear()
     degreeDaysDecrease = NODATA;
     degreeDaysEmergence = NODATA;
 
-    /*!
-     * \brief water need
-     */
+    // water need
     kcMax  = NODATA;
     psiLeaf = NODATA;
     stressTolerance = NODATA;
     fRAW = NODATA;
 
-    /*!
-     * \brief irrigation
-     */
+    // irrigation
     irrigationShift = NODATA;
     irrigationVolume = NODATA;
     degreeDaysStartIrrigation = NODATA;
@@ -93,9 +84,7 @@ void Crit3DCrop::clear()
     doyEndIrrigation = NODATA;
     maxSurfacePuddle = NODATA;
 
-    /*!
-     * \brief variables
-     */
+    // variables
     isLiving = false;
     isEmerged = false;
     LAIstartSenescence = NODATA;
@@ -330,7 +319,7 @@ bool Crit3DCrop::isRootStatic() const
 
 /*!
  * \brief getSurfaceWaterPonding
- * \return maximum height of water ponding [mm]
+ * \return maximum height of water pond [mm]
  */
 double Crit3DCrop::getSurfaceWaterPonding() const
 {
@@ -406,7 +395,7 @@ bool Crit3DCrop::needReset(Crit3DDate myDate, double latitude, double waterTable
 
 
 // reset of (already initialized) crop
-// TODO: smart start (using sowing doy and cycle)
+// TODO: smart start (using meteo settings)
 void Crit3DCrop::resetCrop(unsigned int nrLayers)
 {
     // roots
@@ -435,7 +424,7 @@ void Crit3DCrop::resetCrop(unsigned int nrLayers)
         currentSowingDoy = NODATA;
 
         // roots
-        roots.rootLength = 0.0;
+        roots.currentRootLength = 0.0;
         roots.rootDepth = NODATA;
     }
 
@@ -452,7 +441,7 @@ bool Crit3DCrop::dailyUpdate(const Crit3DDate &myDate, double latitude, const st
 
     unsigned int nrLayers = unsigned(soilLayers.size());
 
-    // check start/end crop cycle (update isLiving)
+    // check start/end crop cycle
     if (needReset(myDate, latitude, waterTableDepth))
     {
         resetCrop(nrLayers);
@@ -479,7 +468,7 @@ bool Crit3DCrop::dailyUpdate(const Crit3DDate &myDate, double latitude, const st
         }
 
         // update roots
-        root::computeRootDepth(this, degreeDays, waterTableDepth);
+        updateRootDepth(degreeDays, waterTableDepth);
         root::computeRootDensity(this, soilLayers);
     }
 
@@ -512,7 +501,7 @@ bool Crit3DCrop::restore(const Crit3DDate &myDate, double latitude, const std::v
         }
 
         // update roots
-        root::computeRootDepth(this, degreeDays, currentWaterTable);
+        updateRootDepth(degreeDays, currentWaterTable);
         root::computeRootDensity(this, soilLayers);
     }
 
@@ -520,30 +509,146 @@ bool Crit3DCrop::restore(const Crit3DDate &myDate, double latitude, const std::v
 }
 
 
-// Liangxia Zhang, Zhongmin Hu, Jiangwen Fan, Decheng Zhou & Fengpei Tang, 2014
-// A meta-analysis of the canopy light extinction coefficient in terrestrial ecosystems
-// "Cropland had the highest value of K (0.62), followed by broadleaf forest (0.59),
-// shrubland (0.56), grassland (0.50), and needleleaf forest (0.45)"
-double Crit3DCrop::getSurfaceCoverFraction()
+// update current root depth [m]
+void Crit3DCrop::updateRootDepth(double currentDD, double waterTableDepth)
 {
-    double k = 0.6;      // [-] light extinction coefficient
-
-    if (idCrop == "" || ! isLiving || LAI < EPSILON)
+    if (! isLiving)
     {
-        return 0;
+        roots.currentRootLength = 0.0;
+        roots.rootDepth = NODATA;
     }
     else
     {
-        return 1 - exp(-k * LAI);
+        roots.currentRootLength = computeRootLength(currentDD, waterTableDepth);
+        roots.rootDepth = roots.rootDepthMin + roots.currentRootLength;
     }
+}
+
+
+// return current root lenght [m]
+double Crit3DCrop::computeRootLength(double currentDD, double waterTableDepth)
+{
+    double newRootLength;
+
+    if (isRootStatic())
+    {
+        newRootLength = roots.actualRootDepthMax - roots.rootDepthMin;
+    }
+    else
+    {
+        if (currentDD <= 0)
+        {
+            newRootLength = 0.0;
+        }
+        else
+        {
+            if (currentDD > roots.degreeDaysRootGrowth)
+            {
+                newRootLength = roots.actualRootDepthMax - roots.rootDepthMin;
+            }
+            else
+            {
+                // in order to avoid numerical divergences when calculating density through cardioid and gamma function
+                currentDD = MAXVALUE(currentDD, 1.0);
+                newRootLength = root::getRootLengthDD(roots, currentDD, degreeDaysEmergence);
+            }
+        }
+    }
+
+    if (isEqual(waterTableDepth, NODATA))
+    {
+        return newRootLength;
+    }
+
+    // WATERTABLE
+    // Nel saturo le radici vanno in asfissia
+    // per cui si mantengono a distanza dalla falda nella fase di crescita
+    // le radici possono crescere (max 2 cm al giorno) se:
+    // la falda è più bassa o si sta abbassando
+    // restano invariate se:
+    // 1) non sono più in fase di crescita
+    // 2) sono già dentro la falda (currentRootDepth > waterTableDepth)
+    const double MAX_DAILY_GROWTH = 0.02;             // [m]
+    const double MIN_WATERTABLE_DISTANCE = 0.1;       // [m]
+
+    if (! isWaterSurplusResistant()
+        && ! isEqual(roots.currentRootLength, NODATA)
+        && newRootLength > roots.currentRootLength)
+    {
+        // la fase di crescita è finita
+        if (currentDD > roots.degreeDaysRootGrowth)
+            newRootLength = roots.currentRootLength;
+        else
+            newRootLength = MINVALUE(newRootLength, roots.currentRootLength + MAX_DAILY_GROWTH);
+
+        // maximum root lenght
+        double maxRootLenght = waterTableDepth - MIN_WATERTABLE_DISTANCE - roots.rootDepthMin;
+        if (newRootLength > maxRootLenght)
+        {
+            newRootLength = MAXVALUE(roots.currentRootLength, maxRootLenght);
+        }
+    }
+
+    return newRootLength;
+}
+
+
+/*! \brief updateRootDepth3D
+ *  update current root lenght and root depth
+ *  function for Criteria3D (update key variables)
+ *  \param currentDD:  current degree days sum
+ *  \param waterTableDepth      [m]
+ *  \param previousRootDepth    [m]
+ *  \param totalSoilDepth       [m]
+ */
+void Crit3DCrop::updateRootDepth3D(double currentDD,  double waterTableDepth, double previousRootDepth, double totalSoilDepth)
+{
+    // set actualRootDepthMax
+    if (isEqual(totalSoilDepth, NODATA) || isEqual(totalSoilDepth, 0))
+    {
+        roots.actualRootDepthMax = roots.rootDepthMax;
+    }
+    else
+    {
+        roots.actualRootDepthMax = std::min(roots.rootDepthMax, totalSoilDepth);
+    }
+
+    // set currentRootLength
+    if (isEqual(previousRootDepth, NODATA))
+    {
+        roots.currentRootLength = 0;
+    }
+    else
+    {
+        roots.currentRootLength = previousRootDepth - roots.rootDepthMin;
+    }
+
+    roots.currentRootLength = computeRootLength(currentDD, waterTableDepth);
+    roots.rootDepth = roots.rootDepthMin + roots.currentRootLength;
+}
+
+
+/*! \brief getCoveredSurfaceFraction
+ *  \ref Liangxia Zhang, Zhongmin Hu, Jiangwen Fan, Decheng Zhou & Fengpei Tang, 2014
+ *  A meta-analysis of the canopy light extinction coefficient in terrestrial ecosystems
+ *  "Cropland had the highest value of K (0.62), followed by broadleaf forest (0.59)
+ *  shrubland (0.56), grassland (0.50), and needleleaf forest (0.45)"
+ *  \return covered surface fraction [-]
+ */
+double Crit3DCrop::getCoveredSurfaceFraction()
+{
+    if (idCrop == "" || ! isLiving || LAI < EPSILON) return 0;
+
+    double k = 0.6;      // [-] light extinction coefficient
+    return 1 - exp(-k * LAI);
 }
 
 
 double Crit3DCrop::getMaxEvaporation(double ET0)
 {
-    double evapMax = ET0 * (1.0 - getSurfaceCoverFraction());
-    // TODO check
-    return evapMax * 0.66;
+    double evapMax = ET0 * (1.0 - getCoveredSurfaceFraction());
+    // TODO check evaporation on wet bare soil
+    return evapMax * 0.67;
 }
 
 
@@ -552,9 +657,9 @@ double Crit3DCrop::getMaxTranspiration(double ET0)
     if (idCrop == "" || ! isLiving || LAI < EPSILON)
         return 0;
 
-    double SCF = this->getSurfaceCoverFraction();
-    double kcmaxFactor = 1 + (kcMax - 1) * SCF;
-    return ET0 * (SCF * kcmaxFactor);
+    double coverSurfFraction = getCoveredSurfaceFraction();
+    double kcFactor = 1 + (kcMax - 1) * coverSurfFraction;
+    return ET0 * coverSurfFraction * kcFactor;
 }
 
 

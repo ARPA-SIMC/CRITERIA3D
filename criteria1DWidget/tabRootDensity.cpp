@@ -27,7 +27,7 @@ TabRootDensity::TabRootDensity()
     chartView->setChart(chart);
 
     seriesRootDensity = new QHorizontalBarSeries();
-    seriesRootDensity->setName("Rooth density");
+    seriesRootDensity->setName("Root density");
     set = new QBarSet("");
     seriesRootDensity->append(set);
     chart->addSeries(seriesRootDensity);
@@ -35,7 +35,7 @@ TabRootDensity::TabRootDensity()
     axisX = new QValueAxis();
     axisY = new QBarCategoryAxis();
 
-    axisX->setTitleText("Rooth density [%]");
+    axisX->setTitleText("Root density [%]");
     axisX->setRange(0,2.2);
     axisX->setTickCount(12);
     axisX->setLabelFormat("%.1f");
@@ -192,14 +192,15 @@ void TabRootDensity::updateRootDensity()
     int prevYear = year - 1;
     Crit3DDate firstDate = Crit3DDate(1, 1, prevYear);
     Crit3DDate lastDate = Crit3DDate(currentDate->date().day(), currentDate->date().month(), year);
-    double waterTableDepth = NODATA;
-    double tmin;
-    double tmax;
+
+    double tmin, tmax, waterTableDepth;
     double maxRootDensity = 0;
+
     for (Crit3DDate myDate = firstDate; myDate <= lastDate; ++myDate)
     {
         tmin = mp.getMeteoPointValueD(myDate, dailyAirTemperatureMin);
         tmax = mp.getMeteoPointValueD(myDate, dailyAirTemperatureMax);
+        waterTableDepth = mp.getMeteoPointValueD(myDate, dailyWaterTableDepth);
 
         if (!myCrop.dailyUpdate(myDate, mp.latitude, layers, tmin, tmax, waterTableDepth, error))
         {

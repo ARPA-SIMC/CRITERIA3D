@@ -86,7 +86,12 @@
         void initialize(double latitude, unsigned int nrLayers, double totalSoilDepth, int currentDoy);
         bool needReset(Crit3DDate myDate, double latitude, double waterTableDepth);
         void resetCrop(unsigned int nrLayers);
+
         bool updateLAI(double latitude, unsigned int nrLayers, int currentDoy);
+        void updateRootDepth(double currentDD, double waterTableDepth);
+        double computeRootLength(double currentDD, double waterTableDepth);
+
+        void updateRootDepth3D(double currentDD, double waterTableDepth, double previousRootDepth, double totalSoilDepth);
 
         double computeSimpleLAI(double myDegreeDays, double latitude, int currentDoy);
 
@@ -95,7 +100,7 @@
         bool restore(const Crit3DDate &myDate, double latitude, const std::vector<soil::Crit3DLayer> &soilLayers,
                      double currentWaterTable, std::string &myError);
 
-        double getSurfaceCoverFraction();
+        double getCoveredSurfaceFraction();
         double getMaxEvaporation(double ET0);
         double getMaxTranspiration(double ET0);
         double getSurfaceWaterPonding() const;

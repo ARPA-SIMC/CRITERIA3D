@@ -9,14 +9,14 @@
 
 Crit3DMeteoPointsDbHandler::Crit3DMeteoPointsDbHandler()
 {
-    error = "";
+    errorStr = "";
     _mapIdMeteoVar.clear();
 }
 
 Crit3DMeteoPointsDbHandler::Crit3DMeteoPointsDbHandler(QString provider_, QString host_, QString dbname_, int port_,
                                                        QString user_, QString pass_)
 {
-    error = "";
+    errorStr = "";
     _mapIdMeteoVar.clear();
 
     if(_db.isOpen())
@@ -38,14 +38,14 @@ Crit3DMeteoPointsDbHandler::Crit3DMeteoPointsDbHandler(QString provider_, QStrin
 
     if (!_db.open())
     {
-       error = _db.lastError().text();
+       errorStr = _db.lastError().text();
     }
 }
 
 
 Crit3DMeteoPointsDbHandler::Crit3DMeteoPointsDbHandler(QString dbname_)
 {
-    error = "";
+    errorStr = "";
     _mapIdMeteoVar.clear();
 
     if(_db.isOpen())
@@ -59,7 +59,7 @@ Crit3DMeteoPointsDbHandler::Crit3DMeteoPointsDbHandler(QString dbname_)
 
     if (!_db.open())
     {
-       error = _db.lastError().text();
+       errorStr = _db.lastError().text();
     }
 }
 
@@ -181,7 +181,7 @@ QDateTime Crit3DMeteoPointsDbHandler::getFirstDate(frequencyType frequency)
 
     if( !qry.exec() )
     {
-        error = qry.lastError().text();
+        errorStr = qry.lastError().text();
     }
     else
     {
@@ -245,7 +245,7 @@ QDateTime Crit3DMeteoPointsDbHandler::getLastDate(frequencyType frequency)
 
     if( !qry.exec() )
     {
-        error = qry.lastError().text();
+        errorStr = qry.lastError().text();
     }
     else
     {
@@ -464,7 +464,7 @@ bool Crit3DMeteoPointsDbHandler::deleteAllData(frequencyType myFreq)
 
     if( !qry.exec() )
     {
-        error = qry.lastError().text();
+        errorStr = qry.lastError().text();
     }
     else
     {
@@ -502,12 +502,12 @@ bool Crit3DMeteoPointsDbHandler::deleteAllPointsFromDataset(QList<QString> datas
 }
 
 
-bool Crit3DMeteoPointsDbHandler::loadDailyData(Crit3DDate firstDate, Crit3DDate lastDate, Crit3DMeteoPoint *meteoPoint)
+bool Crit3DMeteoPointsDbHandler::loadDailyData(const Crit3DDate &firstDate, const Crit3DDate &lastDate, Crit3DMeteoPoint *meteoPoint)
 {
     // check dates
     if (firstDate > lastDate)
     {
-        this->error = "wrong dates: first > last";
+        errorStr = "wrong dates: first > last";
         return false;
     }
 
@@ -545,57 +545,61 @@ bool Crit3DMeteoPointsDbHandler::loadDailyData(Crit3DDate firstDate, Crit3DDate 
 }
 
 
-bool Crit3DMeteoPointsDbHandler::loadHourlyData(Crit3DDate dateStart, Crit3DDate dateEnd, Crit3DMeteoPoint *meteoPoint)
+bool Crit3DMeteoPointsDbHandler::loadHourlyData(const Crit3DDate &firstDate, const Crit3DDate &lastDate, Crit3DMeteoPoint *meteoPoint)
 {
-    meteoVariable variable;
-    int idVar;
-    float value;
+    // check dates
+    if (firstDate > lastDate)
+    {
+        errorStr = "wrong dates: first > last";
+        return false;
+    }
 
-    int numberOfDays = difference(dateStart, dateEnd)+1;
+    // initialize obs data
+    int numberOfDays = difference(firstDate, lastDate) + 1;
     int myHourlyFraction = 1;
-    QString startDate = QString::fromStdString(dateStart.toStdString());
-    QString endDate = QString::fromStdString(dateEnd.toStdString());
+    meteoPoint->initializeObsDataH(myHourlyFraction, numberOfDays, firstDate);
 
-    QSqlQuery qry(_db);
-
-    meteoPoint->initializeObsDataH(myHourlyFraction, numberOfDays, dateStart);
-
+    QString startDateStr = QString::fromStdString(firstDate.toStdString());
+    QString endDateStr = QString::fromStdString(lastDate.toStdString());
     QString tableName = QString::fromStdString(meteoPoint->id) + "_H";
 
     QString statement = QString( "SELECT * FROM `%1` WHERE date_time >= DATETIME('%2 01:00:00') AND date_time <= DATETIME('%3 00:00:00', '+1 day')")
-                                 .arg(tableName, startDate, endDate);
-    if( !qry.exec(statement) )
+                                 .arg(tableName, startDateStr, endDateStr);
+    QSqlQuery qry(_db);
+    if(! qry.exec(statement) )
     {
-        qDebug() << qry.lastError();
+        errorStr = qry.lastError().text();
         return false;
     }
     else
     {
+        meteoVariable variable;
         while (qry.next())
         {
             QDateTime d = qry.value(0).toDateTime();
             Crit3DDate myDate = Crit3DDate(d.date().day(), d.date().month(), d.date().year());
-            //myDate = QDate::fromString(dateStr.mid(0,10), "yyyy-MM-dd");
-            //myTime = QTime::fromString(dateStr.mid(11,8), "HH:mm:ss");
-            //QDateTime d(QDateTime(myDate, myTime, Qt::UTC));
 
-            idVar = qry.value(1).toInt();
-            try {
+            int idVar = qry.value(1).toInt();
+            try
+            {
                 variable = _mapIdMeteoVar.at(idVar);
             }
-            catch (const std::out_of_range& ) {
+            catch (const std::out_of_range& )
+            {
                 variable = noMeteoVar;
             }
 
             if (variable != noMeteoVar)
             {
-                value = qry.value(2).toFloat();
+                float value = qry.value(2).toFloat();
                 meteoPoint->setMeteoPointValueH(myDate, d.time().hour(), d.time().minute(), variable, value);
 
                 // copy scalar intensity to vector intensity (instantaneous values are equivalent, following WMO)
                 // should be removed when hourly averages are available
                 if (variable == windScalarIntensity)
+                {
                     meteoPoint->setMeteoPointValueH(myDate, d.time().hour(), d.time().minute(), windVectorIntensity, value);
+                }
             }
         }
     }
@@ -738,7 +742,7 @@ std::vector<float> Crit3DMeteoPointsDbHandler::loadHourlyVar(QString *myError, m
 
 bool Crit3DMeteoPointsDbHandler::setAndOpenDb(QString dbname_)
 {
-    error = "";
+    errorStr = "";
     _mapIdMeteoVar.clear();
 
     if(_db.isOpen())
@@ -753,7 +757,7 @@ bool Crit3DMeteoPointsDbHandler::setAndOpenDb(QString dbname_)
 
     if (!_db.open())
     {
-       error = _db.lastError().text();
+       errorStr = _db.lastError().text();
        return false;
     }
     return true;
@@ -954,7 +958,7 @@ QString Crit3DMeteoPointsDbHandler::getNameGivenId(QString id)
 
     if( !qry.exec() )
     {
-        error = qry.lastError().text();
+        errorStr = qry.lastError().text();
         return name;
     }
 
@@ -977,7 +981,7 @@ double Crit3DMeteoPointsDbHandler::getAltitudeGivenId(QString id)
 
     if( !qry.exec() )
     {
-        error = qry.lastError().text();
+        errorStr = qry.lastError().text();
         return altitude;
     }
 
@@ -1019,15 +1023,14 @@ bool Crit3DMeteoPointsDbHandler::writePointProperties(Crit3DMeteoPoint *myPoint)
     }
     else
         return true;
-
 }
 
-bool Crit3DMeteoPointsDbHandler::updatePointProperties(QList<QString> columnList, QList<QString> valueList)
-{
 
+bool Crit3DMeteoPointsDbHandler::updatePointProperties(const QList<QString> &columnList, const QList<QString> &valueList)
+{
     if (columnList.size() != valueList.size())
     {
-        qDebug() << "invalid input";
+        errorStr = "invalid input: nr columns != nr values";
         return false;
     }
     QSqlQuery qry(_db);
@@ -1038,42 +1041,42 @@ bool Crit3DMeteoPointsDbHandler::updatePointProperties(QList<QString> columnList
                                "orog_code TEXT(20), PRIMARY KEY(id_point))").arg("point_properties");
 
     qry.prepare(queryStr);
-    if( !qry.exec() )
+    if( ! qry.exec() )
     {
-        qDebug() << qry.lastError();
+        errorStr = qry.lastError().text();
         return false;
     }
 
     queryStr = "INSERT OR REPLACE INTO point_properties (";
-    for (int i = 0; i<columnList.size(); i++)
+    for (int i = 0; i < columnList.size(); i++)
     {
         queryStr += columnList[i]+",";
     }
-    queryStr.chop(1); // remove last ,
+    queryStr.chop(1);                       // remove last comma
     queryStr += ") VALUES (";
     for (int i = 0; i<columnList.size(); i++)
     {
-        queryStr += ":"+columnList[i]+",";
+        queryStr += ":" + columnList[i] + ",";
     }
-    queryStr.chop(1); // remove last ,
+    queryStr.chop(1);                       // remove last comma
     queryStr += ")";
 
     qry.prepare(queryStr);
 
-    for (int i = 0; i<valueList.size(); i++)
+    for (int i = 0; i < valueList.size(); i++)
     {
-        qry.bindValue(":"+columnList[i], valueList[i]);
+        qry.bindValue(":" + columnList[i], valueList[i]);
     }
 
-    if( !qry.exec() )
+    if(! qry.exec())
     {
-        qDebug() << qry.lastError();
+        errorStr = qry.lastError().text();
         return false;
     }
-    else
-        return true;
 
+    return true;
 }
+
 
 bool Crit3DMeteoPointsDbHandler::updatePointPropertiesGivenId(QString id, QList<QString> columnList, QList<QString> valueList)
 {
@@ -1118,7 +1121,7 @@ bool Crit3DMeteoPointsDbHandler::loadVariableProperties()
     QString statement = QString( "SELECT * FROM `%1` ").arg(tableName);
     if( !qry.exec(statement) )
     {
-        error = qry.lastError().text();
+        errorStr = qry.lastError().text();
         return false;
     }
     else
@@ -1136,12 +1139,12 @@ bool Crit3DMeteoPointsDbHandler::loadVariableProperties()
                 ret = _mapIdMeteoVar.insert(std::pair<int, meteoVariable>(id_variable, meteoVar));
                 if (ret.second==false)
                 {
-                    error = "element 'z' already existed";
+                    errorStr = "element 'z' already existed";
                 }
             }
             else
             {
-                error = "Wrong variable: " + variable;
+                errorStr = "Wrong variable: " + variable;
                 return false;
             }
         }
@@ -1149,17 +1152,15 @@ bool Crit3DMeteoPointsDbHandler::loadVariableProperties()
     return true;
 }
 
-bool Crit3DMeteoPointsDbHandler::getNameColumn(QString tableName, QList<QString>* columnList)
+
+bool Crit3DMeteoPointsDbHandler::getFieldList(const QString &tableName, QList<QString> &fieldList)
 {
     QSqlQuery qry(_db);
-
-    std::string varStdString;
-    std::pair<std::map<int, meteoVariable>::iterator,bool> ret;
-
     QString statement = QString( "PRAGMA table_info('%1')").arg(tableName);
+
     if( !qry.exec(statement) )
     {
-        error = qry.lastError().text();
+        errorStr = qry.lastError().text();
         return false;
     }
     else
@@ -1168,11 +1169,13 @@ bool Crit3DMeteoPointsDbHandler::getNameColumn(QString tableName, QList<QString>
         while (qry.next())
         {
             getValue(qry.value("name"), &name);
-            *columnList << name;
+            fieldList << name;
         }
     }
+
     return true;
 }
+
 
 int Crit3DMeteoPointsDbHandler::getIdfromMeteoVar(meteoVariable meteoVar)
 {
@@ -1391,7 +1394,7 @@ bool Crit3DMeteoPointsDbHandler::importHourlyMeteoData(QString csvFileName, bool
 }
 
 
-bool Crit3DMeteoPointsDbHandler::writeDailyDataList(QString pointCode, QList<QString> listEntries, QString& log)
+bool Crit3DMeteoPointsDbHandler::writeDailyDataList(const QString &pointCode, const QList<QString> &listEntries, QString& log)
 {
     if (! existIdPoint(pointCode))
     {
@@ -1413,7 +1416,6 @@ bool Crit3DMeteoPointsDbHandler::writeDailyDataList(QString pointCode, QList<QSt
 
     queryStr = queryStr + listEntries.join(",");
 
-    // exec query
     QSqlQuery qry(_db);
     qry.prepare(queryStr);
     if (! qry.exec())
@@ -1426,7 +1428,7 @@ bool Crit3DMeteoPointsDbHandler::writeDailyDataList(QString pointCode, QList<QSt
 }
 
 
-bool Crit3DMeteoPointsDbHandler::writeHourlyDataList(QString pointCode, QList<QString> listEntries, QString &log)
+bool Crit3DMeteoPointsDbHandler::writeHourlyDataList(const QString &pointCode, const QList<QString> &listEntries, QString &log)
 {
     if (! existIdPoint(pointCode))
     {
@@ -1447,7 +1449,6 @@ bool Crit3DMeteoPointsDbHandler::writeHourlyDataList(QString pointCode, QList<QS
 
     queryStr = queryStr + listEntries.join(",");
 
-    // exec query
     QSqlQuery qry(_db);
     qry.prepare(queryStr);
     if (! qry.exec())
@@ -1554,7 +1555,7 @@ bool Crit3DMeteoPointsDbHandler::deleteAllPointsFromGeoPointList(const QList<gis
 
 bool Crit3DMeteoPointsDbHandler::setActiveStatePointList(const QList<QString>& pointList, bool activeState)
 {
-    error = "";
+    errorStr = "";
     QString idList = "";
     for (int i = 0; i < pointList.size(); i++)
     {
@@ -1573,7 +1574,7 @@ bool Crit3DMeteoPointsDbHandler::setActiveStatePointList(const QList<QString>& p
     QSqlQuery qry(_db);
     if( !qry.exec(sqlStr))
     {
-        error = qry.lastError().text();
+        errorStr = qry.lastError().text();
         return false;
     }
 
@@ -1585,7 +1586,7 @@ bool Crit3DMeteoPointsDbHandler::deleteAllPointsFromIdList(const QList<QString>&
 {
     QSqlQuery qry(_db);
 
-    error = "";
+    errorStr = "";
     for (int i = 0; i < pointList.size(); i++)
     {
         QString id_point = pointList[i];
@@ -1593,7 +1594,7 @@ bool Crit3DMeteoPointsDbHandler::deleteAllPointsFromIdList(const QList<QString>&
         qry.bindValue(":id_point", id_point);
         if( !qry.exec() )
         {
-            error += id_point + " " + qry.lastError().text();
+            errorStr += id_point + " " + qry.lastError().text();
             return false;
         }
 
@@ -1602,14 +1603,14 @@ bool Crit3DMeteoPointsDbHandler::deleteAllPointsFromIdList(const QList<QString>&
         QString queryStr = "DROP TABLE IF EXISTS '" + table +"'";
         if( !qry.exec(queryStr))
         {
-            error += "\n" + qry.lastError().text();
+            errorStr += "\n" + qry.lastError().text();
         }
 
         table = id_point + "_D";
         queryStr = "DROP TABLE IF EXISTS '" + table +"'";
         if( !qry.exec(queryStr))
         {
-            error += "\n" + qry.lastError().text();
+            errorStr += "\n" + qry.lastError().text();
         }
     }
 
@@ -1883,7 +1884,7 @@ bool Crit3DMeteoPointsDbHandler::setActiveStateIfCondition(bool activeState, QSt
 
     if(! qry.exec(statement))
     {
-        error += "\nError in SET is_active: " + condition + " " + qry.lastError().text();
+        errorStr += "\nError in SET is_active: " + condition + " " + qry.lastError().text();
         return false;
     }
 
@@ -1901,7 +1902,7 @@ bool Crit3DMeteoPointsDbHandler::setOrogCode(QString id, int orogCode)
 
     if(! qry.exec())
     {
-        error += "\nError in SET orog_code, ID: " + id + " " + qry.lastError().text();
+        errorStr += "\nError in SET orog_code, ID: " + id + " " + qry.lastError().text();
         return false;
     }
 
@@ -1949,7 +1950,7 @@ bool Crit3DMeteoPointsDbHandler::setJointStations(const QString& idPoint, QList<
     qry.prepare(queryStr);
     if( !qry.exec() )
     {
-        error += idPoint + " " + qry.lastError().text();
+        errorStr += idPoint + " " + qry.lastError().text();
         return false;
     }
 
@@ -1957,11 +1958,11 @@ bool Crit3DMeteoPointsDbHandler::setJointStations(const QString& idPoint, QList<
     qry.bindValue(":id_point", idPoint);
     if( !qry.exec() )
     {
-        error += idPoint + " " + qry.lastError().text();
+        errorStr += idPoint + " " + qry.lastError().text();
         return false;
     }
 
-    error.clear();
+    errorStr.clear();
     for (int i = 0; i < stationsList.size(); i++)
     {
         qry.prepare( "INSERT INTO joint_stations (id_point, joint_station) VALUES (:id_point, :joint_station)" );
@@ -1970,10 +1971,10 @@ bool Crit3DMeteoPointsDbHandler::setJointStations(const QString& idPoint, QList<
         qry.bindValue(":joint_station", stationsList[i]);
         if( !qry.exec() )
         {
-            error += idPoint + "," + stationsList[i] + " " + qry.lastError().text();
+            errorStr += idPoint + "," + stationsList[i] + " " + qry.lastError().text();
         }
     }
-    if (error.isEmpty())
+    if (errorStr.isEmpty())
     {
         return true;
     }

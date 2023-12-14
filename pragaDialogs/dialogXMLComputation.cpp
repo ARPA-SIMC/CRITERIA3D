@@ -42,5 +42,7 @@ DialogXMLComputation::DialogXMLComputation(bool isAnomaly, QList<QString> listXM
 
 void DialogXMLComputation::elabClicked(QListWidgetItem* item)
 {
+    Q_UNUSED(item);
+
     index = listXMLWidget.currentRow();
 }

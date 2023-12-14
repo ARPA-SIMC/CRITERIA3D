@@ -411,9 +411,9 @@ double computeEvaporation(std::vector<soil::Crit3DLayer> &soilLayers, double max
         isWaterSupply = false;
         sumEvap = 0.0;
 
-        for (int i=1; i<=nrEvapLayers; i++)
+        for (int i=1; i <= nrEvapLayers; i++)
         {
-            evapLayerThreshold = soilLayers[i].FC - coeffEvap[i-1] * (soilLayers[i].FC - soilLayers[i].HH);
+            evapLayerThreshold = soilLayers[i].HH + (1 - coeffEvap[i-1]) * (soilLayers[i].FC - soilLayers[i].HH) * 0.5;
             evapLayer = (coeffEvap[i-1] / sumCoeff) * residualEvaporation;
 
             if (soilLayers[i].waterContent > (evapLayerThreshold + evapLayer))

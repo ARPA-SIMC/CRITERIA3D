@@ -30,6 +30,7 @@
     QList<QString> getFields(QSqlDatabase* db_, QString tableName);
     QList<QString> getFields(const QSqlQuery& query);
     QList<QString> getFieldsUpperCase(const QSqlQuery &query);
+    bool fieldExists(const QSqlQuery &query, const QString fieldName);
 
     bool getValue(QVariant myRs);
     bool getValue(QVariant myRs, int* myValue);
@@ -54,8 +55,10 @@
 
     void removeOldFiles(const QString &targetPath, const QString &targetStr, int nrDays);
 
-    void clearDir( const QString path );
-    QList<QString> removeList(QList<QString> list, QList<QString> toDelete);
+    void clearDir( const QString path);
+    QList<QString> removeList(const QList<QString> &list, QList<QString> &toDelete);
+
+    bool parseCSV(const QString &csvFileName, QList<QString> &csvFields, QList<QList<QString>> &csvData, QString &errorString);
 
 
 #endif // UTILITIES_H

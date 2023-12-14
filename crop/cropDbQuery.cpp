@@ -7,16 +7,16 @@
 
 bool getCropIdList(const QSqlDatabase &dbCrop, QList<QString>& cropIdList, QString& errorStr)
 {
-    QString queryString = "SELECT id_crop FROM crop";
-    QSqlQuery query = dbCrop.exec(queryString);
+    QSqlQuery query(dbCrop);
+    query.prepare( "SELECT id_crop FROM crop");
 
-    query.first();
-    if (! query.isValid())
+    if(! query.exec())
     {
         errorStr = query.lastError().text();
         return false;
     }
 
+    query.first();
     do
     {
         QString cropId;
@@ -26,7 +26,7 @@ bool getCropIdList(const QSqlDatabase &dbCrop, QList<QString>& cropIdList, QStri
             cropIdList.append(cropId);
         }
     }
-    while(query.next());
+    while( query.next() );
 
     return true;
 }

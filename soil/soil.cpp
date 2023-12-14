@@ -188,7 +188,7 @@ namespace soil
         nrHorizons = nrHorizons - 1;
     }
 
-    int Crit3DSoil::getHorizonIndex(double depth)
+    int Crit3DSoil::getHorizonIndex(double depth) const
     {
        for (unsigned int index = 0; index < nrHorizons; index++)
        {
