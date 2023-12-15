@@ -313,7 +313,7 @@ int writeCsvOutputUnit(QString idCase, QString idCropClass, QSqlDatabase& dbData
         resultVector.clear();
         QString varName = outputVariable.varName[i];
         QString computation = outputVariable.computation[i];
-        if (!computation.isEmpty())
+        if (! computation.isEmpty())
         {
             // nrDays is required, because the computation should be done between values into interval referenceDate+-nrDays
             if (outputVariable.nrDays[i].isEmpty())
@@ -506,10 +506,9 @@ int writeCsvOutputUnit(QString idCase, QString idCropClass, QSqlDatabase& dbData
                                                         previousFirstDate, previousLastDate, irriRatio, resultVector, errorStr);
                             if (queryResult == ERROR_DB_INCOMPLETE_DATA)
                             {
-                                // only first year can be incomplete, otherwise the comparison is not valid and can be terminated
-                                if (year != climateFirstDate.year())
+                                // only first and last years can be incomplete, otherwise the comparison is not valid and can be terminated
+                                if (year != climateFirstDate.year() && year != climateLastDate.year())
                                 {
-                                    result = NODATA;
                                     skip = true;
                                     break;
                                 }
@@ -526,6 +525,7 @@ int writeCsvOutputUnit(QString idCase, QString idCropClass, QSqlDatabase& dbData
                             }
                             year = year+1;
                         }
+
                         resultVector.clear();
                         if (skip)
                         {
