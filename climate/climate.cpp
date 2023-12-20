@@ -4974,6 +4974,7 @@ bool monthlyAggregateDataGrid(Crit3DMeteoGridDbHandler* meteoGridDbHandler, QDat
                 meteoPointTemp->initializeObsDataM(nrMonths, firstDate.month(), firstDate.year());
                 // copy id to MPTemp
                 meteoPointTemp->id = meteoGridDbHandler->meteoGrid()->meteoPointPointer(row,col)->id;
+                meteoPointTemp->latitude = meteoGridDbHandler->meteoGrid()->meteoPointPointer(row,col)->latitude;
                 // meteoPointTemp should be init
                 meteoPointTemp->nrObsDataDaysH = 0;
                 meteoPointTemp->nrObsDataDaysD = 0;
