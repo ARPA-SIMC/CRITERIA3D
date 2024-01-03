@@ -184,7 +184,7 @@
         QDate _lastDailyDate;
         QDate _firstHourlyDate;
         QDate _lastHourlyDate;
-        QDate _firsMonthlytDate;
+        QDate _firstMonthlyDate;
         QDate _lastMonthlyDate;
 
         TXMLTable _tableDaily;
