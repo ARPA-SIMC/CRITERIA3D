@@ -1702,9 +1702,9 @@ bool Crit3DMeteoGridDbHandler::updateGridDate(QString *myError)
 }
 
 
-bool Crit3DMeteoGridDbHandler::loadGridDailyData(QString &errorStr, const QString &meteoPoint, const QDate &first, const QDate &last)
+bool Crit3DMeteoGridDbHandler::loadGridDailyData(QString &myError, const QString &meteoPoint, const QDate &firstDate, const QDate &lastDate)
 {
-    errorStr = "";
+    myError = "";
 
     QSqlQuery qry(_db);
     QString tableD = _tableDaily.prefix + meteoPoint + _tableDaily.postFix;
@@ -1712,28 +1712,34 @@ bool Crit3DMeteoGridDbHandler::loadGridDailyData(QString &errorStr, const QStrin
     unsigned row, col;
     if ( !_meteoGrid->findMeteoPointFromId(&row, &col, meteoPoint.toStdString()) )
     {
-        errorStr = "Missing MeteoPoint id";
+        myError = "Missing MeteoPoint id";
         return false;
     }
 
-    int numberOfDays = first.daysTo(last) + 1;
-    _meteoGrid->meteoPointPointer(row, col)->initializeObsDataD(numberOfDays, getCrit3DDate(first));
+    int numberOfDays = firstDate.daysTo(lastDate) + 1;
+    _meteoGrid->meteoPointPointer(row, col)->initializeObsDataD(numberOfDays, getCrit3DDate(firstDate));
+
+    if (firstDate > _lastDailyDate || lastDate < _firstDailyDate)
+    {
+        myError = "missing data";
+        return false;
+    }
 
     QString statement;
-    if (first == last)
+    if (firstDate == lastDate)
     {
-        statement = QString("SELECT * FROM `%1` WHERE %2 = '%3'").arg(tableD, _tableDaily.fieldTime, first.toString("yyyy-MM-dd"));
+        statement = QString("SELECT * FROM `%1` WHERE %2 = '%3'").arg(tableD, _tableDaily.fieldTime, firstDate.toString("yyyy-MM-dd"));
     }
     else
     {
         statement = QString("SELECT * FROM `%1` WHERE %2 >= '%3' AND %2 <= '%4' ORDER BY %2")
-                            .arg(tableD, _tableDaily.fieldTime, first.toString("yyyy-MM-dd"), last.toString("yyyy-MM-dd"));
+                            .arg(tableD, _tableDaily.fieldTime, firstDate.toString("yyyy-MM-dd"), lastDate.toString("yyyy-MM-dd"));
     }
     qry.prepare(statement);
 
     if(! qry.exec())
     {
-        errorStr = qry.lastError().text();
+        myError = qry.lastError().text();
         return false;
     }
 
@@ -1745,13 +1751,13 @@ bool Crit3DMeteoGridDbHandler::loadGridDailyData(QString &errorStr, const QStrin
     {
         if (! getValue(qry.value(_tableDaily.fieldTime), &date))
         {
-            errorStr = "Missing " + _tableDaily.fieldTime;
+            myError = "Missing " + _tableDaily.fieldTime;
             return false;
         }
 
         if (! getValue(qry.value("VariableCode"), &varCode))
         {
-            errorStr = "Missing VariableCode";
+            myError = "Missing VariableCode";
             return false;
         }
 
@@ -1763,7 +1769,10 @@ bool Crit3DMeteoGridDbHandler::loadGridDailyData(QString &errorStr, const QStrin
         meteoVariable variable = getDailyVarEnum(varCode);
 
         if (! _meteoGrid->meteoPointPointer(row, col)->setMeteoPointValueD(getCrit3DDate(date), variable, value))
+        {
+            myError = "Error in setMeteoPointValueD";
             return false;
+        }
     }
 
     return true;
@@ -1893,7 +1902,7 @@ bool Crit3DMeteoGridDbHandler::loadGridDailyDataFixedFields(QString &myError, QS
 }
 
 
-bool Crit3DMeteoGridDbHandler::loadGridHourlyData(QString &myError, QString meteoPoint, QDateTime first, QDateTime last)
+bool Crit3DMeteoGridDbHandler::loadGridHourlyData(QString &myError, QString meteoPoint, QDateTime firstDate, QDateTime lastDate)
 {
     myError = "";
 
@@ -1912,11 +1921,18 @@ bool Crit3DMeteoGridDbHandler::loadGridHourlyData(QString &myError, QString mete
         return false;
     }
 
-    int numberOfDays = first.date().daysTo(last.date());
-    _meteoGrid->meteoPointPointer(row, col)->initializeObsDataH(1, numberOfDays, getCrit3DDate(first.date()));
+    int numberOfDays = firstDate.date().daysTo(lastDate.date());
+    _meteoGrid->meteoPointPointer(row, col)->initializeObsDataH(1, numberOfDays, getCrit3DDate(firstDate.date()));
+
+    if (firstDate.date() > _lastHourlyDate || lastDate.date() < _firstHourlyDate)
+    {
+        myError = "missing data";
+        return false;
+    }
 
     QString statement = QString("SELECT * FROM `%1` WHERE `%2` >= '%3' AND `%2` <= '%4' ORDER BY `%2`")
-                                .arg(tableH).arg(_tableHourly.fieldTime).arg(first.toString("yyyy-MM-dd hh:mm")).arg(last.toString("yyyy-MM-dd hh:mm"));
+                                .arg(tableH, _tableHourly.fieldTime, firstDate.toString("yyyy-MM-dd hh:mm"),
+                                 lastDate.toString("yyyy-MM-dd hh:mm") );
 
     if( !qry.exec(statement) )
     {
@@ -1952,6 +1968,7 @@ bool Crit3DMeteoGridDbHandler::loadGridHourlyData(QString &myError, QString mete
 
     return true;
 }
+
 
 bool Crit3DMeteoGridDbHandler::loadGridHourlyDataEnsemble(QString &myError, QString meteoPoint, int memberNr, QDateTime first, QDateTime last)
 {
@@ -2078,7 +2095,7 @@ bool Crit3DMeteoGridDbHandler::loadGridHourlyDataFixedFields(QString &myError, Q
     return true;
 }
 
-bool Crit3DMeteoGridDbHandler::loadGridMonthlyData(QString &myError, QString meteoPoint, QDate first, QDate last)
+bool Crit3DMeteoGridDbHandler::loadGridMonthlyData(QString &myError, QString meteoPoint, QDate firstDate, QDate lastDate)
 {
     myError = "";
 
@@ -2094,8 +2111,8 @@ bool Crit3DMeteoGridDbHandler::loadGridMonthlyData(QString &myError, QString met
     unsigned col;
 
     // set day to 1 to better comparison
-    first.setDate(first.year(), first.month(), 1);
-    last.setDate(last.year(), last.month(), 1);
+    firstDate.setDate(firstDate.year(), firstDate.month(), 1);
+    lastDate.setDate(lastDate.year(), lastDate.month(), 1);
 
     if (!_meteoGrid->findMeteoPointFromId(&row, &col, meteoPoint.toStdString()) )
     {
@@ -2103,10 +2120,16 @@ bool Crit3DMeteoGridDbHandler::loadGridMonthlyData(QString &myError, QString met
         return false;
     }
 
-    int numberOfMonths = (last.year()-first.year())*12 + last.month() - (first.month()-1);
-    _meteoGrid->meteoPointPointer(row,col)->initializeObsDataM(numberOfMonths, first.month(), first.year());
+    int numberOfMonths = (lastDate.year()-firstDate.year())*12 + lastDate.month() - (firstDate.month()-1);
+    _meteoGrid->meteoPointPointer(row,col)->initializeObsDataM(numberOfMonths, firstDate.month(), firstDate.year());
 
-    QString statement = QString("SELECT * FROM `%1` WHERE `PragaYear` BETWEEN %2 AND %3 AND PointCode = '%4' ORDER BY `PragaYear`").arg(table).arg(first.year()).arg(last.year()).arg(meteoPoint);
+    if (firstDate > _lastMonthlyDate || lastDate < _firstMonthlyDate)
+    {
+        myError = "missing data";
+        return false;
+    }
+
+    QString statement = QString("SELECT * FROM `%1` WHERE `PragaYear` BETWEEN %2 AND %3 AND PointCode = '%4' ORDER BY `PragaYear`").arg(table).arg(firstDate.year()).arg(lastDate.year()).arg(meteoPoint);
     if( !qry.exec(statement) )
     {
         myError = qry.lastError().text();
@@ -2129,7 +2152,7 @@ bool Crit3DMeteoGridDbHandler::loadGridMonthlyData(QString &myError, QString met
             }
 
             date.setDate(year,month, 1);
-            if (date < first || date > last)
+            if (date < firstDate || date > lastDate)
             {
                 continue;
             }
