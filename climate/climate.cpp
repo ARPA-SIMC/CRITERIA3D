@@ -1835,12 +1835,11 @@ bool elaborateDailyAggrVarFromDailyFromStartDate(meteoVariable myVar, Crit3DMete
         return true;
     else
         return false;
-
 }
+
 
 bool aggregatedHourlyToDaily(meteoVariable myVar, Crit3DMeteoPoint* meteoPoint, Crit3DDate dateIni, Crit3DDate dateFin, Crit3DMeteoSettings *meteoSettings)
 {
-
     Crit3DDate date;
     std::vector <float> values;
     float value, dailyValue;
@@ -5009,13 +5008,12 @@ bool monthlyAggregateDataGrid(Crit3DMeteoGridDbHandler* meteoGridDbHandler, QDat
     return dataSaved;
 }
 
+
 int computeAnnualSeriesOnPointFromDaily(QString *myError, Crit3DMeteoPointsDbHandler* meteoPointsDbHandler, Crit3DMeteoGridDbHandler* meteoGridDbHandler,
                                          Crit3DMeteoPoint* meteoPointTemp, Crit3DClimate* clima, bool isMeteoGrid, bool isAnomaly, Crit3DMeteoSettings* meteoSettings,
                                         std::vector<float> &outputValues, bool dataAlreadyLoaded)
 {
     int validYears = 0;
-    meteoComputation elabMeteoComp = getMeteoCompFromString(MapMeteoComputation, clima->elab1().toStdString());
-
     if (clima->param1IsClimate())
     {
         clima->param1();
@@ -5289,11 +5287,10 @@ void computeClimateOnDailyData(Crit3DMeteoPoint meteoPoint, meteoVariable var, Q
     }
 }
 
+
 void setMpValues(Crit3DMeteoPoint meteoPointGet, Crit3DMeteoPoint* meteoPointSet, QDate myDate, meteoVariable myVar, Crit3DMeteoSettings* meteoSettings)
 {
-
     bool automaticETP = meteoSettings->getAutomaticET0HS();
-    bool automaticTmed = meteoSettings->getAutomaticTavg();
     Crit3DQuality qualityCheck;
 
     switch(myVar)
@@ -5407,8 +5404,8 @@ void setMpValues(Crit3DMeteoPoint meteoPointGet, Crit3DMeteoPoint* meteoPointSet
             break;
         }
     }
-
 }
+
 
 meteoComputation getMeteoCompFromString(std::map<std::string, meteoComputation> map, std::string value)
 {
