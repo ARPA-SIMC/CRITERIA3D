@@ -1420,12 +1420,12 @@ bool Crit3DMeteoGridDbHandler::loadIdMeteoProperties(QString *myError, QString i
 }
 
 
-bool Crit3DMeteoGridDbHandler::updateGridDate(QString *myError)
+bool Crit3DMeteoGridDbHandler::updateMeteoGridDate(QString &myError)
 {
     QList<QString> tableList = _db.tables(QSql::Tables);
     if (tableList.size() <= 1)
     {
-        *myError = "No data.";
+        myError = "No data.";
         return false;
     }
 
@@ -1436,7 +1436,7 @@ bool Crit3DMeteoGridDbHandler::updateGridDate(QString *myError)
 
     if (!_meteoGrid->findFirstActiveMeteoPoint(&id, &row, &col))
     {
-        *myError = "No active cells.";
+        myError = "No active cells.";
         return false;
     }
 
@@ -1476,7 +1476,7 @@ bool Crit3DMeteoGridDbHandler::updateGridDate(QString *myError)
 
                 if (!_meteoGrid->findFirstActiveMeteoPoint(&id, &row, &col))
                 {
-                    *myError = "active cell not found";
+                    myError = "active cell not found";
                     return false;
                 }
                 tableD = _tableDaily.prefix + QString::fromStdString(id) + _tableDaily.postFix;
@@ -1488,7 +1488,7 @@ bool Crit3DMeteoGridDbHandler::updateGridDate(QString *myError)
 
         if ( qry.lastError().type() != QSqlError::NoError )
         {
-            *myError = qry.lastError().text();
+            myError = qry.lastError().text();
             return false;
         }
         else
@@ -1508,7 +1508,7 @@ bool Crit3DMeteoGridDbHandler::updateGridDate(QString *myError)
             }
             else
             {
-                *myError = "Daily time field not found: " + _tableDaily.fieldTime;
+                myError = "Daily time field not found: " + _tableDaily.fieldTime;
                 return false;
             }
         }
@@ -1534,7 +1534,7 @@ bool Crit3DMeteoGridDbHandler::updateGridDate(QString *myError)
 
                 if (! _meteoGrid->findFirstActiveMeteoPoint(&id, &row, &col))
                 {
-                    *myError = "active cell not found";
+                    myError = "active cell not found";
                     return false;
                 }
 
@@ -1547,7 +1547,7 @@ bool Crit3DMeteoGridDbHandler::updateGridDate(QString *myError)
 
         if ( qry.lastError().type() != QSqlError::NoError && qry.lastError().nativeErrorCode() != tableNotFoundError)
         {
-            *myError = qry.lastError().text();
+            myError = qry.lastError().text();
             return false;
         }
         else
@@ -1568,7 +1568,7 @@ bool Crit3DMeteoGridDbHandler::updateGridDate(QString *myError)
             }
             else
             {
-                *myError = "Hourly time field not found: " + _tableHourly.fieldTime;
+                myError = "Hourly time field not found: " + _tableHourly.fieldTime;
                 return false;
             }
         }
@@ -1583,7 +1583,7 @@ bool Crit3DMeteoGridDbHandler::updateGridDate(QString *myError)
 
         if(! qry.exec(statement) )
         {
-            *myError = qry.lastError().text();
+            myError = qry.lastError().text();
             return false;
         }
 
@@ -1596,7 +1596,7 @@ bool Crit3DMeteoGridDbHandler::updateGridDate(QString *myError)
 
         if ( qry.lastError().type() != QSqlError::NoError )
         {
-            *myError = qry.lastError().text();
+            myError = qry.lastError().text();
             return false;
         }
         else
@@ -1608,7 +1608,7 @@ bool Crit3DMeteoGridDbHandler::updateGridDate(QString *myError)
             }
             else
             {
-                *myError = "PragaYear field not found";
+                myError = "PragaYear field not found";
                 return false;
             }
         }
@@ -1617,7 +1617,7 @@ bool Crit3DMeteoGridDbHandler::updateGridDate(QString *myError)
 
         if ( qry.lastError().type() != QSqlError::NoError )
         {
-            *myError = qry.lastError().text();
+            myError = qry.lastError().text();
             return false;
         }
         else
@@ -1628,7 +1628,7 @@ bool Crit3DMeteoGridDbHandler::updateGridDate(QString *myError)
             }
             else
             {
-                *myError = "PragaMonth field not found";
+                myError = "PragaMonth field not found";
                 return false;
             }
         }
@@ -1638,7 +1638,7 @@ bool Crit3DMeteoGridDbHandler::updateGridDate(QString *myError)
 
         if ( qry.lastError().type() != QSqlError::NoError )
         {
-            *myError = qry.lastError().text();
+            myError = qry.lastError().text();
             return false;
         }
         else
@@ -1649,7 +1649,7 @@ bool Crit3DMeteoGridDbHandler::updateGridDate(QString *myError)
             }
             else
             {
-                *myError = "PragaMonth field not found";
+                myError = "PragaMonth field not found";
                 return false;
             }
         }
@@ -1694,7 +1694,7 @@ bool Crit3DMeteoGridDbHandler::updateGridDate(QString *myError)
 
     if (_firstDate == noDate || _lastDate == noDate)
     {
-        *myError = "Missing data!";
+        myError = "Missing data.";
         return false;
     }
 
@@ -3127,6 +3127,7 @@ bool Crit3DMeteoGridDbHandler::saveGridData(QString *myError, QDateTime firstTim
 
     return true;
 }
+
 
 bool Crit3DMeteoGridDbHandler::saveGridHourlyData(QString *myError, QDateTime firstDate, QDateTime lastDate, QList<meteoVariable> meteoVariableList)
 {

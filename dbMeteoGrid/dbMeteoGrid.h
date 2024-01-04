@@ -110,7 +110,7 @@
         bool newCellProperties(QString *myError);
         bool writeCellProperties(QString *myError, int nRow, int nCol);
         bool loadIdMeteoProperties(QString *myError, QString idMeteo);
-        bool updateGridDate(QString *myError);
+        bool updateMeteoGridDate(QString &myError);
 
         bool loadGridDailyData(QString &myError, const QString &meteoPoint, const QDate &firstDate, const QDate &lastDate);
         bool loadGridDailyDataFixedFields(QString &myError, QString meteoPoint, QDate first, QDate last);

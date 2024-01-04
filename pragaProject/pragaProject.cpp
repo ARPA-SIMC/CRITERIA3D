@@ -2245,6 +2245,9 @@ bool PragaProject::interpolationMeteoGridPeriod(QDate dateIni, QDate dateFin, QL
     if (nrDaysLoading == NODATA)
         nrDaysLoading = dateIni.daysTo(dateFin)+1;
 
+    if (nrDaysSaving == NODATA || nrDaysSaving > nrDaysLoading)
+        nrDaysSaving = nrDaysLoading;
+
     while (myDate <= dateFin)
     {
         countDaysSaving++;
