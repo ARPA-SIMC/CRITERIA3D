@@ -3012,7 +3012,7 @@ bool Project::createDefaultProject(QString fileName)
 }
 
 
-bool Project::start(QString appPath)
+bool Project::pragaStart(QString appPath)
 {
     if (appPath.right(1) != "/") appPath += "/";
     setApplicationPath(appPath);
