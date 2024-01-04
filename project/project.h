@@ -159,7 +159,7 @@
         void saveRadiationParameters();
         void saveProxies();
 
-        bool pragaStart(QString appPath);
+        bool start(QString appPath);
         bool loadProject();
         bool loadProjectSettings(QString settingsFileName);
         bool loadParameters(QString parametersFileName);
