@@ -1632,20 +1632,26 @@ bool Project::loadMeteoGridMonthlyData(QDate firstDate, QDate lastDate, bool sho
         {
             if (this->meteoGridDbHandler->meteoGrid()->getMeteoPointActiveId(row, col, &id))
             {
-
-                if (this->meteoGridDbHandler->loadGridMonthlyData(errorString, QString::fromStdString(id), firstDate, lastDate))
+                bool isOk;
+                if (firstDate == lastDate)
                 {
-                    count = count + 1;
+                   isOk = meteoGridDbHandler->loadGridMonthlySingleDate(errorString, QString::fromStdString(id), firstDate);
                 }
+                else
+                {
+                    isOk = meteoGridDbHandler->loadGridMonthlyData(errorString, QString::fromStdString(id), firstDate, lastDate);
+                }
+
+                if (isOk) count = count + 1;
             }
         }
     }
 
     if (showInfo) closeProgressBar();
 
-    if (count == 0)
+    if (count == 0 && errorString != "")
     {
-        errorString = "No Data Available";
+        logError("No Data Available: " + errorString);
         return false;
     }
     else
