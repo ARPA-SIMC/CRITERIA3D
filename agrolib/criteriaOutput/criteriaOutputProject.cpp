@@ -440,7 +440,7 @@ int CriteriaOutputProject::precomputeDtx()
     logger.writeInfo("Compute dtx...");
 
     QString idCase;
-    int step = compUnitList.size() * 0.01;
+    int step = MAXVALUE(compUnitList.size() * 0.01, 1);
 
     for (unsigned int i=0; i < compUnitList.size(); i++)
     {
@@ -611,8 +611,8 @@ int CriteriaOutputProject::createMaps()
     logger.writeInfo("MAPS");
 
     // parser csv file mapListFileName
-    QList<QString> inputField;
-    QList<QString> outputName;
+    QList<QString> inputFieldName;
+    QList<QString> outputFileName;
     QList<QString> paletteFileName;
     QFile mapList(mapListFileName);
     if ( !mapList.open(QFile::ReadOnly | QFile::Text) )
@@ -623,66 +623,88 @@ int CriteriaOutputProject::createMaps()
     else
     {
         QTextStream in(&mapList);
-        //skip header
+        // skip header
         QString line = in.readLine();
 
-        while (!in.atEnd())
+        while (! in.atEnd())
         {
             line = in.readLine();
             QList<QString> items = line.split(",");
-            if (items.size() < REQUIREDMAPLISTCSVINFO)
+
+            if (! mapPalettePath.isEmpty())
             {
-                projectError = "invalid line in map list:\n" + line + "\n"
-                               + "Required input field, output file name, palette file name.";
-                return ERROR_SETTINGS_MISSINGDATA;
+                if (items.size() < 3)
+                {
+                    projectError = "invalid line in map list:\n" + line + "\n"
+                                   + "Required: input field name, output file name, palette file name.";
+                    return ERROR_SETTINGS_MISSINGDATA;
+                }
+            }
+            else
+            {
+                if (items.size() < 2)
+                {
+                    projectError = "invalid line in map list:\n" + line + "\n"
+                                   + "Required: input field name, output file name.";
+                    return ERROR_SETTINGS_MISSINGDATA;
+                }
             }
 
             // input field (remove whitespace)
-            inputField.push_back(items[0].toUpper().trimmed());
-            if (inputField.last().isEmpty())
+            inputFieldName.push_back(items[0].toUpper().trimmed());
+            if ( inputFieldName.last().isEmpty() )
             {
                 projectError = "missing shape input field in line:\n" + line;
                 return ERROR_SETTINGS_MISSINGDATA;
             }
 
-            // output file name (remove whitespace)
-            outputName.push_back(items[1].toUpper().trimmed());
-            if (outputName.last().isEmpty())
+            // output file (remove whitespace)
+            outputFileName.push_back(items[1].toUpper().trimmed());
+            if ( outputFileName.last().isEmpty() )
             {
                 projectError = "missing output map name in line:\n" + line;
                 return ERROR_SETTINGS_MISSINGDATA;
             }
 
-            // palette file name (remove whitespace)
-            paletteFileName.push_back(items[2].toUpper().trimmed());
-            if (paletteFileName.last().isEmpty())
+            if (! mapPalettePath.isEmpty())
             {
-                projectError = "missing palette file name in line:\n" + line;
-                return ERROR_SETTINGS_MISSINGDATA;
+                // palette file name (remove whitespace)
+                paletteFileName.push_back(items[2].toUpper().trimmed());
+                if ( paletteFileName.last().isEmpty() )
+                {
+                    projectError = "missing palette file name in line:\n" + line;
+                    return ERROR_SETTINGS_MISSINGDATA;
+                }
             }
         }
     }
 
     int rasterOK = 0;
 
-    for (int i=0; i < inputField.size(); i++)
+    for (int i=0; i < inputFieldName.size(); i++)
     {
-        QString mapName = outputShapeFilePath + "/" + outputName[i]+ "." + mapFormat;
-        QString paletteName = mapPalettePath + "/" + paletteFileName[i];
+        QString mapName = outputShapeFilePath + "/" + outputFileName[i]+ "." + mapFormat;
+
+        QString paletteName = "";
+        if (! mapPalettePath.isEmpty())
+        {
+            paletteName = mapPalettePath + "/" + paletteFileName[i];
+        }
+
         logger.writeInfo("Write map: " + mapName);
-        if (shapeToRaster(outputShapeFileName, inputField[i], mapCellSize, mapProjection, mapName, paletteName, projectError))
+        if (shapeToRaster(outputShapeFileName, inputFieldName[i], mapCellSize, mapProjection, mapName, paletteName, projectError))
         {
             rasterOK = rasterOK + 1;
         }
     }
 
-    if (rasterOK == inputField.size())
+    if (rasterOK == inputFieldName.size())
     {
         return CRIT1D_OK;
     }
     else
     {
-        int nRasterError = inputField.size() - rasterOK;
+        int nRasterError = inputFieldName.size() - rasterOK;
         projectError = QString::number(nRasterError) + " invalid raster - " + projectError;
         return ERROR_MAPS;
     }
@@ -828,13 +850,13 @@ int CriteriaOutputProject::createAggregationFile()
         if (aggregationVariable.aggregationType[i] == "MAJORITY")
         {
             isOk = zonalStatisticsShapeMajority(shapeRef, shapeVal, matrix, vectorNull,
-                                                aggregationVariable.inputField[i].toStdString(),
+                                                aggregationVariable.inputFieldName[i].toStdString(),
                                                 aggregationVariable.outputVarName[i].toStdString(),
                                                 threshold, error);
         }
         else
         {
-            isOk = zonalStatisticsShape(shapeRef, shapeVal, matrix, vectorNull, aggregationVariable.inputField[i].toStdString(),
+            isOk = zonalStatisticsShape(shapeRef, shapeVal, matrix, vectorNull, aggregationVariable.inputFieldName[i].toStdString(),
                                         aggregationVariable.outputVarName[i].toStdString(),
                                         aggregationVariable.aggregationType[i].toStdString(),
                                         threshold, error);

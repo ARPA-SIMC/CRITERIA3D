@@ -1306,9 +1306,9 @@ bool Project::loadMeteoGridDB(QString xmlName)
 
     if (! this->meteoGridDbHandler->meteoGrid()->createRasterGrid()) return false;
 
-    if (!meteoGridDbHandler->updateGridDate(&errorString))
+    if (!meteoGridDbHandler->updateMeteoGridDate(errorString))
     {
-        logInfoGUI("updateGridDate: " + errorString);
+        logInfoGUI("Error in updateMeteoGridDate: " + errorString);
     }
 
     if (loadGridDataAtStart || ! meteoPointsLoaded)
@@ -1345,9 +1345,9 @@ bool Project::newMeteoGridDB(QString xmlName)
 
     if (! this->meteoGridDbHandler->meteoGrid()->createRasterGrid()) return false;
 
-    if (!meteoGridDbHandler->updateGridDate(&errorString))
+    if (!meteoGridDbHandler->updateMeteoGridDate(errorString))
     {
-        logInfoGUI("updateGridDate: " + errorString);
+        logInfoGUI("Error in updateMeteoGridDate: " + errorString);
     }
 
     if (loadGridDataAtStart || ! meteoPointsLoaded)
