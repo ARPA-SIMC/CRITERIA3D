@@ -1578,7 +1578,7 @@ bool Crit3DMeteoGridDbHandler::updateMeteoGridDate(QString &myError)
     {
         QString table = "MonthlyData";
         QString statement = QString("CREATE TABLE IF NOT EXISTS `%1`"
-                                    "(PragaYear smallint(4) UNSIGNED, PragaMonth tinyint(2) UNSIGNED, PointCode CHAR(5), "
+                                    "(PragaYear smallint(4) UNSIGNED, PragaMonth tinyint(2) UNSIGNED, PointCode VARCHAR(6), "
                                     "VariableCode tinyint(3) UNSIGNED, Value float(6,1), PRIMARY KEY(PragaYear,PragaMonth,PointCode,VariableCode))").arg(table);
 
         if(! qry.exec(statement) )
@@ -3049,7 +3049,7 @@ bool Crit3DMeteoGridDbHandler::saveCellGridMonthlyData(QString *myError, QString
     QString table = "MonthlyData";
 
     QString statement = QString("CREATE TABLE IF NOT EXISTS `%1`"
-                                "(PragaYear smallint(4) UNSIGNED, PragaMonth tinyint(2) UNSIGNED, PointCode CHAR(5), "
+                                "(PragaYear smallint(4) UNSIGNED, PragaMonth tinyint(2) UNSIGNED, PointCode VARCHAR(6), "
                                 "VariableCode tinyint(3) UNSIGNED, Value float(6,1), PRIMARY KEY(PragaYear,PragaMonth,PointCode,VariableCode))").arg(table);
 
     if( !qry.exec(statement) )
@@ -3082,7 +3082,7 @@ bool Crit3DMeteoGridDbHandler::saveCellGridMonthlyData(QString *myError, QString
 
         statement = statement.left(statement.length() - 1);
 
-        if( !qry.exec(statement) )
+        if( ! qry.exec(statement) )
         {
             *myError = qry.lastError().text();
             return false;
