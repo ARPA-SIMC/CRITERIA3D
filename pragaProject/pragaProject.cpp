@@ -2440,6 +2440,7 @@ bool PragaProject::interpolationMeteoGrid(meteoVariable myVar, frequencyType myF
     return true;
 }
 
+
 bool PragaProject::dbMeteoPointDataCount(QDate myFirstDate, QDate myLastDate, meteoVariable myVar, QString dataset, std::vector<int> &myCounter)
 {
     frequencyType myFreq = getVarFrequency(myVar);
@@ -2499,10 +2500,9 @@ bool PragaProject::dbMeteoPointDataCount(QDate myFirstDate, QDate myLastDate, me
 
     if (modality == MODE_GUI) closeProgressBar();
 
-
-
     return true;
 }
+
 
 bool PragaProject::dbMeteoGridMissingData(QDate myFirstDate, QDate myLastDate, meteoVariable myVar, QList <QDate> &dateList, QList <QString> &idList)
 {
@@ -2769,6 +2769,7 @@ void PragaProject::deleteSynchWidget()
 {
     synchronicityWidget = nullptr;
 }
+
 
 void PragaProject::showPointStatisticsWidgetGrid(std::string id)
 {
