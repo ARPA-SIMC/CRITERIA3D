@@ -260,7 +260,7 @@ QDateTime Crit3DMeteoPointsDbHandler::getLastDate(frequencyType frequency)
     QDate myDate;
     QTime myTime;
     QString dateStr, statement;
-    int maxTableNr = 200;
+    int maxTableNr = 500;
     int step = std::max(1, int(tableList.size() / maxTableNr));
     int count = 0;
     foreach (QString table, tableList)
