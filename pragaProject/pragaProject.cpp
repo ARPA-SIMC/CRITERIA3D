@@ -3270,6 +3270,8 @@ bool PragaProject::monthlyAggregateVariablesGrid(const QDate &firstDate, const Q
         return false;
 
     meteoGridDbHandler->updateMeteoGridDate(errorString);
+
+    return true;
 }
 
 

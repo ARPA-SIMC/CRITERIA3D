@@ -307,6 +307,7 @@ bool NetCDFHandler::readProperties(string fileName)
     char typeName[NC_MAX_NAME+1];
 
     int valueInt;
+    float valueFloat;
     double value;
     size_t length;
     nc_type ncTypeId;
@@ -544,6 +545,18 @@ bool NetCDFHandler::readProperties(string fileName)
                 }
 
                 metadata << attrName << " = " << valueInt << endl;
+            }
+            else if (ncTypeId == NC_FLOAT)
+            {
+                nc_get_att(ncId, v, attrName, &valueFloat);
+
+                // no data
+                if (lowerCase(string(attrName)) == "missing_value" || lowerCase(string(attrName)) == "_fillvalue")
+                {
+                    missingValue = double(valueFloat);
+                }
+
+                metadata << attrName << " = " << valueFloat << endl;
             }
             else if (ncTypeId == NC_DOUBLE)
             {
@@ -1071,8 +1084,7 @@ bool NetCDFHandler::writeData_NoTime(const gis::Crit3DRasterGrid& myDataGrid)
 }
 
 
-// TODO: sistemare con dimensioni
-bool NetCDFHandler::extractVariableMap(int idVar, const Crit3DTime& myTime, std::string& errorStr)
+bool NetCDFHandler::extractVariableMap_old(int idVar, const Crit3DTime& myTime, std::string& errorStr)
 {
     // initialize
     dataGrid.emptyGrid();
@@ -1117,20 +1129,21 @@ bool NetCDFHandler::extractVariableMap(int idVar, const Crit3DTime& myTime, std:
     // read data
     int retVal;
     long nrValues;
+
     size_t start[] = {size_t(timeIndex), 0, 0};
     size_t count[] = {1, 1, 1};
+
     if (isLatLon)
     {
         count[1] = nrLat;
         count[2] = nrLon;
-        nrValues = nrLat * nrLon;
     }
     else
     {
         count[1] = nrX;
         count[2] = nrY;
-        nrValues = nrX * nrY;
     }
+    nrValues = count[1] * count[2];
     float* values = new float[nrValues];
 
     switch(currentVar.type)
@@ -1198,7 +1211,7 @@ bool NetCDFHandler::extractVariableMap(int idVar, const Crit3DTime& myTime, std:
 }
 
 
-bool NetCDFHandler::extractVariableMap2(int idVar, const Crit3DTime &myTime, std::string &errorStr)
+bool NetCDFHandler::extractVariableMap(int idVar, const Crit3DTime &myTime, std::string &errorStr)
 {
     // initialize
     dataGrid.emptyGrid();
@@ -1266,7 +1279,7 @@ bool NetCDFHandler::extractVariableMap2(int idVar, const Crit3DTime &myTime, std
         for (int col = 0; col < dataGrid.header->nrCols; col++)
         {
             index[indexXLatDim] = size_t(col);
-            float value;
+            float value = dataGrid.header->flag;
 
             if (currentVar.type == NC_DOUBLE)
             {
