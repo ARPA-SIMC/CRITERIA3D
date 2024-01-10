@@ -1,4 +1,5 @@
 #include "dbMeteoGrid.h"
+#include "crit3dDate.h"
 #include "meteoGrid.h"
 #include "basicMath.h"
 #include "utilities.h"
@@ -1657,7 +1658,7 @@ bool Crit3DMeteoGridDbHandler::updateMeteoGridDate(QString &myError)
         if (minPragaYear != NODATA && maxPragaYear != NODATA &&
                 minPragaMonth != NODATA && maxPragaMonth != NODATA) {
 
-            _lastMonthlyDate.setDate(maxPragaYear, maxPragaMonth, 1);
+            _lastMonthlyDate.setDate(maxPragaYear, maxPragaMonth, getDaysInMonth(maxPragaMonth, maxPragaYear));
             _firstMonthlyDate.setDate(minPragaYear, minPragaMonth, 1);
         }
     }
