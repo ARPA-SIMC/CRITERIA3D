@@ -350,7 +350,7 @@ void Crit3DClimate::setDailyCumulated(bool newDailyCumulated)
     _dailyCumulated = newDailyCumulated;
 }
 
-QSqlDatabase Crit3DClimate::db() const
+const QSqlDatabase& Crit3DClimate::db() const
 {
     return _db;
 }

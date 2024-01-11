@@ -663,10 +663,9 @@ void PragaProject::readClimate(bool isMeteoGrid, QString climateSelected, int cl
                 if (meteoGridDbHandler->meteoGrid()->getMeteoPointActiveId(row, col, &id))
                 {
                     Crit3DMeteoPoint* meteoPoint = meteoGridDbHandler->meteoGrid()->meteoPointPointer(row,col);
-                    results = readElab(db, table.toLower(), &errorString, QString::fromStdString(meteoPoint->id), climateSelected);
+                    results = readElab(db, table.toLower(), QString::fromStdString(meteoPoint->id), climateSelected, &errorString);
                     if (results.size() < climateIndex)
                     {
-                        errorString = "climate index error";
                         meteoPoint->climate = NODATA;
                     }
                     else
@@ -696,7 +695,7 @@ void PragaProject::readClimate(bool isMeteoGrid, QString climateSelected, int cl
                     updateProgressBar(i);
                 }
                 QString id = QString::fromStdString(meteoPoints[i].id);
-                results = readElab(db, table.toLower(), &errorString, id, climateSelected);
+                results = readElab(db, table.toLower(), id, climateSelected, &errorString);
                 if (results.size() < climateIndex)
                 {
                     errorString = "climate index error";
