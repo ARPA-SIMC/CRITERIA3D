@@ -74,22 +74,22 @@ QList<float> readElab(const QSqlDatabase &db, const QString &table, const QStrin
 {
     *myError = "";
     QList<float> elabValueList;
+    QSqlQuery qry(db);
 
     QString statement = QString("SELECT * FROM `%1` WHERE `id_point` = '%2' AND `elab` = '%3'").arg(table, id, elab);
 
-    QSqlQuery qry(db);
     if(! qry.exec(statement))
     {
         *myError = qry.lastError().text();
-        return elabValueList;
-
     }
-
-    while (qry.next())
+    else
     {
-        float value;
-        getValue(qry.value("value"), &value);
-        elabValueList << value;
+        while (qry.next())
+        {
+            float value;
+            getValue(qry.value("value"), &value);
+            elabValueList << value;
+        }
     }
 
     return elabValueList;
