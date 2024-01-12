@@ -4,9 +4,6 @@
     #ifndef QSQLDATABASE_H
         #include <QSqlDatabase>
     #endif
-    #ifndef _VECTOR_
-        #include <vector>
-    #endif
 
     bool saveDailyElab(QSqlDatabase db, QString *myError, QString id, std::vector<float> allResults, QString elab);
     bool saveDecadalElab(QSqlDatabase db, QString *myError, QString id, std::vector<float> allResults, QString elab);
@@ -21,7 +18,7 @@
 
     bool deleteElab(QSqlDatabase db, QString *myError, QString table, QString elab);
 
-    QList<float> readElab(QSqlDatabase db, QString table, QString *myError, QString id, QString elab);
+    QList<float> readElab(const QSqlDatabase &db, const QString &table, const QString &id, const QString &elab, QString *myError);
     QList<QString> getIdListFromElab(QSqlDatabase db, QString table, QString *myError, QString elab);
     QList<QString> getIdListFromElab(QSqlDatabase db, QString table, QString *myError, QString elab, int index);
 

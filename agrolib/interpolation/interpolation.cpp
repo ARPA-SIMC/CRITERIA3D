@@ -1326,7 +1326,7 @@ bool setFittingParameters(Crit3DProxyCombination myCombination, Crit3DInterpolat
     const double RATIO_DELTA = 1000;
 
     for (unsigned i=0; i<myCombination.getIsActive().size(); i++)
-        if (myCombination.getValue(i))
+        if (mySettings->getProxy(i)->getIsSignificant())
         {
             if (getProxyPragaName(mySettings->getProxy(i)->getName()) == height)
                 myFunc.push_back(lapseRatePiecewise);
@@ -1742,7 +1742,7 @@ bool getActiveProxyValues(Crit3DInterpolationSettings *mySettings, const std::ve
                 isComplete = false;
         }
 
-    return isComplete;
+    return (activeProxyValues.size() > 0 && isComplete);
 }
 
 

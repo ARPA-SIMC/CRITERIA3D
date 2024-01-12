@@ -663,10 +663,9 @@ void PragaProject::readClimate(bool isMeteoGrid, QString climateSelected, int cl
                 if (meteoGridDbHandler->meteoGrid()->getMeteoPointActiveId(row, col, &id))
                 {
                     Crit3DMeteoPoint* meteoPoint = meteoGridDbHandler->meteoGrid()->meteoPointPointer(row,col);
-                    results = readElab(db, table.toLower(), &errorString, QString::fromStdString(meteoPoint->id), climateSelected);
+                    results = readElab(db, table.toLower(), QString::fromStdString(meteoPoint->id), climateSelected, &errorString);
                     if (results.size() < climateIndex)
                     {
-                        errorString = "climate index error";
                         meteoPoint->climate = NODATA;
                     }
                     else
@@ -696,7 +695,7 @@ void PragaProject::readClimate(bool isMeteoGrid, QString climateSelected, int cl
                     updateProgressBar(i);
                 }
                 QString id = QString::fromStdString(meteoPoints[i].id);
-                results = readElab(db, table.toLower(), &errorString, id, climateSelected);
+                results = readElab(db, table.toLower(), id, climateSelected, &errorString);
                 if (results.size() < climateIndex)
                 {
                     errorString = "climate index error";
@@ -3239,9 +3238,8 @@ bool PragaProject::loadXMLImportData(QString fileName)
 }
 
 
-bool PragaProject::monthlyVariablesGrid(QDate first, QDate last, QList <meteoVariable> variables)
+bool PragaProject::monthlyAggregateVariablesGrid(const QDate &firstDate, const QDate &lastDate, QList<meteoVariable> &variablesList)
 {
-
     // check meteo grid
     if (! meteoGridLoaded)
     {
@@ -3250,23 +3248,31 @@ bool PragaProject::monthlyVariablesGrid(QDate first, QDate last, QList <meteoVar
     }
 
     // check dates
-    if (first.isNull() || last.isNull() || first > last)
+    if (firstDate.isNull() || lastDate.isNull() || firstDate > lastDate)
     {
         logError("Wrong period");
         return false;
     }
 
     std::vector <meteoVariable> dailyMeteoVar;
-    for (int i = 0; i < variables.size(); i++)
+    for (int i = 0; i < variablesList.size(); i++)
     {
-        meteoVariable dailyVar = updateMeteoVariable(variables[i], daily);
+        meteoVariable dailyVar = updateMeteoVariable(variablesList[i], daily);
         if (dailyVar != noMeteoVar)
         {
             dailyMeteoVar.push_back(dailyVar);
         }
     }
-    return monthlyAggregateDataGrid(meteoGridDbHandler, first, last, dailyMeteoVar, meteoSettings, quality, &climateParameters);
+
+    if (! monthlyAggregateDataGrid(meteoGridDbHandler, firstDate, lastDate, dailyMeteoVar, meteoSettings,
+                                  quality, &climateParameters, errorString))
+        return false;
+
+    meteoGridDbHandler->updateMeteoGridDate(errorString);
+
+    return true;
 }
+
 
 bool PragaProject::computeDroughtIndexAll(droughtIndex index, int firstYear, int lastYear, QDate date, int timescale, meteoVariable myVar)
 {

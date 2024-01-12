@@ -14,9 +14,8 @@
     #ifndef QSQLDATABASE_H
         #include <QSqlDatabase>
     #endif
-    #ifndef QDATETIME_H
-        #include <QDate>
-    #endif
+
+    class QDate;
 
     class Crit3DClimate
     {
@@ -31,7 +30,7 @@
 
         void copyParam(Crit3DClimate* clima);
 
-        QSqlDatabase db() const;
+        const QSqlDatabase &db() const;
         void setDb(const QSqlDatabase &db);
 
         QString climateElab() const;

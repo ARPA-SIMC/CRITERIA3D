@@ -231,8 +231,7 @@ QDateTime Crit3DMeteoPointsDbHandler::getFirstDate(frequencyType frequency)
 QDateTime Crit3DMeteoPointsDbHandler::getLastDate(frequencyType frequency)
 {
     QSqlQuery qry(_db);
-    QList<QString> tables;
-    QDateTime lastDate;
+    QList<QString> tableList;
 
     QString dayHour;
     if (frequency == daily)
@@ -252,16 +251,23 @@ QDateTime Crit3DMeteoPointsDbHandler::getLastDate(frequencyType frequency)
         while (qry.next())
         {
             QString table = qry.value(0).toString();
-            tables << table;
+            tableList << table;
         }
     }
 
-    QDateTime date;
+    QDateTime lastDate;
+    QDateTime currentLastDate;
     QDate myDate;
     QTime myTime;
     QString dateStr, statement;
-    foreach (QString table, tables)
+    int maxTableNr = 500;
+    int step = std::max(1, int(tableList.size() / maxTableNr));
+    int count = 0;
+    foreach (QString table, tableList)
     {
+        count++;
+        if ((count % step) != 0) continue;
+
         statement = QString( "SELECT MAX(date_time) FROM `%1` AS dateTime").arg(table);
         if(qry.exec(statement))
         {
@@ -272,18 +278,18 @@ QDateTime Crit3DMeteoPointsDbHandler::getLastDate(frequencyType frequency)
                 {
                     if (frequency == daily)
                     {
-                        date = QDateTime::fromString(dateStr,"yyyy-MM-dd");
+                        currentLastDate = QDateTime::fromString(dateStr,"yyyy-MM-dd");
                     }
                     else if (frequency == hourly)
                     {
                         myDate = QDate::fromString(dateStr.mid(0,10), "yyyy-MM-dd");
                         myTime = QTime::fromString(dateStr.mid(11,8), "HH:mm:ss");
-                        date = QDateTime(myDate, myTime, Qt::UTC);
+                        currentLastDate = QDateTime(myDate, myTime, Qt::UTC);
                     }
 
-                    if (lastDate.isNull() || date > lastDate)
+                    if (lastDate.isNull() || currentLastDate > lastDate)
                     {
-                        lastDate = date;
+                        lastDate = currentLastDate;
                     }
                 }
             }
@@ -518,8 +524,16 @@ bool Crit3DMeteoPointsDbHandler::loadDailyData(const Crit3DDate &firstDate, cons
     QString lastDateStr = QString::fromStdString(lastDate.toStdString());
     QString tableName = QString::fromStdString(meteoPoint->id) + "_D";
 
-    QString statement = QString( "SELECT * FROM `%1` WHERE date_time >= DATE('%2') AND date_time < DATE('%3', '+1 day')")
+    QString statement;
+    if (numberOfDays == 1)
+    {
+        statement = QString( "SELECT * FROM `%1` WHERE date_time = DATE('%2')").arg(tableName, firstDateStr);
+    }
+    else
+    {
+        statement = QString( "SELECT * FROM `%1` WHERE date_time >= DATE('%2') AND date_time < DATE('%3', '+1 day')")
                                 .arg(tableName, firstDateStr, lastDateStr);
+    }
 
     QSqlQuery myQuery(_db);
     if( myQuery.exec(statement) )

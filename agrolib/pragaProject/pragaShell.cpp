@@ -521,8 +521,11 @@ int cmdMonthlyIntegrationVariablesGrid(PragaProject* myProject, QList<QString> a
         return PRAGA_INVALID_COMMAND;
     }
 
-    if (! myProject->monthlyVariablesGrid(first, last, variables))
+    if (! myProject->monthlyAggregateVariablesGrid(first, last, variables))
+    {
+        myProject->logError();
         return PRAGA_ERROR;
+    }
 
     return PRAGA_OK;
 }

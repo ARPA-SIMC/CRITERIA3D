@@ -1553,18 +1553,16 @@ bool Project::loadMeteoGridDailyData(QDate firstDate, QDate lastDate, bool showI
 
 bool Project::loadMeteoGridHourlyData(QDateTime firstDate, QDateTime lastDate, bool showInfo)
 {
-    std::string id;
-    int count = 0;
-    int infoStep = 1;
-
     if (! meteoGridDbHandler->tableHourly().exists) return false;
 
+    int infoStep = 1;
     if (showInfo)
     {
         QString infoStr = "Load meteo grid hourly data: " + firstDate.toString("yyyy-MM-dd:hh") + " - " + lastDate.toString("yyyy-MM-dd:hh");
         infoStep = setProgressBar(infoStr, this->meteoGridDbHandler->gridStructure().header().nrRows);
     }
 
+    int count = 0;
     for (int row = 0; row < this->meteoGridDbHandler->gridStructure().header().nrRows; row++)
     {
         if (showInfo && (row % infoStep) == 0)
@@ -1574,6 +1572,7 @@ bool Project::loadMeteoGridHourlyData(QDateTime firstDate, QDateTime lastDate, b
 
         for (int col = 0; col < this->meteoGridDbHandler->gridStructure().header().nrCols; col++)
         {
+            std::string id;
             if (this->meteoGridDbHandler->meteoGrid()->getMeteoPointActiveId(row, col, &id))
             {
                 if (!this->meteoGridDbHandler->gridStructure().isFixedFields())
@@ -1632,20 +1631,26 @@ bool Project::loadMeteoGridMonthlyData(QDate firstDate, QDate lastDate, bool sho
         {
             if (this->meteoGridDbHandler->meteoGrid()->getMeteoPointActiveId(row, col, &id))
             {
-
-                if (this->meteoGridDbHandler->loadGridMonthlyData(errorString, QString::fromStdString(id), firstDate, lastDate))
+                bool isOk;
+                if (firstDate == lastDate)
                 {
-                    count = count + 1;
+                   isOk = meteoGridDbHandler->loadGridMonthlySingleDate(errorString, QString::fromStdString(id), firstDate);
                 }
+                else
+                {
+                    isOk = meteoGridDbHandler->loadGridMonthlyData(errorString, QString::fromStdString(id), firstDate, lastDate);
+                }
+
+                if (isOk) count = count + 1;
             }
         }
     }
 
     if (showInfo) closeProgressBar();
 
-    if (count == 0)
+    if (count == 0 && errorString != "")
     {
-        errorString = "No Data Available";
+        logError("No Data Available: " + errorString);
         return false;
     }
     else
