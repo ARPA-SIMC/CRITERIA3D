@@ -205,7 +205,7 @@ void Crit3DProject::dailyUpdateCrop()
         }
     }
 
-    // clean daily temp maps
+    // cleans daily temperature maps
     dailyTminMap.emptyGrid();
     dailyTmaxMap.emptyGrid();
 }
@@ -213,7 +213,7 @@ void Crit3DProject::dailyUpdateCrop()
 
 /*!
  * \brief assignETreal
- *  assign soil evaporation and crop transpiration for the whole domain
+ * assigns soil evaporation and crop transpiration for the whole domain
  */
 void Crit3DProject::assignETreal()
 {
@@ -229,6 +229,10 @@ void Crit3DProject::assignETreal()
             int surfaceIndex = indexMap.at(0).value[row][col];
             if (surfaceIndex != indexMap.at(0).header->flag)
             {
+                double utmX, utmY;
+                DEM.getXY(row, col, utmX, utmY);
+                int soilIndex = getCrit3DSoilIndex(utmX, utmY);
+
                 float lai = laiMap.value[row][col];
                 if (isEqual(lai, NODATA))
                 {
@@ -236,8 +240,8 @@ void Crit3DProject::assignETreal()
                 }
 
                 // assign real evaporation
-                double realEvap = assignEvaporation(row, col, lai);             // [mm]
-                double evapFlow = area * (realEvap / 1000.);                    // [m3 h-1]
+                double realEvap = assignEvaporation(row, col, lai, soilIndex);      // [mm]
+                double evapFlow = area * (realEvap / 1000.);                        // [m3 h-1]
                 totalEvaporation += evapFlow;
 
                 // assign real transpiration

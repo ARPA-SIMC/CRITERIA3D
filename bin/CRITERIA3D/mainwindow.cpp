@@ -729,16 +729,22 @@ void MainWindow::updateDateTime()
 
 void MainWindow::updateModelTime()
 {
-    QDateTime currentDateTime;
-    currentDateTime.setDate(myProject.getCurrentDate());
+    QDate date = myProject.getCurrentDate();
     int hour = myProject.getCurrentHour();
     int minutes = int(floor(myProject.currentSeconds / 60));
     int seconds = myProject.currentSeconds - (minutes * 60);
     if (minutes == 60)
     {
         hour++;
+        if (hour == 24)
+        {
+            date = date.addDays(1);
+            hour = 0;
+        }
         minutes = 0;
     }
+    QDateTime currentDateTime;
+    currentDateTime.setDate(date);
     currentDateTime.setTime(QTime(hour, minutes, seconds));
     this->ui->modelTimeEdit->setText(currentDateTime.toString("yyyy-MM-dd HH:mm:ss"));
 }

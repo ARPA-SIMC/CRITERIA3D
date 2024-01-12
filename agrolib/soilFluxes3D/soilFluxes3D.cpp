@@ -190,7 +190,7 @@ int DLL_EXPORT __STDCALL setHydraulicProperties(int waterRetentionCurve,
     myParameters.waterRetentionCurve = waterRetentionCurve;
     myParameters.meanType = conductivityMeanType;
 
-    if  ((horizVertRatioConductivity >= 1) && (horizVertRatioConductivity <= 100))
+    if  ((horizVertRatioConductivity >= 0.1) && (horizVertRatioConductivity <= 100))
     {
         myParameters.k_lateral_vertical_ratio = horizVertRatioConductivity;
         return CRIT3D_OK;
@@ -587,7 +587,8 @@ int DLL_EXPORT __STDCALL setHydraulicProperties(int waterRetentionCurve,
 /*!
  * \brief getAvailableWaterContent
  * \param index
- * \return  available water content (over wilting point) at surface: water level [m]; sub-surface: awc [m^3 m^-3]
+ * \return  available water content (over wilting point)
+ * surface: water level [m]; sub-surface: awc [m3 m-3]
  */
  double DLL_EXPORT __STDCALL getAvailableWaterContent(long index)
  {
@@ -603,12 +604,12 @@ int DLL_EXPORT __STDCALL setHydraulicProperties(int waterRetentionCurve,
  }
 
 
-    /*!
-     * \brief getWaterDeficit
-     * \param index
-     * \param fieldCapacity
-     * \return water deficit at surface: 0; sub-surface: [m^3 m^-3]
-     */
+/*!
+ * \brief getWaterDeficit
+ * \param index
+ * \param fieldCapacity
+ * \return water deficit at surface: 0; sub-surface: [m^3 m^-3]
+ */
 	double DLL_EXPORT __STDCALL getWaterDeficit(long index, double fieldCapacity)
  {
         if (myNode == nullptr) return(MEMORY_ERROR);

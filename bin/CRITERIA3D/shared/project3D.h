@@ -157,7 +157,7 @@
 
         bool interpolateHourlyMeteoVar(meteoVariable myVar, const QDateTime& myTime);
 
-        double assignEvaporation(int row, int col, double lai);
+        double assignEvaporation(int row, int col, double lai, int soilIndex);
         double assignTranspiration(int row, int col, double lai, double degreeDays);
 
         bool setSinkSource();
