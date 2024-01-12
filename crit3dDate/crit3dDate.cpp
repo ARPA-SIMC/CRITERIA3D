@@ -41,7 +41,7 @@ const long doyMonth[13] = {0, 31, 59, 90, 120, 151, 181, 212, 243, 273, 304, 334
 // index: 1 - 12
 int getDaysInMonth(int month, int year)
 {
-    if (month < 1 || month > 12) return NODATA;
+    if ((month < 1) || (month > 12)) return NODATA;
 
     if(month == 2 && isLeapYear(year))
         return 29;

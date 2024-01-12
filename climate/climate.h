@@ -4,9 +4,6 @@
     #ifndef METEO_H
         #include "meteo.h"
     #endif
-    #ifndef STATISTICS_H
-        #include "statistics.h"
-    #endif
     #ifndef DBMETEOPOINTS_H
         #include "dbMeteoPointsHandler.h"
     #endif
