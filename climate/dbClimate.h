@@ -5,6 +5,10 @@
         #include <QSqlDatabase>
     #endif
 
+    #ifndef _VECTOR_
+        #include <vector>
+    #endif
+
     bool saveDailyElab(QSqlDatabase db, QString *myError, QString id, std::vector<float> allResults, QString elab);
     bool saveDecadalElab(QSqlDatabase db, QString *myError, QString id, std::vector<float> allResults, QString elab);
     bool saveMonthlyElab(QSqlDatabase db, QString *myError, QString id, std::vector<float> allResults, QString elab);
