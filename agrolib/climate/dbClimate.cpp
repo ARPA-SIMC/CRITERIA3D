@@ -395,14 +395,14 @@ bool selectVarElab(QSqlDatabase db, QString *myError, QString table, QString var
     return found;
 }
 
-bool selectAllElab(QSqlDatabase db, QString *myError, QString table, QList<QString>* listElab)
+bool getClimateFieldsFromTable(QSqlDatabase db, QString *myError, QString climateTable, QList<QString>* fieldList)
 {
     QSqlQuery qry(db);
     QString elab;
 
     bool found = false;
 
-    QString statement = QString("SELECT DISTINCT elab from `%1` ").arg(table);
+    QString statement = QString("SELECT DISTINCT elab from `%1` ").arg(climateTable);
 
     qry.prepare(statement);
 
@@ -418,7 +418,7 @@ bool selectAllElab(QSqlDatabase db, QString *myError, QString table, QList<QStri
         {
             if (getValue(qry.value("elab"), &elab))
             {
-                listElab->append(elab);
+                fieldList->append(elab);
                 found = true;
             }
             else
@@ -431,7 +431,7 @@ bool selectAllElab(QSqlDatabase db, QString *myError, QString table, QList<QStri
     return found;
 }
 
-bool showClimateTables(QSqlDatabase db, QString *myError, QList<QString>* climateTables)
+bool getClimateTables(QSqlDatabase db, QString *myError, QList<QString>* climateTables)
 {
     QSqlQuery qry(db);
     QString table;

@@ -574,7 +574,7 @@ bool PragaProject::showClimateFields(bool isMeteoGrid, QList<QString>* climateDb
     }
     QList<QString> climateTables;
 
-    if ( !showClimateTables(db, &errorString, &climateTables) )
+    if ( !getClimateTables(db, &errorString, &climateTables) )
     {
         errorString = "No climate tables";
         return false;
@@ -583,7 +583,7 @@ bool PragaProject::showClimateFields(bool isMeteoGrid, QList<QString>* climateDb
     {
         for (int i=0; i < climateTables.size(); i++)
         {
-            selectAllElab(db, &errorString, climateTables[i], climateDbElab);
+            getClimateFieldsFromTable(db, &errorString, climateTables[i], climateDbElab);
         }
         if (climateDbElab->isEmpty())
         {
@@ -1316,14 +1316,12 @@ bool PragaProject::downloadDailyDataArkimet(QList<QString> variables, bool prec0
         return false;
     }
 
-    int index, nrPoints = 0;
+    int index = 0;
     bool isSelection = isSelectionPointsActive(meteoPoints, nrMeteoPoints);
     for( int i=0; i < nrMeteoPoints; i++ )
     {
         if (!isSelection || meteoPoints[i].selected)
         {
-            nrPoints ++;
-
             id = QString::fromStdString(meteoPoints[i].id);
             dataset = QString::fromStdString(meteoPoints[i].dataset);
 
@@ -1398,7 +1396,7 @@ bool PragaProject::downloadHourlyDataArkimet(QList<QString> variables, QDate sta
         }
     }
 
-    int index, nrPoints = 0;
+    int index = 0;
     QString id, dataset;
     QList<QString> datasetList;
     QList<QList<QString>> idList;
@@ -1408,8 +1406,6 @@ bool PragaProject::downloadHourlyDataArkimet(QList<QString> variables, QDate sta
     {
         if (!isSelection || meteoPoints[i].selected)
         {
-            nrPoints ++;
-
             id = QString::fromStdString(meteoPoints[i].id);
             dataset = QString::fromStdString(meteoPoints[i].dataset);
 
@@ -3634,7 +3630,43 @@ bool PragaProject::removeGriddingTask(QDateTime dateCreation, QString user, QDat
     return true;
 }
 
-bool PragaProject::computeClimaFromXMLSaveOnDB(QString xmlName)
+bool PragaProject::cleanClimatePoint()
+{
+
+    QSqlDatabase db;
+
+    if (this->meteoPointsDbHandler == nullptr)
+    {
+        errorString = "Load meteo points";
+        return false;
+    }
+    db = this->meteoPointsDbHandler->getDb();
+
+    QList<QString> climateTables;
+    QList<QString> climateFields;
+
+    unsigned i,j;
+
+    if (getClimateTables(db, &errorString, &climateTables) )
+    {
+        for (i=0; i < climateTables.size(); i++)
+        {
+            climateFields.clear();
+            getClimateFieldsFromTable(db, &errorString, climateTables[i], &climateFields);
+
+            if (! climateFields.isEmpty())
+            {
+                for (j=0; j < climateFields.size(); j++)
+                    if (! deleteElab(db, &errorString, climateTables[i].toLower(), climateFields[j]))
+                        return false;
+            }
+        }
+    }
+
+    return true;
+}
+
+bool PragaProject::computeClimatePointXML(QString xmlName)
 {
 
     Crit3DElabList *listXMLElab = new Crit3DElabList();

@@ -1091,7 +1091,7 @@ void DialogMeteoComputation::readParameter(int state)
         climateDbElabList.setVisible(true);
         adjustSize();
         QList<QString> climateTables;
-        if (! showClimateTables(myProject.clima->db(), &myError, &climateTables) )
+        if (! getClimateTables(myProject.clima->db(), &myError, &climateTables) )
         {
             climateDbElabList.addItem("No saved elaborations found");
         }

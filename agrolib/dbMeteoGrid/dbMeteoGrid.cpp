@@ -1262,8 +1262,8 @@ bool Crit3DMeteoGridDbHandler::newCellProperties(QString *myError)
     QSqlQuery qry(_db);
     QString table = "CellsProperties";
     QString statement = QString("CREATE TABLE `%1`"
-                                "(`Code` varchar(6) NOT NULL PRIMARY KEY, `SecondaryCode` TEXT, `Name` TEXT, "
-                                "`Notes` TEXT, `Row` INT, `Col` INT, `X` DOUBLE(16,2) DEFAULT 0.00, `Y` DOUBLE(16,2) DEFAULT 0.00, `Height` DOUBLE(16,2) DEFAULT 0.00, `Active` INT)").arg(table);
+                                "(`Code` varchar(6) NOT NULL PRIMARY KEY, `Name` varchar(50), "
+                                "`Row` INT, `Col` INT, `X` DOUBLE(16,2) DEFAULT 0.00, `Y` DOUBLE(16,2) DEFAULT 0.00, `Height` DOUBLE(16,2) DEFAULT 0.00, `Active` INT)").arg(table);
 
     if( !qry.exec(statement) )
     {

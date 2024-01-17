@@ -16,6 +16,7 @@ QList<QString> getPragaCommandList()
     cmdList.append("Download        | Download");
     cmdList.append("AggrOnZones     | GridAggregationOnZones");
     cmdList.append("ComputeClimate  | ComputeClimaFromXMLSaveOnDB");
+    cmdList.append("CleanClimate    | CleanClimate");
     cmdList.append("Drought         | ComputeDroughtIndexGrid");
     cmdList.append("DroughtPoint    | ComputeDroughtIndexPoint");
     cmdList.append("GridAggr        | GridAggregation");
@@ -123,7 +124,12 @@ int PragaProject::executePragaCommand(QList<QString> argumentList, bool* isComma
     else if (command == "CLIMATE" || command == "COMPUTECLIMATE")
     {
         *isCommandFound = true;
-        return cmdComputeClimaFromXMLSaveOnDB(this, argumentList);
+        return cmdComputeClimatePointsXML(this, argumentList);
+    }
+    else if (command == "CLEANCLIM" || command == "CLEANCLIMATE")
+    {
+        *isCommandFound = true;
+        return cmdCleanClimatePoint(this);
     }
     else if (command == "DROUGHTINDEXPOINT" || command == "DROUGHTPOINT")
     {
@@ -940,7 +946,7 @@ int pragaShell(PragaProject* myProject)
         return true;
     }
     */
-    int cmdComputeClimaFromXMLSaveOnDB(PragaProject* myProject, QList<QString> argumentList)
+    int cmdComputeClimatePointsXML(PragaProject* myProject, QList<QString> argumentList)
     {
         if (argumentList.size() < 2)
         {
@@ -949,7 +955,17 @@ int pragaShell(PragaProject* myProject)
         }
 
         QString xmlName = myProject->getCompleteFileName(argumentList.at(1), PATH_PROJECT);
-        if (!myProject->computeClimaFromXMLSaveOnDB(xmlName))
+        if (!myProject->computeClimatePointXML(xmlName))
+        {
+            return PRAGA_ERROR;
+        }
+
+        return PRAGA_OK;
+    }
+
+    int cmdCleanClimatePoint(PragaProject* myProject)
+    {
+        if (!myProject->cleanClimatePoint())
         {
             return PRAGA_ERROR;
         }

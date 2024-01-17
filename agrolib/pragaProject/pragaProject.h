@@ -152,7 +152,8 @@
         bool getGriddingTasks(std::vector<QDateTime> &timeCreation, std::vector<QDate> &dateStart, std::vector<QDate> &dateEnd,
                                                         std::vector<QString> &users, std::vector<QString> &notes);
         bool removeGriddingTask(QDateTime dateCreation, QString user, QDate dateStart, QDate dateEnd);
-        bool computeClimaFromXMLSaveOnDB(QString xmlName);
+        bool computeClimatePointXML(QString xmlName);
+        bool cleanClimatePoint();
         bool saveLogProceduresGrid(QString nameProc, QDate date);
 
         #ifdef NETCDF
