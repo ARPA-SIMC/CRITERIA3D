@@ -455,7 +455,7 @@ bool Crit3DCrop::dailyUpdate(const Crit3DDate &myDate, double latitude, const st
         double dailyDD = getDailyDegreeIncrease(tmin, tmax, currentDoy);
         if (isEqual(dailyDD, NODATA))
         {
-            myError = "Error in computing degree dyas for " + myDate.toStdString();
+            myError = "Error in computing degree days for " + myDate.toStdString();
             return false;
         }
         degreeDays += dailyDD;

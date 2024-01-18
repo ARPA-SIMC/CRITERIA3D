@@ -396,6 +396,7 @@ bool loadSoil(const QSqlDatabase &dbSoil, const QString &soilCode, soil::Crit3DS
         }
 
         mySoil.totalDepth = mySoil.horizon[mySoil.nrHorizons-1].lowerDepth;
+
     }
     else
     {
