@@ -57,7 +57,7 @@ bool Crit3DMeteoGridDbHandler::parseXMLGrid(QString xmlFileName, QString *myErro
 
     QDomDocument xmlDoc;
 
-    if (!parseXMLFile(xmlFileName, &xmlDoc, myError)) return false;
+    if (! parseXMLFile(xmlFileName, &xmlDoc, myError)) return false;
 
     QDomNode child;
     QDomNode secondChild;
@@ -73,12 +73,12 @@ bool Crit3DMeteoGridDbHandler::parseXMLGrid(QString xmlFileName, QString *myErro
     _tableHourly.exists = false;
     _tableMonthly.exists = false;
 
-    while(!ancestor.isNull())
+    while(! ancestor.isNull())
     {
         if (ancestor.toElement().tagName().toUpper() == "CONNECTION")
         {
             child = ancestor.firstChild();
-            while( !child.isNull())
+            while(! child.isNull())
             {
                 myTag = child.toElement().tagName().toUpper();
                 if (myTag == "PROVIDER")
@@ -529,7 +529,6 @@ bool Crit3DMeteoGridDbHandler::parseXMLGrid(QString xmlFileName, QString *myErro
             *myError = oor.what() + errMess;
         }
     }
-
 
     _meteoGrid->setGridStructure(_gridStructure);
 
@@ -1718,9 +1717,15 @@ bool Crit3DMeteoGridDbHandler::loadGridDailyData(QString &myError, const QString
     int numberOfDays = firstDate.daysTo(lastDate) + 1;
     _meteoGrid->meteoPointPointer(row, col)->initializeObsDataD(numberOfDays, getCrit3DDate(firstDate));
 
-    if (firstDate > _lastDailyDate || lastDate < _firstDailyDate)
+    if (_firstDailyDate.isValid() && _lastDailyDate.isValid())
     {
-        return false;
+        if (_firstDailyDate.year() != 1800 && _lastDailyDate.year() != 1800)
+        {
+            if (firstDate > _lastDailyDate || lastDate < _firstDailyDate)
+            {
+                return false;
+            }
+        }
     }
 
     QSqlQuery qry(_db);

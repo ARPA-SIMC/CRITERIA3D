@@ -585,7 +585,7 @@ void Criteria1DWidget::on_actionOpenProject()
 
     openCropDB(myProject.dbCropName);
     openSoilDB(myProject.dbSoilName);
-    openMeteoDB(myProject.dbMeteoName);
+    openMeteoDB(myProject.dbMeteoName, false);
 
     this->cropListComboBox.blockSignals(false);
     this->soilListComboBox.blockSignals(false);
@@ -861,37 +861,40 @@ void Criteria1DWidget::openCropDB(QString newDbCropName)
 
 void Criteria1DWidget::on_actionOpenMeteoDB()
 {
-
     QString dbMeteoName = QFileDialog::getOpenFileName(this, tr("Open meteo database"), "", tr("SQLite files or XML (*.db *xml)"));
-    if (dbMeteoName == "")
-        return;
-    else
+    if (! dbMeteoName.isEmpty())
     {
         if (dbMeteoName.right(3) == "xml")
             myProject.isXmlMeteoGrid = true;
         else
             myProject.isXmlMeteoGrid = false;
-        openMeteoDB(dbMeteoName);
+
+        openMeteoDB(dbMeteoName, true);
     }
 }
 
 
-void Criteria1DWidget::openMeteoDB(QString dbMeteoName)
+void Criteria1DWidget::openMeteoDB(QString dbMeteoName, bool isMenu)
 {
     QString errorStr;
     QList<QString> idMeteoList;
     if (myProject.isXmlMeteoGrid)
     {
-        if (! myProject.observedMeteoGrid->parseXMLGrid(dbMeteoName, &errorStr))
+        if (isMenu)
         {
-            QMessageBox::critical(nullptr, "Error XML meteo grid", errorStr);
-            return;
+            if (! myProject.observedMeteoGrid->parseXMLGrid(dbMeteoName, &errorStr))
+            {
+                QMessageBox::critical(nullptr, "Error XML meteo grid", errorStr);
+                return;
+            }
+            if (! myProject.observedMeteoGrid->openDatabase(&errorStr, "observed"))
+            {
+                QMessageBox::critical(nullptr, "Error DB Grid", errorStr);
+                return;
+            }
         }
-        if (! myProject.observedMeteoGrid->openDatabase(&errorStr, "observed"))
-        {
-            QMessageBox::critical(nullptr, "Error DB Grid", errorStr);
-            return;
-        }
+
+        // check daily list
         if (! myProject.observedMeteoGrid->idDailyList(&errorStr, &idMeteoList))
         {
             QMessageBox::critical(nullptr, "Error daily table list", errorStr);
@@ -900,10 +903,13 @@ void Criteria1DWidget::openMeteoDB(QString dbMeteoName)
     }
     else
     {
-        if (! openDbMeteo(dbMeteoName, myProject.dbMeteo, errorStr))
+        if (isMenu)
         {
-            QMessageBox::critical(nullptr, "Error DB meteo", errorStr);
-            return;
+            if (! openDbMeteo(dbMeteoName, myProject.dbMeteo, errorStr))
+            {
+                QMessageBox::critical(nullptr, "Error DB meteo", errorStr);
+                return;
+            }
         }
 
         // read id_meteo list
@@ -1226,6 +1232,7 @@ void Criteria1DWidget::on_actionChooseMeteo(QString idMeteo)
     {
         return;
     }
+
     // clear prev year list
     this->firstYearListComboBox.blockSignals(true);
     this->lastYearListComboBox.blockSignals(true);
@@ -1299,16 +1306,18 @@ void Criteria1DWidget::on_actionChooseMeteo(QString idMeteo)
             // last year can be incomplete
             for (int i = 0; i < yearList.size()-1; i++)
             {
-                    if ( !checkYearMeteoGrid(myProject.observedMeteoGrid->db(), meteoTableName, myProject.observedMeteoGrid->tableDaily().fieldTime, varCodeTmin, varCodeTmax, varCodePrec, yearList[i], &errorStr))
+                    if (! checkYearMeteoGrid(myProject.observedMeteoGrid->db(), meteoTableName, myProject.observedMeteoGrid->tableDaily().fieldTime,
+                                        varCodeTmin, varCodeTmax, varCodePrec, yearList[i], errorStr))
                     {
                         yearList.removeAt(pos);
-                        i = i - 1;
+                        i--;
                     }
                     else
                     {
-                        pos = pos + 1;
+                        pos++;
                     }
              }
+
             // store last Date
             getLastDateGrid(myProject.dbMeteo, meteoTableName, myProject.observedMeteoGrid->tableDaily().fieldTime, yearList[yearList.size()-1], &myProject.lastSimulationDate, &errorStr);
         }
@@ -1363,12 +1372,11 @@ void Criteria1DWidget::on_actionChooseMeteo(QString idMeteo)
     {
         if (yearList[i].toInt() == yearList[i-1].toInt()+1)
         {
-            this->firstYearListComboBox.addItem(yearList[i]);
+            firstYearListComboBox.addItem(yearList[i]);
         }
     }
 
     this->lastYearListComboBox.blockSignals(false);
-
 }
 
 
@@ -1376,6 +1384,7 @@ void Criteria1DWidget::on_actionChooseFirstYear(QString year)
 {
     this->lastYearListComboBox.blockSignals(true);
     this->lastYearListComboBox.clear();
+
     // add first year
     this->lastYearListComboBox.addItem(year);
     int index = yearList.indexOf(year);
@@ -1392,6 +1401,7 @@ void Criteria1DWidget::on_actionChooseFirstYear(QString year)
             break;
         }
     }
+
     updateMeteoPointValues();
     this->lastYearListComboBox.blockSignals(false);
 }
@@ -1407,17 +1417,19 @@ void Criteria1DWidget::on_actionChooseLastYear(QString year)
         this->lastYearListComboBox.setCurrentText(QString::number(maxYear));
         return;
     }
+
     updateMeteoPointValues();
 }
 
 
-void Criteria1DWidget::updateMeteoPointValues()
+bool Criteria1DWidget::updateMeteoPointValues()
 {
     QString errorStr;
 
-    // init meteoPoint with all years asked
+    // initialize meteoPoint with all the required years
     int firstYear = this->firstYearListComboBox.currentText().toInt() - 1;
     int lastYear = this->lastYearListComboBox.currentText().toInt();
+
     QDate firstDate(firstYear, 1, 1);
     QDate lastDate(lastYear, 1, 1);
     QDate myDate = firstDate;
@@ -1427,26 +1439,26 @@ void Criteria1DWidget::updateMeteoPointValues()
         numberDays = numberDays + unsigned(myDate.daysInYear());
         myDate.setDate(myDate.year()+1, 1, 1);
     }
+
     myProject.myCase.meteoPoint.initializeObsDataD(numberDays, getCrit3DDate(firstDate));
 
     if (myProject.isXmlMeteoGrid)
     {
-        unsigned row;
-        unsigned col;
-        if (!myProject.observedMeteoGrid->meteoGrid()->findMeteoPointFromId(&row, &col, myProject.myCase.meteoPoint.id) )
+        unsigned row, col;
+        if (! myProject.observedMeteoGrid->meteoGrid()->findMeteoPointFromId(&row, &col, myProject.myCase.meteoPoint.id))
         {
             errorStr = "Missing observed meteo cell";
             QMessageBox::critical(nullptr, "Error!", errorStr);
-            return;
+            return false;
         }
 
-        if (!myProject.observedMeteoGrid->gridStructure().isFixedFields())
+        if (! myProject.observedMeteoGrid->gridStructure().isFixedFields())
         {
-            if (!myProject.observedMeteoGrid->loadGridDailyData(errorStr, QString::fromStdString(myProject.myCase.meteoPoint.id), firstDate, QDate(lastDate.year(),12,31)))
+            if (! myProject.observedMeteoGrid->loadGridDailyData(errorStr, QString::fromStdString(myProject.myCase.meteoPoint.id), firstDate, QDate(lastDate.year(),12,31)))
             {
                 errorStr = "Missing observed data";
                 QMessageBox::critical(nullptr, "Error!", errorStr);
-                return;
+                return false;
             }
         }
         else
@@ -1455,10 +1467,12 @@ void Criteria1DWidget::updateMeteoPointValues()
             {
                 errorStr = "Missing observed data";
                 QMessageBox::critical(nullptr, "Error!", errorStr);
-                return;
+                return false;
             }
         }
+
         float tmin, tmax, tavg, prec, waterDepth;
+
         for (int i = 0; i < (firstDate.daysTo(QDate(lastDate.year(), 12, 31)) + 1); i++)
         {
             Crit3DDate myDate = getCrit3DDate(firstDate.addDays(i));
@@ -1481,6 +1495,7 @@ void Criteria1DWidget::updateMeteoPointValues()
             waterDepth = myProject.observedMeteoGrid->meteoGrid()->meteoPointPointer(row, col)->getMeteoPointValueD(myDate, dailyWaterTableDepth);
             myProject.myCase.meteoPoint.setMeteoPointValueD(myDate, dailyWaterTableDepth, waterDepth);
         }
+
         if (isOnlyOneYear)
         {
             // copy values to prev years
@@ -1502,10 +1517,10 @@ void Criteria1DWidget::updateMeteoPointValues()
     {
         if (isOnlyOneYear)
         {
-            if (!fillDailyTempPrecCriteria1D(&(myProject.dbMeteo), meteoTableName, &(myProject.myCase.meteoPoint), lastYear, &errorStr))
+            if (! fillDailyTempPrecCriteria1D(&(myProject.dbMeteo), meteoTableName, &(myProject.myCase.meteoPoint), lastYear, &errorStr))
             {
                 QMessageBox::critical(nullptr, "Error! ", errorStr + " year: " + QString::number(lastYear));
-                return;
+                return false;
             }
             // copy values to previous year
             Crit3DDate myDate = getCrit3DDate(lastDate);
@@ -1531,16 +1546,18 @@ void Criteria1DWidget::updateMeteoPointValues()
                                                  &(myProject.myCase.meteoPoint), year, &errorStr))
                 {
                     QMessageBox::critical(nullptr, "Error! ", errorStr + " year: " + QString::number(year));
-                    return;
+                    return false;
                 }
             }
         }
     }
 
-    if (!myProject.myCase.crop.idCrop.empty())
+    if (! myProject.myCase.crop.idCrop.empty())
     {
         on_actionUpdate();
     }
+
+    return true;
 }
 
 
@@ -2159,11 +2176,13 @@ bool Criteria1DWidget::setMeteoSqlite(QString& errorStr)
 
 void Criteria1DWidget::on_actionViewWeather()
 {
-    QString errorStr;
-    if (!setMeteoSqlite(errorStr))
+    if (! myProject.isXmlMeteoGrid)
     {
-        QMessageBox::critical(nullptr, "ERROR!", errorStr);
-        return;
+        if (! setMeteoSqlite(myProject.projectError))
+        {
+            QMessageBox::critical(nullptr, "ERROR!", myProject.projectError);
+            return;
+        }
     }
 
     Crit3DMeteoWidget* meteoWidgetPoint = new Crit3DMeteoWidget(myProject.isXmlMeteoGrid, myProject.path, &meteoSettings);
