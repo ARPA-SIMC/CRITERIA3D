@@ -612,7 +612,7 @@ void PragaProject::readClimate(bool isMeteoGrid, QString climateSelected, int cl
     QString infoStr;
 
     QSqlDatabase db;
-    QList<float> results;
+    float result;
 
     Crit3DClimateList climateList;
     QList<QString> climate;
@@ -663,15 +663,14 @@ void PragaProject::readClimate(bool isMeteoGrid, QString climateSelected, int cl
                 if (meteoGridDbHandler->meteoGrid()->getMeteoPointActiveId(row, col, &id))
                 {
                     Crit3DMeteoPoint* meteoPoint = meteoGridDbHandler->meteoGrid()->meteoPointPointer(row,col);
-                    results = readElab(db, table.toLower(), QString::fromStdString(meteoPoint->id), climateSelected, &errorString);
-                    if (results.size() < climateIndex)
+                    if (climateIndex != NODATA)
                     {
-                        meteoPoint->climate = NODATA;
+                        result = readElab(db, table.toLower(), climateIndex, QString::fromStdString(meteoPoint->id), climateSelected, &errorString);
+                        meteoPoint->climate = result;
                     }
                     else
                     {
-                        float value = results[climateIndex-1];
-                        meteoPoint->climate = value;
+                        meteoPoint->climate = NODATA;
                     }
                 }
              }
@@ -695,16 +694,15 @@ void PragaProject::readClimate(bool isMeteoGrid, QString climateSelected, int cl
                     updateProgressBar(i);
                 }
                 QString id = QString::fromStdString(meteoPoints[i].id);
-                results = readElab(db, table.toLower(), id, climateSelected, &errorString);
-                if (results.size() < climateIndex)
+                if (climateIndex == NODATA)
                 {
                     errorString = "climate index error";
                     meteoPoints[i].climate = NODATA;
                 }
                 else
                 {
-                    float value = results[climateIndex-1];
-                    meteoPoints[i].climate = value;
+                    result = readElab(db, table.toLower(), climateIndex, id, climateSelected, &errorString);
+                    meteoPoints[i].climate = result;
                 }
             }
         }
