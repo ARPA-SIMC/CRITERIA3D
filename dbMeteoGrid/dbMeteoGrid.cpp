@@ -3466,6 +3466,30 @@ bool Crit3DMeteoGridDbHandler::saveCellCurrentGridHourlyFF(QString& errorStr, QS
 }
 
 
+bool Crit3DMeteoGridDbHandler::isDaily()
+{
+    if ( ! _firstDailyDate.isValid() || _firstDailyDate.year() == 1800
+        || ! _lastDailyDate.isValid() || _lastDailyDate.year() == 1800 )
+    {
+        return false;
+    }
+
+    return true;
+}
+
+
+bool Crit3DMeteoGridDbHandler::isHourly()
+{
+    if ( ! _firstHourlyDate.isValid() || _firstHourlyDate.year() == 1800
+        || ! _lastHourlyDate.isValid() || _lastHourlyDate.year() == 1800 )
+    {
+        return false;
+    }
+
+    return true;
+}
+
+
 QDate Crit3DMeteoGridDbHandler::getFirstDailyDate() const
 {
     if (_firstDailyDate.year() == 1800)

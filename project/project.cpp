@@ -3172,6 +3172,7 @@ void Project::importHourlyMeteoData(const QString& csvFileName, bool importAllFi
     }
 }
 
+
 void Project::showMeteoWidgetPoint(std::string idMeteoPoint, std::string namePoint, bool isAppend)
 {
     logInfoGUI("Loading data...");
@@ -3243,7 +3244,10 @@ void Project::showMeteoWidgetPoint(std::string idMeteoPoint, std::string namePoi
         meteoPointsDbHandler->loadDailyData(getCrit3DDate(firstDaily), getCrit3DDate(lastDaily), &mp);
         meteoPointsDbHandler->loadHourlyData(getCrit3DDate(firstHourly.date()), getCrit3DDate(lastHourly.date()), &mp);
 
-        meteoWidgetPoint->setDateInterval(firstDate, lastDate);
+        // TODO add check on hourly
+        meteoWidgetPoint->setDateIntervalDaily(firstDate, lastDate);
+        meteoWidgetPoint->setDateIntervalHourly(firstDate, lastDate);
+
         meteoWidgetPoint->setCurrentDate(this->currentDate);
         meteoWidgetPoint->draw(mp, isAppend);
     }
@@ -3327,7 +3331,14 @@ void Project::showMeteoWidgetGrid(std::string idCell, bool isAppend)
             int nMembers = meteoGridDbHandler->gridStructure().nrMembers();
             if (meteoGridDbHandler->meteoGrid()->findMeteoPointFromId(&row,&col,idCell))
             {
-                meteoWidgetGrid->setDateInterval(firstDate, lastDate);
+                if (meteoGridDbHandler->isDaily())
+                {
+                    meteoWidgetGrid->setDateIntervalDaily(firstDate, lastDate);
+                }
+                if (meteoGridDbHandler->isHourly())
+                {
+                    meteoWidgetGrid->setDateIntervalHourly(firstDate, lastDate);
+                }
             }
             else
             {
@@ -3359,7 +3370,15 @@ void Project::showMeteoWidgetGrid(std::string idCell, bool isAppend)
             unsigned col;
             if (meteoGridDbHandler->meteoGrid()->findMeteoPointFromId(&row,&col,idCell))
             {
-                meteoWidgetGrid->setDateInterval(firstDate, lastDate);
+                if (meteoGridDbHandler->isDaily())
+                {
+                    meteoWidgetGrid->setDateIntervalDaily(firstDate, lastDate);
+                }
+                if (meteoGridDbHandler->isHourly())
+                {
+                    meteoWidgetGrid->setDateIntervalHourly(firstDate, lastDate);
+                }
+
                 meteoWidgetGrid->draw(meteoGridDbHandler->meteoGrid()->meteoPoint(row,col), isAppend);
             }
         }

@@ -168,6 +168,9 @@
         QDate getFirsMonthlytDate() const;
         QDate getLastMonthlyDate() const;
 
+        bool isDaily();
+        bool isHourly();
+
         bool saveLogProcedures(QString *myError, QString nameProc, QDate date);
 
     private:
