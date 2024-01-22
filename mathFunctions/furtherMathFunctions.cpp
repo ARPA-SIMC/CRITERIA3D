@@ -1002,21 +1002,12 @@ namespace interpolation
 
     double computeWeighted_StandardError(const std::vector<double>& observed, const std::vector<double>& predicted, const std::vector<double>& weights, int nrPredictors)
     {
-        // This function computes the weighted R-squared (coefficient of determination)
+        // This function computes the standard Error
         double sum_weighted_squared_residuals = 0.0;
-        double sum_weighted_squared_total = 0.0;
-        double weighted_mean_observed = 0.0;
+        //double sum_weighted_squared_total = 0.0;
+        //double weighted_mean_observed = 0.0;
 
-        // Calculate the weighted mean of the observed values
-        double sum_weights = 0.0;
-        for (int i = 0; i < observed.size(); i++)
-        {
-            weighted_mean_observed += observed[i] * weights[i];
-            sum_weights += weights[i];
-        }
-        weighted_mean_observed /= sum_weights;
 
-        // Calculate the sums needed for weighted R-squared calculation
         for (int i = 0; i < observed.size(); i++)
         {
             double weighted_residual = weights[i] * (observed[i] - predicted[i]);
@@ -1027,7 +1018,8 @@ namespace interpolation
             standardError = sqrt(sum_weighted_squared_residuals/(observed.size()-nrPredictors-1));
         else
             standardError = sqrt(sum_weighted_squared_residuals/(observed.size()-1));
-        return 0;
+
+        return standardError;
     }
 
 
