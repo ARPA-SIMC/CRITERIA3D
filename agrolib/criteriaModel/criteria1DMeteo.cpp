@@ -502,11 +502,12 @@ bool getLastDateGrid(QSqlDatabase dbMeteo, QString table, QString fieldTime, QSt
 }
 
 
-bool checkYearMeteoGrid(QSqlDatabase dbMeteo, QString tableD, QString fieldTime, int varCodeTmin, int varCodeTmax, int varCodePrec, QString year, QString *error)
+bool checkYearMeteoGrid(const QSqlDatabase &dbMeteo, const QString &tableD, const QString &fieldTime,
+                        int varCodeTmin, int varCodeTmax, int varCodePrec, const QString &year, QString &error)
 {
     QSqlQuery qry(dbMeteo);
 
-    *error = "";
+    error = "";
 
     QString TMIN_MIN = "-50.0";
     QString TMIN_MAX = "40.0";
@@ -524,13 +525,13 @@ bool checkYearMeteoGrid(QSqlDatabase dbMeteo, QString tableD, QString fieldTime,
 
     if( !qry.exec(statement) )
     {
-        *error = qry.lastError().text();
+        error = qry.lastError().text();
         return false;
     }
     qry.first();
     if (! qry.isValid())
     {
-        *error = qry.lastError().text();
+        error = qry.lastError().text();
         return false;
     }
     int count;
@@ -542,7 +543,7 @@ bool checkYearMeteoGrid(QSqlDatabase dbMeteo, QString tableD, QString fieldTime,
     // 3 variables
     if (count/3 < (daysInYear-MAX_MISSING_TOT_DAYS))
     {
-        *error = "incomplete year, valid data missing more than MAX_MISSING_DAYS";
+        error = "incomplete year, valid data missing more than MAX_MISSING_DAYS";
         return false;
     }
 
@@ -552,14 +553,14 @@ bool checkYearMeteoGrid(QSqlDatabase dbMeteo, QString tableD, QString fieldTime,
                         "ORDER BY `%2`").arg(tableD, fieldTime, year).arg(varCodeTmin, varCodeTmax, varCodePrec);
     if( !qry.exec(statement) )
     {
-        *error = qry.lastError().text();
+        error = qry.lastError().text();
         return false;
     }
 
     qry.first();
     if (! qry.isValid())
     {
-        *error = qry.lastError().text();
+        error = qry.lastError().text();
         return false;
     }
 
@@ -594,13 +595,13 @@ bool checkYearMeteoGrid(QSqlDatabase dbMeteo, QString tableD, QString fieldTime,
             // 2 days missing
             if (previousDateTmin.daysTo(date) > (MAX_MISSING_CONSECUTIVE_DAYS_T+1))
             {
-                *error = "incomplete year, missing more than 1 consecutive days";
+                error = "incomplete year, missing more than 1 consecutive days";
                 return false;
             }
             // 1 day missing, the next one invalid temp
             if ( (previousDateTmin.daysTo(date) == (MAX_MISSING_CONSECUTIVE_DAYS_T+1)) && (tmin < tmin_min || tmin > tmin_max) )
             {
-                *error = "incomplete year, missing valid data (temp) more than 1 consecutive days";
+                error = "incomplete year, missing valid data (temp) more than 1 consecutive days";
                 return false;
             }
             // no day missing, check valid temp
@@ -609,7 +610,7 @@ bool checkYearMeteoGrid(QSqlDatabase dbMeteo, QString tableD, QString fieldTime,
                 invalidTempMin = invalidTempMin + 1;
                 if (invalidTempMin > 1)
                 {
-                    *error = "incomplete year, missing valid data (temp) more than 1 consecutive days";
+                    error = "incomplete year, missing valid data (temp) more than 1 consecutive days";
                     return false;
                 }
             }
@@ -625,13 +626,13 @@ bool checkYearMeteoGrid(QSqlDatabase dbMeteo, QString tableD, QString fieldTime,
             // 2 days missing
             if (previousDateTmax.daysTo(date) > (MAX_MISSING_CONSECUTIVE_DAYS_T+1))
             {
-                *error = "incomplete year, missing more than 1 consecutive days";
+                error = "incomplete year, missing more than 1 consecutive days";
                 return false;
             }
             // 1 day missing, the next one invalid temp
             if ( (previousDateTmax.daysTo(date) == (MAX_MISSING_CONSECUTIVE_DAYS_T+1)) && (tmax < tmax_min || tmax > tmax_max) )
             {
-                *error = "incomplete year, missing valid data (temp) more than 1 consecutive days";
+                error = "incomplete year, missing valid data (temp) more than 1 consecutive days";
                 return false;
             }
             // no day missing, check valid temp
@@ -640,7 +641,7 @@ bool checkYearMeteoGrid(QSqlDatabase dbMeteo, QString tableD, QString fieldTime,
                 invalidTempMax = invalidTempMax + 1;
                 if (invalidTempMax > 1)
                 {
-                    *error = "incomplete year, missing valid data (temp) more than 1 consecutive days";
+                    error = "incomplete year, missing valid data (temp) more than 1 consecutive days";
                     return false;
                 }
             }
@@ -660,7 +661,7 @@ bool checkYearMeteoGrid(QSqlDatabase dbMeteo, QString tableD, QString fieldTime,
                 // 7 day missing, the next one invalid temp
                 if ( invalidPrec > MAX_MISSING_CONSECUTIVE_DAYS_PREC )
                 {
-                     *error = "incomplete year, missing valid data (prec) more than 7 consecutive days";
+                     error = "incomplete year, missing valid data (prec) more than 7 consecutive days";
                      return false;
                 }
             }
@@ -677,20 +678,20 @@ bool checkYearMeteoGrid(QSqlDatabase dbMeteo, QString tableD, QString fieldTime,
     // check last day (tempMin)
     if (date.daysTo(lastDate) > MAX_MISSING_CONSECUTIVE_DAYS_T || (date.daysTo(lastDate) == MAX_MISSING_CONSECUTIVE_DAYS_T && invalidTempMin > 0) )
     {
-        *error = "incomplete year, missing more than 1 consecutive days (tempMin)";
+        error = "incomplete year, missing more than 1 consecutive days (tempMin)";
         return false;
     }
     // check last day (tempMax)
     if (date.daysTo(lastDate) > MAX_MISSING_CONSECUTIVE_DAYS_T || (date.daysTo(lastDate) == MAX_MISSING_CONSECUTIVE_DAYS_T && invalidTempMax > 0) )
     {
-        *error = "incomplete year, missing more than 1 consecutive days (tempMax)";
+        error = "incomplete year, missing more than 1 consecutive days (tempMax)";
         return false;
     }
 
     // check last day (prec)
     if (date.daysTo(lastDate) > MAX_MISSING_CONSECUTIVE_DAYS_PREC || (date.daysTo(lastDate) + invalidPrec > MAX_MISSING_CONSECUTIVE_DAYS_PREC ) )
     {
-        *error = "incomplete year, missing more than 1 consecutive days (prec)";
+        error = "incomplete year, missing more than 1 consecutive days (prec)";
         return false;
     }
 

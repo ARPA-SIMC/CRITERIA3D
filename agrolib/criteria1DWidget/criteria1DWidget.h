@@ -49,7 +49,7 @@
             void on_actionViewWeather();
             void on_actionViewSoil();
             bool saveCrop();
-            void updateMeteoPointValues();
+            bool updateMeteoPointValues();
             void updateCropParam(QString idCrop);
             bool updateCrop();
             void updateTabLAI();
@@ -155,7 +155,7 @@
             void checkCropUpdate();
             void openComputationUnitsDB(QString dbComputationUnitsName);
             void openCropDB(QString dbCropName);
-            void openMeteoDB(QString dbMeteoName);
+            void openMeteoDB(QString dbMeteoName, bool isMenu);
             void openSoilDB(QString dbSoilName);
             bool setMeteoSqlite(QString &error);
     };

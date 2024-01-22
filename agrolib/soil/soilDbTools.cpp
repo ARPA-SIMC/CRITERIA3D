@@ -382,16 +382,21 @@ bool loadSoil(const QSqlDatabase &dbSoil, const QString &soilCode, soil::Crit3DS
     // errors on the last horizon is tolerated (bedrock)
     if (mySoil.nrHorizons > 0)
     {
-        int lastHorizonIndex = mySoil.nrHorizons-1;
         if (firstWrongIndex != NODATA)
         {
-            if (mySoil.nrHorizons == 1)
+            if (mySoil.nrHorizons == 1 || firstWrongIndex == 0)
+            {
                 return false;
+            }
             else
-                lastHorizonIndex = firstWrongIndex-1;
+            {
+                mySoil.nrHorizons = firstWrongIndex;
+                mySoil.horizon.resize(mySoil.nrHorizons);
+            }
         }
 
-        mySoil.totalDepth = mySoil.horizon[lastHorizonIndex].lowerDepth;
+        mySoil.totalDepth = mySoil.horizon[mySoil.nrHorizons-1].lowerDepth;
+
     }
     else
     {

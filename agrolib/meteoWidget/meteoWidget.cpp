@@ -382,13 +382,19 @@ Crit3DMeteoWidget::~Crit3DMeteoWidget()
 }
 
 
-void Crit3DMeteoWidget::setDateInterval(QDate first, QDate last)
+void Crit3DMeteoWidget::setDateIntervalDaily(QDate firstDate, QDate lastDate)
 {
-    firstDailyDate = first;
-    firstHourlyDate = first;
-    lastDailyDate = last;
-    lastHourlyDate = last;
+    firstDailyDate = firstDate;
+    lastDailyDate = lastDate;
 }
+
+
+void Crit3DMeteoWidget::setDateIntervalHourly(QDate firstDate, QDate lastDate)
+{
+    firstHourlyDate = firstDate;
+    lastHourlyDate = lastDate;
+}
+
 
 void Crit3DMeteoWidget::draw(Crit3DMeteoPoint mp, bool isAppend)
 {
@@ -556,11 +562,11 @@ void Crit3DMeteoWidget::resetValues()
                 QList<QString> elementsName = pointName.split(' ');
                 if (elementsName.size() == 1)
                 {
-                    pointName = elementsName[0].left(8);
+                    pointName = elementsName[0].left(10);
                 }
                 else
                 {
-                    pointName = elementsName[0].left(4)+elementsName[elementsName.size()-1].left(4);
+                    pointName = elementsName[0].left(5) + elementsName[elementsName.size()-1].left(5);
                 }
                 line->setName(QString::fromStdString(meteoPoints[mp].id)+"_"+pointName+"_"+nameLines[i]);
                 //QColor lineColor = colorLine[i];
@@ -597,11 +603,11 @@ void Crit3DMeteoWidget::resetValues()
                 QList<QString> elementsName = pointName.split(' ');
                 if (elementsName.size() == 1)
                 {
-                    pointName = elementsName[0].left(8);
+                    pointName = elementsName[0].left(10);
                 }
                 else
                 {
-                    pointName = elementsName[0].left(4)+elementsName[elementsName.size()-1].left(4);
+                    pointName = elementsName[0].left(5) + elementsName[elementsName.size()-1].left(5);
                 }
                 name = QString::fromStdString(meteoPoints[mp].id)+"_"+pointName+"_"+nameBar[i];
                 QBarSet* set = new QBarSet(name);
@@ -1175,6 +1181,18 @@ void Crit3DMeteoWidget::drawHourlyVar()
 {
     if (! isInitialized) return;
 
+    categories.clear();
+    categoriesVirtual.clear();
+    m_tooltip = new Callout(chart);
+    m_tooltip->hide();
+
+    if (! firstHourlyDate.isValid() || ! lastHourlyDate.isValid()
+        || firstHourlyDate.year() == 1800 || lastHourlyDate.year() == 1800)
+    {
+        // nothing to draw
+        return;
+    }
+
     FormInfo formInfo;
     formInfo.showInfo("Draw hourly data...");
 
@@ -1187,11 +1205,6 @@ void Crit3DMeteoWidget::drawHourlyVar()
 
     int nrDays = firstDate->date().daysTo(lastDate->date())+1;
     int nrValues = nrDays*24;
-
-    categories.clear();
-    categoriesVirtual.clear();
-    m_tooltip = new Callout(chart);
-    m_tooltip->hide();
 
     // virtual x axis
     int nrIntervals;

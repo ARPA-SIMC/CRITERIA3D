@@ -1183,7 +1183,7 @@ namespace soil
             i++;
         }
 
-        if (! isEqual(upperDepth,totalDepth))
+        if (! isEqual(upperDepth, totalDepth))
         {
             totalDepth = upperDepth;
         }

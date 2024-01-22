@@ -1000,6 +1000,28 @@ namespace interpolation
         return weighted_r_squared;
     }
 
+    double computeWeighted_StandardError(const std::vector<double>& observed, const std::vector<double>& predicted, const std::vector<double>& weights, int nrPredictors)
+    {
+        // This function computes the standard Error
+        double sum_weighted_squared_residuals = 0.0;
+        //double sum_weighted_squared_total = 0.0;
+        //double weighted_mean_observed = 0.0;
+
+
+        for (int i = 0; i < observed.size(); i++)
+        {
+            double weighted_residual = weights[i] * (observed[i] - predicted[i]);
+            sum_weighted_squared_residuals += weighted_residual * weighted_residual;
+        }
+        double standardError;
+        if (observed.size() > (nrPredictors+1))
+            standardError = sqrt(sum_weighted_squared_residuals/(observed.size()-nrPredictors-1));
+        else
+            standardError = sqrt(sum_weighted_squared_residuals/(observed.size()-1));
+
+        return standardError;
+    }
+
 
     int bestFittingMarquardt_nDimension(double (*func)(std::vector<std::function<double(double, std::vector<double>&)>>&, std::vector<double>& , std::vector <std::vector <double>>&),
                                         std::vector<std::function<double(double, std::vector<double>&)>>& myFunc,

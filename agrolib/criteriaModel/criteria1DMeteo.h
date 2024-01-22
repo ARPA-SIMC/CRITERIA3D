@@ -21,7 +21,8 @@
 
     bool checkYear(QSqlDatabase* dbMeteo, QString table, QString year, QString *error);
     bool checkYearMeteoGridFixedFields(QSqlDatabase dbMeteo, QString tableD, QString fieldTime, QString fieldTmin, QString fieldTmax, QString fieldPrec, QString year, QString *error);
-    bool checkYearMeteoGrid(QSqlDatabase dbMeteo, QString tableD, QString fieldTime, int varCodeTmin, int varCodeTmax, int varCodePrec, QString year, QString *error);
+    bool checkYearMeteoGrid(const QSqlDatabase &dbMeteo, const QString &tableD, const QString &fieldTime,
+                            int varCodeTmin, int varCodeTmax, int varCodePrec, const QString &year, QString &error);
 
     bool getLastDate(QSqlDatabase* dbMeteo, QString table, QString year, QDate* date, QString *error);
     bool getLastDateGrid(QSqlDatabase dbMeteo, QString table, QString fieldTime, QString year, QDate* date, QString *error);

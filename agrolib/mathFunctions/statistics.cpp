@@ -499,6 +499,81 @@ namespace statistics
         free(roots);
     }
 
+    void weightedMultiRegressionLinearWithoutConstantTerm(const std::vector <std::vector <float>> &x, std::vector <float> &y, const std::vector <float> &weight, long nrItems,std::vector <float> &m, int nrPredictors)
+    {
+        double** XT = (double**)calloc(nrPredictors, sizeof(double*));
+        double** X = (double**)calloc(nrItems, sizeof(double*));
+        double** X2 = (double**)calloc(nrPredictors, sizeof(double*));
+        double** X2Inverse = (double**)calloc(nrPredictors, sizeof(double*));
+        for (int i=0;i<nrPredictors;i++)
+        {
+            XT[i]= (double*)calloc(nrItems, sizeof(double));
+            X2[i]= (double*)calloc(nrItems, sizeof(double));
+            X2Inverse[i]= (double*)calloc(nrItems, sizeof(double));
+        }
+        for (int i=0;i<nrItems;i++)
+        {
+            X[i]= (double*)calloc(nrPredictors, sizeof(double));
+        }
+        for (int j=0;j<nrPredictors;j++)
+        {
+            for (int i=0;i<nrItems;i++)
+            {
+                    XT[j][i] = x[i][j];
+            }
+        }
+        matricial::transposedMatrix(XT,nrPredictors,nrItems,X);
+        for (int j=0;j<nrPredictors;j++)
+        {
+            for (int i =0; i<nrItems; i++)
+            {
+                X[i][j]= 1./weight[i]*X[i][j];
+            }
+        }
+        matricial::matrixProduct(XT,X,nrItems,nrPredictors,nrPredictors,nrItems,X2);
+        matricial::inverse(X2,X2Inverse,nrPredictors);
+        //matricial::matrixProduct(X2Inverse,XT,nrPredictors+1,nrPredictors+1,nrItems,nrPredictors+1,X);
+        for (int i=0;i<nrItems;i++)
+        {
+            y[i] /= weight[i];
+        }
+        double* roots = (double*)calloc(nrPredictors, sizeof(double));
+        for (int j=0;j<nrPredictors;j++)
+        {
+            roots[j]=0;
+            for (int i=0;i<nrItems;i++)
+            {
+                roots[j] += (XT[j][i]*y[i]);
+            }
+        }
+        for (int j=0;j<nrPredictors;j++)
+        {
+            m[j]=0;
+        }
+        for (int j=0;j<nrPredictors;j++)
+        {
+            for (int i=0;i<nrPredictors;i++)
+            {
+                m[j] += float(X2Inverse[j][i]*roots[i]);
+            }
+        }
+        for (int j=0;j<nrPredictors;j++)
+        {
+            free(XT[j]);
+            free(X2[j]);
+            free(X2Inverse[j]);
+        }
+        for (int i=0;i<nrItems;i++)
+        {
+            free(X[i]);
+        }
+        free(X);
+        free(XT);
+        free(X2);
+        free(X2Inverse);
+        free(roots);
+    }
+
     void multiRegressionLinear(float** x,  float* y, long nrItems,float* q,float* m, int nrPredictors)
     {
         double* SUMx;
