@@ -3273,12 +3273,13 @@ void Project::showMeteoWidgetGrid(std::string idCell, bool isAppend)
     if (meteoGridDbHandler->gridStructure().isEnsemble())
     {
         isAppend = false;
-        logInfoGUI("meteo grid is ensemble: append mode is not possible, a new widget is opening");
+        logInfoGUI("Meteo grid is ensemble: append mode is not possible, a new widget is opening.");
     }
 
     if (isAppend)
     {
-        logInfoGUI("Loading data...");
+        logInfoGUI("Loading data...\n");
+
         if (!meteoGridDbHandler->gridStructure().isFixedFields())
         {
             meteoGridDbHandler->loadGridDailyData(errorString, QString::fromStdString(idCell), firstDate, lastDate);
@@ -3304,7 +3305,7 @@ void Project::showMeteoWidgetGrid(std::string idCell, bool isAppend)
         }
         return;
     }
-    else if (!isAppend)
+    else
     {
         bool isGrid = true;
         Crit3DMeteoWidget* meteoWidgetGrid = new Crit3DMeteoWidget(isGrid, projectPath, meteoSettings);
@@ -3321,7 +3322,10 @@ void Project::showMeteoWidgetGrid(std::string idCell, bool isAppend)
         meteoWidgetGridList.append(meteoWidgetGrid);
 
         QObject::connect(meteoWidgetGrid, SIGNAL(closeWidgetGrid(int)), this, SLOT(deleteMeteoWidgetGrid(int)));
+
         logInfoGUI("Loading data...");
+        logInfoGUI("Loading data...");
+
         if (meteoGridDbHandler->gridStructure().isEnsemble())
         {
             meteoWidgetGrid->setIsEnsemble(true);
@@ -3366,8 +3370,8 @@ void Project::showMeteoWidgetGrid(std::string idCell, bool isAppend)
                 meteoGridDbHandler->loadGridHourlyDataFixedFields(errorString, QString::fromStdString(idCell), firstDateTime, lastDateTime);
             }
             closeLogInfo();
-            unsigned row;
-            unsigned col;
+
+            unsigned row, col;
             if (meteoGridDbHandler->meteoGrid()->findMeteoPointFromId(&row,&col,idCell))
             {
                 if (meteoGridDbHandler->isDaily())
@@ -3385,6 +3389,7 @@ void Project::showMeteoWidgetGrid(std::string idCell, bool isAppend)
         return;
     }
 }
+
 
 void Project::deleteMeteoWidgetPoint(int id)
 {
