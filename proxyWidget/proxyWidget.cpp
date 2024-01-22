@@ -51,7 +51,7 @@ Crit3DProxyWidget::Crit3DProxyWidget(Crit3DInterpolationSettings* interpolationS
     QHBoxLayout *selectionOptionEditLayout = new QHBoxLayout;
 
     detrended.setText("Detrended data");
-    climatologicalLR.setText("Climatological lapse rate");
+    climatologicalLR.setText("Climate lapserate");
     modelLR.setText("Model lapse rate");
     
     QLabel *r2Label = new QLabel(tr("R2"));
@@ -103,7 +103,8 @@ Crit3DProxyWidget::Crit3DProxyWidget(Crit3DInterpolationSettings* interpolationS
         }
         myVar = getKeyMeteoVarMeteoMap(MapHourlyMeteoVarToString, comboVariable.currentText().toStdString());
     }
-    comboVariable.setSizeAdjustPolicy(QComboBox::AdjustToContents);
+    //comboVariable.setSizeAdjustPolicy(QComboBox::AdjustToContents);
+    comboVariable.setMinimumWidth(100);
     
     selectionChartLayout->addWidget(variableLabel);
     selectionChartLayout->addWidget(&comboVariable);
