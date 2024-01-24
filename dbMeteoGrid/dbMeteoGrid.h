@@ -112,7 +112,7 @@
         bool loadIdMeteoProperties(QString *myError, QString idMeteo);
         bool updateMeteoGridDate(QString &myError);
 
-        bool loadGridDailyData(QString &myError, const QString &meteoPoint, const QDate &firstDate, const QDate &lastDate);
+        bool loadGridDailyData(QString &myError, const QString &meteoPointId, const QDate &firstDate, const QDate &lastDate);
         bool loadGridDailyDataFixedFields(QString &myError, QString meteoPoint, QDate first, QDate last);
         bool loadGridDailyDataEnsemble(QString &myError, QString meteoPoint, int memberNr, QDate first, QDate last);
         bool loadGridHourlyData(QString &myError, QString meteoPoint, QDateTime firstDate, QDateTime lastDate);
@@ -158,7 +158,8 @@
         bool activeAllCells(QString *myError);
         bool setActiveStateCellsInList(QString *myError, QList<QString> idList, bool activeState);
 
-        bool exportDailyDataCsv(QString &errorStr, bool isTPrec, QDate firstDate, QDate lastDate, QString idListFileName, QString outputPath);
+        bool exportDailyDataCsv(QString &errorStr, bool isTPrec, meteoVariable variable,
+                                QDate firstDate, QDate lastDate, QString idListFileName, QString outputPath);
         bool MeteoGridToRasterFlt(double cellSize, const gis::Crit3DGisSettings &gisSettings, gis::Crit3DRasterGrid& myGrid);
 
         QDate getFirstDailyDate() const;
