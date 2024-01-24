@@ -50,6 +50,7 @@
     #define ERROR_STR_MISSING_DEM "Load a Digital Elevation Model (DEM) before."
     #define ERROR_STR_MISSING_PROJECT "Open a project before."
     #define ERROR_STR_MISSING_GRID "Load a meteo grid DB before."
+    #define ERROR_STR_MISSING_POINT_GRID "Load meteo Points or grid."
 
     class Crit3DMeteoWidget;
     class FormInfo;
