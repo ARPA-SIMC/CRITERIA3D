@@ -12,6 +12,7 @@ public:
     ~DialogComputeDroughtIndex();
 
     void indexClicked(QListWidgetItem* item);
+    void targetChange();
     void done(bool res);
     QString getIndex() const;
     int getYearFrom() const;
