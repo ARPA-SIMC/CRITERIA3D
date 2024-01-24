@@ -8,14 +8,14 @@ class DialogComputeDroughtIndex : public QDialog
 {
     Q_OBJECT
 public:
-    DialogComputeDroughtIndex(bool isMeteoGridLoaded, bool isMeteoPointLoaded, QDate myDatePointsFrom, QDate myDatePointsTo, QDate myDateGridFrom, QDate myDateGridTo);
+    DialogComputeDroughtIndex(bool isMeteoGridLoaded, bool isMeteoPointLoaded, int yearPointsFrom, int yearPointsTo, int yearGridFrom, int yearGridTo);
     ~DialogComputeDroughtIndex();
 
     void indexClicked(QListWidgetItem* item);
     void done(bool res);
     QString getIndex() const;
-    QDate getDateFrom() const;
-    QDate getDateTo() const;
+    int getYearFrom() const;
+    int getYearTo() const;
 
 private:
     bool isMeteoPointLoaded;
@@ -24,8 +24,8 @@ private:
     QRadioButton pointsButton;
     QRadioButton gridButton;
     QListWidget listIndex;
-    QDateEdit dateFrom;
-    QDateEdit dateTo;
+    QLineEdit yearFrom;
+    QLineEdit yearTo;
 };
 
 #endif // DIALOGCOMPUTEDROUGHTINDEX_H

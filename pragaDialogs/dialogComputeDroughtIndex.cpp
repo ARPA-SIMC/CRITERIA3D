@@ -1,6 +1,6 @@
 #include "dialogComputeDroughtIndex.h"
 
-DialogComputeDroughtIndex::DialogComputeDroughtIndex(bool isMeteoGridLoaded, bool isMeteoPointLoaded, QDate myDatePointsFrom, QDate myDatePointsTo, QDate myDateGridFrom, QDate myDateGridTo)
+DialogComputeDroughtIndex::DialogComputeDroughtIndex(bool isMeteoGridLoaded, bool isMeteoPointLoaded, int yearPointsFrom, int yearPointsTo, int yearGridFrom, int yearGridTo)
     : isMeteoGridLoaded(isMeteoGridLoaded), isMeteoPointLoaded(isMeteoPointLoaded)
 {
 
@@ -50,14 +50,18 @@ DialogComputeDroughtIndex::DialogComputeDroughtIndex(bool isMeteoGridLoaded, boo
     if (pointsButton.isChecked())
     {
         isMeteoGrid = false;
-        dateFrom.setDate(myDatePointsFrom);
-        dateTo.setDate(myDatePointsTo);
+        yearFrom.setText(QString::number(yearPointsFrom));
+        yearTo.setText(QString::number(yearPointsTo));
+        yearFrom.setValidator(new QIntValidator(yearPointsFrom, yearPointsTo));
+        yearTo.setValidator(new QIntValidator(yearPointsFrom, yearPointsTo));
     }
     else if (gridButton.isChecked())
     {
         isMeteoGrid = true;
-        dateFrom.setDate(myDateGridFrom);
-        dateTo.setDate(myDateGridTo);
+        yearFrom.setText(QString::number(yearGridFrom));
+        yearTo.setText(QString::number(yearGridTo));
+        yearFrom.setValidator(new QIntValidator(yearGridFrom, yearGridTo));
+        yearTo.setValidator(new QIntValidator(yearGridFrom, yearGridTo));
     }
 
     targetLayout.addWidget(&pointsButton);
@@ -65,16 +69,12 @@ DialogComputeDroughtIndex::DialogComputeDroughtIndex(bool isMeteoGridLoaded, boo
     targetGroupBox->setLayout(&targetLayout);
 
     mainLayout->addWidget(subTitleLabel);
-    QLabel *dateFromLabel = new QLabel(tr("Reference Period From"));
-    dateLayout->addWidget(dateFromLabel);
-    dateLayout->addWidget(&dateFrom);
-    QLabel *dateToLabel = new QLabel(tr("Reference Period To"));
-    dateLayout->addWidget(dateToLabel);
-    dateLayout->addWidget(&dateTo);
-
-
-    dateFrom.setDisplayFormat("dd.MM.yyyy");
-    dateTo.setDisplayFormat("dd.MM.yyyy");
+    QLabel *yearFromLabel = new QLabel(tr("Reference Start Year"));
+    dateLayout->addWidget(yearFromLabel);
+    dateLayout->addWidget(&yearFrom);
+    QLabel *yearToLabel = new QLabel(tr("Reference End Year"));
+    dateLayout->addWidget(yearToLabel);
+    dateLayout->addWidget(&yearTo);
 
     QLabel *variableLabel = new QLabel(tr("Drought Index: "));
     std::map<meteoVariable, std::string>::const_iterator it;
@@ -123,9 +123,9 @@ void DialogComputeDroughtIndex::done(bool res)
             QMessageBox::information(nullptr, "Missing drought index", "Select a drought index");
             return;
         }
-        if (dateFrom.date() > dateTo.date())
+        if (yearFrom.text().toInt() > yearTo.text().toInt())
         {
-            QMessageBox::information(nullptr, "Invalid interval", "First date should be <= last date ");
+            QMessageBox::information(nullptr, "Invalid interval", "First reference year should be <= last reference year ");
             return;
         }
         QDialog::done(QDialog::Accepted);
@@ -143,13 +143,13 @@ QString DialogComputeDroughtIndex::getIndex() const
     return listIndex.currentItem()->text();
 }
 
-QDate DialogComputeDroughtIndex::getDateFrom() const
+int DialogComputeDroughtIndex::getYearFrom() const
 {
-    return dateFrom.date();
+    return yearFrom.text().toInt();
 }
 
-QDate DialogComputeDroughtIndex::getDateTo() const
+int DialogComputeDroughtIndex::getYearTo() const
 {
-    return dateTo.date();
+    return yearTo.text().toInt();
 }
 
