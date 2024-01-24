@@ -88,6 +88,8 @@ DialogComputeDroughtIndex::DialogComputeDroughtIndex(bool isMeteoGridLoaded, boo
 
     connect(&buttonBox, &QDialogButtonBox::accepted, [=](){ this->done(true); });
     connect(&buttonBox, &QDialogButtonBox::rejected, [=](){ this->done(false); });
+    connect(&pointsButton, &QRadioButton::clicked, [=](){ this->targetChange(); });
+    connect(&gridButton, &QRadioButton::clicked, [=](){ this->targetChange(); });
     connect(&listIndex, &QListWidget::itemClicked, [=](QListWidgetItem* item){ this->indexClicked(item); });
 
     layoutOk->addWidget(&buttonBox);
@@ -112,6 +114,24 @@ void DialogComputeDroughtIndex::indexClicked(QListWidgetItem* item)
     Q_UNUSED(item);
 }
 
+void DialogComputeDroughtIndex::targetChange()
+{
+    if (pointsButton.isChecked())
+    {
+        isMeteoGrid = false;
+        yearFrom.setText(QString("%1").arg(yearPointsFrom));
+        yearTo.setText(QString("%1").arg(yearPointsTo));
+
+    }
+    else if (gridButton.isChecked())
+    {
+        isMeteoGrid = true;
+        yearFrom.setText(QString("%1").arg(yearGridFrom));
+        yearTo.setText(QString("%1").arg(yearGridTo));
+
+    }
+}
+
 void DialogComputeDroughtIndex::done(bool res)
 {
     if (res) // ok
@@ -126,7 +146,7 @@ void DialogComputeDroughtIndex::done(bool res)
             QMessageBox::information(nullptr, "Invalid interval", "First reference year should be <= last reference year ");
             return;
         }
-        if (pointsButton.isChecked())
+        if (!isMeteoGrid)
         {
             if (yearFrom.text().toInt() < yearPointsFrom || yearTo.text().toInt() > yearPointsTo)
             {
