@@ -559,7 +559,7 @@ namespace statistics
         *q=0;
         for (int j=0;j<nrPredictors;j++)
         {
-            m[j]=0;
+            m.push_back(0);
         }
         for (int i=0;i<nrPredictors+1;i++)
         {
