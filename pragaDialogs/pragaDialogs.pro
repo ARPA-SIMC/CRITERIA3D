@@ -36,6 +36,7 @@ SOURCES += \
     dialogCellSize.cpp \
     dialogClimateFields.cpp \
     dialogComputeData.cpp \
+    dialogComputeDroughtIndex.cpp \
     dialogDownloadMeteoData.cpp \
     dialogSelectDataset.cpp \
     dialogSeriesOnZones.cpp \
@@ -48,6 +49,7 @@ HEADERS += \
     dialogCellSize.h \
     dialogClimateFields.h \
     dialogComputeData.h \
+    dialogComputeDroughtIndex.h \
     dialogDownloadMeteoData.h \
     dialogSelectDataset.h \
     dialogSeriesOnZones.h \
