@@ -38,6 +38,7 @@ SOURCES += \
     dialogComputeData.cpp \
     dialogComputeDroughtIndex.cpp \
     dialogDownloadMeteoData.cpp \
+    dialogExportDataGrid.cpp \
     dialogSelectDataset.cpp \
     dialogSeriesOnZones.cpp \
     dialogShiftData.cpp \
@@ -51,6 +52,7 @@ HEADERS += \
     dialogComputeData.h \
     dialogComputeDroughtIndex.h \
     dialogDownloadMeteoData.h \
+    dialogExportDataGrid.h \
     dialogSelectDataset.h \
     dialogSeriesOnZones.h \
     dialogShiftData.h \

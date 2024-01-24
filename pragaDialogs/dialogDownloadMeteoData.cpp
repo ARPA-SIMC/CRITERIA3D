@@ -88,19 +88,25 @@ DialogDownloadMeteoData::DialogDownloadMeteoData()
     connect(&dailyVar, &QListWidget::itemClicked, [=](QListWidgetItem * item){ this->dailyItemClicked(item); });
     connect(&hourlyVar, &QListWidget::itemClicked, [=](QListWidgetItem * item){ this->hourlyItemClicked(item); });
 
-    firstYearEdit.setDate(QDate::currentDate());
-    QLabel *FirstDateLabel = new QLabel("   Start Date:");
-    FirstDateLabel->setBuddy(&firstYearEdit);
+    QDate yesterday = QDate::currentDate().addDays(-1);
 
-    lastYearEdit.setDate(QDate::currentDate());
+    firstDateEdit.setDate(yesterday);
+    firstDateEdit.setDisplayFormat("yyyy-MM-dd");
+    firstDateEdit.setCalendarPopup(true);
+    QLabel *FirstDateLabel = new QLabel("   Start Date:");
+    FirstDateLabel->setBuddy(&firstDateEdit);
+
+    lastDateEdit.setDate(QDate::currentDate());
+    lastDateEdit.setDisplayFormat("yyyy-MM-dd");
+    lastDateEdit.setCalendarPopup(true);
     QLabel *LastDateLabel = new QLabel("    End Date:");
-    LastDateLabel->setBuddy(&lastYearEdit);
+    LastDateLabel->setBuddy(&lastDateEdit);
 
     dateLayout.addWidget(FirstDateLabel);
-    dateLayout.addWidget(&firstYearEdit);
+    dateLayout.addWidget(&firstDateEdit);
 
     dateLayout.addWidget(LastDateLabel);
-    dateLayout.addWidget(&lastYearEdit);
+    dateLayout.addWidget(&lastDateEdit);
 
     QDialogButtonBox buttonBox;
     QPushButton downloadButton("Download");
@@ -213,8 +219,8 @@ void DialogDownloadMeteoData::done(bool res)
 
     if(res)  // ok was pressed
     {
-        QDate firstDate = firstYearEdit.date();
-        QDate lastDate = lastYearEdit.date();
+        QDate firstDate = firstDateEdit.date();
+        QDate lastDate = lastDateEdit.date();
 
         if ((! firstDate.isValid()) || (! lastDate.isValid()))
         {
@@ -276,31 +282,5 @@ void DialogDownloadMeteoData::done(bool res)
         QDialog::done(QDialog::Rejected);
         return;
     }
-
 }
 
-
-QList<QString> DialogDownloadMeteoData::getVarD() const
-{
-    return varD;
-}
-
-QList<QString> DialogDownloadMeteoData::getVarH() const
-{
-    return varH;
-}
-
-QDate DialogDownloadMeteoData::getFirstDate()
-{
-    return firstYearEdit.date();
-}
-
-QDate DialogDownloadMeteoData::getLastDate()
-{
-    return lastYearEdit.date();
-}
-
-bool DialogDownloadMeteoData::getPrec0024() const
-{
-    return prec0024;
-}
