@@ -1,6 +1,9 @@
-#include "shell.h"
-#include "project.h"
 #include "commonConstants.h"
+#include "meteo.h"
+#include "project.h"
+#include "shell.h"
+#include "dbMeteoGrid.h"
+
 #include <iostream>
 #include <sstream>
 #include <QString>
@@ -156,7 +159,7 @@ QString getCommandLine(QString programName)
 {
     std::string commandLine;
 
-    std::cout << programName.toStdString() << ">";
+    std::cout << "\n" << programName.toStdString() << ">";
     getline (std::cin, commandLine);
 
     return QString::fromStdString(commandLine);
@@ -280,12 +283,13 @@ int cmdExportDailyDataCsv(Project* myProject, QList<QString> argumentList)
     if (argumentList.size() < 2)
     {
         QString usage = "Usage:\n"
-                        "ExportDailyDataCsv [-TPREC] [-t:type] -d1:firstDate [-d2:lastDate] [-l:idList] [-p:outputPath]\n"
-                        "-TPREC     save only Tmin, Tmax, Tavg, Prec \n"
+                        "ExportDailyDataCsv [-TPREC] [-v:varname] [-t:type] -d1:firstDate [-d2:lastDate] [-l:idList] [-p:outputPath]\n"
+                        "-TPREC     save Tmin, Tmax, Tavg, Prec (default: ALL variables) \n"
+                        "-v         save single Variable (varname: TMIN, TMAX, TAVG, PREC, RHMIN, RHMAX, RHAVG, RAD, ET0_HS, ET0_PM, LEAFW) \n"
                         "-t         Type: GRID|POINTS (default: GRID) \n"
-                        "-d1, -d2   Date format: YYYY-MM-DD (default lastDate: yesterday) \n"
+                        "-d1, -d2   Date format: YYYY-MM-DD (default: lastDate = yesterday) \n"
                         "-l         List of output points or cells filename  (default: ALL active cells/points) \n"
-                        "-p         output Path - default:" + outputPath + " \n";
+                        "-p         output Path (default: " + outputPath + ") \n";
         myProject->logInfo(usage);
         return PRAGA_OK;
     }
@@ -294,11 +298,24 @@ int cmdExportDailyDataCsv(Project* myProject, QList<QString> argumentList)
     QString idListFileName = "";
     QDate firstDate, lastDate;
     bool isTPrec = false;
+    QString varName = "";
+    meteoVariable variable = noMeteoVar;
 
     for (int i = 1; i < argumentList.size(); i++)
     {
         if (argumentList.at(i).left(6).toUpper() == "-TPREC")
             isTPrec = true;
+
+        if (argumentList.at(i).left(3) == "-v:")
+        {
+            varName = "DAILY_" + argumentList[i].right(argumentList[i].length()-3).toUpper();
+            variable = getMeteoVar(varName.toStdString());
+            if (variable == noMeteoVar)
+            {
+                myProject->logError("Wrong variable: " + varName);
+                return PRAGA_OK;
+            }
+        }
 
         if (argumentList.at(i).left(4) == "-d1:")
         {
@@ -358,9 +375,10 @@ int cmdExportDailyDataCsv(Project* myProject, QList<QString> argumentList)
     // check first date (mandatory)
     if (! firstDate.isValid())
     {
-        myProject->logError("Missing first date: use option -d1:firstDate");
+        myProject->logError("Missing first date: use -d1:firstDate");
         return PRAGA_OK;
     }
+
     // check last date (default: yesterday)
     if (! lastDate.isValid())
     {
@@ -369,10 +387,20 @@ int cmdExportDailyDataCsv(Project* myProject, QList<QString> argumentList)
 
     myProject->logInfo("... first date is: " + firstDate.toString());
     myProject->logInfo("... last date is: " + lastDate.toString());
+
     if (isTPrec)
     {
         myProject->logInfo("... output format is: Date, Tmin (C), Tmax (C), Tavg (C), Prec (mm)");
     }
+    else if(variable != noMeteoVar)
+    {
+        myProject->logInfo("... output format is: Date, " + varName);
+    }
+    else
+    {
+        myProject->logInfo("... export ALL variables");
+    }
+
     if (idListFileName != "")
     {
         myProject->logInfo("... ID list file is: " + idListFileName);
@@ -394,7 +422,7 @@ int cmdExportDailyDataCsv(Project* myProject, QList<QString> argumentList)
             return PRAGA_ERROR;
         }
 
-        if (! myProject->meteoGridDbHandler->exportDailyDataCsv(myProject->errorString, isTPrec,
+        if (! myProject->meteoGridDbHandler->exportDailyDataCsv(myProject->errorString, isTPrec, variable,
                                              firstDate, lastDate, idListFileName, outputPath))
         {
             myProject->logError();

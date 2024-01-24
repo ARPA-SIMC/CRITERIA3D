@@ -499,8 +499,10 @@ namespace statistics
         free(roots);
     }
 
-    void weightedMultiRegressionLinearWithStats(const std::vector <std::vector <float>> &x, std::vector <float> &y, const std::vector <float> &weight, long nrItems,float* q,std::vector <float> &m, int nrPredictors,bool calculateR2, bool calculateStdError,float* R2, float* stdError)
+    void weightedMultiRegressionLinearWithStats(const std::vector <std::vector <float>> &x, std::vector <float> &y, const std::vector <float> &weight,float* q,std::vector <float> &m,bool calculateR2, bool calculateStdError,float* R2, float* stdError)
     {
+        int nrPredictors = x[0].size();
+        int nrItems = x.size();
         double** XT = (double**)calloc(nrPredictors+1, sizeof(double*));
         double** X = (double**)calloc(nrItems, sizeof(double*));
         double** X2 = (double**)calloc(nrPredictors+1, sizeof(double*));
