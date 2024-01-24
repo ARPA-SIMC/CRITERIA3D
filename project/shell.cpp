@@ -283,37 +283,49 @@ int cmdExportDailyDataCsv(Project* myProject, QList<QString> argumentList)
     if (argumentList.size() < 2)
     {
         QString usage = "Usage:\n"
-                        "ExportDailyDataCsv [-TPREC] [-v:varname] [-t:type] -d1:firstDate [-d2:lastDate] [-l:idList] [-p:outputPath]\n"
-                        "-TPREC     save Tmin, Tmax, Tavg, Prec (default: ALL variables) \n"
-                        "-v         save single Variable (varname: TMIN, TMAX, TAVG, PREC, RHMIN, RHMAX, RHAVG, RAD, ET0_HS, ET0_PM, LEAFW) \n"
-                        "-t         Type: GRID|POINTS (default: GRID) \n"
-                        "-d1, -d2   Date format: YYYY-MM-DD (default: lastDate = yesterday) \n"
-                        "-l         List of output points or cells filename  (default: ALL active cells/points) \n"
+                        "ExportDailyDataCsv -v:variableList [-TPREC] [-t:type] -d1:firstDate [-d2:lastDate] [-l:idList] [-p:outputPath]\n"
+                        "-v         list of comma separated variables (varname: TMIN, TMAX, TAVG, PREC, RHMIN, RHMAX, RHAVG, RAD, ET0_HS, ET0_PM, LEAFW) \n"
+                        "-TPREC     export Tmin, Tmax, Tavg, Prec \n"
+                        "-t         type: GRID|POINTS (default: GRID) \n"
+                        "-d1, -d2   date format: YYYY-MM-DD (default: lastDate = yesterday) \n"
+                        "-l         list of output points or cells filename  (default: ALL active cells/points) \n"
                         "-p         output Path (default: " + outputPath + ") \n";
         myProject->logInfo(usage);
         return PRAGA_OK;
     }
 
     QString typeStr = "GRID";
-    QString idListFileName = "";
     QDate firstDate, lastDate;
+    QList<meteoVariable> variableList;
     bool isTPrec = false;
-    QString varName = "";
-    meteoVariable variable = noMeteoVar;
+    QString idListFileName = "";
 
     for (int i = 1; i < argumentList.size(); i++)
     {
         if (argumentList.at(i).left(6).toUpper() == "-TPREC")
+        {
             isTPrec = true;
+            variableList = {dailyAirTemperatureMin, dailyAirTemperatureMax, dailyAirTemperatureAvg, dailyPrecipitation};
+        }
 
+        // variables list
         if (argumentList.at(i).left(3) == "-v:")
         {
-            varName = "DAILY_" + argumentList[i].right(argumentList[i].length()-3).toUpper();
-            variable = getMeteoVar(varName.toStdString());
-            if (variable == noMeteoVar)
+            QString variables = argumentList[i].right(argumentList[i].length()-3).toUpper();
+            QList<QString> varNameList = variables.split(",");
+            for (int i = 0; i < varNameList.size(); i++)
             {
-                myProject->logError("Wrong variable: " + varName);
-                return PRAGA_OK;
+                std::string varString = "DAILY_" + varNameList[i].toStdString();
+                meteoVariable var = getMeteoVar(varString);
+                if (var != noMeteoVar)
+                {
+                    variableList.append(var);
+                }
+                else
+                {
+                    myProject->logError("Wrong variable: " + varNameList[i]);
+                    return PRAGA_OK;
+                }
             }
         }
 
@@ -388,17 +400,11 @@ int cmdExportDailyDataCsv(Project* myProject, QList<QString> argumentList)
     myProject->logInfo("... first date is: " + firstDate.toString());
     myProject->logInfo("... last date is: " + lastDate.toString());
 
-    if (isTPrec)
+
+    if (variableList.isEmpty())
     {
-        myProject->logInfo("... output format is: Date, Tmin (C), Tmax (C), Tavg (C), Prec (mm)");
-    }
-    else if(variable != noMeteoVar)
-    {
-        myProject->logInfo("... output format is: Date, " + varName);
-    }
-    else
-    {
-        myProject->logInfo("... export ALL variables");
+        myProject->logError("Missing variables.");
+        return PRAGA_OK;
     }
 
     if (idListFileName != "")
@@ -412,6 +418,7 @@ int cmdExportDailyDataCsv(Project* myProject, QList<QString> argumentList)
         else
             myProject->logInfo("... export ALL meteo points");
     }
+
     myProject->logInfo("... output path is: " + outputPath);
 
     if (typeStr == "GRID")
@@ -422,7 +429,7 @@ int cmdExportDailyDataCsv(Project* myProject, QList<QString> argumentList)
             return PRAGA_ERROR;
         }
 
-        if (! myProject->meteoGridDbHandler->exportDailyDataCsv(myProject->errorString, isTPrec, variable,
+        if (! myProject->meteoGridDbHandler->exportDailyDataCsv(myProject->errorString, variableList,
                                              firstDate, lastDate, idListFileName, outputPath))
         {
             myProject->logError();

@@ -1010,6 +1010,7 @@ frequencyType getVarFrequency(meteoVariable myVar)
         return noFrequency;
 }
 
+
 meteoVariable getMeteoVar(std::string varString)
 {
     auto search = MapDailyMeteoVar.find(varString);
@@ -1031,7 +1032,6 @@ meteoVariable getMeteoVar(std::string varString)
                 return search->second;
             }
         }
-
     }
 
     return noMeteoVar;
