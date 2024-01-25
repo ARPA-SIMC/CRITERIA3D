@@ -499,7 +499,7 @@ namespace statistics
         free(roots);
     }
 
-    void weightedMultiRegressionLinearWithStats(const std::vector <std::vector <float>> &x, std::vector <float> &y, const std::vector <float> &weight,float* q,std::vector <float> &m,bool calculateR2, bool calculateStdError,float* R2, float* stdError)
+    void weightedMultiRegressionLinearWithStats(const std::vector <std::vector <float>> &x, std::vector <float> &y, const std::vector <float> &weight,float* q,std::vector <float> &m,bool calculateR2, bool calculateStdError,float* R2, float* stdError, float *qSE,std::vector <float> &mSE)
     {
         int nrPredictors = x[0].size();
         int nrItems = x.size();
@@ -517,6 +517,7 @@ namespace statistics
         {
             X[i]= (double*)calloc(nrPredictors+1, sizeof(double));
         }
+        printf("transposed matrix\n");
         for (int j=0;j<nrPredictors+1;j++)
         {
             for (int i=0;i<nrItems;i++)
@@ -530,7 +531,6 @@ namespace statistics
                     XT[j][i] = x[i][j-1];
                 }
             }
-
         }
         matricial::transposedMatrix(XT,nrPredictors+1,nrItems,X);
         for (int j=0;j<nrPredictors+1;j++)
@@ -560,6 +560,7 @@ namespace statistics
         for (int j=0;j<nrPredictors;j++)
         {
             m.push_back(0);
+            mSE.push_back(0);
         }
         for (int i=0;i<nrPredictors+1;i++)
         {
@@ -573,21 +574,6 @@ namespace statistics
                 m[j-1] += float(X2Inverse[j][i]*roots[i]);
             }
         }
-        for (int j=0;j<nrPredictors+1;j++)
-        {
-            free(XT[j]);
-            free(X2[j]);
-            free(X2Inverse[j]);
-        }
-        for (int i=0;i<nrItems;i++)
-        {
-            free(X[i]);
-        }
-        free(X);
-        free(XT);
-        free(X2);
-        free(X2Inverse);
-        free(roots);
 
         if (calculateR2)
         {
@@ -622,7 +608,39 @@ namespace statistics
                 weightDouble[i]=weight[i];
             }
             *stdError = interpolation::computeWeighted_StandardError(yObs,ySim,weightDouble,nrPredictors+1);
+            matricial::transposedMatrix(XT,nrPredictors+1,nrItems,X);
+            for (int j=0;j<nrPredictors+1;j++)
+            {
+                for (int i =0; i<nrItems; i++)
+                {
+                    X[i][j]= weight[i]*X[i][j];
+                }
+            }
+            matricial::matrixProduct(XT,X,nrItems,nrPredictors+1,nrPredictors+1,nrItems,X2);
+            matricial::inverse(X2,X2Inverse,nrPredictors+1);
+            *qSE = (*stdError)*sqrt(X2Inverse[0][0]);
+            for (int j=1;j<nrPredictors+1;j++)
+            {
+                mSE[j-1]=(*stdError)*sqrt(X2Inverse[j][j]);
+            }
         }
+
+        for (int j=0;j<nrPredictors+1;j++)
+        {
+            free(XT[j]);
+            free(X2[j]);
+            free(X2Inverse[j]);
+        }
+        for (int i=0;i<nrItems;i++)
+        {
+            free(X[i]);
+        }
+        free(X);
+        free(XT);
+        free(X2);
+        free(X2Inverse);
+        free(roots);
+
     }
 
     void multiRegressionLinear(float** x,  float* y, long nrItems,float* q,float* m, int nrPredictors)
