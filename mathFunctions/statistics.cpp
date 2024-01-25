@@ -560,6 +560,7 @@ namespace statistics
         for (int j=0;j<nrPredictors;j++)
         {
             m.push_back(0);
+            mSE.push_back(0);
         }
         for (int i=0;i<nrPredictors+1;i++)
         {
