@@ -14,17 +14,16 @@
         QDateEdit firstDateEdit;
         QDateEdit lastDateEdit;
 
-        std::vector<QListWidgetItem> dailyItems;
-        std::vector<QListWidgetItem> hourlyItems;
+        QString cellListFileName;
 
         QCheckBox allDaily;
         QCheckBox allHourly;
 
+        std::vector<QListWidgetItem> dailyItems;
+        std::vector<QListWidgetItem> hourlyItems;
+
         QList<QString> dailyVariableList;
         QList<QString> hourlyVariableList;
-
-    public:
-        DialogExportDataGrid();
 
         void allDailyVarClicked(int toggled);
         void allHourlyVarClicked(int state);
@@ -32,19 +31,27 @@
         void dailyItemClicked(QListWidgetItem * item);
         void hourlyItemClicked(QListWidgetItem * item);
 
+        void on_actionLoadCellList();
+
         void done(bool result);
 
+    public:
+        DialogExportDataGrid();
+
         QList<QString> getDailyVariableList() const
-        { return dailyVariableList; }
+            { return dailyVariableList; }
 
         QList<QString> getHourlyVariableList() const
-        { return hourlyVariableList; }
+            { return hourlyVariableList; }
 
         QDate getFirstDate()
-        { return firstDateEdit.date(); }
+            { return firstDateEdit.date(); }
 
         QDate getLastDate()
-        { return lastDateEdit.date(); }
+            { return lastDateEdit.date(); }
+
+        QString getCellListFileName()
+            { return cellListFileName; }
     };
 
 

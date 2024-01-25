@@ -55,7 +55,6 @@ bool Crit3DMeteoGridDbHandler::parseXMLFile(QString xmlFileName, QDomDocument* x
 
 bool Crit3DMeteoGridDbHandler::parseXMLGrid(QString xmlFileName, QString *myError)
 {
-
     QDomDocument xmlDoc;
 
     if (! parseXMLFile(xmlFileName, &xmlDoc, myError)) return false;
@@ -3662,7 +3661,7 @@ bool Crit3DMeteoGridDbHandler::exportDailyDataCsv(QString &errorStr, QList<meteo
     }
     outputPath = outDir.absolutePath();
 
-    bool isList = (idListFileName != "");
+    bool isList = (! idListFileName.isEmpty());
     QList<QString> idList;
     if (isList)
     {
@@ -3726,7 +3725,7 @@ bool Crit3DMeteoGridDbHandler::exportDailyDataCsv(QString &errorStr, QList<meteo
                         std::string varName = getMeteoVarName(variableList[i]);
                         std::string unit = getUnitFromVariable(variableList[i]);
                         QString VarString = QString::fromStdString(varName + " (" + unit + ")");
-                        out << ", " + VarString;
+                        out << "," + VarString;
                     }
                 }
                 out << "\n";

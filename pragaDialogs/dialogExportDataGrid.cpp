@@ -52,6 +52,13 @@ DialogExportDataGrid::DialogExportDataGrid()
 
     timeVarLayout.addWidget(&dailyVar);
 
+    allDaily.setText("All daily variables");
+    allVarLayout.addWidget(&allDaily);
+
+    connect(&allDaily, &QCheckBox::toggled, [=](int toggled){ this->allDailyVarClicked(toggled); });
+    connect(&dailyVar, &QListWidget::itemClicked, [=](QListWidgetItem * item){ this->dailyItemClicked(item); });
+
+    // TODO manca la funzione per esportare gli orari
     hourlyVar.setSelectionMode(QAbstractItemView::MultiSelection);
 
     hourlyItems.resize(6);
@@ -71,19 +78,13 @@ DialogExportDataGrid::DialogExportDataGrid()
 
     timeVarLayout.addWidget(&hourlyVar);
 
-    allDaily.setText("All daily variables");
     allHourly.setText("All hourly variables");
-
-    allVarLayout.addWidget(&allDaily);
     allVarLayout.addWidget(&allHourly);
 
     hourlyVar.setVisible(false);
     allHourly.setVisible(false);
 
-    connect(&allDaily, &QCheckBox::toggled, [=](int toggled){ this->allDailyVarClicked(toggled); });
     //connect(&allHourly, &QCheckBox::toggled, [=](int toggled){ this->allHourlyVarClicked(toggled); });
-
-    connect(&dailyVar, &QListWidget::itemClicked, [=](QListWidgetItem * item){ this->dailyItemClicked(item); });
     //connect(&hourlyVar, &QListWidget::itemClicked, [=](QListWidgetItem * item){ this->hourlyItemClicked(item); });
 
     QDate yesterday = QDate::currentDate().addDays(-1);
@@ -121,16 +122,39 @@ DialogExportDataGrid::DialogExportDataGrid()
     connect(&buttonBox, &QDialogButtonBox::accepted, [=](){ this->done(true); });
     connect(&buttonBox, &QDialogButtonBox::rejected, [=](){ this->done(false); });
 
+    // menu
+    QMenuBar* menuBar = new QMenuBar();
+    QMenu *menuFile = new QMenu("File");
+    menuBar->addMenu(menuFile);
+
+    QAction* loadCellList = new QAction(tr("&Load the list of cell IDs"), this);
+    menuFile->addAction(loadCellList);
+    connect(loadCellList, &QAction::triggered, this, &DialogExportDataGrid::on_actionLoadCellList);
+
     buttonLayout.addWidget(&buttonBox);
     mainLayout.addLayout(&titleLayout);
     mainLayout.addLayout(&timeVarLayout);
     mainLayout.addLayout(&allVarLayout);
     mainLayout.addLayout(&dateLayout);
     mainLayout.addLayout(&buttonLayout);
+    mainLayout.setMenuBar(menuBar);
     setLayout(&mainLayout);
 
     show();
     exec();
+}
+
+
+void DialogExportDataGrid::on_actionLoadCellList()
+{
+    cellListFileName = QFileDialog::getOpenFileName(this, tr("Select list of cell IDs"), "", tr("All files (*.*)"));
+
+    QFile listFile(cellListFileName);
+    if (! listFile.open(QFile::ReadOnly | QFile::Text))
+    {
+        QMessageBox::information(nullptr, "Wrong file", "Wrong format: must be a text file.");
+        cellListFileName = "";
+    }
 }
 
 
