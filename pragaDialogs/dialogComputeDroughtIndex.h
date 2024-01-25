@@ -17,6 +17,9 @@ public:
     QString getIndex() const;
     int getYearFrom() const;
     int getYearTo() const;
+    int getTimescale() const;
+
+    bool getIsMeteoGrid() const;
 
 private:
     bool isMeteoPointLoaded;
