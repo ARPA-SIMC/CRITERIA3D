@@ -31,6 +31,8 @@ private:
     QListWidget listIndex;
     QLineEdit yearFrom;
     QLineEdit yearTo;
+    QComboBox timescaleList;
+    QLabel timescaleLabel;
 };
 
 #endif // DIALOGCOMPUTEDROUGHTINDEX_H

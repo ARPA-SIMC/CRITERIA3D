@@ -9,7 +9,10 @@ DialogComputeDroughtIndex::DialogComputeDroughtIndex(bool isMeteoGridLoaded, boo
     QHBoxLayout targetLayout;
     QHBoxLayout *layoutOk = new QHBoxLayout;
     QHBoxLayout *dateLayout = new QHBoxLayout;
+    QHBoxLayout *groupLayout = new QHBoxLayout;
+    groupLayout->setAlignment(Qt::AlignTop);
     QVBoxLayout *indexLayout = new QVBoxLayout;
+    QHBoxLayout *timescaleLayout = new QHBoxLayout;
 
     QLabel *subTitleLabel = new QLabel();
     QGroupBox *targetGroupBox = new QGroupBox("Target");
@@ -81,8 +84,26 @@ DialogComputeDroughtIndex::DialogComputeDroughtIndex(bool isMeteoGridLoaded, boo
     listIndex.addItem("INDEX_SPEI");
     listIndex.addItem("INDEX_DECILES");
 
+    timescaleLabel.setText("Timescale: ");
+    timescaleList.addItem("3");
+    timescaleList.addItem("6");
+    timescaleList.addItem("12");
+    timescaleList.addItem("24");
+
+    variableLabel->setMaximumWidth(this->width()/2);
+    listIndex.setMaximumWidth(this->width()/2);
+    listIndex.setMaximumHeight(this->height()/3);
     indexLayout->addWidget(variableLabel);
     indexLayout->addWidget(&listIndex);
+
+    timescaleLabel.setMaximumWidth(this->width()/2);
+    timescaleLayout->addWidget(&timescaleLabel);
+    timescaleLayout->addWidget(&timescaleList);
+    timescaleLabel.setVisible(false);
+    timescaleList.setVisible(false);
+
+    groupLayout->addLayout(indexLayout);
+    groupLayout->addLayout(timescaleLayout);
 
     QDialogButtonBox buttonBox(QDialogButtonBox::Ok | QDialogButtonBox::Cancel);
 
@@ -96,7 +117,7 @@ DialogComputeDroughtIndex::DialogComputeDroughtIndex(bool isMeteoGridLoaded, boo
 
     mainLayout->addWidget(targetGroupBox);
     mainLayout->addLayout(dateLayout);
-    mainLayout->addLayout(indexLayout);
+    mainLayout->addLayout(groupLayout);
     mainLayout->addLayout(layoutOk);
 
     setLayout(mainLayout);
@@ -111,7 +132,16 @@ DialogComputeDroughtIndex::~DialogComputeDroughtIndex()
 
 void DialogComputeDroughtIndex::indexClicked(QListWidgetItem* item)
 {
-    Q_UNUSED(item);
+    if (item->text() == "INDEX_SPI" || item->text() == "INDEX_SPEI")
+    {
+        timescaleLabel.setVisible(true);
+        timescaleList.setVisible(true);
+    }
+    else if (item->text() == "INDEX_DECILES")
+    {
+        timescaleLabel.setVisible(false);
+        timescaleList.setVisible(false);
+    }
 }
 
 void DialogComputeDroughtIndex::targetChange()
