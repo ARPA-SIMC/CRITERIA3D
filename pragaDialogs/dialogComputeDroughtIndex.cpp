@@ -217,3 +217,13 @@ int DialogComputeDroughtIndex::getYearTo() const
     return yearTo.text().toInt();
 }
 
+int DialogComputeDroughtIndex::getTimescale() const
+{
+    return timescaleList.currentText().toInt();
+}
+
+bool DialogComputeDroughtIndex::getIsMeteoGrid() const
+{
+    return isMeteoGrid;
+}
+
