@@ -573,7 +573,7 @@ QList<QString> readListSingleColumn(QString fileName, QString& error)
     }
     else
     {
-        error = "Error opening list file: " + fileName;
+        error = "Wrong file format (must be a text file): " + fileName;
     }
 
     return myList;

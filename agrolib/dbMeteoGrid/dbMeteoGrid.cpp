@@ -3,6 +3,7 @@
 #include "meteoGrid.h"
 #include "basicMath.h"
 #include "utilities.h"
+#include "meteoPoint.h"
 #include "commonConstants.h"
 
 #include <iostream>
@@ -54,7 +55,6 @@ bool Crit3DMeteoGridDbHandler::parseXMLFile(QString xmlFileName, QDomDocument* x
 
 bool Crit3DMeteoGridDbHandler::parseXMLGrid(QString xmlFileName, QString *myError)
 {
-
     QDomDocument xmlDoc;
 
     if (! parseXMLFile(xmlFileName, &xmlDoc, myError)) return false;
@@ -1702,15 +1702,15 @@ bool Crit3DMeteoGridDbHandler::updateMeteoGridDate(QString &myError)
 }
 
 
-bool Crit3DMeteoGridDbHandler::loadGridDailyData(QString &myError, const QString &meteoPoint, const QDate &firstDate, const QDate &lastDate)
+bool Crit3DMeteoGridDbHandler::loadGridDailyData(QString &myError, const QString &meteoPointId, const QDate &firstDate, const QDate &lastDate)
 {
     myError = "";
-    QString tableD = _tableDaily.prefix + meteoPoint + _tableDaily.postFix;
+    QString tableD = _tableDaily.prefix + meteoPointId + _tableDaily.postFix;
 
     unsigned row, col;
-    if ( !_meteoGrid->findMeteoPointFromId(&row, &col, meteoPoint.toStdString()) )
+    if ( !_meteoGrid->findMeteoPointFromId(&row, &col, meteoPointId.toStdString()) )
     {
-        myError = "Missing MeteoPoint id";
+        myError = "Missing meteoPoint id: " + meteoPointId;
         return false;
     }
 
@@ -1723,6 +1723,7 @@ bool Crit3DMeteoGridDbHandler::loadGridDailyData(QString &myError, const QString
         {
             if (firstDate > _lastDailyDate || lastDate < _firstDailyDate)
             {
+                myError = "Missing data in this time interval.";
                 return false;
             }
         }
@@ -3631,36 +3632,42 @@ bool Crit3DMeteoGridDbHandler::saveLogProcedures(QString *myError, QString nameP
 /*!
  * \brief ExportDailyDataCsv
  * export gridded daily meteo data to csv files
- * \param isTPrec           save only variables: Tmin, Tmax, Tavg, Prec
- * \param idListFileName    filename of cells id list (list by columns)
- * if idListFile == ""      save ALL cells
+ * \param variableList      list of meteo variables
+ * \param idListFileName    text file of cells id list by columns - if idListFileName is empty save ALL cells
  * \param outputPath        path for output files
  * \return true on success, false otherwise
  */
-bool Crit3DMeteoGridDbHandler::exportDailyDataCsv(QString &errorStr, bool isTPrec, QDate firstDate, QDate lastDate,
-                                                  QString idListFileName, QString outputPath)
+bool Crit3DMeteoGridDbHandler::exportDailyDataCsv(QString &errorStr, QList<meteoVariable> variableList,
+                                                  QDate firstDate, QDate lastDate, QString idListFileName, QString outputPath)
 {
     errorStr = "";
 
     // check output path
+    if (outputPath == "")
+    {
+        errorStr = "Missing output path.";
+        return false;
+    }
+
     QDir outDir(outputPath);
+    // make directory
     if (! outDir.exists())
     {
         if (! outDir.mkpath(outputPath))
         {
-            errorStr = "Wrong outputPath, unable to create this directory: " + outputPath;
+            errorStr = "Wrong output path, unable to create directory: " + outputPath;
             return false;
         }
     }
     outputPath = outDir.absolutePath();
 
-    bool isList = (idListFileName != "");
+    bool isList = (! idListFileName.isEmpty());
     QList<QString> idList;
     if (isList)
     {
         if (! QFile::exists(idListFileName))
         {
-            errorStr = "The ID list file does not exist: " + idListFileName;
+            errorStr = "The ID list does not exist: " + idListFileName;
             return false;
         }
 
@@ -3670,7 +3677,7 @@ bool Crit3DMeteoGridDbHandler::exportDailyDataCsv(QString &errorStr, bool isTPre
 
         if (idList.size() == 0)
         {
-            errorStr = "The ID list file is empty: " + idListFileName;
+            errorStr = "The ID list is empty: " + idListFileName;
             return false;
         }
     }
@@ -3708,72 +3715,41 @@ bool Crit3DMeteoGridDbHandler::exportDailyDataCsv(QString &errorStr, bool isTPre
                     continue;
                 }
 
-                // header
+                // write header
                 QTextStream out(&outputFile);
-                out << "Date, Tmin (C), Tmax (C), Tavg (C), Prec (mm)";
-                if (isTPrec)
-                    out << "\n";
-                else
-                    out << "RHmin (%), RHmax (%), RHavg (%), Windspeed (m/s), Rad (MJ)\n";
+                out << "Date";
+                for (int i = 0; i < variableList.size(); i++)
+                {
+                    if (variableList[i] != noMeteoVar)
+                    {
+                        std::string varName = getMeteoVarName(variableList[i]);
+                        std::string unit = getUnitFromVariable(variableList[i]);
+                        QString VarString = QString::fromStdString(varName + " (" + unit + ")");
+                        out << "," + VarString;
+                    }
+                }
+                out << "\n";
 
-                // save data
+                // write data
                 QDate currentDate = firstDate;
                 while (currentDate <= lastDate)
                 {
                     Crit3DDate myDate = getCrit3DDate(currentDate);
+                    out << currentDate.toString("yyyy-MM-dd");
 
-                    float tmin = _meteoGrid->meteoPointPointer(row,col)->getMeteoPointValueD(myDate, dailyAirTemperatureMin);
-                    QString tminStr = "";
-                    if (tmin != NODATA)
-                        tminStr = QString::number(tmin);
-
-                    float tmax = _meteoGrid->meteoPointPointer(row,col)->getMeteoPointValueD(myDate, dailyAirTemperatureMax);
-                    QString tmaxStr = "";
-                    if (tmax != NODATA)
-                        tmaxStr = QString::number(tmax);
-
-                    float tavg = _meteoGrid->meteoPointPointer(row,col)->getMeteoPointValueD(myDate, dailyAirTemperatureAvg);
-                    QString tavgStr = "";
-                    if (tavg != NODATA)
-                        tavgStr = QString::number(tavg);
-
-                    float prec = _meteoGrid->meteoPointPointer(row,col)->getMeteoPointValueD(myDate, dailyPrecipitation);
-                    QString precStr = "";
-                    if (prec != NODATA)
-                        precStr = QString::number(prec);
-
-                    out << currentDate.toString("yyyy-MM-dd") << "," << tminStr << "," << tmaxStr << "," << tavgStr << "," << precStr;
-                    if (isTPrec)
-                        out << "\n";
-                    else
+                    for (int i = 0; i < variableList.size(); i++)
                     {
-                        float rhmin = _meteoGrid->meteoPointPointer(row,col)->getMeteoPointValueD(myDate, dailyAirRelHumidityMin);
-                        QString rhminStr = "";
-                        if (rhmin != NODATA)
-                            rhminStr = QString::number(rhmin);
+                        if (variableList[i] != noMeteoVar)
+                        {
+                            float value = _meteoGrid->meteoPointPointer(row,col)->getMeteoPointValueD(myDate, variableList[i]);
+                            QString valueString = "";
+                            if (value != NODATA)
+                                valueString = QString::number(value);
 
-                        float rhmax = _meteoGrid->meteoPointPointer(row,col)->getMeteoPointValueD(myDate, dailyAirRelHumidityMax);
-                        QString rhmaxStr = "";
-                        if (rhmax != NODATA)
-                            rhmaxStr = QString::number(rhmax);
-
-                        float rhavg = _meteoGrid->meteoPointPointer(row,col)->getMeteoPointValueD(myDate, dailyAirRelHumidityAvg);
-                        QString rhavgStr = "";
-                        if (rhavg != NODATA)
-                            rhavgStr = QString::number(rhavg);
-
-                        float wspeed = _meteoGrid->meteoPointPointer(row,col)->getMeteoPointValueD(myDate, dailyWindScalarIntensityAvg);
-                        QString wspeedStr = "";
-                        if (wspeed != NODATA)
-                            wspeedStr = QString::number(wspeed);
-
-                        float rad = _meteoGrid->meteoPointPointer(row,col)->getMeteoPointValueD(myDate, dailyGlobalRadiation);
-                        QString radStr = "";
-                        if (rad != NODATA)
-                            radStr = QString::number(rad);
-
-                        out << "," << rhminStr << "," << rhmaxStr << "," << rhavgStr << "," << wspeedStr << "," << radStr << "\n";
+                            out << "," << valueString;
+                        }
                     }
+                    out << "\n";
 
                     currentDate = currentDate.addDays(1);
                 }

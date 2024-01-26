@@ -22,7 +22,7 @@
 
     bool deleteElab(QSqlDatabase db, QString *myError, QString table, QString elab);
 
-    QList<float> readElab(const QSqlDatabase &db, const QString &table, const QString &id, const QString &elab, QString *myError);
+    float readElab(const QSqlDatabase &db, const QString &table, const int &timeIndex, const QString &id, const QString &elab, QString *myError);
     QList<QString> getIdListFromElab(QSqlDatabase db, QString table, QString *myError, QString elab);
     QList<QString> getIdListFromElab(QSqlDatabase db, QString table, QString *myError, QString elab, int index);
 

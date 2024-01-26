@@ -250,9 +250,9 @@
     };
 
     const std::map<std::vector<meteoVariable>, std::string> MapVarUnit = {
-        { {dailyAirTemperatureMin,airTemperature,monthlyAirTemperatureMin}, "°C"} ,
-        { {dailyAirTemperatureMax,monthlyAirTemperatureMax}, "°C"} ,
-        { {dailyAirTemperatureAvg,dailyAirTemperatureRange,monthlyAirTemperatureAvg}, "°C"} ,
+        { {dailyAirTemperatureMin,airTemperature,monthlyAirTemperatureMin}, "C"} ,
+        { {dailyAirTemperatureMax,monthlyAirTemperatureMax}, "C"} ,
+        { {dailyAirTemperatureAvg,dailyAirTemperatureRange,monthlyAirTemperatureAvg}, "C"} ,
         { {dailyPrecipitation,precipitation,monthlyPrecipitation}, "mm"} ,
         { {dailyReferenceEvapotranspirationHS,dailyReferenceEvapotranspirationPM,referenceEvapotranspiration,monthlyReferenceEvapotranspirationHS}, "mm"} ,
         { {dailyAirRelHumidityMin,dailyAirRelHumidityMax,dailyAirRelHumidityAvg,airRelHumidity}, "%"} ,
@@ -263,12 +263,12 @@
         { {dailyWindVectorDirectionPrevailing, dailyWindVectorIntensityMax, windVectorDirection}, "deg"} ,
         { {windVectorIntensity, windVectorX, windVectorY}, "m s-1"} ,
         { {dailyLeafWetness,leafWetness}, "h"} ,
-        { {dailyHeatingDegreeDays,dailyCoolingDegreeDays}, "°D"} ,
+        { {dailyHeatingDegreeDays,dailyCoolingDegreeDays}, "D"} ,
         { {airRelHumidity,dailyAirRelHumidityMin,dailyAirRelHumidityMax,dailyAirRelHumidityAvg}, "%"} ,
-        { {airDewTemperature}, "°C"} ,
+        { {airDewTemperature}, "C"} ,
         { {dailyThomAvg,dailyThomDaytime,dailyThomNighttime,thom}, "-"} ,
         { {dailyWaterTableDepth,snowWaterEquivalent,snowFall,snowMelt,snowLiquidWaterContent}, "mm"} ,
-        { {snowSurfaceTemperature}, "°C"} ,
+        { {snowSurfaceTemperature}, "C"} ,
         { {snowInternalEnergy,snowSurfaceEnergy,sensibleHeat,latentHeat}, "kJ m-2"} ,
     };
 

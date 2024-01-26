@@ -70,29 +70,33 @@ bool deleteElab(QSqlDatabase db, QString *myError, QString table, QString elab)
 }
 
 
-QList<float> readElab(const QSqlDatabase &db, const QString &table, const QString &id, const QString &elab, QString *myError)
+float readElab(const QSqlDatabase &db, const QString &table, const int &timeIndex, const QString &id, const QString &elab, QString *myError)
 {
     *myError = "";
-    QList<float> elabValueList;
     QSqlQuery qry(db);
 
-    QString statement = QString("SELECT * FROM `%1` WHERE `id_point` = '%2' AND `elab` = '%3'").arg(table, id, elab);
+    QString statement = QString("SELECT * FROM `%1` ").arg(table);
+    qry.prepare( statement + " WHERE TimeIndex= :TimeIndex AND id_point = :id_point AND elab = :elab" );
 
-    if(! qry.exec(statement))
+    qry.bindValue(":TimeIndex", timeIndex);
+    qry.bindValue(":id_point", id);
+    qry.bindValue(":elab", elab);
+
+
+    float value = NODATA;
+    if( !qry.exec() )
     {
         *myError = qry.lastError().text();
     }
     else
     {
-        while (qry.next())
+        if (qry.next())
         {
-            float value;
             getValue(qry.value("value"), &value);
-            elabValueList << value;
         }
     }
 
-    return elabValueList;
+    return value;
 }
 
 
