@@ -152,6 +152,9 @@
             Crit3DDriessen Driessen;
 
             Crit3DHorizon();
+
+            double getSoilFraction()
+                { return (1.0 - coarseFragments); }
         };
 
 
