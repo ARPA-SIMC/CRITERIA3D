@@ -1401,9 +1401,11 @@ double Project3D::assignTranspiration(int row, int col, double lai, double degre
     if (landUnitList[cropIndex].idCrop.isEmpty())
         return actualTranspiration;
 
+    Crit3DCrop currentCrop = cropList[cropIndex];
+
     // compute maximum transpiration
     double et0 = double(hourlyMeteoMaps->mapHourlyET0->value[row][col]);        // [mm]
-    double kcMax = cropList[cropIndex].kcMax;                                   // [-]
+    double kcMax = currentCrop.kcMax;                                   // [-]
     double maxTranspiration = getPotentialTranspiration(et0, lai, kcMax);
 
     if (maxTranspiration < EPSILON)
@@ -1420,58 +1422,66 @@ double Project3D::assignTranspiration(int row, int col, double lai, double degre
     double previousRootDepth = NODATA;                          // [m]
 
     // update root lenght
-    cropList[cropIndex].updateRootDepth3D(degreeDays, watertableDepth, previousRootDepth, totalSoilDepth);
-    if (cropList[cropIndex].roots.currentRootLength <= 0)
+    currentCrop.updateRootDepth3D(degreeDays, watertableDepth, previousRootDepth, totalSoilDepth);
+    if (currentCrop.roots.currentRootLength <= 0)
         return actualTranspiration;
 
     // update root density
-    if (! root::computeRootDensity3D(&(cropList[cropIndex]), soilList[soilIndex], nrLayers, layerDepth, layerThickness))
+    if (! root::computeRootDensity3D(&currentCrop, soilList[soilIndex], nrLayers, layerDepth, layerThickness))
     {
         return actualTranspiration;
     }
 
-    // TODO assign root density from degreedays
     /*
-    if (roots.firstRootLayer == NODATA) return 0;
-
     double thetaWP;                                 // [m3 m-3] volumetric water content at Wilting Point
     double cropWP;                                  // [mm] wilting point specific for crop
-    double waterSurplusThreshold;                        // [mm] water surplus stress threshold
+    double waterSurplusThreshold;                   // [mm] water surplus stress threshold
     double waterScarcityThreshold;                  // [mm] water scarcity stress threshold
-    double WSS;                                     // [] water surplus stress
 
     double TRs=0.0;                                 // [mm] actual transpiration with only water scarsity stress
     double TRe=0.0;                                 // [mm] actual transpiration with only water surplus stress
     double totRootDensityWithoutStress = 0.0;       // [-]
     double redistribution = 0.0;                    // [mm]
+*/
 
     // initialize
-    unsigned int nrLayers = unsigned(soilLayers.size());
-    bool* isLayerStressed = new bool[nrLayers];
+    std::vector<bool> isLayerStressed;
+    std::vector<float> layerTranspiration;
+    isLayerStressed.resize(nrLayers);
+    layerTranspiration.resize(nrLayers);
     for (unsigned int i = 0; i < nrLayers; i++)
     {
         isLayerStressed[i] = false;
         layerTranspiration[i] = 0;
     }
 
-    // water surplus
-    if (isWaterSurplusResistant())
-        WSS = 0.0;
-    else
-        WSS = 0.5;
-
-    for (unsigned int i = unsigned(roots.firstRootLayer); i <= unsigned(roots.lastRootLayer); i++)
+    // water surplus stress starting threshold 0: saturation 1: field capacity
+    double waterSurplusStressFraction = 0.5;
+    if (currentCrop.isWaterSurplusResistant())
     {
-        // [mm]
-        waterSurplusThreshold = soilLayers[i].SAT - (WSS * (soilLayers[i].SAT - soilLayers[i].FC));
+        waterSurplusStressFraction = 0.0;
+    }
 
-        thetaWP = soil::thetaFromSignPsi(-soil::cmTokPa(psiLeaf), *(soilLayers[i].horizonPtr));
-        // [mm]
-        cropWP = thetaWP * soilLayers[i].thickness * soilLayers[i].soilFraction * 1000.0;
+    int firstRootLayer = currentCrop.roots.firstRootLayer;
+    int lastRootLayer = currentCrop.roots.lastRootLayer;
+    for (int layer = firstRootLayer; layer <= lastRootLayer; layer++)
+    {
+        long nodeIndex = long(indexMap.at(layer).value[row][col]);
+        int horIndex = soilList[soilIndex].getHorizonIndex(layerDepth[layer]);
+        soil::Crit3DHorizon horizon = soilList[soilIndex].horizon[horIndex];
 
-        // [mm]
-        waterScarcityThreshold = soilLayers[i].FC - fRAW * (soilLayers[i].FC - cropWP);
+        // [m3 m-3]
+        double sat = horizon.vanGenuchten.thetaS;
+        double waterSurplusVolThreshold = sat - waterSurplusStressFraction * (sat - horizon.waterContentFC);
 
+        // wilting point [mm]
+        double layerWP_mm = horizon.waterContentWP * layerThickness[layer] * horizon.getSoilFraction() * 1000.;
+
+        // [m3 m-3]
+        double waterScarcityVolThreshold = horizon.waterContentFC - currentCrop.fRAW * (horizon.waterContentFC - horizon.waterContentWP);
+    }
+
+        /*
         if ((soilLayers[i].waterContent - waterSurplusThreshold) > EPSILON)
         {
             // WATER SURPLUS
