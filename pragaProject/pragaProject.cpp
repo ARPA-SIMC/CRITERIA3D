@@ -3460,6 +3460,122 @@ bool PragaProject::computeDroughtIndexPoint(droughtIndex index, int timescale, i
     return true;
 }
 
+bool PragaProject::computeDroughtIndexPointGUI(droughtIndex index, int timescale, int refYearStart, int refYearEnd, QDate myDate)
+{
+
+    if (!aggregationDbHandler)
+    {
+        logError("No db aggregation");
+        return false;
+    }
+
+    // check meteo point
+    if (! meteoPointsLoaded)
+    {
+        logError("No meteo point");
+        return false;
+    }
+
+    // check ref years
+    if (refYearStart > refYearEnd)
+    {
+        logError("Wrong reference years");
+        return false;
+    }
+
+    QDate firstDate(refYearStart,1,1);
+    QDate lastDate;
+    int maxYear = std::max(refYearEnd,myDate.year());
+    if (maxYear == QDate::currentDate().year())
+    {
+        lastDate.setDate(maxYear, QDate::currentDate().month(),1);
+    }
+    else
+    {
+        lastDate.setDate(maxYear,12,1);
+    }
+
+    bool loadHourly = false;
+    bool loadDaily = true;
+    bool showInfo = true;
+    float value = NODATA;
+    QString indexStr;
+
+    if (index == INDEX_SPI)
+    {
+        indexStr = "SPI";
+    }
+    else if (index == INDEX_SPEI)
+    {
+        indexStr = "SPEI";
+    }
+    else if (index == INDEX_DECILES)
+    {
+        indexStr = "DECILES";
+    }
+    else
+    {
+        logError("Unknown index");
+        return false;
+    }
+
+    if (!loadMeteoPointsData(firstDate, lastDate, loadHourly, loadDaily, showInfo))
+    {
+        logError("There are no data");
+        return false;
+    }
+
+    int step = 0;
+    if (showInfo)
+    {
+        QString infoStr = "Compute drought - Meteo Points";
+        step = setProgressBar(infoStr, nrMeteoPoints);
+    }
+
+    std::vector<meteoVariable> dailyMeteoVar;
+    dailyMeteoVar.push_back(dailyPrecipitation);
+    dailyMeteoVar.push_back(dailyReferenceEvapotranspirationHS);
+    bool res = false;
+
+    int nrMonths = (lastDate.year()-firstDate.year())*12+lastDate.month()-(firstDate.month()-1);
+    for (int i=0; i < nrMeteoPoints; i++)
+    {
+        if (showInfo && (i % step) == 0)
+        {
+            updateProgressBar(i);
+        }
+
+        // compute monthly data
+        meteoPoints[i].initializeObsDataM(nrMonths, firstDate.month(), firstDate.year());
+        for(int j = 0; j < dailyMeteoVar.size(); j++)
+        {
+            meteoPoints[i].computeMonthlyAggregate(getCrit3DDate(firstDate), getCrit3DDate(lastDate), dailyMeteoVar[j], meteoSettings, quality, &climateParameters);
+        }
+        Drought mydrought(index, refYearStart, refYearEnd, getCrit3DDate(myDate), &(meteoPoints[i]), meteoSettings);
+        if (timescale > 0)
+        {
+            mydrought.setTimeScale(timescale);
+        }
+        if (index == INDEX_DECILES)
+        {
+            if (mydrought.computePercentileValuesCurrentDay())
+            {
+                value = mydrought.getCurrentPercentileValue();
+            }
+        }
+        else if (index == INDEX_SPI || index == INDEX_SPEI)
+        {
+            value = mydrought.computeDroughtIndex();
+        }
+        meteoPoints[i].elaboration = value;
+        if (value != NODATA)
+        {
+            res = true;
+        }
+    }
+    return res;
+}
+
 bool PragaProject::activeMeteoGridCellsWithDEM()
 {
 
