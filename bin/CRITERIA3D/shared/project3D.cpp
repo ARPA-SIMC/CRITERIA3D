@@ -245,6 +245,7 @@ bool Project3D::initializeWaterBalance3D()
 
     // set layers depth
     setSoilLayers();
+
     setLayersDepth();
     logInfo("Nr of layers: " + QString::number(nrLayers));
 

@@ -10,15 +10,21 @@
 #include <QSqlError>
 #include <QUuid>
 #include <QVariant>
+#include <QFile>
 
 
 bool openDbSoil(const QString &dbSoilName, QSqlDatabase &dbSoil, QString &errorStr)
 {
+    if (! QFile(dbSoilName).exists())
+    {
+        errorStr = "Soil database doesn't exist:\n" + dbSoilName;
+        return false;
+    }
 
     dbSoil = QSqlDatabase::addDatabase("QSQLITE", QUuid::createUuid().toString());
     dbSoil.setDatabaseName(dbSoilName);
 
-    if (!dbSoil.open())
+    if (! dbSoil.open())
     {
        errorStr = "Connection with database fail";
        return false;

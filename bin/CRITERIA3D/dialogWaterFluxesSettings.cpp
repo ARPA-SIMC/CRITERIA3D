@@ -39,6 +39,13 @@ DialogWaterFluxesSettings::DialogWaterFluxesSettings()
     layoutDepth->addWidget(imposedComputationDepthEdit, 2, 1);
     depthGroupBox->setLayout(layoutDepth);
 
+    // soil
+    QGroupBox* soilGroupBox = new QGroupBox("Soil properties");
+    QVBoxLayout *soilLayout = new QVBoxLayout;
+    useWaterRetentionFitting = new QRadioButton("Use water retention data");
+    soilLayout->addWidget(useWaterRetentionFitting);
+    soilGroupBox->setLayout(soilLayout);
+
     // ok/cancel buttons
     QDialogButtonBox *buttonBox = new QDialogButtonBox(QDialogButtonBox::Ok | QDialogButtonBox::Cancel);
 
@@ -48,6 +55,7 @@ DialogWaterFluxesSettings::DialogWaterFluxesSettings()
     QVBoxLayout *mainLayout = new QVBoxLayout();
     mainLayout->addWidget(initialGroupBox);
     mainLayout->addWidget(depthGroupBox);
+    mainLayout->addWidget(soilGroupBox);
     mainLayout->addWidget(buttonBox);
     setLayout(mainLayout);
 

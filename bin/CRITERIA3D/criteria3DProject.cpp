@@ -63,6 +63,11 @@ bool Crit3DProject::initializeCriteria3DModel()
 
     clearWaterBalance3D();
 
+    if (! loadSoilDatabase(soilDbFileName))
+    {
+        return false;
+    }
+
     if (! setSoilIndexMap())
         return false;
 

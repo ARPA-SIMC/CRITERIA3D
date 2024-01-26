@@ -15,6 +15,7 @@
         QRadioButton *onlySurface;
         QRadioButton *allSoilDepth;
         QRadioButton *imposedDepth;
+        QRadioButton *useWaterRetentionFitting;
 
         DialogWaterFluxesSettings();
 

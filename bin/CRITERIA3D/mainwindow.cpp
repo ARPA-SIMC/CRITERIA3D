@@ -2159,7 +2159,6 @@ void MainWindow::on_actionSnow_settings_triggered()
 //--------------------- MENU WATER FLUXES  -----------------------
 
 
-
 void MainWindow::on_actionWaterFluxes_settings_triggered()
 {
     DialogWaterFluxesSettings dialogWaterFluxes;
@@ -2173,6 +2172,8 @@ void MainWindow::on_actionWaterFluxes_settings_triggered()
     else
         dialogWaterFluxes.imposedDepth->setChecked(true);
 
+    dialogWaterFluxes.useWaterRetentionFitting->setChecked(myProject.fittingOptions.useWaterRetentionData);
+
     dialogWaterFluxes.exec();
     if (dialogWaterFluxes.result() != QDialog::Accepted)
     {
@@ -2184,10 +2185,11 @@ void MainWindow::on_actionWaterFluxes_settings_triggered()
         myProject.waterFluxesParameters.imposedComputationDepth = dialogWaterFluxes.getImposedComputationDepth();
         myProject.waterFluxesParameters.computeOnlySurface = dialogWaterFluxes.onlySurface->isChecked();
         myProject.waterFluxesParameters.computeAllSoilDepth = dialogWaterFluxes.allSoilDepth->isChecked();
+        myProject.fittingOptions.useWaterRetentionData = dialogWaterFluxes.useWaterRetentionFitting->isChecked();
 
-        /*if (!myProject.writeCriteria3DParameters())
+        /*if (! myProject.writeCriteria3DParameters())
         {
-            myProject.logError("Error writing snow parameters");
+            myProject.logError("Error writing soil fluxes parameters");
         }*/
     }
 
