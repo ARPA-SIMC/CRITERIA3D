@@ -3462,13 +3462,6 @@ bool PragaProject::computeDroughtIndexPoint(droughtIndex index, int timescale, i
 
 bool PragaProject::computeDroughtIndexPointGUI(droughtIndex index, int timescale, int refYearStart, int refYearEnd, QDate myDate)
 {
-
-    if (!aggregationDbHandler)
-    {
-        logError("No db aggregation");
-        return false;
-    }
-
     // check meteo point
     if (! meteoPointsLoaded)
     {
