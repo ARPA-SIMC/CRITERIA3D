@@ -142,6 +142,7 @@
         bool monthlyAggregateVariablesGrid(const QDate &firstDate, const QDate &lastDate, QList <meteoVariable> &variablesList);
         bool computeDroughtIndexAll(droughtIndex index, int firstYear, int lastYear, QDate date, int timescale, meteoVariable myVar);
         bool computeDroughtIndexPoint(droughtIndex index, int timescale, int refYearStart, int refYearEnd);
+        bool computeDroughtIndexPointGUI(droughtIndex index, int timescale, int refYearStart, int refYearEnd, QDate myDate);
         void showPointStatisticsWidgetPoint(std::string idMeteoPoint);
         void showHomogeneityTestWidgetPoint(std::string idMeteoPoint);
         void showSynchronicityTestWidgetPoint(std::string idMeteoPoint);
