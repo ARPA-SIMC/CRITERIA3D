@@ -996,7 +996,7 @@ bool Project::loadDEM(QString myFileName)
         QString infoStr = "WARNING: " + QString::number(DEM.header->flag) + " is not a valid NODATA value for DEM!";
         infoStr += " It will be converted in: " + QString::number(NODATA);
         logInfo(infoStr);
-        gis::convertNodataRasterGrid(DEM);
+        gis::convertFlagToNodata(DEM);
     }
 
     setColorScale(noMeteoTerrain, DEM.colorScale);
