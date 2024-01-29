@@ -44,6 +44,7 @@ bool CriteriaAggregationVariable::parserAggregationVariable(QString fileName, QS
                 error = "missing output variable";
                 return false;
             }
+
             // remove whitespace
             outputVarName.push_back(items[pos].toUpper().trimmed());
             if (outputVarName.isEmpty())
@@ -58,9 +59,10 @@ bool CriteriaAggregationVariable::parserAggregationVariable(QString fileName, QS
                 error = "missing input field (shape)";
                 return false;
             }
+
             // remove whitespace
-            inputField.push_back(items[pos].toUpper().trimmed());
-            if (inputField.isEmpty())
+            inputFieldName.push_back(items[pos].toUpper().trimmed());
+            if (inputFieldName.isEmpty())
             {
                 error = "missing input field";
                 return false;
@@ -72,6 +74,7 @@ bool CriteriaAggregationVariable::parserAggregationVariable(QString fileName, QS
                 error = "missing computation";
                 return false;
             }
+
             // remove whitespace
             aggregationType.push_back(items[pos].toUpper().trimmed());
             if (aggregationType.isEmpty())

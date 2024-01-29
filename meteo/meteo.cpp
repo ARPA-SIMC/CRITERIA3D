@@ -28,6 +28,7 @@
 
 #include "commonConstants.h"
 #include "basicMath.h"
+#include "quality.h"
 #include "physics.h"
 #include "meteo.h"
 #include "color.h"
@@ -42,6 +43,7 @@ void Crit3DMeteoSettings::initialize()
     minimumPercentage = DEFAULT_MIN_PERCENTAGE;
     rainfallThreshold = DEFAULT_RAINFALL_THRESHOLD;
     thomThreshold = DEFAULT_THOM_THRESHOLD;
+    temperatureThreshold = DEFAULT_TEMPERATURE_THRESHOLD;
     transSamaniCoefficient = DEFAULT_TRANSMISSIVITY_SAMANI;
     windIntensityDefault = DEFAULT_WIND_INTENSITY;
     hourlyIntervals = DEFAULT_HOURLY_INTERVALS;
@@ -104,9 +106,19 @@ float Crit3DMeteoSettings::getThomThreshold() const
     return thomThreshold;
 }
 
+float Crit3DMeteoSettings::getTemperatureThreshold() const
+{
+    return temperatureThreshold;
+}
+
 void Crit3DMeteoSettings::setThomThreshold(float value)
 {
     thomThreshold = value;
+}
+
+void Crit3DMeteoSettings::setTemperatureThreshold(float value)
+{
+    temperatureThreshold = value;
 }
 
 bool Crit3DMeteoSettings::getAutomaticTavg() const
@@ -171,7 +183,7 @@ float Crit3DClimateParameters::getClimateLapseRate(meteoVariable myVar, Crit3DTi
     int myHour = myTime.getNearestHour();
 
     // TODO improve!
-    if (myDate == getNullDate() || myHour == NODATA)
+    if (myDate.isNullDate() || myHour == NODATA)
         return -0.006f;
 
     unsigned int indexMonth = unsigned(myDate.month - 1);
@@ -221,25 +233,34 @@ float Crit3DClimateParameters::getClimateLapseRate(meteoVariable myVar, int mont
         return NODATA;
 }
 
+
 float Crit3DClimateParameters::getClimateVar(meteoVariable myVar, int month, float height, float refHeight)
 {
     unsigned int indexMonth = unsigned(month - 1);
-
     float climateVar = NODATA;
 
-    if (myVar == dailyAirTemperatureMin)
+    switch(myVar)
+    {
+    case dailyAirTemperatureMin:
         climateVar = tmin[indexMonth];
-    else if (myVar == dailyAirTemperatureMax)
+        break;
+    case dailyAirTemperatureMax:
         climateVar = tmax[indexMonth];
-    if (myVar == dailyAirRelHumidityMin)
+        break;
+    case dailyAirRelHumidityMin:
         climateVar = tdmin[indexMonth];
-    else if (myVar == dailyAirRelHumidityMin)
+        break;
+    case dailyAirRelHumidityMax:
         climateVar = tdmax[indexMonth];
-    else
+        break;
+    default:
         return NODATA;
+    }
 
     if (climateVar != NODATA && height != NODATA)
+    {
         climateVar += getClimateLapseRate(myVar, month) * (height - refHeight);
+    }
 
     return climateVar;
 }
@@ -258,23 +279,50 @@ float tDewFromRelHum(float RH, float T)
 }
 
 
+double tDewFromRelHum(double RH, double T)
+{
+    if (isEqual(RH, NODATA) || isEqual(T, NODATA) || RH == 0)
+        return NODATA;
+
+    RH = MINVALUE(100, RH);
+
+    double mySaturatedVaporPres = exp((16.78 * T - 116.9) / (T + 237.3));
+    double actualVaporPres = RH / 100. * mySaturatedVaporPres;
+    return (log(actualVaporPres) * 237.3 + 116.9) / (16.78 - log(actualVaporPres));
+}
+
+
 float relHumFromTdew(float Td, float T)
 {
-    if (int(Td) == int(NODATA) || int(T) == int(NODATA))
+    if (isEqual(Td, NODATA) || isEqual(T, NODATA))
         return NODATA;
 
     double d = 237.3;
     double c = 17.2693882;
     double esp = 1 / (double(T) + d);
-    double myValue = pow((exp((c * double(Td)) - ((c * double(T) / (double(T) + d))) * (double(Td) + d))), esp);
-    myValue *= 100.;
+    double rh = pow(exp((c * double(Td)) - ((c * double(T) / (double(T) + d))) * (double(Td) + d)), esp);
+    rh *= 100;
 
-    if (myValue > 100.)
-        return 100;
-    else if (myValue <= 0.)
-        return 1.;
-    else
-        return float(myValue);
+    if (rh > 100) return 100;
+
+    return std::max(1.f, float(rh));
+}
+
+
+double relHumFromTdew(double Td, double T)
+{
+    if (isEqual(Td, NODATA) || isEqual(T, NODATA))
+        return NODATA;
+
+    double d = 237.3;
+    double c = 17.2693882;
+    double esp = 1 / (double(T) + d);
+    double rh = pow(exp((c * Td) - (c * T / (T + d)) * (Td + d)), esp);
+    rh *= 100;
+
+    if (rh > 100) return 100;
+
+    return std::max(1., rh);
 }
 
 
@@ -298,6 +346,79 @@ double dailyExtrRadiation(double myLat, int myDoy)
     OmegaS = acos(-tan(Phi) * tan(delta));
 
     return SOLAR_CONSTANT * DAY_SECONDS / 1000000. * dr / PI * (OmegaS * sin(Phi) * sin(delta) + cos(Phi) * cos(delta) * sin(OmegaS));
+}
+
+float computeDailyBIC(float prec, float etp)
+{
+
+    Crit3DQuality qualityCheck;
+
+    // TODO nella versione vb ammessi anche i qualitySuspectData, questo tipo per ora non è stato implementato
+    quality::qualityType qualityPrec = qualityCheck.syntacticQualitySingleValue(dailyPrecipitation, prec);
+    quality::qualityType qualityETP = qualityCheck.syntacticQualitySingleValue(dailyReferenceEvapotranspirationHS, etp);
+    if (qualityPrec == quality::accepted && qualityETP == quality::accepted)
+    {
+            return (prec - etp);
+    }
+    else
+        return NODATA;
+
+}
+
+float dailyThermalRange(float Tmin, float Tmax)
+{
+
+    Crit3DQuality qualityCheck;
+
+    // TODO nella versione vb ammessi anche i qualitySuspectData, questo tipo per ora non è stato implementato
+    quality::qualityType qualityTmin = qualityCheck.syntacticQualitySingleValue(dailyAirTemperatureMin, Tmin);
+    quality::qualityType qualityTmax = qualityCheck.syntacticQualitySingleValue(dailyAirTemperatureMax, Tmax);
+    if (qualityTmin  == quality::accepted && qualityTmax == quality::accepted)
+        return (Tmax - Tmin);
+    else
+        return NODATA;
+
+}
+
+float dailyAverageT(float Tmin, float Tmax)
+{
+        Crit3DQuality qualityCheck;
+
+        // TODO nella versione vb ammessi anche i qualitySuspectData, questo tipo per ora non è stato implementato
+        quality::qualityType qualityTmin = qualityCheck.syntacticQualitySingleValue(dailyAirTemperatureMin, Tmin);
+        quality::qualityType qualityTmax = qualityCheck.syntacticQualitySingleValue(dailyAirTemperatureMax, Tmax);
+        if (qualityTmin  == quality::accepted && qualityTmax == quality::accepted)
+            return ( (Tmin + Tmax) / 2) ;
+        else
+            return NODATA;
+}
+
+
+float dailyEtpHargreaves(float Tmin, float Tmax, Crit3DDate date, double latitude, Crit3DMeteoSettings* meteoSettings)
+{
+    Crit3DQuality qualityCheck;
+
+    // TODO nella versione vb ammessi anche i qualitySuspectData, questo tipo per ora non è stato implementato
+    quality::qualityType qualityTmin = qualityCheck.syntacticQualitySingleValue(dailyAirTemperatureMin, Tmin);
+    quality::qualityType qualityTmax = qualityCheck.syntacticQualitySingleValue(dailyAirTemperatureMax, Tmax);
+    int dayOfYear = getDoyFromDate(date);
+    if (qualityTmin  == quality::accepted && qualityTmax == quality::accepted)
+            return float(ET0_Hargreaves(meteoSettings->getTransSamaniCoefficient(), latitude, dayOfYear, Tmax, Tmin));
+    else
+        return NODATA;
+}
+
+
+float dewPoint(float relHumAir, float tempAir)
+{
+    if (relHumAir == NODATA || relHumAir == 0 || tempAir == NODATA)
+        return NODATA;
+
+    relHumAir = MINVALUE(100, relHumAir);
+
+    double saturatedVaporPres = exp((16.78 * tempAir - 116.9) / (tempAir + 237.3));
+    double actualVaporPres = relHumAir / 100 * saturatedVaporPres;
+    return float((log(actualVaporPres) * 237.3 + 116.9) / (16.78 - log(actualVaporPres)));
 }
 
 
@@ -379,7 +500,7 @@ double ET0_Penman_daily(int myDOY, double myElevation, double myLatitude,
 
         myPressure = 101.3 * pow(((293 - 0.0065 * myElevation) / 293), 5.26);
 
-        myPsychro = Psychro(myPressure, myTmed);
+        myPsychro = psychro(myPressure, myTmed);
 
         /*!
         \brief
@@ -392,7 +513,7 @@ double ET0_Penman_daily(int myDOY, double myElevation, double myLatitude,
         /*! Monteith and Unsworth (2008) */
         mySatVapPress = 0.61078 * exp(17.27 * myTmed / (myTmed + 237.3));
         myVapPress = mySatVapPress * myUmed / 100;
-        delta = SaturationSlope(myTmed, mySatVapPress);
+        delta = saturationSlope(myTmed, mySatVapPress);
 
         myDailySB = STEFAN_BOLTZMANN * DAY_SECONDS / 1000000;       /*!<   to MJ */
         myEmissivity = emissivityFromVaporPressure(myVapPress);
@@ -401,7 +522,7 @@ double ET0_Penman_daily(int myDOY, double myElevation, double myLatitude,
         mySWNetRad = mySWGlobRad * (1 - ALBEDO_CROP_REFERENCE);
         myNetRad = (mySWNetRad - myLWNetRad);
 
-        myLambda = LatentHeatVaporization(myTmed) / 1000000; /*!<  to MJ */
+        myLambda = latentHeatVaporization(myTmed) / 1000000; /*!<  to MJ */
 
         vmed2 = myVmed10 * 0.748;
 
@@ -445,7 +566,7 @@ double ET0_Penman_hourly(double heigth, double normalizedTransmissivity, double 
     double firstTerm, secondTerm, denominator;
 
 
-    es = SaturationVaporPressure(airTemp) / 1000.;
+    es = saturationVaporPressure(airTemp) / 1000.;
     ea = airHum * es / 100.0;
     emissivity = emissivityFromVaporPressure(ea);
     tAirK = airTemp + ZEROCELSIUS;
@@ -468,12 +589,12 @@ double ET0_Penman_hourly(double heigth, double normalizedTransmissivity, double 
         Cd = 0.96;
     }
 
-    delta = SaturationSlope(airTemp, es);
+    delta = saturationSlope(airTemp, es);
 
-    pressure = PressureFromAltitude(heigth) / 1000.;
+    pressure = pressureFromAltitude(heigth) / 1000.;
 
-    gamma = Psychro(pressure, airTemp);
-    lambda = LatentHeatVaporization(airTemp);
+    gamma = psychro(pressure, airTemp);
+    lambda = latentHeatVaporization(airTemp);
 
     windSpeed2 = windSpeed10 * 0.748;
 
@@ -510,7 +631,7 @@ double ET0_Penman_hourly_net_rad(double heigth, double netIrradiance, double air
 
     netRadiation = 3600 * netIrradiance;
 
-    es = SaturationVaporPressure(airTemp) / 1000.;
+    es = saturationVaporPressure(airTemp) / 1000.;
     ea = airHum * es / 100.0;
 
     tAirK = airTemp + ZEROCELSIUS;
@@ -526,12 +647,12 @@ double ET0_Penman_hourly_net_rad(double heigth, double netIrradiance, double air
         Cd = 0.96;
     }
 
-    delta = SaturationSlope(airTemp, es);
+    delta = saturationSlope(airTemp, es);
 
-    pressure = PressureFromAltitude(heigth) / 1000.;
+    pressure = pressureFromAltitude(heigth) / 1000.;
 
-    gamma = Psychro(pressure, airTemp);
-    lambda = LatentHeatVaporization(airTemp);
+    gamma = psychro(pressure, airTemp);
+    lambda = latentHeatVaporization(airTemp);
 
     windSpeed2 = windSpeed10 * 0.748;
 
@@ -577,7 +698,7 @@ float computeThomIndex(float temp, float relHum)
     {
         float zT = temp;
         float zUR = relHum;
-        float es = 0.611f * exp(17.27f * zT / (zT + float(ZEROCELSIUS) - 36.f));
+        float es = float(0.611 * exp(17.27 * zT / (zT + ZEROCELSIUS - 36)));
         float zTwb = zT;
         float zTwbPrec = -999.f;
 
@@ -585,8 +706,8 @@ float computeThomIndex(float temp, float relHum)
         {
             zTwbPrec = zTwb;
             float zT1 = (zT + zTwb) / 2;
-            float es1 = 0.611f * exp(17.27f * zT1 / (zT1 + float(ZEROCELSIUS) - 36.f));
-            float delta = es1 / (zT1 + float(ZEROCELSIUS)) * log(207700000 / es1);
+            float es1 = float(0.611 * exp(17.27 * zT1 / (zT1 + ZEROCELSIUS - 36)));
+            float delta = float(es1 / (zT1 + ZEROCELSIUS) * log(207700000 / es1));
             zTwb = zT - es * (1.f - zUR / 100.f) / (delta + 0.06667f);
         }
 
@@ -618,7 +739,7 @@ bool computeWindPolar(float u, float v, float* intensity, float* direction)
 
     if (isEqual(u, NODATA) || isEqual(v, NODATA)) return false;
 
-    *intensity = sqrt(u * u + v * v);
+    *intensity = sqrtf(u * u + v * v);
 
     if (isEqual(u, 0))
     {
@@ -647,9 +768,13 @@ bool setColorScale(meteoVariable variable, Crit3DColorScale *colorScale)
     {
         case airTemperature: case dailyAirTemperatureAvg: case dailyAirTemperatureMax:
         case dailyAirTemperatureMin: case dailyAirTemperatureRange:
-        case airDewTemperature: case dailyAirDewTemperatureAvg: case dailyAirDewTemperatureMin: case dailyAirDewTemperatureMax:
+        case airDewTemperature:
         case snowSurfaceTemperature:
+        case dailyHeatingDegreeDays:
             setTemperatureScale(colorScale);
+            break;
+        case elaboration:
+            setDefaultScale(colorScale);
             break;
         case airRelHumidity: case dailyAirRelHumidityAvg: case dailyAirRelHumidityMax:
         case dailyAirRelHumidityMin: case leafWetness: case dailyLeafWetness:
@@ -661,12 +786,10 @@ bool setColorScale(meteoVariable variable, Crit3DColorScale *colorScale)
         case snowFall: case snowWaterEquivalent: case snowLiquidWaterContent: case snowMelt:
         case dailyWaterTableDepth:
             setPrecipitationScale(colorScale);
-            colorScale->minimum = 0;
             break;  
         case snowAge:
             setGrayScale(colorScale);
             reverseColorScale(colorScale);
-            colorScale->minimum = 0;
             break;
         case dailyBIC:
             setCenteredScale(colorScale);
@@ -681,15 +804,18 @@ bool setColorScale(meteoVariable variable, Crit3DColorScale *colorScale)
         case atmPressure:
             setWindIntensityScale(colorScale);
             break;
+        case leafAreaIndex:
+            setLAIScale(colorScale);
+            break;
         case anomaly:
             setAnomalyScale(colorScale);
             break;
         case noMeteoTerrain:
-            setDefaultDEMScale(colorScale);
+            setDTMScale(colorScale);
             break;
 
         default:
-            setDefaultDEMScale(colorScale);
+            setDefaultScale(colorScale);
     }
 
     return true;
@@ -712,12 +838,8 @@ std::string getVariableString(meteoVariable myVar)
         return "Maximum relative humidity (%)";
     else if (myVar == dailyAirRelHumidityMin)
         return "Minimum relative humidity (%)";
-    else if (myVar == airDewTemperature || myVar == dailyAirDewTemperatureAvg)
+    else if (myVar == airDewTemperature)
         return "Air dew temperature (°C)";
-    else if (myVar == dailyAirDewTemperatureMax)
-        return "Maximum air dew temperature (°C)";
-    else if (myVar == dailyAirDewTemperatureMin)
-        return "Minimum air dew temperature (°C)";
     else if (myVar == thom || myVar == dailyThomAvg)
         return "Thom index ()";
     else if (myVar == dailyThomDaytime)
@@ -794,6 +916,10 @@ std::string getVariableString(meteoVariable myVar)
         return "Sensible heat (kJ m-2)";
     else if (myVar == latentHeat)
         return "Latent heat (kJ m-2)";
+    else if (myVar == dailyHeatingDegreeDays)
+        return "Heating degree days (°D)";
+    else if (myVar == leafAreaIndex)
+            return "Leaf area index (m2 m-2)";
 
     else if (myVar == noMeteoTerrain)
         return "Elevation (m)";
@@ -846,6 +972,24 @@ meteoVariable getKeyMeteoVarMeteoMap(std::map<meteoVariable,std::string> map, co
     for (it = map.begin(); it != map.end(); ++it)
     {
         if (it->second == value)
+        {
+            key = it->first;
+            break;
+        }
+    }
+    return key;
+}
+
+meteoVariable getKeyMeteoVarMeteoMapWithoutUnderscore(std::map<meteoVariable,std::string> map, const std::string& value)
+{
+    std::map<meteoVariable, std::string>::const_iterator it;
+    meteoVariable key = noMeteoVar;
+
+    for (it = map.begin(); it != map.end(); ++it)
+    {
+        std::string str = it->second;
+        str.erase(std::remove(str.begin(), str.end(), '_'), str.end());
+        if (str == value)
         {
             key = it->first;
             break;
@@ -1038,9 +1182,6 @@ meteoVariable updateMeteoVariable(meteoVariable myVar, frequencyType myFreq)
         else if (myVar == airRelHumidity)
             return dailyAirRelHumidityAvg;
 
-        else if (myVar == airDewTemperature)
-            return dailyAirDewTemperatureAvg;
-
         else if (myVar == thom)
             return dailyThomAvg;
 
@@ -1075,9 +1216,6 @@ meteoVariable updateMeteoVariable(meteoVariable myVar, frequencyType myFreq)
 
         else if (myVar == dailyAirRelHumidityAvg || myVar == dailyAirRelHumidityMax || myVar == dailyAirRelHumidityMin)
             return airRelHumidity;
-
-        else if (myVar == dailyAirDewTemperatureAvg || myVar == dailyAirDewTemperatureMax || myVar == dailyAirDewTemperatureMin)
-            return airDewTemperature;
 
         else if (myVar == dailyPrecipitation || myVar == monthlyPrecipitation)
             return precipitation;

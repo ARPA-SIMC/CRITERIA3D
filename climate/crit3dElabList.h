@@ -12,13 +12,6 @@
     #include "crit3dClimateList.h"
 #endif
 
-#ifndef QLIST_H
-    #include <QList>
-#endif
-#ifndef QDATETIME_H
-    #include <QDateTime>
-#endif
-
 
 class Crit3DElabList
 {
@@ -98,6 +91,9 @@ public:
     void setListFileName(const std::vector<QString> &listFileName);
     void insertFileName(QString filename);
 
+    void insertDailyCumulated(bool dailyCumulated);
+    std::vector<bool> listDailyCumulated() const;
+
 private:
 
     QList<QString> _listAll;
@@ -117,6 +113,7 @@ private:
     std::vector<QString> _listElab2;
     std::vector<float> _listParam2;
     std::vector<QString> _listFileName;
+    std::vector<bool> _listDailyCumulated;
 };
 
 #endif // CRIT3DELABLIST_H

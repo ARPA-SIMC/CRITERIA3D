@@ -4,6 +4,9 @@
     #ifndef SOIL_H
         #include "soil.h"
     #endif
+    #ifndef CARBON_H
+        #include "carbonNitrogen.h"
+    #endif
     #ifndef CROP_H
         #include "crop.h"
     #endif
@@ -52,10 +55,12 @@
     {
     public:
         Crit1DCompUnit unit;
+        bool computeFactorOfSafety;
 
         // SOIL
         soil::Crit3DSoil mySoil;
         std::vector<soil::Crit3DLayer> soilLayers;
+        std::vector<Crit3DCarbonNitrogenLayer> carbonNitrogenLayers;
         soil::Crit3DFittingOptions fittingOptions;
 
         // CROP
@@ -70,24 +75,25 @@
         Crit1DCase();
 
         bool initializeSoil(std::string &error);
-        void initializeWaterContent(Crit3DDate myDate);
+        bool initializeWaterContent(Crit3DDate myDate);
         bool computeDailyModel(Crit3DDate &myDate, std::string &error);
 
         double getWaterContent(double computationDepth);
         double getWaterPotential(double computationDepth);
-        double getWaterDeficit(double computationDepth);
-        double getWaterCapacity(double computationDepth);
-        double getAvailableWater(double computationDepth);
         double getFractionAW(double computationDepth);
+        double getSlopeStability(double computationDepth);
+
+        double getWaterDeficitSum(double computationDepth);
+        double getWaterCapacitySum(double computationDepth);
+        double getAvailableWaterSum(double computationDepth);
 
     private:
         double minLayerThickness;       // [m]
         double geometricFactor;         // [-]
-        double ploughedSoilDepth;       // [m]
+
         double lx, ly;                  // [m]
         double area;                    // [m2]
 
-        std::vector<double> prevWaterContent;
 
         bool initializeNumericalFluxes(std::string &error);
         bool computeNumericalFluxes(const Crit3DDate &myDate, std::string &error);
@@ -96,6 +102,11 @@
         void saveWaterContent();
         void restoreWaterContent();
         double getTotalWaterContent();
+
+
+     public:
+        std::vector<double> prevWaterContent;
+        double ploughedSoilDepth;       // [m]
 
     };
 

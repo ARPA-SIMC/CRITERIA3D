@@ -14,7 +14,7 @@ TEMPLATE = lib
 CONFIG += staticlib
 
 CONFIG += debug_and_release
-QMAKE_CXXFLAGS += -std=c++11
+CONFIG += c++11 c++14 c++17
 
 DEFINES += _CRT_SECURE_NO_WARNINGS
 
@@ -37,6 +37,7 @@ INCLUDEPATH += ../crit3dDate ../mathFunctions ../gis ../meteo \
 SOURCES += \
     colorLegend.cpp \
     mapGraphicsRasterObject.cpp \
+    mapGraphicsRasterUtm.cpp \
     mapGraphicsShapeObject.cpp \
     rubberBand.cpp \
     squareMarker.cpp \
@@ -46,6 +47,7 @@ SOURCES += \
 HEADERS += \
     colorLegend.h \
     mapGraphicsRasterObject.h \
+    mapGraphicsRasterUtm.h \
     mapGraphicsShapeObject.h \
     rubberBand.h \
     squareMarker.h \

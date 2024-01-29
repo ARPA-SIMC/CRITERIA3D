@@ -1,10 +1,9 @@
 #----------------------------------------------------
 #
 #   mathFunctions library
-#   contains common constants
-#   basic math, physics and statistic functions
 #
-#   This project is part of CRITERIA3D distribution
+#   contains common constants,
+#   math, physics and statistic functions
 #
 #----------------------------------------------------
 
@@ -14,7 +13,7 @@ TEMPLATE = lib
 CONFIG += staticlib
 
 CONFIG += debug_and_release
-QMAKE_CXXFLAGS += -std=c++11
+CONFIG += c++11 c++14 c++17
 
 unix:{
     CONFIG(debug, debug|release) {

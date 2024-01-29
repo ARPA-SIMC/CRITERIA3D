@@ -1,6 +1,6 @@
 /*!
-* \brief computation unit for CRITERIA-1D
-* \note Unit = distinct combination of crop, soil and meteo
+* \brief computational unit for CRITERIA-1D
+* \note computational unit = distinct combination of crop, soil and meteo
 */
 
 #ifndef COMPUTATIONUNITSDB_H
@@ -9,6 +9,8 @@
     #include <QString>
     #include <QSqlDatabase>
     #include <vector>
+
+class QSqlDatabase;
 
     class Crit1DCompUnit
     {
@@ -24,6 +26,7 @@
         int idSoilNumber;
 
         bool isNumericalInfiltration;
+        bool isComputeLateralDrainage;
         bool isGeometricLayers;
         bool isOptimalIrrigation;
         bool useWaterTableData;

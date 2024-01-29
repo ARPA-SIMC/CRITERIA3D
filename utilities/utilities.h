@@ -28,6 +28,9 @@
     bool getPeriodDates(QString periodSelected, int year, QDate myDate, QDate* startDate, QDate* endDate);
 
     QList<QString> getFields(QSqlDatabase* db_, QString tableName);
+    QList<QString> getFields(const QSqlQuery& query);
+    QList<QString> getFieldsUpperCase(const QSqlQuery &query);
+    bool fieldExists(const QSqlQuery &query, const QString fieldName);
 
     bool getValue(QVariant myRs);
     bool getValue(QVariant myRs, int* myValue);
@@ -37,18 +40,25 @@
     bool getValue(QVariant myRs, QDateTime* myValue);
     bool getValue(QVariant myRs, QString* myValue);
 
-    QString getFilePath(QString fileNameComplete);
-    QString getFileName(QString fileNameComplete);
+    QString getFilePath(const QString &fileNameComplete);
+    QString getFileName(const QString &fileNameComplete);
 
-    std::vector <float> StringListToFloat(QStringList myList);
+    std::vector <float> StringListToFloat(QList<QString> myList);
+    std::vector <double> StringListToDouble(QList<QString> myList);
     QStringList FloatVectorToStringList(std::vector <float> myVector);
+    QStringList DoubleVectorToStringList(std::vector <double> myVector);
     QList<QString> readListSingleColumn(QString fileName, QString& error);
 
     bool removeDirectory(QString myPath);
     bool searchDocPath(QString* docPath);
     bool searchDataPath(QString* dataPath);
-    void clearDir( const QString path );
-    QList<QString> removeList(QList<QString> list, QList<QString> toDelete);
+
+    void removeOldFiles(const QString &targetPath, const QString &targetStr, int nrDays);
+
+    void clearDir( const QString path);
+    QList<QString> removeList(const QList<QString> &list, QList<QString> &toDelete);
+
+    bool parseCSV(const QString &csvFileName, QList<QString> &csvFields, QList<QList<QString>> &csvData, QString &errorString);
 
 
 #endif // UTILITIES_H

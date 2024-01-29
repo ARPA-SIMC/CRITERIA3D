@@ -29,9 +29,11 @@
 */
 
 #include <math.h>
+#include <algorithm>
 
 #include "soil.h"
 #include "commonConstants.h"
+#include "basicMath.h"
 #include "furtherMathFunctions.h"
 
 
@@ -50,10 +52,13 @@ namespace soil
         this->bulkDensity = NODATA;
         this->thetaSat = NODATA;
         this->kSat = NODATA;
+        this->effectiveCohesion = NODATA;
+        this->frictionAngle = NODATA;
     }
 
     Crit3DFittingOptions::Crit3DFittingOptions()
     {
+        // default
         this->waterRetentionCurve = MODIFIEDVANGENUCHTEN;
         this->useWaterRetentionData = true;
         this->airEntryFixed = true;
@@ -65,16 +70,21 @@ namespace soil
         this->depth = NODATA;
         this->thickness = NODATA;
         this->soilFraction = NODATA;
+
         this->waterContent = NODATA;
+        this->waterPotential = NODATA;
+
         this->SAT = NODATA;
         this->FC = NODATA;
         this->WP = NODATA;
         this->HH = NODATA;
+
         this->critical = NODATA;
         this->maxInfiltration = NODATA;
         this->flux = NODATA;
+        this->factorOfSafety = NODATA;
 
-        this->horizon = nullptr;
+        this->horizonPtr = nullptr;
     }
 
     Crit3DTexture::Crit3DTexture()
@@ -85,6 +95,7 @@ namespace soil
         this->classUSDA = NODATA;
         this->classNL = NODATA;
         this->classNameUSDA = "UNDEFINED";
+        this->classUSCS = NODATA;
     }
 
     Crit3DTexture::Crit3DTexture (double mySand, double mySilt, double myClay)
@@ -106,6 +117,12 @@ namespace soil
         this->thetaR = NODATA;
         this->thetaS = NODATA;
         this->refThetaS = NODATA;
+    }
+
+    Crit3DGeotechnicsClass::Crit3DGeotechnicsClass()
+    {
+        this->effectiveCohesion = NODATA;
+        this->frictionAngle = NODATA;
     }
 
     Crit3DDriessen::Crit3DDriessen()
@@ -130,6 +147,8 @@ namespace soil
         this->coarseFragments = NODATA;
         this->organicMatter = NODATA;
         this->bulkDensity = NODATA;
+        this->effectiveCohesion = NODATA;
+        this->frictionAngle = NODATA;
 
         this->fieldCapacity = NODATA;
         this->wiltingPoint = NODATA;
@@ -145,7 +164,7 @@ namespace soil
         this->cleanSoil();
     }
 
-    void Crit3DSoil::initialize(const std::string& soilCode, int nrHorizons)
+    void Crit3DSoil::initialize(const std::string &soilCode, int nrHorizons)
     {
         this->cleanSoil();
         this->code = soilCode;
@@ -157,19 +176,19 @@ namespace soil
         }
     }
 
-    void Crit3DSoil::addHorizon(int nHorizon, Crit3DHorizon* newHorizon)
+    void Crit3DSoil::addHorizon(int nHorizon, const Crit3DHorizon &newHorizon)
     {
-        this->horizon.insert(this->horizon.begin() + nHorizon, *newHorizon);
-        this->nrHorizons = nrHorizons + 1;
+        horizon.insert(horizon.begin() + nHorizon, newHorizon);
+        nrHorizons = nrHorizons + 1;
     }
 
     void Crit3DSoil::deleteHorizon(int nHorizon)
     {
-        this->horizon.erase(this->horizon.begin() + nHorizon);
-        this->nrHorizons = nrHorizons - 1;
+        horizon.erase(horizon.begin() + nHorizon);
+        nrHorizons = nrHorizons - 1;
     }
 
-    int Crit3DSoil::getHorizonIndex(double depth)
+    int Crit3DSoil::getHorizonIndex(double depth) const
     {
        for (unsigned int index = 0; index < nrHorizons; index++)
        {
@@ -180,19 +199,20 @@ namespace soil
        return NODATA;
     }
 
+
     void Crit3DSoil::cleanSoil()
     {
-        for (unsigned int i = 0; i < this->horizon.size(); i++)
+        for (unsigned int i = 0; i < horizon.size(); i++)
         {
-            this->horizon[i].dbData.waterRetention.erase(this->horizon[i].dbData.waterRetention.begin(), this->horizon[i].dbData.waterRetention.end());
-            this->horizon[i].dbData.waterRetention.clear();
+            horizon[i].dbData.waterRetention.erase(horizon[i].dbData.waterRetention.begin(), horizon[i].dbData.waterRetention.end());
+            horizon[i].dbData.waterRetention.clear();
         }
-        this->horizon.clear();
-        this->nrHorizons = 0;
-        this->totalDepth = 0;
-        this->id = NODATA;
-        this->code = "";
-        this->name = "";
+        horizon.clear();
+        nrHorizons = 0;
+        totalDepth = 0;
+        id = NODATA;
+        code = "";
+        name = "";
     }
 
 
@@ -201,18 +221,18 @@ namespace soil
         if (horizonPointer == nullptr)
             return false;
 
-        horizon = horizonPointer;
+        horizonPtr = horizonPointer;
 
         double hygroscopicHumidity = -2000;     // [kPa]
-        double waterContentHH = soil::thetaFromSignPsi(hygroscopicHumidity, horizon);
+        double waterContentHH = soil::thetaFromSignPsi(hygroscopicHumidity, *horizonPtr);
 
         // [-]
-        soilFraction = (1.0 - horizon->coarseFragments);
+        soilFraction = (1.0 - horizonPtr->coarseFragments);
 
         // [mm]
-        SAT = horizon->vanGenuchten.thetaS * soilFraction * thickness * 1000;
-        FC = horizon->waterContentFC * soilFraction * thickness * 1000;
-        WP = horizon->waterContentWP * soilFraction * thickness * 1000;
+        SAT = horizonPtr->vanGenuchten.thetaS * soilFraction * thickness * 1000;
+        FC = horizonPtr->waterContentFC * soilFraction * thickness * 1000;
+        WP = horizonPtr->waterContentWP * soilFraction * thickness * 1000;
         HH = waterContentHH * soilFraction * thickness * 1000;
         critical = FC;
 
@@ -300,6 +320,70 @@ namespace soil
     }
 
 
+    // Unified Soil Classification System (USCS)
+    int getUSCSClass(const Crit3DHorizon &horizon)
+    {
+        double coarseFraction = horizon.coarseFragments + (horizon.texture.sand / 100) * (1 - horizon.coarseFragments);
+        double fineFraction = (horizon.texture.clay + horizon.texture.silt) / 100 * (1 - horizon.coarseFragments);
+        if (coarseFraction > 0.5)
+        {
+            double gravelsFraction = 0.66 * horizon.coarseFragments;
+            if (gravelsFraction/coarseFraction > 0.5)
+            {
+                // GRAVELS
+                if (fineFraction < 0.12)
+                   return 1;    // GW (also GP)
+                else
+                   return 3;    // GM (also GC)
+            }
+            else
+            {
+                // SANDS
+                if (horizon.texture.classNameUSDA == "sand")
+                   return 8; // SP
+                if (horizon.texture.classNameUSDA == "sandy loam" || horizon.texture.classNameUSDA == "loamy sand")
+                   return 9; // SM
+                if (horizon.texture.classNameUSDA == "sandy clayloam" || horizon.texture.classNameUSDA == "sandy clay")
+                   return 10; // SC
+
+                // default
+                return 9;     // SM
+            }
+        }
+        else
+        {
+            // FINE grained soils
+            if (horizon.texture.classNameUSDA == "loam" || horizon.texture.classNameUSDA == "clayloam" || horizon.texture.classNameUSDA == "silty clayloam")
+            {
+                if (horizon.organicMatter > 0.2)
+                   return 16; // OL
+                else
+                   return 14; // CL
+            }
+            if (horizon.texture.classNameUSDA == "silt" || horizon.texture.classNameUSDA == "silt loam")
+            {
+                if (horizon.organicMatter > 0.2)
+                   return 16; // OL
+                else
+                   return 13; // ML
+            }
+            if (horizon.texture.classNameUSDA == "clay" || horizon.texture.classNameUSDA == "silty clay")
+            {
+                if (horizon.organicMatter > 0.2)
+                   return 17; // OH
+                else
+                   return 15; // CH
+            }
+
+            //default
+            if (horizon.organicMatter > 0.2)
+                return 16; // OL
+            else
+                return 14; // CL
+        }
+    }
+
+
     double estimateSpecificDensity(double organicMatter)
     {
         if (int(organicMatter) == int(NODATA))
@@ -316,18 +400,18 @@ namespace soil
 
 
     // estimate bulk density from total porosity
-    double estimateBulkDensity(Crit3DHorizon* horizon, double totalPorosity, bool increaseWithDepth)
+    double estimateBulkDensity(const Crit3DHorizon &horizon, double totalPorosity, bool increaseWithDepth)
     {
         if (int(totalPorosity) == int(NODATA))
-            totalPorosity = (horizon->vanGenuchten.refThetaS);
+            totalPorosity = (horizon.vanGenuchten.refThetaS);
 
-        double specificDensity = estimateSpecificDensity(horizon->organicMatter);
+        double specificDensity = estimateSpecificDensity(horizon.organicMatter);
         double refBulkDensity = (1 - totalPorosity) * specificDensity;
 
         // increase/decrease with depth, reference theta sat at 30cm
         if (increaseWithDepth)
         {
-            double depth = (horizon->upperDepth + horizon->lowerDepth) * 0.5;
+            double depth = (horizon.upperDepth + horizon.lowerDepth) * 0.5;
             double depthCoeff = (depth - 0.30) * 0.05;
             refBulkDensity *= (1.0 + depthCoeff);
         }
@@ -336,16 +420,16 @@ namespace soil
     }
 
 
-    double estimateTotalPorosity(Crit3DHorizon* horizon, double bulkDensity)
+    double estimateTotalPorosity(const Crit3DHorizon &horizon, double bulkDensity)
     {
         if (int(bulkDensity) == int(NODATA)) return NODATA;
 
-        double specificDensity = estimateSpecificDensity(horizon->organicMatter);
+        double specificDensity = estimateSpecificDensity(horizon.organicMatter);
         return 1 - (bulkDensity /specificDensity);
     }
 
 
-    double estimateThetaSat(Crit3DHorizon* horizon, double bulkDensity)
+    double estimateThetaSat(const Crit3DHorizon &horizon, double bulkDensity)
     {
         double totalPorosity = estimateTotalPorosity(horizon, bulkDensity);
         if (int(totalPorosity) == int(NODATA))
@@ -355,38 +439,38 @@ namespace soil
     }
 
 
-    double estimateSaturatedConductivity(Crit3DHorizon* horizon, double bulkDensity)
+    double estimateSaturatedConductivity(const Crit3DHorizon &horizon, double bulkDensity)
     {
         if (int(bulkDensity) == int(NODATA)) return NODATA;
 
-        double refTotalPorosity = horizon->vanGenuchten.refThetaS;
-        double specificDensity = estimateSpecificDensity(horizon->organicMatter);
+        double refTotalPorosity = horizon.vanGenuchten.refThetaS;
+        double specificDensity = estimateSpecificDensity(horizon.organicMatter);
         double refBulkDensity = (1 - refTotalPorosity) * specificDensity;
 
         if (bulkDensity <= refBulkDensity)
-            return horizon->waterConductivity.kSat;
+            return horizon.waterConductivity.kSat;
         else
         {
             // soil compaction
             double ratio = 1 - (bulkDensity / refBulkDensity);
-            return horizon->waterConductivity.kSat * exp(10*ratio);
+            return horizon.waterConductivity.kSat * exp(10*ratio);
         }
     }
 
 
-    int getHorizonIndex(Crit3DSoil* soil, double depth)
+    int getHorizonIndex(const Crit3DSoil &soil, double depth)
     {
-       for (unsigned int index = 0; index < soil->nrHorizons; index++)
+       for (unsigned int index = 0; index < soil.nrHorizons; index++)
        {
-           if (depth >= soil->horizon[index].upperDepth && depth <= (soil->horizon[index].lowerDepth + EPSILON))
-               return(int(index));
+           if (depth >= soil.horizon[index].upperDepth && depth <= (soil.horizon[index].lowerDepth + EPSILON))
+               return int(index);
        }
 
        return NODATA;
     }
 
 
-    int getSoilLayerIndex(std::vector<soil::Crit3DLayer> &soilLayers, double depth)
+    int getSoilLayerIndex(const std::vector<soil::Crit3DLayer> &soilLayers, double depth)
     {
        for (unsigned int index = 0; index < soilLayers.size(); index++)
        {
@@ -407,7 +491,7 @@ namespace soil
      * \note author: Franco Zinoni
      * \return water potential at field capacity (with sign)
      */
-    double getFieldCapacity(Crit3DHorizon* horizon, soil::units unit)
+    double getFieldCapacity(double clayContent, soil::units unit)
     {
         double fcMin = -10;                 /*!< [kPa] clay < 20% : sandy soils */
         double fcMax = -33;                 /*!< [kPa] clay > 50% : clay soils */
@@ -417,13 +501,13 @@ namespace soil
 
         double fieldCapacity;
 
-        if (double(horizon->texture.clay) <= CLAYMIN)
+        if (clayContent <= CLAYMIN)
             fieldCapacity = fcMin;
-        else if (double(horizon->texture.clay) >= CLAYMAX)
+        else if (clayContent >= CLAYMAX)
             fieldCapacity = fcMax;
         else
         {
-            double clayFactor = (double(horizon->texture.clay) - CLAYMIN) / (CLAYMAX - CLAYMIN);
+            double clayFactor = (clayContent - CLAYMIN) / (CLAYMAX - CLAYMIN);
             fieldCapacity = (fcMin + (fcMax - fcMin) * clayFactor);
         }
 
@@ -483,13 +567,13 @@ namespace soil
      * \param horizon pointer to Crit3DHorizon class
      * \return [-] degree of saturation
      */
-    double SeFromTheta(double theta, Crit3DHorizon* horizon)
+    double SeFromTheta(double theta, const Crit3DHorizon &horizon)
     {
         // check range
-        if (theta >= horizon->vanGenuchten.thetaS) return 1;
-        if (theta <= horizon->vanGenuchten.thetaR) return 0;
+        if (theta >= horizon.vanGenuchten.thetaS) return 1;
+        if (theta <= horizon.vanGenuchten.thetaR) return 0;
 
-        return (theta - horizon->vanGenuchten.thetaR) / (horizon->vanGenuchten.thetaS - horizon->vanGenuchten.thetaR);
+        return (theta - horizon.vanGenuchten.thetaR) / (horizon.vanGenuchten.thetaS - horizon.vanGenuchten.thetaR);
     }
 
 
@@ -500,12 +584,12 @@ namespace soil
      * \param horizon: pointer to Crit3DHorizon class
      * \return water potential                  [kPa]
      */
-    double psiFromTheta(double theta, Crit3DHorizon* horizon)
+    double psiFromTheta(double theta, const Crit3DHorizon &horizon)
 
     {
         double Se = SeFromTheta(theta, horizon);
-        double temp = pow(1.0 / (Se * horizon->vanGenuchten.sc), 1.0 / horizon->vanGenuchten.m) - 1.0;
-        double psi = (1.0 / horizon->vanGenuchten.alpha) * pow(temp, 1.0/ horizon->vanGenuchten.n);
+        double temp = pow(1.0 / (Se * horizon.vanGenuchten.sc), 1.0 / horizon.vanGenuchten.m) - 1.0;
+        double psi = (1.0 / horizon.vanGenuchten.alpha) * pow(temp, 1.0/ horizon.vanGenuchten.n);
         return psi;
     }
 
@@ -517,15 +601,15 @@ namespace soil
      * \param horizon
      * \return degree of saturation         [-]
      */
-    double degreeOfSaturationFromSignPsi(double signPsi, Crit3DHorizon* horizon)
+    double degreeOfSaturationFromSignPsi(double signPsi, const Crit3DHorizon &horizon)
     {
         if (signPsi >= 0.0) return 1.0;
 
         double psi = fabs(signPsi);
-        if (psi <=  horizon->vanGenuchten.he) return 1.0;
+        if (psi <=  horizon.vanGenuchten.he) return 1.0;
 
-        double degreeOfSaturation = pow(1.0 + pow(horizon->vanGenuchten.alpha * psi, horizon->vanGenuchten.n),
-                        - horizon->vanGenuchten.m) / horizon->vanGenuchten.sc;
+        double degreeOfSaturation = pow(1.0 + pow(horizon.vanGenuchten.alpha * psi, horizon.vanGenuchten.n),
+                        - horizon.vanGenuchten.m) / horizon.vanGenuchten.sc;
 
         return degreeOfSaturation;
     }
@@ -537,12 +621,12 @@ namespace soil
      * \param horizon
      * \return volumetric water content     [m^3 m-3]
      */
-    double thetaFromSignPsi(double signPsi, Crit3DHorizon* horizon)
+    double thetaFromSignPsi(double signPsi, const Crit3DHorizon &horizon)
     {     
         // degree of saturation [-]
         double Se = degreeOfSaturationFromSignPsi(signPsi, horizon);
 
-        double theta = Se * (horizon->vanGenuchten.thetaS - horizon->vanGenuchten.thetaR) + horizon->vanGenuchten.thetaR;
+        double theta = Se * (horizon.vanGenuchten.thetaS - horizon.vanGenuchten.thetaR) + horizon.vanGenuchten.thetaR;
         return theta;
     }
 
@@ -555,16 +639,16 @@ namespace soil
      * \return hydraulic conductivity       [cm day^-1]
      * \warning very low values are possible (es: 10^12)
      */
-    double waterConductivity(double Se, Crit3DHorizon* horizon)
+    double waterConductivity(double Se, const Crit3DHorizon &horizon)
     {
-        if (Se >= 1.) return(horizon->waterConductivity.kSat);
+        if (Se >= 1.) return(horizon.waterConductivity.kSat);
 
         double myTmp = NODATA;
 
-        double myNumerator = 1. - pow(1. - pow(Se * horizon->vanGenuchten.sc, 1.0 / horizon->vanGenuchten.m), horizon->vanGenuchten.m);
-        myTmp = myNumerator / (1. - pow(1. - pow(horizon->vanGenuchten.sc, 1.0 / horizon->vanGenuchten.m), horizon->vanGenuchten.m));
+        double myNumerator = 1. - pow(1. - pow(Se * horizon.vanGenuchten.sc, 1.0 / horizon.vanGenuchten.m), horizon.vanGenuchten.m);
+        myTmp = myNumerator / (1. - pow(1. - pow(horizon.vanGenuchten.sc, 1.0 / horizon.vanGenuchten.m), horizon.vanGenuchten.m));
 
-        return (horizon->waterConductivity.kSat * pow(Se, horizon->waterConductivity.l) * pow(myTmp , 2.0));
+        return (horizon.waterConductivity.kSat * pow(Se, horizon.waterConductivity.l) * pow(myTmp , 2.0));
     }
 
 
@@ -574,7 +658,7 @@ namespace soil
      * \param horizon
      * \return water conductivity           [cm day-1]
      */
-    double waterConductivityFromSignPsi(double signPsi, Crit3DHorizon* horizon)
+    double waterConductivityFromSignPsi(double signPsi, const Crit3DHorizon &horizon)
     {
         double theta = soil::thetaFromSignPsi(signPsi, horizon);
         double degreeOfSaturation = SeFromTheta(theta, horizon);
@@ -588,10 +672,10 @@ namespace soil
      * \param layer: pointer to Crit3DLayer class
      * \return water content        [mm]
      */
-    double getWaterContentFromPsi(double psi, Crit3DLayer* layer)
+    double getWaterContentFromPsi(double psi, const Crit3DLayer &layer)
     {
-        double theta = soil::thetaFromSignPsi(-psi, layer->horizon);
-        return theta * layer->thickness * layer->soilFraction * 1000;
+        double theta = soil::thetaFromSignPsi(-psi, *(layer.horizonPtr));
+        return theta * layer.thickness * layer.soilFraction * 1000;
     }
 
 
@@ -631,7 +715,7 @@ namespace soil
     double Crit3DLayer::getDegreeOfSaturation()
     {
         double theta = getVolumetricWaterContent();
-        return (theta - horizon->vanGenuchten.thetaR) / (horizon->vanGenuchten.thetaS - horizon->vanGenuchten.thetaR);
+        return (theta - horizonPtr->vanGenuchten.thetaR) / (horizonPtr->vanGenuchten.thetaS - horizonPtr->vanGenuchten.thetaR);
     }
 
 
@@ -642,7 +726,7 @@ namespace soil
     double Crit3DLayer::getWaterPotential()
     {
         double theta = getVolumetricWaterContent();
-        return psiFromTheta(theta, horizon);
+        return psiFromTheta(theta, *horizonPtr);
     }
 
 
@@ -653,8 +737,35 @@ namespace soil
     double Crit3DLayer::getWaterConductivity()
     {
         double theta = getVolumetricWaterContent();
-        double degreeOfSaturation = SeFromTheta(theta, horizon);
-        return waterConductivity(degreeOfSaturation, horizon);
+        double degreeOfSaturation = SeFromTheta(theta, *horizonPtr);
+        return waterConductivity(degreeOfSaturation, *horizonPtr);
+    }
+
+
+    /*!
+     * \brief getSlopeStability
+     * \return factor of safety FoS [-]
+     * if fos < 1 the slope is unstable
+     */
+    double Crit3DLayer::computeSlopeStability(double slope, double rootCohesion)
+    {
+        double suctionStress = -waterPotential * getDegreeOfSaturation();    // [kPa]
+
+        double slopeAngle = asin(slope);
+        double frictionAngle = horizonPtr->frictionAngle * DEG_TO_RAD;
+
+        double tanAngle = tan(slopeAngle);
+        double tanFrictionAngle = tan(frictionAngle);
+
+        double frictionEffect =  tanFrictionAngle / tanAngle;
+
+        double unitWeight = horizonPtr->bulkDensity * GRAVITY;                   // [kN m-3]
+        double cohesionEffect = 2 * (horizonPtr->effectiveCohesion + rootCohesion) / (unitWeight * depth * sin(2*slopeAngle));
+
+        double suctionEffect = (suctionStress * (tanAngle + 1/tanAngle) * tanFrictionAngle) / (unitWeight * depth);
+
+        // factor of safety
+        return frictionEffect + cohesionEffect - suctionEffect;        // [-]
     }
 
 
@@ -676,148 +787,166 @@ namespace soil
 
     /*!
      * \brief Set soil properties of one horizon starting from data in soil db
-     * \brief it assumes that horizon->dbData and textureClassList are just loaded
+     * \brief it assumes that horizon.dbData and textureClassList are just loaded
      * \return true if soil properties are correct, false otherwise
      */
-    bool setHorizon(Crit3DHorizon* horizon, Crit3DTextureClass* textureClassList,
-                    Crit3DFittingOptions* fittingOptions, std::string* error)
+    bool setHorizon(Crit3DHorizon &horizon, const std::vector<Crit3DTextureClass> &textureClassList,
+                    const std::vector<Crit3DGeotechnicsClass> &geotechnicsClassList,
+                    const Crit3DFittingOptions &fittingOptions, std::string &errorStr)
     {
-        *error = "";
+        errorStr = "";
 
         // depth [cm]->[m]
-        if (horizon->dbData.upperDepth != NODATA && horizon->dbData.lowerDepth != NODATA)
+        if (horizon.dbData.upperDepth != NODATA && horizon.dbData.lowerDepth != NODATA)
         {
-            horizon->upperDepth = horizon->dbData.upperDepth / 100;
-            horizon->lowerDepth = horizon->dbData.lowerDepth / 100;
+            horizon.upperDepth = horizon.dbData.upperDepth / 100;
+            horizon.lowerDepth = horizon.dbData.lowerDepth / 100;
         }
         else
         {
-            *error += "wrong depth";
+            errorStr += "wrong depth";
             return false;
         }
 
-        // coarse fragments [%] -> 0-1
-        if (horizon->dbData.coarseFragments != NODATA
-                && horizon->dbData.coarseFragments >= 0
-                && horizon->dbData.coarseFragments < 100)
+        // sand, silt, clay [%]
+        horizon.texture.sand = horizon.dbData.sand;
+        horizon.texture.silt = horizon.dbData.silt;
+        horizon.texture.clay = horizon.dbData.clay;
+        if (horizon.texture.sand <= 1 && horizon.texture.silt <= 1 && horizon.texture.clay <= 1)
         {
-            horizon->coarseFragments = horizon->dbData.coarseFragments / 100;
+            horizon.texture.sand *= 100;
+            horizon.texture.silt *= 100;
+            horizon.texture.clay *= 100;
+        }
+
+        // texture
+        horizon.texture.classUSDA = soil::getUSDATextureClass(horizon.texture);
+        if (horizon.texture.classUSDA == NODATA)
+        {
+            errorStr = "sand+silt+clay <> 100";
+            return false;
+        }
+
+        horizon.texture.classNameUSDA = textureClassList[horizon.texture.classUSDA].classNameUSDA;
+        horizon.texture.classNL = soil::getNLTextureClass(horizon.texture);
+
+        // coarse fragments: from percentage to fraction [0-1]
+        if (horizon.dbData.coarseFragments != NODATA
+            && horizon.dbData.coarseFragments >= 0
+            && horizon.dbData.coarseFragments < 100)
+        {
+            horizon.coarseFragments = horizon.dbData.coarseFragments / 100;
         }
         else
         {
             // default: no coarse fragment
-            horizon->coarseFragments = 0.0;
+            horizon.coarseFragments = 0.0;
         }
 
-        // organic matter [%] -> 0-1
-        if (horizon->dbData.organicMatter != NODATA
-                && horizon->dbData.organicMatter > 0
-                && horizon->dbData.organicMatter < 100)
+        // organic matter: from percentage to fraction [0-1]
+        if (horizon.dbData.organicMatter != NODATA
+            && horizon.dbData.organicMatter > 0
+            && horizon.dbData.organicMatter < 100)
         {
-            horizon->organicMatter = horizon->dbData.organicMatter / 100;
+            horizon.organicMatter = horizon.dbData.organicMatter / 100;
         }
         else
         {
-            horizon->organicMatter = estimateOrganicMatter(horizon->upperDepth);
+            horizon.organicMatter = estimateOrganicMatter(horizon.upperDepth);
         }
-
-        // sand, silt, clay [%]
-        horizon->texture.sand = horizon->dbData.sand;
-        horizon->texture.silt = horizon->dbData.silt;
-        horizon->texture.clay = horizon->dbData.clay;
-        if (horizon->texture.sand <= 1 && horizon->texture.silt <= 1 && horizon->texture.clay <= 1)
-        {
-            horizon->texture.sand *= 100;
-            horizon->texture.silt *= 100;
-            horizon->texture.clay *= 100;
-        }
-
-        // texture
-        horizon->texture.classUSDA = soil::getUSDATextureClass(horizon->texture);
-        if (horizon->texture.classUSDA == NODATA)
-        {
-            *error = "sand+silt+clay <> 100";
-            return false;
-        }
-
-        horizon->texture.classNL = soil::getNLTextureClass(horizon->texture);
-        horizon->texture.classNameUSDA = textureClassList[horizon->texture.classUSDA].classNameUSDA;
 
         // assign default parameters from texture class
-        horizon->vanGenuchten = textureClassList[horizon->texture.classUSDA].vanGenuchten;
-        horizon->waterConductivity = textureClassList[horizon->texture.classUSDA].waterConductivity;
-        horizon->Driessen = textureClassList[horizon->texture.classNL].Driessen;
+        horizon.vanGenuchten = textureClassList[horizon.texture.classUSDA].vanGenuchten;
+        horizon.waterConductivity = textureClassList[horizon.texture.classUSDA].waterConductivity;
+        horizon.Driessen = textureClassList[horizon.texture.classNL].Driessen;
 
         // theta sat [m3 m-3]
-        if (horizon->dbData.thetaSat != NODATA && horizon->dbData.thetaSat > 0 && horizon->dbData.thetaSat < 1)
+        if (horizon.dbData.thetaSat != NODATA && horizon.dbData.thetaSat > 0 && horizon.dbData.thetaSat < 1)
         {
-            horizon->vanGenuchten.thetaS = horizon->dbData.thetaSat;
+            horizon.vanGenuchten.thetaS = horizon.dbData.thetaSat;
         }
 
         // bulk density [g cm-3]
-        horizon->bulkDensity = NODATA;
-        if (horizon->dbData.bulkDensity != NODATA && horizon->dbData.bulkDensity > 0 && horizon->dbData.bulkDensity < QUARTZ_DENSITY)
+        horizon.bulkDensity = NODATA;
+        if (horizon.dbData.bulkDensity != NODATA && horizon.dbData.bulkDensity > 0 && horizon.dbData.bulkDensity < QUARTZ_DENSITY)
         {
-            horizon->bulkDensity = horizon->dbData.bulkDensity;  
+            horizon.bulkDensity = horizon.dbData.bulkDensity;
         }
         else
         {
-            horizon->bulkDensity = soil::estimateBulkDensity(horizon, horizon->vanGenuchten.thetaS, true);
+            horizon.bulkDensity = soil::estimateBulkDensity(horizon, horizon.vanGenuchten.thetaS, true);
         }
 
         // theta sat from bulk density
-        if(horizon->dbData.thetaSat == NODATA)
+        if(horizon.dbData.thetaSat == NODATA)
         {
-            horizon->vanGenuchten.thetaS = soil::estimateThetaSat(horizon, horizon->bulkDensity);
+            horizon.vanGenuchten.thetaS = soil::estimateThetaSat(horizon, horizon.bulkDensity);
         }
 
         // water retention curve fitting
-        if (fittingOptions->useWaterRetentionData && horizon->dbData.waterRetention.size() > 0)
+        if (fittingOptions.useWaterRetentionData && horizon.dbData.waterRetention.size() > 0)
         {
             fittingWaterRetentionCurve(horizon, fittingOptions);
 
             // bulk density from fitted theta sat
-            if (horizon->dbData.bulkDensity == NODATA)
+            if (horizon.dbData.bulkDensity == NODATA)
             {
-                horizon->bulkDensity = soil::estimateBulkDensity(horizon, horizon->vanGenuchten.thetaS, false);
+                horizon.bulkDensity = soil::estimateBulkDensity(horizon, horizon.vanGenuchten.thetaS, false);
             }
         }
 
         // Ksat = saturated water conductivity [cm day-1]
-        if (horizon->dbData.kSat != NODATA && horizon->dbData.kSat > 0)
+        if (horizon.dbData.kSat != NODATA && horizon.dbData.kSat > 0)
         {
             // check ksat value
-            if (horizon->dbData.kSat < (horizon->waterConductivity.kSat / 100))
+            if (horizon.dbData.kSat < (horizon.waterConductivity.kSat / 100))
             {
-                horizon->waterConductivity.kSat /= 100;
-                *error = "Ksat is out of class limits.";
+                horizon.waterConductivity.kSat /= 100;
+                errorStr = "Ksat is out of class limits.";
             }
-            else if (horizon->dbData.kSat > (horizon->waterConductivity.kSat * 100))
+            else if (horizon.dbData.kSat > (horizon.waterConductivity.kSat * 100))
             {
-                horizon->waterConductivity.kSat *= 100;
-                *error = "Ksat is out of class limits.";
+                horizon.waterConductivity.kSat *= 100;
+                errorStr = "Ksat is out of class limits.";
             }
             else
             {
-                horizon->waterConductivity.kSat = horizon->dbData.kSat;
+                horizon.waterConductivity.kSat = horizon.dbData.kSat;
             }
         }
         else
         {
-            horizon->waterConductivity.kSat = soil::estimateSaturatedConductivity(horizon, horizon->bulkDensity);
+            horizon.waterConductivity.kSat = soil::estimateSaturatedConductivity(horizon, horizon.bulkDensity);
         }
 
-        // update with coarse fragment (TODO check altre parti del codice!)
-        //horizon->vanGenuchten.thetaS *= (1.0 - horizon->coarseFragments);
-        //horizon->vanGenuchten.thetaR *= (1.0 - horizon->coarseFragments);
+        horizon.CEC = 50.0;
+        horizon.PH = 7.7;
 
-        horizon->CEC = 50.0;
-        horizon->PH = 7.7;
+        // new parameters for slope stability
+        horizon.texture.classUSCS = getUSCSClass(horizon);
+        if (horizon.dbData.effectiveCohesion != NODATA)
+        {
+            horizon.effectiveCohesion = horizon.dbData.effectiveCohesion;
+        }
+        else
+        {
+            if (horizon.texture.classUSCS >= 1 && horizon.texture.classUSCS <= 18)
+                horizon.effectiveCohesion = geotechnicsClassList[horizon.texture.classUSCS].effectiveCohesion;
+        }
+        if (horizon.dbData.frictionAngle != NODATA)
+        {
+            horizon.frictionAngle = horizon.dbData.frictionAngle;
+        }
+        else
+        {
+            if (horizon.texture.classUSCS >= 1 && horizon.texture.classUSCS <= 18)
+                horizon.frictionAngle = geotechnicsClassList[horizon.texture.classUSCS].frictionAngle;
+        }
 
-        horizon->fieldCapacity = soil::getFieldCapacity(horizon, soil::KPA);
-        horizon->wiltingPoint = soil::getWiltingPoint(soil::KPA);
-        horizon->waterContentFC = soil::thetaFromSignPsi(horizon->fieldCapacity, horizon);
-        horizon->waterContentWP = soil::thetaFromSignPsi(horizon->wiltingPoint, horizon);
+        horizon.fieldCapacity = soil::getFieldCapacity(horizon.texture.clay, soil::KPA);
+        horizon.wiltingPoint = soil::getWiltingPoint(soil::KPA);
+        horizon.waterContentFC = soil::thetaFromSignPsi(horizon.fieldCapacity, horizon);
+        horizon.waterContentWP = soil::thetaFromSignPsi(horizon.wiltingPoint, horizon);
 
         return true;
     }
@@ -828,35 +957,60 @@ namespace soil
      * \brief using data in water_retention table in soil db
      * \return true if success, false otherwise
      */
-    bool fittingWaterRetentionCurve(Crit3DHorizon* horizon, Crit3DFittingOptions* fittingOptions)
+    bool fittingWaterRetentionCurve(Crit3DHorizon &horizon, const Crit3DFittingOptions &fittingOptions)
     {
-        if (! fittingOptions->useWaterRetentionData || horizon->dbData.waterRetention.size() == 0)
+        unsigned int nrObsValues = unsigned(horizon.dbData.waterRetention.size());
+
+        if (! fittingOptions.useWaterRetentionData || nrObsValues == 0)
         {
             // nothing to do
             return true;
         }
 
-        if (fittingOptions->waterRetentionCurve != MODIFIEDVANGENUCHTEN)
+        if (fittingOptions.waterRetentionCurve != MODIFIEDVANGENUCHTEN)
         {
             // TODO other functions
             return false;
         }
 
-        // values
-        unsigned int nrValues = unsigned(horizon->dbData.waterRetention.size());
+        // search theta max
+        double psiMin = 10000;      // [kpa]
+        double thetaMax = 0;        // [m3 m-3]
+        for (unsigned int i = 0; i < nrObsValues; i++)
+        {
+            psiMin = std::min(psiMin, horizon.dbData.waterRetention[i].water_potential);
+            thetaMax = std::max(thetaMax, horizon.dbData.waterRetention[i].water_content);
+        }
+        // add theta sat if minimum observed value is greater than 3 kPa
+        bool addThetaSat = ((thetaMax < horizon.vanGenuchten.thetaS) && (psiMin > 3));
+
+        // set values
+        unsigned int nrValues = nrObsValues;
+        unsigned int firstIndex = 0;
+        if (addThetaSat)
+        {
+            nrValues++;
+            firstIndex = 1;
+        }
         double* x = new double[nrValues];
         double* y = new double[nrValues];
-        for (unsigned int i = 0; i < nrValues; i++)
+
+        if (addThetaSat)
         {
-            x[i] = horizon->dbData.waterRetention[i].water_potential;
-            y[i] = horizon->dbData.waterRetention[i].water_content;
+            x[0] = 0.0;
+            y[0] = horizon.vanGenuchten.thetaS;
+        }
+        for (unsigned int i = 0; i < nrObsValues; i++)
+        {
+            x[i + firstIndex] = horizon.dbData.waterRetention[i].water_potential;
+            y[i + firstIndex] = horizon.dbData.waterRetention[i].water_content;
         }
 
         int functionCode;
         unsigned int nrParameters;
         int nrIterations = 200;
 
-        if (fittingOptions->mRestriction)
+        if (fittingOptions.mRestriction)
         {
             functionCode = FUNCTION_CODE_MODIFIED_VAN_GENUCHTEN_RESTRICTED;
             nrParameters = 5;
@@ -874,36 +1028,56 @@ namespace soil
         double* pdelta = new double[nrParameters];
 
         // water content at saturation [m^3 m^-3]
-        param[0] = horizon->vanGenuchten.thetaS;
+        param[0] = horizon.vanGenuchten.thetaS;
         pmin[0] = 0;
         pmax[0] = 1;
 
         // water content residual [m^3 m^-3]
-        param[1] = horizon->vanGenuchten.thetaR;
+        param[1] = horizon.vanGenuchten.thetaR;
         pmin[1] = 0;
-        pmax[1] = horizon->vanGenuchten.thetaR;
+        pmax[1] = std::max(0.1, horizon.vanGenuchten.thetaR*2);
 
         // air entry [kPa]
-        param[2] = horizon->vanGenuchten.he;
-        if (fittingOptions->airEntryFixed)
+        param[2] = horizon.vanGenuchten.he;
+        if (fittingOptions.airEntryFixed)
         {
-            pmin[2] = horizon->vanGenuchten.he;
-            pmax[2] = horizon->vanGenuchten.he;
+            pmin[2] = horizon.vanGenuchten.he;
+            pmax[2] = horizon.vanGenuchten.he;
         }
         else
         {
-            pmin[2] = 0.01;
-            pmax[2] = 10;
+            double heMin = 0.01;                            // kPa
+            double heMax = 10;                              // kPa
+
+            // search air entry interval
+            if (! addThetaSat)
+            {
+                for (unsigned int i = 0; i < nrObsValues; i++)
+                {
+                    double delta = (thetaMax - horizon.dbData.waterRetention[i].water_content);
+                    double psi = horizon.dbData.waterRetention[i].water_potential;
+                    if (delta <= 0.0002)
+                    {
+                       heMin = std::max(heMin, psi);
+                    }
+                    if (delta >= 0.002)
+                    {
+                       heMax = std::min(heMax, psi);
+                    }
+                }
+            }
+            pmin[2] = heMin;
+            pmax[2] = heMax;
         }
 
         // Van Genuchten alpha parameter [kPa^-1]
-        param[3] = horizon->vanGenuchten.alpha;
+        param[3] = horizon.vanGenuchten.alpha;
         pmin[3] = 0.01;
         pmax[3] = 10;
 
         // Van Genuchten n parameter [-]
-        param[4] = horizon->vanGenuchten.n;
-        if (fittingOptions->mRestriction)
+        param[4] = horizon.vanGenuchten.n;
+        if (fittingOptions.mRestriction)
         {
             pmin[4] = 1;
             pmax[4] = 10;
@@ -914,7 +1088,7 @@ namespace soil
             pmax[4] = 10;
 
             // Van Genuchten m parameter (restricted: 1-1/n) [-]
-            param[5] = horizon->vanGenuchten.m;
+            param[5] = horizon.vanGenuchten.m;
             pmin[5] = 0.01;
             pmax[5] = 1;
         }
@@ -927,20 +1101,20 @@ namespace soil
         if ( interpolation::fittingMarquardt(pmin, pmax, param, signed(nrParameters), pdelta,
                                    nrIterations, EPSILON, functionCode, x, y, signed(nrValues)) )
         {
-            horizon->vanGenuchten.thetaS = param[0];
-            horizon->vanGenuchten.thetaR = param[1];
-            horizon->vanGenuchten.he = param[2];
-            horizon->vanGenuchten.alpha = param[3];
-            horizon->vanGenuchten.n = param[4];
-            if (fittingOptions->mRestriction)
+            horizon.vanGenuchten.thetaS = param[0];
+            horizon.vanGenuchten.thetaR = param[1];
+            horizon.vanGenuchten.he = param[2];
+            horizon.vanGenuchten.alpha = param[3];
+            horizon.vanGenuchten.n = param[4];
+            if (fittingOptions.mRestriction)
             {
-                horizon->vanGenuchten.m = 1 - 1 / horizon->vanGenuchten.n;
+                horizon.vanGenuchten.m = 1 - 1 / horizon.vanGenuchten.n;
             }
             else
             {
-                horizon->vanGenuchten.m = param[5];
+                horizon.vanGenuchten.m = param[5];
             }
-            horizon->vanGenuchten.sc = pow(1 + pow(horizon->vanGenuchten.alpha * horizon->vanGenuchten.he, horizon->vanGenuchten.n), -horizon->vanGenuchten.m);
+            horizon.vanGenuchten.sc = pow(1 + pow(horizon.vanGenuchten.alpha * horizon.vanGenuchten.he, horizon.vanGenuchten.n), -horizon.vanGenuchten.m);
 
             return true;
         }
@@ -970,10 +1144,10 @@ namespace soil
 
         // layer > 0: soil
         unsigned int i = 1;
-        double upperDepth = 0.0;
-        double currentThikness = layerThicknessMin;
+        double upperDepth = 0.0;                        // [m]
+        double currentThikness = layerThicknessMin;     // [m]
 
-        while (upperDepth < totalDepth)
+        while ((totalDepth - upperDepth) >= 0.001)
         {
             Crit3DLayer newLayer;
             newLayer.thickness = round(currentThikness*100) / 100;
@@ -1009,10 +1183,13 @@ namespace soil
             i++;
         }
 
+        if (! isEqual(upperDepth, totalDepth))
+        {
+            totalDepth = upperDepth;
+        }
+
         return true;
     }
 
 }
-
-
 

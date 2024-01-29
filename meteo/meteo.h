@@ -9,21 +9,13 @@
         #include "statistics.h"
     #endif
 
-    #ifndef VECTOR_H
-        #include <vector>
-    #endif
-
-    #ifndef _MAP_
-        #include <map>
-    #endif
-
-
-    class Crit3DColorScale;
+    #include <map>
 
     #define DEFAULT_MIN_PERCENTAGE 80
     #define DEFAULT_RAINFALL_THRESHOLD 0.2f
     #define DEFAULT_LEAFWETNESS_RH_THRESHOLD 87
     #define DEFAULT_THOM_THRESHOLD 24
+    #define DEFAULT_TEMPERATURE_THRESHOLD 30
     #define DEFAULT_TRANSMISSIVITY_SAMANI 0.17f
     #define DEFAULT_HOURLY_INTERVALS 1
     #define DEFAULT_WIND_INTENSITY 2.0f
@@ -38,6 +30,8 @@
     #define FIELD_METEO_DATETIME "date"
     #define FIELD_METEO_VARIABLE "id_variable"
     #define FIELD_METEO_VARIABLE_NAME "variable"
+
+    class Crit3DColorScale;
 
     class Crit3DMeteoSettings
     {
@@ -54,6 +48,9 @@
 
         float getThomThreshold() const;
         void setThomThreshold(float value);
+
+        float getTemperatureThreshold() const;
+        void setTemperatureThreshold(float value);
 
         float getTransSamaniCoefficient() const;
         void setTransSamaniCoefficient(float value);
@@ -74,6 +71,7 @@
         float minimumPercentage;
         float rainfallThreshold;
         float thomThreshold;
+        float temperatureThreshold;
         float transSamaniCoefficient;
         int hourlyIntervals;
         float windIntensityDefault;
@@ -91,9 +89,8 @@
     enum meteoVariable {airTemperature, dailyAirTemperatureMin, monthlyAirTemperatureMin, dailyAirTemperatureMax, monthlyAirTemperatureMax,
                     dailyAirTemperatureAvg, monthlyAirTemperatureAvg, dailyAirTemperatureRange,
                     precipitation, dailyPrecipitation, monthlyPrecipitation,
-                    airRelHumidity, dailyAirRelHumidityMin, dailyAirRelHumidityMax, dailyAirRelHumidityAvg,
-                    airDewTemperature, dailyAirDewTemperatureMin, dailyAirDewTemperatureMax, dailyAirDewTemperatureAvg,
-                    thom, dailyThomMax, dailyThomAvg, dailyThomHoursAbove, dailyThomDaytime, dailyThomNighttime,
+                    airRelHumidity, airDewTemperature, dailyAirRelHumidityMin, dailyAirRelHumidityMax, dailyAirRelHumidityAvg,
+                    thom, dailyThomMax, dailyThomAvg, dailyThomHoursAbove, dailyThomDaytime, dailyThomNighttime,dailyTemperatureHoursAbove,
                     globalIrradiance, netIrradiance, directIrradiance, diffuseIrradiance, reflectedIrradiance, atmTransmissivity,
                     dailyGlobalRadiation, monthlyGlobalRadiation, dailyDirectRadiation, dailyDiffuseRadiation, dailyReflectedRadiation,
                     windScalarIntensity, windVectorIntensity, windVectorDirection, windVectorX, windVectorY,
@@ -103,8 +100,9 @@
                     dailyBIC, monthlyBIC, dailyHeatingDegreeDays, dailyCoolingDegreeDays,
                     snowWaterEquivalent, snowFall, snowSurfaceTemperature, snowInternalEnergy, snowSurfaceEnergy,
                     snowAge, snowLiquidWaterContent, snowMelt, sensibleHeat, latentHeat,
-                    dailyWaterTableDepth,
-                    anomaly, elaboration, noMeteoTerrain, noMeteoVar};
+                    dailyWaterTableDepth, leafAreaIndex,
+                    anomaly, elaboration, noMeteoTerrain,
+                    noMeteoVar};
 
 
     const std::map<std::string, meteoVariable> MapDailyMeteoVar = {
@@ -125,14 +123,12 @@
       { "DAILY_ET0_PM", dailyReferenceEvapotranspirationPM },
       { "DAILY_LEAFW", dailyLeafWetness },
       { "DAILY_TEMPRANGE", dailyAirTemperatureRange },
-      { "DAILY_AIRDEW_TMIN", dailyAirDewTemperatureMin },
-      { "DAILY_AIRDEW_TMAX", dailyAirDewTemperatureMax },
-      { "DAILY_AIRDEW_TAVG", dailyAirDewTemperatureAvg },
       { "DAILY_THOMMAX", dailyThomMax },
       { "DAILY_THOMAVG", dailyThomAvg },
       { "DAILY_THOM_HABOVE", dailyThomHoursAbove },
       { "DAILY_THOM_DAYTIME", dailyThomDaytime },
       { "DAILY_THOM_NIGHTTIME", dailyThomNighttime },
+      { "DAILY_TEMPERATURE_HABOVE", dailyTemperatureHoursAbove},
       { "DAILY_DIRECT_RAD", dailyDirectRadiation },
       { "DAILY_DIFFUSE_RAD", dailyDiffuseRadiation },
       { "DAILY_REFLEC_RAD", dailyReflectedRadiation },
@@ -162,14 +158,12 @@
       { dailyReferenceEvapotranspirationPM, "DAILY_ET0_PM" },
       { dailyLeafWetness, "DAILY_LEAFW" },
       { dailyAirTemperatureRange, "DAILY_TEMPRANGE" },
-      { dailyAirDewTemperatureMin, "DAILY_AIRDEW_TMIN" },
-      { dailyAirDewTemperatureMax, "DAILY_AIRDEW_TMAX" },
-      { dailyAirDewTemperatureAvg, "DAILY_AIRDEW_TAVG" },
       { dailyThomMax, "DAILY_THOMMAX" },
       { dailyThomAvg, "DAILY_THOMAVG" },
       { dailyThomHoursAbove, "DAILY_THOM_HABOVE" },
       { dailyThomDaytime, "DAILY_THOM_DAYTIME" },
       { dailyThomNighttime, "DAILY_THOM_NIGHTTIME" },
+      { dailyTemperatureHoursAbove, "DAILY_TEMPERATURE_HABOVE" },
       { dailyDirectRadiation, "DAILY_DIRECT_RAD" },
       { dailyDiffuseRadiation, "DAILY_DIFFUSE_RAD" },
       { dailyReflectedRadiation, "DAILY_REFLEC_RAD" },
@@ -271,7 +265,7 @@
         { {dailyLeafWetness,leafWetness}, "h"} ,
         { {dailyHeatingDegreeDays,dailyCoolingDegreeDays}, "°D"} ,
         { {airRelHumidity,dailyAirRelHumidityMin,dailyAirRelHumidityMax,dailyAirRelHumidityAvg}, "%"} ,
-        { {dailyAirDewTemperatureMin,dailyAirDewTemperatureMax,dailyAirDewTemperatureAvg,airDewTemperature}, "°C"} ,
+        { {airDewTemperature}, "°C"} ,
         { {dailyThomAvg,dailyThomDaytime,dailyThomNighttime,thom}, "-"} ,
         { {dailyWaterTableDepth,snowWaterEquivalent,snowFall,snowMelt,snowLiquidWaterContent}, "mm"} ,
         { {snowSurfaceTemperature}, "°C"} ,
@@ -310,6 +304,14 @@
     float relHumFromTdew(float Td, float T);
     float tDewFromRelHum(float RH, float T);
 
+    double tDewFromRelHum(double RH, double T);
+    double tDewFromRelHum(double RH, double T);
+
+    float computeDailyBIC(float prec, float etp);
+    float dailyThermalRange(float Tmin, float Tmax);
+    float dailyAverageT(float Tmin, float Tmax);
+    float dailyEtpHargreaves(float Tmin, float Tmax, Crit3DDate date, double latitude, Crit3DMeteoSettings *meteoSettings);
+    float dewPoint(float relHumAir, float tempAir);
     bool computeLeafWetness(double prec, double relHumidity, short* leafW);
 
     double ET0_Penman_hourly(double heigth, double clearSkyIndex, double globalIrradiance,
@@ -333,6 +335,7 @@
     std::string getUnitFromVariable(meteoVariable var);
     std::string getKeyStringMeteoMap(std::map<std::string, meteoVariable> map, meteoVariable value);
     meteoVariable getKeyMeteoVarMeteoMap(std::map<meteoVariable,std::string> map, const std::string &value);
+    meteoVariable getKeyMeteoVarMeteoMapWithoutUnderscore(std::map<meteoVariable,std::string> map, const std::string& value);
     meteoVariable getMeteoVar(std::string varString);
     meteoVariable getHourlyMeteoVar(std::string varString);
     std::string getMeteoVarName(meteoVariable var);

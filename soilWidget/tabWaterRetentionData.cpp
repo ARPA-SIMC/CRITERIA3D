@@ -12,7 +12,7 @@ TabWaterRetentionData::TabWaterRetentionData()
     QVBoxLayout* tableLayout = new QVBoxLayout;
     tableWaterRetention = new TableWaterRetention();
     tableWaterRetention->setColumnCount(2);
-    QStringList tableHeader;
+    QList<QString> tableHeader;
     tableHeader << "Water potential [kPa]" << "Water content [m3 m-3]";
     tableWaterRetention->setHorizontalHeaderLabels(tableHeader);
     tableWaterRetention->setSelectionBehavior(QAbstractItemView::SelectRows);
@@ -53,21 +53,22 @@ TabWaterRetentionData::TabWaterRetentionData()
     fillData = false;
 }
 
-void TabWaterRetentionData::insertData(soil::Crit3DSoil *soil, soil::Crit3DTextureClass* textureClassList,
+void TabWaterRetentionData::insertData(soil::Crit3DSoil *soil, std::vector<soil::Crit3DTextureClass>* textureClassList,
+                                       std::vector<soil::Crit3DGeotechnicsClass> *geotechnicsClassList,
                                        soil::Crit3DFittingOptions* fittingOptions)
 {
-    if (soil == nullptr)
-    {
-        return;
-    }
-
     resetAll();
+
+    if (soil == nullptr || soil->nrHorizons == 0)
+        return;
+
     fillData = true;
 
     barHorizons.draw(soil);
     deleteRow->setEnabled(false);
     mySoil = soil;
     myTextureClassList = textureClassList;
+    myGeotechnicsClassList = geotechnicsClassList;
     myFittingOptions = fittingOptions;
     addRow->setEnabled(true);
 
@@ -144,7 +145,7 @@ void TabWaterRetentionData::addRowClicked()
     mySoil->horizon[currentHorizon].dbData.waterRetention.insert(itPos, newRow);
 
     std::string errorString;
-    soil::setHorizon(&(mySoil->horizon[currentHorizon]), myTextureClassList, myFittingOptions, &errorString);
+    soil::setHorizon(mySoil->horizon[currentHorizon], *myTextureClassList, *myGeotechnicsClassList, *myFittingOptions, errorString);
 
     deleteRow->setEnabled(true);
 
@@ -185,7 +186,7 @@ void TabWaterRetentionData::removeRowClicked()
     tableWaterRetention->removeRow(row);
     mySoil->horizon[currentHorizon].dbData.waterRetention.erase(mySoil->horizon[currentHorizon].dbData.waterRetention.begin() + row);
     std::string errorString;
-    soil::setHorizon(&(mySoil->horizon[currentHorizon]), myTextureClassList, myFittingOptions, &errorString);
+    soil::setHorizon(mySoil->horizon[currentHorizon], *myTextureClassList, *myGeotechnicsClassList, *myFittingOptions, errorString);
 
     emit updateSignal();
 }
@@ -286,7 +287,7 @@ void TabWaterRetentionData::cellChanged(int row, int column)
     sort(mySoil->horizon[currentHorizon].dbData.waterRetention.begin(), mySoil->horizon[currentHorizon].dbData.waterRetention.end(), soil::sortWaterPotential);
 
     std::string errorString;
-    soil::setHorizon(&(mySoil->horizon[currentHorizon]), myTextureClassList, myFittingOptions, &errorString);
+    soil::setHorizon(mySoil->horizon[currentHorizon], *myTextureClassList, *myGeotechnicsClassList, *myFittingOptions, errorString);
 
     tableWaterRetention->update();
     tableWaterRetention->blockSignals(false);

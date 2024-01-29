@@ -94,18 +94,18 @@ double computeSoilSurfaceResistanceCG(double theta, double thetaSat)
 /*!
  * \brief atmospheric sensible heat flux
  * \param i
- * \return latent heat (W m-2)
+ * \return sensible heat (W m-2)
  */
 double computeAtmosphericSensibleFlux(long i)
 {
     if (myNode[i].boundary->Heat == nullptr || ! myNode[myNode[i].up.index].isSurface)
         return 0;
 
-    double myPressure = PressureFromAltitude(double(myNode[i].z));
+    double myPressure = pressureFromAltitude(double(myNode[i].z));
 
     double myDeltaT = myNode[i].boundary->Heat->temperature - myNode[i].extra->Heat->T;
 
-    double myCvAir = AirVolumetricSpecificHeat(myPressure, myNode[i].boundary->Heat->temperature);
+    double myCvAir = airVolumetricSpecificHeat(myPressure, myNode[i].boundary->Heat->temperature);
 
     return (myCvAir * myDeltaT * myNode[i].boundary->Heat->aerodynamicConductance);
 }
@@ -122,8 +122,8 @@ double computeAtmosphericLatentFlux(long i)
 
     double PressSat, ConcVapSat, BoundaryVapor;
 
-    PressSat = SaturationVaporPressure(myNode[i].boundary->Heat->temperature - ZEROCELSIUS);
-    ConcVapSat = VaporConcentrationFromPressure(PressSat, myNode[i].boundary->Heat->temperature);
+    PressSat = saturationVaporPressure(myNode[i].boundary->Heat->temperature - ZEROCELSIUS);
+    ConcVapSat = vaporConcentrationFromPressure(PressSat, myNode[i].boundary->Heat->temperature);
     BoundaryVapor = ConcVapSat * (myNode[i].boundary->Heat->relativeHumidity / 100.);
 
     // kg m-3
@@ -155,8 +155,8 @@ double computeAtmosphericLatentFluxSurfaceWater(long i)
     double PressSat, ConcVapSat, BoundaryVapor;
 
     // atmospheric vapor content (kg m-3)
-    PressSat = SaturationVaporPressure(myNode[downIndex].boundary->Heat->temperature - ZEROCELSIUS);
-    ConcVapSat = VaporConcentrationFromPressure(PressSat, myNode[downIndex].boundary->Heat->temperature);
+    PressSat = saturationVaporPressure(myNode[downIndex].boundary->Heat->temperature - ZEROCELSIUS);
+    ConcVapSat = vaporConcentrationFromPressure(PressSat, myNode[downIndex].boundary->Heat->temperature);
     BoundaryVapor = ConcVapSat * (myNode[downIndex].boundary->Heat->relativeHumidity / 100.);
 
     // surface water vapor content (kg m-3) (assuming water temperature is the same of atmosphere)
@@ -182,7 +182,7 @@ double computeAtmosphericLatentHeatFlux(long i)
     double latentHeatFlow = 0.;
 
     // J kg-1
-    double lambda = LatentHeatVaporization(myNode[i].extra->Heat->T - ZEROCELSIUS);
+    double lambda = latentHeatVaporization(myNode[i].extra->Heat->T - ZEROCELSIUS);
     // waterFlow: vapor sink source (m3 s-1)
     latentHeatFlow = myNode[i].boundary->waterFlow * WATER_DENSITY * lambda;
 
@@ -200,17 +200,21 @@ double getSurfaceWaterFraction(int i)
     }
 }
 
-void updateBoundary()
+void updateConductance()
 {
-    for (long i = 0; i < myStructure.nrNodes; i++)
-        if (myNode[i].boundary != nullptr)
-            if (myStructure.computeHeat)
+    if (myStructure.computeHeat)
+    {
+        for (long i = 0; i < myStructure.nrNodes; i++)
+        {
+            if (myNode[i].boundary != nullptr)
+            {
                 if (myNode[i].extra->Heat != nullptr)
+                {
                     if (myNode[i].boundary->type == BOUNDARY_HEAT_SURFACE)
                     {
                         // update aerodynamic conductance
                         myNode[i].boundary->Heat->aerodynamicConductance =
-                                AerodynamicConductance(myNode[i].boundary->Heat->heightTemperature,
+                                aerodynamicConductance(myNode[i].boundary->Heat->heightTemperature,
                                     myNode[i].boundary->Heat->heightWind,
                                     myNode[i].extra->Heat->T,
                                     myNode[i].boundary->Heat->roughnessHeight,
@@ -218,56 +222,57 @@ void updateBoundary()
                                     myNode[i].boundary->Heat->windSpeed);
 
                         if (myStructure.computeWater)
-                            // update soil surface conductance
                         {
+                            // update soil surface conductance
                             double theta = theta_from_sign_Psi(myNode[i].H - myNode[i].z, i);
                             myNode[i].boundary->Heat->soilConductance = 1./ computeSoilSurfaceResistance(theta);
                         }
                     }
+                }
+            }
+        }
+    }
 }
 
 
-void updateBoundaryWater(double deltaT)
+void updateBoundaryWater (double deltaT)
 {
-    double Hs, avgH, maxFlow, flow;
     double const EPSILON_METER = 0.0001;          // [m] 0.1 mm
 
     for (long i = 0; i < myStructure.nrNodes; i++)
     {
-        // extern sink/source
+        // water sink-source
         myNode[i].Qw = myNode[i].waterSinkSource;
 
         if (myNode[i].boundary != nullptr)
         {
-            // initialize
             myNode[i].boundary->waterFlow = 0.;
 
             if (myNode[i].boundary->type == BOUNDARY_RUNOFF)
             {
-                avgH = (myNode[i].H + myNode[i].oldH) * 0.5;
-                // surface water available to runoff [m]
-                Hs = MAXVALUE(avgH - (myNode[i].z + myNode[i].Soil->Pond), 0.0);
-                if (Hs > EPSILON_METER)
+                double avgH = (myNode[i].H + myNode[i].oldH) * 0.5;        // [m]
+                // Surface water available for runoff [m]
+                double hs = MAXVALUE(avgH - (myNode[i].z + myNode[i].Soil->Pond), 0.0);
+                if (hs > EPSILON_METER)
                 {
-                    maxFlow = (Hs * myNode[i].volume_area) / deltaT;        /*!<  [m^3 s^-1] maximum available flow during time step */
+                    double maxFlow = (hs * myNode[i].volume_area) / deltaT;         // [m3 s-1] maximum flow available during the time step
                     // Manning equation
-                    double v = (1. / myNode[i].Soil->Roughness) * pow(Hs, 2./3.) * sqrt(myNode[i].boundary->slope);
+                    double v = (1. / myNode[i].Soil->Roughness) * pow(hs, 2./3.) * sqrt(myNode[i].boundary->slope);
                     // on the surface boundaryArea is a side [m]
-                    flow = myNode[i].boundary->boundaryArea * Hs * v;       /*!< [m^3 s^-1] */
+                    double flow = myNode[i].boundary->boundaryArea * hs * v;        // [m3 s-1]
                     myNode[i].boundary->waterFlow = -MINVALUE(flow, maxFlow);
                 }
             }
             else if (myNode[i].boundary->type == BOUNDARY_FREEDRAINAGE)
             {
-                // [m^3 s^-1] Darcy unit gradient
+                // Darcy unit gradient
                 // dH=dz=L  -> dH/L=1
-                flow = -myNode[i].k * myNode[i].up.area;
-                myNode[i].boundary->waterFlow = flow;
+                myNode[i].boundary->waterFlow = -myNode[i].k * myNode[i].up.area;
             }
 
             else if (myNode[i].boundary->type == BOUNDARY_FREELATERALDRAINAGE)
             {
-                // [m^3 s^-1] Darcy gradient=slope
+                // Darcy gradient = slope
                 // dH=dz slope=dz/L -> dH/L=slope
                 myNode[i].boundary->waterFlow = -myNode[i].k * myParameters.k_lateral_vertical_ratio
                                             * myNode[i].boundary->boundaryArea * myNode[i].boundary->slope;
@@ -278,20 +283,24 @@ void updateBoundaryWater(double deltaT)
                 // water table
                 double L = 1.0;                         // [m]
                 double boundaryZ = myNode[i].z - L;     // [m]
-                double boundaryK;
+                double boundaryK;                       // [m s-1]
+
                 if (myNode[i].boundary->prescribedTotalPotential >= boundaryZ)
+                {
+                    // saturated
                     boundaryK = myNode[i].Soil->K_sat;
+                }
                 else
                 {
+                    // unsaturated
                     double boundaryPsi = fabs(myNode[i].boundary->prescribedTotalPotential - boundaryZ);
-                    double boundarySe = computeSefromPsi(boundaryPsi, myNode[i].Soil);
+                    double boundarySe = computeSefromPsi_unsat(boundaryPsi, myNode[i].Soil);
                     boundaryK = computeWaterConductivity(boundarySe, myNode[i].Soil);
                 }
+
                 double meanK = computeMean(myNode[i].k, boundaryK);
                 double dH = myNode[i].boundary->prescribedTotalPotential - myNode[i].H;
-                flow = meanK * myNode[i].boundary->boundaryArea * (dH / L);
-                myNode[i].boundary->waterFlow = flow;
-
+                myNode[i].boundary->waterFlow = meanK * myNode[i].boundary->boundaryArea * (dH / L);
             }
 
             else if (myNode[i].boundary->type == BOUNDARY_HEAT_SURFACE)
@@ -346,14 +355,14 @@ void updateBoundaryWater(double deltaT)
 		long i = myCulvert.index;
 		double waterLevel = 0.5 * (myNode[i].H + myNode[i].oldH) - myNode[i].z;		// [m]
 
-		flow = 0.0;
+        double flow = 0.0;                                                          // [m3 s-1]
 
 		if (waterLevel >= myCulvert.height * 1.5)
 		{
 			// pressure flow - Hazen-Williams equation
 			double equivalentDiameter = sqrt((4. * myCulvert.width * myCulvert.height) / PI);
 			// roughness = 70 (rough concrete)
-			flow = (70. * pow(myCulvert.slope, 0.54) * pow(equivalentDiameter, 2.63)) / 3.591;
+            flow = (70.0 * pow(myCulvert.slope, 0.54) * pow(equivalentDiameter, 2.63)) / 3.591;
 
 		}
 		else if (waterLevel > myCulvert.height)
@@ -362,13 +371,13 @@ void updateBoundaryWater(double deltaT)
             double wettedPerimeter = myCulvert.width + 2.* myCulvert.height;                // [m]
             double hydraulicRadius = myNode[i].boundary->boundaryArea / wettedPerimeter;	// [m]
 
-			// maximum Manning flow [m^3 s^-1]
+            // maximum Manning flow [m3 s-1]
             double ManningFlow = (myNode[i].boundary->boundaryArea / myCulvert.roughness)
                                 * sqrt(myCulvert.slope) * pow(hydraulicRadius, 2. / 3.);
 
 			// pressure flow - Hazen-Williams equation - roughness = 70
 			double equivalentDiameter = sqrt((4. * myCulvert.width * myCulvert.height) / PI);
-			double pressureFlow = (70. * pow(myCulvert.slope, 0.54) * pow(equivalentDiameter, 2.63)) / 3.591;
+            double pressureFlow = (70.0 * pow(myCulvert.slope, 0.54) * pow(equivalentDiameter, 2.63)) / 3.591;
 
 			double weight = (waterLevel - myCulvert.height) / (myCulvert.height * 0.5);
 			flow = weight * pressureFlow + (1. - weight) * ManningFlow;

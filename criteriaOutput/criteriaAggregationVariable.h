@@ -10,7 +10,7 @@
     {
     public:
         QList<QString> outputVarName;
-        QList<QString> inputField;
+        QList<QString> inputFieldName;
         QList<QString> aggregationType;
 
         CriteriaAggregationVariable();

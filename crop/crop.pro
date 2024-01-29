@@ -30,6 +30,7 @@ INCLUDEPATH +=  ../crit3dDate ../mathFunctions ../soil ../utilities
 SOURCES += crop.cpp \
     cropDbQuery.cpp \
     cropDbTools.cpp \
+    landUnit.cpp \
     rainfallInterception.cpp \
     root.cpp \
     development.cpp \
@@ -39,6 +40,7 @@ HEADERS += crop.h \
     biomass.h \
     cropDbQuery.h \
     cropDbTools.h \
+    landUnit.h \
     rainfallInterception.h \
     root.h \
     development.h

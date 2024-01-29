@@ -37,6 +37,7 @@
         gis::Crit3DGisSettings* gisSettings;
 
         Crit3DRadiationSettings();
+        ~Crit3DRadiationSettings();
 
         void initialize();
         void setGisSettings(const gis::Crit3DGisSettings *myGisSettings);

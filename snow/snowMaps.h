@@ -17,8 +17,8 @@
         ~Crit3DSnowMaps();
 
         void clear();
-        void initialize(const gis::Crit3DRasterGrid &dtm, double snowSkinThickness);
-        void resetSnowModel(double snowSkinThickness);
+        void initialize(const gis::Crit3DRasterGrid &dtm, double skinThickness);
+        void resetSnowModel(double skinThickness);
 
         void updateMap(Crit3DSnow &snowPoint, int row, int col);
         void setPoint(Crit3DSnow &snowPoint, int row, int col);

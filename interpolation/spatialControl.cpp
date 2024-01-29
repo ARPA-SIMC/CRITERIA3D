@@ -2,12 +2,14 @@
 #include <cmath>
 
 #include "commonConstants.h"
+#include "basicMath.h"
 #include "spatialControl.h"
 #include "interpolation.h"
 #include "statistics.h"
 
+
 float findThreshold(meteoVariable myVar, Crit3DMeteoSettings* meteoSettings,
-                    float value, float stdDev, float nrStdDev, float stdDevZ, float minDistance)
+                    float value, float stdDev, float nrStdDev, float avgDeltaZ, float minDistance)
 {
     float zWeight, distWeight, threshold;
 
@@ -27,8 +29,8 @@ float findThreshold(meteoVariable myVar, Crit3DMeteoSettings* meteoSettings,
              || myVar == dailyAirTemperatureAvg )
     {
         threshold = 1.f;
-        zWeight = stdDevZ / 100.f;
-        distWeight = minDistance / 5000.f;
+        zWeight = avgDeltaZ / 100.f;
+        distWeight = minDistance / 1000.f;
 
         threshold = MINVALUE(MINVALUE(distWeight + threshold + zWeight, 12.f) + stdDev * nrStdDev, 15.f);
     }
@@ -37,8 +39,8 @@ float findThreshold(meteoVariable myVar, Crit3DMeteoSettings* meteoSettings,
              || myVar == dailyAirRelHumidityMin
              || myVar == dailyAirRelHumidityAvg )
     {
-        threshold = 8.f;
-        zWeight = stdDevZ / 100.f;
+        threshold = 20.f;
+        zWeight = avgDeltaZ / 10.f;
         distWeight = minDistance / 1000.f;
         threshold += zWeight + distWeight + stdDev * nrStdDev;
     }
@@ -50,7 +52,7 @@ float findThreshold(meteoVariable myVar, Crit3DMeteoSettings* meteoSettings,
              || myVar == dailyWindVectorIntensityMax)
     {
         threshold = 1.f;
-        zWeight = stdDevZ / 50.f;
+        zWeight = avgDeltaZ / 50.f;
         distWeight = minDistance / 2000.f;
         threshold += zWeight + distWeight + stdDev * nrStdDev;
     }
@@ -67,7 +69,7 @@ float findThreshold(meteoVariable myVar, Crit3DMeteoSettings* meteoSettings,
         threshold += distWeight + stdDev * (nrStdDev + 1.f);
     }
     else if (myVar == atmTransmissivity)
-        threshold = MAXVALUE(stdDev * nrStdDev, 0.5f);
+        threshold = MAXVALUE(stdDev * nrStdDev, 0.25f);
     else
         threshold = stdDev * nrStdDev;
 
@@ -85,7 +87,7 @@ bool computeResiduals(meteoVariable myVar, Crit3DMeteoPoint* meteoPoints, int nr
     float myValue, interpolatedValue;
     interpolatedValue = NODATA;
     myValue = NODATA;
-    std::vector <float> myProxyValues;
+    std::vector <double> myProxyValues;
     bool isValid;
 
     for (int i = 0; i < nrMeteoPoints; i++)
@@ -157,7 +159,7 @@ void spatialQualityControl(meteoVariable myVar, Crit3DMeteoPoint* meteoPoints, i
                            Crit3DInterpolationSettings *settings, Crit3DMeteoSettings* meteoSettings, Crit3DClimateParameters* myClimate, Crit3DTime myTime)
 {
     int i;
-    float stdDev, stdDevZ, minDist, myValue, myResidual;
+    float stdDev, avgDeltaZ, minDist, myValue, myResidual;
     std::vector <int> listIndex;
     std::vector <float> listResiduals;
     std::vector <Crit3DInterpolationDataPoint> myInterpolationPoints;
@@ -173,22 +175,24 @@ void spatialQualityControl(meteoVariable myVar, Crit3DMeteoPoint* meteoPoints, i
             return;
 
         for (i = 0; i < nrMeteoPoints; i++)
+        {
             if (meteoPoints[i].quality == quality::accepted)
             {
                 if (neighbourhoodVariability(myVar, myInterpolationPoints, settings, float(meteoPoints[i].point.utm.x),
                          float(meteoPoints[i].point.utm.y),float(meteoPoints[i].point.z),
-                         10, &stdDev, &stdDevZ, &minDist))
+                         10, &stdDev, &avgDeltaZ, &minDist))
                 {
                     myValue = meteoPoints[i].currentValue;
                     myResidual = meteoPoints[i].residual;
                     stdDev = MAXVALUE(stdDev, myValue/100.f);
-                    if (fabs(myResidual) > findThreshold(myVar, meteoSettings, myValue, stdDev, 2, stdDevZ, minDist))
+                    if (fabs(myResidual) > findThreshold(myVar, meteoSettings, myValue, stdDev, 2, avgDeltaZ, minDist))
                     {
                         listIndex.push_back(i);
                         meteoPoints[i].quality = quality::wrong_spatial;
                     }
                 }
             }
+        }
 
         if (listIndex.size() > 0)
         {
@@ -203,7 +207,8 @@ void spatialQualityControl(meteoVariable myVar, Crit3DMeteoPoint* meteoPoints, i
                                             float(meteoPoints[listIndex[i]].point.utm.x),
                                             float(meteoPoints[listIndex[i]].point.utm.y),
                                             float(meteoPoints[listIndex[i]].point.z),
-                                            meteoPoints[listIndex[i]].getProxyValues(), false);
+                                            meteoPoints[i].getProxyValues(),
+                                            false);
 
                     myValue = meteoPoints[listIndex[i]].currentValue;
 
@@ -215,13 +220,13 @@ void spatialQualityControl(meteoVariable myVar, Crit3DMeteoPoint* meteoPoints, i
                     if (neighbourhoodVariability(myVar, myInterpolationPoints, settings, float(meteoPoints[listIndex[i]].point.utm.x),
                              float(meteoPoints[listIndex[i]].point.utm.y),
                              float(meteoPoints[listIndex[i]].point.z),
-                             10, &stdDev, &stdDevZ, &minDist))
+                             10, &stdDev, &avgDeltaZ, &minDist))
                     {
                         myResidual = listResiduals[i];
 
                         myValue = meteoPoints[listIndex[i]].currentValue;
 
-                        if (fabs(myResidual) > findThreshold(myVar, meteoSettings, myValue, stdDev, 3, stdDevZ, minDist))
+                        if (fabs(myResidual) > findThreshold(myVar, meteoSettings, myValue, stdDev, 3, avgDeltaZ, minDist))
                             meteoPoints[listIndex[i]].quality = quality::wrong_spatial;
                         else
                             meteoPoints[listIndex[i]].quality = quality::accepted;
@@ -236,7 +241,7 @@ void spatialQualityControl(meteoVariable myVar, Crit3DMeteoPoint* meteoPoints, i
 
 bool checkData(Crit3DQuality* myQuality, meteoVariable myVar, Crit3DMeteoPoint* meteoPoints, int nrMeteoPoints,
                               Crit3DTime myTime, Crit3DInterpolationSettings* spatialQualityInterpolationSettings,
-                                Crit3DMeteoSettings* meteoSettings, Crit3DClimateParameters* myClimate, bool checkSpatial)
+                              Crit3DMeteoSettings* meteoSettings, Crit3DClimateParameters* myClimate, bool checkSpatial)
 {
     if (nrMeteoPoints == 0)
         return false;
@@ -245,13 +250,25 @@ bool checkData(Crit3DQuality* myQuality, meteoVariable myVar, Crit3DMeteoPoint* 
     {
         // assign data
         for (int i = 0; i < nrMeteoPoints; i++)
+        {
             meteoPoints[i].currentValue = meteoPoints[i].elaboration;
+            if (int(meteoPoints[i].currentValue) != int(NODATA))
+                meteoPoints[i].quality = quality::accepted;
+            else
+                meteoPoints[i].quality = quality::missing_data;
+        }
     }
     else if (myVar == anomaly)
     {
         // assign data
         for (int i = 0; i < nrMeteoPoints; i++)
+        {
             meteoPoints[i].currentValue = meteoPoints[i].anomaly;
+            if (int(meteoPoints[i].currentValue) != int(NODATA))
+                meteoPoints[i].quality = quality::accepted;
+            else
+                meteoPoints[i].quality = quality::missing_data;
+        }
     }
     else
     {
@@ -263,7 +280,9 @@ bool checkData(Crit3DQuality* myQuality, meteoVariable myVar, Crit3DMeteoPoint* 
         myQuality->syntacticQualityControl(myVar, meteoPoints, nrMeteoPoints);
 
         // quality control - spatial
-        if (checkSpatial && myVar != precipitation && myVar != dailyPrecipitation && myVar != windVectorDirection && myVar != dailyWindVectorDirectionPrevailing)
+        if (checkSpatial && myVar != precipitation && myVar != dailyPrecipitation
+                         && myVar != windVectorX && myVar != windVectorY
+                         && myVar != windVectorDirection && myVar != dailyWindVectorDirectionPrevailing)
         {
             spatialQualityControl(myVar, meteoPoints, nrMeteoPoints, spatialQualityInterpolationSettings, meteoSettings, myClimate, myTime);
         }
@@ -313,8 +332,9 @@ bool passDataToInterpolation(Crit3DMeteoPoint* meteoPoints, int nrMeteoPoints,
             myPoint.proxyValues = meteoPoints[i].proxyValues;
             myPoint.topographicDistance = meteoPoints[i].topographicDistance;
             myPoint.isActive = true;
+            myPoint.isMarked = meteoPoints[i].marked;
 
-            if (int(xMin) == int(NODATA))
+            if (isEqual(xMin, NODATA))
             {
                 xMin = float(myPoint.point->utm.x);
                 xMax = float(myPoint.point->utm.x);
@@ -338,7 +358,7 @@ bool passDataToInterpolation(Crit3DMeteoPoint* meteoPoints, int nrMeteoPoints,
 
     if (nrValid > 0)
     {
-        mySettings->computeShepardInitialRadius((xMax - xMin)*(yMax-yMin), nrValid);
+        mySettings->setPointsBoundingBoxArea((xMax - xMin) * (yMax - yMin));
         return true;
     }
     else

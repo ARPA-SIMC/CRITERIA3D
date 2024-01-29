@@ -1,10 +1,12 @@
 #include <QDate>
 #include <QString>
 
+#include "basicMath.h"
 #include "gis.h"
 #include "utilities.h"
 #include "interpolation.h"
 #include "interpolationCmd.h"
+
 
 float crossValidationStatistics::getMeanAbsoluteError() const
 {
@@ -142,8 +144,8 @@ bool interpolateProxyGridSeries(const Crit3DProxyGridSeries& mySeries, QDate myD
 
     if (nrGrids == 1)
     {
-        if (! gis::readEsriGrid(gridNames[0].toStdString(), &tmpGrid, &myError)) return false;
-        gis::resampleGrid(tmpGrid, gridOut, *gridBase.header, aggrAverage, 0);
+        if (! gis::readEsriGrid(gridNames[0].toStdString(), &tmpGrid, myError)) return false;
+        gis::resampleGrid(tmpGrid, gridOut, gridBase.header, aggrAverage, 0);
         return true;
     }
 
@@ -167,8 +169,8 @@ bool interpolateProxyGridSeries(const Crit3DProxyGridSeries& mySeries, QDate myD
 
     // load grids
     gis::Crit3DRasterGrid firstGrid, secondGrid;
-    if (! gis::readEsriGrid(gridNames[first].toStdString(), &firstGrid, &myError)) return false;
-    if (! gis::readEsriGrid(gridNames[second].toStdString(), &secondGrid, &myError)) return false;
+    if (! gis::readEsriGrid(gridNames[first].toStdString(), &firstGrid, myError)) return false;
+    if (! gis::readEsriGrid(gridNames[second].toStdString(), &secondGrid, myError)) return false;
 
     firstGrid.setMapTime(getCrit3DTime(QDate(gridYears[first],1,1), 0));
     secondGrid.setMapTime(getCrit3DTime(QDate(gridYears[second],1,1), 0));
@@ -178,7 +180,7 @@ bool interpolateProxyGridSeries(const Crit3DProxyGridSeries& mySeries, QDate myD
     {
         tmpGrid = secondGrid;
         secondGrid.clear();
-        gis::resampleGrid(tmpGrid, &secondGrid, *firstGrid.header, aggrAverage, 0);
+        gis::resampleGrid(tmpGrid, &secondGrid, firstGrid.header, aggrAverage, 0);
         tmpGrid.initializeGrid();
     }
 
@@ -187,7 +189,7 @@ bool interpolateProxyGridSeries(const Crit3DProxyGridSeries& mySeries, QDate myD
 
     if (! gis::temporalYearlyInterpolation(firstGrid, secondGrid, myDate.year(), myMin, myMax, &tmpGrid)) return false;
 
-    gis::resampleGrid(tmpGrid, gridOut, *gridBase.header, aggrAverage, 0);
+    gis::resampleGrid(tmpGrid, gridOut, gridBase.header, aggrAverage, 0);
 
     gridOut->setMapTime(tmpGrid.getMapTime());
 
@@ -234,7 +236,7 @@ bool interpolationRaster(std::vector <Crit3DInterpolationDataPoint> &myPoints, C
     }
 
     float myX, myY;
-    std::vector <float> proxyValues;
+    std::vector <double> proxyValues;
     proxyValues.resize(unsigned(mySettings->getProxyNr()));
 
     for (long myRow = 0; myRow < outputGrid->header->nrRows ; myRow++)
@@ -243,18 +245,19 @@ bool interpolationRaster(std::vector <Crit3DInterpolationDataPoint> &myPoints, C
         {
             gis::getUtmXYFromRowColSinglePrecision(*outputGrid, myRow, myCol, &myX, &myY);
             float myZ = raster.value[myRow][myCol];
-            if (int(myZ) != int(outputGrid->header->flag))
+            if (! isEqual(myZ, outputGrid->header->flag))
             {
-                if (getUseDetrendingVar(myVar)) getProxyValuesXY(myX, myY, mySettings, proxyValues);
+                if (getUseDetrendingVar(myVar))
+                    getProxyValuesXY(myX, myY, mySettings, proxyValues);
+
                 outputGrid->value[myRow][myCol] = interpolate(myPoints, mySettings, meteoSettings, myVar, myX, myY, myZ, proxyValues, true);
             }
         }
     }
 
     if (! gis::updateMinMaxRasterGrid(outputGrid))
-    {
         return false;
-    }
 
     return true;
 }
+

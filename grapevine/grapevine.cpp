@@ -438,7 +438,7 @@ double Vine3D_Grapevine::acclimationFunction2(double preFactor, double expFactor
 void Vine3D_Grapevine::weatherVariables()
 {
     // taken from Hydrall Model, Magnani UNIBO
-    myAirVapourPressure = SaturationVaporPressure(myInstantTemp)*myRelativeHumidity/100.;
+    myAirVapourPressure = saturationVaporPressure(myInstantTemp)*myRelativeHumidity/100.;
     myEmissivitySky = 1.24 * pow((myAirVapourPressure/100.0) / (myInstantTemp+ZEROCELSIUS),(1.0/7.0))*(1 - 0.84*myCloudiness)+ 0.84*myCloudiness;
     myLongWaveIrradiance = pow(myInstantTemp+ZEROCELSIUS,4) * myEmissivitySky * STEFAN_BOLTZMANN ;
     mySlopeSatVapPressureVSTemp = 2588464.2 / pow(240.97 + myInstantTemp, 2) * exp(17.502 * myInstantTemp / (240.97 + myInstantTemp)) ;
@@ -1194,14 +1194,14 @@ double Vine3D_Grapevine::meanLastMonthTemperature(double previousLastMonthTemp)
 
 
 void Vine3D_Grapevine::setRootDensity(Crit3DModelCase* modelCase, soil::Crit3DSoil* mySoil, std::vector <double> layerDepth, std::vector <double> layerThickness,
-                                       int nrLayersWithRoot, int nrUpperLayersWithoutRoot, rootDistribution type, double mode , double mean)
+                                       int nrLayersWithRoot, int nrUpperLayersWithoutRoot, rootDistributionType rootType, double mode , double mean)
 {
 
     modelCase->rootDensity =  static_cast<double*> (calloc(size_t(modelCase->soilLayersNr), sizeof(double)));
 
     double shapeFactor=2.;
 
-    if (type == CARDIOID_DISTRIBUTION)
+    if (rootType == CARDIOID_DISTRIBUTION)
     {
         double *lunette = static_cast<double*> (calloc(size_t(2 * nrLayersWithRoot), sizeof(double)));
         double *lunetteDensity =  static_cast<double*> (calloc(size_t(2 * nrLayersWithRoot), sizeof(double)));
@@ -1244,7 +1244,7 @@ void Vine3D_Grapevine::setRootDensity(Crit3DModelCase* modelCase, soil::Crit3DSo
         }
     }
 
-    else if (type == GAMMA_DISTRIBUTION)
+    else if (rootType == GAMMA_DISTRIBUTION)
     {
         double kappa, theta;
         double a, b, skeleton;
@@ -1264,7 +1264,7 @@ void Vine3D_Grapevine::setRootDensity(Crit3DModelCase* modelCase, soil::Crit3DSo
                 modelCase->rootDensity[i] = incompleteGamma(kappa, (b - depthWithoutRoots) / theta) - incompleteGamma(kappa, (a - depthWithoutRoots)/ theta);
 
                 //skeleton
-                indexHorizon = soil::getHorizonIndex(mySoil, layerDepth.at(size_t(i)));
+                indexHorizon = soil::getHorizonIndex(*mySoil, layerDepth.at(size_t(i)));
                 skeleton = mySoil->horizon[indexHorizon].coarseFragments;
                 modelCase->rootDensity[i] *= (1.0 - skeleton);
 
@@ -1661,7 +1661,7 @@ double* getTrapezoidRoots(int layersNr, soil::Crit3DSoil* mySoil, std::vector<do
             y1 = m*x1 + q;
             y2 = m*x2 + q;
 
-            indexHorizon = soil::getHorizonIndex(mySoil, layerDepth.at(size_t(layer)));
+            indexHorizon = soil::getHorizonIndex(*mySoil, layerDepth.at(size_t(layer)));
             skeleton = mySoil->horizon[indexHorizon].coarseFragments;
             myRoots[layer] = (y1+y2) * fabs(x2-x1) * 0.5 * (1 - skeleton);
             rootDensitySum += myRoots[layer];
@@ -1673,8 +1673,6 @@ double* getTrapezoidRoots(int layersNr, soil::Crit3DSoil* mySoil, std::vector<do
     {
         myRoots[layer] /= rootDensitySum;
     }
-
-
 
     return myRoots;
 }

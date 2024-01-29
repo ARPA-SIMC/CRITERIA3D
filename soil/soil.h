@@ -37,6 +37,8 @@
             double bulkDensity;                 /*!<   [g cm^-3]    */
             double thetaSat;                    /*!<   [m^3 m^-3]   */
             double kSat;                        /*!<   [cm day^-1]  */
+            double effectiveCohesion;           /*!<   [kPa]        */
+            double frictionAngle;               /*!<   [degrees]    */
 
             std::vector <Crit3DWaterRetention> waterRetention;
 
@@ -53,6 +55,8 @@
             int classUSDA;
             int classNL;
             std::string classNameUSDA;
+            // Unified Soil Classification System (USCS)
+            int classUSCS;
 
             Crit3DTexture();
             /*!
@@ -78,6 +82,16 @@
             double refThetaS;               /*!<  [m^3 m^-3] reference volumetric water content at saturation */
 
             Crit3DVanGenuchten();
+        };
+
+
+        class Crit3DGeotechnicsClass
+        {
+        public:
+            double effectiveCohesion;      /*!<  [kPa] soil effective cohesion */
+            double frictionAngle;          /*!<  [°] soil failure angle */
+
+            Crit3DGeotechnicsClass();
         };
 
 
@@ -121,6 +135,8 @@
             double coarseFragments;             /*!<  [-] 0-1   */
             double organicMatter;               /*!<  [-] 0-1   */
             double bulkDensity;                 /*!<  [g/cm^3]  */
+            double effectiveCohesion;           /*!<  [kPa]     */
+            double frictionAngle;               /*!<  [degrees] */
 
             double fieldCapacity;               /*!<  [kPa]     */
             double wiltingPoint;                /*!<  [kPa]     */
@@ -146,6 +162,7 @@
             double thickness;           /*!<   [m] */
             double soilFraction;        /*!<   [-] fraction of soil (1 - coarse fragment fraction) */
             double waterContent;        /*!<   [mm] */
+            double waterPotential;      /*!<   [kPa] water potential (psi) saved after soilFluxes computation (positive: unsaturated) */
             double SAT;                 /*!<   [mm] water content at saturation  */
             double FC;                  /*!<   [mm] water content at field capacity */
             double WP;                  /*!<   [mm] water content at wilting point  */
@@ -153,8 +170,9 @@
             double critical;            /*!<   [mm] water content at critical point for water movement (typical FC)  */
             double maxInfiltration;     /*!<   [mm]  */
             double flux;                /*!<   [mm]  */
+            double factorOfSafety;      /*!<   [-]  factor of safety (FoS) - if FoS < 1 the slope is unstable */
 
-            Crit3DHorizon *horizon;
+            Crit3DHorizon *horizonPtr;
 
             Crit3DLayer();
 
@@ -163,6 +181,7 @@
             double getDegreeOfSaturation();
             double getWaterPotential();
             double getWaterConductivity();
+            double computeSlopeStability(double slope, double normalizedRootDensity);
         };
 
 
@@ -180,9 +199,9 @@
 
             void initialize(const std::string &soilCode, int nrHorizons);
             void cleanSoil();
-            void addHorizon(int nHorizon, Crit3DHorizon *newHorizon);
+            void addHorizon(int nHorizon, const Crit3DHorizon &newHorizon);
             void deleteHorizon(int nHorizon);
-            int getHorizonIndex(double depth);
+            int getHorizonIndex(double depth) const;
 
             bool setSoilLayers(double layerThicknessMin, double geometricFactor,
                                std::vector<Crit3DLayer> &soilLayers, std::string &myError);
@@ -206,10 +225,12 @@
         int getUSDATextureClass(double sand, double silt, double clay);
         int getNLTextureClass(double sand, double silt, double clay);
 
-        int getHorizonIndex(Crit3DSoil* soil, double depth);
-        int getSoilLayerIndex(std::vector<soil::Crit3DLayer> &soilLayers, double depth);
+        int getUSCSClass(const Crit3DHorizon &horizon);
 
-        double getFieldCapacity(Crit3DHorizon* horizon, soil::units unit);
+        int getHorizonIndex(const Crit3DSoil &soil, double depth);
+        int getSoilLayerIndex(const std::vector<Crit3DLayer> &soilLayers, double depth);
+
+        double getFieldCapacity(double clayContent, soil::units unit);
         double getWiltingPoint(soil::units unit);
 
         double kPaToMeters(double value);
@@ -218,29 +239,30 @@
         double kPaToCm(double value);
         double cmTokPa(double value);
 
-        double SeFromTheta(double theta, Crit3DHorizon* horizon);
-        double psiFromTheta(double theta, Crit3DHorizon* horizon);
-        double degreeOfSaturationFromSignPsi(double signPsi, Crit3DHorizon* horizon);
-        double thetaFromSignPsi(double signPsi, Crit3DHorizon* horizon);
-        double waterConductivityFromSignPsi(double psi, Crit3DHorizon* horizon);
+        double SeFromTheta(double theta, const Crit3DHorizon &horizon);
+        double psiFromTheta(double theta, const Crit3DHorizon &horizon);
+        double degreeOfSaturationFromSignPsi(double signPsi, const Crit3DHorizon &horizon);
+        double thetaFromSignPsi(double signPsi, const Crit3DHorizon &horizon);
+        double waterConductivityFromSignPsi(double psi, const Crit3DHorizon &horizon);
 
-        double waterConductivity(double Se, Crit3DHorizon* horizon);
+        double waterConductivity(double Se, const Crit3DHorizon &horizon);
 
         double estimateOrganicMatter(double upperDepth);
         double estimateSpecificDensity(double organicMatter);
-        double estimateBulkDensity(Crit3DHorizon* horizon, double totalPorosity, bool increaseWithDepth);
-        double estimateSaturatedConductivity(Crit3DHorizon* horizon, double bulkDensity);
-        double estimateTotalPorosity(Crit3DHorizon* horizon, double bulkDensity);
-        double estimateThetaSat(Crit3DHorizon* horizon, double bulkDensity);
+        double estimateBulkDensity(const Crit3DHorizon &horizon, double totalPorosity, bool increaseWithDepth);
+        double estimateSaturatedConductivity(const Crit3DHorizon &horizon, double bulkDensity);
+        double estimateTotalPorosity(const Crit3DHorizon &horizon, double bulkDensity);
+        double estimateThetaSat(const Crit3DHorizon &horizon, double bulkDensity);
 
-        double getWaterContentFromPsi(double signPsi, Crit3DLayer* layer);
+        double getWaterContentFromPsi(double signPsi, const Crit3DLayer &layer);
         double getWaterContentFromAW(double availableWater, const Crit3DLayer &layer);
 
-        bool setHorizon(Crit3DHorizon* horizon, Crit3DTextureClass* textureClassList,
-                        Crit3DFittingOptions *fittingOptions, std::string* error);
+        bool setHorizon(Crit3DHorizon &horizon, const std::vector<Crit3DTextureClass> &textureClassList,
+                        const std::vector<Crit3DGeotechnicsClass> &geotechnicsClassList,
+                        const Crit3DFittingOptions &fittingOptions, std::string &errorStr);
 
-        bool fittingWaterRetentionCurve(Crit3DHorizon* horizon,
-                        Crit3DFittingOptions* fittingOptions);
+        bool fittingWaterRetentionCurve(Crit3DHorizon &horizon, const Crit3DFittingOptions &fittingOptions);
+
         bool sortWaterPotential(soil::Crit3DWaterRetention first, soil::Crit3DWaterRetention second);
     }
 

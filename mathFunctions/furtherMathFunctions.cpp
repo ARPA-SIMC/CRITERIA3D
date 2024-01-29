@@ -1,47 +1,141 @@
 /*!
-    \copyright 2016 Fausto Tomei, Gabriele Antolini,
-    Alberto Pistocchi, Marco Bittelli, Antonio Volta, Laura Costantini
+    \copyright 2023
+    Fausto Tomei, Gabriele Antolini, Antonio Volta
 
-    This file is part of CRITERIA3D.
-    CRITERIA3D has been developed under contract issued by A.R.P.A. Emilia-Romagna
+    This file is part of AGROLIB distribution.
+    AGROLIB has been developed under contract issued by A.R.P.A. Emilia-Romagna
 
-    CRITERIA3D is free software: you can redistribute it and/or modify
+    AGROLIB is free software: you can redistribute it and/or modify
     it under the terms of the GNU Lesser General Public License as published by
     the Free Software Foundation, either version 3 of the License, or
     (at your option) any later version.
 
-    CRITERIA3D is distributed in the hope that it will be useful,
+    AGROLIB is distributed in the hope that it will be useful,
     but WITHOUT ANY WARRANTY; without even the implied warranty of
     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
     GNU Lesser General Public License for more details.
 
     You should have received a copy of the GNU Lesser General Public License
-    along with CRITERIA3D.  If not, see <http://www.gnu.org/licenses/>.
+    along with AGROLIB.  If not, see <http://www.gnu.org/licenses/>.
 
     Contacts:
-    Antonio Volta  avolta@arpae.it
+    ftomei@arpae.it
+    gantolini@arpae.it
+    avolta@arpae.it
 */
 
 #include <math.h>
 #include <stdlib.h>
 #include <time.h>
+#include <functional>
+
 #include "commonConstants.h"
 #include "furtherMathFunctions.h"
 
 
+double lapseRateRotatedSigmoid(double x, std::vector <double> par)
+{
+    if (par.size() < 4) return NODATA;
+    double y;
+    y = par[0] + par[1]*x + par[2]*(1/(1+exp(-par[3]*(x - par[4]))));
+    return y;
+}
+
+double lapseRateFrei(double x, std::vector <double>& par)
+{
+    /*
+    par[0] = T0;
+    par[1] = gamma;
+    par[2] = a;
+    par[3] = h0;
+    par[4] = h1;
+    */
+
+    if (par.size() < 4) return NODATA;
+
+    double y;
+    y = par[0] - par[1]*x;
+    if (x <= par[3])
+    {
+        return y - par[2];
+    }
+    else if (x >= par[4])
+    {
+        return y;
+    }
+    return y - 0.5*par[2]*(1 + cos(PI*(x-par[3])/(par[4]-par[3])));
+}
+
+double lapseRatePiecewise(double x, std::vector <double>& par)
+{
+
+    // "y = mx + q" piecewise function;
+    double xb;
+    // par[2] means the delta between the two quotes. It must be positive.
+    xb = par[0]+par[2];
+    if (x < par[0])
+    {
+        //m = par[4];
+        //q = par[1]-m*par[0];
+        return par[4]*x + par[1]-par[4]*par[0];
+    }
+    else if (x>xb)
+    {
+        //m = par[4];
+        //q = par[3]-m*xb;
+        return par[4]*x + par[3]-par[4]*xb;
+    }
+    else
+    {
+        //m = (par[3]-par[1])/par[2];
+        //q = par[1]-m*par[0];
+        return ((par[3]-par[1])/par[2])*x+ par[1]-(par[3]-par[1])/par[2]*par[0];
+    }
+}
+
+double functionSum(std::vector<std::function<double(double, std::vector<double>&)>>& functions, std::vector<double>& x, std::vector <std::vector <double>>& par)
+{
+    double result = 0.0;
+    int counter = 0;
+    for (const auto& function : functions)
+    {
+        result += function(x[counter],par[counter]);
+        counter++;
+    }
+    return result;
+}
+
+double functionLinear(double x, std::vector <double>& par)
+{
+    return par[0] * x;
+}
+
+double multilinear(std::vector<double> &x, std::vector<double> &par)
+{
+    if (par.size() != (x.size()+1))
+        return NODATA;
+
+    double y = 0;
+    for (int i=0; i < x.size(); i++)
+        y += par[i] * x[i];
+
+    y += par[x.size()];
+    return y;
+}
+
 float gaussianFunction(TfunctionInput fInput)
 {
-    float y;
-    y = 1/(fInput.par[1]*sqrt(2*PI))*exp(-0.5*(fInput.x-fInput.par[0])*(fInput.x-fInput.par[0])/(fInput.par[1]*fInput.par[1]));
-    return y;
+    double y = (1 / (fInput.par[1] * sqrt(2*PI))
+            * exp(-0.5*(fInput.x-fInput.par[0])*(fInput.x-fInput.par[0])/(fInput.par[1]*fInput.par[1])));
+    return float(y);
 }
 
 float gaussianFunction(float x, float mean, float devStd)
 {
-    devStd = MAXVALUE(devStd, 0.00001f);
-    float ratio = (x - mean) / devStd;
-    float y = 1 / (devStd*sqrt(2*PI)) * exp(-0.5*(ratio*ratio));
-    return y;
+    double devStd_d = MAXVALUE(double(devStd), 0.00001);
+    double ratio = double(x - mean) / devStd_d;
+    double y = 1 / (devStd_d * sqrt(2*PI)) * exp(-0.5*(ratio * ratio));
+    return float(y);
 }
 
 float errorFunctionPrimitive(float x)
@@ -54,17 +148,12 @@ double errorFunctionPrimitive(double x)
     return exp(-x*x);
 }
 
-
 float blackBodyShape(TfunctionInput fInput)
 {
     float b, y;
     b = fInput.par[0];
     y = b * float(pow(fInput.x, 3)*(1. / (exp(b*fInput.x)-0.99)));
     return (y);
-}
-double parabolicFunction(double x, double* par)
-{
-    return par[1]*(x - par[0])*(x - par[0]) + par[2] ;
 }
 
 double twoParametersAndExponentialPolynomialFunctions(double x, double* par)
@@ -96,17 +185,9 @@ double harmonicsFourierGeneral(double x, double* par,int nrPar)
         }
         return y;
     }
+}
 
-}
-/*float straightLine(TfunctionInput fInput)
-{
-    float m,q,y;
-    m = fInput.par[0];
-    q = fInput.par[1];
-    y = m*fInput.x + q;
-    return(y);
-}
-*/
+
 
 namespace integration
 {
@@ -158,9 +239,10 @@ namespace integration
 
     float trapzdParametric(float (*func)(TfunctionInput) , int nrPar, float *par , float a , float b , int n)
     {
-        float x , tnm , sum , del ;
-        static float s ;
-        TfunctionInput functionInput ;
+        float x, tnm, sum, del;
+        static float s;
+        TfunctionInput functionInput;
+
         if (nrPar > 0)
         {
             functionInput.par = (float *) calloc(nrPar, sizeof(float));
@@ -170,7 +252,6 @@ namespace integration
                 functionInput.par[i]=par[i];
             }
         }
-
         else
         {
             functionInput.par = (float *) calloc(1, sizeof(float));
@@ -231,18 +312,20 @@ namespace integration
     }
 
 
-    float simpsonRule(float (*func)(float),float a , float b , float EPS)
+    float simpsonRule(float (*func)(float), float a, float b, float EPS)
     {
         /*! this function calculates definte integrals using the Simpson rule */
         if (a > b)
         {
             return (-simpsonRule(func,b, a , EPS)); //recursive formula
         }
+
         float old_s [10] = {0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0};
         //float trapezoidalRule(float (*func)(float) , float a , float b , int n) ;
         int j;
         float sumInfenitesimal , sumTrapezoidal , old_sumTrapezoidal=0.0 , old_sumInfinitesimal = 0.0 ;
         float s1 = 0.;
+
         for ( j=1 ; j <= 20 ; j++)
         {
             sumTrapezoidal = trapezoidalRule(func,a,b,j) ;
@@ -261,8 +344,10 @@ namespace integration
             old_sumInfinitesimal = sumInfenitesimal ;
            old_sumTrapezoidal = sumTrapezoidal ;
         }
-        float average_s=0.0 , average_s2 = 0.0 , variance ;
-        for ( short k=0 ; k < 10 ; k++)
+
+        float average_s=0.0, average_s2 = 0.0, variance;
+
+        for (short k=0; k < 10; k++)
         {
             average_s  += old_s[k];
             average_s2 += old_s[k]*old_s[k] ;
@@ -346,6 +431,32 @@ namespace integration
 
 namespace interpolation
 {
+    double secant_method(double (*func) (double),  double x0, double x1)
+    {
+        double x2, fx0, fx1, error;
+
+        for (int i = 0; i < MAX_NUMBER_ITERATIONS; i++)
+        {
+            fx0 = (*func)(x0);
+            fx1 = (*func)(x1);
+
+            // secant method formula
+            x2 = x1 - (fx1 * (x1 - x0)) / (fx1 - fx0);
+            error = fabs(x2 - x1);
+            //printf("Iteration %d: x = %.8f, f(x) = %.8f, error = %.8f\n", i+1, x2, fx2, error);
+            if (error < EPSILON)
+                return x2; // the roots was successfully approximated
+
+            // Update the values for the next iteration
+            x0 = x1;
+            x1 = x2;
+        }
+
+        //printf("No converge after %d iterations.\n", MAX_ITER);
+        return 0.0;
+    }
+
+
     float linearInterpolation (float x, float *xColumn , float *yColumn, int dimTable )
     {
         //float *firstColumn = (float *) calloc(dimTable, sizeof(float));
@@ -490,17 +601,17 @@ namespace interpolation
         int i, j, k;
         double pivot, mult, top;
 
-        double* g = (double *) calloc(nrParameters+1, sizeof(double));
-        double* z = (double *) calloc(nrParameters+1, sizeof(double));
-        double* firstEst = (double *) calloc(nrData+1, sizeof(double));
+        double* g = (double *) calloc(nrParameters, sizeof(double));
+        double* z = (double *) calloc(nrParameters, sizeof(double));
+        double* firstEst = (double *) calloc(nrData, sizeof(double));
 
-        double** a = (double **) calloc(nrParameters+1, sizeof(double*));
-        double** P = (double **) calloc(nrParameters+1, sizeof(double*));
+        double** a = (double **) calloc(nrParameters, sizeof(double*));
+        double** P = (double **) calloc(nrParameters, sizeof(double*));
 
-        for (i = 0; i < nrParameters+1; i++)
+        for (i = 0; i < nrParameters; i++)
         {
-                a[i] = (double *) calloc(nrParameters+1, sizeof(double));
-                P[i] = (double *) calloc(nrData+1, sizeof(double));
+                a[i] = (double *) calloc(nrParameters, sizeof(double));
+                P[i] = (double *) calloc(nrData, sizeof(double));
         }
 
         // first set of estimates
@@ -537,7 +648,7 @@ namespace interpolation
         for (i = 0; i < nrParameters; i++)
         {
             g[i] = 0.;
-            for (k = 0 ; k<nrData ; k++)
+            for (k = 0 ; k < nrData ; k++)
             {
                 g[i] += P[i][k] * (y[k] - firstEst[k]);
             }
@@ -548,7 +659,7 @@ namespace interpolation
             }
         }
 
-        for (i = 0; i < (nrParameters+1); i++)
+        for (i = 0; i < nrParameters; i++)
         {
             a[i][i] += lambda[i];
             for (j = i+1; j < nrParameters; j++)
@@ -589,7 +700,7 @@ namespace interpolation
         }
 
         // free memory
-        for (i = 0; i < nrParameters+1; i++)
+        for (i = 0; i < nrParameters; i++)
         {
             free(a[i]);
             free(P[i]);
@@ -638,7 +749,7 @@ namespace interpolation
                 return modifiedVanGenuchten(x, parameters, true);
 
             case FUNCTION_CODE_PARABOLIC :
-            return parabolicFunction(x, parameters);
+                return parabolicFunction(x, parameters);
 
             default:
                 return NODATA ;
@@ -663,6 +774,12 @@ namespace interpolation
         }
 
         return norm;
+    }
+
+
+    double parabolicFunction(double x, double* par)
+    {
+        return par[1]*(x - par[0])*(x - par[0]) + par[2];
     }
 
 
@@ -714,7 +831,11 @@ namespace interpolation
             secondDerivative[i] = NODATA;
         }
 
-        punctualSecondDerivative(dim, firstColumn, secondColumn, secondDerivative);
+        if (! punctualSecondDerivative(dim, firstColumn, secondColumn, secondDerivative))
+        {
+            free(secondDerivative);
+            return NODATA;
+        }
 
         while (x > firstColumn[i])
             i++;
@@ -731,10 +852,12 @@ namespace interpolation
         return y ;
     }
 
-    void punctualSecondDerivative(int dim, double *firstColumn , double *secondColumn, double* secondDerivative)
+
+    bool punctualSecondDerivative(int dim, double *firstColumn , double *secondColumn, double* secondDerivative)
     {
-        int matrixDimension;
-        matrixDimension = dim-2;
+        if (dim <= 2) return false;
+
+        int matrixDimension = dim-2;
         double *y2 = (double *) calloc(matrixDimension, sizeof(double));
         double *constantTerm = (double *) calloc(matrixDimension, sizeof(double));
         double *diagonal =  (double *) calloc(matrixDimension, sizeof(double));
@@ -762,7 +885,9 @@ namespace interpolation
         free(subDiagonal);
         free(superDiagonal);
 
+        return true;
     }
+
 
     void tridiagonalThomasAlgorithm (int n, double *subDiagonal, double *mainDiagonal, double *superDiagonal, double *constantTerm, double* output)
     {
@@ -794,7 +919,459 @@ namespace interpolation
         free(newConstantTerm);
     }
 
+    double computeR2(const std::vector<double>& obs,const std::vector<double>& sim)
+    {
+        double R2=0;
+        double meanObs=0;
+        double RSS=0;
+        double TSS=0;
+        for (int i=0;i<obs.size();i++)
+        {
+            meanObs += obs[i];
+        }
+        meanObs /= obs.size();
+        //compute RSS and TSS
+        for (int i=0;i<obs.size();i++)
+        {
+            RSS += (obs[i]-sim[i])*(obs[i]-sim[i]);
+            TSS += (obs[i]-meanObs)*(obs[i]-meanObs);
+        }
+        R2 = 1 - RSS/TSS;
+        return R2;
+    }
 
+    double weightedVariance(const std::vector<double>& data, const std::vector<double>& weights)
+    {
+        // This function computes the weighted variance
+        if (data.size() <= 0) {
+            // Handle the case when there is no data or weights
+            return 0.0;
+        }
+
+        double sum_weights = 0.0;
+        double sum_weighted_data = 0.0;
+        double sum_squared_weighted_data = 0.0;
+
+        // Calculate the necessary sums for weighted variance calculation
+        for (int i = 0; i < data.size(); i++)
+        {
+            sum_weights += weights[i];
+            sum_weighted_data += data[i] * weights[i];
+            sum_squared_weighted_data += data[i] * data[i] * weights[i];
+        }
+
+        // Calculate the weighted variance
+        double weighted_mean = sum_weighted_data / sum_weights;
+        double variance = (sum_squared_weighted_data / sum_weights) - (weighted_mean * weighted_mean);
+
+        return variance;
+    }
+
+
+    double computeWeighted_R2(const std::vector<double>& observed, const std::vector<double>& predicted, const std::vector<double>& weights)
+    {
+        // This function computes the weighted R-squared (coefficient of determination)
+        double sum_weighted_squared_residuals = 0.0;
+        double sum_weighted_squared_total = 0.0;
+        double weighted_mean_observed = 0.0;
+
+        // Calculate the weighted mean of the observed values
+        double sum_weights = 0.0;
+        for (int i = 0; i < observed.size(); i++)
+        {
+            weighted_mean_observed += observed[i] * weights[i];
+            sum_weights += weights[i];
+        }
+        weighted_mean_observed /= sum_weights;
+
+        // Calculate the sums needed for weighted R-squared calculation
+        for (int i = 0; i < observed.size(); i++)
+        {
+            double weighted_residual = weights[i] * (observed[i] - predicted[i]);
+            sum_weighted_squared_residuals += weighted_residual * weighted_residual;
+
+            double weighted_total_deviation = weights[i] * (observed[i] - weighted_mean_observed);
+            sum_weighted_squared_total += weighted_total_deviation * weighted_total_deviation;
+        }
+
+        // Calculate weighted R-squared
+        double weighted_r_squared = 1.0 - (sum_weighted_squared_residuals / sum_weighted_squared_total);
+
+        return weighted_r_squared;
+    }
+
+    double computeWeighted_StandardError(const std::vector<double>& observed, const std::vector<double>& predicted, const std::vector<double>& weights, int nrPredictors)
+    {
+        // This function computes the standard Error
+        double sum_weighted_squared_residuals = 0.0;
+        //double sum_weighted_squared_total = 0.0;
+        //double weighted_mean_observed = 0.0;
+
+
+        for (int i = 0; i < observed.size(); i++)
+        {
+            double weighted_residual = weights[i] * (observed[i] - predicted[i]);
+            sum_weighted_squared_residuals += weighted_residual * weighted_residual;
+        }
+        double standardError;
+        if (observed.size() > (nrPredictors+1))
+            standardError = sqrt(sum_weighted_squared_residuals/(observed.size()-nrPredictors-1));
+        else
+            standardError = sqrt(sum_weighted_squared_residuals/(observed.size()-1));
+
+        return standardError;
+    }
+
+
+    int bestFittingMarquardt_nDimension(double (*func)(std::vector<std::function<double(double, std::vector<double>&)>>&, std::vector<double>& , std::vector <std::vector <double>>&),
+                                        std::vector<std::function<double(double, std::vector<double>&)>>& myFunc,
+                                        int nrTrials, int nrMinima,
+                                        std::vector <std::vector <double>>& parametersMin, std::vector <std::vector <double>>& parametersMax,
+                                        std::vector <std::vector <double>>& parameters, std::vector <std::vector <double>>& parametersDelta,
+                                        int maxIterationsNr, double myEpsilon, double deltaR2,
+                                        std::vector <std::vector <double>>& x ,std::vector<double>& y,
+                                        bool isWeighted, std::vector<double>& weights)
+    {
+        int i,j;
+        int nrPredictors = int(parameters.size());
+        int nrData = int(y.size());
+        std::vector <int> nrParameters(nrPredictors);
+        int nrParametersTotal = 0;
+        for (i=0; i<nrPredictors;i++)
+        {
+            nrParameters[i]= int(parameters[i].size());
+            nrParametersTotal += nrParameters[i];
+        }
+        std::vector <std::vector <double>> bestParameters(nrPredictors);
+        std::vector <std::vector <int>> correspondenceTag(2,std::vector<int>(nrParametersTotal));
+        int counterTag = 0;
+        for (i=0; i<nrPredictors;i++)
+        {
+            for (j=0; j<nrParameters[i];j++)
+            {
+                correspondenceTag[0][counterTag] = i;
+                correspondenceTag[1][counterTag] = j;
+                counterTag++;
+                parametersDelta[i][j] = MAXVALUE(parametersDelta[i][j], EPSILON);
+            }
+            bestParameters[i].resize(nrParameters[i]) ;
+        }
+
+        double bestR2 = NODATA;
+        double R2;
+        std::vector <double> R2Previous(nrMinima,NODATA);
+        std::vector<double> ySim(nrData);
+
+        int iRandom = 0;
+        int counter = 0;
+        srand (unsigned(time(nullptr)));
+
+        do
+        {
+            for (i=0; i<nrPredictors; i++)
+            {
+                for (j=0; j<nrParameters[i]; j++)
+                {
+                    parameters[i][j] = parametersMin[i][j] + ((double) rand() / (RAND_MAX))*(parametersMax[i][j]-parametersMin[i][j]);
+                }
+            }
+            fittingMarquardt_nDimension(func,myFunc,parametersMin, parametersMax,
+                                        parameters, parametersDelta,correspondenceTag, maxIterationsNr,
+                                        myEpsilon, x, y, isWeighted, weights);
+            for (i=0;i<nrData;i++)
+            {
+                ySim[i]= func(myFunc,x[i], parameters);
+            }
+            if (!isWeighted)
+                R2 = computeR2(y,ySim);
+            else
+                R2 = computeWeighted_R2(y,ySim,weights);
+            //printf("%d R2 = %f\n",iRandom,R2);
+            if (R2 > bestR2-EPSILON)
+            {
+                for (j=0;j<nrMinima-1;j++)
+                {
+                    R2Previous[j] = R2Previous[j+1];
+                }
+                bestR2 = R2Previous[nrMinima-1] = R2;
+                for (i=0;i<nrPredictors;i++)
+                {
+                    for (j=0; j<nrParameters[i]; j++)
+                    {
+                        bestParameters[i][j] = parameters[i][j];
+                    }
+                }
+            }
+            iRandom++;
+            counter++;
+        } while( (iRandom < nrTrials) && (R2 < (1 - EPSILON)) && (fabs(R2Previous[0]-R2Previous[nrMinima-1]) > deltaR2) );
+
+        for (i=0;i<nrPredictors;i++)
+        {
+            for (j=0; j<nrParameters[i]; j++)
+            {
+                parameters[i][j] = bestParameters[i][j];
+            }
+        }
+        return counter;
+    }
+
+
+    bool fittingMarquardt_nDimension(double (*func)(std::vector<std::function<double(double, std::vector<double>&)>>&, std::vector<double>& , std::vector <std::vector <double>>&),
+                                     std::vector<std::function<double (double, std::vector<double> &)> >& myFunc,
+                                     std::vector<std::vector<double> > &parametersMin, std::vector<std::vector<double> > &parametersMax,
+                                     std::vector<std::vector<double> > &parameters, std::vector<std::vector<double> > &parametersDelta, std::vector<std::vector<int> > &correspondenceParametersTag,
+                                     int maxIterationsNr, double myEpsilon,
+                                     std::vector <std::vector <double>>& x, std::vector<double>& y,
+                                     bool isWeighted, std::vector<double>& weights)
+    {
+        int i,j;
+        int nrPredictors = int(parameters.size());
+        double mySSE, diffSSE, newSSE;
+        static double VFACTOR = 10;
+        std::vector <int> nrParameters(nrPredictors);
+        std::vector <std::vector <double>> paramChange(nrPredictors);
+        std::vector <std::vector <double>> newParameters(nrPredictors);
+        std::vector <std::vector <double>> lambda(nrPredictors);
+
+        for (i=0; i<nrPredictors;i++)
+        {
+            nrParameters[i]= int(parameters[i].size());
+            paramChange[i].resize(nrParameters[i]);
+            newParameters[i].resize(nrParameters[i]);
+            lambda[i].resize(nrParameters[i]);
+            for (j=0; j<nrParameters[i]; j++)
+            {
+                lambda[i][j] = 0.01;       // damping parameter
+                //paramChange[i][j] = 0; // quit because already initialized to 0 by default
+            }
+        }
+
+        mySSE = normGeneric_nDimension(func,myFunc, parameters, x, y);
+
+        int iterationNr = 0;
+        do
+        {
+
+            leastSquares_nDimension(func,myFunc, parameters, parametersDelta,correspondenceParametersTag, x, y,
+                                    lambda, paramChange, isWeighted, weights);
+
+            // change parameters
+            for (i = 0; i < nrPredictors; i++)
+            {
+                for (j=0; j<nrParameters[i]; j++)
+                {
+                    newParameters[i][j] = parameters[i][j] + paramChange[i][j];
+                    if ((newParameters[i][j] > parametersMax[i][j]) && (lambda[i][j] < 1000))
+                    {
+                        newParameters[i][j] = parametersMax[i][j];
+                        if (lambda[i][j] < 1000)
+                            lambda[i][j] *= VFACTOR;
+                    }
+                    if (newParameters[i][j] < parametersMin[i][j])
+                    {
+                        newParameters[i][j] = parametersMin[i][j];
+                        if (lambda[i][j] < 1000)
+                            lambda[i][j] *= VFACTOR;
+                    }
+                }
+            }
+            newSSE = normGeneric_nDimension(func, myFunc, newParameters, x, y);
+
+            if (newSSE == NODATA)
+                return false;
+
+            diffSSE = mySSE - newSSE ;
+
+            if (diffSSE > 0)
+            {
+                mySSE = newSSE;
+                for (i=0; i<nrPredictors; i++)
+                {
+                    for (j=0; j<nrParameters[i]; j++)
+                    {
+                        parameters[i][j] = newParameters[i][j];
+                        lambda[i][j] /= VFACTOR;
+                    }
+                }
+            }
+            else
+            {
+                for(i = 0; i < nrPredictors; i++)
+                {
+                    for (j=0; j<nrParameters[i]; j++)
+                    {
+                        lambda[i][j] *= VFACTOR;
+                    }
+                }
+            }
+            iterationNr++;
+        } while (iterationNr <= maxIterationsNr && fabs(diffSSE) > myEpsilon);
+        return (fabs(diffSSE) <= myEpsilon);
+    }
+
+
+    void leastSquares_nDimension(double (*func)(std::vector<std::function<double (double, std::vector<double> &)> > &, std::vector<double> &, std::vector <std::vector <double>>&),
+                                 std::vector<std::function<double (double, std::vector<double> &)> > myFunc,
+                                 std::vector <std::vector <double>>& parameters, std::vector <std::vector <double>>& parametersDelta, std::vector <std::vector <int>>& correspondenceParametersTag,
+                                 std::vector <std::vector <double>>& x, std::vector<double>& y, std::vector <std::vector <double>>& lambda,
+                                 std::vector <std::vector <double>>& parametersChange, bool isWeighted, std::vector<double>& weights)
+    {
+        int i,j,k;
+        double pivot, mult, top;
+        int nrPredictors = int(parameters.size());
+        int nrParametersTotal = 0;
+        int nrData = int(y.size());
+        std::vector <int> nrParameters(nrPredictors);
+        for (int i=0; i<nrPredictors;i++)
+        {
+            nrParameters[i]= int(parameters[i].size());
+            nrParametersTotal += nrParameters[i];
+        }
+
+        std::vector<double> g(nrParametersTotal);// = (double *) calloc(nrParametersTotal, sizeof(double));
+        std::vector<double> z(nrParametersTotal);
+        std::vector<double> firstEst(nrData);
+        std::vector<std::vector<double>> a(nrParametersTotal, std::vector<double>(nrParametersTotal));
+        std::vector<std::vector<double>> P(nrParametersTotal, std::vector<double>(nrData));
+        // first set of estimates
+        for (i = 0; i < nrData; i++)
+        {
+            firstEst[i] = func(myFunc,x[i], parameters);
+        }
+
+        // change parameters and compute derivatives
+        int counterDim = 0;
+        //double newEst;
+        for (i = 0; i < nrPredictors; i++)
+        {
+            for (k=0;k<nrParameters[i];k++)
+            {
+                parameters[i][k] += parametersDelta[i][k];
+                for (j = 0; j < nrData; j++)
+                {
+
+                    //newEst = func(myFunc,x[j], parameters);
+                    P[counterDim][j] = (func(myFunc,x[j], parameters) - firstEst[j]) / parametersDelta[i][k];
+                }
+                parameters[i][k] -= parametersDelta[i][k];
+                counterDim++;
+            }
+        }
+
+        for (i = 0; i < nrParametersTotal; i++)
+        {
+            for (j = i; j < nrParametersTotal; j++)
+            {
+                a[i][j] = 0;
+                for (k = 0; k < nrData; k++)
+                {
+                    if (isWeighted)
+                    {
+                        a[i][j] += (weights[k]*(P[i][k] * P[j][k]));
+                    }
+                    else
+                    {
+                        a[i][j] += (P[i][k] * P[j][k]);
+                    }
+                }
+            }
+            z[i] = sqrt(a[i][i]) + EPSILON; //?
+        }
+
+        for (i = 0; i < nrParametersTotal; i++)
+        {
+            g[i] = 0.;
+            for (k = 0 ; k < nrData ; k++)
+            {
+                g[i] += P[i][k] * (y[k] - firstEst[k]);
+            }
+            g[i] /= z[i];
+            for (j = i; j < nrParametersTotal; j++)
+            {
+                a[i][j] /= (z[i] * z[j]);
+            }
+        }
+        counterDim = 0;
+        for (i = 0; i < nrPredictors; i++)
+        {
+            for (k=0;k<nrParameters[i];k++)
+            {
+                a[counterDim][counterDim] += lambda[i][k];
+                for (j = counterDim+1; j < nrParametersTotal; j++)
+                {
+                    a[j][i] = a[i][j];
+                }
+                counterDim++;
+            }
+        }
+
+        for (j = 0; j < (nrParametersTotal - 1); j++)
+        {
+            pivot = a[j][j];
+            for (i = j + 1 ; i < nrParametersTotal; i++)
+            {
+                mult = a[i][j] / pivot;
+                for (k = j + 1; k < nrParametersTotal; k++)
+                {
+                    a[i][k] -= mult * a[j][k];
+                }
+                g[i] -= mult * g[j];
+            }
+        }
+
+        parametersChange[nrPredictors - 1][nrParameters[nrPredictors-1]-1] = g[nrParametersTotal - 1] / a[nrParametersTotal - 1][nrParametersTotal - 1];
+
+        for (i = nrParametersTotal - 2; i >= 0; i--)
+        {
+            top = g[i];
+            for (k = i + 1; k < nrParametersTotal; k++)
+            {
+                top -= a[i][k] * parametersChange[correspondenceParametersTag[0][k]][correspondenceParametersTag[1][k]];
+            }
+            parametersChange[correspondenceParametersTag[0][i]][correspondenceParametersTag[1][i]] = top / a[i][i];
+        }
+        counterDim = 0;
+        for (i = 0; i < nrPredictors; i++)
+        {
+            for (k=0;k<nrParameters[i];k++)
+            {
+                parametersChange[i][k] /= z[counterDim];
+                counterDim++;
+            }
+        }
+
+    }
+
+
+    double normGeneric_nDimension(double (*func)(std::vector<std::function<double(double, std::vector<double>&)>>&, std::vector<double>&, std::vector <std::vector <double>>&),
+                                  std::vector<std::function<double (double, std::vector <double>&)>> myFunc,
+                                  std::vector <std::vector <double>> &parameters,std::vector <std::vector <double>>& x,
+                                  std::vector<double>& y)
+    {
+        double error;
+        double norm = 0;
+        //std::vector<double> xPoint(xDim);
+        //xPoint.resize(xDim);
+
+        for (int i = 0; i < y.size(); i++)
+        {
+            //for (j=0; j<xDim; j++)
+            //{
+                //xPoint[j] = x[i][j];
+                /* questo ciclo for potrebbe essere evitato se
+                 * le dimensioni di x fossero invertite */
+            //}
+            //estimate = func(myFunc,x[i], parameters);
+            // da valutare se possiamo togliere questo controllo
+            //if (estimate == NODATA)
+                //return NODATA;
+
+            error = y[i] - func(myFunc,x[i], parameters);
+            norm += error * error;
+        }
+        return norm;
+    }
 }
 
 
@@ -845,6 +1422,7 @@ namespace matricial
         }
         return CRIT3D_OK;
     }
+
 
     // it assume that rowSecond == colFirst
     int matrixProductNoCheck(double **first, double**second,int rowFirst, int colFirst, int colSecond, double ** multiply)
@@ -1479,6 +2057,51 @@ namespace matricial
             eigenvectorA[1][i] = (eigenvalueA[i]-a[0][0])/a[0][1];
         }
         return 0;
+    }
+
+    bool linearSystemResolutionByCramerMethod(double* constantTerm, double** coefficientMatrix, int matrixSize, double* roots)
+    {
+
+        double denominator;
+        denominator = determinant(coefficientMatrix,matrixSize);
+        if (fabs(denominator)<EPSILON) return false;
+
+        double** numerator = (double**)calloc(matrixSize, sizeof(double*));
+        for(int i = 0;i<matrixSize;i++)
+        {
+            numerator[i] = (double*)calloc(matrixSize, sizeof(double));
+            for(int j = 0;j<matrixSize;j++)
+            {
+                numerator[i][j] = coefficientMatrix[i][j];
+            }
+        }
+
+        for(int counterRoot = 0;counterRoot<matrixSize; counterRoot++)
+        {
+            /*for(int i = 0;i<matrixSize;i++)
+            {
+                for(int j = 0;j<matrixSize;j++)
+                {
+                    numerator[j][i] = coefficientMatrix[j][i];
+                }
+            }*/
+            for(int j = 0;j<matrixSize;j++)
+            {
+                numerator[j][counterRoot] = constantTerm[j];
+            }
+            roots[counterRoot] = determinant(numerator,matrixSize)/denominator;
+            for(int j = 0;j<matrixSize;j++)
+            {
+                numerator[j][counterRoot] = coefficientMatrix[j][counterRoot];
+            }
+        }
+        for(int i = 0;i<matrixSize;i++)
+        {
+            free(numerator[i]);
+        }
+        free(numerator);
+
+        return true;
     }
 }
 

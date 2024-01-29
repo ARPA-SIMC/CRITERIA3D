@@ -15,15 +15,15 @@
         #include <map>
     #endif
 
-    enum TInterpolationMethod { idw, kriging, shepard };
+    enum TInterpolationMethod { idw, shepard, shepard_modified };
 
     const std::map<std::string, TInterpolationMethod> interpolationMethodNames = {
       { "idw", idw },
       { "shepard", shepard },
-      { "kriging", kriging }
+      { "shepard_modified", shepard_modified }
     };
 
-    enum TProxyVar { height, heightInversion, urbanFraction, orogIndex, seaDistance, aspect, slope, noProxy };
+    enum TProxyVar { height, heightInversion, urbanFraction, orogIndex, seaDistance, aspect, slope, waterIndex, noProxy };
 
     const std::map<std::string, TProxyVar> ProxyVarNames = {
       { "elevation", height },
@@ -33,7 +33,8 @@
       { "urbanFraction", urbanFraction },
       { "seaDistance", seaDistance },
       { "aspect", aspect },
-      { "slope", slope }
+      { "slope", slope },
+      { "water_index", waterIndex}
     };
 
 

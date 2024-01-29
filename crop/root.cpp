@@ -29,7 +29,6 @@
 
 
 #include <math.h>
-#include <iostream>
 
 #include "commonConstants.h"
 #include "gammaFunction.h"
@@ -57,9 +56,10 @@ void Crit3DRoot::clear()
     actualRootDepthMax = NODATA;
     firstRootLayer = NODATA;
     lastRootLayer = NODATA;
-    rootLength = NODATA;
+    currentRootLength = NODATA;
     rootDepth = NODATA;
     rootDensity.clear();
+    rootsAdditionalCohesion = NODATA;
 }
 
 
@@ -91,11 +91,13 @@ namespace root
             case (GAMMA_DISTRIBUTION):
                 return 5;
             default:
+                // cardioid
                 return 4;
          }
     }
 
-    rootDistributionType getRootDistributionTypeFromString(std::string rootShape)
+
+    rootDistributionType getRootDistributionTypeFromString(const std::string &rootShape)
     {
         if (rootShape == "cylinder")
         {
@@ -114,6 +116,7 @@ namespace root
         return CARDIOID_DISTRIBUTION;
     }
 
+
     std::string getRootDistributionTypeString(rootDistributionType rootType)
     {
         switch (rootType)
@@ -126,136 +129,57 @@ namespace root
             return "gamma function";
         }
 
-        return "No root type";
-    }
-
-    double computeRootDepth(Crit3DCrop* myCrop, double currentDD, double waterTableDepth)
-    {
-        if (!(myCrop->isLiving))
-        {
-            myCrop->roots.rootLength = 0.0;
-            myCrop->roots.rootDepth = NODATA;
-        }
-        else
-        {
-            myCrop->roots.rootLength = computeRootLength(myCrop, currentDD, waterTableDepth);
-            myCrop->roots.rootDepth = myCrop->roots.rootDepthMin + myCrop->roots.rootLength;
-        }
-
-        return myCrop->roots.rootDepth;
+        return "Undefined root type";
     }
 
 
-    // TODO this function computes the root length based on thermal units, it could be changed for perennial crops
-    double computeRootLength(Crit3DCrop* myCrop, double currentDD, double waterTableDepth)
+    // [m]
+    // this function computes the roots rate of development
+    double getRootLengthDD(const Crit3DRoot &myRoot, double currentDD, double emergenceDD)
     {
-        double myRootLength = NODATA;
+        // in order to avoid numerical divergences when calculating density through cardioid and gamma function
+        if (currentDD <= 1)
+            return 0.;
 
-        if (myCrop->isPluriannual())
+        // growth phase ended
+        double maxRootLength = myRoot.actualRootDepthMax - myRoot.rootDepthMin;
+        if (currentDD > myRoot.degreeDaysRootGrowth)
+            return maxRootLength;
+
+        double currentRootLength = NODATA;
+        if (myRoot.growth == LINEAR)
         {
-            myRootLength = myCrop->roots.actualRootDepthMax - myCrop->roots.rootDepthMin;
+            currentRootLength = maxRootLength * (currentDD / myRoot.degreeDaysRootGrowth);
         }
-        else
-        {
-            if (currentDD <= 0)
-                myRootLength = 0.0;
-            else if (currentDD > myCrop->roots.degreeDaysRootGrowth)
-                myRootLength = myCrop->roots.actualRootDepthMax - myCrop->roots.rootDepthMin;
-            else
-            {
-                // in order to avoid numerical divergences when calculating density through cardioid and gamma function
-                currentDD = MAXVALUE(currentDD, 1.0);
-                myRootLength = getRootLengthDD(&(myCrop->roots), currentDD, myCrop->degreeDaysEmergence);
-            }
-        }
-
-        // WATERTABLE
-        // le radici nel terreno saturo vanno in asfissia
-        // per cui vanno mantenute a distanza nella fase di crescita
-        // le radici possono crescere se:
-        // la falda è più bassa o si abbassa (max 2 cm al giorno)
-        // restano invariate se:
-        // 1) non sono più in fase di crescita
-        // 2) se sono già dentro la falda
-        const double MAX_DAILY_GROWTH = 0.02;             // [m]
-        const double MIN_WATERTABLE_DISTANCE = 0.2;       // [m]
-
-        if (int(waterTableDepth) != int(NODATA)
-                && waterTableDepth > 0
-                && int(myCrop->roots.rootLength) != int(NODATA)
-                && !myCrop->isWaterSurplusResistant()
-                && myRootLength > myCrop->roots.rootLength)
-        {
-            // check on growth
-            if (currentDD > myCrop->roots.degreeDaysRootGrowth)
-                myRootLength = myCrop->roots.rootLength;
-            else
-                myRootLength = MINVALUE(myRootLength, myCrop->roots.rootLength + MAX_DAILY_GROWTH);
-
-            // check on watertable
-            double maxLenght = waterTableDepth - myCrop->roots.rootDepthMin - MIN_WATERTABLE_DISTANCE;
-            if (myRootLength > maxLenght)
-            {
-                myRootLength = MAXVALUE(myCrop->roots.rootLength, maxLenght);
-            }
-        }
-
-        return myRootLength;
-    }
-
-
-    //[m]
-    double getRootLengthDD(Crit3DRoot* myRoot, double currentDD, double emergenceDD)
-    {
-        // this function computes the roots rate of development
-        double myRootLength = NODATA;
-        double maxRootLength = myRoot->actualRootDepthMax - myRoot->rootDepthMin;
-
-        if (currentDD <= 0) return 0.;
-        if (currentDD > myRoot->degreeDaysRootGrowth) return maxRootLength;
-
-        double halfDevelopmentPoint = myRoot->degreeDaysRootGrowth * 0.5 ;
-
-        if (myRoot->growth == LINEAR)
-        {
-            myRootLength = maxRootLength * (currentDD / myRoot->degreeDaysRootGrowth);
-        }
-        else if (myRoot->growth == LOGISTIC)
+        else if (myRoot.growth == LOGISTIC)
         {
             double logMax, logMin,deformationFactor;
             double iniLog = log(9.);
             double filLog = log(1 / 0.99 - 1);
-            double k,b;
-            k = -(iniLog - filLog) / (emergenceDD - myRoot->degreeDaysRootGrowth);
-            b = -(filLog + k * myRoot->degreeDaysRootGrowth);
+            double k = -(iniLog - filLog) / (emergenceDD - myRoot.degreeDaysRootGrowth);
+            double b = -(filLog + k * myRoot.degreeDaysRootGrowth);
 
-            logMax = (myRoot->actualRootDepthMax) / (1 + exp(-b - k * myRoot->degreeDaysRootGrowth));
-            logMin = myRoot->actualRootDepthMax / (1 + exp(-b));
+            logMax = (myRoot.actualRootDepthMax) / (1 + exp(-b - k * myRoot.degreeDaysRootGrowth));
+            logMin = myRoot.actualRootDepthMax / (1 + exp(-b));
             deformationFactor = (logMax - logMin) / maxRootLength ;
-            myRootLength = 1.0 / deformationFactor * (myRoot->actualRootDepthMax / (1.0 + exp(-b - k * currentDD)) - logMin);
-        }
-        else if (myRoot->growth == EXPONENTIAL)
-        {
-            // not used in Criteria Bdp
-            myRootLength = maxRootLength * (1.- exp(-2.*(currentDD/halfDevelopmentPoint)));
+            currentRootLength = 1.0 / deformationFactor * (myRoot.actualRootDepthMax / (1.0 + exp(-b - k * currentDD)) - logMin);
         }
 
-        return myRootLength;
+        return currentRootLength;
     }
 
 
     int highestCommonFactor(int* vector, int vectorDim)
     {
         // highest common factor (hcf) amongst n integer numbers
-        int num1, num2, i, hcf;
-        hcf = num1 = vector[0];
+        int num1, num2;
+        int hcf = vector[0];
         for (int j=0; j<vectorDim-1; j++)
         {
-
             num1 = hcf;
             num2 = vector[j+1];
 
-            for(i=1; i<=num1 || i<=num2; ++i)
+            for(int i=1; i<=num1 || i<=num2; ++i)
             {
                 if(num1%i==0 && num2%i==0)   /* Checking whether i is a factor of both number */
                     hcf=i;
@@ -264,64 +188,59 @@ namespace root
         return hcf;
     }
 
-    int checkTheOrderOfMagnitude(double number,int* order)
-    {
 
+    int checkTheOrderOfMagnitude(double number, int &order)
+    {
         if (number<1)
         {
             number *= 10;
-            (*order)--;
-            checkTheOrderOfMagnitude(number,order);
+            order--;
+            checkTheOrderOfMagnitude(number, order);
         }
         else if (number >= 10)
         {
             number /=10;
-            (*order)++;
-            checkTheOrderOfMagnitude(number,order);
+            order++;
+            checkTheOrderOfMagnitude(number, order);
         }
         return 0;
     }
+
 
     int orderOfMagnitude(double number)
     {
         int order = 0;
         number = fabs(number);
-        checkTheOrderOfMagnitude(number,&order);
+        checkTheOrderOfMagnitude(number, order);
         return order;
     }
 
 
-    int getNrAtoms(const std::vector<soil::Crit3DLayer> &soilLayers, double rootDepthMin, double* minThickness, int* atoms)
+    int getNrAtoms(const std::vector<soil::Crit3DLayer> &soilLayers, double &minThickness, std::vector<int> &atoms)
     {
-        unsigned int i;
         unsigned int nrLayers = unsigned(soilLayers.size());
         int multiplicationFactor = 1;
 
-        if (rootDepthMin > 0)
-            *minThickness = rootDepthMin;
-        else
-            *minThickness = soilLayers[1].thickness;
+        minThickness = soilLayers[1].thickness;
 
-        for(i=1; i < nrLayers; i++)
-            *minThickness = MINVALUE(*minThickness, soilLayers[i].thickness);
-
-        double tmp = *minThickness * 1.001;
+        double tmp = minThickness * 1.001;
         if (tmp < 1)
-            multiplicationFactor = int(pow(10.0,-orderOfMagnitude(tmp)));
+            multiplicationFactor = int(pow(10.0, -orderOfMagnitude(tmp)));
 
-        if (*minThickness < 1)
+        if (minThickness < 1)
         {
-            *minThickness = 1./multiplicationFactor;
+            minThickness = 1./multiplicationFactor;
         }
 
         int value;
         int counter = 0;
-        for(i=0; i < nrLayers; i++)
+        for(unsigned int i=0; i < nrLayers; i++)
         {
            value = int(round(multiplicationFactor * soilLayers[i].thickness));
            atoms[i] = value;
            counter += value;
         }
+
         return counter;
     }
 
@@ -334,7 +253,7 @@ namespace root
      */
     void cardioidDistribution(double shapeFactor, unsigned int nrLayersWithRoot,
                               unsigned int nrUpperLayersWithoutRoot, unsigned int totalLayers,
-                              double* densityThinLayers)
+                              std::vector<double> &densityThinLayers)
     {
         unsigned int i;
         std::vector<double> lunette, lunetteDensity;
@@ -392,15 +311,17 @@ namespace root
 
     void cylindricalDistribution(double deformation, unsigned int nrLayersWithRoot,
                                  unsigned int nrUpperLayersWithoutRoot, unsigned int totalLayers,
-                                 double* densityThinLayers)
+                                 std::vector<double> &densityThinLayers)
     {
        unsigned int i;
-       double* cylinderDensity = new double[nrLayersWithRoot*2];
+       std::vector<double> cylinderDensity;
+       cylinderDensity.resize(nrLayersWithRoot*2);
 
+       // initialize not deformed cylinder
        for (i = 0 ; i < (2*nrLayersWithRoot); i++)
        {
            cylinderDensity[i]= 1./(2*nrLayersWithRoot);
-       } // not deformed cylinder
+       }
 
        // linear and ovoidal deformation
        double deltaDeformation,rootDensitySum;
@@ -431,8 +352,6 @@ namespace root
        {
            densityThinLayers[nrUpperLayersWithoutRoot+i] = cylinderDensity[2*i] + cylinderDensity[2*i+1];
        }
-
-       delete[] cylinderDensity;
     }
 
 
@@ -450,28 +369,43 @@ namespace root
         double soilDepth = soilLayers[nrLayers-1].depth + soilLayers[nrLayers-1].thickness / 2;
 
         // Initialize
-        unsigned int i, layer;
-        for (i = 0; i < nrLayers; i++)
+        for (unsigned int i = 0; i < nrLayers; i++)
         {
             myCrop->roots.rootDensity[i] = 0.0;
         }
 
-        if ((! myCrop->isLiving) || (myCrop->roots.rootLength <= 0 )) return true;
+        if ((! myCrop->isLiving) || (myCrop->roots.currentRootLength <= 0 ))
+            return true;
 
         if ((myCrop->roots.rootShape == CARDIOID_DISTRIBUTION)
             || (myCrop->roots.rootShape == CYLINDRICAL_DISTRIBUTION))
         {
             double minimumThickness;
-            int* atoms = new int[nrLayers];
-            int numberOfRootedLayers, numberOfTopUnrootedLayers;
-            unsigned int nrAtoms;
-            nrAtoms = root::getNrAtoms(soilLayers, myCrop->roots.rootDepthMin, &minimumThickness, atoms);
-            numberOfTopUnrootedLayers = int(round(myCrop->roots.rootDepthMin / minimumThickness));
-            numberOfRootedLayers = int(ceil(MINVALUE(myCrop->roots.rootLength, soilDepth) / minimumThickness));
-            double* densityThinLayers =  new double[nrAtoms];
+            std::vector<int> atoms;
+            atoms.resize(nrLayers);
+            int nrAtoms = root::getNrAtoms(soilLayers, minimumThickness, atoms);
 
-            for (i=0; i < nrAtoms; i++)
+            int numberOfRootedLayers, numberOfTopUnrootedLayers;
+            numberOfTopUnrootedLayers = int(round(myCrop->roots.rootDepthMin / minimumThickness));
+            numberOfRootedLayers = int(round(MINVALUE(myCrop->roots.currentRootLength, soilDepth) / minimumThickness));
+
+            // roots are still too short
+            if (numberOfRootedLayers == 0)
+                return true;
+
+            // check nr of thin layers
+            if ((numberOfTopUnrootedLayers + numberOfRootedLayers) > nrAtoms)
+            {
+                numberOfRootedLayers = nrAtoms - numberOfTopUnrootedLayers;
+            }
+
+            // initialize thin layers density
+            std::vector<double> densityThinLayers;
+            densityThinLayers.resize(nrAtoms);
+            for (int i=0; i < nrAtoms; i++)
+            {
                 densityThinLayers[i] = 0.;
+            }
 
             if (myCrop->roots.rootShape == CARDIOID_DISTRIBUTION)
             {
@@ -484,25 +418,22 @@ namespace root
                                         numberOfTopUnrootedLayers, signed(nrAtoms), densityThinLayers);
             }
 
-            unsigned int counter = 0;
-            for (layer=0; layer < nrLayers; layer++)
+            int counter = 0;
+            for (unsigned int layer=0; layer < nrLayers; layer++)
             {
-                for (unsigned int j = 0; j < unsigned(atoms[layer]); j++)
+                for (int j = 0; j < atoms[layer]; j++)
                 {
                     if (counter < nrAtoms)
                         myCrop->roots.rootDensity[layer] += densityThinLayers[counter];
                     counter++;
                 }
             }
-
-            delete[] atoms;
-            delete[] densityThinLayers;
         }
         else if (myCrop->roots.rootShape == GAMMA_DISTRIBUTION)
         {
             double kappa, theta,a,b;
             double mean, mode;
-            mean = myCrop->roots.rootLength * 0.5;
+            mean = myCrop->roots.currentRootLength * 0.5;
             int iterations=0;
             double integralComplementary;
             do{
@@ -510,14 +441,14 @@ namespace root
                 theta = mean - mode;
                 kappa = mean / theta;
                 iterations++;
-                integralComplementary=incompleteGamma(kappa,3*myCrop->roots.rootLength/theta) - incompleteGamma(kappa,myCrop->roots.rootLength/theta);
+                integralComplementary=incompleteGamma(kappa,3*myCrop->roots.currentRootLength/theta) - incompleteGamma(kappa,myCrop->roots.currentRootLength/theta);
                 mean *= 0.99;
             } while(integralComplementary>0.01 && iterations<1000);
 
-            for (i=1 ; i < nrLayers; i++)
+            for (unsigned int i=1 ; i < nrLayers; i++)
             {
                 b = MAXVALUE(soilLayers[i].depth + soilLayers[i].thickness*0.5 - myCrop->roots.rootDepthMin,0); // right extreme
-                if (b>0 && b< myCrop->roots.rootLength)
+                if (b>0 && b< myCrop->roots.currentRootLength)
                 {
                     a = MAXVALUE(soilLayers[i].depth - soilLayers[i].thickness*0.5 - myCrop->roots.rootDepthMin,0); // left extreme
                     myCrop->roots.rootDensity[i] = incompleteGamma(kappa,b/theta) - incompleteGamma(kappa,a/theta); // incompleteGamma is already normalized by gamma(kappa)
@@ -530,7 +461,7 @@ namespace root
         }
 
         double rootDensitySum = 0. ;
-        for (i=0 ; i < nrLayers; i++)
+        for (unsigned int i=0 ; i < nrLayers; i++)
         {
             myCrop->roots.rootDensity[i] *= soilLayers[i].soilFraction;
             rootDensitySum += myCrop->roots.rootDensity[i];
@@ -538,11 +469,11 @@ namespace root
 
         if (rootDensitySum > 0.0)
         {
-            for (i=0 ; i<nrLayers ; i++)
+            for (unsigned int i=0 ; i < nrLayers ; i++)
                 myCrop->roots.rootDensity[i] /= rootDensitySum;
 
             myCrop->roots.firstRootLayer = 0;
-            layer = 0;
+            unsigned int layer = 0;
 
             while (layer < nrLayers && myCrop->roots.rootDensity[layer] == 0.0)
             {
@@ -560,5 +491,132 @@ namespace root
 
         return true;
     }
+
+
+    bool computeRootDensity3D(Crit3DCrop* myCrop, const soil::Crit3DSoil &currentSoil, unsigned int nrLayers,
+                              const std::vector<double> &layerDepth, const std::vector<double> &layerThickness)
+    {
+        // check soil
+        if (nrLayers == 0)
+        {
+            myCrop->roots.firstRootLayer = NODATA;
+            myCrop->roots.lastRootLayer = NODATA;
+            return false;
+        }
+
+        // Initialize
+        myCrop->roots.rootDensity.clear();
+        myCrop->roots.rootDensity.resize(nrLayers);
+        for (unsigned int i = 0; i < nrLayers; i++)
+        {
+            myCrop->roots.rootDensity[i] = 0.0;
+        }
+
+        if (myCrop->roots.currentRootLength <= 0 )
+            return true;
+
+        if (myCrop->roots.rootShape == GAMMA_DISTRIBUTION)
+            myCrop->roots.rootShape = CARDIOID_DISTRIBUTION;
+
+        int nrAtoms = int(currentSoil.totalDepth * 100) + 1;
+        double minimumThickness = 0.01;                                    // [m]
+
+        int numberOfRootedLayers, numberOfTopUnrootedLayers;
+        numberOfTopUnrootedLayers = int(round(myCrop->roots.rootDepthMin / minimumThickness));
+        numberOfRootedLayers = int(round(MINVALUE(myCrop->roots.currentRootLength, currentSoil.totalDepth) / minimumThickness));
+
+        // roots are still too short
+        if (numberOfRootedLayers == 0)
+            return true;
+
+        // check nr of thin layers
+        if ((numberOfTopUnrootedLayers + numberOfRootedLayers) > nrAtoms)
+        {
+            numberOfRootedLayers = nrAtoms - numberOfTopUnrootedLayers;
+        }
+
+        // initialize thin layers density
+        std::vector<double> densityThinLayers;
+        densityThinLayers.resize(nrAtoms);
+        for (int i=0; i < nrAtoms; i++)
+        {
+            densityThinLayers[i] = 0.;
+        }
+
+        if (myCrop->roots.rootShape == CARDIOID_DISTRIBUTION)
+        {
+            cardioidDistribution(myCrop->roots.shapeDeformation, numberOfRootedLayers,
+                                 numberOfTopUnrootedLayers, signed(nrAtoms), densityThinLayers);
+        }
+        else if (myCrop->roots.rootShape == CYLINDRICAL_DISTRIBUTION)
+        {
+            cylindricalDistribution(myCrop->roots.shapeDeformation, numberOfRootedLayers,
+                                    numberOfTopUnrootedLayers, signed(nrAtoms), densityThinLayers);
+        }
+
+        double maxLayerDepth = layerDepth[nrLayers-1] + layerThickness[nrLayers-1] * 0.5;
+        int atom = 0;
+        double currentDepth = double(atom) * 0.01;                              // [m]
+        double rootDensitySum = 0.;
+        while (currentDepth <= maxLayerDepth && atom < nrAtoms)
+        {
+            for (unsigned int l = 0; l < nrLayers; l++)
+            {
+                double upperDepth = layerDepth[l] - layerThickness[l] * 0.5;
+                double lowerDepth = layerDepth[l] + layerThickness[l] * 0.5;
+                if (currentDepth >= upperDepth && currentDepth <= lowerDepth)
+                {
+                    myCrop->roots.rootDensity[l] += densityThinLayers[atom];
+                    rootDensitySum += densityThinLayers[atom];
+                    break;
+                }
+            }
+
+            atom++;
+            currentDepth = double(atom) * 0.01;                                 // [m]
+        }
+
+        if (rootDensitySum <= EPSILON)
+            return true;
+
+        double rootDensitySumSubset = 0.;
+        for (unsigned int l=0 ; l < nrLayers; l++)
+        {
+            int horIndex = currentSoil.getHorizonIndex(layerDepth[l]);
+            if (horIndex != int(NODATA))
+            {
+                double soilFraction = (1 - currentSoil.horizon[horIndex].coarseFragments);
+                myCrop->roots.rootDensity[l] *= soilFraction;
+                rootDensitySumSubset += myCrop->roots.rootDensity[l];
+            }
+        }
+
+        if (rootDensitySumSubset != rootDensitySum)
+        {
+            double ratio = rootDensitySum / rootDensitySumSubset;
+            for (unsigned int l=0 ; l < nrLayers; l++)
+            {
+                myCrop->roots.rootDensity[l] *= ratio;
+            }
+        }
+
+        myCrop->roots.firstRootLayer = 0;
+        unsigned int layer = 0;
+        while (layer < nrLayers && myCrop->roots.rootDensity[layer] == 0.0)
+        {
+            layer++;
+            (myCrop->roots.firstRootLayer)++;
+        }
+
+        myCrop->roots.lastRootLayer = myCrop->roots.firstRootLayer;
+        while (layer < nrLayers && myCrop->roots.rootDensity[layer] != 0.0)
+        {
+            myCrop->roots.lastRootLayer = signed(layer);
+            layer++;
+        }
+
+        return true;
+    }
+
 }
 

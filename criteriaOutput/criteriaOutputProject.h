@@ -13,8 +13,6 @@
 #include "shapeHandler.h"
 #include "crit3dDate.h"
 
-#define REQUIREDMAPLISTCSVINFO 2
-
 #define ERROR_MISSINGPARAMETERS -900
 #define ERROR_WRONGPARAMETER -901
 
@@ -22,7 +20,7 @@
 #define ERROR_SETTINGS_WRONGFILENAME -2
 #define ERROR_SETTINGS_MISSINGDATA -3
 #define ERROR_DBPARAMETERS -5
-#define ERROR_DBHISTORICAL -6
+#define ERROR_DBCLIMATE -6
 #define ERROR_TDXWRITE -7
 #define ERROR_DBOUTPUT -10
 #define ERROR_WRONGDATE -11
@@ -63,6 +61,7 @@ public:
     QString aggregationThreshold;
 
     QString mapListFileName;
+    QString mapPalettePath;
     QString mapCellSize;
     QString mapFormat;
     QString mapProjection;
@@ -78,11 +77,11 @@ public:
     QString dbComputationUnitsName;
     QString dbDataName;
     QString dbCropName;
-    QString dbDataHistoricalName;
+    QString dbClimateDataName;
 
     QSqlDatabase dbCrop;
     QSqlDatabase dbData;
-    QSqlDatabase dbDataHistorical;
+    QSqlDatabase dbClimateData;
 
     int nrUnits;
     std::vector<Crit1DCompUnit> compUnitList;

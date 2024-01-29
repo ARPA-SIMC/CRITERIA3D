@@ -9,7 +9,8 @@
     class Crit3DCrop;
 
     enum rootDistributionType {CYLINDRICAL_DISTRIBUTION, CARDIOID_DISTRIBUTION, GAMMA_DISTRIBUTION};
-    const int numRootDistributionType = 3;
+    const int nrRootDistributionType = 3;
+
     enum rootGrowthType {LINEAR, EXPONENTIAL, LOGISTIC};
 
     /*!
@@ -22,17 +23,18 @@
         rootGrowthType growth;
 
         /*! parameters */
-        double degreeDaysRootGrowth;        /*!< [°D]  */
+        int degreeDaysRootGrowth;           /*!< [°D]  */
         double rootDepthMin;                /*!< [m]   */
         double rootDepthMax;                /*!< [m]   */
         double shapeDeformation;            /*!< [-]   */
 
         /*! variables */
-        double actualRootDepthMax;          /*!< [m]  it takes into account soilDepth */
-        double rootLength;                  /*!< [m]  */
+        double actualRootDepthMax;          /*!< [m]  it takes into account soil depth */
+        double currentRootLength;           /*!< [m]  */
         int firstRootLayer;                 /*!< [-]  */
         int lastRootLayer;                  /*!< [-]  */
         std::vector<double> rootDensity;    /*!< [-]  */
+        double rootsAdditionalCohesion;     /*!< [kPa] Cr = roots reinforcement (RR) derived from a model */
 
         /*! state variables */
         double rootDepth;                   /*!<  [m]  current root depth */
@@ -45,16 +47,17 @@
 
     namespace root
     {
-        int getNrAtoms(const std::vector<soil::Crit3DLayer> &soilLayers, double rootDepthMin, double* minThickness, int* atoms);
-        double getRootLengthDD(Crit3DRoot* myRoot, double currentDD, double emergenceDD);
         rootDistributionType getRootDistributionType(int rootShape);
         int getRootDistributionNumber(rootDistributionType rootShape);
-        rootDistributionType getRootDistributionTypeFromString(std::string rootShape);
+        rootDistributionType getRootDistributionTypeFromString(const std::string &rootShape);
         std::string getRootDistributionTypeString(rootDistributionType rootType);
 
-        double computeRootLength(Crit3DCrop* myCrop, double currentDD, double waterTableDepth);
-        double computeRootDepth(Crit3DCrop* myCrop, double currentDD, double waterTableDepth);
+        double getRootLengthDD(const Crit3DRoot &myRoot, double currentDD, double emergenceDD);
         bool computeRootDensity(Crit3DCrop* myCrop, const std::vector<soil::Crit3DLayer> &soilLayers);
+        bool computeRootDensity3D(Crit3DCrop* myCrop, const soil::Crit3DSoil &currentSoil, unsigned int nrLayers,
+                                  const std::vector<double> &layerDepth, const std::vector<double> &layerThickness);
+
+        int getNrAtoms(const std::vector<soil::Crit3DLayer> &soilLayers, double &minThickness, std::vector<int> &atoms);
     }
 
 #endif // ROOT_H

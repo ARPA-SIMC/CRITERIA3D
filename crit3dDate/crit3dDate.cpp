@@ -41,7 +41,7 @@ const long doyMonth[13] = {0, 31, 59, 90, 120, 151, 181, 212, 243, 273, 304, 334
 // index: 1 - 12
 int getDaysInMonth(int month, int year)
 {
-    if (month < 1 || month > 12) return NODATA;
+    if ((month < 1) || (month > 12)) return NODATA;
 
     if(month == 2 && isLeapYear(year))
         return 29;
@@ -233,16 +233,16 @@ Crit3DDate getDateFromDoy(int year, int doy)
     return Crit3DDate(doy-(doyMonth[month-1]+leap), month, year);
 }
 
-
-Crit3DDate getNullDate()
+void Crit3DDate::setNullDate()
 {
-    Crit3DDate* myDate = new Crit3DDate();
-    return *myDate;
+    day = 0;
+    month = 0;
+    year = 0;
 }
 
-bool isNullDate(Crit3DDate myDate)
+bool Crit3DDate::isNullDate()
 {
-    return (myDate.day == 0 && myDate.month == 0 && myDate.year == 0);
+    return (day == 0 && month == 0 && year == 0);
 }
 
 

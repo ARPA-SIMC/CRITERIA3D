@@ -12,6 +12,7 @@ QT  += gui widgets
 TEMPLATE = lib
 CONFIG += staticlib
 CONFIG += debug_and_release
+CONFIG += c++14 c++17
 
 DEFINES += _CRT_SECURE_NO_WARNINGS
 
@@ -30,11 +31,17 @@ INCLUDEPATH += ../mathFunctions
 
 SOURCES += \
     formInfo.cpp \
-    formTimePeriod.cpp
+    formSelection.cpp \
+    formText.cpp \
+    formTimePeriod.cpp \
+    formSelectionSource.cpp
 
 HEADERS += \
     formInfo.h \
-    formTimePeriod.h
+    formSelection.h \
+    formText.h \
+    formTimePeriod.h \
+    formSelectionSource.h
 
 FORMS += \
     formTimePeriod.ui

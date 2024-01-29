@@ -1,4 +1,5 @@
 #include <QtWidgets>
+#include <QLocale>
 
 #include "project.h"
 #include "radiationSettings.h"
@@ -24,16 +25,16 @@ DialogRadiation::DialogRadiation(Project* myProject)
     comboRealSky = new QComboBox();
     comboLinkeMode = new QComboBox();
     groupLinke = new QGroupBox("Linke turbidity factor");
-    editLinke = new QLineEdit(QString::number(double(project_->radSettings.getLinke())));
+    editLinke = new QLineEdit(QLocale().toString(project_->radSettings.getLinke()));
     buttonLinke = new QPushButton("Load Linke map...");
     editLinkeMap = new QLineEdit();
     comboAlbedoMode = new QComboBox();
     buttonAlbedo = new QPushButton("Load albedo map...");
     editAlbedoMap = new QLineEdit();
-    editAlbedo = new QLineEdit(QString::number(double(project_->radSettings.getAlbedo())));
+    editAlbedo = new QLineEdit(QLocale().toString(project_->radSettings.getAlbedo()));
     comboTiltMode = new QComboBox();
-    editTilt = new QLineEdit(QString::number(double(project_->radSettings.getTilt())));
-    editAspect = new QLineEdit(QString::number(double(project_->radSettings.getAspect())));
+    editTilt = new QLineEdit(QLocale().toString(project_->radSettings.getTilt()));
+    editAspect = new QLineEdit(QLocale().toString(project_->radSettings.getAspect()));
 
     // --------------------------------------------------------
     // algorithm
@@ -88,7 +89,7 @@ DialogRadiation::DialogRadiation(Project* myProject)
     layoutTransSettings->addLayout(layoutTransAlgorithm);
 
     QLabel* labelTransClear = new QLabel("clear sky transmissivity");
-    editTransClearSky = new QLineEdit(QString::number(double(project_->radSettings.getClearSky())));
+    editTransClearSky = new QLineEdit(QLocale().toString(project_->radSettings.getClearSky()));
     QDoubleValidator* doubleValClearSky = new QDoubleValidator(0.0, 1.0, 2, this);
     editTransClearSky->setValidator(doubleValClearSky);
     layoutTransSettings->addWidget(labelTransClear);
@@ -240,10 +241,7 @@ DialogRadiation::DialogRadiation(Project* myProject)
 void DialogRadiation::updateAlgorithm(const QString myString)
 {
     TradiationAlgorithm myAlgorithm = radAlgorithmToString.at(myString.toStdString());
-    /*if (myAlgorithm == RADIATION_ALGORITHM_BROOKS)
-    {
-        groupLinke->setEnabled(false);
-    }*/
+
     if (myAlgorithm == RADIATION_ALGORITHM_RSUN)
     {
         groupLinke->setEnabled(true);
@@ -292,9 +290,9 @@ void DialogRadiation::loadLinke()
     qFileName = qFileName.left(qFileName.length()-4);
 
     std::string fileName = qFileName.toStdString();
-    std::string error_;
+    std::string errorStr;
     linkeMap = new gis::Crit3DRasterGrid();
-    if (gis::readEsriGrid(fileName, linkeMap, &error_))
+    if (gis::readEsriGrid(fileName, linkeMap, errorStr))
         editLinkeMap->setText(qFileName);
     else
         QMessageBox::information(nullptr, "Error", "Error opening " + qFileName);
@@ -307,9 +305,9 @@ void DialogRadiation::loadAlbedo()
     qFileName = qFileName.left(qFileName.length()-4);
 
     std::string fileName = qFileName.toStdString();
-    std::string error_;
+    std::string errorStr;
     albedoMap = new gis::Crit3DRasterGrid();
-    if (gis::readEsriGrid(fileName, albedoMap, &error_))
+    if (gis::readEsriGrid(fileName, albedoMap, errorStr))
         editAlbedoMap->setText(qFileName);
     else
         QMessageBox::information(nullptr, "Error", "Error opening " + qFileName);
@@ -346,7 +344,7 @@ void DialogRadiation::accept()
                     return;
                 }
                 else {
-                    linke = editLinke->text().toFloat();
+                    linke = QLocale().toFloat(editLinke->text());
                 }
             }
             else if (linkeMode == PARAM_MODE_MAP)
@@ -368,7 +366,7 @@ void DialogRadiation::accept()
             return;
         }
         else {
-            albedo = editAlbedo->text().toFloat();
+            albedo = QLocale().toFloat(editAlbedo->text());
         }
 
     }
@@ -389,7 +387,7 @@ void DialogRadiation::accept()
             return;
         }
         else {
-            tilt = editTilt->text().toFloat();
+            tilt = QLocale().toFloat(editTilt->text());
         }
 
 
@@ -399,7 +397,7 @@ void DialogRadiation::accept()
             return;
         }
         else {
-            aspect = editAspect->text().toFloat();
+            aspect = QLocale().toFloat(editAspect->text());
         }
     }
 
@@ -410,7 +408,7 @@ void DialogRadiation::accept()
     project_->radSettings.setTiltMode(tiltMode);
     project_->radSettings.setRealSky(realSky);
     project_->radSettings.setShadowing(checkShadowing->isChecked());
-    project_->radSettings.setClearSky(editTransClearSky->text().toFloat());
+    project_->radSettings.setClearSky(QLocale().toFloat(editTransClearSky->text()));
 
     if (linke != NODATA) project_->radSettings.setLinke(linke);
     if (albedo != NODATA) project_->radSettings.setAlbedo(albedo);

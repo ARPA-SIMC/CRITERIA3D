@@ -32,6 +32,11 @@
             void on_actionChangeLeftAxis();
             void on_actionExportGraph();
             void on_actionExportData();
+            void addStationClicked();
+            void deleteStationClicked();
+            void saveToDbClicked();
+            void updateYears();
+            void setMpValues(Crit3DMeteoPoint meteoPointGet, Crit3DMeteoPoint *meteoPointSet, QDate myDate);
 
     private:
             bool isGrid;
@@ -39,6 +44,7 @@
             Crit3DMeteoGridDbHandler* meteoGridDbHandler;
             Crit3DClimate clima;
             QList<Crit3DMeteoPoint> meteoPoints;
+            QList<std::string> idPoints;
             QDate firstDaily;
             QDate lastDaily;
             QDateTime firstHourly;

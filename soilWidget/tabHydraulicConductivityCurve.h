@@ -31,13 +31,10 @@
         bool fillElement;
         int indexSelected;
 
-        double dxMin = 0.001;
-        double dxMax = 10000000;
-
-        double xMin = (dxMin * 100);
-        double xMax = (dxMax / 100);
+        double xMin = 0.1;
+        double xMax = 1000000;
         double yMin = pow(10, -12);
-        double yMax = 1000;
+        double yMax = pow(10, 4);
 
     private slots:
         void widgetClicked(int index);

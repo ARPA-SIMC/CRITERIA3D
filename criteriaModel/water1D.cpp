@@ -25,6 +25,7 @@
 */
 
 #include <math.h>
+#include <algorithm>
 
 #include "commonConstants.h"
 #include "water1D.h"
@@ -101,11 +102,11 @@ double computeInfiltration(std::vector<soil::Crit3DLayer> &soilLayers, double in
     // Maximum infiltration - due to gravitational force and permeability (Driessen 1986, eq.34)
     for (i = 1; i < nrLayers; i++)
     {
-        soilLayers[i].maxInfiltration = 10 * soilLayers[i].horizon->Driessen.gravConductivity;
+        soilLayers[i].maxInfiltration = 10 * soilLayers[i].horizonPtr->Driessen.gravConductivity;
 
         if (soilLayers[i].depth < ploughedSoilDepth)
         {
-            soilLayers[i].maxInfiltration += 10 * (1 - avgPloughSatDegree) * soilLayers[i].horizon->Driessen.maxSorptivity;
+            soilLayers[i].maxInfiltration += 10 * (1 - avgPloughSatDegree) * soilLayers[i].horizonPtr->Driessen.maxSorptivity;
         }
     }
 
@@ -249,6 +250,12 @@ double computeInfiltration(std::vector<soil::Crit3DLayer> &soilLayers, double in
         }
     }
 
+    // update water potential
+    for (unsigned i=1; i < nrLayers; i++)
+    {
+        soilLayers[i].waterPotential = soilLayers[i].getWaterPotential();                      // [kPa]
+    }
+
     return drainage;
 }
 
@@ -274,7 +281,7 @@ double computeCapillaryRise(std::vector<soil::Crit3DLayer> &soilLayers, double w
     unsigned int lastLayer = nrLayers-1;
     if (nrLayers == 0) return 0;
 
-    // NO WaterTable, wrong data or watertable too depth (6 meters)
+    // No WaterTable, wrong data or watertable too depth (6 meters)
     if ( isEqual(waterTableDepth, NODATA) || waterTableDepth <= 0
             || waterTableDepth > (soilLayers[lastLayer].depth + 6) )
     {
@@ -307,7 +314,7 @@ double computeCapillaryRise(std::vector<soil::Crit3DLayer> &soilLayers, double w
     }
 
     // air entry point of boundary layer
-    he_boundary = soilLayers[boundaryLayer].horizon->vanGenuchten.he;       // [kPa]
+    he_boundary = soilLayers[boundaryLayer].horizonPtr->vanGenuchten.he;       // [kPa]
 
     // above watertable: assign water content threshold for vertical drainage
     for (unsigned int i = 1; i <= boundaryLayer; i++)
@@ -315,7 +322,7 @@ double computeCapillaryRise(std::vector<soil::Crit3DLayer> &soilLayers, double w
         dz = (waterTableDepth - soilLayers[i].depth);                       // [m]
         psi = soil::metersTokPa(dz) + he_boundary;                          // [kPa]
 
-        soilLayers[i].critical = soil::getWaterContentFromPsi(psi, &(soilLayers[i]));
+        soilLayers[i].critical = soil::getWaterContentFromPsi(psi, soilLayers[i]);
 
         if (soilLayers[i].critical < soilLayers[i].FC)
         {
@@ -379,22 +386,21 @@ double computeEvaporation(std::vector<soil::Crit3DLayer> &soilLayers, double max
         return actualEvaporation;
 
     // soil evaporation
-    unsigned int lastLayerEvap = unsigned(floor(MAX_EVAPORATION_DEPTH / soilLayers[1].thickness)) +1;
-    double* coeffEvap = new double[lastLayerEvap];
+    int nrEvapLayers = int(floor(MAX_EVAPORATION_DEPTH / soilLayers[1].thickness)) +1;
+    nrEvapLayers = std::min(nrEvapLayers, int(soilLayers.size()-1));
+    double* coeffEvap = new double[nrEvapLayers];
     double layerDepth, coeffDepth;
 
     double sumCoeff = 0;
     double minDepth = soilLayers[1].depth + soilLayers[1].thickness / 2;
-    for (unsigned int i=1; i <= lastLayerEvap; i++)
+    for (int i=1; i <= nrEvapLayers; i++)
     {
         layerDepth = soilLayers[i].depth + soilLayers[i].thickness / 2.0;
 
-        // evaporation coefficient: 1 at depthMin, ~0.1 at MAX_EVAPORATION_DEPTH
         coeffDepth = MAXVALUE((layerDepth - minDepth) / (MAX_EVAPORATION_DEPTH - minDepth), 0);
+        // evaporation coefficient: 1 at depthMin, ~0.1 at MAX_EVAPORATION_DEPTH
         coeffEvap[i-1] = exp(-2 * coeffDepth);
 
-        // old vb computation
-        // coeffEvap[i-1] = MINVALUE(1.0, exp((-layerDepth * 2.0) / MAX_EVAPORATION_DEPTH));
         sumCoeff += coeffEvap[i-1];
     }
 
@@ -405,9 +411,9 @@ double computeEvaporation(std::vector<soil::Crit3DLayer> &soilLayers, double max
         isWaterSupply = false;
         sumEvap = 0.0;
 
-        for (unsigned int i=1; i<=lastLayerEvap; i++)
+        for (int i=1; i <= nrEvapLayers; i++)
         {
-            evapLayerThreshold = soilLayers[i].FC - coeffEvap[i-1] * (soilLayers[i].FC - soilLayers[i].HH);
+            evapLayerThreshold = soilLayers[i].HH + (1 - coeffEvap[i-1]) * (soilLayers[i].FC - soilLayers[i].HH) * 0.5;
             evapLayer = (coeffEvap[i-1] / sumCoeff) * residualEvaporation;
 
             if (soilLayers[i].waterContent > (evapLayerThreshold + evapLayer))
@@ -434,7 +440,7 @@ double computeEvaporation(std::vector<soil::Crit3DLayer> &soilLayers, double max
 /*!
  * \brief compute surface runoff [mm]
  */
-double computeSurfaceRunoff(Crit3DCrop &myCrop, std::vector<soil::Crit3DLayer> &soilLayers)
+double computeSurfaceRunoff(const Crit3DCrop &myCrop, std::vector<soil::Crit3DLayer> &soilLayers)
 {
     double surfaceRunoff;           // [mm]
     double maxSurfaceWater;         // [mm]
@@ -486,7 +492,7 @@ double computeLateralDrainage(std::vector<soil::Crit3DLayer> &soilLayers)
 
             hydrHead = satFactor * (drainDepth - soilLayers[i].depth);                      // [m]
 
-            maxDrainage =  10 * soilLayers[i].horizon->Driessen.k0 * hydrHead /
+            maxDrainage =  10 * soilLayers[i].horizonPtr->Driessen.k0 * hydrHead /
                     (hydrHead + (fieldWidth / PI) * log(fieldWidth / (PI * drainRadius)));      // [mm]
 
             layerDrainage = MINVALUE(waterSurplus, maxDrainage);                                // [mm]
@@ -512,7 +518,7 @@ double assignOptimalIrrigation(std::vector<soil::Crit3DLayer> &soilLayers, unsig
     unsigned int nrLayers = unsigned(soilLayers.size());
 
     unsigned int i=0;
-    while (i < nrLayers && i <= lastRootLayer && residualIrrigation > 0)
+    while ((i < nrLayers) && (i <= lastRootLayer) && (residualIrrigation > 0))
     {
         if (soilLayers[i].waterContent < soilLayers[i].FC)
         {
@@ -530,12 +536,12 @@ double assignOptimalIrrigation(std::vector<soil::Crit3DLayer> &soilLayers, unsig
 
 
 /*!
- * \brief getSoilWaterContent
+ * \brief getSoilWaterContentSum
  * \param soilLayers
  * \param computationDepth = computation soil depth [cm]
  * \return sum of water content from zero to computationSoilDepth [mm]
  */
-double getSoilWaterContent(const std::vector<soil::Crit3DLayer> &soilLayers, double computationDepth)
+double getSoilWaterContentSum(const std::vector<soil::Crit3DLayer> &soilLayers, double computationDepth)
 {
     computationDepth /= 100;                // [cm] --> [m]
     double lowerDepth, upperDepth;          // [m]
@@ -576,7 +582,7 @@ double getReadilyAvailableWater(const Crit3DCrop &myCrop, const std::vector<soil
     double sumRAW = 0.0;
     for (unsigned int i = unsigned(myCrop.roots.firstRootLayer); i <= unsigned(myCrop.roots.lastRootLayer); i++)
     {
-        double thetaWP = soil::thetaFromSignPsi(-soil::cmTokPa(myCrop.psiLeaf), soilLayers[i].horizon);
+        double thetaWP = soil::thetaFromSignPsi(-soil::cmTokPa(myCrop.psiLeaf), *(soilLayers[i].horizonPtr));
         // [mm]
         double cropWP = thetaWP * soilLayers[i].thickness * soilLayers[i].soilFraction * 1000.0;
         // [mm]

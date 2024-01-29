@@ -11,7 +11,7 @@ TEMPLATE = lib
 CONFIG += staticlib
 
 CONFIG += debug_and_release
-QMAKE_CXXFLAGS += -std=c++11
+CONFIG += c++11 c++14 c++17
 
 unix:{
     CONFIG(debug, debug|release) {
@@ -28,13 +28,11 @@ INCLUDEPATH += ../crit3dDate ../mathFunctions ../meteo ../gis ../interpolation .
 
 SOURCES += importDataXML.cpp \
     fieldXML.cpp \
-    importPropertiesCSV.cpp \
     variableXML.cpp
 
 
 HEADERS += importDataXML.h \
     fieldXML.h \
-    importPropertiesCSV.h \
     variableXML.h
 
 

@@ -14,9 +14,8 @@
     #ifndef QSQLDATABASE_H
         #include <QSqlDatabase>
     #endif
-    #ifndef QDATETIME_H
-        #include <QDate>
-    #endif
+
+    class QDate;
 
     class Crit3DClimate
     {
@@ -31,7 +30,7 @@
 
         void copyParam(Crit3DClimate* clima);
 
-        QSqlDatabase db() const;
+        const QSqlDatabase &db() const;
         void setDb(const QSqlDatabase &db);
 
         QString climateElab() const;
@@ -107,6 +106,9 @@
         bool getIsClimateAnomalyFromDb() const;
         void setIsClimateAnomalyFromDb(bool isClimateFromDb);
 
+        bool dailyCumulated() const;
+        void setDailyCumulated(bool newDailyCumulated);
+
     private:
         QSqlDatabase _db;
         QString _climateElab;
@@ -126,6 +128,7 @@
         bool _isClimateAnomalyFromDb;
         QString _elab2;
         float _param2;
+        bool _dailyCumulated;
         Crit3DElaborationSettings *elabSettings;
 
         meteoVariable _currentVar;

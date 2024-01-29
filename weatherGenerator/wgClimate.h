@@ -22,10 +22,12 @@
                           float *inputPrec, float precThreshold, float minPrecData,
                           TweatherGenClimate* wGen, bool writeOutput, bool outputForStats,
                           QString outputFileName, float* monthlyPrecipitation,
-                          float** consecutiveDry, float** consecutiveWet, int nrMonth, int nrConsecutiveDryDaysBins);
+                          float** consecutiveDry, float** consecutiveWet, int nrConsecutiveDryDaysBins);
+
     bool computeWG2DClimate(int nrDays, Crit3DDate inputFirstDate, float *inputTMin, float *inputTMax,
                           float *inputPrec, float precThreshold, float minPrecData,
                           TweatherGenClimate* wGen, bool writeOutput, bool outputForStats,
                           QString outputFileName, float* monthlyPrecipitation);
+
 #endif // WGCLIMATE_H
 

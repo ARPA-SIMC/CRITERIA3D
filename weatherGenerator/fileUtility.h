@@ -1,13 +1,15 @@
 #ifndef FILEUTILITY_H
 #define FILEUTILITY_H
 
-    class QString;
     struct ToutputDailyMeteo;
     struct TinputObsData;
+    #include <vector>
+    #include <QString>
 
-    bool readMeteoDataCsv (QString namefile, char separator, double noData,  TinputObsData* inputData);
+    bool readMeteoDataCsv (QString &fileName, char separator, double noData, TinputObsData* inputData);
 
-    bool writeMeteoDataCsv (QString namefile, char separator, ToutputDailyMeteo* mydailyData, long dataLenght);
+    bool writeMeteoDataCsv(QString &fileName, char separator, std::vector<ToutputDailyMeteo> &dailyData);
+
 
 #endif // FILEUTILITY_H
 

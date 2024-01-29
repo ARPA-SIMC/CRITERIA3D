@@ -18,12 +18,13 @@
 
     public:
         TabHorizons();
-        void insertSoilHorizons(soil::Crit3DSoil* mySoil, soil::Crit3DTextureClass *textureClassList,
+        void insertSoilHorizons(soil::Crit3DSoil* mySoil, std::vector<soil::Crit3DTextureClass> *textureClassList,
+                                std::vector<soil::Crit3DGeotechnicsClass> *geotechnicsClassList,
                                 soil::Crit3DFittingOptions *fittingOptions);
         void updateTableModel(soil::Crit3DSoil *soil);
         bool checkDepths();
         bool checkHorizonData(int horizonNum);
-        void checkMissingItem(int horizonNum);
+        void checkMissingItem(int horizonNr);
         void checkComputedValues(int horizonNum);
         void setInvalidTableModelRow(int horizonNum);
         void clearSelections();
@@ -49,7 +50,8 @@
         QPushButton* addRow;
         QPushButton* deleteRow;
         soil::Crit3DSoil* mySoil;
-        soil::Crit3DTextureClass* myTextureClassList;
+        std::vector<soil::Crit3DTextureClass>* myTextureClassList;
+        std::vector<soil::Crit3DGeotechnicsClass>* myGeotechnicsClassList;
         soil::Crit3DFittingOptions* myFittingOptions;
         bool insertSoilElement;
     private slots:

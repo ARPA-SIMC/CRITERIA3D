@@ -1,58 +1,49 @@
-/*-----------------------------------------------------------------------------------
+/*!
+    \copyright 2023
+    Fausto Tomei, Gabriele Antolini, Antonio Volta
 
-    CRITERIA 3D
-    Copyright (C) 2011 Fausto Tomei, Gabriele Antolini, Alberto Pistocchi,
-    Antonio Volta, Giulia Villani, Marco Bittelli
+    This file is part of AGROLIB distribution.
+    AGROLIB has been developed under contract issued by A.R.P.A. Emilia-Romagna
 
-    This file is part of CRITERIA3D.
-    CRITERIA3D has been developed under contract issued by A.R.P.A. Emilia-Romagna
-
-    CRITERIA3D is free software: you can redistribute it and/or modify
+    AGROLIB is free software: you can redistribute it and/or modify
     it under the terms of the GNU Lesser General Public License as published by
     the Free Software Foundation, either version 3 of the License, or
     (at your option) any later version.
 
-    CRITERIA3D is distributed in the hope that it will be useful,
+    AGROLIB is distributed in the hope that it will be useful,
     but WITHOUT ANY WARRANTY; without even the implied warranty of
     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
     GNU Lesser General Public License for more details.
 
     You should have received a copy of the GNU Lesser General Public License
-    along with CRITERIA3D.  If not, see <http://www.gnu.org/licenses/>.
+    along with AGROLIB.  If not, see <http://www.gnu.org/licenses/>.
 
-    contacts:
-    ftomei@arpa.emr.it
-    fausto.tomei@gmail.com
-    gantolini@arpa.emr.it
-    alberto.pistocchi@gecosistema.it
-    marco.bittelli@unibo.it
------------------------------------------------------------------------------------*/
+    Contacts:
+    ftomei@arpae.it
+    gantolini@arpae.it
+    avolta@arpae.it
+*/
 
 #include <math.h>
-#include "physics.h"
-#include "basicMath.h"
+
 #include "commonConstants.h"
+#include "basicMath.h"
+#include "physics.h"
 
 
 /*!
- * \brief [Pa] pressure
- * \param myElevation
- * \return result
+ * \brief pressure [Pa]
+ * \param altitude in meters above the sea level [m]
+ * \return atmospheric pressure (Pa)
  */
-double PressureFromAltitude(double myHeight)
+double pressureFromAltitude(double height)
 {	/* from Allen et al., 1994.
     An update for the calculation of reference evapotranspiration.
     ICID Bulletin 43: 65
-    INPUT:
-    altitude in meters above the sea level [m]
-    OUTPUT:
-    atmospheric pressure (Pa)
     */
 
-    double myPressure;
-
-    myPressure = P0 * pow(1 + myHeight * LAPSE_RATE_MOIST_AIR / TP0, - GRAVITY / (LAPSE_RATE_MOIST_AIR * R_DRY_AIR));
-    return myPressure;
+    double pressure = P0 * pow(1 + height * LAPSE_RATE_MOIST_AIR / TP0, - GRAVITY / (LAPSE_RATE_MOIST_AIR * R_DRY_AIR));
+    return pressure;
 }
 
 
@@ -62,24 +53,24 @@ double PressureFromAltitude(double myHeight)
  * \param myT (K)
  * \return air molar density [mol m-3]
  */
-double AirMolarDensity(double myPressure, double myT)
+double airMolarDensity(double myPressure, double myT)
 {
     return 44.65 * (myPressure / P0) * (ZEROCELSIUS / myT);
 }
 
 
-double VolumetricLatentHeatVaporization(double myPressure, double myT)
+double volumetricLatentHeatVaporization(double myPressure, double myT)
 // [J m-3] latent heat of vaporization
 {
-    double rhoAir = AirMolarDensity(myPressure, myT); // [mol m-3] molar density of air
+    double rhoAir = airMolarDensity(myPressure, myT); // [mol m-3] molar density of air
     return (rhoAir * (45144. - 48. * (myT - ZEROCELSIUS)));	// Campbell 1994
 }
 
 
 /*!
- * \brief vapourPressureDeficit
+ * \brief Vapour Pressure Deficit (VPD)
  * \param air temperature (C)
- * \param realtive humidity (%)
+ * \param relative humidity (%)
  * \return Vapour pressure deficit [hPa]
  */
 double vapourPressureDeficit(double tAir, double relativeHumidity)
@@ -87,30 +78,29 @@ double vapourPressureDeficit(double tAir, double relativeHumidity)
     // check relative humidity
     if (relativeHumidity < 1) relativeHumidity = 1.0;
     if (relativeHumidity > 100) relativeHumidity = 100.0;
-    relativeHumidity /= 100.0;
 
-    return (1.0 - relativeHumidity) * 6.1375 * exp((17.502 * tAir) / (240.97 + tAir));
+    return (1.0 - relativeHumidity / 100.0) * saturationVaporPressure(tAir) / 100.0;
 }
 
 
-double VaporPressureFromConcentration(double myConcentration, double myT)
+double vaporPressureFromConcentration(double myConcentration, double myT)
 // [Pa] convert vapor partial pressure from concentration in kg m-3
 {
     return (myConcentration * R_GAS * myT / MH2O);
 }
 
 
-double VaporConcentrationFromPressure(double myPressure, double myT)
+double vaporConcentrationFromPressure(double myPressure, double myT)
 // [kg m-3] compute vapor concentration from pressure (Pa) and temperature (K)
 {
     return (myPressure * MH2O / (R_GAS * myT));
 }
 
 
-double AirVolumetricSpecificHeat(double myPressure, double myT)
-{ // (J m-3 K-1) volumetric specific heat of air
-
-    double myMolarDensity = AirMolarDensity(myPressure, myT); // mol m-3
+double airVolumetricSpecificHeat(double myPressure, double myT)
+// (J m-3 K-1) volumetric specific heat of air
+{
+    double myMolarDensity = airMolarDensity(myPressure, myT); // mol m-3
     double mySpHeat = (HEAT_CAPACITY_AIR_MOLAR * myMolarDensity);
     return (mySpHeat);
 }
@@ -121,7 +111,7 @@ double AirVolumetricSpecificHeat(double myPressure, double myT)
  * \param myTCelsius [degC]
  * \return result
  */
-double SaturationVaporPressure(double myTCelsius)
+double saturationVaporPressure(double myTCelsius)
 {
     return 611 * exp(17.502 * myTCelsius / (myTCelsius + 240.97));
 }
@@ -133,7 +123,7 @@ double SaturationVaporPressure(double myTCelsius)
  * \param satVapPressure (kPa)
  * \return result
  */
-double SaturationSlope(double airTCelsius, double satVapPressure)
+double saturationSlope(double airTCelsius, double satVapPressure)
 {
     return (4098. * satVapPressure / ((237.3 + airTCelsius) * (237.3 + airTCelsius)));
 }
@@ -141,8 +131,8 @@ double SaturationSlope(double airTCelsius, double satVapPressure)
 
 double getAirVaporDeficit(double myT, double myVapor)
 {
-    double myVaporPressure = SaturationVaporPressure(myT - ZEROCELSIUS);
-    double mySatVapor = VaporConcentrationFromPressure(myVaporPressure, myT);
+    double myVaporPressure = saturationVaporPressure(myT - ZEROCELSIUS);
+    double mySatVapor = vaporConcentrationFromPressure(myVaporPressure, myT);
     return (mySatVapor - myVapor);
 }
 
@@ -152,7 +142,7 @@ double getAirVaporDeficit(double myT, double myVapor)
  * \param myTCelsius
  * \return result
  */
-double LatentHeatVaporization(double myTCelsius)
+double latentHeatVaporization(double myTCelsius)
 {
     return (2501000. - 2369.2 * myTCelsius);
 }
@@ -164,9 +154,9 @@ double LatentHeatVaporization(double myTCelsius)
  * \param myTemp [°C]
  * \return result
  */
-double Psychro(double myPressure, double myTemp)
+double psychro(double myPressure, double myTemp)
 {
-    return CP * myPressure / (RATIO_WATER_VD * LatentHeatVaporization(myTemp));
+    return CP * myPressure / (RATIO_WATER_VD * latentHeatVaporization(myTemp));
 }
 
 
@@ -177,7 +167,7 @@ double AirDensity(double myTemperature, double myRelativeHumidity)
     double satVaporPressure;    // saturation vapor partial pressure (Pa)
     double myDensity;			// air density (kg m-3)
 
-    satVaporPressure = SaturationVaporPressure(myTemperature - ZEROCELSIUS);
+    satVaporPressure = saturationVaporPressure(myTemperature - ZEROCELSIUS);
     vaporPressure = (satVaporPressure * myRelativeHumidity);
     totalPressure = 101300;
 
@@ -198,7 +188,7 @@ double AirDensity(double myTemperature, double myRelativeHumidity)
 * \return aerodynamic conductance for heat and vapor [m s-1]
 * from Campbell Norman 1998
 */
-double AerodynamicConductance(double heightTemperature,
+double aerodynamicConductance(double heightTemperature,
                               double heightWind,
                               double soilSurfaceTemperature,
                               double roughnessHeight,
@@ -206,7 +196,7 @@ double AerodynamicConductance(double heightTemperature,
                               double windSpeed)
 {
     double K = NODATA;				    // (m s-1) aerodynamic conductance
-    double psiM, psiH;					// () stability correction factors for momentum and for heat
+    double psiM, psiH;					// () diabatic correction factors for momentum and for heat
     double uStar;						// (m s-1) friction velocity
     double zeroPlane;					// (m) zero place displacement
     double roughnessMomentum;           // () surface roughness parameter for momentum
@@ -223,27 +213,29 @@ double AerodynamicConductance(double heightTemperature,
 
     psiM = 0.;
     psiH = 0.;
-    Ch = AirVolumetricSpecificHeat(PressureFromAltitude(heightWind), airTemperature);
+    Ch = airVolumetricSpecificHeat(pressureFromAltitude(heightWind), airTemperature);
 
     for (short i = 1; i <= 3; i++)
     {
-        uStar = VON_KARMAN_CONST * windSpeed / (log((heightWind - zeroPlane) / roughnessMomentum) + psiM);
-        K = VON_KARMAN_CONST * uStar / (log((heightTemperature - zeroPlane) / roughnessHeat) + psiH);
+        uStar = VON_KARMAN_CONST * windSpeed / (log((heightWind - zeroPlane + roughnessMomentum) / roughnessMomentum) + psiM);
+        K = VON_KARMAN_CONST * uStar / (log((heightTemperature - zeroPlane + roughnessHeat) / roughnessHeat) + psiH);
         H = K * Ch * (soilSurfaceTemperature - airTemperature);
         Sp = -VON_KARMAN_CONST * heightWind * GRAVITY * H / (Ch * airTemperature * (pow(uStar, 3)));
         if (Sp > 0)
-        {// stability
-            psiH = 4.7 * Sp;
+        {
+            // stability
+            psiH = 6 * log(1 + Sp);
             psiM = psiH;
         }
         else
-        {// unstability
+        {
+            // unstability
             psiH = -2 * log((1 + sqrt(1 - 16 * Sp)) / 2);
             psiM = 0.6 * psiH;
         }
     }
 
-    return (K);
+    return K;
 
 }
 
@@ -257,7 +249,7 @@ double AerodynamicConductance(double heightTemperature,
 * \return aerodynamic conductance for heat and vapor [m s-1]
 * McJannet et al 2008
 */
-double AerodynamicConductanceOpenwater(double myHeight, double myWaterBodySurface, double myAirTemperature, double myWindSpeed10)
+double aerodynamicConductanceOpenwater(double myHeight, double myWaterBodySurface, double myAirTemperature, double myWindSpeed10)
 {
     double myPressure;		// Pa
     double myT;				// K
@@ -265,10 +257,10 @@ double AerodynamicConductanceOpenwater(double myHeight, double myWaterBodySurfac
     double myPsycro;		// kPa K-1
     double windFunction;	// (MJ m-2 d-1 kPa-1) wind function (Sweers 1976)
 
-    myPressure = PressureFromAltitude(myHeight);
+    myPressure = pressureFromAltitude(myHeight);
     myT = myAirTemperature;
-    myVolSpecHeat = AirVolumetricSpecificHeat(myPressure, myT);
-    myPsycro = Psychro(myPressure / 1000, myT);
+    myVolSpecHeat = airVolumetricSpecificHeat(myPressure, myT);
+    myPsycro = psychro(myPressure / 1000, myT);
 
     windFunction = pow((5. / (myWaterBodySurface * 1000000)), 0.05) * (3.8 + 1.57 * myWindSpeed10);
     windFunction *= 1000000. / DAY_SECONDS; //to J m-2 s-1 kPa
@@ -419,7 +411,7 @@ int windPrevailingDir(std::vector<float> intensity, std::vector<float> dir, int 
 
 }
 
-float TimeIntegration(std::vector<float> values, float timeStep)
+float timeIntegrationFunction(std::vector<float> values, float timeStep)
 {
 
     if (values.size() == 0)

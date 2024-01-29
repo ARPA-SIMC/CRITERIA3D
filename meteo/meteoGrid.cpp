@@ -44,12 +44,12 @@ void Crit3DMeteoGridStructure::setName(const std::string &name)
     _name = name;
 }
 
-gis::Crit3DGridHeader Crit3DMeteoGridStructure::header() const
+gis::Crit3DLatLonHeader Crit3DMeteoGridStructure::header() const
 {
     return _header;
 }
 
-void Crit3DMeteoGridStructure::setHeader(const gis::Crit3DGridHeader &header)
+void Crit3DMeteoGridStructure::setHeader(const gis::Crit3DLatLonHeader &header)
 {
     _header = header;
 }
@@ -340,7 +340,6 @@ void Crit3DMeteoGrid::fillMeteoRaster()
              }
         }
     }
-
 }
 
 void Crit3DMeteoGrid::fillMeteoRasterNoData()
@@ -695,7 +694,7 @@ void Crit3DMeteoGrid::assignCellAggregationPoints(unsigned row, unsigned col, gi
 
             gis::Crit3DGeoPoint pointLatLon0;
             gis::Crit3DGeoPoint pointLatLon;
-            gis::Crit3DGridHeader latLonHeader;
+            gis::Crit3DLatLonHeader latLonHeader;
             double utmX, utmY;
 
             pointLatLon0.latitude = _gridStructure.header().llCorner.latitude + row * _gridStructure.header().dy;
@@ -732,8 +731,8 @@ void Crit3DMeteoGrid::assignCellAggregationPoints(unsigned row, unsigned col, gi
 
             gis::Crit3DRasterCell demLL, demUR;
 
-            gis::getRowColFromXY(*myDEM, utmLL.x, utmLL.y, &demLL.row, &demLL.col);
-            gis::getRowColFromXY(*myDEM, utmUR.x, utmUR.y, &demUR.row, &demUR.col);
+            myDEM->getRowCol( utmLL.x, utmLL.y, demLL.row, demLL.col);
+            myDEM->getRowCol(utmUR.x, utmUR.y, demUR.row, demUR.col);
             _meteoPoints[row][col]->aggregationPoints.clear();
             _meteoPoints[row][col]->aggregationPointsMaxNr = 0;
 
@@ -768,7 +767,7 @@ void Crit3DMeteoGrid::assignCellAggregationPoints(unsigned row, unsigned col, gi
     }
 }
 
-void Crit3DMeteoGrid::initializeData(Crit3DDate dateIni, Crit3DDate dateFin)
+void Crit3DMeteoGrid::initializeData(Crit3DDate dateIni, Crit3DDate dateFin, bool isHourly, bool isDaily, bool isMonthly)
 {
     int nrDays = dateIni.daysTo(dateFin) + 1;
     int nrMonths = (dateFin.year-dateIni.year)*12+dateFin.month-(dateIni.month-1);
@@ -777,9 +776,9 @@ void Crit3DMeteoGrid::initializeData(Crit3DDate dateIni, Crit3DDate dateFin)
         for (unsigned col = 0; col < unsigned(gridStructure().header().nrCols); col++)
             if (_meteoPoints[row][col]->active)
             {
-                _meteoPoints[row][col]->initializeObsDataH(1, nrDays, dateIni);
-                _meteoPoints[row][col]->initializeObsDataD(nrDays, dateIni);
-                _meteoPoints[row][col]->initializeObsDataM(nrMonths, dateIni.month, dateIni.year);
+                if (isHourly) _meteoPoints[row][col]->initializeObsDataH(1, nrDays, dateIni);
+                if (isDaily) _meteoPoints[row][col]->initializeObsDataD(nrDays, dateIni);
+                if (isMonthly) _meteoPoints[row][col]->initializeObsDataM(nrMonths, dateIni.month, dateIni.year);
             }
 }
 
@@ -882,14 +881,14 @@ void Crit3DMeteoGrid::spatialAggregateMeteoGrid(meteoVariable myVar, frequencyTy
 double Crit3DMeteoGrid::spatialAggregateMeteoGridPoint(Crit3DMeteoPoint myPoint, aggregationMethod elab)
 {
 
-    std::vector <double> validValues;
+    std::vector <float> validValues;
 
 
     for (unsigned int i = 0; i < myPoint.aggregationPoints.size(); i++)
     {
         if (myPoint.aggregationPoints[i].z != NODATA)
         {
-            validValues.push_back(myPoint.aggregationPoints[i].z);
+            validValues.push_back(float(myPoint.aggregationPoints[i].z));
         }
     }
 
@@ -910,7 +909,7 @@ double Crit3DMeteoGrid::spatialAggregateMeteoGridPoint(Crit3DMeteoPoint myPoint,
     else if (elab == aggregationMethod::aggrMedian)
     {
         int size = int(validValues.size());
-        return sorting::percentile(validValues.data(), &size, 50.0, true);
+        return sorting::percentile(validValues, size, 50.0, true);
     }
     else if (elab == aggregationMethod::aggrStdDeviation)
     {
@@ -984,17 +983,17 @@ void Crit3DMeteoGrid::saveRowColfromZone(gis::Crit3DRasterGrid* zoneGrid, std::v
             value = zoneGrid->value[row][col];
             if (value != zoneGrid->header->flag)
             {
-                zoneGrid->getXY(row, col, &x, &y);
+                zoneGrid->getXY(row, col, x, y);
                 if (!_gridStructure.isUTM())
                 {
                     double utmX = x;
                     double utmY = y;
                     gis::getLatLonFromUtm(_gisSettings, utmX, utmY, &y, &x);
-                    gis::getMeteoGridRowColFromXY(_gridStructure.header(), x, y, &myRow, &myCol);
+                    gis::getGridRowColFromXY(_gridStructure.header(), x, y, &myRow, &myCol);
                 }
                 else
                 {
-                    gis::getRowColFromXY(dataMeteoGrid, x, y, &myRow, &myCol);
+                    dataMeteoGrid.getRowCol(x, y, myRow, myCol);
                 }
 
                 if (myRow >= 0 && myCol >= 0 && myRow < _gridStructure.header().nrRows && myCol < _gridStructure.header().nrCols)
@@ -1025,3 +1024,4 @@ void Crit3DMeteoGrid::computeHourlyDerivedVariables(Crit3DTime dateTime)
         }
     }
 }
+

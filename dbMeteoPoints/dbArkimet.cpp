@@ -13,6 +13,8 @@ DbArkimet::DbArkimet(QString dbName) : Crit3DMeteoPointsDbHandler(dbName)
 QList<VariablesList> DbArkimet::getVariableProperties(QList<int> id)
 {
     QList<VariablesList> variableList;
+    if (! (id.size() > 0))
+        return variableList;
 
     QString idlist = QString("(%1").arg(id[0]);
 
@@ -76,7 +78,7 @@ QList<int> DbArkimet::getId(QString VarName)
 
     if( !qry.exec(myQuery))
     {
-        error = "Error in execute query:\n" + myQuery + "\n" + qry.lastError().text();
+        this->setErrorString("Error in execute query:\n" + myQuery + "\n" + qry.lastError().text());
     }
     else
     {

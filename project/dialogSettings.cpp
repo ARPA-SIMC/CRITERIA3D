@@ -49,9 +49,6 @@ ProjectTab::ProjectTab(Project* project_)
     group->addButton(&utc);
     group->addButton(&localTime);
 
-    loadGridData.setText("Load grid data at start");
-    loadGridData.setChecked(project_->loadGridDataAtStart);
-
     QVBoxLayout *mainLayout = new QVBoxLayout;
     mainLayout->addWidget(startLocationLat);
     mainLayout->addWidget(&startLocationLatEdit);
@@ -71,8 +68,6 @@ ProjectTab::ProjectTab(Project* project_)
     buttonLayout->addWidget(&localTime);
 
     mainLayout->addLayout(buttonLayout);
-
-    mainLayout->addWidget(&loadGridData);
 
     mainLayout->addStretch(1);
     setLayout(mainLayout);
@@ -149,6 +144,13 @@ MeteoTab::MeteoTab(Crit3DMeteoSettings *meteoSettings)
     thomThresholdEdit.setValidator(doubleValThom);
     thomThresholdEdit.setText(QString::number(meteoSettings->getThomThreshold()));
 
+    QLabel *temperatureThreshold = new QLabel(tr("threshold for temperature [degC]:"));
+    QDoubleValidator *doubleValTemp = new QDoubleValidator( -100.0, 100.0, 5, this );
+    doubleValTemp->setNotation(QDoubleValidator::StandardNotation);
+    temperatureThresholdEdit.setFixedWidth(EDIT_SIZE);
+    temperatureThresholdEdit.setValidator(doubleValThom);
+    temperatureThresholdEdit.setText(QString::number(meteoSettings->getTemperatureThreshold()));
+
     QLabel *transSamaniCoefficient = new QLabel(tr("Samani coefficient for ET0 computation []:"));
     QDoubleValidator *doubleValSamani = new QDoubleValidator( -5.0, 5.0, 5, this );
     doubleValSamani->setNotation(QDoubleValidator::StandardNotation);
@@ -178,6 +180,9 @@ MeteoTab::MeteoTab(Crit3DMeteoSettings *meteoSettings)
     mainLayout->addWidget(thomThreshold);
     mainLayout->addWidget(&thomThresholdEdit);
 
+    mainLayout->addWidget(temperatureThreshold);
+    mainLayout->addWidget(&temperatureThresholdEdit);
+
     mainLayout->addWidget(transSamaniCoefficient);
     mainLayout->addWidget(&transSamaniCoefficientEdit);
 
@@ -194,7 +199,7 @@ DialogSettings::DialogSettings(Project* myProject)
     project_ = myProject;
 
     setWindowTitle(tr("Parameters"));
-    setFixedSize(650,700);
+    setFixedSize(600,500);
     projectTab = new ProjectTab(myProject);
     qualityTab = new QualityTab(myProject->quality);
     metTab = new MeteoTab(myProject->meteoSettings);
@@ -312,7 +317,6 @@ bool DialogSettings::acceptValues()
     project_->gisSettings.utmZone = projectTab->utmZoneEdit.text().toInt();
     project_->gisSettings.timeZone = projectTab->timeZoneEdit.text().toInt();
     project_->gisSettings.isUTC = projectTab->utc.isChecked();
-    project_->loadGridDataAtStart = projectTab->loadGridData.isChecked();
 
     project_->quality->setReferenceHeight(qualityTab->referenceClimateHeightEdit.text().toFloat());
     project_->quality->setDeltaTSuspect(qualityTab->deltaTSuspectEdit.text().toFloat());
@@ -322,11 +326,12 @@ bool DialogSettings::acceptValues()
     project_->meteoSettings->setMinimumPercentage(metTab->minimumPercentageEdit.text().toFloat());
     project_->meteoSettings->setRainfallThreshold(metTab->rainfallThresholdEdit.text().toFloat());
     project_->meteoSettings->setThomThreshold(metTab->thomThresholdEdit.text().toFloat());
+    project_->meteoSettings->setTemperatureThreshold(metTab->temperatureThresholdEdit.text().toFloat());
     project_->meteoSettings->setTransSamaniCoefficient(metTab->transSamaniCoefficientEdit.text().toFloat());
     project_->meteoSettings->setAutomaticTavg(metTab->automaticTavgEdit.isChecked());
     project_->meteoSettings->setAutomaticET0HS(metTab->automaticET0HSEdit.isChecked());
 
-    project_->saveProjectSettings();
+    project_->saveProjectLocation();
     project_->saveGenericParameters();
 
     return true;

@@ -4,6 +4,7 @@
     #ifndef QSQLDATABASE_H
         #include <QSqlDatabase>
     #endif
+
     #ifndef _VECTOR_
         #include <vector>
     #endif
@@ -15,13 +16,13 @@
     bool saveAnnualElab(QSqlDatabase db, QString *myError, QString id, float result, QString elab);
     bool saveGenericElab(QSqlDatabase db, QString *myError, QString id, float result, QString elab);
 
-    bool selectAllElab(QSqlDatabase db, QString *myError, QString table, QList<QString>* listElab);
+    bool getClimateFieldsFromTable(QSqlDatabase db, QString *myError, QString climateTable, QList<QString>* fieldList);
     bool selectVarElab(QSqlDatabase db, QString *myError, QString table, QString variable, QList<QString>* listElab);
-    bool showClimateTables(QSqlDatabase db, QString *myError, QList<QString>* climateTables);
+    bool getClimateTables(QSqlDatabase db, QString *myError, QList<QString>* climateTables);
 
     bool deleteElab(QSqlDatabase db, QString *myError, QString table, QString elab);
 
-    QList<float> readElab(QSqlDatabase db, QString table, QString *myError, QString id, QString elab);
+    float readElab(const QSqlDatabase &db, const QString &table, const int &timeIndex, const QString &id, const QString &elab, QString *myError);
     QList<QString> getIdListFromElab(QSqlDatabase db, QString table, QString *myError, QString elab);
     QList<QString> getIdListFromElab(QSqlDatabase db, QString table, QString *myError, QString elab, int index);
 

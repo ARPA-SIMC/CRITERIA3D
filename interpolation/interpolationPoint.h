@@ -7,6 +7,9 @@
     #ifndef METEO_H
         #include "meteo.h"
     #endif
+    #ifndef INTERPOLATIONSETTINGS_H
+        #include "interpolationSettings.h"
+    #endif
 
     class Crit3DInterpolationDataPoint {
     private:
@@ -15,17 +18,17 @@
         gis::Crit3DPoint* point;
         int index;
         bool isActive;
+        bool isMarked;
         float distance;
-        float deltaZ;
         float value;
+        float regressionWeight;
         lapseRateCodeType lapseRateCode;
         gis::Crit3DRasterGrid* topographicDistance;
-        std::vector <float> proxyValues;
+        std::vector<float> proxyValues;
 
         Crit3DInterpolationDataPoint();
 
         float getProxyValue(unsigned int pos);
-        std::vector <float> getProxyValues();
     };
 
 #endif // INTERPOLATIONPOINT_H

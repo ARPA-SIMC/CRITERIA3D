@@ -14,11 +14,11 @@
     bool zonalStatisticsShape(Crit3DShapeHandler &shapeRef, Crit3DShapeHandler &shapeVal,
                               std::vector<std::vector<int> > &matrix, std::vector<int>& vectorNull,
                               std::string valField, std::string valFieldOutput, std::string aggregationType,
-                              double threshold, std::string &error);
+                              double threshold, std::string &errorStr);
 
     bool zonalStatisticsShapeMajority(Crit3DShapeHandler &shapeRef, Crit3DShapeHandler &shapeVal,
                               std::vector<std::vector<int> > &matrix, std::vector<int> &vectorNull,
                               std::string valField, std::string valFieldOutput,
-                              double threshold, std::string &error);
+                              double threshold, std::string &errorStr);
 
 #endif // ZONALSTATISTIC_H

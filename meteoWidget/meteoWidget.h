@@ -3,11 +3,12 @@
 
     #include <QtWidgets>
     #include <QtCharts>
+    #include "meteo.h"
     #include "meteoPoint.h"
     #include "callout.h"
 
-
     qreal findMedian(QList<double> sortedList, int begin, int end);
+
     class Crit3DMeteoWidget : public QWidget
     {
         Q_OBJECT
@@ -15,12 +16,19 @@
         public:
             Crit3DMeteoWidget(bool isGrid, QString projectPath, Crit3DMeteoSettings* meteoSettings_);
             ~Crit3DMeteoWidget() override;
+
             int getMeteoWidgetID() const;
             void setMeteoWidgetID(int value);
-            void setDateInterval(QDate date0, QDate date1);
-            void draw(Crit3DMeteoPoint mp, bool isAppend);
+
+            void setCurrentDate(QDate myDate);
+            void setDateIntervalDaily(QDate firstDate, QDate lastDate);
+            void setDateIntervalHourly(QDate firstDate, QDate lastDate);
+
             void addMeteoPointsEnsemble(Crit3DMeteoPoint mp);
+
+            void draw(Crit3DMeteoPoint mp, bool isAppend);
             void drawEnsemble();
+
             void resetValues();
             void resetEnsembleValues();
             void drawDailyVar();
@@ -45,13 +53,26 @@
             void on_actionChangeLeftAxis();
             void on_actionChangeRightAxis();
             void on_actionExportGraph();
+            void on_actionRemoveStation();
 
     private:
             int meteoWidgetID;
             bool isGrid;
             bool isEnsemble;
+            bool isInitialized;
             int nrMembers;
+
+            QVector<Crit3DMeteoPoint> meteoPoints;
+            QVector<Crit3DMeteoPoint> meteoPointsEnsemble;
             Crit3DMeteoSettings* meteoSettings;
+
+            frequencyType currentFreq;
+            QDate firstDailyDate;
+            QDate lastDailyDate;
+            QDate firstHourlyDate;
+            QDate lastHourlyDate;
+            QDate currentDate;
+
             QPushButton *addVarButton;
             QPushButton *dailyButton;
             QPushButton *hourlyButton;
@@ -84,13 +105,7 @@
             QVector<QVector<QBarSet*>> setVector;
             QList<QString> categories;
             QList<QString> categoriesVirtual;
-            QVector<Crit3DMeteoPoint> meteoPoints;
-            QVector<Crit3DMeteoPoint> meteoPointsEnsemble;
-            frequencyType currentFreq;
-            QDate firstDailyDate;
-            QDate lastDailyDate;
-            QDate firstHourlyDate;
-            QDate lastHourlyDate;
+
             bool isLine;
             bool isBar;
             Callout *m_tooltip;

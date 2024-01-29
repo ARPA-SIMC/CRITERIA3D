@@ -43,8 +43,9 @@
             QSqlDatabase dbSoil;
             soil::Crit3DSoil mySoil;
             soil::Crit3DSoil savedSoil;
-            soil::Crit3DTextureClass textureClassList[13];
-            soil::Crit3DFittingOptions* fittingOptions;
+            std::vector<soil::Crit3DTextureClass> textureClassList;
+            std::vector<soil::Crit3DGeotechnicsClass> geotechnicsClassList;
+            soil::Crit3DFittingOptions fittingOptions;
             int dbSoilType;
 
             QGroupBox *infoGroup;
@@ -70,7 +71,10 @@
             QString picPath;
             QPainter painter;
             QLabel *labelPic;
-            bool changed;
+
+            bool soilChanged;
+            bool isFitting;
+
             // USDA textural triangle size inside picture pic
             constexpr static const double widthTriangle = 362.0;
             constexpr static const double heightTriangle = 314.0;

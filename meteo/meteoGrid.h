@@ -22,8 +22,8 @@
             std::string name() const;
             void setName(const std::string &name);
 
-            gis::Crit3DGridHeader header() const;
-            void setHeader(const gis::Crit3DGridHeader &header);
+            gis::Crit3DLatLonHeader header() const;
+            void setHeader(const gis::Crit3DLatLonHeader &header);
 
             int dataType() const;
             void setDataType(int dataType);
@@ -60,7 +60,7 @@
 
     private:
             std::string _name;
-            gis::Crit3DGridHeader _header;
+            gis::Crit3DLatLonHeader _header;
 
             int _dataType;
 
@@ -135,7 +135,7 @@
             bool findFirstActiveMeteoPoint(std::string* id, int* row, int* col);
             bool isActiveMeteoPointFromId(const std::string &id);
 
-            void initializeData(Crit3DDate dateIni, Crit3DDate dateFin);
+            void initializeData(Crit3DDate dateIni, Crit3DDate dateFin, bool isHourly, bool isDaily, bool isMonthly);
             void emptyGridData(Crit3DDate dateIni, Crit3DDate dateFin);
             void findGridAggregationPoints(gis::Crit3DRasterGrid* myDEM);
             void assignCellAggregationPoints(unsigned row, unsigned col, gis::Crit3DRasterGrid* myDEM, bool excludeNoData);

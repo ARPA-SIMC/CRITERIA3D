@@ -12,7 +12,7 @@ bool saveDailyElab(QSqlDatabase db, QString *myError, QString id, std::vector<fl
     QSqlQuery qry(db);
     if (db.driverName() == "QSQLITE")
     {
-        qry.prepare("CREATE TABLE IF NOT EXISTS `climate_daily` (days INTEGER, id_point TEXT, elab TEXT, value REAL, PRIMARY KEY(days,id_point,elab));");
+        qry.prepare("CREATE TABLE IF NOT EXISTS `climate_daily` (TimeIndex INTEGER, id_point TEXT, elab TEXT, value REAL, PRIMARY KEY(TimeIndex,id_point,elab));");
         if( !qry.exec() )
         {
             *myError = qry.lastError().text();
@@ -22,14 +22,14 @@ bool saveDailyElab(QSqlDatabase db, QString *myError, QString id, std::vector<fl
     }
     else if (db.driverName() == "QMYSQL")
     {
-        qry.prepare("CREATE TABLE IF NOT EXISTS `climate_daily` (days smallint(5), id_point varchar(20), elab varchar(100), value float(5,2), PRIMARY KEY(days,id_point,elab) );");
+        qry.prepare("CREATE TABLE IF NOT EXISTS `climate_daily` (TimeIndex smallint(5), id_point varchar(10), elab varchar(80), value float(6,1), PRIMARY KEY(TimeIndex,id_point,elab) );");
         if( !qry.exec() )
         {
             *myError = qry.lastError().text();
             return false;
         }
     }
-    qry.prepare( "REPLACE INTO `climate_daily` (days, id_point, elab, value)"
+    qry.prepare( "REPLACE INTO `climate_daily` (TimeIndex, id_point, elab, value)"
                                       " VALUES (?, ?, ?, ?)" );
 
 
@@ -70,33 +70,35 @@ bool deleteElab(QSqlDatabase db, QString *myError, QString table, QString elab)
 }
 
 
-QList<float> readElab(QSqlDatabase db, QString table, QString *myError, QString id, QString elab)
+float readElab(const QSqlDatabase &db, const QString &table, const int &timeIndex, const QString &id, const QString &elab, QString *myError)
 {
+    *myError = "";
     QSqlQuery qry(db);
-    float value;
-    QList<float> elabValueList;
 
-    QString statement = QString("SELECT * FROM `%1`").arg(table);
-    qry.prepare( statement + " WHERE id_point = :id_point AND elab = :elab" );
+    QString statement = QString("SELECT * FROM `%1` ").arg(table);
+    qry.prepare( statement + " WHERE TimeIndex= :TimeIndex AND id_point = :id_point AND elab = :elab" );
 
+    qry.bindValue(":TimeIndex", timeIndex);
     qry.bindValue(":id_point", id);
     qry.bindValue(":elab", elab);
 
+
+    float value = NODATA;
     if( !qry.exec() )
     {
         *myError = qry.lastError().text();
     }
     else
     {
-        while (qry.next())
+        if (qry.next())
         {
             getValue(qry.value("value"), &value);
-            elabValueList << value;
         }
     }
 
-    return elabValueList;
+    return value;
 }
+
 
 QList<QString> getIdListFromElab(QSqlDatabase db, QString table, QString *myError, QString elab)
 {
@@ -163,7 +165,7 @@ bool saveDecadalElab(QSqlDatabase db, QString *myError, QString id, std::vector<
     QSqlQuery qry(db);
     if (db.driverName() == "QSQLITE")
     {
-        qry.prepare("CREATE TABLE IF NOT EXISTS `climate_decadal` (decades INTEGER, id_point TEXT, elab TEXT, value REAL, PRIMARY KEY(decades,id_point,elab));");
+        qry.prepare("CREATE TABLE IF NOT EXISTS `climate_decadal` (TimeIndex INTEGER, id_point TEXT, elab TEXT, value REAL, PRIMARY KEY(TimeIndex,id_point,elab));");
         if( !qry.exec() )
         {
             *myError = qry.lastError().text();
@@ -173,14 +175,14 @@ bool saveDecadalElab(QSqlDatabase db, QString *myError, QString id, std::vector<
     }
     else if (db.driverName() == "QMYSQL")
     {
-        qry.prepare("CREATE TABLE IF NOT EXISTS `climate_decadal` (decades smallint(5), id_point varchar(20), elab  varchar(100), value float(5,2), PRIMARY KEY(decades,id_point,elab) );");
+        qry.prepare("CREATE TABLE IF NOT EXISTS `climate_decadal` (TimeIndex smallint(5), id_point varchar(10), elab  varchar(80), value float(6,1), PRIMARY KEY(TimeIndex,id_point,elab) );");
         if( !qry.exec() )
         {
             *myError = qry.lastError().text();
             return false;
         }
     }
-    qry.prepare( "REPLACE INTO `climate_decadal` (decades, id_point, elab, value)"
+    qry.prepare( "REPLACE INTO `climate_decadal` (TimeIndex, id_point, elab, value)"
                                       " VALUES (?, ?, ?, ?)" );
 
     for (unsigned int i = 0; i < allResults.size(); i++)
@@ -205,7 +207,7 @@ bool saveMonthlyElab(QSqlDatabase db, QString *myError, QString id, std::vector<
     QSqlQuery qry(db);
     if (db.driverName() == "QSQLITE")
     {
-        qry.prepare("CREATE TABLE IF NOT EXISTS `climate_monthly` (months INTEGER, id_point TEXT, elab TEXT, value REAL, PRIMARY KEY(months,id_point,elab));");
+        qry.prepare("CREATE TABLE IF NOT EXISTS `climate_monthly` (TimeIndex INTEGER, id_point TEXT, elab TEXT, value REAL, PRIMARY KEY(TimeIndex,id_point,elab));");
         if( !qry.exec() )
         {
             *myError = qry.lastError().text();
@@ -215,14 +217,14 @@ bool saveMonthlyElab(QSqlDatabase db, QString *myError, QString id, std::vector<
     }
     else if (db.driverName() == "QMYSQL")
     {
-        qry.prepare("CREATE TABLE IF NOT EXISTS `climate_monthly` (months smallint(5), id_point varchar(20), elab  varchar(100), value float(5,2), PRIMARY KEY(months,id_point,elab) );");
+        qry.prepare("CREATE TABLE IF NOT EXISTS `climate_monthly` (TimeIndex smallint(5), id_point varchar(10), elab  varchar(80), value float(6,1), PRIMARY KEY(TimeIndex,id_point,elab) );");
         if( !qry.exec() )
         {
             *myError = qry.lastError().text();
             return false;
         }
     }
-    qry.prepare( "REPLACE INTO `climate_monthly` (months, id_point, elab, value)"
+    qry.prepare( "REPLACE INTO `climate_monthly` (TimeIndex, id_point, elab, value)"
                                       " VALUES (?, ?, ?, ?)" );
 
     for (unsigned int i = 0; i < allResults.size(); i++)
@@ -247,7 +249,7 @@ bool saveSeasonalElab(QSqlDatabase db, QString *myError, QString id, std::vector
     QSqlQuery qry(db);
     if (db.driverName() == "QSQLITE")
     {
-        qry.prepare("CREATE TABLE IF NOT EXISTS `climate_seasonal` (season INTEGER, id_point TEXT, elab TEXT, value REAL, PRIMARY KEY(season,id_point,elab));");
+        qry.prepare("CREATE TABLE IF NOT EXISTS `climate_seasonal` (TimeIndex INTEGER, id_point TEXT, elab TEXT, value REAL, PRIMARY KEY(TimeIndex,id_point,elab));");
         if( !qry.exec() )
         {
             *myError = qry.lastError().text();
@@ -257,14 +259,14 @@ bool saveSeasonalElab(QSqlDatabase db, QString *myError, QString id, std::vector
     }
     else if (db.driverName() == "QMYSQL")
     {
-        qry.prepare("CREATE TABLE IF NOT EXISTS `climate_seasonal` (season smallint(5), id_point varchar(20), elab  varchar(100), value float(5,2), PRIMARY KEY(season,id_point,elab) );");
+        qry.prepare("CREATE TABLE IF NOT EXISTS `climate_seasonal` (TimeIndex smallint(5), id_point varchar(10), elab  varchar(80), value float(6,1), PRIMARY KEY(TimeIndex,id_point,elab) );");
         if( !qry.exec() )
         {
             *myError = qry.lastError().text();
             return false;
         }
     }
-    qry.prepare( "REPLACE INTO `climate_seasonal` (season, id_point, elab, value)"
+    qry.prepare( "REPLACE INTO `climate_seasonal` (TimeIndex, id_point, elab, value)"
                                       " VALUES (?, ?, ?,?)" );
 
     for (unsigned int i = 0; i < allResults.size(); i++)
@@ -299,7 +301,7 @@ bool saveAnnualElab(QSqlDatabase db, QString *myError, QString id, float result,
     }
     else if (db.driverName() == "QMYSQL")
     {
-        qry.prepare("CREATE TABLE IF NOT EXISTS `climate_annual` (id_point varchar(20), elab  varchar(100), value float(5,2), PRIMARY KEY(id_point,elab) );");
+        qry.prepare("CREATE TABLE IF NOT EXISTS `climate_annual` (id_point varchar(10), elab  varchar(80), value float(6,1), PRIMARY KEY(id_point,elab) );");
         if( !qry.exec() )
         {
             *myError = qry.lastError().text();
@@ -337,7 +339,7 @@ bool saveGenericElab(QSqlDatabase db, QString *myError, QString id, float result
     }
     else if (db.driverName() == "QMYSQL")
     {
-        qry.prepare("CREATE TABLE IF NOT EXISTS `climate_generic` (id_point varchar(20), elab  varchar(100), value float(5,2), PRIMARY KEY(id_point,elab) );");
+        qry.prepare("CREATE TABLE IF NOT EXISTS `climate_generic` (id_point varchar(10), elab  varchar(80), value float(6,1), PRIMARY KEY(id_point,elab) );");
         if( !qry.exec() )
         {
             *myError = qry.lastError().text();
@@ -366,6 +368,7 @@ bool selectVarElab(QSqlDatabase db, QString *myError, QString table, QString var
     QString elab;
 
     bool found = false;
+    variable = variable.remove("_"); // db save variable without "_"
 
     QString statement = QString("SELECT DISTINCT elab from `%1` WHERE `elab` LIKE '%%2%%'").arg(table).arg(variable);
 
@@ -396,14 +399,14 @@ bool selectVarElab(QSqlDatabase db, QString *myError, QString table, QString var
     return found;
 }
 
-bool selectAllElab(QSqlDatabase db, QString *myError, QString table, QList<QString>* listElab)
+bool getClimateFieldsFromTable(QSqlDatabase db, QString *myError, QString climateTable, QList<QString>* fieldList)
 {
     QSqlQuery qry(db);
     QString elab;
 
     bool found = false;
 
-    QString statement = QString("SELECT DISTINCT elab from `%1` ").arg(table);
+    QString statement = QString("SELECT DISTINCT elab from `%1` ").arg(climateTable);
 
     qry.prepare(statement);
 
@@ -419,7 +422,7 @@ bool selectAllElab(QSqlDatabase db, QString *myError, QString table, QList<QStri
         {
             if (getValue(qry.value("elab"), &elab))
             {
-                listElab->append(elab);
+                fieldList->append(elab);
                 found = true;
             }
             else
@@ -432,7 +435,7 @@ bool selectAllElab(QSqlDatabase db, QString *myError, QString table, QList<QStri
     return found;
 }
 
-bool showClimateTables(QSqlDatabase db, QString *myError, QList<QString>* climateTables)
+bool getClimateTables(QSqlDatabase db, QString *myError, QList<QString>* climateTables)
 {
     QSqlQuery qry(db);
     QString table;

@@ -133,7 +133,8 @@ int DLL_EXPORT __STDCALL initialize(long nrNodes, int nrLayers, int nrLateralLin
 
 
 /*!
-   \brief Set numerical solution parameters
+   \brief setNumericalParameters
+   \return numerical solution parameters
 */
 int DLL_EXPORT __STDCALL setNumericalParameters(float minDeltaT, float maxDeltaT, int maxIterationNumber,
                         int maxApproximationsNumber, int ResidualTolerance, float MBRThreshold)
@@ -173,7 +174,7 @@ int DLL_EXPORT __STDCALL setNumericalParameters(float minDeltaT, float maxDeltaT
 
 
 /*!
- * \brief Set hydraulic properties
+ * \brief setHydraulicProperties
  *  default values:
  *  waterRetentionCurve = MODIFIED_VANGENUCHTEN
  *  meanType = MEAN_LOGARITHMIC
@@ -189,7 +190,7 @@ int DLL_EXPORT __STDCALL setHydraulicProperties(int waterRetentionCurve,
     myParameters.waterRetentionCurve = waterRetentionCurve;
     myParameters.meanType = conductivityMeanType;
 
-    if  ((horizVertRatioConductivity >= 1) && (horizVertRatioConductivity <= 100))
+    if  ((horizVertRatioConductivity >= 0.1) && (horizVertRatioConductivity <= 100))
     {
         myParameters.k_lateral_vertical_ratio = horizVertRatioConductivity;
         return CRIT3D_OK;
@@ -202,7 +203,7 @@ int DLL_EXPORT __STDCALL setHydraulicProperties(int waterRetentionCurve,
 }
 
 /*!
- * \brief Set node position and properties
+ * \brief setNode
  * \param myIndex
  * \param x
  * \param y
@@ -212,7 +213,7 @@ int DLL_EXPORT __STDCALL setHydraulicProperties(int waterRetentionCurve,
  * \param isBoundary
  * \param boundaryType
  * \param slope
- * \return
+ * \return node position and properties
  */
  int DLL_EXPORT __STDCALL setNode(long myIndex, float x, float y, double z, double volume_or_area, bool isSurface,
                         bool isBoundary, int boundaryType, float slope, float boundaryArea)
@@ -325,7 +326,7 @@ int DLL_EXPORT __STDCALL setHydraulicProperties(int waterRetentionCurve,
 
 
 /*!
- * \brief Assign surface index to node
+ * \brief setNodeSurface
  * \param nodeIndex
  * \param surfaceIndex
  * \return OK/ERROR
@@ -346,7 +347,7 @@ int DLL_EXPORT __STDCALL setHydraulicProperties(int waterRetentionCurve,
 
 
 /*!
- * \brief Assign soil to node
+ * \brief setNodeSoil
  * \param nodeIndex
  * \param soilIndex
  * \param horizonIndex
@@ -370,7 +371,7 @@ int DLL_EXPORT __STDCALL setHydraulicProperties(int waterRetentionCurve,
 
 
 /*!
- * \brief Set soil properties
+ * \brief setSoilProperties
  * \param nSoil
  * \param nHorizon
  * \param VG_alpha  [m-1]       Van Genutchen alpha parameter (warning: usually is kPa-1 in literature)
@@ -387,7 +388,7 @@ int DLL_EXPORT __STDCALL setHydraulicProperties(int waterRetentionCurve,
                         double VG_he, double ThetaR, double ThetaS, double Ksat, double L, double organicMatter, double clay)
  {
 
-    if (VG_alpha <= 0 || ThetaR < 0 || ThetaR >= 1 || ThetaS <= 0 || ThetaS > 1 || ThetaR > ThetaS)
+    if (VG_alpha <= 0 || (ThetaR < 0) || ThetaR >= 1 || ThetaS <= 0 || ThetaS > 1 || ThetaR > ThetaS)
         return PARAMETER_ERROR;
 
     if (nSoil >= int(Soil_List.size()))
@@ -430,7 +431,7 @@ int DLL_EXPORT __STDCALL setHydraulicProperties(int waterRetentionCurve,
 
 
 /*!
- * \brief Set current matric potential
+ * \brief setMatricPotential
  * \param nodeIndex
  * \param potential [m]
  * \return OK/ERROR
@@ -461,7 +462,7 @@ int DLL_EXPORT __STDCALL setHydraulicProperties(int waterRetentionCurve,
 
 
     /*!
-     * \brief Set current total potential
+     * \brief setToalPotential
      * \param nodeIndex
      * \param totalPotential [m]
      * \return OK/ERROR
@@ -494,7 +495,7 @@ int DLL_EXPORT __STDCALL setHydraulicProperties(int waterRetentionCurve,
 
 
 /*!
- * \brief Set current volumetric water content
+ * \brief setWaterContent
  * \param nodeIndex
  * \param waterContent [m^3 m^-3]
  * \return OK/ERROR
@@ -529,7 +530,7 @@ int DLL_EXPORT __STDCALL setHydraulicProperties(int waterRetentionCurve,
 
 
 /*!
- * \brief Set current water sink/source
+ * \brief setWaterSinkSource
  * \param nodeIndex
  * \param waterSinkSource [m^3/sec] flow
  * \return OK/ERROR
@@ -546,7 +547,7 @@ int DLL_EXPORT __STDCALL setHydraulicProperties(int waterRetentionCurve,
 
 
 /*!
- * \brief Set prescribed Total Potential
+ * \brief setPrescribedTotalPotential
  * \param nodeIndex
  * \param prescribedTotalPotential [m]
  * \return OK/ERROR
@@ -565,9 +566,9 @@ int DLL_EXPORT __STDCALL setHydraulicProperties(int waterRetentionCurve,
 
 
 /*!
- * \brief return water content
+ * \brief getWaterContent
  * \param nodeIndex
- * \return  surface: [m] surface water level , sub-surface: [m^3 m^-3] volumetric water content
+ * \return water content at the surface: [m] surface water level; and sub-surface: [m^3 m^-3] volumetric water content
  */
  double DLL_EXPORT __STDCALL getWaterContent(long nodeIndex)
  {
@@ -584,9 +585,10 @@ int DLL_EXPORT __STDCALL setHydraulicProperties(int waterRetentionCurve,
 
 
 /*!
- * \brief return available water content (over wilting point)
+ * \brief getAvailableWaterContent
  * \param index
- * \return  surface: [m] water level, sub-surface: [m^3 m^-3] awc
+ * \return  available water content (over wilting point)
+ * surface: water level [m]; sub-surface: awc [m3 m-3]
  */
  double DLL_EXPORT __STDCALL getAvailableWaterContent(long index)
  {
@@ -602,12 +604,12 @@ int DLL_EXPORT __STDCALL setHydraulicProperties(int waterRetentionCurve,
  }
 
 
-    /*!
-     * \brief return current deficit from fieldCapacity [m]
-     * \param index
-     * \param fieldCapacity
-     * \return surface:	0, sub-surface: [m^3 m^-3]
-     */
+/*!
+ * \brief getWaterDeficit
+ * \param index
+ * \param fieldCapacity
+ * \return water deficit at surface: 0; sub-surface: [m^3 m^-3]
+ */
 	double DLL_EXPORT __STDCALL getWaterDeficit(long index, double fieldCapacity)
  {
         if (myNode == nullptr) return(MEMORY_ERROR);
@@ -624,9 +626,9 @@ int DLL_EXPORT __STDCALL setHydraulicProperties(int waterRetentionCurve,
 
 
 /*!
-  * \brief return degree of saturation (normalized water content)
+  * \brief getDegreeOfSaturation
   * \param nodeIndex
-  * \return surface: [-] water presence 0-100 , sub-surface: [%] degree of saturation
+  * \return degree of saturation at surface: water presence 0-100 [-]; sub-surface: degree of saturation [%]
   */
  double DLL_EXPORT __STDCALL getDegreeOfSaturation(long nodeIndex)
  {
@@ -646,8 +648,8 @@ int DLL_EXPORT __STDCALL setHydraulicProperties(int waterRetentionCurve,
 
 
  /*!
-  * \brief computes total water content          [m^3]
-  * \return result
+  * \brief getTotalWaterContent
+  * \return total water content [m^3]
   */
  double DLL_EXPORT __STDCALL getTotalWaterContent()
  {
@@ -656,9 +658,9 @@ int DLL_EXPORT __STDCALL setHydraulicProperties(int waterRetentionCurve,
 
 
  /*!
-  * \brief computes hydraulic conductivity                [m/s]
+  * \brief getWaterConductivity
   * \param nodeIndex
-  * \return result
+  * \return hydraulic conductivity (k) [m/s]
   */
  double DLL_EXPORT __STDCALL getWaterConductivity(long nodeIndex)
  {
@@ -671,9 +673,9 @@ int DLL_EXPORT __STDCALL setHydraulicProperties(int waterRetentionCurve,
 
 
  /*!
-  * \brief comoputes matric potential (psi)           [m]
+  * \brief getMatricPotential
   * \param nodeIndex [-]
-  * \return result
+  * \return matric potential [m]
   */
  double DLL_EXPORT __STDCALL getMatricPotential(long nodeIndex)
  {
@@ -685,9 +687,9 @@ int DLL_EXPORT __STDCALL setHydraulicProperties(int waterRetentionCurve,
 
 
  /*!
-  * \brief computes total potential H (psi + z)      [m]
+  * \brief getTotalPotential
   * \param nodeIndex
-  * \return result
+  * \return total water potential (psi + z) [m]
   */
  double DLL_EXPORT __STDCALL getTotalPotential(long nodeIndex)
  {
@@ -699,10 +701,10 @@ int DLL_EXPORT __STDCALL setHydraulicProperties(int waterRetentionCurve,
 
 
  /*!
-  * \brief computes [m^3] maximum integrated flow over the time step
+  * \brief getWaterFlow
   * \param n
   * \param direction
-  * \return result
+  * \return maximum integrated flow in the requested direction [m^3]
   */
  double DLL_EXPORT __STDCALL getWaterFlow(long n, short direction)
  {
@@ -750,9 +752,9 @@ int DLL_EXPORT __STDCALL setHydraulicProperties(int waterRetentionCurve,
 
 
  /*!
-  * \brief computes [m^3] integrated flow over the time step
+  * \brief getSumLateralWaterFlow
   * \param n
-  * \return result
+  * \return integrated lateral flow over the time step [m^3]
   */
  double DLL_EXPORT __STDCALL getSumLateralWaterFlow(long n)
  {
@@ -770,9 +772,9 @@ int DLL_EXPORT __STDCALL setHydraulicProperties(int waterRetentionCurve,
 
 
  /*!
-  * \brief computes [m^3] integrated inflow over the time step
+  * \brief getSumLateralWaterFlowIn
   * \param n
-  * \return result
+  * \return integrated lateral inflow over the time step [m^3]
   */
  double DLL_EXPORT __STDCALL getSumLateralWaterFlowIn(long n)
  {
@@ -790,9 +792,9 @@ int DLL_EXPORT __STDCALL setHydraulicProperties(int waterRetentionCurve,
 
 
  /*!
-  * \brief computes [m^3] integrated outflow over the time step
+  * \brief getSumLateralWaterFlowOut
   * \param n
-  * \return result
+  * \return integrated lateral outflow over the time step  [m^3]
   */
  double DLL_EXPORT __STDCALL getSumLateralWaterFlowOut(long n)
  {
@@ -814,7 +816,10 @@ int DLL_EXPORT __STDCALL setHydraulicProperties(int waterRetentionCurve,
     InitializeBalanceWater();
     if (myStructure.computeHeat)
         initializeBalanceHeat();
+    else
+        balanceWholePeriod.heatMBR = 1.;
 }
+
 
  double DLL_EXPORT __STDCALL getWaterMBR()
  {
@@ -829,6 +834,11 @@ int DLL_EXPORT __STDCALL setHydraulicProperties(int waterRetentionCurve,
  double DLL_EXPORT __STDCALL getHeatMBE()
   {
      return (balanceWholePeriod.heatMBE);
+  }
+
+  double DLL_EXPORT __STDCALL getWaterStorage()
+  {
+     return (balanceCurrentTimeStep.storageWater);
   }
 
 
@@ -869,8 +879,9 @@ int DLL_EXPORT __STDCALL setHydraulicProperties(int waterRetentionCurve,
 
 
  /*!
-  * \brief computes a period of time [s]
+  * \brief computePeriod
   * \param myPeriod
+  * \return a period of time [s]
   */
  void DLL_EXPORT __STDCALL computePeriod(double myPeriod)
     {
@@ -891,16 +902,19 @@ int DLL_EXPORT __STDCALL setHydraulicProperties(int waterRetentionCurve,
 
 
  /*!
- * \brief computes a single step of time [s]
+ * \brief computeStep
  * \param maxTime
- * \return result
+ * \return single step of time [s]
  */
 double DLL_EXPORT __STDCALL computeStep(double maxTime)
 {
     double dtWater, dtHeat;
 
-    if (myStructure.computeHeat) initializeHeatFluxes(false, true);
-    updateBoundary();
+    if (myStructure.computeHeat)
+    {
+        initializeHeatFluxes(false, true);
+        updateConductance();
+    }
 
     if (myStructure.computeWater)
         computeWater(maxTime, &dtWater);
@@ -938,7 +952,7 @@ double DLL_EXPORT __STDCALL computeStep(double maxTime)
 }
 
 /*!
- * \brief Set temperature
+ * \brief setTemperature
  * \param nodeIndex
  * \param myT [K]
  * \return OK/ERROR
@@ -966,7 +980,7 @@ int DLL_EXPORT __STDCALL setTemperature(long nodeIndex, double myT)
 }
 
 /*!
- * \brief Set fixed temperature
+ * \brief setFixedTemperature
  * \param nodeIndex
  * \param myT [K]
  * \return OK/ERROR
@@ -987,7 +1001,7 @@ int DLL_EXPORT __STDCALL setFixedTemperature(long nodeIndex, double myT, double 
 }
 
 /*!
- * \brief Set boundary wind speed
+ * \brief setHeatBoundaryWindSpeed
  * \param nodeIndex
  * \param myWindSpeed [m s-1]
  * \return OK/ERROR
@@ -1007,7 +1021,7 @@ int DLL_EXPORT __STDCALL setHeatBoundaryWindSpeed(long nodeIndex, double myWindS
 }
 
 /*!
- * \brief Set boundary roughness height
+ * \brief setHeatBoundaryRoughness
  * \param nodeIndex
  * \param myRoughness [m]
  * \return OK/ERROR
@@ -1027,7 +1041,7 @@ int DLL_EXPORT __STDCALL setHeatBoundaryRoughness(long nodeIndex, double myRough
 }
 
 /*!
- * \brief Set heat sink/source
+ * \brief setHeatSinkSource
  * \param nodeIndex
  * \param myHeatFlow [W]
  * \return OK/ERROR
@@ -1046,7 +1060,7 @@ int DLL_EXPORT __STDCALL setHeatSinkSource(long nodeIndex, double myHeatFlow)
 }
 
 /*!
- * \brief Set boundary temperature
+ * \brief setHeatBoundaryTemperature
  * \param nodeIndex
  * \param myTemperature [K]
  * \return OK/ERROR
@@ -1068,7 +1082,7 @@ int DLL_EXPORT __STDCALL setHeatBoundaryTemperature(long nodeIndex, double myTem
 }
 
 /*!
- * \brief Set boundary net irradiance
+ * \brief setHeatBoundaryNetIrradiance
  * \param nodeIndex
  * \param myNetIrradiance [W m-2]
  * \return OK/ERROR
@@ -1090,7 +1104,7 @@ int DLL_EXPORT __STDCALL setHeatBoundaryNetIrradiance(long nodeIndex, double myN
 }
 
 /*!
- * \brief Set boundary air humidity
+ * \brief setHeatBoundaryRelativeHumidity
  * \param nodeIndex
  * \param myRelativeHumidity [%]
  * \return OK/ERROR
@@ -1112,7 +1126,7 @@ int DLL_EXPORT __STDCALL setHeatBoundaryRelativeHumidity(long nodeIndex, double 
 }
 
 /*!
- * \brief Set boundary reference height for wind
+ * \brief setHeatBoundaryHeightWind
  * \param nodeIndex
  * \param myHeight [m]
  * \return OK/ERROR
@@ -1132,7 +1146,7 @@ int DLL_EXPORT __STDCALL setHeatBoundaryHeightWind(long nodeIndex, double myHeig
 
 
 /*!
- * \brief Set boundary reference height for temperature
+ * \brief setHeatBoundaryHeightTemperature
  * \param nodeIndex
  * \param myHeight [m]
  * \return OK/ERROR
@@ -1151,7 +1165,7 @@ int DLL_EXPORT __STDCALL setHeatBoundaryHeightTemperature(long nodeIndex, double
 }
 
 /*!
- * \brief return node temperature
+ * \brief getTemperature
  * \param nodeIndex
  * \return temperature [K]
 */
@@ -1165,7 +1179,7 @@ double DLL_EXPORT __STDCALL getTemperature(long nodeIndex)
 }
 
 /*!
- * \brief return heat conductivity
+ * \brief getHeatConductivity
  * \param nodeIndex
  * \return conductivity [W m-1 s-1]
  */
@@ -1179,10 +1193,10 @@ double DLL_EXPORT __STDCALL getHeatConductivity(long nodeIndex)
 }
 
 /*!
- * \brief return instantaneous heat flux
+ * \brief getHeatFlux
  * \param nodeIndex
  * \param myDirection
- * \return heat flux [W] or water flux (m3 -1)
+ * \return instantaneous heat flux [W] or water flux (m3 -1)
 */
 float DLL_EXPORT __STDCALL getHeatFlux(long nodeIndex, short myDirection, int fluxType)
 {
@@ -1214,9 +1228,9 @@ float DLL_EXPORT __STDCALL getHeatFlux(long nodeIndex, short myDirection, int fl
 }
 
 /*!
- * \brief return boundary sensible heat flux
+ * \brief getBoundarySensibleFlux
  * \param nodeIndex
- * \return sensbile latent heat flux [W m-2]
+ * \return boundary sensible latent heat flux [W m-2]
 */
 double DLL_EXPORT __STDCALL getBoundarySensibleFlux(long nodeIndex)
 {
@@ -1232,9 +1246,9 @@ double DLL_EXPORT __STDCALL getBoundarySensibleFlux(long nodeIndex)
 
 
 /*!
- * \brief return boundary latent heat flux
+ * \brief getBoundaryLatentFlux
  * \param nodeIndex
- * \return latent heat flux [W m-2]
+ * \return boundary latent heat flux [W m-2]
 */
 double DLL_EXPORT __STDCALL getBoundaryLatentFlux(long nodeIndex)
 {
@@ -1249,9 +1263,9 @@ double DLL_EXPORT __STDCALL getBoundaryLatentFlux(long nodeIndex)
 }
 
 /*!
- * \brief return boundary advective heat flux
+ * \brief getBoundaryAdvectiveFlux
  * \param nodeIndex
- * \return advective heat flux [W m-2]
+ * \return boundary advective heat flux [W m-2]
 */
 double DLL_EXPORT __STDCALL getBoundaryAdvectiveFlux(long nodeIndex)
 {
@@ -1267,9 +1281,9 @@ double DLL_EXPORT __STDCALL getBoundaryAdvectiveFlux(long nodeIndex)
 }
 
 /*!
- * \brief return boundary radiative heat flux
+ * \brief getBoundaryRadiativeFlux
  * \param nodeIndex
- * \return radiative heat flux [W m-2]
+ * \return boundary radiative heat flux [W m-2]
 */
 double DLL_EXPORT __STDCALL getBoundaryRadiativeFlux(long nodeIndex)
 {
@@ -1284,9 +1298,9 @@ double DLL_EXPORT __STDCALL getBoundaryRadiativeFlux(long nodeIndex)
 }
 
 /*!
- * \brief return boundary aerodynamic conductance
+ * \brief getBoundaryAerodynamicConductance
  * \param nodeIndex
- * \return aerodynamic conductance [m s-1]
+ * \return boundary aerodynamic conductance [m s-1]
 */
 double DLL_EXPORT __STDCALL getBoundaryAerodynamicConductance(long nodeIndex)
 {
@@ -1303,9 +1317,9 @@ double DLL_EXPORT __STDCALL getBoundaryAerodynamicConductance(long nodeIndex)
 
 
 /*!
- * \brief return boundary aerodynamic conductance for open water
+ * \brief getBoundaryAerodynamicConductanceOpenWater
  * \param nodeIndex
- * \return aerodynamic conductance [m s-1]
+ * \return boundary aerodynamic conductance [m s-1]
 */
 /*
 double DLL_EXPORT getBoundaryAerodynamicConductanceOpenWater(long nodeIndex)
@@ -1317,14 +1331,14 @@ double DLL_EXPORT getBoundaryAerodynamicConductanceOpenWater(long nodeIndex)
     if (myNode[nodeIndex].boundary->type != BOUNDARY_HEAT) return (INDEX_ERROR);
 
     // boundary aerodynamic resistance
-    return (myNode[nodeIndex].boundary->Heat->aerodynamicConductanceOpenWater);
+    return (myNode[nodeIndex].boundary->Heat->aerodynamicConductanceOpenwater);
 }
 */
 
 /*!
- * \brief return boundary soil conductance
+ * \brief getBoundarySoilConductance
  * \param nodeIndex
- * \return soil conductance [m s-1]
+ * \return boundary soil conductance [m s-1]
 */
 double DLL_EXPORT __STDCALL getBoundarySoilConductance(long nodeIndex)
 {
@@ -1339,9 +1353,9 @@ double DLL_EXPORT __STDCALL getBoundarySoilConductance(long nodeIndex)
 }
 
 /*!
- * \brief return vapor concentration
+ * \brief getNodeVapor
  * \param nodeIndex
- * \return vapor concentration [kg m-3]
+ * \return node vapor concentration [kg m-3]
 */
 double DLL_EXPORT __STDCALL getNodeVapor(long i)
 {
@@ -1356,7 +1370,7 @@ double DLL_EXPORT __STDCALL getNodeVapor(long i)
 }
 
 /*!
- * \brief return heat storage
+ * \brief getHeat
  * \param nodeIndex
  * \return heat storage [J]
 */
@@ -1373,7 +1387,7 @@ double DLL_EXPORT __STDCALL getHeat(long i, double h)
     if (myStructure.computeWater && myStructure.computeHeatVapor)
     {
         double thetaV = VaporThetaV(h, myNode[i].extra->Heat->T, i);
-        myHeat += thetaV * LatentHeatVaporization(myNode[i].extra->Heat->T - ZEROCELSIUS) * WATER_DENSITY * myNode[i].volume_area;
+        myHeat += thetaV * latentHeatVaporization(myNode[i].extra->Heat->T - ZEROCELSIUS) * WATER_DENSITY * myNode[i].volume_area;
     }
 
     return (myHeat);

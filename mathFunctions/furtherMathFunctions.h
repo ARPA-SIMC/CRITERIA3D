@@ -7,12 +7,13 @@
     #ifndef _STRING_
         #include <string>
     #endif
-
-    enum estimatedFunction {FUNCTION_CODE_SPHERICAL, FUNCTION_CODE_LINEAR, FUNCTION_CODE_PARABOLIC,
-                       FUNCTION_CODE_EXPONENTIAL, FUNCTION_CODE_LOGARITMIC,
-                       FUNCTION_CODE_TWOPARAMETERSPOLYNOMIAL, FUNCTION_CODE_FOURIER_2_HARMONICS,
-                       FUNCTION_CODE_FOURIER_GENERAL_HARMONICS,
-                       FUNCTION_CODE_MODIFIED_VAN_GENUCHTEN, FUNCTION_CODE_MODIFIED_VAN_GENUCHTEN_RESTRICTED};
+#include <functional>
+enum estimatedFunction {FUNCTION_CODE_SPHERICAL, FUNCTION_CODE_LINEAR, FUNCTION_CODE_PARABOLIC,
+                   FUNCTION_CODE_EXPONENTIAL, FUNCTION_CODE_LOGARITMIC,
+                   FUNCTION_CODE_TWOPARAMETERSPOLYNOMIAL, FUNCTION_CODE_FOURIER_2_HARMONICS,
+                   FUNCTION_CODE_FOURIER_GENERAL_HARMONICS,
+                   FUNCTION_CODE_MODIFIED_VAN_GENUCHTEN, FUNCTION_CODE_MODIFIED_VAN_GENUCHTEN_RESTRICTED,
+                   FUNCTION_CODE_MULTILINEAR,FUNCTION_CODE_TEMPVSHEIGHT};
 
 
     struct TfunctionInput{
@@ -36,17 +37,19 @@
         float *par ;
     };
 
+
     double twoParametersAndExponentialPolynomialFunctions(double x, double* par);
     double twoHarmonicsFourier(double x, double* par);
     double harmonicsFourierGeneral(double x, double* par,int nrPar);
     float errorFunctionPrimitive(float x);
     double errorFunctionPrimitive(double x);
-    double parabolicFunction(double x, double* par);
     float gaussianFunction(TfunctionInput fInput);
     float gaussianFunction(float x, float mean, float devStd);
-
-
-
+    double functionSum(std::vector<std::function<double (double, std::vector<double> &)> > &functions, std::vector<double>& x, std::vector <std::vector <double>>& par);
+    double functionLinear(double x, std::vector <double>& par);
+    double lapseRatePiecewise(double x, std::vector <double>& par);
+    double lapseRateFrei(double x, std::vector <double>& par);
+    double lapseRateRotatedSigmoid(double x, std::vector <double> par);
 
     namespace integration
     {
@@ -63,9 +66,12 @@
 
     namespace interpolation
     {
+        double secant_method(double (*func)(double),  double x0, double x1);
         double linearInterpolation (double x, double *xColumn , double *yColumn, int dimTable);
         float linearInterpolation (float x, float *xColumn , float *yColumn, int dimTable );
         float linearExtrapolation(double x3,double x1,double y1,double x2 , double y2);
+
+        double parabolicFunction(double x, double* par);
 
         void leastSquares(int idFunction, double* parameters, int nrParameters,
                           double* x, double* y, int nrData, double* lambda,
@@ -80,9 +86,38 @@
 
         double modifiedVanGenuchten(double psi, double *parameters, bool isRestricted);
         double cubicSpline(double x , double *firstColumn , double *secondColumn, int dim); // not working to be checked
-        void punctualSecondDerivative(int dim, double *firstColumn , double *secondColumn, double* secondDerivative); // not working to be checked
+        bool punctualSecondDerivative(int dim, double *firstColumn , double *secondColumn, double* secondDerivative); // not working to be checked
         void tridiagonalThomasAlgorithm (int n, double *subDiagonal, double *mainDiagonal, double *superDiagonal, double *constantTerm, double* output); // not working to be checked
 
+        double computeR2(const std::vector<double>& obs, const std::vector<double>& sim);
+        double computeWeighted_R2(const std::vector<double>& observed, const std::vector<double>& predicted, const std::vector<double>& weights);
+        double computeWeighted_StandardError(const std::vector<double>& observed, const std::vector<double>& predicted, const std::vector<double>& weights, int nrPredictors);
+        double weightedVariance(const std::vector<double>& data, const std::vector<double>& weights);
+        int bestFittingMarquardt_nDimension(double (*func)(std::vector<std::function<double (double, std::vector<double> &)> > &, std::vector<double> &, std::vector<std::vector<double>> &),
+                                        std::vector<std::function<double (double, std::vector<double> &)> >& myFunc,
+                                        int nrTrials, int nrMinima,
+                                        std::vector<std::vector<double> > &parametersMin, std::vector<std::vector<double> > &parametersMax,
+                                        std::vector<std::vector<double> > &parameters, std::vector<std::vector<double> > &parametersDelta,
+                                        int maxIterationsNr, double myEpsilon, double deltaR2,
+                                        std::vector <std::vector <double>>& x , std::vector<double>& y, bool isWeighted, std::vector<double>& weights);
+
+        bool fittingMarquardt_nDimension(double (*func)(std::vector<std::function<double (double, std::vector<double> &)> > &, std::vector<double> &, std::vector <std::vector <double>>&),
+                                         std::vector<std::function<double (double, std::vector<double> &)> > &myFunc,
+                                         std::vector <std::vector <double>>& parametersMin, std::vector <std::vector <double>>& parametersMax,
+                                         std::vector <std::vector <double>>& parameters, std::vector <std::vector <double>>& parametersDelta,
+                                         std::vector <std::vector <int>>& correspondenceParametersTag, int maxIterationsNr, double myEpsilon,
+                                         std::vector <std::vector <double>>& x, std::vector<double>& y, bool isWeighted, std::vector<double>& weights);
+
+        double normGeneric_nDimension(double (*func)(std::vector<std::function<double (double, std::vector<double> &)>> &, std::vector<double> &, std::vector <std::vector <double>>&),
+                                      std::vector<std::function<double (double, std::vector<double> &)> > myFunc,
+                                      std::vector <std::vector <double>> &parameters, std::vector <std::vector <double>>& x, std::vector<double>& y);
+
+        void leastSquares_nDimension(double (*func)(std::vector<std::function<double(double, std::vector<double>&)>>&, std::vector<double>& , std::vector <std::vector <double>>&),
+                                    std::vector<std::function<double (double, std::vector<double> &)> > myFunc,
+                                    std::vector <std::vector <double>>& parameters, std::vector <std::vector <double>>& parametersDelta,
+                                    std::vector <std::vector <int>>& correspondenceParametersTag,
+                                    std::vector <std::vector <double>>& x, std::vector<double>& y, std::vector <std::vector <double>>& lambda,
+                                    std::vector <std::vector <double>>& parametersChange,bool isWeighted, std::vector<double>& weights);
     }
 
     namespace matricial
@@ -105,6 +140,7 @@
         void minorMatrix(double** b,double** a,int i,int n);
         int eigenSystemMatrix2x2(double** a, double* eigenvalueA, double** eigenvectorA, int n);
         bool inverseGaussJordan(double** a,double** d,int n);
+        bool linearSystemResolutionByCramerMethod(double* constantTerm, double** coefficientMatrix, int matrixSize, double* roots);
     }
 
     namespace distribution

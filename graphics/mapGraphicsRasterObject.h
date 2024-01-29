@@ -29,16 +29,18 @@
 #ifndef MAPGRAPHICSRASTEROBJECT_H
 #define MAPGRAPHICSRASTEROBJECT_H
 
-    #include "MapGraphics_global.h"
     #include "MapGraphicsObject.h"
     #include "MapGraphicsView.h"
-    #include "Position.h"
+
+    #ifndef POSITION_H
+        #include "Position.h"
+    #endif
 
     #ifndef COLORLEGEND_H
         #include "colorLegend.h"
     #endif
 
-    #ifndef MAP_H
+    #ifndef GEOMAP_H
         #include "geoMap.h"
     #endif
 
@@ -61,23 +63,20 @@
          * \param view a MapGraphicsView pointer
          * \param parent MapGraphicsObject
          */
-        explicit RasterObject(MapGraphicsView* view, MapGraphicsObject *parent = nullptr);
+        explicit RasterObject(MapGraphicsView* _view, MapGraphicsObject *parent = nullptr);
 
         bool isLoaded;
 
         void clear();
         void setDrawing(bool value);
         void setDrawBorders(bool value);
-        void setColorLegend(ColorLegend* myLegend);
-        void setNetCDF(bool value);
-        bool isNetCDF();
+        void setColorLegend(ColorLegend* colorLegendPtr);
 
-        QPointF getPixel(const QPointF &latLonPoint);
-        QPointF getLatLon(const QPointF &pos);
+        QPointF getPixel(const QPointF &geoPoint);
 
         bool initializeUTM(gis::Crit3DRasterGrid* myRaster, const gis::Crit3DGisSettings& gisSettings, bool isGrid_);
         bool initializeLatLon(gis::Crit3DRasterGrid* myRaster, const gis::Crit3DGisSettings& gisSettings,
-                              const gis::Crit3DGridHeader& latLonHeader, bool isGrid_);
+                              const gis::Crit3DLatLonHeader& latLonHeader, bool isGrid_);
         float getRasterMaxSize();
         gis::Crit3DGeoPoint* getRasterCenter();
         void setRaster(gis::Crit3DRasterGrid* rasterPtr);
@@ -85,7 +84,7 @@
         void updateCenter();
         Position getCurrentCenter();
 
-        gis::Crit3DGridHeader getLatLonHeader() const;
+        gis::Crit3DLatLonHeader getLatLonHeader() const;
         bool getRowCol(gis::Crit3DGeoPoint geoPoint, int* row, int* col);
         float getValue(gis::Crit3DGeoPoint& geoPoint);
         float getValue(Position& myPos);
@@ -111,17 +110,18 @@
         MapGraphicsView* view;
         gis::Crit3DRasterGrid* rasterPointer;
         gis::Crit3DGeoMap* geoMap;
-        QPointF referencePixel;
-        ColorLegend* colorScaleLegend;
-        bool isDrawBorder;
+        ColorLegend* colorLegendPointer;
+
         RowCol **matrix;
-        gis::Crit3DGridHeader latLonHeader;
+        gis::Crit3DLatLonHeader latLonHeader;
         double longitudeShift;
 
+        QPointF refCenterPixel;
+
+        bool isDrawBorder;
         bool isLatLon;
         bool isDrawing;
         bool isGrid;
-        bool isNetcdf;
         int utmZone;
 
         void freeIndexesMatrix();

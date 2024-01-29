@@ -45,7 +45,7 @@ void downyMildew(TdownyMildew* downyMildewCore, bool isFirstJanuary){
     float avgT = 0.0;
     float wdtwd = 0.0;
 
-    float vpd = vapourPressureDeficit(tair, relativeHumidity);
+    float vpd = float(vapourPressureDeficit(tair, relativeHumidity));
     int litterMoist = leafLitterMoisture(rain, vpd);
 
     // total matured oospores are given each hour with the rate of dormancy breaking of MMO (MMO=1)
@@ -316,11 +316,11 @@ float dormancyBreaking(float htime) {
 float survivalRateSporangia(float tair, float relativeHumidity) {
 
     //check relativeHumidity
-    if (relativeHumidity < 1.f) relativeHumidity = 1.0;
-    if (relativeHumidity > 100.f) relativeHumidity = 100.0;
+    if (relativeHumidity < 1) relativeHumidity = 1;
+    if (relativeHumidity > 100) relativeHumidity = 100;
     relativeHumidity /= 100.f;
 
-    return 1.f / (24.f*(5.67f-0.47f*(tair*(1.f-relativeHumidity))+0.01f*pow((tair*(1.f-relativeHumidity)),2.f)));
+    return 1.f / (24.f*(5.67f-0.47f*(tair*(1.f-relativeHumidity))+0.01f * powf((tair*(1.f-relativeHumidity)), 2.f)));
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////

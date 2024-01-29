@@ -32,12 +32,18 @@ Crit3DInterpolationDataPoint::Crit3DInterpolationDataPoint()
 {
     index = NODATA;
     isActive = false;
+    isMarked = false;
+
     distance = NODATA;
-    deltaZ = NODATA;
     value = NODATA;
+    regressionWeight = NODATA;
+
     lapseRateCode = primary;
+
     topographicDistance = nullptr;
+
     point = new gis::Crit3DPoint();
+    proxyValues.clear();
 }
 
 float Crit3DInterpolationDataPoint::getProxyValue(unsigned int pos)
@@ -46,13 +52,4 @@ float Crit3DInterpolationDataPoint::getProxyValue(unsigned int pos)
         return proxyValues[pos];
     else
         return NODATA;
-}
-
-std::vector <float> Crit3DInterpolationDataPoint::getProxyValues()
-{
-    std::vector <float> myValues;
-    for (unsigned int i=0; i < proxyValues.size(); i++)
-        myValues.push_back(getProxyValue(i));
-
-    return myValues;
 }

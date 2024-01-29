@@ -132,10 +132,10 @@ namespace leafDevelopment
     {
         // decreasing parameter
         double c4;
-        if (myCrop->type == FRUIT_TREE)
+        if (myCrop->type == TREE)
             c4 = 15.0;
         else
-            c4 = 10.0;
+            c4 = 9.0;
 
         if (myDegreeDays <= myCrop->degreeDaysIncrease)
         {

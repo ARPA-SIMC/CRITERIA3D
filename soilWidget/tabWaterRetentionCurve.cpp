@@ -44,12 +44,11 @@ TabWaterRetentionCurve::TabWaterRetentionCurve()
     setLayout(mainLayout);
     setMouseTracking(true);
     fillElement = false;
-
 }
+
 
 void TabWaterRetentionCurve::resetAll()
 {
-
     // delete all Widgets
     barHorizons.clear();
 
@@ -70,8 +69,8 @@ void TabWaterRetentionCurve::resetAll()
     m_tooltip = new Callout(chart);
     m_tooltip->hide();
     fillElement = false;
-
 }
+
 
 bool TabWaterRetentionCurve::getFillElement() const
 {
@@ -106,10 +105,10 @@ void TabWaterRetentionCurve::insertElements(soil::Crit3DSoil *soil)
         QLineSeries* curve = new QLineSeries();
         curve->setColor(color);
         double factor = 1.2;
-        x = dxMin;
-        while (x < dxMax*factor)
+        x = xMin;
+        while (x <= (xMax * factor))
         {
-            double y = soil::thetaFromSignPsi(-x, &mySoil->horizon[i]);
+            double y = soil::thetaFromSignPsi(-x, mySoil->horizon[i]);
             if (y != NODATA)
             {
                 curve->append(x,y);
@@ -134,7 +133,7 @@ void TabWaterRetentionCurve::insertElements(soil::Crit3DSoil *soil)
             {
                 double x = mySoil->horizon[i].dbData.waterRetention[j].water_potential;
                 double y = mySoil->horizon[i].dbData.waterRetention[j].water_content;
-                if (x != NODATA && y != NODATA)
+                if (x>0 && x != NODATA && y != NODATA)
                 {
                     curveMarkers->append(x,y);
                 }
@@ -219,13 +218,9 @@ void TabWaterRetentionCurve::highlightCurve( bool isHightlight )
         if ( isHightlight && i == indexSelected)
         {
             QPen pen = curveList[i]->pen();
-            pen.setWidth(2);
+            pen.setWidth(3);
             pen.setBrush(QBrush(curveColor));
             curveList[i]->setPen(pen);
-            if (!curveMarkerMap.isEmpty() && i<curveMarkerMap.size())
-            {
-                curveMarkerMap[i]->setPen(pen);
-            }
         }
         else
         {
@@ -233,10 +228,6 @@ void TabWaterRetentionCurve::highlightCurve( bool isHightlight )
             pen.setWidth(1);
             pen.setBrush(QBrush(curveColor));
             curveList[i]->setPen(pen);
-            if (!curveMarkerMap.isEmpty() && i<curveMarkerMap.size())
-            {
-                curveMarkerMap[i]->setPen(pen);
-            }
         }
     }
 

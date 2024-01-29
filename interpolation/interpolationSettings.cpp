@@ -25,13 +25,9 @@
 
 #include <string>
 
-#include "crit3dDate.h"
 #include "interpolationSettings.h"
-#include "interpolation.h"
 #include "basicMath.h"
 #include "commonConstants.h"
-#include "cmath"
-
 
 bool Crit3DInterpolationSettings::getPrecipitationAllZero() const
 {
@@ -83,16 +79,6 @@ void Crit3DInterpolationSettings::setMeteoGridAggrMethod(const aggregationMethod
     meteoGridAggrMethod = value;
 }
 
-float Crit3DInterpolationSettings::getShepardInitialRadius() const
-{
-    return shepardInitialRadius;
-}
-
-void Crit3DInterpolationSettings::setShepardInitialRadius(float value)
-{
-    shepardInitialRadius = value;
-}
-
 int Crit3DInterpolationSettings::getIndexPointCV() const
 {
     return indexPointCV;
@@ -138,11 +124,6 @@ Crit3DProxyCombination Crit3DInterpolationSettings::getOptimalCombination() cons
     return optimalCombination;
 }
 
-Crit3DProxyCombination* Crit3DInterpolationSettings::getOptimalCombinationRef()
-{
-    return &optimalCombination;
-}
-
 void Crit3DInterpolationSettings::setOptimalCombination(const Crit3DProxyCombination &value)
 {
     optimalCombination = value;
@@ -151,11 +132,6 @@ void Crit3DInterpolationSettings::setOptimalCombination(const Crit3DProxyCombina
 Crit3DProxyCombination Crit3DInterpolationSettings::getSelectedCombination() const
 {
     return selectedCombination;
-}
-
-Crit3DProxyCombination* Crit3DInterpolationSettings::getSelectedCombinationRef()
-{
-    return &selectedCombination;
 }
 
 void Crit3DInterpolationSettings::setSelectedCombination(const Crit3DProxyCombination &value)
@@ -178,12 +154,12 @@ void Crit3DInterpolationSettings::setIndexHeight(unsigned value)
     indexHeight = value;
 }
 
-void Crit3DInterpolationSettings::setCurrentCombination(Crit3DProxyCombination *value)
+void Crit3DInterpolationSettings::setCurrentCombination(Crit3DProxyCombination value)
 {
     currentCombination = value;
 }
 
-Crit3DProxyCombination *Crit3DInterpolationSettings::getCurrentCombination() const
+Crit3DProxyCombination Crit3DInterpolationSettings::getCurrentCombination() const
 {
     return currentCombination;
 }
@@ -196,26 +172,6 @@ std::vector<Crit3DProxy> Crit3DInterpolationSettings::getCurrentProxy() const
 void Crit3DInterpolationSettings::setCurrentProxy(const std::vector<Crit3DProxy> &value)
 {
     currentProxy = value;
-}
-
-float Crit3DInterpolationSettings::getRefHeightWind() const
-{
-    return refHeightWind;
-}
-
-void Crit3DInterpolationSettings::setRefHeightWind(float value)
-{
-    refHeightWind = value;
-}
-
-float Crit3DInterpolationSettings::getSurfaceRoughness() const
-{
-    return surfaceRoughness;
-}
-
-void Crit3DInterpolationSettings::setSurfaceRoughness(float value)
-{
-    surfaceRoughness = value;
 }
 
 bool Crit3DInterpolationSettings::getUseInterpolatedTForRH() const
@@ -270,6 +226,76 @@ void Crit3DInterpolationSettings::setKh_error_series(const std::vector<float> &n
     Kh_error_series = newKh_error_series;
 }
 
+bool Crit3DInterpolationSettings::getMeteoGridUpscaleFromDem() const
+{
+    return meteoGridUpscaleFromDem;
+}
+
+void Crit3DInterpolationSettings::setMeteoGridUpscaleFromDem(bool newMeteoGridUpscaleFromDem)
+{
+    meteoGridUpscaleFromDem = newMeteoGridUpscaleFromDem;
+}
+
+bool Crit3DInterpolationSettings::getUseMultipleDetrending() const
+{
+    return useMultipleDetrending;
+}
+
+void Crit3DInterpolationSettings::setUseMultipleDetrending(bool newUseMultipleDetrending)
+{
+    useMultipleDetrending = newUseMultipleDetrending;
+}
+
+float Crit3DInterpolationSettings::getPointsBoundingBoxArea() const
+{
+    return pointsBoundingBoxArea;
+}
+
+void Crit3DInterpolationSettings::setPointsBoundingBoxArea(float newPointsBoundingBoxArea)
+{
+    pointsBoundingBoxArea = newPointsBoundingBoxArea;
+}
+
+float Crit3DInterpolationSettings::getLocalRadius() const
+{
+    return localRadius;
+}
+
+void Crit3DInterpolationSettings::setLocalRadius(float newLocalRadius)
+{
+    localRadius = newLocalRadius;
+}
+
+int Crit3DInterpolationSettings::getMinPointsLocalDetrending() const
+{
+    return minPointsLocalDetrending;
+}
+
+void Crit3DInterpolationSettings::setMinPointsLocalDetrending(int newMinPointsLocalDetrending)
+{
+    minPointsLocalDetrending = newMinPointsLocalDetrending;
+}
+
+std::vector<std::vector<double> > Crit3DInterpolationSettings::getFittingParameters() const
+{
+    return fittingParameters;
+}
+
+void Crit3DInterpolationSettings::setFittingParameters(const std::vector<std::vector<double> > &newFittingParameters)
+{
+    fittingParameters = newFittingParameters;
+}
+
+std::vector<std::function<double (double, std::vector<double> &)>> Crit3DInterpolationSettings::getFittingFunction() const
+{
+    return fittingFunction;
+}
+
+void Crit3DInterpolationSettings::setFittingFunction(const std::vector<std::function<double (double, std::vector<double> &)> > &newFittingFunction)
+{
+    fittingFunction = newFittingFunction;
+}
+
 Crit3DInterpolationSettings::Crit3DInterpolationSettings()
 {
     initialize();
@@ -292,26 +318,23 @@ void Crit3DInterpolationSettings::initialize()
     interpolationMethod = idw;
     useThermalInversion = true;
     useTD = false;
+    useLocalDetrending = false;
     topoDist_maxKh = 128;
     useDewPoint = true;
     useInterpolatedTForRH = true;
+    useMultipleDetrending = false;
     useBestDetrending = false;
     useLapseRateCode = false;
     minRegressionR2 = float(PEARSONSTANDARDTHRESHOLD);
     meteoGridAggrMethod = aggrAverage;
+    meteoGridUpscaleFromDem = true;
     indexHeight = unsigned(NODATA);
 
     isKrigingReady = false;
     precipitationAllZero = false;
     maxHeightInversion = 1000.;
-    shepardInitialRadius = NODATA;
     indexPointCV = NODATA;
-
-    refHeightWind = 2;
-    surfaceRoughness = 0.1f;
-
-    if (currentCombination == nullptr)
-        currentCombination = new Crit3DProxyCombination();
+    minPointsLocalDetrending = 20;
 
     Kh_series.clear();
     Kh_error_series.clear();
@@ -339,7 +362,10 @@ TInterpolationMethod Crit3DInterpolationSettings::getInterpolationMethod()
 { return interpolationMethod;}
 
 bool Crit3DInterpolationSettings::getUseTD()
-{ return useTD;}
+{ return (useTD && !useLocalDetrending);}
+
+bool Crit3DInterpolationSettings::getUseLocalDetrending()
+{ return useLocalDetrending;}
 
 float Crit3DInterpolationSettings::getMaxHeightInversion()
 { return maxHeightInversion;}
@@ -356,6 +382,9 @@ void Crit3DInterpolationSettings::setUseThermalInversion(bool myValue)
 void Crit3DInterpolationSettings::setUseTD(bool myValue)
 { useTD = myValue;}
 
+void Crit3DInterpolationSettings::setUseLocalDetrending(bool myValue)
+{ useLocalDetrending = myValue;}
+
 void Crit3DInterpolationSettings::setUseDewPoint(bool myValue)
 { useDewPoint = myValue;}
 
@@ -370,6 +399,17 @@ size_t Crit3DInterpolationSettings::getProxyNr()
 
 Crit3DProxy* Crit3DInterpolationSettings::getProxy(unsigned pos)
 { return &(currentProxy[pos]);}
+
+int Crit3DInterpolationSettings::getProxyPosFromName(TProxyVar name)
+{
+    for (int i = 0; i < getProxyNr(); i++)
+    {
+        if (getProxyPragaName(getProxyName(i)) == name)
+            return i;
+    }
+
+    return NODATA;
+}
 
 std::string Crit3DProxy::getName() const
 {
@@ -479,6 +519,46 @@ void Crit3DProxy::setRegressionIntercept(float newRegressionIntercept)
     regressionIntercept = newRegressionIntercept;
 }
 
+float Crit3DProxy::getAvg() const
+{
+    return avg;
+}
+
+void Crit3DProxy::setAvg(float newAvg)
+{
+    avg = newAvg;
+}
+
+float Crit3DProxy::getStdDev() const
+{
+    return stdDev;
+}
+
+void Crit3DProxy::setStdDev(float newStdDev)
+{
+    stdDev = newStdDev;
+}
+
+float Crit3DProxy::getStdDevThreshold() const
+{
+    return stdDevThreshold;
+}
+
+void Crit3DProxy::setStdDevThreshold(float newStdDevThreshold)
+{
+    stdDevThreshold = newStdDevThreshold;
+}
+
+std::vector<double> Crit3DProxy::getFittingParametersRange() const
+{
+    return fittingParametersRange;
+}
+
+void Crit3DProxy::setFittingParametersRange(const std::vector<double> &newFittingParametersRange)
+{
+    fittingParametersRange = newFittingParametersRange;
+}
+
 Crit3DProxy::Crit3DProxy()
 {
     name = "";
@@ -495,6 +575,10 @@ Crit3DProxy::Crit3DProxy()
     lapseRateT1 = NODATA;
     inversionLapseRate = NODATA;
     inversionIsSignificative = false;
+
+    avg = NODATA;
+    stdDev = NODATA;
+    stdDevThreshold = NODATA;
 
     proxyTable = "";
     proxyField = "";
@@ -552,7 +636,7 @@ void Crit3DProxy::setRegressionSlope(float myValue)
 float Crit3DProxy::getRegressionSlope()
 { return regressionSlope;}
 
-float Crit3DProxy::getValue(unsigned int pos, std::vector <float> proxyValues)
+double Crit3DProxy::getValue(unsigned int pos, std::vector <double> proxyValues)
 {
     if (pos < proxyValues.size())
         return proxyValues[pos];
@@ -589,17 +673,12 @@ void Crit3DInterpolationSettings::addProxy(Crit3DProxy myProxy, bool isActive_)
 std::string Crit3DInterpolationSettings::getProxyName(unsigned pos)
 { return currentProxy[pos].getName();}
 
-float Crit3DInterpolationSettings::getProxyValue(unsigned pos, std::vector <float> proxyValues)
+double Crit3DInterpolationSettings::getProxyValue(unsigned pos, std::vector <double> proxyValues)
 {
     if (pos < currentProxy.size())
         return currentProxy[pos].getValue(pos, proxyValues);
     else
         return NODATA;
-}
-
-void Crit3DInterpolationSettings::computeShepardInitialRadius(float area, int nrPoints)
-{
-    setShepardInitialRadius(sqrt((SHEPARD_AVG_NRPOINTS * area) / (float(PI) * nrPoints)));
 }
 
 std::deque<bool> Crit3DProxyCombination::getIsActive() const
@@ -650,7 +729,7 @@ void Crit3DProxyCombination::setUseThermalInversion(bool value)
 bool Crit3DInterpolationSettings::getCombination(int combinationInteger, Crit3DProxyCombination &outCombination)
 {
     outCombination = selectedCombination;
-    std::string binaryString = decimal_to_binary(combinationInteger, getProxyNr()+1);
+    std::string binaryString = decimal_to_binary(unsigned(combinationInteger), int(getProxyNr()+1));
 
     int indexHeight = getIndexHeight();
 

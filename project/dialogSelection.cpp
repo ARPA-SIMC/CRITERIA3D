@@ -116,7 +116,7 @@ meteoVariable chooseColorScale()
 }
 
 
-frequencyType chooseFrequency(Project* project_)
+frequencyType chooseFrequency(const Project &myProject)
 {
     QDialog myDialog;
     QVBoxLayout mainLayout;
@@ -134,7 +134,7 @@ frequencyType chooseFrequency(Project* project_)
     layoutFrequency.addWidget(&Hourly);
     layoutFrequency.addWidget(&Monthly);
 
-    frequencyType myFreq = project_->getCurrentFrequency();
+    frequencyType myFreq = myProject.getCurrentFrequency();
 
     if (myFreq == daily)
         Daily.setChecked(true);
@@ -170,9 +170,9 @@ frequencyType chooseFrequency(Project* project_)
 }
 
 
-meteoVariable chooseMeteoVariable(Project* myProject)
+meteoVariable chooseMeteoVariable(const Project &myProject)
 {
-    if (myProject->getCurrentFrequency() == noFrequency)
+    if (myProject.getCurrentFrequency() == noFrequency)
     {
         QMessageBox::information(nullptr, "No frequency", "Choose frequency before");
         return noMeteoVar;
@@ -186,7 +186,7 @@ meteoVariable chooseMeteoVariable(Project* myProject)
     myDialog.setWindowTitle("Choose variable");
     myDialog.setFixedWidth(300);
 
-    meteoVariable myCurrentVar = myProject->getCurrentVariable();
+    meteoVariable myCurrentVar = myProject.getCurrentVariable();
 
     QRadioButton Tavg("Average air temperature");
     QRadioButton Tmin("Minimum air temperature");
@@ -228,7 +228,7 @@ meteoVariable chooseMeteoVariable(Project* myProject)
     QRadioButton MRad("Solar radiation");
     QRadioButton MBIC("Hydroclimatic balance");
 
-    if (myProject->getCurrentFrequency() == daily)
+    if (myProject.getCurrentFrequency() == daily)
     {
         layoutVariable.addWidget(&Tmin);
         layoutVariable.addWidget(&Tavg);
@@ -283,7 +283,7 @@ meteoVariable chooseMeteoVariable(Project* myProject)
         else if (myCurrentVar == dailyLeafWetness)
             LeafWD.setChecked(true);
     }
-    else if (myProject->getCurrentFrequency() == hourly)
+    else if (myProject.getCurrentFrequency() == hourly)
     {
         layoutVariable.addWidget(&T);
         layoutVariable.addWidget(&P);
@@ -326,7 +326,7 @@ meteoVariable chooseMeteoVariable(Project* myProject)
         else if (myCurrentVar == leafWetness)
             LW.setChecked(true);
     }
-    else if (myProject->getCurrentFrequency() == monthly)
+    else if (myProject.getCurrentFrequency() == monthly)
     {
         layoutVariable.addWidget(&MTavg);
         layoutVariable.addWidget(&MTmin);
@@ -370,7 +370,7 @@ meteoVariable chooseMeteoVariable(Project* myProject)
         return noMeteoVar;
     }
 
-   if (myProject->getCurrentFrequency() == daily)
+   if (myProject.getCurrentFrequency() == daily)
    {
        if (Tmin.isChecked())
            return (dailyAirTemperatureMin);
@@ -408,7 +408,7 @@ meteoVariable chooseMeteoVariable(Project* myProject)
            return (dailyLeafWetness);
    }
 
-   if (myProject->getCurrentFrequency() == hourly)
+   if (myProject.getCurrentFrequency() == hourly)
    {
        if (T.isChecked())
            return (airTemperature);
@@ -438,7 +438,7 @@ meteoVariable chooseMeteoVariable(Project* myProject)
            return (referenceEvapotranspiration);
    }
 
-   if (myProject->getCurrentFrequency() == monthly)
+   if (myProject.getCurrentFrequency() == monthly)
    {
        if (MTmin.isChecked())
            return (monthlyAirTemperatureMin);
