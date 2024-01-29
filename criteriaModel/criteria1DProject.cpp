@@ -63,9 +63,11 @@ void Crit1DProject::initialize()
     lastSimulationDate = QDate(1800,1,1);
 
     outputString = "";
+
     // specific outputs
     waterDeficitDepth.clear();
     waterContentDepth.clear();
+    degreeOfSaturationDepth.clear();
     waterPotentialDepth.clear();
     availableWaterDepth.clear();
     fractionAvailableWaterDepth.clear();
@@ -255,6 +257,12 @@ bool Crit1DProject::readSettings()
         if (! setVariableDepth(depthList, waterContentDepth))
         {
             projectError = "Wrong water content depth in " + configFileName;
+            return false;
+        }
+        depthList = projectSettings->value("degreeOfSaturation").toStringList();
+        if (! setVariableDepth(depthList, degreeOfSaturationDepth))
+        {
+            projectError = "Wrong degree of saturation depth in " + configFileName;
             return false;
         }
         depthList = projectSettings->value("waterPotential").toStringList();
@@ -1544,7 +1552,12 @@ bool Crit1DProject::createOutputTable(QString &myError)
     // specific depth variables
     for (unsigned int i = 0; i < waterContentDepth.size(); i++)
     {
-        QString fieldName = "SWC_" + QString::number(waterContentDepth[i]);
+        QString fieldName = "VWC_" + QString::number(waterContentDepth[i]);
+        queryString += ", " + fieldName + " REAL";
+    }
+    for (unsigned int i = 0; i < degreeOfSaturationDepth.size(); i++)
+    {
+        QString fieldName = "DEGSAT_" + QString::number(degreeOfSaturationDepth[i]);
         queryString += ", " + fieldName + " REAL";
     }
     for (unsigned int i = 0; i < waterPotentialDepth.size(); i++)
@@ -1604,7 +1617,12 @@ void Crit1DProject::updateOutput(Crit3DDate myDate, bool isFirst)
         // specific depth variables
         for (unsigned int i = 0; i < waterContentDepth.size(); i++)
         {
-            QString fieldName = "SWC_" + QString::number(waterContentDepth[i]);
+            QString fieldName = "VWC_" + QString::number(waterContentDepth[i]);
+            outputString += ", " + fieldName;
+        }
+        for (unsigned int i = 0; i < degreeOfSaturationDepth.size(); i++)
+        {
+            QString fieldName = "DEGSAT_" + QString::number(degreeOfSaturationDepth[i]);
             outputString += ", " + fieldName;
         }
         for (unsigned int i = 0; i < waterPotentialDepth.size(); i++)
@@ -1669,7 +1687,11 @@ void Crit1DProject::updateOutput(Crit3DDate myDate, bool isFirst)
     // specific depth variables
     for (unsigned int i = 0; i < waterContentDepth.size(); i++)
     {
-        outputString += "," + QString::number(myCase.getWaterContent(waterContentDepth[i]), 'g', 4);
+        outputString += "," + QString::number(myCase.getVolumetricWaterContent(waterContentDepth[i]), 'g', 4);
+    }
+    for (unsigned int i = 0; i < degreeOfSaturationDepth.size(); i++)
+    {
+        outputString += "," + QString::number(myCase.getDegreeOfSaturation(degreeOfSaturationDepth[i]), 'g', 4);
     }
     for (unsigned int i = 0; i < waterPotentialDepth.size(); i++)
     {

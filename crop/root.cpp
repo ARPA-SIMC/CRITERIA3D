@@ -591,6 +591,7 @@ namespace root
             }
         }
 
+        // normalize root density
         if (rootDensitySumSubset != rootDensitySum)
         {
             double ratio = rootDensitySum / rootDensitySumSubset;
@@ -600,6 +601,7 @@ namespace root
             }
         }
 
+        // find first and last root layers
         myCrop->roots.firstRootLayer = 0;
         unsigned int layer = 0;
         while (layer < nrLayers && myCrop->roots.rootDensity[layer] == 0.0)

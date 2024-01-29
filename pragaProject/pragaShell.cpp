@@ -848,17 +848,18 @@ int pragaShell(PragaProject* myProject)
     #ifdef _WIN32
         openNewConsole();
     #endif
-    int result;
+
     while (! myProject->requestedExit)
     {
         QString commandLine = getCommandLine("PRAGA");
         if (commandLine != "")
         {
             QList<QString> argumentList = getArgumentList(commandLine);
-            result = executeCommand(argumentList, myProject);
+            int result = executeCommand(argumentList, myProject);
             if (result != 0)
             {
-                myProject->logError("Praga shell error code: "+QString::number(result));
+                myProject->logError("Praga shell error code: " + QString::number(result));
+
                 //return result;
             }
         }
@@ -866,6 +867,7 @@ int pragaShell(PragaProject* myProject)
 
     return PRAGA_OK;
 }
+
 
 #ifdef NETCDF
 

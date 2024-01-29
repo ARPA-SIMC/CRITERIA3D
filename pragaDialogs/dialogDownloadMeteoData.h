@@ -5,14 +5,15 @@
 
     class DialogDownloadMeteoData : public QDialog
     {
-
         Q_OBJECT
 
     private:
         QListWidget dailyVar;
         QListWidget hourlyVar;
-        QDateEdit firstYearEdit;
-        QDateEdit lastYearEdit;
+
+        QDateEdit firstDateEdit;
+        QDateEdit lastDateEdit;
+
         QListWidgetItem daily_item1;
         QListWidgetItem daily_item2;
         QListWidgetItem daily_item3;
@@ -41,16 +42,29 @@
 
     public:
         DialogDownloadMeteoData();
+
         void done(bool res);
         void allDailyVarClicked(int toggled);
         void allHourlyVarClicked(int state);
+
         void dailyItemClicked(QListWidgetItem * item);
         void hourlyItemClicked(QListWidgetItem * item);
-        QList<QString> getVarD() const;
-        QList<QString> getVarH() const;
-        QDate getFirstDate();
-        QDate getLastDate();
-        bool getPrec0024() const;
+
+        QList<QString> getVarD() const
+        { return varD; }
+
+        QList<QString> getVarH() const
+        { return varH; }
+
+        QDate getFirstDate()
+        { return firstDateEdit.date(); }
+
+        QDate getLastDate()
+        { return lastDateEdit.date(); }
+
+        bool getPrec0024() const
+        { return prec0024; }
+
     };
 
 #endif // DIALOGDOWNLOADMETEODATA_H

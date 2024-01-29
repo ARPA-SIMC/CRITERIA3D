@@ -91,6 +91,7 @@
 
         // specific output
         std::vector<int> waterContentDepth;
+        std::vector<int> degreeOfSaturationDepth;
         std::vector<int> waterPotentialDepth;
         std::vector<int> waterDeficitDepth;
         std::vector<int> awcDepth;
