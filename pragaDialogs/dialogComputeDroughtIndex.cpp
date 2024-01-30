@@ -1,8 +1,8 @@
 #include "dialogComputeDroughtIndex.h"
 
-DialogComputeDroughtIndex::DialogComputeDroughtIndex(bool isMeteoGridLoaded, bool isMeteoPointLoaded, int yearPointsFrom, int yearPointsTo, int yearGridFrom, int yearGridTo)
+DialogComputeDroughtIndex::DialogComputeDroughtIndex(bool isMeteoGridLoaded, bool isMeteoPointLoaded, int yearPointsFrom, int yearPointsTo, int yearGridFrom, int yearGridTo, QDate currentDate)
     : isMeteoGridLoaded(isMeteoGridLoaded), isMeteoPointLoaded(isMeteoPointLoaded),
-    yearPointsFrom(yearPointsFrom), yearPointsTo(yearPointsTo), yearGridFrom(yearGridFrom), yearGridTo(yearGridTo)
+    yearPointsFrom(yearPointsFrom), yearPointsTo(yearPointsTo), yearGridFrom(yearGridFrom), yearGridTo(yearGridTo), currentDate(currentDate)
 {
 
     QVBoxLayout* mainLayout = new QVBoxLayout;
@@ -65,17 +65,23 @@ DialogComputeDroughtIndex::DialogComputeDroughtIndex(bool isMeteoGridLoaded, boo
     }
     yearFrom.setValidator(new QIntValidator(100, 3000));
     yearTo.setValidator(new QIntValidator(100, 3000));
+    yearFrom.setMaximumWidth(this->width()/9);
+    yearTo.setMaximumWidth(this->width()/9);
     targetLayout.addWidget(&pointsButton);
     targetLayout.addWidget(&gridButton);
     targetGroupBox->setLayout(&targetLayout);
 
     mainLayout->addWidget(subTitleLabel);
-    QLabel *yearFromLabel = new QLabel(tr("Reference Start Year"));
+    QLabel *yearFromLabel = new QLabel(tr("Reference Start Year:"));
     dateLayout->addWidget(yearFromLabel);
     dateLayout->addWidget(&yearFrom);
-    QLabel *yearToLabel = new QLabel(tr("Reference End Year"));
+    QLabel *yearToLabel = new QLabel(tr("Reference End Year:"));
     dateLayout->addWidget(yearToLabel);
     dateLayout->addWidget(&yearTo);
+    myDate.setDate(currentDate);
+    QLabel *dateToLabel = new QLabel(tr("Date:"));
+    dateLayout->addWidget(dateToLabel);
+    dateLayout->addWidget(&myDate);
 
     QLabel *variableLabel = new QLabel(tr("Drought Index: "));
     std::map<meteoVariable, std::string>::const_iterator it;
@@ -220,6 +226,11 @@ int DialogComputeDroughtIndex::getYearTo() const
 int DialogComputeDroughtIndex::getTimescale() const
 {
     return timescaleList.currentText().toInt();
+}
+
+QDate DialogComputeDroughtIndex::getDate() const
+{
+    return myDate.date();
 }
 
 bool DialogComputeDroughtIndex::getIsMeteoGrid() const
