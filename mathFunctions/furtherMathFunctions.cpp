@@ -1062,7 +1062,7 @@ namespace interpolation
         std::vector <double> R2Previous(nrMinima,NODATA);
         std::vector<double> ySim(nrData);
 
-        int iRandom = 0;
+        //int iRandom = 0;
         int counter = 0;
         srand (unsigned(time(nullptr)));
 
@@ -1102,9 +1102,9 @@ namespace interpolation
                     }
                 }
             }
-            iRandom++;
+            //iRandom++;
             counter++;
-        } while( (iRandom < nrTrials) && (R2 < (1 - EPSILON)) && (fabs(R2Previous[0]-R2Previous[nrMinima-1]) > deltaR2) );
+        } while( (counter < nrTrials) && (R2 < (1 - EPSILON)) && (fabs(R2Previous[0]-R2Previous[nrMinima-1]) > deltaR2) );
 
         for (i=0;i<nrPredictors;i++)
         {
