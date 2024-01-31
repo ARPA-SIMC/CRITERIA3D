@@ -1087,20 +1087,31 @@ namespace interpolation
             else
                 R2 = computeWeighted_R2(y,ySim,weights);
             //printf("%d R2 = %f\n",iRandom,R2);
-            if (R2 > bestR2-EPSILON)
+            if (R2 > (bestR2-deltaR2))
             {
                 for (j=0;j<nrMinima-1;j++)
                 {
                     R2Previous[j] = R2Previous[j+1];
                 }
-                bestR2 = R2Previous[nrMinima-1] = R2;
-                for (i=0;i<nrPredictors;i++)
+                if (R2 > (bestR2))
+                {
+                    for (i=0;i<nrPredictors;i++)
+                    {
+                        for (j=0; j<nrParameters[i]; j++)
+                        {
+                            bestParameters[i][j] = parameters[i][j];
+                        }
+                    }
+                    bestR2 = R2;
+                }
+                R2Previous[nrMinima-1] = R2;
+                /*for (i=0;i<nrPredictors;i++)
                 {
                     for (j=0; j<nrParameters[i]; j++)
                     {
                         bestParameters[i][j] = parameters[i][j];
                     }
-                }
+                }*/
             }
             //iRandom++;
             counter++;
