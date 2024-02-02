@@ -49,8 +49,6 @@
             QDate firstDaily;
             QDate lastDaily;
             std::vector<float> myAnnualSeries;
-            std::vector<int> vectorYears;
-            bool yearsMissing;
             QList<std::string> sortedId;
             std::vector<float> distanceId;
             QMap<QString, std::string> mapNameId;
