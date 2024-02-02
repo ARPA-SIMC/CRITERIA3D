@@ -351,16 +351,19 @@ void Crit3DHomogeneityWidget::plotAnnualSeries()
     meteoPointTemp.nrObsDataDaysD = 0;
     bool dataAlreadyLoaded = false;
     int validYears = 0;
-    if (vectorYears.empty())
-    {
-        validYears = computeAnnualSeriesOnPointFromDaily(&myError, meteoPointsDbHandler, nullptr,
-                                                             &meteoPointTemp, &clima, false, isAnomaly, meteoSettings, myAnnualSeries, vectorYears, dataAlreadyLoaded);
+    std::vector<int> vectorYears;
+    validYears = computeAnnualSeriesOnPointFromDaily(&myError, meteoPointsDbHandler, nullptr,
+                                                         &meteoPointTemp, &clima, false, isAnomaly, meteoSettings, myAnnualSeries, vectorYears, dataAlreadyLoaded);
 
-        yearsMissing = false;
-        if (vectorYears[vectorYears.size()-1] - vectorYears[0] + 1 != vectorYears.size()-1)
-        {
-            yearsMissing = true;
-        }
+    if (validYears == 0)
+    {
+        myAnnualSeries.clear();
+        return;
+    }
+    bool yearsMissing = false;
+    if (vectorYears[vectorYears.size()-1] - vectorYears[0] + 1 != vectorYears.size()-1)
+    {
+        yearsMissing = true;
     }
 
     QDate endDate(QDate(lastYear, 12, 31));
@@ -370,26 +373,52 @@ void Crit3DHomogeneityWidget::plotAnnualSeries()
     if (idPointsJointed.size() != 1 && (lastDateCopyed < lastDate || yearsMissing))
     {
         // mancano dei dati, controllare joint stations
-        for (int i = 1; i<idPointsJointed.size(); i++)
+        if (yearsMissing)
         {
-            QDate lastDateNew = meteoPointsDbHandler->getLastDate(daily, idPointsJointed[i]).date();
-            if (lastDateNew > lastDateCopyed)
+            std::vector<int> vectorMissing;
+            int posMissing, n;
+            for (int y = 0; y<vectorYears.size()-1; y++)
             {
-                int indexMp;
-                for (int j = 0; j<meteoPointsNearDistanceList.size(); j++)
+                posMissing = vectorYears[y+1]-vectorYears[y]-1;
+                n = 1;
+                while (posMissing != 0)
                 {
-                    if (meteoPointsNearDistanceList[j].id == idPointsJointed[i])
-                    {
-                        indexMp = j;
-                        break;
-                    }
-                }
-                for (QDate myDate=lastDateCopyed.addDays(1); myDate<=lastDateNew; myDate=myDate.addDays(1))
-                {
-                    setMpValues(meteoPointsNearDistanceList[indexMp], &meteoPointTemp, myDate, myVar, meteoSettings);
+                    vectorMissing.push_back(vectorYears[y]+n);
+                    posMissing = posMissing - 1;
+                    n = n + 1;
                 }
             }
-            lastDateCopyed = lastDateNew;
+            for (int y = 0; y < vectorMissing.size(); y++)
+            {
+                for (int i = 1; i<idPointsJointed.size(); i++)
+                {
+                    // TO DO
+                }
+            }
+        }
+        if (lastDateCopyed < lastDate)
+        {
+            for (int i = 1; i<idPointsJointed.size(); i++)
+            {
+                QDate lastDateNew = meteoPointsDbHandler->getLastDate(daily, idPointsJointed[i]).date();
+                if (lastDateNew > lastDateCopyed)
+                {
+                    int indexMp;
+                    for (int j = 0; j<meteoPointsNearDistanceList.size(); j++)
+                    {
+                        if (meteoPointsNearDistanceList[j].id == idPointsJointed[i])
+                        {
+                            indexMp = j;
+                            break;
+                        }
+                    }
+                    for (QDate myDate=lastDateCopyed.addDays(1); myDate<=lastDateNew; myDate=myDate.addDays(1))
+                    {
+                        setMpValues(meteoPointsNearDistanceList[indexMp], &meteoPointTemp, myDate, myVar, meteoSettings);
+                    }
+                }
+                lastDateCopyed = lastDateNew;
+            }
         }
         dataAlreadyLoaded = true;
         vectorYears.clear();
@@ -492,6 +521,7 @@ void Crit3DHomogeneityWidget::plotAnnualSeries()
         averageValue = sum / validYears;
         // draw
         annualSeriesChartView->draw(years, seriesToView);
+        return;
     }
     else
     {
