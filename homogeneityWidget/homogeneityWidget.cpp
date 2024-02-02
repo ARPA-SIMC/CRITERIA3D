@@ -120,7 +120,7 @@ Crit3DHomogeneityWidget::Crit3DHomogeneityWidget(Crit3DMeteoPointsDbHandler* met
 
     for (int i = 0; i<jointStationsMyMp.size(); i++)
     {
-        int indexMp;
+        int indexMp = -1;
         for (int j = 0; j<this->meteoPointsNearDistanceList.size(); j++)
         {
             if (this->meteoPointsNearDistanceList[j].id == jointStationsMyMp[i].toStdString())
@@ -129,11 +129,14 @@ Crit3DHomogeneityWidget::Crit3DHomogeneityWidget(Crit3DMeteoPointsDbHandler* met
                 break;
             }
         }
-        jointStationsSelected.addItem(QString::fromStdString(this->meteoPointsNearDistanceList[indexMp].id)+" "+QString::fromStdString(this->meteoPointsNearDistanceList[indexMp].name));
         // load all Data
         QDate firstDaily = meteoPointsDbHandler->getFirstDate(daily, jointStationsMyMp[i].toStdString()).date();
         QDate lastDaily = meteoPointsDbHandler->getLastDate(daily, jointStationsMyMp[i].toStdString()).date();
-        meteoPointsDbHandler->loadDailyData(getCrit3DDate(firstDaily), getCrit3DDate(lastDaily), &this->meteoPointsNearDistanceList[indexMp]);
+        if (indexMp != -1)
+        {
+            jointStationsSelected.addItem(QString::fromStdString(this->meteoPointsNearDistanceList[indexMp].id)+" "+QString::fromStdString(this->meteoPointsNearDistanceList[indexMp].name));
+            meteoPointsDbHandler->loadDailyData(getCrit3DDate(firstDaily), getCrit3DDate(lastDaily), &this->meteoPointsNearDistanceList[indexMp]);
+        }
     }
 
     for (int i = 1; i<this->meteoPointsNearDistanceList.size(); i++)
