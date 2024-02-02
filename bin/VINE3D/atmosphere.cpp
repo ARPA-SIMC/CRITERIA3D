@@ -236,7 +236,7 @@ bool vine3DInterpolationDemRadiation(Vine3DProject* myProject, const Crit3DTime&
             return false;
         }
 
-    if (radiation::computeRadiationGrid(&(myProject->radSettings), myProject->DEM, myProject->radiationMaps, myCrit3DTime))
+    if (radiation::computeRadiationDEM(&(myProject->radSettings), myProject->DEM, myProject->radiationMaps, myCrit3DTime))
         myResult = setRadiationScale(myProject->radiationMaps->globalRadiationMap->colorScale);
     else
         myProject->errorString = "Function vine3DInterpolationDemRadiation: error computing irradiance";

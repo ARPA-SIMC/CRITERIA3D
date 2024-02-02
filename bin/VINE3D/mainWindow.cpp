@@ -50,7 +50,7 @@ MainWindow::MainWindow(QWidget *parent) :
     showPointsGroup->setEnabled(false);
 
     // Set tiles source
-    this->setMapSource(WebTileSource::OPEN_STREET_MAP);
+    this->setMapSource(WebTileSource::GOOGLE_Terrain);
 
     // Set start size and position
     this->startCenter = new Position (myProject.gisSettings.startLocation.longitude, myProject.gisSettings.startLocation.latitude, 0.0);
@@ -652,7 +652,6 @@ void MainWindow::on_actionShow_boundary_triggered()
 }
 
 
-
 void MainWindow::on_actionVine3D_InitializeWaterBalance_triggered()
 {
     if (! myProject.setVine3DSoilIndexMap()) return;
@@ -660,9 +659,10 @@ void MainWindow::on_actionVine3D_InitializeWaterBalance_triggered()
     if (myProject.initializeWaterBalance3D())
     {
         myProject.outputWaterBalanceMaps = new Crit3DWaterBalanceMaps(myProject.DEM);
-        QMessageBox::information(nullptr, "", "Criteria3D initialized.");
+        QMessageBox::information(nullptr, "", "3D water fluxes initialized.");
     }
 }
+
 
 void MainWindow::on_actionShowPointsHide_triggered()
 {

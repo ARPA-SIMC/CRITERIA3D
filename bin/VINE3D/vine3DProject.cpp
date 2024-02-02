@@ -178,11 +178,15 @@ bool Vine3DProject::loadVine3DProject(QString myFileName)
         return false;
     soilMap.isLoaded = true;
 
+    processes.computeEvaporation = true;
+    processes.computeCrop = true;
+
     if (! initializeWaterBalance3D())
     {
         logError();
         return false;
     }
+
     outputWaterBalanceMaps = new Crit3DWaterBalanceMaps(DEM);
 
     if (! initializeGrapevine(this))
@@ -1471,11 +1475,11 @@ int Vine3DProject::getVine3DSoilIndex(long row, long col)
 bool Vine3DProject::setVine3DSoilIndexMap()
 {
     // check
-    if (!DEM.isLoaded || !modelCaseIndexMap.isLoaded || nrSoils == 0)
+    if (! DEM.isLoaded || ! modelCaseIndexMap.isLoaded || nrSoils == 0)
     {
-        if (!DEM.isLoaded)
+        if (! DEM.isLoaded)
             logError("setVine3DSoilIndexMap: missing Digital Elevation Model.");
-        else if (!modelCaseIndexMap.isLoaded)
+        else if (! modelCaseIndexMap.isLoaded)
             logError("setVine3DSoilIndexMap: missing field map.");
         else if (nrSoils == 0)
             logError("setVine3DSoilIndexMap: missing soil properties.");
@@ -1592,10 +1596,12 @@ bool Vine3DProject::computeVine3DWaterSinkSource()
                 int idField = getModelCaseIndex(row, col);
                 float laiGrass = modelCases[idField].maxLAIGrass;
                 float laiVine = statePlantMaps->leafAreaIndexMap->value[row][col];
-                float laiTot = laiVine + laiGrass;
+                double laiTot = double(laiVine + laiGrass);
 
-                double realEvap = computeEvaporation(row, col, double(laiTot));     // [mm]
-                flow = area * (realEvap / 1000.0);                                  // [m3/h]
+                int soilIndex = getSoilIndex(row, col);
+
+                double realEvap = assignEvaporation(row, col, laiTot, soilIndex);       // [mm]
+                flow = area * (realEvap / 1000.0);                                      // [m3/h]
                 totalEvaporation += flow;
             }
         }
