@@ -4991,7 +4991,7 @@ bool monthlyAggregateDataGrid(Crit3DMeteoGridDbHandler* meteoGridDbHandler, QDat
 
 int computeAnnualSeriesOnPointFromDaily(QString *myError, Crit3DMeteoPointsDbHandler* meteoPointsDbHandler, Crit3DMeteoGridDbHandler* meteoGridDbHandler,
                                          Crit3DMeteoPoint* meteoPointTemp, Crit3DClimate* clima, bool isMeteoGrid, bool isAnomaly, Crit3DMeteoSettings* meteoSettings,
-                                        std::vector<float> &outputValues, bool dataAlreadyLoaded)
+                                        std::vector<float> &outputValues, std::vector<int> &vectorYears, bool dataAlreadyLoaded)
 {
     int validYears = 0;
     if (clima->param1IsClimate())
@@ -5046,6 +5046,7 @@ int computeAnnualSeriesOnPointFromDaily(QString *myError, Crit3DMeteoPointsDbHan
             if ( elaborationOnPoint(myError, meteoPointsDbHandler, nullptr, meteoPointTemp, clima, isMeteoGrid, startDate, endDate, isAnomaly, meteoSettings, dataAlreadyLoaded))
             {
                 validYears = validYears + 1;
+                vectorYears.push_back(myYear);
                 if(isAnomaly)
                 {
                     outputValues.push_back(meteoPointTemp->anomaly);

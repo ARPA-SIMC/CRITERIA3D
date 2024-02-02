@@ -361,7 +361,7 @@ bool Crit1DCase::computeNumericalFluxes(const Crit3DDate &myDate, std::string &e
 }
 
 
-void Crit1DCase::saveWaterContent()
+void Crit1DCase::storeWaterContent()
 {
     prevWaterContent.clear();
     prevWaterContent.resize(soilLayers.size());
@@ -537,7 +537,7 @@ bool Crit1DCase::computeDailyModel(Crit3DDate &myDate, std::string &error)
 
     output.dailyIrrigation = 0;
     // Water fluxes (first computation)
-    saveWaterContent();
+    storeWaterContent();
     if (! computeWaterFluxes(myDate, error)) return false;
     // Irrigation
     double irrigation = checkIrrigationDemand(doy, prec, precTomorrow, output.dailyMaxTranspiration);
@@ -653,11 +653,11 @@ double Crit1DCase::getTotalWaterContent()
 
 
 /*!
- * \brief getWaterContent
+ * \brief getVolumetricWaterContent
  * \param computationDepth = computation soil depth  [cm]
- * \return volumetric water content at specific depth [-]
+ * \return volumetric water content (soil moisture) at specific depth [m3 m-3]
  */
-double Crit1DCase::getWaterContent(double computationDepth)
+double Crit1DCase::getVolumetricWaterContent(double computationDepth)
 {
     computationDepth /= 100;        // [cm] --> [m]
 
@@ -672,6 +672,34 @@ double Crit1DCase::getWaterContent(double computationDepth)
         if (computationDepth >= upperDepth && computationDepth <= lowerDepth)
         {
             return soilLayers[i].waterContent / (soilLayers[i].thickness * 1000);
+        }
+    }
+
+    return NODATA;
+}
+
+
+/*!
+ * \brief getDegreeOfSaturation
+ * \param computationDepth = computation soil depth  [cm]
+ * \return degree of saturation at specific depth [-]
+ */
+double Crit1DCase::getDegreeOfSaturation(double computationDepth)
+{
+    computationDepth /= 100;        // [cm] --> [m]
+    if (computationDepth <= 0 || computationDepth > mySoil.totalDepth)
+    {
+        return NODATA;
+    }
+
+    double upperDepth, lowerDepth;
+    for (unsigned int i = 1; i < soilLayers.size(); i++)
+    {
+        upperDepth = soilLayers[i].depth - soilLayers[i].thickness * 0.5;
+        lowerDepth = soilLayers[i].depth + soilLayers[i].thickness * 0.5;
+        if (computationDepth >= upperDepth && computationDepth <= lowerDepth)
+        {
+            return soilLayers[i].waterContent / soilLayers[i].SAT;
         }
     }
 
@@ -778,7 +806,7 @@ double Crit1DCase::getWaterDeficitSum(double computationDepth)
 
 /*!
  * \brief getWaterCapacity
- * \param computationDepth = computation soil depth  [cm]
+ * \param computationDepth = computation soil depth [cm]
  * \return sum of available water capacity (FC-WP) from zero to computationDepth (mm)
  */
 double Crit1DCase::getWaterCapacitySum(double computationDepth)

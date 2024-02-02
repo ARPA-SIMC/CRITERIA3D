@@ -623,8 +623,9 @@ void Crit3DPointStatisticsWidget::plot()
                 dataAlreadyLoaded = true;
             }
 
+            std::vector<int> vectorYears;
             int validYears = computeAnnualSeriesOnPointFromDaily(&myError, meteoPointsDbHandler, meteoGridDbHandler,
-                                                     &meteoPointTemp, &clima, isGrid, isAnomaly, meteoSettings, outputValues, dataAlreadyLoaded);
+                                                     &meteoPointTemp, &clima, isGrid, isAnomaly, meteoSettings, outputValues, vectorYears, dataAlreadyLoaded);
             formInfo.close();
             if (validYears < 3)
             {
@@ -636,7 +637,7 @@ void Crit3DPointStatisticsWidget::plot()
             int count = 0;
             int validData = 0;
             int yearsLength = lastYear - firstYear;
-            int nYearsToAdd;
+            int nYearsToAdd = 0;
             if (yearsLength > 20)
             {
                 for (int inc = 0; inc<=3; inc++)
@@ -820,8 +821,9 @@ void Crit3DPointStatisticsWidget::plot()
 
             FormInfo formInfo;
             formInfo.showInfo("compute annual series...");
+            std::vector<int> vectorYears;
             int validYears = computeAnnualSeriesOnPointFromDaily(&myError, meteoPointsDbHandler, meteoGridDbHandler,
-                                                     &meteoPointTemp, &clima, isGrid, isAnomaly, meteoSettings, outputValues, dataAlreadyLoaded);
+                                                     &meteoPointTemp, &clima, isGrid, isAnomaly, meteoSettings, outputValues, vectorYears, dataAlreadyLoaded);
             formInfo.close();
             if (validYears < 3)
             {
@@ -834,7 +836,7 @@ void Crit3DPointStatisticsWidget::plot()
             int validData = 0;
 
             int yearsLength = lastYear - firstYear;
-            int nYearsToAdd;
+            int nYearsToAdd = 0;
             if (yearsLength > 20)
             {
                 for (int inc = 0; inc<=3; inc++)
@@ -1622,9 +1624,9 @@ void Crit3DPointStatisticsWidget::showElaboration()
             }
             dataAlreadyLoaded = true;
         }
-
+        std::vector<int> vectorYears;
         int validYears = computeAnnualSeriesOnPointFromDaily(&myError, meteoPointsDbHandler, meteoGridDbHandler,
-                                                 &meteoPointTemp, &clima, isGrid, isAnomaly, meteoSettings, outputValues, dataAlreadyLoaded);
+                                                 &meteoPointTemp, &clima, isGrid, isAnomaly, meteoSettings, outputValues, vectorYears, dataAlreadyLoaded);
         if (validYears < 3)
         {
             //copy to clima original value for next elab
@@ -1637,7 +1639,7 @@ void Crit3DPointStatisticsWidget::showElaboration()
         float sum = 0;
         int count = 0;
         int yearsLength = lastYear - firstYear;
-        int nYearsToAdd;
+        int nYearsToAdd = 0;
         if (yearsLength > 20)
         {
             for (int inc = 0; inc<=3; inc++)

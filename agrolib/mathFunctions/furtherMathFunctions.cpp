@@ -28,7 +28,7 @@
 #include <stdlib.h>
 #include <time.h>
 #include <functional>
-
+#include <random>
 #include "commonConstants.h"
 #include "furtherMathFunctions.h"
 
@@ -1062,17 +1062,21 @@ namespace interpolation
         std::vector <double> R2Previous(nrMinima,NODATA);
         std::vector<double> ySim(nrData);
 
-        int iRandom = 0;
+        //int iRandom = 0;
         int counter = 0;
-        srand (unsigned(time(nullptr)));
-
+        //srand (unsigned(time(nullptr)));
+        std::random_device rd;
+        std::mt19937 gen(rd());
+        std::uniform_real_distribution<double> dis(0.0, 1.0);
+        //double randomNumber;
         do
         {
             for (i=0; i<nrPredictors; i++)
             {
                 for (j=0; j<nrParameters[i]; j++)
                 {
-                    parameters[i][j] = parametersMin[i][j] + ((double) rand() / (RAND_MAX))*(parametersMax[i][j]-parametersMin[i][j]);
+                    //parameters[i][j] = parametersMin[i][j] + ((double) rand() / (RAND_MAX))*(parametersMax[i][j]-parametersMin[i][j]);
+                    parameters[i][j] = parametersMin[i][j] + (dis(gen))*(parametersMax[i][j]-parametersMin[i][j]);
                 }
             }
             fittingMarquardt_nDimension(func,myFunc,parametersMin, parametersMax,
@@ -1087,24 +1091,35 @@ namespace interpolation
             else
                 R2 = computeWeighted_R2(y,ySim,weights);
             //printf("%d R2 = %f\n",iRandom,R2);
-            if (R2 > bestR2-EPSILON)
+            if (R2 > (bestR2-deltaR2))
             {
                 for (j=0;j<nrMinima-1;j++)
                 {
                     R2Previous[j] = R2Previous[j+1];
                 }
-                bestR2 = R2Previous[nrMinima-1] = R2;
-                for (i=0;i<nrPredictors;i++)
+                if (R2 > (bestR2))
+                {
+                    for (i=0;i<nrPredictors;i++)
+                    {
+                        for (j=0; j<nrParameters[i]; j++)
+                        {
+                            bestParameters[i][j] = parameters[i][j];
+                        }
+                    }
+                    bestR2 = R2;
+                }
+                R2Previous[nrMinima-1] = R2;
+                /*for (i=0;i<nrPredictors;i++)
                 {
                     for (j=0; j<nrParameters[i]; j++)
                     {
                         bestParameters[i][j] = parameters[i][j];
                     }
-                }
+                }*/
             }
-            iRandom++;
+            //iRandom++;
             counter++;
-        } while( (iRandom < nrTrials) && (R2 < (1 - EPSILON)) && (fabs(R2Previous[0]-R2Previous[nrMinima-1]) > deltaR2) );
+        } while( (counter < nrTrials) && (R2 < (1 - EPSILON)) && (fabs(R2Previous[0]-R2Previous[nrMinima-1]) > deltaR2) );
 
         for (i=0;i<nrPredictors;i++)
         {
@@ -1351,22 +1366,9 @@ namespace interpolation
     {
         double error;
         double norm = 0;
-        //std::vector<double> xPoint(xDim);
-        //xPoint.resize(xDim);
 
         for (int i = 0; i < y.size(); i++)
         {
-            //for (j=0; j<xDim; j++)
-            //{
-                //xPoint[j] = x[i][j];
-                /* questo ciclo for potrebbe essere evitato se
-                 * le dimensioni di x fossero invertite */
-            //}
-            //estimate = func(myFunc,x[i], parameters);
-            // da valutare se possiamo togliere questo controllo
-            //if (estimate == NODATA)
-                //return NODATA;
-
             error = y[i] - func(myFunc,x[i], parameters);
             norm += error * error;
         }
