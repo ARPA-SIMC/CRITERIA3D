@@ -369,7 +369,8 @@ void Crit3DHomogeneityWidget::plotAnnualSeries()
     QDate endDate(QDate(lastYear, 12, 31));
     int numberOfDays = meteoPointsNearDistanceList[0].obsDataD[0].date.daysTo(getCrit3DDate(endDate))+1;
     meteoPointTemp.initializeObsDataD(numberOfDays, meteoPointsNearDistanceList[0].obsDataD[0].date);
-    meteoPointTemp.initializeObsDataDFromMp(meteoPointsNearDistanceList[0].nrObsDataDaysD, meteoPointsNearDistanceList[0].obsDataD[0].date, meteoPointsNearDistanceList[0]);
+    meteoPointTemp.initializeObsDataDFromMp(numberOfDays, meteoPointsNearDistanceList[0].obsDataD[0].date, meteoPointsNearDistanceList[0]);
+
     if (idPointsJointed.size() != 1 && (lastDateCopyed < lastDate || yearsMissing))
     {
         // mancano dei dati, controllare joint stations
@@ -425,53 +426,6 @@ void Crit3DHomogeneityWidget::plotAnnualSeries()
         validYears = computeAnnualSeriesOnPointFromDaily(&myError, meteoPointsDbHandler, nullptr,
                                                              &meteoPointTemp, &clima, false, isAnomaly, meteoSettings, myAnnualSeries, vectorYears, dataAlreadyLoaded);
     }
-
-
-    /*
-    if (idPointsJointed.size() == 1 || lastDateCopyed >= lastDate)
-    {
-        // no joint station inside date interval
-        // meteoPointTemp should be init
-        meteoPointTemp.nrObsDataDaysD = 0;
-        dataAlreadyLoaded = false;
-    }
-    else
-    {
-        QDate endDate(QDate(lastYear, 12, 31));
-        int numberOfDays = meteoPointsNearDistanceList[0].obsDataD[0].date.daysTo(getCrit3DDate(endDate))+1;
-        meteoPointTemp.initializeObsDataD(numberOfDays, meteoPointsNearDistanceList[0].obsDataD[0].date);
-        meteoPointTemp.initializeObsDataDFromMp(meteoPointsNearDistanceList[0].nrObsDataDaysD, meteoPointsNearDistanceList[0].obsDataD[0].date, meteoPointsNearDistanceList[0]);
-        if (lastDateCopyed < lastDate)
-        {
-            for (int i = 1; i<idPointsJointed.size(); i++)
-            {
-                QDate lastDateNew = meteoPointsDbHandler->getLastDate(daily, idPointsJointed[i]).date();
-                if (lastDateNew > lastDateCopyed)
-                {
-                    int indexMp;
-                    for (int j = 0; j<meteoPointsNearDistanceList.size(); j++)
-                    {
-                        if (meteoPointsNearDistanceList[j].id == idPointsJointed[i])
-                        {
-                            indexMp = j;
-                            break;
-                        }
-                    }
-                    for (QDate myDate=lastDateCopyed.addDays(1); myDate<=lastDateNew; myDate=myDate.addDays(1))
-                    {
-                        setMpValues(meteoPointsNearDistanceList[indexMp], &meteoPointTemp, myDate, myVar, meteoSettings);
-                    }
-                }
-                lastDateCopyed = lastDateNew;
-            }
-        }
-        dataAlreadyLoaded = true;
-    }
-
-    std::vector<int> vectorYears;
-    int validYears = computeAnnualSeriesOnPointFromDaily(&myError, meteoPointsDbHandler, nullptr,
-                                             &meteoPointTemp, &clima, false, isAnomaly, meteoSettings, myAnnualSeries, vectorYears, dataAlreadyLoaded);
-*/
     formInfo.close();
 
     if (validYears > 0)
