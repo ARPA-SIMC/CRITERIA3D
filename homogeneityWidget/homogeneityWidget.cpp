@@ -366,10 +366,10 @@ void Crit3DHomogeneityWidget::plotAnnualSeries()
         yearsMissing = true;
     }
 
-    QDate endDate(QDate(lastYear, 12, 31));
-    int numberOfDays = meteoPointsNearDistanceList[0].obsDataD[0].date.daysTo(getCrit3DDate(endDate))+1;
+    int numberOfDays = meteoPointsNearDistanceList[0].obsDataD[0].date.daysTo(getCrit3DDate(lastDate))+1;
     meteoPointTemp.initializeObsDataD(numberOfDays, meteoPointsNearDistanceList[0].obsDataD[0].date);
     meteoPointTemp.initializeObsDataDFromMp(numberOfDays, meteoPointsNearDistanceList[0].obsDataD[0].date, meteoPointsNearDistanceList[0]);
+    bool addedDataFromJoint = false;
 
     if (idPointsJointed.size() != 1 && (lastDateCopyed < lastDate || yearsMissing))
     {
@@ -389,11 +389,48 @@ void Crit3DHomogeneityWidget::plotAnnualSeries()
                     n = n + 1;
                 }
             }
-            for (int y = 0; y < vectorMissing.size(); y++)
+            int indexMp;
+            for (int i = 1; i<idPointsJointed.size(); i++)
             {
-                for (int i = 1; i<idPointsJointed.size(); i++)
+                for (int j = 0; j<meteoPointsNearDistanceList.size(); j++)
                 {
-                    // TO DO
+                    if (meteoPointsNearDistanceList[j].id == idPointsJointed[i])
+                    {
+                        indexMp = j;
+                        break;
+                    }
+                }
+                Crit3DMeteoPoint meteoPointTempJoint;
+                meteoPointTempJoint.id = meteoPointsNearDistanceList[indexMp].id;
+                meteoPointTempJoint.latitude = meteoPointsNearDistanceList[indexMp].latitude;
+                meteoPointTempJoint.elaboration = meteoPointsNearDistanceList[indexMp].elaboration;
+                meteoPointTempJoint.nrObsDataDaysD = 0;
+                int validYearsJoint = 0;
+                std::vector<int> vectorYearsJoint;
+                std::vector<float> annualSeriesJoint;
+                clima.setYearStart(firstYear);
+                clima.setYearEnd(lastYear);
+                validYearsJoint = computeAnnualSeriesOnPointFromDaily(&myError, meteoPointsDbHandler, nullptr,
+                                                                 &meteoPointTempJoint, &clima, false, isAnomaly, meteoSettings, annualSeriesJoint, vectorYearsJoint, false);
+                for (int k=0; k<vectorYearsJoint.size(); k++)
+                {
+                    if(std::find(vectorMissing.begin(), vectorMissing.end(), vectorYearsJoint[k]) != vectorMissing.end())
+                    {
+                        // vectorMissing contains vectorYearsJoint[k]
+                        QDate startYear(vectorYearsJoint[k],1,1);
+                        QDate endYear(vectorYearsJoint[k],12,31);
+                        // copy values
+                        for (QDate myDate=startYear; myDate<=endYear; myDate=myDate.addDays(1))
+                        {
+                            setMpValues(meteoPointsNearDistanceList[indexMp], &meteoPointTemp, myDate, myVar, meteoSettings);
+                        }
+                        addedDataFromJoint = true;
+                        vectorMissing.erase(remove(vectorMissing.begin(), vectorMissing.end(), vectorYearsJoint[k]), vectorMissing.end());
+                    }
+                }
+                if (vectorMissing.empty())
+                {
+                    break;
                 }
             }
         }
@@ -417,14 +454,21 @@ void Crit3DHomogeneityWidget::plotAnnualSeries()
                     {
                         setMpValues(meteoPointsNearDistanceList[indexMp], &meteoPointTemp, myDate, myVar, meteoSettings);
                     }
+                    addedDataFromJoint = true;
                 }
                 lastDateCopyed = lastDateNew;
             }
         }
+    }
+    if(addedDataFromJoint)
+    {
         dataAlreadyLoaded = true;
         vectorYears.clear();
+        clima.setYearStart(firstYear);
+        clima.setYearEnd(lastYear);
+        myAnnualSeries.clear();
         validYears = computeAnnualSeriesOnPointFromDaily(&myError, meteoPointsDbHandler, nullptr,
-                                                             &meteoPointTemp, &clima, false, isAnomaly, meteoSettings, myAnnualSeries, vectorYears, dataAlreadyLoaded);
+                                                         &meteoPointTemp, &clima, false, isAnomaly, meteoSettings, myAnnualSeries, vectorYears, dataAlreadyLoaded);
     }
     formInfo.close();
 
