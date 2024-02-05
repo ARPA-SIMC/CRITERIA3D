@@ -651,7 +651,7 @@ int CriteriaOutputProject::createMaps()
             }
 
             // input field (remove whitespace)
-            inputFieldName.push_back(items[0].toUpper().trimmed());
+            inputFieldName.push_back(items[0].trimmed());
             if ( inputFieldName.last().isEmpty() )
             {
                 projectError = "missing shape input field in line:\n" + line;
@@ -659,7 +659,7 @@ int CriteriaOutputProject::createMaps()
             }
 
             // output file (remove whitespace)
-            outputFileName.push_back(items[1].toUpper().trimmed());
+            outputFileName.push_back(items[1].trimmed());
             if ( outputFileName.last().isEmpty() )
             {
                 projectError = "missing output map name in line:\n" + line;
@@ -669,7 +669,7 @@ int CriteriaOutputProject::createMaps()
             if (! mapPalettePath.isEmpty())
             {
                 // palette file name (remove whitespace)
-                paletteFileName.push_back(items[2].toUpper().trimmed());
+                paletteFileName.push_back(items[2].trimmed());
                 if ( paletteFileName.last().isEmpty() )
                 {
                     projectError = "missing palette file name in line:\n" + line;
@@ -679,32 +679,39 @@ int CriteriaOutputProject::createMaps()
         }
     }
 
-    int rasterOK = 0;
-
+    // main cycle
+    int nrRasterOK= 0;
     for (int i=0; i < inputFieldName.size(); i++)
     {
-        QString mapName = outputShapeFilePath + "/" + outputFileName[i]+ "." + mapFormat;
+        QString mapFileName = outputShapeFilePath + "/" + outputFileName[i]+ "." + mapFormat;
 
-        QString paletteName = "";
+        QString paletteCompleteFileName = "";
         if (! mapPalettePath.isEmpty())
         {
-            paletteName = mapPalettePath + "/" + paletteFileName[i];
+            paletteCompleteFileName = mapPalettePath + "/" + paletteFileName[i];
+            if (! QFile(paletteCompleteFileName).exists())
+            {
+                logger.writeError("Missing palette file: " + paletteCompleteFileName);
+                // skip this map
+                continue;
+            }
         }
 
-        logger.writeInfo("Write map: " + mapName);
-        if (shapeToRaster(outputShapeFileName, inputFieldName[i], mapCellSize, mapProjection, mapName, paletteName, projectError))
+        logger.writeInfo("Write map: " + mapFileName);
+        if (shapeToRaster(outputShapeFileName, inputFieldName[i], mapCellSize, mapProjection,
+                          mapFileName, paletteCompleteFileName, projectError))
         {
-            rasterOK = rasterOK + 1;
+            nrRasterOK++;
         }
     }
 
-    if (rasterOK == inputFieldName.size())
+    if (nrRasterOK == inputFieldName.size())
     {
         return CRIT1D_OK;
     }
     else
     {
-        int nRasterError = inputFieldName.size() - rasterOK;
+        int nRasterError = inputFieldName.size() - nrRasterOK;
         projectError = QString::number(nRasterError) + " invalid raster - " + projectError;
         return ERROR_MAPS;
     }
