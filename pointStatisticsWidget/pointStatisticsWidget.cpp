@@ -560,8 +560,10 @@ void Crit3DPointStatisticsWidget::plot()
             }
             clima.setYearStart(firstYear);
             clima.setYearEnd(lastYear);
-            clima.setGenericPeriodDateStart(QDate(firstYear, dayFrom.date().month(), dayFrom.date().day()));
-            clima.setGenericPeriodDateEnd(QDate(lastYear, dayTo.date().month(), dayTo.date().day()));
+            QDate firstDate(firstYear, dayFrom.date().month(), dayFrom.date().day());
+            QDate lastDate(lastYear, dayTo.date().month(), dayTo.date().day());
+            clima.setGenericPeriodDateStart(firstDate);
+            clima.setGenericPeriodDateEnd(lastDate);
             if (dayFrom.date()> dayTo.date())
             {
                 clima.setNYears(1);
@@ -582,29 +584,47 @@ void Crit3DPointStatisticsWidget::plot()
             meteoPointTemp.id = meteoPoints[0].id;
             meteoPointTemp.latitude = meteoPoints[0].latitude;
             meteoPointTemp.elaboration = meteoPoints[0].elaboration;
-            bool dataAlreadyLoaded;
-            if (idPoints.size() == 1)
+            QDate lastDateCopyed = meteoPointsDbHandler->getLastDate(daily, meteoPoints[0].id).date();
+
+            meteoPointTemp.nrObsDataDaysD = 0;
+            meteoPointTemp.nrObsDataDaysH = 0;
+            bool dataAlreadyLoaded = false;
+            int validYears = 0;
+            std::vector<int> vectorYears;
+            validYears = computeAnnualSeriesOnPointFromDaily(&myError, meteoPointsDbHandler, meteoGridDbHandler,
+                                                                 &meteoPointTemp, &clima, isGrid, isAnomaly, meteoSettings, outputValues, vectorYears, dataAlreadyLoaded);
+            bool yearsMissing = false;
+            if (vectorYears[vectorYears.size()-1] - vectorYears[0] + 1 != vectorYears.size()-1)
             {
-                // meteoPointTemp should be init
-                meteoPointTemp.nrObsDataDaysH = 0;
-                meteoPointTemp.nrObsDataDaysD = 0;
-                dataAlreadyLoaded = false;
+                yearsMissing = true;
             }
-            else
+            int numberOfDays = meteoPoints[0].obsDataD[0].date.daysTo(getCrit3DDate(lastDate))+1;
+            meteoPointTemp.initializeObsDataD(numberOfDays, meteoPoints[0].obsDataD[0].date);
+            meteoPointTemp.initializeObsDataH(1, numberOfDays, meteoPoints[0].getMeteoPointHourlyValuesDate(0));
+            meteoPointTemp.initializeObsDataDFromMp(meteoPoints[0].nrObsDataDaysD, meteoPoints[0].obsDataD[0].date, meteoPoints[0]);
+            meteoPointTemp.initializeObsDataHFromMp(1,meteoPoints[0].nrObsDataDaysH, meteoPoints[0].getMeteoPointHourlyValuesDate(0), meteoPoints[0]);
+            bool addedDataFromJoint = false;
+
+            if (idPoints.size() != 1 && (lastDateCopyed < lastDate || yearsMissing))
             {
-                QDate endDate(QDate(lastYear, dayTo.date().month(), dayTo.date().day()));
-                int numberOfDays = meteoPoints[0].obsDataD[0].date.daysTo(getCrit3DDate(endDate))+1;
-                meteoPointTemp.initializeObsDataD(numberOfDays, meteoPoints[0].obsDataD[0].date);
-                meteoPointTemp.initializeObsDataH(1, numberOfDays, meteoPoints[0].getMeteoPointHourlyValuesDate(0));
-                meteoPointTemp.initializeObsDataDFromMp(meteoPoints[0].nrObsDataDaysD, meteoPoints[0].obsDataD[0].date, meteoPoints[0]);
-                meteoPointTemp.initializeObsDataHFromMp(1,meteoPoints[0].nrObsDataDaysH, meteoPoints[0].getMeteoPointHourlyValuesDate(0), meteoPoints[0]);
-                QDate lastDateCopyed = meteoPointsDbHandler->getLastDate(daily, meteoPoints[0].id).date();
-                for (int i = 1; i<idPoints.size(); i++)
+                if (yearsMissing)
                 {
-                    QDate lastDateNew = meteoPointsDbHandler->getLastDate(daily, idPoints[i]).date();
-                    if (lastDateNew > lastDateCopyed)
+                    std::vector<int> vectorMissing;
+                    int posMissing, n;
+                    for (int y = 0; y<vectorYears.size()-1; y++)
                     {
-                        int indexMp;
+                        posMissing = vectorYears[y+1]-vectorYears[y]-1;
+                        n = 1;
+                        while (posMissing != 0)
+                        {
+                            vectorMissing.push_back(vectorYears[y]+n);
+                            posMissing = posMissing - 1;
+                            n = n + 1;
+                        }
+                    }
+                    int indexMp;
+                    for (int i = 1; i<idPoints.size(); i++)
+                    {
                         for (int j = 0; j<meteoPoints.size(); j++)
                         {
                             if (meteoPoints[j].id == idPoints[i])
@@ -613,19 +633,76 @@ void Crit3DPointStatisticsWidget::plot()
                                 break;
                             }
                         }
-                        for (QDate myDate=lastDateCopyed.addDays(1); myDate<=lastDateNew; myDate=myDate.addDays(1))
+                        Crit3DMeteoPoint meteoPointTempJoint;
+                        meteoPointTempJoint.id = meteoPoints[indexMp].id;
+                        meteoPointTempJoint.latitude = meteoPoints[indexMp].latitude;
+                        meteoPointTempJoint.elaboration = meteoPoints[indexMp].elaboration;
+                        meteoPointTempJoint.nrObsDataDaysD = 0;
+                        int validYearsJoint = 0;
+                        std::vector<int> vectorYearsJoint;
+                        std::vector<float> annualSeriesJoint;
+                        clima.setYearStart(firstYear);
+                        clima.setYearEnd(lastYear);
+                        validYearsJoint = computeAnnualSeriesOnPointFromDaily(&myError, meteoPointsDbHandler, nullptr,
+                                                                              &meteoPointTempJoint, &clima, false, isAnomaly, meteoSettings, annualSeriesJoint, vectorYearsJoint, false);
+                        for (int k=0; k<vectorYearsJoint.size(); k++)
                         {
-                            setMpValues(meteoPoints[indexMp], &meteoPointTemp, myDate);
+                            if(std::find(vectorMissing.begin(), vectorMissing.end(), vectorYearsJoint[k]) != vectorMissing.end())
+                            {
+                                // vectorMissing contains vectorYearsJoint[k]
+                                QDate startYear(vectorYearsJoint[k],1,1);
+                                QDate endYear(vectorYearsJoint[k],12,31);
+                                // copy values
+                                for (QDate myDate=startYear; myDate<=endYear; myDate=myDate.addDays(1))
+                                {
+                                    setMpValues(meteoPoints[indexMp], &meteoPointTemp, myDate);
+                                }
+                                addedDataFromJoint = true;
+                                vectorMissing.erase(remove(vectorMissing.begin(), vectorMissing.end(), vectorYearsJoint[k]), vectorMissing.end());
+                            }
+                        }
+                        if (vectorMissing.empty())
+                        {
+                            break;
                         }
                     }
-                    lastDateCopyed = lastDateNew;
                 }
+                if (lastDateCopyed < lastDate)
+                {
+                    for (int i = 1; i<idPoints.size(); i++)
+                    {
+                        QDate lastDateNew = meteoPointsDbHandler->getLastDate(daily, idPoints[i]).date();
+                        if (lastDateNew > lastDateCopyed)
+                        {
+                            int indexMp;
+                            for (int j = 0; j<meteoPoints.size(); j++)
+                            {
+                                if (meteoPoints[j].id == idPoints[i])
+                                {
+                                    indexMp = j;
+                                    break;
+                                }
+                            }
+                            for (QDate myDate=lastDateCopyed.addDays(1); myDate<=lastDateNew; myDate=myDate.addDays(1))
+                            {
+                                setMpValues(meteoPoints[indexMp], &meteoPointTemp, myDate);
+                            }
+                            addedDataFromJoint = true;
+                        }
+                        lastDateCopyed = lastDateNew;
+                    }
+                }
+            }
+            if(addedDataFromJoint)
+            {
                 dataAlreadyLoaded = true;
+                vectorYears.clear();
+                clima.setYearStart(firstYear);
+                clima.setYearEnd(lastYear);
+                validYears = computeAnnualSeriesOnPointFromDaily(&myError, meteoPointsDbHandler, meteoGridDbHandler,
+                                                                 &meteoPointTemp, &clima, isGrid, isAnomaly, meteoSettings, outputValues, vectorYears, dataAlreadyLoaded);
             }
 
-            std::vector<int> vectorYears;
-            int validYears = computeAnnualSeriesOnPointFromDaily(&myError, meteoPointsDbHandler, meteoGridDbHandler,
-                                                     &meteoPointTemp, &clima, isGrid, isAnomaly, meteoSettings, outputValues, vectorYears, dataAlreadyLoaded);
             formInfo.close();
             if (validYears < 3)
             {
