@@ -807,8 +807,10 @@ void Crit3DPointStatisticsWidget::plot()
             }
             clima.setYearStart(firstYear);
             clima.setYearEnd(lastYear);
-            clima.setGenericPeriodDateStart(QDate(firstYear, dayFrom.date().month(), dayFrom.date().day()));
-            clima.setGenericPeriodDateEnd(QDate(lastYear, dayTo.date().month(), dayTo.date().day()));
+            QDate firstDate(firstYear, dayFrom.date().month(), dayFrom.date().day());
+            QDate lastDate(lastYear, dayTo.date().month(), dayTo.date().day());
+            clima.setGenericPeriodDateStart(firstDate);
+            clima.setGenericPeriodDateEnd(lastDate);
             if (dayFrom.date()> dayTo.date())
             {
                 clima.setNYears(1);
@@ -821,9 +823,6 @@ void Crit3DPointStatisticsWidget::plot()
             std::vector<int> years;
             QString myError;
             bool isAnomaly = false;
-
-            QDate startDate(clima.yearStart(), clima.genericPeriodDateStart().month(), clima.genericPeriodDateStart().day());
-            QDate endDate(clima.yearEnd(), clima.genericPeriodDateEnd().month(), clima.genericPeriodDateEnd().day()); 
             bool dataAlreadyLoaded;
 
             // copy data to MPTemp
@@ -840,7 +839,7 @@ void Crit3DPointStatisticsWidget::plot()
             }
             else
             {
-                int numberOfDays = meteoPoints[0].obsDataD[0].date.daysTo(getCrit3DDate(endDate))+1;
+                int numberOfDays = meteoPoints[0].obsDataD[0].date.daysTo(getCrit3DDate(lastDate))+1;
                 meteoPointTemp.initializeObsDataD(numberOfDays, meteoPoints[0].obsDataD[0].date);
                 meteoPointTemp.initializeObsDataH(1, numberOfDays, meteoPoints[0].getMeteoPointHourlyValuesDate(0));
                 meteoPointTemp.initializeObsDataDFromMp(meteoPoints[0].nrObsDataDaysD, meteoPoints[0].obsDataD[0].date, meteoPoints[0]);
@@ -873,7 +872,7 @@ void Crit3DPointStatisticsWidget::plot()
 
             if (isGrid)
             {
-                if (!elaborationOnPoint(&myError, nullptr, meteoGridDbHandler, &meteoPointTemp, &clima, isGrid, startDate, endDate, isAnomaly, meteoSettings, dataAlreadyLoaded))
+                if (!elaborationOnPoint(&myError, nullptr, meteoGridDbHandler, &meteoPointTemp, &clima, isGrid, firstDate, lastDate, isAnomaly, meteoSettings, dataAlreadyLoaded))
                 {
                     QMessageBox::information(nullptr, "Error", "Data not available in the reference period");
                     return;
@@ -881,7 +880,7 @@ void Crit3DPointStatisticsWidget::plot()
             }
             else
             {
-                if (!elaborationOnPoint(&myError, meteoPointsDbHandler, nullptr, &meteoPointTemp, &clima, isGrid, startDate, endDate, isAnomaly, meteoSettings, dataAlreadyLoaded))
+                if (!elaborationOnPoint(&myError, meteoPointsDbHandler, nullptr, &meteoPointTemp, &clima, isGrid, firstDate, lastDate, isAnomaly, meteoSettings, dataAlreadyLoaded))
                 {
                     QMessageBox::information(nullptr, "Error", "Data not available in the reference period");
                     return;
