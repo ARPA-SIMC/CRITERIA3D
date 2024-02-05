@@ -697,6 +697,7 @@ void Crit3DPointStatisticsWidget::plot()
             {
                 dataAlreadyLoaded = true;
                 vectorYears.clear();
+                outputValues.clear();
                 clima.setYearStart(firstYear);
                 clima.setYearEnd(lastYear);
                 validYears = computeAnnualSeriesOnPointFromDaily(&myError, meteoPointsDbHandler, meteoGridDbHandler,
