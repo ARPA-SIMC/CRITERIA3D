@@ -581,15 +581,19 @@ void Crit3DPointStatisticsWidget::plot()
             formInfo.showInfo("compute annual series...");
             // copy data to MPTemp
             Crit3DMeteoPoint meteoPointTemp;
-            meteoPointTemp = meteoPoints[0];
-
             // copy all data to meteoPointTemp from joint if there are holes
             if (idPoints.size() != 1)
             {
+                int numberOfDays = firstDate.daysTo(lastDate)+1;
+                meteoPointTemp.initializeObsDataD(numberOfDays, getCrit3DDate(firstDate));
                 for (QDate myDate = firstDate; myDate <= lastDate; myDate = myDate.addDays(1) )
                 {
                     checkValueAndMerge(meteoPoints[0], &meteoPointTemp, myDate);
                 }
+            }
+            else
+            {
+                meteoPointTemp = meteoPoints[0];
             }
 
             bool dataAlreadyLoaded = true;
@@ -722,15 +726,19 @@ void Crit3DPointStatisticsWidget::plot()
 
             // copy data to MPTemp
             Crit3DMeteoPoint meteoPointTemp;
-            meteoPointTemp = meteoPoints[0];
-
             // copy all data to meteoPointTemp from joint if there are holes
             if (idPoints.size() != 1)
             {
+                int numberOfDays = firstDate.daysTo(lastDate)+1;
+                meteoPointTemp.initializeObsDataD(numberOfDays, getCrit3DDate(firstDate));
                 for (QDate myDate = firstDate; myDate <= lastDate; myDate = myDate.addDays(1) )
                 {
                     checkValueAndMerge(meteoPoints[0], &meteoPointTemp, myDate);
                 }
+            }
+            else
+            {
+                meteoPointTemp = meteoPoints[0];
             }
 
             if (isGrid)
@@ -880,15 +888,19 @@ void Crit3DPointStatisticsWidget::plot()
             }
             // copy data to MPTemp
             Crit3DMeteoPoint meteoPointTemp;
-            meteoPointTemp = meteoPoints[0];
-
             // copy all data to meteoPointTemp from joint if there are holes
             if (idPoints.size() != 1)
             {
+                int numberOfDays = firstDate.daysTo(lastDate)+1;
+                meteoPointTemp.initializeObsDataD(numberOfDays, getCrit3DDate(firstDate));
                 for (QDate myDate = firstDate; myDate <= lastDate; myDate = myDate.addDays(1) )
                 {
                     checkValueAndMerge(meteoPoints[0], &meteoPointTemp, myDate);
                 }
+            }
+            else
+            {
+                meteoPointTemp = meteoPoints[0];
             }
             computeClimateOnDailyData(meteoPointTemp, myVar, firstDate, lastDate,
                                       smooth, &dataPresence, quality, climateParameters, meteoSettings, dailyClima, decadalClima, monthlyClima);
@@ -1495,15 +1507,19 @@ void Crit3DPointStatisticsWidget::showElaboration()
         bool isAnomaly = false;
         // copy data to MPTemp
         Crit3DMeteoPoint meteoPointTemp;
-        meteoPointTemp = meteoPoints[0];
-
         // copy all data to meteoPointTemp from joint if there are holes
         if (idPoints.size() != 1)
         {
+            int numberOfDays = firstDate.daysTo(lastDate)+1;
+            meteoPointTemp.initializeObsDataD(numberOfDays, getCrit3DDate(firstDate));
             for (QDate myDate = firstDate; myDate <= lastDate; myDate = myDate.addDays(1) )
             {
                 checkValueAndMerge(meteoPoints[0], &meteoPointTemp, myDate);
             }
+        }
+        else
+        {
+            meteoPointTemp = meteoPoints[0];
         }
         bool dataAlreadyLoaded = true;
         std::vector<int> vectorYears;
