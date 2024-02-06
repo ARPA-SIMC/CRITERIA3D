@@ -345,13 +345,8 @@ void Crit3DHomogeneityWidget::plotAnnualSeries()
     // copy data to MPTemp
     Crit3DMeteoPoint meteoPointTemp;
     meteoPointTemp = meteoPointsNearDistanceList[0];
-    /*
-    meteoPointTemp.id = meteoPointsNearDistanceList[0].id;
-    meteoPointTemp.latitude = meteoPointsNearDistanceList[0].latitude;
-    meteoPointTemp.elaboration = meteoPointsNearDistanceList[0].elaboration;
-*/
 
-    // copy all data to meteoPointTemp
+    // copy all data to meteoPointTemp from joint if there are holes
     if (idPointsJointed.size() != 1)
     {
         for (QDate myDate = firstDate; myDate <= lastDate; myDate = myDate.addDays(1) )
