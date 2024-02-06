@@ -517,7 +517,7 @@ namespace statistics
         {
             X[i]= (double*)calloc(nrPredictors+1, sizeof(double));
         }
-        printf("transposed matrix\n");
+
         for (int j=0;j<nrPredictors+1;j++)
         {
             for (int i=0;i<nrItems;i++)
