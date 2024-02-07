@@ -916,6 +916,9 @@ void Crit3DPointStatisticsWidget::plot()
                 dailyClima.push_back(0);
             }
             // copy data to MPTemp
+            FormInfo formInfo;
+            formInfo.showInfo("compute climate...");
+
             Crit3DMeteoPoint meteoPointTemp;
             // copy all data to meteoPointTemp from joint if there are holes
             if (idPoints.size() != 1)
@@ -956,6 +959,7 @@ void Crit3DPointStatisticsWidget::plot()
                     monthlyPointList.append(QPointF(day,monthlyClima[month]));
                 }
             }
+            formInfo.close();
             // draw
             chartView->drawClima(dailyPointList, decadalPointList, monthlyPointList);
         }
@@ -1009,6 +1013,8 @@ void Crit3DPointStatisticsWidget::plot()
                 dateEndPeriod.setDate(dateStartPeriod.year()+1, dateEndPeriod.month(), dateEndPeriod.day());
             }
 
+            FormInfo formInfo;
+            formInfo.showInfo("compute...");
             // copy data to MPTemp
             Crit3DMeteoPoint meteoPointTemp;
             // copy all data to meteoPointTemp from joint if there are holes
@@ -1079,6 +1085,7 @@ void Crit3DPointStatisticsWidget::plot()
             }
             if (myMinValue == NODATA || myMaxValue == NODATA)
             {
+                formInfo.close();
                 return; // no data
             }
             int minValueInt = myMinValue;
@@ -1135,6 +1142,7 @@ void Crit3DPointStatisticsWidget::plot()
                 }
                 if (!generalizedGammaFitting(series, nrValues, &beta, &alpha,  &pzero))
                 {
+                    formInfo.close();
                     return;
                 }
             }
@@ -1196,6 +1204,7 @@ void Crit3DPointStatisticsWidget::plot()
                             }
                             else
                             {
+                                formInfo.close();
                                 QMessageBox::information(nullptr, "Error", "Error in gamma distribution");
                                 return;
                             }
@@ -1212,6 +1221,7 @@ void Crit3DPointStatisticsWidget::plot()
             {
                 bucket[i] = bucket[i]/visualizedNrValues;
             }
+            formInfo.close();
             chartView->drawDistribution(bucket, lineValues, valMinValue, valMaxValue, classWidthValue);
         }
     }
@@ -1239,6 +1249,9 @@ void Crit3DPointStatisticsWidget::plot()
             QMessageBox::information(nullptr, "Error", "Wrong class Width value");
             return;
         }
+        FormInfo formInfo;
+        formInfo.showInfo("compute...");
+
         float myMinValue = NODATA;
         float myMaxValue = NODATA;
         bool isFirstData = true;
@@ -1348,6 +1361,7 @@ void Crit3DPointStatisticsWidget::plot()
         }
         if (myMinValue == NODATA || myMaxValue == NODATA)
         {
+            formInfo.close();
             return; // no data
         }
         int minValueInt = myMinValue;
@@ -1403,6 +1417,7 @@ void Crit3DPointStatisticsWidget::plot()
             }
             if (!generalizedGammaFitting(series, nrValues, &beta, &alpha,  &pzero))
             {
+                formInfo.close();
                 return;
             }
         }
@@ -1466,6 +1481,7 @@ void Crit3DPointStatisticsWidget::plot()
                         }
                         else
                         {
+                            formInfo.close();
                             QMessageBox::information(nullptr, "Error", "Error in gamma distribution");
                             return;
                         }
@@ -1482,6 +1498,7 @@ void Crit3DPointStatisticsWidget::plot()
         {
             bucket[i] = bucket[i]/visualizedNrValues;
         }
+        formInfo.close();
         chartView->drawDistribution(bucket, lineValues, valMinValue, valMaxValue, classWidthValue);
     }
 }
@@ -1519,6 +1536,8 @@ void Crit3DPointStatisticsWidget::showElaboration()
         std::vector<int> years;
         QString myError;
         bool isAnomaly = false;
+        FormInfo formInfo;
+        formInfo.showInfo("compute...");
         // copy data to MPTemp
         Crit3DMeteoPoint meteoPointTemp;
         // copy all data to meteoPointTemp from joint if there are holes
@@ -1544,6 +1563,7 @@ void Crit3DPointStatisticsWidget::showElaboration()
             //copy to clima original value for next elab
             clima.setYearStart(firstYear);
             clima.setYearEnd(lastYear);
+            formInfo.close();
             QMessageBox::information(nullptr, "Error", "Number of valid years < 3");
             return;
         }
@@ -1588,6 +1608,7 @@ void Crit3DPointStatisticsWidget::showElaboration()
             }
             count = count + 1;
         }
+        formInfo.close();
         // draw
         chartView->drawTrend(years, outputValues);
 
@@ -1641,21 +1662,15 @@ void Crit3DPointStatisticsWidget::updatePlotByVal()
 void Crit3DPointStatisticsWidget::updatePlot()
 {
     // does not compute valMax and valMin
-    FormInfo formInfo;
-    formInfo.showInfo("Update plot...");
     plot();
-    formInfo.close();
 }
 
 void Crit3DPointStatisticsWidget::computePlot()
 {
     // compute valMax and valMin
-    FormInfo formInfo;
-    formInfo.showInfo("Compute plot...");
     valMax.clear();
     valMin.clear();
     plot();
-    formInfo.close();
 }
 
 void Crit3DPointStatisticsWidget::on_actionChangeLeftAxis()
