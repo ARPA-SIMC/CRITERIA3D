@@ -49,6 +49,28 @@ Crit3DPointStatisticsWidget::Crit3DPointStatisticsWidget(bool isGrid, Crit3DMete
     this->setAttribute(Qt::WA_DeleteOnClose);
 
     idPoints << meteoPoints[0].id;
+    QList<QString> jointStationsMyMp = meteoPointsDbHandler->getJointStations(QString::fromStdString(meteoPoints[0].id));
+    for (int j = 0; j<jointStationsMyMp.size(); j++)
+    {
+        idPoints << jointStationsMyMp[j].toStdString();
+        // load all Data
+
+        QDate firstDaily = meteoPointsDbHandler->getFirstDate(daily, jointStationsMyMp[j].toStdString()).date();
+        QDate lastDaily = meteoPointsDbHandler->getLastDate(daily, jointStationsMyMp[j].toStdString()).date();
+
+        QDateTime firstHourly = meteoPointsDbHandler->getFirstDate(hourly, jointStationsMyMp[j].toStdString());
+        QDateTime lastHourly = meteoPointsDbHandler->getLastDate(hourly, jointStationsMyMp[j].toStdString());
+        for (int n = 0; n<meteoPoints.size(); n++)
+        {
+            if (meteoPoints[n].id == jointStationsMyMp[j].toStdString())
+            {
+                jointStationsSelected.addItem(QString::fromStdString(meteoPoints[n].id)+" "+QString::fromStdString(meteoPoints[n].name));
+                meteoPointsDbHandler->loadDailyData(getCrit3DDate(firstDaily), getCrit3DDate(lastDaily), &(this->meteoPoints[n]));
+                meteoPointsDbHandler->loadHourlyData(getCrit3DDate(firstHourly.date()), getCrit3DDate(lastHourly.date()), &(this->meteoPoints[n]));
+                break;
+            }
+        }
+    }
     // layout
     QVBoxLayout *mainLayout = new QVBoxLayout();
     QHBoxLayout *upperLayout = new QHBoxLayout();
@@ -199,7 +221,14 @@ Crit3DPointStatisticsWidget::Crit3DPointStatisticsWidget(bool isGrid, Crit3DMete
     deleteStation.setMaximumWidth(120);
     saveToDb.setText("Save to DB");
     saveToDb.setMaximumWidth(120);
-    deleteStation.setEnabled(false);
+    if (jointStationsMyMp.isEmpty())
+    {
+        deleteStation.setEnabled(false);
+    }
+    else
+    {
+        deleteStation.setEnabled(true);
+    }
     saveToDb.setEnabled(false);
     addDeleteStationLayout->addWidget(&deleteStation);
     jointStationsSelectLayout->addLayout(addDeleteStationLayout);
@@ -1612,15 +1641,21 @@ void Crit3DPointStatisticsWidget::updatePlotByVal()
 void Crit3DPointStatisticsWidget::updatePlot()
 {
     // does not compute valMax and valMin
+    FormInfo formInfo;
+    formInfo.showInfo("Update plot...");
     plot();
+    formInfo.close();
 }
 
 void Crit3DPointStatisticsWidget::computePlot()
 {
     // compute valMax and valMin
+    FormInfo formInfo;
+    formInfo.showInfo("Compute plot...");
     valMax.clear();
     valMin.clear();
     plot();
+    formInfo.close();
 }
 
 void Crit3DPointStatisticsWidget::on_actionChangeLeftAxis()

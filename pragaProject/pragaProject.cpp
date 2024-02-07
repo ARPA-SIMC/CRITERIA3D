@@ -2598,6 +2598,15 @@ void PragaProject::showPointStatisticsWidgetPoint(std::string idMeteoPoint)
     meteoPointsDbHandler->loadDailyData(getCrit3DDate(firstDaily), getCrit3DDate(lastDaily), &mp);
     logInfoGUI("Loading hourly data...");
     meteoPointsDbHandler->loadHourlyData(getCrit3DDate(firstHourly.date()), getCrit3DDate(lastHourly.date()), &mp);
+    QList<QString> jointStationsMyMp = meteoPointsDbHandler->getJointStations(QString::fromStdString(idMeteoPoint));
+    for (int j = 0; j<jointStationsMyMp.size(); j++)
+    {
+        QDate lastDateNew = meteoPointsDbHandler->getLastDate(daily, jointStationsMyMp[j].toStdString()).date();
+        if (lastDateNew > lastDaily)
+        {
+            lastDaily = lastDateNew;
+        }
+    }
     closeLogInfo();
     QList<Crit3DMeteoPoint> meteoPointsWidgetList;
     meteoPointsWidgetList.append(mp);
