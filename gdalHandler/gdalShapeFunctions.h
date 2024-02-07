@@ -29,7 +29,7 @@
         {"bil", "EHdr"}
     };
 
-    bool shapeToRaster(QString shapeFileName, QString shapeField, QString resolution, QString proj,
+    bool gdalShapeToRaster(QString shapeFileName, QString shapeField, QString resolution, QString newProjection,
                        QString outputName, QString paletteFileName, QString &errorStr);
 
 
