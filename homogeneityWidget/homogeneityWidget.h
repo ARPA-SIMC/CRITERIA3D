@@ -40,6 +40,7 @@
             void addFoundStationClicked();
             void deleteFoundStationClicked();
             void executeClicked();
+            void checkValueAndMerge(Crit3DMeteoPoint meteoPointGet, Crit3DMeteoPoint* meteoPointSet, QDate myDate);
 
     private:
             Crit3DMeteoPointsDbHandler* meteoPointsDbHandler;
