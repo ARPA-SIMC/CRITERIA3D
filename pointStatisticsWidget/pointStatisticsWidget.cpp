@@ -980,8 +980,24 @@ void Crit3DPointStatisticsWidget::plot()
                 dateEndPeriod.setDate(dateStartPeriod.year()+1, dateEndPeriod.month(), dateEndPeriod.day());
             }
 
+            // copy data to MPTemp
+            Crit3DMeteoPoint meteoPointTemp;
+            // copy all data to meteoPointTemp from joint if there are holes
+            if (idPoints.size() != 1)
+            {
+                int numberOfDays = firstDate.daysTo(lastDate)+1;
+                meteoPointTemp.initializeObsDataD(numberOfDays, getCrit3DDate(firstDate));
+                for (QDate myDate = firstDate; myDate <= lastDate; myDate = myDate.addDays(1) )
+                {
+                    checkValueAndMerge(meteoPoints[0], &meteoPointTemp, myDate);
+                }
+            }
+            else
+            {
+                meteoPointTemp = meteoPoints[0];
+            }
+
             int totDays = 0;
-            quality::qualityType check;
             for (QDate myDate = firstDate; myDate <= lastDate; myDate = myDate.addDays(1))
             {
                 if (myDate >= dateStartPeriod && myDate <= dateEndPeriod)
@@ -989,39 +1005,8 @@ void Crit3DPointStatisticsWidget::plot()
                     totDays = totDays + 1;
                     if (myDate >= firstDaily && myDate <= lastDaily)
                     {
-                        int indexMp = 0;
-                        int i = firstDaily.daysTo(myDate);
-                        if (!isGrid)
-                        {
-                            int nPoint;
-                            for (nPoint = 0; nPoint<idPoints.size(); nPoint++)
-                            {
-                                if (myDate <= meteoPointsDbHandler->getLastDate(daily, idPoints[nPoint]).date())
-                                {
-                                    break;
-                                }
-                            }
-                            QDate myFirstDaily = meteoPointsDbHandler->getFirstDate(daily, idPoints[nPoint]).date();
-                            i = myFirstDaily.daysTo(myDate);
-                            for (int j = 0; j<meteoPoints.size(); j++)
-                            {
-                                if (meteoPoints[j].id == idPoints[nPoint])
-                                {
-                                    indexMp = j;
-                                    break;
-                                }
-                            }
-                        }
-                        float myDailyValue = meteoPoints[indexMp].getMeteoPointValueD(getCrit3DDate(myDate), myVar, meteoSettings);
-                        if (i<0 || i>meteoPoints[indexMp].nrObsDataDaysD)
-                        {
-                            check = quality::missing_data;
-                        }
-                        else
-                        {
-                            check = quality->checkFastValueDaily_SingleValue(myVar, climateParameters, myDailyValue, myDate.month(), meteoPoints[indexMp].point.z);
-                        }
-                        if (check == quality::accepted)
+                        float myDailyValue = meteoPointTemp.getMeteoPointValueD(getCrit3DDate(myDate), myVar, meteoSettings);
+                        if (myDailyValue != NODATA)
                         {
                             if (myVar == dailyPrecipitation)
                             {
