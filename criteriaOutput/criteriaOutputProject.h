@@ -111,6 +111,7 @@ public:
     int createAggregationFile();
     int createNetcdf();
     int createMaps();
+    int createWebOutput();
 
     bool initializeCsvOutputFile();
     bool getAllDbVariable();

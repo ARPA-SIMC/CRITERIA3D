@@ -574,6 +574,12 @@ int CriteriaOutputProject::createShapeFile()
 
 
 #ifdef GDAL
+int CriteriaOutputProject::createWebOutput()
+{
+    return CRIT1D_OK;
+}
+
+
 int CriteriaOutputProject::createMaps()
 {
     // check map list
@@ -698,10 +704,14 @@ int CriteriaOutputProject::createMaps()
         }
 
         logger.writeInfo("Write map: " + mapFileName);
-        if (shapeToRaster(outputShapeFileName, inputFieldName[i], mapCellSize, mapProjection,
+        if (gdalShapeToRaster(outputShapeFileName, inputFieldName[i], mapCellSize, mapProjection,
                           mapFileName, paletteCompleteFileName, projectError))
         {
             nrRasterOK++;
+        }
+        else
+        {
+            logger.writeError(projectError);
         }
     }
 
@@ -712,7 +722,7 @@ int CriteriaOutputProject::createMaps()
     else
     {
         int nRasterError = inputFieldName.size() - nrRasterOK;
-        projectError = QString::number(nRasterError) + " invalid raster - " + projectError;
+        projectError = QString::number(nRasterError) + " invalid raster.";
         return ERROR_MAPS;
     }
 }
