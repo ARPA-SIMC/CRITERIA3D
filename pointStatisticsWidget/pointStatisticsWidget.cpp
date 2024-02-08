@@ -65,8 +65,14 @@ Crit3DPointStatisticsWidget::Crit3DPointStatisticsWidget(bool isGrid, Crit3DMete
             if (this->meteoPoints[n].id == jointStationsMyMp[j].toStdString())
             {
                 jointStationsSelected.addItem(QString::fromStdString(this->meteoPoints[n].id)+" "+QString::fromStdString(this->meteoPoints[n].name));
-                meteoPointsDbHandler->loadDailyData(getCrit3DDate(firstDaily), getCrit3DDate(lastDaily), &(this->meteoPoints[n]));
-                meteoPointsDbHandler->loadHourlyData(getCrit3DDate(firstHourly.date()), getCrit3DDate(lastHourly.date()), &(this->meteoPoints[n]));
+                if (firstDaily.isValid() && lastDaily.isValid())
+                {
+                    meteoPointsDbHandler->loadDailyData(getCrit3DDate(firstDaily), getCrit3DDate(lastDaily), &(this->meteoPoints[n]));
+                }
+                if (firstHourly.isValid() && lastHourly.isValid())
+                {
+                    meteoPointsDbHandler->loadHourlyData(getCrit3DDate(firstHourly.date()), getCrit3DDate(lastHourly.date()), &(this->meteoPoints[n]));
+                }
                 break;
             }
         }
@@ -1810,8 +1816,14 @@ void Crit3DPointStatisticsWidget::addStationClicked()
 
         QDateTime firstHourly = meteoPointsDbHandler->getFirstDate(hourly, newId);
         QDateTime lastHourly = meteoPointsDbHandler->getLastDate(hourly, newId);
-        meteoPointsDbHandler->loadDailyData(getCrit3DDate(firstDaily), getCrit3DDate(lastDaily), &meteoPoints[indexMp]);
-        meteoPointsDbHandler->loadHourlyData(getCrit3DDate(firstHourly.date()), getCrit3DDate(lastHourly.date()), &meteoPoints[indexMp]);
+        if (firstDaily.isValid() && lastDaily.isValid())
+        {
+            meteoPointsDbHandler->loadDailyData(getCrit3DDate(firstDaily), getCrit3DDate(lastDaily), &meteoPoints[indexMp]);
+        }
+        if (firstHourly.isValid() && lastHourly.isValid())
+        {
+            meteoPointsDbHandler->loadHourlyData(getCrit3DDate(firstHourly.date()), getCrit3DDate(lastHourly.date()), &meteoPoints[indexMp]);
+        }
         updateYears();
     }
 
