@@ -1795,7 +1795,6 @@ void Crit3DPointStatisticsWidget::addStationClicked()
         newId = jointStationsList.currentText().section(" ",0,0).toStdString();
         idPoints << newId;
 
-        updateYears();
         int indexMp;
         for (int j = 0; j<meteoPoints.size(); j++)
         {
@@ -1813,19 +1812,24 @@ void Crit3DPointStatisticsWidget::addStationClicked()
         QDateTime lastHourly = meteoPointsDbHandler->getLastDate(hourly, newId);
         meteoPointsDbHandler->loadDailyData(getCrit3DDate(firstDaily), getCrit3DDate(lastDaily), &meteoPoints[indexMp]);
         meteoPointsDbHandler->loadHourlyData(getCrit3DDate(firstHourly.date()), getCrit3DDate(lastHourly.date()), &meteoPoints[indexMp]);
+        updateYears();
     }
 
 }
 
 void Crit3DPointStatisticsWidget::deleteStationClicked()
 {
-    saveToDb.setEnabled(true);
     QList<QListWidgetItem*> items = jointStationsSelected.selectedItems();
+    if (items.isEmpty())
+    {
+        return;
+    }
     foreach(QListWidgetItem * item, items)
     {
         idPoints.removeOne(item->text().section(" ",0,0).toStdString());
         delete jointStationsSelected.takeItem(jointStationsSelected.row(item));
     }
+    saveToDb.setEnabled(true);
     updateYears();
 }
 
@@ -1841,6 +1845,7 @@ void Crit3DPointStatisticsWidget::saveToDbClicked()
     {
         QMessageBox::critical(nullptr, "Error", meteoPointsDbHandler->getErrorString());
     }
+    saveToDb.setEnabled(false);
 }
 
 void Crit3DPointStatisticsWidget::updateYears()
