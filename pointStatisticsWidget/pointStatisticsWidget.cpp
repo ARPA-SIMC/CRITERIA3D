@@ -43,12 +43,40 @@ Crit3DPointStatisticsWidget::Crit3DPointStatisticsWidget(bool isGrid, Crit3DMete
 :isGrid(isGrid), meteoPointsDbHandler(meteoPointsDbHandler), meteoGridDbHandler(meteoGridDbHandler), meteoPoints(meteoPoints), firstDaily(firstDaily),
   lastDaily(lastDaily), firstHourly(firstHourly), lastHourly(lastHourly), meteoSettings(meteoSettings), settings(settings), climateParameters(climateParameters), quality(quality)
 {
-    this->setWindowTitle("Point statistics Id:"+QString::fromStdString(meteoPoints[0].id)+" "+QString::fromStdString(meteoPoints[0].name));
+    this->setWindowTitle("Point statistics Id:"+QString::fromStdString(this->meteoPoints[0].id)+" "+QString::fromStdString(this->meteoPoints[0].name));
     this->resize(1000, 600);
     this->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
     this->setAttribute(Qt::WA_DeleteOnClose);
 
-    idPoints << meteoPoints[0].id;
+    idPoints << this->meteoPoints[0].id;
+    QList<QString> jointStationsMyMp = meteoPointsDbHandler->getJointStations(QString::fromStdString(this->meteoPoints[0].id));
+    for (int j = 0; j<jointStationsMyMp.size(); j++)
+    {
+        idPoints << jointStationsMyMp[j].toStdString();
+        // load all Data
+
+        QDate firstDaily = meteoPointsDbHandler->getFirstDate(daily, jointStationsMyMp[j].toStdString()).date();
+        QDate lastDaily = meteoPointsDbHandler->getLastDate(daily, jointStationsMyMp[j].toStdString()).date();
+
+        QDateTime firstHourly = meteoPointsDbHandler->getFirstDate(hourly, jointStationsMyMp[j].toStdString());
+        QDateTime lastHourly = meteoPointsDbHandler->getLastDate(hourly, jointStationsMyMp[j].toStdString());
+        for (int n = 0; n<this->meteoPoints.size(); n++)
+        {
+            if (this->meteoPoints[n].id == jointStationsMyMp[j].toStdString())
+            {
+                jointStationsSelected.addItem(QString::fromStdString(this->meteoPoints[n].id)+" "+QString::fromStdString(this->meteoPoints[n].name));
+                if (firstDaily.isValid() && lastDaily.isValid())
+                {
+                    meteoPointsDbHandler->loadDailyData(getCrit3DDate(firstDaily), getCrit3DDate(lastDaily), &(this->meteoPoints[n]));
+                }
+                if (firstHourly.isValid() && lastHourly.isValid())
+                {
+                    meteoPointsDbHandler->loadHourlyData(getCrit3DDate(firstHourly.date()), getCrit3DDate(lastHourly.date()), &(this->meteoPoints[n]));
+                }
+                break;
+            }
+        }
+    }
     // layout
     QVBoxLayout *mainLayout = new QVBoxLayout();
     QHBoxLayout *upperLayout = new QHBoxLayout();
@@ -179,9 +207,9 @@ Crit3DPointStatisticsWidget::Crit3DPointStatisticsWidget(bool isGrid, Crit3DMete
     jointStationsSelectLayout->addWidget(jointStationsLabel);
     jointStationsSelectLayout->addWidget(&jointStationsList);
     jointStationsList.setMaximumWidth(this->width()/5);
-    for (int i = 1; i<meteoPoints.size(); i++)
+    for (int i = 1; i<this->meteoPoints.size(); i++)
     {
-        jointStationsList.addItem(QString::fromStdString(meteoPoints[i].id)+" "+QString::fromStdString(meteoPoints[i].name));
+        jointStationsList.addItem(QString::fromStdString(this->meteoPoints[i].id)+" "+QString::fromStdString(this->meteoPoints[i].name));
     }
     if (jointStationsList.count() != 0)
     {
@@ -199,7 +227,14 @@ Crit3DPointStatisticsWidget::Crit3DPointStatisticsWidget(bool isGrid, Crit3DMete
     deleteStation.setMaximumWidth(120);
     saveToDb.setText("Save to DB");
     saveToDb.setMaximumWidth(120);
-    deleteStation.setEnabled(false);
+    if (jointStationsMyMp.isEmpty())
+    {
+        deleteStation.setEnabled(false);
+    }
+    else
+    {
+        deleteStation.setEnabled(true);
+    }
     saveToDb.setEnabled(false);
     addDeleteStationLayout->addWidget(&deleteStation);
     jointStationsSelectLayout->addLayout(addDeleteStationLayout);
@@ -887,6 +922,9 @@ void Crit3DPointStatisticsWidget::plot()
                 dailyClima.push_back(0);
             }
             // copy data to MPTemp
+            FormInfo formInfo;
+            formInfo.showInfo("compute climate...");
+
             Crit3DMeteoPoint meteoPointTemp;
             // copy all data to meteoPointTemp from joint if there are holes
             if (idPoints.size() != 1)
@@ -927,6 +965,7 @@ void Crit3DPointStatisticsWidget::plot()
                     monthlyPointList.append(QPointF(day,monthlyClima[month]));
                 }
             }
+            formInfo.close();
             // draw
             chartView->drawClima(dailyPointList, decadalPointList, monthlyPointList);
         }
@@ -980,6 +1019,8 @@ void Crit3DPointStatisticsWidget::plot()
                 dateEndPeriod.setDate(dateStartPeriod.year()+1, dateEndPeriod.month(), dateEndPeriod.day());
             }
 
+            FormInfo formInfo;
+            formInfo.showInfo("compute...");
             // copy data to MPTemp
             Crit3DMeteoPoint meteoPointTemp;
             // copy all data to meteoPointTemp from joint if there are holes
@@ -1050,6 +1091,7 @@ void Crit3DPointStatisticsWidget::plot()
             }
             if (myMinValue == NODATA || myMaxValue == NODATA)
             {
+                formInfo.close();
                 return; // no data
             }
             int minValueInt = myMinValue;
@@ -1106,6 +1148,7 @@ void Crit3DPointStatisticsWidget::plot()
                 }
                 if (!generalizedGammaFitting(series, nrValues, &beta, &alpha,  &pzero))
                 {
+                    formInfo.close();
                     return;
                 }
             }
@@ -1167,6 +1210,7 @@ void Crit3DPointStatisticsWidget::plot()
                             }
                             else
                             {
+                                formInfo.close();
                                 QMessageBox::information(nullptr, "Error", "Error in gamma distribution");
                                 return;
                             }
@@ -1183,6 +1227,7 @@ void Crit3DPointStatisticsWidget::plot()
             {
                 bucket[i] = bucket[i]/visualizedNrValues;
             }
+            formInfo.close();
             chartView->drawDistribution(bucket, lineValues, valMinValue, valMaxValue, classWidthValue);
         }
     }
@@ -1210,6 +1255,9 @@ void Crit3DPointStatisticsWidget::plot()
             QMessageBox::information(nullptr, "Error", "Wrong class Width value");
             return;
         }
+        FormInfo formInfo;
+        formInfo.showInfo("compute...");
+
         float myMinValue = NODATA;
         float myMaxValue = NODATA;
         bool isFirstData = true;
@@ -1319,6 +1367,7 @@ void Crit3DPointStatisticsWidget::plot()
         }
         if (myMinValue == NODATA || myMaxValue == NODATA)
         {
+            formInfo.close();
             return; // no data
         }
         int minValueInt = myMinValue;
@@ -1374,6 +1423,7 @@ void Crit3DPointStatisticsWidget::plot()
             }
             if (!generalizedGammaFitting(series, nrValues, &beta, &alpha,  &pzero))
             {
+                formInfo.close();
                 return;
             }
         }
@@ -1437,6 +1487,7 @@ void Crit3DPointStatisticsWidget::plot()
                         }
                         else
                         {
+                            formInfo.close();
                             QMessageBox::information(nullptr, "Error", "Error in gamma distribution");
                             return;
                         }
@@ -1453,6 +1504,7 @@ void Crit3DPointStatisticsWidget::plot()
         {
             bucket[i] = bucket[i]/visualizedNrValues;
         }
+        formInfo.close();
         chartView->drawDistribution(bucket, lineValues, valMinValue, valMaxValue, classWidthValue);
     }
 }
@@ -1490,6 +1542,8 @@ void Crit3DPointStatisticsWidget::showElaboration()
         std::vector<int> years;
         QString myError;
         bool isAnomaly = false;
+        FormInfo formInfo;
+        formInfo.showInfo("compute...");
         // copy data to MPTemp
         Crit3DMeteoPoint meteoPointTemp;
         // copy all data to meteoPointTemp from joint if there are holes
@@ -1515,6 +1569,7 @@ void Crit3DPointStatisticsWidget::showElaboration()
             //copy to clima original value for next elab
             clima.setYearStart(firstYear);
             clima.setYearEnd(lastYear);
+            formInfo.close();
             QMessageBox::information(nullptr, "Error", "Number of valid years < 3");
             return;
         }
@@ -1559,6 +1614,7 @@ void Crit3DPointStatisticsWidget::showElaboration()
             }
             count = count + 1;
         }
+        formInfo.close();
         // draw
         chartView->drawTrend(years, outputValues);
 
@@ -1745,7 +1801,6 @@ void Crit3DPointStatisticsWidget::addStationClicked()
         newId = jointStationsList.currentText().section(" ",0,0).toStdString();
         idPoints << newId;
 
-        updateYears();
         int indexMp;
         for (int j = 0; j<meteoPoints.size(); j++)
         {
@@ -1761,8 +1816,15 @@ void Crit3DPointStatisticsWidget::addStationClicked()
 
         QDateTime firstHourly = meteoPointsDbHandler->getFirstDate(hourly, newId);
         QDateTime lastHourly = meteoPointsDbHandler->getLastDate(hourly, newId);
-        meteoPointsDbHandler->loadDailyData(getCrit3DDate(firstDaily), getCrit3DDate(lastDaily), &meteoPoints[indexMp]);
-        meteoPointsDbHandler->loadHourlyData(getCrit3DDate(firstHourly.date()), getCrit3DDate(lastHourly.date()), &meteoPoints[indexMp]);
+        if (firstDaily.isValid() && lastDaily.isValid())
+        {
+            meteoPointsDbHandler->loadDailyData(getCrit3DDate(firstDaily), getCrit3DDate(lastDaily), &meteoPoints[indexMp]);
+        }
+        if (firstHourly.isValid() && lastHourly.isValid())
+        {
+            meteoPointsDbHandler->loadHourlyData(getCrit3DDate(firstHourly.date()), getCrit3DDate(lastHourly.date()), &meteoPoints[indexMp]);
+        }
+        updateYears();
     }
 
 }
@@ -1770,11 +1832,16 @@ void Crit3DPointStatisticsWidget::addStationClicked()
 void Crit3DPointStatisticsWidget::deleteStationClicked()
 {
     QList<QListWidgetItem*> items = jointStationsSelected.selectedItems();
+    if (items.isEmpty())
+    {
+        return;
+    }
     foreach(QListWidgetItem * item, items)
     {
         idPoints.removeOne(item->text().section(" ",0,0).toStdString());
         delete jointStationsSelected.takeItem(jointStationsSelected.row(item));
     }
+    saveToDb.setEnabled(true);
     updateYears();
 }
 
@@ -1790,6 +1857,7 @@ void Crit3DPointStatisticsWidget::saveToDbClicked()
     {
         QMessageBox::critical(nullptr, "Error", meteoPointsDbHandler->getErrorString());
     }
+    saveToDb.setEnabled(false);
 }
 
 void Crit3DPointStatisticsWidget::updateYears()
@@ -1984,7 +2052,11 @@ void Crit3DPointStatisticsWidget::checkValueAndMerge(Crit3DMeteoPoint meteoPoint
             while(myDateTime<=endDateTime)
             {
                 float value = meteoPointGet.getMeteoPointValueH(getCrit3DDate(myDateTime.date()), myDateTime.time().hour(), 0, leafWetness);
-                if (value == NODATA)
+                if (value != NODATA)
+                {
+                    meteoPointSet->setMeteoPointValueD(getCrit3DDate(myDate), leafWetness, value);
+                }
+                else
                 {
                     // missing dato, check joit station
                     for (int i = 1; i<idPoints.size(); i++)
@@ -2014,7 +2086,11 @@ void Crit3DPointStatisticsWidget::checkValueAndMerge(Crit3DMeteoPoint meteoPoint
     case dailyThomDaytime:
     {
             float value = meteoPointGet.getMeteoPointValueD(getCrit3DDate(myDate), dailyAirRelHumidityMin, meteoSettings);
-            if (value == NODATA)
+            if (value != NODATA)
+            {
+                meteoPointSet->setMeteoPointValueD(getCrit3DDate(myDate), dailyAirRelHumidityMin, value);
+            }
+            else
             {
                 // missing dato, check joit station
                 for (int i = 1; i<idPoints.size(); i++)
@@ -2037,7 +2113,11 @@ void Crit3DPointStatisticsWidget::checkValueAndMerge(Crit3DMeteoPoint meteoPoint
                 }
             }
             value = meteoPointGet.getMeteoPointValueD(getCrit3DDate(myDate), dailyAirTemperatureMax, meteoSettings);
-            if (value == NODATA)
+            if (value != NODATA)
+            {
+                meteoPointSet->setMeteoPointValueD(getCrit3DDate(myDate), dailyAirTemperatureMax, value);
+            }
+            else
             {
                 // missing dato, check joit station
                 for (int i = 1; i<idPoints.size(); i++)
@@ -2065,7 +2145,11 @@ void Crit3DPointStatisticsWidget::checkValueAndMerge(Crit3DMeteoPoint meteoPoint
     case dailyThomNighttime:
     {
             float value = meteoPointGet.getMeteoPointValueD(getCrit3DDate(myDate), dailyAirRelHumidityMax, meteoSettings);
-            if (value == NODATA)
+            if (value != NODATA)
+            {
+                meteoPointSet->setMeteoPointValueD(getCrit3DDate(myDate), dailyAirRelHumidityMax, value);
+            }
+            else
             {
                 // missing dato, check joit station
                 for (int i = 1; i<idPoints.size(); i++)
@@ -2088,7 +2172,11 @@ void Crit3DPointStatisticsWidget::checkValueAndMerge(Crit3DMeteoPoint meteoPoint
                 }
             }
             value = meteoPointGet.getMeteoPointValueD(getCrit3DDate(myDate), dailyAirTemperatureMin, meteoSettings);
-            if (value == NODATA)
+            if (value != NODATA)
+            {
+                meteoPointSet->setMeteoPointValueD(getCrit3DDate(myDate), dailyAirTemperatureMin, value);
+            }
+            else
             {
                 // missing dato, check joit station
                 for (int i = 1; i<idPoints.size(); i++)
@@ -2119,7 +2207,11 @@ void Crit3DPointStatisticsWidget::checkValueAndMerge(Crit3DMeteoPoint meteoPoint
             while(myDateTime<=endDateTime)
             {
                 float value = meteoPointGet.getMeteoPointValueH(getCrit3DDate(myDateTime.date()), myDateTime.time().hour(), 0, airTemperature);
-                if (value == NODATA)
+                if (value != NODATA)
+                {
+                    meteoPointSet->setMeteoPointValueD(getCrit3DDate(myDate), airTemperature, value);
+                }
+                else
                 {
                     // missing dato, check joit station
                     for (int i = 1; i<idPoints.size(); i++)
@@ -2142,7 +2234,11 @@ void Crit3DPointStatisticsWidget::checkValueAndMerge(Crit3DMeteoPoint meteoPoint
                     }
                 }
                 value = meteoPointGet.getMeteoPointValueH(getCrit3DDate(myDateTime.date()), myDateTime.time().hour(), 0, airRelHumidity);
-                if (value == NODATA)
+                if (value != NODATA)
+                {
+                    meteoPointSet->setMeteoPointValueD(getCrit3DDate(myDate), airRelHumidity, value);
+                }
+                else
                 {
                     // missing dato, check joit station
                     for (int i = 1; i<idPoints.size(); i++)
@@ -2171,7 +2267,11 @@ void Crit3DPointStatisticsWidget::checkValueAndMerge(Crit3DMeteoPoint meteoPoint
     case dailyBIC:
     {
             float value = meteoPointGet.getMeteoPointValueD(getCrit3DDate(myDate), dailyReferenceEvapotranspirationHS, meteoSettings);
-            if (value == NODATA)
+            if (value != NODATA)
+            {
+                meteoPointSet->setMeteoPointValueD(getCrit3DDate(myDate), dailyReferenceEvapotranspirationHS, value);
+            }
+            else
             {
                 // missing dato, check joit station
                 for (int i = 1; i<idPoints.size(); i++)
@@ -2196,7 +2296,11 @@ void Crit3DPointStatisticsWidget::checkValueAndMerge(Crit3DMeteoPoint meteoPoint
             if (automaticETP)
             {
                 float value = meteoPointGet.getMeteoPointValueD(getCrit3DDate(myDate), dailyAirTemperatureMin, meteoSettings);
-                if (value == NODATA)
+                if (value != NODATA)
+                {
+                    meteoPointSet->setMeteoPointValueD(getCrit3DDate(myDate), dailyAirTemperatureMin, value);
+                }
+                else
                 {
                     // missing dato, check joit station
                     for (int i = 1; i<idPoints.size(); i++)
@@ -2219,7 +2323,11 @@ void Crit3DPointStatisticsWidget::checkValueAndMerge(Crit3DMeteoPoint meteoPoint
                     }
                 }
                 value = meteoPointGet.getMeteoPointValueD(getCrit3DDate(myDate), dailyAirTemperatureMax, meteoSettings);
-                if (value == NODATA)
+                if (value != NODATA)
+                {
+                    meteoPointSet->setMeteoPointValueD(getCrit3DDate(myDate), dailyAirTemperatureMax, value);
+                }
+                else
                 {
                     // missing dato, check joit station
                     for (int i = 1; i<idPoints.size(); i++)
@@ -2243,7 +2351,11 @@ void Crit3DPointStatisticsWidget::checkValueAndMerge(Crit3DMeteoPoint meteoPoint
                 }
             }
             value = meteoPointGet.getMeteoPointValueD(getCrit3DDate(myDate), dailyPrecipitation, meteoSettings);
-            if (value == NODATA)
+            if (value != NODATA)
+            {
+                meteoPointSet->setMeteoPointValueD(getCrit3DDate(myDate), dailyPrecipitation, value);
+            }
+            else
             {
                 // missing dato, check joit station
                 for (int i = 1; i<idPoints.size(); i++)
@@ -2271,7 +2383,11 @@ void Crit3DPointStatisticsWidget::checkValueAndMerge(Crit3DMeteoPoint meteoPoint
     case dailyAirTemperatureRange:
     {
             float value = meteoPointGet.getMeteoPointValueD(getCrit3DDate(myDate), dailyAirTemperatureMin, meteoSettings);
-            if (value == NODATA)
+            if (value != NODATA)
+            {
+                meteoPointSet->setMeteoPointValueD(getCrit3DDate(myDate), dailyAirTemperatureMin, value);
+            }
+            else
             {
                 // missing dato, check joit station
                 for (int i = 1; i<idPoints.size(); i++)
@@ -2294,7 +2410,11 @@ void Crit3DPointStatisticsWidget::checkValueAndMerge(Crit3DMeteoPoint meteoPoint
                 }
             }
             value = meteoPointGet.getMeteoPointValueD(getCrit3DDate(myDate), dailyAirTemperatureMax, meteoSettings);
-            if (value == NODATA)
+            if (value != NODATA)
+            {
+                meteoPointSet->setMeteoPointValueD(getCrit3DDate(myDate), dailyAirTemperatureMax, value);
+            }
+            else
             {
                 // missing dato, check joit station
                 for (int i = 1; i<idPoints.size(); i++)
@@ -2324,7 +2444,11 @@ void Crit3DPointStatisticsWidget::checkValueAndMerge(Crit3DMeteoPoint meteoPoint
             if (automaticTmed)
             {
                 float value = meteoPointGet.getMeteoPointValueD(getCrit3DDate(myDate), dailyAirTemperatureMin, meteoSettings);
-                if (value == NODATA)
+                if (value != NODATA)
+                {
+                    meteoPointSet->setMeteoPointValueD(getCrit3DDate(myDate), dailyAirTemperatureMin, value);
+                }
+                else
                 {
                     // missing dato, check joit station
                     for (int i = 1; i<idPoints.size(); i++)
@@ -2347,7 +2471,11 @@ void Crit3DPointStatisticsWidget::checkValueAndMerge(Crit3DMeteoPoint meteoPoint
                     }
                 }
                 value = meteoPointGet.getMeteoPointValueD(getCrit3DDate(myDate), dailyAirTemperatureMax, meteoSettings);
-                if (value == NODATA)
+                if (value != NODATA)
+                {
+                    meteoPointSet->setMeteoPointValueD(getCrit3DDate(myDate), dailyAirTemperatureMax, value);
+                }
+                else
                 {
                     // missing dato, check joit station
                     for (int i = 1; i<idPoints.size(); i++)
@@ -2378,7 +2506,11 @@ void Crit3DPointStatisticsWidget::checkValueAndMerge(Crit3DMeteoPoint meteoPoint
             if (automaticETP)
             {
                 float value = meteoPointGet.getMeteoPointValueD(getCrit3DDate(myDate), dailyAirTemperatureMin, meteoSettings);
-                if (value == NODATA)
+                if (value != NODATA)
+                {
+                    meteoPointSet->setMeteoPointValueD(getCrit3DDate(myDate), dailyAirTemperatureMin, value);
+                }
+                else
                 {
                     // missing dato, check joit station
                     for (int i = 1; i<idPoints.size(); i++)
@@ -2401,7 +2533,11 @@ void Crit3DPointStatisticsWidget::checkValueAndMerge(Crit3DMeteoPoint meteoPoint
                     }
                 }
                 value = meteoPointGet.getMeteoPointValueD(getCrit3DDate(myDate), dailyAirTemperatureMax, meteoSettings);
-                if (value == NODATA)
+                if (value != NODATA)
+                {
+                    meteoPointSet->setMeteoPointValueD(getCrit3DDate(myDate), dailyAirTemperatureMax, value);
+                }
+                else
                 {
                     // missing dato, check joit station
                     for (int i = 1; i<idPoints.size(); i++)
@@ -2429,7 +2565,11 @@ void Crit3DPointStatisticsWidget::checkValueAndMerge(Crit3DMeteoPoint meteoPoint
     case dailyHeatingDegreeDays: case dailyCoolingDegreeDays:
     {
             float value = meteoPointGet.getMeteoPointValueD(getCrit3DDate(myDate), dailyAirTemperatureAvg, meteoSettings);
-            if (value == NODATA)
+            if (value != NODATA)
+            {
+                meteoPointSet->setMeteoPointValueD(getCrit3DDate(myDate), dailyAirTemperatureAvg, value);
+            }
+            else
             {
                 // missing dato, check joit station
                 for (int i = 1; i<idPoints.size(); i++)
@@ -2452,7 +2592,11 @@ void Crit3DPointStatisticsWidget::checkValueAndMerge(Crit3DMeteoPoint meteoPoint
                 }
             }
             value = meteoPointGet.getMeteoPointValueD(getCrit3DDate(myDate), dailyAirTemperatureMin, meteoSettings);
-            if (value == NODATA)
+            if (value != NODATA)
+            {
+                meteoPointSet->setMeteoPointValueD(getCrit3DDate(myDate), dailyAirTemperatureMin, value);
+            }
+            else
             {
                 // missing dato, check joit station
                 for (int i = 1; i<idPoints.size(); i++)
@@ -2475,7 +2619,11 @@ void Crit3DPointStatisticsWidget::checkValueAndMerge(Crit3DMeteoPoint meteoPoint
                 }
             }
             value = meteoPointGet.getMeteoPointValueD(getCrit3DDate(myDate), dailyAirTemperatureMax, meteoSettings);
-            if (value == NODATA)
+            if (value != NODATA)
+            {
+                meteoPointSet->setMeteoPointValueD(getCrit3DDate(myDate), dailyAirTemperatureMax, value);
+            }
+            else
             {
                 // missing dato, check joit station
                 for (int i = 1; i<idPoints.size(); i++)
@@ -2503,7 +2651,11 @@ void Crit3DPointStatisticsWidget::checkValueAndMerge(Crit3DMeteoPoint meteoPoint
     default:
     {
             float value = meteoPointGet.getMeteoPointValueD(getCrit3DDate(myDate), myVar, meteoSettings);
-            if (value == NODATA)
+            if (value != NODATA)
+            {
+                meteoPointSet->setMeteoPointValueD(getCrit3DDate(myDate), myVar, value);
+            }
+            else
             {
                 // missing dato, check joit station
                 for (int i = 1; i<idPoints.size(); i++)

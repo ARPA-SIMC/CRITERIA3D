@@ -1534,7 +1534,11 @@ void Crit3DHomogeneityWidget::checkValueAndMerge(Crit3DMeteoPoint meteoPointGet,
     default:
     {
         float value = meteoPointGet.getMeteoPointValueD(getCrit3DDate(myDate), myVar, meteoSettings);
-        if (value == NODATA)
+        if (value != NODATA)
+        {
+            meteoPointSet->setMeteoPointValueD(getCrit3DDate(myDate), myVar, value);
+        }
+        else
         {
             // missing dato, check joit station
             for (int i = 1; i<idPointsJointed.size(); i++)
