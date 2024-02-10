@@ -4,13 +4,15 @@
 #include "ogr_spatialref.h"
 #include <gdal_priv.h>
 #include <gdal_utils.h>
+#include <QDebug>
 
 #include "gdalShapeFunctions.h"
 #include "gdalRasterFunctions.h"
 
 
-bool gdalShapeToRaster(QString shapeFileName, QString shapeField, QString resolution, QString newProjection,
-                   QString outputName, QString paletteFileName, QString &errorStr)
+bool gdalShapeToRaster(QString shapeFileName, QString shapeField, QString resolution,
+                       QString mapProjection, QString outputName, QString paletteFileName,
+                       bool isPngCopy, QString pngFileName, QString pngProjection, QString &errorStr)
 {
     GDALAllRegister();
     QFileInfo outputFile(outputName);
@@ -42,6 +44,7 @@ bool gdalShapeToRaster(QString shapeFileName, QString shapeField, QString resolu
     {
         srs = *pOrigSrs;
     }
+
     if ( srs.IsProjected() )
     {
         srs.exportToWkt( &pszProjection );
@@ -89,10 +92,9 @@ bool gdalShapeToRaster(QString shapeFileName, QString shapeField, QString resolu
 
     // re-projection
     QString fileNameProj = outputFile.absolutePath() + "/proj." + ext;
-    if (! newProjection.isEmpty())
+    if (! mapProjection.isEmpty())
     {
-        bool isProjOk = gdalReprojection(rasterDataset, inputDataset, pszProjection, newProjection, fileNameProj, errorStr);
-
+        bool isProjOk = gdalReprojection(rasterDataset, inputDataset, mapProjection, fileNameProj, errorStr);
         GDALClose( rasterDataset );
         CPLFree( pszProjection );
 
@@ -110,7 +112,6 @@ bool gdalShapeToRaster(QString shapeFileName, QString shapeField, QString resolu
     {
         GDALDatasetH colorDataset = GDALDEMProcessing(strdup(fileNameColor.toStdString().c_str()), inputDataset, "color-relief",
                                                       strdup(paletteFileName.toStdString().c_str()), nullptr, &error);
-
         if (colorDataset == nullptr || error != 0)
         {
             errorStr = "Error in coloring map (GDALDEMProcessing).";
@@ -118,13 +119,22 @@ bool gdalShapeToRaster(QString shapeFileName, QString shapeField, QString resolu
             return false;
         }
 
-        GDALClose( colorDataset );
+        GDALClose( inputDataset );
+        inputDataset = colorDataset;
     }
 
-    if (inputDataset != nullptr)
+    // PNG copy
+    if (isPngCopy)
     {
-        GDALClose( inputDataset );
+        if (! gdalExportPng(inputDataset, pngFileName, pngProjection, errorStr))
+        {
+            qDebug() << "ERROR: failed to write" << pngFileName;
+            qDebug() << errorStr;
+            errorStr = "";
+        }
     }
+
+    GDALClose( inputDataset );
 
     // rename output and remove temporary files
     QFile::remove(outputName);
@@ -133,7 +143,7 @@ bool gdalShapeToRaster(QString shapeFileName, QString shapeField, QString resolu
     {
         QFile::rename(fileNameColor, outputName);
     }
-    else if(! newProjection.isEmpty())
+    else if(! mapProjection.isEmpty())
     {
         QFile::rename(fileNameProj, outputName);
     }

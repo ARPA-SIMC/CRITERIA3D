@@ -66,6 +66,8 @@ public:
     QString mapFormat;
     QString mapProjection;
     QString mapAreaName;
+    bool isPngCopy;
+    QString pngProjection;
 
     QString outputCsvFileName;
     QString outputShapeFileName;
@@ -111,7 +113,6 @@ public:
     int createAggregationFile();
     int createNetcdf();
     int createMaps();
-    int createWebOutput();
 
     bool initializeCsvOutputFile();
     bool getAllDbVariable();
