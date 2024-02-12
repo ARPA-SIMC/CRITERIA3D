@@ -48,35 +48,41 @@ Crit3DPointStatisticsWidget::Crit3DPointStatisticsWidget(bool isGrid, Crit3DMete
     this->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
     this->setAttribute(Qt::WA_DeleteOnClose);
 
+    // joint stations
     idPoints << this->meteoPoints[0].id;
-    QList<QString> jointStationsMyMp = meteoPointsDbHandler->getJointStations(QString::fromStdString(this->meteoPoints[0].id));
-    for (int j = 0; j<jointStationsMyMp.size(); j++)
+    QList<QString> jointStationsMyMp;
+    if (meteoPointsDbHandler != nullptr)
     {
-        idPoints << jointStationsMyMp[j].toStdString();
-        // load all Data
-
-        QDate firstDaily = meteoPointsDbHandler->getFirstDate(daily, jointStationsMyMp[j].toStdString()).date();
-        QDate lastDaily = meteoPointsDbHandler->getLastDate(daily, jointStationsMyMp[j].toStdString()).date();
-
-        QDateTime firstHourly = meteoPointsDbHandler->getFirstDate(hourly, jointStationsMyMp[j].toStdString());
-        QDateTime lastHourly = meteoPointsDbHandler->getLastDate(hourly, jointStationsMyMp[j].toStdString());
-        for (int n = 0; n<this->meteoPoints.size(); n++)
+        jointStationsMyMp = meteoPointsDbHandler->getJointStations(QString::fromStdString(this->meteoPoints[0].id));
+        for (int j = 0; j<jointStationsMyMp.size(); j++)
         {
-            if (this->meteoPoints[n].id == jointStationsMyMp[j].toStdString())
+            idPoints << jointStationsMyMp[j].toStdString();
+            // load all Data
+
+            QDate firstDaily = meteoPointsDbHandler->getFirstDate(daily, jointStationsMyMp[j].toStdString()).date();
+            QDate lastDaily = meteoPointsDbHandler->getLastDate(daily, jointStationsMyMp[j].toStdString()).date();
+
+            QDateTime firstHourly = meteoPointsDbHandler->getFirstDate(hourly, jointStationsMyMp[j].toStdString());
+            QDateTime lastHourly = meteoPointsDbHandler->getLastDate(hourly, jointStationsMyMp[j].toStdString());
+            for (int n = 0; n<this->meteoPoints.size(); n++)
             {
-                jointStationsSelected.addItem(QString::fromStdString(this->meteoPoints[n].id)+" "+QString::fromStdString(this->meteoPoints[n].name));
-                if (firstDaily.isValid() && lastDaily.isValid())
+                if (this->meteoPoints[n].id == jointStationsMyMp[j].toStdString())
                 {
-                    meteoPointsDbHandler->loadDailyData(getCrit3DDate(firstDaily), getCrit3DDate(lastDaily), &(this->meteoPoints[n]));
+                    jointStationsSelected.addItem(QString::fromStdString(this->meteoPoints[n].id)+" "+QString::fromStdString(this->meteoPoints[n].name));
+                    if (firstDaily.isValid() && lastDaily.isValid())
+                    {
+                        meteoPointsDbHandler->loadDailyData(getCrit3DDate(firstDaily), getCrit3DDate(lastDaily), &(this->meteoPoints[n]));
+                    }
+                    if (firstHourly.isValid() && lastHourly.isValid())
+                    {
+                        meteoPointsDbHandler->loadHourlyData(getCrit3DDate(firstHourly.date()), getCrit3DDate(lastHourly.date()), &(this->meteoPoints[n]));
+                    }
+                    break;
                 }
-                if (firstHourly.isValid() && lastHourly.isValid())
-                {
-                    meteoPointsDbHandler->loadHourlyData(getCrit3DDate(firstHourly.date()), getCrit3DDate(lastHourly.date()), &(this->meteoPoints[n]));
-                }
-                break;
             }
         }
     }
+
     // layout
     QVBoxLayout *mainLayout = new QVBoxLayout();
     QHBoxLayout *upperLayout = new QHBoxLayout();
