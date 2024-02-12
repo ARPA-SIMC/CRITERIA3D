@@ -1691,7 +1691,12 @@ bool elaborateDailyAggrVarFromDailyFromStartDate(meteoVariable myVar, Crit3DMete
 
     for (QDate myDate = first; myDate<=last; myDate=myDate.addDays(1))
     {
-        unsigned int index = firstDate.daysTo(myDate);
+        unsigned long index = firstDate.daysTo(myDate);
+        if (index >= meteoPoint.obsDataD.size())
+        {
+            break;
+        }
+
         switch(myVar)
         {
         case dailyThomDaytime:
