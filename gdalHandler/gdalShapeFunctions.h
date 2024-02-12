@@ -29,8 +29,9 @@
         {"bil", "EHdr"}
     };
 
-    bool gdalShapeToRaster(QString shapeFileName, QString shapeField, QString resolution, QString newProjection,
-                       QString outputName, QString paletteFileName, QString &errorStr);
+    bool gdalShapeToRaster(QString shapeFileName, QString shapeField, QString resolution, QString mapProjection,
+                            QString outputName, QString paletteFileName, bool isPngCopy, QString pngFileName,
+                            QString pngProjection, QString &errorStr);
 
 
 #endif // GDALSHAPEFUNCTIONS_H

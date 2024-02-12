@@ -6,6 +6,7 @@
 #include <iostream>
 #include <cmath>
 
+#include <QFileInfo>
 #include <QString>
 #include <QDebug>
 
@@ -181,73 +182,83 @@ bool convertGdalRaster(GDALDataset* dataset, gis::Crit3DRasterGrid* myRaster, in
 }
 
 
-bool gdalReprojection(GDALDatasetH rasterDataset, GDALDatasetH &projDataset, char *pszProjection,
+bool gdalReprojection(GDALDatasetH &srcDataset, GDALDatasetH &dstDataset,
                       QString newProjection, QString projFileName, QString &errorStr)
 {
-    // Create output with same datatype as first input band.
-    GDALDataType eDT = GDALGetRasterDataType(GDALGetRasterBand(rasterDataset, 1));
-
-    // Get output driver (GeoTIFF format)
-    GDALDriverH hDriver = GDALGetDriverByName( "GTiff" );
-    if (hDriver == nullptr)
+    // check destination coordinate system
+    OGRSpatialReference dstSpatialRef;
+    int ogrError = dstSpatialRef.importFromEPSG(newProjection.toInt());
+    if (ogrError != OGRERR_NONE)
     {
-        errorStr = "Error in reprojection (GDALGetDriverByName GTiff)";
+        errorStr = "Error in gdalReprojection. Wrong projection: " + newProjection;
         return false;
     }
 
-    // Get source coordinate system
-    char *pszDstWKT = nullptr;
-    OGRSpatialReference oSRS;
-    oSRS.SetWellKnownGeogCS(newProjection.toStdString().c_str());
-    oSRS.exportToWkt( &pszDstWKT );
+    // source projection
+    const char* srcWKTProjection = GDALGetProjectionRef( srcDataset ) ;
+
+    // destination projection
+    char* dstWKTProjection;
+    dstSpatialRef.exportToWkt( &dstWKTProjection );
+
+    // datatype
+    GDALDataType dataType = GDALGetRasterDataType(GDALGetRasterBand(srcDataset, 1));
+
+    // output driver (GeoTIFF format)
+    GDALDriverH hDriver = GDALGetDriverByName( "GTiff" );
+    if (hDriver == nullptr)
+    {
+        errorStr = "Error in gdalReprojection (GDALGetDriverByName GTiff)";
+        return false;
+    }
 
     // Create a transformer that maps from source pixel/line coordinates
     // to destination georeferenced coordinates (not destination
     // pixel line).  We do that by omitting the destination dataset
     // handle (setting it to nullptr).
-    void *hTransformArg = GDALCreateGenImgProjTransformer(rasterDataset, pszProjection, nullptr, pszDstWKT, FALSE, 0, 1 );
+    void *handleTransformArg = GDALCreateGenImgProjTransformer(srcDataset, srcWKTProjection, nullptr, dstWKTProjection, FALSE, 0, 1 );
 
-    if ( hTransformArg == nullptr )
+    if ( handleTransformArg == nullptr )
     {
-        errorStr = "Error in reprojection (GDALCreateGenImgProjTransformer)";
+        errorStr = "Error in gdalReprojection (GDALCreateGenImgProjTransformer)";
         return false;
     }
 
     // Get approximate output georeferenced bounds and resolution for file.
+    int nrPixels, nrLines;
     double adfDstGeoTransform[6];
-    int nPixels=0, nLines=0;
+
     CPLErr eErr;
-    eErr = GDALSuggestedWarpOutput( rasterDataset,
-                                   GDALGenImgProjTransform, hTransformArg,
-                                   adfDstGeoTransform, &nPixels, &nLines );
+    eErr = GDALSuggestedWarpOutput( srcDataset,
+                                   GDALGenImgProjTransform, handleTransformArg,
+                                   adfDstGeoTransform, &nrPixels, &nrLines );
     if( eErr != CE_None )
     {
-        errorStr = "Error reprojection (GDALSuggestedWarpOutput)";
+        errorStr = "Error gdalReprojection (GDALSuggestedWarpOutput). Error nr: " + QString::number(eErr);
         return false;
     }
 
-    char *createOptions[] = {strdup("COMPRESS=LZW"), nullptr};
+    char *createOptions[] = { strdup("COMPRESS=LZW"), nullptr };
 
     // Create the projected dataset
-    projDataset = GDALCreate( hDriver, strdup(projFileName.toStdString().c_str()), nPixels, nLines,
-                             GDALGetRasterCount(rasterDataset), eDT, createOptions );
-
-    if( projDataset == nullptr )
+    dstDataset = GDALCreate( hDriver, strdup(projFileName.toStdString().c_str()), nrPixels, nrLines,
+                             GDALGetRasterCount(srcDataset), dataType, createOptions );
+    if( dstDataset == nullptr )
     {
-        errorStr = "Error in reprojection (GDALCreate)";
+        errorStr = "Error in gdalReprojection (GDALCreate)";
         return false;
     }
 
     // Write out the projection definition.
-    GDALSetProjection( projDataset, pszDstWKT );
-    GDALSetGeoTransform( projDataset, adfDstGeoTransform );
+    GDALSetProjection( dstDataset, dstWKTProjection );
+    GDALSetGeoTransform( dstDataset, adfDstGeoTransform );
 
     // Setup warp options.
     GDALWarpOptions *psWarpOptions = GDALCreateWarpOptions();
-    psWarpOptions->hSrcDS = rasterDataset;
-    psWarpOptions->hDstDS = projDataset;
-    psWarpOptions->nBandCount = MIN(GDALGetRasterCount(rasterDataset),
-                                    GDALGetRasterCount(projDataset));
+    psWarpOptions->hSrcDS = srcDataset;
+    psWarpOptions->hDstDS = dstDataset;
+    psWarpOptions->nBandCount = MIN(GDALGetRasterCount(srcDataset),
+                                    GDALGetRasterCount(dstDataset));
 
     psWarpOptions->panSrcBands = (int *)CPLMalloc(sizeof(int) * psWarpOptions->nBandCount);
     psWarpOptions->panDstBands = (int *)CPLMalloc(sizeof(int) * psWarpOptions->nBandCount);
@@ -285,7 +296,7 @@ bool gdalReprojection(GDALDatasetH rasterDataset, GDALDatasetH &projDataset, cha
         }
     }
 
-    psWarpOptions->pTransformerArg = hTransformArg;
+    psWarpOptions->pTransformerArg = handleTransformArg;
     psWarpOptions->papszWarpOptions = CSLSetNameValue( psWarpOptions->papszWarpOptions, "INIT_DEST", "NO_DATA" );
     psWarpOptions->papszWarpOptions = CSLSetNameValue( psWarpOptions->papszWarpOptions, "WRITE_FLUSH", "YES" );
     CPLFetchBool( psWarpOptions->papszWarpOptions, "OPTIMIZE_SIZE", true );
@@ -293,17 +304,18 @@ bool gdalReprojection(GDALDatasetH rasterDataset, GDALDatasetH &projDataset, cha
     psWarpOptions->pfnTransformer = GDALGenImgProjTransform;
 
     // Initialize and execute the warp operation.
-    eErr = GDALReprojectImage(rasterDataset, pszProjection,
-                              projDataset, pszDstWKT,
+    int cplError;
+    cplError = GDALReprojectImage(srcDataset, srcWKTProjection,
+                              dstDataset, dstWKTProjection,
                               GRA_Bilinear,
                               0.0, 0.0,
                               GDALTermProgress, nullptr,
                               psWarpOptions);
 
-    GDALDestroyGenImgProjTransformer( hTransformArg );
+    GDALDestroyGenImgProjTransformer( handleTransformArg );
     GDALDestroyWarpOptions( psWarpOptions );
 
-    if (eErr != CE_None)
+    if (cplError != CE_None)
     {
         errorStr =  CPLGetLastErrorMsg();
         return false;
@@ -316,18 +328,54 @@ bool gdalReprojection(GDALDatasetH rasterDataset, GDALDatasetH &projDataset, cha
 }
 
 
-// make a bitmap copy (tipically PNG)
-bool gdalExportImg(GDALDatasetH rasterDataset, QString format, QString imgFileName, QString &errorStr)
+// make a png copy
+bool gdalExportPng(GDALDatasetH &rasterDataset, QString pngFileName, QString pngProjection, QString &errorStr)
 {
-    /*
-    GDALDriverH driver = GDALGetDriverByName( strdup(format.toStdString().c_str()) );
-    GDALDriver *imgDriver = (GDALDriver *)driver;
-    GDALDataset *imgDataset = imgDriver->CreateCopy(strdup(imgFileName.toStdString().c_str()), (GDALDataset *)rasterDataset, FALSE, NULL, NULL, NULL);
+    // rename old file
+    QFile::remove(pngFileName);
 
-    GDALClose( imgDataset );
-    */
+    // tmp file
+    QFileInfo outputFile(pngFileName);
+    QString tmpFileName = outputFile.absolutePath() + "/tmp";
 
-    return true;
+    // reprojection
+    GDALDatasetH projDataset;
+    if (! pngProjection.isEmpty())
+    {
+        if (! gdalReprojection(rasterDataset, projDataset, pngProjection, tmpFileName, errorStr))
+        {
+            return false;
+        }
+    }
+
+    // copy png
+    GDALDriverH driver = GDALGetDriverByName("PNG");
+    GDALDriver *pngDriver = (GDALDriver *)driver;
+    GDALDataset *pngDataset;
+
+    if (! pngProjection.isEmpty())
+    {
+        pngDataset = pngDriver->CreateCopy(strdup(pngFileName.toStdString().c_str()),
+                                           (GDALDataset *)projDataset, FALSE, NULL, NULL, NULL);
+        GDALClose( projDataset );
+        QFile::remove(tmpFileName);
+    }
+    else
+    {
+        pngDataset = pngDriver->CreateCopy(strdup(pngFileName.toStdString().c_str()),
+                                           (GDALDataset *)rasterDataset, FALSE, NULL, NULL, NULL);
+    }
+
+    if (pngDataset == nullptr)
+    {
+        errorStr = "Error to create PNG copy.";
+        return false;
+    }
+    else
+    {
+        GDALClose( pngDataset );
+        return true;
+    }
 }
 
 

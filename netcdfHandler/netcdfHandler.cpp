@@ -1143,7 +1143,7 @@ bool NetCDFHandler::extractVariableMap_old(int idVar, const Crit3DTime& myTime, 
         count[1] = nrX;
         count[2] = nrY;
     }
-    nrValues = count[1] * count[2];
+    nrValues = long(count[1] * count[2]);
     float* values = new float[nrValues];
 
     switch(currentVar.type)
