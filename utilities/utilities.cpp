@@ -2,7 +2,10 @@
 #include "commonConstants.h"
 #include "crit3dDate.h"
 #include "math.h"
+#include "qjsonobject.h"
 
+#include <QJsonDocument>
+#include <QJsonArray>
 #include <QVariant>
 #include <QSqlDriver>
 #include <QSqlRecord>
@@ -659,4 +662,44 @@ bool parseCSV(const QString &csvFileName, QList<QString> &csvFields, QList<QList
 
     myFile.close();
     return true;
+}
+
+bool writeJson(const QString & ancestor, const std::vector <QString> &fieldNames, const std::vector <QString> dataType, const std::vector <std::vector <QString>> &values, const QString & jsonFilename)
+{
+    QJsonObject content;
+    QJsonArray records;
+    QJsonObject recordObject;
+
+    bool isFloat = false;
+
+    for (int i=0; i < values.size(); i++)
+    {
+        if (values[i].size() != fieldNames.size() || values[i].size() != dataType.size()) return false;
+
+        recordObject.empty();
+        for (int j=0; j < values[i].size(); j++)
+        {
+            if (dataType[j] == "float")
+                recordObject.insert(fieldNames[j], values[i][j].toFloat(&isFloat));
+            else
+                recordObject.insert(fieldNames[j], values[i][j]);
+        }
+
+        records.push_back(recordObject);
+    }
+
+    content.insert(ancestor, records);
+
+    QJsonDocument doc(content);
+    QByteArray bytes = doc.toJson(QJsonDocument::Indented);
+    QFile file(jsonFilename);
+    if(file.open(QIODevice::WriteOnly | QIODevice::Text | QIODevice::Truncate ))
+    {
+        QTextStream iStream( &file );
+        iStream << bytes;
+        file.close();
+        return true;
+    }
+    else
+        return false;
 }
