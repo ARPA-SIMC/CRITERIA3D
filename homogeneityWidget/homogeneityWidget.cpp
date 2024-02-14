@@ -120,7 +120,7 @@ Crit3DHomogeneityWidget::Crit3DHomogeneityWidget(Crit3DMeteoPointsDbHandler* met
 
     for (int i = 0; i<jointStationsMyMp.size(); i++)
     {
-        int indexMp;
+        int indexMp = -1;
         for (int j = 0; j<this->meteoPointsNearDistanceList.size(); j++)
         {
             if (this->meteoPointsNearDistanceList[j].id == jointStationsMyMp[i].toStdString())
@@ -129,11 +129,14 @@ Crit3DHomogeneityWidget::Crit3DHomogeneityWidget(Crit3DMeteoPointsDbHandler* met
                 break;
             }
         }
-        jointStationsSelected.addItem(QString::fromStdString(this->meteoPointsNearDistanceList[indexMp].id)+" "+QString::fromStdString(this->meteoPointsNearDistanceList[indexMp].name));
         // load all Data
         QDate firstDaily = meteoPointsDbHandler->getFirstDate(daily, jointStationsMyMp[i].toStdString()).date();
         QDate lastDaily = meteoPointsDbHandler->getLastDate(daily, jointStationsMyMp[i].toStdString()).date();
-        meteoPointsDbHandler->loadDailyData(getCrit3DDate(firstDaily), getCrit3DDate(lastDaily), &this->meteoPointsNearDistanceList[indexMp]);
+        if (indexMp != -1)
+        {
+            jointStationsSelected.addItem(QString::fromStdString(this->meteoPointsNearDistanceList[indexMp].id)+" "+QString::fromStdString(this->meteoPointsNearDistanceList[indexMp].name));
+            meteoPointsDbHandler->loadDailyData(getCrit3DDate(firstDaily), getCrit3DDate(lastDaily), &this->meteoPointsNearDistanceList[indexMp]);
+        }
     }
 
     for (int i = 1; i<this->meteoPointsNearDistanceList.size(); i++)
@@ -341,53 +344,27 @@ void Crit3DHomogeneityWidget::plotAnnualSeries()
     formInfo.showInfo("compute annual series...");
     // copy data to MPTemp
     Crit3DMeteoPoint meteoPointTemp;
-    meteoPointTemp.id = meteoPointsNearDistanceList[0].id;
-    meteoPointTemp.latitude = meteoPointsNearDistanceList[0].latitude;
-    meteoPointTemp.elaboration = meteoPointsNearDistanceList[0].elaboration;
-    QDate lastDateCopyed = meteoPointsDbHandler->getLastDate(daily, meteoPointsNearDistanceList[0].id).date();
-    bool dataAlreadyLoaded;
-    if (idPointsJointed.size() == 1 || lastDateCopyed >= lastDate)
+    // copy all data to meteoPointTemp from joint if there are holes
+    if (idPointsJointed.size() != 1)
     {
-        // no joint station inside date interval
-        // meteoPointTemp should be init
-        meteoPointTemp.nrObsDataDaysD = 0;
-        dataAlreadyLoaded = false;
+        int numberOfDays = firstDate.daysTo(lastDate)+1;
+        meteoPointTemp.initializeObsDataD(numberOfDays, getCrit3DDate(firstDate));
+        for (QDate myDate = firstDate; myDate <= lastDate; myDate = myDate.addDays(1) )
+        {
+            checkValueAndMerge(meteoPointsNearDistanceList[0], &meteoPointTemp, myDate);
+        }
     }
     else
     {
-        QDate endDate(QDate(lastYear, 12, 31));
-        int numberOfDays = meteoPointsNearDistanceList[0].obsDataD[0].date.daysTo(getCrit3DDate(endDate))+1;
-        meteoPointTemp.initializeObsDataD(numberOfDays, meteoPointsNearDistanceList[0].obsDataD[0].date);
-        meteoPointTemp.initializeObsDataDFromMp(meteoPointsNearDistanceList[0].nrObsDataDaysD, meteoPointsNearDistanceList[0].obsDataD[0].date, meteoPointsNearDistanceList[0]);
-        if (lastDateCopyed < lastDate)
-        {
-            for (int i = 1; i<idPointsJointed.size(); i++)
-            {
-                QDate lastDateNew = meteoPointsDbHandler->getLastDate(daily, idPointsJointed[i]).date();
-                if (lastDateNew > lastDateCopyed)
-                {
-                    int indexMp;
-                    for (int j = 0; j<meteoPointsNearDistanceList.size(); j++)
-                    {
-                        if (meteoPointsNearDistanceList[j].id == idPointsJointed[i])
-                        {
-                            indexMp = j;
-                            break;
-                        }
-                    }
-                    for (QDate myDate=lastDateCopyed.addDays(1); myDate<=lastDateNew; myDate=myDate.addDays(1))
-                    {
-                        setMpValues(meteoPointsNearDistanceList[indexMp], &meteoPointTemp, myDate, myVar, meteoSettings);
-                    }
-                }
-                lastDateCopyed = lastDateNew;
-            }
-        }
-        dataAlreadyLoaded = true;
+        meteoPointTemp = meteoPointsNearDistanceList[0];
     }
 
-    int validYears = computeAnnualSeriesOnPointFromDaily(&myError, meteoPointsDbHandler, nullptr,
-                                             &meteoPointTemp, &clima, false, isAnomaly, meteoSettings, myAnnualSeries, dataAlreadyLoaded);
+    bool dataAlreadyLoaded = true;
+    int validYears = 0;
+    std::vector<int> vectorYears;
+    validYears = computeAnnualSeriesOnPointFromDaily(&myError, meteoPointsDbHandler, nullptr,
+                                                     &meteoPointTemp, &clima, false, isAnomaly, meteoSettings, myAnnualSeries, vectorYears, dataAlreadyLoaded);
+
     formInfo.close();
 
     if (validYears > 0)
@@ -396,7 +373,7 @@ void Crit3DHomogeneityWidget::plotAnnualSeries()
         int count = 0;
         int validData = 0;
         int yearsLength = lastYear - firstYear;
-        int nYearsToAdd;
+        int nYearsToAdd = 0;
         std::vector<float> seriesToView = myAnnualSeries;
         if (yearsLength > 15)
         {
@@ -437,6 +414,7 @@ void Crit3DHomogeneityWidget::plotAnnualSeries()
         averageValue = sum / validYears;
         // draw
         annualSeriesChartView->draw(years, seriesToView);
+        return;
     }
     else
     {
@@ -762,47 +740,168 @@ void Crit3DHomogeneityWidget::findReferenceStations()
 
         // copy data to MPTemp
         Crit3DMeteoPoint meteoPointTemp;
-        meteoPointTemp.id = mpToBeComputed.id;
-        meteoPointTemp.latitude = mpToBeComputed.latitude;
-        meteoPointTemp.elaboration = mpToBeComputed.elaboration;
-        bool dataAlreadyLoaded;
-        if (jointStationsListMpToBeComputed.size() == 0)
+        // copy all data to meteoPointTemp from joint if there are holes
+        if (jointStationsListMpToBeComputed.size() != 0)
         {
-            // meteoPointTemp should be init
-            meteoPointTemp.nrObsDataDaysH = 0;
-            meteoPointTemp.nrObsDataDaysD = 0;
-            dataAlreadyLoaded = false;
+            // load all joint stations data
+            QList<Crit3DMeteoPoint> jointStationsMpList;
+            for (int j = 0; j<jointStationsListMpToBeComputed.size(); j++)
+            {
+                Crit3DMeteoPoint mpGet;
+                mpGet.id = jointStationsListMpToBeComputed[j].toStdString();
+                meteoPointsDbHandler->loadDailyData(getCrit3DDate(firstDate), getCrit3DDate(lastDate), &mpGet);
+                jointStationsMpList.push_back(mpGet);
+            }
+
+            int numberOfDays = firstDate.daysTo(lastDate)+1;
+            meteoPointTemp.initializeObsDataD(numberOfDays, getCrit3DDate(firstDate));
+            for (QDate myDate = firstDate; myDate <= lastDate; myDate = myDate.addDays(1) )
+            {
+                bool automaticTmed = meteoSettings->getAutomaticTavg();
+                switch(myVar)
+                {
+
+                case dailyAirTemperatureAvg:
+                {
+                    float value = mpToBeComputed.getMeteoPointValueD(getCrit3DDate(myDate), dailyAirTemperatureAvg, meteoSettings);
+                    if (value != NODATA)
+                    {
+                        meteoPointTemp.setMeteoPointValueD(getCrit3DDate(myDate), dailyAirTemperatureAvg, value);
+                    }
+                    else
+                    {
+                        if (automaticTmed)
+                        {
+                            float value = mpToBeComputed.getMeteoPointValueD(getCrit3DDate(myDate), dailyAirTemperatureMin, meteoSettings);
+                            if (value == NODATA)
+                            {
+                                // missing dato, check joit station
+                                for (int j = 0; j<jointStationsListMpToBeComputed.size(); j++)
+                                {
+                                    float valueJoint = jointStationsMpList[j].getMeteoPointValueD(getCrit3DDate(myDate), dailyAirTemperatureMin, meteoSettings);
+                                    if (valueJoint != NODATA)
+                                    {
+                                        meteoPointTemp.setMeteoPointValueD(getCrit3DDate(myDate), dailyAirTemperatureMin, valueJoint);
+                                        QString nameJoint = meteoPointsDbHandler->getNameGivenId(jointStationsListMpToBeComputed[j]);
+                                        if (!name.contains(nameJoint))
+                                        {
+                                            name = name+"_J_"+nameJoint;
+                                        }
+                                        break;
+                                    }
+                                }
+                            }
+                            value = mpToBeComputed.getMeteoPointValueD(getCrit3DDate(myDate), dailyAirTemperatureMax, meteoSettings);
+                            if (value == NODATA)
+                            {
+                                // missing dato, check joit station
+                                for (int j = 0; j<jointStationsListMpToBeComputed.size(); j++)
+                                {
+                                    float valueJoint = jointStationsMpList[j].getMeteoPointValueD(getCrit3DDate(myDate), dailyAirTemperatureMax, meteoSettings);
+                                    if (valueJoint != NODATA)
+                                    {
+                                        meteoPointTemp.setMeteoPointValueD(getCrit3DDate(myDate), dailyAirTemperatureMax, valueJoint);
+                                        QString nameJoint = meteoPointsDbHandler->getNameGivenId(jointStationsListMpToBeComputed[j]);
+                                        if (!name.contains(nameJoint))
+                                        {
+                                            name = name+"_J_"+nameJoint;
+                                        }
+                                        break;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    break;
+                }
+                case dailyAirRelHumidityAvg:
+                {
+                    float value = mpToBeComputed.getMeteoPointValueD(getCrit3DDate(myDate), dailyAirRelHumidityAvg, meteoSettings);
+                    if (value != NODATA)
+                    {
+                        meteoPointTemp.setMeteoPointValueD(getCrit3DDate(myDate), dailyAirRelHumidityAvg, value);
+                    }
+                    else
+                    {
+                        if (automaticTmed)
+                        {
+                            float value = mpToBeComputed.getMeteoPointValueD(getCrit3DDate(myDate), dailyAirRelHumidityMin, meteoSettings);
+                            if (value == NODATA)
+                            {
+                                // missing dato, check joit station
+                                for (int j = 0; j<jointStationsListMpToBeComputed.size(); j++)
+                                {
+                                    float valueJoint = jointStationsMpList[j].getMeteoPointValueD(getCrit3DDate(myDate), dailyAirRelHumidityMin, meteoSettings);
+                                    if (valueJoint != NODATA)
+                                    {
+                                        meteoPointTemp.setMeteoPointValueD(getCrit3DDate(myDate), dailyAirRelHumidityMin, valueJoint);
+                                        QString nameJoint = meteoPointsDbHandler->getNameGivenId(jointStationsListMpToBeComputed[j]);
+                                        if (!name.contains(nameJoint))
+                                        {
+                                            name = name+"_J_"+nameJoint;
+                                        }
+                                        break;
+                                    }
+                                }
+                            }
+                            value = mpToBeComputed.getMeteoPointValueD(getCrit3DDate(myDate), dailyAirRelHumidityMax, meteoSettings);
+                            if (value == NODATA)
+                            {
+                                // missing dato, check joit station
+                                for (int j = 0; j<jointStationsListMpToBeComputed.size(); j++)
+                                {
+                                    float valueJoint = jointStationsMpList[j].getMeteoPointValueD(getCrit3DDate(myDate), dailyAirRelHumidityMax, meteoSettings);
+                                    if (valueJoint != NODATA)
+                                    {
+                                        meteoPointTemp.setMeteoPointValueD(getCrit3DDate(myDate), dailyAirRelHumidityMax, valueJoint);
+                                        QString nameJoint = meteoPointsDbHandler->getNameGivenId(jointStationsListMpToBeComputed[j]);
+                                        if (!name.contains(nameJoint))
+                                        {
+                                            name = name+"_J_"+nameJoint;
+                                        }
+                                        break;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    break;
+                }
+                default:
+                {
+                    float value = mpToBeComputed.getMeteoPointValueD(getCrit3DDate(myDate), myVar, meteoSettings);
+                    if (value == NODATA)
+                    {
+                        // missing dato, check joit station
+                        for (int j = 0; j<jointStationsListMpToBeComputed.size(); j++)
+                        {
+                            float valueJoint = jointStationsMpList[j].getMeteoPointValueD(getCrit3DDate(myDate), myVar, meteoSettings);
+                            if (valueJoint != NODATA)
+                            {
+                                meteoPointTemp.setMeteoPointValueD(getCrit3DDate(myDate), myVar, valueJoint);
+                                QString nameJoint = meteoPointsDbHandler->getNameGivenId(jointStationsListMpToBeComputed[j]);
+                                if (!name.contains(nameJoint))
+                                {
+                                    name = name+"_J_"+nameJoint;
+                                }
+                                break;
+                            }
+                        }
+                    }
+                    break;
+                }
+                }
+            }
         }
         else
         {
-            QDate endDate(QDate(yearTo.currentText().toInt(), 12, 31));
-            int numberOfDays = mpToBeComputed.obsDataD[0].date.daysTo(getCrit3DDate(endDate))+1;
-            meteoPointTemp.initializeObsDataD(numberOfDays, mpToBeComputed.obsDataD[0].date);
-            meteoPointTemp.initializeObsDataDFromMp(mpToBeComputed.nrObsDataDaysD, mpToBeComputed.obsDataD[0].date, mpToBeComputed);
-            QDate lastDateCopyed = meteoPointsDbHandler->getLastDate(daily, mpToBeComputed.id).date();
-            for (int j = 0; j<jointStationsListMpToBeComputed.size(); j++)
-            {
-                QDate lastDateNew = meteoPointsDbHandler->getLastDate(daily, jointStationsListMpToBeComputed[j].toStdString()).date();
-                if (lastDateNew > lastDateCopyed)
-                {
-                    Crit3DMeteoPoint mpGet;
-                    mpGet.id = jointStationsListMpToBeComputed[j].toStdString();
-                    meteoPointsDbHandler->loadDailyData(getCrit3DDate(firstDate), getCrit3DDate(lastDate), &mpGet);
-
-                    for (QDate myDate=lastDateCopyed.addDays(1); myDate<=lastDateNew; myDate=myDate.addDays(1))
-                    {
-                        setMpValues(mpGet, &meteoPointTemp, myDate, myVar, meteoSettings);
-                    }
-                    QString nameJoint = meteoPointsDbHandler->getNameGivenId(jointStationsListMpToBeComputed[j]);
-                    name = name+"_J_"+nameJoint;
-                }
-                lastDateCopyed = lastDateNew;
-            }
-            dataAlreadyLoaded = true;
+            meteoPointTemp = mpToBeComputed;
         }
+        bool dataAlreadyLoaded = true;
         std::vector<float> mpToBeComputedAnnualSeries;
+        std::vector<int> vectorYears;
         int validYears = computeAnnualSeriesOnPointFromDaily(&myError, meteoPointsDbHandler, nullptr,
-                                                 &meteoPointTemp, &clima, false, false, meteoSettings, mpToBeComputedAnnualSeries, dataAlreadyLoaded);
+                                                 &meteoPointTemp, &clima, false, false, meteoSettings, mpToBeComputedAnnualSeries, vectorYears, dataAlreadyLoaded);
         if (validYears != 0)
         {
             if ( (float)validYears / (float)(lastYear - firstYear + 1) > meteoSettings->getMinimumPercentage() / 100.f)
@@ -1301,4 +1400,169 @@ void Crit3DHomogeneityWidget::executeClicked()
     formInfo.close();
 
 }
+
+void Crit3DHomogeneityWidget::checkValueAndMerge(Crit3DMeteoPoint meteoPointGet, Crit3DMeteoPoint* meteoPointSet, QDate myDate)
+{
+
+    bool automaticTmed = meteoSettings->getAutomaticTavg();
+
+    switch(myVar)
+    {
+
+    case dailyAirTemperatureAvg:
+    {
+        float value = meteoPointGet.getMeteoPointValueD(getCrit3DDate(myDate), dailyAirTemperatureAvg, meteoSettings);
+        if (value != NODATA)
+        {
+            meteoPointSet->setMeteoPointValueD(getCrit3DDate(myDate), dailyAirTemperatureAvg, value);
+        }
+        else
+        {
+            if (automaticTmed)
+            {
+                float value = meteoPointGet.getMeteoPointValueD(getCrit3DDate(myDate), dailyAirTemperatureMin, meteoSettings);
+                if (value == NODATA)
+                {
+                    // missing dato, check joit station
+                    for (int i = 1; i<idPointsJointed.size(); i++)
+                    {
+                        int indexMp;
+                        for (int j = 0; j<meteoPointsNearDistanceList.size(); j++)
+                        {
+                            if (meteoPointsNearDistanceList[j].id == idPointsJointed[i])
+                            {
+                                indexMp = j;
+                                break;
+                            }
+                        }
+                        float valueJoint = meteoPointsNearDistanceList[indexMp].getMeteoPointValueD(getCrit3DDate(myDate), dailyAirTemperatureMin, meteoSettings);
+                        if (valueJoint != NODATA)
+                        {
+                            meteoPointSet->setMeteoPointValueD(getCrit3DDate(myDate), dailyAirTemperatureMin, valueJoint);
+                            break;
+                        }
+                    }
+                }
+                value = meteoPointGet.getMeteoPointValueD(getCrit3DDate(myDate), dailyAirTemperatureMax, meteoSettings);
+                if (value == NODATA)
+                {
+                    // missing dato, check joit station
+                    for (int i = 1; i<idPointsJointed.size(); i++)
+                    {
+                        int indexMp;
+                        for (int j = 0; j<meteoPointsNearDistanceList.size(); j++)
+                        {
+                            if (meteoPointsNearDistanceList[j].id == idPointsJointed[i])
+                            {
+                                indexMp = j;
+                                break;
+                            }
+                        }
+                        float valueJoint = meteoPointsNearDistanceList[indexMp].getMeteoPointValueD(getCrit3DDate(myDate), dailyAirTemperatureMax, meteoSettings);
+                        if (valueJoint != NODATA)
+                        {
+                            meteoPointSet->setMeteoPointValueD(getCrit3DDate(myDate), dailyAirTemperatureMax, valueJoint);
+                            break;
+                        }
+                    }
+                }
+            }
+        }
+        break;
+    }
+    case dailyAirRelHumidityAvg:
+    {
+        float value = meteoPointGet.getMeteoPointValueD(getCrit3DDate(myDate), dailyAirRelHumidityAvg, meteoSettings);
+        if (value != NODATA)
+        {
+            meteoPointSet->setMeteoPointValueD(getCrit3DDate(myDate), dailyAirRelHumidityAvg, value);
+        }
+        else
+        {
+            if (automaticTmed)
+            {
+                float value = meteoPointGet.getMeteoPointValueD(getCrit3DDate(myDate), dailyAirRelHumidityMin, meteoSettings);
+                if (value == NODATA)
+                {
+                    // missing dato, check joit station
+                    for (int i = 1; i<idPointsJointed.size(); i++)
+                    {
+                        int indexMp;
+                        for (int j = 0; j<meteoPointsNearDistanceList.size(); j++)
+                        {
+                            if (meteoPointsNearDistanceList[j].id == idPointsJointed[i])
+                            {
+                                indexMp = j;
+                                break;
+                            }
+                        }
+                        float valueJoint = meteoPointsNearDistanceList[indexMp].getMeteoPointValueD(getCrit3DDate(myDate), dailyAirRelHumidityMin, meteoSettings);
+                        if (valueJoint != NODATA)
+                        {
+                            meteoPointSet->setMeteoPointValueD(getCrit3DDate(myDate), dailyAirRelHumidityMin, valueJoint);
+                            break;
+                        }
+                    }
+                }
+                value = meteoPointGet.getMeteoPointValueD(getCrit3DDate(myDate), dailyAirRelHumidityMax, meteoSettings);
+                if (value == NODATA)
+                {
+                    // missing dato, check joit station
+                    for (int i = 1; i<idPointsJointed.size(); i++)
+                    {
+                        int indexMp;
+                        for (int j = 0; j<meteoPointsNearDistanceList.size(); j++)
+                        {
+                            if (meteoPointsNearDistanceList[j].id == idPointsJointed[i])
+                            {
+                                indexMp = j;
+                                break;
+                            }
+                        }
+                        float valueJoint = meteoPointsNearDistanceList[indexMp].getMeteoPointValueD(getCrit3DDate(myDate), dailyAirRelHumidityMax, meteoSettings);
+                        if (valueJoint != NODATA)
+                        {
+                            meteoPointSet->setMeteoPointValueD(getCrit3DDate(myDate), dailyAirRelHumidityMax, valueJoint);
+                            break;
+                        }
+                    }
+                }
+            }
+        }
+        break;
+    }
+    default:
+    {
+        float value = meteoPointGet.getMeteoPointValueD(getCrit3DDate(myDate), myVar, meteoSettings);
+        if (value != NODATA)
+        {
+            meteoPointSet->setMeteoPointValueD(getCrit3DDate(myDate), myVar, value);
+        }
+        else
+        {
+            // missing dato, check joit station
+            for (int i = 1; i<idPointsJointed.size(); i++)
+            {
+                int indexMp;
+                for (int j = 0; j<meteoPointsNearDistanceList.size(); j++)
+                {
+                    if (meteoPointsNearDistanceList[j].id == idPointsJointed[i])
+                    {
+                        indexMp = j;
+                        break;
+                    }
+                }
+                float valueJoint = meteoPointsNearDistanceList[indexMp].getMeteoPointValueD(getCrit3DDate(myDate), myVar, meteoSettings);
+                if (valueJoint != NODATA)
+                {
+                    meteoPointSet->setMeteoPointValueD(getCrit3DDate(myDate), myVar, valueJoint);
+                    break;
+                }
+            }
+        }
+        break;
+    }
+    }
+}
+
 
