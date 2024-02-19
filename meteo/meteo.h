@@ -249,7 +249,7 @@
         { monthlyGlobalRadiation, "MONTHLY_RAD" }
     };
 
-    // se cambiano le unità di misura, controlalre procedure che generano i netcdf e ne controllano la unit, come quelle di mapping
+    // se cambiano le unità di misura, controllare le procedure che generano i netcdf e ne controllano la unit, come quelle di mapping
     const std::map<std::vector<meteoVariable>, std::string> MapVarUnit = {
         { {dailyAirTemperatureMin,airTemperature,monthlyAirTemperatureMin}, "C"} ,
         { {dailyAirTemperatureMax,monthlyAirTemperatureMax}, "C"} ,
