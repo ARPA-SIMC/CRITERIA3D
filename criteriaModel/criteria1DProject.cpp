@@ -1566,8 +1566,7 @@ bool Crit1DProject::createOutputTable(QString &myError)
     if (isClimateOutput)
     {
         queryString = "CREATE TABLE '" + myCase.unit.idCase + "'"
-                      + " ( DATE TEXT, PREC REAL, IRRIGATION REAL,"
-                      + " AVAILABLE_WATER REAL, FRACTION_AW REAL,"
+                      + " ( DATE TEXT, AVAILABLE_WATER REAL,"
                       + " TRANSP_MAX, TRANSP REAL";
     }
     else
@@ -1643,8 +1642,7 @@ void Crit1DProject::updateOutput(Crit3DDate myDate, bool isFirst)
         if (isClimateOutput)
         {
             outputString = "INSERT INTO '" + myCase.unit.idCase + "'"
-                           + " (DATE, PREC, IRRIGATION,"
-                           + " AVAILABLE_WATER, FRACTION_AW,"
+                           + " (DATE, AVAILABLE_WATER,"
                            + " TRANSP_MAX, TRANSP";
         }
         else
@@ -1708,10 +1706,7 @@ void Crit1DProject::updateOutput(Crit3DDate myDate, bool isFirst)
     if (isClimateOutput)
     {
         outputString += "('" + QString::fromStdString(myDate.toStdString()) + "'"
-                        + "," + QString::number(myCase.output.dailyPrec)
-                        + "," + QString::number(myCase.output.dailyIrrigation)
                         + "," + QString::number(myCase.output.dailyAvailableWater, 'g', 4)
-                        + "," + QString::number(myCase.output.dailyFractionAW, 'g', 3)
                         + "," + QString::number(myCase.output.dailyMaxTranspiration, 'g', 3)
                         + "," + QString::number(myCase.output.dailyTranspiration, 'g', 3);
     }
