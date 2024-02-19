@@ -90,6 +90,7 @@
         bool addDateTimeLogFile;
 
         // specific output
+        bool isClimateOutput;
         std::vector<int> waterContentDepth;
         std::vector<int> degreeOfSaturationDepth;
         std::vector<int> waterPotentialDepth;
