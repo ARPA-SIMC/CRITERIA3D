@@ -54,7 +54,8 @@
 
         double getRootLengthDD(const Crit3DRoot &myRoot, double currentDD, double emergenceDD);
         bool computeRootDensity(Crit3DCrop* myCrop, const std::vector<soil::Crit3DLayer> &soilLayers);
-        bool computeRootDensity3D(Crit3DCrop* myCrop, const soil::Crit3DSoil &currentSoil, unsigned int nrLayers,
+
+        bool computeRootDensity3D(Crit3DCrop &myCrop, const soil::Crit3DSoil &currentSoil, unsigned int nrLayers,
                                   const std::vector<double> &layerDepth, const std::vector<double> &layerThickness);
 
         int getNrAtoms(const std::vector<soil::Crit3DLayer> &soilLayers, double &minThickness, std::vector<int> &atoms);

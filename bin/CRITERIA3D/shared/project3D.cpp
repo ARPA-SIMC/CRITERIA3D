@@ -1340,6 +1340,7 @@ double Project3D::assignEvaporation(int row, int col, double lai, int soilIndex)
     std::vector<double> layerCoeff;
     depthCoeff.resize(lastEvapLayer+1);
     layerCoeff.resize(lastEvapLayer+1);
+
     double coeffSum = 0;
     for (unsigned int layer=1; layer <= unsigned(lastEvapLayer); layer++)
     {
@@ -1383,80 +1384,83 @@ double Project3D::assignEvaporation(int row, int col, double lai, int soilIndex)
 }
 
 
-// assign actual crop transpiration
-// return sum of crop transpiration over the soil column
-double Project3D::assignTranspiration(int row, int col, double lai, double degreeDays)
+/*! \brief assignTranspiration
+ *  Assigns the actual crop transpiration (waterSinkSource) from the soil root zone
+ *  \param row, col
+ *  \param currentLai: leaf area index [m2 m-2]
+ *  \param currentDegreeDays: degree days sum [°C]
+ *  \return crop transpiration sum [mm]
+ */
+double Project3D::assignTranspiration(int row, int col, double currentLai, double currentDegreeDays)
 {
     double actualTranspiration = 0;
 
-    if (lai < EPSILON || isEqual(degreeDays, NODATA))
+    // check lai and degree days
+    if (currentLai < EPSILON || isEqual(currentDegreeDays, NODATA))
+    {
         return actualTranspiration;
+    }
 
     // check land unit
     int cropIndex = getLandUnitIndexRowCol(row, col);
     if (cropIndex == NODATA)
+    {
         return actualTranspiration;
+    }
 
     // check crop
     if (landUnitList[cropIndex].idCrop.isEmpty())
+    {
         return actualTranspiration;
+    }
 
     Crit3DCrop currentCrop = cropList[cropIndex];
 
     // compute maximum transpiration
     double et0 = double(hourlyMeteoMaps->mapHourlyET0->value[row][col]);        // [mm]
-    double kcMax = currentCrop.kcMax;                                   // [-]
-    double maxTranspiration = getPotentialTranspiration(et0, lai, kcMax);
+    double kcMax = currentCrop.kcMax;                                           // [-]
+    double maxTranspiration = getPotentialTranspiration(et0, currentLai, kcMax);
 
     if (maxTranspiration < EPSILON)
-        return actualTranspiration;
-
-    // check soil
-    int soilIndex = int(soilIndexMap.value[row][col]);
-    if (soilIndex == NODATA)
-        return actualTranspiration;
-    double totalSoilDepth = soilList[soilIndex].totalDepth;     // [m]
-
-    // TODO watertable
-    double watertableDepth = NODATA;                            // [m]
-    double previousRootDepth = NODATA;                          // [m]
-
-    // update root lenght
-    currentCrop.updateRootDepth3D(degreeDays, watertableDepth, previousRootDepth, totalSoilDepth);
-    if (currentCrop.roots.currentRootLength <= 0)
-        return actualTranspiration;
-
-    // update root density
-    if (! root::computeRootDensity3D(&currentCrop, soilList[soilIndex], nrLayers, layerDepth, layerThickness))
     {
         return actualTranspiration;
     }
 
-    /*
-    double thetaWP;                                 // [m3 m-3] volumetric water content at Wilting Point
-    double cropWP;                                  // [mm] wilting point specific for crop
-    double waterSurplusThreshold;                   // [mm] water surplus stress threshold
-    double waterScarcityThreshold;                  // [mm] water scarcity stress threshold
+    // check soil
+    int soilIndex = int(soilIndexMap.value[row][col]);
+    if (soilIndex == NODATA)
+    {
+        return actualTranspiration;
+    }
 
-    double TRs=0.0;                                 // [mm] actual transpiration with only water scarsity stress
-    double TRe=0.0;                                 // [mm] actual transpiration with only water surplus stress
-    double totRootDensityWithoutStress = 0.0;       // [-]
-    double redistribution = 0.0;                    // [mm]
-*/
+    // compute root lenght
+    currentCrop.computeRootLength3D(currentDegreeDays, soilList[soilIndex].totalDepth);
+    if (currentCrop.roots.currentRootLength <= 0)
+    {
+        return actualTranspiration;
+    }
 
-    // initialize
+    // compute root density
+    if (! root::computeRootDensity3D(currentCrop, soilList[soilIndex], nrLayers, layerDepth, layerThickness))
+    {
+        return actualTranspiration;
+    }
+
+    // initialize vectors
     std::vector<bool> isLayerStressed;
     std::vector<float> layerTranspiration;
     isLayerStressed.resize(nrLayers);
     layerTranspiration.resize(nrLayers);
+
     for (unsigned int i = 0; i < nrLayers; i++)
     {
         isLayerStressed[i] = false;
         layerTranspiration[i] = 0;
     }
 
-    // water surplus stress starting threshold 0: saturation 1: field capacity
-    double waterSurplusStressFraction = 0.5;
+    // set water surplus stress threshold
+    // 0 = saturation 1 = field capacity
+    double waterSurplusStressFraction = 0.5;        // [-]
     if (currentCrop.isWaterSurplusResistant())
     {
         waterSurplusStressFraction = 0.0;
@@ -1464,52 +1468,45 @@ double Project3D::assignTranspiration(int row, int col, double lai, double degre
 
     int firstRootLayer = currentCrop.roots.firstRootLayer;
     int lastRootLayer = currentCrop.roots.lastRootLayer;
+
     for (int layer = firstRootLayer; layer <= lastRootLayer; layer++)
     {
         long nodeIndex = long(indexMap.at(layer).value[row][col]);
-        int horIndex = soilList[soilIndex].getHorizonIndex(layerDepth[layer]);
-        soil::Crit3DHorizon horizon = soilList[soilIndex].horizon[horIndex];
+        int horizonIndex = soilList[soilIndex].getHorizonIndex(layerDepth[layer]);
+        soil::Crit3DHorizon horizon = soilList[soilIndex].horizon[horizonIndex];
 
         // [m3 m-3]
-        double sat = horizon.vanGenuchten.thetaS;
-        double waterSurplusVolThreshold = sat - waterSurplusStressFraction * (sat - horizon.waterContentFC);
+        double volWaterContent = getCriteria3DVar(waterContent, nodeIndex);
+        double thetaSat = horizon.vanGenuchten.thetaS;
+        double volWaterSurplusThreshold = thetaSat - waterSurplusStressFraction * (thetaSat - horizon.waterContentFC);
+        double volWaterScarcityThreshold = horizon.waterContentFC - currentCrop.fRAW * (horizon.waterContentFC - horizon.waterContentWP);
 
-        // wilting point [mm]
-        double layerWP_mm = horizon.waterContentWP * layerThickness[layer] * horizon.getSoilFraction() * 1000.;
-
-        // [m3 m-3]
-        double waterScarcityVolThreshold = horizon.waterContentFC - currentCrop.fRAW * (horizon.waterContentFC - horizon.waterContentWP);
+        if  ((volWaterContent - volWaterSurplusThreshold)  > EPSILON)
+        {
+            // WATER SURPLUS
+            double ratio = (thetaSat - volWaterContent) / (thetaSat - volWaterSurplusThreshold);
+            layerTranspiration[layer] = maxTranspiration * currentCrop.roots.rootDensity[layer] * ratio;
+            isLayerStressed[layer] = true;
+        }
+        else if (volWaterContent <= horizon.waterContentWP)
+        {
+            layerTranspiration[layer] = 0;
+            isLayerStressed[layer] = true;
+        }
+        else if (volWaterContent < volWaterScarcityThreshold)
+        {
+            // WATER SCARSITY
+            double ratio = (volWaterContent - horizon.waterContentWP) / (volWaterScarcityThreshold - horizon.waterContentWP);
+            layerTranspiration[layer] = maxTranspiration * currentCrop.roots.rootDensity[layer] * ratio;
+            isLayerStressed[layer] = true;
+        }
+        else
+        {
+            // NORMAL CONDITION
+        }
     }
 
         /*
-        if ((soilLayers[i].waterContent - waterSurplusThreshold) > EPSILON)
-        {
-            // WATER SURPLUS
-            layerTranspiration[i] = maxTranspiration * roots.rootDensity[i] *
-                                    ((soilLayers[i].SAT - soilLayers[i].waterContent)
-                                     / (soilLayers[i].SAT - waterSurplusThreshold));
-
-            TRe += layerTranspiration[i];
-            TRs += maxTranspiration * roots.rootDensity[i];
-            isLayerStressed[i] = true;
-        }
-        else if (soilLayers[i].waterContent < waterScarcityThreshold)
-        {
-            // WATER SCARSITY
-            if (soilLayers[i].waterContent <= cropWP)
-            {
-                layerTranspiration[i] = 0;
-            }
-            else
-            {
-                layerTranspiration[i] = maxTranspiration * roots.rootDensity[i] *
-                                        ((soilLayers[i].waterContent - cropWP) / (waterScarcityThreshold - cropWP));
-            }
-
-            TRs += layerTranspiration[i];
-            TRe += maxTranspiration * roots.rootDensity[i];
-            isLayerStressed[i] = true;
-        }
         else
         {
             // normal conditions
@@ -1529,6 +1526,9 @@ double Project3D::assignTranspiration(int row, int col, double lai, double degre
             }
         }
     }
+
+    double totRootDensityWithoutStress = 0.0;       // [-]
+    double redistribution = 0.0;                    // [mm]
 
     // WATER STRESS [-]
     double firstWaterStress = 1 - (TRs / maxTranspiration);
