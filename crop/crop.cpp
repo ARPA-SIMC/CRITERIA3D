@@ -593,18 +593,16 @@ double Crit3DCrop::computeRootLength(double currentDD, double waterTableDepth)
 }
 
 
-/*! \brief updateRootDepth3D
- *  update current root lenght and root depth
+/*! \brief computeRootLength3D
+ *  compute current root lenght and root depth
  *  function for Criteria3D (update key variables)
- *  \param currentDD:  current degree days sum
- *  \param waterTableDepth      [m]
- *  \param previousRootDepth    [m]
+ *  \param currentDegreeDays    [°C]
  *  \param totalSoilDepth       [m]
  */
-void Crit3DCrop::updateRootDepth3D(double currentDD,  double waterTableDepth, double previousRootDepth, double totalSoilDepth)
+void Crit3DCrop::computeRootLength3D(double currentDegreeDays, double totalSoilDepth)
 {
     // set actualRootDepthMax
-    if (isEqual(totalSoilDepth, NODATA) || isEqual(totalSoilDepth, 0))
+    if ( isEqual(totalSoilDepth, NODATA) )
     {
         roots.actualRootDepthMax = roots.rootDepthMax;
     }
@@ -614,16 +612,32 @@ void Crit3DCrop::updateRootDepth3D(double currentDD,  double waterTableDepth, do
     }
 
     // set currentRootLength
-    if (isEqual(previousRootDepth, NODATA))
+    if (isRootStatic())
     {
-        roots.currentRootLength = 0;
+        roots.currentRootLength = roots.actualRootDepthMax - roots.rootDepthMin;
     }
     else
     {
-        roots.currentRootLength = previousRootDepth - roots.rootDepthMin;
+        if (currentDegreeDays <= 0)
+        {
+            roots.currentRootLength = 0.0;
+        }
+        else
+        {
+            if (currentDegreeDays > roots.degreeDaysRootGrowth)
+            {
+                roots.currentRootLength = roots.actualRootDepthMax - roots.rootDepthMin;
+            }
+            else
+            {
+                // in order to avoid numerical divergences
+                currentDegreeDays = MAXVALUE(currentDegreeDays, 1);
+                roots.currentRootLength = root::getRootLengthDD(roots, currentDegreeDays, degreeDaysEmergence);
+            }
+        }
     }
 
-    roots.currentRootLength = computeRootLength(currentDD, waterTableDepth);
+    // set rootDepth
     roots.rootDepth = roots.rootDepthMin + roots.currentRootLength;
 }
 
