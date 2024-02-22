@@ -2248,6 +2248,15 @@ bool Crit3DMeteoGridDbHandler::loadGridAllMonthlyData(QString &myError, QDate fi
         return false;
     }
 
+    // init all monthly data
+    for (int row = 0; row < gridStructure().header().nrRows; row++)
+    {
+        for (int col = 0; col < gridStructure().header().nrCols; col++)
+        {
+            _meteoGrid->meteoPointPointer(row,col)->initializeObsDataM(numberOfMonths, firstDate.month(), firstDate.year());
+        }
+    }
+
     QSqlQuery qry(_db);
     QDate date;
     unsigned row, col;
@@ -2308,7 +2317,6 @@ bool Crit3DMeteoGridDbHandler::loadGridAllMonthlyData(QString &myError, QDate fi
                     myError = "Missing MeteoPoint id";
                     return false;
                 }
-                _meteoGrid->meteoPointPointer(row,col)->initializeObsDataM(numberOfMonths, firstDate.month(), firstDate.year());
             }
             if (! _meteoGrid->meteoPointPointer(row,col)->setMeteoPointValueM(getCrit3DDate(date), variable, value))
                 return false;
