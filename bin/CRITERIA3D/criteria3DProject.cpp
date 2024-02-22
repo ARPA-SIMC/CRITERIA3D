@@ -63,6 +63,7 @@ bool Crit3DProject::initializeCriteria3DModel()
 
     clearWaterBalance3D();
 
+    // it is necessary to reload the soils db (the fitting options may have changed)
     if (! loadSoilDatabase(soilDbFileName))
     {
         return false;
