@@ -2308,11 +2308,7 @@ bool Crit3DMeteoGridDbHandler::loadGridAllMonthlyData(QString &myError, QDate fi
                     myError = "Missing MeteoPoint id";
                     return false;
                 }
-
-                if (_meteoGrid->meteoPointPointer(row,col)->nrObsDataDaysM == 0)
-                {
-                    _meteoGrid->meteoPointPointer(row,col)->initializeObsDataM(numberOfMonths, firstDate.month(), firstDate.year());
-                }
+                _meteoGrid->meteoPointPointer(row,col)->initializeObsDataM(numberOfMonths, firstDate.month(), firstDate.year());
             }
             if (! _meteoGrid->meteoPointPointer(row,col)->setMeteoPointValueM(getCrit3DDate(date), variable, value))
                 return false;
