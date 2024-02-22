@@ -120,8 +120,10 @@
         std::vector <double> layerThickness;    // [m]
 
         // sink/source
-        std::vector <double> waterSinkSource;   // [m^3/sec]
-        double totalPrecipitation, totalEvaporation, totalTranspiration;
+        std::vector <double> waterSinkSource;   // [m3 s-1]
+        double totalPrecipitation;              // [m3 h-1]
+        double totalEvaporation;                // [m3 h-1]
+        double totalTranspiration;              // [m3 h-1]
 
         Project3D();
 

@@ -222,8 +222,8 @@ void Crit3DProject::dailyUpdateCrop()
  */
 void Crit3DProject::assignETreal()
 {
-    totalEvaporation = 0;
-    totalTranspiration = 0;
+    totalEvaporation = 0;               // [m3 h-1]
+    totalTranspiration = 0;             // [m3 h-1]
 
     double area = DEM.header->cellSize * DEM.header->cellSize;
 
@@ -244,18 +244,18 @@ void Crit3DProject::assignETreal()
                     lai = 0;
                 }
 
-                // assign real evaporation
-                double realEvap = assignEvaporation(row, col, lai, soilIndex);      // [mm]
-                double evapFlow = area * (realEvap / 1000.);                        // [m3 h-1]
-                totalEvaporation += evapFlow;
+                // assigns actual evaporation
+                double actualEvap = assignEvaporation(row, col, lai, soilIndex);    // [mm h-1]
+                double evapFlow = area * (actualEvap / 1000.);                      // [m3 h-1]
+                totalEvaporation += evapFlow;                                       // [m3 h-1]
 
-                // assign real transpiration
+                // assigns actual transpiration
                 if (lai > 0)
                 {
                     float degreeDays = degreeDaysMap.value[row][col];
-                    double realTransp = assignTranspiration(row, col, lai, degreeDays);     // [mm]
-                    double traspFlow = area * (realTransp / 1000.);                         // [m3 h-1]
-                    totalTranspiration += traspFlow;
+                    double actualTransp = assignTranspiration(row, col, lai, degreeDays);   // [mm h-1]
+                    double traspFlow = area * (actualTransp / 1000.);                       // [m3 h-1]
+                    totalTranspiration += traspFlow;                                        // [m3 h-1]
                 }
             }
         }
@@ -266,7 +266,7 @@ void Crit3DProject::assignETreal()
 void Crit3DProject::assignPrecipitation()
 {
     // initialize
-    totalPrecipitation = 0;
+    totalPrecipitation = 0;                 // [m3]
 
     double area = DEM.header->cellSize * DEM.header->cellSize;
 
@@ -278,16 +278,15 @@ void Crit3DProject::assignPrecipitation()
             int surfaceIndex = indexMap.at(0).value[row][col];
             if (surfaceIndex != indexMap.at(0).header->flag)
             {
-                double waterSource = 0;
                 float prec = hourlyMeteoMaps->mapHourlyPrec->value[row][col];
                 if (! isEqual(prec, hourlyMeteoMaps->mapHourlyPrec->header->flag))
-                    waterSource += prec;
-
-                if (waterSource > 0)
                 {
-                    double flow = area * (waterSource / 1000.);                     // [m3 h-1]
-                    waterSinkSource[unsigned(surfaceIndex)] += flow / 3600.;        // [m3 s-1]
-                    totalPrecipitation += flow;
+                    if (prec > 0)
+                    {
+                        double flow = area * (prec / 1000.);                // [m3 h-1]
+                        waterSinkSource[surfaceIndex] += flow / 3600.;      // [m3 s-1]
+                        totalPrecipitation += flow;                         // [m3]
+                    }
                 }
             }
         }

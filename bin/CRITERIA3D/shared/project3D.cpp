@@ -766,10 +766,10 @@ void Project3D::computeWaterBalance3D(double totalTimeStep)
 {
     double previousWaterContent = soilFluxes3D::getTotalWaterContent();
 
-    logInfo("total water [m^3]: " + QString::number(previousWaterContent));
-    logInfo("precipitation [m^3]: " + QString::number(totalPrecipitation));
-    logInfo("evaporation [m^3]: " + QString::number(-totalEvaporation));
-    logInfo("transpiration [m^3]: " + QString::number(-totalTranspiration));
+    logInfo("total water [m3]: " + QString::number(previousWaterContent));
+    logInfo("precipitation [m3]: " + QString::number(totalPrecipitation));
+    logInfo("evaporation [m3]: " + QString::number(-totalEvaporation));
+    logInfo("transpiration [m3]: " + QString::number(-totalTranspiration));
     logInfo("Compute water flow...");
 
     soilFluxes3D::initializeBalance();
@@ -1385,15 +1385,15 @@ double Project3D::assignEvaporation(int row, int col, double lai, int soilIndex)
 
 
 /*! \brief assignTranspiration
- *  Assigns the actual crop transpiration (waterSinkSource) from the soil root zone
- *  \param row, col
+ *  it computes the actual crop transpiration from the soil root zone
+ *  and assigns to waterSinkSource
  *  \param currentLai: leaf area index [m2 m-2]
  *  \param currentDegreeDays: degree days sum [°C]
- *  \return crop transpiration sum [mm]
+ *  \return actual transpiration [mm]
  */
 double Project3D::assignTranspiration(int row, int col, double currentLai, double currentDegreeDays)
 {
-    double actualTranspiration = 0;
+    double actualTranspiration = 0;                 // [mm]
 
     // check lai and degree days
     if (currentLai < EPSILON || isEqual(currentDegreeDays, NODATA))
@@ -1458,14 +1458,14 @@ double Project3D::assignTranspiration(int row, int col, double currentLai, doubl
         layerTranspiration[i] = 0;
     }
 
-    // set water surplus stress threshold
-    // 0 = saturation 1 = field capacity
-    double waterSurplusStressFraction = 0.5;        // [-]
+    // set water surplus stress threshold (0: saturation 1: field capacity)
+    double waterSurplusStressFraction = 0.5;                // [-]
     if (currentCrop.isWaterSurplusResistant())
     {
         waterSurplusStressFraction = 0.0;
     }
 
+    double rootDensityWithoutStress = 0.0;                   // [-]
     int firstRootLayer = currentCrop.roots.firstRootLayer;
     int lastRootLayer = currentCrop.roots.lastRootLayer;
 
@@ -1481,84 +1481,61 @@ double Project3D::assignTranspiration(int row, int col, double currentLai, doubl
         double volWaterSurplusThreshold = thetaSat - waterSurplusStressFraction * (thetaSat - horizon.waterContentFC);
         double volWaterScarcityThreshold = horizon.waterContentFC - currentCrop.fRAW * (horizon.waterContentFC - horizon.waterContentWP);
 
-        if  ((volWaterContent - volWaterSurplusThreshold)  > EPSILON)
+        double ratio;
+        if (volWaterContent <= horizon.waterContentWP)
         {
-            // WATER SURPLUS
-            double ratio = (thetaSat - volWaterContent) / (thetaSat - volWaterSurplusThreshold);
-            layerTranspiration[layer] = maxTranspiration * currentCrop.roots.rootDensity[layer] * ratio;
-            isLayerStressed[layer] = true;
-        }
-        else if (volWaterContent <= horizon.waterContentWP)
-        {
-            layerTranspiration[layer] = 0;
+            // NO AVAILABLE WATER
+            ratio = 0;
             isLayerStressed[layer] = true;
         }
         else if (volWaterContent < volWaterScarcityThreshold)
         {
             // WATER SCARSITY
-            double ratio = (volWaterContent - horizon.waterContentWP) / (volWaterScarcityThreshold - horizon.waterContentWP);
-            layerTranspiration[layer] = maxTranspiration * currentCrop.roots.rootDensity[layer] * ratio;
+            ratio = (volWaterContent - horizon.waterContentWP) / (volWaterScarcityThreshold - horizon.waterContentWP);
+            isLayerStressed[layer] = true;
+        }
+        else if  ((volWaterContent - volWaterSurplusThreshold)  > EPSILON)
+        {
+            // WATER SURPLUS
+            ratio = (thetaSat - volWaterContent) / (thetaSat - volWaterSurplusThreshold);
             isLayerStressed[layer] = true;
         }
         else
         {
             // NORMAL CONDITION
+            ratio = 1;
+            isLayerStressed[layer] = false;
+            rootDensityWithoutStress += currentCrop.roots.rootDensity[layer];
         }
+
+        layerTranspiration[layer] = maxTranspiration * currentCrop.roots.rootDensity[layer] * ratio;
+        actualTranspiration += layerTranspiration[layer];
     }
-
-        /*
-        else
-        {
-            // normal conditions
-            layerTranspiration[i] = maxTranspiration * roots.rootDensity[i];
-
-            TRs += layerTranspiration[i];
-            TRe += layerTranspiration[i];
-
-            if ((soilLayers[i].waterContent - layerTranspiration[i]) > waterScarcityThreshold)
-            {
-                isLayerStressed[i] = false;
-                totRootDensityWithoutStress +=  roots.rootDensity[i];
-            }
-            else
-            {
-                isLayerStressed[i] = true;
-            }
-        }
-    }
-
-    double totRootDensityWithoutStress = 0.0;       // [-]
-    double redistribution = 0.0;                    // [mm]
 
     // WATER STRESS [-]
-    double firstWaterStress = 1 - (TRs / maxTranspiration);
+    double waterStress = 1 - (actualTranspiration / maxTranspiration);
 
-    // Hydraulic redistribution
-    // the movement of water from moist to dry soil through plant roots
-    // TODO add numerical process
-    if (firstWaterStress > EPSILON && totRootDensityWithoutStress > EPSILON)
+    // Hydraulic redistribution: movement of water from moist to dry soil through plant roots
+    if (waterStress > EPSILON && rootDensityWithoutStress > EPSILON)
     {
-        // redistribution acts on not stressed roots
-        redistribution = MINVALUE(firstWaterStress, totRootDensityWithoutStress) * maxTranspiration;
+        // redistribution acts only on not stressed roots
+        double redistribution = maxTranspiration * std::min(waterStress, rootDensityWithoutStress);     // [mm]
 
-        for (int i = roots.firstRootLayer; i <= roots.lastRootLayer; i++)
-        {
-            if (! isLayerStressed[i])
-            {
-                double addLayerTransp = redistribution * (roots.rootDensity[unsigned(i)] / totRootDensityWithoutStress);
-                layerTranspiration[unsigned(i)] += addLayerTransp;
-                TRs += addLayerTransp;
-            }
-        }
+        for (int layer = firstRootLayer; layer <= lastRootLayer; layer++)
+            if (! isLayerStressed[layer])
+                layerTranspiration[layer] += redistribution * (currentCrop.roots.rootDensity[layer] / rootDensityWithoutStress);
     }
 
-    waterStress = 1 - (TRs / maxTranspiration);
-
-    for (int i = roots.firstRootLayer; i <= roots.lastRootLayer; i++)
+    // assigns transpiration to water sink source
+    double area = DEM.header->cellSize * DEM.header->cellSize;          // [m2]
+    actualTranspiration = 0;
+    for (int layer = firstRootLayer; layer <= lastRootLayer; layer++)
     {
-        totalTranspiration += layerTranspiration[unsigned(i)];
+        double flow = area * (layerTranspiration[layer] / 1000);        // [m3 h-1]
+        long nodeIndex = long(indexMap.at(layer).value[row][col]);
+        waterSinkSource.at(nodeIndex) -= (flow / 3600);                 // [m3 s-1]
+        actualTranspiration += layerTranspiration[layer];               // [mm]
     }
-    */
 
     return actualTranspiration;
 }

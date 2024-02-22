@@ -724,7 +724,10 @@ double Crit3DCrop::computeTranspiration(double maxTranspiration, const std::vect
 
     // initialize
     unsigned int nrLayers = unsigned(soilLayers.size());
-    bool* isLayerStressed = new bool[nrLayers];
+
+    // initialize vectors
+    std::vector<bool> isLayerStressed;
+    isLayerStressed.resize(nrLayers);
     for (unsigned int i = 0; i < nrLayers; i++)
     {
         isLayerStressed[i] = false;
@@ -821,14 +824,13 @@ double Crit3DCrop::computeTranspiration(double maxTranspiration, const std::vect
 
     waterStress = 1 - (TRs / maxTranspiration);
 
-    double totalTranspiration = 0;
+    double actualTranspiration = 0;
     for (int i = roots.firstRootLayer; i <= roots.lastRootLayer; i++)
     {
-        totalTranspiration += layerTranspiration[unsigned(i)];
+        actualTranspiration += layerTranspiration[unsigned(i)];
     }
 
-    delete[] isLayerStressed;
-    return totalTranspiration;
+    return actualTranspiration;
 }
 
 
