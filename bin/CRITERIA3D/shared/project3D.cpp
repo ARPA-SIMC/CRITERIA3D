@@ -1468,6 +1468,7 @@ double Project3D::assignTranspiration(int row, int col, double currentLai, doubl
     double rootDensityWithoutStress = 0.0;                   // [-]
     int firstRootLayer = currentCrop.roots.firstRootLayer;
     int lastRootLayer = currentCrop.roots.lastRootLayer;
+    double transpirationSubsetMax = 0;
 
     for (int layer = firstRootLayer; layer <= lastRootLayer; layer++)
     {
@@ -1509,17 +1510,20 @@ double Project3D::assignTranspiration(int row, int col, double currentLai, doubl
         }
 
         layerTranspiration[layer] = maxTranspiration * currentCrop.roots.rootDensity[layer] * ratio;
+        transpirationSubsetMax += maxTranspiration * currentCrop.roots.rootDensity[layer];
         actualTranspiration += layerTranspiration[layer];
     }
 
     // WATER STRESS [-]
-    double waterStress = 1 - (actualTranspiration / maxTranspiration);
+    // transpirationSubsetMax = maxTranspiration when all soil profile is simulated
+    // otherwise it refers to the subset of soil profile considered
+    double waterStress = 1 - (actualTranspiration / transpirationSubsetMax);
 
     // Hydraulic redistribution: movement of water from moist to dry soil through plant roots
     if (waterStress > EPSILON && rootDensityWithoutStress > EPSILON)
     {
         // redistribution acts only on not stressed roots
-        double redistribution = maxTranspiration * std::min(waterStress, rootDensityWithoutStress);     // [mm]
+        double redistribution = transpirationSubsetMax * std::min(waterStress, rootDensityWithoutStress);     // [mm]
 
         for (int layer = firstRootLayer; layer <= lastRootLayer; layer++)
             if (! isLayerStressed[layer])
