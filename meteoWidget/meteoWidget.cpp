@@ -2118,28 +2118,51 @@ void Crit3DMeteoWidget::on_actionDataAvailability()
     QDialog infoWindow;
     infoWindow.setWindowTitle("DataAvailability");
     QVBoxLayout* layout = new QVBoxLayout();
-    QString infoDaily = QString("<b> Daily Data: </b>");
-    QLabel* labelDaily = new QLabel(infoDaily);
-    layout->addWidget(labelDaily);
-    QString dailyInfo = QString("%1 - %2")
-                       .arg(firstDailyDate.toString("yyyy/MM/dd"), lastDailyDate.toString("yyyy/MM/dd"));
-    QTextEdit* dailyTextEdit = new QTextEdit(dailyInfo);
-    QFont font = dailyTextEdit->font();
-    QFontMetrics fontMetrics = QFontMetrics(font);
-    dailyTextEdit->setMaximumHeight(fontMetrics.height()+10);
-    dailyTextEdit->setReadOnly(true);
-    layout->addWidget(dailyTextEdit);
 
-    QString infoHourly = QString("<b> Hourly Data: </b>");
-    QLabel* labelHourly = new QLabel(infoHourly);
-    layout->addWidget(labelHourly);
-    QString hourlyInfo = QString("%1 - %2")
-                            .arg(firstHourlyDate.toString("yyyy/MM/dd"), lastHourlyDate.toString("yyyy/MM/dd"));
-    QTextEdit* hourlyTextEdit = new QTextEdit(hourlyInfo);
-    hourlyTextEdit->setMaximumHeight(fontMetrics.height()+10);
-    hourlyTextEdit->setReadOnly(true);
-    layout->addWidget(hourlyTextEdit);
+    QDate myFirstDailyDate;
+    QDate myLastDailyDate;
+    QDate myFirstHourlyDate;
+    QDate myLastHourlyDate;
 
+    for (int mp=0; mp<meteoPoints.size();mp++)
+    {
+        QString stationId = QString::fromStdString(meteoPoints[mp].id);
+        QString stationsName = QString::fromStdString(meteoPoints[mp].name);
+        QString station = stationId+"_"+stationsName;
+
+        QGroupBox *groupBox = new QGroupBox(station);
+        QVBoxLayout *vbox = new QVBoxLayout;
+
+        QString infoDaily = QString("<b> Daily Data: </b>");
+        QLabel* labelDaily = new QLabel(infoDaily);
+        vbox->addWidget(labelDaily);
+        myFirstDailyDate.setDate(meteoPoints[mp].obsDataD[0].date.year, meteoPoints[mp].obsDataD[0].date.month, meteoPoints[mp].obsDataD[0].date.day);
+        myLastDailyDate = myFirstDailyDate.addDays(meteoPoints[mp].nrObsDataDaysD-1);
+        QString dailyInfo = QString("%1 - %2")
+                                .arg(myFirstDailyDate.toString("yyyy/MM/dd"), myLastDailyDate.toString("yyyy/MM/dd"));
+        QTextEdit* dailyTextEdit = new QTextEdit(dailyInfo);
+        QFont font = dailyTextEdit->font();
+        QFontMetrics fontMetrics = QFontMetrics(font);
+        dailyTextEdit->setMaximumHeight(fontMetrics.height()+10);
+        dailyTextEdit->setReadOnly(true);
+        vbox->addWidget(dailyTextEdit);
+
+        QString infoHourly = QString("<b> Hourly Data: </b>");
+        QLabel* labelHourly = new QLabel(infoHourly);
+        vbox->addWidget(labelHourly);
+        myFirstHourlyDate.setDate(meteoPoints[mp].getMeteoPointHourlyValuesDate(0).year, meteoPoints[mp].getMeteoPointHourlyValuesDate(0).month,
+                                  meteoPoints[mp].getMeteoPointHourlyValuesDate(0).day);
+        myLastHourlyDate = myFirstHourlyDate.addDays(meteoPoints[mp].nrObsDataDaysH-1);
+
+        QString hourlyInfo = QString("%1 - %2")
+                                 .arg(myFirstHourlyDate.toString("yyyy/MM/dd"), myLastHourlyDate.toString("yyyy/MM/dd"));
+        QTextEdit* hourlyTextEdit = new QTextEdit(hourlyInfo);
+        hourlyTextEdit->setMaximumHeight(fontMetrics.height()+10);
+        hourlyTextEdit->setReadOnly(true);
+        vbox->addWidget(hourlyTextEdit);
+        groupBox->setLayout(vbox);
+        layout->addWidget(groupBox);
+    }
     infoWindow.setLayout(layout);
     infoWindow.exec();
 }
