@@ -259,7 +259,7 @@
         void importHourlyMeteoData(const QString& fileName, bool importAllFiles, bool deletePreviousData);
 
         gis::Crit3DRasterGrid* getHourlyMeteoRaster(meteoVariable myVar);
-        void showMeteoWidgetPoint(std::string idMeteoPoint, std::string namePoint, bool isAppend);
+        void showMeteoWidgetPoint(std::string idMeteoPoint, std::string namePoint, std::string lapseRate, bool isAppend);
         void showMeteoWidgetGrid(std::string idCell, bool isAppend);
         void showProxyGraph();
 

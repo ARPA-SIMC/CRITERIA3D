@@ -337,8 +337,10 @@ Crit3DMeteoWidget::Crit3DMeteoWidget(bool isGrid, QString projectPath, Crit3DMet
     // menu
     QMenuBar* menuBar = new QMenuBar();
     QMenu *editMenu = new QMenu("Edit");
+    QMenu *viewMenu = new QMenu("View");
 
     menuBar->addMenu(editMenu);
+    menuBar->addMenu(viewMenu);
     mainLayout->setMenuBar(menuBar);
 
     QAction* changeLeftAxis = new QAction(tr("&Change axis left"), this);
@@ -351,6 +353,12 @@ Crit3DMeteoWidget::Crit3DMeteoWidget(bool isGrid, QString projectPath, Crit3DMet
     editMenu->addAction(exportGraph);
     editMenu->addAction(removeStation);
 
+    QAction* infoPoint = new QAction(tr("&Info meteo point"), this);
+    QAction* dataAvailability = new QAction(tr("&Data availability"), this);
+
+    viewMenu->addAction(infoPoint);
+    viewMenu->addAction(dataAvailability);
+
     connect(addVarButton, &QPushButton::clicked, [=](){ showVar(); });
     connect(dailyButton, &QPushButton::clicked, [=](){ showDailyGraph(); });
     connect(hourlyButton, &QPushButton::clicked, [=](){ showHourlyGraph(); });
@@ -362,6 +370,8 @@ Crit3DMeteoWidget::Crit3DMeteoWidget(bool isGrid, QString projectPath, Crit3DMet
     connect(changeRightAxis, &QAction::triggered, this, &Crit3DMeteoWidget::on_actionChangeRightAxis);
     connect(exportGraph, &QAction::triggered, this, &Crit3DMeteoWidget::on_actionExportGraph);
     connect(removeStation, &QAction::triggered, this, &Crit3DMeteoWidget::on_actionRemoveStation);
+    connect(infoPoint, &QAction::triggered, this, &Crit3DMeteoWidget::on_actionInfoPoint);
+    connect(dataAvailability, &QAction::triggered, this, &Crit3DMeteoWidget::on_actionDataAvailability);
 
     plotLayout->addWidget(chartView);
     horizontalGroupBox->setLayout(buttonLayout);
@@ -2077,6 +2087,33 @@ void Crit3DMeteoWidget::on_actionRemoveStation()
         updateSeries();
         redraw();
     }
+}
+
+void Crit3DMeteoWidget::on_actionInfoPoint()
+{
+    QDialog infoWindow;
+    infoWindow.setWindowTitle("Info meteo points");
+    QVBoxLayout* layout = new QVBoxLayout(&infoWindow);
+    for (int mp=0; mp<meteoPoints.size();mp++)
+    {
+        QString stationId = QString::fromStdString(meteoPoints[mp].id);
+        QString stationsName = QString::fromStdString(meteoPoints[mp].name);
+        QString station = stationId+"_"+stationsName;
+        QString lapseRateName = QString::fromStdString(getLapseRateCodeName(meteoPoints[mp].lapseRateCode));
+        QLabel* label = new QLabel(station);
+        layout->addWidget(label);
+        QString info = QString("Point: <b> %1 </b> <br/> ID: %2 <br/> lapse rate code: %3")
+                                  .arg(stationsName, stationId, lapseRateName);
+        QTextEdit* plainTextEdit = new QTextEdit(info);
+        plainTextEdit->setReadOnly(true);
+        layout->addWidget(plainTextEdit);
+    }
+    infoWindow.exec();
+}
+
+void Crit3DMeteoWidget::on_actionDataAvailability()
+{
+    // TO DO
 }
 
 

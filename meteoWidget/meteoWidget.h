@@ -54,6 +54,8 @@
             void on_actionChangeRightAxis();
             void on_actionExportGraph();
             void on_actionRemoveStation();
+            void on_actionInfoPoint();
+            void on_actionDataAvailability();
 
     private:
             int meteoWidgetID;
