@@ -2093,7 +2093,7 @@ void Crit3DMeteoWidget::on_actionInfoPoint()
 {
     QDialog infoWindow;
     infoWindow.setWindowTitle("Info meteo points");
-    QVBoxLayout* layout = new QVBoxLayout(&infoWindow);
+    QVBoxLayout* layout = new QVBoxLayout();
     for (int mp=0; mp<meteoPoints.size();mp++)
     {
         QString stationId = QString::fromStdString(meteoPoints[mp].id);
@@ -2108,12 +2108,39 @@ void Crit3DMeteoWidget::on_actionInfoPoint()
         plainTextEdit->setReadOnly(true);
         layout->addWidget(plainTextEdit);
     }
+    infoWindow.setLayout(layout);
     infoWindow.exec();
 }
 
 void Crit3DMeteoWidget::on_actionDataAvailability()
 {
-    // TO DO
+    QDialog infoWindow;
+    infoWindow.setWindowTitle("DataAvailability");
+    QVBoxLayout* layout = new QVBoxLayout();
+    QString infoDaily = QString("<b> Daily Data: </b>");
+    QLabel* labelDaily = new QLabel(infoDaily);
+    layout->addWidget(labelDaily);
+    QString dailyInfo = QString("%1 - %2")
+                       .arg(firstDailyDate.toString("yyyy/MM/dd"), lastDailyDate.toString("yyyy/MM/dd"));
+    QTextEdit* dailyTextEdit = new QTextEdit(dailyInfo);
+    QFont font = dailyTextEdit->font();
+    QFontMetrics fontMetrics = QFontMetrics(font);
+    dailyTextEdit->setMaximumHeight(fontMetrics.height()+10);
+    dailyTextEdit->setReadOnly(true);
+    layout->addWidget(dailyTextEdit);
+
+    QString infoHourly = QString("<b> Hourly Data: </b>");
+    QLabel* labelHourly = new QLabel(infoHourly);
+    layout->addWidget(labelHourly);
+    QString hourlyInfo = QString("%1 - %2")
+                            .arg(firstHourlyDate.toString("yyyy/MM/dd"), lastHourlyDate.toString("yyyy/MM/dd"));
+    QTextEdit* hourlyTextEdit = new QTextEdit(hourlyInfo);
+    hourlyTextEdit->setMaximumHeight(fontMetrics.height()+10);
+    hourlyTextEdit->setReadOnly(true);
+    layout->addWidget(hourlyTextEdit);
+
+    infoWindow.setLayout(layout);
+    infoWindow.exec();
 }
 
 
