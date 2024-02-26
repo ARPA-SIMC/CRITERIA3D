@@ -115,6 +115,11 @@ void Crit3DMeteoPoint::setLapseRateCode(std::string lapseRateCode)
 
 }
 
+void Crit3DMeteoPoint::setDataset(std::string dataset)
+{
+    this->dataset = dataset;
+}
+
 void Crit3DMeteoPoint::initializeObsDataH(int myHourlyFraction, int numberOfDays, const Crit3DDate& firstDate)
 {
     this->cleanObsDataH();

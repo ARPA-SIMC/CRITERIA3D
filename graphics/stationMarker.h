@@ -41,8 +41,8 @@
             void mousePressEvent(QGraphicsSceneMouseEvent *event);
             void mouseReleaseEvent(QGraphicsSceneMouseEvent *event);
         signals:
-            void newStationClicked(std::string, std::string, std::string, bool);
-            void appendStationClicked(std::string, std::string, std::string, bool);
+            void newStationClicked(std::string, std::string, std::string, std::string, bool);
+            void appendStationClicked(std::string, std::string, std::string, std::string, bool);
             void newPointStatisticsClicked(std::string, bool);
             void changeOrogCodeClicked(std::string, int);
             void newHomogeneityTestClicked(std::string);

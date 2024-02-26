@@ -166,6 +166,7 @@
 
             void setId(std::string value);
             void setName(std::string name);
+            void setDataset(std::string dataset);
             void setLapseRateCode(std::string lapseRateCode);
 
             bool computeDerivedVariables(Crit3DTime dateTime);
