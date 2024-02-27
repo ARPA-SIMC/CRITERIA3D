@@ -2100,11 +2100,12 @@ void Crit3DMeteoWidget::on_actionInfoPoint()
         QString stationsName = QString::fromStdString(meteoPoints[mp].name);
         QString station = stationId+"_"+stationsName;
         QString dataset = QString::fromStdString(meteoPoints[mp].dataset);
+        QString altitude = QString::number(meteoPoints[mp].point.z);
         QString lapseRateName = QString::fromStdString(getLapseRateCodeName(meteoPoints[mp].lapseRateCode));
         QLabel* label = new QLabel(station);
         layout->addWidget(label);
-        QString info = QString("Point: <b> %1 </b> <br/> ID: %2 <br/> dataset: %3 <br/> lapse rate code: %4")
-                                  .arg(stationsName, stationId, dataset, lapseRateName);
+        QString info = QString("Point: <b> %1 </b> <br/> ID: %2 <br/> dataset: %3 <br/> altitude: %4 m <br/> lapse rate code: %5")
+                                  .arg(stationsName, stationId, dataset, altitude, lapseRateName);
         QTextEdit* plainTextEdit = new QTextEdit(info);
         plainTextEdit->setReadOnly(true);
         layout->addWidget(plainTextEdit);
