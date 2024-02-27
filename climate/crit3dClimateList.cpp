@@ -194,7 +194,7 @@ std::vector<bool> Crit3DClimateList::listDailyCumulated() const
 }
 
 
-void Crit3DClimateList::parserElaboration()
+void Crit3DClimateList::parserElaboration(QString &errorStr)
 {
     for (int i = 0; i < _listClimateElab.size(); i++)
     {
@@ -218,6 +218,7 @@ void Crit3DClimateList::parserElaboration()
         int firstYear = myYearWords[0].toInt(&isOk);
         if (! isOk)
         {
+            errorStr += "Wrong year: " + myYearWords[0] + "\n";
             _listClimateElab.replace(i, "NULL");
             continue;
         }
@@ -225,6 +226,7 @@ void Crit3DClimateList::parserElaboration()
         int lastYear = myYearWords[1].toInt(&isOk);
         if (! isOk)
         {
+            errorStr += "Wrong year: " + myYearWords[1] + "\n";
             _listClimateElab.replace(i, "NULL");
             continue;
         }
@@ -236,31 +238,34 @@ void Crit3DClimateList::parserElaboration()
 
         if (words.size() == pos)
         {
-             _listClimateElab.replace(i, "NULL");
+            errorStr += "Missing parameters in line: " + climateElab + "\n";
+            _listClimateElab.replace(i, "NULL");
             continue;
         }
 
         meteoVariable var = noMeteoVar;
-        if (words[pos] != "")
+        QString varStr = words[pos];
+        if (varStr != "")
         {
-            if (words[pos].contains("CUMULATED"))
+            if (varStr.contains("CUMULATED"))
             {
                 _listDailyCumulated.push_back(true);
-                words[pos].remove("CUMULATED");
+                varStr.remove("CUMULATED");
             }
             else
             {
                 _listDailyCumulated.push_back(false);
             }
-            var = getKeyMeteoVarMeteoMap(MapDailyMeteoVarToString, words[pos].toUpper().toStdString());
+            var = getKeyMeteoVarMeteoMap(MapDailyMeteoVarToString, varStr.toUpper().toStdString());
             if (var == noMeteoVar)
             {
-                var = getKeyMeteoVarMeteoMapWithoutUnderscore(MapDailyMeteoVarToString, words[pos].toUpper().toStdString());
+                var = getKeyMeteoVarMeteoMapWithoutUnderscore(MapDailyMeteoVarToString, varStr.toUpper().toStdString());
             }
         }
 
         if (var == noMeteoVar)
         {
+            errorStr += "Wrong variable: " + varStr + "\n";
             _listClimateElab.replace(i, "NULL");
             continue;
         }
@@ -273,23 +278,24 @@ void Crit3DClimateList::parserElaboration()
 
         if (words.size() == pos)
         {
+            errorStr += "Missing parameters in line: " + climateElab + "\n";
             _listClimateElab.replace(i, "NULL");
             continue;
         }
 
         QString periodTypeStr = words[pos];
-
         _listPeriodType.push_back(getPeriodTypeFromString(periodTypeStr));
+
         pos = pos + 1; // pos = 3
 
         if (words.size() == pos)
         {
-             _listClimateElab.replace(i, "NULL");
+            errorStr += "Missing parameters in line: " + climateElab + "\n";
+            _listClimateElab.replace(i, "NULL");
             continue;
         }
 
-
-        if ( (_listPeriodType[i] == genericPeriod) && ( (words[pos].at(0)).isDigit() ) )
+        if ( (_listPeriodType[i] == genericPeriod) && ( (words[pos].at(0)).isDigit() ))
         {
             _listPeriodStr.push_back(words[pos]);
             parserGenericPeriodString(i);
@@ -305,7 +311,8 @@ void Crit3DClimateList::parserElaboration()
 
         if (words.size() == pos)
         {
-             _listClimateElab.replace(i, "NULL");
+            errorStr += "Missing parameters in line: " + climateElab + "\n";
+            _listClimateElab.replace(i, "NULL");
             continue;
         }
 
@@ -314,6 +321,12 @@ void Crit3DClimateList::parserElaboration()
         QString param1ClimateField;
 
         meteoComputation elabMeteoComputation = getMeteoCompFromString(MapMeteoComputation, elab.toStdString());
+        if (elabMeteoComputation == noMeteoComp)
+        {
+            errorStr += "Wrong elaboration: " + elab + "\n";
+            _listClimateElab.replace(i, "NULL");
+            continue;
+        }
 
         float param = NODATA;
         int nrParam = nParameters(elabMeteoComputation);
@@ -343,7 +356,6 @@ void Crit3DClimateList::parserElaboration()
             }
             else
             {
-
                 param1IsClimate = false;
                 param1ClimateField = "";
                 param = words[pos].toFloat();
@@ -368,6 +380,14 @@ void Crit3DClimateList::parserElaboration()
             elab1 = words[pos];
             _listElab1.push_back(elab1);
             elabMeteoComputation = getMeteoCompFromString(MapMeteoComputation, elab1.toStdString());
+
+            if (elabMeteoComputation == noMeteoComp)
+            {
+                errorStr += "Wrong elaboration: " + elab1 + "\n";
+                _listClimateElab.replace(i, "NULL");
+                continue;
+            }
+
             nrParam = nParameters(elabMeteoComputation);
 
             if (nrParam > 0)
@@ -422,9 +442,7 @@ void Crit3DClimateList::parserElaboration()
             _listParam1IsClimate.push_back(param1IsClimate);
             _listParam1ClimateField.push_back(param1ClimateField);
         }
-
     }
-
 }
 
 

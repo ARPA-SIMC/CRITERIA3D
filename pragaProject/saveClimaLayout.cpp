@@ -1,6 +1,9 @@
 #include "saveClimaLayout.h"
 
-bool compareClimateElab(const QString &el1, const QString &el2) {
+bool compareClimateElab(const QString &el1, const QString &el2)
+{
+    if (! el1.contains('_') || ! el2.contains('_'))
+        return false;
 
     QString var1 = el1.split("_")[1];
     QString var2 = el2.split("_")[1];
@@ -8,12 +11,17 @@ bool compareClimateElab(const QString &el1, const QString &el2) {
     if (var1 != var2)
         return var1.compare(var2) < 0;
 
-    return (el1.mid(5, 9).toInt() - el1.left(4).toInt()) > (el2.mid(5, 9).toInt() - el2.left(4).toInt());
+    if (el1.size() < 9 || el2.size() < 9)
+        return false;
+
+    int period1 = el1.mid(5, 4).toInt() - el1.left(4).toInt();
+    int period2 = el2.mid(5, 4).toInt() - el2.left(4).toInt();
+    return (period1 > period2);
 }
+
 
 SaveClimaLayout::SaveClimaLayout()
 {
-
     listLayout.addWidget(&listView);
 
     saveList.setText("Save list");
@@ -31,10 +39,9 @@ SaveClimaLayout::SaveClimaLayout()
 
 }
 
+
 void SaveClimaLayout::addElab()
 {
-
-
     QString elabAdded = firstYear + "-" + lastYear + "_" + variable.remove("_") + "_" + period;
     if (period == "Generic")
     {
@@ -73,8 +80,8 @@ void SaveClimaLayout::addElab()
 
     listView.clear();
     listView.addItems(list);
-
 }
+
 
 void SaveClimaLayout::deleteRaw()
 {
@@ -110,40 +117,35 @@ void SaveClimaLayout::saveElabList()
         return;
     }
     elabList.close();
-
 }
+
 
 void SaveClimaLayout::loadElabList()
 {
-
     QString fileName = QFileDialog::getOpenFileName(this, tr("Open elaborations file"), "", tr("(*.txt)"));
-    if (fileName == "") return;
+    if (fileName.isEmpty())
+        return;
 
     QFile elabList(fileName);
-    if (elabList.open(QFile::ReadOnly | QFile::Text))
+    if (! elabList.open(QFile::ReadOnly | QFile::Text))
+        return;
+
+    QTextStream sIn(&elabList);
+    while (! sIn.atEnd())
     {
-      QTextStream sIn(&elabList);
-      while (!sIn.atEnd())
-      {
-          QString line = sIn.readLine();
-          if (list.contains(line) == 0)
-          {
+        QString line = sIn.readLine();
+        if (!line.isEmpty() && !list.contains(line))
+        {
             list << line;
-          }
-      }
-      std::sort(list.begin(), list.end(), compareClimateElab);
-
-      listView.clear();
-      listView.addItems(list);
-
-    }
-    else
-    {
-      qDebug() << "error opening output file\n";
-      return;
+        }
     }
 
+    std::sort(list.begin(), list.end(), compareClimateElab);
+
+    listView.clear();
+    listView.addItems(list);
 }
+
 
 QList<QString> SaveClimaLayout::getList() const
 {
