@@ -98,6 +98,11 @@ void Crit3DMeteoPoint::setName(std::string name)
     this->name = name;
 }
 
+void Crit3DMeteoPoint::setAltitude(double altitude)
+{
+    this->point.z = altitude;
+}
+
 void Crit3DMeteoPoint::setLapseRateCode(std::string lapseRateCode)
 {
     if (lapseRateCode == "primary")
