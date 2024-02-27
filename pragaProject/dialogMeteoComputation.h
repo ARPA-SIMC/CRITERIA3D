@@ -62,7 +62,6 @@ class DialogMeteoComputation : public QDialog
         QComboBox climateDbElabList;
 
 
-
     public:
         DialogMeteoComputation(QSettings *settings, bool isMeteoGridLoaded, bool isMeteoPointLoaded, bool isAnomaly, bool saveClima);
         void done(bool res);

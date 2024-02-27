@@ -193,9 +193,9 @@ std::vector<bool> Crit3DClimateList::listDailyCumulated() const
    return _listDailyCumulated;
 }
 
+
 void Crit3DClimateList::parserElaboration()
 {
-
     for (int i = 0; i < _listClimateElab.size(); i++)
     {
         int pos = 0;
@@ -207,24 +207,37 @@ void Crit3DClimateList::parserElaboration()
         if (words.isEmpty())
         {
             _listClimateElab.replace(i, "NULL");
+            continue;
         }
 
+        // split years
         QString periodElabList = words.at(pos);
-        QList<QString> myYearWords = periodElabList.split('-'); // ÷
+        QList<QString> myYearWords = periodElabList.split('-');
 
-        if (myYearWords[0].toInt() == false || myYearWords[1].toInt() == false)
+        bool isOk = false;
+        int firstYear = myYearWords[0].toInt(&isOk);
+        if (! isOk)
         {
-             _listClimateElab.replace(i, "NULL");
+            _listClimateElab.replace(i, "NULL");
+            continue;
         }
 
-        _listYearStart.push_back(myYearWords[0].toInt());
-        _listYearEnd.push_back(myYearWords[1].toInt());
+        int lastYear = myYearWords[1].toInt(&isOk);
+        if (! isOk)
+        {
+            _listClimateElab.replace(i, "NULL");
+            continue;
+        }
+
+        _listYearStart.push_back(firstYear);
+        _listYearEnd.push_back(lastYear);
 
         pos = pos + 1;
 
         if (words.size() == pos)
         {
              _listClimateElab.replace(i, "NULL");
+            continue;
         }
 
         meteoVariable var = noMeteoVar;
@@ -239,20 +252,29 @@ void Crit3DClimateList::parserElaboration()
             {
                 _listDailyCumulated.push_back(false);
             }
-            var = getKeyMeteoVarMeteoMap(MapDailyMeteoVarToString, words[pos].toStdString());
+            var = getKeyMeteoVarMeteoMap(MapDailyMeteoVarToString, words[pos].toUpper().toStdString());
             if (var == noMeteoVar)
             {
-                var = getKeyMeteoVarMeteoMapWithoutUnderscore(MapDailyMeteoVarToString, words[pos].toStdString());
+                var = getKeyMeteoVarMeteoMapWithoutUnderscore(MapDailyMeteoVarToString, words[pos].toUpper().toStdString());
             }
         }
 
-        _listVariable.push_back(var);
+        if (var == noMeteoVar)
+        {
+            _listClimateElab.replace(i, "NULL");
+            continue;
+        }
+        else
+        {
+            _listVariable.push_back(var);
+        }
 
         pos = pos + 1;
 
         if (words.size() == pos)
         {
             _listClimateElab.replace(i, "NULL");
+            continue;
         }
 
         QString periodTypeStr = words[pos];
@@ -263,6 +285,7 @@ void Crit3DClimateList::parserElaboration()
         if (words.size() == pos)
         {
              _listClimateElab.replace(i, "NULL");
+            continue;
         }
 
 
@@ -283,6 +306,7 @@ void Crit3DClimateList::parserElaboration()
         if (words.size() == pos)
         {
              _listClimateElab.replace(i, "NULL");
+            continue;
         }
 
         QString elab = words[pos];
