@@ -1,5 +1,5 @@
-#ifndef IMPORTDATAXML_H
-#define IMPORTDATAXML_H
+#ifndef INOUTDATAXML_H
+#define INOUTDATAXML_H
 
 #ifndef QDOM_H
     #include <QDomElement>
@@ -16,10 +16,10 @@
 
 enum formatType{ XMLFORMATFIXED, XMLFORMATDELIMITED};
 
-class ImportDataXML
+class InOutDataXML
 {
 public:
-    ImportDataXML(bool isGrid, Crit3DMeteoPointsDbHandler* meteoPointsDbHandler, Crit3DMeteoGridDbHandler* meteoGridDbHandler, QString xmlFileName);
+    InOutDataXML(bool isGrid, Crit3DMeteoPointsDbHandler* meteoPointsDbHandler, Crit3DMeteoGridDbHandler* meteoGridDbHandler, QString xmlFileName);
     bool parseXMLFile(QDomDocument* xmlDoc, QString *error);
     bool parserXML(QString *error);
     bool importDataMain(QString fileName, QString &error);
@@ -55,4 +55,4 @@ private:
     bool checkPointCodeFromFileName(QString& myPointCode, QString& errorStr);
 };
 
-#endif // IMPORTDATAXML_H
+#endif // INOUTDATAXML_H

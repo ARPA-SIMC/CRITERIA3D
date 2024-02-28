@@ -3218,11 +3218,11 @@ bool PragaProject::parserXMLImportData(QString xmlName, bool isGrid)
     }
     if (isGrid)
     {
-        importData = new ImportDataXML(isGrid, nullptr, meteoGridDbHandler, xmlName);
+        importData = new InOutDataXML(isGrid, nullptr, meteoGridDbHandler, xmlName);
     }
     else
     {
-        importData = new ImportDataXML(isGrid, meteoPointsDbHandler, nullptr, xmlName);
+        importData = new InOutDataXML(isGrid, meteoPointsDbHandler, nullptr, xmlName);
     }
 
     errorString = "";

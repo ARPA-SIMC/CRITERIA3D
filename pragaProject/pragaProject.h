@@ -21,8 +21,8 @@
         #include "netcdfHandler.h"
     #endif
 
-    #ifndef IMPORTDATAXML_H
-        #include "importDataXML.h"
+    #ifndef INOUTDATAXML_H
+        #include "inOutDataXML.h"
     #endif
 
     #ifndef DROUGHT_H
@@ -76,7 +76,7 @@
 
         std::string synchReferencePoint;
 
-        ImportDataXML* importData;
+        InOutDataXML* importData;
 
         Crit3DMeteoPointsDbHandler* outputMeteoPointsDbHandler;
         bool outputMeteoPointsLoaded;

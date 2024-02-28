@@ -33,7 +33,7 @@ INCLUDEPATH +=  ../crit3dDate ../mathFunctions ../phenology ../meteo ../gis  \
                 ../drought ../interpolation ../solarRadiation ../utilities  \
                 ../outputPoints ../dbMeteoPoints ../dbMeteoGrid ../meteoWidget  \
                 ../proxyWidget ../pointStatisticsWidget ../homogeneityWidget ../synchronicityWidget ../climate ../netcdfHandler  \
-                ../graphics ../commonDialogs ../commonChartElements ../pragaDialogs ../importDataXML ../project
+                ../graphics ../commonDialogs ../commonChartElements ../pragaDialogs ../inOutDataXML ../project
 
 
 SOURCES += \

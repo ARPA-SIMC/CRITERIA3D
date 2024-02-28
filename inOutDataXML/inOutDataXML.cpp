@@ -1,4 +1,4 @@
-#include "importDataXML.h"
+#include "inOutDataXML.h"
 #include "commonConstants.h"
 #include <QTextStream>
 #include <QFile>
@@ -6,7 +6,7 @@
 
 
 
-ImportDataXML::ImportDataXML(bool isGrid, Crit3DMeteoPointsDbHandler *meteoPointsDbHandler, Crit3DMeteoGridDbHandler *meteoGridDbHandler, QString xmlFileName)
+InOutDataXML::InOutDataXML(bool isGrid, Crit3DMeteoPointsDbHandler *meteoPointsDbHandler, Crit3DMeteoGridDbHandler *meteoGridDbHandler, QString xmlFileName)
 {
     this->isGrid = isGrid;
     this->xmlFileName = xmlFileName;
@@ -15,7 +15,7 @@ ImportDataXML::ImportDataXML(bool isGrid, Crit3DMeteoPointsDbHandler *meteoPoint
     this->format_headerRow = 0;
 }
 
-bool ImportDataXML::parseXMLFile(QDomDocument* xmlDoc, QString *errorStr)
+bool InOutDataXML::parseXMLFile(QDomDocument* xmlDoc, QString *errorStr)
 {
     if (xmlFileName == "")
     {
@@ -46,7 +46,7 @@ bool ImportDataXML::parseXMLFile(QDomDocument* xmlDoc, QString *errorStr)
     return true;
 }
 
-bool ImportDataXML::parserXML(QString *myError)
+bool InOutDataXML::parserXML(QString *myError)
 {
     QDomDocument xmlDoc;
     if (!parseXMLFile(&xmlDoc, myError)) return false;
@@ -416,7 +416,7 @@ bool ImportDataXML::parserXML(QString *myError)
 }
 
 
-bool ImportDataXML::importDataMain(QString fileName, QString& errorStr)
+bool InOutDataXML::importDataMain(QString fileName, QString& errorStr)
 {
     if (fileName == "")
     {
@@ -436,7 +436,7 @@ bool ImportDataXML::importDataMain(QString fileName, QString& errorStr)
 }
 
 
-bool ImportDataXML::checkPointCodeFromFileName(QString& myPointCode, QString& errorStr)
+bool InOutDataXML::checkPointCodeFromFileName(QString& myPointCode, QString& errorStr)
 {
     myPointCode = "";
 
@@ -483,7 +483,7 @@ bool ImportDataXML::checkPointCodeFromFileName(QString& myPointCode, QString& er
 }
 
 
-bool ImportDataXML::importXMLDataFixed(QString& errorStr)
+bool InOutDataXML::importXMLDataFixed(QString& errorStr)
 {
     QFile myFile(dataFileName);
     if (!myFile.open(QIODevice::ReadOnly))
@@ -785,7 +785,7 @@ bool ImportDataXML::importXMLDataFixed(QString& errorStr)
 }
 
 
-bool ImportDataXML::importXMLDataDelimited(QString& errorStr)
+bool InOutDataXML::importXMLDataDelimited(QString& errorStr)
 {
     QFile myFile(dataFileName);
     if ( !myFile.open(QIODevice::ReadOnly) )
@@ -1132,7 +1132,7 @@ bool ImportDataXML::importXMLDataDelimited(QString& errorStr)
 }
 
 
-QString ImportDataXML::parseXMLPointCode(QString text)
+QString InOutDataXML::parseXMLPointCode(QString text)
 {
     QString myPointCode = "";
 
@@ -1169,7 +1169,7 @@ QString ImportDataXML::parseXMLPointCode(QString text)
     return myPointCode;
 }
 
-QDate ImportDataXML::parseXMLDate(QString text)
+QDate InOutDataXML::parseXMLDate(QString text)
 {
     QDate myDate(1800,1,1);
 
@@ -1181,7 +1181,7 @@ QDate ImportDataXML::parseXMLDate(QString text)
 }
 
 
-QDateTime ImportDataXML::parseXMLDateTime(QString text)
+QDateTime InOutDataXML::parseXMLDateTime(QString text)
 {
     QString myDateStr = text.mid(time.getFirstChar()-1,time.getNrChar());
     QString format = time.getFormat();
@@ -1193,7 +1193,7 @@ QDateTime ImportDataXML::parseXMLDateTime(QString text)
 }
 
 
-QVariant ImportDataXML::parseXMLFixedValue(QString text, int nReplication, FieldXML myField)
+QVariant InOutDataXML::parseXMLFixedValue(QString text, int nReplication, FieldXML myField)
 {
     QVariant myValue = "ERROR";
     QString mySubstring;
