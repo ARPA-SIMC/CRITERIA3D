@@ -35,18 +35,18 @@
 #include <QDate>
 
 
-Crit3DMeteoWidget::Crit3DMeteoWidget(bool isGrid, QString projectPath, Crit3DMeteoSettings* meteoSettings_)
+Crit3DMeteoWidget::Crit3DMeteoWidget(bool isGrid_, QString projectPath, Crit3DMeteoSettings* meteoSettings_)
 {
     isInitialized = false;
     meteoSettings = meteoSettings_;
-    this->isGrid = isGrid;
-    this->isEnsemble = false;
-    this->nrMembers = NODATA;
+    isGrid = isGrid_;
+    isEnsemble = false;
+    nrMembers = NODATA;
     maxEnsembleBar = -1;
     maxEnsembleLine = NODATA;
     minEnsembleLine = -NODATA;
 
-    if (this->isGrid)
+    if (isGrid)
     {
         this->setWindowTitle("Grid");
     }
@@ -58,11 +58,13 @@ Crit3DMeteoWidget::Crit3DMeteoWidget(bool isGrid, QString projectPath, Crit3DMet
     this->resize(1240, 700);
     this->setAttribute(Qt::WA_DeleteOnClose);
     currentFreq = noFrequency;
-    currentDate = QDate(1800,1,1);
-    firstDailyDate = currentDate;
-    firstHourlyDate = currentDate;
-    lastDailyDate = currentDate;
-    lastHourlyDate = currentDate;
+
+    QDate noDate = QDate(1800,1,1);
+    currentDate = noDate;
+    firstDailyDate = noDate;
+    firstHourlyDate = noDate;
+    lastDailyDate = noDate;
+    lastHourlyDate = noDate;
 
     isLine = false;
     isBar = false;
@@ -70,7 +72,7 @@ Crit3DMeteoWidget::Crit3DMeteoWidget(bool isGrid, QString projectPath, Crit3DMet
     QVector<QBarSet*> vectorBarSet;
 
     QString csvPath, defaultPath, stylesPath;
-    if (!projectPath.isEmpty())
+    if (! projectPath.isEmpty())
     {
         defaultPath = projectPath + "SETTINGS/Crit3DPlotDefault.csv";
         stylesPath = projectPath + "SETTINGS/Crit3DPlotStyles.csv";
@@ -309,8 +311,6 @@ Crit3DMeteoWidget::Crit3DMeteoWidget(bool isGrid, QString projectPath, Crit3DMet
     axisY = new QValueAxis();
     axisYdx = new QValueAxis();
 
-    QDate first(QDate::currentDate().year(), 1, 1);
-    QDate last(QDate::currentDate().year(), 12, 31);
     axisX->setTitleText("Date");
     axisXvirtual->setTitleText("Date");
     axisXvirtual->setGridLineVisible(false);
@@ -337,8 +337,10 @@ Crit3DMeteoWidget::Crit3DMeteoWidget(bool isGrid, QString projectPath, Crit3DMet
     // menu
     QMenuBar* menuBar = new QMenuBar();
     QMenu *editMenu = new QMenu("Edit");
+    QMenu *viewMenu = new QMenu("View");
 
     menuBar->addMenu(editMenu);
+    menuBar->addMenu(viewMenu);
     mainLayout->setMenuBar(menuBar);
 
     QAction* changeLeftAxis = new QAction(tr("&Change axis left"), this);
@@ -351,6 +353,12 @@ Crit3DMeteoWidget::Crit3DMeteoWidget(bool isGrid, QString projectPath, Crit3DMet
     editMenu->addAction(exportGraph);
     editMenu->addAction(removeStation);
 
+    QAction* infoPoint = new QAction(tr("&Info meteo point"), this);
+    QAction* dataAvailability = new QAction(tr("&Data availability"), this);
+
+    viewMenu->addAction(infoPoint);
+    viewMenu->addAction(dataAvailability);
+
     connect(addVarButton, &QPushButton::clicked, [=](){ showVar(); });
     connect(dailyButton, &QPushButton::clicked, [=](){ showDailyGraph(); });
     connect(hourlyButton, &QPushButton::clicked, [=](){ showHourlyGraph(); });
@@ -362,6 +370,8 @@ Crit3DMeteoWidget::Crit3DMeteoWidget(bool isGrid, QString projectPath, Crit3DMet
     connect(changeRightAxis, &QAction::triggered, this, &Crit3DMeteoWidget::on_actionChangeRightAxis);
     connect(exportGraph, &QAction::triggered, this, &Crit3DMeteoWidget::on_actionExportGraph);
     connect(removeStation, &QAction::triggered, this, &Crit3DMeteoWidget::on_actionRemoveStation);
+    connect(infoPoint, &QAction::triggered, this, &Crit3DMeteoWidget::on_actionInfoPoint);
+    connect(dataAvailability, &QAction::triggered, this, &Crit3DMeteoWidget::on_actionDataAvailability);
 
     plotLayout->addWidget(chartView);
     horizontalGroupBox->setLayout(buttonLayout);
@@ -2077,6 +2087,133 @@ void Crit3DMeteoWidget::on_actionRemoveStation()
         updateSeries();
         redraw();
     }
+}
+
+void Crit3DMeteoWidget::on_actionInfoPoint()
+{
+    QDialog infoWindow;
+    infoWindow.setWindowTitle("Info meteo points");
+    QVBoxLayout* layout = new QVBoxLayout();
+    for (int mp=0; mp<meteoPoints.size();mp++)
+    {
+        QString stationId = QString::fromStdString(meteoPoints[mp].id);
+        QString stationsName = QString::fromStdString(meteoPoints[mp].name);
+        QString station = stationId+"_"+stationsName;
+        QString dataset = QString::fromStdString(meteoPoints[mp].dataset);
+        QString altitude = QString::number(meteoPoints[mp].point.z);
+        QString lapseRateName = QString::fromStdString(getLapseRateCodeName(meteoPoints[mp].lapseRateCode));
+        QLabel* label = new QLabel(station);
+        layout->addWidget(label);
+        QString infoStr;
+        if (isGrid)
+        {
+            infoStr = QString("Cell: <b> %1 </b> <br/> ID: %2 <br/> altitude: %3 m ")
+                          .arg(stationsName, stationId, altitude);
+        }
+        else
+        {
+            infoStr = QString("Point: <b> %1 </b> <br/> ID: %2 <br/> dataset: %3 <br/> altitude: %4 m <br/> lapse rate code: %5")
+                                  .arg(stationsName, stationId, dataset, altitude, lapseRateName);
+        }
+        QTextEdit* plainTextEdit = new QTextEdit(infoStr);
+        plainTextEdit->setReadOnly(true);
+        layout->addWidget(plainTextEdit);
+    }
+    infoWindow.setLayout(layout);
+    infoWindow.exec();
+}
+
+
+void Crit3DMeteoWidget::on_actionDataAvailability()
+{
+    QDialog infoWindow;
+    infoWindow.setWindowTitle("DataAvailability");
+    QVBoxLayout* layout = new QVBoxLayout();
+
+    if (isGrid)
+    {
+        QGroupBox *groupBox = new QGroupBox("MeteoGrid");
+        QVBoxLayout *vbox = new QVBoxLayout;
+
+        if (!firstDailyDate.isNull() && firstDailyDate.year() != 1800)
+        {
+            QLabel* labelDaily = new QLabel("Daily Data:");
+            vbox->addWidget(labelDaily);
+
+            QString dailyInfo = QString("%1 - %2").arg(firstDailyDate.toString("yyyy/MM/dd"), lastDailyDate.toString("yyyy/MM/dd"));
+            QTextEdit* dailyTextEdit = new QTextEdit(dailyInfo);
+
+            dailyTextEdit->setMaximumHeight(QFontMetrics(dailyTextEdit->font()).height() + 10);
+            dailyTextEdit->setReadOnly(true);
+
+            vbox->addWidget(dailyTextEdit);
+        }
+
+        if (!firstHourlyDate.isNull() && firstHourlyDate.year() != 1800)
+        {
+            QLabel* labelHourly = new QLabel("Hourly Data:");
+            vbox->addWidget(labelHourly);
+
+            QString hourlyInfo = QString("%1 - %2").arg(firstHourlyDate.toString("yyyy/MM/dd"), lastHourlyDate.toString("yyyy/MM/dd"));
+            QTextEdit* hourlyTextEdit = new QTextEdit(hourlyInfo);
+
+            hourlyTextEdit->setMaximumHeight(QFontMetrics(hourlyTextEdit->font()).height() + 10);
+            hourlyTextEdit->setReadOnly(true);
+
+            vbox->addWidget(hourlyTextEdit);
+        }
+
+        groupBox->setLayout(vbox);
+        layout->addWidget(groupBox);
+    }
+    else
+    {
+        QDate myFirstDailyDate, myLastDailyDate;
+        QDate myFirstHourlyDate, myLastHourlyDate;
+
+        for (int mp=0; mp<meteoPoints.size();mp++)
+        {
+            QString stationId = QString::fromStdString(meteoPoints[mp].id);
+            QString stationsName = QString::fromStdString(meteoPoints[mp].name);
+            QString stationString = stationId + "_" + stationsName;
+
+            QGroupBox *groupBox = new QGroupBox(stationString);
+            QVBoxLayout *vbox = new QVBoxLayout;
+
+            QString infoDaily = QString("Daily Data:");
+            QLabel* labelDaily = new QLabel(infoDaily);
+            vbox->addWidget(labelDaily);
+            myFirstDailyDate.setDate(meteoPoints[mp].obsDataD[0].date.year, meteoPoints[mp].obsDataD[0].date.month, meteoPoints[mp].obsDataD[0].date.day);
+            myLastDailyDate = myFirstDailyDate.addDays(meteoPoints[mp].nrObsDataDaysD-1);
+            QString dailyInfo = QString("%1 - %2")
+                                    .arg(myFirstDailyDate.toString("yyyy/MM/dd"), myLastDailyDate.toString("yyyy/MM/dd"));
+            QTextEdit* dailyTextEdit = new QTextEdit(dailyInfo);
+            QFont font = dailyTextEdit->font();
+            QFontMetrics fontMetrics = QFontMetrics(font);
+            dailyTextEdit->setMaximumHeight(fontMetrics.height()+10);
+            dailyTextEdit->setReadOnly(true);
+            vbox->addWidget(dailyTextEdit);
+
+            QString infoHourly = QString("Hourly Data:");
+            QLabel* labelHourly = new QLabel(infoHourly);
+            vbox->addWidget(labelHourly);
+            myFirstHourlyDate.setDate(meteoPoints[mp].getMeteoPointHourlyValuesDate(0).year, meteoPoints[mp].getMeteoPointHourlyValuesDate(0).month,
+                                      meteoPoints[mp].getMeteoPointHourlyValuesDate(0).day);
+            myLastHourlyDate = myFirstHourlyDate.addDays(meteoPoints[mp].nrObsDataDaysH-1);
+
+            QString hourlyInfo = QString("%1 - %2")
+                                     .arg(myFirstHourlyDate.toString("yyyy/MM/dd"), myLastHourlyDate.toString("yyyy/MM/dd"));
+            QTextEdit* hourlyTextEdit = new QTextEdit(hourlyInfo);
+            hourlyTextEdit->setMaximumHeight(fontMetrics.height()+10);
+            hourlyTextEdit->setReadOnly(true);
+            vbox->addWidget(hourlyTextEdit);
+            groupBox->setLayout(vbox);
+            layout->addWidget(groupBox);
+        }
+    }
+
+    infoWindow.setLayout(layout);
+    infoWindow.exec();
 }
 
 

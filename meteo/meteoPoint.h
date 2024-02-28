@@ -166,6 +166,9 @@
 
             void setId(std::string value);
             void setName(std::string name);
+            void setDataset(std::string dataset);
+            void setAltitude(double altitude);
+            void setLapseRateCode(std::string lapseRateCode);
 
             bool computeDerivedVariables(Crit3DTime dateTime);
             bool computeMonthlyAggregate(Crit3DDate firstDate, Crit3DDate lastDate, meteoVariable dailyMeteoVar, Crit3DMeteoSettings *meteoSettings, Crit3DQuality *qualityCheck, Crit3DClimateParameters *climateParam);

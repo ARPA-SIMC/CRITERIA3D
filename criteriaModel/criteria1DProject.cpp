@@ -65,6 +65,7 @@ void Crit1DProject::initialize()
     outputString = "";
 
     // specific outputs
+    isClimateOutput = false;
     waterDeficitDepth.clear();
     waterContentDepth.clear();
     degreeOfSaturationDepth.clear();
@@ -253,60 +254,80 @@ bool Crit1DProject::readSettings()
     // OUTPUT variables (optional)
     QList<QString> depthList;
     projectSettings->beginGroup("output");
+
+        isClimateOutput = projectSettings->value("isClimateOutput", false).toBool();
+
         depthList = projectSettings->value("waterContent").toStringList();
         if (! setVariableDepth(depthList, waterContentDepth))
         {
             projectError = "Wrong water content depth in " + configFileName;
             return false;
         }
+
         depthList = projectSettings->value("degreeOfSaturation").toStringList();
         if (! setVariableDepth(depthList, degreeOfSaturationDepth))
         {
             projectError = "Wrong degree of saturation depth in " + configFileName;
             return false;
         }
+
         depthList = projectSettings->value("waterPotential").toStringList();
         if (! setVariableDepth(depthList, waterPotentialDepth))
         {
             projectError = "Wrong water potential depth in " + configFileName;
             return false;
         }
+
         depthList = projectSettings->value("waterDeficit").toStringList();
         if (! setVariableDepth(depthList, waterDeficitDepth))
         {
             projectError = "Wrong water deficit depth in " + configFileName;
             return false;
         }
+
         depthList = projectSettings->value("awc").toStringList();
         if (! setVariableDepth(depthList, awcDepth))
         {
             projectError = "Wrong available water capacity depth in " + configFileName;
             return false;
         }
+
         depthList = projectSettings->value("availableWater").toStringList();
         if (depthList.size() == 0)
+        {
+            // alternative field name
             depthList = projectSettings->value("aw").toStringList();
+        }
         if (! setVariableDepth(depthList, availableWaterDepth))
         {
             projectError = "Wrong available water depth in " + configFileName;
             return false;
         }
+
         depthList = projectSettings->value("fractionAvailableWater").toStringList();
         if (depthList.size() == 0)
+        {
+            // alternative field name
             depthList = projectSettings->value("faw").toStringList();
+        }
         if (! setVariableDepth(depthList, fractionAvailableWaterDepth))
         {
             projectError = "Wrong fraction available water depth in " + configFileName;
             return false;
         }
+
         depthList = projectSettings->value("factorOfSafety").toStringList();
         if (depthList.size() == 0)
-            depthList = projectSettings->value("factorOfSafety").toStringList();
+        {
+            // alternative field name
+            depthList = projectSettings->value("fos").toStringList();
+        }
         if (! setVariableDepth(depthList, factorOfSafetyDepth))
         {
             projectError = "Wrong slope stability depth in " + configFileName;
             return false;
         }
+
     projectSettings->endGroup();
 
     return true;
@@ -1542,12 +1563,21 @@ bool Crit1DProject::createOutputTable(QString &myError)
     QString queryString = "DROP TABLE '" + myCase.unit.idCase + "'";
     QSqlQuery myQuery = this->dbOutput.exec(queryString);
 
-    queryString = "CREATE TABLE '" + myCase.unit.idCase + "'"
+    if (isClimateOutput)
+    {
+        queryString = "CREATE TABLE '" + myCase.unit.idCase + "'"
+                      + " ( DATE TEXT, AVAILABLE_WATER REAL,"
+                      + " TRANSP_MAX, TRANSP REAL";
+    }
+    else
+    {
+        queryString = "CREATE TABLE '" + myCase.unit.idCase + "'"
                   + " ( DATE TEXT, PREC REAL, IRRIGATION REAL, WATER_CONTENT REAL, SURFACE_WC REAL, "
                   + " AVAILABLE_WATER REAL, READILY_AW REAL, FRACTION_AW REAL, "
                   + " RUNOFF REAL, DRAINAGE REAL, LATERAL_DRAINAGE REAL, CAPILLARY_RISE REAL, "
                   + " ET0 REAL, TRANSP_MAX, TRANSP REAL, EVAP_MAX REAL, EVAP REAL, "
                   + " LAI REAL, ROOT_DEPTH REAL, BALANCE REAL";
+    }
 
     // specific depth variables
     for (unsigned int i = 0; i < waterContentDepth.size(); i++)
@@ -1591,6 +1621,7 @@ bool Crit1DProject::createOutputTable(QString &myError)
         queryString += ", " + fieldName + " REAL";
     }
 
+    // close query
     queryString += ")";
     myQuery = this->dbOutput.exec(queryString);
 
@@ -1608,11 +1639,20 @@ void Crit1DProject::updateOutput(Crit3DDate myDate, bool isFirst)
 {
     if (isFirst)
     {
-        outputString = "INSERT INTO '" + myCase.unit.idCase + "'"
+        if (isClimateOutput)
+        {
+            outputString = "INSERT INTO '" + myCase.unit.idCase + "'"
+                           + " (DATE, AVAILABLE_WATER,"
+                           + " TRANSP_MAX, TRANSP";
+        }
+        else
+        {
+            outputString = "INSERT INTO '" + myCase.unit.idCase + "'"
                        + " (DATE, PREC, IRRIGATION, WATER_CONTENT, SURFACE_WC, "
                        + " AVAILABLE_WATER, READILY_AW, FRACTION_AW, "
                        + " RUNOFF, DRAINAGE, LATERAL_DRAINAGE, CAPILLARY_RISE, ET0, "
                        + " TRANSP_MAX, TRANSP, EVAP_MAX, EVAP, LAI, ROOT_DEPTH, BALANCE";
+        }
 
         // specific depth variables
         for (unsigned int i = 0; i < waterContentDepth.size(); i++)
@@ -1663,7 +1703,16 @@ void Crit1DProject::updateOutput(Crit3DDate myDate, bool isFirst)
         outputString += ",";
     }
 
-    outputString += "('" + QString::fromStdString(myDate.toStdString()) + "'"
+    if (isClimateOutput)
+    {
+        outputString += "('" + QString::fromStdString(myDate.toStdString()) + "'"
+                        + "," + QString::number(myCase.output.dailyAvailableWater, 'g', 4)
+                        + "," + QString::number(myCase.output.dailyMaxTranspiration, 'g', 3)
+                        + "," + QString::number(myCase.output.dailyTranspiration, 'g', 3);
+    }
+    else
+    {
+        outputString += "('" + QString::fromStdString(myDate.toStdString()) + "'"
                     + "," + QString::number(myCase.output.dailyPrec)
                     + "," + QString::number(myCase.output.dailyIrrigation)
                     + "," + QString::number(myCase.output.dailySoilWaterContent, 'g', 4)
@@ -1683,6 +1732,7 @@ void Crit1DProject::updateOutput(Crit3DDate myDate, bool isFirst)
                     + "," + getOutputStringNullZero(myCase.crop.LAI)
                     + "," + getOutputStringNullZero(myCase.crop.roots.rootDepth)
                     + "," + QString::number(myCase.output.dailyBalance, 'g', 3);
+    }
 
     // specific depth variables
     for (unsigned int i = 0; i < waterContentDepth.size(); i++)

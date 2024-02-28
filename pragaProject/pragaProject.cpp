@@ -1,3 +1,4 @@
+#include "commonConstants.h"
 #include "basicMath.h"
 #include "climate.h"
 #include "crit3dElabList.h"
@@ -619,7 +620,14 @@ void PragaProject::readClimate(bool isMeteoGrid, QString climateSelected, int cl
     climate.push_back(climateSelected);
 
     climateList.setListClimateElab(climate);
-    climateList.parserElaboration();
+
+    errorString = "";
+    climateList.parserElaboration(errorString);
+    if (! errorString.isEmpty())
+    {
+        logError();
+        errorString = "";
+    }
 
     // copy elaboration to clima
     clima->setYearStart(climateList.listYearStart().at(0));
@@ -665,7 +673,7 @@ void PragaProject::readClimate(bool isMeteoGrid, QString climateSelected, int cl
                     Crit3DMeteoPoint* meteoPoint = meteoGridDbHandler->meteoGrid()->meteoPointPointer(row,col);
                     if (climateIndex != NODATA)
                     {
-                        result = readElab(db, table.toLower(), climateIndex, QString::fromStdString(meteoPoint->id), climateSelected, &errorString);
+                        result = readClimateElab(db, table.toLower(), climateIndex, QString::fromStdString(meteoPoint->id), climateSelected, &errorString);
                         meteoPoint->climate = result;
                     }
                     else
@@ -701,7 +709,7 @@ void PragaProject::readClimate(bool isMeteoGrid, QString climateSelected, int cl
                 }
                 else
                 {
-                    result = readElab(db, table.toLower(), climateIndex, id, climateSelected, &errorString);
+                    result = readClimateElab(db, table.toLower(), climateIndex, id, climateSelected, &errorString);
                     meteoPoints[i].climate = result;
                 }
             }
@@ -1044,7 +1052,14 @@ bool PragaProject::climatePointsCycle(bool showInfo)
     }
     // parser all the list
     Crit3DClimateList* climateList = clima->getListElab();
-    climateList->parserElaboration();
+
+    errorString = "";
+    climateList->parserElaboration(errorString);
+    if (! errorString.isEmpty())
+    {
+        logError();
+        errorString = "";
+    }
 
     Crit3DMeteoPoint* meteoPointTemp = new Crit3DMeteoPoint;
     for (int i = 0; i < nrMeteoPoints; i++)
@@ -1165,7 +1180,14 @@ bool PragaProject::climatePointsCycleGrid(bool showInfo)
 
     // parser all the list
     Crit3DClimateList* climateList = clima->getListElab();
-    climateList->parserElaboration();
+
+    errorString = "";
+    climateList->parserElaboration(errorString);
+    if (! errorString.isEmpty())
+    {
+        logError();
+        errorString = "";
+    }
 
     Crit3DMeteoPoint* meteoPointTemp = new Crit3DMeteoPoint;
     for (int row = 0; row < meteoGridDbHandler->gridStructure().header().nrRows; row++)
@@ -1281,8 +1303,6 @@ bool PragaProject::downloadDailyDataArkimet(QList<QString> variables, bool prec0
         return false;
     }
 
-    const int MAXDAYS = 30;
-
     QString id, dataset;
     QList<QString> datasetList;
     QList<QList<QString>> idList;
@@ -1344,14 +1364,11 @@ bool PragaProject::downloadDailyDataArkimet(QList<QString> variables, bool prec0
     {
         if (showInfo)
         {
-            setProgressBar("Download data from: " + startDate.toString("yyyy-MM-dd") + " to: " + endDate.toString("yyyy-MM-dd") + " dataset:" + datasetList[i], nrDays);
+            setProgressBar("Download daily data from: " + startDate.toString("yyyy-MM-dd") + " to: " + endDate.toString("yyyy-MM-dd") + " dataset:" + datasetList[i], nrDays);
         }
 
-        int nrStations = idList[i].size();
-        int stepDays = std::max(MAXDAYS, 360 / nrStations);
-
         QDate date1 = startDate;
-        QDate date2 = std::min(date1.addDays(stepDays), endDate);
+        QDate date2 = std::min(date1.addDays(MAXDAYS_DOWNLOAD_DAILY), endDate);
 
         while (date1 <= endDate)
         {
@@ -1359,16 +1376,15 @@ bool PragaProject::downloadDailyDataArkimet(QList<QString> variables, bool prec0
 
             if (showInfo)
             {
-                updateProgressBar(startDate.daysTo(date2)+1);
+                updateProgressBar(startDate.daysTo(date2) + 1);
             }
 
             date1 = date2.addDays(1);
-            date2 = std::min(date1.addDays(stepDays), endDate);
+            date2 = std::min(date1.addDays(MAXDAYS_DOWNLOAD_DAILY), endDate);
         }
 
         if (showInfo) closeProgressBar();
     }
-
 
     delete myDownload;
     return true;
@@ -1377,8 +1393,6 @@ bool PragaProject::downloadDailyDataArkimet(QList<QString> variables, bool prec0
 
 bool PragaProject::downloadHourlyDataArkimet(QList<QString> variables, QDate startDate, QDate endDate, bool showInfo)
 {
-    const int MAXDAYS = 7;
-
     QList<int> arkIdVar;
     Download* myDownload = new Download(meteoPointsDbHandler->getDbName());
 
@@ -1427,24 +1441,24 @@ bool PragaProject::downloadHourlyDataArkimet(QList<QString> variables, QDate sta
     for( int i=0; i < datasetList.size(); i++ )
     {
         QDate date1 = startDate;
-        QDate date2 = std::min(date1.addDays(MAXDAYS-1), endDate);
+        QDate date2 = std::min(date1.addDays(MAXDAYS_DOWNLOAD_HOURLY), endDate);
 
         if (showInfo)
         {
-            setProgressBar("Download data from: " + startDate.toString("yyyy-MM-dd") + " to:" + endDate.toString("yyyy-MM-dd") + " dataset:" + datasetList[i], nrDays);
+            setProgressBar("Download hourly data from: " + startDate.toString("yyyy-MM-dd") + " to:" + endDate.toString("yyyy-MM-dd") + " dataset:" + datasetList[i], nrDays);
         }
         while (date1 <= endDate)
         {
             if (showInfo)
             {
-                updateProgressBar(int(startDate.daysTo(date2)+1));
+                updateProgressBar(startDate.daysTo(date2) + 1);
             }
 
             if (! myDownload->downloadHourlyData(date1, date2, datasetList[i], idList[i], arkIdVar))
                 updateProgressBarText("NO DATA");
 
             date1 = date2.addDays(1);
-            date2 = std::min(date1.addDays(MAXDAYS-1), endDate);
+            date2 = std::min(date1.addDays(MAXDAYS_DOWNLOAD_HOURLY), endDate);
         }
         if (showInfo)
         {
@@ -1969,11 +1983,11 @@ bool PragaProject::interpolationOutputPointsPeriod(QDate firstDate, QDate lastDa
     QVector<QList<QString>> hourlyDataList;
     if (isDaily)
     {
-        dailyDataList.resize(outputPoints.size());
+        dailyDataList.resize(int(outputPoints.size()));
     }
     if (isHourly)
     {
-        hourlyDataList.resize(outputPoints.size());
+        hourlyDataList.resize(int(outputPoints.size()));
     }
 
     int nrDays = firstDate.daysTo(lastDate) + 1;
@@ -2598,6 +2612,15 @@ void PragaProject::showPointStatisticsWidgetPoint(std::string idMeteoPoint)
     meteoPointsDbHandler->loadDailyData(getCrit3DDate(firstDaily), getCrit3DDate(lastDaily), &mp);
     logInfoGUI("Loading hourly data...");
     meteoPointsDbHandler->loadHourlyData(getCrit3DDate(firstHourly.date()), getCrit3DDate(lastHourly.date()), &mp);
+    QList<QString> jointStationsMyMp = meteoPointsDbHandler->getJointStations(QString::fromStdString(idMeteoPoint));
+    for (int j = 0; j<jointStationsMyMp.size(); j++)
+    {
+        QDate lastDateNew = meteoPointsDbHandler->getLastDate(daily, jointStationsMyMp[j].toStdString()).date();
+        if (lastDateNew > lastDaily)
+        {
+            lastDaily = lastDateNew;
+        }
+    }
     closeLogInfo();
     QList<Crit3DMeteoPoint> meteoPointsWidgetList;
     meteoPointsWidgetList.append(mp);
@@ -2607,7 +2630,7 @@ void PragaProject::showPointStatisticsWidgetPoint(std::string idMeteoPoint)
     {
         if (meteoPoints[i].id != idMeteoPoint)
         {
-            if (meteoPoints[i].active && (meteoPoints[i].nrObsDataDaysD != 0 || meteoPoints[i].nrObsDataDaysH != 0))
+            if (meteoPoints[i].nrObsDataDaysD != 0 || meteoPoints[i].nrObsDataDaysH != 0)
             {
                 double utmX = meteoPoints[i].point.utm.x;
                 double utmY = meteoPoints[i].point.utm.y;
@@ -3752,18 +3775,16 @@ bool PragaProject::cleanClimatePoint()
     QList<QString> climateTables;
     QList<QString> climateFields;
 
-    unsigned i,j;
-
     if (getClimateTables(db, &errorString, &climateTables) )
     {
-        for (i=0; i < climateTables.size(); i++)
+        for (int i = 0; i < climateTables.size(); i++)
         {
             climateFields.clear();
             getClimateFieldsFromTable(db, &errorString, climateTables[i], &climateFields);
 
             if (! climateFields.isEmpty())
             {
-                for (j=0; j < climateFields.size(); j++)
+                for (int j = 0; j < climateFields.size(); j++)
                     if (! deleteElab(db, &errorString, climateTables[i].toLower(), climateFields[j]))
                         return false;
             }

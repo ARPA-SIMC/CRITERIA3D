@@ -60,5 +60,6 @@
 
     bool parseCSV(const QString &csvFileName, QList<QString> &csvFields, QList<QList<QString>> &csvData, QString &errorString);
 
+    bool writeJson(const QString &ancestor, const std::vector<QString> &fieldNames, const std::vector<QString> dataType, const std::vector<std::vector<QString> > &values, const QString &jsonFilename);
 
 #endif // UTILITIES_H

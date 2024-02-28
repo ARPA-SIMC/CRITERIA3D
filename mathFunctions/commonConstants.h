@@ -54,6 +54,16 @@
     #define PATH_STATES "STATES/"
     #define PATH_NETCDF "NETCDF/"
 
+    // --------------- PRAGA constants  ----------------
+    #define PRAGA_OK 0
+    #define PRAGA_ERROR 100
+    #define PRAGA_INVALID_COMMAND 101
+    #define PRAGA_MISSING_FILE 102
+    #define PRAGA_ENV_ERROR 103
+    #define NO_ACTIVE -8888
+    #define MAXDAYS_DOWNLOAD_DAILY 180
+    #define MAXDAYS_DOWNLOAD_HOURLY 10
+
     // --------------- soilFluxes3D ----------------
     #define NOLINK -1
 
@@ -74,14 +84,6 @@
 
     #define CRIT1D_OK 0
     #define CRIT3D_OK 1
-
-    // --------------- PRAGA constants  ----------------
-    #define PRAGA_OK 0
-    #define PRAGA_ERROR 100
-    #define PRAGA_INVALID_COMMAND 101
-    #define PRAGA_MISSING_FILE 102
-    #define PRAGA_ENV_ERROR 103
-    #define NO_ACTIVE -8888
 
     #define VANGENUCHTEN 0
     #define MODIFIEDVANGENUCHTEN 1

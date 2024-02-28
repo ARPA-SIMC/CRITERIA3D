@@ -100,7 +100,7 @@
         std::vector<float> listParam2() const;
         void setListParam2(const std::vector<float> &listParam2);
 
-        void parserElaboration();
+        void parserElaboration(QString &errorStr);
         bool parserGenericPeriodString(int index);
 
         void insertDailyCumulated(bool dailyCumulated);

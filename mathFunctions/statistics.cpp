@@ -501,8 +501,8 @@ namespace statistics
 
     void weightedMultiRegressionLinearWithStats(const std::vector <std::vector <float>> &x, std::vector <float> &y, const std::vector <float> &weight,float* q,std::vector <float> &m,bool calculateR2, bool calculateStdError,float* R2, float* stdError, float *qSE,std::vector <float> &mSE)
     {
-        int nrPredictors = x[0].size();
-        int nrItems = x.size();
+        int nrPredictors = int(x[0].size());
+        int nrItems = int(x.size());
         double** XT = (double**)calloc(nrPredictors+1, sizeof(double*));
         double** X = (double**)calloc(nrItems, sizeof(double*));
         double** X2 = (double**)calloc(nrPredictors+1, sizeof(double*));
@@ -517,7 +517,7 @@ namespace statistics
         {
             X[i]= (double*)calloc(nrPredictors+1, sizeof(double));
         }
-        printf("transposed matrix\n");
+
         for (int j=0;j<nrPredictors+1;j++)
         {
             for (int i=0;i<nrItems;i++)
@@ -590,7 +590,7 @@ namespace statistics
                 yObs[i]=y[i];
                 weightDouble[i]=weight[i];
             }
-            *R2 = interpolation::computeWeighted_R2(yObs,ySim,weightDouble);
+            *R2 = float(interpolation::computeWeighted_R2(yObs,ySim,weightDouble));
         }
         if (calculateStdError)
         {
@@ -607,7 +607,7 @@ namespace statistics
                 yObs[i]=y[i];
                 weightDouble[i]=weight[i];
             }
-            *stdError = interpolation::computeWeighted_StandardError(yObs,ySim,weightDouble,nrPredictors+1);
+            *stdError = float(interpolation::computeWeighted_StandardError(yObs,ySim,weightDouble,nrPredictors+1));
             matricial::transposedMatrix(XT,nrPredictors+1,nrItems,X);
             for (int j=0;j<nrPredictors+1;j++)
             {
@@ -618,10 +618,10 @@ namespace statistics
             }
             matricial::matrixProduct(XT,X,nrItems,nrPredictors+1,nrPredictors+1,nrItems,X2);
             matricial::inverse(X2,X2Inverse,nrPredictors+1);
-            *qSE = (*stdError)*sqrt(X2Inverse[0][0]);
+            *qSE = (*stdError) * float(sqrt(X2Inverse[0][0]));
             for (int j=1;j<nrPredictors+1;j++)
             {
-                mSE[j-1]=(*stdError)*sqrt(X2Inverse[j][j]);
+                mSE[j-1]= (*stdError) * float(sqrt(X2Inverse[j][j]));
             }
         }
 

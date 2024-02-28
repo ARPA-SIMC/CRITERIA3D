@@ -66,6 +66,8 @@ public:
     QString mapFormat;
     QString mapProjection;
     QString mapAreaName;
+    bool isPngCopy;
+    QString pngProjection;
 
     QString outputCsvFileName;
     QString outputShapeFileName;

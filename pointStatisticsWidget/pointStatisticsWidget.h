@@ -37,6 +37,8 @@
             void saveToDbClicked();
             void updateYears();
             void setMpValues(Crit3DMeteoPoint meteoPointGet, Crit3DMeteoPoint *meteoPointSet, QDate myDate);
+            void checkValueAndMerge(Crit3DMeteoPoint meteoPointGet, Crit3DMeteoPoint* meteoPointSet, QDate myDate);
+
 
     private:
             bool isGrid;
