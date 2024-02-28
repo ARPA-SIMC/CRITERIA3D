@@ -81,15 +81,15 @@ bool ImportDataXML::parserXML(QString *myError)
 
                         if (mySecondTag == "PRAGANAME" || mySecondTag == "PRAGAFIELD")
                         {
-                            fileName_pragaName[fileName_pragaName.size()-1] = secondChild.toElement().text();
+                            fileName_pragaName.append(secondChild.toElement().text());
                         }
                         else if (mySecondTag == "TEXT" || mySecondTag == "FIXEDTEXT")
                         {
-                            fileName_fixedText[fileName_fixedText.size()-1] = secondChild.toElement().text();
+                            fileName_fixedText.append(secondChild.toElement().text());
                         }
                         else if (mySecondTag == "NRCHAR" || mySecondTag == "NR_CHAR")
                         {
-                            fileName_nrChar[fileName_nrChar.size()-1] = secondChild.toElement().text().toInt();
+                            fileName_nrChar.append(secondChild.toElement().text().toInt());
                         }
                     }
 
