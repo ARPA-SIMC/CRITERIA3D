@@ -180,7 +180,7 @@ Crit3DMeteoWidget::Crit3DMeteoWidget(bool isGrid_, QString projectPath, Crit3DMe
     // check valid data
     int dailyVar = 0;
     int hourlyVar = 0;
-    for (int i = 0; i<currentVariables.size(); i++)
+    for (int i = 0; i < currentVariables.size(); i++)
     {
         if (currentVariables[i].contains("DAILY"))
         {
@@ -470,6 +470,36 @@ void Crit3DMeteoWidget::addMeteoPointsEnsemble(Crit3DMeteoPoint mp)
 }
 
 
+QString getFormattedLabel(QString pointName, QString varName)
+{
+    QString label;
+
+    QList<QString> words = pointName.split(' ');
+
+    if (words.size() == 1)
+    {
+        int size = std::min(int(words[0].size()), 12);
+        pointName = words[0].left(size);
+    }
+    else
+    {
+        int last = words.size() - 1;
+        int size1 = std::min(int(words[0].size()), 7);
+        int size2 = std::min(int(words[last].size()), 12-size1);
+        pointName = words[0].left(size1) + '_' + words[last].left(size2);
+    }
+
+    if (varName.contains("DAILY_"))
+    {
+        varName = varName.remove("DAILY_");
+    }
+
+    label = pointName + '_' + varName;
+
+    return label;
+}
+
+
 void Crit3DMeteoWidget::drawEnsemble()
 {
     if (! isInitialized || meteoPointsEnsemble.isEmpty() || meteoPointsEnsemble.size() != nrMembers)
@@ -521,6 +551,7 @@ void Crit3DMeteoWidget::drawEnsemble()
     show();
 }
 
+
 void Crit3DMeteoWidget::resetValues()
 {
     int nMeteoPoints = meteoPoints.size();
@@ -541,7 +572,7 @@ void Crit3DMeteoWidget::resetValues()
         }
         lineSeries.clear();
     }
-    if (!barSeries.isEmpty())
+    if (! barSeries.isEmpty())
     {
         for (int mp = 0; mp < barSeries.size(); mp++)
         {
@@ -562,23 +593,16 @@ void Crit3DMeteoWidget::resetValues()
     {
         QVector<QLineSeries*> vectorLine;
         // add lineSeries elements for each mp, clone lineSeries[0]
-        for (int mp=0; mp<nMeteoPoints;mp++)
+        for (int mp = 0; mp < nMeteoPoints; mp++)
         {
+            QString pointName = QString::fromStdString(meteoPoints[mp].name);
             vectorLine.clear();
-            for (int i = 0; i<nameLines.size(); i++)
+
+            for (int i = 0; i < nameLines.size(); i++)
             {
                 QLineSeries* line = new QLineSeries();
-                QString pointName = QString::fromStdString(meteoPoints[mp].name);
-                QList<QString> elementsName = pointName.split(' ');
-                if (elementsName.size() == 1)
-                {
-                    pointName = elementsName[0].left(10);
-                }
-                else
-                {
-                    pointName = elementsName[0].left(5) + elementsName[elementsName.size()-1].left(5);
-                }
-                line->setName(QString::fromStdString(meteoPoints[mp].id)+"_"+pointName+"_"+nameLines[i]);
+                line->setName(getFormattedLabel(pointName, nameLines[i]));
+
                 //QColor lineColor = colorLine[i];
                 QColor lineColor = colorLines[i];
                 if (nMeteoPoints == 1)
@@ -599,28 +623,21 @@ void Crit3DMeteoWidget::resetValues()
         }
     }
 
+    // possono essere veri entrambi
     if (isBar)
     {
         QVector<QBarSet*> vectorBarSet;
-        QString name;
         // add vectorBarSet elements for each mp
-        for (int mp=0; mp<nMeteoPoints;mp++)
+        for (int mp = 0; mp < nMeteoPoints; mp++)
         {
+            QString pointName = QString::fromStdString(meteoPoints[mp].name);
             vectorBarSet.clear();
+
             for (int i = 0; i < nameBar.size(); i++)
             {
-                QString pointName = QString::fromStdString(meteoPoints[mp].name);
-                QList<QString> elementsName = pointName.split(' ');
-                if (elementsName.size() == 1)
-                {
-                    pointName = elementsName[0].left(10);
-                }
-                else
-                {
-                    pointName = elementsName[0].left(5) + elementsName[elementsName.size()-1].left(5);
-                }
-                name = QString::fromStdString(meteoPoints[mp].id)+"_"+pointName+"_"+nameBar[i];
-                QBarSet* set = new QBarSet(name);
+                QBarSet* bar = new QBarSet(getFormattedLabel(pointName, nameBar[i]));
+                bar->setLabel(getFormattedLabel(pointName, nameBar[i]));
+
                 QColor barColor = colorBar[i];
                 if (meteoPointsEnsemble.size() == 0)
                 {
@@ -632,14 +649,14 @@ void Crit3DMeteoWidget::resetValues()
                     {
                         barColor.setAlpha( 255-(mp*(150/(nMeteoPoints-1))) );
                     }
-                    set->setColor(barColor);
+                    bar->setColor(barColor);
                 }
                 else
                 {
-                    set->setColor(Qt::transparent);
+                    bar->setColor(Qt::transparent);
                 }
-                set->setBorderColor(barColor);
-                vectorBarSet.append(set);
+                bar->setBorderColor(barColor);
+                vectorBarSet.append(bar);
             }
             if (vectorBarSet.size() != 0)
             {
@@ -905,6 +922,7 @@ void Crit3DMeteoWidget::drawEnsembleDailyVar()
     formInfo.close();
 }
 
+
 void Crit3DMeteoWidget::drawDailyVar()
 {
     if (! isInitialized) return;
@@ -1016,7 +1034,7 @@ void Crit3DMeteoWidget::drawDailyVar()
 
     if (isBar)
     {
-        for (int mp=0; mp<nMeteoPoints;mp++)
+        for (int mp = 0; mp < nMeteoPoints; mp++)
         {
             QBarSeries* barMpSeries = new QBarSeries();
             for (int i = 0; i < nameBar.size(); i++)
@@ -1026,7 +1044,7 @@ void Crit3DMeteoWidget::drawDailyVar()
             barSeries.append(barMpSeries);
         }
 
-        for (int mp=0; mp<nMeteoPoints;mp++)
+        for (int mp = 0; mp < nMeteoPoints; mp++)
         {
             connect(barSeries[mp], &QBarSeries::hovered, this, &Crit3DMeteoWidget::tooltipBar);
             if (nameBar.size() != 0)
@@ -1594,7 +1612,7 @@ void Crit3DMeteoWidget::redraw()
     {
         resetEnsembleValues();
     }
-    if(!isEnsemble)
+    if(! isEnsemble)
     {
         resetValues();
     }
@@ -1605,7 +1623,7 @@ void Crit3DMeteoWidget::redraw()
         {
             drawEnsembleDailyVar();
         }
-        if(!isEnsemble)
+        if(! isEnsemble)
         {
             drawDailyVar();
         }
