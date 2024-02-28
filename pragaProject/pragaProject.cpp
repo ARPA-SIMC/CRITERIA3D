@@ -3209,27 +3209,31 @@ bool PragaProject::loadForecastToGrid(QString fileName, bool overWrite, bool che
 }
 */
 
-bool PragaProject::parserXMLImportData(QString xmlName, bool isGrid)
+bool PragaProject::parserXMLImportExportData(QString xmlName, bool isGrid)
 {
     if (! QFile(xmlName).exists() || ! QFileInfo(xmlName).isFile())
     {
         logError("Missing file: " + xmlName);
         return false;
     }
+    if (inOutData)
+    {
+        delete inOutData;
+    }
     if (isGrid)
     {
-        importData = new InOutDataXML(isGrid, nullptr, meteoGridDbHandler, xmlName);
+        inOutData = new InOutDataXML(isGrid, nullptr, meteoGridDbHandler, xmlName);
     }
     else
     {
-        importData = new InOutDataXML(isGrid, meteoPointsDbHandler, nullptr, xmlName);
+        inOutData = new InOutDataXML(isGrid, meteoPointsDbHandler, nullptr, xmlName);
     }
 
     errorString = "";
-    if (!importData->parserXML(&errorString))
+    if (!inOutData->parserXML(&errorString))
     {
         logError(errorString);
-        delete importData;
+        delete inOutData;
         return false;
     }
     return true;
@@ -3245,7 +3249,7 @@ bool PragaProject::loadXMLImportData(QString fileName)
     }
 
     errorString = "";
-    if (!importData->importDataMain(fileName, errorString))
+    if (!inOutData->importDataMain(fileName, errorString))
     {
         logError(errorString);
         return false;
