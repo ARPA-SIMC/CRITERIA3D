@@ -1064,19 +1064,19 @@ namespace interpolation
 
         //int iRandom = 0;
         int counter = 0;
-        //srand (unsigned(time(nullptr)));
-        std::random_device rd;
-        std::mt19937 gen(rd());
-        std::uniform_real_distribution<double> dis(0.0, 1.0);
-        //double randomNumber;
+        srand (unsigned(time(nullptr)));
+        //std::random_device rd;
+        //std::mt19937 gen(rd());
+        //std::uniform_real_distribution<double> dis(0.0, 1.0);
+        double randomNumber;
         do
         {
             for (i=0; i<nrPredictors; i++)
             {
                 for (j=0; j<nrParameters[i]; j++)
                 {
-                    //parameters[i][j] = parametersMin[i][j] + ((double) rand() / (RAND_MAX))*(parametersMax[i][j]-parametersMin[i][j]);
-                    parameters[i][j] = parametersMin[i][j] + (dis(gen))*(parametersMax[i][j]-parametersMin[i][j]);
+                    parameters[i][j] = parametersMin[i][j] + ((double) rand() / (RAND_MAX))*(parametersMax[i][j]-parametersMin[i][j]);
+                    //parameters[i][j] = parametersMin[i][j] + (dis(gen))*(parametersMax[i][j]-parametersMin[i][j]);
                 }
             }
             fittingMarquardt_nDimension(func,myFunc,parametersMin, parametersMax,
