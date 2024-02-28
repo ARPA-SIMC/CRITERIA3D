@@ -3258,6 +3258,24 @@ bool PragaProject::loadXMLImportData(QString fileName)
     return true;
 }
 
+bool PragaProject::loadXMLExportData(QString filename)
+{
+    qDebug() << "loadXMLExportData";
+    qDebug() << "filename " << filename;
+/*
+    errorString = "";
+    QString myPointCode = inOutData->parseXMLPointCode(filename);
+    if (myPointCode.isEmpty())
+    {
+        qDebug() << "ERROR";
+        logError(errorString);
+        return false;
+    }
+    qDebug() << "myPointCode " << myPointCode;
+*/
+
+    return true;
+}
 
 bool PragaProject::monthlyAggregateVariablesGrid(const QDate &firstDate, const QDate &lastDate, QList<meteoVariable> &variablesList)
 {

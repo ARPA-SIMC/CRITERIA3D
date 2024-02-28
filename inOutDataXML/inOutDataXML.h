@@ -29,6 +29,7 @@ public:
     QString parseXMLPointCode(QString text);
     QDate parseXMLDate(QString text);
     QVariant parseXMLFixedValue(QString text, int nReplication, FieldXML myField);
+    bool checkPointCodeFromFileName(QString& myPointCode, QString& errorStr);
 
 private:
     bool isGrid;
@@ -51,8 +52,6 @@ private:
     QList<VariableXML> variable;
     QString dataFileName;
     int numVarFields;
-
-    bool checkPointCodeFromFileName(QString& myPointCode, QString& errorStr);
 };
 
 #endif // INOUTDATAXML_H
