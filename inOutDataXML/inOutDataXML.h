@@ -31,6 +31,7 @@ public:
     QVariant parseXMLFixedValue(QString text, int nReplication, FieldXML myField);
     bool checkPointCodeFromFileName(QString& myPointCode, QString& errorStr);
     QString parseXMLFilename(QString code);
+    QStringList getVariableList();
 
 private:
     bool isGrid;

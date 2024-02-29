@@ -1258,3 +1258,13 @@ QString InOutDataXML::parseXMLFilename(QString code)
     filename = fileName_path + code + suffix;
     return filename;
 }
+
+QStringList InOutDataXML::getVariableList()
+{
+    QStringList variableList;
+    for (int i = 0; i < variable.size(); i++)
+    {
+        variableList.append(variable[i].varField.getType());
+    }
+    return variableList;
+}

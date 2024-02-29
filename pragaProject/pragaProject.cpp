@@ -3269,6 +3269,8 @@ bool PragaProject::loadXMLExportData(QString code)
         return false;
     }
     qDebug() << "filename " << filename;
+    QStringList variableList = inOutData->getVariableList();
+    qDebug() << "variableList " << variableList;
     return true;
 }
 
