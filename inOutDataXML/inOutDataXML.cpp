@@ -1259,14 +1259,18 @@ QString InOutDataXML::parseXMLFilename(QString code)
     return filename;
 }
 
-QStringList InOutDataXML::getVariableList()
+QString InOutDataXML::getVariableExport()
 {
-    QStringList variableList;
-    for (int i = 0; i < variable.size(); i++)
+    QString variableExport;
+    if (variable.size() == 0)
     {
-        variableList.append(variable[i].varField.getType());
+        variableExport = "";
     }
-    return variableList;
+    else
+    {
+        variableExport = variable[0].varField.getType();
+    }
+    return variableExport;
 }
 
 int InOutDataXML::getPointCodeFirstChar()

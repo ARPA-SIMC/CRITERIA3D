@@ -3228,7 +3228,6 @@ bool PragaProject::parserXMLImportExportData(QString xmlName, bool isGrid)
     {
         inOutData = new InOutDataXML(isGrid, meteoPointsDbHandler, nullptr, xmlName);
     }
-qDebug() << "parserXML call ";
     errorString = "";
     if (!inOutData->parserXML(&errorString))
     {
@@ -3236,7 +3235,6 @@ qDebug() << "parserXML call ";
         delete inOutData;
         return false;
     }
-qDebug() << "parserXML DONE ";
     return true;
 }
 
@@ -3269,8 +3267,8 @@ bool PragaProject::loadXMLExportData(QString code)
         return false;
     }
     qDebug() << "filename " << filename;
-    QStringList variableList = inOutData->getVariableList();
-    qDebug() << "variableList " << variableList;
+    QString variable = inOutData->getVariableExport();
+    qDebug() << "variable " << variable;
     return true;
 }
 

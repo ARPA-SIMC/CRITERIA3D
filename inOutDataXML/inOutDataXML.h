@@ -31,7 +31,7 @@ public:
     QVariant parseXMLFixedValue(QString text, int nReplication, FieldXML myField);
     bool checkPointCodeFromFileName(QString& myPointCode, QString& errorStr);
     QString parseXMLFilename(QString code);
-    QStringList getVariableList();
+    QString getVariableExport();
     int getPointCodeFirstChar();
     int getVariableCodeFirstChar();
     QString getVariableCodeAttribute();
