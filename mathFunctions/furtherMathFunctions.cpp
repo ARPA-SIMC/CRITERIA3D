@@ -68,7 +68,8 @@ double lapseRateFrei(double x, std::vector <double>& par)
 
 double lapseRatePiecewise(double x, std::vector <double>& par)
 {
-
+    // the piecewise line is parameterized as follows
+    // the line passes through A(par[0];par[1])and B(par[0]+par[2];par[3]). par[4] is the slope of the 2 externals pieces
     // "y = mx + q" piecewise function;
     double xb;
     // par[2] means the delta between the two quotes. It must be positive.
