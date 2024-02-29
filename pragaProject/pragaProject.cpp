@@ -3216,10 +3216,6 @@ bool PragaProject::parserXMLImportExportData(QString xmlName, bool isGrid)
         logError("Missing file: " + xmlName);
         return false;
     }
-    if (inOutData)
-    {
-        delete inOutData;
-    }
     if (isGrid)
     {
         inOutData = new InOutDataXML(isGrid, nullptr, meteoGridDbHandler, xmlName);
