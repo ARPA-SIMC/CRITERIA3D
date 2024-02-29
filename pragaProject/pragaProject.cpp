@@ -3269,6 +3269,27 @@ bool PragaProject::loadXMLExportData(QString code)
     qDebug() << "filename " << filename;
     QString variable = inOutData->getVariableExport();
     qDebug() << "variable " << variable;
+    meteoVariable meteoVar = getMeteoVar(variable.toStdString());
+    if (meteoVar == noMeteoVar)
+    {
+        errorString = "Unknown meteo variable: " + variable;
+        logError(errorString);
+        return false;
+    }
+    /*
+    std::vector<QString> dateStr;
+    std::vector<float> values = meteoPointsDbHandler->getAllDailyVar(&errorString, meteoVar, code, dateStr);
+    for (int i = 0; i<dateStr.size(); i++)
+    {
+        qDebug() << "dateStr " << dateStr[i];
+    }
+    for (int i = 0; i<values.size(); i++)
+    {
+        qDebug() << "values " << values[i];
+    }
+*/
+
+
     return true;
 }
 

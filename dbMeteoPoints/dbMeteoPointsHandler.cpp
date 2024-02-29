@@ -686,6 +686,41 @@ std::vector<float> Crit3DMeteoPointsDbHandler::loadDailyVar(QString *myError, me
     return dailyVarList;
 }
 
+std::vector<float> Crit3DMeteoPointsDbHandler::getAllDailyVar(QString *myError, meteoVariable variable, QString id, std::vector<QString> &dateStr)
+{
+    QString date;
+    float value;
+    std::vector<float> dailyVarList;
+
+    int idVar = getIdfromMeteoVar(variable);
+
+
+    QSqlQuery myQuery(_db);
+
+    QString tableName = id + "_D";
+
+    QString statement = QString( "SELECT * FROM `%1` WHERE `%2` = %3")
+                            .arg(tableName).arg(FIELD_METEO_VARIABLE).arg(idVar);
+
+    if( !myQuery.exec(statement) )
+    {
+        *myError = myQuery.lastError().text();
+        return dailyVarList;
+    }
+    else
+    {
+        while (myQuery.next())
+        {
+            date = myQuery.value(0).toString();
+            dateStr.push_back(date);
+            value = myQuery.value(2).toFloat();
+            dailyVarList.push_back(value);
+        }
+    }
+
+    return dailyVarList;
+}
+
 std::vector<float> Crit3DMeteoPointsDbHandler::loadHourlyVar(QString *myError, meteoVariable variable, Crit3DDate dateStart, Crit3DDate dateEnd, QDateTime* firstDateDB, Crit3DMeteoPoint *meteoPoint)
 {
     QString dateStr;
