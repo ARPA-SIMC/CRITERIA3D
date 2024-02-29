@@ -81,7 +81,7 @@ bool InOutDataXML::parserXML(QString *myError)
 
                         if (mySecondTag == "PRAGANAME" || mySecondTag == "PRAGAFIELD")
                         {
-                            fileName_pragaName.append(secondChild.toElement().text());
+                            fileName_pragaName = secondChild.toElement().text();
                         }
                         else if (mySecondTag == "TEXT" || mySecondTag == "FIXEDTEXT")
                         {
@@ -89,8 +89,9 @@ bool InOutDataXML::parserXML(QString *myError)
                         }
                         else if (mySecondTag == "NRCHAR" || mySecondTag == "NR_CHAR")
                         {
-                            fileName_nrChar.append(secondChild.toElement().text().toInt());
+                            fileName_nrChar = secondChild.toElement().text().toInt();
                         }
+                        secondChild = secondChild.nextSibling();
                     }
 
                 }
@@ -1243,4 +1244,56 @@ QVariant InOutDataXML::parseXMLFixedValue(QString text, int nReplication, FieldX
         }
     }
     return myValue;
+}
+
+QString InOutDataXML::parseXMLFilename(QString code)
+{
+    QString filename = "";
+    if (code.length() > fileName_nrChar)
+    {
+        return filename;
+    }
+    QString suffix = fileName_fixedText.join(",");
+    suffix.replace(",","");
+    filename = fileName_path + code + suffix;
+    return filename;
+}
+
+QString InOutDataXML::getVariableExport()
+{
+    QString variableExport;
+    if (variable.size() == 0)
+    {
+        variableExport = "";
+    }
+    else
+    {
+        variableExport = variable[0].varField.getType();
+    }
+    return variableExport;
+}
+
+int InOutDataXML::getPointCodeFirstChar()
+{
+    return pointCode.getFirstChar();
+}
+
+int InOutDataXML::getVariableCodeFirstChar()
+{
+    return variableCode.getFirstChar();
+}
+
+QString InOutDataXML::getVariableCodeAttribute()
+{
+    return variableCode.getAttribute();
+}
+
+int InOutDataXML::getTimeFirstChar()
+{
+    return time.getFirstChar();
+}
+
+QString InOutDataXML::getTimeFormat()
+{
+    return time.getFormat();
 }

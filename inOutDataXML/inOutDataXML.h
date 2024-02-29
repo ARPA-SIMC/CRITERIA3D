@@ -30,6 +30,13 @@ public:
     QDate parseXMLDate(QString text);
     QVariant parseXMLFixedValue(QString text, int nReplication, FieldXML myField);
     bool checkPointCodeFromFileName(QString& myPointCode, QString& errorStr);
+    QString parseXMLFilename(QString code);
+    QString getVariableExport();
+    int getPointCodeFirstChar();
+    int getVariableCodeFirstChar();
+    QString getVariableCodeAttribute();
+    int getTimeFirstChar();
+    QString getTimeFormat();
 
 private:
     bool isGrid;
@@ -43,9 +50,9 @@ private:
     QString format_delimiter;
     QString format_decimalSeparator;
     QString fileName_path;
-    QList<QString> fileName_pragaName;
+    QString fileName_pragaName;
     QList<QString> fileName_fixedText;
-    QList<int> fileName_nrChar;
+    int fileName_nrChar;
     FieldXML time;
     FieldXML pointCode;
     FieldXML variableCode;
