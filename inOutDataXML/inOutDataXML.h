@@ -32,6 +32,11 @@ public:
     bool checkPointCodeFromFileName(QString& myPointCode, QString& errorStr);
     QString parseXMLFilename(QString code);
     QStringList getVariableList();
+    int getPointCodeFirstChar();
+    int getVariableCodeFirstChar();
+    QString getVariableCodeAttribute();
+    int getTimeFirstChar();
+    QString getTimeFormat();
 
 private:
     bool isGrid;

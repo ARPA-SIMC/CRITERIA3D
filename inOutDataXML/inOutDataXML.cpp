@@ -1268,3 +1268,28 @@ QStringList InOutDataXML::getVariableList()
     }
     return variableList;
 }
+
+int InOutDataXML::getPointCodeFirstChar()
+{
+    return pointCode.getFirstChar();
+}
+
+int InOutDataXML::getVariableCodeFirstChar()
+{
+    return variableCode.getFirstChar();
+}
+
+QString InOutDataXML::getVariableCodeAttribute()
+{
+    return variableCode.getAttribute();
+}
+
+int InOutDataXML::getTimeFirstChar()
+{
+    return time.getFirstChar();
+}
+
+QString InOutDataXML::getTimeFormat()
+{
+    return time.getFormat();
+}
