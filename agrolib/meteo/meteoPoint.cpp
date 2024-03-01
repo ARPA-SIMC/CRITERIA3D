@@ -98,6 +98,33 @@ void Crit3DMeteoPoint::setName(std::string name)
     this->name = name;
 }
 
+void Crit3DMeteoPoint::setAltitude(double altitude)
+{
+    this->point.z = altitude;
+}
+
+void Crit3DMeteoPoint::setLapseRateCode(std::string lapseRateCode)
+{
+    if (lapseRateCode == "primary")
+    {
+        this->lapseRateCode = primary;
+    }
+    else if (lapseRateCode == "secondary")
+    {
+        this->lapseRateCode = secondary;
+    }
+    else if (lapseRateCode == "supplemental")
+    {
+        this->lapseRateCode = supplemental;
+    }
+
+}
+
+void Crit3DMeteoPoint::setDataset(std::string dataset)
+{
+    this->dataset = dataset;
+}
+
 void Crit3DMeteoPoint::initializeObsDataH(int myHourlyFraction, int numberOfDays, const Crit3DDate& firstDate)
 {
     this->cleanObsDataH();

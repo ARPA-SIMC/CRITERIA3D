@@ -70,30 +70,36 @@ bool deleteElab(QSqlDatabase db, QString *myError, QString table, QString elab)
 }
 
 
-float readElab(const QSqlDatabase &db, const QString &table, const int &timeIndex, const QString &id, const QString &elab, QString *myError)
+float readClimateElab(const QSqlDatabase &db, const QString &table, const int &timeIndex,
+                      const QString &id, const QString &elab, QString *myError)
 {
     *myError = "";
     QSqlQuery qry(db);
 
     QString statement = QString("SELECT * FROM `%1` ").arg(table);
-    qry.prepare( statement + " WHERE TimeIndex= :TimeIndex AND id_point = :id_point AND elab = :elab" );
-
-    qry.bindValue(":TimeIndex", timeIndex);
-    qry.bindValue(":id_point", id);
-    qry.bindValue(":elab", elab);
-
-
-    float value = NODATA;
-    if( !qry.exec() )
+    if (table == "climate_annual" || table == "climate_generic")
     {
-        *myError = qry.lastError().text();
+        qry.prepare( statement + " WHERE id_point = :id_point AND elab = :elab" );
     }
     else
     {
-        if (qry.next())
-        {
-            getValue(qry.value("value"), &value);
-        }
+        qry.prepare( statement + " WHERE TimeIndex= :TimeIndex AND id_point = :id_point AND elab = :elab" );
+        qry.bindValue(":TimeIndex", timeIndex);
+    }
+
+    qry.bindValue(":id_point", id);
+    qry.bindValue(":elab", elab);
+
+    if(! qry.exec() )
+    {
+        *myError = qry.lastError().text();
+        return NODATA;
+    }
+
+    float value = NODATA;
+    if (qry.next())
+    {
+        getValue(qry.value("value"), &value);
     }
 
     return value;

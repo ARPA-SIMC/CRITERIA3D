@@ -68,7 +68,8 @@ double lapseRateFrei(double x, std::vector <double>& par)
 
 double lapseRatePiecewise(double x, std::vector <double>& par)
 {
-
+    // the piecewise line is parameterized as follows
+    // the line passes through A(par[0];par[1])and B(par[0]+par[2];par[3]). par[4] is the slope of the 2 externals pieces
     // "y = mx + q" piecewise function;
     double xb;
     // par[2] means the delta between the two quotes. It must be positive.
@@ -1064,19 +1065,19 @@ namespace interpolation
 
         //int iRandom = 0;
         int counter = 0;
-        //srand (unsigned(time(nullptr)));
-        std::random_device rd;
-        std::mt19937 gen(rd());
-        std::uniform_real_distribution<double> dis(0.0, 1.0);
-        //double randomNumber;
+        srand (unsigned(time(nullptr)));
+        //std::random_device rd;
+        //std::mt19937 gen(rd());
+        //std::uniform_real_distribution<double> dis(0.0, 1.0);
+        double randomNumber;
         do
         {
             for (i=0; i<nrPredictors; i++)
             {
                 for (j=0; j<nrParameters[i]; j++)
                 {
-                    //parameters[i][j] = parametersMin[i][j] + ((double) rand() / (RAND_MAX))*(parametersMax[i][j]-parametersMin[i][j]);
-                    parameters[i][j] = parametersMin[i][j] + (dis(gen))*(parametersMax[i][j]-parametersMin[i][j]);
+                    parameters[i][j] = parametersMin[i][j] + ((double) rand() / (RAND_MAX))*(parametersMax[i][j]-parametersMin[i][j]);
+                    //parameters[i][j] = parametersMin[i][j] + (dis(gen))*(parametersMax[i][j]-parametersMin[i][j]);
                 }
             }
             fittingMarquardt_nDimension(func,myFunc,parametersMin, parametersMax,

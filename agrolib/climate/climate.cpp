@@ -32,7 +32,7 @@ bool elaborationOnPoint(QString *myError, Crit3DMeteoPointsDbHandler* meteoPoint
         int index = clima->getParam1ClimateIndex();
         if (index != NODATA)
         {
-            float param = readElab(clima->db(), table, index, QString::fromStdString(meteoPointTemp->id), clima->param1ClimateField(), myError);
+            float param = readClimateElab(clima->db(), table, index, QString::fromStdString(meteoPointTemp->id), clima->param1ClimateField(), myError);
             clima->setParam1(param);
         }
         else
@@ -138,7 +138,7 @@ bool passingClimateToAnomaly(QString *myError, Crit3DMeteoPoint* meteoPointTemp,
     float valueClimate;
     QString table = getTable(clima->climateElab());
     int index = clima->getParam1ClimateIndex();
-    valueClimate = readElab(clima->db(), table, index, QString::fromStdString(meteoPointTemp->id), clima->climateElab(), myError);
+    valueClimate = readClimateElab(clima->db(), table, index, QString::fromStdString(meteoPointTemp->id), clima->climateElab(), myError);
     if (index != NODATA && valueClimate != NODATA)
     {
         // MP found
@@ -194,7 +194,7 @@ bool passingClimateToAnomaly(QString *myError, Crit3DMeteoPoint* meteoPointTemp,
 
         if (minDist != NODATA)
         {
-            valueClimate = readElab(clima->db(), table, index, idNearMP, clima->climateElab(), myError);
+            valueClimate = readClimateElab(clima->db(), table, index, idNearMP, clima->climateElab(), myError);
             if (index != NODATA && valueClimate != NODATA)
             {
                 return anomalyOnPoint(meteoPointTemp, valueClimate);
@@ -215,7 +215,7 @@ bool passingClimateToAnomalyGrid(QString *myError, Crit3DMeteoPoint* meteoPointT
     float valueClimate;
     QString table = getTable(clima->climateElab());
     int index = clima->getParam1ClimateIndex();
-    valueClimate = readElab(clima->db(), table, index, QString::fromStdString(meteoPointTemp->id), clima->climateElab(), myError);
+    valueClimate = readClimateElab(clima->db(), table, index, QString::fromStdString(meteoPointTemp->id), clima->climateElab(), myError);
     if (index != NODATA && valueClimate != NODATA)
     {
         // MP found
@@ -355,7 +355,7 @@ bool climateTemporalCycle(QString *myError, Crit3DClimate* clima, std::vector<fl
                 int climateIndex = getClimateIndexFromElab(getQDate(startD), clima->param1ClimateField());
                 if (climateIndex != NODATA)
                 {
-                    paramValue = readElab(db, table, climateIndex, QString::fromStdString(meteoPoint->id), clima->param1ClimateField(), myError);
+                    paramValue = readClimateElab(db, table, climateIndex, QString::fromStdString(meteoPoint->id), clima->param1ClimateField(), myError);
                     clima->setParam1(paramValue);
                 }
                 else
@@ -417,7 +417,7 @@ bool climateTemporalCycle(QString *myError, Crit3DClimate* clima, std::vector<fl
                 int climateIndex = getClimateIndexFromElab(getQDate(startD), clima->param1ClimateField());
                 if (climateIndex != NODATA)
                 {
-                    paramValue = readElab(db, table, climateIndex, QString::fromStdString(meteoPoint->id), clima->param1ClimateField(), myError);
+                    paramValue = readClimateElab(db, table, climateIndex, QString::fromStdString(meteoPoint->id), clima->param1ClimateField(), myError);
                     clima->setParam1(paramValue);
                 }
                 else
@@ -466,7 +466,7 @@ bool climateTemporalCycle(QString *myError, Crit3DClimate* clima, std::vector<fl
 
                 if (climateIndex != NODATA)
                 {
-                    paramValue = readElab(db, table, climateIndex, QString::fromStdString(meteoPoint->id), clima->param1ClimateField(), myError);
+                    paramValue = readClimateElab(db, table, climateIndex, QString::fromStdString(meteoPoint->id), clima->param1ClimateField(), myError);
                     clima->setParam1(paramValue);
                 }
                 else
@@ -531,7 +531,7 @@ bool climateTemporalCycle(QString *myError, Crit3DClimate* clima, std::vector<fl
 
                 if (climateIndex != NODATA)
                 {
-                    paramValue = readElab(db, table, climateIndex, QString::fromStdString(meteoPoint->id), clima->param1ClimateField(), myError);
+                    paramValue = readClimateElab(db, table, climateIndex, QString::fromStdString(meteoPoint->id), clima->param1ClimateField(), myError);
                     clima->setParam1(paramValue);
                 }
                 else
@@ -573,7 +573,7 @@ bool climateTemporalCycle(QString *myError, Crit3DClimate* clima, std::vector<fl
 
             if (climateIndex != NODATA)
             {
-                paramValue = readElab(db, table, climateIndex, QString::fromStdString(meteoPoint->id), clima->param1ClimateField(), myError);
+                paramValue = readClimateElab(db, table, climateIndex, QString::fromStdString(meteoPoint->id), clima->param1ClimateField(), myError);
                 clima->setParam1(paramValue);
             }
             else
@@ -607,7 +607,7 @@ bool climateTemporalCycle(QString *myError, Crit3DClimate* clima, std::vector<fl
             int climateIndex = getClimateIndexFromElab(getQDate(startD), clima->param1ClimateField());
             if (climateIndex != NODATA)
             {
-                paramValue = readElab(db, table, climateIndex, QString::fromStdString(meteoPoint->id), clima->param1ClimateField(), myError);
+                paramValue = readClimateElab(db, table, climateIndex, QString::fromStdString(meteoPoint->id), clima->param1ClimateField(), myError);
                 clima->setParam1(paramValue);
             }
             else

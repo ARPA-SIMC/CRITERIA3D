@@ -21,8 +21,8 @@
         #include "netcdfHandler.h"
     #endif
 
-    #ifndef IMPORTDATAXML_H
-        #include "importDataXML.h"
+    #ifndef INOUTDATAXML_H
+        #include "inOutDataXML.h"
     #endif
 
     #ifndef DROUGHT_H
@@ -76,7 +76,7 @@
 
         std::string synchReferencePoint;
 
-        ImportDataXML* importData;
+        InOutDataXML* inOutData;
 
         Crit3DMeteoPointsDbHandler* outputMeteoPointsDbHandler;
         bool outputMeteoPointsLoaded;
@@ -137,8 +137,9 @@
         bool dbMeteoGridMissingData(QDate myFirstDate, QDate myLastDate, meteoVariable myVar, QList<QDate> &dateList, QList<QString> &idList);
 
         int executePragaCommand(QList<QString> argumentList, bool* isCommandFound);
-        bool parserXMLImportData(QString xmlName, bool isGrid);
+        bool parserXMLImportExportData(QString xmlName, bool isGrid);
         bool loadXMLImportData(QString fileName);
+        bool loadXMLExportData(QString code);
         bool monthlyAggregateVariablesGrid(const QDate &firstDate, const QDate &lastDate, QList <meteoVariable> &variablesList);
         bool computeDroughtIndexAll(droughtIndex index, int firstYear, int lastYear, QDate date, int timescale, meteoVariable myVar);
         bool computeDroughtIndexPoint(droughtIndex index, int timescale, int refYearStart, int refYearEnd);

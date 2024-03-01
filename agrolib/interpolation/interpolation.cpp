@@ -1513,11 +1513,11 @@ bool multipleDetrending(std::vector <Crit3DInterpolationDataPoint> &myPoints, Cr
     setFittingParameters(myCombination, mySettings, myFunc, parametersMin, parametersMax, parametersDelta, parameters);
 
     // multiple non linear fitting
+    /*interpolation::bestFittingMarquardt_nDimension(&functionSum, myFunc, 4, 3, parametersMin, parametersMax, parameters, parametersDelta,
+                                    20, 0.05, 0.02, predictors, predictands, false, weights);*/
     interpolation::bestFittingMarquardt_nDimension(&functionSum, myFunc, 10000, 5, parametersMin, parametersMax, parameters, parametersDelta,
-                                    100, 0.0001, 0.02, predictors, predictands, false, weights);
-    /*interpolation::bestFittingMarquardt_nDimension(&functionSum, myFunc, 10000, 5, parametersMin, parametersMax, parameters, parametersDelta,
                                                    100, EPSILON, 0.01, predictors, predictands, false, weights);
-    */
+
     mySettings->setFittingFunction(myFunc);
     mySettings->setFittingParameters(parameters);
 
