@@ -227,6 +227,10 @@ float RasterUtmObject::getRasterMaxSize()
  */
 bool RasterUtmObject::getCurrentWindow(gis::Crit3DRasterWindow* rasterWindow)
 {
+    // check pointer
+    if (_rasterPointer == nullptr)
+        return false;
+
     // get current view extent
     gis::Crit3DUtmPoint bottomleft, topRight;
     gis::getUtmFromLatLon(_utmZone, this->_geoMap->bottomLeft, &bottomleft);

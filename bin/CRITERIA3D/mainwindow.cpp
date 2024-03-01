@@ -1194,6 +1194,9 @@ void MainWindow::on_actionView_Aspect_triggered()
 {
     if (myProject.DEM.isLoaded)
     {
+        myProject.radiationMaps->aspectMap->colorScale->setMinimum(0);
+        myProject.radiationMaps->aspectMap->colorScale->setMaximum(360);
+        myProject.radiationMaps->aspectMap->colorScale->setRangeBlocked(true);
         setCircolarScale(myProject.radiationMaps->aspectMap->colorScale);
         setCurrentRasterOutput(myProject.radiationMaps->aspectMap);
         ui->labelOutputRaster->setText("Aspect °");
