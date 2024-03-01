@@ -3173,7 +3173,8 @@ void Project::importHourlyMeteoData(const QString& csvFileName, bool importAllFi
 }
 
 
-void Project::showMeteoWidgetPoint(std::string idMeteoPoint, std::string namePoint, std::string dataset, double altitude, std::string lapseRate, bool isAppend)
+void Project::showMeteoWidgetPoint(std::string idMeteoPoint, std::string namePoint, std::string dataset,
+                                   double altitude, std::string lapseRateCode, bool isAppend)
 {
     logInfoGUI("Loading data...");
 
@@ -3219,7 +3220,7 @@ void Project::showMeteoWidgetPoint(std::string idMeteoPoint, std::string namePoi
     Crit3DMeteoPoint mp;
     mp.setId(idMeteoPoint);
     mp.setName(namePoint);
-    mp.setLapseRateCode(lapseRate);
+    mp.setLapseRateCode(lapseRateCode);
     mp.setDataset(dataset);
     mp.point.z = altitude;
 

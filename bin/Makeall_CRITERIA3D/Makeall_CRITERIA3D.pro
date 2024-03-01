@@ -6,7 +6,7 @@ SUBDIRS =       ../../agrolib/soilFluxes3D  \
                 ../../agrolib/utilities ../../agrolib/soil ../../agrolib/crop \
                 ../../agrolib/interpolation ../../agrolib/solarRadiation  ../../agrolib/snow \
                 ../../agrolib/dbMeteoPoints ../../agrolib/outputPoints \
-                ../../agrolib/dbMeteoGrid  ../../agrolib/importDataXML \
+                ../../agrolib/dbMeteoGrid  ../../agrolib/inOutDataXML \
                 ../../agrolib/proxyWidget ../../agrolib/project  \
                 ../../agrolib/meteoWidget ../../agrolib/soilWidget \
                 ../../agrolib/commonDialogs ../../agrolib/commonChartElements ../../agrolib/graphics \

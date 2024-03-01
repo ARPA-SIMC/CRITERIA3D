@@ -546,14 +546,13 @@ void MainWindow::addMeteoPoints()
         this->mapView->scene()->addObject(this->meteoPointList[i]);
 
         point->setToolTip();
-        connect(point, SIGNAL(newStationClicked(std::string, std::string, bool)), this, SLOT(callNewMeteoWidget(std::string, std::string, bool)));
-        connect(point, SIGNAL(appendStationClicked(std::string, std::string, bool)), this, SLOT(callAppendMeteoWidget(std::string, std::string, bool)));
+        connect(point, SIGNAL(newStationClicked(std::string, std::string, std::string, double, std::string, bool)), this, SLOT(callNewMeteoWidget(std::string, std::string, std::string, double, std::string, bool)));
+        connect(point, SIGNAL(appendStationClicked(std::string, std::string, std::string, double, std::string, bool)), this, SLOT(callAppendMeteoWidget(std::string, std::string, std::string, double, std::string, bool)));
     }
 
 }
 
-
-void MainWindow::callNewMeteoWidget(std::string id, std::string name, bool isGrid)
+void MainWindow::callNewMeteoWidget(std::string id, std::string name, std::string dataset, double altitude, std::string lapseRateCode, bool isGrid)
 {
     bool isAppend = false;
     if (isGrid)
@@ -562,13 +561,13 @@ void MainWindow::callNewMeteoWidget(std::string id, std::string name, bool isGri
     }
     else
     {
-        myProject.showMeteoWidgetPoint(id, name, isAppend);
+        myProject.showMeteoWidgetPoint(id, name, dataset, altitude, lapseRateCode, isAppend);
     }
     return;
 }
 
 
-void MainWindow::callAppendMeteoWidget(std::string id, std::string name, bool isGrid)
+void MainWindow::callAppendMeteoWidget(std::string id, std::string name, std::string dataset, double altitude, std::string lapseRateCode, bool isGrid)
 {
     bool isAppend = true;
     if (isGrid)
@@ -577,7 +576,7 @@ void MainWindow::callAppendMeteoWidget(std::string id, std::string name, bool is
     }
     else
     {
-        myProject.showMeteoWidgetPoint(id, name, isAppend);
+        myProject.showMeteoWidgetPoint(id, name, dataset, altitude, lapseRateCode, isAppend);
     }
     return;
 }

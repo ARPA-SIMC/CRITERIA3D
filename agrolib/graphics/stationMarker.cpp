@@ -133,14 +133,14 @@ void StationMarker::mouseReleaseEvent(QGraphicsSceneMouseEvent *event)
 
         if (selection != nullptr)
         {
-            std::string lapseRateName = getLapseRateCodeName(_lapseRateCode);
+            std::string lapseRateCode = getLapseRateCodeName(_lapseRateCode);
             if (selection == openMeteoWidget)
             {
-                emit newStationClicked(_id, _name, _dataset, _altitude, lapseRateName, isGrid);
+                emit newStationClicked(_id, _name, _dataset, _altitude, lapseRateCode, isGrid);
             }
             else if (selection == appendMeteoWidget)
             {
-                emit appendStationClicked(_id, _name, _dataset, _altitude, lapseRateName, isGrid);
+                emit appendStationClicked(_id, _name, _dataset, _altitude, lapseRateCode, isGrid);
             }
             else if (selection == openPointStatisticsWidget)
             {
