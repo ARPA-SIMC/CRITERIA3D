@@ -41,6 +41,9 @@
         void updateMaps();
         void updateOutputMap();
 
+        void callNewMeteoWidget(std::string id, std::string name, std::string dataset, double altitude, std::string lapseRateCode, bool isGrid);
+        void callAppendMeteoWidget(std::string id, std::string name, std::string dataset, double altitude, std::string lapseRateCode, bool isGrid);
+
         void on_actionOpenProject_triggered();
         void on_actionCloseProject_triggered();
         void on_actionLoad_DEM_triggered();
@@ -94,9 +97,6 @@
         void on_actionProxy_analysis_triggered();
         void on_actionComputePeriod_meteoVariables_triggered();
         void on_actionComputeHour_meteoVariables_triggered();
-
-        void callNewMeteoWidget(std::string id, std::string name, bool isGrid);
-        void callAppendMeteoWidget(std::string id, std::string name, bool isGrid);
 
         void on_actionRadiation_settings_triggered();
         void on_actionRadiation_compute_current_hour_triggered();

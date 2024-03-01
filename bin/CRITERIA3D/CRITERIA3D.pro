@@ -24,7 +24,7 @@ INCLUDEPATH +=  ./shared  \
                 ../../agrolib/interpolation ../../agrolib/solarRadiation ../../agrolib/snow \
                 ../../agrolib/outputPoints ../../agrolib/soilWidget ../../agrolib/utilities  \
                 ../../agrolib/dbMeteoPoints ../../agrolib/outputPoints ../../agrolib/dbMeteoGrid \
-                ../../agrolib/importDataXML ../../agrolib/proxyWidget ../../agrolib/project \
+                ../../agrolib/inOutDataXML ../../agrolib/proxyWidget ../../agrolib/project \
                 ../../agrolib/graphics  ../../agrolib/commonChartElements ../../agrolib/commonDialogs \
                 ../../mapGraphics ../../agrolib/meteoWidget
 
@@ -38,7 +38,7 @@ CONFIG(debug, debug|release) {
     }
     LIBS += -L../../agrolib/project/debug -lproject
     LIBS += -L../../agrolib/proxyWidget/debug -lproxyWidget
-    LIBS += -L../../agrolib/importDataXML/debug -limportDataXML
+    LIBS += -L../../agrolib/inOutDataXML/debug -linOutDataXML
     LIBS += -L../../agrolib/meteoWidget/debug -lmeteoWidget
     LIBS += -L../../agrolib/commonDialogs/debug -lcommonDialogs
     LIBS += -L../../agrolib/dbMeteoGrid/debug -ldbMeteoGrid
@@ -63,7 +63,7 @@ CONFIG(debug, debug|release) {
     LIBS += -L../../mapGraphics/release -lMapGraphics
     LIBS += -L../../agrolib/project/release -lproject
     LIBS += -L../../agrolib/proxyWidget/release -lproxyWidget
-    LIBS += -L../../agrolib/importDataXML/release -limportDataXML
+    LIBS += -L../../agrolib/inOutDataXML/release -linOutDataXML
     LIBS += -L../../agrolib/meteoWidget/release -lmeteoWidget
     LIBS += -L../../agrolib/commonDialogs/release -lcommonDialogs
     LIBS += -L../../agrolib/dbMeteoGrid/release -ldbMeteoGrid
