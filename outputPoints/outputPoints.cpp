@@ -47,8 +47,8 @@ bool writeOutputPointListCsv(QString csvFileName, std::vector<gis::Crit3DOutputP
         QList<QString> pointData;
         pointData.clear();
         pointData.append(QString::fromStdString(outputPointList[i].id));
-        pointData.append(QString::number(outputPointList[i].latitude));
-        pointData.append(QString::number(outputPointList[i].longitude));
+        pointData.append(QString::number(outputPointList[i].latitude, 'g', 8));
+        pointData.append(QString::number(outputPointList[i].longitude, 'g', 8));
         pointData.append(QString::number(outputPointList[i].z));
         if (outputPointList[i].active)
         {
