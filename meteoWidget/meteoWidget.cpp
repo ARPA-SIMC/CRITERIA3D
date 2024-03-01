@@ -2114,9 +2114,11 @@ void Crit3DMeteoWidget::on_actionExportGraph()
 
     if (fileName != "")
     {
-        const auto dpr = chartView->devicePixelRatioF();
+        /*const auto dpr = chartView->devicePixelRatioF();
         QPixmap buffer(chartView->width() * dpr, chartView->height() * dpr);
-        buffer.setDevicePixelRatio(dpr);
+        buffer.setDevicePixelRatio(dpr);*/
+
+        QPixmap buffer(chartView->width() * 2, chartView->height() * 2);
         buffer.fill(Qt::transparent);
 
         QPainter *paint = new QPainter(&buffer);
@@ -2128,6 +2130,7 @@ void Crit3DMeteoWidget::on_actionExportGraph()
         buffer.save(&file, "PNG");
     }
 }
+
 
 void Crit3DMeteoWidget::on_actionRemoveStation()
 {
