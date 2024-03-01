@@ -406,11 +406,56 @@ void Crit3DMeteoWidget::setDateIntervalHourly(QDate firstDate, QDate lastDate)
 }
 
 
-void Crit3DMeteoWidget::draw(Crit3DMeteoPoint mp, bool isAppend)
+// search bigger data interval to show between meteoPoints
+void Crit3DMeteoWidget::updateTimeRange()
+{
+    for (int i = 0; i < meteoPoints.size(); i++)
+    {
+        QDate myDailyDateFirst;
+        myDailyDateFirst.setDate(meteoPoints[i].obsDataD[0].date.year,
+                                 meteoPoints[i].obsDataD[0].date.month,
+                                 meteoPoints[i].obsDataD[0].date.day);
+        QDate myDailyDateLast = myDailyDateFirst.addDays(meteoPoints[i].nrObsDataDaysD-1);
+
+        // updates daily range
+        if (myDailyDateFirst.isValid() &&
+            (! firstDailyDate.isValid() || firstDailyDate.year() == 1800 || myDailyDateFirst < firstDailyDate))
+        {
+            firstDailyDate = myDailyDateFirst;
+        }
+        if (myDailyDateLast.isValid() &&
+            (! lastDailyDate.isValid() || lastDailyDate.year() == 1800 || myDailyDateLast > lastDailyDate))
+        {
+            lastDailyDate = myDailyDateLast;
+        }
+
+        QDate myHourlyDateFirst;
+        myHourlyDateFirst.setDate(meteoPoints[i].getMeteoPointHourlyValuesDate(0).year,
+                                  meteoPoints[i].getMeteoPointHourlyValuesDate(0).month,
+                                  meteoPoints[i].getMeteoPointHourlyValuesDate(0).day);
+        QDate myHourlyDateLast = myHourlyDateFirst.addDays(meteoPoints[i].nrObsDataDaysH-1);
+
+        // updates hourly range
+        if (myHourlyDateFirst.isValid() &&
+            (! firstHourlyDate.isValid() || firstHourlyDate.year() == 1800 || myHourlyDateFirst < firstHourlyDate))
+        {
+            firstHourlyDate = myHourlyDateFirst;
+        }
+        if (myHourlyDateLast.isValid() &&
+            (! lastHourlyDate.isValid() || lastHourlyDate.year() == 1800 || myHourlyDateLast > lastHourlyDate))
+        {
+            lastHourlyDate = myHourlyDateLast;
+        }
+    }
+}
+
+
+void Crit3DMeteoWidget::drawMeteoPoint(Crit3DMeteoPoint mp, bool isAppend)
 {
     if (! isInitialized) return;
 
     meteoPoints.append(mp);
+    updateTimeRange();
 
     if (! isAppend)
     {
@@ -418,43 +463,17 @@ void Crit3DMeteoWidget::draw(Crit3DMeteoPoint mp, bool isAppend)
         firstDate->blockSignals(true);
         lastDate->blockSignals(true);
 
-        QDate myDailyDateFirst;
-        QDate myDailyDateLast;
-        QDate myHourlyDateFirst;
-        QDate myHourlyDateLast;
-        // search bigger data interval to show between meteoPoints
-        for (int i = 0; i < meteoPoints.size(); i++)
-        {
-            myDailyDateFirst.setDate(meteoPoints[i].obsDataD[0].date.year, meteoPoints[i].obsDataD[0].date.month, meteoPoints[i].obsDataD[0].date.day);
-            myDailyDateLast = myDailyDateFirst.addDays(meteoPoints[i].nrObsDataDaysD-1);
-            if (myDailyDateFirst.isValid() && myDailyDateFirst < firstDailyDate)
-            {
-                firstDailyDate = myDailyDateFirst;
-            }
-            if (myDailyDateLast.isValid() && myDailyDateLast > lastDailyDate)
-            {
-                lastDailyDate = myDailyDateLast;
-            }
-            myHourlyDateFirst.setDate(meteoPoints[i].getMeteoPointHourlyValuesDate(0).year, meteoPoints[i].getMeteoPointHourlyValuesDate(0).month,
-                                      meteoPoints[i].getMeteoPointHourlyValuesDate(0).day);
-            myHourlyDateLast = myHourlyDateFirst.addDays(meteoPoints[i].nrObsDataDaysH-1);
-            if (myHourlyDateFirst.isValid() && myHourlyDateFirst < firstHourlyDate)
-            {
-                firstHourlyDate = myHourlyDateFirst;
-            }
-            if (myHourlyDateLast.isValid() && myHourlyDateLast > lastHourlyDate)
-            {
-                lastHourlyDate = myHourlyDateLast;
-            }
-        }
-
         lastDate->setDate(currentDate);
 
         // draw period (31 days for daily, 3 days for hourly)
         if (currentFreq == daily)
+        {
             firstDate->setDate(currentDate.addDays(-30));
+        }
         else if (currentFreq == hourly)
+        {
             firstDate->setDate(currentDate.addDays(-2));
+        }
 
         firstDate->blockSignals(false);
         lastDate->blockSignals(false);
@@ -1646,13 +1665,30 @@ void Crit3DMeteoWidget::redraw()
 void Crit3DMeteoWidget::shiftPrevious()
 {
     int nDays = firstDate->date().daysTo(lastDate->date());
-    if (firstDailyDate < firstDate->date().addDays(-nDays-1))
+
+    QDate firstValidDate;
+    if (currentFreq == daily)
+    {
+        if (! firstDailyDate.isValid() || firstDailyDate.year() == 1800)
+            return;
+
+        firstValidDate = firstDailyDate;
+    }
+    else
+    {
+        if (! firstHourlyDate.isValid() || firstHourlyDate.year() == 1800)
+            return;
+
+        firstValidDate = firstHourlyDate;
+    }
+
+    if (firstValidDate < firstDate->date().addDays(-nDays-1))
     {
         firstDate->setDate(firstDate->date().addDays(-nDays-1));
     }
     else
     {
-        firstDate->setDate(firstDailyDate);
+        firstDate->setDate(firstValidDate);
     }
 
     lastDate->setDate(firstDate->date().addDays(nDays));
@@ -1664,13 +1700,30 @@ void Crit3DMeteoWidget::shiftPrevious()
 void Crit3DMeteoWidget::shiftFollowing()
 {
     int nDays = firstDate->date().daysTo(lastDate->date());
-    if (lastDate->date().addDays(nDays+1) < lastDailyDate)
+
+    QDate lastValidDate;
+    if (currentFreq == daily)
+    {
+        if (! lastDailyDate.isValid() || lastDailyDate.year() == 1800)
+            return;
+
+        lastValidDate = lastDailyDate;
+    }
+    else
+    {
+        if (! lastHourlyDate.isValid() || lastHourlyDate.year() == 1800)
+            return;
+
+        lastValidDate = lastHourlyDate;
+    }
+
+    if (lastDate->date().addDays(nDays+1) < lastValidDate)
     {
         lastDate->setDate(lastDate->date().addDays(nDays+1));
     }
     else
     {
-        lastDate->setDate(lastDailyDate);
+        lastDate->setDate(lastValidDate);
     }
 
     firstDate->setDate(lastDate->date().addDays(-nDays));

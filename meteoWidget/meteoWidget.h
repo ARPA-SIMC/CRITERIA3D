@@ -26,7 +26,8 @@
 
             void addMeteoPointsEnsemble(Crit3DMeteoPoint mp);
 
-            void draw(Crit3DMeteoPoint mp, bool isAppend);
+            void updateTimeRange();
+            void drawMeteoPoint(Crit3DMeteoPoint mp, bool isAppend);
             void drawEnsemble();
 
             void resetValues();
