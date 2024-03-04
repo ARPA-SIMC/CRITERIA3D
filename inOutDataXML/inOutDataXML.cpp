@@ -1278,9 +1278,24 @@ int InOutDataXML::getPointCodeFirstChar()
     return pointCode.getFirstChar();
 }
 
+int InOutDataXML::getPointCodeNrChar()
+{
+    return pointCode.getNrChar();
+}
+
 int InOutDataXML::getVariableCodeFirstChar()
 {
     return variableCode.getFirstChar();
+}
+
+int InOutDataXML::getVariableCodeNrChar()
+{
+    return variableCode.getNrChar();
+}
+
+QString InOutDataXML::getVariableCodeAlign()
+{
+    return variableCode.getAlignment();
 }
 
 QString InOutDataXML::getVariableCodeAttribute()

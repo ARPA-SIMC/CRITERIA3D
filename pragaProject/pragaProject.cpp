@@ -3246,7 +3246,6 @@ bool PragaProject::loadXMLImportData(QString fileName)
     errorString = "";
     if (!inOutData->importDataMain(fileName, errorString))
     {
-        logError(errorString);
         return false;
     }
 
@@ -3259,7 +3258,7 @@ bool PragaProject::loadXMLExportData(QString code)
     QString filename = inOutData->parseXMLFilename(code);
     if (filename.isEmpty())
     {
-        logError(errorString);
+        errorString = "Invalid filename" ;
         return false;
     }
     qDebug() << "filename " << filename;
@@ -3269,11 +3268,54 @@ bool PragaProject::loadXMLExportData(QString code)
     if (meteoVar == noMeteoVar)
     {
         errorString = "Unknown meteo variable: " + variable;
-        logError(errorString);
+        return false;
+    }
+    int pointCodeFirstChar = inOutData->getPointCodeFirstChar();
+    int pointCodeNrChar = inOutData->getPointCodeNrChar();
+    QString myCode = code.leftJustified(pointCodeNrChar, ' ');
+    myCode = QString("%1").arg(myCode, -pointCodeFirstChar);
+    int variableFirstChar = inOutData->getVariableCodeFirstChar();
+    int variableNrChar = inOutData->getVariableCodeNrChar();
+    int whiteSpacesBefore = variableFirstChar - (myCode.length()+1);
+    QString attribute = inOutData->getVariableCodeAttribute().leftJustified(variableNrChar, ' ');
+    int timeFirstChar = inOutData->getTimeFirstChar();
+    int whiteSpacesAfter = timeFirstChar - (variableFirstChar + variableNrChar);
+    QString fixedString = QString("%1%2").arg(myCode, whiteSpacesBefore).arg(attribute,whiteSpacesAfter);
+    QString variableAlign = inOutData->getVariableCodeAlign();
+    if (variableAlign.isEmpty())
+    {
+        variableAlign = "right"; //default
+    }
+    else if (variableAlign != "right" || variableAlign != "left")
+    {
+        errorString = "Invalid alignment: " + variableAlign;
         return false;
     }
     std::vector<QString> dateStr;
     std::vector<float> values = meteoPointsDbHandler->getAllDailyVar(&errorString, meteoVar, code, dateStr);
+    if (values.size() == 0)
+    {
+        errorString = code + " has no data for variable: " + variable;
+        return false;
+    }
+    QFile file(filename);
+    file.open(QIODevice::WriteOnly | QIODevice::Text);
+    QTextStream out(&file);
+    for (int i = 0; i<values.size(); i++)
+    {
+        qDebug() << "dateStr[i] " << dateStr[i];
+        QDate myDate = QDate::fromString(dateStr[i],inOutData->getTimeFormat());
+        if (!myDate.isValid())
+        {
+                errorString = "Invalid date format: " + inOutData->getTimeFormat();
+                file.close();
+                return false;
+        }
+
+        out << fixedString;
+    }
+    file.close();
+
     return true;
 }
 

@@ -33,8 +33,11 @@ public:
     QString parseXMLFilename(QString code);
     QString getVariableExport();
     int getPointCodeFirstChar();
+    int getPointCodeNrChar();
     int getVariableCodeFirstChar();
     QString getVariableCodeAttribute();
+    int getVariableCodeNrChar();
+    QString getVariableCodeAlign();
     int getTimeFirstChar();
     QString getTimeFormat();
 
