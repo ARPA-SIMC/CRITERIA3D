@@ -3271,16 +3271,25 @@ bool PragaProject::loadXMLExportData(QString code)
         return false;
     }
     int pointCodeFirstChar = inOutData->getPointCodeFirstChar();
-    int pointCodeNrChar = inOutData->getPointCodeNrChar();
-    QString myCode = code.leftJustified(pointCodeNrChar, ' ');
-    myCode = QString("%1").arg(myCode, -pointCodeFirstChar);
-    int variableFirstChar = inOutData->getVariableCodeFirstChar();
-    int variableNrChar = inOutData->getVariableCodeNrChar();
-    int whiteSpacesBefore = variableFirstChar - (myCode.length()+1);
-    QString attribute = inOutData->getVariableCodeAttribute().leftJustified(variableNrChar, ' ');
+    QString fixedString = code;
+    for (int i = 0; i<pointCodeFirstChar-1; i++)
+    {
+        fixedString.insert(0, " ");
+    }
+    int variableCodeFirstChar = inOutData->getVariableCodeFirstChar();
+    int whiteSpaces = variableCodeFirstChar - (fixedString.length()+1);
+    for (int i = 0; i<whiteSpaces; i++)
+    {
+        fixedString.append(" ");
+    }
+    QString attribute = inOutData->getVariableCodeAttribute();
+    fixedString = fixedString + attribute;
     int timeFirstChar = inOutData->getTimeFirstChar();
-    int whiteSpacesAfter = timeFirstChar - (variableFirstChar + variableNrChar);
-    QString fixedString = QString("%1%2").arg(myCode, whiteSpacesBefore).arg(attribute,whiteSpacesAfter);
+    whiteSpaces = timeFirstChar - (fixedString.length()+1);
+    for (int i = 0; i<whiteSpaces; i++)
+    {
+        fixedString.append(" ");
+    }
     QString variableAlign = inOutData->getVariableCodeAlign();
     if (variableAlign.isEmpty())
     {
@@ -3301,18 +3310,20 @@ bool PragaProject::loadXMLExportData(QString code)
     QFile file(filename);
     file.open(QIODevice::WriteOnly | QIODevice::Text);
     QTextStream out(&file);
+    qDebug() << "fixedString " << fixedString;
     for (int i = 0; i<values.size(); i++)
     {
-        qDebug() << "dateStr[i] " << dateStr[i];
-        QDate myDate = QDate::fromString(dateStr[i],inOutData->getTimeFormat());
-        if (!myDate.isValid())
+        QDate myDate = QDate::fromString(dateStr[i], "yyyy-MM-dd");
+        QString myDateStr = myDate.toString(inOutData->getTimeFormat());
+        if (myDateStr.isEmpty())
         {
-                errorString = "Invalid date format: " + inOutData->getTimeFormat();
-                file.close();
-                return false;
+            errorString = "Invalid date format: " + inOutData->getTimeFormat();
+            file.close();
+            return false;
         }
 
-        out << fixedString;
+        out << fixedString << myDateStr ;
+        out <<"\n";
     }
     file.close();
 
