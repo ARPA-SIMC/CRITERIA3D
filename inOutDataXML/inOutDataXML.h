@@ -37,7 +37,10 @@ public:
     int getVariableCodeFirstChar();
     QString getVariableCodeAttribute();
     int getVariableCodeNrChar();
-    QString getVariableCodeAlign();
+    QString getVariableAlign();
+    int getVariableFirstChar();
+    int getVariableNrChar();
+    QString getVariableFormat();
     int getTimeFirstChar();
     QString getTimeFormat();
 

@@ -3290,12 +3290,17 @@ bool PragaProject::loadXMLExportData(QString code)
     {
         fixedString.append(" ");
     }
-    QString variableAlign = inOutData->getVariableCodeAlign();
+    QString variableAlign = inOutData->getVariableAlign();
+    int variableFirstChar = inOutData->getVariableFirstChar();
+    int variableNrChar = inOutData->getVariableNrChar();
+    QString variableFormat = inOutData->getVariableFormat();
+    QChar charFormat = variableFormat[variableFormat.length()-1];
+    int nDecimals = variableFormat.mid(variableFormat.length()-2,1).toInt();
     if (variableAlign.isEmpty())
     {
         variableAlign = "right"; //default
     }
-    else if (variableAlign != "right" || variableAlign != "left")
+    else if (variableAlign != "right" && variableAlign != "left")
     {
         errorString = "Invalid alignment: " + variableAlign;
         return false;
@@ -3321,8 +3326,46 @@ bool PragaProject::loadXMLExportData(QString code)
             file.close();
             return false;
         }
+        QString fixedStringAddDate = fixedString+myDateStr;
+        out << fixedStringAddDate;
+        whiteSpaces = variableFirstChar - (fixedStringAddDate.length()+1);
+        for (int i = 0; i<whiteSpaces; i++)
+        {
+            out << " " ;
+        }
 
-        out << fixedString << myDateStr ;
+        QString myValue;
+        if (charFormat == 'f')
+        {
+            myValue = QString::number(values[i],'f',nDecimals);
+        }
+        else if (charFormat == 'd')
+        {
+            myValue = QString::number(values[i],'d',nDecimals);
+        }
+        else if (charFormat == 'd'|| charFormat == 'i')
+        {
+            myValue = QString::number(values[i],'f',nDecimals);
+        }
+        else if (charFormat == 'e')
+        {
+            myValue = QString::number(values[i],'e',nDecimals);
+        }
+        else if (charFormat == 'g')
+        {
+            myValue = QString::number(values[i],'g',nDecimals);
+        }
+
+        if (variableAlign == "left")
+        {
+            myValue.leftJustified(variableNrChar, ' ');
+            out << myValue;
+        }
+        else
+        {
+            myValue.rightJustified(variableNrChar, ' ');
+            out << myValue;
+        }
         out <<"\n";
     }
     file.close();

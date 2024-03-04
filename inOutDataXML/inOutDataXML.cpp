@@ -1293,11 +1293,6 @@ int InOutDataXML::getVariableCodeNrChar()
     return variableCode.getNrChar();
 }
 
-QString InOutDataXML::getVariableCodeAlign()
-{
-    return variableCode.getAlignment();
-}
-
 QString InOutDataXML::getVariableCodeAttribute()
 {
     return variableCode.getAttribute();
@@ -1311,4 +1306,24 @@ int InOutDataXML::getTimeFirstChar()
 QString InOutDataXML::getTimeFormat()
 {
     return time.getFormat();
+}
+
+QString InOutDataXML::getVariableAlign()
+{
+    return variable[0].varField.getAlignment();
+}
+
+int InOutDataXML::getVariableFirstChar()
+{
+    return variable[0].varField.getFirstChar();
+}
+
+int InOutDataXML::getVariableNrChar()
+{
+    return variable[0].varField.getNrChar();
+}
+
+QString InOutDataXML::getVariableFormat()
+{
+    return variable[0].varField.getFormat();
 }
