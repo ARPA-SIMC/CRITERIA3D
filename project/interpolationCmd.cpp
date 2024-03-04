@@ -214,7 +214,9 @@ bool checkProxyGridSeries(Crit3DInterpolationSettings* mySettings, const gis::Cr
                 if (mySeries[j].getGridName().size() > 0)
                 {
                     gridOut = new gis::Crit3DRasterGrid();
-                    interpolateProxyGridSeries(mySeries[j], myDate, gridBase, gridOut);
+                    if (! interpolateProxyGridSeries(mySeries[j], myDate, gridBase, gridOut))
+                        return false;
+
                     mySettings->getProxy(i)->setGrid(gridOut);
                     return true;
                 }

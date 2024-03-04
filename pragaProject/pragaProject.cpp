@@ -2283,6 +2283,11 @@ bool PragaProject::interpolationMeteoGridPeriod(QDate dateIni, QDate dateFin, QL
                 if (! readProxyValues()) return false;
                 currentYear = myDate.year();
             }
+            else
+            {
+                errorString = "Error checking proxy grid series";
+                return false;
+            }
         }
 
         if (isHourly)
