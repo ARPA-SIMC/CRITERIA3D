@@ -131,9 +131,10 @@ void Crit3DProxyGridSeries::addGridToSeries(QString name_, int year_)
     gridYear.push_back(year_);
 }
 
-bool interpolateProxyGridSeries(const Crit3DProxyGridSeries& mySeries, QDate myDate, const gis::Crit3DRasterGrid& gridBase, gis::Crit3DRasterGrid* gridOut)
+bool interpolateProxyGridSeries(const Crit3DProxyGridSeries& mySeries, QDate myDate, const gis::Crit3DRasterGrid& gridBase, gis::Crit3DRasterGrid* gridOut, QString* error)
 {
     std::string myError;
+    *error = "";
     std::vector <QString> gridNames = mySeries.getGridName();
     std::vector <int> gridYears = mySeries.getGridYear();
     size_t nrGrids = gridNames.size();
@@ -144,7 +145,12 @@ bool interpolateProxyGridSeries(const Crit3DProxyGridSeries& mySeries, QDate myD
 
     if (nrGrids == 1)
     {
-        if (! gis::readEsriGrid(gridNames[0].toStdString(), &tmpGrid, myError)) return false;
+        if (! gis::readEsriGrid(gridNames[0].toStdString(), &tmpGrid, myError))
+        {
+            *error = QString::fromStdString(myError);
+            return false;
+        }
+
         gis::resampleGrid(tmpGrid, gridOut, gridBase.header, aggrAverage, 0);
         return true;
     }
@@ -169,8 +175,17 @@ bool interpolateProxyGridSeries(const Crit3DProxyGridSeries& mySeries, QDate myD
 
     // load grids
     gis::Crit3DRasterGrid firstGrid, secondGrid;
-    if (! gis::readEsriGrid(gridNames[first].toStdString(), &firstGrid, myError)) return false;
+    if (! gis::readEsriGrid(gridNames[first].toStdString(), &firstGrid, myError))
+    {
+        *error = QString::fromStdString(myError);
+        return false;
+    }
+
     if (! gis::readEsriGrid(gridNames[second].toStdString(), &secondGrid, myError)) return false;
+    {
+        *error = QString::fromStdString(myError);
+        return false;
+    }
 
     firstGrid.setMapTime(getCrit3DTime(QDate(gridYears[first],1,1), 0));
     secondGrid.setMapTime(getCrit3DTime(QDate(gridYears[second],1,1), 0));
@@ -187,7 +202,11 @@ bool interpolateProxyGridSeries(const Crit3DProxyGridSeries& mySeries, QDate myD
     float myMin = MINVALUE(firstGrid.minimum, secondGrid.minimum);
     float myMax = MAXVALUE(firstGrid.maximum, secondGrid.maximum);
 
-    if (! gis::temporalYearlyInterpolation(firstGrid, secondGrid, myDate.year(), myMin, myMax, &tmpGrid)) return false;
+    if (! gis::temporalYearlyInterpolation(firstGrid, secondGrid, myDate.year(), myMin, myMax, &tmpGrid))
+    {
+        *error = "Error interpolatinn proxy grid series";
+        return false;
+    }
 
     gis::resampleGrid(tmpGrid, gridOut, gridBase.header, aggrAverage, 0);
 
@@ -200,10 +219,11 @@ bool interpolateProxyGridSeries(const Crit3DProxyGridSeries& mySeries, QDate myD
     return true;
 }
 
-bool checkProxyGridSeries(Crit3DInterpolationSettings* mySettings, const gis::Crit3DRasterGrid& gridBase, std::vector <Crit3DProxyGridSeries> mySeries, QDate myDate)
+bool checkProxyGridSeries(Crit3DInterpolationSettings* mySettings, const gis::Crit3DRasterGrid& gridBase, std::vector <Crit3DProxyGridSeries> mySeries, QDate myDate, QString* error)
 {
     unsigned i,j;
     gis::Crit3DRasterGrid* gridOut;
+    *error = "";
 
     for (i=0; i < mySettings->getProxyNr(); i++)
     {
@@ -214,7 +234,7 @@ bool checkProxyGridSeries(Crit3DInterpolationSettings* mySettings, const gis::Cr
                 if (mySeries[j].getGridName().size() > 0)
                 {
                     gridOut = new gis::Crit3DRasterGrid();
-                    if (! interpolateProxyGridSeries(mySeries[j], myDate, gridBase, gridOut))
+                    if (! interpolateProxyGridSeries(mySeries[j], myDate, gridBase, gridOut, error))
                         return false;
 
                     mySettings->getProxy(i)->setGrid(gridOut);

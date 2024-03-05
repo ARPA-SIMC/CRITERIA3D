@@ -823,7 +823,7 @@ int pragaBatch(PragaProject* myProject, QString scriptFileName)
         result = executeCommand(argumentList, myProject) ;
         if (result != 0)
         {
-            myProject->logError("Praga batch error code: "+QString::number(result));
+            myProject->logError("Praga batch error code: " + QString::number(result) + "\n" + myProject->errorString);
             return result;
         }
     }

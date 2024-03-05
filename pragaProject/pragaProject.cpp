@@ -2186,6 +2186,7 @@ bool PragaProject::interpolationMeteoGridPeriod(QDate dateIni, QDate dateFin, QL
     int countDaysSaving = 0;
     QDate loadDateFin;
     QDate saveDateIni;
+    QString error;
 
     if (pragaDailyMaps == nullptr) pragaDailyMaps = new Crit3DDailyMeteoMaps(DEM);
     if (pragaHourlyMaps == nullptr) pragaHourlyMaps = new PragaHourlyMeteoMaps(DEM);
@@ -2278,14 +2279,14 @@ bool PragaProject::interpolationMeteoGridPeriod(QDate dateIni, QDate dateFin, QL
         if (useProxies && currentYear != myDate.year())
         {
             logInfoGUI("Interpolating proxy grid series...");
-            if (checkProxyGridSeries(&interpolationSettings, DEM, proxyGridSeries, myDate))
+            if (checkProxyGridSeries(&interpolationSettings, DEM, proxyGridSeries, myDate, &error))
             {
                 if (! readProxyValues()) return false;
                 currentYear = myDate.year();
             }
             else
             {
-                errorString = "Error checking proxy grid series";
+                errorString = error;
                 return false;
             }
         }
