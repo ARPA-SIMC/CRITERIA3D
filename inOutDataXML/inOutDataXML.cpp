@@ -1337,3 +1337,9 @@ int InOutDataXML::getVariableFlagFirstChar()
 {
     return variable[0].flagField.getFirstChar();
 }
+
+float InOutDataXML::getFormatMissingValue()
+{
+    return format_missingValue;
+}
+

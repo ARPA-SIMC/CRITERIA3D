@@ -45,6 +45,7 @@ public:
     QString getTimeFormat();
     QString getVariableFlagAccepted();
     int getVariableFlagFirstChar();
+    float getFormatMissingValue();
 
 private:
     bool isGrid;

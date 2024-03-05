@@ -3315,6 +3315,7 @@ bool PragaProject::loadXMLExportData(QString code)
     {
         flagFirstChar = inOutData->getVariableFlagFirstChar();
     }
+    QString missingValueStr = QString::number(inOutData->getFormatMissingValue());
 
 
 
@@ -3347,29 +3348,36 @@ bool PragaProject::loadXMLExportData(QString code)
         }
 
         QString myValue;
-        if (charFormat == 'f')
+        if (values[i] == NODATA)
         {
-            myValue = QString::number(values[i],'f',nDecimals);
-        }
-        else if (charFormat == 'd')
-        {
-            myValue = QString::number(values[i],'d',nDecimals);
-        }
-        else if (charFormat == 'd'|| charFormat == 'i')
-        {
-            myValue = QString::number(values[i],'f',nDecimals);
-        }
-        else if (charFormat == 'e')
-        {
-            myValue = QString::number(values[i],'e',nDecimals);
-        }
-        else if (charFormat == 'g')
-        {
-            myValue = QString::number(values[i],'g',nDecimals);
+            myValue = missingValueStr;
         }
         else
         {
-            myValue = QString::number(values[i],'f',nDecimals);  // default
+            if (charFormat == 'f')
+            {
+                myValue = QString::number(values[i],'f',nDecimals);
+            }
+            else if (charFormat == 'd')
+            {
+                myValue = QString::number(values[i],'d',nDecimals);
+            }
+            else if (charFormat == 'd'|| charFormat == 'i')
+            {
+                myValue = QString::number(values[i],'f',nDecimals);
+            }
+            else if (charFormat == 'e')
+            {
+                myValue = QString::number(values[i],'e',nDecimals);
+            }
+            else if (charFormat == 'g')
+            {
+                myValue = QString::number(values[i],'g',nDecimals);
+            }
+            else
+            {
+                myValue = QString::number(values[i],'f',nDecimals);  // default
+            }
         }
 
         if (variableAlign == "left")
