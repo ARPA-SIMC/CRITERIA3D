@@ -3409,6 +3409,7 @@ bool PragaProject::loadXMLExportData(QString code)
 bool PragaProject::loadXMLExportDataGrid(QString code)
 {
     // TO DO
+    return true;
 }
 
 bool PragaProject::monthlyAggregateVariablesGrid(const QDate &firstDate, const QDate &lastDate, QList<meteoVariable> &variablesList)
