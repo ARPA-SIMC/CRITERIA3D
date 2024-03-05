@@ -1141,7 +1141,7 @@ QString InOutDataXML::parseXMLPointCode(QString text)
     {
         if (format_type == XMLFORMATFIXED || (format_type == XMLFORMATDELIMITED && pointCode.getType().toUpper() == "FILENAMEDEFINED"))
         {
-            QString substring = text.mid(pointCode.getFirstChar()-1,pointCode.getNrChar());
+            QString substring = text.mid(0,pointCode.getNrChar());
             if (pointCode.getFormat().isEmpty() || pointCode.getFormat() == "%s")
             {
                 // pointCode is a string
@@ -1326,4 +1326,14 @@ int InOutDataXML::getVariableNrChar()
 QString InOutDataXML::getVariableFormat()
 {
     return variable[0].varField.getFormat();
+}
+
+QString InOutDataXML::getVariableFlagAccepted()
+{
+    return variable[0].flagAccepted;
+}
+
+int InOutDataXML::getVariableFlagFirstChar()
+{
+    return variable[0].flagField.getFirstChar();
 }

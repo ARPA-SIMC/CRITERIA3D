@@ -3266,9 +3266,7 @@ bool PragaProject::loadXMLExportData(QString code)
         errorString = "Invalid filename" ;
         return false;
     }
-    qDebug() << "filename " << filename;
     QString variable = inOutData->getVariableExport();
-    qDebug() << "variable " << variable;
     meteoVariable meteoVar = getMeteoVar(variable.toStdString());
     if (meteoVar == noMeteoVar)
     {
@@ -3310,6 +3308,15 @@ bool PragaProject::loadXMLExportData(QString code)
         errorString = "Invalid alignment: " + variableAlign;
         return false;
     }
+    QString flagAccepted = inOutData->getVariableFlagAccepted();
+    int flagFirstChar;
+    if (!flagAccepted.isEmpty())
+    {
+        flagFirstChar = inOutData->getVariableFlagFirstChar();
+    }
+
+
+
     std::vector<QString> dateStr;
     std::vector<float> values = meteoPointsDbHandler->getAllDailyVar(&errorString, meteoVar, code, dateStr);
     if (values.size() == 0)
@@ -3320,7 +3327,6 @@ bool PragaProject::loadXMLExportData(QString code)
     QFile file(filename);
     file.open(QIODevice::WriteOnly | QIODevice::Text);
     QTextStream out(&file);
-    qDebug() << "fixedString " << fixedString;
     for (int i = 0; i<values.size(); i++)
     {
         QDate myDate = QDate::fromString(dateStr[i], "yyyy-MM-dd");
@@ -3360,16 +3366,29 @@ bool PragaProject::loadXMLExportData(QString code)
         {
             myValue = QString::number(values[i],'g',nDecimals);
         }
+        else
+        {
+            myValue = QString::number(values[i],'f',nDecimals);  // default
+        }
 
         if (variableAlign == "left")
         {
-            myValue.leftJustified(variableNrChar, ' ');
+            myValue = myValue.leftJustified(variableNrChar, ' ');
             out << myValue;
         }
         else
         {
-            myValue.rightJustified(variableNrChar, ' ');
+            myValue = myValue.rightJustified(variableNrChar, ' ');
             out << myValue;
+        }
+        if (!flagAccepted.isEmpty())
+        {
+            whiteSpaces = flagFirstChar - (variableFirstChar + variableNrChar);
+            for (int i = 0; i<whiteSpaces; i++)
+            {
+                    out << " " ;
+            }
+            out << flagAccepted;
         }
         out <<"\n";
     }

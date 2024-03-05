@@ -43,6 +43,8 @@ public:
     QString getVariableFormat();
     int getTimeFirstChar();
     QString getTimeFormat();
+    QString getVariableFlagAccepted();
+    int getVariableFlagFirstChar();
 
 private:
     bool isGrid;
