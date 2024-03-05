@@ -3382,7 +3382,7 @@ bool PragaProject::loadXMLExportData(QString code)
             myValue = myValue.rightJustified(variableNrChar, ' ');
             out << myValue;
         }
-        if (!flagAccepted.isEmpty())
+        if (values[i] != NODATA && !flagAccepted.isEmpty())
         {
             whiteSpaces = flagFirstChar - (variableFirstChar + variableNrChar);
             for (int i = 0; i<whiteSpaces; i++)
