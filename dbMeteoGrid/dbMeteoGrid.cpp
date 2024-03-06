@@ -2428,6 +2428,64 @@ std::vector<float> Crit3DMeteoGridDbHandler::loadGridDailyVar(QString *myError, 
     return dailyVarList;
 }
 
+std::vector<float> Crit3DMeteoGridDbHandler::exportAllDataVar(QString *myError, frequencyType freq, meteoVariable variable, QString id, std::vector<QString> &dateStr)
+{
+    QString date;
+    float value;
+    std::vector<float> allDataVarList;
+
+    QSqlQuery myQuery(_db);
+    QString tableName;
+    int idVar;
+
+    if (freq == daily)
+    {
+        idVar = getDailyVarCode(variable);
+        if (idVar == NODATA)
+        {
+            *myError = "Variable not existing";
+            return allDataVarList;
+        }
+        tableName = _tableDaily.prefix + id + _tableDaily.postFix;
+    }
+    else if (freq == hourly)
+    {
+        idVar = getHourlyVarCode(variable);
+        if (idVar == NODATA)
+        {
+            *myError = "Variable not existing";
+            return allDataVarList;
+        }
+        tableName = _tableHourly.prefix + id + _tableHourly.postFix;
+    }
+    else
+    {
+        *myError = "Frequency should be daily or hourly";
+        return allDataVarList;
+    }
+
+    QString statement = QString( "SELECT * FROM `%1` WHERE VariableCode = '%2'")
+                            .arg(tableName).arg(idVar);
+
+    if( !myQuery.exec(statement) )
+    {
+        *myError = myQuery.lastError().text();
+        return allDataVarList;
+    }
+    else
+    {
+        while (myQuery.next())
+        {
+            date = myQuery.value(0).toString();
+            dateStr.push_back(date);
+            value = myQuery.value(2).toFloat();
+            allDataVarList.push_back(value);
+        }
+    }
+
+    return allDataVarList;
+}
+
 
 std::vector<float> Crit3DMeteoGridDbHandler::loadGridDailyVarFixedFields(QString *myError, QString meteoPoint, meteoVariable variable, QDate first, QDate last, QDate* firstDateDB)
 {

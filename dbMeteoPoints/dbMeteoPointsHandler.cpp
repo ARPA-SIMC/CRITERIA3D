@@ -686,11 +686,11 @@ std::vector<float> Crit3DMeteoPointsDbHandler::loadDailyVar(QString *myError, me
     return dailyVarList;
 }
 
-std::vector<float> Crit3DMeteoPointsDbHandler::exportAllDayVar(QString *myError, frequencyType freq, meteoVariable variable, QString id, std::vector<QString> &dateStr)
+std::vector<float> Crit3DMeteoPointsDbHandler::exportAllDataVar(QString *myError, frequencyType freq, meteoVariable variable, QString id, std::vector<QString> &dateStr)
 {
     QString date;
     float value;
-    std::vector<float> dailyVarList;
+    std::vector<float> allDataVarList;
 
     int idVar = getIdfromMeteoVar(variable);
 
@@ -709,7 +709,7 @@ std::vector<float> Crit3DMeteoPointsDbHandler::exportAllDayVar(QString *myError,
     else
     {
         *myError = "Frequency should be daily or hourly";
-        return dailyVarList;
+        return allDataVarList;
     }
 
     QString statement = QString( "SELECT * FROM `%1` WHERE `%2` = %3")
@@ -718,7 +718,7 @@ std::vector<float> Crit3DMeteoPointsDbHandler::exportAllDayVar(QString *myError,
     if( !myQuery.exec(statement) )
     {
         *myError = myQuery.lastError().text();
-        return dailyVarList;
+        return allDataVarList;
     }
     else
     {
@@ -727,11 +727,11 @@ std::vector<float> Crit3DMeteoPointsDbHandler::exportAllDayVar(QString *myError,
             date = myQuery.value(0).toString();
             dateStr.push_back(date);
             value = myQuery.value(2).toFloat();
-            dailyVarList.push_back(value);
+            allDataVarList.push_back(value);
         }
     }
 
-    return dailyVarList;
+    return allDataVarList;
 }
 
 std::vector<float> Crit3DMeteoPointsDbHandler::loadHourlyVar(QString *myError, meteoVariable variable, Crit3DDate dateStart, Crit3DDate dateEnd, QDateTime* firstDateDB, Crit3DMeteoPoint *meteoPoint)
