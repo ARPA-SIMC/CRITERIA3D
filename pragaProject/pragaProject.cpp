@@ -3349,10 +3349,25 @@ bool PragaProject::loadXMLExportData(QString code)
     QFile file(filename);
     file.open(QIODevice::WriteOnly | QIODevice::Text);
     QTextStream out(&file);
+    QDate myDate;
+    QTime myTime;
+    QDateTime myDateTime;
+    QString myDateStr;
     for (int i = 0; i<values.size(); i++)
     {
-        QDate myDate = QDate::fromString(dateStr[i], "yyyy-MM-dd");
-        QString myDateStr = myDate.toString(inOutData->getTimeFormat());
+        if (freq == daily)
+        {
+            myDate = QDate::fromString(dateStr[i], "yyyy-MM-dd");
+            myDateStr = myDate.toString(inOutData->getTimeFormat());
+        }
+        else if (freq == hourly)
+        {
+            myDate = QDate::fromString(dateStr[i].mid(0,10), "yyyy-MM-dd");
+            myTime = QTime::fromString(dateStr[i].mid(11,8), "HH:mm:ss");
+            myDateTime = QDateTime(myDate, myTime, Qt::UTC);
+            myDateStr = myDateTime.toString(inOutData->getTimeFormat());
+        }
+
         if (myDateStr.isEmpty())
         {
             errorString = "Invalid date format: " + inOutData->getTimeFormat();
