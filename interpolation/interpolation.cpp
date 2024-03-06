@@ -28,6 +28,10 @@
 #include <vector>
 #include <algorithm>
 
+#include <fstream>
+#include <chrono>
+#include <iostream>
+
 #include "commonConstants.h"
 #include "basicMath.h"
 #include "furtherMathFunctions.h"
@@ -1512,11 +1516,23 @@ bool multipleDetrending(std::vector <Crit3DInterpolationDataPoint> &myPoints, Cr
     std::vector<std::function<double(double, std::vector<double>&)>> myFunc;
     setFittingParameters(myCombination, mySettings, myFunc, parametersMin, parametersMax, parametersDelta, parameters);
 
+    auto start2 = std::chrono::high_resolution_clock::now();
+
     // multiple non linear fitting
     /*interpolation::bestFittingMarquardt_nDimension(&functionSum, myFunc, 4, 3, parametersMin, parametersMax, parameters, parametersDelta,
                                     20, 0.05, 0.02, predictors, predictands, false, weights);*/
     interpolation::bestFittingMarquardt_nDimension(&functionSum, myFunc, 10000, 5, parametersMin, parametersMax, parameters, parametersDelta,
                                                    100, 0.001, 0.01, predictors, predictands, false, weights);
+
+    auto end2 = std::chrono::high_resolution_clock::now();
+    std::chrono::duration<double> tempo2 = end2 - start2;
+    std::ofstream csvfile("C:/Github/tempoBestFit.csv", std::ios::app);
+
+    if (!csvfile.is_open()) {
+        std::cerr << "Errore apertura file\n";
+    }
+    csvfile << tempo2.count() << std::endl;
+    csvfile.close();
 
     mySettings->setFittingFunction(myFunc);
     mySettings->setFittingParameters(parameters);
