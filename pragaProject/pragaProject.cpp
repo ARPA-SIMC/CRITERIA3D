@@ -3340,7 +3340,7 @@ bool PragaProject::loadXMLExportData(QString code)
 
 
     std::vector<QString> dateStr;
-    std::vector<float> values = meteoPointsDbHandler->getAllDailyVar(&errorString, freq, meteoVar, code, dateStr);
+    std::vector<float> values = meteoPointsDbHandler->exportAllDailyVar(&errorString, freq, meteoVar, code, dateStr);
     if (values.size() == 0)
     {
         errorString = code + " has no data for variable: " + variable;
