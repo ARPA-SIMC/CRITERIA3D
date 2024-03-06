@@ -686,7 +686,7 @@ std::vector<float> Crit3DMeteoPointsDbHandler::loadDailyVar(QString *myError, me
     return dailyVarList;
 }
 
-std::vector<float> Crit3DMeteoPointsDbHandler::exportAllDailyVar(QString *myError, frequencyType freq, meteoVariable variable, QString id, std::vector<QString> &dateStr)
+std::vector<float> Crit3DMeteoPointsDbHandler::exportAllDayVar(QString *myError, frequencyType freq, meteoVariable variable, QString id, std::vector<QString> &dateStr)
 {
     QString date;
     float value;

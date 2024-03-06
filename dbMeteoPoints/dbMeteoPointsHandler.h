@@ -68,7 +68,7 @@
         std::vector<float> loadDailyVar(QString *myError, meteoVariable variable,
                                         Crit3DDate dateStart, Crit3DDate dateEnd,
                                         QDate* firstDateDB, Crit3DMeteoPoint *meteoPoint);
-        std::vector<float> exportAllDailyVar(QString *myError, frequencyType freq, meteoVariable variable, QString id, std::vector<QString> &dateStr);
+        std::vector<float> exportAllDayVar(QString *myError, frequencyType freq, meteoVariable variable, QString id, std::vector<QString> &dateStr);
 
         bool loadHourlyData(const Crit3DDate &firstDate, const Crit3DDate &lastDate, Crit3DMeteoPoint *meteoPoint);
 
