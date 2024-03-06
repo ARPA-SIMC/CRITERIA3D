@@ -43,6 +43,7 @@ public:
     QString getVariableFormat();
     int getTimeFirstChar();
     QString getTimeFormat();
+    QString getTimeType();
     QString getVariableFlagAccepted();
     int getVariableFlagFirstChar();
     float getFormatMissingValue();

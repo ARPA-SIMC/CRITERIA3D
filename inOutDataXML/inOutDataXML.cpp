@@ -1308,6 +1308,11 @@ QString InOutDataXML::getTimeFormat()
     return time.getFormat();
 }
 
+QString InOutDataXML::getTimeType()
+{
+    return time.getType();
+}
+
 QString InOutDataXML::getVariableAlign()
 {
     return variable[0].varField.getAlignment();
@@ -1342,4 +1347,5 @@ float InOutDataXML::getFormatMissingValue()
 {
     return format_missingValue;
 }
+
 

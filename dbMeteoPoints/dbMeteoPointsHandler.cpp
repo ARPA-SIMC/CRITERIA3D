@@ -686,7 +686,7 @@ std::vector<float> Crit3DMeteoPointsDbHandler::loadDailyVar(QString *myError, me
     return dailyVarList;
 }
 
-std::vector<float> Crit3DMeteoPointsDbHandler::getAllDailyVar(QString *myError, meteoVariable variable, QString id, std::vector<QString> &dateStr)
+std::vector<float> Crit3DMeteoPointsDbHandler::getAllDailyVar(QString *myError, frequencyType freq, meteoVariable variable, QString id, std::vector<QString> &dateStr)
 {
     QString date;
     float value;
@@ -696,8 +696,21 @@ std::vector<float> Crit3DMeteoPointsDbHandler::getAllDailyVar(QString *myError, 
 
 
     QSqlQuery myQuery(_db);
+    QString tableName;
 
-    QString tableName = id + "_D";
+    if (freq == daily)
+    {
+        tableName = id + "_D";
+    }
+    else if (freq == hourly)
+    {
+        tableName = id + "_H";
+    }
+    else
+    {
+        *myError = "Frequency should be daily or hourly";
+        return dailyVarList;
+    }
 
     QString statement = QString( "SELECT * FROM `%1` WHERE `%2` = %3")
                             .arg(tableName).arg(FIELD_METEO_VARIABLE).arg(idVar);

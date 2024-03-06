@@ -3323,11 +3323,24 @@ bool PragaProject::loadXMLExportData(QString code)
         flagFirstChar = inOutData->getVariableFlagFirstChar();
     }
     QString missingValueStr = QString::number(inOutData->getFormatMissingValue());
-
+    QString timeType = inOutData->getTimeType();
+    frequencyType freq;
+    if (timeType == "daily" || timeType == "DAILY" || timeType == "D")
+    {
+        freq = daily;
+    } else if (timeType == "hourly" || timeType == "HOURLY" || timeType == "H")
+    {
+        freq = hourly;
+    }
+    else
+    {
+        errorString = "Invalid time type: " + timeType;
+        return false;
+    }
 
 
     std::vector<QString> dateStr;
-    std::vector<float> values = meteoPointsDbHandler->getAllDailyVar(&errorString, meteoVar, code, dateStr);
+    std::vector<float> values = meteoPointsDbHandler->getAllDailyVar(&errorString, freq, meteoVar, code, dateStr);
     if (values.size() == 0)
     {
         errorString = code + " has no data for variable: " + variable;
