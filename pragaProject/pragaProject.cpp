@@ -3274,11 +3274,15 @@ bool PragaProject::loadXMLExportData(QString code)
         errorString = "Unknown meteo variable: " + variable;
         return false;
     }
+    QString fixedString = "";
     int pointCodeFirstChar = inOutData->getPointCodeFirstChar();
-    QString fixedString = code;
-    for (int i = 0; i<pointCodeFirstChar-1; i++)
+    if (pointCodeFirstChar != NODATA)
     {
-        fixedString.insert(0, " ");
+        fixedString = code;
+        for (int i = 0; i<pointCodeFirstChar-1; i++)
+        {
+                fixedString.insert(0, " ");
+        }
     }
     int variableCodeFirstChar = inOutData->getVariableCodeFirstChar();
     int whiteSpaces = variableCodeFirstChar - (fixedString.length()+1);
@@ -3287,7 +3291,10 @@ bool PragaProject::loadXMLExportData(QString code)
         fixedString.append(" ");
     }
     QString attribute = inOutData->getVariableCodeAttribute();
-    fixedString = fixedString + attribute;
+    if (!attribute.isEmpty())
+    {
+        fixedString = fixedString + attribute;
+    }
     int timeFirstChar = inOutData->getTimeFirstChar();
     whiteSpaces = timeFirstChar - (fixedString.length()+1);
     for (int i = 0; i<whiteSpaces; i++)
