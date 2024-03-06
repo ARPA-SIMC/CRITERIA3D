@@ -1122,6 +1122,8 @@ namespace interpolation
             counter++;
         } while( (counter < nrTrials) && (R2 < (1 - EPSILON)) && (fabs(R2Previous[0]-R2Previous[nrMinima-1]) > deltaR2) );
 
+        printf("counter = %d\n",counter);
+
         for (i=0;i<nrPredictors;i++)
         {
             for (j=0; j<nrParameters[i]; j++)
