@@ -2430,7 +2430,7 @@ std::vector<float> Crit3DMeteoGridDbHandler::loadGridDailyVar(QString *myError, 
 
 std::vector<float> Crit3DMeteoGridDbHandler::exportAllDataVar(QString *myError, frequencyType freq, meteoVariable variable, QString id, std::vector<QString> &dateStr)
 {
-    QString date;
+    QString myDateStr;
     float value;
     std::vector<float> allDataVarList;
 
@@ -2466,7 +2466,8 @@ std::vector<float> Crit3DMeteoGridDbHandler::exportAllDataVar(QString *myError, 
 
     QString statement = QString( "SELECT * FROM `%1` WHERE VariableCode = '%2'")
                             .arg(tableName).arg(idVar);
-
+    QDateTime dateTime;
+    QDate date;
     if( !myQuery.exec(statement) )
     {
         *myError = myQuery.lastError().text();
@@ -2476,8 +2477,27 @@ std::vector<float> Crit3DMeteoGridDbHandler::exportAllDataVar(QString *myError, 
     {
         while (myQuery.next())
         {
-            date = myQuery.value(0).toString();
-            dateStr.push_back(date);
+            if (freq == daily)
+            {
+                if (! getValue(myQuery.value(_tableDaily.fieldTime), &date))
+                {
+                    *myError = "Missing fieldTime";
+                    return allDataVarList;
+                }
+                myDateStr = date.toString("yyyy-MM-dd");
+            }
+            else if (freq == hourly)
+            {
+                if (! getValue(myQuery.value(_tableHourly.fieldTime), &dateTime))
+                {
+                    *myError = "Missing fieldTime";
+                    return allDataVarList;
+                }
+                // LC dateTime.toString direttamente ritorna una stringa vuota nelle ore di passaggio all'ora legale
+                myDateStr = dateTime.date().toString("yyyy-MM-dd") + " " + dateTime.time().toString("hh:mm");
+            }
+
+            dateStr.push_back(myDateStr);
             value = myQuery.value(2).toFloat();
             allDataVarList.push_back(value);
         }

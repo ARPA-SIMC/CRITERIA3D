@@ -3363,12 +3363,12 @@ bool PragaProject::loadXMLExportData(QString code)
         else if (freq == hourly)
         {
             myDate = QDate::fromString(dateStr[i].mid(0,10), "yyyy-MM-dd");
-            myTime = QTime::fromString(dateStr[i].mid(11,8), "HH:mm:ss");
+            myTime = QTime::fromString(dateStr[i].mid(11,8), "hh:mm");
             myDateTime = QDateTime(myDate, myTime, Qt::UTC);
             myDateStr = myDateTime.toString(inOutData->getTimeFormat());
         }
 
-        if (myDateStr.isEmpty())
+        if (!dateStr[i].isEmpty() && myDateStr.isEmpty())
         {
             errorString = "Invalid date format: " + inOutData->getTimeFormat();
             file.close();
@@ -3441,9 +3441,187 @@ bool PragaProject::loadXMLExportData(QString code)
     return true;
 }
 
+// LC 2 funzioni separate per gliglie e punti per eventualmente diversificare anche i dati da esportare (es. le griglie hanno anche i mensili)
 bool PragaProject::loadXMLExportDataGrid(QString code)
 {
-    // TO DO
+    errorString = "";
+    QString filename = inOutData->parseXMLFilename(code);
+    if (filename.isEmpty())
+    {
+        errorString = "Invalid filename" ;
+        return false;
+    }
+    QString variable = inOutData->getVariableExport();
+    meteoVariable meteoVar = getMeteoVar(variable.toStdString());
+    if (meteoVar == noMeteoVar)
+    {
+        errorString = "Unknown meteo variable: " + variable;
+        return false;
+    }
+    QString fixedString = "";
+    int pointCodeFirstChar = inOutData->getPointCodeFirstChar();
+    if (pointCodeFirstChar != NODATA)
+    {
+        fixedString = code;
+        for (int i = 0; i<pointCodeFirstChar-1; i++)
+        {
+            fixedString.insert(0, " ");
+        }
+    }
+    int variableCodeFirstChar = inOutData->getVariableCodeFirstChar();
+    int whiteSpaces = variableCodeFirstChar - (fixedString.length()+1);
+    for (int i = 0; i<whiteSpaces; i++)
+    {
+        fixedString.append(" ");
+    }
+    QString attribute = inOutData->getVariableCodeAttribute();
+    if (!attribute.isEmpty())
+    {
+        fixedString = fixedString + attribute;
+    }
+    int timeFirstChar = inOutData->getTimeFirstChar();
+    whiteSpaces = timeFirstChar - (fixedString.length()+1);
+    for (int i = 0; i<whiteSpaces; i++)
+    {
+        fixedString.append(" ");
+    }
+    QString variableAlign = inOutData->getVariableAlign();
+    int variableFirstChar = inOutData->getVariableFirstChar();
+    int variableNrChar = inOutData->getVariableNrChar();
+    QString variableFormat = inOutData->getVariableFormat();
+    QChar charFormat = variableFormat[variableFormat.length()-1];
+    int nDecimals = variableFormat.mid(variableFormat.length()-2,1).toInt();
+    if (variableAlign.isEmpty())
+    {
+        variableAlign = "right"; //default
+    }
+    else if (variableAlign != "right" && variableAlign != "left")
+    {
+        errorString = "Invalid alignment: " + variableAlign;
+        return false;
+    }
+    QString flagAccepted = inOutData->getVariableFlagAccepted();
+    int flagFirstChar;
+    if (!flagAccepted.isEmpty())
+    {
+        flagFirstChar = inOutData->getVariableFlagFirstChar();
+    }
+    QString missingValueStr = QString::number(inOutData->getFormatMissingValue());
+    QString timeType = inOutData->getTimeType();
+    frequencyType freq;
+    if (timeType == "daily" || timeType == "DAILY" || timeType == "D")
+    {
+        freq = daily;
+    } else if (timeType == "hourly" || timeType == "HOURLY" || timeType == "H")
+    {
+        freq = hourly;
+    }
+    else
+    {
+        errorString = "Invalid time type: " + timeType;
+        return false;
+    }
+
+
+    std::vector<QString> dateStr;
+    std::vector<float> values = meteoGridDbHandler->exportAllDataVar(&errorString, freq, meteoVar, code, dateStr);
+    if (values.size() == 0)
+    {
+        errorString = code + " has no data for variable: " + variable;
+        return false;
+    }
+    QFile file(filename);
+    file.open(QIODevice::WriteOnly | QIODevice::Text);
+    QTextStream out(&file);
+    QDate myDate;
+    QTime myTime;
+    QDateTime myDateTime;
+    QString myDateStr;
+    for (int i = 0; i<values.size(); i++)
+    {
+        if (freq == daily)
+        {
+            myDate = QDate::fromString(dateStr[i], "yyyy-MM-dd");
+            myDateStr = myDate.toString(inOutData->getTimeFormat());
+        }
+        else if (freq == hourly)
+        {
+            myDate = QDate::fromString(dateStr[i].mid(0,10), "yyyy-MM-dd");
+            myTime = QTime::fromString(dateStr[i].mid(11,8), "hh:mm");
+            myDateTime = QDateTime(myDate, myTime, Qt::UTC);
+            myDateStr = myDateTime.toString(inOutData->getTimeFormat());
+        }
+
+        if (!dateStr[i].isEmpty() && myDateStr.isEmpty())
+        {
+            errorString = "Invalid date format: " + inOutData->getTimeFormat();
+            file.close();
+            return false;
+        }
+        QString fixedStringAddDate = fixedString+myDateStr;
+        out << fixedStringAddDate;
+        whiteSpaces = variableFirstChar - (fixedStringAddDate.length()+1);
+        for (int i = 0; i<whiteSpaces; i++)
+        {
+            out << " " ;
+        }
+
+        QString myValue;
+        if (values[i] == NODATA)
+        {
+            myValue = missingValueStr;
+        }
+        else
+        {
+            if (charFormat == 'f')
+            {
+                    myValue = QString::number(values[i],'f',nDecimals);
+            }
+            else if (charFormat == 'd')
+            {
+                    myValue = QString::number(values[i],'d',nDecimals);
+            }
+            else if (charFormat == 'd'|| charFormat == 'i')
+            {
+                    myValue = QString::number(values[i],'f',nDecimals);
+            }
+            else if (charFormat == 'e')
+            {
+                    myValue = QString::number(values[i],'e',nDecimals);
+            }
+            else if (charFormat == 'g')
+            {
+                    myValue = QString::number(values[i],'g',nDecimals);
+            }
+            else
+            {
+                    myValue = QString::number(values[i],'f',nDecimals);  // default
+            }
+        }
+
+        if (variableAlign == "left")
+        {
+            myValue = myValue.leftJustified(variableNrChar, ' ');
+            out << myValue;
+        }
+        else
+        {
+            myValue = myValue.rightJustified(variableNrChar, ' ');
+            out << myValue;
+        }
+        if (values[i] != NODATA && !flagAccepted.isEmpty())
+        {
+            whiteSpaces = flagFirstChar - (variableFirstChar + variableNrChar);
+            for (int i = 0; i<whiteSpaces; i++)
+            {
+                    out << " " ;
+            }
+            out << flagAccepted;
+        }
+        out <<"\n";
+    }
+    file.close();
+
     return true;
 }
 
