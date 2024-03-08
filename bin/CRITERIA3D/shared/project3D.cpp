@@ -1099,7 +1099,15 @@ bool Project3D::setCriteria3DMap(criteria3DVariable var, int layerIndex)
             long nodeIndex = indexMap.at(layerIndex).value[row][col];
             if (nodeIndex != indexMap.at(layerIndex).header->flag)
             {
-                double value = getCriteria3DVar(var, nodeIndex);
+                double value;
+                if (var == factorOfSafety)
+                {
+                    value = computeFactorOfSafety(nodeIndex);
+                }
+                else
+                {
+                    value = getCriteria3DVar(var, nodeIndex);
+                }
 
                 if (value == NODATA)
                 {
@@ -1542,6 +1550,14 @@ double Project3D::assignTranspiration(int row, int col, double currentLai, doubl
     }
 
     return actualTranspiration;
+}
+
+
+float Project3D::computeFactorOfSafety(int nodeIndex)
+{
+    //TODO
+
+    return NODATA;
 }
 
 

@@ -2311,6 +2311,11 @@ void MainWindow::showCriteria3DVariable(criteria3DVariable var, int layerIndex, 
             ui->labelOutputRaster->setText("Volumetric water content [m3 m-3]");
         }
     }
+    else if (current3DVariable == factorOfSafety)
+    {
+        setSlopeStabilityScale(myProject.criteria3DMap.colorScale);
+        ui->labelOutputRaster->setText("Factor of safety [-]");
+    }
 
     // set range
     if (isFixedRange)
@@ -3146,7 +3151,7 @@ void MainWindow::on_actionView_SoilMoisture_triggered()
 void MainWindow::on_actionView_factor_of_safety_triggered()
 {
     int layerIndex = std::max(1, ui->layerNrEdit->value());
-    showCriteria3DVariable(waterContent, layerIndex, false, NODATA, NODATA);
+    showCriteria3DVariable(factorOfSafety, layerIndex, true, 0, 10);
 }
 
 
