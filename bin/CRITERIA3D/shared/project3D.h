@@ -169,7 +169,7 @@
 
         bool setCriteria3DMap(criteria3DVariable var, int layerIndex);
 
-        float computeFactorOfSafety(int nodeIndex);
+        float computeFactorOfSafety(int row, int col, int layerIndex, int nodeIndex);
     };
 
     bool isCrit3dError(int result, QString &error);
