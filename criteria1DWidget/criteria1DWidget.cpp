@@ -2190,7 +2190,7 @@ void Criteria1DWidget::on_actionViewWeather()
     QDate lastDate = getQDate(myProject.myCase.meteoPoint.getLastDailyData());
     meteoWidgetPoint->setCurrentDate(lastDate);
 
-    meteoWidgetPoint->draw(myProject.myCase.meteoPoint, false);
+    meteoWidgetPoint->drawMeteoPoint(myProject.myCase.meteoPoint, false);
 }
 
 

@@ -59,7 +59,7 @@
 
         // SOIL
         soil::Crit3DSoil mySoil;
-        std::vector<soil::Crit3DLayer> soilLayers;
+        std::vector<soil::Crit1DLayer> soilLayers;
         std::vector<Crit3DCarbonNitrogenLayer> carbonNitrogenLayers;
         soil::Crit3DFittingOptions fittingOptions;
 

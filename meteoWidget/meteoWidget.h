@@ -57,6 +57,7 @@
             void on_actionRemoveStation();
             void on_actionInfoPoint();
             void on_actionDataAvailability();
+            void on_actionDataSum();
 
     private:
             int meteoWidgetID;

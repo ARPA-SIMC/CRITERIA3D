@@ -203,9 +203,9 @@
     };
 
 
-    double convertToGramsPerM3(double myQuantity, soil::Crit3DLayer& soilLayer);
-    double convertToGramsPerLiter(double myQuantity, soil::Crit3DLayer &soilLayer);
-    double convertToGramsPerKg(double myQuantity, soil::Crit3DLayer &soilLayer);
+    double convertToGramsPerM3(double myQuantity, soil::Crit1DLayer& soilLayer);
+    double convertToGramsPerLiter(double myQuantity, soil::Crit1DLayer &soilLayer);
+    double convertToGramsPerKg(double myQuantity, soil::Crit1DLayer &soilLayer);
     double CNRatio(double C, double N, int flagOrganicMatter);
 
 
