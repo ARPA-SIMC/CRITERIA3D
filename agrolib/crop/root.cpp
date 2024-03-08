@@ -216,7 +216,7 @@ namespace root
     }
 
 
-    int getNrAtoms(const std::vector<soil::Crit3DLayer> &soilLayers, double &minThickness, std::vector<int> &atoms)
+    int getNrAtoms(const std::vector<soil::Crit1DLayer> &soilLayers, double &minThickness, std::vector<int> &atoms)
     {
         unsigned int nrLayers = unsigned(soilLayers.size());
         int multiplicationFactor = 1;
@@ -355,7 +355,7 @@ namespace root
     }
 
 
-    bool computeRootDensity(Crit3DCrop* myCrop, const std::vector<soil::Crit3DLayer> &soilLayers)
+    bool computeRootDensity(Crit3DCrop* myCrop, const std::vector<soil::Crit1DLayer> &soilLayers)
     {
         // check soil
         unsigned int nrLayers = unsigned(soilLayers.size());
