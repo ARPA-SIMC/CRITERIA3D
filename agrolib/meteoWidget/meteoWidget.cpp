@@ -355,9 +355,11 @@ Crit3DMeteoWidget::Crit3DMeteoWidget(bool isGrid_, QString projectPath, Crit3DMe
 
     QAction* infoPoint = new QAction(tr("&Info meteo point"), this);
     QAction* dataAvailability = new QAction(tr("&Data availability"), this);
+    QAction* dataSum = new QAction(tr("&Sum"), this);
 
     viewMenu->addAction(infoPoint);
     viewMenu->addAction(dataAvailability);
+    viewMenu->addAction(dataSum);
 
     connect(addVarButton, &QPushButton::clicked, [=](){ showVar(); });
     connect(dailyButton, &QPushButton::clicked, [=](){ showDailyGraph(); });
@@ -372,6 +374,7 @@ Crit3DMeteoWidget::Crit3DMeteoWidget(bool isGrid_, QString projectPath, Crit3DMe
     connect(removeStation, &QAction::triggered, this, &Crit3DMeteoWidget::on_actionRemoveStation);
     connect(infoPoint, &QAction::triggered, this, &Crit3DMeteoWidget::on_actionInfoPoint);
     connect(dataAvailability, &QAction::triggered, this, &Crit3DMeteoWidget::on_actionDataAvailability);
+    connect(dataSum, &QAction::triggered, this, &Crit3DMeteoWidget::on_actionDataSum);
 
     plotLayout->addWidget(chartView);
     horizontalGroupBox->setLayout(buttonLayout);
@@ -2288,6 +2291,12 @@ void Crit3DMeteoWidget::on_actionDataAvailability()
 
     infoWindow.setLayout(layout);
     infoWindow.exec();
+}
+
+void Crit3DMeteoWidget::on_actionDataSum()
+{
+    // TO DO;
+    // Apre una finestra con l'elenco delle variabili attualmente visualizzate in modo che siano selezionabili quali vogliamo switchare sulla comulata
 }
 
 

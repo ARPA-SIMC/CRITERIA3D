@@ -15,7 +15,7 @@
     public:
         TabLAI();
         void computeLAI(Crit3DCrop* myCrop, Crit3DMeteoPoint *meteoPoint, int firstYear, int lastYear,
-                        const QDate &lastDBMeteoDate, const std::vector<soil::Crit3DLayer>& soilLayers);
+                        const QDate &lastDBMeteoDate, const std::vector<soil::Crit1DLayer>& soilLayers);
 
         void tooltipLAI(QPointF point, bool state);
         void tooltipPE(QPointF point, bool state);

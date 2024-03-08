@@ -55,19 +55,19 @@ Crit3DCarbonNitrogenSettings::Crit3DCarbonNitrogenSettings()
 }
 
 
-double convertToGramsPerM3(double myQuantity, soil::Crit3DLayer &soilLayer)
+double convertToGramsPerM3(double myQuantity, soil::Crit1DLayer &soilLayer)
 {
     // convert [g m-2] -> [g m-3] = [mg dm-3]
     return myQuantity / soilLayer.thickness;
 }
 
-double convertToGramsPerLiter(double myQuantity, soil::Crit3DLayer &soilLayer)
+double convertToGramsPerLiter(double myQuantity, soil::Crit1DLayer &soilLayer)
 {
     // convert [g m-2] -> [g m-3] -> [g l-1]
     return (convertToGramsPerM3(myQuantity, soilLayer) / 1000);
 }
 
-double convertToGramsPerKg(double myQuantity, soil::Crit3DLayer &soilLayer)
+double convertToGramsPerKg(double myQuantity, soil::Crit1DLayer &soilLayer)
 {
     // convert [g m-2] -> [g m-3] -> [g kg-1]
     return (convertToGramsPerM3(myQuantity, soilLayer) / 1000) / soilLayer.horizonPtr->bulkDensity;

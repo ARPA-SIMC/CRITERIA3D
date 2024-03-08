@@ -39,7 +39,7 @@
  * \brief Initialize soil water content
  * \param soilLayers
  */
-void initializeWater(std::vector<soil::Crit3DLayer> &soilLayers)
+void initializeWater(std::vector<soil::Crit1DLayer> &soilLayers)
 {
     // TODO water content as function of month
     double initialAW = 0.8;             /*!<  [-] fraction of available Water  */
@@ -61,7 +61,7 @@ void initializeWater(std::vector<soil::Crit3DLayer> &soilLayers)
  * \author Margot van Soetendael
  * \note P.M.Driessen, 1986, "The water balance of soil"
  */
-double computeInfiltration(std::vector<soil::Crit3DLayer> &soilLayers, double inputWater, double ploughedSoilDepth)
+double computeInfiltration(std::vector<soil::Crit1DLayer> &soilLayers, double inputWater, double ploughedSoilDepth)
 {
     // TODO extend to geometric soilLayers
     unsigned int reached;                   // [-] index of reached soilLayers for surpuls water
@@ -266,7 +266,7 @@ double computeInfiltration(std::vector<soil::Crit3DLayer> &soilLayers, double in
  * \param waterTableDepth [m]
  * \return capillary rise
  */
-double computeCapillaryRise(std::vector<soil::Crit3DLayer> &soilLayers, double waterTableDepth)
+double computeCapillaryRise(std::vector<soil::Crit1DLayer> &soilLayers, double waterTableDepth)
 {
     double psi, previousPsi;             // [kPa] water potential
     double he_boundary;                  // [kPa] air entry point boundary soilLayers
@@ -371,7 +371,7 @@ double computeCapillaryRise(std::vector<soil::Crit3DLayer> &soilLayers, double w
 }
 
 
-double computeEvaporation(std::vector<soil::Crit3DLayer> &soilLayers, double maxEvaporation)
+double computeEvaporation(std::vector<soil::Crit1DLayer> &soilLayers, double maxEvaporation)
 {
    // TODO extend to geometric soilLayers
 
@@ -440,7 +440,7 @@ double computeEvaporation(std::vector<soil::Crit3DLayer> &soilLayers, double max
 /*!
  * \brief compute surface runoff [mm]
  */
-double computeSurfaceRunoff(const Crit3DCrop &myCrop, std::vector<soil::Crit3DLayer> &soilLayers)
+double computeSurfaceRunoff(const Crit3DCrop &myCrop, std::vector<soil::Crit1DLayer> &soilLayers)
 {
     double surfaceRunoff;           // [mm]
     double maxSurfaceWater;         // [mm]
@@ -464,7 +464,7 @@ double computeSurfaceRunoff(const Crit3DCrop &myCrop, std::vector<soil::Crit3DLa
  * \note P.M.Driessen, 1986, eq.58
  * \return lateralDrainage
  */
-double computeLateralDrainage(std::vector<soil::Crit3DLayer> &soilLayers)
+double computeLateralDrainage(std::vector<soil::Crit1DLayer> &soilLayers)
 {
     double satFactor;                       // [-]
     double hydrHead;                        // [m]
@@ -512,7 +512,7 @@ double computeLateralDrainage(std::vector<soil::Crit3DLayer> &soilLayers)
  * \param soilLayers, lastRootLayer, irrigationMax
  * \return irrigation [mm]
  */
-double assignOptimalIrrigation(std::vector<soil::Crit3DLayer> &soilLayers, unsigned int lastRootLayer, double irrigationMax)
+double assignOptimalIrrigation(std::vector<soil::Crit1DLayer> &soilLayers, unsigned int lastRootLayer, double irrigationMax)
 {
     double residualIrrigation = irrigationMax;
     unsigned int nrLayers = unsigned(soilLayers.size());
@@ -541,7 +541,7 @@ double assignOptimalIrrigation(std::vector<soil::Crit3DLayer> &soilLayers, unsig
  * \param computationDepth = computation soil depth [cm]
  * \return sum of water content from zero to computationSoilDepth [mm]
  */
-double getSoilWaterContentSum(const std::vector<soil::Crit3DLayer> &soilLayers, double computationDepth)
+double getSoilWaterContentSum(const std::vector<soil::Crit1DLayer> &soilLayers, double computationDepth)
 {
     computationDepth /= 100;                // [cm] --> [m]
     double lowerDepth, upperDepth;          // [m]
@@ -573,7 +573,7 @@ double getSoilWaterContentSum(const std::vector<soil::Crit3DLayer> &soilLayers, 
  * \param soilLayers
  * \return sum of readily available water in the rooting zone [mm]
  */
-double getReadilyAvailableWater(const Crit3DCrop &myCrop, const std::vector<soil::Crit3DLayer> &soilLayers)
+double getReadilyAvailableWater(const Crit3DCrop &myCrop, const std::vector<soil::Crit1DLayer> &soilLayers)
 {
     if (! myCrop.isLiving) return NODATA;
     if (myCrop.roots.rootDepth <= myCrop.roots.rootDepthMin) return NODATA;
