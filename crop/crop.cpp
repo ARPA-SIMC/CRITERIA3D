@@ -433,7 +433,7 @@ void Crit3DCrop::resetCrop(unsigned int nrLayers)
 }
 
 
-bool Crit3DCrop::dailyUpdate(const Crit3DDate &myDate, double latitude, const std::vector<soil::Crit3DLayer> &soilLayers,
+bool Crit3DCrop::dailyUpdate(const Crit3DDate &myDate, double latitude, const std::vector<soil::Crit1DLayer> &soilLayers,
                              double tmin, double tmax, double waterTableDepth, std::string &myError)
 {
     myError = "";
@@ -476,7 +476,7 @@ bool Crit3DCrop::dailyUpdate(const Crit3DDate &myDate, double latitude, const st
 }
 
 
-bool Crit3DCrop::restore(const Crit3DDate &myDate, double latitude, const std::vector<soil::Crit3DLayer> &soilLayers,
+bool Crit3DCrop::restore(const Crit3DDate &myDate, double latitude, const std::vector<soil::Crit1DLayer> &soilLayers,
                          double currentWaterTable, std::string &myError)
 {
     myError = "";
@@ -681,7 +681,7 @@ double Crit3DCrop::getMaxTranspiration(double ET0)
  * \brief getCropWaterDeficit
  * \return sum of water deficit (mm) in the rooting zone
  */
-double Crit3DCrop::getCropWaterDeficit(const std::vector<soil::Crit3DLayer> &soilLayers)
+double Crit3DCrop::getCropWaterDeficit(const std::vector<soil::Crit1DLayer> &soilLayers)
 {
     //check
     if (! isLiving) return NODATA;
@@ -703,7 +703,7 @@ double Crit3DCrop::getCropWaterDeficit(const std::vector<soil::Crit3DLayer> &soi
  * \return total transpiration and layerTranspiration vector [mm]
  * or percentage of water stress (if returnWaterStress = true)
  */
-double Crit3DCrop::computeTranspiration(double maxTranspiration, const std::vector<soil::Crit3DLayer> &soilLayers, double& waterStress)
+double Crit3DCrop::computeTranspiration(double maxTranspiration, const std::vector<soil::Crit1DLayer> &soilLayers, double& waterStress)
 {
     // check
     if (idCrop == "" || ! isLiving) return 0;
