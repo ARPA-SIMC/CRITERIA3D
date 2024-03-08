@@ -1141,7 +1141,7 @@ QString InOutDataXML::parseXMLPointCode(QString text)
     {
         if (format_type == XMLFORMATFIXED || (format_type == XMLFORMATDELIMITED && pointCode.getType().toUpper() == "FILENAMEDEFINED"))
         {
-            QString substring = text.mid(pointCode.getFirstChar()-1,pointCode.getNrChar());
+            QString substring = text.mid(0,pointCode.getNrChar());
             if (pointCode.getFormat().isEmpty() || pointCode.getFormat() == "%s")
             {
                 // pointCode is a string
@@ -1278,9 +1278,19 @@ int InOutDataXML::getPointCodeFirstChar()
     return pointCode.getFirstChar();
 }
 
+int InOutDataXML::getPointCodeNrChar()
+{
+    return pointCode.getNrChar();
+}
+
 int InOutDataXML::getVariableCodeFirstChar()
 {
     return variableCode.getFirstChar();
+}
+
+int InOutDataXML::getVariableCodeNrChar()
+{
+    return variableCode.getNrChar();
 }
 
 QString InOutDataXML::getVariableCodeAttribute()
@@ -1297,3 +1307,45 @@ QString InOutDataXML::getTimeFormat()
 {
     return time.getFormat();
 }
+
+QString InOutDataXML::getTimeType()
+{
+    return time.getType();
+}
+
+QString InOutDataXML::getVariableAlign()
+{
+    return variable[0].varField.getAlignment();
+}
+
+int InOutDataXML::getVariableFirstChar()
+{
+    return variable[0].varField.getFirstChar();
+}
+
+int InOutDataXML::getVariableNrChar()
+{
+    return variable[0].varField.getNrChar();
+}
+
+QString InOutDataXML::getVariableFormat()
+{
+    return variable[0].varField.getFormat();
+}
+
+QString InOutDataXML::getVariableFlagAccepted()
+{
+    return variable[0].flagAccepted;
+}
+
+int InOutDataXML::getVariableFlagFirstChar()
+{
+    return variable[0].flagField.getFirstChar();
+}
+
+float InOutDataXML::getFormatMissingValue()
+{
+    return format_missingValue;
+}
+
+

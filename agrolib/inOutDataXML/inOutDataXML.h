@@ -33,10 +33,20 @@ public:
     QString parseXMLFilename(QString code);
     QString getVariableExport();
     int getPointCodeFirstChar();
+    int getPointCodeNrChar();
     int getVariableCodeFirstChar();
     QString getVariableCodeAttribute();
+    int getVariableCodeNrChar();
+    QString getVariableAlign();
+    int getVariableFirstChar();
+    int getVariableNrChar();
+    QString getVariableFormat();
     int getTimeFirstChar();
     QString getTimeFormat();
+    QString getTimeType();
+    QString getVariableFlagAccepted();
+    int getVariableFlagFirstChar();
+    float getFormatMissingValue();
 
 private:
     bool isGrid;

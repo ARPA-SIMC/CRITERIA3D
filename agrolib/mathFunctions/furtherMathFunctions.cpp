@@ -32,6 +32,8 @@
 #include "commonConstants.h"
 #include "furtherMathFunctions.h"
 
+#include <iostream>
+#include <fstream>
 
 double lapseRateRotatedSigmoid(double x, std::vector <double> par)
 {
@@ -1121,6 +1123,14 @@ namespace interpolation
             //iRandom++;
             counter++;
         } while( (counter < nrTrials) && (R2 < (1 - EPSILON)) && (fabs(R2Previous[0]-R2Previous[nrMinima-1]) > deltaR2) );
+
+        std::ofstream csvfile("C:/Github/counterR2.csv", std::ios::app);
+
+        if (!csvfile.is_open()) {
+            std::cerr << "Errore apertura file\n";
+        }
+        csvfile << counter << "," << R2 << std::endl;
+        csvfile.close();
 
         for (i=0;i<nrPredictors;i++)
         {

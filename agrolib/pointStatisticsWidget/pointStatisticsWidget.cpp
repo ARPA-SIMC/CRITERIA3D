@@ -1696,16 +1696,18 @@ void Crit3DPointStatisticsWidget::on_actionChangeLeftAxis()
 }
 
 
+
 void Crit3DPointStatisticsWidget::on_actionExportGraph()
 {
-
     QString fileName = QFileDialog::getSaveFileName(this, tr("Save current graph"), "", tr("png files (*.png)"));
 
     if (fileName != "")
     {
-        const auto dpr = chartView->devicePixelRatioF();
+        /*const auto dpr = chartView->devicePixelRatioF();
         QPixmap buffer(chartView->width() * dpr, chartView->height() * dpr);
-        buffer.setDevicePixelRatio(dpr);
+        buffer.setDevicePixelRatio(dpr);*/
+
+        QPixmap buffer(chartView->width() * 2, chartView->height() * 2);
         buffer.fill(Qt::transparent);
 
         QPainter *paint = new QPainter(&buffer);
@@ -1717,6 +1719,7 @@ void Crit3DPointStatisticsWidget::on_actionExportGraph()
         buffer.save(&file, "PNG");
     }
 }
+
 
 void Crit3DPointStatisticsWidget::on_actionExportData()
 {

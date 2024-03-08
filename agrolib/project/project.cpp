@@ -23,6 +23,9 @@
 #include <QMessageBox>
 #include <string>
 
+#include <fstream>
+#include <chrono>
+
 
 Project::Project()
 {
@@ -2306,6 +2309,7 @@ bool Project::interpolationDemLocalDetrending(meteoVariable myVar, const Crit3DT
                 float z = DEM.value[row][col];
                 if (! isEqual(z, myHeader.flag))
                 {
+                    auto start1 = std::chrono::high_resolution_clock::now();
                     gis::getUtmXYFromRowCol(myHeader, row, col, &x, &y);
 
                     std::vector <Crit3DInterpolationDataPoint> subsetInterpolationPoints;
@@ -2314,6 +2318,16 @@ bool Project::interpolationDemLocalDetrending(meteoVariable myVar, const Crit3DT
                     getProxyValuesXY(x, y, &interpolationSettings, proxyValues);
                     myRaster->value[row][col] = interpolate(subsetInterpolationPoints, &interpolationSettings, meteoSettings,
                                                             myVar, x, y, z, proxyValues, true);
+
+                    auto end1 = std::chrono::high_resolution_clock::now();
+                    std::chrono::duration<double> tempo1 = end1 - start1;
+                    std::ofstream csvfile("C:/Github/rowCol.csv", std::ios::app);
+
+                    if (!csvfile.is_open()) {
+                        std::cerr << "Errore apertura file\n";
+                    }
+                    csvfile << row << "," << col << "," << tempo1.count() << std::endl;
+                    csvfile.close();
                 }
             }
         }
