@@ -1502,8 +1502,7 @@ void MainWindow::on_actionView_Snow_latent_heat_triggered()
 
 
 // ------------- CROP MAPS ---------------------------------------------------
-
-void MainWindow::on_actiondegree_days_triggered()
+void MainWindow::on_actionView_degree_days_triggered()
 {
     if (! myProject.isCriteria3DInitialized)
     {
@@ -2160,7 +2159,6 @@ void MainWindow::on_actionSnow_settings_triggered()
 
 //--------------------- MENU WATER FLUXES  -----------------------
 
-
 void MainWindow::on_actionWaterFluxes_settings_triggered()
 {
     DialogWaterFluxesSettings dialogWaterFluxes;
@@ -2237,6 +2235,8 @@ void MainWindow::on_actionCriteria3D_Initialize_triggered()
         updateModelTime();
     }
 }
+
+
 
 
 void MainWindow::on_actionCriteria3D_compute_next_hour_triggered()
@@ -3143,6 +3143,13 @@ void MainWindow::on_actionView_SoilMoisture_triggered()
 }
 
 
+void MainWindow::on_actionView_factor_of_safety_triggered()
+{
+    int layerIndex = std::max(1, ui->layerNrEdit->value());
+    showCriteria3DVariable(waterContent, layerIndex, false, NODATA, NODATA);
+}
+
+
 void MainWindow::on_layerNrEdit_valueChanged(int layerIndex)
 {
     if (myProject.nrLayers <= 1)
@@ -3181,4 +3188,5 @@ void MainWindow::on_actionUpdate_subHourly_triggered(bool checked)
 {
     myProject.showEachTimeStep = checked;
 }
+
 

@@ -1293,7 +1293,7 @@
        <second>0</second>
        <year>1752</year>
        <month>9</month>
-       <day>29</day>
+       <day>28</day>
       </datetime>
      </property>
      <property name="maximumDate">
@@ -2009,7 +2009,7 @@
     </widget>
     <widget class="QMenu" name="menuMeteo_variables">
      <property name="title">
-      <string>Meteo map</string>
+      <string>Meteo maps</string>
      </property>
      <addaction name="actionView_Air_temperature"/>
      <addaction name="actionView_Air_relative_humidity"/>
@@ -2089,13 +2089,23 @@
      <property name="title">
       <string>Crop model</string>
      </property>
-     <addaction name="actiondegree_days"/>
+     <addaction name="actionView_degree_days"/>
      <addaction name="actionView_Crop_LAI"/>
+    </widget>
+    <widget class="QMenu" name="menuSlope_stability">
+     <property name="title">
+      <string>Slope stability</string>
+     </property>
+     <addaction name="actionView_factor_of_safety"/>
     </widget>
     <addaction name="actionShow_3D_viewer"/>
     <addaction name="separator"/>
     <addaction name="menuPoints"/>
     <addaction name="menuOutput_points_3"/>
+    <addaction name="separator"/>
+    <addaction name="menuDEM"/>
+    <addaction name="menuShowSoil"/>
+    <addaction name="menuShowLand_use"/>
     <addaction name="separator"/>
     <addaction name="menuMeteo_variables"/>
     <addaction name="separator"/>
@@ -2107,9 +2117,7 @@
     <addaction name="separator"/>
     <addaction name="menuWater_fluxes"/>
     <addaction name="separator"/>
-    <addaction name="menuDEM"/>
-    <addaction name="menuShowSoil"/>
-    <addaction name="menuShowLand_use"/>
+    <addaction name="menuSlope_stability"/>
     <addaction name="separator"/>
    </widget>
    <widget class="QMenu" name="menuSnow_model">
@@ -2842,7 +2850,7 @@
     <string>Fixed range</string>
    </property>
   </action>
-  <action name="actiondegree_days">
+  <action name="actionView_degree_days">
    <property name="text">
     <string>Degree days</string>
    </property>
@@ -2858,6 +2866,11 @@
    </property>
    <property name="text">
     <string>Update sub hourly</string>
+   </property>
+  </action>
+  <action name="actionView_factor_of_safety">
+   <property name="text">
+    <string>Factor of safety</string>
    </property>
   </action>
  </widget>

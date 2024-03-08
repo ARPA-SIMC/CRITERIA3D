@@ -17,8 +17,9 @@
     class QString;
 
     enum criteria3DVariable {waterContent, waterTotalPotential, waterMatricPotential,
-                        availableWaterContent, degreeOfSaturation, soilTemperature,
-                        soilSurfaceMoisture, bottomDrainage, waterDeficit, waterInflow, waterOutflow};
+                            availableWaterContent, degreeOfSaturation, soilTemperature,
+                            soilSurfaceMoisture, bottomDrainage, waterDeficit, waterInflow, waterOutflow,
+                            factorOfSafety};
 
 
     class WaterFluxesParameters

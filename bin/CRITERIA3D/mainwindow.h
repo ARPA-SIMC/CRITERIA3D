@@ -224,9 +224,11 @@
 
         void on_actionView_Crop_LAI_triggered();
 
-        void on_actiondegree_days_triggered();
-
         void on_actionUpdate_subHourly_triggered(bool checked);
+
+        void on_actionView_degree_days_triggered();
+
+        void on_actionView_factor_of_safety_triggered();
 
     protected:
         /*!
