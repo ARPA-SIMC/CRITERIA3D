@@ -65,7 +65,7 @@ namespace soil
         this->mRestriction = true;
     }
 
-    Crit3DLayer::Crit3DLayer()
+    Crit1DLayer::Crit1DLayer()
     {
         this->depth = NODATA;
         this->thickness = NODATA;
@@ -216,7 +216,7 @@ namespace soil
     }
 
 
-    bool Crit3DLayer::setLayer(Crit3DHorizon *horizonPointer)
+    bool Crit1DLayer::setLayer(Crit3DHorizon *horizonPointer)
     {
         if (horizonPointer == nullptr)
             return false;
@@ -470,7 +470,7 @@ namespace soil
     }
 
 
-    int getSoilLayerIndex(const std::vector<soil::Crit3DLayer> &soilLayers, double depth)
+    int getSoilLayerIndex(const std::vector<soil::Crit1DLayer> &soilLayers, double depth)
     {
        for (unsigned int index = 0; index < soilLayers.size(); index++)
        {
@@ -669,10 +669,10 @@ namespace soil
     /*!
      * \brief get water content corresponding to a specific water potential
      * \param psi: water potential  [kPa]
-     * \param layer: pointer to Crit3DLayer class
+     * \param layer: pointer to Crit1DLayer class
      * \return water content        [mm]
      */
-    double getWaterContentFromPsi(double psi, const Crit3DLayer &layer)
+    double getWaterContentFromPsi(double psi, const Crit1DLayer &layer)
     {
         double theta = soil::thetaFromSignPsi(-psi, *(layer.horizonPtr));
         return theta * layer.thickness * layer.soilFraction * 1000;
@@ -682,10 +682,10 @@ namespace soil
     /*!
      * \brief get water content corresponding to a specific available water
      * \param availableWater    [-] (0: wilting point, 1: field capacity)
-     * \param layer: Crit3DLayer class
+     * \param layer: Crit1DLayer class
      * \return  water content   [mm]
      */
-    double getWaterContentFromAW(double availableWater, const Crit3DLayer& layer)
+    double getWaterContentFromAW(double availableWater, const Crit1DLayer& layer)
     {
         if (availableWater < 0)
             return layer.WP;
@@ -701,7 +701,7 @@ namespace soil
     /*!
      * \brief return current volumetric water content [m3 m^3]
      */
-    double Crit3DLayer::getVolumetricWaterContent()
+    double Crit1DLayer::getVolumetricWaterContent()
     {
         // waterContent [mm]
         // thickness [m]
@@ -712,7 +712,7 @@ namespace soil
     /*!
      * \brief return degree of saturation [-]
      */
-    double Crit3DLayer::getDegreeOfSaturation()
+    double Crit1DLayer::getDegreeOfSaturation()
     {
         double theta = getVolumetricWaterContent();
         return (theta - horizonPtr->vanGenuchten.thetaR) / (horizonPtr->vanGenuchten.thetaS - horizonPtr->vanGenuchten.thetaR);
@@ -723,7 +723,7 @@ namespace soil
      * \brief get current water potential
      * \return water potential [kPa]
      */
-    double Crit3DLayer::getWaterPotential()
+    double Crit1DLayer::getWaterPotential()
     {
         double theta = getVolumetricWaterContent();
         return psiFromTheta(theta, *horizonPtr);
@@ -734,7 +734,7 @@ namespace soil
      * \brief get current water conductivity
      * \return hydraulic conductivity   [cm day^-1]
      */
-    double Crit3DLayer::getWaterConductivity()
+    double Crit1DLayer::getWaterConductivity()
     {
         double theta = getVolumetricWaterContent();
         double degreeOfSaturation = SeFromTheta(theta, *horizonPtr);
@@ -747,7 +747,7 @@ namespace soil
      * \return factor of safety FoS [-]
      * if fos < 1 the slope is unstable
      */
-    double Crit3DLayer::computeSlopeStability(double slope, double rootCohesion)
+    double Crit1DLayer::computeSlopeStability(double slope, double rootCohesion)
     {
         double suctionStress = -waterPotential * getDegreeOfSaturation();    // [kPa]
 
@@ -1133,7 +1133,7 @@ namespace soil
 
 
     bool Crit3DSoil::setSoilLayers(double layerThicknessMin, double geometricFactor,
-                                   std::vector<Crit3DLayer> &soilLayers, std::string &myError)
+                                   std::vector<Crit1DLayer> &soilLayers, std::string &myError)
     {
         soilLayers.clear();
 
@@ -1149,7 +1149,7 @@ namespace soil
 
         while ((totalDepth - upperDepth) >= 0.001)
         {
-            Crit3DLayer newLayer;
+            Crit1DLayer newLayer;
             newLayer.thickness = round(currentThikness*100) / 100;
             newLayer.depth = upperDepth + newLayer.thickness * 0.5;
 

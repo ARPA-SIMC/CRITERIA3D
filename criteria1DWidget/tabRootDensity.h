@@ -25,7 +25,7 @@
     private:
         Crit3DCrop myCrop;
         Crit3DMeteoPoint mp;
-        std::vector<soil::Crit3DLayer> layers;
+        std::vector<soil::Crit1DLayer> layers;
 
         unsigned int nrLayers;
         int year;
