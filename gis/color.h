@@ -55,6 +55,7 @@
     bool setDefaultScale(Crit3DColorScale* myScale);
     bool setDTMScale(Crit3DColorScale* myScale);
     bool setTemperatureScale(Crit3DColorScale* myScale);
+    bool setSlopeStabilityScale(Crit3DColorScale* myScale);
     bool setAnomalyScale(Crit3DColorScale* myScale);
     bool setPrecipitationScale(Crit3DColorScale* myScale);
     bool setRelativeHumidityScale(Crit3DColorScale* myScale);
