@@ -759,7 +759,7 @@ namespace soil
 
         double frictionEffect =  tanFrictionAngle / tanAngle;
 
-        double unitWeight = horizonPtr->bulkDensity * GRAVITY;                   // [kN m-3]
+        double unitWeight = horizonPtr->bulkDensity * GRAVITY;                // [kN m-3]
         double cohesionEffect = 2 * (horizonPtr->effectiveCohesion + rootCohesion) / (unitWeight * depth * sin(2*slopeAngle));
 
         double suctionEffect = (suctionStress * (tanAngle + 1/tanAngle) * tanFrictionAngle) / (unitWeight * depth);
