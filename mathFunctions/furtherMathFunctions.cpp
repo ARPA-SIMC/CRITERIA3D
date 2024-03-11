@@ -32,9 +32,9 @@
 #include "commonConstants.h"
 #include "furtherMathFunctions.h"
 
-/*#include <iostream>
+#include <iostream>
 #include <fstream>
-*/
+#include <cmath>
 
 double lapseRateRotatedSigmoid(double x, std::vector <double> par)
 {
@@ -1348,6 +1348,12 @@ namespace interpolation
         }
 
         parametersChange[nrPredictors - 1][nrParameters[nrPredictors-1]-1] = g[nrParametersTotal - 1] / a[nrParametersTotal - 1][nrParametersTotal - 1];
+
+        /*debugging
+        if (std::isnan(parametersChange[nrPredictors - 1][nrParameters[nrPredictors-1]-1]))
+        {
+            printf("nan trovato\n");
+        }*/
 
         for (i = nrParametersTotal - 2; i >= 0; i--)
         {
