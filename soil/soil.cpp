@@ -709,6 +709,7 @@ namespace soil
         return theta;
     }
 
+
     /*!
      * \brief return degree of saturation [-]
      */
