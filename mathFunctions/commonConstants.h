@@ -217,7 +217,7 @@
         #define PI 3.141592653589793238462643383
     #endif
     #ifndef EPSILON
-        #define EPSILON 0.000001
+        #define EPSILON 0.0000001
     #endif
     #define EULER 2.718281828459
     #define DEG_TO_RAD 0.0174532925
