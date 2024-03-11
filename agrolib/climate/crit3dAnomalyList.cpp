@@ -685,7 +685,7 @@ bool Crit3DAnomalyList::addAnomaly(unsigned int index)
 
 
     QString anomalyAdded = yearStart + "-" + yearEnd + "_" + variable + "_" + period;
-    anomalyAdded = anomalyAdded + "_" + periodStartDay + ":" + periodStartMonth + "-" + periodEndDay + ":" + periodEndMonth;
+    anomalyAdded = anomalyAdded + "_" + periodStartDay + "of" + periodStartMonth + "-" + periodEndDay + "of" + periodEndMonth;
     if (nYear != "0")
     {
         anomalyAdded = anomalyAdded + "-+" + nYear + "y";
@@ -717,7 +717,7 @@ bool Crit3DAnomalyList::addAnomaly(unsigned int index)
     else
     {
         anomalyAdded = anomalyAdded + refYearStart + "-" + refYearEnd + "_" + refPeriod;
-        anomalyAdded = anomalyAdded + "_" + refPeriodStartDay + ":" + refPeriodStartMonth + "-" + refPeriodEndDay + ":" + refPeriodEndMonth;
+        anomalyAdded = anomalyAdded + "_" + refPeriodStartDay + "of" + refPeriodStartMonth + "-" + refPeriodEndDay + "of" + refPeriodEndMonth;
         if (refNYear != "0")
         {
             anomalyAdded = anomalyAdded + "-+" + refNYear + "y";

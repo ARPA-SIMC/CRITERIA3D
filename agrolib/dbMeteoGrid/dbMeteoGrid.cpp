@@ -4,6 +4,7 @@
 #include "basicMath.h"
 #include "utilities.h"
 #include "meteoPoint.h"
+#include "meteo.h"
 #include "commonConstants.h"
 
 #include <iostream>
@@ -2233,6 +2234,7 @@ bool Crit3DMeteoGridDbHandler::loadGridMonthlyData(QString &myError, QString met
     return true;
 }
 
+
 bool Crit3DMeteoGridDbHandler::loadGridAllMonthlyData(QString &myError, QDate firstDate, QDate lastDate)
 {
     myError = "";
@@ -2258,13 +2260,15 @@ bool Crit3DMeteoGridDbHandler::loadGridAllMonthlyData(QString &myError, QDate fi
     }
 
     QSqlQuery qry(_db);
-    QDate date;
+    QDate monthDate;
     unsigned row, col;
     int year, month, varCode;
+    int lastVarCode = NODATA;
+    meteoVariable variable = noMeteoVar;
+    QString pointCode, lastPointCode;
     float value;
-    QString pointCode;
-    QString prevCode = "NODATA";
-    QString statement = QString("SELECT * FROM `%1` WHERE `PragaYear` BETWEEN %2 AND %3 ORDER BY `PragaYear`").arg(table).arg(firstDate.year()).arg(lastDate.year());
+
+    QString statement = QString("SELECT * FROM `%1` WHERE `PragaYear` BETWEEN %2 AND %3 ORDER BY `PointCode`").arg(table).arg(firstDate.year()).arg(lastDate.year());
     if( !qry.exec(statement) )
     {
         myError = qry.lastError().text();
@@ -2274,53 +2278,59 @@ bool Crit3DMeteoGridDbHandler::loadGridAllMonthlyData(QString &myError, QDate fi
     {
         while (qry.next())
         {
-            if (!getValue(qry.value("PragaYear"), &year))
+            if (! getValue(qry.value("PragaYear"), &year))
             {
                 myError = "Missing PragaYear";
                 return false;
             }
 
-            if (!getValue(qry.value("PragaMonth"), &month))
+            if (! getValue(qry.value("PragaMonth"), &month))
             {
                 myError = "Missing PragaMonth";
                 return false;
             }
 
-            date.setDate(year,month, 1);
-            if (date < firstDate || date > lastDate)
+            monthDate.setDate(year, month, 1);
+            if (monthDate < firstDate || monthDate > lastDate)
             {
                 continue;
             }
 
-            if (!getValue(qry.value("PointCode"), &pointCode))
+            if (! getValue(qry.value("PointCode"), &pointCode))
             {
                 myError = "Missing PointCode";
                 return false;
             }
 
-            if (!getValue(qry.value("VariableCode"), &varCode))
+            if (pointCode != lastPointCode)     // new point
+            {
+                if (! _meteoGrid->findMeteoPointFromId(&row, &col, pointCode.toStdString()) )
+                {
+                    myError = "Missing MeteoPoint id";
+                    return false;
+                }
+                lastPointCode = pointCode;
+            }
+
+            if (! getValue(qry.value("VariableCode"), &varCode))
             {
                 myError = "Missing VariableCode";
                 return false;
             }
 
-            if (!getValue(qry.value("Value"), &value))
+            if (varCode != lastVarCode)     // new var
+            {
+                variable = getMonthlyVarEnum(varCode);
+                lastVarCode = varCode;
+            }
+
+            if (! getValue(qry.value("Value"), &value))
             {
                 myError = "Missing Value";
             }
 
-            meteoVariable variable = getMonthlyVarEnum(varCode);
-            if (prevCode != pointCode) // new point
-            {
-                if (!_meteoGrid->findMeteoPointFromId(&row, &col, pointCode.toStdString()) )
-                {
-                    myError = "Missing MeteoPoint id";
-                    return false;
-                }
-            }
-            if (! _meteoGrid->meteoPointPointer(row,col)->setMeteoPointValueM(getCrit3DDate(date), variable, value))
+            if (! _meteoGrid->meteoPointPointer(row, col)->setMeteoPointValueM(getCrit3DDate(monthDate), variable, value))
                 return false;
-            prevCode = pointCode;
         }
     }
 

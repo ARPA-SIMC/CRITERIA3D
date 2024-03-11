@@ -3008,10 +3008,10 @@ void PragaProject::showPointStatisticsWidgetGrid(std::string id)
                 netcdfTitle = listXMLElab->listFileName()[i];
                 netcdfName = xmlPath + listXMLElab->listFileName()[i]+".nc";
             }
-            QDate dateEnd = listXMLElab->listDateEnd()[i].addYears(listXMLElab->listNYears()[i]);
-            QDate dateStart = listXMLElab->listDateStart()[i];
+            QDate dateEnd = QDate(listXMLElab->listYearEnd()[i] + listXMLElab->listNYears()[i], listXMLElab->listDateEnd()[i].month(), listXMLElab->listDateEnd()[i].day());
+            QDate dateStart = QDate(listXMLElab->listYearStart()[i], listXMLElab->listDateStart()[i].month(), listXMLElab->listDateStart()[i].day());
             int nDays = dateStart.daysTo(dateEnd);
-            exportMeteoGridToNetCDF(netcdfName, netcdfTitle, QString::fromStdString(MapDailyMeteoVarToString.at(listXMLElab->listVariable()[i])), getUnitFromVariable(listXMLElab->listVariable()[i]), getCrit3DDate(listXMLElab->listDateStart()[i]), nDays, 0, 0);
+            exportMeteoGridToNetCDF(netcdfName, netcdfTitle, QString::fromStdString(MapDailyMeteoVarToString.at(listXMLElab->listVariable()[i])), getUnitFromVariable(listXMLElab->listVariable()[i]), getCrit3DDate(dateStart), nDays, 0, 0);
             // reset param
             clima->resetParam();
             // reset current values
@@ -3098,10 +3098,11 @@ void PragaProject::showPointStatisticsWidgetGrid(std::string id)
                 netcdfName = xmlPath + listXMLAnomaly->listFileName()[i]+".nc";
             }
 
-            QDate dateEnd = listXMLAnomaly->listDateEnd()[i].addYears(listXMLAnomaly->listNYears()[i]);
-            QDate dateStart = listXMLAnomaly->listDateStart()[i];
+            QDate dateEnd = QDate(listXMLElab->listYearEnd()[i] + listXMLElab->listNYears()[i], listXMLElab->listDateEnd()[i].month(), listXMLElab->listDateEnd()[i].day());
+            QDate dateStart = QDate(listXMLElab->listYearStart()[i], listXMLElab->listDateStart()[i].month(), listXMLElab->listDateStart()[i].day());
+
             int nDays = dateStart.daysTo(dateEnd);
-            exportMeteoGridToNetCDF(netcdfName, netcdfTitle, QString::fromStdString(MapDailyMeteoVarToString.at(listXMLAnomaly->listVariable()[i])), getUnitFromVariable(listXMLAnomaly->listVariable()[i]), getCrit3DDate(listXMLAnomaly->listDateStart()[i]),
+            exportMeteoGridToNetCDF(netcdfName, netcdfTitle, QString::fromStdString(MapDailyMeteoVarToString.at(listXMLAnomaly->listVariable()[i])), getUnitFromVariable(listXMLAnomaly->listVariable()[i]), getCrit3DDate(dateStart),
                                     nDays, listXMLAnomaly->listRefYearStart()[i], listXMLAnomaly->listRefYearEnd()[i]);
             // reset param
             clima->resetParam();
@@ -3111,10 +3112,9 @@ void PragaProject::showPointStatisticsWidgetGrid(std::string id)
             referenceClima->resetCurrentValues();
         }
 
-        for (unsigned int i = 0; i<listXMLDrought->listAll().size(); i++)
+        for (unsigned int i = 0; i < listXMLDrought->listAll().size(); i++)
         {
-
-            computeDroughtIndexAll(listXMLDrought->listIndex()[i], listXMLDrought->listYearStart()[i], listXMLDrought->listYearEnd()[i], listXMLDrought->listDate()[i], listXMLDrought->listTimescale()[i], listXMLDrought->listVariable()[i]);
+            computeDroughtIndexGrid(listXMLDrought->listIndex()[i], listXMLDrought->listYearStart()[i], listXMLDrought->listYearEnd()[i], listXMLDrought->listDate()[i], listXMLDrought->listTimescale()[i], listXMLDrought->listVariable()[i]);
             meteoGridDbHandler->meteoGrid()->fillMeteoRasterElabValue();
 
             QString netcdfName;
@@ -3128,21 +3128,21 @@ void PragaProject::showPointStatisticsWidgetGrid(std::string id)
             }
             if (listXMLDrought->listIndex()[i] == INDEX_SPI)
             {
-                int fistMonth = listXMLDrought->listDate()[i].month() - listXMLDrought->listTimescale()[i]+1;
+                int firstMonth = listXMLDrought->listDate()[i].month() - listXMLDrought->listTimescale()[i]+1;
                 QDate dateStart;
-                if (fistMonth <= 0 && fistMonth >= -11)
+                if (firstMonth <= 0 && firstMonth >= -11)
                 {
-                        fistMonth = 12 + fistMonth;
-                        dateStart.setDate(listXMLDrought->listDate()[i].year()-1, fistMonth, 1);
+                        firstMonth = 12 + firstMonth;
+                        dateStart.setDate(listXMLDrought->listDate()[i].year()-1, firstMonth, 1);
                 }
-                if (fistMonth < -11)
+                if (firstMonth < -11)
                 {
-                        fistMonth = 24 + fistMonth;
-                        dateStart.setDate(listXMLDrought->listDate()[i].year()-2, fistMonth, 1);
+                        firstMonth = 24 + firstMonth;
+                        dateStart.setDate(listXMLDrought->listDate()[i].year()-2, firstMonth, 1);
                 }
                 else
                 {
-                    dateStart.setDate(listXMLDrought->listDate()[i].year(), fistMonth, 1);
+                    dateStart.setDate(listXMLDrought->listDate()[i].year(), firstMonth, 1);
                 }
                 int lastDay = listXMLDrought->listDate()[i].daysInMonth();
                 QDate dateEnd(listXMLDrought->listDate()[i].year(),listXMLDrought->listDate()[i].month(),lastDay);
@@ -3661,7 +3661,7 @@ bool PragaProject::monthlyAggregateVariablesGrid(const QDate &firstDate, const Q
 }
 
 
-bool PragaProject::computeDroughtIndexAll(droughtIndex index, int firstYear, int lastYear, QDate date, int timescale, meteoVariable myVar)
+bool PragaProject::computeDroughtIndexGrid(droughtIndex index, int firstYear, int lastYear, QDate date, int timescale, meteoVariable myVar)
 {
     // check meteo grid
     if (! meteoGridLoaded)
@@ -3679,21 +3679,28 @@ bool PragaProject::computeDroughtIndexAll(droughtIndex index, int firstYear, int
 
     bool res = false;
 
-    QDate firstDate(firstYear,1,1);
+    QDate firstDate(firstYear, 1, 1);
     QDate lastDate;
-    int maxYear = std::max(lastYear,date.year());
+    int maxYear = std::max(lastYear, date.year());
     if (maxYear == QDate::currentDate().year())
     {
-        lastDate.setDate(maxYear, QDate::currentDate().month(),1);
+        lastDate.setDate(maxYear, QDate::currentDate().month(), 1);
     }
     else
     {
         lastDate.setDate(maxYear,12,1);
     }
 
+    logInfoGUI("Load monthly grid data...");
+    qApp->processEvents();
     meteoGridDbHandler->loadGridAllMonthlyData(errorString, firstDate, lastDate);
+    closeLogInfo();
+
+    setProgressBar("Drought Index - Meteo Grid", meteoGridDbHandler->meteoGrid()->gridStructure().header().nrRows);
     for (unsigned row = 0; row < unsigned(meteoGridDbHandler->meteoGrid()->gridStructure().header().nrRows); row++)
     {
+        updateProgressBar(row);
+
         for (unsigned col = 0; col < unsigned(meteoGridDbHandler->meteoGrid()->gridStructure().header().nrCols); col++)
         {
             if (meteoGridDbHandler->meteoGrid()->meteoPointPointer(row,col)->active)
@@ -3726,6 +3733,8 @@ bool PragaProject::computeDroughtIndexAll(droughtIndex index, int firstYear, int
             }
         }
     }
+    closeProgressBar();
+
     return res;
 }
 
