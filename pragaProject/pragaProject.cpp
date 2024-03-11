@@ -3008,10 +3008,10 @@ void PragaProject::showPointStatisticsWidgetGrid(std::string id)
                 netcdfTitle = listXMLElab->listFileName()[i];
                 netcdfName = xmlPath + listXMLElab->listFileName()[i]+".nc";
             }
-            QDate dateEnd = listXMLElab->listDateEnd()[i].addYears(listXMLElab->listNYears()[i]);
-            QDate dateStart = listXMLElab->listDateStart()[i];
+            QDate dateEnd = QDate(listXMLElab->listYearEnd()[i] + listXMLElab->listNYears()[i], listXMLElab->listDateEnd()[i].month(), listXMLElab->listDateEnd()[i].day());
+            QDate dateStart = QDate(listXMLElab->listYearStart()[i], listXMLElab->listDateStart()[i].month(), listXMLElab->listDateStart()[i].day());
             int nDays = dateStart.daysTo(dateEnd);
-            exportMeteoGridToNetCDF(netcdfName, netcdfTitle, QString::fromStdString(MapDailyMeteoVarToString.at(listXMLElab->listVariable()[i])), getUnitFromVariable(listXMLElab->listVariable()[i]), getCrit3DDate(listXMLElab->listDateStart()[i]), nDays, 0, 0);
+            exportMeteoGridToNetCDF(netcdfName, netcdfTitle, QString::fromStdString(MapDailyMeteoVarToString.at(listXMLElab->listVariable()[i])), getUnitFromVariable(listXMLElab->listVariable()[i]), getCrit3DDate(dateStart), nDays, 0, 0);
             // reset param
             clima->resetParam();
             // reset current values
@@ -3098,10 +3098,11 @@ void PragaProject::showPointStatisticsWidgetGrid(std::string id)
                 netcdfName = xmlPath + listXMLAnomaly->listFileName()[i]+".nc";
             }
 
-            QDate dateEnd = listXMLAnomaly->listDateEnd()[i].addYears(listXMLAnomaly->listNYears()[i]);
-            QDate dateStart = listXMLAnomaly->listDateStart()[i];
+            QDate dateEnd = QDate(listXMLElab->listYearEnd()[i] + listXMLElab->listNYears()[i], listXMLElab->listDateEnd()[i].month(), listXMLElab->listDateEnd()[i].day());
+            QDate dateStart = QDate(listXMLElab->listYearStart()[i], listXMLElab->listDateStart()[i].month(), listXMLElab->listDateStart()[i].day());
+
             int nDays = dateStart.daysTo(dateEnd);
-            exportMeteoGridToNetCDF(netcdfName, netcdfTitle, QString::fromStdString(MapDailyMeteoVarToString.at(listXMLAnomaly->listVariable()[i])), getUnitFromVariable(listXMLAnomaly->listVariable()[i]), getCrit3DDate(listXMLAnomaly->listDateStart()[i]),
+            exportMeteoGridToNetCDF(netcdfName, netcdfTitle, QString::fromStdString(MapDailyMeteoVarToString.at(listXMLAnomaly->listVariable()[i])), getUnitFromVariable(listXMLAnomaly->listVariable()[i]), getCrit3DDate(dateStart),
                                     nDays, listXMLAnomaly->listRefYearStart()[i], listXMLAnomaly->listRefYearEnd()[i]);
             // reset param
             clima->resetParam();
@@ -3127,21 +3128,21 @@ void PragaProject::showPointStatisticsWidgetGrid(std::string id)
             }
             if (listXMLDrought->listIndex()[i] == INDEX_SPI)
             {
-                int fistMonth = listXMLDrought->listDate()[i].month() - listXMLDrought->listTimescale()[i]+1;
+                int firstMonth = listXMLDrought->listDate()[i].month() - listXMLDrought->listTimescale()[i]+1;
                 QDate dateStart;
-                if (fistMonth <= 0 && fistMonth >= -11)
+                if (firstMonth <= 0 && firstMonth >= -11)
                 {
-                        fistMonth = 12 + fistMonth;
-                        dateStart.setDate(listXMLDrought->listDate()[i].year()-1, fistMonth, 1);
+                        firstMonth = 12 + firstMonth;
+                        dateStart.setDate(listXMLDrought->listDate()[i].year()-1, firstMonth, 1);
                 }
-                if (fistMonth < -11)
+                if (firstMonth < -11)
                 {
-                        fistMonth = 24 + fistMonth;
-                        dateStart.setDate(listXMLDrought->listDate()[i].year()-2, fistMonth, 1);
+                        firstMonth = 24 + firstMonth;
+                        dateStart.setDate(listXMLDrought->listDate()[i].year()-2, firstMonth, 1);
                 }
                 else
                 {
-                    dateStart.setDate(listXMLDrought->listDate()[i].year(), fistMonth, 1);
+                    dateStart.setDate(listXMLDrought->listDate()[i].year(), firstMonth, 1);
                 }
                 int lastDay = listXMLDrought->listDate()[i].daysInMonth();
                 QDate dateEnd(listXMLDrought->listDate()[i].year(),listXMLDrought->listDate()[i].month(),lastDay);

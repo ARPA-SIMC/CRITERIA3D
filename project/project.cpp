@@ -2602,6 +2602,11 @@ bool Project::interpolationGrid(meteoVariable myVar, const Crit3DTime& myTime)
                         localSelection(interpolationPoints, subsetInterpolationPoints, myX, myY, interpolationSettings);
                         preInterpolation(subsetInterpolationPoints, &interpolationSettings, meteoSettings, &climateParameters, meteoPoints, nrMeteoPoints, myVar, myTime);
                         interpolatedValue = interpolate(subsetInterpolationPoints, &interpolationSettings, meteoSettings, myVar, myX, myY, myZ, proxyValues, true);
+                        //debugging
+                        if (interpolatedValue > 9000)
+                        {
+                            std::cout << "valore sballato" << std::endl;
+                        }
                     }
                     else
                     {

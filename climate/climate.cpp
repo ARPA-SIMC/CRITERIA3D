@@ -3068,7 +3068,7 @@ bool parseXMLElaboration(Crit3DElabList *listXMLElab, Crit3DAnomalyList *listXML
                 if (myTag == "PERIOD")
                 {
                     periodPresent = true;
-                    if (parseXMLPeriodTag(child, listXMLElab, listXMLAnomaly, false, false, period, firstYear, myError) == false)
+                    if (parseXMLPeriodTag(child, listXMLElab, listXMLAnomaly, false, false, period, myError) == false)
                     {
                         listXMLElab->eraseElement(nElab);
                         qDebug() << "parseXMLPeriodTag ";
@@ -3349,7 +3349,7 @@ bool parseXMLElaboration(Crit3DElabList *listXMLElab, Crit3DAnomalyList *listXML
 
                 if (myTag == "PERIOD")
                 {
-                    if (parseXMLPeriodTag(child, listXMLElab, listXMLAnomaly, true, false, period, firstYear, myError) == false)
+                    if (parseXMLPeriodTag(child, listXMLElab, listXMLAnomaly, true, false, period, myError) == false)
                     {
                         listXMLAnomaly->eraseElement(nAnomaly);
                         errorAnomaly = true;
@@ -3359,7 +3359,7 @@ bool parseXMLElaboration(Crit3DElabList *listXMLElab, Crit3DAnomalyList *listXML
                 {
                     if (myTag == "REFPERIOD")
                     {
-                        if (parseXMLPeriodTag(child, listXMLElab, listXMLAnomaly, true, true, refPeriod, refFirstYear, myError) == false)
+                        if (parseXMLPeriodTag(child, listXMLElab, listXMLAnomaly, true, true, refPeriod, myError) == false)
                         {
                             listXMLAnomaly->eraseElement(nAnomaly);
                             errorAnomaly = true;
@@ -4061,7 +4061,7 @@ bool parseXMLPeriodType(QDomNode ancestor, QString attributePeriod, Crit3DElabLi
 }
 
 bool parseXMLPeriodTag(QDomNode child, Crit3DElabList *listXMLElab, Crit3DAnomalyList *listXMLAnomaly, bool isAnomaly, bool isRefPeriod,
-                        QString period, QString firstYear, QString *myError)
+                        QString period, QString *myError)
 {
     QDate dateStart;
     QDate dateEnd;
@@ -4070,8 +4070,8 @@ bool parseXMLPeriodTag(QDomNode child, Crit3DElabList *listXMLElab, Crit3DAnomal
     {
         QString periodEnd = child.toElement().attribute("fin");
         QString periodStart = child.toElement().attribute("ini");
-        periodEnd = periodEnd+"/"+firstYear;
-        periodStart = periodStart+"/"+firstYear;
+        periodEnd = periodEnd+"/2000";
+        periodStart = periodStart+"/2000";
         dateStart = QDate::fromString(periodStart, "dd/MM/yyyy");
         dateEnd = QDate::fromString(periodEnd, "dd/MM/yyyy");
         nYears = child.toElement().attribute("nyears");
@@ -4120,7 +4120,7 @@ bool parseXMLPeriodTag(QDomNode child, Crit3DElabList *listXMLElab, Crit3DAnomal
     if (period == "Daily")
     {
         int dayOfYear = child.toElement().attribute("doy").toInt();
-        dateStart = QDate(firstYear.toInt(), 1, 1).addDays(dayOfYear - 1);
+        dateStart = QDate(2000, 1, 1).addDays(dayOfYear - 1);
         dateEnd = dateStart;
 
         if (isAnomaly)
@@ -4167,9 +4167,9 @@ bool parseXMLPeriodTag(QDomNode child, Crit3DElabList *listXMLElab, Crit3DAnomal
         int dayEnd;
         int month;
 
-        intervalDecade(decade, firstYear.toInt(), &dayStart, &dayEnd, &month);
-        dateStart.setDate(firstYear.toInt(), month, dayStart);
-        dateEnd.setDate(firstYear.toInt(), month, dayEnd);
+        intervalDecade(decade, 2000, &dayStart, &dayEnd, &month);
+        dateStart.setDate(2000, month, dayStart);
+        dateEnd.setDate(2000, month, dayEnd);
 
         if (isAnomaly)
         {
@@ -4210,9 +4210,9 @@ bool parseXMLPeriodTag(QDomNode child, Crit3DElabList *listXMLElab, Crit3DAnomal
     if (period == "Monthly")
     {
         int month = child.toElement().attribute("month").toInt();
-        dateStart.setDate(firstYear.toInt(), month, 1);
+        dateStart.setDate(2000, month, 1);
         dateEnd = dateStart;
-        dateEnd.setDate(firstYear.toInt(), month, dateEnd.daysInMonth());
+        dateEnd.setDate(2000, month, dateEnd.daysInMonth());
 
         if (isAnomaly)
         {
@@ -4257,15 +4257,15 @@ bool parseXMLPeriodTag(QDomNode child, Crit3DElabList *listXMLElab, Crit3DAnomal
         int season = getSeasonFromString(seasonString);
         if (season == 4)
         {
-            dateStart.setDate(firstYear.toInt()-1, 12, 1);
-            QDate temp(firstYear.toInt(), 2, 1);
-            dateEnd.setDate(firstYear.toInt(), 2, temp.daysInMonth());
+            dateStart.setDate(1999, 12, 1);
+            QDate temp(2000, 2, 1);
+            dateEnd.setDate(2000, 2, temp.daysInMonth());
         }
         else
         {
-            dateStart.setDate(firstYear.toInt(), season*3, 1);
-            QDate temp(firstYear.toInt(), season*3+2, 1);
-            dateEnd.setDate(firstYear.toInt(), season*3+2, temp.daysInMonth());
+            dateStart.setDate(2000, season*3, 1);
+            QDate temp(2000, season*3+2, 1);
+            dateEnd.setDate(2000, season*3+2, temp.daysInMonth());
         }
 
         if (isAnomaly)
@@ -4306,8 +4306,8 @@ bool parseXMLPeriodTag(QDomNode child, Crit3DElabList *listXMLElab, Crit3DAnomal
     }
     if (period == "Annual")
     {
-        dateStart.setDate(firstYear.toInt(), 1, 1);
-        dateEnd.setDate(firstYear.toInt(), 12, 31);
+        dateStart.setDate(2000, 1, 1);
+        dateEnd.setDate(2000, 12, 31);
 
         if (isAnomaly)
         {

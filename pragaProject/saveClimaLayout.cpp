@@ -45,7 +45,7 @@ void SaveClimaLayout::addElab()
     QString elabAdded = firstYear + "-" + lastYear + "_" + variable.remove("_") + "_" + period;
     if (period == "Generic")
     {
-        elabAdded = elabAdded + "_" + genericPeriodStartDay + ":" + genericPeriodStartMonth + "-" + genericPeriodEndDay + ":" + genericPeriodEndMonth;
+        elabAdded = elabAdded + "_" + genericPeriodStartDay + "of" + genericPeriodStartMonth + "-" + genericPeriodEndDay + "of" + genericPeriodEndMonth;
         if (genericNYear != "0")
         {
             elabAdded = elabAdded + "-+" + genericNYear + "y";
