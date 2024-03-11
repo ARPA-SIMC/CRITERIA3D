@@ -369,7 +369,7 @@ bool Crit3DElabList::addElab(unsigned int index)
     QString elabAdded = yearStart + "-" + yearEnd + "_" + variable + "_" + period;
     if (periodStartDay != "0" && periodStartMonth != "0" && periodEndDay != "0" && periodEndMonth != "0")
     {
-        elabAdded = elabAdded + "_" + periodStartDay + ":" + periodStartMonth + "-" + periodEndDay + ":" + periodEndMonth;
+        elabAdded = elabAdded + "_" + periodStartDay + "of" + periodStartMonth + "-" + periodEndDay + "of" + periodEndMonth;
     }
     if (nYear != "0")
     {

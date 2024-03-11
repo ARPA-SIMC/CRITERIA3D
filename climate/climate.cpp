@@ -3068,7 +3068,7 @@ bool parseXMLElaboration(Crit3DElabList *listXMLElab, Crit3DAnomalyList *listXML
                 if (myTag == "PERIOD")
                 {
                     periodPresent = true;
-                    if (parseXMLPeriodTag(child, listXMLElab, listXMLAnomaly, false, false, period, firstYear, myError) == false)
+                    if (parseXMLPeriodTag(child, listXMLElab, listXMLAnomaly, false, false, period, myError) == false)
                     {
                         listXMLElab->eraseElement(nElab);
                         qDebug() << "parseXMLPeriodTag ";
@@ -3349,7 +3349,7 @@ bool parseXMLElaboration(Crit3DElabList *listXMLElab, Crit3DAnomalyList *listXML
 
                 if (myTag == "PERIOD")
                 {
-                    if (parseXMLPeriodTag(child, listXMLElab, listXMLAnomaly, true, false, period, firstYear, myError) == false)
+                    if (parseXMLPeriodTag(child, listXMLElab, listXMLAnomaly, true, false, period, myError) == false)
                     {
                         listXMLAnomaly->eraseElement(nAnomaly);
                         errorAnomaly = true;
@@ -3359,7 +3359,7 @@ bool parseXMLElaboration(Crit3DElabList *listXMLElab, Crit3DAnomalyList *listXML
                 {
                     if (myTag == "REFPERIOD")
                     {
-                        if (parseXMLPeriodTag(child, listXMLElab, listXMLAnomaly, true, true, refPeriod, refFirstYear, myError) == false)
+                        if (parseXMLPeriodTag(child, listXMLElab, listXMLAnomaly, true, true, refPeriod, myError) == false)
                         {
                             listXMLAnomaly->eraseElement(nAnomaly);
                             errorAnomaly = true;
