@@ -8,7 +8,7 @@ SUBDIRS =       ../../agrolib/soilFluxes3D  \
                 ../../agrolib/grapevine ../../agrolib/outputPoints \
                 ../../agrolib/interpolation ../../agrolib/solarRadiation  \
                 ../../agrolib/dbMeteoPoints ../../agrolib/dbMeteoGrid  \
-                ../../agrolib/commonDialogs ../../agrolib/importDataXML \
+                ../../agrolib/commonDialogs ../../agrolib/inOutDataXML \
                 ../../agrolib/proxyWidget \
                 ../../agrolib/project  \
                 ../../agrolib/meteoWidget  ../../agrolib/graphics \
