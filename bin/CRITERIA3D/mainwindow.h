@@ -218,10 +218,6 @@
 
         void on_actionWaterFluxes_settings_triggered();
 
-        void on_action_surface_wc_automatic_range_triggered(bool checked);
-
-        void on_action_surface_wc_Fixed_range_triggered(bool checked);
-
         void on_actionView_Crop_LAI_triggered();
 
         void on_actionUpdate_subHourly_triggered(bool checked);
@@ -229,6 +225,10 @@
         void on_actionView_degree_days_triggered();
 
         void on_actionView_factor_of_safety_triggered();
+        void on_actionView_degreeOfSaturation_automatic_range_triggered();
+        void on_actionView_degreeOfSaturation_fixed_range_triggered();
+        void on_actionView_surfaceWaterContent_automatic_range_triggered();
+        void on_actionView_surfaceWaterContent_fixed_range_triggered();
 
     protected:
         /*!

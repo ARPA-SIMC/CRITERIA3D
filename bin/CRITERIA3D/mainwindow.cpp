@@ -2311,11 +2311,18 @@ void MainWindow::showCriteria3DVariable(criteria3DVariable var, int layerIndex, 
             ui->labelOutputRaster->setText("Volumetric water content [m3 m-3]");
         }
     }
+    else if (current3DVariable == degreeOfSaturation)
+    {
+        setTemperatureScale(myProject.criteria3DMap.colorScale);
+        reverseColorScale(myProject.criteria3DMap.colorScale);
+        ui->labelOutputRaster->setText("Degree of saturation [-]");
+    }
     else if (current3DVariable == factorOfSafety)
     {
         setSlopeStabilityScale(myProject.criteria3DMap.colorScale);
         ui->labelOutputRaster->setText("Factor of safety [-]");
     }
+
 
     // set range
     if (isFixedRange)
@@ -2330,41 +2337,6 @@ void MainWindow::showCriteria3DVariable(criteria3DVariable var, int layerIndex, 
 
     setCurrentRasterOutput(&(myProject.criteria3DMap));
 }
-
-
-void MainWindow::on_action_surface_wc_automatic_range_triggered(bool checked)
-{
-    ui->action_surface_wc_Fixed_range->setChecked(! checked);
-
-    if (checked)
-    {
-        showCriteria3DVariable(waterContent, 0, false, NODATA, NODATA);
-    }
-}
-
-
-void MainWindow::on_action_surface_wc_Fixed_range_triggered(bool checked)
-{
-    ui->action_surface_wc_automatic_range->setChecked(! checked);
-
-    if (checked)
-    {
-        // choose minimum
-        float minimum = 0;
-        QString valueStr = editValue("Choose minimum value [mm]", QString::number(minimum));
-        if (valueStr == "") return;
-        minimum = valueStr.toFloat();
-
-        // choose maximum
-        float maximum = 100;
-        valueStr = editValue("Choose maximum value [mm]", QString::number(maximum));
-        if (valueStr == "") return;
-        maximum = valueStr.toFloat();
-
-        showCriteria3DVariable(waterContent, 0, true, minimum, maximum);
-    }
-}
-
 
 
 //------------------- STATES ----------------------
@@ -3141,10 +3113,50 @@ void MainWindow::on_actionHide_Geomap_triggered()
 }
 
 
+//------------------- MENU VIEW SOIL FLUXES OUTPUT ------------------
+
+void MainWindow::on_actionView_surfaceWaterContent_automatic_range_triggered()
+{
+    showCriteria3DVariable(waterContent, 0, false, NODATA, NODATA);
+}
+
+
+void MainWindow::on_actionView_surfaceWaterContent_fixed_range_triggered()
+{
+    // choose minimum
+    float minimum = 0;
+    QString valueStr = editValue("Choose minimum value [mm]", QString::number(minimum));
+    if (valueStr == "") return;
+    minimum = valueStr.toFloat();
+
+    // choose maximum
+    float maximum = 100;
+    valueStr = editValue("Choose maximum value [mm]", QString::number(maximum));
+    if (valueStr == "") return;
+    maximum = valueStr.toFloat();
+
+    showCriteria3DVariable(waterContent, 0, true, minimum, maximum);
+}
+
+
 void MainWindow::on_actionView_SoilMoisture_triggered()
 {
     int layerIndex = std::max(1, ui->layerNrEdit->value());
     showCriteria3DVariable(waterContent, layerIndex, false, NODATA, NODATA);
+}
+
+
+void MainWindow::on_actionView_degreeOfSaturation_automatic_range_triggered()
+{
+    int layerIndex = ui->layerNrEdit->value();
+    showCriteria3DVariable(degreeOfSaturation, layerIndex, false, NODATA, NODATA);
+}
+
+
+void MainWindow::on_actionView_degreeOfSaturation_fixed_range_triggered()
+{
+    int layerIndex = ui->layerNrEdit->value();
+    showCriteria3DVariable(degreeOfSaturation, layerIndex, true, 0.0, 1.0);
 }
 
 
@@ -3154,6 +3166,8 @@ void MainWindow::on_actionView_factor_of_safety_triggered()
     showCriteria3DVariable(factorOfSafety, layerIndex, true, 0, 10);
 }
 
+
+//------------------- OTHER FUNCTIONS ---------------------
 
 void MainWindow::on_layerNrEdit_valueChanged(int layerIndex)
 {

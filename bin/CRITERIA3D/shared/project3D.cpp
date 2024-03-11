@@ -1555,13 +1555,15 @@ double Project3D::assignTranspiration(int row, int col, double currentLai, doubl
 
 float Project3D::computeFactorOfSafety(int row, int col, int layerIndex, int nodeIndex)
 {
-    // suction stress [kPa]
-    double saturationDegree = soilFluxes3D::getDegreeOfSaturation(nodeIndex) / 100;     // [-]
+    // degree of saturation [-]
+    double saturationDegree = soilFluxes3D::getDegreeOfSaturation(nodeIndex);
 
-    // sign is just in matric potential
-    double waterPotential = soilFluxes3D::getMatricPotential(nodeIndex) * GRAVITY;      // [kPa]
-    waterPotential = std::min(0.0, waterPotential);
-    double suctionStress = waterPotential * saturationDegree;
+    // matric potential (with sign) [kPa]
+    double matricPotential = soilFluxes3D::getMatricPotential(nodeIndex) * GRAVITY;
+    matricPotential = std::min(0.0, matricPotential);
+
+    // suction stress [kPa]
+    double suctionStress = matricPotential * saturationDegree;
 
     // slope angle [rad]
     float slopeDegree = radiationMaps->slopeMap->getValueFromRowCol(row, col);
@@ -1584,14 +1586,14 @@ float Project3D::computeFactorOfSafety(int row, int col, int layerIndex, int nod
     double bulkDensity = soilList[unsigned(soilIndex)].horizon[horizonIndex].bulkDensity;  // [g cm-3] --> [Mg m-3]
     double unitWeight = bulkDensity * GRAVITY;
 
-    // cohesion effect [-]
-    double depth = layerDepth[layerIndex];   // [m]
     // TODO root cohesion [kPa] leggere da db e assegnare in base alla ratio di root density
     double rootCohesion = 0.;
-    double cohesionEffect = 2 * (effectiveCohesion + rootCohesion) / (unitWeight * depth * sin(2*slopeAngle));
+
+    // cohesion effect [-]
+    double cohesionEffect = 2 * (effectiveCohesion + rootCohesion) / (unitWeight * layerDepth[layerIndex] * sin(2*slopeAngle));
 
     // suction effect [-]
-    double suctionEffect = (suctionStress * (tanAngle + 1/tanAngle) * tanFrictionAngle) / (unitWeight * depth);
+    double suctionEffect = (suctionStress * (tanAngle + 1/tanAngle) * tanFrictionAngle) / (unitWeight * layerDepth[layerIndex]);
 
     // factor of safety [-]
     return frictionEffect + cohesionEffect - suctionEffect;

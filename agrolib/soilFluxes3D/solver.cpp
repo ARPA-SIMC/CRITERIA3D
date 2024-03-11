@@ -35,16 +35,16 @@
 
 double distance(unsigned long i, unsigned long j)
 {
-    return sqrt(square(fabs(double(myNode[i].x - myNode[j].x)))
-                + square(fabs(double(myNode[i].y - myNode[j].y)))
-                + square(fabs(double(myNode[i].z - myNode[j].z))));
+    return sqrt(square(fabs(double(nodeListPtr[i].x - nodeListPtr[j].x)))
+                + square(fabs(double(nodeListPtr[i].y - nodeListPtr[j].y)))
+                + square(fabs(double(nodeListPtr[i].z - nodeListPtr[j].z))));
 }
 
 
 double distance2D(unsigned long i, unsigned long j)
 {
-    return sqrt(square(fabs(double(myNode[i].x - myNode[j].x)))
-                + square(fabs(double(myNode[i].y - myNode[j].y))));
+    return sqrt(square(fabs(double(nodeListPtr[i].x - nodeListPtr[j].x)))
+                + square(fabs(double(nodeListPtr[i].y - nodeListPtr[j].y))));
 }
 
 double arithmeticMean(double v1, double v2)
@@ -84,16 +84,16 @@ double computeMean(double v1, double v2)
 
 TlinkedNode* getLink(long i, long j)
 {
-    if (myNode[i].up.index == j)
-        return &(myNode[i].up);
+    if (nodeListPtr[i].up.index == j)
+        return &(nodeListPtr[i].up);
 
-    if (myNode[i].down.index == j)
-        return &(myNode[i].down);
+    if (nodeListPtr[i].down.index == j)
+        return &(nodeListPtr[i].down);
 
     for (short l = 0; l < myStructure.nrLateralLinks; l++)
     {
-         if (myNode[i].lateral[l].index == j)
-             return &(myNode[i].lateral[l]);
+         if (nodeListPtr[i].lateral[l].index == j)
+             return &(nodeListPtr[i].lateral[l]);
     }
 
     return nullptr;
@@ -138,12 +138,12 @@ double GaussSeidelIterationWater(short direction)
         }
 
         /*! surface check */
-        if (myNode[i].isSurface)
-            if (newX < double(myNode[i].z))
-                newX = double(myNode[i].z);
+        if (nodeListPtr[i].isSurface)
+            if (newX < double(nodeListPtr[i].z))
+                newX = double(nodeListPtr[i].z);
 
         /*! water potential [m] */
-        double psi = fabs(newX - double(myNode[i].z));
+        double psi = fabs(newX - double(nodeListPtr[i].z));
 
         /*! infinity norm (normalized if psi > 1m) */
         if (psi > 1)
@@ -168,7 +168,7 @@ double GaussSeidelIterationHeat()
     short j;
 
     for (long i = 1; i < myStructure.nrNodes; i++)
-        if (!myNode[i].isSurface)
+        if (!nodeListPtr[i].isSurface)
         {
             if (A[i][0].val != 0.)
             {
