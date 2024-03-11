@@ -27,6 +27,7 @@
 #include "dialogRemoveStation.h"
 #include "dialogMeteoTable.h"
 #include "dialogChangeAxis.h"
+#include "dialogVariableToSum.h"
 #include "utilities.h"
 #include "commonConstants.h"
 #include "formInfo.h"
@@ -777,7 +778,11 @@ void Crit3DMeteoWidget::drawEnsembleDailyVar()
             {
                 sortedList.clear();
                 myDate = firstCrit3DDate.addDays(day);
-                meteoVariable meteoVar = MapDailyMeteoVar.at(nameLines[i].toStdString());
+                meteoVariable meteoVar = getMeteoVar(nameLines[i].toStdString());
+                if (meteoVar == noMeteoVar)
+                {
+                    continue;
+                }
 
                 for (int mp=0; mp<nrMembers;mp++)
                 {
@@ -840,7 +845,11 @@ void Crit3DMeteoWidget::drawEnsembleDailyVar()
             for (int day = 0; day < nDays; day++)
             {
                 myDate = firstCrit3DDate.addDays(day);
-                meteoVariable meteoVar = MapDailyMeteoVar.at(nameBar[i].toStdString());
+                meteoVariable meteoVar = getMeteoVar(nameBar[i].toStdString());
+                if (meteoVar == noMeteoVar)
+                {
+                    continue;
+                }
                 sortedList.clear();
                 for (int mp=0; mp<nrMembers;mp++)
                 {
@@ -1008,7 +1017,11 @@ void Crit3DMeteoWidget::drawDailyVar()
             {
                 for (int i = 0; i < nameLines.size(); i++)
                 {
-                    meteoVariable meteoVar = MapDailyMeteoVar.at(nameLines[i].toStdString());
+                    meteoVariable meteoVar = getMeteoVar(nameLines[i].toStdString());
+                    if (meteoVar == noMeteoVar)
+                    {
+                        continue;
+                    }
                     double value = meteoPoints[mp].getMeteoPointValueD(myDate, meteoVar, meteoSettings);
                     if (value != NODATA)
                     {
@@ -1035,7 +1048,11 @@ void Crit3DMeteoWidget::drawDailyVar()
             {
                 for (int j = 0; j < nameBar.size(); j++)
                 {
-                    meteoVariable meteoVar = MapDailyMeteoVar.at(nameBar[j].toStdString());
+                    meteoVariable meteoVar = getMeteoVar(nameBar[j].toStdString());
+                    if (meteoVar == noMeteoVar)
+                    {
+                        continue;
+                    }
                     double value = meteoPoints[mp].getMeteoPointValueD(myDate, meteoVar, meteoSettings);
                     if (value != NODATA)
                     {
@@ -1564,7 +1581,7 @@ void Crit3DMeteoWidget::showHourlyGraph()
         auto searchDaily = MapDailyMeteoVar.find(name.toStdString());
         if (searchDaily != MapDailyMeteoVar.end())
         {
-            meteoVariable dailyVar = MapDailyMeteoVar.at(name.toStdString());
+            meteoVariable dailyVar = getMeteoVar(name.toStdString());
             meteoVariable hourlyVar= updateMeteoVariable(dailyVar, hourly);
             if (hourlyVar != noMeteoVar)
             {
@@ -2297,6 +2314,14 @@ void Crit3DMeteoWidget::on_actionDataSum()
 {
     // TO DO;
     // Apre una finestra con l'elenco delle variabili attualmente visualizzate in modo che siano selezionabili quali vogliamo switchare sulla comulata
+    DialogVariableToSum varToSum(currentVariables);
+    QList<QString> varToSumList;
+    if (varToSum.result() == QDialog::Accepted)
+    {
+        varToSumList = varToSum.getSelectedVariable();
+    }
+    qDebug() << "varToSumList " << varToSumList.join(",");
+
 }
 
 

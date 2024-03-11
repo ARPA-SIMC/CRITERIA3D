@@ -39,6 +39,7 @@ SOURCES += \
     dialogMeteoTable.cpp \
     dialogRemoveStation.cpp \
     dialogSelectVar.cpp \
+    dialogVariableToSum.cpp \
     meteoTable.cpp \
     meteoWidget.cpp
 
@@ -47,6 +48,7 @@ HEADERS += \
     dialogMeteoTable.h \
     dialogRemoveStation.h \
     dialogSelectVar.h \
+    dialogVariableToSum.h \
     meteoTable.h \
     meteoWidget.h
 
