@@ -98,16 +98,16 @@ double computeSoilSurfaceResistanceCG(double theta, double thetaSat)
  */
 double computeAtmosphericSensibleFlux(long i)
 {
-    if (myNode[i].boundary->Heat == nullptr || ! myNode[myNode[i].up.index].isSurface)
+    if (nodeListPtr[i].boundary->Heat == nullptr || ! nodeListPtr[nodeListPtr[i].up.index].isSurface)
         return 0;
 
-    double myPressure = pressureFromAltitude(double(myNode[i].z));
+    double myPressure = pressureFromAltitude(double(nodeListPtr[i].z));
 
-    double myDeltaT = myNode[i].boundary->Heat->temperature - myNode[i].extra->Heat->T;
+    double myDeltaT = nodeListPtr[i].boundary->Heat->temperature - nodeListPtr[i].extra->Heat->T;
 
-    double myCvAir = airVolumetricSpecificHeat(myPressure, myNode[i].boundary->Heat->temperature);
+    double myCvAir = airVolumetricSpecificHeat(myPressure, nodeListPtr[i].boundary->Heat->temperature);
 
-    return (myCvAir * myDeltaT * myNode[i].boundary->Heat->aerodynamicConductance);
+    return (myCvAir * myDeltaT * nodeListPtr[i].boundary->Heat->aerodynamicConductance);
 }
 
 /*!
@@ -117,20 +117,20 @@ double computeAtmosphericSensibleFlux(long i)
  */
 double computeAtmosphericLatentFlux(long i)
 {
-    if (myNode[i].boundary->Heat == nullptr || ! myNode[myNode[i].up.index].isSurface)
+    if (nodeListPtr[i].boundary->Heat == nullptr || ! nodeListPtr[nodeListPtr[i].up.index].isSurface)
         return 0;
 
     double PressSat, ConcVapSat, BoundaryVapor;
 
-    PressSat = saturationVaporPressure(myNode[i].boundary->Heat->temperature - ZEROCELSIUS);
-    ConcVapSat = vaporConcentrationFromPressure(PressSat, myNode[i].boundary->Heat->temperature);
-    BoundaryVapor = ConcVapSat * (myNode[i].boundary->Heat->relativeHumidity / 100.);
+    PressSat = saturationVaporPressure(nodeListPtr[i].boundary->Heat->temperature - ZEROCELSIUS);
+    ConcVapSat = vaporConcentrationFromPressure(PressSat, nodeListPtr[i].boundary->Heat->temperature);
+    BoundaryVapor = ConcVapSat * (nodeListPtr[i].boundary->Heat->relativeHumidity / 100.);
 
     // kg m-3
     double myDeltaVapor = BoundaryVapor - soilFluxes3D::getNodeVapor(i);
 
     // m s-1
-    double myTotalConductance = 1./((1./myNode[i].boundary->Heat->aerodynamicConductance) + (1. / myNode[i].boundary->Heat->soilConductance));
+    double myTotalConductance = 1./((1./nodeListPtr[i].boundary->Heat->aerodynamicConductance) + (1. / nodeListPtr[i].boundary->Heat->soilConductance));
 
     // kg m-2 s-1
     double myVaporFlow = myDeltaVapor * myTotalConductance;
@@ -145,26 +145,26 @@ double computeAtmosphericLatentFlux(long i)
  */
 double computeAtmosphericLatentFluxSurfaceWater(long i)
 {
-    if (! myNode[i].isSurface) return 0.;
-    if (&(myNode[i].down) == nullptr) return 0.;
+    if (! nodeListPtr[i].isSurface) return 0.;
+    if (&(nodeListPtr[i].down) == nullptr) return 0.;
 
-    long downIndex = myNode[i].down.index;
+    long downIndex = nodeListPtr[i].down.index;
 
-    if (myNode[downIndex].boundary->Heat == nullptr || myNode[downIndex].boundary->type != BOUNDARY_HEAT_SURFACE) return 0.;
+    if (nodeListPtr[downIndex].boundary->Heat == nullptr || nodeListPtr[downIndex].boundary->type != BOUNDARY_HEAT_SURFACE) return 0.;
 
     double PressSat, ConcVapSat, BoundaryVapor;
 
     // atmospheric vapor content (kg m-3)
-    PressSat = saturationVaporPressure(myNode[downIndex].boundary->Heat->temperature - ZEROCELSIUS);
-    ConcVapSat = vaporConcentrationFromPressure(PressSat, myNode[downIndex].boundary->Heat->temperature);
-    BoundaryVapor = ConcVapSat * (myNode[downIndex].boundary->Heat->relativeHumidity / 100.);
+    PressSat = saturationVaporPressure(nodeListPtr[downIndex].boundary->Heat->temperature - ZEROCELSIUS);
+    ConcVapSat = vaporConcentrationFromPressure(PressSat, nodeListPtr[downIndex].boundary->Heat->temperature);
+    BoundaryVapor = ConcVapSat * (nodeListPtr[downIndex].boundary->Heat->relativeHumidity / 100.);
 
     // surface water vapor content (kg m-3) (assuming water temperature is the same of atmosphere)
     double myDeltaVapor = BoundaryVapor - ConcVapSat;
 
     // kg m-2 s-1
     // using aerodynamic conductance of index below (boundary for heat)
-    double myVaporFlow = myDeltaVapor * myNode[downIndex].boundary->Heat->aerodynamicConductance;
+    double myVaporFlow = myDeltaVapor * nodeListPtr[downIndex].boundary->Heat->aerodynamicConductance;
 
     return myVaporFlow;
 }
@@ -176,27 +176,27 @@ double computeAtmosphericLatentFluxSurfaceWater(long i)
  */
 double computeAtmosphericLatentHeatFlux(long i)
 {
-    if (myNode[i].boundary->Heat == nullptr || ! myNode[myNode[i].up.index].isSurface)
+    if (nodeListPtr[i].boundary->Heat == nullptr || ! nodeListPtr[nodeListPtr[i].up.index].isSurface)
         return 0;
 
     double latentHeatFlow = 0.;
 
     // J kg-1
-    double lambda = latentHeatVaporization(myNode[i].extra->Heat->T - ZEROCELSIUS);
+    double lambda = latentHeatVaporization(nodeListPtr[i].extra->Heat->T - ZEROCELSIUS);
     // waterFlow: vapor sink source (m3 s-1)
-    latentHeatFlow = myNode[i].boundary->waterFlow * WATER_DENSITY * lambda;
+    latentHeatFlow = nodeListPtr[i].boundary->waterFlow * WATER_DENSITY * lambda;
 
     return latentHeatFlow;
 }
 
 double getSurfaceWaterFraction(int i)
 {
-    if (! myNode[i].isSurface)
+    if (! nodeListPtr[i].isSurface)
         return 0.0;
     else
     {
-        double h = MAXVALUE(myNode[i].H - double(myNode[i].z), 0);
-        return 1.0 - MAXVALUE(0.0, myNode[i].Soil->Pond - h) / myNode[i].Soil->Pond;
+        double h = MAXVALUE(nodeListPtr[i].H - double(nodeListPtr[i].z), 0);
+        return 1.0 - MAXVALUE(0.0, nodeListPtr[i].Soil->Pond - h) / nodeListPtr[i].Soil->Pond;
     }
 }
 
@@ -206,26 +206,26 @@ void updateConductance()
     {
         for (long i = 0; i < myStructure.nrNodes; i++)
         {
-            if (myNode[i].boundary != nullptr)
+            if (nodeListPtr[i].boundary != nullptr)
             {
-                if (myNode[i].extra->Heat != nullptr)
+                if (nodeListPtr[i].extra->Heat != nullptr)
                 {
-                    if (myNode[i].boundary->type == BOUNDARY_HEAT_SURFACE)
+                    if (nodeListPtr[i].boundary->type == BOUNDARY_HEAT_SURFACE)
                     {
                         // update aerodynamic conductance
-                        myNode[i].boundary->Heat->aerodynamicConductance =
-                                aerodynamicConductance(myNode[i].boundary->Heat->heightTemperature,
-                                    myNode[i].boundary->Heat->heightWind,
-                                    myNode[i].extra->Heat->T,
-                                    myNode[i].boundary->Heat->roughnessHeight,
-                                    myNode[i].boundary->Heat->temperature,
-                                    myNode[i].boundary->Heat->windSpeed);
+                        nodeListPtr[i].boundary->Heat->aerodynamicConductance =
+                                aerodynamicConductance(nodeListPtr[i].boundary->Heat->heightTemperature,
+                                    nodeListPtr[i].boundary->Heat->heightWind,
+                                    nodeListPtr[i].extra->Heat->T,
+                                    nodeListPtr[i].boundary->Heat->roughnessHeight,
+                                    nodeListPtr[i].boundary->Heat->temperature,
+                                    nodeListPtr[i].boundary->Heat->windSpeed);
 
                         if (myStructure.computeWater)
                         {
                             // update soil surface conductance
-                            double theta = theta_from_sign_Psi(myNode[i].H - myNode[i].z, i);
-                            myNode[i].boundary->Heat->soilConductance = 1./ computeSoilSurfaceResistance(theta);
+                            double theta = theta_from_sign_Psi(nodeListPtr[i].H - nodeListPtr[i].z, i);
+                            nodeListPtr[i].boundary->Heat->soilConductance = 1./ computeSoilSurfaceResistance(theta);
                         }
                     }
                 }
@@ -242,110 +242,110 @@ void updateBoundaryWater (double deltaT)
     for (long i = 0; i < myStructure.nrNodes; i++)
     {
         // water sink-source
-        myNode[i].Qw = myNode[i].waterSinkSource;
+        nodeListPtr[i].Qw = nodeListPtr[i].waterSinkSource;
 
-        if (myNode[i].boundary != nullptr)
+        if (nodeListPtr[i].boundary != nullptr)
         {
-            myNode[i].boundary->waterFlow = 0.;
+            nodeListPtr[i].boundary->waterFlow = 0.;
 
-            if (myNode[i].boundary->type == BOUNDARY_RUNOFF)
+            if (nodeListPtr[i].boundary->type == BOUNDARY_RUNOFF)
             {
-                double avgH = (myNode[i].H + myNode[i].oldH) * 0.5;        // [m]
+                double avgH = (nodeListPtr[i].H + nodeListPtr[i].oldH) * 0.5;        // [m]
                 // Surface water available for runoff [m]
-                double hs = MAXVALUE(avgH - (myNode[i].z + myNode[i].Soil->Pond), 0.0);
+                double hs = MAXVALUE(avgH - (nodeListPtr[i].z + nodeListPtr[i].Soil->Pond), 0.0);
                 if (hs > EPSILON_METER)
                 {
-                    double maxFlow = (hs * myNode[i].volume_area) / deltaT;         // [m3 s-1] maximum flow available during the time step
+                    double maxFlow = (hs * nodeListPtr[i].volume_area) / deltaT;         // [m3 s-1] maximum flow available during the time step
                     // Manning equation
-                    double v = (1. / myNode[i].Soil->Roughness) * pow(hs, 2./3.) * sqrt(myNode[i].boundary->slope);
+                    double v = (1. / nodeListPtr[i].Soil->Roughness) * pow(hs, 2./3.) * sqrt(nodeListPtr[i].boundary->slope);
                     // on the surface boundaryArea is a side [m]
-                    double flow = myNode[i].boundary->boundaryArea * hs * v;        // [m3 s-1]
-                    myNode[i].boundary->waterFlow = -MINVALUE(flow, maxFlow);
+                    double flow = nodeListPtr[i].boundary->boundaryArea * hs * v;        // [m3 s-1]
+                    nodeListPtr[i].boundary->waterFlow = -MINVALUE(flow, maxFlow);
                 }
             }
-            else if (myNode[i].boundary->type == BOUNDARY_FREEDRAINAGE)
+            else if (nodeListPtr[i].boundary->type == BOUNDARY_FREEDRAINAGE)
             {
                 // Darcy unit gradient
                 // dH=dz=L  -> dH/L=1
-                myNode[i].boundary->waterFlow = -myNode[i].k * myNode[i].up.area;
+                nodeListPtr[i].boundary->waterFlow = -nodeListPtr[i].k * nodeListPtr[i].up.area;
             }
 
-            else if (myNode[i].boundary->type == BOUNDARY_FREELATERALDRAINAGE)
+            else if (nodeListPtr[i].boundary->type == BOUNDARY_FREELATERALDRAINAGE)
             {
                 // Darcy gradient = slope
                 // dH=dz slope=dz/L -> dH/L=slope
-                myNode[i].boundary->waterFlow = -myNode[i].k * myParameters.k_lateral_vertical_ratio
-                                            * myNode[i].boundary->boundaryArea * myNode[i].boundary->slope;
+                nodeListPtr[i].boundary->waterFlow = -nodeListPtr[i].k * myParameters.k_lateral_vertical_ratio
+                                            * nodeListPtr[i].boundary->boundaryArea * nodeListPtr[i].boundary->slope;
             }
 
-            else if (myNode[i].boundary->type == BOUNDARY_PRESCRIBEDTOTALPOTENTIAL)
+            else if (nodeListPtr[i].boundary->type == BOUNDARY_PRESCRIBEDTOTALPOTENTIAL)
             {
                 // water table
                 double L = 1.0;                         // [m]
-                double boundaryZ = myNode[i].z - L;     // [m]
+                double boundaryZ = nodeListPtr[i].z - L;     // [m]
                 double boundaryK;                       // [m s-1]
 
-                if (myNode[i].boundary->prescribedTotalPotential >= boundaryZ)
+                if (nodeListPtr[i].boundary->prescribedTotalPotential >= boundaryZ)
                 {
                     // saturated
-                    boundaryK = myNode[i].Soil->K_sat;
+                    boundaryK = nodeListPtr[i].Soil->K_sat;
                 }
                 else
                 {
                     // unsaturated
-                    double boundaryPsi = fabs(myNode[i].boundary->prescribedTotalPotential - boundaryZ);
-                    double boundarySe = computeSefromPsi_unsat(boundaryPsi, myNode[i].Soil);
-                    boundaryK = computeWaterConductivity(boundarySe, myNode[i].Soil);
+                    double boundaryPsi = fabs(nodeListPtr[i].boundary->prescribedTotalPotential - boundaryZ);
+                    double boundarySe = computeSefromPsi_unsat(boundaryPsi, nodeListPtr[i].Soil);
+                    boundaryK = computeWaterConductivity(boundarySe, nodeListPtr[i].Soil);
                 }
 
-                double meanK = computeMean(myNode[i].k, boundaryK);
-                double dH = myNode[i].boundary->prescribedTotalPotential - myNode[i].H;
-                myNode[i].boundary->waterFlow = meanK * myNode[i].boundary->boundaryArea * (dH / L);
+                double meanK = computeMean(nodeListPtr[i].k, boundaryK);
+                double dH = nodeListPtr[i].boundary->prescribedTotalPotential - nodeListPtr[i].H;
+                nodeListPtr[i].boundary->waterFlow = meanK * nodeListPtr[i].boundary->boundaryArea * (dH / L);
             }
 
-            else if (myNode[i].boundary->type == BOUNDARY_HEAT_SURFACE)
+            else if (nodeListPtr[i].boundary->type == BOUNDARY_HEAT_SURFACE)
             {
                 if (myStructure.computeHeat && myStructure.computeHeatVapor)
                 {
                     long upIndex;
 
                     double surfaceWaterFraction = 0.;
-                    if (&(myNode[i].up) != nullptr)
+                    if (&(nodeListPtr[i].up) != nullptr)
                     {
-                        upIndex = myNode[i].up.index;
+                        upIndex = nodeListPtr[i].up.index;
                         surfaceWaterFraction = getSurfaceWaterFraction(upIndex);
                     }
 
-                    double evapFromSoil = computeAtmosphericLatentFlux(i) / WATER_DENSITY * myNode[i].up.area;
+                    double evapFromSoil = computeAtmosphericLatentFlux(i) / WATER_DENSITY * nodeListPtr[i].up.area;
 
                     // surface water
                     if (surfaceWaterFraction > 0.)
                     {
-                        double waterVolume = (myNode[upIndex].H - myNode[upIndex].z) * myNode[upIndex].volume_area;
-                        double evapFromSurface = computeAtmosphericLatentFluxSurfaceWater(upIndex) / WATER_DENSITY * myNode[i].up.area;
+                        double waterVolume = (nodeListPtr[upIndex].H - nodeListPtr[upIndex].z) * nodeListPtr[upIndex].volume_area;
+                        double evapFromSurface = computeAtmosphericLatentFluxSurfaceWater(upIndex) / WATER_DENSITY * nodeListPtr[i].up.area;
 
                         evapFromSoil *= (1. - surfaceWaterFraction);
                         evapFromSurface *= surfaceWaterFraction;
 
                         evapFromSurface = MAXVALUE(evapFromSurface, -waterVolume / deltaT);
 
-                        if (myNode[upIndex].boundary != nullptr)
-                            myNode[upIndex].boundary->waterFlow = evapFromSurface;
+                        if (nodeListPtr[upIndex].boundary != nullptr)
+                            nodeListPtr[upIndex].boundary->waterFlow = evapFromSurface;
                         else
-                            myNode[upIndex].Qw += evapFromSurface;
+                            nodeListPtr[upIndex].Qw += evapFromSurface;
 
                     }
 
                     if (evapFromSoil < 0.)
-                        evapFromSoil = MAXVALUE(evapFromSoil, -(theta_from_Se(i) - myNode[i].Soil->Theta_r) * myNode[i].volume_area / deltaT);
+                        evapFromSoil = MAXVALUE(evapFromSoil, -(theta_from_Se(i) - nodeListPtr[i].Soil->Theta_r) * nodeListPtr[i].volume_area / deltaT);
                     else
-                        evapFromSoil = MINVALUE(evapFromSoil, (myNode[i].Soil->Theta_s - myNode[i].Soil->Theta_r) * myNode[i].volume_area / deltaT);
+                        evapFromSoil = MINVALUE(evapFromSoil, (nodeListPtr[i].Soil->Theta_s - nodeListPtr[i].Soil->Theta_r) * nodeListPtr[i].volume_area / deltaT);
 
-                    myNode[i].boundary->waterFlow = evapFromSoil;
+                    nodeListPtr[i].boundary->waterFlow = evapFromSoil;
                 }
             }            
 
-            myNode[i].Qw += myNode[i].boundary->waterFlow;
+            nodeListPtr[i].Qw += nodeListPtr[i].boundary->waterFlow;
         }
     }
 
@@ -353,7 +353,7 @@ void updateBoundaryWater (double deltaT)
 	if (myCulvert.index != NOLINK)
 	{
 		long i = myCulvert.index;
-		double waterLevel = 0.5 * (myNode[i].H + myNode[i].oldH) - myNode[i].z;		// [m]
+		double waterLevel = 0.5 * (nodeListPtr[i].H + nodeListPtr[i].oldH) - nodeListPtr[i].z;		// [m]
 
         double flow = 0.0;                                                          // [m3 s-1]
 
@@ -369,10 +369,10 @@ void updateBoundaryWater (double deltaT)
 		{
 			// mixed flow: open channel - pressure flow
             double wettedPerimeter = myCulvert.width + 2.* myCulvert.height;                // [m]
-            double hydraulicRadius = myNode[i].boundary->boundaryArea / wettedPerimeter;	// [m]
+            double hydraulicRadius = nodeListPtr[i].boundary->boundaryArea / wettedPerimeter;	// [m]
 
             // maximum Manning flow [m3 s-1]
-            double ManningFlow = (myNode[i].boundary->boundaryArea / myCulvert.roughness)
+            double ManningFlow = (nodeListPtr[i].boundary->boundaryArea / myCulvert.roughness)
                                 * sqrt(myCulvert.slope) * pow(hydraulicRadius, 2. / 3.);
 
 			// pressure flow - Hazen-Williams equation - roughness = 70
@@ -383,7 +383,7 @@ void updateBoundaryWater (double deltaT)
 			flow = weight * pressureFlow + (1. - weight) * ManningFlow;
 
 		}
-		else if (waterLevel > myNode[i].Soil->Pond)
+		else if (waterLevel > nodeListPtr[i].Soil->Pond)
 		{
 			// open channel flow
             double boundaryArea = myCulvert.width * waterLevel;					// [m^2]
@@ -395,8 +395,8 @@ void updateBoundaryWater (double deltaT)
 		}
 
 		// set boundary
-		myNode[i].boundary->waterFlow = -flow;
-		myNode[i].Qw += myNode[i].boundary->waterFlow;
+		nodeListPtr[i].boundary->waterFlow = -flow;
+		nodeListPtr[i].Qw += nodeListPtr[i].boundary->waterFlow;
 	}
 }
 
@@ -409,75 +409,75 @@ void updateBoundaryHeat()
     {
         if (isHeatNode(i))
         {
-            myNode[i].extra->Heat->Qh = myNode[i].extra->Heat->sinkSource;
+            nodeListPtr[i].extra->Heat->Qh = nodeListPtr[i].extra->Heat->sinkSource;
 
-            if (myNode[i].boundary != nullptr)
+            if (nodeListPtr[i].boundary != nullptr)
             {
-                if (myNode[i].boundary->type == BOUNDARY_HEAT_SURFACE)
+                if (nodeListPtr[i].boundary->type == BOUNDARY_HEAT_SURFACE)
                 {
-                    myNode[i].boundary->Heat->advectiveHeatFlux = 0.;
-                    myNode[i].boundary->Heat->sensibleFlux = 0.;
-                    myNode[i].boundary->Heat->latentFlux = 0.;
-                    myNode[i].boundary->Heat->radiativeFlux = 0.;
+                    nodeListPtr[i].boundary->Heat->advectiveHeatFlux = 0.;
+                    nodeListPtr[i].boundary->Heat->sensibleFlux = 0.;
+                    nodeListPtr[i].boundary->Heat->latentFlux = 0.;
+                    nodeListPtr[i].boundary->Heat->radiativeFlux = 0.;
 
-                    if (myNode[i].boundary->Heat->netIrradiance != NODATA)
-                        myNode[i].boundary->Heat->radiativeFlux = myNode[i].boundary->Heat->netIrradiance;
+                    if (nodeListPtr[i].boundary->Heat->netIrradiance != NODATA)
+                        nodeListPtr[i].boundary->Heat->radiativeFlux = nodeListPtr[i].boundary->Heat->netIrradiance;
 
-                    myNode[i].boundary->Heat->sensibleFlux += computeAtmosphericSensibleFlux(i);
+                    nodeListPtr[i].boundary->Heat->sensibleFlux += computeAtmosphericSensibleFlux(i);
 
                     if (myStructure.computeWater && myStructure.computeHeatVapor)
-                        myNode[i].boundary->Heat->latentFlux += computeAtmosphericLatentHeatFlux(i) / myNode[i].up.area;
+                        nodeListPtr[i].boundary->Heat->latentFlux += computeAtmosphericLatentHeatFlux(i) / nodeListPtr[i].up.area;
 
                     if (myStructure.computeWater && myStructure.computeHeatAdvection)
                     {
                         // advective heat from rain
-                        myWaterFlux = myNode[i].up.linkedExtra->heatFlux->waterFlux;
+                        myWaterFlux = nodeListPtr[i].up.linkedExtra->heatFlux->waterFlux;
                         if (myWaterFlux > 0.)
                         {
-                            advTemperature = myNode[i].boundary->Heat->temperature;
-                            heatFlux =  myWaterFlux * HEAT_CAPACITY_WATER * advTemperature / myNode[i].up.area;
-                            myNode[i].boundary->Heat->advectiveHeatFlux += heatFlux;
+                            advTemperature = nodeListPtr[i].boundary->Heat->temperature;
+                            heatFlux =  myWaterFlux * HEAT_CAPACITY_WATER * advTemperature / nodeListPtr[i].up.area;
+                            nodeListPtr[i].boundary->Heat->advectiveHeatFlux += heatFlux;
                         }
 
                         // advective heat from evaporation/condensation
-                        if (myNode[i].boundary->waterFlow < 0.)
-                            advTemperature = myNode[i].extra->Heat->T;
+                        if (nodeListPtr[i].boundary->waterFlow < 0.)
+                            advTemperature = nodeListPtr[i].extra->Heat->T;
                         else
-                            advTemperature = myNode[i].boundary->Heat->temperature;
+                            advTemperature = nodeListPtr[i].boundary->Heat->temperature;
 
-                        myNode[i].boundary->Heat->advectiveHeatFlux += myNode[i].boundary->waterFlow * WATER_DENSITY * HEAT_CAPACITY_WATER_VAPOR * advTemperature / myNode[i].up.area;
+                        nodeListPtr[i].boundary->Heat->advectiveHeatFlux += nodeListPtr[i].boundary->waterFlow * WATER_DENSITY * HEAT_CAPACITY_WATER_VAPOR * advTemperature / nodeListPtr[i].up.area;
 
                     }
 
-                    myNode[i].extra->Heat->Qh += myNode[i].up.area * (myNode[i].boundary->Heat->radiativeFlux +
-                                                                      myNode[i].boundary->Heat->sensibleFlux +
-                                                                      myNode[i].boundary->Heat->latentFlux +
-                                                                      myNode[i].boundary->Heat->advectiveHeatFlux);
+                    nodeListPtr[i].extra->Heat->Qh += nodeListPtr[i].up.area * (nodeListPtr[i].boundary->Heat->radiativeFlux +
+                                                                      nodeListPtr[i].boundary->Heat->sensibleFlux +
+                                                                      nodeListPtr[i].boundary->Heat->latentFlux +
+                                                                      nodeListPtr[i].boundary->Heat->advectiveHeatFlux);
                 }
-                else if (myNode[i].boundary->type == BOUNDARY_FREEDRAINAGE ||
-                         myNode[i].boundary->type == BOUNDARY_PRESCRIBEDTOTALPOTENTIAL)
+                else if (nodeListPtr[i].boundary->type == BOUNDARY_FREEDRAINAGE ||
+                         nodeListPtr[i].boundary->type == BOUNDARY_PRESCRIBEDTOTALPOTENTIAL)
                 {
                     if (myStructure.computeWater && myStructure.computeHeatAdvection)
                     {
-                        myWaterFlux = myNode[i].boundary->waterFlow;
+                        myWaterFlux = nodeListPtr[i].boundary->waterFlow;
 
                         if (myWaterFlux < 0)
-                            advTemperature = myNode[i].extra->Heat->T;
+                            advTemperature = nodeListPtr[i].extra->Heat->T;
                         else
-                            advTemperature = myNode[i].boundary->Heat->fixedTemperature;
+                            advTemperature = nodeListPtr[i].boundary->Heat->fixedTemperature;
 
-                        heatFlux =  myWaterFlux * HEAT_CAPACITY_WATER * advTemperature / myNode[i].up.area;
-                        myNode[i].boundary->Heat->advectiveHeatFlux = heatFlux;
+                        heatFlux =  myWaterFlux * HEAT_CAPACITY_WATER * advTemperature / nodeListPtr[i].up.area;
+                        nodeListPtr[i].boundary->Heat->advectiveHeatFlux = heatFlux;
 
-                        myNode[i].extra->Heat->Qh += myNode[i].up.area * myNode[i].boundary->Heat->advectiveHeatFlux;
+                        nodeListPtr[i].extra->Heat->Qh += nodeListPtr[i].up.area * nodeListPtr[i].boundary->Heat->advectiveHeatFlux;
                     }
 
-                    if (myNode[i].boundary->Heat->fixedTemperature != NODATA)
+                    if (nodeListPtr[i].boundary->Heat->fixedTemperature != NODATA)
                     {
                         double avgH = getHMean(i);
-                        double boundaryHeatConductivity = SoilHeatConductivity(i, myNode[i].extra->Heat->T, avgH - myNode[i].z);
-                        double deltaT = myNode[i].boundary->Heat->fixedTemperature - myNode[i].extra->Heat->T;
-                        myNode[i].extra->Heat->Qh += boundaryHeatConductivity * deltaT / myNode[i].boundary->Heat->fixedTemperatureDepth * myNode[i].up.area;
+                        double boundaryHeatConductivity = SoilHeatConductivity(i, nodeListPtr[i].extra->Heat->T, avgH - nodeListPtr[i].z);
+                        double deltaT = nodeListPtr[i].boundary->Heat->fixedTemperature - nodeListPtr[i].extra->Heat->T;
+                        nodeListPtr[i].extra->Heat->Qh += boundaryHeatConductivity * deltaT / nodeListPtr[i].boundary->Heat->fixedTemperatureDepth * nodeListPtr[i].up.area;
                     }
                 }
             }

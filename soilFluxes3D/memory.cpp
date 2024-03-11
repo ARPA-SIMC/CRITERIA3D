@@ -48,20 +48,20 @@ void cleanArrays()
     if (C != nullptr) { free(C); C = nullptr; }
     if (invariantFlux != nullptr) { free(invariantFlux); invariantFlux = nullptr; }
     if (X != nullptr) { free(X); X = nullptr; }
-    }
+}
 
 
 void cleanNodes()
 {
-    if (myNode != nullptr)
+    if (nodeListPtr != nullptr)
     {
         for (long i = 0; i < myStructure.nrNodes; i++)
         {
-			if (myNode[i].boundary != nullptr) free(myNode[i].boundary);
-			free(myNode[i].lateral);
+            if (nodeListPtr[i].boundary != nullptr) free(nodeListPtr[i].boundary);
+            free(nodeListPtr[i].lateral);
         }
-        free(myNode);
-        myNode = nullptr;
+        free(nodeListPtr);
+        nodeListPtr = nullptr;
     }
 }
 

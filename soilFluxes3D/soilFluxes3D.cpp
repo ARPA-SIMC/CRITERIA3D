@@ -28,6 +28,7 @@
 #include <math.h>
 #include <stdlib.h>
 
+#include "commonConstants.h"
 #include "physics.h"
 #include "header/types.h"
 #include "header/memory.h"
@@ -47,7 +48,7 @@ TCrit3DStructure myStructure;
 
 Tculvert myCulvert;
 
-TCrit3Dnode *myNode = nullptr;
+TCrit3Dnode *nodeListPtr = nullptr;
 TmatrixElement **A = nullptr;
 
 double *invariantFlux = nullptr;
@@ -106,26 +107,26 @@ int DLL_EXPORT __STDCALL initialize(long nrNodes, int nrLayers, int nrLateralLin
     myStructure.maxNrColumns = nrLateralLinks + 2 + 1;
 
     /*! build the nodes vector */
-    myNode = (TCrit3Dnode *) calloc(myStructure.nrNodes, sizeof(TCrit3Dnode));
+    nodeListPtr = (TCrit3Dnode *) calloc(myStructure.nrNodes, sizeof(TCrit3Dnode));
 	for (long i = 0; i < myStructure.nrNodes; i++)
 	{
-		myNode[i].Soil = nullptr;
-		myNode[i].boundary = nullptr;
-		myNode[i].up.index = NOLINK;
-        myNode[i].down.index = NOLINK;
+        nodeListPtr[i].Soil = nullptr;
+        nodeListPtr[i].boundary = nullptr;
+        nodeListPtr[i].up.index = NOLINK;
+        nodeListPtr[i].down.index = NOLINK;
 
-        myNode[i].lateral = (TlinkedNode *) calloc(myStructure.nrLateralLinks, sizeof(TlinkedNode));
+        nodeListPtr[i].lateral = (TlinkedNode *) calloc(myStructure.nrLateralLinks, sizeof(TlinkedNode));
 
         for (short l = 0; l < myStructure.nrLateralLinks; l++)
         {
-            myNode[i].lateral[l].index = NOLINK;
+            nodeListPtr[i].lateral[l].index = NOLINK;
             if (myStructure.computeHeat || myStructure.computeSolutes)
-                myNode[i].lateral[l].linkedExtra = new(TCrit3DLinkedNodeExtra);
+                nodeListPtr[i].lateral[l].linkedExtra = new(TCrit3DLinkedNodeExtra);
         }
     }
 
     /*! build the matrix */
-    if (myNode == nullptr)
+    if (nodeListPtr == nullptr)
         return MEMORY_ERROR;
     else
         return initializeArrays();
@@ -218,29 +219,29 @@ int DLL_EXPORT __STDCALL setHydraulicProperties(int waterRetentionCurve,
  int DLL_EXPORT __STDCALL setNode(long myIndex, float x, float y, double z, double volume_or_area, bool isSurface,
                         bool isBoundary, int boundaryType, float slope, float boundaryArea)
  {
-    if (myNode == nullptr) return(MEMORY_ERROR);
+    if (nodeListPtr == nullptr) return(MEMORY_ERROR);
     if ((myIndex < 0) || (myIndex >= myStructure.nrNodes)) return(INDEX_ERROR);
 
 	if (isBoundary)
 	{
-		myNode[myIndex].boundary = new(Tboundary);
-        initializeBoundary(myNode[myIndex].boundary, boundaryType, slope, boundaryArea);
+        nodeListPtr[myIndex].boundary = new(Tboundary);
+        initializeBoundary(nodeListPtr[myIndex].boundary, boundaryType, slope, boundaryArea);
 	}
 
     if ((myStructure.computeHeat || myStructure.computeSolutes) && ! isSurface)
     {
-        myNode[myIndex].extra = new(TCrit3DnodeExtra);
-        initializeExtra(myNode[myIndex].extra, myStructure.computeHeat, myStructure.computeSolutes);
+        nodeListPtr[myIndex].extra = new(TCrit3DnodeExtra);
+        initializeExtra(nodeListPtr[myIndex].extra, myStructure.computeHeat, myStructure.computeSolutes);
     }
 
-    myNode[myIndex].x = x;
-    myNode[myIndex].y = y;
-    myNode[myIndex].z = z;
-    myNode[myIndex].volume_area = volume_or_area;   /*!< area on surface elements, volume on sub-surface */
+    nodeListPtr[myIndex].x = x;
+    nodeListPtr[myIndex].y = y;
+    nodeListPtr[myIndex].z = z;
+    nodeListPtr[myIndex].volume_area = volume_or_area;   /*!< area on surface elements, volume on sub-surface */
 
-	myNode[myIndex].isSurface = isSurface;
+    nodeListPtr[myIndex].isSurface = isSurface;
 
-    myNode[myIndex].waterSinkSource = 0.;
+    nodeListPtr[myIndex].waterSinkSource = 0.;
 
     return CRIT3D_OK;
  }
@@ -249,7 +250,7 @@ int DLL_EXPORT __STDCALL setHydraulicProperties(int waterRetentionCurve,
  int DLL_EXPORT __STDCALL setNodeLink(long n, long linkIndex, short direction, float interfaceArea)
  {
     /*! error check */
-    if (myNode == nullptr) return MEMORY_ERROR;
+    if (nodeListPtr == nullptr) return MEMORY_ERROR;
 
     if ((n < 0) || (n >= myStructure.nrNodes) || (linkIndex < 0) || (linkIndex >= myStructure.nrNodes))
         return INDEX_ERROR;
@@ -258,41 +259,41 @@ int DLL_EXPORT __STDCALL setHydraulicProperties(int waterRetentionCurve,
     switch (direction)
     {
         case UP :
-                    myNode[n].up.index = linkIndex;
-                    myNode[n].up.area = interfaceArea;
-                    myNode[n].up.sumFlow = 0;
+                    nodeListPtr[n].up.index = linkIndex;
+                    nodeListPtr[n].up.area = interfaceArea;
+                    nodeListPtr[n].up.sumFlow = 0;
 
                     if (myStructure.computeHeat || myStructure.computeSolutes)
                     {
-                        myNode[n].up.linkedExtra = new(TCrit3DLinkedNodeExtra);
-                        initializeLinkExtra(myNode[n].up.linkedExtra, myStructure.computeHeat, myStructure.computeSolutes);
+                        nodeListPtr[n].up.linkedExtra = new(TCrit3DLinkedNodeExtra);
+                        initializeLinkExtra(nodeListPtr[n].up.linkedExtra, myStructure.computeHeat, myStructure.computeSolutes);
                     }
 
                     break;
         case DOWN :
-                    myNode[n].down.index = linkIndex;
-                    myNode[n].down.area = interfaceArea;
-					myNode[n].down.sumFlow = 0;
+                    nodeListPtr[n].down.index = linkIndex;
+                    nodeListPtr[n].down.area = interfaceArea;
+                    nodeListPtr[n].down.sumFlow = 0;
 
                     if (myStructure.computeHeat || myStructure.computeSolutes)
                     {
-                        myNode[n].down.linkedExtra = new(TCrit3DLinkedNodeExtra);
-                        initializeLinkExtra(myNode[n].down.linkedExtra, myStructure.computeHeat, myStructure.computeSolutes);
+                        nodeListPtr[n].down.linkedExtra = new(TCrit3DLinkedNodeExtra);
+                        initializeLinkExtra(nodeListPtr[n].down.linkedExtra, myStructure.computeHeat, myStructure.computeSolutes);
                     }
 
                     break;
         case LATERAL :
                     j = 0;
-                    while ((j < myStructure.nrLateralLinks) && (myNode[n].lateral[j].index != NOLINK)) j++;
+                    while ((j < myStructure.nrLateralLinks) && (nodeListPtr[n].lateral[j].index != NOLINK)) j++;
                     if (j == myStructure.nrLateralLinks) return (TOPOGRAPHY_ERROR);
-                    myNode[n].lateral[j].index = linkIndex;
-                    myNode[n].lateral[j].area = interfaceArea;
-					myNode[n].lateral[j].sumFlow = 0;
+                    nodeListPtr[n].lateral[j].index = linkIndex;
+                    nodeListPtr[n].lateral[j].area = interfaceArea;
+                    nodeListPtr[n].lateral[j].sumFlow = 0;
 
                     if (myStructure.computeHeat || myStructure.computeSolutes)
                     {
-                        myNode[n].lateral[j].linkedExtra = new(TCrit3DLinkedNodeExtra);
-                        initializeLinkExtra(myNode[n].lateral[j].linkedExtra, myStructure.computeHeat, myStructure.computeSolutes);
+                        nodeListPtr[n].lateral[j].linkedExtra = new(TCrit3DLinkedNodeExtra);
+                        initializeLinkExtra(nodeListPtr[n].lateral[j].linkedExtra, myStructure.computeHeat, myStructure.computeSolutes);
                     }
 
                     break;
@@ -305,7 +306,7 @@ int DLL_EXPORT __STDCALL setHydraulicProperties(int waterRetentionCurve,
 
  int DLL_EXPORT __STDCALL setCulvert(long nodeIndex, double roughness, double slope, double width, double height)
  {
-	 if ((nodeIndex < 0) || (!myNode[nodeIndex].isSurface))
+     if ((nodeIndex < 0) || (!nodeListPtr[nodeIndex].isSurface))
 	 {
 		 myCulvert.index = NOLINK;
 		 return(INDEX_ERROR);
@@ -317,9 +318,9 @@ int DLL_EXPORT __STDCALL setHydraulicProperties(int waterRetentionCurve,
 	 myCulvert.width = width;					// [m]
 	 myCulvert.height = height;					// [m]
 
-	myNode[nodeIndex].boundary = new(Tboundary);
+    nodeListPtr[nodeIndex].boundary = new(Tboundary);
     double boundaryArea = width*height;
-    initializeBoundary(myNode[nodeIndex].boundary, BOUNDARY_CULVERT, float(slope), float(boundaryArea));
+    initializeBoundary(nodeListPtr[nodeIndex].boundary, BOUNDARY_CULVERT, float(slope), float(boundaryArea));
 
 	 return(CRIT3D_OK);
  }
@@ -333,14 +334,14 @@ int DLL_EXPORT __STDCALL setHydraulicProperties(int waterRetentionCurve,
  */
  int DLL_EXPORT __STDCALL setNodeSurface(long nodeIndex, int surfaceIndex)
  {
-    if (myNode == nullptr)
+    if (nodeListPtr == nullptr)
         return MEMORY_ERROR;
-    if (nodeIndex < 0 || (! myNode[nodeIndex].isSurface))
+    if (nodeIndex < 0 || (! nodeListPtr[nodeIndex].isSurface))
         return INDEX_ERROR;
     if (surfaceIndex < 0 || surfaceIndex >= int(Surface_List.size()))
         return PARAMETER_ERROR;
 
-    myNode[nodeIndex].Soil = &Surface_List[surfaceIndex];
+    nodeListPtr[nodeIndex].Soil = &Surface_List[surfaceIndex];
 
     return(CRIT3D_OK);
  }
@@ -355,7 +356,7 @@ int DLL_EXPORT __STDCALL setHydraulicProperties(int waterRetentionCurve,
  */
  int DLL_EXPORT __STDCALL setNodeSoil(long nodeIndex, int soilIndex, int horizonIndex)
  {
-    if (myNode == nullptr)
+    if (nodeListPtr == nullptr)
         return MEMORY_ERROR;
     if (nodeIndex < 0 || nodeIndex >= myStructure.nrNodes)
         return INDEX_ERROR;
@@ -364,7 +365,7 @@ int DLL_EXPORT __STDCALL setHydraulicProperties(int waterRetentionCurve,
     if (horizonIndex < 0 || horizonIndex >= int(Soil_List[soilIndex].size()))
         return PARAMETER_ERROR;
 
-    myNode[nodeIndex].Soil = &Soil_List[soilIndex][horizonIndex];
+    nodeListPtr[nodeIndex].Soil = &Soil_List[soilIndex][horizonIndex];
 
     return CRIT3D_OK;
  }
@@ -438,23 +439,23 @@ int DLL_EXPORT __STDCALL setHydraulicProperties(int waterRetentionCurve,
  */
  int DLL_EXPORT __STDCALL setMatricPotential(long nodeIndex, double potential)
  {
-     if (myNode == nullptr)
+     if (nodeListPtr == nullptr)
          return MEMORY_ERROR;
      if ((nodeIndex < 0) || (nodeIndex >= myStructure.nrNodes))
          return INDEX_ERROR;
 
-     myNode[nodeIndex].H = potential + myNode[nodeIndex].z;
-     myNode[nodeIndex].oldH = myNode[nodeIndex].H;
+     nodeListPtr[nodeIndex].H = potential + nodeListPtr[nodeIndex].z;
+     nodeListPtr[nodeIndex].oldH = nodeListPtr[nodeIndex].H;
 
-     if (myNode[nodeIndex].isSurface)
+     if (nodeListPtr[nodeIndex].isSurface)
      {
-         myNode[nodeIndex].Se = 1.;
-         myNode[nodeIndex].k = NODATA;
+         nodeListPtr[nodeIndex].Se = 1.;
+         nodeListPtr[nodeIndex].k = NODATA;
      }
      else
      {
-         myNode[nodeIndex].Se = computeSe(nodeIndex);
-         myNode[nodeIndex].k = computeK(nodeIndex);
+         nodeListPtr[nodeIndex].Se = computeSe(nodeIndex);
+         nodeListPtr[nodeIndex].k = computeK(nodeIndex);
      }
 
      return CRIT3D_OK;
@@ -470,24 +471,24 @@ int DLL_EXPORT __STDCALL setHydraulicProperties(int waterRetentionCurve,
 	int DLL_EXPORT __STDCALL setTotalPotential(long nodeIndex, double totalPotential)
  {
 
-	 if (myNode == nullptr)
+     if (nodeListPtr == nullptr)
 		 return(MEMORY_ERROR);
 
 	 if ((nodeIndex < 0) || (nodeIndex >= myStructure.nrNodes))
 		 return(INDEX_ERROR);
 
-     myNode[nodeIndex].H = totalPotential;
-	 myNode[nodeIndex].oldH = myNode[nodeIndex].H;
+     nodeListPtr[nodeIndex].H = totalPotential;
+     nodeListPtr[nodeIndex].oldH = nodeListPtr[nodeIndex].H;
 
-	 if (myNode[nodeIndex].isSurface)
+     if (nodeListPtr[nodeIndex].isSurface)
 	 {
-		 myNode[nodeIndex].Se = 1.;
-		 myNode[nodeIndex].k = NODATA;
+         nodeListPtr[nodeIndex].Se = 1.;
+         nodeListPtr[nodeIndex].k = NODATA;
 	 }
 	 else
 	 {
-         myNode[nodeIndex].Se = computeSe(nodeIndex);
-         myNode[nodeIndex].k = computeK(nodeIndex);
+         nodeListPtr[nodeIndex].Se = computeSe(nodeIndex);
+         nodeListPtr[nodeIndex].k = computeK(nodeIndex);
 	 }
 
 	 return(CRIT3D_OK);
@@ -502,27 +503,27 @@ int DLL_EXPORT __STDCALL setHydraulicProperties(int waterRetentionCurve,
  */
  int DLL_EXPORT __STDCALL setWaterContent(long nodeIndex, double waterContent)
  {
-    if (myNode == nullptr) return MEMORY_ERROR;
+    if (nodeListPtr == nullptr) return MEMORY_ERROR;
 
     if ((nodeIndex < 0) || (nodeIndex >= myStructure.nrNodes)) return INDEX_ERROR;
 
     if (waterContent < 0.) return PARAMETER_ERROR;
 
-    if (myNode[nodeIndex].isSurface)
+    if (nodeListPtr[nodeIndex].isSurface)
             {
             /*! surface */
-            myNode[nodeIndex].H = myNode[nodeIndex].z + waterContent;
-            myNode[nodeIndex].oldH = myNode[nodeIndex].H;
-            myNode[nodeIndex].Se = 1.;
-            myNode[nodeIndex].k = 0.;
+            nodeListPtr[nodeIndex].H = nodeListPtr[nodeIndex].z + waterContent;
+            nodeListPtr[nodeIndex].oldH = nodeListPtr[nodeIndex].H;
+            nodeListPtr[nodeIndex].Se = 1.;
+            nodeListPtr[nodeIndex].k = 0.;
             }
     else
             {
             if (waterContent > 1.0) return PARAMETER_ERROR;
-            myNode[nodeIndex].Se = Se_from_theta(nodeIndex, waterContent);
-            myNode[nodeIndex].H = myNode[nodeIndex].z - psi_from_Se(nodeIndex);
-            myNode[nodeIndex].oldH = myNode[nodeIndex].H;
-            myNode[nodeIndex].k = computeK(nodeIndex);
+            nodeListPtr[nodeIndex].Se = Se_from_theta(nodeIndex, waterContent);
+            nodeListPtr[nodeIndex].H = nodeListPtr[nodeIndex].z - psi_from_Se(nodeIndex);
+            nodeListPtr[nodeIndex].oldH = nodeListPtr[nodeIndex].H;
+            nodeListPtr[nodeIndex].k = computeK(nodeIndex);
             }
 
     return CRIT3D_OK;
@@ -537,10 +538,10 @@ int DLL_EXPORT __STDCALL setHydraulicProperties(int waterRetentionCurve,
  */
  int DLL_EXPORT __STDCALL setWaterSinkSource(long nodeIndex, double waterSinkSource)
  {
-    if (myNode == nullptr) return MEMORY_ERROR;
+    if (nodeListPtr == nullptr) return MEMORY_ERROR;
     if ((nodeIndex < 0) || (nodeIndex >= myStructure.nrNodes)) return INDEX_ERROR;
 
-    myNode[nodeIndex].waterSinkSource = waterSinkSource;
+    nodeListPtr[nodeIndex].waterSinkSource = waterSinkSource;
 
     return CRIT3D_OK;
  }
@@ -554,12 +555,12 @@ int DLL_EXPORT __STDCALL setHydraulicProperties(int waterRetentionCurve,
  */
  int DLL_EXPORT __STDCALL setPrescribedTotalPotential(long nodeIndex, double prescribedTotalPotential)
  {
-    if (myNode == nullptr) return MEMORY_ERROR;
+    if (nodeListPtr == nullptr) return MEMORY_ERROR;
     if ((nodeIndex < 0) || (nodeIndex >= myStructure.nrNodes)) return INDEX_ERROR;
-    if (myNode[nodeIndex].boundary == nullptr) return BOUNDARY_ERROR;
-    if (myNode[nodeIndex].boundary->type != BOUNDARY_PRESCRIBEDTOTALPOTENTIAL) return BOUNDARY_ERROR;
+    if (nodeListPtr[nodeIndex].boundary == nullptr) return BOUNDARY_ERROR;
+    if (nodeListPtr[nodeIndex].boundary->type != BOUNDARY_PRESCRIBEDTOTALPOTENTIAL) return BOUNDARY_ERROR;
 
-    myNode[nodeIndex].boundary->prescribedTotalPotential = prescribedTotalPotential;
+    nodeListPtr[nodeIndex].boundary->prescribedTotalPotential = prescribedTotalPotential;
 
     return CRIT3D_OK;
  }
@@ -572,12 +573,12 @@ int DLL_EXPORT __STDCALL setHydraulicProperties(int waterRetentionCurve,
  */
  double DLL_EXPORT __STDCALL getWaterContent(long nodeIndex)
  {
-        if (myNode == nullptr) return(MEMORY_ERROR);
+        if (nodeListPtr == nullptr) return(MEMORY_ERROR);
         if ((nodeIndex < 0) || (nodeIndex >= myStructure.nrNodes)) return(INDEX_ERROR);
 
-        if  (myNode[nodeIndex].isSurface)
+        if  (nodeListPtr[nodeIndex].isSurface)
             /*! surface */
-            return (myNode[nodeIndex].H - myNode[nodeIndex].z);
+            return (nodeListPtr[nodeIndex].H - nodeListPtr[nodeIndex].z);
         else
             /*! sub-surface */
             return (theta_from_Se(nodeIndex));
@@ -592,12 +593,12 @@ int DLL_EXPORT __STDCALL setHydraulicProperties(int waterRetentionCurve,
  */
  double DLL_EXPORT __STDCALL getAvailableWaterContent(long index)
  {
-        if (myNode == nullptr) return(MEMORY_ERROR);
+        if (nodeListPtr == nullptr) return(MEMORY_ERROR);
         if ((index < 0) || (index >= myStructure.nrNodes)) return(INDEX_ERROR);
 
-        if  (myNode[index].isSurface)
+        if  (nodeListPtr[index].isSurface)
             /*! surface */
-            return (myNode[index].H - myNode[index].z);
+            return (nodeListPtr[index].H - nodeListPtr[index].z);
         else
             /*! sub-surface */
             return MAXVALUE(0.0, theta_from_Se(index) - theta_from_sign_Psi(-160, index));
@@ -612,10 +613,10 @@ int DLL_EXPORT __STDCALL setHydraulicProperties(int waterRetentionCurve,
  */
 	double DLL_EXPORT __STDCALL getWaterDeficit(long index, double fieldCapacity)
  {
-        if (myNode == nullptr) return(MEMORY_ERROR);
+        if (nodeListPtr == nullptr) return(MEMORY_ERROR);
         if ((index < 0) || (index >= myStructure.nrNodes)) return(INDEX_ERROR);
 
-        if  (myNode[index].isSurface)
+        if  (nodeListPtr[index].isSurface)
             /*! surface */
             return (0.0);
         else
@@ -628,22 +629,29 @@ int DLL_EXPORT __STDCALL setHydraulicProperties(int waterRetentionCurve,
 /*!
   * \brief getDegreeOfSaturation
   * \param nodeIndex
-  * \return degree of saturation at surface: water presence 0-100 [-]; sub-surface: degree of saturation [%]
+  * \return at surface: water presence (0: no water, 1: water >= 1 mm);
+  * at sub-surface: degree of saturation [-]
   */
  double DLL_EXPORT __STDCALL getDegreeOfSaturation(long nodeIndex)
  {
-        if (myNode == nullptr) return(MEMORY_ERROR);
-        if ((nodeIndex < 0) || (nodeIndex >= myStructure.nrNodes)) return(INDEX_ERROR);
+    if (nodeListPtr == nullptr)
+        return MEMORY_ERROR;
+    if ((nodeIndex < 0) || (nodeIndex >= myStructure.nrNodes))
+        return INDEX_ERROR;
 
-        if  (myNode[nodeIndex].isSurface)
-        {
-            if ((myNode[nodeIndex].H - myNode[nodeIndex].z) > 0.0001)
-                return 100;
-            else
-                return 0;
-        }
-        else
-            return (myNode[nodeIndex].Se*100.0);
+    if  (nodeListPtr[nodeIndex].isSurface)
+    {
+        double h = nodeListPtr[nodeIndex].H - nodeListPtr[nodeIndex].z;
+        double h_max = 0.001;       // [m]
+
+        if (h <= 0 ) return 0.;
+        else if (h >= h_max) return 1.;
+        else return (h / h_max);
+    }
+    else
+    {
+        return nodeListPtr[nodeIndex].Se;
+    }
  }
 
 
@@ -665,10 +673,10 @@ int DLL_EXPORT __STDCALL setHydraulicProperties(int waterRetentionCurve,
  double DLL_EXPORT __STDCALL getWaterConductivity(long nodeIndex)
  {
     /*! error check */
-    if (myNode == nullptr) return(MEMORY_ERROR);
+    if (nodeListPtr == nullptr) return(MEMORY_ERROR);
     if ((nodeIndex < 0) || (nodeIndex >= myStructure.nrNodes)) return(INDEX_ERROR);
 
-    return (myNode[nodeIndex].k);
+    return (nodeListPtr[nodeIndex].k);
  }
 
 
@@ -679,10 +687,10 @@ int DLL_EXPORT __STDCALL setHydraulicProperties(int waterRetentionCurve,
   */
  double DLL_EXPORT __STDCALL getMatricPotential(long nodeIndex)
  {
-    if (myNode == nullptr) return(MEMORY_ERROR);
+    if (nodeListPtr == nullptr) return(MEMORY_ERROR);
     if ((nodeIndex < 0) || (nodeIndex >= myStructure.nrNodes)) return(INDEX_ERROR);
 
-    return (myNode[nodeIndex].H - myNode[nodeIndex].z);
+    return (nodeListPtr[nodeIndex].H - nodeListPtr[nodeIndex].z);
  }
 
 
@@ -693,10 +701,10 @@ int DLL_EXPORT __STDCALL setHydraulicProperties(int waterRetentionCurve,
   */
  double DLL_EXPORT __STDCALL getTotalPotential(long nodeIndex)
  {
-	 if (myNode == nullptr) return(MEMORY_ERROR);
+     if (nodeListPtr == nullptr) return(MEMORY_ERROR);
 	 if ((nodeIndex < 0) || (nodeIndex >= myStructure.nrNodes)) return(INDEX_ERROR);
 
-	 return (myNode[nodeIndex].H);
+     return (nodeListPtr[nodeIndex].H);
  }
 
 
@@ -708,16 +716,16 @@ int DLL_EXPORT __STDCALL setHydraulicProperties(int waterRetentionCurve,
   */
  double DLL_EXPORT __STDCALL getWaterFlow(long n, short direction)
  {
-    if (myNode == nullptr) return MEMORY_ERROR;
+    if (nodeListPtr == nullptr) return MEMORY_ERROR;
     if ((n < 0) || (n >= myStructure.nrNodes)) return INDEX_ERROR;
 
 	double maxFlow = 0.0;
 
 	switch (direction) {
         case UP:
-            if (myNode[n].up.index != NOLINK)
+            if (nodeListPtr[n].up.index != NOLINK)
             {
-                return myNode[n].up.sumFlow;
+                return nodeListPtr[n].up.sumFlow;
             }
             else
             {
@@ -725,9 +733,9 @@ int DLL_EXPORT __STDCALL setHydraulicProperties(int waterRetentionCurve,
             }
 
 		case DOWN:
-            if (myNode[n].down.index != NOLINK)
+            if (nodeListPtr[n].down.index != NOLINK)
             {
-                return myNode[n].down.sumFlow;
+                return nodeListPtr[n].down.sumFlow;
             }
             else
             {
@@ -737,10 +745,10 @@ int DLL_EXPORT __STDCALL setHydraulicProperties(int waterRetentionCurve,
 		case LATERAL:
 			// return maximum lateral flow
             for (short i = 0; i < myStructure.nrLateralLinks; i++)
-                if (myNode[n].lateral[i].index != NOLINK)
-                    if (fabs(myNode[n].lateral[i].sumFlow) > maxFlow)
+                if (nodeListPtr[n].lateral[i].index != NOLINK)
+                    if (fabs(nodeListPtr[n].lateral[i].sumFlow) > maxFlow)
                     {
-                        maxFlow = myNode[n].lateral[i].sumFlow;
+                        maxFlow = nodeListPtr[n].lateral[i].sumFlow;
                     }
 
             return maxFlow;
@@ -758,14 +766,14 @@ int DLL_EXPORT __STDCALL setHydraulicProperties(int waterRetentionCurve,
   */
  double DLL_EXPORT __STDCALL getSumLateralWaterFlow(long n)
  {
-    if (myNode == nullptr) return MEMORY_ERROR;
+    if (nodeListPtr == nullptr) return MEMORY_ERROR;
     if ((n < 0) || (n >= myStructure.nrNodes)) return INDEX_ERROR;
 
     double sumLateralFlow = 0.0;
     for (short i = 0; i < myStructure.nrLateralLinks; i++)
     {
-        if (myNode[n].lateral[i].index != NOLINK)
-			sumLateralFlow += myNode[n].lateral[i].sumFlow;
+        if (nodeListPtr[n].lateral[i].index != NOLINK)
+            sumLateralFlow += nodeListPtr[n].lateral[i].sumFlow;
     }
 	return sumLateralFlow;
  }
@@ -778,14 +786,14 @@ int DLL_EXPORT __STDCALL setHydraulicProperties(int waterRetentionCurve,
   */
  double DLL_EXPORT __STDCALL getSumLateralWaterFlowIn(long n)
  {
-    if (myNode == nullptr) return MEMORY_ERROR;
+    if (nodeListPtr == nullptr) return MEMORY_ERROR;
     if ((n < 0) || (n >= myStructure.nrNodes)) return INDEX_ERROR;
 
     double sumLateralFlow = 0.0;
     for (short i = 0; i < myStructure.nrLateralLinks; i++)
-        if (myNode[n].lateral[i].index != NOLINK)
-            if (myNode[n].lateral[i].sumFlow > 0)
-                sumLateralFlow += myNode[n].lateral[i].sumFlow;
+        if (nodeListPtr[n].lateral[i].index != NOLINK)
+            if (nodeListPtr[n].lateral[i].sumFlow > 0)
+                sumLateralFlow += nodeListPtr[n].lateral[i].sumFlow;
 
     return sumLateralFlow;
  }
@@ -798,14 +806,14 @@ int DLL_EXPORT __STDCALL setHydraulicProperties(int waterRetentionCurve,
   */
  double DLL_EXPORT __STDCALL getSumLateralWaterFlowOut(long n)
  {
-    if (myNode == nullptr) return MEMORY_ERROR;
+    if (nodeListPtr == nullptr) return MEMORY_ERROR;
     if ((n < 0) || (n >= myStructure.nrNodes)) return INDEX_ERROR;
 
     double sumLateralFlow = 0.0;
     for (short i = 0; i < myStructure.nrLateralLinks; i++)
-        if (myNode[n].lateral[i].index != NOLINK)
-            if (myNode[n].lateral[i].sumFlow < 0)
-                sumLateralFlow += myNode[n].lateral[i].sumFlow;
+        if (nodeListPtr[n].lateral[i].index != NOLINK)
+            if (nodeListPtr[n].lateral[i].sumFlow < 0)
+                sumLateralFlow += nodeListPtr[n].lateral[i].sumFlow;
 
     return sumLateralFlow;
  }
@@ -849,14 +857,14 @@ int DLL_EXPORT __STDCALL setHydraulicProperties(int waterRetentionCurve,
   */
  double DLL_EXPORT __STDCALL getBoundaryWaterFlow(long nodeIndex)
  {
-    if (myNode == nullptr)
+    if (nodeListPtr == nullptr)
         return MEMORY_ERROR;
     if (nodeIndex < 0 || nodeIndex >= myStructure.nrNodes)
         return INDEX_ERROR;
-    if (myNode[nodeIndex].boundary == nullptr)
+    if (nodeListPtr[nodeIndex].boundary == nullptr)
         return BOUNDARY_ERROR;
 
-    return myNode[nodeIndex].boundary->sumBoundaryWaterFlow;
+    return nodeListPtr[nodeIndex].boundary->sumBoundaryWaterFlow;
  }
 
 
@@ -870,9 +878,9 @@ int DLL_EXPORT __STDCALL setHydraulicProperties(int waterRetentionCurve,
     double sumBoundaryFlow = 0.0;
 
     for (long n = 0; n < myStructure.nrNodes; n++)
-        if (myNode[n].boundary != nullptr)
-            if (myNode[n].boundary->type == boundaryType)
-				sumBoundaryFlow += myNode[n].boundary->sumBoundaryWaterFlow;
+        if (nodeListPtr[n].boundary != nullptr)
+            if (nodeListPtr[n].boundary->type == boundaryType)
+                sumBoundaryFlow += nodeListPtr[n].boundary->sumBoundaryWaterFlow;
 
     return sumBoundaryFlow;
  }
@@ -965,7 +973,7 @@ int DLL_EXPORT __STDCALL setTemperature(long nodeIndex, double myT)
    // myT              [K] temperature
    //----------------------------------------------------------------------------------------------
 
-   if (myNode == nullptr) return(MEMORY_ERROR);
+   if (nodeListPtr == nullptr) return(MEMORY_ERROR);
 
    if ((nodeIndex < 0) || (nodeIndex >= myStructure.nrNodes)) return(INDEX_ERROR);
 
@@ -973,8 +981,8 @@ int DLL_EXPORT __STDCALL setTemperature(long nodeIndex, double myT)
 
    if (! isHeatNode(nodeIndex)) return(MEMORY_ERROR);
 
-   myNode[nodeIndex].extra->Heat->T = myT;
-   myNode[nodeIndex].extra->Heat->oldT = myT;
+   nodeListPtr[nodeIndex].extra->Heat->T = myT;
+   nodeListPtr[nodeIndex].extra->Heat->oldT = myT;
 
    return(CRIT3D_OK);
 }
@@ -987,15 +995,15 @@ int DLL_EXPORT __STDCALL setTemperature(long nodeIndex, double myT)
  */
 int DLL_EXPORT __STDCALL setFixedTemperature(long nodeIndex, double myT, double myDepth)
 {
-   if (myNode == nullptr) return(MEMORY_ERROR);
+   if (nodeListPtr == nullptr) return(MEMORY_ERROR);
    if ((nodeIndex < 0) || (nodeIndex >= myStructure.nrNodes)) return(INDEX_ERROR);
-   if (myNode[nodeIndex].boundary == nullptr) return(BOUNDARY_ERROR);
-   if (myNode[nodeIndex].boundary->Heat == nullptr) return(BOUNDARY_ERROR);
-   if (myNode[nodeIndex].boundary->type != BOUNDARY_PRESCRIBEDTOTALPOTENTIAL &&
-           myNode[nodeIndex].boundary->type != BOUNDARY_FREEDRAINAGE) return(BOUNDARY_ERROR);
+   if (nodeListPtr[nodeIndex].boundary == nullptr) return(BOUNDARY_ERROR);
+   if (nodeListPtr[nodeIndex].boundary->Heat == nullptr) return(BOUNDARY_ERROR);
+   if (nodeListPtr[nodeIndex].boundary->type != BOUNDARY_PRESCRIBEDTOTALPOTENTIAL &&
+           nodeListPtr[nodeIndex].boundary->type != BOUNDARY_FREEDRAINAGE) return(BOUNDARY_ERROR);
 
-   myNode[nodeIndex].boundary->Heat->fixedTemperatureDepth = myDepth;
-   myNode[nodeIndex].boundary->Heat->fixedTemperature = myT;
+   nodeListPtr[nodeIndex].boundary->Heat->fixedTemperatureDepth = myDepth;
+   nodeListPtr[nodeIndex].boundary->Heat->fixedTemperature = myT;
 
    return(CRIT3D_OK);
 }
@@ -1008,14 +1016,14 @@ int DLL_EXPORT __STDCALL setFixedTemperature(long nodeIndex, double myT, double 
  */
 int DLL_EXPORT __STDCALL setHeatBoundaryWindSpeed(long nodeIndex, double myWindSpeed)
 {
-   if (myNode == nullptr) return(MEMORY_ERROR);
+   if (nodeListPtr == nullptr) return(MEMORY_ERROR);
    if ((nodeIndex < 0) || (nodeIndex >= myStructure.nrNodes)) return(INDEX_ERROR);
    if ((myWindSpeed < 0) || (myWindSpeed > 1000)) return(PARAMETER_ERROR);
 
-   if (myNode[nodeIndex].boundary == nullptr || myNode[nodeIndex].boundary->Heat == nullptr)
+   if (nodeListPtr[nodeIndex].boundary == nullptr || nodeListPtr[nodeIndex].boundary->Heat == nullptr)
        return (BOUNDARY_ERROR);
 
-   myNode[nodeIndex].boundary->Heat->windSpeed = myWindSpeed;
+   nodeListPtr[nodeIndex].boundary->Heat->windSpeed = myWindSpeed;
 
    return(CRIT3D_OK);
 }
@@ -1028,14 +1036,14 @@ int DLL_EXPORT __STDCALL setHeatBoundaryWindSpeed(long nodeIndex, double myWindS
  */
 int DLL_EXPORT __STDCALL setHeatBoundaryRoughness(long nodeIndex, double myRoughness)
 {
-   if (myNode == nullptr) return(MEMORY_ERROR);
+   if (nodeListPtr == nullptr) return(MEMORY_ERROR);
    if ((nodeIndex < 0) || (nodeIndex >= myStructure.nrNodes)) return(INDEX_ERROR);
    if (myRoughness < 0) return(PARAMETER_ERROR);
 
-   if (myNode[nodeIndex].boundary == nullptr || myNode[nodeIndex].boundary->Heat == nullptr)
+   if (nodeListPtr[nodeIndex].boundary == nullptr || nodeListPtr[nodeIndex].boundary->Heat == nullptr)
        return (BOUNDARY_ERROR);
 
-   myNode[nodeIndex].boundary->Heat->roughnessHeight = myRoughness;
+   nodeListPtr[nodeIndex].boundary->Heat->roughnessHeight = myRoughness;
 
    return(CRIT3D_OK);
 }
@@ -1048,13 +1056,13 @@ int DLL_EXPORT __STDCALL setHeatBoundaryRoughness(long nodeIndex, double myRough
  */
 int DLL_EXPORT __STDCALL setHeatSinkSource(long nodeIndex, double myHeatFlow)
 {
-   if (myNode == nullptr)
+   if (nodeListPtr == nullptr)
        return(MEMORY_ERROR);
 
    if ((nodeIndex < 0) || (nodeIndex >= myStructure.nrNodes))
        return(INDEX_ERROR);
 
-   myNode[nodeIndex].extra->Heat->sinkSource = myHeatFlow;
+   nodeListPtr[nodeIndex].extra->Heat->sinkSource = myHeatFlow;
 
    return(CRIT3D_OK);
 }
@@ -1067,16 +1075,16 @@ int DLL_EXPORT __STDCALL setHeatSinkSource(long nodeIndex, double myHeatFlow)
  */
 int DLL_EXPORT __STDCALL setHeatBoundaryTemperature(long nodeIndex, double myTemperature)
 {
-   if (myNode == nullptr)
+   if (nodeListPtr == nullptr)
        return(MEMORY_ERROR);
 
    if ((nodeIndex < 0) || (nodeIndex >= myStructure.nrNodes))
        return(INDEX_ERROR);
 
-   if (myNode[nodeIndex].boundary == nullptr || myNode[nodeIndex].boundary->Heat == nullptr)
+   if (nodeListPtr[nodeIndex].boundary == nullptr || nodeListPtr[nodeIndex].boundary->Heat == nullptr)
        return (BOUNDARY_ERROR);
 
-   myNode[nodeIndex].boundary->Heat->temperature = myTemperature;
+   nodeListPtr[nodeIndex].boundary->Heat->temperature = myTemperature;
 
    return(CRIT3D_OK);
 }
@@ -1089,16 +1097,16 @@ int DLL_EXPORT __STDCALL setHeatBoundaryTemperature(long nodeIndex, double myTem
  */
 int DLL_EXPORT __STDCALL setHeatBoundaryNetIrradiance(long nodeIndex, double myNetIrradiance)
 {
-   if (myNode == nullptr)
+   if (nodeListPtr == nullptr)
        return(MEMORY_ERROR);
 
    if ((nodeIndex < 0) || (nodeIndex >= myStructure.nrNodes))
        return(INDEX_ERROR);
 
-   if (myNode[nodeIndex].boundary == nullptr || myNode[nodeIndex].boundary->Heat == nullptr)
+   if (nodeListPtr[nodeIndex].boundary == nullptr || nodeListPtr[nodeIndex].boundary->Heat == nullptr)
        return (BOUNDARY_ERROR);
 
-   myNode[nodeIndex].boundary->Heat->netIrradiance = myNetIrradiance;
+   nodeListPtr[nodeIndex].boundary->Heat->netIrradiance = myNetIrradiance;
 
    return(CRIT3D_OK);
 }
@@ -1111,16 +1119,16 @@ int DLL_EXPORT __STDCALL setHeatBoundaryNetIrradiance(long nodeIndex, double myN
  */
 int DLL_EXPORT __STDCALL setHeatBoundaryRelativeHumidity(long nodeIndex, double myRelativeHumidity)
 {
-   if (myNode == nullptr)
+   if (nodeListPtr == nullptr)
        return(MEMORY_ERROR);
 
    if ((nodeIndex < 0) || (nodeIndex >= myStructure.nrNodes))
        return(INDEX_ERROR);
 
-   if (myNode[nodeIndex].boundary == nullptr || myNode[nodeIndex].boundary->Heat == nullptr)
+   if (nodeListPtr[nodeIndex].boundary == nullptr || nodeListPtr[nodeIndex].boundary->Heat == nullptr)
        return (BOUNDARY_ERROR);
 
-   myNode[nodeIndex].boundary->Heat->relativeHumidity = myRelativeHumidity;
+   nodeListPtr[nodeIndex].boundary->Heat->relativeHumidity = myRelativeHumidity;
 
    return(CRIT3D_OK);
 }
@@ -1133,13 +1141,13 @@ int DLL_EXPORT __STDCALL setHeatBoundaryRelativeHumidity(long nodeIndex, double 
  */
 int DLL_EXPORT __STDCALL setHeatBoundaryHeightWind(long nodeIndex, double myHeight)
 {
-   if (myNode == nullptr) return(MEMORY_ERROR);
+   if (nodeListPtr == nullptr) return(MEMORY_ERROR);
    if ((nodeIndex < 0) || (nodeIndex >= myStructure.nrNodes)) return(INDEX_ERROR);
 
-   if (myNode[nodeIndex].boundary == nullptr || myNode[nodeIndex].boundary->Heat == nullptr)
+   if (nodeListPtr[nodeIndex].boundary == nullptr || nodeListPtr[nodeIndex].boundary->Heat == nullptr)
        return (BOUNDARY_ERROR);
 
-   myNode[nodeIndex].boundary->Heat->heightWind = myHeight;
+   nodeListPtr[nodeIndex].boundary->Heat->heightWind = myHeight;
 
    return(CRIT3D_OK);
 }
@@ -1153,13 +1161,13 @@ int DLL_EXPORT __STDCALL setHeatBoundaryHeightWind(long nodeIndex, double myHeig
  */
 int DLL_EXPORT __STDCALL setHeatBoundaryHeightTemperature(long nodeIndex, double myHeight)
 {
-   if (myNode == nullptr) return(MEMORY_ERROR);
+   if (nodeListPtr == nullptr) return(MEMORY_ERROR);
    if ((nodeIndex < 0) || (nodeIndex >= myStructure.nrNodes)) return(INDEX_ERROR);
 
-   if (myNode[nodeIndex].boundary == nullptr || myNode[nodeIndex].boundary->Heat == nullptr)
+   if (nodeListPtr[nodeIndex].boundary == nullptr || nodeListPtr[nodeIndex].boundary->Heat == nullptr)
        return (BOUNDARY_ERROR);
 
-   myNode[nodeIndex].boundary->Heat->heightTemperature = myHeight;
+   nodeListPtr[nodeIndex].boundary->Heat->heightTemperature = myHeight;
 
    return(CRIT3D_OK);
 }
@@ -1171,11 +1179,11 @@ int DLL_EXPORT __STDCALL setHeatBoundaryHeightTemperature(long nodeIndex, double
 */
 double DLL_EXPORT __STDCALL getTemperature(long nodeIndex)
 {
-    if (myNode == nullptr) return(TOPOGRAPHY_ERROR);
+    if (nodeListPtr == nullptr) return(TOPOGRAPHY_ERROR);
     if ((nodeIndex >= myStructure.nrNodes)) return(INDEX_ERROR);
     if (! isHeatNode(nodeIndex)) return (MEMORY_ERROR);
 
-    return (myNode[nodeIndex].extra->Heat->T);
+    return (nodeListPtr[nodeIndex].extra->Heat->T);
 }
 
 /*!
@@ -1185,11 +1193,11 @@ double DLL_EXPORT __STDCALL getTemperature(long nodeIndex)
  */
 double DLL_EXPORT __STDCALL getHeatConductivity(long nodeIndex)
 {
-    if (myNode == nullptr) return(TOPOGRAPHY_ERROR);
+    if (nodeListPtr == nullptr) return(TOPOGRAPHY_ERROR);
     if ((nodeIndex >= myStructure.nrNodes)) return(INDEX_ERROR);
     if (! isHeatNode(nodeIndex)) return (MEMORY_ERROR);
 
-   return SoilHeatConductivity(nodeIndex, myNode[nodeIndex].extra->Heat->T, myNode[nodeIndex].H - myNode[nodeIndex].z);
+   return SoilHeatConductivity(nodeIndex, nodeListPtr[nodeIndex].extra->Heat->T, nodeListPtr[nodeIndex].H - nodeListPtr[nodeIndex].z);
 }
 
 /*!
@@ -1200,7 +1208,7 @@ double DLL_EXPORT __STDCALL getHeatConductivity(long nodeIndex)
 */
 float DLL_EXPORT __STDCALL getHeatFlux(long nodeIndex, short myDirection, int fluxType)
 {
-    if (myNode == nullptr) return(TOPOGRAPHY_ERROR);
+    if (nodeListPtr == nullptr) return(TOPOGRAPHY_ERROR);
     if ((nodeIndex >= myStructure.nrNodes)) return(INDEX_ERROR);
     if (! isHeatNode(nodeIndex)) return (MEMORY_ERROR);
 
@@ -1209,15 +1217,15 @@ float DLL_EXPORT __STDCALL getHeatFlux(long nodeIndex, short myDirection, int fl
     switch (myDirection)
     {
     case UP:
-        return readHeatFlux(&(myNode[nodeIndex].up), fluxType);
+        return readHeatFlux(&(nodeListPtr[nodeIndex].up), fluxType);
 
     case DOWN:
-        return readHeatFlux(&(myNode[nodeIndex].down), fluxType);
+        return readHeatFlux(&(nodeListPtr[nodeIndex].down), fluxType);
 
     case LATERAL:
         for (short i = 0; i < myStructure.nrLateralLinks; i++)
         {
-            float myFlux = readHeatFlux(&(myNode[nodeIndex].lateral[i]), fluxType);
+            float myFlux = readHeatFlux(&(nodeListPtr[nodeIndex].lateral[i]), fluxType);
             if (myFlux != NODATA && myFlux > fabs(myMaxFlux))
                 myMaxFlux = myFlux;
         }
@@ -1234,14 +1242,14 @@ float DLL_EXPORT __STDCALL getHeatFlux(long nodeIndex, short myDirection, int fl
 */
 double DLL_EXPORT __STDCALL getBoundarySensibleFlux(long nodeIndex)
 {
-    if (myNode == nullptr) return (TOPOGRAPHY_ERROR);
+    if (nodeListPtr == nullptr) return (TOPOGRAPHY_ERROR);
     if (nodeIndex >= myStructure.nrNodes) return (INDEX_ERROR);
     if (! myStructure.computeHeat) return (MISSING_DATA_ERROR);
-    if (myNode[nodeIndex].boundary == nullptr) return (INDEX_ERROR);
-    if (myNode[nodeIndex].boundary->type != BOUNDARY_HEAT_SURFACE) return (INDEX_ERROR);
+    if (nodeListPtr[nodeIndex].boundary == nullptr) return (INDEX_ERROR);
+    if (nodeListPtr[nodeIndex].boundary->type != BOUNDARY_HEAT_SURFACE) return (INDEX_ERROR);
 
     // boundary sensible heat flow density
-    return (myNode[nodeIndex].boundary->Heat->sensibleFlux);
+    return (nodeListPtr[nodeIndex].boundary->Heat->sensibleFlux);
 }
 
 
@@ -1252,14 +1260,14 @@ double DLL_EXPORT __STDCALL getBoundarySensibleFlux(long nodeIndex)
 */
 double DLL_EXPORT __STDCALL getBoundaryLatentFlux(long nodeIndex)
 {
-    if (myNode == nullptr) return (TOPOGRAPHY_ERROR);
+    if (nodeListPtr == nullptr) return (TOPOGRAPHY_ERROR);
     if (nodeIndex >= myStructure.nrNodes) return (INDEX_ERROR);
     if (! myStructure.computeHeat || ! myStructure.computeWater || ! myStructure.computeHeatVapor) return (MISSING_DATA_ERROR);
-    if (myNode[nodeIndex].boundary == nullptr) return (INDEX_ERROR);
-    if (myNode[nodeIndex].boundary->type != BOUNDARY_HEAT_SURFACE) return (INDEX_ERROR);
+    if (nodeListPtr[nodeIndex].boundary == nullptr) return (INDEX_ERROR);
+    if (nodeListPtr[nodeIndex].boundary->type != BOUNDARY_HEAT_SURFACE) return (INDEX_ERROR);
 
     // boundary latent heat flow density
-    return (myNode[nodeIndex].boundary->Heat->latentFlux);
+    return (nodeListPtr[nodeIndex].boundary->Heat->latentFlux);
 }
 
 /*!
@@ -1269,15 +1277,15 @@ double DLL_EXPORT __STDCALL getBoundaryLatentFlux(long nodeIndex)
 */
 double DLL_EXPORT __STDCALL getBoundaryAdvectiveFlux(long nodeIndex)
 {
-    if (myNode == nullptr) return (TOPOGRAPHY_ERROR);
+    if (nodeListPtr == nullptr) return (TOPOGRAPHY_ERROR);
     if (nodeIndex >= myStructure.nrNodes) return (INDEX_ERROR);
     if (! myStructure.computeHeat || ! myStructure.computeWater || ! myStructure.computeHeatAdvection) return (MISSING_DATA_ERROR);
-    if (myNode[nodeIndex].boundary == nullptr) return (BOUNDARY_ERROR);
-    if (myNode[nodeIndex].boundary->Heat == nullptr) return (BOUNDARY_ERROR);
-    if (myNode[nodeIndex].boundary->type != BOUNDARY_HEAT_SURFACE) return (BOUNDARY_ERROR);
+    if (nodeListPtr[nodeIndex].boundary == nullptr) return (BOUNDARY_ERROR);
+    if (nodeListPtr[nodeIndex].boundary->Heat == nullptr) return (BOUNDARY_ERROR);
+    if (nodeListPtr[nodeIndex].boundary->type != BOUNDARY_HEAT_SURFACE) return (BOUNDARY_ERROR);
 
     // boundary advective heat flow density
-    return (myNode[nodeIndex].boundary->Heat->advectiveHeatFlux);
+    return (nodeListPtr[nodeIndex].boundary->Heat->advectiveHeatFlux);
 }
 
 /*!
@@ -1287,14 +1295,14 @@ double DLL_EXPORT __STDCALL getBoundaryAdvectiveFlux(long nodeIndex)
 */
 double DLL_EXPORT __STDCALL getBoundaryRadiativeFlux(long nodeIndex)
 {
-    if (myNode == nullptr) return (TOPOGRAPHY_ERROR);
+    if (nodeListPtr == nullptr) return (TOPOGRAPHY_ERROR);
     if (nodeIndex >= myStructure.nrNodes) return (INDEX_ERROR);
     if (! myStructure.computeHeat) return (MISSING_DATA_ERROR);
-    if (myNode[nodeIndex].boundary == nullptr) return (INDEX_ERROR);
-    if (myNode[nodeIndex].boundary->type != BOUNDARY_HEAT_SURFACE) return (INDEX_ERROR);
+    if (nodeListPtr[nodeIndex].boundary == nullptr) return (INDEX_ERROR);
+    if (nodeListPtr[nodeIndex].boundary->type != BOUNDARY_HEAT_SURFACE) return (INDEX_ERROR);
 
     // boundary net radiative heat flow density
-    return (myNode[nodeIndex].boundary->Heat->radiativeFlux);
+    return (nodeListPtr[nodeIndex].boundary->Heat->radiativeFlux);
 }
 
 /*!
@@ -1304,14 +1312,14 @@ double DLL_EXPORT __STDCALL getBoundaryRadiativeFlux(long nodeIndex)
 */
 double DLL_EXPORT __STDCALL getBoundaryAerodynamicConductance(long nodeIndex)
 {
-    if (myNode == nullptr) return (TOPOGRAPHY_ERROR);
+    if (nodeListPtr == nullptr) return (TOPOGRAPHY_ERROR);
     if (nodeIndex >= myStructure.nrNodes) return (INDEX_ERROR);
     if (! myStructure.computeHeat) return (MISSING_DATA_ERROR);
-    if (myNode[nodeIndex].boundary == nullptr) return (INDEX_ERROR);
-    if (myNode[nodeIndex].boundary->type != BOUNDARY_HEAT_SURFACE) return (INDEX_ERROR);
+    if (nodeListPtr[nodeIndex].boundary == nullptr) return (INDEX_ERROR);
+    if (nodeListPtr[nodeIndex].boundary->type != BOUNDARY_HEAT_SURFACE) return (INDEX_ERROR);
 
     // boundary aerodynamic resistance
-    return (myNode[nodeIndex].boundary->Heat->aerodynamicConductance);
+    return (nodeListPtr[nodeIndex].boundary->Heat->aerodynamicConductance);
 }
 
 
@@ -1324,14 +1332,14 @@ double DLL_EXPORT __STDCALL getBoundaryAerodynamicConductance(long nodeIndex)
 /*
 double DLL_EXPORT getBoundaryAerodynamicConductanceOpenWater(long nodeIndex)
 {
-    if (myNode == nullptr) return (TOPOGRAPHY_ERROR);
+    if (nodeListPtr == nullptr) return (TOPOGRAPHY_ERROR);
     if ((nodeIndex < 1) || (nodeIndex >= myStructure.nrNodes)) return (INDEX_ERROR);
     if (! myStructure.computeHeat) return (MISSING_DATA_ERROR);
-    if (myNode[nodeIndex].boundary == nullptr) return (INDEX_ERROR);
-    if (myNode[nodeIndex].boundary->type != BOUNDARY_HEAT) return (INDEX_ERROR);
+    if (nodeListPtr[nodeIndex].boundary == nullptr) return (INDEX_ERROR);
+    if (nodeListPtr[nodeIndex].boundary->type != BOUNDARY_HEAT) return (INDEX_ERROR);
 
     // boundary aerodynamic resistance
-    return (myNode[nodeIndex].boundary->Heat->aerodynamicConductanceOpenwater);
+    return (nodeListPtr[nodeIndex].boundary->Heat->aerodynamicConductanceOpenwater);
 }
 */
 
@@ -1342,14 +1350,14 @@ double DLL_EXPORT getBoundaryAerodynamicConductanceOpenWater(long nodeIndex)
 */
 double DLL_EXPORT __STDCALL getBoundarySoilConductance(long nodeIndex)
 {
-    if (myNode == nullptr) return (TOPOGRAPHY_ERROR);
+    if (nodeListPtr == nullptr) return (TOPOGRAPHY_ERROR);
     if (nodeIndex >= myStructure.nrNodes) return (INDEX_ERROR);
     if (! myStructure.computeHeat) return (MISSING_DATA_ERROR);
-    if (myNode[nodeIndex].boundary == nullptr) return (INDEX_ERROR);
-    if (myNode[nodeIndex].boundary->type != BOUNDARY_HEAT_SURFACE) return (INDEX_ERROR);
+    if (nodeListPtr[nodeIndex].boundary == nullptr) return (INDEX_ERROR);
+    if (nodeListPtr[nodeIndex].boundary->type != BOUNDARY_HEAT_SURFACE) return (INDEX_ERROR);
 
     // boundary soil conductance
-    return (myNode[nodeIndex].boundary->Heat->soilConductance);
+    return (nodeListPtr[nodeIndex].boundary->Heat->soilConductance);
 }
 
 /*!
@@ -1359,12 +1367,12 @@ double DLL_EXPORT __STDCALL getBoundarySoilConductance(long nodeIndex)
 */
 double DLL_EXPORT __STDCALL getNodeVapor(long i)
 {
-    if (myNode == nullptr) return(TOPOGRAPHY_ERROR);
+    if (nodeListPtr == nullptr) return(TOPOGRAPHY_ERROR);
     if (i >= myStructure.nrNodes) return(INDEX_ERROR);
     if (! myStructure.computeHeat || ! myStructure.computeWater || ! myStructure.computeHeatVapor) return (MISSING_DATA_ERROR);
 
-    double h = myNode[i].H - myNode[i].z;
-    double T = myNode[i].extra->Heat->T;
+    double h = nodeListPtr[i].H - nodeListPtr[i].z;
+    double T = nodeListPtr[i].extra->Heat->T;
 
     return VaporFromPsiTemp(h, T);
 }
@@ -1376,18 +1384,18 @@ double DLL_EXPORT __STDCALL getNodeVapor(long i)
 */
 double DLL_EXPORT __STDCALL getHeat(long i, double h)
 {
-    if (myNode == nullptr) return(TOPOGRAPHY_ERROR);
+    if (nodeListPtr == nullptr) return(TOPOGRAPHY_ERROR);
     if (i >= myStructure.nrNodes) return(INDEX_ERROR);
     if (! myStructure.computeHeat) return (MISSING_DATA_ERROR);
-    if (myNode[i].extra->Heat == nullptr) return MISSING_DATA_ERROR;
-    if (myNode[i].extra->Heat->T == NODATA) return MISSING_DATA_ERROR;
+    if (nodeListPtr[i].extra->Heat == nullptr) return MISSING_DATA_ERROR;
+    if (nodeListPtr[i].extra->Heat->T == NODATA) return MISSING_DATA_ERROR;
 
-    double myHeat = SoilHeatCapacity(i, h, myNode[i].extra->Heat->T) * myNode[i].volume_area  * myNode[i].extra->Heat->T;
+    double myHeat = SoilHeatCapacity(i, h, nodeListPtr[i].extra->Heat->T) * nodeListPtr[i].volume_area  * nodeListPtr[i].extra->Heat->T;
 
     if (myStructure.computeWater && myStructure.computeHeatVapor)
     {
-        double thetaV = VaporThetaV(h, myNode[i].extra->Heat->T, i);
-        myHeat += thetaV * latentHeatVaporization(myNode[i].extra->Heat->T - ZEROCELSIUS) * WATER_DENSITY * myNode[i].volume_area;
+        double thetaV = VaporThetaV(h, nodeListPtr[i].extra->Heat->T, i);
+        myHeat += thetaV * latentHeatVaporization(nodeListPtr[i].extra->Heat->T - ZEROCELSIUS) * WATER_DENSITY * nodeListPtr[i].volume_area;
     }
 
     return (myHeat);
