@@ -3111,10 +3111,9 @@ void PragaProject::showPointStatisticsWidgetGrid(std::string id)
             referenceClima->resetCurrentValues();
         }
 
-        for (unsigned int i = 0; i<listXMLDrought->listAll().size(); i++)
+        for (unsigned int i = 0; i < listXMLDrought->listAll().size(); i++)
         {
-
-            computeDroughtIndexAll(listXMLDrought->listIndex()[i], listXMLDrought->listYearStart()[i], listXMLDrought->listYearEnd()[i], listXMLDrought->listDate()[i], listXMLDrought->listTimescale()[i], listXMLDrought->listVariable()[i]);
+            computeDroughtIndexGrid(listXMLDrought->listIndex()[i], listXMLDrought->listYearStart()[i], listXMLDrought->listYearEnd()[i], listXMLDrought->listDate()[i], listXMLDrought->listTimescale()[i], listXMLDrought->listVariable()[i]);
             meteoGridDbHandler->meteoGrid()->fillMeteoRasterElabValue();
 
             QString netcdfName;
@@ -3661,7 +3660,7 @@ bool PragaProject::monthlyAggregateVariablesGrid(const QDate &firstDate, const Q
 }
 
 
-bool PragaProject::computeDroughtIndexAll(droughtIndex index, int firstYear, int lastYear, QDate date, int timescale, meteoVariable myVar)
+bool PragaProject::computeDroughtIndexGrid(droughtIndex index, int firstYear, int lastYear, QDate date, int timescale, meteoVariable myVar)
 {
     // check meteo grid
     if (! meteoGridLoaded)
@@ -3679,21 +3678,28 @@ bool PragaProject::computeDroughtIndexAll(droughtIndex index, int firstYear, int
 
     bool res = false;
 
-    QDate firstDate(firstYear,1,1);
+    QDate firstDate(firstYear, 1, 1);
     QDate lastDate;
-    int maxYear = std::max(lastYear,date.year());
+    int maxYear = std::max(lastYear, date.year());
     if (maxYear == QDate::currentDate().year())
     {
-        lastDate.setDate(maxYear, QDate::currentDate().month(),1);
+        lastDate.setDate(maxYear, QDate::currentDate().month(), 1);
     }
     else
     {
         lastDate.setDate(maxYear,12,1);
     }
 
+    logInfoGUI("Load monthly grid data...");
+    qApp->processEvents();
     meteoGridDbHandler->loadGridAllMonthlyData(errorString, firstDate, lastDate);
+    closeLogInfo();
+
+    setProgressBar("Drought Index - Meteo Grid", meteoGridDbHandler->meteoGrid()->gridStructure().header().nrRows);
     for (unsigned row = 0; row < unsigned(meteoGridDbHandler->meteoGrid()->gridStructure().header().nrRows); row++)
     {
+        updateProgressBar(row);
+
         for (unsigned col = 0; col < unsigned(meteoGridDbHandler->meteoGrid()->gridStructure().header().nrCols); col++)
         {
             if (meteoGridDbHandler->meteoGrid()->meteoPointPointer(row,col)->active)
@@ -3726,6 +3732,8 @@ bool PragaProject::computeDroughtIndexAll(droughtIndex index, int firstYear, int
             }
         }
     }
+    closeProgressBar();
+
     return res;
 }
 
