@@ -625,8 +625,6 @@ void Crit3DMeteoWidget::resetValues()
             {
                 QLineSeries* line = new QLineSeries();
                 line->setName(getFormattedLabel(pointName, nameLines[i]));
-
-                //QColor lineColor = colorLine[i];
                 QColor lineColor = colorLines[i];
                 if (nMeteoPoints == 1)
                 {
@@ -2312,16 +2310,60 @@ void Crit3DMeteoWidget::on_actionDataAvailability()
 
 void Crit3DMeteoWidget::on_actionDataSum()
 {
-    // TO DO;
-    // Apre una finestra con l'elenco delle variabili attualmente visualizzate in modo che siano selezionabili quali vogliamo switchare sulla comulata
     DialogVariableToSum varToSum(currentVariables);
     QList<QString> varToSumList;
     if (varToSum.result() == QDialog::Accepted)
     {
         varToSumList = varToSum.getSelectedVariable();
     }
-    qDebug() << "varToSumList " << varToSumList.join(",");
+    else
+    {
+        return;
+    }
+    if (!varToSumList.isEmpty())
+    {
+        drawSum(varToSumList);
+    }
+}
 
+void Crit3DMeteoWidget::drawSum(QList<QString> varToSumList)
+{
+    // TO DO
+    int nMeteoPoints = meteoPoints.size();
+    for (int i = 0; i < varToSumList.size(); i++)
+    {
+        qDebug() << "varToSumList: " << varToSumList[i];
+        if (!lineSeries.isEmpty())
+        {
+            for (int j = 0; j < nameLines.size(); j++)
+            {
+                qDebug() << "nameLines[j]: " << nameLines[j];
+                if (nameLines[j] == varToSumList[i])
+                {
+                    qDebug() << "found: " << varToSumList[i];
+                    for (int mp=0; mp<nMeteoPoints;mp++)
+                    {
+                        for (int n = 0; n<lineSeries[mp][j]->points().size(); n++)
+                        {
+                            qDebug() << "lineSeries[mp][j]->points()[n].x(): " << lineSeries[mp][j]->points()[n].x();
+                            qDebug() << "lineSeries[mp][j]->points()[n].y(): " << lineSeries[mp][j]->points()[n].y();
+                        }
+                    }
+                }
+            }
+        }
+        if (! barSeries.isEmpty())
+        {
+            for (int j = 0; j < nameBar.size(); j++)
+            {
+                qDebug() << "nameBar[j]: " << nameBar[j];
+                if (nameBar[j] == varToSumList[i])
+                {
+                    qDebug() << "found: " << varToSumList[i];
+                }
+            }
+        }
+    }
 }
 
 
