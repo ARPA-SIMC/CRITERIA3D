@@ -53,11 +53,10 @@ void RasterUtmObject::clear()
 
     _rasterPointer = nullptr;
     _colorLegendPointer = nullptr;
+    isLoaded = false;
 
     _utmZone = NODATA;
     _refCenterPixel = QPointF(NODATA, NODATA);
-
-    isLoaded = false;
 }
 
 

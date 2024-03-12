@@ -666,8 +666,8 @@ void MainWindow::drawProject()
 
 void MainWindow::clearMaps_GUI()
 {
-    rasterDEM->clear();
     rasterOutput->clear();
+    rasterDEM->clear();
 
     ui->labelInputRaster->setText("");
     ui->labelOutputRaster->setText("");
@@ -789,7 +789,6 @@ void MainWindow::on_timeEdit_valueChanged(int myHour)
 }
 
 
-
 void MainWindow::on_actionLoad_DEM_triggered()
 {
     QString fileName = QFileDialog::getOpenFileName(this, tr("Open Digital Elevation Model"), "",
@@ -797,16 +796,13 @@ void MainWindow::on_actionLoad_DEM_triggered()
 
     if (fileName == "") return;
 
-    rasterDEM->setDrawing(false);
-    rasterOutput->setDrawing(false);
+    clearMaps_GUI();
 
     if (! myProject.loadDEM(fileName)) return;
 
-    rasterDEM->setDrawing(true);
-    rasterOutput->setDrawing(true);
-
-    this->renderDEM();
+    renderDEM();
 }
+
 
 void MainWindow::on_actionOpenProject_triggered()
 {
