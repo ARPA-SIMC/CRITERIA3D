@@ -32,9 +32,6 @@
 #include "commonConstants.h"
 #include "furtherMathFunctions.h"
 
-#include <iostream>
-#include <fstream>
-#include <cmath>
 
 double lapseRateRotatedSigmoid(double x, std::vector <double> par)
 {
@@ -1094,7 +1091,7 @@ namespace interpolation
                 R2 = computeR2(y,ySim);
             else
                 R2 = computeWeighted_R2(y,ySim,weights);
-            //printf("%d R2 = %f\n",iRandom,R2);
+
             if (R2 > (bestR2-deltaR2))
             {
                 for (j=0;j<nrMinima-1;j++)
@@ -1121,18 +1118,9 @@ namespace interpolation
                     }
                 }*/
             }
-            //iRandom++;
             counter++;
         } while( (counter < nrTrials) && (R2 < (1 - EPSILON)) && (fabs(R2Previous[0]-R2Previous[nrMinima-1]) > deltaR2) );
 
-/*        std::ofstream csvfile("C:/Github/counterR2.csv", std::ios::app);
-
-        if (!csvfile.is_open()) {
-            std::cerr << "Errore apertura file\n";
-        }
-        csvfile << counter << "," << R2 << std::endl;
-        csvfile.close();
-*/
         for (i=0;i<nrPredictors;i++)
         {
             for (j=0; j<nrParameters[i]; j++)
@@ -1349,11 +1337,6 @@ namespace interpolation
 
         parametersChange[nrPredictors - 1][nrParameters[nrPredictors-1]-1] = g[nrParametersTotal - 1] / a[nrParametersTotal - 1][nrParametersTotal - 1];
 
-        /*debugging
-        if (std::isnan(parametersChange[nrPredictors - 1][nrParameters[nrPredictors-1]-1]))
-        {
-            printf("nan trovato\n");
-        }*/
 
         for (i = nrParametersTotal - 2; i >= 0; i--)
         {

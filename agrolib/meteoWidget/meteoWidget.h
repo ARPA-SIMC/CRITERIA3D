@@ -58,6 +58,7 @@
             void on_actionInfoPoint();
             void on_actionDataAvailability();
             void on_actionDataSum();
+            void drawSum(QList<QString> varToSumList);
 
     private:
             int meteoWidgetID;

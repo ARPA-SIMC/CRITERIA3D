@@ -61,7 +61,8 @@ private:
     QString format_decimalSeparator;
     QString fileName_path;
     QString fileName_pragaName;
-    QList<QString> fileName_fixedText;
+    QList<QString> fileName_fixedPrefix;
+    QList<QString> fileName_fixedSuffix;
     int fileName_nrChar;
     FieldXML time;
     FieldXML pointCode;
