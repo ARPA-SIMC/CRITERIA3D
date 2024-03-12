@@ -319,7 +319,7 @@
         void drawProject();
         void renderDEM();
         void drawMeteoPoints();
-        void clearMaps_GUI();
+        void clearRaster_GUI();
         void clearMeteoPoints_GUI();
 
         void setMeteoVariable(meteoVariable myVar, gis::Crit3DRasterGrid *myGrid);

@@ -664,7 +664,7 @@ void MainWindow::drawProject()
 }
 
 
-void MainWindow::clearMaps_GUI()
+void MainWindow::clearRaster_GUI()
 {
     rasterOutput->clear();
     rasterDEM->clear();
@@ -796,7 +796,7 @@ void MainWindow::on_actionLoad_DEM_triggered()
 
     if (fileName == "") return;
 
-    clearMaps_GUI();
+    clearRaster_GUI();
 
     if (! myProject.loadDEM(fileName)) return;
 
@@ -811,7 +811,7 @@ void MainWindow::on_actionOpenProject_triggered()
     if (fileName == "") return;
 
     clearMeteoPoints_GUI();
-    clearMaps_GUI();
+    clearRaster_GUI();
 
     if (! myProject.loadCriteria3DProject(fileName))
     {
@@ -825,7 +825,7 @@ void MainWindow::on_actionOpenProject_triggered()
 void MainWindow::on_actionCloseProject_triggered()
 {
     clearMeteoPoints_GUI();
-    clearMaps_GUI();
+    clearRaster_GUI();
 
     myProject.loadCriteria3DProject(myProject.getApplicationPath() + "default.ini");
 
