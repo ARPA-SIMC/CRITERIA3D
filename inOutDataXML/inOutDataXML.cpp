@@ -83,9 +83,13 @@ bool InOutDataXML::parserXML(QString *myError)
                         {
                             fileName_pragaName = secondChild.toElement().text();
                         }
-                        else if (mySecondTag == "TEXT" || mySecondTag == "FIXEDTEXT")
+                        else if (mySecondTag == "PREFIX" || mySecondTag == "FIXEDPREFIX")
                         {
-                            fileName_fixedText.append(secondChild.toElement().text());
+                            fileName_fixedPrefix.append(secondChild.toElement().text());
+                        }
+                        else if (mySecondTag == "SUFFIX" || mySecondTag == "FIXEDSUFFIX")
+                        {
+                            fileName_fixedSuffix.append(secondChild.toElement().text());
                         }
                         else if (mySecondTag == "NRCHAR" || mySecondTag == "NR_CHAR")
                         {
@@ -1253,9 +1257,11 @@ QString InOutDataXML::parseXMLFilename(QString code)
     {
         return filename;
     }
-    QString suffix = fileName_fixedText.join(",");
+    QString prefix = fileName_fixedPrefix.join(",");
+    prefix.replace(",","");
+    QString suffix = fileName_fixedSuffix.join(",");
     suffix.replace(",","");
-    filename = fileName_path + code + suffix;
+    filename = fileName_path + prefix + code + suffix;
     return filename;
 }
 
