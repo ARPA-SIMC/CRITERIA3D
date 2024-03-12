@@ -112,3 +112,12 @@ HEADERS += \
 
 FORMS += mainwindow.ui
 
+DISTFILES += \
+    Criteria3D.ico
+
+RESOURCES += Criteria3D.ico
+
+win32:
+{
+    RC_ICONS = Criteria3D.ico
+}
