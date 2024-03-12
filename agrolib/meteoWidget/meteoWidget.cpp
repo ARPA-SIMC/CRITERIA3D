@@ -2337,17 +2337,25 @@ void Crit3DMeteoWidget::drawSum(QList<QString> varToSumList)
         {
             for (int j = 0; j < nameLines.size(); j++)
             {
-                qDebug() << "nameLines[j]: " << nameLines[j];
                 if (nameLines[j] == varToSumList[i])
                 {
-                    qDebug() << "found: " << varToSumList[i];
+                    QVector<QPointF> points;
+                    QVector<QPointF> cumulativePoints;
                     for (int mp=0; mp<nMeteoPoints;mp++)
                     {
                         for (int n = 0; n<lineSeries[mp][j]->points().size(); n++)
                         {
-                            qDebug() << "lineSeries[mp][j]->points()[n].x(): " << lineSeries[mp][j]->points()[n].x();
-                            qDebug() << "lineSeries[mp][j]->points()[n].y(): " << lineSeries[mp][j]->points()[n].y();
+                            points.append(QPointF(lineSeries[mp][j]->points()[n].x(),lineSeries[mp][j]->points()[n].y()));
                         }
+                        cumulativePoints.append(points[0]);
+                        for (int n = 1; n<points.size(); n++)
+                        {
+                            cumulativePoints.append(QPointF(points[n].rx(), points[n].ry()+cumulativePoints[n-1].ry()));
+                        }
+                        lineSeries[mp][j]->replace(cumulativePoints);
+                        axisY->setMax(cumulativePoints.last().ry());
+                        points.clear();
+                        cumulativePoints.clear();
                     }
                 }
             }
@@ -2360,6 +2368,22 @@ void Crit3DMeteoWidget::drawSum(QList<QString> varToSumList)
                 if (nameBar[j] == varToSumList[i])
                 {
                     qDebug() << "found: " << varToSumList[i];
+                    QVector<double> values;
+                    for (int mp=0; mp<nMeteoPoints;mp++)
+                    {
+                        qDebug() << "setVector[mp][j]->count(): " << setVector[mp][j]->count();
+                        for (int n = 0; n<setVector[mp][j]->count(); n++)
+                        {
+                            qDebug() << "n " << n;
+                            qDebug() << "setVector[mp][j]->at(n): " << setVector[mp][j]->at(n);
+                            values << setVector[mp][j]->at(n);
+                        }
+                        for (int n = 1; n<values.size(); n++)
+                        {
+                            setVector[mp][j]->replace(n,values[n] + values [n-1]);
+                            qDebug() << "setVectorNew: " << setVector[mp][j]->at(n);
+                        }
+                    }
                 }
             }
         }
