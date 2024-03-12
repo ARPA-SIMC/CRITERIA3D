@@ -1002,7 +1002,8 @@ bool Project::loadDEM(QString myFileName)
     setColorScale(noMeteoTerrain, DEM.colorScale);
 
     // initialize radiation maps (slope, aspect, lat/lon, transmissivity, etc.)
-    if (radiationMaps != nullptr) radiationMaps->clear();
+    if (radiationMaps != nullptr)
+        radiationMaps->clear();
     radiationMaps = new Crit3DRadiationMaps(DEM, gisSettings);
 
     // initialize hourly meteo maps
@@ -1706,6 +1707,7 @@ QDateTime Project::findDbPointFirstTime()
 
     return firstTime;
 }
+
 
 void Project::checkMeteoPointsDEM()
 {
