@@ -1145,11 +1145,32 @@ QString InOutDataXML::parseXMLPointCode(QString text)
     {
         if (format_type == XMLFORMATFIXED || (format_type == XMLFORMATDELIMITED && pointCode.getType().toUpper() == "FILENAMEDEFINED"))
         {
-            QString substring = text.mid(0,pointCode.getNrChar());
-            if (pointCode.getFormat().isEmpty() || pointCode.getFormat() == "%s")
+            if (fileName_pragaName.isEmpty())
             {
-                // pointCode is a string
-                myPointCode = substring;
+                QString substring = text.mid(0,pointCode.getNrChar());
+                if (pointCode.getFormat().isEmpty() || pointCode.getFormat() == "%s")
+                {
+                    // pointCode is a string
+                    myPointCode = substring;
+                }
+            }
+            else
+            {
+                // con questa casistica l'import funziona anche con gli xml di export che hanno il campo filename e prefissi o suffissi nel nome del file
+                QString substring = text;
+                for (int i = 0; i<fileName_fixedPrefix.size(); i++)
+                {
+                    substring = substring.replace(fileName_fixedPrefix[i],"");
+                }
+                for (int i = 0; i<fileName_fixedSuffix.size(); i++)
+                {
+                    substring = substring.replace(fileName_fixedSuffix[i],"");
+                }
+                if (pointCode.getFormat().isEmpty() || pointCode.getFormat() == "%s")
+                {
+                    // pointCode is a string
+                    myPointCode = substring;
+                }
             }
         }
         else if (format_type == XMLFORMATDELIMITED)
