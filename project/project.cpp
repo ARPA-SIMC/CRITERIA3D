@@ -2584,6 +2584,10 @@ bool Project::interpolationGrid(meteoVariable myVar, const Crit3DTime& myTime)
 
                     if (interpolationSettings.getUseLocalDetrending())
                     {
+                        if (row == 80 && col == 67)
+                        {
+                            std::cout << "cella individuata" << std::endl;
+                        }
                         std::vector <Crit3DInterpolationDataPoint> subsetInterpolationPoints;
                         localSelection(interpolationPoints, subsetInterpolationPoints, myX, myY, interpolationSettings);
                         preInterpolation(subsetInterpolationPoints, &interpolationSettings, meteoSettings, &climateParameters, meteoPoints, nrMeteoPoints, myVar, myTime);
@@ -2592,6 +2596,7 @@ bool Project::interpolationGrid(meteoVariable myVar, const Crit3DTime& myTime)
                         if (interpolatedValue > 9000)
                         {
                             std::cout << "valore sballato" << std::endl;
+                            std::cout << "riga " << row << " colonna " << col << std::endl;
                         }
                     }
                     else
