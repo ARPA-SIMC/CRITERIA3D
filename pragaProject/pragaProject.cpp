@@ -3259,7 +3259,7 @@ bool PragaProject::loadXMLImportData(QString fileName)
     return true;
 }
 
-bool PragaProject::loadXMLExportData(QString code)
+bool PragaProject::loadXMLExportData(QString code, QDateTime myFirstTime, QDateTime myLastTime)
 {
     errorString = "";
     QString filename = inOutData->parseXMLFilename(code);
@@ -3318,7 +3318,7 @@ bool PragaProject::loadXMLExportData(QString code)
         return false;
     }
     QString flagAccepted = inOutData->getVariableFlagAccepted();
-    int flagFirstChar;
+    int flagFirstChar = 0;
     if (!flagAccepted.isEmpty())
     {
         flagFirstChar = inOutData->getVariableFlagFirstChar();
@@ -3341,7 +3341,7 @@ bool PragaProject::loadXMLExportData(QString code)
 
 
     std::vector<QString> dateStr;
-    std::vector<float> values = meteoPointsDbHandler->exportAllDataVar(&errorString, freq, meteoVar, code, dateStr);
+    std::vector<float> values = meteoPointsDbHandler->exportAllDataVar(&errorString, freq, meteoVar, code, myFirstTime, myLastTime, dateStr);
     if (values.size() == 0)
     {
         errorString = code + " has no data for variable: " + variable;
@@ -3443,7 +3443,7 @@ bool PragaProject::loadXMLExportData(QString code)
 }
 
 // LC 2 funzioni separate per gliglie e punti per eventualmente diversificare anche i dati da esportare (es. le griglie hanno anche i mensili)
-bool PragaProject::loadXMLExportDataGrid(QString code)
+bool PragaProject::loadXMLExportDataGrid(QString code, QDateTime myFirstTime, QDateTime myLastTime)
 {
     errorString = "";
     QString filename = inOutData->parseXMLFilename(code);
@@ -3502,7 +3502,7 @@ bool PragaProject::loadXMLExportDataGrid(QString code)
         return false;
     }
     QString flagAccepted = inOutData->getVariableFlagAccepted();
-    int flagFirstChar;
+    int flagFirstChar = 0;
     if (!flagAccepted.isEmpty())
     {
         flagFirstChar = inOutData->getVariableFlagFirstChar();
