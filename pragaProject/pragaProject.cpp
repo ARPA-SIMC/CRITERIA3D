@@ -3525,7 +3525,7 @@ bool PragaProject::loadXMLExportDataGrid(QString code, QDateTime myFirstTime, QD
 
 
     std::vector<QString> dateStr;
-    std::vector<float> values = meteoGridDbHandler->exportAllDataVar(&errorString, freq, meteoVar, code, dateStr);
+    std::vector<float> values = meteoGridDbHandler->exportAllDataVar(&errorString, freq, meteoVar, code, myFirstTime, myLastTime, dateStr);
     if (values.size() == 0)
     {
         errorString = code + " has no data for variable: " + variable;
