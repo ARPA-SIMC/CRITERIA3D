@@ -2337,10 +2337,11 @@ void Crit3DMeteoWidget::drawSum(QList<QString> varToSumList)
         {
             for (int j = 0; j < nameLines.size(); j++)
             {
+                qreal max = NODATA;
                 if (nameLines[j] == varToSumList[i])
                 {
                     QVector<QPointF> points;
-                    QVector<QPointF> cumulativePoints;
+                    QVector<QPointF> cumulativePoints;   
                     for (int mp=0; mp<nMeteoPoints;mp++)
                     {
                         for (int n = 0; n<lineSeries[mp][j]->points().size(); n++)
@@ -2353,11 +2354,15 @@ void Crit3DMeteoWidget::drawSum(QList<QString> varToSumList)
                             cumulativePoints.append(QPointF(points[n].rx(), points[n].ry()+cumulativePoints[n-1].ry()));
                         }
                         lineSeries[mp][j]->replace(cumulativePoints);
-                        axisY->setMax(cumulativePoints.last().ry());
+                        if (max < cumulativePoints.last().ry())
+                        {
+                            max = cumulativePoints.last().ry();
+                        }
                         points.clear();
                         cumulativePoints.clear();
                     }
                 }
+                axisY->setRange(axisY->min(),max);
             }
         }
         if (! barSeries.isEmpty())
@@ -2365,26 +2370,33 @@ void Crit3DMeteoWidget::drawSum(QList<QString> varToSumList)
             for (int j = 0; j < nameBar.size(); j++)
             {
                 qDebug() << "nameBar[j]: " << nameBar[j];
+                double max = NODATA;
                 if (nameBar[j] == varToSumList[i])
                 {
                     qDebug() << "found: " << varToSumList[i];
                     QVector<double> values;
+                    QVector<double> cumulativeValues;
                     for (int mp=0; mp<nMeteoPoints;mp++)
                     {
-                        qDebug() << "setVector[mp][j]->count(): " << setVector[mp][j]->count();
                         for (int n = 0; n<setVector[mp][j]->count(); n++)
                         {
-                            qDebug() << "n " << n;
-                            qDebug() << "setVector[mp][j]->at(n): " << setVector[mp][j]->at(n);
                             values << setVector[mp][j]->at(n);
                         }
+                        cumulativeValues.append(values[0]);
                         for (int n = 1; n<values.size(); n++)
                         {
-                            setVector[mp][j]->replace(n,values[n] + values [n-1]);
-                            qDebug() << "setVectorNew: " << setVector[mp][j]->at(n);
+                            cumulativeValues.append(values[n]+cumulativeValues[n-1]);
+                            setVector[mp][j]->replace(n,cumulativeValues[n]);
                         }
+                        if (max < cumulativeValues.last())
+                        {
+                            max = cumulativeValues.last();
+                        }
+                        values.clear();
+                        cumulativeValues.clear();
                     }
                 }
+                axisYdx->setRange(axisYdx->min(),max);
             }
         }
     }
