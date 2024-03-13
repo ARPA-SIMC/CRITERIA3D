@@ -2328,11 +2328,9 @@ void Crit3DMeteoWidget::on_actionDataSum()
 
 void Crit3DMeteoWidget::drawSum(QList<QString> varToSumList)
 {
-    // TO DO
     int nMeteoPoints = meteoPoints.size();
     for (int i = 0; i < varToSumList.size(); i++)
     {
-        qDebug() << "varToSumList: " << varToSumList[i];
         if (!lineSeries.isEmpty())
         {
             for (int j = 0; j < nameLines.size(); j++)
@@ -2369,11 +2367,9 @@ void Crit3DMeteoWidget::drawSum(QList<QString> varToSumList)
         {
             for (int j = 0; j < nameBar.size(); j++)
             {
-                qDebug() << "nameBar[j]: " << nameBar[j];
                 double max = NODATA;
                 if (nameBar[j] == varToSumList[i])
                 {
-                    qDebug() << "found: " << varToSumList[i];
                     QVector<double> values;
                     QVector<double> cumulativeValues;
                     for (int mp=0; mp<nMeteoPoints;mp++)
