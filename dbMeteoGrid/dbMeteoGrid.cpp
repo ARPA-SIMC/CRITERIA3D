@@ -2306,7 +2306,7 @@ bool Crit3DMeteoGridDbHandler::loadGridAllMonthlyData(QString &myError, QDate fi
             {
                 if (! _meteoGrid->findMeteoPointFromId(&row, &col, pointCode.toStdString()) )
                 {
-                    myError = "Missing MeteoPoint id";
+                    myError = "Missing cell id: " + pointCode;
                     return false;
                 }
                 lastPointCode = pointCode;

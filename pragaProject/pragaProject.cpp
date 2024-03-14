@@ -3674,8 +3674,6 @@ bool PragaProject::computeDroughtIndexGrid(droughtIndex index, int firstYear, in
         return false;
     }
 
-    bool res = false;
-
     QDate firstDate(firstYear, 1, 1);
     QDate lastDate;
     int maxYear = std::max(lastYear, date.year());
@@ -3693,8 +3691,17 @@ bool PragaProject::computeDroughtIndexGrid(droughtIndex index, int firstYear, in
     bool isOk = meteoGridDbHandler->loadGridAllMonthlyData(errorString, firstDate, lastDate);
     closeLogInfo();
 
-    if (! isOk) return false;
+    if (! isOk)
+    {
+        if (! errorString.isEmpty())
+            logError();
+        else
+            logError("No data.");
 
+        return false;
+    }
+
+    isOk = false;
     setProgressBar("Drought Index - Meteo Grid", meteoGridDbHandler->meteoGrid()->gridStructure().header().nrRows);
     for (unsigned row = 0; row < unsigned(meteoGridDbHandler->meteoGrid()->gridStructure().header().nrRows); row++)
     {
@@ -3727,14 +3734,17 @@ bool PragaProject::computeDroughtIndexGrid(droughtIndex index, int firstYear, in
                 }
                 if (meteoGridDbHandler->meteoGrid()->meteoPointPointer(row,col)->elaboration != NODATA)
                 {
-                    res = true;
+                    isOk = true;
                 }
             }
         }
     }
     closeProgressBar();
 
-    return res;
+    if (! isOk)
+        logError("No data.");
+
+    return isOk;
 }
 
 
