@@ -1431,12 +1431,12 @@ bool multipleDetrending(std::vector <Crit3DInterpolationDataPoint> &myPoints, Cr
 
     // exclude points with incomplete proxies
     unsigned i;
-    vector<Crit3DInterpolationDataPoint>::iterator it;
     //std::vector <Crit3DInterpolationDataPoint> finalPoints;
     bool isValid;
     float proxyValue;
+    vector<Crit3DInterpolationDataPoint>::iterator it = myPoints.begin();
 
-    for (it = myPoints.begin(); it != myPoints.end(); it++)
+    while (it != myPoints.end())
     {
         isValid = true;
         for (pos=0; pos < mySettings->getProxyNr(); pos++)
@@ -1450,7 +1450,13 @@ bool multipleDetrending(std::vector <Crit3DInterpolationDataPoint> &myPoints, Cr
                 }
             }
 
-        if (! isValid) myPoints.erase(it);
+        if (! isValid)
+        {
+            it = myPoints.erase(it);
+        }
+        else {
+            it++;
+        }
     }
 
     // proxy spatial variability (2nd step)
