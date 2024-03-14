@@ -2306,15 +2306,14 @@ bool Crit3DMeteoGridDbHandler::loadGridAllMonthlyData(QString &myError, QDate fi
             {
                 if (! _meteoGrid->findMeteoPointFromId(&row, &col, pointCode.toStdString()) )
                 {
-                    myError = "Missing cell id: " + pointCode;
-                    return false;
+                    continue;
                 }
                 lastPointCode = pointCode;
             }
 
             if (! getValue(qry.value("VariableCode"), &varCode))
             {
-                myError = "Missing VariableCode";
+                myError = "Missing VariableCode: " + QString::number(varCode);
                 return false;
             }
 
@@ -2330,7 +2329,10 @@ bool Crit3DMeteoGridDbHandler::loadGridAllMonthlyData(QString &myError, QDate fi
             }
 
             if (! _meteoGrid->meteoPointPointer(row, col)->setMeteoPointValueM(getCrit3DDate(monthDate), variable, value))
+            {
+                myError = "Error in setMeteoPointValueM()";
                 return false;
+            }
         }
     }
 

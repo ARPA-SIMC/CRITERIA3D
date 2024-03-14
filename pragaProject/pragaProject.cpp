@@ -3717,6 +3717,7 @@ bool PragaProject::computeDroughtIndexGrid(droughtIndex index, int firstYear, in
                     mydrought.setTimeScale(timescale);
                 }
                 meteoGridDbHandler->meteoGrid()->meteoPointPointer(row,col)->elaboration = NODATA;
+
                 if (index == INDEX_DECILES)
                 {
                     if (myVar != noMeteoVar)
@@ -3732,6 +3733,7 @@ bool PragaProject::computeDroughtIndexGrid(droughtIndex index, int firstYear, in
                 {
                     meteoGridDbHandler->meteoGrid()->meteoPointPointer(row,col)->elaboration = mydrought.computeDroughtIndex();
                 }
+
                 if (meteoGridDbHandler->meteoGrid()->meteoPointPointer(row,col)->elaboration != NODATA)
                 {
                     isOk = true;
