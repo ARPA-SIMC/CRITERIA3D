@@ -3696,7 +3696,7 @@ bool PragaProject::computeDroughtIndexGrid(droughtIndex index, int firstYear, in
         if (! errorString.isEmpty())
             logError();
         else
-            logError("No data.");
+            logError("No monthly data.");
 
         return false;
     }
@@ -3744,7 +3744,7 @@ bool PragaProject::computeDroughtIndexGrid(droughtIndex index, int firstYear, in
     closeProgressBar();
 
     if (! isOk)
-        logError("No data.");
+        logError("Missing data.");
 
     return isOk;
 }
