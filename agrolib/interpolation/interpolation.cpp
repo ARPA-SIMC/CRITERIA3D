@@ -1431,17 +1431,18 @@ bool multipleDetrending(std::vector <Crit3DInterpolationDataPoint> &myPoints, Cr
 
     // exclude points with incomplete proxies
     unsigned i;
-    std::vector <Crit3DInterpolationDataPoint> finalPoints;
+    //std::vector <Crit3DInterpolationDataPoint> finalPoints;
     bool isValid;
     float proxyValue;
+    vector<Crit3DInterpolationDataPoint>::iterator it = myPoints.begin();
 
-    for (i=0; i < myPoints.size(); i++)
+    while (it != myPoints.end())
     {
         isValid = true;
         for (pos=0; pos < mySettings->getProxyNr(); pos++)
             if (mySettings->getProxy(pos)->getIsSignificant())
             {
-                proxyValue = myPoints[i].getProxyValue(pos);
+                proxyValue = it->getProxyValue(pos);
                 if (proxyValue == NODATA)
                 {
                     isValid = false;
@@ -1449,7 +1450,13 @@ bool multipleDetrending(std::vector <Crit3DInterpolationDataPoint> &myPoints, Cr
                 }
             }
 
-        if (isValid) finalPoints.push_back(myPoints[i]);
+        if (! isValid)
+        {
+            it = myPoints.erase(it);
+        }
+        else {
+            it++;
+        }
     }
 
     // proxy spatial variability (2nd step)
@@ -1459,7 +1466,7 @@ bool multipleDetrending(std::vector <Crit3DInterpolationDataPoint> &myPoints, Cr
     validNr = 0;
     for (pos=0; pos < int(mySettings->getProxyNr()); pos++)
     {
-        if (myCombination.getValue(pos) && proxyValidity(finalPoints, pos, mySettings->getProxy(pos)->getStdDevThreshold(), &avg, &stdDev))
+        if (myCombination.getValue(pos) && proxyValidity(myPoints, pos, mySettings->getProxy(pos)->getStdDevThreshold(), &avg, &stdDev))
         {
             avgs.push_back(avg);
             stdDevs.push_back(stdDev);
@@ -1479,24 +1486,24 @@ bool multipleDetrending(std::vector <Crit3DInterpolationDataPoint> &myPoints, Cr
     std::vector <double> predictands;
     std::vector <double> weights;
 
-    for (i=0; i < finalPoints.size(); i++)
+    for (i=0; i < myPoints.size(); i++)
     {
         rowPredictors.clear();
         for (pos=0; pos < mySettings->getProxyNr(); pos++)
             if ((mySettings->getProxy(pos)->getIsSignificant()))
             {
-                proxyValue = finalPoints[i].getProxyValue(pos);
+                proxyValue = myPoints[i].getProxyValue(pos);
                 //rowPredictors.push_back((proxyValue - avgs[index]) / stdDevs[index]);
                 rowPredictors.push_back(proxyValue);
             }
 
         //predictorsNorm.push_back(rowPredictors);
         predictors.push_back(rowPredictors);
-        predictands.push_back(finalPoints[i].value);
-        weights.push_back(finalPoints[i].regressionWeight);
+        predictands.push_back(myPoints[i].value);
+        weights.push_back(myPoints[i].regressionWeight);
     }
 
-    if (finalPoints.size() < mySettings->getMinPointsLocalDetrending())
+    if (myPoints.size() < mySettings->getMinPointsLocalDetrending())
     {
         for (pos = 0; pos < mySettings->getProxyNr(); pos++)
             mySettings->getProxy(pos)->setIsSignificant(false);

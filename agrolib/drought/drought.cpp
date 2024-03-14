@@ -2,7 +2,10 @@
 #include "commonConstants.h"
 #include "basicMath.h"
 #include "gammaFunction.h"
+#include "meteo.h"
+
 #include <algorithm>
+
 
 Drought::Drought(droughtIndex index, int firstYear, int lastYear, Crit3DDate date, Crit3DMeteoPoint* meteoPoint, Crit3DMeteoSettings* meteoSettings)
 {
@@ -79,28 +82,28 @@ void Drought::setComputeAll(bool value)
     computeAll = value;
 }
 
+
 float Drought::computeDroughtIndex()
 {
-
     timeScale = timeScale - 1; // index start from 0
     if (index == INDEX_SPI)
     {
-        if (!computeSpiParameters())
+        if (! computeSpiParameters())
         {
             return NODATA;
         }
     }
     else if (index == INDEX_SPEI)
     {
-        if (!computeSpeiParameters())
+        if (! computeSpeiParameters())
         {
             return NODATA;
         }
     }
-    int start;
-    int end;
+
+    int start, end;
     std::vector<float> mySum(meteoPoint->nrObsDataDaysM);
-    for (int i = 0; i<meteoPoint->nrObsDataDaysM; i++)
+    for (int i = 0; i < meteoPoint->nrObsDataDaysM; i++)
     {
         droughtResults.push_back(NODATA);
     }
@@ -133,7 +136,7 @@ float Drought::computeDroughtIndex()
     for (int j = start; j <= end; j++)
     {
         mySum[j] = 0;
-        for(int i = 0; i<=timeScale; i++)
+        for(int i = 0; i <= timeScale; i++)
         {
             if ((j-i)>=0 && j < meteoPoint->nrObsDataDaysM)
             {
@@ -193,8 +196,10 @@ float Drought::computeDroughtIndex()
             }
         }
     }
+
     return droughtResults[end];
 }
+
 
 bool Drought::computeSpiParameters()
 {

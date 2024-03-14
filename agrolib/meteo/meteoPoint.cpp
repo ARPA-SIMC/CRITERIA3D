@@ -1298,10 +1298,11 @@ bool Crit3DMeteoPoint::computeMonthlyAggregate(Crit3DDate firstDate, Crit3DDate 
             currentMonth = actualDate.addDays(1).month;
             nrDays = getDaysInMonth(currentMonth, actualDate.year);
         }
-
     }
+
     return aggregateDailyInMonthly;
 }
+
 
 TObsDataH *Crit3DMeteoPoint::getObsDataH() const
 {

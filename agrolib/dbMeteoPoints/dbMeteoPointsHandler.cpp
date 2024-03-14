@@ -686,7 +686,7 @@ std::vector<float> Crit3DMeteoPointsDbHandler::loadDailyVar(QString *myError, me
     return dailyVarList;
 }
 
-std::vector<float> Crit3DMeteoPointsDbHandler::exportAllDataVar(QString *myError, frequencyType freq, meteoVariable variable, QString id, std::vector<QString> &dateStr)
+std::vector<float> Crit3DMeteoPointsDbHandler::exportAllDataVar(QString *myError, frequencyType freq, meteoVariable variable, QString id, QDateTime myFirstTime, QDateTime myLastTime, std::vector<QString> &dateStr)
 {
     QString myDateStr;
     QDateTime dateTime;
@@ -699,23 +699,32 @@ std::vector<float> Crit3DMeteoPointsDbHandler::exportAllDataVar(QString *myError
 
     QSqlQuery myQuery(_db);
     QString tableName;
+    QString startDate;
+    QString endDate;
+    QString statement;
 
     if (freq == daily)
     {
         tableName = id + "_D";
+        startDate = myFirstTime.date().toString("yyyy-MM-dd");
+        endDate = myLastTime.date().toString("yyyy-MM-dd");
+        statement = QString( "SELECT * FROM `%1` WHERE `%2` = %3 AND date_time >= DATE('%4') AND date_time <= DATE('%5')")
+                                .arg(tableName).arg(FIELD_METEO_VARIABLE).arg(idVar).arg(startDate).arg(endDate);
+
     }
     else if (freq == hourly)
     {
         tableName = id + "_H";
+        startDate = myFirstTime.date().toString("yyyy-MM-dd") + " " + myFirstTime.time().toString("hh:mm");
+        endDate = myLastTime.date().toString("yyyy-MM-dd") + " " + myLastTime.time().toString("hh:mm");
+        statement = QString( "SELECT * FROM `%1` WHERE `%2` = %3 AND date_time >= DATETIME('%4') AND date_time <= DATETIME('%5')")
+                                .arg(tableName).arg(FIELD_METEO_VARIABLE).arg(idVar).arg(startDate).arg(endDate);
     }
     else
     {
         *myError = "Frequency should be daily or hourly";
         return allDataVarList;
     }
-
-    QString statement = QString( "SELECT * FROM `%1` WHERE `%2` = %3")
-                            .arg(tableName).arg(FIELD_METEO_VARIABLE).arg(idVar);
 
     if( !myQuery.exec(statement) )
     {

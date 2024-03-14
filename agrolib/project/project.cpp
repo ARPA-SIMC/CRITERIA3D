@@ -1384,7 +1384,7 @@ bool Project::loadAggregationdDB(QString dbName)
         logError(aggregationDbHandler->error());
         return false;
     }
-    if (!aggregationDbHandler->loadVariableProperties())
+    if (! aggregationDbHandler->loadVariableProperties())
     {
         return false;
     }
@@ -2586,20 +2586,10 @@ bool Project::interpolationGrid(meteoVariable myVar, const Crit3DTime& myTime)
 
                     if (interpolationSettings.getUseLocalDetrending())
                     {
-                        if (row == 80 && col == 67)
-                        {
-                            std::cout << "cella individuata" << std::endl;
-                        }
                         std::vector <Crit3DInterpolationDataPoint> subsetInterpolationPoints;
                         localSelection(interpolationPoints, subsetInterpolationPoints, myX, myY, interpolationSettings);
                         preInterpolation(subsetInterpolationPoints, &interpolationSettings, meteoSettings, &climateParameters, meteoPoints, nrMeteoPoints, myVar, myTime);
                         interpolatedValue = interpolate(subsetInterpolationPoints, &interpolationSettings, meteoSettings, myVar, myX, myY, myZ, proxyValues, true);
-                        //debugging
-                        if (interpolatedValue > 9000)
-                        {
-                            std::cout << "valore sballato" << std::endl;
-                            std::cout << "riga " << row << " colonna " << col << std::endl;
-                        }
                     }
                     else
                     {
@@ -3075,7 +3065,7 @@ bool Project::loadProject()
 
     if (dbAggregationFileName != "")
     {
-        if (! loadAggregationdDB(projectPath+"/"+dbAggregationFileName))
+        if (! loadAggregationdDB(projectPath + "/" + dbAggregationFileName))
         {
             errorString = "load Aggregation DB failed";
             errorType = ERROR_DBPOINT;

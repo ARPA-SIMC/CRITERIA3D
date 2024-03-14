@@ -2306,15 +2306,14 @@ bool Crit3DMeteoGridDbHandler::loadGridAllMonthlyData(QString &myError, QDate fi
             {
                 if (! _meteoGrid->findMeteoPointFromId(&row, &col, pointCode.toStdString()) )
                 {
-                    myError = "Missing MeteoPoint id";
-                    return false;
+                    continue;
                 }
                 lastPointCode = pointCode;
             }
 
             if (! getValue(qry.value("VariableCode"), &varCode))
             {
-                myError = "Missing VariableCode";
+                myError = "Missing VariableCode: " + QString::number(varCode);
                 return false;
             }
 
@@ -2330,7 +2329,10 @@ bool Crit3DMeteoGridDbHandler::loadGridAllMonthlyData(QString &myError, QDate fi
             }
 
             if (! _meteoGrid->meteoPointPointer(row, col)->setMeteoPointValueM(getCrit3DDate(monthDate), variable, value))
+            {
+                myError = "Error in setMeteoPointValueM()";
                 return false;
+            }
         }
     }
 
@@ -2438,7 +2440,7 @@ std::vector<float> Crit3DMeteoGridDbHandler::loadGridDailyVar(QString *myError, 
     return dailyVarList;
 }
 
-std::vector<float> Crit3DMeteoGridDbHandler::exportAllDataVar(QString *myError, frequencyType freq, meteoVariable variable, QString id, std::vector<QString> &dateStr)
+std::vector<float> Crit3DMeteoGridDbHandler::exportAllDataVar(QString *myError, frequencyType freq, meteoVariable variable, QString id, QDateTime myFirstTime, QDateTime myLastTime, std::vector<QString> &dateStr)
 {
     QString myDateStr;
     float value;
@@ -2446,6 +2448,9 @@ std::vector<float> Crit3DMeteoGridDbHandler::exportAllDataVar(QString *myError, 
 
     QSqlQuery myQuery(_db);
     QString tableName;
+    QString statement;
+    QString startDate;
+    QString endDate;
     int idVar;
 
     if (freq == daily)
@@ -2457,6 +2462,10 @@ std::vector<float> Crit3DMeteoGridDbHandler::exportAllDataVar(QString *myError, 
             return allDataVarList;
         }
         tableName = _tableDaily.prefix + id + _tableDaily.postFix;
+        startDate = myFirstTime.date().toString("yyyy-MM-dd");
+        endDate = myLastTime.date().toString("yyyy-MM-dd");
+        statement = QString( "SELECT * FROM `%1` WHERE VariableCode = '%2' AND `%3` >= '%4' AND `%3`<= '%5'")
+                        .arg(tableName).arg(idVar).arg(_tableDaily.fieldTime).arg(startDate).arg(endDate);
     }
     else if (freq == hourly)
     {
@@ -2467,15 +2476,16 @@ std::vector<float> Crit3DMeteoGridDbHandler::exportAllDataVar(QString *myError, 
             return allDataVarList;
         }
         tableName = _tableHourly.prefix + id + _tableHourly.postFix;
+        startDate = myFirstTime.date().toString("yyyy-MM-dd") + " " + myFirstTime.time().toString("hh:mm");
+        endDate = myLastTime.date().toString("yyyy-MM-dd") + " " + myLastTime.time().toString("hh:mm");
+        statement = QString( "SELECT * FROM `%1` WHERE VariableCode = '%2' AND `%3` >= '%4' AND `%3`<= '%5'")
+                        .arg(tableName).arg(idVar).arg(_tableHourly.fieldTime).arg(startDate).arg(endDate);
     }
     else
     {
         *myError = "Frequency should be daily or hourly";
         return allDataVarList;
     }
-
-    QString statement = QString( "SELECT * FROM `%1` WHERE VariableCode = '%2'")
-                            .arg(tableName).arg(idVar);
     QDateTime dateTime;
     QDate date;
     if( !myQuery.exec(statement) )
