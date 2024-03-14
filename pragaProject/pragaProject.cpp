@@ -3136,7 +3136,7 @@ void PragaProject::showPointStatisticsWidgetGrid(std::string id)
                         firstMonth = 12 + firstMonth;
                         dateStart.setDate(listXMLDrought->listDate()[i].year()-1, firstMonth, 1);
                 }
-                if (firstMonth < -11)
+                else if (firstMonth < -11)
                 {
                         firstMonth = 24 + firstMonth;
                         dateStart.setDate(listXMLDrought->listDate()[i].year()-2, firstMonth, 1);
@@ -3159,7 +3159,7 @@ void PragaProject::showPointStatisticsWidgetGrid(std::string id)
                         fistMonth = 12 + fistMonth;
                         dateStart.setDate(listXMLDrought->listDate()[i].year()-1, fistMonth, 1);
                 }
-                if (fistMonth < -11)
+                else if (fistMonth < -11)
                 {
                         fistMonth = 24 + fistMonth;
                         dateStart.setDate(listXMLDrought->listDate()[i].year()-2, fistMonth, 1);
