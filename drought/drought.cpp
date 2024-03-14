@@ -136,7 +136,7 @@ float Drought::computeDroughtIndex()
     for (int j = start; j <= end; j++)
     {
         mySum[j] = 0;
-        for(int i = 0; i<=timeScale; i++)
+        for(int i = 0; i <= timeScale; i++)
         {
             if ((j-i)>=0 && j < meteoPoint->nrObsDataDaysM)
             {

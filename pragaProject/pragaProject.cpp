@@ -3910,12 +3910,7 @@ bool PragaProject::computeDroughtIndexPointGUI(droughtIndex index, int timescale
         lastDate.setDate(maxYear,12,1);
     }
 
-    bool loadHourly = false;
-    bool loadDaily = true;
-    bool showInfo = true;
-    float value = NODATA;
     QString indexStr;
-
     if (index == INDEX_SPI)
     {
         indexStr = "SPI";
@@ -3934,9 +3929,12 @@ bool PragaProject::computeDroughtIndexPointGUI(droughtIndex index, int timescale
         return false;
     }
 
-    if (!loadMeteoPointsData(firstDate, lastDate, loadHourly, loadDaily, showInfo))
+    bool loadHourly = false;
+    bool loadDaily = true;
+    bool showInfo = true;
+    if (! loadMeteoPointsData(firstDate, lastDate, loadHourly, loadDaily, showInfo))
     {
-        logError("There are no data");
+        logError("No data.");
         return false;
     }
 
@@ -3950,9 +3948,11 @@ bool PragaProject::computeDroughtIndexPointGUI(droughtIndex index, int timescale
     std::vector<meteoVariable> dailyMeteoVar;
     dailyMeteoVar.push_back(dailyPrecipitation);
     dailyMeteoVar.push_back(dailyReferenceEvapotranspirationHS);
-    bool isOk = false;
 
-    int nrMonths = (lastDate.year()-firstDate.year())*12+lastDate.month()-(firstDate.month()-1);
+    bool isOk = false;
+    float value = NODATA;
+
+    int nrMonths = (lastDate.year()-firstDate.year())*12 + lastDate.month() - (firstDate.month()-1);
     for (int i = 0; i < nrMeteoPoints; i++)
     {
         if (showInfo && (i % step) == 0)
