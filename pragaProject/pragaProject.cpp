@@ -3690,8 +3690,10 @@ bool PragaProject::computeDroughtIndexGrid(droughtIndex index, int firstYear, in
 
     logInfoGUI("Load monthly grid data...");
     qApp->processEvents();
-    meteoGridDbHandler->loadGridAllMonthlyData(errorString, firstDate, lastDate);
+    bool isOk = meteoGridDbHandler->loadGridAllMonthlyData(errorString, firstDate, lastDate);
     closeLogInfo();
+
+    if (! isOk) return false;
 
     setProgressBar("Drought Index - Meteo Grid", meteoGridDbHandler->meteoGrid()->gridStructure().header().nrRows);
     for (unsigned row = 0; row < unsigned(meteoGridDbHandler->meteoGrid()->gridStructure().header().nrRows); row++)
@@ -3819,44 +3821,51 @@ bool PragaProject::computeDroughtIndexPoint(droughtIndex index, int timescale, i
         {
             meteoPoints[i].computeMonthlyAggregate(getCrit3DDate(firstDate), getCrit3DDate(lastDate), dailyMeteoVar[j], meteoSettings, quality, &climateParameters);
         }
+
         while(myDate <= lastDate)
         {
-            Drought mydrought(index, refYearStart, refYearEnd, getCrit3DDate(myDate), &(meteoPoints[i]), meteoSettings);
+            Drought myDrought(index, refYearStart, refYearEnd, getCrit3DDate(myDate), &(meteoPoints[i]), meteoSettings);
             if (timescale > 0)
             {
-                mydrought.setTimeScale(timescale);
+                myDrought.setTimeScale(timescale);
             }
             if (index == INDEX_DECILES)
             {
-                if (mydrought.computePercentileValuesCurrentDay())
+                if (myDrought.computePercentileValuesCurrentDay())
                 {
-                    value = mydrought.getCurrentPercentileValue();
+                    value = myDrought.getCurrentPercentileValue();
                 }
             }
             else if (index == INDEX_SPI || index == INDEX_SPEI)
             {
-                value = mydrought.computeDroughtIndex();
+                value = myDrought.computeDroughtIndex();
             }
-            listEntries.push_back(QString("(%1,%2,'%3',%4,%5,'%6',%7,%8)").arg(QString::number(myDate.year())).arg(QString::number(myDate.month()))
-                                  .arg(QString::fromStdString(meteoPoints[i].id)).arg(QString::number(refYearStart)).arg(QString::number(refYearEnd)).arg(indexStr)
-                                  .arg(QString::number(timescale)).arg(QString::number(value)));
+
+            listEntries.push_back(QString("(%1,%2,'%3',%4,%5,'%6',%7,%8)").arg(QString::number(myDate.year()), QString::number(myDate.month()),
+                                                                               QString::fromStdString(meteoPoints[i].id),
+                                                                               QString::number(refYearStart), QString::number(refYearEnd),
+                                                                               indexStr, QString::number(timescale), QString::number(value)));
             myDate = myDate.addMonths(1);
         }
     }
+
     if (listEntries.empty())
     {
         logError("Failed to compute droughtIndex ");
         return false;
     }
-    if (!aggregationDbHandler->writeDroughtDataList(listEntries, &errorString))
+
+    if (! aggregationDbHandler->writeDroughtDataList(listEntries, &errorString))
     {
         logError("Failed to write droughtIndex "+errorString);
         return false;
     }
+
     if (showInfo)
     {
         logInfo("droughtIndex saved");
     }
+
     return true;
 }
 
@@ -3929,10 +3938,10 @@ bool PragaProject::computeDroughtIndexPointGUI(droughtIndex index, int timescale
     std::vector<meteoVariable> dailyMeteoVar;
     dailyMeteoVar.push_back(dailyPrecipitation);
     dailyMeteoVar.push_back(dailyReferenceEvapotranspirationHS);
-    bool res = false;
+    bool isOk = false;
 
     int nrMonths = (lastDate.year()-firstDate.year())*12+lastDate.month()-(firstDate.month()-1);
-    for (int i=0; i < nrMeteoPoints; i++)
+    for (int i = 0; i < nrMeteoPoints; i++)
     {
         if (showInfo && (i % step) == 0)
         {
@@ -3945,29 +3954,39 @@ bool PragaProject::computeDroughtIndexPointGUI(droughtIndex index, int timescale
         {
             meteoPoints[i].computeMonthlyAggregate(getCrit3DDate(firstDate), getCrit3DDate(lastDate), dailyMeteoVar[j], meteoSettings, quality, &climateParameters);
         }
-        Drought mydrought(index, refYearStart, refYearEnd, getCrit3DDate(myDate), &(meteoPoints[i]), meteoSettings);
+
+        Drought myDrought(index, refYearStart, refYearEnd, getCrit3DDate(myDate), &(meteoPoints[i]), meteoSettings);
+
         if (timescale > 0)
         {
-            mydrought.setTimeScale(timescale);
+            myDrought.setTimeScale(timescale);
         }
+
         if (index == INDEX_DECILES)
         {
-            if (mydrought.computePercentileValuesCurrentDay())
+            if (myDrought.computePercentileValuesCurrentDay())
             {
-                value = mydrought.getCurrentPercentileValue();
+                value = myDrought.getCurrentPercentileValue();
+            }
+            else
+            {
+                value = NODATA;
             }
         }
         else if (index == INDEX_SPI || index == INDEX_SPEI)
         {
-            value = mydrought.computeDroughtIndex();
+            value = myDrought.computeDroughtIndex();
         }
+
         meteoPoints[i].elaboration = value;
+
         if (value != NODATA)
         {
-            res = true;
+            isOk = true;
         }
     }
-    return res;
+
+    return isOk;
 }
 
 

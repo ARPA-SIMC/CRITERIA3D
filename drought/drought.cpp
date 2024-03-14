@@ -79,6 +79,7 @@ void Drought::setComputeAll(bool value)
     computeAll = value;
 }
 
+
 float Drought::computeDroughtIndex()
 {
 
@@ -195,6 +196,7 @@ float Drought::computeDroughtIndex()
     }
     return droughtResults[end];
 }
+
 
 bool Drought::computeSpiParameters()
 {
