@@ -956,8 +956,6 @@ bool PragaProject::elaborationPointsCycleGrid(bool isAnomaly, bool showInfo)
         startDate.setDate(climaUsed->yearStart() + climaUsed->nYears(), climaUsed->genericPeriodDateStart().month(), climaUsed->genericPeriodDateStart().day());
     }
 
-
-     //Crit3DMeteoPoint* meteoPointTemp = new Crit3DMeteoPoint;
      bool dataAlreadyLoaded = false;
 
      for (int row = 0; row < meteoGridDbHandler->gridStructure().header().nrRows; row++)
@@ -1017,13 +1015,11 @@ bool PragaProject::elaborationPointsCycleGrid(bool isAnomaly, bool showInfo)
         {
             errorString = "no valid cells available";
         }
-        //delete meteoPointTemp;
         delete climaUsed;
         return false;
     }
     else
     {
-        //delete meteoPointTemp;
         delete climaUsed;
         return true;
     }
@@ -3099,8 +3095,8 @@ void PragaProject::showPointStatisticsWidgetGrid(std::string id)
                 netcdfName = xmlPath + listXMLAnomaly->listFileName()[i]+".nc";
             }
 
-            QDate dateEnd = QDate(listXMLElab->listYearEnd()[i] + listXMLElab->listNYears()[i], listXMLElab->listDateEnd()[i].month(), listXMLElab->listDateEnd()[i].day());
-            QDate dateStart = QDate(listXMLElab->listYearStart()[i], listXMLElab->listDateStart()[i].month(), listXMLElab->listDateStart()[i].day());
+            QDate dateEnd = QDate(listXMLAnomaly->listYearEnd()[i] + listXMLAnomaly->listNYears()[i], listXMLAnomaly->listDateEnd()[i].month(), listXMLAnomaly->listDateEnd()[i].day());
+            QDate dateStart = QDate(listXMLAnomaly->listYearStart()[i], listXMLAnomaly->listDateStart()[i].month(), listXMLAnomaly->listDateStart()[i].day());
 
             int nDays = dateStart.daysTo(dateEnd);
             exportMeteoGridToNetCDF(netcdfName, netcdfTitle, QString::fromStdString(MapDailyMeteoVarToString.at(listXMLAnomaly->listVariable()[i])), getUnitFromVariable(listXMLAnomaly->listVariable()[i]), getCrit3DDate(dateStart),
