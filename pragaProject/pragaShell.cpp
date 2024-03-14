@@ -1,4 +1,5 @@
 #include "pragaShell.h"
+#include "pragaProject.h"
 #include "shell.h"
 #include "utilities.h"
 #include "commonConstants.h"
@@ -975,9 +976,9 @@ int pragaShell(PragaProject* myProject)
         return PRAGA_OK;
     }
 
+
     int cmdDroughtIndexPoint(PragaProject* myProject, QList<QString> argumentList)
     {
-
         if (argumentList.size() < 5)
         {
             myProject->logError("Missing parameters for computing drought index point");
@@ -1041,6 +1042,7 @@ int pragaShell(PragaProject* myProject)
                 }
             }
         }
+
         if (! myProject->computeDroughtIndexPoint(index, timescale, ry1, ry2))
         {
             return PRAGA_ERROR;
@@ -1048,6 +1050,7 @@ int pragaShell(PragaProject* myProject)
 
         return PRAGA_OK;
     }
+
 
     int cmdSaveLogDataProceduresGrid(PragaProject* myProject, QList<QString> argumentList)
     {

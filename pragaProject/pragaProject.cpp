@@ -1667,7 +1667,7 @@ bool PragaProject::averageSeriesOnZonesMeteoGrid(meteoVariable variable, meteoCo
 
      // save dailyElabAggregation result into DB
      if (showInfo) setProgressBar("Save data...", 0);
-     if (!aggregationDbHandler->saveAggrData(int(zoneGrid->maximum), aggregationString, periodType, startDate, endDate, variable, dailyElabAggregation, lonVector, latVector))
+     if (! aggregationDbHandler->saveAggrData(int(zoneGrid->maximum), aggregationString, periodType, startDate, endDate, variable, dailyElabAggregation, lonVector, latVector))
      {
          errorString = aggregationDbHandler->error();
          if (showInfo) closeProgressBar();
@@ -3735,10 +3735,11 @@ bool PragaProject::computeDroughtIndexGrid(droughtIndex index, int firstYear, in
     return res;
 }
 
+
+// assume che sia stato caricato un progetto con solo aggregationDb
 bool PragaProject::computeDroughtIndexPoint(droughtIndex index, int timescale, int refYearStart, int refYearEnd)
 {
-
-    if (!aggregationDbHandler)
+    if (! aggregationDbHandler)
     {
         logError("No db aggregation");
         return false;
@@ -3786,7 +3787,7 @@ bool PragaProject::computeDroughtIndexPoint(droughtIndex index, int timescale, i
         return false;
     }
 
-    if (!loadMeteoPointsData(firstDate, lastDate, loadHourly, loadDaily, showInfo))
+    if (! loadMeteoPointsData(firstDate, lastDate, loadHourly, loadDaily, showInfo))
     {
         logError("There are no data");
         return false;
@@ -3858,6 +3859,7 @@ bool PragaProject::computeDroughtIndexPoint(droughtIndex index, int timescale, i
     }
     return true;
 }
+
 
 bool PragaProject::computeDroughtIndexPointGUI(droughtIndex index, int timescale, int refYearStart, int refYearEnd, QDate myDate)
 {
@@ -3967,6 +3969,7 @@ bool PragaProject::computeDroughtIndexPointGUI(droughtIndex index, int timescale
     }
     return res;
 }
+
 
 bool PragaProject::activeMeteoGridCellsWithDEM()
 {
