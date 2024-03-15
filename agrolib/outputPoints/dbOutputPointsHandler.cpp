@@ -1,6 +1,7 @@
 #include "dbOutputPointsHandler.h"
 #include "commonConstants.h"
 #include "utilities.h"
+#include "meteo.h"
 
 #include <QtSql>
 
@@ -100,7 +101,41 @@ bool Crit3DOutputPointsDbHandler::addColumn(QString tableName, meteoVariable myV
 }
 
 
-bool Crit3DOutputPointsDbHandler::saveHourlyData(QString tableName, const QDateTime& myTime,
+// depth [cm]
+bool Crit3DOutputPointsDbHandler::addCriteria3DColumn(const QString &tableName, criteria3DVariable myVar, int depth, QString& errorStr)
+{
+    // column name
+    /*
+    QString newField = QString::fromStdString(getMeteoVarName(myVar));
+    if (newField == "")
+    {
+        errorStr = "Missing variable name.";
+        return false;
+    }
+
+    // column exists already
+    QList<QString> fieldList = getFields(&_db, tableName);
+    if (fieldList.contains(newField))
+    {
+        return true;
+    }
+
+    // add column
+    QString queryString = "ALTER TABLE '" + tableName + "'";
+    queryString += " ADD " + newField + " REAL";
+
+    QSqlQuery myQuery = _db.exec(queryString);
+    if (myQuery.lastError().isValid())
+    {
+        errorStr = "Error in add column: " + newField + "\n" + myQuery.lastError().text();
+        return false;
+    }
+*/
+    return true;
+}
+
+
+bool Crit3DOutputPointsDbHandler::saveHourlyMeteoData(QString tableName, const QDateTime& myTime,
                                                  const std::vector<meteoVariable>& varList,
                                                  const std::vector<float>& values,
                                                  QString& errorStr)

@@ -88,7 +88,6 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->flagView_not_active_outputPoints->setChecked(this->viewNotActiveOutputPoints);
     this->currentPointsVisualization = notShown;
 
-    current3DlayerIndex = waterContent;
     current3DlayerIndex = 0;
     view3DVariable = false;
 
@@ -2205,6 +2204,7 @@ void MainWindow::on_actionCriteria3D_Initialize_triggered()
     myProject.processes.computeWater = true;
     myProject.processes.computeEvaporation = true;
     myProject.processes.computeCrop = true;
+    myProject.processes.computeSlopeStability = true;
 
     if (myProject.initializeCriteria3DModel())
     {
@@ -2291,7 +2291,7 @@ void MainWindow::showCriteria3DVariable(criteria3DVariable var, int layerIndex, 
     current3DVariable = var;
     current3DlayerIndex = layerIndex;
 
-    if (current3DVariable == waterContent)
+    if (current3DVariable == volumetricWaterContent)
     {
         if (layerIndex == 0)
         {
@@ -3113,7 +3113,7 @@ void MainWindow::on_actionHide_Geomap_triggered()
 
 void MainWindow::on_actionView_surfaceWaterContent_automatic_range_triggered()
 {
-    showCriteria3DVariable(waterContent, 0, false, NODATA, NODATA);
+    showCriteria3DVariable(volumetricWaterContent, 0, false, NODATA, NODATA);
 }
 
 
@@ -3131,14 +3131,14 @@ void MainWindow::on_actionView_surfaceWaterContent_fixed_range_triggered()
     if (valueStr == "") return;
     maximum = valueStr.toFloat();
 
-    showCriteria3DVariable(waterContent, 0, true, minimum, maximum);
+    showCriteria3DVariable(volumetricWaterContent, 0, true, minimum, maximum);
 }
 
 
 void MainWindow::on_actionView_SoilMoisture_triggered()
 {
     int layerIndex = std::max(1, ui->layerNrEdit->value());
-    showCriteria3DVariable(waterContent, layerIndex, false, NODATA, NODATA);
+    showCriteria3DVariable(volumetricWaterContent, layerIndex, false, NODATA, NODATA);
 }
 
 

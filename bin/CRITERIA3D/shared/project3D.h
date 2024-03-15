@@ -16,12 +16,6 @@
 
     class QString;
 
-    enum criteria3DVariable {waterContent, waterTotalPotential, waterMatricPotential,
-                            availableWaterContent, degreeOfSaturation, soilTemperature,
-                            soilSurfaceMoisture, bottomDrainage, waterDeficit, waterInflow, waterOutflow,
-                            factorOfSafety};
-
-
     class WaterFluxesParameters
     {
     public:
@@ -45,7 +39,7 @@
     {
     public:
 
-        bool computeMeteo, computeRadiation, computeWater;
+        bool computeMeteo, computeRadiation, computeWater, computeSlopeStability;
         bool computeEvaporation, computeCrop, computeSnow, computeSolutes;
         bool computeHeat, computeAdvectiveHeat, computeLatentHeat;
 

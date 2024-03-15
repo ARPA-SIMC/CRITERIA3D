@@ -71,6 +71,7 @@ void Crit3DProcesses::initialize()
     computeMeteo = false;
     computeRadiation = false;
     computeWater = false;
+    computeSlopeStability = false;
     computeEvaporation = false;
     computeCrop = false;
     computeSnow = false;
@@ -1115,7 +1116,7 @@ bool Project3D::setCriteria3DMap(criteria3DVariable var, int layerIndex)
                 }
                 else
                 {
-                    if (var == waterContent && layerIndex == 0)
+                    if (var == volumetricWaterContent && layerIndex == 0)
                     {
                         // surface
                         value *= 1000;          // [m] -> [mm]
@@ -1329,7 +1330,7 @@ double Project3D::assignEvaporation(int row, int col, double lai, int soilIndex)
     // assigns surface evaporation
     long surfaceNodeIndex = long(indexMap.at(0).value[row][col]);
     // [mm]
-    double surfaceWater = getCriteria3DVar(waterContent, surfaceNodeIndex) * 1000;
+    double surfaceWater = getCriteria3DVar(volumetricWaterContent, surfaceNodeIndex) * 1000;
     double surfaceEvaporation = std::min(maxEvaporation, surfaceWater);
 
     // TODO surface evaporation out of numerical solution
@@ -1373,7 +1374,7 @@ double Project3D::assignEvaporation(int row, int col, double lai, int soilIndex)
 
         // TODO getHygroscopicHumidity
         double evapThreshold = horizon.waterContentWP + (1 - evapCoeff) * (horizon.waterContentFC - horizon.waterContentWP) * 0.5;
-        double wcAboveThreshold = std::max(getCriteria3DVar(waterContent, nodeIndex) - evapThreshold, 0.0);         // [m3 m-3]
+        double wcAboveThreshold = std::max(getCriteria3DVar(volumetricWaterContent, nodeIndex) - evapThreshold, 0.0);         // [m3 m-3]
 
         // [mm]
         double evapAvailableWater = wcAboveThreshold * layerThickness[layer] * 1000;
@@ -1485,7 +1486,7 @@ double Project3D::assignTranspiration(int row, int col, double currentLai, doubl
         soil::Crit3DHorizon horizon = soilList[soilIndex].horizon[horizonIndex];
 
         // [m3 m-3]
-        double volWaterContent = getCriteria3DVar(waterContent, nodeIndex);
+        double volWaterContent = getCriteria3DVar(volumetricWaterContent, nodeIndex);
         double thetaSat = horizon.vanGenuchten.thetaS;
         double volWaterSurplusThreshold = thetaSat - waterSurplusStressFraction * (thetaSat - horizon.waterContentFC);
         double volWaterScarcityThreshold = horizon.waterContentFC - currentCrop.fRAW * (horizon.waterContentFC - horizon.waterContentWP);
@@ -1555,8 +1556,17 @@ double Project3D::assignTranspiration(int row, int col, double currentLai, doubl
 
 float Project3D::computeFactorOfSafety(int row, int col, int layerIndex, int nodeIndex)
 {
+    if (layerIndex >= layerDepth.size())
+    {
+        return NODATA;
+    }
+
     // degree of saturation [-]
     double saturationDegree = soilFluxes3D::getDegreeOfSaturation(nodeIndex);
+    if (saturationDegree == MEMORY_ERROR || saturationDegree == INDEX_ERROR)
+    {
+        return NODATA;
+    }
 
     // matric potential (with sign) [kPa]
     double matricPotential = soilFluxes3D::getMatricPotential(nodeIndex) * GRAVITY;
@@ -1569,9 +1579,14 @@ float Project3D::computeFactorOfSafety(int row, int col, int layerIndex, int nod
     float slopeDegree = radiationMaps->slopeMap->getValueFromRowCol(row, col);
     float slopeAngle = slopeDegree * DEG_TO_RAD;
 
-    // friction angle [rad]
     int soilIndex = getSoilIndex(row, col);
     int horizonIndex = soil::getHorizonIndex(soilList[unsigned(soilIndex)], layerDepth[layerIndex]);
+    if (horizonIndex == NODATA)
+    {
+        return NODATA;
+    }
+
+    // friction angle [rad]
     double frictionAngle = soilList[unsigned(soilIndex)].horizon[horizonIndex].frictionAngle * DEG_TO_RAD;
 
     // effective cohesion [kPa]
@@ -1583,6 +1598,7 @@ float Project3D::computeFactorOfSafety(int row, int col, int layerIndex, int nod
     double frictionEffect =  tanFrictionAngle / tanAngle;
 
     // unit weight [kN m-3]
+    // TODO integrazione (avg) da zero a layerdepth
     double bulkDensity = soilList[unsigned(soilIndex)].horizon[horizonIndex].bulkDensity;  // [g cm-3] --> [Mg m-3]
     double unitWeight = bulkDensity * GRAVITY;
 
@@ -1635,7 +1651,7 @@ double getCriteria3DVar(criteria3DVariable myVar, long nodeIndex)
 {
     double crit3dVar;
 
-    if (myVar == waterContent)
+    if (myVar == volumetricWaterContent)
     {
         crit3dVar = soilFluxes3D::getWaterContent(nodeIndex);
     }
@@ -1688,7 +1704,7 @@ bool setCriteria3DVar(criteria3DVariable myVar, long nodeIndex, double myValue)
 {
     int myResult = MISSING_DATA_ERROR;
 
-    if (myVar == waterContent)
+    if (myVar == volumetricWaterContent)
     {
         // TODO check: skeleton
         myResult = soilFluxes3D::setWaterContent(nodeIndex, myValue);
@@ -1753,7 +1769,7 @@ QString getDailyPrefixFromVar(QDate myDate, criteria3DVariable myVar)
 {
     QString fileName = myDate.toString("yyyyMMdd");
 
-    if (myVar == waterContent)
+    if (myVar == volumetricWaterContent)
         fileName += "_WaterContent_";
     if (myVar == availableWaterContent)
         fileName += "_availableWaterContent_";

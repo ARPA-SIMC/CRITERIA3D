@@ -1332,6 +1332,20 @@ bool Crit3DProject::writeOutputPointsTables()
                 if (! outputPointsDbHandler->addColumn(tableName, sensibleHeat, errorString)) return false;
                 if (! outputPointsDbHandler->addColumn(tableName, latentHeat, errorString)) return false;
             }
+            if (processes.computeWater)
+            {
+                // TODO
+            }
+            if (processes.computeSlopeStability)
+            {
+                // slope stablility starts from layer 1
+                for (int l = 1; l < layerDepth.size(); l++)
+                {
+                    int depth_cm = round(layerDepth[l] * 100);
+                    if (! outputPointsDbHandler->addCriteria3DColumn(tableName, factorOfSafety, depth_cm, errorString))
+                        return false;
+                }
+            }
         }
     }
 
@@ -1342,78 +1356,124 @@ bool Crit3DProject::writeOutputPointsTables()
 bool Crit3DProject::writeOutputPointsData()
 {
     QString tableName;
-    std::vector<meteoVariable> varList;
-    std::vector<float> valuesList;
+    std::vector<meteoVariable> meteoVarList;
+    std::vector<criteria3DVariable> criteria3dVarList;
+    std::vector<float> meteoValuesList;
+    std::vector<float> criteria3dValuesList;
 
     if (processes.computeMeteo)
     {
-        varList.push_back(airTemperature);
-        varList.push_back(precipitation);
-        varList.push_back(airRelHumidity);
-        varList.push_back(windScalarIntensity);
+        meteoVarList.push_back(airTemperature);
+        meteoVarList.push_back(precipitation);
+        meteoVarList.push_back(airRelHumidity);
+        meteoVarList.push_back(windScalarIntensity);
     }
     if (processes.computeRadiation)
     {
-        varList.push_back(atmTransmissivity);
-        varList.push_back(globalIrradiance);
-        varList.push_back(directIrradiance);
-        varList.push_back(diffuseIrradiance);
-        varList.push_back(reflectedIrradiance);
+        meteoVarList.push_back(atmTransmissivity);
+        meteoVarList.push_back(globalIrradiance);
+        meteoVarList.push_back(directIrradiance);
+        meteoVarList.push_back(diffuseIrradiance);
+        meteoVarList.push_back(reflectedIrradiance);
     }
     if (processes.computeSnow)
     {
-        varList.push_back(snowWaterEquivalent);
-        varList.push_back(snowFall);
-        varList.push_back(snowMelt);
-        varList.push_back(snowSurfaceTemperature);
-        varList.push_back(snowSurfaceEnergy);
-        varList.push_back(snowInternalEnergy);
-        varList.push_back(sensibleHeat);
-        varList.push_back(latentHeat);
+        meteoVarList.push_back(snowWaterEquivalent);
+        meteoVarList.push_back(snowFall);
+        meteoVarList.push_back(snowMelt);
+        meteoVarList.push_back(snowSurfaceTemperature);
+        meteoVarList.push_back(snowSurfaceEnergy);
+        meteoVarList.push_back(snowInternalEnergy);
+        meteoVarList.push_back(sensibleHeat);
+        meteoVarList.push_back(latentHeat);
+    }
+    if (processes.computeWater)
+    {
+        criteria3dVarList.push_back(volumetricWaterContent);
+        criteria3dVarList.push_back(waterMatricPotential);
+    }
+    if (processes.computeSlopeStability)
+    {
+        criteria3dVarList.push_back(factorOfSafety);
     }
 
     for (unsigned int i = 0; i < outputPoints.size(); i++)
     {
         if (outputPoints[i].active)
         {
-            float x = float(outputPoints[i].utm.x);
-            float y = float(outputPoints[i].utm.y);
+            double x = outputPoints[i].utm.x;
+            double y = outputPoints[i].utm.y;
             tableName = QString::fromStdString(outputPoints[i].id);
+
             if (processes.computeMeteo)
             {
-                valuesList.push_back(hourlyMeteoMaps->mapHourlyTair->getValueFromXY(x, y));
-                valuesList.push_back(hourlyMeteoMaps->mapHourlyPrec->getValueFromXY(x, y));
-                valuesList.push_back(hourlyMeteoMaps->mapHourlyRelHum->getValueFromXY(x, y));
-                valuesList.push_back(hourlyMeteoMaps->mapHourlyWindScalarInt->getValueFromXY(x, y));
+                meteoValuesList.push_back(hourlyMeteoMaps->mapHourlyTair->getValueFromXY(x, y));
+                meteoValuesList.push_back(hourlyMeteoMaps->mapHourlyPrec->getValueFromXY(x, y));
+                meteoValuesList.push_back(hourlyMeteoMaps->mapHourlyRelHum->getValueFromXY(x, y));
+                meteoValuesList.push_back(hourlyMeteoMaps->mapHourlyWindScalarInt->getValueFromXY(x, y));
             }
             if (processes.computeRadiation)
             {
-                valuesList.push_back(radiationMaps->transmissivityMap->getValueFromXY(x, y));
-                valuesList.push_back(radiationMaps->globalRadiationMap->getValueFromXY(x, y));
-                valuesList.push_back(radiationMaps->beamRadiationMap->getValueFromXY(x, y));
-                valuesList.push_back(radiationMaps->diffuseRadiationMap->getValueFromXY(x, y));
-                valuesList.push_back(radiationMaps->reflectedRadiationMap->getValueFromXY(x, y));
+                meteoValuesList.push_back(radiationMaps->transmissivityMap->getValueFromXY(x, y));
+                meteoValuesList.push_back(radiationMaps->globalRadiationMap->getValueFromXY(x, y));
+                meteoValuesList.push_back(radiationMaps->beamRadiationMap->getValueFromXY(x, y));
+                meteoValuesList.push_back(radiationMaps->diffuseRadiationMap->getValueFromXY(x, y));
+                meteoValuesList.push_back(radiationMaps->reflectedRadiationMap->getValueFromXY(x, y));
             }
             if (processes.computeSnow)
             {
-                valuesList.push_back(snowMaps.getSnowWaterEquivalentMap()->getValueFromXY(x, y));
-                valuesList.push_back(snowMaps.getSnowFallMap()->getValueFromXY(x, y));
-                valuesList.push_back(snowMaps.getSnowMeltMap()->getValueFromXY(x, y));
-                valuesList.push_back(snowMaps.getSnowSurfaceTempMap()->getValueFromXY(x, y));
-                valuesList.push_back(snowMaps.getSurfaceEnergyMap()->getValueFromXY(x, y));
-                valuesList.push_back(snowMaps.getInternalEnergyMap()->getValueFromXY(x, y));
-                valuesList.push_back(snowMaps.getSensibleHeatMap()->getValueFromXY(x, y));
-                valuesList.push_back(snowMaps.getLatentHeatMap()->getValueFromXY(x, y));
+                meteoValuesList.push_back(snowMaps.getSnowWaterEquivalentMap()->getValueFromXY(x, y));
+                meteoValuesList.push_back(snowMaps.getSnowFallMap()->getValueFromXY(x, y));
+                meteoValuesList.push_back(snowMaps.getSnowMeltMap()->getValueFromXY(x, y));
+                meteoValuesList.push_back(snowMaps.getSnowSurfaceTempMap()->getValueFromXY(x, y));
+                meteoValuesList.push_back(snowMaps.getSurfaceEnergyMap()->getValueFromXY(x, y));
+                meteoValuesList.push_back(snowMaps.getInternalEnergyMap()->getValueFromXY(x, y));
+                meteoValuesList.push_back(snowMaps.getSensibleHeatMap()->getValueFromXY(x, y));
+                meteoValuesList.push_back(snowMaps.getLatentHeatMap()->getValueFromXY(x, y));
+            }
+            if (processes.computeWater)
+            {
+                // TODO
+            }
+            if (processes.computeSlopeStability)
+            {
+                int row, col;
+                float value;
+                gis::getRowColFromXY((*DEM.header), x, y, &row, &col);
+
+                for (unsigned int layerIndex = 1; layerIndex < nrLayers; layerIndex++)
+                {
+                    long nodeIndex = indexMap.at(layerIndex).value[row][col];
+                    if (nodeIndex == indexMap.at(layerIndex).header->flag)
+                    {
+                        value = NODATA;
+                    }
+                    else
+                    {
+                        value = computeFactorOfSafety(row, col, layerIndex, nodeIndex);
+                    }
+
+                    criteria3dValuesList.push_back(value);
+                }
             }
 
-            if (! outputPointsDbHandler->saveHourlyData(tableName, getCurrentTime(), varList, valuesList, errorString))
+            if (! outputPointsDbHandler->saveHourlyMeteoData(tableName, getCurrentTime(), meteoVarList, meteoValuesList, errorString))
             {
                 return false;
             }
-            valuesList.clear();
+            /*
+            if (! outputPointsDbHandler->saveHourlyCriteria3DData(tableName, getCurrentTime(), criteria3dVarList, criteria3dValuesList, layerDepth, errorString))
+            {
+                return false;
+            }*/
+
+            meteoValuesList.clear();
+            criteria3dValuesList.clear();
         }
     }
-    varList.clear();
+
+    meteoVarList.clear();
+    criteria3dVarList.clear();
 
     return true;
 }
