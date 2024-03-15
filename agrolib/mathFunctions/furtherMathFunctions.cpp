@@ -1227,7 +1227,7 @@ namespace interpolation
                 }
             }
             iterationNr++;
-        } while (iterationNr <= maxIterationsNr && fabs(diffSSE) > myEpsilon);
+        } while (fabs(diffSSE) > myEpsilon && iterationNr <= maxIterationsNr);
         return (fabs(diffSSE) <= myEpsilon);
     }
 
@@ -1255,6 +1255,7 @@ namespace interpolation
         std::vector<double> firstEst(nrData);
         std::vector<std::vector<double>> a(nrParametersTotal, std::vector<double>(nrParametersTotal));
         std::vector<std::vector<double>> P(nrParametersTotal, std::vector<double>(nrData));
+        // matrix P corresponds to the Jacobian
         // first set of estimates
         for (i = 0; i < nrData; i++)
         {
@@ -1341,6 +1342,7 @@ namespace interpolation
             }
         }
 
+        // linear system resolution in order to get the Delta of each parameter
         parametersChange[nrPredictors - 1][nrParameters[nrPredictors-1]-1] = g[nrParametersTotal - 1] / a[nrParametersTotal - 1][nrParametersTotal - 1];
 
 
