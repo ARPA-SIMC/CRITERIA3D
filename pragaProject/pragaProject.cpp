@@ -946,22 +946,116 @@ bool PragaProject::elaborationPointsCycleGrid(bool isAnomaly, bool showInfo)
 
     QDate startDate;
     QDate endDate;
-
     if (climaUsed->nYears() > 0)
     {
-        startDate.setDate(climaUsed->yearStart(), climaUsed->genericPeriodDateStart().month(), climaUsed->genericPeriodDateStart().day());
-        endDate.setDate(climaUsed->yearEnd() + climaUsed->nYears(), climaUsed->genericPeriodDateEnd().month(), climaUsed->genericPeriodDateEnd().day());
+        int myYearStart = climaUsed->yearStart();
+        int myYearEnd = climaUsed->yearEnd() + climaUsed->nYears();
+        startDate.setDate(myYearStart, climaUsed->genericPeriodDateStart().month(), climaUsed->genericPeriodDateStart().day());
+        endDate.setDate(myYearEnd, climaUsed->genericPeriodDateEnd().month(), climaUsed->genericPeriodDateEnd().day());
+        // check dates - leap case
+        if (climaUsed->genericPeriodDateStart().month() == 2 && climaUsed->genericPeriodDateStart().day() == 29)
+        {
+            if (!isLeapYear(myYearStart))
+            {
+                if (climaUsed->periodType() != dailyPeriod)
+                {
+                    startDate.setDate(myYearStart, 2, 28);
+                }
+                else
+                {
+                    startDate.setDate(myYearStart, 3, 1);
+                }
+            }
+        }
+        if (climaUsed->genericPeriodDateEnd().month() == 2 && climaUsed->genericPeriodDateEnd().day() == 29)
+        {
+            if (!isLeapYear(myYearEnd))
+            {
+                if (climaUsed->periodType() != dailyPeriod)
+                {
+                    endDate.setDate(myYearEnd, 2, 28);
+                }
+                else
+                {
+                    endDate.setDate(myYearEnd, 3, 1);
+                }
+            }
+        }
     }
     else if (climaUsed->nYears() < 0)
     {
-        startDate.setDate(climaUsed->yearStart() + climaUsed->nYears(), climaUsed->genericPeriodDateStart().month(), climaUsed->genericPeriodDateStart().day());
-        endDate.setDate(climaUsed->yearEnd(), climaUsed->genericPeriodDateEnd().month(), climaUsed->genericPeriodDateEnd().day());
+        int myYearStart = climaUsed->yearStart() + climaUsed->nYears();
+        int myYearEnd = climaUsed->yearEnd();
+        startDate.setDate(myYearStart, climaUsed->genericPeriodDateStart().month(), climaUsed->genericPeriodDateStart().day());
+        endDate.setDate(myYearEnd, climaUsed->genericPeriodDateEnd().month(), climaUsed->genericPeriodDateEnd().day());
+        // check dates - leap case
+        if (climaUsed->genericPeriodDateStart().month() == 2 && climaUsed->genericPeriodDateStart().day() == 29)
+        {
+            if (!isLeapYear(myYearStart))
+            {
+                if (climaUsed->periodType() != dailyPeriod)
+                {
+                    startDate.setDate(myYearStart, 2, 28);
+                }
+                else
+                {
+                    startDate.setDate(myYearStart, 3, 1);
+                }
+            }
+        }
+        if (climaUsed->genericPeriodDateEnd().month() == 2 && climaUsed->genericPeriodDateEnd().day() == 29)
+        {
+            if (!isLeapYear(myYearEnd))
+            {
+                if (climaUsed->periodType() != dailyPeriod)
+                {
+                    endDate.setDate(myYearEnd, 2, 28);
+                }
+                else
+                {
+                    endDate.setDate(myYearEnd, 3, 1);
+                }
+            }
+        }
     }
     else
     {
-        startDate.setDate(climaUsed->yearStart(), climaUsed->genericPeriodDateStart().month(), climaUsed->genericPeriodDateStart().day());
-        endDate.setDate(climaUsed->yearEnd(), climaUsed->genericPeriodDateEnd().month(), climaUsed->genericPeriodDateEnd().day());
+        int myYearStart = climaUsed->yearStart();
+        int myYearEnd = climaUsed->yearEnd();
+        startDate.setDate(myYearStart, climaUsed->genericPeriodDateStart().month(), climaUsed->genericPeriodDateStart().day());
+        endDate.setDate(myYearEnd, climaUsed->genericPeriodDateEnd().month(), climaUsed->genericPeriodDateEnd().day());
+        // check dates - leap case
+        if (climaUsed->genericPeriodDateStart().month() == 2 && climaUsed->genericPeriodDateStart().day() == 29)
+        {
+            if (!isLeapYear(myYearStart))
+            {
+                if (climaUsed->periodType() != dailyPeriod)
+                {
+                    startDate.setDate(myYearStart, 2, 28);
+                }
+                else
+                {
+                    startDate.setDate(myYearStart, 3, 1);
+                }
+            }
+        }
+        if (climaUsed->genericPeriodDateEnd().month() == 2 && climaUsed->genericPeriodDateEnd().day() == 29)
+        {
+            if (!isLeapYear(myYearEnd))
+            {
+                if (climaUsed->periodType() != dailyPeriod)
+                {
+                    endDate.setDate(myYearEnd, 2, 28);
+                }
+                else
+                {
+                    endDate.setDate(myYearEnd, 3, 1);
+                }
+            }
+        }
     }
+
+
 
      bool dataAlreadyLoaded = false;
 
