@@ -22,7 +22,9 @@
 
         bool createTable(QString tableName, QString &errorStr);
         bool addColumn(QString tableName, meteoVariable myVar, QString &errorString);
-        bool saveHourlyData(QString tableName, const QDateTime &myTime,
+        bool addCriteria3DColumn(const QString &tableName, criteria3DVariable myVar, int depth, QString& errorStr);
+
+        bool saveHourlyMeteoData(QString tableName, const QDateTime &myTime,
                             const std::vector<meteoVariable> &varList,
                             const std::vector<float> &values, QString& errorStr);
 
