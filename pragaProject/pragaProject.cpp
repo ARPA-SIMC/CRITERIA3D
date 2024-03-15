@@ -946,6 +946,7 @@ bool PragaProject::elaborationPointsCycleGrid(bool isAnomaly, bool showInfo)
 
     QDate startDate;
     QDate endDate;
+
     if (climaUsed->nYears() > 0)
     {
         int myYearStart = climaUsed->yearStart();
@@ -1017,6 +1018,23 @@ bool PragaProject::elaborationPointsCycleGrid(bool isAnomaly, bool showInfo)
                 }
             }
         }
+
+
+    if (climaUsed->nYears() > 0)
+    {
+        startDate.setDate(climaUsed->yearStart(), climaUsed->genericPeriodDateStart().month(), climaUsed->genericPeriodDateStart().day());
+        endDate.setDate(climaUsed->yearEnd() + climaUsed->nYears(), climaUsed->genericPeriodDateEnd().month(), climaUsed->genericPeriodDateEnd().day());
+    }
+    else if (climaUsed->nYears() < 0)
+    {
+        startDate.setDate(climaUsed->yearStart() + climaUsed->nYears(), climaUsed->genericPeriodDateStart().month(), climaUsed->genericPeriodDateStart().day());
+        endDate.setDate(climaUsed->yearEnd(), climaUsed->genericPeriodDateEnd().month(), climaUsed->genericPeriodDateEnd().day());
+    }
+    else
+    {
+        startDate.setDate(climaUsed->yearStart(), climaUsed->genericPeriodDateStart().month(), climaUsed->genericPeriodDateStart().day());
+        endDate.setDate(climaUsed->yearEnd(), climaUsed->genericPeriodDateEnd().month(), climaUsed->genericPeriodDateEnd().day());
+>>>>>>> aa8ff6c55849eccf5df90c86fc7b86fb8bb72e6e
     }
     else
     {
