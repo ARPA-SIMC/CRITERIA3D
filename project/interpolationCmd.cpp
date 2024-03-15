@@ -181,7 +181,7 @@ bool interpolateProxyGridSeries(const Crit3DProxyGridSeries& mySeries, QDate myD
         return false;
     }
 
-    if (! gis::readEsriGrid(gridNames[second].toStdString(), &secondGrid, myError)) return false;
+    if (! gis::readEsriGrid(gridNames[second].toStdString(), &secondGrid, myError))
     {
         *error = QString::fromStdString(myError);
         return false;
