@@ -24,7 +24,7 @@ bool setSoilProfileCrop(Vine3DProject* myProject, int row, int col, Crit3DModelC
     double* soilWPProfile = getSoilVarProfile(myProject, row, col, soil::soilWaterPotentialWP);
     double* soilFCProfile = getSoilVarProfile(myProject, row, col, soil::soilWaterPotentialFC) ;
     double* matricPotentialProfile = getCriteria3DVarProfile(myProject, row, col, waterMatricPotential);
-    double* waterContentProfile = getCriteria3DVarProfile(myProject, row, col, waterContent);
+    double* waterContentProfile = getCriteria3DVarProfile(myProject, row, col, volumetricWaterContent);
     double* waterContentProfileWP = getSoilVarProfile(myProject, row, col, soil::soilWaterContentWP);
     double* waterContentProfileFC = getSoilVarProfile(myProject, row, col, soil::soilWaterContentFC);
 
