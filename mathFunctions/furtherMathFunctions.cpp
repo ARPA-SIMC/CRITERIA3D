@@ -1071,7 +1071,6 @@ namespace interpolation
         //std::uniform_real_distribution<double> dis(0.0, 1.0);
         std::normal_distribution<double> normal_dis(0.5, 0.2);
         double truncNormal;
-        double randomNumber;
         do
         {
             for (i=0; i<nrPredictors; i++)
