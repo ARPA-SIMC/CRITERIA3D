@@ -76,7 +76,7 @@ double lapseRatePiecewise(double x, std::vector <double>& par)
     xb = par[0]+par[2];
     if (x < par[0])
     {
-        //m = par[4];
+        //m = par[4];;
         //q = par[1]-m*par[0];
         return par[4]*x + par[1]-par[4]*par[0];
     }
