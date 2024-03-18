@@ -150,7 +150,7 @@ enum estimatedFunction {FUNCTION_CODE_SPHERICAL, FUNCTION_CODE_LINEAR, FUNCTION_
 
     namespace myrandom
     {
-        //float ran1(long *idum);
+        //float ran1(long *idum) ;
         //float gasdev(long *idum);
         double cauchyRandom(double gamma);
         float normalRandom(int *gasDevIset,float *gasDevGset);
