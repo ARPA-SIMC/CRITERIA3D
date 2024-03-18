@@ -499,9 +499,12 @@ bool InOutDataXML::importXMLDataFixed(QString& errorStr)
 
     QString myPointCode = "";
     QString previousPointCode = "";
-    if (! checkPointCodeFromFileName(myPointCode, errorStr))
+    if (format_isSinglePoint)
     {
-        return false;
+        if (! checkPointCodeFromFileName(myPointCode, errorStr))
+        {
+            return false;
+        }
     }
 
     QTextStream in(&myFile);
@@ -801,9 +804,12 @@ bool InOutDataXML::importXMLDataDelimited(QString& errorStr)
 
     QString myPointCode = "";
     QString previousPointCode = "";
-    if (! checkPointCodeFromFileName(myPointCode, errorStr))
+    if (format_isSinglePoint)
     {
-        return false;
+        if (! checkPointCodeFromFileName(myPointCode, errorStr))
+        {
+            return false;
+        }
     }
 
     QTextStream in(&myFile);
@@ -1140,14 +1146,24 @@ bool InOutDataXML::importXMLDataDelimited(QString& errorStr)
 QString InOutDataXML::parseXMLPointCode(QString text)
 {
     QString myPointCode = "";
+    QString substring = "";
 
-    if (pointCode.getType().toUpper() == "FIELDDEFINED" || pointCode.getType().toUpper() == "FIELDEFINED" || pointCode.getType().toUpper() == "FILENAMEDEFINED")
+    if (pointCode.getType().toUpper() == "FIELDDEFINED" || pointCode.getType().toUpper() == "FIELDEFINED" || pointCode.getType().toUpper() == "FILENAMEDEFINED" || pointCode.getType().toUpper() == "FIXED")
     {
         if (format_type == XMLFORMATFIXED || (format_type == XMLFORMATDELIMITED && pointCode.getType().toUpper() == "FILENAMEDEFINED"))
         {
             if (fileName_pragaName.isEmpty())
             {
-                QString substring = text.mid(0,pointCode.getNrChar());
+                if (pointCode.getType().toUpper() == "FILENAMEDEFINED")
+                {
+                    // text is the name of the file
+                    substring = text.mid(0,pointCode.getNrChar());
+                }
+                else
+                {
+                    // text is a line, firstChar start from 1
+                    substring = text.mid(pointCode.getFirstChar()-1,pointCode.getNrChar());
+                }
                 if (pointCode.getFormat().isEmpty() || pointCode.getFormat() == "%s")
                 {
                     // pointCode is a string
