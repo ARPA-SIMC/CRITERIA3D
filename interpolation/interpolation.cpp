@@ -40,6 +40,7 @@
 #include "interpolation.h"
 #include <functional>
 
+
 using namespace std;
 
 float getMinHeight(const std::vector<Crit3DInterpolationDataPoint> &myPoints, bool useLapseRateCode)
@@ -1329,7 +1330,7 @@ bool setFittingParameters(Crit3DProxyCombination myCombination, Crit3DInterpolat
         if (mySettings->getProxy(i)->getIsSignificant())
         {
             if (getProxyPragaName(mySettings->getProxy(i)->getName()) == height)
-                myFunc.push_back(lapseRatePiecewise);
+                myFunc.push_back(lapseRatePiecewise_two);
             else
                 myFunc.push_back(functionLinear);
 
@@ -1520,8 +1521,8 @@ bool multipleDetrending(std::vector <Crit3DInterpolationDataPoint> &myPoints, Cr
     setFittingParameters(myCombination, mySettings, myFunc, parametersMin, parametersMax, parametersDelta, parameters);
 
     // multiple non linear fitting
-    interpolation::bestFittingMarquardt_nDimension(&functionSum, myFunc, 500, 5, parametersMin, parametersMax, parameters, parametersDelta,
-                                                   100, 0.005, 0.01, predictors, predictands, false, weights);
+    interpolation::bestFittingMarquardt_nDimension(&functionSum, myFunc, 1000, 5, parametersMin, parametersMax, parameters, parametersDelta,
+                                                   100, 0.005, 0.01, predictors, predictands, true, weights);
 
     mySettings->setFittingFunction(myFunc);
     mySettings->setFittingParameters(parameters);

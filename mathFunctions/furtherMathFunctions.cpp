@@ -66,7 +66,7 @@ double lapseRateFrei(double x, std::vector <double>& par)
     return y - 0.5*par[2]*(1 + cos(PI*(x-par[3])/(par[4]-par[3])));
 }
 
-double lapseRatePiecewise(double x, std::vector <double>& par)
+double lapseRatePiecewise_three(double x, std::vector <double>& par)
 {
     // the piecewise line is parameterized as follows
     // the line passes through A(par[0];par[1])and B(par[0]+par[2];par[3]). par[4] is the slope of the 2 externals pieces
@@ -91,6 +91,25 @@ double lapseRatePiecewise(double x, std::vector <double>& par)
         //m = (par[3]-par[1])/par[2];
         //q = par[1]-m*par[0];
         return ((par[3]-par[1])/par[2])*x+ par[1]-(par[3]-par[1])/par[2]*par[0];
+    }
+}
+
+double lapseRatePiecewise_two(double x, std::vector <double>& par)
+{
+    // the piecewise line is parameterized as follows
+    // the line passes through A(par[0];par[1]). par[2] is the slope of the first line, par[3] the slope of the second
+    // "y = mx + q" piecewise function;
+    if (x < par[0])
+    {
+        //m = par[2];
+        //q = -par[2]*par[0]+par[1];
+        return par[2]*(x-par[0])+par[1];
+    }
+    else if (x >= par[0])
+    {
+        //m = par[3]:
+        //q = -par[3]*par[0]+par[1];
+        return par[3]*(x-par[0])+par[1];
     }
 }
 
