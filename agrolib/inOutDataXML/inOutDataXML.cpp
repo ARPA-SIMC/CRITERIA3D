@@ -499,9 +499,12 @@ bool InOutDataXML::importXMLDataFixed(QString& errorStr)
 
     QString myPointCode = "";
     QString previousPointCode = "";
-    if (! checkPointCodeFromFileName(myPointCode, errorStr))
+    if (format_isSinglePoint)
     {
-        return false;
+        if (! checkPointCodeFromFileName(myPointCode, errorStr))
+        {
+            return false;
+        }
     }
 
     QTextStream in(&myFile);
@@ -801,9 +804,12 @@ bool InOutDataXML::importXMLDataDelimited(QString& errorStr)
 
     QString myPointCode = "";
     QString previousPointCode = "";
-    if (! checkPointCodeFromFileName(myPointCode, errorStr))
+    if (format_isSinglePoint)
     {
-        return false;
+        if (! checkPointCodeFromFileName(myPointCode, errorStr))
+        {
+            return false;
+        }
     }
 
     QTextStream in(&myFile);
@@ -1140,50 +1146,60 @@ bool InOutDataXML::importXMLDataDelimited(QString& errorStr)
 QString InOutDataXML::parseXMLPointCode(QString text)
 {
     QString myPointCode = "";
+    QString substring = "";
 
-    if (pointCode.getType().toUpper() == "FIELDDEFINED" || pointCode.getType().toUpper() == "FIELDEFINED" || pointCode.getType().toUpper() == "FILENAMEDEFINED")
+    if (format_type == XMLFORMATFIXED || (format_type == XMLFORMATDELIMITED && pointCode.getType().toUpper() == "FILENAMEDEFINED"))
     {
-        if (format_type == XMLFORMATFIXED || (format_type == XMLFORMATDELIMITED && pointCode.getType().toUpper() == "FILENAMEDEFINED"))
+        if (fileName_pragaName.isEmpty())
         {
-            if (fileName_pragaName.isEmpty())
+            if (pointCode.getType().toUpper() == "FILENAMEDEFINED")
             {
-                QString substring = text.mid(0,pointCode.getNrChar());
-                if (pointCode.getFormat().isEmpty() || pointCode.getFormat() == "%s")
-                {
-                    // pointCode is a string
-                    myPointCode = substring;
-                }
+                // text is the name of the file
+                substring = text.mid(0,pointCode.getNrChar());
             }
             else
             {
-                // con questa casistica l'import funziona anche con gli xml di export che hanno il campo filename e prefissi o suffissi nel nome del file
-                QString substring = text;
-                for (int i = 0; i<fileName_fixedPrefix.size(); i++)
-                {
-                    substring = substring.replace(fileName_fixedPrefix[i],"");
-                }
-                for (int i = 0; i<fileName_fixedSuffix.size(); i++)
-                {
-                    substring = substring.replace(fileName_fixedSuffix[i],"");
-                }
-                if (pointCode.getFormat().isEmpty() || pointCode.getFormat() == "%s")
-                {
-                    // pointCode is a string
-                    myPointCode = substring;
-                }
+                // text is a line, firstChar start from 1
+                substring = text.mid(pointCode.getFirstChar()-1,pointCode.getNrChar());
+            }
+            if (pointCode.getFormat().isEmpty() || pointCode.getFormat() == "%s")
+            {
+                // pointCode is a string
+                myPointCode = substring;
             }
         }
-        else if (format_type == XMLFORMATDELIMITED)
+        else
         {
-            QList<QString> list = text.split(format_delimiter);
-            if (format_isSinglePoint)
+            // con questa casistica l'import funziona anche con gli xml di export che hanno il campo filename e prefissi o suffissi nel nome del file
+            QString substring = text;
+            for (int i = 0; i<fileName_fixedPrefix.size(); i++)
             {
-                myPointCode = list[pointCode.getPosition()];
+                substring = substring.replace(fileName_fixedPrefix[i],"");
             }
-            else
+            for (int i = 0; i<fileName_fixedSuffix.size(); i++)
             {
-                myPointCode = list[pointCode.getPosition()-1];
+                substring = substring.replace(fileName_fixedSuffix[i],"");
             }
+            if (pointCode.getFormat().isEmpty() || pointCode.getFormat() == "%s")
+            {
+                // pointCode is a string
+                myPointCode = substring;
+            }
+        }
+    }
+    else if (format_type == XMLFORMATDELIMITED)
+    {
+        QList<QString> list = text.split(format_delimiter);
+        int pos = pointCode.getPosition();
+        if (pos < 0)
+            return myPointCode;
+        if (format_isSinglePoint)
+        {
+            myPointCode = list[pointCode.getPosition()];
+        }
+        else
+        {
+            myPointCode = list[pointCode.getPosition()-1];
         }
     }
 

@@ -10,6 +10,7 @@ DialogSelectionMeteoPoint::DialogSelectionMeteoPoint(bool active, Crit3DMeteoPoi
     datasetList = meteoPointsDbHandler->getDatasetList();
 
     setWindowTitle("Select");
+    setMinimumWidth(400);
     QVBoxLayout mainLayout;
     QHBoxLayout selectionLayout;
     QHBoxLayout buttonLayout;
