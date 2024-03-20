@@ -1010,10 +1010,11 @@ void MainWindow::redrawMeteoPoints(visualizationType myType, bool updateColorSCa
 
             this->ui->actionView_PointsCurrentVariable->setChecked(true);
             // quality control
+            std::string errorStdStr;
             checkData(myProject.quality, currentVar,
                       myProject.meteoPoints, myProject.nrMeteoPoints, myProject.getCrit3DCurrentTime(),
                       &(myProject.qualityInterpolationSettings), myProject.meteoSettings,
-                      &(myProject.climateParameters), myProject.checkSpatialQuality);
+                      &(myProject.climateParameters), myProject.checkSpatialQuality, errorStdStr);
 
             if (updateColorSCale)
             {

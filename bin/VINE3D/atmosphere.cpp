@@ -216,30 +216,36 @@ bool vine3DInterpolationDemRadiation(Vine3DProject* myProject, const Crit3DTime&
         return false;
     }
 
+    std::string errorStdStr;
     if (! checkAndPassDataToInterpolation(&(myProject->qualityParameters), atmTransmissivity, myProject->meteoPoints, myProject->nrMeteoPoints, myCrit3DTime,
                                           &(myProject->qualityInterpolationSettings), &(myProject->interpolationSettings),
                                           myProject->meteoSettings, &(myProject->climateParameters),
-                                          interpolationPoints, true))
+                                          interpolationPoints, true, errorStdStr))
     {
-        myProject->errorString = "Function vine3DInterpolationDemRadiation: no transmissivity data available";
+        myProject->errorString = "Function vine3DInterpolationDemRadiation: missing transmissivity data.";
         return false;
     }
 
-    if (preInterpolation(interpolationPoints, &(myProject->interpolationSettings),
+    if (! preInterpolation(interpolationPoints, &(myProject->interpolationSettings),
                          myProject->meteoSettings, &(myProject->climateParameters),
-                         myProject->meteoPoints, myProject->nrMeteoPoints, atmTransmissivity, myCrit3DTime))
-        if (! interpolationRaster(interpolationPoints, &(myProject->interpolationSettings),
-                                  myProject->meteoSettings, myProject->radiationMaps->transmissivityMap,
-                                  myProject->DEM, atmTransmissivity))
-        {
-            myProject->errorString = "Function vine3DInterpolationDemRadiation: error interpolating transmissivity";
-            return false;
-        }
+                         myProject->meteoPoints, myProject->nrMeteoPoints, atmTransmissivity, myCrit3DTime, errorStdStr))
+    {
+        myProject->errorString = "error in preInterpolation:" + QString::fromStdString(errorStdStr);
+        return false;
+    }
+
+    if (! interpolationRaster(interpolationPoints, &(myProject->interpolationSettings),
+                              myProject->meteoSettings, myProject->radiationMaps->transmissivityMap,
+                              myProject->DEM, atmTransmissivity))
+    {
+        myProject->errorString = "Error in interpolating transmissivity.";
+        return false;
+    }
 
     if (radiation::computeRadiationDEM(&(myProject->radSettings), myProject->DEM, myProject->radiationMaps, myCrit3DTime))
         myResult = setRadiationScale(myProject->radiationMaps->globalRadiationMap->colorScale);
     else
-        myProject->errorString = "Function vine3DInterpolationDemRadiation: error computing irradiance";
+        myProject->errorString = "Error in computing irradiance.";
 
     return myResult;
 }
