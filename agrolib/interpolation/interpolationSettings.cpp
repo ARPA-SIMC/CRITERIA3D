@@ -141,7 +141,7 @@ void Crit3DInterpolationSettings::setSelectedCombination(const Crit3DProxyCombin
 
 void Crit3DInterpolationSettings::setValueSelectedCombination(unsigned int index, bool isActive)
 {
-    selectedCombination.setValue(index, isActive);
+    selectedCombination.setProxyActive(index, isActive);
 }
 
 unsigned Crit3DInterpolationSettings::getIndexHeight() const
@@ -666,8 +666,8 @@ void Crit3DInterpolationSettings::addProxy(Crit3DProxy myProxy, bool isActive_)
     if (getProxyPragaName(myProxy.getName()) == height)
         setIndexHeight(int(currentProxy.size())-1);
 
-    selectedCombination.addValue(isActive_);
-    optimalCombination.addValue(isActive_);
+    selectedCombination.addProxyActive(isActive_);
+    optimalCombination.addProxyActive(isActive_);
 }
 
 std::string Crit3DInterpolationSettings::getProxyName(unsigned pos)
@@ -681,50 +681,19 @@ double Crit3DInterpolationSettings::getProxyValue(unsigned pos, std::vector <dou
         return NODATA;
 }
 
-std::deque<bool> Crit3DProxyCombination::getIsActive() const
-{
-    return isActive;
-}
-
-void Crit3DProxyCombination::setIsActive(const std::deque<bool> &value)
-{
-    isActive = value;
-}
 
 Crit3DProxyCombination::Crit3DProxyCombination()
 {
-    setUseThermalInversion(false);
+    clear();
 }
+
 
 void Crit3DProxyCombination::clear()
 {
-    isActive.clear();
+    _isActiveList.clear();
+    _useThermalInversion = false;
 }
 
-void Crit3DProxyCombination::addValue(bool isActive_)
-{
-    isActive.push_back(isActive_);
-}
-
-void Crit3DProxyCombination::setValue(unsigned index, bool isActive_)
-{
-    isActive[index] = isActive_;
-}
-
-bool Crit3DProxyCombination::getValue(unsigned index)
-{
-    return isActive[index];
-}
-
-bool Crit3DProxyCombination::getUseThermalInversion() const
-{
-    return useThermalInversion;
-}
-
-void Crit3DProxyCombination::setUseThermalInversion(bool value)
-{
-    useThermalInversion = value;
-}
 
 bool Crit3DInterpolationSettings::getCombination(int combinationInteger, Crit3DProxyCombination &outCombination)
 {
@@ -735,11 +704,15 @@ bool Crit3DInterpolationSettings::getCombination(int combinationInteger, Crit3DP
 
     // avoid combinations with inversion (last index) and without orography
     if (combinationInteger % 2 == 1)
+    {
         if (indexHeight == NODATA || binaryString[indexHeight] == '0')
             return false;
+    }
 
     for (unsigned int i=0; i < binaryString.length()-1; i++)
-        outCombination.setValue(i, binaryString[i] == '1' && selectedCombination.getValue(i));
+    {
+        outCombination.setProxyActive(i, (binaryString[i] == '1' && selectedCombination.isProxyActive(i)) );
+    }
 
     outCombination.setUseThermalInversion(binaryString[binaryString.length()-1] == '1' && selectedCombination.getUseThermalInversion());
 

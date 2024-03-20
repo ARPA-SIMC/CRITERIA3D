@@ -38,6 +38,8 @@
 #include "spatialControl.h"
 #include "interpolationPoint.h"
 #include "interpolation.h"
+#include "interpolationSettings.h"
+
 #include <functional>
 
 
@@ -1027,7 +1029,7 @@ void localSelection(vector <Crit3DInterpolationDataPoint> &inputPoints, vector <
         inputPoints[i].distance = gis::computeDistance(x, y, float((inputPoints[i]).point->utm.x), float((inputPoints[i]).point->utm.y));
 
     unsigned int nrValid = 0;
-    float stepRadius = 10000;           // [m]
+    float stepRadius = 5000;           // [m]
     float r0 = 0;                       // [m]
     float r1 = stepRadius;              // [m]
     unsigned int i;
@@ -1046,6 +1048,7 @@ void localSelection(vector <Crit3DInterpolationDataPoint> &inputPoints, vector <
 
     for (i=0; i < selectedPoints.size(); i++)
         selectedPoints[i].regressionWeight = (1 - selectedPoints[i].distance / r1);
+        //selectedPoints[i].regressionWeight = 1;
 
     mySettings.setLocalRadius(r1);
 }
@@ -1187,7 +1190,7 @@ float retrend(meteoVariable myVar, vector<double> myProxyValues, Crit3DInterpola
         {
             myProxy = mySettings->getProxy(pos);
 
-            if (myCombination.getValue(pos) && myProxy->getIsSignificant())
+            if (myCombination.isProxyActive(pos) && myProxy->getIsSignificant())
             {
                 myProxyValue = mySettings->getProxyValue(pos, myProxyValues);
 
@@ -1255,7 +1258,7 @@ void detrending(std::vector <Crit3DInterpolationDataPoint> &myPoints,
 
     for (int pos=0; pos < int(mySettings->getProxyNr()); pos++)
     {
-        if (myCombination.getValue(pos))
+        if (myCombination.isProxyActive(pos))
         {
             myProxy = mySettings->getProxy(pos);
             myProxy->setIsSignificant(false);
@@ -1280,21 +1283,21 @@ void detrending(std::vector <Crit3DInterpolationDataPoint> &myPoints,
     }
 }
 
-bool proxyValidity(std::vector <Crit3DInterpolationDataPoint> &myPoints, int proxyPos, float stdDevThreshold, float* avg, float* stdDev)
+
+bool proxyValidity(std::vector <Crit3DInterpolationDataPoint> &myPoints, int proxyPos, float stdDevThreshold, double &avg, double &stdDev)
 {
-    std::vector <float> proxyValues;
-    float myValue, sum = 0;
+    std::vector<float> proxyValues;
     const int MIN_NR = 10;
-    unsigned i;
 
-    *avg = NODATA;
-    *stdDev = NODATA;
+    avg = NODATA;
+    stdDev = NODATA;
 
-    for (i = 0; i < myPoints.size(); i++)
+    double sum = 0;
+    for (unsigned i = 0; i < myPoints.size(); i++)
     {
         if (myPoints[i].isActive)
         {
-            myValue = myPoints[i].getProxyValue(proxyPos);
+            float myValue = myPoints[i].getProxyValue(proxyPos);
             if (myValue != NODATA)
             {
                 proxyValues.push_back(myValue);
@@ -1305,28 +1308,32 @@ bool proxyValidity(std::vector <Crit3DInterpolationDataPoint> &myPoints, int pro
 
     if (proxyValues.size() < MIN_NR) return false;
 
-    *avg = sum / proxyValues.size();
+    avg = sum / proxyValues.size();
 
     sum = 0;
-    for (i=0; i < proxyValues.size(); i++)
-        sum += (proxyValues[i] - *avg) * (proxyValues[i] - *avg);
+    for (unsigned i = 0; i < proxyValues.size(); i++)
+    {
+        sum += (proxyValues[i] - avg) * (proxyValues[i] - avg);
+    }
 
-    *stdDev = float(sqrt(sum / (proxyValues.size() - 1)));
+    stdDev = sqrt(sum / (proxyValues.size() - 1));
 
     if (stdDevThreshold != NODATA)
-        return (*stdDev > stdDevThreshold);
+        return (stdDev > stdDevThreshold);
     else
         return true;
 }
 
-bool setFittingParameters(Crit3DProxyCombination myCombination, Crit3DInterpolationSettings* mySettings,
+
+bool setAllFittingParameters(Crit3DProxyCombination myCombination, Crit3DInterpolationSettings* mySettings,
                      std::vector<std::function<double(double, std::vector<double>&)>>& myFunc,
-                     std::vector <std::vector<double>> & paramMin, std::vector <std::vector<double>> & paramMax,
-                     std::vector <std::vector<double>> & paramDelta, std::vector <std::vector<double>> & paramFirstGuess)
+                     std::vector <std::vector<double>> &paramMin, std::vector <std::vector<double>> &paramMax,
+                     std::vector <std::vector<double>> &paramDelta, std::vector <std::vector<double>> &paramFirstGuess,
+                     std::string &errorStr)
 {
     const double RATIO_DELTA = 1000;
 
-    for (unsigned i=0; i<myCombination.getIsActive().size(); i++)
+    for (unsigned i=0; i < myCombination.getProxySize(); i++)
         if (mySettings->getProxy(i)->getIsSignificant())
         {
             if (getProxyPragaName(mySettings->getProxy(i)->getName()) == height)
@@ -1336,6 +1343,12 @@ bool setFittingParameters(Crit3DProxyCombination myCombination, Crit3DInterpolat
 
             std::vector <double> myParam = mySettings->getProxy(i)->getFittingParametersRange();
             unsigned int nrParam = unsigned(myParam.size() / 2);
+
+            if (nrParam == 0)
+            {
+                errorStr = "Missing fitting parameters for proxy: " + mySettings->getProxy(i)->getName();
+                return false;
+            }
 
             double min_,max_;
             std::vector <double> proxyParamMin;
@@ -1368,8 +1381,8 @@ std::vector <double> getfittingParameters(Crit3DProxyCombination myCombination, 
     unsigned i,j,index;
 
     index=0;
-    for (i=0; i<myCombination.getIsActive().size(); i++)
-        if (myCombination.getValue(i))
+    for (i=0; i < myCombination.getProxySize(); i++)
+        if (myCombination.isProxyActive(i))
         {
             if (getProxyPragaName(mySettings->getProxy(i)->getName()) == height)
             {
@@ -1390,19 +1403,21 @@ std::vector <double> getfittingParameters(Crit3DProxyCombination myCombination, 
 }
 
 
-bool multipleDetrending(std::vector <Crit3DInterpolationDataPoint> &myPoints, Crit3DInterpolationSettings* mySettings, meteoVariable myVar)
+bool multipleDetrending(std::vector <Crit3DInterpolationDataPoint> &myPoints,
+                        Crit3DInterpolationSettings* mySettings, meteoVariable myVar, std::string &errorStr)
 {
     if (! getUseDetrendingVar(myVar)) return false;
 
     Crit3DProxyCombination myCombination = mySettings->getSelectedCombination();
 
-    // verify predictors number and if elevation is active
+    // verify predictors number
     unsigned nrPredictors = 0;
     std::vector <unsigned int> proxyIndex;
     Crit3DProxy* myProxy;
-    for (int pos=0; pos < int(mySettings->getProxyNr()); pos++)
+    int proxyNr = int(mySettings->getProxyNr());
+    for (int pos=0; pos < proxyNr; pos++)
     {
-        if (myCombination.getValue(pos))
+        if (myCombination.isProxyActive(pos))
         {
             myProxy = mySettings->getProxy(pos);
             myProxy->setIsSignificant(false);
@@ -1414,21 +1429,24 @@ bool multipleDetrending(std::vector <Crit3DInterpolationDataPoint> &myPoints, Cr
     if (nrPredictors == 0) return false;
 
     // proxy spatial variability (1st step)
-    float avg, stdDev;
+    double avg, stdDev;
     unsigned validNr;
-    unsigned pos;
     validNr = 0;
 
-    for (pos=0; pos < int(mySettings->getProxyNr()); pos++)
+    for (int pos=0; pos < proxyNr; pos++)
     {
-        if (myCombination.getValue(pos) && proxyValidity(myPoints, pos, mySettings->getProxy(pos)->getStdDevThreshold(), &avg, &stdDev))
+        if (myCombination.isProxyActive(pos) && proxyValidity(myPoints, pos, mySettings->getProxy(pos)->getStdDevThreshold(), avg, stdDev))
         {
             mySettings->getProxy(pos)->setIsSignificant(true);
             validNr++;
         }
     }
 
-    if (validNr == 0) return false;
+    if (validNr == 0)
+    {
+        errorStr = "No proxy";
+        return false;
+    }
 
     // exclude points with incomplete proxies
     unsigned i;
@@ -1440,7 +1458,7 @@ bool multipleDetrending(std::vector <Crit3DInterpolationDataPoint> &myPoints, Cr
     while (it != myPoints.end())
     {
         isValid = true;
-        for (pos=0; pos < mySettings->getProxyNr(); pos++)
+        for (int pos=0; pos < proxyNr; pos++)
             if (mySettings->getProxy(pos)->getIsSignificant())
             {
                 proxyValue = it->getProxyValue(pos);
@@ -1465,9 +1483,9 @@ bool multipleDetrending(std::vector <Crit3DInterpolationDataPoint> &myPoints, Cr
     std::vector <float> stdDevs;
 
     validNr = 0;
-    for (pos=0; pos < int(mySettings->getProxyNr()); pos++)
+    for (int pos=0; pos < proxyNr; pos++)
     {
-        if (myCombination.getValue(pos) && proxyValidity(myPoints, pos, mySettings->getProxy(pos)->getStdDevThreshold(), &avg, &stdDev))
+        if (myCombination.isProxyActive(pos) && proxyValidity(myPoints, pos, mySettings->getProxy(pos)->getStdDevThreshold(), avg, stdDev))
         {
             avgs.push_back(avg);
             stdDevs.push_back(stdDev);
@@ -1490,7 +1508,7 @@ bool multipleDetrending(std::vector <Crit3DInterpolationDataPoint> &myPoints, Cr
     for (i=0; i < myPoints.size(); i++)
     {
         rowPredictors.clear();
-        for (pos=0; pos < mySettings->getProxyNr(); pos++)
+        for (int pos=0; pos < proxyNr; pos++)
             if ((mySettings->getProxy(pos)->getIsSignificant()))
             {
                 proxyValue = myPoints[i].getProxyValue(pos);
@@ -1506,9 +1524,10 @@ bool multipleDetrending(std::vector <Crit3DInterpolationDataPoint> &myPoints, Cr
 
     if (myPoints.size() < mySettings->getMinPointsLocalDetrending())
     {
-        for (pos = 0; pos < mySettings->getProxyNr(); pos++)
+        for (int pos = 0; pos < proxyNr; pos++)
             mySettings->getProxy(pos)->setIsSignificant(false);
 
+        errorStr = "Not enough points for detrending.";
         return false;
     }
 
@@ -1516,13 +1535,17 @@ bool multipleDetrending(std::vector <Crit3DInterpolationDataPoint> &myPoints, Cr
     std::vector <std::vector<double>> parametersMax;
     std::vector <std::vector<double>> parametersDelta;
     std::vector <std::vector<double>> parameters;
-
     std::vector<std::function<double(double, std::vector<double>&)>> myFunc;
-    setFittingParameters(myCombination, mySettings, myFunc, parametersMin, parametersMax, parametersDelta, parameters);
+
+    if (! setAllFittingParameters(myCombination, mySettings, myFunc, parametersMin, parametersMax,
+                                 parametersDelta, parameters, errorStr))
+    {
+        return false;
+    }
 
     // multiple non linear fitting
     interpolation::bestFittingMarquardt_nDimension(&functionSum, myFunc, 1000, 5, parametersMin, parametersMax, parameters, parametersDelta,
-                                                   100, 0.005, 0.01, predictors, predictands, true, weights);
+                                                   100, 0.005, 0.01, predictors, predictands, weights);
 
     mySettings->setFittingFunction(myFunc);
     mySettings->setFittingParameters(parameters);
@@ -1533,7 +1556,7 @@ bool multipleDetrending(std::vector <Crit3DInterpolationDataPoint> &myPoints, Cr
     float detrendValue;
     for (i = 0; i < myPoints.size(); i++)
     {
-        for (pos=0; pos < mySettings->getProxyNr(); pos++)
+        for (int pos=0; pos < proxyNr; pos++)
         {
             if ((mySettings->getProxy(pos)->getIsSignificant()))
             {
@@ -1640,7 +1663,7 @@ void optimalDetrending(meteoVariable myVar, Crit3DMeteoPoint* &myMeteoPoints, in
 
 bool preInterpolation(std::vector <Crit3DInterpolationDataPoint> &myPoints, Crit3DInterpolationSettings* mySettings, Crit3DMeteoSettings* meteoSettings,
                       Crit3DClimateParameters* myClimate, Crit3DMeteoPoint* myMeteoPoints, int nrMeteoPoints,
-                      meteoVariable myVar, Crit3DTime myTime)
+                      meteoVariable myVar, Crit3DTime myTime, std::string &errorStr)
 {
     if (myVar == precipitation || myVar == dailyPrecipitation)
     {
@@ -1659,7 +1682,10 @@ bool preInterpolation(std::vector <Crit3DInterpolationDataPoint> &myPoints, Crit
         if (mySettings->getUseMultipleDetrending())
         {
             mySettings->setCurrentCombination(mySettings->getSelectedCombination());
-            multipleDetrending(myPoints, mySettings, myVar);
+            if (! multipleDetrending(myPoints, mySettings, myVar, errorStr))
+            {
+                return false;
+            }
         }
         else
         {
@@ -1743,7 +1769,7 @@ bool getActiveProxyValues(Crit3DInterpolationSettings *mySettings, const std::ve
     bool isComplete = true;
 
     for (unsigned int i=0; i < mySettings->getProxyNr(); i++)
-        if (myCombination.getValue(i) && mySettings->getProxy(i)->getIsSignificant())
+        if (myCombination.isProxyActive(i) && mySettings->getProxy(i)->getIsSignificant())
         {
             activeProxyValues.push_back(allProxyValues[i]);
             if (allProxyValues[i] == NODATA)
@@ -1765,7 +1791,7 @@ void getProxyValuesXY(float x, float y, Crit3DInterpolationSettings* mySettings,
     {
         myValues[i] = NODATA;
 
-        if (myCombination.getValue(i))
+        if (myCombination.isProxyActive(i))
         {
             proxyGrid = mySettings->getProxy(i)->getGrid();
             if (proxyGrid != nullptr && proxyGrid->isLoaded)

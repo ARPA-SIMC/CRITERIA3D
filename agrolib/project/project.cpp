@@ -2181,19 +2181,22 @@ bool Project::interpolationCv(meteoVariable myVar, const Crit3DTime& myTime, cro
     }
 
     std::vector <Crit3DInterpolationDataPoint> interpolationPoints;
+    std::string errorStdStr;
 
     // check quality and pass data to interpolation
     if (!checkAndPassDataToInterpolation(quality, myVar, meteoPoints, nrMeteoPoints, myTime,
-                                         &qualityInterpolationSettings, &interpolationSettings, meteoSettings, &climateParameters, interpolationPoints,
-                                         checkSpatialQuality))
+                                         &qualityInterpolationSettings, &interpolationSettings, meteoSettings,
+                                         &climateParameters, interpolationPoints,
+                                         checkSpatialQuality, errorStdStr))
     {
-        logError("No data available: " + QString::fromStdString(getVariableString(myVar)));
+        logError("No data available: " + QString::fromStdString(getVariableString(myVar)) + "\n" + QString::fromStdString(errorStdStr));
         return false;
     }
 
-    if (! preInterpolation(interpolationPoints, &interpolationSettings, meteoSettings, &climateParameters, meteoPoints, nrMeteoPoints, myVar, myTime))
+    if (! preInterpolation(interpolationPoints, &interpolationSettings, meteoSettings, &climateParameters,
+                          meteoPoints, nrMeteoPoints, myVar, myTime, errorStdStr))
     {
-        logError("Interpolation: error in function preInterpolation");
+        logError("Error in function preInterpolation:\n" + QString::fromStdString(errorStdStr));
         return false;
     }
 
@@ -2210,21 +2213,23 @@ bool Project::interpolationCv(meteoVariable myVar, const Crit3DTime& myTime, cro
 bool Project::interpolationDem(meteoVariable myVar, const Crit3DTime& myTime, gis::Crit3DRasterGrid *myRaster)
 {
     std::vector <Crit3DInterpolationDataPoint> interpolationPoints;
+    std::string errorStdStr;
 
     // check quality and pass data to interpolation
-    if (!checkAndPassDataToInterpolation(quality, myVar, meteoPoints, nrMeteoPoints, myTime,
+    if (! checkAndPassDataToInterpolation(quality, myVar, meteoPoints, nrMeteoPoints, myTime,
                                          &qualityInterpolationSettings, &interpolationSettings, meteoSettings, &climateParameters, interpolationPoints,
-                                         checkSpatialQuality))
+                                         checkSpatialQuality, errorStdStr))
     {
-        errorString = "No data available: " + QString::fromStdString(getVariableString(myVar));
+        errorString = "No data available: " + QString::fromStdString(getVariableString(myVar))
+                      + "\n" + QString::fromStdString(errorStdStr);
         return false;
     }
 
     // detrending, checking precipitation and optimizing td parameters
     if (! preInterpolation(interpolationPoints, &interpolationSettings, meteoSettings,
-                         &climateParameters, meteoPoints, nrMeteoPoints, myVar, myTime))
+                         &climateParameters, meteoPoints, nrMeteoPoints, myVar, myTime, errorStdStr))
     {
-        errorString = "Error in function preInterpolation.";
+        errorString = "Error in function preInterpolation:\n" + QString::fromStdString(errorStdStr);
         return false;
     }
 
@@ -2257,11 +2262,14 @@ bool Project::interpolationDemLocalDetrending(meteoVariable myVar, const Crit3DT
 
     // pass data to interpolation
     std::vector <Crit3DInterpolationDataPoint> interpolationPoints;
+    std::string errorStdStr;
+
     if (!checkAndPassDataToInterpolation(quality, myVar, meteoPoints, nrMeteoPoints, myTime,
                                          &qualityInterpolationSettings, &interpolationSettings, meteoSettings, &climateParameters, interpolationPoints,
-                                         checkSpatialQuality))
+                                         checkSpatialQuality, errorStdStr))
     {
-        logError("No data available: " + QString::fromStdString(getVariableString(myVar)));
+        errorString = "No data available: " + QString::fromStdString(getVariableString(myVar))
+                      + "\n" + QString::fromStdString(errorStdStr);
         return false;
     }
 
@@ -2286,7 +2294,13 @@ bool Project::interpolationDemLocalDetrending(meteoVariable myVar, const Crit3DT
                 {
                     std::vector <Crit3DInterpolationDataPoint> subsetInterpolationPoints;
                     localSelection(interpolationPoints, subsetInterpolationPoints, x, y, interpolationSettings);
-                    preInterpolation(subsetInterpolationPoints, &interpolationSettings, meteoSettings, &climateParameters, meteoPoints, nrMeteoPoints, myVar, myTime);
+                    if (! preInterpolation(subsetInterpolationPoints, &interpolationSettings, meteoSettings, &climateParameters,
+                                          meteoPoints, nrMeteoPoints, myVar, myTime, errorStdStr))
+                    {
+                        errorString = "Error in function preInterpolation:\n" + QString::fromStdString(errorStdStr);
+                        return false;
+                    }
+
                     getProxyValuesXY(x, y, &interpolationSettings, proxyValues);
                     outputPoints[i].currentValue = interpolate(subsetInterpolationPoints, &interpolationSettings, meteoSettings,
                                                                myVar, x, y, outputPoints[i].z, proxyValues, true);
@@ -2312,7 +2326,13 @@ bool Project::interpolationDemLocalDetrending(meteoVariable myVar, const Crit3DT
 
                     std::vector <Crit3DInterpolationDataPoint> subsetInterpolationPoints;
                     localSelection(interpolationPoints, subsetInterpolationPoints, x, y, interpolationSettings);
-                    preInterpolation(subsetInterpolationPoints, &interpolationSettings, meteoSettings, &climateParameters, meteoPoints, nrMeteoPoints, myVar, myTime);
+                    if (! preInterpolation(subsetInterpolationPoints, &interpolationSettings, meteoSettings, &climateParameters,
+                                          meteoPoints, nrMeteoPoints, myVar, myTime, errorStdStr))
+                    {
+                        errorString = "Error in function preInterpolation:\n" + QString::fromStdString(errorStdStr);
+                        return false;
+                    }
+
                     getProxyValuesXY(x, y, &interpolationSettings, proxyValues);
                     myRaster->value[row][col] = interpolate(subsetInterpolationPoints, &interpolationSettings, meteoSettings,
                                                             myVar, x, y, z, proxyValues, true);
@@ -2360,17 +2380,24 @@ bool Project::interpolateDemRadiation(const Crit3DTime& myTime, gis::Crit3DRaste
     }
 
     bool result;
+    std::string errorStdStr;
+
     result = checkAndPassDataToInterpolation(quality, atmTransmissivity, meteoPoints, nrMeteoPoints,
                                           myTime, &qualityInterpolationSettings, &interpolationSettings,
-                                          meteoSettings, &climateParameters, interpolationPoints, checkSpatialQuality);
+                                          meteoSettings, &climateParameters,
+                                          interpolationPoints, checkSpatialQuality, errorStdStr);
     if (! result)
     {
         logError("Error in function interpolateDemRadiation: not enough transmissivity data.");
         return false;
     }
 
-    preInterpolation(interpolationPoints, &interpolationSettings, meteoSettings, &climateParameters,
-                     meteoPoints, nrMeteoPoints, atmTransmissivity, myTime);
+    if (! preInterpolation(interpolationPoints, &interpolationSettings, meteoSettings, &climateParameters,
+                            meteoPoints, nrMeteoPoints, atmTransmissivity, myTime, errorStdStr))
+    {
+        logError("Error in function preInterpolation:\n" + QString::fromStdString(errorStdStr));
+        return false;
+    }
 
     // interpolate transmissivity
     if (getComputeOnlyPoints())
@@ -2489,7 +2516,7 @@ bool Project::meteoGridAggregateProxy(std::vector <gis::Crit3DRasterGrid*> &myGr
 
     for (unsigned int i=0; i < interpolationSettings.getProxyNr(); i++)
     {
-        if (interpolationSettings.getCurrentCombination().getValue(i))
+        if (interpolationSettings.getCurrentCombination().isProxyActive(i))
         {
             gis::Crit3DRasterGrid* myGrid = new gis::Crit3DRasterGrid();
 
@@ -2511,11 +2538,12 @@ bool Project::interpolationGrid(meteoVariable myVar, const Crit3DTime& myTime)
         return false;
 
     std::vector <Crit3DInterpolationDataPoint> interpolationPoints;
+    std::string errorStdStr;
 
     // check quality and pass data to interpolation
-    if (!checkAndPassDataToInterpolation(quality, myVar, meteoPoints, nrMeteoPoints, myTime,
+    if (! checkAndPassDataToInterpolation(quality, myVar, meteoPoints, nrMeteoPoints, myTime,
                                          &qualityInterpolationSettings, &interpolationSettings, meteoSettings, &climateParameters, interpolationPoints,
-                                         checkSpatialQuality))
+                                         checkSpatialQuality, errorStdStr))
     {
         logError("No data available: " + QString::fromStdString(getVariableString(myVar)));
         return false;
@@ -2526,9 +2554,9 @@ bool Project::interpolationGrid(meteoVariable myVar, const Crit3DTime& myTime)
     if (! interpolationSettings.getUseLocalDetrending())
     {
         if (! preInterpolation(interpolationPoints, &interpolationSettings, meteoSettings,
-                              &climateParameters, meteoPoints, nrMeteoPoints, myVar, myTime))
+                              &climateParameters, meteoPoints, nrMeteoPoints, myVar, myTime, errorStdStr))
         {
-            logError("Interpolation: error in function preInterpolation");
+            logError("Error in function preInterpolation:\n" + QString::fromStdString(errorStdStr));
             return false;
         }
         myCombination = interpolationSettings.getCurrentCombination();
@@ -2571,7 +2599,7 @@ bool Project::interpolationGrid(meteoVariable myVar, const Crit3DTime& myTime)
                     {
                         proxyValues[i] = NODATA;
 
-                        if (myCombination.getValue(i))
+                        if (myCombination.isProxyActive(i))
                         {
                             if (proxyIndex < meteoGridProxies.size())
                             {
@@ -2588,7 +2616,14 @@ bool Project::interpolationGrid(meteoVariable myVar, const Crit3DTime& myTime)
                     {
                         std::vector <Crit3DInterpolationDataPoint> subsetInterpolationPoints;
                         localSelection(interpolationPoints, subsetInterpolationPoints, myX, myY, interpolationSettings);
-                        preInterpolation(subsetInterpolationPoints, &interpolationSettings, meteoSettings, &climateParameters, meteoPoints, nrMeteoPoints, myVar, myTime);
+
+                        if (! preInterpolation(subsetInterpolationPoints, &interpolationSettings, meteoSettings,
+                                              &climateParameters, meteoPoints, nrMeteoPoints, myVar, myTime, errorStdStr))
+                        {
+                            logError("Error in function preInterpolation:\n" + QString::fromStdString(errorStdStr));
+                            return false;
+                        }
+
                         interpolatedValue = interpolate(subsetInterpolationPoints, &interpolationSettings, meteoSettings, myVar, myX, myY, myZ, proxyValues, true);
                     }
                     else
@@ -2898,7 +2933,7 @@ void Project::saveProxies()
         myProxy = interpolationSettings.getProxy(i);
         parameters->beginGroup("proxy_" + QString::fromStdString(myProxy->getName()));
             parameters->setValue("order", i+1);
-            parameters->setValue("active", interpolationSettings.getSelectedCombination().getValue(i));
+            parameters->setValue("active", interpolationSettings.getSelectedCombination().isProxyActive(i));
             parameters->setValue("use_for_spatial_quality_control", myProxy->getForQualityControl());
             if (myProxy->getProxyTable() != "") parameters->setValue("table", QString::fromStdString(myProxy->getProxyTable()));
             if (myProxy->getProxyField() != "") parameters->setValue("field", QString::fromStdString(myProxy->getProxyField()));

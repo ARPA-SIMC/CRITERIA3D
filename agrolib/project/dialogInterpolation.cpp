@@ -218,7 +218,7 @@ void DialogInterpolation::redrawProxies()
          Crit3DProxy* myProxy = _interpolationSettings->getProxy(i);
          QListWidgetItem *chkProxy = new QListWidgetItem(QString::fromStdString(myProxy->getName()), proxyListCheck);
          chkProxy->setFlags(chkProxy->flags() | Qt::ItemIsUserCheckable);
-         if (_interpolationSettings->getSelectedCombination().getValue(i))
+         if (_interpolationSettings->getSelectedCombination().isProxyActive(i))
             chkProxy->setCheckState(Qt::Checked);
          else
             chkProxy->setCheckState(Qt::Unchecked);

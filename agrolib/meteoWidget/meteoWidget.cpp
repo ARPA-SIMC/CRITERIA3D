@@ -253,6 +253,7 @@ Crit3DMeteoWidget::Crit3DMeteoWidget(bool isGrid_, QString projectPath, Crit3DMe
 
     dailyButton = new QPushButton(tr("daily"));
     hourlyButton = new QPushButton(tr("hourly"));
+    monthlyButton = new QPushButton(tr("monthly"));
     addVarButton = new QPushButton(tr("+/- var"));
     tableButton = new QPushButton(tr("view table"));
     redrawButton = new QPushButton(tr("redraw"));
@@ -264,6 +265,7 @@ Crit3DMeteoWidget::Crit3DMeteoWidget(bool isGrid_, QString projectPath, Crit3DMe
     lastDate = new QDateTimeEdit(currentDate);
     dailyButton->setMaximumWidth(100);
     hourlyButton->setMaximumWidth(100);
+    monthlyButton->setMaximumWidth(100);
     addVarButton->setMaximumWidth(100);
     tableButton->setMaximumWidth(100);
     redrawButton->setMaximumWidth(100);
@@ -283,13 +285,22 @@ Crit3DMeteoWidget::Crit3DMeteoWidget(bool isGrid_, QString projectPath, Crit3DMe
     {
         dailyButton->setEnabled(false);
         hourlyButton->setEnabled(true);
+        monthlyButton->setEnabled(true);
     }
-    else
+    else if (currentFreq == hourly)
     {
-        dailyButton->setEnabled(true);
         hourlyButton->setEnabled(false);
+        dailyButton->setEnabled(true);
+        monthlyButton->setEnabled(true);
+    }
+    else if (currentFreq == monthly)
+    {
+        monthlyButton->setEnabled(false);
+        dailyButton->setEnabled(true);
+        hourlyButton->setEnabled(true);
     }
 
+    buttonLayout->addWidget(monthlyButton);
     buttonLayout->addWidget(dailyButton);
     buttonLayout->addWidget(hourlyButton);
     buttonLayout->addWidget(addVarButton);
@@ -363,6 +374,7 @@ Crit3DMeteoWidget::Crit3DMeteoWidget(bool isGrid_, QString projectPath, Crit3DMe
     viewMenu->addAction(dataSum);
 
     connect(addVarButton, &QPushButton::clicked, [=](){ showVar(); });
+    connect(monthlyButton, &QPushButton::clicked, [=](){ showMonthlyGraph(); });
     connect(dailyButton, &QPushButton::clicked, [=](){ showDailyGraph(); });
     connect(hourlyButton, &QPushButton::clicked, [=](){ showHourlyGraph(); });
     connect(tableButton, &QPushButton::clicked, [=](){ showTable(); });
@@ -1484,13 +1496,17 @@ void Crit3DMeteoWidget::showVar()
 
     if (currentFreq == noFrequency)
     {
-        if (!dailyButton->isEnabled()) // dailyButton is pressed
+        if (dailyButton->isChecked()) // dailyButton is pressed
         {
             currentFreq = daily;
         }
-        else
+        else if (hourlyButton->isChecked())
         {
             currentFreq = hourly;
+        }
+        else if (monthlyButton->isChecked())
+        {
+            currentFreq = monthly;
         }
     }
     QList<QString> allKeys = MapCSVStyles.keys();
@@ -1512,6 +1528,13 @@ void Crit3DMeteoWidget::showVar()
                 allVar.append(allKeys[i]);
             }
         }
+        else if (currentFreq == monthly)
+        {
+            if (!allKeys[i].contains("MONTHLY") && !selectedVar.contains(allKeys[i]))
+            {
+                allVar.append(allKeys[i]);
+            }
+        }
     }
     DialogSelectVar selectDialog(allVar, selectedVar);
     if (selectDialog.result() == QDialog::Accepted)
@@ -1524,6 +1547,45 @@ void Crit3DMeteoWidget::showVar()
     }
 }
 
+void Crit3DMeteoWidget::showMonthlyGraph()
+{
+    if (! isInitialized) return;
+
+    currentFreq = monthly;
+
+    dailyButton->setEnabled(true);
+    hourlyButton->setEnabled(true);
+    monthlyButton->setEnabled(false);
+
+     // TO DO
+/*
+    QList<QString> currentMonthlyVar = currentVariables;
+    currentVariables.clear();
+
+    for (int i = 0; i<currentMonthlyVar.size(); i++)
+    {
+        QString name = currentMonthlyVar[i];
+        auto searchMonthly = MapMonthlyMeteoVar.find(name.toStdString());
+        if (searchMonthly != MapMonthlyMeteoVar.end())
+        {
+            meteoVariable monthlyVar = MapMonthlyMeteoVar.at(name.toStdString());
+            meteoVariable dailyVar = updateMeteoVariable(monthlyVar, daily);
+            if (dailyVar != noMeteoVar)
+            {
+                QString varString = QString::fromStdString(MapDailyMeteoVarToString.at(dailyVar));
+                if (!currentVariables.contains(varString))
+                {
+                    currentVariables.append(varString);
+                }
+            }
+        }
+    }
+
+    updateSeries();
+    redraw();
+*/
+}
+
 
 void Crit3DMeteoWidget::showDailyGraph()
 {
@@ -1533,6 +1595,7 @@ void Crit3DMeteoWidget::showDailyGraph()
 
     dailyButton->setEnabled(false);
     hourlyButton->setEnabled(true);
+    monthlyButton->setEnabled(true);
 
     QList<QString> currentHourlyVar = currentVariables;
     currentVariables.clear();
@@ -1569,6 +1632,7 @@ void Crit3DMeteoWidget::showHourlyGraph()
 
     hourlyButton->setEnabled(false);
     dailyButton->setEnabled(true);
+    monthlyButton->setEnabled(true);
 
     QList<QString> currentDailyVar = currentVariables;
     currentVariables.clear();

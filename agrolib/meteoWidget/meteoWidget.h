@@ -35,6 +35,7 @@
             void drawDailyVar();
             void drawEnsembleDailyVar();
             void drawHourlyVar();
+            void showMonthlyGraph();
             void showDailyGraph();
             void showHourlyGraph();
             void updateSeries();
@@ -81,6 +82,7 @@
             QPushButton *addVarButton;
             QPushButton *dailyButton;
             QPushButton *hourlyButton;
+            QPushButton *monthlyButton;
             QPushButton *tableButton;
             QPushButton *redrawButton;
             QPushButton *shiftPreviousButton;
