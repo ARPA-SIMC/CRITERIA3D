@@ -285,17 +285,22 @@ void Crit3DProxyWidget::plot()
     chartView->cleanScatterSeries();
     outInterpolationPoints.clear();
 
+    std::string errorStdStr;
     if (detrended.isChecked())
     {
         outInterpolationPoints.clear();
+
         checkAndPassDataToInterpolation(quality, myVar, meteoPoints, nrMeteoPoints, getCurrentTime(), SQinterpolationSettings,
-                                        interpolationSettings, meteoSettings, climateParam, outInterpolationPoints, checkSpatialQuality);
+                                        interpolationSettings, meteoSettings, climateParam,
+                                        outInterpolationPoints, checkSpatialQuality, errorStdStr);
+
         detrending(outInterpolationPoints, interpolationSettings->getSelectedCombination(), interpolationSettings, climateParam, myVar, getCurrentTime());
     }
     else
     {
         checkAndPassDataToInterpolation(quality, myVar, meteoPoints, nrMeteoPoints, getCurrentTime(), SQinterpolationSettings,
-                                        interpolationSettings, meteoSettings, climateParam, outInterpolationPoints, checkSpatialQuality);
+                                        interpolationSettings, meteoSettings, climateParam,
+                                        outInterpolationPoints, checkSpatialQuality, errorStdStr);
     }
     QList<QPointF> pointListPrimary, pointListSecondary, pointListSupplemental, pointListMarked;
     QMap< QString, QPointF > idPointMap1;

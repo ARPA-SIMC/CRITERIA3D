@@ -15,13 +15,15 @@
     #endif
 
     bool checkData(Crit3DQuality* myQuality, meteoVariable myVar, Crit3DMeteoPoint* meteoPoints, int nrMeteoPoints, Crit3DTime myTime,
-                   Crit3DInterpolationSettings* spatialQualityInterpolationSettings, Crit3DMeteoSettings *meteoSettings, Crit3DClimateParameters *myClimate, bool checkSpatial);
+                    Crit3DInterpolationSettings* spatialQualityInterpolationSettings, Crit3DMeteoSettings *meteoSettings,
+                    Crit3DClimateParameters *myClimate, bool checkSpatial, std::string &errorStr);
 
     bool checkAndPassDataToInterpolation(Crit3DQuality* myQuality, meteoVariable myVar, Crit3DMeteoPoint* meteoPoints,
                                          int nrMeteoPoints, Crit3DTime myTime, Crit3DInterpolationSettings *SQinterpolationSettings,
-                                         Crit3DInterpolationSettings* interpolationSettings, Crit3DMeteoSettings *meteoSettings, Crit3DClimateParameters *myClimate,
+                                         Crit3DInterpolationSettings* interpolationSettings, Crit3DMeteoSettings *meteoSettings,
+                                         Crit3DClimateParameters *myClimate,
                                          std::vector<Crit3DInterpolationDataPoint> &myInterpolationPoints,
-                                         bool checkSpatial);
+                                         bool checkSpatial, std::string errorStr);
 
     bool passDataToInterpolation(Crit3DMeteoPoint* meteoPoints, int nrMeteoPoints,
                              std::vector<Crit3DInterpolationDataPoint> &myInterpolationPoints, Crit3DInterpolationSettings* mySettings);
@@ -31,5 +33,8 @@
 
     float computeErrorCrossValidation(meteoVariable myVar, Crit3DMeteoPoint *myPoints, int nrMeteoPoints, const Crit3DTime& myTime, Crit3DMeteoSettings *meteoSettings);
 
+    bool spatialQualityControl(meteoVariable myVar, Crit3DMeteoPoint* meteoPoints, int nrMeteoPoints,
+                               Crit3DInterpolationSettings *settings, Crit3DMeteoSettings* meteoSettings,
+                               Crit3DClimateParameters* myClimate, Crit3DTime myTime, std::string &errorStr);
 
 #endif // SPATIALCONTROL_H

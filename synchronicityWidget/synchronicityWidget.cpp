@@ -285,21 +285,23 @@ void Crit3DSynchronicityWidget::addInterpolationGraph()
     progress.setValue(i+1);
     progress.close();
 
+    std::string errorStdStr;
     for (QDate currentDate = interpolationStartDate; currentDate <= myEndDate; currentDate = currentDate.addDays(1))
     {
         float myValue1 = dailyValues[firstDaily.daysTo(currentDate)+myLag];
         // check quality and pass data to interpolation
         if (!checkAndPassDataToInterpolation(quality, myVar, meteoPoints, nrMeteoPoints, getCrit3DTime(currentDate, 1),
                                              &qualityInterpolationSettings, &interpolationSettings, meteoSettings, climateParameters, interpolationPoints,
-                                             checkSpatialQuality))
+                                             checkSpatialQuality, errorStdStr))
         {
             QMessageBox::critical(nullptr, "Error", "No data available");
             return;
         }
 
-        if (! preInterpolation(interpolationPoints, &interpolationSettings, meteoSettings, climateParameters, meteoPoints, nrMeteoPoints, myVar, getCrit3DTime(currentDate, 1)))
+        if (! preInterpolation(interpolationPoints, &interpolationSettings, meteoSettings, climateParameters,
+                              meteoPoints, nrMeteoPoints, myVar, getCrit3DTime(currentDate, 1), errorStdStr))
         {
-            QMessageBox::critical(nullptr, "Error", "Interpolation: error in function preInterpolation");
+            QMessageBox::critical(nullptr, "Error", "Error in function preInterpolation: " + QString::fromStdString(errorStdStr));
             return;
         }
         float interpolatedValue = interpolate(interpolationPoints, &interpolationSettings, meteoSettings, myVar,

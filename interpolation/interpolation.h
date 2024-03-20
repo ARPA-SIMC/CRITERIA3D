@@ -47,7 +47,7 @@
     float getProxyMaxValue(std::vector <Crit3DInterpolationDataPoint> &myPoints, unsigned pos);
 
     bool preInterpolation(std::vector<Crit3DInterpolationDataPoint> &myPoints, Crit3DInterpolationSettings *mySettings, Crit3DMeteoSettings *meteoSettings, Crit3DClimateParameters* myClimate,
-                          Crit3DMeteoPoint *myMeteoPoints, int nrMeteoPoints, meteoVariable myVar, Crit3DTime myTime);
+                          Crit3DMeteoPoint *myMeteoPoints, int nrMeteoPoints, meteoVariable myVar, Crit3DTime myTime, std::string &errorStr);
 
     bool krigingEstimateVariogram(float *myDist, float *mySemiVar,int sizeMyVar, int nrMyPoints,float myMaxDistance, double *mySill, double *myNugget, double *myRange, double *mySlope, TkrigingMode *myMode, int nrPointData);
     bool krigLinearPrep(double *mySlope, double *myNugget, int nrPointData);
@@ -66,7 +66,9 @@
     void detrending(std::vector <Crit3DInterpolationDataPoint> &myPoints,
                     Crit3DProxyCombination myCombination, Crit3DInterpolationSettings *mySettings, Crit3DClimateParameters *myClimate,
                     meteoVariable myVar, Crit3DTime myTime);
-    bool multipleDetrending(std::vector <Crit3DInterpolationDataPoint> &myPoints, Crit3DInterpolationSettings* mySettings, meteoVariable myVar);
+
+    bool multipleDetrending(std::vector <Crit3DInterpolationDataPoint> &myPoints, Crit3DInterpolationSettings* mySettings,
+                            meteoVariable myVar, std::string &errorStr);
 
     bool getUseDetrendingVar(meteoVariable myVar);
     bool isThermal(meteoVariable myVar);
@@ -92,6 +94,12 @@
 
     bool proxyValidity(std::vector <Crit3DInterpolationDataPoint> &myPoints, int proxyPos,
                        float stdDevThreshold, double &avg, double &stdDev);
+
+    bool setAllFittingParameters(Crit3DProxyCombination myCombination, Crit3DInterpolationSettings* mySettings,
+                                 std::vector<std::function<double(double, std::vector<double>&)>>& myFunc,
+                                 std::vector <std::vector<double>> &paramMin, std::vector <std::vector<double>> &paramMax,
+                                 std::vector <std::vector<double>> &paramDelta, std::vector <std::vector<double>> &paramFirstGuess,
+                                 std::string &errorStr);
 
 
 #endif // INTERPOLATION_H
