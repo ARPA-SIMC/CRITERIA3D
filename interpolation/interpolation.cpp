@@ -38,6 +38,8 @@
 #include "spatialControl.h"
 #include "interpolationPoint.h"
 #include "interpolation.h"
+#include "interpolationSettings.h"
+
 #include <functional>
 
 
@@ -1188,7 +1190,7 @@ float retrend(meteoVariable myVar, vector<double> myProxyValues, Crit3DInterpola
         {
             myProxy = mySettings->getProxy(pos);
 
-            if (myCombination.getValue(pos) && myProxy->getIsSignificant())
+            if (myCombination.isProxyActive(pos) && myProxy->getIsSignificant())
             {
                 myProxyValue = mySettings->getProxyValue(pos, myProxyValues);
 
@@ -1256,7 +1258,7 @@ void detrending(std::vector <Crit3DInterpolationDataPoint> &myPoints,
 
     for (int pos=0; pos < int(mySettings->getProxyNr()); pos++)
     {
-        if (myCombination.getValue(pos))
+        if (myCombination.isProxyActive(pos))
         {
             myProxy = mySettings->getProxy(pos);
             myProxy->setIsSignificant(false);
@@ -1327,7 +1329,7 @@ bool setFittingParameters(Crit3DProxyCombination myCombination, Crit3DInterpolat
 {
     const double RATIO_DELTA = 1000;
 
-    for (unsigned i=0; i<myCombination.getIsActive().size(); i++)
+    for (unsigned i=0; i < myCombination.getProxySize(); i++)
         if (mySettings->getProxy(i)->getIsSignificant())
         {
             if (getProxyPragaName(mySettings->getProxy(i)->getName()) == height)
@@ -1369,8 +1371,8 @@ std::vector <double> getfittingParameters(Crit3DProxyCombination myCombination, 
     unsigned i,j,index;
 
     index=0;
-    for (i=0; i<myCombination.getIsActive().size(); i++)
-        if (myCombination.getValue(i))
+    for (i=0; i < myCombination.getProxySize(); i++)
+        if (myCombination.isProxyActive(i))
         {
             if (getProxyPragaName(mySettings->getProxy(i)->getName()) == height)
             {
@@ -1401,9 +1403,10 @@ bool multipleDetrending(std::vector <Crit3DInterpolationDataPoint> &myPoints, Cr
     unsigned nrPredictors = 0;
     std::vector <unsigned int> proxyIndex;
     Crit3DProxy* myProxy;
-    for (int pos=0; pos < int(mySettings->getProxyNr()); pos++)
+    int proxyNr = int(mySettings->getProxyNr());
+    for (int pos=0; pos < proxyNr; pos++)
     {
-        if (myCombination.getValue(pos))
+        if (myCombination.isProxyActive(pos))
         {
             myProxy = mySettings->getProxy(pos);
             myProxy->setIsSignificant(false);
@@ -1422,7 +1425,7 @@ bool multipleDetrending(std::vector <Crit3DInterpolationDataPoint> &myPoints, Cr
 
     for (pos=0; pos < int(mySettings->getProxyNr()); pos++)
     {
-        if (myCombination.getValue(pos) && proxyValidity(myPoints, pos, mySettings->getProxy(pos)->getStdDevThreshold(), &avg, &stdDev))
+        if (myCombination.isProxyActive(pos) && proxyValidity(myPoints, pos, mySettings->getProxy(pos)->getStdDevThreshold(), &avg, &stdDev))
         {
             mySettings->getProxy(pos)->setIsSignificant(true);
             validNr++;
@@ -1468,7 +1471,7 @@ bool multipleDetrending(std::vector <Crit3DInterpolationDataPoint> &myPoints, Cr
     validNr = 0;
     for (pos=0; pos < int(mySettings->getProxyNr()); pos++)
     {
-        if (myCombination.getValue(pos) && proxyValidity(myPoints, pos, mySettings->getProxy(pos)->getStdDevThreshold(), &avg, &stdDev))
+        if (myCombination.isProxyActive(pos) && proxyValidity(myPoints, pos, mySettings->getProxy(pos)->getStdDevThreshold(), &avg, &stdDev))
         {
             avgs.push_back(avg);
             stdDevs.push_back(stdDev);
@@ -1744,7 +1747,7 @@ bool getActiveProxyValues(Crit3DInterpolationSettings *mySettings, const std::ve
     bool isComplete = true;
 
     for (unsigned int i=0; i < mySettings->getProxyNr(); i++)
-        if (myCombination.getValue(i) && mySettings->getProxy(i)->getIsSignificant())
+        if (myCombination.isProxyActive(i) && mySettings->getProxy(i)->getIsSignificant())
         {
             activeProxyValues.push_back(allProxyValues[i]);
             if (allProxyValues[i] == NODATA)
@@ -1766,7 +1769,7 @@ void getProxyValuesXY(float x, float y, Crit3DInterpolationSettings* mySettings,
     {
         myValues[i] = NODATA;
 
-        if (myCombination.getValue(i))
+        if (myCombination.isProxyActive(i))
         {
             proxyGrid = mySettings->getProxy(i)->getGrid();
             if (proxyGrid != nullptr && proxyGrid->isLoaded)

@@ -2489,7 +2489,7 @@ bool Project::meteoGridAggregateProxy(std::vector <gis::Crit3DRasterGrid*> &myGr
 
     for (unsigned int i=0; i < interpolationSettings.getProxyNr(); i++)
     {
-        if (interpolationSettings.getCurrentCombination().getValue(i))
+        if (interpolationSettings.getCurrentCombination().isProxyActive(i))
         {
             gis::Crit3DRasterGrid* myGrid = new gis::Crit3DRasterGrid();
 
@@ -2571,7 +2571,7 @@ bool Project::interpolationGrid(meteoVariable myVar, const Crit3DTime& myTime)
                     {
                         proxyValues[i] = NODATA;
 
-                        if (myCombination.getValue(i))
+                        if (myCombination.isProxyActive(i))
                         {
                             if (proxyIndex < meteoGridProxies.size())
                             {
@@ -2898,7 +2898,7 @@ void Project::saveProxies()
         myProxy = interpolationSettings.getProxy(i);
         parameters->beginGroup("proxy_" + QString::fromStdString(myProxy->getName()));
             parameters->setValue("order", i+1);
-            parameters->setValue("active", interpolationSettings.getSelectedCombination().getValue(i));
+            parameters->setValue("active", interpolationSettings.getSelectedCombination().isProxyActive(i));
             parameters->setValue("use_for_spatial_quality_control", myProxy->getForQualityControl());
             if (myProxy->getProxyTable() != "") parameters->setValue("table", QString::fromStdString(myProxy->getProxyTable()));
             if (myProxy->getProxyField() != "") parameters->setValue("field", QString::fromStdString(myProxy->getProxyField()));
@@ -3353,7 +3353,7 @@ void Project::showMeteoWidgetGrid(std::string idCell, bool isAppend)
         meteoWidgetGrid->setCurrentDate(currentDate);
         meteoWidgetGridList.append(meteoWidgetGrid);
 
-        QObject::connect(meteoWidgetGrid, SIGNAL(closeWidgetGrid(int)), this, SLOT(deleteMeteoWidgetGrid(int)));
+        //QObject::connect(meteoWidgetGrid, SIGNAL(closeWidgetGrid(int)), this, SLOT(deleteMeteoWidgetGrid(int)));
 
         logInfoGUI("Loading data...");
 

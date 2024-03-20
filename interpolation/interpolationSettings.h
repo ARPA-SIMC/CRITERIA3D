@@ -98,25 +98,27 @@
         void setFittingParametersRange(const std::vector<double> &newFittingParametersRange);
     };
 
+
     class Crit3DProxyCombination
     {
     private:
-        std::deque<bool> isActive;
-        bool useThermalInversion;
-
+        std::vector<bool> _isActiveList;
+        bool _useThermalInversion;
 
     public:
         Crit3DProxyCombination();
 
         void clear();
-        bool getUseThermalInversion() const;
-        void setUseThermalInversion(bool value);
-        void addValue(bool isActive_);
-        void setValue(unsigned index, bool isActive_);
-        bool getValue(unsigned index);
-        std::deque<bool> getIsActive() const;
-        void setIsActive(const std::deque<bool> &value);
+        void addProxyActive(bool value) { _isActiveList.push_back(value); }
+        void setProxyActive(unsigned index, bool value) { _isActiveList[index] = value; }
+        bool isProxyActive(unsigned index) { return _isActiveList[index]; }
+
+        unsigned int getProxySize() const { return unsigned(_isActiveList.size()); }
+
+        bool getUseThermalInversion() const { return _useThermalInversion; }
+        void setUseThermalInversion(bool value) { _useThermalInversion = value; }
     };
+
 
     class Crit3DInterpolationSettings
     {
