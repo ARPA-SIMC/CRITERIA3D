@@ -3353,7 +3353,7 @@ void Project::showMeteoWidgetGrid(std::string idCell, bool isAppend)
         meteoWidgetGrid->setCurrentDate(currentDate);
         meteoWidgetGridList.append(meteoWidgetGrid);
 
-        //QObject::connect(meteoWidgetGrid, SIGNAL(closeWidgetGrid(int)), this, SLOT(deleteMeteoWidgetGrid(int)));
+        QObject::connect(meteoWidgetGrid, SIGNAL(closeWidgetGrid(int)), this, SLOT(deleteMeteoWidgetGrid(int)));
 
         logInfoGUI("Loading data...");
 
