@@ -1283,21 +1283,21 @@ void detrending(std::vector <Crit3DInterpolationDataPoint> &myPoints,
     }
 }
 
-bool proxyValidity(std::vector <Crit3DInterpolationDataPoint> &myPoints, int proxyPos, float stdDevThreshold, float* avg, float* stdDev)
+
+bool proxyValidity(std::vector <Crit3DInterpolationDataPoint> &myPoints, int proxyPos, float stdDevThreshold, double &avg, double &stdDev)
 {
-    std::vector <float> proxyValues;
-    float myValue, sum = 0;
+    std::vector<double> proxyValues;
     const int MIN_NR = 10;
-    unsigned i;
 
-    *avg = NODATA;
-    *stdDev = NODATA;
+    avg = NODATA;
+    stdDev = NODATA;
 
-    for (i = 0; i < myPoints.size(); i++)
+    double sum = 0;
+    for (unsigned i = 0; i < myPoints.size(); i++)
     {
         if (myPoints[i].isActive)
         {
-            myValue = myPoints[i].getProxyValue(proxyPos);
+            double myValue = myPoints[i].getProxyValue(proxyPos);
             if (myValue != NODATA)
             {
                 proxyValues.push_back(myValue);
@@ -1308,19 +1308,22 @@ bool proxyValidity(std::vector <Crit3DInterpolationDataPoint> &myPoints, int pro
 
     if (proxyValues.size() < MIN_NR) return false;
 
-    *avg = sum / proxyValues.size();
+    avg = sum / proxyValues.size();
 
     sum = 0;
-    for (i=0; i < proxyValues.size(); i++)
-        sum += (proxyValues[i] - *avg) * (proxyValues[i] - *avg);
+    for (unsigned i = 0; i < proxyValues.size(); i++)
+    {
+        sum += (proxyValues[i] - avg) * (proxyValues[i] - avg);
+    }
 
-    *stdDev = float(sqrt(sum / (proxyValues.size() - 1)));
+    stdDev = sqrt(sum / (proxyValues.size() - 1));
 
     if (stdDevThreshold != NODATA)
-        return (*stdDev > stdDevThreshold);
+        return (stdDev > stdDevThreshold);
     else
         return true;
 }
+
 
 bool setFittingParameters(Crit3DProxyCombination myCombination, Crit3DInterpolationSettings* mySettings,
                      std::vector<std::function<double(double, std::vector<double>&)>>& myFunc,
@@ -1418,14 +1421,14 @@ bool multipleDetrending(std::vector <Crit3DInterpolationDataPoint> &myPoints, Cr
     if (nrPredictors == 0) return false;
 
     // proxy spatial variability (1st step)
-    float avg, stdDev;
+    double avg, stdDev;
     unsigned validNr;
     unsigned pos;
     validNr = 0;
 
     for (pos=0; pos < int(mySettings->getProxyNr()); pos++)
     {
-        if (myCombination.isProxyActive(pos) && proxyValidity(myPoints, pos, mySettings->getProxy(pos)->getStdDevThreshold(), &avg, &stdDev))
+        if (myCombination.isProxyActive(pos) && proxyValidity(myPoints, pos, mySettings->getProxy(pos)->getStdDevThreshold(), avg, stdDev))
         {
             mySettings->getProxy(pos)->setIsSignificant(true);
             validNr++;
@@ -1471,7 +1474,7 @@ bool multipleDetrending(std::vector <Crit3DInterpolationDataPoint> &myPoints, Cr
     validNr = 0;
     for (pos=0; pos < int(mySettings->getProxyNr()); pos++)
     {
-        if (myCombination.isProxyActive(pos) && proxyValidity(myPoints, pos, mySettings->getProxy(pos)->getStdDevThreshold(), &avg, &stdDev))
+        if (myCombination.isProxyActive(pos) && proxyValidity(myPoints, pos, mySettings->getProxy(pos)->getStdDevThreshold(), avg, stdDev))
         {
             avgs.push_back(avg);
             stdDevs.push_back(stdDev);
@@ -1520,8 +1523,8 @@ bool multipleDetrending(std::vector <Crit3DInterpolationDataPoint> &myPoints, Cr
     std::vector <std::vector<double>> parametersMax;
     std::vector <std::vector<double>> parametersDelta;
     std::vector <std::vector<double>> parameters;
-
     std::vector<std::function<double(double, std::vector<double>&)>> myFunc;
+
     setFittingParameters(myCombination, mySettings, myFunc, parametersMin, parametersMax, parametersDelta, parameters);
 
     // multiple non linear fitting

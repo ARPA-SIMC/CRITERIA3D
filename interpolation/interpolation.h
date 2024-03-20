@@ -90,5 +90,8 @@
                           std::vector <Crit3DInterpolationDataPoint> &selectedPoints,
                           float x, float y, Crit3DInterpolationSettings &mySettings);
 
+    bool proxyValidity(std::vector <Crit3DInterpolationDataPoint> &myPoints, int proxyPos,
+                       float stdDevThreshold, double &avg, double &stdDev);
+
 
 #endif // INTERPOLATION_H
