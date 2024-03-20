@@ -1027,7 +1027,7 @@ void localSelection(vector <Crit3DInterpolationDataPoint> &inputPoints, vector <
         inputPoints[i].distance = gis::computeDistance(x, y, float((inputPoints[i]).point->utm.x), float((inputPoints[i]).point->utm.y));
 
     unsigned int nrValid = 0;
-    float stepRadius = 10000;           // [m]
+    float stepRadius = 5000;           // [m]
     float r0 = 0;                       // [m]
     float r1 = stepRadius;              // [m]
     unsigned int i;
@@ -1046,6 +1046,7 @@ void localSelection(vector <Crit3DInterpolationDataPoint> &inputPoints, vector <
 
     for (i=0; i < selectedPoints.size(); i++)
         selectedPoints[i].regressionWeight = (1 - selectedPoints[i].distance / r1);
+        //selectedPoints[i].regressionWeight = 1;
 
     mySettings.setLocalRadius(r1);
 }
@@ -1522,7 +1523,7 @@ bool multipleDetrending(std::vector <Crit3DInterpolationDataPoint> &myPoints, Cr
 
     // multiple non linear fitting
     interpolation::bestFittingMarquardt_nDimension(&functionSum, myFunc, 1000, 5, parametersMin, parametersMax, parameters, parametersDelta,
-                                                   100, 0.005, 0.01, predictors, predictands, true, weights);
+                                                   100, 0.005, 0.01, predictors, predictands, weights);
 
     mySettings->setFittingFunction(myFunc);
     mySettings->setFittingParameters(parameters);
