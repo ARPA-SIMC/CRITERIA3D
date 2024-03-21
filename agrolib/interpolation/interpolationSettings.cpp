@@ -663,7 +663,7 @@ void Crit3DInterpolationSettings::addProxy(Crit3DProxy myProxy, bool isActive_)
 {
     currentProxy.push_back(myProxy);
 
-    if (getProxyPragaName(myProxy.getName()) == height)
+    if (getProxyPragaName(myProxy.getName()) == proxyHeight)
         setIndexHeight(int(currentProxy.size())-1);
 
     selectedCombination.addProxyActive(isActive_);
