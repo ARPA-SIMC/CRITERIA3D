@@ -20,6 +20,7 @@ QList<QString> getPragaCommandList()
     cmdList.append("CleanClimate    | CleanClimate");
     cmdList.append("Drought         | ComputeDroughtIndexGrid");
     cmdList.append("DroughtPoint    | ComputeDroughtIndexPoint");
+    cmdList.append("Gridding        | InterpolationGridPeriod");
     cmdList.append("GridAggr        | GridAggregation");
     cmdList.append("GridDerVar      | GridDerivedVariables");
     cmdList.append("GridMonthlyInt  | GridMonthlyIntegrationVariables");
@@ -283,7 +284,7 @@ int cmdInterpolationGridPeriod(PragaProject* myProject, QList<QString> argumentL
 
     QDate dateIni, dateFin;
     bool saveRasters = false;
-    QList <QString> varString, aggrVarString;
+    QList <QString> varString;
     QList <meteoVariable> variables, aggrVariables;
     QString var;
     meteoVariable meteoVar;

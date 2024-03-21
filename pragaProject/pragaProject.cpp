@@ -2590,7 +2590,7 @@ bool PragaProject::interpolationMeteoGridPeriod(QDate dateIni, QDate dateFin, QL
             }
         }
 
-        if (countDaysSaving == nrDaysSaving || myDate == dateFin)
+        if (countDaysSaving == nrDaysSaving || myDate == dateFin || myDate == loadDateFin)
         {
             if (aggrVariables.count() > 0)
             {
