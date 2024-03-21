@@ -1132,7 +1132,7 @@ void detrendPoints(std::vector <Crit3DInterpolationDataPoint> &myPoints, Crit3DI
 
         proxyValue = myPoint->getProxyValue(pos);
 
-        if (getProxyPragaName(myProxy->getName()) == height)
+        if (getProxyPragaName(myProxy->getName()) == proxyHeight)
         {
             if (proxyValue != NODATA)
             {
@@ -1198,7 +1198,7 @@ float retrend(meteoVariable myVar, vector<double> myProxyValues, Crit3DInterpola
                 {
                     proxySlope = myProxy->getRegressionSlope();
 
-                    if (getProxyPragaName(myProxy->getName()) == height)
+                    if (getProxyPragaName(myProxy->getName()) == proxyHeight)
                     {
                         if (mySettings->getUseThermalInversion() && myProxy->getInversionIsSignificative())
                         {
@@ -1263,7 +1263,7 @@ void detrending(std::vector <Crit3DInterpolationDataPoint> &myPoints,
             myProxy = mySettings->getProxy(pos);
             myProxy->setIsSignificant(false);
 
-            if (getProxyPragaName(myProxy->getName()) == height)
+            if (getProxyPragaName(myProxy->getName()) == proxyHeight)
             {
                 if (regressionOrography(myPoints, myCombination, mySettings, myClimate, myTime, myVar, pos))
                 {
@@ -1336,7 +1336,7 @@ bool setAllFittingParameters(Crit3DProxyCombination myCombination, Crit3DInterpo
     for (unsigned i=0; i < myCombination.getProxySize(); i++)
         if (mySettings->getProxy(i)->getIsSignificant())
         {
-            if (getProxyPragaName(mySettings->getProxy(i)->getName()) == height)
+            if (getProxyPragaName(mySettings->getProxy(i)->getName()) == proxyHeight)
                 myFunc.push_back(lapseRatePiecewise_two);
             else
                 myFunc.push_back(functionLinear);
@@ -1375,6 +1375,7 @@ bool setAllFittingParameters(Crit3DProxyCombination myCombination, Crit3DInterpo
     return myFunc.size() > 0;
 }
 
+
 std::vector <double> getfittingParameters(Crit3DProxyCombination myCombination, Crit3DInterpolationSettings* mySettings, std::vector <double> paramOut, unsigned pos)
 {
     std::vector <double> myParam;
@@ -1384,7 +1385,7 @@ std::vector <double> getfittingParameters(Crit3DProxyCombination myCombination, 
     for (i=0; i < myCombination.getProxySize(); i++)
         if (myCombination.isProxyActive(i))
         {
-            if (getProxyPragaName(mySettings->getProxy(i)->getName()) == height)
+            if (getProxyPragaName(mySettings->getProxy(i)->getName()) == proxyHeight)
             {
                 if (i == pos)
                     for (j=0; j<5; j++)

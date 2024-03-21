@@ -204,7 +204,7 @@ bool Project::checkProxy(const Crit3DProxy &myProxy, QString* error)
         return false;
     }
 
-    bool isHeight = (getProxyPragaName(name_) == height);
+    bool isHeight = (getProxyPragaName(name_) == proxyHeight);
 
     if (!isHeight && (myProxy.getGridName() == "") && (myProxy.getProxyTable() == "" && myProxy.getProxyField() == ""))
     {
@@ -241,7 +241,7 @@ bool Project::addProxyToProject(std::vector <Crit3DProxy> proxyList, std::deque 
     }
 
     for (i=0; i < interpolationSettings.getProxyNr(); i++)
-        if (getProxyPragaName(interpolationSettings.getProxy(i)->getName()) == height) setProxyDEM();
+        if (getProxyPragaName(interpolationSettings.getProxy(i)->getName()) == proxyHeight) setProxyDEM();
 
     return true;
 }
@@ -683,15 +683,15 @@ bool Project::loadParameters(QString parametersFileName)
             {
                 unsigned int nrParameters;
 
-                if (getProxyPragaName(name_.toStdString()) == height)
-                    nrParameters = 4;
+                if (getProxyPragaName(name_.toStdString()) == proxyHeight)
+                    nrParameters = 5;
                 else
                     nrParameters = 1;
 
                 myList = parameters->value("fitting_parameters").toStringList();
                 if (myList.size() != nrParameters*2)
                 {
-                    errorString = "Incomplete fitting parameters for proxy " + name_;
+                    errorString = "Wrong nr. of fitting parameters for proxy: " + name_;
                     return  false;
                 }
 
