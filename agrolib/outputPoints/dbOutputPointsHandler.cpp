@@ -215,11 +215,10 @@ bool Crit3DOutputPointsDbHandler::saveHourlyCriteria3D_Data(QString tableName, c
         return false;
     }
 
-    // TODO delete data (date, hour) se questo è l'unico salvataggio
     QString timeStr = myTime.toString("yyyy-MM-dd HH:mm:ss");
 
     // field list
-    QString fieldList = "";
+    QString setList = "";
     for (unsigned int i = 0; i < varList.size(); i++)
     {
         QString variableString = QString::fromStdString(getCriteria3DVarName(varList[i]));
@@ -233,27 +232,20 @@ bool Crit3DOutputPointsDbHandler::saveHourlyCriteria3D_Data(QString tableName, c
         {
             int depth = round(layerDepth[layer] * 100);         // [cm]
 
-            QString newField = variableString + "_" + QString::number(depth);
-            fieldList += "'" + newField + "'";
-            if (i  < nrSoilLayers)
-                fieldList += ",";
-        }
-    }
+            QString fieldName = variableString + "_" + QString::number(depth);
+            setList += "'" + fieldName + "'=";
 
-    // values list
-    QString valuesList = "";
-    for (unsigned int i = 0; i < varList.size(); i++)
-    {
-        for (int layer = 1; layer <= nrSoilLayers; layer++)
-        {
-            valuesList += QString::number(values[i], 'f', 2);
-            if (i  < nrSoilLayers)
-                valuesList += ",";
+            int index = i * nrSoilLayers + layer - 1;
+            QString valueStr = QString::number(values[index], 'f', 2);
+            setList += valueStr;
+
+            if (index < (nrValues - 1))
+                setList += ",";
         }
     }
 
     QSqlQuery qry(_db);
-    QString queryString = QString("INSERT INTO '%1' (%2) VALUES (%3) WHERE DATE_TIME ='%4'").arg(tableName, fieldList, valuesList, timeStr);
+    QString queryString = QString("UPDATE '%1' SET %2 WHERE DATE_TIME ='%3'").arg(tableName, setList, timeStr);
     if (! qry.exec(queryString))
     {
         errorStr = QString("Error in query: " + queryString + "\n" + qry.lastError().text());
