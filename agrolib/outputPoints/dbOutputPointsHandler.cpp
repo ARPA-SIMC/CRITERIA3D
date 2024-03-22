@@ -36,23 +36,7 @@ Crit3DOutputPointsDbHandler::~Crit3DOutputPointsDbHandler()
 }
 
 
-bool Crit3DOutputPointsDbHandler::isOpen()
-{
-    return _db.isOpen();
-}
-
-QString Crit3DOutputPointsDbHandler::getDbName()
-{
-    return _db.databaseName();
-}
-
-QString Crit3DOutputPointsDbHandler::getErrorString()
-{
-    return errorString;
-}
-
-
-bool Crit3DOutputPointsDbHandler::createTable(QString tableName, QString& errorStr)
+bool Crit3DOutputPointsDbHandler::createTable(const QString& tableName, QString& errorStr)
 {
     QString queryString = "CREATE TABLE IF NOT EXISTS '" + tableName + "'";
     queryString += " (DATE_TIME TEXT, PRIMARY KEY(DATE_TIME))";
@@ -69,7 +53,7 @@ bool Crit3DOutputPointsDbHandler::createTable(QString tableName, QString& errorS
 }
 
 
-bool Crit3DOutputPointsDbHandler::addColumn(QString tableName, meteoVariable myVar, QString& errorStr)
+bool Crit3DOutputPointsDbHandler::addColumn(const QString &tableName, meteoVariable myVar, QString& errorStr)
 {
     // column name
     QString newField = QString::fromStdString(getMeteoVarName(myVar));
@@ -117,7 +101,7 @@ bool Crit3DOutputPointsDbHandler::addCriteria3DColumn(const QString &tableName, 
 
     // column exists already
     QList<QString> fieldList = getFields(&_db, tableName);
-    if (fieldList.contains(newField))
+    if ( fieldList.contains(newField) )
     {
         return true;
     }
@@ -137,10 +121,10 @@ bool Crit3DOutputPointsDbHandler::addCriteria3DColumn(const QString &tableName, 
 }
 
 
-bool Crit3DOutputPointsDbHandler::saveHourlyMeteoData(QString tableName, const QDateTime& myTime,
-                                                 const std::vector<meteoVariable>& varList,
-                                                 const std::vector<float>& values,
-                                                 QString& errorStr)
+bool Crit3DOutputPointsDbHandler::saveHourlyMeteoData(const QString &tableName, const QDateTime &myTime,
+                                                 const std::vector<meteoVariable> &varList,
+                                                 const std::vector<float> &values,
+                                                 QString &errorStr)
 {
     if (varList.size() != values.size())
     {
@@ -195,11 +179,11 @@ bool Crit3DOutputPointsDbHandler::saveHourlyMeteoData(QString tableName, const Q
 
 
 // layerDepth  [m]
-bool Crit3DOutputPointsDbHandler::saveHourlyCriteria3D_Data(QString tableName, const QDateTime& myTime,
+bool Crit3DOutputPointsDbHandler::saveHourlyCriteria3D_Data(const QString &tableName, const QDateTime& myTime,
                                                         const std::vector<criteria3DVariable>& varList,
                                                         const std::vector<float>& values,
                                                         const std::vector <double>& layerDepth,
-                                                        QString& errorStr)
+                                                        QString &errorStr)
 {
     int nrSoilLayers = int(layerDepth.size()) - 1;
     if (nrSoilLayers <= 0)
@@ -208,7 +192,7 @@ bool Crit3DOutputPointsDbHandler::saveHourlyCriteria3D_Data(QString tableName, c
         return false;
     }
 
-    int nrValues = varList.size() * nrSoilLayers;
+    int nrValues = int(varList.size()) * nrSoilLayers;
     if (nrValues != values.size())
     {
         errorStr = "Error saving values: number of values is not as expected.";

@@ -1,9 +1,10 @@
 #include "dialogNewPoint.h"
+#include "basicMath.h"
+
 
 DialogNewPoint::DialogNewPoint(const QList<QString>& _idList, const gis::Crit3DGisSettings& _gisSettings, gis::Crit3DRasterGrid* _DEMptr)
 :idList(_idList), gisSettings(_gisSettings), DEMpointer(_DEMptr)
 {
-
     setWindowTitle("New point");
     this->resize(300, 180);
     this->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
@@ -101,11 +102,9 @@ DialogNewPoint::~DialogNewPoint()
 void DialogNewPoint::computeUTM()
 {
     if (utmx.text().isEmpty() || utmy.text().isEmpty())
-    {
         return;
-    }
-    double myLat;
-    double myLon;
+
+    double myLat, myLon;
     gis::getLatLonFromUtm(gisSettings, utmx.text().toDouble(), utmy.text().toDouble(), &myLat, &myLon);
     lat.setText(QString::number(myLat));
     lon.setText(QString::number(myLon));
@@ -121,6 +120,7 @@ void DialogNewPoint::getFromDEM()
         QMessageBox::information(nullptr, "DEM not loaded", "Load DEM");
         return;
     }
+
     float demValue;
     if (utmx.text().isEmpty() || utmy.text().isEmpty())
     {
@@ -139,7 +139,7 @@ void DialogNewPoint::getFromDEM()
         demValue = gis::getValueFromXY(*DEMpointer, utmx.text().toDouble(), utmy.text().toDouble());
     }
 
-    if (demValue != DEMpointer->header->flag)
+    if (! isEqual(demValue, DEMpointer->header->flag))
     {
         height.setText(QString::number(demValue));
     }
@@ -224,24 +224,4 @@ void DialogNewPoint::done(int res)
         QDialog::done(QDialog::Rejected);
         return;
     }
-}
-
-QString DialogNewPoint::getId()
-{
-    return id.text();
-}
-
-double DialogNewPoint::getLat()
-{
-    return lat.text().toDouble();
-}
-
-double DialogNewPoint::getLon()
-{
-    return lon.text().toDouble();
-}
-
-double DialogNewPoint::getHeight()
-{
-    return height.text().toDouble();
 }
