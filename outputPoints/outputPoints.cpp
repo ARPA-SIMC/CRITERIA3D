@@ -7,11 +7,11 @@
 
 
 
-bool loadOutputPointListCsv(QString csvFileName, std::vector<gis::Crit3DOutputPoint> &outputPointList,
-                         int utmZone, QString &errorString)
+bool loadOutputPointListCsv(const QString &csvFileName, std::vector<gis::Crit3DOutputPoint> &outputPointList,
+                            int utmZone, QString &errorString)
 {
     QList<QList<QString>> data;
-    if (!importOutputPointsCsv(csvFileName, data, errorString))
+    if (! importPointPropertiesCsv(csvFileName, data, errorString))
         return false;
 
     for (int i = 0; i < data.size(); i++)
@@ -32,7 +32,7 @@ bool loadOutputPointListCsv(QString csvFileName, std::vector<gis::Crit3DOutputPo
 }
 
 
-bool writeOutputPointListCsv(QString csvFileName, std::vector<gis::Crit3DOutputPoint> &outputPointList, QString &errorString)
+bool writeOutputPointListCsv(const QString &csvFileName, std::vector<gis::Crit3DOutputPoint> &outputPointList, QString &errorString)
 {
     errorString.clear();
     if (csvFileName == "")
@@ -84,7 +84,7 @@ bool writeOutputPointListCsv(QString csvFileName, std::vector<gis::Crit3DOutputP
 }
 
 
-bool importOutputPointsCsv(QString csvFileName, QList<QList<QString>> &data, QString &errorString)
+bool importPointPropertiesCsv(const QString &csvFileName, QList<QList<QString>> &pointsProperties, QString &errorString)
 {
     errorString.clear();
     if (csvFileName == "")
@@ -178,7 +178,8 @@ bool importOutputPointsCsv(QString csvFileName, QList<QList<QString>> &data, QSt
             myFile.close();
             return false;
         }
-        data.append(line);
+
+        pointsProperties.append(line);
     }
     myFile.close();
 

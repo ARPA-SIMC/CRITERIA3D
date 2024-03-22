@@ -12,26 +12,26 @@ public:
     DialogNewPoint(const QList<QString>& _idList, const gis::Crit3DGisSettings& _gisSettings, gis::Crit3DRasterGrid* _DEMptr);
     ~DialogNewPoint();
 
-    void done(int res);
+    QString getId() { return id.text(); }
+    double getLat() { return lat.text().toDouble(); }
+    double getLon() { return lon.text().toDouble(); }
+    double getHeight() { return height.text().toDouble(); }
 
     void setDEM();
     void computeUTM();
     void getFromDEM();
-    QString getId();
-    double getLat();
-    double getLon();
-    double getHeight();
+
+    void done(int res);
 
 private:
     QList<QString> idList;
+
     gis::Crit3DGisSettings gisSettings;
     gis::Crit3DRasterGrid* DEMpointer;
-    QLineEdit id;
-    QLineEdit utmx;
-    QLineEdit utmy;
-    QLineEdit lat;
-    QLineEdit lon;
-    QLineEdit height;
+
+    QLineEdit id, utmx, utmy;
+    QLineEdit lat, lon, height;
+
     QPushButton computeUTMButton;
     QPushButton getFromDEMButton;
 };
