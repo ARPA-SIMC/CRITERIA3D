@@ -20,6 +20,7 @@ QList<QString> getPragaCommandList()
     cmdList.append("CleanClimate    | CleanClimate");
     cmdList.append("Drought         | ComputeDroughtIndexGrid");
     cmdList.append("DroughtPoint    | ComputeDroughtIndexPoint");
+    cmdList.append("Gridding        | InterpolationGridPeriod");
     cmdList.append("GridAggr        | GridAggregation");
     cmdList.append("GridDerVar      | GridDerivedVariables");
     cmdList.append("GridMonthlyInt  | GridMonthlyIntegrationVariables");
@@ -283,7 +284,7 @@ int cmdInterpolationGridPeriod(PragaProject* myProject, QList<QString> argumentL
 
     QDate dateIni, dateFin;
     bool saveRasters = false;
-    QList <QString> varString, aggrVarString;
+    QList <QString> varString;
     QList <meteoVariable> variables, aggrVariables;
     QString var;
     meteoVariable meteoVar;
@@ -859,9 +860,7 @@ int pragaShell(PragaProject* myProject)
             int result = executeCommand(argumentList, myProject);
             if (result != 0)
             {
-                myProject->logError("Praga shell error code: " + QString::number(result));
-
-                //return result;
+                myProject->logError("Praga shell error code: " + QString::number(result) + "\n" + myProject->errorString);
             }
         }
     }
