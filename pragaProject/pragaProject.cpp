@@ -2380,9 +2380,6 @@ bool PragaProject::interpolationMeteoGridPeriod(QDate dateIni, QDate dateFin, QL
     bool isDaily = false, isHourly = false;
     QList<meteoVariable> varToSave;
     int countDaysSaving = 0;
-    QDate loadDateFin;
-    QDate saveDateIni;
-    QString error;
 
     if (pragaDailyMaps == nullptr) pragaDailyMaps = new Crit3DDailyMeteoMaps(DEM);
     if (pragaHourlyMaps == nullptr) pragaHourlyMaps = new PragaHourlyMeteoMaps(DEM);
@@ -2444,13 +2441,15 @@ bool PragaProject::interpolationMeteoGridPeriod(QDate dateIni, QDate dateFin, QL
         varToSave.push_back(myVar);
 
     int currentYear = NODATA;
-    saveDateIni = dateIni;
+    QDate saveDateIni = dateIni;
 
     if (nrDaysLoading == NODATA)
         nrDaysLoading = dateIni.daysTo(dateFin)+1;
 
     if (nrDaysSaving == NODATA || nrDaysSaving > nrDaysLoading)
         nrDaysSaving = nrDaysLoading;
+
+    QDate loadDateFin = QDate(1800, 1, 1);
 
     while (myDate <= dateFin)
     {
@@ -2475,16 +2474,14 @@ bool PragaProject::interpolationMeteoGridPeriod(QDate dateIni, QDate dateFin, QL
         if (useProxies && currentYear != myDate.year())
         {
             logInfoGUI("Interpolating proxy grid series...");
-            if (checkProxyGridSeries(&interpolationSettings, DEM, proxyGridSeries, myDate, &error))
-            {
-                if (! readProxyValues()) return false;
-                currentYear = myDate.year();
-            }
-            else
-            {
-                errorString = error;
+
+            if (! checkProxyGridSeries(&interpolationSettings, DEM, proxyGridSeries, myDate, &errorString))
                 return false;
-            }
+
+            if (! readProxyValues())
+                return false;
+
+            currentYear = myDate.year();
         }
 
         if (isHourly)

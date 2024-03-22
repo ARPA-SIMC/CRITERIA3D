@@ -860,9 +860,7 @@ int pragaShell(PragaProject* myProject)
             int result = executeCommand(argumentList, myProject);
             if (result != 0)
             {
-                myProject->logError("Praga shell error code: " + QString::number(result));
-
-                //return result;
+                myProject->logError("Praga shell error code: " + QString::number(result) + "\n" + myProject->errorString);
             }
         }
     }
