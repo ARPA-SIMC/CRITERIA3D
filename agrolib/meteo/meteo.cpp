@@ -1037,6 +1037,7 @@ meteoVariable getMeteoVar(std::string varString)
     return noMeteoVar;
 }
 
+
 std::string getMeteoVarName(meteoVariable var)
 {
     auto search = MapDailyMeteoVarToString.find(var);
@@ -1051,6 +1052,22 @@ std::string getMeteoVarName(meteoVariable var)
 
     return "";
 }
+
+
+std::string getCriteria3DVarName(criteria3DVariable var)
+{
+    auto search = MapCriteria3DVarToString.find(var);
+
+    if (search != MapCriteria3DVarToString.end())
+    {
+        return search->second;
+    }
+    else
+    {
+        return "";
+    }
+}
+
 
 std::string getLapseRateCodeName(lapseRateCodeType code)
 {

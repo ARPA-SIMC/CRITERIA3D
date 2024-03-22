@@ -344,8 +344,6 @@ bool Crit3DProject::runModels(QDateTime firstTime, QDateTime lastTime)
             }
         }
 
-        // TODO update crop roots
-
         // cycle on hours
         int firstHour = (myDate == firstDate) ? hour1 : 0;
         int lastHour = (myDate == lastDate) ? hour2 : 23;
@@ -1334,7 +1332,12 @@ bool Crit3DProject::writeOutputPointsTables()
             }
             if (processes.computeWater)
             {
-                // TODO
+                for (int l = 1; l < layerDepth.size(); l++)
+                {
+                    int depth_cm = round(layerDepth[l] * 100);
+                    if (! outputPointsDbHandler->addCriteria3DColumn(tableName, volumetricWaterContent, depth_cm, errorString))
+                        return false;
+                }
             }
             if (processes.computeSlopeStability)
             {
@@ -1390,7 +1393,6 @@ bool Crit3DProject::writeOutputPointsData()
     if (processes.computeWater)
     {
         criteria3dVarList.push_back(volumetricWaterContent);
-        criteria3dVarList.push_back(waterMatricPotential);
     }
     if (processes.computeSlopeStability)
     {
@@ -1433,7 +1435,24 @@ bool Crit3DProject::writeOutputPointsData()
             }
             if (processes.computeWater)
             {
-                // TODO
+                int row, col;
+                float value;
+                gis::getRowColFromXY((*DEM.header), x, y, &row, &col);
+
+                for (unsigned int layerIndex = 1; layerIndex < nrLayers; layerIndex++)
+                {
+                    long nodeIndex = indexMap.at(layerIndex).value[row][col];
+                    if (nodeIndex == indexMap.at(layerIndex).header->flag)
+                    {
+                        value = NODATA;
+                    }
+                    else
+                    {
+                        value = getCriteria3DVar(volumetricWaterContent, nodeIndex);
+                    }
+
+                    criteria3dValuesList.push_back(value);
+                }
             }
             if (processes.computeSlopeStability)
             {
@@ -1461,11 +1480,11 @@ bool Crit3DProject::writeOutputPointsData()
             {
                 return false;
             }
-            /*
-            if (! outputPointsDbHandler->saveHourlyCriteria3DData(tableName, getCurrentTime(), criteria3dVarList, criteria3dValuesList, layerDepth, errorString))
+            if (! outputPointsDbHandler->saveHourlyCriteria3D_Data(tableName, getCurrentTime(), criteria3dVarList,
+                                                                  criteria3dValuesList, layerDepth, errorString))
             {
                 return false;
-            }*/
+            }
 
             meteoValuesList.clear();
             criteria3dValuesList.clear();
@@ -1628,7 +1647,7 @@ void Crit3DProject::shadowColor(const Crit3DColor &colorIn, Crit3DColor &colorOu
             colorOut.red = std::min(255, std::max(0, int(colorOut.red + shadow)));
             colorOut.green = std::min(255, std::max(0, int(colorOut.green + shadow)));
             colorOut.blue = std::min(255, std::max(0, int(colorOut.blue + shadow)));
-            if (slope > openGlGeometry->artifactSlope())
+            if (slopeDegree > openGlGeometry->artifactSlope())
             {
                 colorOut.red = std::min(255, std::max(0, int((colorOut.red + 256) / 2)));
                 colorOut.green = std::min(255, std::max(0, int((colorOut.green + 256) / 2)));
