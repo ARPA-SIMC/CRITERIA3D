@@ -28,6 +28,12 @@
                             const std::vector<meteoVariable> &varList,
                             const std::vector<float> &values, QString& errorStr);
 
+        bool saveHourlyCriteria3D_Data(QString tableName, const QDateTime& myTime,
+                                    const std::vector<criteria3DVariable>& varList,
+                                    const std::vector<float>& values,
+                                    const std::vector <double>& layerDepth,
+                                     QString& errorStr);
+
     private:
 
         QSqlDatabase _db;

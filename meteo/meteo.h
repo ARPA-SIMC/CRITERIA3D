@@ -205,6 +205,7 @@
       { "ACTUAL_EVAPO", actualEvaporation }
     };
 
+
     const std::map<meteoVariable, std::string> MapHourlyMeteoVarToString = {
         { airTemperature, "TAVG" },
         { precipitation, "PREC" },
@@ -282,6 +283,25 @@
     };
 
 
+    const std::map<criteria3DVariable, std::string> MapCriteria3DVarToString = {
+        { volumetricWaterContent , "VOL_WC" },
+        { waterTotalPotential , "TOT_WP" },
+        { waterMatricPotential , "WP" },
+        { availableWaterContent , "AWC" },
+        { degreeOfSaturation , "SATDEG" },
+        { factorOfSafety, "FOS" }
+    };
+
+    const std::map<std::string, criteria3DVariable> MapCriteria3DVar = {
+        { "VOL_WC", volumetricWaterContent },
+        { "TOT_WP", waterTotalPotential },
+        { "WP", waterMatricPotential },
+        { "AWC", availableWaterContent },
+        { "SATDEG", degreeOfSaturation },
+        { "FOS", factorOfSafety }
+    };
+
+
     enum frequencyType {hourly, daily, monthly, noFrequency};
 
     enum surfaceType   {SurfaceTypeWater, SurfaceTypeSoil, SurfaceTypeCrop};
@@ -345,13 +365,18 @@
     std::string getKeyStringMeteoMap(std::map<std::string, meteoVariable> map, meteoVariable value);
     meteoVariable getKeyMeteoVarMeteoMap(std::map<meteoVariable,std::string> map, const std::string &value);
     meteoVariable getKeyMeteoVarMeteoMapWithoutUnderscore(std::map<meteoVariable,std::string> map, const std::string& value);
+
     meteoVariable getMeteoVar(std::string varString);
     meteoVariable getHourlyMeteoVar(std::string varString);
     std::string getMeteoVarName(meteoVariable var);
-    std::string getLapseRateCodeName(lapseRateCodeType code);
 
+    std::string getCriteria3DVarName(criteria3DVariable var);
+
+    std::string getLapseRateCodeName(lapseRateCodeType code);
     bool checkLapseRateCode(lapseRateCodeType myType, bool useLapseRateCode, bool useSupplemental);
+
     meteoVariable getDailyMeteoVarFromHourly(meteoVariable myVar, aggregationMethod myAggregation);
+
     meteoVariable updateMeteoVariable(meteoVariable myVar, frequencyType myFreq);
 
 
