@@ -35,6 +35,7 @@
             void drawDailyVar();
             void drawEnsembleDailyVar();
             void drawHourlyVar();
+            void drawMonthlyVar();
             void showMonthlyGraph();
             void showDailyGraph();
             void showHourlyGraph();
