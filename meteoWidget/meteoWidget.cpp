@@ -1550,40 +1550,64 @@ void Crit3DMeteoWidget::showVar()
 void Crit3DMeteoWidget::showMonthlyGraph()
 {
     if (! isInitialized) return;
-
+    frequencyType prevFreq = currentFreq;
     currentFreq = monthly;
 
     dailyButton->setEnabled(true);
     hourlyButton->setEnabled(true);
     monthlyButton->setEnabled(false);
 
-     // TO DO
-/*
-    QList<QString> currentMonthlyVar = currentVariables;
-    currentVariables.clear();
-
-    for (int i = 0; i<currentMonthlyVar.size(); i++)
+    if (prevFreq == daily)
     {
-        QString name = currentMonthlyVar[i];
-        auto searchMonthly = MapMonthlyMeteoVar.find(name.toStdString());
-        if (searchMonthly != MapMonthlyMeteoVar.end())
+        QList<QString> currentDailyVar = currentVariables;
+        currentVariables.clear();
+        for (int i = 0; i < currentDailyVar.size(); i++)
         {
-            meteoVariable monthlyVar = MapMonthlyMeteoVar.at(name.toStdString());
-            meteoVariable dailyVar = updateMeteoVariable(monthlyVar, daily);
-            if (dailyVar != noMeteoVar)
+            QString name = currentDailyVar[i];
+            auto searchDaily = MapDailyMeteoVar.find(name.toStdString());
+            if (searchDaily != MapDailyMeteoVar.end())
             {
-                QString varString = QString::fromStdString(MapDailyMeteoVarToString.at(dailyVar));
-                if (!currentVariables.contains(varString))
+                meteoVariable dailyVar = getMeteoVar(name.toStdString());
+                meteoVariable monthlyVar= updateMeteoVariable(dailyVar, monthly);
+                if (monthlyVar != noMeteoVar)
                 {
-                    currentVariables.append(varString);
+                    QString varString = QString::fromStdString(getMeteoVarName(monthlyVar));
+                    if (!varString.isEmpty() && !currentVariables.contains(varString))
+                    {
+                        currentVariables.append(varString);
+                    }
                 }
             }
         }
     }
-
+    else if (prevFreq == hourly)
+    {
+        QList<QString> currentHourlyVar = currentVariables;
+        currentVariables.clear();
+        for (int i = 0; i<currentHourlyVar.size(); i++)
+        {
+            QString name = currentHourlyVar[i];
+            auto searchHourly = MapHourlyMeteoVar.find(name.toStdString());
+            if (searchHourly != MapHourlyMeteoVar.end())
+            {
+                meteoVariable hourlyVar = MapHourlyMeteoVar.at(name.toStdString());
+                meteoVariable monthlyVar= updateMeteoVariable(hourlyVar, monthly);
+                if (monthlyVar != noMeteoVar)
+                {
+                    QString varString = QString::fromStdString(getMeteoVarName(monthlyVar));
+                    if (!varString.isEmpty() && !currentVariables.contains(varString))
+                    {
+                        currentVariables.append(varString);
+                    }
+                }
+            }
+        }
+    }
+/*
     updateSeries();
     redraw();
 */
+
 }
 
 
@@ -1611,8 +1635,8 @@ void Crit3DMeteoWidget::showDailyGraph()
                 meteoVariable dailyVar = updateMeteoVariable(hourlyVar, daily);
                 if (dailyVar != noMeteoVar)
                 {
-                    QString varString = QString::fromStdString(MapDailyMeteoVarToString.at(dailyVar));
-                    if (!currentVariables.contains(varString))
+                    QString varString = QString::fromStdString(getMeteoVarName(dailyVar));
+                    if (!varString.isEmpty() && !currentVariables.contains(varString))
                     {
                         currentVariables.append(varString);
                     }
@@ -1634,8 +1658,8 @@ void Crit3DMeteoWidget::showDailyGraph()
                 meteoVariable dailyVar = updateMeteoVariable(monthlyVar, daily);
                 if (dailyVar != noMeteoVar)
                 {
-                    QString varString = QString::fromStdString(MapDailyMeteoVarToString.at(dailyVar));
-                    if (!currentVariables.contains(varString))
+                    QString varString = QString::fromStdString(getMeteoVarName(dailyVar));
+                    if (!varString.isEmpty() && !currentVariables.contains(varString))
                     {
                         currentVariables.append(varString);
                     }
@@ -1673,8 +1697,8 @@ void Crit3DMeteoWidget::showHourlyGraph()
                 meteoVariable hourlyVar= updateMeteoVariable(dailyVar, hourly);
                 if (hourlyVar != noMeteoVar)
                 {
-                    QString varString = QString::fromStdString(MapHourlyMeteoVarToString.at(hourlyVar));
-                    if (!currentVariables.contains(varString))
+                    QString varString = QString::fromStdString(getMeteoVarName(hourlyVar));
+                    if (!varString.isEmpty() && !currentVariables.contains(varString))
                     {
                         currentVariables.append(varString);
                     }
@@ -1696,8 +1720,8 @@ void Crit3DMeteoWidget::showHourlyGraph()
                 meteoVariable hourlyVar= updateMeteoVariable(monthlyVar, hourly);
                 if (hourlyVar != noMeteoVar)
                 {
-                    QString varString = QString::fromStdString(MapHourlyMeteoVarToString.at(hourlyVar));
-                    if (!currentVariables.contains(varString))
+                    QString varString = QString::fromStdString(getMeteoVarName(hourlyVar));
+                    if (!varString.isEmpty() && !currentVariables.contains(varString))
                     {
                         currentVariables.append(varString);
                     }
