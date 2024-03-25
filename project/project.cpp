@@ -3306,6 +3306,9 @@ void Project::showMeteoWidgetGrid(std::string idCell, bool isAppend)
 {
     QDate firstDate = meteoGridDbHandler->firstDate();
     QDate lastDate = meteoGridDbHandler->lastDate();
+    QDate firstMonthlyDate = meteoGridDbHandler->getFirstMonthlytDate();
+    QDate lastMonthlyDate = meteoGridDbHandler->getFirstMonthlytDate();
+
 
     QDateTime firstDateTime, lastDateTime;
     if (meteoGridDbHandler->getFirstHourlyDate().isValid())
@@ -3343,6 +3346,10 @@ void Project::showMeteoWidgetGrid(std::string idCell, bool isAppend)
             {
                 meteoGridDbHandler->loadGridHourlyData(errorString, QString::fromStdString(idCell), firstDateTime, lastDateTime);
             }
+            if (meteoGridDbHandler->isMonthly())
+            {
+                meteoGridDbHandler->loadGridMonthlyData(errorString, QString::fromStdString(idCell), firstMonthlyDate, lastMonthlyDate);
+            }
         }
         else
         {
@@ -3353,6 +3360,10 @@ void Project::showMeteoWidgetGrid(std::string idCell, bool isAppend)
             if (meteoGridDbHandler->isHourly())
             {
                 meteoGridDbHandler->loadGridHourlyDataFixedFields(errorString, QString::fromStdString(idCell), firstDateTime, lastDateTime);
+            }
+            if (meteoGridDbHandler->isMonthly())
+            {
+                meteoGridDbHandler->loadGridMonthlyData(errorString, QString::fromStdString(idCell), firstMonthlyDate, lastMonthlyDate);
             }
         }
         closeLogInfo();
@@ -3436,6 +3447,10 @@ void Project::showMeteoWidgetGrid(std::string idCell, bool isAppend)
                 {
                     meteoGridDbHandler->loadGridHourlyData(errorString, QString::fromStdString(idCell), firstDateTime, lastDateTime);
                 }
+                if (meteoGridDbHandler->isMonthly())
+                {
+                    meteoGridDbHandler->loadGridMonthlyData(errorString, QString::fromStdString(idCell), firstMonthlyDate, lastMonthlyDate);
+                }
             }
             else
             {
@@ -3446,6 +3461,10 @@ void Project::showMeteoWidgetGrid(std::string idCell, bool isAppend)
                 if (meteoGridDbHandler->isHourly())
                 {
                     meteoGridDbHandler->loadGridHourlyDataFixedFields(errorString, QString::fromStdString(idCell), firstDateTime, lastDateTime);
+                }
+                if (meteoGridDbHandler->isMonthly())
+                {
+                    meteoGridDbHandler->loadGridMonthlyData(errorString, QString::fromStdString(idCell), firstMonthlyDate, lastMonthlyDate);
                 }
             }
             closeLogInfo();
