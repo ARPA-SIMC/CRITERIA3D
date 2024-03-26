@@ -3480,6 +3480,10 @@ void Project::showMeteoWidgetGrid(std::string idCell, bool isAppend)
                 {
                     meteoWidgetGrid->setDateIntervalHourly(firstDateTime.date(), lastDateTime.date());
                 }
+                if (meteoGridDbHandler->isMonthly())
+                {
+                    meteoWidgetGrid->setDateIntervalMonthly(firstMonthlyDate, lastMonthlyDate);
+                }
 
                 meteoWidgetGrid->drawMeteoPoint(meteoGridDbHandler->meteoGrid()->meteoPoint(row,col), isAppend);
             }

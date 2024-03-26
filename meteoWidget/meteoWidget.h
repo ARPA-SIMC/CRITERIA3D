@@ -23,6 +23,7 @@
             void setCurrentDate(QDate myDate);
             void setDateIntervalDaily(QDate firstDate, QDate lastDate);
             void setDateIntervalHourly(QDate firstDate, QDate lastDate);
+            void setDateIntervalMonthly(QDate firstDate, QDate lastDate);
 
             void addMeteoPointsEnsemble(Crit3DMeteoPoint mp);
 
@@ -78,6 +79,8 @@
             QDate lastDailyDate;
             QDate firstHourlyDate;
             QDate lastHourlyDate;
+            QDate firstMonthlyDate;
+            QDate lastMonthlyDate;
             QDate currentDate;
 
             QPushButton *addVarButton;

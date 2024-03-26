@@ -64,8 +64,10 @@ Crit3DMeteoWidget::Crit3DMeteoWidget(bool isGrid_, QString projectPath, Crit3DMe
     currentDate = noDate;
     firstDailyDate = noDate;
     firstHourlyDate = noDate;
+    firstMonthlyDate = noDate;
     lastDailyDate = noDate;
     lastHourlyDate = noDate;
+    lastMonthlyDate = noDate;
 
     isLine = false;
     isBar = false;
@@ -421,6 +423,12 @@ void Crit3DMeteoWidget::setDateIntervalHourly(QDate firstDate, QDate lastDate)
     lastHourlyDate = lastDate;
 }
 
+void Crit3DMeteoWidget::setDateIntervalMonthly(QDate firstDate, QDate lastDate)
+{
+    firstMonthlyDate = firstDate;
+    lastMonthlyDate = lastDate;
+}
+
 
 // search bigger data interval to show between meteoPoints
 void Crit3DMeteoWidget::updateTimeRange()
@@ -461,6 +469,24 @@ void Crit3DMeteoWidget::updateTimeRange()
             (! lastHourlyDate.isValid() || lastHourlyDate.year() == 1800 || myHourlyDateLast > lastHourlyDate))
         {
             lastHourlyDate = myHourlyDateLast;
+        }
+
+        QDate myMonthlyDateFirst;
+        myMonthlyDateFirst.setDate(meteoPoints[i].obsDataM[0]._year,
+                                 meteoPoints[i].obsDataM[0]._month,
+                                 1);
+        QDate myMonthlyDateLast = myMonthlyDateFirst.addMonths(meteoPoints[i].nrObsDataDaysM-1);
+
+        // updates monthly range
+        if (myMonthlyDateFirst.isValid() &&
+            (! firstMonthlyDate.isValid() || firstMonthlyDate.year() == 1800 || myMonthlyDateFirst < firstMonthlyDate))
+        {
+            firstMonthlyDate = myMonthlyDateFirst;
+        }
+        if (myMonthlyDateLast.isValid() &&
+            (! lastMonthlyDate.isValid() || lastMonthlyDate.year() == 1800 || myMonthlyDateLast > lastMonthlyDate))
+        {
+            lastMonthlyDate = myMonthlyDateLast;
         }
     }
 }
@@ -2125,12 +2151,19 @@ void Crit3DMeteoWidget::shiftPrevious()
 
         firstValidDate = firstDailyDate;
     }
-    else
+    else if (currentFreq == hourly)
     {
         if (! firstHourlyDate.isValid() || firstHourlyDate.year() == 1800)
             return;
 
         firstValidDate = firstHourlyDate;
+    }
+    else if (currentFreq == monthly)
+    {
+        if (! firstMonthlyDate.isValid() || firstMonthlyDate.year() == 1800)
+            return;
+
+        firstValidDate = firstMonthlyDate;
     }
 
     if (firstValidDate < firstDate->date().addDays(-nDays-1))
@@ -2710,6 +2743,20 @@ void Crit3DMeteoWidget::on_actionDataAvailability()
             hourlyTextEdit->setReadOnly(true);
 
             vbox->addWidget(hourlyTextEdit);
+        }
+
+        if (!firstMonthlyDate.isNull() && firstMonthlyDate.year() != 1800)
+        {
+            QLabel* labelMonthly = new QLabel("Monthly Data:");
+            vbox->addWidget(labelMonthly);
+
+            QString monthlyInfo = QString("%1 - %2").arg(firstMonthlyDate.toString("yyyy/MM"), lastMonthlyDate.toString("yyyy/MM"));
+            QTextEdit* monthlyTextEdit = new QTextEdit(monthlyInfo);
+
+            monthlyTextEdit->setMaximumHeight(QFontMetrics(monthlyTextEdit->font()).height() + 10);
+            monthlyTextEdit->setReadOnly(true);
+
+            vbox->addWidget(monthlyTextEdit);
         }
 
         groupBox->setLayout(vbox);
