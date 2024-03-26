@@ -1498,16 +1498,13 @@ void Crit3DMeteoWidget::drawMonthlyVar()
 
     firstDate->blockSignals(true);
     lastDate->blockSignals(true);
-/*
+
     Crit3DDate myDate;
-    int nDays = 0;
     double maxBar = -1;
     double maxLine = NODATA;
     double minLine = -NODATA;
 
-    Crit3DDate firstCrit3DDate = getCrit3DDate(firstDate->date());
-    Crit3DDate lastCrit3DDate = getCrit3DDate(lastDate->date());
-    nDays = firstCrit3DDate.daysTo(lastCrit3DDate)+1;
+    int numberOfMonths = (lastDate->date().year()- firstDate->date().year())*12 + lastDate->date().month() - (firstDate->date().month()-1);
 
     categories.clear();
     categoriesVirtual.clear();
@@ -1516,35 +1513,35 @@ void Crit3DMeteoWidget::drawMonthlyVar()
 
     // virtual x axis
     int nrIntervals;
-    if (nDays <= 12)
+    if (numberOfMonths <= 12)
     {
-        nrIntervals = nDays;
+        nrIntervals = numberOfMonths;
     }
-    else if (nDays <= 45)
+    else if (numberOfMonths <= 45)
     {
-        nrIntervals = nDays/3;
+        nrIntervals = numberOfMonths/3;
     }
     else
     {
         nrIntervals = 12;
     }
-    double step = double(nDays) / double(nrIntervals);
+    double step = double(numberOfMonths) / double(nrIntervals);
     double nextIndex = step / 2 - 0.5;
-    for (int day = 0; day < nDays; day++)
+    for (int month = 0; month < numberOfMonths; month++)
     {
-        myDate = firstCrit3DDate.addDays(day);
-        if (day == round(nextIndex))
+        myDate = getCrit3DDate(firstDate->date().addMonths(month));
+        if (month == round(nextIndex))
         {
-            categoriesVirtual.append(getQDate(myDate).toString("MMM dd <br> yyyy"));
+            categoriesVirtual.append(getQDate(myDate).toString("MMM <br> yyyy"));
             nextIndex += step;
         }
     }
 
     int nMeteoPoints = meteoPoints.size();
-    for (int day = 0; day < nDays; day++)
+    for (int month = 0; month < numberOfMonths; month++)
     {
-        myDate = firstCrit3DDate.addDays(day);
-        categories.append(QString::number(day));
+        myDate = getCrit3DDate(firstDate->date().addMonths(month));
+        categories.append(QString::number(month));
 
         for (int mp=0; mp<nMeteoPoints;mp++)
         {
@@ -1557,10 +1554,10 @@ void Crit3DMeteoWidget::drawMonthlyVar()
                     {
                         continue;
                     }
-                    double value = meteoPoints[mp].getMeteoPointValueD(myDate, meteoVar, meteoSettings);
+                    double value = meteoPoints[mp].getMeteoPointValueM(myDate, meteoVar);
                     if (value != NODATA)
                     {
-                        lineSeries[mp][i]->append(day, value);
+                        lineSeries[mp][i]->append(month, value);
                         if (value > maxLine)
                         {
                             maxLine = value;
@@ -1574,7 +1571,7 @@ void Crit3DMeteoWidget::drawMonthlyVar()
                     {
                         if (meteoPoints[mp].isDateLoadedD(myDate))
                         {
-                            lineSeries[mp][i]->append(day, value); // nodata days are not drawed if they are the first of the last day of the serie
+                            lineSeries[mp][i]->append(month, value); // nodata days are not drawed if they are the first of the last day of the serie
                         }
                     }
                 }
@@ -1588,7 +1585,7 @@ void Crit3DMeteoWidget::drawMonthlyVar()
                     {
                         continue;
                     }
-                    double value = meteoPoints[mp].getMeteoPointValueD(myDate, meteoVar, meteoSettings);
+                    double value = meteoPoints[mp].getMeteoPointValueM(myDate, meteoVar);
                     if (value != NODATA)
                     {
                         *setVector[mp][j] << value;
@@ -1705,10 +1702,10 @@ void Crit3DMeteoWidget::drawMonthlyVar()
     }
 
     // add minimimum values required
-    if (nDays==1)
+    if (numberOfMonths==1)
     {
         categories.append(QString::number(1));
-        categoriesVirtual.append(firstDate->date().addDays(1).toString("MMM dd <br> yyyy"));
+        categoriesVirtual.append(firstDate->date().addDays(1).toString("MMM <br> yyyy"));
         for (int mp=0; mp<nMeteoPoints;mp++)
         {
             if (isLine)
@@ -1733,7 +1730,7 @@ void Crit3DMeteoWidget::drawMonthlyVar()
     {
         for (int j = 0; j < nameBar.size(); j++)
         {
-            if (nDays < 5)
+            if (numberOfMonths < 5)
             {
                 setVector[mp][j]->setColor(QColor("transparent"));
             }
@@ -1776,7 +1773,6 @@ void Crit3DMeteoWidget::drawMonthlyVar()
     }
 
     formInfo.close();
-*/
 }
 
 
@@ -1893,11 +1889,9 @@ void Crit3DMeteoWidget::showMonthlyGraph()
             }
         }
     }
-/*
+
     updateSeries();
     redraw();
-*/
-
 }
 
 
