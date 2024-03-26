@@ -3307,7 +3307,7 @@ void Project::showMeteoWidgetGrid(std::string idCell, bool isAppend)
     QDate firstDate = meteoGridDbHandler->firstDate();
     QDate lastDate = meteoGridDbHandler->lastDate();
     QDate firstMonthlyDate = meteoGridDbHandler->getFirstMonthlytDate();
-    QDate lastMonthlyDate = meteoGridDbHandler->getFirstMonthlytDate();
+    QDate lastMonthlyDate = meteoGridDbHandler->getLastMonthlyDate();
 
 
     QDateTime firstDateTime, lastDateTime;

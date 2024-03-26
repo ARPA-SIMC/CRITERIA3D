@@ -1569,7 +1569,7 @@ void Crit3DMeteoWidget::drawMonthlyVar()
                     }
                     else
                     {
-                        if (meteoPoints[mp].isDateLoadedD(myDate))
+                        if (meteoPoints[mp].isDateLoadedM(myDate))
                         {
                             lineSeries[mp][i]->append(month, value); // nodata days are not drawed if they are the first of the last day of the serie
                         }
@@ -2222,11 +2222,16 @@ bool Crit3DMeteoWidget::computeTooltipLineSeries(QLineSeries *series, QPointF po
                     QDate xDate = firstDate->date().addDays(doy);
                     m_tooltip->setText(QString("%1 \n%2 nan ").arg(series->name()).arg(xDate.toString("MMM dd yyyy")));
                 }
-                if (currentFreq == hourly)
+                else if (currentFreq == hourly)
                 {
                     QDateTime xDate(firstDate->date(), QTime(0,0,0), Qt::UTC);
                     xDate = xDate.addSecs(3600*doy);
                     m_tooltip->setText(QString("%1 \n%2 nan ").arg(series->name()).arg(xDate.toString("MMM dd yyyy hh:mm")));
+                }
+                else if (currentFreq == monthly)
+                {
+                    QDate xDate = firstDate->date().addMonths(doy);
+                    m_tooltip->setText(QString("%1 \n%2 nan ").arg(series->name()).arg(xDate.toString("MMM yyyy")));
                 }
                 m_tooltip->setSeries(series);
                 m_tooltip->setAnchor(point);
@@ -2357,7 +2362,7 @@ bool Crit3DMeteoWidget::computeTooltipLineSeries(QLineSeries *series, QPointF po
             double value = series->at(doyRelative).y();
             m_tooltip->setText(QString("%1 \n%2 %3 ").arg(series->name()).arg(xDate.toString("MMM dd yyyy")).arg(value, 0, 'f', 1));
         }
-        if (currentFreq == hourly)
+        else if (currentFreq == hourly)
         {
             QDateTime xDate(firstDate->date(), QTime(0,0,0), Qt::UTC);
             xDate = xDate.addSecs(3600*doy);
@@ -2371,6 +2376,20 @@ bool Crit3DMeteoWidget::computeTooltipLineSeries(QLineSeries *series, QPointF po
             }
             double value = series->at(doyRelative).y();
             m_tooltip->setText(QString("%1 \n%2 %3 ").arg(series->name()).arg(xDate.toString("MMM dd yyyy hh:mm")).arg(value, 0, 'f', 1));
+        }
+        else if (currentFreq == monthly)
+        {
+            QDate xDate = firstDate->date().addMonths(doy);
+            for(int i = 0; i < series->count(); i++)
+            {
+                if (series->at(i).x() == doy)
+                {
+                    doyRelative = i;
+                    break;
+                }
+            }
+            double value = series->at(doyRelative).y();
+            m_tooltip->setText(QString("%1 \n%2 %3 ").arg(series->name()).arg(xDate.toString("MMM yyyy")).arg(value, 0, 'f', 1));
         }
         m_tooltip->setSeries(series);
         m_tooltip->setAnchor(point);
@@ -2424,12 +2443,17 @@ void Crit3DMeteoWidget::tooltipBar(bool state, int index, QBarSet *barset)
             QDate xDate = firstDate->date().addDays(index);
             valueStr = QString("%1 \n%2 %3 ").arg(xDate.toString("MMM dd yyyy")).arg(barset->label()).arg(barset->at(index), 0, 'f', 1);
         }
-        if (currentFreq == hourly)
+        else if (currentFreq == hourly)
         {
 
             QDateTime xDate(firstDate->date(), QTime(0,0,0), Qt::UTC);
             xDate = xDate.addSecs(3600*index);
             valueStr = QString("%1 \n%2 %3 ").arg(xDate.toString("MMM dd yyyy hh:mm")).arg(barset->label()).arg(barset->at(index), 0, 'f', 1);
+        }
+        else if (currentFreq == monthly)
+        {
+            QDate xDate = firstDate->date().addMonths(index);
+            valueStr = QString("%1 \n%2 %3 ").arg(xDate.toString("MMM yyyy")).arg(barset->label()).arg(barset->at(index), 0, 'f', 1);
         }
 
         m_tooltip->setSeries(series);
