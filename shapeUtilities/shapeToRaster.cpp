@@ -35,13 +35,13 @@ bool initializeRasterFromShape(Crit3DShapeHandler &shape, gis::Crit3DRasterGrid 
         xmax = MAXVALUE(xmax, bounds.xmax);
     }
 
-    xmin = floor(xmin);
-    ymin = floor(ymin);
+    xmin = round(xmin * 10.) * 0.1;
+    ymin = round(ymin * 10.) * 0.1;
     header.cellSize = cellSize;
     header.llCorner.x = xmin;
     header.llCorner.y = ymin;
-    header.nrRows = int(floor((ymax - ymin) / cellSize))+1;
-    header.nrCols = int(floor((xmax - xmin) / cellSize))+1;
+    header.nrRows = int(floor((ymax - ymin) / cellSize)) + 1;
+    header.nrCols = int(floor((xmax - xmin) / cellSize)) + 1;
     header.flag = NODATA;
 
     return raster.initializeGrid(header);
