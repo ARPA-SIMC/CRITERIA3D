@@ -436,11 +436,14 @@ void Crit3DMeteoWidget::updateTimeRange()
     for (int i = 0; i < meteoPoints.size(); i++)
     {
         QDate myDailyDateFirst;
-        myDailyDateFirst.setDate(meteoPoints[i].obsDataD[0].date.year,
-                                 meteoPoints[i].obsDataD[0].date.month,
-                                 meteoPoints[i].obsDataD[0].date.day);
-        QDate myDailyDateLast = myDailyDateFirst.addDays(meteoPoints[i].nrObsDataDaysD-1);
-
+        QDate myDailyDateLast;
+        if (meteoPoints[i].obsDataD.size() != 0)
+        {
+            myDailyDateFirst.setDate(meteoPoints[i].obsDataD[0].date.year,
+                                     meteoPoints[i].obsDataD[0].date.month,
+                                     meteoPoints[i].obsDataD[0].date.day);
+            myDailyDateLast = myDailyDateFirst.addDays(meteoPoints[i].nrObsDataDaysD-1);
+        }
         // updates daily range
         if (myDailyDateFirst.isValid() &&
             (! firstDailyDate.isValid() || firstDailyDate.year() == 1800 || myDailyDateFirst < firstDailyDate))
@@ -455,10 +458,9 @@ void Crit3DMeteoWidget::updateTimeRange()
 
         QDate myHourlyDateFirst;
         myHourlyDateFirst.setDate(meteoPoints[i].getMeteoPointHourlyValuesDate(0).year,
-                                  meteoPoints[i].getMeteoPointHourlyValuesDate(0).month,
-                                  meteoPoints[i].getMeteoPointHourlyValuesDate(0).day);
+                                      meteoPoints[i].getMeteoPointHourlyValuesDate(0).month,
+                                      meteoPoints[i].getMeteoPointHourlyValuesDate(0).day);
         QDate myHourlyDateLast = myHourlyDateFirst.addDays(meteoPoints[i].nrObsDataDaysH-1);
-
         // updates hourly range
         if (myHourlyDateFirst.isValid() &&
             (! firstHourlyDate.isValid() || firstHourlyDate.year() == 1800 || myHourlyDateFirst < firstHourlyDate))
@@ -472,11 +474,14 @@ void Crit3DMeteoWidget::updateTimeRange()
         }
 
         QDate myMonthlyDateFirst;
-        myMonthlyDateFirst.setDate(meteoPoints[i].obsDataM[0]._year,
-                                 meteoPoints[i].obsDataM[0]._month,
-                                 1);
-        QDate myMonthlyDateLast = myMonthlyDateFirst.addMonths(meteoPoints[i].nrObsDataDaysM-1);
-
+        QDate myMonthlyDateLast;
+        if (meteoPoints[i].obsDataM.size() != 0)
+        {
+            myMonthlyDateFirst.setDate(meteoPoints[i].obsDataM[0]._year,
+                                     meteoPoints[i].obsDataM[0]._month,
+                                     1);
+            myMonthlyDateLast = myMonthlyDateFirst.addMonths(meteoPoints[i].nrObsDataDaysM-1);
+        }
         // updates monthly range
         if (myMonthlyDateFirst.isValid() &&
             (! firstMonthlyDate.isValid() || firstMonthlyDate.year() == 1800 || myMonthlyDateFirst < firstMonthlyDate))
