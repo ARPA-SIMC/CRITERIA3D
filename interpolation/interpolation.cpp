@@ -1443,11 +1443,7 @@ bool multipleDetrending(std::vector <Crit3DInterpolationDataPoint> &myPoints,
         }
     }
 
-    if (validNr == 0)
-    {
-        errorStr = "No proxy";
-        return false;
-    }
+    if (validNr == 0) return false;
 
     // exclude points with incomplete proxies
     unsigned i;
@@ -1545,8 +1541,8 @@ bool multipleDetrending(std::vector <Crit3DInterpolationDataPoint> &myPoints,
     }
 
     // multiple non linear fitting
-    interpolation::bestFittingMarquardt_nDimension(&functionSum, myFunc, 1000, 5, parametersMin, parametersMax, parameters, parametersDelta,
-                                                   100, 0.005, 0.01, predictors, predictands, weights);
+    interpolation::bestFittingMarquardt_nDimension(&functionSum, myFunc, 500, 3, parametersMin, parametersMax, parameters, parametersDelta,
+                                                   50, 0.005, 0.05, predictors, predictands, weights);
 
     mySettings->setFittingFunction(myFunc);
     mySettings->setFittingParameters(parameters);
@@ -1683,10 +1679,7 @@ bool preInterpolation(std::vector <Crit3DInterpolationDataPoint> &myPoints, Crit
         if (mySettings->getUseMultipleDetrending())
         {
             mySettings->setCurrentCombination(mySettings->getSelectedCombination());
-            if (! multipleDetrending(myPoints, mySettings, myVar, errorStr))
-            {
-                return false;
-            }
+            multipleDetrending(myPoints, mySettings, myVar, errorStr);
         }
         else
         {

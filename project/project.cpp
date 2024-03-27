@@ -684,7 +684,7 @@ bool Project::loadParameters(QString parametersFileName)
                 unsigned int nrParameters;
 
                 if (getProxyPragaName(name_.toStdString()) == proxyHeight)
-                    nrParameters = 5;
+                    nrParameters = 4;
                 else
                     nrParameters = 1;
 
