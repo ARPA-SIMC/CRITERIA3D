@@ -2117,6 +2117,10 @@ void Crit3DMeteoWidget::redraw()
         if(! isEnsemble)
         {
             drawDailyVar();
+            if (varToSumList.size() != 0)
+            {
+                drawSum();
+            }
         }
     }
     else if (currentFreq == hourly)
@@ -2128,6 +2132,10 @@ void Crit3DMeteoWidget::redraw()
         if(!isEnsemble)
         {
             drawHourlyVar();
+            if (varToSumList.size() != 0)
+            {
+                drawSum();
+            }
         }
     }
     else if (currentFreq == monthly)
@@ -2139,6 +2147,10 @@ void Crit3DMeteoWidget::redraw()
         if(!isEnsemble)
         {
             drawMonthlyVar();
+            if (varToSumList.size() != 0)
+            {
+                drawSum();
+            }
         }
     }
 
@@ -2836,7 +2848,7 @@ void Crit3DMeteoWidget::on_actionDataSum()
     if (!varToSumList.isEmpty())
     {
         dataSum->setChecked(true);
-        drawSum(varToSumList);
+        drawSum();
     }
     else
     {
@@ -2844,7 +2856,7 @@ void Crit3DMeteoWidget::on_actionDataSum()
     }
 }
 
-void Crit3DMeteoWidget::drawSum(QList<QString> varToSumList)
+void Crit3DMeteoWidget::drawSum()
 {
     int nMeteoPoints = meteoPoints.size();
     for (int i = 0; i < varToSumList.size(); i++)
