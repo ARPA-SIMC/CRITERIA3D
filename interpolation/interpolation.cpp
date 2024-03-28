@@ -1407,7 +1407,7 @@ std::vector <double> getfittingParameters(Crit3DProxyCombination myCombination, 
 bool multipleDetrending(std::vector <Crit3DInterpolationDataPoint> &myPoints,
                         Crit3DInterpolationSettings* mySettings, meteoVariable myVar, std::string &errorStr)
 {
-    if (! getUseDetrendingVar(myVar)) return false;
+    if (! getUseDetrendingVar(myVar)) return true;
 
     Crit3DProxyCombination myCombination = mySettings->getSelectedCombination();
 
@@ -1427,7 +1427,7 @@ bool multipleDetrending(std::vector <Crit3DInterpolationDataPoint> &myPoints,
         }
     }
 
-    if (nrPredictors == 0) return false;
+    if (nrPredictors == 0) return true;
 
     // proxy spatial variability (1st step)
     double avg, stdDev;
@@ -1443,11 +1443,10 @@ bool multipleDetrending(std::vector <Crit3DInterpolationDataPoint> &myPoints,
         }
     }
 
-    if (validNr == 0) return false;
+    if (validNr == 0) return true;
 
     // exclude points with incomplete proxies
     unsigned i;
-    //std::vector <Crit3DInterpolationDataPoint> finalPoints;
     bool isValid;
     float proxyValue;
     vector<Crit3DInterpolationDataPoint>::iterator it = myPoints.begin();
@@ -1476,16 +1475,11 @@ bool multipleDetrending(std::vector <Crit3DInterpolationDataPoint> &myPoints,
     }
 
     // proxy spatial variability (2nd step)
-    std::vector <float> avgs;
-    std::vector <float> stdDevs;
-
     validNr = 0;
     for (int pos=0; pos < proxyNr; pos++)
     {
         if (myCombination.isProxyActive(pos) && proxyValidity(myPoints, pos, mySettings->getProxy(pos)->getStdDevThreshold(), avg, stdDev))
         {
-            avgs.push_back(avg);
-            stdDevs.push_back(stdDev);
             mySettings->getProxy(pos)->setIsSignificant(true);
             validNr++;
         }
@@ -1493,11 +1487,10 @@ bool multipleDetrending(std::vector <Crit3DInterpolationDataPoint> &myPoints,
             mySettings->getProxy(pos)->setIsSignificant(false);
     }
 
-    if (validNr == 0) return false;
+    if (validNr == 0) return true;
 
-    // z-score normalization
+    // filling vectors
     std::vector <double> rowPredictors;
-    //std::vector <std::vector <double>> predictorsNorm;
     std::vector <std::vector <double>> predictors;
     std::vector <double> predictands;
     std::vector <double> weights;
@@ -1509,11 +1502,9 @@ bool multipleDetrending(std::vector <Crit3DInterpolationDataPoint> &myPoints,
             if ((mySettings->getProxy(pos)->getIsSignificant()))
             {
                 proxyValue = myPoints[i].getProxyValue(pos);
-                //rowPredictors.push_back((proxyValue - avgs[index]) / stdDevs[index]);
                 rowPredictors.push_back(proxyValue);
             }
 
-        //predictorsNorm.push_back(rowPredictors);
         predictors.push_back(rowPredictors);
         predictands.push_back(myPoints[i].value);
         weights.push_back(myPoints[i].regressionWeight);
@@ -1525,7 +1516,7 @@ bool multipleDetrending(std::vector <Crit3DInterpolationDataPoint> &myPoints,
             mySettings->getProxy(pos)->setIsSignificant(false);
 
         errorStr = "Not enough points for detrending.";
-        return false;
+        return true;
     }
 
     std::vector <std::vector<double>> parametersMin;
@@ -1679,7 +1670,7 @@ bool preInterpolation(std::vector <Crit3DInterpolationDataPoint> &myPoints, Crit
         if (mySettings->getUseMultipleDetrending())
         {
             mySettings->setCurrentCombination(mySettings->getSelectedCombination());
-            multipleDetrending(myPoints, mySettings, myVar, errorStr);
+            if (! multipleDetrending(myPoints, mySettings, myVar, errorStr)) return false;
         }
         else
         {
