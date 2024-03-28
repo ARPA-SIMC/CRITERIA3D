@@ -1,7 +1,7 @@
 #include "dialogVariableToSum.h"
 
-DialogVariableToSum::DialogVariableToSum(QList<QString> variableList)
-: variableList(variableList)
+DialogVariableToSum::DialogVariableToSum(QList<QString> variableList, QList<QString> varAlreadyChecked)
+: variableList(variableList), varAlreadyChecked(varAlreadyChecked)
 {
     setWindowTitle("Choose variable to sum");
     this->resize(400, 200);
@@ -15,6 +15,10 @@ DialogVariableToSum::DialogVariableToSum(QList<QString> variableList)
     {
         QCheckBox* checkbox = new QCheckBox(variableList[i], this);
         checkList.append(checkbox);
+        if (varAlreadyChecked.contains(checkbox->text()))
+        {
+            checkbox->setChecked(true);
+        }
         variableLayout->addWidget(checkbox);
     }
 

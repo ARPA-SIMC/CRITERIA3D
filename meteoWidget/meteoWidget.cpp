@@ -369,7 +369,8 @@ Crit3DMeteoWidget::Crit3DMeteoWidget(bool isGrid_, QString projectPath, Crit3DMe
 
     QAction* infoPoint = new QAction(tr("&Info meteo point"), this);
     QAction* dataAvailability = new QAction(tr("&Data availability"), this);
-    QAction* dataSum = new QAction(tr("&Sum"), this);
+    dataSum = new QAction(tr("&Sum"), this);
+    dataSum->setCheckable(true);
 
     viewMenu->addAction(infoPoint);
     viewMenu->addAction(dataAvailability);
@@ -2819,19 +2820,27 @@ void Crit3DMeteoWidget::on_actionDataAvailability()
 
 void Crit3DMeteoWidget::on_actionDataSum()
 {
-    DialogVariableToSum varToSum(currentVariables);
-    QList<QString> varToSumList;
+    DialogVariableToSum varToSum(currentVariables, varToSumList);
     if (varToSum.result() == QDialog::Accepted)
     {
         varToSumList = varToSum.getSelectedVariable();
     }
     else
     {
+        if (varToSumList.isEmpty())
+        {
+            dataSum->setChecked(false);
+        }
         return;
     }
     if (!varToSumList.isEmpty())
     {
+        dataSum->setChecked(true);
         drawSum(varToSumList);
+    }
+    else
+    {
+        dataSum->setChecked(false);
     }
 }
 

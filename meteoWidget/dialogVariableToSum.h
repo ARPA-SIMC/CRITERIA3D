@@ -10,10 +10,11 @@ class DialogVariableToSum : public QDialog
 private:
     QList<QString> variableList;
     QList<QString> selectedVariable;
+    QList<QString> varAlreadyChecked;
     QList<QCheckBox*> checkList;
 
 public:
-    DialogVariableToSum(QList<QString> variableList);
+    DialogVariableToSum(QList<QString> variableList, QList<QString> varAlreadyChecked);
     QList<QString> getSelectedVariable();
     void done(bool res);
 };

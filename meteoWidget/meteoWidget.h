@@ -83,6 +83,7 @@
             QDate lastMonthlyDate;
             QDate currentDate;
 
+            QAction* dataSum;
             QPushButton *addVarButton;
             QPushButton *dailyButton;
             QPushButton *hourlyButton;
@@ -116,6 +117,7 @@
             QVector<QVector<QBarSet*>> setVector;
             QList<QString> categories;
             QList<QString> categoriesVirtual;
+            QList<QString> varToSumList;
 
             bool isLine;
             bool isBar;
