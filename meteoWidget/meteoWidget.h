@@ -62,6 +62,7 @@
             void on_actionDataAvailability();
             void on_actionDataSum();
             void drawSum();
+            void checkExistingData();
 
     private:
             int meteoWidgetID;

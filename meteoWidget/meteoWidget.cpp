@@ -495,6 +495,36 @@ void Crit3DMeteoWidget::updateTimeRange()
             lastMonthlyDate = myMonthlyDateLast;
         }
     }
+    checkExistingData();
+}
+
+void Crit3DMeteoWidget::checkExistingData()
+{
+    // set enable/disable buttons if daily/hourly/monthly data are available
+    if ( (!firstDailyDate.isValid() || firstDailyDate.year() == 1800) && (!lastDailyDate.isValid() || lastDailyDate.year() == 1800) )
+    {
+        dailyButton->setVisible(false);
+    }
+    else
+    {
+        dailyButton->setVisible(true);
+    }
+    if ( (!firstHourlyDate.isValid() || firstHourlyDate.year() == 1800) && (!lastHourlyDate.isValid() || lastHourlyDate.year() == 1800) )
+    {
+        hourlyButton->setVisible(false);
+    }
+    else
+    {
+        hourlyButton->setVisible(true);
+    }
+    if ( (!firstMonthlyDate.isValid() || firstMonthlyDate.year() == 1800) && (!lastMonthlyDate.isValid() || lastMonthlyDate.year() == 1800) )
+    {
+        monthlyButton->setVisible(false);
+    }
+    else
+    {
+        monthlyButton->setVisible(true);
+    }
 }
 
 
@@ -1875,9 +1905,9 @@ void Crit3DMeteoWidget::showMonthlyGraph()
     varToSumList.clear();
     dataSum->setChecked(false);
 
+    monthlyButton->setEnabled(false);
     dailyButton->setEnabled(true);
     hourlyButton->setEnabled(true);
-    monthlyButton->setEnabled(false);
 
     if (prevFreq == daily)
     {
