@@ -684,7 +684,7 @@ bool Project::loadParameters(QString parametersFileName)
                 unsigned int nrParameters;
 
                 if (getProxyPragaName(name_.toStdString()) == proxyHeight)
-                    nrParameters = 5;
+                    nrParameters = 4;
                 else
                     nrParameters = 1;
 
@@ -2336,6 +2336,8 @@ bool Project::interpolationDemLocalDetrending(meteoVariable myVar, const Crit3DT
                     getProxyValuesXY(x, y, &interpolationSettings, proxyValues);
                     myRaster->value[row][col] = interpolate(subsetInterpolationPoints, &interpolationSettings, meteoSettings,
                                                             myVar, x, y, z, proxyValues, true);
+
+
                 }
             }
         }
@@ -3551,6 +3553,12 @@ void Project::showProxyGraph()
         proxyWidget = new Crit3DProxyWidget(&interpolationSettings, meteoPointsSelected, nSelected, currentFrequency, currentDate, currentHour, quality, &qualityInterpolationSettings, meteoSettings, &climateParameters, checkSpatialQuality);
     }
     QObject::connect(proxyWidget, SIGNAL(closeProxyWidget()), this, SLOT(deleteProxyWidget()));
+    return;
+}
+
+void Project::showLocalProxyGraph(gis::Crit3DGisSettings gisSettings, double x, double y)
+{
+    localProxyWidget = new Crit3DLocalProxyWidget(x, y, gisSettings, &interpolationSettings, meteoPoints, nrMeteoPoints, currentFrequency, currentDate, currentHour, quality, &qualityInterpolationSettings, meteoSettings, &climateParameters, checkSpatialQuality);
     return;
 }
 

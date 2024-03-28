@@ -37,11 +37,13 @@ INCLUDEPATH += ../crit3dDate ../mathFunctions ../gis ../meteo ../utilities ../co
 
 SOURCES += \
     chartView.cpp \
+    localproxywidget.cpp \
     proxyWidget.cpp
 
 
 HEADERS += \
     chartView.h \
+    localproxywidget.h \
     proxyWidget.h 
 
 

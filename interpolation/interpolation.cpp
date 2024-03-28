@@ -1545,8 +1545,8 @@ bool multipleDetrending(std::vector <Crit3DInterpolationDataPoint> &myPoints,
     }
 
     // multiple non linear fitting
-    interpolation::bestFittingMarquardt_nDimension(&functionSum, myFunc, 1000, 5, parametersMin, parametersMax, parameters, parametersDelta,
-                                                   100, 0.005, 0.01, predictors, predictands, weights);
+    interpolation::bestFittingMarquardt_nDimension(&functionSum, myFunc, 500, 3, parametersMin, parametersMax, parameters, parametersDelta,
+                                                   80, 0.005, 0.02, predictors, predictands, weights);
 
     mySettings->setFittingFunction(myFunc);
     mySettings->setFittingParameters(parameters);
