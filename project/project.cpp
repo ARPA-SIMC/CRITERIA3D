@@ -2585,6 +2585,9 @@ bool Project::interpolationGrid(meteoVariable myVar, const Crit3DTime& myTime)
     {
         for (unsigned row = 0; row < unsigned(meteoGridDbHandler->meteoGrid()->gridStructure().header().nrRows); row++)
         {
+            if (meteoGridDbHandler->meteoGrid()->meteoPoints()[row][col]->id == "002565")
+                int a = 0;
+
             if (meteoGridDbHandler->meteoGrid()->meteoPoints()[row][col]->active)
             {
                 myX = meteoGridDbHandler->meteoGrid()->meteoPoints()[row][col]->point.utm.x;
