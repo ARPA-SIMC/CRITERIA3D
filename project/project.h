@@ -35,7 +35,7 @@
         #include "proxyWidget.h"
     #endif
     #ifndef LOCALPROXYWIDGET_H
-        #include "localproxywidget.h"
+        #include "localProxyWidget.h"
     #endif
 
     #ifndef _FSTREAM_
