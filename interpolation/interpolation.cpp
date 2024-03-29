@@ -1047,8 +1047,8 @@ void localSelection(vector <Crit3DInterpolationDataPoint> &inputPoints, vector <
     }
 
     for (i=0; i < selectedPoints.size(); i++)
-        selectedPoints[i].regressionWeight = (1 - selectedPoints[i].distance / r1);
-        //selectedPoints[i].regressionWeight = 1;
+        //selectedPoints[i].regressionWeight = (1 - selectedPoints[i].distance / r1);
+        selectedPoints[i].regressionWeight = 1;
 
     mySettings.setLocalRadius(r1);
 }
