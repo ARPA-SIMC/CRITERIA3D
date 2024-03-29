@@ -34,6 +34,9 @@
     #ifndef PROXYWIDGET_H
         #include "proxyWidget.h"
     #endif
+    #ifndef LOCALPROXYWIDGET_H
+        #include "localproxywidget.h"
+    #endif
 
     #ifndef _FSTREAM_
         #include <fstream>
@@ -144,6 +147,7 @@
         QList<Crit3DMeteoWidget*> meteoWidgetGridList;
 
         Crit3DProxyWidget* proxyWidget;
+        Crit3DLocalProxyWidget* localProxyWidget;
 
         Project();
 
@@ -263,6 +267,7 @@
                                   double altitude, std::string lapseRateCode, bool isAppend);
         void showMeteoWidgetGrid(std::string idCell, bool isAppend);
         void showProxyGraph();
+        void showLocalProxyGraph(gis::Crit3DGisSettings gisSettings, double x, double y);
 
         void clearSelectedPoints();
         void clearSelectedOutputPoints();

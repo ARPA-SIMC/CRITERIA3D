@@ -2336,6 +2336,8 @@ bool Project::interpolationDemLocalDetrending(meteoVariable myVar, const Crit3DT
                     getProxyValuesXY(x, y, &interpolationSettings, proxyValues);
                     myRaster->value[row][col] = interpolate(subsetInterpolationPoints, &interpolationSettings, meteoSettings,
                                                             myVar, x, y, z, proxyValues, true);
+
+
                 }
             }
         }
@@ -3311,7 +3313,7 @@ void Project::showMeteoWidgetGrid(std::string idCell, bool isAppend)
     QDate firstDate = meteoGridDbHandler->firstDate();
     QDate lastDate = meteoGridDbHandler->lastDate();
     QDate firstMonthlyDate = meteoGridDbHandler->getFirstMonthlytDate();
-    QDate lastMonthlyDate = meteoGridDbHandler->getLastMonthlyDate();
+    QDate lastMonthlyDate = meteoGridDbHandler->getFirstMonthlytDate();
 
 
     QDateTime firstDateTime, lastDateTime;
@@ -3484,10 +3486,6 @@ void Project::showMeteoWidgetGrid(std::string idCell, bool isAppend)
                 {
                     meteoWidgetGrid->setDateIntervalHourly(firstDateTime.date(), lastDateTime.date());
                 }
-                if (meteoGridDbHandler->isMonthly())
-                {
-                    meteoWidgetGrid->setDateIntervalMonthly(firstMonthlyDate, lastMonthlyDate);
-                }
 
                 meteoWidgetGrid->drawMeteoPoint(meteoGridDbHandler->meteoGrid()->meteoPoint(row,col), isAppend);
             }
@@ -3559,6 +3557,12 @@ void Project::showProxyGraph()
         proxyWidget = new Crit3DProxyWidget(&interpolationSettings, meteoPointsSelected, nSelected, currentFrequency, currentDate, currentHour, quality, &qualityInterpolationSettings, meteoSettings, &climateParameters, checkSpatialQuality);
     }
     QObject::connect(proxyWidget, SIGNAL(closeProxyWidget()), this, SLOT(deleteProxyWidget()));
+    return;
+}
+
+void Project::showLocalProxyGraph(gis::Crit3DGisSettings gisSettings, double x, double y)
+{
+    localProxyWidget = new Crit3DLocalProxyWidget(x, y, gisSettings, &interpolationSettings, meteoPoints, nrMeteoPoints, currentFrequency, currentDate, currentHour, quality, &qualityInterpolationSettings, meteoSettings, &climateParameters, checkSpatialQuality);
     return;
 }
 
