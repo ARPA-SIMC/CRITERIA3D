@@ -87,10 +87,12 @@ bool RasterUtmObject::initialize(gis::Crit3DRasterGrid* rasterPtr, const gis::Cr
 
     gis::getGeoExtentsFromUTMHeader(gisSettings, _rasterPointer->header, &_latLonHeader);
     gis::Crit3DRasterHeader utmHeader = *_rasterPointer->header;
-    // lat/lon raster have one extra cell
+
+    // latlon raster have one extra cell
     gis::Crit3DRasterHeader extHeader = utmHeader;
     extHeader.nrCols++;
     extHeader.nrRows++;
+
     _latRaster.initializeGrid(extHeader);
     _lonRaster.initializeGrid(extHeader);
 
@@ -100,17 +102,13 @@ bool RasterUtmObject::initialize(gis::Crit3DRasterGrid* rasterPtr, const gis::Cr
         for (int col = 0; col < extHeader.nrCols; col++)
         {
             gis::getUtmXYFromRowCol(utmHeader, row, col, &x, &y);
-            // move to top left of the cell, except the last row/column (bottom right)
-            if (row < extHeader.nrRows -1)
-                y += utmHeader.cellSize * 0.5;
-            else
-                y -= utmHeader.cellSize * 0.5;
-            if (col < extHeader.nrCols -1)
-                x -= utmHeader.cellSize * 0.5;
-            else
-                x += utmHeader.cellSize * 0.5;
+
+            // move to top left of the cell
+            y += utmHeader.cellSize * 0.5;
+            x -= utmHeader.cellSize * 0.5;
 
             gis::getLatLonFromUtm(gisSettings, x, y, &lat, &lon);
+
             _latRaster.value[row][col] = lat;
             _lonRaster.value[row][col] = lon;
         }
@@ -347,11 +345,19 @@ bool RasterUtmObject::drawRaster(QPainter* painter)
     {
         int row2 = std::min(row1 + step, _rasterPointer->header->nrRows-1);
         int rowCenter = floor((row1 + row2) * 0.5);
+        if (row2 == row1)
+        {
+            row2++;
+        }
 
         for (int col1 = rasterWindow.v[0].col; col1 <= rasterWindow.v[1].col; col1 += step)
         {
             int col2 = std::min(col1 + step, _rasterPointer->header->nrCols-1);
             int colCenter = floor((col1 + col2) * 0.5);
+            if (col2 == col1)
+            {
+                col2++;
+            }
 
             // raster value
             float value = _rasterPointer->value[rowCenter][colCenter];

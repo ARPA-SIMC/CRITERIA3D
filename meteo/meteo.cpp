@@ -1047,7 +1047,14 @@ std::string getMeteoVarName(meteoVariable var)
     else
     {
         search = MapHourlyMeteoVarToString.find(var);
-        if (search != MapHourlyMeteoVarToString.end()) return search->second;
+        if (search != MapHourlyMeteoVarToString.end())
+            return search->second;
+        else
+        {
+            search = MapMonthlyMeteoVarToString.find(var);
+            if (search != MapMonthlyMeteoVarToString.end())
+                return search->second;
+        }
     }
 
     return "";

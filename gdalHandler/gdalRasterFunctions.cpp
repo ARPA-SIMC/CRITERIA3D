@@ -55,8 +55,7 @@ bool convertGdalRaster(GDALDataset* dataset, gis::Crit3DRasterGrid* myRaster, in
 
     // projection
     OGRSpatialReference* spatialReference;
-    QString prjString = QString::fromStdString(dataset->GetProjectionRef());
-    if (prjString != "")
+    if (dataset->GetProjectionRef() != "")
     {
         qDebug() << "Projection =" << dataset->GetProjectionRef();
         spatialReference = new OGRSpatialReference(dataset->GetProjectionRef());
@@ -72,7 +71,7 @@ bool convertGdalRaster(GDALDataset* dataset, gis::Crit3DRasterGrid* myRaster, in
 
         // UTM zone
         utmZone = spatialReference->GetUTMZone();
-        qDebug() << "UTM zone =" << spatialReference->GetUTMZone();
+        qDebug() << "UTM zone = " << spatialReference->GetUTMZone();
     }
     else
     {
@@ -133,8 +132,10 @@ bool convertGdalRaster(GDALDataset* dataset, gis::Crit3DRasterGrid* myRaster, in
     qDebug() << "Nodata =" << QString::number(nodataValue);
 
     // initialize raster
-    myRaster->header->nrCols = dataset->GetRasterXSize();
-    myRaster->header->nrRows = dataset->GetRasterYSize();
+    int xSize = dataset->GetRasterXSize();
+    int ySize = dataset->GetRasterYSize();
+    myRaster->header->nrCols = xSize;
+    myRaster->header->nrRows = ySize;
     myRaster->header->cellSize = adfGeoTransform[1];
     myRaster->header->llCorner.x = adfGeoTransform[0];
     myRaster->header->llCorner.y = adfGeoTransform[3] - myRaster->header->cellSize * myRaster->header->nrRows;
@@ -147,8 +148,6 @@ bool convertGdalRaster(GDALDataset* dataset, gis::Crit3DRasterGrid* myRaster, in
     }
 
     // read data
-    int xSize = band->GetXSize();
-    int ySize = band->GetYSize();
     float* data = (float *) CPLMalloc(sizeof(float) * xSize * ySize);
     CPLErr errGdal = band->RasterIO(GF_Read, 0, 0, xSize, ySize, data, xSize, ySize, GDT_Float32, 0, 0);
 
