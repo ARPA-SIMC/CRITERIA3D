@@ -2585,14 +2585,13 @@ bool Project::interpolationGrid(meteoVariable myVar, const Crit3DTime& myTime)
     {
         for (unsigned row = 0; row < unsigned(meteoGridDbHandler->meteoGrid()->gridStructure().header().nrRows); row++)
         {
-            if (meteoGridDbHandler->meteoGrid()->meteoPoints()[row][col]->id == "002565")
-                int a = 0;
-
             if (meteoGridDbHandler->meteoGrid()->meteoPoints()[row][col]->active)
             {
                 myX = meteoGridDbHandler->meteoGrid()->meteoPoints()[row][col]->point.utm.x;
                 myY = meteoGridDbHandler->meteoGrid()->meteoPoints()[row][col]->point.utm.y;
                 myZ = meteoGridDbHandler->meteoGrid()->meteoPoints()[row][col]->point.z;
+
+                interpolationSettings.setProxiesComplete(true);
 
                 if (getUseDetrendingVar(myVar))
                 {
@@ -2609,6 +2608,8 @@ bool Project::interpolationGrid(meteoVariable myVar, const Crit3DTime& myTime)
                                 float proxyValue = gis::getValueFromXY(*meteoGridProxies[proxyIndex], myX, myY);
                                 if (proxyValue != meteoGridProxies[proxyIndex]->header->flag)
                                     proxyValues[i] = double(proxyValue);
+                                else
+                                    interpolationSettings.setProxiesComplete(false);
                             }
 
                             proxyIndex++;

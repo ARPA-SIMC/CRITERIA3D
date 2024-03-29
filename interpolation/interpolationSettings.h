@@ -152,6 +152,7 @@
         std::vector <float> Kh_error_series;
 
         bool proxyLoaded;
+        bool proxiesComplete;
         std::vector <Crit3DProxy> currentProxy;
         Crit3DProxyCombination optimalCombination;
         Crit3DProxyCombination selectedCombination;
@@ -247,6 +248,8 @@
         void setFittingParameters(const std::vector<std::vector <double>> &newFittingParameters);
         std::vector<std::function<double (double, std::vector<double> &)> > getFittingFunction() const;
         void setFittingFunction(const std::vector<std::function<double (double, std::vector<double> &)> > &newFittingFunction);
+        bool getProxiesComplete() const;
+        void setProxiesComplete(bool newProxiesComplete);
     };
 
 #endif // INTERPOLATIONSETTINGS_H

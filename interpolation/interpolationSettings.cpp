@@ -296,6 +296,16 @@ void Crit3DInterpolationSettings::setFittingFunction(const std::vector<std::func
     fittingFunction = newFittingFunction;
 }
 
+bool Crit3DInterpolationSettings::getProxiesComplete() const
+{
+    return proxiesComplete;
+}
+
+void Crit3DInterpolationSettings::setProxiesComplete(bool newProxiesComplete)
+{
+    proxiesComplete = newProxiesComplete;
+}
+
 Crit3DInterpolationSettings::Crit3DInterpolationSettings()
 {
     initialize();
