@@ -100,18 +100,22 @@ bool Crit1DProject::readSettings()
     // PROJECT
     projectSettings->beginGroup("project");
 
-    path += projectSettings->value("path","").toString();
+    path += projectSettings->value("path", "").toString();
     projectName = projectSettings->value("name", "CRITERIA1D").toString();
 
-    dbCropName = projectSettings->value("db_crop","").toString();
+    dbCropName = projectSettings->value("db_crop", "").toString();
     if (dbCropName.left(1) == ".")
-        dbCropName = path + dbCropName;
+    {
+        dbCropName = QDir::cleanPath(path + dbCropName);
+    }
 
-    dbSoilName = projectSettings->value("db_soil","").toString();
+    dbSoilName = projectSettings->value("db_soil", "").toString();
     if (dbSoilName.left(1) == ".")
-        dbSoilName = path + dbSoilName;
+    {
+        dbSoilName = QDir::cleanPath(path + dbSoilName);
+    }
 
-    dbMeteoName = projectSettings->value("db_meteo","").toString();
+    dbMeteoName = projectSettings->value("db_meteo", "").toString();
     if (dbMeteoName.left(1) == ".")
     {
         dbMeteoName = QDir::cleanPath(path + dbMeteoName);
@@ -121,16 +125,18 @@ bool Crit1DProject::readSettings()
         isXmlMeteoGrid = true;
     }
 
-    dbForecastName = projectSettings->value("db_forecast","").toString();
+    dbForecastName = projectSettings->value("db_forecast", "").toString();
     if (dbForecastName.left(1) == ".")
-        dbForecastName = path + dbForecastName;
+    {
+        dbForecastName = QDir::cleanPath(path + dbForecastName);
+    }
 
     // computational units db
-    dbComputationUnitsName = projectSettings->value("db_comp_units","").toString();
+    dbComputationUnitsName = projectSettings->value("db_comp_units", "").toString();
     if (dbComputationUnitsName == "")
     {
         // check old name
-        dbComputationUnitsName = projectSettings->value("db_units","").toString();
+        dbComputationUnitsName = projectSettings->value("db_units", "").toString();
     }
     if (dbComputationUnitsName == "")
     {
@@ -138,12 +144,16 @@ bool Crit1DProject::readSettings()
         return false;
     }
     if (dbComputationUnitsName.left(1) == ".")
-        dbComputationUnitsName = path + dbComputationUnitsName;
+    {
+        dbComputationUnitsName = QDir::cleanPath(path + dbComputationUnitsName);
+    }
 
    // output db
-    dbOutputName = projectSettings->value("db_output","").toString();
+    dbOutputName = projectSettings->value("db_output", "").toString();
     if (dbOutputName.left(1) == ".")
-        dbOutputName = path + dbOutputName;
+    {
+        dbOutputName = QDir::cleanPath(path + dbOutputName);
+    }
 
     // date
     if (firstSimulationDate == QDate(1800,1,1))
