@@ -2587,9 +2587,6 @@ bool Project::interpolationGrid(meteoVariable myVar, const Crit3DTime& myTime)
     {
         for (unsigned row = 0; row < unsigned(meteoGridDbHandler->meteoGrid()->gridStructure().header().nrRows); row++)
         {
-            if (meteoGridDbHandler->meteoGrid()->meteoPoints()[row][col]->id == "002565")
-                int a = 0;
-
             if (meteoGridDbHandler->meteoGrid()->meteoPoints()[row][col]->active)
             {
                 myX = meteoGridDbHandler->meteoGrid()->meteoPoints()[row][col]->point.utm.x;
@@ -3312,7 +3309,7 @@ void Project::showMeteoWidgetGrid(std::string idCell, bool isAppend)
     QDate firstDate = meteoGridDbHandler->firstDate();
     QDate lastDate = meteoGridDbHandler->lastDate();
     QDate firstMonthlyDate = meteoGridDbHandler->getFirstMonthlytDate();
-    QDate lastMonthlyDate = meteoGridDbHandler->getLastMonthlyDate();
+    QDate lastMonthlyDate = meteoGridDbHandler->getFirstMonthlytDate();
 
 
     QDateTime firstDateTime, lastDateTime;
@@ -3484,10 +3481,6 @@ void Project::showMeteoWidgetGrid(std::string idCell, bool isAppend)
                 if (meteoGridDbHandler->isHourly())
                 {
                     meteoWidgetGrid->setDateIntervalHourly(firstDateTime.date(), lastDateTime.date());
-                }
-                if (meteoGridDbHandler->isMonthly())
-                {
-                    meteoWidgetGrid->setDateIntervalMonthly(firstMonthlyDate, lastMonthlyDate);
                 }
 
                 meteoWidgetGrid->drawMeteoPoint(meteoGridDbHandler->meteoGrid()->meteoPoint(row,col), isAppend);
