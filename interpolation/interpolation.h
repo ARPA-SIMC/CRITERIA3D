@@ -59,7 +59,7 @@
                                   float* devSt, float* avgDeltaZ, float* minDistance);
 
     float interpolate(std::vector<Crit3DInterpolationDataPoint> &myPoints, Crit3DInterpolationSettings *mySettings, Crit3DMeteoSettings *meteoSettings, meteoVariable myVar, float myX, float myY, float myZ, std::vector<double> myProxyValues, bool excludeSupplemental);
-    void getProxyValuesXY(float x, float y, Crit3DInterpolationSettings* mySettings, std::vector<double> &myValues);
+    bool getProxyValuesXY(float x, float y, Crit3DInterpolationSettings* mySettings, std::vector<double> &myValues);
 
     bool getActiveProxyValues(Crit3DInterpolationSettings *mySettings, const std::vector<double> &allProxyValues, std::vector<double> &activeProxyValues);
 

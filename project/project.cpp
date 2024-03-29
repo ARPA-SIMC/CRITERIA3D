@@ -2074,6 +2074,8 @@ void Project::passInterpolatedTemperatureToHumidityPoints(Crit3DTime myTime, Cri
 bool Project::interpolationOutputPoints(std::vector <Crit3DInterpolationDataPoint> &interpolationPoints,
                                         gis::Crit3DRasterGrid *outputGrid, meteoVariable myVar)
 {
+    // GA 2024-03-29 mi sembra che qua manchi il local detrending
+
     if (! getComputeOnlyPoints()) return false;
 
     if (outputPoints.empty())
@@ -2155,6 +2157,8 @@ bool Project::computeStatisticsCrossValidation(Crit3DTime myTime, meteoVariable 
 
 bool Project::interpolationCv(meteoVariable myVar, const Crit3DTime& myTime, crossValidationStatistics *myStats)
 {
+    // TODO local detrending
+
     if (! checkInterpolation(myVar)) return false;
 
     // check variables
@@ -2292,6 +2296,8 @@ bool Project::interpolationDemLocalDetrending(meteoVariable myVar, const Crit3DT
                 myRaster->getRowCol(x, y, row, col);
                 if (! myRaster->isOutOfGrid(row, col))
                 {
+                    getProxyValuesXY(x, y, &interpolationSettings, proxyValues);
+
                     std::vector <Crit3DInterpolationDataPoint> subsetInterpolationPoints;
                     localSelection(interpolationPoints, subsetInterpolationPoints, x, y, interpolationSettings);
                     if (! preInterpolation(subsetInterpolationPoints, &interpolationSettings, meteoSettings, &climateParameters,
@@ -2301,7 +2307,7 @@ bool Project::interpolationDemLocalDetrending(meteoVariable myVar, const Crit3DT
                         return false;
                     }
 
-                    getProxyValuesXY(x, y, &interpolationSettings, proxyValues);
+
                     outputPoints[i].currentValue = interpolate(subsetInterpolationPoints, &interpolationSettings, meteoSettings,
                                                                myVar, x, y, outputPoints[i].z, proxyValues, true);
 
@@ -2319,10 +2325,14 @@ bool Project::interpolationDemLocalDetrending(meteoVariable myVar, const Crit3DT
         {
             for (long col = 0; col < myHeader.nrCols; col++)
             {
+                interpolationSettings.setProxiesComplete(true);
+
                 float z = DEM.value[row][col];
                 if (! isEqual(z, myHeader.flag))
                 {
                     gis::getUtmXYFromRowCol(myHeader, row, col, &x, &y);
+
+                    if (! getProxyValuesXY(x, y, &interpolationSettings, proxyValues)) interpolationSettings.setProxiesComplete(false);
 
                     std::vector <Crit3DInterpolationDataPoint> subsetInterpolationPoints;
                     localSelection(interpolationPoints, subsetInterpolationPoints, x, y, interpolationSettings);
@@ -2333,7 +2343,7 @@ bool Project::interpolationDemLocalDetrending(meteoVariable myVar, const Crit3DT
                         return false;
                     }
 
-                    getProxyValuesXY(x, y, &interpolationSettings, proxyValues);
+
                     myRaster->value[row][col] = interpolate(subsetInterpolationPoints, &interpolationSettings, meteoSettings,
                                                             myVar, x, y, z, proxyValues, true);
 

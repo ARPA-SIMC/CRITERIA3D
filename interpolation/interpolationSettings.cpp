@@ -345,6 +345,7 @@ void Crit3DInterpolationSettings::initialize()
     maxHeightInversion = 1000.;
     indexPointCV = NODATA;
     minPointsLocalDetrending = 20;
+    proxiesComplete = true;
 
     Kh_series.clear();
     Kh_error_series.clear();
