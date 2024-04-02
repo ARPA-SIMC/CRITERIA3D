@@ -296,6 +296,16 @@ void Crit3DInterpolationSettings::setFittingFunction(const std::vector<std::func
     fittingFunction = newFittingFunction;
 }
 
+bool Crit3DInterpolationSettings::getProxiesComplete() const
+{
+    return proxiesComplete;
+}
+
+void Crit3DInterpolationSettings::setProxiesComplete(bool newProxiesComplete)
+{
+    proxiesComplete = newProxiesComplete;
+}
+
 Crit3DInterpolationSettings::Crit3DInterpolationSettings()
 {
     initialize();
@@ -335,6 +345,7 @@ void Crit3DInterpolationSettings::initialize()
     maxHeightInversion = 1000.;
     indexPointCV = NODATA;
     minPointsLocalDetrending = 20;
+    proxiesComplete = true;
 
     Kh_series.clear();
     Kh_error_series.clear();

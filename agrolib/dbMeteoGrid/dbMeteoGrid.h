@@ -168,11 +168,12 @@
         QDate getLastDailyDate() const;
         QDate getFirstHourlyDate() const;
         QDate getLastHourlyDate() const;
-        QDate getFirsMonthlytDate() const;
+        QDate getFirstMonthlytDate() const;
         QDate getLastMonthlyDate() const;
 
         bool isDaily();
         bool isHourly();
+        bool isMonthly();
 
         bool saveLogProcedures(QString *myError, QString nameProc, QDate date);
 

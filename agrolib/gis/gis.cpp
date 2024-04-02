@@ -713,7 +713,6 @@ namespace gis
      */
     void latLonToUtm(double lat, double lon, double *utmEasting, double *utmNorthing, int *zoneNumber)
     {
-
         static double ellipsoidK0 = 0.9996;
         double eccSquared, lonOrigin, eccPrimeSquared, ae, a, n;
         double t, c,m,lonTemp, latRad,lonRad,lonOriginRad;
@@ -774,17 +773,18 @@ namespace gis
         if (lat < 0) (*utmNorthing) += 10000000.;
     }
 
+
     void getUtmFromLatLon(int zoneNumber, const Crit3DGeoPoint& geoPoint, Crit3DUtmPoint* utmPoint)
     {
         latLonToUtmForceZone(zoneNumber, geoPoint.latitude, geoPoint.longitude, &(utmPoint->x), &(utmPoint->y));
     }
 
+
+    /*!
+          \brief equivalent to latLonToUtm forcing UTM zone.
+    */
     void latLonToUtmForceZone(int zoneNumber, double lat, double lon, double *utmEasting, double *utmNorthing)
     {
-
-        /*!
-          equivalent to LatLonToUTM forcing UTM zone.
-        */
         double eccSquared, lonOrigin, eccPrimeSquared, ae, a, n , t, c,m,lonTemp, latRad,lonRad,lonOriginRad;
         static double ellipsoidK0 = 0.9996;
 

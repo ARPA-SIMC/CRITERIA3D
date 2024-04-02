@@ -2420,12 +2420,15 @@ bool PragaProject::interpolationMeteoGridPeriod(QDate dateIni, QDate dateFin, QL
 
     // find out if topographic distance is needed
     bool useTd = false;
-    foreach (myVar, variables)
+    if (interpolationSettings.getUseTD())
     {
-        if (getUseTdVar(myVar))
+        foreach (myVar, variables)
         {
-            useTd = true;
-            break;
+            if (getUseTdVar(myVar))
+            {
+                useTd = true;
+                break;
+            }
         }
     }
 
@@ -2444,10 +2447,14 @@ bool PragaProject::interpolationMeteoGridPeriod(QDate dateIni, QDate dateFin, QL
     QDate saveDateIni = dateIni;
 
     if (nrDaysLoading == NODATA)
+    {
         nrDaysLoading = dateIni.daysTo(dateFin)+1;
+    }
 
     if (nrDaysSaving == NODATA || nrDaysSaving > nrDaysLoading)
+    {
         nrDaysSaving = nrDaysLoading;
+    }
 
     QDate loadDateFin = QDate(1800, 1, 1);
 
@@ -2465,7 +2472,8 @@ bool PragaProject::interpolationMeteoGridPeriod(QDate dateIni, QDate dateFin, QL
             meteoGridDbHandler->meteoGrid()->initializeData(getCrit3DDate(myDate.addDays(-1)), getCrit3DDate(loadDateFin), isHourly, isDaily, false);
 
             logInfoGUI("Loading meteo points data from " + myDate.addDays(-1).toString("dd/MM/yyyy") + " to " + loadDateFin.toString("dd/MM/yyyy"));
-            //load one day before (for transmissivity)
+
+            // load one day before (for transmissivity)
             if (! loadMeteoPointsData(myDate.addDays(-1), loadDateFin, isHourly, isDaily, false))
                 return false;
         }
@@ -2475,7 +2483,7 @@ bool PragaProject::interpolationMeteoGridPeriod(QDate dateIni, QDate dateFin, QL
         {
             logInfoGUI("Interpolating proxy grid series...");
 
-            if (! checkProxyGridSeries(&interpolationSettings, DEM, proxyGridSeries, myDate, &errorString))
+            if (! checkProxyGridSeries(&interpolationSettings, DEM, proxyGridSeries, myDate, errorString))
                 return false;
 
             if (! readProxyValues())

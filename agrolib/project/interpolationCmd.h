@@ -68,10 +68,14 @@
     };
 
     bool checkProxyGridSeries(Crit3DInterpolationSettings* mySettings, const gis::Crit3DRasterGrid &gridBase,
-                              std::vector <Crit3DProxyGridSeries> mySeries, QDate myDate, QString *error);
+                              std::vector <Crit3DProxyGridSeries> mySeries, QDate myDate, QString &errorStr);
 
-    bool interpolationRaster(std::vector <Crit3DInterpolationDataPoint> &myPoints, Crit3DInterpolationSettings* mySettings, Crit3DMeteoSettings *meteoSettings,
-                            gis::Crit3DRasterGrid* outputGrid, const gis::Crit3DRasterGrid& raster, meteoVariable myVar);
+    bool interpolationRaster(std::vector <Crit3DInterpolationDataPoint> &myPoints, Crit3DInterpolationSettings* mySettings,
+                             Crit3DMeteoSettings *meteoSettings, gis::Crit3DRasterGrid* outputGrid,
+                             const gis::Crit3DRasterGrid& raster, meteoVariable myVar);
+
+    bool interpolateProxyGridSeries(const Crit3DProxyGridSeries& mySeries, QDate myDate, const gis::Crit3DRasterGrid& gridBase,
+                                    gis::Crit3DRasterGrid *gridOut, QString &errorStr);
 
 
 #endif // INTERPOLATIONCMD_H

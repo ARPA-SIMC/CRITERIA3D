@@ -100,33 +100,43 @@ bool Crit1DProject::readSettings()
     // PROJECT
     projectSettings->beginGroup("project");
 
-    path += projectSettings->value("path","").toString();
+    path += projectSettings->value("path", "").toString();
     projectName = projectSettings->value("name", "CRITERIA1D").toString();
 
-    dbCropName = projectSettings->value("db_crop","").toString();
+    dbCropName = projectSettings->value("db_crop", "").toString();
     if (dbCropName.left(1) == ".")
-        dbCropName = path + dbCropName;
+    {
+        dbCropName = QDir::cleanPath(path + dbCropName);
+    }
 
-    dbSoilName = projectSettings->value("db_soil","").toString();
+    dbSoilName = projectSettings->value("db_soil", "").toString();
     if (dbSoilName.left(1) == ".")
-        dbSoilName = path + dbSoilName;
+    {
+        dbSoilName = QDir::cleanPath(path + dbSoilName);
+    }
 
-    dbMeteoName = projectSettings->value("db_meteo","").toString();
+    dbMeteoName = projectSettings->value("db_meteo", "").toString();
     if (dbMeteoName.left(1) == ".")
-        dbMeteoName = path + dbMeteoName;
-    if (dbMeteoName.right(3) == "xml")
+    {
+        dbMeteoName = QDir::cleanPath(path + dbMeteoName);
+    }
+    if (dbMeteoName.right(3).toUpper() == "XML")
+    {
         isXmlMeteoGrid = true;
+    }
 
-    dbForecastName = projectSettings->value("db_forecast","").toString();
+    dbForecastName = projectSettings->value("db_forecast", "").toString();
     if (dbForecastName.left(1) == ".")
-        dbForecastName = path + dbForecastName;
+    {
+        dbForecastName = QDir::cleanPath(path + dbForecastName);
+    }
 
     // computational units db
-    dbComputationUnitsName = projectSettings->value("db_comp_units","").toString();
+    dbComputationUnitsName = projectSettings->value("db_comp_units", "").toString();
     if (dbComputationUnitsName == "")
     {
         // check old name
-        dbComputationUnitsName = projectSettings->value("db_units","").toString();
+        dbComputationUnitsName = projectSettings->value("db_units", "").toString();
     }
     if (dbComputationUnitsName == "")
     {
@@ -134,17 +144,25 @@ bool Crit1DProject::readSettings()
         return false;
     }
     if (dbComputationUnitsName.left(1) == ".")
-        dbComputationUnitsName = path + dbComputationUnitsName;
+    {
+        dbComputationUnitsName = QDir::cleanPath(path + dbComputationUnitsName);
+    }
 
    // output db
-    dbOutputName = projectSettings->value("db_output","").toString();
+    dbOutputName = projectSettings->value("db_output", "").toString();
     if (dbOutputName.left(1) == ".")
-        dbOutputName = path + dbOutputName;
+    {
+        dbOutputName = QDir::cleanPath(path + dbOutputName);
+    }
 
     // date
     if (firstSimulationDate == QDate(1800,1,1))
     {
         firstSimulationDate = projectSettings->value("firstDate",0).toDate();
+        if (! firstSimulationDate.isValid())
+        {
+            firstSimulationDate = projectSettings->value("first_date",0).toDate();
+        }
         if (! firstSimulationDate.isValid())
         {
             firstSimulationDate = QDate(1800,1,1);
@@ -154,6 +172,10 @@ bool Crit1DProject::readSettings()
     if (lastSimulationDate == QDate(1800,1,1))
     {
         lastSimulationDate = projectSettings->value("lastDate",0).toDate();
+        if (! lastSimulationDate.isValid())
+        {
+             lastSimulationDate = projectSettings->value("last_date",0).toDate();
+        }
         if (! lastSimulationDate.isValid())
         {
             lastSimulationDate = QDate(1800,1,1);
@@ -358,7 +380,7 @@ int Crit1DProject::initializeProject(QString settingsFileName)
         return ERROR_SETTINGS_WRONGFILENAME;
     }
 
-    if (!readSettings())
+    if (! readSettings())
         return ERROR_SETTINGS_MISSINGDATA;
 
     logger.setLog(path, projectName, addDateTimeLogFile);
@@ -468,18 +490,30 @@ bool Crit1DProject::setSoil(QString soilCode, QString &errorStr)
 
 bool Crit1DProject::setMeteoXmlGrid(QString idMeteo, QString idForecast, unsigned int memberNr)
 {
-    unsigned row, col;
+    // check date
+    QDate NODATE = QDate(1800, 1, 1);
+    if (! firstSimulationDate.isValid() || firstSimulationDate == NODATE )
+    {
+        projectError = "Missing first simulation date.";
+        return false;
+    }
+    if (! lastSimulationDate.isValid() || lastSimulationDate == NODATE )
+    {
+        projectError = "Missing last simulation date.";
+        return false;
+    }
     unsigned nrDays = unsigned(firstSimulationDate.daysTo(lastSimulationDate)) + 1;
 
-    if (!observedMeteoGrid->meteoGrid()->findMeteoPointFromId(&row, &col, idMeteo.toStdString()) )
+    unsigned row, col;
+    if (! observedMeteoGrid->meteoGrid()->findMeteoPointFromId(&row, &col, idMeteo.toStdString()) )
     {
         projectError = "Missing observed meteo cell: " + idMeteo;
         return false;
     }
 
-    if (!observedMeteoGrid->gridStructure().isFixedFields())
+    if (! observedMeteoGrid->gridStructure().isFixedFields())
     {
-        if (!observedMeteoGrid->loadGridDailyData(projectError, idMeteo, firstSimulationDate, lastSimulationDate))
+        if (! observedMeteoGrid->loadGridDailyData(projectError, idMeteo, firstSimulationDate, lastSimulationDate))
         {
             projectError = "Missing observed data: " + idMeteo;
             return false;
@@ -487,7 +521,7 @@ bool Crit1DProject::setMeteoXmlGrid(QString idMeteo, QString idForecast, unsigne
     }
     else
     {
-        if (!observedMeteoGrid->loadGridDailyDataFixedFields(projectError, idMeteo, firstSimulationDate, lastSimulationDate))
+        if (! observedMeteoGrid->loadGridDailyDataFixedFields(projectError, idMeteo, firstSimulationDate, lastSimulationDate))
         {
             if (projectError == "Missing MeteoPoint id")
             {
@@ -501,11 +535,12 @@ bool Crit1DProject::setMeteoXmlGrid(QString idMeteo, QString idForecast, unsigne
         }
     }
 
-    if (this->isShortTermForecast)
+    if (isShortTermForecast)
     {
-        if (!this->forecastMeteoGrid->gridStructure().isFixedFields())
+        if (! forecastMeteoGrid->gridStructure().isFixedFields())
         {
-            if (!this->forecastMeteoGrid->loadGridDailyData(projectError, idForecast, lastSimulationDate.addDays(1), lastSimulationDate.addDays(daysOfForecast)))
+            if (! forecastMeteoGrid->loadGridDailyData(projectError, idForecast, lastSimulationDate.addDays(1),
+                                                            lastSimulationDate.addDays(daysOfForecast)))
             {
                 if (projectError == "Missing MeteoPoint id")
                 {
@@ -520,7 +555,8 @@ bool Crit1DProject::setMeteoXmlGrid(QString idMeteo, QString idForecast, unsigne
         }
         else
         {
-            if (!this->forecastMeteoGrid->loadGridDailyDataFixedFields(projectError, idForecast, lastSimulationDate.addDays(1), lastSimulationDate.addDays(daysOfForecast)))
+            if (! forecastMeteoGrid->loadGridDailyDataFixedFields(projectError, idForecast,
+                                              lastSimulationDate.addDays(1), lastSimulationDate.addDays(daysOfForecast)))
             {
                 if (projectError == "Missing MeteoPoint id")
                 {
@@ -536,16 +572,17 @@ bool Crit1DProject::setMeteoXmlGrid(QString idMeteo, QString idForecast, unsigne
         nrDays += unsigned(daysOfForecast);
     }
 
-    if (this->isEnsembleForecast)
+    if (isEnsembleForecast)
     {
-        if (this->forecastMeteoGrid->gridStructure().isFixedFields())
+        if (forecastMeteoGrid->gridStructure().isFixedFields())
         {
             projectError = "DB grid fixed fields: not available";
             return false;
         }
         else
         {
-            if (!this->forecastMeteoGrid->loadGridDailyDataEnsemble(projectError, idForecast, int(memberNr), lastSimulationDate.addDays(1), lastSimulationDate.addDays(daysOfForecast)))
+            if (! forecastMeteoGrid->loadGridDailyDataEnsemble(projectError, idForecast, int(memberNr),
+                                            lastSimulationDate.addDays(1), lastSimulationDate.addDays(daysOfForecast)))
             {
                 if (projectError == "Missing MeteoPoint id")
                 {
@@ -561,8 +598,8 @@ bool Crit1DProject::setMeteoXmlGrid(QString idMeteo, QString idForecast, unsigne
         nrDays += unsigned(daysOfForecast);
     }
 
-    myCase.meteoPoint.latitude = this->observedMeteoGrid->meteoGrid()->meteoPointPointer(row, col)->latitude;
-    myCase.meteoPoint.longitude = this->observedMeteoGrid->meteoGrid()->meteoPointPointer(row, col)->longitude;
+    myCase.meteoPoint.latitude = observedMeteoGrid->meteoGrid()->meteoPointPointer(row, col)->latitude;
+    myCase.meteoPoint.longitude = observedMeteoGrid->meteoGrid()->meteoPointPointer(row, col)->longitude;
     myCase.meteoPoint.initializeObsDataD(nrDays, getCrit3DDate(firstSimulationDate));
 
     float tmin, tmax, tavg, prec;
@@ -570,22 +607,23 @@ bool Crit1DProject::setMeteoXmlGrid(QString idMeteo, QString idForecast, unsigne
     for (int i = 0; i < lastIndex; i++)
     {
         Crit3DDate myDate = getCrit3DDate(firstSimulationDate.addDays(i));
-        tmin = this->observedMeteoGrid->meteoGrid()->meteoPointPointer(row, col)->getMeteoPointValueD(myDate, dailyAirTemperatureMin);
+        tmin = observedMeteoGrid->meteoGrid()->meteoPointPointer(row, col)->getMeteoPointValueD(myDate, dailyAirTemperatureMin);
         myCase.meteoPoint.setMeteoPointValueD(myDate, dailyAirTemperatureMin, tmin);
 
-        tmax = this->observedMeteoGrid->meteoGrid()->meteoPointPointer(row, col)->getMeteoPointValueD(myDate, dailyAirTemperatureMax);
+        tmax = observedMeteoGrid->meteoGrid()->meteoPointPointer(row, col)->getMeteoPointValueD(myDate, dailyAirTemperatureMax);
         myCase.meteoPoint.setMeteoPointValueD(myDate, dailyAirTemperatureMax, tmax);
 
-        tavg = this->observedMeteoGrid->meteoGrid()->meteoPointPointer(row, col)->getMeteoPointValueD(myDate, dailyAirTemperatureAvg);
+        tavg = observedMeteoGrid->meteoGrid()->meteoPointPointer(row, col)->getMeteoPointValueD(myDate, dailyAirTemperatureAvg);
         if (int(tavg) == int(NODATA))
         {
             tavg = (tmax + tmin)/2;
         }
         myCase.meteoPoint.setMeteoPointValueD(myDate, dailyAirTemperatureAvg, tavg);
 
-        prec = this->observedMeteoGrid->meteoGrid()->meteoPointPointer(row, col)->getMeteoPointValueD(myDate, dailyPrecipitation);
+        prec = observedMeteoGrid->meteoGrid()->meteoPointPointer(row, col)->getMeteoPointValueD(myDate, dailyPrecipitation);
         myCase.meteoPoint.setMeteoPointValueD(myDate, dailyPrecipitation, prec);
     }
+
     if (isShortTermForecast || isEnsembleForecast)
     {
         QDate start = lastSimulationDate.addDays(1);
@@ -593,23 +631,24 @@ bool Crit1DProject::setMeteoXmlGrid(QString idMeteo, QString idForecast, unsigne
         for (int i = 0; i< start.daysTo(end)+1; i++)
         {
             Crit3DDate myDate = getCrit3DDate(start.addDays(i));
-            tmin = this->forecastMeteoGrid->meteoGrid()->meteoPointPointer(row, col)->getMeteoPointValueD(myDate, dailyAirTemperatureMin);
+            tmin = forecastMeteoGrid->meteoGrid()->meteoPointPointer(row, col)->getMeteoPointValueD(myDate, dailyAirTemperatureMin);
             myCase.meteoPoint.setMeteoPointValueD(myDate, dailyAirTemperatureMin, tmin);
 
-            tmax = this->forecastMeteoGrid->meteoGrid()->meteoPointPointer(row, col)->getMeteoPointValueD(myDate, dailyAirTemperatureMax);
+            tmax = forecastMeteoGrid->meteoGrid()->meteoPointPointer(row, col)->getMeteoPointValueD(myDate, dailyAirTemperatureMax);
             myCase.meteoPoint.setMeteoPointValueD(myDate, dailyAirTemperatureMax, tmax);
 
-            tavg = this->forecastMeteoGrid->meteoGrid()->meteoPointPointer(row, col)->getMeteoPointValueD(myDate, dailyAirTemperatureAvg);
+            tavg = forecastMeteoGrid->meteoGrid()->meteoPointPointer(row, col)->getMeteoPointValueD(myDate, dailyAirTemperatureAvg);
             if (int(tavg) == int(NODATA))
             {
                 tavg = (tmax + tmin)/2;
             }
             myCase.meteoPoint.setMeteoPointValueD(myDate, dailyAirTemperatureAvg, tavg);
 
-            prec = this->forecastMeteoGrid->meteoGrid()->meteoPointPointer(row, col)->getMeteoPointValueD(myDate, dailyPrecipitation);
+            prec = forecastMeteoGrid->meteoGrid()->meteoPointPointer(row, col)->getMeteoPointValueD(myDate, dailyPrecipitation);
             myCase.meteoPoint.setMeteoPointValueD(myDate, dailyPrecipitation, prec);
         }
     }
+
     return true;
 }
 
@@ -1328,19 +1367,21 @@ bool Crit1DProject::setPercentileOutputCsv()
     QString outputCsvPath = getFilePath(outputCsvFileName);
     if (! QDir(outputCsvPath).exists())
     {
-        QDir().mkdir(outputCsvPath);
+        if (! QDir().mkdir(outputCsvPath))
+        {
+            logger.writeError("Error creating directory: " + outputCsvPath);
+            return false;
+        }
     }
 
     outputCsvFile.open(outputCsvFileName.toStdString().c_str(), std::ios::out | std::ios::trunc);
     if ( outputCsvFile.fail())
     {
-        logger.writeError("open failure: " + QString(strerror(errno)) + '\n');
+        logger.writeError("Open failure: " + outputCsvFileName + "\n" + QString(strerror(errno)));
         return false;
     }
-    else
-    {
-        logger.writeInfo("Statistics output file (csv): " + outputCsvFileName + "\n");
-    }
+
+    logger.writeInfo("Statistics output file (csv): " + outputCsvFileName + "\n");
 
     if (isYearlyStatistics || isMonthlyStatistics || isSeasonalForecast)
     {

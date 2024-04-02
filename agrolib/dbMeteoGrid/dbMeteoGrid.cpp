@@ -3682,6 +3682,17 @@ bool Crit3DMeteoGridDbHandler::isHourly()
     return true;
 }
 
+bool Crit3DMeteoGridDbHandler::isMonthly()
+{
+    if ( ! _firstMonthlyDate.isValid() || _firstMonthlyDate.year() == 1800
+        || ! _lastMonthlyDate.isValid() || _lastMonthlyDate.year() == 1800 )
+    {
+        return false;
+    }
+
+    return true;
+}
+
 
 QDate Crit3DMeteoGridDbHandler::getFirstDailyDate() const
 {
@@ -3719,7 +3730,7 @@ QDate Crit3DMeteoGridDbHandler::getLastHourlyDate() const
     return _lastHourlyDate;
 }
 
-QDate Crit3DMeteoGridDbHandler::getFirsMonthlytDate() const
+QDate Crit3DMeteoGridDbHandler::getFirstMonthlytDate() const
 {
     if (_firstMonthlyDate.year() == 1800)
     {

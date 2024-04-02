@@ -36,6 +36,7 @@
 #include "criteria1DMeteo.h"
 #include "utilities.h"
 #include "basicMath.h"
+#include "root.h"
 
 #include <QFileInfo>
 #include <QFileDialog>
@@ -1026,7 +1027,7 @@ void Criteria1DWidget::on_actionExecuteCase()
         return;
     }
 
-    if (!myProject.computeUnit(myProject.myCase.unit))
+    if (! myProject.computeUnit(myProject.myCase.unit))
     {
         QMessageBox::critical(nullptr, "Error!", myProject.projectError);
     }
