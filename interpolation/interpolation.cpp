@@ -1092,7 +1092,7 @@ bool getUseDetrendingVar(meteoVariable myVar)
         myVar == dailyAirTemperatureMin ||
         myVar == elaboration )
 
-    return true;
+        return true;
     else
         return false;
 }
@@ -1108,7 +1108,7 @@ bool getUseTdVar(meteoVariable myVar)
         myVar == atmPressure ||
         myVar == dailyWaterTableDepth)
 
-    return false;
+        return false;
     else
         return true;
 }

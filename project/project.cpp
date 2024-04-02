@@ -1121,9 +1121,11 @@ bool Project::loadMeteoPointsDB(QString fileName)
         logError("Error reading proxy values");
     }
 
-    //position with respect to DEM
+    // position with respect to DEM
     if (DEM.isLoaded)
+    {
         checkMeteoPointsDEM();
+    }
 
     meteoPointsLoaded = true;
     logInfo("Meteo points DB = " + dbName);
@@ -1220,7 +1222,9 @@ bool Project::loadAggregationDBAsMeteoPoints(QString fileName)
 
     //position with respect to DEM
     if (DEM.isLoaded)
+    {
         checkMeteoPointsDEM();
+    }
 
     meteoPointsLoaded = true;
     logInfo("Meteo points DB = " + dbName);
@@ -1762,11 +1766,14 @@ bool Project::readPointProxyValues(Crit3DMeteoPoint* myPoint, QSqlDatabase* myDb
             }
         }
 
-        if (int(myPoint->proxyValues[i]) == int(NODATA))
+        if (isEqual(myPoint->proxyValues[i], NODATA))
         {
             gis::Crit3DRasterGrid* proxyGrid = myProxy->getGrid();
             if (proxyGrid == nullptr || ! proxyGrid->isLoaded)
+            {
+                errorString = "Error in proxy grid: " + QString::fromStdString(myProxy->getGridName());
                 return false;
+            }
             else
             {
                 myValue = gis::getValueFromXY(*proxyGrid, myPoint->point.utm.x, myPoint->point.utm.y);
@@ -1864,7 +1871,8 @@ bool Project::readProxyValues()
 
     for (int i = 0; i < this->nrMeteoPoints; i++)
     {
-        if (! readPointProxyValues(&(this->meteoPoints[i]), &myDb)) return false;
+        if (! readPointProxyValues(&(this->meteoPoints[i]), &myDb))
+            return false;
     }
 
     return true;
@@ -1874,14 +1882,23 @@ bool Project::readProxyValues()
 bool Project::updateProxy()
 {
     if (DEM.isLoaded)
+    {
         if (! interpolationSettings.getProxyLoaded())
         {
-            if (loadProxyGrids()) interpolationSettings.setProxyLoaded(true);
-            else return false;
+            if (loadProxyGrids())
+            {
+                interpolationSettings.setProxyLoaded(true);
+            }
+            else
+                return false;
 
             if (meteoPointsDbHandler != nullptr)
-                if (! readProxyValues()) return false;
+            {
+                if (! readProxyValues())
+                    return false;
+            }
         }
+    }
 
     return true;
 }
