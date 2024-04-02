@@ -1367,19 +1367,21 @@ bool Crit1DProject::setPercentileOutputCsv()
     QString outputCsvPath = getFilePath(outputCsvFileName);
     if (! QDir(outputCsvPath).exists())
     {
-        QDir().mkdir(outputCsvPath);
+        if (! QDir().mkdir(outputCsvPath))
+        {
+            logger.writeError("Error creating directory: " + outputCsvPath);
+            return false;
+        }
     }
 
     outputCsvFile.open(outputCsvFileName.toStdString().c_str(), std::ios::out | std::ios::trunc);
     if ( outputCsvFile.fail())
     {
-        logger.writeError("open failure: " + QString(strerror(errno)) + '\n');
+        logger.writeError("Open failure: " + outputCsvFileName + "\n" + QString(strerror(errno)));
         return false;
     }
-    else
-    {
-        logger.writeInfo("Statistics output file (csv): " + outputCsvFileName + "\n");
-    }
+
+    logger.writeInfo("Statistics output file (csv): " + outputCsvFileName + "\n");
 
     if (isYearlyStatistics || isMonthlyStatistics || isSeasonalForecast)
     {
