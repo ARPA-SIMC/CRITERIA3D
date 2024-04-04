@@ -396,4 +396,12 @@ bool RasterUtmObject::drawRaster(QPainter* painter)
 }
 
 
+bool RasterUtmObject::getRowCol(RasterUtmObject* rasterObj, double x, double y, int& row, int& col)
+{
+    rasterObj->_rasterPointer->getRowCol(x, y, row, col);
 
+    if(row != NODATA && col != NODATA)
+        return true;
+    else
+        return false;
+}
