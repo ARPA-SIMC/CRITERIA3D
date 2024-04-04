@@ -65,6 +65,7 @@
 
         void clear();
         bool initialize(gis::Crit3DRasterGrid* rasterPtr, const gis::Crit3DGisSettings& gisSettings);
+        bool getRowCol(RasterUtmObject* rasterObj, double x, double y, int& row, int& col);
 
         void setDrawing(bool value) {_isDrawing = value;}
         void setColorLegend(ColorLegend* colorLegendPtr) {_colorLegendPointer = colorLegendPtr;}
