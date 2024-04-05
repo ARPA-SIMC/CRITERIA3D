@@ -591,6 +591,10 @@ QString getFormattedLabel(QString pointName, QString varName)
     {
         varName = varName.remove("DAILY_");
     }
+    else if (varName.contains("MONTHLY_"))
+    {
+        varName = varName.remove("MONTHLY_");
+    }
 
     label = pointName + '_' + varName;
 
@@ -2309,8 +2313,20 @@ void Crit3DMeteoWidget::editLineSeries()
                 series->setColor(newColor);
                 for (int i = 0; i<nameLines.size(); i++)
                 {
-                    qDebug() << "nameLines[i]" << nameLines[i];
                     qDebug() << "series->name()" << series->name();
+                    QString myName = nameLines[i];
+                    if (nameLines[i].contains("DAILY"))
+                    {
+                        myName.remove("DAILY_");
+                    }
+                    if (nameLines[i].contains("MONTHLY"))
+                    {
+                        myName.remove("MONTHLY_");
+                    }
+                    if (series->name().contains(myName))
+                    {
+                        qDebug() << "nameLines[i]" << nameLines[i];
+                    }
                     // TO DO
                 }
             }
