@@ -34,6 +34,7 @@
 
 #include <QLayout>
 #include <QDate>
+#include <QColorDialog>
 
 
 Crit3DMeteoWidget::Crit3DMeteoWidget(bool isGrid_, QString projectPath, Crit3DMeteoSettings* meteoSettings_)
@@ -589,6 +590,10 @@ QString getFormattedLabel(QString pointName, QString varName)
     if (varName.contains("DAILY_"))
     {
         varName = varName.remove("DAILY_");
+    }
+    else if (varName.contains("MONTHLY_"))
+    {
+        varName = varName.remove("MONTHLY_");
     }
 
     label = pointName + '_' + varName;
@@ -1203,6 +1208,7 @@ void Crit3DMeteoWidget::drawDailyVar()
                     lineSeries[mp][i]->attachAxis(axisX);
                     lineSeries[mp][i]->attachAxis(axisY);
                     connect(lineSeries[mp][i], &QLineSeries::hovered, this, &Crit3DMeteoWidget::tooltipLineSeries);
+                    connect(lineSeries[mp][i], &QLineSeries::clicked, this, &Crit3DMeteoWidget::editLineSeries);
                 }
             }
         }
@@ -2285,6 +2291,57 @@ void Crit3DMeteoWidget::tooltipLineSeries(QPointF point, bool state)
 {
     QLineSeries *series = qobject_cast<QLineSeries *>(sender());
     computeTooltipLineSeries(series, point, state);
+}
+
+void Crit3DMeteoWidget::editLineSeries()
+{
+    QLineSeries *series = qobject_cast<QLineSeries *>(sender());
+    QMenu menu("Edit");
+    QAction* editColor = menu.addAction(QString("Set color"));
+    QAction *selection =  menu.exec(QCursor::pos());
+
+    if (selection != nullptr)
+    {
+        if (selection == editColor)
+        {
+            QColorDialog colorSelection;
+            QColor newColor = colorSelection.getColor(series->color(), this );
+            if( newColor.isValid() )
+            {
+                series->setColor(newColor);
+                for (int i = 0; i<nameLines.size(); i++)
+                {
+                    qDebug() << "series->name()" << series->name();
+                    QString myName = nameLines[i];
+                    if (nameLines[i].contains("DAILY"))
+                    {
+                        myName.remove("DAILY_");
+                    }
+                    if (nameLines[i].contains("MONTHLY"))
+                    {
+                        myName.remove("MONTHLY_");
+                    }
+                    if (series->name().contains(myName))
+                    {
+                        QMapIterator<QString, QList<QString>> iterator(MapCSVStyles);
+                        while (iterator.hasNext())
+                        {
+                            iterator.next();
+
+                                if (iterator.key() == nameLines[i])
+                                {
+                                    QList<QString> newItems = iterator.value();
+                                    newItems[1] = newColor.name();
+                                    MapCSVStyles[nameLines[i]] = newItems;
+                                    break;
+                                }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
 }
 
 bool Crit3DMeteoWidget::computeTooltipLineSeries(QLineSeries *series, QPointF point, bool state)
