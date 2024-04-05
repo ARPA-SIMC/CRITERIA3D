@@ -1163,6 +1163,7 @@ void Crit3DMeteoWidget::drawDailyVar()
         for (int mp = 0; mp < nMeteoPoints; mp++)
         {
             connect(barSeries[mp], &QBarSeries::hovered, this, &Crit3DMeteoWidget::tooltipBar);
+            connect(barSeries[mp], &QBarSeries::clicked, this, &Crit3DMeteoWidget::editBar);
             if (nameBar.size() != 0)
             {
                 chart->addSeries(barSeries[mp]);
@@ -1477,6 +1478,7 @@ void Crit3DMeteoWidget::drawHourlyVar()
         for (int mp=0; mp<nMeteoPoints;mp++)
         {
             connect(barSeries[mp], &QBarSeries::hovered, this, &Crit3DMeteoWidget::tooltipBar);
+            connect(barSeries[mp], &QBarSeries::clicked, this, &Crit3DMeteoWidget::editBar);
             if (nameBar.size() != 0)
             {
                 chart->addSeries(barSeries[mp]);
@@ -1516,6 +1518,7 @@ void Crit3DMeteoWidget::drawHourlyVar()
                 lineSeries[mp][i]->attachAxis(axisX);
                 lineSeries[mp][i]->attachAxis(axisY);
                 connect(lineSeries[mp][i], &QLineSeries::hovered, this, &Crit3DMeteoWidget::tooltipLineSeries);
+                connect(lineSeries[mp][i], &QLineSeries::clicked, this, &Crit3DMeteoWidget::editLineSeries);
             }
         }
         if (maxLine == NODATA && minLine == -NODATA)
@@ -1686,6 +1689,7 @@ void Crit3DMeteoWidget::drawMonthlyVar()
         for (int mp = 0; mp < nMeteoPoints; mp++)
         {
             connect(barSeries[mp], &QBarSeries::hovered, this, &Crit3DMeteoWidget::tooltipBar);
+            connect(barSeries[mp], &QBarSeries::clicked, this, &Crit3DMeteoWidget::editBar);
             if (nameBar.size() != 0)
             {
                 chart->addSeries(barSeries[mp]);
@@ -1731,6 +1735,7 @@ void Crit3DMeteoWidget::drawMonthlyVar()
                     lineSeries[mp][i]->attachAxis(axisX);
                     lineSeries[mp][i]->attachAxis(axisY);
                     connect(lineSeries[mp][i], &QLineSeries::hovered, this, &Crit3DMeteoWidget::tooltipLineSeries);
+                    connect(lineSeries[mp][i], &QLineSeries::clicked, this, &Crit3DMeteoWidget::editLineSeries);
                 }
             }
         }
@@ -2311,7 +2316,6 @@ void Crit3DMeteoWidget::editLineSeries()
                 series->setColor(newColor);
                 for (int i = 0; i<nameLines.size(); i++)
                 {
-                    qDebug() << "series->name()" << series->name();
                     QString myName = nameLines[i];
                     if (nameLines[i].contains("DAILY"))
                     {
@@ -2617,6 +2621,58 @@ void Crit3DMeteoWidget::tooltipBar(bool state, int index, QBarSet *barset)
     else
     {
         m_tooltip->hide();
+    }
+
+}
+
+void Crit3DMeteoWidget::editBar()
+{
+    QBarSeries *series = qobject_cast<QBarSeries *>(sender());
+    QBarSet *barset = series->barSets()[0];
+    QMenu menu("Edit");
+    QAction* editColor = menu.addAction(QString("Set color"));
+    QAction *selection =  menu.exec(QCursor::pos());
+
+    if (selection != nullptr)
+    {
+        if (selection == editColor)
+        {
+            QColorDialog colorSelection;
+            QColor newColor = colorSelection.getColor(barset->color(), this );
+            if( newColor.isValid() )
+            {
+                barset->setColor(newColor);
+                barset->setBorderColor(newColor);
+                for (int i = 0; i<nameBar.size(); i++)
+                {
+                    QString myName = nameBar[i];
+                    if (nameBar[i].contains("DAILY"))
+                    {
+                        myName.remove("DAILY_");
+                    }
+                    if (nameBar[i].contains("MONTHLY"))
+                    {
+                        myName.remove("MONTHLY_");
+                    }
+                    if (barset->label().contains(myName))
+                    {
+                        QMapIterator<QString, QList<QString>> iterator(MapCSVStyles);
+                        while (iterator.hasNext())
+                        {
+                            iterator.next();
+
+                            if (iterator.key() == nameBar[i])
+                            {
+                                QList<QString> newItems = iterator.value();
+                                newItems[1] = newColor.name();
+                                MapCSVStyles[nameBar[i]] = newItems;
+                                break;
+                            }
+                        }
+                    }
+                }
+            }
+        }
     }
 
 }
