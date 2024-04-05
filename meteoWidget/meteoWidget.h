@@ -50,6 +50,7 @@
             void editLineSeries();
             bool computeTooltipLineSeries(QLineSeries *series, QPointF point, bool state);
             void tooltipBar(bool state, int index, QBarSet *barset);
+            void editBar();
             void handleMarkerClicked();
             void closeEvent(QCloseEvent *event) override;
             void setIsEnsemble(bool value);
