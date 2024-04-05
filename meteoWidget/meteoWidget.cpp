@@ -2304,12 +2304,10 @@ void Crit3DMeteoWidget::editLineSeries()
     {
         if (selection == editColor)
         {
-            qDebug() << "TEST";
             QColorDialog colorSelection;
             QColor newColor = colorSelection.getColor(series->color(), this );
             if( newColor.isValid() )
             {
-                qDebug() << "Color Choosen : " << newColor.name();
                 series->setColor(newColor);
                 for (int i = 0; i<nameLines.size(); i++)
                 {
@@ -2325,9 +2323,20 @@ void Crit3DMeteoWidget::editLineSeries()
                     }
                     if (series->name().contains(myName))
                     {
-                        qDebug() << "nameLines[i]" << nameLines[i];
+                        QMapIterator<QString, QList<QString>> iterator(MapCSVStyles);
+                        while (iterator.hasNext())
+                        {
+                            iterator.next();
+
+                                if (iterator.key() == nameLines[i])
+                                {
+                                    QList<QString> newItems = iterator.value();
+                                    newItems[1] = newColor.name();
+                                    MapCSVStyles[nameLines[i]] = newItems;
+                                    break;
+                                }
+                        }
                     }
-                    // TO DO
                 }
             }
         }
