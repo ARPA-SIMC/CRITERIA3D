@@ -47,6 +47,7 @@
             void showTable();
             void showVar();
             void tooltipLineSeries(QPointF point, bool state);
+            void editLineSeries();
             bool computeTooltipLineSeries(QLineSeries *series, QPointF point, bool state);
             void tooltipBar(bool state, int index, QBarSet *barset);
             void handleMarkerClicked();

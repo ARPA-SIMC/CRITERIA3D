@@ -34,6 +34,7 @@
 
 #include <QLayout>
 #include <QDate>
+#include <QColorDialog>
 
 
 Crit3DMeteoWidget::Crit3DMeteoWidget(bool isGrid_, QString projectPath, Crit3DMeteoSettings* meteoSettings_)
@@ -1203,6 +1204,7 @@ void Crit3DMeteoWidget::drawDailyVar()
                     lineSeries[mp][i]->attachAxis(axisX);
                     lineSeries[mp][i]->attachAxis(axisY);
                     connect(lineSeries[mp][i], &QLineSeries::hovered, this, &Crit3DMeteoWidget::tooltipLineSeries);
+                    connect(lineSeries[mp][i], &QLineSeries::clicked, this, &Crit3DMeteoWidget::editLineSeries);
                 }
             }
         }
@@ -2285,6 +2287,36 @@ void Crit3DMeteoWidget::tooltipLineSeries(QPointF point, bool state)
 {
     QLineSeries *series = qobject_cast<QLineSeries *>(sender());
     computeTooltipLineSeries(series, point, state);
+}
+
+void Crit3DMeteoWidget::editLineSeries()
+{
+    QLineSeries *series = qobject_cast<QLineSeries *>(sender());
+    QMenu menu("Edit");
+    QAction* editColor = menu.addAction(QString("Set color"));
+    QAction *selection =  menu.exec(QCursor::pos());
+
+    if (selection != nullptr)
+    {
+        if (selection == editColor)
+        {
+            qDebug() << "TEST";
+            QColorDialog colorSelection;
+            QColor newColor = colorSelection.getColor(series->color(), this );
+            if( newColor.isValid() )
+            {
+                qDebug() << "Color Choosen : " << newColor.name();
+                series->setColor(newColor);
+                for (int i = 0; i<nameLines.size(); i++)
+                {
+                    qDebug() << "nameLines[i]" << nameLines[i];
+                    qDebug() << "series->name()" << series->name();
+                    // TO DO
+                }
+            }
+        }
+    }
+
 }
 
 bool Crit3DMeteoWidget::computeTooltipLineSeries(QLineSeries *series, QPointF point, bool state)
