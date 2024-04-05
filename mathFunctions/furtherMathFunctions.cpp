@@ -32,6 +32,9 @@
 #include "commonConstants.h"
 #include "furtherMathFunctions.h"
 
+#include <fstream>
+#include <iostream>
+
 
 double lapseRateRotatedSigmoid(double x, std::vector <double> par)
 {
@@ -1082,26 +1085,31 @@ namespace interpolation
         std::vector <double> R2Previous(nrMinima,NODATA);
         std::vector<double> ySim(nrData);
 
-        //int iRandom = 0;
         int counter = 0;
         //srand (unsigned(time(nullptr)));
         std::random_device rd;
         std::mt19937 gen(rd());
-        //std::uniform_real_distribution<double> dis(0.0, 1.0);
         std::normal_distribution<double> normal_dis(0.5, 0.2);
-        double truncNormal;
+        //double truncNormal;
+        bool first = 1;
         do
         {
             for (i=0; i<nrPredictors; i++)
             {
                 for (j=0; j<nrParameters[i]; j++)
                 {
-                    //parameters[i][j] = parametersMin[i][j] + ((double) rand() / (RAND_MAX))*(parametersMax[i][j]-parametersMin[i][j]);
-                    //parameters[i][j] = parametersMin[i][j] + (dis(gen))*(parametersMax[i][j]-parametersMin[i][j]);
-                    do {
+                    /*do {
                         truncNormal = normal_dis(gen);
                     } while(truncNormal <= 0.0 || truncNormal >= 1.0);
                     parameters[i][j] = parametersMin[i][j] + (truncNormal)*(parametersMax[i][j]-parametersMin[i][j]);
+*/
+                    if (first == 1)
+                        parameters[i][j] = parametersMin[i][j];
+                    else
+                    {
+                        parameters[i][j] += (parametersMax[i][j]-parametersMin[i][j])/100;
+                        first = 0;
+                    }
                 }
             }
             fittingMarquardt_nDimension(func,myFunc,parametersMin, parametersMax,
@@ -1149,7 +1157,9 @@ namespace interpolation
                 parameters[i][j] = bestParameters[i][j];
             }
         }
+
         return counter;
+
     }
 
 

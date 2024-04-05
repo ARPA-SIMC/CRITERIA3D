@@ -2329,6 +2329,7 @@ bool Project::interpolationDemLocalDetrending(meteoVariable myVar, const Crit3DT
                                                                myVar, x, y, outputPoints[i].z, proxyValues, true);
 
                     myRaster->value[row][col] = outputPoints[i].currentValue;
+
                 }
             }
         }

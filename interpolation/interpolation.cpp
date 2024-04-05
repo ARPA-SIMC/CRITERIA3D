@@ -43,6 +43,7 @@
 #include <functional>
 
 
+
 using namespace std;
 
 float getMinHeight(const std::vector<Crit3DInterpolationDataPoint> &myPoints, bool useLapseRateCode)
@@ -1034,23 +1035,41 @@ void localSelection(vector <Crit3DInterpolationDataPoint> &inputPoints, vector <
     float r1 = stepRadius;              // [m]
     unsigned int i;
 
+    float maxDistance = 0;
     while (nrValid < minPoints)
     {
+        maxDistance = 0;
         for (i=0; i < inputPoints.size(); i++)
+        {
             if (inputPoints[i].distance != NODATA && inputPoints[i].distance > r0 && inputPoints[i].distance <= r1)
             {
                 selectedPoints.push_back(inputPoints[i]);
                 nrValid++;
+                if (inputPoints[i].distance > maxDistance)
+                    maxDistance = inputPoints[i].distance;
             }
+        }
         r0 = r1;
         r1 += stepRadius;
     }
 
-    for (i=0; i < selectedPoints.size(); i++)
-        //selectedPoints[i].regressionWeight = (1 - selectedPoints[i].distance / r1);
-        selectedPoints[i].regressionWeight = 1;
+    /* //same number of stations for all cells
+    unsigned newIndex = selectedPoints.size();
+    std::vector <Crit3DInterpolationDataPoint> outputPoints;
+    if (nrValid > minPoints+1)
+    {
+        newIndex = sortPointsByDistance(minPoints + 1, selectedPoints, outputPoints);
+        while (outputPoints.size() > minPoints+1)
+            outputPoints.pop_back();
+    }
+    selectedPoints.clear();
+    selectedPoints = outputPoints;
+*/
 
-    mySettings.setLocalRadius(r1);
+    for (i=0; i< selectedPoints.size(); i++)
+        selectedPoints[i].regressionWeight = (1 - selectedPoints[i].distance / maxDistance);
+
+    mySettings.setLocalRadius(maxDistance);
 }
 
 
@@ -1534,8 +1553,8 @@ bool multipleDetrending(std::vector <Crit3DInterpolationDataPoint> &myPoints,
     }
 
     // multiple non linear fitting
-    interpolation::bestFittingMarquardt_nDimension(&functionSum, myFunc, 1000, 5, parametersMin, parametersMax, parameters, parametersDelta,
-                                                   100, 0.005, 0.02, predictors, predictands, weights);
+    interpolation::bestFittingMarquardt_nDimension(&functionSum, myFunc, 600, 4, parametersMin, parametersMax, parameters, parametersDelta,
+                                                   80, 0.005, 0.025, predictors, predictands, weights);
 
     mySettings->setFittingFunction(myFunc);
     mySettings->setFittingParameters(parameters);
