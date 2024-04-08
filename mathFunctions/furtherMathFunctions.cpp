@@ -1090,8 +1090,21 @@ namespace interpolation
         std::random_device rd;
         std::mt19937 gen(rd());
         std::normal_distribution<double> normal_dis(0.5, 0.2);
-        //double truncNormal;
-        bool first = 1;
+        double truncNormal;
+
+        for (i=0; i<nrPredictors; i++)
+        {
+            for (j=0; j<nrParameters[i]; j++)
+            {
+                /*do {
+                            truncNormal = normal_dis(gen);
+                        } while(truncNormal <= 0.0 || truncNormal >= 1.0);
+                        parameters[i][j] = parametersMin[i][j] + (truncNormal)*(parametersMax[i][j]-parametersMin[i][j]);
+    */
+                parameters[i][j] = parametersMin[i][j] - (parametersMax[i][j]-parametersMin[i][j])/200;
+            }
+        }
+
         do
         {
             for (i=0; i<nrPredictors; i++)
@@ -1099,19 +1112,14 @@ namespace interpolation
                 for (j=0; j<nrParameters[i]; j++)
                 {
                     /*do {
-                        truncNormal = normal_dis(gen);
-                    } while(truncNormal <= 0.0 || truncNormal >= 1.0);
-                    parameters[i][j] = parametersMin[i][j] + (truncNormal)*(parametersMax[i][j]-parametersMin[i][j]);
-*/
-                    if (first == 1)
-                        parameters[i][j] = parametersMin[i][j];
-                    else
-                    {
-                        parameters[i][j] += (parametersMax[i][j]-parametersMin[i][j])/100;
-                        first = 0;
-                    }
+                            truncNormal = normal_dis(gen);
+                        } while(truncNormal <= 0.0 || truncNormal >= 1.0);
+                        parameters[i][j] = parametersMin[i][j] + (truncNormal)*(parametersMax[i][j]-parametersMin[i][j]);
+    */
+                    parameters[i][j] += (parametersMax[i][j]-parametersMin[i][j])/200;
                 }
             }
+
             fittingMarquardt_nDimension(func,myFunc,parametersMin, parametersMax,
                                         parameters, parametersDelta,correspondenceTag, maxIterationsNr,
                                         myEpsilon, x, y, weights);
