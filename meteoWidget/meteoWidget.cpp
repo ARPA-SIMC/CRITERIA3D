@@ -747,6 +747,7 @@ void Crit3DMeteoWidget::resetValues()
                     if (mp == 0)
                     {
                         bar->setColor(barColor);
+                        bar->setBorderColor(barColor);
                     }
                     else
                     {
@@ -755,13 +756,14 @@ void Crit3DMeteoWidget::resetValues()
                         newColor.setGreen(barColor.green() + (255-barColor.green()) * mp/nMeteoPoints);
                         newColor.setBlue(barColor.blue() + (255-barColor.blue()) * mp/nMeteoPoints);
                         bar->setColor(newColor);
+                        bar->setBorderColor(newColor);
                     }
                 }
                 else
                 {
                     bar->setColor(Qt::transparent);
+                    bar->setBorderColor(barColor);
                 }
-                bar->setBorderColor(barColor);
                 vectorBarSet.append(bar);
             }
             if (vectorBarSet.size() != 0)
@@ -1295,6 +1297,7 @@ void Crit3DMeteoWidget::drawDailyVar()
                     if (mp == 0)
                     {
                         setVector[mp][j]->setColor(barColor);
+                        setVector[mp][j]->setBorderColor(barColor);
                     }
                     else
                     {
@@ -1303,13 +1306,15 @@ void Crit3DMeteoWidget::drawDailyVar()
                         newColor.setGreen(barColor.green() + (255-barColor.green()) * mp/nMeteoPoints);
                         newColor.setBlue(barColor.blue() + (255-barColor.blue()) * mp/nMeteoPoints);
                         setVector[mp][j]->setColor(newColor);
+                        setVector[mp][j]->setBorderColor(newColor);
                     }
                 }
                 else
                 {
                     setVector[mp][j]->setColor(Qt::transparent);
+                    setVector[mp][j]->setBorderColor(barColor);
                 }
-                setVector[mp][j]->setBorderColor(barColor);
+
             }
         }
     }
@@ -1467,6 +1472,7 @@ void Crit3DMeteoWidget::drawHourlyVar()
                     if (mp == 0)
                     {
                         setVector[mp][i]->setColor(barColor);
+                        setVector[mp][i]->setBorderColor(barColor);
                     }
                     else
                     {
@@ -1475,13 +1481,14 @@ void Crit3DMeteoWidget::drawHourlyVar()
                         newColor.setGreen(barColor.green() + (255-barColor.green()) * mp/nMeteoPoints);
                         newColor.setBlue(barColor.blue() + (255-barColor.blue()) * mp/nMeteoPoints);
                         setVector[mp][i]->setColor(newColor);
+                        setVector[mp][i]->setBorderColor(newColor);
                     }
                 }
                 else
                 {
                     setVector[mp][i]->setColor(Qt::transparent);
+                    setVector[mp][i]->setBorderColor(barColor);
                 }
-                setVector[mp][i]->setBorderColor(barColor);
                 barMpSeries->append(setVector[mp][i]);
             }
             barSeries.append(barMpSeries);
@@ -1827,6 +1834,7 @@ void Crit3DMeteoWidget::drawMonthlyVar()
                     if (mp == 0)
                     {
                         setVector[mp][j]->setColor(barColor);
+                        setVector[mp][j]->setBorderColor(barColor);
                     }
                     else
                     {
@@ -1835,13 +1843,14 @@ void Crit3DMeteoWidget::drawMonthlyVar()
                         newColor.setGreen(barColor.green() + (255-barColor.green()) * mp/nMeteoPoints);
                         newColor.setBlue(barColor.blue() + (255-barColor.blue()) * mp/nMeteoPoints);
                         setVector[mp][j]->setColor(newColor);
+                        setVector[mp][j]->setBorderColor(newColor);
                     }
                 }
                 else
                 {
                     setVector[mp][j]->setColor(Qt::transparent);
+                    setVector[mp][j]->setBorderColor(barColor);
                 }
-                setVector[mp][j]->setBorderColor(barColor);
             }
         }
     }
