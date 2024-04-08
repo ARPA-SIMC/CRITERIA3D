@@ -119,6 +119,11 @@ enum estimatedFunction {FUNCTION_CODE_SPHERICAL, FUNCTION_CODE_LINEAR, FUNCTION_
                                     std::vector <std::vector <int>>& correspondenceParametersTag,
                                     std::vector <std::vector <double>>& x, std::vector<double>& y, std::vector <std::vector <double>>& lambda,
                                     std::vector <std::vector <double>>& parametersChange, std::vector<double>& weights);
+        void leastSquares_nDimension_withoutNormalization(double (*func)(std::vector<std::function<double (double, std::vector<double> &)> > &, std::vector<double> &, std::vector <std::vector <double>>&),
+                                                          std::vector<std::function<double (double, std::vector<double> &)> > myFunc,
+                                                          std::vector <std::vector <double>>& parameters, std::vector <std::vector <double>>& parametersDelta, std::vector <std::vector <int>>& correspondenceParametersTag,
+                                                          std::vector <std::vector <double>>& x, std::vector<double>& y, std::vector <std::vector <double>>& lambda,
+                                                          std::vector <std::vector <double>>& parametersChange, std::vector<double>& weights);
     }
 
     namespace matricial
