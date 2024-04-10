@@ -1417,6 +1417,7 @@ namespace interpolation
         std::vector<double> firstEst(nrData);
         std::vector<std::vector<double>> a(nrParametersTotal, std::vector<double>(nrParametersTotal));
         std::vector<std::vector<double>> P(nrParametersTotal, std::vector<double>(nrData));
+        std::vector<std::vector<double>> weightsP(nrParametersTotal, std::vector<double>(nrData));
 
         // matrix P corresponds to the Jacobian
         // first set of estimates
@@ -1446,12 +1447,20 @@ namespace interpolation
 
         for (i = 0; i < nrParametersTotal; i++)
         {
+            for (k = 0; k < nrData; k++)
+            {
+                weightsP[i][k] = weights[k]*P[i][k];
+            }
+        }
+
+        for (i = 0; i < nrParametersTotal; i++)
+        {
             for (j = i; j < nrParametersTotal; j++)
             {
                 a[i][j] = 0;
                 for (k = 0; k < nrData; k++)
                 {
-                    a[i][j] += (weights[k]*(P[i][k] * P[j][k]));
+                    a[i][j] += ((P[i][k] * weightsP[j][k]));
                 }
             }
             //z[i] = sqrt(a[i][i]) + EPSILON; //?
