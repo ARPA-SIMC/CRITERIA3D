@@ -712,9 +712,9 @@ void Crit3DMeteoWidget::resetValues()
                 else
                 {
                     QColor newColor;
-                    newColor.setRed(lineColor.red() + (255-lineColor.red()) * mp/nMeteoPoints);
-                    newColor.setGreen(lineColor.green() + (255-lineColor.green()) * mp/nMeteoPoints);
-                    newColor.setBlue(lineColor.blue() + (255-lineColor.blue()) * mp/nMeteoPoints);
+                    newColor.setRed(lineColor.red() + (255-lineColor.red()) * (mp+1)/nMeteoPoints);
+                    newColor.setGreen(lineColor.green() + (255-lineColor.green()) * (mp+1)/nMeteoPoints);
+                    newColor.setBlue(lineColor.blue() + (255-lineColor.blue()) * (mp+1)/nMeteoPoints);
                     line->setColor(newColor);
                 }
                 vectorLine.append(line);
