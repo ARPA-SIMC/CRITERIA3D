@@ -1092,18 +1092,18 @@ namespace interpolation
         std::normal_distribution<double> normal_dis(0.5, 0.2);
         double truncNormal;
 
-        for (i=0; i<nrPredictors; i++)
+        /*for (i=0; i<nrPredictors; i++)
         {
             for (j=0; j<nrParameters[i]; j++)
             {
-                /*do {
+                do {
                             truncNormal = normal_dis(gen);
                         } while(truncNormal <= 0.0 || truncNormal >= 1.0);
                         parameters[i][j] = parametersMin[i][j] + (truncNormal)*(parametersMax[i][j]-parametersMin[i][j]);
-    */
+
                 parameters[i][j] = parametersMin[i][j] - (parametersMax[i][j]-parametersMin[i][j])/200;
             }
-        }
+        }*/
 
         do
         {
@@ -1111,12 +1111,12 @@ namespace interpolation
             {
                 for (j=0; j<nrParameters[i]; j++)
                 {
-                    /*do {
+                    do {
                             truncNormal = normal_dis(gen);
                         } while(truncNormal <= 0.0 || truncNormal >= 1.0);
                         parameters[i][j] = parametersMin[i][j] + (truncNormal)*(parametersMax[i][j]-parametersMin[i][j]);
-    */
-                    parameters[i][j] += (parametersMax[i][j]-parametersMin[i][j])/200;
+
+                    //parameters[i][j] += (parametersMax[i][j]-parametersMin[i][j])/200;
                 }
             }
 

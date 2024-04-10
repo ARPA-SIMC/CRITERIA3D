@@ -4451,6 +4451,8 @@ bool Project::setTempParametersRange(meteoVariable myVar)
     float value;
     int i = 0;
 
+    if (!parameters->contains("fitting_parameters"))
+        return false;
     if (nrMeteoPoints == 0)
         return false;
 
