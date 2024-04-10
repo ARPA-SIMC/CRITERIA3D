@@ -703,7 +703,8 @@ double Crit3DCrop::getCropWaterDeficit(const std::vector<soil::Crit1DLayer> &soi
  * \return total transpiration and layerTranspiration vector [mm]
  * or percentage of water stress (if returnWaterStress = true)
  */
-double Crit3DCrop::computeTranspiration(double maxTranspiration, const std::vector<soil::Crit1DLayer> &soilLayers, double& waterStress)
+double Crit3DCrop::computeTranspiration(double maxTranspiration, const std::vector<soil::Crit1DLayer> &soilLayers,
+                                        double& waterStress, double& waterExcessStress)
 {
     // check
     if (idCrop == "" || ! isLiving) return 0;
@@ -823,6 +824,7 @@ double Crit3DCrop::computeTranspiration(double maxTranspiration, const std::vect
     }
 
     waterStress = 1 - (TRs / maxTranspiration);
+    waterExcessStress = 1 - (TRe / maxTranspiration);
 
     double actualTranspiration = 0;
     for (int i = roots.firstRootLayer; i <= roots.lastRootLayer; i++)
