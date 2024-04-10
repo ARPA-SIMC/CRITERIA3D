@@ -457,8 +457,9 @@ double Crit1DCase::checkIrrigationDemand(int doy, double currentPrec, double nex
     double threshold = 1. - crop.stressTolerance;
 
     double waterStress = 0;
-    crop.computeTranspiration(maxTranspiration, soilLayers, waterStress);
-    if (waterStress <= threshold)
+    double waterExcessStress = 0;
+    crop.computeTranspiration(maxTranspiration, soilLayers, waterStress, waterExcessStress);
+    if ((waterStress - waterExcessStress)  <= threshold)
         return 0;
 
     // check irrigation shift
@@ -534,11 +535,12 @@ bool Crit1DCase::computeDailyModel(Crit3DDate &myDate, std::string &error)
     // Maximum evaporation and transpiration
     output.dailyMaxEvaporation = crop.getMaxEvaporation(output.dailyEt0);
     output.dailyMaxTranspiration = crop.getMaxTranspiration(output.dailyEt0);
-
     output.dailyIrrigation = 0;
+
     // Water fluxes (first computation)
     storeWaterContent();
     if (! computeWaterFluxes(myDate, error)) return false;
+
     // Irrigation
     double irrigation = checkIrrigationDemand(doy, prec, precTomorrow, output.dailyMaxTranspiration);
 
@@ -606,12 +608,13 @@ bool Crit1DCase::computeDailyModel(Crit3DDate &myDate, std::string &error)
 
     // Transpiration
     double waterStress = 0;
-    output.dailyTranspiration = crop.computeTranspiration(output.dailyMaxTranspiration, soilLayers, waterStress);
+    double waterExcessStress = 0;
+    output.dailyTranspiration = crop.computeTranspiration(output.dailyMaxTranspiration, soilLayers, waterStress, waterExcessStress);
 
     // assign transpiration
     if (output.dailyTranspiration > 0)
     {
-        for (unsigned int i = unsigned(crop.roots.firstRootLayer); i <= unsigned(crop.roots.lastRootLayer); i++)
+        for (int i = crop.roots.firstRootLayer; i <= crop.roots.lastRootLayer; i++)
         {
             soilLayers[i].waterContent -= crop.layerTranspiration[i];
         }
