@@ -1416,7 +1416,6 @@ bool Project::loadMeteoPointsData(const QDate& firstDate, const QDate& lastDate,
     {
         step = setProgressBar(infoStr, nrMeteoPoints);
     }
-
     for (int i=0; i < nrMeteoPoints; i++)
     {
         if (showInfo)
@@ -1428,7 +1427,7 @@ bool Project::loadMeteoPointsData(const QDate& firstDate, const QDate& lastDate,
             if (meteoPointsDbHandler->loadHourlyData(getCrit3DDate(firstDate), getCrit3DDate(lastDate), &(meteoPoints[i]))) isData = true;
 
         if (loadDaily)
-            if (meteoPointsDbHandler->loadDailyData(getCrit3DDate(firstDate), getCrit3DDate(lastDate), &(meteoPoints[i]))) isData = true;
+            if (meteoPointsDbHandler->loadDailyData(getCrit3DDate(firstDate), getCrit3DDate(lastDate), &(meteoPoints[i])))  isData = true;
     }
 
     if (showInfo) closeProgressBar();
@@ -2948,6 +2947,7 @@ void Project::saveInterpolationParameters()
         parameters->setValue("min_points_local_detrending", QString::number(int(interpolationSettings.getMinPointsLocalDetrending())));
     parameters->endGroup();
 
+
     saveProxies();
 
     parameters->sync();
@@ -4444,3 +4444,78 @@ void Project::closeProgressBar()
     }
 }
 
+bool Project::setTempParametersRange(meteoVariable myVar)
+{
+    float min;
+    float max;
+    float value;
+    int i = 0;
+
+    if (nrMeteoPoints == 0)
+        return false;
+
+    frequencyType myFreq = getVarFrequency(myVar);
+    Crit3DDate myDate = getCrit3DDate(this->getCurrentDate());
+    int myHour = this->getCurrentHour();
+
+    if (myFreq == daily)
+    {
+        if (myVar != dailyAirTemperatureAvg && myVar != dailyAirTemperatureMax && myVar != dailyAirTemperatureMin)
+            return false;
+
+        do {
+            min = meteoPoints[i].getMeteoPointValueD(myDate, myVar);
+            max = min;
+            i++;
+        } while (min == NODATA);
+
+        for (i = 0; i < nrMeteoPoints; i++)
+        {
+            value = meteoPoints[i].getMeteoPointValueD(myDate, myVar);
+            if (value != NODATA)
+            {
+                if (value < min)
+                    min = value;
+                if (value > max)
+                    max = value;
+            }
+        }
+    }
+    else if (myFreq == hourly)
+    {
+        if (myVar != airTemperature)
+            return false;
+
+        do {
+            min = meteoPoints[i].getMeteoPointValueH(myDate, myHour, 0, myVar);
+            max = min;
+            i++;
+        } while (min == NODATA);
+
+        for (int i = 0; i < nrMeteoPoints; i++)
+        {
+            value = meteoPoints[i].getMeteoPointValueH(myDate, myHour, 0, myVar);
+            if (value != NODATA)
+            {
+                if (value < min)
+                    min = value;
+                if (value > max)
+                    max = value;
+            }
+        }
+    }
+
+    Crit3DProxy* myProxy;
+    for (unsigned int i=0; i < interpolationSettings.getProxyNr(); i++)
+    {
+        myProxy = interpolationSettings.getProxy(i);
+        if (getProxyPragaName(myProxy->getName()) == proxyHeight)
+        {
+            std::vector <double> fittingParametersRange = myProxy->getFittingParametersRange();
+            fittingParametersRange[1] = min - 2;
+            fittingParametersRange[5] = max + 2;
+            myProxy->setFittingParametersRange(fittingParametersRange);
+        }
+    }
+    return true;
+}

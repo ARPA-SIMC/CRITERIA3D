@@ -268,6 +268,7 @@
         void showMeteoWidgetGrid(std::string idCell, bool isAppend);
         void showProxyGraph();
         void showLocalProxyGraph(gis::Crit3DGisSettings gisSettings, double x, double y);
+        bool setTempParametersRange(meteoVariable myVar);
 
         void clearSelectedPoints();
         void clearSelectedOutputPoints();
