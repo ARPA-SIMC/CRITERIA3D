@@ -51,7 +51,6 @@ class QSqlDatabase;
         QSqlDatabase db;
     };
 
-
     bool readComputationUnitList(QString dbComputationUnitsName, std::vector<Crit1DCompUnit> &compUnitList, QString &error);
 
 
