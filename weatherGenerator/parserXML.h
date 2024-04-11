@@ -48,9 +48,9 @@
         QString anomalySeason;
     };
 
-    bool parseXMLFile(QString xmlFileName, QDomDocument* xmlDoc);
+    bool parseXMLFile(const QString &xmlFileName, QDomDocument &xmlDoc);
 
-    bool parseXMLSeasonal(QString xmlFileName, XMLSeasonalAnomaly* XMLAnomaly);
+    bool parseXMLSeasonal(const QString &xmlFileName, XMLSeasonalAnomaly &XMLAnomaly);
 
 
 #endif // PARSERXML_H

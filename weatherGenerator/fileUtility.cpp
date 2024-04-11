@@ -8,7 +8,7 @@
 #include "fileUtility.h"
 
 
-bool readMeteoDataCsv (QString &fileName, char mySeparator, double noData, TinputObsData &inputData)
+bool readMeteoDataCsv (const QString &fileName, char mySeparator, double noData, TinputObsData &inputData)
 {
     clearInputData(inputData);
 
@@ -174,7 +174,7 @@ bool readMeteoDataCsv (QString &fileName, char mySeparator, double noData, Tinpu
 
 
 // Write the output of weather generator: a daily series of tmin, tmax, prec data
-bool writeMeteoDataCsv(QString &fileName, char separator, std::vector<ToutputDailyMeteo> &dailyData)
+bool writeMeteoDataCsv(const QString &fileName, char separator, std::vector<ToutputDailyMeteo> &dailyData)
 {
     QFile file(fileName);
     if (!file.open(QIODevice::WriteOnly | QIODevice::Truncate | QIODevice::Text)) {
