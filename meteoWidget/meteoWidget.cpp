@@ -711,31 +711,8 @@ void Crit3DMeteoWidget::resetValues()
                 }
                 else
                 {
-                    QColor newColor;
-                    if (lineColor.red() >= 255/2)
-                    {
-                        newColor.setRed(lineColor.red() - (255-lineColor.red()) * (mp+1)/nMeteoPoints);
-                    }
-                    else
-                    {
-                        newColor.setRed(lineColor.red() + (255-lineColor.red()) * (mp+1)/nMeteoPoints);
-                    }
-                    if (lineColor.green() >= 255/2)
-                    {
-                        newColor.setGreen(lineColor.green() - (255-lineColor.green()) * (mp+1)/nMeteoPoints);
-                    }
-                    else
-                    {
-                        newColor.setGreen(lineColor.green() + (255-lineColor.green()) * (mp+1)/nMeteoPoints);
-                    }
-                    if (lineColor.blue() >= 255/2)
-                    {
-                        newColor.setBlue(lineColor.blue() - (255-lineColor.blue()) * (mp+1)/nMeteoPoints);
-                    }
-                    else
-                    {
-                        newColor.setBlue(lineColor.blue() + (255-lineColor.blue()) * (mp+1)/nMeteoPoints);
-                    }
+                    QColor newColor = lineColor.toHsl();
+                    newColor.setHsl(newColor.hslHue()+(mp*15), newColor.hslSaturation(), newColor.lightness());
                     line->setColor(newColor);
                 }
                 vectorLine.append(line);
@@ -772,31 +749,8 @@ void Crit3DMeteoWidget::resetValues()
                     }
                     else
                     {
-                        QColor newColor;
-                        if (barColor.red() >= 255/2)
-                        {
-                            newColor.setRed(barColor.red() - (255-barColor.red()) * (mp+1)/nMeteoPoints);
-                        }
-                        else
-                        {
-                            newColor.setRed(barColor.red() + (255-barColor.red()) * (mp+1)/nMeteoPoints);
-                        }
-                        if (barColor.green() >= 255/2)
-                        {
-                            newColor.setGreen(barColor.green() - (255-barColor.green()) * (mp+1)/nMeteoPoints);
-                        }
-                        else
-                        {
-                            newColor.setGreen(barColor.green() + (255-barColor.green()) * (mp+1)/nMeteoPoints);
-                        }
-                        if (barColor.blue() >= 255/2)
-                        {
-                            newColor.setBlue(barColor.blue() - (255-barColor.blue()) * (mp+1)/nMeteoPoints);
-                        }
-                        else
-                        {
-                            newColor.setBlue(barColor.blue() + (255-barColor.blue()) * (mp+1)/nMeteoPoints);
-                        }
+                        QColor newColor = barColor.toHsl();
+                        newColor.setHsl(newColor.hslHue()+(mp*15), newColor.hslSaturation(), newColor.lightness());
                         bar->setColor(newColor);
                         bar->setBorderColor(newColor);
                     }
