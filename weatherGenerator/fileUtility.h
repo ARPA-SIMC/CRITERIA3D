@@ -7,9 +7,9 @@
     struct ToutputDailyMeteo;
     struct TinputObsData;
 
-    bool readMeteoDataCsv (QString &fileName, char separator, double noData, TinputObsData &inputData);
+    bool readMeteoDataCsv (const QString &fileName, char separator, double noData, TinputObsData &inputData);
 
-    bool writeMeteoDataCsv(QString &fileName, char separator, std::vector<ToutputDailyMeteo> &dailyData);
+    bool writeMeteoDataCsv(const QString &fileName, char separator, std::vector<ToutputDailyMeteo> &dailyData);
 
 
 #endif // FILEUTILITY_H

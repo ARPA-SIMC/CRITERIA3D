@@ -42,8 +42,8 @@ class QSqlDatabase;
         ComputationUnitsDB(QString dbname, QString &error);
         ~ComputationUnitsDB();
 
-        bool writeListToCompUnitsTable(QList<QString> idCase, QList<QString> idCrop, QList<QString> idMeteo,
-                                   QList<QString> idSoil, QList<double> hectares, QString &error);
+        bool writeListToCompUnitsTable(QList<QString> &idCase, QList<QString> &idCrop, QList<QString> &idMeteo,
+                                   QList<QString> &idSoil, QList<double> &hectares, QString &error);
 
         bool readComputationUnitList(std::vector<Crit1DCompUnit> &compUnitList, QString &error);
 
