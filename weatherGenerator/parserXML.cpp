@@ -92,7 +92,7 @@ bool parseXMLSeasonal(QString xmlFileName, XMLSeasonalAnomaly* XMLAnomaly)
 
     XMLAnomaly->initialize();
 
-     if (!parseXMLFile(xmlFileName, &xmlDoc))
+     if (! parseXMLFile(xmlFileName, &xmlDoc))
     {
         qDebug() << "parseXMLSeasonal error";
         return false;
