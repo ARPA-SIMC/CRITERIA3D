@@ -488,11 +488,11 @@ bool isWGDate(Crit3DDate myDate, int wgDoy1, int wgDoy2)
 }
 
 
-void clearInputData(TinputObsData* myData)
+void clearInputData(TinputObsData &myData)
 {
-    myData->inputTMin.clear();
-    myData->inputTMax.clear();
-    myData->inputPrecip.clear();
+    myData.inputTMin.clear();
+    myData.inputTMax.clear();
+    myData.inputPrecip.clear();
 }
 
 
