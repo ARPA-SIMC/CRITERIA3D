@@ -121,7 +121,7 @@
     bool computeClimate(TweatherGenClimate &wgClimate, int firstYear, int nrRepetitions,
                         float rainfallThreshold, std::vector<ToutputDailyMeteo> &outputDailyData);
 
-    void clearInputData(TinputObsData* myData);
+    void clearInputData(TinputObsData &myData);
 
 
 #endif // WEATHERGENERATOR_H
