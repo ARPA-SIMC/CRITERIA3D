@@ -3545,8 +3545,8 @@ bool PragaProject::loadXMLExportData(QString code, QDateTime myFirstTime, QDateT
     std::vector<float> values = meteoPointsDbHandler->exportAllDataVar(&errorString, freq, meteoVar, code, myFirstTime, myLastTime, dateStr);
     if (values.size() == 0)
     {
-        errorString = code + " has no data for variable: " + variable;
-        return false;
+        // non ci sono dati per quella variabile, non produce alcun file e va avanti con eventuali altri meteo points
+        return true;
     }
     QFile file(filename);
     file.open(QIODevice::WriteOnly | QIODevice::Text);

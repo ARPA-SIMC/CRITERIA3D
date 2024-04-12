@@ -488,11 +488,11 @@ bool isWGDate(Crit3DDate myDate, int wgDoy1, int wgDoy2)
 }
 
 
-void clearInputData(TinputObsData* myData)
+void clearInputData(TinputObsData &myData)
 {
-    myData->inputTMin.clear();
-    myData->inputTMax.clear();
-    myData->inputPrecip.clear();
+    myData.inputTMin.clear();
+    myData.inputTMax.clear();
+    myData.inputPrecip.clear();
 }
 
 
@@ -606,7 +606,7 @@ bool assignAnomalyPrec(float myAnomaly, int anomalyMonth1, int anomalyMonth2,
     float myNewSumPrec = 0;
     float myFraction = 0;
 
-    int nrMonths = numMonthsInPeriod(anomalyMonth1, anomalyMonth2);
+    int nrMonths = getMonthsInPeriod(anomalyMonth1, anomalyMonth2);
 
     // compute sum of precipitation
     mySumClimatePrec = 0;
@@ -688,7 +688,7 @@ bool makeSeasonalForecast(QString outputFileName, char separator, XMLSeasonalAno
     // it checks if observed data includes the last 9 months before wgDoy1
     int nrDaysBeforeWgDoy1;
     if (! checkLastYearDate(lastYearDailyObsData->inputFirstDate, lastYearDailyObsData->inputLastDate,
-                            lastYearDailyObsData->dataLenght, myPredictionYear, &wgDoy1, &nrDaysBeforeWgDoy1))
+                            lastYearDailyObsData->dataLenght, myPredictionYear, wgDoy1, nrDaysBeforeWgDoy1))
     {
         qDebug() << "ERROR: observed data should include at least 9 months before wgDoy1";
         return false;
@@ -845,8 +845,8 @@ bool computeSeasonalPredictions(TinputObsData *lastYearDailyObsData, TweatherGen
     Crit3DDate firstDate, lastDate;
     int lastYear, myDoy;
     int obsIndex, currentIndex;
-    int fixwgDoy1 = wgDoy1;
-    int fixwgDoy2 = wgDoy2;
+    int fixWgDoy1 = wgDoy1;
+    int fixWgDoy2 = wgDoy2;
 
     // TODO etp e falda
 
@@ -883,13 +883,13 @@ bool computeSeasonalPredictions(TinputObsData *lastYearDailyObsData, TweatherGen
         if (isLastMember)
         {
             if ( (!isLeapYear(predictionYear+1) && !isLeapYear(lastYear)) || (isLeapYear(predictionYear+1) && isLeapYear(lastYear)))
-                lastDate = getDateFromDoy(lastYear,wgDoy2);
+                lastDate = getDateFromDoy(lastYear, wgDoy2);
             else
             {
                 if(isLeapYear(predictionYear+1) && wgDoy2 >= 60)
-                    lastDate = getDateFromDoy(lastYear,wgDoy2-1);
+                    lastDate = getDateFromDoy(lastYear, wgDoy2-1);
                 if(isLeapYear(lastYear) && wgDoy2 >= 59 )
-                    lastDate = getDateFromDoy(lastYear,wgDoy2+1);
+                    lastDate = getDateFromDoy(lastYear, wgDoy2+1);
             }
         }
         else
@@ -906,13 +906,13 @@ bool computeSeasonalPredictions(TinputObsData *lastYearDailyObsData, TweatherGen
     for (myDate = firstDate; myDate <= lastDate; ++myDate)
     {
 
-        fixWgDoy(wgDoy1, wgDoy2, predictionYear, myDate.year, &fixwgDoy1, &fixwgDoy2);
+        setCorrectWgDoy(wgDoy1, wgDoy2, predictionYear, myDate.year, fixWgDoy1, fixWgDoy2);
         myDoy = getDoyFromDate(myDate);
 
         // fill mydailyData.date
         initializeDailyDataBasic (&outputDailyData[currentIndex], myDate);
 
-        if ( isWGDate(myDate, fixwgDoy1, fixwgDoy2) )
+        if ( isWGDate(myDate, fixWgDoy1, fixWgDoy2) )
         {
             outputDailyData[currentIndex].maxTemp = getTMax(myDoy, rainfallThreshold, wgClimate);
             outputDailyData[currentIndex].minTemp = getTMin(myDoy, rainfallThreshold, wgClimate);
@@ -924,9 +924,9 @@ bool computeSeasonalPredictions(TinputObsData *lastYearDailyObsData, TweatherGen
             obsDate.day = myDate.day;
             obsDate.month = myDate.month;
 
-            if (myDoy < fixwgDoy1)
+            if (myDoy < fixWgDoy1)
                 obsDate.year = predictionYear;
-            else if (myDoy > fixwgDoy2)
+            else if (myDoy > fixWgDoy2)
                 obsDate.year = predictionYear-1;
 
             obsIndex = difference(lastYearDailyObsData->inputFirstDate, obsDate);

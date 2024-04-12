@@ -383,7 +383,9 @@ double computeEvaporation(std::vector<soil::Crit1DLayer> &soilLayers, double max
 
     double residualEvaporation = maxEvaporation - surfaceEvaporation;
     if (residualEvaporation < EPSILON)
+    {
         return actualEvaporation;
+    }
 
     // soil evaporation
     int nrEvapLayers = int(floor(MAX_EVAPORATION_DEPTH / soilLayers[1].thickness)) +1;
@@ -408,20 +410,30 @@ double computeEvaporation(std::vector<soil::Crit1DLayer> &soilLayers, double max
     double sumEvap, evapLayerThreshold, evapLayer;
     while ((residualEvaporation > EPSILON) && (isWaterSupply == true))
     {
-        isWaterSupply = false;
         sumEvap = 0.0;
 
         for (int i=1; i <= nrEvapLayers; i++)
         {
-            evapLayerThreshold = soilLayers[i].HH + (1 - coeffEvap[i-1]) * (soilLayers[i].FC - soilLayers[i].HH) * 0.5;
-            evapLayer = (coeffEvap[i-1] / sumCoeff) * residualEvaporation;
+            evapLayer = residualEvaporation * (coeffEvap[i-1] / sumCoeff);
+            evapLayerThreshold = soilLayers[i].HH + (1 - coeffEvap[i-1]) * (soilLayers[i].FC - soilLayers[i].HH);
 
             if (soilLayers[i].waterContent > (evapLayerThreshold + evapLayer))
+            {
                 isWaterSupply = true;
-            else if (soilLayers[i].waterContent > evapLayerThreshold)
-                evapLayer = soilLayers[i].waterContent - evapLayerThreshold;
+            }
             else
-                evapLayer = 0.0;
+            {
+                if (soilLayers[i].waterContent > evapLayerThreshold)
+                {
+                    evapLayer = soilLayers[i].waterContent - evapLayerThreshold;
+                }
+                else
+                {
+                    evapLayer = 0.0;
+                }
+
+                isWaterSupply = false;
+            }
 
             soilLayers[i].waterContent -= evapLayer;
             sumEvap += evapLayer;

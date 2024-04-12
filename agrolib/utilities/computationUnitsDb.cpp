@@ -55,9 +55,9 @@ ComputationUnitsDB::~ComputationUnitsDB()
 }
 
 
-bool ComputationUnitsDB::writeListToCompUnitsTable(QList<QString> idCase, QList<QString> idCrop,
-                                                   QList<QString> idMeteo, QList<QString> idSoil,
-                                                   QList<double> hectares, QString &error)
+bool ComputationUnitsDB::writeListToCompUnitsTable(QList<QString> &idCase, QList<QString> &idCrop,
+                                                   QList<QString> &idMeteo, QList<QString> &idSoil,
+                                                   QList<double> &hectares, QString &error)
 {
     QSqlQuery qry(db);
     qry.prepare("CREATE TABLE computational_units (ID_CASE TEXT, ID_CROP TEXT, ID_METEO TEXT, ID_SOIL TEXT, hectares NUMERIC, PRIMARY KEY(ID_CASE))");
