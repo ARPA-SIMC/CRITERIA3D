@@ -2402,7 +2402,8 @@ void Crit3DMeteoWidget::editLineSeries()
                                 for (int mp = 0; mp < meteoPoints.size(); mp++)
                                 {
                                     QString pointName = QString::fromStdString(meteoPoints[mp].name);
-                                    if (series->name().contains(pointName))
+                                    QString label = getFormattedLabel(pointName, nameLines[i]);
+                                    if (series->name() == label)
                                     {
                                         if (newItems.size() > mp+1)
                                         {
@@ -2742,7 +2743,8 @@ void Crit3DMeteoWidget::editBar()
                                 for (int mp = 0; mp < meteoPoints.size(); mp++)
                                 {
                                     QString pointName = QString::fromStdString(meteoPoints[mp].name);
-                                    if (barset->label().contains(pointName))
+                                    QString label = getFormattedLabel(pointName, nameBar[i]);
+                                    if (barset->label() == label)
                                     {
                                         if (newItems.size() > mp+1)
                                         {
