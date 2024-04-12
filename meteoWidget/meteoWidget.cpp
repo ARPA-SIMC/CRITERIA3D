@@ -714,15 +714,26 @@ void Crit3DMeteoWidget::resetValues()
                     QColor newColor = lineColor.toHsl();
                     newColor.setHsl(newColor.hslHue()+(mp*15), newColor.hslSaturation(), newColor.lightness());
                     line->setColor(newColor);
-                    QMapIterator<QString, QList<QColor>> iterator(colorLinesMpAppended);
-                    while (iterator.hasNext())
+                    if (colorLinesMpAppended.isEmpty())
                     {
-                        iterator.next();
-
-                        if (iterator.key() == lineColor.name())
+                        QList<QColor> myList;
+                        myList.append(newColor);
+                        colorLinesMpAppended.insert(lineColor.name(), myList);
+                    }
+                    else
+                    {
+                        QMapIterator<QString, QList<QColor>> iterator(colorLinesMpAppended);
+                        while (iterator.hasNext())
                         {
-                            colorLinesMpAppended[lineColor.name()].append(newColor);
-                            break;
+                            iterator.next();
+
+                            if (iterator.key() == lineColor.name())
+                            {
+                                QList<QColor> myList = colorLinesMpAppended[lineColor.name()];
+                                myList.append(newColor);
+                                colorLinesMpAppended[lineColor.name()] = myList;
+                                break;
+                            }
                         }
                     }
                 }
@@ -764,15 +775,26 @@ void Crit3DMeteoWidget::resetValues()
                         newColor.setHsl(newColor.hslHue()+(mp*15), newColor.hslSaturation(), newColor.lightness());
                         bar->setColor(newColor);
                         bar->setBorderColor(newColor);
-                        QMapIterator<QString, QList<QColor>> iterator(colorBarMpAppended);
-                        while (iterator.hasNext())
+                        if (colorBarMpAppended.isEmpty())
                         {
-                            iterator.next();
-
-                            if (iterator.key() == barColor.name())
+                            QList<QColor> myList;
+                            myList.append(newColor);
+                            colorBarMpAppended.insert(barColor.name(), myList);
+                        }
+                        else
+                        {
+                            QMapIterator<QString, QList<QColor>> iterator(colorBarMpAppended);
+                            while (iterator.hasNext())
                             {
-                                colorBarMpAppended[barColor.name()].append(newColor);
-                                break;
+                                iterator.next();
+
+                                if (iterator.key() == barColor.name())
+                                {
+                                    QList<QColor> myList = colorBarMpAppended[barColor.name()];
+                                    myList.append(newColor);
+                                    colorBarMpAppended[barColor.name()] = myList;
+                                    break;
+                                }
                             }
                         }
                     }
