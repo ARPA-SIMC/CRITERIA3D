@@ -1089,7 +1089,7 @@ namespace interpolation
         //srand (unsigned(time(nullptr)));
         std::random_device rd;
         std::mt19937 gen(rd());
-        std::normal_distribution<double> normal_dis(0.5, 0.2);
+        std::normal_distribution<double> normal_dis(0.5, 0.5);
         double truncNormal;
 
         /*for (i=0; i<nrPredictors; i++)
@@ -1287,7 +1287,10 @@ namespace interpolation
         std::vector<double> z(nrParametersTotal);
         std::vector<double> firstEst(nrData);
         std::vector<std::vector<double>> a(nrParametersTotal, std::vector<double>(nrParametersTotal));
+        std::vector<std::vector<double>> a2(nrParametersTotal, std::vector<double>(nrParametersTotal));
         std::vector<std::vector<double>> P(nrParametersTotal, std::vector<double>(nrData));
+        std::vector<std::vector<double>> weightsP(nrParametersTotal, std::vector<double>(nrData));
+
         // matrix P corresponds to the Jacobian
         // first set of estimates
         for (i = 0; i < nrData; i++)
@@ -1316,15 +1319,25 @@ namespace interpolation
 
         for (i = 0; i < nrParametersTotal; i++)
         {
+            for (k = 0; k < nrData; k++)
+            {
+                weightsP[i][k] = weights[k]*P[i][k];
+            }
+        }
+
+        for (i = 0; i < nrParametersTotal; i++)
+        {
             for (j = i; j < nrParametersTotal; j++)
             {
                 a[i][j] = 0;
+                a2[i][j] = 0;
                 for (k = 0; k < nrData; k++)
                 {
-                    a[i][j] += (weights[k]*(P[i][k] * P[j][k]));
+                    a[i][j] += ((P[i][k] * weightsP[j][k]));
+                    a2[i][j] += ((P[i][k] * P[j][k]));
                 }
             }
-            z[i] = sqrt(a[i][i]) + EPSILON; //?
+            z[i] = sqrt(a2[i][i]) + EPSILON; //?
         }
 
         for (i = 0; i < nrParametersTotal; i++)
@@ -1332,7 +1345,7 @@ namespace interpolation
             g[i] = 0.;
             for (k = 0 ; k < nrData ; k++)
             {
-                g[i] += P[i][k] * (y[k] - firstEst[k]);
+                g[i] += P[i][k] * weights[k]* (y[k] - firstEst[k]); // added the weights
             }
             g[i] /= z[i];
             for (j = i; j < nrParametersTotal; j++)

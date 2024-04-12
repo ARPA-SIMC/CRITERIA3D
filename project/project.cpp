@@ -4451,8 +4451,19 @@ bool Project::setTempParametersRange(meteoVariable myVar)
     float value;
     int i = 0;
 
-    if (!parameters->contains("fitting_parameters"))
-        return false;
+    Crit3DProxy* myProxy;
+    size_t myNrProxies = interpolationSettings.getProxyNr();
+    for (unsigned int i=0; i < myNrProxies; i++)
+    {
+        myProxy = interpolationSettings.getProxy(i);
+        if (getProxyPragaName(myProxy->getName()) == proxyHeight)
+        {
+            std::vector <double> parametersRange = myProxy->getFittingParametersRange();
+            if (parametersRange.empty())
+                return false;
+        }
+    }
+
     if (nrMeteoPoints == 0)
         return false;
 
@@ -4507,16 +4518,18 @@ bool Project::setTempParametersRange(meteoVariable myVar)
         }
     }
 
-    Crit3DProxy* myProxy;
     for (unsigned int i=0; i < interpolationSettings.getProxyNr(); i++)
     {
         myProxy = interpolationSettings.getProxy(i);
         if (getProxyPragaName(myProxy->getName()) == proxyHeight)
         {
             std::vector <double> fittingParametersRange = myProxy->getFittingParametersRange();
-            fittingParametersRange[1] = min - 2;
-            fittingParametersRange[5] = max + 2;
-            myProxy->setFittingParametersRange(fittingParametersRange);
+            if (!fittingParametersRange.empty())
+            {
+                fittingParametersRange[1] = min - 2;
+                fittingParametersRange[5] = max + 2;
+                myProxy->setFittingParametersRange(fittingParametersRange);
+            }
         }
     }
     return true;
