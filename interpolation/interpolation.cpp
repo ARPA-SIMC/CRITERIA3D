@@ -41,6 +41,7 @@
 #include "interpolationSettings.h"
 
 #include <functional>
+#include <iostream>
 
 
 
@@ -1531,7 +1532,7 @@ bool multipleDetrending(std::vector <Crit3DInterpolationDataPoint> &myPoints,
         weights.push_back(myPoints[i].regressionWeight);
     }
 
-    if (myPoints.size() < mySettings->getMinPointsLocalDetrending())
+    if (mySettings->getUseLocalDetrending() && myPoints.size() < mySettings->getMinPointsLocalDetrending())
     {
         for (int pos = 0; pos < proxyNr; pos++)
             mySettings->getProxy(pos)->setIsSignificant(false);
@@ -1553,8 +1554,13 @@ bool multipleDetrending(std::vector <Crit3DInterpolationDataPoint> &myPoints,
     }
 
     // multiple non linear fitting
-    interpolation::bestFittingMarquardt_nDimension(&functionSum, myFunc, 1000, 4, parametersMin, parametersMax, parameters, parametersDelta,
-                                                   90, 0.005, 0.025, predictors, predictands, weights);
+    interpolation::bestFittingMarquardt_nDimension(&functionSum, myFunc, 10000, 4, parametersMin, parametersMax, parameters, parametersDelta,
+                                                   90, 0.005, 0.001, predictors, predictands, weights);
+
+    std::cout << "parametri: ";
+    for (int p = 0; p < parameters.size(); p++)
+        //std::cout << parameters[p];
+    std::cout << std::endl;
 
     mySettings->setFittingFunction(myFunc);
     mySettings->setFittingParameters(parameters);
