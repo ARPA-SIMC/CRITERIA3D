@@ -1,4 +1,5 @@
 #include "shapeUtilities.h"
+#include "shapeHandler.h"
 #include <QFile>
 #include <QFileInfo>
 
@@ -27,7 +28,7 @@ QString cloneShapeFile(QString refFileName, QString newFileName)
     QFile::remove(newFile +".prj");
     QFile::copy(refFile +".prj", newFile +".prj");
 
-    return(newFile + ".shp");
+    return newFile + ".shp";
 }
 
 /*! copyShapeFile
@@ -76,4 +77,56 @@ bool cleanShapeFile(Crit3DShapeHandler &shapeHandler)
     QFile::remove(tmpFile + ".shx");
 
     return shapeHandler.open(shapeHandler.getFilepath());
+}
+
+
+bool computeAnomaly(Crit3DShapeHandler *shapeAnomaly, Crit3DShapeHandler *shape1, Crit3DShapeHandler *shape2,
+                    std::string id1, std::string id2, std::string field1, std::string field2, QString fileName, QString &errorStr)
+{
+    QString newShapeFileName = copyShapeFile(QString::fromStdString(shape1->getFilepath()), fileName);
+
+    if (! shapeAnomaly->open(newShapeFileName.toStdString()))
+    {
+        errorStr = "Error in create/open new shapefile: " + newShapeFileName;
+        return false;
+    }
+
+    // remove fields
+    int nrFields = shape1->getFieldNumbers();
+    for (int i = 0; i < nrFields; i++)
+    {
+        std::string fieldName = shape1->getFieldName(i);
+        if (fieldName != id1)
+        {
+            int fieldPos = shapeAnomaly->getFieldPos(fieldName);
+            if (fieldPos != -1)
+            {
+                if (! shapeAnomaly->removeField(fieldPos))
+                {
+                    errorStr = "Error in delete field: " + QString::fromStdString(fieldName);
+                    return false;
+                }
+            }
+        }
+    }
+
+    // add anomaly field
+    if (! shapeAnomaly->addField("anomaly", FTDouble, 10, 1))
+    {
+        errorStr = "Error in create field 'anomaly'.";
+        return false;
+    }
+    int anomalyPos = shapeAnomaly->getFieldPos("anomaly");
+
+    // compute values
+    int fieldPos1 = shape1->getFieldPos(field1);
+    int fieldPos2 = shape2->getFieldPos(field2);
+
+    for (int i = 0; i < shape1->getShapeCount(); i++)
+    {
+        double anomalyValue = shape2->getNumericValue(i, fieldPos2) - shape1->getNumericValue(i, fieldPos1);
+        shapeAnomaly->writeDoubleAttribute(i, anomalyPos, anomalyValue);
+    }
+
+    return true;
 }
