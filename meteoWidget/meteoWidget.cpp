@@ -714,6 +714,28 @@ void Crit3DMeteoWidget::resetValues()
                     QColor newColor = lineColor.toHsl();
                     newColor.setHsl(newColor.hslHue()+(mp*15), newColor.hslSaturation(), newColor.lightness());
                     line->setColor(newColor);
+                    if (colorLinesMpAppended.isEmpty())
+                    {
+                        QList<QColor> myList;
+                        myList.append(newColor);
+                        colorLinesMpAppended.insert(lineColor.name(), myList);
+                    }
+                    else
+                    {
+                        QMapIterator<QString, QList<QColor>> iterator(colorLinesMpAppended);
+                        while (iterator.hasNext())
+                        {
+                            iterator.next();
+
+                            if (iterator.key() == lineColor.name())
+                            {
+                                QList<QColor> myList = colorLinesMpAppended[lineColor.name()];
+                                myList.append(newColor);
+                                colorLinesMpAppended[lineColor.name()] = myList;
+                                break;
+                            }
+                        }
+                    }
                 }
                 vectorLine.append(line);
             }
@@ -753,6 +775,28 @@ void Crit3DMeteoWidget::resetValues()
                         newColor.setHsl(newColor.hslHue()+(mp*15), newColor.hslSaturation(), newColor.lightness());
                         bar->setColor(newColor);
                         bar->setBorderColor(newColor);
+                        if (colorBarMpAppended.isEmpty())
+                        {
+                            QList<QColor> myList;
+                            myList.append(newColor);
+                            colorBarMpAppended.insert(barColor.name(), myList);
+                        }
+                        else
+                        {
+                            QMapIterator<QString, QList<QColor>> iterator(colorBarMpAppended);
+                            while (iterator.hasNext())
+                            {
+                                iterator.next();
+
+                                if (iterator.key() == barColor.name())
+                                {
+                                    QList<QColor> myList = colorBarMpAppended[barColor.name()];
+                                    myList.append(newColor);
+                                    colorBarMpAppended[barColor.name()] = myList;
+                                    break;
+                                }
+                            }
+                        }
                     }
                 }
                 else
@@ -2130,7 +2174,9 @@ void Crit3DMeteoWidget::updateSeries()
 
     nameLines.clear();
     colorLines.clear();
+    colorLinesMpAppended.clear();
     nameBar.clear();
+    colorBarMpAppended.clear();
     colorBar.clear();
     isLine = false;
     isBar = false;
@@ -2148,13 +2194,33 @@ void Crit3DMeteoWidget::updateSeries()
                 {
                     isLine = true;
                     nameLines.append(i.key());
-                    colorLines.append(QColor(items[1]));
+                    QColor myColor = QColor(items[1]);
+                    colorLines.append(myColor);
+                    QList<QColor> appendedList;
+                    for (int colorAppended = 2; colorAppended < items.size(); colorAppended++)
+                    {
+                        appendedList.append(QColor(items[colorAppended]));
+                    }
+                    if (!appendedList.isEmpty())
+                    {
+                        colorLinesMpAppended.insert(items[1], appendedList);
+                    }
                 }
                 if (items[0] == "bar")
                 {
                     isBar = true;
                     nameBar.append(i.key());
-                    colorBar.append(QColor(items[1]));
+                    QColor myColor = QColor(items[1]);
+                    colorBar.append(myColor);
+                    QList<QColor> appendedList;
+                    for (int colorAppended = 2; colorAppended < items.size(); colorAppended++)
+                    {
+                        appendedList.append(QColor(items[colorAppended]));
+                    }
+                    if (!appendedList.isEmpty())
+                    {
+                        colorBarMpAppended.insert(items[1], appendedList);
+                    }
                 }
             }
         }
@@ -2354,7 +2420,19 @@ void Crit3DMeteoWidget::editLineSeries()
                             if (iterator.key() == nameLines[i])
                             {
                                 QList<QString> newItems = iterator.value();
-                                newItems[1] = newColor.name();
+                                // check which mp is
+                                for (int mp = 0; mp < meteoPoints.size(); mp++)
+                                {
+                                    QString pointName = QString::fromStdString(meteoPoints[mp].name);
+                                    QString label = getFormattedLabel(pointName, nameLines[i]);
+                                    if (series->name() == label)
+                                    {
+                                        if (newItems.size() > mp+1)
+                                        {
+                                            newItems[mp+1] = newColor.name();
+                                        }
+                                    }
+                                }
                                 MapCSVStyles[nameLines[i]] = newItems;
                                 break;
                             }
@@ -2683,7 +2761,20 @@ void Crit3DMeteoWidget::editBar()
                             if (iterator.key() == nameBar[i])
                             {
                                 QList<QString> newItems = iterator.value();
-                                newItems[1] = newColor.name();
+                                // check which mp is
+                                for (int mp = 0; mp < meteoPoints.size(); mp++)
+                                {
+                                    QString pointName = QString::fromStdString(meteoPoints[mp].name);
+                                    QString label = getFormattedLabel(pointName, nameBar[i]);
+                                    if (barset->label() == label)
+                                    {
+                                        if (newItems.size() > mp+1)
+                                        {
+                                            newItems[mp+1] = newColor.name();
+                                        }
+                                        break;
+                                    }
+                                }
                                 MapCSVStyles[nameBar[i]] = newItems;
                                 break;
                             }
