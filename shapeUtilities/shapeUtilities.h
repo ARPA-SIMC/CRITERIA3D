@@ -12,6 +12,7 @@
     bool cleanShapeFile(Crit3DShapeHandler &shapeHandler);
 
     bool computeAnomaly(Crit3DShapeHandler *shapeAnomaly, Crit3DShapeHandler *shape1, Crit3DShapeHandler *shape2,
-                        std::string id1, std::string id2, std::string field1, std::string field2, QString fileName, QString &errorStr);
+                        std::string id1, std::string id2, std::string field1, std::string field2,
+                        QString fileName, QString &errorStr);
 
 #endif // SHAPEUTILITIES_H
