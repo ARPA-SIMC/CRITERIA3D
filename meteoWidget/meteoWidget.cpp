@@ -713,9 +713,9 @@ void Crit3DMeteoWidget::resetValues()
                 {
                     QColor newColor = lineColor.toHsl();
                     newColor.setHsl(newColor.hslHue()+(mp*15), newColor.hslSaturation(), newColor.lightness());
-                    line->setColor(newColor);
                     if (colorLinesMpAppended.isEmpty())
                     {
+                        line->setColor(newColor);
                         QList<QColor> myList;
                         myList.append(newColor);
                         colorLinesMpAppended.insert(lineColor.name(), myList);
@@ -726,12 +726,21 @@ void Crit3DMeteoWidget::resetValues()
                         while (iterator.hasNext())
                         {
                             iterator.next();
-
+                            qDebug() << "iterator.key() " << iterator.key();
+                            qDebug() << "lineColor.name() " << lineColor.name();
                             if (iterator.key() == lineColor.name())
                             {
                                 QList<QColor> myList = colorLinesMpAppended[lineColor.name()];
-                                myList.append(newColor);
-                                colorLinesMpAppended[lineColor.name()] = myList;
+                                if (myList.size()>=mp)
+                                {
+                                    line->setColor(myList[mp-1]);
+                                }
+                                else
+                                {
+                                    myList.append(newColor);
+                                    colorLinesMpAppended[lineColor.name()] = myList;
+                                    line->setColor(newColor);
+                                }
                                 break;
                             }
                         }
@@ -773,10 +782,10 @@ void Crit3DMeteoWidget::resetValues()
                     {
                         QColor newColor = barColor.toHsl();
                         newColor.setHsl(newColor.hslHue()+(mp*15), newColor.hslSaturation(), newColor.lightness());
-                        bar->setColor(newColor);
-                        bar->setBorderColor(newColor);
                         if (colorBarMpAppended.isEmpty())
                         {
+                            bar->setColor(newColor);
+                            bar->setBorderColor(newColor);
                             QList<QColor> myList;
                             myList.append(newColor);
                             colorBarMpAppended.insert(barColor.name(), myList);
@@ -791,8 +800,18 @@ void Crit3DMeteoWidget::resetValues()
                                 if (iterator.key() == barColor.name())
                                 {
                                     QList<QColor> myList = colorBarMpAppended[barColor.name()];
-                                    myList.append(newColor);
-                                    colorBarMpAppended[barColor.name()] = myList;
+                                    if (myList.size()>=mp)
+                                    {
+                                        bar->setColor(myList[mp-1]);
+                                        bar->setBorderColor(myList[mp-1]);
+                                    }
+                                    else
+                                    {
+                                        myList.append(newColor);
+                                        colorBarMpAppended[barColor.name()] = myList;
+                                        bar->setColor(newColor);
+                                        bar->setBorderColor(newColor);
+                                    }
                                     break;
                                 }
                             }
@@ -2195,6 +2214,10 @@ void Crit3DMeteoWidget::updateSeries()
                     isLine = true;
                     nameLines.append(i.key());
                     QColor myColor = QColor(items[1]);
+                    qDebug() << "items[1] " << items[1];
+                    qDebug() << "myColor " << myColor;
+                    qDebug() << "myColor.name() " << myColor.name();
+                    qDebug() << "myColor.name(QColor::QColor::HexRgb) " << myColor.name(QColor::QColor::HexRgb);
                     colorLines.append(myColor);
                     QList<QColor> appendedList;
                     for (int colorAppended = 2; colorAppended < items.size(); colorAppended++)
@@ -2203,7 +2226,7 @@ void Crit3DMeteoWidget::updateSeries()
                     }
                     if (!appendedList.isEmpty())
                     {
-                        colorLinesMpAppended.insert(items[1], appendedList);
+                        colorLinesMpAppended.insert(myColor.name(), appendedList);
                     }
                 }
                 if (items[0] == "bar")
@@ -2219,7 +2242,7 @@ void Crit3DMeteoWidget::updateSeries()
                     }
                     if (!appendedList.isEmpty())
                     {
-                        colorBarMpAppended.insert(items[1], appendedList);
+                        colorBarMpAppended.insert(myColor.name(), appendedList);
                     }
                 }
             }
