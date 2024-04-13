@@ -1,3 +1,4 @@
+#include "commonConstants.h"
 #include "shapeUtilities.h"
 #include "shapeHandler.h"
 #include <QFile>
@@ -80,9 +81,9 @@ bool cleanShapeFile(Crit3DShapeHandler &shapeHandler)
 }
 
 
+// shape1 and shape2 must have the same polygons and IDs
 bool computeAnomaly(Crit3DShapeHandler *shapeAnomaly, Crit3DShapeHandler *shape1, Crit3DShapeHandler *shape2,
-                    std::string id1, std::string id2, std::string field1, std::string field2,
-                    QString fileName, QString &errorStr)
+                    std::string id, std::string field1, std::string field2, QString fileName, QString &errorStr)
 {
     QString newShapeFileName = copyShapeFile(QString::fromStdString(shape1->getFilepath()), fileName);
 
@@ -92,12 +93,12 @@ bool computeAnomaly(Crit3DShapeHandler *shapeAnomaly, Crit3DShapeHandler *shape1
         return false;
     }
 
-    // remove fields
+    // remove fields (not ID)
     int nrFields = shape1->getFieldNumbers();
     for (int i = 0; i < nrFields; i++)
     {
         std::string fieldName = shape1->getFieldName(i);
-        if (fieldName != id1)
+        if (fieldName != id)
         {
             int fieldPos = shapeAnomaly->getFieldPos(fieldName);
             if (fieldPos != -1)
@@ -119,14 +120,28 @@ bool computeAnomaly(Crit3DShapeHandler *shapeAnomaly, Crit3DShapeHandler *shape1
     }
     int anomalyPos = shapeAnomaly->getFieldPos("anomaly");
 
-    // compute values
-    int fieldPos1 = shape1->getFieldPos(field1);
-    int fieldPos2 = shape2->getFieldPos(field2);
+    // check field position
+    int pos1 = shape1->getFieldPos(field1);
+    int pos2 = shape2->getFieldPos(field2);
+    if (pos1 == -1 || pos2 == -1)
+    {
+        errorStr = "Missing field.";
+        return false;
+    }
 
+    // compute values
     for (int i = 0; i < shape1->getShapeCount(); i++)
     {
-        double anomalyValue = shape2->getNumericValue(i, fieldPos2) - shape1->getNumericValue(i, fieldPos1);
-        shapeAnomaly->writeDoubleAttribute(i, anomalyPos, anomalyValue);
+        double value1 = shape1->getNumericValue(i, pos1);
+        double value2 = shape2->getNumericValue(i, pos2);
+        if (value1 != NODATA && value2 != NODATA)
+        {
+            shapeAnomaly->writeDoubleAttribute(i, anomalyPos, value2 - value1);
+        }
+        else
+        {
+            shapeAnomaly->writeDoubleAttribute(i, anomalyPos, NULL);
+        }
     }
 
     return true;
