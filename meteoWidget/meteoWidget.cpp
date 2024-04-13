@@ -800,7 +800,7 @@ void Crit3DMeteoWidget::resetValues()
                                 if (iterator.key() == barColor.name())
                                 {
                                     QList<QColor> myList = colorBarMpAppended[barColor.name()];
-                                    if (myList.size()>=mp)
+                                    if (myList.size() >= mp)
                                     {
                                         bar->setColor(myList[mp-1]);
                                         bar->setBorderColor(myList[mp-1]);
@@ -1360,12 +1360,43 @@ void Crit3DMeteoWidget::drawDailyVar()
                     }
                     else
                     {
-                        QColor newColor;
-                        newColor.setRed(barColor.red() + (255-barColor.red()) * mp/nMeteoPoints);
-                        newColor.setGreen(barColor.green() + (255-barColor.green()) * mp/nMeteoPoints);
-                        newColor.setBlue(barColor.blue() + (255-barColor.blue()) * mp/nMeteoPoints);
-                        setVector[mp][j]->setColor(newColor);
-                        setVector[mp][j]->setBorderColor(newColor);
+                        QColor newColor = barColor.toHsl();
+                        newColor.setHsl(newColor.hslHue()+(mp*15), newColor.hslSaturation(), newColor.lightness());
+                        if (colorBarMpAppended.isEmpty())
+                        {
+                            setVector[mp][j]->setColor(newColor);
+                            setVector[mp][j]->setBorderColor(newColor);
+                            QList<QColor> myList;
+                            myList.append(newColor);
+                            colorBarMpAppended.insert(barColor.name(), myList);
+                        }
+                        else
+                        {
+                            QMapIterator<QString, QList<QColor>> iterator(colorBarMpAppended);
+                            while (iterator.hasNext())
+                            {
+                                iterator.next();
+
+                                if (iterator.key() == barColor.name())
+                                {
+                                    QList<QColor> myList = colorBarMpAppended[barColor.name()];
+                                    if (myList.size() >= mp)
+                                    {
+                                        setVector[mp][j]->setColor(myList[mp-1]);
+                                        setVector[mp][j]->setBorderColor(myList[mp-1]);
+                                    }
+                                    else
+                                    {
+                                        myList.append(newColor);
+                                        colorBarMpAppended[barColor.name()] = myList;
+                                        setVector[mp][j]->setColor(newColor);
+                                        setVector[mp][j]->setBorderColor(newColor);
+                                    }
+                                    break;
+                                }
+                            }
+                        }
+
                     }
                 }
                 else
@@ -1535,12 +1566,43 @@ void Crit3DMeteoWidget::drawHourlyVar()
                     }
                     else
                     {
-                        QColor newColor;
-                        newColor.setRed(barColor.red() + (255-barColor.red()) * mp/nMeteoPoints);
-                        newColor.setGreen(barColor.green() + (255-barColor.green()) * mp/nMeteoPoints);
-                        newColor.setBlue(barColor.blue() + (255-barColor.blue()) * mp/nMeteoPoints);
-                        setVector[mp][i]->setColor(newColor);
-                        setVector[mp][i]->setBorderColor(newColor);
+                        QColor newColor = barColor.toHsl();
+                        newColor.setHsl(newColor.hslHue()+(mp*15), newColor.hslSaturation(), newColor.lightness());
+                        if (colorBarMpAppended.isEmpty())
+                        {
+                            setVector[mp][i]->setColor(newColor);
+                            setVector[mp][i]->setBorderColor(newColor);
+                            QList<QColor> myList;
+                            myList.append(newColor);
+                            colorBarMpAppended.insert(barColor.name(), myList);
+                        }
+                        else
+                        {
+                            QMapIterator<QString, QList<QColor>> iterator(colorBarMpAppended);
+                            while (iterator.hasNext())
+                            {
+                                iterator.next();
+
+                                if (iterator.key() == barColor.name())
+                                {
+                                    QList<QColor> myList = colorBarMpAppended[barColor.name()];
+                                    if (myList.size() >= mp)
+                                    {
+                                        setVector[mp][i]->setColor(myList[mp-1]);
+                                        setVector[mp][i]->setBorderColor(myList[mp-1]);
+                                    }
+                                    else
+                                    {
+                                        myList.append(newColor);
+                                        colorBarMpAppended[barColor.name()] = myList;
+                                        setVector[mp][i]->setColor(newColor);
+                                        setVector[mp][i]->setBorderColor(newColor);
+                                    }
+                                    break;
+                                }
+                            }
+                        }
+
                     }
                 }
                 else
@@ -1897,12 +1959,43 @@ void Crit3DMeteoWidget::drawMonthlyVar()
                     }
                     else
                     {
-                        QColor newColor;
-                        newColor.setRed(barColor.red() + (255-barColor.red()) * mp/nMeteoPoints);
-                        newColor.setGreen(barColor.green() + (255-barColor.green()) * mp/nMeteoPoints);
-                        newColor.setBlue(barColor.blue() + (255-barColor.blue()) * mp/nMeteoPoints);
-                        setVector[mp][j]->setColor(newColor);
-                        setVector[mp][j]->setBorderColor(newColor);
+                        QColor newColor = barColor.toHsl();
+                        newColor.setHsl(newColor.hslHue()+(mp*15), newColor.hslSaturation(), newColor.lightness());
+                        if (colorBarMpAppended.isEmpty())
+                        {
+                            setVector[mp][j]->setColor(newColor);
+                            setVector[mp][j]->setBorderColor(newColor);
+                            QList<QColor> myList;
+                            myList.append(newColor);
+                            colorBarMpAppended.insert(barColor.name(), myList);
+                        }
+                        else
+                        {
+                            QMapIterator<QString, QList<QColor>> iterator(colorBarMpAppended);
+                            while (iterator.hasNext())
+                            {
+                                iterator.next();
+
+                                if (iterator.key() == barColor.name())
+                                {
+                                    QList<QColor> myList = colorBarMpAppended[barColor.name()];
+                                    if (myList.size() >= mp)
+                                    {
+                                        setVector[mp][j]->setColor(myList[mp-1]);
+                                        setVector[mp][j]->setBorderColor(myList[mp-1]);
+                                    }
+                                    else
+                                    {
+                                        myList.append(newColor);
+                                        colorBarMpAppended[barColor.name()] = myList;
+                                        setVector[mp][j]->setColor(newColor);
+                                        setVector[mp][j]->setBorderColor(newColor);
+                                    }
+                                    break;
+                                }
+                            }
+                        }
+
                     }
                 }
                 else
