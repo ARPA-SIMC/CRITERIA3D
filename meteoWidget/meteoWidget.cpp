@@ -2431,6 +2431,10 @@ void Crit3DMeteoWidget::editLineSeries()
                                         {
                                             newItems[mp+1] = newColor.name();
                                         }
+                                        else
+                                        {
+                                            newItems.append(newColor.name());
+                                        }
                                     }
                                 }
                                 MapCSVStyles[nameLines[i]] = newItems;
@@ -2771,6 +2775,10 @@ void Crit3DMeteoWidget::editBar()
                                         if (newItems.size() > mp+1)
                                         {
                                             newItems[mp+1] = newColor.name();
+                                        }
+                                        else
+                                        {
+                                            newItems.append(newColor.name());
                                         }
                                         break;
                                     }
