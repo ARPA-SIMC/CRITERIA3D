@@ -17,10 +17,16 @@ QString cloneShapeFile(QString refFileName, QString newFileName)
     QString refFile = refFileInfo.absolutePath() + "/" + refFileInfo.baseName();
     QString newFile = newFileInfo.absolutePath() + "/" + newFileInfo.baseName();
 
-    QFile::remove(newFile + ".dbf");
+    if (! QFile::remove(newFile + ".dbf"))
+    {
+        return "";
+    }
     QFile::copy(refFile +".dbf", newFile +".dbf");
 
-    QFile::remove(newFile +".shp");
+    if (! QFile::remove(newFile +".shp"))
+    {
+        return "";
+    }
     QFile::copy(refFile +".shp", newFile +".shp");
 
     QFile::remove(newFile +".shx");
@@ -85,11 +91,16 @@ bool cleanShapeFile(Crit3DShapeHandler &shapeHandler)
 bool computeAnomaly(Crit3DShapeHandler *shapeAnomaly, Crit3DShapeHandler *shape1, Crit3DShapeHandler *shape2,
                     std::string id, std::string field1, std::string field2, QString fileName, QString &errorStr)
 {
-    QString newShapeFileName = copyShapeFile(QString::fromStdString(shape1->getFilepath()), fileName);
+    QString newShapeFileName = cloneShapeFile(QString::fromStdString(shape1->getFilepath()), fileName);
+    if (newShapeFileName == "")
+    {
+        errorStr = "Error in create/open shapefile: " + newShapeFileName;
+        return false;
+    }
 
     if (! shapeAnomaly->open(newShapeFileName.toStdString()))
     {
-        errorStr = "Error in create/open new shapefile: " + newShapeFileName;
+        errorStr = "Error in create/open shapefile: " + newShapeFileName;
         return false;
     }
 
@@ -137,10 +148,6 @@ bool computeAnomaly(Crit3DShapeHandler *shapeAnomaly, Crit3DShapeHandler *shape1
         if (value1 != NODATA && value2 != NODATA)
         {
             shapeAnomaly->writeDoubleAttribute(i, anomalyPos, value2 - value1);
-        }
-        else
-        {
-            shapeAnomaly->writeDoubleAttribute(i, anomalyPos, NULL);
         }
     }
 
