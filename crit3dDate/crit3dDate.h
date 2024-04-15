@@ -94,7 +94,7 @@
     Crit3DDate max(const Crit3DDate& myDate1, const Crit3DDate& myDate2);
     Crit3DDate min(const Crit3DDate& myDate1, const Crit3DDate& myDate2);
 
-    int difference(Crit3DDate firstDate, Crit3DDate lastDate);
+    int difference(const Crit3DDate &firstDate, const Crit3DDate &lastDate);
 
     inline long getJulianDay(int day, int month, int year);
     Crit3DDate getDateFromJulianDay(long julianDay);
