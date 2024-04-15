@@ -104,12 +104,20 @@ bool Crit1DProject::readSettings()
     projectName = projectSettings->value("name", "CRITERIA1D").toString();
 
     dbCropName = projectSettings->value("db_crop", "").toString();
+    if (dbCropName == "")
+    {
+        dbCropName = projectSettings->value("crop_db", "").toString();
+    }
     if (dbCropName.left(1) == ".")
     {
         dbCropName = QDir::cleanPath(path + dbCropName);
     }
 
     dbSoilName = projectSettings->value("db_soil", "").toString();
+    if (dbSoilName == "")
+    {
+        dbSoilName = projectSettings->value("soil_db", "").toString();
+    }
     if (dbSoilName.left(1) == ".")
     {
         dbSoilName = QDir::cleanPath(path + dbSoilName);
