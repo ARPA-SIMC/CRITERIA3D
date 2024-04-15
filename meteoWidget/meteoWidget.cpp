@@ -656,8 +656,6 @@ void Crit3DMeteoWidget::drawEnsemble()
 
 void Crit3DMeteoWidget::resetValues()
 {
-    qDebug() << "resetValues";
-    qDebug() << "colorBarMpAppended.size() " << colorBarMpAppended.size();
     int nMeteoPoints = meteoPoints.size();
     // clear prev series values
     if (!lineSeries.isEmpty())
@@ -666,7 +664,6 @@ void Crit3DMeteoWidget::resetValues()
         {
             for (int i = 0; i < lineSeries[mp].size(); i++)
             {
-                lineSeries[mp][i]->clear();
                 if (chart->series().contains(lineSeries[mp][i]))
                 {
                     chart->removeSeries(lineSeries[mp][i]);
@@ -681,7 +678,6 @@ void Crit3DMeteoWidget::resetValues()
         for (int mp = 0; mp < barSeries.size(); mp++)
         {
             setVector[mp].clear();
-            barSeries[mp]->clear();
             if (chart->series().contains(barSeries[mp]))
             {
                 chart->removeSeries(barSeries[mp]);
@@ -728,8 +724,6 @@ void Crit3DMeteoWidget::resetValues()
                         while (iterator.hasNext())
                         {
                             iterator.next();
-                            qDebug() << "iterator.key() " << iterator.key();
-                            qDebug() << "lineColor.name() " << lineColor.name();
                             if (iterator.key() == lineColor.name())
                             {
                                 QList<QColor> myList = colorLinesMpAppended[lineColor.name()];
@@ -2119,8 +2113,6 @@ void Crit3DMeteoWidget::showHourlyGraph()
 
 void Crit3DMeteoWidget::updateSeries()
 {
-    qDebug() << "updateSeries";
-    qDebug() << "colorBarMpAppended.size() " << colorBarMpAppended.size();
     if (! isInitialized) return;
 
     nameLines.clear();
@@ -2181,8 +2173,6 @@ void Crit3DMeteoWidget::updateSeries()
 
 void Crit3DMeteoWidget::redraw()
 {
-    qDebug() << "redraw";
-    qDebug() << "colorBarMpAppended.size() " << colorBarMpAppended.size();
     if (! isInitialized) return;
 
     if (lastDate->dateTime() < firstDate->dateTime())
