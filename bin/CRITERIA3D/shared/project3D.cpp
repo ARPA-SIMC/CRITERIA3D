@@ -176,12 +176,16 @@ bool Project3D::loadProject3DSettings()
     // soil db
     soilDbFileName = projectSettings->value("soil_db").toString();
     if (soilDbFileName == "")
+    {
         soilDbFileName = projectSettings->value("db_soil").toString();
+    }
 
     // crop db
     cropDbFileName = projectSettings->value("crop_db").toString();
     if (cropDbFileName == "")
+    {
         cropDbFileName = projectSettings->value("db_crop").toString();
+    }
 
     // soil map
     soilMapFileName = projectSettings->value("soil_map").toString();
@@ -189,7 +193,9 @@ bool Project3D::loadProject3DSettings()
     // land use map
     landUseMapFileName = projectSettings->value("landuse_map").toString();
     if (landUseMapFileName == "")
+    {
         landUseMapFileName = projectSettings->value("landUnits_map").toString();
+    }
 
     projectSettings->endGroup();
 
