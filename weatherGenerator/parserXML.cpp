@@ -123,7 +123,7 @@ bool parseXMLSeasonal(const QString &xmlFileName, XMLSeasonalAnomaly &XMLAnomaly
                 if (myTag == "NAME")
                 {
                     XMLAnomaly.point.name = child.toElement().text();
-                    // remove white spaces
+                    // remove white spaces //
                     XMLAnomaly.point.name = XMLAnomaly.point.name.simplified();
                     nrTokens++;
                 }
