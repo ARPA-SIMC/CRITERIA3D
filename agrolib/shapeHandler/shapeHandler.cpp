@@ -333,6 +333,7 @@ double Crit3DShapeHandler::getNumericValue(int shapeNumber, std::string fieldNam
 }
 
 
+// return NODATA as null value
 double Crit3DShapeHandler::getNumericValue(int shapeNumber, int fieldPos)
 {
     DBFFieldType fieldType = getFieldType(fieldPos);
@@ -704,4 +705,6 @@ std::string Crit3DShapeHandler::getAttributesList(int index)
 
     return shapeData;
 }
+
+
 

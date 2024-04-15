@@ -25,8 +25,6 @@ FormInfo::FormInfo()
 
 int FormInfo::start(QString info, int nrValues)
 {
-    this->label->setText(info);
-
     if (nrValues <= 0)
         this->progressBar->setVisible(false);
     else
@@ -37,6 +35,8 @@ int FormInfo::start(QString info, int nrValues)
     }
 
     this->show();
+
+    this->label->setText(info);
     qApp->processEvents();
 
     return std::max(1, int(nrValues / 50));
