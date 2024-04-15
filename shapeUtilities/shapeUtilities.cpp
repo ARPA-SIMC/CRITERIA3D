@@ -17,17 +17,17 @@ QString cloneShapeFile(QString refFileName, QString newFileName)
     QString refFile = refFileInfo.absolutePath() + "/" + refFileInfo.baseName();
     QString newFile = newFileInfo.absolutePath() + "/" + newFileInfo.baseName();
 
-    if (! QFile::remove(newFile + ".dbf"))
+    if (QFile::exists(newFile + ".shp"))
     {
-        return "";
-    }
-    QFile::copy(refFile +".dbf", newFile +".dbf");
-
-    if (! QFile::remove(newFile +".shp"))
-    {
-        return "";
+        if (! QFile::remove(newFile + ".shp"))
+        {
+            return "";
+        }
     }
     QFile::copy(refFile +".shp", newFile +".shp");
+
+    QFile::remove(newFile +".dbf");
+    QFile::copy(refFile +".dbf", newFile +".dbf");
 
     QFile::remove(newFile +".shx");
     QFile::copy(refFile +".shx", newFile +".shx");
