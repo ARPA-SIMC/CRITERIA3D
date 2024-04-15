@@ -246,7 +246,7 @@ bool Crit3DDate::isNullDate()
 }
 
 
-int difference(Crit3DDate firstDate, Crit3DDate lastDate)
+int difference(const Crit3DDate &firstDate, const Crit3DDate &lastDate)
 {
     return firstDate.daysTo(lastDate);
 }
