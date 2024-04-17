@@ -128,18 +128,6 @@ double functionSum(std::vector<std::function<double(double, std::vector<double>&
     return result;
 }
 
-double functionSum_detrending(std::vector<std::function<double(double, std::vector<double>&)>>& functions, std::vector <double> x, std::vector <std::vector <double>>& par)
-{
-    double result = 0.0;
-    int counter = 0;
-    for (const auto& function : functions)
-    {
-        result += function(x[counter],par[counter]);
-        counter++;
-    }
-    return result;
-}
-
 double functionLinear(double x, std::vector <double>& par)
 {
     return par[0] * x;
