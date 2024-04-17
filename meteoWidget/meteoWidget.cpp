@@ -808,6 +808,7 @@ void Crit3DMeteoWidget::resetValues()
                             bar->setBorderColor(newColor);
                             QList<QColor> myList;
                             myList.append(newColor);
+                            colorBarMpAppended.insert(barColor.name(), myList);
                         }
                         else
                         {
