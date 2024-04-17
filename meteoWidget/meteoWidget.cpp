@@ -703,6 +703,8 @@ void Crit3DMeteoWidget::resetValues()
                 QLineSeries* line = new QLineSeries();
                 line->setName(getFormattedLabel(pointName, nameLines[i]));
                 QColor lineColor = colorLines[i];
+                qDebug() << "mp " << mp;
+                qDebug() << "lineColor " << lineColor.name();
                 if (mp == 0)
                 {
                     line->setColor(lineColor);
@@ -710,8 +712,18 @@ void Crit3DMeteoWidget::resetValues()
                 else
                 {
                     QColor newColor = lineColor.toHsl();
-                    newColor.setHsl(newColor.hslHue()+(mp*15), newColor.hslSaturation(), newColor.lightness());
-                    if (colorLinesMpAppended.isEmpty())
+                    int h = newColor.hslHue();
+                    qDebug() << "h old value" << h;
+                    if (h >= 180)
+                    {
+                        newColor.setHsl(h-(mp*26), newColor.hslSaturation(), newColor.lightness());
+                    }
+                    else
+                    {
+                        newColor.setHsl(h+(mp*26), newColor.hslSaturation(), newColor.lightness());
+                    }
+                    qDebug() << "h NEW value" << newColor.hslHue();
+                    if (colorLinesMpAppended.isEmpty() || !colorLinesMpAppended.contains(lineColor.name()))
                     {
                         line->setColor(newColor);
                         QList<QColor> myList;
@@ -767,6 +779,8 @@ void Crit3DMeteoWidget::resetValues()
                 bar->setLabel(getFormattedLabel(pointName, nameBar[i]));
 
                 QColor barColor = colorBar[i];
+                qDebug() << "mp " << mp;
+                qDebug() << "barColor " << barColor.name();
                 if (meteoPointsEnsemble.size() == 0)
                 {
                     if (mp == 0)
@@ -777,8 +791,18 @@ void Crit3DMeteoWidget::resetValues()
                     else
                     {
                         QColor newColor = barColor.toHsl();
-                        newColor.setHsl(newColor.hslHue()+(mp*15), newColor.hslSaturation(), newColor.lightness());
-                        if (colorBarMpAppended.isEmpty())
+                        int h = newColor.hslHue();
+                        qDebug() << "h old value" << h;
+                        if (h >= 180)
+                        {
+                            newColor.setHsl(h-(mp*26), newColor.hslSaturation(), newColor.lightness());
+                        }
+                        else
+                        {
+                            newColor.setHsl(h+(mp*26), newColor.hslSaturation(), newColor.lightness());
+                        }
+                        qDebug() << "h NEW value" << newColor.hslHue();
+                        if (colorBarMpAppended.isEmpty() || !colorBarMpAppended.contains(barColor.name()))
                         {
                             bar->setColor(newColor);
                             bar->setBorderColor(newColor);
