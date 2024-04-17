@@ -1537,7 +1537,7 @@ bool multipleDetrending(std::vector <Crit3DInterpolationDataPoint> &myPoints,
             mySettings->getProxy(pos)->setIsSignificant(false);
 
         errorStr = "Not enough points for detrending.";
-        return true;
+        return false; //?
     }
 
     std::vector <std::vector<double>> parametersMin;
@@ -1553,8 +1553,8 @@ bool multipleDetrending(std::vector <Crit3DInterpolationDataPoint> &myPoints,
     }
 
     // multiple non linear fitting
-    interpolation::bestFittingMarquardt_nDimension(&functionSum, myFunc, 10000, 4, parametersMin, parametersMax, parameters, parametersDelta,
-                                                   90, 0.005, 0.001, predictors, predictands, weights);
+    interpolation::bestFittingMarquardt_nDimension(&functionSum, myFunc, 500, 4, parametersMin, parametersMax, parameters, parametersDelta,
+                                                   90, 0.005, 0.002, predictors, predictands, weights);
 
     mySettings->setFittingFunction(myFunc);
     mySettings->setFittingParameters(parameters);
@@ -1565,12 +1565,14 @@ bool multipleDetrending(std::vector <Crit3DInterpolationDataPoint> &myPoints,
     float detrendValue;
     for (i = 0; i < myPoints.size(); i++)
     {
+        proxyValues.clear();
+
         for (int pos=0; pos < proxyNr; pos++)
         {
             if ((mySettings->getProxy(pos)->getIsSignificant()))
             {
                 proxyValue = myPoints[i].getProxyValue(pos);
-                proxyValues.push_back(proxyValue);
+                proxyValues.push_back(double(proxyValue));
             }
         }
 
