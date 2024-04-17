@@ -1559,24 +1559,24 @@ bool multipleDetrending(std::vector <Crit3DInterpolationDataPoint> &myPoints,
     mySettings->setFittingFunction(myFunc);
     mySettings->setFittingParameters(parameters);
 
-    std::vector <std::vector <double>> proxyValues(myPoints.size());
+    std::vector <double> proxyValues;
 
     // detrending
     float detrendValue;
     for (i = 0; i < myPoints.size(); i++)
     {
-        //proxyValues[i].reserve(proxyNr);
+        proxyValues.clear();
 
         for (int pos=0; pos < proxyNr; pos++)
         {
             if ((mySettings->getProxy(pos)->getIsSignificant()))
             {
                 proxyValue = myPoints[i].getProxyValue(pos);
-                proxyValues[i].push_back(proxyValue);
+                proxyValues.push_back(double(proxyValue));
             }
         }
 
-        detrendValue = float(functionSum_detrending(myFunc, proxyValues[i], parameters));
+        detrendValue = float(functionSum(myFunc, proxyValues, parameters));
         myPoints[i].value -= detrendValue;
     }
 
