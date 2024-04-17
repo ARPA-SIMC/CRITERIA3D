@@ -1273,17 +1273,17 @@ namespace interpolation
     {
         int i,j,k;
         double pivot, mult, top;
-        int nrPredictors = int(parameters.size());
+        int nrPredictors = parameters.size();
         int nrParametersTotal = 0;
-        int nrData = int(y.size());
+        int nrData = y.size();
         std::vector <int> nrParameters(nrPredictors);
-        for (int i=0; i<nrPredictors;i++)
+        for (i=0; i<nrPredictors;i++)
         {
             nrParameters[i]= int(parameters[i].size());
             nrParametersTotal += nrParameters[i];
         }
 
-        std::vector<double> g(nrParametersTotal);// = (double *) calloc(nrParametersTotal, sizeof(double));
+        std::vector<double> g(nrParametersTotal);
         std::vector<double> z(nrParametersTotal);
         std::vector<double> firstEst(nrData);
         std::vector<std::vector<double>> a(nrParametersTotal, std::vector<double>(nrParametersTotal));
@@ -1415,17 +1415,17 @@ namespace interpolation
     {
         int i,j,k;
         double pivot, mult, top;
-        int nrPredictors = int(parameters.size());
+        int nrPredictors = parameters.size();
         int nrParametersTotal = 0;
-        int nrData = int(y.size());
+        int nrData = y.size();
         std::vector <int> nrParameters(nrPredictors);
-        for (int i=0; i<nrPredictors;i++)
+        for (i=0; i<nrPredictors;i++)
         {
             nrParameters[i]= int(parameters[i].size());
             nrParametersTotal += nrParameters[i];
         }
 
-        std::vector<double> g(nrParametersTotal);// = (double *) calloc(nrParametersTotal, sizeof(double));
+        std::vector<double> g(nrParametersTotal);
         //std::vector<double> z(nrParametersTotal);
         std::vector<double> firstEst(nrData);
         std::vector<std::vector<double>> a(nrParametersTotal, std::vector<double>(nrParametersTotal));
