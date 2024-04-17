@@ -52,5 +52,7 @@
 
     bool parseXMLSeasonal(const QString &xmlFileName, XMLSeasonalAnomaly &XMLAnomaly);
 
+    bool parseXMLScenario(const QString &xmlFileName, XMLSeasonalAnomaly &XMLAnomaly);
+
 
 #endif // PARSERXML_H
