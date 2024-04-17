@@ -1202,7 +1202,8 @@ float retrend(meteoVariable myVar, vector<double> myProxyValues, Crit3DInterpola
         {
             std::vector<std::function<double(double, std::vector<double>&)>> myFunc = mySettings->getFittingFunction();
             std::vector <std::vector <double>> fittingParameters = mySettings->getFittingParameters();
-            retrendValue = float(functionSum(myFunc, activeProxyValues, fittingParameters));
+            if (myFunc.size() > 0 && fittingParameters.size() > 0)
+                retrendValue = float(functionSum(myFunc, activeProxyValues, fittingParameters));
         }
     }
     else
@@ -1428,6 +1429,8 @@ std::vector <double> getfittingParameters(Crit3DProxyCombination myCombination, 
 bool multipleDetrending(std::vector <Crit3DInterpolationDataPoint> &myPoints,
                         Crit3DInterpolationSettings* mySettings, meteoVariable myVar, std::string &errorStr)
 {
+    mySettings->clearFitting();
+
     if (! getUseDetrendingVar(myVar)) return true;
 
     Crit3DProxyCombination myCombination = mySettings->getSelectedCombination();
@@ -1536,8 +1539,7 @@ bool multipleDetrending(std::vector <Crit3DInterpolationDataPoint> &myPoints,
         for (int pos = 0; pos < proxyNr; pos++)
             mySettings->getProxy(pos)->setIsSignificant(false);
 
-        errorStr = "Not enough points for detrending.";
-        return false; //?
+        return true;
     }
 
     std::vector <std::vector<double>> parametersMin;
