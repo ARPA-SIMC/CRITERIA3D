@@ -1017,7 +1017,7 @@ void localSelection(vector <Crit3DInterpolationDataPoint> &inputPoints, vector <
                     float x, float y, Crit3DInterpolationSettings& mySettings)
 {
     // search more stations to assure min points with all valid proxies
-    float ratioMinPoints = float(1.2);
+    float ratioMinPoints = float(1.4);
     unsigned minPoints = unsigned(mySettings.getMinPointsLocalDetrending() * ratioMinPoints);
     if (inputPoints.size() <= minPoints)
     {
@@ -1202,8 +1202,19 @@ float retrend(meteoVariable myVar, vector<double> myProxyValues, Crit3DInterpola
         {
             std::vector<std::function<double(double, std::vector<double>&)>> myFunc = mySettings->getFittingFunction();
             std::vector <std::vector <double>> fittingParameters = mySettings->getFittingParameters();
+
             if (myFunc.size() > 0 && fittingParameters.size() > 0)
                 retrendValue = float(functionSum(myFunc, activeProxyValues, fittingParameters));
+
+            for (int pos=0; pos < int(mySettings->getProxyNr()); pos++) //can be skipped if altitude is always first proxy
+            {
+                if (getProxyPragaName(mySettings->getProxy(pos)->getName()) == proxyHeight)
+                {
+                    if (!mySettings->getProxy(pos)->getIsSignificant())
+                        retrendValue = 0.;
+                    break;
+                }
+            }
         }
     }
     else
@@ -1508,7 +1519,11 @@ bool multipleDetrending(std::vector <Crit3DInterpolationDataPoint> &myPoints,
             validNr++;
         }
         else
+        {
             mySettings->getProxy(pos)->setIsSignificant(false);
+            if (getProxyPragaName(mySettings->getProxy(pos)->getName()) == proxyHeight)
+                return true;
+        }
     }
 
     if (validNr == 0) return true;
@@ -1556,7 +1571,7 @@ bool multipleDetrending(std::vector <Crit3DInterpolationDataPoint> &myPoints,
 
     // multiple non linear fitting
     interpolation::bestFittingMarquardt_nDimension(&functionSum, myFunc, 500, 4, parametersMin, parametersMax, parameters, parametersDelta,
-                                                   90, 0.005, 0.002, predictors, predictands, weights);
+                                                   80, 0.005, 0.002, predictors, predictands, weights);
 
     mySettings->setFittingFunction(myFunc);
     mySettings->setFittingParameters(parameters);
