@@ -1338,8 +1338,6 @@ void Crit3DMeteoWidget::drawDailyVar()
     if (axisY->min() <= 0 && axisY->max() >= 0)
     {
         zeroLine->clear();
-        zeroLine->setColor(Qt::gray);
-        zeroLine->setName("zero");
         for (int day = 0; day < nDays; day++)
         {
             zeroLine->append(day, 0);
@@ -1621,8 +1619,6 @@ void Crit3DMeteoWidget::drawHourlyVar()
     if (axisY->min() <= 0 && axisY->max() >= 0)
     {
         zeroLine->clear();
-        zeroLine->setColor(Qt::gray);
-        zeroLine->setName("zero");
         for (int d = 0; d < nDays; d++)
         {
             for (int h = 0; h < 24; h++)
@@ -1879,8 +1875,6 @@ void Crit3DMeteoWidget::drawMonthlyVar()
     if (axisY->min() <= 0 && axisY->max() >= 0)
     {
         zeroLine->clear();
-        zeroLine->setColor(Qt::gray);
-        zeroLine->setName("zero");
         for (int month = 0; month < numberOfMonths; month++)
         {
             zeroLine->append(month, 0);
