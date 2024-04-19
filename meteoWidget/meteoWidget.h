@@ -115,6 +115,7 @@
             QMap<QString, QList<QColor>> colorLinesMpAppended;
             QVector<QColor> colorBar;
             QMap<QString, QList<QColor>> colorBarMpAppended;
+            QLineSeries* zeroLine;
             QVector<QVector<QLineSeries*>> lineSeries;
             QVector<QBarSeries*> barSeries;
             QVector<QBoxPlotSeries*> ensembleSeries;
