@@ -48,6 +48,8 @@
         QString anomalySeason;
     };
 
+    //TODO class XMLScenarioAnomaly
+
     bool parseXMLFile(const QString &xmlFileName, QDomDocument &xmlDoc);
 
     bool parseXMLSeasonal(const QString &xmlFileName, XMLSeasonalAnomaly &XMLAnomaly);
