@@ -2337,6 +2337,7 @@ bool Project::interpolationDemLocalDetrending(meteoVariable myVar, const Crit3DT
     {
         gis::Crit3DRasterHeader myHeader = *(DEM.header);
         myRaster->initializeGrid(myHeader);
+        myRaster->initializeParameters(myHeader);
 
         for (long row = 0; row < myHeader.nrRows ; row++)
         {
@@ -2353,6 +2354,8 @@ bool Project::interpolationDemLocalDetrending(meteoVariable myVar, const Crit3DT
 
                     std::vector <Crit3DInterpolationDataPoint> subsetInterpolationPoints;
                     localSelection(interpolationPoints, subsetInterpolationPoints, x, y, interpolationSettings);
+                    if (interpolationSettings.getUseLocalDetrending())
+                        interpolationSettings.setFittingParameters(myRaster->prepareParameters(row, col));
                     if (! preInterpolation(subsetInterpolationPoints, &interpolationSettings, meteoSettings, &climateParameters,
                                           meteoPoints, nrMeteoPoints, myVar, myTime, errorStdStr))
                     {
@@ -2363,8 +2366,8 @@ bool Project::interpolationDemLocalDetrending(meteoVariable myVar, const Crit3DT
 
                     myRaster->value[row][col] = interpolate(subsetInterpolationPoints, &interpolationSettings, meteoSettings,
                                                             myVar, x, y, z, proxyValues, true);
-
-
+                    if (interpolationSettings.getUseLocalDetrending())
+                        myRaster->setParametersForRowCol(row, col, interpolationSettings.getFittingParameters());
                 }
             }
         }
@@ -2579,6 +2582,7 @@ bool Project::interpolationGrid(meteoVariable myVar, const Crit3DTime& myTime)
     }
 
     Crit3DProxyCombination myCombination;
+    meteoGridDbHandler->meteoGrid()->dataMeteoGrid.initializeParametersLatLonHeader(meteoGridDbHandler->meteoGrid()->gridStructure().header());
 
     if (! interpolationSettings.getUseLocalDetrending())
     {
@@ -2621,7 +2625,6 @@ bool Project::interpolationGrid(meteoVariable myVar, const Crit3DTime& myTime)
                 myZ = meteoGridDbHandler->meteoGrid()->meteoPoints()[row][col]->point.z;
 
                 interpolationSettings.setProxiesComplete(true);
-
                 if (getUseDetrendingVar(myVar))
                 {
                     proxyIndex = 0;
@@ -2649,6 +2652,7 @@ bool Project::interpolationGrid(meteoVariable myVar, const Crit3DTime& myTime)
                     {
                         std::vector <Crit3DInterpolationDataPoint> subsetInterpolationPoints;
                         localSelection(interpolationPoints, subsetInterpolationPoints, myX, myY, interpolationSettings);
+                        interpolationSettings.setFittingParameters(meteoGridDbHandler->meteoGrid()->dataMeteoGrid.prepareParameters(row, col));
 
                         if (! preInterpolation(subsetInterpolationPoints, &interpolationSettings, meteoSettings,
                                               &climateParameters, meteoPoints, nrMeteoPoints, myVar, myTime, errorStdStr))
@@ -2658,6 +2662,7 @@ bool Project::interpolationGrid(meteoVariable myVar, const Crit3DTime& myTime)
                         }
 
                         interpolatedValue = interpolate(subsetInterpolationPoints, &interpolationSettings, meteoSettings, myVar, myX, myY, myZ, proxyValues, true);
+                        meteoGridDbHandler->meteoGrid()->dataMeteoGrid.setParametersForRowCol(row, col, interpolationSettings.getFittingParameters());
                     }
                     else
                     {
@@ -2668,7 +2673,6 @@ bool Project::interpolationGrid(meteoVariable myVar, const Crit3DTime& myTime)
                 {
                     interpolatedValue = interpolate(interpolationPoints, &interpolationSettings, meteoSettings, myVar, myX, myY, myZ, proxyValues, true);
                 }
-
                 if (freq == hourly)
                 {
                     if (meteoGridDbHandler->meteoGrid()->meteoPoints()[row][col]->nrObsDataDaysH == 0)

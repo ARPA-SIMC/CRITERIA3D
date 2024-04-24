@@ -1365,6 +1365,7 @@ bool setAllFittingParameters(Crit3DProxyCombination myCombination, Crit3DInterpo
                      std::string &errorStr)
 {
     const double RATIO_DELTA = 1000;
+    bool isPreviousParam = !paramFirstGuess.empty();
 
     for (unsigned i=0; i < myCombination.getProxySize(); i++)
         if (mySettings->getProxy(i)->getIsSignificant())
@@ -1402,7 +1403,8 @@ bool setAllFittingParameters(Crit3DProxyCombination myCombination, Crit3DInterpo
             paramMin.push_back(proxyParamMin);
             paramMax.push_back(proxyParamMax);
             paramDelta.push_back(proxyParamDelta);
-            paramFirstGuess.push_back(proxyParamFirstGuess);
+            if (!isPreviousParam)
+                paramFirstGuess.push_back(proxyParamFirstGuess);
         }
 
     return myFunc.size() > 0;
@@ -1440,6 +1442,7 @@ std::vector <double> getfittingParameters(Crit3DProxyCombination myCombination, 
 bool multipleDetrending(std::vector <Crit3DInterpolationDataPoint> &myPoints,
                         Crit3DInterpolationSettings* mySettings, meteoVariable myVar, std::string &errorStr)
 {
+    std::vector <std::vector<double>> parameters = mySettings->getFittingParameters();
     mySettings->clearFitting();
 
     if (! getUseDetrendingVar(myVar)) return true;
@@ -1560,7 +1563,7 @@ bool multipleDetrending(std::vector <Crit3DInterpolationDataPoint> &myPoints,
     std::vector <std::vector<double>> parametersMin;
     std::vector <std::vector<double>> parametersMax;
     std::vector <std::vector<double>> parametersDelta;
-    std::vector <std::vector<double>> parameters;
+    //std::vector <std::vector<double>> parameters;
     std::vector<std::function<double(double, std::vector<double>&)>> myFunc;
 
     if (! setAllFittingParameters(myCombination, mySettings, myFunc, parametersMin, parametersMax,
@@ -1571,7 +1574,7 @@ bool multipleDetrending(std::vector <Crit3DInterpolationDataPoint> &myPoints,
 
     // multiple non linear fitting
     interpolation::bestFittingMarquardt_nDimension(&functionSum, myFunc, 500, 4, parametersMin, parametersMax, parameters, parametersDelta,
-                                                   80, 0.005, 0.002, predictors, predictands, weights);
+                                                   90, 0.005, 0.001, predictors, predictands, weights);
 
     mySettings->setFittingFunction(myFunc);
     mySettings->setFittingParameters(parameters);

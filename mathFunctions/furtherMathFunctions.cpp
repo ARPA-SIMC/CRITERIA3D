@@ -1094,19 +1094,6 @@ namespace interpolation
 
         do
         {
-            for (i=0; i<nrPredictors; i++)
-            {
-                for (j=0; j<nrParameters[i]; j++)
-                {
-                    do {
-                            truncNormal = normal_dis(gen);
-                        } while(truncNormal <= 0.0 || truncNormal >= 1.0);
-                        parameters[i][j] = parametersMin[i][j] + (truncNormal)*(parametersMax[i][j]-parametersMin[i][j]);
-
-                    //parameters[i][j] += (parametersMax[i][j]-parametersMin[i][j])/200;
-                }
-            }
-
             fittingMarquardt_nDimension_noSquares(func,myFunc,parametersMin, parametersMax,
                                         parameters, parametersDelta,correspondenceTag, maxIterationsNr,
                                         myEpsilon, x, y, weights);
@@ -1134,15 +1121,29 @@ namespace interpolation
                     bestR2 = R2;
                 }
                 R2Previous[nrMinima-1] = R2;
-                /*for (i=0;i<nrPredictors;i++)
+
+                for (i=0;i<nrPredictors;i++)
                 {
                     for (j=0; j<nrParameters[i]; j++)
                     {
                         bestParameters[i][j] = parameters[i][j];
                     }
-                }*/
+                }
             }
             counter++;
+
+            for (i=0; i<nrPredictors; i++)
+            {
+                for (j=0; j<nrParameters[i]; j++)
+                {
+                    do {
+                        truncNormal = normal_dis(gen);
+                    } while(truncNormal <= 0.0 || truncNormal >= 1.0);
+                    parameters[i][j] = parametersMin[i][j] + (truncNormal)*(parametersMax[i][j]-parametersMin[i][j]);
+
+                    //parameters[i][j] += (parametersMax[i][j]-parametersMin[i][j])/200;
+                }
+            }
         } while( (counter < nrTrials) && (R2 < (1 - EPSILON)) && (fabs(R2Previous[0]-R2Previous[nrMinima-1]) > deltaR2) );
 
         for (i=0;i<nrPredictors;i++)
