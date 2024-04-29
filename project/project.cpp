@@ -2582,7 +2582,8 @@ bool Project::interpolationGrid(meteoVariable myVar, const Crit3DTime& myTime)
     }
 
     Crit3DProxyCombination myCombination;
-    meteoGridDbHandler->meteoGrid()->dataMeteoGrid.initializeParametersLatLonHeader(meteoGridDbHandler->meteoGrid()->gridStructure().header());
+    if (interpolationSettings.getUseLocalDetrending())
+        meteoGridDbHandler->meteoGrid()->dataMeteoGrid.initializeParametersLatLonHeader(meteoGridDbHandler->meteoGrid()->gridStructure().header());
 
     if (! interpolationSettings.getUseLocalDetrending())
     {
