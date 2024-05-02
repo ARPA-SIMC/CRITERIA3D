@@ -52,6 +52,56 @@ void XMLSeasonalAnomaly::printInfo()
    qDebug() << "";
 }
 
+XMLScenarioAnomaly::XMLScenarioAnomaly()
+{
+    this->initialize(); // chiedere a Fausto perché non fare initialize direttamente qui
+}
+
+
+void XMLScenarioAnomaly::initialize()
+{
+    /*
+    point.name = "";
+    point.code = "";
+    point.latitude = NODATA;
+    point.longitude = NODATA;
+    point.info = "";
+
+    forecast.clear();
+
+    climatePeriod.yearFrom = NODATA;
+    climatePeriod.yearTo = NODATA;
+
+    modelNumber = NODATA;
+
+    modelName.clear();
+    modelMember.clear();
+
+    repetitions = NODATA;
+    anomalyYear = NODATA;
+    anomalySeason = "";
+    */
+}
+
+
+void XMLScenarioAnomaly::printInfo()
+{
+    /*
+    qDebug() << "point.name = " << point.name;
+    qDebug() << "point.longitude = " << point.longitude;
+    qDebug() << "point.latitude = " << point.latitude;
+    qDebug() << "climate first year = " << climatePeriod.yearFrom;
+    qDebug() << "climate last year = " << climatePeriod.yearTo;
+    qDebug() << "number of models = " << modelNumber;
+    qDebug() << "models = " << modelName;
+    qDebug() << "number of members = " << modelMember;
+    qDebug() << "number of repetitions = " << repetitions;
+    qDebug() << "anomaly year = " << anomalyYear;
+    qDebug() << "anomaly season = " << anomalySeason;
+    qDebug() << "";
+    */
+}
+
 
 bool parseXMLFile(const QString &xmlFileName, QDomDocument &xmlDoc)
 {
@@ -257,9 +307,9 @@ bool parseXMLSeasonal(const QString &xmlFileName, XMLSeasonalAnomaly &XMLAnomaly
     return true;
 }
 
-bool parseXMLScenario(const QString &xmlFileName, XMLSeasonalAnomaly &XMLAnomaly)
+bool parseXMLScenario(const QString &xmlFileName, XMLScenarioAnomaly &XMLAnomaly)
 {
-    /*QDomDocument xmlDoc;
+    QDomDocument xmlDoc;
 
     XMLAnomaly.initialize();
 
@@ -277,7 +327,7 @@ bool parseXMLScenario(const QString &xmlFileName, XMLSeasonalAnomaly &XMLAnomaly
     QString myTag;
     QString mySecondTag;
     int nrTokens = 0;
-    const int nrRequiredToken = 31;
+    const int nrRequiredToken = 150; // to be checked
 
     QString models;
     QString members;
@@ -285,7 +335,45 @@ bool parseXMLScenario(const QString &xmlFileName, XMLSeasonalAnomaly &XMLAnomaly
 
     while(! ancestor.isNull())
     {
-        if (ancestor.toElement().tagName().toUpper() == "POINT")
+        if (ancestor.toElement().tagName().toUpper() == "FILE")
+        {
+            child = ancestor.firstChild();
+            while(! child.isNull())
+            {
+                myTag = child.toElement().tagName().toUpper();
+                if (myTag == "TYPE")
+                {
+                    XMLAnomaly.file.type = child.toElement().text();
+                    // remove white spaces //
+                    XMLAnomaly.file.type = XMLAnomaly.file.type.simplified();
+                    nrTokens++;
+                }
+                else if (myTag == "ATTRIBUTE")
+                {
+                    XMLAnomaly.file.attribute = child.toElement().text();
+                    // remove white spaces
+                    XMLAnomaly.file.attribute = XMLAnomaly.file.attribute.simplified();
+                    nrTokens++;
+                }
+                else if (myTag == "DELIMETER")
+                {
+                    XMLAnomaly.file.delimeter = child.toElement().text();
+                    // remove white spaces
+                    XMLAnomaly.file.delimeter = XMLAnomaly.file.delimeter.simplified();
+                    nrTokens++;
+                }
+                else if (myTag == "DECIMALSEPARATOR")
+                {
+                    XMLAnomaly.file.decimalSeparator = child.toElement().text();
+                    // remove white spaces
+                    XMLAnomaly.file.decimalSeparator = XMLAnomaly.file.decimalSeparator.simplified();
+                    nrTokens++;
+                }
+                child = child.nextSibling();
+            }
+
+        }
+        else if (ancestor.toElement().tagName().toUpper() == "POINT")
         {
             child = ancestor.firstChild();
             while(! child.isNull())
@@ -315,17 +403,16 @@ bool parseXMLScenario(const QString &xmlFileName, XMLSeasonalAnomaly &XMLAnomaly
                     XMLAnomaly.point.longitude = child.toElement().text().toFloat();
                     nrTokens++;
                 }
-                else if (myTag == "INFO")
+                else if (myTag == "HEIGHT")
                 {
-                    XMLAnomaly.point.info = child.toElement().text();
-                    // remove white spaces
-                    XMLAnomaly.point.info = XMLAnomaly.point.info.simplified();
+                    XMLAnomaly.point.height = child.toElement().text().toFloat();
                     nrTokens++;
                 }
                 child = child.nextSibling();
             }
 
         }
+        /*
         else if (ancestor.toElement().tagName().toUpper() == "CLIMATE")
         {
             child = ancestor.firstChild();
@@ -412,7 +499,7 @@ bool parseXMLScenario(const QString &xmlFileName, XMLSeasonalAnomaly &XMLAnomaly
 
                 child = child.nextSibling();
             }
-        }
+        }*/
 
         ancestor = ancestor.nextSibling();
     }
@@ -424,6 +511,6 @@ bool parseXMLScenario(const QString &xmlFileName, XMLSeasonalAnomaly &XMLAnomaly
         qDebug() << "Missing " + QString::number(missingTokens) + " key informations.";
         return false;
     }
-*/
+
     return true;
 }

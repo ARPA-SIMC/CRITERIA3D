@@ -6,6 +6,45 @@
     #include <QStringList>
     #include <QDomElement>
 
+    struct TXMLScenarioFile
+    {
+        QString type;
+        QString attribute;
+        QString delimeter;
+        QString decimalSeparator;
+    };
+    struct TXMLScenarioPoint
+    {
+        QString name;
+        QString code;
+        float latitude;
+        float longitude;
+        float height;
+    };
+    struct TXMLScenarioModels
+    {
+        QString type;
+        QString value;
+    };
+    struct TXMLScenarioClimateField
+    {
+        int yearFrom;
+        int yearTo;
+    };
+    struct TXMLScenarioType
+    {
+        QString type;
+        int yearFrom;
+        int yearTo;
+    };
+    struct TXMLScenarioValuesList
+    {
+        QString type;
+        QString attribute;
+        QStringList value;
+    };
+
+
     struct TXMLPoint
     {
         QString name;
@@ -48,13 +87,34 @@
         QString anomalySeason;
     };
 
-    //TODO class XMLScenarioAnomaly
+    class XMLScenarioAnomaly
+    {
+    public:
+        XMLScenarioAnomaly();
+
+        void initialize();
+        void printInfo();
+
+
+        TXMLScenarioFile file;
+        //TXMLScenarioType type;
+        TXMLScenarioPoint point;
+        TXMLScenarioModels models;
+        TXMLScenarioClimateField climatePeriod;
+        std::vector<std::vector<TXMLScenarioValuesList>> seasonalScenarios;
+        int modelNumber;
+        QStringList modelName;
+        QStringList modelMember;
+        int repetitions;
+        int anomalyYear;
+        QString anomalySeason[4];
+    };
 
     bool parseXMLFile(const QString &xmlFileName, QDomDocument &xmlDoc);
 
     bool parseXMLSeasonal(const QString &xmlFileName, XMLSeasonalAnomaly &XMLAnomaly);
 
-    bool parseXMLScenario(const QString &xmlFileName, XMLSeasonalAnomaly &XMLAnomaly);
+    bool parseXMLScenario(const QString &xmlFileName, XMLScenarioAnomaly &XMLAnomaly);
 
 
 #endif // PARSERXML_H
