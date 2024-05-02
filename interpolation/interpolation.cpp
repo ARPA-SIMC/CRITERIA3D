@@ -42,6 +42,9 @@
 
 #include <functional>
 
+#include <fstream>
+#include <iostream>
+
 
 
 using namespace std;
@@ -1017,7 +1020,7 @@ void localSelection(vector <Crit3DInterpolationDataPoint> &inputPoints, vector <
                     float x, float y, Crit3DInterpolationSettings& mySettings)
 {
     // search more stations to assure min points with all valid proxies
-    float ratioMinPoints = float(1.2);
+    float ratioMinPoints = float(1.4);
     unsigned minPoints = unsigned(mySettings.getMinPointsLocalDetrending() * ratioMinPoints);
     if (inputPoints.size() <= minPoints)
     {
@@ -1202,8 +1205,19 @@ float retrend(meteoVariable myVar, vector<double> myProxyValues, Crit3DInterpola
         {
             std::vector<std::function<double(double, std::vector<double>&)>> myFunc = mySettings->getFittingFunction();
             std::vector <std::vector <double>> fittingParameters = mySettings->getFittingParameters();
+
             if (myFunc.size() > 0 && fittingParameters.size() > 0)
                 retrendValue = float(functionSum(myFunc, activeProxyValues, fittingParameters));
+
+            for (int pos=0; pos < int(mySettings->getProxyNr()); pos++) //can be skipped if altitude is always first proxy
+            {
+                if (getProxyPragaName(mySettings->getProxy(pos)->getName()) == proxyHeight)
+                {
+                    if (!mySettings->getProxy(pos)->getIsSignificant())
+                        retrendValue = 0.;
+                    break;
+                }
+            }
         }
     }
     else
@@ -1354,6 +1368,7 @@ bool setAllFittingParameters(Crit3DProxyCombination myCombination, Crit3DInterpo
                      std::string &errorStr)
 {
     const double RATIO_DELTA = 1000;
+    bool isPreviousParam = !paramFirstGuess.empty();
 
     for (unsigned i=0; i < myCombination.getProxySize(); i++)
         if (mySettings->getProxy(i)->getIsSignificant())
@@ -1391,7 +1406,8 @@ bool setAllFittingParameters(Crit3DProxyCombination myCombination, Crit3DInterpo
             paramMin.push_back(proxyParamMin);
             paramMax.push_back(proxyParamMax);
             paramDelta.push_back(proxyParamDelta);
-            paramFirstGuess.push_back(proxyParamFirstGuess);
+            if (!isPreviousParam)
+                paramFirstGuess.push_back(proxyParamFirstGuess);
         }
 
     return myFunc.size() > 0;
@@ -1429,6 +1445,7 @@ std::vector <double> getfittingParameters(Crit3DProxyCombination myCombination, 
 bool multipleDetrending(std::vector <Crit3DInterpolationDataPoint> &myPoints,
                         Crit3DInterpolationSettings* mySettings, meteoVariable myVar, std::string &errorStr)
 {
+    std::vector <std::vector<double>> parameters = mySettings->getFittingParameters();
     mySettings->clearFitting();
 
     if (! getUseDetrendingVar(myVar)) return true;
@@ -1508,7 +1525,11 @@ bool multipleDetrending(std::vector <Crit3DInterpolationDataPoint> &myPoints,
             validNr++;
         }
         else
+        {
             mySettings->getProxy(pos)->setIsSignificant(false);
+            if (getProxyPragaName(mySettings->getProxy(pos)->getName()) == proxyHeight)
+                return true;
+        }
     }
 
     if (validNr == 0) return true;
@@ -1545,7 +1566,7 @@ bool multipleDetrending(std::vector <Crit3DInterpolationDataPoint> &myPoints,
     std::vector <std::vector<double>> parametersMin;
     std::vector <std::vector<double>> parametersMax;
     std::vector <std::vector<double>> parametersDelta;
-    std::vector <std::vector<double>> parameters;
+    //std::vector <std::vector<double>> parameters;
     std::vector<std::function<double(double, std::vector<double>&)>> myFunc;
 
     if (! setAllFittingParameters(myCombination, mySettings, myFunc, parametersMin, parametersMax,
@@ -1556,7 +1577,7 @@ bool multipleDetrending(std::vector <Crit3DInterpolationDataPoint> &myPoints,
 
     // multiple non linear fitting
     interpolation::bestFittingMarquardt_nDimension(&functionSum, myFunc, 500, 4, parametersMin, parametersMax, parameters, parametersDelta,
-                                                   90, 0.005, 0.002, predictors, predictands, weights);
+                                                   80, 0.005, 0.002, predictors, predictands, weights);
 
     mySettings->setFittingFunction(myFunc);
     mySettings->setFittingParameters(parameters);

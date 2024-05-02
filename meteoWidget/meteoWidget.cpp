@@ -142,6 +142,9 @@ Crit3DMeteoWidget::Crit3DMeteoWidget(bool isGrid_, QString projectPath, Crit3DMe
             currentFreq = hourly;
         }
         MapCSVDefault.insert(key,items);
+        zeroLine = new QLineSeries();
+        zeroLine->setColor(Qt::gray);
+        zeroLine->setName("zero");
         if (items[0] == "line")
         {
             auto search = MapDailyMeteoVar.find(key.toStdString());
@@ -656,6 +659,10 @@ void Crit3DMeteoWidget::drawEnsemble()
 
 void Crit3DMeteoWidget::resetValues()
 {
+    if (chart->series().contains(zeroLine))
+    {
+        chart->removeSeries(zeroLine);
+    }
     int nMeteoPoints = meteoPoints.size();
     // clear prev series values
     if (!lineSeries.isEmpty())
@@ -1327,6 +1334,19 @@ void Crit3DMeteoWidget::drawDailyVar()
         axisY->setVisible(false);
     }
 
+    // add zeroLine
+    if (axisY->min() <= 0 && axisY->max() >= 0)
+    {
+        zeroLine->clear();
+        for (int day = 0; day < nDays; day++)
+        {
+            zeroLine->append(day, 0);
+        }
+        chart->addSeries(zeroLine);
+        zeroLine->attachAxis(axisX);
+        zeroLine->attachAxis(axisY);
+    }
+
     // add minimimum values required
     if (nDays==1)
     {
@@ -1372,10 +1392,19 @@ void Crit3DMeteoWidget::drawDailyVar()
 
     foreach(QLegendMarker* marker, chart->legend()->markers())
     {
-        marker->setVisible(true);
-        marker->series()->setVisible(true);
-        QObject::connect(marker, &QLegendMarker::clicked, this, &Crit3DMeteoWidget::handleMarkerClicked);
+        if (marker->series()->name() != "zero")
+        {
+            marker->setVisible(true);
+            marker->series()->setVisible(true);
+            QObject::connect(marker, &QLegendMarker::clicked, this, &Crit3DMeteoWidget::handleMarkerClicked);
+        }
+        else
+        {
+            marker->setVisible(false);
+            marker->series()->setVisible(true);
+        }
     }
+
 
     formInfo.close();
 }
@@ -1407,8 +1436,8 @@ void Crit3DMeteoWidget::drawHourlyVar()
     double maxLine = NODATA;
     double minLine = -NODATA;
 
-    int nrDays = firstDate->date().daysTo(lastDate->date())+1;
-    int nrValues = nrDays*24;
+    int nDays = firstDate->date().daysTo(lastDate->date())+1;
+    int nrValues = nDays*24;
 
     // virtual x axis
     int nrIntervals;
@@ -1429,7 +1458,7 @@ void Crit3DMeteoWidget::drawHourlyVar()
     Crit3DDate myCrit3DDate;
     QDateTime myDateTime;
 
-    for (int d = 0; d < nrDays; d++)
+    for (int d = 0; d < nDays; d++)
     {
         myCrit3DDate = getCrit3DDate(myDate);
 
@@ -1586,6 +1615,23 @@ void Crit3DMeteoWidget::drawHourlyVar()
         axisY->setVisible(false);
     }
 
+    // add zeroLine
+    if (axisY->min() <= 0 && axisY->max() >= 0)
+    {
+        zeroLine->clear();
+        for (int d = 0; d < nDays; d++)
+        {
+            for (int h = 0; h < 24; h++)
+            {
+                int index = d*24+h;
+                zeroLine->append(index, 0);
+            }
+        }
+        chart->addSeries(zeroLine);
+        zeroLine->attachAxis(axisX);
+        zeroLine->attachAxis(axisY);
+    }
+
     axisX->setCategories(categories);
     axisXvirtual->setCategories(categoriesVirtual);
     axisX->setGridLineVisible(false);
@@ -1595,13 +1641,20 @@ void Crit3DMeteoWidget::drawHourlyVar()
 
     foreach(QLegendMarker* marker, chart->legend()->markers())
     {
-        marker->setVisible(true);
-        marker->series()->setVisible(true);
-        QObject::connect(marker, &QLegendMarker::clicked, this, &Crit3DMeteoWidget::handleMarkerClicked);
+        if (marker->series()->name() != "zero")
+        {
+            marker->setVisible(true);
+            marker->series()->setVisible(true);
+            QObject::connect(marker, &QLegendMarker::clicked, this, &Crit3DMeteoWidget::handleMarkerClicked);
+        }
+        else
+        {
+            marker->setVisible(false);
+            marker->series()->setVisible(true);
+        }
     }
 
     formInfo.close();
-
 }
 
 void Crit3DMeteoWidget::drawMonthlyVar()
@@ -1818,6 +1871,19 @@ void Crit3DMeteoWidget::drawMonthlyVar()
         axisY->setVisible(false);
     }
 
+    // add zeroLine
+    if (axisY->min() <= 0 && axisY->max() >= 0)
+    {
+        zeroLine->clear();
+        for (int month = 0; month < numberOfMonths; month++)
+        {
+            zeroLine->append(month, 0);
+        }
+        chart->addSeries(zeroLine);
+        zeroLine->attachAxis(axisX);
+        zeroLine->attachAxis(axisY);
+    }
+
     // add minimimum values required
     if (numberOfMonths==1)
     {
@@ -1863,9 +1929,17 @@ void Crit3DMeteoWidget::drawMonthlyVar()
 
     foreach(QLegendMarker* marker, chart->legend()->markers())
     {
-        marker->setVisible(true);
-        marker->series()->setVisible(true);
-        QObject::connect(marker, &QLegendMarker::clicked, this, &Crit3DMeteoWidget::handleMarkerClicked);
+        if (marker->series()->name() != "zero")
+        {
+            marker->setVisible(true);
+            marker->series()->setVisible(true);
+            QObject::connect(marker, &QLegendMarker::clicked, this, &Crit3DMeteoWidget::handleMarkerClicked);
+        }
+        else
+        {
+            marker->setVisible(false);
+            marker->series()->setVisible(true);
+        }
     }
 
     formInfo.close();

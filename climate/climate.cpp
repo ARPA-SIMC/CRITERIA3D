@@ -2813,7 +2813,7 @@ int getNumberClimateIndexFromElab(QString elab)
     case annualPeriod: case genericPeriod:
             return 1;
     case decadalPeriod:
-            return 10;
+            return 36;
     case monthlyPeriod:
             return 12;
     case seasonalPeriod:
