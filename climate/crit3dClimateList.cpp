@@ -407,10 +407,9 @@ void Crit3DClimateList::parserElaboration(QString &errorStr)
 
                     while ( words[pos].right(2) != "||" )
                     {
-                        pos = pos + 1;
                         param1ClimateField = param1ClimateField + "_" + words[pos];
+                        pos = pos + 1;
                     }
-                    pos = pos + 1;
                     param1ClimateField = param1ClimateField + "_" + words[pos].left(words[pos].size() - 2);
 
                     _listParam1.push_back(NODATA);
