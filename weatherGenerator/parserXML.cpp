@@ -332,9 +332,10 @@ bool parseXMLScenario(const QString &xmlFileName, XMLScenarioAnomaly &XMLAnomaly
     QString models;
     QString members;
     QString values;
-
+    int counter = 0;
     while(! ancestor.isNull())
     {
+
         if (ancestor.toElement().tagName().toUpper() == "FILE")
         {
             child = ancestor.firstChild();
@@ -457,83 +458,60 @@ bool parseXMLScenario(const QString &xmlFileName, XMLScenarioAnomaly &XMLAnomaly
                 {XMLAnomaly.scenario.yearTo = child.toElement().text().toInt(); nrTokens++;}
                 child = child.nextSibling();
             }
-
         }
-        /*
-        else if (ancestor.toElement().tagName().toUpper() == "MODELS")
+        else if (ancestor.toElement().tagName().toUpper() == "PERIOD")
         {
+            int counter2= 0;
             child = ancestor.firstChild();
             while( !child.isNull())
             {
                 myTag = child.toElement().tagName().toUpper();
-                if (myTag == "NUMBER")
-                {XMLAnomaly.modelNumber = child.toElement().text().toInt(); nrTokens++;}
-                else if (myTag == "NAME")
+                if (myTag == "TIME")
                 {
-                    models = child.toElement().text();
-                    XMLAnomaly.modelName = models.split(",");
+                    XMLAnomaly.period[counter].type = child.toElement().text();
+                    // remove white spaces
+                    XMLAnomaly.period[counter].type = XMLAnomaly.period[counter].type.simplified();
                     nrTokens++;
                 }
-                else if (myTag == "MEMBERS")
-                {
-                    members = child.toElement().text();
-                    XMLAnomaly.modelMember = members.split(",");
-                    nrTokens++;
-                }
-                else if (myTag == "REPETITIONS")
-                {XMLAnomaly.repetitions = child.toElement().text().toInt(); nrTokens++;}
-                else if (myTag == "YEAR")
-                {XMLAnomaly.anomalyYear = child.toElement().text().toInt(); nrTokens++;}
-                else if (myTag == "SEASON")
-                {XMLAnomaly.anomalySeason = child.toElement().text(); nrTokens++;}
-                child = child.nextSibling();
-            }
 
-        }
-        else if (ancestor.toElement().tagName().toUpper() == "FORECAST")
-        {
-            child = ancestor.firstChild();
-            while( !child.isNull())
-            {
-                myTag = child.toElement().tagName().toUpper();
                 if (myTag == "VAR")
                 {
                     secondChild = child.firstChild();
-                    XMLAnomaly.forecast.push_back(valuelist);
+                    counter2 = 0;
+                    //XMLAnomaly.forecast.push_back(valuelist);
                     while( !secondChild.isNull())
                     {
                         mySecondTag = secondChild.toElement().tagName().toUpper();
                         if (mySecondTag == "TYPE")
                         {
-                            XMLAnomaly.forecast[XMLAnomaly.forecast.size()-1].type = secondChild.toElement().text();
+                            XMLAnomaly.period[counter].seasonalScenarios[counter2].type = secondChild.toElement().text();
                             // remove white spaces
-                            XMLAnomaly.forecast[XMLAnomaly.forecast.size()-1].type = XMLAnomaly.forecast[XMLAnomaly.forecast.size()-1].type.simplified();
+                            XMLAnomaly.period[counter].seasonalScenarios[counter2].type = XMLAnomaly.period[counter].seasonalScenarios[counter2].type.simplified();
                             nrTokens++;
                         }
-
                         if (mySecondTag == "ATTRIBUTE")
                         {
-                            XMLAnomaly.forecast[XMLAnomaly.forecast.size()-1].attribute = secondChild.toElement().text();
+                            XMLAnomaly.period[counter].seasonalScenarios[counter2].attribute = secondChild.toElement().text();
                             // remove white spaces
-                            XMLAnomaly.forecast[XMLAnomaly.forecast.size()-1].attribute = XMLAnomaly.forecast[XMLAnomaly.forecast.size()-1].attribute.simplified();
+                            XMLAnomaly.period[counter].seasonalScenarios[counter2].attribute = XMLAnomaly.period[counter].seasonalScenarios[counter2].attribute.simplified();
                             nrTokens++;
                         }
-
                         if (mySecondTag == "VALUE")
                         {
                             values = secondChild.toElement().text();
-                            XMLAnomaly.forecast[XMLAnomaly.forecast.size()-1].value = values.split(",");
+                            XMLAnomaly.period[counter].seasonalScenarios[counter2].value = values.split(",");
                             nrTokens++;
                         }
 
                         secondChild = secondChild.nextSibling();
+                        counter2++;
                     }
                 }
-
                 child = child.nextSibling();
             }
-        }*/
 
+            counter++;
+        }
         ancestor = ancestor.nextSibling();
     }
     xmlDoc.clear();

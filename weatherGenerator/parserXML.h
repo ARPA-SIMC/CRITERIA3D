@@ -43,7 +43,11 @@
         QString attribute;
         QStringList value;
     };
-
+    struct TXMLScenarioPeriod
+    {
+        QString type;
+        TXMLScenarioValuesList seasonalScenarios[4];
+    };
 
     struct TXMLPoint
     {
@@ -102,13 +106,13 @@
         TXMLScenarioModels models;
         TXMLScenarioClimateField climatePeriod;
         TXMLScenarioType scenario;
-        TXMLScenarioValuesList seasonalScenarios[4]; // four season
+        TXMLScenarioPeriod period[4]; // four season
         //int modelNumber;
         //QStringList modelName;
         //QStringList modelMember;
         int repetitions;
         int anomalyYear;
-        QString anomalySeason[4];
+        //QString anomalySeason[4];
     };
 
     bool parseXMLFile(const QString &xmlFileName, QDomDocument &xmlDoc);
