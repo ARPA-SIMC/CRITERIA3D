@@ -97,6 +97,35 @@ double lapseRatePiecewise_three(double x, std::vector <double>& par)
     }
 }
 
+double lapseRatePiecewiseForInterpolation(double x, std::vector <double>& par)
+{
+    // the piecewise line is parameterized as follows
+    // the line passes through A(par[0];par[1])and B(par[0]+par[2];par[3]). par[4] is the slope of the 2 externals pieces
+    // "y = mx + q" piecewise function;
+    double xb;
+    par[2] = MAXVALUE(10, par[2]);
+    // par[2] means the delta between the two quotes. It must be positive.
+    xb = par[0]+par[2];
+    if (x < par[0])
+    {
+        //m = par[4];;
+        //q = par[1]-m*par[0];
+        return par[4]*x + par[1]-par[4]*par[0];
+    }
+    else if (x>xb)
+    {
+        //m = par[4];
+        //q = par[3]-m*xb;
+        return par[4]*x + par[3]-par[4]*xb;
+    }
+    else
+    {
+        //m = (par[3]-par[1])/par[2];
+        //q = par[1]-m*par[0];
+        return ((par[3]-par[1])/par[2])*x+ par[1]-(par[3]-par[1])/par[2]*par[0];
+    }
+}
+
 double lapseRatePiecewise_two(double x, std::vector <double>& par)
 {
     // the piecewise line is parameterized as follows
@@ -1097,6 +1126,23 @@ namespace interpolation
             fittingMarquardt_nDimension_noSquares(func,myFunc,parametersMin, parametersMax,
                                         parameters, parametersDelta,correspondenceTag, maxIterationsNr,
                                         myEpsilon, x, y, weights);
+
+            //SOLO PER ALTEZZA
+            if (parameters[0][3] < parameters[0][1])
+            {
+                for (i=0; i<nrPredictors; i++)
+                {
+                    for (j=0; j<nrParameters[i]; j++)
+                    {
+                        do {
+                            truncNormal = normal_dis(gen);
+                        } while(truncNormal <= 0.0 || truncNormal >= 1.0);
+                        parameters[i][j] = parametersMin[i][j] + (truncNormal)*(parametersMax[i][j]-parametersMin[i][j]);
+                    }
+                }
+                continue;
+            }
+
             for (i=0;i<nrData;i++)
             {
                 ySim[i]= func(myFunc,x[i], parameters);
@@ -1140,11 +1186,9 @@ namespace interpolation
                         truncNormal = normal_dis(gen);
                     } while(truncNormal <= 0.0 || truncNormal >= 1.0);
                     parameters[i][j] = parametersMin[i][j] + (truncNormal)*(parametersMax[i][j]-parametersMin[i][j]);
-
-                    //parameters[i][j] += (parametersMax[i][j]-parametersMin[i][j])/200;
                 }
             }
-        } while( (counter < nrTrials) && (R2 < (1 - EPSILON)) && (fabs(R2Previous[0]-R2Previous[nrMinima-1]) > deltaR2) );
+        } while( (counter < nrTrials) && (R2 < 0.8) && (fabs(R2Previous[0]-R2Previous[nrMinima-1]) > deltaR2) );
 
         for (i=0;i<nrPredictors;i++)
         {

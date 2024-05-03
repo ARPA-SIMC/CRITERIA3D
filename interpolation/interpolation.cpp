@@ -1374,7 +1374,7 @@ bool setAllFittingParameters(Crit3DProxyCombination myCombination, Crit3DInterpo
         if (mySettings->getProxy(i)->getIsSignificant())
         {
             if (getProxyPragaName(mySettings->getProxy(i)->getName()) == proxyHeight)
-                myFunc.push_back(lapseRatePiecewise_two);
+                myFunc.push_back(lapseRatePiecewiseForInterpolation);
             else
                 myFunc.push_back(functionLinear);
 
@@ -1576,7 +1576,7 @@ bool multipleDetrending(std::vector <Crit3DInterpolationDataPoint> &myPoints,
     }
 
     // multiple non linear fitting
-    interpolation::bestFittingMarquardt_nDimension(&functionSum, myFunc, 500, 4, parametersMin, parametersMax, parameters, parametersDelta,
+    interpolation::bestFittingMarquardt_nDimension(&functionSum, myFunc, 100, 4, parametersMin, parametersMax, parameters, parametersDelta,
                                                    80, 0.005, 0.002, predictors, predictands, weights);
 
     mySettings->setFittingFunction(myFunc);

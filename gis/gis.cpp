@@ -287,6 +287,8 @@ namespace gis
 
     bool Crit3DRasterGrid::initializeParameters(const Crit3DRasterHeader& initHeader)
     {
+        if (!parametersCell.empty())
+            parametersCell.clear();
         parametersCell.resize(initHeader.nrRows*initHeader.nrCols);
         for (int i = 0; i < parametersCell.size(); i++)
         {
@@ -496,7 +498,8 @@ namespace gis
 
         int index = row * header->nrCols + col;
 
-        parameters = parametersCell[index].fittingParameters;
+        if (index < parametersCell.size())
+            parameters = parametersCell[index].fittingParameters;
 
         return parameters;
 

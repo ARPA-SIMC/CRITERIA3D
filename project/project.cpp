@@ -684,7 +684,7 @@ bool Project::loadParameters(QString parametersFileName)
                 unsigned int nrParameters;
 
                 if (getProxyPragaName(name_.toStdString()) == proxyHeight)
-                    nrParameters = 4;
+                    nrParameters = 5;
                 else
                     nrParameters = 1;
 
@@ -2423,7 +2423,6 @@ bool Project::interpolateDemRadiation(const Crit3DTime& myTime, gis::Crit3DRaste
         logError("Error in function interpolateDemRadiation: not enough transmissivity data.");
         return false;
     }
-
     if (! preInterpolation(interpolationPoints, &interpolationSettings, meteoSettings, &climateParameters,
                             meteoPoints, nrMeteoPoints, atmTransmissivity, myTime, errorStdStr))
     {
@@ -2582,8 +2581,6 @@ bool Project::interpolationGrid(meteoVariable myVar, const Crit3DTime& myTime)
     }
 
     Crit3DProxyCombination myCombination;
-    if (interpolationSettings.getUseLocalDetrending())
-        meteoGridDbHandler->meteoGrid()->dataMeteoGrid.initializeParametersLatLonHeader(meteoGridDbHandler->meteoGrid()->gridStructure().header());
 
     if (! interpolationSettings.getUseLocalDetrending())
     {
@@ -2597,6 +2594,7 @@ bool Project::interpolationGrid(meteoVariable myVar, const Crit3DTime& myTime)
     }
     else
     {
+        meteoGridDbHandler->meteoGrid()->dataMeteoGrid.initializeParametersLatLonHeader(meteoGridDbHandler->meteoGrid()->gridStructure().header());
         myCombination = interpolationSettings.getSelectedCombination();
         interpolationSettings.setCurrentCombination(myCombination);
     }
@@ -2654,7 +2652,6 @@ bool Project::interpolationGrid(meteoVariable myVar, const Crit3DTime& myTime)
                         std::vector <Crit3DInterpolationDataPoint> subsetInterpolationPoints;
                         localSelection(interpolationPoints, subsetInterpolationPoints, myX, myY, interpolationSettings);
                         interpolationSettings.setFittingParameters(meteoGridDbHandler->meteoGrid()->dataMeteoGrid.prepareParameters(row, col));
-
                         if (! preInterpolation(subsetInterpolationPoints, &interpolationSettings, meteoSettings,
                                               &climateParameters, meteoPoints, nrMeteoPoints, myVar, myTime, errorStdStr))
                         {
@@ -3593,9 +3590,25 @@ void Project::showProxyGraph()
     return;
 }
 
-void Project::showLocalProxyGraph(gis::Crit3DGisSettings gisSettings, double x, double y)
+void Project::showLocalProxyGraph(gis::Crit3DGeoPoint myPoint, gis::Crit3DRasterGrid myDataRaster)
 {
-    localProxyWidget = new Crit3DLocalProxyWidget(x, y, gisSettings, &interpolationSettings, meteoPoints, nrMeteoPoints, currentFrequency, currentDate, currentHour, quality, &qualityInterpolationSettings, meteoSettings, &climateParameters, checkSpatialQuality);
+    gis::Crit3DUtmPoint myUtm;
+    gis::getUtmFromLatLon(this->gisSettings.utmZone, myPoint, &myUtm);
+
+    int row, col;
+    std::vector<std::vector<double>> parameters;
+    if (myDataRaster.isLoaded && !myDataRaster.parametersCell.empty())
+    {
+        //gis::getRowColFromXY(*(myDataRaster.header), myUtm, &row, &col);
+        //parameters = myDataRaster.getParametersFromRowCol(row, col);
+    }
+    if (this->meteoGridLoaded && !this->meteoGridDbHandler->meteoGrid()->dataMeteoGrid.parametersCell.empty())
+    {
+        gis::getGridRowColFromXY(meteoGridDbHandler->meteoGrid()->gridStructure().header(), myPoint.longitude, myPoint.latitude, &row, &col);
+        parameters = meteoGridDbHandler->meteoGrid()->dataMeteoGrid.getParametersFromRowCol(row, col);
+    }
+
+    localProxyWidget = new Crit3DLocalProxyWidget(myUtm.x, myUtm.y, parameters, this->gisSettings, &interpolationSettings, meteoPoints, nrMeteoPoints, currentFrequency, currentDate, currentHour, quality, &qualityInterpolationSettings, meteoSettings, &climateParameters, checkSpatialQuality);
     return;
 }
 
@@ -4531,8 +4544,20 @@ bool Project::setTempParametersRange(meteoVariable myVar)
             std::vector <double> fittingParametersRange = myProxy->getFittingParametersRange();
             if (!fittingParametersRange.empty())
             {
-                fittingParametersRange[1] = min - 2;
-                fittingParametersRange[5] = max + 2;
+                if (fittingParametersRange.size() == 8)
+                {
+                    //piecewise_two
+                    fittingParametersRange[1] = min - 2;
+                    fittingParametersRange[5] = max + 2;
+                }
+                else if (fittingParametersRange.size() == 10)
+                {
+                    //piecewise_three
+                    fittingParametersRange[1] = min - 2;
+                    fittingParametersRange[3] = min - 2;
+                    fittingParametersRange[6] = max + 2;
+                    fittingParametersRange[8] = max + 2;
+                }
                 myProxy->setFittingParametersRange(fittingParametersRange);
             }
         }
