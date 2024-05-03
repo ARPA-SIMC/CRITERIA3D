@@ -24,7 +24,7 @@
     struct TXMLScenarioModels
     {
         QString type;
-        QString value;
+        QStringList value;
     };
     struct TXMLScenarioClimateField
     {
@@ -101,10 +101,11 @@
         TXMLScenarioPoint point;
         TXMLScenarioModels models;
         TXMLScenarioClimateField climatePeriod;
-        std::vector<std::vector<TXMLScenarioValuesList>> seasonalScenarios;
-        int modelNumber;
-        QStringList modelName;
-        QStringList modelMember;
+        TXMLScenarioType scenario;
+        TXMLScenarioValuesList seasonalScenarios[4]; // four season
+        //int modelNumber;
+        //QStringList modelName;
+        //QStringList modelMember;
         int repetitions;
         int anomalyYear;
         QString anomalySeason[4];

@@ -412,7 +412,23 @@ bool parseXMLScenario(const QString &xmlFileName, XMLScenarioAnomaly &XMLAnomaly
             }
 
         }
-        /*
+        else if (ancestor.toElement().tagName().toUpper() == "MODELS")
+        {
+            child = ancestor.firstChild();
+            while( !child.isNull())
+            {
+                myTag = child.toElement().tagName().toUpper();
+                if (myTag == "TYPE")
+                {XMLAnomaly.models.type = child.toElement().text(); nrTokens++;}
+                else if (myTag == "VALUE")
+                {
+                    models = child.toElement().text();
+                    XMLAnomaly.models.value = models.split(",");
+                    nrTokens++;
+                }
+                child = child.nextSibling();
+            }
+        }
         else if (ancestor.toElement().tagName().toUpper() == "CLIMATE")
         {
             child = ancestor.firstChild();
@@ -427,6 +443,23 @@ bool parseXMLScenario(const QString &xmlFileName, XMLScenarioAnomaly &XMLAnomaly
             }
 
         }
+        else if (ancestor.toElement().tagName().toUpper() == "SCENARIO")
+        {
+            child = ancestor.firstChild();
+            while( !child.isNull())
+            {
+                myTag = child.toElement().tagName().toUpper();
+                if (myTag == "TYPE")
+                {XMLAnomaly.scenario.type = child.toElement().text(); nrTokens++;};
+                if (myTag == "FROM")
+                {XMLAnomaly.scenario.yearFrom = child.toElement().text().toInt(); nrTokens++;}
+                if (myTag == "TO")
+                {XMLAnomaly.scenario.yearTo = child.toElement().text().toInt(); nrTokens++;}
+                child = child.nextSibling();
+            }
+
+        }
+        /*
         else if (ancestor.toElement().tagName().toUpper() == "MODELS")
         {
             child = ancestor.firstChild();
