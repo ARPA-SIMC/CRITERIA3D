@@ -655,11 +655,15 @@ bool Project::loadParameters(QString parametersFileName)
             {
                 quality->setRelHumTolerance(parameters->value("relhum_tolerance").toFloat());
             }
+            if (parameters->contains("water_table_maximum_depth") && !parameters->value("water_table_maximum_depth").toString().isEmpty())
+            {
+                quality->setWaterTableMaximumDepth(parameters->value("water_table_maximum_depth").toFloat());
+            }
 
             parameters->endGroup();
         }
 
-        //proxy variables (for interpolation)
+        // proxy variables (for interpolation)
         if (group.startsWith("proxy_"))
         {
             QString name_;
@@ -692,7 +696,7 @@ bool Project::loadParameters(QString parametersFileName)
                 myList = parameters->value("fitting_parameters").toStringList();
                 if (myList.size() != nrParameters*2 && myList.size() != (nrParameters-1)*2)
                 {
-                    errorString = "Wrong nr. of fitting parameters for proxy: " + name_;
+                    errorString = "Wrong number of fitting parameters for proxy: " + name_;
                     return  false;
                 }
 
@@ -3000,6 +3004,7 @@ void Project::saveGenericParameters()
         parameters->setValue("delta_temperature_suspect", QString::number(quality->getDeltaTSuspect()));
         parameters->setValue("delta_temperature_wrong", QString::number(quality->getDeltaTWrong()));
         parameters->setValue("relhum_tolerance", QString::number(quality->getRelHumTolerance()));
+        parameters->setValue("water_table_maximum_depth", QString::number(quality->getWaterTableMaximumDepth()));
     parameters->endGroup();
 
     parameters->beginGroup("climate");
@@ -3118,7 +3123,7 @@ bool Project::loadProject()
     if (! loadParameters(parametersFileName))
     {
         errorType = ERROR_SETTINGS;
-        errorString = "load parameters failed:\n" + errorString;
+        errorString = "Load parameters failed.\n" + errorString;
         logError();
         return false;
     }

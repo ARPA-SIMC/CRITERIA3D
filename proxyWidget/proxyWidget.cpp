@@ -87,23 +87,28 @@ Crit3DProxyWidget::Crit3DProxyWidget(Crit3DInterpolationSettings* interpolationS
         climatologicalLR.setVisible(true);
     }
 
-    std::map<meteoVariable, std::string>::const_iterator it;
+    std::map<meteoVariable, std::string>::const_iterator iterator;
     if (currentFrequency == daily)
     {
-        for(it = MapDailyMeteoVarToString.begin(); it != MapDailyMeteoVarToString.end(); ++it)
+        for(iterator = MapDailyMeteoVarToString.begin(); iterator != MapDailyMeteoVarToString.end(); ++iterator)
         {
-            comboVariable.addItem(QString::fromStdString(it->second));
+            comboVariable.addItem(QString::fromStdString(iterator->second));
         }
         myVar = getKeyMeteoVarMeteoMap(MapDailyMeteoVarToString, comboVariable.currentText().toStdString());
     }
     else if (currentFrequency == hourly)
     {
-        for(it = MapHourlyMeteoVarToString.begin(); it != MapHourlyMeteoVarToString.end(); ++it)
+        for(iterator = MapHourlyMeteoVarToString.begin(); iterator != MapHourlyMeteoVarToString.end(); ++iterator)
         {
-            comboVariable.addItem(QString::fromStdString(it->second));
+            comboVariable.addItem(QString::fromStdString(iterator->second));
         }
         myVar = getKeyMeteoVarMeteoMap(MapHourlyMeteoVarToString, comboVariable.currentText().toStdString());
     }
+    else
+    {
+        QMessageBox::information(nullptr, "Warning!", "Select data frequency (daily or hourly) before.");
+    }
+
     //comboVariable.setSizeAdjustPolicy(QComboBox::AdjustToContents);
     comboVariable.setMinimumWidth(100);
     

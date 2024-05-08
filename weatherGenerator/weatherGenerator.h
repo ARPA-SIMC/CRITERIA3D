@@ -16,7 +16,7 @@
         std::vector<float> inputTMin;
         std::vector<float> inputTMax;
         std::vector<float> inputPrecip;
-        int dataLenght;
+        int dataLength;
     };
 
     struct Tmonthlyweather
@@ -116,7 +116,7 @@
     bool computeSeasonalPredictions(TinputObsData *lastYearDailyObsData, TweatherGenClimate& wgClimate,
                                     int predictionYear, int firstYear, int nrRepetitions,
                                     int wgDoy1, int wgDoy2, float minPrec, bool isLastMember,
-                                    std::vector<ToutputDailyMeteo> &outputDailyData, int *outputDataLenght);
+                                    std::vector<ToutputDailyMeteo> &outputDailyData, int *outputDataLength);
 
     bool computeClimate(TweatherGenClimate &wgClimate, int firstYear, int nrRepetitions,
                         float rainfallThreshold, std::vector<ToutputDailyMeteo> &outputDailyData);

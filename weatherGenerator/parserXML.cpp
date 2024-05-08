@@ -327,7 +327,7 @@ bool parseXMLScenario(const QString &xmlFileName, XMLScenarioAnomaly &XMLAnomaly
     QString myTag;
     QString mySecondTag;
     int nrTokens = 0;
-    const int nrRequiredToken = 150; // to be checked
+    const int nrRequiredToken = 67; // to be checked
 
     QString models;
     QString members;
