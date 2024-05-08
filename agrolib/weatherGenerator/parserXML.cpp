@@ -52,6 +52,56 @@ void XMLSeasonalAnomaly::printInfo()
    qDebug() << "";
 }
 
+XMLScenarioAnomaly::XMLScenarioAnomaly()
+{
+    this->initialize(); // chiedere a Fausto perché non fare initialize direttamente qui
+}
+
+
+void XMLScenarioAnomaly::initialize()
+{
+    /*
+    point.name = "";
+    point.code = "";
+    point.latitude = NODATA;
+    point.longitude = NODATA;
+    point.info = "";
+
+    forecast.clear();
+
+    climatePeriod.yearFrom = NODATA;
+    climatePeriod.yearTo = NODATA;
+
+    modelNumber = NODATA;
+
+    modelName.clear();
+    modelMember.clear();
+
+    repetitions = NODATA;
+    anomalyYear = NODATA;
+    anomalySeason = "";
+    */
+}
+
+
+void XMLScenarioAnomaly::printInfo()
+{
+    /*
+    qDebug() << "point.name = " << point.name;
+    qDebug() << "point.longitude = " << point.longitude;
+    qDebug() << "point.latitude = " << point.latitude;
+    qDebug() << "climate first year = " << climatePeriod.yearFrom;
+    qDebug() << "climate last year = " << climatePeriod.yearTo;
+    qDebug() << "number of models = " << modelNumber;
+    qDebug() << "models = " << modelName;
+    qDebug() << "number of members = " << modelMember;
+    qDebug() << "number of repetitions = " << repetitions;
+    qDebug() << "anomaly year = " << anomalyYear;
+    qDebug() << "anomaly season = " << anomalySeason;
+    qDebug() << "";
+    */
+}
+
 
 bool parseXMLFile(const QString &xmlFileName, QDomDocument &xmlDoc)
 {
@@ -123,7 +173,7 @@ bool parseXMLSeasonal(const QString &xmlFileName, XMLSeasonalAnomaly &XMLAnomaly
                 if (myTag == "NAME")
                 {
                     XMLAnomaly.point.name = child.toElement().text();
-                    // remove white spaces
+                    // remove white spaces //
                     XMLAnomaly.point.name = XMLAnomaly.point.name.simplified();
                     nrTokens++;
                 }
@@ -257,3 +307,221 @@ bool parseXMLSeasonal(const QString &xmlFileName, XMLSeasonalAnomaly &XMLAnomaly
     return true;
 }
 
+bool parseXMLScenario(const QString &xmlFileName, XMLScenarioAnomaly &XMLAnomaly)
+{
+    QDomDocument xmlDoc;
+
+    XMLAnomaly.initialize();
+
+    if (! parseXMLFile(xmlFileName, xmlDoc))
+    {
+        qDebug() << "parseXMLSeasonal error";
+        return false;
+    }
+
+    QDomNode child;
+    QDomNode secondChild;
+    TXMLValuesList valuelist;
+
+    QDomNode ancestor = xmlDoc.documentElement().firstChild();
+    QString myTag;
+    QString mySecondTag;
+    int nrTokens = 0;
+    const int nrRequiredToken = 67; // to be checked
+
+    QString models;
+    QString members;
+    QString values;
+    int counter = 0;
+    while(! ancestor.isNull())
+    {
+
+        if (ancestor.toElement().tagName().toUpper() == "FILE")
+        {
+            child = ancestor.firstChild();
+            while(! child.isNull())
+            {
+                myTag = child.toElement().tagName().toUpper();
+                if (myTag == "TYPE")
+                {
+                    XMLAnomaly.file.type = child.toElement().text();
+                    // remove white spaces //
+                    XMLAnomaly.file.type = XMLAnomaly.file.type.simplified();
+                    nrTokens++;
+                }
+                else if (myTag == "ATTRIBUTE")
+                {
+                    XMLAnomaly.file.attribute = child.toElement().text();
+                    // remove white spaces
+                    XMLAnomaly.file.attribute = XMLAnomaly.file.attribute.simplified();
+                    nrTokens++;
+                }
+                else if (myTag == "DELIMETER")
+                {
+                    XMLAnomaly.file.delimeter = child.toElement().text();
+                    // remove white spaces
+                    XMLAnomaly.file.delimeter = XMLAnomaly.file.delimeter.simplified();
+                    nrTokens++;
+                }
+                else if (myTag == "DECIMALSEPARATOR")
+                {
+                    XMLAnomaly.file.decimalSeparator = child.toElement().text();
+                    // remove white spaces
+                    XMLAnomaly.file.decimalSeparator = XMLAnomaly.file.decimalSeparator.simplified();
+                    nrTokens++;
+                }
+                child = child.nextSibling();
+            }
+
+        }
+        else if (ancestor.toElement().tagName().toUpper() == "POINT")
+        {
+            child = ancestor.firstChild();
+            while(! child.isNull())
+            {
+                myTag = child.toElement().tagName().toUpper();
+                if (myTag == "NAME")
+                {
+                    XMLAnomaly.point.name = child.toElement().text();
+                    // remove white spaces //
+                    XMLAnomaly.point.name = XMLAnomaly.point.name.simplified();
+                    nrTokens++;
+                }
+                else if (myTag == "CODE")
+                {
+                    XMLAnomaly.point.code = child.toElement().text();
+                    // remove white spaces
+                    XMLAnomaly.point.code = XMLAnomaly.point.code.simplified();
+                    nrTokens++;
+                }
+                else if ((myTag == "LAT") || (myTag == "LATITUDE"))
+                {
+                    XMLAnomaly.point.latitude = child.toElement().text().toFloat();
+                    nrTokens++;
+                }
+                else if ((myTag == "LON") || (myTag == "LONGITUDE"))
+                {
+                    XMLAnomaly.point.longitude = child.toElement().text().toFloat();
+                    nrTokens++;
+                }
+                else if (myTag == "HEIGHT")
+                {
+                    XMLAnomaly.point.height = child.toElement().text().toFloat();
+                    nrTokens++;
+                }
+                child = child.nextSibling();
+            }
+
+        }
+        else if (ancestor.toElement().tagName().toUpper() == "MODELS")
+        {
+            child = ancestor.firstChild();
+            while( !child.isNull())
+            {
+                myTag = child.toElement().tagName().toUpper();
+                if (myTag == "TYPE")
+                {XMLAnomaly.models.type = child.toElement().text(); nrTokens++;}
+                else if (myTag == "VALUE")
+                {
+                    models = child.toElement().text();
+                    XMLAnomaly.models.value = models.split(",");
+                    nrTokens++;
+                }
+                child = child.nextSibling();
+            }
+        }
+        else if (ancestor.toElement().tagName().toUpper() == "CLIMATE")
+        {
+            child = ancestor.firstChild();
+            while( !child.isNull())
+            {
+                myTag = child.toElement().tagName().toUpper();
+                if (myTag == "FROM")
+                {XMLAnomaly.climatePeriod.yearFrom = child.toElement().text().toInt(); nrTokens++;}
+                if (myTag == "TO")
+                {XMLAnomaly.climatePeriod.yearTo = child.toElement().text().toInt(); nrTokens++;}
+                child = child.nextSibling();
+            }
+
+        }
+        else if (ancestor.toElement().tagName().toUpper() == "SCENARIO")
+        {
+            child = ancestor.firstChild();
+            while( !child.isNull())
+            {
+                myTag = child.toElement().tagName().toUpper();
+                if (myTag == "TYPE")
+                {XMLAnomaly.scenario.type = child.toElement().text(); nrTokens++;};
+                if (myTag == "FROM")
+                {XMLAnomaly.scenario.yearFrom = child.toElement().text().toInt(); nrTokens++;}
+                if (myTag == "TO")
+                {XMLAnomaly.scenario.yearTo = child.toElement().text().toInt(); nrTokens++;}
+                child = child.nextSibling();
+            }
+        }
+        else if (ancestor.toElement().tagName().toUpper() == "PERIOD")
+        {
+            int counter2= 0;
+            child = ancestor.firstChild();
+            while( !child.isNull())
+            {
+                myTag = child.toElement().tagName().toUpper();
+                if (myTag == "TIME")
+                {
+                    XMLAnomaly.period[counter].type = child.toElement().text();
+                    // remove white spaces
+                    XMLAnomaly.period[counter].type = XMLAnomaly.period[counter].type.simplified();
+                    nrTokens++;
+                }
+
+                if (myTag == "VAR")
+                {
+                    secondChild = child.firstChild();
+                    counter2 = 0;
+                    //XMLAnomaly.forecast.push_back(valuelist);
+                    while( !secondChild.isNull())
+                    {
+                        mySecondTag = secondChild.toElement().tagName().toUpper();
+                        if (mySecondTag == "TYPE")
+                        {
+                            XMLAnomaly.period[counter].seasonalScenarios[counter2].type = secondChild.toElement().text();
+                            // remove white spaces
+                            XMLAnomaly.period[counter].seasonalScenarios[counter2].type = XMLAnomaly.period[counter].seasonalScenarios[counter2].type.simplified();
+                            nrTokens++;
+                        }
+                        if (mySecondTag == "ATTRIBUTE")
+                        {
+                            XMLAnomaly.period[counter].seasonalScenarios[counter2].attribute = secondChild.toElement().text();
+                            // remove white spaces
+                            XMLAnomaly.period[counter].seasonalScenarios[counter2].attribute = XMLAnomaly.period[counter].seasonalScenarios[counter2].attribute.simplified();
+                            nrTokens++;
+                        }
+                        if (mySecondTag == "VALUE")
+                        {
+                            values = secondChild.toElement().text();
+                            XMLAnomaly.period[counter].seasonalScenarios[counter2].value = values.split(",");
+                            nrTokens++;
+                        }
+
+                        secondChild = secondChild.nextSibling();
+                        counter2++;
+                    }
+                }
+                child = child.nextSibling();
+            }
+
+            counter++;
+        }
+        ancestor = ancestor.nextSibling();
+    }
+    xmlDoc.clear();
+
+    if (nrTokens < nrRequiredToken)
+    {
+        int missingTokens = nrRequiredToken - nrTokens;
+        qDebug() << "Missing " + QString::number(missingTokens) + " key informations.";
+        return false;
+    }
+
+    return true;
+}

@@ -139,6 +139,12 @@
             Crit3DRasterCell();
         };
 
+        struct RasterGridParameters {
+        public:
+            int row;
+            int col;
+            std::vector<std::vector<double>> fittingParameters;
+        };
 
         class Crit3DRasterGrid
         {
@@ -149,6 +155,7 @@
             float minimum, maximum;
             bool isLoaded;
             Crit3DTime mapTime;
+            std::vector<RasterGridParameters> parametersCell;
 
             Crit3DUtmPoint* utmPoint(int myRow, int myCol);
             void getXY(int myRow, int myCol, double &x, double &y) const;
@@ -171,6 +178,9 @@
             bool initializeGrid(const Crit3DLatLonHeader& latLonHeader);
             bool initializeGrid(const Crit3DRasterGrid& initGrid, float initValue);
 
+            bool initializeParameters(const Crit3DRasterHeader &initHeader);
+            bool initializeParametersLatLonHeader(const Crit3DLatLonHeader& latLonHeader);
+
             bool copyGrid(const Crit3DRasterGrid& initGrid);
 
             bool setConstantValueWithBase(float initValue, const Crit3DRasterGrid& initGrid);
@@ -179,6 +189,9 @@
             bool isFlag(int myRow, int myCol) const;
             float getValueFromRowCol(int myRow, int myCol) const;
             float getValueFromXY(double x, double y) const;
+            std::vector<std::vector<double>> getParametersFromRowCol(int row, int col);
+            bool setParametersForRowCol(int row, int col, std::vector<std::vector<double>> parameters);
+            std::vector<std::vector<double>> prepareParameters(int row, int col);
 
             Crit3DTime getMapTime() const;
             void setMapTime(const Crit3DTime &value);

@@ -46,8 +46,10 @@ enum estimatedFunction {FUNCTION_CODE_SPHERICAL, FUNCTION_CODE_LINEAR, FUNCTION_
     float gaussianFunction(TfunctionInput fInput);
     float gaussianFunction(float x, float mean, float devStd);
     double functionSum(std::vector<std::function<double (double, std::vector<double> &)> > &functions, std::vector<double>& x, std::vector <std::vector <double>>& par);
+    double functionSum_detrending(std::vector<std::function<double(double, std::vector<double>&)>>& functions, std::vector<double> x, std::vector <std::vector <double>>& par);
     double functionLinear(double x, std::vector <double>& par);
     double lapseRatePiecewise_three(double x, std::vector <double>& par);
+    double lapseRatePiecewiseForInterpolation(double x, std::vector <double>& par);
     double lapseRatePiecewise_two(double x, std::vector <double>& par);
     double lapseRateFrei(double x, std::vector <double>& par);
     double lapseRateRotatedSigmoid(double x, std::vector <double> par);
@@ -108,6 +110,14 @@ enum estimatedFunction {FUNCTION_CODE_SPHERICAL, FUNCTION_CODE_LINEAR, FUNCTION_
                                          std::vector <std::vector <double>>& parameters, std::vector <std::vector <double>>& parametersDelta,
                                          std::vector <std::vector <int>>& correspondenceParametersTag, int maxIterationsNr, double myEpsilon,
                                          std::vector <std::vector <double>>& x, std::vector<double>& y, std::vector<double>& weights);
+
+        bool fittingMarquardt_nDimension_noSquares(double (*func)(std::vector<std::function<double(double, std::vector<double>&)>>&, std::vector<double>& , std::vector <std::vector <double>>&),
+                                                   std::vector<std::function<double (double, std::vector<double> &)> >& myFunc,
+                                                   std::vector<std::vector<double> > &parametersMin, std::vector<std::vector<double> > &parametersMax,
+                                                   std::vector<std::vector<double> > &parameters, std::vector<std::vector<double> > &parametersDelta, std::vector<std::vector<int> > &correspondenceParametersTag,
+                                                   int maxIterationsNr, double myEpsilon,
+                                                   std::vector <std::vector <double>>& x, std::vector<double>& y,
+                                                   std::vector<double>& weights);
 
         double normGeneric_nDimension(double (*func)(std::vector<std::function<double (double, std::vector<double> &)>> &, std::vector<double> &, std::vector <std::vector <double>>&),
                                       std::vector<std::function<double (double, std::vector<double> &)> > myFunc,

@@ -29,7 +29,7 @@ DialogClimateFields::DialogClimateFields(QList<QString> climateDbElab, QList<QSt
     showButton.setText("Show");
     showButton.setEnabled(false);
 
-    deleteButton.setText("Delete All");
+    deleteButton.setText("Delete");
     deleteButton.setEnabled(false);
 
     buttonLayout.addWidget(&showButton);
@@ -176,5 +176,6 @@ void DialogClimateFields::showClicked()
 void DialogClimateFields::deleteClicked()
 {
     isShowClicked = false;
-    QDialog::done(QDialog::Accepted);
+    if (QMessageBox::question(this, "Warning", "Are you sure?", QMessageBox::Yes|QMessageBox::No) == QMessageBox::Yes)
+        QDialog::done(QDialog::Accepted);
 }

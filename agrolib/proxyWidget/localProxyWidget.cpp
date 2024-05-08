@@ -35,8 +35,8 @@
 #include <QDate>
 
 
-Crit3DLocalProxyWidget::Crit3DLocalProxyWidget(double x, double y, gis::Crit3DGisSettings gisSettings, Crit3DInterpolationSettings* interpolationSettings, Crit3DMeteoPoint *meteoPoints, int nrMeteoPoints, frequencyType currentFrequency, QDate currentDate, int currentHour, Crit3DQuality *quality, Crit3DInterpolationSettings* SQinterpolationSettings, Crit3DMeteoSettings *meteoSettings, Crit3DClimateParameters *climateParam, bool checkSpatialQuality)
-    :x(x), y(y), gisSettings(gisSettings), interpolationSettings(interpolationSettings), meteoPoints(meteoPoints), nrMeteoPoints(nrMeteoPoints), currentFrequency(currentFrequency), currentDate(currentDate), currentHour(currentHour), quality(quality), SQinterpolationSettings(SQinterpolationSettings), meteoSettings(meteoSettings), climateParam(climateParam), checkSpatialQuality(checkSpatialQuality)
+Crit3DLocalProxyWidget::Crit3DLocalProxyWidget(double x, double y, std::vector<std::vector<double>> parameters, gis::Crit3DGisSettings gisSettings, Crit3DInterpolationSettings* interpolationSettings, Crit3DMeteoPoint *meteoPoints, int nrMeteoPoints, frequencyType currentFrequency, QDate currentDate, int currentHour, Crit3DQuality *quality, Crit3DInterpolationSettings* SQinterpolationSettings, Crit3DMeteoSettings *meteoSettings, Crit3DClimateParameters *climateParam, bool checkSpatialQuality)
+    :x(x), y(y), parameters(parameters), gisSettings(gisSettings), interpolationSettings(interpolationSettings), meteoPoints(meteoPoints), nrMeteoPoints(nrMeteoPoints), currentFrequency(currentFrequency), currentDate(currentDate), currentHour(currentHour), quality(quality), SQinterpolationSettings(SQinterpolationSettings), meteoSettings(meteoSettings), climateParam(climateParam), checkSpatialQuality(checkSpatialQuality)
 {
     gis::Crit3DGeoPoint localGeoPoint;
     gis::Crit3DUtmPoint localUtmPoint;
@@ -292,7 +292,6 @@ void Crit3DLocalProxyWidget::plot()
 {
     chartView->cleanScatterSeries();
     outInterpolationPoints.clear();
-    std::vector <Crit3DInterpolationDataPoint> subsetInterpolationPoints;
     std::string errorStdStr;
     if (detrended.isChecked())
     {
@@ -438,58 +437,86 @@ void Crit3DLocalProxyWidget::modelLRClicked(int toggled)
     QPointF point;
     float xMin;
     float xMax;
-    if (toggled && outInterpolationPoints.size() != 0)
+
+    if (parameters.empty())
+        return;
+
+    if (toggled && subsetInterpolationPoints.size() != 0)
     {
         if (comboAxisX.currentText() == "elevation")
         {
-            xMin = getZmin(outInterpolationPoints);
-            xMax = getZmax(outInterpolationPoints);
+            xMin = getZmin(subsetInterpolationPoints);
+            xMax = getZmax(subsetInterpolationPoints);
 
-            if (!regressionOrography(outInterpolationPoints,interpolationSettings->getSelectedCombination(), interpolationSettings, climateParam,
-                                     getCurrentTime(), myVar, proxyPos))
+            float regressionSlope;
+
+            if (interpolationSettings->getUseMultipleDetrending())
             {
-                return;
-            }
-
-            float lapseRateH0 = interpolationSettings->getProxy(proxyPos)->getLapseRateH0();
-            float lapseRateH1 = interpolationSettings->getProxy(proxyPos)->getLapseRateH1();
-            float lapseRateT0 = interpolationSettings->getProxy(proxyPos)->getLapseRateT0();
-            float lapseRateT1 = interpolationSettings->getProxy(proxyPos)->getLapseRateT1();
-            float regressionSlope = interpolationSettings->getProxy(proxyPos)->getRegressionSlope();
-
-            if (interpolationSettings->getProxy(proxyPos)->getInversionIsSignificative())
-            {
-                if (xMin < interpolationSettings->getProxy(proxyPos)->getLapseRateH0())
+                int pos;
+                for (pos = 0; pos < interpolationSettings->getProxyNr(); pos++)
                 {
+                    if (getProxyPragaName(interpolationSettings->getProxy(pos)->getName()) == proxyHeight)
+                        break;
+                }
+
+                if (parameters[pos].size() != 5)
+                    return;
+
+                float lapseRateH0 = parameters[pos][0];
+                float lapseRateH1 = parameters[pos][0]+parameters[pos][2];
+                float lapseRateT0 = parameters[pos][1];
+                float lapseRateT1 = parameters[pos][3];
+                regressionSlope = parameters[pos][4];
+
+
+                /*if (interpolationSettings->getProxy(proxyPos)->getInversionIsSignificative())
+                {
+                    if (xMin < interpolationSettings->getProxy(proxyPos)->getLapseRateH0())
+                    {
+                        point.setX(xMin);
+                        point.setY(lapseRateT0);
+                        point_vector.append(point);
+                    }*/
+
+                float myY;
+                if (xMin < lapseRateH0)
+                {
+                    myY = lapseRateT0 + regressionSlope * (xMin - lapseRateH0);
                     point.setX(xMin);
-                    point.setY(lapseRateT0);
+                    point.setY(myY);
                     point_vector.append(point);
                 }
-                point.setX(lapseRateH0);
-                point.setY(lapseRateT0);
-                point_vector.append(point);
 
-                point.setX(lapseRateH1);
-                point.setY(lapseRateT1);
-                point_vector.append(point);
+                    point.setX(lapseRateH0);
+                    point.setY(lapseRateT0);
+                    point_vector.append(point);
 
-                float myY = lapseRateT1 + regressionSlope * (xMax - lapseRateH1);
-                point.setX(xMax);
-                point.setY(myY);
-                point_vector.append(point);
+                    point.setX(lapseRateH1);
+                    point.setY(lapseRateT1);
+                    point_vector.append(point);
+
+                    if (xMax > lapseRateH1)
+                    {
+                        myY = lapseRateT1 + regressionSlope * (xMax - lapseRateH1);
+                        point.setX(xMax);
+                        point.setY(myY);
+                        point_vector.append(point);
+                    }
+                /*}
+                else
+                {
+                    float myY = lapseRateT0 + regressionSlope * xMin;
+                    point.setX(xMin);
+                    point.setY(myY);
+                    point_vector.append(point);
+
+                    myY = lapseRateT0 + regressionSlope * xMax;
+                    point.setX(xMax);
+                    point.setY(myY);
+                    point_vector.append(point);
+                }*/
             }
-            else
-            {
-                float myY = lapseRateT0 + regressionSlope * xMin;
-                point.setX(xMin);
-                point.setY(myY);
-                point_vector.append(point);
 
-                myY = lapseRateT0 + regressionSlope * xMax;
-                point.setX(xMax);
-                point.setY(myY);
-                point_vector.append(point);
-            }
             if (interpolationSettings->getProxy(proxyPos)->getRegressionR2() != NODATA)
             {
                 r2.setText(QString("%1").arg(interpolationSettings->getProxy(proxyPos)->getRegressionR2(), 0, 'f', 2));
@@ -498,10 +525,10 @@ void Crit3DLocalProxyWidget::modelLRClicked(int toggled)
         }
         else
         {
-            xMin = getProxyMinValue(outInterpolationPoints, proxyPos);
-            xMax = getProxyMaxValue(outInterpolationPoints, proxyPos);
+            xMin = getProxyMinValue(subsetInterpolationPoints, proxyPos);
+            xMax = getProxyMaxValue(subsetInterpolationPoints, proxyPos);
             bool isZeroIntercept = false;
-            if (!regressionGeneric(outInterpolationPoints, interpolationSettings, proxyPos, isZeroIntercept))
+            if (!regressionGeneric(subsetInterpolationPoints, interpolationSettings, proxyPos, isZeroIntercept))
             {
                 return;
             }

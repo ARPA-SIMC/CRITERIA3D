@@ -297,7 +297,6 @@ void Crit3DSynchronicityWidget::addInterpolationGraph()
             QMessageBox::critical(nullptr, "Error", "No data available");
             return;
         }
-
         if (! preInterpolation(interpolationPoints, &interpolationSettings, meteoSettings, climateParameters,
                               meteoPoints, nrMeteoPoints, myVar, getCrit3DTime(currentDate, 1), errorStdStr))
         {

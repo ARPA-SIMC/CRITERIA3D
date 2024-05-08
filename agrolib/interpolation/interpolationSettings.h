@@ -250,6 +250,7 @@
         void setFittingFunction(const std::vector<std::function<double (double, std::vector<double> &)> > &newFittingFunction);
         bool getProxiesComplete() const;
         void setProxiesComplete(bool newProxiesComplete);
+        void clearFitting();
     };
 
 #endif // INTERPOLATIONSETTINGS_H
