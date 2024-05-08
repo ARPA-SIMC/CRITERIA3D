@@ -103,6 +103,14 @@ QualityTab::QualityTab(Crit3DQuality *quality)
     humidityToleranceEdit.setValidator(doubleValPerc);
     humidityToleranceEdit.setText(QString::number(quality->getRelHumTolerance()));
 
+    QLabel *waterTableDepth = new QLabel(tr("maximum value of the observed water table depth [cm]:"));
+    waterTableDepthEdit.setFixedWidth(EDIT_SIZE);
+    QIntValidator *intWaterTableDepth = new QIntValidator( 0, 10000, this );
+    doubleValPerc->setNotation(QDoubleValidator::StandardNotation);
+    waterTableDepthEdit.setFixedWidth(EDIT_SIZE);
+    waterTableDepthEdit.setValidator(intWaterTableDepth);
+    waterTableDepthEdit.setText(QString::number(quality->getWaterTableMaximumDepth()));
+
     QVBoxLayout *mainLayout = new QVBoxLayout;
     mainLayout->addWidget(referenceClimateHeight);
     mainLayout->addWidget(&referenceClimateHeightEdit);
@@ -115,6 +123,9 @@ QualityTab::QualityTab(Crit3DQuality *quality)
 
     mainLayout->addWidget(humidityTolerance);
     mainLayout->addWidget(&humidityToleranceEdit);
+
+    mainLayout->addWidget(waterTableDepth);
+    mainLayout->addWidget(&waterTableDepthEdit);
 
     mainLayout->addStretch(1);
     setLayout(mainLayout);
@@ -286,6 +297,12 @@ bool DialogSettings::acceptValues()
         return false;
     }
 
+    if (qualityTab->waterTableDepthEdit.text().isEmpty())
+    {
+        QMessageBox::information(nullptr, "Missing Parameter", "maximum value of the observed water table depth");
+        return false;
+    }
+
     if (metTab->minimumPercentageEdit.text().isEmpty())
     {
         QMessageBox::information(nullptr, "Missing Parameter", "insert minimum percentage of valid data");
@@ -322,6 +339,7 @@ bool DialogSettings::acceptValues()
     project_->quality->setDeltaTSuspect(qualityTab->deltaTSuspectEdit.text().toFloat());
     project_->quality->setDeltaTWrong(qualityTab->deltaTWrongEdit.text().toFloat());
     project_->quality->setRelHumTolerance(qualityTab->humidityToleranceEdit.text().toFloat());
+    project_->quality->setWaterTableMaximumDepth(qualityTab->waterTableDepthEdit.text().toFloat());
 
     project_->meteoSettings->setMinimumPercentage(metTab->minimumPercentageEdit.text().toFloat());
     project_->meteoSettings->setRainfallThreshold(metTab->rainfallThresholdEdit.text().toFloat());

@@ -27,7 +27,7 @@ int getMonthsInPeriod(int month1, int month2)
 
 // it checks if observed data includes the last 9 months before wgDoy_1
 // it updates wgDoy_1 and nr_DaysBefore if some days are missing (lower than NRDAYSTOLERANCE)
-bool checkLastYearDate(const Crit3DDate &inputFirstDate, const Crit3DDate &inputLastDate, int dataLenght,
+bool checkLastYearDate(const Crit3DDate &inputFirstDate, const Crit3DDate &inputLastDate, int dataLength,
                        int myPredictionYear, int &wgDoy1, int &nrDaysBefore)
 {
     Crit3DDate predictionFirstDate = getDateFromDoy (myPredictionYear, wgDoy1);
@@ -80,7 +80,7 @@ bool checkLastYearDate(const Crit3DDate &inputFirstDate, const Crit3DDate &input
         nrDaysBefore += (difference(predictionFirstDate, inputLastDate)) + 1 ;
     }
 
-    if ( difference(inputFirstDate, predictionFirstDate) < nrDaysBefore || dataLenght < (nrDaysBefore-NRDAYSTOLERANCE) )
+    if ( difference(inputFirstDate, predictionFirstDate) < nrDaysBefore || dataLength < (nrDaysBefore-NRDAYSTOLERANCE) )
     {
         // observed data does not include 9 months before wgDoy1 or more than NRDAYSTOLERANCE days missing
         return false;

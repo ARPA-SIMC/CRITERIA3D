@@ -19,6 +19,7 @@
             explicit DialogInterpolation(Project *myProject);
 
             QComboBox algorithmEdit;
+            QComboBox elevationFunctionEdit;
             QLineEdit minRegressionR2Edit;
             QLineEdit maxTdMultiplierEdit;
             QLineEdit minPointsLocalDetrendingEdit;
