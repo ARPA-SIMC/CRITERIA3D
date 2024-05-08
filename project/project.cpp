@@ -663,7 +663,7 @@ bool Project::loadParameters(QString parametersFileName)
             parameters->endGroup();
         }
 
-        //proxy variables (for interpolation)
+        // proxy variables (for interpolation)
         if (group.startsWith("proxy_"))
         {
             QString name_;
@@ -695,7 +695,7 @@ bool Project::loadParameters(QString parametersFileName)
                 myList = parameters->value("fitting_parameters").toStringList();
                 if (myList.size() != nrParameters*2)
                 {
-                    errorString = "Wrong nr. of fitting parameters for proxy: " + name_;
+                    errorString = "Wrong number of fitting parameters for proxy: " + name_;
                     return  false;
                 }
 
@@ -3122,7 +3122,7 @@ bool Project::loadProject()
     if (! loadParameters(parametersFileName))
     {
         errorType = ERROR_SETTINGS;
-        errorString = "load parameters failed:\n" + errorString;
+        errorString = "Load parameters failed.\n" + errorString;
         logError();
         return false;
     }
