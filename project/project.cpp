@@ -655,6 +655,10 @@ bool Project::loadParameters(QString parametersFileName)
             {
                 quality->setRelHumTolerance(parameters->value("relhum_tolerance").toFloat());
             }
+            if (parameters->contains("water_table_maximum_depth") && !parameters->value("water_table_maximum_depth").toString().isEmpty())
+            {
+                quality->setWaterTableMaximumDepth(parameters->value("water_table_maximum_depth").toFloat());
+            }
 
             parameters->endGroup();
         }
@@ -2999,6 +3003,7 @@ void Project::saveGenericParameters()
         parameters->setValue("delta_temperature_suspect", QString::number(quality->getDeltaTSuspect()));
         parameters->setValue("delta_temperature_wrong", QString::number(quality->getDeltaTWrong()));
         parameters->setValue("relhum_tolerance", QString::number(quality->getRelHumTolerance()));
+        parameters->setValue("water_table_maximum_depth", QString::number(quality->getWaterTableMaximumDepth()));
     parameters->endGroup();
 
     parameters->beginGroup("climate");

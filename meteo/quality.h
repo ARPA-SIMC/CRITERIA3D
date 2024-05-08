@@ -4,12 +4,20 @@
     #ifndef METEO_H
         #include "meteo.h"
     #endif
+    #ifndef COMMONCONSTANTS_H
+        #include "commonConstants.h"
+    #endif
 
     // default
+    // [m]
     #define DEF_VALUE_REF_HEIGHT 300
+    // [°C]
     #define DEF_VALUE_DELTA_T_SUSP 13
     #define DEF_VALUE_DELTA_T_WRONG 26
+    // [%]
     #define DEF_VALUE_REL_HUM_TOLERANCE 102
+    // [cm]
+    #define DEF_VALUE_WATERTABLE_MAX_DEPTH 300
 
 
     class Crit3DMeteoPoint;
@@ -20,14 +28,16 @@
 
         class Range {
             private:
-                float max;
-                float min;
-            public:
-                Range();
-                Range(float myMin, float myMax);
+                float _max;
+                float _min;
 
-                float getMin();
-                float getMax();
+            public:
+                Range() { _min = NODATA; _max = NODATA; }
+
+                Range(float min, float max): _min(min), _max(max) { }
+
+                float getMin() { return _min; }
+                float getMax() { return _max; }
         };
     }
 
@@ -58,7 +68,7 @@
         float deltaTSuspect;
         float deltaTWrong;
         float relHumTolerance;
-
+        float waterTableMaximumDepth;
 
     public:
 
@@ -73,21 +83,20 @@
 
         quality::qualityType syntacticQualitySingleValue(meteoVariable myVar, float myValue);
 
-        float getReferenceHeight() const;
+        float getReferenceHeight() const { return referenceHeight; }
+        void setReferenceHeight(float value) { referenceHeight = value; }
 
-        void setReferenceHeight(float value);
+        float getDeltaTSuspect() const { return deltaTSuspect; }
+        void setDeltaTSuspect(float value) { deltaTSuspect = value; }
 
-        float getDeltaTSuspect() const;
+        float getDeltaTWrong() const { return deltaTWrong; }
+        void setDeltaTWrong(float value) { deltaTWrong = value; }
 
-        void setDeltaTSuspect(float value);
+        float getRelHumTolerance() const { return relHumTolerance; }
+        void setRelHumTolerance(float value) { relHumTolerance = value; }
 
-        float getDeltaTWrong() const;
-
-        void setDeltaTWrong(float value);
-
-        float getRelHumTolerance() const;
-
-        void setRelHumTolerance(float value);
+        float getWaterTableMaximumDepth() const { return waterTableMaximumDepth; }
+        void setWaterTableMaximumDepth(float value) { waterTableMaximumDepth = value; }
 
         quality::qualityType checkFastValueDaily_SingleValue(meteoVariable myVar, Crit3DClimateParameters *climateParam, float myValue, int month, float height);
 

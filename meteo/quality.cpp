@@ -23,71 +23,11 @@
     ftomei@arpae.it
 */
 
-
 #include "commonConstants.h"
 #include "basicMath.h"
 #include "quality.h"
 #include "meteoPoint.h"
 
-namespace quality
-{
-    Range::Range()
-    {
-        min = NODATA;
-        max = NODATA;
-    }
-
-    Range::Range(float myMin, float myMax)
-    {
-        min = myMin;
-        max = myMax;
-    }
-
-    float Range::getMin() { return min; }
-
-    float Range::getMax() { return max; }
-}
-
-
-float Crit3DQuality::getReferenceHeight() const
-{
-    return referenceHeight;
-}
-
-void Crit3DQuality::setReferenceHeight(float value)
-{
-    referenceHeight = value;
-}
-
-float Crit3DQuality::getDeltaTSuspect() const
-{
-    return deltaTSuspect;
-}
-
-void Crit3DQuality::setDeltaTSuspect(float value)
-{
-    deltaTSuspect = value;
-}
-
-float Crit3DQuality::getDeltaTWrong() const
-{
-    return deltaTWrong;
-}
-
-void Crit3DQuality::setDeltaTWrong(float value)
-{
-    deltaTWrong = value;
-}
-
-float Crit3DQuality::getRelHumTolerance() const
-{
-    return relHumTolerance;
-}
-
-void Crit3DQuality::setRelHumTolerance(float value)
-{
-    relHumTolerance = value;
-}
 
 void Crit3DQuality::initialize()
 {
@@ -95,7 +35,9 @@ void Crit3DQuality::initialize()
     deltaTSuspect = DEF_VALUE_DELTA_T_SUSP;
     deltaTWrong = DEF_VALUE_DELTA_T_WRONG;
     relHumTolerance = DEF_VALUE_REL_HUM_TOLERANCE;
+    waterTableMaximumDepth = DEF_VALUE_WATERTABLE_MAX_DEPTH;
 }
+
 
 Crit3DQuality::Crit3DQuality()
 {
@@ -122,6 +64,7 @@ Crit3DQuality::Crit3DQuality()
     initialize();
 }
 
+
 Crit3DQuality::~Crit3DQuality()
 {
     delete qualityHourlyT;
@@ -144,6 +87,7 @@ Crit3DQuality::~Crit3DQuality()
     delete qualityDailyGRad;
     delete qualityDailyET0;
 }
+
 
 quality::Range* Crit3DQuality::getQualityRange(meteoVariable myVar)
 {
