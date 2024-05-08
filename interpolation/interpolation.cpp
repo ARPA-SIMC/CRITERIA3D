@@ -1374,9 +1374,49 @@ bool setAllFittingParameters(Crit3DProxyCombination myCombination, Crit3DInterpo
         if (mySettings->getProxy(i)->getIsSignificant())
         {
             if (getProxyPragaName(mySettings->getProxy(i)->getName()) == proxyHeight)
-                myFunc.push_back(lapseRatePiecewiseForInterpolation);
+            {
+                if (mySettings->getChosenElevationFunction() == frei)
+                {
+                    myFunc.push_back(lapseRateFrei);
+                    mySettings->getProxy(i)->setFittingFunctionName(frei);
+                    if (!(mySettings->getProxy(i)->getFittingParametersRange().empty()))
+                    {
+                        double min = mySettings->getProxy(i)->getMinMaxTemperature(0);
+                        double max = mySettings->getProxy(i)->getMinMaxTemperature(1);
+                        std::vector <double> tempParam = {min, 0, -10, -200, 0.1, max+10, 0.006, 10, 1800, 1000};
+                        mySettings->getProxy(i)->setFittingParametersRange(tempParam);
+                    }
+                }
+                else if (mySettings->getChosenElevationFunction() == piecewiseTwo)
+                {
+                    myFunc.push_back(lapseRatePiecewise_two);
+                    mySettings->getProxy(i)->setFittingFunctionName(piecewiseTwo);
+                    if (!(mySettings->getProxy(i)->getFittingParametersRange().empty()))
+                    {
+                        double min = mySettings->getProxy(i)->getMinMaxTemperature(0);
+                        double max = mySettings->getProxy(i)->getMinMaxTemperature(1);
+                        std::vector <double> tempParam = {-200, min-2, 0, -0.006, 1800, max+2, 0.01, 0};
+                        mySettings->getProxy(i)->setFittingParametersRange(tempParam);
+                    }
+                }
+                else if (mySettings->getChosenElevationFunction() == piecewiseThree)
+                {
+                    myFunc.push_back(lapseRatePiecewiseForInterpolation);
+                    mySettings->getProxy(i)->setFittingFunctionName(piecewiseThree);
+                    if (!(mySettings->getProxy(i)->getFittingParametersRange().empty()))
+                    {
+                        double min = mySettings->getProxy(i)->getMinMaxTemperature(0);
+                        double max = mySettings->getProxy(i)->getMinMaxTemperature(1);
+                        std::vector <double> tempParam = {-200, min-2, 100, 0, -0.006, 1800, max+2, 1000, (max-min-2), 0};
+                        mySettings->getProxy(i)->setFittingParametersRange(tempParam);
+                    }
+                }
+            }
             else
+            {
                 myFunc.push_back(functionLinear);
+                mySettings->getProxy(i)->setFittingFunctionName(linear);
+            }
 
             std::vector <double> myParam = mySettings->getProxy(i)->getFittingParametersRange();
             unsigned int nrParam = unsigned(myParam.size() / 2);

@@ -668,6 +668,7 @@ bool Project::loadParameters(QString parametersFileName)
 
             name_ = group.right(group.size()-6);
             myProxy->setName(name_.toStdString());
+            myProxy->setFittingFunctionName(noFunction);
 
             parameters->beginGroup(group);
 
@@ -689,7 +690,7 @@ bool Project::loadParameters(QString parametersFileName)
                     nrParameters = 1;
 
                 myList = parameters->value("fitting_parameters").toStringList();
-                if (myList.size() != nrParameters*2)
+                if (myList.size() != nrParameters*2 && myList.size() != (nrParameters-1)*2)
                 {
                     errorString = "Wrong nr. of fitting parameters for proxy: " + name_;
                     return  false;
@@ -3590,17 +3591,17 @@ void Project::showProxyGraph()
     return;
 }
 
-void Project::showLocalProxyGraph(gis::Crit3DGeoPoint myPoint, gis::Crit3DRasterGrid myDataRaster)
+void Project::showLocalProxyGraph(gis::Crit3DGeoPoint myPoint, gis::Crit3DRasterGrid *myDataRaster)
 {
     gis::Crit3DUtmPoint myUtm;
     gis::getUtmFromLatLon(this->gisSettings.utmZone, myPoint, &myUtm);
 
     int row, col;
     std::vector<std::vector<double>> parameters;
-    if (myDataRaster.isLoaded && !myDataRaster.parametersCell.empty())
+    if (myDataRaster->isLoaded && !myDataRaster->parametersCell.empty())
     {
-        //gis::getRowColFromXY(*(myDataRaster.header), myUtm, &row, &col);
-        //parameters = myDataRaster.getParametersFromRowCol(row, col);
+        gis::getRowColFromXY(*(myDataRaster->header), myUtm, &row, &col);
+        parameters = myDataRaster->getParametersFromRowCol(row, col);
     }
     if (this->meteoGridLoaded && !this->meteoGridDbHandler->meteoGrid()->dataMeteoGrid.parametersCell.empty())
     {
@@ -4462,7 +4463,7 @@ void Project::closeProgressBar()
     }
 }
 
-bool Project::setTempParametersRange(meteoVariable myVar)
+bool Project::findTempMinMax(meteoVariable myVar)
 {
     float min;
     float max;
@@ -4540,27 +4541,7 @@ bool Project::setTempParametersRange(meteoVariable myVar)
     {
         myProxy = interpolationSettings.getProxy(i);
         if (getProxyPragaName(myProxy->getName()) == proxyHeight)
-        {
-            std::vector <double> fittingParametersRange = myProxy->getFittingParametersRange();
-            if (!fittingParametersRange.empty())
-            {
-                if (fittingParametersRange.size() == 8)
-                {
-                    //piecewise_two
-                    fittingParametersRange[1] = min - 2;
-                    fittingParametersRange[5] = max + 2;
-                }
-                else if (fittingParametersRange.size() == 10)
-                {
-                    //piecewise_three
-                    fittingParametersRange[1] = min - 2;
-                    fittingParametersRange[3] = min - 2;
-                    fittingParametersRange[6] = max + 2;
-                    fittingParametersRange[8] = max + 2;
-                }
-                myProxy->setFittingParametersRange(fittingParametersRange);
-            }
-        }
+            myProxy->setMinMaxTemperature(min, max);
     }
     return true;
 }

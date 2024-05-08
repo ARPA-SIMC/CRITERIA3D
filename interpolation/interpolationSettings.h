@@ -18,6 +18,7 @@
     #include <deque>
 
     std::string getKeyStringInterpolationMethod(TInterpolationMethod value);
+    std::string getKeyStringElevationFunction(TFittingFunction value);
     TProxyVar getProxyPragaName(std::string name_);
 
     class Crit3DProxy
@@ -34,7 +35,9 @@
         float regressionR2;
         float regressionSlope;
         float regressionIntercept;
+        TFittingFunction fittingFunctionName;
         std::vector <double> fittingParametersRange;
+        std::vector <double> tempMinMax;
 
         float avg;
         float stdDev;
@@ -96,6 +99,10 @@
         void setStdDevThreshold(float newStdDevThreshold);
         std::vector<double> getFittingParametersRange() const;
         void setFittingParametersRange(const std::vector<double> &newFittingParametersRange);
+        TFittingFunction getFittingFunctionName();
+        void setFittingFunctionName(TFittingFunction functionName);
+        void setMinMaxTemperature(double min, double max);
+        double getMinMaxTemperature (int i);
     };
 
 
@@ -126,6 +133,7 @@
         gis::Crit3DRasterGrid* currentDEM; //for TD
 
         TInterpolationMethod interpolationMethod;
+        TFittingFunction chosenElevationFunction;
 
         float minRegressionR2;
         bool useThermalInversion;
@@ -161,6 +169,7 @@
 
         std::vector <std::vector<double>> fittingParameters;
         std::vector<std::function<double(double, std::vector<double>&)>> fittingFunction;
+
 
     public:
         Crit3DInterpolationSettings();
@@ -251,6 +260,8 @@
         bool getProxiesComplete() const;
         void setProxiesComplete(bool newProxiesComplete);
         void clearFitting();
+        TFittingFunction getChosenElevationFunction();
+        void setChosenElevationFunction(TFittingFunction chosenFunction);
     };
 
 #endif // INTERPOLATIONSETTINGS_H

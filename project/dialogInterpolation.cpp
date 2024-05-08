@@ -136,6 +136,25 @@ DialogInterpolation::DialogInterpolation(Project *myProject)
 
     layoutDetrending->addWidget(localDetrendingEdit);
 
+    QLabel *labelElFunction = new QLabel(tr("Fitting function for elevation:"));
+    layoutDetrending->addWidget(labelElFunction);
+
+    std::map<std::string, TFittingFunction>::const_iterator itElFunc;
+    for (itElFunc = fittingFunctionNames.begin(); itElFunc != fittingFunctionNames.end(); ++itElFunc)
+    {
+        if (itElFunc->first == "linear")
+            continue;
+        elevationFunctionEdit.addItem(QString::fromStdString(itElFunc->first), QString::fromStdString(itElFunc->first));
+    }
+
+    QString elevationFunctionString = QString::fromStdString(getKeyStringElevationFunction(_interpolationSettings->getChosenElevationFunction()));
+    int indexElFunction = elevationFunctionEdit.findData(elevationFunctionString);
+    if (indexElFunction != -1)
+        elevationFunctionEdit.setCurrentIndex(indexElFunction);
+
+    layoutDetrending->addWidget(&elevationFunctionEdit);
+
+
     QVBoxLayout *layoutProxy = new QVBoxLayout;
     QLabel *labelProxy = new QLabel(tr("temperature detrending proxies"));
     layoutProxy->addWidget(labelProxy);
@@ -287,6 +306,9 @@ void DialogInterpolation::accept()
     _interpolationSettings->setMinRegressionR2(QLocale().toFloat(minRegressionR2Edit.text()));
     _interpolationSettings->setTopoDist_maxKh(maxTdMultiplierEdit.text().toInt());
     _interpolationSettings->setMinPointsLocalDetrending(minPointsLocalDetrendingEdit.text().toInt());
+
+    QString elFunctionString = elevationFunctionEdit.itemData(elevationFunctionEdit.currentIndex()).toString();
+    _interpolationSettings->setChosenElevationFunction(fittingFunctionNames.at(elFunctionString.toStdString()));
 
     _qualityInterpolationSettings->setMinRegressionR2(QLocale().toFloat(minRegressionR2Edit.text()));
     _qualityInterpolationSettings->setTopoDist_maxKh(maxTdMultiplierEdit.text().toInt());
