@@ -4,6 +4,7 @@
 #include <QString>
 #include <QList>
 #include <QDate>
+#include <QMap>
 
 class Well
 {
