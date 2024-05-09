@@ -6,7 +6,6 @@
     #include "well.h"
 #endif
 
-
 bool loadCsvRegistry(QString csvRegistry, QList<Well> *wellList, QString *errorStr);
 
 #endif // IMPORTREGISTRY_H

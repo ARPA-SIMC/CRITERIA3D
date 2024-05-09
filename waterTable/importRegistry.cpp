@@ -67,7 +67,6 @@ bool loadCsvRegistry(QString csvRegistry, QList<Well> *wellList, QString *errorS
     {
         *errorStr = "ID repeated or with invalid coordinates: " + errorList.join(",");
     }
-
     return true;
 }
 
