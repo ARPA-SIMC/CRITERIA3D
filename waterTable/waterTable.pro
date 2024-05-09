@@ -26,7 +26,9 @@ win32:{
 
 INCLUDEPATH += ../mathFunctions ../meteo ../gis ../dbMeteoPoints ../dbMeteoGrid
 
-SOURCES += importRegistry.cpp
+SOURCES += importRegistry.cpp \
+    well.cpp
 
-HEADERS += importRegistry.h
+HEADERS += importRegistry.h \
+    well.h
 
