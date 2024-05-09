@@ -4564,7 +4564,7 @@ bool Project::waterTableImportLocation(QString csvFileName)
     }
     if (!errorString.isEmpty())
     {
-        logInfo(errorString);
+        logInfoGUI(errorString);
     }
     return true;
 }

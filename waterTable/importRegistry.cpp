@@ -27,7 +27,7 @@ bool loadCsvRegistry(QString csvRegistry, QList<Well> *wellList, QString *errorS
         while (!in.atEnd())
         {
             line = in.readLine();
-            QStringList items = line.split(" ");
+            QStringList items = line.split(",");
             items.removeAll({});
             if (items.size()<nFields)
             {
