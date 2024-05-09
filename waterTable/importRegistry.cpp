@@ -6,3 +6,4 @@ bool loadCsvRegistry(QString csvRegistry, QString *errorStr)
 
     return true;
 }
+
