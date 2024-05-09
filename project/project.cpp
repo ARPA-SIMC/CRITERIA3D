@@ -14,7 +14,6 @@
 #include "dialogSelectionMeteoPoint.h"
 #include "dialogPointDeleteData.h"
 #include "formInfo.h"
-#include "well.h"
 #include "importRegistry.h"
 
 
@@ -4555,9 +4554,8 @@ bool Project::findTempMinMax(meteoVariable myVar)
 
 bool Project::waterTableImportLocation(QString csvFileName)
 {
-    QList<Well> wellList;
     errorString = ""; // reset errorString
-    if (!loadCsvRegistry(csvFileName, &wellList, &errorString))
+    if (!loadCsvRegistry(csvFileName, &wellPoints, &errorString))
     {
         logError(errorString);
         return false;
