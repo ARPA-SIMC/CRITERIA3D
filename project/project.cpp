@@ -4569,7 +4569,7 @@ bool Project::waterTableImportLocation(QString csvFileName)
     }
     if (wrongLines>0)
     {
-        QMessageBox::warning(nullptr, "Warning!", QString::number(wrongLines) + " wrong lines of data were not loaded, see the log file for more information");
+        QMessageBox::warning(nullptr, "Warning!", QString::number(wrongLines) + " wrong lines of data were not loaded, see the log file " + logFileName + " for more information");
         logInfo(errorString);
     }
     return true;
@@ -4585,7 +4585,7 @@ bool Project::waterTableImportDepths(QString csvDepths)
     }
     if (wrongLines>0)
     {
-        QMessageBox::warning(nullptr, "Warning!", QString::number(wrongLines) + " wrong lines of data were not loaded, see the log file for more information");
+        QMessageBox::warning(nullptr, "Warning!", QString::number(wrongLines) + " wrong lines of data were not loaded, see the log file " + logFileName + " for more information");
         logInfo(errorString);
     }
     return true;

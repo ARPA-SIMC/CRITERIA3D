@@ -104,7 +104,7 @@ bool loadCsvDepths(QString csvDepths, std::vector<Well> &wellList, int waterTabl
             items.removeAll({});
             if (items.size() < nFields)
             {
-                errorList.append(items[posId]);
+                errorList.append(line);
                 *wrongLines = *wrongLines + 1;
                 continue;
             }
@@ -122,7 +122,7 @@ bool loadCsvDepths(QString csvDepths, std::vector<Well> &wellList, int waterTabl
             if (found == false)
             {
                 // id does not exist
-                errorList.append(id);
+                errorList.append(line);
                 *wrongLines = *wrongLines + 1;
                 continue;
             }
@@ -130,14 +130,14 @@ bool loadCsvDepths(QString csvDepths, std::vector<Well> &wellList, int waterTabl
             QDate date = QDate::fromString(items[posDate],"yyyy-MM-dd");
             if (!date.isValid())
             {
-                errorList.append(id);
+                errorList.append(line);
                 *wrongLines = *wrongLines + 1;
                 continue;
             }
             int value = items[posDepth].toInt(&ok);
             if (!ok || value == NODATA || value < 0 || value > waterTableMaximumDepth)
             {
-                errorList.append(id);
+                errorList.append(line);
                 *wrongLines = *wrongLines + 1;
                 continue;
             }
@@ -148,7 +148,7 @@ bool loadCsvDepths(QString csvDepths, std::vector<Well> &wellList, int waterTabl
 
     if (*wrongLines>0)
     {
-        *errorStr = "ID not existing or with invalid data or value: " + errorList.join(",");
+        *errorStr = "ID not existing or with invalid data or value:\n" + errorList.join("\n");
     }
     return true;
 
