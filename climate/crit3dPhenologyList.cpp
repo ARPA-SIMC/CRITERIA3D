@@ -151,14 +151,13 @@ void Crit3DPhenologyList::eraseElement(unsigned int index)
     {
         _listScale.erase(_listScale.begin() + index);
     }
-
 }
+
 
 bool Crit3DPhenologyList::addPhenology(unsigned int index)
 {
-
-    QString dateStart = _listDateStart[index].toString("dd/MM/yyyy");
-    QString dateEnd = _listDateEnd[index].toString("dd/MM/yyyy");
+    QString dateStart = _listDateStart[index].toString("yyyy-MM-dd");
+    QString dateEnd = _listDateEnd[index].toString("yyyy-MM-dd");
     QString computation;
     QString variety;
     QString scale;
