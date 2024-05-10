@@ -1,4 +1,4 @@
-#include "importRegistry.h"
+#include "importData.h"
 #include <QFile>
 #include <QTextStream>
 

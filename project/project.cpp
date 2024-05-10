@@ -14,7 +14,7 @@
 #include "dialogSelectionMeteoPoint.h"
 #include "dialogPointDeleteData.h"
 #include "formInfo.h"
-#include "importRegistry.h"
+#include "importData.h"
 
 
 #include <iostream>

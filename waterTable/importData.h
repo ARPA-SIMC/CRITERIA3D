@@ -1,5 +1,5 @@
-#ifndef IMPORTREGISTRY_H
-#define IMPORTREGISTRY_H
+#ifndef IMPORTDATA_H
+#define IMPORTDATA_H
 
 #include <QString>
 #ifndef WELL_H
@@ -8,5 +8,5 @@
 
 bool loadCsvRegistry(QString csvRegistry, QList<Well> *wellList, QString *errorStr);
 
-#endif // IMPORTREGISTRY_H
+#endif // IMPORTDATA_H
 
