@@ -1,4 +1,5 @@
 #include "importData.h"
+#include "commonConstants.h"
 #include <QFile>
 #include <QTextStream>
 
@@ -73,7 +74,7 @@ bool loadCsvRegistry(QString csvRegistry, std::vector<Well> &wellList, QString *
     return true;
 }
 
-bool loadCsvDepths(QString csvDepths, std::vector<Well> &wellList, QString *errorStr, int* wrongLines)
+bool loadCsvDepths(QString csvDepths, std::vector<Well> &wellList, int waterTableMaximumDepth, QString *errorStr, int* wrongLines)
 {
 
     QFile myFile(csvDepths);
@@ -124,7 +125,7 @@ bool loadCsvDepths(QString csvDepths, std::vector<Well> &wellList, QString *erro
                 continue;
             }
 
-            QDate date = QDate::fromString(items[posDate],"yyyy/MM7dd");
+            QDate date = QDate::fromString(items[posDate],"yyyy-MM-dd");
             if (!date.isValid())
             {
                 errorList.append(id);
@@ -132,7 +133,7 @@ bool loadCsvDepths(QString csvDepths, std::vector<Well> &wellList, QString *erro
                 continue;
             }
             int value = items[posDepth].toInt(&ok);
-            if (!ok)
+            if (!ok || value == NODATA || value < 0 || value > waterTableMaximumDepth)
             {
                 errorList.append(id);
                 *wrongLines = *wrongLines + 1;

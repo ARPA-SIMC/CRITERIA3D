@@ -4574,3 +4574,20 @@ bool Project::waterTableImportLocation(QString csvFileName)
     }
     return true;
 }
+
+bool Project::waterTableImportDepths(QString csvDepths)
+{
+    int wrongLines = 0;
+    if (!loadCsvDepths(csvDepths, wellPoints, quality->getWaterTableMaximumDepth() , &errorString, &wrongLines))
+    {
+        logError(errorString);
+        return false;
+    }
+    if (wrongLines>0)
+    {
+        QMessageBox::warning(nullptr, "Warning!", QString::number(wrongLines) + " wrong lines of data were not loaded, see the log file for more information");
+        logInfo(errorString);
+    }
+    return true;
+}
+
