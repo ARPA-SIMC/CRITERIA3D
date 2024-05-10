@@ -34,3 +34,8 @@ void Well::setUtmY(double newUtmY)
 {
     utmY = newUtmY;
 }
+
+void Well::insertData(QDate myDate, int myValue)
+{
+    depths.insert(myDate, myValue);
+}

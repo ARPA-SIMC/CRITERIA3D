@@ -2,7 +2,7 @@
 #include <QFile>
 #include <QTextStream>
 
-bool loadCsvRegistry(QString csvRegistry, QList<Well> *wellList, QString *errorStr)
+bool loadCsvRegistry(QString csvRegistry, std::vector<Well> &wellList, QString *errorStr, int* wrongLines)
 {
     QFile myFile(csvRegistry);
     QList<QString> idList;
@@ -39,6 +39,7 @@ bool loadCsvRegistry(QString csvRegistry, QList<Well> *wellList, QString *errorS
             {
                 // id already saved
                 errorList.append(id);
+                *wrongLines = *wrongLines + 1;
                 continue;
             }
             idList.append(id);
@@ -46,19 +47,21 @@ bool loadCsvRegistry(QString csvRegistry, QList<Well> *wellList, QString *errorS
             if (!ok)
             {
                 errorList.append(id);
+                *wrongLines = *wrongLines + 1;
                 continue;
             }
             double utmY = items[posUtmy].toDouble(&ok);
             if (!ok)
             {
                 errorList.append(id);
+                *wrongLines = *wrongLines + 1;
                 continue;
             }
             Well newWell;
             newWell.setId(id);
             newWell.setUtmX(utmX);
             newWell.setUtmY(utmY);
-            wellList->append(newWell);
+            wellList.push_back(newWell);
         }
     }
     myFile.close();
@@ -68,5 +71,83 @@ bool loadCsvRegistry(QString csvRegistry, QList<Well> *wellList, QString *errorS
         *errorStr = "ID repeated or with invalid coordinates: " + errorList.join(",");
     }
     return true;
+}
+
+bool loadCsvDepths(QString csvDepths, std::vector<Well> &wellList, QString *errorStr, int* wrongLines)
+{
+
+    QFile myFile(csvDepths);
+    QList<QString> errorList;
+    int posId = 0;
+    int posDate = 1;
+    int posDepth = 2;
+
+    int nFields = 3;
+    bool ok;
+
+    if ( !myFile.open(QFile::ReadOnly | QFile::Text) )
+    {
+        *errorStr = "csvFileName file does not exist";
+        return false;
+    }
+    else
+    {
+        QTextStream in(&myFile);
+        //skip header
+        QString line = in.readLine();
+        while (!in.atEnd())
+        {
+            line = in.readLine();
+            QStringList items = line.split(",");
+            items.removeAll({});
+            if (items.size()<nFields)
+            {
+                *errorStr = "missing field required";
+                return false;
+            }
+            QString id = items[posId];
+            bool found = false;
+            int i = 0;
+            for (; i < wellList.size(); i++)
+            {
+                if (wellList[i].getId() == id)
+                {
+                    found = true;
+                    break;
+                }
+            }
+            if (found == false)
+            {
+                // id does not exist
+                errorList.append(id);
+                *wrongLines = *wrongLines + 1;
+                continue;
+            }
+
+            QDate date = QDate::fromString(items[posDate],"yyyy/MM7dd");
+            if (!date.isValid())
+            {
+                errorList.append(id);
+                *wrongLines = *wrongLines + 1;
+                continue;
+            }
+            int value = items[posDepth].toInt(&ok);
+            if (!ok)
+            {
+                errorList.append(id);
+                *wrongLines = *wrongLines + 1;
+                continue;
+            }
+            wellList[i].insertData(date, value);
+        }
+    }
+    myFile.close();
+
+    if (!errorList.isEmpty())
+    {
+        *errorStr = "ID repeated or with invalid coordinates: " + errorList.join(",");
+    }
+    return true;
+
 }
 

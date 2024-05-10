@@ -4554,15 +4554,23 @@ bool Project::findTempMinMax(meteoVariable myVar)
 
 bool Project::waterTableImportLocation(QString csvFileName)
 {
+    if (logFileName == "")
+    {
+        QString path = QFileInfo(csvFileName).absolutePath();
+        logFileName = path + "/waterTableLog.txt";
+    }
+    setLogFile(logFileName);
     errorString = ""; // reset errorString
-    if (!loadCsvRegistry(csvFileName, &wellPoints, &errorString))
+    int wrongLines = 0;
+    if (!loadCsvRegistry(csvFileName, wellPoints, &errorString, &wrongLines))
     {
         logError(errorString);
         return false;
     }
-    if (!errorString.isEmpty())
+    if (wrongLines>0)
     {
-        logInfoGUI(errorString);
+        QMessageBox::warning(nullptr, "Warning!", QString::number(wrongLines) + " wrong lines of data were not loaded, see the log file for more information");
+        logInfo(errorString);
     }
     return true;
 }

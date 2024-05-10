@@ -19,6 +19,8 @@ public:
     double getUtmY() const;
     void setUtmY(double newUtmY);
 
+    void insertData(QDate myDate, int myValue);
+
 private:
     QString id;
     double utmX;
