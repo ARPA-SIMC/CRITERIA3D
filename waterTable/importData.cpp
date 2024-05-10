@@ -32,8 +32,9 @@ bool loadCsvRegistry(QString csvRegistry, std::vector<Well> &wellList, QString *
             items.removeAll({});
             if (items.size()<nFields)
             {
-                *errorStr = "missing field required";
-                return false;
+                errorList.append(items[posId]);
+                *wrongLines = *wrongLines + 1;
+                continue;
             }
             QString id = items[posId];
             if (idList.contains(id))
@@ -67,7 +68,7 @@ bool loadCsvRegistry(QString csvRegistry, std::vector<Well> &wellList, QString *
     }
     myFile.close();
 
-    if (!errorList.isEmpty())
+    if (*wrongLines>0)
     {
         *errorStr = "ID repeated or with invalid coordinates: " + errorList.join(",");
     }
@@ -101,10 +102,11 @@ bool loadCsvDepths(QString csvDepths, std::vector<Well> &wellList, int waterTabl
             line = in.readLine();
             QStringList items = line.split(",");
             items.removeAll({});
-            if (items.size()<nFields)
+            if (items.size() < nFields)
             {
-                *errorStr = "missing field required";
-                return false;
+                errorList.append(items[posId]);
+                *wrongLines = *wrongLines + 1;
+                continue;
             }
             QString id = items[posId];
             bool found = false;
@@ -144,9 +146,9 @@ bool loadCsvDepths(QString csvDepths, std::vector<Well> &wellList, int waterTabl
     }
     myFile.close();
 
-    if (!errorList.isEmpty())
+    if (*wrongLines>0)
     {
-        *errorStr = "ID repeated or with invalid coordinates: " + errorList.join(",");
+        *errorStr = "ID not existing or with invalid data or value: " + errorList.join(",");
     }
     return true;
 
