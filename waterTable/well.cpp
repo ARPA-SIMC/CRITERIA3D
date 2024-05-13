@@ -39,3 +39,31 @@ void Well::insertData(QDate myDate, int myValue)
 {
     depths.insert(myDate, myValue);
 }
+
+QDate Well::getFirstDate()
+{
+    QList<QDate> allDates = depths.keys();
+    firstDate = allDates[0];
+    for (int i = 0; i < allDates.size(); i++)
+    {
+        if (allDates[i] < firstDate)
+        {
+            firstDate = allDates[i];
+        }
+    }
+    return firstDate;
+}
+
+QDate Well::getLastDate()
+{
+    QList<QDate> allDates = depths.keys();
+    lastDate = allDates[0];
+    for (int i = 0; i < allDates.size(); i++)
+    {
+        if (allDates[i] > lastDate)
+        {
+            lastDate = allDates[i];
+        }
+    }
+    return lastDate;
+}

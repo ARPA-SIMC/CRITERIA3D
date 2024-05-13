@@ -28,9 +28,11 @@ INCLUDEPATH += ../mathFunctions ../meteo ../gis ../dbMeteoPoints ../dbMeteoGrid
 
 SOURCES += \
     importData.cpp \
+    waterTable.cpp \
     well.cpp
 
 HEADERS += \
     importData.h \
+    waterTable.h \
     well.h
 
