@@ -317,10 +317,11 @@ float weibull (float dailyAvgPrec, float precThreshold)
 
 
 /*!
-  * \brief Computes daily values starting from monthly mean
-  * using cubic spline
+  * \brief Computes daily values starting from monthly averages using cubic spline
+  * \param monthlyAvg: vector of monthly averages (12 values)
+  * outputDailyValues: vector of interpolated daily values (366 values)
 */
-void cubicSplineYearInterpolate(float *meanY, float *dayVal)
+void cubicSplineYearInterpolate(float *monthlyAvg, float *outputDailyValues)
 {
     double monthMid [16] = {-61, - 31, 0, 31, 59, 90, 120, 151, 181, 212, 243, 273, 304, 334, 365, 396};
 
@@ -329,23 +330,25 @@ void cubicSplineYearInterpolate(float *meanY, float *dayVal)
         monthMid[iMonth] += 15;
     }
 
-    double* averageMonthlyAmountPrecLarger = new double[16];
+    double* avgMonthlyAmountLarger = new double[16];
     for (int iMonth = 0; iMonth < 12; iMonth++)
     {
-        averageMonthlyAmountPrecLarger[iMonth+2] = double(meanY[iMonth]);
+        avgMonthlyAmountLarger[iMonth+2] = double(monthlyAvg[iMonth]);
     }
 
-    averageMonthlyAmountPrecLarger[0] = double(meanY[10]);
-    averageMonthlyAmountPrecLarger[1] = double(meanY[11]);
-    averageMonthlyAmountPrecLarger[14] = double(meanY[0]);
-    averageMonthlyAmountPrecLarger[15] = double(meanY[1]);
+    avgMonthlyAmountLarger[0] = double(monthlyAvg[10]);
+    avgMonthlyAmountLarger[1] = double(monthlyAvg[11]);
+    avgMonthlyAmountLarger[14] = double(monthlyAvg[0]);
+    avgMonthlyAmountLarger[15] = double(monthlyAvg[1]);
 
-    for (int jjj=0; jjj<365; jjj++)
+    for (int iDay=0; iDay<365; iDay++)
     {
-        dayVal[jjj] = interpolation::cubicSpline(jjj*1.0, monthMid, averageMonthlyAmountPrecLarger, 16);
+        outputDailyValues[iDay] = interpolation::cubicSpline(iDay, monthMid, avgMonthlyAmountLarger, 16);
     }
+    // leap years
+    outputDailyValues[365] = outputDailyValues[0];
 
-    delete [] averageMonthlyAmountPrecLarger;
+    delete [] avgMonthlyAmountLarger;
 }
 
 

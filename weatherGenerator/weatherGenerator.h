@@ -92,7 +92,7 @@
 
     bool markov(float pwd, float pww, bool isWetPreviousDay);
     float weibull (float mean, float precThreshold);
-    void cubicSplineYearInterpolate(float *meanY, float *dayVal);
+    void cubicSplineYearInterpolate(float *monthlyAvg, float *outputDailyValues);
     void quadrSplineYearInterpolate(float *meanY, float *dayVal);
 
     void genTemps(float *tMax, float *tMin, float meanTMax, float meanTMin, float stdMax,

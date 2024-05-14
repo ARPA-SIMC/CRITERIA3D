@@ -2025,7 +2025,7 @@ bool PragaProject::timeAggregateGrid(QDate dateIni, QDate dateFin, QList <meteoV
     // now only hourly-->daily
     if (loadData)
     {
-        logInfoGUI("Loading grid data: " + dateIni.toString("dd/MM/yyyy") + "-" + dateFin.toString("dd/MM/yyyy"));
+        logInfoGUI("Loading grid data: " + dateIni.toString("yyyy-MM-dd") + "-" + dateFin.toString("yyyy-MM-dd"));
         loadMeteoGridHourlyData(QDateTime(dateIni, QTime(1,0), Qt::UTC), QDateTime(dateFin.addDays(1), QTime(0,0), Qt::UTC), false);
     }
 
@@ -2067,7 +2067,7 @@ bool PragaProject::hourlyDerivedVariablesGrid(QDate first, QDate last, bool load
     // now only hourly-->daily
     if (loadData)
     {
-        logInfoGUI("Loading grid data: " + first.toString("dd/MM/yyyy") + "-" + last.toString("dd/MM/yyyy"));
+        logInfoGUI("Loading grid data: " + first.toString("yyyy-MM-dd") + "-" + last.toString("yyyy-MM-dd"));
         loadMeteoGridHourlyData(firstDateTime, lastDateTime, false);
     }
 
@@ -2468,10 +2468,10 @@ bool PragaProject::interpolationMeteoGridPeriod(QDate dateIni, QDate dateFin, QL
             loadDateFin = myDate.addDays(nrDaysLoading-1);
             if (loadDateFin > dateFin) loadDateFin = dateFin;
 
-            logInfoGUI("Initializing meteo grid from " + myDate.addDays(-1).toString("dd/MM/yyyy") + " to " + loadDateFin.toString("dd/MM/yyyy"));
+            logInfoGUI("Initializing meteo grid from " + myDate.addDays(-1).toString("yyyy-MM-dd") + " to " + loadDateFin.toString("yyyy-MM-dd"));
             meteoGridDbHandler->meteoGrid()->initializeData(getCrit3DDate(myDate.addDays(-1)), getCrit3DDate(loadDateFin), isHourly, isDaily, false);
 
-            logInfoGUI("Loading meteo points data from " + myDate.addDays(-1).toString("dd/MM/yyyy") + " to " + loadDateFin.toString("dd/MM/yyyy"));
+            logInfoGUI("Loading meteo points data from " + myDate.addDays(-1).toString("yyyy-MM-dd") + " to " + loadDateFin.toString("yyyy-MM-dd"));
 
             // load one day before (for transmissivity)
             if (! loadMeteoPointsData(myDate.addDays(-1), loadDateFin, isHourly, isDaily, false))
@@ -2496,7 +2496,7 @@ bool PragaProject::interpolationMeteoGridPeriod(QDate dateIni, QDate dateFin, QL
         {
             for (myHour = 1; myHour <= 24; myHour++)
             {
-                logInfoGUI("Interpolating hourly variables for " + myDate.toString("dd/MM/yyyy") + " " + QString("%1").arg(myHour, 2, 10, QChar('0')) + ":00");
+                logInfoGUI("Interpolating hourly variables for " + myDate.toString("yyyy-MM-dd") + " " + QString("%1").arg(myHour, 2, 10, QChar('0')) + ":00");
 
                 foreach (myVar, variables)
                 {
@@ -2559,7 +2559,7 @@ bool PragaProject::interpolationMeteoGridPeriod(QDate dateIni, QDate dateFin, QL
 
         if (isDaily)
         {
-            logInfoGUI("Interpolating daily variables for " + myDate.toString("dd/MM/yyyy"));
+            logInfoGUI("Interpolating daily variables for " + myDate.toString("yyyy-MM-dd"));
 
             foreach (myVar, variables)
             {
@@ -2599,12 +2599,12 @@ bool PragaProject::interpolationMeteoGridPeriod(QDate dateIni, QDate dateFin, QL
         {
             if (aggrVariables.count() > 0)
             {
-                logInfoGUI("Time integration from " + saveDateIni.toString("dd/MM/yyyy") + " to " + myDate.toString("dd/MM/yyyy"));
+                logInfoGUI("Time integration from " + saveDateIni.toString("yyyy-MM-dd") + " to " + myDate.toString("yyyy-MM-dd"));
                 if (! timeAggregateGrid(saveDateIni, myDate, aggrVariables, false, false)) return false;
             }
 
             // saving hourly and daily meteo grid data to DB
-            logInfoGUI("Saving meteo grid data from " + saveDateIni.toString("dd/MM/yyyy") + " to " + myDate.toString("dd/MM/yyyy"));
+            logInfoGUI("Saving meteo grid data from " + saveDateIni.toString("yyyy-MM-dd") + " to " + myDate.toString("yyyy-MM-dd"));
             meteoGridDbHandler->saveGridData(&myError, QDateTime(saveDateIni, QTime(1,0,0), Qt::UTC), QDateTime(myDate.addDays(1), QTime(0,0,0), Qt::UTC), varToSave, meteoSettings);
 
             meteoGridDbHandler->meteoGrid()->emptyGridData(getCrit3DDate(saveDateIni), getCrit3DDate(myDate));

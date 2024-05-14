@@ -6,13 +6,6 @@
     #include <QStringList>
     #include <QDomElement>
 
-    struct TXMLScenarioFile
-    {
-        QString type;
-        QString attribute;
-        QString delimeter;
-        QString decimalSeparator;
-    };
     struct TXMLScenarioPoint
     {
         QString name;
@@ -99,20 +92,13 @@
         void initialize();
         void printInfo();
 
-
-        TXMLScenarioFile file;
-        //TXMLScenarioType type;
         TXMLScenarioPoint point;
         TXMLScenarioModels models;
         TXMLScenarioClimateField climatePeriod;
         TXMLScenarioType scenario;
         TXMLScenarioPeriod period[4]; // four season
-        //int modelNumber;
-        //QStringList modelName;
-        //QStringList modelMember;
         int repetitions;
         int anomalyYear;
-        //QString anomalySeason[4];
     };
 
     bool parseXMLFile(const QString &xmlFileName, QDomDocument &xmlDoc);

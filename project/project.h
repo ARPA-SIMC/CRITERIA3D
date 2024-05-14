@@ -10,6 +10,9 @@
     #ifndef OUTPUTPOINTS_H
         #include "outputPoints.h"
     #endif
+    #ifndef WELL_H
+        #include "well.h"
+    #endif
     #ifndef DBOUTPUTPOINTSHANDLER_H
         #include "dbOutputPointsHandler.h"
     #endif
@@ -110,6 +113,7 @@
         int nrMeteoPoints;
         Crit3DMeteoPoint* meteoPoints;
         std::vector<gis::Crit3DOutputPoint> outputPoints;
+        std::vector<Well> wellPoints;
 
         Crit3DMeteoPointsDbHandler* meteoPointsDbHandler;
         Crit3DOutputPointsDbHandler* outputPointsDbHandler;
@@ -290,6 +294,9 @@
 
         void setComputeOnlyPoints(bool value);
         bool getComputeOnlyPoints();
+
+        bool waterTableImportLocation(QString csvFileName);
+        bool waterTableImportDepths(QString csvDepths);
 
     private slots:
         void deleteMeteoWidgetPoint(int id);

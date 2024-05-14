@@ -185,7 +185,9 @@ int cmdExit(Project* myProject)
 {
     myProject->requestedExit = true;
 
-    // TODO: close project
+    #ifdef _WIN32
+        FreeConsole();
+    #endif
 
     return PRAGA_OK;
 }

@@ -14,6 +14,7 @@
 #include "dialogSelectionMeteoPoint.h"
 #include "dialogPointDeleteData.h"
 #include "formInfo.h"
+#include "importData.h"
 
 
 #include <iostream>
@@ -4545,3 +4546,51 @@ bool Project::findTempMinMax(meteoVariable myVar)
 
     return true;
 }
+
+
+bool Project::waterTableImportLocation(QString csvFileName)
+{
+    if (logFileName == "")
+    {
+        setLogFile("waterTableLog.txt");
+    }
+
+    int wrongLines = 0;
+    if (! loadCsvRegistry(csvFileName, wellPoints, errorString, wrongLines))
+    {
+        logError(errorString);
+        return false;
+    }
+
+    if (wrongLines > 0)
+    {
+        logInfo(errorString);
+        QMessageBox::warning(nullptr, "Warning!", QString::number(wrongLines)
+                            + " wrong lines of data were not loaded, see the log file " + logFileName + " for more information");
+    }
+
+    errorString = "";
+    return true;
+}
+
+
+bool Project::waterTableImportDepths(QString csvDepths)
+{
+    int wrongLines = 0;
+    if (! loadCsvDepths(csvDepths, wellPoints, quality->getWaterTableMaximumDepth(), errorString, wrongLines))
+    {
+        logError(errorString);
+        return false;
+    }
+
+    if (wrongLines>0)
+    {
+        logInfo(errorString);
+        QMessageBox::warning(nullptr, "Warning!", QString::number(wrongLines)
+                            + " wrong lines of data were not loaded, see the log file " + logFileName + " for more information");
+    }
+
+    errorString = "";
+    return true;
+}
+
