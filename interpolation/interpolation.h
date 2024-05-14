@@ -95,6 +95,14 @@
     bool proxyValidity(std::vector <Crit3DInterpolationDataPoint> &myPoints, int proxyPos,
                        float stdDevThreshold, double &avg, double &stdDev);
 
+    bool setAllFittingRanges(Crit3DProxyCombination myCombination, Crit3DInterpolationSettings* mySettings);
+
+    bool setAllFittingParameters_noRange(Crit3DProxyCombination myCombination, Crit3DInterpolationSettings* mySettings,
+                                         std::vector<std::function<double(double, std::vector<double>&)>>& myFunc,
+                                         std::vector <std::vector<double>> &paramMin, std::vector <std::vector<double>> &paramMax,
+                                         std::vector <std::vector<double>> &paramDelta, std::vector <std::vector<double>> &paramFirstGuess,
+                                         std::string &errorStr);
+
     bool setAllFittingParameters(Crit3DProxyCombination myCombination, Crit3DInterpolationSettings* mySettings,
                                  std::vector<std::function<double(double, std::vector<double>&)>>& myFunc,
                                  std::vector <std::vector<double>> &paramMin, std::vector <std::vector<double>> &paramMax,
