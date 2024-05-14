@@ -4561,7 +4561,7 @@ bool Project::waterTableImportLocation(QString csvFileName)
     }
 
     int wrongLines = 0;
-    if (! loadCsvRegistry(csvFileName, wellPoints, &errorString, &wrongLines))
+    if (! loadCsvRegistry(csvFileName, wellPoints, errorString, wrongLines))
     {
         logError(errorString);
         return false;
@@ -4582,7 +4582,7 @@ bool Project::waterTableImportLocation(QString csvFileName)
 bool Project::waterTableImportDepths(QString csvDepths)
 {
     int wrongLines = 0;
-    if (! loadCsvDepths(csvDepths, wellPoints, quality->getWaterTableMaximumDepth() , &errorString, &wrongLines))
+    if (! loadCsvDepths(csvDepths, wellPoints, quality->getWaterTableMaximumDepth(), errorString, wrongLines))
     {
         logError(errorString);
         return false;

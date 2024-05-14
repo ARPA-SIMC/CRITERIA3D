@@ -4,21 +4,23 @@
 #include <QTextStream>
 
 
-bool loadCsvRegistry(QString csvRegistry, std::vector<Well> &wellList, QString *errorStr, int* wrongLines)
+bool loadCsvRegistry(QString csvRegistry, std::vector<Well> &wellList, QString &errorStr, int &wrongLines)
 {
+    errorStr = "";
+    wellList.clear();
+
     QFile myFile(csvRegistry);
     QList<QString> idList;
     QList<QString> errorList;
     int posId = 0;
     int posUtmx = 1;
     int posUtmy = 2;
-
     int nFields = 3;
     bool ok;
-    *errorStr = "";
+
     if (! myFile.open(QFile::ReadOnly | QFile::Text) )
     {
-        *errorStr = "csvFileName file does not exist";
+        errorStr = "csvFileName file does not exist";
         return false;
     }
     else
@@ -34,7 +36,7 @@ bool loadCsvRegistry(QString csvRegistry, std::vector<Well> &wellList, QString *
             if (items.size()<nFields)
             {
                 errorList.append(items[posId]);
-                *wrongLines = *wrongLines + 1;
+                wrongLines++;
                 continue;
             }
             QString id = items[posId];
@@ -42,7 +44,7 @@ bool loadCsvRegistry(QString csvRegistry, std::vector<Well> &wellList, QString *
             {
                 // id already saved
                 errorList.append(id);
-                *wrongLines = *wrongLines + 1;
+                wrongLines++;
                 continue;
             }
             idList.append(id);
@@ -50,14 +52,14 @@ bool loadCsvRegistry(QString csvRegistry, std::vector<Well> &wellList, QString *
             if (!ok)
             {
                 errorList.append(id);
-                *wrongLines = *wrongLines + 1;
+                wrongLines++;
                 continue;
             }
             double utmY = items[posUtmy].toDouble(&ok);
             if (!ok)
             {
                 errorList.append(id);
-                *wrongLines = *wrongLines + 1;
+                wrongLines++;
                 continue;
             }
             Well newWell;
@@ -69,18 +71,17 @@ bool loadCsvRegistry(QString csvRegistry, std::vector<Well> &wellList, QString *
     }
     myFile.close();
 
-    if (*wrongLines>0)
+    if (wrongLines > 0)
     {
-        *errorStr = "ID repeated or with invalid coordinates: " + errorList.join(",");
+        errorStr = "ID repeated or with invalid coordinates: " + errorList.join(",");
     }
 
     return true;
 }
 
 
-bool loadCsvDepths(QString csvDepths, std::vector<Well> &wellList, int waterTableMaximumDepth, QString *errorStr, int* wrongLines)
+bool loadCsvDepths(QString csvDepths, std::vector<Well> &wellList, int waterTableMaximumDepth, QString &errorStr, int &wrongLines)
 {
-
     QFile myFile(csvDepths);
     QList<QString> errorList;
     int posId = 0;
@@ -89,11 +90,11 @@ bool loadCsvDepths(QString csvDepths, std::vector<Well> &wellList, int waterTabl
 
     int nFields = 3;
     bool ok;
-    *errorStr = "";
+    errorStr = "";
 
     if (! myFile.open(QFile::ReadOnly | QFile::Text) )
     {
-        *errorStr = "csvFileName file does not exist";
+        errorStr = "csvFileName file does not exist";
         return false;
     }
     else
@@ -109,17 +110,18 @@ bool loadCsvDepths(QString csvDepths, std::vector<Well> &wellList, int waterTabl
             if (items.size() < nFields)
             {
                 errorList.append(line);
-                *wrongLines = *wrongLines + 1;
+                wrongLines++;
                 continue;
             }
             QString id = items[posId];
             bool found = false;
-            int i = 0;
-            for (; i < wellList.size(); i++)
+            int index = NODATA;
+            for (int i = 0; i < wellList.size(); i++)
             {
                 if (wellList[i].getId() == id)
                 {
                     found = true;
+                    index = 1;
                     break;
                 }
             }
@@ -127,32 +129,34 @@ bool loadCsvDepths(QString csvDepths, std::vector<Well> &wellList, int waterTabl
             {
                 // id does not exist
                 errorList.append(line);
-                *wrongLines = *wrongLines + 1;
+                wrongLines++;
                 continue;
             }
 
             QDate date = QDate::fromString(items[posDate],"yyyy-MM-dd");
-            if (!date.isValid())
+            if (! date.isValid())
             {
                 errorList.append(line);
-                *wrongLines = *wrongLines + 1;
+                wrongLines++;
                 continue;
             }
+
             int value = items[posDepth].toInt(&ok);
             if (!ok || value == NODATA || value < 0 || value > waterTableMaximumDepth)
             {
                 errorList.append(line);
-                *wrongLines = *wrongLines + 1;
+                wrongLines++;
                 continue;
             }
-            wellList[i].insertData(date, value);
+
+            wellList[index].insertData(date, value);
         }
     }
     myFile.close();
 
-    if (*wrongLines>0)
+    if (wrongLines > 0)
     {
-        *errorStr = "ID not existing or with invalid data or value:\n" + errorList.join("\n");
+        errorStr = "ID not existing or with invalid data or value:\n" + errorList.join("\n");
     }
 
     return true;
