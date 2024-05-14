@@ -4,7 +4,7 @@
 #
 #-------------------------------------------------
 
-QT      += core
+QT      += core xml
 QT      -= gui
 
 TEMPLATE = lib
@@ -24,7 +24,7 @@ win32:{
     TARGET = waterTable
 }
 
-INCLUDEPATH += ../mathFunctions ../meteo ../gis ../dbMeteoPoints ../dbMeteoGrid
+INCLUDEPATH += ../crit3dDate ../mathFunctions ../meteo ../gis ../dbMeteoPoints ../dbMeteoGrid ../weatherGenerator
 
 SOURCES += \
     importData.cpp \

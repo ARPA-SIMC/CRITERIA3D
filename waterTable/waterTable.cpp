@@ -1,5 +1,6 @@
 #include "waterTable.h"
 #include "commonConstants.h"
+#include "weatherGenerator.h"
 
 WaterTable::WaterTable()
 {
@@ -29,7 +30,7 @@ void WaterTable::initializeWaterTable(Well myWell)
     this->well = myWell;
     for (int myMonthIndex = 0; myMonthIndex < 12; myMonthIndex++)
     {
-        WTClimateMonthly.push_back(NODATA);
+        WTClimateMonthly[myMonthIndex] = NODATA;
     }
 
     isMeteoPointLinked = false;
@@ -114,10 +115,8 @@ bool WaterTable::computeWTClimate()
         }
         WTClimateMonthly[myMonthIndex] = H_sum[myMonthIndex] / H_num[myMonthIndex];
         isClimateReady = true;
-        //math.qSplineYearInterpolate .WTClimateMonthly, .WTClimateDaily
+        cubicSplineYearInterpolate(WTClimateMonthly, WTClimateDaily);
     }
-
     return true;
-
 }
 

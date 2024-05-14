@@ -31,8 +31,8 @@ private:
     float EF;
 
     bool isClimateReady;
-    std::vector<float> WTClimateMonthly;
-    std::vector<float> WTClimateDaily;
+    float WTClimateMonthly[12];
+    float WTClimateDaily[366];
     int nrObsData;
 
     bool isMeteoPointLinked;
