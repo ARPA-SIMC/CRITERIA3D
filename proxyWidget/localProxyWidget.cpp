@@ -202,6 +202,47 @@ Crit3DLocalProxyWidget::Crit3DLocalProxyWidget(double x, double y, std::vector<s
 
         selectionLayout->addLayout(parametriLayout);
     }
+    else if (!parameters.empty() && interpolationSettings->getProxy(proxyPos)->getFittingFunctionName() == piecewiseThreeFree && parameters[proxyPos].size() == 6)
+    {
+        QVBoxLayout *parametriLayout = new QVBoxLayout();
+
+        QLabel *H0Lab = new QLabel(QString("H0: %1").arg(parameters[proxyPos][0]));
+        QLabel *T0Lab = new QLabel(QString("T0: %1").arg(parameters[proxyPos][1]));
+        QLabel *H1Lab = new QLabel(QString("H1: %1").arg(parameters[proxyPos][0]+parameters[proxyPos][2]));
+        QLabel *slope1Lab = new QLabel(QString("Slope1: %1").arg(parameters[proxyPos][4]));
+        QLabel *slope2Lab = new QLabel(QString("Slope2: %1").arg(parameters[proxyPos][3]));
+        QLabel *slope3Lab = new QLabel(QString("Slope3: %1").arg(parameters[proxyPos][5]));
+
+        parametriLayout->addWidget(H0Lab);
+        parametriLayout->addWidget(T0Lab);
+        parametriLayout->addWidget(H1Lab);
+        parametriLayout->addWidget(slope1Lab);
+        parametriLayout->addWidget(slope2Lab);
+        parametriLayout->addWidget(slope3Lab);
+
+
+        selectionLayout->addLayout(parametriLayout);
+    }
+    else if (!parameters.empty() && interpolationSettings->getProxy(proxyPos)->getFittingFunctionName() == piecewiseThreeSlope && parameters[proxyPos].size() == 6)
+    {
+        QVBoxLayout *parametriLayout = new QVBoxLayout();
+
+        QLabel *H0Lab = new QLabel(QString("H0: %1").arg(parameters[proxyPos][0]));
+        QLabel *T0Lab = new QLabel(QString("T0: %1").arg(parameters[proxyPos][1]));
+        QLabel *H1Lab = new QLabel(QString("H1: %1").arg(parameters[proxyPos][0]+parameters[proxyPos][2]));
+        QLabel *slope2Lab = new QLabel(QString("Slope3: %1").arg(parameters[proxyPos][3]));
+        QLabel *slope3Lab = new QLabel(QString("Slope1: %1").arg(parameters[proxyPos][4]));
+
+        parametriLayout->addWidget(H0Lab);
+        parametriLayout->addWidget(T0Lab);
+        parametriLayout->addWidget(H1Lab);
+        //parametriLayout->addWidget(slope1Lab);
+        parametriLayout->addWidget(slope2Lab);
+        parametriLayout->addWidget(slope3Lab);
+
+
+        selectionLayout->addLayout(parametriLayout);
+    }
     horizontalGroupBox->setMaximumSize(1240, 130);
     horizontalGroupBox->setLayout(selectionLayout);
 
@@ -357,6 +398,7 @@ void Crit3DLocalProxyWidget::plot()
 {
     chartView->cleanScatterSeries();
     outInterpolationPoints.clear();
+    subsetInterpolationPoints.clear();
     std::string errorStdStr;
     if (detrended.isChecked())
     {
@@ -516,7 +558,7 @@ void Crit3DLocalProxyWidget::modelLRClicked(int toggled)
 
             if (interpolationSettings->getUseMultipleDetrending())
             {
-                if (parameters.empty() || (parameters[proxyPos].size() != 5 && parameters[proxyPos].size() != 4))
+                if (parameters.empty() || (parameters[proxyPos].size() != 5 && parameters[proxyPos].size() != 6 && parameters[proxyPos].size() != 4))
                     return;
 
                 if (interpolationSettings->getProxy(proxyPos)->getFittingFunctionName() == piecewiseThree)
@@ -577,30 +619,43 @@ void Crit3DLocalProxyWidget::modelLRClicked(int toggled)
                 }
                 else if (interpolationSettings->getProxy(proxyPos)->getFittingFunctionName() == frei)
                 {
-                    double freiT0 = parameters[proxyPos][0];
-                    double freiGamma = parameters[proxyPos][1];
-                    double freiA = parameters[proxyPos][2];
-                    double freiH0 = parameters[proxyPos][3];
-                    double freiH1 = parameters[proxyPos][4]+parameters[proxyPos][3];
-
-                    std::vector <double> par;
-                    par.push_back(freiT0);
-                    par.push_back(freiGamma);
-                    par.push_back(freiA);
-                    par.push_back(freiH0);
-                    par.push_back(freiH1);
-
                     std::vector <double> xVector;
-
                     for (int m = xMin; m < xMax; m += 5)
                         xVector.push_back(m);
 
                     for (int p = 0; p < xVector.size(); p++)
                     {
                         point.setX(xVector[p]);
-                        point.setY(lapseRateFrei(xVector[p], par));
+                        point.setY(lapseRateFrei(xVector[p], parameters[proxyPos]));
                         point_vector.append(point);
                     }
+                }
+                else if (interpolationSettings->getProxy(proxyPos)->getFittingFunctionName() == piecewiseThreeFree)
+                {
+                    std::vector <double> xVector;
+                    for (int m = xMin; m < xMax; m += 5)
+                        xVector.push_back(m);
+
+                    for (int p = 0; p < xVector.size(); p++)
+                    {
+                        point.setX(xVector[p]);
+                        point.setY(lapseRatePiecewiseFree(xVector[p], parameters[proxyPos]));
+                        point_vector.append(point);
+                    }
+                }
+                else if (interpolationSettings->getProxy(proxyPos)->getFittingFunctionName() == piecewiseThreeSlope)
+                {
+                    std::vector <double> xVector;
+                    for (int m = xMin; m < xMax; m += 5)
+                        xVector.push_back(m);
+
+                    for (int p = 0; p < xVector.size(); p++)
+                    {
+                        point.setX(xVector[p]);
+                        point.setY(lapseRatePiecewiseThree_withSlope(xVector[p], parameters[proxyPos]));
+                        point_vector.append(point);
+                    }
+
                 }
                 /*if (interpolationSettings->getProxy(proxyPos)->getInversionIsSignificative())
                 {

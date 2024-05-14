@@ -306,6 +306,18 @@ void Crit3DInterpolationSettings::setChosenElevationFunction(TFittingFunction ch
     chosenElevationFunction = chosenFunction;
 }
 
+void Crit3DInterpolationSettings::setMinMaxTemperature(double min, double max)
+{
+    tempMinMax.clear();
+    tempMinMax.push_back(min);
+    tempMinMax.push_back(max);
+}
+
+std::vector<double> Crit3DInterpolationSettings::getMinMaxTemperature()
+{
+    return tempMinMax;
+}
+
 void Crit3DInterpolationSettings::clearFitting()
 {
     fittingFunction.clear();
@@ -355,7 +367,7 @@ void Crit3DInterpolationSettings::initialize()
     meteoGridAggrMethod = aggrAverage;
     meteoGridUpscaleFromDem = true;
     indexHeight = unsigned(NODATA);
-    chosenElevationFunction = frei;
+    chosenElevationFunction = piecewiseThreeSlope;
 
     isKrigingReady = false;
     precipitationAllZero = false;
@@ -615,20 +627,6 @@ TFittingFunction Crit3DProxy::getFittingFunctionName()
     return fittingFunctionName;
 }
 
-void Crit3DProxy::setMinMaxTemperature(double min, double max)
-{
-    tempMinMax.clear();
-    tempMinMax.push_back(min);
-    tempMinMax.push_back(max);
-}
-
-double Crit3DProxy::getMinMaxTemperature(int i)
-{
-    if (tempMinMax.empty())
-        return NODATA;
-
-    return tempMinMax[i];
-}
 
 Crit3DProxy::Crit3DProxy()
 {
@@ -646,7 +644,7 @@ Crit3DProxy::Crit3DProxy()
     lapseRateT1 = NODATA;
     inversionLapseRate = NODATA;
     inversionIsSignificative = false;
-    tempMinMax;
+    fittingParametersRange.clear();
 
     avg = NODATA;
     stdDev = NODATA;

@@ -37,7 +37,6 @@
         float regressionIntercept;
         TFittingFunction fittingFunctionName;
         std::vector <double> fittingParametersRange;
-        std::vector <double> tempMinMax;
 
         float avg;
         float stdDev;
@@ -101,8 +100,6 @@
         void setFittingParametersRange(const std::vector<double> &newFittingParametersRange);
         TFittingFunction getFittingFunctionName();
         void setFittingFunctionName(TFittingFunction functionName);
-        void setMinMaxTemperature(double min, double max);
-        double getMinMaxTemperature (int i);
     };
 
 
@@ -169,6 +166,7 @@
 
         std::vector <std::vector<double>> fittingParameters;
         std::vector<std::function<double(double, std::vector<double>&)>> fittingFunction;
+        std::vector<double> tempMinMax;
 
 
     public:
@@ -253,6 +251,7 @@
         void setLocalRadius(float newLocalRadius);
         int getMinPointsLocalDetrending() const;
         void setMinPointsLocalDetrending(int newMinPointsLocalDetrending);
+
         std::vector<std::vector <double>> getFittingParameters() const;
         void setFittingParameters(const std::vector<std::vector <double>> &newFittingParameters);
         std::vector<std::function<double (double, std::vector<double> &)> > getFittingFunction() const;
@@ -262,6 +261,8 @@
         void clearFitting();
         TFittingFunction getChosenElevationFunction();
         void setChosenElevationFunction(TFittingFunction chosenFunction);
+        void setMinMaxTemperature(double min, double max);
+        std::vector<double> getMinMaxTemperature();
     };
 
 #endif // INTERPOLATIONSETTINGS_H
