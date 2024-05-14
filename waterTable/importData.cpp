@@ -3,6 +3,7 @@
 #include <QFile>
 #include <QTextStream>
 
+
 bool loadCsvRegistry(QString csvRegistry, std::vector<Well> &wellList, QString *errorStr, int* wrongLines)
 {
     QFile myFile(csvRegistry);
@@ -14,8 +15,8 @@ bool loadCsvRegistry(QString csvRegistry, std::vector<Well> &wellList, QString *
 
     int nFields = 3;
     bool ok;
-
-    if ( !myFile.open(QFile::ReadOnly | QFile::Text) )
+    *errorStr = "";
+    if (! myFile.open(QFile::ReadOnly | QFile::Text) )
     {
         *errorStr = "csvFileName file does not exist";
         return false;
@@ -72,8 +73,10 @@ bool loadCsvRegistry(QString csvRegistry, std::vector<Well> &wellList, QString *
     {
         *errorStr = "ID repeated or with invalid coordinates: " + errorList.join(",");
     }
+
     return true;
 }
+
 
 bool loadCsvDepths(QString csvDepths, std::vector<Well> &wellList, int waterTableMaximumDepth, QString *errorStr, int* wrongLines)
 {
@@ -86,8 +89,9 @@ bool loadCsvDepths(QString csvDepths, std::vector<Well> &wellList, int waterTabl
 
     int nFields = 3;
     bool ok;
+    *errorStr = "";
 
-    if ( !myFile.open(QFile::ReadOnly | QFile::Text) )
+    if (! myFile.open(QFile::ReadOnly | QFile::Text) )
     {
         *errorStr = "csvFileName file does not exist";
         return false;
@@ -150,7 +154,7 @@ bool loadCsvDepths(QString csvDepths, std::vector<Well> &wellList, int waterTabl
     {
         *errorStr = "ID not existing or with invalid data or value:\n" + errorList.join("\n");
     }
-    return true;
 
+    return true;
 }
 

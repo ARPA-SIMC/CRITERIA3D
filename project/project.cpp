@@ -4560,7 +4560,6 @@ bool Project::waterTableImportLocation(QString csvFileName)
         setLogFile("waterTableLog.txt");
     }
 
-    errorString = "";
     int wrongLines = 0;
     if (! loadCsvRegistry(csvFileName, wellPoints, &errorString, &wrongLines))
     {
@@ -4575,6 +4574,7 @@ bool Project::waterTableImportLocation(QString csvFileName)
                             + " wrong lines of data were not loaded, see the log file " + logFileName + " for more information");
     }
 
+    errorString = "";
     return true;
 }
 
@@ -4595,6 +4595,7 @@ bool Project::waterTableImportDepths(QString csvDepths)
                             + " wrong lines of data were not loaded, see the log file " + logFileName + " for more information");
     }
 
+    errorString = "";
     return true;
 }
 
