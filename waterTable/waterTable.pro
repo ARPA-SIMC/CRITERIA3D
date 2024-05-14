@@ -24,7 +24,7 @@ win32:{
     TARGET = waterTable
 }
 
-INCLUDEPATH += ../crit3dDate ../mathFunctions ../meteo ../gis ../dbMeteoPoints ../dbMeteoGrid ../weatherGenerator
+INCLUDEPATH += ../crit3dDate ../mathFunctions ../meteo ../interpolation ../gis ../weatherGenerator
 
 SOURCES += \
     importData.cpp \

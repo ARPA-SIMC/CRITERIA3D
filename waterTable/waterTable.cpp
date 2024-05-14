@@ -2,7 +2,8 @@
 #include "commonConstants.h"
 #include "weatherGenerator.h"
 
-WaterTable::WaterTable()
+WaterTable::WaterTable(Crit3DMeteoPoint* meteoPoints, int nrMeteoPoints, Crit3DMeteoGrid* meteoGrid, bool isMeteoGridLoaded)
+    : meteoPoints(meteoPoints), nrMeteoPoints(nrMeteoPoints), meteoGrid(meteoGrid), isMeteoGridLoaded(isMeteoGridLoaded)
 {
 
 }
@@ -28,6 +29,8 @@ void WaterTable::initializeWaterTable(Well myWell)
 {
 
     this->well = myWell;
+    getFirstDate();
+    getLastDate();
     for (int myMonthIndex = 0; myMonthIndex < 12; myMonthIndex++)
     {
         WTClimateMonthly[myMonthIndex] = NODATA;
@@ -117,6 +120,72 @@ bool WaterTable::computeWTClimate()
         isClimateReady = true;
         cubicSplineYearInterpolate(WTClimateMonthly, WTClimateDaily);
     }
+    return true;
+}
+
+bool WaterTable::assignNearestMeteoPoint()
+{
+    float minimumDistance = NODATA;
+    bool assignNearestMeteoPoint = false;
+    if (isMeteoGridLoaded)
+    {
+        int zoneNumber;
+        for (unsigned row = 0; row < unsigned(meteoGrid->gridStructure().header().nrRows); row++)
+        {
+            for (unsigned col = 0; col < unsigned(meteoGrid->gridStructure().header().nrCols); col++)
+            {
+                double utmX = meteoGrid->meteoPointPointer(row,col)->point.utm.x;
+                double utmY = meteoGrid->meteoPointPointer(row,col)->point.utm.y;
+                if (utmX == NODATA || utmY == NODATA)
+                {
+                    double lat = meteoGrid->meteoPointPointer(row,col)->latitude;
+                    double lon = meteoGrid->meteoPointPointer(row,col)->longitude;
+                    gis::latLonToUtm(lat, lon, &utmX, &utmY, &zoneNumber);
+                }
+                float myDistance = gis::computeDistance(well.getUtmX(), well.getUtmY(), utmX, utmY);
+                if (myDistance < MAXWELLDISTANCE )
+                {
+                    if (myDistance < minimumDistance || minimumDistance == NODATA)
+                    {
+                        if (assignWTMeteoData(*meteoGrid->meteoPointPointer(row,col) ))
+                        {
+                            minimumDistance = myDistance;
+                            assignNearestMeteoPoint = true;
+                            well.setLinkedMeteoPoint(*meteoGrid->meteoPointPointer(row,col));
+                        }
+                    }
+                }
+            }
+        }
+    }
+    else
+    {
+        for (int i = 0; i < nrMeteoPoints; i++)
+        {
+
+            double utmX = meteoPoints[i].point.utm.x;
+            double utmY = meteoPoints[i].point.utm.y;
+            float myDistance = gis::computeDistance(well.getUtmX(), well.getUtmY(), utmX, utmY);
+            if (myDistance < MAXWELLDISTANCE )
+            {
+                if (myDistance < minimumDistance || minimumDistance == NODATA)
+                {
+                    if (assignWTMeteoData(meteoPoints[i]))
+                    {
+                        minimumDistance = myDistance;
+                        assignNearestMeteoPoint = true;
+                        well.setLinkedMeteoPoint(meteoPoints[i]);
+                    }
+                }
+            }
+        }
+    }
+    return assignNearestMeteoPoint;
+}
+
+bool WaterTable::assignWTMeteoData(Crit3DMeteoPoint point)
+{
+    // TO DO
     return true;
 }
 
