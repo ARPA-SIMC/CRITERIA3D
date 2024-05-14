@@ -40,6 +40,16 @@ void Well::insertData(QDate myDate, int myValue)
     depths.insert(myDate, myValue);
 }
 
+int  Well::getDepthNr()
+{
+    return depths.size();
+}
+
+QMap<QDate, int> Well::getDepths() const
+{
+    return depths;
+}
+
 QDate Well::getFirstDate()
 {
     QList<QDate> allDates = depths.keys();

@@ -24,6 +24,10 @@ public:
     QDate getFirstDate();
     QDate getLastDate();
 
+    int getDepthNr();
+
+    QMap<QDate, int> getDepths() const;
+
 private:
     QString id;
     double utmX;
