@@ -21,7 +21,8 @@ class WaterTable
         bool assignWTMeteoData(Crit3DMeteoPoint point);
         bool computeETP_allSeries();
         bool computeCWBCorrelation(int maxNrDays);
-        double computeCWB(QDate myDate, int nrDays);
+        float computeCWB(QDate myDate, int nrDays);
+        bool computeWaterTableIndices(int doy1, int doy2);
         QString getError() const;
 
     private:
@@ -37,6 +38,9 @@ class WaterTable
         QDate lastMeteoDate;
         Well well;
         QString error;
+
+        std::vector<float> etpValues;
+        std::vector<float> precValues;
 
         int nrDaysPeriod;
         float alpha;

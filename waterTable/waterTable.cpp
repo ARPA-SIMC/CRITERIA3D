@@ -60,7 +60,7 @@ bool WaterTable::computeWaterTable(Well myWell, int maxNrDays, int doy1, int doy
     }
 
     initializeWaterTable(myWell);
-    bool isClimateReady = computeWTClimate();
+    isClimateReady = computeWTClimate();
     isMeteoPointLinked = assignNearestMeteoPoint();
     if (isMeteoPointLinked == false)
     {
@@ -73,12 +73,12 @@ bool WaterTable::computeWaterTable(Well myWell, int maxNrDays, int doy1, int doy
     }
 
     isCWBEquationReady = computeCWBCorrelation(maxNrDays);
-//          If Not .isCWBEquationReady Then Exit Function
-
-//                  computeWaterTableIndices myWell, doy1, doy2
-
-//                  End With
-
+    if (!isCWBEquationReady)
+    {
+        return false;
+    }
+    // LC non c'è alcun controllo sul valore di ritorno di computeWaterTableIndices
+    computeWaterTableIndices (doy1, doy2);
     return true;
 }
 
@@ -187,7 +187,7 @@ bool WaterTable::assignNearestMeteoPoint()
 bool WaterTable::assignWTMeteoData(Crit3DMeteoPoint point)
 {
     firstMeteoDate = firstDateWell.addDays(-730); // necessari 24 mesi di dati meteo precedenti il primo dato di falda
-    lastMeteoDate = lastDateWell; // ultimo dato di falda CHECK lastDate = max(currentDay, myWell.Well.Items.Item(UBound(myWell.Well.Items.Item)).date_)
+    lastMeteoDate.setDate(point.getLastDailyData().year, point.getLastDailyData().month, point.getLastDailyData().day); // ultimo dato disponibile
     float precPerc = point.getPercValueVariable(Crit3DDate(firstMeteoDate.day(), firstMeteoDate.month(), firstMeteoDate.year()) , Crit3DDate(lastMeteoDate.day(), lastMeteoDate.month(), lastMeteoDate.year()), dailyPrecipitation);
     float tMinPerc = point.getPercValueVariable(Crit3DDate(firstMeteoDate.day(), firstMeteoDate.month(), firstMeteoDate.year()) , Crit3DDate(lastMeteoDate.day(), lastMeteoDate.month(), lastMeteoDate.year()), dailyAirTemperatureMin);
     float tMaxPerc = point.getPercValueVariable(Crit3DDate(firstMeteoDate.day(), firstMeteoDate.month(), firstMeteoDate.year()) , Crit3DDate(lastMeteoDate.day(), lastMeteoDate.month(), lastMeteoDate.year()), dailyAirTemperatureMax);
@@ -206,10 +206,12 @@ bool WaterTable::assignWTMeteoData(Crit3DMeteoPoint point)
 
 bool WaterTable::computeETP_allSeries()
 {
+    etpValues.clear();
+    precValues.clear();
     double myLat;
     double myLon;
     gis::getLatLonFromUtm(gisSettings, well.getUtmX(), well.getUtmY(), &myLat, &myLon);
-    double sumCWB = 0;
+    float sumCWB = 0;
     int nrValidDays = 0;
     for (QDate myDate = firstMeteoDate; myDate<=lastMeteoDate; myDate=myDate.addDays(1))
     {
@@ -218,6 +220,8 @@ bool WaterTable::computeETP_allSeries()
         float Tmax = linkedMeteoPoint.getMeteoPointValueD(date, dailyAirTemperatureMax);
         float prec = linkedMeteoPoint.getMeteoPointValueD(date, dailyPrecipitation);
         float etp = dailyEtpHargreaves(Tmin, Tmax, date, myLat,&meteoSettings);
+        etpValues.push_back(etp);
+        precValues.push_back(prec);
         if (etp != NODATA && prec != NODATA)
         {
             sumCWB = sumCWB + (prec - etp);
@@ -238,11 +242,19 @@ bool WaterTable::computeETP_allSeries()
     return true;
 }
 
+// Ricerca del periodo di correlazione migliore
 bool WaterTable::computeCWBCorrelation(int maxNrDays)
 {
     float bestR2 = 0;
+    float bestH0;
+    float bestAlfaCoeff;
     int bestNrDays = NODATA;
     QMap<QDate, int> myDepths = well.getDepths();
+    std::vector<float> myCWBSum;
+    std::vector<float> myObsWT;
+    float a;
+    float b;
+    float myR2;
 
     for (int nrDays = 90; nrDays <= maxNrDays; nrDays=nrDays+10)
     {
@@ -251,15 +263,82 @@ bool WaterTable::computeCWBCorrelation(int maxNrDays)
         {
             QDate myDate = it.key();
             int myValue = it.value();
-            //float myCWBValue = computeCWB(myDate, nrDays);  // [cm]
-            // TO DO
+            float myCWBValue = computeCWB(myDate, nrDays);  // [cm]
+            if (myCWBValue != NODATA)
+            {
+                myCWBSum.push_back(myCWBValue);
+                myObsWT.push_back(myValue);
+            }
         }
+        statistics::linearRegression(myCWBSum, myObsWT, myCWBSum.size(), false, &a, &b, &myR2);
+        if (myR2 > bestR2)
+        {
+            bestR2 = myR2;
+            bestNrDays = nrDays;
+            bestH0 = a;
+            bestAlfaCoeff = b;
+        }
+    }
+    if (bestR2 > 0)
+    {
+        nrObsData = myObsWT.size();
+        nrDaysPeriod = bestNrDays;
+        h0 = bestH0;
+        alpha = bestAlfaCoeff;
+        R2 = bestR2;
+        isCWBEquationReady = true;
+        return true;
+    }
+    else
+    {
+        return false;
     }
 }
 
-double WaterTable::computeCWB(QDate myDate, int nrDays)
+// Climatic WaterBalance (CWB) on a nrDaysPeriod
+float WaterTable::computeCWB(QDate myDate, int nrDays)
+{
+    float sumCWB = 0;
+    int nrValidDays = 0;
+    QDate actualDate;
+    float currentCWB;
+    float weight;
+    for (int shift = 1; shift<=nrDays; shift++)
+    {
+        actualDate = myDate.addDays(-shift);
+        int index = firstMeteoDate.daysTo(actualDate) + 1; // LC CONTROLLARE
+        if (index > 0 && index < precValues.size())
+        {
+            float etp = etpValues[index];
+            float prec = precValues[index];
+            if ( etp != NODATA &&  prec != NODATA)
+            {
+                currentCWB = prec - etp;
+                weight = 1 - shift; // nrDaysPeriod
+                sumCWB = sumCWB + currentCWB * weight;
+                nrValidDays = nrValidDays + 1;
+            }
+        }
+    }
+
+    if (nrValidDays < (nrDaysPeriod * meteoSettings.getMinimumPercentage() / 100))
+    {
+        error = "Few Data";
+        return NODATA;
+    }
+    // Climate
+    float climateCWB = avgDailyCWB * nrDaysPeriod * 0.5;
+
+    // conversion: from [mm] to [cm]
+    float computeCWB = (sumCWB - climateCWB) * 0.1;
+
+    return computeCWB;
+}
+
+// function to compute several statistical indices for watertable depth
+bool WaterTable::computeWaterTableIndices(int doy1, int doy2)
 {
     // TO DO
-    return NODATA;
+    return true;
 }
 
