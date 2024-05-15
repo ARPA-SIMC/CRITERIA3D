@@ -98,15 +98,15 @@ bool WaterTable::computeWTClimate()
     }
 
     QMap<QDate, int> myDepths = well.getDepths();
-    for (auto it = myDepths.keyValueBegin(); it != myDepths.keyValueEnd(); ++it)
+    QMapIterator<QDate, int> it(myDepths);
+    while (it.hasNext())
     {
-        QDate myDate = it->first;
-        int myValue = it->second;
+        QDate myDate = it.key();
+        int myValue = it.value();
         int myMonth = myDate.month();
         int myMonthIndex = myMonth - 1;
         H_sum[myMonthIndex] = H_sum[myMonthIndex] + myValue;
         H_num[myMonthIndex] = H_num[myMonthIndex] + 1;
-
     }
 
     for (int myMonthIndex = 0; myMonthIndex < 12; myMonthIndex++)
