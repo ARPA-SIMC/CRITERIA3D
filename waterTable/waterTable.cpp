@@ -67,8 +67,12 @@ bool WaterTable::computeWaterTable(Well myWell, int maxNrDays, int doy1, int doy
         return false;
     }
 
-//                      computeETP_allSeries myWell
-//                          .isCWBEquationReady = ComputeCWBCorrelation(myWell, maxNrDays, True)
+    if (!computeETP_allSeries())
+    {
+        return false;
+    }
+
+    isCWBEquationReady = computeCWBCorrelation(maxNrDays);
 //          If Not .isCWBEquationReady Then Exit Function
 
 //                  computeWaterTableIndices myWell, doy1, doy2
@@ -207,8 +211,55 @@ bool WaterTable::computeETP_allSeries()
     gis::getLatLonFromUtm(gisSettings, well.getUtmX(), well.getUtmY(), &myLat, &myLon);
     double sumCWB = 0;
     int nrValidDays = 0;
-    // TO DO
+    for (QDate myDate = firstMeteoDate; myDate<=lastMeteoDate; myDate=myDate.addDays(1))
+    {
+        Crit3DDate date(myDate.day(), myDate.month(), myDate.year());
+        float Tmin = linkedMeteoPoint.getMeteoPointValueD(date, dailyAirTemperatureMin);
+        float Tmax = linkedMeteoPoint.getMeteoPointValueD(date, dailyAirTemperatureMax);
+        float prec = linkedMeteoPoint.getMeteoPointValueD(date, dailyPrecipitation);
+        float etp = dailyEtpHargreaves(Tmin, Tmax, date, myLat,&meteoSettings);
+        if (etp != NODATA && prec != NODATA)
+        {
+            sumCWB = sumCWB + (prec - etp);
+            nrValidDays = nrValidDays + 1;
+        }
+    }
+
+    if (nrValidDays > 0)
+    {
+        avgDailyCWB = sumCWB / nrValidDays;
+    }
+    else
+    {
+        error = "Missing data: " + QString::fromStdString(linkedMeteoPoint.name);
+        return false;
+    }
 
     return true;
+}
+
+bool WaterTable::computeCWBCorrelation(int maxNrDays)
+{
+    float bestR2 = 0;
+    int bestNrDays = NODATA;
+    QMap<QDate, int> myDepths = well.getDepths();
+
+    for (int nrDays = 90; nrDays <= maxNrDays; nrDays=nrDays+10)
+    {
+        QMapIterator<QDate, int> it(myDepths);
+        while (it.hasNext())
+        {
+            QDate myDate = it.key();
+            int myValue = it.value();
+            //float myCWBValue = computeCWB(myDate, nrDays);  // [cm]
+            // TO DO
+        }
+    }
+}
+
+double WaterTable::computeCWB(QDate myDate, int nrDays)
+{
+    // TO DO
+    return NODATA;
 }
 

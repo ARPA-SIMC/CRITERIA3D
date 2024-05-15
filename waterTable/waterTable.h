@@ -20,6 +20,8 @@ class WaterTable
         bool assignNearestMeteoPoint();
         bool assignWTMeteoData(Crit3DMeteoPoint point);
         bool computeETP_allSeries();
+        bool computeCWBCorrelation(int maxNrDays);
+        double computeCWB(QDate myDate, int nrDays);
         QString getError() const;
 
     private:
