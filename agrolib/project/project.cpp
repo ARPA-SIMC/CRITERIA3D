@@ -14,6 +14,7 @@
 #include "dialogSelectionMeteoPoint.h"
 #include "dialogPointDeleteData.h"
 #include "formInfo.h"
+#include "importData.h"
 
 
 #include <iostream>
@@ -686,7 +687,7 @@ bool Project::loadParameters(QString parametersFileName)
 
             if (parameters->contains("fitting_parameters"))
             {
-                unsigned int nrParameters;
+                /*unsigned int nrParameters;
 
                 if (getProxyPragaName(name_.toStdString()) == proxyHeight)
                     nrParameters = 5;
@@ -694,11 +695,11 @@ bool Project::loadParameters(QString parametersFileName)
                     nrParameters = 1;
 
                 myList = parameters->value("fitting_parameters").toStringList();
-                if (myList.size() != nrParameters*2 && myList.size() != (nrParameters-1)*2)
+                if (myList.size() != nrParameters*2 && myList.size() != (nrParameters-1)*2 && myList.size() != (nrParameters+1)*2) //TODO: change
                 {
                     errorString = "Wrong number of fitting parameters for proxy: " + name_;
                     return  false;
-                }
+                }*/
 
                 myProxy->setFittingParametersRange(StringListToDouble(myList));
             }
@@ -2344,6 +2345,12 @@ bool Project::interpolationDemLocalDetrending(meteoVariable myVar, const Crit3DT
         myRaster->initializeGrid(myHeader);
         myRaster->initializeParameters(myHeader);
 
+        if(!setAllFittingRanges(myCombination, &interpolationSettings))
+        {
+            errorString = "Error in function preInterpolation: \n couldn't set fitting ranges.";
+            return false;
+        }
+
         for (long row = 0; row < myHeader.nrRows ; row++)
         {
             for (long col = 0; col < myHeader.nrCols; col++)
@@ -2614,6 +2621,12 @@ bool Project::interpolationGrid(meteoVariable myVar, const Crit3DTime& myTime)
     float myX, myY, myZ;
     std::vector <double> proxyValues;
     proxyValues.resize(unsigned(interpolationSettings.getProxyNr()));
+
+    if(!setAllFittingRanges(myCombination, &interpolationSettings))
+    {
+        errorString = "Error in function preInterpolation: \n couldn't set fitting ranges.";
+        return false;
+    }
 
     float interpolatedValue = NODATA;
     unsigned int i, proxyIndex;
@@ -4475,19 +4488,6 @@ bool Project::findTempMinMax(meteoVariable myVar)
     float value;
     int i = 0;
 
-    Crit3DProxy* myProxy;
-    size_t myNrProxies = interpolationSettings.getProxyNr();
-    for (unsigned int i=0; i < myNrProxies; i++)
-    {
-        myProxy = interpolationSettings.getProxy(i);
-        if (getProxyPragaName(myProxy->getName()) == proxyHeight)
-        {
-            std::vector <double> parametersRange = myProxy->getFittingParametersRange();
-            if (parametersRange.empty())
-                return false;
-        }
-    }
-
     if (nrMeteoPoints == 0)
         return false;
 
@@ -4542,11 +4542,55 @@ bool Project::findTempMinMax(meteoVariable myVar)
         }
     }
 
-    for (unsigned int i=0; i < interpolationSettings.getProxyNr(); i++)
-    {
-        myProxy = interpolationSettings.getProxy(i);
-        if (getProxyPragaName(myProxy->getName()) == proxyHeight)
-            myProxy->setMinMaxTemperature(min, max);
-    }
+    interpolationSettings.setMinMaxTemperature(min, max);
+
     return true;
 }
+
+
+bool Project::waterTableImportLocation(QString csvFileName)
+{
+    if (logFileName == "")
+    {
+        setLogFile("waterTableLog.txt");
+    }
+
+    int wrongLines = 0;
+    if (! loadCsvRegistry(csvFileName, wellPoints, errorString, wrongLines))
+    {
+        logError(errorString);
+        return false;
+    }
+
+    if (wrongLines > 0)
+    {
+        logInfo(errorString);
+        QMessageBox::warning(nullptr, "Warning!", QString::number(wrongLines)
+                            + " wrong lines of data were not loaded, see the log file " + logFileName + " for more information");
+    }
+
+    errorString = "";
+    return true;
+}
+
+
+bool Project::waterTableImportDepths(QString csvDepths)
+{
+    int wrongLines = 0;
+    if (! loadCsvDepths(csvDepths, wellPoints, quality->getWaterTableMaximumDepth(), errorString, wrongLines))
+    {
+        logError(errorString);
+        return false;
+    }
+
+    if (wrongLines>0)
+    {
+        logInfo(errorString);
+        QMessageBox::warning(nullptr, "Warning!", QString::number(wrongLines)
+                            + " wrong lines of data were not loaded, see the log file " + logFileName + " for more information");
+    }
+
+    errorString = "";
+    return true;
+}
+

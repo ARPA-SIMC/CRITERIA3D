@@ -592,7 +592,7 @@ bool climateGenerator(int nrData, TinputObsData climateDailyObsData, Crit3DDate 
 
     result = computeWGClimate(nrDays, newDailyObsData.inputFirstDate, newDailyObsData.inputTMin,
                               newDailyObsData.inputTMax, newDailyObsData.inputPrecip,
-                              precThreshold, minPrecData, wGen, false,"");
+                              precThreshold, minPrecData, wGen, false, "");
 
     newDailyObsData.inputTMin.clear();
     newDailyObsData.inputTMax.clear();

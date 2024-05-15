@@ -162,7 +162,7 @@
     
 	float loadFromMp_SaveOutput(Crit3DMeteoPoint* meteoPoint,
 					meteoVariable variable, QDate first, QDate last, std::vector<float> &outputValues);
-    
+
 	void setMpValues(Crit3DMeteoPoint meteoPointGet, Crit3DMeteoPoint* meteoPointSet, QDate myDate, meteoVariable myVar, Crit3DMeteoSettings* meteoSettings);
 					meteoComputation getMeteoCompFromString(std::map<std::string, meteoComputation> map, std::string value);
     

@@ -13,7 +13,8 @@ bool readMeteoDataCsv (const QString &fileName, char mySeparator, double noData,
     clearInputData(inputData);
 
     QFile file(fileName);
-    if (!file.open(QIODevice::ReadOnly)) {
+    if (! file.open(QIODevice::ReadOnly))
+    {
         qDebug() << "\nERROR!\n" << fileName << file.errorString();
         return false;
     }
@@ -33,15 +34,16 @@ bool readMeteoDataCsv (const QString &fileName, char mySeparator, double noData,
     // header
     file.readLine();
 
-    while (!file.atEnd()) {
+    while (!file.atEnd())
+    {
         QByteArray line = file.readLine();
 
-        //check format
+        // check format
         if (line.split(mySeparator).count() < 5)
         {
             qDebug() << "ERROR!" << "\nfile =" << fileName << "\nline =" << indexLine+2;;
-            qDebug() << "missing data / invalid format / invalid separator";
-            qDebug() << "required separator =" << mySeparator <<"\n";
+            qDebug() << "missing data or invalid format or invalid separator";
+            qDebug() << "required separator = " << mySeparator <<"\n";
             return false;
         }
 
@@ -158,7 +160,6 @@ bool readMeteoDataCsv (const QString &fileName, char mySeparator, double noData,
         if ((inputData.inputTMin[i] != noData) && (inputData.inputTMax[i] != noData)
              && (inputData.inputTMin[i] > inputData.inputTMax[i]))
         {
-            //qDebug() << "Warning: TMIN > TMAX: " << listDate[i];
             // switch
             inputData.inputTMin[i] = listTMax[i].toFloat();
             inputData.inputTMax[i] = listTMin[i].toFloat();

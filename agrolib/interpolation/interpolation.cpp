@@ -1360,12 +1360,71 @@ bool proxyValidity(std::vector <Crit3DInterpolationDataPoint> &myPoints, int pro
         return true;
 }
 
+bool setAllFittingRanges(Crit3DProxyCombination myCombination, Crit3DInterpolationSettings* mySettings)
+{
+    if (mySettings->getMinMaxTemperature().empty())
+        return 0;
 
-bool setAllFittingParameters(Crit3DProxyCombination myCombination, Crit3DInterpolationSettings* mySettings,
-                     std::vector<std::function<double(double, std::vector<double>&)>>& myFunc,
-                     std::vector <std::vector<double>> &paramMin, std::vector <std::vector<double>> &paramMax,
-                     std::vector <std::vector<double>> &paramDelta, std::vector <std::vector<double>> &paramFirstGuess,
-                     std::string &errorStr)
+    for (unsigned i=0; i < myCombination.getProxySize(); i++)
+        if (myCombination.isProxyActive(i) == true)
+        {
+            if (getProxyPragaName(mySettings->getProxy(i)->getName()) == proxyHeight)
+            {
+                double min = mySettings->getMinMaxTemperature()[0];
+                double max = mySettings->getMinMaxTemperature()[1];
+                std::vector <double> tempParam;
+                if (mySettings->getChosenElevationFunction() == frei)
+                {
+                    mySettings->getProxy(i)->setFittingFunctionName(frei);
+                    if (!(mySettings->getProxy(i)->getFittingParametersRange().empty()))
+                        tempParam = {min, 0, -4, -200, 0.1, max+10, 0.006, 4, 1800, 1000};
+                }
+                else if (mySettings->getChosenElevationFunction() == piecewiseTwo)
+                {
+                    mySettings->getProxy(i)->setFittingFunctionName(piecewiseTwo);
+                    if (!(mySettings->getProxy(i)->getFittingParametersRange().empty()))
+                        tempParam = {-200, min-2, 0, -0.006, 1800, max+2, 0.01, 0};
+                }
+                else if (mySettings->getChosenElevationFunction() == piecewiseThree)
+                {
+                    mySettings->getProxy(i)->setFittingFunctionName(piecewiseThree);
+                    if (!(mySettings->getProxy(i)->getFittingParametersRange().empty()))
+                        tempParam = {-200, min-2, 100, 0, -0.006, 1800, max+2, 1000, (max-min-2), 0};
+                }
+                else if (mySettings->getChosenElevationFunction() == piecewiseThreeFree)
+                {
+                    mySettings->getProxy(i)->setFittingFunctionName(piecewiseThreeFree);
+                    if (!(mySettings->getProxy(i)->getFittingParametersRange().empty()))
+                        tempParam = {-200, min-2, 100, 0.001, -0.006, -0.006, 1800, max+2, 1000, 0.007, 0, 0};
+                }
+                else if (mySettings->getChosenElevationFunction() == piecewiseThreeSlope)
+                {
+                    mySettings->getProxy(i)->setFittingFunctionName(piecewiseThreeSlope);
+                    if (!(mySettings->getProxy(i)->getFittingParametersRange().empty()))
+                        tempParam = {-200, min-2, 100, 0.001, -0.006, 1800, max+2, 1000, 0.007, 0};
+                }
+                else if (mySettings->getChosenElevationFunction() == freiFree)
+                {
+                    mySettings->getProxy(i)->setFittingFunctionName(freiFree);
+                    if (!(mySettings->getProxy(i)->getFittingParametersRange().empty()))
+                        tempParam = {min, 0, -4, -200, 0.1, 0, max+10, 0.006, 4, 1800, 1000, 0.006};
+                }
+                mySettings->getProxy(i)->setFittingParametersRange(tempParam);
+            }
+            else
+            {
+                mySettings->getProxy(i)->setFittingFunctionName(linear);
+                mySettings->getProxy(i)->setFittingParametersRange({0,100});
+            }
+        }
+    return 1;
+}
+
+bool setAllFittingParameters_noRange(Crit3DProxyCombination myCombination, Crit3DInterpolationSettings* mySettings,
+                             std::vector<std::function<double(double, std::vector<double>&)>>& myFunc,
+                             std::vector <std::vector<double>> &paramMin, std::vector <std::vector<double>> &paramMax,
+                             std::vector <std::vector<double>> &paramDelta, std::vector <std::vector<double>> &paramFirstGuess,
+                             std::string &errorStr)
 {
     const double RATIO_DELTA = 1000;
     bool isPreviousParam = !paramFirstGuess.empty();
@@ -1376,41 +1435,118 @@ bool setAllFittingParameters(Crit3DProxyCombination myCombination, Crit3DInterpo
             if (getProxyPragaName(mySettings->getProxy(i)->getName()) == proxyHeight)
             {
                 if (mySettings->getChosenElevationFunction() == frei)
+                    myFunc.push_back(lapseRateFrei);
+                else if (mySettings->getChosenElevationFunction() == piecewiseTwo)
+                    myFunc.push_back(lapseRatePiecewise_two);
+                else if (mySettings->getChosenElevationFunction() == piecewiseThree)
+                    myFunc.push_back(lapseRatePiecewiseForInterpolation);
+                else if (mySettings->getChosenElevationFunction() == piecewiseThreeFree)
+                    myFunc.push_back(lapseRatePiecewiseFree);
+                else if (mySettings->getChosenElevationFunction() == piecewiseThreeSlope)
+                    myFunc.push_back(lapseRatePiecewiseThree_withSlope);
+                else if (mySettings->getChosenElevationFunction() == freiFree)
+                    myFunc.push_back(lapseRateFreiFree);
+            }
+            else
+            {
+                myFunc.push_back(functionLinear);
+            }
+
+            std::vector <double> myParam = mySettings->getProxy(i)->getFittingParametersRange();
+            unsigned int nrParam = unsigned(myParam.size() / 2);
+
+            if (nrParam == 0)
+            {
+                errorStr = "Missing fitting parameters for proxy: " + mySettings->getProxy(i)->getName();
+                return false;
+            }
+
+            double min_,max_;
+            std::vector <double> proxyParamMin;
+            std::vector <double> proxyParamMax;
+            std::vector <double> proxyParamDelta;
+            std::vector <double> proxyParamFirstGuess;
+
+            for (unsigned j=0; j < nrParam; j++)
+            {
+                min_ = myParam[j];
+                max_ = myParam[nrParam+j];
+                proxyParamMin.push_back(min_);
+                proxyParamMax.push_back(max_);
+                proxyParamDelta.push_back((max_ - min_) / RATIO_DELTA);
+                proxyParamFirstGuess.push_back((max_ - min_) / 2);
+            }
+
+            paramMin.push_back(proxyParamMin);
+            paramMax.push_back(proxyParamMax);
+            paramDelta.push_back(proxyParamDelta);
+            if (!isPreviousParam)
+                paramFirstGuess.push_back(proxyParamFirstGuess);
+        }
+
+    return myFunc.size() > 0;
+}
+
+bool setAllFittingParameters(Crit3DProxyCombination myCombination, Crit3DInterpolationSettings* mySettings,
+                             std::vector<std::function<double(double, std::vector<double>&)>>& myFunc,
+                             std::vector <std::vector<double>> &paramMin, std::vector <std::vector<double>> &paramMax,
+                             std::vector <std::vector<double>> &paramDelta, std::vector <std::vector<double>> &paramFirstGuess,
+                             std::string &errorStr)
+{
+    const double RATIO_DELTA = 1000;
+    bool isPreviousParam = !paramFirstGuess.empty();
+
+    for (unsigned i=0; i < myCombination.getProxySize(); i++)
+        if (mySettings->getProxy(i)->getIsSignificant())
+        {
+            if (getProxyPragaName(mySettings->getProxy(i)->getName()) == proxyHeight)
+            {
+                double min = mySettings->getMinMaxTemperature()[0];
+                double max = mySettings->getMinMaxTemperature()[1];
+                std::vector <double> tempParam;
+                if (mySettings->getChosenElevationFunction() == frei)
                 {
                     myFunc.push_back(lapseRateFrei);
                     mySettings->getProxy(i)->setFittingFunctionName(frei);
                     if (!(mySettings->getProxy(i)->getFittingParametersRange().empty()))
-                    {
-                        double min = mySettings->getProxy(i)->getMinMaxTemperature(0);
-                        double max = mySettings->getProxy(i)->getMinMaxTemperature(1);
-                        std::vector <double> tempParam = {min, 0, -10, -200, 0.1, max+10, 0.006, 10, 1800, 1000};
-                        mySettings->getProxy(i)->setFittingParametersRange(tempParam);
-                    }
+                        tempParam = {min, 0, -10, -200, 0.1, max+10, 0.006, 10, 1800, 1000};
                 }
                 else if (mySettings->getChosenElevationFunction() == piecewiseTwo)
                 {
                     myFunc.push_back(lapseRatePiecewise_two);
                     mySettings->getProxy(i)->setFittingFunctionName(piecewiseTwo);
                     if (!(mySettings->getProxy(i)->getFittingParametersRange().empty()))
-                    {
-                        double min = mySettings->getProxy(i)->getMinMaxTemperature(0);
-                        double max = mySettings->getProxy(i)->getMinMaxTemperature(1);
-                        std::vector <double> tempParam = {-200, min-2, 0, -0.006, 1800, max+2, 0.01, 0};
-                        mySettings->getProxy(i)->setFittingParametersRange(tempParam);
-                    }
+                        tempParam = {-200, min-2, 0, -0.006, 1800, max+2, 0.01, 0};
                 }
                 else if (mySettings->getChosenElevationFunction() == piecewiseThree)
                 {
                     myFunc.push_back(lapseRatePiecewiseForInterpolation);
                     mySettings->getProxy(i)->setFittingFunctionName(piecewiseThree);
                     if (!(mySettings->getProxy(i)->getFittingParametersRange().empty()))
-                    {
-                        double min = mySettings->getProxy(i)->getMinMaxTemperature(0);
-                        double max = mySettings->getProxy(i)->getMinMaxTemperature(1);
-                        std::vector <double> tempParam = {-200, min-2, 100, 0, -0.006, 1800, max+2, 1000, (max-min-2), 0};
-                        mySettings->getProxy(i)->setFittingParametersRange(tempParam);
-                    }
+                        tempParam = {-200, min-2, 100, 0, -0.006, 1800, max+2, 1000, (max-min-2), 0};
                 }
+                else if (mySettings->getChosenElevationFunction() == piecewiseThreeFree)
+                {
+                    myFunc.push_back(lapseRatePiecewiseFree);
+                    mySettings->getProxy(i)->setFittingFunctionName(piecewiseThreeFree);
+                    if (!(mySettings->getProxy(i)->getFittingParametersRange().empty()))
+                        tempParam = {-200, min-2, 100, 0.001, -0.006, -0.006, 1800, max+2, 1000, 0.01, 0, 0};
+                }
+                else if (mySettings->getChosenElevationFunction() == piecewiseThreeSlope)
+                {
+                    myFunc.push_back(lapseRatePiecewiseThree_withSlope);
+                    mySettings->getProxy(i)->setFittingFunctionName(piecewiseThreeSlope);
+                    if (!(mySettings->getProxy(i)->getFittingParametersRange().empty()))
+                        tempParam = {-200, min-2, 100, 0.002, -0.006, 1800, max+2, 1000, 0.01, 0};
+                }
+                else if (mySettings->getChosenElevationFunction() == freiFree)
+                {
+                    myFunc.push_back(lapseRateFreiFree);
+                    mySettings->getProxy(i)->setFittingFunctionName(freiFree);
+                    if (!(mySettings->getProxy(i)->getFittingParametersRange().empty()))
+                        tempParam = {min, 0, -4, -200, 0.1, 0, max+10, 0.006, 4, 1800, 1000, 0.006};
+                }
+                mySettings->getProxy(i)->setFittingParametersRange(tempParam);
             }
             else
             {
@@ -1609,14 +1745,14 @@ bool multipleDetrending(std::vector <Crit3DInterpolationDataPoint> &myPoints,
     //std::vector <std::vector<double>> parameters;
     std::vector<std::function<double(double, std::vector<double>&)>> myFunc;
 
-    if (! setAllFittingParameters(myCombination, mySettings, myFunc, parametersMin, parametersMax,
+    if (! setAllFittingParameters_noRange(myCombination, mySettings, myFunc, parametersMin, parametersMax,
                                  parametersDelta, parameters, errorStr))
     {
         return false;
     }
 
     // multiple non linear fitting
-    interpolation::bestFittingMarquardt_nDimension(&functionSum, myFunc, 100, 4, parametersMin, parametersMax, parameters, parametersDelta,
+    interpolation::bestFittingMarquardt_nDimension(&functionSum, myFunc, 30, 4, parametersMin, parametersMax, parameters, parametersDelta,
                                                    80, 0.005, 0.002, predictors, predictands, weights);
 
     mySettings->setFittingFunction(myFunc);
