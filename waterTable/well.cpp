@@ -50,16 +50,6 @@ QMap<QDate, int> Well::getDepths() const
     return depths;
 }
 
-Crit3DMeteoPoint Well::getLinkedMeteoPoint() const
-{
-    return linkedMeteoPoint;
-}
-
-void Well::setLinkedMeteoPoint(Crit3DMeteoPoint newLinkedMeteoPoint)
-{
-    linkedMeteoPoint = newLinkedMeteoPoint;
-}
-
 QDate Well::getFirstDate()
 {
     QList<QDate> allDates = depths.keys();

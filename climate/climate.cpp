@@ -916,7 +916,6 @@ float loadFromMp_SaveOutput(Crit3DMeteoPoint* meteoPoint,
     return percValue;
 }
 
-
 float loadHourlyVarSeries(QString *myError, Crit3DMeteoPointsDbHandler* meteoPointsDbHandler,
            Crit3DMeteoGridDbHandler* meteoGridDbHandler, Crit3DMeteoPoint* meteoPoint, bool isMeteoGrid,
            meteoVariable variable, QDateTime first, QDateTime last)

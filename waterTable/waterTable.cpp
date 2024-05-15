@@ -2,22 +2,22 @@
 #include "commonConstants.h"
 #include "weatherGenerator.h"
 
-WaterTable::WaterTable(Crit3DMeteoPoint* meteoPoints, int nrMeteoPoints, Crit3DMeteoGrid* meteoGrid, bool isMeteoGridLoaded)
-    : meteoPoints(meteoPoints), nrMeteoPoints(nrMeteoPoints), meteoGrid(meteoGrid), isMeteoGridLoaded(isMeteoGridLoaded)
+WaterTable::WaterTable(Crit3DMeteoPoint* meteoPoints, int nrMeteoPoints, Crit3DMeteoGrid* meteoGrid, bool isMeteoGridLoaded, Crit3DMeteoSettings meteoSettings, gis::Crit3DGisSettings gisSettings)
+    : meteoPoints(meteoPoints), nrMeteoPoints(nrMeteoPoints), meteoGrid(meteoGrid), isMeteoGridLoaded(isMeteoGridLoaded), meteoSettings(meteoSettings), gisSettings(gisSettings)
 {
 
 }
 
-QDate WaterTable::getFirstDate()
+QDate WaterTable::getFirstDateWell()
 {
-    firstDate = well.getFirstDate();
-    return firstDate;
+    firstDateWell = well.getFirstDate();
+    return firstDateWell;
 }
 
-QDate WaterTable::getLastDate()
+QDate WaterTable::getLastDateWell()
 {
-    lastDate = well.getLastDate();
-    return lastDate;
+    lastDateWell = well.getLastDate();
+    return lastDateWell;
 }
 
 QString WaterTable::getError() const
@@ -29,8 +29,8 @@ void WaterTable::initializeWaterTable(Well myWell)
 {
 
     this->well = myWell;
-    getFirstDate();
-    getLastDate();
+    getFirstDateWell();
+    getLastDateWell();
     for (int myMonthIndex = 0; myMonthIndex < 12; myMonthIndex++)
     {
         WTClimateMonthly[myMonthIndex] = NODATA;
@@ -61,14 +61,11 @@ bool WaterTable::computeWaterTable(Well myWell, int maxNrDays, int doy1, int doy
 
     initializeWaterTable(myWell);
     bool isClimateReady = computeWTClimate();
-
-//          If Not .Well.Items.isLoaded Then Exit Function
-
-//              .isMeteoPointLinked = assignNearestMeteoPoint(myWell, d1, d2)
-//          If Not .isMeteoPointLinked Then
-//              PragaShell.setErrorMsg "Missing near weather data"
-//          Exit Function
-//              End If
+    isMeteoPointLinked = assignNearestMeteoPoint();
+    if (isMeteoPointLinked == false)
+    {
+        return false;
+    }
 
 //                      computeETP_allSeries myWell
 //                          .isCWBEquationReady = ComputeCWBCorrelation(myWell, maxNrDays, True)
@@ -151,7 +148,7 @@ bool WaterTable::assignNearestMeteoPoint()
                         {
                             minimumDistance = myDistance;
                             assignNearestMeteoPoint = true;
-                            well.setLinkedMeteoPoint(*meteoGrid->meteoPointPointer(row,col));
+                            linkedMeteoPoint = (*meteoGrid->meteoPointPointer(row,col));
                         }
                     }
                 }
@@ -174,7 +171,7 @@ bool WaterTable::assignNearestMeteoPoint()
                     {
                         minimumDistance = myDistance;
                         assignNearestMeteoPoint = true;
-                        well.setLinkedMeteoPoint(meteoPoints[i]);
+                        linkedMeteoPoint = meteoPoints[i];
                     }
                 }
             }
@@ -185,7 +182,33 @@ bool WaterTable::assignNearestMeteoPoint()
 
 bool WaterTable::assignWTMeteoData(Crit3DMeteoPoint point)
 {
+    firstMeteoDate = firstDateWell.addDays(-730); // necessari 24 mesi di dati meteo precedenti il primo dato di falda
+    lastMeteoDate = lastDateWell; // ultimo dato di falda CHECK lastDate = max(currentDay, myWell.Well.Items.Item(UBound(myWell.Well.Items.Item)).date_)
+    float precPerc = point.getPercValueVariable(Crit3DDate(firstMeteoDate.day(), firstMeteoDate.month(), firstMeteoDate.year()) , Crit3DDate(lastMeteoDate.day(), lastMeteoDate.month(), lastMeteoDate.year()), dailyPrecipitation);
+    float tMinPerc = point.getPercValueVariable(Crit3DDate(firstMeteoDate.day(), firstMeteoDate.month(), firstMeteoDate.year()) , Crit3DDate(lastMeteoDate.day(), lastMeteoDate.month(), lastMeteoDate.year()), dailyAirTemperatureMin);
+    float tMaxPerc = point.getPercValueVariable(Crit3DDate(firstMeteoDate.day(), firstMeteoDate.month(), firstMeteoDate.year()) , Crit3DDate(lastMeteoDate.day(), lastMeteoDate.month(), lastMeteoDate.year()), dailyAirTemperatureMax);
+
+    float minPercentage = meteoSettings.getMinimumPercentage();
+    if (precPerc > minPercentage/100 && tMinPerc > minPercentage/100 && tMaxPerc > minPercentage/100)
+    {
+        return true;
+    }
+    else
+    {
+        error = "Not enough meteo data to analyze watertable period. Try to decrease the required percentage";
+        return false;
+    }
+}
+
+bool WaterTable::computeETP_allSeries()
+{
+    double myLat;
+    double myLon;
+    gis::getLatLonFromUtm(gisSettings, well.getUtmX(), well.getUtmY(), &myLat, &myLon);
+    double sumCWB = 0;
+    int nrValidDays = 0;
     // TO DO
+
     return true;
 }
 

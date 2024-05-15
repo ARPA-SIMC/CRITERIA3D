@@ -175,6 +175,7 @@
             TObsDataH *getObsDataH() const;
             void initializeObsDataDFromMp(unsigned int numberOfDays, const Crit3DDate& firstDate, Crit3DMeteoPoint mp);
             void initializeObsDataHFromMp(int myHourlyFraction, int numberOfDays, const Crit3DDate& firstDate, Crit3DMeteoPoint mp);
+            float getPercValueVariable(Crit3DDate firstDate, Crit3DDate lastDate, meteoVariable dailyMeteoVar);
 
             bool getDailyDataCsv_TPrec(std::string &outStr);
 

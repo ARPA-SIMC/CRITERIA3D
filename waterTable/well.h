@@ -29,9 +29,6 @@ public:
 
     QMap<QDate, int> getDepths() const;
 
-    Crit3DMeteoPoint getLinkedMeteoPoint() const;
-    void setLinkedMeteoPoint(Crit3DMeteoPoint newLinkedMeteoPoint);
-
 private:
     QString id;
     double utmX;
@@ -39,7 +36,6 @@ private:
     QMap<QDate, int> depths;
     QDate firstDate;
     QDate lastDate;
-    Crit3DMeteoPoint linkedMeteoPoint;
 };
 
 #endif // WELL_H
