@@ -48,6 +48,7 @@ void WaterTable::initializeWaterTable(Well myWell)
     EF = NODATA;
     NASH = NODATA;
     RMSE = NODATA;
+    avgDailyCWB = NODATA;
 
 }
 
@@ -338,7 +339,110 @@ float WaterTable::computeCWB(QDate myDate, int nrDays)
 // function to compute several statistical indices for watertable depth
 bool WaterTable::computeWaterTableIndices(int doy1, int doy2)
 {
-    // TO DO
+    QMap<QDate, int> myDepths = well.getDepths();
+    QMapIterator<QDate, int> it(myDepths);
+    std::vector<float> myObs;
+    std::vector<float> myComputed;
+    std::vector<float> myClimate;
+    float myIntercept;
+    float myCoeff;
+    while (it.hasNext())
+    {
+        QDate myDate = it.key();
+        int myValue = it.value();
+        int myDoy = myDate.dayOfYear();
+        // doesn't work for interannual period
+        if ((myDoy >= doy1) && (myDoy <= doy2))
+        {
+            float computedValue = getWaterTableDaily(myDate);
+            if (computedValue != NODATA)
+            {
+                myObs.push_back(myValue);
+                myComputed.push_back(computedValue);
+                myClimate.push_back(getWaterTableClimate(myDate));
+            }
+        }
+    }
+    statistics::linearRegression(myObs, myComputed, myObs.size(), false, &myIntercept, &myCoeff, &R2);
+    float mySum = 0;
+    float mySumError = 0;
+    float mySumDiffClimate = 0;
+    float mySumDiffAvg = 0;
+    float myErr = 0;
+    float myErrAvg = 0;
+    float myErrClimate = 0;
+
+    nrObsData = myObs.size();
+    for (int i=0; i<nrObsData; i++)
+    {
+        mySum = mySum + myObs[i];
+    }
+    float myObsAvg = mySum / nrObsData;
+    for (int i=0; i<nrObsData; i++)
+    {
+        myErr = myComputed[i] - myObs[i];
+        mySumError = mySumError + myErr * myErr;
+        myErrAvg = myObs[i] - myObsAvg;
+        mySumDiffAvg = mySumDiffAvg + myErrAvg * myErrAvg;
+        if (isClimateReady)
+        {
+            myErrClimate = myObs[i] - myClimate[i];
+            mySumDiffClimate = mySumDiffClimate + myErrClimate * myErrClimate;
+        }
+    }
+    RMSE = sqrt(mySumError / nrObsData);
+    NASH = 1 - mySumError / mySumDiffAvg;
+
+    if (isClimateReady)
+    {
+        EF = 1 - mySumError / mySumDiffClimate;
+    }
+    else
+    {
+        EF = NODATA;
+    }
     return true;
+}
+
+// restituisce il valore stimato di falda
+float WaterTable::getWaterTableDaily(QDate myDate)
+{
+    float getWaterTableDaily = NODATA;
+    bool isComputed = false;
+
+    if (isMeteoPointLinked && isCWBEquationReady)
+    {
+        float myCWB = computeCWB(myDate, nrDaysPeriod);
+        if (myCWB != NODATA)
+        {
+            float myH = h0 + alpha * myCWB;
+            getWaterTableDaily = myH;
+            isComputed = true;
+        }
+    }
+
+
+
+    // No data: climatic value
+    if (!isComputed && isClimateReady)
+    {
+        getWaterTableDaily = getWaterTableClimate(myDate);
+    }
+    return getWaterTableDaily;
+}
+
+float WaterTable::getWaterTableClimate(QDate myDate)
+{
+
+    float getWaterTableClimate = NODATA;
+
+    if (!isClimateReady)
+    {
+        return getWaterTableClimate;
+    }
+
+    int myDoy = myDate.dayOfYear();
+    getWaterTableClimate = WTClimateDaily[myDoy];
+    return getWaterTableClimate;
 }
 

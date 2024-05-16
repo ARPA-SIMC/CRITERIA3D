@@ -23,6 +23,8 @@ class WaterTable
         bool computeCWBCorrelation(int maxNrDays);
         float computeCWB(QDate myDate, int nrDays);
         bool computeWaterTableIndices(int doy1, int doy2);
+        float getWaterTableDaily(QDate myDate);
+        float getWaterTableClimate(QDate myDate);
         QString getError() const;
 
     private:
