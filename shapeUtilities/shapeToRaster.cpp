@@ -7,9 +7,9 @@
 #include "basicMath.h"
 
 
-bool initializeRasterFromShape(Crit3DShapeHandler &shape, gis::Crit3DRasterGrid &raster, double cellSize)
+bool initializeRasterFromShape(const Crit3DShapeHandler &shapeHandler, gis::Crit3DRasterGrid &raster, double cellSize)
 {
-    int nrShape = shape.getShapeCount();
+    int nrShape = shapeHandler.getShapeCount();
     if (nrShape <= 0)
     {
         // void shapefile
@@ -27,7 +27,7 @@ bool initializeRasterFromShape(Crit3DShapeHandler &shape, gis::Crit3DRasterGrid 
 
     for (int i = 0; i < nrShape; i++)
     {
-        shape.getShape(i, object);
+        shapeHandler.getShape(i, object);
         bounds = object.getBounds();
         ymin = MINVALUE(ymin, bounds.ymin);
         xmin = MINVALUE(xmin, bounds.xmin);
@@ -48,7 +48,7 @@ bool initializeRasterFromShape(Crit3DShapeHandler &shape, gis::Crit3DRasterGrid 
 }
 
 
-bool fillRasterWithShapeNumber(gis::Crit3DRasterGrid &raster, Crit3DShapeHandler &shapeHandler)
+bool fillRasterWithShapeNumber(gis::Crit3DRasterGrid &raster, const Crit3DShapeHandler &shapeHandler)
 {
     int nrShape = shapeHandler.getShapeCount();
     if (nrShape <= 0)
@@ -83,7 +83,7 @@ bool fillRasterWithShapeNumber(gis::Crit3DRasterGrid &raster, Crit3DShapeHandler
         {
             for (int col = c0; col <= c1; col++)
             {
-                if (int(raster.value[row][col]) == int(raster.header->flag))
+                if (isEqual(raster.value[row][col], raster.header->flag))
                 {
                     raster.getXY(row, col, x, y);
                     if (object.pointInPolygon(x, y))
@@ -99,7 +99,7 @@ bool fillRasterWithShapeNumber(gis::Crit3DRasterGrid &raster, Crit3DShapeHandler
 }
 
 
-bool fillRasterWithField(gis::Crit3DRasterGrid &raster, Crit3DShapeHandler &shapeHandler, std::string fieldName)
+bool fillRasterWithField(gis::Crit3DRasterGrid &raster, Crit3DShapeHandler &shapeHandler, const std::string &fieldName)
 {
     int nrShape = shapeHandler.getShapeCount();
     if (nrShape <= 0)
@@ -138,7 +138,7 @@ bool fillRasterWithField(gis::Crit3DRasterGrid &raster, Crit3DShapeHandler &shap
             {
                 for (int col = c0; col <= c1; col++)
                 {
-                    if (int(raster.value[row][col]) == int(raster.header->flag))
+                    if (isEqual(raster.value[row][col], raster.header->flag))
                     {
                         raster.getXY(row, col, x, y);
                         if (object.pointInPolygon(x, y))
@@ -155,22 +155,24 @@ bool fillRasterWithField(gis::Crit3DRasterGrid &raster, Crit3DShapeHandler &shap
 }
 
 
-bool rasterizeShape(Crit3DShapeHandler &shape, gis::Crit3DRasterGrid &newRaster, std::string field, double cellSize)
+bool rasterizeShape(Crit3DShapeHandler &shapeHandler, gis::Crit3DRasterGrid &newRaster,
+                    const std::string &field, double cellSize)
 {
-    if (! initializeRasterFromShape(shape, newRaster, cellSize))
+    if (! initializeRasterFromShape(shapeHandler, newRaster, cellSize))
         return false;
 
     if (field == "Shape ID")
     {
-        if (! fillRasterWithShapeNumber(newRaster, shape))
+        if (! fillRasterWithShapeNumber(newRaster, shapeHandler))
             return false;
     }
     else
     {
-        if (! fillRasterWithField(newRaster, shape, field))
+        if (! fillRasterWithField(newRaster, shapeHandler, field))
             return false;
     }
 
     return true;
 }
+
 

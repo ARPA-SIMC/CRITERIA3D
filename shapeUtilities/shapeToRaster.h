@@ -8,10 +8,13 @@
         #include "gis.h"
     #endif
 
-    bool initializeRasterFromShape(Crit3DShapeHandler &shape, gis::Crit3DRasterGrid &raster, double cellSize);
-    bool fillRasterWithShapeNumber(gis::Crit3DRasterGrid &raster, Crit3DShapeHandler &shape);
-    bool fillRasterWithField(gis::Crit3DRasterGrid &raster, Crit3DShapeHandler &shape, std::string valField);
-    bool rasterizeShape(Crit3DShapeHandler &shape, gis::Crit3DRasterGrid &newRaster, std::string field, double cellSize);
+    bool initializeRasterFromShape(const Crit3DShapeHandler &shapeHandler, gis::Crit3DRasterGrid &raster, double cellSize);
+
+    bool fillRasterWithShapeNumber(gis::Crit3DRasterGrid &raster, const Crit3DShapeHandler &shapeHandler);
+
+    bool fillRasterWithField(gis::Crit3DRasterGrid &raster, Crit3DShapeHandler &shapeHandler, const std::string &valField);
+
+    bool rasterizeShape(Crit3DShapeHandler &shapeHandler, gis::Crit3DRasterGrid &newRaster, const std::string &field, double cellSize);
 
 
 #endif // SHAPETORASTER_H

@@ -1015,19 +1015,19 @@ int CriteriaOutputProject::createNetcdf()
 }
 
 
-bool CriteriaOutputProject::convertShapeToNetcdf(Crit3DShapeHandler &shape, std::string outputFileName,
+bool CriteriaOutputProject::convertShapeToNetcdf(Crit3DShapeHandler &shapeHandler, std::string outputFileName,
                                                  std::string field, std::string variableName, std::string variableUnit, double cellSize,
                                                  Crit3DDate computationDate, int nrDays)
 {
-    if (! shape.getIsWGS84())
+    if (! shapeHandler.getIsWGS84())
     {
         projectError = "Shapefile is not WGS84.";
         return false;
     }
 
     // rasterize shape
-    gis::Crit3DRasterGrid myRaster;
-    if (! rasterizeShape(shape, myRaster, field, cellSize))
+    gis::Crit3DRasterGrid tmpRaster;
+    if (! rasterizeShape(shapeHandler, tmpRaster, field, cellSize))
     {
         projectError = "Error in rasterize shape.";
         return false;
@@ -1035,14 +1035,14 @@ bool CriteriaOutputProject::convertShapeToNetcdf(Crit3DShapeHandler &shape, std:
 
     // set UTM zone and emisphere
     gis::Crit3DGisSettings gisSettings;
-    gisSettings.utmZone = shape.getUtmZone();
+    gisSettings.utmZone = shapeHandler.getUtmZone();
     double sign = 1;
-    if (! shape.getIsNorth()) sign = -1;
+    if (! shapeHandler.getIsNorth()) sign = -1;
     gisSettings.startLocation.latitude = sign * abs(gisSettings.startLocation.latitude);
 
     // convert to lat lon raster
     gis::Crit3DLatLonHeader latLonHeader;
-    gis::getGeoExtentsFromUTMHeader(gisSettings, myRaster.header, &latLonHeader);
+    gis::getGeoExtentsFromUTMHeader(gisSettings, tmpRaster.header, &latLonHeader);
 
     // initialize data raster (only for values)
     gis::Crit3DRasterGrid dataRaster;
@@ -1063,11 +1063,11 @@ bool CriteriaOutputProject::convertShapeToNetcdf(Crit3DShapeHandler &shape, std:
         {
             gis::getLatLonFromRowCol(latLonHeader, row, col, &lat, &lon);
             gis::latLonToUtmForceZone(gisSettings.utmZone, lat, lon, &x, &y);
-            if (! gis::isOutOfGridXY(x, y, myRaster.header))
+            if (! gis::isOutOfGridXY(x, y, tmpRaster.header))
             {
-                gis::getRowColFromXY(*(myRaster.header), x, y, &utmRow, &utmCol);
-                float value = myRaster.getValueFromRowCol(utmRow, utmCol);
-                if (int(value) != int(myRaster.header->flag))
+                gis::getRowColFromXY(*(tmpRaster.header), x, y, &utmRow, &utmCol);
+                float value = tmpRaster.getValueFromRowCol(utmRow, utmCol);
+                if (int(value) != int(tmpRaster.header->flag))
                 {
                     dataRaster.value[row][col] = value;
                 }
