@@ -123,7 +123,7 @@ bool loadCsvDepths(QString csvDepths, std::vector<Well> &wellList, int waterTabl
                 if (wellList[i].getId() == id)
                 {
                     found = true;
-                    index = 1;
+                    index = i;
                     break;
                 }
             }
