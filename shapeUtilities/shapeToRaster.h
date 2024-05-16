@@ -16,5 +16,8 @@
 
     bool rasterizeShape(Crit3DShapeHandler &shapeHandler, gis::Crit3DRasterGrid &newRaster, const std::string &field, double cellSize);
 
+    bool rasterizeShapeWithRef(const gis::Crit3DRasterGrid &refRaster, gis::Crit3DRasterGrid &newRaster,
+                               Crit3DShapeHandler &shapeHandler, const std::string &fieldName);
+
 
 #endif // SHAPETORASTER_H

@@ -176,3 +176,72 @@ bool rasterizeShape(Crit3DShapeHandler &shapeHandler, gis::Crit3DRasterGrid &new
 }
 
 
+bool rasterizeShapeWithRef(const gis::Crit3DRasterGrid &refRaster, gis::Crit3DRasterGrid &newRaster,
+                             Crit3DShapeHandler &shapeHandler, const std::string &fieldName)
+{
+    newRaster.initializeGrid(*(refRaster.header));
+
+    int nrShape = shapeHandler.getShapeCount();
+    if (nrShape <= 0)
+    {
+        // void shapefile
+        return false;
+    }
+
+    int fieldIndex = NODATA;
+    if (fieldName != "Shape ID")
+    {
+        fieldIndex = shapeHandler.getDBFFieldIndex(fieldName.c_str());
+    }
+
+    ShapeObject object;
+    double x, y, fieldValue;
+    Box<double> bounds;
+    int r0, r1, c0, c1;
+
+    for (int shapeIndex = 0; shapeIndex < nrShape; shapeIndex++)
+    {
+        shapeHandler.getShape(shapeIndex, object);
+
+        if (fieldName == "Shape ID")
+        {
+            fieldValue = shapeIndex;
+        }
+        else
+        {
+            fieldValue = shapeHandler.getNumericValue(shapeIndex, fieldIndex);
+        }
+
+        if (! isEqual(fieldValue, NODATA))
+        {
+            // get bounds
+            bounds = object.getBounds();
+            gis::getRowColFromXY(*(newRaster.header), bounds.xmin, bounds.ymax, &r0, &c0);
+            gis::getRowColFromXY(*(newRaster.header), bounds.xmax, bounds.ymin, &r1, &c1);
+
+            // check bounds
+            r0 = MAXVALUE(r0-1, 0);
+            r1 = MINVALUE(r1+1, newRaster.header->nrRows -1);
+            c0 = MAXVALUE(c0-1, 0);
+            c1 = MINVALUE(c1+1, newRaster.header->nrCols -1);
+
+            for (int row = r0; row <= r1; row++)
+            {
+                for (int col = c0; col <= c1; col++)
+                {
+                    if (! isEqual(refRaster.value[row][col], refRaster.header->flag))
+                    {
+                        newRaster.getXY(row, col, x, y);
+                        if (object.pointInPolygon(x, y))
+                        {
+                            newRaster.value[row][col] = float(fieldValue);
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    return true;
+}
+
