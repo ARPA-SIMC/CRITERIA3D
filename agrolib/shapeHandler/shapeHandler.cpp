@@ -269,9 +269,9 @@ bool Crit3DShapeHandler::setUTMzone(std::string prjFileName)
 }
 
 
-bool Crit3DShapeHandler::getShape(int index, ShapeObject &shape)
+bool Crit3DShapeHandler::getShape(int index, ShapeObject &shape) const
 {
-    if ( (m_handle == nullptr) || (m_dbf == nullptr)) return false;
+    if ((m_handle == nullptr) || (m_dbf == nullptr)) return false;
 
     SHPObject *obj = SHPReadObject(m_handle, index);
     shape.assign(obj);
@@ -281,18 +281,18 @@ bool Crit3DShapeHandler::getShape(int index, ShapeObject &shape)
 }
 
 
-int	Crit3DShapeHandler::getDBFFieldIndex(const char *pszFieldName)
+int	Crit3DShapeHandler::getDBFFieldIndex(const char *pszFieldName) const
 {
     return DBFGetFieldIndex(m_dbf, pszFieldName);
 }
 
-int	Crit3DShapeHandler::isDBFRecordDeleted(int record)
+int	Crit3DShapeHandler::isDBFRecordDeleted(int record) const
 {
     return DBFIsRecordDeleted(m_dbf, record);
 }
 
 
-int	Crit3DShapeHandler::getFieldPos(std::string fieldName)
+int	Crit3DShapeHandler::getFieldPos(std::string fieldName) const
 {
     for (int i = 0; i < m_fields; i++)
         if (m_fieldsList.at(unsigned(i)) == fieldName)
@@ -302,7 +302,7 @@ int	Crit3DShapeHandler::getFieldPos(std::string fieldName)
 }
 
 
-bool Crit3DShapeHandler::existField(std::string fieldName)
+bool Crit3DShapeHandler::existField(std::string fieldName) const
 {
     for (int i = 0; i < m_fields; i++)
         if (m_fieldsList.at(unsigned(i)) == fieldName)
@@ -312,7 +312,7 @@ bool Crit3DShapeHandler::existField(std::string fieldName)
 }
 
 
-DBFFieldType Crit3DShapeHandler::getFieldType(std::string fieldName)
+DBFFieldType Crit3DShapeHandler::getFieldType(std::string fieldName) const
 {
     int pos = getFieldPos(fieldName);
 

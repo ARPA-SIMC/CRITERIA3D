@@ -38,13 +38,13 @@
         void closeDBF();
         void closeSHP();
 
-        bool getShape(int index, ShapeObject &shape);
-        int	getDBFFieldIndex(const char *pszFieldName);
-        int	isDBFRecordDeleted(int record);
+        bool getShape(int index, ShapeObject &shape) const;
+        int	getDBFFieldIndex(const char *pszFieldName) const;
+        int	isDBFRecordDeleted(int record) const;
 
-        int getFieldPos(std::string fieldName);
-        bool existField(std::string fieldName);
-        DBFFieldType getFieldType(std::string fieldName);
+        int getFieldPos(std::string fieldName) const;
+        bool existField(std::string fieldName) const;
+        DBFFieldType getFieldType(std::string fieldName) const;
 
         int readIntAttribute(int shapeNumber, int fieldPos);
         bool writeIntAttribute(int shapeNumber, int fieldPos, int nFieldValue);
@@ -75,19 +75,19 @@
         int getShapeIndexfromPoint(double utmX, double utmY);
         std::string getAttributesList(int index);
 
-        std::string getTypeString()
+        std::string getTypeString() const
         { return getShapeTypeAsString(m_type); }
 
-        std::string	getFieldName(int fieldPos)
+        std::string	getFieldName(int fieldPos) const
         { return m_fieldsList.at(unsigned(fieldPos)); }
 
-        DBFFieldType getFieldType(int fieldPos)
+        DBFFieldType getFieldType(int fieldPos) const
         { return m_fieldsTypeList.at(unsigned(fieldPos)); }
 
-        int	getType() { return m_type; }
-        int getFieldNumbers() { return m_fields; }
-        int getShapeCount() { return m_count; }
-        int	getDBFRecordCount() { return m_dbf->nRecords; }
+        int	getType() const { return m_type; }
+        int getFieldNumbers() const { return m_fields; }
+        int getShapeCount() const { return m_count; }
+        int	getDBFRecordCount() const { return m_dbf->nRecords; }
 
         bool getIsWGS84() const { return m_isWGS84; }
         bool getIsNorth() const { return m_isNorth; }

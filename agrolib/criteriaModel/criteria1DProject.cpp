@@ -513,7 +513,22 @@ bool Crit1DProject::setMeteoXmlGrid(QString idMeteo, QString idForecast, unsigne
     unsigned nrDays = unsigned(firstSimulationDate.daysTo(lastSimulationDate)) + 1;
 
     unsigned row, col;
-    if (! observedMeteoGrid->meteoGrid()->findMeteoPointFromId(&row, &col, idMeteo.toStdString()) )
+    bool isMeteoCellFound = false;
+    if (observedMeteoGrid->meteoGrid()->findMeteoPointFromId(&row, &col, idMeteo.toStdString()))
+    {
+        isMeteoCellFound = true;
+    }
+    else if (idMeteo.at(0) == '0')
+    {
+        // try with one digit less
+        idMeteo = idMeteo.right(idMeteo.size()-1);
+        if (observedMeteoGrid->meteoGrid()->findMeteoPointFromId(&row, &col, idMeteo.toStdString()))
+        {
+            isMeteoCellFound = true;
+        }
+    }
+
+    if (! isMeteoCellFound)
     {
         projectError = "Missing observed meteo cell: " + idMeteo;
         return false;
@@ -667,9 +682,18 @@ bool Crit1DProject::setMeteoSqlite(QString idMeteo, QString idForecast)
     QSqlQuery query = dbMeteo.exec(queryString);
     query.last();
 
+    if (! query.isValid() && idMeteo.at(0) == '0')
+    {
+        // try with one digit less
+        QString idMeteoShort = idMeteo.right(idMeteo.size()-1);
+        queryString = "SELECT * FROM point_properties WHERE id_meteo='" + idMeteoShort + "'";
+        query = dbMeteo.exec(queryString);
+        query.last();
+    }
+
     if (! query.isValid())
     {
-        // previous code version
+        // try the previous code version
         queryString = "SELECT * FROM meteo_locations WHERE id_meteo='" + idMeteo + "'";
         query = dbMeteo.exec(queryString);
         query.last();
@@ -912,7 +936,7 @@ bool Crit1DProject::computeUnit(unsigned int unitIndex, unsigned int memberNr)
 bool Crit1DProject::computeCase(unsigned int memberNr)
 {
     myCase.fittingOptions.useWaterRetentionData = myCase.unit.useWaterRetentionData;
-    // user wants to compute factor of safety
+    // the user wants to compute the factor of safety
     myCase.computeFactorOfSafety = (factorOfSafetyDepth.size() > 0);
 
     if (! loadCropParameters(dbCrop, myCase.unit.idCrop, myCase.crop, projectError))

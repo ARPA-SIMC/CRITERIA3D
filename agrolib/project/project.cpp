@@ -4594,3 +4594,10 @@ bool Project::waterTableImportDepths(QString csvDepths)
     return true;
 }
 
+bool Project::computeSingleWell(QString idWell, int indexWell)
+{
+    // TO DO
+    qDebug() << "selectedId " << idWell;
+    qDebug() << "selectedIndex " << QString::number(indexWell);
+    return true;
+}
