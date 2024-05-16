@@ -297,6 +297,7 @@
 
         bool waterTableImportLocation(QString csvFileName);
         bool waterTableImportDepths(QString csvDepths);
+        bool computeSingleWell(QString idWell, int indexWell);
 
     private slots:
         void deleteMeteoWidgetPoint(int id);
