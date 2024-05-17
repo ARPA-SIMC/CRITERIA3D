@@ -21,7 +21,7 @@ DialogSummary::DialogSummary(WaterTable myWaterTable)
     myAlpha.setReadOnly(true);
 
     QLabel labelH0("H0 [cm]: ");
-    QLineEdit myH0(QString::number(myWaterTable.getH0()));
+    QLineEdit myH0(QString::number((int)myWaterTable.getH0()));
     myH0.setReadOnly(true);
 
     QLabel labelNrDays("Nr days: ");
