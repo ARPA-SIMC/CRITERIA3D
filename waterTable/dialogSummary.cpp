@@ -17,7 +17,7 @@ DialogSummary::DialogSummary(WaterTable myWaterTable)
     myObsData.setReadOnly(true);
 
     QLabel labelAlpha("alpha [-]: ");
-    QLineEdit myAlpha(QString::number(myWaterTable.getAlpha()));
+    QLineEdit myAlpha(QString::number(myWaterTable.getAlpha(),'f', 2));
     myAlpha.setReadOnly(true);
 
     QLabel labelH0("H0 [cm]: ");
@@ -29,19 +29,19 @@ DialogSummary::DialogSummary(WaterTable myWaterTable)
     myNrDays.setReadOnly(true);
 
     QLabel labelR2("R2 [-]: ");
-    QLineEdit myR2(QString::number(myWaterTable.getR2()));
+    QLineEdit myR2(QString::number(myWaterTable.getR2(),'f', 2));
     myR2.setReadOnly(true);
 
     QLabel labelRMSE("RMSE [cm]: ");
-    QLineEdit myRMSE(QString::number(myWaterTable.getRMSE()));
+    QLineEdit myRMSE(QString::number(myWaterTable.getRMSE(),'f', 2));
     myRMSE.setReadOnly(true);
 
     QLabel labelNASH("Nash-Sutcliffe [-]: ");
-    QLineEdit myNASH(QString::number(myWaterTable.getNASH()));
+    QLineEdit myNASH(QString::number(myWaterTable.getNASH(),'f', 2));
     myNASH.setReadOnly(true);
 
     QLabel labelEfIndex("Efficiency Index [-]: ");
-    QLineEdit myEfIndex(QString::number(myWaterTable.getEF()));
+    QLineEdit myEfIndex(QString::number(myWaterTable.getEF(),'f', 2));
     myEfIndex.setReadOnly(true);
 
     infoLayout->addWidget(&labelId,0,0,1,1);
