@@ -824,7 +824,7 @@ namespace soil
         horizon.texture.classUSDA = soil::getUSDATextureClass(horizon.texture);
         if (horizon.texture.classUSDA == NODATA)
         {
-            errorStr = "sand+silt+clay <> 100";
+            //errorStr = "sand+silt+clay <> 100";
             return false;
         }
 

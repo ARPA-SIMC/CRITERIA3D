@@ -375,12 +375,16 @@ bool loadSoil(const QSqlDatabase &dbSoil, const QString &soilCode, soil::Crit3DS
             }
             else
             {
-                errorStr += "\n";
+                if (horizonError != "")
+                    errorStr += "\n";
             }
 
-            errorStr += "soil_code: " + soilCode
+            if (horizonError != "")
+            {
+                errorStr += "soil_code: " + soilCode
                         + " horizon nr." + QString::number(mySoil.horizon[i].dbData.horizonNr)
                         + " " + QString::fromStdString(horizonError);
+            }
         }
     }
 
