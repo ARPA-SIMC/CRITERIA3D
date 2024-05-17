@@ -4,7 +4,7 @@
 #
 #-------------------------------------------------
 
-QT      += core xml
+QT      += widgets charts core xml
 QT      -= gui
 
 TEMPLATE = lib
@@ -27,11 +27,15 @@ win32:{
 INCLUDEPATH += ../crit3dDate ../mathFunctions ../meteo ../interpolation ../gis ../weatherGenerator
 
 SOURCES += \
+    dialogSelectWell.cpp \
+    dialogSummary.cpp \
     importData.cpp \
     waterTable.cpp \
     well.cpp
 
 HEADERS += \
+    dialogSelectWell.h \
+    dialogSummary.h \
     importData.h \
     waterTable.h \
     well.h

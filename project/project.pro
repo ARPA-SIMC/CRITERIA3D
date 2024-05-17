@@ -30,7 +30,8 @@ win32:{
 INCLUDEPATH += ../crit3dDate ../mathFunctions ../gis ../meteo   \
             ../solarRadiation ../interpolation ../utilities     \
             ../netcdfHandler ../dbMeteoPoints ../outputPoints ../dbMeteoGrid    \
-            ../meteoWidget ../commonDialogs ../commonChartElements ../climate ../proxyWidget ../inOutDataXML ../waterTable
+            ../meteoWidget ../commonDialogs ../commonChartElements ../climate \
+            ../proxyWidget ../inOutDataXML ../waterTable
 
 
 SOURCES += \

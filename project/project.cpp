@@ -15,6 +15,8 @@
 #include "dialogPointDeleteData.h"
 #include "formInfo.h"
 #include "importData.h"
+#include "waterTable.h"
+#include "dialogSummary.h"
 
 
 #include <iostream>
@@ -4596,3 +4598,32 @@ bool Project::waterTableImportDepths(QString csvDepths)
     return true;
 }
 
+bool Project::computeSingleWell(QString idWell, int indexWell)
+{
+    // TO DO
+    qDebug() << "selectedId " << idWell;
+    qDebug() << "selectedIndex " << QString::number(indexWell);
+    bool isMeteoGridLoaded;
+    QDate firstMeteoDate = wellPoints[indexWell].getFirstDate().addDays(-730); // necessari 24 mesi di dati meteo precedenti il primo dato di falda
+    if (this->meteoGridDbHandler != nullptr)
+    {
+        loadMeteoGridDailyData(firstMeteoDate, this->meteoGridDbHandler->getLastDailyDate(), true);
+        isMeteoGridLoaded = true;
+    }
+    else if (meteoPoints != nullptr)
+    {
+        loadMeteoPointsData(firstMeteoDate, this->meteoPointsDbHandler->getLastDate(daily).date(), false, true, true);
+        isMeteoGridLoaded = false;
+    }
+    else
+    {
+        logError(ERROR_STR_MISSING_POINT_GRID);
+        return false;
+    }
+
+    int maxNrDays = 730;  // attualmente fisso
+    WaterTable waterTable(meteoPoints, nrMeteoPoints, meteoGridDbHandler->meteoGrid(), isMeteoGridLoaded, *meteoSettings, gisSettings);
+    waterTable.computeWaterTable(wellPoints[indexWell], maxNrDays);
+    DialogSummary dialogResult(waterTable);   // show results
+    return true;
+}
