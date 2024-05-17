@@ -687,7 +687,7 @@ bool Project::loadParameters(QString parametersFileName)
 
             if (parameters->contains("fitting_parameters"))
             {
-                /*unsigned int nrParameters;
+                unsigned int nrParameters;
 
                 if (getProxyPragaName(name_.toStdString()) == proxyHeight)
                     nrParameters = 5;
@@ -699,7 +699,7 @@ bool Project::loadParameters(QString parametersFileName)
                 {
                     errorString = "Wrong number of fitting parameters for proxy: " + name_;
                     return  false;
-                }*/
+                }
 
                 myProxy->setFittingParametersRange(StringListToDouble(myList));
             }
@@ -3627,7 +3627,7 @@ void Project::showLocalProxyGraph(gis::Crit3DGeoPoint myPoint, gis::Crit3DRaster
         parameters = meteoGridDbHandler->meteoGrid()->dataMeteoGrid.getParametersFromRowCol(row, col);
     }
 
-    localProxyWidget = new Crit3DLocalProxyWidget(myUtm.x, myUtm.y, parameters, this->gisSettings, &interpolationSettings, meteoPoints, nrMeteoPoints, currentFrequency, currentDate, currentHour, quality, &qualityInterpolationSettings, meteoSettings, &climateParameters, checkSpatialQuality);
+    localProxyWidget = new Crit3DLocalProxyWidget(myUtm.x, myUtm.y, parameters, this->gisSettings, &interpolationSettings, meteoPoints, nrMeteoPoints, currentVariable, currentFrequency, currentDate, currentHour, quality, &qualityInterpolationSettings, meteoSettings, &climateParameters, checkSpatialQuality);
     return;
 }
 
@@ -4504,9 +4504,9 @@ bool Project::findTempMinMax(meteoVariable myVar)
             min = meteoPoints[i].getMeteoPointValueD(myDate, myVar);
             max = min;
             i++;
-        } while (min == NODATA);
+        } while (min == NODATA && i < nrMeteoPoints);
 
-        for (i = 0; i < nrMeteoPoints; i++)
+        while (i < nrMeteoPoints)
         {
             value = meteoPoints[i].getMeteoPointValueD(myDate, myVar);
             if (value != NODATA)
@@ -4516,6 +4516,7 @@ bool Project::findTempMinMax(meteoVariable myVar)
                 if (value > max)
                     max = value;
             }
+            i++;
         }
     }
     else if (myFreq == hourly)
@@ -4542,7 +4543,8 @@ bool Project::findTempMinMax(meteoVariable myVar)
         }
     }
 
-    interpolationSettings.setMinMaxTemperature(min, max);
+    if (min != NODATA && max != NODATA)
+        interpolationSettings.setMinMaxTemperature(min, max);
 
     return true;
 }
