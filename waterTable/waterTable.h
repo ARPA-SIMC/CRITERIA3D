@@ -17,14 +17,14 @@ class WaterTable
         QDate getFirstDateWell();
         QDate getLastDateWell();
         void initializeWaterTable(Well myWell);
-        bool computeWaterTable(Well myWell, int maxNrDays, int doy1, int doy2);
+        bool computeWaterTable(Well myWell, int maxNrDays);
         bool computeWTClimate();
         bool assignNearestMeteoPoint();
         bool assignWTMeteoData(Crit3DMeteoPoint point);
         bool computeETP_allSeries();
         bool computeCWBCorrelation(int maxNrDays);
         float computeCWB(QDate myDate, int nrDays);
-        bool computeWaterTableIndices(int doy1, int doy2);
+        bool computeWaterTableIndices();
         float getWaterTableDaily(QDate myDate);
         float getWaterTableClimate(QDate myDate);
         bool computeWaterTableClimate(QDate currentDate, int yearFrom, int yearTo, float* myValue);

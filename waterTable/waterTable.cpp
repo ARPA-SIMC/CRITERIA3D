@@ -97,7 +97,7 @@ void WaterTable::initializeWaterTable(Well myWell)
 
 }
 
-bool WaterTable::computeWaterTable(Well myWell, int maxNrDays, int doy1, int doy2)
+bool WaterTable::computeWaterTable(Well myWell, int maxNrDays)
 {
     if (myWell.getDepthNr() == 0)
     {
@@ -124,7 +124,7 @@ bool WaterTable::computeWaterTable(Well myWell, int maxNrDays, int doy1, int doy
         return false;
     }
     // LC non c'è alcun controllo sul valore di ritorno di computeWaterTableIndices
-    computeWaterTableIndices (doy1, doy2);
+    computeWaterTableIndices();
     return true;
 }
 
@@ -384,7 +384,7 @@ float WaterTable::computeCWB(QDate myDate, int nrDays)
 }
 
 // function to compute several statistical indices for watertable depth
-bool WaterTable::computeWaterTableIndices(int doy1, int doy2)
+bool WaterTable::computeWaterTableIndices()
 {
     QMap<QDate, int> myDepths = well.getDepths();
     QMapIterator<QDate, int> it(myDepths);
@@ -393,6 +393,8 @@ bool WaterTable::computeWaterTableIndices(int doy1, int doy2)
     std::vector<float> myClimate;
     float myIntercept;
     float myCoeff;
+    int doy1 = 1;
+    int doy2 = 366;
     while (it.hasNext())
     {
         it.next();

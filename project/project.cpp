@@ -16,6 +16,7 @@
 #include "formInfo.h"
 #include "importData.h"
 #include "waterTable.h"
+#include "dialogSummary.h"
 
 
 #include <iostream>
@@ -4618,8 +4619,9 @@ bool Project::computeSingleWell(QString idWell, int indexWell)
         return false;
     }
 
+    int maxNrDays = 730;  // attualmente fisso
     WaterTable waterTable(meteoPoints, nrMeteoPoints, meteoGridDbHandler->meteoGrid(), isMeteoGridLoaded, *meteoSettings, gisSettings);
-    // waterTable.computeWaterTable(wellPoints[indexWell], 90, 1, 15);
-
+    waterTable.computeWaterTable(wellPoints[indexWell], maxNrDays);
+    DialogSummary dialogResult(waterTable);   // show results
     return true;
 }

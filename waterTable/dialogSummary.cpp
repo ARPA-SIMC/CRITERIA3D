@@ -6,36 +6,43 @@ DialogSummary::DialogSummary(WaterTable myWaterTable)
     QVBoxLayout* mainLayout = new QVBoxLayout;
     this->resize(350, 200);
 
-
-    QHBoxLayout *layoutOk = new QHBoxLayout;
     QGridLayout *infoLayout = new QGridLayout;
 
     QLabel labelId("ID: ");
     QLineEdit myId(myWaterTable.getIdWell());
+    myId.setReadOnly(true);
 
     QLabel labelObsData("Nr of observed depth: ");
     QLineEdit myObsData(QString::number(myWaterTable.getNrObsData()));
+    myObsData.setReadOnly(true);
 
     QLabel labelAlpha("alpha [-]: ");
     QLineEdit myAlpha(QString::number(myWaterTable.getAlpha()));
+    myAlpha.setReadOnly(true);
 
     QLabel labelH0("H0 [cm]: ");
     QLineEdit myH0(QString::number(myWaterTable.getH0()));
+    myH0.setReadOnly(true);
 
     QLabel labelNrDays("Nr days: ");
     QLineEdit myNrDays(QString::number(myWaterTable.getNrDaysPeriod()));
+    myNrDays.setReadOnly(true);
 
     QLabel labelR2("R2 [-]: ");
     QLineEdit myR2(QString::number(myWaterTable.getR2()));
+    myR2.setReadOnly(true);
 
     QLabel labelRMSE("RMSE [cm]: ");
     QLineEdit myRMSE(QString::number(myWaterTable.getRMSE()));
+    myRMSE.setReadOnly(true);
 
     QLabel labelNASH("Nash-Sutcliffe [-]: ");
     QLineEdit myNASH(QString::number(myWaterTable.getNASH()));
+    myNASH.setReadOnly(true);
 
     QLabel labelEfIndex("Efficiency Index [-]: ");
     QLineEdit myEfIndex(QString::number(myWaterTable.getEF()));
+    myEfIndex.setReadOnly(true);
 
     infoLayout->addWidget(&labelId,0,0,1,1);
     infoLayout->addWidget(&myId,0,1,1,1);
@@ -64,15 +71,7 @@ DialogSummary::DialogSummary(WaterTable myWaterTable)
     infoLayout->addWidget(&labelEfIndex,8,0,1,1);
     infoLayout->addWidget(&myEfIndex,8,1,1,1);
 
-    QDialogButtonBox buttonBox(QDialogButtonBox::Ok | QDialogButtonBox::Cancel);
-
-    connect(&buttonBox, &QDialogButtonBox::accepted, [=](){ this->done(true); });
-    connect(&buttonBox, &QDialogButtonBox::rejected, [=](){ this->done(false); });
-
-    layoutOk->addWidget(&buttonBox);
-
     mainLayout->addLayout(infoLayout);
-    mainLayout->addLayout(layoutOk);
 
     setLayout(mainLayout);
     exec();
