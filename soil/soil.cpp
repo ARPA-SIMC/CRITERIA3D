@@ -813,7 +813,8 @@ namespace soil
         horizon.texture.sand = horizon.dbData.sand;
         horizon.texture.silt = horizon.dbData.silt;
         horizon.texture.clay = horizon.dbData.clay;
-        if (horizon.texture.sand <= 1 && horizon.texture.silt <= 1 && horizon.texture.clay <= 1)
+        if (! isEqual(horizon.texture.sand, NODATA) && ! isEqual(horizon.texture.silt, NODATA) && ! isEqual(horizon.texture.clay, NODATA)
+            && (horizon.texture.sand + horizon.texture.silt + horizon.texture.clay) <= 1 )
         {
             horizon.texture.sand *= 100;
             horizon.texture.silt *= 100;
@@ -824,7 +825,10 @@ namespace soil
         horizon.texture.classUSDA = soil::getUSDATextureClass(horizon.texture);
         if (horizon.texture.classUSDA == NODATA)
         {
-            //errorStr = "sand+silt+clay <> 100";
+            if (! isEqual(horizon.texture.sand, NODATA) || ! isEqual(horizon.texture.silt, NODATA) || ! isEqual(horizon.texture.clay, NODATA))
+            {
+                errorStr = "sand+silt+clay <> 100";
+            }
             return false;
         }
 
