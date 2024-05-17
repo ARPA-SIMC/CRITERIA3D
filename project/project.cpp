@@ -4601,12 +4601,15 @@ bool Project::computeSingleWell(QString idWell, int indexWell)
     qDebug() << "selectedId " << idWell;
     qDebug() << "selectedIndex " << QString::number(indexWell);
     bool isMeteoGridLoaded;
+    QDate firstMeteoDate = wellPoints[indexWell].getFirstDate().addDays(-730); // necessari 24 mesi di dati meteo precedenti il primo dato di falda
     if (this->meteoGridDbHandler != nullptr)
     {
+        loadMeteoGridDailyData(firstMeteoDate, this->meteoGridDbHandler->getLastDailyDate(), true);
         isMeteoGridLoaded = true;
     }
     else if (meteoPoints != nullptr)
     {
+        loadMeteoPointsData(firstMeteoDate, this->meteoPointsDbHandler->getLastDate(daily).date(), false, true, true);
         isMeteoGridLoaded = false;
     }
     else
@@ -4616,6 +4619,7 @@ bool Project::computeSingleWell(QString idWell, int indexWell)
     }
 
     WaterTable waterTable(meteoPoints, nrMeteoPoints, meteoGridDbHandler->meteoGrid(), isMeteoGridLoaded, *meteoSettings, gisSettings);
+    // waterTable.computeWaterTable(wellPoints[indexWell], 90, 1, 15);
 
     return true;
 }
