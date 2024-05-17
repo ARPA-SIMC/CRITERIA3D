@@ -15,6 +15,7 @@
 #include "dialogPointDeleteData.h"
 #include "formInfo.h"
 #include "importData.h"
+#include "waterTable.h"
 
 
 #include <iostream>
@@ -4599,5 +4600,22 @@ bool Project::computeSingleWell(QString idWell, int indexWell)
     // TO DO
     qDebug() << "selectedId " << idWell;
     qDebug() << "selectedIndex " << QString::number(indexWell);
+    bool isMeteoGridLoaded;
+    if (this->meteoGridDbHandler != nullptr)
+    {
+        isMeteoGridLoaded = true;
+    }
+    else if (meteoPoints != nullptr)
+    {
+        isMeteoGridLoaded = false;
+    }
+    else
+    {
+        logError(ERROR_STR_MISSING_POINT_GRID);
+        return false;
+    }
+
+    WaterTable waterTable(meteoPoints, nrMeteoPoints, meteoGridDbHandler->meteoGrid(), isMeteoGridLoaded, *meteoSettings, gisSettings);
+
     return true;
 }

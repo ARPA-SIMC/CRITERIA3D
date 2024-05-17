@@ -28,12 +28,14 @@ INCLUDEPATH += ../crit3dDate ../mathFunctions ../meteo ../interpolation ../gis .
 
 SOURCES += \
     dialogSelectWell.cpp \
+    dialogSummary.cpp \
     importData.cpp \
     waterTable.cpp \
     well.cpp
 
 HEADERS += \
     dialogSelectWell.h \
+    dialogSummary.h \
     importData.h \
     waterTable.h \
     well.h
