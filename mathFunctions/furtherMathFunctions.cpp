@@ -725,6 +725,8 @@ namespace interpolation
     {
         int i, j, k;
         double pivot, mult, top;
+        if (nrParameters <= 0)
+            return;
 
         double* g = (double *) calloc(nrParameters, sizeof(double));
         double* z = (double *) calloc(nrParameters, sizeof(double));
@@ -1158,8 +1160,8 @@ namespace interpolation
                                         std::vector<double>& weights)
     {
         int i,j;
-        int nrPredictors = parameters.size();
-        int nrData = y.size();
+        int nrPredictors = int(parameters.size());
+        int nrData = int(y.size());
         std::vector <int> nrParameters(nrPredictors);
         int nrParametersTotal = 0;
         for (i=0; i<nrPredictors;i++)
@@ -1391,13 +1393,13 @@ namespace interpolation
             //least squares function
             int i,j,k;
             double pivot, mult, top;
-            int nrPredictors = parameters.size();
+            int nrPredictors = int(parameters.size());
             int nrParametersTotal = 0;
-            int nrData = y.size();
+            int nrData = int(y.size());
             std::vector <int> nrParameters(nrPredictors);
             for (i=0; i<nrPredictors;i++)
             {
-                nrParameters[i]= parameters[i].size();
+                nrParameters[i]= int(parameters[i].size());
                 nrParametersTotal += nrParameters[i];
             }
 
@@ -1574,9 +1576,9 @@ namespace interpolation
     {
         int i,j,k;
         double pivot, mult, top;
-        int nrPredictors = parameters.size();
+        int nrPredictors = int(parameters.size());
         int nrParametersTotal = 0;
-        int nrData = y.size();
+        int nrData = int(y.size());
         std::vector <int> nrParameters(nrPredictors);
         for (i=0; i<nrPredictors;i++)
         {
@@ -1716,9 +1718,9 @@ namespace interpolation
     {
         int i,j,k;
         double pivot, mult, top;
-        int nrPredictors = parameters.size();
+        int nrPredictors = int(parameters.size());
         int nrParametersTotal = 0;
-        int nrData = y.size();
+        int nrData = int(y.size());
         std::vector <int> nrParameters(nrPredictors);
         for (i=0; i<nrPredictors;i++)
         {
@@ -1874,8 +1876,8 @@ namespace interpolation
                                                        std::vector<double>& weights)
     {
         int i,j;
-        int nrData = y.size();
-        int nrParameters = parameters.size();
+        int nrData = int(y.size());
+        int nrParameters = int(parameters.size());
 
         std::vector <double> bestParameters(nrParameters);
 
@@ -1956,11 +1958,11 @@ namespace interpolation
         int i,j,k;
         double mySSE, diffSSE, newSSE;
         static double VFACTOR = 10;
-        int nrParameters = parameters.size();
+        int nrParameters = int(parameters.size());
         std::vector <double> paramChange(nrParameters,0);
         std::vector <double> newParameters(nrParameters,0);
         std::vector <double> lambda (nrParameters,0.01);
-        int nrData = y.size();
+        int nrData = int(y.size());
 
         double error = 0;
         mySSE = 0;
