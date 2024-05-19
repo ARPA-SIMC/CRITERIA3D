@@ -4,16 +4,18 @@
 #include <QtWidgets>
 #include <QtCharts>
 
-#include "waterTable.h"
 #include "waterTableChartView.h"
 
 class WaterTableWidget : public QWidget
 {
     Q_OBJECT
 public:
-    WaterTableWidget(WaterTable myWaterTable);
+    WaterTableWidget(QString id, std::vector<QDate> myDates, std::vector<float> myValues, std::vector<float> myHindcastSeries, std::vector<float> myInterpolateSeries);
+    void plot(std::vector<QDate> myDates, std::vector<float> myValues, std::vector<float> myHindcastSeries, std::vector<float> myInterpolateSeries);
+
 private:
     WaterTableChartView *waterTableChartView;
+
 };
 
 #endif // WATERTABLEWIDGET_H

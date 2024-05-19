@@ -29,6 +29,7 @@ class WaterTable
         float getWaterTableClimate(QDate myDate);
         bool computeWaterTableClimate(QDate currentDate, int yearFrom, int yearTo, float* myValue);
         bool getWaterTableHindcast(QDate myDate, float* myValue, float* myDelta, int* myDeltaDays);
+        void ViewWaterTableSeries();
         QString getError() const;
 
         float getAlpha() const;
@@ -39,6 +40,11 @@ class WaterTable
         float getNASH() const;
         float getEF() const;
         int getNrObsData() const;
+
+        std::vector<QDate> getMyDates() const;
+        std::vector<float> getMyValues() const;
+        std::vector<float> getMyHindcastSeries() const;
+        std::vector<float> getMyInterpolateSeries() const;
 
     private:
         Crit3DMeteoPoint *meteoPoints;
@@ -74,6 +80,12 @@ class WaterTable
         bool isCWBEquationReady;
         float avgDailyCWB; //[mm]
         Crit3DMeteoPoint linkedMeteoPoint;
+
+        // graph
+        std::vector<QDate> myDates;
+        std::vector<float> myValues;
+        std::vector<float> myHindcastSeries;
+        std::vector<float> myInterpolateSeries;
 };
 
 #endif // WATERTABLE_H

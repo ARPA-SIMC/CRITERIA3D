@@ -70,6 +70,26 @@ int WaterTable::getNrObsData() const
     return nrObsData;
 }
 
+std::vector<QDate> WaterTable::getMyDates() const
+{
+    return myDates;
+}
+
+std::vector<float> WaterTable::getMyValues() const
+{
+    return myValues;
+}
+
+std::vector<float> WaterTable::getMyHindcastSeries() const
+{
+    return myHindcastSeries;
+}
+
+std::vector<float> WaterTable::getMyInterpolateSeries() const
+{
+    return myInterpolateSeries;
+}
+
 void WaterTable::initializeWaterTable(Well myWell)
 {
 
@@ -646,3 +666,29 @@ bool WaterTable::getWaterTableHindcast(QDate myDate, float* myValue, float* myDe
     return getWaterTableHindcast;
 }
 
+void WaterTable::ViewWaterTableSeries()
+{
+    QMap<QDate, int> myDepths = well.getDepths();
+    QMapIterator<QDate, int> it(myDepths);
+
+    myDates.clear();
+    myValues.clear();
+    myHindcastSeries.clear();
+    myInterpolateSeries.clear();
+    float myDepth;
+    float myDelta;
+    int myDeltaDays;
+
+    while (it.hasNext())
+    {
+        it.next();
+        QDate myDate = it.key();
+        myDates.push_back(myDate);
+        int myValue = it.value();
+        myValues.push_back(myValue);
+        float computedValue = getWaterTableDaily(myDate);
+        myHindcastSeries.push_back(computedValue);
+        getWaterTableHindcast(myDate, &myDepth, &myDelta, &myDeltaDays);
+        myInterpolateSeries.push_back(myDepth);
+    }
+}
