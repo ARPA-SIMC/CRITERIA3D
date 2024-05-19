@@ -31,6 +31,7 @@ SOURCES += \
     dialogSummary.cpp \
     importData.cpp \
     waterTable.cpp \
+    waterTableChartView.cpp \
     well.cpp
 
 HEADERS += \
@@ -38,5 +39,6 @@ HEADERS += \
     dialogSummary.h \
     importData.h \
     waterTable.h \
+    waterTableChartView.h \
     well.h
 
