@@ -81,12 +81,15 @@ bool computeUcmPrevailing(Crit3DShapeHandler &shapeUCM, Crit3DShapeHandler &shap
 
     // add ID CASE
     shapeUCM.addField("ID_CASE", FTString, 20, 0);
-    int idCaseIndex = shapeUCM.getFieldPos("ID_CASE");
+    int idCasePos = shapeUCM.getFieldPos("ID_CASE");
 
     // add ID CROP
     bool existIdCrop = shapeUCM.existField("ID_CROP");
-    if (! existIdCrop) shapeUCM.addField("ID_CROP", FTString, 5, 0);
-    int idCropIndex = shapeUCM.getFieldPos("ID_CROP");
+    if (! existIdCrop)
+    {
+        shapeUCM.addField("ID_CROP", FTString, 5, 0);
+    }
+    int idCropPos = shapeUCM.getFieldPos("ID_CROP");
 
     // read indexes
     int nShape = shapeUCM.getShapeCount();
@@ -111,30 +114,63 @@ bool computeUcmPrevailing(Crit3DShapeHandler &shapeUCM, Crit3DShapeHandler &shap
         return false;
     }
 
-    // FILL ID_CROP and ID_CASE
-    for (int shapeIndex = 0; shapeIndex < nShape; shapeIndex++)
+    // add HECTARES
+    bool existHectares = shapeUCM.existField("HA");
+    int hectaresPos = shapeUCM.getFieldPos("HA");
+    if (! existHectares)
     {
-        std::string cropStr = shapeUCM.readStringAttribute(shapeIndex, cropIndex);
-        if (cropStr == "-9999") cropStr = "";
-
-        std::string soilStr = shapeUCM.readStringAttribute(shapeIndex, soilIndex);
-        if (soilStr == "-9999") soilStr = "";
-
-        std::string meteoStr = shapeUCM.readStringAttribute(shapeIndex, meteoIndex);
-        if (meteoStr == "-9999") meteoStr = "";
-
-        std::string caseStr = "";
-        if (meteoStr != "" && soilStr != "" && cropStr != "")
-            caseStr = "M" + meteoStr + "S" + soilStr + "C" + cropStr;
-
-        if (! existIdCrop) shapeUCM.writeStringAttribute(shapeIndex, idCropIndex, cropStr.c_str());
-        shapeUCM.writeStringAttribute(shapeIndex, idCaseIndex, caseStr.c_str());
-
-        if (caseStr == "")
-            shapeUCM.deleteRecord(shapeIndex);
+        existHectares = shapeUCM.existField("HECTARES");
+        hectaresPos = shapeUCM.getFieldPos("HECTARES");
+    }
+    if (! existHectares)
+    {
+        shapeUCM.addField("HECTARES", FTDouble, 12, 1);
+        hectaresPos = shapeUCM.getFieldPos("HECTARES");
     }
 
-    if (showInfo) formInfo.close();
+    // FILL ID_CROP and ID_CASE
+    for (int shapeNr = 0; shapeNr < nShape; shapeNr++)
+    {
+        std::string cropStr = shapeUCM.readStringAttribute(shapeNr, cropIndex);
+        if (cropStr == "-9999") cropStr = "";
+
+        std::string soilStr = shapeUCM.readStringAttribute(shapeNr, soilIndex);
+        if (soilStr == "-9999") soilStr = "";
+
+        std::string meteoStr = shapeUCM.readStringAttribute(shapeNr, meteoIndex);
+        if (meteoStr == "-9999") meteoStr = "";
+
+        // check ID CASE
+        std::string caseStr = "";
+        if (meteoStr != "" && soilStr != "" && cropStr != "")
+        {
+            caseStr = "M" + meteoStr + "S" + soilStr + "C" + cropStr;
+        }
+        else
+        {
+            shapeUCM.deleteRecord(shapeNr);
+            continue;
+        }
+
+        // write ID CROP
+        if (! existIdCrop)
+        {
+            shapeUCM.writeStringAttribute(shapeNr, idCropPos, cropStr.c_str());
+        }
+
+        // check hectares
+        double hectares = shapeUCM.readDoubleAttribute(shapeNr, hectaresPos);
+        if (hectares == 0)
+        {
+            shapeUCM.writeDoubleAttribute(shapeNr, hectaresPos, NODATA);
+        }
+
+        // write ID CASE
+        shapeUCM.writeStringAttribute(shapeNr, idCasePos, caseStr.c_str());
+    }
+
+    if (showInfo)
+        formInfo.close();
     cleanShapeFile(shapeUCM);
 
     return isOk;
@@ -152,7 +188,7 @@ bool fillUcmIdCase(Crit3DShapeHandler &ucm, std::string idCrop, std::string idSo
     int cropIndex = ucm.getFieldPos(idCrop);
     int soilIndex = ucm.getFieldPos(idSoil);
     int meteoIndex = ucm.getFieldPos(idMeteo);
-    int idCaseIndex = ucm.getFieldPos("ID_CASE");
+    int idCasePos = ucm.getFieldPos("ID_CASE");
 
     if (cropIndex == -1 || soilIndex == -1 || meteoIndex == -1)
     {
@@ -173,7 +209,7 @@ bool fillUcmIdCase(Crit3DShapeHandler &ucm, std::string idCrop, std::string idSo
         if (meteoStr != "" && soilStr != "" && cropStr != "")
             caseStr = "M" + meteoStr + "S" + soilStr + "C" + cropStr;
 
-        ucm.writeStringAttribute(shapeIndex, idCaseIndex, caseStr.c_str());
+        ucm.writeStringAttribute(shapeIndex, idCasePos, caseStr.c_str());
 
         if (caseStr == "")
             ucm.deleteRecord(shapeIndex);
@@ -201,11 +237,11 @@ bool writeUcmListToDb(Crit3DShapeHandler &shapeHandler, QString dbName, QString 
 
         double hectares = shapeHandler.getNumericValue(signed(i), "HA");
         if (hectares == NODATA)
-            hectares = shapeHandler.getNumericValue(signed(i), "Hectares");
-        if (hectares == NODATA)
-            hectares = shapeHandler.getNumericValue(signed(i), "hectares");
+        {
+            hectares = shapeHandler.getNumericValue(signed(i), "HECTARES");
+        }
 
-        if ( !idCase.contains(key) )
+        if ( ! idCase.contains(key) )
         {
             idCase << key;
             idCrop << QString::fromStdString(shapeHandler.getStringValue(signed(i), "ID_CROP"));
