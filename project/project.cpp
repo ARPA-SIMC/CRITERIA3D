@@ -4617,13 +4617,14 @@ bool Project::computeSingleWell(QString idWell, int indexWell)
         logError(ERROR_STR_MISSING_POINT_GRID);
         return false;
     }
-
     int maxNrDays = 730;  // attualmente fisso
     WaterTable waterTable(meteoPoints, nrMeteoPoints, meteoGridDbHandler->meteoGrid(), isMeteoGridLoaded, *meteoSettings, gisSettings);
     waterTable.computeWaterTable(wellPoints[indexWell], maxNrDays);
+    waterTable.viewWaterTableSeries();        // prepare series to show
     waterTableList.push_back(waterTable);
     DialogSummary* dialogResult = new DialogSummary(waterTable);   // show results
-    waterTable.viewWaterTableSeries();        // prepare series to show
+    dialogResult->show();
     WaterTableWidget* chartResult = new WaterTableWidget(idWell, waterTable.getMyDates(), waterTable.getMyHindcastSeries(), waterTable.getMyInterpolateSeries(), waterTable.getDepths());
+    chartResult->show();
     return true;
 }
