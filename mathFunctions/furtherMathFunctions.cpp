@@ -1247,7 +1247,7 @@ namespace interpolation
                     parameters[i][j] = parametersMin[i][j] + (truncNormal)*(parametersMax[i][j]-parametersMin[i][j]);
                 }
             }
-        } while( (counter < nrTrials) && (R2 < 0.8) && (fabs(R2Previous[0]-R2Previous[nrMinima-1]) > deltaR2) );
+        } while( (counter < nrTrials) && !(R2Previous[0] > 0.8 && R2Previous[nrMinima-1] > 0.8) && (fabs(R2Previous[0]-R2Previous[nrMinima-1]) > deltaR2) );
 
         for (i=0;i<nrPredictors;i++)
         {
