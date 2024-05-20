@@ -75,11 +75,6 @@ std::vector<QDate> WaterTable::getMyDates() const
     return myDates;
 }
 
-std::vector<float> WaterTable::getMyValues() const
-{
-    return myValues;
-}
-
 std::vector<float> WaterTable::getMyHindcastSeries() const
 {
     return myHindcastSeries;
@@ -672,20 +667,15 @@ void WaterTable::ViewWaterTableSeries()
     QMapIterator<QDate, int> it(myDepths);
 
     myDates.clear();
-    myValues.clear();
     myHindcastSeries.clear();
     myInterpolateSeries.clear();
     float myDepth;
     float myDelta;
     int myDeltaDays;
 
-    while (it.hasNext())
+    for (QDate myDate = firstMeteoDate; myDate<=lastMeteoDate; myDate=myDate.addDays(1))
     {
-        it.next();
-        QDate myDate = it.key();
         myDates.push_back(myDate);
-        int myValue = it.value();
-        myValues.push_back(myValue);
         float computedValue = getWaterTableDaily(myDate);
         myHindcastSeries.push_back(computedValue);
         getWaterTableHindcast(myDate, &myDepth, &myDelta, &myDeltaDays);

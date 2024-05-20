@@ -24,7 +24,7 @@ win32:{
     TARGET = waterTable
 }
 
-INCLUDEPATH += ../crit3dDate ../mathFunctions ../meteo ../interpolation ../gis ../weatherGenerator
+INCLUDEPATH += ../crit3dDate ../mathFunctions ../meteo ../interpolation ../gis ../commonChartElements ../weatherGenerator
 
 SOURCES += \
     dialogSelectWell.cpp \

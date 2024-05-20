@@ -83,7 +83,6 @@ class WaterTable
 
         // graph
         std::vector<QDate> myDates;
-        std::vector<float> myValues;
         std::vector<float> myHindcastSeries;
         std::vector<float> myInterpolateSeries;
 };

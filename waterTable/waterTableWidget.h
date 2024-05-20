@@ -10,8 +10,7 @@ class WaterTableWidget : public QWidget
 {
     Q_OBJECT
 public:
-    WaterTableWidget(QString id, std::vector<QDate> myDates, std::vector<float> myValues, std::vector<float> myHindcastSeries, std::vector<float> myInterpolateSeries);
-    void plot(std::vector<QDate> myDates, std::vector<float> myValues, std::vector<float> myHindcastSeries, std::vector<float> myInterpolateSeries);
+    WaterTableWidget(QString id, std::vector<QDate> myDates, std::vector<float> myHindcastSeries, std::vector<float> myInterpolateSeries, QMap<QDate, int> obsDepths);
 
 private:
     WaterTableChartView *waterTableChartView;
