@@ -22,7 +22,7 @@ INCLUDEPATH +=  ../../mapGraphics \
                 ../../agrolib/solarRadiation ../../agrolib/soil  \
                 ../../agrolib/crop ../../agrolib/grapevine ../../agrolib/outputPoints \
                 ../../agrolib/utilities ../../agrolib/dbMeteoPoints ../../agrolib/dbMeteoGrid \
-                ../../agrolib/proxyWidget \
+                ../../agrolib/proxyWidget ../../agrolib/waterTable \
                 ../../agrolib/commonDialogs ../../agrolib/project \
                 ../../agrolib/graphics ../../agrolib/commonChartElements ../../agrolib/meteoWidget ../../mapGraphics  \
                 ../CRITERIA3D/shared
@@ -47,6 +47,7 @@ CONFIG(debug, debug|release) {
     LIBS += -L../../agrolib/dbMeteoPoints/debug -ldbMeteoPoints
     LIBS += -L../../agrolib/outputPoints/debug -loutputPoints
     LIBS += -L../../agrolib/utilities/debug -lutilities
+    LIBS += -L../../agrolib/waterTable/debug -lwaterTable
     LIBS += -L../../agrolib/grapevine/debug -lgrapevine
     LIBS += -L../../agrolib/soil/debug -lsoil
     LIBS += -L../../agrolib/crop/debug -lcrop
@@ -69,6 +70,7 @@ CONFIG(debug, debug|release) {
     LIBS += -L../../agrolib/dbMeteoPoints/release -ldbMeteoPoints
     LIBS += -L../../agrolib/outputPoints/release -loutputPoints
     LIBS += -L../../agrolib/utilities/release -lutilities
+    LIBS += -L../../agrolib/waterTable/release -lwaterTable
     LIBS += -L../../agrolib/grapevine/release -lgrapevine
     LIBS += -L../../agrolib/soil/release -lsoil
     LIBS += -L../../agrolib/crop/release -lcrop

@@ -9,9 +9,9 @@ SUBDIRS =       ../../agrolib/soilFluxes3D  \
                 ../../agrolib/interpolation ../../agrolib/solarRadiation  \
                 ../../agrolib/dbMeteoPoints ../../agrolib/dbMeteoGrid  \
                 ../../agrolib/commonDialogs ../../agrolib/inOutDataXML \
-                ../../agrolib/proxyWidget \
-                ../../agrolib/project  \
+                ../../agrolib/proxyWidget ../../agrolib/project  \
                 ../../agrolib/meteoWidget  ../../agrolib/graphics \
+                ../../agrolib/waterTable \
                 ../VINE3D
 
 CONFIG += ordered
