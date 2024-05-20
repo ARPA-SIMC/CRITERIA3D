@@ -2111,27 +2111,22 @@ bool Criteria1DWidget::checkCropIsChanged()
     return isCropChanged;
 }
 
+
 void Criteria1DWidget::irrigationVolumeChanged()
 {
     double irrigationVolume = QLocale().toDouble(irrigationVolumeValue->text());
 
     if (irrigationVolume == 0)
     {
-        irrigationShiftValue->setValue(0);
         irrigationShiftValue->setEnabled(false);
-        degreeDaysStartValue->setText(nullptr);
         degreeDaysStartValue->setEnabled(false);
-        degreeDaysEndValue->setText(nullptr);
         degreeDaysEndValue->setEnabled(false);
     }
     else if (irrigationVolume > 0)
     {
         irrigationShiftValue->setEnabled(true);
-        irrigationShiftValue->setValue(cropFromDB.irrigationShift);
         degreeDaysStartValue->setEnabled(true);
-        degreeDaysStartValue->setText(QString::number(cropFromDB.degreeDaysStartIrrigation));
         degreeDaysEndValue->setEnabled(true);
-        degreeDaysEndValue->setText(QString::number(cropFromDB.degreeDaysEndIrrigation));
     }
 }
 

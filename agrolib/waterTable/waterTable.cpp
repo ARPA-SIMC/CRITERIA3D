@@ -8,6 +8,11 @@ WaterTable::WaterTable(Crit3DMeteoPoint* meteoPoints, int nrMeteoPoints, Crit3DM
 
 }
 
+QString WaterTable::getIdWell() const
+{
+    return well.getId();
+}
+
 QDate WaterTable::getFirstDateWell()
 {
     firstDateWell = well.getFirstDate();
@@ -20,9 +25,69 @@ QDate WaterTable::getLastDateWell()
     return lastDateWell;
 }
 
+QMap<QDate, int> WaterTable::getDepths()
+{
+    return well.getDepths();
+}
+
 QString WaterTable::getError() const
 {
     return error;
+}
+
+float WaterTable::getAlpha() const
+{
+    return alpha;
+}
+
+float WaterTable::getH0() const
+{
+    return h0;
+}
+
+int WaterTable::getNrDaysPeriod() const
+{
+    return nrDaysPeriod;
+}
+
+float WaterTable::getR2() const
+{
+    return R2;
+}
+
+float WaterTable::getRMSE() const
+{
+    return RMSE;
+}
+
+float WaterTable::getNASH() const
+{
+    return NASH;
+}
+
+float WaterTable::getEF() const
+{
+    return EF;
+}
+
+int WaterTable::getNrObsData() const
+{
+    return nrObsData;
+}
+
+std::vector<QDate> WaterTable::getMyDates() const
+{
+    return myDates;
+}
+
+std::vector<float> WaterTable::getMyHindcastSeries() const
+{
+    return myHindcastSeries;
+}
+
+std::vector<float> WaterTable::getMyInterpolateSeries() const
+{
+    return myInterpolateSeries;
 }
 
 void WaterTable::initializeWaterTable(Well myWell)
@@ -52,7 +117,7 @@ void WaterTable::initializeWaterTable(Well myWell)
 
 }
 
-bool WaterTable::computeWaterTable(Well myWell, int maxNrDays, int doy1, int doy2)
+bool WaterTable::computeWaterTable(Well myWell, int maxNrDays)
 {
     if (myWell.getDepthNr() == 0)
     {
@@ -79,7 +144,7 @@ bool WaterTable::computeWaterTable(Well myWell, int maxNrDays, int doy1, int doy
         return false;
     }
     // LC non c'è alcun controllo sul valore di ritorno di computeWaterTableIndices
-    computeWaterTableIndices (doy1, doy2);
+    computeWaterTableIndices();
     return true;
 }
 
@@ -103,6 +168,7 @@ bool WaterTable::computeWTClimate()
     QMapIterator<QDate, int> it(myDepths);
     while (it.hasNext())
     {
+        it.next();
         QDate myDate = it.key();
         int myValue = it.value();
         int myMonth = myDate.month();
@@ -262,6 +328,7 @@ bool WaterTable::computeCWBCorrelation(int maxNrDays)
         QMapIterator<QDate, int> it(myDepths);
         while (it.hasNext())
         {
+            it.next();
             QDate myDate = it.key();
             int myValue = it.value();
             float myCWBValue = computeCWB(myDate, nrDays);  // [cm]
@@ -337,7 +404,7 @@ float WaterTable::computeCWB(QDate myDate, int nrDays)
 }
 
 // function to compute several statistical indices for watertable depth
-bool WaterTable::computeWaterTableIndices(int doy1, int doy2)
+bool WaterTable::computeWaterTableIndices()
 {
     QMap<QDate, int> myDepths = well.getDepths();
     QMapIterator<QDate, int> it(myDepths);
@@ -346,8 +413,11 @@ bool WaterTable::computeWaterTableIndices(int doy1, int doy2)
     std::vector<float> myClimate;
     float myIntercept;
     float myCoeff;
+    int doy1 = 1;
+    int doy2 = 366;
     while (it.hasNext())
     {
+        it.next();
         QDate myDate = it.key();
         int myValue = it.value();
         int myDoy = myDate.dayOfYear();
@@ -596,3 +666,24 @@ bool WaterTable::getWaterTableHindcast(QDate myDate, float* myValue, float* myDe
     return getWaterTableHindcast;
 }
 
+void WaterTable::viewWaterTableSeries()
+{
+    QMap<QDate, int> myDepths = well.getDepths();
+    QMapIterator<QDate, int> it(myDepths);
+
+    myDates.clear();
+    myHindcastSeries.clear();
+    myInterpolateSeries.clear();
+    float myDepth;
+    float myDelta;
+    int myDeltaDays;
+
+    for (QDate myDate = firstMeteoDate; myDate<=lastMeteoDate; myDate=myDate.addDays(1))
+    {
+        myDates.push_back(myDate);
+        float computedValue = getWaterTableDaily(myDate);
+        myHindcastSeries.push_back(computedValue);
+        getWaterTableHindcast(myDate, &myDepth, &myDelta, &myDeltaDays);
+        myInterpolateSeries.push_back(myDepth);
+    }
+}

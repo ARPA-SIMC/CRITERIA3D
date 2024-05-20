@@ -15,6 +15,8 @@
 #include "dialogPointDeleteData.h"
 #include "formInfo.h"
 #include "importData.h"
+#include "dialogSummary.h"
+#include "waterTableWidget.h"
 
 
 #include <iostream>
@@ -687,7 +689,7 @@ bool Project::loadParameters(QString parametersFileName)
 
             if (parameters->contains("fitting_parameters"))
             {
-                /*unsigned int nrParameters;
+                unsigned int nrParameters;
 
                 if (getProxyPragaName(name_.toStdString()) == proxyHeight)
                     nrParameters = 5;
@@ -699,7 +701,7 @@ bool Project::loadParameters(QString parametersFileName)
                 {
                     errorString = "Wrong number of fitting parameters for proxy: " + name_;
                     return  false;
-                }*/
+                }
 
                 myProxy->setFittingParametersRange(StringListToDouble(myList));
             }
@@ -3627,7 +3629,7 @@ void Project::showLocalProxyGraph(gis::Crit3DGeoPoint myPoint, gis::Crit3DRaster
         parameters = meteoGridDbHandler->meteoGrid()->dataMeteoGrid.getParametersFromRowCol(row, col);
     }
 
-    localProxyWidget = new Crit3DLocalProxyWidget(myUtm.x, myUtm.y, parameters, this->gisSettings, &interpolationSettings, meteoPoints, nrMeteoPoints, currentFrequency, currentDate, currentHour, quality, &qualityInterpolationSettings, meteoSettings, &climateParameters, checkSpatialQuality);
+    localProxyWidget = new Crit3DLocalProxyWidget(myUtm.x, myUtm.y, parameters, this->gisSettings, &interpolationSettings, meteoPoints, nrMeteoPoints, currentVariable, currentFrequency, currentDate, currentHour, quality, &qualityInterpolationSettings, meteoSettings, &climateParameters, checkSpatialQuality);
     return;
 }
 
@@ -4504,9 +4506,9 @@ bool Project::findTempMinMax(meteoVariable myVar)
             min = meteoPoints[i].getMeteoPointValueD(myDate, myVar);
             max = min;
             i++;
-        } while (min == NODATA);
+        } while (min == NODATA && i < nrMeteoPoints);
 
-        for (i = 0; i < nrMeteoPoints; i++)
+        while (i < nrMeteoPoints)
         {
             value = meteoPoints[i].getMeteoPointValueD(myDate, myVar);
             if (value != NODATA)
@@ -4516,6 +4518,7 @@ bool Project::findTempMinMax(meteoVariable myVar)
                 if (value > max)
                     max = value;
             }
+            i++;
         }
     }
     else if (myFreq == hourly)
@@ -4542,7 +4545,8 @@ bool Project::findTempMinMax(meteoVariable myVar)
         }
     }
 
-    interpolationSettings.setMinMaxTemperature(min, max);
+    if (min != NODATA && max != NODATA)
+        interpolationSettings.setMinMaxTemperature(min, max);
 
     return true;
 }
@@ -4596,8 +4600,30 @@ bool Project::waterTableImportDepths(QString csvDepths)
 
 bool Project::computeSingleWell(QString idWell, int indexWell)
 {
-    // TO DO
-    qDebug() << "selectedId " << idWell;
-    qDebug() << "selectedIndex " << QString::number(indexWell);
+    bool isMeteoGridLoaded;
+    QDate firstMeteoDate = wellPoints[indexWell].getFirstDate().addDays(-730); // necessari 24 mesi di dati meteo precedenti il primo dato di falda
+    if (this->meteoGridDbHandler != nullptr)
+    {
+        loadMeteoGridDailyData(firstMeteoDate, this->meteoGridDbHandler->getLastDailyDate(), true);
+        isMeteoGridLoaded = true;
+    }
+    else if (meteoPoints != nullptr)
+    {
+        loadMeteoPointsData(firstMeteoDate, this->meteoPointsDbHandler->getLastDate(daily).date(), false, true, true);
+        isMeteoGridLoaded = false;
+    }
+    else
+    {
+        logError(ERROR_STR_MISSING_POINT_GRID);
+        return false;
+    }
+
+    int maxNrDays = 730;  // attualmente fisso
+    WaterTable waterTable(meteoPoints, nrMeteoPoints, meteoGridDbHandler->meteoGrid(), isMeteoGridLoaded, *meteoSettings, gisSettings);
+    waterTable.computeWaterTable(wellPoints[indexWell], maxNrDays);
+    waterTableList.push_back(waterTable);
+    DialogSummary* dialogResult = new DialogSummary(waterTable);   // show results
+    waterTable.viewWaterTableSeries();        // prepare series to show
+    WaterTableWidget* chartResult = new WaterTableWidget(idWell, waterTable.getMyDates(), waterTable.getMyHindcastSeries(), waterTable.getMyInterpolateSeries(), waterTable.getDepths());
     return true;
 }

@@ -13,22 +13,38 @@ class WaterTable
 {
     public:
         WaterTable(Crit3DMeteoPoint* meteoPoints, int nrMeteoPoints, Crit3DMeteoGrid* meteoGrid, bool isMeteoGridLoaded, Crit3DMeteoSettings meteoSettings, gis::Crit3DGisSettings gisSettings);
+        QString getIdWell() const;
         QDate getFirstDateWell();
         QDate getLastDateWell();
         void initializeWaterTable(Well myWell);
-        bool computeWaterTable(Well myWell, int maxNrDays, int doy1, int doy2);
+        bool computeWaterTable(Well myWell, int maxNrDays);
         bool computeWTClimate();
         bool assignNearestMeteoPoint();
         bool assignWTMeteoData(Crit3DMeteoPoint point);
         bool computeETP_allSeries();
         bool computeCWBCorrelation(int maxNrDays);
         float computeCWB(QDate myDate, int nrDays);
-        bool computeWaterTableIndices(int doy1, int doy2);
+        bool computeWaterTableIndices();
         float getWaterTableDaily(QDate myDate);
         float getWaterTableClimate(QDate myDate);
         bool computeWaterTableClimate(QDate currentDate, int yearFrom, int yearTo, float* myValue);
         bool getWaterTableHindcast(QDate myDate, float* myValue, float* myDelta, int* myDeltaDays);
+        void viewWaterTableSeries();
         QString getError() const;
+
+        float getAlpha() const;
+        float getH0() const;
+        int getNrDaysPeriod() const;
+        float getR2() const;
+        float getRMSE() const;
+        float getNASH() const;
+        float getEF() const;
+        int getNrObsData() const;
+
+        std::vector<QDate> getMyDates() const;
+        std::vector<float> getMyHindcastSeries() const;
+        std::vector<float> getMyInterpolateSeries() const;
+        QMap<QDate, int> getDepths();
 
     private:
         Crit3DMeteoPoint *meteoPoints;
@@ -64,6 +80,11 @@ class WaterTable
         bool isCWBEquationReady;
         float avgDailyCWB; //[mm]
         Crit3DMeteoPoint linkedMeteoPoint;
+
+        // graph
+        std::vector<QDate> myDates;
+        std::vector<float> myHindcastSeries;
+        std::vector<float> myInterpolateSeries;
 };
 
 #endif // WATERTABLE_H
