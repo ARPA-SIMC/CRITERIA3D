@@ -20,3 +20,13 @@ WaterTableWidget::WaterTableWidget(QString id, std::vector<QDate> myDates, std::
     waterTableChartView->draw(myDates, myHindcastSeries, myInterpolateSeries, obsDepths);
     show();
 }
+
+WaterTableWidget::~WaterTableWidget()
+{
+
+}
+
+void WaterTableWidget::closeEvent(QCloseEvent *event)
+{
+    event->accept();
+}

@@ -4622,8 +4622,8 @@ bool Project::computeSingleWell(QString idWell, int indexWell)
     WaterTable waterTable(meteoPoints, nrMeteoPoints, meteoGridDbHandler->meteoGrid(), isMeteoGridLoaded, *meteoSettings, gisSettings);
     waterTable.computeWaterTable(wellPoints[indexWell], maxNrDays);
     waterTableList.push_back(waterTable);
-    DialogSummary dialogResult(waterTable);   // show results
+    DialogSummary* dialogResult = new DialogSummary(waterTable);   // show results
     waterTable.viewWaterTableSeries();        // prepare series to show
-    //WaterTableWidget chartResult(idWell, waterTable.getMyDates(), waterTable.getMyHindcastSeries(), waterTable.getMyInterpolateSeries(), waterTable.getDepths());
+    WaterTableWidget* chartResult = new WaterTableWidget(idWell, waterTable.getMyDates(), waterTable.getMyHindcastSeries(), waterTable.getMyInterpolateSeries(), waterTable.getDepths());
     return true;
 }

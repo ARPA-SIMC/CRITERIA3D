@@ -54,6 +54,22 @@ void WaterTableChartView::draw(std::vector<QDate> myDates, std::vector<float> my
     axisY->setMax(300);
     axisY->setMin(0);
     axisY->setLabelFormat("%d");
+
+    QDateTime firstDateTime;
+    firstDateTime.setDate(myDates[0]);
+    firstDateTime.setTime(QTime(0,0));
+    QDateTime lastDateTime;
+    lastDateTime.setDate(myDates[myDates.size()-1]);
+    lastDateTime.setTime(QTime(0,0));
+
+    axisX->setTickCount(12);
+    axisX->setMin(firstDateTime);
+    axisX->setMax(lastDateTime);
+
+    chart()->addSeries(obsDepthSeries);
+    chart()->addSeries(hindcastSeries);
+    chart()->addSeries(interpolationSeries);
+
     connect(obsDepthSeries, &QScatterSeries::hovered, this, &WaterTableChartView::tooltipObsDepthSeries);
     connect(hindcastSeries, &QLineSeries::hovered, this, &WaterTableChartView::tooltipLineSeries);
     connect(interpolationSeries, &QLineSeries::hovered, this, &WaterTableChartView::tooltipLineSeries);
@@ -72,10 +88,11 @@ void WaterTableChartView::tooltipObsDepthSeries(QPointF point, bool state)
     auto serie = qobject_cast<QScatterSeries *>(sender());
     if (state)
     {
-        double xValue = point.x();
+        QDateTime firstDate(QDate(1970,1,1), QTime(0,0,0));
+        QDateTime xValue = firstDate.addMSecs(point.x());
         double yValue = point.y();
 
-        m_tooltip->setText(QString("%1: %2").arg(xValue).arg(yValue, 0, 'd'));
+        m_tooltip->setText(QString("%1: %2").arg(xValue.date().toString("yyyy/MM/dd")).arg(yValue, 0, 'd'));
         m_tooltip->setSeries(serie);
         m_tooltip->setAnchor(point);
         m_tooltip->setZValue(11);
@@ -94,10 +111,11 @@ void WaterTableChartView::tooltipLineSeries(QPointF point, bool state)
     auto serie = qobject_cast<QLineSeries *>(sender());
     if (state)
     {
-        int xValue = point.x();
+        QDateTime firstDate(QDate(1970,1,1), QTime(0,0,0));
+        QDateTime xValue = firstDate.addMSecs(point.x());
         double yValue = point.y();
 
-        m_tooltip->setText(QString("%1: %2").arg(xValue).arg(yValue, 0, 'd'));
+        m_tooltip->setText(QString("%1: %2").arg(xValue.date().toString("yyyy/MM/dd")).arg(yValue, 0, 'd'));
         m_tooltip->setSeries(serie);
         m_tooltip->setAnchor(point);
         m_tooltip->setZValue(11);
