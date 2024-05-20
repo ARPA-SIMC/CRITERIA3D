@@ -74,5 +74,5 @@ DialogSummary::DialogSummary(WaterTable myWaterTable)
     mainLayout->addLayout(infoLayout);
 
     setLayout(mainLayout);
-    exec();
+    show();
 }

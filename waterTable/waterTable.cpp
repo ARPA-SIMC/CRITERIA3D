@@ -25,6 +25,11 @@ QDate WaterTable::getLastDateWell()
     return lastDateWell;
 }
 
+QMap<QDate, int> WaterTable::getDepths()
+{
+    return well.getDepths();
+}
+
 QString WaterTable::getError() const
 {
     return error;
@@ -661,7 +666,7 @@ bool WaterTable::getWaterTableHindcast(QDate myDate, float* myValue, float* myDe
     return getWaterTableHindcast;
 }
 
-void WaterTable::ViewWaterTableSeries()
+void WaterTable::viewWaterTableSeries()
 {
     QMap<QDate, int> myDepths = well.getDepths();
     QMapIterator<QDate, int> it(myDepths);

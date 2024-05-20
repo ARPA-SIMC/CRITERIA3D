@@ -19,6 +19,7 @@ WaterTableChartView::WaterTableChartView(QWidget *parent) :
     axisX = new QDateTimeAxis();
     axisX->setFormat("yyyy/MM/dd");
     axisY = new QValueAxis();
+    axisY->setReverse(true);
 
     chart()->addAxis(axisX, Qt::AlignBottom);
     chart()->addAxis(axisY, Qt::AlignLeft);
@@ -32,14 +33,6 @@ WaterTableChartView::WaterTableChartView(QWidget *parent) :
 
 void WaterTableChartView::draw(std::vector<QDate> myDates, std::vector<float> myHindcastSeries, std::vector<float> myInterpolateSeries, QMap<QDate, int> obsDepths)
 {
-    float myMinHindcastValue = -NODATA;
-    float myMaxHindcastValue = NODATA;
-
-    float myMinInterpolationValue = -NODATA;
-    float myMaxInterpolationValue = NODATA;
-
-    float myMinObsValue = -NODATA;
-    float myMaxObsValue = NODATA;
 
     int nDays = myDates.size();
     QDateTime myDateTime;
@@ -49,46 +42,17 @@ void WaterTableChartView::draw(std::vector<QDate> myDates, std::vector<float> my
         myDateTime.setDate(myDates[day]);
         hindcastSeries->append(myDateTime.toMSecsSinceEpoch(), myHindcastSeries[day]);
         interpolationSeries->append(myDateTime.toMSecsSinceEpoch(), myInterpolateSeries[day]);
-        if (myHindcastSeries[day] != NODATA)
-        {
-            if (myHindcastSeries[day] > myMaxHindcastValue)
-            {
-                myMaxHindcastValue = myHindcastSeries[day];
-            }
-            if (myHindcastSeries[day] < myMinHindcastValue)
-            {
-                myMinHindcastValue = myHindcastSeries[day];
-            }
-        }
-        if (myInterpolateSeries[day] != NODATA)
-        {
-            if (myInterpolateSeries[day] > myMaxInterpolationValue)
-            {
-                myMaxInterpolationValue = myInterpolateSeries[day];
-            }
-            if (myInterpolateSeries[day] < myMinInterpolationValue)
-            {
-                myMinInterpolationValue = myInterpolateSeries[day];
-            }
-        }
+
         if(obsDepths.contains(myDates[day]))
         {
             int myDepth = obsDepths[myDates[day]];
             obsDepthSeries->append(myDateTime.toMSecsSinceEpoch(), myDepth);
-            if (myDepth > myMaxObsValue)
-            {
-                myMaxObsValue = myDepth;
-            }
-            if (myDepth < myMinObsValue)
-            {
-                myMinObsValue = myDepth;
-            }
         }
     }
 
 
-    axisY->setMax(std::max({myMinHindcastValue, myMinInterpolationValue, myMinObsValue}));
-    axisY->setMin(std::min({myMinHindcastValue, myMinInterpolationValue, myMinObsValue}));
+    axisY->setMax(300);
+    axisY->setMin(0);
     axisY->setLabelFormat("%d");
     connect(obsDepthSeries, &QScatterSeries::hovered, this, &WaterTableChartView::tooltipObsDepthSeries);
     connect(hindcastSeries, &QLineSeries::hovered, this, &WaterTableChartView::tooltipLineSeries);
@@ -99,7 +63,7 @@ void WaterTableChartView::draw(std::vector<QDate> myDates, std::vector<float> my
         marker->series()->setVisible(true);
         QObject::connect(marker, &QLegendMarker::clicked, this, &WaterTableChartView::handleMarkerClicked);
     }
-
+    return;
 }
 
 void WaterTableChartView::tooltipObsDepthSeries(QPointF point, bool state)

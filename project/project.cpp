@@ -16,6 +16,7 @@
 #include "formInfo.h"
 #include "importData.h"
 #include "dialogSummary.h"
+#include "waterTableWidget.h"
 
 
 #include <iostream>
@@ -4599,9 +4600,6 @@ bool Project::waterTableImportDepths(QString csvDepths)
 
 bool Project::computeSingleWell(QString idWell, int indexWell)
 {
-    // TO DO
-    qDebug() << "selectedId " << idWell;
-    qDebug() << "selectedIndex " << QString::number(indexWell);
     bool isMeteoGridLoaded;
     QDate firstMeteoDate = wellPoints[indexWell].getFirstDate().addDays(-730); // necessari 24 mesi di dati meteo precedenti il primo dato di falda
     if (this->meteoGridDbHandler != nullptr)
@@ -4625,5 +4623,7 @@ bool Project::computeSingleWell(QString idWell, int indexWell)
     waterTable.computeWaterTable(wellPoints[indexWell], maxNrDays);
     waterTableList.push_back(waterTable);
     DialogSummary dialogResult(waterTable);   // show results
+    waterTable.viewWaterTableSeries();        // prepare series to show
+    //WaterTableWidget chartResult(idWell, waterTable.getMyDates(), waterTable.getMyHindcastSeries(), waterTable.getMyInterpolateSeries(), waterTable.getDepths());
     return true;
 }
