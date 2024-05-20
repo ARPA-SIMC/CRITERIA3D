@@ -25,6 +25,11 @@ QDate WaterTable::getLastDateWell()
     return lastDateWell;
 }
 
+QMap<QDate, int> WaterTable::getDepths()
+{
+    return well.getDepths();
+}
+
 QString WaterTable::getError() const
 {
     return error;
@@ -73,11 +78,6 @@ int WaterTable::getNrObsData() const
 std::vector<QDate> WaterTable::getMyDates() const
 {
     return myDates;
-}
-
-std::vector<float> WaterTable::getMyValues() const
-{
-    return myValues;
 }
 
 std::vector<float> WaterTable::getMyHindcastSeries() const
@@ -666,26 +666,21 @@ bool WaterTable::getWaterTableHindcast(QDate myDate, float* myValue, float* myDe
     return getWaterTableHindcast;
 }
 
-void WaterTable::ViewWaterTableSeries()
+void WaterTable::viewWaterTableSeries()
 {
     QMap<QDate, int> myDepths = well.getDepths();
     QMapIterator<QDate, int> it(myDepths);
 
     myDates.clear();
-    myValues.clear();
     myHindcastSeries.clear();
     myInterpolateSeries.clear();
     float myDepth;
     float myDelta;
     int myDeltaDays;
 
-    while (it.hasNext())
+    for (QDate myDate = firstMeteoDate; myDate<=lastMeteoDate; myDate=myDate.addDays(1))
     {
-        it.next();
-        QDate myDate = it.key();
         myDates.push_back(myDate);
-        int myValue = it.value();
-        myValues.push_back(myValue);
         float computedValue = getWaterTableDaily(myDate);
         myHindcastSeries.push_back(computedValue);
         getWaterTableHindcast(myDate, &myDepth, &myDelta, &myDeltaDays);

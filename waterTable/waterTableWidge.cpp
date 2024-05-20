@@ -1,6 +1,6 @@
 #include "waterTableWidget.h"
 
-WaterTableWidget::WaterTableWidget(QString id, std::vector<QDate> myDates, std::vector<float> myValues, std::vector<float> myHindcastSeries, std::vector<float> myInterpolateSeries)
+WaterTableWidget::WaterTableWidget(QString id, std::vector<QDate> myDates, std::vector<float> myHindcastSeries, std::vector<float> myInterpolateSeries, QMap<QDate, int> obsDepths)
 {
     this->setWindowTitle("Graph Id well: "+ id);
     this->resize(1240, 700);
@@ -17,11 +17,16 @@ WaterTableWidget::WaterTableWidget(QString id, std::vector<QDate> myDates, std::
     mainLayout->addLayout(plotLayout);
     setLayout(mainLayout);
 
-    plot(myDates, myValues, myHindcastSeries, myInterpolateSeries);
+    waterTableChartView->draw(myDates, myHindcastSeries, myInterpolateSeries, obsDepths);
     show();
 }
 
-void WaterTableWidget::plot(std::vector<QDate> myDates, std::vector<float> myValues, std::vector<float> myHindcastSeries, std::vector<float> myInterpolateSeries)
+WaterTableWidget::~WaterTableWidget()
 {
-    // TO DO
+
+}
+
+void WaterTableWidget::closeEvent(QCloseEvent *event)
+{
+    event->accept();
 }

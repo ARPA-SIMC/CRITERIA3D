@@ -74,5 +74,15 @@ DialogSummary::DialogSummary(WaterTable myWaterTable)
     mainLayout->addLayout(infoLayout);
 
     setLayout(mainLayout);
-    exec();
+    show();
+}
+
+DialogSummary::~DialogSummary()
+{
+
+}
+
+void DialogSummary::closeEvent(QCloseEvent *event)
+{
+    event->accept();
 }

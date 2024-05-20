@@ -8,6 +8,8 @@ class DialogSummary : public QDialog
 {
 public:
     DialogSummary(WaterTable myWaterTable);
+    ~DialogSummary();
+    void closeEvent(QCloseEvent *event);
 };
 
 #endif // DIALOGSUMMARY_H
