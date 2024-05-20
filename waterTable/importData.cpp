@@ -40,6 +40,7 @@ bool loadCsvRegistry(QString csvRegistry, std::vector<Well> &wellList, QString &
                 wrongLines++;
                 continue;
             }
+            items[posId] = items[posId].simplified();
             QString id = items[posId].remove(QChar('"'));
             if (idList.contains(id))
             {
@@ -49,6 +50,7 @@ bool loadCsvRegistry(QString csvRegistry, std::vector<Well> &wellList, QString &
                 continue;
             }
             idList.append(id);
+            items[posUtmx] = items[posUtmx].simplified();
             double utmX = items[posUtmx].remove(QChar('"')).toDouble(&ok);
             if (!ok)
             {
@@ -56,6 +58,7 @@ bool loadCsvRegistry(QString csvRegistry, std::vector<Well> &wellList, QString &
                 wrongLines++;
                 continue;
             }
+            items[posUtmy] = items[posUtmy].simplified();
             double utmY = items[posUtmy].remove(QChar('"')).toDouble(&ok);
             if (!ok)
             {
@@ -115,6 +118,7 @@ bool loadCsvDepths(QString csvDepths, std::vector<Well> &wellList, int waterTabl
                 wrongLines++;
                 continue;
             }
+            items[posId] = items[posId].simplified();
             QString id = items[posId].remove(QChar('"'));
             bool found = false;
             int index = NODATA;
@@ -134,7 +138,7 @@ bool loadCsvDepths(QString csvDepths, std::vector<Well> &wellList, int waterTabl
                 wrongLines++;
                 continue;
             }
-
+            items[posDate] = items[posDate].simplified();
             QDate date = QDate::fromString(items[posDate].remove(QChar('"')),"yyyy-MM-dd");
             if (! date.isValid())
             {
@@ -142,7 +146,7 @@ bool loadCsvDepths(QString csvDepths, std::vector<Well> &wellList, int waterTabl
                 wrongLines++;
                 continue;
             }
-
+            items[posDepth] = items[posDepth].simplified();
             int value = items[posDepth].remove(QChar('"')).toInt(&ok);
             if (!ok || value == NODATA || value < 0 || value > waterTableMaximumDepth)
             {
