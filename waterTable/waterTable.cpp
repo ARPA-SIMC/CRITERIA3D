@@ -376,7 +376,7 @@ float WaterTable::computeCWB(QDate myDate, int nrDays)
     for (int shift = 1; shift<=nrDays; shift++)
     {
         actualDate = myDate.addDays(-shift);
-        int index = firstMeteoDate.daysTo(actualDate) + 1; // LC CONTROLLARE
+        int index = firstMeteoDate.daysTo(actualDate) + 1;
         if (index > 0 && index < precValues.size())
         {
             float etp = etpValues[index];
@@ -391,13 +391,13 @@ float WaterTable::computeCWB(QDate myDate, int nrDays)
         }
     }
 
-    if (nrValidDays < (nrDaysPeriod * meteoSettings.getMinimumPercentage() / 100))
+    if (nrValidDays < (nrDays * meteoSettings.getMinimumPercentage() / 100))
     {
         error = "Few Data";
         return NODATA;
     }
     // Climate
-    float climateCWB = avgDailyCWB * nrDaysPeriod * 0.5;
+    float climateCWB = avgDailyCWB * nrDays * 0.5;
 
     // conversion: from [mm] to [cm]
     float computeCWB = (sumCWB - climateCWB) * 0.1;
