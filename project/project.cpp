@@ -4602,14 +4602,15 @@ bool Project::computeSingleWell(QString idWell, int indexWell)
 {
     bool isMeteoGridLoaded;
     QDate firstMeteoDate = wellPoints[indexWell].getFirstDate().addDays(-730); // necessari 24 mesi di dati meteo precedenti il primo dato di falda
+    double wellUtmX = wellPoints[indexWell].getUtmX();
+    double wellUtmY = wellPoints[indexWell].getUtmY();
+    Crit3DMeteoPoint* linkedMeteoPoint;
     if (this->meteoGridDbHandler != nullptr)
     {
-        loadMeteoGridDailyData(firstMeteoDate, this->meteoGridDbHandler->getLastDailyDate(), true);
         isMeteoGridLoaded = true;
     }
     else if (meteoPoints != nullptr)
     {
-        loadMeteoPointsData(firstMeteoDate, this->meteoPointsDbHandler->getLastDate(daily).date(), false, true, true);
         isMeteoGridLoaded = false;
     }
     else
@@ -4617,8 +4618,13 @@ bool Project::computeSingleWell(QString idWell, int indexWell)
         logError(ERROR_STR_MISSING_POINT_GRID);
         return false;
     }
+    if (!assignNearestMeteoPoint(isMeteoGridLoaded, wellUtmX, wellUtmY, firstMeteoDate, linkedMeteoPoint))
+    {
+        logError("Missing near weather data");
+        return false;
+    }
     int maxNrDays = 730;  // attualmente fisso
-    WaterTable waterTable(meteoPoints, nrMeteoPoints, meteoGridDbHandler->meteoGrid(), isMeteoGridLoaded, *meteoSettings, gisSettings);
+    WaterTable waterTable(*linkedMeteoPoint, *meteoSettings, gisSettings);
     waterTable.computeWaterTable(wellPoints[indexWell], maxNrDays);
     waterTable.viewWaterTableSeries();        // prepare series to show
     waterTableList.push_back(waterTable);
@@ -4627,4 +4633,88 @@ bool Project::computeSingleWell(QString idWell, int indexWell)
     WaterTableWidget* chartResult = new WaterTableWidget(idWell, waterTable.getMyDates(), waterTable.getMyHindcastSeries(), waterTable.getMyInterpolateSeries(), waterTable.getDepths());
     chartResult->show();
     return true;
+}
+
+bool Project::assignNearestMeteoPoint(bool isMeteoGridLoaded, double wellUtmX, double wellUtmY, QDate firstMeteoDate, Crit3DMeteoPoint* linkedMeteoPoint)
+{
+    float minimumDistance = NODATA;
+    bool assignNearestMeteoPoint = false;
+    if (isMeteoGridLoaded)
+    {
+        int zoneNumber;
+        QDate lastDate = this->meteoGridDbHandler->getLastDailyDate();
+        for (unsigned row = 0; row < unsigned(meteoGridDbHandler->meteoGrid()->gridStructure().header().nrRows); row++)
+        {
+            for (unsigned col = 0; col < unsigned(meteoGridDbHandler->meteoGrid()->gridStructure().header().nrCols); col++)
+            {
+                double utmX = meteoGridDbHandler->meteoGrid()->meteoPointPointer(row,col)->point.utm.x;
+                double utmY = meteoGridDbHandler->meteoGrid()->meteoPointPointer(row,col)->point.utm.y;
+                if (utmX == NODATA || utmY == NODATA)
+                {
+                    double lat = meteoGridDbHandler->meteoGrid()->meteoPointPointer(row,col)->latitude;
+                    double lon = meteoGridDbHandler->meteoGrid()->meteoPointPointer(row,col)->longitude;
+                    gis::latLonToUtm(lat, lon, &utmX, &utmY, &zoneNumber);
+                }
+                float myDistance = gis::computeDistance(wellUtmX, wellUtmY, utmX, utmY);
+                if (myDistance < MAXWELLDISTANCE )
+                {
+                    if (myDistance < minimumDistance || minimumDistance == NODATA)
+                    {
+                        meteoGridDbHandler->loadGridDailyData(errorString, QString::fromStdString(meteoGridDbHandler->meteoGrid()->meteoPointPointer(row,col)->id), firstMeteoDate, lastDate);
+                        if (assignWTMeteoData(meteoGridDbHandler->meteoGrid()->meteoPointPointer(row,col), firstMeteoDate))
+                        {
+                            minimumDistance = myDistance;
+                            assignNearestMeteoPoint = true;
+                            linkedMeteoPoint = meteoGridDbHandler->meteoGrid()->meteoPointPointer(row,col);
+                        }
+                    }
+                }
+            }
+        }
+    }
+    else
+    {
+        QDate lastDate = meteoPointsDbHandler->getLastDate(daily).date();
+        for (int i = 0; i < nrMeteoPoints; i++)
+        {
+
+            double utmX = meteoPoints[i].point.utm.x;
+            double utmY = meteoPoints[i].point.utm.y;
+            float myDistance = gis::computeDistance(wellUtmX, wellUtmY, utmX, utmY);
+            if (myDistance < MAXWELLDISTANCE )
+            {
+                if (myDistance < minimumDistance || minimumDistance == NODATA)
+                {
+                    meteoPointsDbHandler->loadDailyData(getCrit3DDate(firstMeteoDate), getCrit3DDate(lastDate), &(meteoPoints[i]));
+                    if (assignWTMeteoData(&meteoPoints[i], firstMeteoDate))
+                    {
+                        minimumDistance = myDistance;
+                        assignNearestMeteoPoint = true;
+                        linkedMeteoPoint = &meteoPoints[i];
+                    }
+                }
+            }
+        }
+    }
+    return assignNearestMeteoPoint;
+}
+
+bool Project::assignWTMeteoData(Crit3DMeteoPoint* linkedMeteoPoint, QDate firstMeteoDate)
+{
+    QDate lastMeteoDate;
+    lastMeteoDate.setDate(linkedMeteoPoint->getLastDailyData().year, linkedMeteoPoint->getLastDailyData().month, linkedMeteoPoint->getLastDailyData().day); // ultimo dato disponibile
+    float precPerc = linkedMeteoPoint->getPercValueVariable(Crit3DDate(firstMeteoDate.day(), firstMeteoDate.month(), firstMeteoDate.year()) , Crit3DDate(lastMeteoDate.day(), lastMeteoDate.month(), lastMeteoDate.year()), dailyPrecipitation);
+    float tMinPerc = linkedMeteoPoint->getPercValueVariable(Crit3DDate(firstMeteoDate.day(), firstMeteoDate.month(), firstMeteoDate.year()) , Crit3DDate(lastMeteoDate.day(), lastMeteoDate.month(), lastMeteoDate.year()), dailyAirTemperatureMin);
+    float tMaxPerc = linkedMeteoPoint->getPercValueVariable(Crit3DDate(firstMeteoDate.day(), firstMeteoDate.month(), firstMeteoDate.year()) , Crit3DDate(lastMeteoDate.day(), lastMeteoDate.month(), lastMeteoDate.year()), dailyAirTemperatureMax);
+
+    float minPercentage = meteoSettings->getMinimumPercentage();
+    if (precPerc > minPercentage/100 && tMinPerc > minPercentage/100 && tMaxPerc > minPercentage/100)
+    {
+        return true;
+    }
+    else
+    {
+        errorString = "Not enough meteo data to analyze watertable period. Try to decrease the required percentage";
+        return false;
+    }
 }

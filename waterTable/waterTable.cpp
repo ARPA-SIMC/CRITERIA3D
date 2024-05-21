@@ -2,8 +2,8 @@
 #include "commonConstants.h"
 #include "weatherGenerator.h"
 
-WaterTable::WaterTable(Crit3DMeteoPoint* meteoPoints, int nrMeteoPoints, Crit3DMeteoGrid* meteoGrid, bool isMeteoGridLoaded, Crit3DMeteoSettings meteoSettings, gis::Crit3DGisSettings gisSettings)
-    : meteoPoints(meteoPoints), nrMeteoPoints(nrMeteoPoints), meteoGrid(meteoGrid), isMeteoGridLoaded(isMeteoGridLoaded), meteoSettings(meteoSettings), gisSettings(gisSettings)
+WaterTable::WaterTable(Crit3DMeteoPoint linkedMeteoPoint, Crit3DMeteoSettings meteoSettings, gis::Crit3DGisSettings gisSettings)
+    : linkedMeteoPoint(linkedMeteoPoint), meteoSettings(meteoSettings), gisSettings(gisSettings)
 {
 
 }
@@ -101,7 +101,6 @@ void WaterTable::initializeWaterTable(Well myWell)
         WTClimateMonthly[myMonthIndex] = NODATA;
     }
 
-    isMeteoPointLinked = false;
     isCWBEquationReady = false;
     isClimateReady = false;
 
@@ -127,11 +126,6 @@ bool WaterTable::computeWaterTable(Well myWell, int maxNrDays)
 
     initializeWaterTable(myWell);
     isClimateReady = computeWTClimate();
-    isMeteoPointLinked = assignNearestMeteoPoint();
-    if (isMeteoPointLinked == false)
-    {
-        return false;
-    }
 
     if (!computeETP_allSeries())
     {
@@ -189,86 +183,6 @@ bool WaterTable::computeWTClimate()
     isClimateReady = true;
     cubicSplineYearInterpolate(WTClimateMonthly, WTClimateDaily);
     return true;
-}
-
-bool WaterTable::assignNearestMeteoPoint()
-{
-    float minimumDistance = NODATA;
-    bool assignNearestMeteoPoint = false;
-    if (isMeteoGridLoaded)
-    {
-        int zoneNumber;
-        for (unsigned row = 0; row < unsigned(meteoGrid->gridStructure().header().nrRows); row++)
-        {
-            for (unsigned col = 0; col < unsigned(meteoGrid->gridStructure().header().nrCols); col++)
-            {
-                double utmX = meteoGrid->meteoPointPointer(row,col)->point.utm.x;
-                double utmY = meteoGrid->meteoPointPointer(row,col)->point.utm.y;
-                if (utmX == NODATA || utmY == NODATA)
-                {
-                    double lat = meteoGrid->meteoPointPointer(row,col)->latitude;
-                    double lon = meteoGrid->meteoPointPointer(row,col)->longitude;
-                    gis::latLonToUtm(lat, lon, &utmX, &utmY, &zoneNumber);
-                }
-                float myDistance = gis::computeDistance(well.getUtmX(), well.getUtmY(), utmX, utmY);
-                if (myDistance < MAXWELLDISTANCE )
-                {
-                    if (myDistance < minimumDistance || minimumDistance == NODATA)
-                    {
-                        if (assignWTMeteoData(*meteoGrid->meteoPointPointer(row,col) ))
-                        {
-                            minimumDistance = myDistance;
-                            assignNearestMeteoPoint = true;
-                            linkedMeteoPoint = (*meteoGrid->meteoPointPointer(row,col));
-                        }
-                    }
-                }
-            }
-        }
-    }
-    else
-    {
-        for (int i = 0; i < nrMeteoPoints; i++)
-        {
-
-            double utmX = meteoPoints[i].point.utm.x;
-            double utmY = meteoPoints[i].point.utm.y;
-            float myDistance = gis::computeDistance(well.getUtmX(), well.getUtmY(), utmX, utmY);
-            if (myDistance < MAXWELLDISTANCE )
-            {
-                if (myDistance < minimumDistance || minimumDistance == NODATA)
-                {
-                    if (assignWTMeteoData(meteoPoints[i]))
-                    {
-                        minimumDistance = myDistance;
-                        assignNearestMeteoPoint = true;
-                        linkedMeteoPoint = meteoPoints[i];
-                    }
-                }
-            }
-        }
-    }
-    return assignNearestMeteoPoint;
-}
-
-bool WaterTable::assignWTMeteoData(Crit3DMeteoPoint point)
-{
-    firstMeteoDate = firstDateWell.addDays(-730); // necessari 24 mesi di dati meteo precedenti il primo dato di falda
-    lastMeteoDate.setDate(point.getLastDailyData().year, point.getLastDailyData().month, point.getLastDailyData().day); // ultimo dato disponibile
-    float precPerc = point.getPercValueVariable(Crit3DDate(firstMeteoDate.day(), firstMeteoDate.month(), firstMeteoDate.year()) , Crit3DDate(lastMeteoDate.day(), lastMeteoDate.month(), lastMeteoDate.year()), dailyPrecipitation);
-    float tMinPerc = point.getPercValueVariable(Crit3DDate(firstMeteoDate.day(), firstMeteoDate.month(), firstMeteoDate.year()) , Crit3DDate(lastMeteoDate.day(), lastMeteoDate.month(), lastMeteoDate.year()), dailyAirTemperatureMin);
-    float tMaxPerc = point.getPercValueVariable(Crit3DDate(firstMeteoDate.day(), firstMeteoDate.month(), firstMeteoDate.year()) , Crit3DDate(lastMeteoDate.day(), lastMeteoDate.month(), lastMeteoDate.year()), dailyAirTemperatureMax);
-
-    float minPercentage = meteoSettings.getMinimumPercentage();
-    if (precPerc > minPercentage/100 && tMinPerc > minPercentage/100 && tMaxPerc > minPercentage/100)
-    {
-        return true;
-    }
-    else
-    {
-        error = "Not enough meteo data to analyze watertable period. Try to decrease the required percentage";
-        return false;
-    }
 }
 
 bool WaterTable::computeETP_allSeries()
@@ -475,7 +389,7 @@ float WaterTable::getWaterTableDaily(QDate myDate)
     float getWaterTableDaily = NODATA;
     bool isComputed = false;
 
-    if (isMeteoPointLinked && isCWBEquationReady)
+    if (isCWBEquationReady)
     {
         float myCWB = computeCWB(myDate, nrDaysPeriod);
         if (myCWB != NODATA)
