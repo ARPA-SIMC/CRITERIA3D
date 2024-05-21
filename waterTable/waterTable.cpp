@@ -437,13 +437,13 @@ bool WaterTable::computeWaterTableIndices()
     float myErrAvg = 0;
     float myErrClimate = 0;
 
-    nrObsData = myObs.size();
-    for (int i=0; i<nrObsData; i++)
+    int nrObs = myObs.size();
+    for (int i=0; i<nrObs; i++)
     {
         mySum = mySum + myObs[i];
     }
-    float myObsAvg = mySum / nrObsData;
-    for (int i=0; i<nrObsData; i++)
+    float myObsAvg = mySum / nrObs;
+    for (int i=0; i<nrObs; i++)
     {
         myErr = myComputed[i] - myObs[i];
         mySumError = mySumError + myErr * myErr;
@@ -455,7 +455,7 @@ bool WaterTable::computeWaterTableIndices()
             mySumDiffClimate = mySumDiffClimate + myErrClimate * myErrClimate;
         }
     }
-    RMSE = sqrt(mySumError / nrObsData);
+    RMSE = sqrt(mySumError / nrObs);
     NASH = 1 - mySumError / mySumDiffAvg;
 
     if (isClimateReady)
