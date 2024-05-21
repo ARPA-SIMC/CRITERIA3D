@@ -1478,7 +1478,7 @@ namespace interpolation
                     a[counterDim][counterDim] += lambda[i][k]*a[counterDim][counterDim];
                     for (j = counterDim+1; j < nrParametersTotal; j++)
                     {
-                        a[j][i] = a[i][j];
+                        a[j][counterDim] = a[counterDim][j];
                     }
                     counterDim++;
                 }
@@ -1664,7 +1664,7 @@ namespace interpolation
                 a[counterDim][counterDim] += lambda[i][k];
                 for (j = counterDim+1; j < nrParametersTotal; j++)
                 {
-                    a[j][i] = a[i][j];
+                    a[j][counterDim] = a[counterDim][j];
                 }
                 counterDim++;
             }
@@ -1803,7 +1803,7 @@ namespace interpolation
                 a[counterDim][counterDim] += lambda[i][k]*a[counterDim][counterDim];
                 for (j = counterDim+1; j < nrParametersTotal; j++)
                 {
-                    a[j][i] = a[i][j];
+                    a[j][counterDim] = a[counterDim][j];
                 }
                 counterDim++;
             }
@@ -2032,7 +2032,7 @@ namespace interpolation
                 a[k][k] += lambda[k]*a[k][k];
                 for (j = k+1; j < nrParameters; j++)
                 {
-                    a[j][i] = a[i][j];
+                    a[j][k] = a[k][j];
                 }
             }
             // linear system resolution by matrix inversion
