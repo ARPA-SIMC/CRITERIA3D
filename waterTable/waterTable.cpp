@@ -185,9 +185,9 @@ bool WaterTable::computeWTClimate()
             return false;
         }
         WTClimateMonthly[myMonthIndex] = H_sum[myMonthIndex] / H_num[myMonthIndex];
-        isClimateReady = true;
-        cubicSplineYearInterpolate(WTClimateMonthly, WTClimateDaily);
     }
+    isClimateReady = true;
+    cubicSplineYearInterpolate(WTClimateMonthly, WTClimateDaily);
     return true;
 }
 
@@ -678,12 +678,14 @@ void WaterTable::viewWaterTableSeries()
     float myDelta;
     int myDeltaDays;
 
-    for (QDate myDate = firstMeteoDate; myDate<=lastMeteoDate; myDate=myDate.addDays(1))
+    int numValues = well.getFirstDate().daysTo(lastMeteoDate) + 1;
+    for (int i = 0; i< numValues; i++)
     {
+        QDate myDate = well.getFirstDate().addDays(i);
         myDates.push_back(myDate);
-        float computedValue = getWaterTableDaily(myDate);
+        float computedValue = getWaterTableDaily(myDate.addDays(-1));
         myHindcastSeries.push_back(computedValue);
-        getWaterTableHindcast(myDate, &myDepth, &myDelta, &myDeltaDays);
+        getWaterTableHindcast(myDate.addDays(-1), &myDepth, &myDelta, &myDeltaDays);
         myInterpolateSeries.push_back(myDepth);
     }
 }

@@ -6,7 +6,7 @@ WaterTableChartView::WaterTableChartView(QWidget *parent) :
     obsDepthSeries = new QScatterSeries();
     obsDepthSeries->setName("Observed");
     obsDepthSeries->setColor(Qt::green);
-    obsDepthSeries->setMarkerSize(10.0);
+    obsDepthSeries->setMarkerSize(8.0);
 
     hindcastSeries = new QLineSeries();
     hindcastSeries->setName("hindcast");
@@ -55,17 +55,7 @@ void WaterTableChartView::draw(std::vector<QDate> myDates, std::vector<float> my
     axisY->setMin(0);
     axisY->setLabelFormat("%d");
     axisY->setTickCount(16);
-
-    QDateTime firstDateTime;
-    firstDateTime.setDate(myDates[0].addDays(-3));
-    firstDateTime.setTime(QTime(0,0));
-    QDateTime lastDateTime;
-    lastDateTime.setDate(myDates[myDates.size()-1].addDays(3));
-    lastDateTime.setTime(QTime(0,0));
-
     axisX->setTickCount(12);
-    axisX->setMin(firstDateTime);
-    axisX->setMax(lastDateTime);
 
     chart()->addSeries(obsDepthSeries);
     chart()->addSeries(hindcastSeries);
