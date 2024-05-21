@@ -4624,7 +4624,7 @@ bool Project::computeSingleWell(QString idWell, int indexWell)
         return false;
     }
     int maxNrDays = 730;  // attualmente fisso
-    WaterTable waterTable(*linkedMeteoPoint, *meteoSettings, gisSettings);
+    WaterTable waterTable(linkedMeteoPoint, *meteoSettings, gisSettings);
     waterTable.computeWaterTable(wellPoints[indexWell], maxNrDays);
     waterTable.viewWaterTableSeries();        // prepare series to show
     waterTableList.push_back(waterTable);
@@ -4641,34 +4641,51 @@ bool Project::assignNearestMeteoPoint(bool isMeteoGridLoaded, double wellUtmX, d
     bool assignNearestMeteoPoint = false;
     if (isMeteoGridLoaded)
     {
+        std::string id;
+        std::string assignNearestId;
+        unsigned int assignNearestRow;
+        unsigned int assignNearestCol;
         int zoneNumber;
         QDate lastDate = this->meteoGridDbHandler->getLastDailyDate();
         for (unsigned row = 0; row < unsigned(meteoGridDbHandler->meteoGrid()->gridStructure().header().nrRows); row++)
         {
             for (unsigned col = 0; col < unsigned(meteoGridDbHandler->meteoGrid()->gridStructure().header().nrCols); col++)
             {
-                double utmX = meteoGridDbHandler->meteoGrid()->meteoPointPointer(row,col)->point.utm.x;
-                double utmY = meteoGridDbHandler->meteoGrid()->meteoPointPointer(row,col)->point.utm.y;
-                if (utmX == NODATA || utmY == NODATA)
+                if (this->meteoGridDbHandler->meteoGrid()->getMeteoPointActiveId(row, col, &id))
                 {
-                    double lat = meteoGridDbHandler->meteoGrid()->meteoPointPointer(row,col)->latitude;
-                    double lon = meteoGridDbHandler->meteoGrid()->meteoPointPointer(row,col)->longitude;
-                    gis::latLonToUtm(lat, lon, &utmX, &utmY, &zoneNumber);
-                }
-                float myDistance = gis::computeDistance(wellUtmX, wellUtmY, utmX, utmY);
-                if (myDistance < MAXWELLDISTANCE )
-                {
-                    if (myDistance < minimumDistance || minimumDistance == NODATA)
+                    double utmX = meteoGridDbHandler->meteoGrid()->meteoPointPointer(row,col)->point.utm.x;
+                    double utmY = meteoGridDbHandler->meteoGrid()->meteoPointPointer(row,col)->point.utm.y;
+                    if (utmX == NODATA || utmY == NODATA)
                     {
-                        meteoGridDbHandler->loadGridDailyData(errorString, QString::fromStdString(meteoGridDbHandler->meteoGrid()->meteoPointPointer(row,col)->id), firstMeteoDate, lastDate);
-                        if (assignWTMeteoData(meteoGridDbHandler->meteoGrid()->meteoPointPointer(row,col), firstMeteoDate))
+                        double lat = meteoGridDbHandler->meteoGrid()->meteoPointPointer(row,col)->latitude;
+                        double lon = meteoGridDbHandler->meteoGrid()->meteoPointPointer(row,col)->longitude;
+                        gis::latLonToUtm(lat, lon, &utmX, &utmY, &zoneNumber);
+                    }
+                    float myDistance = gis::computeDistance(wellUtmX, wellUtmY, utmX, utmY);
+                    if (myDistance < MAXWELLDISTANCE )
+                    {
+                        if (myDistance < minimumDistance || minimumDistance == NODATA)
                         {
                             minimumDistance = myDistance;
+                            assignNearestId = id;
+                            assignNearestRow = row;
+                            assignNearestCol = col;
                             assignNearestMeteoPoint = true;
-                            linkedMeteoPoint = meteoGridDbHandler->meteoGrid()->meteoPointPointer(row,col);
                         }
                     }
                 }
+            }
+        }
+        if (assignNearestMeteoPoint)
+        {
+            meteoGridDbHandler->loadGridDailyData(errorString, QString::fromStdString(assignNearestId), firstMeteoDate, lastDate);
+            if (!assignWTMeteoData(meteoGridDbHandler->meteoGrid()->meteoPointPointer(assignNearestRow,assignNearestCol), firstMeteoDate))
+            {
+                return false;
+            }
+            else
+            {
+                linkedMeteoPoint = meteoGridDbHandler->meteoGrid()->meteoPointPointer(assignNearestRow,assignNearestCol);
             }
         }
     }

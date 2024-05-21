@@ -12,7 +12,7 @@
 class WaterTable
 {
     public:
-        WaterTable(Crit3DMeteoPoint linkedMeteoPoint, Crit3DMeteoSettings meteoSettings, gis::Crit3DGisSettings gisSettings);
+        WaterTable(Crit3DMeteoPoint* linkedMeteoPoint, Crit3DMeteoSettings meteoSettings, gis::Crit3DGisSettings gisSettings);
         QString getIdWell() const;
         QDate getFirstDateWell();
         QDate getLastDateWell();
@@ -45,7 +45,7 @@ class WaterTable
         QMap<QDate, int> getDepths();
 
     private:
-        Crit3DMeteoPoint linkedMeteoPoint;
+        Crit3DMeteoPoint* linkedMeteoPoint;
         Crit3DMeteoSettings meteoSettings;
         gis::Crit3DGisSettings gisSettings;
         QDate firstDateWell;

@@ -2,7 +2,7 @@
 #include "commonConstants.h"
 #include "weatherGenerator.h"
 
-WaterTable::WaterTable(Crit3DMeteoPoint linkedMeteoPoint, Crit3DMeteoSettings meteoSettings, gis::Crit3DGisSettings gisSettings)
+WaterTable::WaterTable(Crit3DMeteoPoint *linkedMeteoPoint, Crit3DMeteoSettings meteoSettings, gis::Crit3DGisSettings gisSettings)
     : linkedMeteoPoint(linkedMeteoPoint), meteoSettings(meteoSettings), gisSettings(gisSettings)
 {
 
@@ -197,9 +197,9 @@ bool WaterTable::computeETP_allSeries()
     for (QDate myDate = firstMeteoDate; myDate<=lastMeteoDate; myDate=myDate.addDays(1))
     {
         Crit3DDate date(myDate.day(), myDate.month(), myDate.year());
-        float Tmin = linkedMeteoPoint.getMeteoPointValueD(date, dailyAirTemperatureMin);
-        float Tmax = linkedMeteoPoint.getMeteoPointValueD(date, dailyAirTemperatureMax);
-        float prec = linkedMeteoPoint.getMeteoPointValueD(date, dailyPrecipitation);
+        float Tmin = linkedMeteoPoint->getMeteoPointValueD(date, dailyAirTemperatureMin);
+        float Tmax = linkedMeteoPoint->getMeteoPointValueD(date, dailyAirTemperatureMax);
+        float prec = linkedMeteoPoint->getMeteoPointValueD(date, dailyPrecipitation);
         float etp = dailyEtpHargreaves(Tmin, Tmax, date, myLat,&meteoSettings);
         etpValues.push_back(etp);
         precValues.push_back(prec);
@@ -216,7 +216,7 @@ bool WaterTable::computeETP_allSeries()
     }
     else
     {
-        error = "Missing data: " + QString::fromStdString(linkedMeteoPoint.name);
+        error = "Missing data: " + QString::fromStdString(linkedMeteoPoint->name);
         return false;
     }
 
