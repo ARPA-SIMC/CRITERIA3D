@@ -325,6 +325,8 @@ bool WaterTable::computeCWBCorrelation(int maxNrDays)
 
     for (int nrDays = 90; nrDays <= maxNrDays; nrDays=nrDays+10)
     {
+        myCWBSum.clear();
+        myObsWT.clear();
         QMapIterator<QDate, int> it(myDepths);
         while (it.hasNext())
         {

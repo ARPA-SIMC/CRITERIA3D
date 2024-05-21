@@ -56,6 +56,13 @@ void WaterTableChartView::draw(std::vector<QDate> myDates, std::vector<float> my
     axisY->setLabelFormat("%d");
     axisY->setTickCount(16);
     axisX->setTickCount(12);
+    QDateTime firstDateTime;
+    firstDateTime.setDate(myDates[0].addDays(-3));
+    firstDateTime.setTime(QTime(0,0));
+    QDateTime lastDateTime;
+    lastDateTime.setDate(myDates[myDates.size()-1].addDays(3));
+    lastDateTime.setTime(QTime(0,0));
+    axisX->setRange(firstDateTime, lastDateTime);
 
     chart()->addSeries(obsDepthSeries);
     chart()->addSeries(hindcastSeries);
