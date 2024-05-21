@@ -415,24 +415,17 @@ bool WaterTable::computeWaterTableIndices()
     std::vector<float> myClimate;
     float myIntercept;
     float myCoeff;
-    int doy1 = 1;
-    int doy2 = 366;
     while (it.hasNext())
     {
         it.next();
         QDate myDate = it.key();
         int myValue = it.value();
-        int myDoy = myDate.dayOfYear();
-        // doesn't work for interannual period
-        if ((myDoy >= doy1) && (myDoy <= doy2))
+        float computedValue = getWaterTableDaily(myDate);
+        if (computedValue != NODATA)
         {
-            float computedValue = getWaterTableDaily(myDate);
-            if (computedValue != NODATA)
-            {
-                myObs.push_back(myValue);
-                myComputed.push_back(computedValue);
-                myClimate.push_back(getWaterTableClimate(myDate));
-            }
+            myObs.push_back(myValue);
+            myComputed.push_back(computedValue);
+            myClimate.push_back(getWaterTableClimate(myDate));
         }
     }
     statistics::linearRegression(myObs, myComputed, myObs.size(), false, &myIntercept, &myCoeff, &R2);
