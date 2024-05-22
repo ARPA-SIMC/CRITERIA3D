@@ -291,8 +291,8 @@ float WaterTable::computeCWB(QDate myDate, int nrDays)
     for (int shift = 1; shift<=nrDays; shift++)
     {
         actualDate = myDate.addDays(-shift);
-        int index = firstMeteoDate.daysTo(actualDate) + 1;
-        if (index > 0 && index < precValues.size())
+        int index = firstMeteoDate.daysTo(actualDate);
+        if (index >= 0 && index < precValues.size())
         {
             float etp = etpValues[index];
             float prec = precValues[index];
