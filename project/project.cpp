@@ -4598,7 +4598,7 @@ bool Project::waterTableImportDepths(QString csvDepths)
     return true;
 }
 
-bool Project::computeSingleWell(QString idWell, int indexWell)
+bool Project::computeSingleWell(QString idWell, int indexWell, bool showInfo)
 {
     bool isMeteoGridLoaded;
     QDate firstMeteoDate = wellPoints[indexWell].getFirstDate().addDays(-730); // necessari 24 mesi di dati meteo precedenti il primo dato di falda
@@ -4633,10 +4633,13 @@ bool Project::computeSingleWell(QString idWell, int indexWell)
     waterTable.computeWaterTable(wellPoints[indexWell], maxNrDays);
     waterTable.viewWaterTableSeries();        // prepare series to show
     waterTableList.push_back(waterTable);
-    DialogSummary* dialogResult = new DialogSummary(waterTable);   // show results
-    dialogResult->show();
-    WaterTableWidget* chartResult = new WaterTableWidget(idWell, waterTable.getMyDates(), waterTable.getMyHindcastSeries(), waterTable.getMyInterpolateSeries(), waterTable.getDepths());
-    chartResult->show();
+    if(showInfo)
+    {
+        DialogSummary* dialogResult = new DialogSummary(waterTable);   // show results
+        dialogResult->show();
+        WaterTableWidget* chartResult = new WaterTableWidget(idWell, waterTable.getMyDates(), waterTable.getMyHindcastSeries(), waterTable.getMyInterpolateSeries(), waterTable.getDepths());
+        chartResult->show();
+    }
     return true;
 }
 
