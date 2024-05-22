@@ -5,7 +5,8 @@
 WaterTable::WaterTable(Crit3DMeteoPoint *linkedMeteoPoint, Crit3DMeteoSettings meteoSettings, gis::Crit3DGisSettings gisSettings)
     : linkedMeteoPoint(linkedMeteoPoint), meteoSettings(meteoSettings), gisSettings(gisSettings)
 {
-
+    firstMeteoDate = QDate(linkedMeteoPoint->getFirstDailyData().year, linkedMeteoPoint->getFirstDailyData().month, linkedMeteoPoint->getFirstDailyData().day);
+    lastMeteoDate = QDate(linkedMeteoPoint->getLastDailyData().year, linkedMeteoPoint->getLastDailyData().month, linkedMeteoPoint->getLastDailyData().day);
 }
 
 QString WaterTable::getIdWell() const

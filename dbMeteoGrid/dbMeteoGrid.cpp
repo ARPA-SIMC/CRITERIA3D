@@ -1789,6 +1789,101 @@ bool Crit3DMeteoGridDbHandler::loadGridDailyData(QString &myError, const QString
     return true;
 }
 
+bool Crit3DMeteoGridDbHandler::loadGridDailyMeteoPrec(QString &myError, const QString &meteoPointId, const QDate &firstDate, const QDate &lastDate)
+{
+    myError = "";
+    QString tableD = _tableDaily.prefix + meteoPointId + _tableDaily.postFix;
+
+    unsigned row, col;
+    if ( !_meteoGrid->findMeteoPointFromId(&row, &col, meteoPointId.toStdString()) )
+    {
+        myError = "Missing meteoPoint id: " + meteoPointId;
+        return false;
+    }
+
+    int numberOfDays = firstDate.daysTo(lastDate) + 1;
+    _meteoGrid->meteoPointPointer(row, col)->initializeObsDataD(numberOfDays, getCrit3DDate(firstDate));
+
+    if (_firstDailyDate.isValid() && _lastDailyDate.isValid())
+    {
+        if (_firstDailyDate.year() != 1800 && _lastDailyDate.year() != 1800)
+        {
+            if (firstDate > _lastDailyDate || lastDate < _firstDailyDate)
+            {
+                myError = "Missing data in this time interval.";
+                return false;
+            }
+        }
+    }
+
+    QSqlQuery qry(_db);
+    QString statement;
+    bool isSingleDate = false;
+    QDate date;
+
+    QList<QString> varList;
+    varList.push_back(QString::number(getDailyVarCode(dailyAirTemperatureMin)));
+    varList.push_back(QString::number(getDailyVarCode(dailyAirTemperatureMax)));
+    varList.push_back(QString::number(getDailyVarCode(dailyAirTemperatureAvg)));
+    varList.push_back(QString::number(getDailyVarCode(dailyPrecipitation)));
+
+
+    if (firstDate == lastDate)
+    {
+        statement = QString("SELECT * FROM `%1` WHERE %2 = '%3' AND `VariableCode` IN ('%4')")
+                        .arg(tableD, _tableDaily.fieldTime, firstDate.toString("yyyy-MM-dd"), varList.join("','"));
+        isSingleDate = true;
+        date = firstDate;
+    }
+    else
+    {
+        statement = QString("SELECT * FROM `%1` WHERE %2 >= '%3' AND %2 <= '%4' AND `VariableCode` IN ('%5') ORDER BY %2")
+                        .arg(tableD, _tableDaily.fieldTime, firstDate.toString("yyyy-MM-dd"), lastDate.toString("yyyy-MM-dd"), varList.join("','"));
+    }
+    qry.prepare(statement);
+
+    if(! qry.exec())
+    {
+        myError = qry.lastError().text();
+        return false;
+    }
+
+    int varCode;
+    float value;
+    while (qry.next())
+    {
+        getValue(qry.value("Value"), &value);
+
+        if (value != NODATA)
+        {
+            if (! isSingleDate)
+            {
+                if (! getValue(qry.value(_tableDaily.fieldTime), &date))
+                {
+                    myError = "Missing " + _tableDaily.fieldTime;
+                    return false;
+                }
+            }
+
+            if (! getValue(qry.value("VariableCode"), &varCode))
+            {
+                myError = "Missing VariableCode";
+                return false;
+            }
+
+            meteoVariable variable = getDailyVarEnum(varCode);
+
+            if (! _meteoGrid->meteoPointPointer(row, col)->setMeteoPointValueD(getCrit3DDate(date), variable, value))
+            {
+                myError = "Error in setMeteoPointValueD";
+                return false;
+            }
+        }
+    }
+
+    return true;
+}
+
 
 bool Crit3DMeteoGridDbHandler::loadGridDailyDataEnsemble(QString &myError, QString meteoPoint, int memberNr, QDate first, QDate last)
 {
