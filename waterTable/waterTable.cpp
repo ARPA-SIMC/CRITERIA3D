@@ -299,7 +299,7 @@ float WaterTable::computeCWB(QDate myDate, int nrDays)
             if ( etp != NODATA &&  prec != NODATA)
             {
                 currentCWB = prec - etp;
-                weight = 1 - shift/nrDays;
+                weight = 1 - (float)shift/nrDays;
                 sumCWB = sumCWB + currentCWB * weight;
                 nrValidDays = nrValidDays + 1;
             }
