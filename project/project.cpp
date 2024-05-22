@@ -4635,12 +4635,17 @@ bool Project::computeSingleWell(QString idWell, int indexWell, bool showInfo)
     waterTableList.push_back(waterTable);
     if(showInfo)
     {
-        DialogSummary* dialogResult = new DialogSummary(waterTable);   // show results
-        dialogResult->show();
-        WaterTableWidget* chartResult = new WaterTableWidget(idWell, waterTable.getMyDates(), waterTable.getMyHindcastSeries(), waterTable.getMyInterpolateSeries(), waterTable.getDepths());
-        chartResult->show();
+        showSingleWell(waterTable, idWell);
     }
     return true;
+}
+
+void Project::showSingleWell(WaterTable waterTable, QString idWell)
+{
+    DialogSummary* dialogResult = new DialogSummary(waterTable);   // show results
+    dialogResult->show();
+    WaterTableWidget* chartResult = new WaterTableWidget(idWell, waterTable.getMyDates(), waterTable.getMyHindcastSeries(), waterTable.getMyInterpolateSeries(), waterTable.getDepths());
+    chartResult->show();
 }
 
 bool Project::assignNearestMeteoPoint(bool isMeteoGridLoaded, double wellUtmX, double wellUtmY, QDate firstMeteoDate, Crit3DMeteoPoint* linkedMeteoPoint)
