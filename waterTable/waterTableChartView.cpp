@@ -36,7 +36,7 @@ void WaterTableChartView::draw(std::vector<QDate> myDates, std::vector<float> my
 
     int nDays = myDates.size();
     QDateTime myDateTime;
-    myDateTime.setTime(QTime(0,0));
+    myDateTime.setTime(QTime(0,0,0));
     for (int day = 0; day < nDays; day++)
     {
         myDateTime.setDate(myDates[day]);
@@ -58,10 +58,10 @@ void WaterTableChartView::draw(std::vector<QDate> myDates, std::vector<float> my
     axisX->setTickCount(12);
     QDateTime firstDateTime;
     firstDateTime.setDate(myDates[0].addDays(-3));
-    firstDateTime.setTime(QTime(0,0));
+    firstDateTime.setTime(QTime(0,0,0));
     QDateTime lastDateTime;
     lastDateTime.setDate(myDates[myDates.size()-1].addDays(3));
-    lastDateTime.setTime(QTime(0,0));
+    lastDateTime.setTime(QTime(0,0,0));
     axisX->setRange(firstDateTime, lastDateTime);
 
     chart()->addSeries(obsDepthSeries);

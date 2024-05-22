@@ -420,7 +420,7 @@ float WaterTable::getWaterTableClimate(QDate myDate)
     }
 
     int myDoy = myDate.dayOfYear();
-    getWaterTableClimate = WTClimateDaily[myDoy];
+    getWaterTableClimate = WTClimateDaily[myDoy-1];  // start from 0
     return getWaterTableClimate;
 }
 
@@ -487,6 +487,8 @@ bool WaterTable::getWaterTableHindcast(QDate myDate, float* myValue, float* myDe
     float nextValue = NODATA;
     int indexPrev = NODATA;
     int indexNext = NODATA;
+    int diffWithNext = NODATA;
+    int diffWithPrev = NODATA;
     QDate previousDate;
     QDate nextDate;
     int dT;
@@ -494,21 +496,42 @@ bool WaterTable::getWaterTableHindcast(QDate myDate, float* myValue, float* myDe
     // previuos and next observation
     QMap<QDate, int> myDepths = well.getDepths();
     QList<QDate> keys = myDepths.keys();
-    for (int i = 0; i<keys.size(); i++)
+    int i = keys.indexOf(myDate);
+    if (i != -1) // exact data found
     {
-        if (keys[i] == myDate)
+        if (i>0)
         {
-            if (i>0)
+            indexPrev = i - 1;
+            previousDate = keys[indexPrev];
+            previosValue = myDepths[previousDate];
+        }
+        if (i < keys.size()-1)
+        {
+            indexNext = i + 1;
+            nextDate = keys[indexNext];
+            nextValue = myDepths[nextDate];
+        }
+    }
+    else
+    {
+        for (int i = 0; i<keys.size()-1; i++)
+        {
+            if (i == 0 && keys[i] > myDate)
             {
-                indexPrev = i - 1;
+                indexNext = i;
+                nextDate = keys[indexNext];
+                nextValue = myDepths[nextDate];
+                break;
+            }
+            else if (keys[i] < myDate && keys[i+1] > myDate)
+            {
+                indexPrev = i;
                 previousDate = keys[indexPrev];
                 previosValue = myDepths[previousDate];
-            }
-            if (i < keys.size()-1)
-            {
                 indexNext = i + 1;
                 nextDate = keys[indexNext];
                 nextValue = myDepths[nextDate];
+                break;
             }
         }
     }
@@ -519,6 +542,7 @@ bool WaterTable::getWaterTableHindcast(QDate myDate, float* myValue, float* myDe
         {
             previousDz = previosValue - myWT;
         }
+        diffWithPrev = previousDate.daysTo(myDate);
     }
     if (indexNext != NODATA)
     {
@@ -527,11 +551,10 @@ bool WaterTable::getWaterTableHindcast(QDate myDate, float* myValue, float* myDe
         {
             nextDz = nextValue - myWT;
         }
+        diffWithNext = myDate.daysTo(nextDate);
     }
 
     // check lenght of missing data period
-    int diffWithNext = myDate.daysTo(nextDate);
-    int diffWithPrev = previousDate.daysTo(myDate);
     if (previousDz != NODATA && nextDz != NODATA)
     {
         dT =  previousDate.daysTo(nextDate);
