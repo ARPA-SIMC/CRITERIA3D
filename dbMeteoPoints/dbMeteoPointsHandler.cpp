@@ -1888,7 +1888,7 @@ QList<QString> Crit3DMeteoPointsDbHandler::getIdListGivenDataset(QList<QString> 
             datasetList += "'" + dataset + "'";
         }
     }
-    QString statement = "SELECT id_point from point_properties WHERE dataset IN  (" + datasetList + ")";
+    QString statement = "SELECT id_point from point_properties WHERE UPPER(dataset) IN  (" + datasetList.toUpper() + ")";
 
     if( !qry.exec(statement) )
     {

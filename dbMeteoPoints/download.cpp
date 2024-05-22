@@ -140,7 +140,7 @@ QMap<QString, QString> Download::getArmiketIdList(QList<QString> datasetList)
                     qDebug() << "jsonDataset: value is not string";
                 else
                     foreach(QString item, _datasetsList)
-                        if (jsonDataset == item)
+                        if (jsonDataset.toString().toUpper() == item.toUpper())
                         {
                             QString idValue;
                             QString nameValue;
