@@ -32,7 +32,7 @@ SOURCES += \
     importData.cpp \
     waterTable.cpp \
     waterTableChartView.cpp \
-    waterTableWidge.cpp \
+    waterTableWidget.cpp \
     well.cpp
 
 HEADERS += \

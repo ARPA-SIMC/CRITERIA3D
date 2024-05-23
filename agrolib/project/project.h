@@ -303,6 +303,9 @@
         bool waterTableImportLocation(QString csvFileName);
         bool waterTableImportDepths(QString csvDepths);
         bool computeSingleWell(QString idWell, int indexWell);
+        void showSingleWell(WaterTable waterTable, QString idWell);
+        bool assignNearestMeteoPoint(bool isMeteoGridLoaded, double wellUtmX, double wellUtmY, QDate firstMeteoDate, Crit3DMeteoPoint* linkedMeteoPoint);
+        bool assignWTMeteoData(Crit3DMeteoPoint* linkedMeteoPoint, QDate firstMeteoDate);
 
     private slots:
         void deleteMeteoWidgetPoint(int id);

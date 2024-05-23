@@ -18,7 +18,6 @@ WaterTableWidget::WaterTableWidget(QString id, std::vector<QDate> myDates, std::
     setLayout(mainLayout);
 
     waterTableChartView->draw(myDates, myHindcastSeries, myInterpolateSeries, obsDepths);
-    show();
 }
 
 WaterTableWidget::~WaterTableWidget()

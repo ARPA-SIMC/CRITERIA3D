@@ -115,6 +115,7 @@
         bool loadGridDailyData(QString &myError, const QString &meteoPointId, const QDate &firstDate, const QDate &lastDate);
         bool loadGridDailyDataFixedFields(QString &myError, QString meteoPoint, QDate first, QDate last);
         bool loadGridDailyDataEnsemble(QString &myError, QString meteoPoint, int memberNr, QDate first, QDate last);
+        bool loadGridDailyMeteoPrec(QString &myError, const QString &meteoPointId, const QDate &firstDate, const QDate &lastDate);
         bool loadGridHourlyData(QString &myError, QString meteoPoint, QDateTime firstDate, QDateTime lastDate);
         bool loadGridHourlyDataFixedFields(QString &myError, QString meteoPoint, QDateTime first, QDateTime last);
         bool loadGridHourlyDataEnsemble(QString &myError, QString meteoPoint, int memberNr, QDateTime first, QDateTime last);

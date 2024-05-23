@@ -6,7 +6,7 @@ WaterTableChartView::WaterTableChartView(QWidget *parent) :
     obsDepthSeries = new QScatterSeries();
     obsDepthSeries->setName("Observed");
     obsDepthSeries->setColor(Qt::green);
-    obsDepthSeries->setMarkerSize(10.0);
+    obsDepthSeries->setMarkerSize(8.0);
 
     hindcastSeries = new QLineSeries();
     hindcastSeries->setName("hindcast");
@@ -36,7 +36,7 @@ void WaterTableChartView::draw(std::vector<QDate> myDates, std::vector<float> my
 
     int nDays = myDates.size();
     QDateTime myDateTime;
-    myDateTime.setTime(QTime(0,0));
+    myDateTime.setTime(QTime(0,0,0));
     for (int day = 0; day < nDays; day++)
     {
         myDateTime.setDate(myDates[day]);
@@ -54,17 +54,15 @@ void WaterTableChartView::draw(std::vector<QDate> myDates, std::vector<float> my
     axisY->setMax(300);
     axisY->setMin(0);
     axisY->setLabelFormat("%d");
-
-    QDateTime firstDateTime;
-    firstDateTime.setDate(myDates[0]);
-    firstDateTime.setTime(QTime(0,0));
-    QDateTime lastDateTime;
-    lastDateTime.setDate(myDates[myDates.size()-1]);
-    lastDateTime.setTime(QTime(0,0));
-
+    axisY->setTickCount(16);
     axisX->setTickCount(12);
-    axisX->setMin(firstDateTime);
-    axisX->setMax(lastDateTime);
+    QDateTime firstDateTime;
+    firstDateTime.setDate(myDates[0].addDays(-3));
+    firstDateTime.setTime(QTime(0,0,0));
+    QDateTime lastDateTime;
+    lastDateTime.setDate(myDates[myDates.size()-1].addDays(3));
+    lastDateTime.setTime(QTime(0,0,0));
+    axisX->setRange(firstDateTime, lastDateTime);
 
     chart()->addSeries(obsDepthSeries);
     chart()->addSeries(hindcastSeries);
@@ -90,9 +88,10 @@ void WaterTableChartView::tooltipObsDepthSeries(QPointF point, bool state)
     {
         QDateTime firstDate(QDate(1970,1,1), QTime(0,0,0));
         QDateTime xValue = firstDate.addMSecs(point.x());
-        double yValue = point.y();
+        QDate myDate = xValue.date().addDays(1);
+        int yValue = point.y();
 
-        m_tooltip->setText(QString("%1: %2").arg(xValue.date().toString("yyyy/MM/dd")).arg(yValue, 0, 'd'));
+        m_tooltip->setText(QString("%1: %2").arg(myDate.toString("yyyy/MM/dd")).arg(yValue));
         m_tooltip->setSeries(serie);
         m_tooltip->setAnchor(point);
         m_tooltip->setZValue(11);
@@ -113,9 +112,10 @@ void WaterTableChartView::tooltipLineSeries(QPointF point, bool state)
     {
         QDateTime firstDate(QDate(1970,1,1), QTime(0,0,0));
         QDateTime xValue = firstDate.addMSecs(point.x());
-        double yValue = point.y();
+        QDate myDate = xValue.date().addDays(1);
+        int yValue = point.y();
 
-        m_tooltip->setText(QString("%1: %2").arg(xValue.date().toString("yyyy/MM/dd")).arg(yValue, 0, 'd'));
+        m_tooltip->setText(QString("%1: %2").arg(myDate.toString("yyyy/MM/dd")).arg(yValue));
         m_tooltip->setSeries(serie);
         m_tooltip->setAnchor(point);
         m_tooltip->setZValue(11);
