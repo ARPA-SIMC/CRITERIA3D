@@ -56,6 +56,7 @@
     public:
         Crit1DCompUnit unit;
         bool computeFactorOfSafety;
+        int nrMissingPrec;
 
         // SOIL
         soil::Crit3DSoil mySoil;
