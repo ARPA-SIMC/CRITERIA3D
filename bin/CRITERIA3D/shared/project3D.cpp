@@ -35,9 +35,11 @@
 #include "root.h"
 #include "gis.h"
 #include "soil.h"
+#include "meteo.h"
 
 #include <QUuid>
 #include <QApplication>
+#include <algorithm>
 
 
 WaterFluxesParameters::WaterFluxesParameters()
@@ -1582,8 +1584,8 @@ float Project3D::computeFactorOfSafety(int row, int col, int layerIndex, int nod
     double suctionStress = matricPotential * saturationDegree;
 
     // slope angle [rad]
-    float slopeDegree = radiationMaps->slopeMap->getValueFromRowCol(row, col);
-    float slopeAngle = slopeDegree * DEG_TO_RAD;
+    double slopeDegree = double(radiationMaps->slopeMap->getValueFromRowCol(row, col));
+    double slopeAngle = slopeDegree * DEG_TO_RAD;
 
     int soilIndex = getSoilIndex(row, col);
     int horizonIndex = soil::getHorizonIndex(soilList[unsigned(soilIndex)], layerDepth[layerIndex]);
@@ -1599,7 +1601,7 @@ float Project3D::computeFactorOfSafety(int row, int col, int layerIndex, int nod
     double effectiveCohesion = soilList[unsigned(soilIndex)].horizon[horizonIndex].effectiveCohesion;
 
     // friction effect [-]
-    double tanAngle = tan(slopeAngle);
+    double tanAngle = std::max(EPSILON, tan(slopeAngle));
     double tanFrictionAngle = tan(frictionAngle);
     double frictionEffect =  tanFrictionAngle / tanAngle;
 
