@@ -1160,8 +1160,8 @@ namespace interpolation
                                         std::vector<double>& weights)
     {
         int i,j;
-        int nrPredictors = int(parameters.size());
-        int nrData = int(y.size());
+        int nrPredictors = parameters.size();
+        int nrData = y.size();
         std::vector <int> nrParameters(nrPredictors);
         int nrParametersTotal = 0;
         for (i=0; i<nrPredictors;i++)
@@ -1364,7 +1364,8 @@ namespace interpolation
                                      std::vector<double>& weights)
     {
         int i,j;
-        int nrPredictors = int(parameters.size());
+        int nrPredictors = parameters.size();
+        int nrData = y.size();
         double mySSE, diffSSE, newSSE;
         static double VFACTOR = 10;
         std::vector <int> nrParameters(nrPredictors);
@@ -1377,12 +1378,12 @@ namespace interpolation
             nrParameters[i]= int(parameters[i].size());
             paramChange[i].resize(nrParameters[i]);
             newParameters[i].resize(nrParameters[i]);
-            lambda[i].resize(nrParameters[i]);
-            for (j=0; j<nrParameters[i]; j++)
+            lambda[i].resize(nrParameters[i],0.01);
+            /*for (j=0; j<nrParameters[i]; j++)
             {
                 lambda[i][j] = 0.01;       // damping parameter
                 //paramChange[i][j] = 0; // quit because already initialized to 0 by default
-            }
+            }*/
         }
 
         mySSE = normGeneric_nDimension(func,myFunc, parameters, x, y, weights);
@@ -1393,13 +1394,11 @@ namespace interpolation
             //least squares function
             int i,j,k;
             double pivot, mult, top;
-            int nrPredictors = int(parameters.size());
             int nrParametersTotal = 0;
-            int nrData = int(y.size());
             std::vector <int> nrParameters(nrPredictors);
             for (i=0; i<nrPredictors;i++)
             {
-                nrParameters[i]= int(parameters[i].size());
+                nrParameters[i]= parameters[i].size();
                 nrParametersTotal += nrParameters[i];
             }
 
