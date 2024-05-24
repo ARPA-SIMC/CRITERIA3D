@@ -180,7 +180,8 @@ int CriteriaOutputProject::initializeProjectCsv()
 }
 
 
-int CriteriaOutputProject::initializeProject(QString settingsFileName, QString operation, QDate dateComputation, bool isLog)
+int CriteriaOutputProject::initializeProject(const QString &settingsFileName, const QString &operation,
+                                             const QDate &dateComputation, bool isLog)
 {
     closeProject();
     initialize();
@@ -1017,7 +1018,7 @@ int CriteriaOutputProject::createNetcdf()
 
 bool CriteriaOutputProject::convertShapeToNetcdf(Crit3DShapeHandler &shapeHandler, std::string outputFileName,
                                                  std::string field, std::string variableName, std::string variableUnit, double cellSize,
-                                                 Crit3DDate computationDate, int nrDays)
+                                                 const Crit3DDate &computationDate, int nrDays)
 {
     if (! shapeHandler.getIsWGS84())
     {
@@ -1255,9 +1256,8 @@ bool CriteriaOutputProject::getDbDataDates(QDate &firstDate, QDate &lastDate)
 }
 
 
-int CriteriaOutputProject::createCsvFileFromGUI(QDate dateComputation, QString csvFileName)
+int CriteriaOutputProject::createCsvFileFromGUI(const QDate &dateComputation, const QString &csvFileName)
 {
-
     int myResult = initializeProjectCsv();
     if (myResult != CRIT1D_OK)
     {
