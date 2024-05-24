@@ -1355,6 +1355,7 @@ namespace interpolation
         return (fabs(diffSSE) <= myEpsilon);
     }
 
+
     bool fittingMarquardt_nDimension_noSquares(double (*func)(std::vector<std::function<double(double, std::vector<double>&)>>&, std::vector<double>& , std::vector <std::vector <double>>&),
                                      std::vector<std::function<double (double, std::vector<double> &)> >& myFunc,
                                      std::vector<std::vector<double> > &parametersMin, std::vector<std::vector<double> > &parametersMax,
@@ -1363,7 +1364,7 @@ namespace interpolation
                                      std::vector <std::vector <double>>& x, std::vector<double>& y,
                                      std::vector<double>& weights)
     {
-        int i,j;
+        int i;
         int nrPredictors = parameters.size();
         int nrData = y.size();
         double mySSE, diffSSE, newSSE;
@@ -1398,7 +1399,7 @@ namespace interpolation
             std::vector <int> nrParameters(nrPredictors);
             for (i=0; i<nrPredictors;i++)
             {
-                nrParameters[i]= parameters[i].size();
+                nrParameters[i] = int(parameters[i].size());
                 nrParametersTotal += nrParameters[i];
             }
 
