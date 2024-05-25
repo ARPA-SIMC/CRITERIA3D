@@ -57,10 +57,10 @@ void WaterTableChartView::draw(std::vector<QDate> myDates, std::vector<float> my
     axisY->setTickCount(16);
     axisX->setTickCount(15);
     QDateTime firstDateTime;
-    firstDateTime.setDate(myDates[0].addDays(-3));
+    firstDateTime.setDate(myDates[0]);
     firstDateTime.setTime(QTime(0,0,0));
     QDateTime lastDateTime;
-    lastDateTime.setDate(myDates[myDates.size()-1].addDays(3));
+    lastDateTime.setDate(myDates[myDates.size()-1]);
     lastDateTime.setTime(QTime(0,0,0));
     axisX->setRange(firstDateTime, lastDateTime);
 
