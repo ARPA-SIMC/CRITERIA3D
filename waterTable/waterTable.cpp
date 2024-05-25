@@ -623,9 +623,11 @@ void WaterTable::viewWaterTableSeries()
     {
         QDate myDate = well.getFirstDate().addDays(i);
         myDates.push_back(myDate);
-        float computedValue = getWaterTableDaily(myDate.addDays(-1));
+        //float computedValue = getWaterTableDaily(myDate.addDays(-1));  // LC in vb toglie un giorno ma non si capisce il motivo
+        float computedValue = getWaterTableDaily(myDate);
         myHindcastSeries.push_back(computedValue);
-        getWaterTableHindcast(myDate.addDays(-1), &myDepth, &myDelta, &myDeltaDays);
+        //getWaterTableHindcast(myDate.addDays(-1), &myDepth, &myDelta, &myDeltaDays); // LC in vb toglie un giorno ma non si capisce il motivo
+        getWaterTableHindcast(myDate, &myDepth, &myDelta, &myDeltaDays);
         myInterpolateSeries.push_back(myDepth);
     }
 }

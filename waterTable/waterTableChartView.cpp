@@ -14,7 +14,7 @@ WaterTableChartView::WaterTableChartView(QWidget *parent) :
 
     interpolationSeries = new QLineSeries();
     interpolationSeries->setName("interpolation");
-    interpolationSeries->setColor(Qt::black);
+    interpolationSeries->setColor(QColor(0,0,1));
 
     axisX = new QDateTimeAxis();
     axisX->setFormat("yyyy/MM/dd");
@@ -170,4 +170,10 @@ void WaterTableChartView::handleMarkerClicked()
     pen.setColor(color);
     marker->setPen(pen);
 
+}
+
+QList<QPointF> WaterTableChartView::exportInterpolationValues()
+{
+    QList<QPointF> pointsSerie = interpolationSeries->points();
+    return pointsSerie;
 }
