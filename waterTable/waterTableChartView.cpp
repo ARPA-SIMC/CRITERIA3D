@@ -17,7 +17,7 @@ WaterTableChartView::WaterTableChartView(QWidget *parent) :
     interpolationSeries->setColor(QColor(0,0,1));
 
     axisX = new QDateTimeAxis();
-    axisX->setFormat("yyyy/MM/dd");
+    axisX->setFormat("yyyy/MM");
     axisY = new QValueAxis();
     axisY->setReverse(true);
 
@@ -55,7 +55,7 @@ void WaterTableChartView::draw(std::vector<QDate> myDates, std::vector<float> my
     axisY->setMin(0);
     axisY->setLabelFormat("%d");
     axisY->setTickCount(16);
-    axisX->setTickCount(12);
+    axisX->setTickCount(15);
     QDateTime firstDateTime;
     firstDateTime.setDate(myDates[0].addDays(-3));
     firstDateTime.setTime(QTime(0,0,0));
