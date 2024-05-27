@@ -52,6 +52,7 @@ void RasterObject::clear()
 {
     setDrawing(false);
     setDrawBorders(false);
+    setVisible(false);
     freeIndexesMatrix();
 
     latLonHeader.nrCols = 0;
