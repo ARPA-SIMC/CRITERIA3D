@@ -992,3 +992,160 @@ bool computeClimate(TweatherGenClimate &wgClimate, int firstYear, int nrRepetiti
 
     return true;
 }
+
+bool makeScenario(QString outputFileName, char separator, XMLSeasonalAnomaly* XMLAnomaly,
+                          TweatherGenClimate& wGenClimate,
+                          int nrRepetitions, int myPredictionYear, int wgDoy1, int wgDoy2,
+                          float rainfallThreshold)
+{
+    /*TweatherGenClimate wGen;
+    std::vector<ToutputDailyMeteo> dailyPredictions;
+
+    Crit3DDate myFirstDatePrediction, seasonFirstDate, seasonLastDate;
+
+    unsigned int nrMembers;         // number of models into xml anomaly file
+    unsigned int nrYears;           // number of years of the output series. It is the length of the virtual period where all the previsions (one for each model) are given one after another
+    unsigned int nrValues;          // number of days between the first and the last prediction year
+    int firstYear, lastYear, myYear;
+    unsigned int obsIndex;
+    unsigned int addday = 0;
+    bool isLastMember = false;
+
+    // it checks if observed data includes the last 9 months before wgDoy1
+    int nrDaysBeforeWgDoy1;
+    if (! checkLastYearDate(lastYearDailyObsData->inputFirstDate, lastYearDailyObsData->inputLastDate,
+                           lastYearDailyObsData->dataLength, myPredictionYear, wgDoy1, nrDaysBeforeWgDoy1))
+    {
+        qDebug() << "ERROR: observed data should include at least 9 months before wgDoy1";
+        return false;
+    }
+
+    nrMembers = 0;
+    for (int i = 0; i<XMLAnomaly->modelMember.size(); i++)
+    {
+        nrMembers += XMLAnomaly->modelMember[i].toUInt();
+    }
+
+    nrYears = nrMembers * unsigned(nrRepetitions);
+
+    firstYear = myPredictionYear;
+
+    // wgDoy1 within myPredictionYear, wgDoy2 within myPredictionYear+1
+    if (wgDoy1 < wgDoy2)
+        lastYear = firstYear + signed(nrYears) - 1;
+    else
+        lastYear = firstYear + signed(nrYears);
+
+    seasonFirstDate = getDateFromDoy (myPredictionYear, wgDoy1);
+    if (wgDoy1 < wgDoy2)
+        seasonLastDate = getDateFromDoy (myPredictionYear, wgDoy2);
+    else
+        seasonLastDate = getDateFromDoy (myPredictionYear+1, wgDoy2);
+
+    myFirstDatePrediction = seasonFirstDate.addDays(-nrDaysBeforeWgDoy1);
+
+    for (int i = myPredictionYear; i <= lastYear; i++)
+    {
+        if (isLeapYear(i))
+            addday++;
+    }
+
+    nrValues = nrYears * 365 + addday +1;
+    if (nrValues <= 0)
+    {
+        qDebug() << "ERROR: wrong date";
+        return false;
+    }
+
+    dailyPredictions.resize(nrValues);
+
+    // copy the last 9 months before wgDoy1
+    float lastTmax = NODATA;
+    float lastTmin = NODATA;
+    Crit3DDate myDate = myFirstDatePrediction;
+    for (int tmp = 0; tmp < nrDaysBeforeWgDoy1; tmp++)
+    {
+        dailyPredictions[tmp].date = myDate;
+        obsIndex = difference(lastYearDailyObsData->inputFirstDate, dailyPredictions[tmp].date);
+        dailyPredictions[tmp].minTemp = lastYearDailyObsData->inputTMin[obsIndex];
+        dailyPredictions[tmp].maxTemp = lastYearDailyObsData->inputTMax[obsIndex];
+        dailyPredictions[tmp].prec = lastYearDailyObsData->inputPrecip[obsIndex];
+
+        if ((int(dailyPredictions[tmp].maxTemp) == int(NODATA))
+            || (int(dailyPredictions[tmp].minTemp) == int(NODATA))
+            || (int(dailyPredictions[tmp].prec) == int(NODATA)))
+        {
+            if (tmp == 0)
+            {
+                qDebug() << "ERROR: Missing data:" << QString::fromStdString(dailyPredictions[tmp].date.toStdString());
+                return false;
+            }
+            else
+            {
+                qDebug() << "WARNING: Missing data:" << QString::fromStdString(dailyPredictions[tmp].date.toStdString());
+
+                if (int(dailyPredictions[tmp].maxTemp) == int(NODATA))
+                    dailyPredictions[tmp].maxTemp = lastTmax;
+
+                if (int(dailyPredictions[tmp].minTemp) == int(NODATA))
+                    dailyPredictions[tmp].minTemp = lastTmin;
+
+                if (int(dailyPredictions[tmp].prec) == int(NODATA))
+                    dailyPredictions[tmp].prec = 0;
+            }
+        }
+        else
+        {
+            lastTmax = dailyPredictions[tmp].maxTemp;
+            lastTmin = dailyPredictions[tmp].minTemp;
+        }
+        ++myDate;
+    }
+
+    qDebug() << "Observed OK";
+    int outputDataLength = nrDaysBeforeWgDoy1;
+
+    // store the climate without anomalies
+    wGen = wGenClimate;
+    myYear = firstYear;
+
+    // first month of my season
+    int anomalyMonth1 = seasonFirstDate.month;
+    // last month of my season
+    int anomalyMonth2 = seasonLastDate.month;
+
+    for (unsigned int modelIndex = 0; modelIndex < nrMembers; modelIndex++)
+    {
+        // assign anomaly
+        if ( !assignXMLAnomaly(XMLAnomaly, modelIndex, anomalyMonth1, anomalyMonth2, wGenClimate, wGen))
+        {
+            qDebug() << "Error in Scenario: assignXMLAnomaly returns false";
+            return false;
+        }
+
+        if (modelIndex == nrMembers-1 )
+        {
+            isLastMember = true;
+        }
+        // compute seasonal prediction
+        if (!computeSeasonalPredictions(lastYearDailyObsData, wGen,
+                                        myPredictionYear, myYear, nrRepetitions,
+                                        wgDoy1, wgDoy2, rainfallThreshold, isLastMember,
+                                        dailyPredictions, &outputDataLength ))
+        {
+            qDebug() << "Error in computeSeasonalPredictions";
+            return false;
+        }
+
+        // next model
+        myYear = myYear + nrRepetitions;
+    }
+
+    qDebug() << "\n>>> output:" << outputFileName;
+
+    writeMeteoDataCsv (outputFileName, separator, dailyPredictions);
+
+    dailyPredictions.clear();
+    */
+    return true;
+}
