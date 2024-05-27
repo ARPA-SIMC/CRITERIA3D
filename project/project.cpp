@@ -4570,7 +4570,7 @@ bool Project::waterTableImportLocation(QString csvFileName)
     {
         logInfo(errorString);
         QMessageBox::warning(nullptr, "Warning!", QString::number(wrongLines)
-                            + " wrong lines of data were not loaded, see the log file " + logFileName + " for more information");
+                            + " wrong lines of data were not loaded, see the log file for more information: " + logFileName);
     }
 
     errorString = "";
@@ -4591,15 +4591,19 @@ bool Project::waterTableImportDepths(QString csvDepths)
     {
         logInfo(errorString);
         QMessageBox::warning(nullptr, "Warning!", QString::number(wrongLines)
-                            + " wrong lines of data were not loaded, see the log file " + logFileName + " for more information");
+                            + " wrong lines of data were not loaded, see the log file for more information: " + logFileName);
     }
 
     errorString = "";
     return true;
 }
 
-bool Project::computeSingleWell(QString idWell, int indexWell)
+
+bool Project::computeSingleWell(int indexWell)
 {
+    if (indexWell == NODATA)
+        return false;
+
     bool isMeteoGridLoaded;
     QDate firstMeteoDate = wellPoints[indexWell].getFirstDate().addDays(-730); // necessari 24 mesi di dati meteo precedenti il primo dato di falda
     double wellUtmX = wellPoints[indexWell].getUtmX();
@@ -4636,11 +4640,12 @@ bool Project::computeSingleWell(QString idWell, int indexWell)
     return true;
 }
 
+
 void Project::showSingleWell(WaterTable waterTable, QString idWell)
 {
     DialogSummary* dialogResult = new DialogSummary(waterTable);   // show results
     dialogResult->show();
-    WaterTableWidget* chartResult = new WaterTableWidget(idWell, waterTable.getMyDates(), waterTable.getMyHindcastSeries(), waterTable.getMyInterpolateSeries(), waterTable.getDepths());
+    WaterTableWidget* chartResult = new WaterTableWidget(idWell, waterTable.getMyDates(), waterTable.getMyHindcastSeries(), waterTable.getMyInterpolateSeries(), waterTable.getObsDepths());
     chartResult->show();
     return;
 }

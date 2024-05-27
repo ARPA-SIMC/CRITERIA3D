@@ -104,6 +104,7 @@
 
         int initializeProject(const QString &settingsFileName, const QString &operationStr,
                               const QDate &_dateComputation, bool isLog);
+
         int initializeProjectDtx();
         int initializeProjectCsv();
 

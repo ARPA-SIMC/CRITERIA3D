@@ -14,10 +14,10 @@ WaterTableChartView::WaterTableChartView(QWidget *parent) :
 
     interpolationSeries = new QLineSeries();
     interpolationSeries->setName("interpolation");
-    interpolationSeries->setColor(Qt::black);
+    interpolationSeries->setColor(QColor(0,0,1));
 
     axisX = new QDateTimeAxis();
-    axisX->setFormat("yyyy/MM/dd");
+    axisX->setFormat("yyyy/MM");
     axisY = new QValueAxis();
     axisY->setReverse(true);
 
@@ -55,12 +55,12 @@ void WaterTableChartView::draw(std::vector<QDate> myDates, std::vector<float> my
     axisY->setMin(0);
     axisY->setLabelFormat("%d");
     axisY->setTickCount(16);
-    axisX->setTickCount(12);
+    axisX->setTickCount(15);
     QDateTime firstDateTime;
-    firstDateTime.setDate(myDates[0].addDays(-3));
+    firstDateTime.setDate(myDates[0]);
     firstDateTime.setTime(QTime(0,0,0));
     QDateTime lastDateTime;
-    lastDateTime.setDate(myDates[myDates.size()-1].addDays(3));
+    lastDateTime.setDate(myDates[myDates.size()-1]);
     lastDateTime.setTime(QTime(0,0,0));
     axisX->setRange(firstDateTime, lastDateTime);
 
@@ -170,4 +170,10 @@ void WaterTableChartView::handleMarkerClicked()
     pen.setColor(color);
     marker->setPen(pen);
 
+}
+
+QList<QPointF> WaterTableChartView::exportInterpolationValues()
+{
+    QList<QPointF> pointsSerie = interpolationSeries->points();
+    return pointsSerie;
 }

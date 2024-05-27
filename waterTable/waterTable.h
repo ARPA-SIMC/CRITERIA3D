@@ -42,7 +42,7 @@ class WaterTable
         std::vector<QDate> getMyDates() const;
         std::vector<float> getMyHindcastSeries() const;
         std::vector<float> getMyInterpolateSeries() const;
-        QMap<QDate, int> getDepths();
+        QMap<QDate, int> getObsDepths();
 
     private:
         Crit3DMeteoPoint* linkedMeteoPoint;
