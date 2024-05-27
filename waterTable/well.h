@@ -25,9 +25,9 @@ public:
     QDate getFirstDate();
     QDate getLastDate();
 
-    int getDepthNr();
+    int getObsDepthNr();
 
-    QMap<QDate, int> getDepths() const;
+    QMap<QDate, int> getObsDepths() const;
 
 private:
     QString id;

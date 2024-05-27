@@ -108,7 +108,7 @@ bool shapeFromCsv(Crit3DShapeHandler &refShapeFile, QString csvFileName,
     }
 
     QFile csvFile(csvFileName);
-    if ( !csvFile.open(QFile::ReadOnly | QFile::Text) )
+    if (! csvFile.open(QFile::ReadOnly | QFile::Text))
     {
         errorStr = "CSV data file not exists: " + csvFileName;
         return false;
@@ -124,7 +124,7 @@ bool shapeFromCsv(Crit3DShapeHandler &refShapeFile, QString csvFileName,
     }
 
     Crit3DShapeHandler outputShapeFile;
-    if (!outputShapeFile.open(outputFileName.toStdString()))
+    if (! outputShapeFile.open(outputFileName.toStdString()))
     {
         errorStr = "Load shapefile failed: " + outputFileName;
         return false;
@@ -185,7 +185,7 @@ bool shapeFromCsv(Crit3DShapeHandler &refShapeFile, QString csvFileName,
         {
             QList<QString> valuesList = fieldList.value(newFields[i]);
             QString field = valuesList[0];
-            if (valuesList[1] == "STRING")
+            if (valuesList[1] == "STRING" || valuesList[1] == "TEXT")
             {
                 type = FTString;
                 if (valuesList[2].isEmpty())
@@ -236,7 +236,7 @@ bool shapeFromCsv(Crit3DShapeHandler &refShapeFile, QString csvFileName,
             }
 
             outputShapeFile.addField(field.toStdString().c_str(), type, nWidth, nDecimals);
-            myPosMap.insert(i,outputShapeFile.getFieldPos(field.toStdString()));
+            myPosMap.insert(i, outputShapeFile.getFieldPos(field.toStdString()));
         }
     }
 
@@ -265,7 +265,8 @@ bool shapeFromCsv(Crit3DShapeHandler &refShapeFile, QString csvFileName,
     // main cycle
     int step = nrRows * 0.1;
     int currentRow = 0;
-    while (!inputStream.atEnd())
+    int nrValidValues = 0;
+    while (! inputStream.atEnd())
     {
         // counter
         if (currentRow % step == 0)
@@ -298,26 +299,37 @@ bool shapeFromCsv(Crit3DShapeHandler &refShapeFile, QString csvFileName,
                     {
                         writeOK = outputShapeFile.writeDoubleAttribute(shapeIndex, iterator.value(), valueToWrite.toDouble());
                     }
-                    if (!writeOK)
+                    if (! writeOK)
                     {
                         errorStr = "Error in write this cases: " + idCase;
                         outputShapeFile.close();
                         csvFile.close();
                         return false;
                     }
+                    else
+                    {
+                        nrValidValues++;
+                    }
                 }
             }
         }
 
         currentRow++;
-        if (currentRow == (nrRows-1))
-        {
-            std::cout << " done.\n";
-        }
     }
 
     outputShapeFile.close();
     csvFile.close();
-    return true;
+
+    if (nrValidValues == 0)
+    {
+        std::cout << "\n";
+        errorStr = "No valid data.";
+        return false;
+    }
+    else
+    {
+        std::cout << " done.\n";
+        return true;
+    }
 }
 

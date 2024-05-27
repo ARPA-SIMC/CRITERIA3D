@@ -40,12 +40,12 @@ void Well::insertData(QDate myDate, int myValue)
     depths.insert(myDate, myValue);
 }
 
-int  Well::getDepthNr()
+int  Well::getObsDepthNr()
 {
     return depths.size();
 }
 
-QMap<QDate, int> Well::getDepths() const
+QMap<QDate, int> Well::getObsDepths() const
 {
     return depths;
 }
