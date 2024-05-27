@@ -180,13 +180,13 @@ int CriteriaOutputProject::initializeProjectCsv()
 }
 
 
-int CriteriaOutputProject::initializeProject(const QString &settingsFileName, const QString &operation,
-                                             const QDate &dateComputation, bool isLog)
+int CriteriaOutputProject::initializeProject(const QString &settingsFileName, const QString &operationStr,
+                                             const QDate &_dateComputation, bool isLog)
 {
     closeProject();
     initialize();
-    this->dateComputation = dateComputation;
-    this->operation = operation;
+    this->dateComputation = _dateComputation;
+    this->operation = operationStr;
 
     if (settingsFileName == "")
     {
@@ -562,7 +562,7 @@ int CriteriaOutputProject::createShapeFile()
 
     Crit3DShapeHandler inputShape;
 
-    if (!inputShape.open(ucmFileName.toStdString()))
+    if (! inputShape.open(ucmFileName.toStdString()))
     {
         projectError = "Wrong shapefile: " + ucmFileName;
         return ERROR_SHAPEFILE;
