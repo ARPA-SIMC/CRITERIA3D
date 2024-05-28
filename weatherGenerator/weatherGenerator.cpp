@@ -993,12 +993,12 @@ bool computeClimate(TweatherGenClimate &wgClimate, int firstYear, int nrRepetiti
     return true;
 }
 
-bool makeScenario(QString outputFileName, char separator, XMLSeasonalAnomaly* XMLAnomaly,
+bool makeScenario(QString outputFileName, char separator, XMLScenarioAnomaly *XMLAnomaly,
                           TweatherGenClimate& wGenClimate,
-                          int nrRepetitions, int myPredictionYear, int wgDoy1, int wgDoy2,
+                          int nrRepetitions, int myPredictionYear, int *wgDoy1, int *wgDoy2,
                           float rainfallThreshold)
 {
-    /*TweatherGenClimate wGen;
+    TweatherGenClimate wGen;
     std::vector<ToutputDailyMeteo> dailyPredictions;
 
     Crit3DDate myFirstDatePrediction, seasonFirstDate, seasonLastDate;
@@ -1010,7 +1010,7 @@ bool makeScenario(QString outputFileName, char separator, XMLSeasonalAnomaly* XM
     unsigned int obsIndex;
     unsigned int addday = 0;
     bool isLastMember = false;
-
+    /*
     // it checks if observed data includes the last 9 months before wgDoy1
     int nrDaysBeforeWgDoy1;
     if (! checkLastYearDate(lastYearDailyObsData->inputFirstDate, lastYearDailyObsData->inputLastDate,
@@ -1025,11 +1025,11 @@ bool makeScenario(QString outputFileName, char separator, XMLSeasonalAnomaly* XM
     {
         nrMembers += XMLAnomaly->modelMember[i].toUInt();
     }
-
-    nrYears = nrMembers * unsigned(nrRepetitions);
-
+    */
+    //nrYears = nrMembers * unsigned(nrRepetitions);
+    nrYears = nrRepetitions;
     firstYear = myPredictionYear;
-
+    /*
     // wgDoy1 within myPredictionYear, wgDoy2 within myPredictionYear+1
     if (wgDoy1 < wgDoy2)
         lastYear = firstYear + signed(nrYears) - 1;
@@ -1149,3 +1149,4 @@ bool makeScenario(QString outputFileName, char separator, XMLSeasonalAnomaly* XM
     */
     return true;
 }
+
