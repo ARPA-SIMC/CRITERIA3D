@@ -168,3 +168,66 @@ bool loadCsvDepths(QString csvDepths, std::vector<Well> &wellList, int waterTabl
     return true;
 }
 
+bool loadCsvDepthsSingleWell(QString csvDepths, Well well, int waterTableMaximumDepth, QString &errorStr, int &wrongLines)
+{
+    QFile myFile(csvDepths);
+    QList<QString> errorList;
+
+    int posDate = 0;
+    int posDepth = 1;
+
+    int nFields = 2;
+    bool ok;
+    errorStr = "";
+
+    if (! myFile.open(QFile::ReadOnly | QFile::Text) )
+    {
+        errorStr = "csvFileName file does not exist";
+        return false;
+    }
+    else
+    {
+        QTextStream in(&myFile);
+        //skip header
+        QString line = in.readLine();
+        while (!in.atEnd())
+        {
+            line = in.readLine();
+            QList<QString> items = line.split(",");
+            items.removeAll({});
+            if (items.size() < nFields)
+            {
+                errorList.append(line);
+                wrongLines++;
+                continue;
+            }
+            items[posDate] = items[posDate].simplified();
+            QDate date = QDate::fromString(items[posDate].remove(QChar('"')),"yyyy-MM-dd");
+            if (! date.isValid())
+            {
+                errorList.append(line);
+                wrongLines++;
+                continue;
+            }
+            items[posDepth] = items[posDepth].simplified();
+            int value = items[posDepth].remove(QChar('"')).toInt(&ok);
+            if (!ok || value == NODATA || value < 0 || value > waterTableMaximumDepth)
+            {
+                errorList.append(line);
+                wrongLines++;
+                continue;
+            }
+
+            well.insertData(date, value);
+        }
+    }
+    myFile.close();
+
+    if (wrongLines > 0)
+    {
+        errorStr = "ID not existing or with invalid data or value:\n" + errorList.join("\n");
+    }
+
+    return true;
+}
+

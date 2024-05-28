@@ -8,6 +8,7 @@
 
 bool loadCsvRegistry(QString csvRegistry, std::vector<Well> &wellList, QString &errorStr, int &wrongLines);
 bool loadCsvDepths(QString csvDepths, std::vector<Well> &wellList, int waterTableMaximumDepth, QString &errorStr, int &wrongLines);
+bool loadCsvDepthsSingleWell(QString csvDepths, Well well, int waterTableMaximumDepth, QString &errorStr, int &wrongLines);
 
 #endif // IMPORTDATA_H
 
