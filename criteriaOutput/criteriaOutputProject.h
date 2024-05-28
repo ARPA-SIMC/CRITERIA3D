@@ -102,8 +102,9 @@
         void initialize();
         void closeProject();
 
-        int initializeProject(const QString &settingsFileName, const QString &operation,
-                                             const QDate &dateComputation, bool isLog);
+        int initializeProject(const QString &settingsFileName, const QString &operationStr,
+                              const QDate &_dateComputation, bool isLog);
+
         int initializeProjectDtx();
         int initializeProjectCsv();
 

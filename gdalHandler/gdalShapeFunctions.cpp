@@ -110,8 +110,11 @@ bool gdalShapeToRaster(QString shapeFileName, QString shapeField, QString resolu
     // create color map
     if (! paletteFileName.isEmpty())
     {
+        char *optionForDEM[] = {const_cast<char *>("-alpha"), nullptr};
+        GDALDEMProcessingOptions *psOptions = GDALDEMProcessingOptionsNew(optionForDEM, nullptr);
+
         GDALDatasetH colorDataset = GDALDEMProcessing(strdup(fileNameColor.toStdString().c_str()), inputDataset, "color-relief",
-                                                      strdup(paletteFileName.toStdString().c_str()), nullptr, &error);
+                                                      strdup(paletteFileName.toStdString().c_str()), psOptions, &error);
         if (colorDataset == nullptr || error != 0)
         {
             errorStr = "Error in coloring map (GDALDEMProcessing).";
