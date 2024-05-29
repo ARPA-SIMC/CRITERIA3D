@@ -1048,7 +1048,7 @@ bool Project::loadMeteoPointsDB(QString fileName)
 
     closeMeteoPointsDB();
 
-    logInfoGUI("Load meteo points DB = " + fileName);
+    logInfoGUI("Load meteo points DB: " + fileName);
 
     dbPointsFileName = fileName;
     QString dbName = getCompleteFileName(fileName, PATH_METEOPOINT);
@@ -1077,7 +1077,7 @@ bool Project::loadMeteoPointsDB(QString fileName)
     errorString = "";
     if (! meteoPointsDbHandler->getPropertiesFromDb(listMeteoPoints, gisSettings, errorString))
     {
-        errorString = "Error in reading table 'point_properties'\n" + errorString;
+        errorString = "Error in reading the table point_properties\n" + errorString;
         closeMeteoPointsDB();
         return false;
     }
@@ -1085,7 +1085,7 @@ bool Project::loadMeteoPointsDB(QString fileName)
     nrMeteoPoints = listMeteoPoints.size();
     if (nrMeteoPoints == 0)
     {
-        errorString = "Missing data in the table 'point_properties'\n" + errorString;
+        errorString = "Missing data in the table point_properties\n" + errorString;
         closeMeteoPointsDB();
         return false;
     }
@@ -1669,6 +1669,7 @@ bool Project::loadMeteoGridMonthlyData(QDate firstDate, QDate lastDate, bool sho
         return true;
 }
 
+
 QDateTime Project::findDbPointLastTime()
 {
     QDateTime lastTime;
@@ -1677,7 +1678,10 @@ QDateTime Project::findDbPointLastTime()
     QDateTime lastDateD;
     lastDateD.setTimeSpec(Qt::UTC);
     lastDateD = meteoPointsDbHandler->getLastDate(daily);
-    if (! lastDateD.isNull()) lastTime = lastDateD;
+    if (! lastDateD.isNull())
+    {
+        lastTime = lastDateD;
+    }
 
     QDateTime lastDateH;
     lastDateH.setTimeSpec(Qt::UTC);
@@ -1685,14 +1689,19 @@ QDateTime Project::findDbPointLastTime()
 
     if (! lastDateH.isNull())
     {
-        if (! lastTime.isNull())
+        if (! lastDateD.isNull())
+        {
             lastTime = (lastDateD > lastDateH) ? lastDateD : lastDateH;
+        }
         else
+        {
             lastTime = lastDateH;
+        }
     }
 
     return lastTime;
 }
+
 
 QDateTime Project::findDbPointFirstTime()
 {

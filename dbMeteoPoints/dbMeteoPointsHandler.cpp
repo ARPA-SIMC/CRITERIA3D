@@ -242,7 +242,7 @@ QDateTime Crit3DMeteoPointsDbHandler::getLastDate(frequencyType frequency)
     qry.prepare( "SELECT name FROM sqlite_master WHERE type='table' AND name like :dayHour ESCAPE '^'");
     qry.bindValue(":dayHour",  "%^_" + dayHour  + "%");
 
-    if( !qry.exec() )
+    if(! qry.exec() )
     {
         errorStr = qry.lastError().text();
     }
@@ -274,11 +274,11 @@ QDateTime Crit3DMeteoPointsDbHandler::getLastDate(frequencyType frequency)
             if (qry.next())
             {
                 dateStr = qry.value(0).toString();
-                if (!dateStr.isEmpty())
+                if (! dateStr.isEmpty())
                 {
                     if (frequency == daily)
                     {
-                        currentLastDate = QDateTime::fromString(dateStr,"yyyy-MM-dd");
+                        currentLastDate = QDateTime::fromString(dateStr, "yyyy-MM-dd");
                     }
                     else if (frequency == hourly)
                     {

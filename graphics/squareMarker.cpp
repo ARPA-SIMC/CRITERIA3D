@@ -2,42 +2,17 @@
 #include "squareMarker.h"
 
 
-SquareMarker::SquareMarker(qreal side,bool sizeIsZoomInvariant, QColor fillColor, MapGraphicsObject *parent) :
+SquareMarker::SquareMarker(qreal side, bool sizeIsZoomInvariant, QColor fillColor, MapGraphicsObject *parent) :
     SquareObject(side, sizeIsZoomInvariant, fillColor, parent)
 {
-    this->setFlag(MapGraphicsObject::ObjectIsSelectable, false);
-    this->setFlag(MapGraphicsObject::ObjectIsMovable, false);
-    this->setFlag(MapGraphicsObject::ObjectIsFocusable, false);
+    setFlag(MapGraphicsObject::ObjectIsSelectable, false);
+    setFlag(MapGraphicsObject::ObjectIsMovable, false);
+    setFlag(MapGraphicsObject::ObjectIsFocusable, false);
 
     _id = "";
-    _currentValue = NODATA;
     _active = true;
 }
 
-void SquareMarker::setId(std::string id)
-{
-    _id = id;
-}
-
-std::string SquareMarker::id() const
-{
-    return _id;
-}
-
-void SquareMarker::setCurrentValue(float currentValue)
-{
-    _currentValue = currentValue;
-}
-
-bool SquareMarker::active() const
-{
-    return _active;
-}
-
-void SquareMarker::setActive(bool active)
-{
-    _active = active;
-}
 
 void SquareMarker::setToolTip()
 {
@@ -46,9 +21,9 @@ void SquareMarker::setToolTip()
     QString toolTipText = QString("Point: <b> %1 </b> <br/>")
                             .arg(idpoint);
 
-    if (_currentValue != NODATA)
+    if (currentValue() != NODATA)
     {
-        QString value = QString::number(_currentValue);
+        QString value = QString::number(currentValue());
         toolTipText += QString("value: <b> %1 </b>").arg(value);
     }
 

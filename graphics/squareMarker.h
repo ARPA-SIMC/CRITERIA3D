@@ -8,21 +8,20 @@
     {
         Q_OBJECT
 
+        private:
+            std::string _id;
+            bool _active;
+
         public:
             explicit SquareMarker(qreal side, bool sizeIsZoomInvariant, QColor fillColor, MapGraphicsObject *parent = nullptr);
 
-            std::string id() const;
-            bool active() const;
+            std::string id() const { return _id; }
+            void setId(std::string id) { _id = id; }
 
-            void setId(std::string id);
-            void setActive(bool active);
-            void setCurrentValue(float currentValue);
+            bool active() const { return _active; }
+            void setActive(bool active) { _active = active; }
+
             void setToolTip();
-
-    private:
-            std::string _id;
-            bool _active;
-            float _currentValue;
 
         protected:
             void mousePressEvent(QGraphicsSceneMouseEvent *event);

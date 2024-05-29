@@ -31,10 +31,10 @@ WaterTableChartView::WaterTableChartView(QWidget *parent) :
     m_tooltip->hide();
 }
 
+
 void WaterTableChartView::draw(std::vector<QDate> myDates, std::vector<float> myHindcastSeries, std::vector<float> myInterpolateSeries, QMap<QDate, int> obsDepths)
 {
-
-    int nDays = myDates.size();
+    int nDays = int(myDates.size());
     QDateTime myDateTime;
     myDateTime.setTime(QTime(0,0,0));
     for (int day = 0; day < nDays; day++)
