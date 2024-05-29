@@ -4,7 +4,7 @@
 #include <QStaticText>
 
 #define NODATA -9999
-#define TEXT_SIDE 3
+#define TEXT_SIDE 2
 
 
 SquareObject::SquareObject(qreal side, bool sizeIsZoomInvariant, QColor fillColor, MapGraphicsObject *parent) :
@@ -25,9 +25,9 @@ SquareObject::~SquareObject()
 
 QRectF SquareObject::boundingRect() const
 {
-    return QRectF(-_side * TEXT_SIDE * 0.5,
+    return QRectF(-_side * TEXT_SIDE,
                   -_side * 0.5,
-                  _side * TEXT_SIDE,
+                  _side * TEXT_SIDE * 2,
                   _side);
 }
 
