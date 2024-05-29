@@ -4,7 +4,7 @@
 #include <QStaticText>
 
 #define NODATA -9999
-#define RADIUS_WIDTH 3
+#define TEXT_SIDE 3
 
 
 SquareObject::SquareObject(qreal side, bool sizeIsZoomInvariant, QColor fillColor, MapGraphicsObject *parent) :
@@ -25,11 +25,13 @@ SquareObject::~SquareObject()
 
 QRectF SquareObject::boundingRect() const
 {
-    return QRectF(-0.5*_side,
-                  -0.5*_side,
-                  _side,
+    return QRectF(-_side * TEXT_SIDE * 0.5,
+                  -_side * 0.5,
+                  _side * TEXT_SIDE,
                   _side);
 }
+
+
 
 void SquareObject::paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget)
 {
@@ -39,35 +41,53 @@ void SquareObject::paint(QPainter *painter, const QStyleOptionGraphicsItem *opti
 
     if (_isText)
     {
-        if (_currentValue != NODATA)
+        QString myStr = "";
+        if (_isId)
         {
-            QStaticText staticText = QStaticText( QString::number(_currentValue, 'f', 1) );
-            staticText.setTextWidth(_side * RADIUS_WIDTH * 2);
-
-            QTextOption myOption;
-            myOption.setAlignment(Qt::AlignCenter);
-            staticText.setTextOption(myOption);
-
-            if (painter->font().bold())
-            {
-                QFont currentFont = painter->font();
-                currentFont.setBold(false);
-                painter->setFont(currentFont);
-            }
-
-            painter->scale(1,-1);
-            painter->drawStaticText(-_side * RADIUS_WIDTH, -_side * 2, staticText);
+            myStr = _id;
         }
+        else if (_currentValue != NODATA)
+        {
+            myStr =  QString::number(_currentValue, 'f', 1);
+        }
+        QStaticText staticText = QStaticText(myStr);
+        staticText.setTextWidth(_side * TEXT_SIDE);
+
+        QTextOption myOption;
+        myOption.setAlignment(Qt::AlignCenter);
+        staticText.setTextOption(myOption);
+
+        if (! painter->font().bold())
+        {
+            QFont currentFont = painter->font();
+            currentFont.setBold(true);
+            painter->setFont(currentFont);
+        }
+
+        painter->scale(1,-1);
+        painter->drawStaticText(-_side * TEXT_SIDE * 0.5, -_side, staticText);
     }
     else
     {
         painter->setBrush(_fillColor);
-        painter->drawRect(boundingRect());
+        painter->drawRect( QRectF(-_side * 0.5, -_side * 0.5, _side, _side) );
     }
+}
+
+void SquareObject::setId(const QString &id)
+{
+    if (_id == id)
+        return;
+
+    _id = id;
+    emit this->redrawRequested();
 }
 
 void SquareObject::setSide(qreal side)
 {
+    if (_side == side)
+        return;
+
     _side = side;
     emit this->redrawRequested();
 }
@@ -91,13 +111,21 @@ void SquareObject::setCurrentValue(qreal currentValue)
     emit this->redrawRequested();
 }
 
-
 void SquareObject::showText(bool isShowText)
 {
     if (_isText == isShowText)
         return;
 
     _isText = isShowText;
+    emit this->redrawRequested();
+}
+
+void SquareObject::showId(bool isShowId)
+{
+    if (_isId == isShowId)
+        return;
+
+    _isId = isShowId;
     emit this->redrawRequested();
 }
 
