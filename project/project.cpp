@@ -4492,71 +4492,64 @@ void Project::closeProgressBar()
     }
 }
 
-bool Project::findTempMinMax(meteoVariable myVar)
-{
-    float min;
-    float max;
-    float value;
-    int i = 0;
 
+bool Project::findTemperatureRange(meteoVariable myVar)
+{
     if (nrMeteoPoints == 0)
         return false;
 
+    // check frequency and variable
     frequencyType myFreq = getVarFrequency(myVar);
-    Crit3DDate myDate = getCrit3DDate(this->getCurrentDate());
-    int myHour = this->getCurrentHour();
-
     if (myFreq == daily)
     {
         if (myVar != dailyAirTemperatureAvg && myVar != dailyAirTemperatureMax && myVar != dailyAirTemperatureMin)
             return false;
-
-        do {
-            min = meteoPoints[i].getMeteoPointValueD(myDate, myVar);
-            max = min;
-            i++;
-        } while (min == NODATA && i < nrMeteoPoints);
-
-        while (i < nrMeteoPoints)
-        {
-            value = meteoPoints[i].getMeteoPointValueD(myDate, myVar);
-            if (value != NODATA)
-            {
-                if (value < min)
-                    min = value;
-                if (value > max)
-                    max = value;
-            }
-            i++;
-        }
     }
     else if (myFreq == hourly)
     {
         if (myVar != airTemperature)
             return false;
+    }
+    else
+    {
+        return false;
+    }
 
-        do {
-            min = meteoPoints[i].getMeteoPointValueH(myDate, myHour, 0, myVar);
-            max = min;
-            i++;
-        } while (min == NODATA);
+    Crit3DDate myDate = getCrit3DDate(this->getCurrentDate());
+    int myHour = this->getCurrentHour();
+    float currentMin = NODATA;
+    float currentMax = NODATA;
+    float value = NODATA;
 
-        for (int i = 0; i < nrMeteoPoints; i++)
+    for (int i = 0; i < nrMeteoPoints; i++)
+    {
+        if (myFreq == daily)
+        {
+            value = meteoPoints[i].getMeteoPointValueD(myDate, myVar);
+        }
+        else if (myFreq == hourly)
         {
             value = meteoPoints[i].getMeteoPointValueH(myDate, myHour, 0, myVar);
-            if (value != NODATA)
+        }
+        if (value != NODATA)
+        {
+            if (value < currentMin || currentMin == NODATA)
             {
-                if (value < min)
-                    min = value;
-                if (value > max)
-                    max = value;
+                currentMin = value;
+            }
+            if (value > currentMax || currentMax == NODATA)
+            {
+                currentMax = value;
             }
         }
     }
 
-    if (min != NODATA && max != NODATA)
-        interpolationSettings.setMinMaxTemperature(min, max);
+    if (currentMin == NODATA || currentMax == NODATA)
+    {
+        return false;
+    }
 
+    interpolationSettings.setMinMaxTemperature(currentMin, currentMax);
     return true;
 }
 
@@ -4569,7 +4562,7 @@ bool Project::waterTableImportLocation(QString csvFileName)
     }
 
     int wrongLines = 0;
-    if (! loadCsvRegistry(csvFileName, wellPoints, errorString, wrongLines))
+    if (! loadWaterTableLocationCsv(csvFileName, wellPoints, errorString, wrongLines))
     {
         logError(errorString);
         return false;
@@ -4590,7 +4583,7 @@ bool Project::waterTableImportLocation(QString csvFileName)
 bool Project::waterTableImportDepths(QString csvDepths)
 {
     int wrongLines = 0;
-    if (! loadCsvDepths(csvDepths, wellPoints, quality->getWaterTableMaximumDepth(), errorString, wrongLines))
+    if (! loadWaterTableDepthCsv(csvDepths, wellPoints, quality->getWaterTableMaximumDepth(), errorString, wrongLines))
     {
         logError(errorString);
         return false;

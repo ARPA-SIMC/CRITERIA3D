@@ -278,7 +278,9 @@ QDateTime Crit3DMeteoPointsDbHandler::getLastDate(frequencyType frequency)
                 {
                     if (frequency == daily)
                     {
-                        currentLastDate = QDateTime::fromString(dateStr, "yyyy-MM-dd");
+                        myDate = QDate::fromString(dateStr, "yyyy-MM-dd");
+                        myTime = QTime(12, 0, 0, 0);
+                        currentLastDate = QDateTime(myDate, myTime, Qt::UTC);
                     }
                     else if (frequency == hourly)
                     {

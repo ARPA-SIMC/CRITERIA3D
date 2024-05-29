@@ -9,17 +9,14 @@ SquareMarker::SquareMarker(qreal side, bool sizeIsZoomInvariant, QColor fillColo
     setFlag(MapGraphicsObject::ObjectIsMovable, false);
     setFlag(MapGraphicsObject::ObjectIsFocusable, false);
 
-    _id = "";
     _active = true;
 }
 
 
 void SquareMarker::setToolTip()
 {
-    QString idpoint = QString::fromStdString(_id);
-
     QString toolTipText = QString("Point: <b> %1 </b> <br/>")
-                            .arg(idpoint);
+                            .arg(id());
 
     if (currentValue() != NODATA)
     {
