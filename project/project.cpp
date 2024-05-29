@@ -4611,6 +4611,7 @@ bool Project::computeSingleWell(int indexWell)
     double wellUtmX = wellPoints[indexWell].getUtmX();
     double wellUtmY = wellPoints[indexWell].getUtmY();
     Crit3DMeteoPoint linkedMeteoPoint;
+
     if (this->meteoGridDbHandler != nullptr)
     {
         isMeteoGridLoaded = true;
@@ -4624,6 +4625,7 @@ bool Project::computeSingleWell(int indexWell)
         logError(ERROR_STR_MISSING_POINT_GRID);
         return false;
     }
+
     if (!assignNearestMeteoPoint(isMeteoGridLoaded, wellUtmX, wellUtmY, firstMeteoDate, &linkedMeteoPoint))
     {
         logError("Missing near weather data");
@@ -4634,10 +4636,13 @@ bool Project::computeSingleWell(int indexWell)
         logError("Missing near weather data");
         return false;
     }
-    int maxNrDays = 730;  // attualmente fisso
+
+    int maxNrDays = 730;  // attualmente fisso (2 anni)
     WaterTable waterTable(&linkedMeteoPoint, *meteoSettings, gisSettings);
-    waterTable.computeWaterTable(wellPoints[indexWell], maxNrDays);
-    waterTable.viewWaterTableSeries();        // prepare series to show
+
+    waterTable.computeWaterTableParameters(wellPoints[indexWell], maxNrDays);
+    waterTable.computeWaterTableSeries();
+
     waterTableList.push_back(waterTable);
     return true;
 }

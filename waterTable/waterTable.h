@@ -17,7 +17,7 @@ class WaterTable
         QDate getFirstDateWell();
         QDate getLastDateWell();
         void initializeWaterTable(Well myWell);
-        bool computeWaterTable(Well myWell, int maxNrDays);
+        bool computeWaterTableParameters(Well myWell, int maxNrDays);
         bool computeWTClimate();
         bool computeETP_allSeries();
         bool computeCWBCorrelation(int maxNrDays);
@@ -26,8 +26,8 @@ class WaterTable
         float getWaterTableDaily(QDate myDate);
         float getWaterTableClimate(QDate myDate);
         bool computeWaterTableClimate(QDate currentDate, int yearFrom, int yearTo, float* myValue);
-        bool getWaterTableHindcast(QDate myDate, float* myValue, float* myDelta, int* myDeltaDays);
-        void viewWaterTableSeries();
+        bool getWaterTableInterpolation(QDate myDate, float* myValue, float* myDelta, int* myDeltaDays);
+        void computeWaterTableSeries();
         QString getError() const;
 
         float getAlpha() const;
