@@ -1,12 +1,18 @@
 #ifndef WATERTABLE_H
 #define WATERTABLE_H
 
-#include "well.h"
-#include "meteoPoint.h"
-#include "meteoGrid.h"
+#ifndef WELL_H
+    #include "well.h"
+#endif
+#ifndef METEO_H
+    #include "meteo.h"
+#endif
+#ifndef GIS_H
+    #include "gis.h"
+#endif
 #include <QDate>
 
-#define MAXWELLDISTANCE 5000                           // distanza max: 10 km
+#define MAXWELLDISTANCE 5000                           // distanza max: 5 km
 #define WATERTABLE_MAXDELTADAYS 90
 
 class WaterTable
