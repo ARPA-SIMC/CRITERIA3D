@@ -5,7 +5,6 @@
 #include <QList>
 #include <QDate>
 #include <QMap>
-#include "meteoPoint.h"
 
 class Well
 {
