@@ -27,7 +27,8 @@ public:
     void setRadius(qreal radius);
     void setFillColor(const QColor& color);
     void setCurrentValue(qreal currentValue);
-    void setShowText(bool isShowText);
+
+    void showText(bool isShowText);
     void setMultiColorText(bool isMultiColorText);
     void setMarked(bool isMarked);
 

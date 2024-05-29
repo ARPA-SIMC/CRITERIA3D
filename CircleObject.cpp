@@ -119,7 +119,7 @@ void CircleObject::setCurrentValue(qreal currentValue)
 }
 
 
-void CircleObject::setShowText(bool isShowText)
+void CircleObject::showText(bool isShowText)
 {
     if (_isText == isShowText) return;
 
