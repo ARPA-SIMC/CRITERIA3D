@@ -168,7 +168,7 @@ bool loadCsvDepths(QString csvDepths, std::vector<Well> &wellList, int waterTabl
     return true;
 }
 
-bool loadCsvDepthsSingleWell(QString csvDepths, Well well, int waterTableMaximumDepth, QDate climateObsFirstDate, QDate climateObsLastDate, QString &errorStr, int &wrongLines)
+bool loadCsvDepthsSingleWell(QString csvDepths, Well* well, int waterTableMaximumDepth, QDate climateObsFirstDate, QDate climateObsLastDate, QString &errorStr, int &wrongLines)
 {
     QFile myFile(csvDepths);
     QList<QString> errorList;
@@ -218,7 +218,7 @@ bool loadCsvDepthsSingleWell(QString csvDepths, Well well, int waterTableMaximum
                 continue;
             }
 
-            well.insertData(date, value);
+            well->insertData(date, value);
         }
     }
     myFile.close();
