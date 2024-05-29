@@ -108,6 +108,8 @@
 
     bool assignAnomalyPrec(float myAnomaly, int anomalyMonth1, int anomalyMonth2,
                            float* myWGMonthlyVarNoAnomaly, float* myWGMonthlyVar);
+    bool assignXMLAnomalyScenario(XMLScenarioAnomaly* XMLAnomaly, int anomalyMonth1, int anomalyMonth2,
+                                  TweatherGenClimate& wGenNoAnomaly, TweatherGenClimate &wGen);
 
     bool makeSeasonalForecast(QString outputFileName, char separator, XMLSeasonalAnomaly* XMLAnomaly,
                             TweatherGenClimate& wGenClimate, TinputObsData* lastYearDailyObsData,
