@@ -277,7 +277,7 @@
         void showMeteoWidgetGrid(std::string idCell, bool isAppend);
         void showProxyGraph();
         void showLocalProxyGraph(gis::Crit3DGeoPoint myPoint, gis::Crit3DRasterGrid *myDataRaster);
-        bool findTempMinMax(meteoVariable myVar);
+        bool findTemperatureRange(meteoVariable myVar);
 
         void clearSelectedPoints();
         void clearSelectedOutputPoints();

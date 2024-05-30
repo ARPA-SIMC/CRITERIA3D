@@ -5,36 +5,45 @@
 #include <QRegularExpression>
 
 
-bool loadCsvRegistry(QString csvRegistry, std::vector<Well> &wellList, QString &errorStr, int &wrongLines)
+bool loadWaterTableLocationCsv(const QString &csvFileName, std::vector<Well> &wellList, QString &errorStr, int &wrongLines)
 {
     errorStr = "";
     wellList.clear();
 
-    QFile myFile(csvRegistry);
+    QFile myFile(csvFileName);
     QList<QString> idList;
     QList<QString> errorList;
     int posId = 0;
     int posUtmx = 1;
     int posUtmy = 2;
-    int nFields = 3;
-    bool ok;
+    int nrRequiredFields = 3;
+    int validLines = 0;
+     bool ok;
 
     if (! myFile.open(QFile::ReadOnly | QFile::Text) )
     {
-        errorStr = "csvFileName file does not exist";
+        errorStr = "Csv file does not exist:\n" + csvFileName;
         return false;
     }
     else
     {
         QTextStream in(&myFile);
-        //skip header
+
+        // check header
         QString line = in.readLine();
-        while (!in.atEnd())
+        QList<QString> headerItems = line.split(",");
+        if (headerItems.size() != nrRequiredFields)
+        {
+            errorStr = "Wrong data! Required well ID, utm X, utm Y.";
+            return false;
+        }
+
+        while (! in.atEnd())
         {
             line = in.readLine();
             QList<QString> items = line.split(",");
             items.removeAll({});
-            if (items.size()<nFields)
+            if (items.size() < nrRequiredFields)
             {
                 errorList.append(items[posId]);
                 wrongLines++;
@@ -66,14 +75,22 @@ bool loadCsvRegistry(QString csvRegistry, std::vector<Well> &wellList, QString &
                 wrongLines++;
                 continue;
             }
+
             Well newWell;
             newWell.setId(id);
             newWell.setUtmX(utmX);
             newWell.setUtmY(utmY);
             wellList.push_back(newWell);
+            validLines++;
         }
     }
     myFile.close();
+
+    if (validLines == 0)
+    {
+        errorStr = "Wrong wells location:\n" + csvFileName;
+        return false;
+    }
 
     if (wrongLines > 0)
     {
@@ -84,35 +101,45 @@ bool loadCsvRegistry(QString csvRegistry, std::vector<Well> &wellList, QString &
 }
 
 
-bool loadCsvDepths(QString csvDepths, std::vector<Well> &wellList, int waterTableMaximumDepth, QString &errorStr, int &wrongLines)
+bool loadWaterTableDepthCsv(const QString &csvFileName, std::vector<Well> &wellList,
+                            int waterTableMaximumDepth, QString &errorStr, int &wrongLines)
 {
-    QFile myFile(csvDepths);
+    errorStr = "";
+    QFile myFile(csvFileName);
     QList<QString> errorList;
 
     int posId = 0;
     int posDate = 1;
     int posDepth = 2;
 
-    int nFields = 3;
+    int nrRequiredFields = 3;
+    int validLines = 0;
     bool ok;
-    errorStr = "";
 
     if (! myFile.open(QFile::ReadOnly | QFile::Text) )
     {
-        errorStr = "csvFileName file does not exist";
+        errorStr = "Csv file does not exist:\n" + csvFileName;
         return false;
     }
     else
     {
         QTextStream in(&myFile);
-        //skip header
+
+        // check header
         QString line = in.readLine();
+        QList<QString> headerItems = line.split(",");
+        if (headerItems.size() != nrRequiredFields)
+        {
+            errorStr = "Wrong data! Required well ID, date, depth.";
+            return false;
+        }
+
         while (!in.atEnd())
         {
             line = in.readLine();
             QList<QString> items = line.split(",");
             items.removeAll({});
-            if (items.size() < nFields)
+            if (items.size() < nrRequiredFields)
             {
                 errorList.append(line);
                 wrongLines++;
@@ -156,9 +183,16 @@ bool loadCsvDepths(QString csvDepths, std::vector<Well> &wellList, int waterTabl
             }
 
             wellList[index].insertData(date, value);
+            validLines++;
         }
     }
     myFile.close();
+
+    if (validLines == 0)
+    {
+        errorStr = "Wrong water table depth:\n" + csvFileName;
+        return false;
+    }
 
     if (wrongLines > 0)
     {
