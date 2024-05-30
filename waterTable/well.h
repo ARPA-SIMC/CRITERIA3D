@@ -5,7 +5,6 @@
 #include <QList>
 #include <QDate>
 #include <QMap>
-#include "meteoPoint.h"
 
 class Well
 {
@@ -28,6 +27,7 @@ public:
     int getObsDepthNr();
 
     QMap<QDate, int> getObsDepths() const;
+    int minValuesPerMonth();
 
 private:
     QString id;

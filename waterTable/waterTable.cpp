@@ -2,11 +2,10 @@
 #include "commonConstants.h"
 #include "weatherGenerator.h"
 
-WaterTable::WaterTable(Crit3DMeteoPoint *linkedMeteoPoint, Crit3DMeteoSettings meteoSettings, gis::Crit3DGisSettings gisSettings)
-    : linkedMeteoPoint(linkedMeteoPoint), meteoSettings(meteoSettings), gisSettings(gisSettings)
+WaterTable::WaterTable(std::vector<float> &inputTMin, std::vector<float> &inputTMax, std::vector<float> &inputPrec, QDate firstMeteoDate, QDate lastMeteoDate,
+                       Crit3DMeteoSettings meteoSettings, gis::Crit3DGisSettings gisSettings)
+    : inputTMin(inputTMin), inputTMax(inputTMax), inputPrec(inputPrec), firstMeteoDate(firstMeteoDate), lastMeteoDate(lastMeteoDate), meteoSettings(meteoSettings), gisSettings(gisSettings)
 {
-    firstMeteoDate = QDate(linkedMeteoPoint->getFirstDailyData().year, linkedMeteoPoint->getFirstDailyData().month, linkedMeteoPoint->getFirstDailyData().day);
-    lastMeteoDate = QDate(linkedMeteoPoint->getLastDailyData().year, linkedMeteoPoint->getLastDailyData().month, linkedMeteoPoint->getLastDailyData().day);
 }
 
 QString WaterTable::getIdWell() const
@@ -195,13 +194,29 @@ bool WaterTable::computeETP_allSeries()
 
     float sumCWB = 0;
     int nrValidDays = 0;
+    int index = 0;
+    float Tmin = NODATA;
+    float Tmax = NODATA;
+    float prec = NODATA;
+    float etp = NODATA;
     for (QDate myDate = firstMeteoDate; myDate<=lastMeteoDate; myDate=myDate.addDays(1))
     {
         Crit3DDate date(myDate.day(), myDate.month(), myDate.year());
-        float Tmin = linkedMeteoPoint->getMeteoPointValueD(date, dailyAirTemperatureMin);
-        float Tmax = linkedMeteoPoint->getMeteoPointValueD(date, dailyAirTemperatureMax);
-        float prec = linkedMeteoPoint->getMeteoPointValueD(date, dailyPrecipitation);
-        float etp = dailyEtpHargreaves(Tmin, Tmax, date, myLat,&meteoSettings);
+        if (index > inputTMin.size() || index > inputTMax.size() || index > inputPrec.size())
+        {
+            etp = NODATA;
+            if (index < inputPrec.size())
+            {
+                prec = inputPrec[index];
+            }
+        }
+        else
+        {
+            Tmin = inputTMin[index];
+            Tmax = inputTMax[index];
+            prec = inputPrec[index];
+            etp = dailyEtpHargreaves(Tmin, Tmax, date, myLat,&meteoSettings);
+        }
         etpValues.push_back(etp);
         precValues.push_back(prec);
         if (etp != NODATA && prec != NODATA)
@@ -209,6 +224,7 @@ bool WaterTable::computeETP_allSeries()
             sumCWB = sumCWB + (prec - etp);
             nrValidDays = nrValidDays + 1;
         }
+        index = index + 1;
     }
 
     if (nrValidDays > 0)
@@ -217,7 +233,7 @@ bool WaterTable::computeETP_allSeries()
     }
     else
     {
-        error = "Missing data: " + QString::fromStdString(linkedMeteoPoint->name);
+        error = "Missing data";
         return false;
     }
 

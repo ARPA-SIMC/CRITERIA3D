@@ -1,18 +1,25 @@
 #ifndef WATERTABLE_H
 #define WATERTABLE_H
 
-#include "well.h"
-#include "meteoPoint.h"
-#include "meteoGrid.h"
+#ifndef WELL_H
+    #include "well.h"
+#endif
+#ifndef METEO_H
+    #include "meteo.h"
+#endif
+#ifndef GIS_H
+    #include "gis.h"
+#endif
 #include <QDate>
 
-#define MAXWELLDISTANCE 5000                           // distanza max: 10 km
+#define MAXWELLDISTANCE 5000                           // distanza max: 5 km
 #define WATERTABLE_MAXDELTADAYS 90
 
 class WaterTable
 {
     public:
-        WaterTable(Crit3DMeteoPoint* linkedMeteoPoint, Crit3DMeteoSettings meteoSettings, gis::Crit3DGisSettings gisSettings);
+        WaterTable(std::vector<float> &inputTMin, std::vector<float> &inputTMax, std::vector<float> &inputPrec, QDate firstMeteoDate, QDate lastMeteoDate,
+                   Crit3DMeteoSettings meteoSettings, gis::Crit3DGisSettings gisSettings);
         QString getIdWell() const;
         QDate getFirstDateWell();
         QDate getLastDateWell();
@@ -45,7 +52,6 @@ class WaterTable
         QMap<QDate, int> getObsDepths();
 
     private:
-        Crit3DMeteoPoint* linkedMeteoPoint;
         Crit3DMeteoSettings meteoSettings;
         gis::Crit3DGisSettings gisSettings;
         QDate firstDateWell;
@@ -55,6 +61,9 @@ class WaterTable
         Well well;
         QString error;
 
+        std::vector<float> inputTMin;
+        std::vector<float> inputTMax;
+        std::vector<float> inputPrec;
         std::vector<float> etpValues;
         std::vector<float> precValues;
 

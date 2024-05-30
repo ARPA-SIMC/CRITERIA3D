@@ -1,4 +1,5 @@
 #include "well.h"
+#include <algorithm>
 
 Well::Well()
 {
@@ -76,4 +77,25 @@ QDate Well::getLastDate()
         }
     }
     return lastDate;
+}
+
+int Well::minValuesPerMonth()
+{
+    QMapIterator<QDate, int> it(depths);
+    std::vector<int> H_num;
+    for (int myMonthIndex = 0; myMonthIndex < 12; myMonthIndex++)
+    {
+        H_num.push_back(0);
+    }
+    while (it.hasNext())
+    {
+        it.next();
+        QDate myDate = it.key();
+        int myMonth = myDate.month();
+        int myMonthIndex = myMonth - 1;
+        H_num[myMonthIndex] = H_num[myMonthIndex] + 1;
+    }
+
+    auto min = min_element(H_num.begin(), H_num.end());
+    return *min;
 }

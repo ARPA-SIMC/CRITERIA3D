@@ -202,7 +202,7 @@ bool loadWaterTableDepthCsv(const QString &csvFileName, std::vector<Well> &wellL
     return true;
 }
 
-bool loadCsvDepthsSingleWell(QString csvDepths, Well well, int waterTableMaximumDepth, QString &errorStr, int &wrongLines)
+bool loadCsvDepthsSingleWell(QString csvDepths, Well* well, int waterTableMaximumDepth, QDate climateObsFirstDate, QDate climateObsLastDate, QString &errorStr, int &wrongLines)
 {
     QFile myFile(csvDepths);
     QList<QString> errorList;
@@ -237,7 +237,7 @@ bool loadCsvDepthsSingleWell(QString csvDepths, Well well, int waterTableMaximum
             }
             items[posDate] = items[posDate].simplified();
             QDate date = QDate::fromString(items[posDate].remove(QChar('"')),"yyyy-MM-dd");
-            if (! date.isValid())
+            if (! date.isValid() || date < climateObsFirstDate || date > climateObsLastDate)
             {
                 errorList.append(line);
                 wrongLines++;
@@ -252,14 +252,14 @@ bool loadCsvDepthsSingleWell(QString csvDepths, Well well, int waterTableMaximum
                 continue;
             }
 
-            well.insertData(date, value);
+            well->insertData(date, value);
         }
     }
     myFile.close();
 
     if (wrongLines > 0)
     {
-        errorStr = "ID not existing or with invalid data or value:\n" + errorList.join("\n");
+        errorStr = "Invalid data or value or data out of range:\n" + errorList.join("\n");
     }
 
     return true;
