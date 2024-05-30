@@ -139,9 +139,10 @@ void Crit3DInterpolationSettings::setSelectedCombination(const Crit3DProxyCombin
     selectedCombination = value;
 }
 
-void Crit3DInterpolationSettings::setValueSelectedCombination(unsigned int index, bool isActive)
+void Crit3DInterpolationSettings::setActiveSelectedCombination(unsigned int index, bool isActive)
 {
     selectedCombination.setProxyActive(index, isActive);
+    selectedCombination.setProxySignificant(index, false);
 }
 
 unsigned Crit3DInterpolationSettings::getIndexHeight() const
@@ -163,6 +164,7 @@ Crit3DProxyCombination Crit3DInterpolationSettings::getCurrentCombination() cons
 {
     return currentCombination;
 }
+
 
 std::vector<Crit3DProxy> Crit3DInterpolationSettings::getCurrentProxy() const
 {
@@ -286,6 +288,22 @@ void Crit3DInterpolationSettings::setFittingParameters(const std::vector<std::ve
     fittingParameters = newFittingParameters;
 }
 
+void Crit3DInterpolationSettings::setFittingParametersElevation(const std::vector<double> &newFittingParameters)
+{
+    if (fittingParameters.empty()) {
+        fittingParameters.push_back(newFittingParameters);
+    } else {
+        fittingParameters[0] = newFittingParameters;
+    }
+}
+
+void Crit3DInterpolationSettings::addFittingParameters(const std::vector<std::vector<double> > &newFittingParameters)
+{
+    for (size_t i = 0; i < newFittingParameters.size(); ++i) {
+        fittingParameters.push_back(newFittingParameters[i]);
+    }
+}
+
 std::vector<std::function<double (double, std::vector<double> &)>> Crit3DInterpolationSettings::getFittingFunction() const
 {
     return fittingFunction;
@@ -294,6 +312,12 @@ std::vector<std::function<double (double, std::vector<double> &)>> Crit3DInterpo
 void Crit3DInterpolationSettings::setFittingFunction(const std::vector<std::function<double (double, std::vector<double> &)> > &newFittingFunction)
 {
     fittingFunction = newFittingFunction;
+}
+
+void Crit3DInterpolationSettings::addFittingFunction(const std::vector<std::function<double (double, std::vector<double> &)> > &newFittingFunction)
+{
+    for (int i = 0; i < newFittingFunction.size(); i ++)
+        fittingFunction.push_back(newFittingFunction[i]);
 }
 
 TFittingFunction Crit3DInterpolationSettings::getChosenElevationFunction()
@@ -367,7 +391,7 @@ void Crit3DInterpolationSettings::initialize()
     meteoGridAggrMethod = aggrAverage;
     meteoGridUpscaleFromDem = true;
     indexHeight = unsigned(NODATA);
-    chosenElevationFunction = piecewiseThreeSlope;
+    chosenElevationFunction = piecewiseThreeFree;
 
     isKrigingReady = false;
     precipitationAllZero = false;
@@ -737,7 +761,9 @@ void Crit3DInterpolationSettings::addProxy(Crit3DProxy myProxy, bool isActive_)
         setIndexHeight(int(currentProxy.size())-1);
 
     selectedCombination.addProxyActive(isActive_);
+    selectedCombination.addProxySignificant(false);
     optimalCombination.addProxyActive(isActive_);
+    optimalCombination.addProxySignificant(false);
 }
 
 std::string Crit3DInterpolationSettings::getProxyName(unsigned pos)
@@ -761,7 +787,45 @@ Crit3DProxyCombination::Crit3DProxyCombination()
 void Crit3DProxyCombination::clear()
 {
     _isActiveList.clear();
+    _isSignificantList.clear();
     _useThermalInversion = false;
+}
+
+void Crit3DProxyCombination::resetCombination(unsigned int size)
+{
+    _isActiveList.resize(size);
+    _isSignificantList.resize(size);
+    for (unsigned int i = 0; i < size; i++)
+    {
+        setProxyActive(i, false);
+        setProxySignificant(i, false);
+    }
+    _useThermalInversion = false;
+}
+
+unsigned int Crit3DProxyCombination::getActiveProxySize()
+{
+    unsigned int size = 0;
+    for (unsigned int i = 0; i < getProxySize(); i++)
+        if (isProxyActive(i)) size++;
+
+    return size;
+}
+
+void Crit3DProxyCombination::setAllActiveToFalse()
+{
+    for (unsigned int i = 0; i < _isActiveList.size(); i++)
+        setProxyActive(i, false);
+
+    return;
+}
+
+void Crit3DProxyCombination::setAllSignificantToFalse()
+{
+    for (unsigned int i = 0; i < _isActiveList.size(); i++)
+        setProxySignificant(i, false);
+
+    return;
 }
 
 

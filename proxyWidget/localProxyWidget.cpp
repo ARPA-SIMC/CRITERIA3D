@@ -619,19 +619,6 @@ void Crit3DLocalProxyWidget::modelLRClicked(int toggled)
                         point_vector.append(point);
                     }
                 }
-                else if (interpolationSettings->getProxy(proxyPos)->getFittingFunctionName() == piecewiseThreeFree)
-                {
-                    std::vector <double> xVector;
-                    for (int m = xMin; m < xMax; m += 5)
-                        xVector.push_back(m);
-
-                    for (int p = 0; p < xVector.size(); p++)
-                    {
-                        point.setX(xVector[p]);
-                        point.setY(lapseRatePiecewiseFree(xVector[p], parameters[proxyPos]));
-                        point_vector.append(point);
-                    }
-                }
                 else if (interpolationSettings->getProxy(proxyPos)->getFittingFunctionName() == piecewiseThreeSlope)
                 {
                     std::vector <double> xVector;
@@ -683,27 +670,20 @@ void Crit3DLocalProxyWidget::modelLRClicked(int toggled)
             //TODO lineari
             /*xMin = getProxyMinValue(subsetInterpolationPoints, proxyPos);
             xMax = getProxyMaxValue(subsetInterpolationPoints, proxyPos);
-            bool isZeroIntercept = false;
-            if (!regressionGeneric(subsetInterpolationPoints, interpolationSettings, proxyPos, isZeroIntercept))
-            {
-                return;
-            }
-            float regressionSlope = interpolationSettings->getProxy(proxyPos)->getRegressionSlope();
-            float regressionIntercept = interpolationSettings->getProxy(proxyPos)->getRegressionIntercept();
+
+            float slope = parameters[proxyPos][0];
+            float intercept = parameters[proxyPos][1];
+
+            float myY = intercept + slope * xMin;
             point.setX(xMin);
-            point.setY(regressionIntercept + regressionSlope * xMin);
-            point_vector.append(point);
-            point.setX(xMax);
-            point.setY(regressionIntercept + regressionSlope * xMax);
+            point.setY(myY);
             point_vector.append(point);
 
-            float regressionR2 = interpolationSettings->getProxy(proxyPos)->getRegressionR2();
-            if (regressionR2 != NODATA)
-            {
-                r2.setText(QString("%1").arg(regressionR2, 0, 'f', 2));
-            }
-            lapseRate.setText(QString("%1").arg(regressionSlope, 0, 'f', 2));
- */       }
+            myY = intercept + slope * xMax;
+            point.setX(xMax);
+            point.setY(myY);
+            point_vector.append(point);*/
+        }
         chartView->drawModelLapseRate(point_vector);
     }
 }

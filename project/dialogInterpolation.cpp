@@ -142,7 +142,7 @@ DialogInterpolation::DialogInterpolation(Project *myProject)
     std::map<std::string, TFittingFunction>::const_iterator itElFunc;
     for (itElFunc = fittingFunctionNames.begin(); itElFunc != fittingFunctionNames.end(); ++itElFunc)
     {
-        if (itElFunc->first == "linear" || itElFunc->first == "Triple piecewise" || itElFunc->first == "Nonlinear Frei function (5 parameters)" || itElFunc->first == "Nonlinear Frei function (6 parameters)")
+        if (itElFunc->first == "linear" || itElFunc->first == "Nonlinear Frei function (5 parameters)")
             continue;
         elevationFunctionEdit.addItem(QString::fromStdString(itElFunc->first), QString::fromStdString(itElFunc->first));
     }
@@ -286,7 +286,7 @@ void DialogInterpolation::accept()
     }
 
     for (int i = 0; i < proxyListCheck->count(); i++)
-        _interpolationSettings->setValueSelectedCombination(unsigned(i), proxyListCheck->item(i)->checkState());
+        _interpolationSettings->setActiveSelectedCombination(unsigned(i), proxyListCheck->item(i)->checkState());
 
     QString algorithmString = algorithmEdit.itemData(algorithmEdit.currentIndex()).toString();
     _interpolationSettings->setInterpolationMethod(interpolationMethodNames.at(algorithmString.toStdString()));

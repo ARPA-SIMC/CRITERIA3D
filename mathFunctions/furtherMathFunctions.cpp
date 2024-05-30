@@ -123,34 +123,6 @@ double lapseRatePiecewise_three(double x, std::vector <double>& par)
     }
 }
 
-double lapseRatePiecewiseForInterpolation(double x, std::vector <double>& par)
-{
-    // the piecewise line is parameterized as follows
-    // the line passes through A(par[0];par[1])and B(par[0]+par[2];par[1]+par[3]). par[4] is the slope of the 2 externals pieces
-    // "y = mx + q" piecewise function;
-    double xb;
-    par[2] = MAXVALUE(10, par[2]);
-    // par[2] means the delta between the two quotes. It must be positive.
-    xb = par[0]+par[2];
-    if (x < par[0])
-    {
-        //m = par[4];;
-        //q = par[1]-m*par[0];
-        return par[4]*x + par[1]-par[4]*par[0];
-    }
-    else if (x>xb)
-    {
-        //m = par[4];
-        //q = (par[1]+par[3])-m*xb;
-        return par[4]*x + (par[1]+par[3])-par[4]*xb;
-    }
-    else
-    {
-        //m = ((par[1]+par[3])-par[1])/par[2];
-        //q = par[1]-m*par[0];
-        return (par[3]/par[2])*x + par[1]-(par[3])/par[2]*par[0];
-    }
-}
 
 double lapseRatePiecewiseThree_withSlope(double x, std::vector <double>& par)
 {
@@ -233,6 +205,11 @@ double functionSum(std::vector<std::function<double(double, std::vector<double>&
 double functionLinear(double x, std::vector <double>& par)
 {
     return par[0] * x;
+}
+
+double functionLinear_intercept(double x, std::vector <double>& par)
+{
+    return par[0] * x + par[1];
 }
 
 double multilinear(std::vector<double> &x, std::vector<double> &par)
@@ -1478,7 +1455,7 @@ namespace interpolation
                     a[counterDim][counterDim] += lambda[i][k]*a[counterDim][counterDim];
                     for (j = counterDim+1; j < nrParametersTotal; j++)
                     {
-                        a[j][i] = a[i][j];
+                        a[j][counterDim] = a[counterDim][j];
                     }
                     counterDim++;
                 }
@@ -1664,7 +1641,7 @@ namespace interpolation
                 a[counterDim][counterDim] += lambda[i][k];
                 for (j = counterDim+1; j < nrParametersTotal; j++)
                 {
-                    a[j][i] = a[i][j];
+                    a[j][counterDim] = a[counterDim][j];
                 }
                 counterDim++;
             }
@@ -1803,7 +1780,7 @@ namespace interpolation
                 a[counterDim][counterDim] += lambda[i][k]*a[counterDim][counterDim];
                 for (j = counterDim+1; j < nrParametersTotal; j++)
                 {
-                    a[j][i] = a[i][j];
+                    a[j][counterDim] = a[counterDim][j];
                 }
                 counterDim++;
             }
@@ -1939,7 +1916,7 @@ namespace interpolation
                 } while(truncNormal <= 0.0 || truncNormal >= 1.0);
                 parameters[j] = parametersMin[j] + (truncNormal)*(parametersMax[j]-parametersMin[j]);
             }
-        } while( (counter < nrTrials) && (R2 < 0.8) && (fabs(R2Previous[0]-R2Previous[nrMinima-1]) > deltaR2) );
+        } while( (counter < nrTrials) && !(R2Previous[0] > 0.8 && R2Previous[nrMinima-1] > 0.8) && (fabs(R2Previous[0]-R2Previous[nrMinima-1]) > deltaR2) );
 
         for (j=0; j<nrParameters; j++)
         {
@@ -2032,7 +2009,7 @@ namespace interpolation
                 a[k][k] += lambda[k]*a[k][k];
                 for (j = k+1; j < nrParameters; j++)
                 {
-                    a[j][i] = a[i][j];
+                    a[j][k] = a[k][j];
                 }
             }
             // linear system resolution by matrix inversion

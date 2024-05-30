@@ -694,7 +694,7 @@ bool Project::loadParameters(QString parametersFileName)
                 if (getProxyPragaName(name_.toStdString()) == proxyHeight)
                     nrParameters = 5;
                 else
-                    nrParameters = 1;
+                    nrParameters = 2;
 
                 myList = parameters->value("fitting_parameters").toStringList();
                 if (myList.size() != nrParameters*2 && myList.size() != (nrParameters-1)*2 && myList.size() != (nrParameters+1)*2) //TODO: change
@@ -705,6 +705,62 @@ bool Project::loadParameters(QString parametersFileName)
 
                 myProxy->setFittingParametersRange(StringListToDouble(myList));
             }
+
+            /*if (getProxyPragaName(name_.toStdString()) == proxyHeight)
+            {
+                if (parameters->contains("fitting_function"))
+                {
+                    std::string elevationFuction = parameters->value("fitting_function").toString().toStdString();
+                    if (fittingFunctionNames.find(elevationFuction) == fittingFunctionNames.end())
+                    {
+                        errorString = "Unknown function for elevation. Choose between: piecewiseTwo, piecewiseThreeSlope, piecewiseThreeFree.";
+                        return false;
+                    }
+                    else
+                        interpolationSettings.setChosenElevationFunction(fittingFunctionNames.at(elevationFuction));
+
+                    if (parameters->contains("fitting_parameters"))
+                    {
+                        unsigned int nrParameters;
+
+                        if (interpolationSettings.getChosenElevationFunction()== piecewiseTwo)
+                            nrParameters = 4;
+                        else if (interpolationSettings.getChosenElevationFunction()== piecewiseThreeSlope)
+                            nrParameters = 5;
+                        else if (interpolationSettings.getChosenElevationFunction()== piecewiseThreeFree)
+                            nrParameters = 6;
+
+                        myList = parameters->value("fitting_parameters").toStringList();
+                        if (myList.size() != nrParameters*2)
+                        {
+                            errorString = "Wrong number of fitting parameters for proxy: " + name_;
+                            return  false;
+                        }
+
+                        myProxy->setFittingParametersRange(StringListToDouble(myList));
+                    }
+                }
+                else
+                {
+                    interpolationSettings.setChosenElevationFunction(piecewiseTwo);
+                }
+            }
+            else
+            {
+                if(parameters->contains("fitting_parameters"))
+                {
+                    unsigned int nrParameters = 1;
+
+                    myList = parameters->value("fitting_parameters").toStringList();
+                    if (myList.size() != nrParameters*2)
+                    {
+                        errorString = "Wrong number of fitting parameters for proxy: " + name_;
+                        return  false;
+                    }
+
+                    myProxy->setFittingParametersRange(StringListToDouble(myList));
+                }
+            }*/
 
             if (! parameters->contains("active"))
             {
@@ -2369,7 +2425,7 @@ bool Project::interpolationDemLocalDetrending(meteoVariable myVar, const Crit3DT
                     std::vector <Crit3DInterpolationDataPoint> subsetInterpolationPoints;
                     localSelection(interpolationPoints, subsetInterpolationPoints, x, y, interpolationSettings);
                     if (interpolationSettings.getUseLocalDetrending())
-                        interpolationSettings.setFittingParameters(myRaster->prepareParameters(row, col));
+                        interpolationSettings.setFittingParameters(myRaster->prepareParameters(row, col, myCombination.getActiveProxySize()));
                     if (! preInterpolation(subsetInterpolationPoints, &interpolationSettings, meteoSettings, &climateParameters,
                                           meteoPoints, nrMeteoPoints, myVar, myTime, errorStdStr))
                     {
@@ -2671,7 +2727,7 @@ bool Project::interpolationGrid(meteoVariable myVar, const Crit3DTime& myTime)
                     {
                         std::vector <Crit3DInterpolationDataPoint> subsetInterpolationPoints;
                         localSelection(interpolationPoints, subsetInterpolationPoints, myX, myY, interpolationSettings);
-                        interpolationSettings.setFittingParameters(meteoGridDbHandler->meteoGrid()->dataMeteoGrid.prepareParameters(row, col));
+                        interpolationSettings.setFittingParameters(meteoGridDbHandler->meteoGrid()->dataMeteoGrid.prepareParameters(row, col, myCombination.getActiveProxySize()));
                         if (! preInterpolation(subsetInterpolationPoints, &interpolationSettings, meteoSettings,
                                               &climateParameters, meteoPoints, nrMeteoPoints, myVar, myTime, errorStdStr))
                         {
