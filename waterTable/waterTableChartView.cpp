@@ -6,7 +6,7 @@ WaterTableChartView::WaterTableChartView(QWidget *parent) :
     obsDepthSeries = new QScatterSeries();
     obsDepthSeries->setName("Observed");
     obsDepthSeries->setColor(Qt::green);
-    obsDepthSeries->setMarkerSize(10.0);
+    obsDepthSeries->setMarkerSize(8.0);
 
     hindcastSeries = new QLineSeries();
     hindcastSeries->setName("hindcast");
@@ -14,10 +14,10 @@ WaterTableChartView::WaterTableChartView(QWidget *parent) :
 
     interpolationSeries = new QLineSeries();
     interpolationSeries->setName("interpolation");
-    interpolationSeries->setColor(Qt::black);
+    interpolationSeries->setColor(QColor(0,0,1));
 
     axisX = new QDateTimeAxis();
-    axisX->setFormat("yyyy/MM/dd");
+    axisX->setFormat("yyyy/MM");
     axisY = new QValueAxis();
     axisY->setReverse(true);
 
@@ -31,41 +31,40 @@ WaterTableChartView::WaterTableChartView(QWidget *parent) :
     m_tooltip->hide();
 }
 
+
 void WaterTableChartView::draw(std::vector<QDate> myDates, std::vector<float> myHindcastSeries, std::vector<float> myInterpolateSeries, QMap<QDate, int> obsDepths)
 {
-
-    int nDays = myDates.size();
-    QDateTime myDateTime;
-    myDateTime.setTime(QTime(0,0));
-    for (int day = 0; day < nDays; day++)
-    {
-        myDateTime.setDate(myDates[day]);
-        hindcastSeries->append(myDateTime.toMSecsSinceEpoch(), myHindcastSeries[day]);
-        interpolationSeries->append(myDateTime.toMSecsSinceEpoch(), myInterpolateSeries[day]);
-
-        if(obsDepths.contains(myDates[day]))
-        {
-            int myDepth = obsDepths[myDates[day]];
-            obsDepthSeries->append(myDateTime.toMSecsSinceEpoch(), myDepth);
-        }
-    }
-
-
     axisY->setMax(300);
     axisY->setMin(0);
     axisY->setLabelFormat("%d");
     axisY->setTickCount(16);
 
-    QDateTime firstDateTime;
-    firstDateTime.setDate(myDates[0].addDays(-3));
-    firstDateTime.setTime(QTime(0,0));
-    QDateTime lastDateTime;
-    lastDateTime.setDate(myDates[myDates.size()-1].addDays(3));
-    lastDateTime.setTime(QTime(0,0));
+    QDateTime firstDate;
+    firstDate.setDate(myDates[0]);
+    QDateTime lastDate;
+    lastDate.setDate(myDates[myDates.size()-1]);
 
-    axisX->setTickCount(12);
-    axisX->setMin(firstDateTime);
-    axisX->setMax(lastDateTime);
+    axisX->setRange(firstDate, lastDate);
+    axisX->setTickCount(15);
+
+    int nDays = int(myDates.size());
+    QDateTime currentDateTime;
+    for (int day = 0; day < nDays; day++)
+    {
+        currentDateTime.setDate(myDates[day]);
+        hindcastSeries->append(currentDateTime.toMSecsSinceEpoch(), myHindcastSeries[day]);
+        interpolationSeries->append(currentDateTime.toMSecsSinceEpoch(), myInterpolateSeries[day]);
+
+        if(obsDepths.contains(myDates[day]))
+        {
+            int myDepth = obsDepths[myDates[day]];
+            obsDepthSeries->append(currentDateTime.toMSecsSinceEpoch(), myDepth);
+        }
+        else
+        {
+            obsDepthSeries->append(currentDateTime.toMSecsSinceEpoch(), -1);
+        }
+    }
 
     chart()->addSeries(obsDepthSeries);
     chart()->addSeries(hindcastSeries);
@@ -80,8 +79,8 @@ void WaterTableChartView::draw(std::vector<QDate> myDates, std::vector<float> my
         marker->series()->setVisible(true);
         QObject::connect(marker, &QLegendMarker::clicked, this, &WaterTableChartView::handleMarkerClicked);
     }
-    return;
 }
+
 
 void WaterTableChartView::tooltipObsDepthSeries(QPointF point, bool state)
 {
@@ -173,4 +172,10 @@ void WaterTableChartView::handleMarkerClicked()
     pen.setColor(color);
     marker->setPen(pen);
 
+}
+
+QList<QPointF> WaterTableChartView::exportInterpolationValues()
+{
+    QList<QPointF> pointsSerie = interpolationSeries->points();
+    return pointsSerie;
 }

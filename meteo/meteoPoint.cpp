@@ -1007,6 +1007,14 @@ Crit3DDate Crit3DMeteoPoint::getLastDailyData()
     return obsDataD[nrObsDataDaysD-1].date;
 }
 
+Crit3DDate Crit3DMeteoPoint::getFirstDailyData()
+{
+    if (obsDataD.size() == 0)
+        return NO_DATE;
+
+    return obsDataD[0].date;
+}
+
 
 float Crit3DMeteoPoint::getMeteoPointValueD(const Crit3DDate &myDate, meteoVariable myVar, Crit3DMeteoSettings* meteoSettings)
 {

@@ -1,26 +1,31 @@
 #ifndef WATERTABLE_H
 #define WATERTABLE_H
 
-#include "well.h"
-#include "meteoPoint.h"
-#include "meteoGrid.h"
+#ifndef WELL_H
+    #include "well.h"
+#endif
+#ifndef METEO_H
+    #include "meteo.h"
+#endif
+#ifndef GIS_H
+    #include "gis.h"
+#endif
 #include <QDate>
 
-#define MAXWELLDISTANCE 5000                           // distanza max: 10 km
+#define MAXWELLDISTANCE 5000                           // distanza max: 5 km
 #define WATERTABLE_MAXDELTADAYS 90
 
 class WaterTable
 {
     public:
-        WaterTable(Crit3DMeteoPoint* meteoPoints, int nrMeteoPoints, Crit3DMeteoGrid* meteoGrid, bool isMeteoGridLoaded, Crit3DMeteoSettings meteoSettings, gis::Crit3DGisSettings gisSettings);
+        WaterTable(std::vector<float> &inputTMin, std::vector<float> &inputTMax, std::vector<float> &inputPrec, QDate firstMeteoDate, QDate lastMeteoDate,
+                   Crit3DMeteoSettings meteoSettings, gis::Crit3DGisSettings gisSettings);
         QString getIdWell() const;
         QDate getFirstDateWell();
         QDate getLastDateWell();
         void initializeWaterTable(Well myWell);
-        bool computeWaterTable(Well myWell, int maxNrDays);
+        bool computeWaterTableParameters(Well myWell, int maxNrDays);
         bool computeWTClimate();
-        bool assignNearestMeteoPoint();
-        bool assignWTMeteoData(Crit3DMeteoPoint point);
         bool computeETP_allSeries();
         bool computeCWBCorrelation(int maxNrDays);
         float computeCWB(QDate myDate, int nrDays);
@@ -28,8 +33,8 @@ class WaterTable
         float getWaterTableDaily(QDate myDate);
         float getWaterTableClimate(QDate myDate);
         bool computeWaterTableClimate(QDate currentDate, int yearFrom, int yearTo, float* myValue);
-        bool getWaterTableHindcast(QDate myDate, float* myValue, float* myDelta, int* myDeltaDays);
-        void viewWaterTableSeries();
+        bool getWaterTableInterpolation(QDate myDate, float* myValue, float* myDelta, int* myDeltaDays);
+        void computeWaterTableSeries();
         QString getError() const;
 
         float getAlpha() const;
@@ -44,13 +49,9 @@ class WaterTable
         std::vector<QDate> getMyDates() const;
         std::vector<float> getMyHindcastSeries() const;
         std::vector<float> getMyInterpolateSeries() const;
-        QMap<QDate, int> getDepths();
+        QMap<QDate, int> getObsDepths();
 
     private:
-        Crit3DMeteoPoint *meteoPoints;
-        int nrMeteoPoints;
-        Crit3DMeteoGrid *meteoGrid;
-        bool isMeteoGridLoaded;
         Crit3DMeteoSettings meteoSettings;
         gis::Crit3DGisSettings gisSettings;
         QDate firstDateWell;
@@ -60,6 +61,9 @@ class WaterTable
         Well well;
         QString error;
 
+        std::vector<float> inputTMin;
+        std::vector<float> inputTMax;
+        std::vector<float> inputPrec;
         std::vector<float> etpValues;
         std::vector<float> precValues;
 
@@ -76,10 +80,8 @@ class WaterTable
         float WTClimateDaily[366];
         int nrObsData;
 
-        bool isMeteoPointLinked;
         bool isCWBEquationReady;
         float avgDailyCWB; //[mm]
-        Crit3DMeteoPoint linkedMeteoPoint;
 
         // graph
         std::vector<QDate> myDates;

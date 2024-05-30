@@ -108,6 +108,8 @@
 
     bool assignAnomalyPrec(float myAnomaly, int anomalyMonth1, int anomalyMonth2,
                            float* myWGMonthlyVarNoAnomaly, float* myWGMonthlyVar);
+    bool assignXMLAnomalyScenario(XMLScenarioAnomaly* XMLAnomaly, int anomalyMonth1, int anomalyMonth2,
+                                  TweatherGenClimate& wGenNoAnomaly, TweatherGenClimate &wGen);
 
     bool makeSeasonalForecast(QString outputFileName, char separator, XMLSeasonalAnomaly* XMLAnomaly,
                             TweatherGenClimate& wGenClimate, TinputObsData* lastYearDailyObsData,
@@ -122,6 +124,11 @@
                         float rainfallThreshold, std::vector<ToutputDailyMeteo> &outputDailyData);
 
     void clearInputData(TinputObsData &myData);
+
+    bool makeScenario(QString outputFileName, char separator, XMLScenarioAnomaly* XMLAnomaly,
+                      TweatherGenClimate& wGenClimate,
+                      int nrRepetitions, int myPredictionYear, int* wgDoy1, int* wgDoy2,
+                      float rainfallThreshold);
 
 
 #endif // WEATHERGENERATOR_H

@@ -935,6 +935,8 @@ bool Crit1DProject::computeUnit(unsigned int unitIndex, unsigned int memberNr)
 // use memberNr = 0 for deterministic run
 bool Crit1DProject::computeCase(unsigned int memberNr)
 {
+    // initialize
+    myCase.nrMissingPrec = 0;
     myCase.fittingOptions.useWaterRetentionData = myCase.unit.useWaterRetentionData;
     // the user wants to compute the factor of safety
     myCase.computeFactorOfSafety = (factorOfSafetyDepth.size() > 0);
@@ -973,7 +975,7 @@ bool Crit1DProject::computeCase(unsigned int memberNr)
     {
         float irriRatio = getIrriRatioFromCropClass(dbCrop, "crop_class", "id_class",
                                                 myCase.unit.idCropClass, projectError);
-        if (irriRatio < 0.001f)
+        if (irriRatio < 0.001)
         {
             // No irrigation: nothing to do
             return true;

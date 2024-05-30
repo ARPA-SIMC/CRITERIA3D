@@ -77,6 +77,7 @@ Crit1DCase::Crit1DCase()
     soilLayers.clear();
     prevWaterContent.clear();
 
+    nrMissingPrec = 0;
     computeFactorOfSafety = false;
 }
 
@@ -503,10 +504,20 @@ bool Crit1DCase::computeDailyModel(Crit3DDate &myDate, std::string &error)
     double tmin = double(meteoPoint.getMeteoPointValueD(myDate, dailyAirTemperatureMin));
     double tmax = double(meteoPoint.getMeteoPointValueD(myDate, dailyAirTemperatureMax));
 
-    if (isEqual(prec, NODATA) || isEqual(tmin, NODATA) || isEqual(tmax, NODATA))
+    if (isEqual(tmin, NODATA) || isEqual(tmax, NODATA))
     {
-        error = "Missing weather data: " + myDate.toStdString();
+        error = "Missing temperature data: " + myDate.toStdString();
         return false;
+    }
+    if (isEqual(prec, NODATA))
+    {
+        prec = 0;
+        nrMissingPrec++;
+        if ((nrMissingPrec / meteoPoint.nrObsDataDaysD) > 0.01)
+        {
+            error = "Too many precipitation data are missing (> 1%)";
+            return false;
+        }
     }
 
     // check on wrong data

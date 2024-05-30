@@ -14,6 +14,7 @@ class WaterTableChartView : public QChartView
         void tooltipObsDepthSeries(QPointF point, bool state);
         void tooltipLineSeries(QPointF point, bool state);
         void handleMarkerClicked();
+        QList<QPointF> exportInterpolationValues();
     private:
         QScatterSeries* obsDepthSeries;
         QLineSeries* hindcastSeries;
