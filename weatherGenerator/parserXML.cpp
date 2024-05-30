@@ -437,6 +437,7 @@ bool parseXMLScenario(const QString &xmlFileName, XMLScenarioAnomaly &XMLAnomaly
         else if (ancestor.toElement().tagName().toUpper() == "PERIOD")
         {
             child = ancestor.firstChild();
+            counterVar = 0;
             while(! child.isNull())
             {
                 myTag = child.toElement().tagName().toUpper();
@@ -452,7 +453,7 @@ bool parseXMLScenario(const QString &xmlFileName, XMLScenarioAnomaly &XMLAnomaly
                 if (myTag == "VAR")
                 {
                     secondChild = child.firstChild();
-                    counterVar = 0;
+
                     while(! secondChild.isNull())
                     {
                         mySecondTag = secondChild.toElement().tagName().toUpper();
@@ -478,8 +479,9 @@ bool parseXMLScenario(const QString &xmlFileName, XMLScenarioAnomaly &XMLAnomaly
                         }
 
                         secondChild = secondChild.nextSibling();
-                        counterVar++;
+
                     }
+                    counterVar++;
                 }
                 child = child.nextSibling();
             }

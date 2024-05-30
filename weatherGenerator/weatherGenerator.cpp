@@ -673,9 +673,9 @@ bool assignXMLAnomalyScenario(XMLScenarioAnomaly* XMLAnomaly, int anomalyMonth1,
     // loop for all XMLValuesList (Tmin, Tmax, TminVar, TmaxVar, Prec3M, Wetdays)
     for (i = 0; i < 4; i++)
     {
-        /*if (XMLAnomaly->forecast[i].attribute.toUpper() == "ANOMALY")
+        if (XMLAnomaly->forecast[i].attribute.toUpper() == "ANOMALY")
         {
-            myVar = XMLAnomaly->forecast[i].type.toUpper();
+            /*myVar = XMLAnomaly->forecast[i].type.toUpper();
             result = false;
 
             if (XMLAnomaly->forecast[i].value[modelIndex] != nullptr)
@@ -709,8 +709,8 @@ bool assignXMLAnomalyScenario(XMLScenarioAnomaly* XMLAnomaly, int anomalyMonth1,
             {
                 qDebug() << "wrong anomaly: " + myVar;
                 return false;
-            }
-        }*/
+            }*/
+        }
     }
 
     /* DEBUG
