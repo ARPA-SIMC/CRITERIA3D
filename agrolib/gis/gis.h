@@ -191,7 +191,7 @@
             float getValueFromXY(double x, double y) const;
             std::vector<std::vector<double>> getParametersFromRowCol(int row, int col);
             bool setParametersForRowCol(int row, int col, std::vector<std::vector<double>> parameters);
-            std::vector<std::vector<double>> prepareParameters(int row, int col);
+            std::vector<std::vector<double>> prepareParameters(int row, int col, unsigned int activeProxyNr);
 
             Crit3DTime getMapTime() const;
             void setMapTime(const Crit3DTime &value);

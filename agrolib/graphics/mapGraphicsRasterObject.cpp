@@ -52,6 +52,7 @@ void RasterObject::clear()
 {
     setDrawing(false);
     setDrawBorders(false);
+    setVisible(false);
     freeIndexesMatrix();
 
     latLonHeader.nrCols = 0;
@@ -239,6 +240,7 @@ bool RasterObject::initializeUTM(gis::Crit3DRasterGrid* myRaster, const gis::Cri
 
     setDrawing(true);
     setDrawBorders(isGrid);
+    setVisible(true);
     isLoaded = true;
 
     return true;
@@ -270,7 +272,8 @@ bool RasterObject::initializeLatLon(gis::Crit3DRasterGrid* myRaster, const gis::
     }
 
     setDrawing(true);
-    setDrawBorders(isGrid_);
+    setDrawBorders(isGrid);
+    setVisible(true);
     isLoaded = true;
 
     return true;
