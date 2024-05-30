@@ -4636,15 +4636,7 @@ bool Project::computeSingleWell(int indexWell)
         logError("Missing near weather data");
         return false;
     }
-<<<<<<< HEAD
 
-    int maxNrDays = 730;  // attualmente fisso (2 anni)
-    WaterTable waterTable(&linkedMeteoPoint, *meteoSettings, gisSettings);
-
-    waterTable.computeWaterTableParameters(wellPoints[indexWell], maxNrDays);
-    waterTable.computeWaterTableSeries();
-
-=======
     int maxNrDays = 730;  // attualmente fisso
 
     std::vector<float> inputTMin;
@@ -4661,13 +4653,14 @@ bool Project::computeSingleWell(int indexWell)
         inputTMax.push_back(Tmax);
         inputPrec.push_back(prec);
     }
+
     QDate firstDate(linkedMeteoPoint.getFirstDailyData().year, linkedMeteoPoint.getFirstDailyData().month, linkedMeteoPoint.getFirstDailyData().day);
     QDate lastDate(linkedMeteoPoint.getLastDailyData().year, linkedMeteoPoint.getLastDailyData().month, linkedMeteoPoint.getLastDailyData().day);
 
     WaterTable waterTable(inputTMin, inputTMax, inputPrec, firstDate, lastDate, *meteoSettings, gisSettings);
-    waterTable.computeWaterTable(wellPoints[indexWell], maxNrDays);
-    waterTable.viewWaterTableSeries();        // prepare series to show
->>>>>>> 2a84db442537ad935d81f540ab67574523de1a13
+    waterTable.computeWaterTableParameters(wellPoints[indexWell], maxNrDays);
+    waterTable.computeWaterTableSeries();        // prepare series to show
+
     waterTableList.push_back(waterTable);
     return true;
 }
