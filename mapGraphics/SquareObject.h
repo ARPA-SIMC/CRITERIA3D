@@ -18,10 +18,18 @@ public:
     //pure-virtual from MapGraphicsObject
     void paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget);
 
-    qreal side() const;
-    QColor color() const;
-    void setSide(qreal radius);
+    qreal side() const { return _side; }
+    QColor color() const { return _fillColor; }
+    qreal currentValue() const { return _currentValue; }
+    QString id () const { return _id; }
+
+    void showText(bool isShowText);
+    void showId(bool isShowId);
+
+    void setSide(qreal side);
+    void setId(const QString &id);
     void setFillColor(const QColor& color);
+    void setCurrentValue(qreal currentValue);
     
 signals:
     
@@ -33,8 +41,12 @@ protected:
 
 private:
     qreal _side;
+    qreal _currentValue;
+    QString _id;
     QColor _fillColor;
-    
+
+    bool _isText;
+    bool _isId;
 };
 
 #endif // SQUAREOBJECT_H
