@@ -61,14 +61,20 @@
     float interpolate(std::vector<Crit3DInterpolationDataPoint> &myPoints, Crit3DInterpolationSettings *mySettings, Crit3DMeteoSettings *meteoSettings, meteoVariable myVar, float myX, float myY, float myZ, std::vector<double> myProxyValues, bool excludeSupplemental);
     bool getProxyValuesXY(float x, float y, Crit3DInterpolationSettings* mySettings, std::vector<double> &myValues);
 
-    bool getActiveProxyValues(Crit3DInterpolationSettings *mySettings, const std::vector<double> &allProxyValues, std::vector<double> &activeProxyValues);
+    bool getActiveProxyValues(Crit3DProxyCombination myCombination, const std::vector<double> &allProxyValues, std::vector<double> &activeProxyValues);
 
     void detrending(std::vector <Crit3DInterpolationDataPoint> &myPoints,
                     Crit3DProxyCombination myCombination, Crit3DInterpolationSettings *mySettings, Crit3DClimateParameters *myClimate,
                     meteoVariable myVar, Crit3DTime myTime);
 
-    bool multipleDetrending(std::vector <Crit3DInterpolationDataPoint> &myPoints, Crit3DInterpolationSettings* mySettings,
+    bool multipleDetrendingMain(std::vector <Crit3DInterpolationDataPoint> &myPoints,
+                                Crit3DInterpolationSettings* mySettings, meteoVariable myVar, std::string &errorStr);
+
+    bool multipleDetrending(Crit3DProxyCombination othersCombination, std::vector<std::vector<double> > parameters, std::vector <Crit3DInterpolationDataPoint> &myPoints, Crit3DInterpolationSettings* mySettings,
                             meteoVariable myVar, std::string &errorStr);
+
+    bool multipleDetrendingElevation(Crit3DProxyCombination myCombination, std::vector<std::vector<double> > parameters, std::vector <Crit3DInterpolationDataPoint> &myPoints,
+                                     Crit3DInterpolationSettings* mySettings, meteoVariable myVar, std::string &errorStr);
 
     bool getUseDetrendingVar(meteoVariable myVar);
     bool isThermal(meteoVariable myVar);

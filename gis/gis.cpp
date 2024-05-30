@@ -517,7 +517,7 @@ namespace gis
         return true;
     }
 
-    std::vector<std::vector<double>> Crit3DRasterGrid::prepareParameters(int row, int col)
+    std::vector<std::vector<double>> Crit3DRasterGrid::prepareParameters(int row, int col, unsigned int activeProxyNr)
     {
         std::vector<std::vector<double>> tempProxyVector;
         std::vector<double> tempParVector;
@@ -538,14 +538,13 @@ namespace gis
             for (j = col-1; j < col+2; j++)
             {
                 index = i * header->nrCols + j;
-                if (index >= 0 && index < parametersCell.size() && !parametersCell[index].fittingParameters.empty() && (i != row || j !=col))
+                if (index >= 0 && index < parametersCell.size() && (parametersCell[index].fittingParameters.size() == activeProxyNr) && (i != row || j !=col))
                     findFirst = 1;
                 if (findFirst==1) break;
             }
             if (findFirst==1) break;
         }
 
-        //starting from firt full cell, look at the remaining ones and calculate all the average parameter values
         for (k = 0; k < parametersCell[index].fittingParameters.size(); k++)
         {
             for (l = 0; l < parametersCell[index].fittingParameters[k].size(); l++)
@@ -557,14 +556,13 @@ namespace gis
                     for (int m = j; m < col+2; m++)
                     {
                         index = h * header->nrCols + m;
-                        if (index >= 0 && index < parametersCell.size() && !parametersCell[index].fittingParameters.empty() && (i != row || j !=col))
+                        if (index >= 0 && index < parametersCell.size() && (parametersCell[index].fittingParameters.size() == activeProxyNr) && (i != row || j !=col))
                         {
                             avg += parametersCell[index].fittingParameters[k][l];
                             counter++;
                         }
                     }
                 }
-                //push back the vector of averages
                 tempParVector.push_back(avg/counter);
                 index = i*header->nrCols+j;
             }
