@@ -4633,7 +4633,25 @@ bool Project::computeSingleWell(int indexWell)
         return false;
     }
     int maxNrDays = 730;  // attualmente fisso
-    WaterTable waterTable(&linkedMeteoPoint, *meteoSettings, gisSettings);
+
+    std::vector<float> inputTMin;
+    std::vector<float> inputTMax;
+    std::vector<float> inputPrec;
+
+    for (int i = 0; i < linkedMeteoPoint.nrObsDataDaysD; i++)
+    {
+        Crit3DDate myDate = linkedMeteoPoint.getFirstDailyData().addDays(i);
+        float Tmin = linkedMeteoPoint.getMeteoPointValueD(myDate, dailyAirTemperatureMin);
+        float Tmax = linkedMeteoPoint.getMeteoPointValueD(myDate, dailyAirTemperatureMax);
+        float prec = linkedMeteoPoint.getMeteoPointValueD(myDate, dailyPrecipitation);
+        inputTMin.push_back(Tmin);
+        inputTMax.push_back(Tmax);
+        inputPrec.push_back(prec);
+    }
+    QDate firstDate(linkedMeteoPoint.getFirstDailyData().year, linkedMeteoPoint.getFirstDailyData().month, linkedMeteoPoint.getFirstDailyData().day);
+    QDate lastDate(linkedMeteoPoint.getLastDailyData().year, linkedMeteoPoint.getLastDailyData().month, linkedMeteoPoint.getLastDailyData().day);
+
+    WaterTable waterTable(inputTMin, inputTMax, inputPrec, firstDate, lastDate, *meteoSettings, gisSettings);
     waterTable.computeWaterTable(wellPoints[indexWell], maxNrDays);
     waterTable.viewWaterTableSeries();        // prepare series to show
     waterTableList.push_back(waterTable);
