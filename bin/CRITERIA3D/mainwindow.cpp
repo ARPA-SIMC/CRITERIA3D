@@ -491,7 +491,7 @@ void MainWindow::addOutputPointsGUI()
     for (unsigned int i = 0; i < myProject.outputPoints.size(); i++)
     {
         SquareMarker* point = new SquareMarker(7, true, QColor((Qt::green)));
-        point->setId(myProject.outputPoints[i].id);
+        point->setId(QString::fromStdString(myProject.outputPoints[i].id));
         point->setLatitude(myProject.outputPoints[i].latitude);
         point->setLongitude(myProject.outputPoints[i].longitude);
 
@@ -2996,7 +2996,7 @@ void MainWindow::on_flagView_values_toggled(bool isChecked)
 {
     for (int i = 0; i < meteoPointList.size(); i++)
     {
-        meteoPointList[i]->setShowText(isChecked);
+        meteoPointList[i]->showText(isChecked);
     }
 }
 
