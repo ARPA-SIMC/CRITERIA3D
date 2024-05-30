@@ -1137,8 +1137,8 @@ namespace interpolation
                                         std::vector<double>& weights)
     {
         int i,j;
-        int nrPredictors = parameters.size();
-        int nrData = y.size();
+        int nrPredictors = int(parameters.size());
+        int nrData = int(y.size());
         std::vector <int> nrParameters(nrPredictors);
         int nrParametersTotal = 0;
         for (i=0; i<nrPredictors;i++)
@@ -1342,8 +1342,8 @@ namespace interpolation
                                      std::vector<double>& weights)
     {
         int i;
-        int nrPredictors = parameters.size();
-        int nrData = y.size();
+        int nrPredictors = int(parameters.size());
+        int nrData = int(y.size());
         double mySSE, diffSSE, newSSE;
         static double VFACTOR = 10;
         std::vector <int> nrParameters(nrPredictors);
