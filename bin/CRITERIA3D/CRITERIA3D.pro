@@ -24,10 +24,10 @@ INCLUDEPATH +=  ./shared  \
                 ../../agrolib/interpolation ../../agrolib/solarRadiation ../../agrolib/snow \
                 ../../agrolib/outputPoints ../../agrolib/soilWidget ../../agrolib/utilities  \
                 ../../agrolib/dbMeteoPoints ../../agrolib/outputPoints ../../agrolib/dbMeteoGrid \
-                ../../agrolib/inOutDataXML ../../agrolib/proxyWidget ../../agrolib/project \
+                ../../agrolib/proxyWidget ../../agrolib/project \
                 ../../agrolib/graphics  ../../agrolib/commonChartElements ../../agrolib/commonDialogs \
                 ../../mapGraphics ../../agrolib/meteoWidget \
-                ../../agrolib/waterTable ../../agrolib/weatherGenerator
+                ../../agrolib/waterTable
 
 CONFIG(debug, debug|release) {
     LIBS += -L../../agrolib/graphics/debug -lgraphics
@@ -39,7 +39,6 @@ CONFIG(debug, debug|release) {
     }
     LIBS += -L../../agrolib/project/debug -lproject
     LIBS += -L../../agrolib/proxyWidget/debug -lproxyWidget
-    LIBS += -L../../agrolib/inOutDataXML/debug -linOutDataXML
     LIBS += -L../../agrolib/meteoWidget/debug -lmeteoWidget
     LIBS += -L../../agrolib/commonDialogs/debug -lcommonDialogs
     LIBS += -L../../agrolib/dbMeteoGrid/debug -ldbMeteoGrid
@@ -51,7 +50,6 @@ CONFIG(debug, debug|release) {
     LIBS += -L../../agrolib/soil/debug -lsoil
     LIBS += -L../../agrolib/utilities/debug -lutilities
     LIBS += -L../../agrolib/waterTable/debug -lwaterTable
-    LIBS += -L../../agrolib/weatherGenerator/debug -lweatherGenerator
     LIBS += -L../../agrolib/snow/debug -lsnow
     LIBS += -L../../agrolib/solarRadiation/debug -lsolarRadiation
     LIBS += -L../../agrolib/interpolation/debug -linterpolation
@@ -66,7 +64,6 @@ CONFIG(debug, debug|release) {
     LIBS += -L../../mapGraphics/release -lMapGraphics
     LIBS += -L../../agrolib/project/release -lproject
     LIBS += -L../../agrolib/proxyWidget/release -lproxyWidget
-    LIBS += -L../../agrolib/inOutDataXML/release -linOutDataXML
     LIBS += -L../../agrolib/meteoWidget/release -lmeteoWidget
     LIBS += -L../../agrolib/commonDialogs/release -lcommonDialogs
     LIBS += -L../../agrolib/dbMeteoGrid/release -ldbMeteoGrid
@@ -78,7 +75,6 @@ CONFIG(debug, debug|release) {
     LIBS += -L../../agrolib/soil/release -lsoil
     LIBS += -L../../agrolib/utilities/release -lutilities
     LIBS += -L../../agrolib/waterTable/release -lwaterTable
-    LIBS += -L../../agrolib/weatherGenerator/release -lweatherGenerator
     LIBS += -L../../agrolib/snow/release -lsnow
     LIBS += -L../../agrolib/solarRadiation/release -lsolarRadiation
     LIBS += -L../../agrolib/interpolation/release -linterpolation

@@ -24,7 +24,7 @@ INCLUDEPATH +=  ../../mapGraphics \
                 ../../agrolib/utilities ../../agrolib/dbMeteoPoints ../../agrolib/dbMeteoGrid \
                 ../../agrolib/proxyWidget ../../agrolib/waterTable \
                 ../../agrolib/commonDialogs ../../agrolib/project \
-                ../../agrolib/graphics ../../agrolib/commonChartElements ../../agrolib/meteoWidget ../../mapGraphics  \
+                ../../agrolib/graphics ../../agrolib/commonChartElements ../../agrolib/meteoWidget  \
                 ../CRITERIA3D/shared
 
 CONFIG += debug_and_release

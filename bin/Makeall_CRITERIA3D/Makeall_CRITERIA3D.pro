@@ -5,10 +5,8 @@ SUBDIRS =       ../../agrolib/soilFluxes3D  \
                 ../../agrolib/gis ../../agrolib/meteo \
                 ../../agrolib/utilities ../../agrolib/soil ../../agrolib/crop \
                 ../../agrolib/interpolation ../../agrolib/solarRadiation  ../../agrolib/snow \
-                ../../agrolib/waterTable ../../agrolib/weatherGenerator \
-                ../../agrolib/dbMeteoPoints ../../agrolib/outputPoints \
-                ../../agrolib/dbMeteoGrid  ../../agrolib/inOutDataXML \
-                ../../agrolib/proxyWidget ../../agrolib/project  \
+                ../../agrolib/waterTable ../../agrolib/dbMeteoPoints ../../agrolib/outputPoints \
+                ../../agrolib/dbMeteoGrid  ../../agrolib/proxyWidget ../../agrolib/project  \
                 ../../agrolib/meteoWidget ../../agrolib/soilWidget \
                 ../../agrolib/commonDialogs ../../agrolib/commonChartElements ../../agrolib/graphics \
                 ../CRITERIA3D
