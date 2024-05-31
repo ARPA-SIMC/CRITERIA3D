@@ -32,50 +32,6 @@ QMap<QDate, int> WaterTable::getObsDepths()
     return well.getObsDepths();
 }
 
-QString WaterTable::getError() const
-{
-    return error;
-}
-
-float WaterTable::getAlpha() const
-{
-    return alpha;
-}
-
-float WaterTable::getH0() const
-{
-    return h0;
-}
-
-int WaterTable::getNrDaysPeriod() const
-{
-    return nrDaysPeriod;
-}
-
-float WaterTable::getR2() const
-{
-    return R2;
-}
-
-float WaterTable::getRMSE() const
-{
-    return RMSE;
-}
-
-float WaterTable::getNASH() const
-{
-    return NASH;
-}
-
-float WaterTable::getEF() const
-{
-    return EF;
-}
-
-int WaterTable::getNrObsData() const
-{
-    return nrObsData;
-}
 
 std::vector<QDate> WaterTable::getMyDates() const
 {
@@ -303,13 +259,11 @@ bool WaterTable::computeCWBCorrelation(int maxNrDays)
 }
 
 // Climatic WaterBalance (CWB) on a nrDaysPeriod
-float WaterTable::computeCWB(QDate myDate, int nrDays)
+double WaterTable::computeCWB(QDate myDate, int nrDays)
 {
-    float sumCWB = 0;
+    double sumCWB = 0;
     int nrValidDays = 0;
     QDate actualDate;
-    float currentCWB;
-    float weight;
     for (int shift = 1; shift<=nrDays; shift++)
     {
         actualDate = myDate.addDays(-shift);
@@ -320,9 +274,9 @@ float WaterTable::computeCWB(QDate myDate, int nrDays)
             float prec = precValues[index];
             if ( etp != NODATA &&  prec != NODATA)
             {
-                currentCWB = prec - etp;
-                weight = 1 - (float)shift/nrDays;
-                sumCWB = sumCWB + currentCWB * weight;
+                double currentCWB = double(prec - etp);
+                double weight = 1 - (double)shift/nrDays;
+                sumCWB += currentCWB * weight;
                 nrValidDays = nrValidDays + 1;
             }
         }
@@ -333,13 +287,12 @@ float WaterTable::computeCWB(QDate myDate, int nrDays)
         error = "Few Data";
         return NODATA;
     }
+
     // Climate
-    float climateCWB = avgDailyCWB * nrDays * 0.5;
+    double climateCWB = avgDailyCWB * nrDays * 0.5;
 
     // conversion: from [mm] to [cm]
-    float computeCWB = (sumCWB - climateCWB) * 0.1;
-
-    return computeCWB;
+    return (sumCWB - climateCWB) * 0.1;
 }
 
 
@@ -528,18 +481,20 @@ bool WaterTable::getWaterTableInterpolation(QDate myDate, float* myValue, float*
     int i = keys.indexOf(myDate);
     if (i != -1) // exact data found
     {
-        if (i>0)
+        if (i > 0)
         {
             indexPrev = i - 1;
-            previousDate = keys[indexPrev];
-            previosValue = myDepths[previousDate];
+            indexNext = i;
         }
         if (i < keys.size()-1)
         {
+            indexPrev = i;
             indexNext = i + 1;
-            nextDate = keys[indexNext];
-            nextValue = myDepths[nextDate];
         }
+        previousDate = keys[indexPrev];
+        previosValue = myDepths[previousDate];
+        nextDate = keys[indexNext];
+        nextValue = myDepths[nextDate];
     }
     else
     {
@@ -599,22 +554,23 @@ bool WaterTable::getWaterTableInterpolation(QDate myDate, float* myValue, float*
             }
         }
     }
+
     if (previousDz != NODATA && nextDz != NODATA)
     {
         dT = previousDate.daysTo(nextDate);
-        *myDelta = previousDz * (1 - (diffWithPrev / dT)) + nextDz * (1 - (diffWithNext / dT));
+        *myDelta = previousDz * (1.0 - (float(diffWithPrev) / float(dT))) + nextDz * (1.0 - (float(diffWithNext) / float(dT)));
         *myDeltaDays = std::min(diffWithPrev, diffWithNext);
     }
     else if ( previousDz!= NODATA)
     {
         dT = diffWithPrev;
-        *myDelta = previousDz * std::max((1 - (dT / WATERTABLE_MAXDELTADAYS)), 0);
+        *myDelta = previousDz * std::max((1.f - (float(dT) / float(WATERTABLE_MAXDELTADAYS))), 0.f);
         *myDeltaDays = dT;
     }
     else if ( nextDz!= NODATA)
     {
         dT = diffWithNext;
-        *myDelta = nextDz * std::max((1 - (dT / WATERTABLE_MAXDELTADAYS)), 0);
+        *myDelta = nextDz * std::max((1.f - (float(dT) / float(WATERTABLE_MAXDELTADAYS))), 0.f);
         *myDeltaDays = dT;
     }
     else
