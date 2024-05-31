@@ -191,7 +191,7 @@ void Crit3DSynchronicityWidget::addStationGraph()
 
             if ((float)myX.size() / days * 100.0 > minPerc)
             {
-                statistics::linearRegression(myX, myY, myX.size(), false, &y_intercept, &trend, &r2);
+                statistics::linearRegression(myX, myY, int(myX.size()), false, &y_intercept, &trend, &r2);
             }
             else
             {
