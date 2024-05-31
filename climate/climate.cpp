@@ -3826,7 +3826,7 @@ bool parseXMLElaboration(Crit3DElabList *listXMLElab, Crit3DAnomalyList *listXML
                     meteoVariable var = getKeyMeteoVarMeteoMap(MapMonthlyMeteoVarToString, variable.toStdString());
                     if (var != noMeteoVar)
                     {
-                        listXMLDrought->updateVariable(var, listXMLDrought->listVariable().size() - 1);   //change var
+                        listXMLDrought->updateVariable(var, int(listXMLDrought->listVariable().size()) - 1);   //change var
                     }
                 }
                 if (myTag == "EXPORT")
