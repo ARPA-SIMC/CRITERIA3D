@@ -1,6 +1,7 @@
 #include "waterTable.h"
 #include "commonConstants.h"
-#include "weatherGenerator.h"
+#include "furtherMathFunctions.h"
+
 
 WaterTable::WaterTable(std::vector<float> &inputTMin, std::vector<float> &inputTMax, std::vector<float> &inputPrec, QDate firstMeteoDate, QDate lastMeteoDate,
                        Crit3DMeteoSettings meteoSettings, gis::Crit3DGisSettings gisSettings)
@@ -180,7 +181,7 @@ bool WaterTable::computeWTClimate()
         WTClimateMonthly[myMonthIndex] = H_sum[myMonthIndex] / H_num[myMonthIndex];
     }
     isClimateReady = true;
-    cubicSplineYearInterpolate(WTClimateMonthly, WTClimateDaily);
+    interpolation::cubicSplineYearInterpolate(WTClimateMonthly, WTClimateDaily);
     return true;
 }
 
@@ -482,7 +483,9 @@ bool WaterTable::computeWaterTableClimate(QDate currentDate, int yearFrom, int y
     }
 }
 
-// restituisce il dato interpolato considerando i dati osservati
+
+// restituisce il dato interpolato di profondità considerando i dati osservati
+// nella stessa unità di misura degli osservati (default: cm)
 bool WaterTable::getWaterTableInterpolation(QDate myDate, float* myValue, float* myDelta, int* myDeltaDays)
 {
     *myValue = NODATA;
