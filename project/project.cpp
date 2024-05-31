@@ -706,61 +706,7 @@ bool Project::loadParameters(QString parametersFileName)
                 myProxy->setFittingParametersRange(StringListToDouble(myList));
             }
 
-            /*if (getProxyPragaName(name_.toStdString()) == proxyHeight)
-            {
-                if (parameters->contains("fitting_function"))
-                {
-                    std::string elevationFuction = parameters->value("fitting_function").toString().toStdString();
-                    if (fittingFunctionNames.find(elevationFuction) == fittingFunctionNames.end())
-                    {
-                        errorString = "Unknown function for elevation. Choose between: piecewiseTwo, piecewiseThreeSlope, piecewiseThreeFree.";
-                        return false;
-                    }
-                    else
-                        interpolationSettings.setChosenElevationFunction(fittingFunctionNames.at(elevationFuction));
 
-                    if (parameters->contains("fitting_parameters"))
-                    {
-                        unsigned int nrParameters;
-
-                        if (interpolationSettings.getChosenElevationFunction()== piecewiseTwo)
-                            nrParameters = 4;
-                        else if (interpolationSettings.getChosenElevationFunction()== piecewiseThreeSlope)
-                            nrParameters = 5;
-                        else if (interpolationSettings.getChosenElevationFunction()== piecewiseThreeFree)
-                            nrParameters = 6;
-
-                        myList = parameters->value("fitting_parameters").toStringList();
-                        if (myList.size() != nrParameters*2)
-                        {
-                            errorString = "Wrong number of fitting parameters for proxy: " + name_;
-                            return  false;
-                        }
-
-                        myProxy->setFittingParametersRange(StringListToDouble(myList));
-                    }
-                }
-                else
-                {
-                    interpolationSettings.setChosenElevationFunction(piecewiseTwo);
-                }
-            }
-            else
-            {
-                if(parameters->contains("fitting_parameters"))
-                {
-                    unsigned int nrParameters = 1;
-
-                    myList = parameters->value("fitting_parameters").toStringList();
-                    if (myList.size() != nrParameters*2)
-                    {
-                        errorString = "Wrong number of fitting parameters for proxy: " + name_;
-                        return  false;
-                    }
-
-                    myProxy->setFittingParametersRange(StringListToDouble(myList));
-                }
-            }*/
 
             if (! parameters->contains("active"))
             {
