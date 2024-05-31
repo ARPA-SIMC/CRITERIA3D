@@ -124,11 +124,6 @@
 
     void clearInputData(TinputObsData &myData);
 
-    bool makeScenario(QString outputFileName, char separator, XMLScenarioAnomaly* XMLAnomaly,
-                      TweatherGenClimate& wGenClimate,
-                      int nrRepetitions, int myPredictionYear, int* wgDoy1, int* wgDoy2,
-                      float rainfallThreshold);
-
 
 #endif // WEATHERGENERATOR_H
 
