@@ -483,7 +483,9 @@ bool WaterTable::computeWaterTableClimate(QDate currentDate, int yearFrom, int y
     }
 }
 
-// restituisce il dato interpolato considerando i dati osservati
+
+// restituisce il dato interpolato di profondità considerando i dati osservati
+// nella stessa unità di misura degli osservati (default: cm)
 bool WaterTable::getWaterTableInterpolation(QDate myDate, float* myValue, float* myDelta, int* myDeltaDays)
 {
     *myValue = NODATA;

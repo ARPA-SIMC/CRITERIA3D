@@ -72,9 +72,10 @@
     struct ToutputDailyMeteo
     {
         Crit3DDate date;
-        float minTemp;
-        float maxTemp;
-        float prec;
+        float minTemp;              // [C]
+        float maxTemp;              // [C]
+        float prec;                 // [mm]
+        float waterTableDepth;      // [m]
     };
 
     void initializeDailyDataBasic(ToutputDailyMeteo* dailyData, Crit3DDate myDate);
@@ -110,10 +111,10 @@
                                   TweatherGenClimate& wGenNoAnomaly, TweatherGenClimate &wGen);
 
     bool makeSeasonalForecast(QString outputFileName, char separator, XMLSeasonalAnomaly* XMLAnomaly,
-                            TweatherGenClimate& wGenClimate, TinputObsData* lastYearDailyObsData,
+                            TweatherGenClimate& wGenClimate, TinputObsData* dailyObsData,
                             int numRepetitions, int myPredictionYear, int wgDoy1, int wgDoy2, float rainfallThreshold);
 
-    bool computeSeasonalPredictions(TinputObsData *lastYearDailyObsData, TweatherGenClimate& wgClimate,
+    bool computeSeasonalPredictions(TinputObsData *dailyObsData, TweatherGenClimate& wgClimate,
                                     int predictionYear, int firstYear, int nrRepetitions,
                                     int wgDoy1, int wgDoy2, float minPrec, bool isLastMember,
                                     std::vector<ToutputDailyMeteo> &outputDailyData, int *outputDataLength);
