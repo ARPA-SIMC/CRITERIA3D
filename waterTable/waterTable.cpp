@@ -1,6 +1,7 @@
 #include "waterTable.h"
 #include "commonConstants.h"
 #include "furtherMathFunctions.h"
+#include <math.h>
 
 
 WaterTable::WaterTable(std::vector<float> &inputTMin, std::vector<float> &inputTMax, std::vector<float> &inputPrec, QDate firstMeteoDate, QDate lastMeteoDate,
