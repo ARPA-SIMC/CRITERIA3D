@@ -852,10 +852,17 @@ bool makeSeasonalForecastWaterTable(QString outputFileName, char separator, XMLS
         lastYear = firstYear + signed(nrYears);
 
     seasonFirstDate = getDateFromDoy (myPredictionYear, wgDoy1);
+    int daysWg;
     if (wgDoy1 < wgDoy2)
+    {
         seasonLastDate = getDateFromDoy (myPredictionYear, wgDoy2);
+        daysWg = wgDoy2 - wgDoy1 + 1;
+    }
     else
+    {
         seasonLastDate = getDateFromDoy (myPredictionYear+1, wgDoy2);
+        daysWg = wgDoy1 - wgDoy2 + 1;
+    }
 
     myFirstDatePrediction = seasonFirstDate.addDays(-nrDaysBeforeWgDoy1);
 
@@ -877,6 +884,34 @@ bool makeSeasonalForecastWaterTable(QString outputFileName, char separator, XMLS
     // copy the last 9 months before wgDoy1
     float lastTmax = NODATA;
     float lastTmin = NODATA;
+
+    // copy values to waterTable
+    std::vector<float> inputTMin;
+    std::vector<float> inputTMax;
+    std::vector<float> inputPrec;
+    obsIndex = difference(dailyObsData->inputFirstDate, myFirstDatePrediction);
+    int totDays = nrDaysBeforeWgDoy1 + daysWg;
+    for (int i = 0; i < totDays; i++)
+    {
+        if (i < nrDaysBeforeWgDoy1)
+        {
+        inputTMin.push_back(dailyObsData->inputTMin[obsIndex+i]);
+        inputTMax.push_back(dailyObsData->inputTMax[obsIndex+i]);
+        inputPrec.push_back(dailyObsData->inputPrecip[obsIndex+i]);
+        }
+        else
+        {
+            // in base a wgdoy1 e wgdoy2 aggiungo giorni (vuoti) a watertable
+            inputTMin.push_back(NODATA);
+            inputTMax.push_back(NODATA);
+            inputPrec.push_back(NODATA);
+        }
+    }
+    waterTable.setInputTMin(inputTMin);
+    waterTable.setInputTMax(inputTMax);
+    waterTable.setInputPrec(inputPrec);
+    // TO DO
+
     Crit3DDate myDate = myFirstDatePrediction;
     for (int tmp = 0; tmp < nrDaysBeforeWgDoy1; tmp++)
     {
@@ -886,7 +921,6 @@ bool makeSeasonalForecastWaterTable(QString outputFileName, char separator, XMLS
         dailyPredictions[tmp].maxTemp = dailyObsData->inputTMax[obsIndex];
         dailyPredictions[tmp].prec = dailyObsData->inputPrecip[obsIndex];
         //dailyPredictions[tmp].waterTableDepth = waterTable.getWaterTableInterpolation()
-        // in base a wgdoy1 e wgdoy2 aggiungi giorni (vuoti) a watertable
 
         if ((int(dailyPredictions[tmp].maxTemp) == int(NODATA))
             || (int(dailyPredictions[tmp].minTemp) == int(NODATA))
