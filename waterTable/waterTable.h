@@ -54,6 +54,13 @@ class WaterTable
         std::vector<float> getMyInterpolateSeries() const;
         QMap<QDate, int> getObsDepths();
 
+        void cleanAllMeteoVector();
+        void setInputTMin(const std::vector<float> &newInputTMin);
+
+        void setInputTMax(const std::vector<float> &newInputTMax);
+
+        void setInputPrec(const std::vector<float> &newInputPrec);
+
     private:
         Crit3DMeteoSettings meteoSettings;
         gis::Crit3DGisSettings gisSettings;

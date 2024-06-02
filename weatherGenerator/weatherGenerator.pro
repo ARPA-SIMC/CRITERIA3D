@@ -28,7 +28,7 @@ win32:{
 }
 
 
-INCLUDEPATH += ../crit3dDate ../mathFunctions
+INCLUDEPATH += ../crit3dDate ../mathFunctions ../meteo ../gis ../waterTable
 
 SOURCES += \
     timeUtility.cpp \

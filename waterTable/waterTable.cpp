@@ -32,6 +32,31 @@ QMap<QDate, int> WaterTable::getObsDepths()
     return well.getObsDepths();
 }
 
+void WaterTable::setInputTMin(const std::vector<float> &newInputTMin)
+{
+    inputTMin = newInputTMin;
+}
+
+void WaterTable::setInputTMax(const std::vector<float> &newInputTMax)
+{
+    inputTMax = newInputTMax;
+}
+
+void WaterTable::setInputPrec(const std::vector<float> &newInputPrec)
+{
+    inputPrec = newInputPrec;
+}
+
+void WaterTable::cleanAllMeteoVector()
+{
+    inputTMin.clear();
+    inputTMax.clear();
+    inputPrec.clear();;
+    etpValues.clear();;
+    precValues.clear();;
+}
+
+
 
 std::vector<QDate> WaterTable::getMyDates() const
 {
