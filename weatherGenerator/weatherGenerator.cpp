@@ -994,7 +994,7 @@ bool makeSeasonalForecastWaterTable(QString outputFileName, char separator, XMLS
             return false;
         }
 
-        for (int tmp = wgDoy1; tmp < wgDoy2; tmp++)
+        for (int tmp = 0; tmp <= daysWg; tmp++)
         {
             inputTMin[nrDaysBeforeWgDoy1 + tmp] = dailyPredictions[outputDataLength+tmp].minTemp;
             inputTMax[nrDaysBeforeWgDoy1 + tmp] = dailyPredictions[outputDataLength+tmp].maxTemp;
@@ -1009,7 +1009,7 @@ bool makeSeasonalForecastWaterTable(QString outputFileName, char separator, XMLS
         float myDepth;
         float myDelta;
         int myDeltaDays;
-        for (int tmp = wgDoy1; tmp < wgDoy2; tmp++)
+        for (int tmp = 0; tmp <= daysWg; tmp++)
         {
             Crit3DDate myDate = dailyPredictions[outputDataLength+tmp].date;
             if (waterTable.getWaterTableInterpolation(QDate(myDate.year, myDate.month, myDate.day), &myDepth, &myDelta, &myDeltaDays))
