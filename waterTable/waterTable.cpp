@@ -27,7 +27,7 @@ QDate WaterTable::getLastDateWell()
     return lastDateWell;
 }
 
-QMap<QDate, int> WaterTable::getObsDepths()
+QMap<QDate, float> WaterTable::getObsDepths()
 {
     return well.getObsDepths();
 }
@@ -140,8 +140,8 @@ bool WaterTable::computeWTClimate()
         H_num.push_back(0);
     }
 
-    QMap<QDate, int> myDepths = well.getObsDepths();
-    QMapIterator<QDate, int> it(myDepths);
+    QMap<QDate, float> myDepths = well.getObsDepths();
+    QMapIterator<QDate, float> it(myDepths);
     while (it.hasNext())
     {
         it.next();
@@ -231,7 +231,7 @@ bool WaterTable::computeCWBCorrelation(int maxNrDays)
     float bestH0;
     float bestAlfaCoeff;
     int bestNrDays = NODATA;
-    QMap<QDate, int> myDepths = well.getObsDepths();
+    QMap<QDate, float> myDepths = well.getObsDepths();
     std::vector<float> myCWBSum;
     std::vector<float> myObsWT;
     float a;
@@ -243,7 +243,7 @@ bool WaterTable::computeCWBCorrelation(int maxNrDays)
     {
         myCWBSum.clear();
         myObsWT.clear();
-        QMapIterator<QDate, int> it(myDepths);
+        QMapIterator<QDate, float> it(myDepths);
         while (it.hasNext())
         {
             it.next();
@@ -324,8 +324,8 @@ double WaterTable::computeCWB(QDate myDate, int nrDays)
 // function to compute several statistical indices for watertable depth
 bool WaterTable::computeWaterTableIndices()
 {
-    QMap<QDate, int> myDepths = well.getObsDepths();
-    QMapIterator<QDate, int> it(myDepths);
+    QMap<QDate, float> myDepths = well.getObsDepths();
+    QMapIterator<QDate, float> it(myDepths);
     std::vector<float> myObs;
     std::vector<float> myComputed;
     std::vector<float> myClimate;
@@ -501,7 +501,7 @@ bool WaterTable::getWaterTableInterpolation(QDate myDate, float* myValue, float*
     int dT;
 
     // previuos and next observation
-    QMap<QDate, int> myDepths = well.getObsDepths();
+    QMap<QDate, float> myDepths = well.getObsDepths();
     QList<QDate> keys = myDepths.keys();
     int i = keys.indexOf(myDate);
     if (i != -1) // exact data found
@@ -612,8 +612,8 @@ bool WaterTable::getWaterTableInterpolation(QDate myDate, float* myValue, float*
 
 void WaterTable::computeWaterTableSeries()
 {
-    QMap<QDate, int> myDepths = well.getObsDepths();
-    QMapIterator<QDate, int> it(myDepths);
+    QMap<QDate, float> myDepths = well.getObsDepths();
+    QMapIterator<QDate, float> it(myDepths);
 
     myDates.clear();
     myHindcastSeries.clear();

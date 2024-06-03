@@ -52,7 +52,7 @@ class WaterTable
         std::vector<QDate> getMyDates() const;
         std::vector<float> getMyHindcastSeries() const;
         std::vector<float> getMyInterpolateSeries() const;
-        QMap<QDate, int> getObsDepths();
+        QMap<QDate, float> getObsDepths();
 
         void cleanAllMeteoVector();
         void setInputTMin(const std::vector<float> &newInputTMin);

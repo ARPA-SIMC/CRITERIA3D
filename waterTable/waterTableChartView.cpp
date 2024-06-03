@@ -32,9 +32,10 @@ WaterTableChartView::WaterTableChartView(QWidget *parent) :
 }
 
 
-void WaterTableChartView::draw(std::vector<QDate> myDates, std::vector<float> myHindcastSeries, std::vector<float> myInterpolateSeries, QMap<QDate, int> obsDepths)
+void WaterTableChartView::draw(std::vector<QDate> &myDates, std::vector<float> &myHindcastSeries, std::vector<float> &myInterpolateSeries,
+                               QMap<QDate, float> &obsDepths, float maximumObservedDepth)
 {
-    axisY->setMax(300);  // TODO pass value
+    axisY->setMax(maximumObservedDepth);  // unit of observed watertable data, usually [cm]
     axisY->setMin(0);
     axisY->setLabelFormat("%d");
     axisY->setTickCount(16);

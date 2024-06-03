@@ -3,6 +3,7 @@
 #include <QFile>
 #include <QTextStream>
 #include <QRegularExpression>
+#include "well.h"
 
 
 bool loadWaterTableLocationCsv(const QString &csvFileName, std::vector<Well> &wellList, QString &errorStr, int &wrongLines)
@@ -173,8 +174,9 @@ bool loadWaterTableDepthCsv(const QString &csvFileName, std::vector<Well> &wellL
                 wrongLines++;
                 continue;
             }
+
             items[posDepth] = items[posDepth].simplified();
-            int value = items[posDepth].remove(QChar('"')).toInt(&ok);
+            float value = items[posDepth].remove(QChar('"')).toFloat(&ok);
             if (!ok || value == NODATA || value < 0 || value > waterTableMaximumDepth)
             {
                 errorList.append(line);

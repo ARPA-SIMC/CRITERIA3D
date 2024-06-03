@@ -300,10 +300,10 @@
         void setComputeOnlyPoints(bool value);
         bool getComputeOnlyPoints();
 
-        bool waterTableImportLocation(QString csvFileName);
-        bool waterTableImportDepths(QString csvDepths);
+        bool waterTableImportLocation(const QString &csvFileName);
+        bool waterTableImportDepths(const QString &csvDepthsFileName);
         bool computeSingleWell(int indexWell);
-        void showSingleWell(WaterTable waterTable, QString idWell);
+        void showSingleWell(WaterTable &waterTable, const QString &idWell);
         bool assignNearestMeteoPoint(bool isMeteoGridLoaded, double wellUtmX, double wellUtmY, QDate firstMeteoDate, Crit3DMeteoPoint* linkedMeteoPoint);
         bool assignWTMeteoData(Crit3DMeteoPoint* linkedMeteoPoint, QDate firstMeteoDate);
 
