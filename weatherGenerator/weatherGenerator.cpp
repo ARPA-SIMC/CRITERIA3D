@@ -895,9 +895,9 @@ bool makeSeasonalForecastWaterTable(QString outputFileName, char separator, XMLS
     {
         if (i < nrDaysBeforeWgDoy1)
         {
-        inputTMin.push_back(dailyObsData->inputTMin[obsIndex+i]);
-        inputTMax.push_back(dailyObsData->inputTMax[obsIndex+i]);
-        inputPrec.push_back(dailyObsData->inputPrecip[obsIndex+i]);
+            inputTMin.push_back(dailyObsData->inputTMin[obsIndex+i]);
+            inputTMax.push_back(dailyObsData->inputTMax[obsIndex+i]);
+            inputPrec.push_back(dailyObsData->inputPrecip[obsIndex+i]);
         }
         else
         {
@@ -910,7 +910,10 @@ bool makeSeasonalForecastWaterTable(QString outputFileName, char separator, XMLS
     waterTable.setInputTMin(inputTMin);
     waterTable.setInputTMax(inputTMax);
     waterTable.setInputPrec(inputPrec);
-    // TO DO
+    waterTable.computeETP_allSeries();
+    float myDepth;
+    float myDelta;
+    int myDeltaDays;
 
     Crit3DDate myDate = myFirstDatePrediction;
     for (int tmp = 0; tmp < nrDaysBeforeWgDoy1; tmp++)
@@ -920,7 +923,10 @@ bool makeSeasonalForecastWaterTable(QString outputFileName, char separator, XMLS
         dailyPredictions[tmp].minTemp = dailyObsData->inputTMin[obsIndex];
         dailyPredictions[tmp].maxTemp = dailyObsData->inputTMax[obsIndex];
         dailyPredictions[tmp].prec = dailyObsData->inputPrecip[obsIndex];
-        //dailyPredictions[tmp].waterTableDepth = waterTable.getWaterTableInterpolation()
+        if (waterTable.getWaterTableInterpolation(QDate(myDate.year, myDate.month, myDate.day), &myDepth, &myDelta, &myDeltaDays))
+        {
+            dailyPredictions[tmp].waterTableDepth = myDepth;
+        }
 
         if ((int(dailyPredictions[tmp].maxTemp) == int(NODATA))
             || (int(dailyPredictions[tmp].minTemp) == int(NODATA))
@@ -988,13 +994,29 @@ bool makeSeasonalForecastWaterTable(QString outputFileName, char separator, XMLS
             return false;
         }
 
-        /* TODO
-        for (int tmp = wgDoy1; tmp < wgDoy2; tmp++)
+        for (int tmp = 0; tmp <= daysWg; tmp++)
         {
-            // passi a watertable i valori tmin tmax prec da wgdoy1 a wgdoy2
-            // calcola etp
-            // dailyPredictions[tmp].waterTableDepth = waterTable.getWaterTableInterpolation()
-        }*/
+            inputTMin[nrDaysBeforeWgDoy1 + tmp] = dailyPredictions[outputDataLength+tmp].minTemp;
+            inputTMax[nrDaysBeforeWgDoy1 + tmp] = dailyPredictions[outputDataLength+tmp].maxTemp;
+            inputPrec[nrDaysBeforeWgDoy1 + tmp] = dailyPredictions[outputDataLength+tmp].prec;
+        }
+        // calcola etp
+        waterTable.cleanAllMeteoVector();
+        waterTable.setInputTMin(inputTMin);
+        waterTable.setInputTMax(inputTMax);
+        waterTable.setInputPrec(inputPrec);
+        waterTable.computeETP_allSeries();
+        float myDepth;
+        float myDelta;
+        int myDeltaDays;
+        for (int tmp = 0; tmp <= daysWg; tmp++)
+        {
+            Crit3DDate myDate = dailyPredictions[outputDataLength+tmp].date;
+            if (waterTable.getWaterTableInterpolation(QDate(myDate.year, myDate.month, myDate.day), &myDepth, &myDelta, &myDeltaDays))
+            {
+                dailyPredictions[outputDataLength+tmp].waterTableDepth = myDepth;
+            }
+        }
 
         // next model
         myYear = myYear + nrRepetitions;

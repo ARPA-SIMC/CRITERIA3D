@@ -204,7 +204,7 @@ bool writeMeteoDataCsv(const QString &fileName, char separator, std::vector<Tout
             QString prec = QString::number(double(dailyData[i].prec), 'f', 1);
             QString depth = QString::number(double(dailyData[i].waterTableDepth), 'f', 1);
 
-            stream << myDate << separator << tMin << separator << tMax << separator << prec << depth << "\n";
+            stream << myDate << separator << tMin << separator << tMax << separator << prec << separator << depth << "\n";
         }
     }
     else
