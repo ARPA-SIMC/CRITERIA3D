@@ -687,7 +687,7 @@ bool Project::loadParameters(QString parametersFileName)
             if (parameters->contains("stddev_threshold"))
                 myProxy->setStdDevThreshold(parameters->value("stddev_threshold").toFloat());
 
-            if (parameters->contains("fitting_parameters"))
+            /*if (parameters->contains("fitting_parameters"))
             {
                 unsigned int nrParameters;
 
@@ -704,9 +704,63 @@ bool Project::loadParameters(QString parametersFileName)
                 }
 
                 myProxy->setFittingParametersRange(StringListToDouble(myList));
+            }*/
+
+            if (getProxyPragaName(name_.toStdString()) == proxyHeight)
+            {
+                if (parameters->contains("fitting_function"))
+                {
+                    std::string elevationFuction = parameters->value("fitting_function").toString().toStdString();
+                    if (fittingFunctionNames.find(elevationFuction) == fittingFunctionNames.end())
+                    {
+                        errorString = "Unknown function for elevation. Choose between: piecewise_two, triple_piecewise, free_triple_piecewise.";
+                        return false;
+                    }
+                    else
+                        interpolationSettings.setChosenElevationFunction(fittingFunctionNames.at(elevationFuction));
+
+                    if (parameters->contains("fitting_parameters"))
+                    {
+                        unsigned int nrParameters;
+
+                        if (interpolationSettings.getChosenElevationFunction()== piecewiseTwo)
+                            nrParameters = 4;
+                        else if (interpolationSettings.getChosenElevationFunction()== piecewiseThree)
+                            nrParameters = 5;
+                        else if (interpolationSettings.getChosenElevationFunction()== piecewiseThreeFree)
+                            nrParameters = 6;
+
+                        myList = parameters->value("fitting_parameters").toStringList();
+                        if (myList.size() != nrParameters*2)
+                        {
+                            errorString = "Wrong number of fitting parameters for proxy: " + name_;
+                            return  false;
+                        }
+
+                        myProxy->setFittingParametersRange(StringListToDouble(myList));
+                    }
+                }
+                else
+                {
+                    interpolationSettings.setChosenElevationFunction(piecewiseTwo);
+                }
             }
+            else
+            {
+                if(parameters->contains("fitting_parameters"))
+                {
+                    unsigned int nrParameters = 2;
 
+                    myList = parameters->value("fitting_parameters").toStringList();
+                    if (myList.size() != nrParameters*2)
+                    {
+                        errorString = "Wrong number of fitting parameters for proxy: " + name_;
+                        return  false;
+                    }
 
+                    myProxy->setFittingParametersRange(StringListToDouble(myList));
+                }
+            }
 
             if (! parameters->contains("active"))
             {
@@ -2635,11 +2689,12 @@ bool Project::interpolationGrid(meteoVariable myVar, const Crit3DTime& myTime)
     std::vector <double> proxyValues;
     proxyValues.resize(unsigned(interpolationSettings.getProxyNr()));
 
-    if(!setAllFittingRanges(myCombination, &interpolationSettings))
-    {
-        errorString = "Error in function preInterpolation: \n couldn't set fitting ranges.";
-        return false;
-    }
+    if (interpolationSettings.getUseLocalDetrending())
+        if(!setAllFittingRanges(myCombination, &interpolationSettings))
+        {
+            errorString = "Error in function preInterpolation: \n couldn't set fitting ranges.";
+            return false;
+        }
 
     float interpolatedValue = NODATA;
     unsigned int i, proxyIndex;
