@@ -34,7 +34,7 @@ WaterTableChartView::WaterTableChartView(QWidget *parent) :
 
 void WaterTableChartView::draw(std::vector<QDate> myDates, std::vector<float> myHindcastSeries, std::vector<float> myInterpolateSeries, QMap<QDate, int> obsDepths)
 {
-    axisY->setMax(300);
+    axisY->setMax(300);  // TODO pass value
     axisY->setMin(0);
     axisY->setLabelFormat("%d");
     axisY->setTickCount(16);
@@ -60,15 +60,19 @@ void WaterTableChartView::draw(std::vector<QDate> myDates, std::vector<float> my
             int myDepth = obsDepths[myDates[day]];
             obsDepthSeries->append(currentDateTime.toMSecsSinceEpoch(), myDepth);
         }
-        else
-        {
-            obsDepthSeries->append(currentDateTime.toMSecsSinceEpoch(), -1);
-        }
     }
 
     chart()->addSeries(obsDepthSeries);
+    obsDepthSeries->attachAxis(axisX);
+    obsDepthSeries->attachAxis(axisY);
+
     chart()->addSeries(hindcastSeries);
+    hindcastSeries->attachAxis(axisX);
+    hindcastSeries->attachAxis(axisY);
+
     chart()->addSeries(interpolationSeries);
+    interpolationSeries->attachAxis(axisX);
+    interpolationSeries->attachAxis(axisY);
 
     connect(obsDepthSeries, &QScatterSeries::hovered, this, &WaterTableChartView::tooltipObsDepthSeries);
     connect(hindcastSeries, &QLineSeries::hovered, this, &WaterTableChartView::tooltipLineSeries);

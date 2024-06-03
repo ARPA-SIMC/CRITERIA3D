@@ -186,12 +186,22 @@ bool parseXMLSeasonal(const QString &xmlFileName, XMLSeasonalAnomaly &XMLAnomaly
                 }
                 else if ((myTag == "LAT") || (myTag == "LATITUDE"))
                 {
-                    XMLAnomaly.point.latitude = child.toElement().text().toFloat();
+                    bool ok;
+                    XMLAnomaly.point.latitude = child.toElement().text().toFloat(&ok);
+                    if (ok == false)
+                    {
+                        XMLAnomaly.point.latitude = NODATA;
+                    }
                     nrTokens++;
                 }
                 else if ((myTag == "LON") || (myTag == "LONGITUDE"))
                 {
-                    XMLAnomaly.point.longitude = child.toElement().text().toFloat();
+                    bool ok;
+                    XMLAnomaly.point.longitude = child.toElement().text().toFloat(&ok);
+                    if (ok == false)
+                    {
+                        XMLAnomaly.point.longitude = NODATA;
+                    }
                     nrTokens++;
                 }
                 else if (myTag == "INFO")
