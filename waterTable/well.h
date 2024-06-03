@@ -26,7 +26,7 @@ public:
 
     int getObsDepthNr();
 
-    QMap<QDate, float> getObsDepths() const;
+    QMap<QDate, float> getObsDepths();
 
     int minValuesPerMonth();
 

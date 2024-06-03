@@ -47,7 +47,7 @@ int  Well::getObsDepthNr()
 }
 
 
-QMap<QDate, float> Well::getObsDepths() const
+QMap<QDate, float> Well::getObsDepths()
 {
     return depths;
 }

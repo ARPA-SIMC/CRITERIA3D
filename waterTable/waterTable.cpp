@@ -57,18 +57,17 @@ void WaterTable::cleanAllMeteoVector()
 }
 
 
-
-std::vector<QDate> WaterTable::getMyDates() const
+std::vector<QDate> WaterTable::getMyDates()
 {
     return myDates;
 }
 
-std::vector<float> WaterTable::getMyHindcastSeries() const
+std::vector<float> WaterTable::getMyHindcastSeries()
 {
     return myHindcastSeries;
 }
 
-std::vector<float> WaterTable::getMyInterpolateSeries() const
+std::vector<float> WaterTable::getMyInterpolateSeries()
 {
     return myInterpolateSeries;
 }
