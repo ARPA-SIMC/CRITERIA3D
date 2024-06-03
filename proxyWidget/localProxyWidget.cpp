@@ -534,33 +534,14 @@ void Crit3DLocalProxyWidget::modelLRClicked(int toggled)
 
                 if (interpolationSettings->getProxy(proxyPos)->getFittingFunctionName() == piecewiseThree)
                 {
-                    float lapseRateH0 = parameters[proxyPos][0];
-                    float lapseRateH1 = parameters[proxyPos][0]+parameters[proxyPos][2];
-                    float lapseRateT0 = parameters[proxyPos][1];
-                    float lapseRateT1 = parameters[proxyPos][1]+parameters[proxyPos][3];
-                    float regressionSlope = parameters[proxyPos][4];
+                    std::vector <double> xVector;
+                    for (int m = xMin; m < xMax; m += 5)
+                        xVector.push_back(m);
 
-                    if (xMin < lapseRateH0)
+                    for (int p = 0; p < xVector.size(); p++)
                     {
-                        myY = lapseRateT0 + regressionSlope * (xMin - lapseRateH0);
-                        point.setX(xMin);
-                        point.setY(myY);
-                        point_vector.append(point);
-                    }
-
-                    point.setX(lapseRateH0);
-                    point.setY(lapseRateT0);
-                    point_vector.append(point);
-
-                    point.setX(lapseRateH1);
-                    point.setY(lapseRateT1);
-                    point_vector.append(point);
-
-                    if (xMax > lapseRateH1)
-                    {
-                        myY = lapseRateT1 + regressionSlope * (xMax - lapseRateH1);
-                        point.setX(xMax);
-                        point.setY(myY);
+                        point.setX(xVector[p]);
+                        point.setY(lapseRatePiecewiseThree_withSlope(xVector[p], parameters[proxyPos]));
                         point_vector.append(point);
                     }
                 }
@@ -588,7 +569,7 @@ void Crit3DLocalProxyWidget::modelLRClicked(int toggled)
                     point.setY(myY);
                     point_vector.append(point);
                 }
-                else if (interpolationSettings->getProxy(proxyPos)->getFittingFunctionName() == piecewiseThree)
+                else if (interpolationSettings->getProxy(proxyPos)->getFittingFunctionName() == piecewiseThreeFree)
                 {
                     std::vector <double> xVector;
                     for (int m = xMin; m < xMax; m += 5)
@@ -597,7 +578,7 @@ void Crit3DLocalProxyWidget::modelLRClicked(int toggled)
                     for (int p = 0; p < xVector.size(); p++)
                     {
                         point.setX(xVector[p]);
-                        point.setY(lapseRatePiecewiseThree_withSlope(xVector[p], parameters[proxyPos]));
+                        point.setY(lapseRatePiecewiseFree(xVector[p], parameters[proxyPos]));
                         point_vector.append(point);
                     }
 
