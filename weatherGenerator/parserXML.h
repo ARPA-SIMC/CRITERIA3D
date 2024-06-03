@@ -39,7 +39,7 @@
     struct TXMLScenarioPeriod
     {
         QString type;
-        TXMLScenarioValuesList seasonalScenarios[4];
+        std::vector<TXMLScenarioValuesList> seasonalScenarios;
     };
 
     struct TXMLPoint

@@ -554,7 +554,7 @@ bool assignAnomalyPrec(float myAnomaly, int anomalyMonth1, int anomalyMonth2,
     return true;
 }
 
-bool assignXMLAnomalyScenario(XMLScenarioAnomaly* XMLAnomaly,int modelIndex, int anomalyMonth1, int anomalyMonth2, TweatherGenClimate& wGenNoAnomaly, TweatherGenClimate &wGen)
+bool assignXMLAnomalyScenario(XMLScenarioAnomaly* XMLAnomaly,int modelIndex, int* anomalyMonth1, int* anomalyMonth2, TweatherGenClimate& wGenNoAnomaly, TweatherGenClimate &wGen)
 {
     //unsigned int i = 0;
     QString myVar;
@@ -579,17 +579,17 @@ bool assignXMLAnomalyScenario(XMLScenarioAnomaly* XMLAnomaly,int modelIndex, int
                 if (int(myValue) != int(NODATA))
                 {
                     if ( (myVar == "TMIN") || (myVar == "AVGTMIN") )
-                        result = assignAnomalyNoPrec(myValue, anomalyMonth1, anomalyMonth2, wGenNoAnomaly.monthly.monthlyTmin, wGen.monthly.monthlyTmin);
+                        result = assignAnomalyNoPrec(myValue, anomalyMonth1[iSeason], anomalyMonth2[iSeason], wGenNoAnomaly.monthly.monthlyTmin, wGen.monthly.monthlyTmin);
                     else if ( (myVar == "TMAX") || (myVar == "AVGTMAX") )
-                        result = assignAnomalyNoPrec(myValue, anomalyMonth1, anomalyMonth2, wGenNoAnomaly.monthly.monthlyTmax, wGen.monthly.monthlyTmax);
+                        result = assignAnomalyNoPrec(myValue, anomalyMonth1[iSeason], anomalyMonth2[iSeason], wGenNoAnomaly.monthly.monthlyTmax, wGen.monthly.monthlyTmax);
                     else if ( (myVar == "PREC3M") || (myVar == "PREC") )
-                        result = assignAnomalyPrec(myValue, anomalyMonth1, anomalyMonth2, wGenNoAnomaly.monthly.sumPrec, wGen.monthly.sumPrec);
+                        result = assignAnomalyPrec(myValue, anomalyMonth1[iSeason], anomalyMonth2[iSeason], wGenNoAnomaly.monthly.sumPrec, wGen.monthly.sumPrec);
                     else if ( (myVar == "WETDAYSFREQUENCY") )
-                        result = assignAnomalyNoPrec(myValue, anomalyMonth1, anomalyMonth2, wGenNoAnomaly.monthly.fractionWetDays, wGen.monthly.fractionWetDays);
+                        result = assignAnomalyNoPrec(myValue, anomalyMonth1[iSeason], anomalyMonth2[iSeason], wGenNoAnomaly.monthly.fractionWetDays, wGen.monthly.fractionWetDays);
                     else if ( (myVar == "WETWETDAYSFREQUENCY") )
-                        result = assignAnomalyNoPrec(myValue, anomalyMonth1, anomalyMonth2, wGenNoAnomaly.monthly.probabilityWetWet, wGen.monthly.probabilityWetWet);
+                        result = assignAnomalyNoPrec(myValue, anomalyMonth1[iSeason], anomalyMonth2[iSeason], wGenNoAnomaly.monthly.probabilityWetWet, wGen.monthly.probabilityWetWet);
                     else if ( (myVar == "DELTATMAXDRYWET") )
-                        result = assignAnomalyNoPrec(myValue, anomalyMonth1, anomalyMonth2, wGenNoAnomaly.monthly.dw_Tmax, wGen.monthly.dw_Tmax);
+                        result = assignAnomalyNoPrec(myValue, anomalyMonth1[iSeason], anomalyMonth2[iSeason], wGenNoAnomaly.monthly.dw_Tmax, wGen.monthly.dw_Tmax);
 
                 }
 
@@ -609,10 +609,10 @@ bool assignXMLAnomalyScenario(XMLScenarioAnomaly* XMLAnomaly,int modelIndex, int
             }
         }
         // move to the next season
-        anomalyMonth1 = (anomalyMonth1 + 3)%12;
-        if (anomalyMonth1 == 0) anomalyMonth1 +=12;
-        anomalyMonth2 = (anomalyMonth2 + 3)%12;
-        if (anomalyMonth2 == 0) anomalyMonth2 +=12;
+        //anomalyMonth1 = (anomalyMonth1 + 3)%12;
+        //if (anomalyMonth1 == 0) anomalyMonth1 +=12;
+        //anomalyMonth2 = (anomalyMonth2 + 3)%12;
+        //if (anomalyMonth2 == 0) anomalyMonth2 +=12;
     }
     /* DEBUG
     QString anomaly="anomaly.txt";
