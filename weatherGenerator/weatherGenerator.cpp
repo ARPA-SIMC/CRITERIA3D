@@ -5,7 +5,7 @@
     \copyright
     2016 Fausto Tomei, Laura Costantini
 
-    This file is part of CRITERIA3D.
+    This file is part of agrolib distribution .
     CRITERIA3D has been developed under contract issued by A.R.P.A. Emilia-Romagna
 
     CRITERIA3D is free software: you can redistribute it and/or modify
