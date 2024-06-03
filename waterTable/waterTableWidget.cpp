@@ -1,7 +1,7 @@
 #include "waterTableWidget.h"
 
-WaterTableWidget::WaterTableWidget(const QString &id, std::vector<QDate> &myDates, std::vector<float> &myHindcastSeries,
-                                   std::vector<float> &myInterpolateSeries, QMap<QDate, float> &obsDepths, float maxObservedDepth)
+WaterTableWidget::WaterTableWidget(const QString &id, std::vector<QDate> myDates, std::vector<float> &myHindcastSeries,
+                                   std::vector<float> &myInterpolateSeries, QMap<QDate, float> obsDepths, float maxObservedDepth)
 {
     this->setWindowTitle("Graph Id well: "+ id);
     this->resize(1240, 700);

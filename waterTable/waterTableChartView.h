@@ -12,7 +12,7 @@
             WaterTableChartView(QWidget *parent = 0);
 
             void draw(std::vector<QDate> &myDates, std::vector<float> &myHindcastSeries, std::vector<float> &myInterpolateSeries,
-                      QMap<QDate, float> &obsDepths, float maximumObservedDepth);
+                      QMap<QDate, float> obsDepths, float maximumObservedDepth);
 
             void tooltipObsDepthSeries(QPointF point, bool state);
             void tooltipLineSeries(QPointF point, bool state);
