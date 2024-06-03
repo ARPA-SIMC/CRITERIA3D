@@ -1020,7 +1020,11 @@ void localSelection(vector <Crit3DInterpolationDataPoint> &inputPoints, vector <
                     float x, float y, Crit3DInterpolationSettings& mySettings)
 {
     // search more stations to assure min points with all valid proxies
-    float ratioMinPoints = float(1.4);
+    float ratioMinPoints;
+    if (mySettings.getUseLapseRateCode())
+        ratioMinPoints = float(2);
+    else
+        ratioMinPoints = float(1.3);
     unsigned minPoints = unsigned(mySettings.getMinPointsLocalDetrending() * ratioMinPoints);
     if (inputPoints.size() <= minPoints)
     {
@@ -1692,12 +1696,24 @@ bool multipleDetrendingElevation(Crit3DProxyCombination elevationCombination, st
 	
     Crit3DProxy* elevationProxy = mySettings->getProxy(elevationPos);
 
+    //lapse rate code
+    std::vector <Crit3DInterpolationDataPoint> elevationPoints = myPoints;
+    vector<Crit3DInterpolationDataPoint>::iterator it = elevationPoints.begin();
+
+    while (it != elevationPoints.end())
+    {
+        if (!checkLapseRateCode(it->lapseRateCode, mySettings->getUseLapseRateCode(), true))
+            it = elevationPoints.erase(it);
+        else
+            it++;
+    }
+
     // proxy spatial variability (1st step)
     double avg, stdDev;
     unsigned validNr;
     validNr = 0;
 
-    if (proxyValidity(myPoints, elevationPos, elevationProxy->getStdDevThreshold(), avg, stdDev))
+    if (proxyValidity(elevationPoints, elevationPos, elevationProxy->getStdDevThreshold(), avg, stdDev))
     {
         elevationCombination.setProxySignificant(elevationPos, true);
         Crit3DProxyCombination myCombination = mySettings->getSelectedCombination();
@@ -1720,19 +1736,16 @@ bool multipleDetrendingElevation(Crit3DProxyCombination elevationCombination, st
     unsigned i;
     bool isValid;
     float proxyValue;
-    vector<Crit3DInterpolationDataPoint>::iterator it = myPoints.begin();
+    it = myPoints.begin();
 
     while (it != myPoints.end())
     {
         isValid = true;
-        if (elevationProxy->getIsSignificant())
+        proxyValue = it->getProxyValue(elevationPos);
+        if (proxyValue == NODATA)
         {
-            proxyValue = it->getProxyValue(elevationPos);
-            if (proxyValue == NODATA)
-            {
                 isValid = false;
                 break;
-            }
         }
 
         if (! isValid)
@@ -1741,8 +1754,25 @@ bool multipleDetrendingElevation(Crit3DProxyCombination elevationCombination, st
             it++;
     }
 
+    it = elevationPoints.begin();
+    while (it != elevationPoints.end())
+    {
+        isValid = true;
+        proxyValue = it->getProxyValue(elevationPos);
+        if (proxyValue == NODATA)
+        {
+            isValid = false;
+            break;
+        }
+
+        if (! isValid)
+            it = elevationPoints.erase(it);
+        else
+            it++;
+    }
+
     // proxy spatial variability (2nd step)
-    if (proxyValidity(myPoints, elevationPos, elevationProxy->getStdDevThreshold(), avg, stdDev))
+    if (proxyValidity(elevationPoints, elevationPos, elevationProxy->getStdDevThreshold(), avg, stdDev))
     {
         elevationCombination.setProxySignificant(elevationPos, true);
         Crit3DProxyCombination myCombination = mySettings->getSelectedCombination();
@@ -1768,12 +1798,15 @@ bool multipleDetrendingElevation(Crit3DProxyCombination elevationCombination, st
 
     for (i=0; i < myPoints.size(); i++)
     {
-        predictors.push_back(myPoints[i].getProxyValue(elevationPos));
-        predictands.push_back(myPoints[i].value);
-        weights.push_back(myPoints[i].regressionWeight);
+        if (checkLapseRateCode(myPoints[i].lapseRateCode, mySettings->getUseLapseRateCode(), true))
+        {
+            predictors.push_back(myPoints[i].getProxyValue(elevationPos));
+            predictands.push_back(myPoints[i].value);
+            weights.push_back(myPoints[i].regressionWeight);
+        }
     }
 
-    if (mySettings->getUseLocalDetrending() && myPoints.size() < mySettings->getMinPointsLocalDetrending())
+    if (mySettings->getUseLocalDetrending() && elevationPoints.size() < mySettings->getMinPointsLocalDetrending())
     {
         elevationProxy->setIsSignificant(false);
         Crit3DProxyCombination myCombination = mySettings->getSelectedCombination();
@@ -1820,7 +1853,7 @@ bool multipleDetrendingElevation(Crit3DProxyCombination elevationCombination, st
     float detrendValue;
     for (i = 0; i < myPoints.size(); i++)
     {
-        if ((elevationProxy->getIsSignificant()))
+        if (checkLapseRateCode(myPoints[i].lapseRateCode, mySettings->getUseLapseRateCode(), true))
             proxyValue = myPoints[i].getProxyValue(elevationPos);
 
         detrendValue = float((*func)(proxyValue, parameters[elevationPos]));
@@ -1853,6 +1886,17 @@ bool multipleDetrending(Crit3DProxyCombination othersCombination, std::vector<st
 
     if (nrPredictors == 0) return true;
 
+    //lapse rate code
+    std::vector <Crit3DInterpolationDataPoint> othersPoints = myPoints;
+    vector<Crit3DInterpolationDataPoint>::iterator it = othersPoints.begin();
+    while (it != othersPoints.end())
+    {
+        if (!checkLapseRateCode(it->lapseRateCode, mySettings->getUseLapseRateCode(), false))
+            it = othersPoints.erase(it);
+        else
+            it++;
+    }
+
     // proxy spatial variability (1st step)
     double avg, stdDev;
     unsigned validNr;
@@ -1862,7 +1906,7 @@ bool multipleDetrending(Crit3DProxyCombination othersCombination, std::vector<st
     {
         if (othersCombination.isProxyActive(pos))
         {
-            if (proxyValidity(myPoints, pos, mySettings->getProxy(pos)->getStdDevThreshold(), avg, stdDev))
+            if (proxyValidity(othersPoints, pos, mySettings->getProxy(pos)->getStdDevThreshold(), avg, stdDev))
             {
                 othersCombination.setProxySignificant(pos, true);
                 Crit3DProxyCombination myCombination = mySettings->getCurrentCombination();
@@ -1889,7 +1933,7 @@ bool multipleDetrending(Crit3DProxyCombination othersCombination, std::vector<st
     unsigned i;
     bool isValid;
     float proxyValue;
-    vector<Crit3DInterpolationDataPoint>::iterator it = myPoints.begin();
+    it = myPoints.begin();
 
     while (it != myPoints.end())
     {
@@ -1914,13 +1958,37 @@ bool multipleDetrending(Crit3DProxyCombination othersCombination, std::vector<st
         }
     }
 
+    it = othersPoints.begin();
+    while (it != othersPoints.end())
+    {
+        isValid = true;
+        for (int pos=0; pos < proxyNr; pos++)
+            if (mySettings->getProxy(pos)->getIsSignificant())
+            {
+                proxyValue = it->getProxyValue(pos);
+                if (proxyValue == NODATA)
+                {
+                    isValid = false;
+                    break;
+                }
+            }
+
+        if (! isValid)
+        {
+            it = othersPoints.erase(it);
+        }
+        else {
+            it++;
+        }
+    }
+
     // proxy spatial variability (2nd step)
     validNr = 0;
     for (int pos=0; pos < proxyNr; pos++)
     {
         if (othersCombination.isProxyActive(pos))
         {
-            if (proxyValidity(myPoints, pos, mySettings->getProxy(pos)->getStdDevThreshold(), avg, stdDev))
+            if (proxyValidity(othersPoints, pos, mySettings->getProxy(pos)->getStdDevThreshold(), avg, stdDev))
             {
                 othersCombination.setProxySignificant(pos, true);
                 Crit3DProxyCombination myCombination = mySettings->getCurrentCombination();
@@ -1953,7 +2021,7 @@ bool multipleDetrending(Crit3DProxyCombination othersCombination, std::vector<st
     {
         rowPredictors.clear();
         for (int pos=0; pos < proxyNr; pos++)
-            if (othersCombination.isProxyActive(pos) && othersCombination.isProxySignificant(pos))
+            if (othersCombination.isProxyActive(pos) && othersCombination.isProxySignificant(pos) && checkLapseRateCode(myPoints[i].lapseRateCode, mySettings->getUseLapseRateCode(), false))
             {
                 proxyValue = myPoints[i].getProxyValue(pos);
                 rowPredictors.push_back(proxyValue);
@@ -1964,7 +2032,7 @@ bool multipleDetrending(Crit3DProxyCombination othersCombination, std::vector<st
         weights.push_back(myPoints[i].regressionWeight);
     }
 
-    if (mySettings->getUseLocalDetrending() && myPoints.size() < mySettings->getMinPointsLocalDetrending())
+    if (mySettings->getUseLocalDetrending() && othersPoints.size() < mySettings->getMinPointsLocalDetrending())
     {
         Crit3DProxyCombination myCombination = mySettings->getCurrentCombination();
         for (int pos = 1; pos < proxyNr; pos++)
@@ -2007,18 +2075,20 @@ bool multipleDetrending(Crit3DProxyCombination othersCombination, std::vector<st
     for (i = 0; i < myPoints.size(); i++)
     {
         proxyValues.clear();
-
-        for (int pos=0; pos < proxyNr; pos++)
+        if (checkLapseRateCode(myPoints[i].lapseRateCode, mySettings->getUseLapseRateCode(), false))
         {
-            if ((othersCombination.isProxyActive(pos)) && othersCombination.isProxySignificant(pos))
+            for (int pos=0; pos < proxyNr; pos++)
             {
-                proxyValue = myPoints[i].getProxyValue(pos);
-                proxyValues.push_back(double(proxyValue));
+                if ((othersCombination.isProxyActive(pos)) && othersCombination.isProxySignificant(pos))
+                {
+                    proxyValue = myPoints[i].getProxyValue(pos);
+                    proxyValues.push_back(double(proxyValue));
+                }
             }
-        }
 
-        detrendValue = float(functionSum(myFunc, proxyValues, parameters));
-        myPoints[i].value -= detrendValue;
+            detrendValue = float(functionSum(myFunc, proxyValues, parameters));
+            myPoints[i].value -= detrendValue;
+        }
     }
 
     return true;

@@ -136,7 +136,7 @@ DialogInterpolation::DialogInterpolation(Project *myProject)
 
     layoutDetrending->addWidget(localDetrendingEdit);
 
-    QLabel *labelElFunction = new QLabel(tr("Fitting function for elevation:"));
+    QLabel *labelElFunction = new QLabel(tr("fitting function for elevation"));
     layoutDetrending->addWidget(labelElFunction);
 
     std::map<std::string, TFittingFunction>::const_iterator itElFunc;
