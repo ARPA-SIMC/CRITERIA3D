@@ -64,14 +64,13 @@ void WaterTableChartView::draw(std::vector<QDate> &myDates, std::vector<float> &
     }
 
     chart()->addSeries(obsDepthSeries);
+    chart()->addSeries(hindcastSeries);
+    chart()->addSeries(interpolationSeries);
+
     obsDepthSeries->attachAxis(axisX);
     obsDepthSeries->attachAxis(axisY);
-
-    chart()->addSeries(hindcastSeries);
     hindcastSeries->attachAxis(axisX);
     hindcastSeries->attachAxis(axisY);
-
-    chart()->addSeries(interpolationSeries);
     interpolationSeries->attachAxis(axisX);
     interpolationSeries->attachAxis(axisY);
 
