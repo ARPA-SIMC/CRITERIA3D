@@ -186,12 +186,22 @@ bool parseXMLSeasonal(const QString &xmlFileName, XMLSeasonalAnomaly &XMLAnomaly
                 }
                 else if ((myTag == "LAT") || (myTag == "LATITUDE"))
                 {
-                    XMLAnomaly.point.latitude = child.toElement().text().toFloat();
+                    bool ok;
+                    XMLAnomaly.point.latitude = child.toElement().text().toFloat(&ok);
+                    if (ok == false)
+                    {
+                        XMLAnomaly.point.latitude = NODATA;
+                    }
                     nrTokens++;
                 }
                 else if ((myTag == "LON") || (myTag == "LONGITUDE"))
                 {
-                    XMLAnomaly.point.longitude = child.toElement().text().toFloat();
+                    bool ok;
+                    XMLAnomaly.point.longitude = child.toElement().text().toFloat(&ok);
+                    if (ok == false)
+                    {
+                        XMLAnomaly.point.longitude = NODATA;
+                    }
                     nrTokens++;
                 }
                 else if (myTag == "INFO")
@@ -320,7 +330,7 @@ bool parseXMLScenario(const QString &xmlFileName, XMLScenarioAnomaly &XMLAnomaly
 
     QDomNode child;
     QDomNode secondChild;
-    TXMLValuesList valuelist;
+    TXMLScenarioValuesList valuelist;
 
     QDomNode ancestor = xmlDoc.documentElement().firstChild();
     QString myTag;
@@ -453,7 +463,7 @@ bool parseXMLScenario(const QString &xmlFileName, XMLScenarioAnomaly &XMLAnomaly
                 if (myTag == "VAR")
                 {
                     secondChild = child.firstChild();
-
+                    XMLAnomaly.period[counterTime].seasonalScenarios.push_back(valuelist);
                     while(! secondChild.isNull())
                     {
                         mySecondTag = secondChild.toElement().tagName().toUpper();

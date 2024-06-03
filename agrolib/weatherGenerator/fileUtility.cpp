@@ -175,7 +175,7 @@ bool readMeteoDataCsv (const QString &fileName, char mySeparator, double noData,
 
 
 // Write the output of weather generator: a daily series of tmin, tmax, prec data
-bool writeMeteoDataCsv(const QString &fileName, char separator, std::vector<ToutputDailyMeteo> &dailyData)
+bool writeMeteoDataCsv(const QString &fileName, char separator, std::vector<ToutputDailyMeteo> &dailyData, bool isWaterTable)
 {
     QFile file(fileName);
     if (!file.open(QIODevice::WriteOnly | QIODevice::Truncate | QIODevice::Text)) {
@@ -184,23 +184,49 @@ bool writeMeteoDataCsv(const QString &fileName, char separator, std::vector<Tout
     }
 
     QTextStream stream( &file );
-    stream << "date" << separator << "tmin" << separator << "tmax" << separator << "prec\n";
 
-    for (unsigned int i=0; i < dailyData.size(); i++)
+    if (isWaterTable)
     {
-        if (dailyData[i].date == NO_DATE)
-            break;
+        stream << "date" << separator << "tmin" << separator << "tmax" << separator << "prec" << separator << "depth \n";
 
-        QString year = QString::number(dailyData[i].date.year);
-        QString month = QString::number(dailyData[i].date.month).rightJustified(2, '0');
-        QString day = QString::number(dailyData[i].date.day).rightJustified(2, '0');
-        QString myDate = year + "-" + month + "-" + day;
+        for (unsigned int i=0; i < dailyData.size(); i++)
+        {
+            if (dailyData[i].date == NO_DATE)
+                break;
 
-        QString tMin = QString::number(double(dailyData[i].minTemp), 'f', 1);
-        QString tMax = QString::number(double(dailyData[i].maxTemp), 'f', 1);
-        QString prec = QString::number(double(dailyData[i].prec), 'f', 1);
+            QString year = QString::number(dailyData[i].date.year);
+            QString month = QString::number(dailyData[i].date.month).rightJustified(2, '0');
+            QString day = QString::number(dailyData[i].date.day).rightJustified(2, '0');
+            QString myDate = year + "-" + month + "-" + day;
 
-        stream << myDate << separator << tMin << separator << tMax << separator << prec << "\n";
+            QString tMin = QString::number(double(dailyData[i].minTemp), 'f', 1);
+            QString tMax = QString::number(double(dailyData[i].maxTemp), 'f', 1);
+            QString prec = QString::number(double(dailyData[i].prec), 'f', 1);
+            QString depth = QString::number(double(dailyData[i].waterTableDepth), 'f', 1);
+
+            stream << myDate << separator << tMin << separator << tMax << separator << prec << separator << depth << "\n";
+        }
+    }
+    else
+    {
+        stream << "date" << separator << "tmin" << separator << "tmax" << separator << "prec\n";
+
+        for (unsigned int i=0; i < dailyData.size(); i++)
+        {
+            if (dailyData[i].date == NO_DATE)
+                break;
+
+            QString year = QString::number(dailyData[i].date.year);
+            QString month = QString::number(dailyData[i].date.month).rightJustified(2, '0');
+            QString day = QString::number(dailyData[i].date.day).rightJustified(2, '0');
+            QString myDate = year + "-" + month + "-" + day;
+
+            QString tMin = QString::number(double(dailyData[i].minTemp), 'f', 1);
+            QString tMax = QString::number(double(dailyData[i].maxTemp), 'f', 1);
+            QString prec = QString::number(double(dailyData[i].prec), 'f', 1);
+
+            stream << myDate << separator << tMin << separator << tMax << separator << prec << "\n";
+        }
     }
 
     return true;

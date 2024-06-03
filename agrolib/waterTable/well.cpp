@@ -36,7 +36,7 @@ void Well::setUtmY(double newUtmY)
     utmY = newUtmY;
 }
 
-void Well::insertData(QDate myDate, int myValue)
+void Well::insertData(QDate myDate, float myValue)
 {
     depths.insert(myDate, myValue);
 }
@@ -46,10 +46,12 @@ int  Well::getObsDepthNr()
     return depths.size();
 }
 
-QMap<QDate, int> Well::getObsDepths() const
+
+QMap<QDate, float> Well::getObsDepths()
 {
     return depths;
 }
+
 
 QDate Well::getFirstDate()
 {
@@ -79,9 +81,10 @@ QDate Well::getLastDate()
     return lastDate;
 }
 
+
 int Well::minValuesPerMonth()
 {
-    QMapIterator<QDate, int> it(depths);
+    QMapIterator<QDate, float> it(depths);
     std::vector<int> H_num;
     for (int myMonthIndex = 0; myMonthIndex < 12; myMonthIndex++)
     {

@@ -1,6 +1,7 @@
 #include "waterTableWidget.h"
 
-WaterTableWidget::WaterTableWidget(QString id, std::vector<QDate> myDates, std::vector<float> myHindcastSeries, std::vector<float> myInterpolateSeries, QMap<QDate, int> obsDepths)
+WaterTableWidget::WaterTableWidget(const QString &id, std::vector<QDate> myDates, std::vector<float> myHindcastSeries,
+                                   std::vector<float> myInterpolateSeries, QMap<QDate, float> obsDepths, float maxObservedDepth)
 {
     this->setWindowTitle("Graph Id well: "+ id);
     this->resize(1240, 700);
@@ -28,7 +29,7 @@ WaterTableWidget::WaterTableWidget(QString id, std::vector<QDate> myDates, std::
 
     connect(exportInterpolation, &QAction::triggered, this, &WaterTableWidget::on_actionExportInterpolationData);
 
-    waterTableChartView->draw(myDates, myHindcastSeries, myInterpolateSeries, obsDepths);
+    waterTableChartView->draw(myDates, myHindcastSeries, myInterpolateSeries, obsDepths, maxObservedDepth);
 }
 
 void WaterTableWidget::on_actionExportInterpolationData()

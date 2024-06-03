@@ -19,21 +19,22 @@ public:
     double getUtmY() const;
     void setUtmY(double newUtmY);
 
-    void insertData(QDate myDate, int myValue);
+    void insertData(QDate myDate, float myValue);
 
     QDate getFirstDate();
     QDate getLastDate();
 
     int getObsDepthNr();
 
-    QMap<QDate, int> getObsDepths() const;
+    QMap<QDate, float> getObsDepths();
+
     int minValuesPerMonth();
 
 private:
     QString id;
     double utmX;
     double utmY;
-    QMap<QDate, int> depths;
+    QMap<QDate, float> depths;
     QDate firstDate;
     QDate lastDate;
 };

@@ -1,6 +1,7 @@
 #include "waterTable.h"
 #include "commonConstants.h"
 #include "furtherMathFunctions.h"
+#include <math.h>
 
 
 WaterTable::WaterTable(std::vector<float> &inputTMin, std::vector<float> &inputTMax, std::vector<float> &inputPrec, QDate firstMeteoDate, QDate lastMeteoDate,
@@ -26,67 +27,47 @@ QDate WaterTable::getLastDateWell()
     return lastDateWell;
 }
 
-QMap<QDate, int> WaterTable::getObsDepths()
+QMap<QDate, float> WaterTable::getObsDepths()
 {
     return well.getObsDepths();
 }
 
-QString WaterTable::getError() const
+void WaterTable::setInputTMin(const std::vector<float> &newInputTMin)
 {
-    return error;
+    inputTMin = newInputTMin;
 }
 
-float WaterTable::getAlpha() const
+void WaterTable::setInputTMax(const std::vector<float> &newInputTMax)
 {
-    return alpha;
+    inputTMax = newInputTMax;
 }
 
-float WaterTable::getH0() const
+void WaterTable::setInputPrec(const std::vector<float> &newInputPrec)
 {
-    return h0;
+    inputPrec = newInputPrec;
 }
 
-int WaterTable::getNrDaysPeriod() const
+void WaterTable::cleanAllMeteoVector()
 {
-    return nrDaysPeriod;
+    inputTMin.clear();
+    inputTMax.clear();
+    inputPrec.clear();;
+    etpValues.clear();;
+    precValues.clear();;
 }
 
-float WaterTable::getR2() const
-{
-    return R2;
-}
 
-float WaterTable::getRMSE() const
-{
-    return RMSE;
-}
-
-float WaterTable::getNASH() const
-{
-    return NASH;
-}
-
-float WaterTable::getEF() const
-{
-    return EF;
-}
-
-int WaterTable::getNrObsData() const
-{
-    return nrObsData;
-}
-
-std::vector<QDate> WaterTable::getMyDates() const
+std::vector<QDate> WaterTable::getMyDates()
 {
     return myDates;
 }
 
-std::vector<float> WaterTable::getMyHindcastSeries() const
+std::vector<float> WaterTable::getMyHindcastSeries()
 {
     return myHindcastSeries;
 }
 
-std::vector<float> WaterTable::getMyInterpolateSeries() const
+std::vector<float> WaterTable::getMyInterpolateSeries()
 {
     return myInterpolateSeries;
 }
@@ -158,8 +139,8 @@ bool WaterTable::computeWTClimate()
         H_num.push_back(0);
     }
 
-    QMap<QDate, int> myDepths = well.getObsDepths();
-    QMapIterator<QDate, int> it(myDepths);
+    QMap<QDate, float> myDepths = well.getObsDepths();
+    QMapIterator<QDate, float> it(myDepths);
     while (it.hasNext())
     {
         it.next();
@@ -249,7 +230,7 @@ bool WaterTable::computeCWBCorrelation(int maxNrDays)
     float bestH0;
     float bestAlfaCoeff;
     int bestNrDays = NODATA;
-    QMap<QDate, int> myDepths = well.getObsDepths();
+    QMap<QDate, float> myDepths = well.getObsDepths();
     std::vector<float> myCWBSum;
     std::vector<float> myObsWT;
     float a;
@@ -261,7 +242,7 @@ bool WaterTable::computeCWBCorrelation(int maxNrDays)
     {
         myCWBSum.clear();
         myObsWT.clear();
-        QMapIterator<QDate, int> it(myDepths);
+        QMapIterator<QDate, float> it(myDepths);
         while (it.hasNext())
         {
             it.next();
@@ -302,13 +283,11 @@ bool WaterTable::computeCWBCorrelation(int maxNrDays)
 }
 
 // Climatic WaterBalance (CWB) on a nrDaysPeriod
-float WaterTable::computeCWB(QDate myDate, int nrDays)
+double WaterTable::computeCWB(QDate myDate, int nrDays)
 {
-    float sumCWB = 0;
+    double sumCWB = 0;
     int nrValidDays = 0;
     QDate actualDate;
-    float currentCWB;
-    float weight;
     for (int shift = 1; shift<=nrDays; shift++)
     {
         actualDate = myDate.addDays(-shift);
@@ -319,9 +298,9 @@ float WaterTable::computeCWB(QDate myDate, int nrDays)
             float prec = precValues[index];
             if ( etp != NODATA &&  prec != NODATA)
             {
-                currentCWB = prec - etp;
-                weight = 1 - (float)shift/nrDays;
-                sumCWB = sumCWB + currentCWB * weight;
+                double currentCWB = double(prec - etp);
+                double weight = 1 - (double)shift/nrDays;
+                sumCWB += currentCWB * weight;
                 nrValidDays = nrValidDays + 1;
             }
         }
@@ -332,21 +311,20 @@ float WaterTable::computeCWB(QDate myDate, int nrDays)
         error = "Few Data";
         return NODATA;
     }
+
     // Climate
-    float climateCWB = avgDailyCWB * nrDays * 0.5;
+    double climateCWB = avgDailyCWB * nrDays * 0.5;
 
     // conversion: from [mm] to [cm]
-    float computeCWB = (sumCWB - climateCWB) * 0.1;
-
-    return computeCWB;
+    return (sumCWB - climateCWB) * 0.1;
 }
 
 
 // function to compute several statistical indices for watertable depth
 bool WaterTable::computeWaterTableIndices()
 {
-    QMap<QDate, int> myDepths = well.getObsDepths();
-    QMapIterator<QDate, int> it(myDepths);
+    QMap<QDate, float> myDepths = well.getObsDepths();
+    QMapIterator<QDate, float> it(myDepths);
     std::vector<float> myObs;
     std::vector<float> myComputed;
     std::vector<float> myClimate;
@@ -522,23 +500,25 @@ bool WaterTable::getWaterTableInterpolation(QDate myDate, float* myValue, float*
     int dT;
 
     // previuos and next observation
-    QMap<QDate, int> myDepths = well.getObsDepths();
+    QMap<QDate, float> myDepths = well.getObsDepths();
     QList<QDate> keys = myDepths.keys();
     int i = keys.indexOf(myDate);
     if (i != -1) // exact data found
     {
-        if (i>0)
+        if (i > 0)
         {
             indexPrev = i - 1;
-            previousDate = keys[indexPrev];
-            previosValue = myDepths[previousDate];
+            indexNext = i;
         }
         if (i < keys.size()-1)
         {
+            indexPrev = i;
             indexNext = i + 1;
-            nextDate = keys[indexNext];
-            nextValue = myDepths[nextDate];
         }
+        previousDate = keys[indexPrev];
+        previosValue = myDepths[previousDate];
+        nextDate = keys[indexNext];
+        nextValue = myDepths[nextDate];
     }
     else
     {
@@ -598,22 +578,23 @@ bool WaterTable::getWaterTableInterpolation(QDate myDate, float* myValue, float*
             }
         }
     }
+
     if (previousDz != NODATA && nextDz != NODATA)
     {
         dT = previousDate.daysTo(nextDate);
-        *myDelta = previousDz * (1 - (diffWithPrev / dT)) + nextDz * (1 - (diffWithNext / dT));
+        *myDelta = previousDz * (1.0 - (float(diffWithPrev) / float(dT))) + nextDz * (1.0 - (float(diffWithNext) / float(dT)));
         *myDeltaDays = std::min(diffWithPrev, diffWithNext);
     }
     else if ( previousDz!= NODATA)
     {
         dT = diffWithPrev;
-        *myDelta = previousDz * std::max((1 - (dT / WATERTABLE_MAXDELTADAYS)), 0);
+        *myDelta = previousDz * std::max((1.f - (float(dT) / float(WATERTABLE_MAXDELTADAYS))), 0.f);
         *myDeltaDays = dT;
     }
     else if ( nextDz!= NODATA)
     {
         dT = diffWithNext;
-        *myDelta = nextDz * std::max((1 - (dT / WATERTABLE_MAXDELTADAYS)), 0);
+        *myDelta = nextDz * std::max((1.f - (float(dT) / float(WATERTABLE_MAXDELTADAYS))), 0.f);
         *myDeltaDays = dT;
     }
     else
@@ -630,8 +611,8 @@ bool WaterTable::getWaterTableInterpolation(QDate myDate, float* myValue, float*
 
 void WaterTable::computeWaterTableSeries()
 {
-    QMap<QDate, int> myDepths = well.getObsDepths();
-    QMapIterator<QDate, int> it(myDepths);
+    QMap<QDate, float> myDepths = well.getObsDepths();
+    QMapIterator<QDate, float> it(myDepths);
 
     myDates.clear();
     myHindcastSeries.clear();

@@ -28,28 +28,38 @@ class WaterTable
         bool computeWTClimate();
         bool computeETP_allSeries();
         bool computeCWBCorrelation(int maxNrDays);
-        float computeCWB(QDate myDate, int nrDays);
+        double computeCWB(QDate myDate, int nrDays);
         bool computeWaterTableIndices();
         float getWaterTableDaily(QDate myDate);
         float getWaterTableClimate(QDate myDate);
         bool computeWaterTableClimate(QDate currentDate, int yearFrom, int yearTo, float* myValue);
         bool getWaterTableInterpolation(QDate myDate, float* myValue, float* myDelta, int* myDeltaDays);
         void computeWaterTableSeries();
-        QString getError() const;
 
-        float getAlpha() const;
-        float getH0() const;
-        int getNrDaysPeriod() const;
-        float getR2() const;
-        float getRMSE() const;
-        float getNASH() const;
-        float getEF() const;
-        int getNrObsData() const;
+        QString getError() const { return error; }
 
-        std::vector<QDate> getMyDates() const;
-        std::vector<float> getMyHindcastSeries() const;
-        std::vector<float> getMyInterpolateSeries() const;
-        QMap<QDate, int> getObsDepths();
+        double getAlpha() const { return alpha; }
+        double getH0() const { return h0; }
+
+        float getR2() const { return R2; }
+        float getRMSE() const { return RMSE; }
+        float getNASH() const { return NASH; }
+        float getEF() const { return EF; }
+
+        int getNrDaysPeriod() const { return nrDaysPeriod; }
+        int getNrObsData() const { return nrObsData; }
+
+        std::vector<QDate> getMyDates();
+        std::vector<float> getMyHindcastSeries();
+        std::vector<float> getMyInterpolateSeries();
+        QMap<QDate, float> getObsDepths();
+
+        void cleanAllMeteoVector();
+        void setInputTMin(const std::vector<float> &newInputTMin);
+
+        void setInputTMax(const std::vector<float> &newInputTMax);
+
+        void setInputPrec(const std::vector<float> &newInputPrec);
 
     private:
         Crit3DMeteoSettings meteoSettings;
@@ -68,8 +78,9 @@ class WaterTable
         std::vector<float> precValues;
 
         int nrDaysPeriod;
-        float alpha;
-        float h0;
+        double alpha;
+        double h0;
+
         float R2;
         float RMSE;
         float NASH;
@@ -81,7 +92,7 @@ class WaterTable
         int nrObsData;
 
         bool isCWBEquationReady;
-        float avgDailyCWB; //[mm]
+        double avgDailyCWB; //[mm]
 
         // graph
         std::vector<QDate> myDates;

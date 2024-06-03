@@ -9,6 +9,10 @@
         #include "parserXML.h"
     #endif
 
+    #ifndef WATERTABLE_H
+        #include "waterTable.h"
+    #endif
+
     struct TinputObsData
     {
         Crit3DDate inputFirstDate;
@@ -107,12 +111,17 @@
 
     bool assignAnomalyPrec(float myAnomaly, int anomalyMonth1, int anomalyMonth2,
                            float* myWGMonthlyVarNoAnomaly, float* myWGMonthlyVar);
-    bool assignXMLAnomalyScenario(XMLScenarioAnomaly* XMLAnomaly, int modelIndex, int anomalyMonth1, int anomalyMonth2,
+    bool assignXMLAnomalyScenario(XMLScenarioAnomaly* XMLAnomaly, int modelIndex, int *anomalyMonth1, int *anomalyMonth2,
                                   TweatherGenClimate& wGenNoAnomaly, TweatherGenClimate &wGen);
 
     bool makeSeasonalForecast(QString outputFileName, char separator, XMLSeasonalAnomaly* XMLAnomaly,
                             TweatherGenClimate& wGenClimate, TinputObsData* dailyObsData,
                             int numRepetitions, int myPredictionYear, int wgDoy1, int wgDoy2, float rainfallThreshold);
+
+    bool makeSeasonalForecastWaterTable(QString outputFileName, char separator, XMLSeasonalAnomaly* XMLAnomaly,
+                                        TweatherGenClimate& wGenClimate, TinputObsData* dailyObsData,
+                                        int nrRepetitions, int myPredictionYear, int wgDoy1, int wgDoy2,
+                                        float rainfallThreshold, WaterTable waterTable);
 
     bool computeSeasonalPredictions(TinputObsData *dailyObsData, TweatherGenClimate& wgClimate,
                                     int predictionYear, int firstYear, int nrRepetitions,
