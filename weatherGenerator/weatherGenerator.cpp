@@ -1035,14 +1035,22 @@ bool makeSeasonalForecastWaterTable(QString outputFileName, char separator, XMLS
     int fixWgDoy1 = wgDoy1;
     int fixWgDoy2 = wgDoy2;
     int index = 0;
-    for (myDate = dailyPredictions[0].date; myDate <= dailyPredictions[dailyPredictions.size()-1].date; myDate=myDate.addDays(1))
+    QDate firstDate(myPredictionYear,1,1);
+    QDate lastDate(lastYear,12,31);
+    qDebug() << "firstDate " << firstDate.toString();
+    qDebug() << "lastDate " << lastDate.toString();
+    int indexToBeCopyed = 0;
+    for (QDate myDate = firstDate; myDate <= lastDate; myDate=myDate.addDays(1))
     {
-        setCorrectWgDoy(wgDoy1, wgDoy2, myPredictionYear, myDate.year, fixWgDoy1, fixWgDoy2);
-        if ( !isWGDate(myDate, fixWgDoy1, fixWgDoy2) && dailyPredictions[index].waterTableDepth == NODATA)
+        setCorrectWgDoy(wgDoy1, wgDoy2, myPredictionYear, myDate.year(), fixWgDoy1, fixWgDoy2);
+        if ( !isWGDate(Crit3DDate(myDate.day(), myDate.month(), myDate.year()), fixWgDoy1, fixWgDoy2) && dailyPredictions[index].waterTableDepth == NODATA)
         {
-            int indexToBeCopyed = 0;
             dailyPredictions[index].waterTableDepth =  dailyPredictions[indexToBeCopyed].waterTableDepth;
             indexToBeCopyed = indexToBeCopyed + 1;
+        }
+        else
+        {
+            indexToBeCopyed = 0;
         }
         index = index + 1;
     }
