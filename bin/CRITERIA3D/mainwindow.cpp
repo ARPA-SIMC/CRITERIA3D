@@ -528,7 +528,17 @@ void MainWindow::addMeteoPoints()
 
     for (int i = 0; i < myProject.nrMeteoPoints; i++)
     {
+        // default: white
         StationMarker* point = new StationMarker(5.0, true, QColor(Qt::white));
+
+        if (myProject.meteoPoints[i].lapseRateCode == secondary)
+        {
+            point->setFillColor(QColor(Qt::black));
+        }
+        else if (myProject.meteoPoints[i].lapseRateCode == supplemental)
+        {
+            point->setFillColor(QColor(Qt::gray));
+        }
 
         point->setFlag(MapGraphicsObject::ObjectIsMovable, false);
         point->setLatitude(myProject.meteoPoints[i].latitude);
@@ -540,6 +550,7 @@ void MainWindow::addMeteoPoints()
         point->setMunicipality(myProject.meteoPoints[i].municipality);
         point->setCurrentValue(qreal(myProject.meteoPoints[i].currentValue));
         point->setQuality(myProject.meteoPoints[i].quality);
+        point->setLapseRateCode(myProject.meteoPoints[i].lapseRateCode);
 
         this->meteoPointList.append(point);
         this->mapView->scene()->addObject(this->meteoPointList[i]);
@@ -978,20 +989,26 @@ void MainWindow::redrawMeteoPoints(visualizationType myType, bool updateColorSCa
                 meteoPointList[i]->setCurrentValue(NODATA);
                 meteoPointList[i]->setToolTip();
 
-                // color
+                // set color - default is white
+                meteoPointList[i]->setFillColor(Qt::white);
+
                 if (myProject.meteoPoints[i].selected)
                 {
                     meteoPointList[i]->setFillColor(Qt::yellow);
                 }
+                else if (! myProject.meteoPoints[i].active)
+                {
+                    meteoPointList[i]->setFillColor(Qt::red);
+                }
                 else
                 {
-                    if (myProject.meteoPoints[i].active)
+                    if (myProject.meteoPoints[i].lapseRateCode == secondary)
                     {
-                        meteoPointList[i]->setFillColor(Qt::white);
+                        meteoPointList[i]->setFillColor(QColor(Qt::black));
                     }
-                    else if (! myProject.meteoPoints[i].active)
+                    else if (myProject.meteoPoints[i].lapseRateCode == supplemental)
                     {
-                        meteoPointList[i]->setFillColor(Qt::red);
+                        meteoPointList[i]->setFillColor(QColor(Qt::gray));
                     }
                 }
 
