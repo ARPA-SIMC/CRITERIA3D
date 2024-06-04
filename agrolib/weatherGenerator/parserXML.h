@@ -18,6 +18,7 @@
     {
         QString type;
         QStringList value;
+        int number;
     };
     struct TXMLScenarioClimateField
     {

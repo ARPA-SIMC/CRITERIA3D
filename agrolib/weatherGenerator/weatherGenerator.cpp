@@ -554,6 +554,7 @@ bool assignAnomalyPrec(float myAnomaly, int anomalyMonth1, int anomalyMonth2,
     return true;
 }
 
+
 bool assignXMLAnomalyScenario(XMLScenarioAnomaly* XMLAnomaly,int modelIndex, int* anomalyMonth1, int* anomalyMonth2, TweatherGenClimate& wGenNoAnomaly, TweatherGenClimate &wGen)
 {
     //unsigned int i = 0;
@@ -779,10 +780,11 @@ bool makeSeasonalForecast(QString outputFileName, char separator, XMLSeasonalAno
             isLastMember = true;
         }
         // compute seasonal prediction
+        std::vector<int> indexWg;
         if (! computeSeasonalPredictions(dailyObsData, wGen,
                                         myPredictionYear, myYear, nrRepetitions,
                                         wgDoy1, wgDoy2, rainfallThreshold, isLastMember,
-                                        dailyPredictions, &outputDataLength ))
+                                        dailyPredictions, &outputDataLength, indexWg))
         {
             qDebug() << "Error in computeSeasonalPredictions";
             return false;
@@ -958,7 +960,6 @@ bool makeSeasonalForecastWaterTable(QString outputFileName, char separator, XMLS
         }
         ++myDate;
     }
-
     qDebug() << "Observed OK";
     int outputDataLength = nrDaysBeforeWgDoy1;
 
@@ -985,44 +986,75 @@ bool makeSeasonalForecastWaterTable(QString outputFileName, char separator, XMLS
             isLastMember = true;
         }
         // compute seasonal prediction
+        std::vector<int> indexWg;
         if (! computeSeasonalPredictions(dailyObsData, wGen,
                                         myPredictionYear, myYear, nrRepetitions,
                                         wgDoy1, wgDoy2, rainfallThreshold, isLastMember,
-                                        dailyPredictions, &outputDataLength ))
+                                        dailyPredictions, &outputDataLength, indexWg))
         {
             qDebug() << "Error in computeSeasonalPredictions";
             return false;
         }
 
-        for (int tmp = 0; tmp <= daysWg; tmp++)
+        if (indexWg.size() != 0)
         {
-            inputTMin[nrDaysBeforeWgDoy1 + tmp] = dailyPredictions[outputDataLength+tmp].minTemp;
-            inputTMax[nrDaysBeforeWgDoy1 + tmp] = dailyPredictions[outputDataLength+tmp].maxTemp;
-            inputPrec[nrDaysBeforeWgDoy1 + tmp] = dailyPredictions[outputDataLength+tmp].prec;
-        }
-        // calcola etp
-        waterTable.cleanAllMeteoVector();
-        waterTable.setInputTMin(inputTMin);
-        waterTable.setInputTMax(inputTMax);
-        waterTable.setInputPrec(inputPrec);
-        waterTable.computeETP_allSeries();
-        float myDepth;
-        float myDelta;
-        int myDeltaDays;
-        for (int tmp = 0; tmp <= daysWg; tmp++)
-        {
-            Crit3DDate myDate = dailyPredictions[outputDataLength+tmp].date;
-            if (waterTable.getWaterTableInterpolation(QDate(myDate.year, myDate.month, myDate.day), &myDepth, &myDelta, &myDeltaDays))
+            //qDebug() << "indexWg[0] " << indexWg[0];
+            //qDebug() << "indexWg [indexWg.size()-1] " << indexWg [indexWg.size()-1];
+            //int nWgDays = indexWg [indexWg.size()-1] - indexWg[0];
+            //qDebug() << "nWgDays " << nWgDays;
+            for (int tmp = 0; tmp < daysWg; tmp++)
             {
-                dailyPredictions[outputDataLength+tmp].waterTableDepth = myDepth;
+                inputTMin[nrDaysBeforeWgDoy1 + tmp] = dailyPredictions[indexWg[0]+tmp].minTemp;
+                inputTMax[nrDaysBeforeWgDoy1 + tmp] = dailyPredictions[indexWg[0]+tmp].maxTemp;
+                inputPrec[nrDaysBeforeWgDoy1 + tmp] = dailyPredictions[indexWg[0]+tmp].prec;
+            }
+            // calcola etp
+            waterTable.cleanAllMeteoVector();
+            waterTable.setInputTMin(inputTMin);
+            waterTable.setInputTMax(inputTMax);
+            waterTable.setInputPrec(inputPrec);
+            waterTable.computeETP_allSeries();
+            float myDepth;
+            float myDelta;
+            int myDeltaDays;
+            QDate myDate(seasonFirstDate.year, seasonFirstDate.month, seasonFirstDate.day);
+            for (int tmp = 0; tmp < daysWg; tmp++)
+            {
+                if (waterTable.getWaterTableInterpolation(myDate, &myDepth, &myDelta, &myDeltaDays))
+                {
+                    dailyPredictions[indexWg[0]+tmp].waterTableDepth = myDepth;
+                }
+                myDate = myDate.addDays(1);
             }
         }
 
         // next model
         myYear = myYear + nrRepetitions;
     }
-
     qDebug() << "\n>>> output:" << outputFileName;
+
+    int fixWgDoy1 = wgDoy1;
+    int fixWgDoy2 = wgDoy2;
+    int index = 0;
+    QDate firstDate(myPredictionYear,1,1);
+    QDate lastDate(lastYear,12,31);
+    qDebug() << "firstDate " << firstDate.toString();
+    qDebug() << "lastDate " << lastDate.toString();
+    int indexToBeCopyed = 0;
+    for (QDate myDate = firstDate; myDate <= lastDate; myDate=myDate.addDays(1))
+    {
+        setCorrectWgDoy(wgDoy1, wgDoy2, myPredictionYear, myDate.year(), fixWgDoy1, fixWgDoy2);
+        if ( !isWGDate(Crit3DDate(myDate.day(), myDate.month(), myDate.year()), fixWgDoy1, fixWgDoy2) && dailyPredictions[index].waterTableDepth == NODATA)
+        {
+            dailyPredictions[index].waterTableDepth =  dailyPredictions[indexToBeCopyed].waterTableDepth;
+            indexToBeCopyed = indexToBeCopyed + 1;
+        }
+        else
+        {
+            indexToBeCopyed = 0;
+        }
+        index = index + 1;
+    }
 
     writeMeteoDataCsv (outputFileName, separator, dailyPredictions, true);
 
@@ -1045,7 +1077,7 @@ bool makeSeasonalForecastWaterTable(QString outputFileName, char separator, XMLS
 bool computeSeasonalPredictions(TinputObsData *dailyObsData, TweatherGenClimate &wgClimate,
                                 int predictionYear, int firstYear, int nrRepetitions,
                                 int wgDoy1, int wgDoy2, float rainfallThreshold, bool isLastMember,
-                                std::vector<ToutputDailyMeteo>& outputDailyData, int *outputDataLength)
+                                std::vector<ToutputDailyMeteo>& outputDailyData, int *outputDataLength, std::vector<int>& indexWg)
 
 {
     Crit3DDate myDate, obsDate;
@@ -1124,6 +1156,7 @@ bool computeSeasonalPredictions(TinputObsData *dailyObsData, TweatherGenClimate 
             outputDailyData[currentIndex].maxTemp = getTMax(myDoy, rainfallThreshold, wgClimate);
             outputDailyData[currentIndex].minTemp = getTMin(myDoy, rainfallThreshold, wgClimate);
             outputDailyData[currentIndex].prec = getPrecip(myDoy, rainfallThreshold, wgClimate);
+            indexWg.push_back(currentIndex);
         }
         else
         {

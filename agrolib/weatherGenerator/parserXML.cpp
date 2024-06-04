@@ -52,54 +52,44 @@ void XMLSeasonalAnomaly::printInfo()
    qDebug() << "";
 }
 
+
 XMLScenarioAnomaly::XMLScenarioAnomaly()
 {
-    this->initialize(); // chiedere a Fausto perché non fare initialize direttamente qui
+    this->initialize();
 }
 
 
 void XMLScenarioAnomaly::initialize()
 {
-    /*
     point.name = "";
     point.code = "";
     point.latitude = NODATA;
     point.longitude = NODATA;
-    point.info = "";
-
-    forecast.clear();
 
     climatePeriod.yearFrom = NODATA;
     climatePeriod.yearTo = NODATA;
 
-    modelNumber = NODATA;
-
-    modelName.clear();
-    modelMember.clear();
+    models.type.clear();
+    models.value.clear();
+    models.number = 0;
 
     repetitions = NODATA;
     anomalyYear = NODATA;
-    anomalySeason = "";
-    */
 }
 
 
 void XMLScenarioAnomaly::printInfo()
 {
-    /*
     qDebug() << "point.name = " << point.name;
-    qDebug() << "point.longitude = " << point.longitude;
-    qDebug() << "point.latitude = " << point.latitude;
+    //qDebug() << "point.longitude = " << point.longitude;
+    //qDebug() << "point.latitude = " << point.latitude;
     qDebug() << "climate first year = " << climatePeriod.yearFrom;
     qDebug() << "climate last year = " << climatePeriod.yearTo;
-    qDebug() << "number of models = " << modelNumber;
-    qDebug() << "models = " << modelName;
-    qDebug() << "number of members = " << modelMember;
-    qDebug() << "number of repetitions = " << repetitions;
+    qDebug() << "models = " << models.type;
+    qDebug() << "number of models = " << models.number;
     qDebug() << "anomaly year = " << anomalyYear;
-    qDebug() << "anomaly season = " << anomalySeason;
+    qDebug() << "number of repetitions = " << repetitions;
     qDebug() << "";
-    */
 }
 
 
@@ -399,6 +389,7 @@ bool parseXMLScenario(const QString &xmlFileName, XMLScenarioAnomaly &XMLAnomaly
                 {
                     models = child.toElement().text();
                     XMLAnomaly.models.value = models.split(",");
+                    XMLAnomaly.models.number = XMLAnomaly.models.value.size();
                     nrTokens++;
                 }
                 child = child.nextSibling();
