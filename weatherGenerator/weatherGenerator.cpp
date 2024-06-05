@@ -1041,7 +1041,7 @@ bool makeSeasonalForecastWaterTable(QString outputFileName, char separator, XMLS
     QDate firstDate(dailyPredictions[0].date.year, dailyPredictions[0].date.month, dailyPredictions[0].date.day);
     QDate lastDate = firstDate.addDays(nrValues);
 
-    for (QDate myDate = firstDate; myDate <= lastDate; myDate=myDate.addDays(1))
+    for (QDate myDate = firstDate; myDate < lastDate; myDate=myDate.addDays(1))
     {
         setCorrectWgDoy(wgDoy1, wgDoy2, myPredictionYear, myDate.year(), fixWgDoy1, fixWgDoy2);
         if ( !isWGDate(Crit3DDate(myDate.day(), myDate.month(), myDate.year()), fixWgDoy1, fixWgDoy2) && dailyPredictions[index].waterTableDepth == NODATA)
