@@ -1038,8 +1038,8 @@ bool makeSeasonalForecastWaterTable(QString outputFileName, char separator, XMLS
     int fixWgDoy1 = wgDoy1;
     int fixWgDoy2 = wgDoy2;
     int index = 0;
-    QDate firstDate(myPredictionYear,1,1);
-    QDate lastDate(lastYear,12,31);
+    QDate firstDate(dailyPredictions[0].date.year, dailyPredictions[0].date.month, dailyPredictions[0].date.day);
+    QDate lastDate = firstDate.addDays(nrValues);
 
     for (QDate myDate = firstDate; myDate <= lastDate; myDate=myDate.addDays(1))
     {
@@ -1048,9 +1048,10 @@ bool makeSeasonalForecastWaterTable(QString outputFileName, char separator, XMLS
         {
             for (int indexToBeCopyed = 0; indexToBeCopyed < 366; indexToBeCopyed++)
             {
-                if (dailyPredictions[indexToBeCopyed].date.month == myDate.month() && dailyPredictions[indexToBeCopyed].date.day == myDate.day())
+                if (dailyPredictions[indexToBeCopyed].date.month == myDate.month() && dailyPredictions[indexToBeCopyed].date.day == myDate.day() && dailyPredictions[indexToBeCopyed].waterTableDepth != NODATA)
                 {
                     dailyPredictions[index].waterTableDepth =  dailyPredictions[indexToBeCopyed].waterTableDepth;
+                    break;
                 }
             }
 
