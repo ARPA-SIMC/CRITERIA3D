@@ -119,7 +119,7 @@ bool WaterTable::computeWaterTableParameters(Well myWell, int maxNrDays)
     }
 
     isCWBEquationReady = computeCWBCorrelation(maxNrDays);
-    if (!isCWBEquationReady)
+    if (! isCWBEquationReady)
     {
         return false;
     }
@@ -225,7 +225,7 @@ bool WaterTable::computeETP_allSeries(bool isUpdateAvgCWB)
         precValues.push_back(prec);
         if (etp != NODATA && prec != NODATA)
         {
-            sumCWB = sumCWB + (prec - etp);
+            sumCWB += prec - etp;
             nrValidDays = nrValidDays + 1;
         }
         index = index + 1;
@@ -313,7 +313,7 @@ double WaterTable::computeCWB(QDate myDate, int nrDays)
     double sumCWB = 0;
     int nrValidDays = 0;
     QDate actualDate;
-    for (int shift = 1; shift<=nrDays; shift++)
+    for (int shift = 1; shift <= nrDays; shift++)
     {
         actualDate = myDate.addDays(-shift);
         int index = firstMeteoDate.daysTo(actualDate);
@@ -324,9 +324,9 @@ double WaterTable::computeCWB(QDate myDate, int nrDays)
             if ( etp != NODATA &&  prec != NODATA)
             {
                 double currentCWB = double(prec - etp);
-                double weight = 1 - (double)shift/nrDays;
+                double weight = 1 - double(shift-1) / double(nrDays);
                 sumCWB += currentCWB * weight;
-                nrValidDays = nrValidDays + 1;
+                nrValidDays++;
             }
         }
     }

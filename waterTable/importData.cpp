@@ -204,7 +204,7 @@ bool loadWaterTableDepthCsv(const QString &csvFileName, std::vector<Well> &wellL
     return true;
 }
 
-bool loadCsvDepthsSingleWell(QString csvDepths, Well* well, int waterTableMaximumDepth, QDate climateObsFirstDate, QDate climateObsLastDate, QString &errorStr, int &wrongLines)
+bool loadCsvDepthsSingleWell(QString csvDepths, Well* well, int waterTableMaximumDepth, QString &errorStr, int &wrongLines)
 {
     QFile myFile(csvDepths);
     QList<QString> errorList;
@@ -239,7 +239,7 @@ bool loadCsvDepthsSingleWell(QString csvDepths, Well* well, int waterTableMaximu
             }
             items[posDate] = items[posDate].simplified();
             QDate date = QDate::fromString(items[posDate].remove(QChar('"')),"yyyy-MM-dd");
-            if (! date.isValid() || date < climateObsFirstDate || date > climateObsLastDate)
+            if (! date.isValid())
             {
                 errorList.append(line);
                 wrongLines++;
