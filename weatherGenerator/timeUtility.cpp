@@ -189,3 +189,36 @@ void setCorrectWgDoy(int wgDoy1, int wgDoy2, int predictionYear, int myYear, int
         }
     }
 }
+
+void setAnomalyMonthScenario(QString startingSeason, int *anomalyMonth1, int *anomalyMonth2)
+{
+    if(startingSeason == "DJF")
+    {
+        anomalyMonth1[0] = 12; anomalyMonth2[0] = 2;
+        anomalyMonth1[1] = 3; anomalyMonth2[1] = 5;
+        anomalyMonth1[2] = 6; anomalyMonth2[2] = 8;
+        anomalyMonth1[3] = 9; anomalyMonth2[3] = 11;
+    }
+    else if (startingSeason == "MAM")
+    {
+        anomalyMonth1[3] = 12; anomalyMonth2[3] = 2;
+        anomalyMonth1[0] = 3; anomalyMonth2[0] = 5;
+        anomalyMonth1[1] = 6; anomalyMonth2[1] = 8;
+        anomalyMonth1[2] = 9; anomalyMonth2[2] = 11;
+    }
+    else if (startingSeason == "JJA")
+    {
+        anomalyMonth1[2] = 12; anomalyMonth2[2] = 2;
+        anomalyMonth1[3] = 3; anomalyMonth2[3] = 5;
+        anomalyMonth1[0] = 6; anomalyMonth2[0] = 8;
+        anomalyMonth1[1] = 9; anomalyMonth2[1] = 11;
+
+    }
+    else
+    {
+        anomalyMonth1[1] = 12; anomalyMonth2[1] = 2;
+        anomalyMonth1[2] = 3; anomalyMonth2[2] = 5;
+        anomalyMonth1[3] = 6; anomalyMonth2[3] = 8;
+        anomalyMonth1[0] = 9; anomalyMonth2[0] = 11;
+    }
+}
