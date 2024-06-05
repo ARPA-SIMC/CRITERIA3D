@@ -16,5 +16,7 @@
 
     void setCorrectWgDoy(int wgDoy1, int wgDoy2, int predictionYear, int myYear, int &fixedWgDoy1, int &fixedWgDoy2);
 
+    void setAnomalyMonthScenario(QString startingSeason, int *anomalyMonth1, int *anomalyMonth2);
+
 
 #endif // TIMEUTILITY
