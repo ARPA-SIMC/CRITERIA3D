@@ -10,14 +10,21 @@ class Well
 {
 public:
     Well();
-    QString getId() const;
-    void setId(const QString &newId);
 
-    double getUtmX() const;
-    void setUtmX(double newUtmX);
+    QString getId() const { return id; }
+    void setId(const QString &newId) { id = newId; }
 
-    double getUtmY() const;
-    void setUtmY(double newUtmY);
+    double getUtmX() const { return utmX; }
+    void setUtmX(double newUtmX) { utmX = newUtmX; }
+
+    double getUtmY() const { return utmY; }
+    void setUtmY(double newUtmY) { utmY = newUtmY; }
+
+    double getLatitude() const { return lat; }
+    void setLatitude(double newLat) { lat = newLat; }
+
+    double getLongitude() const { return lon; }
+    void setLongitude(double newLon) { lon = newLon; }
 
     void insertData(QDate myDate, float myValue);
 
@@ -32,9 +39,12 @@ public:
 
 private:
     QString id;
-    double utmX;
-    double utmY;
+
+    double utmX, utmY;
+    double lat, lon;
+
     QMap<QDate, float> depths;
+
     QDate firstDate;
     QDate lastDate;
 };

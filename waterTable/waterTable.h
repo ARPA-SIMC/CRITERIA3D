@@ -18,8 +18,9 @@
 class WaterTable
 {
     public:
-        WaterTable(std::vector<float> &inputTMin, std::vector<float> &inputTMax, std::vector<float> &inputPrec, QDate firstMeteoDate, QDate lastMeteoDate,
-                   Crit3DMeteoSettings meteoSettings, gis::Crit3DGisSettings gisSettings);
+        WaterTable(std::vector<float> &inputTMin, std::vector<float> &inputTMax, std::vector<float> &inputPrec,
+                   QDate firstMeteoDate, QDate lastMeteoDate, Crit3DMeteoSettings meteoSettings);
+
         QString getIdWell() const;
         QDate getFirstDateWell();
         QDate getLastDateWell();
@@ -74,7 +75,7 @@ class WaterTable
 
     private:
         Crit3DMeteoSettings meteoSettings;
-        gis::Crit3DGisSettings gisSettings;
+
         QDate firstDateWell;
         QDate lastDateWell;
         QDate firstMeteoDate;
@@ -87,8 +88,6 @@ class WaterTable
         std::vector<float> inputPrec;
         std::vector<float> etpValues;
         std::vector<float> precValues;
-
-        double lat, lon;
 
         int nrDaysPeriod;
         double alpha;

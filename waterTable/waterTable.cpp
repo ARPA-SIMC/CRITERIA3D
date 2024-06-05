@@ -4,9 +4,9 @@
 #include <math.h>
 
 
-WaterTable::WaterTable(std::vector<float> &inputTMin, std::vector<float> &inputTMax, std::vector<float> &inputPrec, QDate firstMeteoDate, QDate lastMeteoDate,
-                       Crit3DMeteoSettings meteoSettings, gis::Crit3DGisSettings gisSettings)
-    : inputTMin(inputTMin), inputTMax(inputTMax), inputPrec(inputPrec), firstMeteoDate(firstMeteoDate), lastMeteoDate(lastMeteoDate), meteoSettings(meteoSettings), gisSettings(gisSettings)
+WaterTable::WaterTable(std::vector<float> &inputTMin, std::vector<float> &inputTMax, std::vector<float> &inputPrec,
+                       QDate firstMeteoDate, QDate lastMeteoDate, Crit3DMeteoSettings meteoSettings)
+    : inputTMin(inputTMin), inputTMax(inputTMax), inputPrec(inputPrec), firstMeteoDate(firstMeteoDate), lastMeteoDate(lastMeteoDate), meteoSettings(meteoSettings)
 {
 }
 
@@ -78,8 +78,6 @@ std::vector<float> WaterTable::getMyInterpolateSeries()
 void WaterTable::initializeWaterTable(Well myWell)
 {
     well = myWell;
-
-    gis::getLatLonFromUtm(gisSettings, well.getUtmX(), well.getUtmY(), &lat, &lon);
 
     getFirstDateWell();
     getLastDateWell();
@@ -181,7 +179,7 @@ bool WaterTable::setMeteoData(QDate myDate, float tmin, float tmax, float prec)
     if (index < etpValues.size() && index < precValues.size())
     {
         Crit3DDate date = Crit3DDate(myDate.day(), myDate.month(), myDate.year());
-        etpValues[index] = dailyEtpHargreaves(tmin, tmax, date, lat, &meteoSettings);
+        etpValues[index] = dailyEtpHargreaves(tmin, tmax, date, well.getLatitude(), &meteoSettings);
         precValues[index] = prec;
         return true;
     }
@@ -221,7 +219,7 @@ bool WaterTable::computeETP_allSeries(bool isUpdateAvgCWB)
             Tmin = inputTMin[index];
             Tmax = inputTMax[index];
             prec = inputPrec[index];
-            etp = dailyEtpHargreaves(Tmin, Tmax, date, lat, &meteoSettings);
+            etp = dailyEtpHargreaves(Tmin, Tmax, date, well.getLatitude(), &meteoSettings);
         }
         etpValues.push_back(etp);
         precValues.push_back(prec);

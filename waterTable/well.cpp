@@ -1,40 +1,18 @@
+#include "commonConstants.h"
 #include "well.h"
 #include <algorithm>
 
 Well::Well()
 {
+    lat = NODATA;
+    lon = NODATA;
+    utmX = NODATA;
+    utmY = NODATA;
 
+    id = "";
+    depths.clear();
 }
 
-QString Well::getId() const
-{
-    return id;
-}
-
-void Well::setId(const QString &newId)
-{
-    id = newId;
-}
-
-double Well::getUtmX() const
-{
-    return utmX;
-}
-
-void Well::setUtmX(double newUtmX)
-{
-    utmX = newUtmX;
-}
-
-double Well::getUtmY() const
-{
-    return utmY;
-}
-
-void Well::setUtmY(double newUtmY)
-{
-    utmY = newUtmY;
-}
 
 void Well::insertData(QDate myDate, float myValue)
 {
@@ -66,6 +44,7 @@ QDate Well::getFirstDate()
     }
     return firstDate;
 }
+
 
 QDate Well::getLastDate()
 {
