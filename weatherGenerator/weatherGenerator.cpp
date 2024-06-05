@@ -805,7 +805,7 @@ bool makeSeasonalForecast(QString outputFileName, char separator, XMLSeasonalAno
 
 /*!
   * \name makeSeasonalForecastWaterTable
-  * \brief Generates a time series of daily data (Tmin, Tmax, Prec, Depth)
+  * \brief Generates a time series of daily data (Tmin, Tmax, Prec, Water table depth)
   * for a period of nrYears = numMembers * nrRepetitions
   * Different members of anomalies loaded by xml files are added to the climate
   * Output is written on outputFileName (csv)
