@@ -26,7 +26,7 @@ class WaterTable
         void initializeWaterTable(Well myWell);
         bool computeWaterTableParameters(Well myWell, int maxNrDays);
         bool computeWTClimate();
-        bool computeETP_allSeries();
+        bool computeETP_allSeries(bool isUpdateAvgCWB);
         bool computeCWBCorrelation(int maxNrDays);
         double computeCWB(QDate myDate, int nrDays);
         bool computeWaterTableIndices();
@@ -35,6 +35,7 @@ class WaterTable
         bool computeWaterTableClimate(QDate currentDate, int yearFrom, int yearTo, float* myValue);
         bool getWaterTableInterpolation(QDate myDate, float* myValue, float* myDelta, int* myDeltaDays);
         void computeWaterTableSeries();
+        bool setMeteoData(QDate myDate, float tmin, float tmax, float prec);
 
         QString getError() const { return error; }
 
@@ -61,6 +62,16 @@ class WaterTable
 
         void setInputPrec(const std::vector<float> &newInputPrec);
 
+        void setFirstMeteoDate(QDate myDate)
+        {
+            firstMeteoDate = myDate;
+        }
+
+        void setLastMeteoDate(QDate myDate)
+        {
+            lastMeteoDate = myDate;
+        }
+
     private:
         Crit3DMeteoSettings meteoSettings;
         gis::Crit3DGisSettings gisSettings;
@@ -76,6 +87,8 @@ class WaterTable
         std::vector<float> inputPrec;
         std::vector<float> etpValues;
         std::vector<float> precValues;
+
+        double lat, lon;
 
         int nrDaysPeriod;
         double alpha;

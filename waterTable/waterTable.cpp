@@ -51,9 +51,12 @@ void WaterTable::cleanAllMeteoVector()
 {
     inputTMin.clear();
     inputTMax.clear();
-    inputPrec.clear();;
-    etpValues.clear();;
-    precValues.clear();;
+    inputPrec.clear();
+    etpValues.clear();
+    precValues.clear();
+
+    firstMeteoDate = QDate();
+    lastMeteoDate = QDate();
 }
 
 
@@ -74,9 +77,13 @@ std::vector<float> WaterTable::getMyInterpolateSeries()
 
 void WaterTable::initializeWaterTable(Well myWell)
 {
-    this->well = myWell;
+    well = myWell;
+
+    gis::getLatLonFromUtm(gisSettings, well.getUtmX(), well.getUtmY(), &lat, &lon);
+
     getFirstDateWell();
     getLastDateWell();
+
     for (int myMonthIndex = 0; myMonthIndex < 12; myMonthIndex++)
     {
         WTClimateMonthly[myMonthIndex] = NODATA;
@@ -108,7 +115,7 @@ bool WaterTable::computeWaterTableParameters(Well myWell, int maxNrDays)
     initializeWaterTable(myWell);
     isClimateReady = computeWTClimate();
 
-    if (! computeETP_allSeries())
+    if (! computeETP_allSeries(true))
     {
         return false;
     }
@@ -167,12 +174,28 @@ bool WaterTable::computeWTClimate()
 }
 
 
-bool WaterTable::computeETP_allSeries()
+bool WaterTable::setMeteoData(QDate myDate, float tmin, float tmax, float prec)
+{
+    int index = firstMeteoDate.daysTo(myDate);
+
+    if (index < etpValues.size() && index < precValues.size())
+    {
+        Crit3DDate date = Crit3DDate(myDate.day(), myDate.month(), myDate.year());
+        etpValues[index] = dailyEtpHargreaves(tmin, tmax, date, lat, &meteoSettings);
+        precValues[index] = prec;
+        return true;
+    }
+    else
+    {
+        return false;
+    }
+}
+
+
+bool WaterTable::computeETP_allSeries(bool isUpdateAvgCWB)
 {
     etpValues.clear();
     precValues.clear();
-    double myLat, myLon;
-    gis::getLatLonFromUtm(gisSettings, well.getUtmX(), well.getUtmY(), &myLat, &myLon);
 
     float sumCWB = 0;
     int nrValidDays = 0;
@@ -181,7 +204,8 @@ bool WaterTable::computeETP_allSeries()
     float Tmax = NODATA;
     float prec = NODATA;
     float etp = NODATA;
-    for (QDate myDate = firstMeteoDate; myDate<=lastMeteoDate; myDate=myDate.addDays(1))
+
+    for (QDate myDate = firstMeteoDate; myDate <= lastMeteoDate; myDate = myDate.addDays(1))
     {
         Crit3DDate date(myDate.day(), myDate.month(), myDate.year());
         if (index > inputTMin.size() || index > inputTMax.size() || index > inputPrec.size())
@@ -197,7 +221,7 @@ bool WaterTable::computeETP_allSeries()
             Tmin = inputTMin[index];
             Tmax = inputTMax[index];
             prec = inputPrec[index];
-            etp = dailyEtpHargreaves(Tmin, Tmax, date, myLat,&meteoSettings);
+            etp = dailyEtpHargreaves(Tmin, Tmax, date, lat, &meteoSettings);
         }
         etpValues.push_back(etp);
         precValues.push_back(prec);
@@ -209,14 +233,17 @@ bool WaterTable::computeETP_allSeries()
         index = index + 1;
     }
 
-    if (nrValidDays > 0)
+    if (isUpdateAvgCWB)
     {
-        avgDailyCWB = sumCWB / nrValidDays;
-    }
-    else
-    {
-        error = "Missing data";
-        return false;
+        if (nrValidDays > 0)
+        {
+            avgDailyCWB = sumCWB / nrValidDays;
+        }
+        else
+        {
+            error = "Missing data";
+            return false;
+        }
     }
 
     return true;
@@ -414,9 +441,9 @@ float WaterTable::getWaterTableDaily(QDate myDate)
     return getWaterTableDaily;
 }
 
+
 float WaterTable::getWaterTableClimate(QDate myDate)
 {
-
     float getWaterTableClimate = NODATA;
 
     if (!isClimateReady)

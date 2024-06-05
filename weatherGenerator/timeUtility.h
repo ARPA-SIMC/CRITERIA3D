@@ -6,6 +6,7 @@
 
     class Crit3DDate;
     class QString;
+    class QDate;
 
     int getMonthsInPeriod(int month1, int month2);
 

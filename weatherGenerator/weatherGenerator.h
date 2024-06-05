@@ -118,10 +118,12 @@
                             TweatherGenClimate& wGenClimate, TinputObsData* dailyObsData,
                             int numRepetitions, int myPredictionYear, int wgDoy1, int wgDoy2, float rainfallThreshold);
 
+    bool initializeWaterTableData(TinputObsData* dailyObsData, WaterTable *waterTable,
+                                  int predictionYear, int wgDoy1, int nrDaysBeforeWgDoy1, int daysWg);
+
     bool makeSeasonalForecastWaterTable(QString outputFileName, char separator, XMLSeasonalAnomaly* XMLAnomaly,
-                                        TweatherGenClimate& wGenClimate, TinputObsData* dailyObsData,
-                                        int nrRepetitions, int myPredictionYear, int wgDoy1, int wgDoy2,
-                                        float rainfallThreshold, WaterTable waterTable);
+                                        TweatherGenClimate& wGenClimate, TinputObsData* dailyObsData, WaterTable *waterTable,
+                                        int nrRepetitions, int myPredictionYear, int wgDoy1, int wgDoy2, float rainfallThreshold);
 
     bool computeSeasonalPredictions(TinputObsData *dailyObsData, TweatherGenClimate& wgClimate,
                                     int predictionYear, int firstYear, int nrRepetitions,
