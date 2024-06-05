@@ -258,16 +258,16 @@ bool WaterTable::computeCWBCorrelation(int maxNrDays)
     QMap<QDate, float> myDepths = well.getObsDepths();
     std::vector<float> myCWBSum;
     std::vector<float> myObsWT;
-    float a;
-    float b;
-    float myR2;
+    float a, b;
+    float currentR2;
 
     maxNrDays = std::max(90, maxNrDays);
-    for (int nrDays = 90; nrDays <= maxNrDays; nrDays = nrDays+5)
+    for (int nrDays = 90; nrDays <= maxNrDays; nrDays += 5)
     {
         myCWBSum.clear();
         myObsWT.clear();
         QMapIterator<QDate, float> it(myDepths);
+
         while (it.hasNext())
         {
             it.next();
@@ -281,10 +281,10 @@ bool WaterTable::computeCWBCorrelation(int maxNrDays)
             }
         }
 
-        statistics::linearRegression(myCWBSum, myObsWT, int(myCWBSum.size()), false, &a, &b, &myR2);
-        if (myR2 > bestR2)
+        statistics::linearRegression(myCWBSum, myObsWT, int(myCWBSum.size()), false, &a, &b, &currentR2);
+        if (currentR2 > bestR2)
         {
-            bestR2 = myR2;
+            bestR2 = currentR2;
             bestNrDays = nrDays;
             bestH0 = a;
             bestAlfaCoeff = b;
