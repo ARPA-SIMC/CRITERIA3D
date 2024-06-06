@@ -513,13 +513,13 @@ bool WaterTable::getWaterTableInterpolation(QDate myDate, float* myValue, float*
     {
         if (keys[0] > myDate)
         {
-            indexNext = i;
+            indexNext = 0;
             nextDate = keys[indexNext];
             nextValue = myDepths[nextDate];
         }
         else if (keys[lastIndex] < myDate)
         {
-            indexPrev = i;
+            indexPrev = lastIndex;
             previousDate = keys[indexPrev];
             previosValue = myDepths[previousDate];
         }
