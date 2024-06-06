@@ -1014,13 +1014,11 @@ bool makeSeasonalForecastWaterTable(QString outputFileName, char separator, XMLS
             qDebug() << "Error in computeSeasonalPredictions";
             return false;
         }
-
         if (indexWg.size() != 0)
         {
             QDate myDate(seasonFirstDate.year, seasonFirstDate.month, seasonFirstDate.day);
-            for (int i = 0; i < daysWg; i++)
+            for (int currentIndex = indexWg[0]; currentIndex <= indexWg[indexWg.size()-1]; currentIndex++)
             {
-                int currentIndex = indexWg[0] + i;
                 float tmin = dailyPredictions[currentIndex].minTemp;
                 float tmax = dailyPredictions[currentIndex].maxTemp;
                 float prec = dailyPredictions[currentIndex].prec;
@@ -1034,7 +1032,6 @@ bool makeSeasonalForecastWaterTable(QString outputFileName, char separator, XMLS
                 myDate = myDate.addDays(1);
             }
         }
-
         // next model
         myYear = myYear + nrRepetitions;
     }
