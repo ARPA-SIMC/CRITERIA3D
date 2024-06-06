@@ -45,7 +45,6 @@ class WaterTable
 
         float getR2() const { return R2; }
         float getRMSE() const { return RMSE; }
-        float getNASH() const { return NASH; }
         float getEF() const { return EF; }
 
         int getNrDaysPeriod() const { return nrDaysPeriod; }
@@ -92,7 +91,6 @@ class WaterTable
 
         float R2;
         float RMSE;
-        float NASH;
         float EF;
 
         bool isClimateReady;

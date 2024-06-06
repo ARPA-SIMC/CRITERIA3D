@@ -96,7 +96,6 @@ void WaterTable::initializeWaterTable(Well myWell)
     nrDaysPeriod = NODATA;
     nrObsData = 0;
     EF = NODATA;
-    NASH = NODATA;
     RMSE = NODATA;
     avgDailyCWB = NODATA;
 }
@@ -202,6 +201,7 @@ bool WaterTable::computeETP_allSeries(bool isUpdateAvgCWB)
     float Tmax = NODATA;
     float prec = NODATA;
     float etp = NODATA;
+    double lat =  well.getLatitude();
 
     for (QDate myDate = firstMeteoDate; myDate <= lastMeteoDate; myDate = myDate.addDays(1))
     {
@@ -219,10 +219,12 @@ bool WaterTable::computeETP_allSeries(bool isUpdateAvgCWB)
             Tmin = inputTMin[index];
             Tmax = inputTMax[index];
             prec = inputPrec[index];
-            etp = dailyEtpHargreaves(Tmin, Tmax, date, well.getLatitude(), &meteoSettings);
+            etp = dailyEtpHargreaves(Tmin, Tmax, date, lat, &meteoSettings);
         }
+
         etpValues.push_back(etp);
         precValues.push_back(prec);
+
         if (etp != NODATA && prec != NODATA)
         {
             sumCWB += prec - etp;
@@ -291,21 +293,21 @@ bool WaterTable::computeCWBCorrelation(int maxNrDays)
         }
     }
 
-    if (bestR2 > 0)
-    {
-        nrObsData = int(myObsWT.size());
-        nrDaysPeriod = bestNrDays;
-        h0 = bestH0;
-        alpha = bestAlfaCoeff;
-        R2 = bestR2;
-        isCWBEquationReady = true;
-        return true;
-    }
-    else
+    if (bestR2 < 0.1)
     {
         return false;
     }
+
+    nrObsData = int(myObsWT.size());
+    nrDaysPeriod = bestNrDays;
+    h0 = bestH0;
+    alpha = bestAlfaCoeff;
+    R2 = bestR2;
+    isCWBEquationReady = true;
+
+    return true;
 }
+
 
 // Climatic WaterBalance (CWB) on a nrDaysPeriod
 double WaterTable::computeCWB(QDate myDate, int nrDays)
@@ -400,7 +402,6 @@ bool WaterTable::computeWaterTableIndices()
     }
 
     RMSE = sqrt(mySumError / nrObs);
-    NASH = 1 - mySumError / mySumDiffAvg;
 
     if (isClimateReady)
     {

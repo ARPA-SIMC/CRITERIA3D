@@ -38,10 +38,6 @@ DialogSummary::DialogSummary(WaterTable myWaterTable)
     QLineEdit* myRMSE = new QLineEdit(QString::number(myWaterTable.getRMSE(),'f', 2));
     myRMSE->setReadOnly(true);
 
-    QLabel* labelNASH = new QLabel("Nash-Sutcliffe [-]: ");
-    QLineEdit* myNASH = new QLineEdit(QString::number(myWaterTable.getNASH(),'f', 2));
-    myNASH->setReadOnly(true);
-
     QLabel* labelEfIndex = new QLabel("Efficiency Index [-]: ");
     QLineEdit* myEfIndex = new QLineEdit(QString::number(myWaterTable.getEF(),'f', 2));
     myEfIndex->setReadOnly(true);
@@ -66,9 +62,6 @@ DialogSummary::DialogSummary(WaterTable myWaterTable)
 
     infoLayout->addWidget(labelRMSE,6,0,1,1);
     infoLayout->addWidget(myRMSE,6,1,1,1);
-
-    infoLayout->addWidget(labelNASH,7,0,1,1);
-    infoLayout->addWidget(myNASH,7,1,1,1);
 
     infoLayout->addWidget(labelEfIndex,8,0,1,1);
     infoLayout->addWidget(myEfIndex,8,1,1,1);
