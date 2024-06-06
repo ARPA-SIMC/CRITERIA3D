@@ -1709,7 +1709,7 @@ bool Crit3DMeteoGridDbHandler::loadGridDailyData(QString &myError, const QString
     QString tableD = _tableDaily.prefix + meteoPointId + _tableDaily.postFix;
 
     unsigned row, col;
-    if ( !_meteoGrid->findMeteoPointFromId(&row, &col, meteoPointId.toStdString()) )
+    if (! _meteoGrid->findMeteoPointFromId(&row, &col, meteoPointId.toStdString()) )
     {
         myError = "Missing meteoPoint id: " + meteoPointId;
         return false;
@@ -4044,7 +4044,7 @@ bool Crit3DMeteoGridDbHandler::exportDailyDataCsv(const QList<meteoVariable> &va
         for (int col = 0; col < gridStructure().header().nrCols; col++)
         {
             QString id = QString::fromStdString(meteoGrid()->meteoPoints()[row][col]->id);
-            if (! isList || idList.contains(id))
+            if (idList.contains(id) || (! isList && meteoGrid()->meteoPoints()[row][col]->active))
             {
                 // read data
                 if (gridStructure().isEnsemble())
