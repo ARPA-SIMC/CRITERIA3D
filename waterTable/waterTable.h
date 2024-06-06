@@ -57,6 +57,7 @@ class WaterTable
         QMap<QDate, float> getObsDepths();
 
         void cleanAllMeteoVector();
+
         void setInputTMin(const std::vector<float> &newInputTMin);
 
         void setInputTMax(const std::vector<float> &newInputTMax);
@@ -64,14 +65,10 @@ class WaterTable
         void setInputPrec(const std::vector<float> &newInputPrec);
 
         void setFirstMeteoDate(QDate myDate)
-        {
-            firstMeteoDate = myDate;
-        }
+            { firstMeteoDate = myDate; }
 
         void setLastMeteoDate(QDate myDate)
-        {
-            lastMeteoDate = myDate;
-        }
+            { lastMeteoDate = myDate; }
 
     private:
         Crit3DMeteoSettings meteoSettings;
