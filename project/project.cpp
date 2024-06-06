@@ -4619,7 +4619,7 @@ bool Project::waterTableImportLocation(const QString &csvFileName)
     }
 
     int wrongLines = 0;
-    if (! loadWaterTableLocationCsv(csvFileName, wellPoints, errorString, wrongLines))
+    if (! loadWaterTableLocationCsv(csvFileName, wellPoints, gisSettings, errorString, wrongLines))
     {
         logError(errorString);
         return false;
@@ -4714,7 +4714,7 @@ bool Project::computeSingleWell(int indexWell)
     QDate firstDate(linkedMeteoPoint.getFirstDailyData().year, linkedMeteoPoint.getFirstDailyData().month, linkedMeteoPoint.getFirstDailyData().day);
     QDate lastDate(linkedMeteoPoint.getLastDailyData().year, linkedMeteoPoint.getLastDailyData().month, linkedMeteoPoint.getLastDailyData().day);
 
-    WaterTable waterTable(inputTMin, inputTMax, inputPrec, firstDate, lastDate, *meteoSettings, gisSettings);
+    WaterTable waterTable(inputTMin, inputTMax, inputPrec, firstDate, lastDate, *meteoSettings);
     waterTable.computeWaterTableParameters(wellPoints[indexWell], maxNrDays);
     waterTable.computeWaterTableSeries();        // prepare series to show
 

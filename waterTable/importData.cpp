@@ -4,87 +4,97 @@
 #include <QTextStream>
 #include <QRegularExpression>
 #include "well.h"
+#include "gis.h"
 
 
-bool loadWaterTableLocationCsv(const QString &csvFileName, std::vector<Well> &wellList, QString &errorStr, int &wrongLines)
+bool loadWaterTableLocationCsv(const QString &csvFileName, std::vector<Well> &wellList,
+                               const gis::Crit3DGisSettings& gisSettings, QString &errorStr, int &wrongLines)
 {
-    errorStr = "";
     wellList.clear();
 
     QFile myFile(csvFileName);
-    QList<QString> idList;
-    QList<QString> errorList;
-    int posId = 0;
-    int posUtmx = 1;
-    int posUtmy = 2;
-    int nrRequiredFields = 3;
-    int validLines = 0;
-     bool ok;
-
     if (! myFile.open(QFile::ReadOnly | QFile::Text) )
     {
         errorStr = "Csv file does not exist:\n" + csvFileName;
         return false;
     }
-    else
+
+    QTextStream in(&myFile);
+    int nrRequiredFields = 3;
+
+    // check header
+    QString line = in.readLine();
+    QList<QString> headerItems = line.split(",");
+    if (headerItems.size() != nrRequiredFields)
     {
-        QTextStream in(&myFile);
-
-        // check header
-        QString line = in.readLine();
-        QList<QString> headerItems = line.split(",");
-        if (headerItems.size() != nrRequiredFields)
-        {
-            errorStr = "Wrong data! Required well ID, utm X, utm Y.";
-            return false;
-        }
-
-        while (! in.atEnd())
-        {
-            line = in.readLine();
-            QList<QString> items = line.split(",");
-            items.removeAll({});
-            if (items.size() < nrRequiredFields)
-            {
-                errorList.append(items[posId]);
-                wrongLines++;
-                continue;
-            }
-            items[posId] = items[posId].simplified();
-            QString id = items[posId].remove(QChar('"'));
-            if (idList.contains(id))
-            {
-                // id already saved
-                errorList.append(id);
-                wrongLines++;
-                continue;
-            }
-            idList.append(id);
-            items[posUtmx] = items[posUtmx].simplified();
-            double utmX = items[posUtmx].remove(QChar('"')).toDouble(&ok);
-            if (!ok)
-            {
-                errorList.append(id);
-                wrongLines++;
-                continue;
-            }
-            items[posUtmy] = items[posUtmy].simplified();
-            double utmY = items[posUtmy].remove(QChar('"')).toDouble(&ok);
-            if (!ok)
-            {
-                errorList.append(id);
-                wrongLines++;
-                continue;
-            }
-
-            Well newWell;
-            newWell.setId(id);
-            newWell.setUtmX(utmX);
-            newWell.setUtmY(utmY);
-            wellList.push_back(newWell);
-            validLines++;
-        }
+        errorStr = "Wrong data! Required well ID, utm X, utm Y.";
+        return false;
     }
+    errorStr = "";
+
+    QList<QString> idList;
+    QList<QString> errorList;
+    int posId = 0;
+    int posUtmx = 1;
+    int posUtmy = 2;
+    int validLines = 0;
+
+    while (! in.atEnd())
+    {
+        line = in.readLine();
+        QList<QString> items = line.split(",");
+        items.removeAll({});
+        if (items.size() < nrRequiredFields)
+        {
+            errorList.append(items[posId]);
+            wrongLines++;
+            continue;
+        }
+
+        items[posId] = items[posId].simplified();
+        QString id = items[posId].remove(QChar('"'));
+        if (idList.contains(id))
+        {
+            // id already saved
+            errorList.append(id);
+            wrongLines++;
+            continue;
+        }
+        idList.append(id);
+
+        bool isOk;
+        items[posUtmx] = items[posUtmx].simplified();
+        double utmX = items[posUtmx].remove(QChar('"')).toDouble(&isOk);
+        if (! isOk)
+        {
+            errorList.append(id);
+            wrongLines++;
+            continue;
+        }
+
+        items[posUtmy] = items[posUtmy].simplified();
+        double utmY = items[posUtmy].remove(QChar('"')).toDouble(&isOk);
+        if (! isOk)
+        {
+            errorList.append(id);
+            wrongLines++;
+            continue;
+        }
+
+        double lat, lon;
+        gis::getLatLonFromUtm(gisSettings, utmX, utmY, &lat, &lon);
+
+        Well newWell;
+        newWell.setId(id);
+        newWell.setUtmX(utmX);
+        newWell.setUtmY(utmY);
+        newWell.setLatitude(lat);
+        newWell.setLongitude(lon);
+        wellList.push_back(newWell);
+
+        validLines++;
+    }
+
     myFile.close();
 
     if (validLines == 0)
@@ -203,6 +213,7 @@ bool loadWaterTableDepthCsv(const QString &csvFileName, std::vector<Well> &wellL
 
     return true;
 }
+
 
 bool loadCsvDepthsSingleWell(QString csvDepths, Well* well, int waterTableMaximumDepth, QString &errorStr, int &wrongLines)
 {

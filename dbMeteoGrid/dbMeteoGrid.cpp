@@ -3936,7 +3936,8 @@ bool Crit3DMeteoGridDbHandler::saveLogProcedures(QString *myError, QString nameP
  * \return true on success, false otherwise
  */
 bool Crit3DMeteoGridDbHandler::exportDailyDataCsv(QString &errorStr, QList<meteoVariable> variableList,
-                                                  QDate firstDate, QDate lastDate, QString idListFileName, QString outputPath)
+                                                  QDate firstDate, QDate lastDate, QString idListFileName,
+                                                  QString outputPath, bool isEnsemble)
 {
     errorStr = "";
 

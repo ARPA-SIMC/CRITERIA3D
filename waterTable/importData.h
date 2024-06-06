@@ -5,8 +5,12 @@
     #ifndef WELL_H
         #include "well.h"
     #endif
+    #ifndef GIS_H
+        #include "gis.h"
+    #endif
 
-    bool loadWaterTableLocationCsv(const QString &csvFileName, std::vector<Well> &wellList, QString &errorStr, int &wrongLines);
+    bool loadWaterTableLocationCsv(const QString &csvFileName, std::vector<Well> &wellList,
+                               const gis::Crit3DGisSettings &gisSettings, QString &errorStr, int &wrongLines);
 
     bool loadWaterTableDepthCsv(const QString &csvFileName, std::vector<Well> &wellList, int waterTableMaximumDepth,
                                 QString &errorStr, int &wrongLines);
