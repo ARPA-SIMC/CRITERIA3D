@@ -288,7 +288,7 @@ int cmdExportDailyDataCsv(Project* myProject, QList<QString> argumentList)
                         "ExportDailyDataCsv -v:variableList [-TPREC] [-t:type] -d1:firstDate [-d2:lastDate] [-l:idList] [-p:outputPath]\n"
                         "-v         list of comma separated variables (varname: TMIN, TMAX, TAVG, PREC, RHMIN, RHMAX, RHAVG, RAD, ET0_HS, ET0_PM, LEAFW) \n"
                         "-TPREC     export Tmin, Tmax, Tavg, Prec \n"
-                        "-t         type: GRID|ENSEMBLE_GRID|POINTS (default: GRID) \n"
+                        "-t         type: GRID|POINTS (default: GRID) \n"
                         "-d1, -d2   date format: YYYY-MM-DD (default: lastDate = yesterday) \n"
                         "-l         list of output points or cells filename  (default: ALL active cells/points) \n"
                         "-p         output Path (default: " + outputPath + ") \n";
@@ -359,9 +359,9 @@ int cmdExportDailyDataCsv(Project* myProject, QList<QString> argumentList)
         {
             typeStr = argumentList[i].right(argumentList[i].length()-3).toUpper();
 
-            if (typeStr != "GRID" && typeStr != "POINTS" && typeStr != "ENSEMBLE_GRID")
+            if (typeStr != "GRID" && typeStr != "POINTS")
             {
-                myProject->logError("Wrong type: available GRID or ENSEMBLE_GRID or POINTS.");
+                myProject->logError("Wrong type: available GRID or POINTS.");
                 return PRAGA_OK;
             }
         }
@@ -423,7 +423,7 @@ int cmdExportDailyDataCsv(Project* myProject, QList<QString> argumentList)
 
     myProject->logInfo("... output path is: " + outputPath);
 
-    if (typeStr == "GRID" || typeStr == "ENSEMBLE_GRID")
+    if (typeStr == "GRID")
     {
         if (! myProject->meteoGridLoaded)
         {
@@ -431,9 +431,8 @@ int cmdExportDailyDataCsv(Project* myProject, QList<QString> argumentList)
             return PRAGA_ERROR;
         }
 
-        bool isEnsemble = (typeStr == "ENSEMBLE_GRID");
-        if (! myProject->meteoGridDbHandler->exportDailyDataCsv(myProject->errorString, variableList,
-                                             firstDate, lastDate, idListFileName, outputPath, isEnsemble))
+        if (! myProject->meteoGridDbHandler->exportDailyDataCsv(variableList, firstDate, lastDate,
+                                                               idListFileName, outputPath, myProject->errorString))
         {
             myProject->logError();
             return PRAGA_ERROR;
