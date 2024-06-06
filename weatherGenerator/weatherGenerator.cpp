@@ -1014,16 +1014,19 @@ bool makeSeasonalForecastWaterTable(QString outputFileName, char separator, XMLS
             qDebug() << "Error in computeSeasonalPredictions";
             return false;
         }
-
         if (indexWg.size() != 0)
         {
             QDate myDate(seasonFirstDate.year, seasonFirstDate.month, seasonFirstDate.day);
-            for (int i = 0; i < daysWg; i++)
+            QDate lastDate(seasonLastDate.year, seasonLastDate.month, seasonLastDate.day);
+            for (int currentIndex = indexWg[0]; currentIndex <= indexWg[indexWg.size()-1]; currentIndex++)
             {
-                int currentIndex = indexWg[0] + i;
                 float tmin = dailyPredictions[currentIndex].minTemp;
                 float tmax = dailyPredictions[currentIndex].maxTemp;
                 float prec = dailyPredictions[currentIndex].prec;
+                if (isLastMember && myDate>lastDate)
+                {
+                    myDate.setDate(myDate.year()-1, myDate.month(), myDate.day());   // l'ultimo membro può prendere 2 periodi di wg
+                }
                 if (waterTable->setMeteoData(myDate, tmin, tmax, prec))
                 {
                     if (waterTable->getWaterTableInterpolation(myDate, &wtDepth, &myDelta, &myDeltaDays))
@@ -1034,7 +1037,6 @@ bool makeSeasonalForecastWaterTable(QString outputFileName, char separator, XMLS
                 myDate = myDate.addDays(1);
             }
         }
-
         // next model
         myYear = myYear + nrRepetitions;
     }
