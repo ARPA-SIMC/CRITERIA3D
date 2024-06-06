@@ -215,9 +215,9 @@ bool loadWaterTableDepthCsv(const QString &csvFileName, std::vector<Well> &wellL
 }
 
 
-bool loadCsvDepthsSingleWell(QString csvDepths, Well* well, int waterTableMaximumDepth, QString &errorStr, int &wrongLines)
+bool loadCsvDepthsSingleWell(const QString &csvFileName, Well* well, int waterTableMaximumDepth, QString &errorStr, int &wrongLines)
 {
-    QFile myFile(csvDepths);
+    QFile myFile(csvFileName);
     QList<QString> errorList;
 
     int posDate = 0;

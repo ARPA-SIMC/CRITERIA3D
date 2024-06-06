@@ -10,27 +10,33 @@ WaterTable::WaterTable(std::vector<float> &inputTMin, std::vector<float> &inputT
 {
 }
 
-QString WaterTable::getIdWell() const
+
+void WaterTable::initializeWaterTable(Well myWell)
 {
-    return well.getId();
+    well = myWell;
+
+    getFirstDateWell();
+    getLastDateWell();
+
+    for (int myMonthIndex = 0; myMonthIndex < 12; myMonthIndex++)
+    {
+        WTClimateMonthly[myMonthIndex] = NODATA;
+    }
+
+    isCWBEquationReady = false;
+    isClimateReady = false;
+
+    alpha = NODATA;
+    h0 = NODATA;
+    R2 = NODATA;
+    nrDaysPeriod = NODATA;
+    nrObsData = 0;
+    EF = NODATA;
+    RMSE = NODATA;
+    avgDailyCWB = NODATA;
+    error = "";
 }
 
-QDate WaterTable::getFirstDateWell()
-{
-    firstDateWell = well.getFirstDate();
-    return firstDateWell;
-}
-
-QDate WaterTable::getLastDateWell()
-{
-    lastDateWell = well.getLastDate();
-    return lastDateWell;
-}
-
-QMap<QDate, float> WaterTable::getObsDepths()
-{
-    return well.getObsDepths();
-}
 
 void WaterTable::setInputTMin(const std::vector<float> &newInputTMin)
 {
@@ -57,47 +63,6 @@ void WaterTable::cleanAllMeteoVector()
 
     firstMeteoDate = QDate();
     lastMeteoDate = QDate();
-}
-
-
-std::vector<QDate> WaterTable::getMyDates()
-{
-    return myDates;
-}
-
-std::vector<float> WaterTable::getMyHindcastSeries()
-{
-    return myHindcastSeries;
-}
-
-std::vector<float> WaterTable::getMyInterpolateSeries()
-{
-    return myInterpolateSeries;
-}
-
-void WaterTable::initializeWaterTable(Well myWell)
-{
-    well = myWell;
-
-    getFirstDateWell();
-    getLastDateWell();
-
-    for (int myMonthIndex = 0; myMonthIndex < 12; myMonthIndex++)
-    {
-        WTClimateMonthly[myMonthIndex] = NODATA;
-    }
-
-    isCWBEquationReady = false;
-    isClimateReady = false;
-
-    alpha = NODATA;
-    h0 = NODATA;
-    R2 = NODATA;
-    nrDaysPeriod = NODATA;
-    nrObsData = 0;
-    EF = NODATA;
-    RMSE = NODATA;
-    avgDailyCWB = NODATA;
 }
 
 
@@ -165,8 +130,10 @@ bool WaterTable::computeWTClimate()
         }
         WTClimateMonthly[myMonthIndex] = H_sum[myMonthIndex] / H_num[myMonthIndex];
     }
-    isClimateReady = true;
+
     interpolation::cubicSplineYearInterpolate(WTClimateMonthly, WTClimateDaily);
+    isClimateReady = true;
+
     return true;
 }
 
@@ -455,6 +422,7 @@ float WaterTable::getWaterTableClimate(QDate myDate)
     return getWaterTableClimate;
 }
 
+
 bool WaterTable::computeWaterTableClimate(QDate currentDate, int yearFrom, int yearTo, float* myValue)
 {
     *myValue = NODATA;
@@ -504,6 +472,7 @@ bool WaterTable::getWaterTableInterpolation(QDate myDate, float* myValue, float*
     {
         return false;
     }
+
     // first assessment
     float myWT_computation = getWaterTableDaily(myDate);
     if (myWT_computation == NODATA)
@@ -525,50 +494,51 @@ bool WaterTable::getWaterTableInterpolation(QDate myDate, float* myValue, float*
     QDate nextDate;
     int dT;
 
-    // previuos and next observation
     QMap<QDate, float> myDepths = well.getObsDepths();
     QList<QDate> keys = myDepths.keys();
+
+    // check previuos and next observed data
+    int lastIndex = keys.size() - 1;
     int i = keys.indexOf(myDate);
     if (i != -1) // exact data found
     {
-        if (i > 0)
-        {
-            indexPrev = i - 1;
-            indexNext = i;
-        }
-        if (i < keys.size()-1)
-        {
-            indexPrev = i;
-            indexNext = i + 1;
-        }
+        indexPrev = i;
         previousDate = keys[indexPrev];
         previosValue = myDepths[previousDate];
+        indexNext = i;
         nextDate = keys[indexNext];
         nextValue = myDepths[nextDate];
     }
     else
     {
-        for (int i = 0; i<keys.size()-1; i++)
+        if (keys[0] > myDate)
         {
-            if (i == 0 && keys[i] > myDate)
-            {
-                indexNext = i;
-                nextDate = keys[indexNext];
-                nextValue = myDepths[nextDate];
-                break;
-            }
-            else if (keys[i] < myDate && keys[i+1] > myDate)
-            {
-                indexPrev = i;
-                previousDate = keys[indexPrev];
-                previosValue = myDepths[previousDate];
-                indexNext = i + 1;
-                nextDate = keys[indexNext];
-                nextValue = myDepths[nextDate];
-                break;
-            }
+            indexNext = i;
+            nextDate = keys[indexNext];
+            nextValue = myDepths[nextDate];
+        }
+        else if (keys[lastIndex] < myDate)
+        {
+            indexPrev = i;
+            previousDate = keys[indexPrev];
+            previosValue = myDepths[previousDate];
+        }
+        else
+        {
+            for (int i = 0; i < lastIndex; i++)
+                if (keys[i] < myDate && keys[i+1] > myDate)
+                {
+                    indexPrev = i;
+                    previousDate = keys[indexPrev];
+                    previosValue = myDepths[previousDate];
+                    indexNext = i + 1;
+                    nextDate = keys[indexNext];
+                    nextValue = myDepths[nextDate];
+                    break;
+                }
         }
     }
+
     if (indexPrev != NODATA)
     {
         myWT = getWaterTableDaily(previousDate);
@@ -594,7 +564,7 @@ bool WaterTable::getWaterTableInterpolation(QDate myDate, float* myValue, float*
         dT =  previousDate.daysTo(nextDate);
         if (dT > WATERTABLE_MAXDELTADAYS * 2)
         {
-            if ( diffWithPrev <= diffWithNext)
+            if (diffWithPrev <= diffWithNext)
             {
                 nextDz = NODATA;
             }
@@ -608,16 +578,24 @@ bool WaterTable::getWaterTableInterpolation(QDate myDate, float* myValue, float*
     if (previousDz != NODATA && nextDz != NODATA)
     {
         dT = previousDate.daysTo(nextDate);
-        *myDelta = previousDz * (1.0 - (float(diffWithPrev) / float(dT))) + nextDz * (1.0 - (float(diffWithNext) / float(dT)));
-        *myDeltaDays = std::min(diffWithPrev, diffWithNext);
+        if (dT == 0)
+        {
+            *myDelta = previousDz;
+            *myDeltaDays = 0;
+        }
+        else
+        {
+            *myDelta = previousDz * (1.0 - (float(diffWithPrev) / float(dT))) + nextDz * (1.0 - (float(diffWithNext) / float(dT)));
+            *myDeltaDays = std::min(diffWithPrev, diffWithNext);
+        }
     }
-    else if ( previousDz!= NODATA)
+    else if (previousDz != NODATA)
     {
         dT = diffWithPrev;
         *myDelta = previousDz * std::max((1.f - (float(dT) / float(WATERTABLE_MAXDELTADAYS))), 0.f);
         *myDeltaDays = dT;
     }
-    else if ( nextDz!= NODATA)
+    else if (nextDz != NODATA)
     {
         dT = diffWithNext;
         *myDelta = nextDz * std::max((1.f - (float(dT) / float(WATERTABLE_MAXDELTADAYS))), 0.f);

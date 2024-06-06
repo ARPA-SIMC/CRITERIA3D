@@ -21,9 +21,6 @@ class WaterTable
         WaterTable(std::vector<float> &inputTMin, std::vector<float> &inputTMax, std::vector<float> &inputPrec,
                    QDate firstMeteoDate, QDate lastMeteoDate, Crit3DMeteoSettings meteoSettings);
 
-        QString getIdWell() const;
-        QDate getFirstDateWell();
-        QDate getLastDateWell();
         void initializeWaterTable(Well myWell);
         bool computeWaterTableParameters(Well myWell, int maxNrDays);
         bool computeWTClimate();
@@ -36,7 +33,15 @@ class WaterTable
         bool computeWaterTableClimate(QDate currentDate, int yearFrom, int yearTo, float* myValue);
         bool getWaterTableInterpolation(QDate myDate, float* myValue, float* myDelta, int* myDeltaDays);
         void computeWaterTableSeries();
+
         bool setMeteoData(QDate myDate, float tmin, float tmax, float prec);
+
+        void setInputTMin(const std::vector<float> &newInputTMin);
+        void setInputTMax(const std::vector<float> &newInputTMax);
+        void setInputPrec(const std::vector<float> &newInputPrec);
+
+        void setFirstMeteoDate(QDate myDate) { firstMeteoDate = myDate; }
+        void setLastMeteoDate(QDate myDate) { lastMeteoDate = myDate; }
 
         QString getError() const { return error; }
 
@@ -50,30 +55,23 @@ class WaterTable
         int getNrDaysPeriod() const { return nrDaysPeriod; }
         int getNrObsData() const { return nrObsData; }
 
-        std::vector<QDate> getMyDates();
-        std::vector<float> getMyHindcastSeries();
-        std::vector<float> getMyInterpolateSeries();
-        QMap<QDate, float> getObsDepths();
+        QString getIdWell() const { return well.getId(); }
+        QDate getFirstDateWell() { return well.getFirstDate(); }
+        QDate getLastDateWell() { return well.getLastDate(); }
+
+        QMap<QDate, float> getObsDepths() { return well.getObsDepths(); }
+
+        std::vector<QDate> getMyDates() { return myDates; }
+
+        std::vector<float> getMyHindcastSeries() { return myHindcastSeries; }
+
+        std::vector<float> getMyInterpolateSeries() { return myInterpolateSeries; }
 
         void cleanAllMeteoVector();
-
-        void setInputTMin(const std::vector<float> &newInputTMin);
-
-        void setInputTMax(const std::vector<float> &newInputTMax);
-
-        void setInputPrec(const std::vector<float> &newInputPrec);
-
-        void setFirstMeteoDate(QDate myDate)
-            { firstMeteoDate = myDate; }
-
-        void setLastMeteoDate(QDate myDate)
-            { lastMeteoDate = myDate; }
 
     private:
         Crit3DMeteoSettings meteoSettings;
 
-        QDate firstDateWell;
-        QDate lastDateWell;
         QDate firstMeteoDate;
         QDate lastMeteoDate;
         Well well;
