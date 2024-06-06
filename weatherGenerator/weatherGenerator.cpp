@@ -1017,11 +1017,16 @@ bool makeSeasonalForecastWaterTable(QString outputFileName, char separator, XMLS
         if (indexWg.size() != 0)
         {
             QDate myDate(seasonFirstDate.year, seasonFirstDate.month, seasonFirstDate.day);
+            QDate lastDate(seasonLastDate.year, seasonLastDate.month, seasonLastDate.day);
             for (int currentIndex = indexWg[0]; currentIndex <= indexWg[indexWg.size()-1]; currentIndex++)
             {
                 float tmin = dailyPredictions[currentIndex].minTemp;
                 float tmax = dailyPredictions[currentIndex].maxTemp;
                 float prec = dailyPredictions[currentIndex].prec;
+                if (isLastMember && myDate>lastDate)
+                {
+                    myDate.setDate(myDate.year()-1, myDate.month(), myDate.day());   // l'ultimo membro può prendere 2 periodi di wg
+                }
                 if (waterTable->setMeteoData(myDate, tmin, tmax, prec))
                 {
                     if (waterTable->getWaterTableInterpolation(myDate, &wtDepth, &myDelta, &myDeltaDays))
