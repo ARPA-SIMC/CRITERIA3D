@@ -4683,14 +4683,15 @@ bool Project::computeSingleWell(int indexWell)
         return false;
     }
 
-    if (!assignNearestMeteoPoint(isMeteoGridLoaded, wellUtmX, wellUtmY, firstMeteoDate, &linkedMeteoPoint))
+    QString idStr = wellPoints[indexWell].getId();
+    if (! assignNearestMeteoPoint(isMeteoGridLoaded, wellUtmX, wellUtmY, firstMeteoDate, &linkedMeteoPoint))
     {
-        logError("Missing near weather data");
+        logError("Missing weather data near well: " + idStr);
         return false;
     }
     if (linkedMeteoPoint.nrObsDataDaysD == 0)
     {
-        logError("Missing near weather data");
+        logError("Missing weather data near well: " + idStr);
         return false;
     }
 
