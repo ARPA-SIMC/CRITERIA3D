@@ -2135,8 +2135,7 @@ namespace interpolation
                 }
             }
 
-
-            paramChange[nrParameters -1] = g[nrParameters - 1] / a[nrParameters - 1][nrParameters - 1];
+            paramChange[nrParameters -1] = g[nrParameters - 1] / std::max(a[nrParameters - 1][nrParameters - 1], EPSILON);
 
             for (i = nrParameters - 2; i >= 0; i--)
             {
@@ -2145,7 +2144,7 @@ namespace interpolation
                 {
                     top -= a[i][k] * paramChange[k];
                 }
-                paramChange[i] = top / a[i][i];
+                paramChange[i] = top / std::max(a[i][i], EPSILON);
             }
 
             // change parameters

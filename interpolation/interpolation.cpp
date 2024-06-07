@@ -1488,7 +1488,7 @@ bool setAllFittingParameters_noRange(Crit3DProxyCombination myCombination, Crit3
                 proxyParamMin.push_back(min_);
                 proxyParamMax.push_back(max_);
                 proxyParamDelta.push_back((max_ - min_) / RATIO_DELTA);
-                proxyParamFirstGuess.push_back((max_ - min_) / 2);
+                proxyParamFirstGuess.push_back((max_ + min_) / 2); // TODO check if ok
             }
 
             paramMin.push_back(proxyParamMin);
