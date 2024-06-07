@@ -17,6 +17,7 @@
 #include "importData.h"
 #include "dialogSummary.h"
 #include "waterTableWidget.h"
+#include "utilities.h"
 
 
 #include <iostream>
@@ -4629,7 +4630,7 @@ bool Project::waterTableImportLocation(const QString &csvFileName)
     {
         logInfo(errorString);
         QMessageBox::warning(nullptr, "Warning!", QString::number(wrongLines)
-                            + " wrong lines of data were not loaded, see the log file for more information: " + logFileName);
+                            + " wrong lines of data were not loaded\nSee the log file for more information:\n" + logFileName);
     }
 
     errorString = "";
@@ -4650,7 +4651,7 @@ bool Project::waterTableImportDepths(const QString &csvDepthsFileName)
     {
         logInfo(errorString);
         QMessageBox::warning(nullptr, "Warning!", QString::number(wrongLines)
-                            + " wrong lines of data were not loaded, see the log file for more information: " + logFileName);
+                            + " wrong lines of data were not loaded\nSee the log file for more information:\n" + logFileName);
     }
 
     errorString = "";
@@ -4658,7 +4659,7 @@ bool Project::waterTableImportDepths(const QString &csvDepthsFileName)
 }
 
 
-bool Project::computeSingleWell(int indexWell)
+bool Project::waterTableComputeSingleWell(int indexWell)
 {
     if (indexWell == NODATA)
         return false;
@@ -4684,7 +4685,7 @@ bool Project::computeSingleWell(int indexWell)
     }
 
     QString idStr = wellPoints[indexWell].getId();
-    if (! assignNearestMeteoPoint(isMeteoGridLoaded, wellUtmX, wellUtmY, firstMeteoDate, &linkedMeteoPoint))
+    if (! waterTableAssignNearestMeteoPoint(isMeteoGridLoaded, wellUtmX, wellUtmY, firstMeteoDate, &linkedMeteoPoint))
     {
         logError("Missing weather data near well: " + idStr);
         return false;
@@ -4694,8 +4695,6 @@ bool Project::computeSingleWell(int indexWell)
         logError("Missing weather data near well: " + idStr);
         return false;
     }
-
-    int maxNrDays = 730;  // attualmente fisso
 
     std::vector<float> inputTMin;
     std::vector<float> inputTMax;
@@ -4712,11 +4711,11 @@ bool Project::computeSingleWell(int indexWell)
         inputPrec.push_back(prec);
     }
 
-    QDate firstDate(linkedMeteoPoint.getFirstDailyData().year, linkedMeteoPoint.getFirstDailyData().month, linkedMeteoPoint.getFirstDailyData().day);
-    QDate lastDate(linkedMeteoPoint.getLastDailyData().year, linkedMeteoPoint.getLastDailyData().month, linkedMeteoPoint.getLastDailyData().day);
+    WaterTable waterTable(inputTMin, inputTMax, inputPrec, getQDate(linkedMeteoPoint.getFirstDailyData()),
+                          getQDate(linkedMeteoPoint.getLastDailyData()), *meteoSettings);
 
-    WaterTable waterTable(inputTMin, inputTMax, inputPrec, firstDate, lastDate, *meteoSettings);
-    waterTable.computeWaterTableParameters(wellPoints[indexWell], maxNrDays);
+    waterTable.computeWaterTableParameters(wellPoints[indexWell], 5);
+
     waterTable.computeWaterTableSeries();        // prepare series to show
 
     waterTableList.push_back(waterTable);
@@ -4724,7 +4723,7 @@ bool Project::computeSingleWell(int indexWell)
 }
 
 
-void Project::showSingleWell(WaterTable &waterTable, const QString &idWell)
+void Project::waterTableShowSingleWell(WaterTable &waterTable, const QString &idWell)
 {
     DialogSummary* dialogResult = new DialogSummary(waterTable);   // show results
     dialogResult->show();
@@ -4735,10 +4734,11 @@ void Project::showSingleWell(WaterTable &waterTable, const QString &idWell)
     return;
 }
 
-bool Project::assignNearestMeteoPoint(bool isMeteoGridLoaded, double wellUtmX, double wellUtmY, QDate firstMeteoDate, Crit3DMeteoPoint* linkedMeteoPoint)
+
+bool Project::waterTableAssignNearestMeteoPoint(bool isMeteoGridLoaded, double wellUtmX, double wellUtmY, QDate firstMeteoDate, Crit3DMeteoPoint* linkedMeteoPoint)
 {
     float minimumDistance = NODATA;
-    bool assignNearestMeteoPoint = false;
+    bool isFound = false;
     if (isMeteoGridLoaded)
     {
         std::string assignNearestId;
@@ -4746,6 +4746,7 @@ bool Project::assignNearestMeteoPoint(bool isMeteoGridLoaded, double wellUtmX, d
         unsigned int assignNearestCol;
         int zoneNumber;
         QDate lastDate = this->meteoGridDbHandler->getLastDailyDate();
+        QDate firstDate = std::max(firstMeteoDate, this->meteoGridDbHandler->getFirstDailyDate());
         for (unsigned row = 0; row < unsigned(meteoGridDbHandler->meteoGrid()->gridStructure().header().nrRows); row++)
         {
             for (unsigned col = 0; col < unsigned(meteoGridDbHandler->meteoGrid()->gridStructure().header().nrCols); col++)
@@ -4769,16 +4770,16 @@ bool Project::assignNearestMeteoPoint(bool isMeteoGridLoaded, double wellUtmX, d
                             assignNearestId = meteoGridDbHandler->meteoGrid()->meteoPointPointer(row,col)->id;
                             assignNearestRow = row;
                             assignNearestCol = col;
-                            assignNearestMeteoPoint = true;
+                            isFound = true;
                         }
                     }
                 }
             }
         }
-        if (assignNearestMeteoPoint)
+        if (isFound)
         {
-            meteoGridDbHandler->loadGridDailyMeteoPrec(errorString, QString::fromStdString(assignNearestId), firstMeteoDate, lastDate);
-            if (!assignWTMeteoData(meteoGridDbHandler->meteoGrid()->meteoPointPointer(assignNearestRow,assignNearestCol), firstMeteoDate))
+            meteoGridDbHandler->loadGridDailyMeteoPrec(errorString, QString::fromStdString(assignNearestId), firstDate, lastDate);
+            if (! waterTableAssignMeteoData(meteoGridDbHandler->meteoGrid()->meteoPointPointer(assignNearestRow, assignNearestCol), firstDate))
             {
                 return false;
             }
@@ -4807,16 +4808,16 @@ bool Project::assignNearestMeteoPoint(bool isMeteoGridLoaded, double wellUtmX, d
                 if (myDistance < minimumDistance || minimumDistance == NODATA)
                 {
                     meteoPointsDbHandler->loadDailyData(getCrit3DDate(firstMeteoDate), getCrit3DDate(lastDate), &(meteoPoints[i]));
-                    if (assignWTMeteoData(&meteoPoints[i], firstMeteoDate))
+                    if (waterTableAssignMeteoData(&meteoPoints[i], firstMeteoDate))
                     {
                         minimumDistance = myDistance;
-                        assignNearestMeteoPoint = true;
+                        isFound = true;
                         assignNearestIndex = i;
                     }
                 }
             }
         }
-        if (assignNearestMeteoPoint)
+        if (isFound)
         {
             linkedMeteoPoint->id = meteoPoints[assignNearestIndex].id;
             linkedMeteoPoint->name = meteoPoints[assignNearestIndex].name;
@@ -4825,10 +4826,12 @@ bool Project::assignNearestMeteoPoint(bool isMeteoGridLoaded, double wellUtmX, d
             linkedMeteoPoint->obsDataD = meteoPoints[assignNearestIndex].obsDataD;
         }
     }
-    return assignNearestMeteoPoint;
+
+    return isFound;
 }
 
-bool Project::assignWTMeteoData(Crit3DMeteoPoint* linkedMeteoPoint, QDate firstMeteoDate)
+
+bool Project::waterTableAssignMeteoData(Crit3DMeteoPoint* linkedMeteoPoint, QDate firstMeteoDate)
 {
     QDate lastMeteoDate;
     lastMeteoDate.setDate(linkedMeteoPoint->getLastDailyData().year, linkedMeteoPoint->getLastDailyData().month, linkedMeteoPoint->getLastDailyData().day); // ultimo dato disponibile

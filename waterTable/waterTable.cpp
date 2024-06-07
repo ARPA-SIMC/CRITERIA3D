@@ -34,7 +34,7 @@ void WaterTable::initializeWaterTable(Well myWell)
     EF = NODATA;
     RMSE = NODATA;
     avgDailyCWB = NODATA;
-    error = "";
+    errorStr = "";
 }
 
 
@@ -66,11 +66,11 @@ void WaterTable::cleanAllMeteoVector()
 }
 
 
-bool WaterTable::computeWaterTableParameters(Well myWell, int maxNrDays)
+bool WaterTable::computeWaterTableParameters(Well myWell, int stepDays)
 {
     if (myWell.getObsDepthNr() == 0)
     {
-        error = "No WaterTable data loaded.";
+        errorStr = "No WaterTable data loaded.";
         return false;
     }
 
@@ -82,7 +82,7 @@ bool WaterTable::computeWaterTableParameters(Well myWell, int maxNrDays)
         return false;
     }
 
-    isCWBEquationReady = computeCWBCorrelation(maxNrDays);
+    isCWBEquationReady = computeCWBCorrelation(stepDays);
     if (! isCWBEquationReady)
     {
         return false;
@@ -96,7 +96,7 @@ bool WaterTable::computeWTClimate()
 {
     if (well.getObsDepthNr() < 3)
     {
-        error = "Missing data";
+        errorStr = "Missing data";
         return false;
     }
 
@@ -125,7 +125,7 @@ bool WaterTable::computeWTClimate()
     {
         if (H_num[myMonthIndex] < 2)
         {
-            error = "Missing watertable data: month " + QString::number(myMonthIndex+1);
+            errorStr = "Missing watertable data: month " + QString::number(myMonthIndex+1);
             return false;
         }
         WTClimateMonthly[myMonthIndex] = H_sum[myMonthIndex] / H_num[myMonthIndex];
@@ -161,33 +161,30 @@ bool WaterTable::computeETP_allSeries(bool isUpdateAvgCWB)
     etpValues.clear();
     precValues.clear();
 
-    float sumCWB = 0;
-    int nrValidDays = 0;
-    int index = 0;
+    if (inputTMin.size() != inputTMax.size() || inputTMin.size() != inputPrec.size())
+    {
+        errorStr = "Wrong weather size";
+        return false;
+    }
+
     float Tmin = NODATA;
     float Tmax = NODATA;
     float prec = NODATA;
     float etp = NODATA;
     double lat =  well.getLatitude();
 
-    for (QDate myDate = firstMeteoDate; myDate <= lastMeteoDate; myDate = myDate.addDays(1))
+    float sumCWB = 0;
+    int nrValidDays = 0;
+    int nrOfData = (int)inputTMin.size();
+    for (int i = 0; i < nrOfData; i++)
     {
-        Crit3DDate date(myDate.day(), myDate.month(), myDate.year());
-        if (index > inputTMin.size() || index > inputTMax.size() || index > inputPrec.size())
-        {
-            etp = NODATA;
-            if (index < inputPrec.size())
-            {
-                prec = inputPrec[index];
-            }
-        }
-        else
-        {
-            Tmin = inputTMin[index];
-            Tmax = inputTMax[index];
-            prec = inputPrec[index];
-            etp = dailyEtpHargreaves(Tmin, Tmax, date, lat, &meteoSettings);
-        }
+        QDate currentDate = firstMeteoDate.addDays(i);
+        Crit3DDate myDate = Crit3DDate(currentDate.day(), currentDate.month(), currentDate.year());
+
+        Tmin = inputTMin[i];
+        Tmax = inputTMax[i];
+        prec = inputPrec[i];
+        etp = dailyEtpHargreaves(Tmin, Tmax, myDate, lat, &meteoSettings);
 
         etpValues.push_back(etp);
         precValues.push_back(prec);
@@ -195,9 +192,8 @@ bool WaterTable::computeETP_allSeries(bool isUpdateAvgCWB)
         if (etp != NODATA && prec != NODATA)
         {
             sumCWB += prec - etp;
-            nrValidDays = nrValidDays + 1;
+            nrValidDays++;
         }
-        index = index + 1;
     }
 
     if (isUpdateAvgCWB)
@@ -208,7 +204,7 @@ bool WaterTable::computeETP_allSeries(bool isUpdateAvgCWB)
         }
         else
         {
-            error = "Missing data";
+            errorStr = "Missing data";
             return false;
         }
     }
@@ -218,20 +214,21 @@ bool WaterTable::computeETP_allSeries(bool isUpdateAvgCWB)
 
 
 // Ricerca del periodo di correlazione migliore
-bool WaterTable::computeCWBCorrelation(int maxNrDays)
+bool WaterTable::computeCWBCorrelation(int stepDays)
 {
-    float bestR2 = 0;
-    float bestH0;
-    float bestAlfaCoeff;
-    int bestNrDays = NODATA;
     QMap<QDate, float> myDepths = well.getObsDepths();
     std::vector<float> myCWBSum;
     std::vector<float> myObsWT;
-    float a, b;
-    float currentR2;
+    float a = NODATA;
+    float b = NODATA;
+    float currentR2 = NODATA;
+    float bestR2 = 0;
+    float bestH0 = NODATA;
+    float bestAlfaCoeff = NODATA;
+    int bestNrDays = NODATA;
 
-    maxNrDays = std::max(90, maxNrDays);
-    for (int nrDays = 90; nrDays <= maxNrDays; nrDays += 5)
+    int maxNrDays = 730;    // two years
+    for (int nrDays = 90; nrDays <= maxNrDays; nrDays += stepDays)
     {
         myCWBSum.clear();
         myObsWT.clear();
@@ -302,7 +299,7 @@ double WaterTable::computeCWB(QDate myDate, int nrDays)
 
     if (nrValidDays < (nrDays * meteoSettings.getMinimumPercentage() / 100))
     {
-        error = "Few Data";
+        errorStr = "Few Data";
         return NODATA;
     }
 
@@ -341,7 +338,7 @@ bool WaterTable::computeWaterTableIndices()
     statistics::linearRegression(myObs, myComputed, int(myObs.size()), false, &myIntercept, &myCoeff, &R2);
 
     float mySum = 0;
-    float mySumError = 0;
+    float mySumerrorStr = 0;
     float mySumDiffClimate = 0;
     float mySumDiffAvg = 0;
     float myErr = 0;
@@ -358,7 +355,7 @@ bool WaterTable::computeWaterTableIndices()
     for (int i=0; i<nrObs; i++)
     {
         myErr = myComputed[i] - myObs[i];
-        mySumError = mySumError + myErr * myErr;
+        mySumerrorStr = mySumerrorStr + myErr * myErr;
         myErrAvg = myObs[i] - myObsAvg;
         mySumDiffAvg = mySumDiffAvg + myErrAvg * myErrAvg;
         if (isClimateReady)
@@ -368,11 +365,11 @@ bool WaterTable::computeWaterTableIndices()
         }
     }
 
-    RMSE = sqrt(mySumError / nrObs);
+    RMSE = sqrt(mySumerrorStr / nrObs);
 
     if (isClimateReady)
     {
-        EF = 1 - mySumError / mySumDiffClimate;
+        EF = 1 - mySumerrorStr / mySumDiffClimate;
     }
     else
     {
@@ -465,7 +462,7 @@ bool WaterTable::getWaterTableInterpolation(QDate myDate, float* myValue, float*
 
     if (! myDate.isValid())
     {
-        error = "Wrong date";
+        errorStr = "Wrong date";
         return false;
     }
     if (! isCWBEquationReady)
@@ -615,28 +612,26 @@ bool WaterTable::getWaterTableInterpolation(QDate myDate, float* myValue, float*
 
 void WaterTable::computeWaterTableSeries()
 {
-    QMap<QDate, float> myDepths = well.getObsDepths();
-    QMapIterator<QDate, float> it(myDepths);
-
     myDates.clear();
     myHindcastSeries.clear();
     myInterpolateSeries.clear();
     float myDelta;
     int myDeltaDays;
 
-    QDate firstObsDate = well.getFirstDate();
+    QDate firstObsDate = std::min(well.getFirstDate(), firstMeteoDate);
     int numValues = firstObsDate.daysTo(lastMeteoDate) + 1;
+
     for (int i = 0; i < numValues; i++)
     {
-        QDate myDate = firstObsDate.addDays(i);
-        myDates.push_back(myDate);
+        QDate currentDate = firstObsDate.addDays(i);
+        myDates.push_back(currentDate);
 
-        float myDepth = getWaterTableDaily(myDate);
-        myHindcastSeries.push_back(myDepth);
+        float currentDepth = getWaterTableDaily(currentDate);
+        myHindcastSeries.push_back(currentDepth);
 
-        if (getWaterTableInterpolation(myDate, &myDepth, &myDelta, &myDeltaDays))
+        if (getWaterTableInterpolation(currentDate, &currentDepth, &myDelta, &myDeltaDays))
         {
-            myInterpolateSeries.push_back(myDepth);
+            myInterpolateSeries.push_back(currentDepth);
         }
         else
         {
