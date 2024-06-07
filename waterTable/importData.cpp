@@ -23,20 +23,22 @@ bool loadWaterTableLocationCsv(const QString &csvFileName, std::vector<Well> &we
     int nrRequiredFields = 3;
 
     // check header
+    bool isLatLon = false;
     QString line = in.readLine();
     QList<QString> headerItems = line.split(",");
     if (headerItems.size() != nrRequiredFields)
     {
-        errorStr = "Wrong data! Required well ID, utm X, utm Y.";
+        errorStr = "Wrong data! Required ID, utmX, utmY or ID, lat, lon.";
         return false;
     }
-    errorStr = "";
+    if (headerItems[1].toUpper() == "LAT")
+    {
+        isLatLon = true;
+    }
 
+    errorStr = "";
     QList<QString> idList;
     QList<QString> errorList;
-    int posId = 0;
-    int posUtmx = 1;
-    int posUtmy = 2;
     int validLines = 0;
 
     while (! in.atEnd())
@@ -46,43 +48,54 @@ bool loadWaterTableLocationCsv(const QString &csvFileName, std::vector<Well> &we
         items.removeAll({});
         if (items.size() < nrRequiredFields)
         {
-            errorList.append(items[posId]);
+            errorList.append(line);
             wrongLines++;
             continue;
         }
 
-        items[posId] = items[posId].simplified();
-        QString id = items[posId].remove(QChar('"'));
+        items[0] = items[0].simplified();
+        QString id = items[0].remove(QChar('"'));
         if (idList.contains(id))
         {
             // id already saved
-            errorList.append(id);
+            errorList.append(line + "(REPEATED)");
             wrongLines++;
             continue;
         }
         idList.append(id);
 
         bool isOk;
-        items[posUtmx] = items[posUtmx].simplified();
-        double utmX = items[posUtmx].remove(QChar('"')).toDouble(&isOk);
+        items[1] = items[1].simplified();
+        double value1 = items[1].remove(QChar('"')).toDouble(&isOk);
         if (! isOk)
         {
-            errorList.append(id);
+            errorList.append(line);
             wrongLines++;
             continue;
         }
 
-        items[posUtmy] = items[posUtmy].simplified();
-        double utmY = items[posUtmy].remove(QChar('"')).toDouble(&isOk);
+        items[2] = items[2].simplified();
+        double value2 = items[2].remove(QChar('"')).toDouble(&isOk);
         if (! isOk)
         {
-            errorList.append(id);
+            errorList.append(line);
             wrongLines++;
             continue;
         }
 
-        double lat, lon;
-        gis::getLatLonFromUtm(gisSettings, utmX, utmY, &lat, &lon);
+        double utmX, utmY, lat, lon;
+        if (isLatLon)
+        {
+            lat = value1;
+            lon = value2;
+            gis::getUtmFromLatLon(gisSettings, lat, lon, &utmX, &utmY);
+        }
+        else
+        {
+            utmX = value1;
+            utmY = value2;
+            gis::getLatLonFromUtm(gisSettings, utmX, utmY, &lat, &lon);
+        }
 
         Well newWell;
         newWell.setId(id);
@@ -105,7 +118,7 @@ bool loadWaterTableLocationCsv(const QString &csvFileName, std::vector<Well> &we
 
     if (wrongLines > 0)
     {
-        errorStr = "ID repeated or with invalid coordinates: " + errorList.join(",");
+        errorStr = "ID repeated or with invalid coordinates:\n" + errorList.join("\n");
     }
 
     return true;
