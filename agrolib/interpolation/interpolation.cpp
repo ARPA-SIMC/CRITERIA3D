@@ -1020,11 +1020,7 @@ void localSelection(vector <Crit3DInterpolationDataPoint> &inputPoints, vector <
                     float x, float y, Crit3DInterpolationSettings& mySettings)
 {
     // search more stations to assure min points with all valid proxies
-    float ratioMinPoints;
-    if (mySettings.getUseLapseRateCode())
-        ratioMinPoints = float(2);
-    else
-        ratioMinPoints = float(1.3);
+    float ratioMinPoints = float(1.3);
     unsigned minPoints = unsigned(mySettings.getMinPointsLocalDetrending() * ratioMinPoints);
     if (inputPoints.size() <= minPoints)
     {
@@ -1041,9 +1037,10 @@ void localSelection(vector <Crit3DInterpolationDataPoint> &inputPoints, vector <
     float r0 = 0;                       // [m]
     float r1 = stepRadius;              // [m]
     unsigned int i;
+    unsigned int nrPrimaries = 0;
 
     float maxDistance = 0;
-    while (nrValid < minPoints)
+    while (nrValid < minPoints || (mySettings.getUseLapseRateCode() && nrPrimaries < minPoints))
     {
         maxDistance = 0;
         for (i=0; i < inputPoints.size(); i++)
@@ -1054,27 +1051,17 @@ void localSelection(vector <Crit3DInterpolationDataPoint> &inputPoints, vector <
                 nrValid++;
                 if (inputPoints[i].distance > maxDistance)
                     maxDistance = inputPoints[i].distance;
+				
+				if (checkLapseRateCode(inputPoints[i].lapseRateCode, mySettings.getUseLapseRateCode(), true))
+					nrPrimaries++;
             }
         }
         r0 = r1;
         r1 += stepRadius;
     }
 
-    /* //same number of stations for all cells
-    unsigned newIndex = selectedPoints.size();
-    std::vector <Crit3DInterpolationDataPoint> outputPoints;
-    if (nrValid > minPoints+1)
-    {
-        newIndex = sortPointsByDistance(minPoints + 1, selectedPoints, outputPoints);
-        while (outputPoints.size() > minPoints+1)
-            outputPoints.pop_back();
-    }
-    selectedPoints.clear();
-    selectedPoints = outputPoints;
-*/
-
     for (i=0; i< selectedPoints.size(); i++)
-        selectedPoints[i].regressionWeight = (1 - selectedPoints[i].distance / maxDistance);
+        selectedPoints[i].regressionWeight = MAXVALUE(1 - selectedPoints[i].distance / maxDistance,2*EPSILON);
 
     mySettings.setLocalRadius(maxDistance);
 }
@@ -1501,7 +1488,7 @@ bool setAllFittingParameters_noRange(Crit3DProxyCombination myCombination, Crit3
                 proxyParamMin.push_back(min_);
                 proxyParamMax.push_back(max_);
                 proxyParamDelta.push_back((max_ - min_) / RATIO_DELTA);
-                proxyParamFirstGuess.push_back((max_ - min_) / 2);
+                proxyParamFirstGuess.push_back((max_ + min_) / 2); // TODO check if ok
             }
 
             paramMin.push_back(proxyParamMin);
@@ -1743,10 +1730,7 @@ bool multipleDetrendingElevation(Crit3DProxyCombination elevationCombination, st
         isValid = true;
         proxyValue = it->getProxyValue(elevationPos);
         if (proxyValue == NODATA)
-        {
                 isValid = false;
-                break;
-        }
 
         if (! isValid)
             it = myPoints.erase(it);
@@ -1760,10 +1744,7 @@ bool multipleDetrendingElevation(Crit3DProxyCombination elevationCombination, st
         isValid = true;
         proxyValue = it->getProxyValue(elevationPos);
         if (proxyValue == NODATA)
-        {
             isValid = false;
-            break;
-        }
 
         if (! isValid)
             it = elevationPoints.erase(it);
@@ -1822,7 +1803,7 @@ bool multipleDetrendingElevation(Crit3DProxyCombination elevationCombination, st
     //std::vector <std::vector<double>> parameters;
     std::vector<std::function<double(double, std::vector<double>&)>> myFunc;
 
-    unsigned int nrMaxStep = 20;
+    unsigned int nrMaxStep = 80;
     if (parameters.empty())
         nrMaxStep *= 10;
 
@@ -1853,8 +1834,7 @@ bool multipleDetrendingElevation(Crit3DProxyCombination elevationCombination, st
     float detrendValue;
     for (i = 0; i < myPoints.size(); i++)
     {
-        if (checkLapseRateCode(myPoints[i].lapseRateCode, mySettings->getUseLapseRateCode(), true))
-            proxyValue = myPoints[i].getProxyValue(elevationPos);
+        proxyValue = myPoints[i].getProxyValue(elevationPos);
 
         detrendValue = float((*func)(proxyValue, parameters[elevationPos]));
         myPoints[i].value -= detrendValue;
@@ -2075,20 +2055,19 @@ bool multipleDetrending(Crit3DProxyCombination othersCombination, std::vector<st
     for (i = 0; i < myPoints.size(); i++)
     {
         proxyValues.clear();
-        if (checkLapseRateCode(myPoints[i].lapseRateCode, mySettings->getUseLapseRateCode(), false))
+        
+        for (int pos=0; pos < proxyNr; pos++)
         {
-            for (int pos=0; pos < proxyNr; pos++)
+            if ((othersCombination.isProxyActive(pos)) && othersCombination.isProxySignificant(pos))
             {
-                if ((othersCombination.isProxyActive(pos)) && othersCombination.isProxySignificant(pos))
-                {
-                    proxyValue = myPoints[i].getProxyValue(pos);
-                    proxyValues.push_back(double(proxyValue));
-                }
+                proxyValue = myPoints[i].getProxyValue(pos);
+                proxyValues.push_back(double(proxyValue));
             }
-
-            detrendValue = float(functionSum(myFunc, proxyValues, parameters));
-            myPoints[i].value -= detrendValue;
         }
+
+        detrendValue = float(functionSum(myFunc, proxyValues, parameters));
+        myPoints[i].value -= detrendValue;
+        
     }
 
     return true;

@@ -161,8 +161,12 @@
         bool activeAllCells(QString *myError);
         bool setActiveStateCellsInList(QString *myError, QList<QString> idList, bool activeState);
 
-        bool exportDailyDataCsv(QString &errorStr, QList<meteoVariable> variableList,
-                                QDate firstDate, QDate lastDate, QString idListFileName, QString outputPath);
+        bool saveDailyDataCsv(const QString &csvFileName, const QList<meteoVariable> &variableList,
+                              const QDate &firstDate, const QDate &lastDate, unsigned row, unsigned col, QString &errorStr);
+
+        bool exportDailyDataCsv(const QList<meteoVariable> &variableList, const QDate &firstDate,
+                                const QDate &lastDate, const QString &idListFileName, QString &outputPath, QString &errorStr);
+
         bool MeteoGridToRasterFlt(double cellSize, const gis::Crit3DGisSettings &gisSettings, gis::Crit3DRasterGrid& myGrid);
 
         QDate getFirstDailyDate() const;

@@ -431,8 +431,8 @@ int cmdExportDailyDataCsv(Project* myProject, QList<QString> argumentList)
             return PRAGA_ERROR;
         }
 
-        if (! myProject->meteoGridDbHandler->exportDailyDataCsv(myProject->errorString, variableList,
-                                             firstDate, lastDate, idListFileName, outputPath))
+        if (! myProject->meteoGridDbHandler->exportDailyDataCsv(variableList, firstDate, lastDate,
+                                                               idListFileName, outputPath, myProject->errorString))
         {
             myProject->logError();
             return PRAGA_ERROR;

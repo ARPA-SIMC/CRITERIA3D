@@ -208,30 +208,9 @@ Crit3DDate min(const Crit3DDate& myDate1, const Crit3DDate& myDate2)
 
 Crit3DDate getDateFromDoy(int year, int doy)
 {
-    if (doy < 1) return NO_DATE;
-    short month;
-
-    // before 29 february
-    if (doy <= 59)
-    {
-        month = (doy <= 31) ? 1 : 2;
-        return Crit3DDate(doy-doyMonth[month-1], month, year);
-    }
-
-    const short leap = isLeapYear(year) ? 1 : 0;
-    if (doy > (365 + leap)) return NO_DATE;
-
-    // 29 february
-    if (doy == 60 && leap == 1)
-        return Crit3DDate(29, 2, year);
-
-    // after
-    month = 3;
-    while (month <= 12 && doy > (doyMonth[month]+leap))
-        month++;
-
-    return Crit3DDate(doy-(doyMonth[month-1]+leap), month, year);
+    return Crit3DDate(1, 1, year).addDays(doy-1);
 }
+
 
 void Crit3DDate::setNullDate()
 {

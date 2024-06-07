@@ -59,7 +59,7 @@
     #define ERROR_STR_MISSING_DEM "Load a Digital Elevation Model (DEM) before."
     #define ERROR_STR_MISSING_PROJECT "Open a project before."
     #define ERROR_STR_MISSING_GRID "Load a meteo grid DB before."
-    #define ERROR_STR_MISSING_POINT_GRID "Load meteo Points or grid."
+    #define ERROR_STR_MISSING_POINT_GRID "Load meteo points or meteo grid before."
 
     class Crit3DMeteoWidget;
     class FormInfo;
@@ -302,10 +302,10 @@
 
         bool waterTableImportLocation(const QString &csvFileName);
         bool waterTableImportDepths(const QString &csvDepthsFileName);
-        bool computeSingleWell(int indexWell);
-        void showSingleWell(WaterTable &waterTable, const QString &idWell);
-        bool assignNearestMeteoPoint(bool isMeteoGridLoaded, double wellUtmX, double wellUtmY, QDate firstMeteoDate, Crit3DMeteoPoint* linkedMeteoPoint);
-        bool assignWTMeteoData(Crit3DMeteoPoint* linkedMeteoPoint, QDate firstMeteoDate);
+        bool waterTableComputeSingleWell(int indexWell);
+        void waterTableShowSingleWell(WaterTable &waterTable, const QString &idWell);
+        bool waterTableAssignNearestMeteoPoint(bool isMeteoGridLoaded, double wellUtmX, double wellUtmY, QDate firstMeteoDate, Crit3DMeteoPoint* linkedMeteoPoint);
+        bool waterTableAssignMeteoData(Crit3DMeteoPoint* linkedMeteoPoint, QDate firstMeteoDate);
 
     private slots:
         void deleteMeteoWidgetPoint(int id);

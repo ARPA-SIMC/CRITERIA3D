@@ -4,87 +4,110 @@
 #include <QTextStream>
 #include <QRegularExpression>
 #include "well.h"
+#include "gis.h"
 
 
-bool loadWaterTableLocationCsv(const QString &csvFileName, std::vector<Well> &wellList, QString &errorStr, int &wrongLines)
+bool loadWaterTableLocationCsv(const QString &csvFileName, std::vector<Well> &wellList,
+                               const gis::Crit3DGisSettings& gisSettings, QString &errorStr, int &wrongLines)
 {
-    errorStr = "";
     wellList.clear();
 
     QFile myFile(csvFileName);
-    QList<QString> idList;
-    QList<QString> errorList;
-    int posId = 0;
-    int posUtmx = 1;
-    int posUtmy = 2;
-    int nrRequiredFields = 3;
-    int validLines = 0;
-     bool ok;
-
     if (! myFile.open(QFile::ReadOnly | QFile::Text) )
     {
         errorStr = "Csv file does not exist:\n" + csvFileName;
         return false;
     }
-    else
+
+    QTextStream in(&myFile);
+    int nrRequiredFields = 3;
+
+    // check header
+    bool isLatLon = false;
+    QString line = in.readLine();
+    QList<QString> headerItems = line.split(",");
+    if (headerItems.size() != nrRequiredFields)
     {
-        QTextStream in(&myFile);
-
-        // check header
-        QString line = in.readLine();
-        QList<QString> headerItems = line.split(",");
-        if (headerItems.size() != nrRequiredFields)
-        {
-            errorStr = "Wrong data! Required well ID, utm X, utm Y.";
-            return false;
-        }
-
-        while (! in.atEnd())
-        {
-            line = in.readLine();
-            QList<QString> items = line.split(",");
-            items.removeAll({});
-            if (items.size() < nrRequiredFields)
-            {
-                errorList.append(items[posId]);
-                wrongLines++;
-                continue;
-            }
-            items[posId] = items[posId].simplified();
-            QString id = items[posId].remove(QChar('"'));
-            if (idList.contains(id))
-            {
-                // id already saved
-                errorList.append(id);
-                wrongLines++;
-                continue;
-            }
-            idList.append(id);
-            items[posUtmx] = items[posUtmx].simplified();
-            double utmX = items[posUtmx].remove(QChar('"')).toDouble(&ok);
-            if (!ok)
-            {
-                errorList.append(id);
-                wrongLines++;
-                continue;
-            }
-            items[posUtmy] = items[posUtmy].simplified();
-            double utmY = items[posUtmy].remove(QChar('"')).toDouble(&ok);
-            if (!ok)
-            {
-                errorList.append(id);
-                wrongLines++;
-                continue;
-            }
-
-            Well newWell;
-            newWell.setId(id);
-            newWell.setUtmX(utmX);
-            newWell.setUtmY(utmY);
-            wellList.push_back(newWell);
-            validLines++;
-        }
+        errorStr = "Wrong data! Required ID, utmX, utmY or ID, lat, lon.";
+        return false;
     }
+    if (headerItems[1].toUpper() == "LAT")
+    {
+        isLatLon = true;
+    }
+
+    errorStr = "";
+    QList<QString> idList;
+    QList<QString> errorList;
+    int validLines = 0;
+
+    while (! in.atEnd())
+    {
+        line = in.readLine();
+        QList<QString> items = line.split(",");
+        items.removeAll({});
+        if (items.size() < nrRequiredFields)
+        {
+            errorList.append(line);
+            wrongLines++;
+            continue;
+        }
+
+        items[0] = items[0].simplified();
+        QString id = items[0].remove(QChar('"'));
+        if (idList.contains(id))
+        {
+            // id already saved
+            errorList.append(line + "(REPEATED)");
+            wrongLines++;
+            continue;
+        }
+        idList.append(id);
+
+        bool isOk;
+        items[1] = items[1].simplified();
+        double value1 = items[1].remove(QChar('"')).toDouble(&isOk);
+        if (! isOk)
+        {
+            errorList.append(line);
+            wrongLines++;
+            continue;
+        }
+
+        items[2] = items[2].simplified();
+        double value2 = items[2].remove(QChar('"')).toDouble(&isOk);
+        if (! isOk)
+        {
+            errorList.append(line);
+            wrongLines++;
+            continue;
+        }
+
+        double utmX, utmY, lat, lon;
+        if (isLatLon)
+        {
+            lat = value1;
+            lon = value2;
+            gis::getUtmFromLatLon(gisSettings, lat, lon, &utmX, &utmY);
+        }
+        else
+        {
+            utmX = value1;
+            utmY = value2;
+            gis::getLatLonFromUtm(gisSettings, utmX, utmY, &lat, &lon);
+        }
+
+        Well newWell;
+        newWell.setId(id);
+        newWell.setUtmX(utmX);
+        newWell.setUtmY(utmY);
+        newWell.setLatitude(lat);
+        newWell.setLongitude(lon);
+        wellList.push_back(newWell);
+
+        validLines++;
+    }
+
     myFile.close();
 
     if (validLines == 0)
@@ -95,7 +118,7 @@ bool loadWaterTableLocationCsv(const QString &csvFileName, std::vector<Well> &we
 
     if (wrongLines > 0)
     {
-        errorStr = "ID repeated or with invalid coordinates: " + errorList.join(",");
+        errorStr = "ID repeated or with invalid coordinates:\n" + errorList.join("\n");
     }
 
     return true;
@@ -204,9 +227,10 @@ bool loadWaterTableDepthCsv(const QString &csvFileName, std::vector<Well> &wellL
     return true;
 }
 
-bool loadCsvDepthsSingleWell(QString csvDepths, Well* well, int waterTableMaximumDepth, QDate climateObsFirstDate, QDate climateObsLastDate, QString &errorStr, int &wrongLines)
+
+bool loadCsvDepthsSingleWell(const QString &csvFileName, Well* well, int waterTableMaximumDepth, QString &errorStr, int &wrongLines)
 {
-    QFile myFile(csvDepths);
+    QFile myFile(csvFileName);
     QList<QString> errorList;
 
     int posDate = 0;
@@ -239,7 +263,7 @@ bool loadCsvDepthsSingleWell(QString csvDepths, Well* well, int waterTableMaximu
             }
             items[posDate] = items[posDate].simplified();
             QDate date = QDate::fromString(items[posDate].remove(QChar('"')),"yyyy-MM-dd");
-            if (! date.isValid() || date < climateObsFirstDate || date > climateObsLastDate)
+            if (! date.isValid())
             {
                 errorList.append(line);
                 wrongLines++;
