@@ -2123,7 +2123,7 @@ namespace interpolation
 
             for (j = 0; j < (nrParameters - 1); j++)
             {
-                pivot = a[j][j];
+                pivot = std::max(a[j][j],EPSILON);
                 for (i = j + 1 ; i < nrParameters; i++)
                 {
                     mult = a[i][j] / pivot;
