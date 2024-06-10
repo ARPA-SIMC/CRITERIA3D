@@ -1803,7 +1803,7 @@ bool multipleDetrendingElevation(Crit3DProxyCombination elevationCombination, st
     //std::vector <std::vector<double>> parameters;
     std::vector<std::function<double(double, std::vector<double>&)>> myFunc;
 
-    unsigned int nrMaxStep = 80;
+    unsigned int nrMaxStep = 20;
     if (parameters.empty())
         nrMaxStep *= 10;
 
