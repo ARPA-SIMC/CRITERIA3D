@@ -334,7 +334,7 @@ bool TabHorizons::checkHorizonData(int horizonNum)
         tableDb->item(horizonNum,5)->setBackground(Qt::red);
     }
 
-    if (dbData->organicMatter != NODATA && (dbData->organicMatter < 0 || dbData->organicMatter > 100))
+    if ( dbData->organicMatter != NODATA && ((dbData->organicMatter < 0) || (dbData->organicMatter > 100)) )
     {
         tableDb->item(horizonNum,6)->setBackground(Qt::red);
     }
