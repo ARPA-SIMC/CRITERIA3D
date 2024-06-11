@@ -383,7 +383,8 @@ bool Crit3DProject::runModels(QDateTime firstTime, QDateTime lastTime)
         }
     }
 
-    closeLogInfo();
+    logInfoGUI("Computation done.");
+
     return true;
 }
 
