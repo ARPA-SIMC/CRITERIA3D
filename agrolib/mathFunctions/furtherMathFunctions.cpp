@@ -1975,14 +1975,28 @@ namespace interpolation
         std::random_device rd;
         std::mt19937 gen(rd());
         std::normal_distribution<double> normal_dis(0.5, 0.5);
+        //std::normal_distribution<double> normal_dis(25, 20);
         double truncNormal;
+
+        std::vector <std::vector <double>> discreteParameters;
+        int nrDiscrete = 50;
+        std::uniform_int_distribution<> distribuzione(0, 49);
+        std::vector <double> tempDiscrete;
+        for (int j = 0; j < parameters.size()-2; j++)
+        {
+            for (int i = 0; i < nrDiscrete; i++)
+                tempDiscrete.push_back(parametersMin[j]+i*((parametersMax[j]-parametersMin[j])/nrDiscrete));
+
+            discreteParameters.push_back(tempDiscrete);
+            tempDiscrete.clear();
+        }
 
         do
         {
             fittingMarquardt_nDimension_noSquares_singleFunction(func,parametersMin,
                                                                  parametersMax,parameters,
                                                                  parametersDelta,maxIterationsNr,
-                                                                 myEpsilon,x,y,weights);
+                                                                      myEpsilon,x,y,weights);
 
             for (i=0;i<nrData;i++)
             {
@@ -2016,14 +2030,23 @@ namespace interpolation
             }
             counter++;
 
-            for (j=0; j<nrParameters; j++)
+            /*for (j=0; j<nrParameters; j++)
             {
                 do {
                     truncNormal = normal_dis(gen);
                 } while(truncNormal <= 0.0 || truncNormal >= 1.0);
                 parameters[j] = parametersMin[j] + (truncNormal)*(parametersMax[j]-parametersMin[j]);
+            }*/
+
+            int indice = 0;
+            for (j=0; j<nrParameters-2;j++)
+            {
+                do {
+                    indice = distribuzione(gen);
+                } while (indice < 0 || indice >= discreteParameters[j].size());
+                parameters[j] = discreteParameters[j][indice];
             }
-        } while( (counter < nrTrials) && !(R2Previous[0] > 0.8 && R2Previous[nrMinima-1] > 0.8) && (fabs(R2Previous[0]-R2Previous[nrMinima-1]) > deltaR2) );
+        } while( (counter < nrTrials) && !(R2Previous[0] > 0.797 && R2Previous[nrMinima-1] > 0.8) && ((R2Previous[0] == NODATA) || fabs(R2Previous[0]-R2Previous[nrMinima-1]) > deltaR2 ));
 
         for (j=0; j<nrParameters; j++)
         {
