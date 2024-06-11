@@ -220,7 +220,7 @@ bool Crit3DOutputPointsDbHandler::saveHourlyCriteria3D_Data(const QString &table
             setList += "'" + fieldName + "'=";
 
             int index = i * nrSoilLayers + layer - 1;
-            QString valueStr = QString::number(values[index], 'f', 2);
+            QString valueStr = QString::number(values[index], 'f', 3);
             setList += valueStr;
 
             if (index < (nrValues - 1))
