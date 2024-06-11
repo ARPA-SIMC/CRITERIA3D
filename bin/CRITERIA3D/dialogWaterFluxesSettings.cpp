@@ -11,13 +11,13 @@ DialogWaterFluxesSettings::DialogWaterFluxesSettings()
     QLabel *initialWaterPotentialLabel = new QLabel(tr("Initial water potential [m]"));
     initialWaterPotentialEdit = new QLineEdit();
     initialWaterPotentialEdit->setFixedWidth(50);
-    QDoubleValidator* waterPotentialValidator = new QDoubleValidator(-1000.0, 0.0, 1, initialWaterPotentialEdit);
+    QDoubleValidator* waterPotentialValidator = new QDoubleValidator(-1000.0, 1.0, 2, initialWaterPotentialEdit);
     waterPotentialValidator->setNotation(QDoubleValidator::StandardNotation);
     initialWaterPotentialEdit->setValidator(waterPotentialValidator);
 
     QGridLayout *layoutInitial = new QGridLayout();
-    layoutInitial->addWidget(initialWaterPotentialLabel, 0 , 0);
-    layoutInitial->addWidget(initialWaterPotentialEdit, 0 , 1);
+    layoutInitial->addWidget(initialWaterPotentialLabel, 0, 0);
+    layoutInitial->addWidget(initialWaterPotentialEdit, 0, 1);
     initialGroupBox->setLayout(layoutInitial);
 
     // computation depth [m]

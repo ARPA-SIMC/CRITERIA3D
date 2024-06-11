@@ -1585,7 +1585,7 @@ float Project3D::computeFactorOfSafety(int row, int col, int layerIndex, int nod
 
     // slope angle [rad]
     double slopeDegree = double(radiationMaps->slopeMap->getValueFromRowCol(row, col));
-    double slopeAngle = slopeDegree * DEG_TO_RAD;
+    double slopeAngle = std::max(slopeDegree * DEG_TO_RAD, EPSILON);
 
     int soilIndex = getSoilIndex(row, col);
     int horizonIndex = soil::getHorizonIndex(soilList[unsigned(soilIndex)], layerDepth[layerIndex]);
