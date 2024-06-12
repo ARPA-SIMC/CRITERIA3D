@@ -87,19 +87,18 @@ bool loadCropParameters(const QSqlDatabase &dbCrop, QString idCrop, Crit3DCrop &
     myCrop.kcMax = query.value("kc_max").toDouble();
     // [cm]
     if (! getValue(query.value("psi_leaf"), &(myCrop.psiLeaf)))
+    {
+        // default
         myCrop.psiLeaf = 16000;
+    }
 
     myCrop.stressTolerance = query.value("stress_tolerance").toDouble();
 
     // fraction of Readily Available Water
     if (! getValue(query.value("raw_fraction"), &(myCrop.fRAW)))
     {
-        // old version
-        if (! getValue(query.value("frac_read_avail_water_max"), &(myCrop.fRAW)))
-        {
-            errorStr = "Missing RAW_fraction for crop: " + idCropString;
-            return false;
-        }
+        // default
+        myCrop.fRAW = 0.6;
     }
 
     // IRRIGATION
@@ -109,17 +108,25 @@ bool loadCropParameters(const QSqlDatabase &dbCrop, QString idCrop, Crit3DCrop &
     getValue(query.value("doy_start_irrigation"), &(myCrop.doyStartIrrigation));
     getValue(query.value("doy_end_irrigation"), &(myCrop.doyEndIrrigation));
 
-    // key value for irrigation
+    // irrigation volume [mm day-1]
     if (! getValue(query.value("irrigation_volume"), &(myCrop.irrigationVolume)))
+    {
+        // default: no irrigation
         myCrop.irrigationVolume = 0;
+    }
 
     // LAI grass
     if (! getValue(query.value("lai_grass"), &(myCrop.LAIgrass)))
+    {
         myCrop.LAIgrass = 0;
+    }
 
-    // max surface puddle
+    // max surface puddle [mm]
     if (! getValue(query.value("max_height_surface_puddle"), &(myCrop.maxSurfacePuddle)))
-        myCrop.maxSurfacePuddle = 0;
+    {
+        // default: 5 mm
+        myCrop.maxSurfacePuddle = 5;
+    }
 
     return true;
 }
