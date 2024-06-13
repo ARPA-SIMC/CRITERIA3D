@@ -3235,6 +3235,11 @@ void MainWindow::on_actionCriteria3D_save_state_triggered()
 {
     if (myProject.isProjectLoaded)
     {
+        if (myProject.processes.computeSnow)
+        {
+            myProject.saveSnowModelState();
+        }
+
         if (myProject.saveWaterModelState())
         {
             myProject.logInfoGUI("State model successfully saved: " + myProject.getCurrentDate().toString()
