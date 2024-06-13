@@ -2,7 +2,7 @@
     \file crop.cpp
 
     \abstract
-    Crop class functions
+    Crop development (Crit3DCrop class)
 
     \authors
     Fausto Tomei        ftomei@arpae.it
