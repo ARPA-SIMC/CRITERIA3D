@@ -96,7 +96,9 @@
         void setAllHourlyMeteoMapsComputed(bool value);
 
         bool saveDailyOutput(QDate myDate, const QString& outputPathHourly);
-        bool saveModelState();
+        bool saveSnowModelState();
+        bool saveWaterModelState();
+
         bool loadModelState(QString statePath);
         QList<QString> getAllSavedState();
 

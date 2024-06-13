@@ -1293,7 +1293,7 @@
        <second>0</second>
        <year>1752</year>
        <month>9</month>
-       <day>27</day>
+       <day>25</day>
       </datetime>
      </property>
      <property name="maximumDate">
@@ -1975,11 +1975,16 @@
     </property>
     <addaction name="actionWaterFluxes_settings"/>
     <addaction name="separator"/>
+    <addaction name="actionCriteria3D_load_state"/>
+    <addaction name="actionCriteria3D_load_external_state"/>
+    <addaction name="actionCriteria3D_save_state"/>
+    <addaction name="separator"/>
     <addaction name="actionCriteria3D_Initialize"/>
     <addaction name="actionCriteria3D_compute_next_hour"/>
     <addaction name="actionCriteria3D_run_models"/>
     <addaction name="separator"/>
-    <addaction name="actionUpdate_subHourly"/>
+    <addaction name="actionCriteria3D_update_subHourly"/>
+    <addaction name="separator"/>
    </widget>
    <widget class="QMenu" name="menuShow">
     <property name="title">
@@ -2868,7 +2873,7 @@
     <string>Leaf Area Index</string>
    </property>
   </action>
-  <action name="actionUpdate_subHourly">
+  <action name="actionCriteria3D_update_subHourly">
    <property name="checkable">
     <bool>true</bool>
    </property>
@@ -2889,6 +2894,21 @@
   <action name="actionView_degreeOfSaturation_fixed_range">
    <property name="text">
     <string>Fixed range</string>
+   </property>
+  </action>
+  <action name="actionCriteria3D_load_state">
+   <property name="text">
+    <string>Load state...</string>
+   </property>
+  </action>
+  <action name="actionCriteria3D_load_external_state">
+   <property name="text">
+    <string>Load external state...</string>
+   </property>
+  </action>
+  <action name="actionCriteria3D_save_state">
+   <property name="text">
+    <string>Save state</string>
    </property>
   </action>
  </widget>

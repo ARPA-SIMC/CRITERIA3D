@@ -15,6 +15,7 @@
     #endif
 
     class QString;
+    #include <QList>
 
     class WaterFluxesParameters
     {
@@ -92,6 +93,7 @@
 
         // 3D soil fluxes maps
         gis::Crit3DRasterGrid soilIndexMap;
+        QList<int> soilIndexList;
         gis::Crit3DRasterGrid boundaryMap;
         gis::Crit3DRasterGrid criteria3DMap;
         std::vector <gis::Crit3DRasterGrid> indexMap;

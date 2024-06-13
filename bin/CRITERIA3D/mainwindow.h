@@ -123,6 +123,10 @@
         void on_actionCriteria3D_Initialize_triggered();
         void on_actionCriteria3D_compute_next_hour_triggered();
         void on_actionCriteria3D_run_models_triggered();
+        void on_actionCriteria3D_update_subHourly_triggered(bool isChecked);
+        void on_actionCriteria3D_load_state_triggered();
+        void on_actionCriteria3D_load_external_state_triggered();
+        void on_actionCriteria3D_save_state_triggered();
 
         void on_buttonModelPause_clicked();
         void on_buttonModelStop_clicked();
@@ -219,8 +223,6 @@
         void on_actionWaterFluxes_settings_triggered();
 
         void on_actionView_Crop_LAI_triggered();
-
-        void on_actionUpdate_subHourly_triggered(bool checked);
 
         void on_actionView_degree_days_triggered();
 

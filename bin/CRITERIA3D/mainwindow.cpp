@@ -2251,8 +2251,6 @@ void MainWindow::on_actionCriteria3D_Initialize_triggered()
 }
 
 
-
-
 void MainWindow::on_actionCriteria3D_compute_next_hour_triggered()
 {
     if (! myProject.isCriteria3DInitialized)
@@ -2337,7 +2335,6 @@ void MainWindow::showCriteria3DVariable(criteria3DVariable var, int layerIndex, 
         ui->labelOutputRaster->setText("Factor of safety [-]");
     }
 
-
     // set range
     if (isFixedRange)
     {
@@ -2364,7 +2361,7 @@ void MainWindow::on_actionSave_state_triggered()
 {
     if (myProject.isProjectLoaded)
     {
-        if (myProject.saveModelState())
+        if (myProject.saveSnowModelState())
         {
             myProject.logInfoGUI("State model successfully saved: " + myProject.getCurrentDate().toString()
                                  + " H:" + QString::number(myProject.getCurrentHour()));
@@ -2374,7 +2371,6 @@ void MainWindow::on_actionSave_state_triggered()
     {
         myProject.logError(ERROR_STR_MISSING_PROJECT);
     }
-    return;
 }
 
 
@@ -3217,9 +3213,37 @@ void MainWindow::on_layerNrEdit_valueChanged(int layerIndex)
 }
 
 
-void MainWindow::on_actionUpdate_subHourly_triggered(bool checked)
+void MainWindow::on_actionCriteria3D_update_subHourly_triggered(bool isChecked)
 {
-    myProject.showEachTimeStep = checked;
+    myProject.showEachTimeStep = isChecked;
 }
 
+
+void MainWindow::on_actionCriteria3D_load_state_triggered()
+{
+    // TODO
+}
+
+
+void MainWindow::on_actionCriteria3D_load_external_state_triggered()
+{
+    // TODO
+}
+
+
+void MainWindow::on_actionCriteria3D_save_state_triggered()
+{
+    if (myProject.isProjectLoaded)
+    {
+        if (myProject.saveWaterModelState())
+        {
+            myProject.logInfoGUI("State model successfully saved: " + myProject.getCurrentDate().toString()
+                                 + " H:" + QString::number(myProject.getCurrentHour()));
+        }
+    }
+    else
+    {
+        myProject.logError(ERROR_STR_MISSING_PROJECT);
+    }
+}
 

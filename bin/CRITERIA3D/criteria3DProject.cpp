@@ -379,7 +379,7 @@ bool Crit3DProject::runModels(QDateTime firstTime, QDateTime lastTime)
 
         if (isSaveDailyState())
         {
-            saveModelState();
+            saveSnowModelState();
         }
     }
 
@@ -633,7 +633,13 @@ bool Crit3DProject::setSoilIndexMap()
                 DEM.getXY(row, col, x, y);
                 int soilIndex = getCrit3DSoilIndex(x, y);
                 if (soilIndex != NODATA)
+                {
                     soilIndexMap.value[row][col] = float(soilIndex);
+                    if (! soilIndexList.contains(soilIndex))
+                    {
+                        soilIndexList.append(soilIndex);
+                    }
+                }
             }
         }
     }
@@ -1084,7 +1090,84 @@ bool Crit3DProject::modelHourlyCycle(QDateTime myTime, const QString& hourlyOutp
 }
 
 
-bool Crit3DProject::saveModelState()
+bool Crit3DProject::saveWaterModelState()
+{
+    if (! isCriteria3DInitialized)
+    {
+        logError("Initialize water fluxes model before.");
+        return false;
+    }
+
+    QString statePath = getProjectPath() + PATH_STATES;
+    if (! QDir(statePath).exists())
+    {
+        QDir().mkdir(statePath);
+    }
+
+    char hourStr[3];
+    sprintf(hourStr, "%02d", currentHour);
+    QString dateFolder = currentDate.toString("yyyyMMdd") + "_H" + hourStr;
+    QString completePath = statePath + "/" + dateFolder;
+    if (! QDir(completePath).exists())
+    {
+        QDir().mkdir(completePath);
+    }
+
+    // create crop path
+    QString cropPath = completePath + "/crop";
+    if (QDir(cropPath).exists())
+    {
+        QDir(cropPath).removeRecursively();
+    }
+    QDir().mkdir(cropPath);
+
+    // save crop state
+    std::string error;
+    if (! gis::writeEsriGrid((cropPath + "/degreeDays").toStdString(), &degreeDaysMap, error))
+    {
+        logError("Error saving degree days map: " + QString::fromStdString(error));
+        return false;
+    }
+
+    // create water path
+    QString waterPath = completePath + "/water";
+    if (QDir(waterPath).exists())
+    {
+        if (! QDir(waterPath).removeRecursively())
+        {
+            logError("Error deleting water state directory.");
+        }
+    }
+    QDir().mkdir(waterPath);
+
+    // save water potential
+    if (layerDepth.size() != nrLayers)
+    {
+        logError("Wrong number of layers:" + QString::number(nrLayers));
+        return false;
+    }
+    for (int i = 0; i < nrLayers; i++)
+    {
+        if (! setCriteria3DMap(waterMatricPotential, i))
+        {
+            logError();
+            return false;
+        }
+
+        int depthCm = int(layerDepth[i] * 100);
+        QString fileName = "WP_" + QString::number(depthCm);
+        if (! gis::writeEsriGrid((waterPath + "/" + fileName).toStdString(), &criteria3DMap, error))
+        {
+            logError("Error saving water potential: " + QString::fromStdString(error));
+            return false;
+        }
+    }
+
+    return true;
+}
+
+
+bool Crit3DProject::saveSnowModelState()
 {
     if (! snowMaps.isInitialized)
     {

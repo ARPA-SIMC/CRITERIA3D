@@ -166,6 +166,7 @@ void Project3D::clearWaterBalance3D()
     boundaryMap.clear();
     soilIndexMap.clear();
     criteria3DMap.clear();
+    soilIndexList.clear();
 
     isCriteria3DInitialized = false;
 }
@@ -242,7 +243,10 @@ bool Project3D::initializeWaterBalance3D()
         {
             for (unsigned int i = 0; i < nrSoils; i++)
             {
-                computationSoilDepth = std::max(computationSoilDepth, soilList[i].totalDepth);
+                if (soilIndexList.contains(i))
+                {
+                    computationSoilDepth = std::max(computationSoilDepth, soilList[i].totalDepth);
+                }
             }
         }
         else
