@@ -2,7 +2,7 @@
     \file crop.cpp
 
     \abstract
-    Crop class functions
+    Crop development (Crit3DCrop class)
 
     \authors
     Fausto Tomei        ftomei@arpae.it
@@ -107,21 +107,36 @@ void Crit3DCrop::initialize(double latitude, unsigned int nrLayers, double total
     // initialize root depth
     roots.rootDepth = 0;
 
-    if (totalSoilDepth == 0 || roots.rootDepthMax < totalSoilDepth)
-        roots.actualRootDepthMax = roots.rootDepthMax;
+    if (isBareSoil())
+    {
+        roots.rootDepthMax = 0;
+        roots.actualRootDepthMax = 0;
+    }
     else
-        roots.actualRootDepthMax = totalSoilDepth;
+    {
+        if (totalSoilDepth == 0 || roots.rootDepthMax < totalSoilDepth)
+        {
+            roots.actualRootDepthMax = roots.rootDepthMax;
+        }
+        else
+        {
+            roots.actualRootDepthMax = totalSoilDepth;
+        }
+    }
 
     degreeDays = 0;
 
     if (latitude > 0)
+    {
         doyStartSenescence = 305;
+    }
     else
+    {
         doyStartSenescence = 120;
+    }
 
     LAIstartSenescence = NODATA;
     currentSowingDoy = NODATA;
-
     daysSinceIrrigation = NODATA;
 
     // check if the crop is living
@@ -134,7 +149,7 @@ void Crit3DCrop::initialize(double latitude, unsigned int nrLayers, double total
     }
     else
     {
-        isLiving = true;
+        isLiving = !isBareSoil();
     }
 
     resetCrop(nrLayers);
@@ -399,7 +414,7 @@ bool Crit3DCrop::needReset(Crit3DDate myDate, double latitude, double waterTable
 void Crit3DCrop::resetCrop(unsigned int nrLayers)
 {
     // roots
-    if (! isRootStatic())
+    if (! isBareSoil() && ! isRootStatic())
     {
         for (unsigned int i = 0; i < nrLayers; i++)
             roots.rootDensity[i] = 0;
@@ -855,9 +870,12 @@ speciesType getCropType(std::string cropType)
         return FALLOW_ANNUAL;
     else if (cropType == "tree" || cropType == "fruit_tree")
         return TREE;
+    else if (cropType == "bare" || cropType == "bare_soil")
+        return BARESOIL;
     else
         return HERBACEOUS_ANNUAL;
 }
+
 
 std::string getCropTypeString(speciesType cropType)
 {
@@ -877,6 +895,8 @@ std::string getCropTypeString(speciesType cropType)
         return "fallow_annual";
     case TREE:
         return "tree";
+    case BARESOIL:
+        return "bare_soil";
     }
 
     return "No crop type";

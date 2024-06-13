@@ -87,19 +87,18 @@ bool loadCropParameters(const QSqlDatabase &dbCrop, QString idCrop, Crit3DCrop &
     myCrop.kcMax = query.value("kc_max").toDouble();
     // [cm]
     if (! getValue(query.value("psi_leaf"), &(myCrop.psiLeaf)))
+    {
+        // default
         myCrop.psiLeaf = 16000;
+    }
 
     myCrop.stressTolerance = query.value("stress_tolerance").toDouble();
 
     // fraction of Readily Available Water
     if (! getValue(query.value("raw_fraction"), &(myCrop.fRAW)))
     {
-        // old version
-        if (! getValue(query.value("frac_read_avail_water_max"), &(myCrop.fRAW)))
-        {
-            errorStr = "Missing RAW_fraction for crop: " + idCropString;
-            return false;
-        }
+        // default
+        myCrop.fRAW = 0.6;
     }
 
     // IRRIGATION
@@ -109,17 +108,25 @@ bool loadCropParameters(const QSqlDatabase &dbCrop, QString idCrop, Crit3DCrop &
     getValue(query.value("doy_start_irrigation"), &(myCrop.doyStartIrrigation));
     getValue(query.value("doy_end_irrigation"), &(myCrop.doyEndIrrigation));
 
-    // key value for irrigation
+    // irrigation volume [mm day-1]
     if (! getValue(query.value("irrigation_volume"), &(myCrop.irrigationVolume)))
+    {
+        // default: no irrigation
         myCrop.irrigationVolume = 0;
+    }
 
     // LAI grass
     if (! getValue(query.value("lai_grass"), &(myCrop.LAIgrass)))
+    {
         myCrop.LAIgrass = 0;
+    }
 
-    // max surface puddle
+    // max surface puddle [mm]
     if (! getValue(query.value("max_height_surface_puddle"), &(myCrop.maxSurfacePuddle)))
-        myCrop.maxSurfacePuddle = 0;
+    {
+        // default: 5 mm
+        myCrop.maxSurfacePuddle = 5;
+    }
 
     return true;
 }
@@ -156,31 +163,69 @@ bool updateCropLAIparam(QSqlDatabase &dbCrop, const Crit3DCrop &myCrop, QString 
                  "lai_curve_factor_a = :lai_curve_factor_a, lai_curve_factor_b = :lai_curve_factor_b, "
                  "kc_max = :kc_max WHERE id_crop = :id_crop");
 
-    if (myCrop.sowingDoy != NODATA)
+    if (myCrop.isBareSoil())
     {
-        qry.bindValue(":sowing_doy", myCrop.sowingDoy);
-        qry.bindValue(":max_cycle", myCrop.plantCycle);
+        qry.bindValue(":sowing_doy", "");
+        qry.bindValue(":max_cycle", "");
+        qry.bindValue(":lai_grass", "");
+        qry.bindValue(":lai_min", "");
+        qry.bindValue(":lai_max", "");
+        qry.bindValue(":thermal_threshold", "");
+        qry.bindValue(":upper_thermal_threshold", "");
+        qry.bindValue(":degree_days_lai_increase", "");
+        qry.bindValue(":degree_days_lai_decrease", "");
+        qry.bindValue(":lai_curve_factor_a", "");
+        qry.bindValue(":lai_curve_factor_b", "");
+        qry.bindValue(":kc_max", "");
     }
     else
     {
-        qry.bindValue(":sowing_doy", "");
-        qry.bindValue(":max_cycle", 365);
+        if (myCrop.sowingDoy != NODATA)
+        {
+            qry.bindValue(":sowing_doy", myCrop.sowingDoy);
+            qry.bindValue(":max_cycle", myCrop.plantCycle);
+        }
+        else
+        {
+            qry.bindValue(":sowing_doy", "");
+            qry.bindValue(":max_cycle", 365);
+        }
+
+        if (myCrop.LAIgrass != NODATA)
+        {
+            qry.bindValue(":lai_grass", myCrop.LAIgrass);
+        }
+        else
+        {
+            qry.bindValue(":lai_grass", "");
+        }
+
+        if (myCrop.degreeDaysEmergence != 0 && myCrop.degreeDaysEmergence != NODATA)
+        {
+            qry.bindValue(":degree_days_emergence", myCrop.degreeDaysEmergence);
+        }
+        else
+        {
+            qry.bindValue(":degree_days_emergence", "");
+        }
+
+        qry.bindValue(":lai_min", myCrop.LAImin);
+        qry.bindValue(":lai_max", myCrop.LAImax);
+
+        qry.bindValue(":thermal_threshold", myCrop.thermalThreshold);
+        qry.bindValue(":upper_thermal_threshold", myCrop.upperThermalThreshold);
+
+        qry.bindValue(":degree_days_lai_increase", myCrop.degreeDaysIncrease);
+        qry.bindValue(":degree_days_lai_decrease", myCrop.degreeDaysDecrease);
+
+        qry.bindValue(":lai_curve_factor_a", myCrop.LAIcurve_a);
+        qry.bindValue(":lai_curve_factor_b", myCrop.LAIcurve_b);
+        qry.bindValue(":kc_max", myCrop.kcMax);
     }
-    qry.bindValue(":lai_min", myCrop.LAImin);
-    qry.bindValue(":lai_max", myCrop.LAImax);
-    qry.bindValue(":lai_grass", myCrop.LAIgrass);
-    qry.bindValue(":thermal_threshold", myCrop.thermalThreshold);
-    qry.bindValue(":upper_thermal_threshold", myCrop.upperThermalThreshold);
-    qry.bindValue(":degree_days_emergence", myCrop.degreeDaysEmergence);
-    qry.bindValue(":degree_days_lai_increase", myCrop.degreeDaysIncrease);
-    qry.bindValue(":degree_days_lai_decrease", myCrop.degreeDaysDecrease);
-    qry.bindValue(":lai_curve_factor_a", myCrop.LAIcurve_a);
-    qry.bindValue(":lai_curve_factor_b", myCrop.LAIcurve_b);
-    qry.bindValue(":kc_max", myCrop.kcMax);
 
     qry.bindValue(":id_crop", QString::fromStdString(myCrop.idCrop));
 
-    if( !qry.exec() )
+    if( ! qry.exec() )
     {
         errorStr = qry.lastError().text();
         return false;
@@ -200,11 +245,30 @@ bool updateCropRootparam(QSqlDatabase &dbCrop, const Crit3DCrop &myCrop, QString
                  " degree_days_root_increase = :degree_days_root_increase"
                  " WHERE id_crop = :id_crop");
 
-    qry.bindValue(":root_shape", root::getRootDistributionNumber(myCrop.roots.rootShape));
-    qry.bindValue(":root_depth_zero", myCrop.roots.rootDepthMin);
-    qry.bindValue(":root_depth_max", myCrop.roots.rootDepthMax);
-    qry.bindValue(":root_shape_deformation", myCrop.roots.shapeDeformation);
-    qry.bindValue(":degree_days_root_increase", myCrop.roots.degreeDaysRootGrowth);
+    if (myCrop.isBareSoil())
+    {
+        qry.bindValue(":root_shape", "");
+        qry.bindValue(":root_depth_zero", "");
+        qry.bindValue(":root_depth_max", "");
+        qry.bindValue(":root_shape_deformation", "");
+        qry.bindValue(":degree_days_root_increase", "");
+    }
+    else
+    {
+        qry.bindValue(":root_shape", root::getRootDistributionNumber(myCrop.roots.rootShape));
+        qry.bindValue(":root_depth_zero", myCrop.roots.rootDepthMin);
+        qry.bindValue(":root_depth_max", myCrop.roots.rootDepthMax);
+        qry.bindValue(":root_shape_deformation", myCrop.roots.shapeDeformation);
+
+        if (myCrop.roots.degreeDaysRootGrowth != NODATA)
+        {
+            qry.bindValue(":degree_days_root_increase", myCrop.roots.degreeDaysRootGrowth);
+        }
+        else
+        {
+            qry.bindValue(":degree_days_root_increase", "");
+        }
+    }
 
     qry.bindValue(":id_crop", QString::fromStdString(myCrop.idCrop));
 
@@ -213,6 +277,7 @@ bool updateCropRootparam(QSqlDatabase &dbCrop, const Crit3DCrop &myCrop, QString
         errorStr = qry.lastError().text();
         return false;
     }
+
     return true;
 }
 
@@ -226,12 +291,12 @@ bool updateCropIrrigationparam(QSqlDatabase &dbCrop, const Crit3DCrop &myCrop, Q
                  "psi_leaf = :psi_leaf, raw_fraction = :raw_fraction, stress_tolerance = :stress_tolerance"
                  " WHERE id_crop = :id_crop");
 
-    if (myCrop.irrigationVolume == 0)
+    if (myCrop.irrigationVolume == 0 || myCrop.isBareSoil())
     {
-        qry.bindValue(":irrigation_shift", QVariant(QVariant::String));
+        qry.bindValue(":irrigation_shift", "");
         qry.bindValue(":irrigation_volume", 0);
-        qry.bindValue(":degree_days_start_irrigation", QVariant(QVariant::String));
-        qry.bindValue(":degree_days_end_irrigation", QVariant(QVariant::String));
+        qry.bindValue(":degree_days_start_irrigation", "");
+        qry.bindValue(":degree_days_end_irrigation", "");
     }
     else
     {
@@ -241,9 +306,18 @@ bool updateCropIrrigationparam(QSqlDatabase &dbCrop, const Crit3DCrop &myCrop, Q
         qry.bindValue(":degree_days_end_irrigation", myCrop.degreeDaysEndIrrigation);
     }
 
-    qry.bindValue(":psi_leaf", myCrop.psiLeaf);
-    qry.bindValue(":raw_fraction", myCrop.fRAW);
-    qry.bindValue(":stress_tolerance", myCrop.stressTolerance);
+    if (myCrop.isBareSoil() )
+    {
+        qry.bindValue(":psi_leaf", "");
+        qry.bindValue(":raw_fraction", "");
+        qry.bindValue(":stress_tolerance", "");
+    }
+    else
+    {
+        qry.bindValue(":psi_leaf", myCrop.psiLeaf);
+        qry.bindValue(":raw_fraction", myCrop.fRAW);
+        qry.bindValue(":stress_tolerance", myCrop.stressTolerance);
+    }
 
     qry.bindValue(":id_crop", QString::fromStdString(myCrop.idCrop));
 
