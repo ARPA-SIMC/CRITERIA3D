@@ -320,9 +320,9 @@ bool Project3D::initializeWaterBalance3D()
     double vmax = 10.0;                                         // [m s-1]
     double minimumDeltaT = DEM.header->cellSize / vmax;         // [m]
 
-    soilFluxes3D::setNumericalParameters(minimumDeltaT, 3600, 100, 10, 12, 3);     // precision
-    //soilFluxes3D::setNumericalParameters(minimumDeltaT, 3600, 100, 10, 12, 2);   // speedy
-    //soilFluxes3D::setNumericalParameters(minimumDeltaT, 3600, 100, 10, 12, 1);   // very speedy (high error)
+    //int digitMBR = 3;   // precision
+    int digitMBR = 2;   // speedy
+    soilFluxes3D::setNumericalParameters(minimumDeltaT, 3600, 100, 10, 12, digitMBR);
 
     if (! initializeMatricPotential(waterFluxesParameters.initialWaterPotential))  // [m]
     {
@@ -1356,50 +1356,60 @@ double Project3D::assignEvaporation(int row, int col, double lai, int soilIndex)
         return actualEvaporationSum;
     }
 
-    // assign layer coefficients
-    std::vector<double> depthCoeff;
+    // assign layers coefficient
+    std::vector<double> evapCoeff;
     std::vector<double> layerCoeff;
-    depthCoeff.resize(lastEvapLayer+1);
+    evapCoeff.resize(lastEvapLayer+1);
     layerCoeff.resize(lastEvapLayer+1);
 
     double coeffSum = 0;
     for (unsigned int layer=1; layer <= unsigned(lastEvapLayer); layer++)
     {
-        depthCoeff[layer] = std::max((layerDepth[layer] - layerDepth[1]) / (MAX_EVAPORATION_DEPTH - layerDepth[1]), 0.0);
-        double thickCoeff = layerThickness[layer] / 0.04;
+        double depthCoeff = std::max((layerDepth[layer] - layerDepth[1]) / (MAX_EVAPORATION_DEPTH - layerDepth[1]), 0.0);
         // evaporation coefficient: 1 at depthMin, ~0.1 at MAX_EVAPORATION_DEPTH
-        layerCoeff[layer] = exp(-2 * depthCoeff[layer]) * thickCoeff;
+        evapCoeff[layer] = exp(-2 * depthCoeff);
+        // modify by layer thickness
+        layerCoeff[layer] = evapCoeff[layer] * (layerThickness[layer] / 0.04);
         coeffSum += layerCoeff[layer];
     }
 
+    // normalize layer coefficients
     for (unsigned int layer=1; layer <= unsigned(lastEvapLayer); layer++)
     {
-        // normalize
         layerCoeff[layer] /= coeffSum;
-        long nodeIndex = long(indexMap.at(layer).value[row][col]);
-
-        int horIndex = soilList[soilIndex].getHorizonIndex(layerDepth[layer]);
-        soil::Crit3DHorizon horizon = soilList[soilIndex].horizon[horIndex];
-
-        // evaporation coefficient: 1 at depthMin, ~0.1 at MAX_EVAPORATION_DEPTH
-        double evapCoeff = exp(-2 * depthCoeff[layer]);
-
-        // TODO getHygroscopicHumidity
-        double evapThreshold = horizon.waterContentWP + (1 - evapCoeff) * (horizon.waterContentFC - horizon.waterContentWP) * 0.5;
-        double wcAboveThreshold = std::max(getCriteria3DVar(volumetricWaterContent, nodeIndex) - evapThreshold, 0.0);         // [m3 m-3]
-
-        // [mm]
-        double evapAvailableWater = wcAboveThreshold * layerThickness[layer] * 1000;
-
-        double layerEvap = std::min(evapAvailableWater, residualEvaporation * layerCoeff[layer]);     // [mm]
-        if (layerEvap > 0)
-        {
-            actualEvaporationSum += layerEvap;
-            double flow = area * (layerEvap / 1000);                        // [m3 h-1]
-            waterSinkSource.at(unsigned(nodeIndex)) -= (flow / 3600);       // [m3 s-1]
-        }
     }
-    // TODO ciclo compensazione
+
+    int nrIteration = 0;
+    while (residualEvaporation > EPSILON && nrIteration < 3)
+    {
+        double iterEvaporation = 0;
+        for (unsigned int layer=1; layer <= unsigned(lastEvapLayer); layer++)
+        {
+            long nodeIndex = long(indexMap.at(layer).value[row][col]);
+
+            int horIndex = soilList[soilIndex].getHorizonIndex(layerDepth[layer]);
+            soil::Crit3DHorizon horizon = soilList[soilIndex].horizon[horIndex];
+
+            // TODO getHygroscopicHumidity
+            double evapThreshold = horizon.waterContentWP + (1 - evapCoeff[layer]) * (horizon.waterContentFC - horizon.waterContentWP) * 0.5;
+            double vwcAboveThreshold = std::max(getCriteria3DVar(volumetricWaterContent, nodeIndex) - evapThreshold, 0.0);   // [m3 m-3]
+
+            // [mm]
+            double evapAvailableWater = vwcAboveThreshold * layerThickness[layer] * 1000;
+
+            double layerEvap = std::min(evapAvailableWater, residualEvaporation * layerCoeff[layer]);     // [mm]
+            if (layerEvap > 0)
+            {
+                actualEvaporationSum += layerEvap;
+                iterEvaporation += layerEvap;
+                double flow = area * (layerEvap / 1000);                        // [m3 h-1]
+                waterSinkSource.at(unsigned(nodeIndex)) -= (flow / 3600);       // [m3 s-1]
+            }
+        }
+
+        residualEvaporation -= iterEvaporation;
+        nrIteration++;
+    }
 
     return actualEvaporationSum;
 }
