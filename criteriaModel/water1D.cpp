@@ -417,7 +417,7 @@ double computeEvaporation(std::vector<soil::Crit1DLayer> &soilLayers, double max
     bool isWaterSupply = true;
     double sumEvap, evapLayerThreshold, evapLayer;
     int nrIteration = 0;
-    while ((residualEvaporation > EPSILON) && (isWaterSupply == true) && nrIteration < 3)
+    while ((residualEvaporation > EPSILON) && (isWaterSupply == true) && nrIteration < 5)
     {
         sumEvap = 0.0;
 
