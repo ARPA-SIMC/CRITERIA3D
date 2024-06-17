@@ -69,6 +69,7 @@
 
     public:
         bool isCriteria3DInitialized;
+        bool isCropInitialized;
         bool showEachTimeStep;
 
         Crit3DProcesses processes;

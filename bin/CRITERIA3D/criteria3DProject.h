@@ -55,8 +55,12 @@
         Crit3DProject();
 
         bool initializeCriteria3DModel();
+
         void initializeCrop();
+        void initializeCropWithClimateData();
+        bool initializeCropFromDegreeDays(gis::Crit3DRasterGrid &myDegreeMap);
         void dailyUpdateCrop();
+
         void assignETreal();
         void assignPrecipitation();
 

@@ -1517,9 +1517,9 @@ void MainWindow::on_actionView_Snow_latent_heat_triggered()
 // ------------- CROP MAPS ---------------------------------------------------
 void MainWindow::on_actionView_degree_days_triggered()
 {
-    if (! myProject.isCriteria3DInitialized)
+    if (! myProject.isCropInitialized)
     {
-        myProject.logError("Initialize 3D model before.");
+        myProject.logError("Initialize crop before.");
         return;
     }
 
@@ -1529,9 +1529,9 @@ void MainWindow::on_actionView_degree_days_triggered()
 
 void MainWindow::on_actionView_Crop_LAI_triggered()
 {
-    if (! myProject.isCriteria3DInitialized)
+    if (! myProject.isCropInitialized)
     {
-        myProject.logError("Initialize 3D model before.");
+        myProject.logError("Initialize crop before.");
         return;
     }
 
@@ -2223,6 +2223,8 @@ void MainWindow::on_actionCriteria3D_Initialize_triggered()
     myProject.processes.computeEvaporation = true;
     myProject.processes.computeCrop = true;
     myProject.processes.computeSlopeStability = true;
+
+    myProject.initializeCropWithClimateData();
 
     if (myProject.initializeCriteria3DModel())
     {
@@ -3221,7 +3223,33 @@ void MainWindow::on_actionCriteria3D_update_subHourly_triggered(bool isChecked)
 
 void MainWindow::on_actionCriteria3D_load_state_triggered()
 {
-    // TODO
+    if (! myProject.isProjectLoaded)
+    {
+        myProject.logError(ERROR_STR_MISSING_PROJECT);
+        return;
+    }
+
+    QList<QString> stateList = myProject.getAllSavedState();
+    if (stateList.size() == 0)
+    {
+        myProject.logError();
+        return;
+    }
+
+    DialogLoadState dialogLoadState(stateList);
+    if (dialogLoadState.result() != QDialog::Accepted)
+        return;
+
+    QString statePath = myProject.getProjectPath() + PATH_STATES + dialogLoadState.getSelectedState();
+    if (! myProject.loadModelState(statePath))
+    {
+        myProject.logError();
+        return;
+    }
+
+    updateDateTime();
+    loadMeteoPointsDataSingleDay(myProject.getCurrentDate(), true);
+    redrawMeteoPoints(currentPointsVisualization, true);
 }
 
 

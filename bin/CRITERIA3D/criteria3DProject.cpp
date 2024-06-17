@@ -79,8 +79,6 @@ bool Crit3DProject::initializeCriteria3DModel()
         return false;
     }
 
-    initializeCrop();
-
     isCriteria3DInitialized = true;
     logInfoGUI("Criteria3D model initialized");
 
@@ -94,14 +92,20 @@ void Crit3DProject::initializeCrop()
     laiMap.initializeGrid(*(DEM.header));
     degreeDaysMap.initializeGrid(*(DEM.header));
 
+    dailyTminMap.initializeGrid(*(DEM.header));
+    dailyTmaxMap.initializeGrid(*(DEM.header));
+}
+
+
+void Crit3DProject::initializeCropWithClimateData()
+{
+    initializeCrop();
+
     if (! processes.computeCrop)
     {
         // nothing to do
         return;
     }
-
-    dailyTminMap.initializeGrid(*(DEM.header));
-    dailyTmaxMap.initializeGrid(*(DEM.header));
 
     for (int row = 0; row < DEM.header->nrRows; row++)
     {
@@ -170,6 +174,60 @@ void Crit3DProject::initializeCrop()
             }
         }
     }
+
+    isCropInitialized = true;
+}
+
+
+bool Crit3DProject::initializeCropFromDegreeDays(gis::Crit3DRasterGrid &myDegreeMap)
+{
+    initializeCrop();
+
+    if (! myDegreeMap.isLoaded)
+    {
+        errorString = "Wrong degree days map: crop cannot be initialized.";
+        processes.computeCrop = false;
+        return false;
+    }
+
+     if (! landUseMap.isLoaded || landUnitList.empty())
+    {
+        errorString = "Crop db or land use map is missing: crop cannot be initialized.";
+        processes.computeCrop = false;
+        return false;
+    }
+
+    for (int row = 0; row < DEM.header->nrRows; row++)
+    {
+        for (int col = 0; col < DEM.header->nrCols; col++)
+        {
+            float height = DEM.value[row][col];
+            if (! isEqual(height, DEM.header->flag))
+            {
+                // is land unit
+                int index = getLandUnitIndexRowCol(row, col);
+                if (index != NODATA)
+                {
+                    // is crop
+                    if (landUnitList[index].idCrop != "")
+                    {
+                        double x, y;
+                        gis::getUtmXYFromRowCol(*(DEM.header), row, col, &x, &y);
+                        float ddValue = gis::getValueFromXY(myDegreeMap, x, y);
+                        if (! isEqual(ddValue, myDegreeMap.header->flag))
+                        {
+                            degreeDaysMap.value[row][col] = ddValue;
+                            laiMap.value[row][col] = cropList[index].computeSimpleLAI(degreeDaysMap.value[row][col],
+                                                             gisSettings.startLocation.latitude, currentDate.dayOfYear());
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    isCropInitialized = true;
+    return true;
 }
 
 
@@ -1249,7 +1307,7 @@ QList<QString> Crit3DProject::getAllSavedState()
     QList<QString> states;
     QString statePath = getProjectPath() + PATH_STATES;
     QDir dir(statePath);
-    if (!dir.exists())
+    if (! dir.exists())
     {
         errorString = "STATES directory is missing.";
         return states;
@@ -1262,7 +1320,7 @@ QList<QString> Crit3DProject::getAllSavedState()
         return states;
     }
 
-    for (int i=0; i<list.size(); i++)
+    for (int i=0; i < list.size(); i++)
     {
         if (list[i].baseName().size() == 12)
         {
@@ -1300,6 +1358,8 @@ bool Crit3DProject::loadModelState(QString statePath)
         setCurrentHour(hour);
     }
 
+    std::string error, fileName;
+
     // snow model
     QString snowPath = statePath + "/snow";
     QDir snowDir(snowPath);
@@ -1307,9 +1367,6 @@ bool Crit3DProject::loadModelState(QString statePath)
     {
         if (! initializeSnowModel())
             return false;
-
-        std::string error;
-        std::string fileName;
 
         fileName = snowPath.toStdString() + "/SWE";
         if (! gis::readEsriGrid(fileName, snowMaps.getSnowWaterEquivalentMap(), error))
@@ -1367,6 +1424,28 @@ bool Crit3DProject::loadModelState(QString statePath)
             return false;
         }
     }
+
+    // crop model
+    QString cropPath = statePath + "/crop";
+    QDir cropDir(cropPath);
+    if (cropDir.exists())
+    {
+        gis::Crit3DRasterGrid myDegreeDaysMap;
+        fileName = cropPath.toStdString() + "/degreeDays";
+        if (! gis::readEsriGrid(fileName, &myDegreeDaysMap, error))
+        {
+            errorString = "Wrong degree days map:\n" + QString::fromStdString(error);
+            return false;
+        }
+
+        processes.computeCrop = true;
+
+        if (! initializeCropFromDegreeDays(myDegreeDaysMap))
+            return false;
+    }
+
+    // water fluxes
+
 
     return true;
 }
