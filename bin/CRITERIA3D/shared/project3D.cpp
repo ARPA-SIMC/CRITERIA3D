@@ -1331,7 +1331,7 @@ double Project3D::assignEvaporation(int row, int col, double lai, int soilIndex)
         }
     }
 
-    double area = DEM.header->cellSize * DEM.header->cellSize;                  // [m2]
+    double area = DEM.header->cellSize * DEM.header->cellSize;            // [m2]
 
     double et0 = double(hourlyMeteoMaps->mapHourlyET0->value[row][col]);        // [mm]
     double maxEvaporation = getPotentialEvaporation(et0, lai);                  // [mm]
@@ -1378,7 +1378,7 @@ double Project3D::assignEvaporation(int row, int col, double lai, int soilIndex)
     }
 
     int nrIteration = 0;
-    while (residualEvaporation > EPSILON && nrIteration < 3)
+    while (residualEvaporation > EPSILON && nrIteration < 5)
     {
         double iterEvaporation = 0;
         for (unsigned int layer=1; layer <= unsigned(lastEvapLayer); layer++)
