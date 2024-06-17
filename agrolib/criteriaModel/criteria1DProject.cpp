@@ -1095,7 +1095,7 @@ int Crit1DProject::computeAllUnits()
         }
     }
 
-    int infoStep = compUnitList.size();
+    int infoStep = int(compUnitList.size());
     if (compUnitList.size() >= 20)
     {
         infoStep = int(compUnitList.size() / 20);
@@ -1170,7 +1170,7 @@ int Crit1DProject::computeAllUnits()
                 }
             }
 
-            if ((i+1) % infoStep == 0 && nrUnitsComputed > 0)
+            if ((i+1) % infoStep == 0 && nrUnitsComputed > 20)
             {
                 double percentage = (i+1) * 100.0 / compUnitList.size();
                 logger.writeInfo("..." + QString::number(round(percentage)) + "%");
