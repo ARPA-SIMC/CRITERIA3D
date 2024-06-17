@@ -298,15 +298,16 @@ bool Crit1DCase::computeNumericalFluxes(const Crit3DDate &myDate, std::string &e
     soilFluxes3D::initializeBalance();
 
     // precipitation
-    // TODO improve for lat < 0
-    int duration = 24;                              // [hours] winter
-    if (myDate.month >= 5 && myDate.month <= 9)
+    int precDuration = 24;                              // [hours] winter
+    if ( (meteoPoint.latitude > 0 && (myDate.month >= 5 && myDate.month <= 9))
+        || (meteoPoint.latitude <= 0 && (myDate.month <= 3 || myDate.month >= 11)) )
     {
-        duration = 12;                               // [hours] summer
+        precDuration = 12;                              // [hours] summer
     }
-    int precH0 = 13 - duration/2;
-    int precH1 = precH0 + duration -1;
-    double precFlux = (area * output.dailyPrec * 0.001) / (HOUR_SECONDS * duration);  // [m3 s-1]
+
+    int precH0 = 13 - precDuration/2;
+    int precH1 = precH0 + precDuration - 1;
+    double precFlux = (area * output.dailyPrec * 0.001) / (HOUR_SECONDS * precDuration);  // [m3 s-1]
 
     // irrigation
     int irrH0 = 0;
@@ -314,10 +315,17 @@ bool Crit1DCase::computeNumericalFluxes(const Crit3DDate &myDate, std::string &e
     double irrFlux = 0;
     if (! unit.isOptimalIrrigation && output.dailyIrrigation > 0)
     {
-        duration = int(output.dailyIrrigation / 3);     // [hours]
         irrH0 = 6;                                      // morning
-        irrH1 = irrH0 + duration -1;
-        irrFlux = (area * output.dailyIrrigation * 0.001) / (HOUR_SECONDS * duration);  // [m3 s-1]
+        int maxDuration = 24 - irrH0 + 1;               // [hours]
+        float mmHour = 3;
+        if (output.dailyIrrigation >= 10)
+        {
+            mmHour = 10;
+        }
+        int irrDuration = std::min(int(output.dailyIrrigation / mmHour), maxDuration);
+
+        irrH1 = irrH0 + irrDuration - 1;
+        irrFlux = (area * output.dailyIrrigation * 0.001) / (HOUR_SECONDS * irrDuration);  // [m3 s-1]
     }
 
     // daily cycle

@@ -752,7 +752,7 @@ namespace soil
     {
         double suctionStress = -waterPotential * getDegreeOfSaturation();    // [kPa]
 
-        double slopeAngle = asin(slope);
+        double slopeAngle = std::max(asin(slope), EPSILON);
         double frictionAngle = horizonPtr->frictionAngle * DEG_TO_RAD;
 
         double tanAngle = tan(slopeAngle);
@@ -780,8 +780,8 @@ namespace soil
         // surface 2%
         if (upperDepth == 0.0) return 0.02;
         // first layer 1%
-        if (upperDepth > 0 && upperDepth < 0.5) return 0.01;
-        // sub-surface 0.5%
+        if (upperDepth > 0 && upperDepth < 0.4) return 0.01;
+        // sub-surface
         return MINIMUM_ORGANIC_MATTER;
     }
 
