@@ -399,7 +399,7 @@ double computeEvaporation(std::vector<soil::Crit1DLayer> &soilLayers, double max
         double layerDepth = soilLayers[i].depth + soilLayers[i].thickness / 2.0;
 
         double coeffDepth = MAXVALUE((layerDepth - minDepth) / (MAX_EVAPORATION_DEPTH - minDepth), 0);
-        // evaporation coefficient: 1 at depthMin, ~0.1 at MAX_EVAPORATION_DEPTH
+        // evaporation coefficient: 1 at depthMin, ~0.1 at maximum depth for evaporation
         coeffEvap[i-1] = exp(-2 * coeffDepth);
 
         sumCoeff += coeffEvap[i-1];
