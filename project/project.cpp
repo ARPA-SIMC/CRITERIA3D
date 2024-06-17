@@ -2443,10 +2443,8 @@ bool Project::interpolationDemLocalDetrending(meteoVariable myVar, const Crit3DT
                         return false;
                     }
 
-
                     myRaster->value[row][col] = interpolate(subsetInterpolationPoints, &interpolationSettings, meteoSettings,
                                                             myVar, x, y, z, proxyValues, true);
-
                     myRaster->setParametersForRowCol(row, col, interpolationSettings.getFittingParameters());
                     interpolationSettings.setCurrentCombination(interpolationSettings.getSelectedCombination());
                 }
