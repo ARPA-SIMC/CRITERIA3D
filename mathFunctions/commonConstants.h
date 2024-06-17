@@ -92,6 +92,9 @@
     #define MEAN_GEOMETRIC 0
     #define MEAN_LOGARITHMIC 1
 
+    // maximum soil depth for evaporation computation [m]
+    #define MAX_EVAPORATION_DEPTH 0.25
+
     //#define BOUNDARY_SURFACE 1
     #define BOUNDARY_RUNOFF 2
     #define BOUNDARY_FREEDRAINAGE 3
