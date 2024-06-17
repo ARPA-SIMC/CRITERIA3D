@@ -497,7 +497,7 @@ namespace root
                               const std::vector<double> &layerDepth, const std::vector<double> &layerThickness)
     {
         // check soil
-        if (nrLayers == 0)
+        if (nrLayers <= 1)
         {
             myCrop.roots.firstRootLayer = NODATA;
             myCrop.roots.lastRootLayer = NODATA;
