@@ -933,7 +933,7 @@ float modifiedShepardIdw(vector <Crit3DInterpolationDataPoint> &myPoints,
     {
         t[i] = 0;
         for (j=0; j < validPoints.size(); j++)
-            if (i != j && S[i] > 0)
+            if (i != j && S[i] > 0 && validPoints[i].distance > 0 && validPoints[j].distance > 0)
             {
                 cosine = ((X - (float)validPoints[i].point->utm.x) * (X - (float)validPoints[j].point->utm.x) + (Y - (float)validPoints[i].point->utm.y) * (Y - (float)validPoints[j].point->utm.y)) / (validPoints[i].distance * validPoints[j].distance);
                 t[i] = t[i] + S[j] * (1 - cosine);
@@ -1060,8 +1060,9 @@ void localSelection(vector <Crit3DInterpolationDataPoint> &inputPoints, vector <
         r1 += stepRadius;
     }
 
-    for (i=0; i< selectedPoints.size(); i++)
-        selectedPoints[i].regressionWeight = MAXVALUE(1 - selectedPoints[i].distance / maxDistance,2*EPSILON);
+    if (maxDistance != 0)
+        for (i=0; i< selectedPoints.size(); i++)
+            selectedPoints[i].regressionWeight = MAXVALUE(1 - selectedPoints[i].distance / (maxDistance*maxDistance*maxDistance),EPSILON);
 
     mySettings.setLocalRadius(maxDistance);
 }
@@ -1357,7 +1358,7 @@ bool setAllFittingRanges(Crit3DProxyCombination myCombination, Crit3DInterpolati
                 {
                     mySettings->getProxy(i)->setFittingFunctionName(piecewiseTwo);
                     if ((mySettings->getProxy(i)->getFittingParametersRange().empty()))
-                        tempParam = {-200, min-2, 0, -0.006, 1800, max+2, 0.01, 0};
+                        tempParam = {-200, min-2, 0.001, -0.006, 1800, max+2, 0.01, 0.0015};
                     else
                     {
                         tempParam = mySettings->getProxy(i)->getFittingParametersRange();
@@ -1369,7 +1370,7 @@ bool setAllFittingRanges(Crit3DProxyCombination myCombination, Crit3DInterpolati
                 {
                     mySettings->getProxy(i)->setFittingFunctionName(piecewiseThreeFree);
                     if ((mySettings->getProxy(i)->getFittingParametersRange().empty()))
-                        tempParam = {-200, min-2, 100, 0.001, -0.006, -0.006, 1800, max+2, 1000, 0.007, 0, 0};
+                        tempParam = {-200, min-2, 100, 0.001, -0.006, -0.006, 1800, max+2, 1000, 0.007, 0.0015, 0.0015};
                     else
                     {
                         tempParam = mySettings->getProxy(i)->getFittingParametersRange();
@@ -1381,7 +1382,7 @@ bool setAllFittingRanges(Crit3DProxyCombination myCombination, Crit3DInterpolati
                 {
                     mySettings->getProxy(i)->setFittingFunctionName(piecewiseThree);
                     if ((mySettings->getProxy(i)->getFittingParametersRange().empty()))
-                        tempParam = {-200, min-2, 100, 0.001, -0.006, 1800, max+2, 1000, 0.007, 0};
+                        tempParam = {-200, min-2, 100, 0.001, -0.006, 1800, max+2, 1000, 0.007, 0.0015};
                     else
                     {
                         tempParam = mySettings->getProxy(i)->getFittingParametersRange();
@@ -1803,7 +1804,7 @@ bool multipleDetrendingElevation(Crit3DProxyCombination elevationCombination, st
     //std::vector <std::vector<double>> parameters;
     std::vector<std::function<double(double, std::vector<double>&)>> myFunc;
 
-    unsigned int nrMaxStep = 20;
+    unsigned int nrMaxStep = 100;
     if (parameters.empty())
         nrMaxStep *= 10;
 
