@@ -1971,7 +1971,7 @@ namespace interpolation
         std::vector<double> ySim(nrData);
 
         int counter = 0;
-        //srand (unsigned(time(nullptr)));
+        /*srand (unsigned(time(nullptr)));
         std::random_device rd;
         std::mt19937 gen(rd());
         std::normal_distribution<double> normal_dis(0.5, 0.5);
@@ -1989,9 +1989,80 @@ namespace interpolation
 
             discreteParameters.push_back(tempDiscrete);
             tempDiscrete.clear();
-        }
+        }*/
 
-        do
+        //grigliato
+
+        std::vector<double> steps;
+        if (parameters.size() == 4)
+            steps = {50.0, 0.5, 0.00075, 0.00075};
+        else if (parameters.size() == 6)
+            steps = {50.0, 0.5, 50.0, 0.00075, 0.00075, 0.00075};
+        else return false;
+
+        const int numSteps = 40;
+        int directions[] = {1, -1};
+        int numParamsToVary = parameters.size();
+        std::vector<double> firstGuessParam = parameters;
+
+        for (int step = 1; step <= numSteps; ++step)
+        {
+            for (int dir = 0; dir < 2; ++dir)
+            {
+                for (int paramIndex = 0; paramIndex < numParamsToVary; ++paramIndex)
+                {
+
+                    fittingMarquardt_nDimension_noSquares_singleFunction(func,parametersMin,
+                                                                         parametersMax,parameters,
+                                                                         parametersDelta,maxIterationsNr,
+                                                                         myEpsilon,x,y,weights);
+
+                    for (i=0;i<nrData;i++)
+                    {
+                        ySim[i]= func(x[i], parameters);
+                    }
+                    R2 = computeWeighted_R2(y,ySim,weights);
+
+                    if (R2 > (bestR2-deltaR2))
+                    {
+                        for (j=0;j<nrMinima-1;j++)
+                        {
+                            R2Previous[j] = R2Previous[j+1];
+                        }
+                        if (R2 > (bestR2))
+                        {
+                            for (j=0; j<nrParameters; j++)
+                            {
+                                bestParameters[j] = parameters[j];
+                            }
+                            bestR2 = R2;
+                        }
+                        R2Previous[nrMinima-1] = R2;
+
+                        for (j=0; j<nrParameters; j++)
+                        {
+                            bestParameters[j] = parameters[j];
+                        }
+                    }
+                    counter++;
+
+                    if (dir == 0)
+                        parameters[paramIndex] = MINVALUE(firstGuessParam[paramIndex] + directions[dir] * step * steps[paramIndex], parametersMax[paramIndex]);
+                    else
+                        parameters[paramIndex] = MAXVALUE(firstGuessParam[paramIndex] + directions[dir] * step * steps[paramIndex], parametersMin[paramIndex]);
+
+                }
+            }
+
+            if ((counter > nrTrials) || ((R2Previous[0] != NODATA) && fabs(R2Previous[0]-R2Previous[nrMinima-1]) < deltaR2 ))
+                break;
+
+
+        }
+        //end grigliato
+
+        //random
+        /*do
         {
             fittingMarquardt_nDimension_noSquares_singleFunction(func,parametersMin,
                                                                  parametersMax,parameters,
@@ -2030,13 +2101,13 @@ namespace interpolation
             }
             counter++;
 
-            /*for (j=0; j<nrParameters; j++)
+            for (j=0; j<nrParameters; j++)
             {
                 do {
                     truncNormal = normal_dis(gen);
                 } while(truncNormal <= 0.0 || truncNormal >= 1.0);
                 parameters[j] = parametersMin[j] + (truncNormal)*(parametersMax[j]-parametersMin[j]);
-            }*/
+            }
 
             int indice = 0;
             for (j=0; j<nrParameters-2;j++)
@@ -2046,8 +2117,9 @@ namespace interpolation
                 } while (indice < 0 || indice >= discreteParameters[j].size());
                 parameters[j] = discreteParameters[j][indice];
             }
-        } while( (counter < nrTrials) && !(R2Previous[0] > 0.797 && R2Previous[nrMinima-1] > 0.8) && ((R2Previous[0] == NODATA) || fabs(R2Previous[0]-R2Previous[nrMinima-1]) > deltaR2 ));
 
+        } while( (counter < nrTrials) && !(R2Previous[0] > 0.797 && R2Previous[nrMinima-1] > 0.8) && ((R2Previous[0] == NODATA) || fabs(R2Previous[0]-R2Previous[nrMinima-1]) > deltaR2 ));
+*/
         for (j=0; j<nrParameters; j++)
         {
             parameters[j] = bestParameters[j];
