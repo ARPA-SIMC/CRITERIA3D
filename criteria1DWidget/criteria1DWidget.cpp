@@ -594,6 +594,7 @@ void Criteria1DWidget::on_actionOpenProject()
     this->lastYearListComboBox.blockSignals(false);
 
     openComputationUnitsDB(myProject.dbComputationUnitsName);
+
     viewMenu->setEnabled(true);
     if (soilListComboBox.count() == 0)
     {
@@ -1053,15 +1054,20 @@ void Criteria1DWidget::on_actionChooseCase()
     // METEO
     meteoListComboBox.setCurrentText(myProject.myCase.unit.idMeteo);
 
-    // CROP
+    // CROP ID
     myProject.myCase.unit.idCrop = getIdCropFromClass(myProject.dbCrop, "crop_class", "id_class", myProject.myCase.unit.idCropClass, errorStr);
-    if (myProject.myCase.unit.idCrop != "")
+    if (myProject.myCase.unit.idCrop == "")
+    {
+        // it is a single crop, not a crop class
+        myProject.myCase.unit.idCrop = myProject.myCase.unit.idCropClass;
+    }
+    if ( cropListComboBox.findText(myProject.myCase.unit.idCrop) != -1 )
     {
         cropListComboBox.setCurrentText(myProject.myCase.unit.idCrop);
     }
     else
     {
-        QMessageBox::critical(nullptr, "Error!", "Missing crop class: " + myProject.myCase.unit.idCropClass + "\n" + errorStr);
+        QMessageBox::critical(nullptr, "Error!", "Missing crop: " + myProject.myCase.unit.idCropClass + "\n" + errorStr);
     }
 
     // SOIL

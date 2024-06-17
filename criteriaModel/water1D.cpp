@@ -373,8 +373,6 @@ double computeCapillaryRise(std::vector<soil::Crit1DLayer> &soilLayers, double w
 
 double computeEvaporation(std::vector<soil::Crit1DLayer> &soilLayers, double maxEvaporation)
 {
-   // TODO extend to geometric soilLayers
-
     // surface evaporation
     double surfaceEvaporation = MINVALUE(maxEvaporation, soilLayers[0].waterContent);
     soilLayers[0].waterContent -= surfaceEvaporation;
@@ -390,32 +388,43 @@ double computeEvaporation(std::vector<soil::Crit1DLayer> &soilLayers, double max
     // soil evaporation
     int nrEvapLayers = int(floor(MAX_EVAPORATION_DEPTH / soilLayers[1].thickness)) +1;
     nrEvapLayers = std::min(nrEvapLayers, int(soilLayers.size()-1));
-    double* coeffEvap = new double[nrEvapLayers];
-    double layerDepth, coeffDepth;
 
-    double sumCoeff = 0;
+    std::vector<double> coeffEvap;
+    coeffEvap.resize(nrEvapLayers);
+
     double minDepth = soilLayers[1].depth + soilLayers[1].thickness / 2;
+    double sumCoeff = 0;
     for (int i=1; i <= nrEvapLayers; i++)
     {
-        layerDepth = soilLayers[i].depth + soilLayers[i].thickness / 2.0;
+        double layerDepth = soilLayers[i].depth + soilLayers[i].thickness / 2.0;
 
-        coeffDepth = MAXVALUE((layerDepth - minDepth) / (MAX_EVAPORATION_DEPTH - minDepth), 0);
+        double coeffDepth = MAXVALUE((layerDepth - minDepth) / (MAX_EVAPORATION_DEPTH - minDepth), 0);
         // evaporation coefficient: 1 at depthMin, ~0.1 at MAX_EVAPORATION_DEPTH
         coeffEvap[i-1] = exp(-2 * coeffDepth);
 
         sumCoeff += coeffEvap[i-1];
     }
 
+    // normalize
+    std::vector<double> coeffThreshold;
+    coeffThreshold.resize(nrEvapLayers);
+    for (int i=0; i < nrEvapLayers; i++)
+    {
+        coeffThreshold[i] = (1.0 - coeffEvap[i]) * 0.5;
+        coeffEvap[i] /= sumCoeff;
+    }
+
     bool isWaterSupply = true;
     double sumEvap, evapLayerThreshold, evapLayer;
-    while ((residualEvaporation > EPSILON) && (isWaterSupply == true))
+    int nrIteration = 0;
+    while ((residualEvaporation > EPSILON) && (isWaterSupply == true) && nrIteration < 5)
     {
         sumEvap = 0.0;
 
         for (int i=1; i <= nrEvapLayers; i++)
         {
             evapLayer = residualEvaporation * (coeffEvap[i-1] / sumCoeff);
-            evapLayerThreshold = soilLayers[i].HH + (1 - coeffEvap[i-1]) * (soilLayers[i].FC - soilLayers[i].HH);
+            evapLayerThreshold = soilLayers[i].HH + (soilLayers[i].FC - soilLayers[i].HH) * coeffThreshold[i-1];
 
             if (soilLayers[i].waterContent > (evapLayerThreshold + evapLayer))
             {
@@ -441,9 +450,8 @@ double computeEvaporation(std::vector<soil::Crit1DLayer> &soilLayers, double max
 
         residualEvaporation -= sumEvap;
         actualEvaporation  += sumEvap;
+        nrIteration++;
     }
-
-    delete[] coeffEvap;
 
     return actualEvaporation;
 }

@@ -1840,8 +1840,10 @@ void Crit1DCarbonNitrogenProfile::N_harvest(Crit1DCase &myCase) // public functi
         // N of leaves is incorporated in litter through the upeer layer with a smoothly rate during the leaf fall
 
     double N_toLitter = 0;
-    // !!! verificare USR PSR
-    if (myCase.crop.roots.firstRootLayer == 0 && myCase.crop.roots.lastRootLayer == 0)
+
+    if ((myCase.crop.roots.firstRootLayer == 0 && myCase.crop.roots.lastRootLayer == 0)
+            || myCase.crop.roots.firstRootLayer == NODATA || myCase.crop.roots.lastRootLayer == NODATA
+            || myCase.crop.isBareSoil() )
         return;
 
     for (int l = myCase.crop.roots.firstRootLayer; l <= myCase.crop.roots.lastRootLayer; l++) // verificare i cicli for per cambio indici
