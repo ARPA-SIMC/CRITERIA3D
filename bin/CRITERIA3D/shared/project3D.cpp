@@ -1313,8 +1313,6 @@ double getPotentialTranspiration(double ET0, double lai, double kcMax)
  */
 double Project3D::assignEvaporation(int row, int col, double lai, int soilIndex)
 {
-    double const MAX_EVAPORATION_DEPTH = 0.2;               // [m]
-
     int lastEvapLayer;
     if (soilIndex == NODATA)
     {
