@@ -1431,6 +1431,12 @@ double Project3D::assignTranspiration(int row, int col, double currentLai, doubl
         return actualTranspiration;
     }
 
+    // only surface
+    if (nrLayers <= 1)
+    {
+        return actualTranspiration;
+    }
+
     // check land unit
     int cropIndex = getLandUnitIndexRowCol(row, col);
     if (cropIndex == NODATA)
@@ -1443,22 +1449,21 @@ double Project3D::assignTranspiration(int row, int col, double currentLai, doubl
     {
         return actualTranspiration;
     }
-
     Crit3DCrop currentCrop = cropList[cropIndex];
 
-    // compute maximum transpiration
+    // check soil
+    int soilIndex = int(soilIndexMap.value[row][col]);
+    if (soilIndex == NODATA)
+    {
+        return actualTranspiration;
+    }
+
+    // maximum transpiration
     double et0 = double(hourlyMeteoMaps->mapHourlyET0->value[row][col]);        // [mm]
     double kcMax = currentCrop.kcMax;                                           // [-]
     double maxTranspiration = getPotentialTranspiration(et0, currentLai, kcMax);
 
     if (maxTranspiration < EPSILON)
-    {
-        return actualTranspiration;
-    }
-
-    // check soil
-    int soilIndex = int(soilIndexMap.value[row][col]);
-    if (soilIndex == NODATA)
     {
         return actualTranspiration;
     }
@@ -1472,6 +1477,11 @@ double Project3D::assignTranspiration(int row, int col, double currentLai, doubl
 
     // compute root density
     if (! root::computeRootDensity3D(currentCrop, soilList[soilIndex], nrLayers, layerDepth, layerThickness))
+    {
+        return actualTranspiration;
+    }
+    // check root layers
+    if (currentCrop.roots.firstRootLayer == NODATA || currentCrop.roots.lastRootLayer == NODATA)
     {
         return actualTranspiration;
     }
