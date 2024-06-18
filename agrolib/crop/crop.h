@@ -43,8 +43,8 @@
         /*!
          * water need
          */
-        double kcMax;                               /*!< [-] */
-        int psiLeaf;                                /*!< [cm] */
+        double kcMax;                               /*!< [-] maximum crop coefficient */
+        int psiLeaf;                                /*!< [cm] maximum water suction potential */
         double stressTolerance;                     /*!< [-] */
         double fRAW;                                /*!< [-] fraction of Readily Available Water */
 
