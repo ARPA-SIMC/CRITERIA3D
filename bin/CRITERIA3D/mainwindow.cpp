@@ -1145,6 +1145,7 @@ void MainWindow::setCurrentRasterOutput(gis::Crit3DRasterGrid *myRaster)
     view3DVariable = (myRaster == &(myProject.criteria3DMap));
 }
 
+
 void MainWindow::on_actionProjectSettings_triggered()
 {
     DialogSettings* settingsDialog = new DialogSettings(&myProject);
@@ -2214,19 +2215,9 @@ void MainWindow::on_actionWaterFluxes_settings_triggered()
 }
 
 
-void MainWindow::on_actionCriteria3D_Initialize_triggered()
+void MainWindow::initializeInterfaceWaterFluxes()
 {
-    myProject.processes.initialize();
-    myProject.processes.computeMeteo = true;
-    myProject.processes.computeRadiation = true;
-    myProject.processes.computeWater = true;
-    myProject.processes.computeEvaporation = true;
-    myProject.processes.computeCrop = true;
-    myProject.processes.computeSlopeStability = true;
-
-    myProject.initializeCropWithClimateData();
-
-    if (myProject.initializeCriteria3DModel())
+    if (myProject.isCriteria3DInitialized)
     {
         ui->groupBoxModel->setEnabled(true);
 
@@ -2250,6 +2241,23 @@ void MainWindow::on_actionCriteria3D_Initialize_triggered()
         myProject.currentSeconds = 0;
         updateModelTime();
     }
+}
+
+
+void MainWindow::on_actionCriteria3D_Initialize_triggered()
+{
+    myProject.processes.initialize();
+    myProject.processes.computeMeteo = true;
+    myProject.processes.computeRadiation = true;
+    myProject.processes.computeWater = true;
+    myProject.processes.computeEvaporation = true;
+    myProject.processes.computeCrop = true;
+    myProject.processes.computeSlopeStability = true;
+
+    myProject.initializeCropWithClimateData();
+    myProject.initializeCriteria3DModel();
+
+    initializeInterfaceWaterFluxes();
 }
 
 
@@ -3248,6 +3256,7 @@ void MainWindow::on_actionCriteria3D_load_state_triggered()
     }
 
     updateDateTime();
+    initializeInterfaceWaterFluxes();
     loadMeteoPointsDataSingleDay(myProject.getCurrentDate(), true);
     redrawMeteoPoints(currentPointsVisualization, true);
 }
@@ -3270,6 +3279,7 @@ void MainWindow::on_actionCriteria3D_load_external_state_triggered()
     }
 
     updateDateTime();
+    initializeInterfaceWaterFluxes();
     loadMeteoPointsDataSingleDay(myProject.getCurrentDate(), true);
     redrawMeteoPoints(currentPointsVisualization, true);
 }

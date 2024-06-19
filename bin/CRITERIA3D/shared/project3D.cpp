@@ -639,7 +639,7 @@ bool Project3D::initializeMatricPotential(float psi)
 
                     if (isCrit3dError(myResult, error))
                     {
-                        errorString = "setCrit3DMatricPotential: " + error + " in row:"
+                        errorString = "setMatricPotential: " + error + " in row:"
                                     + QString::number(row) + " col:" + QString::number(col);
                         return false;
                     }
@@ -716,7 +716,6 @@ bool Project3D::setCrit3DNodeSoil()
 bool Project3D::initializeSoilMoisture(int month)
 {
     int crit3dResult = CRIT3D_OK;
-    QString error;
     long index, soilIndex, horizonIndex;
     double moistureIndex, waterPotential;
     double fieldCapacity;                    // [m]
@@ -759,9 +758,9 @@ bool Project3D::initializeSoilMoisture(int month)
                         }
                     }
 
-                    if (isCrit3dError(crit3dResult, error))
+                    if (isCrit3dError(crit3dResult, errorString))
                     {
-                        logError("initializeSoilMoisture:" + error);
+                        logError();
                         return false;
                     }
                 }

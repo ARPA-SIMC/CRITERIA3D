@@ -33,6 +33,7 @@
 #include "color.h"
 #include "statistics.h"
 #include "project3D.h"
+#include "soilFluxes3D.h"
 
 #include <QtSql>
 #include <QPaintEvent>
@@ -1189,10 +1190,10 @@ bool Crit3DProject::saveModelsState()
         QDir().mkdir(cropPath);
 
         // save crop state
-        std::string error;
-        if (! gis::writeEsriGrid((cropPath + "/degreeDays").toStdString(), &degreeDaysMap, error))
+        std::string errorStr;
+        if (! gis::writeEsriGrid((cropPath + "/degreeDays").toStdString(), &degreeDaysMap, errorStr))
         {
-            logError("Error saving degree days map: " + QString::fromStdString(error));
+            logError("Error saving degree days map: " + QString::fromStdString(errorStr));
             return false;
         }
     }
@@ -1231,7 +1232,7 @@ bool Crit3DProject::saveModelsState()
                 return false;
             }
 
-            int depthCm = int(layerDepth[i] * 100);
+            int depthCm = int(round(layerDepth[i] * 100));
             QString fileName = "WP_" + QString::number(depthCm);
             std::string errorStr;
             if (! gis::writeEsriGrid((waterPath + "/" + fileName).toStdString(), &criteria3DMap, errorStr))
@@ -1261,47 +1262,47 @@ bool Crit3DProject::saveSnowModelState(const QString &currentStatePath)
     QDir().mkdir(imgPath);
 
     logInfo("Saving snow state: " + currentStatePath);
-    std::string error;
-    if (!gis::writeEsriGrid((snowPath+"/SWE").toStdString(), snowMaps.getSnowWaterEquivalentMap(), error))
+    std::string errorStr;
+    if (!gis::writeEsriGrid((snowPath+"/SWE").toStdString(), snowMaps.getSnowWaterEquivalentMap(), errorStr))
     {
-        logError("Error saving water equivalent map: " + QString::fromStdString(error));
+        logError("Error saving water equivalent map: " + QString::fromStdString(errorStr));
         return false;
     }
     // ENVI file
-    if (!gis::writeEnviGrid((imgPath+"/SWE").toStdString(), gisSettings.utmZone, snowMaps.getSnowWaterEquivalentMap(), error))
+    if (!gis::writeEnviGrid((imgPath+"/SWE").toStdString(), gisSettings.utmZone, snowMaps.getSnowWaterEquivalentMap(), errorStr))
     {
-        logError("Error saving water equivalent map (ENVI file): " + QString::fromStdString(error));
+        logError("Error saving water equivalent map (ENVI file): " + QString::fromStdString(errorStr));
         return false;
     }
 
-    if (!gis::writeEsriGrid((snowPath+"/AgeOfSnow").toStdString(), snowMaps.getAgeOfSnowMap(), error))
+    if (!gis::writeEsriGrid((snowPath+"/AgeOfSnow").toStdString(), snowMaps.getAgeOfSnowMap(), errorStr))
     {
-        logError("Error saving age of snow map: " + QString::fromStdString(error));
+        logError("Error saving age of snow map: " + QString::fromStdString(errorStr));
         return false;
     }
-    if (!gis::writeEsriGrid((snowPath+"/SnowSurfaceTemp").toStdString(), snowMaps.getSnowSurfaceTempMap(), error))
+    if (!gis::writeEsriGrid((snowPath+"/SnowSurfaceTemp").toStdString(), snowMaps.getSnowSurfaceTempMap(), errorStr))
     {
-        logError("Error saving snow surface temp map: " + QString::fromStdString(error));
+        logError("Error saving snow surface temp map: " + QString::fromStdString(errorStr));
         return false;
     }
-    if (!gis::writeEsriGrid((snowPath+"/IceContent").toStdString(), snowMaps.getIceContentMap(), error))
+    if (!gis::writeEsriGrid((snowPath+"/IceContent").toStdString(), snowMaps.getIceContentMap(), errorStr))
     {
-        logError("Error saving ice content map: " + QString::fromStdString(error));
+        logError("Error saving ice content map: " + QString::fromStdString(errorStr));
         return false;
     }
-    if (!gis::writeEsriGrid((snowPath+"/LWContent").toStdString(), snowMaps.getLWContentMap(), error))
+    if (!gis::writeEsriGrid((snowPath+"/LWContent").toStdString(), snowMaps.getLWContentMap(), errorStr))
     {
-        logError("Error saving LW content map: " + QString::fromStdString(error));
+        logError("Error saving LW content map: " + QString::fromStdString(errorStr));
         return false;
     }
-    if (!gis::writeEsriGrid((snowPath+"/InternalEnergy").toStdString(), snowMaps.getInternalEnergyMap(), error))
+    if (!gis::writeEsriGrid((snowPath+"/InternalEnergy").toStdString(), snowMaps.getInternalEnergyMap(), errorStr))
     {
-        logError("Error saving internal energy map: " + QString::fromStdString(error));
+        logError("Error saving internal energy map: " + QString::fromStdString(errorStr));
         return false;
     }
-    if (!gis::writeEsriGrid((snowPath+"/SurfaceInternalEnergy").toStdString(), snowMaps.getSurfaceEnergyMap(), error))
+    if (!gis::writeEsriGrid((snowPath+"/SurfaceInternalEnergy").toStdString(), snowMaps.getSurfaceEnergyMap(), errorStr))
     {
-        logError("Error saving surface energy map: " + QString::fromStdString(error));
+        logError("Error saving surface energy map: " + QString::fromStdString(errorStr));
         return false;
     }
 
@@ -1365,7 +1366,7 @@ bool Crit3DProject::loadModelState(QString statePath)
         setCurrentHour(hour);
     }
 
-    std::string error, fileName;
+    std::string errorStr, fileName;
 
     // snow model
     QString snowPath = statePath + "/snow";
@@ -1376,57 +1377,57 @@ bool Crit3DProject::loadModelState(QString statePath)
             return false;
 
         fileName = snowPath.toStdString() + "/SWE";
-        if (! gis::readEsriGrid(fileName, snowMaps.getSnowWaterEquivalentMap(), error))
+        if (! gis::readEsriGrid(fileName, snowMaps.getSnowWaterEquivalentMap(), errorStr))
         {
-            errorString = "Wrong Snow SWE map:\n" + QString::fromStdString(error);
+            errorString = "Wrong Snow SWE map:\n" + QString::fromStdString(errorStr);
             snowMaps.isInitialized = false;
             return false;
         }
 
         fileName = snowPath.toStdString() + "/AgeOfSnow";
-        if (! gis::readEsriGrid(fileName, snowMaps.getAgeOfSnowMap(), error))
+        if (! gis::readEsriGrid(fileName, snowMaps.getAgeOfSnowMap(), errorStr))
         {
-            errorString = "Wrong Snow AgeOfSnow map:\n" + QString::fromStdString(error);
+            errorString = "Wrong Snow AgeOfSnow map:\n" + QString::fromStdString(errorStr);
             snowMaps.isInitialized = false;
             return false;
         }
 
         fileName = snowPath.toStdString() + "/IceContent";
-        if (! gis::readEsriGrid(fileName, snowMaps.getIceContentMap(), error))
+        if (! gis::readEsriGrid(fileName, snowMaps.getIceContentMap(), errorStr))
         {
-            errorString = "Wrong Snow IceContent map:\n" + QString::fromStdString(error);
+            errorString = "Wrong Snow IceContent map:\n" + QString::fromStdString(errorStr);
             snowMaps.isInitialized = false;
             return false;
         }
 
         fileName = snowPath.toStdString() + "/InternalEnergy";
-        if (! gis::readEsriGrid(fileName, snowMaps.getInternalEnergyMap(), error))
+        if (! gis::readEsriGrid(fileName, snowMaps.getInternalEnergyMap(), errorStr))
         {
-            errorString = "Wrong Snow InternalEnergy map:\n" + QString::fromStdString(error);
+            errorString = "Wrong Snow InternalEnergy map:\n" + QString::fromStdString(errorStr);
             snowMaps.isInitialized = false;
             return false;
         }
 
         fileName = snowPath.toStdString() + "/LWContent";
-        if (! gis::readEsriGrid(fileName, snowMaps.getLWContentMap(), error))
+        if (! gis::readEsriGrid(fileName, snowMaps.getLWContentMap(), errorStr))
         {
-            errorString = "Wrong Snow LWContent map:\n" + QString::fromStdString(error);
+            errorString = "Wrong Snow LWContent map:\n" + QString::fromStdString(errorStr);
             snowMaps.isInitialized = false;
             return false;
         }
 
         fileName = snowPath.toStdString() + "/SnowSurfaceTemp";
-        if (! gis::readEsriGrid(fileName, snowMaps.getSnowSurfaceTempMap(), error))
+        if (! gis::readEsriGrid(fileName, snowMaps.getSnowSurfaceTempMap(), errorStr))
         {
-            errorString = "Wrong Snow SurfaceTemp map:\n" + QString::fromStdString(error);
+            errorString = "Wrong Snow SurfaceTemp map:\n" + QString::fromStdString(errorStr);
             snowMaps.isInitialized = false;
             return false;
         }
 
         fileName = snowPath.toStdString() + "/SurfaceInternalEnergy";
-        if (! gis::readEsriGrid(fileName, snowMaps.getSurfaceEnergyMap(), error))
+        if (! gis::readEsriGrid(fileName, snowMaps.getSurfaceEnergyMap(), errorStr))
         {
-            errorString = "Wrong Snow SurfaceInternalEnergy map:\n" + QString::fromStdString(error);
+            errorString = "Wrong Snow SurfaceInternalEnergy map:\n" + QString::fromStdString(errorStr);
             snowMaps.isInitialized = false;
             return false;
         }
@@ -1439,9 +1440,9 @@ bool Crit3DProject::loadModelState(QString statePath)
     {
         gis::Crit3DRasterGrid myDegreeDaysMap;
         fileName = cropPath.toStdString() + "/degreeDays";
-        if (! gis::readEsriGrid(fileName, &myDegreeDaysMap, error))
+        if (! gis::readEsriGrid(fileName, &myDegreeDaysMap, errorStr))
         {
-            errorString = "Wrong degree days map:\n" + QString::fromStdString(error);
+            errorString = "Wrong degree days map:\n" + QString::fromStdString(errorStr);
             return false;
         }
 
@@ -1456,38 +1457,172 @@ bool Crit3DProject::loadModelState(QString statePath)
     QDir waterDir(waterPath);
     if (waterDir.exists())
     {
-        QStringList filters ("*.flt");
-        QFileInfoList fileList = waterDir.entryInfoList (filters);
-        if (fileList.isEmpty())
+        if (! loadWaterPotentialState(waterPath))
         {
-            errorString = "Water directory is empty.";
+            processes.computeWater = false;
+            isCriteria3DInitialized = false;
             return false;
         }
-
-        if (! isCriteria3DInitialized)
-        {
-            logWarning("Water fluxes will be initialized with current settings.");
-            initializeCriteria3DModel();
-            // TODO update interface
-        }
-
-        std::vector<int> depthList;
-        for (unsigned i = 0; i < fileList.size(); i++)
-        {
-            QString fileName = fileList.at(i).fileName();
-            QString leftFileName = fileName.left(fileName.size() - 4);
-            QString depthStr = leftFileName.right(leftFileName.size() - 3);
-            int currentDepth = depthStr.toInt();
-            depthList.push_back(currentDepth);
-        }
-        std::sort(depthList.begin(), depthList.end());
 
         processes.computeWater = true;
     }
 
+    return true;
+}
+
+
+bool Crit3DProject::loadWaterPotentialState(QString waterPath)
+{
+    QDir waterDir(waterPath);
+
+    QStringList filters ("*.flt");
+    QFileInfoList fileList = waterDir.entryInfoList (filters);
+    if (fileList.isEmpty())
+    {
+        errorString = "Water directory is empty.";
+        return false;
+    }
+
+    if (! isCriteria3DInitialized)
+    {
+        logWarning("The water flow model will be initialized with the current settings.");
+        initializeCriteria3DModel();
+    }
+
+    std::vector<int> depthList;
+    for (unsigned i = 0; i < fileList.size(); i++)
+    {
+        QString fileName = fileList.at(i).fileName();
+        QString leftFileName = fileName.left(fileName.size() - 4);
+        QString depthStr = leftFileName.right(leftFileName.size() - 3);
+        bool isOk;
+        int currentDepth = depthStr.toInt(&isOk);
+        if (isOk)
+        {
+            depthList.push_back(currentDepth);
+        }
+    }
+    if (depthList.empty())
+    {
+        errorString = "Missing depth in water potential fileName.";
+        return false;
+    }
+
+    std::sort(depthList.begin(), depthList.end());
+    double maxReadingDepth = *std::max_element(depthList.begin(), depthList.end()) / 100.;      // [m]
+    double maxDepth = layerDepth[nrLayers-1];                                                   // [m]
+
+    // check on data presence
+    if (computationSoilDepth > 0)
+    {
+        double deltaDepth = std::max(0., maxDepth - maxReadingDepth);
+        if ( (1. - deltaDepth/maxDepth) * 100 < meteoSettings->getMinimumPercentage() )
+        {
+            errorString = "Water potential data is not sufficient \nto cover the current computation depth: "
+                          + QString::number(computationSoilDepth) + " m";
+            return false;
+        }
+    }
+
+    std::vector<gis::Crit3DRasterGrid*> waterPotentialMapList;
+    for (unsigned i = 0; i < depthList.size(); i++)
+    {
+        std::string fileName = waterPath.toStdString() + "/WP_" + std::to_string(depthList[i]);
+        std::string errorStr;
+        gis::Crit3DRasterGrid *currentWaterPotentialMap = new gis::Crit3DRasterGrid();
+        if (! gis::readEsriGrid(fileName, currentWaterPotentialMap, errorStr))
+        {
+            errorString = "Wrong water potential map:\n" + QString::fromStdString(errorStr);
+            return false;
+        }
+        waterPotentialMapList.push_back(currentWaterPotentialMap);
+    }
+
+    for (unsigned int layer = 0; layer < nrLayers; layer ++)
+    {
+        int currentDepthCm = int(round(layerDepth[layer] * 100));
+        int lastDepthIndex = int(depthList.size()) - 1;
+        int layer0, layer1;
+        double w0, w1;
+        int i = 0;
+        while (currentDepthCm > depthList[i] && i < lastDepthIndex)
+        {
+            i++;
+        }
+        if (currentDepthCm == depthList[i])
+        {
+            layer0 = i;
+            layer1 = i;
+        }
+        else
+        {
+            if (currentDepthCm > depthList[i])
+            {
+                layer0 = i;
+                layer1 = std::min(i+1, lastDepthIndex);
+            }
+            else
+            {
+                layer0 = std::max(0, i-1);
+                layer1 = i;
+            }
+        }
+        int delta = depthList[layer1] - depthList[layer0];
+        if (delta == 0)
+        {
+            w0 = 1;
+            w1 = 0;
+        }
+        else
+        {
+            w0 = (currentDepthCm - depthList[layer0]) / delta;
+            w1 = 1 - w0;
+        }
+
+        for (int row = 0; row < indexMap.at(layer).header->nrRows; row++)
+        {
+            for (int col = 0; col < indexMap.at(layer).header->nrCols; col++)
+            {
+                long index = long(indexMap.at(layer).value[row][col]);
+                if (index != long(indexMap.at(layer).header->flag))
+                {
+                    double x, y;
+                    gis::getUtmXYFromRowCol(*(indexMap.at(layer).header), row, col, &x, &y);
+                    float wp0 = gis::getValueFromXY(*(waterPotentialMapList.at(layer0)), x, y);
+
+                    float waterPotential = NODATA;
+                    if (w0 == 1)
+                    {
+                        if (! isEqual(wp0, waterPotentialMapList.at(layer0)->header->flag) )
+                            waterPotential = wp0;
+                    }
+                    else
+                    {
+                        float wp1 = gis::getValueFromXY(*(waterPotentialMapList.at(layer1)), x, y);
+                        if (! isEqual(wp0, waterPotentialMapList.at(layer0)->header->flag)
+                            && ! isEqual(wp1, waterPotentialMapList.at(layer1)->header->flag))
+                            waterPotential = (w0 * wp0) + (w1 * wp1);
+                    }
+
+                    if (! isEqual(waterPotential, NODATA))
+                    {
+                        int myResult = soilFluxes3D::setMatricPotential(index, waterPotential);
+
+                        if (isCrit3dError(myResult, errorString))
+                        {
+                            errorString = "Error in setMatricPotential: " + errorString + " in row:"
+                                          + QString::number(row) + " col:" + QString::number(col);
+                            return false;
+                        }
+                    }
+                }
+            }
+        }
+    }
 
     return true;
 }
+
 
 
 bool Crit3DProject::writeOutputPointsTables()

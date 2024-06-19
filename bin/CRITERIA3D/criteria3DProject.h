@@ -105,6 +105,8 @@
         bool saveModelsState();
 
         bool loadModelState(QString statePath);
+        bool loadWaterPotentialState(QString waterPath);
+
         QList<QString> getAllSavedState();
 
         bool writeOutputPointsTables();
