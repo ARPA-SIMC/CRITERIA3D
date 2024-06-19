@@ -223,7 +223,7 @@ bool Project3D::initializeWaterBalance3D()
     {
         if (! landUseMap.isLoaded || landUnitList.empty())
         {
-            logInfo("WARNING: land use map or crop db is missing: crop computation will be deactivated.");
+            logWarning("Land use map or crop db is missing.\nCrop computation will be deactivated.");
             processes.computeCrop = false;
 
             // use default crop per surface properties

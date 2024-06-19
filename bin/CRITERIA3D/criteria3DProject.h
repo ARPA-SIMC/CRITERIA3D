@@ -34,6 +34,7 @@
         bool check3DProject();
         bool updateDailyTemperatures();
 
+        bool saveSnowModelState(const QString &currentStatePath);
 
     public:
         Crit3DGeometry* openGlGeometry;
@@ -100,8 +101,8 @@
         void setAllHourlyMeteoMapsComputed(bool value);
 
         bool saveDailyOutput(QDate myDate, const QString& outputPathHourly);
-        bool saveSnowModelState();
-        bool saveWaterModelState();
+
+        bool saveModelsState();
 
         bool loadModelState(QString statePath);
         QList<QString> getAllSavedState();

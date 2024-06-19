@@ -2363,7 +2363,7 @@ void MainWindow::on_actionSave_state_triggered()
 {
     if (myProject.isProjectLoaded)
     {
-        if (myProject.saveSnowModelState())
+        if (myProject.saveModelsState())
         {
             myProject.logInfoGUI("State model successfully saved: " + myProject.getCurrentDate().toString()
                                  + " H:" + QString::number(myProject.getCurrentHour()));
@@ -3255,7 +3255,23 @@ void MainWindow::on_actionCriteria3D_load_state_triggered()
 
 void MainWindow::on_actionCriteria3D_load_external_state_triggered()
 {
-    // TODO
+    if (! myProject.isProjectLoaded)
+    {
+        myProject.logError(ERROR_STR_MISSING_PROJECT);
+        return;
+    }
+
+    QString stateDirectory = QFileDialog::getExistingDirectory(this, tr("Open Directory"), "",
+                                                               QFileDialog::ShowDirsOnly | QFileDialog::DontResolveSymlinks);
+    if (! myProject.loadModelState(stateDirectory))
+    {
+        myProject.logError();
+        return;
+    }
+
+    updateDateTime();
+    loadMeteoPointsDataSingleDay(myProject.getCurrentDate(), true);
+    redrawMeteoPoints(currentPointsVisualization, true);
 }
 
 
@@ -3263,12 +3279,7 @@ void MainWindow::on_actionCriteria3D_save_state_triggered()
 {
     if (myProject.isProjectLoaded)
     {
-        if (myProject.processes.computeSnow)
-        {
-            myProject.saveSnowModelState();
-        }
-
-        if (myProject.saveWaterModelState())
+        if (myProject.saveModelsState())
         {
             myProject.logInfoGUI("State model successfully saved: " + myProject.getCurrentDate().toString()
                                  + " H:" + QString::number(myProject.getCurrentHour()));
