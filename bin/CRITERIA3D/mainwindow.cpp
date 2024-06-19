@@ -2426,8 +2426,8 @@ void MainWindow::on_actionLoad_state_triggered()
     if (dialogLoadState.result() != QDialog::Accepted)
         return;
 
-    QString statePath = myProject.getProjectPath() + PATH_STATES + dialogLoadState.getSelectedState();
-    if (myProject.loadModelState(statePath))
+    QString stateDirectory = myProject.getProjectPath() + PATH_STATES + dialogLoadState.getSelectedState();
+    if (myProject.loadModelState(stateDirectory))
     {
         updateDateTime();
         loadMeteoPointsDataSingleDay(myProject.getCurrentDate(), true);
@@ -3248,8 +3248,8 @@ void MainWindow::on_actionCriteria3D_load_state_triggered()
     if (dialogLoadState.result() != QDialog::Accepted)
         return;
 
-    QString statePath = myProject.getProjectPath() + PATH_STATES + dialogLoadState.getSelectedState();
-    if (! myProject.loadModelState(statePath))
+    QString stateDirectory = myProject.getProjectPath() + PATH_STATES + dialogLoadState.getSelectedState();
+    if (! myProject.loadModelState(stateDirectory))
     {
         myProject.logError();
         return;
