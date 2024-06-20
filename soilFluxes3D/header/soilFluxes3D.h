@@ -51,7 +51,7 @@
     // WATER
     __EXTERN int DLL_EXPORT __STDCALL setHydraulicProperties(int waterRetentionCurve, int conductivityMeanType, float horizVertRatioConductivity);
     __EXTERN int DLL_EXPORT __STDCALL setWaterContent(long index, double myWaterContent);
-    __EXTERN int DLL_EXPORT __STDCALL setMatricPotential(long index, double potential);
+    __EXTERN int DLL_EXPORT __STDCALL setMatricPotential(long index, double psi);
     __EXTERN int DLL_EXPORT __STDCALL setTotalPotential(long index, double totalPotential);
     __EXTERN int DLL_EXPORT __STDCALL setPrescribedTotalPotential(long index, double prescribedTotalPotential);
     __EXTERN int DLL_EXPORT __STDCALL setWaterSinkSource(long index, double sinkSource);

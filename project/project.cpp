@@ -1105,8 +1105,6 @@ bool Project::loadMeteoPointsDB(QString fileName)
 
     closeMeteoPointsDB();
 
-    logInfoGUI("Load meteo points DB: " + fileName);
-
     dbPointsFileName = fileName;
     QString dbName = getCompleteFileName(fileName, PATH_METEOPOINT);
     if (! QFile(dbName).exists())
@@ -1118,7 +1116,7 @@ bool Project::loadMeteoPointsDB(QString fileName)
     meteoPointsDbHandler = new Crit3DMeteoPointsDbHandler(dbName);
     if (! meteoPointsDbHandler->getErrorString().isEmpty())
     {
-        errorString = "Function loadMeteoPointsDB:\n" + dbName + "\n" + meteoPointsDbHandler->getErrorString();
+        errorString = meteoPointsDbHandler->getErrorString();
         closeMeteoPointsDB();
         return false;
     }
@@ -1194,7 +1192,6 @@ bool Project::loadMeteoPointsDB(QString fileName)
 
     meteoPointsLoaded = true;
     logInfo("Meteo points DB = " + dbName);
-    closeLogInfo();
 
     return true;
 }
@@ -4459,6 +4456,31 @@ void Project::logError(QString myStr)
 {
     errorString = myStr;
     logError();
+}
+
+
+void Project::logWarning(QString myStr)
+{
+    errorString = myStr;
+    logWarning();
+}
+
+
+void Project::logWarning()
+{
+    if (logFile.is_open())
+    {
+        logFile << "WARNING! " << errorString.toStdString() << std::endl;
+    }
+
+    if (modality == MODE_GUI)
+    {
+        QMessageBox::warning(nullptr, "WARNING!", errorString);
+    }
+    else
+    {
+        std::cout << "WARNING! " << errorString.toStdString() << std::endl;
+    }
 }
 
 

@@ -7,8 +7,6 @@
         #include "soil.h"
     #endif
 
-    #define MAX_EVAPORATION_DEPTH 0.25
-
     class Crit3DCrop;
 
     void initializeWater(std::vector<soil::Crit1DLayer> &soilLayers);

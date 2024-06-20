@@ -55,7 +55,7 @@ bool Download::getPointProperties(QList<QString> datasetList)
         qDebug() << "err: " << error->errorString() << " -> " << error->offset;
 
         // check validity of the document
-        if(!doc.isNull() && doc.isArray())
+        if(! doc.isNull() && doc.isArray() )
         {
             QJsonArray jsonArr = doc.array();
 
@@ -71,7 +71,7 @@ bool Download::getPointProperties(QList<QString> datasetList)
                     qDebug() << "jsonDataset: value is not string";
                 else
                     foreach(QString item, _datasetsList)
-                        if (jsonDataset == item)
+                        if (jsonDataset.toString().toUpper() == item.toUpper())
                         {
                             this->downloadMetadata(obj);
                         }

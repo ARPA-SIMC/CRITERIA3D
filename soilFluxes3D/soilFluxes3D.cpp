@@ -434,17 +434,17 @@ int DLL_EXPORT __STDCALL setHydraulicProperties(int waterRetentionCurve,
 /*!
  * \brief setMatricPotential
  * \param nodeIndex
- * \param potential [m]
+ * \param psi [m]
  * \return OK/ERROR
  */
- int DLL_EXPORT __STDCALL setMatricPotential(long nodeIndex, double potential)
+ int DLL_EXPORT __STDCALL setMatricPotential(long nodeIndex, double psi)
  {
      if (nodeListPtr == nullptr)
          return MEMORY_ERROR;
      if ((nodeIndex < 0) || (nodeIndex >= myStructure.nrNodes))
          return INDEX_ERROR;
 
-     nodeListPtr[nodeIndex].H = potential + nodeListPtr[nodeIndex].z;
+     nodeListPtr[nodeIndex].H = psi + nodeListPtr[nodeIndex].z;
      nodeListPtr[nodeIndex].oldH = nodeListPtr[nodeIndex].H;
 
      if (nodeListPtr[nodeIndex].isSurface)
