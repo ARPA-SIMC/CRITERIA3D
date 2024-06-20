@@ -2099,9 +2099,7 @@ void MainWindow::on_actionSnow_run_model_triggered()
         return;
 
     myProject.processes.initialize();
-    myProject.processes.computeMeteo = true;
-    myProject.processes.computeRadiation = true;
-    myProject.processes.computeSnow = true;
+    myProject.processes.setComputeSnow(true);
 
     startModels(firstTime, lastTime);
 }
@@ -2127,9 +2125,7 @@ void MainWindow::on_actionSnow_compute_next_hour_triggered()
     }
 
     myProject.processes.initialize();
-    myProject.processes.computeMeteo = true;
-    myProject.processes.computeRadiation = true;
-    myProject.processes.computeSnow = true;
+    myProject.processes.setComputeSnow(true);
 
     startModels(currentTime, currentTime);
 }
@@ -2180,7 +2176,6 @@ void MainWindow::on_actionWaterFluxes_settings_triggered()
     dialogWaterFluxes.setImposedComputationDepth(myProject.waterFluxesParameters.imposedComputationDepth);
 
     dialogWaterFluxes.snowProcess->setChecked(myProject.processes.computeSnow);
-    dialogWaterFluxes.evaporationProcess->setChecked(myProject.processes.computeEvaporation);
     dialogWaterFluxes.cropProcess->setChecked(myProject.processes.computeCrop);
     dialogWaterFluxes.waterFluxesProcess->setChecked(myProject.processes.computeWater);
 
@@ -2206,30 +2201,9 @@ void MainWindow::on_actionWaterFluxes_settings_triggered()
         myProject.waterFluxesParameters.computeAllSoilDepth = dialogWaterFluxes.allSoilDepth->isChecked();
         myProject.fittingOptions.useWaterRetentionData = dialogWaterFluxes.useWaterRetentionFitting->isChecked();
 
-        myProject.processes.computeSnow = dialogWaterFluxes.snowProcess->isChecked();
-        if (myProject.processes.computeSnow)
-        {
-            myProject.processes.computeMeteo = true;
-            myProject.processes.computeRadiation = true;
-        }
-        myProject.processes.computeEvaporation = dialogWaterFluxes.evaporationProcess->isChecked();
-        if (myProject.processes.computeEvaporation)
-        {
-            myProject.processes.computeMeteo = true;
-            myProject.processes.computeRadiation = true;
-        }
-        myProject.processes.computeCrop = dialogWaterFluxes.cropProcess->isChecked();
-        if (myProject.processes.computeCrop)
-        {
-            myProject.processes.computeMeteo = true;
-            myProject.processes.computeRadiation = true;
-        }
-        myProject.processes.computeWater = dialogWaterFluxes.waterFluxesProcess->isChecked();
-        if (myProject.processes.computeWater)
-        {
-            myProject.processes.computeMeteo = true;
-            myProject.processes.computeSlopeStability = true;
-        }
+        myProject.processes.setComputeSnow(dialogWaterFluxes.snowProcess->isChecked());
+        myProject.processes.setComputeCrop(dialogWaterFluxes.cropProcess->isChecked());
+        myProject.processes.setComputeWater(dialogWaterFluxes.waterFluxesProcess->isChecked());
 
         /*if (! myProject.writeCriteria3DParameters())
         {
@@ -2243,7 +2217,7 @@ void MainWindow::on_actionWaterFluxes_settings_triggered()
 }
 
 
-void MainWindow::initializeInterfaceWaterFluxes()
+void MainWindow::initializeCriteria3DInterface()
 {
     if (myProject.isCriteria3DInitialized)
     {
@@ -2274,18 +2248,28 @@ void MainWindow::initializeInterfaceWaterFluxes()
 
 void MainWindow::on_actionCriteria3D_Initialize_triggered()
 {
-    myProject.processes.initialize();
-    myProject.processes.computeMeteo = true;
-    myProject.processes.computeRadiation = true;
-    myProject.processes.computeWater = true;
-    myProject.processes.computeEvaporation = true;
-    myProject.processes.computeCrop = true;
-    myProject.processes.computeSlopeStability = true;
+    if (myProject.processes.computeCrop)
+    {
+        if (! myProject.initializeCropWithClimateData())
+        {
+            myProject.logError();
+            return;
+        }
+    }
 
-    myProject.initializeCropWithClimateData();
-    myProject.initializeCriteria3DModel();
+    if (myProject.processes.computeWater)
+        if (! myProject.initializeCriteria3DModel())
+        {
+            myProject.logError();
+            return;
+        }
 
-    initializeInterfaceWaterFluxes();
+    if (myProject.processes.computeCrop || myProject.processes.computeWater)
+    {
+        initializeCriteria3DInterface();
+        myProject.isCriteria3DInitialized = true;
+        myProject.logInfoGUI("Criteria3D model initialized");
+    }
 }
 
 
@@ -3284,7 +3268,7 @@ void MainWindow::on_actionCriteria3D_load_state_triggered()
     }
 
     updateDateTime();
-    initializeInterfaceWaterFluxes();
+    initializeCriteria3DInterface();
     loadMeteoPointsDataSingleDay(myProject.getCurrentDate(), true);
     redrawMeteoPoints(currentPointsVisualization, true);
 }
@@ -3307,7 +3291,7 @@ void MainWindow::on_actionCriteria3D_load_external_state_triggered()
     }
 
     updateDateTime();
-    initializeInterfaceWaterFluxes();
+    initializeCriteria3DInterface();
     loadMeteoPointsDataSingleDay(myProject.getCurrentDate(), true);
     redrawMeteoPoints(currentPointsVisualization, true);
 }

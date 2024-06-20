@@ -74,13 +74,48 @@ void Crit3DProcesses::initialize()
     computeRadiation = false;
     computeWater = false;
     computeSlopeStability = false;
-    computeEvaporation = false;
     computeCrop = false;
     computeSnow = false;
     computeSolutes = false;
     computeHeat = false;
     computeAdvectiveHeat = false;
     computeLatentHeat = false;
+}
+
+void Crit3DProcesses::setComputeCrop(bool value)
+{
+    computeCrop = value;
+
+    // prerequisites
+    if (computeCrop)
+    {
+        computeMeteo = true;
+        computeRadiation = true;
+    }
+}
+
+void Crit3DProcesses::setComputeSnow(bool value)
+{
+    computeSnow = value;
+
+    // prerequisites
+    if (computeSnow)
+    {
+        computeMeteo = true;
+        computeRadiation = true;
+    }
+}
+
+void Crit3DProcesses::setComputeWater(bool value)
+{
+    computeWater = value;
+
+    // prerequisites
+    if (computeWater)
+    {
+        computeMeteo = true;
+        computeSlopeStability = true;
+    }
 }
 
 
@@ -224,7 +259,7 @@ bool Project3D::initializeWaterBalance3D()
         if (! landUseMap.isLoaded || landUnitList.empty())
         {
             logWarning("Land use map or crop db is missing.\nCrop computation will be deactivated.");
-            processes.computeCrop = false;
+            processes.setComputeCrop(false);
 
             // use default crop per surface properties
             landUnitList.clear();

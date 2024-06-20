@@ -14,7 +14,6 @@
 
     public:
         QCheckBox *snowProcess;
-        QCheckBox *evaporationProcess;
         QCheckBox *cropProcess;
         QCheckBox *waterFluxesProcess;
 

@@ -7,11 +7,9 @@ DialogWaterFluxesSettings::DialogWaterFluxesSettings()
     setWindowTitle("3D water fluxes settings");
 
     QGroupBox* processesGroupBox = new QGroupBox("Required processes");
-    QLabel *snowLabel = new QLabel(tr("Snow   "));
+    QLabel *snowLabel = new QLabel(tr("Snow model"));
     snowProcess = new QCheckBox();
-    QLabel *evaporationLabel = new QLabel(tr("Evaporation"));
-    evaporationProcess = new QCheckBox();
-    QLabel *cropLabel = new QLabel(tr("Crop   "));
+    QLabel *cropLabel = new QLabel(tr("Crop (evapotransp.)"));
     cropProcess = new QCheckBox();
     QLabel *waterLabel = new QLabel(tr("Water flow"));
     waterFluxesProcess = new QCheckBox();
@@ -19,8 +17,6 @@ DialogWaterFluxesSettings::DialogWaterFluxesSettings()
     QHBoxLayout *layoutProcesses = new QHBoxLayout();
     layoutProcesses->addWidget(snowProcess);
     layoutProcesses->addWidget(snowLabel);
-    layoutProcesses->addWidget(evaporationProcess);
-    layoutProcesses->addWidget(evaporationLabel);
     layoutProcesses->addWidget(cropProcess);
     layoutProcesses->addWidget(cropLabel);
     layoutProcesses->addWidget(waterFluxesProcess);

@@ -57,8 +57,8 @@
 
         bool initializeCriteria3DModel();
 
-        void initializeCrop();
-        void initializeCropWithClimateData();
+        bool initializeCrop();
+        bool initializeCropWithClimateData();
         bool initializeCropFromDegreeDays(gis::Crit3DRasterGrid &myDegreeMap);
         void dailyUpdateCrop();
 

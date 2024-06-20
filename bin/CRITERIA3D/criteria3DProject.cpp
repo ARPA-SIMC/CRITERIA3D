@@ -57,18 +57,13 @@ Crit3DProject::Crit3DProject() : Project3D()
 bool Crit3DProject::initializeCriteria3DModel()
 {
     if (! check3DProject())
-    {
-        logError();
         return false;
-    }
 
     clearWaterBalance3D();
 
     // it is necessary to reload the soils db (the fitting options may have changed)
     if (! loadSoilDatabase(soilDbFileName))
-    {
         return false;
-    }
 
     if (! setSoilIndexMap())
         return false;
@@ -76,42 +71,46 @@ bool Crit3DProject::initializeCriteria3DModel()
     if (! initializeWaterBalance3D())
     {
         clearWaterBalance3D();
-        logError("Criteria3D model is NOT initialized.");
+        errorString += "\nCriteria3D model is not initialized.";
         return false;
     }
 
     isCriteria3DInitialized = true;
-    logInfoGUI("Criteria3D model initialized");
-
     return true;
 }
 
 
-void Crit3DProject::initializeCrop()
+bool Crit3DProject::initializeCrop()
 {
+    if (! DEM.isLoaded)
+    {
+        errorString = ERROR_STR_MISSING_DEM;
+        return false;
+    }
+
     // initialize LAI and degree days map to NODATA
     laiMap.initializeGrid(*(DEM.header));
     degreeDaysMap.initializeGrid(*(DEM.header));
 
     dailyTminMap.initializeGrid(*(DEM.header));
     dailyTmaxMap.initializeGrid(*(DEM.header));
+
+    return true;
 }
 
 
-void Crit3DProject::initializeCropWithClimateData()
+bool Crit3DProject::initializeCropWithClimateData()
 {
-    initializeCrop();
-
     if (! processes.computeCrop)
-    {
-        // nothing to do
-        return;
-    }
+        return false;
+
+    if (! initializeCrop())
+        return false;
 
     if (landUnitList.empty() || cropList.empty())
     {
-        // missing crop db - nothing to do
-        return;
+        errorString = "missing crop db or land use map";
+        return false;
     }
 
     for (int row = 0; row < DEM.header->nrRows; row++)
@@ -183,6 +182,7 @@ void Crit3DProject::initializeCropWithClimateData()
     }
 
     isCropInitialized = true;
+    return true;
 }
 
 
@@ -193,14 +193,14 @@ bool Crit3DProject::initializeCropFromDegreeDays(gis::Crit3DRasterGrid &myDegree
     if (! myDegreeMap.isLoaded)
     {
         errorString = "Wrong degree days map: crop cannot be initialized.";
-        processes.computeCrop = false;
+        processes.setComputeCrop(false);
         return false;
     }
 
      if (! landUseMap.isLoaded || landUnitList.empty())
     {
         errorString = "Crop db or land use map is missing: crop cannot be initialized.";
-        processes.computeCrop = false;
+        processes.setComputeCrop(false);
         return false;
     }
 
@@ -935,7 +935,6 @@ bool Crit3DProject::initializeSnowModel()
     }
 
     snowMaps.initialize(DEM, snowModel.snowParameters.skinThickness);
-    processes.computeSnow = true;
 
     return true;
 }
@@ -1111,10 +1110,13 @@ bool Crit3DProject::modelHourlyCycle(QDateTime myTime, const QString& hourlyOutp
         waterSinkSource.at(size_t(i)) = 0.;
     }
 
-    if (processes.computeEvaporation || processes.computeCrop)
+    if (processes.computeCrop)
     {
         if (! hourlyMeteoMaps->computeET0PMMap(DEM, radiationMaps))
+        {
+            errorString = "Missing ET0 values.";
             return false;
+        }
 
         if (isSaveOutputRaster())
         {
@@ -1431,6 +1433,8 @@ bool Crit3DProject::loadModelState(QString statePath)
             snowMaps.isInitialized = false;
             return false;
         }
+
+        processes.setComputeSnow(true);
     }
 
     // crop model
@@ -1446,10 +1450,10 @@ bool Crit3DProject::loadModelState(QString statePath)
             return false;
         }
 
-        processes.computeCrop = true;
-
         if (! initializeCropFromDegreeDays(myDegreeDaysMap))
             return false;
+
+        processes.setComputeCrop(true);
     }
 
     // water fluxes
@@ -1459,14 +1463,12 @@ bool Crit3DProject::loadModelState(QString statePath)
     {
         if (! loadWaterPotentialState(waterPath))
         {
-            processes.computeWater = false;
             isCriteria3DInitialized = false;
+            processes.setComputeWater(false);
             return false;
         }
 
-        processes.computeWater = true;
-        processes.computeEvaporation = true;
-        processes.computeSlopeStability = true;
+        processes.setComputeWater(true);
     }
 
     return true;
@@ -1488,7 +1490,11 @@ bool Crit3DProject::loadWaterPotentialState(QString waterPath)
     if (! isCriteria3DInitialized)
     {
         logWarning("The water flow model will be initialized with the current settings.");
-        initializeCriteria3DModel();
+        if (! initializeCriteria3DModel())
+        {
+            logError();
+            return false;
+        }
     }
 
     std::vector<int> depthList;

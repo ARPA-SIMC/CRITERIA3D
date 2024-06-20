@@ -341,7 +341,7 @@
         void clearWindVectorObjects();
         void loadMeteoPointsDataSingleDay(const QDate &date, bool showInfo);
 
-        void initializeInterfaceWaterFluxes();
+        void initializeCriteria3DInterface();
     };
 
     bool selectDates(QDateTime &firstTime, QDateTime &lastTime);
