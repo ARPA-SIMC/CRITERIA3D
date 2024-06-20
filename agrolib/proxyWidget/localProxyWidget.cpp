@@ -379,7 +379,7 @@ void Crit3DLocalProxyWidget::plot()
                                         interpolationSettings, meteoSettings, climateParam,
                                         outInterpolationPoints, checkSpatialQuality, errorStdStr);
 
-        localSelection(outInterpolationPoints, subsetInterpolationPoints, x, y, *interpolationSettings);
+        localSelection(outInterpolationPoints, subsetInterpolationPoints, x, y, z, *interpolationSettings);
         detrending(subsetInterpolationPoints, interpolationSettings->getSelectedCombination(), interpolationSettings, climateParam, myVar, getCurrentTime());
     }
     else
@@ -387,7 +387,7 @@ void Crit3DLocalProxyWidget::plot()
         checkAndPassDataToInterpolation(quality, myVar, meteoPoints, nrMeteoPoints, getCurrentTime(), SQinterpolationSettings,
                                         interpolationSettings, meteoSettings, climateParam,
                                         outInterpolationPoints, checkSpatialQuality, errorStdStr);
-        localSelection(outInterpolationPoints, subsetInterpolationPoints, x, y, *interpolationSettings);
+        localSelection(outInterpolationPoints, subsetInterpolationPoints, x, y, z, *interpolationSettings);
     }
     QList<QPointF> pointListPrimary, pointListSecondary, pointListSupplemental, pointListMarked;
     QMap< QString, QPointF > idPointMap1;

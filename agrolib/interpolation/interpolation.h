@@ -96,7 +96,7 @@
 
     void localSelection(std::vector <Crit3DInterpolationDataPoint> &inputPoints,
                           std::vector <Crit3DInterpolationDataPoint> &selectedPoints,
-                          float x, float y, Crit3DInterpolationSettings &mySettings);
+                          float x, float y, float z, Crit3DInterpolationSettings &mySettings);
 
     bool proxyValidity(std::vector <Crit3DInterpolationDataPoint> &myPoints, int proxyPos,
                        float stdDevThreshold, double &avg, double &stdDev);

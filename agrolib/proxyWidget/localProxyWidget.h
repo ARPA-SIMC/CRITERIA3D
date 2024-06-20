@@ -27,6 +27,7 @@ public:
 private:
     double x;
     double y;
+    double z;
     std::vector<std::vector<double>> parameters;
     gis::Crit3DGisSettings gisSettings;
     Crit3DInterpolationSettings* interpolationSettings;
