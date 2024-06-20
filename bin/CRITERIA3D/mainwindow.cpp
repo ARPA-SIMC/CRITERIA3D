@@ -2179,6 +2179,11 @@ void MainWindow::on_actionWaterFluxes_settings_triggered()
     dialogWaterFluxes.setInitialWaterPotential(myProject.waterFluxesParameters.initialWaterPotential);
     dialogWaterFluxes.setImposedComputationDepth(myProject.waterFluxesParameters.imposedComputationDepth);
 
+    dialogWaterFluxes.snowProcess->setChecked(myProject.processes.computeSnow);
+    dialogWaterFluxes.evaporationProcess->setChecked(myProject.processes.computeEvaporation);
+    dialogWaterFluxes.cropProcess->setChecked(myProject.processes.computeCrop);
+    dialogWaterFluxes.waterFluxesProcess->setChecked(myProject.processes.computeWater);
+
     if (myProject.waterFluxesParameters.computeOnlySurface)
         dialogWaterFluxes.onlySurface->setChecked(true);
     else if (myProject.waterFluxesParameters.computeAllSoilDepth)
@@ -2201,6 +2206,31 @@ void MainWindow::on_actionWaterFluxes_settings_triggered()
         myProject.waterFluxesParameters.computeAllSoilDepth = dialogWaterFluxes.allSoilDepth->isChecked();
         myProject.fittingOptions.useWaterRetentionData = dialogWaterFluxes.useWaterRetentionFitting->isChecked();
 
+        myProject.processes.computeSnow = dialogWaterFluxes.snowProcess->isChecked();
+        if (myProject.processes.computeSnow)
+        {
+            myProject.processes.computeMeteo = true;
+            myProject.processes.computeRadiation = true;
+        }
+        myProject.processes.computeEvaporation = dialogWaterFluxes.evaporationProcess->isChecked();
+        if (myProject.processes.computeEvaporation)
+        {
+            myProject.processes.computeMeteo = true;
+            myProject.processes.computeRadiation = true;
+        }
+        myProject.processes.computeCrop = dialogWaterFluxes.cropProcess->isChecked();
+        if (myProject.processes.computeCrop)
+        {
+            myProject.processes.computeMeteo = true;
+            myProject.processes.computeRadiation = true;
+        }
+        myProject.processes.computeWater = dialogWaterFluxes.waterFluxesProcess->isChecked();
+        if (myProject.processes.computeWater)
+        {
+            myProject.processes.computeMeteo = true;
+            myProject.processes.computeSlopeStability = true;
+        }
+
         /*if (! myProject.writeCriteria3DParameters())
         {
             myProject.logError("Error writing soil fluxes parameters");
@@ -2208,10 +2238,8 @@ void MainWindow::on_actionWaterFluxes_settings_triggered()
     }
 
     // layer thickness
-    // processes (snow crop)
     // boundary (lateral free drainage, bottom free drainage)
     // lateral conductivity ratio
-    // model accuracy
 }
 
 

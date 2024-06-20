@@ -1465,6 +1465,8 @@ bool Crit3DProject::loadModelState(QString statePath)
         }
 
         processes.computeWater = true;
+        processes.computeEvaporation = true;
+        processes.computeSlopeStability = true;
     }
 
     return true;

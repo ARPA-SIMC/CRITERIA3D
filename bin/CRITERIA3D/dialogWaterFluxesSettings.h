@@ -4,6 +4,7 @@
     #include <QDialog>
     #include <QLineEdit>
     #include <QRadioButton>
+    #include <QCheckBox>
 
     class DialogWaterFluxesSettings : public QDialog
     {
@@ -12,6 +13,11 @@
         QLineEdit *imposedComputationDepthEdit;
 
     public:
+        QCheckBox *snowProcess;
+        QCheckBox *evaporationProcess;
+        QCheckBox *cropProcess;
+        QCheckBox *waterFluxesProcess;
+
         QRadioButton *onlySurface;
         QRadioButton *allSoilDepth;
         QRadioButton *imposedDepth;

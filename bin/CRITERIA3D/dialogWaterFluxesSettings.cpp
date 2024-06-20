@@ -6,6 +6,27 @@ DialogWaterFluxesSettings::DialogWaterFluxesSettings()
 {
     setWindowTitle("3D water fluxes settings");
 
+    QGroupBox* processesGroupBox = new QGroupBox("Required processes");
+    QLabel *snowLabel = new QLabel(tr("Snow   "));
+    snowProcess = new QCheckBox();
+    QLabel *evaporationLabel = new QLabel(tr("Evaporation"));
+    evaporationProcess = new QCheckBox();
+    QLabel *cropLabel = new QLabel(tr("Crop   "));
+    cropProcess = new QCheckBox();
+    QLabel *waterLabel = new QLabel(tr("Water flow"));
+    waterFluxesProcess = new QCheckBox();
+
+    QHBoxLayout *layoutProcesses = new QHBoxLayout();
+    layoutProcesses->addWidget(snowProcess);
+    layoutProcesses->addWidget(snowLabel);
+    layoutProcesses->addWidget(evaporationProcess);
+    layoutProcesses->addWidget(evaporationLabel);
+    layoutProcesses->addWidget(cropProcess);
+    layoutProcesses->addWidget(cropLabel);
+    layoutProcesses->addWidget(waterFluxesProcess);
+    layoutProcesses->addWidget(waterLabel);
+    processesGroupBox->setLayout(layoutProcesses);
+
     // initial water potential [m]
     QGroupBox* initialGroupBox = new QGroupBox("Initial conditions");
     QLabel *initialWaterPotentialLabel = new QLabel(tr("Initial water potential [m]"));
@@ -53,6 +74,7 @@ DialogWaterFluxesSettings::DialogWaterFluxesSettings()
     connect(buttonBox, &QDialogButtonBox::rejected, this, &QDialog::reject);
 
     QVBoxLayout *mainLayout = new QVBoxLayout();
+    mainLayout->addWidget(processesGroupBox);
     mainLayout->addWidget(initialGroupBox);
     mainLayout->addWidget(depthGroupBox);
     mainLayout->addWidget(soilGroupBox);
