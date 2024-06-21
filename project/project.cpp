@@ -3407,11 +3407,11 @@ void Project::showMeteoWidgetPoint(std::string idMeteoPoint, std::string namePoi
 
         if (hasDailyData)
         {
-            meteoWidgetPoint->setDateIntervalDaily(firstDaily, lastDaily);
+            meteoWidgetPoint->setDailyRange(firstDaily, lastDaily);
         }
         if (hasHourlyData)
         {
-            meteoWidgetPoint->setDateIntervalHourly(firstHourly.date(), lastHourly.date());
+            meteoWidgetPoint->setHourlyRange(firstHourly.date(), lastHourly.date());
         }
 
         meteoWidgetPoint->setCurrentDate(this->currentDate);
@@ -3429,8 +3429,6 @@ void Project::showMeteoWidgetGrid(std::string idCell, bool isAppend)
     QDate firstMonthlyDate = meteoGridDbHandler->getFirstMonthlytDate();
     QDate lastMonthlyDate = meteoGridDbHandler->getLastMonthlyDate();
 
-    logInfoGUI("Loading data...\n");
-
     QDateTime firstDateTime, lastDateTime;
     if (meteoGridDbHandler->getFirstHourlyDate().isValid())
     {
@@ -3442,16 +3440,21 @@ void Project::showMeteoWidgetGrid(std::string idCell, bool isAppend)
     }
 
     int meteoWidgetId = 0;
-    if (meteoWidgetGridList.isEmpty() || meteoGridDbHandler->gridStructure().isEnsemble())
+    if (meteoWidgetGridList.isEmpty())
     {
         isAppend = false;
     }
 
     if (meteoGridDbHandler->gridStructure().isEnsemble())
     {
-        isAppend = false;
-        logInfoGUI("Meteo grid is ensemble: append mode is not possible, a new widget is opening.");
+        if (isAppend)
+        {
+            isAppend = false;
+            logWarning("Meteo grid is ensemble: append mode is not possible.\nA new meteo widget will be open.");
+        }
     }
+
+    logInfoGUI("Loading data...\n");
 
     if (isAppend)
     {
@@ -3533,11 +3536,11 @@ void Project::showMeteoWidgetGrid(std::string idCell, bool isAppend)
             {
                 if (meteoGridDbHandler->isDaily())
                 {
-                    meteoWidgetGrid->setDateIntervalDaily(firstDate, lastDate);
+                    meteoWidgetGrid->setDailyRange(firstDate, lastDate);
                 }
                 if (meteoGridDbHandler->isHourly())
                 {
-                    meteoWidgetGrid->setDateIntervalHourly(firstDateTime.date(), lastDateTime.date());
+                    meteoWidgetGrid->setHourlyRange(firstDateTime.date(), lastDateTime.date());
                 }
             }
             else
@@ -3595,11 +3598,11 @@ void Project::showMeteoWidgetGrid(std::string idCell, bool isAppend)
             {
                 if (meteoGridDbHandler->isDaily())
                 {
-                    meteoWidgetGrid->setDateIntervalDaily(firstDate, lastDate);
+                    meteoWidgetGrid->setDailyRange(firstDate, lastDate);
                 }
                 if (meteoGridDbHandler->isHourly())
                 {
-                    meteoWidgetGrid->setDateIntervalHourly(firstDateTime.date(), lastDateTime.date());
+                    meteoWidgetGrid->setHourlyRange(firstDateTime.date(), lastDateTime.date());
                 }
 
                 meteoWidgetGrid->drawMeteoPoint(meteoGridDbHandler->meteoGrid()->meteoPoint(row,col), isAppend);
