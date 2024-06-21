@@ -515,8 +515,8 @@ void MainWindow::addMeteoPoints()
         this->mapView->scene()->addObject(this->meteoPointList[i]);
 
         point->setToolTip();
-        connect(point, SIGNAL(newStationClicked(std::string, std::string, bool)), this, SLOT(callNewMeteoWidget(std::string, std::string, bool)));
-        connect(point, SIGNAL(appendStationClicked(std::string, std::string, bool)), this, SLOT(callAppendMeteoWidget(std::string, std::string, bool)));
+        connect(point, SIGNAL(newStationClicked(std::string, std::string, std::string, double, std::string, bool)), this, SLOT(callNewMeteoWidget(std::string, std::string, std::string, double, std::string, bool)));
+        connect(point, SIGNAL(appendStationClicked(std::string, std::string, std::string, double, std::string, bool)), this, SLOT(callAppendMeteoWidget(std::string, std::string, std::string, double, std::string, bool)));
     }
 }
 
@@ -684,5 +684,34 @@ void MainWindow::on_actionRadiation_settings_triggered()
 {
     DialogRadiation* myDialogRadiation = new DialogRadiation(&myProject);
     myDialogRadiation->close();
+}
+
+void MainWindow::callNewMeteoWidget(std::string id, std::string name, std::string dataset, double altitude, std::string lapseRateCode, bool isGrid)
+{
+    bool isAppend = false;
+    if (isGrid)
+    {
+        myProject.showMeteoWidgetGrid(id, isAppend);
+    }
+    else
+    {
+        myProject.showMeteoWidgetPoint(id, name, dataset, altitude, lapseRateCode, isAppend);
+    }
+    return;
+}
+
+
+void MainWindow::callAppendMeteoWidget(std::string id, std::string name, std::string dataset, double altitude, std::string lapseRateCode, bool isGrid)
+{
+    bool isAppend = true;
+    if (isGrid)
+    {
+        myProject.showMeteoWidgetGrid(id, isAppend);
+    }
+    else
+    {
+        myProject.showMeteoWidgetPoint(id, name, dataset, altitude, lapseRateCode, isAppend);
+    }
+    return;
 }
 

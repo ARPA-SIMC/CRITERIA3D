@@ -178,14 +178,14 @@ bool Vine3DProject::loadVine3DProject(QString myFileName)
         return false;
     soilMap.isLoaded = true;
 
-    processes.computeEvaporation = true;
-    processes.computeCrop = true;
+    processes.setComputeCrop(true);
 
     if (! initializeWaterBalance3D())
     {
         logError();
         return false;
     }
+    processes.setComputeWater(true);
 
     outputWaterBalanceMaps = new Crit3DWaterBalanceMaps(DEM);
 
