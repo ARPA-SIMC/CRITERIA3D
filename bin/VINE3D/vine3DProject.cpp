@@ -535,48 +535,51 @@ bool Vine3DProject::loadFieldMap(QString myFileName)
 }
 
 
-bool Vine3DProject::readFieldQuery(QSqlQuery myQuery, int* idField, Crit3DLanduse* landuse, int* vineIndex, int* trainingIndex,
-                                   int* soilIndex, float* maxLaiGrass, float* maxIrrigationRate)
+bool Vine3DProject::readFieldQuery(QSqlQuery &myQuery, int &idField, Crit3DLanduse &landuse, int &vineIndex, int &trainingIndex,
+                                   int &soilIndex, float &maxLaiGrass, float &maxIrrigationRate)
 {
-    int i, idCultivar, idTraining, idSoil;
+    idField = myQuery.value("id_field").toInt();
 
-    *idField = myQuery.value("id_field").toInt();
-
-    //LANDUSE
+    // LANDUSE
     std::string landuse_name = myQuery.value("landuse").toString().toStdString();
     if (landuseNames.find(landuse_name) == landuseNames.end())
     {
-        errorString = "Unknown landuse for field " + QString::number(*idField);
+        errorString = "Unknown landuse for field " + QString::number(idField);
         return false;
     }
     else
-        *landuse = landuseNames.at(landuse_name);
+    {
+        landuse = landuseNames.at(landuse_name);
+    }
 
-    //CULTIVAR
-    idCultivar = myQuery.value("id_cultivar").toInt();
-    i=0;
-    while (i < cultivar.size() && idCultivar != cultivar[i].id) i++;
+    // CULTIVAR
+    int idCultivar = myQuery.value("id_cultivar").toInt();
+    int i=0;
+    while (i < cultivar.size() && idCultivar != cultivar[i].id)
+        i++;
+
     if (i == cultivar.size())
     {
         errorString = "cultivar " + QString::number(idCultivar) + " not found" + myQuery.lastError().text();
         return false;
     }
-    *vineIndex = i;
+    vineIndex = i;
 
-    //TRAINING SYSTEM
-    idTraining = myQuery.value("id_training_system").toInt();
+    // TRAINING SYSTEM
+    int idTraining = myQuery.value("id_training_system").toInt();
     i=0;
-    while (i < trainingSystems.size() && idTraining != this->trainingSystems[i].id) i++;
+    while (i < trainingSystems.size() && idTraining != this->trainingSystems[i].id)
+        i++;
+
     if (i == trainingSystems.size())
     {
         errorString = "training system nr." + QString::number(idTraining) + " not found" + myQuery.lastError().text();
         return false;
     }
-    *trainingIndex = i;
+    trainingIndex = i;
 
-    //SOIL
-    idSoil = myQuery.value("id_soil").toInt();
-
+    // SOIL
+    int idSoil = myQuery.value("id_soil").toInt();
     unsigned int index=0;
     while (index < this->nrSoils && idSoil != soilList[index].id)
         index++;
@@ -586,10 +589,10 @@ bool Vine3DProject::readFieldQuery(QSqlQuery myQuery, int* idField, Crit3DLandus
         errorString = "soil " + QString::number(idSoil) + " not found" + myQuery.lastError().text();
         return false;
     }
-    *soilIndex = signed(index);
+    soilIndex = signed(index);
 
-    *maxLaiGrass = myQuery.value("max_lai_grass").toFloat();
-    *maxIrrigationRate = myQuery.value("irrigation_max_rate").toFloat();
+    maxLaiGrass = myQuery.value("max_lai_grass").toFloat();
+    maxIrrigationRate = myQuery.value("irrigation_max_rate").toFloat();
 
     return true;
 }
@@ -609,20 +612,20 @@ bool Vine3DProject::loadFieldsProperties()
     myQuery.prepare("SELECT id_field, landuse, id_cultivar, id_training_system, id_soil, max_lai_grass, irrigation_max_rate FROM fields WHERE id_field=0");
     if (! myQuery.exec())
     {
-        errorString = "Error reading fields table" + myQuery.lastError().text();
+        errorString = "Error reading fields table.\n" + myQuery.lastError().text();
         return false;
     }
-    else if (!myQuery.next())
+    else if (! myQuery.next())
     {
-        this->errorString = "Missing default field (index = 0) in fields table";
-        return(false);
+        this->errorString = "Missing default field (index = 0) in fields table.";
+        return false;
     }
 
     // READ PROPERTIES
     myQuery.prepare("SELECT id_field, landuse, id_cultivar, id_training_system, id_soil, max_lai_grass, irrigation_max_rate FROM fields ORDER BY id_field");
     if (! myQuery.exec())
     {
-        errorString = "Error reading fields table" + myQuery.lastError().text();
+        errorString = "Error reading fields table.\n" + myQuery.lastError().text();
         return false;
     }
 
@@ -631,7 +634,7 @@ bool Vine3DProject::loadFieldsProperties()
 
     while (myQuery.next())
     {
-        if (readFieldQuery(myQuery, &idField, &landuse, &vineIndex, &trainingIndex, &soilIndex, &maxLaiGrass, &maxIrrigationRate))
+        if (readFieldQuery(myQuery, idField, landuse, vineIndex, trainingIndex, soilIndex, maxLaiGrass, maxIrrigationRate))
         {
             myCase.id = idField;
             myCase.landuse = landuse;
@@ -650,12 +653,12 @@ bool Vine3DProject::loadFieldsProperties()
         }
         else
         {
-            errorString = "Error reading fields";
+            errorString = "Error reading fields: " + errorString;
             return false;
         }
     }
 
-    return(true);
+    return true;
 }
 
 

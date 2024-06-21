@@ -17,7 +17,7 @@
 extern Vine3DProject myProject;
 
 #define MAPBORDER 10
-#define TOOLSWIDTH 270
+#define TOOLSWIDTH 260
 
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
