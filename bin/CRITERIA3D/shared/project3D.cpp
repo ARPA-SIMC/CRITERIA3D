@@ -328,6 +328,7 @@ bool Project3D::initializeWaterBalance3D()
         logError();
         return false;
     }
+    logInfo("Soil surface parameters initialized");
 
     if (! setCrit3DSoils())
     {
@@ -335,7 +336,9 @@ bool Project3D::initializeWaterBalance3D()
         return false;
     }
     if (nrSoils > 0)
-        logInfo("Soils initialized");
+    {
+        logInfo("Soils parameters initialized");
+    }
 
     if (! setCrit3DTopography())
     {
@@ -442,8 +445,9 @@ bool Project3D::setCrit3DSurfaces()
 {
     if (landUnitList.empty())
     {
-        errorString = "Error in setCrit3DSurfaces: missing land use data";
-        return false;
+        logInfo("Missing land unit list: default (fallow) will be used.");
+        Crit3DLandUnit deafultLandUnit;
+        landUnitList.push_back(deafultLandUnit);
     }
 
     for (int i = 0; i < landUnitList.size(); i++)
@@ -451,13 +455,11 @@ bool Project3D::setCrit3DSurfaces()
         int result = soilFluxes3D::setSurfaceProperties(i, landUnitList[i].roughness, landUnitList[i].pond);
         if (isCrit3dError(result, errorString))
         {
-            errorString = "setCrit3DSurfaces: " + errorString + "\n"
+            errorString = "Error in setSurfaceProperties: " + errorString + "\n"
                            + "Unit nr:" + QString::number(i);
             return false;
         }
     }
-
-    logInfo("Nr of land units: " + QString::number(landUnitList.size()));
 
     return true;
 }
@@ -970,6 +972,10 @@ bool Project3D::loadSoilDatabase(QString fileName)
         logError();
         return false;
     }
+    if (! errorString.isEmpty())
+    {
+        logWarning();
+    }
     nrSoils = unsigned(soilList.size());
 
     logInfo("Soil database = " + fileName);
@@ -1421,22 +1427,25 @@ double Project3D::assignEvaporation(int row, int col, double lai, int soilIndex)
             long nodeIndex = long(indexMap.at(layer).value[row][col]);
 
             int horIndex = soilList[soilIndex].getHorizonIndex(layerDepth[layer]);
-            soil::Crit3DHorizon horizon = soilList[soilIndex].horizon[horIndex];
-
-            // TODO getHygroscopicHumidity
-            double evapThreshold = horizon.waterContentWP + (1 - evapCoeff[layer]) * (horizon.waterContentFC - horizon.waterContentWP) * 0.5;
-            double vwcAboveThreshold = std::max(getCriteria3DVar(volumetricWaterContent, nodeIndex) - evapThreshold, 0.0);   // [m3 m-3]
-
-            // [mm]
-            double evapAvailableWater = vwcAboveThreshold * layerThickness[layer] * 1000;
-
-            double layerEvap = std::min(evapAvailableWater, residualEvaporation * layerCoeff[layer]);     // [mm]
-            if (layerEvap > 0)
+            if (horIndex != NODATA)
             {
-                actualEvaporationSum += layerEvap;
-                iterEvaporation += layerEvap;
-                double flow = area * (layerEvap / 1000);                        // [m3 h-1]
-                waterSinkSource.at(unsigned(nodeIndex)) -= (flow / 3600);       // [m3 s-1]
+                soil::Crit3DHorizon horizon = soilList[soilIndex].horizon[horIndex];
+
+                // TODO getHygroscopicHumidity
+                double evapThreshold = horizon.waterContentWP + (1 - evapCoeff[layer]) * (horizon.waterContentFC - horizon.waterContentWP) * 0.5;
+                double vwcAboveThreshold = std::max(getCriteria3DVar(volumetricWaterContent, nodeIndex) - evapThreshold, 0.0);   // [m3 m-3]
+
+                // [mm]
+                double evapAvailableWater = vwcAboveThreshold * layerThickness[layer] * 1000;
+
+                double layerEvap = std::min(evapAvailableWater, residualEvaporation * layerCoeff[layer]);     // [mm]
+                if (layerEvap > 0)
+                {
+                    actualEvaporationSum += layerEvap;
+                    iterEvaporation += layerEvap;
+                    double flow = area * (layerEvap / 1000);                        // [m3 h-1]
+                    waterSinkSource.at(unsigned(nodeIndex)) -= (flow / 3600);       // [m3 s-1]
+                }
             }
         }
 

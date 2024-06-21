@@ -159,7 +159,6 @@ bool Vine3DProject::loadVine3DProject(QString myFileName)
     waterFluxesParameters.computeOnlySurface = false;
     waterFluxesParameters.computeAllSoilDepth = true;
 
-
     // VINE3D parameters
     if (!loadGrapevineParameters() || !loadTrainingSystems() || !loadFieldsProperties() || !loadFieldBook())
     {
@@ -177,8 +176,6 @@ bool Vine3DProject::loadVine3DProject(QString myFileName)
     if (! setVine3DSoilIndexMap())
         return false;
     soilMap.isLoaded = true;
-
-    processes.setComputeCrop(true);
 
     if (! initializeWaterBalance3D())
     {
