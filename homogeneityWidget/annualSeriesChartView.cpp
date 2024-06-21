@@ -62,7 +62,7 @@ void AnnualSeriesChartView::draw(std::vector<int> years, std::vector<float> outp
         axisY->setMin(minValue-3);
     }
     axisX->setRange(years[0], years[years.size()-1]);
-    int nYears = years.size();
+    int nYears = int(years.size());
     if ( nYears <= 15)
     {
         axisX->setTickCount(nYears);

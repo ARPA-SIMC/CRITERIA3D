@@ -3429,6 +3429,7 @@ void Project::showMeteoWidgetGrid(std::string idCell, bool isAppend)
     QDate firstMonthlyDate = meteoGridDbHandler->getFirstMonthlytDate();
     QDate lastMonthlyDate = meteoGridDbHandler->getLastMonthlyDate();
 
+    logInfoGUI("Loading data...\n");
 
     QDateTime firstDateTime, lastDateTime;
     if (meteoGridDbHandler->getFirstHourlyDate().isValid())
@@ -3454,8 +3455,6 @@ void Project::showMeteoWidgetGrid(std::string idCell, bool isAppend)
 
     if (isAppend)
     {
-        logInfoGUI("Loading data...\n");
-
         if (! meteoGridDbHandler->gridStructure().isFixedFields())
         {
             if (meteoGridDbHandler->isDaily())
@@ -3464,6 +3463,7 @@ void Project::showMeteoWidgetGrid(std::string idCell, bool isAppend)
             }
             if (meteoGridDbHandler->isHourly())
             {
+                logInfoGUI("Loading hourly data...\n");
                 meteoGridDbHandler->loadGridHourlyData(errorString, QString::fromStdString(idCell), firstDateTime, lastDateTime);
             }
             if (meteoGridDbHandler->isMonthly())
@@ -3479,6 +3479,7 @@ void Project::showMeteoWidgetGrid(std::string idCell, bool isAppend)
             }
             if (meteoGridDbHandler->isHourly())
             {
+                logInfoGUI("Loading hourly data...\n");
                 meteoGridDbHandler->loadGridHourlyDataFixedFields(errorString, QString::fromStdString(idCell), firstDateTime, lastDateTime);
             }
             if (meteoGridDbHandler->isMonthly())
@@ -3506,7 +3507,7 @@ void Project::showMeteoWidgetGrid(std::string idCell, bool isAppend)
     {
         bool isGrid = true;
         Crit3DMeteoWidget* meteoWidgetGrid = new Crit3DMeteoWidget(isGrid, projectPath, meteoSettings);
-        if (!meteoWidgetGridList.isEmpty())
+        if (! meteoWidgetGridList.isEmpty())
         {
              meteoWidgetId = meteoWidgetGridList[meteoWidgetGridList.size()-1]->getMeteoWidgetID()+1;
         }
@@ -3520,8 +3521,6 @@ void Project::showMeteoWidgetGrid(std::string idCell, bool isAppend)
         meteoWidgetGridList.append(meteoWidgetGrid);
 
         QObject::connect(meteoWidgetGrid, SIGNAL(closeWidgetGrid(int)), this, SLOT(deleteMeteoWidgetGrid(int)));
-
-        logInfoGUI("Loading data...");
 
         if (meteoGridDbHandler->gridStructure().isEnsemble())
         {
@@ -3557,7 +3556,7 @@ void Project::showMeteoWidgetGrid(std::string idCell, bool isAppend)
         }
         else
         {
-            if (!meteoGridDbHandler->gridStructure().isFixedFields())
+            if (! meteoGridDbHandler->gridStructure().isFixedFields())
             {
                 if (meteoGridDbHandler->isDaily())
                 {
@@ -3565,6 +3564,7 @@ void Project::showMeteoWidgetGrid(std::string idCell, bool isAppend)
                 }
                 if (meteoGridDbHandler->isHourly())
                 {
+                    logInfoGUI("Loading hourly data...\n");
                     meteoGridDbHandler->loadGridHourlyData(errorString, QString::fromStdString(idCell), firstDateTime, lastDateTime);
                 }
                 if (meteoGridDbHandler->isMonthly())
@@ -3580,6 +3580,7 @@ void Project::showMeteoWidgetGrid(std::string idCell, bool isAppend)
                 }
                 if (meteoGridDbHandler->isHourly())
                 {
+                    logInfoGUI("Loading hourly data...\n");
                     meteoGridDbHandler->loadGridHourlyDataFixedFields(errorString, QString::fromStdString(idCell), firstDateTime, lastDateTime);
                 }
                 if (meteoGridDbHandler->isMonthly())
@@ -3611,7 +3612,6 @@ void Project::showMeteoWidgetGrid(std::string idCell, bool isAppend)
 
 void Project::deleteMeteoWidgetPoint(int id)
 {
-
     for (int i = 0; i<meteoWidgetPointList.size(); i++)
     {
         if (meteoWidgetPointList[i]->getMeteoWidgetID() == id)
@@ -4435,6 +4435,7 @@ void Project::logInfoGUI(QString myStr)
             formLog = new FormInfo();
         }
         formLog->showInfo(myStr);
+        qApp->processEvents();
     }
     else
     {

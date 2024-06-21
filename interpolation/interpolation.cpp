@@ -1057,7 +1057,7 @@ void localSelection(vector <Crit3DInterpolationDataPoint> &inputPoints, vector <
 					nrPrimaries++;
 
                 if (abs(inputPoints[i].point->z - z) > maxHeightDelta)
-                    maxHeightDelta = abs(inputPoints[i].point->z - z);
+                    maxHeightDelta = fabs(float(inputPoints[i].point->z) - z);
             }
         }
         r0 = r1;
@@ -1067,8 +1067,8 @@ void localSelection(vector <Crit3DInterpolationDataPoint> &inputPoints, vector <
     if (maxDistance != 0 && maxHeightDelta != 0)
         for (i=0; i< selectedPoints.size(); i++)
         {
-            selectedPoints[i].regressionWeight = MAXVALUE(1 - selectedPoints[i].distance / (maxDistance*maxDistance),EPSILON);
-            selectedPoints[i].heightWeight = 1/((2/maxHeightDelta)*selectedPoints[i].point->z+1);
+            selectedPoints[i].regressionWeight = MAXVALUE(1 - selectedPoints[i].distance / (maxDistance*maxDistance), EPSILON);
+            selectedPoints[i].heightWeight = 1./((2./maxHeightDelta)*selectedPoints[i].point->z+1);
             //selectedPoints[i].heightWeight = 1;
         }
     mySettings.setLocalRadius(maxDistance);
