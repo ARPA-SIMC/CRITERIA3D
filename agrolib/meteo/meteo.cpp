@@ -944,9 +944,9 @@ std::string getKeyStringMeteoMap(std::map<std::string, meteoVariable> map, meteo
     return key;
 }
 
+
 std::string getUnitFromVariable(meteoVariable var)
 {
-
     std::string unit = "";
     std::map<std::vector<meteoVariable>, std::string>::const_iterator it;
     std::vector<meteoVariable> key;
@@ -961,8 +961,10 @@ std::string getUnitFromVariable(meteoVariable var)
         }
         key.clear();
     }
+
     return unit;
 }
+
 
 meteoVariable getKeyMeteoVarMeteoMap(std::map<meteoVariable,std::string> map, const std::string& value)
 {

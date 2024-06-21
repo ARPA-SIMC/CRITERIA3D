@@ -3407,11 +3407,11 @@ void Project::showMeteoWidgetPoint(std::string idMeteoPoint, std::string namePoi
 
         if (hasDailyData)
         {
-            meteoWidgetPoint->setDateIntervalDaily(firstDaily, lastDaily);
+            meteoWidgetPoint->setDailyRange(firstDaily, lastDaily);
         }
         if (hasHourlyData)
         {
-            meteoWidgetPoint->setDateIntervalHourly(firstHourly.date(), lastHourly.date());
+            meteoWidgetPoint->setHourlyRange(firstHourly.date(), lastHourly.date());
         }
 
         meteoWidgetPoint->setCurrentDate(this->currentDate);
@@ -3429,7 +3429,6 @@ void Project::showMeteoWidgetGrid(std::string idCell, bool isAppend)
     QDate firstMonthlyDate = meteoGridDbHandler->getFirstMonthlytDate();
     QDate lastMonthlyDate = meteoGridDbHandler->getLastMonthlyDate();
 
-
     QDateTime firstDateTime, lastDateTime;
     if (meteoGridDbHandler->getFirstHourlyDate().isValid())
     {
@@ -3441,21 +3440,24 @@ void Project::showMeteoWidgetGrid(std::string idCell, bool isAppend)
     }
 
     int meteoWidgetId = 0;
-    if (meteoWidgetGridList.isEmpty() || meteoGridDbHandler->gridStructure().isEnsemble())
+    if (meteoWidgetGridList.isEmpty())
     {
         isAppend = false;
     }
 
     if (meteoGridDbHandler->gridStructure().isEnsemble())
     {
-        isAppend = false;
-        logInfoGUI("Meteo grid is ensemble: append mode is not possible, a new widget is opening.");
+        if (isAppend)
+        {
+            isAppend = false;
+            logWarning("Meteo grid is ensemble: append mode is not possible.\nA new meteo widget will be open.");
+        }
     }
+
+    logInfoGUI("Loading data...\n");
 
     if (isAppend)
     {
-        logInfoGUI("Loading data...\n");
-
         if (! meteoGridDbHandler->gridStructure().isFixedFields())
         {
             if (meteoGridDbHandler->isDaily())
@@ -3464,6 +3466,7 @@ void Project::showMeteoWidgetGrid(std::string idCell, bool isAppend)
             }
             if (meteoGridDbHandler->isHourly())
             {
+                logInfoGUI("Loading hourly data...\n");
                 meteoGridDbHandler->loadGridHourlyData(errorString, QString::fromStdString(idCell), firstDateTime, lastDateTime);
             }
             if (meteoGridDbHandler->isMonthly())
@@ -3479,6 +3482,7 @@ void Project::showMeteoWidgetGrid(std::string idCell, bool isAppend)
             }
             if (meteoGridDbHandler->isHourly())
             {
+                logInfoGUI("Loading hourly data...\n");
                 meteoGridDbHandler->loadGridHourlyDataFixedFields(errorString, QString::fromStdString(idCell), firstDateTime, lastDateTime);
             }
             if (meteoGridDbHandler->isMonthly())
@@ -3506,7 +3510,7 @@ void Project::showMeteoWidgetGrid(std::string idCell, bool isAppend)
     {
         bool isGrid = true;
         Crit3DMeteoWidget* meteoWidgetGrid = new Crit3DMeteoWidget(isGrid, projectPath, meteoSettings);
-        if (!meteoWidgetGridList.isEmpty())
+        if (! meteoWidgetGridList.isEmpty())
         {
              meteoWidgetId = meteoWidgetGridList[meteoWidgetGridList.size()-1]->getMeteoWidgetID()+1;
         }
@@ -3521,8 +3525,6 @@ void Project::showMeteoWidgetGrid(std::string idCell, bool isAppend)
 
         QObject::connect(meteoWidgetGrid, SIGNAL(closeWidgetGrid(int)), this, SLOT(deleteMeteoWidgetGrid(int)));
 
-        logInfoGUI("Loading data...");
-
         if (meteoGridDbHandler->gridStructure().isEnsemble())
         {
             meteoWidgetGrid->setIsEnsemble(true);
@@ -3534,11 +3536,11 @@ void Project::showMeteoWidgetGrid(std::string idCell, bool isAppend)
             {
                 if (meteoGridDbHandler->isDaily())
                 {
-                    meteoWidgetGrid->setDateIntervalDaily(firstDate, lastDate);
+                    meteoWidgetGrid->setDailyRange(firstDate, lastDate);
                 }
                 if (meteoGridDbHandler->isHourly())
                 {
-                    meteoWidgetGrid->setDateIntervalHourly(firstDateTime.date(), lastDateTime.date());
+                    meteoWidgetGrid->setHourlyRange(firstDateTime.date(), lastDateTime.date());
                 }
             }
             else
@@ -3557,7 +3559,7 @@ void Project::showMeteoWidgetGrid(std::string idCell, bool isAppend)
         }
         else
         {
-            if (!meteoGridDbHandler->gridStructure().isFixedFields())
+            if (! meteoGridDbHandler->gridStructure().isFixedFields())
             {
                 if (meteoGridDbHandler->isDaily())
                 {
@@ -3565,6 +3567,7 @@ void Project::showMeteoWidgetGrid(std::string idCell, bool isAppend)
                 }
                 if (meteoGridDbHandler->isHourly())
                 {
+                    logInfoGUI("Loading hourly data...\n");
                     meteoGridDbHandler->loadGridHourlyData(errorString, QString::fromStdString(idCell), firstDateTime, lastDateTime);
                 }
                 if (meteoGridDbHandler->isMonthly())
@@ -3580,6 +3583,7 @@ void Project::showMeteoWidgetGrid(std::string idCell, bool isAppend)
                 }
                 if (meteoGridDbHandler->isHourly())
                 {
+                    logInfoGUI("Loading hourly data...\n");
                     meteoGridDbHandler->loadGridHourlyDataFixedFields(errorString, QString::fromStdString(idCell), firstDateTime, lastDateTime);
                 }
                 if (meteoGridDbHandler->isMonthly())
@@ -3594,11 +3598,11 @@ void Project::showMeteoWidgetGrid(std::string idCell, bool isAppend)
             {
                 if (meteoGridDbHandler->isDaily())
                 {
-                    meteoWidgetGrid->setDateIntervalDaily(firstDate, lastDate);
+                    meteoWidgetGrid->setDailyRange(firstDate, lastDate);
                 }
                 if (meteoGridDbHandler->isHourly())
                 {
-                    meteoWidgetGrid->setDateIntervalHourly(firstDateTime.date(), lastDateTime.date());
+                    meteoWidgetGrid->setHourlyRange(firstDateTime.date(), lastDateTime.date());
                 }
 
                 meteoWidgetGrid->drawMeteoPoint(meteoGridDbHandler->meteoGrid()->meteoPoint(row,col), isAppend);
@@ -3611,7 +3615,6 @@ void Project::showMeteoWidgetGrid(std::string idCell, bool isAppend)
 
 void Project::deleteMeteoWidgetPoint(int id)
 {
-
     for (int i = 0; i<meteoWidgetPointList.size(); i++)
     {
         if (meteoWidgetPointList[i]->getMeteoWidgetID() == id)
@@ -4435,6 +4438,7 @@ void Project::logInfoGUI(QString myStr)
             formLog = new FormInfo();
         }
         formLog->showInfo(myStr);
+        qApp->processEvents();
     }
     else
     {
