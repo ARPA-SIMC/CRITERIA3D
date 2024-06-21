@@ -181,6 +181,7 @@ bool Crit3DProject::initializeCropWithClimateData()
         }
     }
 
+    logInfo("LAI initialized with climate data.");
     isCropInitialized = true;
     return true;
 }
@@ -233,6 +234,7 @@ bool Crit3DProject::initializeCropFromDegreeDays(gis::Crit3DRasterGrid &myDegree
         }
     }
 
+    logInfo("LAI initialized with degree days map.");
     isCropInitialized = true;
     return true;
 }
@@ -1110,7 +1112,7 @@ bool Crit3DProject::modelHourlyCycle(QDateTime myTime, const QString& hourlyOutp
         waterSinkSource.at(size_t(i)) = 0.;
     }
 
-    if (processes.computeCrop)
+    if (processes.computeCrop || processes.computeWater)
     {
         if (! hourlyMeteoMaps->computeET0PMMap(DEM, radiationMaps))
         {

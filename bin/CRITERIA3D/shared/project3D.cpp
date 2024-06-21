@@ -114,6 +114,7 @@ void Crit3DProcesses::setComputeWater(bool value)
     if (computeWater)
     {
         computeMeteo = true;
+        computeRadiation = true;
         computeSlopeStability = true;
     }
 }
@@ -359,8 +360,8 @@ bool Project3D::initializeWaterBalance3D()
     double vmax = 10.0;                                         // [m s-1]
     double minimumDeltaT = DEM.header->cellSize / vmax;         // [m]
 
-    //int digitMBR = 3;   // precision
-    int digitMBR = 2;   // speedy
+    int digitMBR = 3;   // precision
+    //int digitMBR = 2;   // speedy
     soilFluxes3D::setNumericalParameters(minimumDeltaT, 3600, 100, 10, 12, digitMBR);
 
     if (! initializeMatricPotential(waterFluxesParameters.initialWaterPotential))  // [m]
@@ -445,7 +446,7 @@ bool Project3D::setCrit3DSurfaces()
 {
     if (landUnitList.empty())
     {
-        logInfo("Missing land unit list: default (fallow) will be used.");
+        logInfo("WARNING! Missing land unit list: default (fallow) will be used.");
         Crit3DLandUnit deafultLandUnit;
         landUnitList.push_back(deafultLandUnit);
     }

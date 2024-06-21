@@ -2248,6 +2248,7 @@ void MainWindow::initializeCriteria3DInterface()
 
 void MainWindow::on_actionCriteria3D_Initialize_triggered()
 {
+    myProject.initializeCrop();
     if (myProject.processes.computeCrop)
     {
         if (! myProject.initializeCropWithClimateData())
