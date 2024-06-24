@@ -76,28 +76,32 @@ Crit3DMeteoPointsDbHandler::~Crit3DMeteoPointsDbHandler()
 }
 
 
-QString Crit3DMeteoPointsDbHandler::getDatasetURL(QString dataset)
+QString Crit3DMeteoPointsDbHandler::getDatasetURL(QString dataset, bool &isOk)
 {
+    errorStr = "";
+    QString queryStr = QString("SELECT URL FROM datasets WHERE dataset = '%1' OR dataset = '%2'").arg(dataset, dataset.toUpper());
+
     QSqlQuery qry(_db);
-    QString url = nullptr;
-
-    qry.prepare( "SELECT URL FROM datasets WHERE dataset = :dataset");
-    qry.bindValue(":dataset", dataset);
-
-    if( !qry.exec() )
+    if(! qry.exec(queryStr))
     {
-        qDebug() << qry.lastError();
+        isOk = false;
+        errorStr = qry.lastError().text();
+        return "";
     }
     else
     {
         if (qry.next())
-            url = qry.value(0).toString();
-
+        {
+            isOk = true;
+            return qry.value(0).toString();
+        }
         else
-            qDebug( "Error: dataset not found" );
+        {
+            isOk = false;
+            errorStr = "dataset " + dataset + " not found in the table 'datasets'";
+            return "";
+        }
     }
-
-    return url;
 }
 
 

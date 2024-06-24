@@ -1,4 +1,5 @@
 #include "download.h"
+#include "dbMeteoPointsHandler.h"
 
 #include <QtNetwork>
 
@@ -258,9 +259,9 @@ void Download::downloadMetadata(QJsonObject obj)
     _dbMeteo->writePointProperties(pointProp);
 }
 
+
 bool Download::getPointPropertiesFromId(QString id, Crit3DMeteoPoint* pointProp)
 {
-
     bool result = true;
     QEventLoop loop;
 
@@ -291,7 +292,7 @@ bool Download::getPointPropertiesFromId(QString id, Crit3DMeteoPoint* pointProp)
         qDebug() << "err: " << error->errorString() << " -> " << error->offset;
 
         // check validity of the document
-        if(!doc.isNull() && doc.isArray())
+        if(! doc.isNull() && doc.isArray())
         {
             QJsonArray jsonArr = doc.array();
 
@@ -392,7 +393,8 @@ bool Download::getPointPropertiesFromId(QString id, Crit3DMeteoPoint* pointProp)
 }
 
 
-bool Download::downloadDailyData(QDate startDate, QDate endDate, QString dataset, QList<QString> stations, QList<int> variables, bool prec0024)
+bool Download::downloadDailyData(const QDate &startDate, const QDate &endDate, const QString &dataset,
+                                 QList<QString> &stations, QList<int> &variables, bool prec0024, QString &errorString)
 {
     QString area, product, refTime;
     QDate myDate;
@@ -403,13 +405,15 @@ bool Download::downloadDailyData(QDate startDate, QDate endDate, QString dataset
 
     QList<QString> idVar;
     for (int i = 0; i < variableList.size(); i++)
+    {
         idVar.append(QString::number(variableList[i].id()));
+    }
 
     // create station tables
     _dbMeteo->initStationsDailyTables(startDate, endDate, stations, idVar);
 
     // attenzione: il reference time dei giornalieri è a fine giornata (ore 00 di day+1)
-    refTime = QString("reftime:>%1,<=%2").arg(startDate.toString("yyyy-MM-dd")).arg(endDate.addDays(1).toString("yyyy-MM-dd"));
+    refTime = QString("reftime:>%1,<=%2").arg(startDate.toString("yyyy-MM-dd"), endDate.addDays(1).toString("yyyy-MM-dd"));
 
     product = QString(";product: VM2,%1").arg(variables[0]);
 
@@ -432,20 +436,27 @@ bool Download::downloadDailyData(QDate startDate, QDate endDate, QString dataset
         if (j == 0)
         {
             area = QString(";area: VM2,%1").arg(stations[countStation]);
-            j = j+1;
-            countStation = countStation+1;
+            countStation++;
+            j++;
         }
         while (countStation < stations.size() && j < maxStationSize)
         {
             area = area % QString(" or VM2,%1").arg(stations[countStation]);
-            countStation = countStation+1;
-            j = j+1;
+            countStation++;
+            j++;
+        }
+
+        bool isOk;
+        url = QUrl(QString("%1/query").arg(_dbMeteo->getDatasetURL(dataset, isOk)));
+        if (! isOk)
+        {
+            errorString = _dbMeteo->getErrorString();
+            return false;
         }
 
         QNetworkAccessManager* manager = new QNetworkAccessManager(this);
         connect(manager, SIGNAL(finished(QNetworkReply*)), &loop, SLOT(quit()));
 
-        url = QUrl(QString("%1/query").arg(_dbMeteo->getDatasetURL(dataset)));
         request.setUrl(url);
         request.setRawHeader("Authorization", _authorization);
         request.setHeader(QNetworkRequest::ContentTypeHeader, QVariant("application/x-www-form-urlencoded"));
@@ -460,7 +471,7 @@ bool Download::downloadDailyData(QDate startDate, QDate endDate, QString dataset
 
         if (reply->error() != QNetworkReply::NoError)
         {
-            qDebug( "Network Error" );
+            errorString = "Network Error";
             downloadOk = false;
         }
         else
@@ -515,7 +526,7 @@ bool Download::downloadDailyData(QDate startDate, QDate endDate, QString dataset
 
                 }
             }
-            if (!emptyLine)
+            if (! emptyLine)
             {
                 downloadOk = _dbMeteo->saveDailyData();
             }
@@ -533,9 +544,9 @@ bool Download::downloadDailyData(QDate startDate, QDate endDate, QString dataset
 }
 
 
-bool Download::downloadHourlyData(QDate startDate, QDate endDate, QString dataset, QList<QString> stations, QList<int> variables)
+bool Download::downloadHourlyData(const QDate &startDate, const QDate &endDate, const QString &dataset,
+                                  QList<QString> &stations, QList<int> &variables, QString &errorString)
 {
-
     QList<VariablesList> variableList = _dbMeteo->getVariableProperties(variables);
     if (variableList.size() == 0)
         return false;
@@ -562,7 +573,7 @@ bool Download::downloadHourlyData(QDate startDate, QDate endDate, QString datase
     endTime = endTime.addSecs(3600 * 24);
 
     // reftime
-    QString refTime = QString("reftime:>=%1,<=%2").arg(startTime.toString("yyyy-MM-dd hh:mm")).arg(endTime.toString("yyyy-MM-dd hh:mm"));
+    QString refTime = QString("reftime:>=%1,<=%2").arg(startTime.toString("yyyy-MM-dd hh:mm"), endTime.toString("yyyy-MM-dd hh:mm"));
 
     QEventLoop loop;
 
@@ -587,10 +598,18 @@ bool Download::downloadHourlyData(QDate startDate, QDate endDate, QString datase
             countStation = countStation+1;
             j = j+1;
         }
+
+        bool isOk;
+        url = QUrl(QString("%1/query").arg(_dbMeteo->getDatasetURL(dataset, isOk)));
+        if (! isOk)
+        {
+            errorString = _dbMeteo->getErrorString();
+            return false;
+        }
+
         QNetworkAccessManager* manager = new QNetworkAccessManager(this);
         connect(manager, SIGNAL(finished(QNetworkReply*)), &loop, SLOT(quit()));
 
-        url = QUrl(QString("%1/query").arg(_dbMeteo->getDatasetURL(dataset)));
         request.setUrl(url);
         request.setRawHeader("Authorization", _authorization);
         request.setHeader(QNetworkRequest::ContentTypeHeader, QVariant("application/x-www-form-urlencoded"));
@@ -604,7 +623,7 @@ bool Download::downloadHourlyData(QDate startDate, QDate endDate, QString datase
 
         if (reply->error() != QNetworkReply::NoError)
         {
-                qDebug( "Network Error" );
+                errorString = "Network Error";
                 delete reply;
                 delete manager;
                 return false;

@@ -1568,7 +1568,10 @@ bool PragaProject::downloadDailyDataArkimet(QList<QString> variables, bool prec0
 
         while (date1 <= endDate)
         {
-            myDownload->downloadDailyData(date1, date2, datasetList[i], idList[i], arkIdVar, prec0024);
+            if (! myDownload->downloadDailyData(date1, date2, datasetList[i], idList[i], arkIdVar, prec0024, errorString))
+            {
+                return false;
+            }
 
             if (showInfo)
             {
@@ -1617,7 +1620,7 @@ bool PragaProject::downloadHourlyDataArkimet(QList<QString> variables, QDate sta
             id = QString::fromStdString(meteoPoints[i].id);
             dataset = QString::fromStdString(meteoPoints[i].dataset);
 
-            if (!datasetList.contains(dataset))
+            if (! datasetList.contains(dataset))
             {
                 datasetList << dataset;
                 QList<QString> myList;
@@ -1650,8 +1653,11 @@ bool PragaProject::downloadHourlyDataArkimet(QList<QString> variables, QDate sta
                 updateProgressBar(startDate.daysTo(date2) + 1);
             }
 
-            if (! myDownload->downloadHourlyData(date1, date2, datasetList[i], idList[i], arkIdVar))
-                updateProgressBarText("NO DATA");
+            errorString = "";
+            if (! myDownload->downloadHourlyData(date1, date2, datasetList[i], idList[i], arkIdVar, errorString))
+            {
+                updateProgressBarText("NO DATA: " + errorString);
+            }
 
             date1 = date2.addDays(1);
             date2 = std::min(date1.addDays(MAXDAYS_DOWNLOAD_HOURLY), endDate);
