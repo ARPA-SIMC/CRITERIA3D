@@ -3,6 +3,7 @@
 #include "project.h"
 #include "shell.h"
 #include "dbMeteoGrid.h"
+#include "utilities.h"
 
 #include <iostream>
 #include <sstream>
