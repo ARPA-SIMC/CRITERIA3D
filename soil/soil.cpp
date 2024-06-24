@@ -814,7 +814,7 @@ namespace soil
         horizon.texture.silt = horizon.dbData.silt;
         horizon.texture.clay = horizon.dbData.clay;
         if (! isEqual(horizon.texture.sand, NODATA) && ! isEqual(horizon.texture.silt, NODATA) && ! isEqual(horizon.texture.clay, NODATA)
-            && (horizon.texture.sand + horizon.texture.silt + horizon.texture.clay) <= 1 )
+            && (horizon.texture.sand + horizon.texture.silt + horizon.texture.clay) <= 1.01 )
         {
             horizon.texture.sand *= 100;
             horizon.texture.silt *= 100;
