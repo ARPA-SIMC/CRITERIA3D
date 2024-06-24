@@ -40,7 +40,7 @@
         QString getErrorString() { return errorStr; }
         void setErrorString(QString str) { errorStr = str; }
 
-        QString getDatasetURL(QString dataset); 
+        QString getDatasetURL(QString dataset, bool &isOk);
         bool setAndOpenDb(QString dbname_);
 
         QList<QString> getAllDatasetsList();
