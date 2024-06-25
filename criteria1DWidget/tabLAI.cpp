@@ -89,7 +89,7 @@ TabLAI::TabLAI()
     connect(seriesLAI, &QLineSeries::hovered, this, &TabLAI::tooltipLAI);
     connect(seriesPotentialEvap, &QLineSeries::hovered, this, &TabLAI::tooltipPE);
     connect(seriesMaxEvap, &QLineSeries::hovered, this, &TabLAI::tooltipME);
-    connect(seriesMaxTransp, &QLineSeries::hovered, this, &TabLAI::tooltipMT);
+    connect(seriesMaxTransp, &QLineSeries::hovered, this, &TabLAI::tooltipMaxTranspiration);
 
     foreach(QLegendMarker* marker, chart->legend()->markers())
     {
@@ -239,7 +239,7 @@ void TabLAI::tooltipME(QPointF point, bool state)
     }
 }
 
-void TabLAI::tooltipMT(QPointF point, bool state)
+void TabLAI::tooltipMaxTranspiration(QPointF point, bool state)
 {
 
     if (state)
