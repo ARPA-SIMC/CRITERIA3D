@@ -305,7 +305,7 @@ bool loadSoilData(const QSqlDatabase &dbSoil, const QString &soilCode, soil::Cri
         getValue(query.value("k_sat"), &ksat);
         mySoil.horizon[i].dbData.kSat = ksat;
 
-        // NEW fields for soil stability, not present in old databases
+        // NEW fields for slope stability, not present in old databases
         QList<QString> fieldList = getFields(query);
 
         double value = NODATA;
