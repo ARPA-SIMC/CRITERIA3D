@@ -1420,7 +1420,7 @@ double Project3D::assignEvaporation(int row, int col, double lai, int soilIndex)
     }
 
     int nrIteration = 0;
-    while (residualEvaporation > EPSILON && nrIteration < 5)
+    while (residualEvaporation > EPSILON && nrIteration < 3)
     {
         double iterEvaporation = 0;
         for (unsigned int layer=1; layer <= unsigned(lastEvapLayer); layer++)
