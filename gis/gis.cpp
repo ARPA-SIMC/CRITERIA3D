@@ -622,7 +622,8 @@ namespace gis
             }
 
         /*!  no values */
-        if (isFirstValue) return false;
+        if (isFirstValue)
+            return false;
 
         myGrid->maximum = maximum;
         myGrid->minimum = minimum;

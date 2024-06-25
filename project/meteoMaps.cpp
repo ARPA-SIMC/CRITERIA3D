@@ -2,6 +2,7 @@
 #include "basicMath.h"
 #include "meteo.h"
 #include "meteoMaps.h"
+#include "gis.h"
 
 
 Crit3DDailyMeteoMaps::Crit3DDailyMeteoMaps(const gis::Crit3DRasterGrid& DEM)

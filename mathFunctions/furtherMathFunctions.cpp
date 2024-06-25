@@ -2002,7 +2002,7 @@ namespace interpolation
 
         const int numSteps = 40;
         int directions[] = {1, -1};
-        int numParamsToVary = parameters.size();
+        size_t numParamsToVary = parameters.size();
         std::vector<double> firstGuessParam = parameters;
 
         for (int step = 1; step <= numSteps; ++step)

@@ -203,11 +203,16 @@
         QString getCompleteFileName(QString fileName, QString secondaryPath);
 
         bool setLogFile(QString myFileName);
-        void logError(QString myStr);
+
         void logInfo(QString myStr);
         void logInfoGUI(QString myStr);
         void closeLogInfo();
+
+        void logError(QString myStr);
         void logError();
+
+        void logWarning(QString myStr);
+        void logWarning();
 
         int setProgressBar(QString myStr, int nrValues);
         void updateProgressBar(int value);
