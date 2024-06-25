@@ -291,7 +291,10 @@ void Crit3DSoilWidget::setDbSoil(QSqlDatabase dbOpened, QString soilCode)
     }
 
     // load default geotechnics parameters (not mandatory)
-    loadGeotechnicsParameters(dbSoil, geotechnicsClassList, errorStr);
+    if (! loadGeotechnicsParameters(dbSoil, geotechnicsClassList, errorStr))
+    {
+        QMessageBox::warning(nullptr, "Warning", "loadGeotechnicsParameters: " + errorStr);
+    }
 
     // read soil list
     QList<QString> soilStringList;

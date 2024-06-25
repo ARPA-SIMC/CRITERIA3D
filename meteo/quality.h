@@ -28,8 +28,7 @@
 
         class Range {
             private:
-                float _max;
-                float _min;
+                float _min, _max;
 
             public:
                 Range() { _min = NODATA; _max = NODATA; }

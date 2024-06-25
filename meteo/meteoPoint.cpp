@@ -1326,7 +1326,7 @@ bool Crit3DMeteoPoint::getDailyDataCsv_TPrec(std::string &outStr)
     outStr = "Date, Tmin (C), Tmax (C), Tavg (C), Prec (mm)\n";
 
     std::ostringstream valueStream;
-    for (int i = 0; i < obsDataD.size(); i++)
+    for (int i = 0; i < int(obsDataD.size()); i++)
     {
         // Date
         outStr += obsDataD[i].date.toStdString() + ",";

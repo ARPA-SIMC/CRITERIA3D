@@ -383,7 +383,6 @@ namespace soil
         }
     }
 
-
     double estimateSpecificDensity(double organicMatter)
     {
         if (int(organicMatter) == int(NODATA))

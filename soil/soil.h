@@ -150,6 +150,7 @@
             Crit3DVanGenuchten vanGenuchten;
             Crit3DWaterConductivity waterConductivity;
             Crit3DDriessen Driessen;
+            Crit3DGeotechnicsClass geotechnics;
 
             Crit3DHorizon();
 

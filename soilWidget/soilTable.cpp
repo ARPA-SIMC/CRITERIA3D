@@ -18,16 +18,16 @@ Crit3DSoilTable::Crit3DSoilTable(tableType type) : type(type)
     QList<QString> tableHeader;
     if (type == dbTable)
     {
-        this->setColumnCount(10);
-        tableHeader << "Upper depth [cm]" << "Lower depth [cm]" << "Sand [%]" << "Silt  [%]" << "Clay [%]" << "Coarse [%]" << "O.M. [%]"
-                        << "B.D. [g/cm3]" << "K Sat [cm/d]" << "Theta S [-]";
+        this->setColumnCount(12);
+        tableHeader << "Upper depth [cm]" << "Lower depth [cm]" << "Sand [%]" << "Silt[%]" << "Clay [%]" << "Coarse [%]" << "O.M. [%]"
+                    << "B.D. [g/cm3]" << "K Sat [cm/d]" << "Theta S [-]" << "c' [kPa]" << "Φ' [°]";
     }
     else if (type == modelTable)
     {
-        this->setColumnCount(11);
+        this->setColumnCount(13);
         tableHeader << "USDA Texture" << "Coarse [%]" << "O.M. [%]"
                         << "B.D. [g/cm3]" << "K Sat [cm/d]" << "ThetaS [-]" << "ThetaR [-]" << "Air entry [KPa]"
-                        << "alpha [KPa^-1]" << "  n  [-] " << " m   [-] ";
+                        << "alpha [KPa^-1]" << "  n  [-] " << " m   [-] " << "c' [kPa]" << "Φ' [°]";
     }
 
     this->setHorizontalHeaderLabels(tableHeader);
