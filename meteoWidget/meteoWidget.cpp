@@ -499,8 +499,10 @@ void Crit3DMeteoWidget::updateTimeRange()
             lastMonthlyDate = myMonthlyDateLast;
         }
     }
+
     checkExistingData();
 }
+
 
 void Crit3DMeteoWidget::checkExistingData()
 {
