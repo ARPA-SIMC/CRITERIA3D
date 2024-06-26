@@ -290,7 +290,7 @@ namespace gis
         if (!parametersCell.empty())
             parametersCell.clear();
         parametersCell.resize(initHeader.nrRows*initHeader.nrCols);
-        for (int i = 0; i < parametersCell.size(); i++)
+        for (int i = 0; i < int(parametersCell.size()); i++)
         {
             parametersCell[i].row = i / initHeader.nrCols;
             parametersCell[i].col = i % initHeader.nrCols;
@@ -303,7 +303,7 @@ namespace gis
     bool Crit3DRasterGrid::initializeParametersLatLonHeader(const Crit3DLatLonHeader& latLonHeader)
     {
         parametersCell.resize(latLonHeader.nrRows*latLonHeader.nrCols);
-        for (int i = 0; i < parametersCell.size(); i++)
+        for (int i = 0; i < int(parametersCell.size()); i++)
         {
             parametersCell[i].row = i / latLonHeader.nrCols;
             parametersCell[i].col = i % latLonHeader.nrCols;
@@ -498,7 +498,7 @@ namespace gis
 
         int index = row * header->nrCols + col;
 
-        if (index < parametersCell.size())
+        if (index < int(parametersCell.size()))
             parameters = parametersCell[index].fittingParameters;
 
         return parameters;
@@ -538,16 +538,16 @@ namespace gis
             for (j = col-1; j < col+2; j++)
             {
                 index = i * header->nrCols + j;
-                if (index >= 0 && index < parametersCell.size() && (parametersCell[index].fittingParameters.size() == activeProxyNr) && (i != row || j !=col))
+                if (index >= 0 && index < int(parametersCell.size()) && (parametersCell[index].fittingParameters.size() == activeProxyNr) && (i != row || j !=col))
                     findFirst = 1;
                 if (findFirst==1) break;
             }
             if (findFirst==1) break;
         }
 
-        for (k = 0; k < parametersCell[index].fittingParameters.size(); k++)
+        for (k = 0; k < int(parametersCell[index].fittingParameters.size()); k++)
         {
-            for (l = 0; l < parametersCell[index].fittingParameters[k].size(); l++)
+            for (l = 0; l < int(parametersCell[index].fittingParameters[k].size()); l++)
             {
                 avg = 0;
                 counter = 0;
@@ -556,7 +556,7 @@ namespace gis
                     for (int m = j; m < col+2; m++)
                     {
                         index = h * header->nrCols + m;
-                        if (index >= 0 && index < parametersCell.size() && (parametersCell[index].fittingParameters.size() == activeProxyNr) && (i != row || j !=col))
+                        if (index >= 0 && index < int(parametersCell.size()) && (parametersCell[index].fittingParameters.size() == activeProxyNr) && (i != row || j !=col))
                         {
                             avg += parametersCell[index].fittingParameters[k][l];
                             counter++;

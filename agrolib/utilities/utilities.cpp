@@ -672,12 +672,12 @@ bool writeJson(const QString & ancestor, const std::vector <QString> &fieldNames
 
     bool isFloat = false;
 
-    for (int i=0; i < values.size(); i++)
+    for (int i=0; i < int(values.size()); i++)
     {
         if (values[i].size() != fieldNames.size() || values[i].size() != dataType.size()) return false;
 
         recordObject.empty();
-        for (int j=0; j < values[i].size(); j++)
+        for (int j=0; j < int(values[i].size()); j++)
         {
             if (dataType[j] == "float")
                 recordObject.insert(fieldNames[j], values[i][j].toFloat(&isFloat));

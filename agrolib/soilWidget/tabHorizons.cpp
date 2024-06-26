@@ -462,6 +462,16 @@ void TabHorizons::checkComputedValues(int horizonNum)
         tableModel->item(horizonNum,5)->setBackground(Qt::yellow);
     }
 
+    if (horizon->dbData.effectiveCohesion == NODATA)
+    {
+        tableModel->item(horizonNum,11)->setBackground(Qt::yellow);
+    }
+
+    if (horizon->dbData.frictionAngle == NODATA)
+    {
+        tableModel->item(horizonNum,12)->setBackground(Qt::yellow);
+    }
+
 }
 
 

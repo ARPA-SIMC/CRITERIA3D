@@ -253,6 +253,7 @@ void TabIrrigation::tooltipLAI(QPointF point, bool isShow)
 }
 
 
+// TODO Giada
 void TabIrrigation::tooltipEvapTransp(QPointF point, bool isShow)
 {
     if (isShow)
@@ -260,7 +261,7 @@ void TabIrrigation::tooltipEvapTransp(QPointF point, bool isShow)
         QDate xDate(firstYear, 1, 1);
         int doy = int(round(point.x()));
         xDate = xDate.addDays(doy);
-        m_tooltip->setText(xDate.toString("yyyy-MM-dd") + "\n" + "evap/transp." + QString::number(point.y(),'f', 2));
+        m_tooltip->setText(xDate.toString("yyyy-MM-dd") + "\n" + "evap/transp. " + QString::number(point.y(),'f', 2)+ "mm");
         m_tooltip->setAnchor(point);
         m_tooltip->setZValue(11);
         m_tooltip->updateGeometry();

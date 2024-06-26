@@ -237,7 +237,7 @@ namespace gis
                     // remove the curly braces, split the values ​​and remove the spaces
                     cleanBraces(valueStr);
                     vector<string> infoStr = splitCommaDelimited(valueStr);
-                    for (int i = 0; i < infoStr.size(); i++)
+                    for (int i = 0; i < int(infoStr.size()); i++)
                     {
                         cleanSpaces(infoStr[i]);
                     }
