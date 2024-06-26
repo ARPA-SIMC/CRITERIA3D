@@ -63,7 +63,7 @@ bool loadLandUnitList(const QSqlDatabase &dbCrop, std::vector<Crit3DLandUnit> &l
 
 int getLandUnitIndex(const std::vector<Crit3DLandUnit> &landUnitList, int idLandUnit)
 {
-    for (int index = 0; index < landUnitList.size(); index++)
+    for (int index = 0; index < int(landUnitList.size()); index++)
         if (landUnitList[index].id == idLandUnit)
             return index;
 
