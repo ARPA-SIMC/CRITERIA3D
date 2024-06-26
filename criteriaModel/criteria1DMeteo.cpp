@@ -714,8 +714,6 @@ bool fillDailyTempPrecCriteria1D(QSqlDatabase* dbMeteo, QString table, Crit3DMet
     }
 
     QDate date;
-    QDate previousDate(validYear-1, 12, 31);
-    QDate lastDate(validYear, 12, 31);
     float tmin = NODATA;
     float tmax = NODATA;
     float tavg = NODATA;
@@ -728,6 +726,9 @@ bool fillDailyTempPrecCriteria1D(QSqlDatabase* dbMeteo, QString table, Crit3DMet
     const float tmax_min = -40;
     const float tmax_max = 60;
 
+    QList<QString> fieldList = getFieldsUpperCase(query);
+    bool existWatertable = fieldList.contains("WATERTABLE");
+
     do
     {
         getValue(query.value("date"), &date);
@@ -736,8 +737,18 @@ bool fillDailyTempPrecCriteria1D(QSqlDatabase* dbMeteo, QString table, Crit3DMet
         getValue(query.value("prec"), &prec);
 
         // Watertable depth [m]
-        getValue(query.value("watertable"), &waterTable);
-        if (waterTable < 0.f) waterTable = NODATA;
+        if (existWatertable)
+        {
+            getValue(query.value("watertable"), &waterTable);
+            if (waterTable < 0.f)
+            {
+                waterTable = NODATA;
+            }
+        }
+        else
+        {
+            waterTable = NODATA;
+        }
 
         if (tmin < tmin_min || tmin > tmin_max)
         {
