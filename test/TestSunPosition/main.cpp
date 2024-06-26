@@ -59,8 +59,7 @@ bool testSunPosition(float lat, float lon, int timeZone, QDate myDate, QTime myT
     float sunRiseMinutes;           // sun rise time [minutes from midnight]
     float sunSetMinutes;            // sun set time [minutes from midnight]
 
-    TsunPosition *mySunPosition;
-    mySunPosition = new TsunPosition();
+    TsunPosition mySunPosition;
 
     int chk = RSUN_compute_solar_position(lon, lat, timeZone, myDate.year(), myDate.month(), myDate.day(),
                                       myTime.hour(), myTime.minute(), myTime.second(),
@@ -72,20 +71,20 @@ bool testSunPosition(float lat, float lon, int timeZone, QDate myDate, QTime myT
         return false;
     }
 
-    RSUN_get_results(&((*mySunPosition).relOptAirMass), &((*mySunPosition).relOptAirMassCorr),
-                     &((*mySunPosition).azimuth), &sunCosIncidenceCompl,
-                     &cosZen, &((*mySunPosition).elevation),
-                     &((*mySunPosition).elevationRefr),
-                     &((*mySunPosition).extraIrradianceHorizontal),
-                     &((*mySunPosition).extraIrradianceNormal),
+    RSUN_get_results(&(mySunPosition.relOptAirMass), &(mySunPosition.relOptAirMassCorr),
+                     &(mySunPosition.azimuth), &sunCosIncidenceCompl,
+                     &cosZen, &(mySunPosition.elevation),
+                     &(mySunPosition.elevationRefr),
+                     &(mySunPosition.extraIrradianceHorizontal),
+                     &(mySunPosition.extraIrradianceNormal),
                      &etrTilt, &prime, &sbcf, &sunRiseMinutes, &sunSetMinutes, &unPrime, &zenRef);
 
     printSunriseSunset(int(sunRiseMinutes), "rise");
     printSunriseSunset(int(sunSetMinutes), "set");
     std::cout << "\nValues at solar time " << myTime.toString().toStdString() << std::endl;
-    std::cout << "azimuth [deg.] " << (*mySunPosition).azimuth << std::endl;
-    std::cout << "elevation angle refracted [deg. from horizon] " << (*mySunPosition).elevationRefr << std::endl;
-    std::cout << "extr. global irradiance horizontal [W/m2] " << (*mySunPosition).extraIrradianceHorizontal << std::endl;
+    std::cout << "azimuth [deg.] " << mySunPosition.azimuth << std::endl;
+    std::cout << "elevation angle refracted [deg. from horizon] " << mySunPosition.elevationRefr << std::endl;
+    std::cout << "extr. global irradiance horizontal [W/m2] " << mySunPosition.extraIrradianceHorizontal << std::endl;
 
     return true;
 }

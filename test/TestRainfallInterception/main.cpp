@@ -36,11 +36,8 @@ int main(int argc, char *argv[])
     double storedWater = 0.0;
     FILE* fp2;
     fp2 = fopen("resultsMonticolo.csv","w");
-    for (int iLine=0;iLine<numberOfLines;iLine++)
+    for (int iLine=0; iLine<numberOfLines; iLine++)
     {
-        //QCoreApplication a(argc, argv);
-
-        double waterFreeEvaporation = 0.01;
         double lai = -9999;
         double laiMin = 0.5;
         double lightExtinctionCoefficient = 0.6;
@@ -69,7 +66,6 @@ int main(int argc, char *argv[])
         fprintf(fp2,"%.2d,%.2d,%.2d,%.2d,%.4d,%.2f,%.2f,%.2f,%.2f,%.2f,%.2f,%.2f\n",hour[iLine],minute[iLine],day[iLine],month[iLine],year[iLine],temp[iLine],prec[iLine],soilWater,storedWater,freeRainfall,throughfall,stemFlow);
         //printf("soilWater %f storedWater%f",soilWater, storedWater);
         //printf("%f\n",canopy::canopyNoInterceptedRainfallHydrall(lai,0.,rainfall));
-        //getchar();
     }
     fclose(fp2);
     return 0;
@@ -141,9 +137,4 @@ double getEvapotranspiration (double meanT, double maxT, double minT, double tim
     extraterrestrialRadiation *= (sunset*sin(latitudeInRadians)*sin(solarDeclination)+ cos(latitudeInRadians)*cos(solarDeclination)*sin(sunset));
     evapotranspirationDaily = 0.0135/2.45*hargreavesConstant*sqrt(maxT-minT)*(meanT+17.8)*extraterrestrialRadiation;
     return (evapotranspirationDaily / (24*60) * timeLagInMinutes);
-
-
-
-
-
 }
