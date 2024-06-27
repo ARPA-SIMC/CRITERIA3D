@@ -655,8 +655,6 @@ void MainWindow::on_actionShow_boundary_triggered()
 
 void MainWindow::on_actionVine3D_InitializeWaterBalance_triggered()
 {
-    if (! myProject.setVine3DSoilIndexMap()) return;
-
     if (myProject.initializeWaterBalance3D())
     {
         myProject.outputWaterBalanceMaps = new Crit3DWaterBalanceMaps(myProject.DEM);

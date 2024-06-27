@@ -1293,7 +1293,7 @@
        <second>0</second>
        <year>1752</year>
        <month>9</month>
-       <day>24</day>
+       <day>23</day>
       </datetime>
      </property>
      <property name="maximumDate">
@@ -2829,7 +2829,7 @@
   </action>
   <action name="actionLoad_soil_data">
    <property name="text">
-    <string>Soil data...</string>
+    <string>Soil db...</string>
    </property>
   </action>
   <action name="actionLoad_land_use_map">
@@ -2839,7 +2839,7 @@
   </action>
   <action name="actionLoad_crop_data">
    <property name="text">
-    <string>Crop and land units data...</string>
+    <string>Crop and land units db...</string>
    </property>
   </action>
   <action name="actionView_SoilMoisture">

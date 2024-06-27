@@ -10,6 +10,7 @@
 
 #include "utilities.h"
 #include "commonConstants.h"
+#include "basicMath.h"
 #include "meteo.h"
 #include "interpolation.h"
 #include "solarRadiation.h"
@@ -42,7 +43,6 @@ void Vine3DProject::initializeVine3DProject()
 
     dailyOutputPath = "daily_output/";
     hourlyOutputPath = "hourly_ouptut/";
-    fieldMapName = "";
 
     lastDateTransmissivity.setDate(1900,1,1);
 
@@ -72,8 +72,6 @@ void Vine3DProject::clearVine3DProject()
 
         dbVine3DFileName = "";
 
-        modelCaseIndexMap.clear();
-
         clearProject3D();
 
         delete vine3DMapsH;
@@ -81,25 +79,19 @@ void Vine3DProject::clearVine3DProject()
     }
 }
 
-bool Vine3DProject::loadVine3DProjectSettings(QString projectFile)
+bool Vine3DProject::loadVine3DProjectSettings()
 {
-    if (! QFile(projectFile).exists())
-    {
-        logError("Project file not found: " + projectFile);
-        return false;
-    }
-
     projectSettings->beginGroup("project");
-        fieldMapName = projectSettings->value("modelCaseMap").toString();
+
         dbVine3DFileName = projectSettings->value("db_vine3d").toString();
-        soilDbFileName = projectSettings->value("soil_db").toString();
-        if (soilDbFileName == "")
-            soilDbFileName = projectSettings->value("db_soil").toString();
+
     projectSettings->endGroup();
 
     projectSettings->beginGroup("settings");
+
         computationSoilDepth = projectSettings->value("soil_depth").toDouble();
         computeDiseases = projectSettings->value("compute_diseases").toBool();
+
     projectSettings->endGroup();
 
     return true;
@@ -139,7 +131,10 @@ bool Vine3DProject::loadVine3DProject(QString myFileName)
     if (! loadProjectSettings(myFileName))
         return false;
 
-    if (! loadVine3DProjectSettings(myFileName))
+    if (! loadProject3DSettings())
+        return false;
+
+    if (! loadVine3DProjectSettings())
         return false;
 
     if (dbVine3DFileName != "") openVine3DDatabase(dbVine3DFileName);
@@ -151,7 +146,6 @@ bool Vine3DProject::loadVine3DProject(QString myFileName)
 
     vine3DMapsH = new Vine3DHourlyMaps(DEM);
     vine3DMapsD = new Crit3DDailyMeteoMaps(DEM);
-
     statePlantMaps = new Crit3DStatePlantMaps(DEM);
 
     // soil data
@@ -167,15 +161,23 @@ bool Vine3DProject::loadVine3DProject(QString myFileName)
         return false;
     }
 
-    if (!loadFieldShape())
+    if (! loadFieldShape())
     {
-        myFileName = getCompleteFileName(fieldMapName, PATH_GEO);
-        if (!loadFieldMap(myFileName)) return false;
+        myFileName = getCompleteFileName(landUseMapFileName, PATH_GEO);
+        if (! loadFieldMap(myFileName)) return false;
     }
 
-    if (! setVine3DSoilIndexMap())
+    if (! loadSoilMap(soilMapFileName))
+    {
+        logError();
         return false;
-    soilMap.isLoaded = true;
+    }
+
+    if (! setSoilIndexMap())
+    {
+        logError();
+        return false;
+    }
 
     if (! initializeWaterBalance3D())
     {
@@ -186,7 +188,7 @@ bool Vine3DProject::loadVine3DProject(QString myFileName)
 
     outputWaterBalanceMaps = new Crit3DWaterBalanceMaps(DEM);
 
-    if (! initializeGrapevine(this))
+    if (! initializeGrapevine())
     {
         logError();
         return false;
@@ -507,7 +509,7 @@ void modelCaseIndexMapIndexFromId(gis::Crit3DRasterGrid* myGrid, std::vector <Cr
 
 bool Vine3DProject::loadFieldMap(QString myFileName)
 {
-    this->logInfo ("Read field map...");
+    this->logInfo ("Read fields map...");
 
     std::string fn = myFileName.left(myFileName.length()-4).toStdString();
     gis::Crit3DRasterGrid myGrid;
@@ -521,19 +523,19 @@ bool Vine3DProject::loadFieldMap(QString myFileName)
     }
 
     // compute prevailing map
-    modelCaseIndexMap.initializeGrid(DEM);
-    gis::prevailingMap(myGrid, &(modelCaseIndexMap));
-    gis::updateMinMaxRasterGrid(&(modelCaseIndexMap));
+    landUseMap.initializeGrid(DEM);
+    gis::prevailingMap(myGrid, &(landUseMap));
+    gis::updateMinMaxRasterGrid(&(landUseMap));
 
-    modelCaseIndexMapIndexFromId(&modelCaseIndexMap, modelCases);
+    modelCaseIndexMapIndexFromId(&landUseMap, modelCases);
 
     this->logInfo ("Field map = " + myFileName);
-    return (true);
+    return true;
 }
 
 
 bool Vine3DProject::readFieldQuery(QSqlQuery &myQuery, int &idField, Crit3DLanduse &landuse, int &vineIndex, int &trainingIndex,
-                                   int &soilIndex, float &maxLaiGrass, float &maxIrrigationRate)
+                                   float &maxLaiGrass, float &maxIrrigationRate)
 {
     idField = myQuery.value("id_field").toInt();
 
@@ -575,19 +577,6 @@ bool Vine3DProject::readFieldQuery(QSqlQuery &myQuery, int &idField, Crit3DLandu
     }
     trainingIndex = i;
 
-    // SOIL
-    int idSoil = myQuery.value("id_soil").toInt();
-    unsigned int index=0;
-    while (index < this->nrSoils && idSoil != soilList[index].id)
-        index++;
-
-    if (index == this->nrSoils)
-    {
-        errorString = "soil " + QString::number(idSoil) + " not found" + myQuery.lastError().text();
-        return false;
-    }
-    soilIndex = signed(index);
-
     maxLaiGrass = myQuery.value("max_lai_grass").toFloat();
     maxIrrigationRate = myQuery.value("irrigation_max_rate").toFloat();
 
@@ -599,14 +588,14 @@ bool Vine3DProject::loadFieldsProperties()
 {
     logInfo ("Read fields properties...");
 
-    int fieldIndex, idField, vineIndex, trainingIndex, soilIndex;
+    int fieldIndex, idField, vineIndex, trainingIndex;
     float maxLaiGrass, maxIrrigationRate;
     Crit3DLanduse landuse;
 
     QSqlQuery myQuery(dbVine3D);
 
     // CHECK DEFAULT
-    myQuery.prepare("SELECT id_field, landuse, id_cultivar, id_training_system, id_soil, max_lai_grass, irrigation_max_rate FROM fields WHERE id_field=0");
+    myQuery.prepare("SELECT id_field, landuse, id_cultivar, id_training_system, max_lai_grass, irrigation_max_rate FROM fields WHERE id_field=0");
     if (! myQuery.exec())
     {
         errorString = "Error reading fields table.\n" + myQuery.lastError().text();
@@ -619,7 +608,7 @@ bool Vine3DProject::loadFieldsProperties()
     }
 
     // READ PROPERTIES
-    myQuery.prepare("SELECT id_field, landuse, id_cultivar, id_training_system, id_soil, max_lai_grass, irrigation_max_rate FROM fields ORDER BY id_field");
+    myQuery.prepare("SELECT id_field, landuse, id_cultivar, id_training_system, max_lai_grass, irrigation_max_rate FROM fields ORDER BY id_field");
     if (! myQuery.exec())
     {
         errorString = "Error reading fields table.\n" + myQuery.lastError().text();
@@ -631,11 +620,10 @@ bool Vine3DProject::loadFieldsProperties()
 
     while (myQuery.next())
     {
-        if (readFieldQuery(myQuery, idField, landuse, vineIndex, trainingIndex, soilIndex, maxLaiGrass, maxIrrigationRate))
+        if (readFieldQuery(myQuery, idField, landuse, vineIndex, trainingIndex, maxLaiGrass, maxIrrigationRate))
         {
             myCase.id = idField;
             myCase.landuse = landuse;
-            myCase.soilIndex = soilIndex;
             myCase.cultivar = &(this->cultivar[vineIndex]);
             myCase.maxLAIGrass = maxLaiGrass;
             myCase.maxIrrigationRate = maxIrrigationRate;
@@ -1438,12 +1426,13 @@ bool Vine3DProject::saveStateAndOutput(QDate myDate)
     return(true);
 }
 
+
 int Vine3DProject::getModelCaseIndex(unsigned row, unsigned col)
 {
-    if (gis::isOutOfGridRowCol(int(row), int(col), modelCaseIndexMap)) return NODATA;
+    if (gis::isOutOfGridRowCol(int(row), int(col), landUseMap)) return NODATA;
 
-    int caseIndex = int(modelCaseIndexMap.value[row][col]);
-    if (caseIndex == int(modelCaseIndexMap.header->flag))
+    int caseIndex = int(landUseMap.value[row][col]);
+    if (caseIndex == int(landUseMap.header->flag))
     {
         //DEFAULT
         caseIndex = 0;
@@ -1452,59 +1441,11 @@ int Vine3DProject::getModelCaseIndex(unsigned row, unsigned col)
     return caseIndex;
 }
 
+
 bool Vine3DProject::isVineyard(unsigned row, unsigned col)
 {
     int caseIndex = getModelCaseIndex(row, col);
     return (modelCases[caseIndex].landuse == landuse_vineyard);
-}
-
-int Vine3DProject::getVine3DSoilIndex(long row, long col)
-{
-    int caseIndex = this->getModelCaseIndex(row, col);
-
-    if (caseIndex != NODATA)
-    {
-        return this->modelCases[caseIndex].soilIndex;
-    }
-    else
-    {
-        return NODATA;
-    }
-}
-
-bool Vine3DProject::setVine3DSoilIndexMap()
-{
-    // check
-    if (! DEM.isLoaded || ! modelCaseIndexMap.isLoaded || nrSoils == 0)
-    {
-        if (! DEM.isLoaded)
-            logError("setVine3DSoilIndexMap: missing Digital Elevation Model.");
-        else if (! modelCaseIndexMap.isLoaded)
-            logError("setVine3DSoilIndexMap: missing field map.");
-        else if (nrSoils == 0)
-            logError("setVine3DSoilIndexMap: missing soil properties.");
-        return false;
-    }
-
-    int soilIndex;
-    soilIndexMap.initializeGrid(*(DEM.header));
-    for (int row = 0; row < DEM.header->nrRows; row++)
-    {
-        for (int col = 0; col < DEM.header->nrCols; col++)
-        {
-            if (int(DEM.value[row][col]) != int(DEM.header->flag))
-            {
-                soilIndex = getVine3DSoilIndex(row, col);
-                if (soilIndex != int(NODATA))
-                {
-                    soilIndexMap.value[row][col] = soilIndex;
-                }
-            }
-        }
-    }
-
-    soilIndexMap.isLoaded = true;
-    return true;
 }
 
 
@@ -1637,6 +1578,51 @@ bool Vine3DProject::computeVine3DWaterSinkSource()
             logError("waterBalanceSinkSource:" + myError);
             return false;
         }
+    }
+
+    return true;
+}
+
+
+// initialize root density for every model case
+bool Vine3DProject::initializeGrapevine()
+{
+    outputPlantMaps = new Crit3DOutputPlantMaps(DEM, nrLayers);
+
+    if (! grapevine.initializeLayers(nrLayers))
+        return false;
+
+    int nrSoilLayersWithoutRoots = 2;
+    int soilLayerWithRoot;
+    double depthModeRootDensity;     //[m] depth of mode of root density
+    double depthMeanRootDensity;     //[m] depth of mean of root density
+
+    for (int i = 0 ; i < modelCases.size(); i++)
+    {
+        // TODO
+        int soilIndex = 0;
+        int nrHorizons = soilList[soilIndex].nrHorizons;
+        soil::Crit3DHorizon myHorizon = soilList[soilIndex].horizon[nrHorizons - 1];
+
+        unsigned int j=0;
+        while (j < nrLayers - 1 && layerDepth.at(size_t(j)) <= myHorizon.lowerDepth)
+            j++;
+
+        modelCases[i].soilLayersNr = j;
+        modelCases[i].soilTotalDepth = myHorizon.lowerDepth;
+
+        soilLayerWithRoot = modelCases[i].soilLayersNr - nrSoilLayersWithoutRoots;
+        depthModeRootDensity = 0.35 * modelCases[i].soilTotalDepth;
+        depthMeanRootDensity = 0.5 * modelCases[i].soilTotalDepth;
+
+        double grassRootDepth = modelCases[i].soilTotalDepth * 0.66;
+        double fallowRootDepth = modelCases[i].soilTotalDepth;
+
+        grapevine.setGrassRootDensity(&(modelCases[i]), &(soilList[soilIndex]), layerDepth, layerThickness, 0.02, grassRootDepth);
+        grapevine.setFallowRootDensity(&(modelCases[i]), &(soilList[soilIndex]), layerDepth, layerThickness, 0.02, fallowRootDepth);
+        grapevine.setRootDensity(&(modelCases[i]), &(soilList[soilIndex]),
+                                            layerDepth, layerThickness, soilLayerWithRoot, nrSoilLayersWithoutRoots,
+                                            GAMMA_DISTRIBUTION, depthModeRootDensity, depthMeanRootDensity);
     }
 
     return true;

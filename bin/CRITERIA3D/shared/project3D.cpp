@@ -232,9 +232,10 @@ bool Project3D::loadProject3DSettings()
 
     // land use map
     landUseMapFileName = projectSettings->value("landuse_map").toString();
-    if (landUseMapFileName == "")
+    if (landUseMapFileName.isEmpty())
     {
-        landUseMapFileName = projectSettings->value("landUnits_map").toString();
+        // old vine3D version
+        landUseMapFileName = projectSettings->value("modelCaseMap").toString();
     }
 
     projectSettings->endGroup();
@@ -375,6 +376,77 @@ bool Project3D::initializeWaterBalance3D()
 }
 
 
+bool Project3D::loadSoilMap(QString fileName)
+{
+    if (fileName.isEmpty())
+    {
+        logError("Missing soil map");
+        return false;
+    }
+
+    fileName = getCompleteFileName(fileName, PATH_GEO);
+
+    std::string errorStr;
+    if (! gis::openRaster(fileName.toStdString(), &soilMap, gisSettings.utmZone, errorStr))
+    {
+        logError("Loading soil map failed: " + fileName + "\n" + QString::fromStdString(errorStr));
+        return false;
+    }
+
+    soilMapFileName = fileName;
+    logInfo("Soil map = " + soilMapFileName);
+
+    return true;
+}
+
+
+bool Project3D::setSoilIndexMap()
+{
+    if (! DEM.isLoaded)
+    {
+        errorString = "Missing DEM.";
+        return false;
+    }
+    if (! soilMap.isLoaded)
+    {
+        errorString = "Missing soil map.";
+        return false;
+    }
+    if (soilList.size() == 0)
+    {
+        errorString = "Missing soil properties.";
+        return false;
+    }
+
+    double x, y;
+    soilIndexMap.initializeGrid(*(DEM.header));
+    soilIndexList.clear();
+
+    for (int row = 0; row < DEM.header->nrRows; row++)
+    {
+        for (int col = 0; col < DEM.header->nrCols; col++)
+        {
+            if (! isEqual(DEM.value[row][col], DEM.header->flag))
+            {
+                DEM.getXY(row, col, x, y);
+                int soilIndex = getSoilListIndex(x, y);
+                if (soilIndex != NODATA)
+                {
+                    soilIndexMap.value[row][col] = float(soilIndex);
+                    if (! soilIndexList.contains(soilIndex))
+                    {
+                        soilIndexList.append(soilIndex);
+                    }
+                }
+            }
+        }
+    }
+
+    soilIndexMap.isLoaded = true;
+    return true;
+}
+
+
 void Project3D::setIndexMaps()
 {
     indexMap.resize(nrLayers);
@@ -388,23 +460,25 @@ void Project3D::setIndexMaps()
         {
             for (int col = 0; col < indexMap.at(layer).header->nrCols; col++)
             {
-                if (int(DEM.value[row][col]) != int(DEM.header->flag))
+                if (! isEqual(DEM.value[row][col], DEM.header->flag))
                 {
-                    int soilIndex;
+                    int checkIndex;
                     if (layer == 0)
                     {
-                        // surface
-                        soilIndex = getLandUnitIndexRowCol(row, col);
+                        // surface (check land use)
+                        checkIndex = getLandUnitIndexRowCol(row, col);
                     }
                     else
                     {
-                        // sub-surface
-                        soilIndex = getSoilIndex(row, col);
-                        if (! isWithinSoil(soilIndex, layerDepth.at(layer)))
-                            soilIndex = NODATA;
+                        // sub-surface (check soil)
+                        checkIndex = getSoilIndex(row, col);
+                        if (! isWithinSoil(checkIndex, layerDepth.at(layer)))
+                        {
+                            checkIndex = NODATA;
+                        }
                     }
 
-                    if (soilIndex != NODATA)
+                    if (checkIndex != NODATA)
                     {
                         indexMap.at(layer).value[row][col] = currentIndex;
                         currentIndex++;
@@ -937,9 +1011,10 @@ int Project3D::getLandUnitIdGeo(double lat, double lon)
 
 int Project3D::getLandUnitIndexRowCol(int row, int col)
 {
-    if (! landUseMap.isLoaded || landUnitList.empty())
+    if (! landUseMap.isLoaded || landUnitList.empty() || landUnitList.size() == 1)
     {
-        return 0;                       // default
+        // default
+        return 0;
     }
 
     double x, y;
@@ -1032,17 +1107,75 @@ void Project3D::setLayersDepth()
 }
 
 
+int Project3D::getSoilId(double x, double y)
+{
+    if (! soilMap.isLoaded)
+        return NODATA;
+
+    float soilMapValue = gis::getValueFromXY(soilMap, x, y);
+
+    if (isEqual(soilMapValue, soilMap.header->flag))
+    {
+        return NODATA;
+    }
+    else
+    {
+        return int(soilMapValue);
+    }
+}
+
+
+int Project3D::getSoilListIndex(double x, double y)
+{
+    int idSoil = getSoilId(x, y);
+    if (idSoil == NODATA)
+        return NODATA;
+
+    for (int index = 0; index < soilList.size(); index++)
+    {
+        if (soilList[index].id == idSoil)
+        {
+            return index;
+        }
+    }
+
+    return NODATA;
+}
+
+
+QString Project3D::getSoilCode(double x, double y)
+{
+    int idSoil = getSoilId(x, y);
+    if (idSoil == NODATA)
+        return "";
+
+    for (unsigned int i = 0; i < soilList.size(); i++)
+    {
+        if (soilList[i].id == idSoil)
+        {
+            return QString::fromStdString(soilList[i].code);
+        }
+    }
+
+    return "NOT FOUND";
+}
+
+
 int Project3D::getSoilIndex(long row, long col)
 {
-    if ( !soilIndexMap.isLoaded)
+    if (! soilIndexMap.isLoaded)
         return NODATA;
 
-    int soilIndex = int(soilIndexMap.getValueFromRowCol(row, col));
+    float soilIndex = soilIndexMap.getValueFromRowCol(row, col);
 
-    if (soilIndex == int(soilIndexMap.header->flag))
+    if (isEqual(soilIndex,soilIndexMap.header->flag))
+    {
         return NODATA;
-
-    return soilIndex;
+    }
+    else
+    {
+        return int(soilIndex);
+    }
 }
 
 

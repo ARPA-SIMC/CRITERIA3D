@@ -771,6 +771,12 @@ namespace gis
             *myY = myHeader.llCorner.y + myHeader.cellSize * (myHeader.nrRows - row - 0.5);
     }
 
+    void getUtmXYFromRowCol(Crit3DRasterHeader *myHeader, int row, int col, double* myX, double* myY)
+    {
+        *myX = myHeader->llCorner.x + myHeader->cellSize * (col + 0.5);
+        *myY = myHeader->llCorner.y + myHeader->cellSize * (myHeader->nrRows - row - 0.5);
+    }
+
     void getLatLonFromRowCol(const Crit3DLatLonHeader& latLonHeader, int row, int col, double* lat, double* lon)
     {
             *lon = latLonHeader.llCorner.longitude + latLonHeader.dx * (col + 0.5);

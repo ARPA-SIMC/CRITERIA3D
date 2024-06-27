@@ -304,7 +304,7 @@ void Crit3DProject::assignETreal()
             {
                 double utmX, utmY;
                 DEM.getXY(row, col, utmX, utmY);
-                int soilIndex = getCrit3DSoilIndex(utmX, utmY);
+                int soilIndex = getSoilListIndex(utmX, utmY);
 
                 float lai = laiMap.value[row][col];
                 if (isEqual(lai, NODATA))
@@ -528,8 +528,11 @@ bool Crit3DProject::loadCriteria3DProject(QString myFileName)
         return false;
 
     // soil map and data
-    if (soilMapFileName != "") loadSoilMap(soilMapFileName);
-    if (soilDbFileName != "") loadSoilDatabase(soilDbFileName);
+    if (soilMapFileName != "")
+        loadSoilMap(soilMapFileName);
+
+    if (soilDbFileName != "")
+        loadSoilDatabase(soilDbFileName);
 
     // land use map and crop data
     if (landUseMapFileName != "") loadLandUseMap(landUseMapFileName);
@@ -625,29 +628,6 @@ bool Crit3DProject::writeCriteria3DParameters()
 }
 
 
-bool Crit3DProject::loadSoilMap(QString fileName)
-{
-    if (fileName == "")
-    {
-        logError("Missing soil map filename");
-        return false;
-    }
-
-    soilMapFileName = fileName;
-    fileName = getCompleteFileName(fileName, PATH_GEO);
-
-    std::string errorStr;
-    if (! gis::openRaster(fileName.toStdString(), &soilMap, gisSettings.utmZone, errorStr))
-    {
-        logError("Load soil map failed: " + fileName + "\n" + QString::fromStdString(errorStr));
-        return false;
-    }
-
-    logInfo("Soil map = " + fileName);
-    return true;
-}
-
-
 bool Crit3DProject::loadLandUseMap(QString fileName)
 {
     if (fileName == "")
@@ -683,88 +663,6 @@ bool Crit3DProject::check3DProject()
     }
 
     return true;
-}
-
-
-bool Crit3DProject::setSoilIndexMap()
-{
-    double x, y;
-    soilIndexMap.initializeGrid(*(DEM.header));
-
-    for (int row = 0; row < DEM.header->nrRows; row++)
-    {
-        for (int col = 0; col < DEM.header->nrCols; col++)
-        {
-            if (int(DEM.value[row][col]) != int(DEM.header->flag))
-            {
-                DEM.getXY(row, col, x, y);
-                int soilIndex = getCrit3DSoilIndex(x, y);
-                if (soilIndex != NODATA)
-                {
-                    soilIndexMap.value[row][col] = float(soilIndex);
-                    if (! soilIndexList.contains(soilIndex))
-                    {
-                        soilIndexList.append(soilIndex);
-                    }
-                }
-            }
-        }
-    }
-
-    soilIndexMap.isLoaded = true;
-    return true;
-}
-
-
-int Crit3DProject::getCrit3DSoilId(double x, double y)
-{
-    if (! soilMap.isLoaded)
-        return NODATA;
-
-    int idSoil = int(gis::getValueFromXY(soilMap, x, y));
-
-    if (idSoil == int(soilMap.header->flag))
-    {
-        return NODATA;
-    }
-    else
-    {
-        return idSoil;
-    }
-}
-
-
-int Crit3DProject::getCrit3DSoilIndex(double x, double y)
-{
-    int idSoil = getCrit3DSoilId(x, y);
-    if (idSoil == NODATA) return NODATA;
-
-    for (int index = 0; index < soilList.size(); index++)
-    {
-        if (soilList[index].id == idSoil)
-        {
-            return index;
-        }
-    }
-
-    return NODATA;
-}
-
-
-QString Crit3DProject::getCrit3DSoilCode(double x, double y)
-{
-    int idSoil = getCrit3DSoilId(x, y);
-    if (idSoil == NODATA) return "";
-
-    for (unsigned int i = 0; i < soilList.size(); i++)
-    {
-        if (soilList[i].id == idSoil)
-        {
-            return QString::fromStdString(soilList[i].code);
-        }
-    }
-
-    return "NOT FOUND";
 }
 
 

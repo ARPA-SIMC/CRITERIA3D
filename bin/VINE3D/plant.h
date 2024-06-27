@@ -91,7 +91,6 @@
         gis::Crit3DRasterGrid* getMapFromVar(plantVariable myVar);
     };
 
-    bool initializeGrapevine(Vine3DProject* myProject);
     bool setStatePlantfromMap(long row, long col , Vine3DProject* myProject);
     bool getStatePlantToMap(long row,long col, Vine3DProject* myProject, TstatePlant* statePlant);
     bool getOutputPlantToMap(long row, long col, Vine3DProject* myProject);
@@ -105,4 +104,5 @@
                          bool isStateMap, bool isMasked);
 
     bool updateThermalSum(Vine3DProject* myProject, QDate myDate);
+
 #endif

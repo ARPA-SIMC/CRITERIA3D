@@ -136,10 +136,12 @@
         void clearProject3D();
         void clearWaterBalance3D();
 
+        bool setSoilIndexMap();
         bool initializeWaterBalance3D();
 
         bool loadSoilDatabase(QString dbName);
         bool loadCropDatabase(QString dbName);
+        bool loadSoilMap(QString fileName);
 
         double getSoilLayerTop(unsigned int i);
         double getSoilLayerBottom(unsigned int i);
@@ -149,6 +151,10 @@
         int getLandUnitIndexRowCol(int row, int col);
 
         bool initializeSoilMoisture(int month);
+
+        int getSoilId(double x, double y);
+        int getSoilListIndex(double x, double y);
+        QString getSoilCode(double x, double y);
 
         int getSoilIndex(long row, long col);
         bool isWithinSoil(int soilIndex, double depth);

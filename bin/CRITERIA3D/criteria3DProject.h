@@ -30,7 +30,6 @@
         bool _saveOutputRaster, _saveOutputPoints, _saveDailyState;
 
         void clear3DProject();
-        bool setSoilIndexMap();
         bool check3DProject();
         bool updateDailyTemperatures();
 
@@ -80,15 +79,10 @@
         bool loadCriteria3DParameters();
         bool writeCriteria3DParameters();
 
-        bool loadSoilMap(QString fileName);
         bool loadLandUseMap(QString fileName);
 
         double getSoilVar(int soilIndex, int layerIndex, soil::soilVariable myVar);
         double* getSoilVarProfile(int row, int col, soil::soilVariable myVar);
-
-        int getCrit3DSoilId(double x, double y);
-        int getCrit3DSoilIndex(double x, double y);
-        QString getCrit3DSoilCode(double x, double y);
 
         bool computeAllMeteoMaps(const QDateTime& myTime, bool showInfo);
 

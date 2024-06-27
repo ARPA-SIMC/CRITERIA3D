@@ -9,52 +9,6 @@
 #include "commonConstants.h"
 
 
-bool initializeGrapevine(Vine3DProject* myProject)
-{
-    myProject->outputPlantMaps = new Crit3DOutputPlantMaps(myProject->DEM, myProject->nrLayers);
-
-    //initialize root density for every model case
-    int soilIndex, nrHorizons;
-    soil::Crit3DHorizon myHorizon;
-
-    if (! myProject->grapevine.initializeLayers(myProject->nrLayers))
-        return false;
-
-    int nrSoilLayersWithoutRoots = 2;
-    int soilLayerWithRoot;
-    double depthModeRootDensity;     //[m] depth of mode of root density
-    double depthMeanRootDensity;     //[m] depth of mean of root density
-
-    for (int i = 0 ; i < myProject->modelCases.size(); i++)
-    {
-        soilIndex = myProject->modelCases[i].soilIndex;
-        nrHorizons = myProject->soilList[soilIndex].nrHorizons;
-        myHorizon = myProject->soilList[soilIndex].horizon[nrHorizons - 1];
-
-        int j=0;
-        while (j < myProject->nrLayers - 1 && myProject->layerDepth.at(size_t(j)) <= myHorizon.lowerDepth)
-            j++;
-
-        myProject->modelCases[i].soilLayersNr = j;
-        myProject->modelCases[i].soilTotalDepth = myHorizon.lowerDepth;
-
-        soilLayerWithRoot = myProject->modelCases[i].soilLayersNr - nrSoilLayersWithoutRoots;
-        depthModeRootDensity = 0.35 * myProject->modelCases[i].soilTotalDepth;
-        depthMeanRootDensity = 0.5 * myProject->modelCases[i].soilTotalDepth;
-
-        double grassRootDepth = myProject->modelCases[i].soilTotalDepth * 0.66;
-        double fallowRootDepth = myProject->modelCases[i].soilTotalDepth;
-
-        myProject->grapevine.setGrassRootDensity(&(myProject->modelCases[i]), &(myProject->soilList[soilIndex]), myProject->layerDepth, myProject->layerThickness, 0.02, grassRootDepth);
-        myProject->grapevine.setFallowRootDensity(&(myProject->modelCases[i]), &(myProject->soilList[soilIndex]), myProject->layerDepth, myProject->layerThickness, 0.02, fallowRootDepth);
-        myProject->grapevine.setRootDensity(&(myProject->modelCases[i]), &(myProject->soilList[soilIndex]),
-                                            myProject->layerDepth, myProject->layerThickness, soilLayerWithRoot, nrSoilLayersWithoutRoots,
-                                            GAMMA_DISTRIBUTION, depthModeRootDensity, depthMeanRootDensity);
-    }
-
-    return true;
-}
-
 void Crit3DStatePlantMaps::initialize()
 {
     leafAreaIndexMap = new gis::Crit3DRasterGrid;

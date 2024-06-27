@@ -224,6 +224,7 @@
         void getUtmXYFromRowColSinglePrecision(const Crit3DRasterGrid& rasterGrid, int myRow, int myCol,float* myX,float* myY);
         void getUtmXYFromRowColSinglePrecision(const Crit3DRasterHeader& myHeader, int myRow, int myCol,float* myX,float* myY);
         void getUtmXYFromRowCol(const Crit3DRasterHeader& myHeader,int myRow, int myCol, double* myX, double* myY);
+        void getUtmXYFromRowCol(Crit3DRasterHeader *myHeader, int row, int col, double* myX, double* myY);
 
         void getLatLonFromRowCol(const Crit3DLatLonHeader &latLonHeader, int myRow, int myCol, double* lat, double* lon);
         void getLatLonFromRowCol(const Crit3DLatLonHeader &latLonHeader, const Crit3DRasterCell& v, Crit3DGeoPoint* p);

@@ -1615,7 +1615,7 @@ bool MainWindow::isSoil(QPoint mapPos)
     Position geoPos = mapView->mapToScene(mapPos);
     gis::latLonToUtmForceZone(myProject.gisSettings.utmZone, geoPos.latitude(), geoPos.longitude(), &x, &y);
 
-    int idSoil = myProject.getCrit3DSoilId(x, y);
+    int idSoil = myProject.getSoilId(x, y);
     return (idSoil != NODATA);
 }
 
@@ -1665,7 +1665,7 @@ void MainWindow::openSoilWidget(QPoint mapPos)
     double x, y;
     Position geoPos = mapView->mapToScene(mapPos);
     gis::latLonToUtmForceZone(myProject.gisSettings.utmZone, geoPos.latitude(), geoPos.longitude(), &x, &y);
-    QString soilCode = myProject.getCrit3DSoilCode(x, y);
+    QString soilCode = myProject.getSoilCode(x, y);
 
     if (soilCode == "")
     {

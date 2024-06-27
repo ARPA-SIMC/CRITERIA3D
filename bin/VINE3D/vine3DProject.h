@@ -55,12 +55,10 @@
 
         QString dailyOutputPath;
         QString hourlyOutputPath;
-        QString fieldMapName;
 
         bool computeDiseases;
 
         gis::Crit3DRasterGrid dataRaster;
-        gis::Crit3DRasterGrid modelCaseIndexMap;
 
         std::vector <TVineCultivar> cultivar;
         std::vector <TtrainingSystem> trainingSystems;
@@ -90,7 +88,7 @@
         Vine3DProject();
 
         bool loadVine3DSettings();
-        bool loadVine3DProjectSettings(QString projectFile);
+        bool loadVine3DProjectSettings();
 
         bool loadFieldsProperties();
         bool loadDBPoints();
@@ -103,15 +101,17 @@
 
         void initializeVine3DProject();
         void clearVine3DProject();
+
         bool loadVine3DProject(QString myFileName);
         bool openVine3DDatabase(QString fileName);
+
+        bool initializeGrapevine();
 
         int queryFieldPoint(double x, double y);
         bool loadFieldShape();
         bool loadFieldMap(QString myFileName);
 
-        bool readFieldQuery(QSqlQuery &myQuery, int &idField, Crit3DLanduse &landuse, int &vineIndex, int &trainingIndex,
-                            int &soilIndex, float &maxLaiGrass,  float &maxIrrigationRate);
+        bool readFieldQuery(QSqlQuery &myQuery, int &idField, Crit3DLanduse &landuse, int &vineIndex, int &trainingIndex, float &maxLaiGrass,  float &maxIrrigationRate);
         bool setField(int fieldIndex, int fieldId, Crit3DLanduse landuse, int soilIndex, int vineIndex, int trainingIndex,
                             float maxLaiGrass,  float maxIrrigationRate);
         bool getFieldBookIndex(int firstIndex, QDate myQDate, int fieldIndex, int* outputIndex);
@@ -128,7 +128,7 @@
         //bool loadObsDataSubHourly(int indexPoint, meteoVariable myVar, QDateTime d1, QDateTime d2, QString tableName);
         //bool loadObsDataHourly(int indexPoint, QDate d1, QDate d2, QString tableName, bool useAggrCodes);
         //bool loadObsDataFilled(QDateTime firstTime, QDateTime lastTime);
-         //bool loadObsDataAllPoints(QDate d1, QDate d2, bool showInfo);
+        //bool loadObsDataAllPoints(QDate d1, QDate d2, bool showInfo);
         void findVine3DLastMeteoDate();
 
         bool loadStates(QDate myDate);
@@ -142,9 +142,6 @@
 
         bool isVineyard(unsigned row, unsigned col);
 
-        int getVine3DSoilIndex(long row, long col);
-
-        bool setVine3DSoilIndexMap();
         bool computeVine3DWaterSinkSource();
 
         soil::Crit3DHorizon* getSoilHorizon(long row, long col, int layer);
