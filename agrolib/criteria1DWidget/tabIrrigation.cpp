@@ -15,30 +15,31 @@ TabIrrigation::TabIrrigation()
 
     seriesLAI = new QLineSeries();
     seriesMaxTransp = new QLineSeries();
-    seriesRealTransp = new QLineSeries();
+    seriesActualTransp = new QLineSeries();
     seriesMaxEvap = new QLineSeries();
-    seriesRealEvap = new QLineSeries();
+    seriesActualEvap = new QLineSeries();
 
-    seriesLAI->setName("LAI [m2 m-2]");
-    seriesMaxTransp->setName("Transpiration max [mm]");
-    seriesRealTransp->setName("actual Transpiration [mm]");
-    seriesMaxEvap->setName("Evaporation max [mm]");
-    seriesRealEvap->setName("actual Evaporation [mm]");
+    seriesLAI->setName("LAI [m2 m-2] ");
+    seriesMaxTransp->setName("max. Transpiration [mm]");
+    seriesActualTransp->setName("actual Transpiration [mm]");
+    seriesMaxEvap->setName("max. Evaporation [mm]");
+    seriesActualEvap->setName("actual Evaporation [mm]");
 
-    seriesLAI->setColor(QColor(Qt::green));
-    seriesMaxTransp->setColor(QColor(0,0,1,255));
-    seriesRealTransp->setColor(QColor(Qt::red));
+    QPen pen;
+    pen.setWidth(2);
+    pen.setColor(QColor(0, 200, 0, 255));
+    seriesLAI->setPen(pen);
+
+    // bug with black
+    seriesMaxTransp->setColor(QColor(0, 0, 1, 255));
+    seriesActualTransp->setColor(QColor(Qt::red));
     seriesMaxEvap->setColor(QColor(Qt::gray));
-    seriesRealEvap->setColor(QColor(Qt::yellow));
+    seriesActualEvap->setColor(QColor(210, 150, 20, 255));
 
     seriesPrecIrr = new QBarSeries();
 
     setPrec = new QBarSet("Precipitation [mm]");
     setIrrigation = new QBarSet("Irrigation [mm]");
-    setPrec->setColor(QColor(Qt::blue));
-    setPrec->setBorderColor(QColor(Qt::blue));
-    setIrrigation->setColor(QColor(Qt::cyan));
-    setIrrigation->setBorderColor(QColor(Qt::cyan));
 
     seriesPrecIrr->append(setPrec);
     seriesPrecIrr->append(setIrrigation);
@@ -76,23 +77,23 @@ TabIrrigation::TabIrrigation()
 
     chart->addSeries(seriesLAI);
     chart->addSeries(seriesMaxTransp);
-    chart->addSeries(seriesRealTransp);
+    chart->addSeries(seriesActualTransp);
     chart->addSeries(seriesMaxEvap);
-    chart->addSeries(seriesRealEvap);
+    chart->addSeries(seriesActualEvap);
     chart->addSeries(seriesPrecIrr);
 
     seriesLAI->attachAxis(axisX);
     seriesMaxTransp->attachAxis(axisX);
-    seriesRealTransp->attachAxis(axisX);
+    seriesActualTransp->attachAxis(axisX);
     seriesMaxEvap->attachAxis(axisX);
-    seriesRealEvap->attachAxis(axisX);
+    seriesActualEvap->attachAxis(axisX);
     seriesPrecIrr->attachAxis(axisX);
 
     seriesLAI->attachAxis(axisY);
     seriesMaxTransp->attachAxis(axisY);
-    seriesRealTransp->attachAxis(axisY);
+    seriesActualTransp->attachAxis(axisY);
     seriesMaxEvap->attachAxis(axisY);
-    seriesRealEvap->attachAxis(axisY);
+    seriesActualEvap->attachAxis(axisY);
     seriesPrecIrr->attachAxis(axisYdx);
 
     chart->legend()->setVisible(true);
@@ -109,9 +110,9 @@ TabIrrigation::TabIrrigation()
 
     connect(seriesLAI, &QLineSeries::hovered, this, &TabIrrigation::tooltipLAI);
     connect(seriesMaxTransp, &QLineSeries::hovered, this, &TabIrrigation::tooltipEvapTransp);
-    connect(seriesRealTransp, &QLineSeries::hovered, this, &TabIrrigation::tooltipEvapTransp);
+    connect(seriesActualTransp, &QLineSeries::hovered, this, &TabIrrigation::tooltipEvapTransp);
     connect(seriesMaxEvap, &QLineSeries::hovered, this, &TabIrrigation::tooltipEvapTransp);
-    connect(seriesRealEvap, &QLineSeries::hovered, this, &TabIrrigation::tooltipEvapTransp);
+    connect(seriesActualEvap, &QLineSeries::hovered, this, &TabIrrigation::tooltipEvapTransp);
     connect(seriesPrecIrr, &QHorizontalBarSeries::hovered, this, &TabIrrigation::tooltipPrecIrr);
     foreach(QLegendMarker* marker, chart->legend()->markers())
     {
@@ -152,9 +153,9 @@ void TabIrrigation::computeIrrigation(Crit1DCase &myCase, int firstYear, int las
     axisX->clear();
     seriesLAI->clear();
     seriesMaxTransp->clear();
-    seriesRealTransp->clear();
+    seriesActualTransp->clear();
     seriesMaxEvap->clear();
-    seriesRealEvap->clear();
+    seriesActualEvap->clear();
     categories.clear();
 
     if (setPrec!= nullptr)
@@ -168,8 +169,8 @@ void TabIrrigation::computeIrrigation(Crit1DCase &myCase, int firstYear, int las
     {
         seriesPrecIrr->remove(setIrrigation);
         setIrrigation = new QBarSet("Irrigation [mm]");
-        setIrrigation->setColor(QColor(Qt::cyan));
-        setIrrigation->setBorderColor(QColor(Qt::cyan));
+        setIrrigation->setColor(QColor(16,183,235,255));
+        setIrrigation->setBorderColor(QColor(16,183,235,255));
     }
 
     int currentDoy = 1;
@@ -199,9 +200,9 @@ void TabIrrigation::computeIrrigation(Crit1DCase &myCase, int firstYear, int las
             categories.append(QString::number(doy));
             seriesLAI->append(doy, myCase.crop.LAI);
             seriesMaxTransp->append(doy, myCase.output.dailyMaxTranspiration);
-            seriesRealTransp->append(doy, myCase.output.dailyTranspiration);
+            seriesActualTransp->append(doy, myCase.output.dailyTranspiration);
             seriesMaxEvap->append(doy, myCase.output.dailyMaxEvaporation);
-            seriesRealEvap->append(doy, myCase.output.dailyEvaporation);
+            seriesActualEvap->append(doy, myCase.output.dailyEvaporation);
             *setPrec << myCase.output.dailyPrec;
             *setIrrigation << myCase.output.dailyIrrigation;
         }

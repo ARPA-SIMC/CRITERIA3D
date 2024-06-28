@@ -32,9 +32,9 @@
         QList<QString> categories;
         QLineSeries* seriesLAI;
         QLineSeries* seriesMaxTransp;
-        QLineSeries* seriesRealTransp;
+        QLineSeries* seriesActualTransp;
         QLineSeries* seriesMaxEvap;
-        QLineSeries* seriesRealEvap;
+        QLineSeries* seriesActualEvap;
         QBarSeries* seriesPrecIrr;
         QBarSet *setPrec;
         QBarSet *setIrrigation;
