@@ -2001,6 +2001,7 @@ void MainWindow::on_buttonModelPause_clicked()
     ui->buttonModelPause->setDisabled(true);
     ui->buttonModelStart->setEnabled(true);
     ui->buttonModelStop->setEnabled(true);
+    qApp->processEvents();
 }
 
 

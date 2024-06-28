@@ -56,9 +56,9 @@ void WaterFluxesParameters::initialize()
     computeOnlySurface = false;
     computeAllSoilDepth = true;
 
-    initialWaterPotential = -3.0;           // [m]
+    initialWaterPotential = -3.0;           // [m] default: field capacity
     imposedComputationDepth = 0.3;          // [m]
-    horizVertRatioConductivity = 1.0;       // [-]
+    horizVertRatioConductivity = 10.0;      // [-] default: ten times
 }
 
 
