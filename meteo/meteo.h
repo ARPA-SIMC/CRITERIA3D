@@ -108,7 +108,7 @@
     enum criteria3DVariable {volumetricWaterContent, waterTotalPotential, waterMatricPotential,
                               availableWaterContent, degreeOfSaturation, soilTemperature,
                               soilSurfaceMoisture, bottomDrainage, waterDeficit, waterInflow, waterOutflow,
-                              factorOfSafety};
+                              factorOfSafety, minimumFactorOfSafety};
 
 
     const std::map<std::string, meteoVariable> MapDailyMeteoVar = {

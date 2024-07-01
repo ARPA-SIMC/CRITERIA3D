@@ -1337,20 +1337,21 @@ namespace gis
     {
         float value = rasterRef.getValueFromRowCol(row,col);
         float aspect = aspectMap.getValueFromRowCol(row,col);
-        if ( isEqual(value, rasterRef.header->flag)
-            || isEqual(aspect, aspectMap.header->flag) )
-                return false;
+        if (isEqual(value, rasterRef.header->flag) || isEqual(aspect, aspectMap.header->flag))
+        {
+            return false;
+        }
 
         int r = 0;
         int c = 0;
-        if (aspect > 135 && aspect < 225)
+        if (aspect >= 135 && aspect <= 225)
             r = 1;
-        else if ((aspect < 45) || (aspect > 315))
+        else if ((aspect <= 45) || (aspect >= 315))
             r = -1;
 
-        if (aspect > 45 && aspect < 135)
+        if (aspect >= 45 && aspect <= 135)
             c = 1;
-        else if (aspect > 225 && aspect < 315)
+        else if (aspect >= 225 && aspect <= 315)
             c = -1;
 
         float valueBoundary = rasterRef.getValueFromRowCol(row + r, col + c);
