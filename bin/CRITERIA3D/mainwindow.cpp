@@ -2364,7 +2364,7 @@ void MainWindow::showCriteria3DVariable(criteria3DVariable var, int layerIndex, 
         reverseColorScale(myProject.criteria3DMap.colorScale);
         ui->labelOutputRaster->setText("Degree of saturation [-]");
     }
-    else if (current3DVariable == factorOfSafety)
+    else if (current3DVariable == factorOfSafety || current3DVariable == minimumFactorOfSafety)
     {
         setSlopeStabilityScale(myProject.criteria3DMap.colorScale);
         ui->labelOutputRaster->setText("Factor of safety [-]");
@@ -3214,7 +3214,7 @@ void MainWindow::on_actionView_factor_of_safety_triggered()
 
 void MainWindow::on_actionView_factor_of_safety_minimum_triggered()
 {
-    showCriteria3DVariable(minimumFactorOfSafety, NODATA, true, 0, 3);
+    showCriteria3DVariable(minimumFactorOfSafety, NODATA, true, 0, 10);
 }
 
 
