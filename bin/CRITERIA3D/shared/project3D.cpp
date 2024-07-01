@@ -1380,6 +1380,38 @@ bool Project3D::setCriteria3DMap(criteria3DVariable var, int layerIndex)
 }
 
 
+bool Project3D::computeMinimumFoS()
+{
+    criteria3DMap.initializeGrid(indexMap.at(0));
+
+    for (int row = 0; row < indexMap.at(0).header->nrRows; row++)
+    {
+        for (int col = 0; col < indexMap.at(0).header->nrCols; col++)
+        {
+            double minimumValue = NODATA;
+            for (unsigned int layer = 1; layer < nrLayers; layer++)
+            {
+                long nodeIndex = indexMap.at(layer).value[row][col];
+                if (nodeIndex != indexMap.at(layer).header->flag)
+                {
+                    double currentValue = computeFactorOfSafety(row, col, layer, nodeIndex);
+                    if (isEqual(minimumValue, NODATA) || currentValue < minimumValue)
+                        minimumValue = currentValue;
+                }
+            }
+
+            if (! isEqual(minimumValue, NODATA))
+            {
+                criteria3DMap.value[row][col] = minimumValue;
+            }
+        }
+    }
+
+    gis::updateMinMaxRasterGrid( &criteria3DMap );
+    return true;
+}
+
+
 bool Project3D::saveHourlyMeteoOutput(meteoVariable myVar, const QString& myPath, QDateTime myTime)
 {
     gis::Crit3DRasterGrid* myRaster = getHourlyMeteoRaster(myVar);
@@ -1821,9 +1853,10 @@ double Project3D::assignTranspiration(int row, int col, double currentLai, doubl
 
 float Project3D::computeFactorOfSafety(int row, int col, int layerIndex, int nodeIndex)
 {
-    if (layerIndex >= layerDepth.size())
+    if (layerIndex >= nrLayers)
     {
         return NODATA;
+        errorString = "Wrong layer nr.: " + QString::number(layerIndex);
     }
 
     // degree of saturation [-]

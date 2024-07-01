@@ -179,6 +179,7 @@
         bool updateCrop(QDateTime myTime);
 
         bool setCriteria3DMap(criteria3DVariable var, int layerIndex);
+        bool computeMinimumFoS();
 
         float computeFactorOfSafety(int row, int col, int layerIndex, int nodeIndex);
     };

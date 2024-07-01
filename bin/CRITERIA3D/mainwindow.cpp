@@ -2322,7 +2322,18 @@ void MainWindow::showCriteria3DVariable(criteria3DVariable var, int layerIndex, 
         return;
     }
 
-    if (! myProject.setCriteria3DMap(var, layerIndex))
+    // compute map
+    bool isOk;
+    if (var == minimumFactorOfSafety)
+    {
+        isOk = myProject.computeMinimumFoS();
+    }
+    else
+    {
+        isOk = myProject.setCriteria3DMap(var, layerIndex);
+    }
+
+    if (! isOk)
     {
         myProject.logError();
         return;
@@ -3201,6 +3212,12 @@ void MainWindow::on_actionView_factor_of_safety_triggered()
 }
 
 
+void MainWindow::on_actionView_factor_of_safety_minimum_triggered()
+{
+    showCriteria3DVariable(minimumFactorOfSafety, NODATA, true, 0, 3);
+}
+
+
 //------------------- OTHER FUNCTIONS ---------------------
 
 void MainWindow::on_layerNrEdit_valueChanged(int layerIndex)
@@ -3314,4 +3331,5 @@ void MainWindow::on_actionCriteria3D_save_state_triggered()
         myProject.logError(ERROR_STR_MISSING_PROJECT);
     }
 }
+
 

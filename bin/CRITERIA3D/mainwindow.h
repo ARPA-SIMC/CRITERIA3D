@@ -227,6 +227,8 @@
         void on_actionView_degree_days_triggered();
 
         void on_actionView_factor_of_safety_triggered();
+        void on_actionView_factor_of_safety_minimum_triggered();
+
         void on_actionView_degreeOfSaturation_automatic_range_triggered();
         void on_actionView_degreeOfSaturation_fixed_range_triggered();
         void on_actionView_surfaceWaterContent_automatic_range_triggered();
