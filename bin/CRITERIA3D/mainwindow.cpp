@@ -2237,7 +2237,7 @@ void MainWindow::initializeCriteria3DInterface()
             ui->layerNrEdit->setMaximum(myProject.nrLayers - 1);
             ui->layerNrEdit->setValue(1);
 
-            QString depthStr = QString::number(myProject.layerDepth[1],'g',2);
+            QString depthStr = QString::number(myProject.layerDepth[1],'f',2);
             ui->layerDepthEdit->setText(depthStr + " m");
         }
 
@@ -3218,7 +3218,7 @@ void MainWindow::on_layerNrEdit_valueChanged(int layerIndex)
         ui->layerNrEdit->setValue(layerIndex);
     }
 
-    QString depthStr = QString::number(myProject.layerDepth[layerIndex],'g',2);
+    QString depthStr = QString::number(myProject.layerDepth[layerIndex],'f',2);
     ui->layerDepthEdit->setText(depthStr + " m");
 
     if (view3DVariable && current3DlayerIndex != 0)

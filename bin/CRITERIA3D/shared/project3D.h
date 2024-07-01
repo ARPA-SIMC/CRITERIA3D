@@ -63,7 +63,7 @@
 
     private:
         void setSoilLayers();
-        void setLayersDepth();
+        bool setLayersDepth();
         void setIndexMaps();
         bool setLateralBoundary();
         bool setCrit3DSurfaces();
@@ -115,9 +115,10 @@
         soil::Crit3DFittingOptions fittingOptions;
 
         // layers
-        double minThickness;                    // [m]
-        double maxThickness;                    // [m]
-        double thickFactor;                     // [m]
+        double minThickness;                    // [m] minimum thickness of soil layers
+        double maxThickness;                    // [m] maximum thickness of soil layers
+        double maxThicknessDepth;               // [m] depth at which the layers must have maximum thickness
+        double thicknessGrowthFactor;           // [-] progressive growth factor of layer thicknesses
 
         std::vector <double> layerDepth;        // [m]
         std::vector <double> layerThickness;    // [m]
@@ -142,6 +143,8 @@
         bool loadSoilDatabase(QString dbName);
         bool loadCropDatabase(QString dbName);
         bool loadSoilMap(QString fileName);
+
+        void setProgressionFactor();
 
         double getSoilLayerTop(unsigned int i);
         double getSoilLayerBottom(unsigned int i);

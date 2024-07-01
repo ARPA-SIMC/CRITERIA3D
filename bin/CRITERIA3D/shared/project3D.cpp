@@ -144,11 +144,11 @@ void Project3D::initializeProject3D()
     soilMapFileName = "";
     landUseMapFileName = "";
 
-    // default values
     computationSoilDepth = 0.0;     // [m]
-    minThickness = 0.02;            // [m]
-    maxThickness = 0.1;             // [m]
-    thickFactor = 1.25;
+    minThickness = 0.02;            // [m] default: 2 cm
+    maxThickness = 0.1;             // [m] default: 10 cm
+    maxThicknessDepth = 0.40;       // [m] default: 40 cm
+    thicknessGrowthFactor = 1.2;    // [-]
 
     nrSoils = 0;
     nrLayers = 0;
@@ -297,7 +297,11 @@ bool Project3D::initializeWaterBalance3D()
     // set layers depth
     setSoilLayers();
 
-    setLayersDepth();
+    if (! setLayersDepth())
+    {
+        logError();
+        return false;
+    }
     logInfo("Nr of layers: " + QString::number(nrLayers));
 
     // set nr of nodes
@@ -312,7 +316,7 @@ bool Project3D::initializeWaterBalance3D()
     waterSinkSource.resize(nrNodes);
 
     // set boundary
-    if (!setLateralBoundary()) return false;
+    if (! setLateralBoundary()) return false;
     logInfo("Lateral boundary computed");
 
     // initialize soil fluxes
@@ -1059,26 +1063,74 @@ bool Project3D::loadSoilDatabase(QString fileName)
 }
 
 
+void Project3D::setProgressionFactor()
+{
+    if (minThickness == maxThickness)
+    {
+        thicknessGrowthFactor = 1.0;
+        return;
+    }
+
+    double factor = 1.01;
+    double bestFactor = factor;
+    double bestError = 99;
+    while (factor <= 2.0)
+    {
+        double currentThickness = minThickness;
+        double currentDepth = minThickness * 0.5;
+        while (currentThickness < maxThickness)
+        {
+            double nextThickness = currentThickness * factor;
+            currentDepth += (currentThickness + nextThickness) * 0.5;
+            currentThickness = nextThickness;
+        }
+
+        double upperDepth = currentDepth - currentThickness * 0.5;
+        double error = fabs(upperDepth - maxThicknessDepth);
+        if (error < bestError)
+        {
+            bestError = error;
+            bestFactor = factor;
+        }
+
+        factor += 0.01;
+    }
+
+    thicknessGrowthFactor = bestFactor;
+}
+
+
 void Project3D::setSoilLayers()
  {
-    double nextThickness;
-    double prevThickness = minThickness;
-    double depth = minThickness * 0.5;
-
     nrLayers = 1;
-    while (depth < computationSoilDepth)
+    if (computationSoilDepth <= 0)
+        return;
+
+    setProgressionFactor();
+
+    nrLayers++;
+    double currentThickness = minThickness;
+    double currentDepth = minThickness;
+
+    while ((computationSoilDepth - currentDepth) > minThickness)
     {
-        nextThickness = MINVALUE(maxThickness, prevThickness * thickFactor);
-        depth = depth + (prevThickness + nextThickness) * 0.5;
-        prevThickness = nextThickness;
         nrLayers++;
+        double nextThickness = std::min(maxThickness, currentThickness * thicknessGrowthFactor);
+        currentDepth += nextThickness;
+        currentThickness = nextThickness;
     }
 }
 
 
 // set thickness and depth (center) of layers [m]
-void Project3D::setLayersDepth()
+bool Project3D::setLayersDepth()
 {
+    if (nrLayers == 0)
+    {
+        errorString = "Soil layers not defined.";
+        return false;
+    }
+
     unsigned int lastLayer = nrLayers-1;
     layerDepth.resize(nrLayers);
     layerThickness.resize(nrLayers);
@@ -1086,24 +1138,29 @@ void Project3D::setLayersDepth()
     layerDepth[0] = 0.0;
     layerThickness[0] = 0.0;
 
-    if (nrLayers <= 1) return;
+    if (nrLayers == 1)
+        return true;
 
     layerThickness[1] = minThickness;
     layerDepth[1] = minThickness * 0.5;
+    double currentDepth = minThickness;
 
-    for (unsigned int i = 2; i < nrLayers; i++)
+    for (unsigned int i = 2; i <= lastLayer; i++)
     {
         if (i == lastLayer)
         {
-            layerThickness[i] = computationSoilDepth - (layerDepth[i-1] + layerThickness[i-1] / 2.0);
+            layerThickness[i] = computationSoilDepth - currentDepth;
         }
         else
         {
-            layerThickness[i] = MINVALUE(maxThickness, layerThickness[i-1] * thickFactor);
+            layerThickness[i] = std::min(maxThickness, layerThickness[i-1] * thicknessGrowthFactor);
         }
 
-        layerDepth[i] = layerDepth[i-1] + (layerThickness[i-1] + layerThickness[i]) * 0.5;
+        layerDepth[i] = currentDepth + layerThickness[i] * 0.5;
+        currentDepth += layerThickness[i];
     }
+
+    return true;
 }
 
 
