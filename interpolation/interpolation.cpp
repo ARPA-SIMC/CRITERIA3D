@@ -1364,22 +1364,22 @@ bool setAllFittingRanges(Crit3DProxyCombination myCombination, Crit3DInterpolati
 				if (mySettings->getChosenElevationFunction() == piecewiseTwo)
                 {
                     mySettings->getProxy(i)->setFittingFunctionName(piecewiseTwo);
-                    tempParam = {-200, min-2, 0, -0.015, 2000, max+2, 0.01, 0.0015};
+                    tempParam = {-200, min-2, 0, -0.01, 5000, max+2, 0.01, 0.0015};
                 }
                 else if (mySettings->getChosenElevationFunction() == piecewiseThreeFree)
                 {
                     mySettings->getProxy(i)->setFittingFunctionName(piecewiseThreeFree);
-                    tempParam = {-200, min-2, 100, 0, -0.015, -0.015, 2000, max+2, 1000, 0.007, 0.0015, 0.0015};
+                    tempParam = {-200, min-2, 100, 0, -0.01, -0.01, 5000, max+2, 1000, 0.007, 0.0015, 0.0015};
                 }
                 else if (mySettings->getChosenElevationFunction() == piecewiseThree)
                 {
                     mySettings->getProxy(i)->setFittingFunctionName(piecewiseThree);
-                    tempParam = {-200, min-2, 100, 0, -0.015, 2000, max+2, 1000, 0.007, 0.0015};
+                    tempParam = {-200, min-2, 100, 0, -0.01, 5000, max+2, 1000, 0.007, 0.0015};
                 }
                 else if (mySettings->getChosenElevationFunction() == freiFree)
                 {
                     mySettings->getProxy(i)->setFittingFunctionName(freiFree);
-                    tempParam = {min, 0, -4, -200, 0.1, 0, max+10, 0.006, 4, 2000, 1000, 0.006};
+                    tempParam = {min, 0, -4, -200, 0.1, 0, max+10, 0.006, 4, 5000, 1000, 0.006};
                 }
                 mySettings->getProxy(i)->setFittingParametersRange(tempParam);
             }
@@ -1888,6 +1888,7 @@ bool multipleDetrending(Crit3DProxyCombination othersCombination, std::vector<st
                 myCombination.setProxySignificant(pos, false);
                 mySettings->setCurrentCombination(myCombination);
                 mySettings->getProxy(pos)->setIsSignificant(false);
+                parameters.clear();
             }
         }
     }
@@ -1970,6 +1971,7 @@ bool multipleDetrending(Crit3DProxyCombination othersCombination, std::vector<st
                 myCombination.setProxySignificant(pos, false);
                 mySettings->setCurrentCombination(myCombination);
                 mySettings->getProxy(pos)->setIsSignificant(false);
+                parameters.clear();
             }
         }
     }
