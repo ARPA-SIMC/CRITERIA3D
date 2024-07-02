@@ -234,6 +234,8 @@
         void on_actionView_surfaceWaterContent_automatic_range_triggered();
         void on_actionView_surfaceWaterContent_fixed_range_triggered();
 
+        void on_flagSave_state_endRun_triggered(bool isChecked);
+
     protected:
         /*!
          * \brief mouseReleaseEvent call moveCenter

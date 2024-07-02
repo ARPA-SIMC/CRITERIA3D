@@ -100,6 +100,7 @@
         // 3D soil fluxes maps
         gis::Crit3DRasterGrid soilIndexMap;
         QList<int> soilIndexList;
+
         gis::Crit3DRasterGrid boundaryMap;
         gis::Crit3DRasterGrid criteria3DMap;
         std::vector <gis::Crit3DRasterGrid> indexMap;
@@ -178,10 +179,10 @@
         void computeWaterBalance3D(double totalTimeStep);
         bool updateCrop(QDateTime myTime);
 
-        bool setCriteria3DMap(criteria3DVariable var, int layerIndex);
-        bool computeMinimumFoS();
+        bool getCriteria3DMap(gis::Crit3DRasterGrid &outputRaster, criteria3DVariable var, int layerIndex);
+        bool computeMinimumFoS(gis::Crit3DRasterGrid &outputRaster);
 
-        float computeFactorOfSafety(int row, int col, int layerIndex, int nodeIndex);
+        float computeFactorOfSafety(int row, int col, unsigned int layerIndex, int nodeIndex);
     };
 
     bool isCrit3dError(int result, QString &error);

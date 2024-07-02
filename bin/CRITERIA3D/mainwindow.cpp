@@ -130,6 +130,9 @@ MainWindow::MainWindow(QWidget *parent) :
     myProject.setSaveDailyState(false);
     ui->flagSave_state_daily_step->setChecked(myProject.isSaveDailyState());
 
+    myProject.setSaveEndOfRunState(false);
+    ui->flagSave_state_endRun->setChecked(myProject.isSaveEndOfRunState());
+
     myProject.setSaveOutputPoints(false);
     myProject.setComputeOnlyPoints(false);
     ui->flagOutputPoints_save_output->setChecked(myProject.isSaveOutputPoints());
@@ -192,8 +195,9 @@ void MainWindow::updateOutputMap()
 
     if (myProject.isCriteria3DInitialized)
     {
-        myProject.setCriteria3DMap(current3DVariable, current3DlayerIndex);
+        myProject.getCriteria3DMap(myProject.criteria3DMap, current3DVariable, current3DlayerIndex);
     }
+
     emit rasterOutput->redrawRequested();
     outputRasterColorLegend->update();
     qApp->processEvents();
@@ -2091,8 +2095,8 @@ void MainWindow::on_actionSnow_run_model_triggered()
 {
     if (! myProject.snowMaps.isInitialized)
     {
-        if (! myProject.initializeSnowModel())
-            return;
+        myProject.logInfoGUI("Initialize snow model before.");
+        return;
     }
 
     QDateTime firstTime, lastTime;
@@ -2326,11 +2330,11 @@ void MainWindow::showCriteria3DVariable(criteria3DVariable var, int layerIndex, 
     bool isOk;
     if (var == minimumFactorOfSafety)
     {
-        isOk = myProject.computeMinimumFoS();
+        isOk = myProject.computeMinimumFoS(myProject.criteria3DMap);
     }
     else
     {
-        isOk = myProject.setCriteria3DMap(var, layerIndex);
+        isOk = myProject.getCriteria3DMap(myProject.criteria3DMap, var, layerIndex);
     }
 
     if (! isOk)
@@ -2391,6 +2395,13 @@ void MainWindow::on_flagSave_state_daily_step_toggled(bool isChecked)
 {
     myProject.setSaveDailyState(isChecked);
 }
+
+
+void MainWindow::on_flagSave_state_endRun_triggered(bool isChecked)
+{
+     myProject.setSaveEndOfRunState(isChecked);
+}
+
 
 void MainWindow::on_actionSave_state_triggered()
 {
@@ -3218,6 +3229,13 @@ void MainWindow::on_actionView_factor_of_safety_minimum_triggered()
 }
 
 
+void MainWindow::on_actionCriteria3D_update_subHourly_triggered(bool isChecked)
+{
+    myProject.showEachTimeStep = isChecked;
+}
+
+
+
 //------------------- OTHER FUNCTIONS ---------------------
 
 void MainWindow::on_layerNrEdit_valueChanged(int layerIndex)
@@ -3251,12 +3269,6 @@ void MainWindow::on_layerNrEdit_valueChanged(int layerIndex)
             showCriteria3DVariable(current3DVariable, layerIndex, false, NODATA, NODATA);
         }
     }
-}
-
-
-void MainWindow::on_actionCriteria3D_update_subHourly_triggered(bool isChecked)
-{
-    myProject.showEachTimeStep = isChecked;
 }
 
 
@@ -3331,5 +3343,4 @@ void MainWindow::on_actionCriteria3D_save_state_triggered()
         myProject.logError(ERROR_STR_MISSING_PROJECT);
     }
 }
-
 

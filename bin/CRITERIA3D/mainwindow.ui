@@ -1293,7 +1293,7 @@
        <second>0</second>
        <year>1752</year>
        <month>9</month>
-       <day>22</day>
+       <day>21</day>
       </datetime>
      </property>
      <property name="maximumDate">
@@ -1985,6 +1985,8 @@
     <addaction name="separator"/>
     <addaction name="actionCriteria3D_update_subHourly"/>
     <addaction name="separator"/>
+    <addaction name="flagSave_state_endRun"/>
+    <addaction name="flagSave_state_daily_step"/>
    </widget>
    <widget class="QMenu" name="menuShow">
     <property name="title">
@@ -2148,7 +2150,6 @@
     <addaction name="actionSnow_compute_next_hour"/>
     <addaction name="actionSnow_run_model"/>
     <addaction name="separator"/>
-    <addaction name="flagSave_state_daily_step"/>
    </widget>
    <widget class="QMenu" name="menuSolar_radiation_model_2">
     <property name="title">
@@ -2530,7 +2531,7 @@
     <bool>false</bool>
    </property>
    <property name="text">
-    <string>Automatic save state (daily step)</string>
+    <string>Automatic state saving (daily step)</string>
    </property>
   </action>
   <action name="actionMapGoogle_satellite">
@@ -2915,6 +2916,14 @@
   <action name="actionView_factor_of_safety_minimum">
    <property name="text">
     <string>Factor of safety (minimum value)</string>
+   </property>
+  </action>
+  <action name="flagSave_state_endRun">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Automatic state saving (end of run)</string>
    </property>
   </action>
  </widget>

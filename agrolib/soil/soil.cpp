@@ -372,7 +372,12 @@ namespace soil
                 if (horizon.organicMatter > 0.2)
                    return 16; // OL
                 else
-                   return 13; // ML
+                {
+                    if(horizon.texture.clay >= 20)
+                        return 12; // SC-CL
+                    else
+                        return 13; // ML
+                }
             }
             if (horizon.texture.classNameUSDA == "clay" || horizon.texture.classNameUSDA == "silty clay")
             {

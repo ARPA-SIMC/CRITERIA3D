@@ -27,13 +27,14 @@
     {
 
     private:
-        bool _saveOutputRaster, _saveOutputPoints, _saveDailyState;
+        bool _saveOutputRaster, _saveOutputPoints, _saveDailyState, _saveEndOfRunState;
 
         void clear3DProject();
         bool check3DProject();
         bool updateDailyTemperatures();
 
         bool saveSnowModelState(const QString &currentStatePath);
+        bool saveSoilWaterState(const QString &currentStatePath);
 
     public:
         Crit3DGeometry* openGlGeometry;
@@ -66,8 +67,11 @@
 
         bool runModels(QDateTime firstTime, QDateTime lastTime);
 
-        void setSaveDailyState(bool isSave);
-        bool isSaveDailyState();
+        void setSaveDailyState(bool isSave) { _saveDailyState = isSave; }
+        bool isSaveDailyState() { return _saveDailyState; }
+
+        void setSaveEndOfRunState(bool isSave) { _saveEndOfRunState = isSave; }
+        bool isSaveEndOfRunState() { return _saveEndOfRunState; }
 
         void setSaveOutputRaster(bool isSave);
         bool isSaveOutputRaster();

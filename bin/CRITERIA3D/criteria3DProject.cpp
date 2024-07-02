@@ -45,6 +45,7 @@ Crit3DProject::Crit3DProject() : Project3D()
     _saveOutputRaster = false;
     _saveOutputPoints = false;
     _saveDailyState = false;
+    _saveEndOfRunState = false;
 
     modelPause = false;
     modelStop = false;
@@ -450,21 +451,16 @@ bool Crit3DProject::runModels(QDateTime firstTime, QDateTime lastTime)
         }
     }
 
+    if (isSaveEndOfRunState())
+    {
+        saveModelsState();
+    }
+
     logInfoGUI("Computation done.");
 
     return true;
 }
 
-
-void Crit3DProject::setSaveDailyState(bool isSave)
-{
-    _saveDailyState = isSave;
-}
-
-bool Crit3DProject::isSaveDailyState()
-{
-    return _saveDailyState;
-}
 
 void Crit3DProject::setSaveOutputRaster(bool isSave)
 {
@@ -1017,14 +1013,15 @@ bool Crit3DProject::modelHourlyCycle(QDateTime myTime, const QString& hourlyOutp
             errorString = "Missing ET0 values.";
             return false;
         }
+        qApp->processEvents();
 
         if (isSaveOutputRaster())
         {
             saveHourlyMeteoOutput(referenceEvapotranspiration, hourlyOutputPath, myTime);
+            qApp->processEvents();
         }
 
         assignETreal();
-
         qApp->processEvents();
     }
 
@@ -1044,6 +1041,7 @@ bool Crit3DProject::modelHourlyCycle(QDateTime myTime, const QString& hourlyOutp
             logError();
             return false;
         }
+        qApp->processEvents();
 
         logInfo("\nWater balance: " + myTime.toString());
         computeWaterBalance3D(3600);
@@ -1078,12 +1076,13 @@ bool Crit3DProject::saveModelsState()
 
     if (processes.computeSnow)
     {
-        saveSnowModelState(currentStatePath);
+        if (! saveSnowModelState(currentStatePath))
+            return false;
     }
 
-    // create crop path
     if (processes.computeCrop)
     {
+        // create crop path
         QString cropPath = currentStatePath + "/crop";
         if (QDir(cropPath).exists())
         {
@@ -1091,7 +1090,7 @@ bool Crit3DProject::saveModelsState()
         }
         QDir().mkdir(cropPath);
 
-        // save crop state
+        // save degree days (state variable)
         std::string errorStr;
         if (! gis::writeEsriGrid((cropPath + "/degreeDays").toStdString(), &degreeDaysMap, errorStr))
         {
@@ -1102,46 +1101,57 @@ bool Crit3DProject::saveModelsState()
 
     if (processes.computeWater)
     {
-        if (! isCriteria3DInitialized)
+        if (! saveSoilWaterState(currentStatePath))
+            return false;
+    }
+
+    return true;
+}
+
+
+bool Crit3DProject::saveSoilWaterState(const QString &currentStatePath)
+{
+    if (! isCriteria3DInitialized)
+    {
+        logError("Initialize water fluxes model before.");
+        return false;
+    }
+
+    // check soil layers
+    if (layerDepth.size() != nrLayers)
+    {
+        logError("Wrong number of layers:" + QString::number(nrLayers));
+        return false;
+    }
+
+    // create water path
+    QString waterPath = currentStatePath + "/water";
+    if (QDir(waterPath).exists())
+    {
+        if (! QDir(waterPath).removeRecursively())
         {
-            logError("Initialize water fluxes model before.");
+            logError("Error deleting water directory.");
+        }
+    }
+    QDir().mkdir(waterPath);
+
+    // save water potential
+    gis::Crit3DRasterGrid rasterGrid;
+    for (unsigned int i = 0; i < nrLayers; i++)
+    {
+        if (! getCriteria3DMap(rasterGrid, waterMatricPotential, i))
+        {
+            logError();
             return false;
         }
 
-        // create water path
-        QString waterPath = currentStatePath + "/water";
-        if (QDir(waterPath).exists())
+        int depthCm = int(round(layerDepth[i] * 100));
+        QString fileName = "WP_" + QString::number(depthCm);
+        std::string errorStr;
+        if (! gis::writeEsriGrid((waterPath + "/" + fileName).toStdString(), &rasterGrid, errorStr))
         {
-            if (! QDir(waterPath).removeRecursively())
-            {
-                logError("Error deleting water state directory.");
-            }
-        }
-        QDir().mkdir(waterPath);
-
-        // save water potential
-        if (layerDepth.size() != nrLayers)
-        {
-            logError("Wrong number of layers:" + QString::number(nrLayers));
+            logError("Error saving water potential: " + QString::fromStdString(errorStr));
             return false;
-        }
-
-        for (unsigned int i = 0; i < nrLayers; i++)
-        {
-            if (! setCriteria3DMap(waterMatricPotential, i))
-            {
-                logError();
-                return false;
-            }
-
-            int depthCm = int(round(layerDepth[i] * 100));
-            QString fileName = "WP_" + QString::number(depthCm);
-            std::string errorStr;
-            if (! gis::writeEsriGrid((waterPath + "/" + fileName).toStdString(), &criteria3DMap, errorStr))
-            {
-                logError("Error saving water potential: " + QString::fromStdString(errorStr));
-                return false;
-            }
         }
     }
 
@@ -1410,6 +1420,7 @@ bool Crit3DProject::loadWaterPotentialState(QString waterPath)
             depthList.push_back(currentDepth);
         }
     }
+
     if (depthList.empty())
     {
         errorString = "Missing depth in water potential fileName.";
@@ -1426,7 +1437,7 @@ bool Crit3DProject::loadWaterPotentialState(QString waterPath)
         double deltaDepth = std::max(0., maxDepth - maxReadingDepth);
         if ( (1. - deltaDepth/maxDepth) * 100 < meteoSettings->getMinimumPercentage() )
         {
-            errorString = "Water potential data is not sufficient \nto cover the current computation depth: "
+            errorString = "Water potential data is not enough to cover the computation depth: "
                           + QString::number(computationSoilDepth) + " m";
             return false;
         }
@@ -1487,6 +1498,7 @@ bool Crit3DProject::loadWaterPotentialState(QString waterPath)
             w1 = 1 - w0;
         }
 
+        float flag = waterPotentialMapList.at(layer0)->header->flag;
         for (int row = 0; row < indexMap.at(layer).header->nrRows; row++)
         {
             for (int col = 0; col < indexMap.at(layer).header->nrCols; col++)
@@ -1495,21 +1507,53 @@ bool Crit3DProject::loadWaterPotentialState(QString waterPath)
                 if (index != long(indexMap.at(layer).header->flag))
                 {
                     double x, y;
+                    float waterPotential = NODATA;
+
                     gis::getUtmXYFromRowCol(*(indexMap.at(layer).header), row, col, &x, &y);
                     float wp0 = gis::getValueFromXY(*(waterPotentialMapList.at(layer0)), x, y);
 
-                    float waterPotential = NODATA;
-                    if (w0 == 1)
+                    if (! isEqual(wp0, flag))
                     {
-                        if (! isEqual(wp0, waterPotentialMapList.at(layer0)->header->flag) )
-                            waterPotential = wp0;
+                        // valid value
+                        waterPotential = wp0;
+                        if (w1 > 0)
+                        {
+                            float wp1 = gis::getValueFromXY(*(waterPotentialMapList.at(layer1)), x, y);
+                            if (! isEqual(wp1, flag))
+                            {
+                                waterPotential = (w0 * wp0) + (w1 * wp1);
+                            }
+                        }
                     }
                     else
                     {
-                        float wp1 = gis::getValueFromXY(*(waterPotentialMapList.at(layer1)), x, y);
-                        if (! isEqual(wp0, waterPotentialMapList.at(layer0)->header->flag)
-                            && ! isEqual(wp1, waterPotentialMapList.at(layer1)->header->flag))
-                            waterPotential = (w0 * wp0) + (w1 * wp1);
+                        // search first valid value
+                        int currentLayer = layer0 - 1;
+                        while (isEqual(wp0, flag) && currentLayer > 0)
+                        {
+                            wp0 = gis::getValueFromXY(*(waterPotentialMapList.at(currentLayer)), x, y);
+                            if (isEqual(wp0, flag))
+                            {
+                                currentLayer--;
+                            }
+                        }
+
+                        if (currentLayer == 0)
+                        {
+                            errorString = "Missing water potential data in row, col: "
+                                          + QString::number(row) + ", " +  QString::number(col);
+                            return false;
+                        }
+
+                        double deltaDepth = (currentDepthCm - depthList[currentLayer]) / 100.;
+                        if ( (1. - deltaDepth/maxDepth) * 100 < meteoSettings->getMinimumPercentage())
+                        {
+                            errorString = "The water potential data is not enough to cover the data in row, col: "
+                                            + QString::number(row) + ", " +  QString::number(col);
+                            return false;
+                        }
+
+                        waterPotential = wp0;
                     }
 
                     if (! isEqual(waterPotential, NODATA))
@@ -1530,7 +1574,6 @@ bool Crit3DProject::loadWaterPotentialState(QString waterPath)
 
     return true;
 }
-
 
 
 bool Crit3DProject::writeOutputPointsTables()

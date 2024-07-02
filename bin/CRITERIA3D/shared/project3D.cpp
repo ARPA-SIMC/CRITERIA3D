@@ -181,6 +181,8 @@ void Project3D::clearProject3D()
     landUnitList.clear();
     cropList.clear();
 
+    processes.initialize();
+
     clearProject();
 }
 
@@ -199,10 +201,11 @@ void Project3D::clearWaterBalance3D()
         indexMap[i].clear();
     }
     indexMap.clear();
+    soilIndexMap.clear();
 
     boundaryMap.clear();
-    soilIndexMap.clear();
     criteria3DMap.clear();
+
     soilIndexList.clear();
 
     isCriteria3DInitialized = false;
@@ -904,7 +907,7 @@ void Project3D::computeWaterBalance3D(double totalTimeStep)
     soilFluxes3D::initializeBalance();
 
     currentSeconds = 0;             // [s]
-    double showTime = 60;           // [s]
+    double showTime = 30;           // [s]
     int currentStep = 0;
     while (currentSeconds < totalTimeStep)
     {
@@ -921,7 +924,7 @@ void Project3D::computeWaterBalance3D(double totalTimeStep)
     }
 
     double runoff = soilFluxes3D::getBoundaryWaterSumFlow(BOUNDARY_RUNOFF);
-   logInfo("runoff [m^3]: " + QString::number(runoff));
+    logInfo("runoff [m^3]: " + QString::number(runoff));
 
     double freeDrainage = soilFluxes3D::getBoundaryWaterSumFlow(BOUNDARY_FREEDRAINAGE);
     logInfo("free drainage [m^3]: " + QString::number(freeDrainage));
@@ -1327,7 +1330,7 @@ bool Project3D::interpolateAndSaveHourlyMeteo(meteoVariable myVar, const QDateTi
 
 // ----------------------------------------- OUTPUT MAP ------------------------------------------
 
-bool Project3D::setCriteria3DMap(criteria3DVariable var, int layerIndex)
+bool Project3D::getCriteria3DMap(gis::Crit3DRasterGrid &outputRaster, criteria3DVariable var, int layerIndex)
 {
     if (layerIndex >= indexMap.size())
     {
@@ -1335,7 +1338,7 @@ bool Project3D::setCriteria3DMap(criteria3DVariable var, int layerIndex)
         return false;
     }
 
-    criteria3DMap.initializeGrid(indexMap.at(layerIndex));
+    outputRaster.initializeGrid(indexMap.at(layerIndex));
 
     for (int row = 0; row < indexMap.at(layerIndex).header->nrRows; row++)
     {
@@ -1356,33 +1359,33 @@ bool Project3D::setCriteria3DMap(criteria3DVariable var, int layerIndex)
 
                 if (value == NODATA)
                 {
-                    criteria3DMap.value[row][col] = criteria3DMap.header->flag;
+                    outputRaster.value[row][col] = outputRaster.header->flag;
                 }
                 else
                 {
                     if (var == volumetricWaterContent && layerIndex == 0)
                     {
-                        // surface
+                        // surface: water height
                         value *= 1000;          // [m] -> [mm]
                     }
-                    criteria3DMap.value[row][col] = value;
+                    outputRaster.value[row][col] = value;
                 }
             }
             else
             {
-                criteria3DMap.value[row][col] = criteria3DMap.header->flag;
+                outputRaster.value[row][col] = outputRaster.header->flag;
             }
         }
     }
 
-    gis::updateMinMaxRasterGrid(&criteria3DMap);
+    gis::updateMinMaxRasterGrid(&outputRaster);
     return true;
 }
 
 
-bool Project3D::computeMinimumFoS()
+bool Project3D::computeMinimumFoS(gis::Crit3DRasterGrid &outputRaster)
 {
-    criteria3DMap.initializeGrid(indexMap.at(0));
+    outputRaster.initializeGrid(indexMap.at(0));
 
     for (int row = 0; row < indexMap.at(0).header->nrRows; row++)
     {
@@ -1402,12 +1405,13 @@ bool Project3D::computeMinimumFoS()
 
             if (! isEqual(minimumValue, NODATA))
             {
-                criteria3DMap.value[row][col] = minimumValue;
+                outputRaster.value[row][col] = minimumValue;
             }
         }
     }
 
-    gis::updateMinMaxRasterGrid( &criteria3DMap );
+    gis::updateMinMaxRasterGrid(&outputRaster);
+
     return true;
 }
 
@@ -1851,7 +1855,7 @@ double Project3D::assignTranspiration(int row, int col, double currentLai, doubl
 }
 
 
-float Project3D::computeFactorOfSafety(int row, int col, int layerIndex, int nodeIndex)
+float Project3D::computeFactorOfSafety(int row, int col, unsigned int layerIndex, int nodeIndex)
 {
     if (layerIndex >= nrLayers)
     {
@@ -1897,8 +1901,10 @@ float Project3D::computeFactorOfSafety(int row, int col, int layerIndex, int nod
 
     // unit weight [kN m-3]
     // TODO integrazione (avg) da zero a layerdepth
-    double bulkDensity = soilList[unsigned(soilIndex)].horizon[horizonIndex].bulkDensity;  // [g cm-3] --> [Mg m-3]
-    double unitWeight = bulkDensity * GRAVITY;
+    double bulkDensity = soilList[unsigned(soilIndex)].horizon[horizonIndex].bulkDensity;   // [g cm-3] --> [Mg m-3]
+    // check
+    double waterContent = soilFluxes3D::getWaterContent(nodeIndex);                         // [m3 m-3] --> [g cm-3]
+    double unitWeight = (bulkDensity + waterContent) * GRAVITY;
 
     // TODO root cohesion [kPa] leggere da db e assegnare in base alla ratio di root density
     double rootCohesion = 0.;
