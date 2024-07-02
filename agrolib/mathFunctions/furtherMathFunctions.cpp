@@ -2000,7 +2000,7 @@ namespace interpolation
             steps = {50.0, 0.5, 50.0, 0.00075, 0.00075, 0.00075};
         else return false;
 
-        const int numSteps = 40;
+        const int numSteps = 100;
         int directions[] = {1, -1};
         size_t numParamsToVary = parameters.size();
         std::vector<double> firstGuessParam = parameters;

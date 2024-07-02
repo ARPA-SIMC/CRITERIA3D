@@ -2729,7 +2729,6 @@ bool Project::interpolationGrid(meteoVariable myVar, const Crit3DTime& myTime)
                             proxyIndex++;
                         }
                     }
-
                     if (interpolationSettings.getUseLocalDetrending())
                     {
                         std::vector <Crit3DInterpolationDataPoint> subsetInterpolationPoints;
