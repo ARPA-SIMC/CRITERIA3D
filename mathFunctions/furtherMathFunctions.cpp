@@ -218,7 +218,7 @@ double multilinear(std::vector<double> &x, std::vector<double> &par)
         return NODATA;
 
     double y = 0;
-    for (int i=0; i < x.size(); i++)
+    for (int i=0; i < int(x.size()); i++)
         y += par[i] * x[i];
 
     y += par[x.size()];
@@ -1136,13 +1136,13 @@ namespace interpolation
         double meanObs=0;
         double RSS=0;
         double TSS=0;
-        for (int i=0;i<obs.size();i++)
+        for (int i=0;i<int(obs.size());i++)
         {
             meanObs += obs[i];
         }
         meanObs /= obs.size();
         //compute RSS and TSS
-        for (int i=0;i<obs.size();i++)
+        for (int i=0;i<int(obs.size());i++)
         {
             RSS += (obs[i]-sim[i])*(obs[i]-sim[i]);
             TSS += (obs[i]-meanObs)*(obs[i]-meanObs);
@@ -1164,7 +1164,7 @@ namespace interpolation
         double sum_squared_weighted_data = 0.0;
 
         // Calculate the necessary sums for weighted variance calculation
-        for (int i = 0; i < data.size(); i++)
+        for (int i = 0; i < int(data.size()); i++)
         {
             sum_weights += weights[i];
             sum_weighted_data += data[i] * weights[i];
@@ -1188,7 +1188,7 @@ namespace interpolation
 
         // Calculate the weighted mean of the observed values
         double sum_weights = 0.0;
-        for (int i = 0; i < observed.size(); i++)
+        for (int i = 0; i < int(observed.size()); i++)
         {
             weighted_mean_observed += observed[i] * weights[i];
             sum_weights += weights[i];
@@ -1196,7 +1196,7 @@ namespace interpolation
         weighted_mean_observed /= sum_weights;
 
         // Calculate the sums needed for weighted R-squared calculation
-        for (int i = 0; i < observed.size(); i++)
+        for (int i = 0; i < int(observed.size()); i++)
         {
             double weighted_residual = weights[i] * (observed[i] - predicted[i]);
             sum_weighted_squared_residuals += weighted_residual * weighted_residual;
@@ -1219,13 +1219,13 @@ namespace interpolation
         //double weighted_mean_observed = 0.0;
 
 
-        for (int i = 0; i < observed.size(); i++)
+        for (int i = 0; i < int(observed.size()); i++)
         {
             double weighted_residual = weights[i] * (observed[i] - predicted[i]);
             sum_weighted_squared_residuals += weighted_residual * weighted_residual;
         }
         double standardError;
-        if (observed.size() > (nrPredictors+1))
+        if (int(observed.size()) > (nrPredictors+1))
             standardError = sqrt(sum_weighted_squared_residuals/(observed.size()-nrPredictors-1));
         else
             standardError = sqrt(sum_weighted_squared_residuals/(observed.size()-1));
@@ -1943,7 +1943,7 @@ namespace interpolation
         double error;
         double norm = 0;
 
-        for (int i = 0; i < y.size(); i++)
+        for (int i = 0; i < int(y.size()); i++)
         {
             error = y[i] - func(myFunc,x[i], parameters);
             norm += error * error * weights[i] * weights[i];
@@ -2009,7 +2009,7 @@ namespace interpolation
         {
             for (int dir = 0; dir < 2; ++dir)
             {
-                for (int paramIndex = 0; paramIndex < numParamsToVary; ++paramIndex)
+                for (int paramIndex = 0; paramIndex < int(numParamsToVary); ++paramIndex)
                 {
 
                     fittingMarquardt_nDimension_noSquares_singleFunction(func,parametersMin,

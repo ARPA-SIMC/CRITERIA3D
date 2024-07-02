@@ -18,23 +18,22 @@ Crit3DSoilTable::Crit3DSoilTable(tableType type) : type(type)
     QList<QString> tableHeader;
     if (type == dbTable)
     {
-        this->setColumnCount(10);
-        tableHeader << "Upper depth [cm]" << "Lower depth [cm]" << "Sand [%]" << "Silt  [%]" << "Clay [%]" << "Coarse [%]" << "O.M. [%]"
-                        << "B.D. [g/cm3]" << "K Sat [cm/d]" << "Theta S [-]";
+        this->setColumnCount(12);
+        tableHeader << "Upper depth [cm]" << "Lower depth [cm]" << "Sand [%]" << "Silt [%]" << "Clay [%]" << "Coarse [%]" << "O.M. [%]"
+                    << "B.D. [g/cm3]" << "K Sat [cm/d]" << "Theta S [-]" << "c' [kPa]" << "Φ' [°]";
     }
     else if (type == modelTable)
     {
-        this->setColumnCount(11);
+        this->setColumnCount(13);
         tableHeader << "USDA Texture" << "Coarse [%]" << "O.M. [%]"
                         << "B.D. [g/cm3]" << "K Sat [cm/d]" << "ThetaS [-]" << "ThetaR [-]" << "Air entry [KPa]"
-                        << "alpha [KPa^-1]" << "  n  [-] " << " m   [-] ";
+                        << "α [KPa^-1]" << "  n  [-] " << " m   [-] " << "c' [kPa]" << "Φ' [°]";
     }
 
     this->setHorizontalHeaderLabels(tableHeader);
     this->resizeColumnsToContents(); 
     this->setSelectionMode(QAbstractItemView::SingleSelection);
     this->setShowGrid(true);
-    //this->setStyleSheet("QTableView {selection-background-color: green;}");
     this->setStyleSheet("QTableView::item:selected { color:black;  border: 3px solid black}");
 
     if (type == dbTable)
@@ -45,6 +44,21 @@ Crit3DSoilTable::Crit3DSoilTable(tableType type) : type(type)
     {
         this->setEditTriggers(QAbstractItemView::NoEditTriggers);
     }
+
+    if (type == dbTable)
+    {
+        QTableWidgetItem *currentHeaderItem = this->horizontalHeaderItem(2);
+        if (currentHeaderItem)
+            currentHeaderItem->setToolTip("Percentage of sand (from 2.0 to 0.05 mm)");
+
+        //currentHeaderItem = this->horizontalHeaderItem(3);
+        //..
+        // TODO
+    }
+    else if (type == modelTable)
+    {
+        // TODO
+    }
 }
 
 
@@ -52,7 +66,8 @@ void Crit3DSoilTable::mouseMoveEvent(QMouseEvent *event)
 {
     QPoint pos = event->pos();
     QTableWidgetItem *item = this->itemAt(pos);
-    if(!item) return;
+    if(! item)
+        return;
 
     if (item->background().color() == Qt::red)
     {

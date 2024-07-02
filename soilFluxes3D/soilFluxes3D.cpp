@@ -198,6 +198,7 @@ int DLL_EXPORT __STDCALL setHydraulicProperties(int waterRetentionCurve,
     }
     else
     {
+        // default
         myParameters.k_lateral_vertical_ratio = 10.;
         return PARAMETER_ERROR;
     }

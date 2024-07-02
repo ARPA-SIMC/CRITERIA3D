@@ -192,7 +192,7 @@
     struct Crit3DModelCase {
         int id;
         Crit3DLanduse landuse;
-        int soilIndex;
+        //int soilIndex;
 
         float shootsPerPlant;
         float plantDensity;

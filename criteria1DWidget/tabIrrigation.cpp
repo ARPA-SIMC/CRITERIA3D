@@ -15,24 +15,31 @@ TabIrrigation::TabIrrigation()
 
     seriesLAI = new QLineSeries();
     seriesMaxTransp = new QLineSeries();
-    seriesRealTransp = new QLineSeries();
+    seriesActualTransp = new QLineSeries();
+    seriesMaxEvap = new QLineSeries();
+    seriesActualEvap = new QLineSeries();
 
-    seriesLAI->setName("LAI [m2 m-2]");
-    seriesMaxTransp->setName("Transpiration max [mm]");
-    seriesRealTransp->setName("Transpiration real [mm]");
+    seriesLAI->setName("LAI [m2 m-2] ");
+    seriesMaxTransp->setName("max. Transpiration [mm]");
+    seriesActualTransp->setName("actual Transpiration [mm]");
+    seriesMaxEvap->setName("max. Evaporation [mm]");
+    seriesActualEvap->setName("actual Evaporation [mm]");
 
-    seriesLAI->setColor(QColor(Qt::darkGreen));
-    seriesMaxTransp->setColor(QColor(0,0,1,255));
-    seriesRealTransp->setColor(QColor(Qt::red));
+    QPen pen;
+    pen.setWidth(2);
+    pen.setColor(QColor(0, 200, 0, 255));
+    seriesLAI->setPen(pen);
+
+    // bug with black
+    seriesMaxTransp->setColor(QColor(0, 0, 1, 255));
+    seriesActualTransp->setColor(QColor(Qt::red));
+    seriesMaxEvap->setColor(QColor(Qt::gray));
+    seriesActualEvap->setColor(QColor(210, 150, 20, 255));
 
     seriesPrecIrr = new QBarSeries();
 
     setPrec = new QBarSet("Precipitation [mm]");
     setIrrigation = new QBarSet("Irrigation [mm]");
-    setPrec->setColor(QColor(Qt::blue));
-    setPrec->setBorderColor(QColor(Qt::blue));
-    setIrrigation->setColor(QColor(Qt::cyan));
-    setIrrigation->setBorderColor(QColor(Qt::cyan));
 
     seriesPrecIrr->append(setPrec);
     seriesPrecIrr->append(setIrrigation);
@@ -70,17 +77,23 @@ TabIrrigation::TabIrrigation()
 
     chart->addSeries(seriesLAI);
     chart->addSeries(seriesMaxTransp);
-    chart->addSeries(seriesRealTransp);
+    chart->addSeries(seriesActualTransp);
+    chart->addSeries(seriesMaxEvap);
+    chart->addSeries(seriesActualEvap);
     chart->addSeries(seriesPrecIrr);
 
     seriesLAI->attachAxis(axisX);
     seriesMaxTransp->attachAxis(axisX);
-    seriesRealTransp->attachAxis(axisX);
+    seriesActualTransp->attachAxis(axisX);
+    seriesMaxEvap->attachAxis(axisX);
+    seriesActualEvap->attachAxis(axisX);
     seriesPrecIrr->attachAxis(axisX);
 
     seriesLAI->attachAxis(axisY);
     seriesMaxTransp->attachAxis(axisY);
-    seriesRealTransp->attachAxis(axisY);
+    seriesActualTransp->attachAxis(axisY);
+    seriesMaxEvap->attachAxis(axisY);
+    seriesActualEvap->attachAxis(axisY);
     seriesPrecIrr->attachAxis(axisYdx);
 
     chart->legend()->setVisible(true);
@@ -96,8 +109,10 @@ TabIrrigation::TabIrrigation()
     m_tooltip->hide();
 
     connect(seriesLAI, &QLineSeries::hovered, this, &TabIrrigation::tooltipLAI);
-    connect(seriesMaxTransp, &QLineSeries::hovered, this, &TabIrrigation::tooltipMT);
-    connect(seriesRealTransp, &QLineSeries::hovered, this, &TabIrrigation::tooltipRT);
+    connect(seriesMaxTransp, &QLineSeries::hovered, this, &TabIrrigation::tooltipEvapTransp);
+    connect(seriesActualTransp, &QLineSeries::hovered, this, &TabIrrigation::tooltipEvapTransp);
+    connect(seriesMaxEvap, &QLineSeries::hovered, this, &TabIrrigation::tooltipEvapTransp);
+    connect(seriesActualEvap, &QLineSeries::hovered, this, &TabIrrigation::tooltipEvapTransp);
     connect(seriesPrecIrr, &QHorizontalBarSeries::hovered, this, &TabIrrigation::tooltipPrecIrr);
     foreach(QLegendMarker* marker, chart->legend()->markers())
     {
@@ -138,7 +153,9 @@ void TabIrrigation::computeIrrigation(Crit1DCase &myCase, int firstYear, int las
     axisX->clear();
     seriesLAI->clear();
     seriesMaxTransp->clear();
-    seriesRealTransp->clear();
+    seriesActualTransp->clear();
+    seriesMaxEvap->clear();
+    seriesActualEvap->clear();
     categories.clear();
 
     if (setPrec!= nullptr)
@@ -152,8 +169,8 @@ void TabIrrigation::computeIrrigation(Crit1DCase &myCase, int firstYear, int las
     {
         seriesPrecIrr->remove(setIrrigation);
         setIrrigation = new QBarSet("Irrigation [mm]");
-        setIrrigation->setColor(QColor(Qt::cyan));
-        setIrrigation->setBorderColor(QColor(Qt::cyan));
+        setIrrigation->setColor(QColor(16,183,235,255));
+        setIrrigation->setBorderColor(QColor(16,183,235,255));
     }
 
     int currentDoy = 1;
@@ -183,7 +200,9 @@ void TabIrrigation::computeIrrigation(Crit1DCase &myCase, int firstYear, int las
             categories.append(QString::number(doy));
             seriesLAI->append(doy, myCase.crop.LAI);
             seriesMaxTransp->append(doy, myCase.output.dailyMaxTranspiration);
-            seriesRealTransp->append(doy, myCase.output.dailyTranspiration);
+            seriesActualTransp->append(doy, myCase.output.dailyTranspiration);
+            seriesMaxEvap->append(doy, myCase.output.dailyMaxEvaporation);
+            seriesActualEvap->append(doy, myCase.output.dailyEvaporation);
             *setPrec << myCase.output.dailyPrec;
             *setIrrigation << myCase.output.dailyIrrigation;
         }
@@ -215,9 +234,9 @@ void TabIrrigation::computeIrrigation(Crit1DCase &myCase, int firstYear, int las
     }
 }
 
-void TabIrrigation::tooltipLAI(QPointF point, bool state)
+void TabIrrigation::tooltipLAI(QPointF point, bool isShow)
 {
-    if (state)
+    if (isShow)
     {
         QDate xDate(firstYear, 1, 1);
         int doy = int(round(point.x())); // start from 0
@@ -234,34 +253,16 @@ void TabIrrigation::tooltipLAI(QPointF point, bool state)
     }
 }
 
-void TabIrrigation::tooltipMT(QPointF point, bool state)
+
+// TODO Giada
+void TabIrrigation::tooltipEvapTransp(QPointF point, bool isShow)
 {
-    if (state)
+    if (isShow)
     {
         QDate xDate(firstYear, 1, 1);
         int doy = int(round(point.x()));
         xDate = xDate.addDays(doy);
-        m_tooltip->setText(QString("%1 \nTransp max %2 ").arg(xDate.toString("yyyy-MM-dd")).arg(point.y(), 0, 'f', 1));
-        m_tooltip->setAnchor(point);
-        m_tooltip->setZValue(11);
-        m_tooltip->updateGeometry();
-        m_tooltip->show();
-    }
-    else
-    {
-        m_tooltip->hide();
-    }
-
-}
-
-void TabIrrigation::tooltipRT(QPointF point, bool state)
-{
-    if (state)
-    {
-        QDate xDate(firstYear, 1, 1);
-        int doy = int(round(point.x()));
-        xDate = xDate.addDays(doy);
-        m_tooltip->setText(QString("%1 \nTransp real %2 ").arg(xDate.toString("yyyy-MM-dd")).arg(point.y(), 0, 'f', 1));
+        m_tooltip->setText(xDate.toString("yyyy-MM-dd") + "\n" + "evap/transp. " + QString::number(point.y(),'f', 2)+ "mm");
         m_tooltip->setAnchor(point);
         m_tooltip->setZValue(11);
         m_tooltip->updateGeometry();
@@ -273,12 +274,12 @@ void TabIrrigation::tooltipRT(QPointF point, bool state)
     }
 }
 
-void TabIrrigation::tooltipPrecIrr(bool state, int index, QBarSet *barset)
+
+
+void TabIrrigation::tooltipPrecIrr(bool isShow, int index, QBarSet *barset)
 {
-
-    if (state && barset!=nullptr && index < barset->count())
+    if (isShow && barset!=nullptr && index < barset->count())
     {
-
         QPoint point = QCursor::pos();
         QPoint mapPoint = chartView->mapFromGlobal(point);
         QPointF pointF = chart->mapToValue(mapPoint,seriesPrecIrr);

@@ -353,7 +353,14 @@ namespace soil
         else
         {
             // FINE grained soils
-            if (horizon.texture.classNameUSDA == "loam" || horizon.texture.classNameUSDA == "clayloam" || horizon.texture.classNameUSDA == "silty clayloam")
+            if (horizon.texture.classNameUSDA == "loam")
+            {
+                if (horizon.organicMatter > 0.2)
+                    return 16; // OL
+                else
+                    return 12; // SC-CL
+            }
+            if (horizon.texture.classNameUSDA == "clayloam" || horizon.texture.classNameUSDA == "silty clayloam")
             {
                 if (horizon.organicMatter > 0.2)
                    return 16; // OL
@@ -379,10 +386,9 @@ namespace soil
             if (horizon.organicMatter > 0.2)
                 return 16; // OL
             else
-                return 14; // CL
+                return 13; // ML
         }
     }
-
 
     double estimateSpecificDensity(double organicMatter)
     {
@@ -927,8 +933,10 @@ namespace soil
         horizon.CEC = 50.0;
         horizon.PH = 7.7;
 
-        // new parameters for slope stability
+        // USCS: Unified Soil Classification System
         horizon.texture.classUSCS = getUSCSClass(horizon);
+
+        // parameters for slope stability
         if (horizon.dbData.effectiveCohesion != NODATA)
         {
             horizon.effectiveCohesion = horizon.dbData.effectiveCohesion;

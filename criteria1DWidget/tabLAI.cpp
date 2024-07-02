@@ -18,25 +18,34 @@ TabLAI::TabLAI()
     chartView->setChart(chart);
 
     seriesLAI = new QLineSeries();
-    seriesPotentialEvap = new QLineSeries();
-    seriesMaxEvap = new QLineSeries();
+    seriesLAI->setName("Leaf Area Index [m2 m-2] ");
+    QPen pen;
+    pen.setWidth(2);
+    seriesLAI->setPen(pen);
+    seriesLAI->setColor(QColor(0, 200, 0, 255));
+
+    seriesETP = new QLineSeries();
+    seriesETP->setName("Potential evapotranspiration [mm] ");
+    // bug with black
+    seriesETP->setColor(QColor(0, 0, 1, 255));
+
     seriesMaxTransp = new QLineSeries();
-    seriesLAI->setName("Leaf Area Index [m2 m-2]");
-    seriesPotentialEvap->setName("Potential evapotranspiration [mm]");
-    seriesPotentialEvap->setColor(QColor(Qt::darkGray));
-    seriesMaxEvap->setName("Evaporation max [mm]");
-    seriesMaxEvap->setColor(QColor(Qt::blue));
-    seriesMaxTransp->setName("Transpiration max [mm]");
+    seriesMaxTransp->setName("Maximum transpiration [mm] ");
     seriesMaxTransp->setColor(QColor(Qt::red));
+
+    seriesMaxEvap = new QLineSeries();
+    seriesMaxEvap->setName("Maximum evaporation [mm] ");
+    seriesMaxEvap->setColor(QColor(Qt::blue));
 
     axisX = new QDateTimeAxis();
     axisY = new QValueAxis();
     axisYdx = new QValueAxis();
 
     chart->addSeries(seriesLAI);
-    chart->addSeries(seriesPotentialEvap);
-    chart->addSeries(seriesMaxEvap);
+    chart->addSeries(seriesETP);
     chart->addSeries(seriesMaxTransp);
+    chart->addSeries(seriesMaxEvap);
+
     QDate first(QDate::currentDate().year(), 1, 1);
     QDate last(QDate::currentDate().year(), 12, 31);
     axisX->setTitleText("Date");
@@ -46,32 +55,27 @@ TabLAI::TabLAI()
     axisX->setTickCount(13);
     chart->addAxis(axisX, Qt::AlignBottom);
     seriesLAI->attachAxis(axisX);
-    seriesPotentialEvap->attachAxis(axisX);
+    seriesETP->attachAxis(axisX);
     seriesMaxEvap->attachAxis(axisX);
     seriesMaxTransp->attachAxis(axisX);
 
     QFont font = axisX->titleFont();
 
+    qreal maximum = 8;
     axisY->setTitleText("Leaf Area Index [m2 m-2]");
     axisY->setTitleFont(font);
-    axisY->setRange(0,7);
-    axisY->setTickCount(8);
-
-    QPen pen;
-    pen.setWidth(3);
-    pen.setBrush(Qt::green);
+    axisY->setRange(0, maximum);
+    axisY->setTickCount(maximum+1);
 
     axisYdx->setTitleText("Evapotranspiration [mm]");
-    axisYdx->setRange(0,7);
-    axisYdx->setTickCount(8);
     axisYdx->setTitleFont(font);
-
-    seriesLAI->setPen(pen);
+    axisYdx->setRange(0, maximum);
+    axisYdx->setTickCount(maximum+1);
 
     chart->addAxis(axisY, Qt::AlignLeft);
     chart->addAxis(axisYdx, Qt::AlignRight);
     seriesLAI->attachAxis(axisY);
-    seriesPotentialEvap->attachAxis(axisYdx);
+    seriesETP->attachAxis(axisYdx);
     seriesMaxEvap->attachAxis(axisYdx);
     seriesMaxTransp->attachAxis(axisYdx);
 
@@ -87,9 +91,9 @@ TabLAI::TabLAI()
     m_tooltip->hide();
 
     connect(seriesLAI, &QLineSeries::hovered, this, &TabLAI::tooltipLAI);
-    connect(seriesPotentialEvap, &QLineSeries::hovered, this, &TabLAI::tooltipPE);
+    connect(seriesETP, &QLineSeries::hovered, this, &TabLAI::tooltipPE);
     connect(seriesMaxEvap, &QLineSeries::hovered, this, &TabLAI::tooltipME);
-    connect(seriesMaxTransp, &QLineSeries::hovered, this, &TabLAI::tooltipMT);
+    connect(seriesMaxTransp, &QLineSeries::hovered, this, &TabLAI::tooltipMaxTranspiration);
 
     foreach(QLegendMarker* marker, chart->legend()->markers())
     {
@@ -129,12 +133,12 @@ void TabLAI::computeLAI(Crit3DCrop* myCrop, Crit3DMeteoPoint *meteoPoint, int fi
     std::string errorStr;
 
     chart->removeSeries(seriesLAI);
-    chart->removeSeries(seriesPotentialEvap);
+    chart->removeSeries(seriesETP);
     chart->removeSeries(seriesMaxEvap);
     chart->removeSeries(seriesMaxTransp);
 
     seriesLAI->clear();
-    seriesPotentialEvap->clear();
+    seriesETP->clear();
     seriesMaxEvap->clear();
     seriesMaxTransp->clear();
 
@@ -161,7 +165,7 @@ void TabLAI::computeLAI(Crit3DCrop* myCrop, Crit3DMeteoPoint *meteoPoint, int fi
 
             // ET0
             dailyEt0 = ET0_Hargreaves(TRANSMISSIVITY_SAMANI_COEFF_DEFAULT, meteoPoint->latitude, doy, tmax, tmin);
-            seriesPotentialEvap->append(x.toMSecsSinceEpoch(), dailyEt0);
+            seriesETP->append(x.toMSecsSinceEpoch(), dailyEt0);
             seriesMaxEvap->append(x.toMSecsSinceEpoch(), myCrop->getMaxEvaporation(dailyEt0));
             seriesMaxTransp->append(x.toMSecsSinceEpoch(), myCrop->getMaxTranspiration(dailyEt0));
             seriesLAI->append(x.toMSecsSinceEpoch(), myCrop->LAI);
@@ -175,12 +179,12 @@ void TabLAI::computeLAI(Crit3DCrop* myCrop, Crit3DMeteoPoint *meteoPoint, int fi
     axisX->setMax(QDateTime(last, QTime(0,0,0)));
 
     chart->addSeries(seriesLAI);
-    chart->addSeries(seriesPotentialEvap);
+    chart->addSeries(seriesETP);
     chart->addSeries(seriesMaxEvap);
     chart->addSeries(seriesMaxTransp);
 
     seriesLAI->attachAxis(axisY);
-    seriesPotentialEvap->attachAxis(axisYdx);
+    seriesETP->attachAxis(axisYdx);
     seriesMaxEvap->attachAxis(axisYdx);
     seriesMaxTransp->attachAxis(axisYdx);
 
@@ -239,7 +243,7 @@ void TabLAI::tooltipME(QPointF point, bool state)
     }
 }
 
-void TabLAI::tooltipMT(QPointF point, bool state)
+void TabLAI::tooltipMaxTranspiration(QPointF point, bool state)
 {
 
     if (state)

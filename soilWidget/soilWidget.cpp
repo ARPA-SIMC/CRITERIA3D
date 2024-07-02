@@ -55,7 +55,7 @@ Crit3DSoilWidget::Crit3DSoilWidget()
     geotechnicsClassList.resize(19);
 
     this->setWindowTitle(QStringLiteral("CRITERIA - Soil Editor"));
-    this->resize(1240, 700);
+    this->resize(1400, 700);
 
     // layout
     QVBoxLayout *mainLayout = new QVBoxLayout();
@@ -286,12 +286,15 @@ void Crit3DSoilWidget::setDbSoil(QSqlDatabase dbOpened, QString soilCode)
     // load default VG parameters
     if (! loadVanGenuchtenParameters(dbSoil, textureClassList, errorStr))
     {
-        QMessageBox::critical(nullptr, "Error", "loadVanGenuchtenParameters: " + errorStr);
+        QMessageBox::critical(nullptr, "Error", "loadVanGenuchtenParameters\n" + errorStr);
         return;
     }
 
     // load default geotechnics parameters (not mandatory)
-    loadGeotechnicsParameters(dbSoil, geotechnicsClassList, errorStr);
+    if (! loadGeotechnicsParameters(dbSoil, geotechnicsClassList, errorStr))
+    {
+        QMessageBox::warning(nullptr, "Warning", "loadGeotechnicsParameters\n" + errorStr);
+    }
 
     // read soil list
     QList<QString> soilStringList;

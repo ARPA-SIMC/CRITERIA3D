@@ -20,13 +20,13 @@
         void tooltipLAI(QPointF point, bool state);
         void tooltipPE(QPointF point, bool state);
         void tooltipME(QPointF point, bool state);
-        void tooltipMT(QPointF point, bool state);
+        void tooltipMaxTranspiration(QPointF point, bool state);
         void handleMarkerClicked();
     private:
         QChartView *chartView;
         QChart *chart;
         QLineSeries *seriesLAI;
-        QLineSeries *seriesPotentialEvap;
+        QLineSeries *seriesETP;
         QLineSeries *seriesMaxEvap;
         QLineSeries *seriesMaxTransp;
         QDateTimeAxis *axisX;

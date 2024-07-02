@@ -15,10 +15,10 @@
         TabIrrigation();
         void computeIrrigation(Crit1DCase &myCase, int firstYear, int lastYear, const QDate &lastDBMeteoDate);
 
-        void tooltipLAI(QPointF point, bool state);
-        void tooltipMT(QPointF point, bool state);
-        void tooltipRT(QPointF point, bool state);
-        void tooltipPrecIrr(bool state, int index, QBarSet *barset);
+        void tooltipLAI(QPointF point, bool isShow);
+        void tooltipEvapTransp(QPointF point, bool isShow);
+        void tooltipPrecIrr(bool isShow, int index, QBarSet *barset);
+
         void handleMarkerClicked();
 
     private:
@@ -32,7 +32,9 @@
         QList<QString> categories;
         QLineSeries* seriesLAI;
         QLineSeries* seriesMaxTransp;
-        QLineSeries* seriesRealTransp;
+        QLineSeries* seriesActualTransp;
+        QLineSeries* seriesMaxEvap;
+        QLineSeries* seriesActualEvap;
         QBarSeries* seriesPrecIrr;
         QBarSet *setPrec;
         QBarSet *setIrrigation;

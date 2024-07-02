@@ -166,6 +166,7 @@ QList<QString> Crit3DMeteoPointsDbHandler::getAllDatasetsList()
     return datasetList;
 }
 
+
 QDateTime Crit3DMeteoPointsDbHandler::getFirstDate(frequencyType frequency)
 {
     QSqlQuery qry(_db);
@@ -183,9 +184,10 @@ QDateTime Crit3DMeteoPointsDbHandler::getFirstDate(frequencyType frequency)
     qry.prepare( "SELECT name FROM sqlite_master WHERE type='table' AND name like :dayHour ESCAPE '^'");
     qry.bindValue(":dayHour",  "%^" + dayHour  + "%");
 
-    if( !qry.exec() )
+    if(! qry.exec() )
     {
         errorStr = qry.lastError().text();
+        return firstDate;
     }
     else
     {
@@ -246,9 +248,11 @@ QDateTime Crit3DMeteoPointsDbHandler::getLastDate(frequencyType frequency)
     qry.prepare( "SELECT name FROM sqlite_master WHERE type='table' AND name like :dayHour ESCAPE '^'");
     qry.bindValue(":dayHour",  "%^_" + dayHour  + "%");
 
+    QDateTime lastDate;
     if(! qry.exec() )
     {
         errorStr = qry.lastError().text();
+        return lastDate;
     }
     else
     {
@@ -259,7 +263,6 @@ QDateTime Crit3DMeteoPointsDbHandler::getLastDate(frequencyType frequency)
         }
     }
 
-    QDateTime lastDate;
     QDateTime currentLastDate;
     QDate myDate;
     QTime myTime;
