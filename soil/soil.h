@@ -134,14 +134,14 @@
             double upperDepth, lowerDepth;      /*!<  [m]       */
             double coarseFragments;             /*!<  [-] 0-1   */
             double organicMatter;               /*!<  [-] 0-1   */
-            double bulkDensity;                 /*!<  [g/cm^3]  */
+            double bulkDensity;                 /*!<  [g cm-3]  */
             double effectiveCohesion;           /*!<  [kPa]     */
             double frictionAngle;               /*!<  [degrees] */
 
             double fieldCapacity;               /*!<  [kPa]     */
             double wiltingPoint;                /*!<  [kPa]     */
-            double waterContentFC;              /*!<  [m^3 m^-3]*/
-            double waterContentWP;              /*!<  [m^3 m^-3]*/
+            double waterContentFC;              /*!<  [m3 m-3]*/
+            double waterContentWP;              /*!<  [m3 m-3]*/
             double PH;                          /*!<  [-]       */
             double CEC;                         /*!<  [meq/100g]*/
 
