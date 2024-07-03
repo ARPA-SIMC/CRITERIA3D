@@ -923,6 +923,7 @@ void Project3D::computeWaterBalance3D(double totalTimeStep)
             }
         }
     }
+    emit updateOutputSignal();
 
     double runoff = soilFluxes3D::getBoundaryWaterSumFlow(BOUNDARY_RUNOFF);
     logInfo("runoff [m^3]: " + QString::number(runoff));
