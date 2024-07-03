@@ -421,11 +421,9 @@ bool Crit3DProject::runModels(QDateTime firstTime, QDateTime lastTime)
 
         for (int hour = firstHour; hour <= lastHour; hour++)
         {
-            currentHour = hour;
-            QDateTime myDateTime = QDateTime(myDate, QTime(hour, 0, 0), Qt::UTC);
-            qDebug() << myDateTime.toString();
+            setCurrentHour(hour);
 
-            if (! runModelHour(myDateTime, currentOutputPath))
+            if (! runModelHour(getCurrentTime(), currentOutputPath))
             {
                 logError();
                 return false;
