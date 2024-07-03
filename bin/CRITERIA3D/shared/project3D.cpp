@@ -1352,7 +1352,7 @@ bool Project3D::getCriteria3DMap(gis::Crit3DRasterGrid &outputRaster, criteria3D
                 double value;
                 if (var == factorOfSafety)
                 {
-                    value = computeFactorOfSafety(row, col, layerIndex, nodeIndex);
+                    value = computeFactorOfSafety(row, col, layerIndex);
                 }
                 else
                 {
@@ -1396,13 +1396,10 @@ bool Project3D::computeMinimumFoS(gis::Crit3DRasterGrid &outputRaster)
             double minimumValue = NODATA;
             for (unsigned int layer = 1; layer < nrLayers; layer++)
             {
-                long nodeIndex = indexMap.at(layer).value[row][col];
-                if (nodeIndex != indexMap.at(layer).header->flag)
-                {
-                    double currentValue = computeFactorOfSafety(row, col, layer, nodeIndex);
+                double currentValue = computeFactorOfSafety(row, col, layer);
+                if (! isEqual(currentValue, NODATA))
                     if (isEqual(minimumValue, NODATA) || currentValue < minimumValue)
                         minimumValue = currentValue;
-                }
             }
 
             if (! isEqual(minimumValue, NODATA))
@@ -1857,13 +1854,46 @@ double Project3D::assignTranspiration(int row, int col, double currentLai, doubl
 }
 
 
-float Project3D::computeFactorOfSafety(int row, int col, unsigned int layerIndex, int nodeIndex)
+float Project3D::computeFactorOfSafety(int row, int col, unsigned int layerIndex)
 {
+    // check layer
     if (layerIndex >= nrLayers)
     {
-        return NODATA;
         errorString = "Wrong layer nr.: " + QString::number(layerIndex);
+        return NODATA;
     }
+
+    // check node
+    long nodeIndex = indexMap.at(layerIndex).value[row][col];
+    if (nodeIndex == indexMap.at(layerIndex).header->flag)
+    {
+        return NODATA;
+    }
+
+    // check horizon
+    int soilIndex = getSoilIndex(row, col);
+    int horizonIndex = soil::getHorizonIndex(soilList[unsigned(soilIndex)], layerDepth[layerIndex]);
+    if (horizonIndex == NODATA)
+    {
+        return NODATA;
+    }
+
+    // slope angle [rad]
+    double slopeDegree = double(radiationMaps->slopeMap->getValueFromRowCol(row, col));
+    if (increaseSlope)
+    {
+        // increase slope (max: 89 degrees)
+        slopeDegree = std::min(slopeDegree * 1.5, 89.);
+    }
+    double slopeAngle = std::max(slopeDegree * DEG_TO_RAD, EPSILON);
+
+    // friction angle [rad]
+    double frictionAngle = soilList[unsigned(soilIndex)].horizon[horizonIndex].frictionAngle * DEG_TO_RAD;
+
+    // friction effect [-]
+    double tanAngle = std::max(EPSILON, tan(slopeAngle));
+    double tanFrictionAngle = tan(frictionAngle);
+    double frictionEffect =  tanFrictionAngle / tanAngle;
 
     // degree of saturation [-]
     double saturationDegree = soilFluxes3D::getDegreeOfSaturation(nodeIndex);
@@ -1879,48 +1909,38 @@ float Project3D::computeFactorOfSafety(int row, int col, unsigned int layerIndex
     // suction stress [kPa]
     double suctionStress = matricPotential * saturationDegree;
 
-    // slope angle [rad]
-    double slopeDegree = double(radiationMaps->slopeMap->getValueFromRowCol(row, col));
-    if (increaseSlope)
-    {
-        // increase slope (max: 89 degrees)
-        slopeDegree = std::min(slopeDegree * 1.5, 89.);
-    }
-    double slopeAngle = std::max(slopeDegree * DEG_TO_RAD, EPSILON);
-
-    int soilIndex = getSoilIndex(row, col);
-    int horizonIndex = soil::getHorizonIndex(soilList[unsigned(soilIndex)], layerDepth[layerIndex]);
-    if (horizonIndex == NODATA)
-    {
-        return NODATA;
-    }
-
-    // friction angle [rad]
-    double frictionAngle = soilList[unsigned(soilIndex)].horizon[horizonIndex].frictionAngle * DEG_TO_RAD;
-
     // effective cohesion [kPa]
     double effectiveCohesion = soilList[unsigned(soilIndex)].horizon[horizonIndex].effectiveCohesion;
 
-    // friction effect [-]
-    double tanAngle = std::max(EPSILON, tan(slopeAngle));
-    double tanFrictionAngle = tan(frictionAngle);
-    double frictionEffect =  tanFrictionAngle / tanAngle;
-
-    // unit weight [kN m-3]
-    // TODO integrazione (avg) da zero a layerdepth
-    double bulkDensity = soilList[unsigned(soilIndex)].horizon[horizonIndex].bulkDensity;   // [g cm-3] --> [Mg m-3]
-    // check (add waterContent)
-    //double waterContent = soilFluxes3D::getWaterContent(nodeIndex);                         // [m3 m-3] --> [g cm-3]
-    double unitWeight = bulkDensity * GRAVITY;
+    // unit weight - integration from zero to layerDepth
+    double weightSum = 0;                                       // [kPa]
+    for (unsigned int layer = 1; layer <= layerIndex; layer++)
+    {
+        long cuurentNode = indexMap.at(layer).value[row][col];
+        if (cuurentNode != indexMap.at(layer).header->flag)
+        {
+            int currentHorizon = soil::getHorizonIndex(soilList[unsigned(soilIndex)], layerDepth[layer]);
+            if (currentHorizon != NODATA)
+            {
+                // [g cm-3] --> [Mg m-3]
+                double bulkDensity = soilList[unsigned(soilIndex)].horizon[currentHorizon].bulkDensity;
+                double waterContent = soilFluxes3D::getWaterContent(cuurentNode);
+                // [kN m-3]
+                double unitWeight = (bulkDensity + waterContent) * GRAVITY;
+                // [kPa]
+                weightSum += unitWeight * layerThickness[layer];
+            }
+        }
+    }
 
     // TODO root cohesion [kPa] leggere da db e assegnare in base alla ratio di root density
     double rootCohesion = 0.;
 
     // cohesion effect [-]
-    double cohesionEffect = 2 * (effectiveCohesion + rootCohesion) / (unitWeight * layerDepth[layerIndex] * sin(2*slopeAngle));
+    double cohesionEffect = 2 * (effectiveCohesion + rootCohesion) / (weightSum * sin(2*slopeAngle));
 
     // suction effect [-]
-    double suctionEffect = (suctionStress * (tanAngle + 1/tanAngle) * tanFrictionAngle) / (unitWeight * layerDepth[layerIndex]);
+    double suctionEffect = (suctionStress * (tanAngle + 1/tanAngle) * tanFrictionAngle) / weightSum;
 
     // factor of safety [-]
     return frictionEffect + cohesionEffect - suctionEffect;

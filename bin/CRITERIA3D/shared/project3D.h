@@ -183,7 +183,7 @@
         bool getCriteria3DMap(gis::Crit3DRasterGrid &outputRaster, criteria3DVariable var, int layerIndex);
         bool computeMinimumFoS(gis::Crit3DRasterGrid &outputRaster);
 
-        float computeFactorOfSafety(int row, int col, unsigned int layerIndex, int nodeIndex);
+        float computeFactorOfSafety(int row, int col, unsigned int layerIndex);
     };
 
     bool isCrit3dError(int result, QString &error);

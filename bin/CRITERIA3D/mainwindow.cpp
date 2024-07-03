@@ -3310,6 +3310,7 @@ void MainWindow::on_actionCriteria3D_load_state_triggered()
     initializeCriteria3DInterface();
     loadMeteoPointsDataSingleDay(myProject.getCurrentDate(), true);
     redrawMeteoPoints(currentPointsVisualization, true);
+    updateOutputMap();
 }
 
 

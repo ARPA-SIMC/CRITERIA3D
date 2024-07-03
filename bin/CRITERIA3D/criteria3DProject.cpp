@@ -1753,16 +1753,7 @@ bool Crit3DProject::writeOutputPointsData()
 
                 for (unsigned int layerIndex = 1; layerIndex < nrLayers; layerIndex++)
                 {
-                    long nodeIndex = indexMap.at(layerIndex).value[row][col];
-                    if (nodeIndex == indexMap.at(layerIndex).header->flag)
-                    {
-                        value = NODATA;
-                    }
-                    else
-                    {
-                        value = computeFactorOfSafety(row, col, layerIndex, nodeIndex);
-                    }
-
+                    value = computeFactorOfSafety(row, col, layerIndex);
                     criteria3dValuesList.push_back(value);
                 }
             }
