@@ -131,7 +131,7 @@ void Project3D::initializeProject3D()
     isCriteria3DInitialized = false;
     isCropInitialized = false;
     showEachTimeStep = false;
-    useDoubleSlope = false;
+    increaseSlope = false;
 
     initializeProject();
 
@@ -1880,10 +1880,10 @@ float Project3D::computeFactorOfSafety(int row, int col, unsigned int layerIndex
 
     // slope angle [rad]
     double slopeDegree = double(radiationMaps->slopeMap->getValueFromRowCol(row, col));
-    if (useDoubleSlope)
+    if (increaseSlope)
     {
-        // double slope (max: 89 degrees)
-        slopeDegree = std::min(slopeDegree * 2., 89.);
+        // increase slope (max: 89 degrees)
+        slopeDegree = std::min(slopeDegree * 1.5, 89.);
     }
     double slopeAngle = std::max(slopeDegree * DEG_TO_RAD, EPSILON);
 

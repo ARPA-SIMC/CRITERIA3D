@@ -235,7 +235,8 @@
         void on_actionView_surfaceWaterContent_fixed_range_triggered();
 
         void on_flagSave_state_endRun_triggered(bool isChecked);
-        void on_flag_double_slope_triggered(bool isChecked);
+
+        void on_flag_increase_slope_triggered(bool isChecked);
 
     protected:
         /*!

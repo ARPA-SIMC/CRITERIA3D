@@ -3235,9 +3235,9 @@ void MainWindow::on_actionCriteria3D_update_subHourly_triggered(bool isChecked)
 }
 
 
-void MainWindow::on_flag_double_slope_triggered(bool isChecked)
+void MainWindow::on_flag_increase_slope_triggered(bool isChecked)
 {
-    myProject.useDoubleSlope = isChecked;
+    myProject.increaseSlope = isChecked;
 }
 
 
