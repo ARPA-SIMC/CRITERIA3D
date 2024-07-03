@@ -250,7 +250,7 @@ bool Project3D::loadProject3DSettings()
 
 bool Project3D::initializeWaterBalance3D()
 {
-    logInfo("\nInitialize 3D water balance...");
+    logInfo("Initialize 3D water balance...");
 
     // check soil
     if (!soilMap.isLoaded || soilList.size() == 0)

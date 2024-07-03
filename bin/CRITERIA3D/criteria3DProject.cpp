@@ -89,6 +89,8 @@ bool Crit3DProject::initializeCrop()
         return false;
     }
 
+    logInfo("Initialize crop...");
+
     // initialize LAI and degree days map to NODATA
     laiMap.initializeGrid(*(DEM.header));
     degreeDaysMap.initializeGrid(*(DEM.header));
@@ -182,8 +184,9 @@ bool Crit3DProject::initializeCropWithClimateData()
         }
     }
 
-    logInfo("LAI initialized with climate data.");
+    logInfo("LAI initialized with climate data - doy: " + QString::number(currentDate.dayOfYear()));
     isCropInitialized = true;
+
     return true;
 }
 
@@ -419,15 +422,16 @@ bool Crit3DProject::runModels(QDateTime firstTime, QDateTime lastTime)
         for (int hour = firstHour; hour <= lastHour; hour++)
         {
             currentHour = hour;
-            QDateTime myTime = QDateTime(myDate, QTime(hour, 0, 0), Qt::UTC);
+            QDateTime myDateTime = QDateTime(myDate, QTime(hour, 0, 0), Qt::UTC);
+            qDebug() << myDateTime.toString();
 
-            if (! modelHourlyCycle(myTime, currentOutputPath))
+            if (! runModelHour(myDateTime, currentOutputPath))
             {
                 logError();
                 return false;
             }
 
-            emit updateOutputSignal();
+            qApp->processEvents();
 
             // output points
             if (isSaveOutputPoints())
@@ -862,22 +866,22 @@ void Crit3DProject::computeSnowPoint(int row, int col)
 bool Crit3DProject::computeSnowModel()
 {
     // check
+    if (! snowMaps.isInitialized)
+    {
+        logError("Initialize snow model before.");
+        return false;
+    }
+
     if (! hourlyMeteoMaps->getComputed())
     {
-        logError("Missing meteo map!");
+        logError("Missing meteo maps.");
         return false;
     }
 
     if (! radiationMaps->getComputed())
     {
-        logError("Missing radiation map!");
+        logError("Missing radiation map.");
         return false;
-    }
-
-    if (! snowMaps.isInitialized)
-    {
-        if (! initializeSnowModel())
-            return false;
     }
 
     if (getComputeOnlyPoints())
@@ -956,26 +960,26 @@ bool Crit3DProject::updateDailyTemperatures()
 }
 
 
-bool Crit3DProject::modelHourlyCycle(QDateTime myTime, const QString& hourlyOutputPath)
+bool Crit3DProject::runModelHour(const QDateTime &myDateTime, const QString& hourlyOutputPath)
 {
     hourlyMeteoMaps->setComputed(false);
     radiationMaps->setComputed(false);
 
     if (processes.computeMeteo)
     {
-        if (! interpolateAndSaveHourlyMeteo(airTemperature, myTime, hourlyOutputPath, isSaveOutputRaster()))
+        if (! interpolateAndSaveHourlyMeteo(airTemperature, myDateTime, hourlyOutputPath, isSaveOutputRaster()))
             return false;
         qApp->processEvents();
 
-        if (! interpolateAndSaveHourlyMeteo(precipitation, myTime, hourlyOutputPath, isSaveOutputRaster()))
+        if (! interpolateAndSaveHourlyMeteo(precipitation, myDateTime, hourlyOutputPath, isSaveOutputRaster()))
             return false;
         qApp->processEvents();
 
-        if (! interpolateAndSaveHourlyMeteo(airRelHumidity, myTime, hourlyOutputPath, isSaveOutputRaster()))
+        if (! interpolateAndSaveHourlyMeteo(airRelHumidity, myDateTime, hourlyOutputPath, isSaveOutputRaster()))
             return false;
         qApp->processEvents();
 
-        if (! interpolateAndSaveHourlyMeteo(windScalarIntensity, myTime, hourlyOutputPath, isSaveOutputRaster()))
+        if (! interpolateAndSaveHourlyMeteo(windScalarIntensity, myDateTime, hourlyOutputPath, isSaveOutputRaster()))
             return false;
         qApp->processEvents();
 
@@ -984,15 +988,15 @@ bool Crit3DProject::modelHourlyCycle(QDateTime myTime, const QString& hourlyOutp
 
     if (processes.computeRadiation)
     {
-        if (! interpolateAndSaveHourlyMeteo(globalIrradiance, myTime, hourlyOutputPath, isSaveOutputRaster()))
+        if (! interpolateAndSaveHourlyMeteo(globalIrradiance, myDateTime, hourlyOutputPath, isSaveOutputRaster()))
             return false;
         qApp->processEvents();
     }
 
     if (processes.computeSnow)
     {
-        // check evaporation
-        // check snowmelt -> surface H0
+        // TODO: link evaporation to water flow
+        // TODO: link snowmelt to surface water content
         if (! computeSnowModel())
         {
             return false;
@@ -1017,7 +1021,7 @@ bool Crit3DProject::modelHourlyCycle(QDateTime myTime, const QString& hourlyOutp
 
         if (isSaveOutputRaster())
         {
-            saveHourlyMeteoOutput(referenceEvapotranspiration, hourlyOutputPath, myTime);
+            saveHourlyMeteoOutput(referenceEvapotranspiration, hourlyOutputPath, myDateTime);
             qApp->processEvents();
         }
 
@@ -1043,7 +1047,7 @@ bool Crit3DProject::modelHourlyCycle(QDateTime myTime, const QString& hourlyOutp
         }
         qApp->processEvents();
 
-        logInfo("\nWater balance: " + myTime.toString());
+        logInfo("\nWater balance: " + myDateTime.toString());
         computeWaterBalance3D(3600);
     }
 

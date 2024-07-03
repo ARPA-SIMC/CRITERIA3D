@@ -94,7 +94,7 @@
         bool computeSnowModel();
         void computeSnowPoint(int row, int col);
 
-        bool modelHourlyCycle(QDateTime myTime, const QString& hourlyOutputPath);
+        bool runModelHour(const QDateTime &myDateTime, const QString& hourlyOutputPath);
 
         void setAllHourlyMeteoMapsComputed(bool value);
 

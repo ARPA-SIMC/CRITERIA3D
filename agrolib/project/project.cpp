@@ -916,9 +916,7 @@ Crit3DTime Project::getCrit3DCurrentTime()
 
 QDateTime Project::getCurrentTime()
 {
-    QDateTime myDateTime;
-    myDateTime.setDate(this->currentDate);
-    return myDateTime.addSecs(this->currentHour * HOUR_SECONDS);
+    return QDateTime(currentDate, QTime(currentHour, 0, 0), Qt::UTC);
 }
 
 
