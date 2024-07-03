@@ -1994,13 +1994,14 @@ namespace interpolation
         //grigliato
 
         std::vector<double> steps;
+        const int numSteps = 100;
         if (parameters.size() == 4)
-            steps = {50.0, 0.5, 0.00075, 0.00075};
+            //steps = {50.0, 0.5, 0.00075, 0.00075};
+            steps = {2*(parametersMax[0]-parametersMin[0])/numSteps, 2*(parametersMax[1]-parametersMin[1])/numSteps, 2*(parametersMax[2]-parametersMin[2])/numSteps, 2*(parametersMax[3]-parametersMin[3])/numSteps};
         else if (parameters.size() == 6)
-            steps = {50.0, 0.5, 50.0, 0.00075, 0.00075, 0.00075};
+            steps = {2*(parametersMax[0]-parametersMin[0])/numSteps, 2*(parametersMax[1]-parametersMin[1])/numSteps, 2*(parametersMax[2]-parametersMin[2])/numSteps, 2*(parametersMax[3]-parametersMin[3])/numSteps,2*(parametersMax[4]-parametersMin[4])/numSteps,2*(parametersMax[5]-parametersMin[5])/numSteps };
         else return false;
 
-        const int numSteps = 100;
         int directions[] = {1, -1};
         size_t numParamsToVary = parameters.size();
         std::vector<double> firstGuessParam = parameters;
