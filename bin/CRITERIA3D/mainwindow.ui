@@ -1293,7 +1293,7 @@
        <second>0</second>
        <year>1752</year>
        <month>9</month>
-       <day>21</day>
+       <day>20</day>
       </datetime>
      </property>
      <property name="maximumDate">
@@ -2113,6 +2113,7 @@
      </property>
      <addaction name="actionView_factor_of_safety"/>
      <addaction name="actionView_factor_of_safety_minimum"/>
+     <addaction name="flag_double_slope"/>
     </widget>
     <addaction name="actionShow_3D_viewer"/>
     <addaction name="separator"/>
@@ -2924,6 +2925,14 @@
    </property>
    <property name="text">
     <string>Automatic state saving (end of run)</string>
+   </property>
+  </action>
+  <action name="flag_double_slope">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>double slope</string>
    </property>
   </action>
  </widget>

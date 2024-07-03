@@ -76,6 +76,7 @@
         bool isCriteria3DInitialized;
         bool isCropInitialized;
         bool showEachTimeStep;
+        bool useDoubleSlope;
 
         Crit3DProcesses processes;
         WaterFluxesParameters waterFluxesParameters;

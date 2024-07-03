@@ -131,6 +131,7 @@ void Project3D::initializeProject3D()
     isCriteria3DInitialized = false;
     isCropInitialized = false;
     showEachTimeStep = false;
+    useDoubleSlope = false;
 
     initializeProject();
 
@@ -1879,6 +1880,11 @@ float Project3D::computeFactorOfSafety(int row, int col, unsigned int layerIndex
 
     // slope angle [rad]
     double slopeDegree = double(radiationMaps->slopeMap->getValueFromRowCol(row, col));
+    if (useDoubleSlope)
+    {
+        // double slope (max: 89 degrees)
+        slopeDegree = std::min(slopeDegree * 2., 89.);
+    }
     double slopeAngle = std::max(slopeDegree * DEG_TO_RAD, EPSILON);
 
     int soilIndex = getSoilIndex(row, col);
@@ -1902,9 +1908,9 @@ float Project3D::computeFactorOfSafety(int row, int col, unsigned int layerIndex
     // unit weight [kN m-3]
     // TODO integrazione (avg) da zero a layerdepth
     double bulkDensity = soilList[unsigned(soilIndex)].horizon[horizonIndex].bulkDensity;   // [g cm-3] --> [Mg m-3]
-    // check
-    double waterContent = soilFluxes3D::getWaterContent(nodeIndex);                         // [m3 m-3] --> [g cm-3]
-    double unitWeight = (bulkDensity + waterContent) * GRAVITY;
+    // check (add waterContent)
+    //double waterContent = soilFluxes3D::getWaterContent(nodeIndex);                         // [m3 m-3] --> [g cm-3]
+    double unitWeight = bulkDensity * GRAVITY;
 
     // TODO root cohesion [kPa] leggere da db e assegnare in base alla ratio di root density
     double rootCohesion = 0.;
