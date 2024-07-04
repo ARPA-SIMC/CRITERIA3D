@@ -65,7 +65,7 @@ TabIrrigation::TabIrrigation()
     axisY->setRange(0,8);
     axisY->setTickCount(9);
 
-    axisYdx->setTitleText("Prec - Irrigation [mm]");
+    axisYdx->setTitleText("Precipitation - Irrigation [mm]");
     axisYdx->setTitleFont(font);
     axisYdx->setRange(0,40);
     axisYdx->setTickCount(9);
@@ -241,7 +241,7 @@ void TabIrrigation::tooltipLAI(QPointF point, bool isShow)
         QDate xDate(firstYear, 1, 1);
         int doy = int(round(point.x())); // start from 0
         xDate = xDate.addDays(doy);
-        m_tooltip->setText(QString("%1 \nLAI %2 ").arg(xDate.toString("yyyy-MM-dd")).arg(point.y(), 0, 'f', 1));
+        m_tooltip->setText(QString("%1\nLAI: %2 [m2 m-2]").arg(xDate.toString("yyyy-MM-dd")).arg(point.y(), 0, 'f', 1));
         m_tooltip->setAnchor(point);
         m_tooltip->setZValue(11);
         m_tooltip->updateGeometry();
@@ -262,7 +262,7 @@ void TabIrrigation::tooltipEvapTransp(QPointF point, bool isShow)
         QDate xDate(firstYear, 1, 1);
         int doy = int(round(point.x()));
         xDate = xDate.addDays(doy);
-        m_tooltip->setText(xDate.toString("yyyy-MM-dd") + "\n" + "evap/transp. " + QString::number(point.y(),'f', 2)+ "mm");
+        m_tooltip->setText(xDate.toString("yyyy-MM-dd") + "\n" + QString::number(point.y(),'f', 2)+ " mm");
         m_tooltip->setAnchor(point);
         m_tooltip->setZValue(11);
         m_tooltip->updateGeometry();
@@ -292,11 +292,11 @@ void TabIrrigation::tooltipPrecIrr(bool isShow, int index, QBarSet *barset)
         QString valueStr;
         if (barset->label() == "Precipitation [mm]")
         {
-            valueStr = QString("%1 \nPrecipitation [mm] %2 ").arg(xDate.toString("yyyy-MM-dd")).arg(barset->at(index), 0, 'f', 1);
+            valueStr = QString("%1\nPrecipitation: %2 mm").arg(xDate.toString("yyyy-MM-dd")).arg(barset->at(index), 0, 'f', 1);
         }
         else if (barset->label() == "Irrigation [mm]")
         {
-            valueStr = QString("%1 \nIrrigation [mm] %2 ").arg(xDate.toString("yyyy-MM-dd")).arg(barset->at(index), 0, 'f', 1);
+            valueStr = QString("%1\nIrrigation: %2 mm").arg(xDate.toString("yyyy-MM-dd")).arg(barset->at(index), 0, 'f', 1);
         }
 
         m_tooltip->setText(valueStr);

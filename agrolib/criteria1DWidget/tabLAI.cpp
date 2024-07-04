@@ -18,24 +18,25 @@ TabLAI::TabLAI()
     chartView->setChart(chart);
 
     seriesLAI = new QLineSeries();
+    seriesETP = new QLineSeries();
+    seriesMaxTransp = new QLineSeries();
+    seriesMaxEvap = new QLineSeries();
+
     seriesLAI->setName("Leaf Area Index [m2 m-2] ");
+    seriesETP->setName("Potential evapotranspiration [mm] ");
+    seriesMaxTransp->setName("Maximum transpiration [mm] ");
+    seriesMaxEvap->setName("Maximum evaporation [mm] ");
+
     QPen pen;
     pen.setWidth(2);
     seriesLAI->setPen(pen);
+
     seriesLAI->setColor(QColor(0, 200, 0, 255));
-
-    seriesETP = new QLineSeries();
-    seriesETP->setName("Potential evapotranspiration [mm] ");
-    // bug with black
-    seriesETP->setColor(QColor(0, 0, 1, 255));
-
-    seriesMaxTransp = new QLineSeries();
-    seriesMaxTransp->setName("Maximum transpiration [mm] ");
     seriesMaxTransp->setColor(QColor(Qt::red));
-
-    seriesMaxEvap = new QLineSeries();
-    seriesMaxEvap->setName("Maximum evaporation [mm] ");
     seriesMaxEvap->setColor(QColor(Qt::blue));
+
+    // bug with black
+    seriesETP->setColor(QColor(0, 0, 16, 255));
 
     axisX = new QDateTimeAxis();
     axisY = new QValueAxis();
@@ -201,7 +202,7 @@ void TabLAI::tooltipLAI(QPointF point, bool state)
     {
         QDateTime xDate;
         xDate.setMSecsSinceEpoch(point.x());
-        m_tooltip->setText(QString("%1 \nLAI: %2 ").arg(xDate.date().toString("yyyy-MM-dd")).arg(point.y(), 0, 'f', 1));
+        m_tooltip->setText(QString("%1\nLAI: %2 [m2 m-2]").arg(xDate.date().toString("yyyy-MM-dd")).arg(point.y(), 0, 'f', 1));
         m_tooltip->setAnchor(point);
         m_tooltip->setZValue(11);
         m_tooltip->updateGeometry();
@@ -217,7 +218,7 @@ void TabLAI::tooltipPE(QPointF point, bool state)
     {
         QDateTime xDate;
         xDate.setMSecsSinceEpoch(point.x());
-        m_tooltip->setText(QString("%1 \nPot. ET: %2 ").arg(xDate.date().toString("yyyy-MM-dd")).arg(point.y(), 0, 'f', 1));
+        m_tooltip->setText(QString("%1\nETP: %2 mm").arg(xDate.date().toString("yyyy-MM-dd")).arg(point.y(), 0, 'f', 1));
         m_tooltip->setAnchor(point);
         m_tooltip->setZValue(11);
         m_tooltip->updateGeometry();
@@ -233,7 +234,7 @@ void TabLAI::tooltipME(QPointF point, bool state)
     {
         QDateTime xDate;
         xDate.setMSecsSinceEpoch(point.x());
-        m_tooltip->setText(QString("%1 \nEvap. max: %2 ").arg(xDate.date().toString("yyyy-MM-dd")).arg(point.y(), 0, 'f', 1));
+        m_tooltip->setText(QString("%1\nmax. Evaporation: %2 mm").arg(xDate.date().toString("yyyy-MM-dd")).arg(point.y(), 0, 'f', 1));
         m_tooltip->setAnchor(point);
         m_tooltip->setZValue(11);
         m_tooltip->updateGeometry();
@@ -250,7 +251,7 @@ void TabLAI::tooltipMaxTranspiration(QPointF point, bool state)
     {
         QDateTime xDate;
         xDate.setMSecsSinceEpoch(point.x());
-        m_tooltip->setText(QString("%1 \nTransp. max: %2 ").arg(xDate.date().toString("yyyy-MM-dd")).arg(point.y(), 0, 'f', 1));
+        m_tooltip->setText(QString("%1\nmax. Transpiration: %2 mm").arg(xDate.date().toString("yyyy-MM-dd")).arg(point.y(), 0, 'f', 1));
         m_tooltip->setAnchor(point);
         m_tooltip->setZValue(11);
         m_tooltip->updateGeometry();
