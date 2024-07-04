@@ -175,13 +175,9 @@ DialogElaboration::DialogElaboration(QSettings *settings, Crit3DClimate *clima, 
     settings->endGroup();
     elaborationLayout.addWidget(&elaborationList);
 
-    QLocale local(QLocale::system().language());
-    local.setNumberOptions(QLocale::RejectGroupSeparator);
     elab1Parameter.setPlaceholderText("Parameter");
     elab1Parameter.setFixedWidth(90);
-    QDoubleValidator* validator = new QDoubleValidator(-9999.0, 9999.0, 2);
-    validator->setLocale(local);
-    elab1Parameter.setValidator(validator);
+    elab1Parameter.setValidator(new QDoubleValidator(-9999.0, 9999.0, 2));
 
     QString elab1Field = elaborationList.currentText();
     if ( MapElabWithParam.find(elab1Field.toStdString()) == MapElabWithParam.end())
@@ -272,7 +268,7 @@ void DialogElaboration::done(bool res)
             clima->setElab1(elaborationList.currentText());
 
             clima->setParam1IsClimate(false);
-            if (elab1Parameter.text() != "")
+            if (! elab1Parameter.text().isEmpty())
             {
                 clima->setParam1(elab1Parameter.text().toFloat());
             }

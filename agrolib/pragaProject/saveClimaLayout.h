@@ -16,33 +16,33 @@ class SaveClimaLayout : public QDialog
         SaveClimaLayout();
 
         QString getFirstYear() const;
-        void setFirstYear(const QString &value);
+        void setFirstYear(const QString &valueStr);
         QString getLastYear() const;
-        void setLastYear(const QString &value);
+        void setLastYear(const QString &valueStr);
         QString getVariable() const;
-        void setVariable(const QString &value);
+        void setVariable(const QString &valueStr);
         QString getPeriod() const;
-        void setPeriod(const QString &value);
+        void setPeriod(const QString &valueStr);
         QString getGenericPeriodEnd() const;
-        void setGenericPeriodEnd(const QString &value);
+        void setGenericPeriodEnd(const QString &valueStr);
         QString getGenericNYear() const;
-        void setGenericNYear(const QString &value);
+        void setGenericNYear(const QString &valueStr);
         QString getSecondElab() const;
-        void setSecondElab(const QString &value);
+        void setSecondElab(const QString &valueStr);
         QString getElab2Param() const;
-        void setElab2Param(const QString &value);
+        void setElab2Param(const QString &valueStr);
         QString getElab() const;
-        void setElab(const QString &value);
+        void setElab(const QString &valueStr);
         QString getElab1Param() const;
-        void setElab1Param(const QString &value);
+        void setElab1Param(const QString &valueStr);
         QString getGenericPeriodStartDay() const;
         void setGenericPeriodStartDay(const QString &value);
         QString getGenericPeriodStartMonth() const;
-        void setGenericPeriodStartMonth(const QString &value);
+        void setGenericPeriodStartMonth(const QString &valueStr);
         QString getGenericPeriodEndDay() const;
-        void setGenericPeriodEndDay(const QString &value);
+        void setGenericPeriodEndDay(const QString &valueStr);
         QString getGenericPeriodEndMonth() const;
-        void setGenericPeriodEndMonth(const QString &value);
+        void setGenericPeriodEndMonth(const QString &valueStr);
 
         void addElab();
         void deleteRaw();
@@ -52,10 +52,10 @@ class SaveClimaLayout : public QDialog
         void loadElabList();
 
         QList<QString> getList() const;
-        void setList(const QList<QString> &value);
+        void setList(const QList<QString> &valueList);
 
         QString getElab1ParamFromdB() const;
-        void setElab1ParamFromdB(const QString &value);
+        void setElab1ParamFromdB(const QString &valueStr);
 
 private:
 
