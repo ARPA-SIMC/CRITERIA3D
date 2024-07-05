@@ -253,8 +253,6 @@ void TabIrrigation::tooltipLAI(QPointF point, bool isShow)
     }
 }
 
-
-// TODO Giada
 void TabIrrigation::tooltipEvapTransp(QPointF point, bool isShow)
 {
     if (isShow)

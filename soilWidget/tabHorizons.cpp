@@ -462,15 +462,14 @@ void TabHorizons::checkComputedValues(int horizonNum)
         tableModel->item(horizonNum,5)->setBackground(Qt::yellow);
     }
 
-    // for soil mechanics parameters just check if is missing
-    if (horizon->geotechnics.effectiveCohesion == NODATA)
+    if (abs(horizon->dbData.effectiveCohesion - horizon->effectiveCohesion) > EPSILON)
     {
-        tableModel->item(horizonNum,11)->setBackground(Qt::red);
+        tableModel->item(horizonNum,11)->setBackground(Qt::yellow);
     }
 
-    if (horizon->geotechnics.frictionAngle == NODATA)
+    if (abs(horizon->dbData.frictionAngle - horizon->frictionAngle) > EPSILON)
     {
-        tableModel->item(horizonNum,12)->setBackground(Qt::red);
+        tableModel->item(horizonNum,12)->setBackground(Qt::yellow);
     }
 
 }
