@@ -77,11 +77,11 @@ Crit3DSoilTable::Crit3DSoilTable(tableType type) : type(type)
 
         currentHeaderItem = this->horizontalHeaderItem(9);
         if (currentHeaderItem)
-            currentHeaderItem->setToolTip("Water content at saturation");
+            currentHeaderItem->setToolTip("Water content at saturation (SAT)");
 
         currentHeaderItem = this->horizontalHeaderItem(10);
         if (currentHeaderItem)
-            currentHeaderItem->setToolTip("Effective cohesion");
+            currentHeaderItem->setToolTip("Soil effective cohesion");
 
         currentHeaderItem = this->horizontalHeaderItem(11);
         if (currentHeaderItem)
@@ -89,7 +89,57 @@ Crit3DSoilTable::Crit3DSoilTable(tableType type) : type(type)
     }
     else if (type == modelTable)
     {
-        // TODO
+        QTableWidgetItem *currentHeaderItem = horizontalHeaderItem(0);
+        if (currentHeaderItem)
+            currentHeaderItem->setToolTip("USDA textural soil classification");
+
+        currentHeaderItem = horizontalHeaderItem(1);
+        if (currentHeaderItem)
+            currentHeaderItem->setToolTip("Percentage of coarse fragments (major than 2.0 mm)");
+
+        currentHeaderItem = this->horizontalHeaderItem(2);
+        if (currentHeaderItem)
+            currentHeaderItem->setToolTip("Percentage of organic matter");
+
+        currentHeaderItem = this->horizontalHeaderItem(3);
+        if (currentHeaderItem)
+            currentHeaderItem->setToolTip("Bulk density");
+
+        currentHeaderItem = this->horizontalHeaderItem(4);
+        if (currentHeaderItem)
+            currentHeaderItem->setToolTip("Saturated hydraulic conductivity");
+
+        currentHeaderItem = this->horizontalHeaderItem(5);
+        if (currentHeaderItem)
+            currentHeaderItem->setToolTip("Water content at saturation (SAT)");
+
+        currentHeaderItem = this->horizontalHeaderItem(6);
+        if (currentHeaderItem)
+            currentHeaderItem->setToolTip("Water content at wilting point (WP)");
+
+        currentHeaderItem = this->horizontalHeaderItem(7);
+        if (currentHeaderItem)
+            currentHeaderItem->setToolTip("Air entry value");
+
+        currentHeaderItem = this->horizontalHeaderItem(8);
+        if (currentHeaderItem)
+            currentHeaderItem->setToolTip("Van Genuchten parameter α");
+
+        currentHeaderItem = this->horizontalHeaderItem(9);
+        if (currentHeaderItem)
+            currentHeaderItem->setToolTip("Van Genuchten parameter n");
+
+        currentHeaderItem = this->horizontalHeaderItem(10);
+        if (currentHeaderItem)
+            currentHeaderItem->setToolTip("Van Genuchten parameter m");
+
+        currentHeaderItem = this->horizontalHeaderItem(11);
+        if (currentHeaderItem)
+            currentHeaderItem->setToolTip("Soil effective cohesion");
+
+        currentHeaderItem = this->horizontalHeaderItem(12);
+        if (currentHeaderItem)
+            currentHeaderItem->setToolTip("Soil friction angle");
     }
 }
 
