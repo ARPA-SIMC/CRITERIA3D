@@ -1,5 +1,5 @@
 /*!
-    CRITERIA3D
+    soilWidget.cpp
 
     \copyright 2016 Fausto Tomei, Gabriele Antolini, Laura Costantini
     Alberto Pistocchi, Marco Bittelli, Antonio Volta
