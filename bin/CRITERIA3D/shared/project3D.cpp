@@ -1169,7 +1169,7 @@ bool Project3D::setLayersDepth()
 }
 
 
-int Project3D::getSoilId(double x, double y)
+int Project3D::getSoilMapId(double x, double y)
 {
     if (! soilMap.isLoaded)
         return NODATA;
@@ -1189,7 +1189,8 @@ int Project3D::getSoilId(double x, double y)
 
 int Project3D::getSoilListIndex(double x, double y)
 {
-    int idSoil = getSoilId(x, y);
+    int idSoil = getSoilMapId(x, y);
+
     if (idSoil == NODATA)
         return NODATA;
 
@@ -1207,7 +1208,7 @@ int Project3D::getSoilListIndex(double x, double y)
 
 QString Project3D::getSoilCode(double x, double y)
 {
-    int idSoil = getSoilId(x, y);
+    int idSoil = getSoilMapId(x, y);
     if (idSoil == NODATA)
         return "";
 

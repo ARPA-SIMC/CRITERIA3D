@@ -1620,7 +1620,7 @@ bool MainWindow::isSoil(QPoint mapPos)
     Position geoPos = mapView->mapToScene(mapPos);
     gis::latLonToUtmForceZone(myProject.gisSettings.utmZone, geoPos.latitude(), geoPos.longitude(), &x, &y);
 
-    int idSoil = myProject.getSoilId(x, y);
+    int idSoil = myProject.getSoilMapId(x, y);
     return (idSoil != NODATA);
 }
 

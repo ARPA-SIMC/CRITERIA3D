@@ -157,7 +157,7 @@
 
         bool initializeSoilMoisture(int month);
 
-        int getSoilId(double x, double y);
+        int getSoilMapId(double x, double y);
         int getSoilListIndex(double x, double y);
         QString getSoilCode(double x, double y);
 

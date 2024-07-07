@@ -516,7 +516,6 @@ bool Crit3DProject::loadCriteria3DProject(QString myFileName)
             return false;
     }
 
-    // only for 3d model
     if (meteoPointsLoaded)
     {
         meteoPointsDbFirstTime = findDbPointFirstTime();
