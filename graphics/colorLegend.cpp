@@ -56,13 +56,13 @@ void ColorLegend::paintEvent(QPaintEvent *event)
 
         if ((i % stepText) == 0)
         {
-            if (isEqual(dblValue, 0) || isEqual(dblValue, 1))
+            if (fabs(dblValue) <= 1)
             {
                 nrDigits = 1;
             }
             else
             {
-                nrDigits = abs(ceil(log10(fabs(dblValue))));
+                nrDigits = int(ceil(log10(fabs(dblValue))));
             }
 
             // negative numbers
