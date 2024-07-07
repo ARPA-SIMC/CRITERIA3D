@@ -2381,11 +2381,7 @@ void MainWindow::showCriteria3DVariable(criteria3DVariable var, int layerIndex, 
     // set range
     if (isFixedRange)
     {
-        if (! isEqual(minimum, NODATA))
-            myProject.criteria3DMap.colorScale->setMinimum(minimum);
-        if (! isEqual(maximum, NODATA))
-            myProject.criteria3DMap.colorScale->setMaximum(maximum);
-
+        myProject.criteria3DMap.colorScale->setRange(minimum, maximum);
         myProject.criteria3DMap.colorScale->setFixedRange(true);
         myProject.criteria3DMap.colorScale->setHideOutliers(true);
     }
@@ -2393,6 +2389,16 @@ void MainWindow::showCriteria3DVariable(criteria3DVariable var, int layerIndex, 
     {
         myProject.criteria3DMap.colorScale->setFixedRange(false);
         myProject.criteria3DMap.colorScale->setHideOutliers(false);
+
+        if (! isEqual(minimum, NODATA) || ! isEqual(maximum, NODATA))
+        {
+            if (! isEqual(minimum, NODATA))
+                myProject.criteria3DMap.colorScale->setMinimum(minimum);
+            if (! isEqual(maximum, NODATA))
+                myProject.criteria3DMap.colorScale->setMaximum(maximum);
+
+            myProject.criteria3DMap.colorScale->setHideOutliers(true);
+        }
     }
 
     setCurrentRasterOutput(&(myProject.criteria3DMap));
@@ -3183,7 +3189,7 @@ void MainWindow::on_actionHide_Geomap_triggered()
 
 void MainWindow::on_actionView_surfaceWaterContent_automatic_range_triggered()
 {
-    showCriteria3DVariable(volumetricWaterContent, 0, true, 0.1, NODATA);
+    showCriteria3DVariable(volumetricWaterContent, 0, false, 0.1, NODATA);
 }
 
 
