@@ -1,7 +1,7 @@
 /*!
     \file mapGraphicsRasterObject.cpp
 
-    \abstract draw raster in MapGraphics widget
+    \abstract draws a lat-lon raster in the MapGraphics widget
 
     This file is part of CRITERIA-3D distribution.
 
@@ -381,7 +381,7 @@ bool RasterObject::drawRaster(gis::Crit3DRasterGrid *myRaster, QPainter* myPaint
     }
 
     // dynamic color scale
-    if (! myRaster->colorScale->isRangeBlocked())
+    if (! myRaster->colorScale->isFixedRange())
     {
         if (this->isLatLon)
         {

@@ -1215,7 +1215,7 @@ void MainWindow::on_actionView_Aspect_triggered()
     {
         myProject.radiationMaps->aspectMap->colorScale->setMinimum(0);
         myProject.radiationMaps->aspectMap->colorScale->setMaximum(360);
-        myProject.radiationMaps->aspectMap->colorScale->setRangeBlocked(true);
+        myProject.radiationMaps->aspectMap->colorScale->setFixedRange(true);
         setCircolarScale(myProject.radiationMaps->aspectMap->colorScale);
         setCurrentRasterOutput(myProject.radiationMaps->aspectMap);
         ui->labelOutputRaster->setText("Aspect °");
@@ -2322,7 +2322,7 @@ void MainWindow::on_actionCriteria3D_run_models_triggered()
 }
 
 
-void MainWindow::showCriteria3DVariable(criteria3DVariable var, int layerIndex, bool isFixedRange, float minimum, float maximum)
+void MainWindow::showCriteria3DVariable(criteria3DVariable var, int layerIndex, bool isFixedRange, double minimum, double maximum)
 {
     if (! myProject.isCriteria3DInitialized)
     {
@@ -2381,12 +2381,18 @@ void MainWindow::showCriteria3DVariable(criteria3DVariable var, int layerIndex, 
     // set range
     if (isFixedRange)
     {
-        myProject.criteria3DMap.colorScale->setRange(minimum, maximum);
-        myProject.criteria3DMap.colorScale->setRangeBlocked(true);
+        if (! isEqual(minimum, NODATA))
+            myProject.criteria3DMap.colorScale->setMinimum(minimum);
+        if (! isEqual(maximum, NODATA))
+            myProject.criteria3DMap.colorScale->setMaximum(maximum);
+
+        myProject.criteria3DMap.colorScale->setFixedRange(true);
+        myProject.criteria3DMap.colorScale->setHideOutliers(true);
     }
     else
     {
-        myProject.criteria3DMap.colorScale->setRangeBlocked(false);
+        myProject.criteria3DMap.colorScale->setFixedRange(false);
+        myProject.criteria3DMap.colorScale->setHideOutliers(false);
     }
 
     setCurrentRasterOutput(&(myProject.criteria3DMap));
@@ -3177,7 +3183,7 @@ void MainWindow::on_actionHide_Geomap_triggered()
 
 void MainWindow::on_actionView_surfaceWaterContent_automatic_range_triggered()
 {
-    showCriteria3DVariable(volumetricWaterContent, 0, false, NODATA, NODATA);
+    showCriteria3DVariable(volumetricWaterContent, 0, true, 0.1, NODATA);
 }
 
 
@@ -3216,20 +3222,20 @@ void MainWindow::on_actionView_degreeOfSaturation_automatic_range_triggered()
 void MainWindow::on_actionView_degreeOfSaturation_fixed_range_triggered()
 {
     int layerIndex = ui->layerNrEdit->value();
-    showCriteria3DVariable(degreeOfSaturation, layerIndex, true, 0.0, 1.0);
+    showCriteria3DVariable(degreeOfSaturation, layerIndex, true, 0.2, 1.0);
 }
 
 
 void MainWindow::on_actionView_factor_of_safety_triggered()
 {
     int layerIndex = std::max(1, ui->layerNrEdit->value());
-    showCriteria3DVariable(factorOfSafety, layerIndex, true, 0, 10);
+    showCriteria3DVariable(factorOfSafety, layerIndex, true, 0, 4);
 }
 
 
 void MainWindow::on_actionView_factor_of_safety_minimum_triggered()
 {
-    showCriteria3DVariable(minimumFactorOfSafety, NODATA, true, 0, 10);
+    showCriteria3DVariable(minimumFactorOfSafety, NODATA, true, 0, 4);
 }
 
 
@@ -3267,7 +3273,7 @@ void MainWindow::on_layerNrEdit_valueChanged(int layerIndex)
 
     if (view3DVariable && current3DlayerIndex != 0)
     {
-        if (myProject.criteria3DMap.colorScale->isRangeBlocked())
+        if (myProject.criteria3DMap.colorScale->isFixedRange())
         {
             showCriteria3DVariable(current3DVariable, layerIndex, true,
                                    myProject.criteria3DMap.colorScale->minimum(),

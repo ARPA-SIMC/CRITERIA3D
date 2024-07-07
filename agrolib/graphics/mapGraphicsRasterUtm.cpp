@@ -1,7 +1,7 @@
 /*!
-    \file mapGraphicsRasterObject.cpp
+    \file mapGraphicsRasterUtm.cpp
 
-    \abstract draw raster in MapGraphics widget
+    \abstract draws a UTM raster in the MapGraphics widget
 
     This file is part of CRITERIA-3D distribution.
 
@@ -29,6 +29,7 @@
 #include "commonConstants.h"
 #include "mapGraphicsRasterUtm.h"
 #include "basicMath.h"
+#include "color.h"
 
 #include <math.h>
 #include <QMenu>
@@ -326,7 +327,7 @@ bool RasterUtmObject::drawRaster(QPainter* painter)
     }
 
     // dynamic color scale
-    if (! _rasterPointer->colorScale->isRangeBlocked())
+    if (! _rasterPointer->colorScale->isFixedRange())
     {
         gis::updateColorScale(_rasterPointer, rasterWindow);
         roundColorScale(_rasterPointer->colorScale, 4, true);
@@ -362,9 +363,16 @@ bool RasterUtmObject::drawRaster(QPainter* painter)
             // raster value
             float value = _rasterPointer->value[rowCenter][colCenter];
 
-            // skip the NODATA value
+            // check NODATA value (transparent)
             if (isEqual(value, _rasterPointer->header->flag) || isEqual(value, NODATA))
                 continue;
+
+            // check outliers (transparent)
+            if (_rasterPointer->colorScale->isHideOutliers())
+            {
+                if (value < _rasterPointer->colorScale->minimum() || value > _rasterPointer->colorScale->maximum())
+                    continue;
+            }
 
             // set color
             myColor = _rasterPointer->colorScale->getColor(value);
