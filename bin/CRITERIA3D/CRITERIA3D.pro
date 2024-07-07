@@ -15,8 +15,6 @@ TARGET = CRITERIA3D
 CONFIG += debug_and_release
 CONFIG += c++11 c++14 c++17
 
-DEFINES += CRITERIA3D
-
 INCLUDEPATH +=  ./shared  \
                 ../../agrolib/soilFluxes3D/header  \
                 ../../agrolib/crit3dDate ../../agrolib/mathFunctions \

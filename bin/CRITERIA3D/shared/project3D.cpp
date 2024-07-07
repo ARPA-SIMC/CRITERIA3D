@@ -128,12 +128,12 @@ Project3D::Project3D() : Project()
 
 void Project3D::initializeProject3D()
 {
+    initializeProject();
+
     isCriteria3DInitialized = false;
     isCropInitialized = false;
     showEachTimeStep = false;
     increaseSlope = false;
-
-    initializeProject();
 
     waterFluxesParameters.initialize();
 

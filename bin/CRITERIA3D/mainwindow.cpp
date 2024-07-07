@@ -534,6 +534,7 @@ void MainWindow::addMeteoPoints()
     {
         // default: white
         StationMarker* point = new StationMarker(5.0, true, QColor(Qt::white));
+        point->setCallerSoftware(CRITERIA3D_caller);
 
         if (myProject.meteoPoints[i].lapseRateCode == secondary)
         {
