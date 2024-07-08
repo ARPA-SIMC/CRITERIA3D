@@ -316,7 +316,7 @@ void Crit3DInterpolationSettings::setFittingFunction(const std::vector<std::func
 
 void Crit3DInterpolationSettings::addFittingFunction(const std::vector<std::function<double (double, std::vector<double> &)> > &newFittingFunction)
 {
-    for (int i = 0; i < newFittingFunction.size(); i ++)
+    for (int i = 0; i < int(newFittingFunction.size()); i ++)
         fittingFunction.push_back(newFittingFunction[i]);
 }
 
@@ -482,7 +482,7 @@ Crit3DProxy* Crit3DInterpolationSettings::getProxy(unsigned pos)
 
 int Crit3DInterpolationSettings::getProxyPosFromName(TProxyVar name)
 {
-    for (int i = 0; i < getProxyNr(); i++)
+    for (int i = 0; i < int(getProxyNr()); i++)
     {
         if (getProxyPragaName(getProxyName(i)) == name)
             return i;
