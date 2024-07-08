@@ -1625,7 +1625,7 @@ bool multipleDetrendingMain(std::vector <Crit3DInterpolationDataPoint> &myPoints
 
             if (otherParameters[0].size() > 2)
             {
-                for (int i = 0; i < (paramSize - 1); i++)
+                for (int i = 0; i < (int(paramSize) - 1); i++)
                     otherParameters[i] = otherParameters[i+1];
                 otherParameters.pop_back();
             }
@@ -1771,7 +1771,7 @@ bool multipleDetrendingElevation(Crit3DProxyCombination elevationCombination, st
         }
     }
 
-    if (mySettings->getUseLocalDetrending() && elevationPoints.size() < mySettings->getMinPointsLocalDetrending())
+    if (mySettings->getUseLocalDetrending() && int(elevationPoints.size()) < mySettings->getMinPointsLocalDetrending())
     {
         elevationProxy->setIsSignificant(false);
         Crit3DProxyCombination myCombination = mySettings->getSelectedCombination();
@@ -1999,7 +1999,7 @@ bool multipleDetrending(Crit3DProxyCombination othersCombination, std::vector<st
         weights.push_back(myPoints[i].regressionWeight);
     }
 
-    if (mySettings->getUseLocalDetrending() && othersPoints.size() < mySettings->getMinPointsLocalDetrending())
+    if (mySettings->getUseLocalDetrending() && int(othersPoints.size()) < mySettings->getMinPointsLocalDetrending())
     {
         Crit3DProxyCombination myCombination = mySettings->getCurrentCombination();
         for (int pos = 1; pos < proxyNr; pos++)

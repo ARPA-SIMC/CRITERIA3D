@@ -533,7 +533,7 @@ bool Project3D::setCrit3DSurfaces()
         landUnitList.push_back(deafultLandUnit);
     }
 
-    for (int i = 0; i < landUnitList.size(); i++)
+    for (int i = 0; i < int(landUnitList.size()); i++)
     {
         int result = soilFluxes3D::setSurfaceProperties(i, landUnitList[i].roughness, landUnitList[i].pond);
         if (isCrit3dError(result, errorString))
@@ -974,7 +974,7 @@ bool Project3D::loadCropDatabase(QString fileName)
 
     // crop list (same index of landUnitsList)
     cropList.resize(landUnitList.size());
-    for (int i = 0; i < landUnitList.size(); i++)
+    for (int i = 0; i < int(landUnitList.size()); i++)
     {
         if (landUnitList[i].idCrop == "") continue;
 
@@ -1194,7 +1194,7 @@ int Project3D::getSoilListIndex(double x, double y)
     if (idSoil == NODATA)
         return NODATA;
 
-    for (int index = 0; index < soilList.size(); index++)
+    for (int index = 0; index < int(soilList.size()); index++)
     {
         if (soilList[index].id == idSoil)
         {
@@ -1335,7 +1335,7 @@ bool Project3D::interpolateAndSaveHourlyMeteo(meteoVariable myVar, const QDateTi
 
 bool Project3D::getCriteria3DMap(gis::Crit3DRasterGrid &outputRaster, criteria3DVariable var, int layerIndex)
 {
-    if (layerIndex >= indexMap.size())
+    if (layerIndex >= int(indexMap.size()))
     {
         errorString = "Layer is not defined: " + QString::number(layerIndex);
         return false;
