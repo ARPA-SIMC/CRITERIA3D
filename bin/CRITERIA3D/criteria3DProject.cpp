@@ -1622,7 +1622,7 @@ bool Crit3DProject::writeOutputPointsTables()
             }
             if (processes.computeWater)
             {
-                for (int l = 1; l < layerDepth.size(); l++)
+                for (int l = 1; l < int(layerDepth.size()); l++)
                 {
                     int depth_cm = round(layerDepth[l] * 100);
                     if (! outputPointsDbHandler->addCriteria3DColumn(tableName, volumetricWaterContent, depth_cm, errorString))
@@ -1632,7 +1632,7 @@ bool Crit3DProject::writeOutputPointsTables()
             if (processes.computeSlopeStability)
             {
                 // slope stablility starts from layer 1
-                for (int l = 1; l < layerDepth.size(); l++)
+                for (int l = 1; l < int(layerDepth.size()); l++)
                 {
                     int depth_cm = round(layerDepth[l] * 100);
                     if (! outputPointsDbHandler->addCriteria3DColumn(tableName, factorOfSafety, depth_cm, errorString))
