@@ -70,7 +70,7 @@
         void setColorLegend(ColorLegend* colorLegendPtr) {_colorLegendPointer = colorLegendPtr;}
         void setRaster(gis::Crit3DRasterGrid* rasterPtr) {_rasterPointer = rasterPtr;}
 
-        gis::Crit3DRasterGrid* getRaster() {return _rasterPointer;}
+        gis::Crit3DRasterGrid* getRasterPointer() {return _rasterPointer;}
 
         float getValue(Position& pos);
         float getRasterMaxSize();

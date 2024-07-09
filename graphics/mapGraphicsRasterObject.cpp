@@ -73,16 +73,6 @@ void RasterObject::clear()
 }
 
 
-void RasterObject::setRaster(gis::Crit3DRasterGrid* rasterPtr)
-{
-    rasterPointer = rasterPtr;
-}
-
-gis::Crit3DRasterGrid* RasterObject::getRaster()
-{
-    return rasterPointer;
-}
-
 void RasterObject::setDrawing(bool value)
 {
     isDrawing = value;
