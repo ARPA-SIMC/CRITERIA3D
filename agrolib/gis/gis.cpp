@@ -1355,7 +1355,9 @@ namespace gis
             c = -1;
 
         float valueBoundary = rasterRef.getValueFromRowCol(row + r, col + c);
-        return isEqual(valueBoundary, rasterRef.header->flag);
+        bool isBoundary = isEqual(valueBoundary, rasterRef.header->flag);
+
+        return isBoundary;
     }
 
 

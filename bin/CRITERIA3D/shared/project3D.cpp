@@ -470,23 +470,27 @@ void Project3D::setIndexMaps()
             {
                 if (! isEqual(DEM.value[row][col], DEM.header->flag))
                 {
-                    int checkIndex;
+                    bool checkIndex = false;
                     if (layer == 0)
                     {
-                        // surface (check land use)
-                        checkIndex = getLandUnitIndexRowCol(row, col);
+                        // surface (check only land use)
+                        if (getLandUnitIndexRowCol(row, col) != NODATA)
+                            checkIndex = true;
                     }
                     else
                     {
-                        // sub-surface (check soil)
-                        checkIndex = getSoilIndex(row, col);
-                        if (! isWithinSoil(checkIndex, layerDepth.at(layer)))
+                        // sub-surface (check land use and soil)
+                        if (getLandUnitIndexRowCol(row, col) != NODATA)
                         {
-                            checkIndex = NODATA;
+                            int soilIndex = getSoilIndex(row, col);
+                            if (isWithinSoil(soilIndex, layerDepth.at(layer)))
+                            {
+                                checkIndex = true;
+                            }
                         }
                     }
 
-                    if (checkIndex != NODATA)
+                    if (checkIndex)
                     {
                         indexMap.at(layer).value[row][col] = currentIndex;
                         currentIndex++;
@@ -1244,7 +1248,8 @@ int Project3D::getSoilIndex(long row, long col)
 
 bool Project3D::isWithinSoil(int soilIndex, double depth)
 {
-    if (soilIndex == int(NODATA) || soilIndex >= int(soilList.size())) return false;
+    if (soilIndex == int(NODATA) || soilIndex >= int(soilList.size()))
+        return false;
 
     // check if depth is lower than lowerDepth of last horizon
     unsigned int lastHorizon = soilList[unsigned(soilIndex)].nrHorizons -1;
