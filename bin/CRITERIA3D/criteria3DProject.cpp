@@ -1947,6 +1947,15 @@ bool Crit3DProject::update3DColors(gis::Crit3DRasterGrid *rasterPointer)
         return false;
     }
 
+    bool isVariable = false;
+    if (rasterPointer != nullptr)
+    {
+        if (rasterPointer->header->isEqualTo(*(DEM.header)))
+        {
+            isVariable = true;
+        }
+    }
+
     float z1, z2, z3, value;
     Crit3DColor *c1, *c2, *c3;
     Crit3DColor sc1, sc2, sc3;
@@ -1965,7 +1974,7 @@ bool Crit3DProject::update3DColors(gis::Crit3DRasterGrid *rasterPointer)
                     c1 = DEM.colorScale->getColor(z1);
                     c3 = DEM.colorScale->getColor(z3);
 
-                    if (rasterPointer != nullptr)
+                    if (isVariable)
                     {
                         value = rasterPointer->getValueFromRowCol(row, col);
                         if (! isEqual(value, rasterPointer->header->flag))
@@ -1983,7 +1992,7 @@ bool Crit3DProject::update3DColors(gis::Crit3DRasterGrid *rasterPointer)
                     if (! isEqual(z2, DEM.header->flag))
                     {
                         c2 = DEM.colorScale->getColor(z2);
-                        if (rasterPointer != nullptr)
+                        if (isVariable)
                         {
                             value = rasterPointer->getValueFromRowCol(row+1, col);
                             if (! isEqual(value, rasterPointer->header->flag))
@@ -2000,7 +2009,7 @@ bool Crit3DProject::update3DColors(gis::Crit3DRasterGrid *rasterPointer)
                     if (! isEqual(z2, DEM.header->flag))
                     {
                         c2 = DEM.colorScale->getColor(z2);
-                        if (rasterPointer != nullptr)
+                        if (isVariable)
                         {
                             value = rasterPointer->getValueFromRowCol(row, col+1);
                             if (! isEqual(value, rasterPointer->header->flag))
