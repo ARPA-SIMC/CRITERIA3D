@@ -530,7 +530,7 @@ void MainWindow::setMapSource(WebTileSource::WebTileType mySource)
 
 void MainWindow::on_rasterScaleButton_clicked()
 {
-    if (this->rasterObj->getRaster() == nullptr)
+    if (this->rasterObj->getRasterPointer() == nullptr)
     {
         QMessageBox::information(nullptr, "No Raster", "Load raster before");
         return;
@@ -539,7 +539,7 @@ void MainWindow::on_rasterScaleButton_clicked()
     meteoVariable myVar = chooseColorScale();
     if (myVar != noMeteoVar)
     {
-        setColorScale(myVar, this->rasterObj->getRaster()->colorScale);
+        setColorScale(myVar, this->rasterObj->getRasterPointer()->colorScale);
         ui->labelRasterScale->setText(QString::fromStdString(getVariableString(myVar)));
     }
 }
@@ -561,7 +561,7 @@ void MainWindow::on_variableButton_clicked()
 
 void MainWindow::on_rasterRestoreButton_clicked()
 {
-    if (rasterObj->getRaster() == nullptr)
+    if (rasterObj->getRasterPointer() == nullptr)
     {
         QMessageBox::information(nullptr, "No Raster", "Load raster before");
         return;
