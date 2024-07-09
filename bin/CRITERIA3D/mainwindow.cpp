@@ -200,6 +200,9 @@ void MainWindow::updateOutputMap()
 
     emit rasterOutput->redrawRequested();
     outputRasterColorLegend->update();
+
+    refreshViewer3D();
+
     qApp->processEvents();
 }
 
@@ -1111,18 +1114,18 @@ void MainWindow::on_variableButton_clicked()
     this->updateCurrentVariable();
 }
 
-void MainWindow::setInputRasterVisible(bool value)
+void MainWindow::setInputRasterVisible(bool isVisible)
 {
-    inputRasterColorLegend->setVisible(value);
-    ui->labelInputRaster->setVisible(value);
-    rasterDEM->setVisible(value);
+    inputRasterColorLegend->setVisible(isVisible);
+    ui->labelInputRaster->setVisible(isVisible);
+    rasterDEM->setVisible(isVisible);
 }
 
-void MainWindow::setOutputRasterVisible(bool value)
+void MainWindow::setOutputRasterVisible(bool isVisible)
 {
-    outputRasterColorLegend->setVisible(value);
-    ui->labelOutputRaster->setVisible(value);
-    rasterOutput->setVisible(value);
+    outputRasterColorLegend->setVisible(isVisible);
+    ui->labelOutputRaster->setVisible(isVisible);
+    rasterOutput->setVisible(isVisible);
 }
 
 void MainWindow::setCurrentRasterInput(gis::Crit3DRasterGrid *myRaster)
@@ -1136,18 +1139,39 @@ void MainWindow::setCurrentRasterInput(gis::Crit3DRasterGrid *myRaster)
     emit rasterDEM->redrawRequested();
 }
 
-void MainWindow::setCurrentRasterOutput(gis::Crit3DRasterGrid *myRaster)
+
+void MainWindow::refreshViewer3D()
+{
+    if (viewer3D != nullptr)
+    {
+        if (rasterOutput->visible())
+        {
+            myProject.update3DColors(rasterOutput->getRasterPointer());
+        }
+        else
+        {
+            myProject.update3DColors();
+        }
+
+        viewer3D->glWidget->update();
+    }
+}
+
+
+void MainWindow::setCurrentRasterOutput(gis::Crit3DRasterGrid *rasterPointer)
 {
     setOutputRasterVisible(true);
 
-    rasterOutput->initialize(myRaster, myProject.gisSettings);
-    outputRasterColorLegend->colorScale = myRaster->colorScale;
+    rasterOutput->initialize(rasterPointer, myProject.gisSettings);
+    outputRasterColorLegend->colorScale = rasterPointer->colorScale;
 
     emit rasterOutput->redrawRequested();
     outputRasterColorLegend->update();
-
     rasterOutput->updateCenter();
-    view3DVariable = (myRaster == &(myProject.criteria3DMap));
+
+    refreshViewer3D();
+
+    view3DVariable = (rasterPointer == &(myProject.criteria3DMap));
 }
 
 
@@ -1248,11 +1272,12 @@ void MainWindow::on_actionView_SoilMap_triggered()
 }
 
 
-void MainWindow::on_actionHide_soil_map_triggered()
+void MainWindow::on_actionHide_Soil_map_triggered()
 {
     if (ui->labelOutputRaster->text() == "Soil")
     {
         setOutputRasterVisible(false);
+        refreshViewer3D();
     }
 }
 
@@ -1356,9 +1381,16 @@ void MainWindow::showMeteoVariable(meteoVariable var)
     }
 }
 
-void MainWindow::on_actionViewMeteoVariable_None_triggered()
+void MainWindow::on_actionView_Radiation_None_triggered()
 {
     setOutputRasterVisible(false);
+    refreshViewer3D();
+}
+
+void MainWindow::on_actionView_MeteoVariable_None_triggered()
+{
+    setOutputRasterVisible(false);
+    refreshViewer3D();
 }
 
 void MainWindow::on_actionView_Air_temperature_triggered()
@@ -1521,7 +1553,8 @@ void MainWindow::on_actionView_Snow_latent_heat_triggered()
 
 
 // ------------- CROP MAPS ---------------------------------------------------
-void MainWindow::on_actionView_degree_days_triggered()
+
+void MainWindow::on_actionView_Crop_degreeDays_triggered()
 {
     if (! myProject.isCropInitialized)
     {
@@ -3135,6 +3168,8 @@ void MainWindow::on_actionShow_3D_viewer_triggered()
 
     connect (viewer3D, SIGNAL(destroyed()), this, SLOT(on_viewer3DClosed()));
     connect (viewer3D, SIGNAL(slopeChanged()), this, SLOT(on_slopeChanged()));
+
+    refreshViewer3D();
 }
 
 
@@ -3175,6 +3210,7 @@ void MainWindow::on_actionHide_LandUseMap_triggered()
     if (ui->labelOutputRaster->text() == "Land use")
     {
         setOutputRasterVisible(false);
+        refreshViewer3D();
     }
 }
 
@@ -3182,18 +3218,19 @@ void MainWindow::on_actionHide_LandUseMap_triggered()
 void MainWindow::on_actionHide_Geomap_triggered()
 {
     setOutputRasterVisible(false);
+    refreshViewer3D();
 }
 
 
 //------------------- MENU VIEW SOIL FLUXES OUTPUT ------------------
 
-void MainWindow::on_actionView_surfaceWaterContent_automatic_range_triggered()
+void MainWindow::on_actionView_SurfaceWaterContent_automatic_range_triggered()
 {
     showCriteria3DVariable(volumetricWaterContent, 0, false, 0.1, NODATA);
 }
 
 
-void MainWindow::on_actionView_surfaceWaterContent_fixed_range_triggered()
+void MainWindow::on_actionView_SurfaceWaterContent_fixed_range_triggered()
 {
     // choose minimum
     float minimum = 0;
@@ -3218,28 +3255,28 @@ void MainWindow::on_actionView_SoilMoisture_triggered()
 }
 
 
-void MainWindow::on_actionView_degreeOfSaturation_automatic_range_triggered()
+void MainWindow::on_actionView_DegreeOfSaturation_automatic_range_triggered()
 {
     int layerIndex = ui->layerNrEdit->value();
     showCriteria3DVariable(degreeOfSaturation, layerIndex, false, NODATA, NODATA);
 }
 
 
-void MainWindow::on_actionView_degreeOfSaturation_fixed_range_triggered()
+void MainWindow::on_actionView_DegreeOfSaturation_fixed_range_triggered()
 {
     int layerIndex = ui->layerNrEdit->value();
     showCriteria3DVariable(degreeOfSaturation, layerIndex, true, 0.2, 1.0);
 }
 
 
-void MainWindow::on_actionView_factor_of_safety_triggered()
+void MainWindow::on_actionView_Factor_of_safety_triggered()
 {
     int layerIndex = std::max(1, ui->layerNrEdit->value());
     showCriteria3DVariable(factorOfSafety, layerIndex, true, 0, 4);
 }
 
 
-void MainWindow::on_actionView_factor_of_safety_minimum_triggered()
+void MainWindow::on_actionView_Factor_of_safety_minimum_triggered()
 {
     showCriteria3DVariable(minimumFactorOfSafety, NODATA, true, 0, 4);
 }
@@ -3319,11 +3356,11 @@ void MainWindow::on_actionCriteria3D_load_state_triggered()
         return;
     }
 
-    updateDateTime();
     initializeCriteria3DInterface();
+    updateOutputMap();
+
     loadMeteoPointsDataSingleDay(myProject.getCurrentDate(), true);
     redrawMeteoPoints(currentPointsVisualization, true);
-    updateOutputMap();
 }
 
 
@@ -3365,5 +3402,6 @@ void MainWindow::on_actionCriteria3D_save_state_triggered()
         myProject.logError(ERROR_STR_MISSING_PROJECT);
     }
 }
+
 
 

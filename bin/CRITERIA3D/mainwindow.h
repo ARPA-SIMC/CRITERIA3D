@@ -68,6 +68,9 @@
         void on_actionView_PointsLocation_triggered();
         void on_actionView_PointsCurrentVariable_triggered();
 
+        void on_actionView_SoilMap_triggered();
+        void on_actionHide_Soil_map_triggered();
+
         void on_actionView_Boundary_triggered();
         void on_actionView_Slope_triggered();
         void on_actionView_Aspect_triggered();
@@ -82,7 +85,8 @@
         void on_actionView_Air_relative_humidity_triggered();
         void on_actionView_Wind_intensity_triggered();
         void on_actionView_ET0_triggered();
-        void on_actionViewMeteoVariable_None_triggered();
+        void on_actionView_MeteoVariable_None_triggered();
+        void on_actionView_Radiation_None_triggered();
 
         void on_actionMapOpenStreetMap_triggered();
         void on_actionMapESRISatellite_triggered();
@@ -115,6 +119,21 @@
         void on_actionView_Snow_liquid_water_content_triggered();
         void on_actionView_Snow_age_triggered();
         void on_actionView_Snowmelt_triggered();
+
+        void on_actionView_Snow_sensible_heat_triggered();
+        void on_actionView_Snow_latent_heat_triggered();
+
+        void on_actionView_Crop_LAI_triggered();
+        void on_actionView_Crop_degreeDays_triggered();
+
+        void on_actionView_Factor_of_safety_triggered();
+        void on_actionView_Factor_of_safety_minimum_triggered();
+
+        void on_actionView_DegreeOfSaturation_automatic_range_triggered();
+        void on_actionView_DegreeOfSaturation_fixed_range_triggered();
+
+        void on_actionView_SurfaceWaterContent_automatic_range_triggered();
+        void on_actionView_SurfaceWaterContent_fixed_range_triggered();
 
         void on_actionSave_state_triggered();
         void on_actionLoad_state_triggered();
@@ -161,8 +180,6 @@
 
         void on_actionOutputPoints_deactivate_selected_triggered();
 
-        void on_actionView_SoilMap_triggered();
-
         void on_flagHide_outputPoints_toggled(bool isChecked);
 
         void on_flagView_not_active_outputPoints_toggled(bool isChecked);
@@ -170,8 +187,6 @@
         void on_actionOutputPoints_activate_all_triggered();
 
         void on_actionOutputPoints_activate_selected_triggered();
-
-        void on_actionHide_soil_map_triggered();
 
         void on_actionOutputPoints_newFile_triggered();
 
@@ -190,10 +205,6 @@
         void on_actionOutputPoints_add_triggered();
 
         void on_flagView_values_toggled(bool arg1);
-
-        void on_actionView_Snow_sensible_heat_triggered();
-
-        void on_actionView_Snow_latent_heat_triggered();
 
         void on_actionLoad_external_state_triggered();
 
@@ -222,21 +233,10 @@
 
         void on_actionWaterFluxes_settings_triggered();
 
-        void on_actionView_Crop_LAI_triggered();
-
-        void on_actionView_degree_days_triggered();
-
-        void on_actionView_factor_of_safety_triggered();
-        void on_actionView_factor_of_safety_minimum_triggered();
-
-        void on_actionView_degreeOfSaturation_automatic_range_triggered();
-        void on_actionView_degreeOfSaturation_fixed_range_triggered();
-        void on_actionView_surfaceWaterContent_automatic_range_triggered();
-        void on_actionView_surfaceWaterContent_fixed_range_triggered();
-
         void on_flagSave_state_endRun_triggered(bool isChecked);
 
         void on_flag_increase_slope_triggered(bool isChecked);
+
 
     protected:
         /*!
@@ -305,9 +305,11 @@
 
         bool loadMeteoPointsDB_GUI(QString dbName);
         void setCurrentRasterInput(gis::Crit3DRasterGrid *myRaster);
-        void setCurrentRasterOutput(gis::Crit3DRasterGrid *myRaster);
+        void setCurrentRasterOutput(gis::Crit3DRasterGrid *rasterPointer);
         void interpolateCurrentVariable();
         bool initializeViewer3D();
+        void refreshViewer3D();
+
         bool checkMapVariable(bool isComputed);
 
         bool isSoil(QPoint mapPos);
@@ -319,8 +321,8 @@
 
         bool contextMenuRequested(QPoint localPos);
 
-        void setInputRasterVisible(bool value);
-        void setOutputRasterVisible(bool value);
+        void setInputRasterVisible(bool isVisible);
+        void setOutputRasterVisible(bool isVisible);
 
         void addMeteoPoints();
         void drawWindVector(int i);

@@ -1293,7 +1293,7 @@
        <second>0</second>
        <year>1752</year>
        <month>9</month>
-       <day>18</day>
+       <day>17</day>
       </datetime>
      </property>
      <property name="maximumDate">
@@ -2025,7 +2025,7 @@
      <addaction name="separator"/>
      <addaction name="actionView_ET0"/>
      <addaction name="separator"/>
-     <addaction name="actionViewMeteoVariable_None"/>
+     <addaction name="actionView_MeteoVariable_None"/>
     </widget>
     <widget class="QMenu" name="menuShowSoil">
      <property name="title">
@@ -2033,7 +2033,7 @@
      </property>
      <addaction name="actionView_SoilMap"/>
      <addaction name="separator"/>
-     <addaction name="actionHide_soil_map"/>
+     <addaction name="actionHide_Soil_map"/>
     </widget>
     <widget class="QMenu" name="menuSnow">
      <property name="title">
@@ -2061,6 +2061,8 @@
      <addaction name="actionView_Diffuse_irradiance"/>
      <addaction name="actionView_Reflected_irradiance"/>
      <addaction name="actionView_Transmissivity"/>
+     <addaction name="separator"/>
+     <addaction name="actionView_Radiation_None"/>
     </widget>
     <widget class="QMenu" name="menuOutput_points_3">
      <property name="title">
@@ -2078,15 +2080,15 @@
       <property name="title">
        <string>Surface water content</string>
       </property>
-      <addaction name="actionView_surfaceWaterContent_automatic_range"/>
-      <addaction name="actionView_surfaceWaterContent_fixed_range"/>
+      <addaction name="actionView_SurfaceWaterContent_automatic_range"/>
+      <addaction name="actionView_SurfaceWaterContent_fixed_range"/>
      </widget>
      <widget class="QMenu" name="menuDegree_of_saturation">
       <property name="title">
        <string>Degree of saturation</string>
       </property>
-      <addaction name="actionView_degreeOfSaturation_automatic_range"/>
-      <addaction name="actionView_degreeOfSaturation_fixed_range"/>
+      <addaction name="actionView_DegreeOfSaturation_automatic_range"/>
+      <addaction name="actionView_DegreeOfSaturation_fixed_range"/>
      </widget>
      <addaction name="menuSurface_water_content"/>
      <addaction name="actionView_SoilMoisture"/>
@@ -2100,19 +2102,19 @@
      <addaction name="separator"/>
      <addaction name="actionHide_LandUseMap"/>
     </widget>
-    <widget class="QMenu" name="actionView_Crop_degreeDays">
+    <widget class="QMenu" name="actionView_Crop">
      <property name="title">
       <string>Crop model</string>
      </property>
-     <addaction name="actionView_degree_days"/>
      <addaction name="actionView_Crop_LAI"/>
+     <addaction name="actionView_Crop_degreeDays"/>
     </widget>
     <widget class="QMenu" name="menuSlope_stability">
      <property name="title">
       <string>Slope stability</string>
      </property>
-     <addaction name="actionView_factor_of_safety"/>
-     <addaction name="actionView_factor_of_safety_minimum"/>
+     <addaction name="actionView_Factor_of_safety"/>
+     <addaction name="actionView_Factor_of_safety_minimum"/>
      <addaction name="flag_increase_slope"/>
     </widget>
     <addaction name="actionShow_3D_viewer"/>
@@ -2130,7 +2132,7 @@
     <addaction name="separator"/>
     <addaction name="menuSnow"/>
     <addaction name="separator"/>
-    <addaction name="actionView_Crop_degreeDays"/>
+    <addaction name="actionView_Crop"/>
     <addaction name="separator"/>
     <addaction name="menuWater_fluxes"/>
     <addaction name="separator"/>
@@ -2445,7 +2447,7 @@
     <string>Hide map</string>
    </property>
   </action>
-  <action name="actionViewMeteoVariable_None">
+  <action name="actionView_MeteoVariable_None">
    <property name="text">
     <string>None</string>
    </property>
@@ -2751,7 +2753,7 @@
     <string>View not active</string>
    </property>
   </action>
-  <action name="actionHide_soil_map">
+  <action name="actionHide_Soil_map">
    <property name="text">
     <string>Hide map</string>
    </property>
@@ -2850,7 +2852,7 @@
     <string>Soil moisture</string>
    </property>
   </action>
-  <action name="actionView_surfaceWaterContent_automatic_range">
+  <action name="actionView_SurfaceWaterContent_automatic_range">
    <property name="checkable">
     <bool>false</bool>
    </property>
@@ -2858,7 +2860,7 @@
     <string>Automatic range</string>
    </property>
   </action>
-  <action name="actionView_surfaceWaterContent_fixed_range">
+  <action name="actionView_SurfaceWaterContent_fixed_range">
    <property name="checkable">
     <bool>false</bool>
    </property>
@@ -2866,7 +2868,7 @@
     <string>Fixed range</string>
    </property>
   </action>
-  <action name="actionView_degree_days">
+  <action name="actionView_Crop_degreeDays">
    <property name="text">
     <string>Degree days</string>
    </property>
@@ -2884,17 +2886,17 @@
     <string>Update sub hourly</string>
    </property>
   </action>
-  <action name="actionView_factor_of_safety">
+  <action name="actionView_Factor_of_safety">
    <property name="text">
     <string>Factor of safety (current depth)</string>
    </property>
   </action>
-  <action name="actionView_degreeOfSaturation_automatic_range">
+  <action name="actionView_DegreeOfSaturation_automatic_range">
    <property name="text">
     <string>Automatic range</string>
    </property>
   </action>
-  <action name="actionView_degreeOfSaturation_fixed_range">
+  <action name="actionView_DegreeOfSaturation_fixed_range">
    <property name="text">
     <string>Fixed range</string>
    </property>
@@ -2914,7 +2916,7 @@
     <string>Save state</string>
    </property>
   </action>
-  <action name="actionView_factor_of_safety_minimum">
+  <action name="actionView_Factor_of_safety_minimum">
    <property name="text">
     <string>Factor of safety (minimum value)</string>
    </property>
@@ -2933,6 +2935,11 @@
    </property>
    <property name="text">
     <string>increase slope</string>
+   </property>
+  </action>
+  <action name="actionView_Radiation_None">
+   <property name="text">
+    <string>None</string>
    </property>
   </action>
  </widget>

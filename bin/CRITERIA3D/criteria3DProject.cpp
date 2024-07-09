@@ -1939,7 +1939,7 @@ void Crit3DProject::shadowColor(const Crit3DColor &colorIn, Crit3DColor &colorOu
 }
 
 
-bool Crit3DProject::update3DColors()
+bool Crit3DProject::update3DColors(gis::Crit3DRasterGrid *rasterPointer)
 {
     if (openGlGeometry == nullptr)
     {
@@ -1947,9 +1947,10 @@ bool Crit3DProject::update3DColors()
         return false;
     }
 
-    float z1, z2, z3;
+    float z1, z2, z3, value;
     Crit3DColor *c1, *c2, *c3;
     Crit3DColor sc1, sc2, sc3;
+
     long i = 0;
     for (long row = 0; row < DEM.header->nrRows; row++)
     {
@@ -1958,18 +1959,38 @@ bool Crit3DProject::update3DColors()
             z1 = DEM.getValueFromRowCol(row, col);
             if (! isEqual(z1, DEM.header->flag))
             {
-                c1 = DEM.colorScale->getColor(z1);
-                shadowColor(*c1, sc1, row, col);
                 z3 = DEM.getValueFromRowCol(row+1, col+1);
                 if (! isEqual(z3, DEM.header->flag))
                 {
+                    c1 = DEM.colorScale->getColor(z1);
                     c3 = DEM.colorScale->getColor(z3);
+
+                    if (rasterPointer != nullptr)
+                    {
+                        value = rasterPointer->getValueFromRowCol(row, col);
+                        if (! isEqual(value, rasterPointer->header->flag))
+                            c1 = rasterPointer->colorScale->getColor(value);
+
+                        value = rasterPointer->getValueFromRowCol(row+1, col+1);
+                        if (! isEqual(value, rasterPointer->header->flag))
+                            c3 = rasterPointer->colorScale->getColor(value);
+                    }
+
+                    shadowColor(*c1, sc1, row, col);
                     shadowColor(*c3, sc3, row+1, col+1);
+
                     z2 = DEM.getValueFromRowCol(row+1, col);
                     if (! isEqual(z2, DEM.header->flag))
                     {
                         c2 = DEM.colorScale->getColor(z2);
+                        if (rasterPointer != nullptr)
+                        {
+                            value = rasterPointer->getValueFromRowCol(row+1, col);
+                            if (! isEqual(value, rasterPointer->header->flag))
+                                c2 = rasterPointer->colorScale->getColor(value);
+                        }
                         shadowColor(*c2, sc2, row+1, col);
+
                         openGlGeometry->setVertexColor(i++, sc1);
                         openGlGeometry->setVertexColor(i++, sc2);
                         openGlGeometry->setVertexColor(i++, sc3);
@@ -1979,7 +2000,14 @@ bool Crit3DProject::update3DColors()
                     if (! isEqual(z2, DEM.header->flag))
                     {
                         c2 = DEM.colorScale->getColor(z2);
+                        if (rasterPointer != nullptr)
+                        {
+                            value = rasterPointer->getValueFromRowCol(row, col+1);
+                            if (! isEqual(value, rasterPointer->header->flag))
+                                c2 = rasterPointer->colorScale->getColor(value);
+                        }
                         shadowColor(*c2, sc2, row, col+1);
+
                         openGlGeometry->setVertexColor(i++, sc3);
                         openGlGeometry->setVertexColor(i++, sc2);
                         openGlGeometry->setVertexColor(i++, sc1);

@@ -115,7 +115,7 @@
         void clearGeometry();
         bool initializeGeometry();
         void shadowColor(const Crit3DColor &colorIn, Crit3DColor &colorOut, int row, int col);
-        bool update3DColors();
+        bool update3DColors(gis::Crit3DRasterGrid *rasterPointer = nullptr);
 
     };
 
