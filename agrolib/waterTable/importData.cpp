@@ -173,7 +173,7 @@ bool loadWaterTableDepthCsv(const QString &csvFileName, std::vector<Well> &wellL
             QString id = items[posId].remove(QChar('"'));
             bool found = false;
             int index = NODATA;
-            for (int i = 0; i < wellList.size(); i++)
+            for (int i = 0; i < int(wellList.size()); i++)
             {
                 if (wellList[i].getId() == id)
                 {
