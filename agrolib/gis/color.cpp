@@ -184,8 +184,8 @@ bool setLAIScale(Crit3DColorScale* myScale)
 
     myScale->keyColor[0] = Crit3DColor(200, 160, 0);        /*!<  ocra */
     myScale->keyColor[1] = Crit3DColor(160, 160, 0);        /*!<  yellow */
-    myScale->keyColor[1] = Crit3DColor(32, 160, 32);        /*!<  dark green */
-    myScale->keyColor[2] = Crit3DColor(0, 255, 0);          /*!<  green */
+    myScale->keyColor[2] = Crit3DColor(32, 160, 32);        /*!<  dark green */
+    myScale->keyColor[3] = Crit3DColor(0, 255, 0);          /*!<  green */
 
     return(myScale->classify());
 }
