@@ -149,9 +149,10 @@ void MainWindow::resizeEvent(QResizeEvent * event)
     Q_UNUSED(event)
 
     const int INFOHEIGHT = 42;
-    const int STEPY = 24;
+
+    int stepY = (this->height() - INFOHEIGHT) / 40;
     int x1 = this->width() - TOOLSWIDTH - MAPBORDER;
-    int dy = ui->groupBoxModel->height() + ui->groupBoxMeteoPoints->height() + ui->groupBoxDEM->height() + ui->groupBoxVariableMap->height() + STEPY*3;
+    int dy = ui->groupBoxModel->height() + ui->groupBoxMeteoPoints->height() + ui->groupBoxDEM->height() + ui->groupBoxVariableMap->height() + stepY*3;
     int y1 = (this->height() - INFOHEIGHT - dy) / 2;
 
     ui->widgetMap->setGeometry(0, 0, x1, this->height() - INFOHEIGHT);
@@ -159,15 +160,15 @@ void MainWindow::resizeEvent(QResizeEvent * event)
 
     ui->groupBoxModel->move(x1, y1);
     ui->groupBoxModel->resize(TOOLSWIDTH, ui->groupBoxModel->height());
-    y1 += ui->groupBoxModel->height() + STEPY;
+    y1 += ui->groupBoxModel->height() + stepY;
 
     ui->groupBoxDEM->move(x1, y1);
     ui->groupBoxDEM->resize(TOOLSWIDTH, ui->groupBoxDEM->height());
-    y1 += ui->groupBoxDEM->height() + STEPY;
+    y1 += ui->groupBoxDEM->height() + stepY;
 
     ui->groupBoxMeteoPoints->move(x1, y1);
     ui->groupBoxMeteoPoints->resize(TOOLSWIDTH, ui->groupBoxMeteoPoints->height());
-    y1 += ui->groupBoxMeteoPoints->height() + STEPY;
+    y1 += ui->groupBoxMeteoPoints->height() + stepY;
 
     ui->groupBoxVariableMap->move(x1, y1);
     ui->groupBoxVariableMap->resize(TOOLSWIDTH, ui->groupBoxVariableMap->height());
