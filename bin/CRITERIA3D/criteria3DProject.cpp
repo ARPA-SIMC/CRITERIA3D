@@ -1978,11 +1978,33 @@ bool Crit3DProject::update3DColors(gis::Crit3DRasterGrid *rasterPointer)
                     {
                         value = rasterPointer->getValueFromRowCol(row, col);
                         if (! isEqual(value, rasterPointer->header->flag))
-                            c1 = rasterPointer->colorScale->getColor(value);
+                        {
+                            // check outliers
+                            if (rasterPointer->colorScale->isHideOutliers())
+                            {
+                                if (value > rasterPointer->colorScale->minimum() && value < rasterPointer->colorScale->maximum())
+                                    c1 = rasterPointer->colorScale->getColor(value);
+                            }
+                            else
+                            {
+                                c1 = rasterPointer->colorScale->getColor(value);
+                            }
+                        }
 
                         value = rasterPointer->getValueFromRowCol(row+1, col+1);
                         if (! isEqual(value, rasterPointer->header->flag))
-                            c3 = rasterPointer->colorScale->getColor(value);
+                        {
+                            // check outliers
+                            if (rasterPointer->colorScale->isHideOutliers())
+                            {
+                                if (value > rasterPointer->colorScale->minimum() && value < rasterPointer->colorScale->maximum())
+                                    c3 = rasterPointer->colorScale->getColor(value);
+                            }
+                            else
+                            {
+                                c3 = rasterPointer->colorScale->getColor(value);
+                            }
+                        }
                     }
 
                     shadowColor(*c1, sc1, row, col);
@@ -1996,7 +2018,18 @@ bool Crit3DProject::update3DColors(gis::Crit3DRasterGrid *rasterPointer)
                         {
                             value = rasterPointer->getValueFromRowCol(row+1, col);
                             if (! isEqual(value, rasterPointer->header->flag))
-                                c2 = rasterPointer->colorScale->getColor(value);
+                            {
+                                // check outliers
+                                if (rasterPointer->colorScale->isHideOutliers())
+                                {
+                                    if (value > rasterPointer->colorScale->minimum() && value < rasterPointer->colorScale->maximum())
+                                        c2 = rasterPointer->colorScale->getColor(value);
+                                }
+                                else
+                                {
+                                    c2 = rasterPointer->colorScale->getColor(value);
+                                }
+                            }
                         }
                         shadowColor(*c2, sc2, row+1, col);
 
@@ -2013,7 +2046,18 @@ bool Crit3DProject::update3DColors(gis::Crit3DRasterGrid *rasterPointer)
                         {
                             value = rasterPointer->getValueFromRowCol(row, col+1);
                             if (! isEqual(value, rasterPointer->header->flag))
-                                c2 = rasterPointer->colorScale->getColor(value);
+                            {
+                                // check outliers
+                                if (rasterPointer->colorScale->isHideOutliers())
+                                {
+                                    if (value > rasterPointer->colorScale->minimum() && value < rasterPointer->colorScale->maximum())
+                                        c2 = rasterPointer->colorScale->getColor(value);
+                                }
+                                else
+                                {
+                                    c2 = rasterPointer->colorScale->getColor(value);
+                                }
+                            }
                         }
                         shadowColor(*c2, sc2, row, col+1);
 

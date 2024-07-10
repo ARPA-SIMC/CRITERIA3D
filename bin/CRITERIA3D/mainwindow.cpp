@@ -2503,7 +2503,7 @@ void MainWindow::on_actionLoad_state_triggered()
     QList<QString> stateList = myProject.getAllSavedState();
     if (stateList.size() == 0)
     {
-        myProject.logError();
+        myProject.logError("Missing state in directory:\n" + myProject.getProjectPath() + PATH_STATES);
         return;
     }
 
@@ -3164,12 +3164,11 @@ void MainWindow::on_actionShow_3D_viewer_triggered()
     }
 
     viewer3D = new Viewer3D(myProject.openGlGeometry);
+    refreshViewer3D();
     viewer3D->show();
 
     connect (viewer3D, SIGNAL(destroyed()), this, SLOT(on_viewer3DClosed()));
     connect (viewer3D, SIGNAL(slopeChanged()), this, SLOT(on_slopeChanged()));
-
-    refreshViewer3D();
 }
 
 
