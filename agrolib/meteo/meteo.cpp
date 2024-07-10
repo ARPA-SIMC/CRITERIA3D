@@ -764,9 +764,6 @@ bool setColorScale(meteoVariable variable, Crit3DColorScale *colorScale)
 {
     if (colorScale == nullptr) return false;
 
-    colorScale->setFixedRange(false);
-    colorScale->setHideOutliers(false);
-
     switch(variable)
     {
         case airTemperature: case dailyAirTemperatureAvg: case dailyAirTemperatureMax:

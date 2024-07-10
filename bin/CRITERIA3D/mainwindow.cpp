@@ -2356,7 +2356,8 @@ void MainWindow::on_actionCriteria3D_run_models_triggered()
 }
 
 
-void MainWindow::showCriteria3DVariable(criteria3DVariable var, int layerIndex, bool isFixedRange, double minimum, double maximum)
+void MainWindow::showCriteria3DVariable(criteria3DVariable var, int layerIndex, bool isFixedRange,
+                                        bool isHideOutliers, double minimum, double maximum)
 {
     if (! myProject.isCriteria3DInitialized)
     {
@@ -2412,27 +2413,26 @@ void MainWindow::showCriteria3DVariable(criteria3DVariable var, int layerIndex, 
         ui->labelOutputRaster->setText("Factor of safety [-]");
     }
 
-    // set range
+    myProject.criteria3DMap.colorScale->setFixedRange(false);
+    myProject.criteria3DMap.colorScale->setHideOutliers(false);
+
+    // range fixed
     if (isFixedRange)
     {
         myProject.criteria3DMap.colorScale->setRange(minimum, maximum);
         myProject.criteria3DMap.colorScale->setFixedRange(true);
-        myProject.criteria3DMap.colorScale->setHideOutliers(true);
     }
-    else
+    // hide outliers
+    if (isHideOutliers)
     {
-        myProject.criteria3DMap.colorScale->setFixedRange(false);
-        myProject.criteria3DMap.colorScale->setHideOutliers(false);
-
         if (! isEqual(minimum, NODATA) || ! isEqual(maximum, NODATA))
         {
             if (! isEqual(minimum, NODATA))
                 myProject.criteria3DMap.colorScale->setMinimum(minimum);
             if (! isEqual(maximum, NODATA))
-                myProject.criteria3DMap.colorScale->setMaximum(maximum);
-
-            myProject.criteria3DMap.colorScale->setHideOutliers(true);
+                myProject.criteria3DMap.colorScale->setMaximum(maximum);  
         }
+        myProject.criteria3DMap.colorScale->setHideOutliers(true);
     }
 
     setCurrentRasterOutput(&(myProject.criteria3DMap));
@@ -3226,7 +3226,7 @@ void MainWindow::on_actionHide_Geomap_triggered()
 
 void MainWindow::on_actionView_SurfaceWaterContent_automatic_range_triggered()
 {
-    showCriteria3DVariable(volumetricWaterContent, 0, false, 0.1, NODATA);
+    showCriteria3DVariable(volumetricWaterContent, 0, false, true, 0.0, NODATA);
 }
 
 
@@ -3244,41 +3244,41 @@ void MainWindow::on_actionView_SurfaceWaterContent_fixed_range_triggered()
     if (valueStr == "") return;
     maximum = valueStr.toFloat();
 
-    showCriteria3DVariable(volumetricWaterContent, 0, true, minimum, maximum);
+    showCriteria3DVariable(volumetricWaterContent, 0, true, false, minimum, maximum);
 }
 
 
 void MainWindow::on_actionView_SoilMoisture_triggered()
 {
     int layerIndex = std::max(1, ui->layerNrEdit->value());
-    showCriteria3DVariable(volumetricWaterContent, layerIndex, false, NODATA, NODATA);
+    showCriteria3DVariable(volumetricWaterContent, layerIndex, false, false, NODATA, NODATA);
 }
 
 
 void MainWindow::on_actionView_DegreeOfSaturation_automatic_range_triggered()
 {
     int layerIndex = ui->layerNrEdit->value();
-    showCriteria3DVariable(degreeOfSaturation, layerIndex, false, NODATA, NODATA);
+    showCriteria3DVariable(degreeOfSaturation, layerIndex, false, false, NODATA, NODATA);
 }
 
 
 void MainWindow::on_actionView_DegreeOfSaturation_fixed_range_triggered()
 {
     int layerIndex = ui->layerNrEdit->value();
-    showCriteria3DVariable(degreeOfSaturation, layerIndex, true, 0.2, 1.0);
+    showCriteria3DVariable(degreeOfSaturation, layerIndex, true, false, 0.1, 1.0);
 }
 
 
 void MainWindow::on_actionView_Factor_of_safety_triggered()
 {
     int layerIndex = std::max(1, ui->layerNrEdit->value());
-    showCriteria3DVariable(factorOfSafety, layerIndex, true, 0, 4);
+    showCriteria3DVariable(factorOfSafety, layerIndex, true, true, 0, 4);
 }
 
 
 void MainWindow::on_actionView_Factor_of_safety_minimum_triggered()
 {
-    showCriteria3DVariable(minimumFactorOfSafety, NODATA, true, 0, 4);
+    showCriteria3DVariable(minimumFactorOfSafety, NODATA, true, true, 0, 4);
 }
 
 
@@ -3314,19 +3314,13 @@ void MainWindow::on_layerNrEdit_valueChanged(int layerIndex)
     QString depthStr = QString::number(myProject.layerDepth[layerIndex],'f',2);
     ui->layerDepthEdit->setText(depthStr + " m");
 
-    if (view3DVariable && current3DlayerIndex != 0)
-    {
-        if (myProject.criteria3DMap.colorScale->isFixedRange())
-        {
-            showCriteria3DVariable(current3DVariable, layerIndex, true,
-                                   myProject.criteria3DMap.colorScale->minimum(),
-                                   myProject.criteria3DMap.colorScale->maximum());
-        }
-        else
-        {
-            showCriteria3DVariable(current3DVariable, layerIndex, false, NODATA, NODATA);
-        }
-    }
+    bool isRangeFixed = myProject.criteria3DMap.colorScale->isFixedRange();
+    bool isHideOutliers = myProject.criteria3DMap.colorScale->isHideOutliers();
+
+    showCriteria3DVariable(current3DVariable, layerIndex, isRangeFixed, isHideOutliers,
+                           myProject.criteria3DMap.colorScale->minimum(),
+                           myProject.criteria3DMap.colorScale->maximum());
+
 }
 
 

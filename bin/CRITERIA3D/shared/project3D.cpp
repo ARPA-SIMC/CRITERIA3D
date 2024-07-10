@@ -911,8 +911,8 @@ void Project3D::computeWaterBalance3D(double totalTimeStep)
 
     soilFluxes3D::initializeBalance();
 
-    currentSeconds = 0;             // [s]
-    double showTime = 30;           // [s]
+    currentSeconds = 0;                 // [s]
+    double minimumShowTime = 10;        // [s]
     int currentStep = 0;
     while (currentSeconds < totalTimeStep)
     {
@@ -920,13 +920,15 @@ void Project3D::computeWaterBalance3D(double totalTimeStep)
 
         if (showEachTimeStep)
         {
-            if (currentSeconds < totalTimeStep && int(currentSeconds / showTime) > currentStep)
+            if (currentSeconds < totalTimeStep && int(currentSeconds / minimumShowTime) > currentStep)
             {
-                currentStep = int(currentSeconds / showTime);
+                currentStep = int(currentSeconds / minimumShowTime);
                 emit updateOutputSignal();
             }
         }
     }
+
+    // refresh
     emit updateOutputSignal();
 
     double runoff = soilFluxes3D::getBoundaryWaterSumFlow(BOUNDARY_RUNOFF);
