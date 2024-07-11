@@ -12,7 +12,7 @@ InOutDataXML::InOutDataXML(bool isGrid, Crit3DMeteoPointsDbHandler *meteoPointsD
     this->xmlFileName = xmlFileName;
     this->meteoPointsDbHandler = meteoPointsDbHandler;
     this->meteoGridDbHandler = meteoGridDbHandler;
-    this->format_headerRow = 0;
+    this->nrHeaderRows = 0;
 }
 
 bool InOutDataXML::parseXMLFile(QDomDocument* xmlDoc, QString *errorStr)
@@ -93,7 +93,7 @@ bool InOutDataXML::parserXML(QString *myError)
                         }
                         else if (mySecondTag == "NRCHAR" || mySecondTag == "NR_CHAR")
                         {
-                            fileName_nrChar = secondChild.toElement().text().toInt();
+                            nrFileNameChars = secondChild.toElement().text().toInt();
                         }
                         secondChild = secondChild.nextSibling();
                     }
@@ -124,20 +124,20 @@ bool InOutDataXML::parserXML(QString *myError)
                 {
                     if (child.toElement().text().toUpper().simplified() == "SINGLEPOINT")
                     {
-                        format_isSinglePoint = true;
+                        isSinglePoint = true;
                     }
                     else
                     {
-                        format_isSinglePoint = false;
+                        isSinglePoint = false;
                     }
                 }
                 else if (myTag == "HEADER" || myTag == "HEADERROWS" || myTag == "NUMHEADERROWS")
                 {
-                    format_headerRow = child.toElement().text().toInt();
+                    nrHeaderRows = child.toElement().text().toInt();
                 }
                 else if (myTag == "MISSINGVALUE" || myTag == "MISSING_VALUE" || myTag == "NODATA")
                 {
-                    format_missingValue = child.toElement().text().toFloat();
+                    missingValue = child.toElement().text().toFloat();
                 }
                 else if (myTag == "DELIMITER")
                 {
@@ -422,7 +422,7 @@ bool InOutDataXML::checkPointCodeFromFileName(QString& myPointCode, QString& err
 {
     myPointCode = "";
 
-    if (! format_isSinglePoint)
+    if (! isSinglePoint)
     {
         errorStr = "Not singlePoint format.";
         return true;
@@ -476,7 +476,7 @@ bool InOutDataXML::importXMLDataFixed(QString& errorStr)
 
     QString myPointCode = "";
     QString previousPointCode = "";
-    if (format_isSinglePoint)
+    if (isSinglePoint)
     {
         if (! checkPointCodeFromFileName(myPointCode, errorStr))
         {
@@ -496,9 +496,9 @@ bool InOutDataXML::importXMLDataFixed(QString& errorStr)
     while (! in.atEnd())
     {
         QString line = in.readLine();
-        if (currentRow >= format_headerRow && !line.isEmpty())
+        if (currentRow >= nrHeaderRows && !line.isEmpty())
         {
-            if (!format_isSinglePoint)
+            if (! isSinglePoint)
             {
                 // multipoint
                 myPointCode = parseXMLPointCode(line);
@@ -576,16 +576,16 @@ bool InOutDataXML::importXMLDataFixed(QString& errorStr)
                         if (myValue.toString() == "ERROR")
                         {
                             nrErrors++;
-                            myValue = format_missingValue;
+                            myValue = missingValue;
                         }
                         else if (myFlag != myFlagAccepted)
                         {
-                            myValue = format_missingValue;
+                            myValue = missingValue;
                         }
 
                     } // end flag if
 
-                    if (myValue != format_missingValue)
+                    if (myValue != missingValue)
                     {
                         // write myValue
                         meteoVariable var = getKeyMeteoVarMeteoMap(MapDailyMeteoVarToString, variable[i].varField.getType().toStdString());
@@ -652,7 +652,7 @@ bool InOutDataXML::importXMLDataFixed(QString& errorStr)
 
                         if (myFlag != myFlagAccepted)
                         {
-                            myValue = format_missingValue;
+                            myValue = missingValue;
                         }
                         else
                         {
@@ -660,12 +660,12 @@ bool InOutDataXML::importXMLDataFixed(QString& errorStr)
                             if (myValue.toString() == "ERROR")
                             {
                                 nrErrors++;
-                                myValue = format_missingValue;
+                                myValue = missingValue;
                             }
                         }
                     }
 
-                    if (myValue != format_missingValue)
+                    if (myValue != missingValue)
                     {
                         // write myValue
                         meteoVariable var = getKeyMeteoVarMeteoMap(MapHourlyMeteoVarToString, variable[i].varField.getType().toStdString());
@@ -781,7 +781,7 @@ bool InOutDataXML::importXMLDataDelimited(QString& errorStr)
 
     QString myPointCode = "";
     QString previousPointCode = "";
-    if (format_isSinglePoint)
+    if (isSinglePoint)
     {
         if (! checkPointCodeFromFileName(myPointCode, errorStr))
         {
@@ -802,9 +802,9 @@ bool InOutDataXML::importXMLDataDelimited(QString& errorStr)
     {
         QString line = in.readLine();
 
-        if (currentRow >= format_headerRow && !line.isEmpty())
+        if (currentRow >= nrHeaderRows && !line.isEmpty())
         {
-            if (! format_isSinglePoint)
+            if (! isSinglePoint)
             {
                 QList<QString> myFields = line.split(format_delimiter);
 
@@ -888,19 +888,19 @@ bool InOutDataXML::importXMLDataDelimited(QString& errorStr)
                                 if (myValue.toString() == "ERROR")
                                 {
                                     nrErrors++;
-                                    myValue = format_missingValue;
+                                    myValue = missingValue;
                                 }
                             }
                             else
                             {
                                 nrErrors++;
-                                myValue = format_missingValue;
+                                myValue = missingValue;
                                 return false;
                             }
                             // check FLAG
                             if (myFields[variable[i].flagField.getPosition()-1] != variable[i].flagAccepted)
                             {
-                                myValue = format_missingValue;
+                                myValue = missingValue;
                             }
                         }
                         else
@@ -911,17 +911,17 @@ bool InOutDataXML::importXMLDataDelimited(QString& errorStr)
                                 if (myValue.toString() == "ERROR")
                                 {
                                     nrErrors++;
-                                    myValue = format_missingValue;
+                                    myValue = missingValue;
                                 }
                             }
                             else
                             {
                                 nrErrors++;
-                                myValue = format_missingValue;
+                                myValue = missingValue;
                                 return false;
                             }
                         }
-                        if (myValue != format_missingValue && myValue != NODATA)
+                        if (myValue != missingValue && myValue != NODATA)
                         {
                             // write value
                             meteoVariable var = getKeyMeteoVarMeteoMap(MapDailyMeteoVarToString, variable[i].varField.getType().toStdString());
@@ -987,19 +987,19 @@ bool InOutDataXML::importXMLDataDelimited(QString& errorStr)
                                 if (myValue.toString() == "ERROR")
                                 {
                                     nrErrors++;
-                                    myValue = format_missingValue;
+                                    myValue = missingValue;
                                 }
                             }
                             else
                             {
                                 nrErrors++;
-                                myValue = format_missingValue;
+                                myValue = missingValue;
                                 return false;
                             }
                             // check FLAG
                             if (myFields[variable[i].flagField.getPosition()-1] != variable[i].flagAccepted)
                             {
-                                myValue = format_missingValue;
+                                myValue = missingValue;
                             }
                         }
                         else
@@ -1010,17 +1010,17 @@ bool InOutDataXML::importXMLDataDelimited(QString& errorStr)
                                 if (myValue.toString() == "ERROR")
                                 {
                                     nrErrors++;
-                                    myValue = format_missingValue;
+                                    myValue = missingValue;
                                 }
                             }
                             else
                             {
                                 nrErrors++;
-                                myValue = format_missingValue;
+                                myValue = missingValue;
                                 return false;
                             }
                         }
-                        if (myValue != format_missingValue && myValue != NODATA)
+                        if (myValue != missingValue && myValue != NODATA)
                         {
                             // write myValue
                             meteoVariable var = getKeyMeteoVarMeteoMap(MapHourlyMeteoVarToString, variable[i].varField.getType().toStdString());
@@ -1155,11 +1155,11 @@ QString InOutDataXML::parseXMLPointCode(QString text)
         {
             // con questa casistica l'import funziona anche con gli xml di export che hanno il campo filename e prefissi o suffissi nel nome del file
             QString substring = text;
-            for (int i = 0; i<fileName_fixedPrefix.size(); i++)
+            for (int i = 0; i < fileName_fixedPrefix.size(); i++)
             {
                 substring = substring.replace(fileName_fixedPrefix[i],"");
             }
-            for (int i = 0; i<fileName_fixedSuffix.size(); i++)
+            for (int i = 0; i < fileName_fixedSuffix.size(); i++)
             {
                 substring = substring.replace(fileName_fixedSuffix[i],"");
             }
@@ -1176,7 +1176,7 @@ QString InOutDataXML::parseXMLPointCode(QString text)
         int pos = pointCode.getPosition();
         if (pos < 0)
             return myPointCode;
-        if (format_isSinglePoint)
+        if (isSinglePoint)
         {
             myPointCode = list[pointCode.getPosition()];
         }
@@ -1273,7 +1273,7 @@ QVariant InOutDataXML::parseXMLFixedValue(QString text, int nReplication, FieldX
 QString InOutDataXML::parseXMLFilename(QString code)
 {
     QString filename = "";
-    if (code.length() > fileName_nrChar)
+    if (code.length() > nrFileNameChars)
     {
         return filename;
     }
@@ -1371,7 +1371,7 @@ int InOutDataXML::getVariableFlagFirstChar()
 
 float InOutDataXML::getFormatMissingValue()
 {
-    return format_missingValue;
+    return missingValue;
 }
 
 

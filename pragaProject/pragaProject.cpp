@@ -3467,6 +3467,7 @@ bool PragaProject::loadXMLImportData(QString fileName)
     return true;
 }
 
+
 bool PragaProject::loadXMLExportData(QString code, QDateTime myFirstTime, QDateTime myLastTime)
 {
     errorString = "";
@@ -3493,23 +3494,27 @@ bool PragaProject::loadXMLExportData(QString code, QDateTime myFirstTime, QDateT
                 fixedString.insert(0, " ");
         }
     }
+
     int variableCodeFirstChar = inOutData->getVariableCodeFirstChar();
     int whiteSpaces = variableCodeFirstChar - (fixedString.length()+1);
-    for (int i = 0; i<whiteSpaces; i++)
+    for (int i = 0; i < whiteSpaces; i++)
     {
         fixedString.append(" ");
     }
+
     QString attribute = inOutData->getVariableCodeAttribute();
-    if (!attribute.isEmpty())
+    if (! attribute.isEmpty())
     {
         fixedString = fixedString + attribute;
     }
+
     int timeFirstChar = inOutData->getTimeFirstChar();
     whiteSpaces = timeFirstChar - (fixedString.length()+1);
-    for (int i = 0; i<whiteSpaces; i++)
+    for (int i = 0; i < whiteSpaces; i++)
     {
         fixedString.append(" ");
     }
+
     QString variableAlign = inOutData->getVariableAlign();
     int variableFirstChar = inOutData->getVariableFirstChar();
     int variableNrChar = inOutData->getVariableNrChar();
@@ -3660,6 +3665,7 @@ bool PragaProject::loadXMLExportDataGrid(QString code, QDateTime myFirstTime, QD
         errorString = "Invalid filename" ;
         return false;
     }
+
     QString variable = inOutData->getVariableExport();
     meteoVariable meteoVar = getMeteoVar(variable.toStdString());
     if (meteoVar == noMeteoVar)
@@ -3667,39 +3673,45 @@ bool PragaProject::loadXMLExportDataGrid(QString code, QDateTime myFirstTime, QD
         errorString = "Unknown meteo variable: " + variable;
         return false;
     }
+
     QString fixedString = "";
     int pointCodeFirstChar = inOutData->getPointCodeFirstChar();
     if (pointCodeFirstChar != NODATA)
     {
         fixedString = code;
-        for (int i = 0; i<pointCodeFirstChar-1; i++)
+        for (int i = 0; i < pointCodeFirstChar-1; i++)
         {
             fixedString.insert(0, " ");
         }
     }
+
     int variableCodeFirstChar = inOutData->getVariableCodeFirstChar();
     int whiteSpaces = variableCodeFirstChar - (fixedString.length()+1);
-    for (int i = 0; i<whiteSpaces; i++)
+    for (int i = 0; i < whiteSpaces; i++)
     {
         fixedString.append(" ");
     }
+
     QString attribute = inOutData->getVariableCodeAttribute();
-    if (!attribute.isEmpty())
+    if (! attribute.isEmpty())
     {
         fixedString = fixedString + attribute;
     }
+
     int timeFirstChar = inOutData->getTimeFirstChar();
     whiteSpaces = timeFirstChar - (fixedString.length()+1);
-    for (int i = 0; i<whiteSpaces; i++)
+    for (int i = 0; i < whiteSpaces; i++)
     {
         fixedString.append(" ");
     }
+
     QString variableAlign = inOutData->getVariableAlign();
     int variableFirstChar = inOutData->getVariableFirstChar();
     int variableNrChar = inOutData->getVariableNrChar();
     QString variableFormat = inOutData->getVariableFormat();
     QChar charFormat = variableFormat[variableFormat.length()-1];
     int nDecimals = variableFormat.mid(variableFormat.length()-2,1).toInt();
+
     if (variableAlign.isEmpty())
     {
         variableAlign = "right"; //default
@@ -3709,6 +3721,7 @@ bool PragaProject::loadXMLExportDataGrid(QString code, QDateTime myFirstTime, QD
         errorString = "Invalid alignment: " + variableAlign;
         return false;
     }
+
     QString flagAccepted = inOutData->getVariableFlagAccepted();
     int flagFirstChar = 0;
     if (!flagAccepted.isEmpty())

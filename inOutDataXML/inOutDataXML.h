@@ -19,7 +19,9 @@ enum formatType{ XMLFORMATFIXED, XMLFORMATDELIMITED};
 class InOutDataXML
 {
 public:
-    InOutDataXML(bool isGrid, Crit3DMeteoPointsDbHandler* meteoPointsDbHandler, Crit3DMeteoGridDbHandler* meteoGridDbHandler, QString xmlFileName);
+    InOutDataXML(bool isGrid, Crit3DMeteoPointsDbHandler* meteoPointsDbHandler,
+                 Crit3DMeteoGridDbHandler* meteoGridDbHandler, QString xmlFileName);
+
     bool parseXMLFile(QDomDocument* xmlDoc, QString *error);
     bool parserXML(QString *error);
     bool importDataMain(QString fileName, QString &error);
@@ -50,25 +52,31 @@ public:
 
 private:
     bool isGrid;
+    bool isSinglePoint;
+    formatType format_type;
+
+    int nrHeaderRows;
+    int nrFileNameChars;
+    float missingValue;
+
     Crit3DMeteoPointsDbHandler* meteoPointsDbHandler;
     Crit3DMeteoGridDbHandler* meteoGridDbHandler;
+
     QString xmlFileName;
-    bool format_isSinglePoint;
-    formatType format_type;
-    int format_headerRow;
-    float format_missingValue;
+    QString dataFileName;
     QString format_delimiter;
     QString format_decimalSeparator;
     QString fileName_path;
     QString fileName_pragaName;
+
     QList<QString> fileName_fixedPrefix;
     QList<QString> fileName_fixedSuffix;
-    int fileName_nrChar;
+
     FieldXML time;
     FieldXML pointCode;
     FieldXML variableCode;
+
     QList<VariableXML> variable;
-    QString dataFileName;
 };
 
 #endif // INOUTDATAXML_H
