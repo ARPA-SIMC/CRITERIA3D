@@ -3458,8 +3458,9 @@ bool PragaProject::loadXMLImportData(QString fileName)
     }
 
     errorString = "";
-    if (!inOutData->importDataMain(fileName, errorString))
+    if (! inOutData->importDataMain(fileName, errorString))
     {
+        logError();
         return false;
     }
 

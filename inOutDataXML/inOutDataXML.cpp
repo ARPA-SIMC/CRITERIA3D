@@ -143,7 +143,7 @@ bool InOutDataXML::parserXML(QString *myError)
                 {
                     if (child.toElement().text() == "")
                     {
-                        format_delimiter = " ";
+                        format_delimiter = ",";
                     }
                     else
                     {
@@ -285,13 +285,13 @@ bool InOutDataXML::parserXML(QString *myError)
             VariableXML var;
             variable.push_back(var);
             child = ancestor.firstChild();
-            while( !child.isNull())
+            while(! child.isNull())
             {
                 myTag = child.toElement().tagName().toUpper();
                 if (myTag == "FIELD")
                 {
                     secondChild = child.firstChild();
-                    while( !secondChild.isNull())
+                    while(! secondChild.isNull())
                     {
                         mySecondTag = secondChild.toElement().tagName().toUpper();
                         if (mySecondTag == "TYPE" || mySecondTag == "NAME")
@@ -394,29 +394,6 @@ bool InOutDataXML::parserXML(QString *myError)
     }
     xmlDoc.clear();
 
-    if (variableCode.getType().toUpper() == "FIXED")
-    {
-        for (int i = 0; i<variable.size(); i++)
-        {
-            if (variable[i].nReplication > 1)
-            {
-                numVarFields = numVarFields + variable[i].nReplication;
-            }
-            else
-            {
-                numVarFields = numVarFields + 1;
-            }
-        }
-    }
-    else if (variable.size() > 0)
-    {
-        numVarFields = 1;
-    }
-    else
-    {
-        *myError = "Error in XML File: missing variables definition.";
-        return false;
-    }
     return true;
 }
 
@@ -516,7 +493,7 @@ bool InOutDataXML::importXMLDataFixed(QString& errorStr)
     int currentRow = 0;
     int nrErrors = 0;
 
-    while (!in.atEnd())
+    while (! in.atEnd())
     {
         QString line = in.readLine();
         if (currentRow >= format_headerRow && !line.isEmpty())
@@ -564,9 +541,9 @@ bool InOutDataXML::importXMLDataFixed(QString& errorStr)
             if (time.getType().toUpper() == "DAILY")
             {
                 QDate myDate = parseXMLDate(line);
-                if (!myDate.isValid() || myDate.year() == 1800)
+                if (! myDate.isValid() || myDate.year() == 1800)
                 {
-                    errorStr = "Date not found or not valid for file: " + dataFileName;
+                    errorStr = "Date not found or invalid in file:\n" + dataFileName;
                     return false;
                 }
                 for (int i = 0; i<variable.size(); i++)
@@ -642,9 +619,9 @@ bool InOutDataXML::importXMLDataFixed(QString& errorStr)
             else if (time.getType().toUpper() == "HOURLY")
             {
                 QDateTime myDateTime = parseXMLDateTime(line);
-                if (!myDateTime.isValid() || myDateTime.date().year() == 1800)
+                if (! myDateTime.isValid() || myDateTime.date().year() == 1800)
                 {
-                    errorStr = "Date not found or not valid for file: " + dataFileName + "\n" + line;
+                    errorStr = "Date not found or invalid in file:\n" + dataFileName + "\n" + line;
                     return false;
                 }
                 for (int i = 0; i < variable.size(); i++)
@@ -821,7 +798,7 @@ bool InOutDataXML::importXMLDataDelimited(QString& errorStr)
     int currentRow = 0;
     int nrErrors = 0;
 
-    while (!in.atEnd())
+    while (! in.atEnd())
     {
         QString line = in.readLine();
 
@@ -876,14 +853,20 @@ bool InOutDataXML::importXMLDataDelimited(QString& errorStr)
                 QList<QString> myFields = line.split(format_delimiter);
                 QDate myDate(1800,1,1);
 
+                if (time.getPosition() <= 0)
+                {
+                    errorStr = "Wrong Time field position (the number of fields must start from 1): " + QString::number(time.getPosition());
+                    return false;
+                }
+
                 if (time.getPosition()-1 < myFields.size())
                 {
                     myDate = parseXMLDate(myFields[time.getPosition()-1]);
                 }
 
-                if (!myDate.isValid() || myDate.year() == 1800)
+                if (! myDate.isValid() || myDate.year() == 1800)
                 {
-                    errorStr = "Date not found or not valid for file: " + dataFileName;
+                    errorStr = "Date not found or invalid in file:\n" + dataFileName;
                     return false;
                 }
 
@@ -897,7 +880,7 @@ bool InOutDataXML::importXMLDataDelimited(QString& errorStr)
                     {
                         int nReplication = 0;
 
-                        if (!variable[i].flagAccepted.isEmpty() && variable[i].flagField.getPosition()>0 && variable[i].flagField.getPosition()-1 < myFields.size())
+                        if (! variable[i].flagAccepted.isEmpty() && variable[i].flagField.getPosition()>0 && variable[i].flagField.getPosition()-1 < myFields.size())
                         {
                             if (variable[i].varField.getPosition() > 0 && variable[i].varField.getPosition()-1 < myFields.size())
                             {
@@ -980,9 +963,9 @@ bool InOutDataXML::importXMLDataDelimited(QString& errorStr)
                      myDateTime = parseXMLDateTime(myFields[time.getPosition()-1]);
                 }
 
-                if (!myDateTime.isValid() || myDateTime.date().year() == 1800)
+                if (! myDateTime.isValid() || myDateTime.date().year() == 1800)
                 {
-                    errorStr = "Date not found or not valid for file: " + dataFileName + "\n" + line;
+                    errorStr = "Date not found or invalid in file:\n" + dataFileName + "\n" + line;
                     return false;
                 }
 
