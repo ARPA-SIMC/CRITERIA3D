@@ -571,7 +571,7 @@ namespace gis
         }
 
         myFile << "ENVI\n";
-        myFile << "description = {CRITERIA3D raster grid}\n";
+        myFile << "description = {raster grid}\n";
         myFile << "samples = " << rasterGrid->header->nrCols << "\n";
         myFile << "lines = " << rasterGrid->header->nrRows << "\n";
         myFile << "bands = 1\n";

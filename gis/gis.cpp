@@ -694,7 +694,7 @@ namespace gis
         myGrid->maximum = maximum;
         myGrid->minimum = minimum;
 
-        if (! myGrid->colorScale->isRangeBlocked())
+        if (! myGrid->colorScale->isFixedRange())
         {
             myGrid->colorScale->setRange(minimum, maximum);
         }
@@ -1421,7 +1421,9 @@ namespace gis
             c = -1;
 
         float valueBoundary = rasterRef.getValueFromRowCol(row + r, col + c);
-        return isEqual(valueBoundary, rasterRef.header->flag);
+        bool isBoundary = isEqual(valueBoundary, rasterRef.header->flag);
+
+        return isBoundary;
     }
 
 
@@ -1763,5 +1765,80 @@ namespace gis
 
         return true;
     }
+
+
+    bool clipRasterWithRaster(gis::Crit3DRasterGrid* refRaster, gis::Crit3DRasterGrid* maskRaster, gis::Crit3DRasterGrid* outputRaster)
+    {
+        if (refRaster == nullptr || maskRaster == nullptr || outputRaster == nullptr)
+            return false;
+
+        gis::Crit3DRasterGrid* tmpRaster = new gis::Crit3DRasterGrid();
+        tmpRaster->initializeGrid(*(refRaster->header));
+
+        bool isFirst = true;
+        long firstRow, lastRow, firstCol, lastCol;
+        double x, y;
+        for (long row = 0; row < refRaster->header->nrRows; row++)
+        {
+            for (long col = 0; col < refRaster->header->nrCols; col++)
+            {
+                gis::getUtmXYFromRowCol(refRaster->header, row, col, &x, &y);
+                if (! isEqual(maskRaster->getValueFromXY(x, y), maskRaster->header->flag))
+                {
+                    tmpRaster->value[row][col] = refRaster->value[row][col];
+                    if (isFirst)
+                    {
+                        firstRow = row;
+                        lastRow = row;
+                        firstCol = col;
+                        lastCol = col;
+                        isFirst = false;
+                    }
+                    else
+                    {
+                        firstRow = std::min(firstRow, row);
+                        firstCol = std::min(firstCol, col);
+                        lastRow = std::max(lastRow, row);
+                        lastCol = std::max(lastCol, col);
+                    }
+                }
+            }
+        }
+
+        // check no data
+        if (isFirst)
+        {
+            tmpRaster->clear();
+            return false;
+        }
+
+        // new header
+        gis::Crit3DRasterHeader header;
+        header = *(refRaster->header);
+        header.nrRows = lastRow - firstRow + 1;
+        header.nrCols = lastCol - firstCol + 1;
+        header.llCorner.x = refRaster->header->llCorner.x + refRaster->header->cellSize * firstCol;
+        header.llCorner.y = refRaster->header->llCorner.y + refRaster->header->cellSize * (refRaster->header->nrRows - (lastRow +1));
+
+        // output raster
+        outputRaster->initializeGrid(header);
+
+        for (long row = 0; row < outputRaster->header->nrRows; row++)
+        {
+            for (long col = 0; col < outputRaster->header->nrCols; col++)
+            {
+                float value = tmpRaster->value[row + firstRow][col + firstCol];
+                if (! isEqual (value, tmpRaster->header->flag))
+                    outputRaster->value[row][col] = value;
+            }
+        }
+
+        // clean memory
+        tmpRaster->clear();
+
+        gis::updateMinMaxRasterGrid(outputRaster);
+        return true;
+    }
+
 }
 

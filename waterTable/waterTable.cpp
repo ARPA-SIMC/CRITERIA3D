@@ -142,7 +142,7 @@ bool WaterTable::setMeteoData(QDate myDate, float tmin, float tmax, float prec)
 {
     int index = firstMeteoDate.daysTo(myDate);
 
-    if (index < etpValues.size() && index < precValues.size())
+    if (index < int(etpValues.size()) && index < int(precValues.size()))
     {
         Crit3DDate date = Crit3DDate(myDate.day(), myDate.month(), myDate.year());
         etpValues[index] = dailyEtpHargreaves(tmin, tmax, date, well.getLatitude(), &meteoSettings);
@@ -283,7 +283,7 @@ double WaterTable::computeCWB(QDate myDate, int nrDays)
     {
         actualDate = myDate.addDays(-shift);
         int index = firstMeteoDate.daysTo(actualDate);
-        if (index >= 0 && index < precValues.size())
+        if (index >= 0 && index < int(precValues.size()))
         {
             float etp = etpValues[index];
             float prec = precValues[index];

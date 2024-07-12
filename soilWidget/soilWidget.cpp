@@ -1,5 +1,5 @@
 /*!
-    CRITERIA3D
+    soilWidget.cpp
 
     \copyright 2016 Fausto Tomei, Gabriele Antolini, Laura Costantini
     Alberto Pistocchi, Marco Bittelli, Antonio Volta
@@ -293,7 +293,7 @@ void Crit3DSoilWidget::setDbSoil(QSqlDatabase dbOpened, QString soilCode)
     // load default geotechnics parameters (not mandatory)
     if (! loadGeotechnicsParameters(dbSoil, geotechnicsClassList, errorStr))
     {
-        QMessageBox::warning(nullptr, "Warning", "loadGeotechnicsParameters\n" + errorStr);
+        QMessageBox::warning(nullptr, "Warning", "Failed to load geotecnical parameters for slope stability: missing reference db");
     }
 
     // read soil list

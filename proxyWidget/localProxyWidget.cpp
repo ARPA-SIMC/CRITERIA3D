@@ -541,7 +541,7 @@ void Crit3DLocalProxyWidget::modelLRClicked(int toggled)
                         for (int m = xMin; m < xMax; m += 5)
                             xVector.push_back(m);
 
-                        for (int p = 0; p < xVector.size(); p++)
+                        for (int p = 0; p < int(xVector.size()); p++)
                         {
                             point.setX(xVector[p]);
                             point.setY(lapseRatePiecewiseThree_withSlope(xVector[p], parameters[proxyPos]));
@@ -578,7 +578,7 @@ void Crit3DLocalProxyWidget::modelLRClicked(int toggled)
                         for (int m = xMin; m < xMax; m += 5)
                             xVector.push_back(m);
 
-                        for (int p = 0; p < xVector.size(); p++)
+                        for (int p = 0; p < int(xVector.size()); p++)
                         {
                             point.setX(xVector[p]);
                             point.setY(lapseRatePiecewiseFree(xVector[p], parameters[proxyPos]));

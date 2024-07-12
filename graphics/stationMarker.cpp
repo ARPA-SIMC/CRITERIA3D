@@ -12,64 +12,18 @@ StationMarker::StationMarker(qreal radius,bool sizeIsZoomInvariant, QColor fillC
     this->setFlag(MapGraphicsObject::ObjectIsSelectable, false);
     this->setFlag(MapGraphicsObject::ObjectIsMovable, false);
     this->setFlag(MapGraphicsObject::ObjectIsFocusable, false);
+
     _id = "";
     _name = "";
     _dataset = "";
+    _municipality = "";
     _altitude = NODATA;
     _lapseRateCode = primary;
-    _municipality = "";
+
+    _caller = PRAGA_caller;
     _active = true;
 }
 
-void StationMarker::setId(std::string id)
-{
-    _id = id;
-}
-
-std::string StationMarker::id() const
-{
-    return _id;
-}
-
-void StationMarker::setName(const std::string &name)
-{
-    _name = name;
-}
-
-void StationMarker::setDataset(const std::string &dataset)
-{
-    _dataset = dataset;
-}
-
-void StationMarker::setAltitude(double altitude)
-{
-    _altitude = altitude;
-}
-
-void StationMarker::setLapseRateCode(lapseRateCodeType code)
-{
-    _lapseRateCode = code;
-}
-
-void StationMarker::setMunicipality(const std::string &municipality)
-{
-    _municipality = municipality;
-}
-
-void StationMarker::setQuality(const quality::qualityType &quality)
-{
-    _quality = quality;
-}
-
-bool StationMarker::active() const
-{
-    return _active;
-}
-
-void StationMarker::setActive(bool active)
-{
-    _active = active;
-}
 
 void StationMarker::setToolTip()
 {
@@ -109,74 +63,101 @@ void StationMarker::mouseReleaseEvent(QGraphicsSceneMouseEvent *event)
 {  
     if (event->button() == Qt::RightButton)
     {
-        bool isGrid = false;
-        QMenu menu;
-        QAction *openMeteoWidget = menu.addAction("Open new meteo widget");
-        QAction *appendMeteoWidget = menu.addAction("Append to last meteo widget");
-        menu.addSeparator();
-        QAction *openPointStatisticsWidget = menu.addAction("Open point statistics widget");
-        QAction *openHomogeneityWidget = menu.addAction("Open homogeneity test widget");
-        menu.addSeparator();
-        QAction *openSynchronicityWidget = menu.addAction("Open synchronicity test widget");
-        QAction *setSynchronicityReferencePoint = menu.addAction("Set as synchronicity reference point");
-        menu.addSeparator();
-        QMenu *orogCodeSubMenu;
-        orogCodeSubMenu = menu.addMenu("Orog code");
-        QAction *actionOrogCode_primary = orogCodeSubMenu->addAction( "Set as primary station" );
-        QAction *actionOrogCode_secondary = orogCodeSubMenu->addAction( "Set as secondary station" );
-        QAction *actionOrogCode_supplemental = orogCodeSubMenu->addAction( "Set as supplemental station" );
-        menu.addSeparator();
-        QAction *actionMarkPoint = menu.addAction( "Mark point" );
-        QAction *actionUnmarkPoint = menu.addAction( "Unmark point" );
-
-        QAction *selection =  menu.exec(QCursor::pos());
-
-        if (selection != nullptr)
+        if (_caller == PRAGA_caller)
         {
-            std::string lapseRateCode = getLapseRateCodeName(_lapseRateCode);
-            if (selection == openMeteoWidget)
+            QMenu menu;
+            QAction *openMeteoWidget = menu.addAction("Open a new meteo widget");
+            QAction *appendMeteoWidget = menu.addAction("Append to the lastest meteo widget");
+            menu.addSeparator();
+            QAction *openPointStatisticsWidget = menu.addAction("Open point statistics widget");
+            QAction *openHomogeneityWidget = menu.addAction("Open homogeneity test widget");
+            menu.addSeparator();
+            QAction *openSynchronicityWidget = menu.addAction("Open synchronicity test widget");
+            QAction *setSynchronicityReferencePoint = menu.addAction("Set as synchronicity reference point");
+            menu.addSeparator();
+            QAction *actionMarkPoint = menu.addAction( "Mark point" );
+            QAction *actionUnmarkPoint = menu.addAction( "Unmark point" );
+            menu.addSeparator();
+            QMenu *orogCodeSubMenu;
+            orogCodeSubMenu = menu.addMenu("Orog code");
+            QAction *actionOrogCode_primary = orogCodeSubMenu->addAction( "Set as primary station" );
+            QAction *actionOrogCode_secondary = orogCodeSubMenu->addAction( "Set as secondary station" );
+            QAction *actionOrogCode_supplemental = orogCodeSubMenu->addAction( "Set as supplemental station" );
+
+            QAction *selection =  menu.exec(QCursor::pos());
+
+            if (selection != nullptr)
             {
-                emit newStationClicked(_id, _name, _dataset, _altitude, lapseRateCode, isGrid);
+                bool isGrid = false;
+                std::string lapseRateCode = getLapseRateCodeName(_lapseRateCode);
+                if (selection == openMeteoWidget)
+                {
+                    emit newStationClicked(_id, _name, _dataset, _altitude, lapseRateCode, isGrid);
+                }
+                else if (selection == appendMeteoWidget)
+                {
+                    emit appendStationClicked(_id, _name, _dataset, _altitude, lapseRateCode, isGrid);
+                }
+                else if (selection == openPointStatisticsWidget)
+                {
+                    emit newPointStatisticsClicked(_id, isGrid);
+                }
+                else if (selection == openHomogeneityWidget)
+                {
+                    emit newHomogeneityTestClicked(_id);
+                }
+                else if (selection == openSynchronicityWidget)
+                {
+                    emit newSynchronicityTestClicked(_id);
+                }
+                else if (selection == setSynchronicityReferencePoint)
+                {
+                    emit setSynchronicityReferenceClicked(_id);
+                }
+                else if (selection == actionOrogCode_primary)
+                {
+                    emit changeOrogCodeClicked(_id, 0);
+                }
+                else if (selection == actionOrogCode_secondary)
+                {
+                    emit changeOrogCodeClicked(_id, 1);
+                }
+                else if (selection == actionOrogCode_supplemental)
+                {
+                    emit changeOrogCodeClicked(_id, 2);
+                }
+                else if (selection == actionMarkPoint)
+                {
+                    emit markPoint(_id);
+                }
+                else if (selection == actionUnmarkPoint)
+                {
+                    emit unmarkPoint(_id);
+                }
             }
-            else if (selection == appendMeteoWidget)
+        }
+        else
+        {
+            // Other Software
+            QMenu menu;
+            QAction *openMeteoWidget = menu.addAction("Open a new meteo widget");
+            QAction *appendMeteoWidget = menu.addAction("Append to the lastest meteo widget");
+            menu.addSeparator();
+
+            QAction *selection =  menu.exec(QCursor::pos());
+
+            if (selection != nullptr)
             {
-                emit appendStationClicked(_id, _name, _dataset, _altitude, lapseRateCode, isGrid);
-            }
-            else if (selection == openPointStatisticsWidget)
-            {
-                emit newPointStatisticsClicked(_id, isGrid);
-            }
-            else if (selection == openHomogeneityWidget)
-            {
-                emit newHomogeneityTestClicked(_id);
-            }
-            else if (selection == openSynchronicityWidget)
-            {
-                emit newSynchronicityTestClicked(_id);
-            }
-            else if (selection == setSynchronicityReferencePoint)
-            {
-                emit setSynchronicityReferenceClicked(_id);
-            }
-            else if (selection == actionOrogCode_primary)
-            {
-                emit changeOrogCodeClicked(_id, 0);
-            }
-            else if (selection == actionOrogCode_secondary)
-            {
-                emit changeOrogCodeClicked(_id, 1);
-            }
-            else if (selection == actionOrogCode_supplemental)
-            {
-                emit changeOrogCodeClicked(_id, 2);
-            }
-            else if (selection == actionMarkPoint)
-            {
-                emit markPoint(_id);
-            }
-            else if (selection == actionUnmarkPoint)
-            {
-                emit unmarkPoint(_id);
+                bool isGrid = false;
+                std::string lapseRateCode = getLapseRateCodeName(_lapseRateCode);
+                if (selection == openMeteoWidget)
+                {
+                    emit newStationClicked(_id, _name, _dataset, _altitude, lapseRateCode, isGrid);
+                }
+                else if (selection == appendMeteoWidget)
+                {
+                    emit appendStationClicked(_id, _name, _dataset, _altitude, lapseRateCode, isGrid);
+                }
             }
         }
     }

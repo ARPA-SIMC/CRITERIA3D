@@ -22,9 +22,12 @@ void ColorLegend::paintEvent(QPaintEvent *event)
 {
     Q_UNUSED(event)
 
-    if (this->colorScale == nullptr) return;
+    // check
+    if (this->colorScale == nullptr)
+        return;
     if (isEqual(this->colorScale->minimum(), NODATA)
-        || isEqual(this->colorScale->maximum(), NODATA)) return;
+        || isEqual(this->colorScale->maximum(), NODATA))
+        return;
 
     QPainter painter(this);
     Crit3DColor* myColor;
@@ -36,14 +39,14 @@ void ColorLegend::paintEvent(QPaintEvent *event)
     const int BLANK_DX = 16;
     int legendWidth = painter.window().width() - BLANK_DX*2;
     unsigned int nrStep = this->colorScale->nrColors();
-    float step = (colorScale->maximum() - colorScale->minimum()) / float(nrStep);
+    double step = (colorScale->maximum() - colorScale->minimum()) / double(nrStep);
     double dx = double(legendWidth) / double(nrStep+1);
     unsigned int stepText = MAXVALUE(nrStep / 4, 1);
     QString valueStr;
     int nrDigits;
     double dblValue, shiftFatctor;
 
-    float value = this->colorScale->minimum();
+    double value = this->colorScale->minimum();
     for (unsigned int i = 0; i <= nrStep; i++)
     {
         dblValue = double(value);
@@ -53,13 +56,13 @@ void ColorLegend::paintEvent(QPaintEvent *event)
 
         if ((i % stepText) == 0)
         {
-            if (isEqual(dblValue, 0))
+            if (fabs(dblValue) <= 1)
             {
                 nrDigits = 1;
             }
             else
             {
-                nrDigits = int(ceil(log10(abs(dblValue))));
+                nrDigits = int(ceil(log10(fabs(dblValue))));
             }
 
             // negative numbers

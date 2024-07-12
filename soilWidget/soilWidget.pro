@@ -3,7 +3,6 @@
 #   Soil Widget library
 #   This project is part of CRITERIA-3D distribution
 #
-#
 #----------------------------------------------------
 
 QT  += widgets sql charts

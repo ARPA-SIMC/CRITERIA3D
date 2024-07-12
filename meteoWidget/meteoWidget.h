@@ -24,6 +24,8 @@
             bool getIsEnsemble() { return isEnsemble; }
             void setNrMembers(int value) { nrMembers = value; }
 
+            void setCurrentFrequency(frequencyType frequency);
+
             void setDailyRange(QDate firstDate, QDate lastDate);
             void setHourlyRange(QDate firstDate, QDate lastDate);
             void setMonthlyRange(QDate firstDate, QDate lastDate);

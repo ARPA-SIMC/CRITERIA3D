@@ -263,8 +263,12 @@
 
         bool mapAlgebra(Crit3DRasterGrid* myMap1, Crit3DRasterGrid* myMap2, Crit3DRasterGrid *outputMap, operationType myOperation);
         bool mapAlgebra(Crit3DRasterGrid* myMap1, float myValue, Crit3DRasterGrid *outputMap, operationType myOperation);
+
         bool prevailingMap(const Crit3DRasterGrid& inputMap,  Crit3DRasterGrid *outputMap);
         float prevailingValue(const std::vector<float> &valueList);
+
+        bool clipRasterWithRaster(gis::Crit3DRasterGrid* refRaster, gis::Crit3DRasterGrid* maskRaster,
+                                  gis::Crit3DRasterGrid* outputRaster);
 
         bool computeLatLonMaps(const gis::Crit3DRasterGrid& rasterGrid,
                                gis::Crit3DRasterGrid* latMap, gis::Crit3DRasterGrid* lonMap,

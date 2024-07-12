@@ -23,8 +23,9 @@
     private:
         unsigned int _nrColors, _nrKeyColors;
         std::vector<Crit3DColor> color;
-        float _minimum, _maximum;
-        bool _isRangeBlocked;
+        double _minimum, _maximum;
+        bool _isFixedRange;
+        bool _isHideOutliers;
         int _classification;
 
     public:
@@ -38,18 +39,22 @@
         unsigned int nrColors() { return _nrColors; }
         unsigned int nrKeyColors() { return _nrKeyColors; }
 
-        float minimum() { return _minimum; }
-        void setMinimum(float min) { _minimum = min; }
+        double minimum() { return _minimum; }
+        void setMinimum(double min) { _minimum = min; }
 
-        float maximum() { return _maximum; }
-        void setMaximum(float max) { _maximum = max; }
+        double maximum() { return _maximum; }
+        void setMaximum(double max) { _maximum = max; }
 
         Crit3DColor* getColor(float myValue);
         unsigned int getColorIndex(float myValue);
 
         bool setRange(float minimum, float maximum);
-        void setRangeBlocked(bool blocked) { _isRangeBlocked = blocked; }
-        bool isRangeBlocked() { return _isRangeBlocked; }
+
+        void setFixedRange(bool fixedRange) { _isFixedRange = fixedRange; }
+        bool isFixedRange() { return _isFixedRange; }
+
+        void setHideOutliers(bool hideOutliers) { _isHideOutliers = hideOutliers; }
+        bool isHideOutliers() { return _isHideOutliers; }
     };
 
     bool setDefaultScale(Crit3DColorScale* myScale);
