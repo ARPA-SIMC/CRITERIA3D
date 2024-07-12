@@ -139,6 +139,21 @@ double lapseRatePiecewiseThree_withSlope(double x, std::vector <double>& par)
         return par[3]*x - par[3]*par[0]+par[1];
 }
 
+double detrendingLapseRatePiecewiseThree_withSlope(double x, std::vector <double>& par)
+{
+    //xa (par[0],par[1]), xb-xa = par[2], par[3] is the slope of the middle piece,
+    //par[4] the slope of the first and last piece
+    par[2] = MAXVALUE(10, par[2]);
+    double xb = par[2]+par[0];
+
+    if (x < par[0])
+        return par[4]*x;
+    else if (x > xb)
+        return par[4]*x;
+    else
+        return par[3]*x;
+}
+
 double lapseRatePiecewiseFree(double x, std::vector <double>& par)
 {
     // the piecewise line is parameterized as follows
@@ -171,6 +186,38 @@ double lapseRatePiecewiseFree(double x, std::vector <double>& par)
     }
 }
 
+double detrendingLapseRatePiecewiseFree(double x, std::vector <double>& par)
+{
+    // the piecewise line is parameterized as follows
+    // the line passes through A(par[0];par[1])and B(par[0]+par[2];...)
+    //par [3] is the slope of the middle piece
+    //par[4] is the first slope. par[5] is the third slope
+
+    // "y = mx + q" piecewise function;
+    double xb;
+    par[2] = MAXVALUE(10, par[2]);
+    // par[2] means the delta between the two quotes. It must be positive.
+    xb = par[0]+par[2];
+    if (x < par[0])
+    {
+        //m = par[4];;
+        //q = par[1]-m*par[0];
+        return par[4]*x;
+    }
+    else if (x>xb)
+    {
+        //m = par[5];
+        //q = m(-par[0]-par[2])+par[3]*par[2]+par[1];
+        return (par[4]*par[0]) + (par[3]*par[2]) + par[5]*(x-xb);
+    }
+    else
+    {
+        //m = par[3];
+        //q = m*(-par[0]) + par[1];
+        return (par[4]*par[0]) + par[3]*(x-par[0]);
+    }
+}
+
 double lapseRatePiecewise_two(double x, std::vector <double>& par)
 {
     // the piecewise line is parameterized as follows
@@ -187,6 +234,25 @@ double lapseRatePiecewise_two(double x, std::vector <double>& par)
         //m = par[3]:
         //q = -par[3]*par[0]+par[1];
         return par[3]*(x-par[0])+par[1];
+    }
+}
+
+double detrendingLapseRatePiecewise_two(double x, std::vector <double>& par)
+{
+    // the piecewise line is parameterized as follows
+    // the line passes through A(par[0];par[1]). par[2] is the slope of the first line, par[3] the slope of the second
+    // "y = mx + q" piecewise function;
+    if (x < par[0])
+    {
+        //m = par[2];
+        //q = -par[2]*par[0]+par[1];
+        return par[2]*x;
+    }
+    else
+    {
+        //m = par[3]:
+        //q = -par[3]*par[0]+par[1];
+        return (par[2]*par[0]) + par[3]*(x-par[0]);
     }
 }
 
@@ -1241,22 +1307,25 @@ namespace interpolation
                                         std::vector <std::vector <double>>& parameters, std::vector <std::vector <double>>& parametersDelta,
                                         int maxIterationsNr, double myEpsilon, double deltaR2,
                                         std::vector <std::vector <double>>& x ,std::vector<double>& y,
-                                        std::vector<double>& weights)
+                                        std::vector<double>& weights, unsigned int elevationPos)
     {
         int i,j;
-        int nrPredictors = int(parameters.size());
+        int nrPredictors = 0;
+        for (int k = 0; k < parameters.size(); k++)
+            if (parameters[k].size() == 2) nrPredictors++;
+        if (elevationPos != NODATA) nrPredictors++;
         int nrData = int(y.size());
-        std::vector <int> nrParameters(nrPredictors);
+        std::vector <int> nrParameters(parameters.size());
         int nrParametersTotal = 0;
-        for (i=0; i<nrPredictors;i++)
+        for (i=0; i<parameters.size();i++)
         {
             nrParameters[i]= int(parameters[i].size());
             nrParametersTotal += nrParameters[i];
         }
-        std::vector <std::vector <double>> bestParameters(nrPredictors);
+        std::vector <std::vector <double>> bestParameters(parameters.size());
         std::vector <std::vector <int>> correspondenceTag(2,std::vector<int>(nrParametersTotal));
         int counterTag = 0;
-        for (i=0; i<nrPredictors;i++)
+        for (i=0; i<parameters.size();i++)
         {
             for (j=0; j<nrParameters[i];j++)
             {
@@ -1274,72 +1343,110 @@ namespace interpolation
         std::vector<double> ySim(nrData);
 
         int counter = 0;
-        //srand (unsigned(time(nullptr)));
-        std::random_device rd;
-        std::mt19937 gen(rd());
-        std::normal_distribution<double> normal_dis(0.5, 0.5);
-        double truncNormal;
+        //grigliato
 
-        do
+        const int numSteps = 20;
+        std::vector<double> steps = {2*(parametersMax[0][0]-parametersMin[0][0])/numSteps, 2*(parametersMax[0][1]-parametersMin[0][1])/numSteps};
+
+        int directions[] = {1, -1};
+        std::vector<std::vector<double>> firstGuessParam = parameters;
+        bool exitFlag = 0;
+
+        for (int step = 1; step <= numSteps; ++step)
         {
-            fittingMarquardt_nDimension_noSquares(func,myFunc,parametersMin, parametersMax,
-                                        parameters, parametersDelta,correspondenceTag, maxIterationsNr,
-                                        myEpsilon, x, y, weights);
-
-            for (i=0;i<nrData;i++)
+            for (int dir = 0; dir < 2; ++dir)
             {
-                ySim[i]= func(myFunc,x[i], parameters);
-            }
-            R2 = computeWeighted_R2(y,ySim,weights);
+                for (int proxyIndex = 0; proxyIndex < nrPredictors; ++proxyIndex)
+                {
+                    if (proxyIndex != elevationPos)
+                    {
+                        for (int paramIndex = 0; paramIndex < parameters.size(); ++paramIndex)
+                        {
 
-            if (R2 > (bestR2-deltaR2))
-            {
-                for (j=0;j<nrMinima-1;j++)
-                {
-                    R2Previous[j] = R2Previous[j+1];
-                }
-                if (R2 > (bestR2))
-                {
-                    for (i=0;i<nrPredictors;i++)
+                            fittingMarquardt_nDimension_noSquares(func,myFunc,parametersMin, parametersMax,
+                                                                  parameters, parametersDelta,correspondenceTag, maxIterationsNr,
+                                                                  myEpsilon, x, y, weights);
+
+                            for (i=0;i<nrData;i++)
+                            {
+                                ySim[i]= func(myFunc,x[i], parameters);
+                            }
+                            R2 = computeWeighted_R2(y,ySim,weights);
+
+                            if (R2 > (bestR2-deltaR2))
+                            {
+                                for (j=0;j<nrMinima-1;j++)
+                                {
+                                    R2Previous[j] = R2Previous[j+1];
+                                }
+                                if (R2 > (bestR2))
+                                {
+                                    for (i=0;i<parameters.size();i++)
+                                    {
+                                        for (j=0; j<nrParameters[i]; j++)
+                                        {
+                                            bestParameters[i][j] = parameters[i][j];
+                                        }
+                                    }
+                                    bestR2 = R2;
+                                }
+                                R2Previous[nrMinima-1] = R2;
+
+                                for (i=0;i<parameters.size();i++)
+                                {
+                                    for (j=0; j<nrParameters[i]; j++)
+                                    {
+                                        bestParameters[i][j] = parameters[i][j];
+                                    }
+                                }
+                            }
+                            counter++;
+
+                            if (!parameters.size() > proxyIndex && !parameters[proxyIndex].empty())
+                            {
+                                if (dir == 0)
+                                    parameters[proxyIndex][paramIndex] = MINVALUE(firstGuessParam[proxyIndex][paramIndex] + directions[dir] * step * steps[paramIndex], parametersMax[proxyIndex][paramIndex]);
+                                else
+                                    parameters[proxyIndex][paramIndex] = MAXVALUE(firstGuessParam[proxyIndex][paramIndex] + directions[dir] * step * steps[paramIndex], parametersMin[proxyIndex][paramIndex]);
+                            }
+
+                            /*for (i=0; i<nrPredictors; i++)
                     {
                         for (j=0; j<nrParameters[i]; j++)
                         {
-                            bestParameters[i][j] = parameters[i][j];
+                            do {
+                                truncNormal = normal_dis(gen);
+                            } while(truncNormal <= 0.0 || truncNormal >= 1.0);
+                            parameters[i][j] = parametersMin[i][j] + (truncNormal)*(parametersMax[i][j]-parametersMin[i][j]);
                         }
                     }
-                    bestR2 = R2;
-                }
-                R2Previous[nrMinima-1] = R2;
+*/
 
-                for (i=0;i<nrPredictors;i++)
-                {
-                    for (j=0; j<nrParameters[i]; j++)
-                    {
-                        bestParameters[i][j] = parameters[i][j];
+
+                            if ((counter > nrTrials) || ((R2Previous[0] != NODATA) && fabs(R2Previous[0]-R2Previous[nrMinima-1]) < deltaR2 ))
+                            {
+                                for (i=0;i<parameters.size();i++)
+                                {
+                                    for (j=0; j<nrParameters[i]; j++)
+                                    {
+                                        parameters[i][j] = bestParameters[i][j];
+                                    }
+                                }
+                                exitFlag = 1;
+                                break;
+                            }
+                        }
                     }
+                    if (exitFlag)
+                        break;
                 }
+                if (exitFlag)
+                    break;
             }
-            counter++;
-
-            for (i=0; i<nrPredictors; i++)
-            {
-                for (j=0; j<nrParameters[i]; j++)
-                {
-                    do {
-                        truncNormal = normal_dis(gen);
-                    } while(truncNormal <= 0.0 || truncNormal >= 1.0);
-                    parameters[i][j] = parametersMin[i][j] + (truncNormal)*(parametersMax[i][j]-parametersMin[i][j]);
-                }
-            }
-        } while( (counter < nrTrials) && !(R2Previous[0] > 0.8 && R2Previous[nrMinima-1] > 0.8) && (fabs(R2Previous[0]-R2Previous[nrMinima-1]) > deltaR2) );
-
-        for (i=0;i<nrPredictors;i++)
-        {
-            for (j=0; j<nrParameters[i]; j++)
-            {
-                parameters[i][j] = bestParameters[i][j];
-            }
+            if (exitFlag)
+                break;
         }
+
 
         return counter;
 
@@ -1449,7 +1556,9 @@ namespace interpolation
                                      std::vector<double>& weights)
     {
         int i;
-        int nrPredictors = int(parameters.size());
+        int nrPredictors = 0;
+        for (int k = 0; k < parameters.size(); k++)
+            if (parameters[k].size() == 2) nrPredictors++;
         int nrData = int(y.size());
         double mySSE, diffSSE, newSSE;
         static double VFACTOR = 10;
@@ -1969,37 +2078,15 @@ namespace interpolation
         double R2;
         std::vector <double> R2Previous(nrMinima,NODATA);
         std::vector<double> ySim(nrData);
-
         int counter = 0;
-        /*srand (unsigned(time(nullptr)));
-        std::random_device rd;
-        std::mt19937 gen(rd());
-        std::normal_distribution<double> normal_dis(0.5, 0.5);
-        //std::normal_distribution<double> normal_dis(25, 20);
-        double truncNormal;
-
-        std::vector <std::vector <double>> discreteParameters;
-        int nrDiscrete = 50;
-        std::uniform_int_distribution<> distribuzione(0, 49);
-        std::vector <double> tempDiscrete;
-        for (int j = 0; j < parameters.size()-2; j++)
-        {
-            for (int i = 0; i < nrDiscrete; i++)
-                tempDiscrete.push_back(parametersMin[j]+i*((parametersMax[j]-parametersMin[j])/nrDiscrete));
-
-            discreteParameters.push_back(tempDiscrete);
-            tempDiscrete.clear();
-        }*/
 
         //grigliato
-
         std::vector<double> steps;
-        const int numSteps = 100;
+        const int numSteps = 50;
         if (parameters.size() == 4)
-            //steps = {50.0, 0.5, 0.00075, 0.00075};
             steps = {2*(parametersMax[0]-parametersMin[0])/numSteps, 2*(parametersMax[1]-parametersMin[1])/numSteps, 2*(parametersMax[2]-parametersMin[2])/numSteps, 2*(parametersMax[3]-parametersMin[3])/numSteps};
         else if (parameters.size() == 6)
-            steps = {2*(parametersMax[0]-parametersMin[0])/numSteps, 2*(parametersMax[1]-parametersMin[1])/numSteps, 2*(parametersMax[2]-parametersMin[2])/numSteps, 2*(parametersMax[3]-parametersMin[3])/numSteps,2*(parametersMax[4]-parametersMin[4])/numSteps,2*(parametersMax[5]-parametersMin[5])/numSteps };
+            steps = {2*(parametersMax[0]-parametersMin[0])/numSteps, 2*(parametersMax[1]-parametersMin[1])/numSteps, 4*(parametersMax[2]-parametersMin[2])/numSteps, 20*(parametersMax[3]-parametersMin[3])/numSteps,20*(parametersMax[3]-parametersMin[3])/numSteps,20*(parametersMax[3]-parametersMin[3])/numSteps };
         else return false;
 
         int directions[] = {1, -1};
@@ -2057,70 +2144,8 @@ namespace interpolation
 
             if ((counter > nrTrials) || ((R2Previous[0] != NODATA) && fabs(R2Previous[0]-R2Previous[nrMinima-1]) < deltaR2 ))
                 break;
-
-
         }
-        //end grigliato
 
-        //random
-        /*do
-        {
-            fittingMarquardt_nDimension_noSquares_singleFunction(func,parametersMin,
-                                                                 parametersMax,parameters,
-                                                                 parametersDelta,maxIterationsNr,
-                                                                      myEpsilon,x,y,weights);
-
-            for (i=0;i<nrData;i++)
-            {
-                ySim[i]= func(x[i], parameters);
-            }
-            R2 = computeWeighted_R2(y,ySim,weights);
-
-            if (R2 > (bestR2-deltaR2))
-            {
-                for (j=0;j<nrMinima-1;j++)
-                {
-                    R2Previous[j] = R2Previous[j+1];
-                }
-                if (R2 > (bestR2))
-                {
-                    for (j=0; j<nrParameters; j++)
-                    {
-                        bestParameters[j] = parameters[j];
-                    }
-                    bestR2 = R2;
-                }
-                R2Previous[nrMinima-1] = R2;
-
-                //for (i=0;i<nrPredictors;i++)
-                //{
-                for (j=0; j<nrParameters; j++)
-                {
-                    bestParameters[j] = parameters[j];
-                }
-                //}
-            }
-            counter++;
-
-            for (j=0; j<nrParameters; j++)
-            {
-                do {
-                    truncNormal = normal_dis(gen);
-                } while(truncNormal <= 0.0 || truncNormal >= 1.0);
-                parameters[j] = parametersMin[j] + (truncNormal)*(parametersMax[j]-parametersMin[j]);
-            }
-
-            int indice = 0;
-            for (j=0; j<nrParameters-2;j++)
-            {
-                do {
-                    indice = distribuzione(gen);
-                } while (indice < 0 || indice >= discreteParameters[j].size());
-                parameters[j] = discreteParameters[j][indice];
-            }
-
-        } while( (counter < nrTrials) && !(R2Previous[0] > 0.797 && R2Previous[nrMinima-1] > 0.8) && ((R2Previous[0] == NODATA) || fabs(R2Previous[0]-R2Previous[nrMinima-1]) > deltaR2 ));
-*/
         for (j=0; j<nrParameters; j++)
         {
             parameters[j] = bestParameters[j];

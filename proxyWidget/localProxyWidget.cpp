@@ -406,7 +406,8 @@ void Crit3DLocalProxyWidget::plot()
             point.setX(proxyVal);
             point.setY(varValue);
             QString text = "id: " + QString::fromStdString(meteoPoints[subsetInterpolationPoints[i].index].id) + "\n"
-                           + "name: " + QString::fromStdString(meteoPoints[subsetInterpolationPoints[i].index].name);
+                           + "name: " + QString::fromStdString(meteoPoints[subsetInterpolationPoints[i].index].name) + "\n"
+                           + "weight: " + QString::number(subsetInterpolationPoints[i].regressionWeight);
             if (subsetInterpolationPoints[i].isMarked)
             {
                 pointListMarked.append(point);
@@ -521,118 +522,93 @@ void Crit3DLocalProxyWidget::modelLRClicked(int toggled)
 
     if (toggled && subsetInterpolationPoints.size() != 0 && currentVariable == myVar)
     {
-        if (comboAxisX.currentText() == "elevation")
+        if (parameters.size() > proxyPos)
         {
-            xMin = getZmin(subsetInterpolationPoints);
-            xMax = getZmax(subsetInterpolationPoints);
-            float myY;
-
-            if (interpolationSettings->getUseMultipleDetrending())
+            if (parameters[proxyPos].size() > 2)
             {
-                if (parameters.empty() || (parameters[proxyPos].size() != 5 && parameters[proxyPos].size() != 6 && parameters[proxyPos].size() != 4))
-                    return;
+                xMin = getZmin(subsetInterpolationPoints);
+                xMax = getZmax(subsetInterpolationPoints);
+                float myY;
 
-                if (interpolationSettings->getProxy(proxyPos)->getFittingFunctionName() == piecewiseThree)
+                if (interpolationSettings->getUseMultipleDetrending())
                 {
-                    std::vector <double> xVector;
-                    for (int m = xMin; m < xMax; m += 5)
-                        xVector.push_back(m);
+                    if ((parameters[proxyPos].size() != 5 && parameters[proxyPos].size() != 6 && parameters[proxyPos].size() != 4))
+                        return;
 
-                    for (int p = 0; p < xVector.size(); p++)
+                    if (interpolationSettings->getProxy(proxyPos)->getFittingFunctionName() == piecewiseThree)
                     {
-                        point.setX(xVector[p]);
-                        point.setY(lapseRatePiecewiseThree_withSlope(xVector[p], parameters[proxyPos]));
-                        point_vector.append(point);
+                        std::vector <double> xVector;
+                        for (int m = xMin; m < xMax; m += 5)
+                            xVector.push_back(m);
+
+                        for (int p = 0; p < xVector.size(); p++)
+                        {
+                            point.setX(xVector[p]);
+                            point.setY(lapseRatePiecewiseThree_withSlope(xVector[p], parameters[proxyPos]));
+                            point_vector.append(point);
+                        }
                     }
-                }
-                else if (interpolationSettings->getProxy(proxyPos)->getFittingFunctionName() == piecewiseTwo)
-                {
-                    float lapseRateH0 = parameters[proxyPos][0];
-                    float lapseRateT0 = parameters[proxyPos][1];
-                    float slope1 = parameters[proxyPos][2];
-                    float slope2 = parameters[proxyPos][3];
-
-                    if (xMin < lapseRateH0)
+                    else if (interpolationSettings->getProxy(proxyPos)->getFittingFunctionName() == piecewiseTwo)
                     {
-                        myY = lapseRateT0 + slope1 * (xMin - lapseRateH0);
-                        point.setX(xMin);
+                        float lapseRateH0 = parameters[proxyPos][0];
+                        float lapseRateT0 = parameters[proxyPos][1];
+                        float slope1 = parameters[proxyPos][2];
+                        float slope2 = parameters[proxyPos][3];
+
+                        if (xMin < lapseRateH0)
+                        {
+                            myY = lapseRateT0 + slope1 * (xMin - lapseRateH0);
+                            point.setX(xMin);
+                            point.setY(myY);
+                            point_vector.append(point);
+                        }
+
+                        point.setX(lapseRateH0);
+                        point.setY(lapseRateT0);
+                        point_vector.append(point);
+
+                        myY = lapseRateT0 + slope2 * (xMax - lapseRateH0);
+                        point.setX(xMax);
                         point.setY(myY);
                         point_vector.append(point);
                     }
-
-                    point.setX(lapseRateH0);
-                    point.setY(lapseRateT0);
-                    point_vector.append(point);
-
-                    myY = lapseRateT0 + slope2 * (xMax - lapseRateH0);
-                    point.setX(xMax);
-                    point.setY(myY);
-                    point_vector.append(point);
-                }
-                else if (interpolationSettings->getProxy(proxyPos)->getFittingFunctionName() == piecewiseThreeFree)
-                {
-                    std::vector <double> xVector;
-                    for (int m = xMin; m < xMax; m += 5)
-                        xVector.push_back(m);
-
-                    for (int p = 0; p < xVector.size(); p++)
+                    else if (interpolationSettings->getProxy(proxyPos)->getFittingFunctionName() == piecewiseThreeFree)
                     {
-                        point.setX(xVector[p]);
-                        point.setY(lapseRatePiecewiseFree(xVector[p], parameters[proxyPos]));
-                        point_vector.append(point);
+                        std::vector <double> xVector;
+                        for (int m = xMin; m < xMax; m += 5)
+                            xVector.push_back(m);
+
+                        for (int p = 0; p < xVector.size(); p++)
+                        {
+                            point.setX(xVector[p]);
+                            point.setY(lapseRatePiecewiseFree(xVector[p], parameters[proxyPos]));
+                            point_vector.append(point);
+                        }
+
                     }
-
                 }
-                /*if (interpolationSettings->getProxy(proxyPos)->getInversionIsSignificative())
-                {
-                    if (xMin < interpolationSettings->getProxy(proxyPos)->getLapseRateH0())
-                    {
-                        point.setX(xMin);
-                        point.setY(lapseRateT0);
-                        point_vector.append(point);
-                    }*/
-
-
-                /*}
-                else
-                {
-                    float myY = lapseRateT0 + regressionSlope * xMin;
-                    point.setX(xMin);
-                    point.setY(myY);
-                    point_vector.append(point);
-
-                    myY = lapseRateT0 + regressionSlope * xMax;
-                    point.setX(xMax);
-                    point.setY(myY);
-                    point_vector.append(point);
-                }*/
-
             }
-
-            /*if (interpolationSettings->getProxy(proxyPos)->getRegressionR2() != NODATA)
+            else
             {
-                r2.setText(QString("%1").arg(interpolationSettings->getProxy(proxyPos)->getRegressionR2(), 0, 'f', 2));
+                xMin = getProxyMinValue(subsetInterpolationPoints, proxyPos);
+                xMax = getProxyMaxValue(subsetInterpolationPoints, proxyPos);
+
+                if (parameters[proxyPos].empty())
+                    return;
+
+                float slope = parameters[proxyPos][0];
+                float intercept = parameters[proxyPos][1];
+
+                float myY = intercept + slope * xMin;
+                point.setX(xMin);
+                point.setY(myY);
+                point_vector.append(point);
+
+                myY = intercept + slope * xMax;
+                point.setX(xMax);
+                point.setY(myY);
+                point_vector.append(point);
             }
-            lapseRate.setText(QString("%1").arg(regressionSlope*1000, 0, 'f', 2));*/
-        }
-        else
-        {
-            //TODO lineari
-            /*xMin = getProxyMinValue(subsetInterpolationPoints, proxyPos);
-            xMax = getProxyMaxValue(subsetInterpolationPoints, proxyPos);
-
-            float slope = parameters[proxyPos][0];
-            float intercept = parameters[proxyPos][1];
-
-            float myY = intercept + slope * xMin;
-            point.setX(xMin);
-            point.setY(myY);
-            point_vector.append(point);
-
-            myY = intercept + slope * xMax;
-            point.setX(xMax);
-            point.setY(myY);
-            point_vector.append(point);*/
         }
         chartView->drawModelLapseRate(point_vector);
     }

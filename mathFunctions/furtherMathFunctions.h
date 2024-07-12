@@ -53,8 +53,11 @@ enum estimatedFunction {FUNCTION_CODE_SPHERICAL, FUNCTION_CODE_LINEAR, FUNCTION_
     double lapseRatePiecewise_three(double x, std::vector <double>& par);
     double lapseRatePiecewiseForInterpolation(double x, std::vector <double>& par);
     double lapseRatePiecewiseFree(double x, std::vector <double>& par);
+    double detrendingLapseRatePiecewiseFree(double x, std::vector <double>& par);
     double lapseRatePiecewiseThree_withSlope(double x, std::vector <double>& par);
+    double detrendingLapseRatePiecewiseThree_withSlope(double x, std::vector <double>& par);
     double lapseRatePiecewise_two(double x, std::vector <double>& par);
+    double detrendingLapseRatePiecewise_two(double x, std::vector <double>& par);
     double lapseRateFrei(double x, std::vector <double>& par);
     double lapseRateFreiFree(double x, std::vector <double>& par);
     double lapseRateRotatedSigmoid(double x, std::vector <double> par);
@@ -110,7 +113,7 @@ enum estimatedFunction {FUNCTION_CODE_SPHERICAL, FUNCTION_CODE_LINEAR, FUNCTION_
                                         std::vector<std::vector<double> > &parametersMin, std::vector<std::vector<double> > &parametersMax,
                                         std::vector<std::vector<double> > &parameters, std::vector<std::vector<double> > &parametersDelta,
                                         int maxIterationsNr, double myEpsilon, double deltaR2,
-                                        std::vector <std::vector <double>>& x , std::vector<double>& y, std::vector<double>& weights);
+                                        std::vector <std::vector <double>>& x , std::vector<double>& y, std::vector<double>& weights, unsigned int elevationPos);
 
         bool fittingMarquardt_nDimension(double (*func)(std::vector<std::function<double (double, std::vector<double> &)> > &, std::vector<double> &, std::vector <std::vector <double>>&),
                                          std::vector<std::function<double (double, std::vector<double> &)> > &myFunc,

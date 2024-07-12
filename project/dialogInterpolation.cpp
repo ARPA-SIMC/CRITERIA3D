@@ -146,6 +146,7 @@ DialogInterpolation::DialogInterpolation(Project *myProject)
             continue;
         elevationFunctionEdit.addItem(QString::fromStdString(itElFunc->first), QString::fromStdString(itElFunc->first));
     }
+
     QString elevationFunctionString = QString::fromStdString(getKeyStringElevationFunction(_interpolationSettings->getChosenElevationFunction()));
     int indexElFunction = elevationFunctionEdit.findData(elevationFunctionString);
     if (indexElFunction != -1)
