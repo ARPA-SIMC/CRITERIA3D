@@ -2219,6 +2219,8 @@ void MainWindow::on_actionWaterFluxes_settings_triggered()
     dialogWaterFluxes.cropProcess->setChecked(myProject.processes.computeCrop);
     dialogWaterFluxes.waterFluxesProcess->setChecked(myProject.processes.computeWater);
 
+    dialogWaterFluxes.accuracySlider->setValue(myProject.waterFluxesParameters.modelAccuracy);
+
     if (myProject.waterFluxesParameters.computeOnlySurface)
         dialogWaterFluxes.onlySurface->setChecked(true);
     else if (myProject.waterFluxesParameters.computeAllSoilDepth)
@@ -2239,6 +2241,9 @@ void MainWindow::on_actionWaterFluxes_settings_triggered()
         myProject.waterFluxesParameters.imposedComputationDepth = dialogWaterFluxes.getImposedComputationDepth();
         myProject.waterFluxesParameters.computeOnlySurface = dialogWaterFluxes.onlySurface->isChecked();
         myProject.waterFluxesParameters.computeAllSoilDepth = dialogWaterFluxes.allSoilDepth->isChecked();
+
+        myProject.waterFluxesParameters.modelAccuracy = dialogWaterFluxes.accuracySlider->value();
+
         myProject.fittingOptions.useWaterRetentionData = dialogWaterFluxes.useWaterRetentionFitting->isChecked();
 
         myProject.processes.setComputeSnow(dialogWaterFluxes.snowProcess->isChecked());
@@ -2252,7 +2257,6 @@ void MainWindow::on_actionWaterFluxes_settings_triggered()
     }
 
     // layer thickness
-    // boundary (lateral free drainage, bottom free drainage)
     // lateral conductivity ratio
 }
 

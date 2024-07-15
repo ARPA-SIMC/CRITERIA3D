@@ -5,6 +5,7 @@
     #include <QLineEdit>
     #include <QRadioButton>
     #include <QCheckBox>
+    #include <QSlider>
 
     class DialogWaterFluxesSettings : public QDialog
     {
@@ -21,6 +22,8 @@
         QRadioButton *allSoilDepth;
         QRadioButton *imposedDepth;
         QRadioButton *useWaterRetentionFitting;
+
+        QSlider *accuracySlider;
 
         DialogWaterFluxesSettings();
 

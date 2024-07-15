@@ -59,6 +59,8 @@ void WaterFluxesParameters::initialize()
     initialWaterPotential = -3.0;           // [m] default: field capacity
     imposedComputationDepth = 0.3;          // [m]
     horizVertRatioConductivity = 10.0;      // [-] default: ten times
+
+    modelAccuracy = 3;                      // [-] default: error on the third digit
 }
 
 
@@ -367,10 +369,13 @@ bool Project3D::initializeWaterBalance3D()
     soilFluxes3D::setHydraulicProperties(MODIFIEDVANGENUCHTEN, MEAN_LOGARITHMIC, waterFluxesParameters.horizVertRatioConductivity);
 
     double vmax = 10.0;                                         // [m s-1]
+    if (waterFluxesParameters.modelAccuracy < 3)
+        vmax = 5.0;
+
     double minimumDeltaT = DEM.header->cellSize / vmax;         // [m]
 
-    int digitMBR = 3;   // precision
-    //int digitMBR = 2;   // speedy
+    // Mass Balance Ratio precision (digit at which error is accepted)
+    int digitMBR = waterFluxesParameters.modelAccuracy;
     soilFluxes3D::setNumericalParameters(minimumDeltaT, 3600, 100, 10, 12, digitMBR);
 
     if (! initializeMatricPotential(waterFluxesParameters.initialWaterPotential))  // [m]

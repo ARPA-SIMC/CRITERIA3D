@@ -25,6 +25,8 @@
         double imposedComputationDepth;          // [m]
         double horizVertRatioConductivity;       // [-]
 
+        int modelAccuracy;                       // [-]
+
         bool freeCatchmentRunoff;
         bool freeLateralDrainage;
         bool freeBottomDrainage;

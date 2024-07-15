@@ -23,6 +23,18 @@ DialogWaterFluxesSettings::DialogWaterFluxesSettings()
     layoutProcesses->addWidget(waterLabel);
     processesGroupBox->setLayout(layoutProcesses);
 
+    // accuracy
+    accuracySlider = new QSlider(Qt::Horizontal);
+    accuracySlider->setRange(1, 5);
+    accuracySlider->setSingleStep(1);
+    accuracySlider->setPageStep(1);
+    accuracySlider->setTickInterval(1);
+    accuracySlider->setTickPosition(QSlider::TicksBelow);
+    QHBoxLayout *accuracyLayout = new QHBoxLayout();
+    accuracyLayout->addWidget(accuracySlider);
+    QGroupBox *accuracyGroupBox = new QGroupBox("Model accuracy");
+    accuracyGroupBox->setLayout(accuracyLayout);
+
     // initial water potential [m]
     QGroupBox* initialGroupBox = new QGroupBox("Initial conditions");
     QLabel *initialWaterPotentialLabel = new QLabel(tr("Initial water potential [m]"));
@@ -71,6 +83,7 @@ DialogWaterFluxesSettings::DialogWaterFluxesSettings()
 
     QVBoxLayout *mainLayout = new QVBoxLayout();
     mainLayout->addWidget(processesGroupBox);
+    mainLayout->addWidget(accuracyGroupBox);
     mainLayout->addWidget(initialGroupBox);
     mainLayout->addWidget(depthGroupBox);
     mainLayout->addWidget(soilGroupBox);
