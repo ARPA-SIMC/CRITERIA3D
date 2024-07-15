@@ -12,7 +12,6 @@
 #include "grapevine.h"
 #include "atmosphere.h"
 #include "utilities.h"
-#include <QDebug>
 
 extern Vine3DProject myProject;
 
@@ -54,7 +53,9 @@ bool assignIrrigation(Vine3DProject* myProject, Crit3DTime myTime)
     int row, col;
 
     for (row = 0; row < myProject->DEM.header->nrRows ; row++)
+    {
         for (col = 0; col < myProject->DEM.header->nrCols; col++)
+        {
             if (int(myProject->DEM.value[row][col]) != int(myProject->DEM.header->flag))
             {
                 //initialize
@@ -80,6 +81,9 @@ bool assignIrrigation(Vine3DProject* myProject, Crit3DTime myTime)
                     }
                 }
             }
+        }
+    }
+
     return true;
 }
 
@@ -259,11 +263,14 @@ bool modelDailyCycle(bool isInitialState, Crit3DDate myDate, int nrHours,
         myProject->computeWaterBalance3D(3600);
 
         if (myCurrentTime == myFirstTime)
-            resetWaterBalanceMap(myProject);
+        {
+            myProject->resetWaterBalanceMap();
+        }
 
-        updateWaterBalanceMaps(myProject);
+        myProject->updateWaterBalanceMaps();
 
-        if (isInitialState) isInitialState = false;
+        if (isInitialState)
+            isInitialState = false;
     }
 
     return true;

@@ -103,7 +103,6 @@ HEADERS += \
     disease.h \
     modelCore.h \
     plant.h \
-    vine3DShell.h \
     waterBalance.h \
     vine3DProject.h \
     mainWindow.h \

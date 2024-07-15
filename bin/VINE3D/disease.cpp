@@ -13,6 +13,7 @@
 #define VEGETATIVESTART 90
 #define VEGETATIVEEND 270
 
+
 // OIDIO
 bool computePowderyMildew(Vine3DProject* myProject)
 {
@@ -82,6 +83,7 @@ bool computePowderyMildew(Vine3DProject* myProject)
 }
 
 
+// peronospora
 bool computeDownyMildew(Vine3DProject* myProject, QDate firstDate, QDate lastDate, unsigned lastHour)
 {
     using namespace std;

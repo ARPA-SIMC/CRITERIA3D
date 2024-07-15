@@ -20,7 +20,6 @@
 #include "modelCore.h"
 #include "atmosphere.h"
 #include "disease.h"
-#include "vine3DShell.h"
 #include "vine3DProject.h"
 #include "soilDbTools.h"
 #include "soilFluxes3D.h"
@@ -95,7 +94,7 @@ bool Vine3DProject::openVine3DDatabase(QString fileName)
 {
     if (fileName == "")
     {
-        logError("Missing VINE3D db filename (field db_vine3d)");
+        errorString = "Missing VINE3D DataBase filename\nSet field 'db_vine3d' in the .ini settings file.";
         return false;
     }
 
@@ -132,8 +131,6 @@ bool Vine3DProject::loadVine3DProject(QString projectFileName)
 
     loadVine3DSettings();
 
-    if (dbVine3DFileName != "") openVine3DDatabase(dbVine3DFileName);
-
     if (! loadProject())
         return false;
 
@@ -144,16 +141,27 @@ bool Vine3DProject::loadVine3DProject(QString projectFileName)
     statePlantMaps = new Crit3DStatePlantMaps(DEM);
 
     // soil data
-    if (soilDbFileName != "") loadSoilDatabase(soilDbFileName);
+    if (! loadSoilDatabase(soilDbFileName))
+    {
+        logError();
+        return false;
+    }
+
     waterFluxesParameters.computeOnlySurface = false;
     waterFluxesParameters.computeAllSoilDepth = true;
+
+    // vine database
+    if (! openVine3DDatabase(dbVine3DFileName))
+    {
+        logError();
+        return false;
+    }
 
     // VINE3D parameters
     if (!loadGrapevineParameters() || !loadTrainingSystems() || !loadFieldsProperties() || !loadFieldBook())
     {
         logError();
         dbVine3D.close();
-        return false;
     }
 
     if (! loadSoilMap(soilMapFileName))
@@ -1552,6 +1560,47 @@ bool Vine3DProject::initializeGrapevine()
     }
 
     return true;
+}
+
+
+void Vine3DProject::resetWaterBalanceMap()
+{
+    outputWaterBalanceMaps->bottomDrainageMap->setConstantValueWithBase(0, DEM);
+    outputWaterBalanceMaps->waterInflowMap->setConstantValueWithBase(0, DEM);
+}
+
+
+void Vine3DProject::updateWaterBalanceMaps()
+{
+    long row, col;
+    long nodeIndex;
+    unsigned int layer, soilIndex;
+    double flow, flow_mm;
+    double area;
+
+    area = pow(outputWaterBalanceMaps->bottomDrainageMap->header->cellSize, 2);
+
+    for (row = 0; row < outputWaterBalanceMaps->bottomDrainageMap->header->nrRows; row++)
+        for (col = 0; col < outputWaterBalanceMaps->bottomDrainageMap->header->nrCols; col++)
+            if (! isEqual(indexMap.at(0).value[row][col], indexMap.at(0).header->flag))
+            {
+                soilIndex = getSoilIndex(row,col);
+                layer = 1;
+                do
+                {
+                    nodeIndex = long(indexMap.at(size_t(layer)).value[row][col]);
+                    flow = soilFluxes3D::getSumLateralWaterFlowIn(nodeIndex);
+                    outputWaterBalanceMaps->waterInflowMap->value[row][col] += float(flow * 1000); //liters
+
+                    layer++;
+                } while (layer < nrLayers && isWithinSoil(soilIndex, layerDepth.at(size_t(layer))));
+
+                nodeIndex = long(indexMap.at(size_t(--layer)).value[row][col]);
+
+                flow = soilFluxes3D::getBoundaryWaterFlow(nodeIndex); //m3
+                flow_mm = flow * 1000 / area;
+                outputWaterBalanceMaps->bottomDrainageMap->value[row][col] -= float(flow_mm);
+            }
 }
 
 

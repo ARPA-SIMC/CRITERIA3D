@@ -75,20 +75,6 @@ QString getVarNameFromPlantVariable(plantVariable myVar)
         return "";
 }
 
-/*
-meteoVariable getMeteoVariable(int myVar)
-{
-    if (myVar == 14) return(airTemperature);
-    else if (myVar == 15) return(precipitation);
-    else if (myVar == 16) return(airRelHumidity);
-    else if (myVar == 17) return(globalIrradiance);
-    else if (myVar == 18) return(windScalarIntensity);
-    else if (myVar == 20) return(leafWetness);
-    else if (myVar == 21) return(atmPressure);
-    else if (myVar == 43) return(windVectorDirection);
-    else return(noMeteoVar);
-}
-*/
 
 int getMeteoVarIndex(meteoVariable myVar)
 {

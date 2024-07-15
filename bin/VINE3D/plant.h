@@ -4,9 +4,6 @@
     #ifndef QDATETIME_H
         #include <QDateTime>
     #endif
-    #ifndef QSTRING_H
-        #include <QString>
-    #endif
     #ifndef GIS_H
         #include "gis.h"
     #endif

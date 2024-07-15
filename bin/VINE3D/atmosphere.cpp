@@ -33,6 +33,7 @@ bool isDataPresent(Vine3DProject* myProject, meteoVariable myVar, Crit3DTime myD
     return false;
 }
 
+
 // ---------------------------------------------------------------
 // Try to cover missing data
 // ---------------------------------------------------------------

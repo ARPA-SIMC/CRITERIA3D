@@ -1053,7 +1053,7 @@ bool Project3D::loadSoilDatabase(QString fileName)
 {
     if (fileName == "")
     {
-        logError("Missing Soil DB filename");
+        errorString = "Missing Soil DB filename";
         return false;
     }
 
@@ -1062,7 +1062,6 @@ bool Project3D::loadSoilDatabase(QString fileName)
 
     if (! loadAllSoils(fileName, soilList, texturalClassList, geotechnicsClassList, fittingOptions, errorString))
     {
-        logError();
         return false;
     }
     if (! errorString.isEmpty())

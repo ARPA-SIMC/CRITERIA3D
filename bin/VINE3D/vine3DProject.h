@@ -145,7 +145,17 @@
 
         bool runModels(QDateTime firstTime, QDateTime lastTime, bool saveOutput);
 
+        bool vine3dShell();
+        bool vine3dBatch(QString scriptFileName);
+        bool executeCommand(QStringList argumentList);
         bool executeVine3DCommand(QStringList argumentList, bool* isCommandFound);
+        void cmdVine3dList();
+        bool cmdOpenVine3DProject(QStringList argumentList);
+        bool cmdRunModels(QStringList argumentList);
+
+        void resetWaterBalanceMap();
+        void updateWaterBalanceMaps();
     };
+
 
 #endif // PROJECT_H

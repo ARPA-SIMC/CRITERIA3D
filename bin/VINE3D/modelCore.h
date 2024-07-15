@@ -16,9 +16,9 @@
 
     bool assignIrrigation(Vine3DProject* myProject, Crit3DTime myTime);
 
+    QString grapevineError(Crit3DTime myTime, long row, long col, QString errorIni);
+
     bool modelDailyCycle(bool isInitialState, Crit3DDate myDate, int nrHours, Vine3DProject* myProject,
                          const QString& myOutputPath, bool isSave);
-
-    bool modelCycleOld(QDateTime dStart, QDateTime dStop,  int secondsPerStep, int indexPoint, TstatePlant* statePlant);
 
 #endif // MODELCORE_H

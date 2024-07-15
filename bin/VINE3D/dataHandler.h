@@ -8,9 +8,10 @@
         #include "plant.h"
     #endif
 
+    class QString;
+
     float getTimeStepFromHourlyInterval(int myHourlyIntervals);
 
-    //meteoVariable getMeteoVariable(int myVar);
     int getMeteoVarIndex(meteoVariable myVar);
 
     QString getVarNameFromPlantVariable(plantVariable myVar);

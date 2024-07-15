@@ -1,8 +1,6 @@
-#include <QFile>
-#include <QTextStream>
 #include "shell.h"
-#include "project.h"
-#include "vine3DShell.h"
+#include "vine3DProject.h"
+
 
 QStringList getVine3DCommandList()
 {
@@ -15,68 +13,41 @@ QStringList getVine3DCommandList()
     return cmdList;
 }
 
-bool cmdList(Vine3DProject* myProject)
+
+void Vine3DProject::cmdVine3dList()
 {
     QStringList list = getVine3DCommandList();
 
-    myProject->logInfo("Available VINE3D console commands:");
-    myProject->logInfo("(short  | long version)");
+    logInfo("Available VINE3D console commands:");
+    logInfo("(short  | long version)");
     for (int i = 0; i < list.size(); i++)
     {
-        myProject->logInfo(list[i]);
+        logInfo(list[i]);
     }
-
-    return true;
 }
 
-bool Vine3DProject::executeVine3DCommand(QStringList argumentList, bool *isCommandFound)
-{
-    *isCommandFound = false;
-    if (argumentList.size() == 0) return false;
 
-    QString command = argumentList.at(0).toUpper();
-
-    if (command == "PROJ" || command == "OPENPROJECT")
-    {
-        *isCommandFound = true;
-        return cmdOpenVine3DProject(this, argumentList);
-    }
-    else if (command == "RUN" || command == "RUNMODELS")
-    {
-        *isCommandFound = true;
-        return cmdRunModels(this, argumentList);
-    }
-    if (command == "LIST" || command == "LISTCOMMANDS")
-    {
-        *isCommandFound = true;
-        return cmdList(this);
-    }
-    else
-    {
-        // TODO:
-        // other vine3d commands
-    }
-
-    return false;
-}
-
-bool cmdOpenVine3DProject(Vine3DProject* myProject, QStringList argumentList)
+bool Vine3DProject::cmdOpenVine3DProject(QStringList argumentList)
 {
     if (argumentList.size() < 2)
     {
-        myProject->logError("Missing project name");
+        logError("Missing project name");
         return false;
     }
 
-    QString projectName = myProject->getCompleteFileName(argumentList.at(1), "PROJECT/");
+    QString projectName = getCompleteFileName(argumentList.at(1), "PROJECT/");
 
-    if (! myProject->loadVine3DProject(projectName))
+    if (! loadVine3DProject(projectName))
+    {
+        logError();
         return false;
+    }
 
     return true;
 }
 
-bool cmdRunModels(Vine3DProject* myProject, QStringList argumentList)
+
+bool Vine3DProject::cmdRunModels(QStringList argumentList)
 {
     if (argumentList.size() == 0) return false;
 
@@ -89,7 +60,7 @@ bool cmdRunModels(Vine3DProject* myProject, QStringList argumentList)
             stringUsage += "\nnrDaysPast: days from today when to start (default: 7)";
             stringUsage += "\nnrDaysForecast: days since today when to finish (default: 0)";
 
-            myProject->logInfo(stringUsage);
+            logInfo(stringUsage);
             return true;
         }
     }
@@ -125,49 +96,54 @@ bool cmdRunModels(Vine3DProject* myProject, QStringList argumentList)
     lastDateTime.setDate(lastDay);
     lastDateTime.setTime(QTime(23,0,0,0));
 
-    if (! myProject->runModels(firstDateTime, lastDateTime, true))
+    if (! runModels(firstDateTime, lastDateTime, true))
+    {
+        logError();
         return false;
+    }
 
     return true;
 }
 
 
-bool executeCommand(QStringList argumentList, Vine3DProject* myProject)
+bool Vine3DProject::vine3dShell()
 {
-    if (argumentList.size() == 0) return false;
-    bool isCommandFound, isExecuted;
+#ifdef _WIN32
+    openNewConsole();
+#endif
 
-    myProject->logInfo(getTimeStamp(argumentList));
+    while (! requestedExit)
+    {
+        QString commandLine = getCommandLine("VINE3D");
+        if (commandLine != "")
+        {
+            QStringList argumentList = getArgumentList(commandLine);
+            executeCommand(argumentList);
+        }
+    }
 
-    isExecuted = executeSharedCommand(myProject, argumentList, &isCommandFound);
-    if (isCommandFound) return isExecuted;
-
-    isExecuted = myProject->executeVine3DCommand(argumentList, &isCommandFound);
-    if (isCommandFound) return isExecuted;
-
-    myProject->logError("This is not a valid VINE3D command.");
-    return false;
+    return true;
 }
 
 
-bool vine3dBatch(Vine3DProject *myProject, QString scriptFileName)
+bool Vine3DProject::vine3dBatch(QString scriptFileName)
 {
-    #ifdef _WIN32
-        attachOutputToConsole();
-    #endif
+#ifdef _WIN32
+    attachOutputToConsole();
+#endif
 
-    myProject->logInfo("\nVINE3D v1.0");
-    myProject->logInfo("Execute script: " + scriptFileName);
+    logInfo("\nVINE3D v1.0");
+    logInfo("Execute script: " + scriptFileName);
 
     if (scriptFileName == "")
     {
-        myProject->logError("No script file provided");
+        logError("No script file provided");
         return false;
     }
 
     if (! QFile(scriptFileName).exists())
     {
-        myProject->logError("Script file not found: " + scriptFileName);
+        logError("Script file not found: " + scriptFileName);
         return false;
     }
 
@@ -177,48 +153,85 @@ bool vine3dBatch(Vine3DProject *myProject, QString scriptFileName)
     QFile inputFile(scriptFileName);
     if (inputFile.open(QIODevice::ReadOnly))
     {
-       QTextStream in(&inputFile);
-       while (!in.atEnd())
-       {
-          line = in.readLine();
-          commandLine = line.split(" ");
+        QTextStream in(&inputFile);
+        while (!in.atEnd())
+        {
+            line = in.readLine();
+            commandLine = line.split(" ");
 
-          if (! executeCommand(commandLine, myProject))
-          {
-              inputFile.close();
-              return false;
-          }
-       }
-       inputFile.close();
+            if (! executeCommand(commandLine))
+            {
+                inputFile.close();
+                return false;
+            }
+        }
+        inputFile.close();
     }
 
-    #ifdef _WIN32
-        // Send "enter" to release application from the console
-        // This is a hack, but if not used the console doesn't know the application has
-        // returned. The "enter" key only sent if the console window is in focus.
-        if (isConsoleForeground()) sendEnterKey();
-    #endif
+#ifdef _WIN32
+    // Send "enter" to release application from the console
+    // This is a hack, but if not used the console doesn't know the application has
+    // returned. The "enter" key only sent if the console window is in focus.
+    if (isConsoleForeground()) sendEnterKey();
+#endif
 
     return true;
 }
 
 
-bool vine3dShell(Vine3DProject* myProject)
+bool Vine3DProject::executeVine3DCommand(QStringList argumentList, bool *isCommandFound)
 {
-    #ifdef _WIN32
-        openNewConsole();
-    #endif
+    *isCommandFound = false;
+    if (argumentList.size() == 0) return false;
 
-    while (! myProject->requestedExit)
+    QString command = argumentList.at(0).toUpper();
+
+    if (command == "PROJ" || command == "OPENPROJECT")
     {
-        QString commandLine = getCommandLine("VINE3D");
-        if (commandLine != "")
-        {
-            QStringList argumentList = getArgumentList(commandLine);
-            executeCommand(argumentList, myProject);
-        }
+        *isCommandFound = true;
+        return cmdOpenVine3DProject(argumentList);
+    }
+    else if (command == "RUN" || command == "RUNMODELS")
+    {
+        *isCommandFound = true;
+        return cmdRunModels(argumentList);
+    }
+    if (command == "LIST" || command == "LISTCOMMANDS")
+    {
+        *isCommandFound = true;
+        cmdVine3dList();
+        return true;
+    }
+    else
+    {
+        // TODO:
+        // other vine3d commands
     }
 
-    return true;
+    return false;
+}
+
+
+bool Vine3DProject::executeCommand(QStringList argumentList)
+{
+    if (argumentList.size() == 0) return false;
+    bool isCommandFound, isExecuted;
+
+    logInfo(getTimeStamp(argumentList));
+
+    isExecuted = executeSharedCommand(this, argumentList, &isCommandFound);
+    if (isCommandFound)
+        return isExecuted;
+
+    isExecuted = executeVine3DCommand(argumentList, &isCommandFound);
+    if (isCommandFound)
+    {
+        return isExecuted;
+    }
+    else
+    {
+        logError("This is not a valid VINE3D command.");
+        return false;
+    }
 }
 
