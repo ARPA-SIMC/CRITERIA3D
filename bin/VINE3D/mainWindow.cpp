@@ -632,7 +632,7 @@ void MainWindow::on_actionShow_DEM_triggered()
     }
     else
     {
-        myProject.logError("Load a Digital Elevation Model before.");
+        myProject.logWarning("Load a Digital Elevation Model before.");
         return;
     }
 }
@@ -647,7 +647,7 @@ void MainWindow::on_actionShow_boundary_triggered()
         }
         else
         {
-            myProject.logError("Initialize model before.");
+            myProject.logWarning("Initialize model before.");
             return;
         }
 }
@@ -711,5 +711,21 @@ void MainWindow::callAppendMeteoWidget(std::string id, std::string name, std::st
         myProject.showMeteoWidgetPoint(id, name, dataset, altitude, lapseRateCode, isAppend);
     }
     return;
+}
+
+
+void MainWindow::on_actionShow_model_cases_map_triggered()
+{
+    if (myProject.landUseMap.isLoaded)
+    {
+        setDefaultScale(myProject.landUseMap.colorScale);
+        this->setCurrentRaster(&(myProject.landUseMap));
+        ui->labelRasterScale->setText("model cases");
+    }
+    else
+    {
+        myProject.logWarning("Load land use and soil maps before.");
+        return;
+    }
 }
 

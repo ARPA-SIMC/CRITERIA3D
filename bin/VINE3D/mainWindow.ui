@@ -456,7 +456,6 @@
    <font>
     <family>Arial</family>
     <pointsize>10</pointsize>
-    <weight>50</weight>
     <bold>false</bold>
    </font>
   </property>
@@ -495,7 +494,6 @@
      <font>
       <family>Arial</family>
       <pointsize>10</pointsize>
-      <weight>50</weight>
       <bold>false</bold>
      </font>
     </property>
@@ -958,7 +956,6 @@
      <font>
       <family>Arial</family>
       <pointsize>10</pointsize>
-      <weight>50</weight>
       <bold>false</bold>
      </font>
     </property>
@@ -1024,7 +1021,6 @@
       <font>
        <family>Arial</family>
        <pointsize>8</pointsize>
-       <weight>50</weight>
        <bold>false</bold>
       </font>
      </property>
@@ -1045,7 +1041,6 @@
       <font>
        <family>Arial</family>
        <pointsize>9</pointsize>
-       <weight>50</weight>
        <bold>false</bold>
       </font>
      </property>
@@ -1103,7 +1098,6 @@
       <font>
        <family>Arial</family>
        <pointsize>9</pointsize>
-       <weight>50</weight>
        <bold>false</bold>
       </font>
      </property>
@@ -1124,7 +1118,6 @@
       <font>
        <family>Arial</family>
        <pointsize>9</pointsize>
-       <weight>50</weight>
        <bold>false</bold>
       </font>
      </property>
@@ -1588,7 +1581,6 @@
      <font>
       <family>Arial</family>
       <pointsize>10</pointsize>
-      <weight>50</weight>
       <bold>false</bold>
      </font>
     </property>
@@ -1651,7 +1643,6 @@
       <font>
        <family>Arial</family>
        <pointsize>9</pointsize>
-       <weight>50</weight>
        <bold>false</bold>
       </font>
      </property>
@@ -1736,7 +1727,6 @@
       <font>
        <family>Arial</family>
        <pointsize>9</pointsize>
-       <weight>50</weight>
        <bold>false</bold>
       </font>
      </property>
@@ -1767,7 +1757,7 @@
        <second>0</second>
        <year>1752</year>
        <month>10</month>
-       <day>14</day>
+       <day>13</day>
       </datetime>
      </property>
      <property name="maximumDate">
@@ -1807,7 +1797,6 @@
       <font>
        <family>Arial</family>
        <pointsize>9</pointsize>
-       <weight>50</weight>
        <bold>false</bold>
       </font>
      </property>
@@ -1892,7 +1881,6 @@
       <font>
        <family>Arial</family>
        <pointsize>9</pointsize>
-       <weight>50</weight>
        <bold>false</bold>
       </font>
      </property>
@@ -1936,7 +1924,6 @@
       <font>
        <family>Arial</family>
        <pointsize>8</pointsize>
-       <weight>50</weight>
        <bold>false</bold>
       </font>
      </property>
@@ -1952,7 +1939,7 @@
      <x>0</x>
      <y>0</y>
      <width>1280</width>
-     <height>22</height>
+     <height>25</height>
     </rect>
    </property>
    <property name="palette">
@@ -2458,6 +2445,7 @@
     <addaction name="separator"/>
     <addaction name="actionShow_DEM"/>
     <addaction name="actionShow_boundary"/>
+    <addaction name="actionShow_model_cases_map"/>
    </widget>
    <addaction name="menuFile"/>
    <addaction name="menuShow"/>
@@ -2524,7 +2512,7 @@
   </action>
   <action name="actionShow_boundary">
    <property name="text">
-    <string>Show boundary</string>
+    <string>Boundary</string>
    </property>
   </action>
   <action name="actionShow_DEM">
@@ -2585,6 +2573,11 @@
   <action name="actionRadiation_settings">
    <property name="text">
     <string>Radiation settings...</string>
+   </property>
+  </action>
+  <action name="actionShow_model_cases_map">
+   <property name="text">
+    <string>Model cases map</string>
    </property>
   </action>
  </widget>

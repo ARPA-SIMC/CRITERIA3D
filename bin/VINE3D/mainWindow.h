@@ -73,6 +73,8 @@
 
         void updateMaps();
 
+        void on_actionShow_model_cases_map_triggered();
+
     protected:
         /*!
          * \brief mouseReleaseEvent call moveCenter
