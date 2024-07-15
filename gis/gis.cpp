@@ -791,7 +791,7 @@ namespace gis
         v->col = int(floor((p.x - myHeader.llCorner.x) / myHeader.cellSize));
     }
 
-    void getGridRowColFromXY (const Crit3DLatLonHeader& myHeader, double myX, double myY, int *row, int *col)
+    void getGridRowColFromLonLat(const Crit3DLatLonHeader& myHeader, double myX, double myY, int *row, int *col)
     {
         *row = int(floor((myY - myHeader.llCorner.latitude) / myHeader.dy));
         *col = int(floor((myX - myHeader.llCorner.longitude) / myHeader.dx));
