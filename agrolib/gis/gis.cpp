@@ -287,8 +287,7 @@ namespace gis
 
     bool Crit3DRasterGrid::initializeParameters(const Crit3DRasterHeader& initHeader)
     {
-        if (!parametersCell.empty())
-            parametersCell.clear();
+        parametersCell.clear();
         parametersCell.resize(initHeader.nrRows*initHeader.nrCols);
         for (int i = 0; i < int(parametersCell.size()); i++)
         {
@@ -517,7 +516,74 @@ namespace gis
         return true;
     }
 
-    std::vector<std::vector<double>> Crit3DRasterGrid::prepareParameters(int row, int col, unsigned int activeProxyNr)
+    std::vector<std::vector<double>> Crit3DRasterGrid::prepareParameters(int row, int col, std::vector<bool> activeList)
+    {
+        std::vector<std::vector<double>> tempProxyVector;
+        tempProxyVector.clear();
+        tempProxyVector.resize(activeList.size());
+        int l, m, k, p;
+        l = 0;
+        m = 0;
+        std::vector<double> avg;
+        int counter, index;
+        bool findFirst = 0;
+
+        if (isOutOfGrid(row, col))
+            return tempProxyVector;
+
+        for (unsigned int i = 0; i < activeList.size(); i++)
+        {
+            findFirst = 0;
+            if (activeList[i])
+            {
+                //look for the first cell that has data for that proxy. if there isn't any, return empty vector
+                for (l = row-1; l < row+2; l++)
+                {
+                    for (m = col-1; m < col+2; m++)
+                    {
+                        index = l * header->nrCols + m;
+                        if (index >= 0 && index < int(parametersCell.size()) && (parametersCell[index].fittingParameters.size() > i && !parametersCell[index].fittingParameters[i].empty()) && (l != row || m !=col)) {
+                            findFirst = 1;
+                        }
+                        if (findFirst==1) break;
+                    }
+                    if (findFirst==1) break;
+                }
+
+                if (findFirst == 0)
+                    continue;
+
+                //you're on a specific proxy rn. cycle through the cells, calculate the avg
+                avg.clear();
+                avg.resize(parametersCell[index].fittingParameters[i].size());
+                counter = 0;
+
+                for (k = l; k < row+2; k++)
+                {
+                    for (p = m; p < col+2; p++)
+                    {
+                        index = k * header->nrCols + p;
+                        if (index >= 0 && index < int(parametersCell.size()) && parametersCell[index].fittingParameters.size() > i && !parametersCell[index].fittingParameters[i].empty()) {
+                            for (unsigned int o = 0; o < avg.size(); o++)
+                            {
+                                avg[o] += parametersCell[index].fittingParameters[i][o];
+
+                            }
+                            counter++;
+                        }
+                    }
+                }
+                for (unsigned int o = 0; o < avg.size(); o++)
+                    avg[o] /= counter;
+
+                tempProxyVector[i] = avg;
+            }
+        }
+
+        return tempProxyVector;
+    }
+
+    std::vector<std::vector<double>> Crit3DRasterGrid::prepareParametersOld(int row, int col, unsigned int activeProxyNr)
     {
         std::vector<std::vector<double>> tempProxyVector;
         std::vector<double> tempParVector;

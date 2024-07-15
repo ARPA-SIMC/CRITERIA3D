@@ -714,21 +714,21 @@ bool Project::loadParameters(QString parametersFileName)
                     std::string elevationFuction = parameters->value("fitting_function").toString().toStdString();
                     if (fittingFunctionNames.find(elevationFuction) == fittingFunctionNames.end())
                     {
-                        errorString = "Unknown function for elevation. Choose between: piecewise_two, triple_piecewise, free_triple_piecewise.";
+                        errorString = "Unknown function for elevation. Remove the field from the .ini file or choose between: piecewise_two, triple_piecewise, free_triple_piecewise.";
                         return false;
                     }
                     else
-                        interpolationSettings.setChosenElevationFunction(fittingFunctionNames.at(elevationFuction));
+                        myProxy->setFittingFunctionName(fittingFunctionNames.at(elevationFuction));
 
                     if (parameters->contains("fitting_parameters"))
                     {
                         unsigned int nrParameters;
 
-                        if (interpolationSettings.getChosenElevationFunction()== piecewiseTwo)
+                        if (myProxy->getFittingFunctionName() == piecewiseTwo)
                             nrParameters = 4;
-                        else if (interpolationSettings.getChosenElevationFunction()== piecewiseThree)
+                        else if (myProxy->getFittingFunctionName() == piecewiseThree)
                             nrParameters = 5;
-                        else if (interpolationSettings.getChosenElevationFunction()== piecewiseThreeFree)
+                        else if (myProxy->getFittingFunctionName()== piecewiseThreeFree)
                             nrParameters = 6;
 
                         myList = parameters->value("fitting_parameters").toStringList();
@@ -743,11 +743,28 @@ bool Project::loadParameters(QString parametersFileName)
                 }
                 else
                 {
-                    interpolationSettings.setChosenElevationFunction(piecewiseTwo);
+                    if (parameters->contains("fitting_parameters"))
+                    {
+                        myList = parameters->value("fitting_parameters").toStringList();
+
+                        if (myList.size() == 8)
+                            myProxy->setFittingFunctionName(piecewiseTwo);
+                        else if (myList.size() == 10)
+                            myProxy->setFittingFunctionName(piecewiseThree);
+                        else if (myList.size() == 12)
+                            myProxy->setFittingFunctionName(piecewiseThreeFree);
+                        else
+                        {
+                            errorString = "Wrong number of fitting parameters for proxy: " + name_;
+                            return  false;
+                        }
+                        myProxy->setFittingParametersRange(StringListToDouble(myList));
+                    }
                 }
             }
             else
             {
+                myProxy->setFittingFunctionName(linear);
                 if(parameters->contains("fitting_parameters"))
                 {
                     unsigned int nrParameters = 2;
@@ -916,7 +933,9 @@ Crit3DTime Project::getCrit3DCurrentTime()
 
 QDateTime Project::getCurrentTime()
 {
-    return QDateTime(currentDate, QTime(currentHour, 0, 0), Qt::UTC);
+    QDateTime myDateTime;
+    myDateTime.setDate(this->currentDate);
+    return myDateTime.addSecs(this->currentHour * HOUR_SECONDS);
 }
 
 
@@ -2429,8 +2448,8 @@ bool Project::interpolationDemLocalDetrending(meteoVariable myVar, const Crit3DT
 
                     std::vector <Crit3DInterpolationDataPoint> subsetInterpolationPoints;
                     localSelection(interpolationPoints, subsetInterpolationPoints, x, y, z, interpolationSettings);
-                    if (interpolationSettings.getUseLocalDetrending())
-                        interpolationSettings.setFittingParameters(myRaster->prepareParameters(row, col, myCombination.getActiveProxySize()));
+                     if (interpolationSettings.getUseLocalDetrending())
+                        interpolationSettings.setFittingParameters(myRaster->prepareParameters(row, col, myCombination.getActiveList()));
                     if (! preInterpolation(subsetInterpolationPoints, &interpolationSettings, meteoSettings, &climateParameters,
                                           meteoPoints, nrMeteoPoints, myVar, myTime, errorStdStr))
                     {
@@ -2441,6 +2460,7 @@ bool Project::interpolationDemLocalDetrending(meteoVariable myVar, const Crit3DT
                     myRaster->value[row][col] = interpolate(subsetInterpolationPoints, &interpolationSettings, meteoSettings,
                                                             myVar, x, y, z, proxyValues, true);
                     myRaster->setParametersForRowCol(row, col, interpolationSettings.getFittingParameters());
+                    interpolationSettings.clearFitting();
                     interpolationSettings.setCurrentCombination(interpolationSettings.getSelectedCombination());
                 }
             }
@@ -2731,7 +2751,7 @@ bool Project::interpolationGrid(meteoVariable myVar, const Crit3DTime& myTime)
                     {
                         std::vector <Crit3DInterpolationDataPoint> subsetInterpolationPoints;
                         localSelection(interpolationPoints, subsetInterpolationPoints, myX, myY, myZ, interpolationSettings);
-                        interpolationSettings.setFittingParameters(meteoGridDbHandler->meteoGrid()->dataMeteoGrid.prepareParameters(row, col, myCombination.getActiveProxySize()));
+                        interpolationSettings.setFittingParameters(meteoGridDbHandler->meteoGrid()->dataMeteoGrid.prepareParameters(row, col, myCombination.getActiveList()));
                         if (! preInterpolation(subsetInterpolationPoints, &interpolationSettings, meteoSettings,
                                               &climateParameters, meteoPoints, nrMeteoPoints, myVar, myTime, errorStdStr))
                         {
@@ -3056,6 +3076,7 @@ void Project::saveProxies()
             if (myProxy->getGridName() != "") parameters->setValue("raster", getRelativePath(QString::fromStdString(myProxy->getGridName())));
             if (myProxy->getStdDevThreshold() != NODATA) parameters->setValue("stddev_threshold", QString::number(myProxy->getStdDevThreshold()));
             if (myProxy->getFittingParametersRange().size() > 0) parameters->setValue("fitting_parameters", DoubleVectorToStringList(myProxy->getFittingParametersRange()));
+            if (getProxyPragaName(myProxy->getName()) == proxyHeight && myProxy->getFittingFunctionName() != noFunction) parameters->setValue("fitting_function", QString::fromStdString(getKeyStringElevationFunction(myProxy->getFittingFunctionName())));
         parameters->endGroup();
     }
 }
@@ -3388,7 +3409,7 @@ void Project::showMeteoWidgetPoint(std::string idMeteoPoint, std::string namePoi
     {
         bool isGrid = false;
         Crit3DMeteoWidget* meteoWidgetPoint = new Crit3DMeteoWidget(isGrid, projectPath, meteoSettings);
-        if (! meteoWidgetPointList.isEmpty())
+        if (!meteoWidgetPointList.isEmpty())
         {
             meteoWidgetId = meteoWidgetPointList[meteoWidgetPointList.size()-1]->getMeteoWidgetID()+1;
         }
@@ -3396,7 +3417,6 @@ void Project::showMeteoWidgetPoint(std::string idMeteoPoint, std::string namePoi
         {
             meteoWidgetId = 0;
         }
-
         meteoWidgetPoint->setMeteoWidgetID(meteoWidgetId);
         meteoWidgetPointList.append(meteoWidgetPoint);
         QObject::connect(meteoWidgetPoint, SIGNAL(closeWidgetPoint(int)), this, SLOT(deleteMeteoWidgetPoint(int)));
@@ -3406,15 +3426,10 @@ void Project::showMeteoWidgetPoint(std::string idMeteoPoint, std::string namePoi
         if (hasDailyData)
         {
             meteoWidgetPoint->setDailyRange(firstDaily, lastDaily);
-            meteoWidgetPoint->setCurrentFrequency(daily);
         }
         if (hasHourlyData)
         {
             meteoWidgetPoint->setHourlyRange(firstHourly.date(), lastHourly.date());
-            if (! hasDailyData)
-            {
-                meteoWidgetPoint->setCurrentFrequency(hourly);
-            }
         }
 
         meteoWidgetPoint->setCurrentDate(this->currentDate);

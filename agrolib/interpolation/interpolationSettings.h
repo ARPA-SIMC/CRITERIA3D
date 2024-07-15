@@ -117,6 +117,7 @@
         void addProxyActive(bool value) { _isActiveList.push_back(value); }
         void setProxyActive(unsigned index, bool value) { _isActiveList[index] = value; }
         bool isProxyActive(unsigned index) { return _isActiveList[index]; }
+        std::vector<bool> getActiveList() { return _isActiveList; }
 
         void addProxySignificant(bool value) { _isSignificantList.push_back(value); }
         void setProxySignificant(unsigned index, bool value) { _isSignificantList[index] = value; }
@@ -140,7 +141,6 @@
         gis::Crit3DRasterGrid* currentDEM; //for TD
 
         TInterpolationMethod interpolationMethod;
-        TFittingFunction chosenElevationFunction;
 
         float minRegressionR2;
         bool useThermalInversion;
@@ -263,12 +263,13 @@
         void setMinPointsLocalDetrending(int newMinPointsLocalDetrending);
 
         std::vector<std::vector <double>> getFittingParameters() const;
+        std::vector<double> getProxyFittingParameters(int tempIndex);
         void setFittingParameters(const std::vector<std::vector <double>> &newFittingParameters);
-        void setFittingParametersElevation(const std::vector<double> &newFittingParameters);
+        void setSingleFittingParameters(std::vector<double> &newFittingParameters, int paramIndex);
         void addFittingParameters(const std::vector<std::vector<double> > &newFittingParameters);
         std::vector<std::function<double (double, std::vector<double> &)> > getFittingFunction() const;
         void setFittingFunction(const std::vector<std::function<double (double, std::vector<double> &)> > &newFittingFunction);
-        void addFittingFunction(const std::vector<std::function<double (double, std::vector<double> &)> > &newFittingFunction);
+        void setSingleFittingFunction(const std::function<double (double, std::vector<double> &)> &newFittingFunction, unsigned int index);
         bool getProxiesComplete() const;
         void setProxiesComplete(bool newProxiesComplete);
         void clearFitting();

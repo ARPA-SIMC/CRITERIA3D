@@ -171,10 +171,15 @@ Criteria1DWidget::Criteria1DWidget()
     waterContentGroup->setFixedWidth(this->width() * widthRatio);
     carbonNitrogenGroup->setFixedWidth(this->width() * widthRatio);
 
-    infoCaseGroup->setTitle("Case");
-    infoCropGroup->setTitle("Crop");
+    QFont normalFont, boldFont;
+    boldFont.setBold(true);
+    normalFont.setBold(false);
+
+    infoCaseGroup->setFont(boldFont);
+    infoCaseGroup->setTitle("Case study");
     infoMeteoGroup->setTitle("Meteo");
     infoSoilGroup->setTitle("Soil");
+    infoCropGroup->setTitle("Crop");
     laiParametersGroup->setTitle("Crop parameters");
     rootParametersGroup->setTitle("Root parameters");
     irrigationParametersGroup->setTitle("Irrigation parameters");
@@ -182,6 +187,7 @@ Criteria1DWidget::Criteria1DWidget()
     waterContentGroup->setTitle("Water Content variable");
     carbonNitrogenGroup->setTitle("Carbon Nitrogen variable");
 
+    caseListComboBox.setFont(normalFont);
     caseInfoLayout->addWidget(&caseListComboBox);
 
     cropInfoLayout->addWidget(cropId, 0, 0);
@@ -435,9 +441,9 @@ Criteria1DWidget::Criteria1DWidget()
     carbonNitrogenGroup->setLayout(carbonNitrogenLayout);
 
     infoLayout->addWidget(infoCaseGroup);
-    infoLayout->addWidget(infoCropGroup);
     infoLayout->addWidget(infoMeteoGroup);
     infoLayout->addWidget(infoSoilGroup);
+    infoLayout->addWidget(infoCropGroup);
     infoLayout->addWidget(laiParametersGroup);
     infoLayout->addWidget(rootParametersGroup);
     infoLayout->addWidget(irrigationParametersGroup);

@@ -283,18 +283,26 @@ std::vector<std::vector<double> > Crit3DInterpolationSettings::getFittingParamet
     return fittingParameters;
 }
 
+std::vector<double> Crit3DInterpolationSettings::getProxyFittingParameters(int tempIndex)
+{
+    if (tempIndex < fittingParameters.size())
+        return fittingParameters[tempIndex];
+    else {
+        fittingParameters.resize(tempIndex + 1);
+        return fittingParameters[tempIndex];
+    }
+}
+
 void Crit3DInterpolationSettings::setFittingParameters(const std::vector<std::vector<double> > &newFittingParameters)
 {
     fittingParameters = newFittingParameters;
 }
 
-void Crit3DInterpolationSettings::setFittingParametersElevation(const std::vector<double> &newFittingParameters)
+void Crit3DInterpolationSettings::setSingleFittingParameters(std::vector<double> &newFittingParameters, int paramIndex)
 {
-    if (fittingParameters.empty()) {
-        fittingParameters.push_back(newFittingParameters);
-    } else {
-        fittingParameters[0] = newFittingParameters;
-    }
+    if (fittingParameters.size() <= paramIndex)
+        fittingParameters.resize(paramIndex+1);
+    fittingParameters[paramIndex] = newFittingParameters;
 }
 
 void Crit3DInterpolationSettings::addFittingParameters(const std::vector<std::vector<double> > &newFittingParameters)
@@ -314,20 +322,57 @@ void Crit3DInterpolationSettings::setFittingFunction(const std::vector<std::func
     fittingFunction = newFittingFunction;
 }
 
-void Crit3DInterpolationSettings::addFittingFunction(const std::vector<std::function<double (double, std::vector<double> &)> > &newFittingFunction)
+void Crit3DInterpolationSettings::setSingleFittingFunction(const std::function<double (double, std::vector<double> &)> &newFittingFunction, unsigned int index)
 {
-    for (int i = 0; i < int(newFittingFunction.size()); i ++)
-        fittingFunction.push_back(newFittingFunction[i]);
+    if (fittingFunction.size() <= index)
+        fittingFunction.resize(index + 1);
+    fittingFunction[index] = newFittingFunction;
+
 }
 
 TFittingFunction Crit3DInterpolationSettings::getChosenElevationFunction()
 {
-    return chosenElevationFunction;
+    int elPos = NODATA;
+    for (int i = 0; i < getProxyNr(); i++)
+        if (getProxyPragaName(getProxy(i)->getName()) == proxyHeight)
+            elPos = i;
+
+    if (elPos != NODATA)
+        return getProxy(elPos)->getFittingFunctionName();
+    else
+        return noFunction;
 }
 
 void Crit3DInterpolationSettings::setChosenElevationFunction(TFittingFunction chosenFunction)
 {
-    chosenElevationFunction = chosenFunction;
+    int elPos = NODATA;
+    for (int i = 0; i < getProxyNr(); i++)
+        if (getProxyPragaName(getProxy(i)->getName()) == proxyHeight)
+            elPos = i;
+
+    double min = -20;
+    double max = 40;
+
+    if (!getMinMaxTemperature().empty())
+    {
+        min = getMinMaxTemperature()[0];
+        max = getMinMaxTemperature()[1];
+    }
+
+    if (elPos != NODATA)
+    {
+        if (chosenFunction == piecewiseTwo)
+            getProxy(elPos)->setFittingParametersRange({-200, min-4, 0.002, -0.01, 5000, max+4, 0.01, 0.0015});
+        else if (chosenFunction == piecewiseThree)
+            getProxy(elPos)->setFittingParametersRange({-200, min-4, 300, 0.002, -0.01, 5000, max+4, 1000, 0.007, 0.0015});
+        else if (chosenFunction == piecewiseThreeFree)
+            getProxy(elPos)->setFittingParametersRange({-200, min-4, 300, 0.002, -0.01, -0.01, 5000, max+4, 1000, 0.007, 0.0015, 0.0015});
+        else return;
+
+        getProxy(elPos)->setFittingFunctionName(chosenFunction);
+    }
+    else
+        return;
 }
 
 void Crit3DInterpolationSettings::setMinMaxTemperature(double min, double max)
@@ -391,7 +436,9 @@ void Crit3DInterpolationSettings::initialize()
     meteoGridAggrMethod = aggrAverage;
     meteoGridUpscaleFromDem = true;
     indexHeight = unsigned(NODATA);
-    chosenElevationFunction = piecewiseThreeFree;
+
+    fittingFunction.clear();
+    fittingParameters.clear();
 
     isKrigingReady = false;
     precipitationAllZero = false;
@@ -482,7 +529,7 @@ Crit3DProxy* Crit3DInterpolationSettings::getProxy(unsigned pos)
 
 int Crit3DInterpolationSettings::getProxyPosFromName(TProxyVar name)
 {
-    for (int i = 0; i < int(getProxyNr()); i++)
+    for (int i = 0; i < getProxyNr(); i++)
     {
         if (getProxyPragaName(getProxyName(i)) == name)
             return i;

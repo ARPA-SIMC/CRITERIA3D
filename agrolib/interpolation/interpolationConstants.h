@@ -31,6 +31,7 @@
       { "orography", proxyHeight },
       { "orogIndex", proxyOrogIndex },
       { "urbanFraction", proxyUrbanFraction },
+      { "urban", proxyUrbanFraction},
       { "seaDistance", proxySeaDistance },
       { "aspect", proxyAspect },
       { "slope", proxySlope },

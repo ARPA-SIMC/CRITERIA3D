@@ -277,7 +277,7 @@ bool interpolationRaster(std::vector <Crit3DInterpolationDataPoint> &myPoints, C
             gis::getUtmXYFromRowColSinglePrecision(*outputGrid, myRow, myCol, &myX, &myY);
             float myZ = raster.value[myRow][myCol];
             if (mySettings->getUseLocalDetrending())
-                mySettings->setFittingParameters(raster.prepareParameters(myRow, myCol, mySettings->getSelectedCombination().getActiveProxySize()));
+                mySettings->setFittingParameters(raster.prepareParameters(myRow, myCol, mySettings->getSelectedCombination().getActiveList()));
             if (! isEqual(myZ, outputGrid->header->flag))
             {
                 if (getUseDetrendingVar(myVar))
