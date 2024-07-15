@@ -63,6 +63,7 @@
         std::vector <TVineCultivar> cultivar;
         std::vector <TtrainingSystem> trainingSystems;
 
+        std::vector <Crit3DModelCase> inputModelCases;
         std::vector <Crit3DModelCase> modelCases;
         std::vector <TVine3DOperation> fieldBook;
 
@@ -87,6 +88,9 @@
 
         Vine3DProject();
 
+        void initializeVine3DProject();
+        void clearVine3DProject();
+
         void loadVine3DSettings();
 
         bool loadFieldsProperties();
@@ -98,16 +102,16 @@
         float findSoilMaxDepth();
         soil::Crit3DSoil *loadHorizons(int idSoil, QString soil_code);
 
-        void initializeVine3DProject();
-        void clearVine3DProject();
-
         bool loadVine3DProject(QString projectFileName);
         bool openVine3DDatabase(QString fileName);
 
         bool initializeGrapevine();
 
+        int getCaseIndexFromId(int caseId);
+        void setModelCasesMap(gis::Crit3DRasterGrid &myGrid);
+
         int queryFieldPoint(double x, double y);
-        bool loadFieldMap(QString myFileName);
+        bool loadFieldMap(QString mapFileName);
 
         bool readFieldQuery(QSqlQuery &myQuery, int &idField, Crit3DLanduse &landuse, int &vineIndex, int &trainingIndex, float &maxLaiGrass,  float &maxIrrigationRate);
         bool setField(int fieldIndex, int fieldId, Crit3DLanduse landuse, int soilIndex, int vineIndex, int trainingIndex,
@@ -123,10 +127,6 @@
         bool isMeteoDataLoaded(const Crit3DTime& myTimeIni, const Crit3DTime& myTimeFin);
         float meteoDataConsistency(meteoVariable myVar, const Crit3DTime& myTimeIni, const Crit3DTime& myTimeFin);
 
-        //bool loadObsDataSubHourly(int indexPoint, meteoVariable myVar, QDateTime d1, QDateTime d2, QString tableName);
-        //bool loadObsDataHourly(int indexPoint, QDate d1, QDate d2, QString tableName, bool useAggrCodes);
-        //bool loadObsDataFilled(QDateTime firstTime, QDateTime lastTime);
-        //bool loadObsDataAllPoints(QDate d1, QDate d2, bool showInfo);
         void findVine3DLastMeteoDate();
 
         bool loadStates(QDate myDate);

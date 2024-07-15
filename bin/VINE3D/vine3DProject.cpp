@@ -48,6 +48,7 @@ void Vine3DProject::initializeVine3DProject()
 
     cultivar.clear();
     trainingSystems.clear();
+    inputModelCases.clear();
     modelCases.clear();
     fieldBook.clear();
 
@@ -411,64 +412,66 @@ int Vine3DProject::queryFieldPoint(double x, double y)
 }
 
 
-int getCaseIndexFromId(int caseId, std::vector <Crit3DModelCase> modelCases)
+int Vine3DProject::getCaseIndexFromId(int caseId)
 {
     if (modelCases.size() == 0)
         return NODATA;
 
-    int i;
-    for (i=0; i < modelCases.size(); i++)
+    for (int i=0; i < modelCases.size(); i++)
         if (caseId == modelCases[i].id)
             return i;
 
-    //default value
-    if (i == modelCases.size() - 1)
-        return 0;
-
-    return NODATA;
+    // default value
+    return 0;
 }
 
-void modelCaseIndexMapIndexFromId(gis::Crit3DRasterGrid* myGrid, std::vector <Crit3DModelCase> modelCases)
+
+void Vine3DProject::setModelCasesMap(gis::Crit3DRasterGrid &myGrid)
 {
     int fieldId, fieldIndex;
 
     // transform from id to index
-    for (int myRow = 0; myRow < myGrid->header->nrRows; myRow++)
-        for (int myCol = 0; myCol < myGrid->header->nrCols; myCol++)
+    for (int row = 0; row < myGrid.header->nrRows; row++)
+    {
+        for (int col = 0; col < myGrid.header->nrCols; col++)
         {
-            fieldId = int(myGrid->value[myRow][myCol]);
-            if (fieldId != int(myGrid->header->flag))
+            fieldId = int(myGrid.value[row][col]);
+            if (! isEqual(fieldId, myGrid.header->flag))
             {
-                fieldIndex = getCaseIndexFromId(fieldId, modelCases);
+                fieldIndex = getCaseIndexFromId(fieldId);
                 if (fieldIndex != NODATA)
-                    myGrid->value[myRow][myCol] = fieldIndex;
+                {
+                    myGrid.value[row][col] = fieldIndex;
+                }
             }
         }
+    }
 }
 
-bool Vine3DProject::loadFieldMap(QString myFileName)
-{
-    this->logInfo ("Read fields map...");
 
-    std::string fn = myFileName.left(myFileName.length()-4).toStdString();
-    gis::Crit3DRasterGrid myGrid;
+bool Vine3DProject::loadFieldMap(QString mapFileName)
+{
+    logInfo ("Read fields map...");
+
+    std::string fn = mapFileName.left(mapFileName.length()-4).toStdString();
+    gis::Crit3DRasterGrid inputGrid;
 
     std::string errorStr;
-    if (! gis::readEsriGrid(fn, &(myGrid), errorStr))
+    if (! gis::readEsriGrid(fn, &(inputGrid), errorStr))
     {
-        this->errorString = "Load fields map failed:\n" + myFileName + "\n" + QString::fromStdString(errorStr);
+        errorString = "Load fields map failed:\n" + mapFileName + "\n" + QString::fromStdString(errorStr);
         logError();
-        return (false);
+        return false;
     }
 
     // compute prevailing map
     landUseMap.initializeGrid(DEM);
-    gis::prevailingMap(myGrid, &(landUseMap));
+    gis::prevailingMap(inputGrid, &(landUseMap));
     gis::updateMinMaxRasterGrid(&(landUseMap));
 
-    modelCaseIndexMapIndexFromId(&landUseMap, modelCases);
+    setModelCasesMap(landUseMap);
 
-    this->logInfo ("Field map = " + myFileName);
+    logInfo ("Field map = " + mapFileName);
     return true;
 }
 
@@ -527,7 +530,7 @@ bool Vine3DProject::loadFieldsProperties()
 {
     logInfo ("Read fields properties...");
 
-    int fieldIndex, idField, vineIndex, trainingIndex;
+    int idField, vineIndex, trainingIndex;
     float maxLaiGrass, maxIrrigationRate;
     Crit3DLanduse landuse;
 
@@ -542,7 +545,7 @@ bool Vine3DProject::loadFieldsProperties()
     }
     else if (! myQuery.next())
     {
-        this->errorString = "Missing default field (index = 0) in fields table.";
+        errorString = "Missing default field (index = 0) in fields table.";
         return false;
     }
 
@@ -550,30 +553,29 @@ bool Vine3DProject::loadFieldsProperties()
     myQuery.prepare("SELECT id_field, landuse, id_cultivar, id_training_system, max_lai_grass, irrigation_max_rate FROM fields ORDER BY id_field");
     if (! myQuery.exec())
     {
-        errorString = "Error reading fields table.\n" + myQuery.lastError().text();
+        errorString = "Error reading fields table:\n" + myQuery.lastError().text();
         return false;
     }
-
-    fieldIndex = 0;
-    Crit3DModelCase myCase;
 
     while (myQuery.next())
     {
         if (readFieldQuery(myQuery, idField, landuse, vineIndex, trainingIndex, maxLaiGrass, maxIrrigationRate))
         {
-            myCase.id = idField;
-            myCase.landuse = landuse;
-            myCase.cultivar = &(this->cultivar[vineIndex]);
-            myCase.maxLAIGrass = maxLaiGrass;
-            myCase.maxIrrigationRate = maxIrrigationRate;
+            Crit3DModelCase currentCase;
+
+            currentCase.id = idField;
+            currentCase.landuse = landuse;
+            currentCase.cultivar = &(cultivar[vineIndex]);
+            currentCase.maxLAIGrass = maxLaiGrass;
+            currentCase.maxIrrigationRate = maxIrrigationRate;
 
             float density = 1 / (trainingSystems[trainingIndex].rowDistance * trainingSystems[trainingIndex].plantDistance);
 
-            myCase.trainingSystem = trainingIndex;
-            myCase.plantDensity = density;
-            myCase.shootsPerPlant = this->trainingSystems[trainingIndex].shootsPerPlant;
+            currentCase.trainingSystem = trainingIndex;
+            currentCase.plantDensity = density;
+            currentCase.shootsPerPlant = trainingSystems[trainingIndex].shootsPerPlant;
 
-            modelCases.push_back(myCase);
+            inputModelCases.push_back(currentCase);
         }
         else
         {
@@ -1209,9 +1211,6 @@ bool Vine3DProject::loadStates(QDate myDate)
 {
     QString statePath = getProjectPath() + "states/" + myDate.toString("yyyy/MM/dd/");
 
-    //if (!loadPlantState(this, tartaricAcidVar, myDate, myStatePath)) return(false);
-    //if (!loadPlantState(this, pHBerryVar, myDate, myStatePath)) return(false);
-    //if (!loadPlantState(this, fruitBiomassIndexVar, myDate, myStatePath)) return(false);
     if (!loadPlantState(this, daysAfterBloomVar, myDate, statePath)) return(false);
     if (!loadPlantState(this, cumulatedBiomassVar, myDate, statePath)) return(false);
     if (!loadPlantState(this, fruitBiomassVar, myDate, statePath)) return(false);
@@ -1223,14 +1222,14 @@ bool Vine3DProject::loadStates(QDate myDate)
     if (!loadPlantState(this, stageVar, myDate, statePath)) return(false);
     if (!loadPlantState(this, leafAreaIndexVar, myDate, statePath)) return(false);
 
-    if (!loadPlantState(this, isHarvestedVar, myDate, statePath))
+    if (! loadPlantState(this, isHarvestedVar, myDate, statePath))
     {
-        this->statePlantMaps->isHarvestedMap->setConstantValueWithBase(0, DEM);
+        statePlantMaps->isHarvestedMap->setConstantValueWithBase(0, DEM);
     }
-    if (!loadPlantState(this, fruitBiomassIndexVar, myDate, statePath))
+    if (! loadPlantState(this, fruitBiomassIndexVar, myDate, statePath))
     {
         //defualt= chardonnay
-        this->statePlantMaps->fruitBiomassIndexMap->setConstantValueWithBase(this->modelCases[1].cultivar->parameterBindiMiglietta.fruitBiomassSlope, DEM);
+       statePlantMaps->fruitBiomassIndexMap->setConstantValueWithBase(inputModelCases[1].cultivar->parameterBindiMiglietta.fruitBiomassSlope, DEM);
     }
 
     //problema: mancano nei precedenti stati
@@ -1242,10 +1241,11 @@ bool Vine3DProject::loadStates(QDate myDate)
     loadPlantState(this, powderyCurrentColoniesVar, myDate, statePath);
     loadPlantState(this, powderySporulatingColoniesVar, myDate, statePath);
 
-    if (!loadWaterBalanceState(this, myDate, statePath, waterMatricPotential)) return false;
+    if (! loadWaterBalanceState(this, myDate, statePath, waterMatricPotential)) return false;
 
-    this->logInfo("Load state: " + myDate.toString("yyyy-MM-dd"));
-    return(true);
+    logInfo("Load state: " + myDate.toString("yyyy-MM-dd"));
+
+    return true;
 }
 
 
@@ -1497,7 +1497,6 @@ bool Vine3DProject::initializeGrapevine()
     int soilLayerWithRoot;
     double depthModeRootDensity;     // [m] depth of mode of root density
     double depthMeanRootDensity;     // [m] depth of mean of root density
-
 
     for (int i = 0; i < modelCases.size(); i++)
     {
