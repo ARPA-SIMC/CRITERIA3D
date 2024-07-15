@@ -301,7 +301,7 @@ void Crit3DInterpolationSettings::setFittingParameters(const std::vector<std::ve
 void Crit3DInterpolationSettings::setSingleFittingParameters(std::vector<double> &newFittingParameters, int paramIndex)
 {
     if (fittingParameters.size() <= paramIndex)
-            fittingParameters.resize(paramIndex+1);
+        fittingParameters.resize(paramIndex+1);
     fittingParameters[paramIndex] = newFittingParameters;
 }
 

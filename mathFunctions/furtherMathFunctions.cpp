@@ -1402,26 +1402,13 @@ namespace interpolation
                             }
                             counter++;
 
-                            if (!parameters.size() > proxyIndex && !parameters[proxyIndex].empty())
+                            if (parameters.size() > proxyIndex && !parameters[proxyIndex].empty())
                             {
                                 if (dir == 0)
                                     parameters[proxyIndex][paramIndex] = MINVALUE(firstGuessParam[proxyIndex][paramIndex] + directions[dir] * step * steps[paramIndex], parametersMax[proxyIndex][paramIndex]);
                                 else
                                     parameters[proxyIndex][paramIndex] = MAXVALUE(firstGuessParam[proxyIndex][paramIndex] + directions[dir] * step * steps[paramIndex], parametersMin[proxyIndex][paramIndex]);
                             }
-
-                            /*for (i=0; i<nrPredictors; i++)
-                    {
-                        for (j=0; j<nrParameters[i]; j++)
-                        {
-                            do {
-                                truncNormal = normal_dis(gen);
-                            } while(truncNormal <= 0.0 || truncNormal >= 1.0);
-                            parameters[i][j] = parametersMin[i][j] + (truncNormal)*(parametersMax[i][j]-parametersMin[i][j]);
-                        }
-                    }
-*/
-
 
                             if ((counter > nrTrials) || ((R2Previous[0] != NODATA) && fabs(R2Previous[0]-R2Previous[nrMinima-1]) < deltaR2 ))
                             {
@@ -2082,7 +2069,7 @@ namespace interpolation
 
         //grigliato
         std::vector<double> steps;
-        const int numSteps = 50;
+        const int numSteps = 30;
         if (parameters.size() == 4)
             steps = {2*(parametersMax[0]-parametersMin[0])/numSteps, 2*(parametersMax[1]-parametersMin[1])/numSteps, 2*(parametersMax[2]-parametersMin[2])/numSteps, 2*(parametersMax[3]-parametersMin[3])/numSteps};
         else if (parameters.size() == 6)
