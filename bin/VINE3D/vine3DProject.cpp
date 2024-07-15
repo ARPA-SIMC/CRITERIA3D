@@ -56,13 +56,6 @@ void Vine3DProject::initializeVine3DProject()
 }
 
 
-bool Vine3DProject::loadVine3DSettings()
-{
-    //eventually put Vine3D generic settings
-    return true;
-}
-
-
 void Vine3DProject::clearVine3DProject()
 {
     if (isProjectLoaded)
@@ -79,7 +72,8 @@ void Vine3DProject::clearVine3DProject()
     }
 }
 
-bool Vine3DProject::loadVine3DProjectSettings()
+
+void Vine3DProject::loadVine3DSettings()
 {
     projectSettings->beginGroup("project");
 
@@ -93,22 +87,21 @@ bool Vine3DProject::loadVine3DProjectSettings()
         computeDiseases = projectSettings->value("compute_diseases").toBool();
 
     projectSettings->endGroup();
-
-    return true;
 }
+
 
 bool Vine3DProject::openVine3DDatabase(QString fileName)
 {
     if (fileName == "")
     {
-        logError("Missing VINE3D DB filename");
+        logError("Missing VINE3D db filename (field db_vine3d)");
         return false;
     }
 
     dbVine3D = QSqlDatabase::addDatabase("QSQLITE", QUuid::createUuid().toString());
     dbVine3D.setDatabaseName(getCompleteFileName(fileName, ""));
 
-    if (!dbVine3D.open())
+    if (! dbVine3D.open())
     {
        errorString = "Connection with database fail";
        return false;
@@ -118,7 +111,8 @@ bool Vine3DProject::openVine3DDatabase(QString fileName)
     return true;
 }
 
-bool Vine3DProject::loadVine3DProject(QString myFileName)
+
+bool Vine3DProject::loadVine3DProject(QString projectFileName)
 {
     clearVine3DProject();
 
@@ -126,16 +120,16 @@ bool Vine3DProject::loadVine3DProject(QString myFileName)
     initializeProject3D();
     initializeVine3DProject();
 
-    if (myFileName == "") return(false);
+    if (projectFileName == "")
+        return false;
 
-    if (! loadProjectSettings(myFileName))
+    if (! loadProjectSettings(projectFileName))
         return false;
 
     if (! loadProject3DSettings())
         return false;
 
-    if (! loadVine3DProjectSettings())
-        return false;
+    loadVine3DSettings();
 
     if (dbVine3DFileName != "") openVine3DDatabase(dbVine3DFileName);
 
@@ -161,13 +155,15 @@ bool Vine3DProject::loadVine3DProject(QString myFileName)
         return false;
     }
 
-    if (! loadFieldShape())
+    QString fileName = getCompleteFileName(landUseMapFileName, PATH_GEO);
+    if (! loadFieldMap(fileName))
     {
-        myFileName = getCompleteFileName(landUseMapFileName, PATH_GEO);
-        if (! loadFieldMap(myFileName)) return false;
+        logError();
+        return false;
     }
 
-    if (! loadSoilMap(soilMapFileName))
+    fileName = getCompleteFileName(soilMapFileName, PATH_GEO);
+    if (! loadSoilMap(fileName))
     {
         logError();
         return false;
@@ -184,6 +180,7 @@ bool Vine3DProject::loadVine3DProject(QString myFileName)
         logError();
         return false;
     }
+
     processes.setComputeWater(true);
 
     outputWaterBalanceMaps = new Crit3DWaterBalanceMaps(DEM);
@@ -413,64 +410,6 @@ int Vine3DProject::queryFieldPoint(double x, double y)
         return NODATA;
 }
 
-
-bool Vine3DProject::loadFieldShape()
-{
-    return false;
-    /* to be revised
-    this->logInfo ("Read Fields...");
-    int dim = 1;
-    int i, j, id;
-    double x0, y0;
-    std::vector <float> valuesList;
-
-    QString myQueryString = "SELECT id_field FROM fields_shp";
-
-    QSqlQuery myQuery;
-    myQuery = this->dbConnection.exec(myQueryString);
-    if (myQuery.size() == -1)
-    {
-        this->errorString = myQuery.lastError().text();
-        return(false);
-    }
-    myQuery.clear();
-
-    this->modelCaseIndexMap.initializeGrid(this->DEM);
-
-    double step = this->modelCaseIndexMap.header->cellSize / (2*dim+1);
-
-    for (long row = 0; row < this->modelCaseIndexMap.header->nrRows ; row++)
-        for (long col = 0; col < this->modelCaseIndexMap.header->nrCols; col++)
-            if (this->DEM.value[row][col] != this->DEM.header->flag)
-            {
-                //center
-                gis::getUtmXYFromRowCol(this->modelCaseIndexMap, row, col, &x0, &y0);
-                id = queryFieldPoint(x0, y0);
-                if (id != NODATA)
-                    this->modelCaseIndexMap.value[row][col] = id;
-                else
-                {
-                    valuesList.resize(0);
-                    for (i = -dim; i <= dim; i++)
-                        for (j = -dim; j <= dim; j++)
-                            if ((i != 0)|| (j != 0))
-                            {
-                                id = queryFieldPoint(x0+(i*step), y0+(j*step));
-                                if (id != NODATA)
-                                    valuesList.push_back(id);
-                            }
-                    if (valuesList.size() == 0)
-                        this->modelCaseIndexMap.value[row][col] = this->modelCaseIndexMap.header->flag;
-                    else
-                        this->modelCaseIndexMap.value[row][col] = gis::prevailingValue(valuesList);
-                }
-            }
-
-    gis::updateMinMaxRasterGrid(&(this->modelCaseIndexMap));
-    this->nrModelCases = int(this->modelCaseIndexMap.maximum);
-    return true;
-    */
-}
 
 int getCaseIndexFromId(int caseId, std::vector <Crit3DModelCase> modelCases)
 {
@@ -1152,42 +1091,6 @@ float Vine3DProject::getTimeStep()
 }
 
 
-/*
-bool Vine3DProject::loadObsDataFilled(QDateTime firstTime, QDateTime lastTime)
-{
-    QDate d1 = firstTime.date().addDays(-30);
-    QDate d2 = lastTime.date().addDays(30);
-
-    if (! this->loadObsDataAllPoints(d1, d2, false)) return(false);
-
-    // Replace missing data
-    long nrReplacedData = 0;
-    Crit3DTime myTime = getCrit3DTime(firstTime);
-    long nrHours = firstTime.secsTo(lastTime) / 3600;
-    for (int i = 0; i <=nrHours; i++)
-    {
-        if (!checkLackOfData(this, airTemperature, myTime, &nrReplacedData)
-            || !checkLackOfData(this, precipitation, myTime, &nrReplacedData)
-            || !checkLackOfData(this, airRelHumidity, myTime, &nrReplacedData))
-        {
-            this->logError("Weather data missing: " + getQDateTime(myTime).toString("yyyyMMdd hh:mm"));
-            return(false);
-        }
-        checkLackOfData(this, windScalarIntensity, myTime, &nrReplacedData);
-        myTime = myTime.addSeconds(3600);
-    }
-
-    if(nrReplacedData > 0)
-    {
-        this->logInfo("\nWarning! "+ QString::number(nrReplacedData)+ " hourly data are missing.");
-        this->logInfo("They was replaced by mean values.\n");
-    }
-
-    return true;
-}
-*/
-
-
 bool Vine3DProject::runModels(QDateTime firstTime, QDateTime lastTime, bool saveOutput)
 {
     if (! isProjectLoaded)
@@ -1196,7 +1099,6 @@ bool Vine3DProject::runModels(QDateTime firstTime, QDateTime lastTime, bool save
         return false;
     }
 
-    //if (!loadObsDataFilled(dateTime1, dateTime2))
     logInfoGUI("Loading meteo data...");
     if (! loadMeteoPointsData(firstTime.date().addDays(-1), lastTime.date().addDays(+1), true, false, false))
     {
@@ -1589,26 +1491,26 @@ bool Vine3DProject::initializeGrapevine()
 {
     outputPlantMaps = new Crit3DOutputPlantMaps(DEM, nrLayers);
 
-    if (! grapevine.initializeLayers(nrLayers))
-        return false;
+    grapevine.initializeLayers(nrLayers);
 
     int nrSoilLayersWithoutRoots = 2;
     int soilLayerWithRoot;
-    double depthModeRootDensity;     //[m] depth of mode of root density
-    double depthMeanRootDensity;     //[m] depth of mean of root density
+    double depthModeRootDensity;     // [m] depth of mode of root density
+    double depthMeanRootDensity;     // [m] depth of mean of root density
 
-    for (int i = 0 ; i < modelCases.size(); i++)
+
+    for (int i = 0; i < modelCases.size(); i++)
     {
         // TODO
-        int soilIndex = 0;
+        int soilIndex = soilIndexList[0];
         int nrHorizons = soilList[soilIndex].nrHorizons;
         soil::Crit3DHorizon myHorizon = soilList[soilIndex].horizon[nrHorizons - 1];
 
-        unsigned int j=0;
-        while (j < nrLayers - 1 && layerDepth.at(size_t(j)) <= myHorizon.lowerDepth)
-            j++;
+        unsigned int layer=0;
+        while (layer < nrLayers - 1 && layerDepth.at(size_t(layer)) <= myHorizon.lowerDepth)
+            layer++;
 
-        modelCases[i].soilLayersNr = j;
+        modelCases[i].soilLayersNr = layer;
         modelCases[i].soilTotalDepth = myHorizon.lowerDepth;
 
         soilLayerWithRoot = modelCases[i].soilLayersNr - nrSoilLayersWithoutRoots;

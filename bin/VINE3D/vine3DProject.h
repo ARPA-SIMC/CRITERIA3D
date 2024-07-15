@@ -87,8 +87,7 @@
 
         Vine3DProject();
 
-        bool loadVine3DSettings();
-        bool loadVine3DProjectSettings();
+        void loadVine3DSettings();
 
         bool loadFieldsProperties();
         bool loadDBPoints();
@@ -102,13 +101,12 @@
         void initializeVine3DProject();
         void clearVine3DProject();
 
-        bool loadVine3DProject(QString myFileName);
+        bool loadVine3DProject(QString projectFileName);
         bool openVine3DDatabase(QString fileName);
 
         bool initializeGrapevine();
 
         int queryFieldPoint(double x, double y);
-        bool loadFieldShape();
         bool loadFieldMap(QString myFileName);
 
         bool readFieldQuery(QSqlQuery &myQuery, int &idField, Crit3DLanduse &landuse, int &vineIndex, int &trainingIndex, float &maxLaiGrass,  float &maxIrrigationRate);

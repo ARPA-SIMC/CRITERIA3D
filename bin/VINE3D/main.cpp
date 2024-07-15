@@ -36,9 +36,6 @@ int main(int argc, char *argv[])
     if (! myProject.loadParameters("parameters.ini"))
         return -1;
 
-    if (! myProject.loadVine3DSettings())
-        return -1;
-
     if (myProject.modality == MODE_GUI)
     {
         QApplication::setOverrideCursor(Qt::ArrowCursor);
