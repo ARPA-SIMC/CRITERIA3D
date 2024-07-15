@@ -113,11 +113,6 @@ void Vine3D_Grapevine::resetLayers()
 {
     for (int i=0 ; i < nrMaxLayers ; i++)
     {
-        //psiSoilProfile[i] = NODATA ;
-        //soilWaterContentProfile[i]= NODATA ;
-        //soilWaterContentProfileFC[i]= NODATA;
-        //soilWaterContentProfileWP[i]= NODATA;
-        //soilFieldCapacity[i] = NODATA;
         fractionTranspirableSoilWaterProfile[i]= NODATA;
         stressCoefficientProfile[i] = NODATA;
         transpirationInstantLayer[i] = NODATA;
@@ -126,15 +121,10 @@ void Vine3D_Grapevine::resetLayers()
     }
 }
 
-bool Vine3D_Grapevine::initializeLayers(int myMaxLayers)
+void Vine3D_Grapevine::initializeLayers(int myMaxLayers)
 {
     nrMaxLayers = myMaxLayers;
 
-    //psiSoilProfile = (double *) calloc(nrLayers, sizeof(double));
-    //soilWaterContentProfile = (double *) calloc(nrLayers, sizeof(double));
-    //soilWaterContentProfileFC = (double *) calloc(nrLayers, sizeof(double));
-    //soilWaterContentProfileWP = (double *) calloc(nrLayers, sizeof(double));
-    //soilFieldCapacity = (double *) calloc (nrLayers, sizeof(double));
     fractionTranspirableSoilWaterProfile = static_cast<double*> (calloc(size_t(nrMaxLayers), sizeof(double)));
     stressCoefficientProfile = static_cast<double*> (calloc(size_t(nrMaxLayers), sizeof(double)));
     transpirationInstantLayer = static_cast<double*> (calloc(size_t(nrMaxLayers), sizeof(double)));
@@ -143,9 +133,8 @@ bool Vine3D_Grapevine::initializeLayers(int myMaxLayers)
     currentProfile = static_cast<double*> (calloc(size_t(nrMaxLayers), sizeof(double)));
 
     resetLayers();
-
-    return true;
 }
+
 
 void Vine3D_Grapevine::setDate (Crit3DTime myTime)
 {
