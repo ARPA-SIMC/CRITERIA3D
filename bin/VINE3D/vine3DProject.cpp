@@ -174,6 +174,12 @@ bool Vine3DProject::loadVine3DProject(QString projectFileName)
         return false;
     }
 
+    if (! setModelCasesMap())
+    {
+        logError();
+        return false;
+    }
+
     if (! initializeWaterBalance3D())
     {
         logError();
@@ -410,37 +416,62 @@ int Vine3DProject::queryFieldPoint(double x, double y)
 }
 
 
-int Vine3DProject::getCaseIndexFromId(int caseId)
+
+bool Vine3DProject::setModelCasesMap()
 {
-    if (modelCases.size() == 0)
-        return NODATA;
+    int nrInputCases = int(inputModelCases.size());
+    if (nrInputCases == 0)
+    {
+        errorString = "Missing land use.";
+        return false;
+    }
 
-    for (int i=0; i < modelCases.size(); i++)
-        if (caseId == modelCases[i].id)
-            return i;
+    int nrSoils = int(soilIndexList.size());
+    if (nrSoils == 0)
+    {
+        errorString = "Missing soil data.";
+        return false;
+    }
 
-    // default value
-    return 0;
-}
+    // set model cases
+    int nrModelCases = nrInputCases * nrSoils;
+    modelCases.resize(nrModelCases);
+    for (int i = 0; i < nrInputCases; i++)
+    {
+        for (int j = 0; j < nrSoils; j++)
+        {
+            int index = nrSoils * i + j;
+            modelCases[index] = inputModelCases[i];
+            modelCases[index].soilIndex = soilIndexList[j];
+        }
+    }
 
-
-void Vine3DProject::setModelCasesMap()
-{
+    // update landUseMap (assume header soilMap = header landUseMap)
     for (int row = 0; row < landUseMap.header->nrRows; row++)
     {
         for (int col = 0; col < landUseMap.header->nrCols; col++)
         {
-            float value = landUseMap.value[row][col];
-            if (! isEqual(value, landUseMap.header->flag) )
+            float caseId = landUseMap.value[row][col];
+            if (! isEqual(caseId, landUseMap.header->flag) )
             {
-                int fieldIndex = getCaseIndexFromId(value);
-                if (fieldIndex != NODATA)
+                landUseMap.value[row][col] = landUseMap.header->flag;
+                int soilIndex = getSoilIndex(row, col);
+                if (soilIndex != NODATA)
                 {
-                    landUseMap.value[row][col] = fieldIndex;
+                    for (int index = 0; index < modelCases.size(); index++)
+                    {
+                        if (modelCases[index].id == caseId && modelCases[index].soilIndex == soilIndex)
+                        {
+                            landUseMap.value[row][col] = index;
+                            break;
+                        }
+                    }
                 }
             }
         }
     }
+
+    return true;
 }
 
 
@@ -465,8 +496,6 @@ bool Vine3DProject::loadFieldMap(QString mapFileName)
     landUseMap.initializeGrid(DEM);
     gis::prevailingMap(inputGrid, &(landUseMap));
     gis::updateMinMaxRasterGrid(&(landUseMap));
-
-    setModelCasesMap();
 
     logInfo ("Field map = " + mapFileName);
     return true;
@@ -1497,8 +1526,7 @@ bool Vine3DProject::initializeGrapevine()
 
     for (int i = 0; i < modelCases.size(); i++)
     {
-        // TODO
-        int soilIndex = soilIndexList[0];
+        int soilIndex = modelCases[i].soilIndex;
         int nrHorizons = soilList[soilIndex].nrHorizons;
         soil::Crit3DHorizon myHorizon = soilList[soilIndex].horizon[nrHorizons - 1];
 

@@ -394,17 +394,13 @@ bool Project3D::loadSoilMap(QString fileName)
 
     fileName = getCompleteFileName(fileName, PATH_GEO);
 
-    gis::Crit3DRasterGrid inputGrid;
     std::string errorStr;
-    if (! gis::openRaster(fileName.toStdString(), &inputGrid, gisSettings.utmZone, errorStr))
+    if (! gis::openRaster(fileName.toStdString(), &soilMap, gisSettings.utmZone, errorStr))
     {
         logError("Loading soil map failed: " + fileName + "\n" + QString::fromStdString(errorStr));
         return false;
     }
 
-    // compute prevailing map
-    soilMap.initializeGrid(DEM);
-    gis::prevailingMap(inputGrid, &(soilMap));
     gis::updateMinMaxRasterGrid(&(soilMap));
 
     soilMapFileName = fileName;

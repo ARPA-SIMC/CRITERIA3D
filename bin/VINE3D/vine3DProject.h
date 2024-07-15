@@ -107,8 +107,7 @@
 
         bool initializeGrapevine();
 
-        int getCaseIndexFromId(int caseId);
-        void setModelCasesMap();
+        bool setModelCasesMap();
 
         int queryFieldPoint(double x, double y);
         bool loadFieldMap(QString mapFileName);
