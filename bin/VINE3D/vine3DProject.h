@@ -108,7 +108,7 @@
         bool initializeGrapevine();
 
         int getCaseIndexFromId(int caseId);
-        void setModelCasesMap(gis::Crit3DRasterGrid &myGrid);
+        void setModelCasesMap();
 
         int queryFieldPoint(double x, double y);
         bool loadFieldMap(QString mapFileName);

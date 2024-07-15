@@ -156,21 +156,19 @@ bool Vine3DProject::loadVine3DProject(QString projectFileName)
         return false;
     }
 
-    QString fileName = getCompleteFileName(landUseMapFileName, PATH_GEO);
-    if (! loadFieldMap(fileName))
-    {
-        logError();
-        return false;
-    }
-
-    fileName = getCompleteFileName(soilMapFileName, PATH_GEO);
-    if (! loadSoilMap(fileName))
+    if (! loadSoilMap(soilMapFileName))
     {
         logError();
         return false;
     }
 
     if (! setSoilIndexMap())
+    {
+        logError();
+        return false;
+    }
+
+    if (! loadFieldMap(landUseMapFileName))
     {
         logError();
         return false;
@@ -426,22 +424,19 @@ int Vine3DProject::getCaseIndexFromId(int caseId)
 }
 
 
-void Vine3DProject::setModelCasesMap(gis::Crit3DRasterGrid &myGrid)
+void Vine3DProject::setModelCasesMap()
 {
-    int fieldId, fieldIndex;
-
-    // transform from id to index
-    for (int row = 0; row < myGrid.header->nrRows; row++)
+    for (int row = 0; row < landUseMap.header->nrRows; row++)
     {
-        for (int col = 0; col < myGrid.header->nrCols; col++)
+        for (int col = 0; col < landUseMap.header->nrCols; col++)
         {
-            fieldId = int(myGrid.value[row][col]);
-            if (! isEqual(fieldId, myGrid.header->flag))
+            float value = landUseMap.value[row][col];
+            if (! isEqual(value, landUseMap.header->flag) )
             {
-                fieldIndex = getCaseIndexFromId(fieldId);
+                int fieldIndex = getCaseIndexFromId(value);
                 if (fieldIndex != NODATA)
                 {
-                    myGrid.value[row][col] = fieldIndex;
+                    landUseMap.value[row][col] = fieldIndex;
                 }
             }
         }
@@ -453,7 +448,9 @@ bool Vine3DProject::loadFieldMap(QString mapFileName)
 {
     logInfo ("Read fields map...");
 
-    std::string fn = mapFileName.left(mapFileName.length()-4).toStdString();
+    QString fileName = getCompleteFileName(mapFileName, PATH_GEO);
+
+    std::string fn = fileName.left(fileName.length()-4).toStdString();
     gis::Crit3DRasterGrid inputGrid;
 
     std::string errorStr;
@@ -469,7 +466,7 @@ bool Vine3DProject::loadFieldMap(QString mapFileName)
     gis::prevailingMap(inputGrid, &(landUseMap));
     gis::updateMinMaxRasterGrid(&(landUseMap));
 
-    setModelCasesMap(landUseMap);
+    setModelCasesMap();
 
     logInfo ("Field map = " + mapFileName);
     return true;
