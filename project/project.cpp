@@ -2437,10 +2437,6 @@ bool Project::interpolationDemLocalDetrending(meteoVariable myVar, const Crit3DT
         {
             for (long col = 0; col < myHeader.nrCols; col++)
             {
-
-                if (row == 113 && col == 32)
-                    int a = 0;
-
                 interpolationSettings.setProxiesComplete(true);
 
                 float z = DEM.value[row][col];
