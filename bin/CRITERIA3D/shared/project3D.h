@@ -179,7 +179,7 @@
         double assignTranspiration(int row, int col, double currentLai, double currentDegreeDays);
 
         bool setSinkSource();
-        void computeWaterBalance3D(double totalTimeStep);
+        void runSoilFluxesModel(double totalTimeStep);
         bool updateCrop(QDateTime myTime);
 
         bool getCriteria3DMap(gis::Crit3DRasterGrid &outputRaster, criteria3DVariable var, int layerIndex);

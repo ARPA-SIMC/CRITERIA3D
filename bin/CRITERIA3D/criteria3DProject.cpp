@@ -1043,8 +1043,8 @@ bool Crit3DProject::runModelHour(const QDateTime &myDateTime, const QString& hou
             return false;
         }
 
-        logInfo("\nWater balance: " + myDateTime.toString());
-        computeWaterBalance3D(3600);
+        logInfo("\nCompute soil fluxes: " + myDateTime.toString());
+        runSoilFluxesModel(3600);
 
         qApp->processEvents();
     }

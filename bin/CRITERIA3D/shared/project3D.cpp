@@ -903,10 +903,10 @@ bool Project3D::initializeSoilMoisture(int month)
 }
 
 
-/*! \brief computeWaterBalance3D
+/*! \brief runSoilFluxesModel
  *  \param totalTimeStep [s]
  */
-void Project3D::computeWaterBalance3D(double totalTimeStep)
+void Project3D::runSoilFluxesModel(double totalTimeStep)
 {
     double previousWaterContent = soilFluxes3D::getTotalWaterContent();
 
@@ -919,7 +919,7 @@ void Project3D::computeWaterBalance3D(double totalTimeStep)
     soilFluxes3D::initializeBalance();
 
     currentSeconds = 0;                 // [s]
-    double minimumShowTime = 10;        // [s]
+    double minimumShowTime = 1;         // [s]
     int currentStep = 0;
     while (currentSeconds < totalTimeStep)
     {
