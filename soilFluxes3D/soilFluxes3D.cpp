@@ -658,7 +658,7 @@ int DLL_EXPORT __STDCALL setHydraulicProperties(int waterRetentionCurve,
 
  /*!
   * \brief getTotalWaterContent
-  * \return total water content [m^3]
+  * \return total water content [m3]
   */
  double DLL_EXPORT __STDCALL getTotalWaterContent()
  {
@@ -823,10 +823,15 @@ int DLL_EXPORT __STDCALL setHydraulicProperties(int waterRetentionCurve,
  void DLL_EXPORT __STDCALL initializeBalance()
 {
     InitializeBalanceWater();
+
     if (myStructure.computeHeat)
+    {
         initializeBalanceHeat();
+    }
     else
+    {
         balanceWholePeriod.heatMBR = 1.;
+    }
 }
 
 
