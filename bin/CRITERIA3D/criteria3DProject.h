@@ -48,8 +48,6 @@
 
         Crit3DSnow snowModel;
 
-        bool modelPause, modelStop;
-
         QDateTime modelFirstTime, modelLastTime;
         QDateTime meteoPointsDbFirstTime;
 
@@ -65,7 +63,7 @@
         void assignETreal();
         void assignPrecipitation();
 
-        bool runModels(QDateTime firstTime, QDateTime lastTime);
+        bool runModels(QDateTime firstTime, QDateTime lastTime, bool isRestart = false);
 
         void setSaveDailyState(bool isSave) { _saveDailyState = isSave; }
         bool isSaveDailyState() { return _saveDailyState; }
@@ -94,7 +92,7 @@
         bool computeSnowModel();
         void computeSnowPoint(int row, int col);
 
-        bool runModelHour(const QDateTime &myDateTime, const QString& hourlyOutputPath);
+        bool runModelHour(const QDateTime &myDateTime, const QString& hourlyOutputPath, bool isRestart = false);
 
         void setAllHourlyMeteoMapsComputed(bool value);
 

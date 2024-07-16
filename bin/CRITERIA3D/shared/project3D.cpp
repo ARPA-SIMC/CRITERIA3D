@@ -137,6 +137,9 @@ void Project3D::initializeProject3D()
     showEachTimeStep = false;
     increaseSlope = false;
 
+    modelPause = false;
+    modelStop = false;
+
     waterFluxesParameters.initialize();
 
     texturalClassList.resize(13);
@@ -159,6 +162,7 @@ void Project3D::initializeProject3D()
     nrLateralLink = 8;
 
     currentSeconds = 0;
+    previousTotalWaterContent = 0;
 
     totalPrecipitation = 0;
     totalEvaporation = 0;
@@ -903,27 +907,36 @@ bool Project3D::initializeSoilMoisture(int month)
 }
 
 
-/*! \brief runSoilFluxesModel
+/*! \brief runModel
  *  \param totalTimeStep [s]
  */
-void Project3D::runSoilFluxesModel(double totalTimeStep)
+void Project3D::runModel(double totalTimeStep, bool isRestart)
 {
-    double previousWaterContent = soilFluxes3D::getTotalWaterContent();
+    if (! isRestart)
+    {
+        currentSeconds = 0;                 // [s]
+        soilFluxes3D::initializeBalance();
 
-    logInfo("total water [m3]: " + QString::number(previousWaterContent));
-    logInfo("precipitation [m3]: " + QString::number(totalPrecipitation));
-    logInfo("evaporation [m3]: " + QString::number(-totalEvaporation));
-    logInfo("transpiration [m3]: " + QString::number(-totalTranspiration));
-    logInfo("Compute water flow...");
+        previousTotalWaterContent = soilFluxes3D::getTotalWaterContent();       // [m3]
 
-    soilFluxes3D::initializeBalance();
+        logInfo("total water [m3]: " + QString::number(previousTotalWaterContent));
+        logInfo("precipitation [m3]: " + QString::number(totalPrecipitation));
+        logInfo("evaporation [m3]: " + QString::number(-totalEvaporation));
+        logInfo("transpiration [m3]: " + QString::number(-totalTranspiration));
+        logInfo("Compute water flow...");
+    }
 
-    currentSeconds = 0;                 // [s]
     double minimumShowTime = 1;         // [s]
     int currentStep = 0;
     while (currentSeconds < totalTimeStep)
     {
         currentSeconds += soilFluxes3D::computeStep(totalTimeStep - currentSeconds);
+
+        if (modelPause)
+        {
+            emit updateOutputSignal();
+            return;
+        }
 
         if (showEachTimeStep)
         {
@@ -948,7 +961,7 @@ void Project3D::runSoilFluxesModel(double totalTimeStep)
     logInfo("lateral drainage [m^3]: " + QString::number(lateralDrainage));
 
     double currentWaterContent = soilFluxes3D::getTotalWaterContent();
-    double forecastWaterContent = previousWaterContent + runoff + freeDrainage + lateralDrainage
+    double forecastWaterContent = previousTotalWaterContent + runoff + freeDrainage + lateralDrainage
                                   + totalPrecipitation - totalEvaporation - totalTranspiration;
     double massBalanceError = currentWaterContent - forecastWaterContent;
     logInfo("Mass balance error [m^3]: " + QString::number(massBalanceError));

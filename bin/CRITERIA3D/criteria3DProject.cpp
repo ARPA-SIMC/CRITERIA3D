@@ -47,9 +47,6 @@ Crit3DProject::Crit3DProject() : Project3D()
     _saveDailyState = false;
     _saveEndOfRunState = false;
 
-    modelPause = false;
-    modelStop = false;
-
     modelFirstTime.setTimeSpec(Qt::UTC);
     modelLastTime.setTimeSpec(Qt::UTC);
 }
@@ -366,26 +363,29 @@ void Crit3DProject::assignPrecipitation()
 }
 
 
-bool Crit3DProject::runModels(QDateTime firstTime, QDateTime lastTime)
+bool Crit3DProject::runModels(QDateTime firstTime, QDateTime lastTime, bool isRestart)
 {
-    // initialize meteo
-    if (processes.computeMeteo)
+    if (! isRestart)
     {
-        hourlyMeteoMaps->initialize();
-
-        // load td maps if needed
-        if (interpolationSettings.getUseTD())
+        // initialize meteo maps
+        if (processes.computeMeteo)
         {
-            logInfoGUI("Loading topographic distance maps...");
-            if (! loadTopographicDistanceMaps(true, false))
-                return false;
-        }
-    }
+            hourlyMeteoMaps->initialize();
 
-    // initialize radiation
-    if (processes.computeRadiation)
-    {
-        radiationMaps->initialize();
+            // load td maps if needed
+            if (interpolationSettings.getUseTD())
+            {
+                logInfoGUI("Loading topographic distance maps...");
+                if (! loadTopographicDistanceMaps(true, false))
+                    return false;
+            }
+        }
+
+        // initialize radiation maps
+        if (processes.computeRadiation)
+        {
+            radiationMaps->initialize();
+        }
     }
 
     QDate firstDate = firstTime.date();
@@ -423,16 +423,14 @@ bool Crit3DProject::runModels(QDateTime firstTime, QDateTime lastTime)
         {
             setCurrentHour(hour);
 
-            if (! runModelHour(getCurrentTime(), currentOutputPath))
+            if (! runModelHour(getCurrentTime(), currentOutputPath, isRestart))
             {
                 logError();
                 return false;
             }
 
-            qApp->processEvents();
-
             // output points
-            if (isSaveOutputPoints())
+            if (isSaveOutputPoints() && currentSeconds == 3600)
             {
                 if (! writeOutputPointsData())
                 {
@@ -957,94 +955,98 @@ bool Crit3DProject::updateDailyTemperatures()
 }
 
 
-bool Crit3DProject::runModelHour(const QDateTime &myDateTime, const QString& hourlyOutputPath)
+bool Crit3DProject::runModelHour(const QDateTime &myDateTime, const QString& hourlyOutputPath, bool isRestart)
 {
-    hourlyMeteoMaps->setComputed(false);
-    radiationMaps->setComputed(false);
-
-    if (processes.computeMeteo)
+    if (! isRestart)
     {
-        if (! interpolateAndSaveHourlyMeteo(airTemperature, myDateTime, hourlyOutputPath, isSaveOutputRaster()))
-            return false;
-        qApp->processEvents();
+        hourlyMeteoMaps->setComputed(false);
+        radiationMaps->setComputed(false);
 
-        if (! interpolateAndSaveHourlyMeteo(precipitation, myDateTime, hourlyOutputPath, isSaveOutputRaster()))
-            return false;
-        qApp->processEvents();
-
-        if (! interpolateAndSaveHourlyMeteo(airRelHumidity, myDateTime, hourlyOutputPath, isSaveOutputRaster()))
-            return false;
-        qApp->processEvents();
-
-        if (! interpolateAndSaveHourlyMeteo(windScalarIntensity, myDateTime, hourlyOutputPath, isSaveOutputRaster()))
-            return false;
-        qApp->processEvents();
-
-        hourlyMeteoMaps->setComputed(true);
-    }
-
-    if (processes.computeRadiation)
-    {
-        if (! interpolateAndSaveHourlyMeteo(globalIrradiance, myDateTime, hourlyOutputPath, isSaveOutputRaster()))
-            return false;
-        qApp->processEvents();
-    }
-
-    if (processes.computeSnow)
-    {
-        // TODO: link evaporation to water flow
-        // TODO: link snowmelt to surface water content
-        if (! computeSnowModel())
+        if (processes.computeMeteo)
         {
-            return false;
-        }
-        qApp->processEvents();
-    }
+            if (! interpolateAndSaveHourlyMeteo(airTemperature, myDateTime, hourlyOutputPath, isSaveOutputRaster()))
+                return false;
 
-    // initalize sink / source
-    for (unsigned long i = 0; i < nrNodes; i++)
-    {
-        waterSinkSource.at(size_t(i)) = 0.;
-    }
+            if (! interpolateAndSaveHourlyMeteo(precipitation, myDateTime, hourlyOutputPath, isSaveOutputRaster()))
+                return false;
 
-    if (processes.computeCrop || processes.computeWater)
-    {
-        if (! hourlyMeteoMaps->computeET0PMMap(DEM, radiationMaps))
-        {
-            errorString = "Missing ET0 values.";
-            return false;
-        }
-        qApp->processEvents();
+            if (! interpolateAndSaveHourlyMeteo(airRelHumidity, myDateTime, hourlyOutputPath, isSaveOutputRaster()))
+                return false;
 
-        if (isSaveOutputRaster())
-        {
-            saveHourlyMeteoOutput(referenceEvapotranspiration, hourlyOutputPath, myDateTime);
+            if (! interpolateAndSaveHourlyMeteo(windScalarIntensity, myDateTime, hourlyOutputPath, isSaveOutputRaster()))
+                return false;
+
+            hourlyMeteoMaps->setComputed(true);
             qApp->processEvents();
         }
 
-        assignETreal();
-        qApp->processEvents();
-    }
-
-    if (processes.computeCrop)
-    {
-        updateDailyTemperatures();
-        qApp->processEvents();
-    }
-
-    // soil water balance
-    if (processes.computeWater)
-    {
-        assignPrecipitation();
-
-        if (! setSinkSource())
+        if (processes.computeRadiation)
         {
-            logError();
-            return false;
+            if (! interpolateAndSaveHourlyMeteo(globalIrradiance, myDateTime, hourlyOutputPath, isSaveOutputRaster()))
+                return false;
+            qApp->processEvents();
         }
 
-        logInfo("\nCompute soil fluxes: " + myDateTime.toString());
-        runSoilFluxesModel(3600);
+        if (processes.computeSnow)
+        {
+            // TODO: link evaporation to water flow
+            // TODO: link snowmelt to surface water content
+            if (! computeSnowModel())
+            {
+                return false;
+            }
+            qApp->processEvents();
+        }
+
+        // initalize sink / source
+        for (unsigned long i = 0; i < nrNodes; i++)
+        {
+            waterSinkSource.at(size_t(i)) = 0.;
+        }
+
+        if (processes.computeCrop || processes.computeWater)
+        {
+            if (! hourlyMeteoMaps->computeET0PMMap(DEM, radiationMaps))
+            {
+                errorString = "Missing ET0 values.";
+                return false;
+            }
+
+            if (isSaveOutputRaster())
+            {
+                saveHourlyMeteoOutput(referenceEvapotranspiration, hourlyOutputPath, myDateTime);
+                qApp->processEvents();
+            }
+
+            assignETreal();
+            qApp->processEvents();
+        }
+
+        if (processes.computeCrop)
+        {
+            updateDailyTemperatures();
+            qApp->processEvents();
+        }
+
+        if (processes.computeWater)
+        {
+            assignPrecipitation();
+
+            if (! setSinkSource())
+                return false;
+            qApp->processEvents();
+        }
+    }
+
+    // soil fluxes
+    if (processes.computeWater)
+    {
+        if (isRestart)
+        {
+            logInfo("\nCompute soil fluxes: " + myDateTime.toString());
+        }
+
+        runModel(3600, isRestart);
 
         qApp->processEvents();
     }

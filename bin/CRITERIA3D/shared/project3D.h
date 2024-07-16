@@ -80,6 +80,8 @@
         bool showEachTimeStep;
         bool increaseSlope;
 
+        bool modelPause, modelStop;
+
         Crit3DProcesses processes;
         WaterFluxesParameters waterFluxesParameters;
 
@@ -126,6 +128,8 @@
 
         std::vector <double> layerDepth;        // [m]
         std::vector <double> layerThickness;    // [m]
+
+        double previousTotalWaterContent;       // [m3]
 
         // sink/source
         std::vector <double> waterSinkSource;   // [m3 s-1]
@@ -179,7 +183,7 @@
         double assignTranspiration(int row, int col, double currentLai, double currentDegreeDays);
 
         bool setSinkSource();
-        void runSoilFluxesModel(double totalTimeStep);
+        void runModel(double totalTimeStep, bool isRestart = false);
         bool updateCrop(QDateTime myTime);
 
         bool getCriteria3DMap(gis::Crit3DRasterGrid &outputRaster, criteria3DVariable var, int layerIndex);

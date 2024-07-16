@@ -2063,9 +2063,10 @@ void MainWindow::on_buttonModelStart_clicked()
         ui->buttonModelStop->setEnabled(true);
 
         QDateTime newFirstTime = QDateTime(myProject.getCurrentDate(), QTime(myProject.getCurrentHour(), 0, 0), Qt::UTC);
-        newFirstTime = newFirstTime.addSecs(3600);
+        newFirstTime = newFirstTime.addSecs(myProject.currentSeconds);
 
-        myProject.runModels(newFirstTime, myProject.modelLastTime);
+        bool isRestart = true;
+        myProject.runModels(newFirstTime, myProject.modelLastTime, isRestart);
     }
 }
 
