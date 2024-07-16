@@ -1359,9 +1359,15 @@ bool Project3D::interpolateAndSaveHourlyMeteo(meteoVariable myVar, const QDateTi
 
 // ----------------------------------------- OUTPUT MAP ------------------------------------------
 
-bool Project3D::getCriteria3DMap(gis::Crit3DRasterGrid &outputRaster, criteria3DVariable var, int layerIndex)
+bool Project3D::computeCriteria3DMap(gis::Crit3DRasterGrid &outputRaster, criteria3DVariable var, int layerIndex)
 {
-    if (layerIndex >= int(indexMap.size()))
+    if (var == minimumFactorOfSafety)
+    {
+        return computeMinimumFoS(outputRaster);
+    }
+
+    // check layer
+    if (layerIndex >= int(indexMap.size()) || layerIndex == NODATA)
     {
         errorString = "Layer is not defined: " + QString::number(layerIndex);
         return false;
@@ -1369,6 +1375,7 @@ bool Project3D::getCriteria3DMap(gis::Crit3DRasterGrid &outputRaster, criteria3D
 
     outputRaster.initializeGrid(indexMap.at(layerIndex));
 
+    // compute map
     for (int row = 0; row < indexMap.at(layerIndex).header->nrRows; row++)
     {
         for (int col = 0; col < indexMap.at(layerIndex).header->nrCols; col++)

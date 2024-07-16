@@ -186,7 +186,7 @@
         void runModel(double totalTimeStep, bool isRestart = false);
         bool updateCrop(QDateTime myTime);
 
-        bool getCriteria3DMap(gis::Crit3DRasterGrid &outputRaster, criteria3DVariable var, int layerIndex);
+        bool computeCriteria3DMap(gis::Crit3DRasterGrid &outputRaster, criteria3DVariable var, int layerIndex);
         bool computeMinimumFoS(gis::Crit3DRasterGrid &outputRaster);
 
         float computeFactorOfSafety(int row, int col, unsigned int layerIndex);

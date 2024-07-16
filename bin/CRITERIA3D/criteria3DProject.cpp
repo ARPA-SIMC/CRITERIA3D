@@ -1041,7 +1041,7 @@ bool Crit3DProject::runModelHour(const QDateTime &myDateTime, const QString& hou
     // soil fluxes
     if (processes.computeWater)
     {
-        if (isRestart)
+        if (! isRestart)
         {
             logInfo("\nCompute soil fluxes: " + myDateTime.toString());
         }
@@ -1143,7 +1143,7 @@ bool Crit3DProject::saveSoilWaterState(const QString &currentStatePath)
     gis::Crit3DRasterGrid rasterGrid;
     for (unsigned int i = 0; i < nrLayers; i++)
     {
-        if (! getCriteria3DMap(rasterGrid, waterMatricPotential, i))
+        if (! computeCriteria3DMap(rasterGrid, waterMatricPotential, i))
         {
             logError();
             return false;

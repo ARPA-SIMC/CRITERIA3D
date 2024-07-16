@@ -15,7 +15,7 @@
         short blue;
 
         Crit3DColor();
-        Crit3DColor(short,short,short);
+        Crit3DColor(short, short, short);
     };
 
     class Crit3DColorScale {

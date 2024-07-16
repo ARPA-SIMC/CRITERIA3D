@@ -196,7 +196,7 @@ void MainWindow::updateOutputMap()
 
     if (myProject.isCriteria3DInitialized)
     {
-        myProject.getCriteria3DMap(myProject.criteria3DMap, current3DVariable, current3DlayerIndex);
+        myProject.computeCriteria3DMap(myProject.criteria3DMap, current3DVariable, current3DlayerIndex);
     }
 
     emit rasterOutput->redrawRequested();
@@ -2371,17 +2371,7 @@ void MainWindow::showCriteria3DVariable(criteria3DVariable var, int layerIndex, 
     }
 
     // compute map
-    bool isOk;
-    if (var == minimumFactorOfSafety)
-    {
-        isOk = myProject.computeMinimumFoS(myProject.criteria3DMap);
-    }
-    else
-    {
-        isOk = myProject.getCriteria3DMap(myProject.criteria3DMap, var, layerIndex);
-    }
-
-    if (! isOk)
+    if (! myProject.computeCriteria3DMap(myProject.criteria3DMap, var, layerIndex))
     {
         myProject.logError();
         return;
