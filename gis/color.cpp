@@ -365,6 +365,23 @@ bool reverseColorScale(Crit3DColorScale* myScale)
 }
 
 
+void mixColor(const Crit3DColor &backColor, const Crit3DColor &foreColor, Crit3DColor &colorOut, float alpha)
+{
+    if (alpha == 0)
+    {
+        colorOut.red = backColor.red;
+        colorOut.green = backColor.green;
+        colorOut.blue = backColor.blue;
+    }
+    else
+    {
+        colorOut.red = std::min(255, int(backColor.red * (1. - alpha)) + int(foreColor.red * alpha));
+        colorOut.green = std::min(255, int(backColor.green * (1. - alpha)) + int(foreColor.green * alpha));
+        colorOut.blue = std::min(255, int(backColor.blue * (1. - alpha)) +int( foreColor.blue * alpha));
+    }
+}
+
+
 /*!
  * \brief roundColorScale round colorScale values on the second (or third) digit of each range.
  * It requires that nrColors is a multiply of nrIntervals for a correct visualization in the colors legend.
