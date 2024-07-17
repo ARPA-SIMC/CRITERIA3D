@@ -1912,17 +1912,17 @@ float Project3D::computeFactorOfSafety(int row, int col, unsigned int layerIndex
         return NODATA;
     }
 
-    // slope angle [rad]
+    // slope angle [degrees]
     double slopeDegree = double(radiationMaps->slopeMap->getValueFromRowCol(row, col));
     if (increaseSlope)
     {
         // increase slope (max: 89 degrees)
         slopeDegree = std::min(slopeDegree * 1.5, 89.);
     }
-    double slopeAngle = std::max(slopeDegree * DEG_TO_RAD, EPSILON);
+    double slopeAngle = std::max(slopeDegree * DEG_TO_RAD, EPSILON);        // [rad]
 
     // friction angle [rad]
-    double frictionAngle = soilList[unsigned(soilIndex)].horizon[horizonIndex].frictionAngle * DEG_TO_RAD;
+    double frictionAngle = soilList[unsigned(soilIndex)].horizon[horizonIndex].frictionAngle * DEG_TO_RAD;      // [rad]
 
     // friction effect [-]
     double tanAngle = std::max(EPSILON, tan(slopeAngle));
@@ -1938,7 +1938,6 @@ float Project3D::computeFactorOfSafety(int row, int col, unsigned int layerIndex
 
     // matric potential (with sign) [kPa]
     double matricPotential = soilFluxes3D::getMatricPotential(nodeIndex) * GRAVITY;
-    matricPotential = std::min(0.0, matricPotential);
 
     // suction stress [kPa]
     double suctionStress = matricPotential * saturationDegree;
