@@ -763,8 +763,8 @@ namespace soil
     {
         double suctionStress = -waterPotential * getDegreeOfSaturation();    // [kPa]
 
-        double slopeAngle = std::max(asin(slope), EPSILON);
-        double frictionAngle = horizonPtr->frictionAngle * DEG_TO_RAD;
+        double slopeAngle = std::max(asin(slope), EPSILON);                  // [rad]
+        double frictionAngle = horizonPtr->frictionAngle * DEG_TO_RAD;       // [rad]
 
         double tanAngle = tan(slopeAngle);
         double tanFrictionAngle = tan(frictionAngle);
