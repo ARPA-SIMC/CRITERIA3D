@@ -428,6 +428,7 @@ bool Crit3DProject::runModels(QDateTime firstTime, QDateTime lastTime, bool isRe
                 logError();
                 return false;
             }
+            isRestart = false;
 
             // output points
             if (isSaveOutputPoints() && currentSeconds == 3600)
