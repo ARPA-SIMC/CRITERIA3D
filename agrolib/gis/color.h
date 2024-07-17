@@ -75,5 +75,7 @@
     bool setSurfaceWaterScale(Crit3DColorScale* myScale);
     bool setLAIScale(Crit3DColorScale* myScale);
 
+    void mixColor(const Crit3DColor &backColor, const Crit3DColor &foreColor, Crit3DColor &colorOut, float alpha);
+
 
 #endif // CRIT3DCOLOR_H

@@ -1949,18 +1949,20 @@ bool Crit3DProject::update3DColors(gis::Crit3DRasterGrid *rasterPointer)
         return false;
     }
 
-    bool isVariable = false;
+    bool isShowVariable = false;
     if (rasterPointer != nullptr)
     {
         if (rasterPointer->header->isEqualTo(*(DEM.header)))
         {
-            isVariable = true;
+            isShowVariable = true;
         }
     }
 
     float z1, z2, z3, value;
-    Crit3DColor *c1, *c2, *c3;
-    Crit3DColor sc1, sc2, sc3;
+    Crit3DColor *c1, *c2, *c3;              // dtm colors
+    Crit3DColor sc1, sc2, sc3;              // shadow colors
+    Crit3DColor *vc1, *vc2, *vc3;           // variable colors
+    Crit3DColor color1, color2, color3;     // final colors
 
     long i = 0;
     for (long row = 0; row < DEM.header->nrRows; row++)
@@ -1968,104 +1970,113 @@ bool Crit3DProject::update3DColors(gis::Crit3DRasterGrid *rasterPointer)
         for (long col = 0; col < DEM.header->nrCols; col++)
         {
             z1 = DEM.getValueFromRowCol(row, col);
-            if (! isEqual(z1, DEM.header->flag))
+            if (! isEqual(z1, DEM.header->flag))  
             {
                 z3 = DEM.getValueFromRowCol(row+1, col+1);
                 if (! isEqual(z3, DEM.header->flag))
                 {
+                    float alpha1 = 0;
+                    float alpha2 = 0;
+                    float alpha3 = 0;
+
                     c1 = DEM.colorScale->getColor(z1);
                     c3 = DEM.colorScale->getColor(z3);
 
-                    if (isVariable)
+                    if (isShowVariable)
                     {
                         value = rasterPointer->getValueFromRowCol(row, col);
                         if (! isEqual(value, rasterPointer->header->flag))
                         {
+                            vc1 = rasterPointer->colorScale->getColor(value);
+                            alpha1 = 0.8f;
+
                             // check outliers
                             if (rasterPointer->colorScale->isHideOutliers())
                             {
-                                if (value > rasterPointer->colorScale->minimum() && value < rasterPointer->colorScale->maximum())
-                                    c1 = rasterPointer->colorScale->getColor(value);
-                            }
-                            else
-                            {
-                                c1 = rasterPointer->colorScale->getColor(value);
+                                if (value < rasterPointer->colorScale->minimum()
+                                    || value > rasterPointer->colorScale->maximum())
+                                    alpha1 = 0;
                             }
                         }
 
                         value = rasterPointer->getValueFromRowCol(row+1, col+1);
                         if (! isEqual(value, rasterPointer->header->flag))
                         {
+                            vc3 = rasterPointer->colorScale->getColor(value);
+                            alpha3 = 0.8f;
+
                             // check outliers
                             if (rasterPointer->colorScale->isHideOutliers())
                             {
-                                if (value > rasterPointer->colorScale->minimum() && value < rasterPointer->colorScale->maximum())
-                                    c3 = rasterPointer->colorScale->getColor(value);
-                            }
-                            else
-                            {
-                                c3 = rasterPointer->colorScale->getColor(value);
+                                if (value < rasterPointer->colorScale->minimum()
+                                    || value > rasterPointer->colorScale->maximum())
+                                    alpha3 = 0;
                             }
                         }
                     }
 
                     shadowColor(*c1, sc1, row, col);
+                    mixColor(sc1, *vc1, color1, alpha1);
+
                     shadowColor(*c3, sc3, row+1, col+1);
+                    mixColor(sc3, *vc3, color3, alpha3);
 
                     z2 = DEM.getValueFromRowCol(row+1, col);
                     if (! isEqual(z2, DEM.header->flag))
                     {
                         c2 = DEM.colorScale->getColor(z2);
-                        if (isVariable)
+                        if (isShowVariable)
                         {
                             value = rasterPointer->getValueFromRowCol(row+1, col);
                             if (! isEqual(value, rasterPointer->header->flag))
                             {
+                                vc2 = rasterPointer->colorScale->getColor(value);
+                                alpha2 = 0.8f;
+
                                 // check outliers
                                 if (rasterPointer->colorScale->isHideOutliers())
                                 {
-                                    if (value > rasterPointer->colorScale->minimum() && value < rasterPointer->colorScale->maximum())
-                                        c2 = rasterPointer->colorScale->getColor(value);
-                                }
-                                else
-                                {
-                                    c2 = rasterPointer->colorScale->getColor(value);
+                                    if (value < rasterPointer->colorScale->minimum()
+                                        || value > rasterPointer->colorScale->maximum())
+                                        alpha2 = 0;
                                 }
                             }
                         }
                         shadowColor(*c2, sc2, row+1, col);
+                        mixColor(sc2, *vc2, color2, alpha2);
 
-                        openGlGeometry->setVertexColor(i++, sc1);
-                        openGlGeometry->setVertexColor(i++, sc2);
-                        openGlGeometry->setVertexColor(i++, sc3);
+                        openGlGeometry->setVertexColor(i++, color1);
+                        openGlGeometry->setVertexColor(i++, color2);
+                        openGlGeometry->setVertexColor(i++, color3);
                     }
 
                     z2 = DEM.getValueFromRowCol(row, col+1);
                     if (! isEqual(z2, DEM.header->flag))
                     {
                         c2 = DEM.colorScale->getColor(z2);
-                        if (isVariable)
+                        if (isShowVariable)
                         {
                             value = rasterPointer->getValueFromRowCol(row, col+1);
                             if (! isEqual(value, rasterPointer->header->flag))
                             {
+                                vc2 = rasterPointer->colorScale->getColor(value);
+                                alpha2 = 0.8f;
+
                                 // check outliers
                                 if (rasterPointer->colorScale->isHideOutliers())
                                 {
-                                    if (value > rasterPointer->colorScale->minimum() && value < rasterPointer->colorScale->maximum())
-                                        c2 = rasterPointer->colorScale->getColor(value);
-                                }
-                                else
-                                {
-                                    c2 = rasterPointer->colorScale->getColor(value);
+                                    if (value < rasterPointer->colorScale->minimum()
+                                        || value > rasterPointer->colorScale->maximum())
+                                        alpha2 = 0;
                                 }
                             }
                         }
                         shadowColor(*c2, sc2, row, col+1);
+                        mixColor(sc2, *vc2, color2, alpha2);
 
-                        openGlGeometry->setVertexColor(i++, sc3);
-                        openGlGeometry->setVertexColor(i++, sc2);
-                        openGlGeometry->setVertexColor(i++, sc1);
+                        openGlGeometry->setVertexColor(i++, color3);
+                        openGlGeometry->setVertexColor(i++, color2);
+                        openGlGeometry->setVertexColor(i++, color1);
                     }
                 }
             }
