@@ -3330,9 +3330,9 @@ void MainWindow::on_actionCriteria3D_load_state_triggered()
     }
 
     QList<QString> stateList = myProject.getAllSavedState();
-    if (stateList.size() == 0)
+    if (stateList.isEmpty())
     {
-        myProject.logError();
+        myProject.logWarning("No states saved in the directory:\n" + myProject.getProjectPath() + PATH_STATES);
         return;
     }
 
