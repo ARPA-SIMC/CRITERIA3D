@@ -2380,6 +2380,10 @@ void MainWindow::showCriteria3DVariable(criteria3DVariable var, int layerIndex, 
     current3DVariable = var;
     current3DlayerIndex = layerIndex;
 
+    myProject.criteria3DMap.colorScale->setFixedRange(false);
+    myProject.criteria3DMap.colorScale->setHideOutliers(false);
+    myProject.criteria3DMap.colorScale->setTransparent(false);
+
     if (current3DVariable == volumetricWaterContent)
     {
         if (layerIndex == 0)
@@ -2387,6 +2391,7 @@ void MainWindow::showCriteria3DVariable(criteria3DVariable var, int layerIndex, 
             // SURFACE
             setSurfaceWaterScale(myProject.criteria3DMap.colorScale);
             ui->labelOutputRaster->setText("Surface water content [mm]");
+            myProject.criteria3DMap.colorScale->setTransparent(true);
         }
         else
         {
@@ -2407,9 +2412,6 @@ void MainWindow::showCriteria3DVariable(criteria3DVariable var, int layerIndex, 
         setSlopeStabilityScale(myProject.criteria3DMap.colorScale);
         ui->labelOutputRaster->setText("Factor of safety [-]");
     }
-
-    myProject.criteria3DMap.colorScale->setFixedRange(false);
-    myProject.criteria3DMap.colorScale->setHideOutliers(false);
 
     // range fixed
     if (isFixedRange)
@@ -3221,7 +3223,7 @@ void MainWindow::on_actionHide_Geomap_triggered()
 
 void MainWindow::on_actionView_SurfaceWaterContent_automatic_range_triggered()
 {
-    showCriteria3DVariable(volumetricWaterContent, 0, false, true, 0.0, NODATA);
+    showCriteria3DVariable(volumetricWaterContent, 0, false, false, NODATA, NODATA);
 }
 
 

@@ -790,6 +790,7 @@ bool setColorScale(meteoVariable variable, Crit3DColorScale *colorScale)
                 || variable == snowLiquidWaterContent || variable == snowMelt)
             {
                 colorScale->setHideOutliers(true);
+                colorScale->setTransparent(true);
             }
             break;  
         case snowAge:

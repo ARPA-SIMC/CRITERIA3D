@@ -510,7 +510,7 @@ bool Crit3DProject::loadCriteria3DProject(QString myFileName)
 
     if (! loadProject())
     {
-        if (errorType != ERROR_DBGRID)
+        if (errorType != ERROR_DBGRID && errorType != ERROR_DBPOINT)
             return false;
     }
 
@@ -1959,10 +1959,14 @@ bool Crit3DProject::update3DColors(gis::Crit3DRasterGrid *rasterPointer)
     }
 
     float z1, z2, z3, value;
-    Crit3DColor *c1, *c2, *c3;              // dtm colors
-    Crit3DColor sc1, sc2, sc3;              // shadow colors
-    Crit3DColor *vc1, *vc2, *vc3;           // variable colors
-    Crit3DColor color1, color2, color3;     // final colors
+    Crit3DColor dtmColor1, dtmColor2, dtmColor3;
+    Crit3DColor color1, color2, color3;             // final colors
+
+    double variableRange = 0;
+    if (isShowVariable)
+    {
+        variableRange = std::max(EPSILON, rasterPointer->colorScale->maximum() - rasterPointer->colorScale->minimum());
+    }
 
     long i = 0;
     for (long row = 0; row < DEM.header->nrRows; row++)
@@ -1975,75 +1979,89 @@ bool Crit3DProject::update3DColors(gis::Crit3DRasterGrid *rasterPointer)
                 z3 = DEM.getValueFromRowCol(row+1, col+1);
                 if (! isEqual(z3, DEM.header->flag))
                 {
-                    float alpha1 = 0;
-                    float alpha2 = 0;
-                    float alpha3 = 0;
+                    Crit3DColor* c1 = DEM.colorScale->getColor(z1);
+                    shadowColor(*c1, dtmColor1, row, col);
+                    color1 = dtmColor1;
 
-                    c1 = DEM.colorScale->getColor(z1);
-                    c3 = DEM.colorScale->getColor(z3);
+                    Crit3DColor* c3 = DEM.colorScale->getColor(z3);
+                    shadowColor(*c3, dtmColor3, row+1, col+1);
+                    color3 = dtmColor3;
 
                     if (isShowVariable)
                     {
                         value = rasterPointer->getValueFromRowCol(row, col);
                         if (! isEqual(value, rasterPointer->header->flag))
                         {
-                            vc1 = rasterPointer->colorScale->getColor(value);
-                            alpha1 = 0.8f;
+                            Crit3DColor* variableColor = rasterPointer->colorScale->getColor(value);
+                            double alpha = 0.66;
 
                             // check outliers
                             if (rasterPointer->colorScale->isHideOutliers())
                             {
-                                if (value < rasterPointer->colorScale->minimum()
+                                if (value <= rasterPointer->colorScale->minimum()
                                     || value > rasterPointer->colorScale->maximum())
-                                    alpha1 = 0;
+                                    alpha = 0;
                             }
+                            if (rasterPointer->colorScale->isTransparent())
+                            {
+                                double step = std::max(0., value - rasterPointer->colorScale->minimum());
+                                alpha = std::min(1., step/variableRange);
+                            }
+                            mixColor(dtmColor1, *variableColor, color1, alpha);
                         }
 
                         value = rasterPointer->getValueFromRowCol(row+1, col+1);
                         if (! isEqual(value, rasterPointer->header->flag))
                         {
-                            vc3 = rasterPointer->colorScale->getColor(value);
-                            alpha3 = 0.8f;
+                            Crit3DColor* variableColor = rasterPointer->colorScale->getColor(value);
+                            double alpha = 0.66;
 
                             // check outliers
                             if (rasterPointer->colorScale->isHideOutliers())
                             {
-                                if (value < rasterPointer->colorScale->minimum()
+                                if (value <= rasterPointer->colorScale->minimum()
                                     || value > rasterPointer->colorScale->maximum())
-                                    alpha3 = 0;
+                                    alpha = 0;
                             }
+                            if (rasterPointer->colorScale->isTransparent())
+                            {
+                                double step = std::max(0., value - rasterPointer->colorScale->minimum());
+                                alpha = std::min(1., step/variableRange);
+                            }
+                            mixColor(dtmColor3, *variableColor, color3, alpha);
                         }
                     }
-
-                    shadowColor(*c1, sc1, row, col);
-                    mixColor(sc1, *vc1, color1, alpha1);
-
-                    shadowColor(*c3, sc3, row+1, col+1);
-                    mixColor(sc3, *vc3, color3, alpha3);
 
                     z2 = DEM.getValueFromRowCol(row+1, col);
                     if (! isEqual(z2, DEM.header->flag))
                     {
-                        c2 = DEM.colorScale->getColor(z2);
+                        Crit3DColor* c2 = DEM.colorScale->getColor(z2);
+                        shadowColor(*c2, dtmColor2, row+1, col);
+                        color2 = dtmColor2;
+
                         if (isShowVariable)
                         {
                             value = rasterPointer->getValueFromRowCol(row+1, col);
                             if (! isEqual(value, rasterPointer->header->flag))
                             {
-                                vc2 = rasterPointer->colorScale->getColor(value);
-                                alpha2 = 0.8f;
+                                Crit3DColor* variableColor = rasterPointer->colorScale->getColor(value);
+                                double alpha = 0.66;
 
                                 // check outliers
                                 if (rasterPointer->colorScale->isHideOutliers())
                                 {
-                                    if (value < rasterPointer->colorScale->minimum()
+                                    if (value <= rasterPointer->colorScale->minimum()
                                         || value > rasterPointer->colorScale->maximum())
-                                        alpha2 = 0;
+                                        alpha = 0;
                                 }
+                                if (rasterPointer->colorScale->isTransparent())
+                                {
+                                    double step = std::max(0., value - rasterPointer->colorScale->minimum());
+                                    alpha = std::min(1., step/variableRange);
+                                }
+                                mixColor(dtmColor2, *variableColor, color2, alpha);
                             }
                         }
-                        shadowColor(*c2, sc2, row+1, col);
-                        mixColor(sc2, *vc2, color2, alpha2);
 
                         openGlGeometry->setVertexColor(i++, color1);
                         openGlGeometry->setVertexColor(i++, color2);
@@ -2053,26 +2071,33 @@ bool Crit3DProject::update3DColors(gis::Crit3DRasterGrid *rasterPointer)
                     z2 = DEM.getValueFromRowCol(row, col+1);
                     if (! isEqual(z2, DEM.header->flag))
                     {
-                        c2 = DEM.colorScale->getColor(z2);
+                        Crit3DColor* c2 = DEM.colorScale->getColor(z2);
+                        shadowColor(*c2, dtmColor2, row, col+1);
+                        color2 = dtmColor2;
+
                         if (isShowVariable)
                         {
                             value = rasterPointer->getValueFromRowCol(row, col+1);
                             if (! isEqual(value, rasterPointer->header->flag))
                             {
-                                vc2 = rasterPointer->colorScale->getColor(value);
-                                alpha2 = 0.8f;
+                                Crit3DColor* variableColor = rasterPointer->colorScale->getColor(value);
+                                double alpha = 0.66;
 
                                 // check outliers
                                 if (rasterPointer->colorScale->isHideOutliers())
                                 {
-                                    if (value < rasterPointer->colorScale->minimum()
+                                    if (value <= rasterPointer->colorScale->minimum()
                                         || value > rasterPointer->colorScale->maximum())
-                                        alpha2 = 0;
+                                        alpha = 0;
                                 }
+                                if (rasterPointer->colorScale->isTransparent())
+                                {
+                                    double step = std::max(0., value - rasterPointer->colorScale->minimum());
+                                    alpha = std::min(1., step/variableRange);
+                                }
+                                mixColor(dtmColor2, *variableColor, color2, alpha);
                             }
                         }
-                        shadowColor(*c2, sc2, row, col+1);
-                        mixColor(sc2, *vc2, color2, alpha2);
 
                         openGlGeometry->setVertexColor(i++, color3);
                         openGlGeometry->setVertexColor(i++, color2);
