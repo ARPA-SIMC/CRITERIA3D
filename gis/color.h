@@ -15,7 +15,7 @@
         short blue;
 
         Crit3DColor();
-        Crit3DColor(short,short,short);
+        Crit3DColor(short, short, short);
     };
 
     class Crit3DColorScale {
@@ -26,6 +26,7 @@
         double _minimum, _maximum;
         bool _isFixedRange;
         bool _isHideOutliers;
+        bool _isTransparent;
         int _classification;
 
     public:
@@ -55,6 +56,9 @@
 
         void setHideOutliers(bool hideOutliers) { _isHideOutliers = hideOutliers; }
         bool isHideOutliers() { return _isHideOutliers; }
+
+        void setTransparent(bool transparent) { _isTransparent = transparent; }
+        bool isTransparent() { return _isTransparent; }
     };
 
     bool setDefaultScale(Crit3DColorScale* myScale);
@@ -74,6 +78,8 @@
     bool setBlackScale(Crit3DColorScale* myScale);
     bool setSurfaceWaterScale(Crit3DColorScale* myScale);
     bool setLAIScale(Crit3DColorScale* myScale);
+
+    void mixColor(const Crit3DColor &backColor, const Crit3DColor &foreColor, Crit3DColor &colorOut, float alpha);
 
 
 #endif // CRIT3DCOLOR_H

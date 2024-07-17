@@ -1068,10 +1068,11 @@ void localSelection(vector <Crit3DInterpolationDataPoint> &inputPoints, vector <
         for (i=0; i< selectedPoints.size(); i++)
         {
             //selectedPoints[i].regressionWeight = MAXVALUE(1 - selectedPoints[i].distance / (std::pow(maxDistance, 16.0/15.0)), EPSILON);
-            selectedPoints[i].regressionWeight = MAXVALUE(std::exp(-std::pow(selectedPoints[i].distance/(0.8*maxDistance),3.0)),EPSILON);
+            //selectedPoints[i].regressionWeight = MAXVALUE(std::exp(-std::pow(selectedPoints[i].distance/((4/5*maxDistance)),7.0)),EPSILON);
+            selectedPoints[i].regressionWeight = MAXVALUE((-(1/std::pow(maxDistance,4)*(std::pow(selectedPoints[i].distance,4)))+1),EPSILON);
             //selectedPoints[i].regressionWeight = 1;
-            selectedPoints[i].heightWeight = 1./((2./maxHeightDelta)*selectedPoints[i].point->z+1);
-            //selectedPoints[i].heightWeight = 1;
+            //selectedPoints[i].heightWeight = 1./((2./maxHeightDelta)*selectedPoints[i].point->z+1);
+            selectedPoints[i].heightWeight = 1;
         }
     mySettings.setLocalRadius(float(maxDistance));
 }
@@ -1689,9 +1690,9 @@ bool multipleDetrendingMain(std::vector <Crit3DInterpolationDataPoint> &myPoints
         elevationCombination.resetCombination(mySettings->getSelectedCombination().getProxySize());
         elevationCombination.setProxyActive(elevationPos, true);
 
-        if (parameters.empty()) {
+        if (parameters.empty())
             parameters.resize(elevationPos + 1);
-        }
+
 
         if (!multipleDetrendingElevation(elevationCombination, parameters[elevationPos], myPoints, mySettings, myVar, errorStr))
             return false;
@@ -1871,7 +1872,7 @@ bool multipleDetrendingElevation(Crit3DProxyCombination elevationCombination, st
     interpolation::bestFittingMarquardt_nDimension_singleFunction(*func, nrMaxStep, 4, parametersMin[elevationPos], parametersMax[elevationPos], parameters[elevationPos], parametersDelta[elevationPos],
                                                    100, 0.005, 0.002, predictors, predictands, weights);
 
-    mySettings->setSingleFittingFunction(myFunc[elevationPos], elevationPos);
+
     mySettings->setSingleFittingParameters(parameters[elevationPos], elevationPos);
 
 
@@ -2104,7 +2105,7 @@ bool multipleDetrending(Crit3DProxyCombination othersCombination, std::vector<st
     //std::vector <std::vector<double>> parameters;
     std::vector<std::function<double(double, std::vector<double>&)>> myFunc(mySettings->getCurrentCombination().getProxySize(), nullptr);
 
-    unsigned int nrMaxStep = 100;
+    unsigned int nrMaxStep = 10;
     if (parameters.empty())
         nrMaxStep *= 10;
 
@@ -2130,7 +2131,7 @@ bool multipleDetrending(Crit3DProxyCombination othersCombination, std::vector<st
     interpolation::bestFittingMarquardt_nDimension(&functionSum, myFunc, nrMaxStep, 4, parametersMin, parametersMax, parameters, parametersDelta,
                                                    100, 0.005, 0.002, predictors, predictands, weights, elevationPos);
 
-
+    myFunc.clear();
     int k = 0;
     for (unsigned int i = 0; i < othersCombination.getProxySize(); i++)
     {
@@ -2142,10 +2143,9 @@ bool multipleDetrending(Crit3DProxyCombination othersCombination, std::vector<st
                 mySettings->setSingleFittingFunction(functionLinear, i);
             }
             k++;
-            myFunc[i] = functionLinear;
+            myFunc.push_back(functionLinear);
         }
     }
-
 
     std::vector <double> proxyValues;
 
