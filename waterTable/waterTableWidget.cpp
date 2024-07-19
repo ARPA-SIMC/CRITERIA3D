@@ -1,4 +1,5 @@
 #include "waterTableWidget.h"
+#include "dialogChangeAxis.h"
 
 WaterTableWidget::WaterTableWidget(const QString &id, std::vector<QDate> myDates, std::vector<float> myHindcastSeries,
                                    std::vector<float> myInterpolateSeries, QMap<QDate, float> obsDepths, float maxObservedDepth)
@@ -22,19 +23,36 @@ WaterTableWidget::WaterTableWidget(const QString &id, std::vector<QDate> myDates
     menuBar->addMenu(editMenu);
     mainLayout->setMenuBar(menuBar);
     QAction* exportInterpolation = new QAction(tr("&Export interpolation as csv"), this);
+    QAction* changeXAxis = new QAction(tr("&Change period (X axis)"), this);
     editMenu->addAction(exportInterpolation);
+    editMenu->addAction(changeXAxis);
 
     mainLayout->addLayout(plotLayout);
     setLayout(mainLayout);
 
     connect(exportInterpolation, &QAction::triggered, this, &WaterTableWidget::on_actionExportInterpolationData);
+    connect(exportInterpolation, &QAction::triggered, this, &WaterTableWidget::on_actionChangeXAxis);
 
-    waterTableChartView->draw(myDates, myHindcastSeries, myInterpolateSeries, obsDepths, maxObservedDepth);
+    waterTableChartView->drawWaterTable(myDates, myHindcastSeries, myInterpolateSeries, obsDepths, maxObservedDepth);
 }
+
+
+void WaterTableWidget::on_actionChangeXAxis()
+{
+    DialogChangeAxis changeAxisDialog(0, true);
+    if (changeAxisDialog.result() == QDialog::Accepted)
+    {
+        QDateTime myDateTime;
+        myDateTime.setDate(changeAxisDialog.getMaxDate());
+        waterTableChartView->axisX->setMax(myDateTime);
+        myDateTime.setDate(changeAxisDialog.getMinDate());
+        waterTableChartView->axisX->setMin(myDateTime);
+    }
+}
+
 
 void WaterTableWidget::on_actionExportInterpolationData()
 {
-
     QString csvFileName = QFileDialog::getSaveFileName(this, tr("Save current data"), "", tr("csv files (*.csv)"));
     if (csvFileName != "")
     {
@@ -66,12 +84,3 @@ void WaterTableWidget::on_actionExportInterpolationData()
     }
 }
 
-WaterTableWidget::~WaterTableWidget()
-{
-
-}
-
-void WaterTableWidget::closeEvent(QCloseEvent *event)
-{
-    event->accept();
-}

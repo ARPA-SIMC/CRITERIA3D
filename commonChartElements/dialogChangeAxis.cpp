@@ -1,18 +1,22 @@
 #include "dialogChangeAxis.h"
 
-DialogChangeAxis::DialogChangeAxis(bool isLeftAxis_)
+DialogChangeAxis::DialogChangeAxis(int nrAxis, bool isDate)
 {
-    isLeftAxis = isLeftAxis_;
     QString title;
-    if (isLeftAxis)
+    if (nrAxis == 0)
+    {
+        title = "Change X Axis";
+    }
+    else if (nrAxis == 1)
     {
         title = "Change Left Axis";
     }
-    else
+    else if (nrAxis == 2)
     {
         title = "Change Right Axis";
     }
     this->setWindowTitle(title);
+
     QVBoxLayout* mainLayout = new QVBoxLayout;
     this->resize(200, 100);
 
@@ -20,17 +24,32 @@ DialogChangeAxis::DialogChangeAxis(bool isLeftAxis_)
     QHBoxLayout *layoutEdit = new QHBoxLayout;
 
     QLabel minValueLabel("Minimum value:");
-    minValueLabel.setBuddy(&minVal);
-    minVal.setValidator(new QDoubleValidator(-999.0, 999.0, 3));
+    layoutEdit->addWidget(&minValueLabel);
+    if (isDate)
+    {
+        minValueLabel.setBuddy(&minDate);
+        layoutEdit->addWidget(&minDate);
+    }
+    else
+    {
+        minValueLabel.setBuddy(&minVal);
+        minVal.setValidator(new QDoubleValidator(-9999.0, 9999.0, 3));
+        layoutEdit->addWidget(&minVal);
+    }
 
     QLabel maxValueLabel("Maximum value:");
-    maxValueLabel.setBuddy(&maxVal);
-    maxVal.setValidator(new QDoubleValidator(-999.0, 999.0, 3));
-
-    layoutEdit->addWidget(&minValueLabel);
-    layoutEdit->addWidget(&minVal);
     layoutEdit->addWidget(&maxValueLabel);
-    layoutEdit->addWidget(&maxVal);
+    if (isDate)
+    {
+         minValueLabel.setBuddy(&maxDate);
+        layoutEdit->addWidget(&maxDate);
+    }
+    else
+    {
+        maxValueLabel.setBuddy(&maxVal);
+        maxVal.setValidator(new QDoubleValidator(-9999.0, 9999.0, 3));
+        layoutEdit->addWidget(&maxVal);
+    }
 
     QDialogButtonBox buttonBox(QDialogButtonBox::Ok | QDialogButtonBox::Cancel);
 
@@ -83,4 +102,14 @@ float DialogChangeAxis::getMinVal() const
 float DialogChangeAxis::getMaxVal() const
 {
     return maxVal.text().toFloat();
+}
+
+QDate DialogChangeAxis::getMinDate() const
+{
+    return minDate.date();
+}
+
+QDate DialogChangeAxis::getMaxDate() const
+{
+    return maxDate.date();
 }
