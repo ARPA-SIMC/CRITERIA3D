@@ -2447,7 +2447,7 @@ bool Project::interpolationDemLocalDetrending(meteoVariable myVar, const Crit3DT
                     if (! getProxyValuesXY(x, y, &interpolationSettings, proxyValues)) interpolationSettings.setProxiesComplete(false);
 
                     std::vector <Crit3DInterpolationDataPoint> subsetInterpolationPoints;
-                    localSelection_new(interpolationPoints, subsetInterpolationPoints, x, y, z, interpolationSettings);
+                    localSelection(interpolationPoints, subsetInterpolationPoints, x, y, z, interpolationSettings);
                      if (interpolationSettings.getUseLocalDetrending())
                         interpolationSettings.setFittingParameters(myRaster->prepareParameters(row, col, myCombination.getActiveList()));
                     if (! preInterpolation(subsetInterpolationPoints, &interpolationSettings, meteoSettings, &climateParameters,
