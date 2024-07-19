@@ -2006,7 +2006,7 @@ bool Crit3DProject::update3DColors(gis::Crit3DRasterGrid *rasterPointer)
                             if (rasterPointer->colorScale->isTransparent())
                             {
                                 double step = std::max(0., value - rasterPointer->colorScale->minimum());
-                                alpha = std::min(1., step/variableRange);
+                                alpha = sqrt(std::min(1., step/variableRange));
                             }
                             mixColor(dtmColor1, *variableColor, color1, alpha);
                         }
@@ -2027,7 +2027,7 @@ bool Crit3DProject::update3DColors(gis::Crit3DRasterGrid *rasterPointer)
                             if (rasterPointer->colorScale->isTransparent())
                             {
                                 double step = std::max(0., value - rasterPointer->colorScale->minimum());
-                                alpha = std::min(1., step/variableRange);
+                                alpha = sqrt(std::min(1., step/variableRange));
                             }
                             mixColor(dtmColor3, *variableColor, color3, alpha);
                         }
@@ -2058,7 +2058,7 @@ bool Crit3DProject::update3DColors(gis::Crit3DRasterGrid *rasterPointer)
                                 if (rasterPointer->colorScale->isTransparent())
                                 {
                                     double step = std::max(0., value - rasterPointer->colorScale->minimum());
-                                    alpha = std::min(1., step/variableRange);
+                                    alpha = sqrt(std::min(1., step/variableRange));
                                 }
                                 mixColor(dtmColor2, *variableColor, color2, alpha);
                             }
@@ -2094,7 +2094,7 @@ bool Crit3DProject::update3DColors(gis::Crit3DRasterGrid *rasterPointer)
                                 if (rasterPointer->colorScale->isTransparent())
                                 {
                                     double step = std::max(0., value - rasterPointer->colorScale->minimum());
-                                    alpha = std::min(1., step/variableRange);
+                                    alpha = sqrt(std::min(1., step/variableRange));
                                 }
                                 mixColor(dtmColor2, *variableColor, color2, alpha);
                             }

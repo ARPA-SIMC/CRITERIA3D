@@ -1022,7 +1022,7 @@ void localSelection_new(std::vector<Crit3DInterpolationDataPoint> &inputPoints, 
     unsigned int i;
     float radius;
     unsigned int nrValid = 0;
-    int minPoints = mySettings.getMinPointsLocalDetrending()*1.2;
+    unsigned int minPoints = unsigned(mySettings.getMinPointsLocalDetrending() * 1.2);
     float shepardInitialRadius = computeShepardInitialRadius(mySettings.getPointsBoundingBoxArea(), unsigned(inputPoints.size()), minPoints);
 
     // define a first neighborhood inside initial radius
