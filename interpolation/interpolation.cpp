@@ -1015,6 +1015,67 @@ float gaussWeighted(vector <Crit3DInterpolationDataPoint> &myPointList)
 }
 */
 
+void localSelection_new(std::vector<Crit3DInterpolationDataPoint> &inputPoints, std::vector<Crit3DInterpolationDataPoint> &selectedPoints,
+                    float x, float y, float z, Crit3DInterpolationSettings& mySettings)
+{
+    std::vector<Crit3DInterpolationDataPoint> tempPoints;
+    unsigned int i;
+    float radius;
+    unsigned int nrValid = 0;
+    int minPoints = mySettings.getMinPointsLocalDetrending()*1.2;
+    float shepardInitialRadius = computeShepardInitialRadius(mySettings.getPointsBoundingBoxArea(), unsigned(inputPoints.size()), minPoints);
+
+    // define a first neighborhood inside initial radius
+    for (i=0; i < inputPoints.size(); i++)
+    {
+        inputPoints[i].distance = gis::computeDistance(x, y, float((inputPoints[i]).point->utm.x), float((inputPoints[i]).point->utm.y));
+        if (inputPoints[i].distance <= shepardInitialRadius &&
+            inputPoints[i].distance > 0 &&
+            checkLapseRateCode(inputPoints[i].lapseRateCode, mySettings.getUseLapseRateCode(), true))
+        {
+            tempPoints.push_back(inputPoints[i]);
+            nrValid++;
+        }
+    }
+
+    if (tempPoints.size() <= minPoints)
+    {
+        nrValid = sortPointsByDistance(minPoints + 1, inputPoints, selectedPoints);
+        if (nrValid > minPoints)
+        {
+            radius = selectedPoints[minPoints].distance;
+            selectedPoints.pop_back();
+        }
+        else
+            radius = selectedPoints[nrValid-1].distance + float(EPSILON);
+    }
+    else if (tempPoints.size() > minPoints)
+    {
+        nrValid = sortPointsByDistance(minPoints + 1, tempPoints, selectedPoints);
+        radius = selectedPoints[minPoints].distance;
+        selectedPoints.pop_back();
+    }
+    else
+    {
+        selectedPoints = tempPoints;
+        radius = shepardInitialRadius;
+    }
+
+    for (int i = 0; i < selectedPoints.size(); i++)
+    {
+        selectedPoints[i].regressionWeight = MAXVALUE((-(1/std::pow(radius,4)*(std::pow(selectedPoints[i].distance,4)))+1),EPSILON);
+        //selectedPoints[i].regressionWeight = 1;
+        //selectedPoints[i].heightWeight = 1./((2./maxHeightDelta)*selectedPoints[i].point->z+1);
+        selectedPoints[i].heightWeight = 1;
+    }
+    mySettings.setLocalRadius(float(radius));
+
+    return;
+}
+
+
+
+
 // TODO elevation std dev?
 void localSelection(vector <Crit3DInterpolationDataPoint> &inputPoints, vector <Crit3DInterpolationDataPoint> &selectedPoints,
                     float x, float y, float z, Crit3DInterpolationSettings& mySettings)
