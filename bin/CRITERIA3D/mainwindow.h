@@ -238,6 +238,8 @@
         void on_flag_increase_slope_triggered(bool isChecked);
 
 
+        void on_actionView_Water_potential_triggered();
+
     protected:
         /*!
          * \brief mouseReleaseEvent call moveCenter

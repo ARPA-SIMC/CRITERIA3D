@@ -1399,11 +1399,12 @@ bool Project3D::computeCriteria3DMap(gis::Crit3DRasterGrid &outputRaster, criter
                 }
                 else
                 {
+                    // surface: water height
                     if (var == volumetricWaterContent && layerIndex == 0)
                     {
-                        // surface: water height
                         value *= 1000;          // [m] -> [mm]
                     }
+
                     outputRaster.value[row][col] = value;
                 }
             }
@@ -2078,8 +2079,8 @@ bool setCriteria3DVar(criteria3DVariable myVar, long nodeIndex, double myValue)
         myResult = soilFluxes3D::setMatricPotential(nodeIndex, myValue);
     }
 
-    return (myResult != INDEX_ERROR && myResult != MEMORY_ERROR && myResult != MISSING_DATA_ERROR &&
-            myResult != TOPOGRAPHY_ERROR);
+    return (myResult != INDEX_ERROR && myResult != MEMORY_ERROR
+            && myResult != MISSING_DATA_ERROR && myResult != TOPOGRAPHY_ERROR);
 }
 
 

@@ -2407,6 +2407,12 @@ void MainWindow::showCriteria3DVariable(criteria3DVariable var, int layerIndex, 
         reverseColorScale(myProject.criteria3DMap.colorScale);
         ui->labelOutputRaster->setText("Degree of saturation [-]");
     }
+    else if (current3DVariable == waterMatricPotential)
+    {
+        setTemperatureScale(myProject.criteria3DMap.colorScale);
+        reverseColorScale(myProject.criteria3DMap.colorScale);
+        ui->labelOutputRaster->setText("Water matric potential [m]");
+    }
     else if (current3DVariable == factorOfSafety || current3DVariable == minimumFactorOfSafety)
     {
         setSlopeStabilityScale(myProject.criteria3DMap.colorScale);
@@ -3252,6 +3258,14 @@ void MainWindow::on_actionView_SoilMoisture_triggered()
 }
 
 
+
+void MainWindow::on_actionView_Water_potential_triggered()
+{
+    int layerIndex = std::max(1, ui->layerNrEdit->value());
+    showCriteria3DVariable(waterMatricPotential, layerIndex, false, false, NODATA, NODATA);
+}
+
+
 void MainWindow::on_actionView_DegreeOfSaturation_automatic_range_triggered()
 {
     int layerIndex = ui->layerNrEdit->value();
@@ -3393,6 +3407,4 @@ void MainWindow::on_actionCriteria3D_save_state_triggered()
         myProject.logError(ERROR_STR_MISSING_PROJECT);
     }
 }
-
-
 
