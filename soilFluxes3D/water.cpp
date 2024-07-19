@@ -323,7 +323,7 @@ bool waterFlowComputation(double deltaT)
         isValidStep = waterBalance(deltaT, approximationNr);
         if (getForcedHalvedTime()) return (false);
         }
-    while ((!isValidStep) && (++approximationNr < myParameters.maxApproximationsNumber));
+    while ((! isValidStep) && (++approximationNr < myParameters.maxApproximationsNumber));
 
     return isValidStep;
  }
@@ -368,7 +368,7 @@ bool computeWater(double maxTime, double *acceptedTime)
 
         isStepOK = waterFlowComputation(*acceptedTime);
 
-        if (!isStepOK) restoreWater();
+        if (! isStepOK) restoreWater();
     }
     return (isStepOK);
 }

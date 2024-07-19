@@ -3709,7 +3709,7 @@ void Project::showLocalProxyGraph(gis::Crit3DGeoPoint myPoint, gis::Crit3DRaster
     }
     if (this->meteoGridLoaded && !this->meteoGridDbHandler->meteoGrid()->dataMeteoGrid.singleCell.empty())
     {
-        gis::getGridRowColFromXY(meteoGridDbHandler->meteoGrid()->gridStructure().header(), myPoint.longitude, myPoint.latitude, &row, &col);
+        gis::getGridRowColFromLonLat(meteoGridDbHandler->meteoGrid()->gridStructure().header(), myPoint.longitude, myPoint.latitude, &row, &col);
         parameters = meteoGridDbHandler->meteoGrid()->dataMeteoGrid.getParametersFromRowCol(row, col);
     }
 
@@ -4200,11 +4200,16 @@ bool Project::exportMeteoGridToCsv(QString fileName)
         for (int col = 0; col < meteoGridDbHandler->meteoGrid()->dataMeteoGrid.header->nrCols; col++)
         {
             float value = meteoGridDbHandler->meteoGrid()->dataMeteoGrid.value[row][col];
-            std::string id = meteoGridDbHandler->meteoGrid()->meteoPoints()[row][col]->id;
-            std::string name = meteoGridDbHandler->meteoGrid()->meteoPoints()[row][col]->name;
 
             if (value != NO_ACTIVE && value != NODATA)
             {
+                int newRow = row;
+                if (! meteoGridDbHandler->meteoGrid()->gridStructure().isUTM())
+                    newRow = meteoGridDbHandler->meteoGrid()->gridStructure().nrRow() - 1 - row;
+
+                std::string id = meteoGridDbHandler->meteoGrid()->meteoPoints()[newRow][col]->id;
+                std::string name = meteoGridDbHandler->meteoGrid()->meteoPoints()[newRow][col]->name;
+
                 out << QString::fromStdString(id + ',' + name + ',') + QString::number(value) + "\n";
             }
         }

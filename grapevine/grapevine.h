@@ -192,13 +192,13 @@
     struct Crit3DModelCase {
         int id;
         Crit3DLanduse landuse;
-        //int soilIndex;
+        int soilIndex;
 
         float shootsPerPlant;
         float plantDensity;
         float maxLAIGrass;
         int trainingSystem;
-        float maxIrrigationRate;        //[mm/h]
+        float maxIrrigationRate;        // [mm h-1]
 
         int soilLayersNr;
         double soilTotalDepth;
@@ -393,7 +393,7 @@
         Vine3D_Grapevine();
 
         //void initializeGrapevineModel(TVineCultivar* cultivar, double secondsPerStep);
-        bool initializeLayers(int myMaxLayers);
+        void initializeLayers(int myMaxLayers);
         bool initializeStatePlant(int doy, Crit3DModelCase *vineField);
         void resetLayers();
 
