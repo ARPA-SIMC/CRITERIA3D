@@ -139,7 +139,7 @@
             Crit3DRasterCell();
         };
 
-        struct RasterGridParameters {
+        struct RasterGridCell {
         public:
             int row;
             int col;
@@ -155,7 +155,7 @@
             float minimum, maximum;
             bool isLoaded;
             Crit3DTime mapTime;
-            std::vector<RasterGridParameters> parametersCell;
+            std::vector<RasterGridCell> singleCell;
 
             Crit3DUtmPoint* utmPoint(int myRow, int myCol);
             void getXY(int myRow, int myCol, double &x, double &y) const;
@@ -192,7 +192,6 @@
             std::vector<std::vector<double>> getParametersFromRowCol(int row, int col);
             bool setParametersForRowCol(int row, int col, std::vector<std::vector<double>> parameters);
             std::vector<std::vector<double>> prepareParameters(int row, int col, std::vector<bool> activeList);
-            std::vector<std::vector<double>> prepareParametersOld(int row, int col, unsigned int activeProxyNr);
 
             Crit3DTime getMapTime() const;
             void setMapTime(const Crit3DTime &value);

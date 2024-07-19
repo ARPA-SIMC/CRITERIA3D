@@ -3702,12 +3702,12 @@ void Project::showLocalProxyGraph(gis::Crit3DGeoPoint myPoint, gis::Crit3DRaster
 
     int row, col;
     std::vector<std::vector<double>> parameters;
-    if (myDataRaster->isLoaded && !myDataRaster->parametersCell.empty())
+    if (myDataRaster->isLoaded && !myDataRaster->singleCell.empty())
     {
         gis::getRowColFromXY(*(myDataRaster->header), myUtm, &row, &col);
         parameters = myDataRaster->getParametersFromRowCol(row, col);
     }
-    if (this->meteoGridLoaded && !this->meteoGridDbHandler->meteoGrid()->dataMeteoGrid.parametersCell.empty())
+    if (this->meteoGridLoaded && !this->meteoGridDbHandler->meteoGrid()->dataMeteoGrid.singleCell.empty())
     {
         gis::getGridRowColFromXY(meteoGridDbHandler->meteoGrid()->gridStructure().header(), myPoint.longitude, myPoint.latitude, &row, &col);
         parameters = meteoGridDbHandler->meteoGrid()->dataMeteoGrid.getParametersFromRowCol(row, col);

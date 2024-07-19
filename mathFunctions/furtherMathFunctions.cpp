@@ -69,33 +69,8 @@ double lapseRateFrei(double x, std::vector <double>& par)
     return y - 0.5*par[2]*(1 + cos(PI*(x-par[3])/(par[4])));
 }
 
-double lapseRateFreiFree(double x, std::vector <double>& par)
-{
-    /*
-    par[0] = T0;
-    par[1] = gamma1;
-    par[2] = a;
-    par[3] = h0;
-    par[4] = h1-h0;
-    par[5] = gamma2
-    */
 
-    if (par.size() < 6) return NODATA;
-
-    double h1 = par[3]+par[4];
-    if (x <= par[3])
-    {
-        return par[0] - par[1]*x - par[2];
-    }
-    else if (x >= (par[4]+par[3]))
-    {
-        return par[0] - par[5]*x;
-    }
-    return par[0] - ((par[5]*par[3]+par[1]*h1)/(par[3]+h1))*x - 0.5*par[2]*(1 + cos(PI*(x-par[3])/(par[4])));
-}
-
-
-double lapseRatePiecewise_three(double x, std::vector <double>& par)
+double lapseRatePiecewise_three_noSlope(double x, std::vector <double>& par)
 {
     // the piecewise line is parameterized as follows
     // the line passes through A(par[0];par[1])and B(par[0]+par[2];par[3]). par[4] is the slope of the 2 externals pieces
@@ -124,7 +99,7 @@ double lapseRatePiecewise_three(double x, std::vector <double>& par)
 }
 
 
-double lapseRatePiecewiseThree_withSlope(double x, std::vector <double>& par)
+double lapseRatePiecewise_three(double x, std::vector <double>& par)
 {
     //xa (par[0],par[1]), xb-xa = par[2], par[3] is the slope of the middle piece,
     //par[4] the slope of the first and last piece
@@ -139,7 +114,7 @@ double lapseRatePiecewiseThree_withSlope(double x, std::vector <double>& par)
         return par[3]*x - par[3]*par[0]+par[1];
 }
 
-double detrendingLapseRatePiecewiseThree_withSlope(double x, std::vector <double>& par)
+double detrendingLapseRatePiecewise_three(double x, std::vector <double>& par)
 {
     //xa (par[0],par[1]), xb-xa = par[2], par[3] is the slope of the middle piece,
     //par[4] the slope of the first and last piece
@@ -154,7 +129,7 @@ double detrendingLapseRatePiecewiseThree_withSlope(double x, std::vector <double
         return par[3]*x;
 }
 
-double lapseRatePiecewiseFree(double x, std::vector <double>& par)
+double lapseRatePiecewise_three_free(double x, std::vector <double>& par)
 {
     // the piecewise line is parameterized as follows
     // the line passes through A(par[0];par[1])and B(par[0]+par[2];...)
@@ -186,7 +161,7 @@ double lapseRatePiecewiseFree(double x, std::vector <double>& par)
     }
 }
 
-double detrendingLapseRatePiecewiseFree(double x, std::vector <double>& par)
+double detrendingLapseRatePiecewise_three_free(double x, std::vector <double>& par)
 {
     // the piecewise line is parameterized as follows
     // the line passes through A(par[0];par[1])and B(par[0]+par[2];...)
@@ -1346,7 +1321,7 @@ namespace interpolation
         //grigliato
 
         const int numSteps = 20;
-        std::vector<double> steps = {2*(parametersMax[0][0]-parametersMin[0][0])/numSteps, 2*(parametersMax[0][1]-parametersMin[0][1])/numSteps};
+        std::vector<double> stepSize = {2*(parametersMax[0][0]-parametersMin[0][0])/numSteps, 2*(parametersMax[0][1]-parametersMin[0][1])/numSteps};
 
         int directions[] = {1, -1};
         std::vector<std::vector<double>> firstGuessParam = parameters;
@@ -1405,9 +1380,9 @@ namespace interpolation
                             if (parameters.size() > proxyIndex && !parameters[proxyIndex].empty())
                             {
                                 if (dir == 0)
-                                    parameters[proxyIndex][paramIndex] = MINVALUE(firstGuessParam[proxyIndex][paramIndex] + directions[dir] * step * steps[paramIndex], parametersMax[proxyIndex][paramIndex]);
+                                    parameters[proxyIndex][paramIndex] = MINVALUE(firstGuessParam[proxyIndex][paramIndex] + directions[dir] * step * stepSize[paramIndex], parametersMax[proxyIndex][paramIndex]);
                                 else
-                                    parameters[proxyIndex][paramIndex] = MAXVALUE(firstGuessParam[proxyIndex][paramIndex] + directions[dir] * step * steps[paramIndex], parametersMin[proxyIndex][paramIndex]);
+                                    parameters[proxyIndex][paramIndex] = MAXVALUE(firstGuessParam[proxyIndex][paramIndex] + directions[dir] * step * stepSize[paramIndex], parametersMin[proxyIndex][paramIndex]);
                             }
 
                             if ((counter > nrTrials) || ((R2Previous[0] != NODATA) && fabs(R2Previous[0]-R2Previous[nrMinima-1]) < deltaR2 ))
@@ -2068,12 +2043,12 @@ namespace interpolation
         int counter = 0;
 
         //grigliato
-        std::vector<double> steps;
+        std::vector<double> stepSize;
         const int numSteps = 30;
         if (parameters.size() == 4)
-            steps = {2*(parametersMax[0]-parametersMin[0])/numSteps, 2*(parametersMax[1]-parametersMin[1])/numSteps, 2*(parametersMax[2]-parametersMin[2])/numSteps, 2*(parametersMax[3]-parametersMin[3])/numSteps};
+            stepSize = {2*(parametersMax[0]-parametersMin[0])/numSteps, 2*(parametersMax[1]-parametersMin[1])/numSteps, 20*(parametersMax[2]-parametersMin[2])/numSteps, 20*(parametersMax[3]-parametersMin[3])/numSteps};
         else if (parameters.size() == 6)
-            steps = {2*(parametersMax[0]-parametersMin[0])/numSteps, 2*(parametersMax[1]-parametersMin[1])/numSteps, 4*(parametersMax[2]-parametersMin[2])/numSteps, 20*(parametersMax[3]-parametersMin[3])/numSteps,20*(parametersMax[3]-parametersMin[3])/numSteps,20*(parametersMax[3]-parametersMin[3])/numSteps };
+            stepSize = {2*(parametersMax[0]-parametersMin[0])/numSteps, 2*(parametersMax[1]-parametersMin[1])/numSteps, 4*(parametersMax[2]-parametersMin[2])/numSteps, 20*(parametersMax[3]-parametersMin[3])/numSteps,20*(parametersMax[3]-parametersMin[3])/numSteps,20*(parametersMax[3]-parametersMin[3])/numSteps };
         else return false;
 
         int directions[] = {1, -1};
@@ -2122,9 +2097,9 @@ namespace interpolation
                     counter++;
 
                     if (dir == 0)
-                        parameters[paramIndex] = MINVALUE(firstGuessParam[paramIndex] + directions[dir] * step * steps[paramIndex], parametersMax[paramIndex]);
+                        parameters[paramIndex] = MINVALUE(firstGuessParam[paramIndex] + directions[dir] * step * stepSize[paramIndex], parametersMax[paramIndex]);
                     else
-                        parameters[paramIndex] = MAXVALUE(firstGuessParam[paramIndex] + directions[dir] * step * steps[paramIndex], parametersMin[paramIndex]);
+                        parameters[paramIndex] = MAXVALUE(firstGuessParam[paramIndex] + directions[dir] * step * stepSize[paramIndex], parametersMin[paramIndex]);
 
                 }
             }
