@@ -3230,7 +3230,7 @@ bool Project::loadProject()
     if (dbPointsFileName != "")
         if (! loadMeteoPointsDB(dbPointsFileName))
         {
-            errorString = "load Meteo Points DB failed";
+            errorString = "load Meteo Points DB failed:\n" + dbPointsFileName;
             errorType = ERROR_DBPOINT;
             logError();
             return false;

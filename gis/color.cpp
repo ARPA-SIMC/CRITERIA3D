@@ -56,6 +56,7 @@ Crit3DColorScale::Crit3DColorScale()
     _maximum = NODATA;
     _isFixedRange = false;
     _isHideOutliers = false;
+    _isTransparent = false;
 
     _classification = classificationMethod::EqualInterval;
 }
@@ -212,8 +213,8 @@ bool setSlopeStabilityScale(Crit3DColorScale* myScale)
     myScale->keyColor[0] = Crit3DColor(128, 0, 128);       /*!< violet */
     myScale->keyColor[1] = Crit3DColor(255, 0, 0);         /*!< red */
     myScale->keyColor[2] = Crit3DColor(255, 255, 0);       /*!< yellow */
-    myScale->keyColor[3] = Crit3DColor(196, 196, 32);      /*!< yellow/green */
-     myScale->keyColor[4] = Crit3DColor(64, 196, 64);      /*!< green */
+    myScale->keyColor[3] = Crit3DColor(64, 196, 64);       /*!< green */
+    myScale->keyColor[4] = Crit3DColor(128, 255, 128);     /*!< light green */
 
     return(myScale->classify());
 }
@@ -362,6 +363,23 @@ bool reverseColorScale(Crit3DColorScale* myScale)
 
     // reclassify
     return myScale->classify();
+}
+
+
+void mixColor(const Crit3DColor &backColor, const Crit3DColor &foreColor, Crit3DColor &colorOut, float alpha)
+{
+    if (alpha == 0)
+    {
+        colorOut.red = backColor.red;
+        colorOut.green = backColor.green;
+        colorOut.blue = backColor.blue;
+    }
+    else
+    {
+        colorOut.red = std::min(255, int(backColor.red * (1. - alpha)) + int(foreColor.red * alpha));
+        colorOut.green = std::min(255, int(backColor.green * (1. - alpha)) + int(foreColor.green * alpha));
+        colorOut.blue = std::min(255, int(backColor.blue * (1. - alpha)) +int( foreColor.blue * alpha));
+    }
 }
 
 
