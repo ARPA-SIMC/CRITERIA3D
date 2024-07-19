@@ -287,13 +287,13 @@ namespace gis
 
     bool Crit3DRasterGrid::initializeParameters(const Crit3DRasterHeader& initHeader)
     {
-        parametersCell.clear();
-        parametersCell.resize(initHeader.nrRows*initHeader.nrCols);
-        for (int i = 0; i < int(parametersCell.size()); i++)
+        singleCell.clear();
+        singleCell.resize(initHeader.nrRows*initHeader.nrCols);
+        for (int i = 0; i < int(singleCell.size()); i++)
         {
-            parametersCell[i].row = i / initHeader.nrCols;
-            parametersCell[i].col = i % initHeader.nrCols;
-            parametersCell[i].fittingParameters.clear();
+            singleCell[i].row = i / initHeader.nrCols;
+            singleCell[i].col = i % initHeader.nrCols;
+            singleCell[i].fittingParameters.clear();
         }
 
         return true;
@@ -301,12 +301,12 @@ namespace gis
 
     bool Crit3DRasterGrid::initializeParametersLatLonHeader(const Crit3DLatLonHeader& latLonHeader)
     {
-        parametersCell.resize(latLonHeader.nrRows*latLonHeader.nrCols);
-        for (int i = 0; i < int(parametersCell.size()); i++)
+        singleCell.resize(latLonHeader.nrRows*latLonHeader.nrCols);
+        for (int i = 0; i < int(singleCell.size()); i++)
         {
-            parametersCell[i].row = i / latLonHeader.nrCols;
-            parametersCell[i].col = i % latLonHeader.nrCols;
-            parametersCell[i].fittingParameters.clear();
+            singleCell[i].row = i / latLonHeader.nrCols;
+            singleCell[i].col = i % latLonHeader.nrCols;
+            singleCell[i].fittingParameters.clear();
         }
 
         return true;
@@ -497,8 +497,8 @@ namespace gis
 
         int index = row * header->nrCols + col;
 
-        if (index < int(parametersCell.size()))
-            parameters = parametersCell[index].fittingParameters;
+        if (index < int(singleCell.size()))
+            parameters = singleCell[index].fittingParameters;
 
         return parameters;
 
@@ -511,7 +511,7 @@ namespace gis
             return false;
 
         int index = row * header->nrCols + col;
-        parametersCell[index].fittingParameters = parameters;
+        singleCell[index].fittingParameters = parameters;
 
         return true;
     }
@@ -542,7 +542,7 @@ namespace gis
                     for (m = col-1; m < col+2; m++)
                     {
                         index = l * header->nrCols + m;
-                        if (index >= 0 && index < int(parametersCell.size()) && (parametersCell[index].fittingParameters.size() > i && !parametersCell[index].fittingParameters[i].empty()) && (l != row || m !=col)) {
+                        if (index >= 0 && index < int(singleCell.size()) && (singleCell[index].fittingParameters.size() > i && !singleCell[index].fittingParameters[i].empty()) && (l != row || m !=col)) {
                             findFirst = 1;
                         }
                         if (findFirst==1) break;
@@ -555,7 +555,7 @@ namespace gis
 
                 //you're on a specific proxy rn. cycle through the cells, calculate the avg
                 avg.clear();
-                avg.resize(parametersCell[index].fittingParameters[i].size());
+                avg.resize(singleCell[index].fittingParameters[i].size());
                 counter = 0;
 
                 for (k = l; k < row+2; k++)
@@ -563,10 +563,10 @@ namespace gis
                     for (p = m; p < col+2; p++)
                     {
                         index = k * header->nrCols + p;
-                        if (index >= 0 && index < int(parametersCell.size()) && parametersCell[index].fittingParameters.size() > i && !parametersCell[index].fittingParameters[i].empty()) {
+                        if (index >= 0 && index < int(singleCell.size()) && singleCell[index].fittingParameters.size() > i && !singleCell[index].fittingParameters[i].empty()) {
                             for (unsigned int o = 0; o < avg.size(); o++)
                             {
-                                avg[o] += parametersCell[index].fittingParameters[i][o];
+                                avg[o] += singleCell[index].fittingParameters[i][o];
 
                             }
                             counter++;
@@ -581,63 +581,6 @@ namespace gis
         }
 
         return tempProxyVector;
-    }
-
-    std::vector<std::vector<double>> Crit3DRasterGrid::prepareParametersOld(int row, int col, unsigned int activeProxyNr)
-    {
-        std::vector<std::vector<double>> tempProxyVector;
-        std::vector<double> tempParVector;
-        tempProxyVector.clear();
-        tempParVector.clear();
-        double avg;
-        int counter;
-        int l, i, j, k;
-        int index;
-        bool findFirst = 0;
-
-        if (isOutOfGrid(row, col))
-            return tempProxyVector;
-
-        //look for the first cell that has data in it. if there isn't any, return empty vector
-        for (i = row-1; i < row+2; i++)
-        {
-            for (j = col-1; j < col+2; j++)
-            {
-                index = i * header->nrCols + j;
-                if (index >= 0 && index < int(parametersCell.size()) && (parametersCell[index].fittingParameters.size() == activeProxyNr) && (i != row || j !=col))
-                    findFirst = 1;
-                if (findFirst==1) break;
-            }
-            if (findFirst==1) break;
-        }
-
-        for (k = 0; k < int(parametersCell[index].fittingParameters.size()); k++)
-        {
-            for (l = 0; l < int(parametersCell[index].fittingParameters[k].size()); l++)
-            {
-                avg = 0;
-                counter = 0;
-                for (int h = i; h < row+2; h++)
-                {
-                    for (int m = j; m < col+2; m++)
-                    {
-                        index = h * header->nrCols + m;
-                        if (index >= 0 && index < int(parametersCell.size()) && (parametersCell[index].fittingParameters.size() == activeProxyNr) && (i != row || j !=col))
-                        {
-                            avg += parametersCell[index].fittingParameters[k][l];
-                            counter++;
-                        }
-                    }
-                }
-                tempParVector.push_back(avg/counter);
-                index = i*header->nrCols+j;
-            }
-            tempProxyVector.push_back(tempParVector);
-            tempParVector.clear();
-        }
-
-        return tempProxyVector;
-
     }
 
     void convertFlagToNodata(Crit3DRasterGrid& myGrid)
