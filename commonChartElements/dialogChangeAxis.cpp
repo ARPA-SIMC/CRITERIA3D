@@ -1,7 +1,9 @@
 #include "dialogChangeAxis.h"
 
-DialogChangeAxis::DialogChangeAxis(int nrAxis, bool isDate)
+DialogChangeAxis::DialogChangeAxis(int nrAxis, bool isDate_)
 {
+    isDateAxis = isDate_;
+
     QString title;
     if (nrAxis == 0)
     {
@@ -25,7 +27,7 @@ DialogChangeAxis::DialogChangeAxis(int nrAxis, bool isDate)
 
     QLabel minValueLabel("Minimum value:");
     layoutEdit->addWidget(&minValueLabel);
-    if (isDate)
+    if (isDateAxis)
     {
         minValueLabel.setBuddy(&minDate);
         layoutEdit->addWidget(&minDate);
@@ -39,7 +41,7 @@ DialogChangeAxis::DialogChangeAxis(int nrAxis, bool isDate)
 
     QLabel maxValueLabel("Maximum value:");
     layoutEdit->addWidget(&maxValueLabel);
-    if (isDate)
+    if (isDateAxis)
     {
          minValueLabel.setBuddy(&maxDate);
         layoutEdit->addWidget(&maxDate);
@@ -74,16 +76,28 @@ void DialogChangeAxis::done(bool res)
 {
     if (res) // ok
     {
-        if (minVal.text().isEmpty())
+        if (isDateAxis)
         {
-            QMessageBox::information(nullptr, "Missing min value", "Insert min val");
-            return;
+            if (minDate.date() >= maxDate.date())
+            {
+                QMessageBox::warning(nullptr, "Wrong date", "Insert correct dates.");
+                return;
+            }
         }
-        if (maxVal.text().isEmpty())
+        else
         {
-            QMessageBox::information(nullptr, "Missing max value", "Insert max val");
-            return;
+            if (minVal.text().isEmpty())
+            {
+                QMessageBox::warning(nullptr, "Missing min value", "Insert minimum value.");
+                return;
+            }
+            if (maxVal.text().isEmpty())
+            {
+                QMessageBox::warning(nullptr, "Missing max value", "Insert maximum value.");
+                return;
+            }
         }
+
         QDialog::done(QDialog::Accepted);
         return;
     }

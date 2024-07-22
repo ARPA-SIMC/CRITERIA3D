@@ -8,6 +8,8 @@
         Q_OBJECT
 
     private:
+        bool isDateAxis;
+
         QDateEdit minDate;
         QLineEdit minVal;
 
@@ -15,7 +17,7 @@
         QLineEdit maxVal;
 
     public:
-        DialogChangeAxis(int nrAxis, bool isDate);
+        DialogChangeAxis(int nrAxis, bool isDate_);
         ~DialogChangeAxis() override;
         void done(bool res);
 

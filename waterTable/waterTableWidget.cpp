@@ -22,8 +22,8 @@ WaterTableWidget::WaterTableWidget(const QString &id, std::vector<QDate> myDates
 
     menuBar->addMenu(editMenu);
     mainLayout->setMenuBar(menuBar);
-    QAction* exportInterpolation = new QAction(tr("&Export interpolation as csv"), this);
-    QAction* changeXAxis = new QAction(tr("&Change period (X axis)"), this);
+    QAction* exportInterpolation = new QAction(tr("&Export interpolation as csv.."), this);
+    QAction* changeXAxis = new QAction(tr("&Change period (X axis).."), this);
     editMenu->addAction(exportInterpolation);
     editMenu->addAction(changeXAxis);
 
@@ -31,7 +31,7 @@ WaterTableWidget::WaterTableWidget(const QString &id, std::vector<QDate> myDates
     setLayout(mainLayout);
 
     connect(exportInterpolation, &QAction::triggered, this, &WaterTableWidget::on_actionExportInterpolationData);
-    connect(exportInterpolation, &QAction::triggered, this, &WaterTableWidget::on_actionChangeXAxis);
+    connect(changeXAxis, &QAction::triggered, this, &WaterTableWidget::on_actionChangeXAxis);
 
     waterTableChartView->drawWaterTable(myDates, myHindcastSeries, myInterpolateSeries, obsDepths, maxObservedDepth);
 }
@@ -40,13 +40,14 @@ WaterTableWidget::WaterTableWidget(const QString &id, std::vector<QDate> myDates
 void WaterTableWidget::on_actionChangeXAxis()
 {
     DialogChangeAxis changeAxisDialog(0, true);
+
     if (changeAxisDialog.result() == QDialog::Accepted)
     {
-        QDateTime myDateTime;
-        myDateTime.setDate(changeAxisDialog.getMaxDate());
-        waterTableChartView->axisX->setMax(myDateTime);
-        myDateTime.setDate(changeAxisDialog.getMinDate());
-        waterTableChartView->axisX->setMin(myDateTime);
+        QDateTime firstDate, lastDate;
+        firstDate.setDate(changeAxisDialog.getMinDate());
+        lastDate.setDate(changeAxisDialog.getMaxDate());
+        waterTableChartView->axisX->setRange(firstDate, lastDate);
+        waterTableChartView->update();
     }
 }
 
