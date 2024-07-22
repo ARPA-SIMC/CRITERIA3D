@@ -5,12 +5,12 @@ WaterTableChartView::WaterTableChartView(QWidget *parent) :
 {
     obsDepthSeries = new QScatterSeries();
     obsDepthSeries->setName("Observed");
-    obsDepthSeries->setColor(Qt::green);
+    obsDepthSeries->setColor(Qt::red);
     obsDepthSeries->setMarkerSize(8.0);
 
     hindcastSeries = new QLineSeries();
     hindcastSeries->setName("hindcast");
-    hindcastSeries->setColor(Qt::red);
+    hindcastSeries->setColor(Qt::green);
 
     interpolationSeries = new QLineSeries();
     interpolationSeries->setName("interpolation");
@@ -32,7 +32,7 @@ WaterTableChartView::WaterTableChartView(QWidget *parent) :
 }
 
 
-void WaterTableChartView::draw(std::vector<QDate> &myDates, std::vector<float> &myHindcastSeries, std::vector<float> &myInterpolateSeries,
+void WaterTableChartView::drawWaterTable(std::vector<QDate> &myDates, std::vector<float> &myHindcastSeries, std::vector<float> &myInterpolateSeries,
                                QMap<QDate, float> obsDepths, float maximumObservedDepth)
 {
     axisY->setMax(maximumObservedDepth);  // unit of observed watertable data, usually [cm]

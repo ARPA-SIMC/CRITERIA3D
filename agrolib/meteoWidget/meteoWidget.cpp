@@ -2999,7 +2999,7 @@ void Crit3DMeteoWidget::setIsEnsemble(bool value)
 
 void Crit3DMeteoWidget::on_actionChangeLeftAxis()
 {
-    DialogChangeAxis changeAxisDialog(true);
+    DialogChangeAxis changeAxisDialog(1, false);
     if (changeAxisDialog.result() == QDialog::Accepted)
     {
         axisY_sx->setMax(changeAxisDialog.getMaxVal());
@@ -3010,7 +3010,7 @@ void Crit3DMeteoWidget::on_actionChangeLeftAxis()
 
 void Crit3DMeteoWidget::on_actionChangeRightAxis()
 {
-    DialogChangeAxis changeAxisDialog(false);
+    DialogChangeAxis changeAxisDialog(2, false);
     if (changeAxisDialog.result() == QDialog::Accepted)
     {
         axisY_dx->setMax(changeAxisDialog.getMaxVal());
