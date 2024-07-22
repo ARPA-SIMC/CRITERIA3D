@@ -6,7 +6,7 @@ WaterTableChartView::WaterTableChartView(QWidget *parent) :
 {
     obsDepthSeries = new QScatterSeries();
     obsDepthSeries->setName("Observed");
-    obsDepthSeries->setColor(QColor(255, 0, 0));
+    obsDepthSeries->setColor(QColor(0, 192, 255));
     obsDepthSeries->setBorderColor(QColor(0,0,1));
     obsDepthSeries->setMarkerSize(4.0);
 
