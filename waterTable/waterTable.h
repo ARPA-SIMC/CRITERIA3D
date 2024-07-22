@@ -18,6 +18,13 @@
 class WaterTable
 {
     public:
+        float WTClimateMonthly[12];
+        float WTClimateDaily[366];
+
+        QDate firstDate;
+        std::vector<float> hindcastSeries;
+        std::vector<float> interpolationSeries;
+
         WaterTable(std::vector<float> &inputTMin, std::vector<float> &inputTMax, std::vector<float> &inputPrec,
                    QDate firstMeteoDate, QDate lastMeteoDate, Crit3DMeteoSettings meteoSettings);
 
@@ -59,13 +66,7 @@ class WaterTable
         QDate getFirstDateWell() { return well.getFirstDate(); }
         QDate getLastDateWell() { return well.getLastDate(); }
 
-        QMap<QDate, float> getObsDepths() { return well.getObsDepths(); }
-
-        std::vector<QDate> getMyDates() { return myDates; }
-
-        std::vector<float> getMyHindcastSeries() { return myHindcastSeries; }
-
-        std::vector<float> getMyInterpolateSeries() { return myInterpolateSeries; }
+        Well* getWell() { return &well; }
 
         void cleanAllMeteoVector();
 
@@ -92,17 +93,10 @@ class WaterTable
         float EF;
 
         bool isClimateReady;
-        float WTClimateMonthly[12];
-        float WTClimateDaily[366];
         int nrObsData;
 
         bool isCWBEquationReady;
         double avgDailyCWB; //[mm]
-
-        // graph
-        std::vector<QDate> myDates;
-        std::vector<float> myHindcastSeries;
-        std::vector<float> myInterpolateSeries;
 };
 
 #endif // WATERTABLE_H

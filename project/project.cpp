@@ -4775,9 +4775,7 @@ void Project::waterTableShowSingleWell(WaterTable &waterTable, const QString &id
 {
     DialogSummary* dialogResult = new DialogSummary(waterTable);   // show results
     dialogResult->show();
-    WaterTableWidget* chartResult = new WaterTableWidget(idWell, waterTable.getMyDates(), waterTable.getMyHindcastSeries(),
-                                                         waterTable.getMyInterpolateSeries(), waterTable.getObsDepths(),
-                                                         quality->getWaterTableMaximumDepth());
+    WaterTableWidget* chartResult = new WaterTableWidget(idWell, waterTable, quality->getWaterTableMaximumDepth());
     chartResult->show();
     return;
 }
