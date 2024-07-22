@@ -4,7 +4,7 @@
 #
 #-------------------------------------------------
 
-QT      += widgets charts core xml
+QT      += core widgets charts
 QT      -= gui
 
 TEMPLATE = lib
@@ -24,7 +24,7 @@ win32:{
     TARGET = waterTable
 }
 
-INCLUDEPATH += ../crit3dDate ../mathFunctions ../meteo ../interpolation ../gis ../commonChartElements
+INCLUDEPATH += ../mathFunctions ../crit3dDate ../meteo ../gis ../commonChartElements
 
 SOURCES += \
     dialogSelectWell.cpp \
