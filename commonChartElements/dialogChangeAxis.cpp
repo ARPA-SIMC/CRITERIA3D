@@ -80,7 +80,7 @@ void DialogChangeAxis::done(bool res)
         {
             if (minDate.date() >= maxDate.date())
             {
-                QMessageBox::warning(nullptr, "Wrong date", "Insert correct dates.");
+                QMessageBox::warning(nullptr, "Wrong dates!", "Insert correct dates.");
                 return;
             }
         }

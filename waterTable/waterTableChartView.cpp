@@ -5,12 +5,12 @@ WaterTableChartView::WaterTableChartView(QWidget *parent) :
 {
     obsDepthSeries = new QScatterSeries();
     obsDepthSeries->setName("Observed");
-    obsDepthSeries->setColor(Qt::green);
+    obsDepthSeries->setColor(Qt::red);
     obsDepthSeries->setMarkerSize(8.0);
 
     hindcastSeries = new QLineSeries();
     hindcastSeries->setName("hindcast");
-    hindcastSeries->setColor(Qt::red);
+    hindcastSeries->setColor(Qt::green);
 
     interpolationSeries = new QLineSeries();
     interpolationSeries->setName("interpolation");
