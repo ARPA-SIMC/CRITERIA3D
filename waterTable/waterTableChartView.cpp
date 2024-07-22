@@ -6,8 +6,9 @@ WaterTableChartView::WaterTableChartView(QWidget *parent) :
 {
     obsDepthSeries = new QScatterSeries();
     obsDepthSeries->setName("Observed");
-    obsDepthSeries->setColor(Qt::green);
-    obsDepthSeries->setMarkerSize(8.0);
+    obsDepthSeries->setColor(QColor(255, 0, 0));
+    obsDepthSeries->setBorderColor(QColor(0,0,1));
+    obsDepthSeries->setMarkerSize(4.0);
 
     hindcastSeries = new QLineSeries();
     hindcastSeries->setName("hindcast");
@@ -17,9 +18,12 @@ WaterTableChartView::WaterTableChartView(QWidget *parent) :
     interpolationSeries->setName("interpolation");
     interpolationSeries->setColor(QColor(0,0,1));
 
+    QPen pen;
+    pen.setWidth(2);
     climateSeries = new QLineSeries();
     climateSeries->setName("climate");
-    climateSeries->setColor(Qt::green);
+    climateSeries->setPen(pen);
+    climateSeries->setColor(QColor(0, 200, 0, 255));
 
     axisX = new QDateTimeAxis();
     axisX->setFormat("yyyy/MM");
@@ -58,11 +62,11 @@ void WaterTableChartView::drawWaterTable(WaterTable &waterTable, float maximumOb
     {
         QDate firstJanuary;
         firstJanuary.setDate(currentDateTime.date().year(), 1, 1);
-        int doy = firstJanuary.daysTo(currentDateTime.date()) + 1;
+        int doyIndex = firstJanuary.daysTo(currentDateTime.date());     // from 0 to 365
 
         hindcastSeries->append(currentDateTime.toMSecsSinceEpoch(), waterTable.hindcastSeries[day]);
         interpolationSeries->append(currentDateTime.toMSecsSinceEpoch(), waterTable.interpolationSeries[day]);
-        climateSeries->append(currentDateTime.toMSecsSinceEpoch(), waterTable.WTClimateDaily[doy]);
+        climateSeries->append(currentDateTime.toMSecsSinceEpoch(), waterTable.WTClimateDaily[doyIndex]);
 
         if(waterTable.getWell()->depths.contains(currentDateTime.date()))
         {
@@ -73,10 +77,11 @@ void WaterTableChartView::drawWaterTable(WaterTable &waterTable, float maximumOb
         currentDateTime = currentDateTime.addDays(1);
     }
 
-    chart()->addSeries(obsDepthSeries);
+
     chart()->addSeries(hindcastSeries);
-    chart()->addSeries(interpolationSeries);
     chart()->addSeries(climateSeries);
+    chart()->addSeries(interpolationSeries);
+    chart()->addSeries(obsDepthSeries);
 
     obsDepthSeries->attachAxis(axisX);
     obsDepthSeries->attachAxis(axisY);
