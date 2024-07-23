@@ -978,6 +978,7 @@ bool Crit3DProject::runModelHour(const QDateTime &myDateTime, const QString& hou
                 return false;
 
             hourlyMeteoMaps->setComputed(true);
+            emit updateOutputSignal();
             qApp->processEvents();
         }
 
@@ -1016,7 +1017,6 @@ bool Crit3DProject::runModelHour(const QDateTime &myDateTime, const QString& hou
             if (isSaveOutputRaster())
             {
                 saveHourlyMeteoOutput(referenceEvapotranspiration, hourlyOutputPath, myDateTime);
-                qApp->processEvents();
             }
 
             assignETreal();
@@ -1026,7 +1026,6 @@ bool Crit3DProject::runModelHour(const QDateTime &myDateTime, const QString& hou
         if (processes.computeCrop)
         {
             updateDailyTemperatures();
-            qApp->processEvents();
         }
 
         if (processes.computeWater)
@@ -1035,7 +1034,6 @@ bool Crit3DProject::runModelHour(const QDateTime &myDateTime, const QString& hou
 
             if (! setSinkSource())
                 return false;
-            qApp->processEvents();
         }
     }
 

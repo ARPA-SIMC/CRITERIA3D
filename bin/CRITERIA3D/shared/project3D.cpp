@@ -1817,7 +1817,13 @@ double Project3D::assignTranspiration(int row, int col, double currentLai, doubl
     for (int layer = firstRootLayer; layer <= lastRootLayer; layer++)
     {
         long nodeIndex = long(indexMap.at(layer).value[row][col]);
+        if (isEqual(nodeIndex, indexMap.at(layer).header->flag))
+            continue;
+
         int horizonIndex = soilList[soilIndex].getHorizonIndex(layerDepth[layer]);
+        if (horizonIndex == NODATA)
+            continue;
+
         soil::Crit3DHorizon horizon = soilList[soilIndex].horizon[horizonIndex];
 
         // [m3 m-3]
@@ -1870,8 +1876,10 @@ double Project3D::assignTranspiration(int row, int col, double currentLai, doubl
         double redistribution = transpirationSubsetMax * std::min(waterStress, rootDensityWithoutStress);     // [mm]
 
         for (int layer = firstRootLayer; layer <= lastRootLayer; layer++)
-            if (! isLayerStressed[layer])
+        {
+            if (! isLayerStressed[layer] && layerTranspiration[layer] > 0)
                 layerTranspiration[layer] += redistribution * (currentCrop.roots.rootDensity[layer] / rootDensityWithoutStress);
+        }
     }
 
     // assigns transpiration to water sink source
@@ -1881,8 +1889,11 @@ double Project3D::assignTranspiration(int row, int col, double currentLai, doubl
     {
         double flow = area * (layerTranspiration[layer] / 1000);        // [m3 h-1]
         long nodeIndex = long(indexMap.at(layer).value[row][col]);
-        waterSinkSource.at(nodeIndex) -= (flow / 3600);                 // [m3 s-1]
-        actualTranspiration += layerTranspiration[layer];               // [mm]
+        if (! isEqual(nodeIndex, indexMap.at(layer).header->flag))
+        {
+            waterSinkSource.at(nodeIndex) -= (flow / 3600);             // [m3 s-1]
+            actualTranspiration += layerTranspiration[layer];           // [mm]
+        }
     }
 
     return actualTranspiration;
