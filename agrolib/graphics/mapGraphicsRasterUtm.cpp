@@ -370,7 +370,7 @@ bool RasterUtmObject::drawRaster(QPainter* painter)
             // check outliers (transparent)
             if (_rasterPointer->colorScale->isHideOutliers())
             {
-                if (value <= _rasterPointer->colorScale->minimum() || value >= _rasterPointer->colorScale->maximum())
+                if (value <= _rasterPointer->colorScale->minimum() || value > _rasterPointer->colorScale->maximum())
                     continue;
             }
 
