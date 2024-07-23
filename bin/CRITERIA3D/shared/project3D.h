@@ -146,7 +146,7 @@
         void clearWaterBalance3D();
 
         bool setSoilIndexMap();
-        bool initializeWaterBalance3D();
+        bool initialize3DModel();
 
         bool loadSoilDatabase(QString dbName);
         bool loadCropDatabase(QString dbName);

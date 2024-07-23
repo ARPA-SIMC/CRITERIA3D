@@ -66,7 +66,7 @@ bool Crit3DProject::initializeCriteria3DModel()
     if (! setSoilIndexMap())
         return false;
 
-    if (! initializeWaterBalance3D())
+    if (! initialize3DModel())
     {
         clearWaterBalance3D();
         errorString += "\nCriteria3D model is not initialized.";

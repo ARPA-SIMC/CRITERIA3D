@@ -254,12 +254,12 @@ bool Project3D::loadProject3DSettings()
 }
 
 
-bool Project3D::initializeWaterBalance3D()
+bool Project3D::initialize3DModel()
 {
-    logInfo("Initialize 3D water balance...");
+    logInfo("Initialize 3D model...");
 
     // check soil
-    if (!soilMap.isLoaded || soilList.size() == 0)
+    if (! soilMap.isLoaded || soilList.size() == 0)
     {
         logInfo("WARNING: soil map or soil db is missing: only surface fluxes will be computed.");
         waterFluxesParameters.computeOnlySurface = true;
@@ -333,7 +333,7 @@ bool Project3D::initializeWaterBalance3D()
     int myResult = soilFluxes3D::initialize(long(nrNodes), int(nrLayers), nrLateralLink, true, false, false);
     if (isCrit3dError(myResult, errorString))
     {
-        logError("initializeWaterBalance3D:" + errorString);
+        logError("initialize3DModel:" + errorString);
         return false;
     }
     logInfo("Memory initialized");
