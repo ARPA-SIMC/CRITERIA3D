@@ -372,17 +372,17 @@ bool Project3D::initialize3DModel()
 
     soilFluxes3D::setHydraulicProperties(MODIFIEDVANGENUCHTEN, MEAN_LOGARITHMIC, waterFluxesParameters.horizVertRatioConductivity);
 
-    double vmax = 10.0;                                         // [m s-1]
+    double vmax = 10.0;                                                                 // [m s-1]
     if (waterFluxesParameters.modelAccuracy < 3)
         vmax = 5.0;
 
-    double minimumDeltaT = DEM.header->cellSize / vmax;         // [m]
+    double minimumDeltaT = std::min(30, DEM.header->cellSize / vmax);                   // [s]
 
     // Mass Balance Ratio precision (digit at which error is accepted)
     int digitMBR = waterFluxesParameters.modelAccuracy;
     soilFluxes3D::setNumericalParameters(minimumDeltaT, 3600, 100, 10, 12, digitMBR);
 
-    if (! initializeMatricPotential(waterFluxesParameters.initialWaterPotential))  // [m]
+    if (! initializeMatricPotential(waterFluxesParameters.initialWaterPotential))       // [m]
     {
         logError();
         return false;
