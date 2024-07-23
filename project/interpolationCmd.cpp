@@ -264,7 +264,10 @@ bool interpolationRaster(std::vector <Crit3DInterpolationDataPoint> &myPoints, C
         return false;
     }
 
-    raster.initializeParameters(*raster.header);
+    if (mySettings->getUseLocalDetrending())
+    {
+        raster.initializeParameters(*raster.header);
+    }
 
     float myX, myY;
     std::vector <double> proxyValues;
