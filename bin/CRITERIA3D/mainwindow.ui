@@ -1293,7 +1293,7 @@
        <second>0</second>
        <year>1752</year>
        <month>9</month>
-       <day>16</day>
+       <day>15</day>
       </datetime>
      </property>
      <property name="maximumDate">
@@ -1890,6 +1890,8 @@
       </property>
       <addaction name="actionLoad_land_use_map"/>
       <addaction name="actionLoad_crop_data"/>
+      <addaction name="separator"/>
+      <addaction name="actionCreate_new_land_use_map"/>
      </widget>
      <addaction name="actionLoad_DEM"/>
      <addaction name="menuMeteo_points"/>
@@ -2842,12 +2844,12 @@
   </action>
   <action name="actionLoad_land_use_map">
    <property name="text">
-    <string>Land use map...</string>
+    <string>Load land use map...</string>
    </property>
   </action>
   <action name="actionLoad_crop_data">
    <property name="text">
-    <string>Crop and land units db...</string>
+    <string>Load crop and land units db...</string>
    </property>
   </action>
   <action name="actionView_SoilMoisture">
@@ -2948,6 +2950,11 @@
   <action name="actionView_Water_potential">
    <property name="text">
     <string>Water potential</string>
+   </property>
+  </action>
+  <action name="actionCreate_new_land_use_map">
+   <property name="text">
+    <string>Create new land use map...</string>
    </property>
   </action>
  </widget>

@@ -240,6 +240,8 @@
 
         void on_actionView_Water_potential_triggered();
 
+        void on_actionCreate_new_land_use_map_triggered();
+
     protected:
         /*!
          * \brief mouseReleaseEvent call moveCenter

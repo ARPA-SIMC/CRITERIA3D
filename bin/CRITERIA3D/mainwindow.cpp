@@ -43,6 +43,7 @@
 #include "glWidget.h"
 #include "dialogWaterFluxesSettings.h"
 #include "utilities.h"
+#include "formText.h"
 
 #include <QTime>
 
@@ -711,7 +712,7 @@ void MainWindow::clearMeteoPoints_GUI()
 
 void MainWindow::renderDEM()
 {
-    if (!myProject.DEM.isLoaded)
+    if (! myProject.DEM.isLoaded)
         return;
 
     ui->groupBoxDEM->setEnabled(true);
@@ -1229,7 +1230,7 @@ void MainWindow::on_actionView_Slope_triggered()
     }
     else
     {
-        myProject.logError(ERROR_STR_MISSING_DEM);
+        myProject.logWarning(ERROR_STR_MISSING_DEM);
         return;
     }
 }
@@ -1247,7 +1248,7 @@ void MainWindow::on_actionView_Aspect_triggered()
     }
     else
     {
-        myProject.logError(ERROR_STR_MISSING_DEM);
+        myProject.logWarning(ERROR_STR_MISSING_DEM);
         return;
     }
 }
@@ -1288,13 +1289,13 @@ bool MainWindow::checkMapVariable(bool isComputed)
 {
     if (! myProject.DEM.isLoaded)
     {
-        myProject.logError(ERROR_STR_MISSING_DEM);
+        myProject.logWarning(ERROR_STR_MISSING_DEM);
         return false;
     }
 
     if (! isComputed)
     {
-        myProject.logError("Compute meteo variables before.");
+        myProject.logWarning("Compute meteo variables before.");
         return false;
     }
 
@@ -3406,5 +3407,63 @@ void MainWindow::on_actionCriteria3D_save_state_triggered()
     {
         myProject.logError(ERROR_STR_MISSING_PROJECT);
     }
+}
+
+
+void MainWindow::on_actionCreate_new_land_use_map_triggered()
+{
+    if (! myProject.DEM.isLoaded)
+    {
+        myProject.logWarning(ERROR_STR_MISSING_DEM);
+        return;
+    }
+
+    // set default value
+    float defaultValue = 1;
+    bool isOk = false;
+    while (! isOk)
+    {
+        QString valueStr = editValue("Enter the default value for land use:", QString::number(defaultValue));
+        if (valueStr.isEmpty())
+            return;
+
+        defaultValue = valueStr.toFloat(&isOk);
+        if (! isOk)
+        {
+            myProject.logWarning("Wrong value: only numeric values are accepted.");
+        }
+    }
+
+    // initialize land use map with DEM
+    gis::Crit3DRasterGrid landUseMap;
+    landUseMap.initializeGrid(myProject.DEM);
+
+    for (int row = 0; row < myProject.DEM.header->nrRows; row++)
+    {
+        for (int col = 0; col < myProject.DEM.header->nrCols; col++)
+        {
+            if (! isEqual(myProject.DEM.value[row][col], myProject.DEM.header->flag))
+            {
+                landUseMap.value[row][col] = defaultValue;
+            }
+        }
+    }
+
+    // set fileName
+    QString completeFileName = QFileDialog::getSaveFileName(this, tr("Save land use map"), "", tr("ESRI float (*.flt)"));
+    if (completeFileName.isEmpty())
+        return;
+
+    std::string fileName = completeFileName.left(completeFileName.size() - 4).toStdString();
+
+    // save map
+    std::string errorStr;
+    if (! gis::writeEsriGrid(fileName, &landUseMap, errorStr))
+    {
+        myProject.logError(QString::fromStdString(errorStr));
+        return;
+    }
+
+    myProject.loadLandUseMap(completeFileName);
 }
 
