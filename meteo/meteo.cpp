@@ -789,8 +789,6 @@ bool setColorScale(meteoVariable variable, Crit3DColorScale *colorScale)
             if (variable == snowFall || variable == snowWaterEquivalent
                 || variable == snowLiquidWaterContent || variable == snowMelt)
             {
-                colorScale->setMinimum(0);
-                colorScale->setFixedRange(true);
                 colorScale->setHideOutliers(true);
                 colorScale->setTransparent(true);
             }
