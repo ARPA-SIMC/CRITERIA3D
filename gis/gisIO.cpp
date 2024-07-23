@@ -112,17 +112,17 @@ namespace gis
      * \param error       string
      * \return true on success, false otherwise
      */
-    bool readEsriGridHeader(string fileName, gis::Crit3DRasterHeader *header, string &errorStr)
+    bool readEsriGridHeader(const string &fileName, gis::Crit3DRasterHeader *header, string &errorStr)
     {
         string myLine, myKey, upKey, valueStr;
         int nrKeys = 0;
 
-        fileName += ".hdr";
-        ifstream  myFile (fileName.c_str());
+        string myFileName = fileName + ".hdr";
+        ifstream  myFile (myFileName.c_str());
 
-        if (!myFile.is_open())
+        if (! myFile.is_open())
         {
-            errorStr = "Missing file: " + fileName;
+            errorStr = "Missing file: " + myFileName;
             return false;
         }
 
@@ -315,7 +315,7 @@ namespace gis
      * \param error         string
      * \return true on success, false otherwise
      */
-    bool readRasterFloatData(string fileName, gis::Crit3DRasterGrid *rasterGrid, string &error)
+    bool readRasterFloatData(const string &fileName, gis::Crit3DRasterGrid *rasterGrid, string &error)
     {
         FILE* filePointer;
 
@@ -382,12 +382,12 @@ namespace gis
      * \param error       string pointer
      * \return true on success, false otherwise
      */
-    bool writeEsriGridHeader(string myFileName, gis::Crit3DRasterHeader *myHeader, string &error)
+    bool writeEsriGridHeader(const string &fileName, gis::Crit3DRasterHeader *myHeader, string &error)
     {
-        myFileName += ".hdr";
+        string myFileName = fileName + ".hdr";
         ofstream myFile (myFileName.c_str());
 
-        if (!myFile.is_open())
+        if (! myFile.is_open())
         {
             error = "File .hdr error.";
             return false;
@@ -429,9 +429,9 @@ namespace gis
      * \param error       string pointer
      * \return true on success, false otherwise
      */
-    bool writeEsriGridFlt(string myFileName, gis::Crit3DRasterGrid* myGrid, string &error)
+    bool writeEsriGridFlt(const string &fileName, gis::Crit3DRasterGrid* myGrid, string &error)
     {
-        myFileName += ".flt";
+        string myFileName = fileName + ".flt";
 
         FILE* filePointer;
 
@@ -454,13 +454,15 @@ namespace gis
      * \brief Write a ESRI float raster (.hdr and .flt)
      * \return true on success, false otherwise
      */
-    bool writeEsriGrid(string fileName, Crit3DRasterGrid* rasterGrid, string &error)
+    bool writeEsriGrid(const string &fileName, Crit3DRasterGrid* rasterGrid, string &errorStr)
     {
-        if (gis::writeEsriGridHeader(fileName, rasterGrid->header, error))
-            if (gis::writeEsriGridFlt(fileName, rasterGrid, error))
-                return true;
+        if (! gis::writeEsriGridHeader(fileName, rasterGrid->header, errorStr))
+            return false;
 
-        return false;
+        if (! gis::writeEsriGridFlt(fileName, rasterGrid, errorStr))
+            return false;
+
+        return true;
     }
 
 
@@ -468,15 +470,15 @@ namespace gis
      * \brief Read a ESRI float raster (.hdr and .flt)
      * \return true on success, false otherwise
      */
-    bool readEsriGrid(string fileName, Crit3DRasterGrid* rasterGrid, string &errorStr)
+    bool readEsriGrid(const string &fileName, Crit3DRasterGrid* rasterGrid, string &errorStr)
     {
         if (rasterGrid == nullptr) return false;
         rasterGrid->clear();
 
         if(gis::readEsriGridHeader(fileName, rasterGrid->header, errorStr))
         {
-            fileName += ".flt";
-            if (gis::readRasterFloatData(fileName, rasterGrid, errorStr))
+            string fltFileName = fileName + ".flt";
+            if (gis::readRasterFloatData(fltFileName, rasterGrid, errorStr))
             {
                 gis::updateMinMaxRasterGrid(rasterGrid);
                 rasterGrid->isLoaded = true;
