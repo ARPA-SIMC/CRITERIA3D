@@ -956,14 +956,13 @@ bool Crit3DProject::runModelHour(const QDateTime &myDateTime, const QString& hou
 
             hourlyMeteoMaps->setComputed(true);
             emit updateOutputSignal();
-            qApp->processEvents();
         }
 
         if (processes.computeRadiation)
         {
             if (! interpolateAndSaveHourlyMeteo(globalIrradiance, myDateTime, hourlyOutputPath, isSaveOutputRaster()))
                 return false;
-            qApp->processEvents();
+            emit updateOutputSignal();
         }
 
         if (processes.computeSnow)
@@ -974,7 +973,7 @@ bool Crit3DProject::runModelHour(const QDateTime &myDateTime, const QString& hou
             {
                 return false;
             }
-            qApp->processEvents();
+            emit updateOutputSignal();
         }
 
         // initalize sink / source
