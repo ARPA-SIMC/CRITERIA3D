@@ -835,7 +835,7 @@ void MainWindow::on_actionOpenProject_triggered()
 
     if (! myProject.loadCriteria3DProject(fileName))
     {
-        myProject.logError("Error opening project: " + myProject.errorString);
+        myProject.logError("*** Error opening the project! ***\n" + myProject.errorString);
         myProject.loadCriteria3DProject(myProject.getApplicationPath() + "default.ini");
     }
 
