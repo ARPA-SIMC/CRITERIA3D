@@ -1307,8 +1307,3 @@ bool NetCDFHandler::extractVariableMap(int idVar, const Crit3DTime &myTime, std:
     return true;
 }
 
-
-gis::Crit3DRasterGrid* NetCDFHandler::getRaster()
-{
-    return &dataGrid;
-}

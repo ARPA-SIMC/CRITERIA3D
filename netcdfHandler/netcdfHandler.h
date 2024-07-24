@@ -95,7 +95,7 @@
         NetCDFVariable getVariableFromId(int idVar);
         NetCDFVariable getVariableFromIndex(int index);
 
-        gis::Crit3DRasterGrid* getRaster();
+        gis::Crit3DRasterGrid* getRasterPointer() { return &dataGrid; }
 
         bool readProperties(std::string fileName);
         bool exportDataSeries(int idVar, gis::Crit3DGeoPoint geoPoint, Crit3DTime seriesFirstTime, Crit3DTime seriesLastTime, std::stringstream *buffer);

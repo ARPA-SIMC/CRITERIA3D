@@ -1,12 +1,14 @@
 #include "waterTableChartView.h"
 
+
 WaterTableChartView::WaterTableChartView(QWidget *parent) :
     QChartView(new QChart(), parent)
 {
     obsDepthSeries = new QScatterSeries();
     obsDepthSeries->setName("Observed");
-    obsDepthSeries->setColor(Qt::green);
-    obsDepthSeries->setMarkerSize(8.0);
+    obsDepthSeries->setColor(QColor(0, 192, 255));
+    obsDepthSeries->setBorderColor(QColor(0,0,1));
+    obsDepthSeries->setMarkerSize(4.0);
 
     hindcastSeries = new QLineSeries();
     hindcastSeries->setName("hindcast");
@@ -15,6 +17,13 @@ WaterTableChartView::WaterTableChartView(QWidget *parent) :
     interpolationSeries = new QLineSeries();
     interpolationSeries->setName("interpolation");
     interpolationSeries->setColor(QColor(0,0,1));
+
+    QPen pen;
+    pen.setWidth(2);
+    climateSeries = new QLineSeries();
+    climateSeries->setName("climate");
+    climateSeries->setPen(pen);
+    climateSeries->setColor(QColor(0, 200, 0, 255));
 
     axisX = new QDateTimeAxis();
     axisX->setFormat("yyyy/MM");
@@ -32,40 +41,47 @@ WaterTableChartView::WaterTableChartView(QWidget *parent) :
 }
 
 
-void WaterTableChartView::draw(std::vector<QDate> &myDates, std::vector<float> &myHindcastSeries, std::vector<float> &myInterpolateSeries,
-                               QMap<QDate, float> obsDepths, float maximumObservedDepth)
+void WaterTableChartView::drawWaterTable(WaterTable &waterTable, float maximumObservedDepth)
 {
     axisY->setMax(maximumObservedDepth);  // unit of observed watertable data, usually [cm]
     axisY->setMin(0);
     axisY->setLabelFormat("%d");
     axisY->setTickCount(16);
 
-    QDateTime firstDate;
-    firstDate.setDate(myDates[0]);
-    QDateTime lastDate;
-    lastDate.setDate(myDates[myDates.size()-1]);
+    QDateTime firstDateTime, lastDateTime;
+    int nrDays = int(waterTable.interpolationSeries.size());
+    firstDateTime.setDate(waterTable.firstDate);
+    lastDateTime.setDate(waterTable.firstDate);
+    lastDateTime = lastDateTime.addDays(nrDays-1);
 
-    axisX->setRange(firstDate, lastDate);
+    axisX->setRange(firstDateTime, lastDateTime);
     axisX->setTickCount(15);
 
-    int nDays = int(myDates.size());
-    QDateTime currentDateTime;
-    for (int day = 0; day < nDays; day++)
+    QDateTime currentDateTime = firstDateTime;
+    for (int day = 0; day < nrDays; day++)
     {
-        currentDateTime.setDate(myDates[day]);
-        hindcastSeries->append(currentDateTime.toMSecsSinceEpoch(), myHindcastSeries[day]);
-        interpolationSeries->append(currentDateTime.toMSecsSinceEpoch(), myInterpolateSeries[day]);
+        QDate firstJanuary;
+        firstJanuary.setDate(currentDateTime.date().year(), 1, 1);
+        int doyIndex = firstJanuary.daysTo(currentDateTime.date());     // from 0 to 365
 
-        if(obsDepths.contains(myDates[day]))
+        hindcastSeries->append(currentDateTime.toMSecsSinceEpoch(), waterTable.hindcastSeries[day]);
+        interpolationSeries->append(currentDateTime.toMSecsSinceEpoch(), waterTable.interpolationSeries[day]);
+        climateSeries->append(currentDateTime.toMSecsSinceEpoch(), waterTable.WTClimateDaily[doyIndex]);
+
+        if(waterTable.getWell()->depths.contains(currentDateTime.date()))
         {
-            int myDepth = obsDepths[myDates[day]];
+            int myDepth = waterTable.getWell()->depths[currentDateTime.date()];
             obsDepthSeries->append(currentDateTime.toMSecsSinceEpoch(), myDepth);
         }
+
+        currentDateTime = currentDateTime.addDays(1);
     }
 
-    chart()->addSeries(obsDepthSeries);
+
     chart()->addSeries(hindcastSeries);
+    chart()->addSeries(climateSeries);
     chart()->addSeries(interpolationSeries);
+    chart()->addSeries(obsDepthSeries);
 
     obsDepthSeries->attachAxis(axisX);
     obsDepthSeries->attachAxis(axisY);
@@ -73,10 +89,13 @@ void WaterTableChartView::draw(std::vector<QDate> &myDates, std::vector<float> &
     hindcastSeries->attachAxis(axisY);
     interpolationSeries->attachAxis(axisX);
     interpolationSeries->attachAxis(axisY);
+    climateSeries->attachAxis(axisX);
+    climateSeries->attachAxis(axisY);
 
     connect(obsDepthSeries, &QScatterSeries::hovered, this, &WaterTableChartView::tooltipObsDepthSeries);
     connect(hindcastSeries, &QLineSeries::hovered, this, &WaterTableChartView::tooltipLineSeries);
     connect(interpolationSeries, &QLineSeries::hovered, this, &WaterTableChartView::tooltipLineSeries);
+
     foreach(QLegendMarker* marker, chart()->legend()->markers())
     {
         marker->setVisible(true);

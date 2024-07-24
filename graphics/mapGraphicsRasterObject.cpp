@@ -1,7 +1,7 @@
 /*!
     \file mapGraphicsRasterObject.cpp
 
-    \abstract draw raster in MapGraphics widget
+    \abstract draws a lat-lon raster in the MapGraphics widget
 
     This file is part of CRITERIA-3D distribution.
 
@@ -72,16 +72,6 @@ void RasterObject::clear()
     isLoaded = false;
 }
 
-
-void RasterObject::setRaster(gis::Crit3DRasterGrid* rasterPtr)
-{
-    rasterPointer = rasterPtr;
-}
-
-gis::Crit3DRasterGrid* RasterObject::getRaster()
-{
-    return rasterPointer;
-}
 
 void RasterObject::setDrawing(bool value)
 {
@@ -381,7 +371,7 @@ bool RasterObject::drawRaster(gis::Crit3DRasterGrid *myRaster, QPainter* myPaint
     }
 
     // dynamic color scale
-    if (! myRaster->colorScale->isRangeBlocked())
+    if (! myRaster->colorScale->isFixedRange())
     {
         if (this->isLatLon)
         {
@@ -529,7 +519,7 @@ bool RasterObject::getRowCol(gis::Crit3DGeoPoint geoPoint, int* row, int* col)
     if (! this->isGrid)
         return false;
 
-    gis::getGridRowColFromXY(this->latLonHeader, geoPoint.longitude, geoPoint.latitude, row, col);
+    gis::getGridRowColFromLonLat(this->latLonHeader, geoPoint.longitude, geoPoint.latitude, row, col);
 
     // check out of grid
     if (gis::isOutOfGridRowCol(*row, *col, this->latLonHeader))

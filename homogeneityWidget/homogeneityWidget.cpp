@@ -565,7 +565,7 @@ void Crit3DHomogeneityWidget::updateYears()
 
 void Crit3DHomogeneityWidget::on_actionChangeLeftAxis()
 {
-    DialogChangeAxis changeAxisDialog(true);
+    DialogChangeAxis changeAxisDialog(1, false);
     if (changeAxisDialog.result() == QDialog::Accepted)
     {
         homogeneityChartView->setYmax(changeAxisDialog.getMaxVal());

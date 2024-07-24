@@ -1,5 +1,5 @@
 /*!
-    CRITERIA3D
+    soil.cpp
 
     \copyright 2016 Fausto Tomei, Gabriele Antolini,
     Alberto Pistocchi, Marco Bittelli, Antonio Volta, Laura Costantini
@@ -372,7 +372,12 @@ namespace soil
                 if (horizon.organicMatter > 0.2)
                    return 16; // OL
                 else
-                   return 13; // ML
+                {
+                    if(horizon.texture.clay >= 20)
+                        return 12; // SC-CL
+                    else
+                        return 13; // ML
+                }
             }
             if (horizon.texture.classNameUSDA == "clay" || horizon.texture.classNameUSDA == "silty clay")
             {
@@ -758,8 +763,8 @@ namespace soil
     {
         double suctionStress = -waterPotential * getDegreeOfSaturation();    // [kPa]
 
-        double slopeAngle = std::max(asin(slope), EPSILON);
-        double frictionAngle = horizonPtr->frictionAngle * DEG_TO_RAD;
+        double slopeAngle = std::max(asin(slope), EPSILON);                  // [rad]
+        double frictionAngle = horizonPtr->frictionAngle * DEG_TO_RAD;       // [rad]
 
         double tanAngle = tan(slopeAngle);
         double tanFrictionAngle = tan(frictionAngle);

@@ -9,6 +9,8 @@
 class Well
 {
 public:
+    QMap<QDate, float> depths;
+
     Well();
 
     QString getId() const { return id; }
@@ -32,9 +34,6 @@ public:
     QDate getLastDate();
 
     int getObsDepthNr();
-
-    QMap<QDate, float> getObsDepths();
-
     int minValuesPerMonth();
 
 private:
@@ -42,8 +41,6 @@ private:
 
     double utmX, utmY;
     double lat, lon;
-
-    QMap<QDate, float> depths;
 
     QDate firstDate;
     QDate lastDate;

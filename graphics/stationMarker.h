@@ -5,8 +5,11 @@
     #include "CircleObject.h"
     #include "MapGraphicsView.h"
     #include "quality.h"
+    #include "meteo.h"
 
     class Crit3DMeteoPoint;
+
+    enum callerSoftware{PRAGA_caller, CRITERIA3D_caller, other_caller};
 
     class StationMarker : public CircleObject
     {
@@ -14,27 +17,46 @@
 
         public:
             explicit StationMarker(qreal radius, bool sizeIsZoomInvariant, QColor fillColor, MapGraphicsObject *parent = nullptr);
-            void setId(std::string id);
+
             void setToolTip();
-            std::string id() const;
-            void setName(const std::string &name);
-            void setDataset(const std::string &dataset);
-            void setAltitude(double altitude);
-            void setLapseRateCode(lapseRateCodeType code);
-            void setMunicipality(const std::string &municipality);
-            void setQuality(const quality::qualityType &quality);
-            bool active() const;
-            void setActive(bool active);
+
+            void setId(std::string id) { _id = id; }
+            std::string id() const { return _id; }
+
+            bool active() const { return _active; }
+            void setActive(bool active) { _active = active; }
+
+            void setName(const std::string &name) { _name = name; }
+
+            void setDataset(const std::string &dataset) { _dataset = dataset; }
+
+            void setAltitude(double altitude) { _altitude = altitude; }
+
+            void setCallerSoftware(callerSoftware caller)
+            { _caller = caller;}
+
+            void setLapseRateCode(lapseRateCodeType code)
+            { _lapseRateCode = code; }
+
+            void setMunicipality(const std::string &municipality)
+            { _municipality = municipality; }
+
+            void setQuality(const quality::qualityType &quality)
+            { _quality = quality; }
 
     private:
             std::string _id;
             std::string _name;
             std::string _dataset;
-            double _altitude;
-            lapseRateCodeType _lapseRateCode;
             std::string _municipality;
+
+            double _altitude;
             float _currentValue;
+
+            lapseRateCodeType _lapseRateCode;
             quality::qualityType _quality;
+            callerSoftware _caller;
+
             bool _active;
 
         protected:

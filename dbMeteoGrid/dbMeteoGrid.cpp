@@ -4126,7 +4126,7 @@ bool Crit3DMeteoGridDbHandler::MeteoGridToRasterFlt(double cellSize, const gis::
             {
                 myGrid.getXY(row, col, utmx, utmy);
                 gis::getLatLonFromUtm(gisSettings, utmx, utmy, &lat, &lon);
-                gis::getGridRowColFromXY (latlonHeader, lon, lat, &dataGridRow, &dataGridCol);
+                gis::getGridRowColFromLonLat (latlonHeader, lon, lat, &dataGridRow, &dataGridCol);
                 if (dataGridRow < 0 || dataGridRow >= latlonHeader.nrRows || dataGridCol < 0 || dataGridCol >= latlonHeader.nrCols)
                 {
                     myValue = NODATA;

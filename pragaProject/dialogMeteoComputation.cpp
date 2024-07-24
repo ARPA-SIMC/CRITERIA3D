@@ -275,13 +275,9 @@ DialogMeteoComputation::DialogMeteoComputation(QSettings *settings, bool isMeteo
     settings->endGroup();
     elaborationLayout.addWidget(&elaborationList);
 
-    QLocale local(QLocale::system().language());
-    local.setNumberOptions(QLocale::RejectGroupSeparator);
     elab1Parameter.setPlaceholderText("Parameter");
     elab1Parameter.setFixedWidth(90);
-    QDoubleValidator* validator = new QDoubleValidator(-9999.0, 9999.0, 2);
-    validator->setLocale(local);
-    elab1Parameter.setValidator(validator);
+    elab1Parameter.setValidator(new QDoubleValidator(-9999.0, 9999.0, 2));
     readParam.setText("Read param from db Climate");
     readParam.setChecked(false);
     climateDbElabList.setVisible(false);
@@ -331,7 +327,7 @@ DialogMeteoComputation::DialogMeteoComputation(QSettings *settings, bool isMeteo
 
     elab2Parameter.setPlaceholderText("Parameter");
     elab2Parameter.setFixedWidth(90);
-    elab2Parameter.setValidator(validator);
+    elab2Parameter.setValidator(new QDoubleValidator(-9999.0, 9999.0, 2));
 
     QString elab2Field = secondElabList.currentText();
     if ( MapElabWithParam.find(elab2Field.toStdString()) == MapElabWithParam.end())
@@ -567,7 +563,7 @@ void DialogMeteoComputation::done(bool res)
             if (!readParam.isChecked())
             {
                 myProject.clima->setParam1IsClimate(false);
-                if (elab1Parameter.text() != "")
+                if (! elab1Parameter.text().isEmpty())
                 {
                     myProject.clima->setParam1(elab1Parameter.text().toFloat());
                 }

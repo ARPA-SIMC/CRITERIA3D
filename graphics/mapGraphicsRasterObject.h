@@ -79,8 +79,10 @@
                               const gis::Crit3DLatLonHeader& latLonHeader, bool isGrid_);
         float getRasterMaxSize();
         gis::Crit3DGeoPoint* getRasterCenter();
-        void setRaster(gis::Crit3DRasterGrid* rasterPtr);
-        gis::Crit3DRasterGrid* getRaster();
+
+        void setRaster(gis::Crit3DRasterGrid* rasterPtr) { rasterPointer = rasterPtr; }
+        gis::Crit3DRasterGrid* getRasterPointer() { return rasterPointer; }
+
         void updateCenter();
         Position getCurrentCenter();
 

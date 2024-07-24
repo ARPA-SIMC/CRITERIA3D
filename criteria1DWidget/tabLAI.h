@@ -26,7 +26,7 @@
         QChartView *chartView;
         QChart *chart;
         QLineSeries *seriesLAI;
-        QLineSeries *seriesPotentialEvap;
+        QLineSeries *seriesETP;
         QLineSeries *seriesMaxEvap;
         QLineSeries *seriesMaxTransp;
         QDateTimeAxis *axisX;

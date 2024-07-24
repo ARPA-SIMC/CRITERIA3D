@@ -62,6 +62,7 @@ Crit3DLocalProxyWidget::Crit3DLocalProxyWidget(double x, double y, std::vector<s
     detrended.setText("Detrended data");
     climatologicalLR.setText("Climate lapserate");
     modelLR.setText("Model lapse rate");
+    stationWeights.setText("See weight of stations");
 
 
     QLabel *r2Label = new QLabel(tr("R2"));
@@ -124,6 +125,7 @@ Crit3DLocalProxyWidget::Crit3DLocalProxyWidget(double x, double y, std::vector<s
     selectionOptionBoxLayout->addWidget(&detrended);
     selectionOptionBoxLayout->addWidget(&modelLR);
     selectionOptionBoxLayout->addWidget(&climatologicalLR);
+    selectionOptionBoxLayout->addWidget(&stationWeights);
 
     selectionOptionEditLayout->addWidget(r2Label);
     selectionOptionEditLayout->addWidget(&r2);
@@ -140,25 +142,7 @@ Crit3DLocalProxyWidget::Crit3DLocalProxyWidget(double x, double y, std::vector<s
     selectionLayout->addStretch(30);
     selectionLayout->addLayout(selectionOptionLayout);
 
-    if (!parameters.empty() && interpolationSettings->getProxy(proxyPos)->getFittingFunctionName() == piecewiseThree && parameters[proxyPos].size() == 5)
-    {
-        QVBoxLayout *parametriLayout = new QVBoxLayout();
-
-        QLabel *H0Lab = new QLabel(QString("H0: %1").arg(parameters[proxyPos][0]));
-        QLabel *T0Lab = new QLabel(QString("T0: %1").arg(parameters[proxyPos][1]));
-        QLabel *H1Lab = new QLabel(QString("H1: %1").arg(parameters[proxyPos][0]+parameters[proxyPos][2]));
-        QLabel *T1Lab = new QLabel(QString("T1: %1").arg(parameters[proxyPos][1]+parameters[proxyPos][3]));
-        QLabel *slopeLab = new QLabel(QString("slope: %1").arg(parameters[proxyPos][4]));
-
-        parametriLayout->addWidget(H0Lab);
-        parametriLayout->addWidget(T0Lab);
-        parametriLayout->addWidget(H1Lab);
-        parametriLayout->addWidget(T1Lab);
-        parametriLayout->addWidget(slopeLab);
-
-        selectionLayout->addLayout(parametriLayout);
-    }
-    else if (!parameters.empty() && interpolationSettings->getProxy(proxyPos)->getFittingFunctionName() == piecewiseTwo && parameters[proxyPos].size() == 4)
+    if (!parameters.empty() && interpolationSettings->getProxy(proxyPos)->getFittingFunctionName() == piecewiseTwo && parameters[proxyPos].size() == 4)
     {
         QVBoxLayout *parametriLayout = new QVBoxLayout();
 
@@ -242,6 +226,7 @@ Crit3DLocalProxyWidget::Crit3DLocalProxyWidget(double x, double y, std::vector<s
     connect(&climatologicalLR, &QCheckBox::toggled, [=](int toggled){ this->climatologicalLRClicked(toggled); });
     connect(&modelLR, &QCheckBox::toggled, [=](int toggled){ this->modelLRClicked(toggled); });
     connect(&detrended, &QCheckBox::toggled, [=](){ this->plot(); });
+    connect(&stationWeights, &QCheckBox::toggled, [=] () {this->plot();});
     connect(updateStations, &QAction::triggered, this, [=](){ this->plot(); });
 
     if (currentFrequency != noFrequency)
@@ -371,6 +356,14 @@ void Crit3DLocalProxyWidget::plot()
     outInterpolationPoints.clear();
     subsetInterpolationPoints.clear();
     std::string errorStdStr;
+
+    for (QGraphicsTextItem* label : weightLabels)
+    {
+        chartView->scene()->removeItem(label);
+        delete label;
+    }
+    weightLabels.clear();
+
     if (detrended.isChecked())
     {
         outInterpolationPoints.clear();
@@ -406,7 +399,8 @@ void Crit3DLocalProxyWidget::plot()
             point.setX(proxyVal);
             point.setY(varValue);
             QString text = "id: " + QString::fromStdString(meteoPoints[subsetInterpolationPoints[i].index].id) + "\n"
-                           + "name: " + QString::fromStdString(meteoPoints[subsetInterpolationPoints[i].index].name);
+                           + "name: " + QString::fromStdString(meteoPoints[subsetInterpolationPoints[i].index].name) + "\n"
+                           + "weight: " + QString::number(subsetInterpolationPoints[i].regressionWeight);
             if (subsetInterpolationPoints[i].isMarked)
             {
                 pointListMarked.append(point);
@@ -484,6 +478,37 @@ void Crit3DLocalProxyWidget::plot()
     {
         modelLRClicked(1);
     }
+
+    if (stationWeights.isChecked())
+    {
+        QChart* chart = chartView->chart();
+        QRectF chartRect = chart->plotArea();
+        double xMin = chartView->axisX->min();
+        double xMax = chartView->axisX->max();
+        double yMin = chartView->axisY->min();
+        double yMax = chartView->axisY->max();
+
+        for (int i = 0; i < int(subsetInterpolationPoints.size()); i++)
+        {
+            float proxyVal = subsetInterpolationPoints[i].getProxyValue(proxyPos);
+            float varValue = subsetInterpolationPoints[i].value;
+
+            if (proxyVal != NODATA && varValue != NODATA)
+            {
+                double xRatio = (proxyVal - xMin) / (xMax - xMin);
+                double yRatio = (varValue - yMin) / (yMax - yMin);
+
+                QPointF scenePos;
+                scenePos.setX(chartRect.left() + xRatio * chartRect.width());
+                scenePos.setY(chartRect.bottom() - yRatio * chartRect.height());
+
+                QGraphicsTextItem* weightLabel = new QGraphicsTextItem(QString::number(subsetInterpolationPoints[i].regressionWeight));
+                weightLabel->setPos(scenePos);
+                chartView->scene()->addItem(weightLabel);
+                weightLabels.push_back(weightLabel);
+            }
+        }
+    }
 }
 
 
@@ -521,118 +546,93 @@ void Crit3DLocalProxyWidget::modelLRClicked(int toggled)
 
     if (toggled && subsetInterpolationPoints.size() != 0 && currentVariable == myVar)
     {
-        if (comboAxisX.currentText() == "elevation")
+        if (parameters.size() > proxyPos)
         {
-            xMin = getZmin(subsetInterpolationPoints);
-            xMax = getZmax(subsetInterpolationPoints);
-            float myY;
-
-            if (interpolationSettings->getUseMultipleDetrending())
+            if (parameters[proxyPos].size() > 2)
             {
-                if (parameters.empty() || (parameters[proxyPos].size() != 5 && parameters[proxyPos].size() != 6 && parameters[proxyPos].size() != 4))
-                    return;
+                xMin = getZmin(subsetInterpolationPoints);
+                xMax = getZmax(subsetInterpolationPoints);
+                float myY;
 
-                if (interpolationSettings->getProxy(proxyPos)->getFittingFunctionName() == piecewiseThree)
+                if (interpolationSettings->getUseMultipleDetrending())
                 {
-                    std::vector <double> xVector;
-                    for (int m = xMin; m < xMax; m += 5)
-                        xVector.push_back(m);
+                    if ((parameters[proxyPos].size() != 5 && parameters[proxyPos].size() != 6 && parameters[proxyPos].size() != 4))
+                        return;
 
-                    for (int p = 0; p < xVector.size(); p++)
+                    if (interpolationSettings->getProxy(proxyPos)->getFittingFunctionName() == piecewiseThree)
                     {
-                        point.setX(xVector[p]);
-                        point.setY(lapseRatePiecewiseThree_withSlope(xVector[p], parameters[proxyPos]));
-                        point_vector.append(point);
+                        std::vector <double> xVector;
+                        for (int m = xMin; m < xMax; m += 5)
+                            xVector.push_back(m);
+
+                        for (int p = 0; p < int(xVector.size()); p++)
+                        {
+                            point.setX(xVector[p]);
+                            point.setY(lapseRatePiecewise_three(xVector[p], parameters[proxyPos]));
+                            point_vector.append(point);
+                        }
                     }
-                }
-                else if (interpolationSettings->getProxy(proxyPos)->getFittingFunctionName() == piecewiseTwo)
-                {
-                    float lapseRateH0 = parameters[proxyPos][0];
-                    float lapseRateT0 = parameters[proxyPos][1];
-                    float slope1 = parameters[proxyPos][2];
-                    float slope2 = parameters[proxyPos][3];
-
-                    if (xMin < lapseRateH0)
+                    else if (interpolationSettings->getProxy(proxyPos)->getFittingFunctionName() == piecewiseTwo)
                     {
-                        myY = lapseRateT0 + slope1 * (xMin - lapseRateH0);
-                        point.setX(xMin);
+                        float lapseRateH0 = parameters[proxyPos][0];
+                        float lapseRateT0 = parameters[proxyPos][1];
+                        float slope1 = parameters[proxyPos][2];
+                        float slope2 = parameters[proxyPos][3];
+
+                        if (xMin < lapseRateH0)
+                        {
+                            myY = lapseRateT0 + slope1 * (xMin - lapseRateH0);
+                            point.setX(xMin);
+                            point.setY(myY);
+                            point_vector.append(point);
+                        }
+
+                        point.setX(lapseRateH0);
+                        point.setY(lapseRateT0);
+                        point_vector.append(point);
+
+                        myY = lapseRateT0 + slope2 * (xMax - lapseRateH0);
+                        point.setX(xMax);
                         point.setY(myY);
                         point_vector.append(point);
                     }
-
-                    point.setX(lapseRateH0);
-                    point.setY(lapseRateT0);
-                    point_vector.append(point);
-
-                    myY = lapseRateT0 + slope2 * (xMax - lapseRateH0);
-                    point.setX(xMax);
-                    point.setY(myY);
-                    point_vector.append(point);
-                }
-                else if (interpolationSettings->getProxy(proxyPos)->getFittingFunctionName() == piecewiseThreeFree)
-                {
-                    std::vector <double> xVector;
-                    for (int m = xMin; m < xMax; m += 5)
-                        xVector.push_back(m);
-
-                    for (int p = 0; p < xVector.size(); p++)
+                    else if (interpolationSettings->getProxy(proxyPos)->getFittingFunctionName() == piecewiseThreeFree)
                     {
-                        point.setX(xVector[p]);
-                        point.setY(lapseRatePiecewiseFree(xVector[p], parameters[proxyPos]));
-                        point_vector.append(point);
+                        std::vector <double> xVector;
+                        for (int m = xMin; m < xMax; m += 5)
+                            xVector.push_back(m);
+
+                        for (int p = 0; p < int(xVector.size()); p++)
+                        {
+                            point.setX(xVector[p]);
+                            point.setY(lapseRatePiecewise_three_free(xVector[p], parameters[proxyPos]));
+                            point_vector.append(point);
+                        }
+
                     }
-
                 }
-                /*if (interpolationSettings->getProxy(proxyPos)->getInversionIsSignificative())
-                {
-                    if (xMin < interpolationSettings->getProxy(proxyPos)->getLapseRateH0())
-                    {
-                        point.setX(xMin);
-                        point.setY(lapseRateT0);
-                        point_vector.append(point);
-                    }*/
-
-
-                /*}
-                else
-                {
-                    float myY = lapseRateT0 + regressionSlope * xMin;
-                    point.setX(xMin);
-                    point.setY(myY);
-                    point_vector.append(point);
-
-                    myY = lapseRateT0 + regressionSlope * xMax;
-                    point.setX(xMax);
-                    point.setY(myY);
-                    point_vector.append(point);
-                }*/
-
             }
-
-            /*if (interpolationSettings->getProxy(proxyPos)->getRegressionR2() != NODATA)
+            else
             {
-                r2.setText(QString("%1").arg(interpolationSettings->getProxy(proxyPos)->getRegressionR2(), 0, 'f', 2));
+                xMin = getProxyMinValue(subsetInterpolationPoints, proxyPos);
+                xMax = getProxyMaxValue(subsetInterpolationPoints, proxyPos);
+
+                if (parameters[proxyPos].empty())
+                    return;
+
+                float slope = parameters[proxyPos][0];
+                float intercept = parameters[proxyPos][1];
+
+                float myY = intercept + slope * xMin;
+                point.setX(xMin);
+                point.setY(myY);
+                point_vector.append(point);
+
+                myY = intercept + slope * xMax;
+                point.setX(xMax);
+                point.setY(myY);
+                point_vector.append(point);
             }
-            lapseRate.setText(QString("%1").arg(regressionSlope*1000, 0, 'f', 2));*/
-        }
-        else
-        {
-            //TODO lineari
-            /*xMin = getProxyMinValue(subsetInterpolationPoints, proxyPos);
-            xMax = getProxyMaxValue(subsetInterpolationPoints, proxyPos);
-
-            float slope = parameters[proxyPos][0];
-            float intercept = parameters[proxyPos][1];
-
-            float myY = intercept + slope * xMin;
-            point.setX(xMin);
-            point.setY(myY);
-            point_vector.append(point);
-
-            myY = intercept + slope * xMax;
-            point.setX(xMax);
-            point.setY(myY);
-            point_vector.append(point);*/
         }
         chartView->drawModelLapseRate(point_vector);
     }
