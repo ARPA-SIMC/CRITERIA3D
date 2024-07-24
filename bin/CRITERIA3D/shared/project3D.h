@@ -148,9 +148,10 @@
         bool setSoilIndexMap();
         bool initialize3DModel();
 
-        bool loadSoilDatabase(QString dbName);
-        bool loadCropDatabase(QString dbName);
-        bool loadSoilMap(QString fileName);
+        bool loadLandUseMap(const QString &fileName);
+        bool loadSoilDatabase(const QString &dbName);
+        bool loadCropDatabase(const QString &dbName);
+        bool loadSoilMap(const QString &fileName);
 
         void setProgressionFactor();
 

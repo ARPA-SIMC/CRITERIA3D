@@ -283,7 +283,7 @@ bool Project3D::initialize3DModel()
     // set computation depth
     if (waterFluxesParameters.computeOnlySurface)
     {
-        computationSoilDepth = 0;
+        computationSoilDepth = 0.;
     }
     else
     {
@@ -393,7 +393,29 @@ bool Project3D::initialize3DModel()
 }
 
 
-bool Project3D::loadSoilMap(QString fileName)
+bool Project3D::loadLandUseMap(const QString &fileName)
+{
+    if (fileName == "")
+    {
+        logError("Missing land use map filename");
+        return false;
+    }
+
+    landUseMapFileName = getCompleteFileName(fileName, PATH_GEO);
+
+    std::string errorStr;
+    if (! gis::openRaster(landUseMapFileName.toStdString(), &landUseMap, gisSettings.utmZone, errorStr))
+    {
+        logError("Load land use map failed: " + landUseMapFileName + "\n" + QString::fromStdString(errorStr));
+        return false;
+    }
+
+    logInfo("Land use map = " + landUseMapFileName);
+    return true;
+}
+
+
+bool Project3D::loadSoilMap(const QString &fileName)
 {
     if (fileName.isEmpty())
     {
@@ -401,18 +423,17 @@ bool Project3D::loadSoilMap(QString fileName)
         return false;
     }
 
-    fileName = getCompleteFileName(fileName, PATH_GEO);
+    soilMapFileName = getCompleteFileName(fileName, PATH_GEO);
 
     std::string errorStr;
-    if (! gis::openRaster(fileName.toStdString(), &soilMap, gisSettings.utmZone, errorStr))
+    if (! gis::openRaster(soilMapFileName.toStdString(), &soilMap, gisSettings.utmZone, errorStr))
     {
-        logError("Loading soil map failed: " + fileName + "\n" + QString::fromStdString(errorStr));
+        logError("Loading soil map failed: " + soilMapFileName + "\n" + QString::fromStdString(errorStr));
         return false;
     }
 
     gis::updateMinMaxRasterGrid(&(soilMap));
 
-    soilMapFileName = fileName;
     logInfo("Soil map = " + soilMapFileName);
 
     return true;
@@ -436,6 +457,8 @@ bool Project3D::setSoilIndexMap()
         errorString = "Missing soil properties.";
         return false;
     }
+
+    logInfo("Set soil index...");
 
     double x, y;
     soilIndexMap.initializeGrid(*(DEM.header));
@@ -970,22 +993,21 @@ void Project3D::runModel(double totalTimeStep, bool isRestart)
 
 // ----------------------------------------- CROP and LAND USE -----------------------------------
 
-bool Project3D::loadCropDatabase(QString fileName)
+bool Project3D::loadCropDatabase(const QString &fileName)
 {
     if (fileName == "")
     {
-        logError("Missing Crop DB filename");
+        logError("Missing Crop DB fileName");
         return false;
     }
 
-    cropDbFileName = fileName;
-    fileName = getCompleteFileName(fileName, PATH_SOIL);
+    cropDbFileName = getCompleteFileName(fileName, PATH_SOIL);
 
     QSqlDatabase dbCrop;
     dbCrop = QSqlDatabase::addDatabase("QSQLITE", QUuid::createUuid().toString());
-    dbCrop.setDatabaseName(fileName);
+    dbCrop.setDatabaseName(cropDbFileName);
 
-    if (!dbCrop.open())
+    if (! dbCrop.open())
     {
        logError("Connection with crop database fail");
        return false;
@@ -1012,7 +1034,7 @@ bool Project3D::loadCropDatabase(QString fileName)
         }
     }
 
-    logInfo("Crop/landUse database = " + fileName);
+    logInfo("Crop/landUse database = " + cropDbFileName);
     return true;
 }
 
@@ -1067,18 +1089,17 @@ int Project3D::getLandUnitIndexRowCol(int row, int col)
 
 // ------------------------------------ SOIL --------------------------------------
 
-bool Project3D::loadSoilDatabase(QString fileName)
+bool Project3D::loadSoilDatabase(const QString &fileName)
 {
     if (fileName == "")
     {
-        errorString = "Missing Soil DB filename";
+        errorString = "Missing Soil DB fileName";
         return false;
     }
 
-    soilDbFileName = fileName;
-    fileName = getCompleteFileName(fileName, PATH_SOIL);
+    soilDbFileName = getCompleteFileName(fileName, PATH_SOIL);
 
-    if (! loadAllSoils(fileName, soilList, texturalClassList, geotechnicsClassList, fittingOptions, errorString))
+    if (! loadAllSoils(soilDbFileName, soilList, texturalClassList, geotechnicsClassList, fittingOptions, errorString))
     {
         return false;
     }
@@ -1088,7 +1109,7 @@ bool Project3D::loadSoilDatabase(QString fileName)
     }
     nrSoils = unsigned(soilList.size());
 
-    logInfo("Soil database = " + fileName);
+    logInfo("Soil database = " + soilDbFileName);
     return true;
 }
 

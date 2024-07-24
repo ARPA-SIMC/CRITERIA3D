@@ -260,7 +260,8 @@ bool modelDailyCycle(bool isInitialState, Crit3DDate myDate, int nrHours,
             return false;
 
         // 3D soil water balance
-        myProject->computeWaterBalance3D(3600);
+        bool isRestart = false;
+        myProject->runModel(3600, isRestart);
 
         if (myCurrentTime == myFirstTime)
         {

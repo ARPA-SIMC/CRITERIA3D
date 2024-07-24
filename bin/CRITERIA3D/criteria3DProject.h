@@ -81,8 +81,6 @@
         bool loadCriteria3DParameters();
         bool writeCriteria3DParameters();
 
-        bool loadLandUseMap(QString fileName);
-
         double getSoilVar(int soilIndex, int layerIndex, soil::soilVariable myVar);
         double* getSoilVarProfile(int row, int col, soil::soilVariable myVar);
 

@@ -94,20 +94,21 @@ bool Vine3DProject::openVine3DDatabase(QString fileName)
 {
     if (fileName == "")
     {
-        errorString = "Missing VINE3D DataBase filename\nSet field 'db_vine3d' in the .ini settings file.";
+        errorString = "VINE3D database fileName missing.\nSet the 'db_vine3d' field in the .ini settings file.";
         return false;
     }
 
+    dbVine3DFileName = getCompleteFileName(fileName, "");
     dbVine3D = QSqlDatabase::addDatabase("QSQLITE", QUuid::createUuid().toString());
-    dbVine3D.setDatabaseName(getCompleteFileName(fileName, ""));
+    dbVine3D.setDatabaseName(dbVine3DFileName);
 
     if (! dbVine3D.open())
     {
-       errorString = "Connection with database fail";
+       errorString = "Connection with database fail.";
        return false;
     }
 
-    logInfo("VINE3D database = " + fileName);
+    logInfo("VINE3D database = " + dbVine3DFileName);
     return true;
 }
 
@@ -148,7 +149,15 @@ bool Vine3DProject::loadVine3DProject(QString projectFileName)
     }
 
     waterFluxesParameters.computeOnlySurface = false;
-    waterFluxesParameters.computeAllSoilDepth = true;
+    if (computationSoilDepth > 0)
+    {
+        waterFluxesParameters.imposedComputationDepth = computationSoilDepth;
+        waterFluxesParameters.computeAllSoilDepth = false;
+    }
+    else
+    {
+        waterFluxesParameters.computeAllSoilDepth = true;
+    }
 
     // vine database
     if (! openVine3DDatabase(dbVine3DFileName))
@@ -164,6 +173,9 @@ bool Vine3DProject::loadVine3DProject(QString projectFileName)
         dbVine3D.close();
     }
 
+    // crop DB is not mandatory
+    loadCropDatabase(cropDbFileName);
+
     if (! loadSoilMap(soilMapFileName))
     {
         logError();
@@ -176,7 +188,7 @@ bool Vine3DProject::loadVine3DProject(QString projectFileName)
         return false;
     }
 
-    if (! loadFieldMap(landUseMapFileName))
+    if (! loadLandUseMap(landUseMapFileName))
     {
         logError();
         return false;
@@ -188,7 +200,7 @@ bool Vine3DProject::loadVine3DProject(QString projectFileName)
         return false;
     }
 
-    if (! initializeWaterBalance3D())
+    if (! initialize3DModel())
     {
         logError();
         return false;
@@ -441,9 +453,12 @@ bool Vine3DProject::setModelCasesMap()
         return false;
     }
 
+    logInfo ("Set the model case map...");
+
     // set model cases
     int nrModelCases = nrInputCases * nrSoils;
     modelCases.resize(nrModelCases);
+
     for (int i = 0; i < nrInputCases; i++)
     {
         for (int j = 0; j < nrSoils; j++)
@@ -479,33 +494,7 @@ bool Vine3DProject::setModelCasesMap()
         }
     }
 
-    return true;
-}
-
-
-bool Vine3DProject::loadFieldMap(QString mapFileName)
-{
-    logInfo ("Read fields map...");
-
-    QString fileName = getCompleteFileName(mapFileName, PATH_GEO);
-
-    std::string fn = fileName.left(fileName.length()-4).toStdString();
-    gis::Crit3DRasterGrid inputGrid;
-
-    std::string errorStr;
-    if (! gis::readEsriGrid(fn, &(inputGrid), errorStr))
-    {
-        errorString = "Load fields map failed:\n" + mapFileName + "\n" + QString::fromStdString(errorStr);
-        logError();
-        return false;
-    }
-
-    // compute prevailing map
-    landUseMap.initializeGrid(DEM);
-    gis::prevailingMap(inputGrid, &(landUseMap));
-    gis::updateMinMaxRasterGrid(&(landUseMap));
-
-    logInfo ("Field map = " + mapFileName);
+    logInfo ("Nr of model cases: " + QString::number(nrModelCases));
     return true;
 }
 

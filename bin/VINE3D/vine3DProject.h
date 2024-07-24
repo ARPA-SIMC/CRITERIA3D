@@ -110,7 +110,6 @@
         bool setModelCasesMap();
 
         int queryFieldPoint(double x, double y);
-        bool loadFieldMap(QString mapFileName);
 
         bool readFieldQuery(QSqlQuery &myQuery, int &idField, Crit3DLanduse &landuse, int &vineIndex, int &trainingIndex, float &maxLaiGrass,  float &maxIrrigationRate);
         bool setField(int fieldIndex, int fieldId, Crit3DLanduse landuse, int soilIndex, int vineIndex, int trainingIndex,

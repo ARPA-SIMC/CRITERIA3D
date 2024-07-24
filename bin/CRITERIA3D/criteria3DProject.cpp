@@ -624,29 +624,6 @@ bool Crit3DProject::writeCriteria3DParameters()
 }
 
 
-bool Crit3DProject::loadLandUseMap(QString fileName)
-{
-    if (fileName == "")
-    {
-        logError("Missing land use map filename");
-        return false;
-    }
-
-    landUseMapFileName = fileName;
-    fileName = getCompleteFileName(fileName, PATH_GEO);
-
-    std::string errorStr;
-    if (! gis::openRaster(fileName.toStdString(), &landUseMap, gisSettings.utmZone, errorStr))
-    {
-        logError("Load land use map failed: " + fileName + "\n" + QString::fromStdString(errorStr));
-        return false;
-    }
-
-    logInfo("Land use map = " + fileName);
-    return true;
-}
-
-
 bool Crit3DProject::check3DProject()
 {
     if (!DEM.isLoaded || !meteoPointsLoaded)
