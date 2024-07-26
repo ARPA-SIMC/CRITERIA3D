@@ -253,9 +253,9 @@ bool modelDailyCycle(bool isInitialState, Crit3DDate myDate, int nrHours,
         if (! myProject->computeVine3DWaterSinkSource())
             return false;
 
-        // 3D soil water balance
+        // 3D soil water fluxes
         bool isRestart = false;
-        myProject->runModel(3600, isRestart);
+        myProject->runWaterFluxes3DModel(3600, isRestart);
 
         if (myCurrentTime == myFirstTime)
         {
