@@ -185,7 +185,7 @@ bool modelDailyCycle(bool isInitialState, Crit3DDate myDate, int nrHours,
                     {
                         if(! myProject->grapevine.initializeStatePlant(getDoyFromDate(myDate), &(myProject->modelCases[modelCaseIndex])))
                         {
-                            myProject->logInfo("Could not initialize grapevine in the present growing season.\nIt will be replaced by a complete grass cover.");
+                            myProject->logInfo("Could not initialize grapevine in the growing season.\nIt will be replaced by a complete grass cover.");
                         }
                     }
                     else
