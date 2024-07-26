@@ -404,11 +404,14 @@ bool Project3D::loadLandUseMap(const QString &fileName)
     landUseMapFileName = getCompleteFileName(fileName, PATH_GEO);
 
     std::string errorStr;
-    if (! gis::openRaster(landUseMapFileName.toStdString(), &landUseMap, gisSettings.utmZone, errorStr))
+    gis::Crit3DRasterGrid raster;
+    if (! gis::openRaster(landUseMapFileName.toStdString(), &raster, gisSettings.utmZone, errorStr))
     {
         logError("Load land use map failed: " + landUseMapFileName + "\n" + QString::fromStdString(errorStr));
         return false;
     }
+
+    gis::resampleGrid(raster, &landUseMap, DEM.header, aggrPrevailing, 0);
 
     logInfo("Land use map = " + landUseMapFileName);
     return true;
@@ -426,13 +429,14 @@ bool Project3D::loadSoilMap(const QString &fileName)
     soilMapFileName = getCompleteFileName(fileName, PATH_GEO);
 
     std::string errorStr;
-    if (! gis::openRaster(soilMapFileName.toStdString(), &soilMap, gisSettings.utmZone, errorStr))
+    gis::Crit3DRasterGrid raster;
+    if (! gis::openRaster(soilMapFileName.toStdString(), &raster, gisSettings.utmZone, errorStr))
     {
         logError("Loading soil map failed: " + soilMapFileName + "\n" + QString::fromStdString(errorStr));
         return false;
     }
 
-    gis::updateMinMaxRasterGrid(&(soilMap));
+    gis::resampleGrid(raster, &soilMap, DEM.header, aggrPrevailing, 0);
 
     logInfo("Soil map = " + soilMapFileName);
 
@@ -528,6 +532,11 @@ void Project3D::setIndexMaps()
                     {
                         indexMap.at(layer).value[row][col] = currentIndex;
                         currentIndex++;
+                    }
+                    else
+                    {
+                        // test
+                        indexMap.at(layer).value[row][col] = indexMap.at(layer).header->flag;
                     }
                 }
             }
@@ -930,14 +939,14 @@ bool Project3D::initializeSoilMoisture(int month)
 }
 
 
-/*! \brief runModel
+/*! \brief runWaterFluxes3DModel
  *  \param totalTimeStep [s]
  */
-void Project3D::runModel(double totalTimeStep, bool isRestart)
+void Project3D::runWaterFluxes3DModel(double totalTimeStep, bool isRestart)
 {
     if (! isRestart)
     {
-        currentSeconds = 0;                 // [s]
+        currentSeconds = 0;                                 // [s]
         soilFluxes3D::initializeBalance();
 
         previousTotalWaterContent = soilFluxes3D::getTotalWaterContent();       // [m3]
@@ -955,7 +964,7 @@ void Project3D::runModel(double totalTimeStep, bool isRestart)
     {
         currentSeconds += soilFluxes3D::computeStep(totalTimeStep - currentSeconds);
 
-        if (modelPause)
+        if (modelPause && currentSeconds < totalTimeStep)
         {
             emit updateOutputSignal();
             return;
@@ -1039,7 +1048,7 @@ bool Project3D::loadCropDatabase(const QString &fileName)
 }
 
 
-int Project3D::getLandUnitIdUTM(double x, double y)
+int Project3D::getLandUnitFromUtm(double x, double y)
 {
     if (! landUseMap.isLoaded)
         return NODATA;
@@ -1062,7 +1071,7 @@ int Project3D::getLandUnitIdGeo(double lat, double lon)
     double x, y;
     gis::latLonToUtmForceZone(gisSettings.utmZone, lat, lon, &x, &y);
 
-    return getLandUnitIdUTM(x, y);
+    return getLandUnitFromUtm(x, y);
 }
 
 
@@ -1075,15 +1084,25 @@ int Project3D::getLandUnitIndexRowCol(int row, int col)
     }
 
     double x, y;
-    DEM.getXY(row, col, x, y);
+    gis::getUtmXYFromRowCol(DEM.header, row, col, &x, &y);
 
-    int id = getLandUnitIdUTM(x, y);
+    int id = getLandUnitFromUtm(x, y);
     if (id == NODATA)
-    {
         return NODATA;
+
+    return getLandUnitListIndex(id);
+}
+
+
+int Project3D::getLandUnitListIndex(int id)
+{
+    for (int index = 0; index < int(landUnitList.size()); index++)
+    {
+        if (landUnitList[index].id == id)
+            return index;
     }
 
-    return getLandUnitIndex(landUnitList, id);
+    return NODATA;
 }
 
 

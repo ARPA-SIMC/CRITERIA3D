@@ -458,6 +458,7 @@ bool Vine3DProject::setModelCasesMap()
     // set model cases
     int nrModelCases = nrInputCases * nrSoils;
     modelCases.resize(nrModelCases);
+    landUnitList.resize(nrModelCases);
 
     for (int i = 0; i < nrInputCases; i++)
     {
@@ -466,6 +467,7 @@ bool Vine3DProject::setModelCasesMap()
             int index = nrSoils * i + j;
             modelCases[index] = inputModelCases[i];
             modelCases[index].soilIndex = soilIndexList[j];
+            landUnitList[index].id = index;
         }
     }
 
@@ -499,7 +501,7 @@ bool Vine3DProject::setModelCasesMap()
 }
 
 
-bool Vine3DProject::readFieldQuery(QSqlQuery &myQuery, int &idField, Crit3DLanduse &landuse, int &vineIndex, int &trainingIndex,
+bool Vine3DProject::readFieldQuery(QSqlQuery &myQuery, int &idField, GrapevineLanduse &landuse, int &vineIndex, int &trainingIndex,
                                    float &maxLaiGrass, float &maxIrrigationRate)
 {
     idField = myQuery.value("id_field").toInt();
@@ -555,7 +557,7 @@ bool Vine3DProject::loadFieldsProperties()
 
     int idField, vineIndex, trainingIndex;
     float maxLaiGrass, maxIrrigationRate;
-    Crit3DLanduse landuse;
+    GrapevineLanduse landuse;
 
     QSqlQuery myQuery(dbVine3D);
 
@@ -1352,24 +1354,24 @@ bool Vine3DProject::saveStateAndOutput(QDate myDate)
 }
 
 
-int Vine3DProject::getModelCaseIndex(unsigned row, unsigned col)
+int Vine3DProject::getModelCaseIndex(int row, int col)
 {
-    if (gis::isOutOfGridRowCol(int(row), int(col), landUseMap)) return NODATA;
+    if (gis::isOutOfGridRowCol(row, col, landUseMap))
+        return NODATA;
 
-    int caseIndex = int(landUseMap.value[row][col]);
-    if (caseIndex == int(landUseMap.header->flag))
-    {
-        //DEFAULT
-        caseIndex = 0;
-    }
+    if (isEqual(landUseMap.value[row][col], landUseMap.header->flag))
+        return NODATA;
 
-    return caseIndex;
+    return int(landUseMap.value[row][col]);
 }
 
 
 bool Vine3DProject::isVineyard(unsigned row, unsigned col)
 {
     int caseIndex = getModelCaseIndex(row, col);
+    if (caseIndex == NODATA)
+        return false;
+
     return (modelCases[caseIndex].landuse == landuse_vineyard);
 }
 
@@ -1458,17 +1460,20 @@ bool Vine3DProject::computeVine3DWaterSinkSource()
             surfaceIndex = long(indexMap.at(0).value[row][col]);
             if (surfaceIndex != long(indexMap.at(0).header->flag))
             {
-                // LAI
-                int idField = getModelCaseIndex(row, col);
-                float laiGrass = modelCases[idField].maxLAIGrass;
-                float laiVine = statePlantMaps->leafAreaIndexMap->value[row][col];
-                double laiTot = double(laiVine + laiGrass);
+                int caseIndex = getModelCaseIndex(row, col);
+                if (caseIndex != NODATA)
+                {
+                    // LAI
+                    float laiGrass = modelCases[caseIndex].maxLAIGrass;
+                    float laiVine = statePlantMaps->leafAreaIndexMap->value[row][col];
+                    double laiTot = double(laiVine + laiGrass);
 
-                int soilIndex = getSoilIndex(row, col);
+                    int soilIndex = getSoilIndex(row, col);
 
-                double realEvap = assignEvaporation(row, col, laiTot, soilIndex);       // [mm]
-                flow = area * (realEvap / 1000.0);                                      // [m3/h]
-                totalEvaporation += flow;
+                    double realEvap = assignEvaporation(row, col, laiTot, soilIndex);       // [mm]
+                    flow = area * (realEvap / 1000.0);                                      // [m3/h]
+                    totalEvaporation += flow;
+                }
             }
         }
     }

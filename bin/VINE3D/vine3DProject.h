@@ -47,7 +47,6 @@
     {
 
     public:
-
         QString dbVine3DFileName;
         QSqlDatabase dbVine3D;
 
@@ -111,8 +110,8 @@
 
         int queryFieldPoint(double x, double y);
 
-        bool readFieldQuery(QSqlQuery &myQuery, int &idField, Crit3DLanduse &landuse, int &vineIndex, int &trainingIndex, float &maxLaiGrass,  float &maxIrrigationRate);
-        bool setField(int fieldIndex, int fieldId, Crit3DLanduse landuse, int soilIndex, int vineIndex, int trainingIndex,
+        bool readFieldQuery(QSqlQuery &myQuery, int &idField, GrapevineLanduse &landuse, int &vineIndex, int &trainingIndex, float &maxLaiGrass,  float &maxIrrigationRate);
+        bool setField(int fieldIndex, int fieldId, GrapevineLanduse landuse, int soilIndex, int vineIndex, int trainingIndex,
                             float maxLaiGrass,  float maxIrrigationRate);
         bool getFieldBookIndex(int firstIndex, QDate myQDate, int fieldIndex, int* outputIndex);
 
@@ -134,7 +133,7 @@
 
         float getTimeStep();
 
-        int getModelCaseIndex(unsigned row, unsigned col);
+        int getModelCaseIndex(int row, int col);
 
         bool isVineyard(unsigned row, unsigned col);
 

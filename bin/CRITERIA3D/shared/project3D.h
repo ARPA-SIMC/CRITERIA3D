@@ -158,7 +158,7 @@
         double getSoilLayerTop(unsigned int i);
         double getSoilLayerBottom(unsigned int i);
         int getSoilLayerIndex(double depth);
-        int getLandUnitIdUTM(double x, double y);
+        int getLandUnitFromUtm(double x, double y);
         int getLandUnitIdGeo(double lat, double lon);
         int getLandUnitIndexRowCol(int row, int col);
 
@@ -167,6 +167,8 @@
         int getSoilMapId(double x, double y);
         int getSoilListIndex(double x, double y);
         QString getSoilCode(double x, double y);
+
+        int getLandUnitListIndex(int id);
 
         int getSoilIndex(long row, long col);
         bool isWithinSoil(int soilIndex, double depth);
@@ -184,7 +186,7 @@
         double assignTranspiration(int row, int col, double currentLai, double currentDegreeDays);
 
         bool setSinkSource();
-        void runModel(double totalTimeStep, bool isRestart = false);
+        void runWaterFluxes3DModel(double totalTimeStep, bool isRestart = false);
         bool updateCrop(QDateTime myTime);
 
         bool computeCriteria3DMap(gis::Crit3DRasterGrid &outputRaster, criteria3DVariable var, int layerIndex);

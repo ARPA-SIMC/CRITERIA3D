@@ -422,13 +422,14 @@ bool Crit3DProject::runModels(QDateTime firstTime, QDateTime lastTime, bool isRe
         for (int hour = firstHour; hour <= lastHour; hour++)
         {
             setCurrentHour(hour);
+            if (currentSeconds == 3600)
+                isRestart = false;
 
-            if (! runModelHour(getCurrentTime(), currentOutputPath, isRestart))
+            if (! runModelHour(currentOutputPath, isRestart))
             {
                 logError();
                 return false;
             }
-            isRestart = false;
 
             // output points
             if (isSaveOutputPoints() && currentSeconds == 3600)
@@ -933,10 +934,13 @@ bool Crit3DProject::updateDailyTemperatures()
 }
 
 
-bool Crit3DProject::runModelHour(const QDateTime &myDateTime, const QString& hourlyOutputPath, bool isRestart)
+bool Crit3DProject::runModelHour(const QString& hourlyOutputPath, bool isRestart)
 {
     if (! isRestart)
     {
+        QDateTime myDateTime = getCurrentTime();
+        currentSeconds = 0;
+
         hourlyMeteoMaps->setComputed(false);
         radiationMaps->setComputed(false);
 
@@ -955,14 +959,14 @@ bool Crit3DProject::runModelHour(const QDateTime &myDateTime, const QString& hou
                 return false;
 
             hourlyMeteoMaps->setComputed(true);
-            emit updateOutputSignal();
+            qApp->processEvents();
         }
 
         if (processes.computeRadiation)
         {
             if (! interpolateAndSaveHourlyMeteo(globalIrradiance, myDateTime, hourlyOutputPath, isSaveOutputRaster()))
                 return false;
-            emit updateOutputSignal();
+            qApp->processEvents();
         }
 
         if (processes.computeSnow)
@@ -973,7 +977,7 @@ bool Crit3DProject::runModelHour(const QDateTime &myDateTime, const QString& hou
             {
                 return false;
             }
-            emit updateOutputSignal();
+            qApp->processEvents();
         }
 
         // initalize sink / source
@@ -1002,6 +1006,7 @@ bool Crit3DProject::runModelHour(const QDateTime &myDateTime, const QString& hou
         if (processes.computeCrop)
         {
             updateDailyTemperatures();
+            qApp->processEvents();
         }
 
         if (processes.computeWater)
@@ -1011,6 +1016,8 @@ bool Crit3DProject::runModelHour(const QDateTime &myDateTime, const QString& hou
             if (! setSinkSource())
                 return false;
         }
+
+        emit updateOutputSignal();
     }
 
     // soil fluxes
@@ -1018,12 +1025,10 @@ bool Crit3DProject::runModelHour(const QDateTime &myDateTime, const QString& hou
     {
         if (! isRestart)
         {
-            logInfo("\nCompute soil fluxes: " + myDateTime.toString());
+            logInfo("\nCompute soil fluxes: " + getCurrentTime().toString());
         }
 
-        runModel(3600, isRestart);
-
-        qApp->processEvents();
+        runWaterFluxes3DModel(3600, isRestart);
     }
 
     // soil heat

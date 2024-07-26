@@ -433,7 +433,7 @@ bool MainWindow::contextMenuRequested(QPoint localPos)
             int id = myProject.getLandUnitIdGeo(geoPos.latitude(), geoPos.longitude());
             if (id != NODATA)
             {
-                int index = getLandUnitIndex(myProject.landUnitList, id);
+                int index = myProject.getLandUnitListIndex(id);
                 if (index != NODATA)
                 {
                     Crit3DLandUnit landUnit = myProject.landUnitList[index];
@@ -461,7 +461,7 @@ bool MainWindow::contextMenuRequested(QPoint localPos)
             int id = myProject.getLandUnitIdGeo(geoPos.latitude(), geoPos.longitude());
             if (id != NODATA)
             {
-                int index = getLandUnitIndex(myProject.landUnitList, id);
+                int index = myProject.getLandUnitListIndex(id);
                 if (index != NODATA)
                 {
                     QString infoStr;
@@ -762,6 +762,7 @@ void MainWindow::updateModelTime()
         }
         minutes = 0;
     }
+
     QDateTime currentDateTime;
     currentDateTime.setDate(date);
     currentDateTime.setTime(QTime(hour, minutes, seconds));
