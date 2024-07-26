@@ -934,8 +934,13 @@ Crit3DTime Project::getCrit3DCurrentTime()
 QDateTime Project::getCurrentTime()
 {
     QDateTime myDateTime;
-    myDateTime.setDate(this->currentDate);
-    return myDateTime.addSecs(this->currentHour * HOUR_SECONDS);
+    if (gisSettings.isUTC)
+    {
+        myDateTime.setTimeSpec(Qt::UTC);
+    }
+
+    myDateTime.setDate(currentDate);
+    return myDateTime.addSecs(currentHour * HOUR_SECONDS);
 }
 
 
