@@ -20,8 +20,10 @@
     class WaterFluxesParameters
     {
     public:
-
         double initialWaterPotential;            // [m]
+        double initialDegreeOfSaturation;        // [-]
+        bool isInitialWaterPotential;
+
         double imposedComputationDepth;          // [m]
         double horizVertRatioConductivity;       // [-]
 
@@ -72,7 +74,7 @@
         bool setCrit3DSoils();
         bool setCrit3DTopography();
         bool setCrit3DNodeSoil();
-        bool initializeMatricPotential(float psi);
+        bool initializeWaterContent();
 
     public:
         bool isCriteria3DInitialized;

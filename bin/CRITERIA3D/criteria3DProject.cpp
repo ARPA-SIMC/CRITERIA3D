@@ -422,7 +422,7 @@ bool Crit3DProject::runModels(QDateTime firstTime, QDateTime lastTime, bool isRe
         for (int hour = firstHour; hour <= lastHour; hour++)
         {
             setCurrentHour(hour);
-            if (currentSeconds == 3600)
+            if (currentSeconds == 0 || currentSeconds == 3600)
                 isRestart = false;
 
             if (! runModelHour(currentOutputPath, isRestart))
@@ -458,7 +458,7 @@ bool Crit3DProject::runModels(QDateTime firstTime, QDateTime lastTime, bool isRe
         saveModelsState();
     }
 
-    logInfoGUI("Computation done.");
+    logInfoGUI("Computation is finished.");
 
     return true;
 }
@@ -980,10 +980,13 @@ bool Crit3DProject::runModelHour(const QString& hourlyOutputPath, bool isRestart
             qApp->processEvents();
         }
 
-        // initalize sink / source
-        for (unsigned long i = 0; i < nrNodes; i++)
+        if (processes.computeWater)
         {
-            waterSinkSource.at(size_t(i)) = 0.;
+            // initalize sink / source
+            for (unsigned long i = 0; i < nrNodes; i++)
+            {
+                waterSinkSource.at(size_t(i)) = 0.;
+            }
         }
 
         if (processes.computeCrop || processes.computeWater)
@@ -999,13 +1002,15 @@ bool Crit3DProject::runModelHour(const QString& hourlyOutputPath, bool isRestart
                 saveHourlyMeteoOutput(referenceEvapotranspiration, hourlyOutputPath, myDateTime);
             }
 
-            assignETreal();
-            qApp->processEvents();
-        }
+            if (processes.computeCrop)
+            {
+                updateDailyTemperatures();
+            }
+            if (processes.computeWater)
+            {
+                assignETreal();
+            }
 
-        if (processes.computeCrop)
-        {
-            updateDailyTemperatures();
             qApp->processEvents();
         }
 

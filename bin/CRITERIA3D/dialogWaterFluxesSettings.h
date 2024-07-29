@@ -11,12 +11,19 @@
     {
     private:
         QLineEdit *initialWaterPotentialEdit;
+        QLineEdit *initialDegreeOfSaturationEdit;
         QLineEdit *imposedComputationDepthEdit;
 
+        bool _isUpdateAccuracy;
+
+    private slots :
+        void updateAccuracy() { _isUpdateAccuracy = true; }
+
     public:
-        QCheckBox *snowProcess;
-        QCheckBox *cropProcess;
-        QCheckBox *waterFluxesProcess;
+        QPushButton *updateButton;
+
+        QRadioButton *initialWaterPotential;
+        QRadioButton *initialDegreeOfSaturation;
 
         QRadioButton *onlySurface;
         QRadioButton *allSoilDepth;
@@ -33,11 +40,20 @@
         void setInitialWaterPotential(double value)
         { initialWaterPotentialEdit->setText(QString::number(value)); }
 
+        double getInitialDegreeOfSaturation() const
+        { return initialDegreeOfSaturationEdit->text().toDouble(); }
+
+        void setInitialDegreeOfSaturation(double value)
+        { initialDegreeOfSaturationEdit->setText(QString::number(value)); }
+
         double getImposedComputationDepth() const
         { return imposedComputationDepthEdit->text().toDouble(); }
 
         void setImposedComputationDepth(double value)
         { imposedComputationDepthEdit->setText(QString::number(value)); }
+
+        bool isUpdateAccuracy() const
+        { return _isUpdateAccuracy; }
     };
 
 

@@ -42,6 +42,7 @@
 #include "dialogNewPoint.h"
 #include "glWidget.h"
 #include "dialogWaterFluxesSettings.h"
+#include "dialogModelProcesses.h"
 #include "utilities.h"
 #include "formText.h"
 
@@ -2120,59 +2121,7 @@ void MainWindow::on_actionRadiation_run_model_triggered()
 }
 
 
-//-------------------- MENU SNOW MODEL -----------------------
-void MainWindow::on_actionSnow_initialize_triggered()
-{
-    if (myProject.initializeSnowModel())
-    {
-        myProject.logInfoGUI("Snow model successfully initialized.");
-    }
-}
-
-void MainWindow::on_actionSnow_run_model_triggered()
-{
-    if (! myProject.snowMaps.isInitialized)
-    {
-        myProject.logInfoGUI("Initialize snow model before.");
-        return;
-    }
-
-    QDateTime firstTime, lastTime;
-    if (! selectDates (firstTime, lastTime))
-        return;
-
-    myProject.processes.initialize();
-    myProject.processes.setComputeSnow(true);
-
-    startModels(firstTime, lastTime);
-}
-
-
-void MainWindow::on_actionSnow_compute_next_hour_triggered()
-{
-    if (! myProject.snowMaps.isInitialized)
-    {
-        if (! myProject.initializeSnowModel())
-            return;
-    }
-
-    QDateTime currentTime;
-    if (myProject.getCurrentHour() == 23)
-    {
-        currentTime.setDate(myProject.getCurrentDate().addDays(1));
-        currentTime.setTime(QTime(0, 0, 0, 0));
-    }
-    else
-    {
-        currentTime = myProject.getCurrentTime().addSecs(HOUR_SECONDS);
-    }
-
-    myProject.processes.initialize();
-    myProject.processes.setComputeSnow(true);
-
-    startModels(currentTime, currentTime);
-}
-
+//------------------------------- MENU 3D MODEL  ------------------------------------
 
 void MainWindow::on_actionSnow_settings_triggered()
 {
@@ -2192,7 +2141,7 @@ void MainWindow::on_actionSnow_settings_triggered()
         return;
     }
     else
-    {   
+    {
         myProject.snowModel.snowParameters.tempMinWithRain = dialogSnowSetting.getSnowThresholdValue();
         myProject.snowModel.snowParameters.tempMaxWithSnow = dialogSnowSetting.getRainfallThresholdValue();
         myProject.snowModel.snowParameters.snowWaterHoldingCapacity = dialogSnowSetting.getWaterHoldingValue();
@@ -2206,21 +2155,35 @@ void MainWindow::on_actionSnow_settings_triggered()
             myProject.logError("Error writing snow parameters");
         }
     }
-    return;
 }
 
 
-//--------------------- MENU WATER FLUXES  -----------------------
+void MainWindow::on_actionCriteria3D_set_processes_triggered()
+{
+    DialogModelProcesses dialogProcesses;
 
-void MainWindow::on_actionWaterFluxes_settings_triggered()
+    dialogProcesses.snowProcess->setChecked(myProject.processes.computeSnow);
+    dialogProcesses.cropProcess->setChecked(myProject.processes.computeCrop);
+    dialogProcesses.waterFluxesProcess->setChecked(myProject.processes.computeWater);
+
+    dialogProcesses.exec();
+
+    if (dialogProcesses.result() == QDialog::Accepted)
+    {
+        myProject.processes.setComputeSnow(dialogProcesses.snowProcess->isChecked());
+        myProject.processes.setComputeCrop(dialogProcesses.cropProcess->isChecked());
+        myProject.processes.setComputeWater(dialogProcesses.waterFluxesProcess->isChecked());
+    }
+}
+
+
+void MainWindow::on_actionCriteria3D_waterFluxes_settings_triggered()
 {
     DialogWaterFluxesSettings dialogWaterFluxes;
     dialogWaterFluxes.setInitialWaterPotential(myProject.waterFluxesParameters.initialWaterPotential);
-    dialogWaterFluxes.setImposedComputationDepth(myProject.waterFluxesParameters.imposedComputationDepth);
+    dialogWaterFluxes.setInitialDegreeOfSaturation(myProject.waterFluxesParameters.initialDegreeOfSaturation);
 
-    dialogWaterFluxes.snowProcess->setChecked(myProject.processes.computeSnow);
-    dialogWaterFluxes.cropProcess->setChecked(myProject.processes.computeCrop);
-    dialogWaterFluxes.waterFluxesProcess->setChecked(myProject.processes.computeWater);
+    dialogWaterFluxes.setImposedComputationDepth(myProject.waterFluxesParameters.imposedComputationDepth);
 
     dialogWaterFluxes.accuracySlider->setValue(myProject.waterFluxesParameters.modelAccuracy);
 
@@ -2234,13 +2197,17 @@ void MainWindow::on_actionWaterFluxes_settings_triggered()
     dialogWaterFluxes.useWaterRetentionFitting->setChecked(myProject.fittingOptions.useWaterRetentionData);
 
     dialogWaterFluxes.exec();
-    if (dialogWaterFluxes.result() != QDialog::Accepted)
+
+    if (dialogWaterFluxes.isUpdateAccuracy())
     {
-        return;
+        myProject.waterFluxesParameters.modelAccuracy = dialogWaterFluxes.accuracySlider->value();
     }
-    else
+
+    if (dialogWaterFluxes.result() == QDialog::Accepted)
     {
         myProject.waterFluxesParameters.initialWaterPotential = dialogWaterFluxes.getInitialWaterPotential();
+        myProject.waterFluxesParameters.initialDegreeOfSaturation = dialogWaterFluxes.getInitialDegreeOfSaturation();
+
         myProject.waterFluxesParameters.imposedComputationDepth = dialogWaterFluxes.getImposedComputationDepth();
         myProject.waterFluxesParameters.computeOnlySurface = dialogWaterFluxes.onlySurface->isChecked();
         myProject.waterFluxesParameters.computeAllSoilDepth = dialogWaterFluxes.allSoilDepth->isChecked();
@@ -2249,18 +2216,14 @@ void MainWindow::on_actionWaterFluxes_settings_triggered()
 
         myProject.fittingOptions.useWaterRetentionData = dialogWaterFluxes.useWaterRetentionFitting->isChecked();
 
-        myProject.processes.setComputeSnow(dialogWaterFluxes.snowProcess->isChecked());
-        myProject.processes.setComputeCrop(dialogWaterFluxes.cropProcess->isChecked());
-        myProject.processes.setComputeWater(dialogWaterFluxes.waterFluxesProcess->isChecked());
-
         /*if (! myProject.writeCriteria3DParameters())
         {
             myProject.logError("Error writing soil fluxes parameters");
         }*/
-    }
 
-    // layer thickness
-    // lateral conductivity ratio
+        // layer thickness
+        // lateral conductivity ratio
+    }
 }
 
 
@@ -2312,33 +2275,55 @@ void MainWindow::on_actionCriteria3D_Initialize_triggered()
             return;
         }
     }
-    else
-    {
-        myProject.initializeCrop();
-    }
 
     if (myProject.processes.computeWater)
+    {
+        if (! myProject.processes.computeCrop)
+        {
+            if (! myProject.initializeCrop())
+            {
+                myProject.logError();
+                return;
+            }
+        }
+
         if (! myProject.initializeCriteria3DModel())
         {
             myProject.logError();
             return;
         }
-
-    if (myProject.processes.computeCrop || myProject.processes.computeWater)
-    {
-        initializeCriteria3DInterface();
-        myProject.isCriteria3DInitialized = true;
-        myProject.logInfoGUI("Criteria3D model initialized");
     }
+
+    if (!myProject.processes.computeSnow && ! myProject.processes.computeCrop && ! myProject.processes.computeWater)
+    {
+        myProject.logWarning("Set up at least one process: view menu 'Set active processes'");
+        return;
+    }
+
+    initializeCriteria3DInterface();
+    myProject.isCriteria3DInitialized = true;
+    myProject.logInfoGUI("The model is initialized.");
 }
 
 
 void MainWindow::on_actionCriteria3D_compute_next_hour_triggered()
 {
-    if (! myProject.isCriteria3DInitialized)
+    if (myProject.processes.computeCrop || myProject.processes.computeWater)
     {
-        myProject.logError("Initialize 3D water fluxes before");
-        return;
+        if (! myProject.isCriteria3DInitialized)
+        {
+            myProject.logError("Initialize 3D model before");
+            return;
+        }
+    }
+
+    if (myProject.processes.computeSnow)
+    {
+        if (! myProject.snowMaps.isInitialized)
+        {
+            if (! myProject.initializeSnowModel())
+                return;
+        }
     }
 
     QDateTime currentTime;
@@ -2358,10 +2343,22 @@ void MainWindow::on_actionCriteria3D_compute_next_hour_triggered()
 
 void MainWindow::on_actionCriteria3D_run_models_triggered()
 {
-    if (! myProject.isCriteria3DInitialized)
+    if (myProject.processes.computeCrop || myProject.processes.computeWater)
     {
-        myProject.logError("Initialize 3D water fluxes before");
-        return;
+        if (! myProject.isCriteria3DInitialized)
+        {
+            myProject.logError("Initialize 3D water fluxes before");
+            return;
+        }
+    }
+
+    if (myProject.processes.computeSnow)
+    {
+        if (! myProject.snowMaps.isInitialized)
+        {
+            myProject.logInfoGUI("Initialize snow model before.");
+            return;
+        }
     }
 
     QDateTime firstTime, lastTime;
@@ -2464,79 +2461,6 @@ void MainWindow::on_flagSave_state_daily_step_toggled(bool isChecked)
 void MainWindow::on_flagSave_state_endRun_triggered(bool isChecked)
 {
      myProject.setSaveEndOfRunState(isChecked);
-}
-
-
-void MainWindow::on_actionSave_state_triggered()
-{
-    if (myProject.isProjectLoaded)
-    {
-        if (myProject.saveModelsState())
-        {
-            myProject.logInfoGUI("State model successfully saved: " + myProject.getCurrentDate().toString()
-                                 + " H:" + QString::number(myProject.getCurrentHour()));
-        }
-    }
-    else
-    {
-        myProject.logError(ERROR_STR_MISSING_PROJECT);
-    }
-}
-
-
-void MainWindow::on_actionLoad_external_state_triggered()
-{
-    if (! myProject.isProjectLoaded)
-    {
-        myProject.logError(ERROR_STR_MISSING_PROJECT);
-        return;
-    }
-
-    QString stateDirectory = QFileDialog::getExistingDirectory(this, tr("Open Directory"), "",
-                                                               QFileDialog::ShowDirsOnly | QFileDialog::DontResolveSymlinks);
-    if (myProject.loadModelState(stateDirectory))
-    {
-        updateDateTime();
-        loadMeteoPointsDataSingleDay(myProject.getCurrentDate(), true);
-        redrawMeteoPoints(currentPointsVisualization, true);
-    }
-    else
-    {
-        myProject.logError();
-    }
-}
-
-
-void MainWindow::on_actionLoad_state_triggered()
-{
-    if (! myProject.isProjectLoaded)
-    {
-        myProject.logError(ERROR_STR_MISSING_PROJECT);
-        return;
-    }
-
-    QList<QString> stateList = myProject.getAllSavedState();
-    if (stateList.size() == 0)
-    {
-        myProject.logError("Missing state in directory:\n" + myProject.getProjectPath() + PATH_STATES);
-        return;
-    }
-
-    DialogLoadState dialogLoadState(stateList);
-    if (dialogLoadState.result() != QDialog::Accepted)
-        return;
-
-    QString stateDirectory = myProject.getProjectPath() + PATH_STATES + dialogLoadState.getSelectedState();
-    if (myProject.loadModelState(stateDirectory))
-    {
-        updateDateTime();
-        loadMeteoPointsDataSingleDay(myProject.getCurrentDate(), true);
-        redrawMeteoPoints(currentPointsVisualization, true);
-    }
-    else
-    {
-        myProject.logError();
-    }
 }
 
 
@@ -3476,4 +3400,5 @@ void MainWindow::on_actionCreate_new_land_use_map_triggered()
 
     myProject.loadLandUseMap(completeFileName);
 }
+
 

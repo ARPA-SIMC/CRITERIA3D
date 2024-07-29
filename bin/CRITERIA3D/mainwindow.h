@@ -63,10 +63,17 @@
         void on_opacitySliderRasterInput_sliderMoved(int position);
         void on_opacitySliderRasterOutput_sliderMoved(int position);
 
+        // Menu show
+        void on_actionShow_3D_viewer_triggered();
+        void on_viewer3DClosed();
+        void on_slopeChanged();
+
         void on_flagView_not_active_points_toggled(bool state);
         void on_actionView_PointsHide_triggered();
         void on_actionView_PointsLocation_triggered();
         void on_actionView_PointsCurrentVariable_triggered();
+
+        void on_flagView_values_toggled(bool arg1);
 
         void on_actionView_SoilMap_triggered();
         void on_actionHide_Soil_map_triggered();
@@ -87,29 +94,6 @@
         void on_actionView_ET0_triggered();
         void on_actionView_MeteoVariable_None_triggered();
         void on_actionView_Radiation_None_triggered();
-
-        void on_actionMapOpenStreetMap_triggered();
-        void on_actionMapESRISatellite_triggered();
-        void on_actionMapTerrain_triggered();
-        void on_actionMapGoogle_hybrid_satellite_triggered();
-        void on_actionMapGoogle_satellite_triggered();
-
-        void on_actionProjectSettings_triggered();
-
-        void on_actionVariableQualitySpatial_triggered();
-        void on_actionInterpolationSettings_triggered();
-        void on_actionProxy_analysis_triggered();
-        void on_actionComputePeriod_meteoVariables_triggered();
-        void on_actionComputeHour_meteoVariables_triggered();
-
-        void on_actionRadiation_settings_triggered();
-        void on_actionRadiation_compute_current_hour_triggered();
-        void on_actionRadiation_run_model_triggered();
-
-        void on_actionSnow_settings_triggered();
-        void on_actionSnow_initialize_triggered();
-        void on_actionSnow_compute_next_hour_triggered();
-        void on_actionSnow_run_model_triggered();
 
         void on_actionView_Snow_water_equivalent_triggered();
         void on_actionView_Snow_surface_temperature_triggered();
@@ -135,10 +119,40 @@
         void on_actionView_SurfaceWaterContent_automatic_range_triggered();
         void on_actionView_SurfaceWaterContent_fixed_range_triggered();
 
-        void on_actionSave_state_triggered();
-        void on_actionLoad_state_triggered();
-        void on_flagSave_state_daily_step_toggled(bool isChecked);
+        // menu meteo points
+        void on_actionPoints_clear_selection_triggered();
+        void on_actionDelete_Points_Selected_triggered();
+        void on_actionDelete_Points_NotActive_triggered();
+        void on_actionPoints_activate_all_triggered();
+        void on_actionPoints_deactivate_all_triggered();
+        void on_actionPoints_activate_selected_triggered();
+        void on_actionPoints_deactivate_selected_triggered();
+        void on_actionPoints_activate_from_point_list_triggered();
+        void on_actionPoints_deactivate_from_point_list_triggered();
+        void on_actionPoints_activate_with_criteria_triggered();
+        void on_actionPoints_deactivate_with_criteria_triggered();
+        void on_actionPoints_delete_data_selected_triggered();
+        void on_actionPoints_delete_data_not_active_triggered();
+        void on_actionPoints_deactivate_with_no_data_triggered();
 
+        // Menu data spatialization
+        void on_actionVariableQualitySpatial_triggered();
+        void on_actionInterpolationSettings_triggered();
+        void on_actionProxy_analysis_triggered();
+
+        void on_actionTopographicDistanceMapWrite_triggered();
+        void on_actionTopographicDistanceMapLoad_triggered();
+
+        void on_actionComputePeriod_meteoVariables_triggered();
+        void on_actionComputeHour_meteoVariables_triggered();
+
+        // Menu soalr radiation
+        void on_actionRadiation_settings_triggered();
+        void on_actionRadiation_compute_current_hour_triggered();
+        void on_actionRadiation_run_model_triggered();
+
+        // menu 3D model
+        void on_actionSnow_settings_triggered();
         void on_actionCriteria3D_Initialize_triggered();
         void on_actionCriteria3D_compute_next_hour_triggered();
         void on_actionCriteria3D_run_models_triggered();
@@ -147,75 +161,38 @@
         void on_actionCriteria3D_load_external_state_triggered();
         void on_actionCriteria3D_save_state_triggered();
 
+        void on_flagSave_state_daily_step_toggled(bool isChecked);
+        void on_flagSave_state_endRun_triggered(bool isChecked);
+
         void on_buttonModelPause_clicked();
         void on_buttonModelStop_clicked();
         void on_buttonModelStart_clicked();
 
-        // menu meteo points
-        void on_actionDelete_Points_Selected_triggered();
-        void on_actionDelete_Points_NotActive_triggered();
-        void on_actionPoints_activate_all_triggered();
-        void on_actionPoints_deactivate_all_triggered();
-        void on_actionPoints_activate_selected_triggered();
-        void on_actionPoints_deactivate_selected_triggered();
-        void on_actionPoints_activate_from_point_list_triggered();
-
-        void on_actionPoints_deactivate_from_point_list_triggered();
-
-        void on_actionPoints_activate_with_criteria_triggered();
-
-        void on_actionPoints_deactivate_with_criteria_triggered();
-
-        void on_actionPoints_delete_data_selected_triggered();
-
-        void on_actionPoints_clear_selection_triggered();
-
-        void on_actionPoints_delete_data_not_active_triggered();
-
-        void on_actionPoints_deactivate_with_no_data_triggered();
-
+        // menu output points
         void on_actionOutputPoints_clear_selection_triggered();
-
         void on_actionOutputPoints_deactivate_all_triggered();
-
         void on_actionOutputPoints_deactivate_selected_triggered();
-
         void on_flagHide_outputPoints_toggled(bool isChecked);
-
         void on_flagView_not_active_outputPoints_toggled(bool isChecked);
-
         void on_actionOutputPoints_activate_all_triggered();
-
         void on_actionOutputPoints_activate_selected_triggered();
-
         void on_actionOutputPoints_newFile_triggered();
-
         void on_actionOutputDB_new_triggered();
-
         void on_actionOutputDB_open_triggered();
-
         void on_actionOutputPoints_delete_selected_triggered();
-
         void on_flagOutputPoints_save_output_toggled(bool isChecked);
-
         void on_flagCompute_only_points_toggled(bool isChecked);
-
         void on_actionLoad_OutputPoints_triggered();
-
         void on_actionOutputPoints_add_triggered();
 
-        void on_flagView_values_toggled(bool arg1);
+        // Menu settings
+        void on_actionMapOpenStreetMap_triggered();
+        void on_actionMapESRISatellite_triggered();
+        void on_actionMapTerrain_triggered();
+        void on_actionMapGoogle_hybrid_satellite_triggered();
+        void on_actionMapGoogle_satellite_triggered();
+        void on_actionProjectSettings_triggered();
 
-        void on_actionLoad_external_state_triggered();
-
-        void on_actionTopographicDistanceMapWrite_triggered();
-
-        void on_actionTopographicDistanceMapLoad_triggered();
-
-        void on_actionShow_3D_viewer_triggered();
-
-        void on_viewer3DClosed();
-        void on_slopeChanged();
 
         void on_actionLoad_land_use_map_triggered();
 
@@ -231,16 +208,15 @@
 
         void on_layerNrEdit_valueChanged(int layerIndex);
 
-        void on_actionWaterFluxes_settings_triggered();
-
-        void on_flagSave_state_endRun_triggered(bool isChecked);
-
         void on_flag_increase_slope_triggered(bool isChecked);
-
 
         void on_actionView_Water_potential_triggered();
 
         void on_actionCreate_new_land_use_map_triggered();
+
+        void on_actionCriteria3D_set_processes_triggered();
+
+        void on_actionCriteria3D_waterFluxes_settings_triggered();
 
     protected:
         /*!

@@ -1293,7 +1293,7 @@
        <second>0</second>
        <year>1752</year>
        <month>9</month>
-       <day>15</day>
+       <day>12</day>
       </datetime>
      </property>
      <property name="maximumDate">
@@ -1971,11 +1971,13 @@
     <addaction name="actionProjectSettings"/>
     <addaction name="separator"/>
    </widget>
-   <widget class="QMenu" name="menuCriteria3D">
+   <widget class="QMenu" name="menu3DModel">
     <property name="title">
-     <string>Water fluxes</string>
+     <string>3D model</string>
     </property>
-    <addaction name="actionWaterFluxes_settings"/>
+    <addaction name="actionCriteria3D_set_processes"/>
+    <addaction name="actionCriteria3D_waterFluxes_settings"/>
+    <addaction name="actionSnow_settings"/>
     <addaction name="separator"/>
     <addaction name="actionCriteria3D_load_state"/>
     <addaction name="actionCriteria3D_load_external_state"/>
@@ -2144,21 +2146,6 @@
     <addaction name="menuSlope_stability"/>
     <addaction name="separator"/>
    </widget>
-   <widget class="QMenu" name="menuSnow_model">
-    <property name="title">
-     <string>Snow model</string>
-    </property>
-    <addaction name="actionSnow_settings"/>
-    <addaction name="separator"/>
-    <addaction name="actionLoad_state"/>
-    <addaction name="actionLoad_external_state"/>
-    <addaction name="actionSave_state"/>
-    <addaction name="separator"/>
-    <addaction name="actionSnow_initialize"/>
-    <addaction name="actionSnow_compute_next_hour"/>
-    <addaction name="actionSnow_run_model"/>
-    <addaction name="separator"/>
-   </widget>
    <widget class="QMenu" name="menuSolar_radiation_model_2">
     <property name="title">
      <string>Solar radiation</string>
@@ -2252,8 +2239,7 @@
    <addaction name="menuMeteo_points_2"/>
    <addaction name="menuDataSpatialization"/>
    <addaction name="menuSolar_radiation_model_2"/>
-   <addaction name="menuCriteria3D"/>
-   <addaction name="menuSnow_model"/>
+   <addaction name="menu3DModel"/>
    <addaction name="menuOutput_points"/>
    <addaction name="menuGIS_settings"/>
   </widget>
@@ -2301,7 +2287,7 @@
     <string>Spatial quality control</string>
    </property>
   </action>
-  <action name="actionWaterFluxes_settings">
+  <action name="actionCriteria3D_waterFluxes_settings">
    <property name="text">
     <string>Water fluxes settings...</string>
    </property>
@@ -2475,27 +2461,12 @@
     <string>New (from csv)...</string>
    </property>
   </action>
-  <action name="actionLoad_state">
-   <property name="text">
-    <string>Load state...</string>
-   </property>
-  </action>
-  <action name="actionSave_state">
-   <property name="text">
-    <string>Save state</string>
-   </property>
-  </action>
   <action name="actionSnow_settings">
    <property name="checkable">
     <bool>false</bool>
    </property>
    <property name="text">
     <string>Snow settings...</string>
-   </property>
-  </action>
-  <action name="actionSnow_run_model">
-   <property name="text">
-    <string>Run model...</string>
    </property>
   </action>
   <action name="actionView_Snow_water_equivalent">
@@ -2511,14 +2482,6 @@
   <action name="actionView_Snow_internal_energy">
    <property name="text">
     <string>Energy content (snow pack or soil)</string>
-   </property>
-  </action>
-  <action name="actionSnow_initialize">
-   <property name="text">
-    <string>Initialize</string>
-   </property>
-   <property name="toolTip">
-    <string>Initialize snow model</string>
    </property>
   </action>
   <action name="actionView_Snow_fall">
@@ -2573,11 +2536,6 @@
   <action name="actionView_Snow_age">
    <property name="text">
     <string>Age of snow</string>
-   </property>
-  </action>
-  <action name="actionSnow_compute_next_hour">
-   <property name="text">
-    <string>Compute next hour</string>
    </property>
   </action>
   <action name="actionView_Snowmelt">
@@ -2797,11 +2755,6 @@
     <string>Latent heat</string>
    </property>
   </action>
-  <action name="actionLoad_external_state">
-   <property name="text">
-    <string>Load external state...</string>
-   </property>
-  </action>
   <action name="actionTopographicDistanceMapWrite">
    <property name="text">
     <string>Write...</string>
@@ -2955,6 +2908,11 @@
   <action name="actionCreate_new_land_use_map">
    <property name="text">
     <string>Create new land use map...</string>
+   </property>
+  </action>
+  <action name="actionCriteria3D_set_processes">
+   <property name="text">
+    <string>Set active processes...</string>
    </property>
   </action>
  </widget>

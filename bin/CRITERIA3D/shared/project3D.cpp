@@ -56,8 +56,11 @@ void WaterFluxesParameters::initialize()
     computeOnlySurface = false;
     computeAllSoilDepth = true;
 
-    initialWaterPotential = -3.0;           // [m] default: field capacity
-    imposedComputationDepth = 0.3;          // [m]
+    isInitialWaterPotential = true;
+    initialWaterPotential = -2.0;           // [m] default: field capacity
+    initialDegreeOfSaturation = 0.8;        // [-]
+
+    imposedComputationDepth = 1.0;          // [m]
     horizVertRatioConductivity = 10.0;      // [-] default: ten times
 
     modelAccuracy = 3;                      // [-] default: error on the third digit
@@ -161,8 +164,8 @@ void Project3D::initializeProject3D()
     nrNodes = 0;
     nrLateralLink = 8;
 
-    currentSeconds = 0;
-    previousTotalWaterContent = 0;
+    currentSeconds = 0;                 // [s]
+    previousTotalWaterContent = 0;      // [m3]
 
     totalPrecipitation = 0;
     totalEvaporation = 0;
@@ -382,7 +385,7 @@ bool Project3D::initialize3DModel()
     int digitMBR = waterFluxesParameters.modelAccuracy;
     soilFluxes3D::setNumericalParameters(minimumDeltaT, 3600, 100, 10, 12, digitMBR);
 
-    if (! initializeMatricPotential(waterFluxesParameters.initialWaterPotential))       // [m]
+    if (! initializeWaterContent())
     {
         logError();
         return false;
@@ -784,7 +787,7 @@ bool Project3D::setCrit3DTopography()
 }
 
 
-bool Project3D::initializeMatricPotential(float psi)
+bool Project3D::initializeWaterContent()
 {
     long index;
     int myResult;
@@ -800,14 +803,34 @@ bool Project3D::initializeMatricPotential(float psi)
                 if (index != long(indexMap.at(layer).header->flag))
                 {
                     if (layer == 0)
-                        myResult = soilFluxes3D::setMatricPotential(index, 0);
+                    {
+                        // surface
+                        if (waterFluxesParameters.isInitialWaterPotential &&  waterFluxesParameters.initialWaterPotential > 0)
+                        {
+                            myResult = soilFluxes3D::setMatricPotential(index, waterFluxesParameters.initialWaterPotential);
+                        }
+                        else
+                        {
+                            myResult = soilFluxes3D::setMatricPotential(index, 0);
+                        }
+                    }
                     else
-                        myResult = soilFluxes3D::setMatricPotential(index, psi);
+                    {
+                        // sub-surface
+                        if (waterFluxesParameters.isInitialWaterPotential)
+                        {
+                            myResult = soilFluxes3D::setMatricPotential(index, waterFluxesParameters.initialWaterPotential);
+                        }
+                        else
+                        {
+                            myResult = soilFluxes3D::setDegreeOfSaturation(index, waterFluxesParameters.initialDegreeOfSaturation);
+                        }
+                    }
 
                     if (isCrit3dError(myResult, error))
                     {
-                        errorString = "setMatricPotential: " + error + " in row:"
-                                    + QString::number(row) + " col:" + QString::number(col);
+                        errorString = "Function initializeWaterContent: " + error + "\n";
+                        errorString += "In row:" + QString::number(row) + " col:" + QString::number(col);
                         return false;
                     }
                 }
