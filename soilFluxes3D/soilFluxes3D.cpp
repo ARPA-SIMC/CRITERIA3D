@@ -499,7 +499,7 @@ int DLL_EXPORT __STDCALL setHydraulicProperties(int waterRetentionCurve,
 /*!
  * \brief setWaterContent
  * \param nodeIndex
- * \param waterContent [m^3 m^-3]
+ * \param waterContent [m] surface - [m3 m-3] sub-surface
  * \return OK/ERROR
  */
  int DLL_EXPORT __STDCALL setWaterContent(long nodeIndex, double waterContent)
@@ -528,6 +528,31 @@ int DLL_EXPORT __STDCALL setHydraulicProperties(int waterRetentionCurve,
             }
 
     return CRIT3D_OK;
+ }
+
+
+ /*!
+ * \brief setDegreeOfSaturation
+ * \param nodeIndex
+ * \param degreeOfSaturation [-] (only sub-surface)
+ * \return OK/ERROR
+ */
+ int DLL_EXPORT __STDCALL setDegreeOfSaturation(long nodeIndex, double degreeOfSaturation)
+ {
+     if (nodeListPtr == nullptr) return MEMORY_ERROR;
+
+     if ((nodeIndex < 0) || (nodeIndex >= myStructure.nrNodes)) return INDEX_ERROR;
+
+     if (nodeListPtr[nodeIndex].isSurface) return INDEX_ERROR;
+
+     if ((degreeOfSaturation < 0.) || (degreeOfSaturation > 1.)) return PARAMETER_ERROR;
+
+     nodeListPtr[nodeIndex].Se = degreeOfSaturation;
+     nodeListPtr[nodeIndex].H = nodeListPtr[nodeIndex].z - psi_from_Se(nodeIndex);
+     nodeListPtr[nodeIndex].oldH = nodeListPtr[nodeIndex].H;
+     nodeListPtr[nodeIndex].k = computeK(nodeIndex);
+
+     return CRIT3D_OK;
  }
 
 
