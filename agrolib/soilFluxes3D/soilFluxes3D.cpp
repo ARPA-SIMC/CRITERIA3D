@@ -182,18 +182,18 @@ int DLL_EXPORT __STDCALL setNumericalParameters(float minDeltaT, float maxDeltaT
  *  k_lateral_vertical_ratio = 10
  * \param waterRetentionCurve
  * \param conductivityMeanType
- * \param horizVertRatioConductivity
+ * \param conductivityHorizVertRatio
  * \return OK or PARAMETER_ERROR
  */
 int DLL_EXPORT __STDCALL setHydraulicProperties(int waterRetentionCurve,
-                        int conductivityMeanType, float horizVertRatioConductivity)
+                        int conductivityMeanType, float conductivityHorizVertRatio)
 {
     myParameters.waterRetentionCurve = waterRetentionCurve;
     myParameters.meanType = conductivityMeanType;
 
-    if  ((horizVertRatioConductivity >= 0.1) && (horizVertRatioConductivity <= 100))
+    if  ((conductivityHorizVertRatio >= 0.1) && (conductivityHorizVertRatio <= 100))
     {
-        myParameters.k_lateral_vertical_ratio = horizVertRatioConductivity;
+        myParameters.k_lateral_vertical_ratio = conductivityHorizVertRatio;
         return CRIT3D_OK;
     }
     else

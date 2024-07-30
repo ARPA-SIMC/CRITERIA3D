@@ -49,7 +49,7 @@
     __EXTERN int DLL_EXPORT __STDCALL setNodeSurface(long nodeIndex, int surfaceIndex);
 
     // WATER
-    __EXTERN int DLL_EXPORT __STDCALL setHydraulicProperties(int waterRetentionCurve, int conductivityMeanType, float horizVertRatioConductivity);
+    __EXTERN int DLL_EXPORT __STDCALL setHydraulicProperties(int waterRetentionCurve, int conductivityMeanType, float conductivityHorizVertRatio);
     __EXTERN int DLL_EXPORT __STDCALL setWaterContent(long index, double myWaterContent);
     __EXTERN int DLL_EXPORT __STDCALL setDegreeOfSaturation(long nodeIndex, double degreeOfSaturation);
     __EXTERN int DLL_EXPORT __STDCALL setMatricPotential(long index, double psi);

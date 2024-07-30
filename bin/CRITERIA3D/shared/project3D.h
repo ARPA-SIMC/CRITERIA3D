@@ -20,22 +20,24 @@
     class WaterFluxesParameters
     {
     public:
+        bool computeOnlySurface;
+        bool computeAllSoilDepth;
+
+        bool isInitialWaterPotential;
         double initialWaterPotential;            // [m]
         double initialDegreeOfSaturation;        // [-]
-        bool isInitialWaterPotential;
 
         double imposedComputationDepth;          // [m]
-        double horizVertRatioConductivity;       // [-]
+        double conductivityHorizVertRatio;       // [-]
 
         int modelAccuracy;                       // [-]
 
         bool freeCatchmentRunoff;
         bool freeLateralDrainage;
         bool freeBottomDrainage;
-        bool computeOnlySurface;
-        bool computeAllSoilDepth;
 
         WaterFluxesParameters();
+
         void initialize();
     };
 
