@@ -21,9 +21,7 @@ const float LAIMIN = 0.01f;
 
 
 Vine3D_Grapevine::Vine3D_Grapevine()
-{
-}
-
+{}
 
 bool Vine3D_Grapevine::compute(bool computeDaily, int secondsPerStep, Crit3DModelCase* modelCase, double chlorophyll)
 {
@@ -106,8 +104,8 @@ bool Vine3D_Grapevine::compute(bool computeDaily, int secondsPerStep, Crit3DMode
     grassTranspiration(modelCase);
 
     return(true);
-
 }
+
 
 void Vine3D_Grapevine::resetLayers()
 {
@@ -120,6 +118,7 @@ void Vine3D_Grapevine::resetLayers()
         transpirationCumulatedGrass[i] = NODATA;
     }
 }
+
 
 void Vine3D_Grapevine::initializeLayers(int myMaxLayers)
 {
@@ -156,22 +155,25 @@ bool Vine3D_Grapevine::setWeather(double meanDailyTemp, double temp, double irra
     myMeanDailyTemperature = meanDailyTemp;
     double deltaRelHum = MAXVALUE(100.0 - myRelativeHumidity, 0.01);
     myVaporPressureDeficit = 0.01 * deltaRelHum * 613.75 * exp(17.502 * myInstantTemp / (240.97 + myInstantTemp));
-    //globalRadiation = globRad;
-    if ((int(prec) != NODATA) && (int(temp) != NODATA) && (int(windSpeed) != NODATA) && (int(irradiance) != NODATA) && (int(relativeHumidity) != NODATA) && (int(atmosphericPressure) != NODATA)) isReadingOK = true ;
-    return isReadingOK ;
+
+    if ((int(prec) != NODATA) && (int(temp) != NODATA) && (int(windSpeed) != NODATA)
+        && (int(irradiance) != NODATA) && (int(relativeHumidity) != NODATA) && (int(atmosphericPressure) != NODATA))
+        isReadingOK = true;
+
+    return isReadingOK;
 }
+
 
 bool Vine3D_Grapevine::setDerivedVariables(double diffuseIrradiance, double directIrradiance, double cloudIndex, double sunElevation)
 {
     bool isReadingOK = false;
     myDiffuseIrradiance = diffuseIrradiance ;
     myDirectIrradiance = directIrradiance ;
-    //myLongWaveIrradiance = longWaveIrradiance ;
     myCloudiness = MINVALUE(1,MAXVALUE(0,cloudIndex)) ;
-    //myAirVapourPressure = airVapourPressure ;
     mySunElevation =  sunElevation;
-    if (int(sunElevation) != NODATA && int(diffuseIrradiance) != NODATA && int(directIrradiance) != NODATA
-            && int(cloudIndex) != NODATA) isReadingOK = true ;
+    if (int(sunElevation) != NODATA && int(diffuseIrradiance) != NODATA && int(directIrradiance) != NODATA && int(cloudIndex) != NODATA)
+        isReadingOK = true ;
+
     return isReadingOK ;
 }
 
@@ -185,32 +187,45 @@ void Vine3D_Grapevine::initializeWaterStress(Crit3DModelCase* modelCase)
 }
 
 
-bool Vine3D_Grapevine::setSoilProfile(Crit3DModelCase* modelCase, double* myWiltingPoint, double* myFieldCapacity,
-                            double* myPsiSoilProfile, double* mySoilWaterContentProfile,
-                            double* mySoilWaterContentFC, double* mySoilWaterContentWP)
+bool Vine3D_Grapevine::setSoilProfile(Crit3DModelCase* modelCase, std::vector<double>& myWiltingPoint, std::vector<double>& myFieldCapacity,
+                            std::vector<double>& myPsiSoilProfile, std::vector<double>& mySoilWaterContentProfile,
+                            std::vector<double>& mySoilWaterContentFC, std::vector<double>& mySoilWaterContentWP)
 {
-    double psiSoilProfile;
-    double logPsiSoilAverage = 0.;
-    double logPsiFCAverage = 0.;
-    double soilFieldCapacity;
+    // check last Soil layer
+    int lastLayer = modelCase->soilLayersNr - 1;
+    for (int i = 1; i < modelCase->soilLayersNr; i++)
+    {
+        if (isEqual(myPsiSoilProfile[i], NODATA) || isEqual(myFieldCapacity[i], NODATA) || isEqual(mySoilWaterContentProfile[i], NODATA)
+            || isEqual(mySoilWaterContentProfile[i], NODATA) || isEqual(mySoilWaterContentWP[i], NODATA))
+        {
+            lastLayer = i-1;
+            break;
+        }
+    }
+    if (lastLayer == 0)
+        return false;
 
     psiSoilAverage = 0.;
     psiFieldCapacityAverage = 0.;
 
-    if (int(myWiltingPoint[int(modelCase->soilLayersNr / 2)]) == NODATA)
-        return false;
-
-    wiltingPoint = myWiltingPoint[int(modelCase->soilLayersNr / 2)] / 101.97;     // conversion from mH2O to MPa
-
-    //layer 0: surface, no soil
+    // initialize vector
     for (int i = 1; i < modelCase->soilLayersNr; i++)
     {
-        if (isEqual(myPsiSoilProfile[i], NODATA) || isEqual(myFieldCapacity[i], NODATA) || isEqual(mySoilWaterContentProfile[i], NODATA)
-                || isEqual(mySoilWaterContentProfile[i], NODATA) || isEqual(mySoilWaterContentWP[i], NODATA))
-            return false;
+        transpirationLayer[i] = 0.;
+        transpirationCumulatedGrass[i] = 0.;
+        fractionTranspirableSoilWaterProfile[i] = 0.;
+    }
 
-        soilFieldCapacity = myFieldCapacity[i]/101.97; // conversion from mH2O to MPa
-        psiSoilProfile = MINVALUE(myPsiSoilProfile[i],-1.)/101.97 ; // conversion from mH2O to MPa
+    int midLayer = (lastLayer + 1) / 2;
+    wiltingPoint = myWiltingPoint[midLayer] / 101.97;                   // conversion from mH2O to MPa
+
+    //layer 0: surface, no soil
+    double logPsiSoilAverage = 0.;
+    double logPsiFCAverage = 0.;
+    for (int i = 1; i <= lastLayer; i++)
+    {
+        double soilFieldCapacity = myFieldCapacity[i] / 101.97;                 // conversion from mH2O to MPa
+        double psiSoilProfile = MINVALUE(myPsiSoilProfile[i], -1.) / 101.97 ;   // conversion from mH2O to MPa
         logPsiSoilAverage += log(-psiSoilProfile) * modelCase->rootDensity[i];
         logPsiFCAverage += log(-soilFieldCapacity) * modelCase->rootDensity[i];
     }
@@ -219,28 +234,26 @@ bool Vine3D_Grapevine::setSoilProfile(Crit3DModelCase* modelCase, double* myWilt
     psiFieldCapacityAverage = -exp(logPsiFCAverage);
     fractionTranspirableSoilWaterAverage = 0;
 
-    double waterContent, waterContentFC, waterContentWP;
-
-    for (int i = 0; i < modelCase->soilLayersNr; i++)
+    for (int i = 0; i <= lastLayer; i++)
     {
-        waterContent = mySoilWaterContentProfile[i];
-        waterContentFC = mySoilWaterContentFC[i];
-        waterContentWP = mySoilWaterContentWP[i];
+        double waterContent = mySoilWaterContentProfile[i];
+        double waterContentFC = mySoilWaterContentFC[i];
+        double waterContentWP = mySoilWaterContentWP[i];
 
         fractionTranspirableSoilWaterProfile[i] = MAXVALUE(0, MINVALUE(1, (waterContent - waterContentWP) / (waterContentFC - waterContentWP)));
         fractionTranspirableSoilWaterAverage += fractionTranspirableSoilWaterProfile[i] * modelCase->rootDensity[i];
-        transpirationLayer[i] = 0.;
-        transpirationCumulatedGrass[i] = 0. ;
     }
+
     return true ;
 }
 
-bool Vine3D_Grapevine::setStatePlant(TstatePlant myStatePlant, bool isVineyard)
+
+bool Vine3D_Grapevine::setStatePlant(TstatePlant myStatePlant, bool isVineyard_)
 {
     statePlant = myStatePlant;
     this->statePlant.outputPlant.transpirationNoStress = 0.;
 
-    if (! isVineyard)
+    if (! isVineyard_)
     {
         statePlant.outputPlant.brixBerry = NODATA;
         statePlant.statePheno.stage = NODATA;
@@ -248,17 +261,8 @@ bool Vine3D_Grapevine::setStatePlant(TstatePlant myStatePlant, bool isVineyard)
         statePlant.stateGrowth.leafAreaIndex = NODATA;
         statePlant.stateGrowth.fruitBiomass = NODATA;
     }
+
     return true;
-}
-
-TstatePlant Vine3D_Grapevine::getStatePlant()
-{
-    return(this->statePlant);
-}
-
-ToutputPlant Vine3D_Grapevine::getOutputPlant()
-{
-    return (this->statePlant.outputPlant);
 }
 
 
@@ -268,13 +272,13 @@ void Vine3D_Grapevine::getFixSimulationParameters()
     parameterBindiMigliettaFix.a = -0.28;
     parameterBindiMigliettaFix.b = 0.04;
     parameterBindiMigliettaFix.c = -0.015;
-    //parameterBindiMigliettaFix.baseTemperature = 10;
-    //parameterBindiMigliettaFix.tempMaxThreshold = 35;
     parameterBindiMigliettaFix.extinctionCoefficient = 0.5;
     parameterBindiMigliettaFix.shadedSurface = 0.8;
+
     // Wang Leuning parameters
     parameterWangLeuningFix.stomatalConductanceMin = 0.008;
     parameterWangLeuningFix.optimalTemperatureForPhotosynthesis = 298.15;
+
     // fenovitis parameters
     parameterPhenoVitisFix.a= 0.005;
     parameterPhenoVitisFix.optimalChillingTemp = 2.8;
@@ -525,6 +529,8 @@ void Vine3D_Grapevine::radiationAbsorption()
     {
          sunlit.leafAreaIndex =  0.0 ;
          sunlit.absorbedPAR = 0.0 ;
+
+         // TODO: non servono?
          sunlitAbsorbedNIR = 0.0 ;
          sunlitAbsorbedLW = 0.0 ;
          sunlit.isothermalNetRadiation =  0.0 ;
@@ -537,11 +543,12 @@ void Vine3D_Grapevine::radiationAbsorption()
          shadedAbsorbedLW= dum[16] * (UPSCALINGFUNC(diffuseLightK,statePlant.stateGrowth.leafAreaIndex) - UPSCALINGFUNC(directLightK+diffuseLightK,statePlant.stateGrowth.leafAreaIndex)) ;
          shaded.isothermalNetRadiation = shaded.absorbedPAR + shadedAbsorbedNIR + shadedAbsorbedLW ;
     }
+
      // Convert absorbed PAR into units of mol m-2 s-1
      sunlit.absorbedPAR *= 4.57E-6 ;
      shaded.absorbedPAR *= 4.57E-6 ;
-
 }
+
 
 void Vine3D_Grapevine::leafTemperature()
 {
@@ -695,7 +702,8 @@ void Vine3D_Grapevine::aerodynamicalCoupling()
             {
                 sunlitDeltaTemp = 0.0;
             }
-            sunlitDeltaTemp = 0.0;
+            sunlitDeltaTemp = 0.0;  // TODO: check
+
             sunlit.leafTemperature = myInstantTemp + sunlitDeltaTemp	+ ZEROCELSIUS ; //sunlit big-leaf
             stomatalConductanceWater = 10.0/shaded.leafAreaIndex ; //dummy stom res for shaded big-leaf
             //if (shaded.isothermalNetRadiation > 100) stomatalConductanceWater *= pow(100/shaded.isothermalNetRadiation,0.5);
@@ -802,9 +810,8 @@ void Vine3D_Grapevine::upscale(TVineCultivar *cultivar)
         sunlit.darkRespiration = 0.0;
         sunlit.maximalCarboxylationRate = 0.0;
     }
-
-
 }
+
 
 void Vine3D_Grapevine::photosynthesisKernel(TVineCultivar* cultivar, double COMP,double GAC,double GHR,double GSCD,double J,double KC,double KO
                      ,double RD,double RNI,double STOMWL,double VCmax,double *ASS,double *GSC,double *TR)
