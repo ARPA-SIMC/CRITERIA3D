@@ -2195,6 +2195,7 @@ void MainWindow::on_actionCriteria3D_waterFluxes_settings_triggered()
         dialogWaterFluxes.imposedDepth->setChecked(true);
 
     dialogWaterFluxes.useWaterRetentionFitting->setChecked(myProject.fittingOptions.useWaterRetentionData);
+    dialogWaterFluxes.setConductivityHVRatio(myProject.waterFluxesParameters.conductivityHorizVertRatio);
 
     dialogWaterFluxes.exec();
 
@@ -2207,6 +2208,7 @@ void MainWindow::on_actionCriteria3D_waterFluxes_settings_triggered()
     {
         myProject.waterFluxesParameters.initialWaterPotential = dialogWaterFluxes.getInitialWaterPotential();
         myProject.waterFluxesParameters.initialDegreeOfSaturation = dialogWaterFluxes.getInitialDegreeOfSaturation();
+        myProject.waterFluxesParameters.conductivityHorizVertRatio = dialogWaterFluxes.getConductivityHVRatio();
 
         myProject.waterFluxesParameters.imposedComputationDepth = dialogWaterFluxes.getImposedComputationDepth();
         myProject.waterFluxesParameters.computeOnlySurface = dialogWaterFluxes.onlySurface->isChecked();

@@ -172,16 +172,10 @@ void Project3D::initializeProject3D()
     totalTranspiration = 0;
 
     // specific outputs
-    isClimateOutput = false;
-    //waterDeficitDepth.clear();
     waterContentDepth.clear();
-    //degreeOfSaturationDepth.clear();
+    degreeOfSaturationDepth.clear();
     waterPotentialDepth.clear();
-    //availableWaterDepth.clear();
-    //fractionAvailableWaterDepth.clear();
     factorOfSafetyDepth.clear();
-    //awcDepth.clear();
-
 
     setCurrentFrequency(hourly);
 }
@@ -265,26 +259,32 @@ bool Project3D::loadProject3DSettings()
 
     projectSettings->endGroup();
 
-    // OUTPUT variables (optional)
+    // OUTPUT VARIABLES (optional)
     QList<QString> depthList;
     projectSettings->beginGroup("output");
 
     depthList = projectSettings->value("waterContent").toStringList();
     if (! setVariableDepth(depthList, waterContentDepth))
     {
-        errorString = "Wrong water content depth in " + projectSettings->fileName();
+        errorString = "Wrong water content depth in the settings file: " + projectSettings->fileName();
+    }
+
+    depthList = projectSettings->value("degreeOfSaturation").toStringList();
+    if (! setVariableDepth(depthList, degreeOfSaturationDepth))
+    {
+        errorString = "Wrong degree of saturation depth in the settings file: " + projectSettings->fileName();
     }
 
     depthList = projectSettings->value("waterPotential").toStringList();
     if (! setVariableDepth(depthList, waterPotentialDepth))
     {
-        errorString = "Wrong water potential depth in " + projectSettings->fileName();
+        errorString = "Wrong water potential depth in the settings file: " + projectSettings->fileName();
     }
 
     depthList = projectSettings->value("factorOfSafety").toStringList();
     if (! setVariableDepth(depthList, factorOfSafetyDepth))
     {
-        errorString = "Wrong factor of safety depth in " + projectSettings->fileName();
+        errorString = "Wrong factor of safety depth in the settings file: " + projectSettings->fileName();
     }
 
     return true;
@@ -2256,17 +2256,21 @@ QString getDailyPrefixFromVar(QDate myDate, criteria3DVariable myVar)
     return fileName;
 }
 
+
 bool setVariableDepth(const QList<QString>& depthList, std::vector<int>& variableDepth)
 {
-    int nrDepth = depthList.size();
+    unsigned nrDepth = unsigned(depthList.size());
     if (nrDepth > 0)
     {
-        variableDepth.resize(unsigned(nrDepth));
-        for (int i = 0; i < nrDepth; i++)
+        variableDepth.resize(nrDepth);
+        for (unsigned i = 0; i < nrDepth; i++)
         {
-            variableDepth[unsigned(i)] = depthList[i].toInt();
-            if (variableDepth[unsigned(i)] <= 0)
+            bool isOk;
+            int depth = depthList[i].toInt(&isOk);
+            if (! isOk || depth <= 0)
                 return false;
+
+            variableDepth[i] = depth;
         }
     }
 

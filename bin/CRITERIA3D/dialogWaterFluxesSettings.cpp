@@ -65,10 +65,20 @@ DialogWaterFluxesSettings::DialogWaterFluxesSettings()
     depthGroupBox->setLayout(layoutDepth);
 
     // soil properties
-    QGroupBox* soilGroupBox = new QGroupBox("Soil properties");
-    QVBoxLayout *soilLayout = new QVBoxLayout;
     useWaterRetentionFitting = new QRadioButton("Use water retention data");
-    soilLayout->addWidget(useWaterRetentionFitting);
+    QLabel *hvConductivityRatioLabel = new QLabel(tr("Conductivity horizontal/vertical ratio [-]"));
+    conductivityHVRatioEdit = new QLineEdit();
+    conductivityHVRatioEdit->setFixedWidth(50);
+    QDoubleValidator* conductivityRatioValidator = new QDoubleValidator(0.1, 20., 2, conductivityHVRatioEdit);
+    conductivityRatioValidator->setNotation(QDoubleValidator::StandardNotation);
+    conductivityHVRatioEdit->setValidator(conductivityRatioValidator);
+
+    QGridLayout *soilLayout = new QGridLayout();
+    soilLayout->addWidget(hvConductivityRatioLabel, 0, 0);
+    soilLayout->addWidget(conductivityHVRatioEdit, 0, 1);
+    soilLayout->addWidget(useWaterRetentionFitting, 1, 0);
+
+    QGroupBox* soilGroupBox = new QGroupBox("Soil properties");
     soilGroupBox->setLayout(soilLayout);
 
     // ok/cancel buttons

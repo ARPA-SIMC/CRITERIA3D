@@ -142,14 +142,9 @@
         double totalTranspiration;              // [m3 h-1]
 
         // specific outputs
-        bool isClimateOutput;
         std::vector<int> waterContentDepth;
-        //std::vector<int> degreeOfSaturationDepth;
+        std::vector<int> degreeOfSaturationDepth;
         std::vector<int> waterPotentialDepth;
-        //std::vector<int> waterDeficitDepth;
-        //std::vector<int> awcDepth;
-        //std::vector<int> availableWaterDepth;
-        //std::vector<int> fractionAvailableWaterDepth;
         std::vector<int> factorOfSafetyDepth;
 
         Project3D();
