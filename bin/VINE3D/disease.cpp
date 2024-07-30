@@ -3,9 +3,9 @@
 #include "downyMildew.h"
 #include "project.h"
 #include "meteo.h"
-#include "atmosphere.h"
 #include "commonConstants.h"
 #include "utilities.h"
+#include "interpolation.h"
 
 #include <iostream>
 
@@ -189,21 +189,28 @@ bool computeDownyMildew(Vine3DProject* myProject, QDate firstDate, QDate lastDat
             for (unsigned h = 0; h < nrHours; h++)
             {
                 if ((myTime.date.day == 1) && (myTime.getHour() == 1))
+                {
                     myProject->logInfo("Compute hourly data - month: " + QString::number(myTime.date.month));
+                }
 
-                if (! interpolationProjectDemMain(myProject, airTemperature, myTime, true))
+                gis::Crit3DRasterGrid* myRaster = myProject->getHourlyMeteoRaster(airTemperature);
+                if (! myProject->interpolationDemMain(airTemperature, myTime, myRaster))
                 {
                     missingData = true;
                     variableMissing = "Air temperature";
                     break;
                 }
-                if (! interpolationProjectDemMain(myProject, airRelHumidity, myTime, true))
+
+                myRaster = myProject->getHourlyMeteoRaster(airRelHumidity);
+                if (! myProject->interpolationDemMain(airRelHumidity, myTime, myRaster))
                 {
                     missingData = true;
                     variableMissing = "Air humidity";
                     break;
                 }
-                if (! interpolationProjectDemMain(myProject, precipitation, myTime, true))
+
+                myRaster = myProject->getHourlyMeteoRaster(precipitation);
+                if (! myProject->interpolationDemMain(precipitation, myTime, myRaster))
                 {
                     missingData = true;
                     variableMissing = "Rainfall";

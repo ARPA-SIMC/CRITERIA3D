@@ -1425,7 +1425,8 @@ bool Project3D::interpolateHourlyMeteoVar(meteoVariable myVar, const QDateTime& 
     else
     {
         gis::Crit3DRasterGrid* myRaster = getHourlyMeteoRaster(myVar);
-        if (myRaster == nullptr) return false;
+        if (myRaster == nullptr)
+            return false;
 
         if (! interpolationDemMain(myVar, getCrit3DTime(myTime), myRaster))
         {

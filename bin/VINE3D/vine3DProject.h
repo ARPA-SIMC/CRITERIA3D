@@ -144,6 +144,12 @@
 
         void resetWaterBalanceMap();
         void updateWaterBalanceMaps();
+
+        bool loadDailyMeteoMap(meteoVariable myDailyVar, QDate myDate);
+
+        bool setSoilProfileCrop(int row, int col, Crit3DModelCase* modelCase);
+        bool assignIrrigation(Crit3DTime myTime);
+        bool modelDailyCycle(bool isInitialState, Crit3DDate myDate, int nrHours, const QString& myOutputPath, bool saveOutput);
     };
 
 

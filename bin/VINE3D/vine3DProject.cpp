@@ -16,8 +16,6 @@
 #include "solarRadiation.h"
 #include "waterBalance.h"
 #include "plant.h"
-#include "modelCore.h"
-#include "atmosphere.h"
 #include "disease.h"
 #include "vine3DProject.h"
 #include "soilDbTools.h"
@@ -1164,9 +1162,9 @@ bool Vine3DProject::runModels(QDateTime firstTime, QDateTime lastTime, bool save
             }
 
             // load average air temperature map, if exists
-            loadDailyMeteoMap(this, dailyAirTemperatureAvg, myDate.addDays(-1));
+            loadDailyMeteoMap(dailyAirTemperatureAvg, myDate.addDays(-1));
 
-            if (! modelDailyCycle(isInitialState, getCrit3DDate(myDate), finalHour, this, myOutputPathHourly, saveOutput))
+            if (! modelDailyCycle(isInitialState, getCrit3DDate(myDate), finalHour, myOutputPathHourly, saveOutput))
             {
                 logError(errorString);
                 return false;
@@ -1194,10 +1192,10 @@ bool Vine3DProject::runModels(QDateTime firstTime, QDateTime lastTime, bool save
             }
 
             //load daily map (for desease)
-            if (! loadDailyMeteoMap(this, dailyAirTemperatureAvg, myDate)) return false;
-            if (! loadDailyMeteoMap(this, dailyAirRelHumidityAvg, myDate)) return false;
-            if (! loadDailyMeteoMap(this, dailyPrecipitation, myDate))  return false;
-            if (! loadDailyMeteoMap(this, dailyLeafWetness, myDate)) return false;
+            if (! loadDailyMeteoMap(dailyAirTemperatureAvg, myDate)) return false;
+            if (! loadDailyMeteoMap(dailyAirRelHumidityAvg, myDate)) return false;
+            if (! loadDailyMeteoMap(dailyPrecipitation, myDate))  return false;
+            if (! loadDailyMeteoMap(dailyLeafWetness, myDate)) return false;
             updateThermalSum(this, myDate);
 
             //powdery mildew
@@ -1212,6 +1210,27 @@ bool Vine3DProject::runModels(QDateTime firstTime, QDateTime lastTime, bool save
     if (computeDiseases) computeDownyMildew(this, firstDate, lastDate, hourTime2);
 
     logInfoGUI("end of run");
+    return true;
+}
+
+
+bool Vine3DProject::loadDailyMeteoMap(meteoVariable myDailyVar, QDate myDate)
+{
+    QString myPath = getProjectPath() + dailyOutputPath + myDate.toString("yyyy/MM/dd/");
+    QString varName = QString::fromStdString(MapDailyMeteoVarToString.at(myDailyVar));
+    QString myFileName = myPath + getOutputNameDaily(varName, "", myDate);
+    std::string myError;
+
+    QFile myFile;
+    myFile.setFileName(myFileName + ".hdr");
+    if (! myFile.exists()) return false;
+
+    if (!gis::readEsriGrid(myFileName.toStdString(), vine3DMapsD->getMapFromVar(myDailyVar), myError))
+    {
+        logError(QString::fromStdString(myError));
+        return false;
+    }
+
     return true;
 }
 
