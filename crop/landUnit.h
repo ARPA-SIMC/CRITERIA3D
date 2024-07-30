@@ -23,7 +23,5 @@
 
     bool loadLandUnitList(const QSqlDatabase &dbCrop, std::vector<Crit3DLandUnit> &landUnitList, QString &errorStr);
 
-    int getLandUnitIndex(const std::vector<Crit3DLandUnit> &landUnitList, int idLandUnit);
-
 
 #endif // LANDUNIT_H
