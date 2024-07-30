@@ -257,11 +257,10 @@ bool Project3D::loadProject3DSettings()
 
     projectSettings->endGroup();
 
-    // OUTPUT VARIABLES (optional)
-    QList<QString> depthList;
+    // output variables (optional)
     projectSettings->beginGroup("output");
 
-    depthList = projectSettings->value("waterContent").toStringList();
+    QList<QString> depthList = projectSettings->value("waterContent").toStringList();
     if (! setVariableDepth(depthList, waterContentDepth))
     {
         errorString = "Wrong water content depth in the settings file: " + projectSettings->fileName();
@@ -284,6 +283,8 @@ bool Project3D::loadProject3DSettings()
     {
         errorString = "Wrong factor of safety depth in the settings file: " + projectSettings->fileName();
     }
+
+    projectSettings->endGroup();
 
     return true;
 }

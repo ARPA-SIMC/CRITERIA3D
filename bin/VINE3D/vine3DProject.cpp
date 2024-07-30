@@ -77,7 +77,7 @@ void Vine3DProject::loadVine3DSettings()
 {
     projectSettings->beginGroup("project");
 
-        dbVine3DFileName = projectSettings->value("db_vine3d").toString();
+        dbVine3DFileName = projectSettings->value("vine3d_db").toString();
 
     projectSettings->endGroup();
 
@@ -94,7 +94,7 @@ bool Vine3DProject::openVine3DDatabase(QString fileName)
 {
     if (fileName == "")
     {
-        errorString = "VINE3D database fileName missing.\nSet the 'db_vine3d' field in the .ini settings file.";
+        errorString = "VINE3D database fileName missing.\nSet the 'vine3d_db' field in the .ini settings file.";
         return false;
     }
 

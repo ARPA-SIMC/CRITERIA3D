@@ -976,6 +976,7 @@ bool Crit3DProject::runModelHour(const QString& hourlyOutputPath, bool isRestart
         {
             if (! interpolateAndSaveHourlyMeteo(globalIrradiance, myDateTime, hourlyOutputPath, isSaveOutputRaster()))
                 return false;
+
             qApp->processEvents();
         }
 
@@ -1044,6 +1045,8 @@ bool Crit3DProject::runModelHour(const QString& hourlyOutputPath, bool isRestart
         }
 
         runWaterFluxes3DModel(3600, isRestart);
+
+        qApp->processEvents();
     }
 
     // soil heat

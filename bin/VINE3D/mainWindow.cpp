@@ -729,3 +729,10 @@ void MainWindow::on_actionShow_model_cases_map_triggered()
     }
 }
 
+
+
+void MainWindow::on_actionCriteria3D_settings_triggered()
+{
+
+}
+

@@ -84,10 +84,22 @@ CONFIG(debug, debug|release) {
 }
 
 
+HEADERS += \
+    shared/project3D.h \
+    shared/dialogWaterFluxesSettings.h \
+    dialogModelProcesses.h \
+    mainwindow.h \
+    criteria3DProject.h \
+    dialogLoadState.h \
+    dialogSnowSettings.h \
+    geometry.h \
+    glWidget.h \
+    viewer3D.h
+
 SOURCES += \
-    dialogModelProcesses.cpp \
-    dialogWaterFluxesSettings.cpp \
     shared/project3D.cpp \
+    shared/dialogWaterFluxesSettings.cpp \
+    dialogModelProcesses.cpp \
     mainwindow.cpp \
     criteria3DProject.cpp \
     dialogLoadState.cpp \
@@ -96,19 +108,6 @@ SOURCES += \
     glWidget.cpp \
     main.cpp \
     viewer3D.cpp
-
-
-HEADERS += \
-    dialogModelProcesses.h \
-    dialogWaterFluxesSettings.h \
-    shared/project3D.h \
-    mainwindow.h \
-    criteria3DProject.h \
-    dialogLoadState.h \
-    dialogSnowSettings.h \
-    geometry.h \
-    glWidget.h \
-    viewer3D.h
 
 
 FORMS += mainwindow.ui

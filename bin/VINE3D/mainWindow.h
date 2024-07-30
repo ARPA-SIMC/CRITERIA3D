@@ -75,6 +75,8 @@
 
         void on_actionShow_model_cases_map_triggered();
 
+        void on_actionCriteria3D_settings_triggered();
+
     protected:
         /*!
          * \brief mouseReleaseEvent call moveCenter
