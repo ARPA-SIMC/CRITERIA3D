@@ -97,23 +97,26 @@ bool Crit3DOutputPointsDbHandler::addCriteria3DColumn(const QString &tableName, 
     }
 
     // column name
+    if (depth != NODATA)
+    {
     QString newField = variableString + "_" + QString::number(depth);
+    }
 
     // column exists already
     QList<QString> fieldList = getFields(&_db, tableName);
-    if ( fieldList.contains(newField) )
+    if ( fieldList.contains(variableString) )
     {
         return true;
     }
 
     // add column
     QString queryString = "ALTER TABLE '" + tableName + "'";
-    queryString += " ADD " + newField + " REAL";
+    queryString += " ADD " + variableString + " REAL";
 
     QSqlQuery myQuery = _db.exec(queryString);
     if (myQuery.lastError().isValid())
     {
-        errorStr = "Error in add column: " + newField + "\n" + myQuery.lastError().text();
+        errorStr = "Error in add column: " + variableString + "\n" + myQuery.lastError().text();
         return false;
     }
 
@@ -193,7 +196,7 @@ bool Crit3DOutputPointsDbHandler::saveHourlyCriteria3D_Data(const QString &table
     }
 
     int nrValues = int(varList.size()) * nrSoilLayers;
-    if (nrValues != values.size())
+    if (nrValues != int(values.size()))
     {
         errorStr = "Error saving values: number of values is not as expected.";
         return false;
