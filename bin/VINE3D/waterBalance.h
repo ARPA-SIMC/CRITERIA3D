@@ -48,8 +48,8 @@
     bool saveWaterBalanceCumulatedOutput(Vine3DProject* myProject, QDate myDate, criteria3DVariable myVar,
                                 QString varName, QString notes, QString outputPath);
 
-    double* getCriteria3DVarProfile(Vine3DProject* myProject, int myRow, int myCol, criteria3DVariable myVar);
-    double* getSoilVarProfile(Vine3DProject* myProject, int myRow, int myCol, soil::soilVariable myVar);
+    std::vector<double> getCriteria3DVarProfile(Vine3DProject* myProject, int myRow, int myCol, criteria3DVariable myVar);
+    std::vector<double> getSoilVarProfile(Vine3DProject* myProject, int myRow, int myCol, soil::soilVariable myVar);
 
 
 #endif // WATERBALANCE_H

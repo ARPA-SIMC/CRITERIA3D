@@ -422,13 +422,14 @@ bool Crit3DProject::runModels(QDateTime firstTime, QDateTime lastTime, bool isRe
         for (int hour = firstHour; hour <= lastHour; hour++)
         {
             setCurrentHour(hour);
+            if (currentSeconds == 0 || currentSeconds == 3600)
+                isRestart = false;
 
-            if (! runModelHour(getCurrentTime(), currentOutputPath, isRestart))
+            if (! runModelHour(currentOutputPath, isRestart))
             {
                 logError();
                 return false;
             }
-            isRestart = false;
 
             // output points
             if (isSaveOutputPoints() && currentSeconds == 3600)
@@ -457,7 +458,7 @@ bool Crit3DProject::runModels(QDateTime firstTime, QDateTime lastTime, bool isRe
         saveModelsState();
     }
 
-    logInfoGUI("Computation done.");
+    logInfoGUI("Computation is finished.");
 
     return true;
 }
@@ -620,29 +621,6 @@ bool Crit3DProject::writeCriteria3DParameters()
     parameters->setValue("snow/snowSurfaceDampingDepth", snowModel.snowParameters.snowSurfaceDampingDepth);
 
     parameters->sync();
-    return true;
-}
-
-
-bool Crit3DProject::loadLandUseMap(QString fileName)
-{
-    if (fileName == "")
-    {
-        logError("Missing land use map filename");
-        return false;
-    }
-
-    landUseMapFileName = fileName;
-    fileName = getCompleteFileName(fileName, PATH_GEO);
-
-    std::string errorStr;
-    if (! gis::openRaster(fileName.toStdString(), &landUseMap, gisSettings.utmZone, errorStr))
-    {
-        logError("Load land use map failed: " + fileName + "\n" + QString::fromStdString(errorStr));
-        return false;
-    }
-
-    logInfo("Land use map = " + fileName);
     return true;
 }
 
@@ -956,10 +934,13 @@ bool Crit3DProject::updateDailyTemperatures()
 }
 
 
-bool Crit3DProject::runModelHour(const QDateTime &myDateTime, const QString& hourlyOutputPath, bool isRestart)
+bool Crit3DProject::runModelHour(const QString& hourlyOutputPath, bool isRestart)
 {
     if (! isRestart)
     {
+        QDateTime myDateTime = getCurrentTime();
+        currentSeconds = 0;
+
         hourlyMeteoMaps->setComputed(false);
         radiationMaps->setComputed(false);
 
@@ -978,7 +959,6 @@ bool Crit3DProject::runModelHour(const QDateTime &myDateTime, const QString& hou
                 return false;
 
             hourlyMeteoMaps->setComputed(true);
-            emit updateOutputSignal();
             qApp->processEvents();
         }
 
@@ -1000,10 +980,13 @@ bool Crit3DProject::runModelHour(const QDateTime &myDateTime, const QString& hou
             qApp->processEvents();
         }
 
-        // initalize sink / source
-        for (unsigned long i = 0; i < nrNodes; i++)
+        if (processes.computeWater)
         {
-            waterSinkSource.at(size_t(i)) = 0.;
+            // initalize sink / source
+            for (unsigned long i = 0; i < nrNodes; i++)
+            {
+                waterSinkSource.at(size_t(i)) = 0.;
+            }
         }
 
         if (processes.computeCrop || processes.computeWater)
@@ -1019,13 +1002,16 @@ bool Crit3DProject::runModelHour(const QDateTime &myDateTime, const QString& hou
                 saveHourlyMeteoOutput(referenceEvapotranspiration, hourlyOutputPath, myDateTime);
             }
 
-            assignETreal();
-            qApp->processEvents();
-        }
+            if (processes.computeCrop)
+            {
+                updateDailyTemperatures();
+            }
+            if (processes.computeWater)
+            {
+                assignETreal();
+            }
 
-        if (processes.computeCrop)
-        {
-            updateDailyTemperatures();
+            qApp->processEvents();
         }
 
         if (processes.computeWater)
@@ -1035,6 +1021,8 @@ bool Crit3DProject::runModelHour(const QDateTime &myDateTime, const QString& hou
             if (! setSinkSource())
                 return false;
         }
+
+        emit updateOutputSignal();
     }
 
     // soil fluxes
@@ -1042,12 +1030,10 @@ bool Crit3DProject::runModelHour(const QDateTime &myDateTime, const QString& hou
     {
         if (! isRestart)
         {
-            logInfo("\nCompute soil fluxes: " + myDateTime.toString());
+            logInfo("\nCompute soil fluxes: " + getCurrentTime().toString());
         }
 
-        runModel(3600, isRestart);
-
-        qApp->processEvents();
+        runWaterFluxes3DModel(3600, isRestart);
     }
 
     // soil heat

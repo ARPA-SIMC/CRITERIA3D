@@ -56,8 +56,11 @@ void WaterFluxesParameters::initialize()
     computeOnlySurface = false;
     computeAllSoilDepth = true;
 
-    initialWaterPotential = -3.0;           // [m] default: field capacity
-    imposedComputationDepth = 0.3;          // [m]
+    isInitialWaterPotential = true;
+    initialWaterPotential = -2.0;           // [m] default: field capacity
+    initialDegreeOfSaturation = 0.8;        // [-]
+
+    imposedComputationDepth = 1.0;          // [m]
     horizVertRatioConductivity = 10.0;      // [-] default: ten times
 
     modelAccuracy = 3;                      // [-] default: error on the third digit
@@ -161,8 +164,8 @@ void Project3D::initializeProject3D()
     nrNodes = 0;
     nrLateralLink = 8;
 
-    currentSeconds = 0;
-    previousTotalWaterContent = 0;
+    currentSeconds = 0;                 // [s]
+    previousTotalWaterContent = 0;      // [m3]
 
     totalPrecipitation = 0;
     totalEvaporation = 0;
@@ -317,7 +320,7 @@ bool Project3D::initialize3DModel()
     // set computation depth
     if (waterFluxesParameters.computeOnlySurface)
     {
-        computationSoilDepth = 0;
+        computationSoilDepth = 0.;
     }
     else
     {
@@ -416,7 +419,7 @@ bool Project3D::initialize3DModel()
     int digitMBR = waterFluxesParameters.modelAccuracy;
     soilFluxes3D::setNumericalParameters(minimumDeltaT, 3600, 100, 10, 12, digitMBR);
 
-    if (! initializeMatricPotential(waterFluxesParameters.initialWaterPotential))       // [m]
+    if (! initializeWaterContent())
     {
         logError();
         return false;
@@ -427,7 +430,32 @@ bool Project3D::initialize3DModel()
 }
 
 
-bool Project3D::loadSoilMap(QString fileName)
+bool Project3D::loadLandUseMap(const QString &fileName)
+{
+    if (fileName == "")
+    {
+        logError("Missing land use map filename");
+        return false;
+    }
+
+    landUseMapFileName = getCompleteFileName(fileName, PATH_GEO);
+
+    std::string errorStr;
+    gis::Crit3DRasterGrid raster;
+    if (! gis::openRaster(landUseMapFileName.toStdString(), &raster, gisSettings.utmZone, errorStr))
+    {
+        logError("Load land use map failed: " + landUseMapFileName + "\n" + QString::fromStdString(errorStr));
+        return false;
+    }
+
+    gis::resampleGrid(raster, &landUseMap, DEM.header, aggrPrevailing, 0);
+
+    logInfo("Land use map = " + landUseMapFileName);
+    return true;
+}
+
+
+bool Project3D::loadSoilMap(const QString &fileName)
 {
     if (fileName.isEmpty())
     {
@@ -435,18 +463,18 @@ bool Project3D::loadSoilMap(QString fileName)
         return false;
     }
 
-    fileName = getCompleteFileName(fileName, PATH_GEO);
+    soilMapFileName = getCompleteFileName(fileName, PATH_GEO);
 
     std::string errorStr;
-    if (! gis::openRaster(fileName.toStdString(), &soilMap, gisSettings.utmZone, errorStr))
+    gis::Crit3DRasterGrid raster;
+    if (! gis::openRaster(soilMapFileName.toStdString(), &raster, gisSettings.utmZone, errorStr))
     {
-        logError("Loading soil map failed: " + fileName + "\n" + QString::fromStdString(errorStr));
+        logError("Loading soil map failed: " + soilMapFileName + "\n" + QString::fromStdString(errorStr));
         return false;
     }
 
-    gis::updateMinMaxRasterGrid(&(soilMap));
+    gis::resampleGrid(raster, &soilMap, DEM.header, aggrPrevailing, 0);
 
-    soilMapFileName = fileName;
     logInfo("Soil map = " + soilMapFileName);
 
     return true;
@@ -470,6 +498,8 @@ bool Project3D::setSoilIndexMap()
         errorString = "Missing soil properties.";
         return false;
     }
+
+    logInfo("Set soil index...");
 
     double x, y;
     soilIndexMap.initializeGrid(*(DEM.header));
@@ -539,6 +569,11 @@ void Project3D::setIndexMaps()
                     {
                         indexMap.at(layer).value[row][col] = currentIndex;
                         currentIndex++;
+                    }
+                    else
+                    {
+                        // test
+                        indexMap.at(layer).value[row][col] = indexMap.at(layer).header->flag;
                     }
                 }
             }
@@ -786,7 +821,7 @@ bool Project3D::setCrit3DTopography()
 }
 
 
-bool Project3D::initializeMatricPotential(float psi)
+bool Project3D::initializeWaterContent()
 {
     long index;
     int myResult;
@@ -802,14 +837,34 @@ bool Project3D::initializeMatricPotential(float psi)
                 if (index != long(indexMap.at(layer).header->flag))
                 {
                     if (layer == 0)
-                        myResult = soilFluxes3D::setMatricPotential(index, 0);
+                    {
+                        // surface
+                        if (waterFluxesParameters.isInitialWaterPotential &&  waterFluxesParameters.initialWaterPotential > 0)
+                        {
+                            myResult = soilFluxes3D::setMatricPotential(index, waterFluxesParameters.initialWaterPotential);
+                        }
+                        else
+                        {
+                            myResult = soilFluxes3D::setMatricPotential(index, 0);
+                        }
+                    }
                     else
-                        myResult = soilFluxes3D::setMatricPotential(index, psi);
+                    {
+                        // sub-surface
+                        if (waterFluxesParameters.isInitialWaterPotential)
+                        {
+                            myResult = soilFluxes3D::setMatricPotential(index, waterFluxesParameters.initialWaterPotential);
+                        }
+                        else
+                        {
+                            myResult = soilFluxes3D::setDegreeOfSaturation(index, waterFluxesParameters.initialDegreeOfSaturation);
+                        }
+                    }
 
                     if (isCrit3dError(myResult, error))
                     {
-                        errorString = "setMatricPotential: " + error + " in row:"
-                                    + QString::number(row) + " col:" + QString::number(col);
+                        errorString = "Function initializeWaterContent: " + error + "\n";
+                        errorString += "In row:" + QString::number(row) + " col:" + QString::number(col);
                         return false;
                     }
                 }
@@ -941,14 +996,14 @@ bool Project3D::initializeSoilMoisture(int month)
 }
 
 
-/*! \brief runModel
+/*! \brief runWaterFluxes3DModel
  *  \param totalTimeStep [s]
  */
-void Project3D::runModel(double totalTimeStep, bool isRestart)
+void Project3D::runWaterFluxes3DModel(double totalTimeStep, bool isRestart)
 {
     if (! isRestart)
     {
-        currentSeconds = 0;                 // [s]
+        currentSeconds = 0;                                 // [s]
         soilFluxes3D::initializeBalance();
 
         previousTotalWaterContent = soilFluxes3D::getTotalWaterContent();       // [m3]
@@ -966,7 +1021,7 @@ void Project3D::runModel(double totalTimeStep, bool isRestart)
     {
         currentSeconds += soilFluxes3D::computeStep(totalTimeStep - currentSeconds);
 
-        if (modelPause)
+        if (modelPause && currentSeconds < totalTimeStep)
         {
             emit updateOutputSignal();
             return;
@@ -1004,22 +1059,21 @@ void Project3D::runModel(double totalTimeStep, bool isRestart)
 
 // ----------------------------------------- CROP and LAND USE -----------------------------------
 
-bool Project3D::loadCropDatabase(QString fileName)
+bool Project3D::loadCropDatabase(const QString &fileName)
 {
     if (fileName == "")
     {
-        logError("Missing Crop DB filename");
+        logError("Missing Crop DB fileName");
         return false;
     }
 
-    cropDbFileName = fileName;
-    fileName = getCompleteFileName(fileName, PATH_SOIL);
+    cropDbFileName = getCompleteFileName(fileName, PATH_SOIL);
 
     QSqlDatabase dbCrop;
     dbCrop = QSqlDatabase::addDatabase("QSQLITE", QUuid::createUuid().toString());
-    dbCrop.setDatabaseName(fileName);
+    dbCrop.setDatabaseName(cropDbFileName);
 
-    if (!dbCrop.open())
+    if (! dbCrop.open())
     {
        logError("Connection with crop database fail");
        return false;
@@ -1046,12 +1100,12 @@ bool Project3D::loadCropDatabase(QString fileName)
         }
     }
 
-    logInfo("Crop/landUse database = " + fileName);
+    logInfo("Crop/landUse database = " + cropDbFileName);
     return true;
 }
 
 
-int Project3D::getLandUnitIdUTM(double x, double y)
+int Project3D::getLandUnitFromUtm(double x, double y)
 {
     if (! landUseMap.isLoaded)
         return NODATA;
@@ -1074,7 +1128,7 @@ int Project3D::getLandUnitIdGeo(double lat, double lon)
     double x, y;
     gis::latLonToUtmForceZone(gisSettings.utmZone, lat, lon, &x, &y);
 
-    return getLandUnitIdUTM(x, y);
+    return getLandUnitFromUtm(x, y);
 }
 
 
@@ -1087,32 +1141,41 @@ int Project3D::getLandUnitIndexRowCol(int row, int col)
     }
 
     double x, y;
-    DEM.getXY(row, col, x, y);
+    gis::getUtmXYFromRowCol(DEM.header, row, col, &x, &y);
 
-    int id = getLandUnitIdUTM(x, y);
+    int id = getLandUnitFromUtm(x, y);
     if (id == NODATA)
-    {
         return NODATA;
+
+    return getLandUnitListIndex(id);
+}
+
+
+int Project3D::getLandUnitListIndex(int id)
+{
+    for (int index = 0; index < int(landUnitList.size()); index++)
+    {
+        if (landUnitList[index].id == id)
+            return index;
     }
 
-    return getLandUnitIndex(landUnitList, id);
+    return NODATA;
 }
 
 
 // ------------------------------------ SOIL --------------------------------------
 
-bool Project3D::loadSoilDatabase(QString fileName)
+bool Project3D::loadSoilDatabase(const QString &fileName)
 {
     if (fileName == "")
     {
-        errorString = "Missing Soil DB filename";
+        errorString = "Missing Soil DB fileName";
         return false;
     }
 
-    soilDbFileName = fileName;
-    fileName = getCompleteFileName(fileName, PATH_SOIL);
+    soilDbFileName = getCompleteFileName(fileName, PATH_SOIL);
 
-    if (! loadAllSoils(fileName, soilList, texturalClassList, geotechnicsClassList, fittingOptions, errorString))
+    if (! loadAllSoils(soilDbFileName, soilList, texturalClassList, geotechnicsClassList, fittingOptions, errorString))
     {
         return false;
     }
@@ -1122,7 +1185,7 @@ bool Project3D::loadSoilDatabase(QString fileName)
     }
     nrSoils = unsigned(soilList.size());
 
-    logInfo("Soil database = " + fileName);
+    logInfo("Soil database = " + soilDbFileName);
     return true;
 }
 

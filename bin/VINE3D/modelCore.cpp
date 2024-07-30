@@ -3,6 +3,7 @@
 #include <qstring.h>
 #include <QDate>
 
+#include "commonConstants.h"
 #include "vine3DProject.h"
 #include "waterBalance.h"
 #include "crit3dDate.h"
@@ -20,31 +21,21 @@ extern Vine3DProject myProject;
 
 bool setSoilProfileCrop(Vine3DProject* myProject, int row, int col, Crit3DModelCase* modelCase)
 {
-    double* soilWPProfile = getSoilVarProfile(myProject, row, col, soil::soilWaterPotentialWP);
-    double* soilFCProfile = getSoilVarProfile(myProject, row, col, soil::soilWaterPotentialFC) ;
-    double* matricPotentialProfile = getCriteria3DVarProfile(myProject, row, col, waterMatricPotential);
-    double* waterContentProfile = getCriteria3DVarProfile(myProject, row, col, volumetricWaterContent);
-    double* waterContentProfileWP = getSoilVarProfile(myProject, row, col, soil::soilWaterContentWP);
-    double* waterContentProfileFC = getSoilVarProfile(myProject, row, col, soil::soilWaterContentFC);
+    std::vector<double> soilWPProfile = getSoilVarProfile(myProject, row, col, soil::soilWaterPotentialWP);
+    std::vector<double> soilFCProfile = getSoilVarProfile(myProject, row, col, soil::soilWaterPotentialFC) ;
+    std::vector<double> waterContentProfileWP = getSoilVarProfile(myProject, row, col, soil::soilWaterContentWP);
+    std::vector<double> waterContentProfileFC = getSoilVarProfile(myProject, row, col, soil::soilWaterContentFC);
 
-    if (! myProject->grapevine.setSoilProfile(modelCase, soilWPProfile, soilFCProfile,
-            matricPotentialProfile, waterContentProfile, waterContentProfileFC,
-            waterContentProfileWP)) return false;
+    std::vector<double> matricPotentialProfile = getCriteria3DVarProfile(myProject, row, col, waterMatricPotential);
+    std::vector<double> waterContentProfile = getCriteria3DVarProfile(myProject, row, col, volumetricWaterContent);
 
-    free(soilWPProfile);
-    free(soilFCProfile);
-    free(matricPotentialProfile);
-    free(waterContentProfile);
-    free(waterContentProfileWP);
-    free(waterContentProfileFC);
-
-    return true;
+    return myProject->grapevine.setSoilProfile(modelCase, soilWPProfile, soilFCProfile,
+                                               matricPotentialProfile, waterContentProfile, waterContentProfileFC, waterContentProfileWP);
 }
 
 
 bool assignIrrigation(Vine3DProject* myProject, Crit3DTime myTime)
 {
-    int fieldIndex;
     float nrHours;
     float irrigationRate, rate;
     int hour = myTime.getHour();
@@ -61,10 +52,11 @@ bool assignIrrigation(Vine3DProject* myProject, Crit3DTime myTime)
                 //initialize
                 myProject->vine3DMapsH->mapHourlyIrrigation->value[row][col] = 0.0;
 
-                fieldIndex = myProject->getModelCaseIndex(unsigned(row), unsigned(col));
-                if (fieldIndex > 0)
+                int caseIndex = myProject->getModelCaseIndex(row, col);
+                if (caseIndex != NODATA)
                 {
                     idBook = 0;
+                    int fieldIndex = myProject->modelCases[caseIndex].id;
                     while (myProject->getFieldBookIndex(idBook, myDate, fieldIndex, &idBook))
                     {
                         if (myProject->fieldBook[idBook].operation == irrigationOperation)
@@ -152,9 +144,9 @@ bool modelDailyCycle(bool isInitialState, Crit3DDate myDate, int nrHours,
         {
             for (long col = 0; col < myProject->DEM.header->nrCols; col++)
             {
-                if (int(myProject->DEM.value[row][col]) != int(myProject->DEM.header->flag))
+                modelCaseIndex = myProject->getModelCaseIndex(row, col);
+                if (modelCaseIndex != NODATA)
                 {
-                    modelCaseIndex = myProject->getModelCaseIndex(unsigned(row), unsigned(col));
                     isNewModelCase = (int(myProject->statePlantMaps->fruitBiomassMap->value[row][col])
                                         == int(myProject->statePlantMaps->fruitBiomassMap->header->flag));
 
@@ -165,12 +157,13 @@ bool modelDailyCycle(bool isInitialState, Crit3DDate myDate, int nrHours,
                                 double(myProject->hourlyMeteoMaps->mapHourlyPrec->value[row][col]),
                                 double(myProject->hourlyMeteoMaps->mapHourlyRelHum->value[row][col]),
                                 double(myProject->hourlyMeteoMaps->mapHourlyWindScalarInt->value[row][col]),
-                                PRESS)) {
+                                PRESS))
+                    {
                         myProject->errorString = grapevineError(myCurrentTime, row, col, "Weather data missing");
                         return(false);
                     }
 
-                    if (!myProject->grapevine.setDerivedVariables(
+                    if (! myProject->grapevine.setDerivedVariables(
                                 double(myProject->radiationMaps->diffuseRadiationMap->value[row][col]),
                                 double(myProject->radiationMaps->beamRadiationMap->value[row][col]),
                                 double(myProject->radiationMaps->transmissivityMap->value[row][col] / CLEAR_SKY_TRANSMISSIVITY_DEFAULT),
@@ -182,21 +175,23 @@ bool modelDailyCycle(bool isInitialState, Crit3DDate myDate, int nrHours,
 
                     myProject->grapevine.resetLayers();
 
-                    if (! setSoilProfileCrop(myProject, row, col, &(myProject->modelCases[modelCaseIndex]))) {
-                        myProject->errorString = grapevineError(myCurrentTime, row, col, "Error setting soil profile");
+                    if (! setSoilProfileCrop(myProject, row, col, &(myProject->modelCases[modelCaseIndex])))
+                    {
+                        myProject->errorString = grapevineError(myCurrentTime, row, col, "Error in soil profile setting");
                         return false;
                     }
 
                     if ((isInitialState) || (isNewModelCase))
                     {
-                        if(!myProject->grapevine.initializeStatePlant(getDoyFromDate(myDate), &(myProject->modelCases[modelCaseIndex])))
+                        if(! myProject->grapevine.initializeStatePlant(getDoyFromDate(myDate), &(myProject->modelCases[modelCaseIndex])))
                         {
-                            myProject->logInfo("Could not initialize grapevine in the present growing season.\nIt will be replaced by a complete grass cover.");
+                            myProject->logInfo("Could not initialize grapevine in the growing season.\nIt will be replaced by a complete grass cover.");
                         }
                     }
                     else
                     {
-                        if (!setStatePlantfromMap(row, col, myProject)) return(false);
+                        if (! setStatePlantfromMap(row, col, myProject))
+                            return false;
                         myProject->grapevine.setStatePlant(myProject->statePlant, true);
                     }
                     double chlorophyll = NODATA;
@@ -204,7 +199,7 @@ bool modelDailyCycle(bool isInitialState, Crit3DDate myDate, int nrHours,
                     if (! myProject->grapevine.compute((myCurrentTime == myFirstTime), myTimeStep, &(myProject->modelCases[modelCaseIndex]), chlorophyll))
                     {
                         myProject->errorString = grapevineError(myCurrentTime, row, col, "Error in grapevine computation");
-                        return(false);
+                        return false;
                     }
 
                     // check field book (first hour)
@@ -255,12 +250,12 @@ bool modelDailyCycle(bool isInitialState, Crit3DDate myDate, int nrHours,
         // Irrigation
         assignIrrigation(myProject, myCurrentTime);
 
-
         if (! myProject->computeVine3DWaterSinkSource())
             return false;
 
-        // 3D soil water balance
-        myProject->computeWaterBalance3D(3600);
+        // 3D soil water fluxes
+        bool isRestart = false;
+        myProject->runWaterFluxes3DModel(3600, isRestart);
 
         if (myCurrentTime == myFirstTime)
         {

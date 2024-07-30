@@ -4,50 +4,46 @@
 
 DialogWaterFluxesSettings::DialogWaterFluxesSettings()
 {
-    setWindowTitle("3D water fluxes settings");
+    setWindowTitle("Soil water flow settings");
 
-    QGroupBox* processesGroupBox = new QGroupBox("Required processes");
-    QLabel *snowLabel = new QLabel(tr("Snow model"));
-    snowProcess = new QCheckBox();
-    QLabel *cropLabel = new QLabel(tr("Crop (evapotransp.)"));
-    cropProcess = new QCheckBox();
-    QLabel *waterLabel = new QLabel(tr("Water flow"));
-    waterFluxesProcess = new QCheckBox();
-
-    QHBoxLayout *layoutProcesses = new QHBoxLayout();
-    layoutProcesses->addWidget(snowProcess);
-    layoutProcesses->addWidget(snowLabel);
-    layoutProcesses->addWidget(cropProcess);
-    layoutProcesses->addWidget(cropLabel);
-    layoutProcesses->addWidget(waterFluxesProcess);
-    layoutProcesses->addWidget(waterLabel);
-    processesGroupBox->setLayout(layoutProcesses);
-
-    // accuracy
+    // model accuracy
+    _isUpdateAccuracy = false;
     accuracySlider = new QSlider(Qt::Horizontal);
     accuracySlider->setRange(1, 5);
     accuracySlider->setSingleStep(1);
     accuracySlider->setPageStep(1);
     accuracySlider->setTickInterval(1);
     accuracySlider->setTickPosition(QSlider::TicksBelow);
+    updateButton = new QPushButton("  Update accuracy  ");
     QHBoxLayout *accuracyLayout = new QHBoxLayout();
     accuracyLayout->addWidget(accuracySlider);
+    accuracyLayout->addWidget(updateButton);
     QGroupBox *accuracyGroupBox = new QGroupBox("Model accuracy");
     accuracyGroupBox->setLayout(accuracyLayout);
 
-    // initial water potential [m]
-    QGroupBox* initialGroupBox = new QGroupBox("Initial conditions");
-    QLabel *initialWaterPotentialLabel = new QLabel(tr("Initial water potential [m]"));
+    // initial conditions
+    QLabel *initialWaterPotentialLabel = new QLabel(tr("Water potential [m]"));
     initialWaterPotentialEdit = new QLineEdit();
     initialWaterPotentialEdit->setFixedWidth(50);
     QDoubleValidator* waterPotentialValidator = new QDoubleValidator(-1000.0, 1.0, 2, initialWaterPotentialEdit);
     waterPotentialValidator->setNotation(QDoubleValidator::StandardNotation);
     initialWaterPotentialEdit->setValidator(waterPotentialValidator);
 
-    QGridLayout *layoutInitial = new QGridLayout();
-    layoutInitial->addWidget(initialWaterPotentialLabel, 0, 0);
-    layoutInitial->addWidget(initialWaterPotentialEdit, 0, 1);
-    initialGroupBox->setLayout(layoutInitial);
+    QLabel *initialDegreeLabel = new QLabel(tr("Degree of saturation [-]"));
+    initialDegreeOfSaturationEdit = new QLineEdit();
+    initialDegreeOfSaturationEdit->setFixedWidth(50);
+    QDoubleValidator* degreeSatValidator = new QDoubleValidator(0.0, 1.0, 3, initialDegreeOfSaturationEdit);
+    degreeSatValidator->setNotation(QDoubleValidator::StandardNotation);
+    initialDegreeOfSaturationEdit->setValidator(degreeSatValidator);
+
+    QGridLayout *layoutInitialConditions = new QGridLayout();
+    layoutInitialConditions->addWidget(initialWaterPotentialLabel, 0, 0);
+    layoutInitialConditions->addWidget(initialWaterPotentialEdit, 0, 1);
+    layoutInitialConditions->addWidget(initialDegreeLabel, 1, 0);
+    layoutInitialConditions->addWidget(initialDegreeOfSaturationEdit, 1, 1);
+
+    QGroupBox* initialConditionsGroupBox = new QGroupBox("Initial conditions");
+    initialConditionsGroupBox->setLayout(layoutInitialConditions);
 
     // computation depth [m]
     QGroupBox* depthGroupBox = new QGroupBox("Computation depth");
@@ -68,7 +64,7 @@ DialogWaterFluxesSettings::DialogWaterFluxesSettings()
     layoutDepth->addWidget(imposedComputationDepthEdit, 2, 1);
     depthGroupBox->setLayout(layoutDepth);
 
-    // soil
+    // soil properties
     QGroupBox* soilGroupBox = new QGroupBox("Soil properties");
     QVBoxLayout *soilLayout = new QVBoxLayout;
     useWaterRetentionFitting = new QRadioButton("Use water retention data");
@@ -80,15 +76,16 @@ DialogWaterFluxesSettings::DialogWaterFluxesSettings()
 
     connect(buttonBox, &QDialogButtonBox::accepted, this, &QDialog::accept);
     connect(buttonBox, &QDialogButtonBox::rejected, this, &QDialog::reject);
+    connect(updateButton, &QPushButton::pressed, this, &DialogWaterFluxesSettings::updateAccuracy);
 
     QVBoxLayout *mainLayout = new QVBoxLayout();
-    mainLayout->addWidget(processesGroupBox);
-    mainLayout->addWidget(accuracyGroupBox);
-    mainLayout->addWidget(initialGroupBox);
+    mainLayout->addWidget(initialConditionsGroupBox);
     mainLayout->addWidget(depthGroupBox);
     mainLayout->addWidget(soilGroupBox);
+    mainLayout->addWidget(accuracyGroupBox);
     mainLayout->addWidget(buttonBox);
     setLayout(mainLayout);
 
     show();
 }
+

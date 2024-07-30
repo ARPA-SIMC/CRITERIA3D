@@ -94,20 +94,21 @@ bool Vine3DProject::openVine3DDatabase(QString fileName)
 {
     if (fileName == "")
     {
-        errorString = "Missing VINE3D DataBase filename\nSet field 'db_vine3d' in the .ini settings file.";
+        errorString = "VINE3D database fileName missing.\nSet the 'db_vine3d' field in the .ini settings file.";
         return false;
     }
 
+    dbVine3DFileName = getCompleteFileName(fileName, "");
     dbVine3D = QSqlDatabase::addDatabase("QSQLITE", QUuid::createUuid().toString());
-    dbVine3D.setDatabaseName(getCompleteFileName(fileName, ""));
+    dbVine3D.setDatabaseName(dbVine3DFileName);
 
     if (! dbVine3D.open())
     {
-       errorString = "Connection with database fail";
+       errorString = "Connection with database fail.";
        return false;
     }
 
-    logInfo("VINE3D database = " + fileName);
+    logInfo("VINE3D database = " + dbVine3DFileName);
     return true;
 }
 
@@ -148,7 +149,15 @@ bool Vine3DProject::loadVine3DProject(QString projectFileName)
     }
 
     waterFluxesParameters.computeOnlySurface = false;
-    waterFluxesParameters.computeAllSoilDepth = true;
+    if (computationSoilDepth > 0)
+    {
+        waterFluxesParameters.imposedComputationDepth = computationSoilDepth;
+        waterFluxesParameters.computeAllSoilDepth = false;
+    }
+    else
+    {
+        waterFluxesParameters.computeAllSoilDepth = true;
+    }
 
     // vine database
     if (! openVine3DDatabase(dbVine3DFileName))
@@ -164,6 +173,9 @@ bool Vine3DProject::loadVine3DProject(QString projectFileName)
         dbVine3D.close();
     }
 
+    // crop DB is not mandatory
+    loadCropDatabase(cropDbFileName);
+
     if (! loadSoilMap(soilMapFileName))
     {
         logError();
@@ -176,7 +188,7 @@ bool Vine3DProject::loadVine3DProject(QString projectFileName)
         return false;
     }
 
-    if (! loadFieldMap(landUseMapFileName))
+    if (! loadLandUseMap(landUseMapFileName))
     {
         logError();
         return false;
@@ -188,7 +200,7 @@ bool Vine3DProject::loadVine3DProject(QString projectFileName)
         return false;
     }
 
-    if (! initializeWaterBalance3D())
+    if (! initialize3DModel())
     {
         logError();
         return false;
@@ -441,9 +453,13 @@ bool Vine3DProject::setModelCasesMap()
         return false;
     }
 
+    logInfo ("Set the model case map...");
+
     // set model cases
     int nrModelCases = nrInputCases * nrSoils;
     modelCases.resize(nrModelCases);
+    landUnitList.resize(nrModelCases);
+
     for (int i = 0; i < nrInputCases; i++)
     {
         for (int j = 0; j < nrSoils; j++)
@@ -451,6 +467,7 @@ bool Vine3DProject::setModelCasesMap()
             int index = nrSoils * i + j;
             modelCases[index] = inputModelCases[i];
             modelCases[index].soilIndex = soilIndexList[j];
+            landUnitList[index].id = index;
         }
     }
 
@@ -479,38 +496,12 @@ bool Vine3DProject::setModelCasesMap()
         }
     }
 
+    logInfo ("Nr of model cases: " + QString::number(nrModelCases));
     return true;
 }
 
 
-bool Vine3DProject::loadFieldMap(QString mapFileName)
-{
-    logInfo ("Read fields map...");
-
-    QString fileName = getCompleteFileName(mapFileName, PATH_GEO);
-
-    std::string fn = fileName.left(fileName.length()-4).toStdString();
-    gis::Crit3DRasterGrid inputGrid;
-
-    std::string errorStr;
-    if (! gis::readEsriGrid(fn, &(inputGrid), errorStr))
-    {
-        errorString = "Load fields map failed:\n" + mapFileName + "\n" + QString::fromStdString(errorStr);
-        logError();
-        return false;
-    }
-
-    // compute prevailing map
-    landUseMap.initializeGrid(DEM);
-    gis::prevailingMap(inputGrid, &(landUseMap));
-    gis::updateMinMaxRasterGrid(&(landUseMap));
-
-    logInfo ("Field map = " + mapFileName);
-    return true;
-}
-
-
-bool Vine3DProject::readFieldQuery(QSqlQuery &myQuery, int &idField, Crit3DLanduse &landuse, int &vineIndex, int &trainingIndex,
+bool Vine3DProject::readFieldQuery(QSqlQuery &myQuery, int &idField, GrapevineLanduse &landuse, int &vineIndex, int &trainingIndex,
                                    float &maxLaiGrass, float &maxIrrigationRate)
 {
     idField = myQuery.value("id_field").toInt();
@@ -566,7 +557,7 @@ bool Vine3DProject::loadFieldsProperties()
 
     int idField, vineIndex, trainingIndex;
     float maxLaiGrass, maxIrrigationRate;
-    Crit3DLanduse landuse;
+    GrapevineLanduse landuse;
 
     QSqlQuery myQuery(dbVine3D);
 
@@ -1363,24 +1354,24 @@ bool Vine3DProject::saveStateAndOutput(QDate myDate)
 }
 
 
-int Vine3DProject::getModelCaseIndex(unsigned row, unsigned col)
+int Vine3DProject::getModelCaseIndex(int row, int col)
 {
-    if (gis::isOutOfGridRowCol(int(row), int(col), landUseMap)) return NODATA;
+    if (gis::isOutOfGridRowCol(row, col, landUseMap))
+        return NODATA;
 
-    int caseIndex = int(landUseMap.value[row][col]);
-    if (caseIndex == int(landUseMap.header->flag))
-    {
-        //DEFAULT
-        caseIndex = 0;
-    }
+    if (isEqual(landUseMap.value[row][col], landUseMap.header->flag))
+        return NODATA;
 
-    return caseIndex;
+    return int(landUseMap.value[row][col]);
 }
 
 
 bool Vine3DProject::isVineyard(unsigned row, unsigned col)
 {
     int caseIndex = getModelCaseIndex(row, col);
+    if (caseIndex == NODATA)
+        return false;
+
     return (modelCases[caseIndex].landuse == landuse_vineyard);
 }
 
@@ -1469,17 +1460,20 @@ bool Vine3DProject::computeVine3DWaterSinkSource()
             surfaceIndex = long(indexMap.at(0).value[row][col]);
             if (surfaceIndex != long(indexMap.at(0).header->flag))
             {
-                // LAI
-                int idField = getModelCaseIndex(row, col);
-                float laiGrass = modelCases[idField].maxLAIGrass;
-                float laiVine = statePlantMaps->leafAreaIndexMap->value[row][col];
-                double laiTot = double(laiVine + laiGrass);
+                int caseIndex = getModelCaseIndex(row, col);
+                if (caseIndex != NODATA)
+                {
+                    // LAI
+                    float laiGrass = modelCases[caseIndex].maxLAIGrass;
+                    float laiVine = statePlantMaps->leafAreaIndexMap->value[row][col];
+                    double laiTot = double(laiVine + laiGrass);
 
-                int soilIndex = getSoilIndex(row, col);
+                    int soilIndex = getSoilIndex(row, col);
 
-                double realEvap = assignEvaporation(row, col, laiTot, soilIndex);       // [mm]
-                flow = area * (realEvap / 1000.0);                                      // [m3/h]
-                totalEvaporation += flow;
+                    double realEvap = assignEvaporation(row, col, laiTot, soilIndex);       // [mm]
+                    flow = area * (realEvap / 1000.0);                                      // [m3/h]
+                    totalEvaporation += flow;
+                }
             }
         }
     }

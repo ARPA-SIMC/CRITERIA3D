@@ -81,8 +81,6 @@
         bool loadCriteria3DParameters();
         bool writeCriteria3DParameters();
 
-        bool loadLandUseMap(QString fileName);
-
         double getSoilVar(int soilIndex, int layerIndex, soil::soilVariable myVar);
         double* getSoilVarProfile(int row, int col, soil::soilVariable myVar);
 
@@ -92,7 +90,7 @@
         bool computeSnowModel();
         void computeSnowPoint(int row, int col);
 
-        bool runModelHour(const QDateTime &myDateTime, const QString& hourlyOutputPath, bool isRestart = false);
+        bool runModelHour(const QString& hourlyOutputPath, bool isRestart = false);
 
         void setAllHourlyMeteoMapsComputed(bool value);
 
