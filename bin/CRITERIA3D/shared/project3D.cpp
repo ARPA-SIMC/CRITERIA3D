@@ -61,7 +61,7 @@ void WaterFluxesParameters::initialize()
     initialDegreeOfSaturation = 0.8;        // [-]
 
     imposedComputationDepth = 1.0;          // [m]
-    horizVertRatioConductivity = 10.0;      // [-] default: ten times
+    conductivityHorizVertRatio = 10.0;      // [-] default: ten times
 
     modelAccuracy = 3;                      // [-] default: error on the third digit
 }
@@ -407,7 +407,7 @@ bool Project3D::initialize3DModel()
     }
     logInfo("Node properties initialized");
 
-    soilFluxes3D::setHydraulicProperties(MODIFIEDVANGENUCHTEN, MEAN_LOGARITHMIC, waterFluxesParameters.horizVertRatioConductivity);
+    soilFluxes3D::setHydraulicProperties(MODIFIEDVANGENUCHTEN, MEAN_LOGARITHMIC, waterFluxesParameters.conductivityHorizVertRatio);
 
     double vmax = 10.0;                                                                 // [m s-1]
     if (waterFluxesParameters.modelAccuracy < 3)

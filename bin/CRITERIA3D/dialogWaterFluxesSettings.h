@@ -13,6 +13,7 @@
         QLineEdit *initialWaterPotentialEdit;
         QLineEdit *initialDegreeOfSaturationEdit;
         QLineEdit *imposedComputationDepthEdit;
+        QLineEdit *conductivityHVRatioEdit;
 
         bool _isUpdateAccuracy;
 
@@ -33,6 +34,12 @@
         QSlider *accuracySlider;
 
         DialogWaterFluxesSettings();
+
+        double getConductivityHVRatio() const
+        { return conductivityHVRatioEdit->text().toDouble(); }
+
+        void setConductivityHVRatio(double value)
+        { conductivityHVRatioEdit->setText(QString::number(value)); }
 
         double getInitialWaterPotential() const
         { return initialWaterPotentialEdit->text().toDouble(); }
