@@ -9,6 +9,7 @@
 #include "dialogSettings.h"
 #include "dialogSelection.h"
 #include "formTimePeriod.h"
+#include "dialogWaterFluxesSettings.h"
 
 #include "mainWindow.h"
 #include "ui_mainWindow.h"
@@ -733,6 +734,52 @@ void MainWindow::on_actionShow_model_cases_map_triggered()
 
 void MainWindow::on_actionCriteria3D_settings_triggered()
 {
+    DialogWaterFluxesSettings dialogWaterFluxes;
+    dialogWaterFluxes.setInitialWaterPotential(myProject.waterFluxesParameters.initialWaterPotential);
+    dialogWaterFluxes.setInitialDegreeOfSaturation(myProject.waterFluxesParameters.initialDegreeOfSaturation);
 
+    dialogWaterFluxes.setConductivityHVRatio(myProject.waterFluxesParameters.conductivityHorizVertRatio);
+
+    dialogWaterFluxes.setImposedComputationDepth(myProject.waterFluxesParameters.imposedComputationDepth);
+
+    dialogWaterFluxes.accuracySlider->setValue(myProject.waterFluxesParameters.modelAccuracy);
+
+    if (myProject.waterFluxesParameters.computeOnlySurface)
+        dialogWaterFluxes.onlySurface->setChecked(true);
+    else if (myProject.waterFluxesParameters.computeAllSoilDepth)
+        dialogWaterFluxes.allSoilDepth->setChecked(true);
+    else
+        dialogWaterFluxes.imposedDepth->setChecked(true);
+
+    dialogWaterFluxes.useWaterRetentionFitting->setChecked(myProject.fittingOptions.useWaterRetentionData);
+
+    dialogWaterFluxes.exec();
+
+    if (dialogWaterFluxes.isUpdateAccuracy())
+    {
+        myProject.waterFluxesParameters.modelAccuracy = dialogWaterFluxes.accuracySlider->value();
+    }
+
+    if (dialogWaterFluxes.result() == QDialog::Accepted)
+    {
+        myProject.waterFluxesParameters.initialWaterPotential = dialogWaterFluxes.getInitialWaterPotential();
+        myProject.waterFluxesParameters.initialDegreeOfSaturation = dialogWaterFluxes.getInitialDegreeOfSaturation();
+        myProject.waterFluxesParameters.conductivityHorizVertRatio = dialogWaterFluxes.getConductivityHVRatio();
+
+        myProject.waterFluxesParameters.imposedComputationDepth = dialogWaterFluxes.getImposedComputationDepth();
+        myProject.waterFluxesParameters.computeOnlySurface = dialogWaterFluxes.onlySurface->isChecked();
+        myProject.waterFluxesParameters.computeAllSoilDepth = dialogWaterFluxes.allSoilDepth->isChecked();
+
+        myProject.waterFluxesParameters.modelAccuracy = dialogWaterFluxes.accuracySlider->value();
+
+        myProject.fittingOptions.useWaterRetentionData = dialogWaterFluxes.useWaterRetentionFitting->isChecked();
+
+        /*if (! myProject.writeCriteria3DParameters())
+        {
+            myProject.logError("Error writing soil fluxes parameters");
+        }*/
+
+        // layer thickness
+    }
 }
 

@@ -84,6 +84,8 @@ CONFIG(debug, debug|release) {
 }
 
 SOURCES += \
+    ../CRITERIA3D/shared/project3D.cpp \
+    ../CRITERIA3D/shared/dialogWaterFluxesSettings.cpp \
     atmosphere.cpp \
     dataHandler.cpp \
     disease.cpp \
@@ -93,11 +95,12 @@ SOURCES += \
     vine3DShell.cpp \
     waterBalance.cpp \
     vine3DProject.cpp \
-    mainWindow.cpp \
-    ../CRITERIA3D/shared/project3D.cpp
+    mainWindow.cpp
 
 
 HEADERS += \
+    ../CRITERIA3D/shared/project3D.h \
+    ../CRITERIA3D/shared/dialogWaterFluxesSettings.h \
     atmosphere.h \
     dataHandler.h \
     disease.h \
@@ -105,8 +108,8 @@ HEADERS += \
     plant.h \
     waterBalance.h \
     vine3DProject.h \
-    mainWindow.h \
-    ../CRITERIA3D/shared/project3D.h
+    mainWindow.h
+
 
 FORMS += \
     mainWindow.ui \

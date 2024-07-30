@@ -2214,7 +2214,6 @@ void MainWindow::on_actionCriteria3D_waterFluxes_settings_triggered()
         }*/
 
         // layer thickness
-        // lateral conductivity ratio
     }
 }
 
