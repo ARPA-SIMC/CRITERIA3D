@@ -168,6 +168,18 @@ void Project3D::initializeProject3D()
     totalEvaporation = 0;
     totalTranspiration = 0;
 
+    // specific outputs
+    isClimateOutput = false;
+    //waterDeficitDepth.clear();
+    waterContentDepth.clear();
+    //degreeOfSaturationDepth.clear();
+    waterPotentialDepth.clear();
+    //availableWaterDepth.clear();
+    //fractionAvailableWaterDepth.clear();
+    factorOfSafetyDepth.clear();
+    //awcDepth.clear();
+
+
     setCurrentFrequency(hourly);
 }
 
@@ -249,6 +261,28 @@ bool Project3D::loadProject3DSettings()
     }
 
     projectSettings->endGroup();
+
+    // OUTPUT variables (optional)
+    QList<QString> depthList;
+    projectSettings->beginGroup("output");
+
+    depthList = projectSettings->value("waterContent").toStringList();
+    if (! setVariableDepth(depthList, waterContentDepth))
+    {
+        errorString = "Wrong water content depth in " + projectSettings->fileName();
+    }
+
+    depthList = projectSettings->value("waterPotential").toStringList();
+    if (! setVariableDepth(depthList, waterPotentialDepth))
+    {
+        errorString = "Wrong water potential depth in " + projectSettings->fileName();
+    }
+
+    depthList = projectSettings->value("factorOfSafety").toStringList();
+    if (! setVariableDepth(depthList, factorOfSafetyDepth))
+    {
+        errorString = "Wrong factor of safety depth in " + projectSettings->fileName();
+    }
 
     return true;
 }
@@ -1961,15 +1995,15 @@ float Project3D::computeFactorOfSafety(int row, int col, unsigned int layerIndex
     double weightSum = 0;                                       // [kPa]
     for (unsigned int layer = 1; layer <= layerIndex; layer++)
     {
-        long cuurentNode = indexMap.at(layer).value[row][col];
-        if (cuurentNode != indexMap.at(layer).header->flag)
+        long currentNode = indexMap.at(layer).value[row][col];
+        if (currentNode != indexMap.at(layer).header->flag)
         {
             int currentHorizon = soil::getHorizonIndex(soilList[unsigned(soilIndex)], layerDepth[layer]);
             if (currentHorizon != NODATA)
             {
                 // [g cm-3] --> [Mg m-3]
                 double bulkDensity = soilList[unsigned(soilIndex)].horizon[currentHorizon].bulkDensity;
-                double waterContent = soilFluxes3D::getWaterContent(cuurentNode);
+                double waterContent = soilFluxes3D::getWaterContent(currentNode);
                 // [kN m-3]
                 double unitWeight = (bulkDensity + waterContent) * GRAVITY;
                 // [kPa]
@@ -2159,3 +2193,19 @@ QString getDailyPrefixFromVar(QDate myDate, criteria3DVariable myVar)
     return fileName;
 }
 
+bool setVariableDepth(const QList<QString>& depthList, std::vector<int>& variableDepth)
+{
+    int nrDepth = depthList.size();
+    if (nrDepth > 0)
+    {
+        variableDepth.resize(unsigned(nrDepth));
+        for (int i = 0; i < nrDepth; i++)
+        {
+            variableDepth[unsigned(i)] = depthList[i].toInt();
+            if (variableDepth[unsigned(i)] <= 0)
+                return false;
+        }
+    }
+
+    return true;
+}
