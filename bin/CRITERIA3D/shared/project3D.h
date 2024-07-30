@@ -141,6 +141,17 @@
         double totalEvaporation;                // [m3 h-1]
         double totalTranspiration;              // [m3 h-1]
 
+        // specific outputs
+        bool isClimateOutput;
+        std::vector<int> waterContentDepth;
+        //std::vector<int> degreeOfSaturationDepth;
+        std::vector<int> waterPotentialDepth;
+        //std::vector<int> waterDeficitDepth;
+        //std::vector<int> awcDepth;
+        //std::vector<int> availableWaterDepth;
+        //std::vector<int> fractionAvailableWaterDepth;
+        std::vector<int> factorOfSafetyDepth;
+
         Project3D();
 
         void initializeProject3D();
@@ -210,5 +221,6 @@
     float readDataHourly(meteoVariable myVar, QString hourlyPath, QDateTime myTime, QString myArea, int row, int col);
     bool readHourlyMap(meteoVariable myVar, QString hourlyPath, QDateTime myTime, QString myArea, gis::Crit3DRasterGrid* myGrid);
 
+    bool setVariableDepth(const QList<QString> &depthList, std::vector<int> &variableDepth);
 
 #endif // PROJECT3D_H
