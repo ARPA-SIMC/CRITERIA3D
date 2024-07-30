@@ -154,12 +154,6 @@ bool vine3DInterpolationDem(Vine3DProject* myProject, meteoVariable myVar,
 }
 
 
-float getTimeStepFromHourlyInterval(int myHourlyIntervals)
-{
-    return 3600. / ((float)myHourlyIntervals);
-}
-
-
 bool vine3DInterpolationDemRadiation(Vine3DProject* myProject, const Crit3DTime& myCrit3DTime, bool isLoadData)
 {
     bool myResult = false;
@@ -170,7 +164,7 @@ bool vine3DInterpolationDemRadiation(Vine3DProject* myProject, const Crit3DTime&
 
     gis::Crit3DPoint myDEMCenter = myProject->DEM.getCenter();
     int intervalWidth = radiation::estimateTransmissivityWindow(&(myProject->radSettings), myProject->DEM, myDEMCenter, myCrit3DTime, (int)(3600 / myProject->meteoSettings->getHourlyIntervals()));
-    int myTimeStep = getTimeStepFromHourlyInterval(myProject->meteoSettings->getHourlyIntervals());
+    int myTimeStep = int(myProject->getTimeStep());
 
     float myDeltaTime = (intervalWidth-1) * 0.5 * myTimeStep;
     Crit3DTime myTimeIni = myCrit3DTime.addSeconds(-myDeltaTime);

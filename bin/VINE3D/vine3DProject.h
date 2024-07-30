@@ -93,13 +93,15 @@
         void loadVine3DSettings();
 
         bool loadFieldsProperties();
-        bool loadDBPoints();
+
+        //bool loadDBPoints();
+        //void findVine3DLastMeteoDate();
+        //int queryFieldPoint(double x, double y);
+
         bool loadGrapevineParameters();
         bool loadTrainingSystems();
 
         bool loadFieldBook();
-        float findSoilMaxDepth();
-        soil::Crit3DSoil *loadHorizons(int idSoil, QString soil_code);
 
         bool loadVine3DProject(QString projectFileName);
         bool openVine3DDatabase(QString fileName);
@@ -108,28 +110,19 @@
 
         bool setModelCasesMap();
 
-        int queryFieldPoint(double x, double y);
-
         bool readFieldQuery(QSqlQuery &myQuery, int &idField, GrapevineLanduse &landuse, int &vineIndex, int &trainingIndex, float &maxLaiGrass,  float &maxIrrigationRate);
         bool setField(int fieldIndex, int fieldId, GrapevineLanduse landuse, int soilIndex, int vineIndex, int trainingIndex,
                             float maxLaiGrass,  float maxIrrigationRate);
         bool getFieldBookIndex(int firstIndex, QDate myQDate, int fieldIndex, int* outputIndex);
 
-        int getAggregatedVarCode(int rawVarCode);
+        //int getAggregatedVarCode(int rawVarCode);
         bool getMeteoVarIndexRaw(meteoVariable myVar, int *nrVarIndices, int **varIndices);
 
         bool loadObsDataHourlyVar(int indexPoint, meteoVariable myVar, QDate d1, QDate d2, QString tableName, bool useAggrCodes);
         bool loadObsDataAllPointsVar(meteoVariable myVar, QDate d1, QDate d2);
 
-        bool isMeteoDataLoaded(const Crit3DTime& myTimeIni, const Crit3DTime& myTimeFin);
-        float meteoDataConsistency(meteoVariable myVar, const Crit3DTime& myTimeIni, const Crit3DTime& myTimeFin);
-
-        void findVine3DLastMeteoDate();
-
         bool loadStates(QDate myDate);
         bool saveStateAndOutput(QDate myDate);
-
-        int getIndexPointFromId(QString myId);
 
         float getTimeStep();
 
@@ -138,8 +131,6 @@
         bool isVineyard(unsigned row, unsigned col);
 
         bool computeVine3DWaterSinkSource();
-
-        soil::Crit3DHorizon* getSoilHorizon(long row, long col, int layer);
 
         bool runModels(QDateTime firstTime, QDateTime lastTime, bool saveOutput);
 

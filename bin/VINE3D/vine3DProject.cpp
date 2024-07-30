@@ -405,6 +405,7 @@ bool Vine3DProject::loadFieldBook()
 }
 
 
+/*
 int Vine3DProject::queryFieldPoint(double x, double y)
 {
     QString UTMx = QString::number(x, 'f', 1);
@@ -433,6 +434,7 @@ int Vine3DProject::queryFieldPoint(double x, double y)
     else
         return NODATA;
 }
+*/
 
 
 
@@ -612,16 +614,7 @@ bool Vine3DProject::loadFieldsProperties()
 }
 
 
-float Vine3DProject::findSoilMaxDepth()
-{
-    double maxSoilDepth = 0;
-    for (unsigned int i = 0; i < nrSoils; i++)
-    {
-        maxSoilDepth = MAXVALUE(maxSoilDepth, soilList[i].totalDepth);
-    }
-    return MINVALUE(computationSoilDepth, maxSoilDepth);
-}
-
+/*
 int Vine3DProject::getAggregatedVarCode(int rawVarCode)
 {
     for (int i=0; i<nrAggrVar; i++)
@@ -630,6 +623,7 @@ int Vine3DProject::getAggregatedVarCode(int rawVarCode)
 
     return NODATA;
 }
+*/
 
 
 int getMeteoVarIndex(meteoVariable myVar)
@@ -675,6 +669,7 @@ bool Vine3DProject::getMeteoVarIndexRaw(meteoVariable myVar, int* nrIndices, int
 }
 
 
+/*
 bool Vine3DProject::loadDBPoints()
 {
     closeMeteoPointsDB();
@@ -740,6 +735,7 @@ bool Vine3DProject::loadDBPoints()
     return(true);
 }
 
+
 void Vine3DProject::findVine3DLastMeteoDate()
 {
     QSqlQuery qry(dbVine3D);
@@ -771,25 +767,7 @@ void Vine3DProject::findVine3DLastMeteoDate()
     setCurrentDate(lastDate.date());
     setCurrentHour(12);
 }
-
-float Vine3DProject::meteoDataConsistency(meteoVariable myVar, const Crit3DTime& myTimeIni, const Crit3DTime& myTimeFin)
-{
-    float dataConsistency = 0.0;
-    for (int i = 0; i < nrMeteoPoints; i++)
-        dataConsistency = MAXVALUE(dataConsistency, meteoPoints[i].obsDataConsistencyH(myVar, myTimeIni, myTimeFin));
-
-    return dataConsistency;
-}
-
-
-bool Vine3DProject::isMeteoDataLoaded(const Crit3DTime& myTimeIni, const Crit3DTime& myTimeFin)
-{
-    for (int i = 0; i < nrMeteoPoints; i++)
-        if (meteoPoints[i].isDateIntervalLoadedH(myTimeIni, myTimeFin))
-            return true;
-
-    return false;
-}
+*/
 
 
 /*
@@ -1118,15 +1096,6 @@ bool Vine3DProject::loadObsDataAllPointsVar(meteoVariable myVar, QDate d1, QDate
 }
 
 
-int Vine3DProject::getIndexPointFromId(QString myId)
-{
-    for (int i = 0; i < nrMeteoPoints; i++)
-        if (QString::fromStdString(meteoPoints[i].id) == myId)
-            return(i);
-    return(NODATA);
-}
-
-
 float Vine3DProject::getTimeStep()
 {
     return (3600 / meteoSettings->getHourlyIntervals());
@@ -1388,19 +1357,6 @@ bool Vine3DProject::isVineyard(unsigned row, unsigned col)
         return false;
 
     return (modelCases[caseIndex].landuse == landuse_vineyard);
-}
-
-
-soil::Crit3DHorizon* Vine3DProject::getSoilHorizon(long row, long col, int layer)
-{
-    int soilIndex = getSoilIndex(row, col);
-    if (soilIndex == NODATA) return nullptr;
-
-    int horizonIndex = soil::getHorizonIndex(soilList[unsigned(soilIndex)], layer);
-    if (horizonIndex == NODATA) return nullptr;
-
-    soil::Crit3DHorizon* horizonPtr = &(soilList[unsigned(soilIndex)].horizon[unsigned(horizonIndex)]);
-    return horizonPtr;
 }
 
 
