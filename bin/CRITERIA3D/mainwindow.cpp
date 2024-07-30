@@ -2012,16 +2012,6 @@ bool MainWindow::startModels(QDateTime firstTime, QDateTime lastTime)
     }
     myProject.closeLogInfo();
 
-    // output points
-    if (myProject.isSaveOutputPoints())
-    {
-        if (! myProject.writeOutputPointsTables())
-        {
-            myProject.logError();
-            return false;
-        }
-    }
-
     // set model interface
     myProject.modelFirstTime = firstTime;
     myProject.modelLastTime = lastTime;

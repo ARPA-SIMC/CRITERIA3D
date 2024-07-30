@@ -78,7 +78,6 @@ void Crit3DProcesses::initialize()
     computeMeteo = false;
     computeRadiation = false;
     computeWater = false;
-    computeSlopeStability = false;
     computeCrop = false;
     computeSnow = false;
     computeSolutes = false;
@@ -120,7 +119,6 @@ void Crit3DProcesses::setComputeWater(bool value)
     {
         computeMeteo = true;
         computeRadiation = true;
-        computeSlopeStability = true;
     }
 }
 
@@ -1389,7 +1387,7 @@ double Project3D::getSoilLayerBottom(unsigned int i)
     return layerDepth[i] + layerThickness[i] / 2.0;
 }
 
-// soil layer index from soil depth
+// soil layer index from soil depth [m]
 int Project3D::getSoilLayerIndex(double depth)
 {
     unsigned int i= 0;

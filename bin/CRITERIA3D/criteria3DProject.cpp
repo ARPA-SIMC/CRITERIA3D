@@ -367,6 +367,16 @@ bool Crit3DProject::runModels(QDateTime firstTime, QDateTime lastTime, bool isRe
 {
     if (! isRestart)
     {
+        // create tables for output points
+        if (isSaveOutputPoints())
+        {
+            if (! writeOutputPointsTables())
+            {
+                logError();
+                return false;
+            }
+        }
+
         // initialize meteo maps
         if (processes.computeMeteo)
         {
@@ -1609,19 +1619,30 @@ bool Crit3DProject::writeOutputPointsTables()
             }
             if (processes.computeWater)
             {
-                for (int l = 1; l < int(layerDepth.size()); l++)
+                for (int l = 0; l < waterContentDepth.size(); l++)
                 {
-                    int depth_cm = round(layerDepth[l] * 100);
+                    int depth_cm = waterContentDepth[l];
                     if (! outputPointsDbHandler->addCriteria3DColumn(tableName, volumetricWaterContent, depth_cm, errorString))
                         return false;
                 }
-            }
-            if (processes.computeSlopeStability)
-            {
-                // slope stablility starts from layer 1
-                for (int l = 1; l < int(layerDepth.size()); l++)
+
+                for (int l = 0; l < waterPotentialDepth.size(); l++)
                 {
-                    int depth_cm = round(layerDepth[l] * 100);
+                    int depth_cm = waterPotentialDepth[l];
+                    if (! outputPointsDbHandler->addCriteria3DColumn(tableName, waterMatricPotential, depth_cm, errorString))
+                        return false;
+                }
+
+                for (int l = 0; l < degreeOfSaturationDepth.size(); l++)
+                {
+                    int depth_cm = degreeOfSaturationDepth[l];
+                    if (! outputPointsDbHandler->addCriteria3DColumn(tableName, degreeOfSaturation, depth_cm, errorString))
+                        return false;
+                }
+
+                for (int l = 0; l < factorOfSafetyDepth.size(); l++)
+                {
+                    int depth_cm = factorOfSafetyDepth[l];
                     if (! outputPointsDbHandler->addCriteria3DColumn(tableName, factorOfSafety, depth_cm, errorString))
                         return false;
                 }
@@ -1637,7 +1658,6 @@ bool Crit3DProject::writeOutputPointsData()
 {
     QString tableName;
     std::vector<meteoVariable> meteoVarList;
-    std::vector<criteria3DVariable> criteria3dVarList;
     std::vector<float> meteoValuesList;
     std::vector<float> criteria3dValuesList;
 
@@ -1666,14 +1686,6 @@ bool Crit3DProject::writeOutputPointsData()
         meteoVarList.push_back(snowInternalEnergy);
         meteoVarList.push_back(sensibleHeat);
         meteoVarList.push_back(latentHeat);
-    }
-    if (processes.computeWater)
-    {
-        criteria3dVarList.push_back(volumetricWaterContent);
-    }
-    if (processes.computeSlopeStability)
-    {
-        criteria3dVarList.push_back(factorOfSafety);
     }
 
     for (unsigned int i = 0; i < outputPoints.size(); i++)
@@ -1713,43 +1725,21 @@ bool Crit3DProject::writeOutputPointsData()
             if (processes.computeWater)
             {
                 int row, col;
-                float value;
                 gis::getRowColFromXY((*DEM.header), x, y, &row, &col);
 
-                for (unsigned int layerIndex = 1; layerIndex < nrLayers; layerIndex++)
-                {
-                    long nodeIndex = indexMap.at(layerIndex).value[row][col];
-                    if (nodeIndex == indexMap.at(layerIndex).header->flag)
-                    {
-                        value = NODATA;
-                    }
-                    else
-                    {
-                        value = getCriteria3DVar(volumetricWaterContent, nodeIndex);
-                    }
-
-                    criteria3dValuesList.push_back(value);
-                }
-            }
-            if (processes.computeSlopeStability)
-            {
-                int row, col;
-                float value;
-                gis::getRowColFromXY((*DEM.header), x, y, &row, &col);
-
-                for (unsigned int layerIndex = 1; layerIndex < nrLayers; layerIndex++)
-                {
-                    value = computeFactorOfSafety(row, col, layerIndex);
-                    criteria3dValuesList.push_back(value);
-                }
+                appendCriteria3DOutputValue(volumetricWaterContent, row, col, waterContentDepth, criteria3dValuesList);
+                appendCriteria3DOutputValue(waterMatricPotential, row, col, waterPotentialDepth, criteria3dValuesList);
+                appendCriteria3DOutputValue(degreeOfSaturation, row, col, degreeOfSaturationDepth, criteria3dValuesList);
+                appendCriteria3DOutputValue(factorOfSafety, row, col, factorOfSafetyDepth, criteria3dValuesList);
             }
 
             if (! outputPointsDbHandler->saveHourlyMeteoData(tableName, getCurrentTime(), meteoVarList, meteoValuesList, errorString))
             {
                 return false;
             }
-            if (! outputPointsDbHandler->saveHourlyCriteria3D_Data(tableName, getCurrentTime(), criteria3dVarList,
-                                                                  criteria3dValuesList, layerDepth, errorString))
+            if (! outputPointsDbHandler->saveHourlyCriteria3D_Data(tableName, getCurrentTime(), criteria3dValuesList,
+                                                                  waterContentDepth, waterPotentialDepth,
+                                                                  degreeOfSaturationDepth, factorOfSafetyDepth, errorString))
             {
                 return false;
             }
@@ -1760,9 +1750,35 @@ bool Crit3DProject::writeOutputPointsData()
     }
 
     meteoVarList.clear();
-    criteria3dVarList.clear();
 
     return true;
+}
+
+
+void Crit3DProject::appendCriteria3DOutputValue(criteria3DVariable myVar, int row, int col,
+                                                const std::vector<int> &depthList, std::vector<float> &outputList)
+{
+    for (int l = 0; l < depthList.size(); l++)
+    {
+        float depth = depthList[l] * 0.01;                          // [cm] -> [m]
+        int layerIndex = getSoilLayerIndex(depth);
+        long nodeIndex = indexMap.at(layerIndex).value[row][col];
+        float value = NODATA;
+
+        if (nodeIndex != indexMap.at(layerIndex).header->flag)
+        {
+            if (myVar == factorOfSafety)
+            {
+                value = computeFactorOfSafety(row, col, layerIndex);
+            }
+            else
+            {
+                value = getCriteria3DVar(myVar, nodeIndex);
+            }
+        }
+
+        outputList.push_back(value);
+    }
 }
 
 

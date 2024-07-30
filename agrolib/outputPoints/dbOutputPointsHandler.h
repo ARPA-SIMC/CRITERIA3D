@@ -33,12 +33,20 @@
                                 const std::vector<meteoVariable> &varList,
                                 const std::vector<float> &values, QString &errorStr);
 
-        bool saveHourlyCriteria3D_Data(const QString &tableName, const QDateTime &myTime,
-                                        const std::vector<criteria3DVariable> &varList,
-                                        const std::vector<float> &values,
-                                        const std::vector <double> &layerDepth, QString &errorStr);
+        bool saveHourlyCriteria3D_Data(const QString &tableName, const QDateTime& myTime,
+                                       const std::vector<float>& values,
+                                       const std::vector<int>& waterContentDepth,
+                                       const std::vector<int>& waterPotentialDepth,
+                                       const std::vector<int>& degreeOfSaturationDepth,
+                                       const std::vector<int>& factorOfSafetyDepth,
+                                       QString &errorStr);
+
+        void appendCriteria3DOutputValue(criteria3DVariable myVar, const std::vector<int> &depthList,
+                                         const std::vector<float>& values, int &firstIndex,
+                                         QList<QString> &outputList);
 
     private:
+
         QSqlDatabase _db;
         QString errorString;
     };

@@ -36,6 +36,9 @@
         bool saveSnowModelState(const QString &currentStatePath);
         bool saveSoilWaterState(const QString &currentStatePath);
 
+        void appendCriteria3DOutputValue(criteria3DVariable myVar, int row, int col,
+                                         const std::vector<int> &depthList, std::vector<float> &outputList);
+
     public:
         Crit3DGeometry* openGlGeometry;
 

@@ -46,7 +46,7 @@
     {
     public:
 
-        bool computeMeteo, computeRadiation, computeWater, computeSlopeStability;
+        bool computeMeteo, computeRadiation, computeWater;
         bool computeCrop, computeSnow, computeSolutes;
         bool computeHeat, computeAdvectiveHeat, computeLatentHeat;
 
