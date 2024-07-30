@@ -8,16 +8,14 @@
 #include "waterBalance.h"
 #include "crit3dDate.h"
 #include "meteo.h"
-#include "dataHandler.h"
 #include "solarRadiation.h"
 #include "grapevine.h"
 #include "atmosphere.h"
 #include "utilities.h"
 
+
 extern Vine3DProject myProject;
 
-// [Pa] default atmospheric pressure at sea level
-#define PRESS 101325
 
 bool setSoilProfileCrop(Vine3DProject* myProject, int row, int col, Crit3DModelCase* modelCase)
 {
@@ -157,7 +155,7 @@ bool modelDailyCycle(bool isInitialState, Crit3DDate myDate, int nrHours,
                                 double(myProject->hourlyMeteoMaps->mapHourlyPrec->value[row][col]),
                                 double(myProject->hourlyMeteoMaps->mapHourlyRelHum->value[row][col]),
                                 double(myProject->hourlyMeteoMaps->mapHourlyWindScalarInt->value[row][col]),
-                                PRESS))
+                                SEA_LEVEL_PRESSURE))
                     {
                         myProject->errorString = grapevineError(myCurrentTime, row, col, "Weather data missing");
                         return(false);

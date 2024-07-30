@@ -2,12 +2,14 @@
 #include <QMessageBox>
 #include <QtGui>
 #include <QApplication>
+
 #include "commonConstants.h"
 #include "vine3DProject.h"
 #include "mainWindow.h"
 
 
 Vine3DProject myProject;
+
 
 int main(int argc, char *argv[])
 {

@@ -4,7 +4,6 @@
 #include "basicMath.h"
 #include "interpolation.h"
 #include "plant.h"
-#include "dataHandler.h"
 #include "vine3DProject.h"
 #include "commonConstants.h"
 
@@ -423,5 +422,78 @@ bool updateThermalSum(Vine3DProject* myProject, QDate myDate)
             }
         }
     }
+
     return true;
 }
+
+
+QString getVarNameFromPlantVariable(plantVariable myVar)
+{
+    if (myVar == tartaricAcidVar)
+        return "tartaricAcid";
+    else if (myVar == wineYieldVar)
+        return "wineYield";
+    else if (myVar == pHBerryVar)
+        return "pHBerry";
+    else if (myVar == brixBerryVar)
+        return "brixBerry";
+    else if (myVar == brixMaximumVar)
+        return "brixMaximum";
+    else if (myVar == deltaBrixVar)
+        return "deltabrix";
+    else if (myVar == daysAfterBloomVar)
+        return "daysAfterBloom";
+    else if (myVar == cumulatedBiomassVar)
+        return "totalBiomass";
+    else if (myVar == daysFromFloweringVar)
+        return "daysFromFlowering";
+    else if (myVar == isHarvestedVar)
+        return "isHarvested";
+    else if (myVar == fruitBiomassVar)
+        return "fruitBiomass";
+    else if (myVar == shootLeafNumberVar)
+        return "shootLeafNumber";
+    else if (myVar == meanTemperatureLastMonthVar)
+        return "meanTLastMonth";
+    else if (myVar == chillingUnitsVar)
+        return "chillingUnits";
+    else if (myVar == forceStateBudBurstVar)
+        return "forceStBudBurst";
+    else if (myVar == forceStateVegetativeSeasonVar)
+        return "forceStVegSeason";
+    else if (myVar == stageVar)
+        return "phenoPhase";
+    else if (myVar == cumRadFruitsetVerVar)
+        return "cumRadFSVeraison";
+    else if (myVar == leafAreaIndexVar)
+        return "leafAreaIndex";
+    else if (myVar == transpirationStressVar)
+        return "vineStress";
+    else if (myVar == transpirationVineyardVar)
+        return "transpirationVine";
+    else if (myVar == transpirationGrassVar)
+        return "transpirationGrass";
+    else if (myVar == degreeDaysFromFirstMarchVar)
+        return "degreeDaysFromFirstMarch";
+    else if (myVar == degreeDays10FromBudBurstVar)
+        return "degreeDaysFromBudBurst";
+    else if (myVar == degreeDaysAtFruitSetVar)
+        return "degreeDaysAtFruitSet";
+    else if (myVar == powderyCurrentColoniesVar)
+        return "powderyCurrentColonies";
+    else if (myVar == powderyAICVar)
+        return "powderyAIC";
+    else if (myVar == powderyCOLVar)
+        return "powderyCOL";
+    else if (myVar == powderyINFRVar)
+        return "powderyINFR";
+    else if (myVar == powderySporulatingColoniesVar)
+        return "powderyTSCOL";
+    else if (myVar == powderyPrimaryInfectionRiskVar)
+        return "powderyPIR";
+    else if (myVar == fruitBiomassIndexVar)
+        return "fruitBiomassIndex";
+    else
+        return "";
+}
+

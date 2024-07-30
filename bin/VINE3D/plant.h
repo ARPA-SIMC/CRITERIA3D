@@ -8,7 +8,6 @@
         #include "gis.h"
     #endif
 
-
     class Vine3DProject;
 
     struct TstatePlant;
@@ -101,5 +100,7 @@
                          bool isStateMap, bool isMasked);
 
     bool updateThermalSum(Vine3DProject* myProject, QDate myDate);
+
+    QString getVarNameFromPlantVariable(plantVariable myVar);
 
 #endif

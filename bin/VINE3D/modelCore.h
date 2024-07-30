@@ -1,18 +1,12 @@
 #ifndef MODELCORE_H
 #define MODELCORE_H
 
-    #ifndef QSTRING_H
-        #include <QString>
-    #endif
-    #ifndef QDATETIME_H
-        #include <QDateTime>
-    #endif
     #ifndef CRIT3DDATE_H
         #include "crit3dDate.h"
     #endif
 
     class Vine3DProject;
-    struct TstatePlant;
+    class QString;
 
     bool assignIrrigation(Vine3DProject* myProject, Crit3DTime myTime);
 

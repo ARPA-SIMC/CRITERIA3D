@@ -4,10 +4,11 @@
 #include "project.h"
 #include "meteo.h"
 #include "atmosphere.h"
-#include "dataHandler.h"
 #include "commonConstants.h"
 #include "utilities.h"
+
 #include <iostream>
+
 
 #define MAXPOINTS 4096
 #define VEGETATIVESTART 90

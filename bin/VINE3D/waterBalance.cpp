@@ -1,12 +1,12 @@
-#include <math.h>
-#include <vector>
 #include "commonConstants.h"
 #include "basicMath.h"
 #include "gis.h"
-#include "dataHandler.h"
 #include "vine3DProject.h"
 #include "soilFluxes3D.h"
 #include "waterBalance.h"
+
+#include <math.h>
+#include <vector>
 
 
 Crit3DWaterBalanceMaps::Crit3DWaterBalanceMaps()

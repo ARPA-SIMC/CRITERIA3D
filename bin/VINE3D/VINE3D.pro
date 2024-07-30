@@ -87,22 +87,20 @@ SOURCES += \
     ../CRITERIA3D/shared/project3D.cpp \
     ../CRITERIA3D/shared/dialogWaterFluxesSettings.cpp \
     atmosphere.cpp \
-    dataHandler.cpp \
     disease.cpp \
-    main.cpp \
     modelCore.cpp \
     plant.cpp \
     vine3DShell.cpp \
     waterBalance.cpp \
     vine3DProject.cpp \
-    mainWindow.cpp
+    mainWindow.cpp \
+    main.cpp
 
 
 HEADERS += \
     ../CRITERIA3D/shared/project3D.h \
     ../CRITERIA3D/shared/dialogWaterFluxesSettings.h \
     atmosphere.h \
-    dataHandler.h \
     disease.h \
     modelCore.h \
     plant.h \

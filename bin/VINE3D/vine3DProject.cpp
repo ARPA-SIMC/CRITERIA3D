@@ -16,7 +16,6 @@
 #include "solarRadiation.h"
 #include "waterBalance.h"
 #include "plant.h"
-#include "dataHandler.h"
 #include "modelCore.h"
 #include "atmosphere.h"
 #include "disease.h"
@@ -631,6 +630,22 @@ int Vine3DProject::getAggregatedVarCode(int rawVarCode)
 
     return NODATA;
 }
+
+
+int getMeteoVarIndex(meteoVariable myVar)
+{
+    if (myVar == airTemperature) return 14;
+    else if (myVar == precipitation)return 15;
+    else if (myVar == airRelHumidity) return 16;
+    else if (myVar == globalIrradiance) return 17;
+    else if (myVar == windScalarIntensity) return 18;
+    else if (myVar == leafWetness) return 20;
+    else if (myVar == atmPressure) return 21;
+    else if (myVar == windVectorDirection) return 43;
+    else
+        return NODATA;
+}
+
 
 bool Vine3DProject::getMeteoVarIndexRaw(meteoVariable myVar, int* nrIndices, int** varIndices)
 {

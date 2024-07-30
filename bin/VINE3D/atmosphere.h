@@ -4,8 +4,8 @@
     #ifndef CRIT3DDATE_H
         #include "crit3dDate.h"
     #endif
-    #ifndef METEOPOINT_H
-        #include "meteoPoint.h"
+    #ifndef METEO_H
+        #include "meteo.h"
     #endif
 
     class Vine3DProject;

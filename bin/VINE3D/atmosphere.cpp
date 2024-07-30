@@ -5,10 +5,12 @@
 #include <QString>
 #include <QFile>
 
+//cout
+#include <iostream>
+
 #include "interpolation.h"
 #include "interpolationCmd.h"
 #include "solarRadiation.h"
-#include "dataHandler.h"
 #include "atmosphere.h"
 #include "vine3DProject.h"
 #include "commonConstants.h"
@@ -17,8 +19,6 @@
 #include "transmissivity.h"
 #include "spatialControl.h"
 
-//cout
-#include <iostream>
 
 
 bool isDataPresent(Vine3DProject* myProject, meteoVariable myVar, Crit3DTime myDateTime)
@@ -151,6 +151,12 @@ bool vine3DInterpolationDem(Vine3DProject* myProject, meteoVariable myVar,
         myProject->errorString = "Function vine3DInterpolationDem: post interpolation";
         return false;
     }
+}
+
+
+float getTimeStepFromHourlyInterval(int myHourlyIntervals)
+{
+    return 3600. / ((float)myHourlyIntervals);
 }
 
 
