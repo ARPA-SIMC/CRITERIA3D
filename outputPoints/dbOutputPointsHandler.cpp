@@ -97,23 +97,26 @@ bool Crit3DOutputPointsDbHandler::addCriteria3DColumn(const QString &tableName, 
     }
 
     // column name
-    QString newField = variableString + "_" + QString::number(depth);
+    if (depth != NODATA)
+    {
+        variableString += "_" + QString::number(depth);
+    }
 
     // column exists already
     QList<QString> fieldList = getFields(&_db, tableName);
-    if ( fieldList.contains(newField) )
+    if ( fieldList.contains(variableString) )
     {
         return true;
     }
 
     // add column
     QString queryString = "ALTER TABLE '" + tableName + "'";
-    queryString += " ADD " + newField + " REAL";
+    queryString += " ADD " + variableString + " REAL";
 
     QSqlQuery myQuery = _db.exec(queryString);
     if (myQuery.lastError().isValid())
     {
-        errorStr = "Error in add column: " + newField + "\n" + myQuery.lastError().text();
+        errorStr = "Error in add column: " + variableString + "\n" + myQuery.lastError().text();
         return false;
     }
 
@@ -178,22 +181,19 @@ bool Crit3DOutputPointsDbHandler::saveHourlyMeteoData(const QString &tableName, 
 }
 
 
-// layerDepth  [m]
+// variableDepth  [cm]
 bool Crit3DOutputPointsDbHandler::saveHourlyCriteria3D_Data(const QString &tableName, const QDateTime& myTime,
-                                                        const std::vector<criteria3DVariable>& varList,
-                                                        const std::vector<float>& values,
-                                                        const std::vector <double>& layerDepth,
-                                                        QString &errorStr)
+                                                            const std::vector<float>& values,
+                                                            const std::vector<int>& waterContentDepth,
+                                                            const std::vector<int>& waterPotentialDepth,
+                                                            const std::vector<int>& degreeOfSaturationDepth,
+                                                            const std::vector<int>& factorOfSafetyDepth,
+                                                            QString &errorStr)
 {
-    int nrSoilLayers = int(layerDepth.size()) - 1;
-    if (nrSoilLayers <= 0)
-    {
-        errorStr = "Error saving values: missing soil layers.";
-        return false;
-    }
+    int nrValues = waterContentDepth.size() + waterPotentialDepth.size()
+                   + degreeOfSaturationDepth.size() + factorOfSafetyDepth.size();
 
-    int nrValues = int(varList.size()) * nrSoilLayers;
-    if (nrValues != values.size())
+    if (nrValues != int(values.size()))
     {
         errorStr = "Error saving values: number of values is not as expected.";
         return false;
@@ -201,35 +201,16 @@ bool Crit3DOutputPointsDbHandler::saveHourlyCriteria3D_Data(const QString &table
 
     QString timeStr = myTime.toString("yyyy-MM-dd HH:mm:ss");
 
-    // field list
-    QString setList = "";
-    for (unsigned int i = 0; i < varList.size(); i++)
-    {
-        QString variableString = QString::fromStdString(getCriteria3DVarName(varList[i]));
-        if (variableString == "")
-        {
-            errorStr = "Missing variable name.";
-            return false;
-        }
+    QList<QString> valueList;
+    int firstIndex = 0;
+    appendCriteria3DOutputValue(volumetricWaterContent, waterContentDepth, values, firstIndex, valueList);
+    appendCriteria3DOutputValue(waterMatricPotential, waterPotentialDepth, values, firstIndex, valueList);
+    appendCriteria3DOutputValue(degreeOfSaturation, degreeOfSaturationDepth, values, firstIndex, valueList);
+    appendCriteria3DOutputValue(factorOfSafety, factorOfSafetyDepth, values, firstIndex, valueList);
 
-        for (int layer = 1; layer <= nrSoilLayers; layer++)
-        {
-            int depth = round(layerDepth[layer] * 100);         // [cm]
-
-            QString fieldName = variableString + "_" + QString::number(depth);
-            setList += "'" + fieldName + "'=";
-
-            int index = i * nrSoilLayers + layer - 1;
-            QString valueStr = QString::number(values[index], 'f', 3);
-            setList += valueStr;
-
-            if (index < (nrValues - 1))
-                setList += ",";
-        }
-    }
 
     QSqlQuery qry(_db);
-    QString queryString = QString("UPDATE '%1' SET %2 WHERE DATE_TIME ='%3'").arg(tableName, setList, timeStr);
+    QString queryString = QString("UPDATE '%1' SET %2 WHERE DATE_TIME ='%3'").arg(tableName, valueList.join(','), timeStr);
     if (! qry.exec(queryString))
     {
         errorStr = QString("Error in query: " + queryString + "\n" + qry.lastError().text());
@@ -237,5 +218,28 @@ bool Crit3DOutputPointsDbHandler::saveHourlyCriteria3D_Data(const QString &table
     }
 
     return true;
+}
+
+
+void Crit3DOutputPointsDbHandler::appendCriteria3DOutputValue(criteria3DVariable myVar, const std::vector<int> &depthList,
+                                                              const std::vector<float>& values, int &firstIndex,
+                                                              QList<QString> &outputList)
+{
+    QString variableString = QString::fromStdString(getCriteria3DVarName(myVar));
+
+    for (int l = 0; l < depthList.size(); l++)
+    {
+        float depth_cm = depthList[l];
+        QString fieldName = variableString + "_" + QString::number(depth_cm);
+
+        int index = firstIndex + l;
+        QString valueStr = QString::number(values[index], 'f', 3);
+
+        QString assignStr = "'" + fieldName + "'=" + valueStr;
+
+        outputList.push_back(assignStr);
+    }
+
+    firstIndex += depthList.size();
 }
 
