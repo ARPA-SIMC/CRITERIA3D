@@ -198,7 +198,7 @@ void Project::setProxyDEM()
 }
 
 
-bool Project::checkProxy(const Crit3DProxy &myProxy, QString* error)
+bool Project::checkProxy(Crit3DProxy &myProxy, QString* error)
 {
     std::string name_ = myProxy.getName();
 
@@ -688,25 +688,6 @@ bool Project::loadParameters(QString parametersFileName)
             if (parameters->contains("stddev_threshold"))
                 myProxy->setStdDevThreshold(parameters->value("stddev_threshold").toFloat());
 
-            /*if (parameters->contains("fitting_parameters"))
-            {
-                unsigned int nrParameters;
-
-                if (getProxyPragaName(name_.toStdString()) == proxyHeight)
-                    nrParameters = 5;
-                else
-                    nrParameters = 2;
-
-                myList = parameters->value("fitting_parameters").toStringList();
-                if (myList.size() != nrParameters*2 && myList.size() != (nrParameters-1)*2 && myList.size() != (nrParameters+1)*2) //TODO: change
-                {
-                    errorString = "Wrong number of fitting parameters for proxy: " + name_;
-                    return  false;
-                }
-
-                myProxy->setFittingParametersRange(StringListToDouble(myList));
-            }*/
-
             if (getProxyPragaName(name_.toStdString()) == proxyHeight)
             {
                 if (parameters->contains("fitting_function"))
@@ -722,7 +703,7 @@ bool Project::loadParameters(QString parametersFileName)
 
                     if (parameters->contains("fitting_parameters"))
                     {
-                        unsigned int nrParameters;
+                        unsigned int nrParameters = NODATA;
 
                         if (myProxy->getFittingFunctionName() == piecewiseTwo)
                             nrParameters = 4;
@@ -3224,7 +3205,6 @@ bool Project::loadProject()
     {
         errorType = ERROR_SETTINGS;
         errorString = "Load parameters failed.\n" + errorString;
-        logError();
         return false;
     }
 
