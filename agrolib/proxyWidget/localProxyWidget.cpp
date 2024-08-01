@@ -39,6 +39,10 @@ Crit3DLocalProxyWidget::Crit3DLocalProxyWidget(double x, double y, std::vector<s
     modelLR.setText("Model lapse rate");
     stationWeights.setText("See weight of stations");
 
+    //temporaneamente disattivati
+    detrended.setVisible(false);
+    climatologicalLR.setVisible(false);
+    climatologicalLR.setEnabled(false);
 
     QLabel *r2Label = new QLabel(tr("R2"));
     QLabel *lapseRateLabel = new QLabel(tr("Lapse rate"));
@@ -375,7 +379,7 @@ void Crit3DLocalProxyWidget::plot()
             point.setY(varValue);
             QString text = "id: " + QString::fromStdString(meteoPoints[subsetInterpolationPoints[i].index].id) + "\n"
                            + "name: " + QString::fromStdString(meteoPoints[subsetInterpolationPoints[i].index].name) + "\n"
-                           + "weight: " + QString::number(subsetInterpolationPoints[i].regressionWeight);
+                           + "weight: " + QString::number(subsetInterpolationPoints[i].regressionWeight, 'f', 5);
             if (subsetInterpolationPoints[i].isMarked)
             {
                 pointListMarked.append(point);
@@ -477,7 +481,7 @@ void Crit3DLocalProxyWidget::plot()
                 scenePos.setX(chartRect.left() + xRatio * chartRect.width());
                 scenePos.setY(chartRect.bottom() - yRatio * chartRect.height());
 
-                QGraphicsTextItem* weightLabel = new QGraphicsTextItem(QString::number(subsetInterpolationPoints[i].regressionWeight));
+                QGraphicsTextItem* weightLabel = new QGraphicsTextItem(QString::number(subsetInterpolationPoints[i].regressionWeight, 'f', 3));
                 weightLabel->setPos(scenePos);
                 chartView->scene()->addItem(weightLabel);
                 weightLabels.push_back(weightLabel);
