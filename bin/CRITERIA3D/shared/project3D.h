@@ -196,6 +196,8 @@
         double assignTranspiration(int row, int col, double currentLai, double currentDegreeDays);
 
         bool setSinkSource();
+        bool setAccuracy();
+
         void runWaterFluxes3DModel(double totalTimeStep, bool isRestart = false);
         bool updateCrop(QDateTime myTime);
 

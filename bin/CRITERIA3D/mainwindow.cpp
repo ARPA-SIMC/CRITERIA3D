@@ -2192,6 +2192,10 @@ void MainWindow::on_actionCriteria3D_waterFluxes_settings_triggered()
     if (dialogWaterFluxes.isUpdateAccuracy())
     {
         myProject.waterFluxesParameters.modelAccuracy = dialogWaterFluxes.accuracySlider->value();
+        if (myProject.isCriteria3DInitialized)
+        {
+            myProject.setAccuracy();
+        }
     }
 
     if (dialogWaterFluxes.result() == QDialog::Accepted)
