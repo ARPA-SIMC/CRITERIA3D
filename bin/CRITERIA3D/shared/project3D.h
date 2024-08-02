@@ -84,7 +84,7 @@
         bool showEachTimeStep;
         bool increaseSlope;
 
-        bool modelPause, modelStop;
+        bool isModelRunning, isModelPaused, isModelStopped;
 
         Crit3DProcesses processes;
         WaterFluxesParameters waterFluxesParameters;

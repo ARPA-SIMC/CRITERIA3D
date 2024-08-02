@@ -66,6 +66,7 @@
         void assignETreal();
         void assignPrecipitation();
 
+        bool checkProcesses();
         bool runModels(QDateTime firstTime, QDateTime lastTime, bool isRestart = false);
 
         void setSaveDailyState(bool isSave) { _saveDailyState = isSave; }

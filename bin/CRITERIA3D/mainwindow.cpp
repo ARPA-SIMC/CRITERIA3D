@@ -2015,12 +2015,13 @@ bool MainWindow::startModels(QDateTime firstTime, QDateTime lastTime)
     // set model interface
     myProject.modelFirstTime = firstTime;
     myProject.modelLastTime = lastTime;
-    myProject.modelPause = false;
-    myProject.modelStop = false;
+
+    myProject.isModelPaused = false;
+    myProject.isModelStopped = false;
 
     ui->groupBoxModel->setEnabled(true);
-    ui->buttonModelPause->setEnabled(true);
     ui->buttonModelStart->setDisabled(true);
+    ui->buttonModelPause->setEnabled(true);
     ui->buttonModelStop->setEnabled(true);
 
     return myProject.runModels(firstTime, lastTime);
@@ -2029,17 +2030,21 @@ bool MainWindow::startModels(QDateTime firstTime, QDateTime lastTime)
 
 void MainWindow::on_buttonModelPause_clicked()
 {
-    myProject.modelPause = true;
+    myProject.isModelPaused = true;
+
     ui->buttonModelPause->setDisabled(true);
     ui->buttonModelStart->setEnabled(true);
     ui->buttonModelStop->setEnabled(true);
+
     qApp->processEvents();
 }
 
 
 void MainWindow::on_buttonModelStop_clicked()
 {
-    myProject.modelStop = true;
+    myProject.isModelStopped = true;
+    myProject.isModelRunning = false;
+
     ui->buttonModelPause->setDisabled(true);
     ui->buttonModelStart->setDisabled(true);
     ui->buttonModelStop->setDisabled(true);
@@ -2048,9 +2053,8 @@ void MainWindow::on_buttonModelStop_clicked()
 
 void MainWindow::on_buttonModelStart_clicked()
 {
-    if (myProject.modelPause)
+    if (myProject.isModelPaused)
     {
-        myProject.modelPause = false;
         ui->buttonModelPause->setEnabled(true);
         ui->buttonModelStart->setDisabled(true);
         ui->buttonModelStop->setEnabled(true);
@@ -2058,8 +2062,13 @@ void MainWindow::on_buttonModelStart_clicked()
         QDateTime newFirstTime = QDateTime(myProject.getCurrentDate(), QTime(myProject.getCurrentHour(), 0, 0), Qt::UTC);
         newFirstTime = newFirstTime.addSecs(myProject.currentSeconds);
 
+        myProject.isModelPaused = false;
         bool isRestart = true;
         myProject.runModels(newFirstTime, myProject.modelLastTime, isRestart);
+    }
+    else
+    {
+        myProject.logWarning("Choose the computation period in the 'Run model' menu.");
     }
 }
 
@@ -2253,6 +2262,18 @@ void MainWindow::initializeCriteria3DInterface()
 
 void MainWindow::on_actionCriteria3D_Initialize_triggered()
 {
+    if (! (myProject.processes.computeSnow || myProject.processes.computeCrop || myProject.processes.computeWater))
+    {
+        myProject.logWarning("Set active processes before.");
+        return;
+    }
+
+    if (myProject.isModelRunning)
+    {
+        myProject.logWarning("The model is running, stop it before reinitializing.");
+        return;
+    }
+
     if (myProject.processes.computeSnow)
     {
         if (! myProject.initializeSnowModel())
@@ -2289,12 +2310,6 @@ void MainWindow::on_actionCriteria3D_Initialize_triggered()
         }
     }
 
-    if (!myProject.processes.computeSnow && ! myProject.processes.computeCrop && ! myProject.processes.computeWater)
-    {
-        myProject.logWarning("Set up at least one process: view menu 'Set active processes'");
-        return;
-    }
-
     initializeCriteria3DInterface();
     myProject.isCriteria3DInitialized = true;
     myProject.logInfoGUI("The model is initialized.");
@@ -2303,22 +2318,16 @@ void MainWindow::on_actionCriteria3D_Initialize_triggered()
 
 void MainWindow::on_actionCriteria3D_compute_next_hour_triggered()
 {
-    if (myProject.processes.computeCrop || myProject.processes.computeWater)
+    if (! myProject.checkProcesses())
     {
-        if (! myProject.isCriteria3DInitialized)
-        {
-            myProject.logError("Initialize 3D model before");
-            return;
-        }
+        myProject.logWarning();
+        return;
     }
 
-    if (myProject.processes.computeSnow)
+    if (myProject.isModelRunning)
     {
-        if (! myProject.snowMaps.isInitialized)
-        {
-            if (! myProject.initializeSnowModel())
-                return;
-        }
+        myProject.logWarning("The model is running, stop it before restart.");
+        return;
     }
 
     QDateTime currentTime;
@@ -2338,22 +2347,16 @@ void MainWindow::on_actionCriteria3D_compute_next_hour_triggered()
 
 void MainWindow::on_actionCriteria3D_run_models_triggered()
 {
-    if (myProject.processes.computeCrop || myProject.processes.computeWater)
+    if (! myProject.checkProcesses())
     {
-        if (! myProject.isCriteria3DInitialized)
-        {
-            myProject.logError("Initialize 3D water fluxes before");
-            return;
-        }
+        myProject.logWarning();
+        return;
     }
 
-    if (myProject.processes.computeSnow)
+    if (myProject.isModelRunning)
     {
-        if (! myProject.snowMaps.isInitialized)
-        {
-            myProject.logInfoGUI("Initialize snow model before.");
-            return;
-        }
+        myProject.logWarning("The model is running, stop it before restart.");
+        return;
     }
 
     QDateTime firstTime, lastTime;
@@ -2369,14 +2372,14 @@ void MainWindow::showCriteria3DVariable(criteria3DVariable var, int layerIndex, 
 {
     if (! myProject.isCriteria3DInitialized)
     {
-        myProject.logError("Initialize water fluxes before.");
+        myProject.logWarning("Initialize water fluxes before.");
         return;
     }
 
     // compute map
     if (! myProject.computeCriteria3DMap(myProject.criteria3DMap, var, layerIndex))
     {
-        myProject.logError();
+        myProject.logWarning();
         return;
     }
 

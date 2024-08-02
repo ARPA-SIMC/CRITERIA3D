@@ -138,8 +138,9 @@ void Project3D::initializeProject3D()
     showEachTimeStep = false;
     increaseSlope = false;
 
-    modelPause = false;
-    modelStop = false;
+    isModelRunning = false;
+    isModelPaused = false;
+    isModelStopped = false;
 
     waterFluxesParameters.initialize();
 
@@ -1042,7 +1043,7 @@ void Project3D::runWaterFluxes3DModel(double totalTimeStep, bool isRestart)
     {
         currentSeconds += soilFluxes3D::computeStep(totalTimeStep - currentSeconds);
 
-        if (modelPause && currentSeconds < totalTimeStep)
+        if (isModelPaused && currentSeconds < totalTimeStep)
         {
             emit updateOutputSignal();
             return;

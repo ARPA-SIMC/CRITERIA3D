@@ -396,6 +396,8 @@ bool Crit3DProject::runModels(QDateTime firstTime, QDateTime lastTime, bool isRe
         {
             radiationMaps->initialize();
         }
+
+        isModelRunning = true;
     }
 
     QDate firstDate = firstTime.date();
@@ -437,6 +439,7 @@ bool Crit3DProject::runModels(QDateTime firstTime, QDateTime lastTime, bool isRe
 
             if (! runModelHour(currentOutputPath, isRestart))
             {
+                isModelRunning = false;
                 logError();
                 return false;
             }
@@ -451,7 +454,7 @@ bool Crit3DProject::runModels(QDateTime firstTime, QDateTime lastTime, bool isRe
                 }
             }
 
-            if (modelPause || modelStop)
+            if (isModelPaused || isModelStopped)
             {
                 return true;
             }
@@ -468,6 +471,7 @@ bool Crit3DProject::runModels(QDateTime firstTime, QDateTime lastTime, bool isRe
         saveModelsState();
     }
 
+    isModelRunning = false;
     logInfoGUI("Computation is finished.");
 
     return true;
@@ -814,7 +818,7 @@ bool Crit3DProject::initializeSnowModel()
 {
     if (! DEM.isLoaded)
     {
-        logError("Load a DTM before.");
+        errorString = ERROR_STR_MISSING_DEM;
         return false;
     }
 
@@ -937,6 +941,42 @@ bool Crit3DProject::updateDailyTemperatures()
                     dailyTmaxMap.value[row][col] = std::max(currentTmax, airT);
                 }
             }
+        }
+    }
+
+    return true;
+}
+
+
+bool Crit3DProject::checkProcesses()
+{
+    if (! isProjectLoaded)
+    {
+        errorString = ERROR_STR_MISSING_PROJECT;
+        return false;
+    }
+
+    if (! (processes.computeCrop || processes.computeWater || processes.computeSnow))
+    {
+        errorString = "Set active processes before.";
+        return false;
+    }
+
+    if (processes.computeCrop || processes.computeWater)
+    {
+        if (! isCriteria3DInitialized)
+        {
+            errorString = "Initialize 3D model before";
+            return false;
+        }
+    }
+
+    if (processes.computeSnow)
+    {
+        if (! snowMaps.isInitialized)
+        {
+            if (! initializeSnowModel())
+                return false;
         }
     }
 
