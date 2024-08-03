@@ -154,7 +154,7 @@ void Project3D::initializeProject3D()
 
     computationSoilDepth = 0.0;     // [m]
     minThickness = 0.02;            // [m] default: 2 cm
-    maxThickness = 0.1;             // [m] default: 10 cm
+    maxThickness = 0.05;            // [m] default: 5 cm
     maxThicknessDepth = 0.40;       // [m] default: 40 cm
     thicknessGrowthFactor = 1.2;    // [-]
 
