@@ -449,6 +449,7 @@ bool Crit3DProject::runModels(QDateTime firstTime, QDateTime lastTime, bool isRe
             {
                 if (! writeOutputPointsData())
                 {
+                    isModelRunning = false;
                     logError();
                     return false;
                 }

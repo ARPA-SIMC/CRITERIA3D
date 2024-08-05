@@ -13,14 +13,10 @@ Crit3DOutputPointsDbHandler::Crit3DOutputPointsDbHandler(QString dbname_)
     {
         _db.close();
     }
-    errorString = "";
 
     _db = QSqlDatabase::addDatabase("QSQLITE", QUuid::createUuid().toString());
     _db.setDatabaseName(dbname_);
-    if (! _db.open())
-    {
-        errorString = _db.lastError().text();
-    }
+    _db.open();
 }
 
 
@@ -126,26 +122,78 @@ bool Crit3DOutputPointsDbHandler::addCriteria3DColumn(const QString &tableName, 
 
 bool Crit3DOutputPointsDbHandler::saveHourlyMeteoData(const QString &tableName, const QDateTime &myTime,
                                                  const std::vector<meteoVariable> &varList,
-                                                 const std::vector<float> &values,
+                                                 const std::vector<float> &valuesList,
                                                  QString &errorStr)
 {
-    if (varList.size() != values.size())
+    if (varList.size() != valuesList.size())
     {
         errorStr = "Error saving values: number of variables is different from values";
         return false;
     }
 
-    QSqlQuery qry(_db);
     QString timeStr = myTime.toString("yyyy-MM-dd HH:mm:ss");
-    QString queryString = QString("DELETE FROM '%1' WHERE DATE_TIME ='%2'").arg(tableName, timeStr);
+    QString queryString = QString("SELECT * FROM '%1' WHERE DATE_TIME='%2'").arg(tableName, timeStr);
+    QSqlQuery query(_db);
 
-    if (! qry.exec(queryString))
+    if (! query.exec(queryString))
     {
-        errorStr = QString("Error deleting values in table:%1 Time:%2\n%3")
-                            .arg(tableName, timeStr, qry.lastError().text());
+        errorStr = QString("Error in reading table: %1 \nTime: %2 \n%3")
+                            .arg(tableName, timeStr, query.lastError().text());
         return false;
     }
 
+    query.last();
+    int querySize = query.at() + 1;     // SQLITE doesn't support SIZE
+    if (querySize > 0)
+    {
+        return saveHourlyMeteoData_update(tableName, timeStr, varList, valuesList, errorStr);
+    }
+    else
+    {
+        return saveHourlyMeteoData_insert(tableName, timeStr, varList, valuesList, errorStr);
+    }
+
+}
+
+
+bool Crit3DOutputPointsDbHandler::saveHourlyMeteoData_update(const QString &tableName, const QString timeStr,
+                                                             const std::vector<meteoVariable> &varList,
+                                                             const std::vector<float> &values,
+                                                             QString &errorStr)
+{
+    QList<QString> assignList;
+    for (unsigned int i = 0; i < varList.size(); i++)
+    {
+        QString fieldStr = QString::fromStdString(getMeteoVarName(varList[i]));
+        if (fieldStr.isEmpty())
+        {
+            errorStr = QString("Error saving values in table:%1 \nMissing variable name").arg(tableName);
+            return false;
+        }
+
+        QString valueStr = QString::number(values[i], 'f', 2);
+
+        assignList.push_back("'" + fieldStr + "'=" + valueStr);
+    }
+
+    QSqlQuery qry(_db);
+    QString queryString = QString("UPDATE '%1' SET %2 WHERE DATE_TIME = DATETIME('%3')").arg(tableName, assignList.join(','), timeStr);
+    if (! qry.exec(queryString))
+    {
+        errorStr = QString("Error saving values in table:%1 Time:%2\n%3")
+                       .arg(tableName, timeStr, qry.lastError().text());
+        return false;
+    }
+
+    return true;
+}
+
+
+bool Crit3DOutputPointsDbHandler::saveHourlyMeteoData_insert(const QString &tableName, const QString timeStr,
+                                                             const std::vector<meteoVariable> &varList,
+                                                             const std::vector<float> &values,
+                                                             QString &errorStr)
+{
     // field list
     QString fieldList = "'DATE_TIME'";
     for (unsigned int i = 0; i < varList.size(); i++)
@@ -157,28 +205,30 @@ bool Crit3DOutputPointsDbHandler::saveHourlyMeteoData(const QString &tableName, 
         }
         else
         {
-            errorStr = "Error saving values: missing variable name.";
+            errorStr = QString("Error saving values in table:%1 \nMissing variable name").arg(tableName);
             return false;
         }
     }
 
     // values list
     QString valuesList = "'" + timeStr + "'";
-    for (unsigned int i = 0; i < varList.size(); i++)
+    for (unsigned int i = 0; i < values.size(); i++)
     {
         valuesList += "," + QString::number(values[i], 'f', 2);
     }
 
-    queryString = QString("INSERT INTO '%1' (%2) VALUES (%3)").arg(tableName, fieldList, valuesList);
+    QSqlQuery qry(_db);
+    QString queryString = QString("INSERT INTO '%1' (%2) VALUES (%3)").arg(tableName, fieldList, valuesList);
     if (! qry.exec(queryString))
     {
         errorStr = QString("Error saving values in table:%1 Time:%2\n%3")
-                              .arg(tableName, timeStr, qry.lastError().text());
+                       .arg(tableName, timeStr, qry.lastError().text());
         return false;
     }
 
     return true;
 }
+
 
 
 // variableDepth  [cm]
@@ -190,8 +240,8 @@ bool Crit3DOutputPointsDbHandler::saveHourlyCriteria3D_Data(const QString &table
                                                             const std::vector<int>& factorOfSafetyDepth,
                                                             QString &errorStr)
 {
-    int nrValues = waterContentDepth.size() + waterPotentialDepth.size()
-                   + degreeOfSaturationDepth.size() + factorOfSafetyDepth.size();
+    int nrValues = int(waterContentDepth.size() + waterPotentialDepth.size()
+                       + degreeOfSaturationDepth.size() + factorOfSafetyDepth.size());
 
     if (nrValues != int(values.size()))
     {
@@ -210,7 +260,7 @@ bool Crit3DOutputPointsDbHandler::saveHourlyCriteria3D_Data(const QString &table
 
 
     QSqlQuery qry(_db);
-    QString queryString = QString("UPDATE '%1' SET %2 WHERE DATE_TIME ='%3'").arg(tableName, valueList.join(','), timeStr);
+    QString queryString = QString("UPDATE '%1' SET %2 WHERE DATE_TIME = DATETIME('%3')").arg(tableName, valueList.join(','), timeStr);
     if (! qry.exec(queryString))
     {
         errorStr = QString("Error in query: " + queryString + "\n" + qry.lastError().text());
@@ -240,6 +290,6 @@ void Crit3DOutputPointsDbHandler::appendCriteria3DOutputValue(criteria3DVariable
         outputList.push_back(assignStr);
     }
 
-    firstIndex += depthList.size();
+    firstIndex += int(depthList.size());
 }
 
