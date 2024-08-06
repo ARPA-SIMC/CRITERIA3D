@@ -243,7 +243,6 @@ bool Crit3DAggregationsDbHandler::writePointProperties(int numZones, QString agg
 
     QSqlQuery qry(_db);
     for (int i = 1; i <= numZones; i++)
-
     {
         QString id = QString::number(i) + "_" + aggrType;
         QString name = id;

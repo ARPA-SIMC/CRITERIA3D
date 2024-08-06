@@ -2501,7 +2501,7 @@ std::vector<float> Crit3DMeteoGridDbHandler::loadGridDailyVar(QString *errorStr,
 
     // read last date
     qry.last();
-    if (!getValue(qry.value(_tableDaily.fieldTime), &lastDateDB))
+    if (! getValue(qry.value(_tableDaily.fieldTime), &lastDateDB))
     {
         *errorStr = "Missing last date";
         return dailyVarList;
