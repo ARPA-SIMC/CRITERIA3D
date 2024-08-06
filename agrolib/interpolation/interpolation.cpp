@@ -1160,6 +1160,7 @@ bool isThermal(meteoVariable myVar)
         myVar == dailyAirTemperatureAvg ||
         myVar == dailyAirTemperatureMax ||
         myVar == dailyAirTemperatureMin ||
+        myVar == dailyReferenceEvapotranspirationHS ||
         myVar == elaboration )
         return true;
     else
@@ -1174,6 +1175,7 @@ bool getUseDetrendingVar(meteoVariable myVar)
         myVar == dailyAirTemperatureAvg ||
         myVar == dailyAirTemperatureMax ||
         myVar == dailyAirTemperatureMin ||
+        myVar == dailyReferenceEvapotranspirationHS ||
         myVar == elaboration )
 
         return true;
@@ -1343,6 +1345,7 @@ bool regressionOrography(std::vector <Crit3DInterpolationDataPoint> &myPoints,
         return false;
     }
 }
+
 
 void detrending(std::vector <Crit3DInterpolationDataPoint> &myPoints,
                 Crit3DProxyCombination myCombination, Crit3DInterpolationSettings* mySettings, Crit3DClimateParameters* myClimate,
@@ -2256,7 +2259,7 @@ void topographicDistanceOptimize(meteoVariable myVar,
         mySettings->setTopoDist_Kh(kh);
         if (computeResiduals(myVar, myMeteoPoints, nrMeteoPoints, interpolationPoints, mySettings, meteoSettings, true, true))
         {
-            avgError = computeErrorCrossValidation(myVar, myMeteoPoints, nrMeteoPoints, myTime, meteoSettings);
+            avgError = computeErrorCrossValidation(myMeteoPoints, nrMeteoPoints);
             if (isEqual(bestError, NODATA) || avgError < bestError)
             {
                 bestError = avgError;
@@ -2303,7 +2306,7 @@ void optimalDetrending(meteoVariable myVar, Crit3DMeteoPoint* &myMeteoPoints, in
 
             if (computeResiduals(myVar, myMeteoPoints, nrMeteoPoints, interpolationPoints, mySettings, meteoSettings, true, true))
             {
-                avgError = computeErrorCrossValidation(myVar, myMeteoPoints, nrMeteoPoints, myTime, meteoSettings);
+                avgError = computeErrorCrossValidation(myMeteoPoints, nrMeteoPoints);
                 if (! isEqual(avgError, NODATA) && (isEqual(minError, NODATA) || avgError < minError))
                 {
                     minError = avgError;
@@ -2367,7 +2370,9 @@ bool preInterpolation(std::vector <Crit3DInterpolationDataPoint> &myPoints, Crit
     }
 
     if (mySettings->getUseTD() && getUseTdVar(myVar))
+    {
         topographicDistanceOptimize(myVar, myMeteoPoints, nrMeteoPoints, myPoints, mySettings, meteoSettings, myTime);
+    }
 
     return true;
 }
