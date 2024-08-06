@@ -201,6 +201,7 @@ void Project::setProxyDEM()
 bool Project::checkProxy(Crit3DProxy &myProxy, QString* error)
 {
     std::string name_ = myProxy.getName();
+    QList<QString> myList;
 
     if (name_ == "")
     {
@@ -214,6 +215,79 @@ bool Project::checkProxy(Crit3DProxy &myProxy, QString* error)
     {
         *error = "error reading grid, table or field for proxy " + QString::fromStdString(name_);
         return false;
+    }
+
+    if (isHeight)
+    {
+        if (parameters->contains("fitting_function"))
+        {
+            std::string elevationFuction = parameters->value("fitting_function").toString().toStdString();
+            if (fittingFunctionNames.find(elevationFuction) == fittingFunctionNames.end())
+            {
+                errorString = "Unknown function for elevation. Remove the field from the .ini file or choose between: piecewise_two, triple_piecewise, free_triple_piecewise.";
+                return false;
+            }
+            else
+                myProxy.setFittingFunctionName(fittingFunctionNames.at(elevationFuction));
+
+            if (parameters->contains("fitting_parameters"))
+            {
+                unsigned int nrParameters = NODATA;
+
+                if (myProxy.getFittingFunctionName() == piecewiseTwo)
+                    nrParameters = 4;
+                else if (myProxy.getFittingFunctionName() == piecewiseThree)
+                    nrParameters = 5;
+                else if (myProxy.getFittingFunctionName()== piecewiseThreeFree)
+                    nrParameters = 6;
+
+                myList = parameters->value("fitting_parameters").toStringList();
+                if (myList.size() != nrParameters*2)
+                {
+                    *error = "Wrong number of fitting parameters for proxy: " + QString::fromStdString(name_);
+                    return  false;
+                }
+
+                myProxy.setFittingParametersRange(StringListToDouble(myList));
+            }
+        }
+        else
+        {
+            if (parameters->contains("fitting_parameters"))
+            {
+                myList = parameters->value("fitting_parameters").toStringList();
+
+                if (myList.size() == 8)
+                    myProxy.setFittingFunctionName(piecewiseTwo);
+                else if (myList.size() == 10)
+                    myProxy.setFittingFunctionName(piecewiseThree);
+                else if (myList.size() == 12)
+                    myProxy.setFittingFunctionName(piecewiseThreeFree);
+                else
+                {
+                    *error = "Wrong number of fitting parameters for proxy: " + QString::fromStdString(name_);
+                    return  false;
+                }
+                myProxy.setFittingParametersRange(StringListToDouble(myList));
+            }
+        }
+    }
+    else
+    {
+        myProxy.setFittingFunctionName(linear);
+        if(parameters->contains("fitting_parameters"))
+        {
+            unsigned int nrParameters = 2;
+
+            myList = parameters->value("fitting_parameters").toStringList();
+            if (myList.size() != nrParameters*2)
+            {
+                *error = "Wrong number of fitting parameters for proxy: " + QString::fromStdString(name_);
+                return  false;
+            }
+
+            myProxy.setFittingParametersRange(StringListToDouble(myList));
+        }
     }
 
     return true;
@@ -687,79 +761,6 @@ bool Project::loadParameters(QString parametersFileName)
 
             if (parameters->contains("stddev_threshold"))
                 myProxy->setStdDevThreshold(parameters->value("stddev_threshold").toFloat());
-
-            if (getProxyPragaName(name_.toStdString()) == proxyHeight)
-            {
-                if (parameters->contains("fitting_function"))
-                {
-                    std::string elevationFuction = parameters->value("fitting_function").toString().toStdString();
-                    if (fittingFunctionNames.find(elevationFuction) == fittingFunctionNames.end())
-                    {
-                        errorString = "Unknown function for elevation. Remove the field from the .ini file or choose between: piecewise_two, triple_piecewise, free_triple_piecewise.";
-                        return false;
-                    }
-                    else
-                        myProxy->setFittingFunctionName(fittingFunctionNames.at(elevationFuction));
-
-                    if (parameters->contains("fitting_parameters"))
-                    {
-                        unsigned int nrParameters = NODATA;
-
-                        if (myProxy->getFittingFunctionName() == piecewiseTwo)
-                            nrParameters = 4;
-                        else if (myProxy->getFittingFunctionName() == piecewiseThree)
-                            nrParameters = 5;
-                        else if (myProxy->getFittingFunctionName()== piecewiseThreeFree)
-                            nrParameters = 6;
-
-                        myList = parameters->value("fitting_parameters").toStringList();
-                        if (myList.size() != nrParameters*2)
-                        {
-                            errorString = "Wrong number of fitting parameters for proxy: " + name_;
-                            return  false;
-                        }
-
-                        myProxy->setFittingParametersRange(StringListToDouble(myList));
-                    }
-                }
-                else
-                {
-                    if (parameters->contains("fitting_parameters"))
-                    {
-                        myList = parameters->value("fitting_parameters").toStringList();
-
-                        if (myList.size() == 8)
-                            myProxy->setFittingFunctionName(piecewiseTwo);
-                        else if (myList.size() == 10)
-                            myProxy->setFittingFunctionName(piecewiseThree);
-                        else if (myList.size() == 12)
-                            myProxy->setFittingFunctionName(piecewiseThreeFree);
-                        else
-                        {
-                            errorString = "Wrong number of fitting parameters for proxy: " + name_;
-                            return  false;
-                        }
-                        myProxy->setFittingParametersRange(StringListToDouble(myList));
-                    }
-                }
-            }
-            else
-            {
-                myProxy->setFittingFunctionName(linear);
-                if(parameters->contains("fitting_parameters"))
-                {
-                    unsigned int nrParameters = 2;
-
-                    myList = parameters->value("fitting_parameters").toStringList();
-                    if (myList.size() != nrParameters*2)
-                    {
-                        errorString = "Wrong number of fitting parameters for proxy: " + name_;
-                        return  false;
-                    }
-
-                    myProxy->setFittingParametersRange(StringListToDouble(myList));
-                }
-            }
 
             if (! parameters->contains("active"))
             {
@@ -2412,7 +2413,7 @@ bool Project::interpolationDemLocalDetrending(meteoVariable myVar, const Crit3DT
         myRaster->initializeGrid(myHeader);
         myRaster->initializeParameters(myHeader);
 
-        if(!setAllFittingRanges(myCombination, &interpolationSettings))
+        if(!setHeightFittingRange(myCombination, &interpolationSettings))
         {
             errorString = "Error in function preInterpolation: \n couldn't set fitting ranges.";
             return false;
@@ -2690,7 +2691,7 @@ bool Project::interpolationGrid(meteoVariable myVar, const Crit3DTime& myTime)
     proxyValues.resize(unsigned(interpolationSettings.getProxyNr()));
 
     if (interpolationSettings.getUseLocalDetrending())
-        if(!setAllFittingRanges(myCombination, &interpolationSettings))
+        if(!setHeightFittingRange(myCombination, &interpolationSettings))
         {
             errorString = "Error in function preInterpolation: \n couldn't set fitting ranges.";
             return false;
