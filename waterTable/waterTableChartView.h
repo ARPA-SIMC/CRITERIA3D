@@ -11,20 +11,21 @@
         public:
             WaterTableChartView(QWidget *parent = 0);
 
-            void draw(std::vector<QDate> &myDates, std::vector<float> &myHindcastSeries, std::vector<float> &myInterpolateSeries,
-                      QMap<QDate, float> obsDepths, float maximumObservedDepth);
+            void drawWaterTable(WaterTable &waterTable, float maximumObservedDepth);
 
             void tooltipObsDepthSeries(QPointF point, bool state);
             void tooltipLineSeries(QPointF point, bool state);
             void handleMarkerClicked();
             QList<QPointF> exportInterpolationValues();
 
+            QDateTimeAxis* axisX;
+
         private:
             QScatterSeries* obsDepthSeries;
             QLineSeries* hindcastSeries;
             QLineSeries* interpolationSeries;
+            QLineSeries* climateSeries;
 
-            QDateTimeAxis* axisX;
             QValueAxis* axisY;
             Callout *m_tooltip;
     };

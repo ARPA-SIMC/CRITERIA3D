@@ -25,11 +25,6 @@ int  Well::getObsDepthNr()
 }
 
 
-QMap<QDate, float> Well::getObsDepths()
-{
-    return depths;
-}
-
 
 QDate Well::getFirstDate()
 {

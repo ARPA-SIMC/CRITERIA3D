@@ -1,34 +1,9 @@
-/*!
-    CRITERIA3D
-    \copyright 2016 Fausto Tomei, Gabriele Antolini, Laura Costantini
-    Alberto Pistocchi, Marco Bittelli, Antonio Volta
-    You should have received a copy of the GNU General Public License
-    along with Nome-Programma.  If not, see <http://www.gnu.org/licenses/>.
-    This file is part of CRITERIA3D.
-    CRITERIA3D has been developed under contract issued by A.R.P.A. Emilia-Romagna
-    CRITERIA3D is free software: you can redistribute it and/or modify
-    it under the terms of the GNU Lesser General Public License as published by
-    the Free Software Foundation, either version 3 of the License, or
-    (at your option) any later version.
-    CRITERIA3D is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU Lesser General Public License for more details.
-    You should have received a copy of the /NU Lesser General Public License
-    along with CRITERIA3D.  If not, see <http://www.gnu.org/licenses/>.
-    contacts:
-    fausto.tomei@gmail.com
-    ftomei@arpae.it
-*/
-
 #include "meteo.h"
 #include "localProxyWidget.h"
-#include "proxyWidget.h"
 #include "utilities.h"
 #include "interpolation.h"
 #include "spatialControl.h"
 #include "commonConstants.h"
-#include "formInfo.h"
 #include "math.h"
 #include "furtherMathFunctions.h"
 
@@ -62,7 +37,12 @@ Crit3DLocalProxyWidget::Crit3DLocalProxyWidget(double x, double y, std::vector<s
     detrended.setText("Detrended data");
     climatologicalLR.setText("Climate lapserate");
     modelLR.setText("Model lapse rate");
+    stationWeights.setText("See weight of stations");
 
+    //temporaneamente disattivati
+    detrended.setVisible(false);
+    climatologicalLR.setVisible(false);
+    climatologicalLR.setEnabled(false);
 
     QLabel *r2Label = new QLabel(tr("R2"));
     QLabel *lapseRateLabel = new QLabel(tr("Lapse rate"));
@@ -124,6 +104,7 @@ Crit3DLocalProxyWidget::Crit3DLocalProxyWidget(double x, double y, std::vector<s
     selectionOptionBoxLayout->addWidget(&detrended);
     selectionOptionBoxLayout->addWidget(&modelLR);
     selectionOptionBoxLayout->addWidget(&climatologicalLR);
+    selectionOptionBoxLayout->addWidget(&stationWeights);
 
     selectionOptionEditLayout->addWidget(r2Label);
     selectionOptionEditLayout->addWidget(&r2);
@@ -140,25 +121,7 @@ Crit3DLocalProxyWidget::Crit3DLocalProxyWidget(double x, double y, std::vector<s
     selectionLayout->addStretch(30);
     selectionLayout->addLayout(selectionOptionLayout);
 
-    if (!parameters.empty() && interpolationSettings->getProxy(proxyPos)->getFittingFunctionName() == piecewiseThree && parameters[proxyPos].size() == 5)
-    {
-        QVBoxLayout *parametriLayout = new QVBoxLayout();
-
-        QLabel *H0Lab = new QLabel(QString("H0: %1").arg(parameters[proxyPos][0]));
-        QLabel *T0Lab = new QLabel(QString("T0: %1").arg(parameters[proxyPos][1]));
-        QLabel *H1Lab = new QLabel(QString("H1: %1").arg(parameters[proxyPos][0]+parameters[proxyPos][2]));
-        QLabel *T1Lab = new QLabel(QString("T1: %1").arg(parameters[proxyPos][1]+parameters[proxyPos][3]));
-        QLabel *slopeLab = new QLabel(QString("slope: %1").arg(parameters[proxyPos][4]));
-
-        parametriLayout->addWidget(H0Lab);
-        parametriLayout->addWidget(T0Lab);
-        parametriLayout->addWidget(H1Lab);
-        parametriLayout->addWidget(T1Lab);
-        parametriLayout->addWidget(slopeLab);
-
-        selectionLayout->addLayout(parametriLayout);
-    }
-    else if (!parameters.empty() && interpolationSettings->getProxy(proxyPos)->getFittingFunctionName() == piecewiseTwo && parameters[proxyPos].size() == 4)
+    if (!parameters.empty() && interpolationSettings->getProxy(proxyPos)->getFittingFunctionName() == piecewiseTwo && parameters[proxyPos].size() == 4)
     {
         QVBoxLayout *parametriLayout = new QVBoxLayout();
 
@@ -242,6 +205,7 @@ Crit3DLocalProxyWidget::Crit3DLocalProxyWidget(double x, double y, std::vector<s
     connect(&climatologicalLR, &QCheckBox::toggled, [=](int toggled){ this->climatologicalLRClicked(toggled); });
     connect(&modelLR, &QCheckBox::toggled, [=](int toggled){ this->modelLRClicked(toggled); });
     connect(&detrended, &QCheckBox::toggled, [=](){ this->plot(); });
+    connect(&stationWeights, &QCheckBox::toggled, [=] () {this->plot();});
     connect(updateStations, &QAction::triggered, this, [=](){ this->plot(); });
 
     if (currentFrequency != noFrequency)
@@ -371,6 +335,14 @@ void Crit3DLocalProxyWidget::plot()
     outInterpolationPoints.clear();
     subsetInterpolationPoints.clear();
     std::string errorStdStr;
+
+    for (QGraphicsTextItem* label : weightLabels)
+    {
+        chartView->scene()->removeItem(label);
+        delete label;
+    }
+    weightLabels.clear();
+
     if (detrended.isChecked())
     {
         outInterpolationPoints.clear();
@@ -407,7 +379,7 @@ void Crit3DLocalProxyWidget::plot()
             point.setY(varValue);
             QString text = "id: " + QString::fromStdString(meteoPoints[subsetInterpolationPoints[i].index].id) + "\n"
                            + "name: " + QString::fromStdString(meteoPoints[subsetInterpolationPoints[i].index].name) + "\n"
-                           + "weight: " + QString::number(subsetInterpolationPoints[i].regressionWeight);
+                           + "weight: " + QString::number(subsetInterpolationPoints[i].regressionWeight, 'f', 5);
             if (subsetInterpolationPoints[i].isMarked)
             {
                 pointListMarked.append(point);
@@ -485,6 +457,37 @@ void Crit3DLocalProxyWidget::plot()
     {
         modelLRClicked(1);
     }
+
+    if (stationWeights.isChecked())
+    {
+        QChart* chart = chartView->chart();
+        QRectF chartRect = chart->plotArea();
+        double xMin = chartView->axisX->min();
+        double xMax = chartView->axisX->max();
+        double yMin = chartView->axisY->min();
+        double yMax = chartView->axisY->max();
+
+        for (int i = 0; i < int(subsetInterpolationPoints.size()); i++)
+        {
+            float proxyVal = subsetInterpolationPoints[i].getProxyValue(proxyPos);
+            float varValue = subsetInterpolationPoints[i].value;
+
+            if (proxyVal != NODATA && varValue != NODATA)
+            {
+                double xRatio = (proxyVal - xMin) / (xMax - xMin);
+                double yRatio = (varValue - yMin) / (yMax - yMin);
+
+                QPointF scenePos;
+                scenePos.setX(chartRect.left() + xRatio * chartRect.width());
+                scenePos.setY(chartRect.bottom() - yRatio * chartRect.height());
+
+                QGraphicsTextItem* weightLabel = new QGraphicsTextItem(QString::number(subsetInterpolationPoints[i].regressionWeight, 'f', 3));
+                weightLabel->setPos(scenePos);
+                chartView->scene()->addItem(weightLabel);
+                weightLabels.push_back(weightLabel);
+            }
+        }
+    }
 }
 
 
@@ -544,7 +547,7 @@ void Crit3DLocalProxyWidget::modelLRClicked(int toggled)
                         for (int p = 0; p < int(xVector.size()); p++)
                         {
                             point.setX(xVector[p]);
-                            point.setY(lapseRatePiecewiseThree_withSlope(xVector[p], parameters[proxyPos]));
+                            point.setY(lapseRatePiecewise_three(xVector[p], parameters[proxyPos]));
                             point_vector.append(point);
                         }
                     }
@@ -581,7 +584,7 @@ void Crit3DLocalProxyWidget::modelLRClicked(int toggled)
                         for (int p = 0; p < int(xVector.size()); p++)
                         {
                             point.setX(xVector[p]);
-                            point.setY(lapseRatePiecewiseFree(xVector[p], parameters[proxyPos]));
+                            point.setY(lapseRatePiecewise_three_free(xVector[p], parameters[proxyPos]));
                             point_vector.append(point);
                         }
 

@@ -198,9 +198,10 @@ void Project::setProxyDEM()
 }
 
 
-bool Project::checkProxy(const Crit3DProxy &myProxy, QString* error)
+bool Project::checkProxy(Crit3DProxy &myProxy, QString* error)
 {
     std::string name_ = myProxy.getName();
+    QList<QString> myList;
 
     if (name_ == "")
     {
@@ -214,6 +215,79 @@ bool Project::checkProxy(const Crit3DProxy &myProxy, QString* error)
     {
         *error = "error reading grid, table or field for proxy " + QString::fromStdString(name_);
         return false;
+    }
+
+    if (isHeight)
+    {
+        if (parameters->contains("fitting_function"))
+        {
+            std::string elevationFuction = parameters->value("fitting_function").toString().toStdString();
+            if (fittingFunctionNames.find(elevationFuction) == fittingFunctionNames.end())
+            {
+                errorString = "Unknown function for elevation. Remove the field from the .ini file or choose between: piecewise_two, triple_piecewise, free_triple_piecewise.";
+                return false;
+            }
+            else
+                myProxy.setFittingFunctionName(fittingFunctionNames.at(elevationFuction));
+
+            if (parameters->contains("fitting_parameters"))
+            {
+                unsigned int nrParameters = NODATA;
+
+                if (myProxy.getFittingFunctionName() == piecewiseTwo)
+                    nrParameters = 4;
+                else if (myProxy.getFittingFunctionName() == piecewiseThree)
+                    nrParameters = 5;
+                else if (myProxy.getFittingFunctionName()== piecewiseThreeFree)
+                    nrParameters = 6;
+
+                myList = parameters->value("fitting_parameters").toStringList();
+                if (myList.size() != nrParameters*2)
+                {
+                    *error = "Wrong number of fitting parameters for proxy: " + QString::fromStdString(name_);
+                    return  false;
+                }
+
+                myProxy.setFittingParametersRange(StringListToDouble(myList));
+            }
+        }
+        else
+        {
+            if (parameters->contains("fitting_parameters"))
+            {
+                myList = parameters->value("fitting_parameters").toStringList();
+
+                if (myList.size() == 8)
+                    myProxy.setFittingFunctionName(piecewiseTwo);
+                else if (myList.size() == 10)
+                    myProxy.setFittingFunctionName(piecewiseThree);
+                else if (myList.size() == 12)
+                    myProxy.setFittingFunctionName(piecewiseThreeFree);
+                else
+                {
+                    *error = "Wrong number of fitting parameters for proxy: " + QString::fromStdString(name_);
+                    return  false;
+                }
+                myProxy.setFittingParametersRange(StringListToDouble(myList));
+            }
+        }
+    }
+    else
+    {
+        myProxy.setFittingFunctionName(linear);
+        if(parameters->contains("fitting_parameters"))
+        {
+            unsigned int nrParameters = 2;
+
+            myList = parameters->value("fitting_parameters").toStringList();
+            if (myList.size() != nrParameters*2)
+            {
+                *error = "Wrong number of fitting parameters for proxy: " + QString::fromStdString(name_);
+                return  false;
+            }
+
+            myProxy.setFittingParametersRange(StringListToDouble(myList));
+        }
     }
 
     return true;
@@ -688,98 +762,6 @@ bool Project::loadParameters(QString parametersFileName)
             if (parameters->contains("stddev_threshold"))
                 myProxy->setStdDevThreshold(parameters->value("stddev_threshold").toFloat());
 
-            /*if (parameters->contains("fitting_parameters"))
-            {
-                unsigned int nrParameters;
-
-                if (getProxyPragaName(name_.toStdString()) == proxyHeight)
-                    nrParameters = 5;
-                else
-                    nrParameters = 2;
-
-                myList = parameters->value("fitting_parameters").toStringList();
-                if (myList.size() != nrParameters*2 && myList.size() != (nrParameters-1)*2 && myList.size() != (nrParameters+1)*2) //TODO: change
-                {
-                    errorString = "Wrong number of fitting parameters for proxy: " + name_;
-                    return  false;
-                }
-
-                myProxy->setFittingParametersRange(StringListToDouble(myList));
-            }*/
-
-            if (getProxyPragaName(name_.toStdString()) == proxyHeight)
-            {
-                if (parameters->contains("fitting_function"))
-                {
-                    std::string elevationFuction = parameters->value("fitting_function").toString().toStdString();
-                    if (fittingFunctionNames.find(elevationFuction) == fittingFunctionNames.end())
-                    {
-                        errorString = "Unknown function for elevation. Remove the field from the .ini file or choose between: piecewise_two, triple_piecewise, free_triple_piecewise.";
-                        return false;
-                    }
-                    else
-                        myProxy->setFittingFunctionName(fittingFunctionNames.at(elevationFuction));
-
-                    if (parameters->contains("fitting_parameters"))
-                    {
-                        unsigned int nrParameters;
-
-                        if (myProxy->getFittingFunctionName() == piecewiseTwo)
-                            nrParameters = 4;
-                        else if (myProxy->getFittingFunctionName() == piecewiseThree)
-                            nrParameters = 5;
-                        else if (myProxy->getFittingFunctionName()== piecewiseThreeFree)
-                            nrParameters = 6;
-
-                        myList = parameters->value("fitting_parameters").toStringList();
-                        if (myList.size() != nrParameters*2)
-                        {
-                            errorString = "Wrong number of fitting parameters for proxy: " + name_;
-                            return  false;
-                        }
-
-                        myProxy->setFittingParametersRange(StringListToDouble(myList));
-                    }
-                }
-                else
-                {
-                    if (parameters->contains("fitting_parameters"))
-                    {
-                        myList = parameters->value("fitting_parameters").toStringList();
-
-                        if (myList.size() == 8)
-                            myProxy->setFittingFunctionName(piecewiseTwo);
-                        else if (myList.size() == 10)
-                            myProxy->setFittingFunctionName(piecewiseThree);
-                        else if (myList.size() == 12)
-                            myProxy->setFittingFunctionName(piecewiseThreeFree);
-                        else
-                        {
-                            errorString = "Wrong number of fitting parameters for proxy: " + name_;
-                            return  false;
-                        }
-                        myProxy->setFittingParametersRange(StringListToDouble(myList));
-                    }
-                }
-            }
-            else
-            {
-                myProxy->setFittingFunctionName(linear);
-                if(parameters->contains("fitting_parameters"))
-                {
-                    unsigned int nrParameters = 2;
-
-                    myList = parameters->value("fitting_parameters").toStringList();
-                    if (myList.size() != nrParameters*2)
-                    {
-                        errorString = "Wrong number of fitting parameters for proxy: " + name_;
-                        return  false;
-                    }
-
-                    myProxy->setFittingParametersRange(StringListToDouble(myList));
-                }
-            }
-
             if (! parameters->contains("active"))
             {
                 errorString = "active not specified for proxy " + QString::fromStdString(myProxy->getName());
@@ -934,8 +916,13 @@ Crit3DTime Project::getCrit3DCurrentTime()
 QDateTime Project::getCurrentTime()
 {
     QDateTime myDateTime;
-    myDateTime.setDate(this->currentDate);
-    return myDateTime.addSecs(this->currentHour * HOUR_SECONDS);
+    if (gisSettings.isUTC)
+    {
+        myDateTime.setTimeSpec(Qt::UTC);
+    }
+
+    myDateTime.setDate(currentDate);
+    return myDateTime.addSecs(currentHour * HOUR_SECONDS);
 }
 
 
@@ -1102,7 +1089,8 @@ bool Project::loadDEM(QString myFileName)
 
     setProxyDEM();
     interpolationSettings.setProxyLoaded(false);
-    if (! updateProxy()) return false;
+    if (! updateProxy())
+        return false;
 
     //set interpolation settings DEM
     interpolationSettings.setCurrentDEM(&DEM);
@@ -1899,7 +1887,7 @@ bool Project::loadProxyGrids()
             }
             else
             {
-                errorString = "Error loading proxy grid " + fileName;
+                errorString = "Error loading raster proxy:\n" + fileName + "\nHow to fix it: check the proxy section in the parameters.ini";
                 return false;
             }
 
@@ -1972,12 +1960,10 @@ bool Project::updateProxy()
     {
         if (! interpolationSettings.getProxyLoaded())
         {
-            if (loadProxyGrids())
-            {
-                interpolationSettings.setProxyLoaded(true);
-            }
-            else
+            if (! loadProxyGrids())
                 return false;
+
+            interpolationSettings.setProxyLoaded(true);
 
             if (meteoPointsDbHandler != nullptr)
             {
@@ -2227,13 +2213,11 @@ bool Project::computeStatisticsCrossValidation(Crit3DTime myTime, meteoVariable 
     std::vector <float> obs;
     std::vector <float> pre;
 
-    float value;
-
     for (int i = 0; i < nrMeteoPoints; i++)
     {
         if (meteoPoints[i].active)
         {
-            value = meteoPoints[i].getMeteoPointValue(myTime, myVar, meteoSettings);
+            float value = meteoPoints[i].currentValue;
 
             if (! isEqual(value, NODATA) && ! isEqual(meteoPoints[i].residual, NODATA))
             {
@@ -2278,11 +2262,11 @@ bool Project::interpolationCv(meteoVariable myVar, const Crit3DTime& myTime, cro
     }
 
     if (myVar == dailyGlobalRadiation ||
+        myVar == globalIrradiance ||
         myVar == dailyLeafWetness ||
         myVar == dailyWindVectorDirectionPrevailing ||
         myVar == dailyWindVectorIntensityAvg ||
-        myVar == dailyWindVectorIntensityMax ||
-        myVar == globalIrradiance)
+        myVar == dailyWindVectorIntensityMax )
     {
         logError("Cross validation is not available for " + QString::fromStdString(getVariableString(myVar)));
         return false;
@@ -2292,7 +2276,7 @@ bool Project::interpolationCv(meteoVariable myVar, const Crit3DTime& myTime, cro
     std::string errorStdStr;
 
     // check quality and pass data to interpolation
-    if (!checkAndPassDataToInterpolation(quality, myVar, meteoPoints, nrMeteoPoints, myTime,
+    if (! checkAndPassDataToInterpolation(quality, myVar, meteoPoints, nrMeteoPoints, myTime,
                                          &qualityInterpolationSettings, &interpolationSettings, meteoSettings,
                                          &climateParameters, interpolationPoints,
                                          checkSpatialQuality, errorStdStr))
@@ -2427,7 +2411,7 @@ bool Project::interpolationDemLocalDetrending(meteoVariable myVar, const Crit3DT
         myRaster->initializeGrid(myHeader);
         myRaster->initializeParameters(myHeader);
 
-        if(!setAllFittingRanges(myCombination, &interpolationSettings))
+        if(!setHeightFittingRange(myCombination, &interpolationSettings))
         {
             errorString = "Error in function preInterpolation: \n couldn't set fitting ranges.";
             return false;
@@ -2705,7 +2689,7 @@ bool Project::interpolationGrid(meteoVariable myVar, const Crit3DTime& myTime)
     proxyValues.resize(unsigned(interpolationSettings.getProxyNr()));
 
     if (interpolationSettings.getUseLocalDetrending())
-        if(!setAllFittingRanges(myCombination, &interpolationSettings))
+        if(!setHeightFittingRange(myCombination, &interpolationSettings))
         {
             errorString = "Error in function preInterpolation: \n couldn't set fitting ranges.";
             return false;
@@ -2800,7 +2784,9 @@ float Project::meteoDataConsistency(meteoVariable myVar, const Crit3DTime& timeI
 {
     float dataConsistency = 0.0;
     for (int i = 0; i < nrMeteoPoints; i++)
+    {
         dataConsistency = MAXVALUE(dataConsistency, meteoPoints[i].obsDataConsistencyH(myVar, timeIni, timeFin));
+    }
 
     return dataConsistency;
 }
@@ -2962,6 +2948,7 @@ frequencyType Project::getCurrentFrequency() const
 {
     return currentFrequency;
 }
+
 
 void Project::setCurrentFrequency(const frequencyType &value)
 {
@@ -3220,7 +3207,6 @@ bool Project::loadProject()
     {
         errorType = ERROR_SETTINGS;
         errorString = "Load parameters failed.\n" + errorString;
-        logError();
         return false;
     }
 
@@ -3362,7 +3348,7 @@ void Project::showMeteoWidgetPoint(std::string idMeteoPoint, std::string namePoi
     QDateTime lastHourly = meteoPointsDbHandler->getLastDate(hourly, idMeteoPoint);
     bool hasHourlyData = !(firstHourly.isNull() || lastHourly.isNull());
 
-    if (!hasDailyData && !hasHourlyData)
+    if (! hasDailyData && ! hasHourlyData)
     {
         logInfoGUI("No data.");
         return;
@@ -3430,6 +3416,10 @@ void Project::showMeteoWidgetPoint(std::string idMeteoPoint, std::string namePoi
         if (hasHourlyData)
         {
             meteoWidgetPoint->setHourlyRange(firstHourly.date(), lastHourly.date());
+            if (! hasDailyData)
+            {
+                meteoWidgetPoint->setFrequency(hourly);
+            }
         }
 
         meteoWidgetPoint->setCurrentDate(this->currentDate);
@@ -3702,12 +3692,12 @@ void Project::showLocalProxyGraph(gis::Crit3DGeoPoint myPoint, gis::Crit3DRaster
 
     int row, col;
     std::vector<std::vector<double>> parameters;
-    if (myDataRaster->isLoaded && !myDataRaster->parametersCell.empty())
+    if (myDataRaster->isLoaded && !myDataRaster->singleCell.empty())
     {
         gis::getRowColFromXY(*(myDataRaster->header), myUtm, &row, &col);
         parameters = myDataRaster->getParametersFromRowCol(row, col);
     }
-    if (this->meteoGridLoaded && !this->meteoGridDbHandler->meteoGrid()->dataMeteoGrid.parametersCell.empty())
+    if (this->meteoGridLoaded && !this->meteoGridDbHandler->meteoGrid()->dataMeteoGrid.singleCell.empty())
     {
         gis::getGridRowColFromLonLat(meteoGridDbHandler->meteoGrid()->gridStructure().header(), myPoint.longitude, myPoint.latitude, &row, &col);
         parameters = meteoGridDbHandler->meteoGrid()->dataMeteoGrid.getParametersFromRowCol(row, col);
@@ -4775,9 +4765,7 @@ void Project::waterTableShowSingleWell(WaterTable &waterTable, const QString &id
 {
     DialogSummary* dialogResult = new DialogSummary(waterTable);   // show results
     dialogResult->show();
-    WaterTableWidget* chartResult = new WaterTableWidget(idWell, waterTable.getMyDates(), waterTable.getMyHindcastSeries(),
-                                                         waterTable.getMyInterpolateSeries(), waterTable.getObsDepths(),
-                                                         quality->getWaterTableMaximumDepth());
+    WaterTableWidget* chartResult = new WaterTableWidget(idWell, waterTable, quality->getWaterTableMaximumDepth());
     chartResult->show();
     return;
 }

@@ -182,18 +182,18 @@ int DLL_EXPORT __STDCALL setNumericalParameters(float minDeltaT, float maxDeltaT
  *  k_lateral_vertical_ratio = 10
  * \param waterRetentionCurve
  * \param conductivityMeanType
- * \param horizVertRatioConductivity
+ * \param conductivityHorizVertRatio
  * \return OK or PARAMETER_ERROR
  */
 int DLL_EXPORT __STDCALL setHydraulicProperties(int waterRetentionCurve,
-                        int conductivityMeanType, float horizVertRatioConductivity)
+                        int conductivityMeanType, float conductivityHorizVertRatio)
 {
     myParameters.waterRetentionCurve = waterRetentionCurve;
     myParameters.meanType = conductivityMeanType;
 
-    if  ((horizVertRatioConductivity >= 0.1) && (horizVertRatioConductivity <= 100))
+    if  ((conductivityHorizVertRatio >= 0.1) && (conductivityHorizVertRatio <= 100))
     {
-        myParameters.k_lateral_vertical_ratio = horizVertRatioConductivity;
+        myParameters.k_lateral_vertical_ratio = conductivityHorizVertRatio;
         return CRIT3D_OK;
     }
     else
@@ -499,7 +499,7 @@ int DLL_EXPORT __STDCALL setHydraulicProperties(int waterRetentionCurve,
 /*!
  * \brief setWaterContent
  * \param nodeIndex
- * \param waterContent [m^3 m^-3]
+ * \param waterContent [m] surface - [m3 m-3] sub-surface
  * \return OK/ERROR
  */
  int DLL_EXPORT __STDCALL setWaterContent(long nodeIndex, double waterContent)
@@ -528,6 +528,31 @@ int DLL_EXPORT __STDCALL setHydraulicProperties(int waterRetentionCurve,
             }
 
     return CRIT3D_OK;
+ }
+
+
+ /*!
+ * \brief setDegreeOfSaturation
+ * \param nodeIndex
+ * \param degreeOfSaturation [-] (only sub-surface)
+ * \return OK/ERROR
+ */
+ int DLL_EXPORT __STDCALL setDegreeOfSaturation(long nodeIndex, double degreeOfSaturation)
+ {
+     if (nodeListPtr == nullptr) return MEMORY_ERROR;
+
+     if ((nodeIndex < 0) || (nodeIndex >= myStructure.nrNodes)) return INDEX_ERROR;
+
+     if (nodeListPtr[nodeIndex].isSurface) return INDEX_ERROR;
+
+     if ((degreeOfSaturation < 0.) || (degreeOfSaturation > 1.)) return PARAMETER_ERROR;
+
+     nodeListPtr[nodeIndex].Se = degreeOfSaturation;
+     nodeListPtr[nodeIndex].H = nodeListPtr[nodeIndex].z - psi_from_Se(nodeIndex);
+     nodeListPtr[nodeIndex].oldH = nodeListPtr[nodeIndex].H;
+     nodeListPtr[nodeIndex].k = computeK(nodeIndex);
+
+     return CRIT3D_OK;
  }
 
 

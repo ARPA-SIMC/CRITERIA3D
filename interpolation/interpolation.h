@@ -100,13 +100,16 @@
                           std::vector <Crit3DInterpolationDataPoint> &selectedPoints,
                           float x, float y, float z, Crit3DInterpolationSettings &mySettings);
 
+    void localSelection_new(std::vector <Crit3DInterpolationDataPoint> &inputPoints, std::vector <Crit3DInterpolationDataPoint> &selectedPoints,
+                         float x, float y, float z, Crit3DInterpolationSettings& mySettings);
+
     bool proxyValidity(std::vector <Crit3DInterpolationDataPoint> &myPoints, int proxyPos,
                        float stdDevThreshold, double &avg, double &stdDev);
 
     bool proxyValidityWeighted(std::vector <Crit3DInterpolationDataPoint> &myPoints, int proxyPos,
                        float stdDevThreshold, double &avg, double &stdDev);
 
-    bool setAllFittingRanges(Crit3DProxyCombination myCombination, Crit3DInterpolationSettings* mySettings);
+    bool setHeightFittingRange(Crit3DProxyCombination myCombination, Crit3DInterpolationSettings* mySettings);
 
     bool setAllFittingParameters_noRange(Crit3DProxyCombination myCombination, Crit3DInterpolationSettings* mySettings,
                                          std::vector<std::function<double(double, std::vector<double>&)>>& myFunc,

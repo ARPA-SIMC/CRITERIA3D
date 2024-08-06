@@ -1015,6 +1015,67 @@ float gaussWeighted(vector <Crit3DInterpolationDataPoint> &myPointList)
 }
 */
 
+void localSelection_new(std::vector<Crit3DInterpolationDataPoint> &inputPoints, std::vector<Crit3DInterpolationDataPoint> &selectedPoints,
+                    float x, float y, float z, Crit3DInterpolationSettings& mySettings)
+{
+    std::vector<Crit3DInterpolationDataPoint> tempPoints;
+    unsigned int i;
+    float radius;
+    unsigned int nrValid = 0;
+    unsigned int minPoints = unsigned(mySettings.getMinPointsLocalDetrending() * 1.2);
+    float shepardInitialRadius = computeShepardInitialRadius(mySettings.getPointsBoundingBoxArea(), unsigned(inputPoints.size()), minPoints);
+
+    // define a first neighborhood inside initial radius
+    for (i=0; i < inputPoints.size(); i++)
+    {
+        inputPoints[i].distance = gis::computeDistance(x, y, float((inputPoints[i]).point->utm.x), float((inputPoints[i]).point->utm.y));
+        if (inputPoints[i].distance <= shepardInitialRadius &&
+            inputPoints[i].distance > 0 &&
+            checkLapseRateCode(inputPoints[i].lapseRateCode, mySettings.getUseLapseRateCode(), true))
+        {
+            tempPoints.push_back(inputPoints[i]);
+            nrValid++;
+        }
+    }
+
+    if (tempPoints.size() <= minPoints)
+    {
+        nrValid = sortPointsByDistance(minPoints + 1, inputPoints, selectedPoints);
+        if (nrValid > minPoints)
+        {
+            radius = selectedPoints[minPoints].distance;
+            selectedPoints.pop_back();
+        }
+        else
+            radius = selectedPoints[nrValid-1].distance + float(EPSILON);
+    }
+    else if (tempPoints.size() > minPoints)
+    {
+        nrValid = sortPointsByDistance(minPoints + 1, tempPoints, selectedPoints);
+        radius = selectedPoints[minPoints].distance;
+        selectedPoints.pop_back();
+    }
+    else
+    {
+        selectedPoints = tempPoints;
+        radius = shepardInitialRadius;
+    }
+
+    for (int i = 0; i < selectedPoints.size(); i++)
+    {
+        selectedPoints[i].regressionWeight = MAXVALUE((-(1/std::pow(radius,4)*(std::pow(selectedPoints[i].distance,4)))+1),EPSILON);
+        //selectedPoints[i].regressionWeight = 1;
+        //selectedPoints[i].heightWeight = 1./((2./maxHeightDelta)*selectedPoints[i].point->z+1);
+        selectedPoints[i].heightWeight = 1;
+    }
+    mySettings.setLocalRadius(float(radius));
+
+    return;
+}
+
+
+
+
 // TODO elevation std dev?
 void localSelection(vector <Crit3DInterpolationDataPoint> &inputPoints, vector <Crit3DInterpolationDataPoint> &selectedPoints,
                     float x, float y, float z, Crit3DInterpolationSettings& mySettings)
@@ -1033,7 +1094,7 @@ void localSelection(vector <Crit3DInterpolationDataPoint> &inputPoints, vector <
         inputPoints[i].distance = gis::computeDistance(x, y, float((inputPoints[i]).point->utm.x), float((inputPoints[i]).point->utm.y));
 
     unsigned int nrValid = 0;
-    float stepRadius = 5000;           // [m]
+    float stepRadius = 2500;           // [m]
     float r0 = 0;                       // [m]
     float r1 = stepRadius;              // [m]
     unsigned int i;
@@ -1077,7 +1138,6 @@ void localSelection(vector <Crit3DInterpolationDataPoint> &inputPoints, vector <
     mySettings.setLocalRadius(float(maxDistance));
 }
 
-
 bool checkPrecipitationZero(const std::vector<Crit3DInterpolationDataPoint> &myPoints, float precThreshold, int &nrNotNull)
 {
     nrNotNull = 0;
@@ -1100,6 +1160,7 @@ bool isThermal(meteoVariable myVar)
         myVar == dailyAirTemperatureAvg ||
         myVar == dailyAirTemperatureMax ||
         myVar == dailyAirTemperatureMin ||
+        myVar == dailyReferenceEvapotranspirationHS ||
         myVar == elaboration )
         return true;
     else
@@ -1114,6 +1175,7 @@ bool getUseDetrendingVar(meteoVariable myVar)
         myVar == dailyAirTemperatureAvg ||
         myVar == dailyAirTemperatureMax ||
         myVar == dailyAirTemperatureMin ||
+        myVar == dailyReferenceEvapotranspirationHS ||
         myVar == elaboration )
 
         return true;
@@ -1284,6 +1346,7 @@ bool regressionOrography(std::vector <Crit3DInterpolationDataPoint> &myPoints,
     }
 }
 
+
 void detrending(std::vector <Crit3DInterpolationDataPoint> &myPoints,
                 Crit3DProxyCombination myCombination, Crit3DInterpolationSettings* mySettings, Crit3DClimateParameters* myClimate,
                 meteoVariable myVar, Crit3DTime myTime)
@@ -1405,19 +1468,33 @@ bool proxyValidityWeighted(std::vector <Crit3DInterpolationDataPoint> &myPoints,
         return true;
 }
 
-bool setAllFittingRanges(Crit3DProxyCombination myCombination, Crit3DInterpolationSettings* mySettings)
+bool setHeightFittingRange(Crit3DProxyCombination myCombination, Crit3DInterpolationSettings* mySettings)
 {
     if (mySettings->getMinMaxTemperature().empty())
         return 0;
+
+    const double H0_MIN = -200; //height of inversion point (double piecewise) or first inversion point (triple piecewise)
+    const double H0_MAX = 5000;
+    const double DELTA_MIN = 300; //height difference between inversion points (for triple piecewise only)
+    const double DELTA_MAX = 1000;
+    const double SLOPE_MIN = 0.002; //ascending slope
+    const double SLOPE_MAX = 0.007;
+    const double INVSLOPE_MIN = -0.01; //inversion slope
+    const double INVSLOPE_MAX = -0.0015;
 
     for (unsigned i=0; i < myCombination.getProxySize(); i++)
         if (myCombination.isProxyActive(i) == true)
         {
             if (getProxyPragaName(mySettings->getProxy(i)->getName()) == proxyHeight)
             {
-                double min = mySettings->getMinMaxTemperature()[0];
-                double max = mySettings->getMinMaxTemperature()[1];
+                const double MIN_T = mySettings->getMinMaxTemperature()[0];
+                const double MAX_T = mySettings->getMinMaxTemperature()[1];
 
+                /*
+                 * following line allows to check if the function for elevation has been changed (GUI only) compared to the
+                 * function read in the .ini file. if it hasn't been changed, only the minimum and maximum temperature get rewritten.
+                 * otherwise appropriate parameters are loaded into the proxy (fittingParametersRange)
+                */
                 if (mySettings->getChosenElevationFunction() == mySettings->getProxy(i)->getFittingFunctionName())
                 {
                     std::vector<double> tempParam;
@@ -1426,18 +1503,18 @@ bool setAllFittingRanges(Crit3DProxyCombination myCombination, Crit3DInterpolati
                     {
                         if (mySettings->getChosenElevationFunction() == piecewiseTwo)
                         {
-                            tempParam[1] = min-2;
-                            tempParam[5] = max+2;
+                            tempParam[1] = MIN_T-2;
+                            tempParam[5] = MAX_T+2;
                         }
                         else if (mySettings->getChosenElevationFunction() == piecewiseThreeFree)
                         {
-                            tempParam[1] = min-2;
-                            tempParam[7] = max+2;
+                            tempParam[1] = MIN_T-2;
+                            tempParam[7] = MAX_T+2;
                         }
                         else if (mySettings->getChosenElevationFunction() == piecewiseThree)
                         {
-                            tempParam[1] = min-2;
-                            tempParam[6] = max+2;
+                            tempParam[1] = MIN_T-2;
+                            tempParam[6] = MAX_T+2;
                         }
                         mySettings->getProxy(i)->setFittingParametersRange(tempParam);
                     }
@@ -1448,22 +1525,20 @@ bool setAllFittingRanges(Crit3DProxyCombination myCombination, Crit3DInterpolati
                     if (mySettings->getChosenElevationFunction() == piecewiseTwo)
                     {
                         mySettings->getProxy(i)->setFittingFunctionName(piecewiseTwo);
-                        tempParam = {-200, min-2, 0.002, -0.01, 5000, max+2, 0.01, 0.0015};
+                        tempParam = {H0_MIN, MIN_T-2, SLOPE_MIN, INVSLOPE_MIN,
+                                     H0_MAX, MAX_T+2, SLOPE_MAX, INVSLOPE_MAX};
                     }
                     else if (mySettings->getChosenElevationFunction() == piecewiseThreeFree)
                     {
                         mySettings->getProxy(i)->setFittingFunctionName(piecewiseThreeFree);
-                        tempParam = {-200, min-2, 300, 0.002, -0.01, -0.01, 5000, max+2, 1000, 0.007, 0.0015, 0.0015};
+                        tempParam = {H0_MIN, MIN_T-2, DELTA_MIN, SLOPE_MIN, INVSLOPE_MIN, INVSLOPE_MIN,
+                                     H0_MAX, MAX_T+2, DELTA_MAX, SLOPE_MAX, INVSLOPE_MAX, INVSLOPE_MAX};
                     }
                     else if (mySettings->getChosenElevationFunction() == piecewiseThree)
                     {
                         mySettings->getProxy(i)->setFittingFunctionName(piecewiseThree);
-                        tempParam = {-200, min-2, 300, 0.002, -0.01, 5000, max+2, 1000, 0.007, 0.0015};
-                    }
-                    else if (mySettings->getChosenElevationFunction() == freiFree)
-                    {
-                        mySettings->getProxy(i)->setFittingFunctionName(freiFree);
-                        tempParam = {min, 0, -4, -200, 0.1, 0.002, max+10, 0.006, 4, 5000, 1000, 0.006};
+                        tempParam = {H0_MIN, MIN_T-2, DELTA_MIN, SLOPE_MIN, INVSLOPE_MIN,
+                                     H0_MAX, MAX_T+2, DELTA_MAX, SLOPE_MAX, INVSLOPE_MAX};
                     }
                     mySettings->getProxy(i)->setFittingParametersRange(tempParam);
                 }
@@ -1504,11 +1579,9 @@ bool setAllFittingParameters_noRange(Crit3DProxyCombination myCombination, Crit3
                 if (mySettings->getChosenElevationFunction() == piecewiseTwo)
                     myFunc[i] = lapseRatePiecewise_two;
                 else if (mySettings->getChosenElevationFunction() == piecewiseThreeFree)
-                    myFunc[i] = lapseRatePiecewiseFree;
+                    myFunc[i] = lapseRatePiecewise_three_free;
                 else if (mySettings->getChosenElevationFunction() == piecewiseThree)
-                    myFunc[i] = lapseRatePiecewiseThree_withSlope;
-                else if (mySettings->getChosenElevationFunction() == freiFree)
-                    myFunc[i] = lapseRateFreiFree;
+                    myFunc[i] = lapseRatePiecewise_three;
                 else
                 {
                     errorStr = "Missing or wrong fitting function for proxy: " + mySettings->getProxy(i)->getName();
@@ -1581,24 +1654,17 @@ bool setAllFittingParameters(Crit3DProxyCombination myCombination, Crit3DInterpo
                 }
                 else if (mySettings->getChosenElevationFunction() == piecewiseThreeFree)
                 {
-                    myFunc.push_back(lapseRatePiecewiseFree);
+                    myFunc.push_back(lapseRatePiecewise_three_free);
                     mySettings->getProxy(i)->setFittingFunctionName(piecewiseThreeFree);
                     if (!(mySettings->getProxy(i)->getFittingParametersRange().empty()))
                         tempParam = {-200, min-2, 100, 0.001, -0.006, -0.006, 1800, max+2, 1000, 0.01, 0, 0};
                 }
                 else if (mySettings->getChosenElevationFunction() == piecewiseThree)
                 {
-                    myFunc.push_back(lapseRatePiecewiseThree_withSlope);
+                    myFunc.push_back(lapseRatePiecewise_three);
                     mySettings->getProxy(i)->setFittingFunctionName(piecewiseThree);
                     if (!(mySettings->getProxy(i)->getFittingParametersRange().empty()))
                         tempParam = {-200, min-2, 100, 0.002, -0.006, 1800, max+2, 1000, 0.01, 0};
-                }
-                else if (mySettings->getChosenElevationFunction() == freiFree)
-                {
-                    myFunc.push_back(lapseRateFreiFree);
-                    mySettings->getProxy(i)->setFittingFunctionName(freiFree);
-                    if (!(mySettings->getProxy(i)->getFittingParametersRange().empty()))
-                        tempParam = {min, 0, -4, -200, 0.1, 0, max+10, 0.006, 4, 1800, 1000, 0.006};
                 }
                 mySettings->getProxy(i)->setFittingParametersRange(tempParam);
             }
@@ -1882,12 +1948,12 @@ bool multipleDetrendingElevation(Crit3DProxyCombination elevationCombination, st
         mySettings->setSingleFittingFunction(detrendingLapseRatePiecewise_two, elevationPos);
     } else if (mySettings->getProxy(elevationPos)->getFittingFunctionName() == piecewiseThreeFree)
     {
-        myFunc[elevationPos] = detrendingLapseRatePiecewiseFree;
-        mySettings->setSingleFittingFunction(detrendingLapseRatePiecewiseFree, elevationPos);
+        myFunc[elevationPos] = detrendingLapseRatePiecewise_three_free;
+        mySettings->setSingleFittingFunction(detrendingLapseRatePiecewise_three_free, elevationPos);
     } else if (mySettings->getProxy(elevationPos)->getFittingFunctionName() == piecewiseThree)
     {
-        myFunc[elevationPos] = detrendingLapseRatePiecewiseThree_withSlope;
-        mySettings->setSingleFittingFunction(detrendingLapseRatePiecewiseThree_withSlope, elevationPos);
+        myFunc[elevationPos] = detrendingLapseRatePiecewise_three;
+        mySettings->setSingleFittingFunction(detrendingLapseRatePiecewise_three, elevationPos);
     }
 
     func = myFunc[elevationPos].target<double(*)(double, std::vector<double>&)>();;
@@ -2193,7 +2259,7 @@ void topographicDistanceOptimize(meteoVariable myVar,
         mySettings->setTopoDist_Kh(kh);
         if (computeResiduals(myVar, myMeteoPoints, nrMeteoPoints, interpolationPoints, mySettings, meteoSettings, true, true))
         {
-            avgError = computeErrorCrossValidation(myVar, myMeteoPoints, nrMeteoPoints, myTime, meteoSettings);
+            avgError = computeErrorCrossValidation(myMeteoPoints, nrMeteoPoints);
             if (isEqual(bestError, NODATA) || avgError < bestError)
             {
                 bestError = avgError;
@@ -2240,7 +2306,7 @@ void optimalDetrending(meteoVariable myVar, Crit3DMeteoPoint* &myMeteoPoints, in
 
             if (computeResiduals(myVar, myMeteoPoints, nrMeteoPoints, interpolationPoints, mySettings, meteoSettings, true, true))
             {
-                avgError = computeErrorCrossValidation(myVar, myMeteoPoints, nrMeteoPoints, myTime, meteoSettings);
+                avgError = computeErrorCrossValidation(myMeteoPoints, nrMeteoPoints);
                 if (! isEqual(avgError, NODATA) && (isEqual(minError, NODATA) || avgError < minError))
                 {
                     minError = avgError;
@@ -2304,7 +2370,9 @@ bool preInterpolation(std::vector <Crit3DInterpolationDataPoint> &myPoints, Crit
     }
 
     if (mySettings->getUseTD() && getUseTdVar(myVar))
+    {
         topographicDistanceOptimize(myVar, myMeteoPoints, nrMeteoPoints, myPoints, mySettings, meteoSettings, myTime);
+    }
 
     return true;
 }
