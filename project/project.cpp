@@ -2213,13 +2213,11 @@ bool Project::computeStatisticsCrossValidation(Crit3DTime myTime, meteoVariable 
     std::vector <float> obs;
     std::vector <float> pre;
 
-    float value;
-
     for (int i = 0; i < nrMeteoPoints; i++)
     {
         if (meteoPoints[i].active)
         {
-            value = meteoPoints[i].getMeteoPointValue(myTime, myVar, meteoSettings);
+            float value = meteoPoints[i].currentValue;
 
             if (! isEqual(value, NODATA) && ! isEqual(meteoPoints[i].residual, NODATA))
             {
@@ -2264,11 +2262,11 @@ bool Project::interpolationCv(meteoVariable myVar, const Crit3DTime& myTime, cro
     }
 
     if (myVar == dailyGlobalRadiation ||
+        myVar == globalIrradiance ||
         myVar == dailyLeafWetness ||
         myVar == dailyWindVectorDirectionPrevailing ||
         myVar == dailyWindVectorIntensityAvg ||
-        myVar == dailyWindVectorIntensityMax ||
-        myVar == globalIrradiance)
+        myVar == dailyWindVectorIntensityMax )
     {
         logError("Cross validation is not available for " + QString::fromStdString(getVariableString(myVar)));
         return false;
@@ -2278,7 +2276,7 @@ bool Project::interpolationCv(meteoVariable myVar, const Crit3DTime& myTime, cro
     std::string errorStdStr;
 
     // check quality and pass data to interpolation
-    if (!checkAndPassDataToInterpolation(quality, myVar, meteoPoints, nrMeteoPoints, myTime,
+    if (! checkAndPassDataToInterpolation(quality, myVar, meteoPoints, nrMeteoPoints, myTime,
                                          &qualityInterpolationSettings, &interpolationSettings, meteoSettings,
                                          &climateParameters, interpolationPoints,
                                          checkSpatialQuality, errorStdStr))

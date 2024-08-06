@@ -84,9 +84,6 @@ bool computeResiduals(meteoVariable myVar, Crit3DMeteoPoint* meteoPoints, int nr
 
     if (myVar == noMeteoVar) return false;
 
-    float myValue, interpolatedValue;
-    interpolatedValue = NODATA;
-    myValue = NODATA;
     std::vector <double> myProxyValues;
     bool isValid;
 
@@ -101,58 +98,67 @@ bool computeResiduals(meteoVariable myVar, Crit3DMeteoPoint* meteoPoints, int nr
 
         if (isValid && meteoPoints[i].quality == quality::accepted)
         {
-            myValue = meteoPoints[i].currentValue;
+            float myValue = meteoPoints[i].currentValue;
 
-            interpolatedValue = interpolate(interpolationPoints, settings, meteoSettings, myVar,
+            float interpolatedValue = interpolate(interpolationPoints, settings, meteoSettings, myVar,
                                             float(meteoPoints[i].point.utm.x),
                                             float(meteoPoints[i].point.utm.y),
                                             float(meteoPoints[i].point.z),
                                             myProxyValues, false);
 
-            if (  myVar == precipitation
-               || myVar == dailyPrecipitation)
+            if (  myVar == precipitation || myVar == dailyPrecipitation)
             {
                 if (myValue != NODATA)
-                    if (myValue < meteoSettings->getRainfallThreshold()) myValue=0.;
+                {
+                    if (myValue < meteoSettings->getRainfallThreshold())
+                        myValue=0.;
+                }
 
                 if (interpolatedValue != NODATA)
-                    if (interpolatedValue < meteoSettings->getRainfallThreshold()) interpolatedValue=0.;
+                {
+                    if (interpolatedValue < meteoSettings->getRainfallThreshold())
+                        interpolatedValue=0.;
+                }
             }
 
             // TODO derived var
 
             if ((interpolatedValue != NODATA) && (myValue != NODATA))
+            {
                 meteoPoints[i].residual = interpolatedValue - myValue;
+            }
         }
     }
 
     return true;
 }
 
-float computeErrorCrossValidation(meteoVariable myVar, Crit3DMeteoPoint* myPoints, int nrMeteoPoints, const Crit3DTime& myTime, Crit3DMeteoSettings* meteoSettings)
+
+float computeErrorCrossValidation(Crit3DMeteoPoint* myPoints, int nrMeteoPoints)
 {
     std::vector <float> obsValues, estValues;
-    float myValue, myEstimate, myResidual;
 
     for (int i=0; i < nrMeteoPoints; i++)
     {
         if (myPoints[i].active)
         {
-            myValue = myPoints[i].getMeteoPointValue(myTime, myVar, meteoSettings);
-            myResidual = myPoints[i].residual;
+            float value = myPoints[i].currentValue;
+            float residual = myPoints[i].residual;
 
-            if (myValue != NODATA && myResidual != NODATA)
+            if (value != NODATA && residual != NODATA)
             {
-                myEstimate = myValue + myResidual;
-                obsValues.push_back(myValue);
-                estValues.push_back(myEstimate);
+                obsValues.push_back(value);
+                estValues.push_back(value + residual);
             }
         }
     }
 
     if (obsValues.size() > 0)
+    {
         return statistics::meanAbsoluteError(obsValues, estValues);
-    else return NODATA;
+    }
+    else
+        return NODATA;
 }
 
 

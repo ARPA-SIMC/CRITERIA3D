@@ -927,6 +927,10 @@ std::string getVariableString(meteoVariable myVar)
     else if (myVar == leafAreaIndex)
             return "Leaf area index (m2 m-2)";
 
+    else if (myVar == elaboration)
+        return "Elaboration";
+    else if (myVar == anomaly)
+        return "Anomaly";
     else if (myVar == noMeteoTerrain)
         return "Elevation (m)";
     else
