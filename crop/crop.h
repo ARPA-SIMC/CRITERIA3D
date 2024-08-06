@@ -12,7 +12,7 @@
     #endif
 
     enum speciesType {HERBACEOUS_ANNUAL, HERBACEOUS_PERENNIAL, HORTICULTURAL, GRASS, TREE, FALLOW, FALLOW_ANNUAL, BARESOIL};
-    #define NR_CROP_SPECIES 7
+    #define NR_CROP_SPECIES 8
 
     /*!
      * \brief The Crit3DCrop class
