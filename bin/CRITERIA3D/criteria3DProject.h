@@ -58,10 +58,11 @@
 
         bool initializeCriteria3DModel();
 
-        bool initializeCrop();
+        bool initializeCropMaps();
+        void dailyUpdateCropMaps(const QDate &myDate);
+
         bool initializeCropWithClimateData();
         bool initializeCropFromDegreeDays(gis::Crit3DRasterGrid &myDegreeMap);
-        void dailyUpdateCrop();
 
         void assignETreal();
         void assignPrecipitation();

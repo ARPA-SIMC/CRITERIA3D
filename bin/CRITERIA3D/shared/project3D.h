@@ -179,6 +179,7 @@
         QString getSoilCode(double x, double y);
 
         int getLandUnitListIndex(int id);
+        bool isCrop(int landUnitIndex);
 
         int getSoilIndex(long row, long col);
         bool isWithinSoil(int soilIndex, double depth);

@@ -1112,7 +1112,7 @@ bool Project3D::loadCropDatabase(const QString &fileName)
     cropList.resize(landUnitList.size());
     for (int i = 0; i < int(landUnitList.size()); i++)
     {
-        if (landUnitList[i].idCrop == "") continue;
+        if (landUnitList[i].idCrop.isEmpty()) continue;
 
         if (! loadCropParameters(dbCrop, landUnitList[i].idCrop, cropList[i], errorString))
         {
@@ -1182,6 +1182,20 @@ int Project3D::getLandUnitListIndex(int id)
     }
 
     return NODATA;
+}
+
+
+bool Project3D::isCrop(int landUnitIndex)
+{
+    if (landUnitIndex == NODATA)
+        return false;
+
+    QString idCrop = landUnitList[landUnitIndex].idCrop.toUpper();
+
+    if (idCrop.isEmpty() || idCrop == "BARE")
+        return false;
+
+    return true;
 }
 
 

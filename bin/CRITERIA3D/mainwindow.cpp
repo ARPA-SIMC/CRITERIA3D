@@ -2296,7 +2296,7 @@ void MainWindow::on_actionCriteria3D_Initialize_triggered()
     {
         if (! myProject.processes.computeCrop)
         {
-            if (! myProject.initializeCrop())
+            if (! myProject.initializeCropMaps())
             {
                 myProject.logError();
                 return;
@@ -3272,7 +3272,13 @@ void MainWindow::on_actionCriteria3D_load_state_triggered()
 {
     if (! myProject.isProjectLoaded)
     {
-        myProject.logError(ERROR_STR_MISSING_PROJECT);
+        myProject.logWarning(ERROR_STR_MISSING_PROJECT);
+        return;
+    }
+
+    if (myProject.isModelRunning)
+    {
+        myProject.logWarning("The model is running, stop it before loading a state.");
         return;
     }
 
@@ -3306,7 +3312,13 @@ void MainWindow::on_actionCriteria3D_load_external_state_triggered()
 {
     if (! myProject.isProjectLoaded)
     {
-        myProject.logError(ERROR_STR_MISSING_PROJECT);
+        myProject.logWarning(ERROR_STR_MISSING_PROJECT);
+        return;
+    }
+
+    if (myProject.isModelRunning)
+    {
+        myProject.logWarning("The model is running, stop it before loading a state.");
         return;
     }
 

@@ -78,7 +78,7 @@ bool Crit3DProject::initializeCriteria3DModel()
 }
 
 
-bool Crit3DProject::initializeCrop()
+bool Crit3DProject::initializeCropMaps()
 {
     if (! DEM.isLoaded)
     {
@@ -104,7 +104,7 @@ bool Crit3DProject::initializeCropWithClimateData()
     if (! processes.computeCrop)
         return false;
 
-    if (! initializeCrop())
+    if (! initializeCropMaps())
         return false;
 
     if (landUnitList.empty() || cropList.empty())
@@ -120,62 +120,57 @@ bool Crit3DProject::initializeCropWithClimateData()
             float height = DEM.value[row][col];
             if (! isEqual(height, DEM.header->flag))
             {
-                // is land unit
                 int index = getLandUnitIndexRowCol(row, col);
-                if (index != NODATA)
+                if (isCrop(index))
                 {
-                    // is crop
-                    if (landUnitList[index].idCrop != "")
-                    {
-                        double degreeDays = 0;
-                        int firstDoy = 1;
-                        int lastDoy = currentDate.dayOfYear();
+                    double degreeDays = 0;
+                    int firstDoy = 1;
+                    int lastDoy = currentDate.dayOfYear();
 
-                        if (gisSettings.startLocation.latitude >= 0)
+                    if (gisSettings.startLocation.latitude >= 0)
+                    {
+                        // Northern hemisphere
+                        firstDoy = 1;
+                    }
+                    else
+                    {
+                        // Southern hemisphere
+                        if (currentDate.dayOfYear() >= 182)
                         {
-                            // Northern hemisphere
-                            firstDoy = 1;
+                            firstDoy = 182;
                         }
                         else
                         {
-                            // Southern hemisphere
-                            if (currentDate.dayOfYear() >= 182)
-                            {
-                                firstDoy = 182;
-                            }
-                            else
-                            {
-                                firstDoy = -183;
-                            }
+                            firstDoy = -183;
                         }
-
-                        // daily cycle
-                        for (int doy = firstDoy; doy <= lastDoy; doy++)
-                        {
-                            int currentDoy = doy;
-                            int currentYear = currentDate.year();
-                            if (currentDoy <= 0)
-                            {
-                                currentYear--;
-                                currentDoy += 365;
-                            }
-                            Crit3DDate myDate = getDateFromDoy(currentYear, currentDoy);
-
-                            float tmin = climateParameters.getClimateVar(dailyAirTemperatureMin, myDate.month,
-                                                                         height, quality->getReferenceHeight());
-                            float tmax = climateParameters.getClimateVar(dailyAirTemperatureMax, myDate.month,
-                                                                         height, quality->getReferenceHeight());
-
-                            double currentDD = cropList[index].getDailyDegreeIncrease(tmin, tmax, currentDoy);
-                            if (! isEqual(currentDD, NODATA))
-                            {
-                                degreeDays += currentDD;
-                            }
-                        }
-
-                        degreeDaysMap.value[row][col] = float(degreeDays);
-                        laiMap.value[row][col] = cropList[index].computeSimpleLAI(degreeDays, gisSettings.startLocation.latitude, currentDate.dayOfYear());
                     }
+
+                    // daily cycle
+                    for (int doy = firstDoy; doy <= lastDoy; doy++)
+                    {
+                        int currentDoy = doy;
+                        int currentYear = currentDate.year();
+                        if (currentDoy <= 0)
+                        {
+                            currentYear--;
+                            currentDoy += 365;
+                        }
+                        Crit3DDate myDate = getDateFromDoy(currentYear, currentDoy);
+
+                        float tmin = climateParameters.getClimateVar(dailyAirTemperatureMin, myDate.month,
+                                                                     height, quality->getReferenceHeight());
+                        float tmax = climateParameters.getClimateVar(dailyAirTemperatureMax, myDate.month,
+                                                                     height, quality->getReferenceHeight());
+
+                        double currentDD = cropList[index].getDailyDegreeIncrease(tmin, tmax, currentDoy);
+                        if (! isEqual(currentDD, NODATA))
+                        {
+                            degreeDays += currentDD;
+                        }
+                    }
+
+                    degreeDaysMap.value[row][col] = float(degreeDays);
+                    laiMap.value[row][col] = cropList[index].computeSimpleLAI(degreeDays, gisSettings.startLocation.latitude, currentDate.dayOfYear());
                 }
             }
         }
@@ -190,7 +185,7 @@ bool Crit3DProject::initializeCropWithClimateData()
 
 bool Crit3DProject::initializeCropFromDegreeDays(gis::Crit3DRasterGrid &myDegreeMap)
 {
-    initializeCrop();
+    initializeCropMaps();
 
     if (! myDegreeMap.isLoaded)
     {
@@ -213,22 +208,18 @@ bool Crit3DProject::initializeCropFromDegreeDays(gis::Crit3DRasterGrid &myDegree
             float height = DEM.value[row][col];
             if (! isEqual(height, DEM.header->flag))
             {
-                // is land unit
+                // field unit list and crop list have the same index
                 int index = getLandUnitIndexRowCol(row, col);
-                if (index != NODATA)
+                if (isCrop(index))
                 {
-                    // is crop
-                    if (landUnitList[index].idCrop != "")
+                    double x, y;
+                    gis::getUtmXYFromRowCol(*(DEM.header), row, col, &x, &y);
+                    float currentDegreeDay = gis::getValueFromXY(myDegreeMap, x, y);
+                    if (! isEqual(currentDegreeDay, myDegreeMap.header->flag))
                     {
-                        double x, y;
-                        gis::getUtmXYFromRowCol(*(DEM.header), row, col, &x, &y);
-                        float ddValue = gis::getValueFromXY(myDegreeMap, x, y);
-                        if (! isEqual(ddValue, myDegreeMap.header->flag))
-                        {
-                            degreeDaysMap.value[row][col] = ddValue;
-                            laiMap.value[row][col] = cropList[index].computeSimpleLAI(degreeDaysMap.value[row][col],
-                                                             gisSettings.startLocation.latitude, currentDate.dayOfYear());
-                        }
+                        degreeDaysMap.value[row][col] = currentDegreeDay;
+                        laiMap.value[row][col] = cropList[index].computeSimpleLAI(degreeDaysMap.value[row][col],
+                                                         gisSettings.startLocation.latitude, currentDate.dayOfYear());
                     }
                 }
             }
@@ -241,18 +232,35 @@ bool Crit3DProject::initializeCropFromDegreeDays(gis::Crit3DRasterGrid &myDegree
 }
 
 
-void Crit3DProject::dailyUpdateCrop()
+void Crit3DProject::dailyUpdateCropMaps(const QDate &myDate)
 {
+    int firstDoy = 1;
+    if (gisSettings.startLocation.latitude < 0)
+    {
+        // Southern hemisphere
+        firstDoy = 182;
+    }
+
+    // reset the crop at the beginning of the new year
+    if (myDate.dayOfYear() == firstDoy)
+    {
+         logInfo("Reset crop...");
+
+        laiMap.emptyGrid();
+        degreeDaysMap.emptyGrid();
+    }
+
     for (int row = 0; row < DEM.header->nrRows; row++)
     {
         for (int col = 0; col < DEM.header->nrCols; col++)
         {
+            // is valid point
             float height = DEM.value[row][col];
             if (! isEqual(height, DEM.header->flag))
             {
-                // is crop
+                // landUnit list and crop list have the same index
                 int index = getLandUnitIndexRowCol(row, col);
-                if (index != NODATA && landUnitList[index].idCrop != "")
+                if (isCrop(index))
                 {
                     float tmin = dailyTminMap.value[row][col];
                     float tmax = dailyTminMap.value[row][col];
@@ -413,7 +421,7 @@ bool Crit3DProject::runModels(QDateTime firstTime, QDateTime lastTime, bool isRe
 
         if (processes.computeCrop)
         {
-            dailyUpdateCrop();
+            dailyUpdateCropMaps(myDate);
         }
 
         if (isSaveOutputRaster())
