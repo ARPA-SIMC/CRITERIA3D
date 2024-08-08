@@ -195,8 +195,9 @@ double getSurfaceWaterFraction(int i)
         return 0.0;
     else
     {
-        double h = MAXVALUE(nodeListPtr[i].H - double(nodeListPtr[i].z), 0);
-        return 1.0 - MAXVALUE(0.0, nodeListPtr[i].Soil->Pond - h) / nodeListPtr[i].Soil->Pond;
+        double h = std::max(nodeListPtr[i].H - nodeListPtr[i].z, 0.);       // [m]
+        double h0 = std::max(double(nodeListPtr[i].pond), 0.001);           // [m]
+        return h / h0;
     }
 }
 
@@ -251,8 +252,9 @@ void updateBoundaryWater (double deltaT)
             if (nodeListPtr[i].boundary->type == BOUNDARY_RUNOFF)
             {
                 double avgH = (nodeListPtr[i].H + nodeListPtr[i].oldH) * 0.5;        // [m]
+
                 // Surface water available for runoff [m]
-                double hs = MAXVALUE(avgH - (nodeListPtr[i].z + nodeListPtr[i].Soil->Pond), 0.0);
+                double hs = MAXVALUE(avgH - (nodeListPtr[i].z + nodeListPtr[i].pond), 0.);
                 if (hs > EPSILON_METER)
                 {
                     double maxFlow = (hs * nodeListPtr[i].volume_area) / deltaT;         // [m3 s-1] maximum flow available during the time step
@@ -383,7 +385,7 @@ void updateBoundaryWater (double deltaT)
 			flow = weight * pressureFlow + (1. - weight) * ManningFlow;
 
 		}
-		else if (waterLevel > nodeListPtr[i].Soil->Pond)
+        else if (waterLevel > nodeListPtr[i].pond)
 		{
 			// open channel flow
             double boundaryArea = myCulvert.width * waterLevel;					// [m^2]

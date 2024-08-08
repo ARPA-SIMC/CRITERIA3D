@@ -94,9 +94,8 @@ double runoff(long i, long j, TlinkedNode *link, double deltaT, unsigned long ap
 		*/
     }
 
-
     double H = MAXVALUE(Hi, Hj);
-    double z = MAXVALUE(nodeListPtr[i].z + nodeListPtr[i].Soil->Pond, nodeListPtr[j].z + nodeListPtr[j].Soil->Pond);
+    double z = MAXVALUE(nodeListPtr[i].z + nodeListPtr[i].pond, nodeListPtr[j].z + nodeListPtr[j].pond);
     double Hs = H - z;
     if (Hs <= 0.) return(0.);
 
