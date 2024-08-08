@@ -45,7 +45,6 @@
         // same header of DEM
         Crit3DSnowMaps snowMaps;
         gis::Crit3DRasterGrid degreeDaysMap;
-        gis::Crit3DRasterGrid laiMap;
         gis::Crit3DRasterGrid dailyTminMap;
         gis::Crit3DRasterGrid dailyTmaxMap;
 

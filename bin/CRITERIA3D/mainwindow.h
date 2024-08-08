@@ -218,6 +218,8 @@
 
         void on_actionCriteria3D_waterFluxes_settings_triggered();
 
+        void on_actionView_SurfacePond_triggered();
+
     protected:
         /*!
          * \brief mouseReleaseEvent call moveCenter

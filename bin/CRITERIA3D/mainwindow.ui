@@ -1293,7 +1293,7 @@
        <second>0</second>
        <year>1752</year>
        <month>9</month>
-       <day>12</day>
+       <day>11</day>
       </datetime>
      </property>
      <property name="maximumDate">
@@ -2095,6 +2095,7 @@
       <addaction name="actionView_DegreeOfSaturation_fixed_range"/>
      </widget>
      <addaction name="menuSurface_water_content"/>
+     <addaction name="actionView_SurfacePond"/>
      <addaction name="separator"/>
      <addaction name="actionView_SoilMoisture"/>
      <addaction name="menuDegree_of_saturation"/>
@@ -2142,7 +2143,6 @@
     <addaction name="actionView_Crop"/>
     <addaction name="separator"/>
     <addaction name="menuWater_fluxes"/>
-    <addaction name="separator"/>
     <addaction name="menuSlope_stability"/>
     <addaction name="separator"/>
    </widget>
@@ -2913,6 +2913,11 @@
   <action name="actionCriteria3D_set_processes">
    <property name="text">
     <string>Set active processes...</string>
+   </property>
+  </action>
+  <action name="actionView_SurfacePond">
+   <property name="text">
+    <string>Surface Pond</string>
    </property>
   </action>
  </widget>

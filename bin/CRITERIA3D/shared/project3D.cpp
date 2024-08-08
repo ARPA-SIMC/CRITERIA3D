@@ -154,7 +154,7 @@ void Project3D::initializeProject3D()
 
     computationSoilDepth = 0.0;     // [m]
     minThickness = 0.02;            // [m] default: 2 cm
-    maxThickness = 0.05;            // [m] default: 5 cm
+    maxThickness = 0.10;            // [m] default: 10 cm
     maxThicknessDepth = 0.40;       // [m] default: 40 cm
     thicknessGrowthFactor = 1.2;    // [-]
 
@@ -192,6 +192,7 @@ void Project3D::clearProject3D()
 
     soilMap.clear();
     landUseMap.clear();
+    laiMap.clear();
 
     landUnitList.clear();
     cropList.clear();
@@ -641,7 +642,7 @@ bool Project3D::setCrit3DSurfaces()
 
     for (int i = 0; i < int(landUnitList.size()); i++)
     {
-        int result = soilFluxes3D::setSurfaceProperties(i, landUnitList[i].roughness, landUnitList[i].pond);
+        int result = soilFluxes3D::setSurfaceProperties(i, landUnitList[i].roughness);
         if (isCrit3dError(result, errorString))
         {
             errorString = "Error in setSurfaceProperties: " + errorString + "\n"
@@ -652,6 +653,7 @@ bool Project3D::setCrit3DSurfaces()
 
     return true;
 }
+
 
 
 // thetaS and thetaR are already corrected for coarse fragments
@@ -914,10 +916,21 @@ bool Project3D::setCrit3DNodeSoil()
                     if (layer == 0)
                     {
                         // surface
-                        int landUnitIndex = getLandUnitIndexRowCol(row, col);
+                        int unitIndex = getLandUnitIndexRowCol(row, col);
 
-                        if (landUnitIndex != NODATA)
-                            soilFluxes3D::setNodeSurface(index, landUnitIndex);
+                        if (unitIndex != NODATA)
+                        {
+                            soilFluxes3D::setNodeSurface(index, unitIndex);
+                            float currentPond = computeCurrentPond(row, col);
+                            if (! isEqual(currentPond, NODATA))
+                            {
+                                soilFluxes3D::setNodePond(index, currentPond);
+                            }
+                            else
+                            {
+                                soilFluxes3D::setNodePond(index, landUnitList[unitIndex].pond);
+                            }
+                        }
                         else
                         {
                             errorString = "Wrong surface definition in row, col: "
@@ -1162,12 +1175,21 @@ int Project3D::getLandUnitIndexRowCol(int row, int col)
         return 0;
     }
 
+    // landuse map has same header of DEM
+    int id = landUseMap.value[row][col];
+    if (id == landUseMap.header->flag)
+    {
+        return NODATA;
+    }
+
+    /*
     double x, y;
     gis::getUtmXYFromRowCol(DEM.header, row, col, &x, &y);
 
     int id = getLandUnitFromUtm(x, y);
     if (id == NODATA)
         return NODATA;
+    */
 
     return getLandUnitListIndex(id);
 }
@@ -1185,12 +1207,12 @@ int Project3D::getLandUnitListIndex(int id)
 }
 
 
-bool Project3D::isCrop(int landUnitIndex)
+bool Project3D::isCrop(int unitIndex)
 {
-    if (landUnitIndex == NODATA)
+    if (unitIndex == NODATA)
         return false;
 
-    QString idCrop = landUnitList[landUnitIndex].idCrop.toUpper();
+    QString idCrop = landUnitList[unitIndex].idCrop.toUpper();
 
     if (idCrop.isEmpty() || idCrop == "BARE")
         return false;
@@ -1226,50 +1248,45 @@ bool Project3D::loadSoilDatabase(const QString &fileName)
 }
 
 
-void Project3D::setProgressionFactor()
-{
-    if (minThickness == maxThickness)
-    {
-        thicknessGrowthFactor = 1.0;
-        return;
-    }
-
-    double factor = 1.01;
-    double bestFactor = factor;
-    double bestError = 99;
-    while (factor <= 2.0)
-    {
-        double currentThickness = minThickness;
-        double currentDepth = minThickness * 0.5;
-        while (currentThickness < maxThickness)
-        {
-            double nextThickness = currentThickness * factor;
-            currentDepth += (currentThickness + nextThickness) * 0.5;
-            currentThickness = nextThickness;
-        }
-
-        double upperDepth = currentDepth - currentThickness * 0.5;
-        double error = fabs(upperDepth - maxThicknessDepth);
-        if (error < bestError)
-        {
-            bestError = error;
-            bestFactor = factor;
-        }
-
-        factor += 0.01;
-    }
-
-    thicknessGrowthFactor = bestFactor;
-}
-
-
 void Project3D::setSoilLayers()
  {
     nrLayers = 1;
     if (computationSoilDepth <= 0)
         return;
 
-    setProgressionFactor();
+    // set thicknessGrowthFactor
+    if (minThickness == maxThickness)
+    {
+        thicknessGrowthFactor = 1.0;
+    }
+    else
+    {
+        double factor = 1.01;
+        double bestFactor = factor;
+        double bestError = 99;
+        while (factor <= 2.0)
+        {
+            double upperDepth = 0;
+            double currentThickness = minThickness;
+            double currentDepth = upperDepth + currentThickness * 0.5;
+            while (currentThickness < maxThickness)
+            {
+                upperDepth += currentThickness;
+                currentThickness = std::min(currentThickness * factor, maxThickness);
+                currentDepth = upperDepth + currentThickness * 0.5;
+            }
+
+            double error = fabs(currentDepth - maxThicknessDepth);
+            if (error < bestError)
+            {
+                bestError = error;
+                bestFactor = factor;
+            }
+
+            factor += 0.01;
+        }
+        thicknessGrowthFactor = bestFactor;
+    }
 
     nrLayers++;
     double currentThickness = minThickness;
@@ -1440,6 +1457,70 @@ int Project3D::getSoilLayerIndex(double depth)
     }
 
     return signed(i);
+}
+
+
+float Project3D::computeCurrentPond(int row, int col)
+{
+    if (! radiationMaps->slopeMap->isLoaded)
+        return NODATA;
+
+    float slopeDegree = radiationMaps->slopeMap->getValueFromRowCol(row, col);
+
+    if (isEqual(slopeDegree, radiationMaps->slopeMap->header->flag))
+        return NODATA;
+
+    double slope = tan(slopeDegree * DEG_TO_RAD);
+
+    int unitIndex = getLandUnitIndexRowCol(row, col);
+    if (unitIndex == NODATA)
+        return NODATA;
+
+    double currentPond = landUnitList[unitIndex].pond / (slope + 1);
+
+    if (processes.computeCrop)
+    {
+        double interceptionFactor = 1.;
+        if (isCrop(unitIndex))
+        {
+            // landUnit list and crop list have the same index
+            float currentLai = laiMap.value[row][col];
+            if (! isEqual(currentLai, laiMap.header->flag))
+            {
+                interceptionFactor = 0.5 + (currentLai / cropList[unitIndex].LAImax) * 0.5;
+            }
+        }
+        currentPond *= interceptionFactor;
+    }
+
+    return float(currentPond);
+}
+
+
+bool Project3D::dailyUpdatePond()
+{
+    if (! this->isCriteria3DInitialized || indexMap.empty() )
+    {
+        return false;
+    }
+
+    for (int row = 0; row < indexMap.at(0).header->nrRows; row++)
+    {
+        for (int col = 0; col < indexMap.at(0).header->nrCols; col++)
+        {
+            long nodeIndex = long(indexMap.at(0).value[row][col]);
+            if (nodeIndex != long(indexMap.at(0).header->flag))
+            {
+                float pond = computeCurrentPond(row, col);
+                if (! isEqual(pond, NODATA))
+                {
+                    soilFluxes3D::setNodePond(nodeIndex, pond);
+                }
+            }
+        }
+    }
+
+    return true;
 }
 
 
@@ -1722,8 +1803,8 @@ double getCoveredSurfaceFraction(double lai)
 double getPotentialEvaporation(double ET0, double lai)
 {
     double evapMax = ET0 * (1.0 - getCoveredSurfaceFraction(lai));
-    // TODO check evaporation on free water
-    return evapMax * 0.67;
+    //return evapMax * 0.67;   // TODO check evaporation on free water
+    return evapMax;
 }
 
 
@@ -2195,16 +2276,22 @@ double getCriteria3DVar(criteria3DVariable myVar, long nodeIndex)
         double fieldCapacity = 3.0;
         crit3dVar = soilFluxes3D::getWaterDeficit(nodeIndex, fieldCapacity);
     }
+    else if (myVar == surfacePond)
+    {
+        crit3dVar = soilFluxes3D::getPond(nodeIndex) * 1000;
+    }
     else
     {
         crit3dVar = MISSING_DATA_ERROR;
     }
 
-    if (crit3dVar == INDEX_ERROR || crit3dVar == MEMORY_ERROR
-        || crit3dVar == MISSING_DATA_ERROR || crit3dVar == TOPOGRAPHY_ERROR) {
+    // check result
+    if (crit3dVar == INDEX_ERROR || crit3dVar == MEMORY_ERROR || crit3dVar == TOPOGRAPHY_ERROR || crit3dVar == MISSING_DATA_ERROR)
+    {
         return NODATA;
     }
-    else {
+    else
+    {
         return crit3dVar;
     }
 }
@@ -2313,3 +2400,6 @@ bool setVariableDepth(const QList<QString>& depthList, std::vector<int>& variabl
 
     return true;
 }
+
+
+

@@ -423,6 +423,10 @@ bool Crit3DProject::runModels(QDateTime firstTime, QDateTime lastTime, bool isRe
         {
             dailyUpdateCropMaps(myDate);
         }
+        if (processes.computeWater)
+        {
+            dailyUpdatePond();
+        }
 
         if (isSaveOutputRaster())
         {
@@ -693,7 +697,6 @@ void Crit3DProject::clear3DProject()
     dailyTmaxMap.clear();
 
     degreeDaysMap.clear();
-    laiMap.clear();
 
     clearGeometry();
 

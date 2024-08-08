@@ -99,11 +99,13 @@
         int nrLateralLink;
         double currentSeconds;
 
-        // soil and land use
+        // same header of DTM
         gis::Crit3DRasterGrid soilMap;
         gis::Crit3DRasterGrid landUseMap;
+        gis::Crit3DRasterGrid laiMap;
+
+        // same indexes
         std::vector <Crit3DLandUnit> landUnitList;
-        // same index of landUnitsList
         std::vector <Crit3DCrop> cropList;
 
         // 3D soil fluxes maps
@@ -163,8 +165,6 @@
         bool loadCropDatabase(const QString &dbName);
         bool loadSoilMap(const QString &fileName);
 
-        void setProgressionFactor();
-
         double getSoilLayerTop(unsigned int i);
         double getSoilLayerBottom(unsigned int i);
         int getSoilLayerIndex(double depth);
@@ -179,7 +179,10 @@
         QString getSoilCode(double x, double y);
 
         int getLandUnitListIndex(int id);
-        bool isCrop(int landUnitIndex);
+        bool isCrop(int unitIndex);
+
+        float computeCurrentPond(int row, int col);
+        bool dailyUpdatePond();
 
         int getSoilIndex(long row, long col);
         bool isWithinSoil(int soilIndex, double depth);

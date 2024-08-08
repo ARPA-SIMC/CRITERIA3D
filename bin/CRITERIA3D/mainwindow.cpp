@@ -2424,6 +2424,11 @@ void MainWindow::showCriteria3DVariable(criteria3DVariable var, int layerIndex, 
         setSlopeStabilityScale(myProject.criteria3DMap.colorScale);
         ui->labelOutputRaster->setText("Factor of safety [-]");
     }
+    else if (current3DVariable == surfacePond)
+    {
+        setSurfaceWaterScale(myProject.criteria3DMap.colorScale);
+        ui->labelOutputRaster->setText("Surface maximum pond [mm]");
+    }
 
     // range fixed
     if (isFixedRange)
@@ -3159,6 +3164,12 @@ void MainWindow::on_actionHide_Geomap_triggered()
 
 
 //------------------- MENU VIEW SOIL FLUXES OUTPUT ------------------
+
+void MainWindow::on_actionView_SurfacePond_triggered()
+{
+    showCriteria3DVariable(surfacePond, 0, false, false, NODATA, NODATA);
+}
+
 
 void MainWindow::on_actionView_SurfaceWaterContent_automatic_range_triggered()
 {
