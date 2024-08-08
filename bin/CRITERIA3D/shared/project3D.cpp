@@ -1476,24 +1476,29 @@ float Project3D::computeCurrentPond(int row, int col)
     if (unitIndex == NODATA)
         return NODATA;
 
-    double currentPond = landUnitList[unitIndex].pond / (slope + 1);
+    double maximumPond = landUnitList[unitIndex].pond;
 
+    double soilMaximumPond = maximumPond / (slope + 1.);
+    if (isCrop(unitIndex))
+    {
+        soilMaximumPond *= 0.5;
+    }
+
+    double currentInterception = 0;
     if (processes.computeCrop)
     {
-        double interceptionFactor = 1.;
         if (isCrop(unitIndex))
         {
             // landUnit list and crop list have the same index
             float currentLai = laiMap.value[row][col];
             if (! isEqual(currentLai, laiMap.header->flag))
             {
-                interceptionFactor = 0.5 + (currentLai / cropList[unitIndex].LAImax) * 0.5;
+                currentInterception = maximumPond * 0.5 * (currentLai / cropList[unitIndex].LAImax);
             }
         }
-        currentPond *= interceptionFactor;
     }
 
-    return float(currentPond);
+    return float(soilMaximumPond + currentInterception);
 }
 
 
