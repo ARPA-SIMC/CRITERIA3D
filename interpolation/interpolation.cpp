@@ -2244,8 +2244,7 @@ void topographicDistanceOptimize(meteoVariable myVar,
                                  int nrMeteoPoints,
                                  std::vector <Crit3DInterpolationDataPoint> &interpolationPoints,
                                  Crit3DInterpolationSettings* mySettings,
-                                 Crit3DMeteoSettings* meteoSettings,
-                                 const Crit3DTime &myTime)
+                                 Crit3DMeteoSettings* meteoSettings)
 {
     float avgError;
 
@@ -2302,7 +2301,7 @@ void optimalDetrending(meteoVariable myVar, Crit3DMeteoPoint* &myMeteoPoints, in
             mySettings->setCurrentCombination(myCombination);
 
             if (mySettings->getUseTD() && getUseTdVar(myVar))
-                topographicDistanceOptimize(myVar, myMeteoPoints, nrMeteoPoints, interpolationPoints, mySettings, meteoSettings, myTime);
+                topographicDistanceOptimize(myVar, myMeteoPoints, nrMeteoPoints, interpolationPoints, mySettings, meteoSettings);
 
             if (computeResiduals(myVar, myMeteoPoints, nrMeteoPoints, interpolationPoints, mySettings, meteoSettings, true, true))
             {
@@ -2371,7 +2370,7 @@ bool preInterpolation(std::vector <Crit3DInterpolationDataPoint> &myPoints, Crit
 
     if (mySettings->getUseTD() && getUseTdVar(myVar))
     {
-        topographicDistanceOptimize(myVar, myMeteoPoints, nrMeteoPoints, myPoints, mySettings, meteoSettings, myTime);
+        topographicDistanceOptimize(myVar, myMeteoPoints, nrMeteoPoints, myPoints, mySettings, meteoSettings);
     }
 
     return true;
