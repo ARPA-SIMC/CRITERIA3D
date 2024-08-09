@@ -1188,6 +1188,7 @@ bool Project::loadMeteoPointsDB(QString fileName)
     {
         logError("Error reading proxy values");
     }
+    closeLogInfo();
 
     // position with respect to DEM
     if (DEM.isLoaded)
@@ -2206,7 +2207,7 @@ bool Project::interpolationOutputPoints(std::vector <Crit3DInterpolationDataPoin
 }
 
 
-bool Project::computeStatisticsCrossValidation(Crit3DTime myTime, meteoVariable myVar, crossValidationStatistics* myStats)
+bool Project::computeStatisticsCrossValidation(crossValidationStatistics* myStats)
 {
     myStats->initialize();
 
@@ -2295,7 +2296,7 @@ bool Project::interpolationCv(meteoVariable myVar, const Crit3DTime& myTime, cro
     if (! computeResiduals(myVar, meteoPoints, nrMeteoPoints, interpolationPoints, &interpolationSettings, meteoSettings, true, true))
         return false;
 
-    if (! computeStatisticsCrossValidation(myTime, myVar, myStats))
+    if (! computeStatisticsCrossValidation(myStats))
         return false;
 
     return true;
@@ -4885,4 +4886,99 @@ bool Project::waterTableAssignMeteoData(Crit3DMeteoPoint* linkedMeteoPoint, QDat
         errorString = "Not enough meteo data to analyze watertable period. Try to decrease the required percentage";
         return false;
     }
+}
+
+
+
+bool Project::assignAltitudeToAggregationPoints()
+{
+    if (! DEM.isLoaded)
+    {
+        errorString = ERROR_STR_MISSING_DEM;
+        return false;
+    }
+
+    if (aggregationDbHandler == nullptr)
+    {
+        errorString = "Open or create a new aggregation database before.";
+        return false;
+    }
+
+    if (meteoPointsLoaded)
+    {
+        errorString = "Close Meteo Points db before execute this operation!";
+        return false;
+    }
+
+    // check aggregation raster
+    QString rasterName;
+    if (! aggregationDbHandler->getRasterName(&rasterName))
+    {
+        errorString = "Missing raster name inside aggregation db.";
+        return false;
+    }
+
+    QString rasterFileName = aggregationPath + "/" + rasterName;
+    QFileInfo rasterFileFltInfo(rasterFileName + ".flt");
+    QFileInfo rasterFileHdrInfo(rasterFileName + ".hdr");
+    if (! rasterFileFltInfo.exists() || ! rasterFileHdrInfo.exists())
+    {
+        errorString = "Raster file does not exist: " + rasterFileName;
+        return false;
+    }
+
+    // load aggregation db as meteo points db
+    if (! loadMeteoPointsDB(aggregationDbHandler->name()) )
+    {
+        errorString = "Error in load aggregation points: " + errorString;
+        return false;
+    }
+
+    // load aggregation raster
+    std::string errorStr = "";
+    std::string fileNameStdStr = rasterFileName.toStdString() + ".flt";
+    gis::Crit3DRasterGrid *aggregationRaster;
+    aggregationRaster = new(gis::Crit3DRasterGrid);
+    if (! gis::openRaster(fileNameStdStr, aggregationRaster, gisSettings.utmZone, errorStr))
+    {
+        errorString = "Open raster failed: " + QString::fromStdString(errorStr);
+        return false;
+    }
+
+    // resample aggregation DEM
+    gis::Crit3DRasterGrid *aggregationDEM;
+    aggregationDEM = new(gis::Crit3DRasterGrid);
+    gis::resampleGrid(DEM, aggregationDEM, aggregationRaster->header, aggrAverage, 0.1f);
+
+    // compute average altitude from aggregation DEM
+    for (int i = 0; i < nrMeteoPoints; i++)
+    {
+        QString idStr = QString::fromStdString(meteoPoints[i].id);
+        QList<QString> idList = idStr.split('_');
+        float zoneNr = idList[0].toFloat();
+
+        std::vector<float> values;
+        for (int row = 0; row < aggregationRaster->header->nrRows; row++)
+        {
+            for (int col = 0; col < aggregationRaster->header->nrCols; col++)
+            {
+                if (isEqual(aggregationRaster->value[row][col], zoneNr))
+                {
+                    float z = aggregationDEM->value[row][col];
+                    if (! isEqual(z, aggregationDEM->header->flag))
+                    {
+                        values.push_back(z);
+                    }
+                }
+            }
+        }
+
+        // update point properties
+        float altitude = statistics::mean(values);
+        QString query = QString("UPDATE point_properties SET altitude = %1 WHERE id_point = '%2'").arg(altitude).arg(idStr);
+        aggregationDbHandler->db().exec(query);
+    }
+
+    closeMeteoPointsDB();
+    return true;
 }

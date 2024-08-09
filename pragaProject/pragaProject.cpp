@@ -1851,7 +1851,7 @@ bool PragaProject::averageSeriesOnZonesMeteoGrid(meteoVariable variable, meteoCo
             {
                 case aggrAverage:
                     {
-                        res = statistics::mean(validValues, size);
+                        res = statistics::mean(validValues);
                         break;
                     }
                 case aggrMedian:
@@ -1872,7 +1872,7 @@ bool PragaProject::averageSeriesOnZonesMeteoGrid(meteoVariable variable, meteoCo
                 default:
                     {
                         // default: average
-                        res = statistics::mean(validValues, size);
+                        res = statistics::mean(validValues);
                         break;
                     }
             }

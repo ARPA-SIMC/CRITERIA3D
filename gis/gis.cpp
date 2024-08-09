@@ -1607,12 +1607,11 @@ namespace gis
     {
         *(newGrid->header) = *newHeader;
 
-        double factor = newGrid->header->cellSize / oldGrid.header->cellSize;
+        double resampleFactor = newGrid->header->cellSize / oldGrid.header->cellSize;
+
         int row, col, tmpRow, tmpCol, nrValues, maxValues;
-        float value, tmpValue;
-        double x, y;
         gis::Crit3DPoint myLL, myUR;
-        std::vector <float> values;
+        std::vector<float> values;
 
         newGrid->initializeGrid();
 
@@ -1621,42 +1620,56 @@ namespace gis
             {
                 newGrid->value[row][col] = newGrid->header->flag;
 
-                value = NODATA;
-
-                if (factor < 1 || elab == aggrCenter)
+                float value = NODATA;
+                if (resampleFactor < 1. || elab == aggrCenter)
                 {
+                    double x, y;
                     newGrid->getXY(row, col, x, y);
                     oldGrid.getRowCol(x, y, tmpRow, tmpCol);
                     if (! gis::isOutOfGridRowCol(tmpRow, tmpCol, oldGrid))
+                    {
                         value = oldGrid.value[tmpRow][tmpCol];
+                    }
                 }
                 else
                 {
-                    newGrid->getXY(row, col, x, y);
-                    myLL.utm.x = x - (newGrid->header->cellSize / 2);
-                    myLL.utm.y = y - (newGrid->header->cellSize / 2);
-                    myUR.utm.x = x + (newGrid->header->cellSize / 2);
-                    myUR.utm.y = y + (newGrid->header->cellSize / 2);
+                    double x0, y0;
+                    newGrid->getXY(row, col, x0, y0);
+                    myLL.utm.x = x0 - (newGrid->header->cellSize / 2);
+                    myLL.utm.y = y0 - (newGrid->header->cellSize / 2);
+                    myUR.utm.x = x0 + (newGrid->header->cellSize / 2);
+                    myUR.utm.y = y0 + (newGrid->header->cellSize / 2);
+
+                    double step = oldGrid.header->cellSize * 0.5;
 
                     values.clear();
                     maxValues = 0;
-                    double step = oldGrid.header->cellSize * 0.5;
-                    for (x = myLL.utm.x; x <= myUR.utm.x; x += step)
-                        for (y = myLL.utm.y; y <= myUR.utm.y; y += step)
+
+                    double x = myLL.utm.x;
+                    while(x <= myUR.utm.x)
+                    {
+                        double y = myLL.utm.y;
+                        while(y <= myUR.utm.y)
                         {
                             maxValues++;
-                            tmpValue = gis::getValueFromXY(oldGrid, x, y);
+                            float tmpValue = gis::getValueFromXY(oldGrid, x, y);
                             if (! isEqual(tmpValue, oldGrid.header->flag))
+                            {
                                 values.push_back(tmpValue);
-                        }
+                            }
 
+                            y += step;
+                        }
+                        x += step;
+                    }
                     nrValues = int(values.size());
+
                     if (maxValues > 0)
                     {
                         if ((float(nrValues) / float(maxValues)) > nodataRatioThreshold)
                         {
                             if (elab == aggrAverage)
-                                value = statistics::mean(values, nrValues);
+                                value = statistics::mean(values);
                             else if (elab == aggrMedian)
                                 value = sorting::percentile(values, nrValues, 50, true);
                             else if (elab == aggrPrevailing)
@@ -1665,13 +1678,16 @@ namespace gis
                     }
                 }
 
-                if (! isEqual(value, NODATA)) newGrid->value[row][col] = value;
+                if (! isEqual(value, NODATA))
+                {
+                    newGrid->value[row][col] = value;
+                }
             }
 
         gis::updateMinMaxRasterGrid(newGrid);
         newGrid->isLoaded = true;
-
     }
+
 
     bool temporalYearlyInterpolation(const gis::Crit3DRasterGrid& firstGrid, const gis::Crit3DRasterGrid& secondGrid,
                                      int myYear, float minValue, float maxValue, gis::Crit3DRasterGrid* outGrid)

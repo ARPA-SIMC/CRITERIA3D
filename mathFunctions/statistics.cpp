@@ -42,7 +42,7 @@ float statisticalElab(meteoComputation elab, float param, std::vector<float> val
     switch(elab)
     {
         case average:
-            return statistics::mean(values, nValues);
+            return statistics::mean(values);
         case maxInList:
             return statistics::maxList(values, nValues);
         case minInList:
@@ -246,7 +246,7 @@ namespace statistics
     {
         if (measured.size() != simulated.size()) return NODATA;
 
-        float obsAvg = mean(measured, int(measured.size()));
+        float obsAvg = mean(measured);
 
         if (isEqual(obsAvg, NODATA)) return NODATA;
 
@@ -1102,7 +1102,7 @@ namespace statistics
 
         if (nrList <= 1) return NODATA;
 
-        myMean = mean(myList,nrList);
+        myMean = mean(myList);
 
         squareDiff = 0;
         nrValidValues = 0;
@@ -1129,7 +1129,7 @@ namespace statistics
 
         if (nrList <= 1) return NODATA;
 
-        myMean = mean(myList,nrList);
+        myMean = mean(myList);
 
         squareDiff = 0;
         nrValidValues = 0;
@@ -1199,51 +1199,53 @@ namespace statistics
             return NODATA;
     }
 
-    float mean(std::vector<float> myList, int nrList)
+
+    float mean(std::vector<float> list)
     {
-        float sum=0.;
-        int i, nrValidValues;
+        if (list.size() < 1)
+            return NODATA;
 
-        if (nrList < 1) return NODATA;
-        nrValidValues = 0;
+        int nrValidValues = 0;
+        double sum = 0.;
 
-        for (i = 0; i < nrList; i++)
+        for (int i = 0; i < list.size(); i++)
         {
-            if (myList[i]!= NODATA)
+            if (! isEqual(list[i], NODATA))
             {
-                sum += myList[i];
+                sum += double(list[i]);
+                nrValidValues++;
+            }
+        }
+
+        if (nrValidValues == 0)
+            return NODATA;
+
+        return float(sum / double(nrValidValues));
+    }
+
+
+    double mean(std::vector<double> list)
+    {
+        if (list.size() < 1) return NODATA;
+
+        int nrValidValues = 0;
+        double sum=0;
+
+        for (int i = 0; i < int(list.size()); i++)
+        {
+            if (list[i] != NODATA)
+            {
+                sum += list[i];
                 nrValidValues++;
             }
         }
 
         if (nrValidValues > 0)
-            return (sum/(float)(nrValidValues));
+            return (sum / (double)(nrValidValues));
         else
             return NODATA;
     }
 
-    double mean(std::vector<double> myList, int nrList)
-    {
-        double sum=0.;
-        int i, nrValidValues;
-
-        if (nrList < 1) return NODATA;
-        nrValidValues = 0;
-
-        for (i = 0; i < nrList; i++)
-        {
-            if (myList[i]!= NODATA)
-            {
-                sum += myList[i];
-                nrValidValues++;
-            }
-        }
-
-        if (nrValidValues > 0)
-            return (sum/(double)(nrValidValues));
-        else
-            return NODATA;
-    }
 
     double mean(double *myList, int nrList)
     {
