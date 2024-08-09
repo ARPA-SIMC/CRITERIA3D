@@ -4889,7 +4889,6 @@ bool Project::waterTableAssignMeteoData(Crit3DMeteoPoint* linkedMeteoPoint, QDat
 }
 
 
-
 bool Project::assignAltitudeToAggregationPoints()
 {
     if (! DEM.isLoaded)
@@ -4950,6 +4949,8 @@ bool Project::assignAltitudeToAggregationPoints()
     aggregationDEM = new(gis::Crit3DRasterGrid);
     gis::resampleGrid(DEM, aggregationDEM, aggregationRaster->header, aggrAverage, 0.1f);
 
+    setProgressBar("Compute altitude..", nrMeteoPoints);
+
     // compute average altitude from aggregation DEM
     for (int i = 0; i < nrMeteoPoints; i++)
     {
@@ -4977,8 +4978,11 @@ bool Project::assignAltitudeToAggregationPoints()
         float altitude = statistics::mean(values);
         QString query = QString("UPDATE point_properties SET altitude = %1 WHERE id_point = '%2'").arg(altitude).arg(idStr);
         aggregationDbHandler->db().exec(query);
+
+        updateProgressBar(i);
     }
 
     closeMeteoPointsDB();
     return true;
 }
+
