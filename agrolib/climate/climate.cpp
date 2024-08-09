@@ -1101,7 +1101,7 @@ float thomDailyMean(TObsDataH* hourlyValues, float minimumPercentage)
     if ( (float(nData) / 24 * 100) < minimumPercentage)
         thomDailyMean = NODATA;
     else
-        thomDailyMean = statistics::mean(thomValues, nData);
+        thomDailyMean = statistics::mean(thomValues);
 
 
     return thomDailyMean;

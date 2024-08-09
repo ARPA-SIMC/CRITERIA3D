@@ -1689,12 +1689,10 @@ bool PragaProject::downloadHourlyDataArkimet(QList<QString> variables, QDate sta
 
 bool PragaProject::averageSeriesOnZonesMeteoGrid(meteoVariable variable, meteoComputation elab1MeteoComp, QString aggregationString, float threshold, gis::Crit3DRasterGrid* zoneGrid, QDate startDate, QDate endDate, QString periodType, std::vector<float> &outputValues, bool showInfo)
 {
-
     aggregationMethod spatialElab = getAggregationMethod(aggregationString.toStdString());
     std::vector <std::vector<int> > meteoGridRow(zoneGrid->header->nrRows, std::vector<int>(zoneGrid->header->nrCols, NODATA));
     std::vector <std::vector<int> > meteoGridCol(zoneGrid->header->nrRows, std::vector<int>(zoneGrid->header->nrCols, NODATA));
     meteoGridDbHandler->meteoGrid()->saveRowColfromZone(zoneGrid, meteoGridRow, meteoGridCol);
-
 
     float percValue;
     bool isMeteoGrid = true;
@@ -1724,8 +1722,8 @@ bool PragaProject::averageSeriesOnZonesMeteoGrid(meteoVariable variable, meteoCo
         for (int zoneCol = 0; zoneCol < zoneGrid->header->nrCols; zoneCol++)
         {
             float zoneValue = zoneGrid->value[zoneRow][zoneCol];
-            double utmx = zoneGrid->utmPoint(zoneRow,zoneCol)->x;
-            double utmy = zoneGrid->utmPoint(zoneRow,zoneCol)->y;
+            double utmx = zoneGrid->utmPoint(zoneRow, zoneCol)->x;
+            double utmy = zoneGrid->utmPoint(zoneRow, zoneCol)->y;
 
             if (! isEqual(zoneValue, zoneGrid->header->flag))
             {
@@ -1743,13 +1741,21 @@ bool PragaProject::averageSeriesOnZonesMeteoGrid(meteoVariable variable, meteoCo
 
     for (unsigned int zonePos = 0; zonePos < zoneVector.size(); zonePos++)
     {
-        double lat;
-        double lon;
-       utmXvector[zonePos] = utmXvector[zonePos] / count[zonePos];
-       utmYvector[zonePos] = utmYvector[zonePos] / count[zonePos];
-       gis::getLatLonFromUtm(gisSettings, utmXvector[zonePos], utmYvector[zonePos], &lat, &lon);
-       latVector.push_back(lat);
-       lonVector.push_back(lon);
+        // average x, y
+        utmXvector[zonePos] = utmXvector[zonePos] / count[zonePos];
+        utmYvector[zonePos] = utmYvector[zonePos] / count[zonePos];
+        double lat, lon;
+        gis::getLatLonFromUtm(gisSettings, utmXvector[zonePos], utmYvector[zonePos], &lat, &lon);
+        latVector.push_back(lat);
+        lonVector.push_back(lon);
+    }
+
+    // save point properties
+    int nrAggregationPoints = int(zoneVector.size());
+    if (! aggregationDbHandler->writeAggregationPointProperties(nrAggregationPoints, aggregationString, lonVector, latVector))
+    {
+        errorString = aggregationDbHandler->error();
+        return false;
     }
 
     int infoStep = 0;
@@ -1767,10 +1773,8 @@ bool PragaProject::averageSeriesOnZonesMeteoGrid(meteoVariable variable, meteoCo
 
          for (int col = 0; col < meteoGridDbHandler->gridStructure().header().nrCols; col++)
          {
-
             if (meteoGridDbHandler->meteoGrid()->getMeteoPointActiveId(row, col, &id))
             {
-
                 Crit3DMeteoPoint* meteoPoint = meteoGridDbHandler->meteoGrid()->meteoPointPointer(row, col);
 
                 // copy data to MPTemp
@@ -1805,7 +1809,6 @@ bool PragaProject::averageSeriesOnZonesMeteoGrid(meteoVariable variable, meteoCo
          {
              for (int zoneCol = 0; zoneCol < zoneGrid->header->nrCols; zoneCol++)
              {
-
                 float zoneValue = zoneGrid->value[zoneRow][zoneCol];
                 if (! isEqual(zoneValue, zoneGrid->header->flag))
                 {
@@ -1813,6 +1816,7 @@ bool PragaProject::averageSeriesOnZonesMeteoGrid(meteoVariable variable, meteoCo
                     if (zoneIndex < 1 || zoneIndex > zoneGrid->maximum)
                     {
                         errorString = "invalid zone index: " + QString::number(zoneIndex);
+                        errorString += "\nZone number has to be between 1 and " + QString::number(zoneGrid->maximum);
                         return false;
                     }
 
@@ -1847,12 +1851,11 @@ bool PragaProject::averageSeriesOnZonesMeteoGrid(meteoVariable variable, meteoCo
             {
                 case aggrAverage:
                     {
-                        res = statistics::mean(validValues, size);
+                        res = statistics::mean(validValues);
                         break;
                     }
                 case aggrMedian:
                     {
-
                         res = sorting::percentile(validValues, size, 50.0, true);
                         break;
                     }
@@ -1869,7 +1872,7 @@ bool PragaProject::averageSeriesOnZonesMeteoGrid(meteoVariable variable, meteoCo
                 default:
                     {
                         // default: average
-                        res = statistics::mean(validValues, size);
+                        res = statistics::mean(validValues);
                         break;
                     }
             }
@@ -1881,12 +1884,12 @@ bool PragaProject::averageSeriesOnZonesMeteoGrid(meteoVariable variable, meteoCo
          {
             zoneVector[zonePos].clear();
          }
-
      }
 
      // save dailyElabAggregation result into DB
      if (showInfo) setProgressBar("Save data...", 0);
-     if (! aggregationDbHandler->saveAggrData(int(zoneGrid->maximum), aggregationString, periodType, startDate, endDate, variable, dailyElabAggregation, lonVector, latVector))
+     if (! aggregationDbHandler->saveAggrData(int(zoneGrid->maximum), aggregationString, periodType,
+                                             startDate, endDate, variable, dailyElabAggregation))
      {
          errorString = aggregationDbHandler->error();
          if (showInfo) closeProgressBar();
