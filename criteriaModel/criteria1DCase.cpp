@@ -182,7 +182,7 @@ bool Crit1DCase::initializeNumericalFluxes(std::string &error)
     double maxSurfaceWater = crop.getSurfaceWaterPonding() * 0.001;     // [m]
     double roughnessManning = 0.024;                                    // [s m^-0.33]
     int surfaceIndex = 0;
-    soilFluxes3D::setSurfaceProperties(surfaceIndex, roughnessManning, maxSurfaceWater);
+    soilFluxes3D::setSurfaceProperties(surfaceIndex, roughnessManning);
 
     // center
     float x0 = 0;
@@ -194,6 +194,7 @@ bool Crit1DCase::initializeNumericalFluxes(std::string &error)
     int nodeIndex = 0;
     soilFluxes3D::setNode(nodeIndex, x0, y0, z0, area, isSurface, true, BOUNDARY_RUNOFF, float(unit.slope), float(ly));
     soilFluxes3D::setNodeSurface(nodeIndex, surfaceIndex);
+    soilFluxes3D::setNodePond(nodeIndex, maxSurfaceWater);
     soilFluxes3D::setNodeLink(nodeIndex, nodeIndex + 1, DOWN, float(area));
 
     // set soil nodes
