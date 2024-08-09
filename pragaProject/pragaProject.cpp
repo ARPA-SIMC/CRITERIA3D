@@ -1689,12 +1689,10 @@ bool PragaProject::downloadHourlyDataArkimet(QList<QString> variables, QDate sta
 
 bool PragaProject::averageSeriesOnZonesMeteoGrid(meteoVariable variable, meteoComputation elab1MeteoComp, QString aggregationString, float threshold, gis::Crit3DRasterGrid* zoneGrid, QDate startDate, QDate endDate, QString periodType, std::vector<float> &outputValues, bool showInfo)
 {
-
     aggregationMethod spatialElab = getAggregationMethod(aggregationString.toStdString());
     std::vector <std::vector<int> > meteoGridRow(zoneGrid->header->nrRows, std::vector<int>(zoneGrid->header->nrCols, NODATA));
     std::vector <std::vector<int> > meteoGridCol(zoneGrid->header->nrRows, std::vector<int>(zoneGrid->header->nrCols, NODATA));
     meteoGridDbHandler->meteoGrid()->saveRowColfromZone(zoneGrid, meteoGridRow, meteoGridCol);
-
 
     float percValue;
     bool isMeteoGrid = true;
@@ -1724,8 +1722,8 @@ bool PragaProject::averageSeriesOnZonesMeteoGrid(meteoVariable variable, meteoCo
         for (int zoneCol = 0; zoneCol < zoneGrid->header->nrCols; zoneCol++)
         {
             float zoneValue = zoneGrid->value[zoneRow][zoneCol];
-            double utmx = zoneGrid->utmPoint(zoneRow,zoneCol)->x;
-            double utmy = zoneGrid->utmPoint(zoneRow,zoneCol)->y;
+            double utmx = zoneGrid->utmPoint(zoneRow, zoneCol)->x;
+            double utmy = zoneGrid->utmPoint(zoneRow, zoneCol)->y;
 
             if (! isEqual(zoneValue, zoneGrid->header->flag))
             {
@@ -1813,6 +1811,7 @@ bool PragaProject::averageSeriesOnZonesMeteoGrid(meteoVariable variable, meteoCo
                     if (zoneIndex < 1 || zoneIndex > zoneGrid->maximum)
                     {
                         errorString = "invalid zone index: " + QString::number(zoneIndex);
+                        errorString += "\nZone number has to be between 1 and " + QString::number(zoneGrid->maximum);
                         return false;
                     }
 
@@ -1852,7 +1851,6 @@ bool PragaProject::averageSeriesOnZonesMeteoGrid(meteoVariable variable, meteoCo
                     }
                 case aggrMedian:
                     {
-
                         res = sorting::percentile(validValues, size, 50.0, true);
                         break;
                     }

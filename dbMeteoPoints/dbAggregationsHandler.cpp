@@ -122,23 +122,23 @@ bool Crit3DAggregationsDbHandler::writeAggregationZonesTable(QString name, QStri
 
 }
 
+
 bool Crit3DAggregationsDbHandler::writeRasterName(QString rasterName)
 {
     QSqlQuery qry(_db);
 
-    qry.prepare( "INSERT INTO zones (name)"
-                                      " VALUES (:name)" );
-
+    qry.prepare( "INSERT INTO zones (name) VALUES (:name)" );
     qry.bindValue(":name", rasterName);
 
-    if( !qry.exec() )
+    if(! qry.exec() )
     {
         _error = qry.lastError().text();
         return false;
     }
-    else
-        return true;
+
+    return true;
 }
+
 
 bool Crit3DAggregationsDbHandler::getRasterName(QString* rasterName)
 {
