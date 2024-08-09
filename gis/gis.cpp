@@ -1601,10 +1601,11 @@ namespace gis
                 isEqual(first.header->llCorner.y, second.header->llCorner.y));
     }
 
+
     void resampleGrid(const gis::Crit3DRasterGrid& oldGrid, gis::Crit3DRasterGrid* newGrid,
-                      gis::Crit3DRasterHeader* header, aggregationMethod elab, float nodataThreshold)
+                      gis::Crit3DRasterHeader* newHeader, aggregationMethod elab, float nodataRatioThreshold)
     {
-        *(newGrid->header) = *header;
+        *(newGrid->header) = *newHeader;
 
         double factor = newGrid->header->cellSize / oldGrid.header->cellSize;
         int row, col, tmpRow, tmpCol, nrValues, maxValues;
@@ -1652,7 +1653,7 @@ namespace gis
                     nrValues = int(values.size());
                     if (maxValues > 0)
                     {
-                        if ((float(nrValues) / float(maxValues)) > nodataThreshold)
+                        if ((float(nrValues) / float(maxValues)) > nodataRatioThreshold)
                         {
                             if (elab == aggrAverage)
                                 value = statistics::mean(values, nrValues);

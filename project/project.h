@@ -241,6 +241,7 @@
         bool loadMeteoGridHourlyData(QDateTime firstDate, QDateTime lastDate, bool showInfo);
         bool loadMeteoGridMonthlyData(QDate firstDate, QDate lastDate, bool showInfo);
         void loadMeteoGridData(QDate firstDate, QDate lastDate, bool showInfo);
+
         QDateTime findDbPointLastTime();
         QDateTime findDbPointFirstTime();
 
