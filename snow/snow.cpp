@@ -89,7 +89,7 @@ void Crit3DSnow::initialize()
 }
 
 
-void Crit3DSnow::setInputData(double temp, double prec, double relHum, double windInt, double globalRad,
+void Crit3DSnow::setSnowInputData(double temp, double prec, double relHum, double windInt, double globalRad,
                               double beamRad, double transmissivity, double clearSkyTransmissivity, double waterContent)
 {
     _airT = temp;
@@ -100,7 +100,7 @@ void Crit3DSnow::setInputData(double temp, double prec, double relHum, double wi
     _beamRadiation = beamRad;
     _transmissivity = transmissivity;
     _clearSkyTransmissivity = clearSkyTransmissivity;
-    _surfaceWaterContent = std::max(waterContent, 0.0);
+    _surfaceWaterContent = std::max(waterContent, 0.0);     // [mm]
 }
 
 
@@ -328,7 +328,7 @@ void Crit3DSnow::computeSnowBrooksModel()
     QPrecipS = (HEAT_CAPACITY_SNOW / 1000.) * (_precSnow / 1000.) * (std::min(0., _airT) - prevSurfaceTemp);
     QPrecip = QPrecipW + QPrecipS;
 
-    // temperatura dell'acqua: almeno 1 grado
+    // temperatura dell'acqua superficiale: almeno 1 grado
     QWaterHeat = (HEAT_CAPACITY_WATER / 1000.) * (_surfaceWaterContent / 1000.)
                  * (std::max(1., (prevSurfaceTemp + _airT) / 2.) - prevSurfaceTemp);
 
