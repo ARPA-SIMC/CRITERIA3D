@@ -347,6 +347,13 @@ void Crit3DProject::assignPrecipitation()
 
     double area = DEM.header->cellSize * DEM.header->cellSize;
 
+    gis::Crit3DRasterGrid *snowFallMap, *snowMeltMap;
+    if (processes.computeSnow)
+    {
+        snowFallMap = snowMaps.getSnowFallMap();
+        snowMeltMap = snowMaps.getSnowMeltMap();
+    }
+
     // precipitation
     for (long row = 0; row < indexMap.at(0).header->nrRows; row++)
     {
@@ -358,9 +365,16 @@ void Crit3DProject::assignPrecipitation()
                 float prec = hourlyMeteoMaps->mapHourlyPrec->value[row][col];
                 if (! isEqual(prec, hourlyMeteoMaps->mapHourlyPrec->header->flag))
                 {
-                    if (prec > 0)
+                    float liquidWater = prec;
+                    if (processes.computeSnow)
                     {
-                        double flow = area * (prec / 1000.);                // [m3 h-1]
+                        float currentSnowFall = snowFallMap->value[row][col];
+                        float currentSnowMelt = snowMeltMap->value[row][col];
+                        liquidWater = prec - currentSnowFall + currentSnowMelt;
+                    }
+                    if (liquidWater > 0)
+                    {
+                        double flow = area * (liquidWater / 1000.);         // [m3 h-1]
                         waterSinkSource[surfaceIndex] += flow / 3600.;      // [m3 s-1]
                         totalPrecipitation += flow;                         // [m3]
                     }
@@ -852,9 +866,9 @@ void Crit3DProject::computeSnowPoint(int row, int col)
     double beamRad = radiationMaps->beamRadiationMap->value[row][col];
     double transmissivity = radiationMaps->transmissivityMap->value[row][col];
     double clearSkyTrans = radSettings.getClearSky();
-    double myWaterContent = 0;
+    double myWaterContent = 0;                              // [mm]
 
-    snowModel.setInputData(airT, prec, relHum, windInt, globalRad, beamRad, transmissivity, clearSkyTrans, myWaterContent);
+    snowModel.setSnowInputData(airT, prec, relHum, windInt, globalRad, beamRad, transmissivity, clearSkyTrans, myWaterContent);
 
     snowModel.computeSnowBrooksModel();
 
