@@ -1775,7 +1775,7 @@ bool Project3D::setSinkSource()
         int myResult = soilFluxes3D::setWaterSinkSource(signed(i), waterSinkSource.at(i));
         if (isCrit3dError(myResult, errorString))
         {
-            errorString = "waterBalanceSinkSource:" + errorString;
+            errorString = "Error in setWaterSinkSource: " + errorString;
             return false;
         }
     }

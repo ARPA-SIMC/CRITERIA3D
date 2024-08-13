@@ -374,7 +374,9 @@ void Crit3DProject::assignPrecipitation()
                     }
                     if (liquidWater > 0)
                     {
-                        double flow = area * (liquidWater / 1000.);         // [m3 h-1]
+                        float surfaceWater = checkSoilCracking(row, col, liquidWater);
+
+                        double flow = area * (surfaceWater / 1000.);        // [m3 h-1]
                         waterSinkSource[surfaceIndex] += flow / 3600.;      // [m3 s-1]
                         totalPrecipitation += flow;                         // [m3]
                     }
@@ -382,6 +384,90 @@ void Crit3DProject::assignPrecipitation()
             }
         }
     }
+}
+
+
+// input: precipitation [mm]
+// returns the water remaining on the surface after infiltration into soil cracks
+float Crit3DProject::checkSoilCracking(int row, int col, float precipitation)
+{
+    const double MAX_CRACKING_DEPTH = 0.6;              // [m]
+    const double MIN_WATER_WATENTIAL = 800;             // [kPa]
+
+    // 1) check soil
+    int soilIndex = getSoilIndex(row, col);
+    if (soilIndex == NODATA)
+        return precipitation;
+
+    // 2) check pond
+    long nodeIndex = indexMap.at(0).value[row][col];
+    double currentPond = getCriteria3DVar(surfacePond, nodeIndex);
+    if (precipitation <= currentPond)
+        return precipitation;
+
+    // 3) check clay soil
+    double maxDepth = std::min(computationSoilDepth, MAX_CRACKING_DEPTH);   // [m]
+
+    bool isFineFraction = true;
+    int lastFineHorizon = NODATA;
+    int h = 0;
+    while (soilList[soilIndex].horizon[h].upperDepth <= maxDepth && isFineFraction)
+    {
+        soil::Crit3DHorizon horizon = soilList[soilIndex].horizon[h];
+
+        double fineFraction = (horizon.texture.clay + horizon.texture.silt * 0.5) / 100 * (1 - horizon.coarseFragments);
+        if (fineFraction < 0.5)
+        {
+            isFineFraction = false;
+        }
+        else
+        {
+            lastFineHorizon = h;
+            h++;
+        }
+    }
+
+    if (lastFineHorizon == NODATA)
+        return precipitation;
+
+    maxDepth = std::min(soilList[soilIndex].horizon[lastFineHorizon].lowerDepth, MAX_CRACKING_DEPTH);
+
+    // clay horizon is too thin
+    if (maxDepth < 0.2)
+        return precipitation;
+
+    // 4) check water potential
+    double step = 0.05;                                                     // [m]
+    double depth = step;
+    double waterPotentialSum = 0;
+    int nrData = 0;
+    while (depth <= maxDepth )
+    {
+        int layerIndex = getSoilLayerIndex(depth);
+        long nodeIndex = indexMap.at(layerIndex).value[row][col];
+        double waterPotential = getCriteria3DVar(waterMatricPotential, nodeIndex);
+        waterPotentialSum += waterPotential;
+        depth += step;
+        nrData++;
+    }
+
+    double avgWaterPotential = -soil::metersTokPa(waterPotentialSum / nrData);      // [kPa]
+    if (avgWaterPotential < MIN_WATER_WATENTIAL)
+        return precipitation;
+
+    // THERE IS A SOIL CRACK
+    double downWater = precipitation - currentPond;             // [mm]
+    double surfaceWater = precipitation - downWater;            // [mm]
+
+    double area = DEM.header->cellSize * DEM.header->cellSize;  // [m2]
+    int layerIndex = getSoilLayerIndex(maxDepth);
+    nodeIndex = indexMap.at(layerIndex).value[row][col];
+
+    double flow = area * (downWater / 1000.);           // [m3 h-1]
+    waterSinkSource[nodeIndex] += flow / 3600.;         // [m3 s-1]
+    totalPrecipitation += flow;                         // [m3]
+
+    return surfaceWater;
 }
 
 

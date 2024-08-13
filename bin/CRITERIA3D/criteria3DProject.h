@@ -65,6 +65,7 @@
 
         void assignETreal();
         void assignPrecipitation();
+        float checkSoilCracking(int row, int col, float precipitation);
 
         bool checkProcesses();
         bool runModels(QDateTime firstTime, QDateTime lastTime, bool isRestart = false);
