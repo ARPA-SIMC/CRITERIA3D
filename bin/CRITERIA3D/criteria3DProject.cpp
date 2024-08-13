@@ -387,6 +387,7 @@ void Crit3DProject::assignPrecipitation()
 }
 
 
+// Water infiltration into soil cracks
 // input: precipitation [mm]
 // returns the water remaining on the surface after infiltration into soil cracks
 float Crit3DProject::checkSoilCracking(int row, int col, float precipitation)
