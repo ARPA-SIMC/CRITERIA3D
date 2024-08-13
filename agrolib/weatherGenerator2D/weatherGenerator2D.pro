@@ -33,7 +33,9 @@ INCLUDEPATH += ../crit3dDate
 INCLUDEPATH += ../meteo
 INCLUDEPATH += ../gis
 INCLUDEPATH += ../crit3dDate
+INCLUDEPATH += ../waterTable
 INCLUDEPATH += ../weatherGenerator
+
 
 SOURCES += wg2D.cpp \
     randomset.cpp \
