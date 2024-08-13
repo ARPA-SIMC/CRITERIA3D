@@ -133,6 +133,7 @@
         std::vector<float> loadGridHourlyVar(QString *errorStr, QString meteoPoint, meteoVariable variable, QDateTime first, QDateTime last, QDateTime* firstDateDB);
         std::vector<float> loadGridHourlyVarFixedFields(QString *errorStr, QString meteoPoint, meteoVariable variable, QDateTime first, QDateTime last, QDateTime* firstDateDB);
         std::vector<float> exportAllDataVar(QString *errorStr, frequencyType freq, meteoVariable variable, QString id, QDateTime myFirstTime, QDateTime myLastTime, std::vector<QString> &dateStr);
+
         bool getYearList(QString *errorStr, QString meteoPoint, QList<QString>* yearList);
         bool idDailyList(QString *errorStr, QList<QString>* idMeteoList);
 
