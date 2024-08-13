@@ -144,25 +144,28 @@ QList<int> DbArkimet::getHourlyVar()
 
 
 
-void DbArkimet::initStationsDailyTables(QDate startDate, QDate endDate, QList<QString> stations, QList<QString> idVar)
+void DbArkimet::initStationsDailyTables(const QDate &startDate, const QDate &endDate,
+                                        const QList<QString> &stationList, const QList<QString> &idVarList)
 {
 
-    for (short i=0; i<idVar.size(); i++)
+    QList<QString> varList;
+    for (int i=0; i < idVarList.size(); i++)
     {
-        idVar[i].insert(0,"'");
-        idVar[i].insert(idVar[i].size(),"'");
+        varList.append("'" + idVarList[i] + "'");
     }
 
-    for (int i = 0; i < stations.size(); i++)
+    for (int i = 0; i < stationList.size(); i++)
     {
         QString statement = QString("CREATE TABLE IF NOT EXISTS `%1_D` "
-                                    "(date_time TEXT, id_variable INTEGER, value REAL, PRIMARY KEY(date_time,id_variable))").arg(stations[i]);
+                                    "(date_time TEXT, id_variable INTEGER, value REAL, "
+                                    "PRIMARY KEY(date_time,id_variable))").arg(stationList[i]);
 
         QSqlQuery qry(statement, _db);
         qry.exec();
 
-        statement = QString("DELETE FROM `%1_D` WHERE date_time >= DATE('%2') AND date_time < DATE('%3', '+1 day') AND id_variable IN (%4)")
-                        .arg(stations[i]).arg(startDate.toString("yyyy-MM-dd")).arg(endDate.toString("yyyy-MM-dd")).arg(idVar.join(","));
+        statement = QString("DELETE FROM `%1_D` WHERE date_time >= DATE('%2') "
+                            "AND date_time < DATE('%3', '+1 day') AND id_variable IN (%4)")
+                        .arg(stationList[i], startDate.toString("yyyy-MM-dd"), endDate.toString("yyyy-MM-dd"), varList.join(","));
 
         qry = QSqlQuery(statement, _db);
         qry.exec();
@@ -171,7 +174,8 @@ void DbArkimet::initStationsDailyTables(QDate startDate, QDate endDate, QList<QS
 }
 
 
-void DbArkimet::initStationsHourlyTables(QDate startDate, QDate endDate, QList<QString> stations, QList<QString> idVar)
+void DbArkimet::initStationsHourlyTables(const QDate &startDate, const QDate &endDate,
+                                         const QList<QString> &stationList, const QList<QString> &idVarList)
 {
     // start from 01:00
     QDateTime startTime(startDate, QTime(1,0,0), Qt::UTC);
@@ -179,21 +183,25 @@ void DbArkimet::initStationsHourlyTables(QDate startDate, QDate endDate, QList<Q
     QDateTime endTime(endDate, QTime(0,0,0), Qt::UTC);
     endTime = endTime.addSecs(3600 * 24);
 
-    for (short i=0; i<idVar.size(); i++)
+    QList<QString> varList;
+    for (int i=0; i < idVarList.size(); i++)
     {
-        idVar[i].insert(0,"'");
-        idVar[i].insert(idVar[i].size(),"'");
+        varList.append("'" + idVarList[i] + "'");
     }
 
-    for (int i = 0; i < stations.size(); i++)
+    for (int i = 0; i < stationList.size(); i++)
     {
-        QString statement = QString("CREATE TABLE IF NOT EXISTS `%1_H` (date_time TEXT, id_variable INTEGER, value REAL, PRIMARY KEY(date_time,id_variable))").arg(stations[i]);
+        QString statement = QString("CREATE TABLE IF NOT EXISTS `%1_H` "
+                                    "(date_time TEXT, id_variable INTEGER, value REAL, "
+                                    "PRIMARY KEY(date_time,id_variable))").arg(stationList[i]);
 
         QSqlQuery qry(statement, _db);
         qry.exec();
 
-        statement = QString("DELETE FROM `%1_H` WHERE date_time >= DATETIME('%2') AND date_time <= DATETIME('%3') AND id_variable IN (%4)")
-                        .arg(stations[i]).arg(startTime.toString("yyyy-MM-dd hh:mm:ss")).arg(endTime.toString("yyyy-MM-dd hh:mm:ss")).arg(idVar.join(","));
+        statement = QString("DELETE FROM `%1_H` WHERE date_time >= DATETIME('%2') "
+                            "AND date_time <= DATETIME('%3') AND id_variable IN (%4)")
+                        .arg(stationList[i], startTime.toString("yyyy-MM-dd hh:mm:ss"),
+                             endTime.toString("yyyy-MM-dd hh:mm:ss"), varList.join(","));
 
         qry = QSqlQuery(statement, _db);
         qry.exec();

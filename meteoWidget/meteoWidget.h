@@ -24,7 +24,7 @@
             bool getIsEnsemble() { return isEnsemble; }
             void setNrMembers(int value) { nrMembers = value; }
 
-            void setCurrentFrequency(frequencyType frequency);
+            void setFrequency(frequencyType frequency);
 
             void setDailyRange(QDate firstDate, QDate lastDate);
             void setHourlyRange(QDate firstDate, QDate lastDate);
@@ -46,7 +46,7 @@
             QVector<Crit3DMeteoPoint> meteoPointsEnsemble;
             Crit3DMeteoSettings* meteoSettings;
 
-            frequencyType currentFreq;
+            frequencyType _currentFrequency;
             QDate firstDailyDate;
             QDate lastDailyDate;
             QDate firstHourlyDate;

@@ -1,34 +1,9 @@
-/*!
-    CRITERIA3D
-    \copyright 2016 Fausto Tomei, Gabriele Antolini, Laura Costantini
-    Alberto Pistocchi, Marco Bittelli, Antonio Volta
-    You should have received a copy of the GNU General Public License
-    along with Nome-Programma.  If not, see <http://www.gnu.org/licenses/>.
-    This file is part of CRITERIA3D.
-    CRITERIA3D has been developed under contract issued by A.R.P.A. Emilia-Romagna
-    CRITERIA3D is free software: you can redistribute it and/or modify
-    it under the terms of the GNU Lesser General Public License as published by
-    the Free Software Foundation, either version 3 of the License, or
-    (at your option) any later version.
-    CRITERIA3D is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU Lesser General Public License for more details.
-    You should have received a copy of the /NU Lesser General Public License
-    along with CRITERIA3D.  If not, see <http://www.gnu.org/licenses/>.
-    contacts:
-    fausto.tomei@gmail.com
-    ftomei@arpae.it
-*/
-
 #include "meteo.h"
 #include "localProxyWidget.h"
-#include "proxyWidget.h"
 #include "utilities.h"
 #include "interpolation.h"
 #include "spatialControl.h"
 #include "commonConstants.h"
-#include "formInfo.h"
 #include "math.h"
 #include "furtherMathFunctions.h"
 
@@ -64,6 +39,10 @@ Crit3DLocalProxyWidget::Crit3DLocalProxyWidget(double x, double y, std::vector<s
     modelLR.setText("Model lapse rate");
     stationWeights.setText("See weight of stations");
 
+    //temporaneamente disattivati
+    detrended.setVisible(false);
+    climatologicalLR.setVisible(false);
+    climatologicalLR.setEnabled(false);
 
     QLabel *r2Label = new QLabel(tr("R2"));
     QLabel *lapseRateLabel = new QLabel(tr("Lapse rate"));
@@ -400,7 +379,7 @@ void Crit3DLocalProxyWidget::plot()
             point.setY(varValue);
             QString text = "id: " + QString::fromStdString(meteoPoints[subsetInterpolationPoints[i].index].id) + "\n"
                            + "name: " + QString::fromStdString(meteoPoints[subsetInterpolationPoints[i].index].name) + "\n"
-                           + "weight: " + QString::number(subsetInterpolationPoints[i].regressionWeight);
+                           + "weight: " + QString::number(subsetInterpolationPoints[i].regressionWeight, 'f', 5);
             if (subsetInterpolationPoints[i].isMarked)
             {
                 pointListMarked.append(point);
@@ -502,7 +481,7 @@ void Crit3DLocalProxyWidget::plot()
                 scenePos.setX(chartRect.left() + xRatio * chartRect.width());
                 scenePos.setY(chartRect.bottom() - yRatio * chartRect.height());
 
-                QGraphicsTextItem* weightLabel = new QGraphicsTextItem(QString::number(subsetInterpolationPoints[i].regressionWeight));
+                QGraphicsTextItem* weightLabel = new QGraphicsTextItem(QString::number(subsetInterpolationPoints[i].regressionWeight, 'f', 3));
                 weightLabel->setPos(scenePos);
                 chartView->scene()->addItem(weightLabel);
                 weightLabels.push_back(weightLabel);

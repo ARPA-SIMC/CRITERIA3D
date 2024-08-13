@@ -51,7 +51,7 @@
 
         void initialize();
 
-        void setInputData(double temp, double prec, double relHum, double windInt, double globalRad,
+        void setSnowInputData(double temp, double prec, double relHum, double windInt, double globalRad,
                           double beamRad, double transmissivity, double clearSkyTransmissivity, double waterContent);
 
         bool checkValidPoint();

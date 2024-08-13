@@ -181,7 +181,7 @@
 
         void setProxyDEM();
         void clearProxyDEM();
-        bool checkProxy(const Crit3DProxy &myProxy, QString *error);
+        bool checkProxy(Crit3DProxy &myProxy, QString *error);
         bool addProxyToProject(std::vector <Crit3DProxy> proxyList, std::deque <bool> proxyActive, std::vector <int> proxyOrder);
         void addProxyGridSeries(QString name_, std::vector <QString> gridNames, std::vector <unsigned> gridYears);
         void setCurrentDate(QDate myDate);
@@ -241,6 +241,7 @@
         bool loadMeteoGridHourlyData(QDateTime firstDate, QDateTime lastDate, bool showInfo);
         bool loadMeteoGridMonthlyData(QDate firstDate, QDate lastDate, bool showInfo);
         void loadMeteoGridData(QDate firstDate, QDate lastDate, bool showInfo);
+
         QDateTime findDbPointLastTime();
         QDateTime findDbPointFirstTime();
 
@@ -267,7 +268,8 @@
         bool interpolationOutputPoints(std::vector <Crit3DInterpolationDataPoint> &interpolationPoints,
                                        gis::Crit3DRasterGrid *outputGrid, meteoVariable myVar);
         bool interpolationCv(meteoVariable myVar, const Crit3DTime& myTime, crossValidationStatistics* myStats);
-        bool computeStatisticsCrossValidation(Crit3DTime myTime, meteoVariable myVar, crossValidationStatistics *myStats);
+
+        bool computeStatisticsCrossValidation(crossValidationStatistics *myStats);
         bool meteoGridAggregateProxy(std::vector<gis::Crit3DRasterGrid *> &myGrids);
 
         frequencyType getCurrentFrequency() const;
@@ -311,6 +313,8 @@
         void waterTableShowSingleWell(WaterTable &waterTable, const QString &idWell);
         bool waterTableAssignNearestMeteoPoint(bool isMeteoGridLoaded, double wellUtmX, double wellUtmY, QDate firstMeteoDate, Crit3DMeteoPoint* linkedMeteoPoint);
         bool waterTableAssignMeteoData(Crit3DMeteoPoint* linkedMeteoPoint, QDate firstMeteoDate);
+
+        bool assignAltitudeToAggregationPoints();
 
     private slots:
         void deleteMeteoWidgetPoint(int id);

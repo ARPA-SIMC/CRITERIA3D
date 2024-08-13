@@ -976,19 +976,19 @@ void Crit3DMeteoGrid::saveRowColfromZone(gis::Crit3DRasterGrid* zoneGrid, std::v
     int myRow, myCol;
     for (int row = 0; row < zoneGrid->header->nrRows; row++)
     {
-
         for (int col = 0; col < zoneGrid->header->nrCols; col++)
         {
             value = zoneGrid->value[row][col];
             if (value != zoneGrid->header->flag)
             {
                 zoneGrid->getXY(row, col, x, y);
-                if (!_gridStructure.isUTM())
+                if (! _gridStructure.isUTM())
                 {
                     double utmX = x;
                     double utmY = y;
-                    gis::getLatLonFromUtm(_gisSettings, utmX, utmY, &y, &x);
-                    gis::getGridRowColFromLonLat(_gridStructure.header(), x, y, &myRow, &myCol);
+                    double lat, lon;
+                    gis::getLatLonFromUtm(_gisSettings, utmX, utmY, &lat, &lon);
+                    gis::getRowColFromLonLat(_gridStructure.header(), lon, lat, &myRow, &myCol);
                 }
                 else
                 {

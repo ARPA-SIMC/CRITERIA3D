@@ -45,33 +45,36 @@
     __EXTERN int DLL_EXPORT __STDCALL setNodeSoil(long nodeIndex, int soilIndex, int horizonIndex);
 
     // SURFACE
-    __EXTERN int DLL_EXPORT __STDCALL setSurfaceProperties(int surfaceIndex, double Roughness, double minWaterLevelRunoff);
+    __EXTERN int DLL_EXPORT __STDCALL setSurfaceProperties(int surfaceIndex, double Roughness);
     __EXTERN int DLL_EXPORT __STDCALL setNodeSurface(long nodeIndex, int surfaceIndex);
+    __EXTERN int DLL_EXPORT __STDCALL setNodePond(long nodeIndex, float pond);
 
     // WATER
-    __EXTERN int DLL_EXPORT __STDCALL setHydraulicProperties(int waterRetentionCurve, int conductivityMeanType, float horizVertRatioConductivity);
+    __EXTERN int DLL_EXPORT __STDCALL setHydraulicProperties(int waterRetentionCurve, int conductivityMeanType, float conductivityHorizVertRatio);
     __EXTERN int DLL_EXPORT __STDCALL setWaterContent(long index, double myWaterContent);
+    __EXTERN int DLL_EXPORT __STDCALL setDegreeOfSaturation(long nodeIndex, double degreeOfSaturation);
     __EXTERN int DLL_EXPORT __STDCALL setMatricPotential(long index, double psi);
     __EXTERN int DLL_EXPORT __STDCALL setTotalPotential(long index, double totalPotential);
     __EXTERN int DLL_EXPORT __STDCALL setPrescribedTotalPotential(long index, double prescribedTotalPotential);
     __EXTERN int DLL_EXPORT __STDCALL setWaterSinkSource(long index, double sinkSource);
 
-    __EXTERN double DLL_EXPORT __STDCALL getWaterContent(long index);
-    __EXTERN double DLL_EXPORT __STDCALL getAvailableWaterContent(long index);
+    __EXTERN double DLL_EXPORT __STDCALL getWaterContent(long nodeIndex);
+    __EXTERN double DLL_EXPORT __STDCALL getAvailableWaterContent(long nodeIndex);
     __EXTERN double DLL_EXPORT __STDCALL getWaterDeficit(long index, double fieldCapacity);
     __EXTERN double DLL_EXPORT __STDCALL getTotalWaterContent();
-    __EXTERN double DLL_EXPORT __STDCALL getDegreeOfSaturation(long index);
-    __EXTERN double DLL_EXPORT __STDCALL getBoundaryWaterFlow(long index);
+    __EXTERN double DLL_EXPORT __STDCALL getDegreeOfSaturation(long nodeIndex);
+    __EXTERN double DLL_EXPORT __STDCALL getBoundaryWaterFlow(long nodeIndex);
     __EXTERN double DLL_EXPORT __STDCALL getBoundaryWaterSumFlow(int boundaryType);
-    __EXTERN double DLL_EXPORT __STDCALL getMatricPotential(long index);
-    __EXTERN double DLL_EXPORT __STDCALL getTotalPotential(long index);
+    __EXTERN double DLL_EXPORT __STDCALL getMatricPotential(long nodeIndex);
+    __EXTERN double DLL_EXPORT __STDCALL getTotalPotential(long nodeIndex);
     __EXTERN double DLL_EXPORT __STDCALL getWaterMBR();
-    __EXTERN double DLL_EXPORT __STDCALL getWaterConductivity(long index);
-    __EXTERN double DLL_EXPORT __STDCALL getWaterFlow(long index, short direction);
-    __EXTERN double DLL_EXPORT __STDCALL getSumLateralWaterFlow(long n);
-    __EXTERN double DLL_EXPORT __STDCALL getSumLateralWaterFlowIn(long n);
-    __EXTERN double DLL_EXPORT __STDCALL getSumLateralWaterFlowOut(long n);
+    __EXTERN double DLL_EXPORT __STDCALL getWaterConductivity(long nodeIndex);
+    __EXTERN double DLL_EXPORT __STDCALL getWaterFlow(long nodeIndex, short direction);
+    __EXTERN double DLL_EXPORT __STDCALL getSumLateralWaterFlow(long nodeIndex);
+    __EXTERN double DLL_EXPORT __STDCALL getSumLateralWaterFlowIn(long nodeIndex);
+    __EXTERN double DLL_EXPORT __STDCALL getSumLateralWaterFlowOut(long nodeIndex);
     __EXTERN double DLL_EXPORT __STDCALL getWaterStorage();
+    __EXTERN float DLL_EXPORT __STDCALL getPond(long nodeIndex);
 
     // HEAT
     __EXTERN int DLL_EXPORT __STDCALL setHeatSinkSource(long nodeIndex, double myHeatFlow);

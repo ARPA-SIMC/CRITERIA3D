@@ -545,9 +545,9 @@ bool Download::downloadDailyData(const QDate &startDate, const QDate &endDate, c
 
 
 bool Download::downloadHourlyData(const QDate &startDate, const QDate &endDate, const QString &dataset,
-                                  QList<QString> &stations, QList<int> &variables, QString &errorString)
+                                  const QList<QString> &stationList, const QList<int> &varList, QString &errorString)
 {
-    QList<VariablesList> variableList = _dbMeteo->getVariableProperties(variables);
+    QList<VariablesList> variableList = _dbMeteo->getVariableProperties(varList);
     if (variableList.size() == 0)
         return false;
 
@@ -557,13 +557,13 @@ bool Download::downloadHourlyData(const QDate &startDate, const QDate &endDate, 
         idVar.append(QString::number(variableList[i].id()));
 
     // create station tables
-    _dbMeteo->initStationsHourlyTables(startDate, endDate, stations, idVar);
+    _dbMeteo->initStationsHourlyTables(startDate, endDate, stationList, idVar);
 
-    QString product = QString(";product: VM2,%1").arg(variables[0]);
+    QString product = QString(";product: VM2,%1").arg(varList[0]);
 
-    for (int i = 1; i < variables.size(); i++)
+    for (int i = 1; i < varList.size(); i++)
     {
-        product = product % QString(" or VM2,%1").arg(variables[i]);
+        product = product % QString(" or VM2,%1").arg(varList[i]);
     }
 
     // start from 01:00
@@ -584,17 +584,17 @@ bool Download::downloadHourlyData(const QDate &startDate, const QDate &endDate, 
     QNetworkRequest request;
     int countStation = 0;
 
-    while (countStation < stations.size())
+    while (countStation < stationList.size())
     {
         if (j == 0)
         {
-            area = QString(";area: VM2,%1").arg(stations[countStation]);
+            area = QString(";area: VM2,%1").arg(stationList[countStation]);
             j = j+1;
             countStation = countStation+1;
         }
-        while (countStation < stations.size() && j < maxStationSize)
+        while (countStation < stationList.size() && j < maxStationSize)
         {
-            area = area % QString(" or VM2,%1").arg(stations[countStation]);
+            area = area % QString(" or VM2,%1").arg(stationList[countStation]);
             countStation = countStation+1;
             j = j+1;
         }

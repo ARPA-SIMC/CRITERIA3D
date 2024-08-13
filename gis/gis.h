@@ -216,7 +216,7 @@
         void getRowColFromXY(const Crit3DRasterHeader& myHeader, double myX, double myY, int *row, int *col);
         void getRowColFromXY(const Crit3DRasterHeader& myHeader, const Crit3DUtmPoint& p, int *row, int *col);
         void getRowColFromXY(const Crit3DRasterHeader& myHeader, const Crit3DUtmPoint& p, Crit3DRasterCell* v);
-        void getGridRowColFromLonLat(const Crit3DLatLonHeader& myHeader, double myX, double myY, int *row, int *col);
+        void getRowColFromLonLat(const Crit3DLatLonHeader& myHeader, double lon, double lat, int *row, int *col);
 
         void getRowColFromLatLon(const Crit3DLatLonHeader &latLonHeader, const Crit3DGeoPoint& p, int *myRow, int *myCol);
         bool isOutOfGridRowCol(int myRow, int myCol, const Crit3DRasterGrid &rasterGrid);
@@ -287,7 +287,7 @@
         float closestDistanceFromGrid(Crit3DPoint myPoint, const gis::Crit3DRasterGrid& dem);
         bool compareGrids(const gis::Crit3DRasterGrid& first, const gis::Crit3DRasterGrid& second);
         void resampleGrid(const gis::Crit3DRasterGrid& oldGrid, gis::Crit3DRasterGrid* newGrid,
-                          Crit3DRasterHeader* header, aggregationMethod elab, float nodataThreshold);
+                          Crit3DRasterHeader* newHeader, aggregationMethod elab, float nodataRatioThreshold);
         bool temporalYearlyInterpolation(const gis::Crit3DRasterGrid& firstGrid, const gis::Crit3DRasterGrid& secondGrid,
                                          int myYear, float minValue, float maxValue, gis::Crit3DRasterGrid* outGrid);
     }
