@@ -734,10 +734,10 @@ namespace gis
         v->col = int(floor((p.x - myHeader.llCorner.x) / myHeader.cellSize));
     }
 
-    void getGridRowColFromLonLat(const Crit3DLatLonHeader& myHeader, double myX, double myY, int *row, int *col)
+    void getRowColFromLonLat(const Crit3DLatLonHeader& myHeader, double lon, double lat, int *row, int *col)
     {
-        *row = int(floor((myY - myHeader.llCorner.latitude) / myHeader.dy));
-        *col = int(floor((myX - myHeader.llCorner.longitude) / myHeader.dx));
+        *row = int(floor((lat - myHeader.llCorner.latitude) / myHeader.dy));
+        *col = int(floor((lon - myHeader.llCorner.longitude) / myHeader.dx));
     }
 
     void getRowColFromLatLon(const Crit3DLatLonHeader& latLonHeader, const Crit3DGeoPoint& p, int* row, int* col)

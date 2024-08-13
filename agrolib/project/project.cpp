@@ -3700,7 +3700,7 @@ void Project::showLocalProxyGraph(gis::Crit3DGeoPoint myPoint, gis::Crit3DRaster
     }
     if (this->meteoGridLoaded && !this->meteoGridDbHandler->meteoGrid()->dataMeteoGrid.singleCell.empty())
     {
-        gis::getGridRowColFromLonLat(meteoGridDbHandler->meteoGrid()->gridStructure().header(), myPoint.longitude, myPoint.latitude, &row, &col);
+        gis::getRowColFromLonLat(meteoGridDbHandler->meteoGrid()->gridStructure().header(), myPoint.longitude, myPoint.latitude, &row, &col);
         parameters = meteoGridDbHandler->meteoGrid()->dataMeteoGrid.getParametersFromRowCol(row, col);
     }
 
