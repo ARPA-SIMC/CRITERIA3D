@@ -398,7 +398,7 @@ void Crit3DSynchronicityWidget::changeInterpolationDate()
 
 void Crit3DSynchronicityWidget::on_actionChangeLeftSynchAxis()
 {
-    DialogChangeAxis changeAxisDialog(true);
+    DialogChangeAxis changeAxisDialog(1, false);
     if (changeAxisDialog.result() == QDialog::Accepted)
     {
         synchronicityChartView->setYmax(changeAxisDialog.getMaxVal());
@@ -408,7 +408,7 @@ void Crit3DSynchronicityWidget::on_actionChangeLeftSynchAxis()
 
 void Crit3DSynchronicityWidget::on_actionChangeLeftInterpolationAxis()
 {
-    DialogChangeAxis changeAxisDialog(true);
+    DialogChangeAxis changeAxisDialog(1, false);
     if (changeAxisDialog.result() == QDialog::Accepted)
     {
         interpolationChartView->setYmax(changeAxisDialog.getMaxVal());

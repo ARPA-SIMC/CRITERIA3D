@@ -49,7 +49,7 @@ Crit3DCrop::Crit3DCrop()
 void Crit3DCrop::clear()
 {
     idCrop = "";
-    type = HERBACEOUS_ANNUAL;
+    type = BARESOIL;
 
     roots.clear();
 

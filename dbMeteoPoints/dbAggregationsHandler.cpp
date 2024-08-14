@@ -35,28 +35,11 @@ Crit3DAggregationsDbHandler::~Crit3DAggregationsDbHandler()
     }
 }
 
-QSqlDatabase Crit3DAggregationsDbHandler::db() const
-{
-    return _db;
-}
-
-
-QString Crit3DAggregationsDbHandler::error() const
-{
-    return _error;
-}
-
-std::map<int, meteoVariable> Crit3DAggregationsDbHandler::mapIdMeteoVar() const
-{
-return _mapIdMeteoVar;
-}
-
 
 bool Crit3DAggregationsDbHandler::saveAggrData(int nZones, QString aggrType, QString periodType, QDate startDate, QDate endDate, meteoVariable variable,
-                                               std::vector< std::vector<float> > aggregatedValues, std::vector <double> lonVector, std::vector <double> latVector)
+                                               std::vector< std::vector<float> > aggregatedValues)
 {
     initAggregatedTables(nZones, aggrType, periodType, startDate, endDate, variable);
-    writePointProperties(nZones, aggrType, lonVector, latVector);
 
     createTmpAggrTable();
 
@@ -102,7 +85,6 @@ bool Crit3DAggregationsDbHandler::saveAggrData(int nZones, QString aggrType, QSt
 
 bool Crit3DAggregationsDbHandler::writeAggregationZonesTable(QString name, QString filename, QString field)
 {
-
     QSqlQuery qry(_db);
 
     qry.prepare( "INSERT INTO aggregation_zones (name, filename, shape_field)"
@@ -117,28 +99,27 @@ bool Crit3DAggregationsDbHandler::writeAggregationZonesTable(QString name, QStri
         _error = qry.lastError().text();
         return false;
     }
-    else
-        return true;
 
+    return true;
 }
+
 
 bool Crit3DAggregationsDbHandler::writeRasterName(QString rasterName)
 {
     QSqlQuery qry(_db);
 
-    qry.prepare( "INSERT INTO zones (name)"
-                                      " VALUES (:name)" );
-
+    qry.prepare( "INSERT INTO zones (name) VALUES (:name)" );
     qry.bindValue(":name", rasterName);
 
-    if( !qry.exec() )
+    if(! qry.exec() )
     {
         _error = qry.lastError().text();
         return false;
     }
-    else
-        return true;
+
+    return true;
 }
+
 
 bool Crit3DAggregationsDbHandler::getRasterName(QString* rasterName)
 {
@@ -165,6 +146,7 @@ bool Crit3DAggregationsDbHandler::getRasterName(QString* rasterName)
         }
     }
 }
+
 
 bool Crit3DAggregationsDbHandler::getAggregationZonesReference(QString name, QString* filename, QString* field)
 {
@@ -195,30 +177,32 @@ bool Crit3DAggregationsDbHandler::getAggregationZonesReference(QString name, QSt
     }
 }
 
+
 void Crit3DAggregationsDbHandler::initAggregatedTables(int numZones, QString aggrType, QString periodType, QDate startDate, QDate endDate, meteoVariable variable)
 {
-
     int idVariable = getIdfromMeteoVar(variable);
     for (int i = 1; i <= numZones; i++)
     {
         QString statement = QString("CREATE TABLE IF NOT EXISTS `%1_%2_%3` "
-                                    "(date_time TEXT, id_variable INTEGER, value REAL, PRIMARY KEY(date_time,id_variable))").arg(i).arg(aggrType).arg(periodType);
+                                    "(date_time TEXT, id_variable INTEGER, value REAL, PRIMARY KEY(date_time,id_variable))")
+                                .arg(i).arg(aggrType, periodType);
 
         QSqlQuery qry(statement, _db);
         if( !qry.exec() )
         {
             _error = qry.lastError().text();
         }
-        statement = QString("DELETE FROM `%1_%2_%3` WHERE date_time >= DATE('%4') AND date_time < DATE('%5', '+1 day') AND id_variable = %6")
-                        .arg(i).arg(aggrType).arg(periodType).arg(startDate.toString("yyyy-MM-dd")).arg(endDate.toString("yyyy-MM-dd")).arg(idVariable);
+
+        statement = QString("DELETE FROM `%1_%2_%3` WHERE date_time >= DATE('%4') "
+                            "AND date_time < DATE('%5', '+1 day') AND id_variable = %6")
+                        .arg(i).arg(aggrType, periodType, startDate.toString("yyyy-MM-dd"), endDate.toString("yyyy-MM-dd")).arg(idVariable);
 
         qry = QSqlQuery(statement, _db);
-        if( !qry.exec() )
+        if(! qry.exec() )
         {
             _error = qry.lastError().text();
         }
     }
-
 }
 
 
@@ -234,16 +218,16 @@ bool Crit3DAggregationsDbHandler::existIdPoint(const QString& idPoint)
 }
 
 
-bool Crit3DAggregationsDbHandler::writePointProperties(int numZones, QString aggrType, std::vector <double> lonVector, std::vector <double> latVector)
+bool Crit3DAggregationsDbHandler::writeAggregationPointProperties(int nrPoints, QString aggrType,
+                                                                  std::vector <double> lonVector, std::vector <double> latVector)
 {
-    if ( !_db.tables().contains(QLatin1String("point_properties")) )
+    if (! _db.tables().contains(QLatin1String("point_properties")) )
     {
         return false;
     }
 
     QSqlQuery qry(_db);
-    for (int i = 1; i <= numZones; i++)
-
+    for (int i = 1; i <= nrPoints; i++)
     {
         QString id = QString::number(i) + "_" + aggrType;
         QString name = id;
@@ -260,7 +244,7 @@ bool Crit3DAggregationsDbHandler::writePointProperties(int numZones, QString agg
             qry.bindValue(":altitude", 0);
             qry.bindValue(":is_active", 1);
 
-            if( !qry.exec() )
+            if(! qry.exec() )
             {
                 _error = qry.lastError().text();
                 return false;
@@ -270,6 +254,7 @@ bool Crit3DAggregationsDbHandler::writePointProperties(int numZones, QString agg
 
     return true;
 }
+
 
 void Crit3DAggregationsDbHandler::createTmpAggrTable()
 {
@@ -390,16 +375,16 @@ int Crit3DAggregationsDbHandler::getIdfromMeteoVar(meteoVariable meteoVar)
     return key;
 }
 
+
 QList<QString> Crit3DAggregationsDbHandler::getAggregations()
 {
-
     QSqlQuery qry(_db);
 
     qry.prepare( "SELECT * FROM aggregations");
     QString aggregation;
     QList<QString> aggregationList;
 
-    if( !qry.exec() )
+    if(! qry.exec() )
     {
         _error = qry.lastError().text();
     }
@@ -411,12 +396,15 @@ QList<QString> Crit3DAggregationsDbHandler::getAggregations()
             aggregationList.append(aggregation);
         }
     }
+
     if (aggregationList.isEmpty())
     {
-        _error = "name not found";
+        _error = "aggregation table is empty.";
     }
+
     return aggregationList;
 }
+
 
 bool Crit3DAggregationsDbHandler::renameColumn(QString oldColumn, QString newColumn)
 {

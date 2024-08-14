@@ -142,10 +142,11 @@ DialogInterpolation::DialogInterpolation(Project *myProject)
     std::map<std::string, TFittingFunction>::const_iterator itElFunc;
     for (itElFunc = fittingFunctionNames.begin(); itElFunc != fittingFunctionNames.end(); ++itElFunc)
     {
-        if (itElFunc->first == "linear" || itElFunc->first == "Nonlinear Frei function (6 parameters)")
+        if (itElFunc->first == "linear")
             continue;
         elevationFunctionEdit.addItem(QString::fromStdString(itElFunc->first), QString::fromStdString(itElFunc->first));
     }
+
     QString elevationFunctionString = QString::fromStdString(getKeyStringElevationFunction(_interpolationSettings->getChosenElevationFunction()));
     int indexElFunction = elevationFunctionEdit.findData(elevationFunctionString);
     if (indexElFunction != -1)

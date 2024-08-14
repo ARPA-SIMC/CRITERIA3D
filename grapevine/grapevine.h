@@ -41,9 +41,9 @@
     enum phenoStage {endoDormancy, ecoDormancy , budBurst , flowering , fruitSet, veraison, physiologicalMaturity, vineSenescence};
     enum TfieldOperation {irrigationOperation, grassSowing, grassRemoving, trimming, leafRemoval,
                           clusterThinning, harvesting, tartaricAnalysis};
-    enum Crit3DLanduse {landuse_nodata, landuse_bare, landuse_vineyard};
+    enum GrapevineLanduse {landuse_nodata, landuse_bare, landuse_vineyard};
 
-    const std::map<std::string, Crit3DLanduse> landuseNames = {
+    const std::map<std::string, GrapevineLanduse> landuseNames = {
         { "UNDEFINED", landuse_nodata },
         { "BARESOIL", landuse_bare },
         { "VINEYARD", landuse_vineyard}
@@ -191,14 +191,14 @@
 
     struct Crit3DModelCase {
         int id;
-        Crit3DLanduse landuse;
-        //int soilIndex;
+        GrapevineLanduse landuse;
+        int soilIndex;
 
         float shootsPerPlant;
         float plantDensity;
         float maxLAIGrass;
         int trainingSystem;
-        float maxIrrigationRate;        //[mm/h]
+        float maxIrrigationRate;        // [mm h-1]
 
         int soilLayersNr;
         double soilTotalDepth;
@@ -300,8 +300,7 @@
         double psiSoilAverage;
         double psiFieldCapacityAverage;
 
-        //double* layerRootDensity;
-        double totalStomatalConductance, totalStomatalConductanceNoStress ;
+        double totalStomatalConductance, totalStomatalConductanceNoStress;
         double transpirationInstant;
         double* currentProfile;
         double* transpirationInstantLayer;          //molH2O m^-2 s^-1
@@ -327,8 +326,6 @@
         bool isAmphystomatic ;
         double specificLeafArea ;
         double alphaLeuning ;
-        //double leafNitrogen ;
-        //double entropicFactorCarboxyliation,entropicFactorElectronTransporRate ;
 
         Vine3D_SunShade shaded ;
         Vine3D_SunShade sunlit ;
@@ -374,7 +371,7 @@
 
         double getWaterStressByPsiSoil(double myPsiSoil,double psiSoilStressParameter,double exponentialFactorForPsiRatio);
         double getWaterStressSawFunction(int index, TVineCultivar *cultivar);
-        //bool getExtractedWaterFromGrassTranspirationandEvaporation(double* myWaterExtractionProfile);
+
         double getWaterStressSawFunctionAverage(TVineCultivar* cultivar);
         double getGrassTranspiration(double stress, double laiGrassMax, double sensitivityToVPD, double fieldCoverByPlant);
         double getFallowTranspiration(double stress, double laiGrassMax, double sensitivityToVPD);
@@ -392,8 +389,13 @@
     public:
         Vine3D_Grapevine();
 
+        TstatePlant getStatePlant(){ return statePlant; }
+        ToutputPlant getOutputPlant() { return statePlant.outputPlant; }
+
+        bool setStatePlant(TstatePlant myStatePlant, bool isVineyard_);
+
         //void initializeGrapevineModel(TVineCultivar* cultivar, double secondsPerStep);
-        bool initializeLayers(int myMaxLayers);
+        void initializeLayers(int myMaxLayers);
         bool initializeStatePlant(int doy, Crit3DModelCase *vineField);
         void resetLayers();
 
@@ -409,15 +411,12 @@
                 double prec , double relativeHumidity , double windSpeed, double atmosphericPressure);
         bool setDerivedVariables (double diffuseIrradiance, double directIrradiance,
                 double cloudIndex, double sunElevation);
-        bool setSoilProfile(Crit3DModelCase *modelCase, double* myWiltingPoint, double *myFieldCapacity,
-                            double *myPsiSoilProfile , double *mySoilWaterContentProfile,
-                            double* mySoilWaterContentFC, double* mySoilWaterContentWP);
-        bool setStatePlant(TstatePlant myStatePlant, bool isVineyard);
 
-        TstatePlant getStatePlant();
-        ToutputPlant getOutputPlant();
+        bool setSoilProfile(Crit3DModelCase* modelCase, std::vector<double>& myWiltingPoint, std::vector<double>& myFieldCapacity,
+                            std::vector<double>& myPsiSoilProfile, std::vector<double>& mySoilWaterContentProfile,
+                            std::vector<double>& mySoilWaterContentFC, std::vector<double>& mySoilWaterContentWP);
+
         double* getExtractedWater(Crit3DModelCase* modelCase);
-        //bool getOutputPlant(int hour, ToutputPlant *outputPlant);
         double getStressCoefficient();
         double getRealTranspirationGrapevine(Crit3DModelCase *modelCase);
         double getRealTranspirationGrass(Crit3DModelCase *modelCase);

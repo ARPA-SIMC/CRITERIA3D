@@ -182,18 +182,18 @@ int DLL_EXPORT __STDCALL setNumericalParameters(float minDeltaT, float maxDeltaT
  *  k_lateral_vertical_ratio = 10
  * \param waterRetentionCurve
  * \param conductivityMeanType
- * \param horizVertRatioConductivity
+ * \param conductivityHorizVertRatio
  * \return OK or PARAMETER_ERROR
  */
 int DLL_EXPORT __STDCALL setHydraulicProperties(int waterRetentionCurve,
-                        int conductivityMeanType, float horizVertRatioConductivity)
+                        int conductivityMeanType, float conductivityHorizVertRatio)
 {
     myParameters.waterRetentionCurve = waterRetentionCurve;
     myParameters.meanType = conductivityMeanType;
 
-    if  ((horizVertRatioConductivity >= 0.1) && (horizVertRatioConductivity <= 100))
+    if  ((conductivityHorizVertRatio >= 0.1) && (conductivityHorizVertRatio <= 100))
     {
-        myParameters.k_lateral_vertical_ratio = horizVertRatioConductivity;
+        myParameters.k_lateral_vertical_ratio = conductivityHorizVertRatio;
         return CRIT3D_OK;
     }
     else
@@ -241,6 +241,14 @@ int DLL_EXPORT __STDCALL setHydraulicProperties(int waterRetentionCurve,
     nodeListPtr[myIndex].volume_area = volume_or_area;   /*!< area on surface elements, volume on sub-surface */
 
     nodeListPtr[myIndex].isSurface = isSurface;
+    if (isSurface)
+    {
+        nodeListPtr[myIndex].pond = 0.0001f;         // [m]
+    }
+    else
+    {
+        nodeListPtr[myIndex].pond = NODATA;
+    }
 
     nodeListPtr[myIndex].waterSinkSource = 0.;
 
@@ -344,7 +352,26 @@ int DLL_EXPORT __STDCALL setHydraulicProperties(int waterRetentionCurve,
 
     nodeListPtr[nodeIndex].Soil = &Surface_List[surfaceIndex];
 
-    return(CRIT3D_OK);
+    return CRIT3D_OK;
+ }
+
+
+ /*!
+ * \brief setNodePond
+ * \param nodeIndex
+ * \param pond      [m]
+ * \return OK/ERROR
+ */
+ int DLL_EXPORT __STDCALL setNodePond(long nodeIndex, float pond)
+ {
+     if (nodeListPtr == nullptr)
+         return MEMORY_ERROR;
+     if (nodeIndex < 0 || (! nodeListPtr[nodeIndex].isSurface))
+         return INDEX_ERROR;
+
+     nodeListPtr[nodeIndex].pond = pond;
+
+     return CRIT3D_OK;
  }
 
 
@@ -417,16 +444,15 @@ int DLL_EXPORT __STDCALL setHydraulicProperties(int waterRetentionCurve,
  }
 
 
- int DLL_EXPORT __STDCALL setSurfaceProperties(int surfaceIndex, double roughness, double surfacePond)
+ int DLL_EXPORT __STDCALL setSurfaceProperties(int surfaceIndex, double roughness)
  {
-    if (roughness < 0 || surfacePond < 0)
+    if (roughness < 0)
         return PARAMETER_ERROR;
 
     if (surfaceIndex > int(Surface_List.size()-1))
         Surface_List.resize(surfaceIndex+1);
 
     Surface_List[surfaceIndex].Roughness = roughness;
-    Surface_List[surfaceIndex].Pond = surfacePond;
 
     return CRIT3D_OK;
  }
@@ -499,7 +525,7 @@ int DLL_EXPORT __STDCALL setHydraulicProperties(int waterRetentionCurve,
 /*!
  * \brief setWaterContent
  * \param nodeIndex
- * \param waterContent [m^3 m^-3]
+ * \param waterContent [m] surface - [m3 m-3] sub-surface
  * \return OK/ERROR
  */
  int DLL_EXPORT __STDCALL setWaterContent(long nodeIndex, double waterContent)
@@ -528,6 +554,31 @@ int DLL_EXPORT __STDCALL setHydraulicProperties(int waterRetentionCurve,
             }
 
     return CRIT3D_OK;
+ }
+
+
+ /*!
+ * \brief setDegreeOfSaturation
+ * \param nodeIndex
+ * \param degreeOfSaturation [-] (only sub-surface)
+ * \return OK/ERROR
+ */
+ int DLL_EXPORT __STDCALL setDegreeOfSaturation(long nodeIndex, double degreeOfSaturation)
+ {
+     if (nodeListPtr == nullptr) return MEMORY_ERROR;
+
+     if ((nodeIndex < 0) || (nodeIndex >= myStructure.nrNodes)) return INDEX_ERROR;
+
+     if (nodeListPtr[nodeIndex].isSurface) return INDEX_ERROR;
+
+     if ((degreeOfSaturation < 0.) || (degreeOfSaturation > 1.)) return PARAMETER_ERROR;
+
+     nodeListPtr[nodeIndex].Se = degreeOfSaturation;
+     nodeListPtr[nodeIndex].H = nodeListPtr[nodeIndex].z - psi_from_Se(nodeIndex);
+     nodeListPtr[nodeIndex].oldH = nodeListPtr[nodeIndex].H;
+     nodeListPtr[nodeIndex].k = computeK(nodeIndex);
+
+     return CRIT3D_OK;
  }
 
 
@@ -564,6 +615,25 @@ int DLL_EXPORT __STDCALL setHydraulicProperties(int waterRetentionCurve,
     nodeListPtr[nodeIndex].boundary->prescribedTotalPotential = prescribedTotalPotential;
 
     return CRIT3D_OK;
+ }
+
+
+ /*!
+ * \brief getPond
+ * \param nodeIndex
+ * \return surface maximum pond [m]
+ */
+ float DLL_EXPORT __STDCALL getPond(long nodeIndex)
+ {
+     if (nodeListPtr == nullptr)
+         return MEMORY_ERROR;
+     if ((nodeIndex < 0) || (nodeIndex >= myStructure.nrNodes))
+         return INDEX_ERROR;
+
+     if  (! nodeListPtr[nodeIndex].isSurface)
+         return INDEX_ERROR;
+
+     return nodeListPtr[nodeIndex].pond;
  }
 
 
@@ -658,7 +728,7 @@ int DLL_EXPORT __STDCALL setHydraulicProperties(int waterRetentionCurve,
 
  /*!
   * \brief getTotalWaterContent
-  * \return total water content [m^3]
+  * \return total water content [m3]
   */
  double DLL_EXPORT __STDCALL getTotalWaterContent()
  {
@@ -703,7 +773,7 @@ int DLL_EXPORT __STDCALL setHydraulicProperties(int waterRetentionCurve,
  double DLL_EXPORT __STDCALL getTotalPotential(long nodeIndex)
  {
      if (nodeListPtr == nullptr) return(MEMORY_ERROR);
-	 if ((nodeIndex < 0) || (nodeIndex >= myStructure.nrNodes)) return(INDEX_ERROR);
+     if ((nodeIndex < 0) || (nodeIndex >= myStructure.nrNodes)) return(INDEX_ERROR);
 
      return (nodeListPtr[nodeIndex].H);
  }
@@ -711,22 +781,22 @@ int DLL_EXPORT __STDCALL setHydraulicProperties(int waterRetentionCurve,
 
  /*!
   * \brief getWaterFlow
-  * \param n
+  * \param nodeIndex
   * \param direction
   * \return maximum integrated flow in the requested direction [m^3]
   */
- double DLL_EXPORT __STDCALL getWaterFlow(long n, short direction)
+ double DLL_EXPORT __STDCALL getWaterFlow(long nodeIndex, short direction)
  {
     if (nodeListPtr == nullptr) return MEMORY_ERROR;
-    if ((n < 0) || (n >= myStructure.nrNodes)) return INDEX_ERROR;
+    if ((nodeIndex < 0) || (nodeIndex >= myStructure.nrNodes)) return INDEX_ERROR;
 
 	double maxFlow = 0.0;
 
 	switch (direction) {
         case UP:
-            if (nodeListPtr[n].up.index != NOLINK)
+            if (nodeListPtr[nodeIndex].up.index != NOLINK)
             {
-                return nodeListPtr[n].up.sumFlow;
+                return nodeListPtr[nodeIndex].up.sumFlow;
             }
             else
             {
@@ -734,9 +804,9 @@ int DLL_EXPORT __STDCALL setHydraulicProperties(int waterRetentionCurve,
             }
 
 		case DOWN:
-            if (nodeListPtr[n].down.index != NOLINK)
+            if (nodeListPtr[nodeIndex].down.index != NOLINK)
             {
-                return nodeListPtr[n].down.sumFlow;
+                return nodeListPtr[nodeIndex].down.sumFlow;
             }
             else
             {
@@ -746,10 +816,10 @@ int DLL_EXPORT __STDCALL setHydraulicProperties(int waterRetentionCurve,
 		case LATERAL:
 			// return maximum lateral flow
             for (short i = 0; i < myStructure.nrLateralLinks; i++)
-                if (nodeListPtr[n].lateral[i].index != NOLINK)
-                    if (fabs(nodeListPtr[n].lateral[i].sumFlow) > maxFlow)
+                if (nodeListPtr[nodeIndex].lateral[i].index != NOLINK)
+                    if (fabs(nodeListPtr[nodeIndex].lateral[i].sumFlow) > maxFlow)
                     {
-                        maxFlow = nodeListPtr[n].lateral[i].sumFlow;
+                        maxFlow = nodeListPtr[nodeIndex].lateral[i].sumFlow;
                     }
 
             return maxFlow;
@@ -762,19 +832,19 @@ int DLL_EXPORT __STDCALL setHydraulicProperties(int waterRetentionCurve,
 
  /*!
   * \brief getSumLateralWaterFlow
-  * \param n
+  * \param nodeIndex
   * \return integrated lateral flow over the time step [m^3]
   */
- double DLL_EXPORT __STDCALL getSumLateralWaterFlow(long n)
+ double DLL_EXPORT __STDCALL getSumLateralWaterFlow(long nodeIndex)
  {
     if (nodeListPtr == nullptr) return MEMORY_ERROR;
-    if ((n < 0) || (n >= myStructure.nrNodes)) return INDEX_ERROR;
+    if ((nodeIndex < 0) || (nodeIndex >= myStructure.nrNodes)) return INDEX_ERROR;
 
     double sumLateralFlow = 0.0;
     for (short i = 0; i < myStructure.nrLateralLinks; i++)
     {
-        if (nodeListPtr[n].lateral[i].index != NOLINK)
-            sumLateralFlow += nodeListPtr[n].lateral[i].sumFlow;
+        if (nodeListPtr[nodeIndex].lateral[i].index != NOLINK)
+            sumLateralFlow += nodeListPtr[nodeIndex].lateral[i].sumFlow;
     }
 	return sumLateralFlow;
  }
@@ -782,19 +852,21 @@ int DLL_EXPORT __STDCALL setHydraulicProperties(int waterRetentionCurve,
 
  /*!
   * \brief getSumLateralWaterFlowIn
-  * \param n
+  * \param nodeIndex
   * \return integrated lateral inflow over the time step [m^3]
   */
- double DLL_EXPORT __STDCALL getSumLateralWaterFlowIn(long n)
+ double DLL_EXPORT __STDCALL getSumLateralWaterFlowIn(long nodeIndex)
  {
-    if (nodeListPtr == nullptr) return MEMORY_ERROR;
-    if ((n < 0) || (n >= myStructure.nrNodes)) return INDEX_ERROR;
+    if (nodeListPtr == nullptr)
+         return MEMORY_ERROR;
+    if ((nodeIndex < 0) || (nodeIndex >= myStructure.nrNodes))
+        return INDEX_ERROR;
 
     double sumLateralFlow = 0.0;
     for (short i = 0; i < myStructure.nrLateralLinks; i++)
-        if (nodeListPtr[n].lateral[i].index != NOLINK)
-            if (nodeListPtr[n].lateral[i].sumFlow > 0)
-                sumLateralFlow += nodeListPtr[n].lateral[i].sumFlow;
+        if (nodeListPtr[nodeIndex].lateral[i].index != NOLINK)
+            if (nodeListPtr[nodeIndex].lateral[i].sumFlow > 0)
+                sumLateralFlow += nodeListPtr[nodeIndex].lateral[i].sumFlow;
 
     return sumLateralFlow;
  }
@@ -802,19 +874,21 @@ int DLL_EXPORT __STDCALL setHydraulicProperties(int waterRetentionCurve,
 
  /*!
   * \brief getSumLateralWaterFlowOut
-  * \param n
+  * \param nodeIndex
   * \return integrated lateral outflow over the time step  [m^3]
   */
- double DLL_EXPORT __STDCALL getSumLateralWaterFlowOut(long n)
+ double DLL_EXPORT __STDCALL getSumLateralWaterFlowOut(long nodeIndex)
  {
-    if (nodeListPtr == nullptr) return MEMORY_ERROR;
-    if ((n < 0) || (n >= myStructure.nrNodes)) return INDEX_ERROR;
+    if (nodeListPtr == nullptr)
+         return MEMORY_ERROR;
+    if ((nodeIndex < 0) || (nodeIndex >= myStructure.nrNodes))
+        return INDEX_ERROR;
 
     double sumLateralFlow = 0.0;
     for (short i = 0; i < myStructure.nrLateralLinks; i++)
-        if (nodeListPtr[n].lateral[i].index != NOLINK)
-            if (nodeListPtr[n].lateral[i].sumFlow < 0)
-                sumLateralFlow += nodeListPtr[n].lateral[i].sumFlow;
+        if (nodeListPtr[nodeIndex].lateral[i].index != NOLINK)
+            if (nodeListPtr[nodeIndex].lateral[i].sumFlow < 0)
+                sumLateralFlow += nodeListPtr[nodeIndex].lateral[i].sumFlow;
 
     return sumLateralFlow;
  }
@@ -823,10 +897,15 @@ int DLL_EXPORT __STDCALL setHydraulicProperties(int waterRetentionCurve,
  void DLL_EXPORT __STDCALL initializeBalance()
 {
     InitializeBalanceWater();
+
     if (myStructure.computeHeat)
+    {
         initializeBalanceHeat();
+    }
     else
+    {
         balanceWholePeriod.heatMBR = 1.;
+    }
 }
 
 

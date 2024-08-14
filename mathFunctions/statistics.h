@@ -48,8 +48,8 @@
         double variance(std::vector<double> myList, int nrList);
         double variance(double *myList, int nrList);
         float mean(float *myList, int nrList);
-        float mean(std::vector<float> myList, int nrList);
-        double mean(std::vector<double> myList, int nrList);
+        float mean(std::vector<float> list);
+        double mean(std::vector<double> list);
         double mean(double *myList, int nrList);
         float covariance(float *myList1, int nrList1,float *myList2, int nrList2);
         double covariance(double *myList1, int nrList1,double *myList2, int nrList2);

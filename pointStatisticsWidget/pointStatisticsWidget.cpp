@@ -1171,7 +1171,7 @@ void Crit3DPointStatisticsWidget::plot()
                         visualizedNrValues = visualizedNrValues + 1;
                     }
                 }
-                avg = statistics::mean(series, nrValues);
+                avg = statistics::mean(series);
                 dev_std = statistics::standardDeviation(series, nrValues);
                 millile3dev = sorting::percentile(sortedSeries, nrValues, 99.73f, true);
                 millile_3Dev = sorting::percentile(sortedSeries, nrValues, 0.27f, false);
@@ -1449,7 +1449,7 @@ void Crit3DPointStatisticsWidget::plot()
                     }
                 }
             }
-            avg = statistics::mean(series, nrValues);
+            avg = statistics::mean(series);
             dev_std = statistics::standardDeviation(series, nrValues);
             millile3dev = sorting::percentile(sortedSeries, nrValues, 99.73f, true);
             millile_3Dev = sorting::percentile(sortedSeries, nrValues, 0.27f, false);
@@ -1689,7 +1689,7 @@ void Crit3DPointStatisticsWidget::computePlot()
 
 void Crit3DPointStatisticsWidget::on_actionChangeLeftAxis()
 {
-    DialogChangeAxis changeAxisDialog(true);
+    DialogChangeAxis changeAxisDialog(1, false);
     if (changeAxisDialog.result() == QDialog::Accepted)
     {
         chartView->setYmax(changeAxisDialog.getMaxVal());

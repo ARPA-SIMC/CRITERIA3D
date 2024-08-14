@@ -108,8 +108,7 @@ bool WaterTable::computeWTClimate()
         H_num.push_back(0);
     }
 
-    QMap<QDate, float> myDepths = well.getObsDepths();
-    QMapIterator<QDate, float> it(myDepths);
+    QMapIterator<QDate, float> it(well.depths);
     while (it.hasNext())
     {
         it.next();
@@ -216,7 +215,6 @@ bool WaterTable::computeETP_allSeries(bool isUpdateAvgCWB)
 // Ricerca del periodo di correlazione migliore
 bool WaterTable::computeCWBCorrelation(int stepDays)
 {
-    QMap<QDate, float> myDepths = well.getObsDepths();
     std::vector<float> myCWBSum;
     std::vector<float> myObsWT;
     float a = NODATA;
@@ -232,7 +230,7 @@ bool WaterTable::computeCWBCorrelation(int stepDays)
     {
         myCWBSum.clear();
         myObsWT.clear();
-        QMapIterator<QDate, float> it(myDepths);
+        QMapIterator<QDate, float> it(well.depths);
 
         while (it.hasNext())
         {
@@ -314,8 +312,7 @@ double WaterTable::computeCWB(QDate myDate, int nrDays)
 // function to compute several statistical indices for watertable depth
 bool WaterTable::computeWaterTableIndices()
 {
-    QMap<QDate, float> myDepths = well.getObsDepths();
-    QMapIterator<QDate, float> it(myDepths);
+    QMapIterator<QDate, float> it(well.depths);
     std::vector<float> myObs;
     std::vector<float> myComputed;
     std::vector<float> myClimate;
@@ -491,8 +488,7 @@ bool WaterTable::getWaterTableInterpolation(QDate myDate, float* myValue, float*
     QDate nextDate;
     int dT;
 
-    QMap<QDate, float> myDepths = well.getObsDepths();
-    QList<QDate> keys = myDepths.keys();
+    QList<QDate> keys = well.depths.keys();
 
     // check previuos and next observed data
     int lastIndex = keys.size() - 1;
@@ -501,10 +497,10 @@ bool WaterTable::getWaterTableInterpolation(QDate myDate, float* myValue, float*
     {
         indexPrev = i;
         previousDate = keys[indexPrev];
-        previosValue = myDepths[previousDate];
+        previosValue = well.depths[previousDate];
         indexNext = i;
         nextDate = keys[indexNext];
-        nextValue = myDepths[nextDate];
+        nextValue = well.depths[nextDate];
     }
     else
     {
@@ -512,13 +508,13 @@ bool WaterTable::getWaterTableInterpolation(QDate myDate, float* myValue, float*
         {
             indexNext = 0;
             nextDate = keys[indexNext];
-            nextValue = myDepths[nextDate];
+            nextValue = well.depths[nextDate];
         }
         else if (keys[lastIndex] < myDate)
         {
             indexPrev = lastIndex;
             previousDate = keys[indexPrev];
-            previosValue = myDepths[previousDate];
+            previosValue = well.depths[previousDate];
         }
         else
         {
@@ -527,10 +523,10 @@ bool WaterTable::getWaterTableInterpolation(QDate myDate, float* myValue, float*
                 {
                     indexPrev = i;
                     previousDate = keys[indexPrev];
-                    previosValue = myDepths[previousDate];
+                    previosValue = well.depths[previousDate];
                     indexNext = i + 1;
                     nextDate = keys[indexNext];
-                    nextValue = myDepths[nextDate];
+                    nextValue = well.depths[nextDate];
                     break;
                 }
         }
@@ -612,30 +608,29 @@ bool WaterTable::getWaterTableInterpolation(QDate myDate, float* myValue, float*
 
 void WaterTable::computeWaterTableSeries()
 {
-    myDates.clear();
-    myHindcastSeries.clear();
-    myInterpolateSeries.clear();
+    hindcastSeries.clear();
+    interpolationSeries.clear();
+
     float myDelta;
     int myDeltaDays;
 
-    QDate firstObsDate = std::min(well.getFirstDate(), firstMeteoDate);
-    int numValues = firstObsDate.daysTo(lastMeteoDate) + 1;
+    firstDate = std::min(well.getFirstDate(), firstMeteoDate);
+    int numValues = firstDate.daysTo(lastMeteoDate) + 1;
 
     for (int i = 0; i < numValues; i++)
     {
-        QDate currentDate = firstObsDate.addDays(i);
-        myDates.push_back(currentDate);
+        QDate currentDate = firstDate.addDays(i);
 
         float currentDepth = getWaterTableDaily(currentDate);
-        myHindcastSeries.push_back(currentDepth);
+        hindcastSeries.push_back(currentDepth);
 
         if (getWaterTableInterpolation(currentDate, &currentDepth, &myDelta, &myDeltaDays))
         {
-            myInterpolateSeries.push_back(currentDepth);
+            interpolationSeries.push_back(currentDepth);
         }
         else
         {
-            myInterpolateSeries.push_back(NODATA);
+            interpolationSeries.push_back(NODATA);
         }
     }
 }

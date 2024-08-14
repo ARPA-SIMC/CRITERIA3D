@@ -1,7 +1,7 @@
 #ifndef SOLVER_H
 #define SOLVER_H
 
-    inline double square(double x) {return ((x)*(x));}
+    inline double square(double x) { return ((x)*(x)); }
 
     double distance(unsigned long index1, unsigned long index2);
 

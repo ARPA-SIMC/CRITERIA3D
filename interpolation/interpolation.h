@@ -63,6 +63,8 @@
 
     bool getActiveProxyValues(Crit3DProxyCombination myCombination, const std::vector<double> &allProxyValues, std::vector<double> &activeProxyValues);
 
+    void removeEmptyFittingParameters(std::vector <std::vector <double>> &fittingParameters);
+
     void detrending(std::vector <Crit3DInterpolationDataPoint> &myPoints,
                     Crit3DProxyCombination myCombination, Crit3DInterpolationSettings *mySettings, Crit3DClimateParameters *myClimate,
                     meteoVariable myVar, Crit3DTime myTime);
@@ -73,7 +75,7 @@
     bool multipleDetrending(Crit3DProxyCombination othersCombination, std::vector<std::vector<double> > parameters, std::vector <Crit3DInterpolationDataPoint> &myPoints, Crit3DInterpolationSettings* mySettings,
                             meteoVariable myVar, std::string &errorStr);
 
-    bool multipleDetrendingElevation(Crit3DProxyCombination myCombination, std::vector<std::vector<double> > parameters, std::vector <Crit3DInterpolationDataPoint> &myPoints,
+    bool multipleDetrendingElevation(Crit3DProxyCombination myCombination, std::vector<double> elevationParameters, std::vector <Crit3DInterpolationDataPoint> &myPoints,
                                      Crit3DInterpolationSettings* mySettings, meteoVariable myVar, std::string &errorStr);
 
     bool getUseDetrendingVar(meteoVariable myVar);
@@ -98,10 +100,16 @@
                           std::vector <Crit3DInterpolationDataPoint> &selectedPoints,
                           float x, float y, float z, Crit3DInterpolationSettings &mySettings);
 
+    void localSelection_new(std::vector <Crit3DInterpolationDataPoint> &inputPoints, std::vector <Crit3DInterpolationDataPoint> &selectedPoints,
+                         float x, float y, float z, Crit3DInterpolationSettings& mySettings);
+
     bool proxyValidity(std::vector <Crit3DInterpolationDataPoint> &myPoints, int proxyPos,
                        float stdDevThreshold, double &avg, double &stdDev);
 
-    bool setAllFittingRanges(Crit3DProxyCombination myCombination, Crit3DInterpolationSettings* mySettings);
+    bool proxyValidityWeighted(std::vector <Crit3DInterpolationDataPoint> &myPoints, int proxyPos,
+                       float stdDevThreshold, double &avg, double &stdDev);
+
+    bool setHeightFittingRange(Crit3DProxyCombination myCombination, Crit3DInterpolationSettings* mySettings);
 
     bool setAllFittingParameters_noRange(Crit3DProxyCombination myCombination, Crit3DInterpolationSettings* mySettings,
                                          std::vector<std::function<double(double, std::vector<double>&)>>& myFunc,

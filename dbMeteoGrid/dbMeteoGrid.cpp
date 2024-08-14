@@ -2501,7 +2501,7 @@ std::vector<float> Crit3DMeteoGridDbHandler::loadGridDailyVar(QString *errorStr,
 
     // read last date
     qry.last();
-    if (!getValue(qry.value(_tableDaily.fieldTime), &lastDateDB))
+    if (! getValue(qry.value(_tableDaily.fieldTime), &lastDateDB))
     {
         *errorStr = "Missing last date";
         return dailyVarList;
@@ -4126,7 +4126,7 @@ bool Crit3DMeteoGridDbHandler::MeteoGridToRasterFlt(double cellSize, const gis::
             {
                 myGrid.getXY(row, col, utmx, utmy);
                 gis::getLatLonFromUtm(gisSettings, utmx, utmy, &lat, &lon);
-                gis::getGridRowColFromXY (latlonHeader, lon, lat, &dataGridRow, &dataGridCol);
+                gis::getRowColFromLonLat (latlonHeader, lon, lat, &dataGridRow, &dataGridCol);
                 if (dataGridRow < 0 || dataGridRow >= latlonHeader.nrRows || dataGridCol < 0 || dataGridCol >= latlonHeader.nrCols)
                 {
                     myValue = NODATA;

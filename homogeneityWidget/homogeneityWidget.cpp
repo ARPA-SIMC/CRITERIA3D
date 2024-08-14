@@ -565,7 +565,7 @@ void Crit3DHomogeneityWidget::updateYears()
 
 void Crit3DHomogeneityWidget::on_actionChangeLeftAxis()
 {
-    DialogChangeAxis changeAxisDialog(true);
+    DialogChangeAxis changeAxisDialog(1, false);
     if (changeAxisDialog.result() == QDialog::Accepted)
     {
         homogeneityChartView->setYmax(changeAxisDialog.getMaxVal());
@@ -1060,7 +1060,7 @@ void Crit3DHomogeneityWidget::executeClicked()
                 myValidValues.push_back((double)myAnnualSeries[i]);
             }
         }
-        double myAverage = statistics::mean(myValidValues, int(myValidValues.size()));
+        double myAverage = statistics::mean(myValidValues);
         std::vector<double> myRefAverage;
         std::vector<float> r2;
         std::vector<std::vector<float>> refSeriesVector;
@@ -1079,7 +1079,7 @@ void Crit3DHomogeneityWidget::executeClicked()
                     myRefValidValues.push_back((double)refSeries[i]);
                 }
             }
-            myRefAverage.push_back(statistics::mean(myRefValidValues, int(myRefValidValues.size())));
+            myRefAverage.push_back(statistics::mean(myRefValidValues));
             statistics::linearRegression(myAnnualSeries, refSeries, long(myAnnualSeries.size()), false, &y_intercept, &trend, &r2Value);
             r2.push_back(r2Value);
         }
@@ -1148,7 +1148,7 @@ void Crit3DHomogeneityWidget::executeClicked()
                 myValidValues.push_back(myQ[i]);
             }
         }
-        double myQAverage = statistics::mean(myValidValues, int(myValidValues.size()));
+        double myQAverage = statistics::mean(myValidValues);
         double myQDevStd = statistics::standardDeviation(myValidValues, int(myValidValues.size()));
         std::vector<double> myZ;
         for (int i = 0; i<myQ.size(); i++)
@@ -1171,7 +1171,7 @@ void Crit3DHomogeneityWidget::executeClicked()
             }
         }
 
-        double myZAverage = statistics::mean(myValidValues, int(myValidValues.size()));
+        double myZAverage = statistics::mean(myValidValues);
 
         isHomogeneous = (qAbs(myZAverage) <= TOLERANCE);
         std::vector<double> z1;
@@ -1205,7 +1205,7 @@ void Crit3DHomogeneityWidget::executeClicked()
                     myValidValues.push_back(z1[i]);
                 }
             }
-            double myZ1Average = statistics::mean(myValidValues, int(myValidValues.size()));
+            double myZ1Average = statistics::mean(myValidValues);
             myValidValues.clear();
             for (int i = 0; i<z2.size(); i++)
             {
@@ -1214,7 +1214,7 @@ void Crit3DHomogeneityWidget::executeClicked()
                     myValidValues.push_back(z2[i]);
                 }
             }
-            double myZ2Average = statistics::mean(myValidValues, int(myValidValues.size()));
+            double myZ2Average = statistics::mean(myValidValues);
             if (myZ1Average != NODATA && myZ2Average != NODATA)
             {
                 myTValues[a] = ( (a+1) * pow(myZ1Average,2)) + ((myZ.size() - (a+1)) * pow(myZ2Average,2));

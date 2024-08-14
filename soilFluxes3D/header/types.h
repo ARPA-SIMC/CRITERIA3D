@@ -8,6 +8,8 @@
         #include "extra.h"
     #endif
 
+    #include "commonConstants.h"
+
     struct Tboundary
     {
         short type;
@@ -53,9 +55,9 @@
 
     struct TlinkedNode
     {
-        long index;                 /*!< index of linked elements */
-        float area;                 /*!< interface area [m^2] */
-        float sumFlow;              /*!< [m^3] sum of flow(i,j) */
+        long index;                             /*!< index of linked elements */
+        float area;                             /*!< interface area [m^2] */
+        float sumFlow;                          /*!< [m3] sum of flow(i,j) */
 
         TCrit3DLinkedNodeExtra* linkedExtra;    /*!< extra variables for heat flux */
     };
@@ -63,18 +65,17 @@
 
     struct Tsoil
     {
-        double VG_alpha;            /*!< [m^-1] Van Genutchen alpha parameter */
+        double VG_alpha;            /*!< [m-1] Van Genutchen alpha parameter */
         double VG_n;                /*!< [-] Van Genutchen n parameter */
         double VG_m;                /*!< [-] Van Genutchen m parameter  ]0. , 1.[ */
         double VG_he;               /*!< [m] air-entry potential for modified VG formulation */
         double VG_Sc;               /*!< [-] reduction factor for modified VG formulation */
-        double Theta_s;             /*!< [m^3/m^3] saturated water content */
-        double Theta_r;             /*!< [m^3/m^3] residual water content */
-        double K_sat;               /*!< [m/sec] saturated hydraulic conductivity */
+        double Theta_s;             /*!< [m3 m-3] saturated water content */
+        double Theta_r;             /*!< [m3 m-3] residual water content */
+        double K_sat;               /*!< [m sec-1] saturated hydraulic conductivity */
         double Mualem_L;            /*!< [-] Mualem tortuosity parameter */
 
-        double Roughness;           /*!< [s/m^0.33] surface: Manning roughness */
-        double Pond;                /*!< [m] surface: height of immobilized water */
+        double Roughness;           /*!< [s m-1/3] surface: Manning roughness */
 
         //for heat
         double organicMatter;       /*!< [-] fraction of organic matter */
@@ -85,17 +86,19 @@
     struct TCrit3Dnode
     {
         double Se;					/*!< [-] degree of saturation */
-        double k;                   /*!< [m s^-1] soil water conductivity */
+        double k;                   /*!< [m s-1] soil water conductivity */
         double H;                   /*!< [m] pressure head */
         double oldH;				/*!< [m] previous pressure head */
         double bestH;				/*!< [m] pressure head of best iteration */
-        double waterSinkSource;     /*!< [m^3 s^-1] water sink source */
-        double Qw;                  /*!< [m^3 s^-1] water flow */
+        double waterSinkSource;     /*!< [m3 s-1] water sink source */
+        double Qw;                  /*!< [m3 s-1] water flow */
 
-        double volume_area;         /*!< [m^3] sub-surface: volume of voxel   */
-                                    /*!< [m^2] surface: area of voxel   */
+        double volume_area;         /*!< [m3] sub-surface: volume of voxel   */
+                                    /*!< [m2] surface: area of voxel   */
         float x, y;                 /*!< [m] coordinates of the center of the voxel */
         double z;                   /*!< [m] heigth of the center of the voxel */
+
+        float pond;                 /*!< [m] only surface: height of immobilized water */
 
         Tsoil *Soil;                /*!< soil pointer */
         Tboundary *boundary;        /*!< boundary pointer */
@@ -133,7 +136,7 @@
 		long index = NOLINK;
 		double width;				/*!< [m] */
 		double height;				/*!< [m] */
-		double roughness;			/*!< [s m-1/3] */
+        double roughness;			/*!< [s m-1/3] Manning roughness */
 		double slope;				/*!< [-] */
     };
 
