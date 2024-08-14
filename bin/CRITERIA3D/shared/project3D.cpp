@@ -2251,6 +2251,10 @@ double getCriteria3DVar(criteria3DVariable myVar, long nodeIndex)
     {
         crit3dVar = soilFluxes3D::getWaterContent(nodeIndex);
     }
+    else if (myVar == maximumVolumetricWaterContent)
+    {
+        crit3dVar = soilFluxes3D::getMaximumWaterContent(nodeIndex);
+    }
     else if (myVar == availableWaterContent)
     {
         crit3dVar = soilFluxes3D::getAvailableWaterContent(nodeIndex);

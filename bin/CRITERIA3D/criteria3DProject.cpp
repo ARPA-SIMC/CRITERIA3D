@@ -388,27 +388,28 @@ void Crit3DProject::assignPrecipitation()
 
 
 // Water infiltration into soil cracks
-// input: precipitation [mm]
+// input: rainfall [mm]
 // returns the water remaining on the surface after infiltration into soil cracks
 float Crit3DProject::checkSoilCracking(int row, int col, float precipitation)
 {
     const double MAX_CRACKING_DEPTH = 0.6;              // [m]
-    const double MIN_WATER_WATENTIAL = 800;             // [kPa]
+    const double MIN_VOID_VOLUME = 0.2;                 // [m3 m-3]
+    const double MAX_VOID_VOLUME = 0.25;                // [m3 m-3]
 
-    // 1) check soil
+    // check soil
     int soilIndex = getSoilIndex(row, col);
     if (soilIndex == NODATA)
         return precipitation;
 
-    // 2) check pond
-    long nodeIndex = indexMap.at(0).value[row][col];
-    double currentPond = getCriteria3DVar(surfacePond, nodeIndex);
-    if (precipitation <= currentPond)
+    // check pond
+    long surfaceNodeIndex = indexMap.at(0).value[row][col];
+    double currentPond = getCriteria3DVar(surfacePond, surfaceNodeIndex);       // [mm]
+    double minimumPond = currentPond * 0.5;                                     // [mm]
+    if (precipitation <= minimumPond)
         return precipitation;
 
-    // 3) check clay soil
+    // check clay
     double maxDepth = std::min(computationSoilDepth, MAX_CRACKING_DEPTH);   // [m]
-
     bool isFineFraction = true;
     int lastFineHorizon = NODATA;
     int h = 0;
@@ -437,38 +438,85 @@ float Crit3DProject::checkSoilCracking(int row, int col, float precipitation)
     if (maxDepth < 0.2)
         return precipitation;
 
-    // 4) check water potential
-    double step = 0.05;                                                     // [m]
-    double depth = step;
-    double waterPotentialSum = 0;
+    // compute void volume
+    double stepDepth = 0.05;                // [m]
+    double currentDepth = stepDepth;        // [m]
+    double voidVolumeSum = 0;
     int nrData = 0;
-    while (depth <= maxDepth )
+    while (currentDepth <= maxDepth )
     {
-        int layerIndex = getSoilLayerIndex(depth);
+        int layerIndex = getSoilLayerIndex(currentDepth);
         long nodeIndex = indexMap.at(layerIndex).value[row][col];
-        double waterPotential = getCriteria3DVar(waterMatricPotential, nodeIndex);
-        waterPotentialSum += waterPotential;
-        depth += step;
+
+        double VWC = getCriteria3DVar(volumetricWaterContent, nodeIndex);               // [m3 m-3]
+        double maxVWC = getCriteria3DVar(maximumVolumetricWaterContent, nodeIndex);     // [m3 m-3]
+
+        // TODO: coarse fragment
+        voidVolumeSum += (maxVWC - VWC);
+
+        currentDepth += stepDepth;
         nrData++;
     }
 
-    double avgWaterPotential = -soil::metersTokPa(waterPotentialSum / nrData);      // [kPa]
-    if (avgWaterPotential < MIN_WATER_WATENTIAL)
+    double avgVoidVolume = voidVolumeSum / nrData;              // [m3 m-3]
+    if (avgVoidVolume <= MIN_VOID_VOLUME)
         return precipitation;
 
     // THERE IS A SOIL CRACK
-    double downWater = precipitation - currentPond;             // [mm]
-    double surfaceWater = precipitation - downWater;            // [mm]
+    double crackRatio = std::min(1.0, (avgVoidVolume - MIN_VOID_VOLUME) / (MAX_VOID_VOLUME - MIN_VOID_VOLUME));
 
+    double maxInfiltration = precipitation * crackRatio;        // [mm]
+    double surfaceWater = precipitation - maxInfiltration;      // [mm]
+    surfaceWater = std::max(surfaceWater, minimumPond);
+    double downWater = precipitation - surfaceWater;            // [mm]
+
+    int lastLayer = getSoilLayerIndex(maxDepth);
     double area = DEM.header->cellSize * DEM.header->cellSize;  // [m2]
-    int layerIndex = getSoilLayerIndex(maxDepth);
-    nodeIndex = indexMap.at(layerIndex).value[row][col];
 
-    double flow = area * (downWater / 1000.);           // [m3 h-1]
-    waterSinkSource[nodeIndex] += flow / 3600.;         // [m3 s-1]
-    totalPrecipitation += flow;                         // [m3]
+    // 1) infiltration (0.1 mm of water for each soil cm)
+    for (int l = 1; l <= lastLayer; l++)
+    {
+        if (downWater <= 0)
+            break;
 
-    return surfaceWater;
+        double layerThick_cm = layerThickness[l] * 100;         // [cm]
+        double layerWater = layerThick_cm * 0.1;                // [mm]
+        layerWater = std::min(layerWater, downWater);
+
+        long nodeIndex = indexMap.at(l).value[row][col];
+        double flow = area * (layerWater / 1000.);              // [m3 h-1]
+        waterSinkSource[nodeIndex] += flow / 3600.;             // [m3 s-1]
+        totalPrecipitation += flow;                             // [m3]
+
+        downWater -= layerWater;
+    }
+
+    // 2) accumulation on the crack bottom (0.5 mm of water for each soil cm)
+    for (int l = lastLayer; l > 0; l--)
+    {
+        if (downWater <= 0)
+            break;
+
+        double layerThick_cm = layerThickness[l] * 100;         // [cm]
+        double layerWater = layerThick_cm * 0.5;                // [mm]
+        layerWater = std::min(layerWater, downWater);
+
+        long nodeIndex = indexMap.at(l).value[row][col];
+        double flow = area * (layerWater / 1000.);              // [m3 h-1]
+        waterSinkSource[nodeIndex] += flow / 3600.;             // [m3 s-1]
+        totalPrecipitation += flow;                             // [m3]
+
+        downWater -= layerWater;
+    }
+
+    if (downWater > 0)
+    {
+        return surfaceWater + downWater;
+    }
+    else
+    {
+        return surfaceWater;
+    }
 }
 
 

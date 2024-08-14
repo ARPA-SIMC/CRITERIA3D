@@ -640,23 +640,47 @@ int DLL_EXPORT __STDCALL setHydraulicProperties(int waterRetentionCurve,
 /*!
  * \brief getWaterContent
  * \param nodeIndex
- * \return water content at the surface: [m] surface water level; and sub-surface: [m^3 m^-3] volumetric water content
+ * \return water content at the surface: [m] surface water level; and sub-surface: [m3 m-3] volumetric water content
  */
  double DLL_EXPORT __STDCALL getWaterContent(long nodeIndex)
  {
-        if (nodeListPtr == nullptr) return(MEMORY_ERROR);
-        if ((nodeIndex < 0) || (nodeIndex >= myStructure.nrNodes)) return(INDEX_ERROR);
+        if (nodeListPtr == nullptr)
+            return MEMORY_ERROR;
+        if ((nodeIndex < 0) || (nodeIndex >= myStructure.nrNodes))
+            return INDEX_ERROR;
 
         if  (nodeListPtr[nodeIndex].isSurface)
+        {
             /*! surface */
             return (nodeListPtr[nodeIndex].H - nodeListPtr[nodeIndex].z);
+        }
         else
+        {
             /*! sub-surface */
-            return (theta_from_Se(nodeIndex));
+            return theta_from_Se(nodeIndex);
+        }
  }
 
 
-/*!
+ /*!
+ * \brief getMaximumWaterContent
+ * \param nodeIndex
+ * \return only sub-surface: [m3 m-3] maximum volumetric water content (theta sat)
+ */
+ double DLL_EXPORT __STDCALL getMaximumWaterContent(long nodeIndex)
+ {
+     if (nodeListPtr == nullptr)
+         return MEMORY_ERROR;
+     if ((nodeIndex < 0) || (nodeIndex >= myStructure.nrNodes))
+         return INDEX_ERROR;
+     if  (nodeListPtr[nodeIndex].isSurface)
+         return INDEX_ERROR;
+
+    return (nodeListPtr[nodeIndex].Soil->Theta_s);
+ }
+
+
+ /*!
  * \brief getAvailableWaterContent
  * \param index
  * \return  available water content (over wilting point)
@@ -664,15 +688,21 @@ int DLL_EXPORT __STDCALL setHydraulicProperties(int waterRetentionCurve,
  */
  double DLL_EXPORT __STDCALL getAvailableWaterContent(long index)
  {
-        if (nodeListPtr == nullptr) return(MEMORY_ERROR);
-        if ((index < 0) || (index >= myStructure.nrNodes)) return(INDEX_ERROR);
+    if (nodeListPtr == nullptr)
+        return MEMORY_ERROR;
+    if ((index < 0) || (index >= myStructure.nrNodes))
+        return INDEX_ERROR;
 
-        if  (nodeListPtr[index].isSurface)
-            /*! surface */
-            return (nodeListPtr[index].H - nodeListPtr[index].z);
-        else
-            /*! sub-surface */
-            return MAXVALUE(0.0, theta_from_Se(index) - theta_from_sign_Psi(-160, index));
+    if  (nodeListPtr[index].isSurface)
+    {
+        // surface
+        return (nodeListPtr[index].H - nodeListPtr[index].z);
+    }
+    else
+    {
+        // sub-surface
+        return MAXVALUE(0.0, theta_from_Se(index) - theta_from_sign_Psi(-160, index));
+    }
  }
 
 
@@ -680,19 +710,25 @@ int DLL_EXPORT __STDCALL setHydraulicProperties(int waterRetentionCurve,
  * \brief getWaterDeficit
  * \param index
  * \param fieldCapacity
- * \return water deficit at surface: 0; sub-surface: [m^3 m^-3]
+ * \return water deficit at surface: 0; sub-surface: [m3 m-3]
  */
 	double DLL_EXPORT __STDCALL getWaterDeficit(long index, double fieldCapacity)
  {
-        if (nodeListPtr == nullptr) return(MEMORY_ERROR);
-        if ((index < 0) || (index >= myStructure.nrNodes)) return(INDEX_ERROR);
+        if (nodeListPtr == nullptr)
+            return MEMORY_ERROR;
+        if ((index < 0) || (index >= myStructure.nrNodes))
+            return INDEX_ERROR;
 
         if  (nodeListPtr[index].isSurface)
-            /*! surface */
-            return (0.0);
+        {
+            // surface
+            return 0;
+        }
         else
-            /*! sub-surface */
+        {
+            // sub-surface
             return (theta_from_sign_Psi(-fieldCapacity, index) - theta_from_Se(index));
+        }
  }
 
 

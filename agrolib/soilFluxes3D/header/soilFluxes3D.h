@@ -59,6 +59,7 @@
     __EXTERN int DLL_EXPORT __STDCALL setWaterSinkSource(long index, double sinkSource);
 
     __EXTERN double DLL_EXPORT __STDCALL getWaterContent(long nodeIndex);
+    __EXTERN double DLL_EXPORT __STDCALL getMaximumWaterContent(long nodeIndex);
     __EXTERN double DLL_EXPORT __STDCALL getAvailableWaterContent(long nodeIndex);
     __EXTERN double DLL_EXPORT __STDCALL getWaterDeficit(long index, double fieldCapacity);
     __EXTERN double DLL_EXPORT __STDCALL getTotalWaterContent();
