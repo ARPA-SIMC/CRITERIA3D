@@ -393,8 +393,8 @@ void Crit3DProject::assignPrecipitation()
 float Crit3DProject::checkSoilCracking(int row, int col, float precipitation)
 {
     const double MAX_CRACKING_DEPTH = 0.6;              // [m]
-    const double MIN_VOID_VOLUME = 0.16;                // [m3 m-3]
-    const double MAX_VOID_VOLUME = 0.24;                // [m3 m-3]
+    const double MIN_VOID_VOLUME = 0.12;                // [m3 m-3]
+    const double MAX_VOID_VOLUME = 0.20;                // [m3 m-3]
 
     // check soil
     int soilIndex = getSoilIndex(row, col);
