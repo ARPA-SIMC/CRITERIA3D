@@ -3417,10 +3417,6 @@ void Project::showMeteoWidgetPoint(std::string idMeteoPoint, std::string namePoi
         if (hasHourlyData)
         {
             meteoWidgetPoint->setHourlyRange(firstHourly.date(), lastHourly.date());
-            if (! hasDailyData)
-            {
-                meteoWidgetPoint->setFrequency(hourly);
-            }
         }
 
         meteoWidgetPoint->setCurrentDate(this->currentDate);

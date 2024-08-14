@@ -146,6 +146,7 @@ Crit3DMeteoWidget::Crit3DMeteoWidget(bool isGrid_, QString projectPath, Crit3DMe
         {
             _currentFrequency = hourly;
         }
+
         MapCSVDefault.insert(key,items);
         zeroLine = new QLineSeries();
         zeroLine->setColor(Qt::gray);
@@ -196,11 +197,11 @@ Crit3DMeteoWidget::Crit3DMeteoWidget(bool isGrid_, QString projectPath, Crit3DMe
     {
         if (currentVariables[i].contains("DAILY"))
         {
-            dailyVar = dailyVar+1;
+            dailyVar++;
         }
         else
         {
-            hourlyVar = hourlyVar+1;
+            hourlyVar++;
         }
     }
 
@@ -532,29 +533,7 @@ void Crit3DMeteoWidget::updateTimeRange()
         }
     }
 
-    checkExistingData();
-}
-
-
-void Crit3DMeteoWidget::checkExistingData()
-{
-    // set enable/disable buttons if daily/hourly/monthly data are available
-    if ( (!firstDailyDate.isValid() || firstDailyDate.year() == 1800) && (!lastDailyDate.isValid() || lastDailyDate.year() == 1800) )
-    {
-        dailyButton->setVisible(false);
-    }
-    else
-    {
-        dailyButton->setVisible(true);
-    }
-    if ( (!firstHourlyDate.isValid() || firstHourlyDate.year() == 1800) && (!lastHourlyDate.isValid() || lastHourlyDate.year() == 1800) )
-    {
-        hourlyButton->setVisible(false);
-    }
-    else
-    {
-        hourlyButton->setVisible(true);
-    }
+    // enable/disable monthly button if monthly data are available
     if ( (!firstMonthlyDate.isValid() || firstMonthlyDate.year() == 1800) && (!lastMonthlyDate.isValid() || lastMonthlyDate.year() == 1800) )
     {
         monthlyButton->setVisible(false);
@@ -1581,7 +1560,12 @@ void Crit3DMeteoWidget::drawHourlyVar()
                 {
                     for (int i = 0; i < nameLines.size(); i++)
                     {
-                        meteoVariable meteoVar = MapHourlyMeteoVar.at(nameLines[i].toStdString());
+                        meteoVariable meteoVar = getMeteoVar(nameLines[i].toStdString());
+                        if (meteoVar == noMeteoVar)
+                        {
+                            continue;
+                        }
+
                         double value = meteoPoints[mp].getMeteoPointValueH(myCrit3DDate, h, 0, meteoVar);
                         if (value != NODATA)
                         {
@@ -1609,7 +1593,12 @@ void Crit3DMeteoWidget::drawHourlyVar()
                 {
                     for (int j = 0; j < nameBar.size(); j++)
                     {
-                        meteoVariable meteoVar = MapHourlyMeteoVar.at(nameBar[j].toStdString());
+                        meteoVariable meteoVar = getMeteoVar(nameBar[j].toStdString());
+                        if (meteoVar == noMeteoVar)
+                        {
+                            continue;
+                        }
+
                         double value = meteoPoints[mp].getMeteoPointValueH(myCrit3DDate, h, 0, meteoVar);
                         if (value != NODATA)
                         {
