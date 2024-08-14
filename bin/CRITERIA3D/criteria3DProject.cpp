@@ -393,8 +393,8 @@ void Crit3DProject::assignPrecipitation()
 float Crit3DProject::checkSoilCracking(int row, int col, float precipitation)
 {
     const double MAX_CRACKING_DEPTH = 0.6;              // [m]
-    const double MIN_VOID_VOLUME = 0.15;                // [m3 m-3]
-    const double MAX_VOID_VOLUME = 0.25;                // [m3 m-3]
+    const double MIN_VOID_VOLUME = 0.16;                // [m3 m-3]
+    const double MAX_VOID_VOLUME = 0.24;                // [m3 m-3]
 
     // check soil
     int soilIndex = getSoilIndex(row, col);
@@ -473,25 +473,7 @@ float Crit3DProject::checkSoilCracking(int row, int col, float precipitation)
     int lastLayer = getSoilLayerIndex(maxDepth);
     double area = DEM.header->cellSize * DEM.header->cellSize;  // [m2]
 
-    // 1) infiltration (0.1 mm of water for each soil cm)
-    for (int l = 1; l <= lastLayer; l++)
-    {
-        if (downWater <= 0)
-            break;
-
-        double layerThick_cm = layerThickness[l] * 100;         // [cm]
-        double layerWater = layerThick_cm * 0.1;                // [mm]
-        layerWater = std::min(layerWater, downWater);
-
-        long nodeIndex = indexMap.at(l).value[row][col];
-        double flow = area * (layerWater / 1000.);              // [m3 h-1]
-        waterSinkSource[nodeIndex] += flow / 3600.;             // [m3 s-1]
-        totalPrecipitation += flow;                             // [m3]
-
-        downWater -= layerWater;
-    }
-
-    // 2) accumulation on the crack bottom (0.5 mm of water for each soil cm)
+    // accumulation on the crack bottom (0.5 mm of water for each soil cm)
     for (int l = lastLayer; l > 0; l--)
     {
         if (downWater <= 0)
