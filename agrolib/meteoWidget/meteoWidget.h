@@ -132,7 +132,6 @@
 
             void drawAxisTitle();
             void drawSum();
-            void checkExistingData();
 
 
     signals:
