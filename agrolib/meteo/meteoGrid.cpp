@@ -196,7 +196,6 @@ Crit3DMeteoGrid::~Crit3DMeteoGrid()
 
 bool Crit3DMeteoGrid::createRasterGrid()
 {
-
     if (_gridStructure.isUTM())
     {
         dataMeteoGrid.header->cellSize = _gridStructure.header().dx;
