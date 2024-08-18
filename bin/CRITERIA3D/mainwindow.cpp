@@ -750,7 +750,12 @@ void MainWindow::updateDateTime()
 void MainWindow::updateModelTime()
 {
     QDate date = myProject.getCurrentDate();
-    int hour = myProject.getCurrentHour();
+    int hour = myProject.getCurrentHour() - 1;
+    if (hour == -1)
+    {
+        date = date.addDays(-1);
+        hour = 23;
+    }
     int minutes = int(floor(myProject.currentSeconds / 60));
     int seconds = myProject.currentSeconds - (minutes * 60);
     if (minutes == 60)
