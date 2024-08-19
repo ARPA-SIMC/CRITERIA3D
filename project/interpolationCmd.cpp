@@ -302,3 +302,87 @@ bool interpolationRaster(std::vector <Crit3DInterpolationDataPoint> &myPoints, C
     return true;
 }
 
+bool topographicIndex(const gis::Crit3DRasterGrid DEM, std::vector <float> windowWidths, gis::Crit3DRasterGrid& outGrid)
+{
+
+    if (! outGrid.initializeGrid(DEM))
+        return false;
+
+    if (windowWidths.size() == 0)
+        return false;
+
+    float threshold = float(EPSILON);
+
+    float z, value, cellNr, cellDelta;
+    unsigned r1, r2, c1, c2, windowRow, windowCol;
+    float higherSum, lowerSum, equalSum, weightSum;
+
+    for (auto width : windowWidths)
+    {
+        cellNr = round(width / DEM.header->cellSize);
+
+        for (int row = 0; row < outGrid.header->nrRows ; row++)
+        {
+            for (int col = 0; col < outGrid.header->nrCols; col++)
+            {
+
+                z = DEM.value[row][col];
+                if (! isEqual(z, DEM.header->flag))
+                {
+                    r1 = row - cellNr;
+                    r2 = row + cellNr;
+                    c1 = col - cellNr;
+                    c2 = col + cellNr;
+
+                    higherSum = 0;
+                    lowerSum = 0;
+                    equalSum = 0;
+                    weightSum = 0;
+                }
+
+                for (windowRow = r1; windowRow <= r2; windowRow++)
+                {
+                    for (windowCol = c1; windowCol <= c2; windowCol++)
+                    {
+                        if (! gis::isOutOfGridRowCol(windowRow, windowCol, DEM))
+                        {
+                            value = DEM.value[windowRow][windowCol];
+
+                            if (! isEqual(value, DEM.header->flag))
+                            {
+                                if (windowRow != row && windowCol != col)
+                                {
+                                    cellDelta = gis::computeDistance(windowRow, windowCol, row, col);
+
+                                    if (cellDelta <= cellNr)
+                                    {
+                                        float weight = 1 - (cellDelta / cellNr);
+
+                                        if (value - z > threshold)
+                                            higherSum += weight;
+                                        else if (value - z < -threshold)
+                                            lowerSum += weight;
+                                        else
+                                            equalSum += weight;
+
+                                        weightSum += weight;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+
+                if (weightSum > 0)
+                {
+                    if (isEqual(outGrid.value[row][col], outGrid.value[row][col]))
+                        outGrid.value[row][col] = (lowerSum - higherSum - equalSum * 0.5) / weightSum;
+                    else
+                        outGrid.value[row][col] += (lowerSum - higherSum - equalSum * 0.5) / weightSum;
+                }
+            }
+        }
+    }
+
+    return true;
+}
