@@ -370,7 +370,11 @@ void Crit3DProject::assignPrecipitation()
                     {
                         float currentSnowFall = snowFallMap->value[row][col];
                         float currentSnowMelt = snowMeltMap->value[row][col];
-                        liquidWater = prec - currentSnowFall + currentSnowMelt;
+                        if (! isEqual(currentSnowFall, snowFallMap->header->flag)
+                            && ! isEqual(currentSnowMelt, snowMeltMap->header->flag) )
+                        {
+                            liquidWater = prec - currentSnowFall + currentSnowMelt;
+                        }
                     }
                     if (liquidWater > 0)
                     {
@@ -965,7 +969,7 @@ bool Crit3DProject::initializeSnowModel()
         return false;
     }
 
-    snowMaps.initialize(DEM, snowModel.snowParameters.skinThickness);
+    snowMaps.initializeSnowMaps(DEM, snowModel.snowParameters.skinThickness);
 
     return true;
 }
@@ -1473,61 +1477,70 @@ bool Crit3DProject::loadModelState(QString statePath)
         if (! initializeSnowModel())
             return false;
 
+        gis::Crit3DRasterGrid *tmpRaster = new gis::Crit3DRasterGrid();
+
         fileName = snowPath.toStdString() + "/SWE";
-        if (! gis::readEsriGrid(fileName, snowMaps.getSnowWaterEquivalentMap(), errorStr))
+        if (! gis::readEsriGrid(fileName, tmpRaster, errorStr))
         {
             errorString = "Wrong Snow SWE map:\n" + QString::fromStdString(errorStr);
             snowMaps.isInitialized = false;
             return false;
         }
+        gis::resampleGrid(*tmpRaster, snowMaps.getSnowWaterEquivalentMap(), DEM.header, aggrAverage, 0.1f);
 
         fileName = snowPath.toStdString() + "/AgeOfSnow";
-        if (! gis::readEsriGrid(fileName, snowMaps.getAgeOfSnowMap(), errorStr))
+        if (! gis::readEsriGrid(fileName, tmpRaster, errorStr))
         {
             errorString = "Wrong Snow AgeOfSnow map:\n" + QString::fromStdString(errorStr);
             snowMaps.isInitialized = false;
             return false;
         }
+        gis::resampleGrid(*tmpRaster, snowMaps.getAgeOfSnowMap(), DEM.header, aggrAverage, 0.1f);
 
         fileName = snowPath.toStdString() + "/IceContent";
-        if (! gis::readEsriGrid(fileName, snowMaps.getIceContentMap(), errorStr))
+        if (! gis::readEsriGrid(fileName, tmpRaster, errorStr))
         {
             errorString = "Wrong Snow IceContent map:\n" + QString::fromStdString(errorStr);
             snowMaps.isInitialized = false;
             return false;
         }
+        gis::resampleGrid(*tmpRaster, snowMaps.getIceContentMap(), DEM.header, aggrAverage, 0.1f);
 
         fileName = snowPath.toStdString() + "/InternalEnergy";
-        if (! gis::readEsriGrid(fileName, snowMaps.getInternalEnergyMap(), errorStr))
+        if (! gis::readEsriGrid(fileName, tmpRaster, errorStr))
         {
             errorString = "Wrong Snow InternalEnergy map:\n" + QString::fromStdString(errorStr);
             snowMaps.isInitialized = false;
             return false;
         }
+        gis::resampleGrid(*tmpRaster, snowMaps.getInternalEnergyMap(), DEM.header, aggrAverage, 0.1f);
 
         fileName = snowPath.toStdString() + "/LWContent";
-        if (! gis::readEsriGrid(fileName, snowMaps.getLWContentMap(), errorStr))
+        if (! gis::readEsriGrid(fileName, tmpRaster, errorStr))
         {
             errorString = "Wrong Snow LWContent map:\n" + QString::fromStdString(errorStr);
             snowMaps.isInitialized = false;
             return false;
         }
+        gis::resampleGrid(*tmpRaster, snowMaps.getLWContentMap(), DEM.header, aggrAverage, 0.1f);
 
         fileName = snowPath.toStdString() + "/SnowSurfaceTemp";
-        if (! gis::readEsriGrid(fileName, snowMaps.getSnowSurfaceTempMap(), errorStr))
+        if (! gis::readEsriGrid(fileName, tmpRaster, errorStr))
         {
             errorString = "Wrong Snow SurfaceTemp map:\n" + QString::fromStdString(errorStr);
             snowMaps.isInitialized = false;
             return false;
         }
+        gis::resampleGrid(*tmpRaster, snowMaps.getSnowSurfaceTempMap(), DEM.header, aggrAverage, 0.1f);
 
         fileName = snowPath.toStdString() + "/SurfaceInternalEnergy";
-        if (! gis::readEsriGrid(fileName, snowMaps.getSurfaceEnergyMap(), errorStr))
+        if (! gis::readEsriGrid(fileName, tmpRaster, errorStr))
         {
             errorString = "Wrong Snow SurfaceInternalEnergy map:\n" + QString::fromStdString(errorStr);
             snowMaps.isInitialized = false;
             return false;
         }
+        gis::resampleGrid(*tmpRaster, snowMaps.getSurfaceEnergyMap(), DEM.header, aggrAverage, 0.1f);
 
         processes.setComputeSnow(true);
     }
