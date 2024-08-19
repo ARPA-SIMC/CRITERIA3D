@@ -29,13 +29,6 @@
         // for vine3d
         gis::Crit3DRasterGrid* sunElevationMap;
 
-        /*
-        gis::Crit3DRasterGrid* linkeMap;
-        gis::Crit3DRasterGrid* albedoMap;
-        gis::Crit3DRasterGrid* sunAzimuthMap;
-        gis::Crit3DRasterGrid* sunIncidenceMap;
-        gis::Crit3DRasterGrid* sunShadowMap;
-        */
 
         Crit3DRadiationMaps();
         Crit3DRadiationMaps(const gis::Crit3DRasterGrid& dem, const gis::Crit3DGisSettings& gisSettings);

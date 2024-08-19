@@ -46,14 +46,6 @@ Crit3DRadiationMaps::Crit3DRadiationMaps()
     reflectedRadiationMap = new gis::Crit3DRasterGrid;
     sunElevationMap = new gis::Crit3DRasterGrid;
 
-    /*
-    linkeMap = new gis::Crit3DRasterGrid;
-    albedoMap = new gis::Crit3DRasterGrid;
-    sunAzimuthMap = new gis::Crit3DRasterGrid;
-    sunIncidenceMap = new gis::Crit3DRasterGrid;
-    sunShadowMap = new gis::Crit3DRasterGrid;
-    */
-
     isComputed = false;
 
 }
@@ -86,20 +78,6 @@ Crit3DRadiationMaps::Crit3DRadiationMaps(const gis::Crit3DRasterGrid& dem, const
     sunElevationMap = new gis::Crit3DRasterGrid;
     sunElevationMap->initializeGrid(dem);
 
-    /*
-    albedoMap = new gis::Crit3DRasterGrid;
-    linkeMap = new gis::Crit3DRasterGrid;
-    sunAzimuthMap = new gis::Crit3DRasterGrid;
-    sunIncidenceMap = new gis::Crit3DRasterGrid;
-    sunShadowMap = new gis::Crit3DRasterGrid;
-
-    linkeMap->initializeGrid(dem);
-    albedoMap->initializeGrid(dem);
-    sunAzimuthMap->initializeGrid(dem);
-    sunIncidenceMap->initializeGrid(dem);
-    sunShadowMap->initializeGrid(dem);
-    */
-
     isComputed = false;
 }
 
@@ -122,14 +100,6 @@ void Crit3DRadiationMaps::clear()
     reflectedRadiationMap->clear();
     sunElevationMap->clear();
 
-    /*
-    albedoMap->clear();
-    linkeMap->clear();
-    sunAzimuthMap->clear();
-    sunIncidenceMap->clear();
-    sunShadowMap->clear();
-    */
-
     delete latMap;
     delete lonMap;
     delete slopeMap;
@@ -140,14 +110,6 @@ void Crit3DRadiationMaps::clear()
     delete diffuseRadiationMap;
     delete reflectedRadiationMap;
     delete sunElevationMap;
-
-    /*
-    delete albedoMap;
-    delete linkeMap;
-    delete sunAzimuthMap;
-    delete sunIncidenceMap;
-    delete sunShadowMap;
-    */
 
     isComputed = false;
 }
@@ -843,11 +805,6 @@ bool computeRadiationRsun(Crit3DRadiationSettings* radSettings, float temperatur
             linke, albedo, radSettings->getClearSky(), transmissivity, &sunPosition, &radPoint, myDem))
             return false;
 
-        /*
-        radiationMaps->sunAzimuthMap->value[row][col] = sunPosition.azimuth;
-        radiationMaps->sunIncidenceMap->value[row][col] = sunPosition.incidence;
-        radiationMaps->sunShadowMap->value[row][col] = float((sunPosition.shadow) ?  0 : 1);
-        */
         radiationMaps->sunElevationMap->value[row][col] = sunPosition.elevation;
         radiationMaps->globalRadiationMap->value[row][col] = float(radPoint.global);
         radiationMaps->beamRadiationMap->value[row][col] = float(radPoint.beam);
