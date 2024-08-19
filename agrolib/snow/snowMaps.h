@@ -20,7 +20,9 @@
         void initializeSnowMaps(const gis::Crit3DRasterGrid &dtm, double skinThickness);
         void resetSnowModel(double skinThickness);
 
-        void updateMap(Crit3DSnow &snowPoint, int row, int col);
+        void updateMapRowCol(Crit3DSnow &snowPoint, int row, int col);
+        void flagMapRowCol(int row, int col);
+
         void setPoint(Crit3DSnow &snowPoint, int row, int col);
 
         void updateRangeMaps();

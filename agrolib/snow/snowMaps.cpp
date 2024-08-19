@@ -105,7 +105,7 @@ void Crit3DSnowMaps::initializeSnowMaps(const gis::Crit3DRasterGrid &dtm, double
 }
 
 
-void Crit3DSnowMaps::updateMap(Crit3DSnow &snowPoint, int row, int col)
+void Crit3DSnowMaps::updateMapRowCol(Crit3DSnow &snowPoint, int row, int col)
 {
     _snowWaterEquivalentMap->value[row][col] = float(snowPoint.getSnowWaterEquivalent());
     _iceContentMap->value[row][col] = float(snowPoint.getIceContent());
@@ -119,6 +119,23 @@ void Crit3DSnowMaps::updateMap(Crit3DSnow &snowPoint, int row, int col)
     _snowMeltMap->value[row][col] = float(snowPoint.getSnowMelt());
     _sensibleHeatMap->value[row][col] = float(snowPoint.getSensibleHeat());
     _latentHeatMap->value[row][col] = float(snowPoint.getLatentHeat());
+}
+
+
+void Crit3DSnowMaps::flagMapRowCol(int row, int col)
+{
+    _snowWaterEquivalentMap->value[row][col] = _snowWaterEquivalentMap->header->flag;
+    _iceContentMap->value[row][col] = _iceContentMap->header->flag;
+    _liquidWaterContentMap->value[row][col] = _liquidWaterContentMap->header->flag;
+    _internalEnergyMap->value[row][col] = _internalEnergyMap->header->flag;
+    _surfaceEnergyMap->value[row][col] = _surfaceEnergyMap->header->flag;
+    _snowSurfaceTempMap->value[row][col] = _snowSurfaceTempMap->header->flag;
+    _ageOfSnowMap->value[row][col] = _ageOfSnowMap->header->flag;
+
+    _snowFallMap->value[row][col] = _snowFallMap->header->flag;
+    _snowMeltMap->value[row][col] = _snowMeltMap->header->flag;
+    _sensibleHeatMap->value[row][col] = _sensibleHeatMap->header->flag;
+    _latentHeatMap->value[row][col] = _latentHeatMap->header->flag;
 }
 
 

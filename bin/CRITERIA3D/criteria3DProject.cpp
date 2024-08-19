@@ -993,7 +993,7 @@ void Crit3DProject::computeSnowPoint(int row, int col)
 
     snowModel.computeSnowBrooksModel();
 
-    snowMaps.updateMap(snowModel, row, col);
+    snowMaps.updateMapRowCol(snowModel, row, col);
 }
 
 
@@ -1047,8 +1047,13 @@ bool Crit3DProject::computeSnowModel()
                 {
                     computeSnowPoint(row, col);
                 }
+                else
+                {
+                    snowMaps.flagMapRowCol(row, col);
+                }
             }
         }
+
         snowMaps.updateRangeMaps();
     }
 
