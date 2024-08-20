@@ -39,6 +39,7 @@
 #include "interpolationPoint.h"
 #include "interpolation.h"
 #include "interpolationSettings.h"
+#include "meteo.h"
 
 #include <functional>
 
@@ -347,31 +348,36 @@ bool regressionGeneric(std::vector <Crit3DInterpolationDataPoint> &myPoints, Cri
 bool regressionSimpleT(std::vector <Crit3DInterpolationDataPoint> &myPoints, Crit3DInterpolationSettings* mySettings, Crit3DClimateParameters* myClimate,
                        Crit3DTime myTime, meteoVariable myVar, unsigned orogProxyPos)
 {
-    float q, m, r2;
+    float slope, t0, r2;
 
     Crit3DProxy* myProxyOrog = mySettings->getProxy(orogProxyPos);
     myProxyOrog->initializeOrography();
 
-    if (! regressionSimple(myPoints, mySettings, orogProxyPos, false, &m, &q, &r2))
+    if (! regressionSimple(myPoints, mySettings, orogProxyPos, false, &slope, &t0, &r2))
         return false;
 
     if (r2 < mySettings->getMinRegressionR2())
         return false;
 
-    myProxyOrog->setRegressionSlope(m);
+    myProxyOrog->setRegressionSlope(slope);
+    myProxyOrog->setLapseRateT0(t0);
     myProxyOrog->setRegressionR2(r2);
-    myProxyOrog->setLapseRateT0(q);
 
     // only pre-inversion data
-    if (m > 0)
+    if (slope > 0 && myVar != elaboration)
     {
-        myProxyOrog->setInversionLapseRate(m);
+        myProxyOrog->setInversionLapseRate(slope);
 
         float maxZ = MINVALUE(getMaxHeight(myPoints, mySettings->getUseLapseRateCode()), mySettings->getMaxHeightInversion());
-        myProxyOrog->setLapseRateT1(q + m * maxZ);
+        myProxyOrog->setLapseRateT1(t0 + slope * maxZ);
         myProxyOrog->setLapseRateH1(maxZ);
         myProxyOrog->setRegressionSlope(myClimate->getClimateLapseRate(myVar, myTime));
         myProxyOrog->setInversionIsSignificative(true);
+    }
+    else
+    {
+        myProxyOrog->setInversionIsSignificative(false);
+        myProxyOrog->setInversionLapseRate(NODATA);
     }
 
     return true;
