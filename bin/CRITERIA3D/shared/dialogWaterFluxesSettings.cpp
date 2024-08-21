@@ -22,14 +22,15 @@ DialogWaterFluxesSettings::DialogWaterFluxesSettings()
     accuracyGroupBox->setLayout(accuracyLayout);
 
     // initial conditions
-    QLabel *initialWaterPotentialLabel = new QLabel(tr("Water potential [m]"));
+    useInitialWaterPotential = new QRadioButton("Water potential [m]");
+    useInitialDegreeOfSaturation = new QRadioButton("Degree of saturation [-]");
+
     initialWaterPotentialEdit = new QLineEdit();
     initialWaterPotentialEdit->setFixedWidth(50);
     QDoubleValidator* waterPotentialValidator = new QDoubleValidator(-1000.0, 1.0, 2, initialWaterPotentialEdit);
     waterPotentialValidator->setNotation(QDoubleValidator::StandardNotation);
     initialWaterPotentialEdit->setValidator(waterPotentialValidator);
 
-    QLabel *initialDegreeLabel = new QLabel(tr("Degree of saturation [-]"));
     initialDegreeOfSaturationEdit = new QLineEdit();
     initialDegreeOfSaturationEdit->setFixedWidth(50);
     QDoubleValidator* degreeSatValidator = new QDoubleValidator(0.0, 1.0, 3, initialDegreeOfSaturationEdit);
@@ -37,9 +38,9 @@ DialogWaterFluxesSettings::DialogWaterFluxesSettings()
     initialDegreeOfSaturationEdit->setValidator(degreeSatValidator);
 
     QGridLayout *layoutInitialConditions = new QGridLayout();
-    layoutInitialConditions->addWidget(initialWaterPotentialLabel, 0, 0);
+    layoutInitialConditions->addWidget(useInitialWaterPotential, 0, 0);
     layoutInitialConditions->addWidget(initialWaterPotentialEdit, 0, 1);
-    layoutInitialConditions->addWidget(initialDegreeLabel, 1, 0);
+    layoutInitialConditions->addWidget(useInitialDegreeOfSaturation, 1, 0);
     layoutInitialConditions->addWidget(initialDegreeOfSaturationEdit, 1, 1);
 
     QGroupBox* initialConditionsGroupBox = new QGroupBox("Initial conditions");

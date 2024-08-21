@@ -2187,6 +2187,9 @@ void MainWindow::on_actionCriteria3D_waterFluxes_settings_triggered()
     dialogWaterFluxes.setInitialWaterPotential(myProject.waterFluxesParameters.initialWaterPotential);
     dialogWaterFluxes.setInitialDegreeOfSaturation(myProject.waterFluxesParameters.initialDegreeOfSaturation);
 
+    dialogWaterFluxes.useInitialWaterPotential->setChecked(myProject.waterFluxesParameters.isInitialWaterPotential);
+    dialogWaterFluxes.useInitialDegreeOfSaturation->setChecked(! myProject.waterFluxesParameters.isInitialWaterPotential);
+
     dialogWaterFluxes.setImposedComputationDepth(myProject.waterFluxesParameters.imposedComputationDepth);
 
     dialogWaterFluxes.accuracySlider->setValue(myProject.waterFluxesParameters.modelAccuracy);
@@ -2216,6 +2219,8 @@ void MainWindow::on_actionCriteria3D_waterFluxes_settings_triggered()
     {
         myProject.waterFluxesParameters.initialWaterPotential = dialogWaterFluxes.getInitialWaterPotential();
         myProject.waterFluxesParameters.initialDegreeOfSaturation = dialogWaterFluxes.getInitialDegreeOfSaturation();
+        myProject.waterFluxesParameters.isInitialWaterPotential = dialogWaterFluxes.useInitialWaterPotential->isChecked();
+
         myProject.waterFluxesParameters.conductivityHorizVertRatio = dialogWaterFluxes.getConductivityHVRatio();
 
         myProject.waterFluxesParameters.imposedComputationDepth = dialogWaterFluxes.getImposedComputationDepth();

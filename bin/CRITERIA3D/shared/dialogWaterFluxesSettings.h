@@ -23,8 +23,8 @@
     public:
         QPushButton *updateButton;
 
-        QRadioButton *initialWaterPotential;
-        QRadioButton *initialDegreeOfSaturation;
+        QRadioButton *useInitialWaterPotential;
+        QRadioButton *useInitialDegreeOfSaturation;
 
         QRadioButton *onlySurface;
         QRadioButton *allSoilDepth;
