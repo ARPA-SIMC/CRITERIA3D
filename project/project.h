@@ -109,7 +109,7 @@
         QString outputPointsFileName;
         QString currentDbOutputFileName;
 
-        QSettings* parameters;
+        QSettings* parametersSettings;
         QSettings* projectSettings;
 
         bool meteoPointsLoaded;
