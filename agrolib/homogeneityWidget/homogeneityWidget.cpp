@@ -134,8 +134,8 @@ Crit3DHomogeneityWidget::Crit3DHomogeneityWidget(Crit3DMeteoPointsDbHandler* met
         QDate lastDaily = meteoPointsDbHandler->getLastDate(daily, jointStationsMyMp[i].toStdString()).date();
         if (indexMp != -1)
         {
-            jointStationsSelected.addItem(QString::fromStdString(this->meteoPointsNearDistanceList[indexMp].id)+" "+QString::fromStdString(this->meteoPointsNearDistanceList[indexMp].name));
-            meteoPointsDbHandler->loadDailyData(getCrit3DDate(firstDaily), getCrit3DDate(lastDaily), &this->meteoPointsNearDistanceList[indexMp]);
+            jointStationsSelected.addItem(QString::fromStdString(this->meteoPointsNearDistanceList[indexMp].id) + " " + QString::fromStdString(this->meteoPointsNearDistanceList[indexMp].name));
+            meteoPointsDbHandler->loadDailyData(getCrit3DDate(firstDaily), getCrit3DDate(lastDaily), this->meteoPointsNearDistanceList[indexMp]);
         }
     }
 
@@ -493,7 +493,7 @@ void Crit3DHomogeneityWidget::addJointStationClicked()
         QDate firstDailyNewId = meteoPointsDbHandler->getFirstDate(daily, newId).date();
         QDate lastDailyNewId = meteoPointsDbHandler->getLastDate(daily, newId).date();
 
-        meteoPointsDbHandler->loadDailyData(getCrit3DDate(firstDailyNewId), getCrit3DDate(lastDailyNewId), &meteoPointsNearDistanceList[indexMp]);
+        meteoPointsDbHandler->loadDailyData(getCrit3DDate(firstDailyNewId), getCrit3DDate(lastDailyNewId), meteoPointsNearDistanceList[indexMp]);
         updateYears();
     }
 
@@ -736,7 +736,7 @@ void Crit3DHomogeneityWidget::findReferenceStations()
         mpToBeComputed.id = sortedId[i];
         QString name = meteoPointsDbHandler->getNameGivenId(QString::fromStdString(sortedId[i]));
         QList<QString> jointStationsListMpToBeComputed = meteoPointsDbHandler->getJointStations(QString::fromStdString(mpToBeComputed.id));
-        meteoPointsDbHandler->loadDailyData(getCrit3DDate(firstDate), getCrit3DDate(lastDate), &mpToBeComputed);
+        meteoPointsDbHandler->loadDailyData(getCrit3DDate(firstDate), getCrit3DDate(lastDate), mpToBeComputed);
 
         // copy data to MPTemp
         Crit3DMeteoPoint meteoPointTemp;
@@ -749,7 +749,7 @@ void Crit3DHomogeneityWidget::findReferenceStations()
             {
                 Crit3DMeteoPoint mpGet;
                 mpGet.id = jointStationsListMpToBeComputed[j].toStdString();
-                meteoPointsDbHandler->loadDailyData(getCrit3DDate(firstDate), getCrit3DDate(lastDate), &mpGet);
+                meteoPointsDbHandler->loadDailyData(getCrit3DDate(firstDate), getCrit3DDate(lastDate), mpGet);
                 jointStationsMpList.push_back(mpGet);
             }
 
@@ -1173,7 +1173,7 @@ void Crit3DHomogeneityWidget::executeClicked()
 
         double myZAverage = statistics::mean(myValidValues);
 
-        isHomogeneous = (qAbs(myZAverage) <= TOLERANCE);
+        isHomogeneous = (qAbs(myZAverage) <= EPSILON);
         std::vector<double> z1;
         std::vector<double> z2;
 

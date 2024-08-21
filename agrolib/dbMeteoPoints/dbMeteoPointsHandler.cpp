@@ -389,10 +389,10 @@ QDateTime Crit3DMeteoPointsDbHandler::getLastDate(frequencyType frequency, std::
 }
 
 
-bool Crit3DMeteoPointsDbHandler::existData(Crit3DMeteoPoint *meteoPoint, frequencyType myFreq)
+bool Crit3DMeteoPointsDbHandler::existData(const Crit3DMeteoPoint &meteoPoint, frequencyType myFreq)
 {
     QSqlQuery query(_db);
-    QString tableName = QString::fromStdString(meteoPoint->id) + ((myFreq == daily) ?  "_D" : "_H");
+    QString tableName = QString::fromStdString(meteoPoint.id) + ((myFreq == daily) ?  "_D" : "_H");
     QString statement = QString( "SELECT 1 FROM `%1`").arg(tableName);
 
     if (query.exec(statement))
@@ -794,7 +794,7 @@ std::vector<float> Crit3DMeteoPointsDbHandler::loadHourlyVar(QString *myError, m
     QString tableName = QString::fromStdString(meteoPoint->id) + "_H";
 
     QString statement = QString( "SELECT * FROM `%1` WHERE `%2` = %3 AND date_time >= DATETIME('%4 01:00:00') AND date_time <= DATETIME('%5 00:00:00', '+1 day')")
-                                 .arg(tableName).arg(FIELD_METEO_VARIABLE).arg(idVar).arg(startDate).arg(endDate);
+                                 .arg(tableName, FIELD_METEO_VARIABLE).arg(idVar).arg(startDate, endDate);
     if( !qry.exec(statement) )
     {
         *myError = qry.lastError().text();
@@ -962,8 +962,9 @@ bool Crit3DMeteoPointsDbHandler::getPropertiesFromDb(QList<Crit3DMeteoPoint>& me
     return true;
 }
 
-bool Crit3DMeteoPointsDbHandler::getPropertiesGivenId(QString id, Crit3DMeteoPoint* meteoPoint,
-                                        const gis::Crit3DGisSettings& gisSettings, QString& errorString)
+
+bool Crit3DMeteoPointsDbHandler::getPropertiesGivenId(const QString &id, Crit3DMeteoPoint &meteoPoint,
+                                        const gis::Crit3DGisSettings &gisSettings, QString &errorString)
 {
 
     QSqlQuery qry(_db);
@@ -980,28 +981,28 @@ bool Crit3DMeteoPointsDbHandler::getPropertiesGivenId(QString id, Crit3DMeteoPoi
 
     while (qry.next())
     {
-        meteoPoint->id = qry.value("id_point").toString().toStdString();
-        meteoPoint->name = qry.value("name").toString().toStdString();
-        meteoPoint->dataset = qry.value("dataset").toString().toStdString();
+        meteoPoint.id = qry.value("id_point").toString().toStdString();
+        meteoPoint.name = qry.value("name").toString().toStdString();
+        meteoPoint.dataset = qry.value("dataset").toString().toStdString();
 
         if (qry.value("latitude") != "")
-            meteoPoint->latitude = qry.value("latitude").toDouble();
+            meteoPoint.latitude = qry.value("latitude").toDouble();
         if (qry.value("longitude") != "")
-            meteoPoint->longitude = qry.value("longitude").toDouble();
+            meteoPoint.longitude = qry.value("longitude").toDouble();
         if (qry.value("utm_x") != "")
-            meteoPoint->point.utm.x = qry.value("utm_x").toDouble();
+            meteoPoint.point.utm.x = qry.value("utm_x").toDouble();
         if (qry.value("utm_y") != "")
-            meteoPoint->point.utm.y = qry.value("utm_y").toDouble();
+            meteoPoint.point.utm.y = qry.value("utm_y").toDouble();
         if (qry.value("altitude") != "")
-            meteoPoint->point.z = qry.value("altitude").toDouble();
+            meteoPoint.point.z = qry.value("altitude").toDouble();
 
         // check position
-        if ((int(meteoPoint->latitude) != int(NODATA) && int(meteoPoint->longitude) != int(NODATA))
-            && (int(meteoPoint->point.utm.x) != int(NODATA) && int(meteoPoint->point.utm.y) != int(NODATA)))
+        if ((int(meteoPoint.latitude) != int(NODATA) && int(meteoPoint.longitude) != int(NODATA))
+            && (int(meteoPoint.point.utm.x) != int(NODATA) && int(meteoPoint.point.utm.y) != int(NODATA)))
         {
             double xTemp, yTemp;
-            gis::latLonToUtmForceZone(gisSettings.utmZone, meteoPoint->latitude, meteoPoint->longitude, &xTemp, &yTemp);
-            if (fabs(xTemp - meteoPoint->point.utm.x) < 100 && fabs(yTemp - meteoPoint->point.utm.y) < 100)
+            gis::latLonToUtmForceZone(gisSettings.utmZone, meteoPoint.latitude, meteoPoint.longitude, &xTemp, &yTemp);
+            if (fabs(xTemp - meteoPoint.point.utm.x) < 100 && fabs(yTemp - meteoPoint.point.utm.y) < 100)
             {
                 isLocationOk = true;
             }
@@ -1009,46 +1010,47 @@ bool Crit3DMeteoPointsDbHandler::getPropertiesGivenId(QString id, Crit3DMeteoPoi
             {
                 errorString += "\nWrong location! "
                                + id + " "
-                               + QString::fromStdString(meteoPoint->name);
+                               + QString::fromStdString(meteoPoint.name);
                 isLocationOk = false;
             }
         }
-        else if ((int(meteoPoint->latitude) == int(NODATA) || int(meteoPoint->longitude) == int(NODATA))
-            && (int(meteoPoint->point.utm.x) != int(NODATA) && int(meteoPoint->point.utm.y) != int(NODATA)))
+        else if ( (int(meteoPoint.latitude) == int(NODATA) || int(meteoPoint.longitude) == int(NODATA))
+                 && (int(meteoPoint.point.utm.x) != int(NODATA) && int(meteoPoint.point.utm.y) != int(NODATA)) )
         {
-            gis::getLatLonFromUtm(gisSettings, meteoPoint->point.utm.x, meteoPoint->point.utm.y,
-                                    &(meteoPoint->latitude), &(meteoPoint->longitude));
+            gis::getLatLonFromUtm(gisSettings, meteoPoint.point.utm.x, meteoPoint.point.utm.y,
+                                    &(meteoPoint.latitude), &(meteoPoint.longitude));
             isLocationOk = true;
         }
-        else if ((int(meteoPoint->latitude) != int(NODATA) && int(meteoPoint->longitude) != int(NODATA))
-                 && (int(meteoPoint->point.utm.x) == int(NODATA) || int(meteoPoint->point.utm.y) == int(NODATA)))
+        else if ( (int(meteoPoint.latitude) != int(NODATA) && int(meteoPoint.longitude) != int(NODATA))
+                 && (int(meteoPoint.point.utm.x) == int(NODATA) || int(meteoPoint.point.utm.y) == int(NODATA)))
         {
-            gis::latLonToUtmForceZone(gisSettings.utmZone, meteoPoint->latitude, meteoPoint->longitude,
-                                      &(meteoPoint->point.utm.x), &(meteoPoint->point.utm.y));
+            gis::latLonToUtmForceZone(gisSettings.utmZone, meteoPoint.latitude, meteoPoint.longitude,
+                                      &(meteoPoint.point.utm.x), &(meteoPoint.point.utm.y));
             isLocationOk = true;
         }
         else
         {
             errorString += "\nMissing location (lat/lon or UTM): "
                            + id + " "
-                           + QString::fromStdString(meteoPoint->name);
+                           + QString::fromStdString(meteoPoint.name);
             isLocationOk = false;
         }
 
         if (isLocationOk)
         {
-            meteoPoint->state = qry.value("state").toString().toStdString();
-            meteoPoint->region = qry.value("region").toString().toStdString();
-            meteoPoint->province = qry.value("province").toString().toStdString();
-            meteoPoint->municipality = qry.value("municipality").toString().toStdString();
-            meteoPoint->active = qry.value("is_active").toBool();
-            meteoPoint->isUTC = qry.value("is_utc").toBool();
-            meteoPoint->lapseRateCode = lapseRateCodeType((qry.value("orog_code").toInt()));
+            meteoPoint.state = qry.value("state").toString().toStdString();
+            meteoPoint.region = qry.value("region").toString().toStdString();
+            meteoPoint.province = qry.value("province").toString().toStdString();
+            meteoPoint.municipality = qry.value("municipality").toString().toStdString();
+            meteoPoint.active = qry.value("is_active").toBool();
+            meteoPoint.isUTC = qry.value("is_utc").toBool();
+            meteoPoint.lapseRateCode = lapseRateCodeType((qry.value("orog_code").toInt()));
         }
     }
 
     return true;
 }
+
 
 QString Crit3DMeteoPointsDbHandler::getNameGivenId(QString id)
 {
@@ -1096,7 +1098,8 @@ double Crit3DMeteoPointsDbHandler::getAltitudeGivenId(QString id)
     return altitude;
 }
 
-bool Crit3DMeteoPointsDbHandler::writePointProperties(Crit3DMeteoPoint *myPoint)
+
+bool Crit3DMeteoPointsDbHandler::writePointProperties(const Crit3DMeteoPoint &myPoint)
 {
 
     QSqlQuery qry(_db);
@@ -1104,24 +1107,24 @@ bool Crit3DMeteoPointsDbHandler::writePointProperties(Crit3DMeteoPoint *myPoint)
     qry.prepare( "INSERT INTO point_properties (id_point, name, dataset, latitude, longitude, latInt, lonInt, utm_x, utm_y, altitude, state, region, province, municipality)"
                                       " VALUES (:id_point, :name, :dataset, :latitude, :longitude, :latInt, :lonInt, :utm_x, :utm_y, :altitude, :state, :region, :province, :municipality)" );
 
-    qry.bindValue(":id_point", QString::fromStdString(myPoint->id));
-    qry.bindValue(":name", QString::fromStdString(myPoint->name));
-    qry.bindValue(":dataset", QString::fromStdString(myPoint->dataset));
-    qry.bindValue(":latitude", myPoint->latitude);
-    qry.bindValue(":longitude", myPoint->longitude);
-    qry.bindValue(":latInt", myPoint->latInt);
-    qry.bindValue(":lonInt", myPoint->lonInt);
-    qry.bindValue(":utm_x", myPoint->point.utm.x);
-    qry.bindValue(":utm_y", myPoint->point.utm.y);
-    qry.bindValue(":altitude", myPoint->point.z);
-    qry.bindValue(":state", QString::fromStdString(myPoint->state));
-    qry.bindValue(":region", QString::fromStdString(myPoint->region));
-    qry.bindValue(":province", QString::fromStdString(myPoint->province));
-    qry.bindValue(":municipality", QString::fromStdString(myPoint->municipality));
+    qry.bindValue(":id_point", QString::fromStdString(myPoint.id));
+    qry.bindValue(":name", QString::fromStdString(myPoint.name));
+    qry.bindValue(":dataset", QString::fromStdString(myPoint.dataset));
+    qry.bindValue(":latitude", myPoint.latitude);
+    qry.bindValue(":longitude", myPoint.longitude);
+    qry.bindValue(":latInt", myPoint.latInt);
+    qry.bindValue(":lonInt", myPoint.lonInt);
+    qry.bindValue(":utm_x", myPoint.point.utm.x);
+    qry.bindValue(":utm_y", myPoint.point.utm.y);
+    qry.bindValue(":altitude", myPoint.point.z);
+    qry.bindValue(":state", QString::fromStdString(myPoint.state));
+    qry.bindValue(":region", QString::fromStdString(myPoint.region));
+    qry.bindValue(":province", QString::fromStdString(myPoint.province));
+    qry.bindValue(":municipality", QString::fromStdString(myPoint.municipality));
 
-    if( !qry.exec() )
+    if( ! qry.exec() )
     {
-        qDebug() << qry.lastError();
+        errorStr = qry.lastError().text();
         return false;
     }
     else

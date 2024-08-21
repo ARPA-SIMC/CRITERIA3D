@@ -505,7 +505,7 @@ bool Crit1DCase::computeDailyModel(Crit3DDate &myDate, std::string &error)
     // check daily meteo data
     if (! meteoPoint.existDailyData(myDate))
     {
-        error = "Missing weather data: " + myDate.toStdString();
+        error = "Missing weather data: " + myDate.toISOString();
         return false;
     }
 
@@ -515,7 +515,7 @@ bool Crit1DCase::computeDailyModel(Crit3DDate &myDate, std::string &error)
 
     if (isEqual(tmin, NODATA) || isEqual(tmax, NODATA))
     {
-        error = "Missing temperature data: " + myDate.toStdString();
+        error = "Missing temperature data: " + myDate.toISOString();
         return false;
     }
     if (isEqual(prec, NODATA))

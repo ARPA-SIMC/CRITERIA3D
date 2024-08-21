@@ -11,7 +11,6 @@
     #include "interpolationSettings.h"
     #include "interpolationPoint.h"
 
-    #define TOLERANCE 0.00000001
 
     class Crit3DSynchronicityWidget : public QWidget
     {

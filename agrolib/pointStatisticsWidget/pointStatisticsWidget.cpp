@@ -71,11 +71,11 @@ Crit3DPointStatisticsWidget::Crit3DPointStatisticsWidget(bool isGrid, Crit3DMete
                     jointStationsSelected.addItem(QString::fromStdString(this->meteoPoints[n].id)+" "+QString::fromStdString(this->meteoPoints[n].name));
                     if (firstDaily.isValid() && lastDaily.isValid())
                     {
-                        meteoPointsDbHandler->loadDailyData(getCrit3DDate(firstDaily), getCrit3DDate(lastDaily), &(this->meteoPoints[n]));
+                        meteoPointsDbHandler->loadDailyData(getCrit3DDate(firstDaily), getCrit3DDate(lastDaily), this->meteoPoints[n]);
                     }
                     if (firstHourly.isValid() && lastHourly.isValid())
                     {
-                        meteoPointsDbHandler->loadHourlyData(getCrit3DDate(firstHourly.date()), getCrit3DDate(lastHourly.date()), &(this->meteoPoints[n]));
+                        meteoPointsDbHandler->loadHourlyData(getCrit3DDate(firstHourly.date()), getCrit3DDate(lastHourly.date()), this->meteoPoints[n]);
                     }
                     break;
                 }
@@ -1829,11 +1829,11 @@ void Crit3DPointStatisticsWidget::addStationClicked()
         QDateTime lastHourly = meteoPointsDbHandler->getLastDate(hourly, newId);
         if (firstDaily.isValid() && lastDaily.isValid())
         {
-            meteoPointsDbHandler->loadDailyData(getCrit3DDate(firstDaily), getCrit3DDate(lastDaily), &meteoPoints[indexMp]);
+            meteoPointsDbHandler->loadDailyData(getCrit3DDate(firstDaily), getCrit3DDate(lastDaily), meteoPoints[indexMp]);
         }
         if (firstHourly.isValid() && lastHourly.isValid())
         {
-            meteoPointsDbHandler->loadHourlyData(getCrit3DDate(firstHourly.date()), getCrit3DDate(lastHourly.date()), &meteoPoints[indexMp]);
+            meteoPointsDbHandler->loadHourlyData(getCrit3DDate(firstHourly.date()), getCrit3DDate(lastHourly.date()), meteoPoints[indexMp]);
         }
         updateYears();
     }

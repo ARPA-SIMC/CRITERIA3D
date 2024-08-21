@@ -794,7 +794,7 @@ float loadDailyVarSeries(QString *myError, Crit3DMeteoPointsDbHandler *meteoPoin
     // meteoPoint
     else
     {
-        dailyValues = meteoPointsDbHandler->loadDailyVar(myError, variable, getCrit3DDate(first), getCrit3DDate(last), &firstDateDB, meteoPoint );
+        dailyValues = meteoPointsDbHandler->loadDailyVar(variable, getCrit3DDate(first), getCrit3DDate(last), *meteoPoint, firstDateDB);
     }
 
 
@@ -854,7 +854,7 @@ float loadDailyVarSeries_SaveOutput(QString *myError, Crit3DMeteoPointsDbHandler
     // meteoPoint
     else
     {
-        dailyValues = meteoPointsDbHandler->loadDailyVar(myError, variable, getCrit3DDate(first), getCrit3DDate(last), &firstDateDB, meteoPoint );
+        dailyValues = meteoPointsDbHandler->loadDailyVar(variable, getCrit3DDate(first), getCrit3DDate(last), *meteoPoint, firstDateDB);
     }
 
 

@@ -2019,7 +2019,7 @@ bool Project::writeTopographicDistanceMaps(bool onlyWithData, bool showInfo)
             if (! onlyWithData)
                 isSelected = true;
             else {
-                isSelected = meteoPointsDbHandler->existData(&meteoPoints[i], daily) || meteoPointsDbHandler->existData(&meteoPoints[i], hourly);
+                isSelected = meteoPointsDbHandler->existData(meteoPoints[i], daily) || meteoPointsDbHandler->existData(meteoPoints[i], hourly);
             }
 
             if (isSelected)
@@ -2106,9 +2106,12 @@ bool Project::loadTopographicDistanceMaps(bool onlyWithData, bool showInfo)
         if (meteoPoints[i].active)
         {
             if (! onlyWithData)
+            {
                 isSelected = true;
-            else {
-                isSelected = meteoPointsDbHandler->existData(&meteoPoints[i], daily) || meteoPointsDbHandler->existData(&meteoPoints[i], hourly);
+            }
+            else
+            {
+                isSelected = meteoPointsDbHandler->existData(meteoPoints[i], daily) || meteoPointsDbHandler->existData(meteoPoints[i], hourly);
             }
 
             if (isSelected)
