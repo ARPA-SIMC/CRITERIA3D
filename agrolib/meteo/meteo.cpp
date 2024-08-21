@@ -179,12 +179,14 @@ float computeTminHourlyWeight(int myHour)
 
 float Crit3DClimateParameters::getClimateLapseRate(meteoVariable myVar, Crit3DTime myTime)
 {
+    const float DEFAULT_LAPSERATE = -0.006f;
+
     Crit3DDate myDate = myTime.date;
     int myHour = myTime.getNearestHour();
 
     // TODO improve!
     if (myDate.isNullDate() || myHour == NODATA)
-        return -0.006f;
+        return DEFAULT_LAPSERATE;
 
     unsigned int indexMonth = unsigned(myDate.month - 1);
 
@@ -208,7 +210,7 @@ float Crit3DClimateParameters::getClimateLapseRate(meteoVariable myVar, Crit3DTi
             lapseTmax = tdMaxLapseRate[indexMonth];
         }
         else
-            return NODATA;
+            return DEFAULT_LAPSERATE;
 
         float tminWeight = computeTminHourlyWeight(myHour);
         return (lapseTmin * tminWeight + lapseTmax * (1 - tminWeight));

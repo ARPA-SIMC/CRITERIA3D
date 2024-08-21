@@ -21,9 +21,9 @@ DbArkimet* Download::getDbArkimet()
     return _dbMeteo;
 }
 
-bool Download::getPointProperties(QList<QString> datasetList)
-{
 
+bool Download::getPointProperties(const QList<QString> &datasetList, QString &errorString)
+{
     bool result = true;
     QEventLoop loop;
 
@@ -43,7 +43,7 @@ bool Download::getPointProperties(QList<QString> datasetList)
 
     if (reply->error() != QNetworkReply::NoError)
     {
-            qDebug() << "Network Error: " << reply->error();
+            errorString =  "Network Error: " + reply->errorString();
             result = false;
     }
     else
@@ -56,7 +56,12 @@ bool Download::getPointProperties(QList<QString> datasetList)
         qDebug() << "err: " << error->errorString() << " -> " << error->offset;
 
         // check validity of the document
-        if(! doc.isNull() && doc.isArray() )
+        if(doc.isNull() || ! doc.isArray())
+        {
+            errorString = "Invalid JSON";
+            result = false;
+        }
+        else
         {
             QJsonArray jsonArr = doc.array();
 
@@ -68,20 +73,19 @@ bool Download::getPointProperties(QList<QString> datasetList)
 
                 if (jsonDataset.isUndefined())
                     qDebug() << "jsonDataset: key id does not exist";
-                else if (!jsonDataset.isString())
+                else if (! jsonDataset.isString())
                     qDebug() << "jsonDataset: value is not string";
                 else
+                {
                     foreach(QString item, _datasetsList)
+                    {
                         if (jsonDataset.toString().toUpper() == item.toUpper())
                         {
                             this->downloadMetadata(obj);
                         }
+                    }
+                }
             }
-        }
-         else
-        {
-            qDebug() << "Invalid JSON...\n";
-            result = false;
         }
     }
 
@@ -89,6 +93,7 @@ bool Download::getPointProperties(QList<QString> datasetList)
     delete manager;
     return result;
 }
+
 
 QMap<QString, QString> Download::getArmiketIdList(QList<QString> datasetList)
 {

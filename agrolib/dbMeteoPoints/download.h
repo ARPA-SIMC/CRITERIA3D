@@ -12,7 +12,7 @@
             explicit Download(QString dbName, QObject* parent = nullptr);
             ~Download();
 
-            bool getPointProperties(QList<QString> datasetList);
+            bool getPointProperties(const QList<QString> &datasetList, QString &errorString);
             bool getPointPropertiesFromId(QString id, Crit3DMeteoPoint* pointProp);
             QMap<QString,QString> getArmiketIdList(QList<QString> datasetList);
             void downloadMetadata(QJsonObject obj);
