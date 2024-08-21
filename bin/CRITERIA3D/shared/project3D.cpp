@@ -159,6 +159,8 @@ void Project3D::initializeProject3D()
     soilMapFileName = "";
     landUseMapFileName = "";
 
+    waterFluxesParameters.initialize();
+
     computationSoilDepth = 0.0;             // [m]
     soilLayerThicknessGrowthFactor = 1.2;   // [-]
 

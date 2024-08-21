@@ -664,8 +664,6 @@ bool Crit3DProject::loadCriteria3DProject(QString myFileName)
     clear3DProject();
     initializeProject3D();
 
-    //snowModel.initialize();
-
     if (! loadProjectSettings(myFileName))
         return false;
 
@@ -931,6 +929,7 @@ double Crit3DProject::getSoilVar(int soilIndex, int layerIndex, soil::soilVariab
 void Crit3DProject::clear3DProject()
 {
     snowMaps.clear();
+    snowModel.initialize();
 
     dailyTminMap.clear();
     dailyTmaxMap.clear();
