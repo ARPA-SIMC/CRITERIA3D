@@ -900,7 +900,7 @@ bool NetCDFHandler::writeMetadata(const gis::Crit3DLatLonHeader& latLonHeader, c
         status = nc_put_att_text(ncId, varTime, "standard_name", 4, "time");
         if (status != NC_NOERR) return false;
 
-        std::string timeUnits = "days since " + myDate.toStdString();
+        std::string timeUnits = "days since " + myDate.toISOString();
         status = nc_put_att_text(ncId, varTime, "units", timeUnits.length(), timeUnits.c_str());
         if (status != NC_NOERR) return false;
 

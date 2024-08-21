@@ -104,14 +104,14 @@ void Crit3DSynchronicityWidget::addStationGraph()
 
     std::vector<float> dailyValues;
     QString myError;
-    dailyValues = meteoPointsDbHandler->loadDailyVar(&myError, myVar, getCrit3DDate(myStartDate.addDays(myLag)), getCrit3DDate(myEndDate.addDays(myLag)), &firstDaily, &mp);
+    dailyValues = meteoPointsDbHandler->loadDailyVar(myVar, getCrit3DDate(myStartDate.addDays(myLag)), getCrit3DDate(myEndDate.addDays(myLag)), mp, firstDaily);
     if (dailyValues.empty())
     {
         QMessageBox::information(nullptr, "Error", "No data for active station");
         return;
     }
     std::vector<float> dailyRefValues;
-    dailyRefValues = meteoPointsDbHandler->loadDailyVar(&myError, myVar, getCrit3DDate(myStartDate), getCrit3DDate(myEndDate), &firstRefDaily, &mpRef);
+    dailyRefValues = meteoPointsDbHandler->loadDailyVar(myVar, getCrit3DDate(myStartDate), getCrit3DDate(myEndDate), mpRef, firstRefDaily);
     if (dailyRefValues.empty())
     {
         QMessageBox::information(nullptr, "Error", "No data for reference station");
@@ -249,8 +249,7 @@ void Crit3DSynchronicityWidget::addInterpolationGraph()
     interpolationDailySeries.clear();
 
     std::vector<float> dailyValues;
-    QString myError;
-    dailyValues = meteoPointsDbHandler->loadDailyVar(&myError, myVar, getCrit3DDate(interpolationStartDate.addDays(myLag)), getCrit3DDate(myEndDate.addDays(myLag)), &firstDaily, &mp);
+    dailyValues = meteoPointsDbHandler->loadDailyVar(myVar, getCrit3DDate(interpolationStartDate.addDays(myLag)), getCrit3DDate(myEndDate.addDays(myLag)), mp, firstDaily);
     if (dailyValues.empty())
     {
         QMessageBox::information(nullptr, "Error", "No data for active station");
@@ -272,17 +271,16 @@ void Crit3DSynchronicityWidget::addInterpolationGraph()
     QProgressDialog progress("Loading daily data...", "Abort", 0, nrMeteoPoints, this);
     progress.setWindowModality(Qt::WindowModal);
     progress.show();
-    int i = 0;
-    for (; i<nrMeteoPoints; i++)
+
+    for (int i = 0; i<nrMeteoPoints; i++)
     {
         progress.setValue(i+1);
         if (progress.wasCanceled())
         {
             break;
         }
-        meteoPointsDbHandler->loadDailyData(getCrit3DDate(interpolationStartDate), getCrit3DDate(myEndDate), &meteoPoints[i]);
+        meteoPointsDbHandler->loadDailyData(getCrit3DDate(interpolationStartDate), getCrit3DDate(myEndDate), meteoPoints[i]);
     }
-    progress.setValue(i+1);
     progress.close();
 
     std::string errorStdStr;
