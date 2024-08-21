@@ -729,12 +729,12 @@ bool makeSeasonalForecast(QString outputFileName, char separator, XMLSeasonalAno
         {
             if (tmp == 0)
             {
-                qDebug() << "ERROR: Missing data:" << QString::fromStdString(dailyPredictions[tmp].date.toStdString());
+                qDebug() << "ERROR: Missing data:" << QString::fromStdString(dailyPredictions[tmp].date.toISOString());
                 return false;
             }
             else
             {
-                qDebug() << "WARNING: Missing data:" << QString::fromStdString(dailyPredictions[tmp].date.toStdString());
+                qDebug() << "WARNING: Missing data:" << QString::fromStdString(dailyPredictions[tmp].date.toISOString());
 
                 if (int(dailyPredictions[tmp].maxTemp) == int(NODATA))
                     dailyPredictions[tmp].maxTemp = lastTmax;
@@ -956,12 +956,12 @@ bool makeSeasonalForecastWaterTable(QString outputFileName, char separator, XMLS
         {
             if (tmp == 0)
             {
-                qDebug() << "ERROR: Missing data:" << QString::fromStdString(dailyPredictions[tmp].date.toStdString());
+                qDebug() << "ERROR: Missing data:" << QString::fromStdString(dailyPredictions[tmp].date.toISOString());
                 return false;
             }
             else
             {
-                qDebug() << "WARNING: Missing data:" << QString::fromStdString(dailyPredictions[tmp].date.toStdString());
+                qDebug() << "WARNING: Missing data:" << QString::fromStdString(dailyPredictions[tmp].date.toISOString());
 
                 if (int(dailyPredictions[tmp].maxTemp) == int(NODATA))
                     dailyPredictions[tmp].maxTemp = lastTmax;

@@ -768,8 +768,7 @@ void weatherGenerator2D::precipitationMultisiteAmountsGeneration()
 
    int gasDevIset = 0;
    double gasDevGset = 0;
-   srand (time(nullptr));
-   //int firstRandomNumber = rand();
+   srand(unsigned(time(nullptr)));
 
    for (int iSeason=0;iSeason<4;iSeason++)
    {
@@ -1260,7 +1259,6 @@ void weatherGenerator2D::spatialIterationAmounts(double** correlationMatrixSimul
 
    double minimalValueToExitFromCycle = NODATA;
    int counterConvergence=0;
-   bool exitWhileCycle = false;
    int nrEigenvaluesLessThan0;
    int counter;
    while ((val>TOLERANCE_MULGETS) && (ii<MAX_ITERATION_MULGETS))
