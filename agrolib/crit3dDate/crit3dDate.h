@@ -45,11 +45,12 @@
         void setDate(int myDay, int myMonth, int myYear);
         bool isNullDate();
         void setNullDate();
+
         Crit3DDate addDays(long offset) const;
         int daysTo(const Crit3DDate& myDate) const;
-        std::string toStdString();
-        std::string toStdString() const;
-        std::string toString();
+
+        std::string toISOString() const;
+
         std::string toString() const;
     };
 
@@ -81,8 +82,8 @@
         int getMinutes() const;
         int getSeconds() const;
 
-        std::string toISOString();
-        std::string toString();
+        std::string toISOString() const;
+        std::string toString() const;
     };
 
     bool isLeapYear(int year);

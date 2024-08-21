@@ -12,7 +12,7 @@
 #endif
 #include <QDate>
 
-#define MAXWELLDISTANCE 5000                           // distanza max: 5 km
+#define MAXWELLDISTANCE 5000                           // maximum distance: 5 km
 #define WATERTABLE_MAXDELTADAYS 90
 
 class WaterTable
