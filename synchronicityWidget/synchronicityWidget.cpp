@@ -68,8 +68,8 @@ void Crit3DSynchronicityWidget::setReferencePointId(const std::string &value)
             return;
         }
         QString errorString;
-        meteoPointsDbHandler->getPropertiesGivenId(QString::fromStdString(value), &mpRef, gisSettings, errorString);
-        nameRefLabel.setText("Id "+ QString::fromStdString(referencePointId)+" - "+QString::fromStdString(mpRef.name));
+        meteoPointsDbHandler->getPropertiesGivenId(QString::fromStdString(value), mpRef, gisSettings, errorString);
+        nameRefLabel.setText("Id "+ QString::fromStdString(referencePointId) + " - " + QString::fromStdString(mpRef.name));
         stationAddGraph.setEnabled(true);
     }
 }

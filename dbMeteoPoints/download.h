@@ -12,10 +12,11 @@
             explicit Download(QString dbName, QObject* parent = nullptr);
             ~Download();
 
-            bool getPointProperties(const QList<QString> &datasetList, QString &errorString);
-            bool getPointPropertiesFromId(QString id, Crit3DMeteoPoint* pointProp);
+            bool getPointProperties(const QList<QString> &datasetList, int utmZone, QString &errorString);
+            bool getPointPropertiesFromId(const QString &id, int utmZone, Crit3DMeteoPoint &pointProp);
+
             QMap<QString,QString> getArmiketIdList(QList<QString> datasetList);
-            void downloadMetadata(QJsonObject obj);
+            void downloadMetadata(const QJsonObject &obj, int utmZone);
 
             bool downloadDailyData(const QDate &startDate, const QDate &endDate, const QString &dataset,
                                    QList<QString> &stations, QList<int> &variables, bool prec0024, QString &errorString);

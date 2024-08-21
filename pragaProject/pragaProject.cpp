@@ -2837,11 +2837,11 @@ void PragaProject::showPointStatisticsWidgetPoint(std::string idMeteoPoint)
     }
 
     Crit3DMeteoPoint mp;
-    meteoPointsDbHandler->getPropertiesGivenId(QString::fromStdString(idMeteoPoint), &mp, gisSettings, errorString);
+    meteoPointsDbHandler->getPropertiesGivenId(QString::fromStdString(idMeteoPoint), mp, gisSettings, errorString);
     logInfoGUI("Loading daily data...");
-    meteoPointsDbHandler->loadDailyData(getCrit3DDate(firstDaily), getCrit3DDate(lastDaily), &mp);
+    meteoPointsDbHandler->loadDailyData(getCrit3DDate(firstDaily), getCrit3DDate(lastDaily), mp);
     logInfoGUI("Loading hourly data...");
-    meteoPointsDbHandler->loadHourlyData(getCrit3DDate(firstHourly.date()), getCrit3DDate(lastHourly.date()), &mp);
+    meteoPointsDbHandler->loadHourlyData(getCrit3DDate(firstHourly.date()), getCrit3DDate(lastHourly.date()), mp);
     QList<QString> jointStationsMyMp = meteoPointsDbHandler->getJointStations(QString::fromStdString(idMeteoPoint));
     for (int j = 0; j<jointStationsMyMp.size(); j++)
     {
@@ -2878,6 +2878,7 @@ void PragaProject::showPointStatisticsWidgetPoint(std::string idMeteoPoint)
     return;
 }
 
+
 void PragaProject::showHomogeneityTestWidgetPoint(std::string idMeteoPoint)
 {
     logInfoGUI("Loading data...");
@@ -2887,16 +2888,17 @@ void PragaProject::showHomogeneityTestWidgetPoint(std::string idMeteoPoint)
     QDate lastDaily = meteoPointsDbHandler->getLastDate(daily, idMeteoPoint).date();
     bool hasDailyData = !(firstDaily.isNull() || lastDaily.isNull());
 
-    if (!hasDailyData)
+    if (! hasDailyData)
     {
         logInfoGUI("No daily data.");
         return;
     }
 
     Crit3DMeteoPoint mp;
-    meteoPointsDbHandler->getPropertiesGivenId(QString::fromStdString(idMeteoPoint), &mp, gisSettings, errorString);
+    meteoPointsDbHandler->getPropertiesGivenId(QString::fromStdString(idMeteoPoint), mp, gisSettings, errorString);
+
     logInfoGUI("Loading daily data...");
-    meteoPointsDbHandler->loadDailyData(getCrit3DDate(firstDaily), getCrit3DDate(lastDaily), &mp);
+    meteoPointsDbHandler->loadDailyData(getCrit3DDate(firstDaily), getCrit3DDate(lastDaily), mp);
     QList<QString> jointStationsMyMp = meteoPointsDbHandler->getJointStations(QString::fromStdString(idMeteoPoint));
     for (int j = 0; j<jointStationsMyMp.size(); j++)
     {
@@ -2935,20 +2937,23 @@ void PragaProject::showHomogeneityTestWidgetPoint(std::string idMeteoPoint)
             }
         }
     }
+
     if (myIndeces.empty())
     {
         logInfoGUI("There are no meteo points as reference...");
         return;
     }
+
     sorting::quicksortAscendingIntegerWithParameters(myIndeces, myDistances, 0, unsigned(myIndeces.size()-1));
     for (int i = 0; i < myIndeces.size(); i++)
     {
         myId << meteoPoints[myIndeces[i]].id;
     }
+
     homogeneityWidget = new Crit3DHomogeneityWidget(meteoPointsDbHandler, meteoPointsNearDistanceList, myId, myDistances, jointStationsMyMp, firstDaily, lastDaily,
                                                             meteoSettings, pragaDefaultSettings, &climateParameters, quality);
-    return;
 }
+
 
 void PragaProject::showSynchronicityTestWidgetPoint(std::string idMeteoPoint)
 {
