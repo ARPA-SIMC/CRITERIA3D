@@ -24,17 +24,21 @@
         bool computeAllSoilDepth;
 
         bool isInitialWaterPotential;
-        double initialWaterPotential;            // [m]
-        double initialDegreeOfSaturation;        // [-]
+        double initialWaterPotential;               // [m]
+        double initialDegreeOfSaturation;           // [-]
 
-        double imposedComputationDepth;          // [m]
-        double conductivityHorizVertRatio;       // [-]
+        double imposedComputationDepth;             // [m]
+        double conductivityHorizVertRatio;          // [-]
 
-        int modelAccuracy;                       // [-]
+        int modelAccuracy;                          // [-]
 
         bool freeCatchmentRunoff;
         bool freeLateralDrainage;
         bool freeBottomDrainage;
+
+        double minSoilLayerThickness;               // [m] minimum thickness of soil layers
+        double maxSoilLayerThickness;               // [m] maximum thickness of soil layers
+        double maxSoilLayerThicknessDepth;          // [m] depth at which the layers must have maximum thickness
 
         WaterFluxesParameters();
 
@@ -127,13 +131,9 @@
         soil::Crit3DFittingOptions fittingOptions;
 
         // layers
-        double minThickness;                    // [m] minimum thickness of soil layers
-        double maxThickness;                    // [m] maximum thickness of soil layers
-        double maxThicknessDepth;               // [m] depth at which the layers must have maximum thickness
-        double thicknessGrowthFactor;           // [-] progressive growth factor of layer thicknesses
-
         std::vector <double> layerDepth;        // [m]
         std::vector <double> layerThickness;    // [m]
+        double soilLayerThicknessGrowthFactor;  // [-] progressive growth factor of layer thicknesses
 
         double previousTotalWaterContent;       // [m3]
 

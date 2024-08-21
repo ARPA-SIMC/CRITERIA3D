@@ -64,6 +64,10 @@ void WaterFluxesParameters::initialize()
     conductivityHorizVertRatio = 10.0;      // [-] default: ten times
 
     modelAccuracy = 3;                      // [-] default: error on the third digit
+
+    minSoilLayerThickness = 0.02;           // [m] default: 2 cm
+    maxSoilLayerThickness = 0.10;           // [m] default: 10 cm
+    maxSoilLayerThicknessDepth = 0.40;      // [m] default: 40 cm
 }
 
 
@@ -152,11 +156,8 @@ void Project3D::initializeProject3D()
     soilMapFileName = "";
     landUseMapFileName = "";
 
-    computationSoilDepth = 0.0;     // [m]
-    minThickness = 0.02;            // [m] default: 2 cm
-    maxThickness = 0.10;            // [m] default: 10 cm
-    maxThicknessDepth = 0.40;       // [m] default: 40 cm
-    thicknessGrowthFactor = 1.2;    // [-]
+    computationSoilDepth = 0.0;             // [m]
+    soilLayerThicknessGrowthFactor = 1.2;   // [-]
 
     nrSoils = 0;
     nrLayers = 0;
@@ -1255,9 +1256,9 @@ void Project3D::setSoilLayers()
         return;
 
     // set thicknessGrowthFactor
-    if (minThickness == maxThickness)
+    if (waterFluxesParameters.minSoilLayerThickness == waterFluxesParameters.maxSoilLayerThickness)
     {
-        thicknessGrowthFactor = 1.0;
+        soilLayerThicknessGrowthFactor = 1.0;
     }
     else
     {
@@ -1267,16 +1268,16 @@ void Project3D::setSoilLayers()
         while (factor <= 2.0)
         {
             double upperDepth = 0;
-            double currentThickness = minThickness;
+            double currentThickness = waterFluxesParameters.minSoilLayerThickness;
             double currentDepth = upperDepth + currentThickness * 0.5;
-            while (currentThickness < maxThickness)
+            while (currentThickness < waterFluxesParameters.maxSoilLayerThickness)
             {
                 upperDepth += currentThickness;
-                currentThickness = std::min(currentThickness * factor, maxThickness);
+                currentThickness = std::min(currentThickness * factor, waterFluxesParameters.maxSoilLayerThickness);
                 currentDepth = upperDepth + currentThickness * 0.5;
             }
 
-            double error = fabs(currentDepth - maxThicknessDepth);
+            double error = fabs(currentDepth - waterFluxesParameters.maxSoilLayerThicknessDepth);
             if (error < bestError)
             {
                 bestError = error;
@@ -1285,18 +1286,18 @@ void Project3D::setSoilLayers()
 
             factor += 0.01;
         }
-        thicknessGrowthFactor = bestFactor;
+        soilLayerThicknessGrowthFactor = bestFactor;
     }
 
     nrLayers++;
-    double currentThickness = minThickness;
-    double currentDepth = minThickness;
+    double currentThickness = waterFluxesParameters.minSoilLayerThickness;
+    double currentLowerDepth = waterFluxesParameters.minSoilLayerThickness;
 
-    while ((computationSoilDepth - currentDepth) > minThickness)
+    while ((computationSoilDepth - currentLowerDepth) > waterFluxesParameters.minSoilLayerThickness)
     {
         nrLayers++;
-        double nextThickness = std::min(maxThickness, currentThickness * thicknessGrowthFactor);
-        currentDepth += nextThickness;
+        double nextThickness = std::min(currentThickness * soilLayerThicknessGrowthFactor, waterFluxesParameters.maxSoilLayerThickness);
+        currentLowerDepth += nextThickness;
         currentThickness = nextThickness;
     }
 }
@@ -1321,9 +1322,9 @@ bool Project3D::setLayersDepth()
     if (nrLayers == 1)
         return true;
 
-    layerThickness[1] = minThickness;
-    layerDepth[1] = minThickness * 0.5;
-    double currentDepth = minThickness;
+    layerThickness[1] = waterFluxesParameters.minSoilLayerThickness;
+    layerDepth[1] = waterFluxesParameters.minSoilLayerThickness * 0.5;
+    double currentDepth = waterFluxesParameters.minSoilLayerThickness;
 
     for (unsigned int i = 2; i <= lastLayer; i++)
     {
@@ -1333,7 +1334,7 @@ bool Project3D::setLayersDepth()
         }
         else
         {
-            layerThickness[i] = std::min(maxThickness, layerThickness[i-1] * thicknessGrowthFactor);
+            layerThickness[i] = std::min(waterFluxesParameters.maxSoilLayerThickness, layerThickness[i-1] * soilLayerThicknessGrowthFactor);
         }
 
         layerDepth[i] = currentDepth + layerThickness[i] * 0.5;

@@ -787,7 +787,21 @@ bool Crit3DProject::writeCriteria3DParameters(bool isSnow, bool isWater, bool is
 
     if (isWater)
     {
+        parametersSettings->setValue("soilFluxes/isInitialWaterPotential", waterFluxesParameters.isInitialWaterPotential);
         parametersSettings->setValue("soilFluxes/initialWaterPotential", waterFluxesParameters.initialWaterPotential);
+        parametersSettings->setValue("soilFluxes/initialDegreeOfSaturation", waterFluxesParameters.initialDegreeOfSaturation);
+
+        parametersSettings->setValue("soilFluxes/computeOnlySurface", waterFluxesParameters.computeOnlySurface);
+        parametersSettings->setValue("soilFluxes/computeAllSoilDepth", waterFluxesParameters.computeAllSoilDepth);
+        parametersSettings->setValue("soilFluxes/imposedComputationDepth", waterFluxesParameters.imposedComputationDepth);
+
+        parametersSettings->setValue("soilFluxes/conductivityHorizVertRatio", waterFluxesParameters.conductivityHorizVertRatio);
+
+        parametersSettings->setValue("soilFluxes/freeCatchmentRunoff", waterFluxesParameters.freeCatchmentRunoff);
+        parametersSettings->setValue("soilFluxes/freeBottomDrainage", waterFluxesParameters.freeBottomDrainage);
+        parametersSettings->setValue("soilFluxes/freeLateralDrainage", waterFluxesParameters.freeLateralDrainage);
+
+        parametersSettings->setValue("soilFluxes/modelAccuracy", waterFluxesParameters.modelAccuracy);
     }
 
     if (isSoilCrack)
