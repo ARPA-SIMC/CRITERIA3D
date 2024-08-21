@@ -14,18 +14,6 @@ Well::Well()
 }
 
 
-void Well::insertData(QDate myDate, float myValue)
-{
-    depths.insert(myDate, myValue);
-}
-
-int  Well::getObsDepthNr()
-{
-    return depths.size();
-}
-
-
-
 QDate Well::getFirstDate()
 {
     QList<QDate> allDates = depths.keys();
@@ -37,6 +25,7 @@ QDate Well::getFirstDate()
             firstDate = allDates[i];
         }
     }
+
     return firstDate;
 }
 
@@ -52,6 +41,7 @@ QDate Well::getLastDate()
             lastDate = allDates[i];
         }
     }
+
     return lastDate;
 }
 

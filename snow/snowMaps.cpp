@@ -25,6 +25,7 @@
 #include "commonConstants.h"
 #include "basicMath.h"
 #include "snowMaps.h"
+#include "gis.h"
 
 
 Crit3DSnowMaps::Crit3DSnowMaps()
