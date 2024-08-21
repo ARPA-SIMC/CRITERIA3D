@@ -1329,7 +1329,7 @@ bool Crit3DMeteoPoint::getDailyDataCsv_TPrec(std::string &outStr)
     for (int i = 0; i < int(obsDataD.size()); i++)
     {
         // Date
-        outStr += obsDataD[i].date.toStdString() + ",";
+        outStr += obsDataD[i].date.toISOString() + ",";
 
         if (obsDataD[i].tMin != NODATA)
         {
