@@ -82,7 +82,7 @@ void Project::initializeProject()
     currentDate.setDate(1800,1,1);
     currentHour = 12;
 
-    parameters = nullptr;
+    parametersSettings = nullptr;
     projectSettings = nullptr;
     radiationMaps = nullptr;
     hourlyMeteoMaps = nullptr;
@@ -116,7 +116,7 @@ void Project::clearProject()
 
     meteoPointsColorScale->setRange(NODATA, NODATA);
 
-    delete parameters;
+    delete parametersSettings;
     delete projectSettings;
     delete aggregationDbHandler;
     meteoWidgetPointList.clear();
@@ -219,9 +219,9 @@ bool Project::checkProxy(Crit3DProxy &myProxy, QString* error)
 
     if (isHeight)
     {
-        if (parameters->contains("fitting_function"))
+        if (parametersSettings->contains("fitting_function"))
         {
-            std::string elevationFuction = parameters->value("fitting_function").toString().toStdString();
+            std::string elevationFuction = parametersSettings->value("fitting_function").toString().toStdString();
             if (fittingFunctionNames.find(elevationFuction) == fittingFunctionNames.end())
             {
                 errorString = "Unknown function for elevation. Remove the field from the .ini file or choose between: piecewise_two, triple_piecewise, free_triple_piecewise.";
@@ -230,7 +230,7 @@ bool Project::checkProxy(Crit3DProxy &myProxy, QString* error)
             else
                 myProxy.setFittingFunctionName(fittingFunctionNames.at(elevationFuction));
 
-            if (parameters->contains("fitting_parameters"))
+            if (parametersSettings->contains("fitting_parameters"))
             {
                 unsigned int nrParameters = NODATA;
 
@@ -241,7 +241,7 @@ bool Project::checkProxy(Crit3DProxy &myProxy, QString* error)
                 else if (myProxy.getFittingFunctionName()== piecewiseThreeFree)
                     nrParameters = 6;
 
-                myList = parameters->value("fitting_parameters").toStringList();
+                myList = parametersSettings->value("fitting_parameters").toStringList();
                 if (myList.size() != nrParameters*2)
                 {
                     *error = "Wrong number of fitting parameters for proxy: " + QString::fromStdString(name_);
@@ -253,9 +253,9 @@ bool Project::checkProxy(Crit3DProxy &myProxy, QString* error)
         }
         else
         {
-            if (parameters->contains("fitting_parameters"))
+            if (parametersSettings->contains("fitting_parameters"))
             {
-                myList = parameters->value("fitting_parameters").toStringList();
+                myList = parametersSettings->value("fitting_parameters").toStringList();
 
                 if (myList.size() == 8)
                     myProxy.setFittingFunctionName(piecewiseTwo);
@@ -275,11 +275,11 @@ bool Project::checkProxy(Crit3DProxy &myProxy, QString* error)
     else
     {
         myProxy.setFittingFunctionName(linear);
-        if(parameters->contains("fitting_parameters"))
+        if(parametersSettings->contains("fitting_parameters"))
         {
             unsigned int nrParameters = 2;
 
-            myList = parameters->value("fitting_parameters").toStringList();
+            myList = parametersSettings->value("fitting_parameters").toStringList();
             if (myList.size() != nrParameters*2)
             {
                 *error = "Wrong number of fitting parameters for proxy: " + QString::fromStdString(name_);
@@ -345,13 +345,13 @@ bool Project::loadParameters(QString parametersFileName)
 
     if (! QFile(parametersFileName).exists() || ! QFileInfo(parametersFileName).isFile())
     {
-        errorString = "Missing parameters file: " + parametersFileName;
+        errorString = "Missing parametersSettings file: " + parametersFileName;
         errorString += "\nCheck project.path in " + projectSettings->fileName();
         return false;
     }
 
-    delete parameters;
-    parameters = new QSettings(parametersFileName, QSettings::IniFormat);
+    delete parametersSettings;
+    parametersSettings = new QSettings(parametersFileName, QSettings::IniFormat);
 
     //interpolation settings
     interpolationSettings.initialize();
@@ -365,60 +365,60 @@ bool Project::loadParameters(QString parametersFileName)
     std::vector <QString> proxyGridSeriesNames;
     std::vector <unsigned> proxyGridSeriesYears;
 
-    Q_FOREACH (QString group, parameters->childGroups())
+    Q_FOREACH (QString group, parametersSettings->childGroups())
     {
         //meteo settings
         if (group == "meteo")
         {
-            parameters->beginGroup(group);
+            parametersSettings->beginGroup(group);
 
-            if (parameters->contains("min_percentage") && !parameters->value("min_percentage").toString().isEmpty())
+            if (parametersSettings->contains("min_percentage") && !parametersSettings->value("min_percentage").toString().isEmpty())
             {
-                meteoSettings->setMinimumPercentage(parameters->value("min_percentage").toFloat());
+                meteoSettings->setMinimumPercentage(parametersSettings->value("min_percentage").toFloat());
             }
-            if (parameters->contains("prec_threshold") && !parameters->value("prec_threshold").toString().isEmpty())
+            if (parametersSettings->contains("prec_threshold") && !parametersSettings->value("prec_threshold").toString().isEmpty())
             {
-                meteoSettings->setRainfallThreshold(parameters->value("prec_threshold").toFloat());
+                meteoSettings->setRainfallThreshold(parametersSettings->value("prec_threshold").toFloat());
             }
-            if (parameters->contains("thom_threshold") && !parameters->value("thom_threshold").toString().isEmpty())
+            if (parametersSettings->contains("thom_threshold") && !parametersSettings->value("thom_threshold").toString().isEmpty())
             {
-                meteoSettings->setThomThreshold(parameters->value("thom_threshold").toFloat());
+                meteoSettings->setThomThreshold(parametersSettings->value("thom_threshold").toFloat());
             }
-            if (parameters->contains("temperature_threshold") && !parameters->value("temperature_threshold").toString().isEmpty())
+            if (parametersSettings->contains("temperature_threshold") && !parametersSettings->value("temperature_threshold").toString().isEmpty())
             {
-                meteoSettings->setTemperatureThreshold(parameters->value("temperature_threshold").toFloat());
+                meteoSettings->setTemperatureThreshold(parametersSettings->value("temperature_threshold").toFloat());
             }
-            if (parameters->contains("samani_coefficient") && !parameters->value("samani_coefficient").toString().isEmpty())
+            if (parametersSettings->contains("samani_coefficient") && !parametersSettings->value("samani_coefficient").toString().isEmpty())
             {
-                meteoSettings->setTransSamaniCoefficient(parameters->value("samani_coefficient").toFloat());
+                meteoSettings->setTransSamaniCoefficient(parametersSettings->value("samani_coefficient").toFloat());
             }
-            if (parameters->contains("hourly_intervals") && !parameters->value("hourly_intervals").toString().isEmpty())
+            if (parametersSettings->contains("hourly_intervals") && !parametersSettings->value("hourly_intervals").toString().isEmpty())
             {
-                meteoSettings->setHourlyIntervals(parameters->value("hourly_intervals").toInt());
+                meteoSettings->setHourlyIntervals(parametersSettings->value("hourly_intervals").toInt());
             }
-            if (parameters->contains("wind_intensity_default") && !parameters->value("wind_intensity_default").toString().isEmpty())
+            if (parametersSettings->contains("wind_intensity_default") && !parametersSettings->value("wind_intensity_default").toString().isEmpty())
             {
-                meteoSettings->setWindIntensityDefault(parameters->value("wind_intensity_default").toInt());
+                meteoSettings->setWindIntensityDefault(parametersSettings->value("wind_intensity_default").toInt());
             }
-            if (parameters->contains("compute_tavg") && !parameters->value("compute_tavg").toString().isEmpty())
+            if (parametersSettings->contains("compute_tavg") && !parametersSettings->value("compute_tavg").toString().isEmpty())
             {
-                meteoSettings->setAutomaticTavg(parameters->value("compute_tavg").toBool());
+                meteoSettings->setAutomaticTavg(parametersSettings->value("compute_tavg").toBool());
             }
-            if (parameters->contains("compute_et0hs") && !parameters->value("compute_et0hs").toString().isEmpty())
+            if (parametersSettings->contains("compute_et0hs") && !parametersSettings->value("compute_et0hs").toString().isEmpty())
             {
-                meteoSettings->setAutomaticET0HS(parameters->value("compute_et0hs").toBool());
+                meteoSettings->setAutomaticET0HS(parametersSettings->value("compute_et0hs").toBool());
             }
 
-            parameters->endGroup();
+            parametersSettings->endGroup();
         }
 
         if (group == "climate")
         {
-            parameters->beginGroup(group);
+            parametersSettings->beginGroup(group);
 
-            if (parameters->contains("tmin"))
+            if (parametersSettings->contains("tmin"))
             {
-                myList = parameters->value("tmin").toStringList();
+                myList = parametersSettings->value("tmin").toStringList();
                 if (myList.size() < 12)
                 {
                     errorString = "Incomplete climate monthly tmin values";
@@ -428,9 +428,9 @@ bool Project::loadParameters(QString parametersFileName)
                 climateParameters.tmin = StringListToFloat(myList);
             }
 
-            if (parameters->contains("tmax"))
+            if (parametersSettings->contains("tmax"))
             {
-                myList = parameters->value("tmax").toStringList();
+                myList = parametersSettings->value("tmax").toStringList();
                 if (myList.size() < 12)
                 {
                     errorString = "Incomplete climate monthly tmax values";
@@ -440,9 +440,9 @@ bool Project::loadParameters(QString parametersFileName)
                 climateParameters.tmax = StringListToFloat(myList);
             }
 
-            if (parameters->contains("tmin_lapserate"))
+            if (parametersSettings->contains("tmin_lapserate"))
             {
-                myList = parameters->value("tmin_lapserate").toStringList();
+                myList = parametersSettings->value("tmin_lapserate").toStringList();
                 if (myList.size() < 12)
                 {
                     errorString = "Incomplete climate monthly tmin lapse rate values";
@@ -452,9 +452,9 @@ bool Project::loadParameters(QString parametersFileName)
                 climateParameters.tminLapseRate = StringListToFloat(myList);
             }
 
-            if (parameters->contains("tmax_lapserate"))
+            if (parametersSettings->contains("tmax_lapserate"))
             {
-                myList = parameters->value("tmax_lapserate").toStringList();
+                myList = parametersSettings->value("tmax_lapserate").toStringList();
                 if (myList.size() < 12)
                 {
                     errorString = "Incomplete climate monthly tmax lapse rate values";
@@ -464,9 +464,9 @@ bool Project::loadParameters(QString parametersFileName)
                 climateParameters.tmaxLapseRate = StringListToFloat(myList);
             }
 
-            if (parameters->contains("tdmin"))
+            if (parametersSettings->contains("tdmin"))
             {
-                myList = parameters->value("tdmin").toStringList();
+                myList = parametersSettings->value("tdmin").toStringList();
                 if (myList.size() < 12)
                 {
                     errorString = "Incomplete climate monthly tdmin values";
@@ -476,9 +476,9 @@ bool Project::loadParameters(QString parametersFileName)
                 climateParameters.tdmin = StringListToFloat(myList);
             }
 
-            if (parameters->contains("tdmax"))
+            if (parametersSettings->contains("tdmax"))
             {
-                myList = parameters->value("tdmax").toStringList();
+                myList = parametersSettings->value("tdmax").toStringList();
                 if (myList.size() < 12)
                 {
                     errorString = "Incomplete climate monthly tdmax values";
@@ -488,9 +488,9 @@ bool Project::loadParameters(QString parametersFileName)
                 climateParameters.tdmax = StringListToFloat(myList);
             }
 
-            if (parameters->contains("tdmin_lapserate"))
+            if (parametersSettings->contains("tdmin_lapserate"))
             {
-                myList = parameters->value("tdmin_lapserate").toStringList();
+                myList = parametersSettings->value("tdmin_lapserate").toStringList();
                 if (myList.size() < 12)
                 {
                     errorString = "Incomplete climate monthly tdmin lapse rate values";
@@ -500,9 +500,9 @@ bool Project::loadParameters(QString parametersFileName)
                 climateParameters.tdMinLapseRate = StringListToFloat(myList);
             }
 
-            if (parameters->contains("tdmax_lapserate"))
+            if (parametersSettings->contains("tdmax_lapserate"))
             {
-                myList = parameters->value("tdmax_lapserate").toStringList();
+                myList = parametersSettings->value("tdmax_lapserate").toStringList();
                 if (myList.size() < 12)
                 {
                     errorString = "Incomplete climate monthly tdmax lapse rate values";
@@ -512,16 +512,16 @@ bool Project::loadParameters(QString parametersFileName)
                 climateParameters.tdMaxLapseRate = StringListToFloat(myList);
             }
 
-            parameters->endGroup();
+            parametersSettings->endGroup();
         }
 
         if (group == "radiation")
         {
-            parameters->beginGroup(group);
+            parametersSettings->beginGroup(group);
 
-            if (parameters->contains("algorithm"))
+            if (parametersSettings->contains("algorithm"))
             {
-                std::string algorithm = parameters->value("algorithm").toString().toStdString();
+                std::string algorithm = parametersSettings->value("algorithm").toString().toStdString();
                 if (radAlgorithmToString.find(algorithm) == radAlgorithmToString.end())
                 {
                     errorString = "Unknown radiation algorithm: " + QString::fromStdString(algorithm);
@@ -531,9 +531,9 @@ bool Project::loadParameters(QString parametersFileName)
                     radSettings.setAlgorithm(radAlgorithmToString.at(algorithm));
             }
 
-            if (parameters->contains("real_sky_algorithm"))
+            if (parametersSettings->contains("real_sky_algorithm"))
             {
-                std::string realSkyAlgorithm = parameters->value("real_sky_algorithm").toString().toStdString();
+                std::string realSkyAlgorithm = parametersSettings->value("real_sky_algorithm").toString().toStdString();
                 if (realSkyAlgorithmToString.find(realSkyAlgorithm) == realSkyAlgorithmToString.end())
                 {
                     errorString = "Unknown radiation real sky algorithm: " + QString::fromStdString(realSkyAlgorithm);
@@ -543,9 +543,9 @@ bool Project::loadParameters(QString parametersFileName)
                     radSettings.setRealSkyAlgorithm(realSkyAlgorithmToString.at(realSkyAlgorithm));
             }
 
-            if (parameters->contains("linke_mode"))
+            if (parametersSettings->contains("linke_mode"))
             {
-                std::string linkeMode = parameters->value("linke_mode").toString().toStdString();
+                std::string linkeMode = parametersSettings->value("linke_mode").toString().toStdString();
                 if (paramModeToString.find(linkeMode) == paramModeToString.end())
                 {
                     errorString = "Unknown Linke mode: " + QString::fromStdString(linkeMode);
@@ -555,9 +555,9 @@ bool Project::loadParameters(QString parametersFileName)
                     radSettings.setLinkeMode(paramModeToString.at(linkeMode));
             }
 
-            if (parameters->contains("albedo_mode"))
+            if (parametersSettings->contains("albedo_mode"))
             {
-                std::string albedoMode = parameters->value("albedo_mode").toString().toStdString();
+                std::string albedoMode = parametersSettings->value("albedo_mode").toString().toStdString();
                 if (paramModeToString.find(albedoMode) == paramModeToString.end())
                 {
                     errorString = "Unknown albedo mode: " + QString::fromStdString(albedoMode);
@@ -567,9 +567,9 @@ bool Project::loadParameters(QString parametersFileName)
                     radSettings.setAlbedoMode(paramModeToString.at(albedoMode));
             }
 
-            if (parameters->contains("tilt_mode"))
+            if (parametersSettings->contains("tilt_mode"))
             {
-                std::string tiltMode = parameters->value("tilt_mode").toString().toStdString();
+                std::string tiltMode = parametersSettings->value("tilt_mode").toString().toStdString();
                 if (tiltModeToString.find(tiltMode) == tiltModeToString.end())
                 {
                     errorString = "Unknown albedo mode: " + QString::fromStdString(tiltMode);
@@ -579,36 +579,36 @@ bool Project::loadParameters(QString parametersFileName)
                     radSettings.setTiltMode(tiltModeToString.at(tiltMode));
             }
 
-            if (parameters->contains("real_sky"))
-                radSettings.setRealSky(parameters->value("real_sky").toBool());
+            if (parametersSettings->contains("real_sky"))
+                radSettings.setRealSky(parametersSettings->value("real_sky").toBool());
 
-            if (parameters->contains("shadowing"))
-                radSettings.setShadowing(parameters->value("shadowing").toBool());
+            if (parametersSettings->contains("shadowing"))
+                radSettings.setShadowing(parametersSettings->value("shadowing").toBool());
 
-            if (parameters->contains("linke"))
-                radSettings.setLinke(parameters->value("linke").toFloat());
+            if (parametersSettings->contains("linke"))
+                radSettings.setLinke(parametersSettings->value("linke").toFloat());
 
-            if (parameters->contains("albedo"))
-                radSettings.setAlbedo(parameters->value("albedo").toFloat());
+            if (parametersSettings->contains("albedo"))
+                radSettings.setAlbedo(parametersSettings->value("albedo").toFloat());
 
-            if (parameters->contains("tilt"))
-                radSettings.setTilt(parameters->value("tilt").toFloat());
+            if (parametersSettings->contains("tilt"))
+                radSettings.setTilt(parametersSettings->value("tilt").toFloat());
 
-            if (parameters->contains("aspect"))
-                radSettings.setAspect(parameters->value("aspect").toFloat());
+            if (parametersSettings->contains("aspect"))
+                radSettings.setAspect(parametersSettings->value("aspect").toFloat());
 
-            if (parameters->contains("clear_sky"))
-                radSettings.setClearSky(parameters->value("clear_sky").toFloat());
+            if (parametersSettings->contains("clear_sky"))
+                radSettings.setClearSky(parametersSettings->value("clear_sky").toFloat());
 
-            if (parameters->contains("linke_map"))
-                radSettings.setLinkeMapName(parameters->value("linke_map").toString().toStdString());
+            if (parametersSettings->contains("linke_map"))
+                radSettings.setLinkeMapName(parametersSettings->value("linke_map").toString().toStdString());
 
-            if (parameters->contains("albedo_map"))
-                radSettings.setAlbedoMapName(parameters->value("albedo_map").toString().toStdString());
+            if (parametersSettings->contains("albedo_map"))
+                radSettings.setAlbedoMapName(parametersSettings->value("albedo_map").toString().toStdString());
 
-            if (parameters->contains("linke_monthly"))
+            if (parametersSettings->contains("linke_monthly"))
             {
-                QList<QString> myLinkeStr = parameters->value("linke_monthly").toStringList();
+                QList<QString> myLinkeStr = parametersSettings->value("linke_monthly").toStringList();
                 if (myLinkeStr.size() < 12)
                 {
                     errorString = "Incomplete monthly Linke values";
@@ -618,9 +618,9 @@ bool Project::loadParameters(QString parametersFileName)
                 radSettings.setLinkeMonthly(StringListToFloat(myLinkeStr));
             }
 
-            if (parameters->contains("albedo_monthly"))
+            if (parametersSettings->contains("albedo_monthly"))
             {
-                QList<QString> myAlbedoStr = parameters->value("albedo_monthly").toStringList();
+                QList<QString> myAlbedoStr = parametersSettings->value("albedo_monthly").toStringList();
                 if (myAlbedoStr.size() < 12)
                 {
                     errorString = "Incomplete monthly albedo values";
@@ -630,17 +630,17 @@ bool Project::loadParameters(QString parametersFileName)
                 radSettings.setAlbedoMonthly(StringListToFloat(myAlbedoStr));
             }
 
-            parameters->endGroup();
+            parametersSettings->endGroup();
         }
 
         //interpolation
         if (group == "interpolation")
         {
-            parameters->beginGroup(group);
+            parametersSettings->beginGroup(group);
 
-            if (parameters->contains("algorithm"))
+            if (parametersSettings->contains("algorithm"))
             {
-                std::string algorithm = parameters->value("algorithm").toString().toStdString();
+                std::string algorithm = parametersSettings->value("algorithm").toString().toStdString();
                 if (interpolationMethodNames.find(algorithm) == interpolationMethodNames.end())
                 {
                     errorString = "Unknown interpolation method";
@@ -650,9 +650,9 @@ bool Project::loadParameters(QString parametersFileName)
                     interpolationSettings.setInterpolationMethod(interpolationMethodNames.at(algorithm));
             }
 
-            if (parameters->contains("aggregationMethod"))
+            if (parametersSettings->contains("aggregationMethod"))
             {
-                std::string aggrMethod = parameters->value("aggregationMethod").toString().toStdString();
+                std::string aggrMethod = parametersSettings->value("aggregationMethod").toString().toStdString();
                 if (aggregationMethodToString.find(aggrMethod) == aggregationMethodToString.end())
                 {
                     errorString = "Unknown aggregation method";
@@ -662,83 +662,83 @@ bool Project::loadParameters(QString parametersFileName)
                     interpolationSettings.setMeteoGridAggrMethod(aggregationMethodToString.at(aggrMethod));
             }
 
-            if (parameters->contains("thermalInversion"))
+            if (parametersSettings->contains("thermalInversion"))
             {
-                interpolationSettings.setUseThermalInversion(parameters->value("thermalInversion").toBool());
-                qualityInterpolationSettings.setUseThermalInversion(parameters->value("thermalInversion").toBool());
+                interpolationSettings.setUseThermalInversion(parametersSettings->value("thermalInversion").toBool());
+                qualityInterpolationSettings.setUseThermalInversion(parametersSettings->value("thermalInversion").toBool());
             }
 
-            if (parameters->contains("topographicDistance"))
-                interpolationSettings.setUseTD(parameters->value("topographicDistance").toBool());
+            if (parametersSettings->contains("topographicDistance"))
+                interpolationSettings.setUseTD(parametersSettings->value("topographicDistance").toBool());
 
-            if (parameters->contains("localDetrending"))
-                interpolationSettings.setUseLocalDetrending(parameters->value("localDetrending").toBool());
+            if (parametersSettings->contains("localDetrending"))
+                interpolationSettings.setUseLocalDetrending(parametersSettings->value("localDetrending").toBool());
 
-            if (parameters->contains("meteogrid_upscalefromdem"))
-                interpolationSettings.setMeteoGridUpscaleFromDem(parameters->value("meteogrid_upscalefromdem").toBool());
+            if (parametersSettings->contains("meteogrid_upscalefromdem"))
+                interpolationSettings.setMeteoGridUpscaleFromDem(parametersSettings->value("meteogrid_upscalefromdem").toBool());
 
-            if (parameters->contains("multipleDetrending"))
-                interpolationSettings.setUseMultipleDetrending(parameters->value("multipleDetrending").toBool());
+            if (parametersSettings->contains("multipleDetrending"))
+                interpolationSettings.setUseMultipleDetrending(parametersSettings->value("multipleDetrending").toBool());
 
-            if (parameters->contains("lapseRateCode"))
+            if (parametersSettings->contains("lapseRateCode"))
             {
-                interpolationSettings.setUseLapseRateCode(parameters->value("lapseRateCode").toBool());
-                qualityInterpolationSettings.setUseLapseRateCode(parameters->value("lapseRateCode").toBool());
+                interpolationSettings.setUseLapseRateCode(parametersSettings->value("lapseRateCode").toBool());
+                qualityInterpolationSettings.setUseLapseRateCode(parametersSettings->value("lapseRateCode").toBool());
             }
 
-            if (parameters->contains("optimalDetrending"))
-                interpolationSettings.setUseBestDetrending(parameters->value("optimalDetrending").toBool());
+            if (parametersSettings->contains("optimalDetrending"))
+                interpolationSettings.setUseBestDetrending(parametersSettings->value("optimalDetrending").toBool());
 
-            if (parameters->contains("minRegressionR2"))
+            if (parametersSettings->contains("minRegressionR2"))
             {
-                interpolationSettings.setMinRegressionR2(parameters->value("minRegressionR2").toFloat());
-                qualityInterpolationSettings.setMinRegressionR2(parameters->value("minRegressionR2").toFloat());
+                interpolationSettings.setMinRegressionR2(parametersSettings->value("minRegressionR2").toFloat());
+                qualityInterpolationSettings.setMinRegressionR2(parametersSettings->value("minRegressionR2").toFloat());
             }
 
-            if (parameters->contains("min_points_local_detrending"))
-                interpolationSettings.setMinPointsLocalDetrending(parameters->value("min_points_local_detrending").toInt());
+            if (parametersSettings->contains("min_points_local_detrending"))
+                interpolationSettings.setMinPointsLocalDetrending(parametersSettings->value("min_points_local_detrending").toInt());
 
-            if (parameters->contains("topographicDistanceMaxMultiplier"))
+            if (parametersSettings->contains("topographicDistanceMaxMultiplier"))
             {
-                interpolationSettings.setTopoDist_maxKh(parameters->value("topographicDistanceMaxMultiplier").toInt());
-                qualityInterpolationSettings.setTopoDist_maxKh(parameters->value("topographicDistanceMaxMultiplier").toInt());
+                interpolationSettings.setTopoDist_maxKh(parametersSettings->value("topographicDistanceMaxMultiplier").toInt());
+                qualityInterpolationSettings.setTopoDist_maxKh(parametersSettings->value("topographicDistanceMaxMultiplier").toInt());
             }
 
-            if (parameters->contains("useDewPoint"))
-                interpolationSettings.setUseDewPoint(parameters->value("useDewPoint").toBool());
+            if (parametersSettings->contains("useDewPoint"))
+                interpolationSettings.setUseDewPoint(parametersSettings->value("useDewPoint").toBool());
 
-            if (parameters->contains("useInterpolationTemperatureForRH"))
-                interpolationSettings.setUseInterpolatedTForRH(parameters->value("useInterpolationTemperatureForRH").toBool());
+            if (parametersSettings->contains("useInterpolationTemperatureForRH"))
+                interpolationSettings.setUseInterpolatedTForRH(parametersSettings->value("useInterpolationTemperatureForRH").toBool());
 
-            parameters->endGroup();
+            parametersSettings->endGroup();
 
         }
 
         if (group == "quality")
         {
-            parameters->beginGroup(group);
-            if (parameters->contains("reference_height") && !parameters->value("reference_height").toString().isEmpty())
+            parametersSettings->beginGroup(group);
+            if (parametersSettings->contains("reference_height") && !parametersSettings->value("reference_height").toString().isEmpty())
             {
-                quality->setReferenceHeight(parameters->value("reference_height").toFloat());
+                quality->setReferenceHeight(parametersSettings->value("reference_height").toFloat());
             }
-            if (parameters->contains("delta_temperature_suspect") && !parameters->value("delta_temperature_suspect").toString().isEmpty())
+            if (parametersSettings->contains("delta_temperature_suspect") && !parametersSettings->value("delta_temperature_suspect").toString().isEmpty())
             {
-                quality->setDeltaTSuspect(parameters->value("delta_temperature_suspect").toFloat());
+                quality->setDeltaTSuspect(parametersSettings->value("delta_temperature_suspect").toFloat());
             }
-            if (parameters->contains("delta_temperature_wrong") && !parameters->value("delta_temperature_wrong").toString().isEmpty())
+            if (parametersSettings->contains("delta_temperature_wrong") && !parametersSettings->value("delta_temperature_wrong").toString().isEmpty())
             {
-                quality->setDeltaTWrong(parameters->value("delta_temperature_wrong").toFloat());
+                quality->setDeltaTWrong(parametersSettings->value("delta_temperature_wrong").toFloat());
             }
-            if (parameters->contains("relhum_tolerance") && !parameters->value("relhum_tolerance").toString().isEmpty())
+            if (parametersSettings->contains("relhum_tolerance") && !parametersSettings->value("relhum_tolerance").toString().isEmpty())
             {
-                quality->setRelHumTolerance(parameters->value("relhum_tolerance").toFloat());
+                quality->setRelHumTolerance(parametersSettings->value("relhum_tolerance").toFloat());
             }
-            if (parameters->contains("water_table_maximum_depth") && !parameters->value("water_table_maximum_depth").toString().isEmpty())
+            if (parametersSettings->contains("water_table_maximum_depth") && !parametersSettings->value("water_table_maximum_depth").toString().isEmpty())
             {
-                quality->setWaterTableMaximumDepth(parameters->value("water_table_maximum_depth").toFloat());
+                quality->setWaterTableMaximumDepth(parametersSettings->value("water_table_maximum_depth").toFloat());
             }
 
-            parameters->endGroup();
+            parametersSettings->endGroup();
         }
 
         // proxy variables (for interpolation)
@@ -752,23 +752,23 @@ bool Project::loadParameters(QString parametersFileName)
             myProxy->setName(name_.toStdString());
             myProxy->setFittingFunctionName(noFunction);
 
-            parameters->beginGroup(group);
+            parametersSettings->beginGroup(group);
 
-            myProxy->setProxyTable(parameters->value("table").toString().toStdString());
-            myProxy->setProxyField(parameters->value("field").toString().toStdString());
-            myProxy->setGridName(getCompleteFileName(parameters->value("raster").toString(), PATH_GEO).toStdString());
-            myProxy->setForQualityControl(parameters->value("use_for_spatial_quality_control").toBool());
+            myProxy->setProxyTable(parametersSettings->value("table").toString().toStdString());
+            myProxy->setProxyField(parametersSettings->value("field").toString().toStdString());
+            myProxy->setGridName(getCompleteFileName(parametersSettings->value("raster").toString(), PATH_GEO).toStdString());
+            myProxy->setForQualityControl(parametersSettings->value("use_for_spatial_quality_control").toBool());
 
-            if (parameters->contains("stddev_threshold"))
-                myProxy->setStdDevThreshold(parameters->value("stddev_threshold").toFloat());
+            if (parametersSettings->contains("stddev_threshold"))
+                myProxy->setStdDevThreshold(parametersSettings->value("stddev_threshold").toFloat());
 
-            if (! parameters->contains("active"))
+            if (! parametersSettings->contains("active"))
             {
                 errorString = "active not specified for proxy " + QString::fromStdString(myProxy->getName());
                 return false;
             }
 
-            if (! parameters->contains("order"))
+            if (! parametersSettings->contains("order"))
             {
                 errorString = "order not specified for proxy " + QString::fromStdString(myProxy->getName());
                 return false;
@@ -777,13 +777,13 @@ bool Project::loadParameters(QString parametersFileName)
             if (checkProxy(*myProxy, &errorString))
             {
                 proxyListTmp.push_back(*myProxy);
-                proxyActiveTmp.push_back(parameters->value("active").toBool());
-                proxyOrder.push_back(parameters->value("order").toInt());
+                proxyActiveTmp.push_back(parametersSettings->value("active").toBool());
+                proxyOrder.push_back(parametersSettings->value("order").toInt());
             }
             else
                 logError();
 
-            parameters->endGroup();
+            parametersSettings->endGroup();
         }
 
         //proxy grid annual series
@@ -791,15 +791,15 @@ bool Project::loadParameters(QString parametersFileName)
         {
             QString proxyName = group.right(group.length()-10);
 
-            parameters->beginGroup(group);
-            int nrGrids = parameters->beginReadArray("grids");
+            parametersSettings->beginGroup(group);
+            int nrGrids = parametersSettings->beginReadArray("grids");
             for (int i = 0; i < nrGrids; ++i) {
-                parameters->setArrayIndex(i);
-                proxyGridSeriesNames.push_back(getCompleteFileName(parameters->value("name").toString(), PATH_GEO));
-                proxyGridSeriesYears.push_back(parameters->value("year").toUInt());
+                parametersSettings->setArrayIndex(i);
+                proxyGridSeriesNames.push_back(getCompleteFileName(parametersSettings->value("name").toString(), PATH_GEO));
+                proxyGridSeriesYears.push_back(parametersSettings->value("year").toUInt());
             }
-            parameters->endArray();
-            parameters->endGroup();
+            parametersSettings->endArray();
+            parametersSettings->endGroup();
 
             addProxyGridSeries(proxyName, proxyGridSeriesNames, proxyGridSeriesYears);
         }
@@ -1888,7 +1888,7 @@ bool Project::loadProxyGrids()
             }
             else
             {
-                errorString = "Error loading raster proxy:\n" + fileName + "\nHow to fix it: check the proxy section in the parameters.ini";
+                errorString = "Error loading raster proxy:\n" + fileName + "\nHow to fix it: check the proxy section in the parametersSettings.ini";
                 return false;
             }
 
@@ -2321,7 +2321,7 @@ bool Project::interpolationDem(meteoVariable myVar, const Crit3DTime& myTime, gi
         return false;
     }
 
-    // detrending, checking precipitation and optimizing td parameters
+    // detrending, checking precipitation and optimizing td parametersSettings
     if (! preInterpolation(interpolationPoints, &interpolationSettings, meteoSettings,
                          &climateParameters, meteoPoints, nrMeteoPoints, myVar, myTime, errorStdStr))
     {
@@ -2485,7 +2485,7 @@ bool Project::interpolateDemRadiation(const Crit3DTime& myTime, gis::Crit3DRaste
     // at least a meteoPoint with transmissivity data
     if (! computeTransmissivity(&radSettings, meteoPoints, nrMeteoPoints, intervalWidth, myTime, DEM))
     {
-        // TODO: add flag to parameters. Could be NOT wanted
+        // TODO: add flag to parametersSettings. Could be NOT wanted
         if (! computeTransmissivityFromTRange(meteoPoints, nrMeteoPoints, myTime))
         {
             logError("Error in function interpolateDemRadiation: cannot compute transmissivity.");
@@ -3001,113 +3001,113 @@ void Project::saveProjectSettings()
 
 void Project::saveRadiationParameters()
 {
-    parameters->beginGroup("radiation");
-        parameters->setValue("algorithm", QString::fromStdString(getKeyStringRadAlgorithm(radSettings.getAlgorithm())));
-        parameters->setValue("real_sky_algorithm", QString::fromStdString(getKeyStringRealSky(radSettings.getRealSkyAlgorithm())));
-        parameters->setValue("linke_mode", QString::fromStdString(getKeyStringParamMode(radSettings.getLinkeMode())));
-        parameters->setValue("albedo_mode", QString::fromStdString(getKeyStringParamMode(radSettings.getAlbedoMode())));
-        parameters->setValue("tilt_mode", QString::fromStdString(getKeyStringTiltMode(radSettings.getTiltMode())));
-        parameters->setValue("real_sky", radSettings.getRealSky());
-        parameters->setValue("shadowing", radSettings.getShadowing());
-        parameters->setValue("linke", QString::number(double(radSettings.getLinke())));
-        parameters->setValue("albedo", QString::number(double(radSettings.getAlbedo())));
-        parameters->setValue("tilt", QString::number(double(radSettings.getTilt())));
-        parameters->setValue("aspect", QString::number(double(radSettings.getAspect())));
-        parameters->setValue("clear_sky", QString::number(double(radSettings.getClearSky())));
-        parameters->setValue("linke_map", getRelativePath(QString::fromStdString(radSettings.getLinkeMapName())));
-        parameters->setValue("albedo_map", getRelativePath(QString::fromStdString(radSettings.getAlbedoMapName())));
-        parameters->setValue("linke_monthly", FloatVectorToStringList(radSettings.getLinkeMonthly()));
-    parameters->endGroup();
+    parametersSettings->beginGroup("radiation");
+        parametersSettings->setValue("algorithm", QString::fromStdString(getKeyStringRadAlgorithm(radSettings.getAlgorithm())));
+        parametersSettings->setValue("real_sky_algorithm", QString::fromStdString(getKeyStringRealSky(radSettings.getRealSkyAlgorithm())));
+        parametersSettings->setValue("linke_mode", QString::fromStdString(getKeyStringParamMode(radSettings.getLinkeMode())));
+        parametersSettings->setValue("albedo_mode", QString::fromStdString(getKeyStringParamMode(radSettings.getAlbedoMode())));
+        parametersSettings->setValue("tilt_mode", QString::fromStdString(getKeyStringTiltMode(radSettings.getTiltMode())));
+        parametersSettings->setValue("real_sky", radSettings.getRealSky());
+        parametersSettings->setValue("shadowing", radSettings.getShadowing());
+        parametersSettings->setValue("linke", QString::number(double(radSettings.getLinke())));
+        parametersSettings->setValue("albedo", QString::number(double(radSettings.getAlbedo())));
+        parametersSettings->setValue("tilt", QString::number(double(radSettings.getTilt())));
+        parametersSettings->setValue("aspect", QString::number(double(radSettings.getAspect())));
+        parametersSettings->setValue("clear_sky", QString::number(double(radSettings.getClearSky())));
+        parametersSettings->setValue("linke_map", getRelativePath(QString::fromStdString(radSettings.getLinkeMapName())));
+        parametersSettings->setValue("albedo_map", getRelativePath(QString::fromStdString(radSettings.getAlbedoMapName())));
+        parametersSettings->setValue("linke_monthly", FloatVectorToStringList(radSettings.getLinkeMonthly()));
+    parametersSettings->endGroup();
 }
 
 void Project::saveInterpolationParameters()
 {
-    parameters->beginGroup("interpolation");
-        parameters->setValue("aggregationMethod", QString::fromStdString(getKeyStringAggregationMethod(interpolationSettings.getMeteoGridAggrMethod())));
-        parameters->setValue("algorithm", QString::fromStdString(getKeyStringInterpolationMethod(interpolationSettings.getInterpolationMethod())));
-        parameters->setValue("lapseRateCode", interpolationSettings.getUseLapseRateCode());
-        parameters->setValue("meteogrid_upscalefromdem", interpolationSettings.getMeteoGridUpscaleFromDem());
-        parameters->setValue("thermalInversion", interpolationSettings.getUseThermalInversion());
-        parameters->setValue("topographicDistance", interpolationSettings.getUseTD());
-        parameters->setValue("localDetrending", interpolationSettings.getUseLocalDetrending());
-        parameters->setValue("topographicDistanceMaxMultiplier", QString::number(interpolationSettings.getTopoDist_maxKh()));
-        parameters->setValue("optimalDetrending", interpolationSettings.getUseBestDetrending());
-        parameters->setValue("multipleDetrending", interpolationSettings.getUseMultipleDetrending());
-        parameters->setValue("useDewPoint", interpolationSettings.getUseDewPoint());
-        parameters->setValue("useInterpolationTemperatureForRH", interpolationSettings.getUseInterpolatedTForRH());
-        parameters->setValue("thermalInversion", interpolationSettings.getUseThermalInversion());
-        parameters->setValue("minRegressionR2", QString::number(double(interpolationSettings.getMinRegressionR2())));
-        parameters->setValue("min_points_local_detrending", QString::number(int(interpolationSettings.getMinPointsLocalDetrending())));
-    parameters->endGroup();
+    parametersSettings->beginGroup("interpolation");
+        parametersSettings->setValue("aggregationMethod", QString::fromStdString(getKeyStringAggregationMethod(interpolationSettings.getMeteoGridAggrMethod())));
+        parametersSettings->setValue("algorithm", QString::fromStdString(getKeyStringInterpolationMethod(interpolationSettings.getInterpolationMethod())));
+        parametersSettings->setValue("lapseRateCode", interpolationSettings.getUseLapseRateCode());
+        parametersSettings->setValue("meteogrid_upscalefromdem", interpolationSettings.getMeteoGridUpscaleFromDem());
+        parametersSettings->setValue("thermalInversion", interpolationSettings.getUseThermalInversion());
+        parametersSettings->setValue("topographicDistance", interpolationSettings.getUseTD());
+        parametersSettings->setValue("localDetrending", interpolationSettings.getUseLocalDetrending());
+        parametersSettings->setValue("topographicDistanceMaxMultiplier", QString::number(interpolationSettings.getTopoDist_maxKh()));
+        parametersSettings->setValue("optimalDetrending", interpolationSettings.getUseBestDetrending());
+        parametersSettings->setValue("multipleDetrending", interpolationSettings.getUseMultipleDetrending());
+        parametersSettings->setValue("useDewPoint", interpolationSettings.getUseDewPoint());
+        parametersSettings->setValue("useInterpolationTemperatureForRH", interpolationSettings.getUseInterpolatedTForRH());
+        parametersSettings->setValue("thermalInversion", interpolationSettings.getUseThermalInversion());
+        parametersSettings->setValue("minRegressionR2", QString::number(double(interpolationSettings.getMinRegressionR2())));
+        parametersSettings->setValue("min_points_local_detrending", QString::number(int(interpolationSettings.getMinPointsLocalDetrending())));
+    parametersSettings->endGroup();
 
 
     saveProxies();
 
-    parameters->sync();
+    parametersSettings->sync();
 }
 
 void Project::saveProxies()
 {
-    Q_FOREACH (QString group, parameters->childGroups())
+    Q_FOREACH (QString group, parametersSettings->childGroups())
     {
         if (group.left(6) == "proxy_")
-            parameters->remove(group);
+            parametersSettings->remove(group);
     }
 
     Crit3DProxy* myProxy;
     for (unsigned int i=0; i < interpolationSettings.getProxyNr(); i++)
     {
         myProxy = interpolationSettings.getProxy(i);
-        parameters->beginGroup("proxy_" + QString::fromStdString(myProxy->getName()));
-            parameters->setValue("order", i+1);
-            parameters->setValue("active", interpolationSettings.getSelectedCombination().isProxyActive(i));
-            parameters->setValue("use_for_spatial_quality_control", myProxy->getForQualityControl());
-            if (myProxy->getProxyTable() != "") parameters->setValue("table", QString::fromStdString(myProxy->getProxyTable()));
-            if (myProxy->getProxyField() != "") parameters->setValue("field", QString::fromStdString(myProxy->getProxyField()));
-            if (myProxy->getGridName() != "") parameters->setValue("raster", getRelativePath(QString::fromStdString(myProxy->getGridName())));
-            if (myProxy->getStdDevThreshold() != NODATA) parameters->setValue("stddev_threshold", QString::number(myProxy->getStdDevThreshold()));
-            if (myProxy->getFittingParametersRange().size() > 0) parameters->setValue("fitting_parameters", DoubleVectorToStringList(myProxy->getFittingParametersRange()));
-            if (getProxyPragaName(myProxy->getName()) == proxyHeight && myProxy->getFittingFunctionName() != noFunction) parameters->setValue("fitting_function", QString::fromStdString(getKeyStringElevationFunction(myProxy->getFittingFunctionName())));
-        parameters->endGroup();
+        parametersSettings->beginGroup("proxy_" + QString::fromStdString(myProxy->getName()));
+            parametersSettings->setValue("order", i+1);
+            parametersSettings->setValue("active", interpolationSettings.getSelectedCombination().isProxyActive(i));
+            parametersSettings->setValue("use_for_spatial_quality_control", myProxy->getForQualityControl());
+            if (myProxy->getProxyTable() != "") parametersSettings->setValue("table", QString::fromStdString(myProxy->getProxyTable()));
+            if (myProxy->getProxyField() != "") parametersSettings->setValue("field", QString::fromStdString(myProxy->getProxyField()));
+            if (myProxy->getGridName() != "") parametersSettings->setValue("raster", getRelativePath(QString::fromStdString(myProxy->getGridName())));
+            if (myProxy->getStdDevThreshold() != NODATA) parametersSettings->setValue("stddev_threshold", QString::number(myProxy->getStdDevThreshold()));
+            if (myProxy->getFittingParametersRange().size() > 0) parametersSettings->setValue("fitting_parameters", DoubleVectorToStringList(myProxy->getFittingParametersRange()));
+            if (getProxyPragaName(myProxy->getName()) == proxyHeight && myProxy->getFittingFunctionName() != noFunction) parametersSettings->setValue("fitting_function", QString::fromStdString(getKeyStringElevationFunction(myProxy->getFittingFunctionName())));
+        parametersSettings->endGroup();
     }
 }
 
 void Project::saveGenericParameters()
 {
-    parameters->beginGroup("meteo");
-        parameters->setValue("min_percentage", QString::number(meteoSettings->getMinimumPercentage()));
-        parameters->setValue("prec_threshold", QString::number(meteoSettings->getRainfallThreshold()));
-        parameters->setValue("samani_coefficient", QString::number(meteoSettings->getTransSamaniCoefficient()));
-        parameters->setValue("thom_threshold", QString::number(meteoSettings->getThomThreshold()));
-        parameters->setValue("temperature_threshold", QString::number(meteoSettings->getTemperatureThreshold()));
-        parameters->setValue("wind_intensity_default", QString::number(meteoSettings->getWindIntensityDefault()));
-        parameters->setValue("hourly_intervals", QString::number(meteoSettings->getHourlyIntervals()));
-        parameters->setValue("compute_tavg", meteoSettings->getAutomaticTavg());
-        parameters->setValue("compute_et0hs", meteoSettings->getAutomaticET0HS());
-    parameters->endGroup();
+    parametersSettings->beginGroup("meteo");
+        parametersSettings->setValue("min_percentage", QString::number(meteoSettings->getMinimumPercentage()));
+        parametersSettings->setValue("prec_threshold", QString::number(meteoSettings->getRainfallThreshold()));
+        parametersSettings->setValue("samani_coefficient", QString::number(meteoSettings->getTransSamaniCoefficient()));
+        parametersSettings->setValue("thom_threshold", QString::number(meteoSettings->getThomThreshold()));
+        parametersSettings->setValue("temperature_threshold", QString::number(meteoSettings->getTemperatureThreshold()));
+        parametersSettings->setValue("wind_intensity_default", QString::number(meteoSettings->getWindIntensityDefault()));
+        parametersSettings->setValue("hourly_intervals", QString::number(meteoSettings->getHourlyIntervals()));
+        parametersSettings->setValue("compute_tavg", meteoSettings->getAutomaticTavg());
+        parametersSettings->setValue("compute_et0hs", meteoSettings->getAutomaticET0HS());
+    parametersSettings->endGroup();
 
-    parameters->beginGroup("quality");
-        parameters->setValue("reference_height", QString::number(quality->getReferenceHeight()));
-        parameters->setValue("delta_temperature_suspect", QString::number(quality->getDeltaTSuspect()));
-        parameters->setValue("delta_temperature_wrong", QString::number(quality->getDeltaTWrong()));
-        parameters->setValue("relhum_tolerance", QString::number(quality->getRelHumTolerance()));
-        parameters->setValue("water_table_maximum_depth", QString::number(quality->getWaterTableMaximumDepth()));
-    parameters->endGroup();
+    parametersSettings->beginGroup("quality");
+        parametersSettings->setValue("reference_height", QString::number(quality->getReferenceHeight()));
+        parametersSettings->setValue("delta_temperature_suspect", QString::number(quality->getDeltaTSuspect()));
+        parametersSettings->setValue("delta_temperature_wrong", QString::number(quality->getDeltaTWrong()));
+        parametersSettings->setValue("relhum_tolerance", QString::number(quality->getRelHumTolerance()));
+        parametersSettings->setValue("water_table_maximum_depth", QString::number(quality->getWaterTableMaximumDepth()));
+    parametersSettings->endGroup();
 
-    parameters->beginGroup("climate");
+    parametersSettings->beginGroup("climate");
 
-    parameters->setValue("tmin", FloatVectorToStringList(climateParameters.tmin));
-    parameters->setValue("tmax", FloatVectorToStringList(climateParameters.tmax));
-    parameters->setValue("tdmin", FloatVectorToStringList(climateParameters.tdmin));
-    parameters->setValue("tdmax", FloatVectorToStringList(climateParameters.tdmax));
-    parameters->setValue("tmin_lapserate", FloatVectorToStringList(climateParameters.tminLapseRate));
-    parameters->setValue("tmax_lapserate", FloatVectorToStringList(climateParameters.tmaxLapseRate));
-    parameters->setValue("tdmin_lapserate", FloatVectorToStringList(climateParameters.tdMinLapseRate));
-    parameters->setValue("tdmax_lapserate", FloatVectorToStringList(climateParameters.tdMaxLapseRate));
+    parametersSettings->setValue("tmin", FloatVectorToStringList(climateParameters.tmin));
+    parametersSettings->setValue("tmax", FloatVectorToStringList(climateParameters.tmax));
+    parametersSettings->setValue("tdmin", FloatVectorToStringList(climateParameters.tdmin));
+    parametersSettings->setValue("tdmax", FloatVectorToStringList(climateParameters.tdmax));
+    parametersSettings->setValue("tmin_lapserate", FloatVectorToStringList(climateParameters.tminLapseRate));
+    parametersSettings->setValue("tmax_lapserate", FloatVectorToStringList(climateParameters.tmaxLapseRate));
+    parametersSettings->setValue("tdmin_lapserate", FloatVectorToStringList(climateParameters.tdMinLapseRate));
+    parametersSettings->setValue("tdmax_lapserate", FloatVectorToStringList(climateParameters.tdMaxLapseRate));
 
-    parameters->endGroup();
+    parametersSettings->endGroup();
 
-    parameters->sync();
+    parametersSettings->sync();
 }
 
 
@@ -3145,10 +3145,10 @@ void Project::createProject(QString path_, QString name_, QString description)
     delete projectSettings;
     projectSettings = new QSettings(projectPath + name_ + ".ini", QSettings::IniFormat);
 
-    // parameters
-    delete parameters;
-    parametersFileName = projectPath + PATH_SETTINGS + "parameters.ini";
-    parameters = new QSettings(parametersFileName, QSettings::IniFormat);
+    // parametersSettings
+    delete parametersSettings;
+    parametersFileName = projectPath + PATH_SETTINGS + "parametersSettings.ini";
+    parametersSettings = new QSettings(parametersFileName, QSettings::IniFormat);
 
     saveProject();
 }
@@ -3174,7 +3174,7 @@ bool Project::createDefaultProject(QString fileName)
     defaultSettings->endGroup();
 
     defaultSettings->beginGroup("settings");
-        defaultSettings->setValue("parameters_file", "parameters.ini");
+        defaultSettings->setValue("parameters_file", "parametersSettings.ini");
     defaultSettings->endGroup();
 
     defaultSettings->sync();
@@ -3210,7 +3210,7 @@ bool Project::loadProject()
     if (! loadParameters(parametersFileName))
     {
         errorType = ERROR_SETTINGS;
-        errorString = "Load parameters failed.\n" + errorString;
+        errorString = "Load parametersSettings failed.\n" + errorString;
         return false;
     }
 
@@ -3691,19 +3691,19 @@ void Project::showLocalProxyGraph(gis::Crit3DGeoPoint myPoint, gis::Crit3DRaster
     gis::getUtmFromLatLon(this->gisSettings.utmZone, myPoint, &myUtm);
 
     int row, col;
-    std::vector<std::vector<double>> parameters;
+    std::vector<std::vector<double>> parametersSettings;
     if (myDataRaster->isLoaded && !myDataRaster->singleCell.empty())
     {
         gis::getRowColFromXY(*(myDataRaster->header), myUtm, &row, &col);
-        parameters = myDataRaster->getParametersFromRowCol(row, col);
+        parametersSettings = myDataRaster->getParametersFromRowCol(row, col);
     }
     if (this->meteoGridLoaded && !this->meteoGridDbHandler->meteoGrid()->dataMeteoGrid.singleCell.empty())
     {
         gis::getRowColFromLonLat(meteoGridDbHandler->meteoGrid()->gridStructure().header(), myPoint.longitude, myPoint.latitude, &row, &col);
-        parameters = meteoGridDbHandler->meteoGrid()->dataMeteoGrid.getParametersFromRowCol(row, col);
+        parametersSettings = meteoGridDbHandler->meteoGrid()->dataMeteoGrid.getParametersFromRowCol(row, col);
     }
 
-    localProxyWidget = new Crit3DLocalProxyWidget(myUtm.x, myUtm.y, parameters, this->gisSettings, &interpolationSettings, meteoPoints, nrMeteoPoints, currentVariable, currentFrequency, currentDate, currentHour, quality, &qualityInterpolationSettings, meteoSettings, &climateParameters, checkSpatialQuality);
+    localProxyWidget = new Crit3DLocalProxyWidget(myUtm.x, myUtm.y, parametersSettings, this->gisSettings, &interpolationSettings, meteoPoints, nrMeteoPoints, currentVariable, currentFrequency, currentDate, currentHour, quality, &qualityInterpolationSettings, meteoSettings, &climateParameters, checkSpatialQuality);
     return;
 }
 

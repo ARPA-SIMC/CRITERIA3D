@@ -84,7 +84,7 @@
 
         bool loadCriteria3DProject(QString myFileName);
         bool loadCriteria3DParameters();
-        bool writeCriteria3DParameters();
+        bool writeCriteria3DParameters(bool isSnow, bool isWater, bool isSoilCrack);
 
         double getSoilVar(int soilIndex, int layerIndex, soil::soilVariable myVar);
         double* getSoilVarProfile(int row, int col, soil::soilVariable myVar);

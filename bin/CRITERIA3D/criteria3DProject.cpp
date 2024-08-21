@@ -263,7 +263,7 @@ void Crit3DProject::dailyUpdateCropMaps(const QDate &myDate)
                 if (isCrop(index))
                 {
                     float tmin = dailyTminMap.value[row][col];
-                    float tmax = dailyTminMap.value[row][col];
+                    float tmax = dailyTmaxMap.value[row][col];
                     if (! isEqual(tmin, dailyTminMap.header->flag) && ! isEqual(tmax, dailyTmaxMap.header->flag))
                     {
                         double dailyDD = cropList[index].getDailyDegreeIncrease(tmin, tmax, currentDate.dayOfYear());
@@ -712,77 +712,91 @@ bool Crit3DProject::loadCriteria3DParameters()
     QString fileName = getCompleteFileName(parametersFileName, PATH_SETTINGS);
     if (! QFile(fileName).exists() || ! QFileInfo(fileName).isFile())
     {
-        logError("Missing parameters file: " + fileName);
+        logError("Missing parametersSettings file: " + fileName);
         return false;
     }
-    if (parameters == nullptr)
+    if (parametersSettings == nullptr)
     {
-        logError("parameters is null");
+        logError("parametersSettings is null");
         return false;
     }
-    Q_FOREACH (QString group, parameters->childGroups())
+    Q_FOREACH (QString group, parametersSettings->childGroups())
     {
         if (group == "snow")
         {
-            parameters->beginGroup(group);
-            if (parameters->contains("tempMaxWithSnow") && !parameters->value("tempMaxWithSnow").toString().isEmpty())
+            parametersSettings->beginGroup(group);
+            if (parametersSettings->contains("tempMaxWithSnow") && !parametersSettings->value("tempMaxWithSnow").toString().isEmpty())
             {
-                snowModel.snowParameters.tempMaxWithSnow = parameters->value("tempMaxWithSnow").toDouble();
+                snowModel.snowParameters.tempMaxWithSnow = parametersSettings->value("tempMaxWithSnow").toDouble();
             }
-            if (parameters->contains("tempMinWithRain") && !parameters->value("tempMinWithRain").toString().isEmpty())
+            if (parametersSettings->contains("tempMinWithRain") && !parametersSettings->value("tempMinWithRain").toString().isEmpty())
             {
-                snowModel.snowParameters.tempMinWithRain = parameters->value("tempMinWithRain").toDouble();
+                snowModel.snowParameters.tempMinWithRain = parametersSettings->value("tempMinWithRain").toDouble();
             }
-            if (parameters->contains("snowWaterHoldingCapacity") && !parameters->value("snowWaterHoldingCapacity").toString().isEmpty())
+            if (parametersSettings->contains("snowWaterHoldingCapacity") && !parametersSettings->value("snowWaterHoldingCapacity").toString().isEmpty())
             {
-                snowModel.snowParameters.snowWaterHoldingCapacity = parameters->value("snowWaterHoldingCapacity").toDouble();
+                snowModel.snowParameters.snowWaterHoldingCapacity = parametersSettings->value("snowWaterHoldingCapacity").toDouble();
             }
-            if (parameters->contains("skinThickness") && !parameters->value("skinThickness").toString().isEmpty())
+            if (parametersSettings->contains("skinThickness") && !parametersSettings->value("skinThickness").toString().isEmpty())
             {
-                snowModel.snowParameters.skinThickness = parameters->value("skinThickness").toDouble();
+                snowModel.snowParameters.skinThickness = parametersSettings->value("skinThickness").toDouble();
             }
-            if (parameters->contains("snowVegetationHeight") && !parameters->value("snowVegetationHeight").toString().isEmpty())
+            if (parametersSettings->contains("snowVegetationHeight") && !parametersSettings->value("snowVegetationHeight").toString().isEmpty())
             {
-                snowModel.snowParameters.snowVegetationHeight = parameters->value("snowVegetationHeight").toDouble();
+                snowModel.snowParameters.snowVegetationHeight = parametersSettings->value("snowVegetationHeight").toDouble();
             }
-            if (parameters->contains("soilAlbedo") && !parameters->value("soilAlbedo").toString().isEmpty())
+            if (parametersSettings->contains("soilAlbedo") && !parametersSettings->value("soilAlbedo").toString().isEmpty())
             {
-                snowModel.snowParameters.soilAlbedo = parameters->value("soilAlbedo").toDouble();
+                snowModel.snowParameters.soilAlbedo = parametersSettings->value("soilAlbedo").toDouble();
             }
-            if (parameters->contains("snowSurfaceDampingDepth") && !parameters->value("snowSurfaceDampingDepth").toString().isEmpty())
+            if (parametersSettings->contains("snowSurfaceDampingDepth") && !parametersSettings->value("snowSurfaceDampingDepth").toString().isEmpty())
             {
-                snowModel.snowParameters.snowSurfaceDampingDepth = parameters->value("snowSurfaceDampingDepth").toDouble();
+                snowModel.snowParameters.snowSurfaceDampingDepth = parametersSettings->value("snowSurfaceDampingDepth").toDouble();
             }
-            parameters->endGroup();
+            parametersSettings->endGroup();
         }
     }
     return true;
 }
 
 
-bool Crit3DProject::writeCriteria3DParameters()
+bool Crit3DProject::writeCriteria3DParameters(bool isSnow, bool isWater, bool isSoilCrack)
 {
     QString fileName = getCompleteFileName(parametersFileName, PATH_SETTINGS);
     if (! QFile(fileName).exists() || ! QFileInfo(fileName).isFile())
     {
-        logError("Missing parameters file: " + fileName);
+        logError("Missing parametersSettings file: " + fileName);
         return false;
     }
-    if (parameters == nullptr)
+    if (parametersSettings == nullptr)
     {
-        logError("parameters is null");
+        logError("parametersSettings is null");
         return false;
     }
 
-    parameters->setValue("snow/tempMaxWithSnow", snowModel.snowParameters.tempMaxWithSnow);
-    parameters->setValue("snow/tempMinWithRain", snowModel.snowParameters.tempMinWithRain);
-    parameters->setValue("snow/snowWaterHoldingCapacity", snowModel.snowParameters.snowWaterHoldingCapacity);
-    parameters->setValue("snow/skinThickness", snowModel.snowParameters.skinThickness);
-    parameters->setValue("snow/snowVegetationHeight", snowModel.snowParameters.snowVegetationHeight);
-    parameters->setValue("snow/soilAlbedo", snowModel.snowParameters.soilAlbedo);
-    parameters->setValue("snow/snowSurfaceDampingDepth", snowModel.snowParameters.snowSurfaceDampingDepth);
+    if (isSnow)
+    {
+        parametersSettings->setValue("snow/tempMaxWithSnow", snowModel.snowParameters.tempMaxWithSnow);
+        parametersSettings->setValue("snow/tempMinWithRain", snowModel.snowParameters.tempMinWithRain);
+        parametersSettings->setValue("snow/snowWaterHoldingCapacity", snowModel.snowParameters.snowWaterHoldingCapacity);
+        parametersSettings->setValue("snow/skinThickness", snowModel.snowParameters.skinThickness);
+        parametersSettings->setValue("snow/snowVegetationHeight", snowModel.snowParameters.snowVegetationHeight);
+        parametersSettings->setValue("snow/soilAlbedo", snowModel.snowParameters.soilAlbedo);
+        parametersSettings->setValue("snow/snowSurfaceDampingDepth", snowModel.snowParameters.snowSurfaceDampingDepth);
+    }
 
-    parameters->sync();
+    if (isWater)
+    {
+        parametersSettings->setValue("soilFluxes/initialWaterPotential", waterFluxesParameters.initialWaterPotential);
+    }
+
+    if (isSoilCrack)
+    {
+        // todo
+    }
+
+    parametersSettings->sync();
+
     return true;
 }
 

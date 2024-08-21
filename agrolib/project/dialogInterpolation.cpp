@@ -10,7 +10,7 @@
 DialogInterpolation::DialogInterpolation(Project *myProject)
 {
     _project = myProject;
-    _paramSettings = myProject->parameters;
+    _paramSettings = myProject->parametersSettings;
     _interpolationSettings = &(myProject->interpolationSettings);
     _qualityInterpolationSettings = &(myProject->qualityInterpolationSettings);
 

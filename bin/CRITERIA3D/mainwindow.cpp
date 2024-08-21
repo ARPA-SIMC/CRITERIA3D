@@ -2138,27 +2138,26 @@ void MainWindow::on_actionSnow_settings_triggered()
     dialogSnowSetting.setSoilAlbedoValue(myProject.snowModel.snowParameters.soilAlbedo);
     dialogSnowSetting.setSnowDampingDepthValue(myProject.snowModel.snowParameters.snowSurfaceDampingDepth);
 
-
     dialogSnowSetting.exec();
     if (dialogSnowSetting.result() != QDialog::Accepted)
-    {
         return;
-    }
-    else
-    {
-        myProject.snowModel.snowParameters.tempMinWithRain = dialogSnowSetting.getSnowThresholdValue();
-        myProject.snowModel.snowParameters.tempMaxWithSnow = dialogSnowSetting.getRainfallThresholdValue();
-        myProject.snowModel.snowParameters.snowWaterHoldingCapacity = dialogSnowSetting.getWaterHoldingValue();
-        myProject.snowModel.snowParameters.skinThickness = dialogSnowSetting.getSurfaceThickValue();
-        myProject.snowModel.snowParameters.snowVegetationHeight = dialogSnowSetting.getVegetationHeightValue();
-        myProject.snowModel.snowParameters.soilAlbedo = dialogSnowSetting.getSoilAlbedoValue();
-        myProject.snowModel.snowParameters.snowSurfaceDampingDepth = dialogSnowSetting.getSnowDampingDepthValue();
 
-        if (!myProject.writeCriteria3DParameters())
-        {
-            myProject.logError("Error writing snow parameters");
-        }
+    myProject.snowModel.snowParameters.tempMinWithRain = dialogSnowSetting.getSnowThresholdValue();
+    myProject.snowModel.snowParameters.tempMaxWithSnow = dialogSnowSetting.getRainfallThresholdValue();
+    myProject.snowModel.snowParameters.snowWaterHoldingCapacity = dialogSnowSetting.getWaterHoldingValue();
+    myProject.snowModel.snowParameters.skinThickness = dialogSnowSetting.getSurfaceThickValue();
+    myProject.snowModel.snowParameters.snowVegetationHeight = dialogSnowSetting.getVegetationHeightValue();
+    myProject.snowModel.snowParameters.soilAlbedo = dialogSnowSetting.getSoilAlbedoValue();
+    myProject.snowModel.snowParameters.snowSurfaceDampingDepth = dialogSnowSetting.getSnowDampingDepthValue();
+
+    bool isSnow = true;
+    bool isWater = false;
+    bool isSoilCrack = false;
+    if (! myProject.writeCriteria3DParameters(isSnow, isWater, isSoilCrack))
+    {
+        myProject.logError("Error writing snow parameters");
     }
+
 }
 
 
@@ -2231,10 +2230,13 @@ void MainWindow::on_actionCriteria3D_waterFluxes_settings_triggered()
 
         myProject.fittingOptions.useWaterRetentionData = dialogWaterFluxes.useWaterRetentionFitting->isChecked();
 
-        /*if (! myProject.writeCriteria3DParameters())
+        bool isSnow = false;
+        bool isWater = true;
+        bool isSoilCrack = false;
+        if (! myProject.writeCriteria3DParameters(isSnow, isWater, isSoilCrack))
         {
             myProject.logError("Error writing soil fluxes parameters");
-        }*/
+        }
 
         // layer thickness
     }
