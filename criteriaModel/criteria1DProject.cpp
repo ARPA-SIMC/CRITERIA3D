@@ -1779,14 +1779,14 @@ void Crit1DProject::updateOutput(Crit3DDate myDate, bool isFirst)
 
     if (isClimateOutput)
     {
-        outputString += "('" + QString::fromStdString(myDate.toStdString()) + "'"
+        outputString += "('" + QString::fromStdString(myDate.toISOString()) + "'"
                         + "," + QString::number(myCase.output.dailyAvailableWater, 'g', 4)
                         + "," + QString::number(myCase.output.dailyMaxTranspiration, 'g', 3)
                         + "," + QString::number(myCase.output.dailyTranspiration, 'g', 3);
     }
     else
     {
-        outputString += "('" + QString::fromStdString(myDate.toStdString()) + "'"
+        outputString += "('" + QString::fromStdString(myDate.toISOString()) + "'"
                     + "," + QString::number(myCase.output.dailyPrec)
                     + "," + QString::number(myCase.output.dailyIrrigation)
                     + "," + QString::number(myCase.output.dailySoilWaterContent, 'g', 4)
