@@ -345,8 +345,7 @@ bool Project::loadParameters(QString parametersFileName)
 
     if (! QFile(parametersFileName).exists() || ! QFileInfo(parametersFileName).isFile())
     {
-        errorString = "Missing parametersSettings file: " + parametersFileName;
-        errorString += "\nCheck project.path in " + projectSettings->fileName();
+        errorString = "Missing file: " + parametersFileName;
         return false;
     }
 
@@ -1888,7 +1887,7 @@ bool Project::loadProxyGrids()
             }
             else
             {
-                errorString = "Error loading raster proxy:\n" + fileName + "\nHow to fix it: check the proxy section in the parametersSettings.ini";
+                errorString = "Error loading raster proxy:\n" + fileName + "\nHow to fix it: check the proxy section in the parameters.ini";
                 return false;
             }
 
@@ -3147,7 +3146,7 @@ void Project::createProject(QString path_, QString name_, QString description)
 
     // parametersSettings
     delete parametersSettings;
-    parametersFileName = projectPath + PATH_SETTINGS + "parametersSettings.ini";
+    parametersFileName = projectPath + PATH_SETTINGS + "parameters.ini";
     parametersSettings = new QSettings(parametersFileName, QSettings::IniFormat);
 
     saveProject();
@@ -3174,7 +3173,7 @@ bool Project::createDefaultProject(QString fileName)
     defaultSettings->endGroup();
 
     defaultSettings->beginGroup("settings");
-        defaultSettings->setValue("parameters_file", "parametersSettings.ini");
+        defaultSettings->setValue("parameters_file", "parameters.ini");
     defaultSettings->endGroup();
 
     defaultSettings->sync();
@@ -3210,7 +3209,7 @@ bool Project::loadProject()
     if (! loadParameters(parametersFileName))
     {
         errorType = ERROR_SETTINGS;
-        errorString = "Load parametersSettings failed.\n" + errorString;
+        errorString = "Parameters loading failed.\n" + errorString;
         return false;
     }
 

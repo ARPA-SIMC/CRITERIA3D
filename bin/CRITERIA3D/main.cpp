@@ -35,20 +35,13 @@ int main(int argc, char *argv[])
 
     if (! myProject.start(myApp.applicationDirPath()))
     {
-        QMessageBox::information(nullptr, "Error!", myProject.errorString);
+        myProject.logError();
         return -1;
     }
 
-    if (! myProject.loadParameters("parameters.ini"))
+    if (! myProject.loadCriteria3DProject(myProject.getApplicationPath() + "default.ini"))
     {
-        QMessageBox::information(nullptr, "Error!", myProject.errorString);
-        return -1;
-    }
-
-    if (! myProject.loadProject3DSettings())
-    {
-        QMessageBox::information(nullptr, "Error!", myProject.errorString);
-        return -1;
+        myProject.logWarning();
     }
 
     QNetworkProxyFactory::setUseSystemConfiguration(true);
@@ -59,6 +52,5 @@ int main(int argc, char *argv[])
     mainWindow.show();
 
     return myApp.exec();
-    // test
 }
 

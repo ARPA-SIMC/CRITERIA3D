@@ -49,25 +49,30 @@ WaterFluxesParameters::WaterFluxesParameters()
 
 void WaterFluxesParameters::initialize()
 {
+    // boundary conditions
     freeCatchmentRunoff = true;
     freeLateralDrainage = true;
     freeBottomDrainage = true;
 
+    // computation soil depth
     computeOnlySurface = false;
     computeAllSoilDepth = true;
+    imposedComputationDepth = 1.0;          // [m]
 
+    // soil layers thicknesses progression
+    minSoilLayerThickness = 0.02;           // [m] default: 2 cm
+    maxSoilLayerThickness = 0.10;           // [m] default: 10 cm
+    maxSoilLayerThicknessDepth = 0.40;      // [m] default: 40 cm
+
+    // initial conditions
     isInitialWaterPotential = true;
     initialWaterPotential = -2.0;           // [m] default: field capacity
     initialDegreeOfSaturation = 0.8;        // [-]
 
-    imposedComputationDepth = 1.0;          // [m]
+    // hydraulic conductivity horizontal / vertical ratio
     conductivityHorizVertRatio = 10.0;      // [-] default: ten times
 
     modelAccuracy = 3;                      // [-] default: error on the third digit
-
-    minSoilLayerThickness = 0.02;           // [m] default: 2 cm
-    maxSoilLayerThickness = 0.10;           // [m] default: 10 cm
-    maxSoilLayerThicknessDepth = 0.40;      // [m] default: 40 cm
 }
 
 
@@ -145,8 +150,6 @@ void Project3D::initializeProject3D()
     isModelRunning = false;
     isModelPaused = false;
     isModelStopped = false;
-
-    waterFluxesParameters.initialize();
 
     texturalClassList.resize(13);
     geotechnicsClassList.resize(19);

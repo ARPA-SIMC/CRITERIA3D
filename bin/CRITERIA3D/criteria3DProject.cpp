@@ -664,7 +664,7 @@ bool Crit3DProject::loadCriteria3DProject(QString myFileName)
     clear3DProject();
     initializeProject3D();
 
-    snowModel.initialize();
+    //snowModel.initialize();
 
     if (! loadProjectSettings(myFileName))
         return false;
@@ -684,7 +684,9 @@ bool Crit3DProject::loadCriteria3DProject(QString myFileName)
     }
 
     if (! loadCriteria3DParameters())
+    {
         return false;
+    }
 
     // soil map and data
     if (soilMapFileName != "")
@@ -712,7 +714,7 @@ bool Crit3DProject::loadCriteria3DParameters()
     QString fileName = getCompleteFileName(parametersFileName, PATH_SETTINGS);
     if (! QFile(fileName).exists() || ! QFileInfo(fileName).isFile())
     {
-        logError("Missing parametersSettings file: " + fileName);
+        logError("Missing parameters file: " + fileName);
         return false;
     }
     if (parametersSettings == nullptr)
@@ -755,6 +757,78 @@ bool Crit3DProject::loadCriteria3DParameters()
             }
             parametersSettings->endGroup();
         }
+
+        if (group == "soilWaterFluxes")
+        {
+            parametersSettings->beginGroup(group);
+
+            if (parametersSettings->contains("isInitialWaterPotential") && ! parametersSettings->value("isInitialWaterPotential").toString().isEmpty())
+            {
+                waterFluxesParameters.isInitialWaterPotential = parametersSettings->value("isInitialWaterPotential").toBool();
+            }
+
+            if (parametersSettings->contains("initialWaterPotential") && ! parametersSettings->value("initialWaterPotential").toString().isEmpty())
+            {
+                waterFluxesParameters.initialWaterPotential = parametersSettings->value("initialWaterPotential").toDouble();
+            }
+
+            if (parametersSettings->contains("initialDegreeOfSaturation") && ! parametersSettings->value("initialDegreeOfSaturation").toString().isEmpty())
+            {
+                waterFluxesParameters.initialDegreeOfSaturation = parametersSettings->value("initialDegreeOfSaturation").toDouble();
+            }
+
+            if (parametersSettings->contains("computeOnlySurface") && ! parametersSettings->value("computeOnlySurface").toString().isEmpty())
+            {
+                waterFluxesParameters.computeOnlySurface = parametersSettings->value("computeOnlySurface").toBool();
+            }
+
+            if (parametersSettings->contains("computeAllSoilDepth") && ! parametersSettings->value("computeAllSoilDepth").toString().isEmpty())
+            {
+                waterFluxesParameters.computeAllSoilDepth = parametersSettings->value("computeAllSoilDepth").toBool();
+            }
+
+            if (parametersSettings->contains("imposedComputationDepth") && ! parametersSettings->value("imposedComputationDepth").toString().isEmpty())
+            {
+                waterFluxesParameters.imposedComputationDepth = parametersSettings->value("imposedComputationDepth").toDouble();
+            }
+
+            if (parametersSettings->contains("conductivityHorizVertRatio") && ! parametersSettings->value("conductivityHorizVertRatio").toString().isEmpty())
+            {
+                waterFluxesParameters.conductivityHorizVertRatio = parametersSettings->value("conductivityHorizVertRatio").toDouble();
+            }
+
+            if (parametersSettings->contains("freeCatchmentRunoff") && ! parametersSettings->value("freeCatchmentRunoff").toString().isEmpty())
+            {
+                waterFluxesParameters.freeCatchmentRunoff = parametersSettings->value("freeCatchmentRunoff").toBool();
+            }
+
+            if (parametersSettings->contains("freeBottomDrainage") && ! parametersSettings->value("freeBottomDrainage").toString().isEmpty())
+            {
+                waterFluxesParameters.freeBottomDrainage = parametersSettings->value("freeBottomDrainage").toBool();
+            }
+
+            if (parametersSettings->contains("freeLateralDrainage") && ! parametersSettings->value("freeLateralDrainage").toString().isEmpty())
+            {
+                waterFluxesParameters.freeLateralDrainage = parametersSettings->value("freeLateralDrainage").toBool();
+            }
+
+            if (parametersSettings->contains("modelAccuracy") && ! parametersSettings->value("modelAccuracy").toString().isEmpty())
+            {
+                waterFluxesParameters.modelAccuracy = parametersSettings->value("modelAccuracy").toInt();
+            }
+
+            parametersSettings->endGroup();
+        }
+
+        if (group == "soilCracking")
+        {
+            parametersSettings->beginGroup(group);
+
+            // TODO
+
+            parametersSettings->endGroup();
+
+        }
     }
     return true;
 }
@@ -787,26 +861,28 @@ bool Crit3DProject::writeCriteria3DParameters(bool isSnow, bool isWater, bool is
 
     if (isWater)
     {
-        parametersSettings->setValue("soilFluxes/isInitialWaterPotential", waterFluxesParameters.isInitialWaterPotential);
-        parametersSettings->setValue("soilFluxes/initialWaterPotential", waterFluxesParameters.initialWaterPotential);
-        parametersSettings->setValue("soilFluxes/initialDegreeOfSaturation", waterFluxesParameters.initialDegreeOfSaturation);
+        parametersSettings->setValue("soilWaterFluxes/isInitialWaterPotential", waterFluxesParameters.isInitialWaterPotential);
+        parametersSettings->setValue("soilWaterFluxes/initialWaterPotential", waterFluxesParameters.initialWaterPotential);
+        parametersSettings->setValue("soilWaterFluxes/initialDegreeOfSaturation", waterFluxesParameters.initialDegreeOfSaturation);
 
-        parametersSettings->setValue("soilFluxes/computeOnlySurface", waterFluxesParameters.computeOnlySurface);
-        parametersSettings->setValue("soilFluxes/computeAllSoilDepth", waterFluxesParameters.computeAllSoilDepth);
-        parametersSettings->setValue("soilFluxes/imposedComputationDepth", waterFluxesParameters.imposedComputationDepth);
+        parametersSettings->setValue("soilWaterFluxes/computeOnlySurface", waterFluxesParameters.computeOnlySurface);
+        parametersSettings->setValue("soilWaterFluxes/computeAllSoilDepth", waterFluxesParameters.computeAllSoilDepth);
+        parametersSettings->setValue("soilWaterFluxes/imposedComputationDepth", waterFluxesParameters.imposedComputationDepth);
 
-        parametersSettings->setValue("soilFluxes/conductivityHorizVertRatio", waterFluxesParameters.conductivityHorizVertRatio);
+        parametersSettings->setValue("soilWaterFluxes/conductivityHorizVertRatio", waterFluxesParameters.conductivityHorizVertRatio);
 
-        parametersSettings->setValue("soilFluxes/freeCatchmentRunoff", waterFluxesParameters.freeCatchmentRunoff);
-        parametersSettings->setValue("soilFluxes/freeBottomDrainage", waterFluxesParameters.freeBottomDrainage);
-        parametersSettings->setValue("soilFluxes/freeLateralDrainage", waterFluxesParameters.freeLateralDrainage);
+        parametersSettings->setValue("soilWaterFluxes/freeCatchmentRunoff", waterFluxesParameters.freeCatchmentRunoff);
+        parametersSettings->setValue("soilWaterFluxes/freeBottomDrainage", waterFluxesParameters.freeBottomDrainage);
+        parametersSettings->setValue("soilWaterFluxes/freeLateralDrainage", waterFluxesParameters.freeLateralDrainage);
 
-        parametersSettings->setValue("soilFluxes/modelAccuracy", waterFluxesParameters.modelAccuracy);
+        parametersSettings->setValue("soilWaterFluxes/modelAccuracy", waterFluxesParameters.modelAccuracy);
     }
 
     if (isSoilCrack)
     {
         // todo
+        // parametersSettings->setValue("soilCracking/ ", );
+
     }
 
     parametersSettings->sync();

@@ -28,12 +28,14 @@ public:
     double getLongitude() const { return lon; }
     void setLongitude(double newLon) { lon = newLon; }
 
-    void insertData(QDate myDate, float myValue);
+    void insertData(QDate myDate, float myValue)
+    { depths.insert(myDate, myValue); }
+
+    int getObsDepthNr() const { return depths.size(); }
 
     QDate getFirstDate();
     QDate getLastDate();
 
-    int getObsDepthNr();
     int minValuesPerMonth();
 
 private:
