@@ -302,7 +302,7 @@ bool interpolationRaster(std::vector <Crit3DInterpolationDataPoint> &myPoints, C
     return true;
 }
 
-bool topographicIndex(const gis::Crit3DRasterGrid DEM, std::vector <float> windowWidths, gis::Crit3DRasterGrid& outGrid)
+bool topographicIndex(const gis::Crit3DRasterGrid& DEM, std::vector <float> windowWidths, gis::Crit3DRasterGrid& outGrid)
 {
 
     if (! outGrid.initializeGrid(DEM))
@@ -314,7 +314,7 @@ bool topographicIndex(const gis::Crit3DRasterGrid DEM, std::vector <float> windo
     float threshold = float(EPSILON);
 
     float z, value, cellNr, cellDelta;
-    unsigned r1, r2, c1, c2, windowRow, windowCol;
+    int r1, r2, c1, c2, windowRow, windowCol;
     float higherSum, lowerSum, equalSum, weightSum;
 
     for (auto width : windowWidths)
@@ -338,51 +338,53 @@ bool topographicIndex(const gis::Crit3DRasterGrid DEM, std::vector <float> windo
                     lowerSum = 0;
                     equalSum = 0;
                     weightSum = 0;
-                }
 
-                for (windowRow = r1; windowRow <= r2; windowRow++)
-                {
-                    for (windowCol = c1; windowCol <= c2; windowCol++)
+                    for (windowRow = r1; windowRow <= r2; windowRow++)
                     {
-                        if (! gis::isOutOfGridRowCol(windowRow, windowCol, DEM))
+                        for (windowCol = c1; windowCol <= c2; windowCol++)
                         {
-                            value = DEM.value[windowRow][windowCol];
-
-                            if (! isEqual(value, DEM.header->flag))
+                            if (! gis::isOutOfGridRowCol(windowRow, windowCol, DEM))
                             {
-                                if (windowRow != row && windowCol != col)
+                                value = DEM.value[windowRow][windowCol];
+
+                                if (! isEqual(value, DEM.header->flag))
                                 {
-                                    cellDelta = gis::computeDistance(windowRow, windowCol, row, col);
-
-                                    if (cellDelta <= cellNr)
+                                    if (windowRow != row && windowCol != col)
                                     {
-                                        float weight = 1 - (cellDelta / cellNr);
+                                        cellDelta = gis::computeDistance(windowRow, windowCol, row, col);
 
-                                        if (value - z > threshold)
-                                            higherSum += weight;
-                                        else if (value - z < -threshold)
-                                            lowerSum += weight;
-                                        else
-                                            equalSum += weight;
+                                        if (cellDelta <= cellNr)
+                                        {
+                                            float weight = 1 - (cellDelta / cellNr);
 
-                                        weightSum += weight;
+                                            if (value - z > threshold)
+                                                higherSum += weight;
+                                            else if (value - z < -threshold)
+                                                lowerSum += weight;
+                                            else
+                                                equalSum += weight;
+
+                                            weightSum += weight;
+                                        }
                                     }
                                 }
                             }
                         }
                     }
-                }
 
-                if (weightSum > 0)
-                {
-                    if (isEqual(outGrid.value[row][col], outGrid.value[row][col]))
-                        outGrid.value[row][col] = (lowerSum - higherSum - equalSum * 0.5) / weightSum;
-                    else
-                        outGrid.value[row][col] += (lowerSum - higherSum - equalSum * 0.5) / weightSum;
+                    if (weightSum > 0)
+                    {
+                        if (isEqual(outGrid.value[row][col], outGrid.header->flag))
+                            outGrid.value[row][col] = (lowerSum - higherSum - equalSum * 0.5) / weightSum;
+                        else
+                            outGrid.value[row][col] += (lowerSum - higherSum - equalSum * 0.5) / weightSum;
+                    }
                 }
             }
         }
     }
+
+    gis::updateMinMaxRasterGrid(&outGrid);
 
     return true;
 }

@@ -77,6 +77,6 @@
     bool interpolateProxyGridSeries(const Crit3DProxyGridSeries& mySeries, QDate myDate, const gis::Crit3DRasterGrid& gridBase,
                                     gis::Crit3DRasterGrid *gridOut, QString &errorStr);
 
-    bool topographicIndex(const gis::Crit3DRasterGrid DEM, std::vector <float> windowWidths, gis::Crit3DRasterGrid& outGrid);
+    bool topographicIndex(const gis::Crit3DRasterGrid &DEM, std::vector <float> windowWidths, gis::Crit3DRasterGrid& outGrid);
 
 #endif // INTERPOLATIONCMD_H
