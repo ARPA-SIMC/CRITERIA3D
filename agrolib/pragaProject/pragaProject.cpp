@@ -122,55 +122,55 @@ bool PragaProject::loadPragaSettings()
 {
     pragaDefaultSettings = new QSettings(getDefaultPath() + PATH_SETTINGS + "pragaDefault.ini", QSettings::IniFormat);
 
-    Q_FOREACH (QString group, parameters->childGroups())
+    Q_FOREACH (QString group, parametersSettings->childGroups())
     {
         if (group == "elaboration")
         {
-            parameters->beginGroup(group);
+            parametersSettings->beginGroup(group);
             Crit3DElaborationSettings* elabSettings = clima->getElabSettings();
 
-            if (parameters->contains("anomaly_pts_max_distance") && !parameters->value("anomaly_pts_max_distance").toString().isEmpty())
+            if (parametersSettings->contains("anomaly_pts_max_distance") && !parametersSettings->value("anomaly_pts_max_distance").toString().isEmpty())
             {
-                elabSettings->setAnomalyPtsMaxDistance(parameters->value("anomaly_pts_max_distance").toFloat());
+                elabSettings->setAnomalyPtsMaxDistance(parametersSettings->value("anomaly_pts_max_distance").toFloat());
             }
-            if (parameters->contains("anomaly_pts_max_delta_z") && !parameters->value("anomaly_pts_max_delta_z").toString().isEmpty())
+            if (parametersSettings->contains("anomaly_pts_max_delta_z") && !parametersSettings->value("anomaly_pts_max_delta_z").toString().isEmpty())
             {
-                elabSettings->setAnomalyPtsMaxDeltaZ(parameters->value("anomaly_pts_max_delta_z").toFloat());
+                elabSettings->setAnomalyPtsMaxDeltaZ(parametersSettings->value("anomaly_pts_max_delta_z").toFloat());
             }
-            if (parameters->contains("grid_min_coverage") && !parameters->value("grid_min_coverage").toString().isEmpty())
+            if (parametersSettings->contains("grid_min_coverage") && !parametersSettings->value("grid_min_coverage").toString().isEmpty())
             {
-                elabSettings->setGridMinCoverage(parameters->value("grid_min_coverage").toFloat());
+                elabSettings->setGridMinCoverage(parametersSettings->value("grid_min_coverage").toFloat());
             }
-            if (parameters->contains("merge_joint_stations") && !parameters->value("merge_joint_stations").toString().isEmpty())
+            if (parametersSettings->contains("merge_joint_stations") && !parametersSettings->value("merge_joint_stations").toString().isEmpty())
             {
-                elabSettings->setMergeJointStations(parameters->value("merge_joint_stations").toBool());
+                elabSettings->setMergeJointStations(parametersSettings->value("merge_joint_stations").toBool());
             }
 
-            parameters->endGroup();
+            parametersSettings->endGroup();
 
         }
         if (group == "quality")
         {
-            parameters->beginGroup(group);
+            parametersSettings->beginGroup(group);
 
-            if (parameters->contains("users"))
+            if (parametersSettings->contains("users"))
             {
-                users = parameters->value("users").toStringList();
+                users = parametersSettings->value("users").toStringList();
             }
 
-            parameters->endGroup();
+            parametersSettings->endGroup();
 
         }
         else if (group == "id_arkimet")
         {
-            parameters->beginGroup(group);
+            parametersSettings->beginGroup(group);
             QList<QString> myList;
             QList<int> intList;
-            if ( parameters->contains(QString::fromStdString(getKeyStringMeteoMap(MapDailyMeteoVar, dailyAirTemperatureAvg))) )
+            if ( parametersSettings->contains(QString::fromStdString(getKeyStringMeteoMap(MapDailyMeteoVar, dailyAirTemperatureAvg))) )
             {
                 intList.clear();
                 QString dailyTavg = QString::fromStdString(getKeyStringMeteoMap(MapDailyMeteoVar, dailyAirTemperatureAvg));
-                myList = parameters->value(dailyTavg).toStringList();
+                myList = parametersSettings->value(dailyTavg).toStringList();
                 for (int i = 0; i < myList.size(); i++)
                 {
                     if (myList[i].toInt() > 0 && !intList.contains(myList[i].toInt()))
@@ -180,11 +180,11 @@ bool PragaProject::loadPragaSettings()
                 }
                 idArkimetDailyMap[dailyTavg] = intList;
             }
-            if ( parameters->contains(QString::fromStdString(getKeyStringMeteoMap(MapDailyMeteoVar, dailyAirTemperatureMax))) )
+            if ( parametersSettings->contains(QString::fromStdString(getKeyStringMeteoMap(MapDailyMeteoVar, dailyAirTemperatureMax))) )
             {
                 intList.clear();
                 QString dailyTmax = QString::fromStdString(getKeyStringMeteoMap(MapDailyMeteoVar, dailyAirTemperatureMax));
-                myList = parameters->value(dailyTmax).toStringList();
+                myList = parametersSettings->value(dailyTmax).toStringList();
                 for (int i = 0; i < myList.size(); i++)
                 {
                     if (myList[i].toInt() > 0 && !intList.contains(myList[i].toInt()))
@@ -194,11 +194,11 @@ bool PragaProject::loadPragaSettings()
                 }
                 idArkimetDailyMap[dailyTmax] = intList;
             }
-            if ( parameters->contains(QString::fromStdString(getKeyStringMeteoMap(MapDailyMeteoVar, dailyAirTemperatureMin))) )
+            if ( parametersSettings->contains(QString::fromStdString(getKeyStringMeteoMap(MapDailyMeteoVar, dailyAirTemperatureMin))) )
             {
                 intList.clear();
                 QString dailyTmin = QString::fromStdString(getKeyStringMeteoMap(MapDailyMeteoVar, dailyAirTemperatureMin));
-                myList = parameters->value(dailyTmin).toStringList();
+                myList = parametersSettings->value(dailyTmin).toStringList();
                 for (int i = 0; i < myList.size(); i++)
                 {
                     if (myList[i].toInt() > 0 && !intList.contains(myList[i].toInt()))
@@ -208,11 +208,11 @@ bool PragaProject::loadPragaSettings()
                 }
                 idArkimetDailyMap[dailyTmin] = intList;
             }
-            if ( parameters->contains(QString::fromStdString(getKeyStringMeteoMap(MapDailyMeteoVar, dailyPrecipitation))) )
+            if ( parametersSettings->contains(QString::fromStdString(getKeyStringMeteoMap(MapDailyMeteoVar, dailyPrecipitation))) )
             {
                 intList.clear();
                 QString dailyPrec = QString::fromStdString(getKeyStringMeteoMap(MapDailyMeteoVar, dailyPrecipitation));
-                myList = parameters->value(dailyPrec).toStringList();
+                myList = parametersSettings->value(dailyPrec).toStringList();
                 for (int i = 0; i < myList.size(); i++)
                 {
                     if (myList[i].toInt() > 0 && !intList.contains(myList[i].toInt()))
@@ -222,11 +222,11 @@ bool PragaProject::loadPragaSettings()
                 }
                 idArkimetDailyMap[dailyPrec] = intList;
             }
-            if ( parameters->contains(QString::fromStdString(getKeyStringMeteoMap(MapDailyMeteoVar, dailyAirRelHumidityAvg))) )
+            if ( parametersSettings->contains(QString::fromStdString(getKeyStringMeteoMap(MapDailyMeteoVar, dailyAirRelHumidityAvg))) )
             {
                 intList.clear();
                 QString dailRHavg = QString::fromStdString(getKeyStringMeteoMap(MapDailyMeteoVar, dailyAirRelHumidityAvg));
-                myList = parameters->value(dailRHavg).toStringList();
+                myList = parametersSettings->value(dailRHavg).toStringList();
                 for (int i = 0; i < myList.size(); i++)
                 {
                     if (myList[i].toInt() > 0 && !intList.contains(myList[i].toInt()))
@@ -236,11 +236,11 @@ bool PragaProject::loadPragaSettings()
                 }
                 idArkimetDailyMap[dailRHavg] = intList;
             }
-            if ( parameters->contains(QString::fromStdString(getKeyStringMeteoMap(MapDailyMeteoVar, dailyAirRelHumidityMax))) )
+            if ( parametersSettings->contains(QString::fromStdString(getKeyStringMeteoMap(MapDailyMeteoVar, dailyAirRelHumidityMax))) )
             {
                 intList.clear();
                 QString dailRHmax = QString::fromStdString(getKeyStringMeteoMap(MapDailyMeteoVar, dailyAirRelHumidityMax));
-                myList = parameters->value(dailRHmax).toStringList();
+                myList = parametersSettings->value(dailRHmax).toStringList();
                 for (int i = 0; i < myList.size(); i++)
                 {
                     if (myList[i].toInt() > 0 && !intList.contains(myList[i].toInt()))
@@ -250,11 +250,11 @@ bool PragaProject::loadPragaSettings()
                 }
                 idArkimetDailyMap[dailRHmax] = intList;
             }
-            if ( parameters->contains(QString::fromStdString(getKeyStringMeteoMap(MapDailyMeteoVar, dailyAirRelHumidityMin))) )
+            if ( parametersSettings->contains(QString::fromStdString(getKeyStringMeteoMap(MapDailyMeteoVar, dailyAirRelHumidityMin))) )
             {
                 intList.clear();
                 QString dailRHmin = QString::fromStdString(getKeyStringMeteoMap(MapDailyMeteoVar, dailyAirRelHumidityMin));
-                myList = parameters->value(dailRHmin).toStringList();
+                myList = parametersSettings->value(dailRHmin).toStringList();
                 for (int i = 0; i < myList.size(); i++)
                 {
                     if (myList[i].toInt() > 0 && !intList.contains(myList[i].toInt()))
@@ -264,11 +264,11 @@ bool PragaProject::loadPragaSettings()
                 }
                 idArkimetDailyMap[dailRHmin] = intList;
             }
-            if (parameters->contains(QString::fromStdString(getKeyStringMeteoMap(MapDailyMeteoVar, dailyGlobalRadiation))))
+            if (parametersSettings->contains(QString::fromStdString(getKeyStringMeteoMap(MapDailyMeteoVar, dailyGlobalRadiation))))
             {
                 intList.clear();
                 QString dailyRad = QString::fromStdString(getKeyStringMeteoMap(MapDailyMeteoVar, dailyGlobalRadiation));
-                myList = parameters->value(dailyRad).toStringList();
+                myList = parametersSettings->value(dailyRad).toStringList();
                 for (int i = 0; i < myList.size(); i++)
                 {
                     if (myList[i].toInt() > 0 && !intList.contains(myList[i].toInt()))
@@ -278,11 +278,11 @@ bool PragaProject::loadPragaSettings()
                 }
                 idArkimetDailyMap[dailyRad] = intList;
             }
-            if ( parameters->contains(QString::fromStdString(getKeyStringMeteoMap(MapDailyMeteoVar, dailyWindScalarIntensityAvg))) )
+            if ( parametersSettings->contains(QString::fromStdString(getKeyStringMeteoMap(MapDailyMeteoVar, dailyWindScalarIntensityAvg))) )
             {
                 intList.clear();
                 QString dailyWindScalIntAvg = QString::fromStdString(getKeyStringMeteoMap(MapDailyMeteoVar, dailyWindScalarIntensityAvg));
-                myList = parameters->value(dailyWindScalIntAvg).toStringList();
+                myList = parametersSettings->value(dailyWindScalIntAvg).toStringList();
                 for (int i = 0; i < myList.size(); i++)
                 {
                     if (myList[i].toInt() > 0 && !intList.contains(myList[i].toInt()))
@@ -292,11 +292,11 @@ bool PragaProject::loadPragaSettings()
                 }
                 idArkimetDailyMap[dailyWindScalIntAvg] = intList;
             }
-            if ( parameters->contains(QString::fromStdString(getKeyStringMeteoMap(MapDailyMeteoVar, dailyWindScalarIntensityMax))) )
+            if ( parametersSettings->contains(QString::fromStdString(getKeyStringMeteoMap(MapDailyMeteoVar, dailyWindScalarIntensityMax))) )
             {
                 intList.clear();
                 QString dailyWindScalIntMax = QString::fromStdString(getKeyStringMeteoMap(MapDailyMeteoVar, dailyWindScalarIntensityMax));
-                myList = parameters->value(dailyWindScalIntMax).toStringList();
+                myList = parametersSettings->value(dailyWindScalIntMax).toStringList();
                 for (int i = 0; i < myList.size(); i++)
                 {
                     if (myList[i].toInt() > 0 && !intList.contains(myList[i].toInt()))
@@ -306,11 +306,11 @@ bool PragaProject::loadPragaSettings()
                 }
                 idArkimetDailyMap[dailyWindScalIntMax] = intList;
             }
-            if ( parameters->contains(QString::fromStdString(getKeyStringMeteoMap(MapDailyMeteoVar, dailyWindVectorDirectionPrevailing))) )
+            if ( parametersSettings->contains(QString::fromStdString(getKeyStringMeteoMap(MapDailyMeteoVar, dailyWindVectorDirectionPrevailing))) )
             {
                 intList.clear();
                 QString dailyWindVecDirPrev = QString::fromStdString(getKeyStringMeteoMap(MapDailyMeteoVar, dailyWindVectorDirectionPrevailing));
-                myList = parameters->value(dailyWindVecDirPrev).toStringList();
+                myList = parametersSettings->value(dailyWindVecDirPrev).toStringList();
                 for (int i = 0; i < myList.size(); i++)
                 {
                     if (myList[i].toInt() > 0 && !intList.contains(myList[i].toInt()))
@@ -320,11 +320,11 @@ bool PragaProject::loadPragaSettings()
                 }
                 idArkimetDailyMap[dailyWindVecDirPrev] = intList;
             }
-            if (parameters->contains(QString::fromStdString(getKeyStringMeteoMap(MapHourlyMeteoVar, airTemperature))))
+            if (parametersSettings->contains(QString::fromStdString(getKeyStringMeteoMap(MapHourlyMeteoVar, airTemperature))))
             {
                 intList.clear();
                 QString airTemp = QString::fromStdString(getKeyStringMeteoMap(MapHourlyMeteoVar, airTemperature));
-                myList = parameters->value(airTemp).toStringList();
+                myList = parametersSettings->value(airTemp).toStringList();
                 for (int i = 0; i < myList.size(); i++)
                 {
                     if (myList[i].toInt() > 0 && !intList.contains(myList[i].toInt()))
@@ -334,11 +334,11 @@ bool PragaProject::loadPragaSettings()
                 }
                 idArkimetHourlyMap[airTemp] = intList;
             }
-            if (parameters->contains(QString::fromStdString(getKeyStringMeteoMap(MapHourlyMeteoVar, precipitation))))
+            if (parametersSettings->contains(QString::fromStdString(getKeyStringMeteoMap(MapHourlyMeteoVar, precipitation))))
             {
                 intList.clear();
                 QString prec = QString::fromStdString(getKeyStringMeteoMap(MapHourlyMeteoVar, precipitation));
-                myList = parameters->value(prec).toStringList();
+                myList = parametersSettings->value(prec).toStringList();
                 for (int i = 0; i < myList.size(); i++)
                 {
                     if (myList[i].toInt() > 0 && !intList.contains(myList[i].toInt()))
@@ -348,11 +348,11 @@ bool PragaProject::loadPragaSettings()
                 }
                 idArkimetHourlyMap[prec] = intList;
             }
-            if (parameters->contains(QString::fromStdString(getKeyStringMeteoMap(MapHourlyMeteoVar, airRelHumidity))))
+            if (parametersSettings->contains(QString::fromStdString(getKeyStringMeteoMap(MapHourlyMeteoVar, airRelHumidity))))
             {
                 intList.clear();
                 QString airRelH = QString::fromStdString(getKeyStringMeteoMap(MapHourlyMeteoVar, airRelHumidity));
-                myList = parameters->value(airRelH).toStringList();
+                myList = parametersSettings->value(airRelH).toStringList();
                 for (int i = 0; i < myList.size(); i++)
                 {
                     if (myList[i].toInt() > 0 && !intList.contains(myList[i].toInt()))
@@ -362,11 +362,11 @@ bool PragaProject::loadPragaSettings()
                 }
                 idArkimetHourlyMap[airRelH] = intList;
             }
-            if (parameters->contains(QString::fromStdString(getKeyStringMeteoMap(MapHourlyMeteoVar, globalIrradiance))))
+            if (parametersSettings->contains(QString::fromStdString(getKeyStringMeteoMap(MapHourlyMeteoVar, globalIrradiance))))
             {
                 intList.clear();
                 QString globalIrr = QString::fromStdString(getKeyStringMeteoMap(MapHourlyMeteoVar, globalIrradiance));
-                myList = parameters->value(globalIrr).toStringList();
+                myList = parametersSettings->value(globalIrr).toStringList();
                 for (int i = 0; i < myList.size(); i++)
                 {
                     if (myList[i].toInt() > 0 && !intList.contains(myList[i].toInt()))
@@ -376,11 +376,11 @@ bool PragaProject::loadPragaSettings()
                 }
                 idArkimetHourlyMap[globalIrr] = intList;
             }
-            if (parameters->contains(QString::fromStdString(getKeyStringMeteoMap(MapHourlyMeteoVar, windScalarIntensity))))
+            if (parametersSettings->contains(QString::fromStdString(getKeyStringMeteoMap(MapHourlyMeteoVar, windScalarIntensity))))
             {
                 intList.clear();
                 QString windScaInt = QString::fromStdString(getKeyStringMeteoMap(MapHourlyMeteoVar, windScalarIntensity));
-                myList = parameters->value(windScaInt).toStringList();
+                myList = parametersSettings->value(windScaInt).toStringList();
                 for (int i = 0; i < myList.size(); i++)
                 {
                     if (myList[i].toInt() > 0 && !intList.contains(myList[i].toInt()))
@@ -390,11 +390,11 @@ bool PragaProject::loadPragaSettings()
                 }
                 idArkimetHourlyMap[windScaInt] = intList;
             }
-            if (parameters->contains(QString::fromStdString(getKeyStringMeteoMap(MapHourlyMeteoVar, windVectorDirection))))
+            if (parametersSettings->contains(QString::fromStdString(getKeyStringMeteoMap(MapHourlyMeteoVar, windVectorDirection))))
             {
                 intList.clear();
                 QString windVecDir = QString::fromStdString(getKeyStringMeteoMap(MapHourlyMeteoVar, windVectorDirection));
-                myList = parameters->value(windVecDir).toStringList();
+                myList = parametersSettings->value(windVecDir).toStringList();
                 for (int i = 0; i < myList.size(); i++)
                 {
                     if (myList[i].toInt() > 0 && !intList.contains(myList[i].toInt()))
@@ -418,7 +418,7 @@ bool PragaProject::loadPragaSettings()
             }
 
 */
-            parameters->endGroup();
+            parametersSettings->endGroup();
 
         }
 
@@ -1904,12 +1904,12 @@ bool PragaProject::averageSeriesOnZonesMeteoGrid(meteoVariable variable, meteoCo
 
 void PragaProject::savePragaParameters()
 {
-    parameters->beginGroup("elaboration");
-        parameters->setValue("anomaly_pts_max_distance", QString::number(double(clima->getElabSettings()->getAnomalyPtsMaxDistance())));
-        parameters->setValue("anomaly_pts_max_delta_z", QString::number(double(clima->getElabSettings()->getAnomalyPtsMaxDeltaZ())));
-        parameters->setValue("grid_min_coverage", QString::number(double(clima->getElabSettings()->getGridMinCoverage())));
-        parameters->setValue("merge_joint_stations", clima->getElabSettings()->getMergeJointStations());
-    parameters->endGroup();
+    parametersSettings->beginGroup("elaboration");
+        parametersSettings->setValue("anomaly_pts_max_distance", QString::number(double(clima->getElabSettings()->getAnomalyPtsMaxDistance())));
+        parametersSettings->setValue("anomaly_pts_max_delta_z", QString::number(double(clima->getElabSettings()->getAnomalyPtsMaxDeltaZ())));
+        parametersSettings->setValue("grid_min_coverage", QString::number(double(clima->getElabSettings()->getGridMinCoverage())));
+        parametersSettings->setValue("merge_joint_stations", clima->getElabSettings()->getMergeJointStations());
+    parametersSettings->endGroup();
 }
 
 QString getMapFileOutName(meteoVariable myVar, QDate myDate, int myHour)
