@@ -1170,14 +1170,14 @@ bool computeSeasonalPredictions(TinputObsData *dailyObsData, TweatherGenClimate 
         {
             outputDailyData[currentIndex].maxTemp = getTMax(myDoy, rainfallThreshold, wgClimate);
             outputDailyData[currentIndex].minTemp = getTMin(myDoy, rainfallThreshold, wgClimate);
-            if (outputDailyData[currentIndex].maxTemp < outputDailyData[currentIndex].minTemp)
+            /*if (outputDailyData[currentIndex].maxTemp < outputDailyData[currentIndex].minTemp)
             {
                 float average,diff;
                 average = 0.5*(outputDailyData[currentIndex].maxTemp + outputDailyData[currentIndex].minTemp);
                 diff = outputDailyData[currentIndex].minTemp - outputDailyData[currentIndex].maxTemp;
                 outputDailyData[currentIndex].maxTemp = average + 0.5*diff;
                 outputDailyData[currentIndex].minTemp = average - 0.5*diff;
-            }
+            }*/
             outputDailyData[currentIndex].prec = getPrecip(myDoy, rainfallThreshold, wgClimate);
             indexWg.push_back(currentIndex);
         }
