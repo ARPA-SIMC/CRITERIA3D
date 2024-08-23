@@ -89,7 +89,7 @@
         QString getNewDataEntry(int pos, const QList<QString>& dataStr, const QString& dateTimeStr,
                             const QString& idVarStr, meteoVariable myVar,
                             int* nrMissingData, int* nrWrongData, Crit3DQuality* dataQuality);
-        bool importHourlyMeteoData(QString fileNameComplete, bool deletePreviousData, QString *log);
+        bool importHourlyMeteoData(const QString &fileNameComplete, bool deletePreviousData, QString &log);
 
         bool writeDailyDataList(const QString &pointCode, const QList<QString> &listEntries, QString& log);
         bool writeHourlyDataList(const QString &pointCode, const QList<QString> &listEntries, QString& log);

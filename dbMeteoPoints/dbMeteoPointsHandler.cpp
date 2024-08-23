@@ -1354,7 +1354,7 @@ QString Crit3DMeteoPointsDbHandler::getNewDataEntry(int pos, const QList<QString
         return "";
     }
 
-    QString newEntry = "('" + dateTimeStr + "','" + idVarStr + "'," + QString::number(double(value)) + "),";
+    QString newEntry = "('" + dateTimeStr + "'," + idVarStr + "," + QString::number(double(value)) + "),";
     return newEntry;
 }
 
@@ -1365,16 +1365,16 @@ QString Crit3DMeteoPointsDbHandler::getNewDataEntry(int pos, const QList<QString
     \details fixed format:
     DATE(yyyy-mm-dd), HOUR, TAVG, PREC, RHAVG, RAD, W_SCAL_INT
 */
-bool Crit3DMeteoPointsDbHandler::importHourlyMeteoData(QString csvFileName, bool deletePreviousData, QString* log)
+bool Crit3DMeteoPointsDbHandler::importHourlyMeteoData(const QString &csvFileName, bool deletePreviousData, QString &log)
 {
     QString fileName = getFileName(csvFileName);
-    *log = "\nInput file: " + fileName;
+    log = "\nInput file: " + fileName;
 
     // check point code
     QString pointCode = fileName.left(fileName.length()-4);
     if (! existIdPoint(pointCode))
     {
-        *log += "\nID " + pointCode + " is not present in the point properties table.";
+        log += "\nID " + pointCode + " is not present in the point properties table.";
         return false;
     }
 
@@ -1382,14 +1382,14 @@ bool Crit3DMeteoPointsDbHandler::importHourlyMeteoData(QString csvFileName, bool
     QFile myFile(csvFileName);
     if(! myFile.open (QIODevice::ReadOnly))
     {
-        *log += myFile.errorString();
+        log += myFile.errorString();
         return false;
     }
 
     QTextStream myStream (&myFile);
     if (myStream.atEnd())
     {
-        *log += "\nFile is void.";
+        log += "\nFile is void.";
         myFile.close();
         return false;
     }
@@ -1403,7 +1403,7 @@ bool Crit3DMeteoPointsDbHandler::importHourlyMeteoData(QString csvFileName, bool
     QString tableName = pointCode + "_H";
     if (! createTable(tableName, deletePreviousData))
     {
-        *log += "\nError in create table: " + tableName + _db.lastError().text();
+        log += "\nError in create table: " + tableName + _db.lastError().text();
         myFile.close();
         return false;
     }
@@ -1422,9 +1422,9 @@ bool Crit3DMeteoPointsDbHandler::importHourlyMeteoData(QString csvFileName, bool
     int nrWrongDateTime = 0;
     int nrWrongData = 0;
     int nrMissingData = 0;
-    QString queryStr = "INSERT INTO " + tableName + " VALUES";
+    QString queryStr = "INSERT INTO '" + tableName + "' VALUES";
 
-    while(!myStream.atEnd())
+    while(! myStream.atEnd())
     {
         line = myStream.readLine().split(',');
 
@@ -1435,7 +1435,7 @@ bool Crit3DMeteoPointsDbHandler::importHourlyMeteoData(QString csvFileName, bool
         currentDate = QDate::fromString(line.at(0),"yyyy-MM-dd");
         if (! currentDate.isValid())
         {
-            *log += "\nWrong dateTime: " + line.at(0) + " h" + line.at(1);
+            log += "\nWrong dateTime: " + line.at(0) + " h" + line.at(1);
             nrWrongDateTime++;
             continue;
         }
@@ -1443,9 +1443,9 @@ bool Crit3DMeteoPointsDbHandler::importHourlyMeteoData(QString csvFileName, bool
         // check hour
         bool isNumber = false;
         hour = line.at(1).toInt(&isNumber);
-        if (!isNumber || (hour < 0) || (hour > 23))
+        if (! isNumber || (hour < 0) || (hour > 23))
         {
-            *log += "\nWrong dateTime: " + line.at(0) + " h" + line.at(1);
+            log += "\nWrong dateTime: " + line.at(0) + " h" + line.at(1);
             nrWrongDateTime++;
             continue;
         }
@@ -1460,7 +1460,7 @@ bool Crit3DMeteoPointsDbHandler::importHourlyMeteoData(QString csvFileName, bool
         if ((currentDate < previousDate) ||
             (currentDate == previousDate && hour <= previousHour))
         {
-            *log += "\nDuplicate dateTime: " + dateTimeStr;
+            log += "\nDuplicate dateTime: " + dateTimeStr;
             nrWrongDateTime++;
             continue;
         }
@@ -1485,16 +1485,16 @@ bool Crit3DMeteoPointsDbHandler::importHourlyMeteoData(QString csvFileName, bool
         qry.prepare(queryStr);
         if (! qry.exec())
         {
-            *log += "\nError in execute query: " + qry.lastError().text() +"\n";
-            *log += "Maybe there are missing or wrong data values.";
+            log += "\nError in execute query: " + qry.lastError().text() +"\n";
+            log += "Maybe there are missing or wrong data values.";
             return false;
         }
     }
 
-    *log += "\nData imported successfully.";
-    *log += "\nWrong date/time: " + QString::number(nrWrongDateTime);
-    *log += "\nMissing data: " + QString::number(nrMissingData);
-    *log += "\nWrong values: " + QString::number(nrWrongData);
+    log += "\nData imported successfully.";
+    log += "\nWrong date/time: " + QString::number(nrWrongDateTime);
+    log += "\nMissing data: " + QString::number(nrMissingData);
+    log += "\nWrong values: " + QString::number(nrWrongData);
 
     return true;
 }
