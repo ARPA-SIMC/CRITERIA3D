@@ -1748,6 +1748,8 @@ bool multipleDetrendingElevation(Crit3DProxyCombination elevationCombination, st
                         Crit3DInterpolationSettings* mySettings, meteoVariable myVar, std::string &errorStr)
 {
 
+    // perché se non supera il controllo di validità viene anche settato a non attivo?
+
     if (! getUseDetrendingVar(myVar)) return true;
     int elevationPos = NODATA;
 	
@@ -1830,6 +1832,8 @@ bool multipleDetrendingElevation(Crit3DProxyCombination elevationCombination, st
         }
 
     }
+
+    //essendo un solo proxy, qui penso si possa fare un singolo step
 
     // proxy spatial variability (2nd step)
     if (proxyValidityWeighted(elevationPoints, elevationPos, elevationProxy->getStdDevThreshold(), avg, stdDev))
