@@ -354,6 +354,8 @@ void Crit3DInterpolationSettings::setChosenElevationFunction(TFittingFunction ch
     const double INVSLOPE_MIN = -0.01; //inversion slope
     const double INVSLOPE_MAX = -0.0015;
 
+    if (getUseMultipleDetrending()) clearFitting();
+
     int elPos = NODATA;
     for (int i = 0; i < getProxyNr(); i++)
         if (getProxyPragaName(getProxy(i)->getName()) == proxyHeight)

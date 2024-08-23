@@ -1522,8 +1522,6 @@ bool setAllFittingParameters_noRange(Crit3DProxyCombination myCombination, Crit3
                              std::vector <std::vector<double>> &paramDelta, std::vector <std::vector<double>> &paramFirstGuess,
                              std::string &errorStr)
 {
-
-    int elevationPos = NODATA;
     std::vector<std::vector<double>> tempFirstGuess = paramFirstGuess;
     unsigned int nrProxy = mySettings->getSelectedCombination().getProxySize();
     paramFirstGuess.clear();
@@ -1531,12 +1529,6 @@ bool setAllFittingParameters_noRange(Crit3DProxyCombination myCombination, Crit3
     paramMax.resize(nrProxy);
     paramDelta.resize(nrProxy);
     paramFirstGuess.resize(nrProxy);
-
-    for (unsigned int i = 0; i < mySettings->getSelectedCombination().getProxySize(); i++)
-    {
-        if (getProxyPragaName(mySettings->getProxy(i)->getName()) == proxyHeight)
-            elevationPos = i;
-    }
 
     const double RATIO_DELTA = 1000;
 

@@ -2177,6 +2177,9 @@ bool Project::interpolationOutputPoints(std::vector <Crit3DInterpolationDataPoin
         return false;
     }
 
+    if (interpolationSettings.getUseMultipleDetrending())
+        interpolationSettings.clearFitting();
+
     std::vector <double> proxyValues;
     proxyValues.resize(unsigned(interpolationSettings.getProxyNr()));
 
@@ -2287,6 +2290,9 @@ bool Project::interpolationCv(meteoVariable myVar, const Crit3DTime& myTime, cro
         logError("No data available: " + QString::fromStdString(getVariableString(myVar)) + "\n" + QString::fromStdString(errorStdStr));
         return false;
     }
+
+    if (interpolationSettings.getUseMultipleDetrending())
+        interpolationSettings.clearFitting();
 
     if (! preInterpolation(interpolationPoints, &interpolationSettings, meteoSettings, &climateParameters,
                           meteoPoints, nrMeteoPoints, myVar, myTime, errorStdStr))
@@ -2605,6 +2611,9 @@ bool Project::interpolationDemMain(meteoVariable myVar, const Crit3DTime& myTime
         return interpolateDemRadiation(halfHour, myRaster);
     }
 
+    if (interpolationSettings.getUseMultipleDetrending())
+        interpolationSettings.clearFitting();
+
     // dynamic lapserate
     if (getUseDetrendingVar(myVar) && interpolationSettings.getUseLocalDetrending())
     {
@@ -2651,6 +2660,9 @@ bool Project::interpolationGrid(meteoVariable myVar, const Crit3DTime& myTime)
 
     std::vector <Crit3DInterpolationDataPoint> interpolationPoints;
     std::string errorStdStr;
+
+    if (interpolationSettings.getUseMultipleDetrending())
+        interpolationSettings.clearFitting();
 
     // check quality and pass data to interpolation
     if (! checkAndPassDataToInterpolation(quality, myVar, meteoPoints, nrMeteoPoints, myTime,
