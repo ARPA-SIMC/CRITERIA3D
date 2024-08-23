@@ -2414,9 +2414,9 @@ bool Project::interpolationDemLocalDetrending(meteoVariable myVar, const Crit3DT
         myRaster->initializeGrid(myHeader);
         myRaster->initializeParameters(myHeader);
 
-        if(!setHeightFittingRange(myCombination, &interpolationSettings))
+        if(!setHeightTemperatureRange(myCombination, &interpolationSettings))
         {
-            errorString = "Error in function preInterpolation: \n couldn't set fitting ranges.";
+            errorString = "Error in function preInterpolation: \n couldn't set temperature ranges for height proxy.";
             return false;
         }
 
@@ -2692,9 +2692,9 @@ bool Project::interpolationGrid(meteoVariable myVar, const Crit3DTime& myTime)
     proxyValues.resize(unsigned(interpolationSettings.getProxyNr()));
 
     if (interpolationSettings.getUseLocalDetrending())
-        if(!setHeightFittingRange(myCombination, &interpolationSettings))
+        if(!setHeightTemperatureRange(myCombination, &interpolationSettings))
         {
-            errorString = "Error in function preInterpolation: \n couldn't set fitting ranges.";
+            errorString = "Error in function preInterpolation: \n couldn't set temperature ranges for height proxy.";
             return false;
         }
 

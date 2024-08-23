@@ -345,34 +345,68 @@ TFittingFunction Crit3DInterpolationSettings::getChosenElevationFunction()
 
 void Crit3DInterpolationSettings::setChosenElevationFunction(TFittingFunction chosenFunction)
 {
+    const double H0_MIN = -200; //height of inversion point (double piecewise) or first inversion point (triple piecewise)
+    const double H0_MAX = 5000;
+    const double DELTA_MIN = 300; //height difference between inversion points (for triple piecewise only)
+    const double DELTA_MAX = 1000;
+    const double SLOPE_MIN = 0.002; //ascending slope
+    const double SLOPE_MAX = 0.007;
+    const double INVSLOPE_MIN = -0.01; //inversion slope
+    const double INVSLOPE_MAX = -0.0015;
+
     int elPos = NODATA;
     for (int i = 0; i < getProxyNr(); i++)
         if (getProxyPragaName(getProxy(i)->getName()) == proxyHeight)
             elPos = i;
 
-    double min = -20;
-    double max = 40;
+    double MIN_T = -20;
+    double MAX_T = 40;
 
     if (!getMinMaxTemperature().empty())
     {
-        min = getMinMaxTemperature()[0];
-        max = getMinMaxTemperature()[1];
+        MIN_T = getMinMaxTemperature()[0];
+        MAX_T = getMinMaxTemperature()[1];
     }
 
     if (elPos != NODATA)
     {
-        if (chosenFunction == piecewiseTwo)
-            getProxy(elPos)->setFittingParametersRange({-200, min-4, 0.002, -0.01, 5000, max+4, 0.01, 0.0015});
-        else if (chosenFunction == piecewiseThree)
-            getProxy(elPos)->setFittingParametersRange({-200, min-4, 300, 0.002, -0.01, 5000, max+4, 1000, 0.007, 0.0015});
-        else if (chosenFunction == piecewiseThreeFree)
-            getProxy(elPos)->setFittingParametersRange({-200, min-4, 300, 0.002, -0.01, -0.01, 5000, max+4, 1000, 0.007, 0.0015, 0.0015});
-        else return;
+        if (chosenFunction == getProxy(elPos)->getFittingFunctionName() && !getProxy(elPos)->getFittingParametersRange().empty())
+        {
+            std::vector tempParam = getProxy(elPos)->getFittingParametersRange();
 
-        getProxy(elPos)->setFittingFunctionName(chosenFunction);
+            if (chosenFunction == piecewiseTwo)
+            {
+                tempParam[1] = MIN_T-2;
+                tempParam[5] = MAX_T+2;
+            }
+            else if (chosenFunction == piecewiseThree)
+            {
+                tempParam[1] = MIN_T-2;
+                tempParam[6] = MAX_T+2;
+            }
+            else if (chosenFunction == piecewiseThreeFree)
+            {
+                tempParam[1] = MIN_T-2;
+                tempParam[7] = MAX_T+2;
+            }
+
+            getProxy(elPos)->setFittingParametersRange(tempParam);
+        }
+        else if (chosenFunction != getProxy(elPos)->getFittingFunctionName() || getProxy(elPos)->getFittingParametersRange().empty())
+        {
+            if (chosenFunction == piecewiseTwo)
+                getProxy(elPos)->setFittingParametersRange({H0_MIN, MIN_T-2, SLOPE_MIN, INVSLOPE_MIN,
+                                                            H0_MAX, MAX_T+2, SLOPE_MAX, INVSLOPE_MAX});
+            else if (chosenFunction == piecewiseThree)
+                getProxy(elPos)->setFittingParametersRange({H0_MIN, MIN_T-2, DELTA_MIN, SLOPE_MIN, INVSLOPE_MIN,
+                                                            H0_MAX, MAX_T+2, DELTA_MAX, SLOPE_MAX, INVSLOPE_MAX});
+            else if (chosenFunction == piecewiseThreeFree)
+                getProxy(elPos)->setFittingParametersRange({H0_MIN, MIN_T-2, DELTA_MIN, SLOPE_MIN, INVSLOPE_MIN, INVSLOPE_MIN,
+                                                            H0_MAX, MAX_T+2, DELTA_MAX, SLOPE_MAX, INVSLOPE_MAX, INVSLOPE_MAX});
+
+            getProxy(elPos)->setFittingFunctionName(chosenFunction);
+        }
     }
-    else
-        return;
 }
 
 void Crit3DInterpolationSettings::setMinMaxTemperature(double min, double max)

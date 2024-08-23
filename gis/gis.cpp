@@ -301,6 +301,7 @@ namespace gis
 
     bool Crit3DRasterGrid::initializeParametersLatLonHeader(const Crit3DLatLonHeader& latLonHeader)
     {
+        singleCell.clear();
         singleCell.resize(latLonHeader.nrRows*latLonHeader.nrCols);
         for (int i = 0; i < int(singleCell.size()); i++)
         {

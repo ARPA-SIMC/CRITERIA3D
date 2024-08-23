@@ -1474,19 +1474,10 @@ bool proxyValidityWeighted(std::vector <Crit3DInterpolationDataPoint> &myPoints,
         return true;
 }
 
-bool setHeightFittingRange(Crit3DProxyCombination myCombination, Crit3DInterpolationSettings* mySettings)
+bool setHeightTemperatureRange(Crit3DProxyCombination myCombination, Crit3DInterpolationSettings* mySettings)
 {
     if (mySettings->getMinMaxTemperature().empty())
         return 0;
-
-    const double H0_MIN = -200; //height of inversion point (double piecewise) or first inversion point (triple piecewise)
-    const double H0_MAX = 5000;
-    const double DELTA_MIN = 300; //height difference between inversion points (for triple piecewise only)
-    const double DELTA_MAX = 1000;
-    const double SLOPE_MIN = 0.002; //ascending slope
-    const double SLOPE_MAX = 0.007;
-    const double INVSLOPE_MIN = -0.01; //inversion slope
-    const double INVSLOPE_MAX = -0.0015;
 
     for (unsigned i=0; i < myCombination.getProxySize(); i++)
         if (myCombination.isProxyActive(i) == true)
@@ -1496,55 +1487,27 @@ bool setHeightFittingRange(Crit3DProxyCombination myCombination, Crit3DInterpola
                 const double MIN_T = mySettings->getMinMaxTemperature()[0];
                 const double MAX_T = mySettings->getMinMaxTemperature()[1];
 
-                /*
-                 * following line allows to check if the function for elevation has been changed (GUI only) compared to the
-                 * function read in the .ini file. if it hasn't been changed, only the minimum and maximum temperature get rewritten.
-                 * otherwise appropriate parameters are loaded into the proxy (fittingParametersRange)
-                */
-                if (mySettings->getChosenElevationFunction() == mySettings->getProxy(i)->getFittingFunctionName())
+                std::vector<double> tempParam;
+                tempParam = mySettings->getProxy(i)->getFittingParametersRange();
+                if (!tempParam.empty())
                 {
-                    std::vector<double> tempParam;
-                    tempParam = mySettings->getProxy(i)->getFittingParametersRange();
-                    if (!tempParam.empty())
-                    {
-                        if (mySettings->getChosenElevationFunction() == piecewiseTwo)
-                        {
-                            tempParam[1] = MIN_T-2;
-                            tempParam[5] = MAX_T+2;
-                        }
-                        else if (mySettings->getChosenElevationFunction() == piecewiseThreeFree)
-                        {
-                            tempParam[1] = MIN_T-2;
-                            tempParam[7] = MAX_T+2;
-                        }
-                        else if (mySettings->getChosenElevationFunction() == piecewiseThree)
-                        {
-                            tempParam[1] = MIN_T-2;
-                            tempParam[6] = MAX_T+2;
-                        }
-                        mySettings->getProxy(i)->setFittingParametersRange(tempParam);
-                    }
-                }
-                else
-                {
-                    std::vector <double> tempParam;
                     if (mySettings->getChosenElevationFunction() == piecewiseTwo)
                     {
-                        mySettings->getProxy(i)->setFittingFunctionName(piecewiseTwo);
-                        tempParam = {H0_MIN, MIN_T-2, SLOPE_MIN, INVSLOPE_MIN,
-                                     H0_MAX, MAX_T+2, SLOPE_MAX, INVSLOPE_MAX};
+                        tempParam[1] = MIN_T-2;
+                        tempParam[5] = MAX_T+2;
+                        mySettings->setSingleFittingFunction(lapseRatePiecewise_two, i);
                     }
                     else if (mySettings->getChosenElevationFunction() == piecewiseThreeFree)
                     {
-                        mySettings->getProxy(i)->setFittingFunctionName(piecewiseThreeFree);
-                        tempParam = {H0_MIN, MIN_T-2, DELTA_MIN, SLOPE_MIN, INVSLOPE_MIN, INVSLOPE_MIN,
-                                     H0_MAX, MAX_T+2, DELTA_MAX, SLOPE_MAX, INVSLOPE_MAX, INVSLOPE_MAX};
+                        tempParam[1] = MIN_T-2;
+                        tempParam[7] = MAX_T+2;
+                        mySettings->setSingleFittingFunction(lapseRatePiecewise_three_free, i);
                     }
                     else if (mySettings->getChosenElevationFunction() == piecewiseThree)
                     {
-                        mySettings->getProxy(i)->setFittingFunctionName(piecewiseThree);
-                        tempParam = {H0_MIN, MIN_T-2, DELTA_MIN, SLOPE_MIN, INVSLOPE_MIN,
-                                     H0_MAX, MAX_T+2, DELTA_MAX, SLOPE_MAX, INVSLOPE_MAX};
+                        tempParam[1] = MIN_T-2;
+                        tempParam[6] = MAX_T+2;
+                        mySettings->setSingleFittingFunction(lapseRatePiecewise_three, i);
                     }
                     mySettings->getProxy(i)->setFittingParametersRange(tempParam);
                 }
@@ -1583,11 +1546,20 @@ bool setAllFittingParameters_noRange(Crit3DProxyCombination myCombination, Crit3
             if (getProxyPragaName(mySettings->getProxy(i)->getName()) == proxyHeight)
             {
                 if (mySettings->getChosenElevationFunction() == piecewiseTwo)
+                {
+                    mySettings->setSingleFittingFunction(lapseRatePiecewise_two, i);
                     myFunc[i] = lapseRatePiecewise_two;
+                }
                 else if (mySettings->getChosenElevationFunction() == piecewiseThreeFree)
+                {
+                    mySettings->setSingleFittingFunction(lapseRatePiecewise_three_free, i);
                     myFunc[i] = lapseRatePiecewise_three_free;
+                }
                 else if (mySettings->getChosenElevationFunction() == piecewiseThree)
+                {
+                    mySettings->setSingleFittingFunction(lapseRatePiecewise_three, i);
                     myFunc[i] = lapseRatePiecewise_three;
+                }
                 else
                 {
                     errorStr = "Missing or wrong fitting function for proxy: " + mySettings->getProxy(i)->getName();
@@ -1947,20 +1919,6 @@ bool multipleDetrendingElevation(Crit3DProxyCombination elevationCombination, st
 
     mySettings->setSingleFittingParameters(parameters[elevationPos], elevationPos);
 
-
-    if (mySettings->getProxy(elevationPos)->getFittingFunctionName() == piecewiseTwo)
-    {
-        myFunc[elevationPos] = detrendingLapseRatePiecewise_two;
-        mySettings->setSingleFittingFunction(detrendingLapseRatePiecewise_two, elevationPos);
-    } else if (mySettings->getProxy(elevationPos)->getFittingFunctionName() == piecewiseThreeFree)
-    {
-        myFunc[elevationPos] = detrendingLapseRatePiecewise_three_free;
-        mySettings->setSingleFittingFunction(detrendingLapseRatePiecewise_three_free, elevationPos);
-    } else if (mySettings->getProxy(elevationPos)->getFittingFunctionName() == piecewiseThree)
-    {
-        myFunc[elevationPos] = detrendingLapseRatePiecewise_three;
-        mySettings->setSingleFittingFunction(detrendingLapseRatePiecewise_three, elevationPos);
-    }
 
     func = myFunc[elevationPos].target<double(*)(double, std::vector<double>&)>();;
 
