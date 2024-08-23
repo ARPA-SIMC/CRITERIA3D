@@ -411,16 +411,16 @@ void Crit3DInterpolationSettings::setChosenElevationFunction(TFittingFunction ch
     }
 }
 
-void Crit3DInterpolationSettings::setMinMaxTemperature(double min, double max)
+void Crit3DInterpolationSettings::setPointsRange(double min, double max)
 {
-    tempMinMax.clear();
-    tempMinMax.push_back(min);
-    tempMinMax.push_back(max);
+    pointsRange.clear();
+    pointsRange.push_back(min);
+    pointsRange.push_back(max);
 }
 
 std::vector<double> Crit3DInterpolationSettings::getMinMaxTemperature()
 {
-    return tempMinMax;
+    return pointsRange;
 }
 
 void Crit3DInterpolationSettings::clearFitting()

@@ -4600,65 +4600,7 @@ void Project::closeProgressBar()
 }
 
 
-bool Project::findTemperatureRange(meteoVariable myVar)
-{
-    if (nrMeteoPoints == 0)
-        return false;
 
-    // check frequency and variable
-    frequencyType myFreq = getVarFrequency(myVar);
-    if (myFreq == daily)
-    {
-        if (myVar != dailyAirTemperatureAvg && myVar != dailyAirTemperatureMax && myVar != dailyAirTemperatureMin)
-            return false;
-    }
-    else if (myFreq == hourly)
-    {
-        if (myVar != airTemperature)
-            return false;
-    }
-    else
-    {
-        return false;
-    }
-
-    Crit3DDate myDate = getCrit3DDate(this->getCurrentDate());
-    int myHour = this->getCurrentHour();
-    float currentMin = NODATA;
-    float currentMax = NODATA;
-    float value = NODATA;
-
-    for (int i = 0; i < nrMeteoPoints; i++)
-    {
-        if (myFreq == daily)
-        {
-            value = meteoPoints[i].getMeteoPointValueD(myDate, myVar);
-        }
-        else if (myFreq == hourly)
-        {
-            value = meteoPoints[i].getMeteoPointValueH(myDate, myHour, 0, myVar);
-        }
-        if (value != NODATA)
-        {
-            if (value < currentMin || currentMin == NODATA)
-            {
-                currentMin = value;
-            }
-            if (value > currentMax || currentMax == NODATA)
-            {
-                currentMax = value;
-            }
-        }
-    }
-
-    if (currentMin == NODATA || currentMax == NODATA)
-    {
-        return false;
-    }
-
-    interpolationSettings.setMinMaxTemperature(currentMin, currentMax);
-    return true;
-}
 
 
 bool Project::waterTableImportLocation(const QString &csvFileName)

@@ -176,7 +176,7 @@
 
         std::vector <std::vector<double>> fittingParameters;
         std::vector<std::function<double(double, std::vector<double>&)>> fittingFunction;
-        std::vector<double> tempMinMax;
+        std::vector<double> pointsRange;
 
 
     public:
@@ -275,7 +275,7 @@
         void clearFitting();
         TFittingFunction getChosenElevationFunction();
         void setChosenElevationFunction(TFittingFunction chosenFunction);
-        void setMinMaxTemperature(double min, double max);
+        void setPointsRange(double min, double max);
         std::vector<double> getMinMaxTemperature();
     };
 
