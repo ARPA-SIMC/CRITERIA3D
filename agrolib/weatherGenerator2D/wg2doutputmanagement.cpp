@@ -639,11 +639,13 @@ void weatherGenerator2D::precipitationCorrelationMatricesSimulation()
         }
     }
     fclose(fp);
+
     fp = fopen("outputData/correlationMatricesAmountMatrixDistribution.txt","w");
-    for (int iMonth=0;iMonth<12;iMonth++)
+
+    for (int iMonth=0; iMonth < 12; iMonth++)
     {
         fprintf(fp,"month %d\n",iMonth+1);
-        double bins[20];
+        //double bins[20];
         int counterBin[20];
         for (int i=0;i<20;i++)
         {
@@ -667,14 +669,12 @@ void weatherGenerator2D::precipitationCorrelationMatricesSimulation()
                     counter++;
 
                 } while (!isTheRightBin);
-
             }
         }
         for (int i=0;i<20;i++)
         {
             fprintf(fp,"%f,%d \n", 0.025 + i*0.05, counterBin[i]);
         }
-
     }
 
     fclose(fp);
@@ -708,7 +708,6 @@ void weatherGenerator2D::precipitationCorrelationMatricesSimulation()
             }
         }
         fprintf(fp,"maxValue %f minValue %f\n", maxCorrelationAnomaly, minCorrelationAnomaly);
-
 
         for (int i=0;i<61;i++)
         {

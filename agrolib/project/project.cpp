@@ -2177,6 +2177,9 @@ bool Project::interpolationOutputPoints(std::vector <Crit3DInterpolationDataPoin
         return false;
     }
 
+    if (interpolationSettings.getUseMultipleDetrending())
+        interpolationSettings.clearFitting();
+
     std::vector <double> proxyValues;
     proxyValues.resize(unsigned(interpolationSettings.getProxyNr()));
 
@@ -2287,6 +2290,9 @@ bool Project::interpolationCv(meteoVariable myVar, const Crit3DTime& myTime, cro
         logError("No data available: " + QString::fromStdString(getVariableString(myVar)) + "\n" + QString::fromStdString(errorStdStr));
         return false;
     }
+
+    if (interpolationSettings.getUseMultipleDetrending())
+        interpolationSettings.clearFitting();
 
     if (! preInterpolation(interpolationPoints, &interpolationSettings, meteoSettings, &climateParameters,
                           meteoPoints, nrMeteoPoints, myVar, myTime, errorStdStr))
@@ -2414,9 +2420,9 @@ bool Project::interpolationDemLocalDetrending(meteoVariable myVar, const Crit3DT
         myRaster->initializeGrid(myHeader);
         myRaster->initializeParameters(myHeader);
 
-        if(!setHeightFittingRange(myCombination, &interpolationSettings))
+        if(!setHeightTemperatureRange(myCombination, &interpolationSettings))
         {
-            errorString = "Error in function preInterpolation: \n couldn't set fitting ranges.";
+            errorString = "Error in function preInterpolation: \n couldn't set temperature ranges for height proxy.";
             return false;
         }
 
@@ -2605,6 +2611,9 @@ bool Project::interpolationDemMain(meteoVariable myVar, const Crit3DTime& myTime
         return interpolateDemRadiation(halfHour, myRaster);
     }
 
+    if (interpolationSettings.getUseMultipleDetrending())
+        interpolationSettings.clearFitting();
+
     // dynamic lapserate
     if (getUseDetrendingVar(myVar) && interpolationSettings.getUseLocalDetrending())
     {
@@ -2652,6 +2661,9 @@ bool Project::interpolationGrid(meteoVariable myVar, const Crit3DTime& myTime)
     std::vector <Crit3DInterpolationDataPoint> interpolationPoints;
     std::string errorStdStr;
 
+    if (interpolationSettings.getUseMultipleDetrending())
+        interpolationSettings.clearFitting();
+
     // check quality and pass data to interpolation
     if (! checkAndPassDataToInterpolation(quality, myVar, meteoPoints, nrMeteoPoints, myTime,
                                          &qualityInterpolationSettings, &interpolationSettings, meteoSettings, &climateParameters, interpolationPoints,
@@ -2692,9 +2704,9 @@ bool Project::interpolationGrid(meteoVariable myVar, const Crit3DTime& myTime)
     proxyValues.resize(unsigned(interpolationSettings.getProxyNr()));
 
     if (interpolationSettings.getUseLocalDetrending())
-        if(!setHeightFittingRange(myCombination, &interpolationSettings))
+        if(!setHeightTemperatureRange(myCombination, &interpolationSettings))
         {
-            errorString = "Error in function preInterpolation: \n couldn't set fitting ranges.";
+            errorString = "Error in function preInterpolation: \n couldn't set temperature ranges for height proxy.";
             return false;
         }
 
@@ -4588,65 +4600,7 @@ void Project::closeProgressBar()
 }
 
 
-bool Project::findTemperatureRange(meteoVariable myVar)
-{
-    if (nrMeteoPoints == 0)
-        return false;
 
-    // check frequency and variable
-    frequencyType myFreq = getVarFrequency(myVar);
-    if (myFreq == daily)
-    {
-        if (myVar != dailyAirTemperatureAvg && myVar != dailyAirTemperatureMax && myVar != dailyAirTemperatureMin)
-            return false;
-    }
-    else if (myFreq == hourly)
-    {
-        if (myVar != airTemperature)
-            return false;
-    }
-    else
-    {
-        return false;
-    }
-
-    Crit3DDate myDate = getCrit3DDate(this->getCurrentDate());
-    int myHour = this->getCurrentHour();
-    float currentMin = NODATA;
-    float currentMax = NODATA;
-    float value = NODATA;
-
-    for (int i = 0; i < nrMeteoPoints; i++)
-    {
-        if (myFreq == daily)
-        {
-            value = meteoPoints[i].getMeteoPointValueD(myDate, myVar);
-        }
-        else if (myFreq == hourly)
-        {
-            value = meteoPoints[i].getMeteoPointValueH(myDate, myHour, 0, myVar);
-        }
-        if (value != NODATA)
-        {
-            if (value < currentMin || currentMin == NODATA)
-            {
-                currentMin = value;
-            }
-            if (value > currentMax || currentMax == NODATA)
-            {
-                currentMax = value;
-            }
-        }
-    }
-
-    if (currentMin == NODATA || currentMax == NODATA)
-    {
-        return false;
-    }
-
-    interpolationSettings.setMinMaxTemperature(currentMin, currentMax);
-    return true;
-}
 
 
 bool Project::waterTableImportLocation(const QString &csvFileName)

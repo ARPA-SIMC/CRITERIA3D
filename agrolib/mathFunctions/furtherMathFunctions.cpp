@@ -72,9 +72,13 @@ double lapseRateFrei(double x, std::vector <double>& par)
 
 double lapseRatePiecewise_three_noSlope(double x, std::vector <double>& par)
 {
+    //this is the original lapseRatePiecewise_three function, which isn't used because it's not possible to
+    //control the slope of the middle piece
+
     // the piecewise line is parameterized as follows
     // the line passes through A(par[0];par[1])and B(par[0]+par[2];par[3]). par[4] is the slope of the 2 externals pieces
     // "y = mx + q" piecewise function;
+
     double xb;
     // par[2] means the delta between the two quotes. It must be positive.
     xb = par[0]+par[2];
@@ -98,6 +102,34 @@ double lapseRatePiecewise_three_noSlope(double x, std::vector <double>& par)
     }
 }
 
+/*
+ * The following three functions are only used for the height proxy when the multiple detrending check is enabled.
+ * One function among these three (lapseRatePiecewise_two, _three and _three_free) is selected by the user and used to
+ * look for the fitting parameters with the Marquardt algorithm.
+*/
+
+/*
+ *  functions for MARQUARDT use
+ */
+
+double lapseRatePiecewise_two(double x, std::vector <double>& par)
+{
+    // the piecewise line is parameterized as follows
+    // the line passes through A(par[0];par[1]). par[2] is the slope of the first line, par[3] the slope of the second
+    // "y = mx + q" piecewise function;
+    if (x < par[0])
+    {
+        //m = par[2];
+        //q = -par[2]*par[0]+par[1];
+        return par[2]*(x-par[0])+par[1];
+    }
+    else
+    {
+        //m = par[3]:
+        //q = -par[3]*par[0]+par[1];
+        return par[3]*(x-par[0])+par[1];
+    }
+}
 
 double lapseRatePiecewise_three(double x, std::vector <double>& par)
 {
@@ -114,29 +146,14 @@ double lapseRatePiecewise_three(double x, std::vector <double>& par)
         return par[3]*x - par[3]*par[0]+par[1];
 }
 
-double detrendingLapseRatePiecewise_three(double x, std::vector <double>& par)
-{
-    //xa (par[0],par[1]), xb-xa = par[2], par[3] is the slope of the middle piece,
-    //par[4] the slope of the first and last piece
-    par[2] = MAXVALUE(10, par[2]);
-    double xb = par[2]+par[0];
-
-    if (x < par[0])
-        return par[4]*x;
-    else if (x > xb)
-        return par[4]*x;
-    else
-        return par[3]*x;
-}
-
 double lapseRatePiecewise_three_free(double x, std::vector <double>& par)
 {
     // the piecewise line is parameterized as follows
     // the line passes through A(par[0];par[1])and B(par[0]+par[2];...)
     //par [3] is the slope of the middle piece
     //par[4] is the first slope. par[5] is the third slope
-
     // "y = mx + q" piecewise function;
+
     double xb;
     par[2] = MAXVALUE(10, par[2]);
     // par[2] means the delta between the two quotes. It must be positive.
@@ -158,76 +175,6 @@ double lapseRatePiecewise_three_free(double x, std::vector <double>& par)
         //m = par[3];
         //q = m*(-par[0]) + par[1];
         return par[3]*x - par[3]*par[0]+par[1];
-    }
-}
-
-double detrendingLapseRatePiecewise_three_free(double x, std::vector <double>& par)
-{
-    // the piecewise line is parameterized as follows
-    // the line passes through A(par[0];par[1])and B(par[0]+par[2];...)
-    //par [3] is the slope of the middle piece
-    //par[4] is the first slope. par[5] is the third slope
-
-    // "y = mx + q" piecewise function;
-    double xb;
-    par[2] = MAXVALUE(10, par[2]);
-    // par[2] means the delta between the two quotes. It must be positive.
-    xb = par[0]+par[2];
-    if (x < par[0])
-    {
-        //m = par[4];;
-        //q = par[1]-m*par[0];
-        return par[4]*x;
-    }
-    else if (x>xb)
-    {
-        //m = par[5];
-        //q = m(-par[0]-par[2])+par[3]*par[2]+par[1];
-        return (par[4]*par[0]) + (par[3]*par[2]) + par[5]*(x-xb);
-    }
-    else
-    {
-        //m = par[3];
-        //q = m*(-par[0]) + par[1];
-        return (par[4]*par[0]) + par[3]*(x-par[0]);
-    }
-}
-
-double lapseRatePiecewise_two(double x, std::vector <double>& par)
-{
-    // the piecewise line is parameterized as follows
-    // the line passes through A(par[0];par[1]). par[2] is the slope of the first line, par[3] the slope of the second
-    // "y = mx + q" piecewise function;
-    if (x < par[0])
-    {
-        //m = par[2];
-        //q = -par[2]*par[0]+par[1];
-        return par[2]*(x-par[0])+par[1];
-    }
-    else
-    {
-        //m = par[3]:
-        //q = -par[3]*par[0]+par[1];
-        return par[3]*(x-par[0])+par[1];
-    }
-}
-
-double detrendingLapseRatePiecewise_two(double x, std::vector <double>& par)
-{
-    // the piecewise line is parameterized as follows
-    // the line passes through A(par[0];par[1]). par[2] is the slope of the first line, par[3] the slope of the second
-    // "y = mx + q" piecewise function;
-    if (x < par[0])
-    {
-        //m = par[2];
-        //q = -par[2]*par[0]+par[1];
-        return par[2]*x;
-    }
-    else
-    {
-        //m = par[3]:
-        //q = -par[3]*par[0]+par[1];
-        return (par[2]*par[0]) + par[3]*(x-par[0]);
     }
 }
 
