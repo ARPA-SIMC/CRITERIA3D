@@ -729,12 +729,12 @@ bool makeSeasonalForecast(QString outputFileName, char separator, XMLSeasonalAno
         {
             if (tmp == 0)
             {
-                qDebug() << "ERROR: Missing data:" << QString::fromStdString(dailyPredictions[tmp].date.toStdString());
+                qDebug() << "ERROR: Missing data:" << QString::fromStdString(dailyPredictions[tmp].date.toISOString());
                 return false;
             }
             else
             {
-                qDebug() << "WARNING: Missing data:" << QString::fromStdString(dailyPredictions[tmp].date.toStdString());
+                qDebug() << "WARNING: Missing data:" << QString::fromStdString(dailyPredictions[tmp].date.toISOString());
 
                 if (int(dailyPredictions[tmp].maxTemp) == int(NODATA))
                     dailyPredictions[tmp].maxTemp = lastTmax;
@@ -956,12 +956,12 @@ bool makeSeasonalForecastWaterTable(QString outputFileName, char separator, XMLS
         {
             if (tmp == 0)
             {
-                qDebug() << "ERROR: Missing data:" << QString::fromStdString(dailyPredictions[tmp].date.toStdString());
+                qDebug() << "ERROR: Missing data:" << QString::fromStdString(dailyPredictions[tmp].date.toISOString());
                 return false;
             }
             else
             {
-                qDebug() << "WARNING: Missing data:" << QString::fromStdString(dailyPredictions[tmp].date.toStdString());
+                qDebug() << "WARNING: Missing data:" << QString::fromStdString(dailyPredictions[tmp].date.toISOString());
 
                 if (int(dailyPredictions[tmp].maxTemp) == int(NODATA))
                     dailyPredictions[tmp].maxTemp = lastTmax;
@@ -1170,14 +1170,14 @@ bool computeSeasonalPredictions(TinputObsData *dailyObsData, TweatherGenClimate 
         {
             outputDailyData[currentIndex].maxTemp = getTMax(myDoy, rainfallThreshold, wgClimate);
             outputDailyData[currentIndex].minTemp = getTMin(myDoy, rainfallThreshold, wgClimate);
-            if (outputDailyData[currentIndex].maxTemp < outputDailyData[currentIndex].minTemp)
+            /*if (outputDailyData[currentIndex].maxTemp < outputDailyData[currentIndex].minTemp)
             {
                 float average,diff;
                 average = 0.5*(outputDailyData[currentIndex].maxTemp + outputDailyData[currentIndex].minTemp);
                 diff = outputDailyData[currentIndex].minTemp - outputDailyData[currentIndex].maxTemp;
                 outputDailyData[currentIndex].maxTemp = average + 0.5*diff;
                 outputDailyData[currentIndex].minTemp = average - 0.5*diff;
-            }
+            }*/
             outputDailyData[currentIndex].prec = getPrecip(myDoy, rainfallThreshold, wgClimate);
             indexWg.push_back(currentIndex);
         }

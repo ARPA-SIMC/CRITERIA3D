@@ -59,10 +59,6 @@ enum estimatedFunction {FUNCTION_CODE_SPHERICAL, FUNCTION_CODE_LINEAR, FUNCTION_
     double lapseRatePiecewise_three(double x, std::vector <double>& par);
     double lapseRatePiecewise_three_free(double x, std::vector <double>& par);
 
-    double detrendingLapseRatePiecewise_two(double x, std::vector <double>& par);
-    double detrendingLapseRatePiecewise_three(double x, std::vector <double>& par);
-    double detrendingLapseRatePiecewise_three_free(double x, std::vector <double>& par);
-
 
     namespace integration
     {

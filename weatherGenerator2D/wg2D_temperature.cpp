@@ -232,14 +232,14 @@ void weatherGenerator2D::computeTemperatureParameters()
         }
         for (int iDatum=0; iDatum<nrData; iDatum++)
         {
-           if ((fabs((obsDataD[iStation][iDatum].tMax)))< EPSILON)
+           if ( fabs((obsDataD[iStation][iDatum].tMax)) < EPSILON)
             {
-                obsDataD[iStation][iDatum].tMax += 3.*EPSILON;
+                obsDataD[iStation][iDatum].tMax += float(3. * EPSILON);
 
             }
-            if ((fabs(obsDataD[iStation][iDatum].tMin))< EPSILON)
+            if ( fabs(obsDataD[iStation][iDatum].tMin) < EPSILON)
             {
-                obsDataD[iStation][iDatum].tMin += 3.*EPSILON;
+                obsDataD[iStation][iDatum].tMin += float(3. * EPSILON);
             }
         }
         // compute average temperatures of the stations
@@ -1556,9 +1556,8 @@ void weatherGenerator2D::multisiteRandomNumbersTemperature()
     weatherGenerator2D::initializeNormalRandomMatricesTemperatures();
     int gasDevIset = 0;
     double gasDevGset = 0;
-    srand (time(nullptr));
-    //int firstRandomNumber;
-    //firstRandomNumber = rand();
+    srand(unsigned(time(nullptr)));
+
     int lengthOfRandomSeries;
     lengthOfRandomSeries = parametersModel.yearOfSimulation*365;
     int nrSquareOfStations;
@@ -2125,11 +2124,13 @@ void weatherGenerator2D::multisiteTemperatureGeneration()
         }
         double averageTmax[365]={0};
         double averageTmin[365]={0};
-        srand(time(nullptr));
+        srand(unsigned(time(nullptr)));
+
         for (int j=0;j<lengthOfRandomSeries;j++)
         {
-            int getDecadal = (multiOccurrenceTemperature[j].month_simulated-1)*3 + floor(MINVALUE(multiOccurrenceTemperature[j].day_simulated,29)/10.);
-            int getYear = floor(1.*j/365.);
+            //int getDecadal = (multiOccurrenceTemperature[j].month_simulated-1)*3 + floor(MINVALUE(multiOccurrenceTemperature[j].day_simulated,29)/10.);
+            //int getYear = floor(1.*j/365.);
+
             double random1,random2;
             //random1 = 0.5*((double) rand() / (RAND_MAX) -0.5) + monthlyRandomDeviationTmean[getYear][getDecadal];
             //random2 = 0.5*((double) rand() / (RAND_MAX) -0.5)+ monthlyRandomDeviationTmean[getYear][getDecadal];

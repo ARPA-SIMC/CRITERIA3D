@@ -343,6 +343,7 @@ bool passDataToInterpolation(Crit3DMeteoPoint* meteoPoints, int nrMeteoPoints,
 {
     int nrValid = 0;
     float xMin=NODATA, xMax, yMin, yMax;
+    float valueMin=NODATA, valueMax;
     bool isSelection = isSelectionPointsActive(meteoPoints, nrMeteoPoints);
 
     myInterpolationPoints.clear();
@@ -379,6 +380,17 @@ bool passDataToInterpolation(Crit3DMeteoPoint* meteoPoints, int nrMeteoPoints,
                 yMax = MAXVALUE(yMax, (float)myPoint.point->utm.y);
             }
 
+            if (isEqual(valueMin, NODATA))
+            {
+                valueMin = myPoint.value;
+                valueMax = myPoint.value;
+            }
+            else
+            {
+                if (myPoint.value < valueMin) valueMin = myPoint.value;
+                if (myPoint.value > valueMax) valueMax = myPoint.value;
+            }
+
             myInterpolationPoints.push_back(myPoint);
 
             if (checkLapseRateCode(myPoint.lapseRateCode, mySettings->getUseLapseRateCode(), false))
@@ -389,8 +401,10 @@ bool passDataToInterpolation(Crit3DMeteoPoint* meteoPoints, int nrMeteoPoints,
     if (nrValid > 0)
     {
         mySettings->setPointsBoundingBoxArea((xMax - xMin) * (yMax - yMin));
+        mySettings->setPointsRange(valueMin, valueMax);
         return true;
     }
     else
         return false;
+
 }
