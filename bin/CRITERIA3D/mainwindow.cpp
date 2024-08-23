@@ -1752,7 +1752,8 @@ bool MainWindow::loadMeteoPointsDB_GUI(QString dbName)
 
 void MainWindow::on_actionLoad_MeteoPoints_triggered()
 {
-    QString dbName = QFileDialog::getOpenFileName(this, tr("Open meteo points DB"), "", tr("DB files (*.db)"));
+    QString meteoPointsPath = myProject.getDefaultPath() + PATH_METEOPOINT;
+    QString dbName = QFileDialog::getOpenFileName(this, tr("Open meteo points DB"), meteoPointsPath, tr("DB files (*.db)"));
     if (dbName != "") this->loadMeteoPointsDB_GUI(dbName);
 }
 
