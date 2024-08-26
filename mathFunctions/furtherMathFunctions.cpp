@@ -1991,18 +1991,18 @@ namespace interpolation
 
         //grigliato
         std::vector<double> stepSize;
+        stepSize.resize(parameters.size());
+
         const int numSteps = 30;
-        if (parameters.size() == 4)
-            stepSize = {2*(parametersMax[0]-parametersMin[0])/numSteps, 2*(parametersMax[1]-parametersMin[1])/numSteps, 20*(parametersMax[2]-parametersMin[2])/numSteps, 20*(parametersMax[3]-parametersMin[3])/numSteps};
-        else if (parameters.size() == 6)
-            stepSize = {2*(parametersMax[0]-parametersMin[0])/numSteps, 2*(parametersMax[1]-parametersMin[1])/numSteps, 4*(parametersMax[2]-parametersMin[2])/numSteps, 20*(parametersMax[3]-parametersMin[3])/numSteps,20*(parametersMax[3]-parametersMin[3])/numSteps,20*(parametersMax[3]-parametersMin[3])/numSteps };
-        else return false;
+        for (int i = 0; i < parameters.size(); i++)
+            stepSize[i] = (parametersMax[i]-parametersMin[i])/numSteps;
+
 
         int directions[] = {1, -1};
         size_t numParamsToVary = parameters.size();
         std::vector<double> firstGuessParam = parameters;
 
-        for (int step = 1; step <= numSteps; ++step)
+        for (int step = 1; step <= numSteps*6; step++)
         {
             for (int dir = 0; dir < 2; ++dir)
             {
@@ -2050,8 +2050,7 @@ namespace interpolation
 
                 }
             }
-
-            if ((counter > nrTrials) || ((R2Previous[0] != NODATA) && fabs(R2Previous[0]-R2Previous[nrMinima-1]) < deltaR2 ))
+            if ((counter > nrTrials))
                 break;
         }
 

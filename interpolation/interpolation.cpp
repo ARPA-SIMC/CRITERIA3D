@@ -1119,9 +1119,9 @@ void localSelection(vector <Crit3DInterpolationDataPoint> &inputPoints, vector <
                 nrValid++;
                 if (inputPoints[i].distance > maxDistance)
                     maxDistance = int(inputPoints[i].distance);
-				
-				if (checkLapseRateCode(inputPoints[i].lapseRateCode, mySettings.getUseLapseRateCode(), true))
-					nrPrimaries++;
+
+                if (checkLapseRateCode(inputPoints[i].lapseRateCode, mySettings.getUseLapseRateCode(), true))
+                    nrPrimaries++;
 
                 if (abs(inputPoints[i].point->z - z) > maxHeightDelta)
                     maxHeightDelta = fabs(float(inputPoints[i].point->z) - z);
@@ -1752,14 +1752,14 @@ bool multipleDetrendingElevation(Crit3DProxyCombination elevationCombination, st
 
     if (! getUseDetrendingVar(myVar)) return true;
     int elevationPos = NODATA;
-	
-	for (unsigned int pos = 0; pos < elevationCombination.getProxySize(); pos++)
+
+    for (unsigned int pos = 0; pos < elevationCombination.getProxySize(); pos++)
         if (elevationCombination.isProxyActive(pos))
             elevationPos = pos;
 
     if (elevationPos == NODATA)
         return true;
-	
+
     Crit3DProxy* elevationProxy = mySettings->getProxy(elevationPos);
 
     //lapse rate code
@@ -1899,7 +1899,7 @@ bool multipleDetrendingElevation(Crit3DProxyCombination elevationCombination, st
         errorStr = "couldn't prepare the fitting parameters for proxy: elevation.";
         return false;
     }
-	
+
     auto func = myFunc[elevationPos].target<double(*)(double, std::vector<double>&)>();
 
     if (!func)
@@ -2180,7 +2180,7 @@ bool multipleDetrending(Crit3DProxyCombination othersCombination, std::vector<st
     for (i = 0; i < myPoints.size(); i++)
     {
         proxyValues.clear();
-        
+
         for (int pos=0; pos < proxyNr; pos++)
         {
             if ((othersCombination.isProxyActive(pos)) && othersCombination.isProxySignificant(pos))
@@ -2192,7 +2192,7 @@ bool multipleDetrending(Crit3DProxyCombination othersCombination, std::vector<st
 
         detrendValue = float(functionSum(myFunc, proxyValues, parameters));
         myPoints[i].value -= detrendValue;
-        
+
     }
 
     return true;
