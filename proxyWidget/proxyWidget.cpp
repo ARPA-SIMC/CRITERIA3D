@@ -468,10 +468,20 @@ void Crit3DProxyWidget::modelLRClicked(int toggled)
                     point_vector.append(point);
                 }
             }
-            else
+            else if (! interpolationSettings->getUseLocalDetrending())
             {
                 float myY;
+                std::string errorStr;
+
+                setHeightTemperatureRange(interpolationSettings->getSelectedCombination(), interpolationSettings);
+                interpolationSettings->setCurrentCombination(interpolationSettings->getSelectedCombination());
+                if (interpolationSettings->getProxiesComplete())
+                {
+                    if (! multipleDetrendingMain(outInterpolationPoints, interpolationSettings, myVar, errorStr)) return;
+                }
+
                 std::vector<std::vector<double>> parameters = interpolationSettings->getFittingParameters();
+
                 if (parameters.size() > proxyPos)
                 {
                     if (parameters[proxyPos].size() == 5)
