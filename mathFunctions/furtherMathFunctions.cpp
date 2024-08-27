@@ -1993,7 +1993,7 @@ namespace interpolation
         std::vector<double> stepSize;
         stepSize.resize(parameters.size());
 
-        const int numSteps = 30;
+        const int numSteps = 40;
         for (int i = 0; i < parameters.size(); i++)
             stepSize[i] = (parametersMax[i]-parametersMin[i])/numSteps;
 
@@ -2042,6 +2042,8 @@ namespace interpolation
                         }
                     }
                     counter++;
+
+                    parameters = firstGuessParam;
 
                     if (dir == 0)
                         parameters[paramIndex] = MINVALUE(firstGuessParam[paramIndex] + directions[dir] * step * stepSize[paramIndex], parametersMax[paramIndex]);
