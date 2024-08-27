@@ -115,6 +115,7 @@
                                          std::vector<std::function<double(double, std::vector<double>&)>>& myFunc,
                                          std::vector <std::vector<double>> &paramMin, std::vector <std::vector<double>> &paramMax,
                                          std::vector <std::vector<double>> &paramDelta, std::vector <std::vector<double>> &paramFirstGuess,
+                                         std::vector<double> &stepSize, int numSteps,
                                          std::string &errorStr);
 
     bool setAllFittingParameters(Crit3DProxyCombination myCombination, Crit3DInterpolationSettings* mySettings,

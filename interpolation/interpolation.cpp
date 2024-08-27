@@ -1520,6 +1520,7 @@ bool setAllFittingParameters_noRange(Crit3DProxyCombination myCombination, Crit3
                              std::vector<std::function<double(double, std::vector<double>&)>>& myFunc,
                              std::vector <std::vector<double>> &paramMin, std::vector <std::vector<double>> &paramMax,
                              std::vector <std::vector<double>> &paramDelta, std::vector <std::vector<double>> &paramFirstGuess,
+                             std::vector<double> &stepSize, int numSteps,
                              std::string &errorStr)
 {
     std::vector<std::vector<double>> tempFirstGuess = paramFirstGuess;
@@ -1529,6 +1530,7 @@ bool setAllFittingParameters_noRange(Crit3DProxyCombination myCombination, Crit3
     paramMax.resize(nrProxy);
     paramDelta.resize(nrProxy);
     paramFirstGuess.resize(nrProxy);
+    tempFirstGuess.resize(nrProxy);
 
     const double RATIO_DELTA = 1000;
 
@@ -1584,6 +1586,8 @@ bool setAllFittingParameters_noRange(Crit3DProxyCombination myCombination, Crit3
                 proxyParamMax.push_back(max_);
                 proxyParamDelta.push_back((max_ - min_) / RATIO_DELTA);
                 proxyParamFirstGuess.push_back((max_ + min_) / 2);
+                if (getProxyPragaName(mySettings->getProxy(i)->getName()) == proxyHeight)
+                    stepSize.push_back((max_ - min_)/numSteps);
             }
 
             paramMin[i] = proxyParamMin;
@@ -1884,6 +1888,8 @@ bool multipleDetrendingElevation(Crit3DProxyCombination elevationCombination, st
     std::vector <std::vector<double>> parametersMax;
     std::vector <std::vector<double>> parametersDelta;
     std::vector <std::vector<double>> parameters;
+    std::vector<double> stepSize;
+    int numSteps = 20;
     parameters.resize(mySettings->getCurrentCombination().getProxySize());
     std::vector<std::function<double(double, std::vector<double>&)>> myFunc(mySettings->getCurrentCombination().getProxySize(), nullptr);
 
@@ -1894,7 +1900,7 @@ bool multipleDetrendingElevation(Crit3DProxyCombination elevationCombination, st
         parameters[elevationPos] = elevationParameters;
 
     if (! setAllFittingParameters_noRange(elevationCombination, mySettings, myFunc, parametersMin, parametersMax,
-                                         parametersDelta, parameters, errorStr))
+                                         parametersDelta, parameters, stepSize, numSteps, errorStr))
     {
         errorStr = "couldn't prepare the fitting parameters for proxy: elevation.";
         return false;
@@ -1910,7 +1916,7 @@ bool multipleDetrendingElevation(Crit3DProxyCombination elevationCombination, st
 
     // multiple non linear fitting
     interpolation::bestFittingMarquardt_nDimension_singleFunction(*func, nrMaxStep, 4, parametersMin[elevationPos], parametersMax[elevationPos], parameters[elevationPos], parametersDelta[elevationPos],
-                                                   100, 0.005, 0.002, predictors, predictands, weights);
+                                                   stepSize, numSteps, 100, 0.005, 0.002, predictors, predictands, weights);
 
 
     mySettings->setSingleFittingParameters(parameters[elevationPos], elevationPos);
@@ -2129,14 +2135,14 @@ bool multipleDetrending(Crit3DProxyCombination othersCombination, std::vector<st
     std::vector <std::vector<double>> parametersMax;
     std::vector <std::vector<double>> parametersDelta;
     //std::vector <std::vector<double>> parameters;
+    std::vector <double> stepSize;
+    int numSteps = 40;
     std::vector<std::function<double(double, std::vector<double>&)>> myFunc(mySettings->getCurrentCombination().getProxySize(), nullptr);
 
-    unsigned int nrMaxStep = 10;
-    if (parameters.empty())
-        nrMaxStep *= 10;
+    unsigned int nrMaxStep = 100;
 
     if (! setAllFittingParameters_noRange(othersCombination, mySettings, myFunc, parametersMin, parametersMax,
-                                 parametersDelta, parameters, errorStr))
+                                 parametersDelta, parameters, stepSize, numSteps, errorStr))
         return false;
 
     std::vector<std::function<double(double, std::vector<double>&)>> fullFunc = myFunc;
