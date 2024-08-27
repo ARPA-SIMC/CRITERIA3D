@@ -276,7 +276,7 @@
         TFittingFunction getChosenElevationFunction();
         void setChosenElevationFunction(TFittingFunction chosenFunction);
         void setPointsRange(double min, double max);
-        std::vector<double> getMinMaxTemperature();
+        std::vector<double> getPointsRange();
     };
 
 #endif // INTERPOLATIONSETTINGS_H

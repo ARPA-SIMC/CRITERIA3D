@@ -1476,7 +1476,7 @@ bool proxyValidityWeighted(std::vector <Crit3DInterpolationDataPoint> &myPoints,
 
 bool setHeightTemperatureRange(Crit3DProxyCombination myCombination, Crit3DInterpolationSettings* mySettings)
 {
-    if (mySettings->getMinMaxTemperature().empty())
+    if (mySettings->getPointsRange().empty())
         return 0;
 
     for (unsigned i=0; i < myCombination.getProxySize(); i++)
@@ -1484,8 +1484,8 @@ bool setHeightTemperatureRange(Crit3DProxyCombination myCombination, Crit3DInter
         {
             if (getProxyPragaName(mySettings->getProxy(i)->getName()) == proxyHeight)
             {
-                const double MIN_T = mySettings->getMinMaxTemperature()[0];
-                const double MAX_T = mySettings->getMinMaxTemperature()[1];
+                const double MIN_T = mySettings->getPointsRange()[0];
+                const double MAX_T = mySettings->getPointsRange()[1];
 
                 std::vector<double> tempParam;
                 tempParam = mySettings->getProxy(i)->getFittingParametersRange();
@@ -1612,8 +1612,8 @@ bool setAllFittingParameters(Crit3DProxyCombination myCombination, Crit3DInterpo
         {
             if (getProxyPragaName(mySettings->getProxy(i)->getName()) == proxyHeight)
             {
-                double min = mySettings->getMinMaxTemperature()[0];
-                double max = mySettings->getMinMaxTemperature()[1];
+                double min = mySettings->getPointsRange()[0];
+                double max = mySettings->getPointsRange()[1];
                 std::vector <double> tempParam;
                 if (mySettings->getChosenElevationFunction() == piecewiseTwo)
                 {
@@ -2307,6 +2307,9 @@ bool preInterpolation(std::vector <Crit3DInterpolationDataPoint> &myPoints, Crit
     {
         if (mySettings->getUseMultipleDetrending())
         {
+            if (!mySettings->getUseLocalDetrending())
+                setHeightTemperatureRange(mySettings->getSelectedCombination(), mySettings);
+
             mySettings->setCurrentCombination(mySettings->getSelectedCombination());
             if (mySettings->getProxiesComplete())
             {

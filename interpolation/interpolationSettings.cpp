@@ -364,10 +364,10 @@ void Crit3DInterpolationSettings::setChosenElevationFunction(TFittingFunction ch
     double MIN_T = -20;
     double MAX_T = 40;
 
-    if (!getMinMaxTemperature().empty())
+    if (!getPointsRange().empty())
     {
-        MIN_T = getMinMaxTemperature()[0];
-        MAX_T = getMinMaxTemperature()[1];
+        MIN_T = getPointsRange()[0];
+        MAX_T = getPointsRange()[1];
     }
 
     if (elPos != NODATA)
@@ -418,7 +418,7 @@ void Crit3DInterpolationSettings::setPointsRange(double min, double max)
     pointsRange.push_back(max);
 }
 
-std::vector<double> Crit3DInterpolationSettings::getMinMaxTemperature()
+std::vector<double> Crit3DInterpolationSettings::getPointsRange()
 {
     return pointsRange;
 }
