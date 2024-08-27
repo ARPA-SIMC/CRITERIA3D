@@ -2248,7 +2248,6 @@ bool Project::computeStatisticsCrossValidation(crossValidationStatistics* myStat
     return true;
 }
 
-
 bool Project::interpolationCv(meteoVariable myVar, const Crit3DTime& myTime, crossValidationStatistics *myStats)
 {
     // TODO local detrending
@@ -2263,7 +2262,7 @@ bool Project::interpolationCv(meteoVariable myVar, const Crit3DTime& myTime, cro
         myVar == airRelHumidity))
     {
         logError("Cross validation is not available for " + QString::fromStdString(getVariableString(myVar))
-                 + "\n Deactive 'Interpolate relative humidity using dew point' option.");
+                 + "\n Deactivate option 'Interpolate relative humidity using dew point'");
         return false;
     }
 
@@ -2294,21 +2293,31 @@ bool Project::interpolationCv(meteoVariable myVar, const Crit3DTime& myTime, cro
     if (interpolationSettings.getUseMultipleDetrending())
         interpolationSettings.clearFitting();
 
-    if (! preInterpolation(interpolationPoints, &interpolationSettings, meteoSettings, &climateParameters,
+    if (! interpolationSettings.getUseLocalDetrending() && ! preInterpolation(interpolationPoints, &interpolationSettings, meteoSettings, &climateParameters,
                           meteoPoints, nrMeteoPoints, myVar, myTime, errorStdStr))
     {
         logError("Error in function preInterpolation:\n" + QString::fromStdString(errorStdStr));
         return false;
     }
 
-    if (! computeResiduals(myVar, meteoPoints, nrMeteoPoints, interpolationPoints, &interpolationSettings, meteoSettings, true, true))
-        return false;
+    if (! interpolationSettings.getUseLocalDetrending())
+    {
+        if (! computeResiduals(myVar, meteoPoints, nrMeteoPoints, interpolationPoints, &interpolationSettings, meteoSettings, true, true))
+            return false;
+    }
+    else
+    {
+        if (! computeResidualsLocalDetrending(myVar, myTime, meteoPoints, nrMeteoPoints, interpolationPoints,
+                                             &interpolationSettings, meteoSettings, &climateParameters, true, true))
+            return false;
+    }
 
     if (! computeStatisticsCrossValidation(myStats))
         return false;
 
     return true;
 }
+
 
 
 bool Project::interpolationDem(meteoVariable myVar, const Crit3DTime& myTime, gis::Crit3DRasterGrid *myRaster)
