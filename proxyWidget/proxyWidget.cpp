@@ -5,6 +5,7 @@
 #include "spatialControl.h"
 #include "commonConstants.h"
 #include "math.h"
+#include "furtherMathFunctions.h"
 
 #include <QLayout>
 #include <QDate>
@@ -467,10 +468,64 @@ void Crit3DProxyWidget::modelLRClicked(int toggled)
                     point_vector.append(point);
                 }
             }
-            /*else
+            else
             {
-                multipleDetrending()
-            }*/
+                float myY;
+                std::vector<std::vector<double>> parameters = interpolationSettings->getFittingParameters();
+                if (parameters.size() > proxyPos)
+                {
+                    if (parameters[proxyPos].size() == 5)
+                    {
+                        std::vector <double> xVector;
+                        for (int m = xMin; m < xMax; m += 5)
+                            xVector.push_back(m);
+
+                        for (int p = 0; p < int(xVector.size()); p++)
+                        {
+                            point.setX(xVector[p]);
+                            point.setY(lapseRatePiecewise_three(xVector[p], parameters[proxyPos]));
+                            point_vector.append(point);
+                        }
+                    }
+                    else if (parameters[proxyPos].size() == 4)
+                    {
+                        float lapseRateH0 = parameters[proxyPos][0];
+                        float lapseRateT0 = parameters[proxyPos][1];
+                        float slope1 = parameters[proxyPos][2];
+                        float slope2 = parameters[proxyPos][3];
+
+                        if (xMin < lapseRateH0)
+                        {
+                            myY = lapseRateT0 + slope1 * (xMin - lapseRateH0);
+                            point.setX(xMin);
+                            point.setY(myY);
+                            point_vector.append(point);
+                        }
+
+                        point.setX(lapseRateH0);
+                        point.setY(lapseRateT0);
+                        point_vector.append(point);
+
+                        myY = lapseRateT0 + slope2 * (xMax - lapseRateH0);
+                        point.setX(xMax);
+                        point.setY(myY);
+                        point_vector.append(point);
+                    }
+                    else if (parameters[proxyPos].size() == 6)
+                    {
+                        std::vector <double> xVector;
+                        for (int m = xMin; m < xMax; m += 5)
+                            xVector.push_back(m);
+
+                        for (int p = 0; p < int(xVector.size()); p++)
+                        {
+                            point.setX(xVector[p]);
+                            point.setY(lapseRatePiecewise_three_free(xVector[p], parameters[proxyPos]));
+                            point_vector.append(point);
+                        }
+                    }
+                }
+            }
 
             if (interpolationSettings->getProxy(proxyPos)->getRegressionR2() != NODATA)
             {

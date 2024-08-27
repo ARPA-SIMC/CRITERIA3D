@@ -3338,13 +3338,13 @@ void Project::importHourlyMeteoData(const QString& csvFileName, bool importAllFi
     // cycle on files
     for (int i=0; i < fileList.count(); i++)
     {
-        QString myLog = "";
+        QString logStr = "";
         QString fileNameComplete = filePath + fileList[i];
 
-        if (meteoPointsDbHandler->importHourlyMeteoData(fileNameComplete, deletePreviousData, &myLog))
-            logInfo(myLog);
+        if (meteoPointsDbHandler->importHourlyMeteoData(fileNameComplete, deletePreviousData, logStr))
+            logInfo(logStr);
         else
-            logError(myLog);
+            logError(logStr);
     }
 }
 
