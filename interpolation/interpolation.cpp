@@ -1723,12 +1723,10 @@ bool multipleDetrendingMain(std::vector <Crit3DInterpolationDataPoint> &myPoints
 bool multipleDetrendingElevation(Crit3DProxyCombination elevationCombination, std::vector <Crit3DInterpolationDataPoint> &myPoints,
                         Crit3DInterpolationSettings* mySettings, meteoVariable myVar, std::string &errorStr)
 {
-
-    // perché se non supera il controllo di validità viene anche settato a non attivo?
-
     if (! getUseDetrendingVar(myVar)) return true;
-    int elevationPos = NODATA;
 
+    // find elevation position in combination
+    int elevationPos = NODATA;
     for (unsigned int pos = 0; pos < elevationCombination.getProxySize(); pos++)
         if (elevationCombination.isProxyActive(pos))
             elevationPos = pos;
@@ -1738,120 +1736,44 @@ bool multipleDetrendingElevation(Crit3DProxyCombination elevationCombination, st
 
     Crit3DProxy* elevationProxy = mySettings->getProxy(elevationPos);
 
-    //lapse rate code
+    // find points with valid elevation and role
     std::vector <Crit3DInterpolationDataPoint> elevationPoints = myPoints;
     vector<Crit3DInterpolationDataPoint>::iterator it = elevationPoints.begin();
-
     while (it != elevationPoints.end())
     {
-        if (!checkLapseRateCode(it->lapseRateCode, mySettings->getUseLapseRateCode(), true))
+        if (! checkLapseRateCode(it->lapseRateCode, mySettings->getUseLapseRateCode(), true)  || it->getProxyValue(elevationPos) == NODATA)
             it = elevationPoints.erase(it);
         else
             it++;
     }
 
-    // proxy spatial variability (1st step)
-    if (proxyValidityWeighted(elevationPoints, elevationPos, elevationProxy->getStdDevThreshold()))
-    {
-        elevationCombination.setProxySignificant(elevationPos, true);
-        Crit3DProxyCombination myCombination = mySettings->getSelectedCombination();
-        myCombination.setProxySignificant(elevationPos, true);
-        mySettings->setCurrentCombination(myCombination);
-        elevationProxy->setIsSignificant(true);
-    }
-    else
-    {
-        elevationCombination.setProxySignificant(elevationPos, false);
-        Crit3DProxyCombination myCombination = mySettings->getSelectedCombination();
-        myCombination.setProxyActive(elevationPos, false);
-        myCombination.setProxySignificant(elevationPos, false);
-        mySettings->setCurrentCombination(myCombination);
-        mySettings->getProxy(elevationPos)->setIsSignificant(false);
-        return true;
-    }
+    // proxy spatial variability and minimum points number for local detrending
+    bool isValid = false;
 
-    // exclude points with incomplete proxies
-    unsigned i;
-    bool isValid;
-    float proxyValue;
-    it = myPoints.begin();
-    vector<Crit3DInterpolationDataPoint>::iterator elevationIt = elevationPoints.begin();
+    isValid = proxyValidityWeighted(elevationPoints, elevationPos, elevationProxy->getStdDevThreshold());
+    if (mySettings->getUseLocalDetrending()) isValid = (isValid && elevationPoints.size() >= unsigned(mySettings->getMinPointsLocalDetrending()));
 
-    while (it != myPoints.end())
-    {
-        isValid = true;
-        proxyValue = it->getProxyValue(elevationPos);
-       \
-        if (proxyValue == NODATA)
-            isValid = false;
+    elevationCombination.setProxySignificant(elevationPos, isValid);
+    Crit3DProxyCombination myCombination = mySettings->getSelectedCombination();
+    myCombination.setProxySignificant(elevationPos, isValid);
+    mySettings->setCurrentCombination(myCombination);
+    elevationProxy->setIsSignificant(isValid);
 
-        if (! isValid)
-            it = myPoints.erase(it);
-        else
-            it++;
-
-        isValid = true;
-        if (elevationIt != elevationPoints.end())
-        {
-            proxyValue = elevationIt->getProxyValue(elevationPos);
-
-            if (proxyValue == NODATA)
-                isValid = false;
-            if (!isValid)
-                elevationIt = elevationPoints.erase(elevationIt);
-            else
-                elevationIt++;
-        }
-
-    }
-
-    //essendo un solo proxy, qui penso si possa fare un singolo step
-
-    // proxy spatial variability (2nd step)
-    if (proxyValidityWeighted(elevationPoints, elevationPos, elevationProxy->getStdDevThreshold()))
-    {
-        elevationCombination.setProxySignificant(elevationPos, true);
-        Crit3DProxyCombination myCombination = mySettings->getSelectedCombination();
-        myCombination.setProxySignificant(elevationPos, true);
-        mySettings->setCurrentCombination(myCombination);
-        elevationProxy->setIsSignificant(true);
-    }
-    else
-    {
-        elevationCombination.setProxySignificant(elevationPos, false);
-        Crit3DProxyCombination myCombination = mySettings->getSelectedCombination();
-        myCombination.setProxyActive(elevationPos, false);
-        myCombination.setProxySignificant(elevationPos, false);
-        mySettings->setCurrentCombination(myCombination);
-        elevationProxy->setIsSignificant(false);
-        return true;
-    }
+    if (! isValid) return true;
 
     // filling vectors
     std::vector <double> predictors;
     std::vector <double> predictands;
     std::vector <double> weights;
 
-    for (i=0; i < myPoints.size(); i++)
+    unsigned i;
+    for (i=0; i < elevationPoints.size(); i++)
     {
-        if (checkLapseRateCode(myPoints[i].lapseRateCode, mySettings->getUseLapseRateCode(), true))
-        {
-            predictors.push_back(myPoints[i].getProxyValue(elevationPos));
-            predictands.push_back(myPoints[i].value);
-            if (myPoints[i].regressionWeight != NODATA)
-                weights.push_back(myPoints[i].regressionWeight);
-            else weights.push_back(1);
-        }
-    }
-
-    if (mySettings->getUseLocalDetrending() && elevationPoints.size() < unsigned(mySettings->getMinPointsLocalDetrending()))
-    {
-        elevationProxy->setIsSignificant(false);
-        Crit3DProxyCombination myCombination = mySettings->getSelectedCombination();
-        myCombination.setProxyActive(elevationPos, false);
-        myCombination.setProxySignificant(elevationPos, false);
-        mySettings->setCurrentCombination(myCombination);
-        return true;
+        predictors.push_back(elevationPoints[i].getProxyValue(elevationPos));
+        predictands.push_back(elevationPoints[i].value);
+        if (elevationPoints[i].regressionWeight != NODATA)
+            weights.push_back(elevationPoints[i].regressionWeight);
+        else weights.push_back(1);
     }
 
     std::vector <std::vector<double>> parametersMin;
@@ -1862,8 +1784,6 @@ bool multipleDetrendingElevation(Crit3DProxyCombination elevationCombination, st
     int numSteps = 20;
     std::vector<std::function<double(double, std::vector<double>&)>> myFunc;
 
-    unsigned int nrMaxStep = 200;
-
     if (! setAllFittingParameters_noRange(elevationCombination, mySettings, myFunc, parametersMin, parametersMax,
                                          parametersDelta, parameters, stepSize, numSteps, errorStr))
     {
@@ -1872,14 +1792,14 @@ bool multipleDetrendingElevation(Crit3DProxyCombination elevationCombination, st
     }
 
     // multiple non linear fitting
-    interpolation::bestFittingMarquardt_nDimension_singleFunction(*(myFunc.front().target<double(*)(double, std::vector<double>&)>()), nrMaxStep, 4, parametersMin.front(), parametersMax.front(), parameters.front(), parametersDelta.front(),
+    interpolation::bestFittingMarquardt_nDimension_singleFunction(*(myFunc.front().target<double(*)(double, std::vector<double>&)>()), 200, 4, parametersMin.front(), parametersMax.front(), parameters.front(), parametersDelta.front(),
                                                    stepSize, numSteps, 100, 0.005, 0.002, predictors, predictands, weights);
 
-
+    // GA siamo sicuri che poi l'ordine viene mantenuto in ogni dove?
     mySettings->addFittingParameters(parameters);
 
     // detrending
-    float detrendValue;
+    float proxyValue, detrendValue;
     for (i = 0; i < myPoints.size(); i++)
     {
         proxyValue = myPoints[i].getProxyValue(elevationPos);

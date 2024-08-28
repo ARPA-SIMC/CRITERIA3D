@@ -413,12 +413,12 @@ void Crit3DProxyWidget::modelLRClicked(int toggled)
     float xMax;
     if (toggled && outInterpolationPoints.size() != 0)
     {
+        float regressionSlope = NODATA;
+
         if (comboAxisX.currentText() == "elevation")
         {
             xMin = getZmin(outInterpolationPoints);
             xMax = getZmax(outInterpolationPoints);
-
-            float regressionSlope;
 
             if (! interpolationSettings->getUseMultipleDetrending())
             {

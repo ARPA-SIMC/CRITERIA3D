@@ -166,7 +166,7 @@ bool computeResidualsLocalDetrending(meteoVariable myVar, Crit3DTime myTime, Cri
                 return false;
             }
 
-            float interpolatedValue = interpolate(interpolationPoints, settings, meteoSettings, myVar,
+            float interpolatedValue = interpolate(subsetInterpolationPoints, settings, meteoSettings, myVar,
                                                   float(meteoPoints[i].point.utm.x),
                                                   float(meteoPoints[i].point.utm.y),
                                                   float(meteoPoints[i].point.z),
