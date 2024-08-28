@@ -43,10 +43,6 @@
 
 #include <functional>
 
-#include <fstream>
-#include <iostream>
-
-
 
 using namespace std;
 
@@ -1136,7 +1132,7 @@ void localSelection(vector <Crit3DInterpolationDataPoint> &inputPoints, vector <
         {
             //selectedPoints[i].regressionWeight = MAXVALUE(1 - selectedPoints[i].distance / (std::pow(maxDistance, 16.0/15.0)), EPSILON);
             //selectedPoints[i].regressionWeight = MAXVALUE(std::exp(-std::pow(selectedPoints[i].distance/((4/5*maxDistance)),7.0)),EPSILON);
-            selectedPoints[i].regressionWeight = MAXVALUE((-(1/std::pow(maxDistance,4)*(std::pow(selectedPoints[i].distance,4)))+1),EPSILON);
+            selectedPoints[i].regressionWeight = float(MAXVALUE((-(1/std::pow(maxDistance,4)*(std::pow(selectedPoints[i].distance,4)))+1),EPSILON));
             //selectedPoints[i].regressionWeight = 1;
             //selectedPoints[i].heightWeight = 1./((2./maxHeightDelta)*selectedPoints[i].point->z+1);
             selectedPoints[i].heightWeight = 1;
@@ -1420,8 +1416,9 @@ bool proxyValidity(std::vector <Crit3DInterpolationDataPoint> &myPoints, int pro
         return true;
 }
 
-bool proxyValidityWeighted(std::vector <Crit3DInterpolationDataPoint> &myPoints, int proxyPos, float stdDevThreshold, double &avg, double &stdDev)
+bool proxyValidityWeighted(std::vector <Crit3DInterpolationDataPoint> &myPoints, int proxyPos, float stdDevThreshold)
 {
+    double stdDev;
     std::vector<float> proxyValues;
 
     std::vector<double> data, weights;
@@ -1754,9 +1751,7 @@ bool multipleDetrendingElevation(Crit3DProxyCombination elevationCombination, st
     }
 
     // proxy spatial variability (1st step)
-    double avg, stdDev;
-
-    if (proxyValidityWeighted(elevationPoints, elevationPos, elevationProxy->getStdDevThreshold(), avg, stdDev))
+    if (proxyValidityWeighted(elevationPoints, elevationPos, elevationProxy->getStdDevThreshold()))
     {
         elevationCombination.setProxySignificant(elevationPos, true);
         Crit3DProxyCombination myCombination = mySettings->getSelectedCombination();
@@ -1813,7 +1808,7 @@ bool multipleDetrendingElevation(Crit3DProxyCombination elevationCombination, st
     //essendo un solo proxy, qui penso si possa fare un singolo step
 
     // proxy spatial variability (2nd step)
-    if (proxyValidityWeighted(elevationPoints, elevationPos, elevationProxy->getStdDevThreshold(), avg, stdDev))
+    if (proxyValidityWeighted(elevationPoints, elevationPos, elevationProxy->getStdDevThreshold()))
     {
         elevationCombination.setProxySignificant(elevationPos, true);
         Crit3DProxyCombination myCombination = mySettings->getSelectedCombination();
@@ -1936,7 +1931,6 @@ bool multipleDetrending(Crit3DProxyCombination othersCombination, std::vector <C
     }
 
     // proxy spatial variability (1st step)
-    double avg, stdDev;
     unsigned validNr;
     validNr = 0;
 
@@ -1944,7 +1938,7 @@ bool multipleDetrending(Crit3DProxyCombination othersCombination, std::vector <C
     {
         if (othersCombination.isProxyActive(pos))
         {
-            if (proxyValidityWeighted(othersPoints, pos, mySettings->getProxy(pos)->getStdDevThreshold(), avg, stdDev))
+            if (proxyValidityWeighted(othersPoints, pos, mySettings->getProxy(pos)->getStdDevThreshold()))
             {
                 othersCombination.setProxySignificant(pos, true);
                 Crit3DProxyCombination myCombination = mySettings->getCurrentCombination();
@@ -2027,7 +2021,7 @@ bool multipleDetrending(Crit3DProxyCombination othersCombination, std::vector <C
     {
         if (othersCombination.isProxyActive(pos))
         {
-            if (proxyValidityWeighted(othersPoints, pos, mySettings->getProxy(pos)->getStdDevThreshold(), avg, stdDev))
+            if (proxyValidityWeighted(othersPoints, pos, mySettings->getProxy(pos)->getStdDevThreshold()))
             {
                 othersCombination.setProxySignificant(pos, true);
                 Crit3DProxyCombination myCombination = mySettings->getCurrentCombination();
