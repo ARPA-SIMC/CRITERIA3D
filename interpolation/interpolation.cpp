@@ -1021,7 +1021,7 @@ float gaussWeighted(vector <Crit3DInterpolationDataPoint> &myPointList)
 }
 */
 
-void localSelection_new(std::vector<Crit3DInterpolationDataPoint> &inputPoints, std::vector<Crit3DInterpolationDataPoint> &selectedPoints,
+/*void localSelection_new(std::vector<Crit3DInterpolationDataPoint> &inputPoints, std::vector<Crit3DInterpolationDataPoint> &selectedPoints,
                     float x, float y, float z, Crit3DInterpolationSettings& mySettings)
 {
     std::vector<Crit3DInterpolationDataPoint> tempPoints;
@@ -1078,7 +1078,7 @@ void localSelection_new(std::vector<Crit3DInterpolationDataPoint> &inputPoints, 
 
     return;
 }
-
+*/
 
 
 
@@ -1432,13 +1432,12 @@ bool proxyValidity(std::vector <Crit3DInterpolationDataPoint> &myPoints, int pro
 bool proxyValidityWeighted(std::vector <Crit3DInterpolationDataPoint> &myPoints, int proxyPos, float stdDevThreshold, double &avg, double &stdDev)
 {
     std::vector<float> proxyValues;
-    const int MIN_NR = 10;
 
     std::vector<double> data, weights;
     data.resize(myPoints.size());
     weights.resize(myPoints.size());
 
-    for (int i = 0; i < myPoints.size(); i++)
+    for (unsigned i = 0; i < myPoints.size(); i++)
     {
         data[i] = myPoints[i].getProxyValue(proxyPos);
         weights[i] = myPoints[i].regressionWeight;
@@ -1780,7 +1779,6 @@ bool multipleDetrendingElevation(Crit3DProxyCombination elevationCombination, st
 
     // proxy spatial variability (1st step)
     double avg, stdDev;
-    unsigned validNr;
     validNr = 0;
 
     if (proxyValidityWeighted(elevationPoints, elevationPos, elevationProxy->getStdDevThreshold(), avg, stdDev))
@@ -1874,7 +1872,7 @@ bool multipleDetrendingElevation(Crit3DProxyCombination elevationCombination, st
         }
     }
 
-    if (mySettings->getUseLocalDetrending() && elevationPoints.size() < mySettings->getMinPointsLocalDetrending())
+    if (mySettings->getUseLocalDetrending() && elevationPoints.size() < unsigned(mySettings->getMinPointsLocalDetrending()))
     {
         elevationProxy->setIsSignificant(false);
         Crit3DProxyCombination myCombination = mySettings->getSelectedCombination();
