@@ -133,6 +133,71 @@ bool computeResiduals(meteoVariable myVar, Crit3DMeteoPoint* meteoPoints, int nr
     return true;
 }
 
+bool computeResidualsLocalDetrending(meteoVariable myVar, Crit3DTime myTime, Crit3DMeteoPoint* meteoPoints, int nrMeteoPoints,
+                                              std::vector <Crit3DInterpolationDataPoint> &interpolationPoints, Crit3DInterpolationSettings* settings,
+                                              Crit3DMeteoSettings* meteoSettings, Crit3DClimateParameters* climateParameters,
+                                     bool excludeOutsideDem, bool excludeSupplemental)
+{
+
+    if (myVar == noMeteoVar) return false;
+
+    std::vector <double> myProxyValues;
+    bool isValid;
+    std::string errorStdString;
+
+    for (int i = 0; i < nrMeteoPoints; i++)
+    {
+        myProxyValues = meteoPoints[i].getProxyValues();
+
+        meteoPoints[i].residual = NODATA;
+
+        isValid = (! excludeSupplemental || checkLapseRateCode(meteoPoints[i].lapseRateCode, settings->getUseLapseRateCode(), false));
+        isValid = (isValid && (! excludeOutsideDem || meteoPoints[i].isInsideDem));
+
+        if (isValid && meteoPoints[i].quality == quality::accepted)
+        {
+            float myValue = meteoPoints[i].currentValue;
+
+            std::vector <Crit3DInterpolationDataPoint> subsetInterpolationPoints;
+            localSelection(interpolationPoints, subsetInterpolationPoints, meteoPoints->point.utm.x, meteoPoints->point.utm.y, meteoPoints->point.z, *settings);
+            if (! preInterpolation(subsetInterpolationPoints, settings, meteoSettings,
+                                  climateParameters, meteoPoints, nrMeteoPoints, myVar, myTime, errorStdString))
+            {
+                return false;
+            }
+
+            float interpolatedValue = interpolate(interpolationPoints, settings, meteoSettings, myVar,
+                                                  float(meteoPoints[i].point.utm.x),
+                                                  float(meteoPoints[i].point.utm.y),
+                                                  float(meteoPoints[i].point.z),
+                                                  myProxyValues, false);
+
+            if (  myVar == precipitation || myVar == dailyPrecipitation)
+            {
+                if (myValue != NODATA)
+                {
+                    if (myValue < meteoSettings->getRainfallThreshold())
+                        myValue=0.;
+                }
+
+                if (interpolatedValue != NODATA)
+                {
+                    if (interpolatedValue < meteoSettings->getRainfallThreshold())
+                        interpolatedValue=0.;
+                }
+            }
+
+            // TODO derived var
+
+            if ((interpolatedValue != NODATA) && (myValue != NODATA))
+            {
+                meteoPoints[i].residual = interpolatedValue - myValue;
+            }
+        }
+    }
+
+    return true;
+}
 
 float computeErrorCrossValidation(Crit3DMeteoPoint* myPoints, int nrMeteoPoints)
 {

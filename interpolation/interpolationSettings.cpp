@@ -374,7 +374,7 @@ void Crit3DInterpolationSettings::setChosenElevationFunction(TFittingFunction ch
     {
         if (chosenFunction == getProxy(elPos)->getFittingFunctionName() && !getProxy(elPos)->getFittingParametersRange().empty())
         {
-            std::vector tempParam = getProxy(elPos)->getFittingParametersRange();
+            std::vector <double> tempParam = getProxy(elPos)->getFittingParametersRange();
 
             if (chosenFunction == piecewiseTwo)
             {
