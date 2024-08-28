@@ -107,7 +107,7 @@
                        float stdDevThreshold, double &avg, double &stdDev);
 
     bool proxyValidityWeighted(std::vector <Crit3DInterpolationDataPoint> &myPoints, int proxyPos,
-                       float stdDevThreshold, double &avg, double &stdDev);
+                               float stdDevThreshold);
 
     bool setHeightTemperatureRange(Crit3DProxyCombination myCombination, Crit3DInterpolationSettings* mySettings);
 
