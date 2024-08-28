@@ -283,7 +283,7 @@
                                   double altitude, std::string lapseRateCode, bool isAppend);
         void showMeteoWidgetGrid(std::string idCell, bool isAppend);
         void showProxyGraph();
-        void showLocalProxyGraph(gis::Crit3DGeoPoint myPoint, gis::Crit3DRasterGrid *myDataRaster);
+        void showLocalProxyGraph(gis::Crit3DGeoPoint myPoint);
 
         void clearSelectedPoints();
         void clearSelectedOutputPoints();

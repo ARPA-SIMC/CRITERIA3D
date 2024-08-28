@@ -1838,7 +1838,9 @@ bool multipleDetrendingElevation(Crit3DProxyCombination elevationCombination, st
         {
             predictors.push_back(myPoints[i].getProxyValue(elevationPos));
             predictands.push_back(myPoints[i].value);
-            weights.push_back(myPoints[i].regressionWeight*myPoints[i].heightWeight);
+            if (myPoints[i].regressionWeight != NODATA)
+                weights.push_back(myPoints[i].regressionWeight);
+            else weights.push_back(1);
         }
     }
 

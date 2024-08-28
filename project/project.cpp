@@ -3698,7 +3698,7 @@ void Project::showProxyGraph()
     return;
 }
 
-void Project::showLocalProxyGraph(gis::Crit3DGeoPoint myPoint, gis::Crit3DRasterGrid *myDataRaster)
+void Project::showLocalProxyGraph(gis::Crit3DGeoPoint myPoint)
 {
     gis::Crit3DUtmPoint myUtm;
     gis::getUtmFromLatLon(this->gisSettings.utmZone, myPoint, &myUtm);

@@ -470,7 +470,6 @@ void Crit3DProxyWidget::modelLRClicked(int toggled)
             }
             else if (! interpolationSettings->getUseLocalDetrending())
             {
-                float myY;
                 std::string errorStr;
 
                 setHeightTemperatureRange(interpolationSettings->getSelectedCombination(), interpolationSettings);
