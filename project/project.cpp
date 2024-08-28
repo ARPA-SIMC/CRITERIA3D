@@ -3701,20 +3701,7 @@ void Project::showLocalProxyGraph(gis::Crit3DGeoPoint myPoint, gis::Crit3DRaster
     gis::Crit3DUtmPoint myUtm;
     gis::getUtmFromLatLon(this->gisSettings.utmZone, myPoint, &myUtm);
 
-    int row, col;
-    std::vector<std::vector<double>> parametersSettings;
-    if (myDataRaster->isLoaded && !myDataRaster->singleCell.empty())
-    {
-        gis::getRowColFromXY(*(myDataRaster->header), myUtm, &row, &col);
-        parametersSettings = myDataRaster->getParametersFromRowCol(row, col);
-    }
-    if (this->meteoGridLoaded && !this->meteoGridDbHandler->meteoGrid()->dataMeteoGrid.singleCell.empty())
-    {
-        gis::getRowColFromLonLat(meteoGridDbHandler->meteoGrid()->gridStructure().header(), myPoint.longitude, myPoint.latitude, &row, &col);
-        parametersSettings = meteoGridDbHandler->meteoGrid()->dataMeteoGrid.getParametersFromRowCol(row, col);
-    }
-
-    localProxyWidget = new Crit3DLocalProxyWidget(myUtm.x, myUtm.y, parametersSettings, this->gisSettings, &interpolationSettings, meteoPoints, nrMeteoPoints, currentVariable, currentFrequency, currentDate, currentHour, quality, &qualityInterpolationSettings, meteoSettings, &climateParameters, checkSpatialQuality);
+    localProxyWidget = new Crit3DLocalProxyWidget(myUtm.x, myUtm.y, this->gisSettings, &interpolationSettings, meteoPoints, nrMeteoPoints, currentVariable, currentFrequency, currentDate, currentHour, quality, &qualityInterpolationSettings, meteoSettings, &climateParameters, checkSpatialQuality);
     return;
 }
 

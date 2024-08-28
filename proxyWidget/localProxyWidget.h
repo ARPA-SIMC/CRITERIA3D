@@ -13,7 +13,7 @@ class Crit3DLocalProxyWidget : public QWidget
     Q_OBJECT
 
 public:
-    Crit3DLocalProxyWidget(double x, double y, std::vector<std::vector<double>> parameters, gis::Crit3DGisSettings gisSettings, Crit3DInterpolationSettings* interpolationSettings, Crit3DMeteoPoint* meteoPoints, int nrMeteoPoints, meteoVariable currentVariable, frequencyType currentFrequency, QDate currentDate, int currentHour, Crit3DQuality* quality,  Crit3DInterpolationSettings* SQinterpolationSettings, Crit3DMeteoSettings *meteoSettings, Crit3DClimateParameters *climateParam, bool checkSpatialQuality);
+    Crit3DLocalProxyWidget(double x, double y, gis::Crit3DGisSettings gisSettings, Crit3DInterpolationSettings* interpolationSettings, Crit3DMeteoPoint* meteoPoints, int nrMeteoPoints, meteoVariable currentVariable, frequencyType currentFrequency, QDate currentDate, int currentHour, Crit3DQuality* quality,  Crit3DInterpolationSettings* SQinterpolationSettings, Crit3DMeteoSettings *meteoSettings, Crit3DClimateParameters *climateParam, bool checkSpatialQuality);
     ~Crit3DLocalProxyWidget();
     void closeEvent(QCloseEvent *event);
     void updateDateTime(QDate newDate, int newHour);
@@ -27,7 +27,6 @@ private:
     double x;
     double y;
     double z;
-    std::vector<std::vector<double>> parameters;
     gis::Crit3DGisSettings gisSettings;
     Crit3DInterpolationSettings* interpolationSettings;
     Crit3DQuality* quality;

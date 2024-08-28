@@ -11,8 +11,8 @@
 #include <QDate>
 
 
-Crit3DLocalProxyWidget::Crit3DLocalProxyWidget(double x, double y, std::vector<std::vector<double>> parameters, gis::Crit3DGisSettings gisSettings, Crit3DInterpolationSettings* interpolationSettings, Crit3DMeteoPoint *meteoPoints, int nrMeteoPoints, meteoVariable currentVariable, frequencyType currentFrequency, QDate currentDate, int currentHour, Crit3DQuality *quality, Crit3DInterpolationSettings* SQinterpolationSettings, Crit3DMeteoSettings *meteoSettings, Crit3DClimateParameters *climateParam, bool checkSpatialQuality)
-    :x(x), y(y), parameters(parameters), gisSettings(gisSettings), interpolationSettings(interpolationSettings), meteoPoints(meteoPoints), nrMeteoPoints(nrMeteoPoints), currentVariable(currentVariable), currentFrequency(currentFrequency), currentDate(currentDate), currentHour(currentHour), quality(quality), SQinterpolationSettings(SQinterpolationSettings), meteoSettings(meteoSettings), climateParam(climateParam), checkSpatialQuality(checkSpatialQuality)
+Crit3DLocalProxyWidget::Crit3DLocalProxyWidget(double x, double y, gis::Crit3DGisSettings gisSettings, Crit3DInterpolationSettings* interpolationSettings, Crit3DMeteoPoint *meteoPoints, int nrMeteoPoints, meteoVariable currentVariable, frequencyType currentFrequency, QDate currentDate, int currentHour, Crit3DQuality *quality, Crit3DInterpolationSettings* SQinterpolationSettings, Crit3DMeteoSettings *meteoSettings, Crit3DClimateParameters *climateParam, bool checkSpatialQuality)
+    :x(x), y(y), gisSettings(gisSettings), interpolationSettings(interpolationSettings), meteoPoints(meteoPoints), nrMeteoPoints(nrMeteoPoints), currentVariable(currentVariable), currentFrequency(currentFrequency), currentDate(currentDate), currentHour(currentHour), quality(quality), SQinterpolationSettings(SQinterpolationSettings), meteoSettings(meteoSettings), climateParam(climateParam), checkSpatialQuality(checkSpatialQuality)
 {
     gis::Crit3DGeoPoint localGeoPoint;
     gis::Crit3DUtmPoint localUtmPoint;
@@ -121,62 +121,6 @@ Crit3DLocalProxyWidget::Crit3DLocalProxyWidget(double x, double y, std::vector<s
     selectionLayout->addStretch(30);
     selectionLayout->addLayout(selectionOptionLayout);
 
-    if (!parameters.empty() && interpolationSettings->getProxy(proxyPos)->getFittingFunctionName() == piecewiseTwo && parameters[proxyPos].size() == 4)
-    {
-        QVBoxLayout *parametriLayout = new QVBoxLayout();
-
-        QLabel *H0Lab = new QLabel(QString("H0: %1").arg(parameters[proxyPos][0]));
-        QLabel *T0Lab = new QLabel(QString("T0: %1").arg(parameters[proxyPos][1]));
-        QLabel *slope1Lab = new QLabel(QString("slope1: %1").arg(parameters[proxyPos][2]));
-        QLabel *slope2Lab = new QLabel(QString("slope2: %1").arg(parameters[proxyPos][3]));
-
-        parametriLayout->addWidget(H0Lab);
-        parametriLayout->addWidget(T0Lab);
-        parametriLayout->addWidget(slope1Lab);
-        parametriLayout->addWidget(slope2Lab);
-
-        selectionLayout->addLayout(parametriLayout);
-    }
-    else if (!parameters.empty() && interpolationSettings->getProxy(proxyPos)->getFittingFunctionName() == piecewiseThreeFree && parameters[proxyPos].size() == 6)
-    {
-        QVBoxLayout *parametriLayout = new QVBoxLayout();
-
-        QLabel *H0Lab = new QLabel(QString("H0: %1").arg(parameters[proxyPos][0]));
-        QLabel *T0Lab = new QLabel(QString("T0: %1").arg(parameters[proxyPos][1]));
-        QLabel *H1Lab = new QLabel(QString("H1: %1").arg(parameters[proxyPos][0]+parameters[proxyPos][2]));
-        QLabel *slope1Lab = new QLabel(QString("Slope1: %1").arg(parameters[proxyPos][4]));
-        QLabel *slope2Lab = new QLabel(QString("Slope2: %1").arg(parameters[proxyPos][3]));
-        QLabel *slope3Lab = new QLabel(QString("Slope3: %1").arg(parameters[proxyPos][5]));
-
-        parametriLayout->addWidget(H0Lab);
-        parametriLayout->addWidget(T0Lab);
-        parametriLayout->addWidget(H1Lab);
-        parametriLayout->addWidget(slope1Lab);
-        parametriLayout->addWidget(slope2Lab);
-        parametriLayout->addWidget(slope3Lab);
-
-
-        selectionLayout->addLayout(parametriLayout);
-    }
-    else if (!parameters.empty() && interpolationSettings->getProxy(proxyPos)->getFittingFunctionName() == piecewiseThree && parameters[proxyPos].size() == 5)
-    {
-        QVBoxLayout *parametriLayout = new QVBoxLayout();
-
-        QLabel *H0Lab = new QLabel(QString("H0: %1").arg(parameters[proxyPos][0]));
-        QLabel *T0Lab = new QLabel(QString("T0: %1").arg(parameters[proxyPos][1]));
-        QLabel *H1Lab = new QLabel(QString("H1: %1").arg(parameters[proxyPos][0]+parameters[proxyPos][2]));
-        QLabel *slope1Lab = new QLabel(QString("Slope1: %1").arg(parameters[proxyPos][4]));
-        QLabel *slope2Lab = new QLabel(QString("Slope2: %1").arg(parameters[proxyPos][3]));
-
-        parametriLayout->addWidget(H0Lab);
-        parametriLayout->addWidget(T0Lab);
-        parametriLayout->addWidget(H1Lab);
-        parametriLayout->addWidget(slope2Lab);
-        parametriLayout->addWidget(slope1Lab);
-
-
-        selectionLayout->addLayout(parametriLayout);
-    }
     horizontalGroupBox->setMaximumSize(1240, 130);
     horizontalGroupBox->setLayout(selectionLayout);
 
@@ -520,11 +464,19 @@ void Crit3DLocalProxyWidget::modelLRClicked(int toggled)
     float xMin;
     float xMax;
 
-    if (parameters.empty())
-        return;
 
-    if (toggled && subsetInterpolationPoints.size() != 0 && currentVariable == myVar)
+    if (toggled && subsetInterpolationPoints.size() != 0)
     {
+        std::string errorStr;
+        setHeightTemperatureRange(interpolationSettings->getSelectedCombination(), interpolationSettings);
+        interpolationSettings->setCurrentCombination(interpolationSettings->getSelectedCombination());
+        if (interpolationSettings->getProxiesComplete())
+        {
+            if (! multipleDetrendingMain(outInterpolationPoints, interpolationSettings, myVar, errorStr)) return;
+        }
+
+        std::vector<std::vector<double>> parameters = interpolationSettings->getFittingParameters();
+
         if (parameters.size() > proxyPos)
         {
             if (parameters[proxyPos].size() > 2)
