@@ -330,6 +330,11 @@ void Crit3DInterpolationSettings::setSingleFittingFunction(const std::function<d
 
 }
 
+void Crit3DInterpolationSettings::addFittingFunction(const std::function<double (double, std::vector<double> &)> &newFittingFunction)
+{
+    fittingFunction.push_back(newFittingFunction);
+}
+
 TFittingFunction Crit3DInterpolationSettings::getChosenElevationFunction()
 {
     int elPos = NODATA;

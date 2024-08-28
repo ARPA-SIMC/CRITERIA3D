@@ -264,11 +264,6 @@ bool interpolationRaster(std::vector <Crit3DInterpolationDataPoint> &myPoints, C
         return false;
     }
 
-    if (mySettings->getUseLocalDetrending())
-    {
-        raster.initializeParameters(*raster.header);
-    }
-
     float myX, myY;
     std::vector <double> proxyValues;
     proxyValues.resize(unsigned(mySettings->getProxyNr()));
@@ -279,8 +274,6 @@ bool interpolationRaster(std::vector <Crit3DInterpolationDataPoint> &myPoints, C
         {
             gis::getUtmXYFromRowColSinglePrecision(*outputGrid, myRow, myCol, &myX, &myY);
             float myZ = raster.value[myRow][myCol];
-            if (mySettings->getUseLocalDetrending())
-                mySettings->setFittingParameters(raster.prepareParameters(myRow, myCol, mySettings->getSelectedCombination().getActiveList()));
             if (! isEqual(myZ, outputGrid->header->flag))
             {
                 if (getUseDetrendingVar(myVar))
@@ -290,8 +283,6 @@ bool interpolationRaster(std::vector <Crit3DInterpolationDataPoint> &myPoints, C
 
                 outputGrid->value[myRow][myCol] = interpolate(myPoints, mySettings, meteoSettings,
                                                               myVar, myX, myY, myZ, proxyValues, true);
-                if (mySettings->getUseLocalDetrending())
-                    raster.setParametersForRowCol(myRow, myCol, mySettings->getFittingParameters());
             }
         }
     }

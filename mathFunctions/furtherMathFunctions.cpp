@@ -32,9 +32,6 @@
 #include "commonConstants.h"
 #include "furtherMathFunctions.h"
 
-#include <fstream>
-#include <iostream>
-
 
 double lapseRateRotatedSigmoid(double x, std::vector <double> par)
 {

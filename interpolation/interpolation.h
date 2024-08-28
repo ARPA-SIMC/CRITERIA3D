@@ -72,10 +72,10 @@
     bool multipleDetrendingMain(std::vector <Crit3DInterpolationDataPoint> &myPoints,
                                 Crit3DInterpolationSettings* mySettings, meteoVariable myVar, std::string &errorStr);
 
-    bool multipleDetrending(Crit3DProxyCombination othersCombination, std::vector<std::vector<double> > parameters, std::vector <Crit3DInterpolationDataPoint> &myPoints, Crit3DInterpolationSettings* mySettings,
+    bool multipleDetrending(Crit3DProxyCombination othersCombination, std::vector <Crit3DInterpolationDataPoint> &myPoints, Crit3DInterpolationSettings* mySettings,
                             meteoVariable myVar, std::string &errorStr);
 
-    bool multipleDetrendingElevation(Crit3DProxyCombination myCombination, std::vector<double> elevationParameters, std::vector <Crit3DInterpolationDataPoint> &myPoints,
+    bool multipleDetrendingElevation(Crit3DProxyCombination myCombination, std::vector <Crit3DInterpolationDataPoint> &myPoints,
                                      Crit3DInterpolationSettings* mySettings, meteoVariable myVar, std::string &errorStr);
 
     bool getUseDetrendingVar(meteoVariable myVar);

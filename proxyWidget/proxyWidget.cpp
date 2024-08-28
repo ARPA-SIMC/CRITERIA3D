@@ -484,56 +484,22 @@ void Crit3DProxyWidget::modelLRClicked(int toggled)
 
                 if (parameters.size() > proxyPos)
                 {
-                    if (parameters[proxyPos].size() == 5)
-                    {
-                        std::vector <double> xVector;
-                        for (int m = xMin; m < xMax; m += 5)
-                            xVector.push_back(m);
+                    std::vector <double> xVector;
+                    for (int m = xMin; m < xMax; m += 5)
+                        xVector.push_back(m);
 
-                        for (int p = 0; p < int(xVector.size()); p++)
-                        {
-                            point.setX(xVector[p]);
+                    for (int p = 0; p < int(xVector.size()); p++)
+                    {
+                        point.setX(xVector[p]);
+                        if (parameters[proxyPos].size() == 4)
+                            point.setY(lapseRatePiecewise_two(xVector[p], parameters[proxyPos]));
+                        else if (parameters[proxyPos].size() == 5)
                             point.setY(lapseRatePiecewise_three(xVector[p], parameters[proxyPos]));
-                            point_vector.append(point);
-                        }
-                    }
-                    else if (parameters[proxyPos].size() == 4)
-                    {
-                        float lapseRateH0 = parameters[proxyPos][0];
-                        float lapseRateT0 = parameters[proxyPos][1];
-                        float slope1 = parameters[proxyPos][2];
-                        float slope2 = parameters[proxyPos][3];
-
-                        if (xMin < lapseRateH0)
-                        {
-                            myY = lapseRateT0 + slope1 * (xMin - lapseRateH0);
-                            point.setX(xMin);
-                            point.setY(myY);
-                            point_vector.append(point);
-                        }
-
-                        point.setX(lapseRateH0);
-                        point.setY(lapseRateT0);
-                        point_vector.append(point);
-
-                        myY = lapseRateT0 + slope2 * (xMax - lapseRateH0);
-                        point.setX(xMax);
-                        point.setY(myY);
-                        point_vector.append(point);
-                    }
-                    else if (parameters[proxyPos].size() == 6)
-                    {
-                        std::vector <double> xVector;
-                        for (int m = xMin; m < xMax; m += 5)
-                            xVector.push_back(m);
-
-                        for (int p = 0; p < int(xVector.size()); p++)
-                        {
-                            point.setX(xVector[p]);
+                        else if (parameters[proxyPos].size() == 6)
                             point.setY(lapseRatePiecewise_three_free(xVector[p], parameters[proxyPos]));
-                            point_vector.append(point);
-                        }
+                        point_vector.append(point);
                     }
+
                 }
             }
 
