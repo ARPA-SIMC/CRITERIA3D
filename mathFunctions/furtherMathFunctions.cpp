@@ -33,6 +33,7 @@
 #include "furtherMathFunctions.h"
 
 
+
 double lapseRateRotatedSigmoid(double x, std::vector <double> par)
 {
     if (par.size() < 4) return NODATA;
@@ -1990,16 +1991,14 @@ namespace interpolation
         //grigliato
 
         int directions[] = {1, -1};
-        size_t numParamsToVary = parameters.size();
         std::vector<double> firstGuessParam = parameters;
 
-        for (int step = 1; step <= numSteps*6; step++)
+        for (int step = 1; step <= numSteps*3; step++)
         {
             for (int dir = 0; dir < 2; ++dir)
             {
-                for (int paramIndex = 0; paramIndex < int(numParamsToVary); ++paramIndex)
+                for (int paramIndex = 0; paramIndex < 3; ++paramIndex)
                 {
-
                     fittingMarquardt_nDimension_noSquares_singleFunction(func,parametersMin,
                                                                          parametersMax,parameters,
                                                                          parametersDelta,maxIterationsNr,

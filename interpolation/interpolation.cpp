@@ -1788,7 +1788,7 @@ bool multipleDetrendingElevation(Crit3DProxyCombination elevationCombination, st
     }
 
     // multiple non linear fitting
-    interpolation::bestFittingMarquardt_nDimension_singleFunction(*(myFunc.front().target<double(*)(double, std::vector<double>&)>()), 200, 4, parametersMin.front(), parametersMax.front(), parameters.front(), parametersDelta.front(),
+    interpolation::bestFittingMarquardt_nDimension_singleFunction(*(myFunc.front().target<double(*)(double, std::vector<double>&)>()), 400, 4, parametersMin.front(), parametersMax.front(), parameters.front(), parametersDelta.front(),
                                                    stepSize, numSteps, 100, 0.005, 0.002, predictors, predictands, weights);
 
     // GA siamo sicuri che poi l'ordine viene mantenuto in ogni dove?
