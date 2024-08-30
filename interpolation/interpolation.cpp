@@ -1280,7 +1280,7 @@ float retrend(meteoVariable myVar, vector<double> myProxyValues, Crit3DInterpola
         {
             myProxy = mySettings->getProxy(pos);
 
-            if (myCombination.isProxyActive(pos) && myProxy->getIsSignificant())
+            if (myCombination.isProxyActive(pos) && myCombination.isProxySignificant(pos))
             {
                 myProxyValue = mySettings->getProxyValue(pos, myProxyValues);
 
@@ -1352,13 +1352,13 @@ void detrending(std::vector <Crit3DInterpolationDataPoint> &myPoints,
         if (myCombination.isProxyActive(pos))
         {
             myProxy = mySettings->getProxy(pos);
-            myProxy->setIsSignificant(false);
+            //myProxy->setIsSignificant(false);
 
             if (getProxyPragaName(myProxy->getName()) == proxyHeight)
             {
                 if (regressionOrography(myPoints, myCombination, mySettings, myClimate, myTime, myVar, pos))
                 {
-                    myProxy->setIsSignificant(true);
+                    //myProxy->setIsSignificant(true);
                     detrendPoints(myPoints, mySettings, myVar, pos);
                 }
             }
@@ -1366,7 +1366,7 @@ void detrending(std::vector <Crit3DInterpolationDataPoint> &myPoints,
             {
                 if (regressionGeneric(myPoints, mySettings, pos, false))
                 {
-                    myProxy->setIsSignificant(true);
+                    //myProxy->setIsSignificant(true);
                     detrendPoints(myPoints, mySettings, myVar, pos);
                 }
             }
@@ -1767,7 +1767,7 @@ bool multipleDetrendingOtherProxiesFitting(int elevationPos, std::vector <Crit3D
     {
         if (pos != elevationPos && myCombination.isProxyActive(pos))
         {
-            mySettings->getProxy(pos)->setIsSignificant(false);
+            mySettings->setSignificantCurrentCombination(pos, false);
             proxyIndex.push_back(pos);
             nrPredictors++;
         }
@@ -1796,13 +1796,11 @@ bool multipleDetrendingOtherProxiesFitting(int elevationPos, std::vector <Crit3D
         {
             if (proxyValidityWeighted(othersPoints, pos, mySettings->getProxy(pos)->getStdDevThreshold()))
             {
-                mySettings->getProxy(pos)->setIsSignificant(true);
                 mySettings->setSignificantCurrentCombination(pos, true);
                 validNr++;
             }
             else
             {
-                mySettings->getProxy(pos)->setIsSignificant(false);
                 mySettings->setSignificantCurrentCombination(pos, false);
             }
         }
@@ -1871,13 +1869,11 @@ bool multipleDetrendingOtherProxiesFitting(int elevationPos, std::vector <Crit3D
         {
             if (proxyValidityWeighted(othersPoints, pos, mySettings->getProxy(pos)->getStdDevThreshold()))
             {
-                mySettings->getProxy(pos)->setIsSignificant(true);
                 mySettings->setSignificantCurrentCombination(pos, true);
                 validNr++;
             }
             else
             {
-                mySettings->getProxy(pos)->setIsSignificant(false);
                 mySettings->setSignificantCurrentCombination(pos, false);
             }
         }
@@ -1912,7 +1908,6 @@ bool multipleDetrendingOtherProxiesFitting(int elevationPos, std::vector <Crit3D
         {
             if (pos != elevationPos)
             {
-                mySettings->getProxy(pos)->setIsSignificant(false);
                 mySettings->setSignificantCurrentCombination(pos, false);
             }
         }

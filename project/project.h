@@ -1,7 +1,8 @@
 #ifndef PROJECT_H
 #define PROJECT_H
 
-    #ifndef QUALITY_H
+#include <deque>
+#ifndef QUALITY_H
         #include "quality.h"
     #endif
     #ifndef GIS_H
