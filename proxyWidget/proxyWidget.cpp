@@ -476,12 +476,13 @@ void Crit3DProxyWidget::modelLRClicked(int toggled)
                 interpolationSettings->setCurrentCombination(interpolationSettings->getSelectedCombination());
                 if (interpolationSettings->getProxiesComplete())
                 {
-                    if (! multipleDetrendingMain(outInterpolationPoints, interpolationSettings, myVar, errorStr)) return;
+                    interpolationSettings->clearFitting();
+                    if (! multipleDetrendingElevationFitting(proxyPos, outInterpolationPoints, interpolationSettings, myVar, errorStr)) return;
                 }
 
                 std::vector<std::vector<double>> parameters = interpolationSettings->getFittingParameters();
 
-                if (parameters.size() > proxyPos)
+                if (!parameters.empty() && !parameters.front().empty())
                 {
                     std::vector <double> xVector;
                     for (int m = xMin; m < xMax; m += 5)
@@ -490,12 +491,12 @@ void Crit3DProxyWidget::modelLRClicked(int toggled)
                     for (int p = 0; p < int(xVector.size()); p++)
                     {
                         point.setX(xVector[p]);
-                        if (parameters[proxyPos].size() == 4)
-                            point.setY(lapseRatePiecewise_two(xVector[p], parameters[proxyPos]));
-                        else if (parameters[proxyPos].size() == 5)
-                            point.setY(lapseRatePiecewise_three(xVector[p], parameters[proxyPos]));
-                        else if (parameters[proxyPos].size() == 6)
-                            point.setY(lapseRatePiecewise_three_free(xVector[p], parameters[proxyPos]));
+                        if (parameters.front().size() == 4)
+                            point.setY(lapseRatePiecewise_two(xVector[p], parameters.front()));
+                        else if (parameters.front().size() == 5)
+                            point.setY(lapseRatePiecewise_three(xVector[p], parameters.front()));
+                        else if (parameters.front().size() == 6)
+                            point.setY(lapseRatePiecewise_three_free(xVector[p], parameters.front()));
                         point_vector.append(point);
                     }
 

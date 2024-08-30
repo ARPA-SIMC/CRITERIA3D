@@ -70,11 +70,15 @@
     bool multipleDetrendingMain(std::vector <Crit3DInterpolationDataPoint> &myPoints,
                                 Crit3DInterpolationSettings* mySettings, meteoVariable myVar, std::string &errorStr);
 
-    bool multipleDetrending(int elevationPos, std::vector <Crit3DInterpolationDataPoint> &myPoints, Crit3DInterpolationSettings* mySettings,
+    bool multipleDetrendingOtherProxiesFitting(int elevationPos, std::vector <Crit3DInterpolationDataPoint> &myPoints, Crit3DInterpolationSettings* mySettings,
                             meteoVariable myVar, std::string &errorStr);
 
-    bool multipleDetrendingElevation(int elevationPos, std::vector <Crit3DInterpolationDataPoint> &myPoints,
+    bool multipleDetrendingElevationFitting(int elevationPos, std::vector <Crit3DInterpolationDataPoint> &myPoints,
                                      Crit3DInterpolationSettings* mySettings, meteoVariable myVar, std::string &errorStr);
+
+    bool detrendingElevation(int elevationPos, std::vector <Crit3DInterpolationDataPoint> &myPoints, Crit3DInterpolationSettings* mySettings);
+
+    void detrendingOtherProxies(int elevationPos, std::vector<Crit3DInterpolationDataPoint> &myPoints, Crit3DInterpolationSettings* mySettings);
 
     bool getUseDetrendingVar(meteoVariable myVar);
     bool isThermal(meteoVariable myVar);
