@@ -285,34 +285,6 @@ namespace gis
         return initializeGrid(initValue);
     }
 
-    bool Crit3DRasterGrid::initializeParameters(const Crit3DRasterHeader& initHeader)
-    {
-        singleCell.clear();
-        singleCell.resize(initHeader.nrRows*initHeader.nrCols);
-        for (int i = 0; i < int(singleCell.size()); i++)
-        {
-            singleCell[i].row = i / initHeader.nrCols;
-            singleCell[i].col = i % initHeader.nrCols;
-            singleCell[i].fittingParameters.clear();
-        }
-
-        return true;
-    }
-
-    bool Crit3DRasterGrid::initializeParametersLatLonHeader(const Crit3DLatLonHeader& latLonHeader)
-    {
-        singleCell.clear();
-        singleCell.resize(latLonHeader.nrRows*latLonHeader.nrCols);
-        for (int i = 0; i < int(singleCell.size()); i++)
-        {
-            singleCell[i].row = i / latLonHeader.nrCols;
-            singleCell[i].col = i % latLonHeader.nrCols;
-            singleCell[i].fittingParameters.clear();
-        }
-
-        return true;
-    }
-
 
     bool Crit3DRasterGrid::copyGrid(const Crit3DRasterGrid& initGrid)
     {
@@ -486,103 +458,7 @@ namespace gis
         return getValueFromRowCol(row, col);
     }
 
-    std::vector<std::vector<double>> Crit3DRasterGrid::getParametersFromRowCol(int row, int col)
-    {
-        std::vector<std::vector<double>> parameters;
-        parameters.clear();
 
-        if(isOutOfGrid(row, col))
-        {
-            return parameters;
-        }
-
-        int index = row * header->nrCols + col;
-
-        if (index < int(singleCell.size()))
-            parameters = singleCell[index].fittingParameters;
-
-        return parameters;
-
-
-    }
-
-    bool Crit3DRasterGrid::setParametersForRowCol(int row, int col, std::vector<std::vector<double>> parameters)
-    {
-        if (isOutOfGrid(row, col) || parameters.empty())
-            return false;
-
-        int index = row * header->nrCols + col;
-        singleCell[index].fittingParameters = parameters;
-
-        return true;
-    }
-
-    std::vector<std::vector<double>> Crit3DRasterGrid::prepareParameters(int row, int col, std::vector<bool> activeList)
-    {
-        std::vector<std::vector<double>> tempProxyVector;
-        tempProxyVector.clear();
-        tempProxyVector.resize(activeList.size());
-        int l, m, k, p;
-        l = 0;
-        m = 0;
-        std::vector<double> avg;
-        int counter, index;
-        bool findFirst = 0;
-
-        if (isOutOfGrid(row, col))
-            return tempProxyVector;
-
-        for (unsigned int i = 0; i < activeList.size(); i++)
-        {
-            findFirst = 0;
-            if (activeList[i])
-            {
-                //look for the first cell that has data for that proxy. if there isn't any, return empty vector
-                for (l = row-1; l < row+2; l++)
-                {
-                    for (m = col-1; m < col+2; m++)
-                    {
-                        index = l * header->nrCols + m;
-                        if (index >= 0 && index < int(singleCell.size()) && (singleCell[index].fittingParameters.size() > i && !singleCell[index].fittingParameters[i].empty()) && (l != row || m !=col)) {
-                            findFirst = 1;
-                        }
-                        if (findFirst==1) break;
-                    }
-                    if (findFirst==1) break;
-                }
-
-                if (findFirst == 0)
-                    continue;
-
-                //you're on a specific proxy rn. cycle through the cells, calculate the avg
-                avg.clear();
-                avg.resize(singleCell[index].fittingParameters[i].size());
-                counter = 0;
-
-                for (k = l; k < row+2; k++)
-                {
-                    for (p = m; p < col+2; p++)
-                    {
-                        index = k * header->nrCols + p;
-                        if (index >= 0 && index < int(singleCell.size()) && singleCell[index].fittingParameters.size() > i && !singleCell[index].fittingParameters[i].empty()) {
-                            for (unsigned int o = 0; o < avg.size(); o++)
-                            {
-                                avg[o] += singleCell[index].fittingParameters[i][o];
-
-                            }
-                            counter++;
-                        }
-                    }
-                }
-                for (unsigned int o = 0; o < avg.size(); o++)
-                    avg[o] /= counter;
-
-                tempProxyVector[i] = avg;
-            }
-        }
-
-        return tempProxyVector;
-    }
 
     void convertFlagToNodata(Crit3DRasterGrid& myGrid)
     {

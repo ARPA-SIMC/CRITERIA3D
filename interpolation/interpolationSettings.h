@@ -239,6 +239,7 @@
         void setIndexHeight(unsigned value);
         Crit3DProxyCombination getCurrentCombination() const;
         void setCurrentCombination(Crit3DProxyCombination value);
+        void setSignificantCurrentCombination(unsigned int index, bool isSignificant);
         std::vector<Crit3DProxy> getCurrentProxy() const;
         void setCurrentProxy(const std::vector<Crit3DProxy> &value);
         bool getUseInterpolatedTForRH() const;
@@ -265,11 +266,9 @@
         std::vector<std::vector <double>> getFittingParameters() const;
         std::vector<double> getProxyFittingParameters(int tempIndex);
         void setFittingParameters(const std::vector<std::vector <double>> &newFittingParameters);
-        void setSingleFittingParameters(std::vector<double> &newFittingParameters, int paramIndex);
         void addFittingParameters(const std::vector<std::vector<double> > &newFittingParameters);
         std::vector<std::function<double (double, std::vector<double> &)> > getFittingFunction() const;
         void setFittingFunction(const std::vector<std::function<double (double, std::vector<double> &)> > &newFittingFunction);
-        void setSingleFittingFunction(const std::function<double (double, std::vector<double> &)> &newFittingFunction, unsigned int index);
         void addFittingFunction(const std::function<double (double, std::vector<double> &)> &newFittingFunction);
         bool getProxiesComplete() const;
         void setProxiesComplete(bool newProxiesComplete);

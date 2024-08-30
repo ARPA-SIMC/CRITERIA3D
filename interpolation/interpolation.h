@@ -61,9 +61,7 @@
     float interpolate(std::vector<Crit3DInterpolationDataPoint> &myPoints, Crit3DInterpolationSettings *mySettings, Crit3DMeteoSettings *meteoSettings, meteoVariable myVar, float myX, float myY, float myZ, std::vector<double> myProxyValues, bool excludeSupplemental);
     bool getProxyValuesXY(float x, float y, Crit3DInterpolationSettings* mySettings, std::vector<double> &myValues);
 
-    bool getActiveProxyValues(Crit3DProxyCombination myCombination, const std::vector<double> &allProxyValues, std::vector<double> &activeProxyValues);
-
-    void removeEmptyFittingParameters(std::vector <std::vector <double>> &fittingParameters);
+    bool getMultipleDetrendingValues(Crit3DInterpolationSettings mySettings, const std::vector<double> &allProxyValues, std::vector<double> &activeProxyValues);
 
     void detrending(std::vector <Crit3DInterpolationDataPoint> &myPoints,
                     Crit3DProxyCombination myCombination, Crit3DInterpolationSettings *mySettings, Crit3DClimateParameters *myClimate,
@@ -72,10 +70,10 @@
     bool multipleDetrendingMain(std::vector <Crit3DInterpolationDataPoint> &myPoints,
                                 Crit3DInterpolationSettings* mySettings, meteoVariable myVar, std::string &errorStr);
 
-    bool multipleDetrending(Crit3DProxyCombination othersCombination, std::vector <Crit3DInterpolationDataPoint> &myPoints, Crit3DInterpolationSettings* mySettings,
+    bool multipleDetrending(int elevationPos, std::vector <Crit3DInterpolationDataPoint> &myPoints, Crit3DInterpolationSettings* mySettings,
                             meteoVariable myVar, std::string &errorStr);
 
-    bool multipleDetrendingElevation(Crit3DProxyCombination myCombination, std::vector <Crit3DInterpolationDataPoint> &myPoints,
+    bool multipleDetrendingElevation(int elevationPos, std::vector <Crit3DInterpolationDataPoint> &myPoints,
                                      Crit3DInterpolationSettings* mySettings, meteoVariable myVar, std::string &errorStr);
 
     bool getUseDetrendingVar(meteoVariable myVar);
@@ -111,18 +109,17 @@
 
     bool setHeightTemperatureRange(Crit3DProxyCombination myCombination, Crit3DInterpolationSettings* mySettings);
 
-    bool setAllFittingParameters_noRange(Crit3DProxyCombination myCombination, Crit3DInterpolationSettings* mySettings,
+    bool setFittingParameters_elevation(int elevationPos, Crit3DInterpolationSettings* mySettings,
                                          std::vector<std::function<double(double, std::vector<double>&)>>& myFunc,
                                          std::vector <std::vector<double>> &paramMin, std::vector <std::vector<double>> &paramMax,
                                          std::vector <std::vector<double>> &paramDelta, std::vector <std::vector<double>> &paramFirstGuess,
                                          std::vector<double> &stepSize, int numSteps,
                                          std::string &errorStr);
 
-    bool setAllFittingParameters(Crit3DProxyCombination myCombination, Crit3DInterpolationSettings* mySettings,
-                                 std::vector<std::function<double(double, std::vector<double>&)>>& myFunc,
-                                 std::vector <std::vector<double>> &paramMin, std::vector <std::vector<double>> &paramMax,
-                                 std::vector <std::vector<double>> &paramDelta, std::vector <std::vector<double>> &paramFirstGuess,
-                                 std::string &errorStr);
-
+    bool setFittingParameters_otherProxies(int elevationPos, Crit3DInterpolationSettings* mySettings,
+                                        std::vector<std::function<double(double, std::vector<double>&)>>& myFunc,
+                                        std::vector <std::vector<double>> &paramMin, std::vector <std::vector<double>> &paramMax,
+                                        std::vector <std::vector<double>> &paramDelta, std::vector <std::vector<double>> &paramFirstGuess,
+                                        std::string &errorStr);
 
 #endif // INTERPOLATION_H

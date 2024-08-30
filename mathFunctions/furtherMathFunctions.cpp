@@ -1272,7 +1272,7 @@ namespace interpolation
         std::vector<std::vector<double>> firstGuessParam = parameters;
         bool exitFlag = 0;
 
-        for (int step = 1; step <= numSteps; ++step)
+        for (int step = 1; step <= numSteps; ++step) //CT: da sistemare o saltare
         {
             for (int dir = 0; dir < 2; ++dir)
             {

@@ -165,6 +165,10 @@ Crit3DProxyCombination Crit3DInterpolationSettings::getCurrentCombination() cons
     return currentCombination;
 }
 
+void Crit3DInterpolationSettings::setSignificantCurrentCombination(unsigned int index, bool isSignificant)
+{
+    currentCombination.setProxySignificant(index, isSignificant);
+}
 
 std::vector<Crit3DProxy> Crit3DInterpolationSettings::getCurrentProxy() const
 {
@@ -298,13 +302,6 @@ void Crit3DInterpolationSettings::setFittingParameters(const std::vector<std::ve
     fittingParameters = newFittingParameters;
 }
 
-void Crit3DInterpolationSettings::setSingleFittingParameters(std::vector<double> &newFittingParameters, int paramIndex)
-{
-    if (fittingParameters.size() <= paramIndex)
-        fittingParameters.resize(paramIndex+1);
-    fittingParameters[paramIndex] = newFittingParameters;
-}
-
 void Crit3DInterpolationSettings::addFittingParameters(const std::vector<std::vector<double> > &newFittingParameters)
 {
     for (size_t i = 0; i < newFittingParameters.size(); ++i) {
@@ -320,14 +317,6 @@ std::vector<std::function<double (double, std::vector<double> &)>> Crit3DInterpo
 void Crit3DInterpolationSettings::setFittingFunction(const std::vector<std::function<double (double, std::vector<double> &)> > &newFittingFunction)
 {
     fittingFunction = newFittingFunction;
-}
-
-void Crit3DInterpolationSettings::setSingleFittingFunction(const std::function<double (double, std::vector<double> &)> &newFittingFunction, unsigned int index)
-{
-    if (fittingFunction.size() <= index)
-        fittingFunction.resize(index + 1);
-    fittingFunction[index] = newFittingFunction;
-
 }
 
 void Crit3DInterpolationSettings::addFittingFunction(const std::function<double (double, std::vector<double> &)> &newFittingFunction)
