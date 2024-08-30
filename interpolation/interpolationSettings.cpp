@@ -606,16 +606,6 @@ void Crit3DProxy::setGridName(const std::string &value)
     gridName = value;
 }
 
-bool Crit3DProxy::getIsSignificant() const
-{
-    return isSignificant;
-}
-
-void Crit3DProxy::setIsSignificant(bool value)
-{
-    isSignificant = value;
-}
-
 bool Crit3DProxy::getForQualityControl() const
 {
     return forQualityControl;
@@ -734,7 +724,6 @@ Crit3DProxy::Crit3DProxy()
     name = "";
     gridName = "";
     grid = new gis::Crit3DRasterGrid();
-    isSignificant = false;
     forQualityControl = false;
 
     regressionR2 = NODATA;

@@ -8,14 +8,7 @@
     #ifndef GIS_H
         #include "gis.h"
     #endif
-    #ifndef METEO_H
-        #include "meteo.h"
-    #endif
-    #ifndef METEOGRID_H
-        #include "meteoGrid.h"
-    #endif
 
-    #include <deque>
 
     std::string getKeyStringInterpolationMethod(TInterpolationMethod value);
     std::string getKeyStringElevationFunction(TFittingFunction value);
@@ -29,7 +22,6 @@
         gis::Crit3DRasterGrid* grid;
         std::string proxyTable;
         std::string proxyField;
-        bool isSignificant;
         bool forQualityControl;
 
         float regressionR2;
@@ -61,8 +53,6 @@
         void setGrid(gis::Crit3DRasterGrid *value);
         std::string getGridName() const;
         void setGridName(const std::string &value);
-        bool getIsSignificant() const;
-        void setIsSignificant(bool value);
         void setRegressionR2(float myValue);
         float getRegressionR2();
         void setRegressionSlope(float myValue);
