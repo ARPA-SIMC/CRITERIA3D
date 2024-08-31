@@ -119,16 +119,6 @@ void Crit3DInterpolationSettings::setTopoDist_Kh(int value)
     topoDist_Kh = value;
 }
 
-Crit3DProxyCombination Crit3DInterpolationSettings::getOptimalCombination() const
-{
-    return optimalCombination;
-}
-
-void Crit3DInterpolationSettings::setOptimalCombination(const Crit3DProxyCombination &value)
-{
-    optimalCombination = value;
-}
-
 Crit3DProxyCombination Crit3DInterpolationSettings::getSelectedCombination() const
 {
     return selectedCombination;
@@ -444,7 +434,6 @@ void Crit3DInterpolationSettings::initializeProxy()
 
     currentProxy.clear();
     selectedCombination.clear();
-    optimalCombination.clear();
 
     indexHeight = unsigned(NODATA);
 }
@@ -828,8 +817,6 @@ void Crit3DInterpolationSettings::addProxy(Crit3DProxy myProxy, bool isActive_)
 
     selectedCombination.addProxyActive(isActive_);
     selectedCombination.addProxySignificant(false);
-    optimalCombination.addProxyActive(isActive_);
-    optimalCombination.addProxySignificant(false);
 }
 
 std::string Crit3DInterpolationSettings::getProxyName(unsigned pos)

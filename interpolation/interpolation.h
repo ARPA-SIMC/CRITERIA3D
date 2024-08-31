@@ -63,8 +63,8 @@
 
     bool getMultipleDetrendingValues(Crit3DInterpolationSettings mySettings, const std::vector<double> &allProxyValues, std::vector<double> &activeProxyValues);
 
-    void detrending(std::vector <Crit3DInterpolationDataPoint> &myPoints,
-                    Crit3DProxyCombination myCombination, Crit3DInterpolationSettings *mySettings, Crit3DClimateParameters *myClimate,
+    void detrending(std::vector <Crit3DInterpolationDataPoint> &myPoints, Crit3DProxyCombination inCombination,
+                    Crit3DInterpolationSettings *mySettings, Crit3DClimateParameters *myClimate,
                     meteoVariable myVar, Crit3DTime myTime);
 
     bool multipleDetrendingMain(std::vector <Crit3DInterpolationDataPoint> &myPoints,

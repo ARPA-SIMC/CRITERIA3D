@@ -159,7 +159,6 @@
         bool proxyLoaded;
         bool proxiesComplete;
         std::vector <Crit3DProxy> currentProxy;
-        Crit3DProxyCombination optimalCombination;
         Crit3DProxyCombination selectedCombination;
         Crit3DProxyCombination currentCombination;
         unsigned indexHeight;

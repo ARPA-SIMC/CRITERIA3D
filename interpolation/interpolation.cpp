@@ -1340,25 +1340,28 @@ bool regressionOrography(std::vector <Crit3DInterpolationDataPoint> &myPoints,
 
 
 void detrending(std::vector <Crit3DInterpolationDataPoint> &myPoints,
-                Crit3DProxyCombination myCombination, Crit3DInterpolationSettings* mySettings, Crit3DClimateParameters* myClimate,
+                Crit3DProxyCombination inCombination,
+                Crit3DInterpolationSettings* mySettings, Crit3DClimateParameters* myClimate,
                 meteoVariable myVar, Crit3DTime myTime)
 {
     if (! getUseDetrendingVar(myVar)) return;
 
     Crit3DProxy* myProxy;
 
+    mySettings->setCurrentCombination(inCombination);
+
     for (int pos=0; pos < int(mySettings->getProxyNr()); pos++)
     {
-        if (myCombination.isProxyActive(pos))
+        if (inCombination.isProxyActive(pos))
         {
             myProxy = mySettings->getProxy(pos);
-            //myProxy->setIsSignificant(false);
+            mySettings->setSignificantCurrentCombination(pos, false);
 
             if (getProxyPragaName(myProxy->getName()) == proxyHeight)
             {
-                if (regressionOrography(myPoints, myCombination, mySettings, myClimate, myTime, myVar, pos))
+                if (regressionOrography(myPoints, inCombination, mySettings, myClimate, myTime, myVar, pos))
                 {
-                    //myProxy->setIsSignificant(true);
+                    mySettings->setSignificantCurrentCombination(pos, true);
                     detrendPoints(myPoints, mySettings, myVar, pos);
                 }
             }
@@ -1366,7 +1369,7 @@ void detrending(std::vector <Crit3DInterpolationDataPoint> &myPoints,
             {
                 if (regressionGeneric(myPoints, mySettings, pos, false))
                 {
-                    //myProxy->setIsSignificant(true);
+                    mySettings->setSignificantCurrentCombination(pos, true);
                     detrendPoints(myPoints, mySettings, myVar, pos);
                 }
             }
@@ -2016,7 +2019,6 @@ void optimalDetrending(meteoVariable myVar, Crit3DMeteoPoint* &myMeteoPoints, in
     float avgError, minError;
     size_t proxyNr = mySettings->getProxyNr();
     Crit3DProxyCombination myCombination, bestCombination;
-    myCombination = mySettings->getSelectedCombination();
 
     nrCombination = int(pow(2, double(proxyNr) + 1));
 
@@ -2029,7 +2031,6 @@ void optimalDetrending(meteoVariable myVar, Crit3DMeteoPoint* &myMeteoPoints, in
         {
             passDataToInterpolation(myMeteoPoints, nrMeteoPoints, interpolationPoints, mySettings);
             detrending(interpolationPoints, myCombination, mySettings, myClimate, myVar, myTime);
-            mySettings->setCurrentCombination(myCombination);
 
             if (mySettings->getUseTD() && getUseTdVar(myVar))
                 topographicDistanceOptimize(myVar, myMeteoPoints, nrMeteoPoints, interpolationPoints, mySettings, meteoSettings);
@@ -2050,7 +2051,6 @@ void optimalDetrending(meteoVariable myVar, Crit3DMeteoPoint* &myMeteoPoints, in
     {
         passDataToInterpolation(myMeteoPoints, nrMeteoPoints, outInterpolationPoints, mySettings);
         detrending(outInterpolationPoints, bestCombination, mySettings, myClimate, myVar, myTime);
-        mySettings->setOptimalCombination(bestCombination);
     }
 
     return;
@@ -2089,15 +2089,9 @@ bool preInterpolation(std::vector <Crit3DInterpolationDataPoint> &myPoints, Crit
         else
         {
             if (mySettings->getUseBestDetrending())
-            {
                 optimalDetrending(myVar, myMeteoPoints, nrMeteoPoints, myPoints, mySettings, meteoSettings, myClimate, myTime);
-                mySettings->setCurrentCombination(mySettings->getOptimalCombination());
-            }
             else
-            {
                 detrending(myPoints, mySettings->getSelectedCombination(), mySettings, myClimate, myVar, myTime);
-                mySettings->setCurrentCombination(mySettings->getSelectedCombination());
-            }
         }
     }
 
