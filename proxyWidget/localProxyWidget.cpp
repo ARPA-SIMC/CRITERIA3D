@@ -467,27 +467,24 @@ void Crit3DLocalProxyWidget::modelLRClicked(int toggled)
 
     if (toggled && subsetInterpolationPoints.size() != 0)
     {
-        std::string errorStr;
-        setHeightTemperatureRange(interpolationSettings->getSelectedCombination(), interpolationSettings);
-        interpolationSettings->setCurrentCombination(interpolationSettings->getSelectedCombination());
-        interpolationSettings->clearFitting();
-        if (! multipleDetrendingElevationFitting(proxyPos, outInterpolationPoints, interpolationSettings, myVar, errorStr)) return;
-
-        std::vector<std::vector<double>> parameters = interpolationSettings->getFittingParameters();
-
-        if (!parameters.empty())
+        if (comboAxisX.currentText() == "elevation")
         {
-            if (parameters.front().size() > 2)
+            std::string errorStr;
+            setHeightTemperatureRange(interpolationSettings->getSelectedCombination(), interpolationSettings);
+            interpolationSettings->setCurrentCombination(interpolationSettings->getSelectedCombination());
+            interpolationSettings->clearFitting();
+            if (! multipleDetrendingElevationFitting(proxyPos, outInterpolationPoints, interpolationSettings, myVar, errorStr)) return;
+
+            std::vector<std::vector<double>> parameters = interpolationSettings->getFittingParameters();
+
+            if (!parameters.empty())
             {
-                xMin = getZmin(subsetInterpolationPoints);
-                xMax = getZmax(subsetInterpolationPoints);
-
-                if (interpolationSettings->getUseMultipleDetrending())
+                if (parameters.front().size() > 3 && parameters.front().size() < 7)
                 {
-                    if ((parameters.front().size() != 5 && parameters.front().size() != 6 && parameters.front().size() != 4))
-                        return;
+                    xMin = getZmin(subsetInterpolationPoints);
+                    xMax = getZmax(subsetInterpolationPoints);
 
-                    if (parameters.size() > proxyPos)
+                    if (interpolationSettings->getUseMultipleDetrending())
                     {
                         std::vector <double> xVector;
                         for (int m = xMin; m < xMax; m += 5)
@@ -507,27 +504,10 @@ void Crit3DLocalProxyWidget::modelLRClicked(int toggled)
                     }
                 }
             }
-            else
-            {
-                xMin = getProxyMinValue(subsetInterpolationPoints, proxyPos);
-                xMax = getProxyMaxValue(subsetInterpolationPoints, proxyPos);
-
-                if (parameters[proxyPos].empty())
-                    return;
-
-                float slope = parameters[proxyPos][0];
-                float intercept = parameters[proxyPos][1];
-
-                float myY = intercept + slope * xMin;
-                point.setX(xMin);
-                point.setY(myY);
-                point_vector.append(point);
-
-                myY = intercept + slope * xMax;
-                point.setX(xMax);
-                point.setY(myY);
-                point_vector.append(point);
-            }
+        }
+        else
+        {
+            //TODO: local proxy graph for other proxies
         }
         chartView->drawModelLapseRate(point_vector);
     }
