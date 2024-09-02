@@ -41,7 +41,7 @@
     enum TFittingFunction { piecewiseTwo, piecewiseThreeFree, piecewiseThree, linear, noFunction };
 
     const std::map<std::string, TFittingFunction> fittingFunctionNames = {
-        { "piecewise_two", piecewiseTwo },
+        { "double_piecewise", piecewiseTwo },
         { "free_triple_piecewise", piecewiseThreeFree},
         { "triple_piecewise", piecewiseThree},
         { "linear", linear }

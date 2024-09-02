@@ -224,7 +224,7 @@ bool Project::checkProxy(Crit3DProxy &myProxy, QString* error)
             std::string elevationFuction = parametersSettings->value("fitting_function").toString().toStdString();
             if (fittingFunctionNames.find(elevationFuction) == fittingFunctionNames.end())
             {
-                errorString = "Unknown function for elevation. Remove the field from the .ini file or choose between: piecewise_two, triple_piecewise, free_triple_piecewise.";
+                errorString = "Unknown function for elevation. Remove the field from the .ini file or choose between: double_piecewise, triple_piecewise, free_triple_piecewise.";
                 return false;
             }
             else
