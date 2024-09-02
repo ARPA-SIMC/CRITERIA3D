@@ -1262,14 +1262,14 @@ float retrend(meteoVariable myVar, vector<double> myProxyValues, Crit3DInterpola
     {
         std::vector <double> activeProxyValues;
 
-        if (getMultipleDetrendingValues(*mySettings, myProxyValues, activeProxyValues))
-        {
-            //functions have been set in setFittingParameters_elevation and _otherProxies (height proxy first)
-            std::vector<std::function<double(double, std::vector<double>&)>> myFunc = mySettings->getFittingFunction();
-            //parameters have been set after bestFitting function in multipleDetrendingElevation
-            // and multipleDetrending (height proxy first)
-            std::vector <std::vector <double>> fittingParameters = mySettings->getFittingParameters();
+        //functions have been set in setFittingParameters_elevation and _otherProxies (height proxy first)
+        std::vector<std::function<double(double, std::vector<double>&)>> myFunc = mySettings->getFittingFunction();
+        //parameters have been set after bestFitting function in multipleDetrendingElevation
+        // and multipleDetrending (height proxy first)
+        std::vector <std::vector <double>> fittingParameters = mySettings->getFittingParameters();
 
+        if (getMultipleDetrendingValues(*mySettings, myProxyValues, activeProxyValues, myFunc, fittingParameters))
+        {
             if (myFunc.size() > 0 && fittingParameters.size() > 0)
                 retrendValue = float(functionSum(myFunc, activeProxyValues, fittingParameters));
         }
@@ -2081,10 +2081,7 @@ bool preInterpolation(std::vector <Crit3DInterpolationDataPoint> &myPoints, Crit
             if (!mySettings->getUseLocalDetrending())
                 setHeightTemperatureRange(mySettings->getSelectedCombination(), mySettings);
 
-            if (mySettings->getProxiesComplete())
-            {
-                if (! multipleDetrendingMain(myPoints, mySettings, myVar, errorStr)) return false;
-            }
+            if (! multipleDetrendingMain(myPoints, mySettings, myVar, errorStr)) return false;
         }
         else
         {
@@ -2152,7 +2149,7 @@ float interpolate(vector <Crit3DInterpolationDataPoint> &myPoints, Crit3DInterpo
 }
 
 
-bool getMultipleDetrendingValues(Crit3DInterpolationSettings mySettings, const std::vector<double> &allProxyValues, std::vector<double> &activeProxyValues)
+bool getMultipleDetrendingValues(Crit3DInterpolationSettings mySettings, const std::vector<double> &allProxyValues, std::vector<double> &activeProxyValues, std::vector<std::function<double(double, std::vector<double>&)>> &myFunc, std::vector<std::vector<double>> &myParameters)
 {
     //this function should be used for multiple detrending only, since it loads the elevation proxy before the others
     Crit3DProxyCombination myCombination = mySettings.getCurrentCombination();
@@ -2172,17 +2169,19 @@ bool getMultipleDetrendingValues(Crit3DInterpolationSettings mySettings, const s
         }
     }
 
-    bool isComplete = true;
-
     for (unsigned int i=0; i < myCombination.getProxySize(); i++)
         if (i != elevationPos && myCombination.isProxyActive(i) && myCombination.isProxySignificant(i))
         {
-            activeProxyValues.push_back(allProxyValues[i]);
             if (allProxyValues[i] == NODATA)
-                isComplete = false; //CT: deve essere in grado di continuare con gli altri proxy anche se un valore è NODATA
+            {
+                myFunc.erase(myFunc.begin()+activeProxyValues.size());
+                myParameters.erase(myParameters.begin()+activeProxyValues.size());
+            }
+            else
+                activeProxyValues.push_back(allProxyValues[i]);
         }
 
-    return (activeProxyValues.size() > 0 && isComplete);
+    return (activeProxyValues.size() > 0);
 }
 
 bool getProxyValuesXY(float x, float y, Crit3DInterpolationSettings* mySettings, std::vector<double> &myValues)

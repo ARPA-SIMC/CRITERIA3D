@@ -470,11 +470,8 @@ void Crit3DLocalProxyWidget::modelLRClicked(int toggled)
         std::string errorStr;
         setHeightTemperatureRange(interpolationSettings->getSelectedCombination(), interpolationSettings);
         interpolationSettings->setCurrentCombination(interpolationSettings->getSelectedCombination());
-        if (interpolationSettings->getProxiesComplete())
-        {
-            interpolationSettings->clearFitting();
-            if (! multipleDetrendingElevationFitting(proxyPos, outInterpolationPoints, interpolationSettings, myVar, errorStr)) return;
-        }
+        interpolationSettings->clearFitting();
+        if (! multipleDetrendingElevationFitting(proxyPos, outInterpolationPoints, interpolationSettings, myVar, errorStr)) return;
 
         std::vector<std::vector<double>> parameters = interpolationSettings->getFittingParameters();
 

@@ -2438,14 +2438,12 @@ bool Project::interpolationDemLocalDetrending(meteoVariable myVar, const Crit3DT
         {
             for (long col = 0; col < myHeader.nrCols; col++)
             {
-                interpolationSettings.setProxiesComplete(true);
-
                 float z = DEM.value[row][col];
                 if (! isEqual(z, myHeader.flag))
                 {
                     gis::getUtmXYFromRowCol(myHeader, row, col, &x, &y);
 
-                    if (! getProxyValuesXY(x, y, &interpolationSettings, proxyValues)) interpolationSettings.setProxiesComplete(false);
+                    getProxyValuesXY(x, y, &interpolationSettings, proxyValues);
 
                     std::vector <Crit3DInterpolationDataPoint> subsetInterpolationPoints;
                     localSelection(interpolationPoints, subsetInterpolationPoints, x, y, z, interpolationSettings);
@@ -2727,7 +2725,6 @@ bool Project::interpolationGrid(meteoVariable myVar, const Crit3DTime& myTime)
                 myY = meteoGridDbHandler->meteoGrid()->meteoPoints()[row][col]->point.utm.y;
                 myZ = meteoGridDbHandler->meteoGrid()->meteoPoints()[row][col]->point.z;
 
-                interpolationSettings.setProxiesComplete(true);
                 if (getUseDetrendingVar(myVar))
                 {
                     proxyIndex = 0;
@@ -2743,8 +2740,6 @@ bool Project::interpolationGrid(meteoVariable myVar, const Crit3DTime& myTime)
                                 float proxyValue = gis::getValueFromXY(*meteoGridProxies[proxyIndex], myX, myY);
                                 if (proxyValue != meteoGridProxies[proxyIndex]->header->flag)
                                     proxyValues[i] = double(proxyValue);
-                                else
-                                    interpolationSettings.setProxiesComplete(false);
                             }
 
                             proxyIndex++;
