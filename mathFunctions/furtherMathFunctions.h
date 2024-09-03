@@ -113,6 +113,14 @@ enum estimatedFunction {FUNCTION_CODE_SPHERICAL, FUNCTION_CODE_LINEAR, FUNCTION_
                                         int maxIterationsNr, double myEpsilon, double deltaR2,
                                         std::vector <std::vector <double>>& x , std::vector<double>& y, std::vector<double>& weights, unsigned int elevationPos);
 
+        int bestFittingMarquardt_nDimension_clean(double (*func)(std::vector<std::function<double(double, std::vector<double>&)>>&, std::vector<double>& , std::vector <std::vector <double>>&),
+                                                  std::vector<std::function<double(double, std::vector<double>&)>>& myFunc,
+                                                  std::vector <std::vector <double>>& parametersMin, std::vector <std::vector <double>>& parametersMax,
+                                                  std::vector <std::vector <double>>& parameters, std::vector <std::vector <double>>& parametersDelta,
+                                                  int maxIterationsNr, double myEpsilon,
+                                                  std::vector <std::vector <double>>& x ,std::vector<double>& y,
+                                                  std::vector<double>& weights);
+
         bool fittingMarquardt_nDimension(double (*func)(std::vector<std::function<double (double, std::vector<double> &)> > &, std::vector<double> &, std::vector <std::vector <double>>&),
                                          std::vector<std::function<double (double, std::vector<double> &)> > &myFunc,
                                          std::vector <std::vector <double>>& parametersMin, std::vector <std::vector <double>>& parametersMax,

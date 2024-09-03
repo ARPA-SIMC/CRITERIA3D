@@ -1714,7 +1714,7 @@ bool multipleDetrendingElevationFitting(int elevationPos, std::vector <Crit3DInt
     std::vector<double> parametersDelta;
     std::vector<double> parameters;
     std::vector<double> stepSize;
-    int numSteps = 20;
+    int numSteps = 15;
     std::function<double(double, std::vector<double>&)> myFunc;
 
 
@@ -1737,9 +1737,12 @@ bool multipleDetrendingElevationFitting(int elevationPos, std::vector <Crit3DInt
     return true;
 }
 
-bool detrendingElevation(int elevationPos, std::vector <Crit3DInterpolationDataPoint> &myPoints, Crit3DInterpolationSettings* mySettings)
+void detrendingElevation(int elevationPos, std::vector <Crit3DInterpolationDataPoint> &myPoints, Crit3DInterpolationSettings* mySettings)
 {
     // detrending
+    if (mySettings->getFittingFunction().empty() || mySettings->getFittingParameters().empty())
+        return;
+
     std::function<double(double, std::vector<double>&)> myFunc = mySettings->getFittingFunction().front();
     std::vector <double> parameters = mySettings->getFittingParameters().front();
 
@@ -1752,7 +1755,7 @@ bool detrendingElevation(int elevationPos, std::vector <Crit3DInterpolationDataP
         myPoints[i].value -= detrendValue;
     }
 
-    return true;
+    return;
 }
 
 bool multipleDetrendingOtherProxiesFitting(int elevationPos, std::vector <Crit3DInterpolationDataPoint> &myPoints,
@@ -1923,17 +1926,14 @@ bool multipleDetrendingOtherProxiesFitting(int elevationPos, std::vector <Crit3D
     std::vector <std::vector<double>> parameters;
     std::vector<std::function<double(double, std::vector<double>&)>> myFunc;
 
-    unsigned int nrMaxStep = 100;
-
-
     if (! setFittingParameters_otherProxies(elevationPos, mySettings, myFunc, parametersMin, parametersMax,
                                  parametersDelta, parameters, errorStr))
         return false;
 
 
     // multiple non linear fitting
-    interpolation::bestFittingMarquardt_nDimension(&functionSum, myFunc, nrMaxStep, 4, parametersMin, parametersMax, parameters, parametersDelta,
-                                                   100, 0.005, 0.002, predictors, predictands, weights, elevationPos);
+    interpolation::bestFittingMarquardt_nDimension_clean(&functionSum, myFunc, parametersMin, parametersMax, parameters, parametersDelta,
+                                                   100, 0.005, predictors, predictands, weights);
 
 
     mySettings->addFittingParameters(parameters);
@@ -1947,9 +1947,18 @@ void detrendingOtherProxies(int elevationPos, std::vector<Crit3DInterpolationDat
     double proxyValue;
 
     std::vector<std::function<double(double, std::vector<double>&)>> myFunc = mySettings->getFittingFunction();
-    myFunc.erase(myFunc.begin());
     std::vector<std::vector<double>> parameters = mySettings->getFittingParameters();
-    parameters.erase(parameters.begin());
+
+    if (parameters.empty()) return;
+
+    //if height was significative and height function/parameters are present, delete them
+    if (parameters.front().size() > 2)
+    {
+        parameters.erase(parameters.begin());
+        myFunc.erase(myFunc.begin());
+    }
+
+    if (parameters.empty()) return;
 
     // detrending
     float detrendValue;
