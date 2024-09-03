@@ -2041,12 +2041,12 @@ namespace interpolation
 
         int directions[] = {1, -1};
         std::vector<double> firstGuessParam = parameters;
-
-        for (int step = 1; step <= numSteps*3; step++)
+        int step,dir,paramIndex;
+        for (step = 1; step <= numSteps*3; step++)
         {
-            for (int dir = 0; dir < 2; ++dir)
+            for (dir = 0; dir < 2; ++dir)
             {
-                for (int paramIndex = 0; paramIndex < 3; ++paramIndex)
+                for (paramIndex = 0; paramIndex < 3; ++paramIndex)
                 {
                     fittingMarquardt_nDimension_noSquares_singleFunction(func,parametersMin,
                                                                          parametersMax,parameters,

@@ -1931,7 +1931,7 @@ bool multipleDetrendingOtherProxiesFitting(int elevationPos, std::vector <Crit3D
         return false;
 
 
-    // multiple non linear fitting
+    // multilinear fitting
     interpolation::bestFittingMarquardt_nDimension_clean(&functionSum, myFunc, parametersMin, parametersMax, parameters, parametersDelta,
                                                    100, 0.005, predictors, predictands, weights);
 
