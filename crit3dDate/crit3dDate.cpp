@@ -253,6 +253,22 @@ int getDoyFromDate(const Crit3DDate& myDate)
     return doy;
 }
 
+int getMonthFromDoy(int doy,int year)
+{
+    if (doy <1 || doy > 366) return NODATA;
+    int month = 0;
+    int doyMonthSpecific[12];
+    for (int i=0;i<12;i++)
+    {
+        doyMonthSpecific[i] = doyMonth[i+1];
+        if (isLeapYear(year) && i>0)
+            doyMonthSpecific[i]++;
+    }
+    while (doy > doyMonthSpecific[month])
+        month++;
+
+    return month;
+}
 
 static inline long floordiv(long a, long b)
 {
