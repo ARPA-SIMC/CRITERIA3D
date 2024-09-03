@@ -41,6 +41,18 @@ bool computeWGClimate(int nrDays, Crit3DDate inputFirstDate, const std::vector<f
     double sumTmaxDry[12] = {0};
     double sumTminWet[12] = {0};
     double sumTminDry[12] = {0};
+
+    float maxTmaxWet[12] = {-9999,-9999,-9999,-9999,-9999,-9999,-9999,-9999,-9999,-9999,-9999,-9999};
+    float maxTmaxDry[12] = {-9999,-9999,-9999,-9999,-9999,-9999,-9999,-9999,-9999,-9999,-9999,-9999};
+    float maxTminWet[12] = {-9999,-9999,-9999,-9999,-9999,-9999,-9999,-9999,-9999,-9999,-9999,-9999};
+    float maxTminDry[12] = {-9999,-9999,-9999,-9999,-9999,-9999,-9999,-9999,-9999,-9999,-9999,-9999};
+
+    float minTmaxWet[12] = {9999,9999,9999,9999,9999,9999,9999,9999,9999,9999,9999,9999};
+    float minTmaxDry[12] = {9999,9999,9999,9999,9999,9999,9999,9999,9999,9999,9999,9999};
+    float minTminWet[12] = {9999,9999,9999,9999,9999,9999,9999,9999,9999,9999,9999,9999};
+    float minTminDry[12] = {9999,9999,9999,9999,9999,9999,9999,9999,9999,9999,9999,9999};
+
+
     int daysInMonth;
     bool isPreviousDayWet = false;
 
@@ -71,6 +83,12 @@ bool computeWGClimate(int nrDays, Crit3DDate inputFirstDate, const std::vector<f
                 sumTmaxWet[m] += double(inputTMax[n]);
                 sumTminWet[m] += double(inputTMin[n]);
                 isPreviousDayWet = true;
+
+                maxTmaxWet[m] = MAXVALUE(maxTmaxWet[m],inputTMax[n]);
+                maxTminWet[m] = MAXVALUE(maxTminWet[m],inputTMin[n]);
+                minTmaxWet[m] = MINVALUE(minTmaxWet[m],inputTMax[n]);
+                minTminWet[m] = MINVALUE(minTminWet[m],inputTMin[n]);
+
             }
             else
             {
@@ -78,6 +96,11 @@ bool computeWGClimate(int nrDays, Crit3DDate inputFirstDate, const std::vector<f
                 sumTmaxDry[m] += double(inputTMax[n]);
                 sumTminDry[m] += double(inputTMin[n]);
                 isPreviousDayWet = false;
+
+                maxTmaxDry[m] = MAXVALUE(maxTmaxDry[m],inputTMax[n]);
+                maxTminDry[m] = MAXVALUE(maxTminDry[m],inputTMin[n]);
+                minTmaxDry[m] = MINVALUE(minTmaxDry[m],inputTMax[n]);
+                minTminDry[m] = MINVALUE(minTminDry[m],inputTMin[n]);
             }
         }
 
@@ -125,7 +148,17 @@ bool computeWGClimate(int nrDays, Crit3DDate inputFirstDate, const std::vector<f
             wGen->monthly.stDevTmin[m] = NODATA;
             wGen->monthly.dw_Tmax[m] = NODATA;
         }
-    }
+
+        wGen->monthly.maxTminDry[m] = maxTminDry[m];
+        wGen->monthly.maxTminWet[m] = maxTminWet[m];
+        wGen->monthly.minTminDry[m] = minTminDry[m];
+        wGen->monthly.minTminWet[m] = minTminWet[m];
+        wGen->monthly.maxTmaxDry[m] = maxTmaxDry[m];
+        wGen->monthly.maxTmaxWet[m] = maxTmaxWet[m];
+        wGen->monthly.minTmaxDry[m] = minTmaxDry[m];
+        wGen->monthly.minTmaxWet[m] = minTmaxWet[m];
+
+        }
 
 
     if (writeOutput)
