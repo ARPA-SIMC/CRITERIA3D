@@ -2174,7 +2174,14 @@ bool getMultipleDetrendingValues(Crit3DInterpolationSettings mySettings, const s
         if (getProxyPragaName(mySettings.getProxy(i)->getName()) == proxyHeight && myCombination.isProxyActive(i) && myCombination.isProxySignificant(i))
         {
             elevationPos = i;
-            activeProxyValues.push_back(allProxyValues[i]);
+
+            if (allProxyValues[i] == NODATA)
+            {
+                myFunc.erase(myFunc.begin());
+                myParameters.erase(myParameters.begin());
+            }
+            else
+                activeProxyValues.push_back(allProxyValues[i]);
         }
     }
 
