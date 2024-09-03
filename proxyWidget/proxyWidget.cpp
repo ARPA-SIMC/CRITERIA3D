@@ -467,18 +467,21 @@ void Crit3DProxyWidget::modelLRClicked(int toggled)
                     point.setY(myY);
                     point_vector.append(point);
                 }
+
+                if (interpolationSettings->getProxy(proxyPos)->getRegressionR2() != NODATA)
+                {
+                    r2.setText(QString("%1").arg(interpolationSettings->getProxy(proxyPos)->getRegressionR2(), 0, 'f', 2));
+                }
+                lapseRate.setText(QString("%1").arg(regressionSlope*1000, 0, 'f', 2));
             }
-            else if (! interpolationSettings->getUseLocalDetrending())
+            else if (interpolationSettings->getUseMultipleDetrending() && ! interpolationSettings->getUseLocalDetrending())
             {
                 std::string errorStr;
 
                 setHeightTemperatureRange(interpolationSettings->getSelectedCombination(), interpolationSettings);
                 interpolationSettings->setCurrentCombination(interpolationSettings->getSelectedCombination());
-                if (interpolationSettings->getProxiesComplete())
-                {
-                    interpolationSettings->clearFitting();
-                    if (! multipleDetrendingElevationFitting(proxyPos, outInterpolationPoints, interpolationSettings, myVar, errorStr)) return;
-                }
+                interpolationSettings->clearFitting();
+                if (! multipleDetrendingElevationFitting(proxyPos, outInterpolationPoints, interpolationSettings, myVar, errorStr)) return;
 
                 std::vector<std::vector<double>> parameters = interpolationSettings->getFittingParameters();
 
@@ -499,40 +502,40 @@ void Crit3DProxyWidget::modelLRClicked(int toggled)
                             point.setY(lapseRatePiecewise_three_free(xVector[p], parameters.front()));
                         point_vector.append(point);
                     }
-
                 }
             }
-
-            if (interpolationSettings->getProxy(proxyPos)->getRegressionR2() != NODATA)
-            {
-                r2.setText(QString("%1").arg(interpolationSettings->getProxy(proxyPos)->getRegressionR2(), 0, 'f', 2));
-            }
-            lapseRate.setText(QString("%1").arg(regressionSlope*1000, 0, 'f', 2));
         }
         else
         {
-            xMin = getProxyMinValue(outInterpolationPoints, proxyPos);
-            xMax = getProxyMaxValue(outInterpolationPoints, proxyPos);
-            bool isZeroIntercept = false;
-            if (!regressionGeneric(outInterpolationPoints, interpolationSettings, proxyPos, isZeroIntercept))
+            if (! interpolationSettings->getUseMultipleDetrending())
             {
-                return;
-            }
-            float regressionSlope = interpolationSettings->getProxy(proxyPos)->getRegressionSlope();
-            float regressionIntercept = interpolationSettings->getProxy(proxyPos)->getRegressionIntercept();
-            point.setX(xMin);
-            point.setY(regressionIntercept + regressionSlope * xMin);
-            point_vector.append(point);
-            point.setX(xMax);
-            point.setY(regressionIntercept + regressionSlope * xMax);
-            point_vector.append(point);
+                xMin = getProxyMinValue(outInterpolationPoints, proxyPos);
+                xMax = getProxyMaxValue(outInterpolationPoints, proxyPos);
+                bool isZeroIntercept = false;
+                if (!regressionGeneric(outInterpolationPoints, interpolationSettings, proxyPos, isZeroIntercept))
+                {
+                    return;
+                }
+                float regressionSlope = interpolationSettings->getProxy(proxyPos)->getRegressionSlope();
+                float regressionIntercept = interpolationSettings->getProxy(proxyPos)->getRegressionIntercept();
+                point.setX(xMin);
+                point.setY(regressionIntercept + regressionSlope * xMin);
+                point_vector.append(point);
+                point.setX(xMax);
+                point.setY(regressionIntercept + regressionSlope * xMax);
+                point_vector.append(point);
 
-            float regressionR2 = interpolationSettings->getProxy(proxyPos)->getRegressionR2();
-            if (regressionR2 != NODATA)
-            {
-                r2.setText(QString("%1").arg(regressionR2, 0, 'f', 2));
+                float regressionR2 = interpolationSettings->getProxy(proxyPos)->getRegressionR2();
+                if (regressionR2 != NODATA)
+                {
+                    r2.setText(QString("%1").arg(regressionR2, 0, 'f', 2));
+                }
+                lapseRate.setText(QString("%1").arg(regressionSlope, 0, 'f', 2));
             }
-            lapseRate.setText(QString("%1").arg(regressionSlope, 0, 'f', 2));
+            else if (interpolationSettings->getUseMultipleDetrending() && !interpolationSettings->getUseLocalDetrending())
+            {
+                //TODO
+            }
         }
         chartView->drawModelLapseRate(point_vector);
     }

@@ -157,7 +157,6 @@
         std::vector <float> Kh_error_series;
 
         bool proxyLoaded;
-        bool proxiesComplete;
         std::vector <Crit3DProxy> currentProxy;
         Crit3DProxyCombination selectedCombination;
         Crit3DProxyCombination currentCombination;
@@ -259,8 +258,6 @@
         std::vector<std::function<double (double, std::vector<double> &)> > getFittingFunction() const;
         void setFittingFunction(const std::vector<std::function<double (double, std::vector<double> &)> > &newFittingFunction);
         void addFittingFunction(const std::function<double (double, std::vector<double> &)> &newFittingFunction);
-        bool getProxiesComplete() const;
-        void setProxiesComplete(bool newProxiesComplete);
         void clearFitting();
         TFittingFunction getChosenElevationFunction();
         void setChosenElevationFunction(TFittingFunction chosenFunction);
