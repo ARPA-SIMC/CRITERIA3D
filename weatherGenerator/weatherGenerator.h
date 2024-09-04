@@ -41,6 +41,16 @@
         float monthlyTmaxDry [12];           // [°C]   monthly maximum temp Dry days
         float monthlyTminWet [12];           // [°C]   monthly maximum temp Wet days
         float monthlyTminDry [12];           // [°C]   monthly maximum temp Dry days
+
+        float maxTmaxWet[12];
+        float maxTmaxDry[12];
+        float maxTminWet[12];
+        float maxTminDry[12];
+
+        float minTmaxWet[12];
+        float minTmaxDry[12];
+        float minTminWet[12];
+        float minTminDry[12];
     };
 
     struct Tdailyweather

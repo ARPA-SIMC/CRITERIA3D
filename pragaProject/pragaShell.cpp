@@ -21,6 +21,7 @@ QList<QString> getPragaCommandList()
     cmdList.append("Drought         | ComputeDroughtIndexGrid");
     cmdList.append("DroughtPoint    | ComputeDroughtIndexPoint");
     cmdList.append("Gridding        | InterpolationGridPeriod");
+    cmdList.append("CV              | InterpolationCrossValidation");
     cmdList.append("GridAggr        | GridAggregation");
     cmdList.append("GridDerVar      | GridDerivedVariables");
     cmdList.append("GridMonthlyInt  | GridMonthlyIntegrationVariables");
@@ -75,6 +76,11 @@ int PragaProject::executePragaCommand(QList<QString> argumentList, bool* isComma
     {
         *isCommandFound = true;
         return cmdInterpolationGridPeriod(this, argumentList);
+    }
+    else if (command == "CV" || command == "INTERPOLATIONCROSSVALIDATION")
+    {
+        *isCommandFound = true;
+        return cmdInterpolationCrossValidation(this, argumentList);
     }
     else if (command == "GRIDAGGREGATION" || command == "GRIDAGGR")
     {
@@ -534,6 +540,62 @@ int cmdMonthlyIntegrationVariablesGrid(PragaProject* myProject, QList<QString> a
         myProject->logError();
         return PRAGA_ERROR;
     }
+
+    return PRAGA_OK;
+}
+
+int cmdInterpolationCrossValidation(PragaProject* myProject, QList<QString> argumentList)
+{
+    if (argumentList.size() < 2)
+    {
+        myProject->logError("Missing parameters for gridding");
+        return PRAGA_INVALID_COMMAND;
+    }
+
+    QDate dateIni, dateFin;
+    std::string varString;
+    meteoVariable meteoVar = noMeteoVar;
+
+    for (int i = 1; i < argumentList.size(); i++)
+    {
+        if (argumentList[i].left(3) == "-v:")
+        {
+            varString = argumentList[i].right(argumentList[i].length()-3).toStdString();
+            meteoVar = getMeteoVar(varString);
+            if (meteoVar == noMeteoVar)
+                myProject->logError("Unknown variable: " + QString::fromStdString(varString));
+                    return PRAGA_INVALID_COMMAND;
+        }
+        else if (argumentList.at(i).left(4) == "-d1:")
+            dateIni = QDate::fromString(argumentList[i].right(argumentList[i].length()-4), "dd/MM/yyyy");
+        else if (argumentList.at(i).left(4) == "-d2:")
+            dateFin = QDate::fromString(argumentList[i].right(argumentList[i].length()-4), "dd/MM/yyyy");
+        else if (argumentList.at(i).left(10) == "-yesterday")
+        {
+            dateIni = QDate::currentDate().addDays(-1);
+            dateFin = dateIni;
+        }
+        else if (argumentList.at(i).left(10) == "-lastweek")
+        {
+            dateFin = QDate::currentDate().addDays(-1);
+            dateIni = dateFin.addDays(-6);
+        }
+    }
+
+    if (! dateIni.isValid())
+    {
+        myProject->logError("Wrong initial date");
+        return PRAGA_INVALID_COMMAND;
+    }
+
+    if (! dateFin.isValid())
+    {
+        myProject->logError("Wrong final date");
+        return PRAGA_INVALID_COMMAND;
+    }
+
+    if (! myProject->interpolationCrossValidationPeriod(dateIni, dateFin, meteoVar))
+        return PRAGA_ERROR;
 
     return PRAGA_OK;
 }
