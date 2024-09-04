@@ -1078,7 +1078,7 @@ float gaussWeighted(vector <Crit3DInterpolationDataPoint> &myPointList)
 
 // TODO elevation std dev?
 void localSelection(vector <Crit3DInterpolationDataPoint> &inputPoints, vector <Crit3DInterpolationDataPoint> &selectedPoints,
-                    float x, float y, float z, Crit3DInterpolationSettings& mySettings)
+                    float x, float y, Crit3DInterpolationSettings& mySettings)
 {
     // search more stations to assure min points with all valid proxies
     float ratioMinPoints = float(1.3);
@@ -1101,7 +1101,6 @@ void localSelection(vector <Crit3DInterpolationDataPoint> &inputPoints, vector <
     unsigned int nrPrimaries = 0;
 
     int maxDistance = 0;
-    float maxHeightDelta = 0;
     while (nrValid < minPoints || (mySettings.getUseLapseRateCode() && nrPrimaries < minPoints))
     {
         maxDistance = 0;
@@ -1116,21 +1115,18 @@ void localSelection(vector <Crit3DInterpolationDataPoint> &inputPoints, vector <
 
                 if (checkLapseRateCode(inputPoints[i].lapseRateCode, mySettings.getUseLapseRateCode(), true))
                     nrPrimaries++;
-
-                if (abs(inputPoints[i].point->z - z) > maxHeightDelta)
-                    maxHeightDelta = fabs(float(inputPoints[i].point->z) - z);
             }
         }
         r0 = r1;
         r1 += stepRadius;
     }
 
-    if (maxDistance != 0 && maxHeightDelta != 0)
+    if (maxDistance != 0)
         for (i=0; i< selectedPoints.size(); i++)
         {
-            //selectedPoints[i].regressionWeight = MAXVALUE(1 - selectedPoints[i].distance / (std::pow(maxDistance, 16.0/15.0)), EPSILON);
+            selectedPoints[i].regressionWeight = MAXVALUE(1 - selectedPoints[i].distance / maxDistance, EPSILON);
             //selectedPoints[i].regressionWeight = MAXVALUE(std::exp(-std::pow(selectedPoints[i].distance/((4/5*maxDistance)),7.0)),EPSILON);
-            selectedPoints[i].regressionWeight = float(MAXVALUE((-(1/std::pow(maxDistance,4)*(std::pow(selectedPoints[i].distance,4)))+1),EPSILON));
+            //selectedPoints[i].regressionWeight = float(MAXVALUE((-(1/std::pow(maxDistance,4)*(std::pow(selectedPoints[i].distance,4)))+1),EPSILON));
             //selectedPoints[i].regressionWeight = 1;
         }
     mySettings.setLocalRadius(float(maxDistance));

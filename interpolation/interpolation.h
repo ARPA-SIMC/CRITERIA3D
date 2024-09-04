@@ -100,7 +100,7 @@
 
     void localSelection(std::vector <Crit3DInterpolationDataPoint> &inputPoints,
                           std::vector <Crit3DInterpolationDataPoint> &selectedPoints,
-                          float x, float y, float z, Crit3DInterpolationSettings &mySettings);
+                          float x, float y, Crit3DInterpolationSettings &mySettings);
 
     void localSelection_new(std::vector <Crit3DInterpolationDataPoint> &inputPoints, std::vector <Crit3DInterpolationDataPoint> &selectedPoints,
                          float x, float y, float z, Crit3DInterpolationSettings& mySettings);

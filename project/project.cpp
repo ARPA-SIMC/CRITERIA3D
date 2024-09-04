@@ -2405,7 +2405,7 @@ bool Project::interpolationDemLocalDetrending(meteoVariable myVar, const Crit3DT
                     getProxyValuesXY(x, y, &interpolationSettings, proxyValues);
 
                     std::vector <Crit3DInterpolationDataPoint> subsetInterpolationPoints;
-                    localSelection(interpolationPoints, subsetInterpolationPoints, x, y,outputPoints[i].z, interpolationSettings);
+                    localSelection(interpolationPoints, subsetInterpolationPoints, x, y, interpolationSettings);
                     if (! preInterpolation(subsetInterpolationPoints, &interpolationSettings, meteoSettings, &climateParameters,
                                           meteoPoints, nrMeteoPoints, myVar, myTime, errorStdStr))
                     {
@@ -2446,7 +2446,7 @@ bool Project::interpolationDemLocalDetrending(meteoVariable myVar, const Crit3DT
                     getProxyValuesXY(x, y, &interpolationSettings, proxyValues);
 
                     std::vector <Crit3DInterpolationDataPoint> subsetInterpolationPoints;
-                    localSelection(interpolationPoints, subsetInterpolationPoints, x, y, z, interpolationSettings);
+                    localSelection(interpolationPoints, subsetInterpolationPoints, x, y, interpolationSettings);
                     if (! preInterpolation(subsetInterpolationPoints, &interpolationSettings, meteoSettings, &climateParameters,
                                           meteoPoints, nrMeteoPoints, myVar, myTime, errorStdStr))
                     {
@@ -2748,7 +2748,7 @@ bool Project::interpolationGrid(meteoVariable myVar, const Crit3DTime& myTime)
                     if (interpolationSettings.getUseLocalDetrending())
                     {
                         std::vector <Crit3DInterpolationDataPoint> subsetInterpolationPoints;
-                        localSelection(interpolationPoints, subsetInterpolationPoints, myX, myY, myZ, interpolationSettings);
+                        localSelection(interpolationPoints, subsetInterpolationPoints, myX, myY, interpolationSettings);
                         if (! preInterpolation(subsetInterpolationPoints, &interpolationSettings, meteoSettings,
                                               &climateParameters, meteoPoints, nrMeteoPoints, myVar, myTime, errorStdStr))
                         {
@@ -3697,8 +3697,23 @@ void Project::showLocalProxyGraph(gis::Crit3DGeoPoint myPoint)
 {
     gis::Crit3DUtmPoint myUtm;
     gis::getUtmFromLatLon(this->gisSettings.utmZone, myPoint, &myUtm);
+    double myZGrid = -9999;
+    double myZDEM = -9999;
 
-    localProxyWidget = new Crit3DLocalProxyWidget(myUtm.x, myUtm.y, this->gisSettings, &interpolationSettings, meteoPoints, nrMeteoPoints, currentVariable, currentFrequency, currentDate, currentHour, quality, &qualityInterpolationSettings, meteoSettings, &climateParameters, checkSpatialQuality);
+    if (meteoGridLoaded)
+    {
+        //TODO
+    }
+    if (DEM.isLoaded)
+    {
+        int row, col;
+        DEM.getRowCol(myUtm.x, myUtm.y, row, col);
+        myZDEM = DEM.value[row][col];
+    }
+
+
+
+    localProxyWidget = new Crit3DLocalProxyWidget(myUtm.x, myUtm.y, myZDEM, myZGrid, this->gisSettings, &interpolationSettings, meteoPoints, nrMeteoPoints, currentVariable, currentFrequency, currentDate, currentHour, quality, &qualityInterpolationSettings, meteoSettings, &climateParameters, checkSpatialQuality);
     return;
 }
 

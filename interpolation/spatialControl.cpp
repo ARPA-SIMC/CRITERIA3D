@@ -159,7 +159,7 @@ bool computeResidualsLocalDetrending(meteoVariable myVar, Crit3DTime myTime, Cri
             float myValue = meteoPoints[i].currentValue;
 
             std::vector <Crit3DInterpolationDataPoint> subsetInterpolationPoints;
-            localSelection(interpolationPoints, subsetInterpolationPoints, meteoPoints->point.utm.x, meteoPoints->point.utm.y, meteoPoints->point.z, *settings);
+            localSelection(interpolationPoints, subsetInterpolationPoints, meteoPoints->point.utm.x, meteoPoints->point.utm.y, *settings);
             if (! preInterpolation(subsetInterpolationPoints, settings, meteoSettings,
                                   climateParameters, meteoPoints, nrMeteoPoints, myVar, myTime, errorStdString))
             {

@@ -11,8 +11,8 @@
 #include <QDate>
 
 
-Crit3DLocalProxyWidget::Crit3DLocalProxyWidget(double x, double y, gis::Crit3DGisSettings gisSettings, Crit3DInterpolationSettings* interpolationSettings, Crit3DMeteoPoint *meteoPoints, int nrMeteoPoints, meteoVariable currentVariable, frequencyType currentFrequency, QDate currentDate, int currentHour, Crit3DQuality *quality, Crit3DInterpolationSettings* SQinterpolationSettings, Crit3DMeteoSettings *meteoSettings, Crit3DClimateParameters *climateParam, bool checkSpatialQuality)
-    :x(x), y(y), gisSettings(gisSettings), interpolationSettings(interpolationSettings), meteoPoints(meteoPoints), nrMeteoPoints(nrMeteoPoints), currentVariable(currentVariable), currentFrequency(currentFrequency), currentDate(currentDate), currentHour(currentHour), quality(quality), SQinterpolationSettings(SQinterpolationSettings), meteoSettings(meteoSettings), climateParam(climateParam), checkSpatialQuality(checkSpatialQuality)
+Crit3DLocalProxyWidget::Crit3DLocalProxyWidget(double x, double y, double zDEM, double zGrid, gis::Crit3DGisSettings gisSettings, Crit3DInterpolationSettings* interpolationSettings, Crit3DMeteoPoint *meteoPoints, int nrMeteoPoints, meteoVariable currentVariable, frequencyType currentFrequency, QDate currentDate, int currentHour, Crit3DQuality *quality, Crit3DInterpolationSettings* SQinterpolationSettings, Crit3DMeteoSettings *meteoSettings, Crit3DClimateParameters *climateParam, bool checkSpatialQuality)
+    :x(x), y(y), zDEM(zDEM), zGrid(zGrid), gisSettings(gisSettings), interpolationSettings(interpolationSettings), meteoPoints(meteoPoints), nrMeteoPoints(nrMeteoPoints), currentVariable(currentVariable), currentFrequency(currentFrequency), currentDate(currentDate), currentHour(currentHour), quality(quality), SQinterpolationSettings(SQinterpolationSettings), meteoSettings(meteoSettings), climateParam(climateParam), checkSpatialQuality(checkSpatialQuality)
 {
     gis::Crit3DGeoPoint localGeoPoint;
     gis::Crit3DUtmPoint localUtmPoint;
@@ -20,7 +20,7 @@ Crit3DLocalProxyWidget::Crit3DLocalProxyWidget(double x, double y, gis::Crit3DGi
     localUtmPoint.y = y;
     gis::getLatLonFromUtm(gisSettings, localUtmPoint, localGeoPoint);
 
-    this->setWindowTitle("Local proxy analysis for point of coordinates (" + QString::number(localGeoPoint.latitude) + ", " + QString::number(localGeoPoint.longitude) + ")");
+    this->setWindowTitle("Local proxy analysis for point of coordinates (" + QString::number(localGeoPoint.latitude) + ", " + QString::number(localGeoPoint.longitude) + ")." + " z value: " + QString::number(zDEM) + " (DEM)"); // + QString::number(zGrid) + " (Grid)");
     this->resize(1024, 700);
     this->setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Preferred);
     this->setAttribute(Qt::WA_DeleteOnClose);
@@ -295,7 +295,7 @@ void Crit3DLocalProxyWidget::plot()
                                         interpolationSettings, meteoSettings, climateParam,
                                         outInterpolationPoints, checkSpatialQuality, errorStdStr);
 
-        localSelection(outInterpolationPoints, subsetInterpolationPoints, x, y, z, *interpolationSettings);
+        localSelection(outInterpolationPoints, subsetInterpolationPoints, x, y, *interpolationSettings);
         detrending(subsetInterpolationPoints, interpolationSettings->getSelectedCombination(), interpolationSettings, climateParam, myVar, getCurrentTime());
     }
     else
@@ -303,7 +303,7 @@ void Crit3DLocalProxyWidget::plot()
         checkAndPassDataToInterpolation(quality, myVar, meteoPoints, nrMeteoPoints, getCurrentTime(), SQinterpolationSettings,
                                         interpolationSettings, meteoSettings, climateParam,
                                         outInterpolationPoints, checkSpatialQuality, errorStdStr);
-        localSelection(outInterpolationPoints, subsetInterpolationPoints, x, y, z, *interpolationSettings);
+        localSelection(outInterpolationPoints, subsetInterpolationPoints, x, y, *interpolationSettings);
     }
     QList<QPointF> pointListPrimary, pointListSecondary, pointListSupplemental, pointListMarked;
     QMap< QString, QPointF > idPointMap1;
