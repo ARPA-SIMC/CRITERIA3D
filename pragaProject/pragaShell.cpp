@@ -548,13 +548,14 @@ int cmdInterpolationCrossValidation(PragaProject* myProject, QList<QString> argu
 {
     if (argumentList.size() < 2)
     {
-        myProject->logError("Missing parameters for gridding");
+        myProject->logError("Missing parameters for cross validation");
         return PRAGA_INVALID_COMMAND;
     }
 
     QDate dateIni, dateFin;
     std::string varString;
     meteoVariable meteoVar = noMeteoVar;
+    QString fileName = "";
 
     for (int i = 1; i < argumentList.size(); i++)
     {
@@ -563,8 +564,14 @@ int cmdInterpolationCrossValidation(PragaProject* myProject, QList<QString> argu
             varString = argumentList[i].right(argumentList[i].length()-3).toStdString();
             meteoVar = getMeteoVar(varString);
             if (meteoVar == noMeteoVar)
+            {
                 myProject->logError("Unknown variable: " + QString::fromStdString(varString));
-                    return PRAGA_INVALID_COMMAND;
+                return PRAGA_INVALID_COMMAND;
+            }
+        }
+        else if (argumentList.at(i).left(3) == "-o:")
+        {
+            fileName = argumentList[i].right(argumentList[i].length()-3);
         }
         else if (argumentList.at(i).left(4) == "-d1:")
             dateIni = QDate::fromString(argumentList[i].right(argumentList[i].length()-4), "dd/MM/yyyy");
@@ -582,6 +589,13 @@ int cmdInterpolationCrossValidation(PragaProject* myProject, QList<QString> argu
         }
     }
 
+
+    if (! QDir(QFileInfo(fileName).absolutePath()).exists())
+    {
+        myProject->logError("Unable to save to directory: " + QFileInfo(fileName).absolutePath());
+        return PRAGA_INVALID_COMMAND;
+    }
+
     if (! dateIni.isValid())
     {
         myProject->logError("Wrong initial date");
@@ -594,7 +608,7 @@ int cmdInterpolationCrossValidation(PragaProject* myProject, QList<QString> argu
         return PRAGA_INVALID_COMMAND;
     }
 
-    if (! myProject->interpolationCrossValidationPeriod(dateIni, dateFin, meteoVar))
+    if (! myProject->interpolationCrossValidationPeriod(dateIni, dateFin, meteoVar, fileName))
         return PRAGA_ERROR;
 
     return PRAGA_OK;

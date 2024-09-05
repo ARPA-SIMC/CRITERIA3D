@@ -112,7 +112,7 @@
         bool interpolationMeteoGrid(meteoVariable myVar, frequencyType myFrequency, const Crit3DTime& myTime);
         bool interpolationMeteoGridPeriod(QDate dateIni, QDate dateFin, QList <meteoVariable> variables,
                                           QList<meteoVariable> aggrVariables, bool saveRasters, int nrDaysLoading, int nrDaysSaving);
-        bool interpolationCrossValidationPeriod(QDate dateIni, QDate dateFin, meteoVariable myVar);
+        bool interpolationCrossValidationPeriod(QDate dateIni, QDate dateFin, meteoVariable myVar, QString filename);
         bool saveGrid(meteoVariable myVar, frequencyType myFrequency, const Crit3DTime& myTime, bool showInfo);
         bool timeAggregateGridVarHourlyInDaily(meteoVariable dailyVar, Crit3DDate dateIni, Crit3DDate dateFin);
         bool timeAggregateGrid(QDate dateIni, QDate dateFin, QList <meteoVariable> variables, bool loadData, bool saveData);
