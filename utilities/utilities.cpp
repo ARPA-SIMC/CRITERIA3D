@@ -448,6 +448,16 @@ std::vector <double> StringListToDouble(QList<QString> myList)
     return myVector;
 }
 
+std::vector<int> StringListToInt(QList<QString> myList)
+{
+    std::vector <int> myVector;
+    myVector.resize(unsigned(myList.size()));
+    for (unsigned i=0; i < unsigned(myList.size()); i++)
+        myVector[i] = myList[int(i)].toInt();
+
+    return myVector;
+}
+
 QStringList FloatVectorToStringList(std::vector <float> myVector)
 {
     QList<QString> myList;
@@ -462,6 +472,15 @@ QStringList DoubleVectorToStringList(std::vector <double> myVector)
     QList<QString> myList;
     for (unsigned i=0; i < unsigned(myVector.size()); i++)
         myList.push_back(QString::number(double(myVector[i])));
+
+    return myList;
+}
+
+QStringList IntVectorToStringList(std::vector <int> myVector)
+{
+    QList<QString> myList;
+    for (unsigned i=0; i < unsigned(myVector.size()); i++)
+        myList.push_back(QString::number(int(myVector[i])));
 
     return myList;
 }

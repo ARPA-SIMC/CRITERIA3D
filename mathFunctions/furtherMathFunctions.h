@@ -148,7 +148,7 @@ enum estimatedFunction {FUNCTION_CODE_SPHERICAL, FUNCTION_CODE_LINEAR, FUNCTION_
                                                            std::vector<double> &stepSize, int numSteps,
                                                            int maxIterationsNr, double myEpsilon, double deltaR2,
                                                            std::vector <double>& x , std::vector<double>& y,
-                                                           std::vector<double>& weights);
+                                                           std::vector<double>& weights, std::vector<std::vector<double> > firstGuessCombinations);
 
         double normGeneric_nDimension(double (*func)(std::vector<std::function<double (double, std::vector<double> &)>> &, std::vector<double> &, std::vector <std::vector <double>>&),
                                       std::vector<std::function<double (double, std::vector<double> &)> > myFunc,

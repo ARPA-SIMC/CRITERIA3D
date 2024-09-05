@@ -113,6 +113,8 @@
 
     bool setHeightTemperatureRange(Crit3DProxyCombination myCombination, Crit3DInterpolationSettings* mySettings);
 
+    void calculateFirstGuessCombinations(Crit3DProxy* myProxy);
+
     bool setFittingParameters_elevation(int elevationPos, Crit3DInterpolationSettings* mySettings,
                                          std::vector<std::function<double(double, std::vector<double>&)>>& myFunc,
                                          std::vector <std::vector<double>> &paramMin, std::vector <std::vector<double>> &paramMax,

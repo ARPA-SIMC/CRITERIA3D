@@ -198,10 +198,9 @@ void Project::setProxyDEM()
 }
 
 
-bool Project::checkProxy(Crit3DProxy &myProxy, QString* error)
+bool Project::checkProxy(Crit3DProxy &myProxy, QString* error, bool isActive)
 {
     std::string name_ = myProxy.getName();
-    QList<QString> myList;
 
     if (name_ == "")
     {
@@ -217,76 +216,31 @@ bool Project::checkProxy(Crit3DProxy &myProxy, QString* error)
         return false;
     }
 
-    if (isHeight)
+    if (interpolationSettings.getUseMultipleDetrending() && isActive)
     {
-        if (parametersSettings->contains("fitting_function"))
+        int nrParameters = 0;
+        if (isHeight)
         {
-            std::string elevationFuction = parametersSettings->value("fitting_function").toString().toStdString();
-            if (fittingFunctionNames.find(elevationFuction) == fittingFunctionNames.end())
-            {
-                errorString = "Unknown function for elevation. Remove the field from the .ini file or choose between: double_piecewise, triple_piecewise, free_triple_piecewise.";
-                return false;
-            }
-            else
-                myProxy.setFittingFunctionName(fittingFunctionNames.at(elevationFuction));
-
-            if (parametersSettings->contains("fitting_parameters"))
-            {
-                unsigned int nrParameters = NODATA;
-
-                if (myProxy.getFittingFunctionName() == piecewiseTwo)
-                    nrParameters = 4;
-                else if (myProxy.getFittingFunctionName() == piecewiseThree)
-                    nrParameters = 5;
-                else if (myProxy.getFittingFunctionName()== piecewiseThreeFree)
-                    nrParameters = 6;
-
-                myList = parametersSettings->value("fitting_parameters").toStringList();
-                if (myList.size() != nrParameters*2)
-                {
-                    *error = "Wrong number of fitting parameters for proxy: " + QString::fromStdString(name_);
-                    return  false;
-                }
-
-                myProxy.setFittingParametersRange(StringListToDouble(myList));
-            }
+            if (myProxy.getFittingFunctionName() == piecewiseTwo)
+                nrParameters = 4;
+            else if (myProxy.getFittingFunctionName() == piecewiseThree)
+                nrParameters = 5;
+            else if (myProxy.getFittingFunctionName() == piecewiseThreeFree)
+                nrParameters = 6;
         }
         else
-        {
-            if (parametersSettings->contains("fitting_parameters"))
-            {
-                myList = parametersSettings->value("fitting_parameters").toStringList();
+            nrParameters = 2;
 
-                if (myList.size() == 8)
-                    myProxy.setFittingFunctionName(piecewiseTwo);
-                else if (myList.size() == 10)
-                    myProxy.setFittingFunctionName(piecewiseThree);
-                else if (myList.size() == 12)
-                    myProxy.setFittingFunctionName(piecewiseThreeFree);
-                else
-                {
-                    *error = "Wrong number of fitting parameters for proxy: " + QString::fromStdString(name_);
-                    return  false;
-                }
-                myProxy.setFittingParametersRange(StringListToDouble(myList));
-            }
+        if (myProxy.getFittingParametersRange().size() != nrParameters*2)
+        {
+            *error = "wrong numer of parameters for proxy: " + QString::fromStdString(name_);
+            return false;
         }
-    }
-    else
-    {
-        myProxy.setFittingFunctionName(linear);
-        if(parametersSettings->contains("fitting_parameters"))
+
+        if (myProxy.getFittingFirstGuess().size() != nrParameters)
         {
-            unsigned int nrParameters = 2;
-
-            myList = parametersSettings->value("fitting_parameters").toStringList();
-            if (myList.size() != nrParameters*2)
-            {
-                *error = "Wrong number of fitting parameters for proxy: " + QString::fromStdString(name_);
-                return  false;
-            }
-
-            myProxy.setFittingParametersRange(StringListToDouble(myList));
+            *error = "wrong number of first guess settings for proxy: " + QString::fromStdString(name_);
+            return false;
         }
     }
 
@@ -761,6 +715,41 @@ bool Project::loadParameters(QString parametersFileName)
             if (parametersSettings->contains("stddev_threshold"))
                 myProxy->setStdDevThreshold(parametersSettings->value("stddev_threshold").toFloat());
 
+
+            if (interpolationSettings.getUseMultipleDetrending())
+            {
+                if (getProxyPragaName(name_.toStdString()) == proxyHeight)
+                {
+                    if (parametersSettings->contains("fitting_function"))
+                    {
+                        std::string elevationFuction = parametersSettings->value("fitting_function").toString().toStdString();
+                        if (fittingFunctionNames.find(elevationFuction) == fittingFunctionNames.end())
+                        {
+                            errorString = "Unknown function for elevation. Choose between: double_piecewise, triple_piecewise, free_triple_piecewise.";
+                            return false;
+                        }
+                        else
+                            myProxy->setFittingFunctionName(fittingFunctionNames.at(elevationFuction));
+                    }
+                }
+
+                if (parametersSettings->contains("fitting_parameters_max") && parametersSettings->contains("fitting_parameters_min"))
+                {
+                    myList = parametersSettings->value("fitting_parameters_min").toStringList();
+                    QList<QString> myList2 = parametersSettings->value("fitting_parameters_max").toStringList();
+                    for (int i = 0; i < myList2.size(); i++)
+                        myList.append(myList2[i]);
+
+                    myProxy->setFittingParametersRange(StringListToDouble(myList));
+                }
+
+                if (parametersSettings->contains("fitting_first_guess"))
+                {
+                    myList = parametersSettings->value("fitting_first_guess").toStringList();
+                    myProxy->setFittingFirstGuess(StringListToInt(myList));
+                }
+            }
+
             if (! parametersSettings->contains("active"))
             {
                 errorString = "active not specified for proxy " + QString::fromStdString(myProxy->getName());
@@ -773,7 +762,7 @@ bool Project::loadParameters(QString parametersFileName)
                 return false;
             }
 
-            if (checkProxy(*myProxy, &errorString))
+            if (checkProxy(*myProxy, &errorString, parametersSettings->value("active").toBool()))
             {
                 proxyListTmp.push_back(*myProxy);
                 proxyActiveTmp.push_back(parametersSettings->value("active").toBool());
@@ -3074,7 +3063,9 @@ void Project::saveProxies()
             if (myProxy->getProxyField() != "") parametersSettings->setValue("field", QString::fromStdString(myProxy->getProxyField()));
             if (myProxy->getGridName() != "") parametersSettings->setValue("raster", getRelativePath(QString::fromStdString(myProxy->getGridName())));
             if (myProxy->getStdDevThreshold() != NODATA) parametersSettings->setValue("stddev_threshold", QString::number(myProxy->getStdDevThreshold()));
-            if (myProxy->getFittingParametersRange().size() > 0) parametersSettings->setValue("fitting_parameters", DoubleVectorToStringList(myProxy->getFittingParametersRange()));
+            if (myProxy->getFittingParametersRange().size() > 0) parametersSettings->setValue("fitting_parameters_min", DoubleVectorToStringList(myProxy->getFittingParametersMin()));
+            if (myProxy->getFittingParametersRange().size() > 0) parametersSettings->setValue("fitting_parameters_max", DoubleVectorToStringList(myProxy->getFittingParametersMax()));
+            if (myProxy->getFittingFirstGuess().size() > 0) parametersSettings->setValue("fitting_first_guess", IntVectorToStringList(myProxy->getFittingFirstGuess()));
             if (getProxyPragaName(myProxy->getName()) == proxyHeight && myProxy->getFittingFunctionName() != noFunction) parametersSettings->setValue("fitting_function", QString::fromStdString(getKeyStringElevationFunction(myProxy->getFittingFunctionName())));
         parametersSettings->endGroup();
     }

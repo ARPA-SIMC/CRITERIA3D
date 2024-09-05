@@ -1461,7 +1461,7 @@ bool proxyValidityWeighted(std::vector <Crit3DInterpolationDataPoint> &myPoints,
 
 bool setHeightTemperatureRange(Crit3DProxyCombination myCombination, Crit3DInterpolationSettings* mySettings)
 {
-    if (mySettings->getPointsRange().empty())
+    if (mySettings->getPointsRange().empty() || !mySettings->getUseMultipleDetrending())
         return 0;
 
     for (unsigned i=0; i < myCombination.getProxySize(); i++)
@@ -1496,9 +1496,80 @@ bool setHeightTemperatureRange(Crit3DProxyCombination myCombination, Crit3DInter
                     }
                     mySettings->getProxy(i)->setFittingParametersRange(tempParam);
                 }
+
+                calculateFirstGuessCombinations(mySettings->getProxy(i));
             }
         }
     return true;
+}
+
+void calculateFirstGuessCombinations(Crit3DProxy* myProxy)
+{
+    std::vector<double> tempParam = myProxy->getFittingParametersRange();
+    std::vector <int> firstGuessPosition = myProxy->getFittingFirstGuess();
+    std::vector <double> tempFirstGuess;
+    int numSteps = 10;
+    std::vector <double> stepSize;
+    int nrParam = int(tempParam.size()/2);
+
+    double min_,max_;
+    for (unsigned j=0; j < nrParam; j++)
+    {
+        min_ = tempParam[j];
+        max_ = tempParam[nrParam+j];
+        stepSize.push_back((max_ - min_)/numSteps);
+        if (firstGuessPosition[j] == 0)
+            tempFirstGuess.push_back(min_);
+        else if (firstGuessPosition[j] == 1)
+            tempFirstGuess.push_back((min_ + max_) / 2);
+        else
+            tempFirstGuess.push_back(max_);
+    }
+
+    std::vector <std::vector<double>> firstGuessCombinations;
+    std::vector <double> firstGuessParam = tempFirstGuess;
+    firstGuessCombinations.push_back(tempFirstGuess);
+    std::vector<int> paramIndex;
+
+    if (myProxy->getFittingFunctionName() == piecewiseTwo)
+        paramIndex = {0};
+    else
+        paramIndex = {0,2};
+
+    for (int k = 0; k < paramIndex.size(); k++)
+    {
+        for (int m = 1; m < numSteps+1; m++)
+        {
+            if (firstGuessPosition[k] == 0)
+            {
+                tempFirstGuess[paramIndex[k]] = firstGuessParam[paramIndex[k]] + m * stepSize[paramIndex[k]];
+                firstGuessCombinations.push_back(tempFirstGuess);
+                tempFirstGuess = firstGuessParam;
+            }
+            else if (firstGuessPosition[k] == 2)
+            {
+                tempFirstGuess[paramIndex[k]] = firstGuessParam[paramIndex[k]] - m * stepSize[paramIndex[k]];
+                firstGuessCombinations.push_back(tempFirstGuess);
+                tempFirstGuess = firstGuessParam;
+            }
+            else
+            {
+                if (m < int((numSteps)/2)+1)
+                {
+                    tempFirstGuess[paramIndex[k]] = MINVALUE(firstGuessParam[paramIndex[k]] + m * stepSize[paramIndex[k]], tempParam[nrParam+paramIndex[k]]);
+                    firstGuessCombinations.push_back(tempFirstGuess);
+                    tempFirstGuess = firstGuessParam;
+
+                    tempFirstGuess[paramIndex[k]] = MAXVALUE(firstGuessParam[paramIndex[k]] - m * stepSize[paramIndex[k]], tempParam[paramIndex[k]]);
+                    firstGuessCombinations.push_back(tempFirstGuess);
+                    tempFirstGuess = firstGuessParam;
+                }
+            }
+        }
+    }
+    myProxy->setFirstGuessCombinations(firstGuessCombinations);
+
+    return;
 }
 
 bool setFittingParameters_elevation(int elevationPos, Crit3DInterpolationSettings* mySettings,
@@ -1710,7 +1781,7 @@ bool multipleDetrendingElevationFitting(int elevationPos, std::vector <Crit3DInt
     std::vector<double> parametersDelta;
     std::vector<double> parameters;
     std::vector<double> stepSize;
-    int numSteps = 15;
+    int numSteps = 10;
     std::function<double(double, std::vector<double>&)> myFunc;
 
 
@@ -1721,9 +1792,11 @@ bool multipleDetrendingElevationFitting(int elevationPos, std::vector <Crit3DInt
         return false;
     }
 
+    std::vector<std::vector<double>> firstGuessCombinations = mySettings->getProxy(elevationPos)->getFirstGuessCombinations();
+
     // multiple non linear fitting
     interpolation::bestFittingMarquardt_nDimension_singleFunction(*(myFunc.target<double(*)(double, std::vector<double>&)>()), 400, 4, parametersMin, parametersMax, parameters, parametersDelta,
-                                                                  stepSize, numSteps, 100, 0.005, 0.002, predictors, predictands, weights);
+                                                                  stepSize, numSteps, 100, 0.005, 0.002, predictors, predictands, weights,firstGuessCombinations);
 
 
     std::vector<std::vector<double>> newParameters;

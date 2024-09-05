@@ -29,6 +29,8 @@
         float regressionIntercept;
         TFittingFunction fittingFunctionName;
         std::vector <double> fittingParametersRange;
+        std::vector <int> fittingFirstGuess;
+        std::vector <std::vector <double>> firstGuessCombinations;
 
         float avg;
         float stdDev;
@@ -88,8 +90,14 @@
         void setStdDevThreshold(float newStdDevThreshold);
         std::vector<double> getFittingParametersRange() const;
         void setFittingParametersRange(const std::vector<double> &newFittingParametersRange);
+        std::vector<double> getFittingParametersMax() const;
+        std::vector<double> getFittingParametersMin() const;
         TFittingFunction getFittingFunctionName();
         void setFittingFunctionName(TFittingFunction functionName);
+        std::vector<int> getFittingFirstGuess() const;
+        void setFittingFirstGuess(const std::vector<int> &newFittingFirstGuess);
+        std::vector <std::vector<double>> getFirstGuessCombinations() const;
+        void setFirstGuessCombinations(const std::vector<std::vector<double>> &newFirstGuessCombinations);
     };
 
 
