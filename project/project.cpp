@@ -769,7 +769,7 @@ bool Project::loadParameters(QString parametersFileName)
                 proxyOrder.push_back(parametersSettings->value("order").toInt());
             }
             else
-                logError();
+                return false;
 
             parametersSettings->endGroup();
         }
