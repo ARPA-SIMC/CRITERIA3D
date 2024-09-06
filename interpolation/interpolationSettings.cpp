@@ -381,16 +381,24 @@ void Crit3DInterpolationSettings::setChosenElevationFunction(TFittingFunction ch
         else if (chosenFunction != getProxy(elPos)->getFittingFunctionName() || getProxy(elPos)->getFittingParametersRange().empty())
         {
             if (chosenFunction == piecewiseTwo)
+            {
                 getProxy(elPos)->setFittingParametersRange({H0_MIN, MIN_T-2, SLOPE_MIN, INVSLOPE_MIN,
                                                             H0_MAX, MAX_T+2, SLOPE_MAX, INVSLOPE_MAX});
+                getProxy(elPos)->setFittingFirstGuess({0,1,1,1});
+            }
             else if (chosenFunction == piecewiseThree)
+            {
                 getProxy(elPos)->setFittingParametersRange({H0_MIN, MIN_T-2, DELTA_MIN, SLOPE_MIN, INVSLOPE_MIN,
                                                             H0_MAX, MAX_T+2, DELTA_MAX, SLOPE_MAX, INVSLOPE_MAX});
+                getProxy(elPos)->setFittingFirstGuess({0,1,1,1,1});
+            }
             else if (chosenFunction == piecewiseThreeFree)
+            {
                 getProxy(elPos)->setFittingParametersRange({H0_MIN, MIN_T-2, DELTA_MIN, SLOPE_MIN, INVSLOPE_MIN, INVSLOPE_MIN,
                                                             H0_MAX, MAX_T+2, DELTA_MAX, SLOPE_MAX, INVSLOPE_MAX, INVSLOPE_MAX});
-
-            getProxy(elPos)->setFittingFunctionName(chosenFunction);
+                getProxy(elPos)->setFittingFirstGuess({0,1,1,1,1,1});
+            }
+            getProxy(elPos)->setFittingFunctionName(chosenFunction);          
         }
     }
 }

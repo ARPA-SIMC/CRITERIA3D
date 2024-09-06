@@ -237,7 +237,7 @@ bool Project::checkProxy(Crit3DProxy &myProxy, QString* error, bool isActive)
             return false;
         }
 
-        if (myProxy.getFittingFirstGuess().size() != nrParameters)
+        if (isHeight && myProxy.getFittingFirstGuess().size() != nrParameters)
         {
             *error = "wrong number of first guess settings for proxy: " + QString::fromStdString(name_);
             return false;
@@ -731,6 +731,12 @@ bool Project::loadParameters(QString parametersFileName)
                         else
                             myProxy->setFittingFunctionName(fittingFunctionNames.at(elevationFuction));
                     }
+
+                    if (parametersSettings->contains("fitting_first_guess"))
+                    {
+                        myList = parametersSettings->value("fitting_first_guess").toStringList();
+                        myProxy->setFittingFirstGuess(StringListToInt(myList));
+                    }
                 }
 
                 if (parametersSettings->contains("fitting_parameters_max") && parametersSettings->contains("fitting_parameters_min"))
@@ -741,12 +747,6 @@ bool Project::loadParameters(QString parametersFileName)
                         myList.append(myList2[i]);
 
                     myProxy->setFittingParametersRange(StringListToDouble(myList));
-                }
-
-                if (parametersSettings->contains("fitting_first_guess"))
-                {
-                    myList = parametersSettings->value("fitting_first_guess").toStringList();
-                    myProxy->setFittingFirstGuess(StringListToInt(myList));
                 }
             }
 
