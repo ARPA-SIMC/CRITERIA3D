@@ -2026,21 +2026,21 @@ bool PragaProject::timeAggregateGrid(QDate dateIni, QDate dateFin, QList <meteoV
     // check variables
     if (variables.size() == 0)
     {
-        logError("No variable");
+        errorString = "No variable";
         return false;
     }
 
     // check meteo grid
     if (! meteoGridLoaded)
     {
-        logError("No meteo grid");
+        errorString = "No meteo grid";
         return false;
     }
 
     // check dates
     if (dateIni.isNull() || dateFin.isNull() || dateIni > dateFin)
     {
-        logError("Wrong period");
+        errorString = "Wrong period";
         return false;
     }
 
@@ -2072,14 +2072,14 @@ bool PragaProject::hourlyDerivedVariablesGrid(QDate first, QDate last, bool load
     // check meteo grid
     if (! meteoGridLoaded)
     {
-        logError("No meteo grid");
+        errorString = "No meteo grid";
         return false;
     }
 
     // check dates
     if (first.isNull() || last.isNull() || first > last)
     {
-        logError("Wrong period");
+        errorString = "Wrong period";
         return false;
     }
 
@@ -2366,28 +2366,28 @@ bool PragaProject::interpolationMeteoGridPeriod(QDate dateIni, QDate dateFin, QL
     // check variables
     if (variables.size() == 0)
     {
-        logError("No variable");
+        errorString = "No variable";
         return false;
     }
 
     // check meteo point
     if (! meteoPointsLoaded || nrMeteoPoints == 0)
     {
-        logError("No meteo points");
+        errorString = "No meteo points";
         return false;
     }
 
     // check meteo grid
     if (! meteoGridLoaded)
     {
-        logError("No meteo grid");
+        errorString = "No meteo grid";
         return false;
     }
 
     // check dates
     if (dateIni.isNull() || dateFin.isNull() || dateIni > dateFin)
     {
-        logError("Wrong period");
+        errorString = "Wrong period";
         return false;
     }
 
@@ -2413,7 +2413,7 @@ bool PragaProject::interpolationMeteoGridPeriod(QDate dateIni, QDate dateFin, QL
 
         if (freq == noFrequency)
         {
-            logError("Unknown variable: " + QString::fromStdString(getMeteoVarName(myVar)));
+            errorString = "Unknown variable: " + QString::fromStdString(getMeteoVarName(myVar));
             return false;
         }
         else if (freq == hourly)
@@ -2651,14 +2651,23 @@ bool PragaProject::interpolationCrossValidationPeriod(QDate dateIni, QDate dateF
     // check meteo point
     if (! meteoPointsLoaded || nrMeteoPoints == 0)
     {
-        logError("No meteo points");
+        errorString = "No meteo points";
         return false;
     }
 
     // check dates
     if (dateIni.isNull() || dateFin.isNull() || dateIni > dateFin)
     {
-        logError("Wrong period");
+        errorString = "Wrong period";
+        return false;
+    }
+
+    // available variables for cv
+    if ((myVar == airRelHumidity && interpolationSettings.getUseDewPoint()) ||
+        myVar == windVectorDirection ||
+        myVar == windVectorIntensity)
+    {
+        errorString = "Cross validation not available for variable: " + QString::fromStdString(getVariableString(myVar));
         return false;
     }
 
@@ -2669,7 +2678,7 @@ bool PragaProject::interpolationCrossValidationPeriod(QDate dateIni, QDate dateF
     QDate myDate = dateIni;
     frequencyType myFreq = getVarFrequency(myVar);
 
-    if (getUseTdVar(myVar))
+    if (interpolationSettings.getUseTD())
     {
         logInfoGUI("Loading topographic distance maps...");
         if (! loadTopographicDistanceMaps(true, false))
@@ -2693,10 +2702,13 @@ bool PragaProject::interpolationCrossValidationPeriod(QDate dateIni, QDate dateF
     Crit3DTime myTime;
 
     QTextStream cvOutput(&file);
-    cvOutput << "Time,MAE,MBE,RMSE,CRE,R2";
+    cvOutput << "Time,MAE,MBE,RMSE,CRE,R2" << '\n';
 
+    logInfoGUI("Cross validating " + QString::fromStdString(getMeteoVarName(myVar)) + " from " + dateIni.toString("yyyy-MM-dd") + " to " + dateFin.toString("yyyy-MM-dd"));
     while (myDate <= dateFin)
     {
+        logInfoGUI(myDate.toString("yyyy-MM-dd"));
+
         if (getVarFrequency(myVar) == hourly)
         {
             for (myHour = 1; myHour <= 24; myHour++)
@@ -2705,63 +2717,27 @@ bool PragaProject::interpolationCrossValidationPeriod(QDate dateIni, QDate dateF
 
                 if (interpolationCv(myVar, myTime, &stats))
                 {
-                    cvOutput << getQDateTime(myTime).toString() << '\n';
-                    cvOutput << stats.getMeanAbsoluteError() << '\n';
-                    cvOutput << stats.getMeanBiasError() << '\n';
-                    cvOutput << stats.getRootMeanSquareError() << '\n';
-                    cvOutput << stats.getCompoundRelativeError() << '\n';
-                    cvOutput << stats.getR2() << '\n';
+                    cvOutput << getQDateTime(myTime).toString();
+                    cvOutput << "," << stats.getMeanAbsoluteError();
+                    cvOutput << "," << stats.getMeanBiasError();
+                    cvOutput << "," << stats.getRootMeanSquareError();
+                    cvOutput << "," << stats.getCompoundRelativeError();
+                    cvOutput << "," << stats.getR2() << '\n';
                 }
             }
-
-
-
-
-
-                /*if (myVar == airRelHumidity && interpolationSettings.getUseDewPoint())
-                {
-                    if (interpolationSettings.getUseInterpolatedTForRH())
-                        passInterpolatedTemperatureToHumidityPoints(getCrit3DTime(myDate, myHour), meteoSettings);
-                    if (! interpolationDemMain(airDewTemperature, getCrit3DTime(myDate, myHour), hourlyMeteoMaps->mapHourlyTdew)) return false;
-                    hourlyMeteoMaps->computeRelativeHumidityMap(hourlyMeteoMaps->mapHourlyRelHum);
-                }
-                else if (myVar == windVectorDirection || myVar == windVectorIntensity) {
-                    if (! interpolationDemMain(windVectorX, getCrit3DTime(myDate, myHour), getPragaMapFromVar(windVectorX))) return false;
-                    if (! interpolationDemMain(windVectorY, getCrit3DTime(myDate, myHour), getPragaMapFromVar(windVectorY))) return false;
-                    if (! pragaHourlyMaps->computeWindVector()) return false;
-                }
-                else if (myVar == leafWetness) {
-                    hourlyMeteoMaps->computeLeafWetnessMap() ;
-                }
-                else if (myVar == referenceEvapotranspiration) {
-                    hourlyMeteoMaps->computeET0PMMap(DEM, radiationMaps);
-                }
-                else {
-                    if (! interpolationDemMain(myVar, getCrit3DTime(myDate, myHour), getPragaMapFromVar(myVar))) return false;
-                }
-
-                if (myVar == windVectorDirection || myVar == windVectorIntensity)
-                {
-                    meteoGridDbHandler->meteoGrid()->spatialAggregateMeteoGrid(windVectorX, hourly, getCrit3DDate(myDate), myHour, 0, &DEM, getPragaMapFromVar(windVectorX), interpolationSettings.getMeteoGridAggrMethod());
-                    meteoGridDbHandler->meteoGrid()->spatialAggregateMeteoGrid(windVectorY, hourly, getCrit3DDate(myDate), myHour, 0, &DEM, getPragaMapFromVar(windVectorY), interpolationSettings.getMeteoGridAggrMethod());
-                    meteoGridDbHandler->meteoGrid()->computeWindVectorHourly(getCrit3DDate(myDate), myHour);
-                }
-                else
-                    meteoGridDbHandler->meteoGrid()->spatialAggregateMeteoGrid(myVar, hourly, getCrit3DDate(myDate), myHour, 0, &DEM, myGrid, interpolationSettings.getMeteoGridAggrMethod());
-
-                */
-
         }
         else
         {
+            myTime = getCrit3DTime(myDate, 0);
+
             if (interpolationCv(myVar, myTime, &stats))
             {
-                cvOutput << getQDateTime(myTime).date().toString() << '\n';
-                cvOutput << stats.getMeanAbsoluteError() << '\n';
-                cvOutput << stats.getMeanBiasError() << '\n';
-                cvOutput << stats.getRootMeanSquareError() << '\n';
-                cvOutput << stats.getCompoundRelativeError() << '\n';
-                cvOutput << stats.getR2() << '\n';
+                cvOutput << getQDateTime(myTime).date().toString();
+                cvOutput << "," << stats.getMeanAbsoluteError();
+                cvOutput << "," << stats.getMeanBiasError();
+                cvOutput << "," << stats.getRootMeanSquareError();
+                cvOutput << "," << stats.getCompoundRelativeError();
+                cvOutput << "," << stats.getR2() << '\n';
             }
         }
 
@@ -3996,14 +3972,14 @@ bool PragaProject::monthlyAggregateVariablesGrid(const QDate &firstDate, const Q
     // check meteo grid
     if (! meteoGridLoaded)
     {
-        logError("No meteo grid");
+        errorString = "No meteo grid";
         return false;
     }
 
     // check dates
     if (firstDate.isNull() || lastDate.isNull() || firstDate > lastDate)
     {
-        logError("Wrong period");
+        errorString = "Wrong period";
         return false;
     }
 
