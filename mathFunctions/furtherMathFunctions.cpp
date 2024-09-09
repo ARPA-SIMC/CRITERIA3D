@@ -2035,9 +2035,9 @@ namespace interpolation
         std::vector<double> ySim(nrData);
 
         //grigliato
-        for (i = 0; i < firstGuessCombinations.size(); i++)
+        for (int k = 0; k < firstGuessCombinations.size(); k++)
         {
-            parameters = firstGuessCombinations[i];
+            parameters = firstGuessCombinations[k];
             fittingMarquardt_nDimension_noSquares_singleFunction(func,parametersMin,
                                                                  parametersMax,parameters,
                                                                  parametersDelta,maxIterationsNr,

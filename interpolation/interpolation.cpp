@@ -1508,7 +1508,7 @@ void calculateFirstGuessCombinations(Crit3DProxy* myProxy)
     std::vector<double> tempParam = myProxy->getFittingParametersRange();
     std::vector <int> firstGuessPosition = myProxy->getFittingFirstGuess();
     std::vector <double> tempFirstGuess;
-    int numSteps = 10;
+    int numSteps = 13;
     std::vector <double> stepSize;
     int nrParam = int(tempParam.size()/2);
 
