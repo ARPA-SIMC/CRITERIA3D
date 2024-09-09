@@ -382,7 +382,7 @@ void Crit3DInterpolationSettings::setChosenElevationFunction(TFittingFunction ch
         {
             if (chosenFunction == piecewiseTwo)
             {
-                getProxy(elPos)->setFittingParametersRange({H0_MIN, MIN_T-2, SLOPE_MIN, INVSLOPE_MIN,
+                getProxy(elPos)->setFittingParametersRange({0, MIN_T-2, SLOPE_MIN, INVSLOPE_MIN,
                                                             H0_MAX, MAX_T+2, SLOPE_MAX, INVSLOPE_MAX});
                 getProxy(elPos)->setFittingFirstGuess({0,1,1,1});
             }

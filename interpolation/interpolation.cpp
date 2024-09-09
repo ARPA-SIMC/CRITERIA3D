@@ -1579,7 +1579,7 @@ bool setFittingParameters_elevation(int elevationPos, Crit3DInterpolationSetting
                              std::vector<double> &stepSize, int numSteps,
                              std::string &errorStr)
 {
-    const double RATIO_DELTA = 1000;
+    const double RATIO_DELTA = 800;
 
     if (mySettings->getChosenElevationFunction() == piecewiseTwo)
     {
@@ -1790,10 +1790,9 @@ bool multipleDetrendingElevationFitting(int elevationPos, std::vector <Crit3DInt
     {
         errorStr = "couldn't prepare the fitting parameters for proxy: elevation.";
         return false;
-    }
+    }   
 
     std::vector<std::vector<double>> firstGuessCombinations = mySettings->getProxy(elevationPos)->getFirstGuessCombinations();
-
     // multiple non linear fitting
     interpolation::bestFittingMarquardt_nDimension_singleFunction(*(myFunc.target<double(*)(double, std::vector<double>&)>()), 400, 4, parametersMin, parametersMax, parameters, parametersDelta,
                                                                   stepSize, numSteps, 100, 0.005, 0.002, predictors, predictands, weights,firstGuessCombinations);
