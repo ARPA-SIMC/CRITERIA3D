@@ -32,10 +32,6 @@
 #include "commonConstants.h"
 #include "furtherMathFunctions.h"
 
-#include <fstream>
-#include <iostream>
-
-
 double lapseRateRotatedSigmoid(double x, std::vector <double> par)
 {
     if (par.size() < 4) return NODATA;
@@ -1274,7 +1270,7 @@ namespace interpolation
         std::vector<std::vector<double>> firstGuessParam = parameters;
         bool exitFlag = 0;
 
-        for (int step = 1; step <= numSteps; ++step)
+        for (int step = 1; step <= numSteps; ++step) //CT: da sistemare o saltare
         {
             for (int dir = 0; dir < 2; ++dir)
             {
@@ -1358,6 +1354,55 @@ namespace interpolation
 
 
         return counter;
+
+    }
+
+    int bestFittingMarquardt_nDimension_clean(double (*func)(std::vector<std::function<double(double, std::vector<double>&)>>&, std::vector<double>& , std::vector <std::vector <double>>&),
+                                        std::vector<std::function<double(double, std::vector<double>&)>>& myFunc,
+                                        std::vector <std::vector <double>>& parametersMin, std::vector <std::vector <double>>& parametersMax,
+                                        std::vector <std::vector <double>>& parameters, std::vector <std::vector <double>>& parametersDelta,
+                                        int maxIterationsNr, double myEpsilon,
+                                        std::vector <std::vector <double>>& x ,std::vector<double>& y,
+                                        std::vector<double>& weights)
+    {
+        int i,j;
+        int nrData = int(y.size());
+        std::vector <int> nrParameters(parameters.size());
+        int nrParametersTotal = 0;
+        for (i=0; i<parameters.size();i++)
+        {
+            nrParameters[i]= int(parameters[i].size());
+            nrParametersTotal += nrParameters[i];
+        }
+        std::vector <std::vector <double>> bestParameters(parameters.size());
+        std::vector <std::vector <int>> correspondenceTag(2,std::vector<int>(nrParametersTotal));
+        int counterTag = 0;
+        for (i=0; i<parameters.size();i++)
+        {
+            for (j=0; j<nrParameters[i];j++)
+            {
+                correspondenceTag[0][counterTag] = i;
+                correspondenceTag[1][counterTag] = j;
+                counterTag++;
+                parametersDelta[i][j] = MAXVALUE(parametersDelta[i][j], EPSILON);
+            }
+            bestParameters[i].resize(nrParameters[i]) ;
+        }
+
+        double R2;
+        std::vector<double> ySim(nrData);
+
+        fittingMarquardt_nDimension_noSquares(func,myFunc,parametersMin, parametersMax,
+                                              parameters, parametersDelta,correspondenceTag, maxIterationsNr,
+                                              myEpsilon, x, y, weights);
+
+        for (i=0;i<nrData;i++)
+        {
+            ySim[i]= func(myFunc,x[i], parameters);
+        }
+        R2 = computeWeighted_R2(y,ySim,weights);
+
+        return 1;
 
     }
 
@@ -1973,9 +2018,10 @@ namespace interpolation
                                                        int nrTrials, int nrMinima,
                                                        std::vector <double>& parametersMin, std::vector <double>& parametersMax,
                                                        std::vector <double>& parameters, std::vector <double>& parametersDelta,
+                                                       std::vector <double>& stepSize, int numSteps,
                                                        int maxIterationsNr, double myEpsilon, double deltaR2,
                                                        std::vector <double>& x ,std::vector<double>& y,
-                                                       std::vector<double>& weights)
+                                                       std::vector<double>& weights, std::vector<std::vector<double>> firstGuessCombinations)
     {
         int i,j;
         int nrData = int(y.size());
@@ -1987,27 +2033,59 @@ namespace interpolation
         double R2;
         std::vector <double> R2Previous(nrMinima,NODATA);
         std::vector<double> ySim(nrData);
-        int counter = 0;
 
         //grigliato
-        std::vector<double> stepSize;
-        const int numSteps = 30;
-        if (parameters.size() == 4)
-            stepSize = {2*(parametersMax[0]-parametersMin[0])/numSteps, 2*(parametersMax[1]-parametersMin[1])/numSteps, 20*(parametersMax[2]-parametersMin[2])/numSteps, 20*(parametersMax[3]-parametersMin[3])/numSteps};
-        else if (parameters.size() == 6)
-            stepSize = {2*(parametersMax[0]-parametersMin[0])/numSteps, 2*(parametersMax[1]-parametersMin[1])/numSteps, 4*(parametersMax[2]-parametersMin[2])/numSteps, 20*(parametersMax[3]-parametersMin[3])/numSteps,20*(parametersMax[3]-parametersMin[3])/numSteps,20*(parametersMax[3]-parametersMin[3])/numSteps };
-        else return false;
-
-        int directions[] = {1, -1};
-        size_t numParamsToVary = parameters.size();
-        std::vector<double> firstGuessParam = parameters;
-
-        for (int step = 1; step <= numSteps; ++step)
+        for (int k = 0; k < firstGuessCombinations.size(); k++)
         {
-            for (int dir = 0; dir < 2; ++dir)
+            parameters = firstGuessCombinations[k];
+            fittingMarquardt_nDimension_noSquares_singleFunction(func,parametersMin,
+                                                                 parametersMax,parameters,
+                                                                 parametersDelta,maxIterationsNr,
+                                                                 myEpsilon,x,y,weights);
+
+            for (i=0;i<nrData;i++)
             {
-                for (int paramIndex = 0; paramIndex < int(numParamsToVary); ++paramIndex)
+                ySim[i]= func(x[i], parameters);
+            }
+            R2 = computeWeighted_R2(y,ySim,weights);
+
+            if (R2 > (bestR2-deltaR2))
+            {
+                for (j=0;j<nrMinima-1;j++)
                 {
+                    R2Previous[j] = R2Previous[j+1];
+                }
+                if (R2 > (bestR2))
+                {
+                    for (j=0; j<nrParameters; j++)
+                    {
+                        bestParameters[j] = parameters[j];
+                    }
+                    bestR2 = R2;
+                }
+                R2Previous[nrMinima-1] = R2;
+
+                for (j=0; j<nrParameters; j++)
+                {
+                    bestParameters[j] = parameters[j];
+                }
+            }
+        }
+
+        /*int directions[] = {1, -1};
+        std::vector<double> firstGuessParam = parameters;
+        int step,dir, index;
+        std::vector <int> paramIndex = {0,2};
+
+        for (step = 1; step <= numSteps+1; step++)
+        {
+            for (dir = 0; dir < 2; dir++)
+            {
+                for (index = 0; index < 2; index++)
+                {
+                    if (step > 2 && dir == 1 && index == 0)
+                        continue;
+
 
                     fittingMarquardt_nDimension_noSquares_singleFunction(func,parametersMin,
                                                                          parametersMax,parameters,
@@ -2043,23 +2121,24 @@ namespace interpolation
                     }
                     counter++;
 
+                    parameters = firstGuessParam;
+
                     if (dir == 0)
-                        parameters[paramIndex] = MINVALUE(firstGuessParam[paramIndex] + directions[dir] * step * stepSize[paramIndex], parametersMax[paramIndex]);
+                        parameters[paramIndex[index]] = MINVALUE(firstGuessParam[paramIndex[index]] + directions[dir] * step * stepSize[paramIndex[index]], parametersMax[paramIndex[index]]);
                     else
-                        parameters[paramIndex] = MAXVALUE(firstGuessParam[paramIndex] + directions[dir] * step * stepSize[paramIndex], parametersMin[paramIndex]);
+                        parameters[paramIndex[index]] = MAXVALUE(firstGuessParam[paramIndex[index]] + directions[dir] * step * stepSize[paramIndex[index]], parametersMin[paramIndex[index]]);
 
                 }
             }
-
-            if ((counter > nrTrials) || ((R2Previous[0] != NODATA) && fabs(R2Previous[0]-R2Previous[nrMinima-1]) < deltaR2 ))
+            if ((counter > nrTrials))
                 break;
-        }
+        }*/
 
         for (j=0; j<nrParameters; j++)
         {
             parameters[j] = bestParameters[j];
         }
-        return counter;
+        return 1;
     }
 
     bool fittingMarquardt_nDimension_noSquares_singleFunction(double (*func) (double, std::vector<double>&),

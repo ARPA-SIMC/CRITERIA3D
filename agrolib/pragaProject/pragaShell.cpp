@@ -21,6 +21,7 @@ QList<QString> getPragaCommandList()
     cmdList.append("Drought         | ComputeDroughtIndexGrid");
     cmdList.append("DroughtPoint    | ComputeDroughtIndexPoint");
     cmdList.append("Gridding        | InterpolationGridPeriod");
+    cmdList.append("CV              | InterpolationCrossValidation");
     cmdList.append("GridAggr        | GridAggregation");
     cmdList.append("GridDerVar      | GridDerivedVariables");
     cmdList.append("GridMonthlyInt  | GridMonthlyIntegrationVariables");
@@ -75,6 +76,11 @@ int PragaProject::executePragaCommand(QList<QString> argumentList, bool* isComma
     {
         *isCommandFound = true;
         return cmdInterpolationGridPeriod(this, argumentList);
+    }
+    else if (command == "CV" || command == "INTERPOLATIONCROSSVALIDATION")
+    {
+        *isCommandFound = true;
+        return cmdInterpolationCrossValidation(this, argumentList);
     }
     else if (command == "GRIDAGGREGATION" || command == "GRIDAGGR")
     {
@@ -156,7 +162,7 @@ int cmdOpenPragaProject(PragaProject* myProject, QList<QString> argumentList)
 {
     if (argumentList.size() < 2)
     {
-        myProject->logError("Missing project name");
+        myProject->errorString = "Missing project name";
         return PRAGA_INVALID_COMMAND;
     }
 
@@ -178,10 +184,7 @@ int cmdOpenPragaProject(PragaProject* myProject, QList<QString> argumentList)
     QString projectName = myProject->getCompleteFileName(filename, myProject->projectPragaFolder);
 
     if (! myProject->loadPragaProject(projectName))
-    {
-        myProject->logError();
         return PRAGA_ERROR;
-    }
 
     return PRAGA_OK;
 }
@@ -190,7 +193,7 @@ int cmdDownload(PragaProject* myProject, QList<QString> argumentList)
 {
     if (argumentList.size() < 2)
     {
-        myProject->logError("Missing parameters for download");
+        myProject->errorString = "Missing parameters for download";
         return PRAGA_INVALID_COMMAND;
     }
 
@@ -212,7 +215,7 @@ int cmdDownload(PragaProject* myProject, QList<QString> argumentList)
                 meteoVar = getMeteoVar(var.toStdString());
                 if (meteoVar == noMeteoVar)
                 {
-                    myProject->logError("Unknown variable: " + var);
+                    myProject->errorString = "Unknown variable: " + var;
                     return PRAGA_ERROR;
                 }
                 else
@@ -220,7 +223,7 @@ int cmdDownload(PragaProject* myProject, QList<QString> argumentList)
                     myFreq = getVarFrequency(meteoVar);
                     if (myFreq == noFrequency)
                     {
-                        myProject->logError("Unknown frequency for variable : " + var);
+                        myProject->errorString = "Unknown frequency for variable : " + var;
                         return PRAGA_ERROR;
                     }
                     else if (myFreq == daily)
@@ -252,13 +255,13 @@ int cmdDownload(PragaProject* myProject, QList<QString> argumentList)
 
     if (! dateIni.isValid())
     {
-        myProject->logError("Wrong initial date");
+        myProject->errorString ="Wrong initial date";
         return PRAGA_INVALID_COMMAND;
     }
 
     if (! dateFin.isValid())
     {
-        myProject->logError("Wrong final date");
+        myProject->errorString = "Wrong final date";
         return PRAGA_INVALID_COMMAND;
     }
 
@@ -278,7 +281,7 @@ int cmdInterpolationGridPeriod(PragaProject* myProject, QList<QString> argumentL
 {
     if (argumentList.size() < 2)
     {
-        myProject->logError("Missing parameters for gridding");
+        myProject->errorString = "Missing parameters for gridding";
         return PRAGA_INVALID_COMMAND;
     }
 
@@ -302,7 +305,7 @@ int cmdInterpolationGridPeriod(PragaProject* myProject, QList<QString> argumentL
             {
                 meteoVar = getMeteoVar(var.toStdString());
                 if (meteoVar == noMeteoVar) {
-                    myProject->logError("Unknown variable: " + var);
+                    myProject->errorString = "Unknown variable: " + var;
                     return PRAGA_INVALID_COMMAND;
                 }
 
@@ -317,7 +320,7 @@ int cmdInterpolationGridPeriod(PragaProject* myProject, QList<QString> argumentL
                 meteoVar = getMeteoVar(var.toStdString());
 
                 if (meteoVar == noMeteoVar) {
-                    myProject->logError("Unknown variable: " + var);
+                    myProject->errorString = "Unknown variable: " + var;
                     return PRAGA_INVALID_COMMAND;
                 }
 
@@ -349,25 +352,25 @@ int cmdInterpolationGridPeriod(PragaProject* myProject, QList<QString> argumentL
 
     if (! dateIni.isValid())
     {
-        myProject->logError("Wrong initial date");
+        myProject->errorString = "Wrong initial date";
         return PRAGA_INVALID_COMMAND;
     }
 
     if (! dateFin.isValid())
     {
-        myProject->logError("Wrong final date");
+        myProject->errorString = "Wrong final date";
         return PRAGA_INVALID_COMMAND;
     }
 
     if (saveInterval == NODATA || ! parseSaveInterval)
     {
-        myProject->logError("Wrong saving interval number");
+        myProject->errorString = "Wrong saving interval number";
         return PRAGA_INVALID_COMMAND;
     }
 
     if (! parseLoadInterval)
     {
-        myProject->logError("Wrong loading interval number");
+        myProject->errorString = "Wrong loading interval number";
         return PRAGA_INVALID_COMMAND;
     }
 
@@ -381,7 +384,7 @@ int cmdAggregationGridPeriod(PragaProject* myProject, QList<QString> argumentLis
 {
     if (argumentList.size() < 2)
     {
-        myProject->logError("Missing parameters for aggregation");
+        myProject->errorString = "Missing parameters for aggregation";
         return PRAGA_INVALID_COMMAND;
     }
 
@@ -420,13 +423,13 @@ int cmdAggregationGridPeriod(PragaProject* myProject, QList<QString> argumentLis
 
     if (! dateIni.isValid())
     {
-        myProject->logError("Wrong initial date");
+        myProject->errorString = "Wrong initial date";
         return PRAGA_INVALID_COMMAND;
     }
 
     if (! dateFin.isValid())
     {
-        myProject->logError("Wrong final date");
+        myProject->errorString = "Wrong final date";
         return PRAGA_INVALID_COMMAND;
     }
 
@@ -460,13 +463,13 @@ int cmdHourlyDerivedVariablesGrid(PragaProject* myProject, QList<QString> argume
 
     if (! first.isValid())
     {
-        myProject->logError("Wrong initial date");
+        myProject->errorString = "Wrong initial date";
         return PRAGA_INVALID_COMMAND;
     }
 
     if (! last.isValid())
     {
-        myProject->logError("Wrong final date");
+        myProject->errorString = "Wrong final date";
         return PRAGA_INVALID_COMMAND;
     }
 
@@ -513,19 +516,19 @@ int cmdMonthlyIntegrationVariablesGrid(PragaProject* myProject, QList<QString> a
 
     if (! first.isValid())
     {
-        myProject->logError("Wrong initial date");
+        myProject->errorString = "Wrong initial date";
         return PRAGA_INVALID_COMMAND;
     }
 
     if (variables.isEmpty())
     {
-        myProject->logError("Wrong variable");
+        myProject->errorString ="Wrong variable";
         return PRAGA_INVALID_COMMAND;
     }
 
     if (! last.isValid())
     {
-        myProject->logError("Wrong final date");
+        myProject->errorString = "Wrong final date";
         return PRAGA_INVALID_COMMAND;
     }
 
@@ -534,6 +537,76 @@ int cmdMonthlyIntegrationVariablesGrid(PragaProject* myProject, QList<QString> a
         myProject->logError();
         return PRAGA_ERROR;
     }
+
+    return PRAGA_OK;
+}
+
+int cmdInterpolationCrossValidation(PragaProject* myProject, QList<QString> argumentList)
+{
+    if (argumentList.size() < 4)
+    {
+        myProject->errorString = "Missing parameters for cross validation";
+        return PRAGA_INVALID_COMMAND;
+    }
+
+    QDate dateIni, dateFin;
+    std::string varString;
+    meteoVariable meteoVar = noMeteoVar;
+    QString fileName = "";
+
+    for (int i = 1; i < argumentList.size(); i++)
+    {
+        if (argumentList[i].left(3) == "-v:")
+        {
+            varString = argumentList[i].right(argumentList[i].length()-3).toStdString();
+            meteoVar = getMeteoVar(varString);
+        }
+        else if (argumentList.at(i).left(3) == "-o:")
+        {
+            fileName = argumentList[i].right(argumentList[i].length()-3);
+        }
+        else if (argumentList.at(i).left(4) == "-d1:")
+            dateIni = QDate::fromString(argumentList[i].right(argumentList[i].length()-4), "dd/MM/yyyy");
+        else if (argumentList.at(i).left(4) == "-d2:")
+            dateFin = QDate::fromString(argumentList[i].right(argumentList[i].length()-4), "dd/MM/yyyy");
+        else if (argumentList.at(i).left(10) == "-yesterday")
+        {
+            dateIni = QDate::currentDate().addDays(-1);
+            dateFin = dateIni;
+        }
+        else if (argumentList.at(i).left(10) == "-lastweek")
+        {
+            dateFin = QDate::currentDate().addDays(-1);
+            dateIni = dateFin.addDays(-6);
+        }
+    }
+
+    if (meteoVar == noMeteoVar)
+    {
+        myProject->errorString = "Unknown variable: " + QString::fromStdString(varString);
+        return PRAGA_INVALID_COMMAND;
+    }
+
+    if (! QDir(QFileInfo(fileName).absolutePath()).exists())
+    {
+        myProject->errorString = "Unable to save to directory: " + QFileInfo(fileName).absolutePath();
+        return PRAGA_INVALID_COMMAND;
+    }
+
+    if (! dateIni.isValid())
+    {
+        myProject->errorString = "Wrong initial date";
+        return PRAGA_INVALID_COMMAND;
+    }
+
+    if (! dateFin.isValid())
+    {
+        myProject->errorString = "Wrong final date";
+        return PRAGA_INVALID_COMMAND;
+    }
+
+    if (! myProject->interpolationCrossValidationPeriod(dateIni, dateFin, meteoVar, fileName))
+        return PRAGA_ERROR;
 
     return PRAGA_OK;
 }
@@ -585,7 +658,7 @@ int cmdExportDailyGridToRaster(PragaProject* myProject, QList<QString> argumentL
 
     if (meteoVar == noMeteoVar)
     {
-        myProject->logError("Wrong variable");
+        myProject->errorString = "Wrong variable";
         return PRAGA_INVALID_COMMAND;
     }
 
@@ -596,24 +669,24 @@ int cmdExportDailyGridToRaster(PragaProject* myProject, QList<QString> argumentL
     }
     else if (dateIniStr == "" || ! dateIni.isValid())
     {
-        myProject->logError("Wrong initial date");
+        myProject->errorString = "Wrong initial date";
         return PRAGA_INVALID_COMMAND;
     }
     else if (dateIniStr == "" || ! dateFin.isValid())
     {
-        myProject->logError("Wrong final date");
+        myProject->errorString = "Wrong final date";
         return PRAGA_INVALID_COMMAND;
     }
 
     if (path_ == "")
     {
-        myProject->logError("Wrong path");
+        myProject->errorString = "Wrong path";
         return PRAGA_INVALID_COMMAND;
     }
 
     if (! parseCellsize)
     {
-        myProject->logError("Wrong cell size");
+        myProject->errorString = "Wrong cell size";
         return PRAGA_INVALID_COMMAND;
     }
 
@@ -628,7 +701,7 @@ int cmdExportDailyGridToRaster(PragaProject* myProject, QList<QString> argumentL
     {
         if (argumentList.size() < 2)
         {
-            myProject->logError("Missing xml name");
+            myProject->errorString = "Missing xml name";
             return PRAGA_INVALID_COMMAND;
         }
 
@@ -646,7 +719,7 @@ int cmdGridAggregationOnZones(PragaProject* myProject, QList<QString> argumentLi
 {
     if (argumentList.size() < 4)
     {
-        myProject->logError("Missing parameters for aggregation on zones");
+        myProject->errorString = "Missing parameters for aggregation on zones";
         return PRAGA_INVALID_COMMAND;
     }
 
@@ -711,25 +784,25 @@ int cmdGridAggregationOnZones(PragaProject* myProject, QList<QString> argumentLi
     }
     if (variables.isEmpty())
     {
-        myProject->logError("Wrong variable");
+        myProject->errorString = "Wrong variable";
         return PRAGA_INVALID_COMMAND;
     }
 
     if (aggregationList.isEmpty())
     {
-        myProject->logError("Wrong aggregation");
+        myProject->errorString = "Wrong aggregation";
         return PRAGA_INVALID_COMMAND;
     }
 
     if (! first.isValid())
     {
-        myProject->logError("Wrong initial date");
+        myProject->errorString = "Wrong initial date";
         return PRAGA_INVALID_COMMAND;
     }
 
     if (! last.isValid())
     {
-        myProject->logError("Wrong final date");
+        myProject->errorString = "Wrong final date";
         return PRAGA_INVALID_COMMAND;
     }
 
@@ -741,7 +814,7 @@ int cmdGridAggregationOnZones(PragaProject* myProject, QList<QString> argumentLi
     QString rasterName;
     if (!myProject->aggregationDbHandler->getRasterName(&rasterName))
     {
-        myProject->logError("Missing Raster Name inside aggregation db.");
+        myProject->errorString = "Missing Raster Name inside aggregation db.";
         return PRAGA_ERROR;
     }
 
@@ -751,7 +824,7 @@ int cmdGridAggregationOnZones(PragaProject* myProject, QList<QString> argumentLi
     std::string myError = "";
     if (! gis::readEsriGrid(fnWithoutExt.toStdString(), myRaster, myError))
     {
-        myProject->logError("Load raster failed: " + QString::fromStdString(myError));
+        myProject->errorString = "Load raster failed: " + QString::fromStdString(myError);
         delete myRaster;
         return PRAGA_ERROR;
     }
@@ -823,7 +896,7 @@ int pragaBatch(PragaProject* myProject, QString scriptFileName)
         cmdLine = scriptFile.readLine();
         QList<QString> argumentList = getArgumentList(cmdLine);
         result = executeCommand(argumentList, myProject) ;
-        if (result != 0)
+        if (result != PRAGA_OK)
         {
             myProject->logError("Praga batch error code: " + QString::number(result) + "\n" + myProject->errorString);
             return result;
@@ -858,7 +931,7 @@ int pragaShell(PragaProject* myProject)
         {
             QList<QString> argumentList = getArgumentList(commandLine);
             int result = executeCommand(argumentList, myProject);
-            if (result != 0)
+            if (result != PRAGA_OK)
             {
                 myProject->logError("Praga shell error code: " + QString::number(result) + "\n" + myProject->errorString);
             }
@@ -875,7 +948,7 @@ int pragaShell(PragaProject* myProject)
     {
         if (argumentList.size() < 2)
         {
-            myProject->logError("Missing netcdf name");
+            myProject->errorString = "Missing netcdf name";
             return PRAGA_INVALID_COMMAND;
         }
 
@@ -896,7 +969,7 @@ int pragaShell(PragaProject* myProject)
     {
         if (argumentList.size() < 2)
         {
-            myProject->logError("Missing xml name");
+            myProject->errorString = "Missing xml name";
             return PRAGA_INVALID_COMMAND;
         }
 
@@ -952,7 +1025,7 @@ int pragaShell(PragaProject* myProject)
     {
         if (argumentList.size() < 2)
         {
-            myProject->logError("Missing xml name");
+            myProject->errorString = "Missing xml name";
             return PRAGA_INVALID_COMMAND;
         }
 
@@ -980,7 +1053,7 @@ int pragaShell(PragaProject* myProject)
     {
         if (argumentList.size() < 5)
         {
-            myProject->logError("Missing parameters for computing drought index point");
+            myProject->errorString = "Missing parameters for computing drought index point";
             return PRAGA_INVALID_COMMAND;
         }
 
@@ -1009,7 +1082,7 @@ int pragaShell(PragaProject* myProject)
                 }
                 else
                 {
-                    myProject->logError("Wrong index: -i:<SPI/SPEI/DECILES>");
+                    myProject->errorString = "Wrong index: -i:<SPI/SPEI/DECILES>";
                     return PRAGA_INVALID_COMMAND;
                 }
             }
@@ -1018,7 +1091,7 @@ int pragaShell(PragaProject* myProject)
                 timescale = argumentList[i].right(argumentList[i].length()-3).toInt(&ok);
                 if (!ok)
                 {
-                    myProject->logError("Wrong timescale: -t:<integer number>");
+                    myProject->errorString = "Wrong timescale: -t:<integer number>";
                     return PRAGA_INVALID_COMMAND;
                 }
             }
@@ -1027,7 +1100,7 @@ int pragaShell(PragaProject* myProject)
                 ry1 = argumentList[i].right(argumentList[i].length()-5).toInt(&ok);
                 if (!ok)
                 {
-                    myProject->logError("Wrong reference start year: -ry1:<integer number>");
+                    myProject->errorString = "Wrong reference start year: -ry1:<integer number>";
                     return PRAGA_INVALID_COMMAND;
                 }
             }
@@ -1036,7 +1109,7 @@ int pragaShell(PragaProject* myProject)
                 ry2 = argumentList[i].right(argumentList[i].length()-5).toInt(&ok);
                 if (!ok)
                 {
-                    myProject->logError("Wrong reference end year: -ry2:<integer number>");
+                    myProject->errorString = "Wrong reference end year: -ry2:<integer number>";
                     return PRAGA_INVALID_COMMAND;
                 }
             }
@@ -1055,7 +1128,7 @@ int pragaShell(PragaProject* myProject)
     {
         if (argumentList.size() < 3)
         {
-            myProject->logError("Missing procedure name or date to save");
+            myProject->errorString = "Missing procedure name or date to save";
             return PRAGA_INVALID_COMMAND;
         }
 

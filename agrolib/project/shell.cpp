@@ -198,7 +198,7 @@ int cmdLoadDEM(Project* myProject, QList<QString> argumentList)
 {
     if (argumentList.size() < 2)
     {
-        myProject->logError("Missing DEM file name.");
+        myProject->errorString = "Missing DEM file name.";
         // TODO: USAGE
         return PRAGA_MISSING_FILE;
     }
@@ -219,7 +219,7 @@ int cmdOpenDbPoint(Project* myProject, QList<QString> argumentList)
 {
     if (argumentList.size() < 2)
     {
-        myProject->logError("Missing db point name");
+        myProject->errorString = "Missing db point name";
         return PRAGA_INVALID_COMMAND;
     }
 
@@ -238,7 +238,7 @@ int cmdLoadMeteoGrid(Project* myProject, QList<QString> argumentList)
 {
     if (argumentList.size() < 2)
     {
-        myProject->logError("Missing Grid file name.");
+        myProject->errorString = "Missing grid file name";
         // TODO: USAGE
         return PRAGA_MISSING_FILE;
     }
@@ -261,7 +261,7 @@ int cmdSetLogFile(Project* myProject, QList<QString> argumentList)
 {
     if (argumentList.size() < 2)
     {
-        myProject->logError("Missing Log file name.");
+        myProject->errorString = "Missing log file name";
         // TODO: USAGE
         return PRAGA_INVALID_COMMAND;
     }
@@ -281,6 +281,7 @@ int cmdSetLogFile(Project* myProject, QList<QString> argumentList)
 
 int cmdExportDailyDataCsv(Project* myProject, QList<QString> argumentList)
 {
+    // GA questa funzione scrive degli errori ed esce, ma ritorna sempre PRAGA_OK. e' giusto?
     QString outputPath = myProject->getProjectPath() + PATH_OUTPUT;
 
     if (argumentList.size() < 2)

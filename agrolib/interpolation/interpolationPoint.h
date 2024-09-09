@@ -22,7 +22,6 @@
         float distance;
         float value;
         float regressionWeight;
-        float heightWeight;
         lapseRateCodeType lapseRateCode;
         gis::Crit3DRasterGrid* topographicDistance;
         std::vector<float> proxyValues;

@@ -8,14 +8,7 @@
     #ifndef GIS_H
         #include "gis.h"
     #endif
-    #ifndef METEO_H
-        #include "meteo.h"
-    #endif
-    #ifndef METEOGRID_H
-        #include "meteoGrid.h"
-    #endif
 
-    #include <deque>
 
     std::string getKeyStringInterpolationMethod(TInterpolationMethod value);
     std::string getKeyStringElevationFunction(TFittingFunction value);
@@ -29,7 +22,6 @@
         gis::Crit3DRasterGrid* grid;
         std::string proxyTable;
         std::string proxyField;
-        bool isSignificant;
         bool forQualityControl;
 
         float regressionR2;
@@ -37,6 +29,8 @@
         float regressionIntercept;
         TFittingFunction fittingFunctionName;
         std::vector <double> fittingParametersRange;
+        std::vector <int> fittingFirstGuess;
+        std::vector <std::vector <double>> firstGuessCombinations;
 
         float avg;
         float stdDev;
@@ -61,8 +55,6 @@
         void setGrid(gis::Crit3DRasterGrid *value);
         std::string getGridName() const;
         void setGridName(const std::string &value);
-        bool getIsSignificant() const;
-        void setIsSignificant(bool value);
         void setRegressionR2(float myValue);
         float getRegressionR2();
         void setRegressionSlope(float myValue);
@@ -98,8 +90,14 @@
         void setStdDevThreshold(float newStdDevThreshold);
         std::vector<double> getFittingParametersRange() const;
         void setFittingParametersRange(const std::vector<double> &newFittingParametersRange);
+        std::vector<double> getFittingParametersMax() const;
+        std::vector<double> getFittingParametersMin() const;
         TFittingFunction getFittingFunctionName();
         void setFittingFunctionName(TFittingFunction functionName);
+        std::vector<int> getFittingFirstGuess() const;
+        void setFittingFirstGuess(const std::vector<int> &newFittingFirstGuess);
+        std::vector <std::vector<double>> getFirstGuessCombinations() const;
+        void setFirstGuessCombinations(const std::vector<std::vector<double>> &newFirstGuessCombinations);
     };
 
 
@@ -167,9 +165,7 @@
         std::vector <float> Kh_error_series;
 
         bool proxyLoaded;
-        bool proxiesComplete;
         std::vector <Crit3DProxy> currentProxy;
-        Crit3DProxyCombination optimalCombination;
         Crit3DProxyCombination selectedCombination;
         Crit3DProxyCombination currentCombination;
         unsigned indexHeight;
@@ -239,6 +235,7 @@
         void setIndexHeight(unsigned value);
         Crit3DProxyCombination getCurrentCombination() const;
         void setCurrentCombination(Crit3DProxyCombination value);
+        void setSignificantCurrentCombination(unsigned int index, bool isSignificant);
         std::vector<Crit3DProxy> getCurrentProxy() const;
         void setCurrentProxy(const std::vector<Crit3DProxy> &value);
         bool getUseInterpolatedTForRH() const;
@@ -265,18 +262,15 @@
         std::vector<std::vector <double>> getFittingParameters() const;
         std::vector<double> getProxyFittingParameters(int tempIndex);
         void setFittingParameters(const std::vector<std::vector <double>> &newFittingParameters);
-        void setSingleFittingParameters(std::vector<double> &newFittingParameters, int paramIndex);
         void addFittingParameters(const std::vector<std::vector<double> > &newFittingParameters);
         std::vector<std::function<double (double, std::vector<double> &)> > getFittingFunction() const;
         void setFittingFunction(const std::vector<std::function<double (double, std::vector<double> &)> > &newFittingFunction);
-        void setSingleFittingFunction(const std::function<double (double, std::vector<double> &)> &newFittingFunction, unsigned int index);
-        bool getProxiesComplete() const;
-        void setProxiesComplete(bool newProxiesComplete);
+        void addFittingFunction(const std::function<double (double, std::vector<double> &)> &newFittingFunction);
         void clearFitting();
         TFittingFunction getChosenElevationFunction();
         void setChosenElevationFunction(TFittingFunction chosenFunction);
         void setPointsRange(double min, double max);
-        std::vector<double> getMinMaxTemperature();
+        std::vector<double> getPointsRange();
     };
 
 #endif // INTERPOLATIONSETTINGS_H

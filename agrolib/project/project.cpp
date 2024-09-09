@@ -198,10 +198,9 @@ void Project::setProxyDEM()
 }
 
 
-bool Project::checkProxy(Crit3DProxy &myProxy, QString* error)
+bool Project::checkProxy(Crit3DProxy &myProxy, QString* error, bool isActive)
 {
     std::string name_ = myProxy.getName();
-    QList<QString> myList;
 
     if (name_ == "")
     {
@@ -217,76 +216,31 @@ bool Project::checkProxy(Crit3DProxy &myProxy, QString* error)
         return false;
     }
 
-    if (isHeight)
+    if (interpolationSettings.getUseMultipleDetrending() && isActive)
     {
-        if (parametersSettings->contains("fitting_function"))
+        int nrParameters = 0;
+        if (isHeight)
         {
-            std::string elevationFuction = parametersSettings->value("fitting_function").toString().toStdString();
-            if (fittingFunctionNames.find(elevationFuction) == fittingFunctionNames.end())
-            {
-                errorString = "Unknown function for elevation. Remove the field from the .ini file or choose between: piecewise_two, triple_piecewise, free_triple_piecewise.";
-                return false;
-            }
-            else
-                myProxy.setFittingFunctionName(fittingFunctionNames.at(elevationFuction));
-
-            if (parametersSettings->contains("fitting_parameters"))
-            {
-                unsigned int nrParameters = NODATA;
-
-                if (myProxy.getFittingFunctionName() == piecewiseTwo)
-                    nrParameters = 4;
-                else if (myProxy.getFittingFunctionName() == piecewiseThree)
-                    nrParameters = 5;
-                else if (myProxy.getFittingFunctionName()== piecewiseThreeFree)
-                    nrParameters = 6;
-
-                myList = parametersSettings->value("fitting_parameters").toStringList();
-                if (myList.size() != nrParameters*2)
-                {
-                    *error = "Wrong number of fitting parameters for proxy: " + QString::fromStdString(name_);
-                    return  false;
-                }
-
-                myProxy.setFittingParametersRange(StringListToDouble(myList));
-            }
+            if (myProxy.getFittingFunctionName() == piecewiseTwo)
+                nrParameters = 4;
+            else if (myProxy.getFittingFunctionName() == piecewiseThree)
+                nrParameters = 5;
+            else if (myProxy.getFittingFunctionName() == piecewiseThreeFree)
+                nrParameters = 6;
         }
         else
-        {
-            if (parametersSettings->contains("fitting_parameters"))
-            {
-                myList = parametersSettings->value("fitting_parameters").toStringList();
+            nrParameters = 2;
 
-                if (myList.size() == 8)
-                    myProxy.setFittingFunctionName(piecewiseTwo);
-                else if (myList.size() == 10)
-                    myProxy.setFittingFunctionName(piecewiseThree);
-                else if (myList.size() == 12)
-                    myProxy.setFittingFunctionName(piecewiseThreeFree);
-                else
-                {
-                    *error = "Wrong number of fitting parameters for proxy: " + QString::fromStdString(name_);
-                    return  false;
-                }
-                myProxy.setFittingParametersRange(StringListToDouble(myList));
-            }
+        if (myProxy.getFittingParametersRange().size() != nrParameters*2)
+        {
+            *error = "wrong numer of parameters for proxy: " + QString::fromStdString(name_);
+            return false;
         }
-    }
-    else
-    {
-        myProxy.setFittingFunctionName(linear);
-        if(parametersSettings->contains("fitting_parameters"))
+
+        if (isHeight && myProxy.getFittingFirstGuess().size() != nrParameters)
         {
-            unsigned int nrParameters = 2;
-
-            myList = parametersSettings->value("fitting_parameters").toStringList();
-            if (myList.size() != nrParameters*2)
-            {
-                *error = "Wrong number of fitting parameters for proxy: " + QString::fromStdString(name_);
-                return  false;
-            }
-
-            myProxy.setFittingParametersRange(StringListToDouble(myList));
+            *error = "wrong number of first guess settings for proxy: " + QString::fromStdString(name_);
+            return false;
         }
     }
 
@@ -761,6 +715,41 @@ bool Project::loadParameters(QString parametersFileName)
             if (parametersSettings->contains("stddev_threshold"))
                 myProxy->setStdDevThreshold(parametersSettings->value("stddev_threshold").toFloat());
 
+
+            if (interpolationSettings.getUseMultipleDetrending())
+            {
+                if (getProxyPragaName(name_.toStdString()) == proxyHeight)
+                {
+                    if (parametersSettings->contains("fitting_function"))
+                    {
+                        std::string elevationFuction = parametersSettings->value("fitting_function").toString().toStdString();
+                        if (fittingFunctionNames.find(elevationFuction) == fittingFunctionNames.end())
+                        {
+                            errorString = "Unknown function for elevation. Choose between: double_piecewise, triple_piecewise, free_triple_piecewise.";
+                            return false;
+                        }
+                        else
+                            myProxy->setFittingFunctionName(fittingFunctionNames.at(elevationFuction));
+                    }
+
+                    if (parametersSettings->contains("fitting_first_guess"))
+                    {
+                        myList = parametersSettings->value("fitting_first_guess").toStringList();
+                        myProxy->setFittingFirstGuess(StringListToInt(myList));
+                    }
+                }
+
+                if (parametersSettings->contains("fitting_parameters_max") && parametersSettings->contains("fitting_parameters_min"))
+                {
+                    myList = parametersSettings->value("fitting_parameters_min").toStringList();
+                    QList<QString> myList2 = parametersSettings->value("fitting_parameters_max").toStringList();
+                    for (int i = 0; i < myList2.size(); i++)
+                        myList.append(myList2[i]);
+
+                    myProxy->setFittingParametersRange(StringListToDouble(myList));
+                }
+            }
+
             if (! parametersSettings->contains("active"))
             {
                 errorString = "active not specified for proxy " + QString::fromStdString(myProxy->getName());
@@ -773,14 +762,14 @@ bool Project::loadParameters(QString parametersFileName)
                 return false;
             }
 
-            if (checkProxy(*myProxy, &errorString))
+            if (checkProxy(*myProxy, &errorString, parametersSettings->value("active").toBool()))
             {
                 proxyListTmp.push_back(*myProxy);
                 proxyActiveTmp.push_back(parametersSettings->value("active").toBool());
                 proxyOrder.push_back(parametersSettings->value("order").toInt());
             }
             else
-                logError();
+                return false;
 
             parametersSettings->endGroup();
         }
@@ -2248,7 +2237,6 @@ bool Project::computeStatisticsCrossValidation(crossValidationStatistics* myStat
     return true;
 }
 
-
 bool Project::interpolationCv(meteoVariable myVar, const Crit3DTime& myTime, crossValidationStatistics *myStats)
 {
     // TODO local detrending
@@ -2263,7 +2251,7 @@ bool Project::interpolationCv(meteoVariable myVar, const Crit3DTime& myTime, cro
         myVar == airRelHumidity))
     {
         logError("Cross validation is not available for " + QString::fromStdString(getVariableString(myVar))
-                 + "\n Deactive 'Interpolate relative humidity using dew point' option.");
+                 + "\n Deactivate option 'Interpolate relative humidity using dew point'");
         return false;
     }
 
@@ -2294,21 +2282,31 @@ bool Project::interpolationCv(meteoVariable myVar, const Crit3DTime& myTime, cro
     if (interpolationSettings.getUseMultipleDetrending())
         interpolationSettings.clearFitting();
 
-    if (! preInterpolation(interpolationPoints, &interpolationSettings, meteoSettings, &climateParameters,
+    if (! interpolationSettings.getUseLocalDetrending() && ! preInterpolation(interpolationPoints, &interpolationSettings, meteoSettings, &climateParameters,
                           meteoPoints, nrMeteoPoints, myVar, myTime, errorStdStr))
     {
         logError("Error in function preInterpolation:\n" + QString::fromStdString(errorStdStr));
         return false;
     }
 
-    if (! computeResiduals(myVar, meteoPoints, nrMeteoPoints, interpolationPoints, &interpolationSettings, meteoSettings, true, true))
-        return false;
+    if (! interpolationSettings.getUseLocalDetrending())
+    {
+        if (! computeResiduals(myVar, meteoPoints, nrMeteoPoints, interpolationPoints, &interpolationSettings, meteoSettings, true, true))
+            return false;
+    }
+    else
+    {
+        if (! computeResidualsLocalDetrending(myVar, myTime, meteoPoints, nrMeteoPoints, interpolationPoints,
+                                             &interpolationSettings, meteoSettings, &climateParameters, true, true))
+            return false;
+    }
 
     if (! computeStatisticsCrossValidation(myStats))
         return false;
 
     return true;
 }
+
 
 
 bool Project::interpolationDem(meteoVariable myVar, const Crit3DTime& myTime, gis::Crit3DRasterGrid *myRaster)
@@ -2396,7 +2394,7 @@ bool Project::interpolationDemLocalDetrending(meteoVariable myVar, const Crit3DT
                     getProxyValuesXY(x, y, &interpolationSettings, proxyValues);
 
                     std::vector <Crit3DInterpolationDataPoint> subsetInterpolationPoints;
-                    localSelection(interpolationPoints, subsetInterpolationPoints, x, y,outputPoints[i].z, interpolationSettings);
+                    localSelection(interpolationPoints, subsetInterpolationPoints, x, y, interpolationSettings);
                     if (! preInterpolation(subsetInterpolationPoints, &interpolationSettings, meteoSettings, &climateParameters,
                                           meteoPoints, nrMeteoPoints, myVar, myTime, errorStdStr))
                     {
@@ -2418,7 +2416,6 @@ bool Project::interpolationDemLocalDetrending(meteoVariable myVar, const Crit3DT
     {
         gis::Crit3DRasterHeader myHeader = *(DEM.header);
         myRaster->initializeGrid(myHeader);
-        myRaster->initializeParameters(myHeader);
 
         if(!setHeightTemperatureRange(myCombination, &interpolationSettings))
         {
@@ -2430,19 +2427,15 @@ bool Project::interpolationDemLocalDetrending(meteoVariable myVar, const Crit3DT
         {
             for (long col = 0; col < myHeader.nrCols; col++)
             {
-                interpolationSettings.setProxiesComplete(true);
-
                 float z = DEM.value[row][col];
                 if (! isEqual(z, myHeader.flag))
                 {
                     gis::getUtmXYFromRowCol(myHeader, row, col, &x, &y);
 
-                    if (! getProxyValuesXY(x, y, &interpolationSettings, proxyValues)) interpolationSettings.setProxiesComplete(false);
+                    getProxyValuesXY(x, y, &interpolationSettings, proxyValues);
 
                     std::vector <Crit3DInterpolationDataPoint> subsetInterpolationPoints;
-                    localSelection(interpolationPoints, subsetInterpolationPoints, x, y, z, interpolationSettings);
-                     if (interpolationSettings.getUseLocalDetrending())
-                        interpolationSettings.setFittingParameters(myRaster->prepareParameters(row, col, myCombination.getActiveList()));
+                    localSelection(interpolationPoints, subsetInterpolationPoints, x, y, interpolationSettings);
                     if (! preInterpolation(subsetInterpolationPoints, &interpolationSettings, meteoSettings, &climateParameters,
                                           meteoPoints, nrMeteoPoints, myVar, myTime, errorStdStr))
                     {
@@ -2452,7 +2445,6 @@ bool Project::interpolationDemLocalDetrending(meteoVariable myVar, const Crit3DT
 
                     myRaster->value[row][col] = interpolate(subsetInterpolationPoints, &interpolationSettings, meteoSettings,
                                                             myVar, x, y, z, proxyValues, true);
-                    myRaster->setParametersForRowCol(row, col, interpolationSettings.getFittingParameters());
                     interpolationSettings.clearFitting();
                     interpolationSettings.setCurrentCombination(interpolationSettings.getSelectedCombination());
                 }
@@ -2687,7 +2679,6 @@ bool Project::interpolationGrid(meteoVariable myVar, const Crit3DTime& myTime)
     }
     else
     {
-        meteoGridDbHandler->meteoGrid()->dataMeteoGrid.initializeParametersLatLonHeader(meteoGridDbHandler->meteoGrid()->gridStructure().header());
         myCombination = interpolationSettings.getSelectedCombination();
         interpolationSettings.setCurrentCombination(myCombination);
     }
@@ -2723,7 +2714,6 @@ bool Project::interpolationGrid(meteoVariable myVar, const Crit3DTime& myTime)
                 myY = meteoGridDbHandler->meteoGrid()->meteoPoints()[row][col]->point.utm.y;
                 myZ = meteoGridDbHandler->meteoGrid()->meteoPoints()[row][col]->point.z;
 
-                interpolationSettings.setProxiesComplete(true);
                 if (getUseDetrendingVar(myVar))
                 {
                     proxyIndex = 0;
@@ -2739,8 +2729,6 @@ bool Project::interpolationGrid(meteoVariable myVar, const Crit3DTime& myTime)
                                 float proxyValue = gis::getValueFromXY(*meteoGridProxies[proxyIndex], myX, myY);
                                 if (proxyValue != meteoGridProxies[proxyIndex]->header->flag)
                                     proxyValues[i] = double(proxyValue);
-                                else
-                                    interpolationSettings.setProxiesComplete(false);
                             }
 
                             proxyIndex++;
@@ -2749,8 +2737,7 @@ bool Project::interpolationGrid(meteoVariable myVar, const Crit3DTime& myTime)
                     if (interpolationSettings.getUseLocalDetrending())
                     {
                         std::vector <Crit3DInterpolationDataPoint> subsetInterpolationPoints;
-                        localSelection(interpolationPoints, subsetInterpolationPoints, myX, myY, myZ, interpolationSettings);
-                        interpolationSettings.setFittingParameters(meteoGridDbHandler->meteoGrid()->dataMeteoGrid.prepareParameters(row, col, myCombination.getActiveList()));
+                        localSelection(interpolationPoints, subsetInterpolationPoints, myX, myY, interpolationSettings);
                         if (! preInterpolation(subsetInterpolationPoints, &interpolationSettings, meteoSettings,
                                               &climateParameters, meteoPoints, nrMeteoPoints, myVar, myTime, errorStdStr))
                         {
@@ -2759,7 +2746,6 @@ bool Project::interpolationGrid(meteoVariable myVar, const Crit3DTime& myTime)
                         }
 
                         interpolatedValue = interpolate(subsetInterpolationPoints, &interpolationSettings, meteoSettings, myVar, myX, myY, myZ, proxyValues, true);
-                        meteoGridDbHandler->meteoGrid()->dataMeteoGrid.setParametersForRowCol(row, col, interpolationSettings.getFittingParameters());
                     }
                     else
                     {
@@ -3077,7 +3063,9 @@ void Project::saveProxies()
             if (myProxy->getProxyField() != "") parametersSettings->setValue("field", QString::fromStdString(myProxy->getProxyField()));
             if (myProxy->getGridName() != "") parametersSettings->setValue("raster", getRelativePath(QString::fromStdString(myProxy->getGridName())));
             if (myProxy->getStdDevThreshold() != NODATA) parametersSettings->setValue("stddev_threshold", QString::number(myProxy->getStdDevThreshold()));
-            if (myProxy->getFittingParametersRange().size() > 0) parametersSettings->setValue("fitting_parameters", DoubleVectorToStringList(myProxy->getFittingParametersRange()));
+            if (myProxy->getFittingParametersRange().size() > 0) parametersSettings->setValue("fitting_parameters_min", DoubleVectorToStringList(myProxy->getFittingParametersMin()));
+            if (myProxy->getFittingParametersRange().size() > 0) parametersSettings->setValue("fitting_parameters_max", DoubleVectorToStringList(myProxy->getFittingParametersMax()));
+            if (myProxy->getFittingFirstGuess().size() > 0) parametersSettings->setValue("fitting_first_guess", IntVectorToStringList(myProxy->getFittingFirstGuess()));
             if (getProxyPragaName(myProxy->getName()) == proxyHeight && myProxy->getFittingFunctionName() != noFunction) parametersSettings->setValue("fitting_function", QString::fromStdString(getKeyStringElevationFunction(myProxy->getFittingFunctionName())));
         parametersSettings->endGroup();
     }
@@ -3696,25 +3684,27 @@ void Project::showProxyGraph()
     return;
 }
 
-void Project::showLocalProxyGraph(gis::Crit3DGeoPoint myPoint, gis::Crit3DRasterGrid *myDataRaster)
+void Project::showLocalProxyGraph(gis::Crit3DGeoPoint myPoint)
 {
     gis::Crit3DUtmPoint myUtm;
     gis::getUtmFromLatLon(this->gisSettings.utmZone, myPoint, &myUtm);
+    double myZGrid = -9999;
+    double myZDEM = -9999;
 
-    int row, col;
-    std::vector<std::vector<double>> parametersSettings;
-    if (myDataRaster->isLoaded && !myDataRaster->singleCell.empty())
+    if (meteoGridLoaded)
     {
-        gis::getRowColFromXY(*(myDataRaster->header), myUtm, &row, &col);
-        parametersSettings = myDataRaster->getParametersFromRowCol(row, col);
+        //TODO
     }
-    if (this->meteoGridLoaded && !this->meteoGridDbHandler->meteoGrid()->dataMeteoGrid.singleCell.empty())
+    if (DEM.isLoaded)
     {
-        gis::getRowColFromLonLat(meteoGridDbHandler->meteoGrid()->gridStructure().header(), myPoint.longitude, myPoint.latitude, &row, &col);
-        parametersSettings = meteoGridDbHandler->meteoGrid()->dataMeteoGrid.getParametersFromRowCol(row, col);
+        int row, col;
+        DEM.getRowCol(myUtm.x, myUtm.y, row, col);
+        myZDEM = DEM.value[row][col];
     }
 
-    localProxyWidget = new Crit3DLocalProxyWidget(myUtm.x, myUtm.y, parametersSettings, this->gisSettings, &interpolationSettings, meteoPoints, nrMeteoPoints, currentVariable, currentFrequency, currentDate, currentHour, quality, &qualityInterpolationSettings, meteoSettings, &climateParameters, checkSpatialQuality);
+
+
+    localProxyWidget = new Crit3DLocalProxyWidget(myUtm.x, myUtm.y, myZDEM, myZGrid, this->gisSettings, &interpolationSettings, meteoPoints, nrMeteoPoints, currentVariable, currentFrequency, currentDate, currentHour, quality, &qualityInterpolationSettings, meteoSettings, &climateParameters, checkSpatialQuality);
     return;
 }
 

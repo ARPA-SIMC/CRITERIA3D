@@ -1,7 +1,8 @@
 #ifndef PROJECT_H
 #define PROJECT_H
 
-    #ifndef QUALITY_H
+#include <deque>
+#ifndef QUALITY_H
         #include "quality.h"
     #endif
     #ifndef GIS_H
@@ -181,7 +182,7 @@
 
         void setProxyDEM();
         void clearProxyDEM();
-        bool checkProxy(Crit3DProxy &myProxy, QString *error);
+        bool checkProxy(Crit3DProxy &myProxy, QString *error, bool isActive);
         bool addProxyToProject(std::vector <Crit3DProxy> proxyList, std::deque <bool> proxyActive, std::vector <int> proxyOrder);
         void addProxyGridSeries(QString name_, std::vector <QString> gridNames, std::vector <unsigned> gridYears);
         void setCurrentDate(QDate myDate);
@@ -283,7 +284,7 @@
                                   double altitude, std::string lapseRateCode, bool isAppend);
         void showMeteoWidgetGrid(std::string idCell, bool isAppend);
         void showProxyGraph();
-        void showLocalProxyGraph(gis::Crit3DGeoPoint myPoint, gis::Crit3DRasterGrid *myDataRaster);
+        void showLocalProxyGraph(gis::Crit3DGeoPoint myPoint);
 
         void clearSelectedPoints();
         void clearSelectedOutputPoints();

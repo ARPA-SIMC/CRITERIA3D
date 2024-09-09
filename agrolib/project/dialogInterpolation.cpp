@@ -519,7 +519,7 @@ bool ProxyDialog::checkProxies(QString *error)
 
     for (unsigned i=0; i < _proxy.size(); i++)
     {
-        if (!_project->checkProxy(_proxy[i], error))
+        if (!_project->checkProxy(_proxy[i], error, _project->interpolationSettings.getSelectedCombination().isProxyActive(i)))
             return false;
 
         table_ = _proxy[i].getProxyTable();

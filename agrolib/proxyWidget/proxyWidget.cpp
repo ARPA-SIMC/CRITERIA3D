@@ -5,6 +5,7 @@
 #include "spatialControl.h"
 #include "commonConstants.h"
 #include "math.h"
+#include "furtherMathFunctions.h"
 
 #include <QLayout>
 #include <QDate>
@@ -412,12 +413,12 @@ void Crit3DProxyWidget::modelLRClicked(int toggled)
     float xMax;
     if (toggled && outInterpolationPoints.size() != 0)
     {
+        float regressionSlope = NODATA;
+
         if (comboAxisX.currentText() == "elevation")
         {
             xMin = getZmin(outInterpolationPoints);
             xMax = getZmax(outInterpolationPoints);
-
-            float regressionSlope;
 
             if (! interpolationSettings->getUseMultipleDetrending())
             {
@@ -466,42 +467,75 @@ void Crit3DProxyWidget::modelLRClicked(int toggled)
                     point.setY(myY);
                     point_vector.append(point);
                 }
-            }
-            /*else
-            {
-                multipleDetrending()
-            }*/
 
-            if (interpolationSettings->getProxy(proxyPos)->getRegressionR2() != NODATA)
-            {
-                r2.setText(QString("%1").arg(interpolationSettings->getProxy(proxyPos)->getRegressionR2(), 0, 'f', 2));
+                if (interpolationSettings->getProxy(proxyPos)->getRegressionR2() != NODATA)
+                {
+                    r2.setText(QString("%1").arg(interpolationSettings->getProxy(proxyPos)->getRegressionR2(), 0, 'f', 2));
+                }
+                lapseRate.setText(QString("%1").arg(regressionSlope*1000, 0, 'f', 2));
             }
-            lapseRate.setText(QString("%1").arg(regressionSlope*1000, 0, 'f', 2));
+            else if (interpolationSettings->getUseMultipleDetrending() && ! interpolationSettings->getUseLocalDetrending())
+            {
+                std::string errorStr;
+
+                setHeightTemperatureRange(interpolationSettings->getSelectedCombination(), interpolationSettings);
+                interpolationSettings->setCurrentCombination(interpolationSettings->getSelectedCombination());
+                interpolationSettings->clearFitting();
+                if (! multipleDetrendingElevationFitting(proxyPos, outInterpolationPoints, interpolationSettings, myVar, errorStr)) return;
+
+                std::vector<std::vector<double>> parameters = interpolationSettings->getFittingParameters();
+
+                if (!parameters.empty() && !parameters.front().empty())
+                {
+                    std::vector <double> xVector;
+                    for (int m = xMin; m < xMax; m += 5)
+                        xVector.push_back(m);
+
+                    for (int p = 0; p < int(xVector.size()); p++)
+                    {
+                        point.setX(xVector[p]);
+                        if (parameters.front().size() == 4)
+                            point.setY(lapseRatePiecewise_two(xVector[p], parameters.front()));
+                        else if (parameters.front().size() == 5)
+                            point.setY(lapseRatePiecewise_three(xVector[p], parameters.front()));
+                        else if (parameters.front().size() == 6)
+                            point.setY(lapseRatePiecewise_three_free(xVector[p], parameters.front()));
+                        point_vector.append(point);
+                    }
+                }
+            }
         }
         else
         {
-            xMin = getProxyMinValue(outInterpolationPoints, proxyPos);
-            xMax = getProxyMaxValue(outInterpolationPoints, proxyPos);
-            bool isZeroIntercept = false;
-            if (!regressionGeneric(outInterpolationPoints, interpolationSettings, proxyPos, isZeroIntercept))
+            if (! interpolationSettings->getUseMultipleDetrending())
             {
-                return;
-            }
-            float regressionSlope = interpolationSettings->getProxy(proxyPos)->getRegressionSlope();
-            float regressionIntercept = interpolationSettings->getProxy(proxyPos)->getRegressionIntercept();
-            point.setX(xMin);
-            point.setY(regressionIntercept + regressionSlope * xMin);
-            point_vector.append(point);
-            point.setX(xMax);
-            point.setY(regressionIntercept + regressionSlope * xMax);
-            point_vector.append(point);
+                xMin = getProxyMinValue(outInterpolationPoints, proxyPos);
+                xMax = getProxyMaxValue(outInterpolationPoints, proxyPos);
+                bool isZeroIntercept = false;
+                if (!regressionGeneric(outInterpolationPoints, interpolationSettings, proxyPos, isZeroIntercept))
+                {
+                    return;
+                }
+                float regressionSlope = interpolationSettings->getProxy(proxyPos)->getRegressionSlope();
+                float regressionIntercept = interpolationSettings->getProxy(proxyPos)->getRegressionIntercept();
+                point.setX(xMin);
+                point.setY(regressionIntercept + regressionSlope * xMin);
+                point_vector.append(point);
+                point.setX(xMax);
+                point.setY(regressionIntercept + regressionSlope * xMax);
+                point_vector.append(point);
 
-            float regressionR2 = interpolationSettings->getProxy(proxyPos)->getRegressionR2();
-            if (regressionR2 != NODATA)
-            {
-                r2.setText(QString("%1").arg(regressionR2, 0, 'f', 2));
+                float regressionR2 = interpolationSettings->getProxy(proxyPos)->getRegressionR2();
+                if (regressionR2 != NODATA)
+                {
+                    r2.setText(QString("%1").arg(regressionR2, 0, 'f', 2));
+                }
+                lapseRate.setText(QString("%1").arg(regressionSlope, 0, 'f', 2));
             }
-            lapseRate.setText(QString("%1").arg(regressionSlope, 0, 'f', 2));
+            else if (interpolationSettings->getUseMultipleDetrending() && !interpolationSettings->getUseLocalDetrending())
+            {
+                //TODO
+            }
         }
         chartView->drawModelLapseRate(point_vector);
     }

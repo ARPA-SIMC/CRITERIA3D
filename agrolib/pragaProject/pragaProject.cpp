@@ -2026,21 +2026,21 @@ bool PragaProject::timeAggregateGrid(QDate dateIni, QDate dateFin, QList <meteoV
     // check variables
     if (variables.size() == 0)
     {
-        logError("No variable");
+        errorString = "No variable";
         return false;
     }
 
     // check meteo grid
     if (! meteoGridLoaded)
     {
-        logError("No meteo grid");
+        errorString = "No meteo grid";
         return false;
     }
 
     // check dates
     if (dateIni.isNull() || dateFin.isNull() || dateIni > dateFin)
     {
-        logError("Wrong period");
+        errorString = "Wrong period";
         return false;
     }
 
@@ -2072,14 +2072,14 @@ bool PragaProject::hourlyDerivedVariablesGrid(QDate first, QDate last, bool load
     // check meteo grid
     if (! meteoGridLoaded)
     {
-        logError("No meteo grid");
+        errorString = "No meteo grid";
         return false;
     }
 
     // check dates
     if (first.isNull() || last.isNull() || first > last)
     {
-        logError("Wrong period");
+        errorString = "Wrong period";
         return false;
     }
 
@@ -2366,28 +2366,28 @@ bool PragaProject::interpolationMeteoGridPeriod(QDate dateIni, QDate dateFin, QL
     // check variables
     if (variables.size() == 0)
     {
-        logError("No variable");
+        errorString = "No variable";
         return false;
     }
 
     // check meteo point
     if (! meteoPointsLoaded || nrMeteoPoints == 0)
     {
-        logError("No meteo points");
+        errorString = "No meteo points";
         return false;
     }
 
     // check meteo grid
     if (! meteoGridLoaded)
     {
-        logError("No meteo grid");
+        errorString = "No meteo grid";
         return false;
     }
 
     // check dates
     if (dateIni.isNull() || dateFin.isNull() || dateIni > dateFin)
     {
-        logError("Wrong period");
+        errorString = "Wrong period";
         return false;
     }
 
@@ -2413,7 +2413,7 @@ bool PragaProject::interpolationMeteoGridPeriod(QDate dateIni, QDate dateFin, QL
 
         if (freq == noFrequency)
         {
-            logError("Unknown variable: " + QString::fromStdString(getMeteoVarName(myVar)));
+            errorString = "Unknown variable: " + QString::fromStdString(getMeteoVarName(myVar));
             return false;
         }
         else if (freq == hourly)
@@ -2646,6 +2646,106 @@ bool PragaProject::interpolationMeteoGridPeriod(QDate dateIni, QDate dateFin, QL
     return true;
 }
 
+bool PragaProject::interpolationCrossValidationPeriod(QDate dateIni, QDate dateFin, meteoVariable myVar, QString filename)
+{
+    // check meteo point
+    if (! meteoPointsLoaded || nrMeteoPoints == 0)
+    {
+        errorString = "No meteo points";
+        return false;
+    }
+
+    // check dates
+    if (dateIni.isNull() || dateFin.isNull() || dateIni > dateFin)
+    {
+        errorString = "Wrong period";
+        return false;
+    }
+
+    // available variables for cv
+    if ((myVar == airRelHumidity && interpolationSettings.getUseDewPoint()) ||
+        myVar == windVectorDirection ||
+        myVar == windVectorIntensity)
+    {
+        errorString = "Cross validation not available for variable: " + QString::fromStdString(getVariableString(myVar));
+        return false;
+    }
+
+    // order variables for derived computation
+    std::string errString;
+    QString myError;
+    int myHour;
+    QDate myDate = dateIni;
+    frequencyType myFreq = getVarFrequency(myVar);
+
+    if (interpolationSettings.getUseTD())
+    {
+        logInfoGUI("Loading topographic distance maps...");
+        if (! loadTopographicDistanceMaps(true, false))
+            return false;
+    }
+
+    // loading point data
+    logInfoGUI("Loading meteo points data from " + dateIni.addDays(-1).toString("yyyy-MM-dd") + " to " + dateFin.toString("yyyy-MM-dd"));
+    // load one day before (for transmissivity)
+    if (! loadMeteoPointsData(dateIni, dateFin, myFreq == hourly, myFreq == daily, false))
+        return false;
+
+    crossValidationStatistics stats;
+    QFile file(filename);
+    if (! file.open(QIODevice::WriteOnly | QIODevice::Text))
+    {
+        myError = "Error writing to file " + filename;
+        return false;
+    }
+
+    Crit3DTime myTime;
+
+    QTextStream cvOutput(&file);
+    cvOutput << "Time,MAE,MBE,RMSE,CRE,R2" << '\n';
+
+    logInfoGUI("Cross validating " + QString::fromStdString(getMeteoVarName(myVar)) + " from " + dateIni.toString("yyyy-MM-dd") + " to " + dateFin.toString("yyyy-MM-dd"));
+    while (myDate <= dateFin)
+    {
+        logInfoGUI(myDate.toString("yyyy-MM-dd"));
+
+        if (getVarFrequency(myVar) == hourly)
+        {
+            for (myHour = 1; myHour <= 24; myHour++)
+            {
+                myTime = getCrit3DTime(myDate, myHour);
+
+                if (interpolationCv(myVar, myTime, &stats))
+                {
+                    cvOutput << getQDateTime(myTime).toString();
+                    cvOutput << "," << stats.getMeanAbsoluteError();
+                    cvOutput << "," << stats.getMeanBiasError();
+                    cvOutput << "," << stats.getRootMeanSquareError();
+                    cvOutput << "," << stats.getCompoundRelativeError();
+                    cvOutput << "," << stats.getR2() << '\n';
+                }
+            }
+        }
+        else
+        {
+            myTime = getCrit3DTime(myDate, 0);
+
+            if (interpolationCv(myVar, myTime, &stats))
+            {
+                cvOutput << getQDateTime(myTime).date().toString();
+                cvOutput << "," << stats.getMeanAbsoluteError();
+                cvOutput << "," << stats.getMeanBiasError();
+                cvOutput << "," << stats.getRootMeanSquareError();
+                cvOutput << "," << stats.getCompoundRelativeError();
+                cvOutput << "," << stats.getR2() << '\n';
+            }
+        }
+
+        myDate = myDate.addDays(1);
+    }
+
+    return true;
+}
 
 bool PragaProject::interpolationMeteoGrid(meteoVariable myVar, frequencyType myFrequency, const Crit3DTime& myTime)
 {
@@ -2661,7 +2761,6 @@ bool PragaProject::interpolationMeteoGrid(meteoVariable myVar, frequencyType myF
         }
         else
         {
-
             if (! interpolationGrid(myVar, myTime))
                 return false;
         }
@@ -3873,14 +3972,14 @@ bool PragaProject::monthlyAggregateVariablesGrid(const QDate &firstDate, const Q
     // check meteo grid
     if (! meteoGridLoaded)
     {
-        logError("No meteo grid");
+        errorString = "No meteo grid";
         return false;
     }
 
     // check dates
     if (firstDate.isNull() || lastDate.isNull() || firstDate > lastDate)
     {
-        logError("Wrong period");
+        errorString = "Wrong period";
         return false;
     }
 
