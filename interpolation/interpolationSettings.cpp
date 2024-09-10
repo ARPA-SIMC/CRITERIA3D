@@ -329,7 +329,7 @@ TFittingFunction Crit3DInterpolationSettings::getChosenElevationFunction()
 
 void Crit3DInterpolationSettings::setChosenElevationFunction(TFittingFunction chosenFunction)
 {
-    const double H0_MIN = -200; //height of inversion point (double piecewise) or first inversion point (triple piecewise)
+    const double H0_MIN = -350; //height of single inversion point (double piecewise) or first inversion point (triple piecewise)
     const double H0_MAX = 2500;
     const double DELTA_MIN = 300; //height difference between inversion points (for triple piecewise only)
     const double DELTA_MAX = 1000;

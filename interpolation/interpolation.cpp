@@ -1094,7 +1094,7 @@ void localSelection(vector <Crit3DInterpolationDataPoint> &inputPoints, vector <
         inputPoints[i].distance = gis::computeDistance(x, y, float((inputPoints[i]).point->utm.x), float((inputPoints[i]).point->utm.y));
 
     unsigned int nrValid = 0;
-    float stepRadius = 2000;           // [m]
+    float stepRadius = 1000;           // [m]
     float r0 = 0;                       // [m]
     float r1 = stepRadius;              // [m]
     unsigned int i;
@@ -1103,7 +1103,6 @@ void localSelection(vector <Crit3DInterpolationDataPoint> &inputPoints, vector <
     int maxDistance = 0;
     while (nrValid < minPoints || (mySettings.getUseLapseRateCode() && nrPrimaries < minPoints))
     {
-        maxDistance = 0;
         for (i=0; i < inputPoints.size(); i++)
         {
             if (inputPoints[i].distance != NODATA && inputPoints[i].distance > r0 && inputPoints[i].distance <= r1)
@@ -1124,8 +1123,8 @@ void localSelection(vector <Crit3DInterpolationDataPoint> &inputPoints, vector <
     if (maxDistance != 0)
         for (i=0; i< selectedPoints.size(); i++)
         {
-            //selectedPoints[i].regressionWeight = MAXVALUE(1 - selectedPoints[i].distance / maxDistance, EPSILON);
-            selectedPoints[i].regressionWeight = MAXVALUE(std::exp(-selectedPoints[i].distance*selectedPoints[i].distance/((0.8*maxDistance))),EPSILON);
+            selectedPoints[i].regressionWeight = MAXVALUE(1 - selectedPoints[i].distance / maxDistance, EPSILON);
+            //selectedPoints[i].regressionWeight = MAXVALUE(std::exp(-selectedPoints[i].distance*selectedPoints[i].distance/((0.5*maxDistance)*(0.5*maxDistance))),EPSILON);
             //selectedPoints[i].regressionWeight = float(MAXVALUE((-(1/std::pow(maxDistance,4)*(std::pow(selectedPoints[i].distance,4)))+1),EPSILON));
             //selectedPoints[i].regressionWeight = 1;
         }
