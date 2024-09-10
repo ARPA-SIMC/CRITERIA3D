@@ -1,13 +1,11 @@
 #include <QFileInfo>
 #include <string.h>
-#include <ogrsf_frmts.h>
-#include "ogr_spatialref.h"
-#include <gdal_priv.h>
-#include <gdal_utils.h>
-#include <QDebug>
 
 #include "gdalShapeFunctions.h"
 #include "gdalRasterFunctions.h"
+
+#include <ogrsf_frmts.h>
+#include <gdal_utils.h>
 
 
 bool gdalShapeToRaster(QString shapeFileName, QString shapeField, QString resolution,
