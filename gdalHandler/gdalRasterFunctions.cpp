@@ -8,6 +8,7 @@
 
 #include <QFileInfo>
 #include <QString>
+#include <QDebug>
 
 
 /*! readGdalRaster
