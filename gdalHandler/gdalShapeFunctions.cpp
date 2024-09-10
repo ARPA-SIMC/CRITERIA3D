@@ -1,5 +1,6 @@
 #include <QFileInfo>
 #include <string.h>
+#include <iostream>
 
 #include "gdalShapeFunctions.h"
 #include "gdalRasterFunctions.h"
@@ -129,8 +130,8 @@ bool gdalShapeToRaster(QString shapeFileName, QString shapeField, QString resolu
     {
         if (! gdalExportPng(inputDataset, pngFileName, pngProjection, errorStr))
         {
-            qDebug() << "ERROR: failed to write" << pngFileName;
-            qDebug() << errorStr;
+            std::cout << "ERROR: failed to write" << pngFileName.toStdString();
+            std::cout  << errorStr.toStdString();
             errorStr = "";
         }
     }
