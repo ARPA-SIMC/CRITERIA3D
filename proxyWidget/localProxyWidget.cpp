@@ -508,7 +508,7 @@ void Crit3DLocalProxyWidget::modelLRClicked(int toggled)
         else
         {
             //TODO: local proxy graph for other proxies
-            interpolationSettings->setCurrentCombination(interpolationSettings->getSelectedCombination());
+            /*interpolationSettings->setCurrentCombination(interpolationSettings->getSelectedCombination());
             interpolationSettings->clearFitting();
             std::string errorStr;
             if (! multipleDetrendingOtherProxiesFitting(proxyPos, subsetInterpolationPoints, interpolationSettings, myVar, errorStr)) return;
@@ -516,6 +516,7 @@ void Crit3DLocalProxyWidget::modelLRClicked(int toggled)
             std::vector<std::vector<double>> parameters = interpolationSettings->getFittingParameters();
             if (!interpolationSettings->getFittingParameters().empty() && !interpolationSettings->getFittingFunction().empty())
                 detrendingOtherProxies(3, outInterpolationPoints, interpolationSettings);
+            */
 
         }
         chartView->drawModelLapseRate(point_vector);
