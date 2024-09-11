@@ -1478,19 +1478,19 @@ bool setHeightTemperatureRange(Crit3DProxyCombination myCombination, Crit3DInter
                     if (mySettings->getChosenElevationFunction() == piecewiseTwo)
                     {
                         tempParam[1] = MIN_T-2;
-                        tempParam[5] = MAX_T+2;
+                        tempParam[5] = MAX_T+6;
                         mySettings->addFittingFunction(lapseRatePiecewise_two);
                     }
                     else if (mySettings->getChosenElevationFunction() == piecewiseThreeFree)
                     {
                         tempParam[1] = MIN_T-2;
-                        tempParam[7] = MAX_T+2;
+                        tempParam[7] = MAX_T+6;
                         mySettings->addFittingFunction(lapseRatePiecewise_three_free);
                     }
                     else if (mySettings->getChosenElevationFunction() == piecewiseThree)
                     {
                         tempParam[1] = MIN_T-2;
-                        tempParam[6] = MAX_T+2;
+                        tempParam[6] = MAX_T+6;
                         mySettings->addFittingFunction(lapseRatePiecewise_three);
                     }
                     mySettings->getProxy(i)->setFittingParametersRange(tempParam);
