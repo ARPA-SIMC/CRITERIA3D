@@ -210,7 +210,7 @@ int CriteriaOutputProject::initializeProject(const QString &settingsFileName, co
         return ERROR_SETTINGS_WRONGFILENAME;
     }
 
-    if (!readSettings())
+    if (! readSettings())
     {
         projectError = "Read settings: " + projectError;
         return ERROR_SETTINGS_MISSINGDATA;
