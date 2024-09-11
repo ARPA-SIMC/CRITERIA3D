@@ -1,10 +1,10 @@
 #include "gdalRasterFunctions.h"
 #include "commonConstants.h"
 
-#include <gdalwarper.h>
-
 #include <iostream>
 #include <cmath>
+
+#include <gdalwarper.h>
 
 #include <QFileInfo>
 #include <QString>
@@ -15,10 +15,10 @@
  * \brief open a raster file with GDAL library
  * \return GDALDataset
  */
-bool readGdalRaster(QString fileName, gis::Crit3DRasterGrid* myRaster, int &utmZone, QString &error)
+bool readGdalRaster(QString fileName, gis::Crit3DRasterGrid* rasterPointer, int &utmZone, QString &error)
 {
-    // check
-    if (myRaster == nullptr) return false;
+    // check parameters
+    if (rasterPointer == nullptr) return false;
     if (fileName == "") return false;
 
     GDALDataset* dataset = (GDALDataset*) GDALOpen(fileName.toStdString().data(), GA_ReadOnly);
@@ -28,7 +28,7 @@ bool readGdalRaster(QString fileName, gis::Crit3DRasterGrid* myRaster, int &utmZ
         return false;
     }
 
-    bool myResult = convertGdalRaster(dataset, myRaster, utmZone, error);
+    bool myResult = convertGdalRaster(dataset, rasterPointer, utmZone, error);
     GDALClose(dataset);
 
     return myResult;

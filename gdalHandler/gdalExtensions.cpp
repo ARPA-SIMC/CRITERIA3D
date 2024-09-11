@@ -4,9 +4,9 @@
  * https://github.com/mogasw/rasterix/
 */
 
-#include "gdalExtensions.h"
-
 #include <cstring>
+
+#include "gdalExtensions.h"
 #include <gdal_priv.h>
 
 
