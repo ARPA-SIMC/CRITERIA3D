@@ -34,7 +34,7 @@ bool Crit3DMeteoGridDbHandler::parseXMLFile(QString xmlFileName, QDomDocument* x
     if (!myFile.open(QIODevice::ReadOnly))
     {
         *error = "Open XML failed:\n" + xmlFileName + "\n" + myFile.errorString();
-        return (false);
+        return false;
     }
 
     QString errorStr;
@@ -46,7 +46,7 @@ bool Crit3DMeteoGridDbHandler::parseXMLFile(QString xmlFileName, QDomDocument* x
                 + " - Column: " + QString::number(myErrColumn)
                 + "\n" + errorStr;
         myFile.close();
-        return(false);
+        return false;
     }
 
     myFile.close();
@@ -1908,8 +1908,9 @@ bool Crit3DMeteoGridDbHandler::loadGridDailyDataEnsemble(QString &errorStr, QStr
     int numberOfDays = first.daysTo(last) + 1;
     _meteoGrid->meteoPointPointer(row,col)->initializeObsDataD(numberOfDays, getCrit3DDate(first));
 
-    QString statement = QString("SELECT * FROM `%1` WHERE `%2`>= '%3' AND `%2`<= '%4' AND MemberNr = '%5' ORDER BY `%2`").arg(tableD, _tableDaily.fieldTime).arg(first.toString("yyyy-MM-dd")).arg(last.toString("yyyy-MM-dd")).arg(memberNr);
-    if( !qry.exec(statement) )
+    QString statement = QString("SELECT * FROM `%1` WHERE `%2`>= '%3' AND `%2`<= '%4' AND MemberNr = '%5' ORDER BY `%2`")
+                            .arg(tableD, _tableDaily.fieldTime, first.toString("yyyy-MM-dd"), last.toString("yyyy-MM-dd")).arg(memberNr);
+    if(! qry.exec(statement) )
     {
         errorStr = qry.lastError().text();
         return false;
@@ -2088,10 +2089,8 @@ bool Crit3DMeteoGridDbHandler::loadGridHourlyDataEnsemble(QString &errorStr, QSt
     int varCode;
     float value;
 
-    unsigned row;
-    unsigned col;
-
-    if (!_meteoGrid->findMeteoPointFromId(&row, &col, meteoPoint.toStdString()) )
+    unsigned row, col;
+    if (! _meteoGrid->findMeteoPointFromId(&row, &col, meteoPoint.toStdString()) )
     {
         errorStr = "Missing MeteoPoint id";
         return false;
@@ -2101,9 +2100,9 @@ bool Crit3DMeteoGridDbHandler::loadGridHourlyDataEnsemble(QString &errorStr, QSt
     _meteoGrid->meteoPointPointer(row, col)->initializeObsDataH(1, numberOfDays, getCrit3DDate(first.date()));
 
     QString statement = QString("SELECT * FROM `%1` WHERE `%2` >= '%3' AND `%2` <= '%4' AND MemberNr = '%5' ORDER BY `%2`")
-                                .arg(tableH, _tableHourly.fieldTime).arg(first.toString("yyyy-MM-dd hh:mm")).arg(last.toString("yyyy-MM-dd hh:mm")).arg(memberNr);
+                                .arg(tableH, _tableHourly.fieldTime, first.toString("yyyy-MM-dd hh:mm"), last.toString("yyyy-MM-dd hh:mm")).arg(memberNr);
 
-    if( !qry.exec(statement) )
+    if(! qry.exec(statement) )
     {
         errorStr = qry.lastError().text();
     }
@@ -2139,7 +2138,7 @@ bool Crit3DMeteoGridDbHandler::loadGridHourlyDataEnsemble(QString &errorStr, QSt
 }
 
 
-bool Crit3DMeteoGridDbHandler::loadGridHourlyDataFixedFields(QString &errorStr, QString meteoPoint, QDateTime first, QDateTime last)
+bool Crit3DMeteoGridDbHandler::loadGridHourlyDataFixedFields(QString &errorStr, const QString &meteoPoint, const QDateTime &first, const QDateTime &last)
 {
     errorStr = "";
 
@@ -2149,10 +2148,8 @@ bool Crit3DMeteoGridDbHandler::loadGridHourlyDataFixedFields(QString &errorStr, 
     int varCode;
     float value;
 
-    unsigned row;
-    unsigned col;
-
-    if (!_meteoGrid->findMeteoPointFromId(&row, &col, meteoPoint.toStdString()) )
+    unsigned row, col;
+    if (! _meteoGrid->findMeteoPointFromId(&row, &col, meteoPoint.toStdString()) )
     {
         errorStr = "Missing MeteoPoint id";
         return false;
@@ -2161,8 +2158,9 @@ bool Crit3DMeteoGridDbHandler::loadGridHourlyDataFixedFields(QString &errorStr, 
     int numberOfDays = first.date().daysTo(last.date());
     _meteoGrid->meteoPointPointer(row, col)->initializeObsDataH(1, numberOfDays, getCrit3DDate(first.date()));
 
-    QString statement = QString("SELECT * FROM `%1` WHERE `%2` >= '%3' AND `%2`<= '%4' ORDER BY `%2`").arg(tableH, _tableHourly.fieldTime).arg(first.toString("yyyy-MM-dd hh:mm")).arg(last.toString("yyyy-MM-dd hh:mm"));
-    if( !qry.exec(statement) )
+    QString statement = QString("SELECT * FROM `%1` WHERE `%2` >= '%3' AND `%2`<= '%4' ORDER BY `%2`")
+                            .arg(tableH, _tableHourly.fieldTime, first.toString("yyyy-MM-dd hh:mm"), last.toString("yyyy-MM-dd hh:mm"));
+    if(! qry.exec(statement) )
     {
         errorStr = qry.lastError().text();
     }
@@ -2189,9 +2187,7 @@ bool Crit3DMeteoGridDbHandler::loadGridHourlyDataFixedFields(QString &errorStr, 
                 if (! _meteoGrid->meteoPointPointer(row,col)->setMeteoPointValueH(getCrit3DDate(date.date()), date.time().hour(), date.time().minute(), variable, value))
                     return false;
             }
-
         }
-
     }
 
     return true;
