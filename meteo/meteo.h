@@ -101,7 +101,7 @@
                     snowWaterEquivalent, snowFall, snowSurfaceTemperature, snowInternalEnergy, snowSurfaceEnergy,
                     snowAge, snowLiquidWaterContent, snowMelt, sensibleHeat, latentHeat,
                     dailyWaterTableDepth, leafAreaIndex,
-                    anomaly, elaboration, noMeteoTerrain,
+                    anomaly, elaboration, cvResidual, noMeteoTerrain,
                     noMeteoVar};
 
 
