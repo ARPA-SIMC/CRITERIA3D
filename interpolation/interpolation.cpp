@@ -1458,10 +1458,12 @@ bool proxyValidityWeighted(std::vector <Crit3DInterpolationDataPoint> &myPoints,
         return true;
 }
 
-bool setHeightTemperatureRange(Crit3DProxyCombination myCombination, Crit3DInterpolationSettings* mySettings)
+bool setMultipleDetrendingHeightTemperatureRange(Crit3DInterpolationSettings* mySettings)
 {
     if (mySettings->getPointsRange().empty() || !mySettings->getUseMultipleDetrending())
         return 0;
+
+    Crit3DProxyCombination myCombination = mySettings->getSelectedCombination();
 
     for (unsigned i=0; i < myCombination.getProxySize(); i++)
         if (myCombination.isProxyActive(i) == true)
@@ -2155,7 +2157,7 @@ bool preInterpolation(std::vector <Crit3DInterpolationDataPoint> &myPoints, Crit
         if (mySettings->getUseMultipleDetrending())
         {
             if (!mySettings->getUseLocalDetrending())
-                setHeightTemperatureRange(mySettings->getSelectedCombination(), mySettings);
+                setMultipleDetrendingHeightTemperatureRange(mySettings);
 
             if (! multipleDetrendingMain(myPoints, mySettings, myVar, errorStr)) return false;
         }

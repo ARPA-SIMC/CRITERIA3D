@@ -2296,6 +2296,12 @@ bool Project::interpolationCv(meteoVariable myVar, const Crit3DTime& myTime, cro
     }
     else
     {
+        if(!setMultipleDetrendingHeightTemperatureRange(&interpolationSettings))
+        {
+            errorString = "Error in function preInterpolation: \n couldn't set temperature ranges for height proxy.";
+            return false;
+        }
+
         if (! computeResidualsLocalDetrending(myVar, myTime, meteoPoints, nrMeteoPoints, interpolationPoints,
                                              &interpolationSettings, meteoSettings, &climateParameters, true, true))
             return false;
@@ -2417,7 +2423,7 @@ bool Project::interpolationDemLocalDetrending(meteoVariable myVar, const Crit3DT
         gis::Crit3DRasterHeader myHeader = *(DEM.header);
         myRaster->initializeGrid(myHeader);
 
-        if(!setHeightTemperatureRange(myCombination, &interpolationSettings))
+        if(!setMultipleDetrendingHeightTemperatureRange(&interpolationSettings))
         {
             errorString = "Error in function preInterpolation: \n couldn't set temperature ranges for height proxy.";
             return false;
@@ -2681,6 +2687,11 @@ bool Project::interpolationGrid(meteoVariable myVar, const Crit3DTime& myTime)
     {
         myCombination = interpolationSettings.getSelectedCombination();
         interpolationSettings.setCurrentCombination(myCombination);
+        if(!setMultipleDetrendingHeightTemperatureRange(&interpolationSettings))
+        {
+            errorString = "Error in function preInterpolation: \n couldn't set temperature ranges for height proxy.";
+            return false;
+        }
     }
 
     // proxy aggregation
@@ -2693,13 +2704,6 @@ bool Project::interpolationGrid(meteoVariable myVar, const Crit3DTime& myTime)
     float myX, myY, myZ;
     std::vector <double> proxyValues;
     proxyValues.resize(unsigned(interpolationSettings.getProxyNr()));
-
-    if (interpolationSettings.getUseLocalDetrending())
-        if(!setHeightTemperatureRange(myCombination, &interpolationSettings))
-        {
-            errorString = "Error in function preInterpolation: \n couldn't set temperature ranges for height proxy.";
-            return false;
-        }
 
     float interpolatedValue = NODATA;
     unsigned int i, proxyIndex;

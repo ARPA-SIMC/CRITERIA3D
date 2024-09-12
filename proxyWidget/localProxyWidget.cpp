@@ -470,7 +470,7 @@ void Crit3DLocalProxyWidget::modelLRClicked(int toggled)
         if (comboAxisX.currentText() == "elevation")
         {
             std::string errorStr;
-            setHeightTemperatureRange(interpolationSettings->getSelectedCombination(), interpolationSettings);
+            setMultipleDetrendingHeightTemperatureRange(interpolationSettings);
             interpolationSettings->setCurrentCombination(interpolationSettings->getSelectedCombination());
             interpolationSettings->clearFitting();
             if (! multipleDetrendingElevationFitting(proxyPos, subsetInterpolationPoints, interpolationSettings, myVar, errorStr)) return;
