@@ -3062,6 +3062,7 @@ bool Crit3DMeteoGridDbHandler::saveListHourlyData(QString *errorStr, QString met
     return true;
 }
 
+
 bool Crit3DMeteoGridDbHandler::saveListDailyData(QString *errorStr, QString meteoPointID, QDate firstDate, meteoVariable meteoVar, QList<float> values, bool reverseOrder)
 {
     QSqlQuery qry(_db);
@@ -3111,6 +3112,7 @@ bool Crit3DMeteoGridDbHandler::saveListDailyData(QString *errorStr, QString mete
             return false;
         }
     }
+
     return true;
 }
 
