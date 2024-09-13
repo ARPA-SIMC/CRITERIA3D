@@ -478,7 +478,7 @@ void Crit3DProxyWidget::modelLRClicked(int toggled)
             {
                 std::string errorStr;
 
-                setHeightTemperatureRange(interpolationSettings->getSelectedCombination(), interpolationSettings);
+                setMultipleDetrendingHeightTemperatureRange(interpolationSettings);
                 interpolationSettings->setCurrentCombination(interpolationSettings->getSelectedCombination());
                 interpolationSettings->clearFitting();
                 if (! multipleDetrendingElevationFitting(proxyPos, outInterpolationPoints, interpolationSettings, myVar, errorStr)) return;

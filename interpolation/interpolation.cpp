@@ -1458,10 +1458,12 @@ bool proxyValidityWeighted(std::vector <Crit3DInterpolationDataPoint> &myPoints,
         return true;
 }
 
-bool setHeightTemperatureRange(Crit3DProxyCombination myCombination, Crit3DInterpolationSettings* mySettings)
+bool setMultipleDetrendingHeightTemperatureRange(Crit3DInterpolationSettings* mySettings)
 {
     if (mySettings->getPointsRange().empty() || !mySettings->getUseMultipleDetrending())
         return 0;
+
+    Crit3DProxyCombination myCombination = mySettings->getSelectedCombination();
 
     for (unsigned i=0; i < myCombination.getProxySize(); i++)
         if (myCombination.isProxyActive(i) == true)
@@ -1478,19 +1480,19 @@ bool setHeightTemperatureRange(Crit3DProxyCombination myCombination, Crit3DInter
                     if (mySettings->getChosenElevationFunction() == piecewiseTwo)
                     {
                         tempParam[1] = MIN_T-2;
-                        tempParam[5] = MAX_T+2;
+                        tempParam[5] = MAX_T+6;
                         mySettings->addFittingFunction(lapseRatePiecewise_two);
                     }
                     else if (mySettings->getChosenElevationFunction() == piecewiseThreeFree)
                     {
                         tempParam[1] = MIN_T-2;
-                        tempParam[7] = MAX_T+2;
+                        tempParam[7] = MAX_T+6;
                         mySettings->addFittingFunction(lapseRatePiecewise_three_free);
                     }
                     else if (mySettings->getChosenElevationFunction() == piecewiseThree)
                     {
                         tempParam[1] = MIN_T-2;
-                        tempParam[6] = MAX_T+2;
+                        tempParam[6] = MAX_T+6;
                         mySettings->addFittingFunction(lapseRatePiecewise_three);
                     }
                     mySettings->getProxy(i)->setFittingParametersRange(tempParam);
@@ -2155,7 +2157,7 @@ bool preInterpolation(std::vector <Crit3DInterpolationDataPoint> &myPoints, Crit
         if (mySettings->getUseMultipleDetrending())
         {
             if (!mySettings->getUseLocalDetrending())
-                setHeightTemperatureRange(mySettings->getSelectedCombination(), mySettings);
+                setMultipleDetrendingHeightTemperatureRange(mySettings);
 
             if (! multipleDetrendingMain(myPoints, mySettings, myVar, errorStr)) return false;
         }
