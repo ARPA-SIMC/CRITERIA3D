@@ -2721,7 +2721,7 @@ bool PragaProject::interpolationCrossValidationPeriod(QDate dateIni, QDate dateF
                     cvOutput << "," << crossValidationStatistics.getMeanAbsoluteError();
                     cvOutput << "," << crossValidationStatistics.getMeanBiasError();
                     cvOutput << "," << crossValidationStatistics.getRootMeanSquareError();
-                    cvOutput << "," << crossValidationStatistics.getCompoundRelativeError();
+                    cvOutput << "," << crossValidationStatistics.getNashSutcliffeEfficiency();
                     cvOutput << "," << crossValidationStatistics.getR2() << '\n';
                 }
             }
@@ -2736,7 +2736,7 @@ bool PragaProject::interpolationCrossValidationPeriod(QDate dateIni, QDate dateF
                 cvOutput << "," << crossValidationStatistics.getMeanAbsoluteError();
                 cvOutput << "," << crossValidationStatistics.getMeanBiasError();
                 cvOutput << "," << crossValidationStatistics.getRootMeanSquareError();
-                cvOutput << "," << crossValidationStatistics.getCompoundRelativeError();
+                cvOutput << "," << crossValidationStatistics.getNashSutcliffeEfficiency();
                 cvOutput << "," << crossValidationStatistics.getR2() << '\n';
             }
         }

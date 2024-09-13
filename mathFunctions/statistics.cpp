@@ -242,7 +242,7 @@ namespace statistics
         return sigma;
     }
 
-    double compoundRelativeError(std::vector <float> measured, std::vector <float> simulated)
+    double NashSutcliffeEfficiency(std::vector <float> measured, std::vector <float> simulated)
     {
         if (measured.size() != simulated.size()) return NODATA;
 
@@ -264,7 +264,7 @@ namespace statistics
             if (!isEqual(measured[i], NODATA) && !isEqual(simulated[i], NODATA))
                 sumError += (simulated[i] - measured[i]) * (simulated[i] - measured[i]);
 
-        return sumError / sumDev;
+        return 1 - (sumError / sumDev);
     }
 
     float coefficientOfVariation(float *measured , float *simulated , int nrData)

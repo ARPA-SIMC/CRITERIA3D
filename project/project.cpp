@@ -2227,7 +2227,7 @@ bool Project::computeStatisticsCrossValidation()
         crossValidationStatistics.setMeanAbsoluteError(statistics::meanAbsoluteError(obs, pre));
         crossValidationStatistics.setMeanBiasError(statistics::meanError(obs, pre));
         crossValidationStatistics.setRootMeanSquareError(statistics::rootMeanSquareError(obs, pre));
-        crossValidationStatistics.setCompoundRelativeError(statistics::compoundRelativeError(obs, pre));
+        crossValidationStatistics.setNashSutcliffeEfficiency(statistics::NashSutcliffeEfficiency(obs, pre));
 
         float intercept, slope, r2;
         statistics::linearRegression(obs, pre, int(obs.size()), false, &intercept, &slope, &r2);

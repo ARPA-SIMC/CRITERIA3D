@@ -29,14 +29,14 @@ void Crit3DCrossValidationStatistics::setRootMeanSquareError(float newRootMeanSq
     rootMeanSquareError = newRootMeanSquareError;
 }
 
-float Crit3DCrossValidationStatistics::getCompoundRelativeError() const
+float Crit3DCrossValidationStatistics::getNashSutcliffeEfficiency() const
 {
-    return compoundRelativeError;
+    return NashSutcliffeEfficiency;
 }
 
-void Crit3DCrossValidationStatistics::setCompoundRelativeError(float newCompoundRelativeError)
+void Crit3DCrossValidationStatistics::setNashSutcliffeEfficiency(float newNashSutcliffeEfficiency)
 {
-    compoundRelativeError = newCompoundRelativeError;
+    NashSutcliffeEfficiency = newNashSutcliffeEfficiency;
 }
 
 float Crit3DCrossValidationStatistics::getMeanBiasError() const
@@ -88,7 +88,7 @@ void Crit3DCrossValidationStatistics::initialize()
 {
     meanAbsoluteError = NODATA;
     rootMeanSquareError = NODATA;
-    compoundRelativeError = NODATA;
+    NashSutcliffeEfficiency = NODATA;
     meanBiasError = NODATA;
     R2 = NODATA;
 }

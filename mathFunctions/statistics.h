@@ -27,7 +27,7 @@
         double rootMeanSquareError(std::vector <float> measured, std::vector <float> simulated);
         float meanError(std::vector<float> measured , std::vector<float> simulated );
         float meanAbsoluteError(std::vector <float> measured, std::vector <float> simulated);
-        double compoundRelativeError(std::vector <float> measured, std::vector <float> simulated);
+        double NashSutcliffeEfficiency(std::vector <float> measured, std::vector <float> simulated);
         float coefficientOfVariation(float *measured , float *simulated , int nrData);
         float weighedMean(float *data , float *weights, int nrData);
         float linearInterpolation(float x1, float y1, float x2, float y2, float xx);

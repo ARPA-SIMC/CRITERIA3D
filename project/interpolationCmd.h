@@ -25,7 +25,7 @@
         Crit3DProxyCombination proxyCombination;
         float meanAbsoluteError;
         float rootMeanSquareError;
-        float compoundRelativeError;
+        float NashSutcliffeEfficiency;
         float meanBiasError;
         float R2;
 
@@ -39,8 +39,8 @@
         void setMeanAbsoluteError(float newMeanAbsoluteError);
         float getRootMeanSquareError() const;
         void setRootMeanSquareError(float newRootMeanSquareError);
-        float getCompoundRelativeError() const;
-        void setCompoundRelativeError(float newCompoundRelativeError);
+        float getNashSutcliffeEfficiency() const;
+        void setNashSutcliffeEfficiency(float newNashSutcliffeEfficiency);
         float getMeanBiasError() const;
         void setMeanBiasError(float newMeanBiasError);
         const Crit3DTime &getRefTime() const;
