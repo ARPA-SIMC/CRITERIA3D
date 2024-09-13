@@ -29,6 +29,7 @@
             QCheckBox* multipleDetrendingEdit;
             QCheckBox* topographicDistanceEdit;
             QCheckBox* localDetrendingEdit;
+            QCheckBox* doNotRetrendEdit;
             QCheckBox* upscaleFromDemEdit;
             QCheckBox* useDewPointEdit;
             QCheckBox* useInterpolTForRH;

@@ -2202,10 +2202,10 @@ float interpolate(vector <Crit3DInterpolationDataPoint> &myPoints, Crit3DInterpo
         myResult = modifiedShepardIdw(myPoints, mySettings, radius, myX, myY);
     }
 
-    if (int(myResult) != int(NODATA))
-        myResult += retrend(myVar, myProxyValues, mySettings);
-    else
+    if (int(myResult) == int(NODATA))
         return NODATA;
+    else if (!mySettings->getUseDoNotRetrend())
+        myResult += retrend(myVar, myProxyValues, mySettings);
 
     if (myVar == precipitation || myVar == dailyPrecipitation)
     {

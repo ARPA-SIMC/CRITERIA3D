@@ -150,6 +150,7 @@
         bool useMultipleDetrending;
         bool useDewPoint;
         bool useInterpolatedTForRH;
+        bool useDoNotRetrend;
         int minPointsLocalDetrending;
         bool meteoGridUpscaleFromDem;
         aggregationMethod meteoGridAggrMethod;
@@ -200,6 +201,9 @@
 
         void setUseLocalDetrending(bool myValue);
         bool getUseLocalDetrending();
+
+        void setUseDoNotRetrend(bool myValue);
+        bool getUseDoNotRetrend();
 
         void setUseDewPoint(bool myValue);
         bool getUseDewPoint();

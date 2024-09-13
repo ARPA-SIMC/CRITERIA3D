@@ -126,6 +126,9 @@ DialogInterpolation::DialogInterpolation(Project *myProject)
 
     connect(localDetrendingEdit, SIGNAL(stateChanged(int)), this, SLOT(localDetrendingChanged(int)));
 
+    doNotRetrendEdit = new QCheckBox(tr("do not retrend"));
+    doNotRetrendEdit->setChecked(_interpolationSettings->getUseDoNotRetrend());
+
     QLabel *labelMinPointsLocalDetrendingEdit = new QLabel(tr("minimum points for local detrending"));
     QIntValidator *intValMinPoints = new QIntValidator(1, 1000, this);
     minPointsLocalDetrendingEdit.setFixedWidth(30);
@@ -135,6 +138,7 @@ DialogInterpolation::DialogInterpolation(Project *myProject)
     layoutDetrending->addWidget(&minPointsLocalDetrendingEdit);
 
     layoutDetrending->addWidget(localDetrendingEdit);
+    layoutDetrending->addWidget(doNotRetrendEdit);
 
     QLabel *labelElFunction = new QLabel(tr("fitting function for elevation"));
     layoutDetrending->addWidget(labelElFunction);
@@ -200,6 +204,7 @@ DialogInterpolation::DialogInterpolation(Project *myProject)
     upscaleFromDemChanged(upscaleFromDemEdit->checkState());
     multipleDetrendingChanged(multipleDetrendingEdit->checkState());
     localDetrendingChanged(localDetrendingEdit->checkState());
+
 
     exec();
 }
@@ -300,6 +305,7 @@ void DialogInterpolation::accept()
     _interpolationSettings->setUseLapseRateCode(lapseRateCodeEdit->isChecked());
     _interpolationSettings->setUseBestDetrending(optimalDetrendingEdit->isChecked());
     _interpolationSettings->setUseMultipleDetrending(multipleDetrendingEdit->isChecked());
+    _interpolationSettings->setUseDoNotRetrend(doNotRetrendEdit->isChecked());
     _interpolationSettings->setUseThermalInversion(thermalInversionEdit->isChecked());
     _interpolationSettings->setUseDewPoint(useDewPointEdit->isChecked());
     _interpolationSettings->setUseInterpolatedTForRH((useInterpolTForRH->isChecked()));

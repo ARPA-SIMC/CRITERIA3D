@@ -510,6 +510,9 @@ bool Crit3DInterpolationSettings::getUseTD()
 bool Crit3DInterpolationSettings::getUseLocalDetrending()
 { return useLocalDetrending;}
 
+bool Crit3DInterpolationSettings::getUseDoNotRetrend()
+{ return useDoNotRetrend;}
+
 float Crit3DInterpolationSettings::getMaxHeightInversion()
 { return maxHeightInversion;}
 
@@ -527,6 +530,9 @@ void Crit3DInterpolationSettings::setUseTD(bool myValue)
 
 void Crit3DInterpolationSettings::setUseLocalDetrending(bool myValue)
 { useLocalDetrending = myValue;}
+
+void Crit3DInterpolationSettings::setUseDoNotRetrend(bool myValue)
+{ useDoNotRetrend = myValue;}
 
 void Crit3DInterpolationSettings::setUseDewPoint(bool myValue)
 { useDewPoint = myValue;}
