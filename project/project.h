@@ -146,6 +146,7 @@
 
         Crit3DInterpolationSettings interpolationSettings;
         Crit3DInterpolationSettings qualityInterpolationSettings;
+        Crit3DCrossValidationStatistics crossValidationStatistics;
 
         std::vector <Crit3DProxyGridSeries> proxyGridSeries;
 
@@ -268,9 +269,9 @@
         bool interpolateDemRadiation(const Crit3DTime& myTime, gis::Crit3DRasterGrid *myRaster);
         bool interpolationOutputPoints(std::vector <Crit3DInterpolationDataPoint> &interpolationPoints,
                                        gis::Crit3DRasterGrid *outputGrid, meteoVariable myVar);
-        bool interpolationCv(meteoVariable myVar, const Crit3DTime& myTime, crossValidationStatistics* myStats);
+        bool interpolationCv(meteoVariable myVar, const Crit3DTime& myTime);
 
-        bool computeStatisticsCrossValidation(crossValidationStatistics *myStats);
+        bool computeStatisticsCrossValidation();
         bool meteoGridAggregateProxy(std::vector<gis::Crit3DRasterGrid *> &myGrids);
 
         frequencyType getCurrentFrequency() const;
@@ -315,6 +316,9 @@
         bool waterTableAssignMeteoData(Crit3DMeteoPoint* linkedMeteoPoint, QDate firstMeteoDate);
 
         bool assignAltitudeToAggregationPoints();
+
+        Crit3DCrossValidationStatistics getCrossValidationStatistics() const;
+        void setCrossValidationStatistics(const Crit3DCrossValidationStatistics &newCrossValidationStatistics);
 
     private slots:
         void deleteMeteoWidgetPoint(int id);

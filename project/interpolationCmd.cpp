@@ -9,82 +9,82 @@
 #include "interpolationSettings.h"
 
 
-float crossValidationStatistics::getMeanAbsoluteError() const
+float Crit3DCrossValidationStatistics::getMeanAbsoluteError() const
 {
     return meanAbsoluteError;
 }
 
-void crossValidationStatistics::setMeanAbsoluteError(float newMeanAbsoluteError)
+void Crit3DCrossValidationStatistics::setMeanAbsoluteError(float newMeanAbsoluteError)
 {
     meanAbsoluteError = newMeanAbsoluteError;
 }
 
-float crossValidationStatistics::getRootMeanSquareError() const
+float Crit3DCrossValidationStatistics::getRootMeanSquareError() const
 {
     return rootMeanSquareError;
 }
 
-void crossValidationStatistics::setRootMeanSquareError(float newRootMeanSquareError)
+void Crit3DCrossValidationStatistics::setRootMeanSquareError(float newRootMeanSquareError)
 {
     rootMeanSquareError = newRootMeanSquareError;
 }
 
-float crossValidationStatistics::getCompoundRelativeError() const
+float Crit3DCrossValidationStatistics::getCompoundRelativeError() const
 {
     return compoundRelativeError;
 }
 
-void crossValidationStatistics::setCompoundRelativeError(float newCompoundRelativeError)
+void Crit3DCrossValidationStatistics::setCompoundRelativeError(float newCompoundRelativeError)
 {
     compoundRelativeError = newCompoundRelativeError;
 }
 
-float crossValidationStatistics::getMeanBiasError() const
+float Crit3DCrossValidationStatistics::getMeanBiasError() const
 {
     return meanBiasError;
 }
 
-void crossValidationStatistics::setMeanBiasError(float newMeanBiasError)
+void Crit3DCrossValidationStatistics::setMeanBiasError(float newMeanBiasError)
 {
     meanBiasError = newMeanBiasError;
 }
 
-const Crit3DTime &crossValidationStatistics::getRefTime() const
+const Crit3DTime &Crit3DCrossValidationStatistics::getRefTime() const
 {
     return refTime;
 }
 
-void crossValidationStatistics::setRefTime(const Crit3DTime &newRefTime)
+void Crit3DCrossValidationStatistics::setRefTime(const Crit3DTime &newRefTime)
 {
     refTime = newRefTime;
 }
 
-const Crit3DProxyCombination &crossValidationStatistics::getProxyCombination() const
+const Crit3DProxyCombination &Crit3DCrossValidationStatistics::getProxyCombination() const
 {
     return proxyCombination;
 }
 
-void crossValidationStatistics::setProxyCombination(const Crit3DProxyCombination &newProxyCombination)
+void Crit3DCrossValidationStatistics::setProxyCombination(const Crit3DProxyCombination &newProxyCombination)
 {
     proxyCombination = newProxyCombination;
 }
 
-float crossValidationStatistics::getR2() const
+float Crit3DCrossValidationStatistics::getR2() const
 {
     return R2;
 }
 
-void crossValidationStatistics::setR2(float newR2)
+void Crit3DCrossValidationStatistics::setR2(float newR2)
 {
     R2 = newR2;
 }
 
-crossValidationStatistics::crossValidationStatistics()
+Crit3DCrossValidationStatistics::Crit3DCrossValidationStatistics()
 {
     initialize();
 }
 
-void crossValidationStatistics::initialize()
+void Crit3DCrossValidationStatistics::initialize()
 {
     meanAbsoluteError = NODATA;
     rootMeanSquareError = NODATA;

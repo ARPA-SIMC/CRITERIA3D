@@ -2201,9 +2201,9 @@ bool Project::interpolationOutputPoints(std::vector <Crit3DInterpolationDataPoin
 }
 
 
-bool Project::computeStatisticsCrossValidation(crossValidationStatistics* myStats)
+bool Project::computeStatisticsCrossValidation()
 {
-    myStats->initialize();
+    crossValidationStatistics.initialize();
 
     std::vector <float> obs;
     std::vector <float> pre;
@@ -2217,27 +2217,27 @@ bool Project::computeStatisticsCrossValidation(crossValidationStatistics* myStat
             if (! isEqual(value, NODATA) && ! isEqual(meteoPoints[i].residual, NODATA))
             {
                 obs.push_back(value);
-                pre.push_back(value + meteoPoints[i].residual);
+                pre.push_back(value - meteoPoints[i].residual);
             }
         }
     }
 
     if (obs.size() > 0)
     {
-        myStats->setMeanAbsoluteError(statistics::meanAbsoluteError(obs, pre));
-        myStats->setMeanBiasError(statistics::meanError(obs, pre));
-        myStats->setRootMeanSquareError(statistics::rootMeanSquareError(obs, pre));
-        myStats->setCompoundRelativeError(statistics::compoundRelativeError(obs, pre));
+        crossValidationStatistics.setMeanAbsoluteError(statistics::meanAbsoluteError(obs, pre));
+        crossValidationStatistics.setMeanBiasError(statistics::meanError(obs, pre));
+        crossValidationStatistics.setRootMeanSquareError(statistics::rootMeanSquareError(obs, pre));
+        crossValidationStatistics.setCompoundRelativeError(statistics::compoundRelativeError(obs, pre));
 
         float intercept, slope, r2;
         statistics::linearRegression(obs, pre, int(obs.size()), false, &intercept, &slope, &r2);
-        myStats->setR2(r2);
+        crossValidationStatistics.setR2(r2);
     }
 
     return true;
 }
 
-bool Project::interpolationCv(meteoVariable myVar, const Crit3DTime& myTime, crossValidationStatistics *myStats)
+bool Project::interpolationCv(meteoVariable myVar, const Crit3DTime& myTime)
 {
     // TODO local detrending
 
@@ -2307,7 +2307,7 @@ bool Project::interpolationCv(meteoVariable myVar, const Crit3DTime& myTime, cro
             return false;
     }
 
-    if (! computeStatisticsCrossValidation(myStats))
+    if (! computeStatisticsCrossValidation())
         return false;
 
     return true;
@@ -2946,6 +2946,16 @@ bool Project::searchDefaultPath(QString* defaultPath)
 
     *defaultPath = QDir::cleanPath(myPath) + "/DATA/";
     return true;
+}
+
+Crit3DCrossValidationStatistics Project::getCrossValidationStatistics() const
+{
+    return crossValidationStatistics;
+}
+
+void Project::setCrossValidationStatistics(const Crit3DCrossValidationStatistics &newCrossValidationStatistics)
+{
+    crossValidationStatistics = newCrossValidationStatistics;
 }
 
 

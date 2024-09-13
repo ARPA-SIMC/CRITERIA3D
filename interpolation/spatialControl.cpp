@@ -125,7 +125,7 @@ bool computeResiduals(meteoVariable myVar, Crit3DMeteoPoint* meteoPoints, int nr
 
             if ((interpolatedValue != NODATA) && (myValue != NODATA))
             {
-                meteoPoints[i].residual = interpolatedValue - myValue;
+                meteoPoints[i].residual = myValue - interpolatedValue;
             }
         }
     }
@@ -191,7 +191,7 @@ bool computeResidualsLocalDetrending(meteoVariable myVar, Crit3DTime myTime, Cri
 
             if ((interpolatedValue != NODATA) && (myValue != NODATA))
             {
-                meteoPoints[i].residual = interpolatedValue - myValue;
+                meteoPoints[i].residual = myValue - interpolatedValue;
             }
         }
     }
@@ -213,7 +213,7 @@ float computeErrorCrossValidation(Crit3DMeteoPoint* myPoints, int nrMeteoPoints)
             if (value != NODATA && residual != NODATA)
             {
                 obsValues.push_back(value);
-                estValues.push_back(value + residual);
+                estValues.push_back(value - residual);
             }
         }
     }

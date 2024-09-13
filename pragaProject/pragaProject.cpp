@@ -2691,7 +2691,7 @@ bool PragaProject::interpolationCrossValidationPeriod(QDate dateIni, QDate dateF
     if (! loadMeteoPointsData(dateIni, dateFin, myFreq == hourly, myFreq == daily, false))
         return false;
 
-    crossValidationStatistics stats;
+    Crit3DCrossValidationStatistics stats;
     QFile file(filename);
     if (! file.open(QIODevice::WriteOnly | QIODevice::Text))
     {
@@ -2715,14 +2715,14 @@ bool PragaProject::interpolationCrossValidationPeriod(QDate dateIni, QDate dateF
             {
                 myTime = getCrit3DTime(myDate, myHour);
 
-                if (interpolationCv(myVar, myTime, &stats))
+                if (interpolationCv(myVar, myTime))
                 {
                     cvOutput << getQDateTime(myTime).toString();
-                    cvOutput << "," << stats.getMeanAbsoluteError();
-                    cvOutput << "," << stats.getMeanBiasError();
-                    cvOutput << "," << stats.getRootMeanSquareError();
-                    cvOutput << "," << stats.getCompoundRelativeError();
-                    cvOutput << "," << stats.getR2() << '\n';
+                    cvOutput << "," << crossValidationStatistics.getMeanAbsoluteError();
+                    cvOutput << "," << crossValidationStatistics.getMeanBiasError();
+                    cvOutput << "," << crossValidationStatistics.getRootMeanSquareError();
+                    cvOutput << "," << crossValidationStatistics.getCompoundRelativeError();
+                    cvOutput << "," << crossValidationStatistics.getR2() << '\n';
                 }
             }
         }
@@ -2730,14 +2730,14 @@ bool PragaProject::interpolationCrossValidationPeriod(QDate dateIni, QDate dateF
         {
             myTime = getCrit3DTime(myDate, 0);
 
-            if (interpolationCv(myVar, myTime, &stats))
+            if (interpolationCv(myVar, myTime))
             {
                 cvOutput << getQDateTime(myTime).date().toString();
-                cvOutput << "," << stats.getMeanAbsoluteError();
-                cvOutput << "," << stats.getMeanBiasError();
-                cvOutput << "," << stats.getRootMeanSquareError();
-                cvOutput << "," << stats.getCompoundRelativeError();
-                cvOutput << "," << stats.getR2() << '\n';
+                cvOutput << "," << crossValidationStatistics.getMeanAbsoluteError();
+                cvOutput << "," << crossValidationStatistics.getMeanBiasError();
+                cvOutput << "," << crossValidationStatistics.getRootMeanSquareError();
+                cvOutput << "," << crossValidationStatistics.getCompoundRelativeError();
+                cvOutput << "," << crossValidationStatistics.getR2() << '\n';
             }
         }
 

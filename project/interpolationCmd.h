@@ -19,7 +19,7 @@
 
     class QDate;
 
-    class crossValidationStatistics {
+    class Crit3DCrossValidationStatistics {
     private:
         Crit3DTime refTime;
         Crit3DProxyCombination proxyCombination;
@@ -30,7 +30,7 @@
         float R2;
 
     public:
-        crossValidationStatistics();
+        Crit3DCrossValidationStatistics();
         void initialize();
 
         const Crit3DProxyCombination &getProxyCombination() const;
