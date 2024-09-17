@@ -1761,7 +1761,7 @@ bool PragaProject::averageSeriesOnZonesMeteoGrid(meteoVariable variable, meteoCo
     int infoStep = 0;
     if (showInfo)
     {
-        infoStep = setProgressBar("Aggregating data...", this->meteoGridDbHandler->gridStructure().header().nrRows);
+        infoStep = setProgressBar("Creating data array...", this->meteoGridDbHandler->gridStructure().header().nrRows);
     }
 
     Crit3DMeteoPoint* meteoPointTemp = new Crit3DMeteoPoint;
@@ -1803,8 +1803,16 @@ bool PragaProject::averageSeriesOnZonesMeteoGrid(meteoVariable variable, meteoCo
      int nrDays = int(startDate.daysTo(endDate) + 1);
      std::vector< std::vector<float> > dailyElabAggregation(nrDays, std::vector<float>(int(zoneGrid->maximum), NODATA));
 
+     if (showInfo)
+     {
+         infoStep = setProgressBar("Computing spatial elaborations...", nrDays);
+     }
+
      for (int day = 0; day < nrDays; day++)
      {
+         if (showInfo && (day % infoStep) == 0)
+             updateProgressBar(day);
+
          for (int zoneRow = 0; zoneRow < zoneGrid->header->nrRows; zoneRow++)
          {
              for (int zoneCol = 0; zoneCol < zoneGrid->header->nrCols; zoneCol++)
@@ -1886,8 +1894,10 @@ bool PragaProject::averageSeriesOnZonesMeteoGrid(meteoVariable variable, meteoCo
          }
      }
 
+     if (showInfo) closeProgressBar();
+
      // save dailyElabAggregation result into DB
-     if (showInfo) setProgressBar("Save data...", 0);
+     if (showInfo) setProgressBar("Saving data...", 0);
      if (! aggregationDbHandler->saveAggrData(int(zoneGrid->maximum), aggregationString, periodType,
                                              startDate, endDate, variable, dailyElabAggregation))
      {
