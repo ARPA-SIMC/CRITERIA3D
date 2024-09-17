@@ -2710,7 +2710,7 @@ bool PragaProject::interpolationCrossValidationPeriod(QDate dateIni, QDate dateF
     Crit3DTime myTime;
 
     QTextStream cvOutput(&file);
-    cvOutput << "Time,MAE,MBE,RMSE,CRE,R2" << '\n';
+    cvOutput << "Time,MAE,MBE,RMSE,NS,R2" << '\n';
 
     logInfoGUI("Cross validating " + QString::fromStdString(getMeteoVarName(myVar)) + " from " + dateIni.toString("yyyy-MM-dd") + " to " + dateFin.toString("yyyy-MM-dd"));
     while (myDate <= dateFin)
