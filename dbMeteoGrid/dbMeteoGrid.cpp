@@ -2168,7 +2168,7 @@ bool Crit3DMeteoGridDbHandler::loadGridHourlyDataFixedFields(QString &errorStr, 
     {
         while (qry.next())
         {
-            if (!getValue(qry.value(_tableHourly.fieldTime), &date))
+            if (! getValue(qry.value(_tableHourly.fieldTime), &date))
             {
                 errorStr = "Missing fieldTime";
                 return false;
@@ -2178,9 +2178,9 @@ bool Crit3DMeteoGridDbHandler::loadGridHourlyDataFixedFields(QString &errorStr, 
             {
                 varCode = _tableHourly.varcode[i].varCode;
 
-                if (!getValue(qry.value(_tableHourly.varcode[i].varField), &value))
+                if (! getValue(qry.value(_tableHourly.varcode[i].varField), &value))
                 {
-                    errorStr = "Missing fieldTime";
+                    errorStr = "Missing value for varCode: " + QString::number(varCode);
                 }
                 meteoVariable variable = getHourlyVarEnum(varCode);
 
