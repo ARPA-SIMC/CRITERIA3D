@@ -1367,9 +1367,9 @@ bool Project::loadMeteoGridDB(QString xmlName)
 
     if (! this->meteoGridDbHandler->meteoGrid()->createRasterGrid()) return false;
 
-    if (!meteoGridDbHandler->updateMeteoGridDate(errorString))
+    if (! meteoGridDbHandler->updateMeteoGridDate(errorString))
     {
-        logInfoGUI("Error in updateMeteoGridDate: " + errorString);
+        logWarning("There was a problem reading the time range of MeteoGrid data: " + errorString);
     }
 
     if (loadGridDataAtStart || ! meteoPointsLoaded)
