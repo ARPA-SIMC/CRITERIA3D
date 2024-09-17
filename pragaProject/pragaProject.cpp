@@ -2673,7 +2673,6 @@ bool PragaProject::interpolationCrossValidationPeriod(QDate dateIni, QDate dateF
 
     // order variables for derived computation
     std::string errString;
-    QString myError;
     int myHour;
     QDate myDate = dateIni;
     frequencyType myFreq = getVarFrequency(myVar);
@@ -2685,19 +2684,18 @@ bool PragaProject::interpolationCrossValidationPeriod(QDate dateIni, QDate dateF
             return false;
     }
 
+    QFile file(filename);
+    if (! file.open(QIODevice::WriteOnly | QIODevice::Text))
+    {
+        errorString = "Error writing to file " + filename;
+        return false;
+    }
+
     // loading point data
     logInfoGUI("Loading meteo points data from " + dateIni.addDays(-1).toString("yyyy-MM-dd") + " to " + dateFin.toString("yyyy-MM-dd"));
     // load one day before (for transmissivity)
     if (! loadMeteoPointsData(dateIni, dateFin, myFreq == hourly, myFreq == daily, false))
         return false;
-
-    Crit3DCrossValidationStatistics stats;
-    QFile file(filename);
-    if (! file.open(QIODevice::WriteOnly | QIODevice::Text))
-    {
-        myError = "Error writing to file " + filename;
-        return false;
-    }
 
     Crit3DTime myTime;
 
