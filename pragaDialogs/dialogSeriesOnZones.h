@@ -1,17 +1,12 @@
 #ifndef DIALOGSERIESONZONES_H
 #define DIALOGSERIESONZONES_H
 
-#include <QString>
-#include <QSettings>
-#include <QGridLayout>
-#include <QComboBox>
-
 #include <QtWidgets>
-#include "meteoGrid.h"
+
+#include "meteo.h"
 
 class DialogSeriesOnZones: public QDialog
 {
-
     Q_OBJECT
 
     private:
@@ -30,14 +25,23 @@ class DialogSeriesOnZones: public QDialog
         QString spatialElaboration;
 
     public:
-        DialogSeriesOnZones(QSettings *settings, QList<QString> aggregations, QDate currentDate);
+        DialogSeriesOnZones(QSettings *settings, QList<QString> aggregations, QDate currentDate, bool isHourly);
+
         void done(bool res);
         bool checkValidData();
 
-        meteoVariable getVariable() const;
-        QDate getStartDate() const;
-        QDate getEndDate() const;
-        QString getSpatialElaboration() const;
+        meteoVariable getVariable() const
+        { return variable; }
+
+        QDate getStartDate() const
+        { return startDate; }
+
+        QDate getEndDate() const
+        { return endDate; }
+
+        QString getSpatialElaboration() const
+        { return spatialElaboration; }
+
 };
 
 

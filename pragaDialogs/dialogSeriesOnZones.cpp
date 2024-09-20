@@ -1,65 +1,58 @@
 #include "aggregation.h"
 #include "dialogSeriesOnZones.h"
+
 #include <iostream>
 
 
-meteoVariable DialogSeriesOnZones::getVariable() const
-{
-    return variable;
-}
-
-QDate DialogSeriesOnZones::getStartDate() const
-{
-    return startDate;
-}
-
-QDate DialogSeriesOnZones::getEndDate() const
-{
-    return endDate;
-}
-
-QString DialogSeriesOnZones::getSpatialElaboration() const
-{
-    return spatialElaboration;
-}
-
-DialogSeriesOnZones::DialogSeriesOnZones(QSettings *settings, QList<QString> aggregations, QDate currentDate)
+DialogSeriesOnZones::DialogSeriesOnZones(QSettings *settings, QList<QString> aggregations, QDate currentDate, bool isHourly)
     : settings(settings), aggregations(aggregations)
 {
-
     setWindowTitle("Spatial average series on zones");
-
 
     QVBoxLayout mainLayout;
     QHBoxLayout varLayout;
     QHBoxLayout dateLayout;
     QHBoxLayout spatialElabLayout;
-
     QHBoxLayout layoutOk;
-
-    meteoVariable var;
 
     Q_FOREACH (QString group, settings->childGroups())
     {
-        if (!group.endsWith("_VarToElab1"))
+        if (! group.endsWith("_VarToElab1"))
             continue;
+
         std::string item;
         std::string variable = group.left(group.size()-11).toStdString(); // remove "_VarToElab1"
-        try {
-          var = MapDailyMeteoVar.at(variable);
-          item = MapDailyMeteoVarToString.at(var);
+        if (isHourly)
+        {
+            try
+            {
+                meteoVariable var = MapHourlyMeteoVar.at(variable);
+                item = MapHourlyMeteoVarToString.at(var);
+            }
+            catch (const std::out_of_range& ) {
+                std::cout << "variable: " + variable + " missing in MapHourlyMeteoVar";
+                continue;
+            }
         }
-        catch (const std::out_of_range& ) {
-            std::cout << "variable: " + variable + " missing in MapDailyMeteoVar";
-           continue;
+        else
+        {
+            try
+            {
+              meteoVariable var = MapDailyMeteoVar.at(variable);
+              item = MapDailyMeteoVarToString.at(var);
+            }
+            catch (const std::out_of_range& ) {
+                std::cout << "variable: " + variable + " missing in MapDailyMeteoVar";
+               continue;
+            }
         }
+
         variableList.addItem(QString::fromStdString(item));
     }
 
     QLabel variableLabel("Variable: ");
     varLayout.addWidget(&variableLabel);
     varLayout.addWidget(&variableList);
-
 
     genericStartLabel.setText("Start Date:");
     genericPeriodStart.setDate(currentDate);
@@ -68,14 +61,13 @@ DialogSeriesOnZones::DialogSeriesOnZones(QSettings *settings, QList<QString> agg
     genericPeriodEnd.setDate(currentDate);
     genericEndLabel.setBuddy(&genericPeriodEnd);
 
-
     dateLayout.addWidget(&genericStartLabel);
     dateLayout.addWidget(&genericPeriodStart);
     dateLayout.addWidget(&genericEndLabel);
     dateLayout.addWidget(&genericPeriodEnd);
 
     QLabel spatialElabLabel("Spatial Elaboration: ");
-    for (int i = 0; i<aggregations.size(); i++)
+    for (int i = 0; i < aggregations.size(); i++)
     {
         spatialElab.addItem(aggregations[i]);
     }
@@ -98,7 +90,6 @@ DialogSeriesOnZones::DialogSeriesOnZones(QSettings *settings, QList<QString> agg
 
     setLayout(&mainLayout);
 
-
     show();
     exec();
 
@@ -107,10 +98,9 @@ DialogSeriesOnZones::DialogSeriesOnZones(QSettings *settings, QList<QString> agg
 
 void DialogSeriesOnZones::done(bool res)
 {
-
     if(res)  // ok was pressed
     {
-        if (!checkValidData())
+        if (! checkValidData())
         {
             QDialog::done(QDialog::Rejected);
             return;
@@ -127,12 +117,11 @@ void DialogSeriesOnZones::done(bool res)
         QDialog::done(QDialog::Rejected);
         return;
     }
-
 }
+
 
 bool DialogSeriesOnZones::checkValidData()
 {
-
     startDate = genericPeriodStart.date();
     endDate = genericPeriodEnd.date();
 
@@ -144,11 +133,11 @@ bool DialogSeriesOnZones::checkValidData()
 
     QString var = variableList.currentText();
     variable = getKeyMeteoVarMeteoMap(MapDailyMeteoVarToString, var.toStdString());
+
     //spatialElaboration = getAggregationMethod(spatialElab.currentText().toStdString());
     spatialElaboration = spatialElab.currentText();
 
     return true;
-
 }
 
 

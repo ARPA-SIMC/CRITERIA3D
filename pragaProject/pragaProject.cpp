@@ -1766,8 +1766,8 @@ bool PragaProject::averageSeriesOnZonesMeteoGrid(meteoVariable variable, meteoCo
 
     Crit3DMeteoPoint* meteoPointTemp = new Crit3DMeteoPoint;
 
-     for (int row = 0; row < meteoGridDbHandler->gridStructure().header().nrRows; row++)
-     {
+    for (int row = 0; row < meteoGridDbHandler->gridStructure().header().nrRows; row++)
+    {
          if (showInfo && (row % infoStep) == 0)
              updateProgressBar(row);
 
@@ -1788,8 +1788,8 @@ bool PragaProject::averageSeriesOnZonesMeteoGrid(meteoVariable variable, meteoCo
                 meteoPointTemp->nrObsDataDaysD = 0;
 
                 outputValues.clear();
-                bool dataLoaded = preElaboration(&errorString, nullptr, meteoGridDbHandler, meteoPointTemp, isMeteoGrid, variable, elab1MeteoComp, startDate, endDate, outputValues, &percValue, meteoSettings);
-                if (dataLoaded)
+                if (preElaboration(&errorString, nullptr, meteoGridDbHandler, meteoPointTemp, isMeteoGrid,
+                                   variable, elab1MeteoComp, startDate, endDate, outputValues, &percValue, meteoSettings))
                 {
                     outputSeries.insert(outputSeries.end(), outputValues.begin(), outputValues.end());
                     indexRowCol[row][col] = indexSeries;
@@ -1799,6 +1799,7 @@ bool PragaProject::averageSeriesOnZonesMeteoGrid(meteoVariable variable, meteoCo
         }
     }
     if (showInfo) closeProgressBar();
+    delete meteoPointTemp;
 
      int nrDays = int(startDate.daysTo(endDate) + 1);
      std::vector< std::vector<float> > dailyElabAggregation(nrDays, std::vector<float>(int(zoneGrid->maximum), NODATA));
