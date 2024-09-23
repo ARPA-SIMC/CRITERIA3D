@@ -2700,7 +2700,8 @@ std::vector<float> Crit3DMeteoGridDbHandler::loadGridDailyVarFixedFields(QString
 }
 
 
-std::vector<float> Crit3DMeteoGridDbHandler::loadGridHourlyVar(QString *errorStr, QString meteoPoint, meteoVariable variable, QDateTime first, QDateTime last, QDateTime* firstDateDB)
+std::vector<float> Crit3DMeteoGridDbHandler::loadGridHourlyVar(QString *errorStr, QString meteoPoint, meteoVariable variable,
+                                                               QDateTime first, QDateTime last, QDateTime* firstDateDB)
 {
 
     QSqlQuery qry(_db);
@@ -2787,7 +2788,8 @@ std::vector<float> Crit3DMeteoGridDbHandler::loadGridHourlyVar(QString *errorStr
 }
 
 
-std::vector<float> Crit3DMeteoGridDbHandler::loadGridHourlyVarFixedFields(QString *errorStr, QString meteoPoint, meteoVariable variable, QDateTime first, QDateTime last, QDateTime* firstDateDB)
+std::vector<float> Crit3DMeteoGridDbHandler::loadGridHourlyVarFixedFields(QString *errorStr, QString meteoPoint, meteoVariable variable,
+                                                                          QDateTime first, QDateTime last, QDateTime* firstDateDB)
 {
     QSqlQuery qry(_db);
     QString tableH = _tableHourly.prefix + meteoPoint + _tableHourly.postFix;

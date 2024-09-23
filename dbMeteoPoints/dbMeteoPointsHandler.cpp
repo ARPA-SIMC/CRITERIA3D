@@ -775,7 +775,10 @@ std::vector<float> Crit3DMeteoPointsDbHandler::exportAllDataVar(QString *myError
     return allDataVarList;
 }
 
-std::vector<float> Crit3DMeteoPointsDbHandler::loadHourlyVar(QString *myError, meteoVariable variable, Crit3DDate dateStart, Crit3DDate dateEnd, QDateTime* firstDateDB, Crit3DMeteoPoint *meteoPoint)
+
+std::vector<float> Crit3DMeteoPointsDbHandler::loadHourlyVar(QString *myError, meteoVariable variable,
+                                                             Crit3DDate dateStart, Crit3DDate dateEnd,
+                                                             QDateTime* firstDateDB, Crit3DMeteoPoint *meteoPoint)
 {
     QString dateStr;
     QDateTime previousDate;
@@ -783,7 +786,7 @@ std::vector<float> Crit3DMeteoPointsDbHandler::loadHourlyVar(QString *myError, m
     QTime myTime;
     float value;
     std::vector<float> hourlyVarList;
-    bool firstRow = true;
+    bool isFirstRow = true;
 
     int idVar = getIdfromMeteoVar(variable);
     QString startDate = QString::fromStdString(dateStart.toISOString());
@@ -795,7 +798,7 @@ std::vector<float> Crit3DMeteoPointsDbHandler::loadHourlyVar(QString *myError, m
 
     QString statement = QString( "SELECT * FROM `%1` WHERE `%2` = %3 AND date_time >= DATETIME('%4 01:00:00') AND date_time <= DATETIME('%5 00:00:00', '+1 day')")
                                  .arg(tableName, FIELD_METEO_VARIABLE).arg(idVar).arg(startDate, endDate);
-    if( !qry.exec(statement) )
+    if(! qry.exec(statement))
     {
         *myError = qry.lastError().text();
         return hourlyVarList;
@@ -804,37 +807,37 @@ std::vector<float> Crit3DMeteoPointsDbHandler::loadHourlyVar(QString *myError, m
     {
         while (qry.next())
         {
-            if (firstRow)
+            if (isFirstRow)
             {
                 dateStr = qry.value(0).toString();
                 myDate = QDate::fromString(dateStr.mid(0,10), "yyyy-MM-dd");
                 myTime = QTime::fromString(dateStr.mid(11,8), "HH:mm:ss");
-                QDateTime d(QDateTime(myDate, myTime, Qt::UTC));
+                QDateTime currentDate(QDateTime(myDate, myTime, Qt::UTC));
 
-                *firstDateDB = d;
-                previousDate = *firstDateDB;
+                *firstDateDB = currentDate;
+                previousDate = currentDate;
 
                 value = qry.value(2).toFloat();
 
                 hourlyVarList.push_back(value);
-                firstRow = false;
+                isFirstRow = false;
             }
             else
             {
                 dateStr = qry.value(0).toString();
                 myDate = QDate::fromString(dateStr.mid(0,10), "yyyy-MM-dd");
                 myTime = QTime::fromString(dateStr.mid(11,8), "HH:mm:ss");
-                QDateTime d(QDateTime(myDate, myTime, Qt::UTC));
+                QDateTime currentDate(QDateTime(myDate, myTime, Qt::UTC));
 
-                int missingDate = previousDate.daysTo(d);
-                for (int i =1; i<missingDate; i++)
+                int missingHours = (currentDate.currentSecsSinceEpoch() - previousDate.currentSecsSinceEpoch()) / 3600;
+                for (int i=1; i < missingHours; i++)
                 {
                     hourlyVarList.push_back(NODATA);
                 }
                 value = qry.value(2).toFloat();
 
                 hourlyVarList.push_back(value);
-                previousDate = d;
+                previousDate = currentDate;
             }
         }
     }
