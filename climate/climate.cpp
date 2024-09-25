@@ -830,30 +830,34 @@ float loadDailyVarSeries(QString *myError, Crit3DMeteoPointsDbHandler *meteoPoin
 }
 
 
+
 float loadHourlyVarSeries_SaveOutput(QString *myError, Crit3DMeteoPointsDbHandler *meteoPointsDbHandler,
                                     Crit3DMeteoGridDbHandler *meteoGridDbHandler, Crit3DMeteoPoint* meteoPoint, bool isMeteoGrid,
-                                    meteoVariable variable, QDateTime first, QDateTime last, std::vector<float> &outputValues)
+                                    meteoVariable variable, QDate firstDate, QDate lastDate, std::vector<float> &outputValues)
 {
     std::vector<float> hourlyValues;
     QDateTime firstDateTimeDB;
 
     if (isMeteoGrid)
     {
+        QDateTime firstTime = QDateTime(firstDate, QTime(1,0,0,0));
+        QDateTime lastTime = QDateTime(lastDate.addDays(1), QTime(0,0,0,0));
+
         if (meteoGridDbHandler->gridStructure().isFixedFields())
         {
             hourlyValues = meteoGridDbHandler->loadGridHourlyVarFixedFields(myError, QString::fromStdString(meteoPoint->id),
-                                                                            variable, first, last, &firstDateTimeDB);
+                                                                            variable, firstTime, lastTime, &firstDateTimeDB);
         }
         else
         {
             hourlyValues = meteoGridDbHandler->loadGridHourlyVar(myError, QString::fromStdString(meteoPoint->id), variable,
-                                                                 first, last, &firstDateTimeDB);
+                                                                 firstTime, lastTime, &firstDateTimeDB);
         }
     }
     else
     {
         // meteoPoints
-        hourlyValues = meteoPointsDbHandler->loadHourlyVar(myError, variable, getCrit3DDate(first.date()), getCrit3DDate(last.date()),
+        hourlyValues = meteoPointsDbHandler->loadHourlyVar(myError, variable, getCrit3DDate(firstDate), getCrit3DDate(lastDate),
                                                           &firstDateTimeDB, meteoPoint);
     }
 
@@ -861,11 +865,27 @@ float loadHourlyVarSeries_SaveOutput(QString *myError, Crit3DMeteoPointsDbHandle
     if (hourlyValues.empty())
         return 0;
 
-    int nrOfDays = first.daysTo(last) + 1;
-    meteoPoint->initializeObsDataH(meteoPoint->hourlyFraction, nrOfDays, getCrit3DDate(firstDateTimeDB.date()));
-    meteoPoint->initializeObsDataD(nrOfDays, getCrit3DDate(firstDateTimeDB.date()));
+    // number of days
+    QDateTime lastDateTimeDB = firstDateTimeDB.addSecs((hourlyValues.size()-1) * 3600);
+    int nrOfDays = firstDateTimeDB.daysTo(lastDateTimeDB);
+    if (lastDateTimeDB.time().hour() > 0)
+        nrOfDays++;
 
-    int nrRequestedValues = nrOfDays * 24;
+    Crit3DDate firstCrit3DDate = getCrit3DDate(firstDateTimeDB.date());
+    meteoPoint->initializeObsDataH(meteoPoint->hourlyFraction, nrOfDays, firstCrit3DDate);
+    meteoPoint->initializeObsDataD(nrOfDays, firstCrit3DDate);
+
+    // fill initial NODATA (if firstHour > 1)
+    int firstHour = firstDateTimeDB.time().hour();
+    if (firstHour > 1)
+    {
+        for (int h = 1; h < firstHour; h++)
+        {
+            outputValues.push_back(NODATA);
+        }
+    }
+
+    int nrRequestedValues = (firstDate.daysTo(lastDate) + 1) * 24;
     int nrValidValues = 0;
     Crit3DQuality qualityCheck;
 
@@ -875,14 +895,18 @@ float loadHourlyVarSeries_SaveOutput(QString *myError, Crit3DMeteoPointsDbHandle
         quality::qualityType myQuality = qualityCheck.syntacticQualitySingleValue(variable, hourlyValues[i]);
         if (myQuality == quality::accepted)
         {
-            nrValidValues = nrValidValues + 1;
-            meteoPoint->setMeteoPointValueH(currentDateTime.date, currentDateTime.getHour(), currentDateTime.getMinutes(), variable, hourlyValues[i]);
-            outputValues.push_back(hourlyValues[i]);
+            if (meteoPoint->setMeteoPointValueH(currentDateTime.date, currentDateTime.getHour(), currentDateTime.getMinutes(), variable, hourlyValues[i]))
+            {
+                outputValues.push_back(hourlyValues[i]);
+                nrValidValues = nrValidValues + 1;
+            }
         }
         else
         {
-            meteoPoint->setMeteoPointValueH(currentDateTime.date, currentDateTime.getHour(), currentDateTime.getMinutes(), variable, NODATA);
-            outputValues.push_back(NODATA);
+            if (meteoPoint->setMeteoPointValueH(currentDateTime.date, currentDateTime.getHour(), currentDateTime.getMinutes(), variable, NODATA))
+            {
+                outputValues.push_back(NODATA);
+            }
         }
 
         currentDateTime = currentDateTime.addSeconds(3600);
@@ -2382,19 +2406,18 @@ bool preElaboration(QString *myError, Crit3DMeteoPointsDbHandler* meteoPointsDbH
                     // default variables / elaboration
                     if (getVarFrequency(variable) == hourly)
                     {
-                        QDateTime firstTime = QDateTime(startDate, QTime(0, 0, 0, 0));
-                        QDateTime lastTime = QDateTime(endDate, QTime(23, 0, 0, 0));
-                        *percValue = loadHourlyVarSeries_SaveOutput(myError, meteoPointsDbHandler, meteoGridDbHandler, meteoPoint, isMeteoGrid, variable, firstTime, lastTime, outputValues);
+                        *percValue = loadHourlyVarSeries_SaveOutput(myError, meteoPointsDbHandler, meteoGridDbHandler, meteoPoint,
+                                                                    isMeteoGrid, variable, startDate, endDate, outputValues);
                     }
                     else
                     {
-                        *percValue = loadDailyVarSeries_SaveOutput(myError, meteoPointsDbHandler, meteoGridDbHandler, meteoPoint, isMeteoGrid, variable, startDate, endDate, outputValues);
+                        *percValue = loadDailyVarSeries_SaveOutput(myError, meteoPointsDbHandler, meteoGridDbHandler, meteoPoint,
+                                                                   isMeteoGrid, variable, startDate, endDate, outputValues);
                     }
 
                     preElaboration = ((*percValue) > 0);
                     break;
                 }
-
             }
             break;
         }

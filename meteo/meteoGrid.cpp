@@ -524,9 +524,9 @@ bool Crit3DMeteoGrid::getXYZFromId(std::string id, double* x, double* y, double*
     return false;
 }
 
+
 bool Crit3DMeteoGrid::getIdFromLatLon(double lat, double lon, std::string* id)
 {
-
     double dx = _gridStructure.header().dx;
     double dy = _gridStructure.header().dy;
     double latitude, longitude;
@@ -580,19 +580,22 @@ bool Crit3DMeteoGrid::getIdFromLatLon(double lat, double lon, std::string* id)
     return false;
 }
 
+
 bool Crit3DMeteoGrid::getMeteoPointActiveId(int row, int col, std::string* id)
 {
-    if (row < _gridStructure.header().nrRows && col < _gridStructure.header().nrCols)
+    if (row >= 0 && row < _gridStructure.header().nrRows
+        && col >= 0 && col < _gridStructure.header().nrCols)
     {
         if (_meteoPoints[row][col]->active)
         {
             *id = _meteoPoints[row][col]->id;
             return true;
         }
-
     }
+
     return false;
 }
+
 
 bool Crit3DMeteoGrid::isActiveMeteoPointFromId(const std::string& id)
 {
@@ -968,6 +971,7 @@ void Crit3DMeteoGrid::setLastDate(const Crit3DDate &lastDate)
     _lastDate = lastDate;
 }
 
+
 void Crit3DMeteoGrid::saveRowColfromZone(gis::Crit3DRasterGrid* zoneGrid, std::vector<std::vector<int> > &meteoGridRow, std::vector<std::vector<int> > &meteoGridCol)
 {
     float value;
@@ -1002,11 +1006,11 @@ void Crit3DMeteoGrid::saveRowColfromZone(gis::Crit3DRasterGrid* zoneGrid, std::v
                         meteoGridCol[row][col] = myCol;
                     }
                 }
-
             }
         }
     }
 }
+
 
 void Crit3DMeteoGrid::computeHourlyDerivedVariables(Crit3DTime dateTime)
 {
