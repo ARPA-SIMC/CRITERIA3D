@@ -1687,7 +1687,9 @@ bool PragaProject::downloadHourlyDataArkimet(QList<QString> variables, QDate sta
 }
 
 
-bool PragaProject::averageSeriesOnZonesMeteoGrid(meteoVariable variable, meteoComputation elab1MeteoComp, QString aggregationString, float threshold, gis::Crit3DRasterGrid* zoneGrid, QDate startDate, QDate endDate, QString periodType, std::vector<float> &outputValues, bool showInfo)
+bool PragaProject::averageSeriesOnZonesMeteoGrid(meteoVariable variable, meteoComputation elab1MeteoComp, QString aggregationString,
+                                                 float threshold, gis::Crit3DRasterGrid* zoneGrid, QDate startDate, QDate endDate,
+                                                 QString periodType, bool showInfo)
 {
     aggregationMethod spatialElab = getAggregationMethod(aggregationString.toStdString());
     std::vector <std::vector<int> > meteoGridRow(zoneGrid->header->nrRows, std::vector<int>(zoneGrid->header->nrCols, NODATA));
@@ -1701,8 +1703,13 @@ bool PragaProject::averageSeriesOnZonesMeteoGrid(meteoVariable variable, meteoCo
     int indexSeries = 0;
     float value;
     std::vector<float> outputSeries;
+    std::vector<float> outputValues;
     std::vector <std::vector<int>> indexRowCol(meteoGridDbHandler->gridStructure().header().nrRows, std::vector<int>(meteoGridDbHandler->gridStructure().header().nrCols, NODATA));
 
+    if (showInfo)
+    {
+        logInfoGUI("Assign aggregation points...");
+    }
     gis::updateMinMaxRasterGrid(zoneGrid);
     std::vector <std::vector<float> > zoneVector((unsigned int)(zoneGrid->maximum), std::vector<float>());
     std::vector <double> utmXvector;
@@ -1761,6 +1768,7 @@ bool PragaProject::averageSeriesOnZonesMeteoGrid(meteoVariable variable, meteoCo
     int infoStep = 0;
     if (showInfo)
     {
+        closeLogInfo();
         infoStep = setProgressBar("Creating data array...", this->meteoGridDbHandler->gridStructure().header().nrRows);
     }
 
@@ -1833,7 +1841,8 @@ bool PragaProject::averageSeriesOnZonesMeteoGrid(meteoVariable variable, meteoCo
                     {
                         if (indexRowCol[meteoGridRow[zoneRow][zoneCol]][meteoGridCol[zoneRow][zoneCol]] != NODATA)
                         {
-                            value = outputSeries.at(indexRowCol[meteoGridRow[zoneRow][zoneCol]][meteoGridCol[zoneRow][zoneCol]]*outputValues.size()+day);
+                            value = outputSeries.at(indexRowCol[meteoGridRow[zoneRow][zoneCol]][meteoGridCol[zoneRow][zoneCol]]
+                                                        *outputValues.size() + day);
                             if (value != meteoGridDbHandler->gridStructure().header().flag)
                             {
                                 zoneVector[zoneIndex-1].push_back(value);
@@ -1898,17 +1907,20 @@ bool PragaProject::averageSeriesOnZonesMeteoGrid(meteoVariable variable, meteoCo
      if (showInfo) closeProgressBar();
 
      // save dailyElabAggregation result into DB
-     if (showInfo) setProgressBar("Saving data...", 0);
-     if (! aggregationDbHandler->saveAggrData(int(zoneGrid->maximum), aggregationString, periodType,
-                                             startDate, endDate, variable, dailyElabAggregation))
+     if (showInfo)
+         setProgressBar("Saving data...", 0);
+
+     bool isOk = aggregationDbHandler->saveAggrData(int(zoneGrid->maximum), aggregationString, periodType,
+                                                      startDate, endDate, variable, dailyElabAggregation);
+     if (! isOk)
      {
          errorString = aggregationDbHandler->error();
-         if (showInfo) closeProgressBar();
-         return false;
      }
-     if (showInfo) closeProgressBar();
 
-     return true;
+     if (showInfo)
+         closeProgressBar();
+
+     return isOk;
 
 }
 

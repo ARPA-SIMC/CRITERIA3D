@@ -5,7 +5,7 @@
 
 
 DialogSeriesOnZones::DialogSeriesOnZones(QSettings *settings, QList<QString> aggregations, QDate currentDate, bool isHourly)
-    : settings(settings), aggregations(aggregations)
+    : settings(settings), aggregations(aggregations), isHourly_(isHourly)
 {
     setWindowTitle("Spatial average series on zones");
 
@@ -20,34 +20,25 @@ DialogSeriesOnZones::DialogSeriesOnZones(QSettings *settings, QList<QString> agg
         if (! group.endsWith("_VarToElab1"))
             continue;
 
+        meteoVariable var;
         std::string item;
-        std::string variable = group.left(group.size()-11).toStdString(); // remove "_VarToElab1"
-        if (isHourly)
+        std::string variableStr = group.left(group.size()-11).toStdString();   // remove "_VarToElab1"
+
+        if (isHourly_)
         {
-            try
-            {
-                meteoVariable var = MapHourlyMeteoVar.at(variable);
-                item = MapHourlyMeteoVarToString.at(var);
-            }
-            catch (const std::out_of_range& ) {
-                std::cout << "variable: " + variable + " missing in MapHourlyMeteoVar";
-                continue;
-            }
+            var = getKeyMeteoVarMeteoMap(MapHourlyMeteoVarToString, variableStr);
+            item = MapHourlyMeteoVarToString.at(var);
         }
         else
         {
-            try
-            {
-              meteoVariable var = MapDailyMeteoVar.at(variable);
-              item = MapDailyMeteoVarToString.at(var);
-            }
-            catch (const std::out_of_range& ) {
-                std::cout << "variable: " + variable + " missing in MapDailyMeteoVar";
-               continue;
-            }
+            var = getKeyMeteoVarMeteoMap(MapDailyMeteoVarToString, variableStr);
+            item = MapDailyMeteoVarToString.at(var);
         }
 
-        variableList.addItem(QString::fromStdString(item));
+        if (var != noMeteoVar)
+        {
+            variableList.addItem(QString::fromStdString(item));
+        }
     }
 
     QLabel variableLabel("Variable: ");
@@ -122,20 +113,27 @@ void DialogSeriesOnZones::done(bool res)
 
 bool DialogSeriesOnZones::checkValidData()
 {
-    startDate = genericPeriodStart.date();
-    endDate = genericPeriodEnd.date();
+    startDate_ = genericPeriodStart.date();
+    endDate_ = genericPeriodEnd.date();
 
-    if (startDate > endDate)
+    if (startDate_ > endDate_)
     {
         QMessageBox::information(nullptr, "Invalid date", "first date greater than last date");
         return false;
     }
 
     QString var = variableList.currentText();
-    variable = getKeyMeteoVarMeteoMap(MapDailyMeteoVarToString, var.toStdString());
+    if (isHourly_)
+    {
+        variable_ = getKeyMeteoVarMeteoMap(MapHourlyMeteoVarToString, var.toStdString());
+    }
+    else
+    {
+        variable_ = getKeyMeteoVarMeteoMap(MapDailyMeteoVarToString, var.toStdString());
+    }
 
     //spatialElaboration = getAggregationMethod(spatialElab.currentText().toStdString());
-    spatialElaboration = spatialElab.currentText();
+    spatialElaboration_ = spatialElab.currentText();
 
     return true;
 }

@@ -19,10 +19,11 @@ class DialogSeriesOnZones: public QDialog
         QDateEdit genericPeriodEnd;
         QComboBox spatialElab;
 
-        meteoVariable variable;
-        QDate startDate;
-        QDate endDate;
-        QString spatialElaboration;
+        bool isHourly_;
+        meteoVariable variable_;
+        QDate startDate_;
+        QDate endDate_;
+        QString spatialElaboration_;
 
     public:
         DialogSeriesOnZones(QSettings *settings, QList<QString> aggregations, QDate currentDate, bool isHourly);
@@ -31,16 +32,16 @@ class DialogSeriesOnZones: public QDialog
         bool checkValidData();
 
         meteoVariable getVariable() const
-        { return variable; }
+        { return variable_; }
 
         QDate getStartDate() const
-        { return startDate; }
+        { return startDate_; }
 
         QDate getEndDate() const
-        { return endDate; }
+        { return endDate_; }
 
         QString getSpatialElaboration() const
-        { return spatialElaboration; }
+        { return spatialElaboration_; }
 
 };
 

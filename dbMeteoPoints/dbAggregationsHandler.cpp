@@ -2,6 +2,7 @@
 #include "commonConstants.h"
 #include "basicMath.h"
 #include "utilities.h"
+#include "meteo.h"
 
 #include <QtSql>
 
@@ -334,17 +335,13 @@ bool Crit3DAggregationsDbHandler::loadVariableProperties()
             getValue(qry.value("id_variable"), &id_variable);
             getValue(qry.value("variable"), &variable);
             stdVar = variable.toStdString();
-            try {
-              meteoVar = MapDailyMeteoVar.at(stdVar);
+
+            meteoVar = getKeyMeteoVarMeteoMap(MapDailyMeteoVarToString, stdVar);
+            if (meteoVar == noMeteoVar)
+            {
+                meteoVar = getKeyMeteoVarMeteoMap(MapHourlyMeteoVarToString, stdVar);
             }
-            catch (const std::out_of_range& ) {
-                try {
-                    meteoVar = MapHourlyMeteoVar.at(stdVar);
-                }
-                catch (const std::out_of_range& ) {
-                    meteoVar = noMeteoVar;
-                }
-            }
+
             if (meteoVar != noMeteoVar)
             {
                 ret = _mapIdMeteoVar.insert(std::pair<int, meteoVariable>(id_variable,meteoVar));
