@@ -2382,7 +2382,7 @@ bool preElaboration(QString *myError, Crit3DMeteoPointsDbHandler* meteoPointsDbH
                     if (getVarFrequency(variable) == hourly)
                     {
                         QDateTime firstTime = QDateTime(startDate, QTime(0, 0, 0, 0));
-                        QDateTime lastTime = QDateTime(startDate, QTime(23, 0, 0, 0));
+                        QDateTime lastTime = QDateTime(endDate, QTime(23, 0, 0, 0));
                         *percValue = loadHourlyVarSeries_SaveOutput(myError, meteoPointsDbHandler, meteoGridDbHandler, meteoPoint, isMeteoGrid, variable, firstTime, lastTime, outputValues);
                     }
                     else
