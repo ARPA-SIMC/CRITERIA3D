@@ -2009,9 +2009,9 @@ bool aggregatedHourlyToDaily(meteoVariable myVar, Crit3DMeteoPoint* meteoPoint, 
 
 }
 
+
 std::vector<float> aggregatedHourlyToDailyList(meteoVariable myVar, Crit3DMeteoPoint* meteoPoint, Crit3DDate dateIni, Crit3DDate dateFin, Crit3DMeteoSettings *meteoSettings)
 {
-
     Crit3DDate date;
     std::vector <float> values;
     std::vector<float> dailyData;
@@ -2023,7 +2023,9 @@ std::vector<float> aggregatedHourlyToDailyList(meteoVariable myVar, Crit3DMeteoP
     int nValidValues;
 
     if (meteoPoint->nrObsDataDaysD == 0)
+    {
         meteoPoint->initializeObsDataD(dateIni.daysTo(dateFin)+1, dateIni);
+    }
 
     switch(myVar)
     {
@@ -2093,7 +2095,8 @@ std::vector<float> aggregatedHourlyToDailyList(meteoVariable myVar, Crit3DMeteoP
             break;
     }
 
-    if (hourlyVar == noMeteoVar || elab == noMeteoComp) return dailyData;
+    if (hourlyVar == noMeteoVar || elab == noMeteoComp)
+        return dailyData;
 
     for (date = dateIni; date <= dateFin; date = date.addDays(1))
     {
@@ -2127,11 +2130,9 @@ std::vector<float> aggregatedHourlyToDailyList(meteoVariable myVar, Crit3DMeteoP
         {
             // todo warning
         }
-
     }
 
     return dailyData;
-
 }
 
 

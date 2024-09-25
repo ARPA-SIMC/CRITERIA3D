@@ -2738,7 +2738,6 @@ std::vector<float> Crit3DMeteoGridDbHandler::loadGridHourlyVar(QString *errorStr
     }
     else
     {
-
         while (qry.next())
         {
             if (firstRow)
@@ -2759,7 +2758,7 @@ std::vector<float> Crit3DMeteoGridDbHandler::loadGridHourlyVar(QString *errorStr
             }
             else
             {
-                if (!getValue(qry.value(_tableHourly.fieldTime), &dateTime))
+                if (! getValue(qry.value(_tableHourly.fieldTime), &dateTime))
                 {
                     *errorStr = "Missing fieldTime";
                     return hourlyVarList;
@@ -2771,20 +2770,18 @@ std::vector<float> Crit3DMeteoGridDbHandler::loadGridHourlyVar(QString *errorStr
                     hourlyVarList.push_back(NODATA);
                 }
 
-                if (!getValue(qry.value("Value"), &value))
+                if (! getValue(qry.value("Value"), &value))
                 {
                     *errorStr = "Missing Value";
                 }
+
                 hourlyVarList.push_back(value);
                 previousDateTime = dateTime;
             }
-
         }
-
     }
 
     return hourlyVarList;
-
 }
 
 

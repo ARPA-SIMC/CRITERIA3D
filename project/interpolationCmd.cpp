@@ -1,5 +1,6 @@
 #include <QDate>
 #include <QString>
+#include <math.h>
 
 #include "basicMath.h"
 #include "gis.h"
