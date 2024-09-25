@@ -1,7 +1,7 @@
 #include <QString>
 #include <QDate>
 #include <QtSql>
-#include <qDebug>
+#include <QDebug>
 
 #include <math.h>       /* ceil */
 
