@@ -2049,6 +2049,16 @@ namespace interpolation
             }
             R2 = computeWeighted_R2(y,ySim,weights);
 
+            if (R2 > (bestR2))
+            {
+                for (j=0; j<nrParameters; j++)
+                {
+                    bestParameters[j] = parameters[j];
+                }
+                bestR2 = R2;
+            }
+
+            /*
             if (R2 > (bestR2-deltaR2))
             {
                 for (j=0;j<nrMinima-1;j++)
@@ -2070,6 +2080,7 @@ namespace interpolation
                     bestParameters[j] = parameters[j];
                 }
             }
+            */
         }
 
         /*int directions[] = {1, -1};
