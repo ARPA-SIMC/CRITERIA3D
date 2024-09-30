@@ -808,7 +808,6 @@ int cmdGridAggregationOnZones(PragaProject* myProject, QList<QString> argumentLi
 
     float threshold = NODATA;
     meteoComputation elab1MeteoComp = noMeteoComp;
-    QString periodType = "D";
 
     QString rasterName;
     if (!myProject->aggregationDbHandler->getRasterName(&rasterName))
@@ -833,7 +832,7 @@ int cmdGridAggregationOnZones(PragaProject* myProject, QList<QString> argumentLi
         for (int j = 0; j < aggregationList.size(); j++)
         {
             myProject->logInfo("Computing variable number: " + QString::number(i) + ", aggregation number: " + QString::number(j));
-            if (! myProject->averageSeriesOnZonesMeteoGrid(variables[i], elab1MeteoComp, aggregationList[j], threshold, myRaster, first, last, periodType, false))
+            if (! myProject->averageSeriesOnZonesMeteoGrid(variables[i], elab1MeteoComp, aggregationList[j], threshold, myRaster, first, last, false))
             {
                 delete myRaster;
                 return PRAGA_ERROR;

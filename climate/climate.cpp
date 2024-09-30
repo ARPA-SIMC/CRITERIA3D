@@ -830,7 +830,6 @@ float loadDailyVarSeries(QString *myError, Crit3DMeteoPointsDbHandler *meteoPoin
 }
 
 
-
 float loadHourlyVarSeries_SaveOutput(QString *myError, Crit3DMeteoPointsDbHandler *meteoPointsDbHandler,
                                     Crit3DMeteoGridDbHandler *meteoGridDbHandler, Crit3DMeteoPoint* meteoPoint, bool isMeteoGrid,
                                     meteoVariable variable, QDate firstDate, QDate lastDate, std::vector<float> &outputValues)
@@ -952,10 +951,7 @@ float loadDailyVarSeries_SaveOutput(QString *myError, Crit3DMeteoPointsDbHandler
     }
     else
     {
-        if (meteoPoint->nrObsDataDaysD == 0)
-        {
-            meteoPoint->initializeObsDataD(int(dailyValues.size()), getCrit3DDate(firstDateDB));
-        }
+        meteoPoint->initializeObsDataD(int(dailyValues.size()), getCrit3DDate(firstDateDB));
 
         Crit3DDate currentDate = getCrit3DDate(firstDateDB);
         for (unsigned int i = 0; i < dailyValues.size(); i++)

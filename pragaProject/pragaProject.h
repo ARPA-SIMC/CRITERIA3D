@@ -129,7 +129,7 @@
         bool climatePointsCycleGrid(bool showInfo);
         bool averageSeriesOnZonesMeteoGrid(meteoVariable variable, meteoComputation elab1MeteoComp,
                                            QString aggregationString, float threshold, gis::Crit3DRasterGrid* zoneGrid,
-                                           QDate startDate, QDate endDate, QString periodType, bool showInfo);
+                                           QDate startDate, QDate endDate, bool showInfo);
         bool getIsElabMeteoPointsValue() const;
         void setIsElabMeteoPointsValue(bool value);
         bool dbMeteoPointDataCount(QDate myFirstDate, QDate myLastDate, meteoVariable myVar, QString dataset, std::vector<int> &myCounter);
@@ -157,6 +157,18 @@
         bool computeClimatePointXML(QString xmlName);
         bool cleanClimatePoint();
         bool saveLogProceduresGrid(QString nameProc, QDate date);
+
+        bool dailyZoneAggregationMeteoGrid(meteoVariable variable, const QString& aggregationString, float threshold,
+                                           gis::Crit3DRasterGrid* zoneGrid, std::vector<std::vector<float>> &zoneValues, std::vector<float> &outputSeries,
+                                           std::vector<std::vector<int>> &indexRowCol,
+                                           std::vector<std::vector<int>> &meteoGridRow, std::vector<std::vector<int>> &meteoGridcol,
+                                           const Crit3DDate& startDate, int nrDays, bool showInfo);
+
+        bool hourlyZoneAggregationMeteoGrid(meteoVariable variable, const QString& aggregationString, float threshold,
+                                           gis::Crit3DRasterGrid* zoneGrid, std::vector<std::vector<float>> &zoneValues, std::vector<float> &outputSeries,
+                                           std::vector<std::vector<int>> &indexRowCol,
+                                           std::vector<std::vector<int>> &meteoGridRow, std::vector<std::vector<int>> &meteoGridcol,
+                                           const Crit3DDate& startDate, int nrDays, bool showInfo);
 
         #ifdef NETCDF
                 bool exportMeteoGridToNetCDF(QString fileName, QString title, QString variableName, std::string variableUnit, Crit3DDate myDate, int nDays, int refYearStart, int refYearEnd);
