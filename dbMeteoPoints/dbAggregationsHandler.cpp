@@ -76,7 +76,7 @@ bool Crit3DAggregationsDbHandler::saveAggregationData(int nZones, QString aggrTy
                     QDateTime currentDateTime;
                     currentDateTime.setTimeSpec(Qt::UTC);
                     currentDateTime.setDate(startDate.addDays(currentDay));
-                    currentDateTime.setTime(QTime(currentHour,0,0,0));
+                    currentDateTime.setTime(QTime(currentHour, 0, 0, 0));
 
                     QString dateString = currentDateTime.toString("yyyy-MM-dd hh:00:00");
                     QString varString = QString::number(idVariable);
