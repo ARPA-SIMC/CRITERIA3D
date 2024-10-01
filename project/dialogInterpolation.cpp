@@ -16,7 +16,9 @@ DialogInterpolation::DialogInterpolation(Project *myProject)
 
     setWindowTitle(tr("Interpolation settings"));
 
-    QVBoxLayout *layoutMain = new QVBoxLayout;
+    QHBoxLayout *layoutMain = new QHBoxLayout;
+    QVBoxLayout *layoutMainLeft = new QVBoxLayout;
+    QVBoxLayout *layoutMainRight = new QVBoxLayout;
 
     //algorithm
     QGroupBox *groupAlgorithm = new QGroupBox(tr("Algorithm"));
@@ -35,7 +37,7 @@ DialogInterpolation::DialogInterpolation(Project *myProject)
 
     layoutAlgorithm->addWidget(&algorithmEdit);
     groupAlgorithm->setLayout(layoutAlgorithm);
-    layoutMain->addWidget(groupAlgorithm);
+    layoutMainLeft->addWidget(groupAlgorithm);
 
     // grid interpolation
     QGroupBox *groupGrid = new QGroupBox(tr("Gridding"));
@@ -61,7 +63,7 @@ DialogInterpolation::DialogInterpolation(Project *myProject)
     gridAggrLayout->addWidget(&gridAggregationMethodEdit);
     layoutGrid->addLayout(gridAggrLayout);
     groupGrid->setLayout(layoutGrid);
-    layoutMain->addWidget(groupGrid);
+    layoutMainLeft->addWidget(groupGrid);
 
     connect(upscaleFromDemEdit, SIGNAL(stateChanged(int)), this, SLOT(upscaleFromDemChanged(int)));
 
@@ -84,7 +86,7 @@ DialogInterpolation::DialogInterpolation(Project *myProject)
     layoutTD->addLayout(layoutTdMult);
 
     groupTD->setLayout(layoutTD);
-    layoutMain->addWidget(groupTD);
+    layoutMainLeft->addWidget(groupTD);
 
     // detrending
     QGroupBox *groupDetrending = new QGroupBox(tr("Detrending"));
@@ -175,7 +177,7 @@ DialogInterpolation::DialogInterpolation(Project *myProject)
     layoutDetrending->addLayout(layoutProxy);
 
     groupDetrending->setLayout(layoutDetrending);
-    layoutMain->addWidget(groupDetrending);
+    layoutMainRight->addWidget(groupDetrending);
 
     // dew point
     QGroupBox *groupRH = new QGroupBox(tr("Relative humidity"));
@@ -190,15 +192,20 @@ DialogInterpolation::DialogInterpolation(Project *myProject)
     layoutRH->addWidget(useInterpolTForRH);
 
     groupRH->setLayout(layoutRH);
-    layoutMain->addWidget(groupRH);
+    layoutMainLeft->addWidget(groupRH);
 
     //buttons
+    QVBoxLayout *layoutMainButtons = new QVBoxLayout();
     QDialogButtonBox *buttonBox = new QDialogButtonBox(QDialogButtonBox::Ok | QDialogButtonBox::Cancel);
     connect(buttonBox, &QDialogButtonBox::accepted, this, &QDialog::accept);
     connect(buttonBox, &QDialogButtonBox::rejected, this, &QDialog::reject);
-    layoutMain->addWidget(buttonBox);
+    layoutMainButtons->addWidget(buttonBox);
 
-    layoutMain->addStretch(1);
+    layoutMain->addLayout(layoutMainLeft);
+    layoutMain->addLayout(layoutMainRight);
+    layoutMain->addLayout(layoutMainButtons);
+
+    //layoutMain->addStretch(1);
     setLayout(layoutMain);
 
     upscaleFromDemChanged(upscaleFromDemEdit->checkState());

@@ -1126,6 +1126,7 @@ void localSelection(vector <Crit3DInterpolationDataPoint> &inputPoints, vector <
         for (i=0; i< selectedPoints.size(); i++)
         {
             selectedPoints[i].regressionWeight = MAXVALUE(1 - selectedPoints[i].distance / maxDistance, EPSILON);
+
             //selectedPoints[i].regressionWeight = MAXVALUE(std::exp(-selectedPoints[i].distance*selectedPoints[i].distance/((0.5*maxDistance)*(0.5*maxDistance))),EPSILON);
             //selectedPoints[i].regressionWeight = float(MAXVALUE((-(1/std::pow(maxDistance,4)*(std::pow(selectedPoints[i].distance,4)))+1),EPSILON));
             //selectedPoints[i].regressionWeight = 1;
@@ -1798,7 +1799,7 @@ bool multipleDetrendingElevationFitting(int elevationPos, std::vector <Crit3DInt
     std::vector<std::vector<double>> firstGuessCombinations = mySettings->getProxy(elevationPos)->getFirstGuessCombinations();
     // multiple non linear fitting
     interpolation::bestFittingMarquardt_nDimension_singleFunction(*(myFunc.target<double(*)(double, std::vector<double>&)>()), 400, 4, parametersMin, parametersMax, parameters, parametersDelta,
-                                                                  stepSize, numSteps, 100, 0.5, 0.002, predictors, predictands, weights,firstGuessCombinations);
+                                                                  stepSize, numSteps, 100, 0.5, 0.01, predictors, predictands, weights,firstGuessCombinations);
 
 
     std::vector<std::vector<double>> newParameters;
