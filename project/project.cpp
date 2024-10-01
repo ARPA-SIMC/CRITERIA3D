@@ -2453,6 +2453,8 @@ bool Project::interpolationDemLocalDetrending(meteoVariable myVar, const Crit3DT
                                                             myVar, x, y, z, proxyValues, true);
                     interpolationSettings.clearFitting();
                     interpolationSettings.setCurrentCombination(interpolationSettings.getSelectedCombination());
+
+                    subsetInterpolationPoints.clear();
                 }
             }
         }
