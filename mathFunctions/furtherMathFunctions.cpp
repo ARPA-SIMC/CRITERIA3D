@@ -29,6 +29,7 @@
 #include <time.h>
 #include <functional>
 #include <random>
+#include "basicMath.h"
 #include "commonConstants.h"
 #include "furtherMathFunctions.h"
 
@@ -2049,7 +2050,7 @@ namespace interpolation
             }
             R2 = computeWeighted_R2(y,ySim,weights);
 
-            if (R2 > (bestR2))
+            if (isEqual(R2, NODATA) || R2 > (bestR2 + deltaR2))
             {
                 for (j=0; j<nrParameters; j++)
                 {

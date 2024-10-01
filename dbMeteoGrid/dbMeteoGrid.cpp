@@ -1450,6 +1450,7 @@ bool Crit3DMeteoGridDbHandler::updateMeteoGridDate(QString &errorStr)
     QString tableM = "MonthlyData";
 
     QSqlQuery qry(_db);
+    bool noTables = false;
 
     if (_tableDaily.exists)
     {
@@ -1470,15 +1471,17 @@ bool Crit3DMeteoGridDbHandler::updateMeteoGridDate(QString &errorStr)
                     col = 0;
                 }
 
-                if (!_meteoGrid->findFirstActiveMeteoPoint(&id, &row, &col))
-                {
-                    errorStr = "active cell not found";
-                    return false;
+                if (_meteoGrid->findFirstActiveMeteoPoint(&id, &row, &col))
+                {   
+                    tableD = _tableDaily.prefix + QString::fromStdString(id) + _tableDaily.postFix;
+                    statement = QString("SELECT MIN(%1) as minDate, MAX(%1) as maxDate FROM `%2`").arg(_tableDaily.fieldTime, tableD);
+                    qry.exec(statement);
                 }
-                tableD = _tableDaily.prefix + QString::fromStdString(id) + _tableDaily.postFix;
-
-                statement = QString("SELECT MIN(%1) as minDate, MAX(%1) as maxDate FROM `%2`").arg(_tableDaily.fieldTime, tableD);
-                qry.exec(statement);
+                else
+                {
+                    noTables = true;
+                    break;
+                }
             }
         }
 
@@ -1487,7 +1490,7 @@ bool Crit3DMeteoGridDbHandler::updateMeteoGridDate(QString &errorStr)
             errorStr = qry.lastError().text();
             return false;
         }
-        else
+        else if (! noTables)
         {
             if (qry.next())
             {
@@ -1516,7 +1519,9 @@ bool Crit3DMeteoGridDbHandler::updateMeteoGridDate(QString &errorStr)
         QString statement = QString("SELECT MIN(%1) as minDate, MAX(%1) as maxDate FROM `%2`").arg(_tableHourly.fieldTime, tableH);
         if(! qry.exec(statement) )
         {
-            while( qry.lastError().nativeErrorCode() == tableNotFoundError)
+            while( qry.lastError().nativeErrorCode() == tableNotFoundError
+                   && (col < _gridStructure.header().nrCols-1
+                   || row < _gridStructure.header().nrRows-1))
             {
                 if ( col < _gridStructure.header().nrCols-1)
                 {
@@ -1528,20 +1533,24 @@ bool Crit3DMeteoGridDbHandler::updateMeteoGridDate(QString &errorStr)
                     col = 0;
                 }
 
-                if (! _meteoGrid->findFirstActiveMeteoPoint(&id, &row, &col))
-                {
-                    errorStr = "active cell not found";
-                    return false;
+                if (_meteoGrid->findFirstActiveMeteoPoint(&id, &row, &col))
+                {   
+                    tableH = _tableHourly.prefix + QString::fromStdString(id) + _tableHourly.postFix;
+
+                    statement = QString("SELECT MIN(%1) as minDate, MAX(%1) as maxDate FROM `%2`").arg(_tableHourly.fieldTime, tableH);
+                    qry.exec(statement);
                 }
-
-                tableH = _tableHourly.prefix + QString::fromStdString(id) + _tableHourly.postFix;
-
-                statement = QString("SELECT MIN(%1) as minDate, MAX(%1) as maxDate FROM `%2`").arg(_tableHourly.fieldTime, tableH);
-                qry.exec(statement);
+                else
+                {
+                    noTables = true;
+                    break;
+                }
             }
         }
 
-        if ( qry.lastError().type() != QSqlError::NoError && qry.lastError().nativeErrorCode() != tableNotFoundError)
+        if (noTables) return true;
+
+        if (qry.lastError().type() != QSqlError::NoError && qry.lastError().nativeErrorCode() != tableNotFoundError)
         {
             errorStr = qry.lastError().text();
             return false;
