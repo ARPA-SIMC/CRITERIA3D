@@ -1804,7 +1804,7 @@ bool multipleDetrendingElevationFitting(int elevationPos, std::vector <Crit3DInt
 
     mySettings->getProxy(elevationPos)->setRegressionR2(R2);
 
-    if (R2 < 0.1)
+    if (R2 < 0)
     {
         mySettings->setSignificantCurrentCombination(elevationPos, false);
         return true;

@@ -61,32 +61,32 @@ Crit3DLocalProxyWidget::Crit3DLocalProxyWidget(double x, double y, double zDEM, 
     QLabel *par4Label = new QLabel(tr("par4"));
     QLabel *par5Label = new QLabel(tr("par5"));
 
-    par0.setMaximumWidth(60);
+    par0.setMaximumWidth(90);
     par0.setMinimumHeight(25);
     par0.setMaximumHeight(25);
     par0.setEnabled(false);
 
-    par1.setMaximumWidth(60);
+    par1.setMaximumWidth(90);
     par1.setMinimumHeight(25);
     par1.setMaximumHeight(25);
     par1.setEnabled(false);
 
-    par2.setMaximumWidth(60);
+    par2.setMaximumWidth(90);
     par2.setMinimumHeight(25);
     par2.setMaximumHeight(25);
     par2.setEnabled(false);
 
-    par3.setMaximumWidth(60);
+    par3.setMaximumWidth(90);
     par3.setMinimumHeight(25);
     par3.setMaximumHeight(25);
     par3.setEnabled(false);
 
-    par4.setMaximumWidth(60);
+    par4.setMaximumWidth(90);
     par4.setMinimumHeight(25);
     par4.setMaximumHeight(25);
     par4.setEnabled(false);
 
-    par5.setMaximumWidth(60);
+    par5.setMaximumWidth(90);
     par5.setMinimumHeight(25);
     par5.setMaximumHeight(25);
     par5.setEnabled(false);
