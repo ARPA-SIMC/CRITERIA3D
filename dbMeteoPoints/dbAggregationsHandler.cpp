@@ -47,7 +47,7 @@ bool Crit3DAggregationsDbHandler::saveAggregationData(int nZones, QString aggrTy
     long nrDays = long(startDate.daysTo(endDate)) + 1;
     QSqlQuery qry(_db);
 
-    // LC NB le zone partono da 1
+    // LC warning: the zones start from 1
     for (unsigned int zone = 1; zone <= unsigned(nZones); zone++)
     {
         QString queryString = QString("REPLACE INTO `%1_%2_%3` VALUES").arg(QString::number(zone), aggrType, periodType);
@@ -65,9 +65,18 @@ bool Crit3DAggregationsDbHandler::saveAggregationData(int nZones, QString aggrTy
                         valueString = QString::number(double(aggregatedValues[day*24 + hour][zone-1]), 'f', 1);
                     }
 
+                    // the data refers to the past hour
+                    int currentDay = day;
+                    int currentHour = hour + 1;
+                    if (currentHour == 24)
+                    {
+                        currentHour = 0;
+                        currentDay++;
+                    }
                     QDateTime currentDateTime;
-                    currentDateTime.setDate(startDate.addDays(day));
-                    currentDateTime.setTime(QTime(hour,0,0,0));
+                    currentDateTime.setTimeSpec(Qt::UTC);
+                    currentDateTime.setDate(startDate.addDays(currentDay));
+                    currentDateTime.setTime(QTime(currentHour, 0, 0, 0));
 
                     QString dateString = currentDateTime.toString("yyyy-MM-dd hh:00:00");
                     QString varString = QString::number(idVariable);
@@ -94,7 +103,7 @@ bool Crit3DAggregationsDbHandler::saveAggregationData(int nZones, QString aggrTy
             }
         }
 
-        // remove last comma
+        // removes the last comma
         queryString = queryString.left(queryString.length() - 1);
 
         if (! qry.exec(queryString))
