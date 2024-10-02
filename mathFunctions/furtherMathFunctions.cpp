@@ -2015,7 +2015,7 @@ namespace interpolation
         return norm;
     }
 
-    int bestFittingMarquardt_nDimension_singleFunction(double (*func)(double, std::vector<double>&),
+    double bestFittingMarquardt_nDimension_singleFunction(double (*func)(double, std::vector<double>&),
                                                        int nrTrials, int nrMinima,
                                                        std::vector <double>& parametersMin, std::vector <double>& parametersMax,
                                                        std::vector <double>& parameters, std::vector <double>& parametersDelta,
@@ -2058,99 +2058,13 @@ namespace interpolation
                 }
                 bestR2 = R2;
             }
-
-            /*
-            if (R2 > (bestR2-deltaR2))
-            {
-                for (j=0;j<nrMinima-1;j++)
-                {
-                    R2Previous[j] = R2Previous[j+1];
-                }
-                if (R2 > (bestR2))
-                {
-                    for (j=0; j<nrParameters; j++)
-                    {
-                        bestParameters[j] = parameters[j];
-                    }
-                    bestR2 = R2;
-                }
-                R2Previous[nrMinima-1] = R2;
-
-                for (j=0; j<nrParameters; j++)
-                {
-                    bestParameters[j] = parameters[j];
-                }
-            }
-            */
         }
-
-        /*int directions[] = {1, -1};
-        std::vector<double> firstGuessParam = parameters;
-        int step,dir, index;
-        std::vector <int> paramIndex = {0,2};
-
-        for (step = 1; step <= numSteps+1; step++)
-        {
-            for (dir = 0; dir < 2; dir++)
-            {
-                for (index = 0; index < 2; index++)
-                {
-                    if (step > 2 && dir == 1 && index == 0)
-                        continue;
-
-
-                    fittingMarquardt_nDimension_noSquares_singleFunction(func,parametersMin,
-                                                                         parametersMax,parameters,
-                                                                         parametersDelta,maxIterationsNr,
-                                                                         myEpsilon,x,y,weights);
-
-                    for (i=0;i<nrData;i++)
-                    {
-                        ySim[i]= func(x[i], parameters);
-                    }
-                    R2 = computeWeighted_R2(y,ySim,weights);
-
-                    if (R2 > (bestR2-deltaR2))
-                    {
-                        for (j=0;j<nrMinima-1;j++)
-                        {
-                            R2Previous[j] = R2Previous[j+1];
-                        }
-                        if (R2 > (bestR2))
-                        {
-                            for (j=0; j<nrParameters; j++)
-                            {
-                                bestParameters[j] = parameters[j];
-                            }
-                            bestR2 = R2;
-                        }
-                        R2Previous[nrMinima-1] = R2;
-
-                        for (j=0; j<nrParameters; j++)
-                        {
-                            bestParameters[j] = parameters[j];
-                        }
-                    }
-                    counter++;
-
-                    parameters = firstGuessParam;
-
-                    if (dir == 0)
-                        parameters[paramIndex[index]] = MINVALUE(firstGuessParam[paramIndex[index]] + directions[dir] * step * stepSize[paramIndex[index]], parametersMax[paramIndex[index]]);
-                    else
-                        parameters[paramIndex[index]] = MAXVALUE(firstGuessParam[paramIndex[index]] + directions[dir] * step * stepSize[paramIndex[index]], parametersMin[paramIndex[index]]);
-
-                }
-            }
-            if ((counter > nrTrials))
-                break;
-        }*/
 
         for (j=0; j<nrParameters; j++)
         {
             parameters[j] = bestParameters[j];
         }
-        return 1;
+        return bestR2;
     }
 
     bool fittingMarquardt_nDimension_noSquares_singleFunction(double (*func) (double, std::vector<double>&),
