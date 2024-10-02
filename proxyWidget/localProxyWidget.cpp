@@ -501,6 +501,9 @@ void Crit3DLocalProxyWidget::modelLRClicked(int toggled)
                                 point.setY(lapseRatePiecewise_three_free(xVector[p], parameters.front()));
                             point_vector.append(point);
                         }
+
+                        if (interpolationSettings->getProxy(proxyPos)->getRegressionR2() != NODATA)
+                            r2.setText(QString("%1").arg(interpolationSettings->getProxy(proxyPos)->getRegressionR2(), 0, 'f', 2));
                     }
                 }
             }

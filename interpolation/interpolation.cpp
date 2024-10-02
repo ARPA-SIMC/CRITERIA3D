@@ -1101,7 +1101,7 @@ void localSelection(vector <Crit3DInterpolationDataPoint> &inputPoints, vector <
     unsigned int nrPrimaries = 0;
 
     int maxDistance = 0;
-    while (nrValid < minPoints || (mySettings.getUseLapseRateCode() && nrPrimaries < minPoints))
+    while ((!mySettings.getUseLapseRateCode() && nrValid < minPoints) || (mySettings.getUseLapseRateCode() && nrPrimaries < minPoints))
     {
         for (i=0; i < inputPoints.size(); i++)
         {
@@ -1741,6 +1741,7 @@ bool multipleDetrendingMain(std::vector <Crit3DInterpolationDataPoint> &myPoints
 bool multipleDetrendingElevationFitting(int elevationPos, std::vector <Crit3DInterpolationDataPoint> &myPoints,
                                  Crit3DInterpolationSettings* mySettings, meteoVariable myVar, std::string &errorStr)
 {
+    mySettings->getProxy(elevationPos)->setRegressionR2(NODATA);
     if (! getUseDetrendingVar(myVar)) return true;
     if (elevationPos == NODATA) return true;
 
@@ -1798,9 +1799,16 @@ bool multipleDetrendingElevationFitting(int elevationPos, std::vector <Crit3DInt
 
     std::vector<std::vector<double>> firstGuessCombinations = mySettings->getProxy(elevationPos)->getFirstGuessCombinations();
     // multiple non linear fitting
-    interpolation::bestFittingMarquardt_nDimension_singleFunction(*(myFunc.target<double(*)(double, std::vector<double>&)>()), 400, 4, parametersMin, parametersMax, parameters, parametersDelta,
-                                                                  stepSize, numSteps, 100, 0.5, 0.01, predictors, predictands, weights,firstGuessCombinations);
+    double R2 = interpolation::bestFittingMarquardt_nDimension_singleFunction(*(myFunc.target<double(*)(double, std::vector<double>&)>()), 400, 4, parametersMin, parametersMax, parameters, parametersDelta,
+                                                                  stepSize, numSteps, 1000, 0.5, 0.01, predictors, predictands, weights,firstGuessCombinations);
 
+    mySettings->getProxy(elevationPos)->setRegressionR2(R2);
+
+    if (R2 < 0.1)
+    {
+        mySettings->setSignificantCurrentCombination(elevationPos, false);
+        return true;
+    }
 
     std::vector<std::vector<double>> newParameters;
     newParameters.push_back(parameters);
