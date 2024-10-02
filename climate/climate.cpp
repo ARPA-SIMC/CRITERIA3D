@@ -874,6 +874,9 @@ float loadHourlyVarSeries_SaveOutput(QString *myError, Crit3DMeteoPointsDbHandle
     meteoPoint->initializeObsDataH(meteoPoint->hourlyFraction, nrOfDays, firstCrit3DDate);
     meteoPoint->initializeObsDataD(nrOfDays, firstCrit3DDate);
 
+    int nrRequestedValues = (firstDate.daysTo(lastDate) + 1) * 24;
+    int nrValidValues = 0;
+
     // fill initial NODATA (if firstHour > 1)
     int firstHour = firstDateTimeDB.time().hour();
     if (firstHour > 1)
@@ -884,10 +887,7 @@ float loadHourlyVarSeries_SaveOutput(QString *myError, Crit3DMeteoPointsDbHandle
         }
     }
 
-    int nrRequestedValues = (firstDate.daysTo(lastDate) + 1) * 24;
-    int nrValidValues = 0;
     Crit3DQuality qualityCheck;
-
     Crit3DTime currentDateTime = getCrit3DTime(firstDateTimeDB);
     for (unsigned int i = 0; i < hourlyValues.size(); i++)
     {
