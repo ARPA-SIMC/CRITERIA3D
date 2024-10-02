@@ -33,31 +33,63 @@ Crit3DLocalProxyWidget::Crit3DLocalProxyWidget(double x, double y, double zDEM, 
     QVBoxLayout *selectionOptionLayout = new QVBoxLayout;
     QHBoxLayout *selectionOptionBoxLayout = new QHBoxLayout;
     QHBoxLayout *selectionOptionEditLayout = new QHBoxLayout;
+    QHBoxLayout *parametersListLayoutUp = new QHBoxLayout;
+    QHBoxLayout *parametersListLayoutMiddle = new QHBoxLayout;
+    QHBoxLayout *parametersListLayoutDown = new QHBoxLayout;
+    QVBoxLayout *parametersListLayout = new QVBoxLayout;
 
     detrended.setText("Detrended data");
-    climatologicalLR.setText("Climate lapserate");
     modelLR.setText("Model lapse rate");
     stationWeights.setText("See weight of stations");
 
     //temporaneamente disattivati
     detrended.setVisible(false);
-    climatologicalLR.setVisible(false);
-    climatologicalLR.setEnabled(false);
-
     QLabel *r2Label = new QLabel(tr("R2"));
-    QLabel *lapseRateLabel = new QLabel(tr("Lapse rate"));
 
     r2.setMaximumWidth(60);
     r2.setMinimumHeight(25);
     r2.setMaximumHeight(25);
     r2.setEnabled(false);
-    lapseRate.setMaximumWidth(60);
-    lapseRate.setMinimumHeight(25);
-    lapseRate.setMaximumHeight(25);
-    lapseRate.setEnabled(false);
 
     QLabel *variableLabel = new QLabel(tr("Variable"));
     QLabel *axisXLabel = new QLabel(tr("Axis X"));
+
+    QLabel *par0Label = new QLabel(tr("par0"));
+    QLabel *par1Label = new QLabel(tr("par1"));
+    QLabel *par2Label = new QLabel(tr("par2"));
+    QLabel *par3Label = new QLabel(tr("par3"));
+    QLabel *par4Label = new QLabel(tr("par4"));
+    QLabel *par5Label = new QLabel(tr("par5"));
+
+    par0.setMaximumWidth(60);
+    par0.setMinimumHeight(25);
+    par0.setMaximumHeight(25);
+    par0.setEnabled(false);
+
+    par1.setMaximumWidth(60);
+    par1.setMinimumHeight(25);
+    par1.setMaximumHeight(25);
+    par1.setEnabled(false);
+
+    par2.setMaximumWidth(60);
+    par2.setMinimumHeight(25);
+    par2.setMaximumHeight(25);
+    par2.setEnabled(false);
+
+    par3.setMaximumWidth(60);
+    par3.setMinimumHeight(25);
+    par3.setMaximumHeight(25);
+    par3.setEnabled(false);
+
+    par4.setMaximumWidth(60);
+    par4.setMinimumHeight(25);
+    par4.setMaximumHeight(25);
+    par4.setEnabled(false);
+
+    par5.setMaximumWidth(60);
+    par5.setMinimumHeight(25);
+    par5.setMaximumHeight(25);
+    par5.setEnabled(false);
 
     std::vector<Crit3DProxy> proxy = interpolationSettings->getCurrentProxy();
 
@@ -67,14 +99,6 @@ Crit3DLocalProxyWidget::Crit3DLocalProxyWidget(double x, double y, double zDEM, 
     }
     proxyPos = 0;
     comboAxisX.setSizeAdjustPolicy(QComboBox::AdjustToContents);
-    if (comboAxisX.currentText() != "elevation")
-    {
-        climatologicalLR.setVisible(false);
-    }
-    else
-    {
-        climatologicalLR.setVisible(true);
-    }
 
     std::map<meteoVariable, std::string>::const_iterator it;
     if (currentFrequency == daily)
@@ -101,16 +125,33 @@ Crit3DLocalProxyWidget::Crit3DLocalProxyWidget(double x, double y, double zDEM, 
     selectionChartLayout->addWidget(axisXLabel);
     selectionChartLayout->addWidget(&comboAxisX);
 
+    parametersListLayoutUp->addWidget(par0Label);
+    parametersListLayoutUp->addWidget(&par0);
+    parametersListLayoutUp->addWidget(par3Label);
+    parametersListLayoutUp->addWidget(&par3);
+    parametersListLayoutMiddle->addWidget(par1Label);
+    parametersListLayoutMiddle->addWidget(&par1);
+    parametersListLayoutMiddle->addWidget(par4Label);
+    parametersListLayoutMiddle->addWidget(&par4);
+    parametersListLayoutDown->addWidget(par2Label);
+    parametersListLayoutDown->addWidget(&par2);
+    parametersListLayoutDown->addWidget(par5Label);
+    parametersListLayoutDown->addWidget(&par5);
+
+    parametersListLayout->addStretch(150);
+    parametersListLayout->addStretch(150);
+    parametersListLayout->addStretch(150);
+    parametersListLayout->addLayout(parametersListLayoutUp);
+    parametersListLayout->addLayout(parametersListLayoutMiddle);
+    parametersListLayout->addLayout(parametersListLayoutDown);
+
     selectionOptionBoxLayout->addWidget(&detrended);
     selectionOptionBoxLayout->addWidget(&modelLR);
-    selectionOptionBoxLayout->addWidget(&climatologicalLR);
     selectionOptionBoxLayout->addWidget(&stationWeights);
 
     selectionOptionEditLayout->addWidget(r2Label);
     selectionOptionEditLayout->addWidget(&r2);
     selectionOptionEditLayout->addStretch(150);
-    selectionOptionEditLayout->addWidget(lapseRateLabel);
-    selectionOptionEditLayout->addWidget(&lapseRate);
     selectionOptionEditLayout->addStretch(150);
     selectionOptionEditLayout->addStretch(150);
 
@@ -118,6 +159,8 @@ Crit3DLocalProxyWidget::Crit3DLocalProxyWidget(double x, double y, double zDEM, 
     selectionOptionLayout->addLayout(selectionOptionEditLayout);
 
     selectionLayout->addLayout(selectionChartLayout);
+    selectionLayout->addStretch(30);
+    selectionLayout->addLayout(parametersListLayout);
     selectionLayout->addStretch(30);
     selectionLayout->addLayout(selectionOptionLayout);
 
@@ -146,7 +189,6 @@ Crit3DLocalProxyWidget::Crit3DLocalProxyWidget(double x, double y, double zDEM, 
 
     connect(&comboAxisX, &QComboBox::currentTextChanged, [=](const QString &newProxy){ this->changeProxyPos(newProxy); });
     connect(&comboVariable, &QComboBox::currentTextChanged, [=](const QString &newVariable){ this->changeVar(newVariable); });
-    connect(&climatologicalLR, &QCheckBox::toggled, [=](int toggled){ this->climatologicalLRClicked(toggled); });
     connect(&modelLR, &QCheckBox::toggled, [=](int toggled){ this->modelLRClicked(toggled); });
     connect(&detrended, &QCheckBox::toggled, [=](){ this->plot(); });
     connect(&stationWeights, &QCheckBox::toggled, [=] () {this->plot();});
@@ -381,7 +423,7 @@ void Crit3DLocalProxyWidget::plot()
             chartView->axisX->setTickCount(11);
         }
     }
-    else */
+    else
     {
         climatologicalLR.setVisible(true);
         if (climatologicalLR.isChecked())
@@ -395,7 +437,7 @@ void Crit3DLocalProxyWidget::plot()
         chartView->axisX->setMin(-100);
         chartView->axisX->setMax(nrStep * 100);
         chartView->axisX->setTickCount(nrStep+2);
-    }
+    }*/
 
     if (modelLR.isChecked())
     {
@@ -458,7 +500,12 @@ void Crit3DLocalProxyWidget::modelLRClicked(int toggled)
 {
     chartView->cleanModelLapseRate();
     r2.clear();
-    lapseRate.clear();
+    par0.clear();
+    par1.clear();
+    par2.clear();
+    par3.clear();
+    par4.clear();
+    par5.clear();
     QList<QPointF> point_vector;
     QPointF point;
     float xMin;
@@ -504,6 +551,18 @@ void Crit3DLocalProxyWidget::modelLRClicked(int toggled)
 
                         if (interpolationSettings->getProxy(proxyPos)->getRegressionR2() != NODATA)
                             r2.setText(QString("%1").arg(interpolationSettings->getProxy(proxyPos)->getRegressionR2(), 0, 'f', 2));
+
+                        if (parameters.front().size() > 3)
+                        {
+                            par0.setText(QString("%1").arg(parameters.front()[0], 0, 'f', 4));
+                            par1.setText(QString("%1").arg(parameters.front()[1], 0, 'f', 4));
+                            par2.setText(QString("%1").arg(parameters.front()[2], 0, 'f', 4));
+                            par3.setText(QString("%1").arg(parameters.front()[3], 0, 'f', 4));
+                        }
+                        if (parameters.front().size() > 4)
+                            par4.setText(QString("%1").arg(parameters.front()[4], 0, 'f', 4));
+                        if (parameters.front().size() > 5)
+                            par5.setText(QString("%1").arg(parameters.front()[5], 0, 'f', 4));
                     }
                 }
             }
