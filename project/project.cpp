@@ -663,6 +663,12 @@ bool Project::loadParameters(QString parametersFileName)
             if (parametersSettings->contains("useInterpolationTemperatureForRH"))
                 interpolationSettings.setUseInterpolatedTForRH(parametersSettings->value("useInterpolationTemperatureForRH").toBool());
 
+            if (parametersSettings->contains("doNotRetrend"))
+                interpolationSettings.setUseDoNotRetrend(parametersSettings->value("doNotRetrend").toBool());
+
+            if (parametersSettings->contains("retrendOnly"))
+                interpolationSettings.setUseRetrendOnly(parametersSettings->value("retrendOnly").toBool());
+
             parametersSettings->endGroup();
 
         }
@@ -3046,6 +3052,8 @@ void Project::saveInterpolationParameters()
         parametersSettings->setValue("topographicDistanceMaxMultiplier", QString::number(interpolationSettings.getTopoDist_maxKh()));
         parametersSettings->setValue("optimalDetrending", interpolationSettings.getUseBestDetrending());
         parametersSettings->setValue("multipleDetrending", interpolationSettings.getUseMultipleDetrending());
+        parametersSettings->setValue("doNotRetrend", interpolationSettings.getUseDoNotRetrend());
+        parametersSettings->setValue("retrendOnly", interpolationSettings.getUseRetrendOnly());
         parametersSettings->setValue("useDewPoint", interpolationSettings.getUseDewPoint());
         parametersSettings->setValue("useInterpolationTemperatureForRH", interpolationSettings.getUseInterpolatedTForRH());
         parametersSettings->setValue("thermalInversion", interpolationSettings.getUseThermalInversion());

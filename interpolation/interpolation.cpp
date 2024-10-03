@@ -2202,18 +2202,22 @@ float interpolate(vector <Crit3DInterpolationDataPoint> &myPoints, Crit3DInterpo
 
     computeDistances(myVar, myPoints, mySettings, myX, myY, myZ, excludeSupplemental);
 
-    if (mySettings->getInterpolationMethod() == idw)
-        myResult = inverseDistanceWeighted(myPoints);
-    //else if (mySettings->getInterpolationMethod() == kriging)
-    //    myResult = NODATA;  //TODO
-    else if (mySettings->getInterpolationMethod() == shepard)
-        myResult = shepardIdw(myPoints, mySettings, myX, myY);
-    else if (mySettings->getInterpolationMethod() == shepard_modified)
+    if (!mySettings->getUseRetrendOnly())
     {
-        float radius = NODATA;
-        if (mySettings->getUseLocalDetrending()) radius = mySettings->getLocalRadius();
-        myResult = modifiedShepardIdw(myPoints, mySettings, radius, myX, myY);
+        if (mySettings->getInterpolationMethod() == idw)
+            myResult = inverseDistanceWeighted(myPoints);
+        //else if (mySettings->getInterpolationMethod() == kriging)
+        //    myResult = NODATA;  //TODO
+        else if (mySettings->getInterpolationMethod() == shepard)
+            myResult = shepardIdw(myPoints, mySettings, myX, myY);
+        else if (mySettings->getInterpolationMethod() == shepard_modified)
+        {
+            float radius = NODATA;
+            if (mySettings->getUseLocalDetrending()) radius = mySettings->getLocalRadius();
+            myResult = modifiedShepardIdw(myPoints, mySettings, radius, myX, myY);
+        }
     }
+    else myResult = 0;
 
     if (int(myResult) == int(NODATA))
         return NODATA;

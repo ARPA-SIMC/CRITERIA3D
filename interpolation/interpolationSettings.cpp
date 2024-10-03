@@ -449,6 +449,8 @@ void Crit3DInterpolationSettings::initialize()
     useMultipleDetrending = false;
     useBestDetrending = false;
     useLapseRateCode = false;
+    useDoNotRetrend = false;
+    useRetrendOnly = false;
     minRegressionR2 = float(PEARSONSTANDARDTHRESHOLD);
     meteoGridAggrMethod = aggrAverage;
     meteoGridUpscaleFromDem = true;
@@ -513,6 +515,9 @@ bool Crit3DInterpolationSettings::getUseLocalDetrending()
 bool Crit3DInterpolationSettings::getUseDoNotRetrend()
 { return useDoNotRetrend;}
 
+bool Crit3DInterpolationSettings::getUseRetrendOnly()
+{ return useRetrendOnly;}
+
 float Crit3DInterpolationSettings::getMaxHeightInversion()
 { return maxHeightInversion;}
 
@@ -533,6 +538,9 @@ void Crit3DInterpolationSettings::setUseLocalDetrending(bool myValue)
 
 void Crit3DInterpolationSettings::setUseDoNotRetrend(bool myValue)
 { useDoNotRetrend = myValue;}
+
+void Crit3DInterpolationSettings::setUseRetrendOnly(bool myValue)
+{ useRetrendOnly = myValue;}
 
 void Crit3DInterpolationSettings::setUseDewPoint(bool myValue)
 { useDewPoint = myValue;}

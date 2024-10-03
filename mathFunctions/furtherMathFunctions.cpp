@@ -2050,7 +2050,7 @@ namespace interpolation
             }
             R2 = computeWeighted_R2(y,ySim,weights);
 
-            if (isEqual(R2, NODATA) || R2 > (bestR2 + deltaR2))
+            if (isEqual(bestR2, NODATA) || R2 > (bestR2 + deltaR2))
             {
                 for (j=0; j<nrParameters; j++)
                 {
