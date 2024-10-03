@@ -451,6 +451,7 @@ void Crit3DInterpolationSettings::initialize()
     useLapseRateCode = false;
     useDoNotRetrend = false;
     useRetrendOnly = false;
+
     minRegressionR2 = float(PEARSONSTANDARDTHRESHOLD);
     meteoGridAggrMethod = aggrAverage;
     meteoGridUpscaleFromDem = true;

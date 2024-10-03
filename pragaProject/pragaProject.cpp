@@ -1947,7 +1947,7 @@ bool PragaProject::dailyZoneAggregationMeteoGrid(meteoVariable variable, const Q
 
 
 bool PragaProject::hourlyZoneAggregationMeteoGrid(meteoVariable variable, const QString& aggregationString, float threshold,
-                                                 gis::Crit3DRasterGrid* zoneGrid, std::vector<std::vector<float>> &zoneValues,
+                                                 gis::Crit3DRasterGrid* zoneRaster, std::vector<std::vector<float>> &zoneValues,
                                                  std::vector<float> &outputSeries, std::vector<std::vector<int>> &indexRowCol,
                                                  std::vector<std::vector<int>> &meteoGridRow, std::vector<std::vector<int>> &meteoGridCol,
                                                  const Crit3DDate& startDate, int nrDays, bool showInfo)
@@ -1959,7 +1959,7 @@ bool PragaProject::hourlyZoneAggregationMeteoGrid(meteoVariable variable, const 
     }
 
     aggregationMethod spatialElab = getAggregationMethod(aggregationString.toStdString());
-    std::vector<std::vector<float>> hourlyElabAggregation(nrDays * 24, std::vector<float>(int(zoneGrid->maximum), NODATA));
+    std::vector<std::vector<float>> hourlyElabAggregation(nrDays * 24, std::vector<float>(int(zoneRaster->maximum), NODATA));
 
     for (int day = 0; day < nrDays; day++)
     {
@@ -1968,24 +1968,24 @@ bool PragaProject::hourlyZoneAggregationMeteoGrid(meteoVariable variable, const 
 
         for (int hour = 0; hour < 24; hour++)
         {
-            for (int zoneRow = 0; zoneRow < zoneGrid->header->nrRows; zoneRow++)
+            for (int row = 0; row < zoneRaster->header->nrRows; row++)
             {
-                for (int zoneCol = 0; zoneCol < zoneGrid->header->nrCols; zoneCol++)
+                for (int col = 0; col < zoneRaster->header->nrCols; col++)
                 {
-                    float zoneNr = zoneGrid->value[zoneRow][zoneCol];
-                    if (! isEqual(zoneNr, zoneGrid->header->flag))
+                    float zoneNr = zoneRaster->value[row][col];
+                    if (! isEqual(zoneNr, zoneRaster->header->flag))
                     {
                         unsigned zoneIndex = unsigned(zoneNr);
-                        if (zoneIndex < 1 || zoneIndex > zoneGrid->maximum)
+                        if (zoneIndex < 1 || zoneIndex > zoneRaster->maximum)
                         {
                             errorString = "Invalid zone number: " + QString::number(zoneIndex);
-                            errorString += "\nZone number has to be between 1 and " + QString::number(zoneGrid->maximum);
+                            errorString += "\nZone number has to be between 1 and " + QString::number(zoneRaster->maximum);
                             return false;
                         }
 
-                        if (meteoGridRow[zoneRow][zoneCol] != NODATA && meteoGridCol[zoneRow][zoneCol] != NODATA)
+                        if (meteoGridRow[row][col] != NODATA && meteoGridCol[row][col] != NODATA)
                         {
-                            int indexSeries = indexRowCol[meteoGridRow[zoneRow][zoneCol]][meteoGridCol[zoneRow][zoneCol]];
+                            int indexSeries = indexRowCol[meteoGridRow[row][col]][meteoGridCol[row][col]];
                             if (indexSeries != NODATA)
                             {
                                 float value = outputSeries.at(indexSeries * nrDays * 24 + (day * 24) + hour);
@@ -2043,14 +2043,17 @@ bool PragaProject::hourlyZoneAggregationMeteoGrid(meteoVariable variable, const 
 
                 hourlyElabAggregation[unsigned(day * 24 + hour)][zoneIndex] = res;
             }
-        }
 
-        // clear zoneValues vectors
-        for (unsigned int zoneIndex = 0; zoneIndex < zoneValues.size(); zoneIndex++)
-        {
-            zoneValues[zoneIndex].clear();
+            // clear zoneValues vectors
+            for (unsigned int zoneIndex = 0; zoneIndex < zoneValues.size(); zoneIndex++)
+            {
+                zoneValues[zoneIndex].clear();
+            }
+            // end hour
         }
+        // end day
     }
+
 
     if (showInfo)
     {
@@ -2061,7 +2064,7 @@ bool PragaProject::hourlyZoneAggregationMeteoGrid(meteoVariable variable, const 
     // save aggregation into DB
     QDate startQDate = getQDate(startDate);
     QDate endQDate = startQDate.addDays(nrDays-1);
-    bool isOk = aggregationDbHandler->saveAggregationData(int(zoneGrid->maximum), aggregationString, "H",
+    bool isOk = aggregationDbHandler->saveAggregationData(int(zoneRaster->maximum), aggregationString, "H",
                                                    startQDate, endQDate, variable, hourlyElabAggregation);
     if (! isOk)
     {
