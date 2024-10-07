@@ -550,7 +550,7 @@ void Crit3DLocalProxyWidget::modelLRClicked(int toggled)
                         }
 
                         if (interpolationSettings->getProxy(proxyPos)->getRegressionR2() != NODATA)
-                            r2.setText(QString("%1").arg(interpolationSettings->getProxy(proxyPos)->getRegressionR2(), 0, 'f', 2));
+                            r2.setText(QString("%1").arg(interpolationSettings->getProxy(proxyPos)->getRegressionR2(), 0, 'f', 3));
 
                         if (parameters.front().size() > 3)
                         {
