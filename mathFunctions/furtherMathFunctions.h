@@ -103,6 +103,8 @@ enum estimatedFunction {FUNCTION_CODE_SPHERICAL, FUNCTION_CODE_LINEAR, FUNCTION_
 
         double computeR2(const std::vector<double>& obs, const std::vector<double>& sim);
         double computeWeighted_R2(const std::vector<double>& observed, const std::vector<double>& predicted, const std::vector<double>& weights);
+        double computeWeighted_R2_secondFormulation(const std::vector<double>& observed, const std::vector<double>& predicted, const std::vector<double>& weights);
+        double computeWeighted_R2_generalized_independentObservedData(const std::vector<double>& observed, const std::vector<double>& predicted, const std::vector<double>& weights);
         double computeWeighted_StandardError(const std::vector<double>& observed, const std::vector<double>& predicted, const std::vector<double>& weights, int nrPredictors);
         double computeWeighted_RMSE(const std::vector<double>& observed, const std::vector<double>& predicted, const std::vector<double>& weights);
         double weightedVariance(const std::vector<double>& data, const std::vector<double>& weights);

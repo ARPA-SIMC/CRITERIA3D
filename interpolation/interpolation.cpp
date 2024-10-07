@@ -1122,9 +1122,15 @@ void localSelection(vector <Crit3DInterpolationDataPoint> &inputPoints, vector <
         r1 += stepRadius;
     }
 
+    double temp = 0;
+
     if (maxDistance != 0)
         for (i=0; i< selectedPoints.size(); i++)
         {
+            /*temp = (MAXVALUE(1 - selectedPoints[i].distance / maxDistance, EPSILON))*1000;
+            temp = round(temp);
+            selectedPoints[i].regressionWeight = temp/1000;*/
+
             selectedPoints[i].regressionWeight = MAXVALUE(1 - selectedPoints[i].distance / maxDistance, EPSILON);
 
             //selectedPoints[i].regressionWeight = MAXVALUE(std::exp(-selectedPoints[i].distance*selectedPoints[i].distance/((0.5*maxDistance)*(0.5*maxDistance))),EPSILON);
@@ -1800,7 +1806,7 @@ bool multipleDetrendingElevationFitting(int elevationPos, std::vector <Crit3DInt
     std::vector<std::vector<double>> firstGuessCombinations = mySettings->getProxy(elevationPos)->getFirstGuessCombinations();
     // multiple non linear fitting
     double R2 = interpolation::bestFittingMarquardt_nDimension_singleFunction(*(myFunc.target<double(*)(double, std::vector<double>&)>()), 400, 4, parametersMin, parametersMax, parameters, parametersDelta,
-                                                                  stepSize, numSteps, 1000, 0.5, 0.01, predictors, predictands, weights,firstGuessCombinations);
+                                                                  stepSize, numSteps, 1000, 0.002, 0.005, predictors, predictands, weights,firstGuessCombinations);
 
     mySettings->getProxy(elevationPos)->setRegressionR2(R2);
 

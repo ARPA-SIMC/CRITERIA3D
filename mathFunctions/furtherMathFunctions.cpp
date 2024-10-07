@@ -1196,6 +1196,62 @@ namespace interpolation
         return weighted_r_squared;
     }
 
+    double computeWeighted_R2_secondFormulation(const std::vector<double>& observed, const std::vector<double>& predicted, const std::vector<double>& weights)
+    {
+        // This function computes the weighted R-squared (coefficient of determination)
+        double sum_weighted_squared_residuals = 0.0;
+        double sum_weighted_squared_total = 0.0;
+        double weighted_mean_observed = 0.0;
+
+        // Calculate the weighted mean of the observed values
+        double sum_weights = 0.0;
+        for (int i = 0; i < int(observed.size()); i++)
+        {
+            weighted_mean_observed += observed[i] * weights[i];
+            sum_weights += weights[i];
+        }
+        weighted_mean_observed /= sum_weights;
+
+        // Calculate the sums needed for weighted R-squared calculation
+        for (int i = 0; i < int(observed.size()); i++)
+        {
+            //double weighted_residual = weights[i] * (observed[i] - predicted[i]);
+            sum_weighted_squared_residuals += weights[i] * (observed[i] - predicted[i])*(observed[i] - predicted[i]);
+
+            //double weighted_total_deviation = weights[i] * (observed[i] - weighted_mean_observed);
+            sum_weighted_squared_total += weights[i] * (observed[i] - weighted_mean_observed) * (observed[i] - weighted_mean_observed);
+        }
+
+        // Calculate weighted R-squared
+        double weighted_r_squared = 1.0 - (sum_weighted_squared_residuals / sum_weighted_squared_total);
+
+        return weighted_r_squared;
+    }
+
+
+    double computeWeighted_R2_generalized_independentObservedData(const std::vector<double>& observed, const std::vector<double>& predicted, const std::vector<double>& weights)
+    {
+
+        // This function computes the generalized weighted R-squared (coefficient of determination)
+        double sum_weights = 0.0;
+        double sum_weighted_squared_residuals = 0.0;
+        double sum_weighted_squared_total = 0.0;
+        double sum_observed_times_observed = 0;
+        double sum_squared_observed = 0;
+
+
+        for (int iResiduals = 0 ; iResiduals < observed.size(); iResiduals++)
+        {
+            sum_weighted_squared_residuals += (observed[iResiduals] - predicted[iResiduals])*weights[iResiduals]*(observed[iResiduals] - predicted[iResiduals]);
+            sum_weights += weights[iResiduals];
+            sum_observed_times_observed += (observed[iResiduals])*weights[iResiduals]*(observed[iResiduals]);
+            sum_squared_observed +=  ((observed[iResiduals])*weights[iResiduals])*(weights[iResiduals]*(observed[iResiduals]));
+        }
+        sum_weighted_squared_total = sum_observed_times_observed - sum_squared_observed/sum_weights;
+        double weighted_r_squared = 1.0 - (sum_weighted_squared_residuals / sum_weighted_squared_total);
+        return weighted_r_squared;
+    }
+
     double computeWeighted_StandardError(const std::vector<double>& observed, const std::vector<double>& predicted, const std::vector<double>& weights, int nrPredictors)
     {
         // This function computes the standard Error
