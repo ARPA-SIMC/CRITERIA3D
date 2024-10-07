@@ -1218,6 +1218,29 @@ namespace interpolation
         return standardError;
     }
 
+    double computeWeighted_RMSE(const std::vector<double>& observed, const std::vector<double>& predicted, const std::vector<double>& weights)
+    {
+        // This function computes the weighted root mean squared error
+        double sum_weighted_residuals = 0.0;
+
+        // Sum of weights
+        double sum_weights = 0.0;
+        for (int i = 0; i < int(observed.size()); i++)
+            sum_weights += weights[i];
+
+        // Calculate the sum of the squared errors multiplied by their respective weight
+        for (int i = 0; i < int(observed.size()); i++)
+        {
+            double weighted_residual = weights[i] * (observed[i] - predicted[i]) * (observed[i] - predicted[i]);
+            sum_weighted_residuals += weighted_residual;
+        }
+
+        // Calculate weighted MSE
+        double weighted_MSE = sum_weighted_residuals / (sum_weights * observed.size());
+
+        return sqrt(weighted_MSE);
+    }
+
 
     int bestFittingMarquardt_nDimension(double (*func)(std::vector<std::function<double(double, std::vector<double>&)>>&, std::vector<double>& , std::vector <std::vector <double>>&),
                                         std::vector<std::function<double(double, std::vector<double>&)>>& myFunc,
@@ -2031,7 +2054,9 @@ namespace interpolation
         std::vector <double> bestParameters(nrParameters);
 
         double bestR2 = NODATA;
-        double R2;
+        double bestRMSE = NODATA;
+        int RMSEindex = NODATA;
+        double R2, RMSE;
         std::vector <double> R2Previous(nrMinima,NODATA);
         std::vector<double> ySim(nrData);
 
@@ -2049,6 +2074,13 @@ namespace interpolation
                 ySim[i]= func(x[i], parameters);
             }
             R2 = computeWeighted_R2(y,ySim,weights);
+            RMSE = computeWeighted_RMSE(y, ySim, weights);
+
+            if (isEqual(bestRMSE, NODATA) || RMSE < bestRMSE)
+            {
+                bestRMSE = RMSE;
+                RMSEindex = k;
+            }
 
             if (isEqual(bestR2, NODATA) || R2 > (bestR2 + deltaR2))
             {
@@ -2063,6 +2095,15 @@ namespace interpolation
         for (j=0; j<nrParameters; j++)
         {
             parameters[j] = bestParameters[j];
+        }
+
+        if (bestR2 < 0)
+        {
+            parameters = firstGuessCombinations[RMSEindex];
+            fittingMarquardt_nDimension_noSquares_singleFunction(func,parametersMin,
+                                                                 parametersMax,parameters,
+                                                                 parametersDelta,maxIterationsNr,
+                                                                 myEpsilon,x,y,weights);
         }
         return bestR2;
     }
