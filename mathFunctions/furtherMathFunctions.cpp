@@ -1252,6 +1252,122 @@ namespace interpolation
         return weighted_r_squared;
     }
 
+    double computeWeighted_R2_generalized(const std::vector<double>& observed, const std::vector<double>& predicted,const std::vector<double>& weights)
+    {
+        // mask to use in case of independent observations
+        double R2;
+        std::vector<std::vector<double>> weightsMatrix(weights.size(),std::vector<double>(weights.size()));
+        for (int i=0;i<weights.size();i++)
+        {
+            weightsMatrix[i][i] = weights[i];
+            for (int j=i+1;j<weights.size();j++)
+            {
+                weightsMatrix[i][j] = weightsMatrix[j][i] = 0.;
+            }
+        }
+        R2 = computeWeighted_R2_generalized(observed,predicted,weightsMatrix);
+        return R2;
+    }
+
+
+    double computeWeighted_R2_generalized(const std::vector<double>& observed, const std::vector<double>& predicted, const std::vector<std::vector<double>>& weights)
+    {
+
+        // This function computes the generalized weighted R-squared (coefficient of determination)
+        int n = int(observed.size());
+        double sum_weighted_squared_total = 0.;
+        double** sum_weighted_squared_residuals = (double**)calloc(1, sizeof(double*));
+        double** sum_weighted_squared_total_auxiliary = (double**)calloc(1, sizeof(double*));
+        sum_weighted_squared_residuals[0] = (double*)calloc(1,sizeof(double));
+        sum_weighted_squared_total_auxiliary[0] = (double*)calloc(1,sizeof(double));
+        double** observedPointer = (double**)calloc(n, sizeof(double*));
+        double** residualsPointer = (double**)calloc(n, sizeof(double*));
+        double** identityPointer = (double**)calloc(n, sizeof(double*));
+        double** weightsPointer = (double**)calloc(n, sizeof(double*));
+        double** auxiliaryPointer = (double**)calloc(n, sizeof(double*));
+
+        double** observedPointerTransposed = (double**)calloc(1, sizeof(double*));
+        double** residualsPointerTransposed = (double**)calloc(1, sizeof(double*));
+        double** identityPointerTransposed = (double**)calloc(1, sizeof(double*));
+        observedPointerTransposed[0] = (double*)calloc(n, sizeof(double));
+        residualsPointerTransposed[0] = (double*)calloc(n, sizeof(double));
+        identityPointerTransposed[0] = (double*)calloc(n, sizeof(double));
+
+        for (int i=0;i<n;i++)
+        {
+            weightsPointer[i]= (double*)calloc(n, sizeof(double));
+            observedPointer[i]= (double*)calloc(1,sizeof(double));
+            residualsPointer[i]= (double*)calloc(1,sizeof(double));
+            identityPointer[i]= (double*)calloc(1,sizeof(double));
+            auxiliaryPointer[i]= (double*)calloc(1,sizeof(double));
+        }
+        for (int i=0;i<n;i++)
+        {
+            residualsPointerTransposed[0][i] = residualsPointer[i][0] = observed[i] - predicted[i];
+            observedPointerTransposed[0][i] = observedPointer[i][0] = observed[i];
+            identityPointerTransposed[0][i] = identityPointer[i][0] = 1;
+            for (int j=0;j<n;j++)
+            {
+                weightsPointer[i][j] = weights[i][j];
+            }
+        }
+
+        // computation of RSS
+        matricial::matrixProductNoCheck(weightsPointer,residualsPointer,n,n,1,auxiliaryPointer);
+        matricial::matrixProductNoCheck(residualsPointerTransposed,auxiliaryPointer,1,1,n,sum_weighted_squared_residuals);
+
+
+        // computation of TSS
+
+        matricial::matrixProductNoCheck(weightsPointer,observedPointer,n,n,1,auxiliaryPointer);
+        matricial::matrixProductNoCheck(observedPointerTransposed,auxiliaryPointer,1,1,n,sum_weighted_squared_total_auxiliary);
+        sum_weighted_squared_total += sum_weighted_squared_total_auxiliary[0][0];
+        double num1,num2,den;
+        matricial::matrixProductNoCheck(weightsPointer,identityPointer,n,n,1,auxiliaryPointer);
+        matricial::matrixProductNoCheck(observedPointerTransposed,auxiliaryPointer,1,1,n,sum_weighted_squared_total_auxiliary);
+        num1 = sum_weighted_squared_total_auxiliary[0][0];
+        matricial::matrixProductNoCheck(weightsPointer,observedPointer,n,n,1,auxiliaryPointer);
+        matricial::matrixProductNoCheck(identityPointerTransposed,auxiliaryPointer,1,1,n,sum_weighted_squared_total_auxiliary);
+        num2 = sum_weighted_squared_total_auxiliary[0][0];
+        matricial::matrixProductNoCheck(weightsPointer,identityPointer,n,n,1,auxiliaryPointer);
+        matricial::matrixProductNoCheck(identityPointerTransposed,auxiliaryPointer,1,1,n,sum_weighted_squared_total_auxiliary);
+        den = sum_weighted_squared_total_auxiliary[0][0];
+        sum_weighted_squared_total -= num1*num2/den;
+
+
+        double weighted_r_squared = 1.0 - (sum_weighted_squared_residuals[0][0] / sum_weighted_squared_total);
+
+        // deallocate memory
+        for (int i=0;i<n;i++)
+        {
+            free(weightsPointer[i]);
+            free(observedPointer[i]);
+            free(residualsPointer[i]);
+            free(identityPointer[i]);
+            free(auxiliaryPointer[i]);
+        }
+        free(weightsPointer);
+        free(observedPointer);
+        free(residualsPointer);
+        free(identityPointer);
+        free(auxiliaryPointer);
+
+        free(sum_weighted_squared_residuals[0]);
+        free(sum_weighted_squared_residuals);
+        free(sum_weighted_squared_total_auxiliary[0]);
+        free(sum_weighted_squared_total_auxiliary);
+
+
+        free(observedPointerTransposed[0]);
+        free(residualsPointerTransposed[0]);
+        free(identityPointerTransposed[0]);
+        free(observedPointerTransposed);
+        free(residualsPointerTransposed);
+        free(identityPointerTransposed);
+
+        return weighted_r_squared;
+    }
+
     double computeWeighted_StandardError(const std::vector<double>& observed, const std::vector<double>& predicted, const std::vector<double>& weights, int nrPredictors)
     {
         // This function computes the standard Error
