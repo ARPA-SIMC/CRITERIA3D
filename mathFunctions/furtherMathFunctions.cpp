@@ -1196,6 +1196,178 @@ namespace interpolation
         return weighted_r_squared;
     }
 
+    double computeWeighted_R2_secondFormulation(const std::vector<double>& observed, const std::vector<double>& predicted, const std::vector<double>& weights)
+    {
+        // This function computes the weighted R-squared (coefficient of determination)
+        double sum_weighted_squared_residuals = 0.0;
+        double sum_weighted_squared_total = 0.0;
+        double weighted_mean_observed = 0.0;
+
+        // Calculate the weighted mean of the observed values
+        double sum_weights = 0.0;
+        for (int i = 0; i < int(observed.size()); i++)
+        {
+            weighted_mean_observed += observed[i] * weights[i];
+            sum_weights += weights[i];
+        }
+        weighted_mean_observed /= sum_weights;
+
+        // Calculate the sums needed for weighted R-squared calculation
+        for (int i = 0; i < int(observed.size()); i++)
+        {
+            //double weighted_residual = weights[i] * (observed[i] - predicted[i]);
+            sum_weighted_squared_residuals += weights[i] * (observed[i] - predicted[i])*(observed[i] - predicted[i]);
+
+            //double weighted_total_deviation = weights[i] * (observed[i] - weighted_mean_observed);
+            sum_weighted_squared_total += weights[i] * (observed[i] - weighted_mean_observed) * (observed[i] - weighted_mean_observed);
+        }
+
+        // Calculate weighted R-squared
+        double weighted_r_squared = 1.0 - (sum_weighted_squared_residuals / sum_weighted_squared_total);
+
+        return weighted_r_squared;
+    }
+
+
+    double computeWeighted_R2_generalized_independentObservedData(const std::vector<double>& observed, const std::vector<double>& predicted, const std::vector<double>& weights)
+    {
+
+        // This function computes the generalized weighted R-squared (coefficient of determination)
+        double sum_weights = 0.0;
+        double sum_weighted_squared_residuals = 0.0;
+        double sum_weighted_squared_total = 0.0;
+        double sum_observed_times_observed = 0;
+        double sum_squared_observed = 0;
+
+
+        for (int iResiduals = 0 ; iResiduals < observed.size(); iResiduals++)
+        {
+            sum_weighted_squared_residuals += (observed[iResiduals] - predicted[iResiduals])*weights[iResiduals]*(observed[iResiduals] - predicted[iResiduals]);
+            sum_weights += weights[iResiduals];
+            sum_observed_times_observed += (observed[iResiduals])*weights[iResiduals]*(observed[iResiduals]);
+            sum_squared_observed +=  ((observed[iResiduals])*weights[iResiduals])*(weights[iResiduals]*(observed[iResiduals]));
+        }
+        sum_weighted_squared_total = sum_observed_times_observed - sum_squared_observed/sum_weights;
+        double weighted_r_squared = 1.0 - (sum_weighted_squared_residuals / sum_weighted_squared_total);
+        return weighted_r_squared;
+    }
+
+    double computeWeighted_R2_generalized(const std::vector<double>& observed, const std::vector<double>& predicted,const std::vector<double>& weights)
+    {
+        // mask to use in case of independent observations
+        double R2;
+        std::vector<std::vector<double>> weightsMatrix(weights.size(),std::vector<double>(weights.size()));
+        for (int i=0;i<weights.size();i++)
+        {
+            weightsMatrix[i][i] = weights[i];
+            for (int j=i+1;j<weights.size();j++)
+            {
+                weightsMatrix[i][j] = weightsMatrix[j][i] = 0.;
+            }
+        }
+        R2 = computeWeighted_R2_generalized(observed,predicted,weightsMatrix);
+        return R2;
+    }
+
+
+    double computeWeighted_R2_generalized(const std::vector<double>& observed, const std::vector<double>& predicted, const std::vector<std::vector<double>>& weights)
+    {
+
+        // This function computes the generalized weighted R-squared (coefficient of determination)
+        int n = int(observed.size());
+        double sum_weighted_squared_total = 0.;
+        double** sum_weighted_squared_residuals = (double**)calloc(1, sizeof(double*));
+        double** sum_weighted_squared_total_auxiliary = (double**)calloc(1, sizeof(double*));
+        sum_weighted_squared_residuals[0] = (double*)calloc(1,sizeof(double));
+        sum_weighted_squared_total_auxiliary[0] = (double*)calloc(1,sizeof(double));
+        double** observedPointer = (double**)calloc(n, sizeof(double*));
+        double** residualsPointer = (double**)calloc(n, sizeof(double*));
+        double** identityPointer = (double**)calloc(n, sizeof(double*));
+        double** weightsPointer = (double**)calloc(n, sizeof(double*));
+        double** auxiliaryPointer = (double**)calloc(n, sizeof(double*));
+
+        double** observedPointerTransposed = (double**)calloc(1, sizeof(double*));
+        double** residualsPointerTransposed = (double**)calloc(1, sizeof(double*));
+        double** identityPointerTransposed = (double**)calloc(1, sizeof(double*));
+        observedPointerTransposed[0] = (double*)calloc(n, sizeof(double));
+        residualsPointerTransposed[0] = (double*)calloc(n, sizeof(double));
+        identityPointerTransposed[0] = (double*)calloc(n, sizeof(double));
+
+        for (int i=0;i<n;i++)
+        {
+            weightsPointer[i]= (double*)calloc(n, sizeof(double));
+            observedPointer[i]= (double*)calloc(1,sizeof(double));
+            residualsPointer[i]= (double*)calloc(1,sizeof(double));
+            identityPointer[i]= (double*)calloc(1,sizeof(double));
+            auxiliaryPointer[i]= (double*)calloc(1,sizeof(double));
+        }
+        for (int i=0;i<n;i++)
+        {
+            residualsPointerTransposed[0][i] = residualsPointer[i][0] = observed[i] - predicted[i];
+            observedPointerTransposed[0][i] = observedPointer[i][0] = observed[i];
+            identityPointerTransposed[0][i] = identityPointer[i][0] = 1;
+            for (int j=0;j<n;j++)
+            {
+                weightsPointer[i][j] = weights[i][j];
+            }
+        }
+
+        // computation of RSS
+        matricial::matrixProductNoCheck(weightsPointer,residualsPointer,n,n,1,auxiliaryPointer);
+        matricial::matrixProductNoCheck(residualsPointerTransposed,auxiliaryPointer,1,1,n,sum_weighted_squared_residuals);
+
+
+        // computation of TSS
+
+        matricial::matrixProductNoCheck(weightsPointer,observedPointer,n,n,1,auxiliaryPointer);
+        matricial::matrixProductNoCheck(observedPointerTransposed,auxiliaryPointer,1,1,n,sum_weighted_squared_total_auxiliary);
+        sum_weighted_squared_total += sum_weighted_squared_total_auxiliary[0][0];
+        double num1,num2,den;
+        matricial::matrixProductNoCheck(weightsPointer,identityPointer,n,n,1,auxiliaryPointer);
+        matricial::matrixProductNoCheck(observedPointerTransposed,auxiliaryPointer,1,1,n,sum_weighted_squared_total_auxiliary);
+        num1 = sum_weighted_squared_total_auxiliary[0][0];
+        matricial::matrixProductNoCheck(weightsPointer,observedPointer,n,n,1,auxiliaryPointer);
+        matricial::matrixProductNoCheck(identityPointerTransposed,auxiliaryPointer,1,1,n,sum_weighted_squared_total_auxiliary);
+        num2 = sum_weighted_squared_total_auxiliary[0][0];
+        matricial::matrixProductNoCheck(weightsPointer,identityPointer,n,n,1,auxiliaryPointer);
+        matricial::matrixProductNoCheck(identityPointerTransposed,auxiliaryPointer,1,1,n,sum_weighted_squared_total_auxiliary);
+        den = sum_weighted_squared_total_auxiliary[0][0];
+        sum_weighted_squared_total -= num1*num2/den;
+
+
+        double weighted_r_squared = 1.0 - (sum_weighted_squared_residuals[0][0] / sum_weighted_squared_total);
+
+        // deallocate memory
+        for (int i=0;i<n;i++)
+        {
+            free(weightsPointer[i]);
+            free(observedPointer[i]);
+            free(residualsPointer[i]);
+            free(identityPointer[i]);
+            free(auxiliaryPointer[i]);
+        }
+        free(weightsPointer);
+        free(observedPointer);
+        free(residualsPointer);
+        free(identityPointer);
+        free(auxiliaryPointer);
+
+        free(sum_weighted_squared_residuals[0]);
+        free(sum_weighted_squared_residuals);
+        free(sum_weighted_squared_total_auxiliary[0]);
+        free(sum_weighted_squared_total_auxiliary);
+
+
+        free(observedPointerTransposed[0]);
+        free(residualsPointerTransposed[0]);
+        free(identityPointerTransposed[0]);
+        free(observedPointerTransposed);
+        free(residualsPointerTransposed);
+        free(identityPointerTransposed);
+
+        return weighted_r_squared;
+    }
+
     double computeWeighted_StandardError(const std::vector<double>& observed, const std::vector<double>& predicted, const std::vector<double>& weights, int nrPredictors)
     {
         // This function computes the standard Error
@@ -1216,6 +1388,29 @@ namespace interpolation
             standardError = sqrt(sum_weighted_squared_residuals/(observed.size()-1));
 
         return standardError;
+    }
+
+    double computeWeighted_RMSE(const std::vector<double>& observed, const std::vector<double>& predicted, const std::vector<double>& weights)
+    {
+        // This function computes the weighted root mean squared error
+        double sum_weighted_residuals = 0.0;
+
+        // Sum of weights
+        double sum_weights = 0.0;
+        for (int i = 0; i < int(observed.size()); i++)
+            sum_weights += weights[i];
+
+        // Calculate the sum of the squared errors multiplied by their respective weight
+        for (int i = 0; i < int(observed.size()); i++)
+        {
+            double weighted_residual = weights[i] * (observed[i] - predicted[i]) * (observed[i] - predicted[i]);
+            sum_weighted_residuals += weighted_residual;
+        }
+
+        // Calculate weighted MSE
+        double weighted_MSE = sum_weighted_residuals / (sum_weights * observed.size());
+
+        return sqrt(weighted_MSE);
     }
 
 
@@ -2031,7 +2226,9 @@ namespace interpolation
         std::vector <double> bestParameters(nrParameters);
 
         double bestR2 = NODATA;
-        double R2;
+        double bestRMSE = NODATA;
+        int RMSEindex = NODATA;
+        double R2, RMSE;
         std::vector <double> R2Previous(nrMinima,NODATA);
         std::vector<double> ySim(nrData);
 
@@ -2049,6 +2246,13 @@ namespace interpolation
                 ySim[i]= func(x[i], parameters);
             }
             R2 = computeWeighted_R2(y,ySim,weights);
+            RMSE = computeWeighted_RMSE(y, ySim, weights);
+
+            if (isEqual(bestRMSE, NODATA) || RMSE < bestRMSE)
+            {
+                bestRMSE = RMSE;
+                RMSEindex = k;
+            }
 
             if (isEqual(bestR2, NODATA) || R2 > (bestR2 + deltaR2))
             {
@@ -2063,6 +2267,15 @@ namespace interpolation
         for (j=0; j<nrParameters; j++)
         {
             parameters[j] = bestParameters[j];
+        }
+
+        if (bestR2 < 0)
+        {
+            parameters = firstGuessCombinations[RMSEindex];
+            fittingMarquardt_nDimension_noSquares_singleFunction(func,parametersMin,
+                                                                 parametersMax,parameters,
+                                                                 parametersDelta,maxIterationsNr,
+                                                                 myEpsilon,x,y,weights);
         }
         return bestR2;
     }
