@@ -1800,7 +1800,7 @@ bool multipleDetrendingElevationFitting(int elevationPos, std::vector <Crit3DInt
     std::vector<std::vector<double>> firstGuessCombinations = mySettings->getProxy(elevationPos)->getFirstGuessCombinations();
     // multiple non linear fitting
     double R2 = interpolation::bestFittingMarquardt_nDimension_singleFunction(*(myFunc.target<double(*)(double, std::vector<double>&)>()), 400, 4, parametersMin, parametersMax, parameters, parametersDelta,
-                                                                  stepSize, numSteps, 1000, 0.5, 0.01, predictors, predictands, weights,firstGuessCombinations);
+                                                                  stepSize, numSteps, 1000, 0.002, 0.001, predictors, predictands, weights,firstGuessCombinations);
 
     mySettings->getProxy(elevationPos)->setRegressionR2(R2);
 
