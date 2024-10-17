@@ -1293,7 +1293,7 @@
        <second>0</second>
        <year>1752</year>
        <month>9</month>
-       <day>11</day>
+       <day>10</day>
       </datetime>
      </property>
      <property name="maximumDate">
@@ -1925,6 +1925,7 @@
      </widget>
      <addaction name="menuOutput_points_4"/>
      <addaction name="menuOutput_db"/>
+     <addaction name="actionSave_outputRaster"/>
     </widget>
     <addaction name="menuOpen_project"/>
     <addaction name="separator"/>
@@ -2918,6 +2919,11 @@
   <action name="actionView_SurfacePond">
    <property name="text">
     <string>Surface Pond</string>
+   </property>
+  </action>
+  <action name="actionSave_outputRaster">
+   <property name="text">
+    <string>Save current output (raster)...</string>
    </property>
   </action>
  </widget>

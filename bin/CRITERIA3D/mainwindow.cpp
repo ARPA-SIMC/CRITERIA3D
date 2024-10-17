@@ -3436,3 +3436,25 @@ void MainWindow::on_actionCreate_new_land_use_map_triggered()
 }
 
 
+void MainWindow::on_actionSave_outputRaster_triggered()
+{
+    if (! rasterOutput->visible())
+    {
+        myProject.logWarning("No current output.");
+        return;
+    }
+
+    // set fileName
+    QString outputFileName = QFileDialog::getSaveFileName(this, tr("Save output raster"), "", tr("ESRI float (*.flt)"));
+    if (outputFileName.isEmpty())
+        return;
+    std::string fileName = outputFileName.left(outputFileName.size() - 4).toStdString();
+
+    // write raster
+    std::string errorStr;
+    if (! gis::writeEsriGrid(fileName, rasterOutput->getRasterPointer(), errorStr))
+    {
+        myProject.logError(QString::fromStdString(errorStr));
+    }
+}
+

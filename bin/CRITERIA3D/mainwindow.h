@@ -220,6 +220,8 @@
 
         void on_actionView_SurfacePond_triggered();
 
+        void on_actionSave_outputRaster_triggered();
+
     protected:
         /*!
          * \brief mouseReleaseEvent call moveCenter
