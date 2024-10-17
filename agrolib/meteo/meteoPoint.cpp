@@ -706,7 +706,6 @@ void Crit3DMeteoPoint::cleanObsDataM()
 }
 
 
-
 bool Crit3DMeteoPoint::setMeteoPointValueH(const Crit3DDate& myDate, int myHour, int myMinutes, meteoVariable myVar, float myValue)
 {
     // check

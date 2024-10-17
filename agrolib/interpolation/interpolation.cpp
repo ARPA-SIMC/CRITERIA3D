@@ -1081,7 +1081,7 @@ void localSelection(vector <Crit3DInterpolationDataPoint> &inputPoints, vector <
                     float x, float y, Crit3DInterpolationSettings& mySettings)
 {
     // search more stations to assure min points with all valid proxies
-    float ratioMinPoints = float(1.3);
+    float ratioMinPoints = float(1.2);
     unsigned minPoints = unsigned(mySettings.getMinPointsLocalDetrending() * ratioMinPoints);
     if (inputPoints.size() <= minPoints)
     {
@@ -1094,16 +1094,15 @@ void localSelection(vector <Crit3DInterpolationDataPoint> &inputPoints, vector <
         inputPoints[i].distance = gis::computeDistance(x, y, float((inputPoints[i]).point->utm.x), float((inputPoints[i]).point->utm.y));
 
     unsigned int nrValid = 0;
-    float stepRadius = 2500;           // [m]
+    float stepRadius = 7500;           // [m]
     float r0 = 0;                       // [m]
     float r1 = stepRadius;              // [m]
     unsigned int i;
     unsigned int nrPrimaries = 0;
 
     int maxDistance = 0;
-    while (nrValid < minPoints || (mySettings.getUseLapseRateCode() && nrPrimaries < minPoints))
+    while ((!mySettings.getUseLapseRateCode() && nrValid < minPoints) || (mySettings.getUseLapseRateCode() && nrPrimaries < minPoints))
     {
-        maxDistance = 0;
         for (i=0; i < inputPoints.size(); i++)
         {
             if (inputPoints[i].distance != NODATA && inputPoints[i].distance > r0 && inputPoints[i].distance <= r1)
@@ -1117,15 +1116,24 @@ void localSelection(vector <Crit3DInterpolationDataPoint> &inputPoints, vector <
                     nrPrimaries++;
             }
         }
+        if (nrValid > int(minPoints*0.8))
+            stepRadius = 1000;
         r0 = r1;
         r1 += stepRadius;
     }
 
+    double temp = 0;
+
     if (maxDistance != 0)
         for (i=0; i< selectedPoints.size(); i++)
         {
+            /*temp = (MAXVALUE(1 - selectedPoints[i].distance / maxDistance, EPSILON))*1000;
+            temp = round(temp);
+            selectedPoints[i].regressionWeight = temp/1000;*/
+
             selectedPoints[i].regressionWeight = MAXVALUE(1 - selectedPoints[i].distance / maxDistance, EPSILON);
-            //selectedPoints[i].regressionWeight = MAXVALUE(std::exp(-std::pow(selectedPoints[i].distance/((4/5*maxDistance)),7.0)),EPSILON);
+
+            //selectedPoints[i].regressionWeight = MAXVALUE(std::exp(-selectedPoints[i].distance*selectedPoints[i].distance/((0.5*maxDistance)*(0.5*maxDistance))),EPSILON);
             //selectedPoints[i].regressionWeight = float(MAXVALUE((-(1/std::pow(maxDistance,4)*(std::pow(selectedPoints[i].distance,4)))+1),EPSILON));
             //selectedPoints[i].regressionWeight = 1;
         }
@@ -1459,10 +1467,12 @@ bool proxyValidityWeighted(std::vector <Crit3DInterpolationDataPoint> &myPoints,
         return true;
 }
 
-bool setHeightTemperatureRange(Crit3DProxyCombination myCombination, Crit3DInterpolationSettings* mySettings)
+bool setMultipleDetrendingHeightTemperatureRange(Crit3DInterpolationSettings* mySettings)
 {
     if (mySettings->getPointsRange().empty() || !mySettings->getUseMultipleDetrending())
         return 0;
+
+    Crit3DProxyCombination myCombination = mySettings->getSelectedCombination();
 
     for (unsigned i=0; i < myCombination.getProxySize(); i++)
         if (myCombination.isProxyActive(i) == true)
@@ -1479,19 +1489,19 @@ bool setHeightTemperatureRange(Crit3DProxyCombination myCombination, Crit3DInter
                     if (mySettings->getChosenElevationFunction() == piecewiseTwo)
                     {
                         tempParam[1] = MIN_T-2;
-                        tempParam[5] = MAX_T+2;
+                        tempParam[5] = MAX_T+6;
                         mySettings->addFittingFunction(lapseRatePiecewise_two);
                     }
                     else if (mySettings->getChosenElevationFunction() == piecewiseThreeFree)
                     {
                         tempParam[1] = MIN_T-2;
-                        tempParam[7] = MAX_T+2;
+                        tempParam[7] = MAX_T+6;
                         mySettings->addFittingFunction(lapseRatePiecewise_three_free);
                     }
                     else if (mySettings->getChosenElevationFunction() == piecewiseThree)
                     {
                         tempParam[1] = MIN_T-2;
-                        tempParam[6] = MAX_T+2;
+                        tempParam[6] = MAX_T+6;
                         mySettings->addFittingFunction(lapseRatePiecewise_three);
                     }
                     mySettings->getProxy(i)->setFittingParametersRange(tempParam);
@@ -1737,6 +1747,7 @@ bool multipleDetrendingMain(std::vector <Crit3DInterpolationDataPoint> &myPoints
 bool multipleDetrendingElevationFitting(int elevationPos, std::vector <Crit3DInterpolationDataPoint> &myPoints,
                                  Crit3DInterpolationSettings* mySettings, meteoVariable myVar, std::string &errorStr)
 {
+    mySettings->getProxy(elevationPos)->setRegressionR2(NODATA);
     if (! getUseDetrendingVar(myVar)) return true;
     if (elevationPos == NODATA) return true;
 
@@ -1794,9 +1805,10 @@ bool multipleDetrendingElevationFitting(int elevationPos, std::vector <Crit3DInt
 
     std::vector<std::vector<double>> firstGuessCombinations = mySettings->getProxy(elevationPos)->getFirstGuessCombinations();
     // multiple non linear fitting
-    interpolation::bestFittingMarquardt_nDimension_singleFunction(*(myFunc.target<double(*)(double, std::vector<double>&)>()), 400, 4, parametersMin, parametersMax, parameters, parametersDelta,
-                                                                  stepSize, numSteps, 100, 0.005, 0.002, predictors, predictands, weights,firstGuessCombinations);
+    double R2 = interpolation::bestFittingMarquardt_nDimension_singleFunction(*(myFunc.target<double(*)(double, std::vector<double>&)>()), 400, 4, parametersMin, parametersMax, parameters, parametersDelta,
+                                                                  stepSize, numSteps, 1000, 0.002, 0.005, predictors, predictands, weights,firstGuessCombinations);
 
+    mySettings->getProxy(elevationPos)->setRegressionR2(R2);
 
     std::vector<std::vector<double>> newParameters;
     newParameters.push_back(parameters);
@@ -2156,7 +2168,7 @@ bool preInterpolation(std::vector <Crit3DInterpolationDataPoint> &myPoints, Crit
         if (mySettings->getUseMultipleDetrending())
         {
             if (!mySettings->getUseLocalDetrending())
-                setHeightTemperatureRange(mySettings->getSelectedCombination(), mySettings);
+                setMultipleDetrendingHeightTemperatureRange(mySettings);
 
             if (! multipleDetrendingMain(myPoints, mySettings, myVar, errorStr)) return false;
         }
@@ -2190,23 +2202,27 @@ float interpolate(vector <Crit3DInterpolationDataPoint> &myPoints, Crit3DInterpo
 
     computeDistances(myVar, myPoints, mySettings, myX, myY, myZ, excludeSupplemental);
 
-    if (mySettings->getInterpolationMethod() == idw)
-        myResult = inverseDistanceWeighted(myPoints);
-    //else if (mySettings->getInterpolationMethod() == kriging)
-    //    myResult = NODATA;  //TODO
-    else if (mySettings->getInterpolationMethod() == shepard)
-        myResult = shepardIdw(myPoints, mySettings, myX, myY);
-    else if (mySettings->getInterpolationMethod() == shepard_modified)
+    if (!mySettings->getUseRetrendOnly())
     {
-        float radius = NODATA;
-        if (mySettings->getUseLocalDetrending()) radius = mySettings->getLocalRadius();
-        myResult = modifiedShepardIdw(myPoints, mySettings, radius, myX, myY);
+        if (mySettings->getInterpolationMethod() == idw)
+            myResult = inverseDistanceWeighted(myPoints);
+        //else if (mySettings->getInterpolationMethod() == kriging)
+        //    myResult = NODATA;  //TODO
+        else if (mySettings->getInterpolationMethod() == shepard)
+            myResult = shepardIdw(myPoints, mySettings, myX, myY);
+        else if (mySettings->getInterpolationMethod() == shepard_modified)
+        {
+            float radius = NODATA;
+            if (mySettings->getUseLocalDetrending()) radius = mySettings->getLocalRadius();
+            myResult = modifiedShepardIdw(myPoints, mySettings, radius, myX, myY);
+        }
     }
+    else myResult = 0;
 
-    if (int(myResult) != int(NODATA))
-        myResult += retrend(myVar, myProxyValues, mySettings);
-    else
+    if (int(myResult) == int(NODATA))
         return NODATA;
+    else if (!mySettings->getUseDoNotRetrend())
+        myResult += retrend(myVar, myProxyValues, mySettings);
 
     if (myVar == precipitation || myVar == dailyPrecipitation)
     {

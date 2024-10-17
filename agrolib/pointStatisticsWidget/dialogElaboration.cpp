@@ -27,15 +27,15 @@ DialogElaboration::DialogElaboration(QSettings *settings, Crit3DClimate *clima, 
         std::string item;
         std::string variable = group.left(group.size()-11).toStdString(); // remove "_VarToElab1"
         try {
-          var = MapDailyMeteoVar.at(variable);
-          item = MapDailyMeteoVarToString.at(var);
-          if (clima->variable() == var)
-          {
-            lastVariableUsed = item;
-          }
+            var = MapDailyMeteoVar.at(variable);
+            item = MapDailyMeteoVarToString.at(var);
+            if (clima->variable() == var)
+            {
+                lastVariableUsed = item;
+            }
         }
         catch (const std::out_of_range& ) {
-           continue;
+            continue;
         }
         variableList.addItem(QString::fromStdString(item));
     }

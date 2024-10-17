@@ -2,6 +2,7 @@
 #include "commonConstants.h"
 #include "basicMath.h"
 #include "utilities.h"
+#include "meteo.h"
 
 #include <QtSql>
 
@@ -36,38 +37,73 @@ Crit3DAggregationsDbHandler::~Crit3DAggregationsDbHandler()
 }
 
 
-bool Crit3DAggregationsDbHandler::saveAggrData(int nZones, QString aggrType, QString periodType, QDate startDate, QDate endDate, meteoVariable variable,
+bool Crit3DAggregationsDbHandler::saveAggregationData(int nZones, QString aggrType, QString periodType, QDate startDate, QDate endDate, meteoVariable variable,
                                                std::vector< std::vector<float> > aggregatedValues)
 {
     initAggregatedTables(nZones, aggrType, periodType, startDate, endDate, variable);
-
     createTmpAggrTable();
 
-    // test
     int idVariable = getIdfromMeteoVar(variable);
     long nrDays = long(startDate.daysTo(endDate)) + 1;
-    QString valueString, dateString, varString;
-    QString queryString;
     QSqlQuery qry(_db);
 
-    // LC NB le zone partono da 1
+    // LC warning: the zones start from 1
     for (unsigned int zone = 1; zone <= unsigned(nZones); zone++)
     {
-        queryString = QString("REPLACE INTO `%1_%2_%3` VALUES").arg(QString::number(zone), aggrType, periodType);
+        QString queryString = QString("REPLACE INTO `%1_%2_%3` VALUES").arg(QString::number(zone), aggrType, periodType);
 
-        for (unsigned int day = 0; day < unsigned(nrDays); day++)
+        if (periodType == "H")
         {
+            // hourly data
+            for (int day = 0; day < nrDays; day++)
+            {
+                for (int hour = 0; hour < 24; hour++)
+                {
+                    QString valueString = "NULL";
+                    if (! isEqual(aggregatedValues[day*24 + hour][zone-1], NODATA))
+                    {
+                        valueString = QString::number(double(aggregatedValues[day*24 + hour][zone-1]), 'f', 1);
+                    }
 
-            if (! isEqual(aggregatedValues[day][zone-1], NODATA))
-                valueString = QString::number(double(aggregatedValues[day][zone-1]), 'f', 1);
-            else
-                valueString = "NULL";
+                    // the data refers to the past hour
+                    int currentDay = day;
+                    int currentHour = hour + 1;
+                    if (currentHour == 24)
+                    {
+                        currentHour = 0;
+                        currentDay++;
+                    }
+                    QDateTime currentDateTime;
+                    currentDateTime.setTimeSpec(Qt::UTC);
+                    currentDateTime.setDate(startDate.addDays(currentDay));
+                    currentDateTime.setTime(QTime(currentHour, 0, 0, 0));
 
-            dateString = startDate.addDays(day).toString("yyyy-MM-dd");
-            varString = QString::number(idVariable);
+                    QString dateString = currentDateTime.toString("yyyy-MM-dd hh:00:00");
+                    QString varString = QString::number(idVariable);
 
-            queryString += "('" + dateString + "'," + varString + "," + valueString + "),";
+                    queryString += "('" + dateString + "'," + varString + "," + valueString + "),";
+                }
+            }
         }
+        else
+        {
+            // daily data
+            for (unsigned int day = 0; day < unsigned(nrDays); day++)
+            {
+                QString valueString = "NULL";
+                if (! isEqual(aggregatedValues[day][zone-1], NODATA))
+                {
+                    valueString = QString::number(double(aggregatedValues[day][zone-1]), 'f', 1);
+                }
+
+                QString dateString = startDate.addDays(day).toString("yyyy-MM-dd");
+                QString varString = QString::number(idVariable);
+
+                queryString += "('" + dateString + "'," + varString + "," + valueString + "),";
+            }
+        }
+
+        // removes the last comma
         queryString = queryString.left(queryString.length() - 1);
 
         if (! qry.exec(queryString))
@@ -75,7 +111,6 @@ bool Crit3DAggregationsDbHandler::saveAggrData(int nZones, QString aggrType, QSt
             _error = qry.lastError().text();
             return false;
         }
-
     }
 
     deleteTmpAggrTable();
@@ -188,7 +223,7 @@ void Crit3DAggregationsDbHandler::initAggregatedTables(int numZones, QString agg
                                 .arg(i).arg(aggrType, periodType);
 
         QSqlQuery qry(statement, _db);
-        if( !qry.exec() )
+        if(! qry.exec() )
         {
             _error = qry.lastError().text();
         }
@@ -262,7 +297,7 @@ void Crit3DAggregationsDbHandler::createTmpAggrTable()
 
     QSqlQuery qry(_db);
     qry.prepare("CREATE TABLE TmpAggregationData (date_time TEXT, zone TEXT, id_variable INTEGER, value REAL)");
-    if( !qry.exec() )
+    if(! qry.exec() )
     {
         _error = qry.lastError().text();
     }
@@ -273,8 +308,7 @@ void Crit3DAggregationsDbHandler::deleteTmpAggrTable()
 {
     QSqlQuery qry(_db);
 
-    qry.prepare( "DROP TABLE TmpAggregationData" );
-
+    qry.prepare("DROP TABLE TmpAggregationData");
     qry.exec();
 }
 
@@ -334,17 +368,13 @@ bool Crit3DAggregationsDbHandler::loadVariableProperties()
             getValue(qry.value("id_variable"), &id_variable);
             getValue(qry.value("variable"), &variable);
             stdVar = variable.toStdString();
-            try {
-              meteoVar = MapDailyMeteoVar.at(stdVar);
+
+            meteoVar = getKeyMeteoVarMeteoMap(MapDailyMeteoVarToString, stdVar);
+            if (meteoVar == noMeteoVar)
+            {
+                meteoVar = getKeyMeteoVarMeteoMap(MapHourlyMeteoVarToString, stdVar);
             }
-            catch (const std::out_of_range& ) {
-                try {
-                    meteoVar = MapHourlyMeteoVar.at(stdVar);
-                }
-                catch (const std::out_of_range& ) {
-                    meteoVar = noMeteoVar;
-                }
-            }
+
             if (meteoVar != noMeteoVar)
             {
                 ret = _mapIdMeteoVar.insert(std::pair<int, meteoVariable>(id_variable,meteoVar));

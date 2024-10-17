@@ -117,12 +117,12 @@ DialogMeteoComputation::DialogMeteoComputation(QSettings *settings, bool isMeteo
         std::string item;
         std::string variable = group.left(group.size()-11).toStdString(); // remove "_VarToElab1"
         try {
-          var = MapDailyMeteoVar.at(variable);
-          item = MapDailyMeteoVarToString.at(var);
+            var = MapDailyMeteoVar.at(variable);
+            item = MapDailyMeteoVarToString.at(var);
         }
         catch (const std::out_of_range& ) {
-           myProject.logError("variable " + QString::fromStdString(variable) + " missing in MapDailyMeteoVar");
-           continue;
+            // check hourly variable
+            continue;
         }
         variableList.addItem(QString::fromStdString(item));
     }

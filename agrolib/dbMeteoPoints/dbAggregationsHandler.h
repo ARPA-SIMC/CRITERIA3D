@@ -34,7 +34,7 @@
 
         bool writeAggregationPointProperties(int nrPoints, QString aggrType, std::vector <double> lonVector, std::vector <double> latVector);
 
-        bool saveAggrData(int nZones, QString aggrType, QString periodType, QDate startDate, QDate endDate,
+        bool saveAggregationData(int nZones, QString aggrType, QString periodType, QDate startDate, QDate endDate,
                           meteoVariable variable, std::vector< std::vector<float> > aggregatedValues);
 
         bool insertTmpAggr(QDate startDate, QDate endDate, meteoVariable variable, std::vector< std::vector<float> > aggregatedValues, int nZones);

@@ -51,6 +51,12 @@ private:
     QCheckBox stationWeights;
     QTextEdit r2;
     QTextEdit lapseRate;
+    QTextEdit par0;
+    QTextEdit par1;
+    QTextEdit par2;
+    QTextEdit par3;
+    QTextEdit par4;
+    QTextEdit par5;
     ChartView *chartView;
     meteoVariable myVar;
     int proxyPos;

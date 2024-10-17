@@ -14,7 +14,6 @@
 
 unix:!macx {
     LIBS += -L/usr/lib -lgdal
-    LIBS += -L/usr/lib/x86_64-linux-gnu -lgeos_c
 
     INCLUDEPATH += /usr/include/gdal
     DEPENDPATH += /usr/include/gdal
@@ -39,16 +38,11 @@ win32-g++ {
 mac {
     LIBS += -framework IOKit
     LIBS += -framework CoreFoundation
+    LIBS += -framework GDAL
 
     QMAKE_LFLAGS += -F/Library/Frameworks/
 
-    LIBS += -framework GDAL
-    LIBS += -framework PROJ
-    LIBS += -framework GEOS
-
     INCLUDEPATH += /Library/Frameworks/GDAL.framework/Headers
-    INCLUDEPATH += /Library/Frameworks/PROJ.framework/Headers
-    INCLUDEPATH += /Library/Frameworks/GEOS.framework/Headers
 }
 
 

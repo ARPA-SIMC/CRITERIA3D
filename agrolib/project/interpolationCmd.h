@@ -19,18 +19,18 @@
 
     class QDate;
 
-    class crossValidationStatistics {
+    class Crit3DCrossValidationStatistics {
     private:
         Crit3DTime refTime;
         Crit3DProxyCombination proxyCombination;
         float meanAbsoluteError;
         float rootMeanSquareError;
-        float compoundRelativeError;
+        float NashSutcliffeEfficiency;
         float meanBiasError;
         float R2;
 
     public:
-        crossValidationStatistics();
+        Crit3DCrossValidationStatistics();
         void initialize();
 
         const Crit3DProxyCombination &getProxyCombination() const;
@@ -39,8 +39,8 @@
         void setMeanAbsoluteError(float newMeanAbsoluteError);
         float getRootMeanSquareError() const;
         void setRootMeanSquareError(float newRootMeanSquareError);
-        float getCompoundRelativeError() const;
-        void setCompoundRelativeError(float newCompoundRelativeError);
+        float getNashSutcliffeEfficiency() const;
+        void setNashSutcliffeEfficiency(float newNashSutcliffeEfficiency);
         float getMeanBiasError() const;
         void setMeanBiasError(float newMeanBiasError);
         const Crit3DTime &getRefTime() const;
