@@ -79,7 +79,8 @@
     void detrendingElevation(int elevationPos, std::vector <Crit3DInterpolationDataPoint> &myPoints, Crit3DInterpolationSettings* mySettings);
 
     void detrendingOtherProxies(int elevationPos, std::vector<Crit3DInterpolationDataPoint> &myPoints, Crit3DInterpolationSettings* mySettings);
-
+	
+	bool glocalDetrendingFitting(std::vector <Crit3DInterpolationDataPoint> &myPoints, Crit3DInterpolationSettings* mySettings,  meteoVariable myVar, std::string& errorStr);
     bool getUseDetrendingVar(meteoVariable myVar);
     bool isThermal(meteoVariable myVar);
     bool getUseTdVar(meteoVariable myVar);

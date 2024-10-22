@@ -29,6 +29,7 @@
             QCheckBox* multipleDetrendingEdit;
             QCheckBox* topographicDistanceEdit;
             QCheckBox* localDetrendingEdit;
+			QCheckBox* glocalDetrendingEdit;
             QCheckBox* doNotRetrendEdit;
             QCheckBox* retrendOnlyEdit;
             QCheckBox* upscaleFromDemEdit;
@@ -52,6 +53,7 @@
             void upscaleFromDemChanged(int active);
             void multipleDetrendingChanged(int active);
             void localDetrendingChanged(int active);
+            void glocalDetrendingChanged(int active);
             void optimalDetrendingChanged(int active);
     };
 

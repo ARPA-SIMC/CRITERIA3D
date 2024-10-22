@@ -439,10 +439,12 @@ void Crit3DInterpolationSettings::initializeProxy()
 void Crit3DInterpolationSettings::initialize()
 {
     currentDEM = nullptr;
+	macroAreasMap = nullptr;
     interpolationMethod = idw;
     useThermalInversion = true;
     useTD = false;
     useLocalDetrending = false;
+	useGlocalDetrending = false;
     topoDist_maxKh = 128;
     useDewPoint = true;
     useInterpolatedTForRH = true;
@@ -504,6 +506,38 @@ std::string getKeyStringElevationFunction(TFittingFunction value)
     return key;
 }
 
+void Crit3DInterpolationSettings::setMacroAreasMap(gis::Crit3DRasterGrid *value)
+{
+    macroAreasMap = value;
+}
+
+gis::Crit3DRasterGrid* Crit3DInterpolationSettings::getMacroAreasMap()
+{
+    return macroAreasMap;
+}
+
+std::vector<std::vector<std::vector<double>>> Crit3DInterpolationSettings::getAreaParameters()
+{
+    return areaParameters;
+}
+
+void Crit3DInterpolationSettings::setAreaParameters(std::vector<std::vector<std::vector<double> > > myAreaParameters)
+{
+    areaParameters.clear();
+    areaParameters = myAreaParameters;
+}
+
+std::vector<Crit3DProxyCombination> Crit3DInterpolationSettings::getAreaCombination()
+{
+    return areaCombination;
+}
+
+void Crit3DInterpolationSettings::setAreaCombination(std::vector<Crit3DProxyCombination> myAreaCombination)
+{
+    areaCombination.clear();
+    areaCombination = myAreaCombination;
+}
+
 TInterpolationMethod Crit3DInterpolationSettings::getInterpolationMethod()
 { return interpolationMethod;}
 
@@ -512,6 +546,9 @@ bool Crit3DInterpolationSettings::getUseTD()
 
 bool Crit3DInterpolationSettings::getUseLocalDetrending()
 { return useLocalDetrending;}
+
+bool Crit3DInterpolationSettings::getUseGlocalDetrending()
+{ return useGlocalDetrending;}
 
 bool Crit3DInterpolationSettings::getUseDoNotRetrend()
 { return useDoNotRetrend;}
@@ -536,6 +573,9 @@ void Crit3DInterpolationSettings::setUseTD(bool myValue)
 
 void Crit3DInterpolationSettings::setUseLocalDetrending(bool myValue)
 { useLocalDetrending = myValue;}
+
+void Crit3DInterpolationSettings::setUseGlocalDetrending(bool myValue)
+{ useGlocalDetrending = myValue;}
 
 void Crit3DInterpolationSettings::setUseDoNotRetrend(bool myValue)
 { useDoNotRetrend = myValue;}

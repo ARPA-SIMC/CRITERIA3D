@@ -128,6 +128,11 @@ DialogInterpolation::DialogInterpolation(Project *myProject)
 
     connect(localDetrendingEdit, SIGNAL(stateChanged(int)), this, SLOT(localDetrendingChanged(int)));
 
+	glocalDetrendingEdit = new QCheckBox(tr("glocal detrending"));
+    glocalDetrendingEdit->setChecked(_interpolationSettings->getUseGlocalDetrending());
+
+    connect(glocalDetrendingEdit, SIGNAL(stateChanged(int)), this, SLOT(glocalDetrendingChanged(int)));
+
     doNotRetrendEdit = new QCheckBox(tr("do not retrend"));
     doNotRetrendEdit->setChecked(_interpolationSettings->getUseDoNotRetrend());
 
@@ -143,6 +148,7 @@ DialogInterpolation::DialogInterpolation(Project *myProject)
     layoutDetrending->addWidget(&minPointsLocalDetrendingEdit);
 
     layoutDetrending->addWidget(localDetrendingEdit);
+	layoutDetrending->addWidget(glocalDetrendingEdit);
     layoutDetrending->addWidget(doNotRetrendEdit);
     layoutDetrending->addWidget(retrendOnlyEdit);
 
@@ -237,12 +243,29 @@ void DialogInterpolation::localDetrendingChanged(int active)
     topographicDistanceEdit->setEnabled(active == Qt::Unchecked);
     maxTdMultiplierEdit.setEnabled(active == Qt::Unchecked);
     minPointsLocalDetrendingEdit.setEnabled(active == Qt::Checked);
+    if (active == Qt::Checked) optimalDetrendingEdit->setChecked(Qt::Unchecked);
+    optimalDetrendingEdit->setEnabled(active == Qt::Unchecked);
+    if (active == Qt::Checked) glocalDetrendingEdit->setChecked(Qt::Unchecked);
+    glocalDetrendingEdit->setEnabled(active == Qt::Unchecked);
+}
+
+void DialogInterpolation::glocalDetrendingChanged(int active)
+{
+    if (active == Qt::Checked) topographicDistanceEdit->setChecked(Qt::Unchecked);
+    topographicDistanceEdit->setEnabled(active == Qt::Unchecked);
+    maxTdMultiplierEdit.setEnabled(active == Qt::Unchecked);
+    if (active == Qt::Checked) optimalDetrendingEdit->setChecked(Qt::Unchecked);
+    optimalDetrendingEdit->setEnabled(active == Qt::Unchecked);
+    if (active == Qt::Checked) localDetrendingEdit->setChecked(Qt::Unchecked);
+    localDetrendingEdit->setEnabled(active == Qt::Unchecked);
 }
 
 void DialogInterpolation::optimalDetrendingChanged(int active)
 {
     if (active == Qt::Checked) localDetrendingEdit->setChecked(Qt::Unchecked);
     localDetrendingEdit->setEnabled(active == Qt::Unchecked);
+    if (active == Qt::Checked) glocalDetrendingEdit->setChecked(Qt::Unchecked);
+    glocalDetrendingEdit->setEnabled(active == Qt::Unchecked);
 }
 
 void DialogInterpolation::redrawProxies()
@@ -313,6 +336,7 @@ void DialogInterpolation::accept()
     _interpolationSettings->setMeteoGridUpscaleFromDem(upscaleFromDemEdit->isChecked());
     _interpolationSettings->setUseTD(topographicDistanceEdit->isChecked());
     _interpolationSettings->setUseLocalDetrending(localDetrendingEdit->isChecked());
+	_interpolationSettings->setUseGlocalDetrending(glocalDetrendingEdit->isChecked());
     _interpolationSettings->setUseLapseRateCode(lapseRateCodeEdit->isChecked());
     _interpolationSettings->setUseBestDetrending(optimalDetrendingEdit->isChecked());
     _interpolationSettings->setUseMultipleDetrending(multipleDetrendingEdit->isChecked());

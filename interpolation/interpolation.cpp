@@ -1727,7 +1727,7 @@ bool multipleDetrendingMain(std::vector <Crit3DInterpolationDataPoint> &myPoints
             elevationPos = pos;
     }
 
-    if (mySettings->getCurrentCombination().isProxyActive(elevationPos))
+    if (elevationPos != NODATA && mySettings->getCurrentCombination().isProxyActive(elevationPos))
     {
         if (!multipleDetrendingElevationFitting(elevationPos, myPoints, mySettings, myVar, errorStr))
             return false;
@@ -2061,6 +2061,82 @@ void detrendingOtherProxies(int elevationPos, std::vector<Crit3DInterpolationDat
     }
 }
 
+bool glocalDetrendingFitting(std::vector <Crit3DInterpolationDataPoint> &myPoints, Crit3DInterpolationSettings* mySettings,  meteoVariable myVar, std::string& errorStr)
+{
+    //per n aree, si creano gruppi di stazioni in base al codice (sorta di selection)
+    //poi si chiama fitting per ogni area, il fitting va salvato in una matrice
+    //matrice avrà, per ogni area, i parametri di fitting + la combination + il valore delle stazioni detrendate secondo il fitting corrispondente
+    std::vector<Crit3DInterpolationDataPoint> subsetPoints;
+    int i = 0;
+    int j = 0;
+    int areasNr = int(myPoints.front().macroAreaCode);
+    int start = areasNr;
+
+    //look for highest and lowest "macroAreaCode", that's the areas we'll have to iterate the fitting for
+    for (i = 0; i < myPoints.size(); i++)
+    {
+        if (myPoints[i].macroAreaCode > areasNr)
+            areasNr = int(myPoints[i].macroAreaCode);
+        if (myPoints[i].macroAreaCode < start && !(myPoints[i].macroAreaCode == NODATA))
+            start = int(myPoints[i].macroAreaCode);
+    }
+
+    std::vector<std::vector<std::vector<double>>> allAreaParameters;
+    std::vector<Crit3DProxyCombination> allAreaCombinations;
+    //now create the subset of points, including only the right points, and then call multipleDetrending
+    for (i = start-1; i < areasNr+1; i++) //ATTENZIONE INDICI
+    {
+
+        for (j = 0; j < myPoints.size(); j++)
+        {
+            if (myPoints[j].macroAreaCode == i)
+                subsetPoints.push_back(myPoints[j]);
+        }
+
+        if (! subsetPoints.empty())
+        {
+            mySettings->setCurrentCombination(mySettings->getSelectedCombination());
+            mySettings->clearFitting();
+
+            int elevationPos = NODATA;
+            for (unsigned int pos=0; pos < mySettings->getCurrentCombination().getProxySize(); pos++)
+            {
+                if (getProxyPragaName(mySettings->getProxy(pos)->getName()) == proxyHeight)
+                    elevationPos = pos; //SPOSTA
+            }
+
+            if (elevationPos != NODATA && mySettings->getCurrentCombination().isProxyActive(elevationPos))
+            {
+                if (!multipleDetrendingElevationFitting(elevationPos, subsetPoints, mySettings, myVar, errorStr)) return false;
+
+                detrendingElevation(elevationPos, subsetPoints, mySettings);
+
+            }
+            if (!multipleDetrendingOtherProxiesFitting(elevationPos, subsetPoints, mySettings, myVar, errorStr))
+                return false;
+
+            detrendingOtherProxies(elevationPos, subsetPoints, mySettings);
+
+            //salvataggio parametri e valori staz(?) parlane con gabri pk dovresti salvare tutti i crit3dintpoint(?)
+            allAreaParameters.push_back(mySettings->getFittingParameters());
+            allAreaCombinations.push_back(mySettings->getCurrentCombination());
+        }
+        else
+        {
+            std::vector<std::vector<double>> emptyParameters;
+            Crit3DProxyCombination emptyCombination;
+            allAreaParameters.push_back(emptyParameters);
+            allAreaCombinations.push_back(emptyCombination);
+        }
+        subsetPoints.clear();
+    }
+
+    mySettings->setAreaParameters(allAreaParameters);
+    mySettings->setAreaCombination(allAreaCombinations);
+
+    return true;
+}
+
 
 void topographicDistanceOptimize(meteoVariable myVar,
                                  Crit3DMeteoPoint* &myMeteoPoints,
@@ -2169,8 +2245,15 @@ bool preInterpolation(std::vector <Crit3DInterpolationDataPoint> &myPoints, Crit
         {
             if (!mySettings->getUseLocalDetrending())
                 setMultipleDetrendingHeightTemperatureRange(mySettings);
-
-            if (! multipleDetrendingMain(myPoints, mySettings, myVar, errorStr)) return false;
+		
+			if (mySettings->getUseGlocalDetrending())
+            {
+                glocalDetrendingFitting(myPoints, mySettings, myVar, errorStr);
+            }
+            else
+            {
+                if (! multipleDetrendingMain(myPoints, mySettings, myVar, errorStr)) return false;
+            }
         }
         else
         {
