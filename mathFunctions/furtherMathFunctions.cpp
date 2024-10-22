@@ -1272,7 +1272,7 @@ namespace interpolation
 
     double computeWeighted_R2_generalized(const std::vector<double>& observed, const std::vector<double>& predicted, const std::vector<std::vector<double>>& weights)
     {
-
+        // !!! still to be checked
         // This function computes the generalized weighted R-squared (coefficient of determination)
         int n = int(observed.size());
         double sum_weighted_squared_total = 0.;
