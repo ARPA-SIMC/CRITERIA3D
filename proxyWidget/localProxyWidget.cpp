@@ -328,7 +328,10 @@ void Crit3DLocalProxyWidget::plot()
         delete label;
     }
     weightLabels.clear();
+    int areaCode = NODATA;
 
+    if (interpolationSettings->getUseLocalDetrending())
+    {
     if (detrended.isChecked())
     {
         outInterpolationPoints.clear();
@@ -346,6 +349,43 @@ void Crit3DLocalProxyWidget::plot()
                                         interpolationSettings, meteoSettings, climateParam,
                                         outInterpolationPoints, checkSpatialQuality, errorStdStr);
         localSelection(outInterpolationPoints, subsetInterpolationPoints, x, y, *interpolationSettings);
+    }
+    }
+    else if (interpolationSettings->getUseGlocalDetrending())
+    {
+        areaCode = gis::getValueFromXY(*interpolationSettings->getMacroAreasMap(), x, y);
+        if (detrended.isChecked())
+        {
+            outInterpolationPoints.clear();
+
+            checkAndPassDataToInterpolation(quality, myVar, meteoPoints, nrMeteoPoints, getCurrentTime(), SQinterpolationSettings,
+                                            interpolationSettings, meteoSettings, climateParam,
+                                            outInterpolationPoints, checkSpatialQuality, errorStdStr);
+
+            for (int k = 0; k < outInterpolationPoints.size(); k++)
+            {
+                if (outInterpolationPoints[k].macroAreaCode == areaCode)
+                {
+                    subsetInterpolationPoints.push_back(outInterpolationPoints[k]);
+                }
+            }
+
+            detrending(subsetInterpolationPoints, interpolationSettings->getSelectedCombination(), interpolationSettings, climateParam, myVar, getCurrentTime());
+        }
+        else
+        {
+            checkAndPassDataToInterpolation(quality, myVar, meteoPoints, nrMeteoPoints, getCurrentTime(), SQinterpolationSettings,
+                                            interpolationSettings, meteoSettings, climateParam,
+                                            outInterpolationPoints, checkSpatialQuality, errorStdStr);
+
+            for (int k = 0; k < outInterpolationPoints.size(); k++)
+            {
+                if (outInterpolationPoints[k].macroAreaCode == areaCode)
+                {
+                    subsetInterpolationPoints.push_back(outInterpolationPoints[k]);
+                }
+            }
+        }
     }
     QList<QPointF> pointListPrimary, pointListSecondary, pointListSupplemental, pointListMarked;
     QMap< QString, QPointF > idPointMap1;

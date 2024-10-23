@@ -137,6 +137,7 @@
     {
     private:
         gis::Crit3DRasterGrid* currentDEM; //for TD
+		gis::Crit3DRasterGrid* macroAreasMap; //for glocal detrending
 
         TInterpolationMethod interpolationMethod;
 
@@ -144,6 +145,7 @@
         bool useThermalInversion;
         bool useTD;
         bool useLocalDetrending;
+		bool useGlocalDetrending;
         int maxTdMultiplier;
         bool useLapseRateCode;
         bool useBestDetrending;
@@ -175,6 +177,8 @@
         std::vector <std::vector<double>> fittingParameters;
         std::vector<std::function<double(double, std::vector<double>&)>> fittingFunction;
         std::vector<double> pointsRange;
+		std::vector<std::vector<std::vector<double>>> areaParameters;
+        std::vector<Crit3DProxyCombination> areaCombination;
 
 
     public:
@@ -203,6 +207,14 @@
         void setUseLocalDetrending(bool myValue);
         bool getUseLocalDetrending();
 
+		void setUseGlocalDetrending(bool myValue);
+        bool getUseGlocalDetrending();
+        void setMacroAreasMap(gis::Crit3DRasterGrid *value);
+        gis::Crit3DRasterGrid *getMacroAreasMap();
+        std::vector<std::vector<std::vector<double> > > getAreaParameters();
+        void setAreaParameters(std::vector<std::vector<std::vector<double>>> myAreaParameters);
+        std::vector<Crit3DProxyCombination> getAreaCombination();
+        void setAreaCombination(std::vector<Crit3DProxyCombination> myAreaCombination);
         void setUseDoNotRetrend(bool myValue);
         bool getUseDoNotRetrend();
 
