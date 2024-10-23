@@ -260,8 +260,8 @@
         bool writeTopographicDistanceMap(int pointIndex, const gis::Crit3DRasterGrid& demMap, QString pathTd);
         bool loadTopographicDistanceMaps(bool onlyWithData, bool showInfo);
         void passInterpolatedTemperatureToHumidityPoints(Crit3DTime myTime, Crit3DMeteoSettings *meteoSettings);
-		bool loadMacroAreaGlocalMap(bool showInfo);
-        bool groupCellsInArea(std::vector<int> &areaPoints, unsigned index);
+        int loadMacroAreaGlocalMap();
+        bool groupCellsInArea(std::vector<int> &areaPoints, unsigned index, bool isGrid);
 
         bool checkInterpolation(meteoVariable myVar);
         bool checkInterpolationGrid(meteoVariable myVar);
