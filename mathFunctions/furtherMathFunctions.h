@@ -102,6 +102,7 @@ enum estimatedFunction {FUNCTION_CODE_SPHERICAL, FUNCTION_CODE_LINEAR, FUNCTION_
         void tridiagonalThomasAlgorithm (int n, double *subDiagonal, double *mainDiagonal, double *superDiagonal, double *constantTerm, double* output); // not working to be checked
 
         double computeR2(const std::vector<double>& obs, const std::vector<double>& sim);
+        double computeWeightedRMSE(const std::vector<double>& observed, const std::vector<double>& predicted);
         double computeWeighted_R2(const std::vector<double>& observed, const std::vector<double>& predicted, const std::vector<double>& weights);
         double computeWeighted_R2_secondFormulation(const std::vector<double>& observed, const std::vector<double>& predicted, const std::vector<double>& weights);
         double computeWeighted_R2_generalized_independentObservedData(const std::vector<double>& observed, const std::vector<double>& predicted, const std::vector<double>& weights);
@@ -125,6 +126,12 @@ enum estimatedFunction {FUNCTION_CODE_SPHERICAL, FUNCTION_CODE_LINEAR, FUNCTION_
                                                   int maxIterationsNr, double myEpsilon,
                                                   std::vector <std::vector <double>>& x ,std::vector<double>& y,
                                                   std::vector<double>& weights);
+        int bestFittingMarquardt_nDimension_clean(double (*func)(std::vector<std::function<double(double, std::vector<double>&)>>&, std::vector<double>& , std::vector <std::vector <double>>&),
+                                                  std::vector<std::function<double(double, std::vector<double>&)>>& myFunc,
+                                                  std::vector <std::vector <double>>& parametersMin, std::vector <std::vector <double>>& parametersMax,
+                                                  std::vector <std::vector <double>>& parameters, std::vector <std::vector <double>>& parametersDelta,
+                                                  int maxIterationsNr, double myEpsilon,
+                                                  std::vector <std::vector <double>>& x ,std::vector<double>& y);
 
         bool fittingMarquardt_nDimension(double (*func)(std::vector<std::function<double (double, std::vector<double> &)> > &, std::vector<double> &, std::vector <std::vector <double>>&),
                                          std::vector<std::function<double (double, std::vector<double> &)> > &myFunc,
@@ -140,12 +147,24 @@ enum estimatedFunction {FUNCTION_CODE_SPHERICAL, FUNCTION_CODE_LINEAR, FUNCTION_
                                                    int maxIterationsNr, double myEpsilon,
                                                    std::vector <std::vector <double>>& x, std::vector<double>& y,
                                                    std::vector<double>& weights);
+        bool fittingMarquardt_nDimension_noSquares(double (*func)(std::vector<std::function<double(double, std::vector<double>&)>>&, std::vector<double>& , std::vector <std::vector <double>>&),
+                                                   std::vector<std::function<double (double, std::vector<double> &)> >& myFunc,
+                                                   std::vector<std::vector<double> > &parametersMin, std::vector<std::vector<double> > &parametersMax,
+                                                   std::vector<std::vector<double> > &parameters, std::vector<std::vector<double> > &parametersDelta, std::vector<std::vector<int> > &correspondenceParametersTag,
+                                                   int maxIterationsNr, double myEpsilon,
+                                                   std::vector <std::vector <double>>& x, std::vector<double>& y);
+
         bool fittingMarquardt_nDimension_noSquares_singleFunction(double (*func) (double, std::vector<double>&),
                                                                   std::vector<double> &parametersMin, std::vector<double> &parametersMax,
                                                                   std::vector<double> &parameters, std::vector<double> &parametersDelta,
                                                                   int maxIterationsNr, double myEpsilon,
                                                                   std::vector <double>& x, std::vector<double>& y,
                                                                   std::vector<double>& weights);
+        bool fittingMarquardt_nDimension_noSquares_singleFunction(double (*func) (double, std::vector<double>&),
+                                                                  std::vector<double> &parametersMin, std::vector<double> &parametersMax,
+                                                                  std::vector<double> &parameters, std::vector<double> &parametersDelta,
+                                                                  int maxIterationsNr, double myEpsilon,
+                                                                  std::vector <double>& x, std::vector<double>& y);
         double bestFittingMarquardt_nDimension_singleFunction(double (*func)(double, std::vector<double>&),
                                                            int nrTrials, int nrMinima,
                                                            std::vector <double>& parametersMin, std::vector <double>& parametersMax,
@@ -154,10 +173,21 @@ enum estimatedFunction {FUNCTION_CODE_SPHERICAL, FUNCTION_CODE_LINEAR, FUNCTION_
                                                            int maxIterationsNr, double myEpsilon, double deltaR2,
                                                            std::vector <double>& x , std::vector<double>& y,
                                                            std::vector<double>& weights, std::vector<std::vector<double> > firstGuessCombinations);
+        double bestFittingMarquardt_nDimension_singleFunction(double (*func)(double, std::vector<double>&),
+                                                              int nrTrials, int nrMinima,
+                                                              std::vector <double>& parametersMin, std::vector <double>& parametersMax,
+                                                              std::vector <double>& parameters, std::vector <double>& parametersDelta,
+                                                              std::vector<double> &stepSize, int numSteps,
+                                                              int maxIterationsNr, double myEpsilon, double deltaR2,
+                                                              std::vector <double>& x , std::vector<double>& y,
+                                                              std::vector<std::vector<double> > firstGuessCombinations);
 
         double normGeneric_nDimension(double (*func)(std::vector<std::function<double (double, std::vector<double> &)>> &, std::vector<double> &, std::vector <std::vector <double>>&),
                                       std::vector<std::function<double (double, std::vector<double> &)> > myFunc,
                                       std::vector <std::vector <double>> &parameters, std::vector <std::vector <double>>& x, std::vector<double>& y, std::vector<double>& weights);
+        double normGeneric_nDimension(double (*func)(std::vector<std::function<double (double, std::vector<double> &)>> &, std::vector<double> &, std::vector <std::vector <double>>&),
+                                      std::vector<std::function<double (double, std::vector<double> &)> > myFunc,
+                                      std::vector <std::vector <double>> &parameters, std::vector <std::vector <double>>& x, std::vector<double>& y);
 
         void leastSquares_nDimension(double (*func)(std::vector<std::function<double(double, std::vector<double>&)>>&, std::vector<double>& , std::vector <std::vector <double>>&),
                                     std::vector<std::function<double (double, std::vector<double> &)> > myFunc,
