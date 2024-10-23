@@ -51,6 +51,7 @@
     #define PATH_LOG "LOG/"
     #define PATH_OUTPUT "OUTPUT/"
     #define PATH_TD "TD/"
+    #define PATH_GLOCAL "GLOCAL/"
     #define PATH_STATES "STATES/"
     #define PATH_NETCDF "NETCDF/"
 

@@ -262,6 +262,7 @@
         void passInterpolatedTemperatureToHumidityPoints(Crit3DTime myTime, Crit3DMeteoSettings *meteoSettings);
         int loadMacroAreaGlocalMap();
         bool groupCellsInArea(std::vector<int> &areaPoints, unsigned index, bool isGrid);
+        bool glocalWeightsMaps(float windowWidth);
 
         bool checkInterpolation(meteoVariable myVar);
         bool checkInterpolationGrid(meteoVariable myVar);
