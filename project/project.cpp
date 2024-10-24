@@ -2142,6 +2142,98 @@ bool Project::loadTopographicDistanceMaps(bool onlyWithData, bool showInfo)
     return true;
 }
 
+bool Project::glocalWeightsMaps(float windowWidth)
+{
+    //controlla se c'è mappa aree
+
+    gis::Crit3DRasterGrid* zoneGrid = interpolationSettings.getMacroAreasMap();
+    if (! zoneGrid->isLoaded)
+    {
+        errorString = "Load a zone grid before";
+        return false;
+    }
+
+    QString mapsFolder = projectPath + PATH_GLOCAL;
+    if (! QDir(mapsFolder).exists())
+    {
+        QDir().mkdir(mapsFolder);
+    }
+
+    std::vector <int> zoneCount((unsigned int)(zoneGrid->maximum));
+
+    int i, j;
+
+    //create raster for each zone
+    std::vector <gis::Crit3DRasterGrid> zoneWeightMaps((unsigned int)(zoneGrid->maximum));
+    for (i=0; i < zoneGrid->maximum; i++)
+        zoneWeightMaps[i].initializeGrid(*zoneGrid);
+
+    int cellNr = round(windowWidth / zoneGrid->header->cellSize);
+    float cellDelta;
+
+    int r1, r2, c1, c2, windowRow, windowCol, cellCount;
+
+    for (int zoneRow = 0; zoneRow < zoneGrid->header->nrRows; zoneRow++)
+    {
+        for (int zoneCol = 0; zoneCol < zoneGrid->header->nrCols; zoneCol++)
+        {
+            if (! isEqual(zoneGrid->value[zoneRow][zoneCol], zoneGrid->header->flag))
+            {
+                cellCount = 0;
+
+                for (j=0; j < zoneGrid->maximum; j++)
+                    zoneCount[j] = 0;
+
+                r1 = zoneRow - cellNr;
+                r2 = zoneRow + cellNr;
+                c1 = zoneCol - cellNr;
+                c2 = zoneCol + cellNr;
+
+                for (windowRow = r1; windowRow <= r2; windowRow++)
+                {
+                    for (windowCol = c1; windowCol <= c2; windowCol++)
+                    {
+                        if (! gis::isOutOfGridRowCol(windowRow, windowCol, *zoneGrid))
+                        {
+                            i = zoneGrid->value[windowRow][windowCol];
+
+                            if (! isEqual(i, zoneGrid->header->flag))
+                            {
+                                cellDelta = gis::computeDistance(windowRow, windowCol, zoneRow, zoneCol);
+
+                                if (cellDelta <= cellNr)
+                                {
+                                    cellCount++;
+                                    zoneCount[i-1]++;
+                                }
+                            }
+                        }
+                    }
+                }
+
+                for (i=0; i < zoneGrid->maximum; i++)
+                    if (cellCount > 0)
+                        zoneWeightMaps[i].value[zoneRow][zoneCol] = float(zoneCount[i]) / float(cellCount);
+
+            }
+        }
+    }
+
+    QString fileName;
+    std::string myError;
+    for (int i=0; i < zoneGrid->maximum; i++)
+    {
+        fileName = mapsFolder + "glocalWeight_" + QString::number(i+1);
+        if (! gis::writeEsriGrid(fileName.toStdString(), &zoneWeightMaps[i], myError))
+        {
+            errorString = QString::fromStdString(myError);
+            return false;
+        }
+    }
+
+    return true;
+}
+
 int Project::loadGlocalFiles()
 {
     //TODO: add a check for the code values?

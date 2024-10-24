@@ -263,6 +263,7 @@
         int loadGlocalFiles();
         bool loadGlocalStationsCsv(QString fileName, std::vector<std::vector<int>> &areaPoints);
         bool groupCellsInArea(std::vector<int> &areaPoints, unsigned index, bool isGrid);
+        bool glocalWeightsMaps(float windowWidth);
 
         bool checkInterpolation(meteoVariable myVar);
         bool checkInterpolationGrid(meteoVariable myVar);
