@@ -39,7 +39,6 @@ Crit3DInterpolationDataPoint::Crit3DInterpolationDataPoint()
     regressionWeight = NODATA;
 
     lapseRateCode = primary;
-	macroAreaCode = NODATA;
 
     topographicDistance = nullptr;
 

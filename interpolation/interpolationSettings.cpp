@@ -461,6 +461,9 @@ void Crit3DInterpolationSettings::initialize()
 
     fittingFunction.clear();
     fittingParameters.clear();
+    macroAreas.clear();
+    areaCombination.clear();
+    areaParameters.clear();
 
     isKrigingReady = false;
     precipitationAllZero = false;
@@ -536,6 +539,20 @@ void Crit3DInterpolationSettings::setAreaCombination(std::vector<Crit3DProxyComb
 {
     areaCombination.clear();
     areaCombination = myAreaCombination;
+}
+
+std::vector<Crit3DMacroArea> Crit3DInterpolationSettings::getMacroAreas()
+{
+    return macroAreas;
+}
+void Crit3DInterpolationSettings::addMacroArea(Crit3DMacroArea myArea)
+{
+    macroAreas.push_back(myArea);
+}
+
+void Crit3DInterpolationSettings::setMacroAreas(std::vector<Crit3DMacroArea> myAreas)
+{
+    macroAreas = myAreas;
 }
 
 TInterpolationMethod Crit3DInterpolationSettings::getInterpolationMethod()
@@ -1001,5 +1018,65 @@ bool Crit3DInterpolationSettings::getCombination(int combinationInteger, Crit3DP
     outCombination.setUseThermalInversion(binaryString[binaryString.length()-1] == '1' && selectedCombination.getUseThermalInversion());
 
     return true;
+}
+
+Crit3DMacroArea::Crit3DMacroArea()
+{
+    meteoPoints.clear();
+    areaParameters.clear();
+    areaCombination.clear();
+    areaCells.clear();
+}
+
+void Crit3DMacroArea::setMeteoPoints (std::vector<int> myMeteoPoints)
+{
+    meteoPoints = myMeteoPoints;
+    return;
+}
+
+std::vector<int> Crit3DMacroArea::getMeteoPoints()
+{
+    return meteoPoints;
+}
+
+void Crit3DMacroArea::setAreaCells (std::vector<int> myCells)
+{
+    areaCells = myCells;
+    return;
+}
+
+std::vector<int> Crit3DMacroArea::getAreaCells()
+{
+    return areaCells;
+}
+
+void Crit3DMacroArea::setParameters (std::vector<std::vector<float>> myParameters)
+{
+    areaParameters = myParameters;
+    return;
+}
+
+std::vector<std::vector<float>> Crit3DMacroArea::getParameters()
+{
+    return areaParameters;
+}
+
+void Crit3DMacroArea::setCombination (Crit3DProxyCombination myCombination)
+{
+    areaCombination = myCombination;
+    return;
+}
+
+void Crit3DMacroArea::clear()
+{
+    areaCells.clear();
+    areaParameters.clear();
+    areaCombination.clear();
+    meteoPoints.clear();
+}
+
+Crit3DProxyCombination Crit3DMacroArea::getCombination()
+{
+    return areaCombination;
 }
 

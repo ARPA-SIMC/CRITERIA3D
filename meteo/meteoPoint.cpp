@@ -61,7 +61,6 @@ void Crit3DMeteoPoint::clear()
     this->latInt = NODATA;
     this->lonInt = NODATA;
     this->isInsideDem = false;
-	this->macroAreaCode = NODATA;
 
     this->nrObsDataDaysH = 0;
     this->nrObsDataDaysD = 0;

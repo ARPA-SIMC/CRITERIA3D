@@ -354,6 +354,8 @@ void Crit3DLocalProxyWidget::plot()
     else if (interpolationSettings->getUseGlocalDetrending())
     {
         areaCode = gis::getValueFromXY(*interpolationSettings->getMacroAreasMap(), x, y);
+        Crit3DMacroArea myArea = interpolationSettings->getMacroAreas()[areaCode];
+        std::vector<int> stations = myArea.getMeteoPoints();
         if (detrended.isChecked())
         {
             outInterpolationPoints.clear();
@@ -362,28 +364,31 @@ void Crit3DLocalProxyWidget::plot()
                                             interpolationSettings, meteoSettings, climateParam,
                                             outInterpolationPoints, checkSpatialQuality, errorStdStr);
 
-            for (int k = 0; k < outInterpolationPoints.size(); k++)
+            for (int k = 0; k < stations.size(); k++)
             {
-                if (outInterpolationPoints[k].macroAreaCode == areaCode)
-                {
-                    subsetInterpolationPoints.push_back(outInterpolationPoints[k]);
-                }
+                for (int j = 0; j < outInterpolationPoints.size(); j++)
+                    if (outInterpolationPoints[j].index == stations[k])
+                    {
+                        subsetInterpolationPoints.push_back(outInterpolationPoints[j]);
+                    }
             }
 
             detrending(subsetInterpolationPoints, interpolationSettings->getSelectedCombination(), interpolationSettings, climateParam, myVar, getCurrentTime());
         }
         else
         {
+            outInterpolationPoints.clear();
             checkAndPassDataToInterpolation(quality, myVar, meteoPoints, nrMeteoPoints, getCurrentTime(), SQinterpolationSettings,
                                             interpolationSettings, meteoSettings, climateParam,
                                             outInterpolationPoints, checkSpatialQuality, errorStdStr);
 
-            for (int k = 0; k < outInterpolationPoints.size(); k++)
+            for (int k = 0; k < stations.size(); k++)
             {
-                if (outInterpolationPoints[k].macroAreaCode == areaCode)
-                {
-                    subsetInterpolationPoints.push_back(outInterpolationPoints[k]);
-                }
+                for (int j = 0; j < outInterpolationPoints.size(); j++)
+                    if (outInterpolationPoints[j].index == stations[k])
+                    {
+                        subsetInterpolationPoints.push_back(outInterpolationPoints[j]);
+                    }
             }
         }
     }

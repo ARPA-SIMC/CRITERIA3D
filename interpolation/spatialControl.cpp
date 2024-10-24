@@ -429,7 +429,6 @@ bool passDataToInterpolation(Crit3DMeteoPoint* meteoPoints, int nrMeteoPoints,
             myPoint.topographicDistance = meteoPoints[i].topographicDistance;
             myPoint.isActive = true;
             myPoint.isMarked = meteoPoints[i].marked;
-			myPoint.macroAreaCode = meteoPoints[i].macroAreaCode;
 
             if (isEqual(xMin, NODATA))
             {

@@ -91,7 +91,6 @@
             int latInt;
             int lonInt;
             bool isInsideDem;
-			int macroAreaCode;
 
             bool isUTC;
             bool isForecast;

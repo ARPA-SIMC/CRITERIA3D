@@ -132,6 +132,29 @@
         void setUseThermalInversion(bool value) { _useThermalInversion = value; }
     };
 
+    class Crit3DMacroArea
+    {
+    private:
+        Crit3DProxyCombination areaCombination;
+        std::vector<std::vector<float>> areaParameters;
+        std::vector<int> meteoPoints;
+        std::vector<int> areaCells;
+
+    public:
+        Crit3DMacroArea();
+
+        void setMeteoPoints (std::vector<int> myMeteoPoints);
+        std::vector<int> getMeteoPoints();
+        void setParameters (std::vector<std::vector<float>> myParameters);
+        std::vector<std::vector<float>> getParameters();
+        void setCombination (Crit3DProxyCombination myCombination);
+        Crit3DProxyCombination getCombination();
+        void setAreaCells (std::vector<int> myCells);
+        std::vector<int> getAreaCells();
+        void clear();
+
+    };
+
 
     class Crit3DInterpolationSettings
     {
@@ -180,6 +203,8 @@
 		std::vector<std::vector<std::vector<double>>> areaParameters;
         std::vector<Crit3DProxyCombination> areaCombination;
 
+        std::vector<Crit3DMacroArea> macroAreas;
+
 
     public:
         Crit3DInterpolationSettings();
@@ -215,6 +240,10 @@
         void setAreaParameters(std::vector<std::vector<std::vector<double>>> myAreaParameters);
         std::vector<Crit3DProxyCombination> getAreaCombination();
         void setAreaCombination(std::vector<Crit3DProxyCombination> myAreaCombination);
+        std::vector<Crit3DMacroArea> getMacroAreas();
+        void addMacroArea(Crit3DMacroArea myArea);
+        void setMacroAreas(std::vector<Crit3DMacroArea> myAreas);
+
         void setUseDoNotRetrend(bool myValue);
         bool getUseDoNotRetrend();
 

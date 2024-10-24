@@ -25,7 +25,6 @@
         lapseRateCodeType lapseRateCode;
         gis::Crit3DRasterGrid* topographicDistance;
         std::vector<float> proxyValues;
-		int macroAreaCode;
 
         Crit3DInterpolationDataPoint();
 
