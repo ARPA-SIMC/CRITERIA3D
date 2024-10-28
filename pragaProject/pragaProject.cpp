@@ -2636,13 +2636,6 @@ bool PragaProject::interpolationMeteoGridPeriod(QDate dateIni, QDate dateFin, QL
             return false;
     }
 
-	if (interpolationSettings.getUseGlocalDetrending())
-    {
-        logInfoGUI("Loading macro areas map for glocal detrending...");
-        if (loadGlocalFiles() < 1)
-            return false;
-    }
-
     // save also time aggregated variables
     foreach (myVar, aggrVariables)
         varToSave.push_back(myVar);

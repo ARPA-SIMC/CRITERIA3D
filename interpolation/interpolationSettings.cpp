@@ -1039,13 +1039,13 @@ std::vector<int> Crit3DMacroArea::getMeteoPoints()
     return meteoPoints;
 }
 
-void Crit3DMacroArea::setAreaCells (std::vector<int> myCells)
+void Crit3DMacroArea::setAreaCells (std::vector<float> myCells)
 {
     areaCells = myCells;
     return;
 }
 
-std::vector<int> Crit3DMacroArea::getAreaCells()
+std::vector<float> Crit3DMacroArea::getAreaCells()
 {
     return areaCells;
 }

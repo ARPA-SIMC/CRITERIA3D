@@ -74,7 +74,7 @@
                             meteoVariable myVar, std::string &errorStr);
 
     bool multipleDetrendingElevationFitting(int elevationPos, std::vector <Crit3DInterpolationDataPoint> &myPoints,
-                                     Crit3DInterpolationSettings* mySettings, meteoVariable myVar, std::string &errorStr);
+                                     Crit3DInterpolationSettings* mySettings, meteoVariable myVar, std::string &errorStr, bool isWeighted);
 
     void detrendingElevation(int elevationPos, std::vector <Crit3DInterpolationDataPoint> &myPoints, Crit3DInterpolationSettings* mySettings);
 

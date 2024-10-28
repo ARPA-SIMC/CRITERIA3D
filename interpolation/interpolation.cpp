@@ -1723,7 +1723,7 @@ bool multipleDetrendingMain(std::vector <Crit3DInterpolationDataPoint> &myPoints
 
     if (elevationPos != NODATA && mySettings->getCurrentCombination().isProxyActive(elevationPos))
     {
-        if (!multipleDetrendingElevationFitting(elevationPos, myPoints, mySettings, myVar, errorStr))
+        if (!multipleDetrendingElevationFitting(elevationPos, myPoints, mySettings, myVar, errorStr, true))
             return false;
 
         detrendingElevation(elevationPos, myPoints, mySettings);
@@ -1739,7 +1739,7 @@ bool multipleDetrendingMain(std::vector <Crit3DInterpolationDataPoint> &myPoints
 }
 
 bool multipleDetrendingElevationFitting(int elevationPos, std::vector <Crit3DInterpolationDataPoint> &myPoints,
-                                 Crit3DInterpolationSettings* mySettings, meteoVariable myVar, std::string &errorStr)
+                                 Crit3DInterpolationSettings* mySettings, meteoVariable myVar, std::string &errorStr, bool isWeighted)
 {
     mySettings->getProxy(elevationPos)->setRegressionR2(NODATA);
     if (! getUseDetrendingVar(myVar)) return true;
@@ -1799,8 +1799,13 @@ bool multipleDetrendingElevationFitting(int elevationPos, std::vector <Crit3DInt
 
     std::vector<std::vector<double>> firstGuessCombinations = mySettings->getProxy(elevationPos)->getFirstGuessCombinations();
     // multiple non linear fitting
-    double R2 = interpolation::bestFittingMarquardt_nDimension_singleFunction(*(myFunc.target<double(*)(double, std::vector<double>&)>()), 400, 4, parametersMin, parametersMax, parameters, parametersDelta,
+    double R2 = NODATA;
+    if (isWeighted)
+        R2 = interpolation::bestFittingMarquardt_nDimension_singleFunction(*(myFunc.target<double(*)(double, std::vector<double>&)>()), 400, 4, parametersMin, parametersMax, parameters, parametersDelta,
                                                                   stepSize, numSteps, 1000, 0.002, 0.005, predictors, predictands, weights,firstGuessCombinations);
+    else
+        R2 = interpolation::bestFittingMarquardt_nDimension_singleFunction(*(myFunc.target<double(*)(double, std::vector<double>&)>()), 400, 4, parametersMin, parametersMax, parameters, parametersDelta,
+                                                                           stepSize, numSteps, 1000, 0.002, 0.005, predictors, predictands,firstGuessCombinations);
 
     mySettings->getProxy(elevationPos)->setRegressionR2(R2);
 
@@ -2088,7 +2093,10 @@ bool glocalDetrendingFitting(std::vector <Crit3DInterpolationDataPoint> &myPoint
 
                 for (int k = 0; k < myPoints.size(); k++)
                     if (myPoints[k].index == temp[l])
+                    {
                         subsetPoints.push_back(myPoints[k]);
+                        break;
+                    }
             }
 
             mySettings->setCurrentCombination(mySettings->getSelectedCombination());
@@ -2096,7 +2104,7 @@ bool glocalDetrendingFitting(std::vector <Crit3DInterpolationDataPoint> &myPoint
 
             if (elevationPos != NODATA && mySettings->getCurrentCombination().isProxyActive(elevationPos))
             {
-                if (!multipleDetrendingElevationFitting(elevationPos, subsetPoints, mySettings, myVar, errorStr)) return false;
+                if (!multipleDetrendingElevationFitting(elevationPos, subsetPoints, mySettings, myVar, errorStr, false)) return false;
 
                 detrendingElevation(elevationPos, subsetPoints, mySettings);
 

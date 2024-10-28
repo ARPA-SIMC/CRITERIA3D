@@ -138,7 +138,7 @@
         Crit3DProxyCombination areaCombination;
         std::vector<std::vector<float>> areaParameters;
         std::vector<int> meteoPoints;
-        std::vector<int> areaCells;
+        std::vector<float> areaCells;
 
     public:
         Crit3DMacroArea();
@@ -149,8 +149,8 @@
         std::vector<std::vector<float>> getParameters();
         void setCombination (Crit3DProxyCombination myCombination);
         Crit3DProxyCombination getCombination();
-        void setAreaCells (std::vector<int> myCells);
-        std::vector<int> getAreaCells();
+        void setAreaCells (std::vector<float> myCells);
+        std::vector<float> getAreaCells();
         void clear();
 
     };

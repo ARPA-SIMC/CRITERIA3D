@@ -353,7 +353,10 @@ void Crit3DLocalProxyWidget::plot()
     }
     else if (interpolationSettings->getUseGlocalDetrending())
     {
+
         areaCode = gis::getValueFromXY(*interpolationSettings->getMacroAreasMap(), x, y);
+        if (areaCode < interpolationSettings->getMacroAreas().size())
+        {
         Crit3DMacroArea myArea = interpolationSettings->getMacroAreas()[areaCode];
         std::vector<int> stations = myArea.getMeteoPoints();
         if (detrended.isChecked())
@@ -390,6 +393,7 @@ void Crit3DLocalProxyWidget::plot()
                         subsetInterpolationPoints.push_back(outInterpolationPoints[j]);
                     }
             }
+        }
         }
     }
     QList<QPointF> pointListPrimary, pointListSecondary, pointListSupplemental, pointListMarked;
@@ -565,7 +569,12 @@ void Crit3DLocalProxyWidget::modelLRClicked(int toggled)
             setMultipleDetrendingHeightTemperatureRange(interpolationSettings);
             interpolationSettings->setCurrentCombination(interpolationSettings->getSelectedCombination());
             interpolationSettings->clearFitting();
-            if (! multipleDetrendingElevationFitting(proxyPos, subsetInterpolationPoints, interpolationSettings, myVar, errorStr)) return;
+            if (interpolationSettings->getUseLocalDetrending())
+            {
+                if (! multipleDetrendingElevationFitting(proxyPos, subsetInterpolationPoints, interpolationSettings, myVar, errorStr, true)) return;
+            }
+            else if (interpolationSettings->getUseGlocalDetrending())
+                if (! multipleDetrendingElevationFitting(proxyPos, subsetInterpolationPoints, interpolationSettings, myVar, errorStr, false)) return;
 
             std::vector<std::vector<double>> parameters = interpolationSettings->getFittingParameters();
 
