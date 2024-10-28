@@ -2329,7 +2329,7 @@ bool Project::loadGlocalWeightMaps(std::vector<Crit3DMacroArea> &myAreas, bool i
     gis::Crit3DRasterGrid* macroAreasGrid = new gis::Crit3DRasterGrid();
     std::string fileName = mapsFolder.toStdString() + "glocalWeight_";
 
-    std::vector<float> singleCell(2);
+
     std::vector<float> areaCells;
     int nrCols, nrRows;
     double myLat, myLon, myX, myY;
@@ -2343,7 +2343,7 @@ bool Project::loadGlocalWeightMaps(std::vector<Crit3DMacroArea> &myAreas, bool i
     else
     {
         nrCols = meteoGridDbHandler->gridStructure().header().nrCols;
-        nrRows = meteoGridDbHandler->gridStructure().header().nrCols;
+        nrRows = meteoGridDbHandler->gridStructure().header().nrRows;
     }
 
     for (int i = 0; i < myAreas.size(); i++)
@@ -3321,6 +3321,7 @@ bool Project::interpolationGrid(meteoVariable myVar, const Crit3DTime& myTime)
         std::vector<std::vector<std::vector<double>>> allAreaFittingParameters = interpolationSettings.getAreaParameters();
         std::vector<Crit3DProxyCombination> allAreaCombinations = interpolationSettings.getAreaCombination();
         std::vector<float> areaCells;
+        float myValue = NODATA;
 
         if (allAreaCombinations.size() != numAreas)
         {
@@ -3406,7 +3407,7 @@ bool Project::interpolationGrid(meteoVariable myVar, const Crit3DTime& myTime)
                                 proxyIndex++;
                             }
                         }
-                        interpolatedValue += interpolate(subsetInterpolationPoints, &interpolationSettings, meteoSettings, myVar, myX, myY, myZ, proxyValues, true)
+                        interpolatedValue = interpolate(subsetInterpolationPoints, &interpolationSettings, meteoSettings, myVar, myX, myY, myZ, proxyValues, true)
                                              * areaCells[cellIndex + 1];
 
                     }
@@ -3415,16 +3416,27 @@ bool Project::interpolationGrid(meteoVariable myVar, const Crit3DTime& myTime)
                         if (meteoGridDbHandler->meteoGrid()->meteoPoints()[row][col]->nrObsDataDaysH == 0)
                             meteoGridDbHandler->meteoGrid()->meteoPoints()[row][col]->initializeObsDataH(1, 1, myTime.date);
 
-                        meteoGridDbHandler->meteoGrid()->meteoPoints()[row][col]->setMeteoPointValueH(myTime.date, myTime.getHour(), myTime.getMinutes(), myVar, float(interpolatedValue));
-                        meteoGridDbHandler->meteoGrid()->meteoPoints()[row][col]->currentValue = float(interpolatedValue);
+                        myValue = meteoGridDbHandler->meteoGrid()->meteoPoints()[row][col]->getMeteoPointValueH(myTime.date, myTime.getHour(), myTime.getMinutes(), myVar);
+
+                        if (isEqual(myValue, NODATA))
+                            myValue = 0;
+
+                        meteoGridDbHandler->meteoGrid()->meteoPoints()[row][col]->setMeteoPointValueH(myTime.date, myTime.getHour(), myTime.getMinutes(), myVar, float(interpolatedValue+myValue));
+                        meteoGridDbHandler->meteoGrid()->meteoPoints()[row][col]->currentValue = float(interpolatedValue+myValue);
+
                     }
                     else if (freq == daily)
                     {
                         if (meteoGridDbHandler->meteoGrid()->meteoPoints()[row][col]->nrObsDataDaysD == 0)
                             meteoGridDbHandler->meteoGrid()->meteoPoints()[row][col]->initializeObsDataD(1, myTime.date);
 
-                        meteoGridDbHandler->meteoGrid()->meteoPoints()[row][col]->setMeteoPointValueD(myTime.date, myVar, float(interpolatedValue));
-                        meteoGridDbHandler->meteoGrid()->meteoPoints()[row][col]->currentValue = float(interpolatedValue);
+                        myValue = meteoGridDbHandler->meteoGrid()->meteoPoints()[row][col]->getMeteoPointValueD(myTime.date, myVar);
+
+                        if (isEqual(myValue, NODATA))
+                            myValue = 0;
+
+                        meteoGridDbHandler->meteoGrid()->meteoPoints()[row][col]->setMeteoPointValueD(myTime.date, myVar, float(interpolatedValue+myValue));
+                        meteoGridDbHandler->meteoGrid()->meteoPoints()[row][col]->currentValue = float(interpolatedValue+myValue);
 
                     }
                 }

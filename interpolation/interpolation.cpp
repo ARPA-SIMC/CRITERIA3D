@@ -2071,7 +2071,7 @@ bool glocalDetrendingFitting(std::vector <Crit3DInterpolationDataPoint> &myPoint
     int areasNr = macroAreas.size();
 
     int elevationPos = NODATA;
-    for (unsigned int pos=0; pos < mySettings->getCurrentCombination().getProxySize(); pos++)
+    for (unsigned int pos=0; pos < mySettings->getSelectedCombination().getProxySize(); pos++)
     {
         if (getProxyPragaName(mySettings->getProxy(pos)->getName()) == proxyHeight)
             elevationPos = pos;
@@ -2102,7 +2102,7 @@ bool glocalDetrendingFitting(std::vector <Crit3DInterpolationDataPoint> &myPoint
             mySettings->setCurrentCombination(mySettings->getSelectedCombination());
             mySettings->clearFitting();
 
-            if (elevationPos != NODATA && mySettings->getCurrentCombination().isProxyActive(elevationPos))
+            if (elevationPos != NODATA && mySettings->getSelectedCombination().isProxyActive(elevationPos))
             {
                 if (!multipleDetrendingElevationFitting(elevationPos, subsetPoints, mySettings, myVar, errorStr, false)) return false;
 
