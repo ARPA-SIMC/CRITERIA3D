@@ -1984,7 +1984,10 @@ bool multipleDetrendingOtherProxiesFitting(int elevationPos, std::vector <Crit3D
 
         predictors.push_back(rowPredictors);
         predictands.push_back(myPoints[i].value);
-        weights.push_back(myPoints[i].regressionWeight);
+        if (!isEqual(myPoints[i].regressionWeight, NODATA))
+            weights.push_back(myPoints[i].regressionWeight);
+        else
+            weights.push_back(1);
     }
 
     if (mySettings->getUseLocalDetrending() && othersPoints.size() < mySettings->getMinPointsLocalDetrending())
@@ -2037,6 +2040,7 @@ void detrendingOtherProxies(int elevationPos, std::vector<Crit3DInterpolationDat
         myFunc.erase(myFunc.begin());
     }
 
+    //if no other proxies are active/significant, return
     if (parameters.empty()) return;
 
     std::vector<std::vector<double>> fullParameters = parameters;

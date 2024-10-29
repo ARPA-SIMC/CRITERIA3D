@@ -563,78 +563,113 @@ void Crit3DLocalProxyWidget::modelLRClicked(int toggled)
 
     if (toggled && subsetInterpolationPoints.size() != 0)
     {
-        if (comboAxisX.currentText() == "elevation")
+        int elevationPos = NODATA;
+        for (unsigned int pos=0; pos < interpolationSettings->getSelectedCombination().getProxySize(); pos++)
         {
+            if (getProxyPragaName(interpolationSettings->getProxy(pos)->getName()) == proxyHeight)
+                elevationPos = pos;
+        }
             std::string errorStr;
             setMultipleDetrendingHeightTemperatureRange(interpolationSettings);
             interpolationSettings->setCurrentCombination(interpolationSettings->getSelectedCombination());
             interpolationSettings->clearFitting();
             if (interpolationSettings->getUseLocalDetrending())
             {
-                if (! multipleDetrendingElevationFitting(proxyPos, subsetInterpolationPoints, interpolationSettings, myVar, errorStr, true)) return;
+                if (! multipleDetrendingElevationFitting(elevationPos, subsetInterpolationPoints, interpolationSettings, myVar, errorStr, true)) return;
             }
             else if (interpolationSettings->getUseGlocalDetrending())
-                if (! multipleDetrendingElevationFitting(proxyPos, subsetInterpolationPoints, interpolationSettings, myVar, errorStr, false)) return;
+                if (! multipleDetrendingElevationFitting(elevationPos, subsetInterpolationPoints, interpolationSettings, myVar, errorStr, false)) return;
 
             std::vector<std::vector<double>> parameters = interpolationSettings->getFittingParameters();
 
-            if (!parameters.empty())
+            if (comboAxisX.currentText() == "elevation")
             {
-                if (parameters.front().size() > 3 && parameters.front().size() < 7)
+                if (!parameters.empty())
                 {
-                    xMin = getZmin(subsetInterpolationPoints);
-                    xMax = getZmax(subsetInterpolationPoints);
-
-                    if (interpolationSettings->getUseMultipleDetrending())
+                    if (parameters.front().size() > 3 && parameters.front().size() < 7)
                     {
-                        std::vector <double> xVector;
-                        for (int m = xMin; m < xMax; m += 5)
-                            xVector.push_back(m);
+                        xMin = getZmin(subsetInterpolationPoints);
+                        xMax = getZmax(subsetInterpolationPoints);
 
-                        for (int p = 0; p < int(xVector.size()); p++)
+                        if (interpolationSettings->getUseMultipleDetrending())
                         {
-                            point.setX(xVector[p]);
-                            if (parameters.front().size() == 4)
-                                point.setY(lapseRatePiecewise_two(xVector[p], parameters.front()));
-                            else if (parameters.front().size() == 5)
-                                point.setY(lapseRatePiecewise_three(xVector[p], parameters.front()));
-                            else if (parameters.front().size() == 6)
-                                point.setY(lapseRatePiecewise_three_free(xVector[p], parameters.front()));
-                            point_vector.append(point);
-                        }
+                            std::vector <double> xVector;
+                            for (int m = xMin; m < xMax; m += 5)
+                                xVector.push_back(m);
 
-                        if (interpolationSettings->getProxy(proxyPos)->getRegressionR2() != NODATA)
-                            r2.setText(QString("%1").arg(interpolationSettings->getProxy(proxyPos)->getRegressionR2(), 0, 'f', 3));
+                            for (int p = 0; p < int(xVector.size()); p++)
+                            {
+                                point.setX(xVector[p]);
+                                if (parameters.front().size() == 4)
+                                    point.setY(lapseRatePiecewise_two(xVector[p], parameters.front()));
+                                else if (parameters.front().size() == 5)
+                                    point.setY(lapseRatePiecewise_three(xVector[p], parameters.front()));
+                                else if (parameters.front().size() == 6)
+                                    point.setY(lapseRatePiecewise_three_free(xVector[p], parameters.front()));
+                                point_vector.append(point);
+                            }
 
-                        if (parameters.front().size() > 3)
-                        {
-                            par0.setText(QString("%1").arg(parameters.front()[0], 0, 'f', 4));
-                            par1.setText(QString("%1").arg(parameters.front()[1], 0, 'f', 4));
-                            par2.setText(QString("%1").arg(parameters.front()[2], 0, 'f', 4));
-                            par3.setText(QString("%1").arg(parameters.front()[3], 0, 'f', 4));
+                            if (interpolationSettings->getProxy(elevationPos)->getRegressionR2() != NODATA)
+                                r2.setText(QString("%1").arg(interpolationSettings->getProxy(elevationPos)->getRegressionR2(), 0, 'f', 3));
+
+                            if (parameters.front().size() > 3)
+                            {
+                                par0.setText(QString("%1").arg(parameters.front()[0], 0, 'f', 4));
+                                par1.setText(QString("%1").arg(parameters.front()[1], 0, 'f', 4));
+                                par2.setText(QString("%1").arg(parameters.front()[2], 0, 'f', 4));
+                                par3.setText(QString("%1").arg(parameters.front()[3], 0, 'f', 4));
+                            }
+                            if (parameters.front().size() > 4)
+                                par4.setText(QString("%1").arg(parameters.front()[4], 0, 'f', 4));
+                            if (parameters.front().size() > 5)
+                                par5.setText(QString("%1").arg(parameters.front()[5], 0, 'f', 4));
                         }
-                        if (parameters.front().size() > 4)
-                            par4.setText(QString("%1").arg(parameters.front()[4], 0, 'f', 4));
-                        if (parameters.front().size() > 5)
-                            par5.setText(QString("%1").arg(parameters.front()[5], 0, 'f', 4));
                     }
                 }
             }
-        }
-        else
-        {
-            //TODO: local proxy graph for other proxies
-            /*interpolationSettings->setCurrentCombination(interpolationSettings->getSelectedCombination());
-            interpolationSettings->clearFitting();
-            std::string errorStr;
-            if (! multipleDetrendingOtherProxiesFitting(proxyPos, subsetInterpolationPoints, interpolationSettings, myVar, errorStr)) return;
+            else
+            {
+                //TODO: OTHER PROXIES
+                /*std::string errorStr;
+                //detrendingElevation(elevationPos, outInterpolationPoints, interpolationSettings);
+                if (! multipleDetrendingOtherProxiesFitting(elevationPos, subsetInterpolationPoints, interpolationSettings, myVar, errorStr)) return;
 
-            std::vector<std::vector<double>> parameters = interpolationSettings->getFittingParameters();
-            if (!interpolationSettings->getFittingParameters().empty() && !interpolationSettings->getFittingFunction().empty())
-                detrendingOtherProxies(3, outInterpolationPoints, interpolationSettings);
-            */
+                parameters = interpolationSettings->getFittingParameters();
+                Crit3DProxyCombination myCombination = interpolationSettings->getCurrentCombination();
 
-        }
+                int pos = 0;
+                for (int i = 0; i < proxyPos + 1; i++)
+                    if (myCombination.isProxyActive(i) && myCombination.isProxySignificant(i)) pos++;
+                pos -= 1;
+
+                xMin = getZmin(subsetInterpolationPoints);
+                xMax = getZmax(subsetInterpolationPoints);
+
+                if (interpolationSettings->getUseMultipleDetrending() && pos < parameters.size())
+                {
+                    std::vector <double> xVector;
+                    for (int m = xMin; m < xMax; m += 5)
+                        xVector.push_back(m);
+
+                    for (int p = 0; p < int(xVector.size()); p++)
+                    {
+                        point.setX(xVector[p]);
+                        point.setY(functionLinear_intercept(xVector[p], parameters[pos]));
+                        point_vector.append(point);
+                    }
+
+                    if (interpolationSettings->getProxy(proxyPos)->getRegressionR2() != NODATA)
+                        r2.setText(QString("%1").arg(interpolationSettings->getProxy(proxyPos)->getRegressionR2(), 0, 'f', 3));
+
+                    if (parameters[pos].size() == 2)
+                    {
+                        par0.setText(QString("%1").arg(parameters[pos][0], 0, 'f', 4));
+                        par1.setText(QString("%1").arg(parameters[pos][1], 0, 'f', 4));
+                    }
+                }*/
+
+            }
+
         chartView->drawModelLapseRate(point_vector);
     }
 }

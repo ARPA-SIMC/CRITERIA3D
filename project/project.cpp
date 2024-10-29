@@ -2918,7 +2918,7 @@ bool Project::interpolationDemGlocalDetrending(int numAreas, meteoVariable myVar
             for (int l = 0; l < allAreaFittingParameters[areaIndex].size(); l++)
             {
                 if (allAreaFittingParameters[areaIndex][l].size() == 2)
-                    fittingFunction.push_back(functionLinear);
+                    fittingFunction.push_back(functionLinear_intercept);
                 else if (allAreaFittingParameters[areaIndex][l].size() == 4)
                     fittingFunction.push_back(lapseRatePiecewise_two);
                 else if (allAreaFittingParameters[areaIndex][l].size() == 5)
@@ -3348,7 +3348,7 @@ bool Project::interpolationGrid(meteoVariable myVar, const Crit3DTime& myTime)
             for (int l = 0; l < allAreaFittingParameters[areaIndex].size(); l++)
             {
                 if (allAreaFittingParameters[areaIndex][l].size() == 2)
-                    fittingFunction.push_back(functionLinear);
+                    fittingFunction.push_back(functionLinear_intercept);
                 else if (allAreaFittingParameters[areaIndex][l].size() == 4)
                     fittingFunction.push_back(lapseRatePiecewise_two);
                 else if (allAreaFittingParameters[areaIndex][l].size() == 5)
@@ -3363,7 +3363,7 @@ bool Project::interpolationGrid(meteoVariable myVar, const Crit3DTime& myTime)
             for (int l = 0; l < temp.size(); l++)
             {
                 for (int k = 0; k < interpolationPoints.size(); k++)
-                    if (interpolationPoints[k].index == l)
+                    if (interpolationPoints[k].index == temp[l])
                         subsetInterpolationPoints.push_back(interpolationPoints[k]);
             }
 
