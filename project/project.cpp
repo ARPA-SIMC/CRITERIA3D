@@ -2963,7 +2963,6 @@ bool Project::interpolationDemGlocalDetrending(int numAreas, meteoVariable myVar
                         myRaster->value[row][col] += interpolate(subsetInterpolationPoints, &interpolationSettings, meteoSettings,
                                                              myVar, x, y, z, proxyValues, true)*areaCells[cellIndex+1];
                 }
-
             }
         }
     }

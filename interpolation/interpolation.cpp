@@ -2039,6 +2039,9 @@ void detrendingOtherProxies(int elevationPos, std::vector<Crit3DInterpolationDat
 
     if (parameters.empty()) return;
 
+    std::vector<std::vector<double>> fullParameters = parameters;
+    std::vector<std::function<double(double, std::vector<double>&)>> fullFunc = myFunc;
+
     // detrending
     float detrendValue;
     for (int i = 0; i < myPoints.size(); i++)
@@ -2050,13 +2053,20 @@ void detrendingOtherProxies(int elevationPos, std::vector<Crit3DInterpolationDat
             if (pos != elevationPos && mySettings->getCurrentCombination().isProxyActive(pos) && mySettings->getCurrentCombination().isProxySignificant(pos))
             {
                 proxyValue = myPoints[i].getProxyValue(pos);
-                proxyValues.push_back(double(proxyValue));
+                if (!isEqual(proxyValue, NODATA))
+                    proxyValues.push_back(double(proxyValue));
+                else {
+                    parameters.erase(parameters.begin()+proxyValues.size());
+                    myFunc.erase(myFunc.begin()+proxyValues.size());
+                }
             }
         }
 
         detrendValue = float(functionSum(myFunc, proxyValues, parameters));
         myPoints[i].value -= detrendValue;
 
+        myFunc = fullFunc;
+        parameters = fullParameters;
     }
 }
 
