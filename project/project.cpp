@@ -2332,7 +2332,7 @@ bool Project::loadGlocalWeightMaps(std::vector<Crit3DMacroArea> &myAreas, bool i
 
     std::vector<float> areaCells;
     int nrCols, nrRows;
-    double myLat, myLon, myX, myY;
+    double myX, myY;
     float myValue = NODATA;
 
     if (!isGrid)
@@ -2358,8 +2358,8 @@ bool Project::loadGlocalWeightMaps(std::vector<Crit3DMacroArea> &myAreas, bool i
                 {
                     if (isGrid)
                     {
-                        gis::getLatLonFromRowCol(meteoGridDbHandler->gridStructure().header(), row, col, &myLat, &myLon);
-                        gis::getUtmFromLatLon(gisSettings, myLat, myLon, &myX, &myY);
+                        myX = meteoGridDbHandler->meteoGrid()->meteoPoints()[row][col]->point.utm.x;
+                        myY = meteoGridDbHandler->meteoGrid()->meteoPoints()[row][col]->point.utm.y;
                     }
                     else
                         DEM.getXY(row, col, myX, myY);
