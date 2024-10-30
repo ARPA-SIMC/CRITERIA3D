@@ -2076,13 +2076,10 @@ void detrendingOtherProxies(int elevationPos, std::vector<Crit3DInterpolationDat
 
 bool glocalDetrendingFitting(std::vector <Crit3DInterpolationDataPoint> &myPoints, Crit3DInterpolationSettings* mySettings,  meteoVariable myVar, std::string& errorStr)
 {
-    //per n aree, si creano gruppi di stazioni in base al codice (sorta di selection)
-    //poi si chiama fitting per ogni area, il fitting va salvato in una matrice
-    //matrice avrà, per ogni area, i parametri di fitting + la combination + il valore delle stazioni detrendate secondo il fitting corrispondente
     std::vector<Crit3DInterpolationDataPoint> subsetPoints;
-    int i = 0;
     std::vector<Crit3DMacroArea> macroAreas = mySettings->getMacroAreas();
     int areasNr = macroAreas.size();
+    int i = 0;
 
     int elevationPos = NODATA;
     for (unsigned int pos=0; pos < mySettings->getSelectedCombination().getProxySize(); pos++)
@@ -2091,14 +2088,10 @@ bool glocalDetrendingFitting(std::vector <Crit3DInterpolationDataPoint> &myPoint
             elevationPos = pos;
     }
 
-    std::vector<std::vector<std::vector<double>>> allAreaParameters;
-    std::vector<Crit3DProxyCombination> allAreaCombinations;
-    //now create the subset of points, including only the right points, and then call multipleDetrending
-    for (i = 0; i < areasNr; i++) //ATTENZIONE INDICI
+    //create the subset of points starting from the meteopoints vector saved in every macro area
+    for (i = 0; i < areasNr; i++) //ATTENZIONE INDICI ?
     {
-        Crit3DMacroArea myArea = macroAreas[i];
-
-        std::vector<int> temp = myArea.getMeteoPoints();
+        std::vector<int> temp = macroAreas[i].getMeteoPoints();
         if (! temp.empty())
         {
             std::vector<Crit3DInterpolationDataPoint> subsetPoints;
@@ -2116,35 +2109,23 @@ bool glocalDetrendingFitting(std::vector <Crit3DInterpolationDataPoint> &myPoint
             mySettings->setCurrentCombination(mySettings->getSelectedCombination());
             mySettings->clearFitting();
 
+            //fitting and elevation detrending (necessary for the fitting of other proxies)
             if (elevationPos != NODATA && mySettings->getSelectedCombination().isProxyActive(elevationPos))
             {
                 if (!multipleDetrendingElevationFitting(elevationPos, subsetPoints, mySettings, myVar, errorStr, false)) return false;
-
                 detrendingElevation(elevationPos, subsetPoints, mySettings);
-
             }
             if (!multipleDetrendingOtherProxiesFitting(elevationPos, subsetPoints, mySettings, myVar, errorStr))
                 return false;
 
-            detrendingOtherProxies(elevationPos, subsetPoints, mySettings);
-
-            //
-            allAreaParameters.push_back(mySettings->getFittingParameters());
-            allAreaCombinations.push_back(mySettings->getCurrentCombination());
-        }
-        else
-        {
-            std::vector<std::vector<double>> emptyParameters;
-            Crit3DProxyCombination emptyCombination;
-            allAreaParameters.push_back(emptyParameters);
-            allAreaCombinations.push_back(emptyCombination);
+            //save parameters and combination in the macro area
+            macroAreas[i].setParameters(mySettings->getFittingParameters());
+            macroAreas[i].setCombination(mySettings->getCurrentCombination());
         }
         subsetPoints.clear();
     }
-
-    mySettings->setAreaParameters(allAreaParameters);
-    mySettings->setAreaCombination(allAreaCombinations);
-
+    //update macro areas in settings
+    mySettings->setMacroAreas(macroAreas);
     return true;
 }
 

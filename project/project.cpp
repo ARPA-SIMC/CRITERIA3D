@@ -2860,7 +2860,7 @@ bool Project::interpolationDemGlocalDetrending(int numAreas, meteoVariable myVar
     Crit3DProxyCombination myCombination = interpolationSettings.getSelectedCombination();
     interpolationSettings.setCurrentCombination(myCombination);
 
-    //obtain fitting parameters for every macro area
+    //obtain fitting parameters and combination for every macro area
     if (! preInterpolation(interpolationPoints, &interpolationSettings, meteoSettings, &climateParameters,
                           meteoPoints, nrMeteoPoints, myVar, myTime, errorStdStr))
     {
@@ -2885,8 +2885,7 @@ bool Project::interpolationDemGlocalDetrending(int numAreas, meteoVariable myVar
 
         //preparing to start a "global" interpolation for every single macro area
         unsigned row, col;
-        std::vector<std::vector<std::vector<double>>> allAreaFittingParameters = interpolationSettings.getAreaParameters();
-        std::vector<Crit3DProxyCombination> allAreaCombinations = interpolationSettings.getAreaCombination();
+        float z;
         std::vector<float> areaCells;
 
         int elevationPos = NODATA;
@@ -2896,72 +2895,76 @@ bool Project::interpolationDemGlocalDetrending(int numAreas, meteoVariable myVar
                 elevationPos = pos;
         }
 
-        if (allAreaFittingParameters.size() < numAreas || allAreaCombinations.size() < numAreas)
+        if (interpolationSettings.getMacroAreas().size() != numAreas)
         {
             errorString = "Error in function interpolationGrid: there is something wrong with the macro areas raster file.";
             return false;
         }
 
-        for (unsigned areaIndex = 0; areaIndex < numAreas; areaIndex++)
+        for (unsigned areaIndex = 4; areaIndex < 5; areaIndex++)
         {
-            //save all the cells in that specific area in a vector (areaCells)
+            //load macro area and its cells
             Crit3DMacroArea myArea = interpolationSettings.getMacroAreas()[areaIndex];
             areaCells = myArea.getAreaCells();
-            //groupCellsInArea(areaCells, areaIndex, false);
 
-            //take the parameters+combination for that area
-            std::vector<std::function<double (double, std::vector<double> &)>> fittingFunction;
-            interpolationSettings.setFittingParameters(allAreaFittingParameters[areaIndex]);
-            interpolationSettings.setCurrentCombination(allAreaCombinations[areaIndex]);
-
-            //find the fitting functions vector based on the length of the parameters vector for every proxy
-            for (int l = 0; l < allAreaFittingParameters[areaIndex].size(); l++)
+            if (!areaCells.empty())
             {
-                if (allAreaFittingParameters[areaIndex][l].size() == 2)
-                    fittingFunction.push_back(functionLinear_intercept);
-                else if (allAreaFittingParameters[areaIndex][l].size() == 4)
-                    fittingFunction.push_back(lapseRatePiecewise_two);
-                else if (allAreaFittingParameters[areaIndex][l].size() == 5)
-                    fittingFunction.push_back(lapseRatePiecewise_three);
-                else if (allAreaFittingParameters[areaIndex][l].size() == 6)
-                    fittingFunction.push_back(lapseRatePiecewise_three_free);
-            }
+                //take the parameters+combination for that area
+                interpolationSettings.setFittingParameters(myArea.getParameters());
+                interpolationSettings.setCurrentCombination(myArea.getCombination());
 
-            //create group of macro area interpolation points
-            interpolationSettings.setFittingFunction(fittingFunction);
-            std::vector<int> temp = myArea.getMeteoPoints();
-            std::vector<Crit3DInterpolationDataPoint> subsetInterpolationPoints;
-            for (int l = 0; l < temp.size(); l++)
-            {
-                for (int k = 0; k < interpolationPoints.size(); k++)
-                    if (interpolationPoints[k].index == temp[l])
-                        subsetInterpolationPoints.push_back(interpolationPoints[k]);
-            }
+                //find the fitting functions vector based on the length of the parameters vector for every proxy
+                std::vector<std::function<double (double, std::vector<double> &)>> fittingFunction;
 
-            //detrending (done once for every macro area)
-            if (elevationPos != NODATA && myCombination.isProxyActive(elevationPos))
-                detrendingElevation(elevationPos, subsetInterpolationPoints, &interpolationSettings);
-
-            detrendingOtherProxies(elevationPos, subsetInterpolationPoints, &interpolationSettings);
-
-            for (unsigned cellIndex = 0; cellIndex < areaCells.size(); cellIndex = cellIndex + 2)
-            {
-                row = unsigned(areaCells[cellIndex]/DEM.header->nrCols);
-                col = int(areaCells[cellIndex])%DEM.header->nrCols;
-
-                float z = DEM.value[row][col];
-                if (! isEqual(z, myHeader.flag))
+                for (int l = 0; l < myArea.getParameters().size(); l++)
                 {
-                    gis::getUtmXYFromRowCol(myHeader, row, col, &x, &y);
+                    if (myArea.getParameters()[l].size() == 2)
+                        fittingFunction.push_back(functionLinear_intercept);
+                    else if (myArea.getParameters()[l].size() == 4)
+                        fittingFunction.push_back(lapseRatePiecewise_two);
+                    else if (myArea.getParameters()[l].size() == 5)
+                        fittingFunction.push_back(lapseRatePiecewise_three);
+                    else if (myArea.getParameters()[l].size() == 6)
+                        fittingFunction.push_back(lapseRatePiecewise_three_free);
+                }
+                interpolationSettings.setFittingFunction(fittingFunction);
 
-                    getProxyValuesXY(x, y, &interpolationSettings, proxyValues);
+                //create group of macro area interpolation points
+                std::vector<int> temp = myArea.getMeteoPoints();
+                std::vector<Crit3DInterpolationDataPoint> subsetInterpolationPoints;
+                for (int l = 0; l < temp.size(); l++)
+                {
+                    for (int k = 0; k < interpolationPoints.size(); k++)
+                        if (interpolationPoints[k].index == temp[l])
+                            subsetInterpolationPoints.push_back(interpolationPoints[k]);
+                }
 
-                    if (isEqual(myRaster->value[row][col], NODATA))
-                        myRaster->value[row][col] = interpolate(subsetInterpolationPoints, &interpolationSettings, meteoSettings,
-                                                                myVar, x, y, z, proxyValues, true)*areaCells[cellIndex+1];
-                    else
-                        myRaster->value[row][col] += interpolate(subsetInterpolationPoints, &interpolationSettings, meteoSettings,
-                                                             myVar, x, y, z, proxyValues, true)*areaCells[cellIndex+1];
+                //detrending (done once for every macro area)
+                if (elevationPos != NODATA && myCombination.isProxyActive(elevationPos))
+                    detrendingElevation(elevationPos, subsetInterpolationPoints, &interpolationSettings);
+
+                detrendingOtherProxies(elevationPos, subsetInterpolationPoints, &interpolationSettings);
+
+                //calculate value for every cell
+                for (unsigned cellIndex = 0; cellIndex < areaCells.size(); cellIndex = cellIndex + 2)
+                {
+                    row = unsigned(areaCells[cellIndex]/DEM.header->nrCols);
+                    col = int(areaCells[cellIndex])%DEM.header->nrCols;
+                    z = DEM.value[row][col];
+
+                    if (! isEqual(z, myHeader.flag))
+                    {
+                        gis::getUtmXYFromRowCol(myHeader, row, col, &x, &y);
+
+                        getProxyValuesXY(x, y, &interpolationSettings, proxyValues);
+
+                        if (isEqual(myRaster->value[row][col], NODATA))
+                            myRaster->value[row][col] = interpolate(subsetInterpolationPoints, &interpolationSettings, meteoSettings,
+                                                                    myVar, x, y, z, proxyValues, true)*areaCells[cellIndex+1];
+                        else
+                            myRaster->value[row][col] += interpolate(subsetInterpolationPoints, &interpolationSettings, meteoSettings,
+                                                                     myVar, x, y, z, proxyValues, true)*areaCells[cellIndex+1];
+                    }
                 }
             }
         }
@@ -3317,12 +3320,10 @@ bool Project::interpolationGrid(meteoVariable myVar, const Crit3DTime& myTime)
     else
     {
         unsigned row, col;
-        std::vector<std::vector<std::vector<double>>> allAreaFittingParameters = interpolationSettings.getAreaParameters();
-        std::vector<Crit3DProxyCombination> allAreaCombinations = interpolationSettings.getAreaCombination();
         std::vector<float> areaCells;
         float myValue = NODATA;
 
-        if (allAreaCombinations.size() != numAreas)
+        if (interpolationSettings.getMacroAreas().size() != numAreas)
         {
             errorString = "Error in function interpolationGrid: there is something wrong with the macro areas raster file.";
             return false;
@@ -3337,106 +3338,112 @@ bool Project::interpolationGrid(meteoVariable myVar, const Crit3DTime& myTime)
 
         for (unsigned areaIndex = 0; areaIndex < numAreas; areaIndex++)
         {
+            //load macro area and its cells
             Crit3DMacroArea myArea = interpolationSettings.getMacroAreas()[areaIndex];
             areaCells = myArea.getAreaCells();
-            //groupCellsInArea(areaCells, areaIndex, true);
-            std::vector<std::function<double (double, std::vector<double> &)> > fittingFunction;
-            interpolationSettings.setFittingParameters(allAreaFittingParameters[areaIndex]);
-            interpolationSettings.setCurrentCombination(allAreaCombinations[areaIndex]);
 
-
-            for (int l = 0; l < allAreaFittingParameters[areaIndex].size(); l++)
+            if (!areaCells.empty())
             {
-                if (allAreaFittingParameters[areaIndex][l].size() == 2)
-                    fittingFunction.push_back(functionLinear_intercept);
-                else if (allAreaFittingParameters[areaIndex][l].size() == 4)
-                    fittingFunction.push_back(lapseRatePiecewise_two);
-                else if (allAreaFittingParameters[areaIndex][l].size() == 5)
-                    fittingFunction.push_back(lapseRatePiecewise_three);
-                else if (allAreaFittingParameters[areaIndex][l].size() == 6)
-                    fittingFunction.push_back(lapseRatePiecewise_three_free);
-            }
+                //take the parameters+combination for that area
+                interpolationSettings.setFittingParameters(myArea.getParameters());
+                interpolationSettings.setCurrentCombination(myArea.getCombination());
 
-            interpolationSettings.setFittingFunction(fittingFunction);
-            std::vector<int> temp = myArea.getMeteoPoints();
-            std::vector<Crit3DInterpolationDataPoint> subsetInterpolationPoints;
-            for (int l = 0; l < temp.size(); l++)
-            {
-                for (int k = 0; k < interpolationPoints.size(); k++)
-                    if (interpolationPoints[k].index == temp[l])
-                        subsetInterpolationPoints.push_back(interpolationPoints[k]);
-            }
-
-            if (elevationPos != NODATA && myCombination.isProxyActive(elevationPos))
-                detrendingElevation(elevationPos, subsetInterpolationPoints, &interpolationSettings);
-
-            detrendingOtherProxies(elevationPos, subsetInterpolationPoints, &interpolationSettings);
-
-            unsigned nrCols = meteoGridDbHandler->meteoGrid()->gridStructure().header().nrCols;
-
-            for (unsigned cellIndex = 0; cellIndex < areaCells.size(); cellIndex = cellIndex + 2)
-            {
-                row = unsigned(areaCells[cellIndex]/nrCols);
-                col = int(areaCells[cellIndex])%nrCols;
-
-
-                if (meteoGridDbHandler->meteoGrid()->meteoPoints()[row][col]->active)
+                //find the fitting functions vector based on the length of the parameters vector for every proxy
+                std::vector<std::function<double (double, std::vector<double> &)> > fittingFunction;
+                for (int l = 0; l < myArea.getParameters().size(); l++)
                 {
-                    myX = meteoGridDbHandler->meteoGrid()->meteoPoints()[row][col]->point.utm.x;
-                    myY = meteoGridDbHandler->meteoGrid()->meteoPoints()[row][col]->point.utm.y;
-                    myZ = meteoGridDbHandler->meteoGrid()->meteoPoints()[row][col]->point.z;
+                    if (myArea.getParameters()[l].size() == 2)
+                        fittingFunction.push_back(functionLinear_intercept);
+                    else if (myArea.getParameters()[l].size() == 4)
+                        fittingFunction.push_back(lapseRatePiecewise_two);
+                    else if (myArea.getParameters()[l].size() == 5)
+                        fittingFunction.push_back(lapseRatePiecewise_three);
+                    else if (myArea.getParameters()[l].size() == 6)
+                        fittingFunction.push_back(lapseRatePiecewise_three_free);
+                }
+                interpolationSettings.setFittingFunction(fittingFunction);
 
-                    if (getUseDetrendingVar(myVar))
+                //create vector of macro area interpolation points
+                std::vector<int> temp = myArea.getMeteoPoints();
+                std::vector<Crit3DInterpolationDataPoint> subsetInterpolationPoints;
+                for (int l = 0; l < temp.size(); l++)
+                {
+                    for (int k = 0; k < interpolationPoints.size(); k++)
+                        if (interpolationPoints[k].index == temp[l])
+                            subsetInterpolationPoints.push_back(interpolationPoints[k]);
+                }
+
+                //detrending
+                if (elevationPos != NODATA && myCombination.isProxyActive(elevationPos))
+                    detrendingElevation(elevationPos, subsetInterpolationPoints, &interpolationSettings);
+
+                detrendingOtherProxies(elevationPos, subsetInterpolationPoints, &interpolationSettings);
+
+                unsigned nrCols = meteoGridDbHandler->meteoGrid()->gridStructure().header().nrCols;
+                //calculate value for every cell
+                for (unsigned cellIndex = 0; cellIndex < areaCells.size(); cellIndex = cellIndex + 2)
+                {
+                    row = unsigned(areaCells[cellIndex]/nrCols);
+                    col = int(areaCells[cellIndex])%nrCols;
+
+                    if (meteoGridDbHandler->meteoGrid()->meteoPoints()[row][col]->active)
                     {
-                        proxyIndex = 0;
+                        myX = meteoGridDbHandler->meteoGrid()->meteoPoints()[row][col]->point.utm.x;
+                        myY = meteoGridDbHandler->meteoGrid()->meteoPoints()[row][col]->point.utm.y;
+                        myZ = meteoGridDbHandler->meteoGrid()->meteoPoints()[row][col]->point.z;
 
-                        for (i=0; i < interpolationSettings.getProxyNr(); i++)
+                        if (getUseDetrendingVar(myVar))
                         {
-                            proxyValues[i] = NODATA;
+                            proxyIndex = 0;
 
-                            if (myCombination.isProxyActive(i))
+                            for (i=0; i < interpolationSettings.getProxyNr(); i++)
                             {
-                                if (proxyIndex < meteoGridProxies.size())
+                                proxyValues[i] = NODATA;
+
+                                if (interpolationSettings.getCurrentCombination().isProxyActive(i))
                                 {
-                                    float proxyValue = gis::getValueFromXY(*meteoGridProxies[proxyIndex], myX, myY);
-                                    if (proxyValue != meteoGridProxies[proxyIndex]->header->flag)
-                                        proxyValues[i] = double(proxyValue);
+                                    if (proxyIndex < meteoGridProxies.size())
+                                    {
+                                        float proxyValue = gis::getValueFromXY(*meteoGridProxies[proxyIndex], myX, myY);
+                                        if (proxyValue != meteoGridProxies[proxyIndex]->header->flag)
+                                            proxyValues[i] = double(proxyValue);
+                                    }
+
+                                    proxyIndex++;
                                 }
-
-                                proxyIndex++;
                             }
+                            interpolatedValue = interpolate(subsetInterpolationPoints, &interpolationSettings, meteoSettings, myVar, myX, myY, myZ, proxyValues, true)
+                                                * areaCells[cellIndex + 1];
+
                         }
-                        interpolatedValue = interpolate(subsetInterpolationPoints, &interpolationSettings, meteoSettings, myVar, myX, myY, myZ, proxyValues, true)
-                                             * areaCells[cellIndex + 1];
+                        if (freq == hourly)
+                        {
+                            if (meteoGridDbHandler->meteoGrid()->meteoPoints()[row][col]->nrObsDataDaysH == 0)
+                                meteoGridDbHandler->meteoGrid()->meteoPoints()[row][col]->initializeObsDataH(1, 1, myTime.date);
 
-                    }
-                    if (freq == hourly)
-                    {
-                        if (meteoGridDbHandler->meteoGrid()->meteoPoints()[row][col]->nrObsDataDaysH == 0)
-                            meteoGridDbHandler->meteoGrid()->meteoPoints()[row][col]->initializeObsDataH(1, 1, myTime.date);
+                            myValue = meteoGridDbHandler->meteoGrid()->meteoPoints()[row][col]->getMeteoPointValueH(myTime.date, myTime.getHour(), myTime.getMinutes(), myVar);
 
-                        myValue = meteoGridDbHandler->meteoGrid()->meteoPoints()[row][col]->getMeteoPointValueH(myTime.date, myTime.getHour(), myTime.getMinutes(), myVar);
+                            if (isEqual(myValue, NODATA))
+                                myValue = 0;
 
-                        if (isEqual(myValue, NODATA))
-                            myValue = 0;
+                            meteoGridDbHandler->meteoGrid()->meteoPoints()[row][col]->setMeteoPointValueH(myTime.date, myTime.getHour(), myTime.getMinutes(), myVar, float(interpolatedValue+myValue));
+                            meteoGridDbHandler->meteoGrid()->meteoPoints()[row][col]->currentValue = float(interpolatedValue+myValue);
 
-                        meteoGridDbHandler->meteoGrid()->meteoPoints()[row][col]->setMeteoPointValueH(myTime.date, myTime.getHour(), myTime.getMinutes(), myVar, float(interpolatedValue+myValue));
-                        meteoGridDbHandler->meteoGrid()->meteoPoints()[row][col]->currentValue = float(interpolatedValue+myValue);
+                        }
+                        else if (freq == daily)
+                        {
+                            if (meteoGridDbHandler->meteoGrid()->meteoPoints()[row][col]->nrObsDataDaysD == 0)
+                                meteoGridDbHandler->meteoGrid()->meteoPoints()[row][col]->initializeObsDataD(1, myTime.date);
 
-                    }
-                    else if (freq == daily)
-                    {
-                        if (meteoGridDbHandler->meteoGrid()->meteoPoints()[row][col]->nrObsDataDaysD == 0)
-                            meteoGridDbHandler->meteoGrid()->meteoPoints()[row][col]->initializeObsDataD(1, myTime.date);
+                            myValue = meteoGridDbHandler->meteoGrid()->meteoPoints()[row][col]->getMeteoPointValueD(myTime.date, myVar);
 
-                        myValue = meteoGridDbHandler->meteoGrid()->meteoPoints()[row][col]->getMeteoPointValueD(myTime.date, myVar);
+                            if (isEqual(myValue, NODATA))
+                                myValue = 0;
 
-                        if (isEqual(myValue, NODATA))
-                            myValue = 0;
+                            meteoGridDbHandler->meteoGrid()->meteoPoints()[row][col]->setMeteoPointValueD(myTime.date, myVar, float(interpolatedValue+myValue));
+                            meteoGridDbHandler->meteoGrid()->meteoPoints()[row][col]->currentValue = float(interpolatedValue+myValue);
 
-                        meteoGridDbHandler->meteoGrid()->meteoPoints()[row][col]->setMeteoPointValueD(myTime.date, myVar, float(interpolatedValue+myValue));
-                        meteoGridDbHandler->meteoGrid()->meteoPoints()[row][col]->currentValue = float(interpolatedValue+myValue);
-
+                        }
                     }
                 }
             }

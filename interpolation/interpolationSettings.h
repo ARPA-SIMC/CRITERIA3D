@@ -136,7 +136,7 @@
     {
     private:
         Crit3DProxyCombination areaCombination;
-        std::vector<std::vector<float>> areaParameters;
+        std::vector<std::vector<double>> areaParameters;
         std::vector<int> meteoPoints;
         std::vector<float> areaCells;
 
@@ -145,8 +145,8 @@
 
         void setMeteoPoints (std::vector<int> myMeteoPoints);
         std::vector<int> getMeteoPoints();
-        void setParameters (std::vector<std::vector<float>> myParameters);
-        std::vector<std::vector<float>> getParameters();
+        void setParameters (std::vector<std::vector<double>> myParameters);
+        std::vector<std::vector<double>> getParameters();
         void setCombination (Crit3DProxyCombination myCombination);
         Crit3DProxyCombination getCombination();
         void setAreaCells (std::vector<float> myCells);
@@ -200,8 +200,6 @@
         std::vector <std::vector<double>> fittingParameters;
         std::vector<std::function<double(double, std::vector<double>&)>> fittingFunction;
         std::vector<double> pointsRange;
-		std::vector<std::vector<std::vector<double>>> areaParameters;
-        std::vector<Crit3DProxyCombination> areaCombination;
 
         std::vector<Crit3DMacroArea> macroAreas;
 
@@ -236,12 +234,7 @@
         bool getUseGlocalDetrending();
         void setMacroAreasMap(gis::Crit3DRasterGrid *value);
         gis::Crit3DRasterGrid *getMacroAreasMap();
-        std::vector<std::vector<std::vector<double> > > getAreaParameters();
-        void setAreaParameters(std::vector<std::vector<std::vector<double>>> myAreaParameters);
-        std::vector<Crit3DProxyCombination> getAreaCombination();
-        void setAreaCombination(std::vector<Crit3DProxyCombination> myAreaCombination);
         std::vector<Crit3DMacroArea> getMacroAreas();
-        void addMacroArea(Crit3DMacroArea myArea);
         void setMacroAreas(std::vector<Crit3DMacroArea> myAreas);
 
         void setUseDoNotRetrend(bool myValue);

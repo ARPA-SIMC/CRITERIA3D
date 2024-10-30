@@ -462,8 +462,6 @@ void Crit3DInterpolationSettings::initialize()
     fittingFunction.clear();
     fittingParameters.clear();
     macroAreas.clear();
-    areaCombination.clear();
-    areaParameters.clear();
 
     isKrigingReady = false;
     precipitationAllZero = false;
@@ -519,35 +517,9 @@ gis::Crit3DRasterGrid* Crit3DInterpolationSettings::getMacroAreasMap()
     return macroAreasMap;
 }
 
-std::vector<std::vector<std::vector<double>>> Crit3DInterpolationSettings::getAreaParameters()
-{
-    return areaParameters;
-}
-
-void Crit3DInterpolationSettings::setAreaParameters(std::vector<std::vector<std::vector<double> > > myAreaParameters)
-{
-    areaParameters.clear();
-    areaParameters = myAreaParameters;
-}
-
-std::vector<Crit3DProxyCombination> Crit3DInterpolationSettings::getAreaCombination()
-{
-    return areaCombination;
-}
-
-void Crit3DInterpolationSettings::setAreaCombination(std::vector<Crit3DProxyCombination> myAreaCombination)
-{
-    areaCombination.clear();
-    areaCombination = myAreaCombination;
-}
-
 std::vector<Crit3DMacroArea> Crit3DInterpolationSettings::getMacroAreas()
 {
     return macroAreas;
-}
-void Crit3DInterpolationSettings::addMacroArea(Crit3DMacroArea myArea)
-{
-    macroAreas.push_back(myArea);
 }
 
 void Crit3DInterpolationSettings::setMacroAreas(std::vector<Crit3DMacroArea> myAreas)
@@ -1050,13 +1022,13 @@ std::vector<float> Crit3DMacroArea::getAreaCells()
     return areaCells;
 }
 
-void Crit3DMacroArea::setParameters (std::vector<std::vector<float>> myParameters)
+void Crit3DMacroArea::setParameters (std::vector<std::vector<double>> myParameters)
 {
     areaParameters = myParameters;
     return;
 }
 
-std::vector<std::vector<float>> Crit3DMacroArea::getParameters()
+std::vector<std::vector<double>> Crit3DMacroArea::getParameters()
 {
     return areaParameters;
 }
