@@ -2901,7 +2901,7 @@ bool Project::interpolationDemGlocalDetrending(int numAreas, meteoVariable myVar
             return false;
         }
 
-        for (unsigned areaIndex = 4; areaIndex < 5; areaIndex++)
+        for (unsigned areaIndex = 0; areaIndex < numAreas; areaIndex++)
         {
             //load macro area and its cells
             Crit3DMacroArea myArea = interpolationSettings.getMacroAreas()[areaIndex];
