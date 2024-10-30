@@ -3319,6 +3319,20 @@ bool Project::interpolationGrid(meteoVariable myVar, const Crit3DTime& myTime)
 	}
     else
     {
+        //set all cells to NODATA
+        for (unsigned col = 0; col < unsigned(meteoGridDbHandler->meteoGrid()->gridStructure().header().nrCols); col++)
+        {
+            for (unsigned row = 0; row < unsigned(meteoGridDbHandler->meteoGrid()->gridStructure().header().nrRows); row++)
+            {
+                if (meteoGridDbHandler->meteoGrid()->meteoPoints()[row][col]->active)
+                {
+                    if (freq == hourly)
+                        meteoGridDbHandler->meteoGrid()->meteoPoints()[row][col]->currentValue = NODATA;
+                    else if (freq == daily)
+                        meteoGridDbHandler->meteoGrid()->meteoPoints()[row][col]->currentValue = NODATA;
+                }
+            }
+        }
         unsigned row, col;
         std::vector<float> areaCells;
         float myValue = NODATA;
@@ -3414,14 +3428,13 @@ bool Project::interpolationGrid(meteoVariable myVar, const Crit3DTime& myTime)
                             }
                             interpolatedValue = interpolate(subsetInterpolationPoints, &interpolationSettings, meteoSettings, myVar, myX, myY, myZ, proxyValues, true)
                                                 * areaCells[cellIndex + 1];
-
                         }
                         if (freq == hourly)
                         {
                             if (meteoGridDbHandler->meteoGrid()->meteoPoints()[row][col]->nrObsDataDaysH == 0)
                                 meteoGridDbHandler->meteoGrid()->meteoPoints()[row][col]->initializeObsDataH(1, 1, myTime.date);
 
-                            myValue = meteoGridDbHandler->meteoGrid()->meteoPoints()[row][col]->getMeteoPointValueH(myTime.date, myTime.getHour(), myTime.getMinutes(), myVar);
+                            myValue = meteoGridDbHandler->meteoGrid()->meteoPoints()[row][col]->currentValue;
 
                             if (isEqual(myValue, NODATA))
                                 myValue = 0;
@@ -3435,7 +3448,7 @@ bool Project::interpolationGrid(meteoVariable myVar, const Crit3DTime& myTime)
                             if (meteoGridDbHandler->meteoGrid()->meteoPoints()[row][col]->nrObsDataDaysD == 0)
                                 meteoGridDbHandler->meteoGrid()->meteoPoints()[row][col]->initializeObsDataD(1, myTime.date);
 
-                            myValue = meteoGridDbHandler->meteoGrid()->meteoPoints()[row][col]->getMeteoPointValueD(myTime.date, myVar);
+                            myValue = meteoGridDbHandler->meteoGrid()->meteoPoints()[row][col]->currentValue;
 
                             if (isEqual(myValue, NODATA))
                                 myValue = 0;
