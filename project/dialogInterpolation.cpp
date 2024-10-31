@@ -239,9 +239,6 @@ void DialogInterpolation::multipleDetrendingChanged(int active)
 
 void DialogInterpolation::localDetrendingChanged(int active)
 {
-    if (active == Qt::Checked) topographicDistanceEdit->setChecked(Qt::Unchecked);
-    topographicDistanceEdit->setEnabled(active == Qt::Unchecked);
-    maxTdMultiplierEdit.setEnabled(active == Qt::Unchecked);
     minPointsLocalDetrendingEdit.setEnabled(active == Qt::Checked);
     if (active == Qt::Checked) optimalDetrendingEdit->setChecked(Qt::Unchecked);
     optimalDetrendingEdit->setEnabled(active == Qt::Unchecked);

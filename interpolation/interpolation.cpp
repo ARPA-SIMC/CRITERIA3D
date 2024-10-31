@@ -2256,7 +2256,7 @@ bool preInterpolation(std::vector <Crit3DInterpolationDataPoint> &myPoints, Crit
         }
     }
 
-    if (mySettings->getUseTD() && getUseTdVar(myVar))
+    if (mySettings->getUseTD() && getUseTdVar(myVar) && ! mySettings->getUseGlocalDetrending())
     {
         topographicDistanceOptimize(myVar, myMeteoPoints, nrMeteoPoints, myPoints, mySettings, meteoSettings);
     }
