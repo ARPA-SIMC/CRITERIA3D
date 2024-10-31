@@ -2635,6 +2635,13 @@ bool PragaProject::interpolationMeteoGridPeriod(QDate dateIni, QDate dateFin, QL
         if (! loadTopographicDistanceMaps(true, false))
             return false;
     }
+    if (interpolationSettings.getUseGlocalDetrending())
+    {
+        if (loadGlocalAreasMap())
+            if (loadGlocalStationsAndCells(!interpolationSettings.getMeteoGridUpscaleFromDem()) < 1) return false;
+            else
+                return false;
+    }
 
     // save also time aggregated variables
     foreach (myVar, aggrVariables)
