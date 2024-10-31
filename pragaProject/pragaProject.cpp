@@ -2578,8 +2578,11 @@ bool PragaProject::interpolationMeteoGridPeriod(QDate dateIni, QDate dateFin, QL
     QList<meteoVariable> varToSave;
     int countDaysSaving = 0;
 
-    if (pragaDailyMaps == nullptr) pragaDailyMaps = new Crit3DDailyMeteoMaps(DEM);
-    if (pragaHourlyMaps == nullptr) pragaHourlyMaps = new PragaHourlyMeteoMaps(DEM);
+    if (interpolationSettings.getMeteoGridUpscaleFromDem())
+    {
+        if (pragaDailyMaps == nullptr) pragaDailyMaps = new Crit3DDailyMeteoMaps(DEM);
+        if (pragaHourlyMaps == nullptr) pragaHourlyMaps = new PragaHourlyMeteoMaps(DEM);
+    }
 
     // find out needed frequency
     foreach (myVar, variables)
@@ -2635,12 +2638,11 @@ bool PragaProject::interpolationMeteoGridPeriod(QDate dateIni, QDate dateFin, QL
         if (! loadTopographicDistanceMaps(true, false))
             return false;
     }
+
     if (interpolationSettings.getUseGlocalDetrending())
     {
-        if (loadGlocalAreasMap())
-            if (loadGlocalStationsAndCells(!interpolationSettings.getMeteoGridUpscaleFromDem()) < 1) return false;
-            else
-                return false;
+        if (! loadGlocalAreasMap()) return false;
+        if (! loadGlocalStationsAndCells(!interpolationSettings.getMeteoGridUpscaleFromDem())) return false;
     }
 
     // save also time aggregated variables
@@ -2712,11 +2714,21 @@ bool PragaProject::interpolationMeteoGridPeriod(QDate dateIni, QDate dateFin, QL
                         if (myVar == airRelHumidity && interpolationSettings.getUseDewPoint())
                         {
                             if (interpolationSettings.getUseInterpolatedTForRH())
-                                passInterpolatedTemperatureToHumidityPoints(getCrit3DTime(myDate, myHour), meteoSettings);
-                            if (! interpolationDemMain(airDewTemperature, getCrit3DTime(myDate, myHour), hourlyMeteoMaps->mapHourlyTdew)) return false;
-                            hourlyMeteoMaps->computeRelativeHumidityMap(hourlyMeteoMaps->mapHourlyRelHum);
+                            {
+                                if (interpolationSettings.getMeteoGridUpscaleFromDem())
+                                {
+                                    passInterpolatedTemperatureToHumidityPoints(getCrit3DTime(myDate, myHour), meteoSettings);
+                                    if (! interpolationDemMain(airDewTemperature, getCrit3DTime(myDate, myHour), hourlyMeteoMaps->mapHourlyTdew)) return false;
+                                    hourlyMeteoMaps->computeRelativeHumidityMap(hourlyMeteoMaps->mapHourlyRelHum);
+                                }
+                                else
+                                {
+                                    passGridTemperatureToHumidityPoints(getCrit3DTime(myDate, myHour), meteoSettings);
+                                    if (! interpolationMeteoGrid(airDewTemperature, hourly, getCrit3DTime(myDate, myHour))) return false;
+                                }
+                            }
 
-                            if (saveRasters)
+                            if (interpolationSettings.getMeteoGridUpscaleFromDem() && saveRasters)
                             {
                                 myGrid = getPragaMapFromVar(airDewTemperature);
                                 rasterName = getMapFileOutName(airDewTemperature, myDate, myHour);
@@ -2724,9 +2736,17 @@ bool PragaProject::interpolationMeteoGridPeriod(QDate dateIni, QDate dateFin, QL
                             }
                         }
                         else if (myVar == windVectorDirection || myVar == windVectorIntensity) {
-                            if (! interpolationDemMain(windVectorX, getCrit3DTime(myDate, myHour), getPragaMapFromVar(windVectorX))) return false;
-                            if (! interpolationDemMain(windVectorY, getCrit3DTime(myDate, myHour), getPragaMapFromVar(windVectorY))) return false;
-                            if (! pragaHourlyMaps->computeWindVector()) return false;
+                            if (interpolationSettings.getMeteoGridUpscaleFromDem())
+                            {
+                                if (! interpolationDemMain(windVectorX, getCrit3DTime(myDate, myHour), getPragaMapFromVar(windVectorX))) return false;
+                                if (! interpolationDemMain(windVectorY, getCrit3DTime(myDate, myHour), getPragaMapFromVar(windVectorY))) return false;
+                                if (! pragaHourlyMaps->computeWindVector()) return false;
+                            }
+                            else
+                            {
+                                if (! interpolationMeteoGrid(windVectorX, hourly, getCrit3DTime(myDate, myHour))) return false;
+                                if (! interpolationMeteoGrid(windVectorY, hourly, getCrit3DTime(myDate, myHour))) return false;
+                            }
                         }
                         else if (myVar == leafWetness) {
                             hourlyMeteoMaps->computeLeafWetnessMap() ;

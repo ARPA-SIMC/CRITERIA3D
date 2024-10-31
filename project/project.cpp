@@ -2272,7 +2272,7 @@ bool Project::loadGlocalAreasMap()
     return true;
 }
 
-int Project::loadGlocalStationsAndCells(bool isGrid)
+bool Project::loadGlocalStationsAndCells(bool isGrid)
 {
     //leggi csv aree
     QString mapsFolder = defaultPath + PATH_GEO;
@@ -2316,7 +2316,7 @@ int Project::loadGlocalStationsAndCells(bool isGrid)
 
     interpolationSettings.setMacroAreas(myAreas);
 
-    return areaPoints.size();
+    return (areaPoints.size() > 0);
 }
 
 bool Project::loadGlocalWeightMaps(std::vector<Crit3DMacroArea> &myAreas, bool isGrid)
@@ -2519,6 +2519,40 @@ void Project::passInterpolatedTemperatureToHumidityPoints(Crit3DTime myTime, Cri
     }
 }
 
+void Project::passGridTemperatureToHumidityPoints(Crit3DTime myTime, Crit3DMeteoSettings* meteoSettings)
+{
+    float airRelHum, airT;
+    int row, col;
+    double lat, lon;
+
+    for (int i = 0; i < nrMeteoPoints; i++)
+    {
+        airRelHum = meteoPoints[i].getMeteoPointValue(myTime, airRelHumidity, meteoSettings);
+        airT = meteoPoints[i].getMeteoPointValue(myTime, airTemperature, meteoSettings);
+
+        if (! isEqual(airRelHum, NODATA) && isEqual(airT, NODATA))
+        {
+            if (meteoGridDbHandler->meteoGrid()->gridStructure().isUTM())
+            {
+                gis::getRowColFromLonLat(meteoGridDbHandler->meteoGrid()->gridStructure().header(),
+                                     meteoPoints[i].point.utm.x, meteoPoints[i].point.utm.y, &row, &col);
+            }
+            else
+            {
+                gis::getLatLonFromUtm(gisSettings, meteoPoints[i].point.utm.x, meteoPoints[i].point.utm.y, &lat, &lon);
+                gis::getRowColFromLonLat(meteoGridDbHandler->meteoGrid()->gridStructure().header(),
+                                         lon, lat, &row, &col);
+            }
+
+            if (! gis::isOutOfGridRowCol(row, col, meteoGridDbHandler->meteoGrid()->gridStructure().header()))
+            {
+                meteoPoints[i].setMeteoPointValueH(myTime.date, myTime.getHour(), myTime.getMinutes(), airTemperature,
+                                                   meteoGridDbHandler->meteoGrid()->meteoPoint(row,col).getMeteoPointValueH(myTime.date, myTime.getHour(), myTime.getMinutes(), airTemperature));
+
+            }
+        }
+    }
+}
 
 bool Project::interpolationOutputPoints(std::vector <Crit3DInterpolationDataPoint> &interpolationPoints,
                                         gis::Crit3DRasterGrid *outputGrid, meteoVariable myVar)
@@ -3169,10 +3203,8 @@ bool Project::interpolationGrid(meteoVariable myVar, const Crit3DTime& myTime)
 
     if (interpolationSettings.getUseGlocalDetrending())
     {
-        if (loadGlocalAreasMap())
-            if (loadGlocalStationsAndCells(true) < 1) return false;
-        else
-            return false;
+        if (! loadGlocalAreasMap()) return false;
+        if (! loadGlocalStationsAndCells(!interpolationSettings.getMeteoGridUpscaleFromDem())) return false;
     }
 
     // check quality and pass data to interpolation
