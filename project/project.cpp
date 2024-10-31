@@ -2835,7 +2835,7 @@ bool Project::interpolationDemLocalDetrending(meteoVariable myVar, const Crit3DT
     return true;
 }
 
-bool Project::interpolationDemGlocalDetrending(int numAreas, meteoVariable myVar, const Crit3DTime& myTime, gis::Crit3DRasterGrid *myRaster)
+bool Project::interpolationDemGlocalDetrending(meteoVariable myVar, const Crit3DTime& myTime, gis::Crit3DRasterGrid *myRaster)
 {
     if (!getUseDetrendingVar(myVar) || !interpolationSettings.getUseGlocalDetrending())
         return false;
@@ -2895,13 +2895,7 @@ bool Project::interpolationDemGlocalDetrending(int numAreas, meteoVariable myVar
                 elevationPos = pos;
         }
 
-        if (interpolationSettings.getMacroAreas().size() != numAreas)
-        {
-            errorString = "Error in function interpolationGrid: there is something wrong with the macro areas raster file.";
-            return false;
-        }
-
-        for (unsigned areaIndex = 0; areaIndex < numAreas; areaIndex++)
+        for (unsigned areaIndex = 0; areaIndex < interpolationSettings.getMacroAreas().size(); areaIndex++)
         {
             //load macro area and its cells
             Crit3DMacroArea myArea = interpolationSettings.getMacroAreas()[areaIndex];
@@ -3119,17 +3113,6 @@ bool Project::interpolationDemMain(meteoVariable myVar, const Crit3DTime& myTime
     if (interpolationSettings.getUseMultipleDetrending())
         interpolationSettings.clearFitting();
 
-    int numAreas = 1;
-    if (interpolationSettings.getUseGlocalDetrending())
-    {
-        if (loadGlocalAreasMap())
-        {
-            numAreas = loadGlocalStationsAndCells(false);
-            if (numAreas < 1) return false;
-        }
-        else
-            return false;
-    }
     // dynamic lapserate
     if (getUseDetrendingVar(myVar) && interpolationSettings.getUseLocalDetrending())
     {
@@ -3137,7 +3120,7 @@ bool Project::interpolationDemMain(meteoVariable myVar, const Crit3DTime& myTime
     }
 	else if (getUseDetrendingVar(myVar) && interpolationSettings.getUseGlocalDetrending())
     {
-        return interpolationDemGlocalDetrending(numAreas, myVar, myTime, myRaster);
+        return interpolationDemGlocalDetrending(myVar, myTime, myRaster);
     }
     else
     {
@@ -3184,14 +3167,10 @@ bool Project::interpolationGrid(meteoVariable myVar, const Crit3DTime& myTime)
     if (interpolationSettings.getUseMultipleDetrending())
         interpolationSettings.clearFitting();
 
-    unsigned numAreas = 1;
     if (interpolationSettings.getUseGlocalDetrending())
     {
         if (loadGlocalAreasMap())
-        {
-            numAreas = loadGlocalStationsAndCells(true);
-            if (numAreas < 1) return false;
-        }
+            if (loadGlocalStationsAndCells(true) < 1) return false;
         else
             return false;
     }
@@ -3337,12 +3316,6 @@ bool Project::interpolationGrid(meteoVariable myVar, const Crit3DTime& myTime)
         std::vector<float> areaCells;
         float myValue = NODATA;
 
-        if (interpolationSettings.getMacroAreas().size() != numAreas)
-        {
-            errorString = "Error in function interpolationGrid: there is something wrong with the macro areas raster file.";
-            return false;
-        }
-
         int elevationPos = NODATA;
         for (unsigned int pos=0; pos < interpolationSettings.getCurrentCombination().getProxySize(); pos++)
         {
@@ -3350,7 +3323,7 @@ bool Project::interpolationGrid(meteoVariable myVar, const Crit3DTime& myTime)
                 elevationPos = pos;
         }
 
-        for (unsigned areaIndex = 0; areaIndex < numAreas; areaIndex++)
+        for (unsigned areaIndex = 0; areaIndex < interpolationSettings.getMacroAreas().size(); areaIndex++)
         {
             //load macro area and its cells
             Crit3DMacroArea myArea = interpolationSettings.getMacroAreas()[areaIndex];
