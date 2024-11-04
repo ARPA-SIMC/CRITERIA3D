@@ -2934,45 +2934,11 @@ bool Project::interpolationDemGlocalDetrending(meteoVariable myVar, const Crit3D
             //load macro area and its cells
             Crit3DMacroArea myArea = interpolationSettings.getMacroAreas()[areaIndex];
             areaCells = myArea.getAreaCells();
+			std::vector<Crit3DInterpolationDataPoint> subsetInterpolationPoints;
 
             if (!areaCells.empty())
             {
-                //take the parameters+combination for that area
-                interpolationSettings.setFittingParameters(myArea.getParameters());
-                interpolationSettings.setCurrentCombination(myArea.getCombination());
-
-                //find the fitting functions vector based on the length of the parameters vector for every proxy
-                std::vector<std::function<double (double, std::vector<double> &)>> fittingFunction;
-
-                for (int l = 0; l < myArea.getParameters().size(); l++)
-                {
-                    if (myArea.getParameters()[l].size() == 2)
-                        fittingFunction.push_back(functionLinear_intercept);
-                    else if (myArea.getParameters()[l].size() == 4)
-                        fittingFunction.push_back(lapseRatePiecewise_two);
-                    else if (myArea.getParameters()[l].size() == 5)
-                        fittingFunction.push_back(lapseRatePiecewise_three);
-                    else if (myArea.getParameters()[l].size() == 6)
-                        fittingFunction.push_back(lapseRatePiecewise_three_free);
-                }
-                interpolationSettings.setFittingFunction(fittingFunction);
-
-                //create group of macro area interpolation points
-                std::vector<int> temp = myArea.getMeteoPoints();
-                std::vector<Crit3DInterpolationDataPoint> subsetInterpolationPoints;
-                for (int l = 0; l < temp.size(); l++)
-                {
-                    for (int k = 0; k < interpolationPoints.size(); k++)
-                        if (interpolationPoints[k].index == temp[l])
-                            subsetInterpolationPoints.push_back(interpolationPoints[k]);
-                }
-
-                //detrending (done once for every macro area)
-                if (elevationPos != NODATA && myCombination.isProxyActive(elevationPos))
-                    detrendingElevation(elevationPos, subsetInterpolationPoints, &interpolationSettings);
-
-                detrendingOtherProxies(elevationPos, subsetInterpolationPoints, &interpolationSettings);
-
+                macroAreaDetrending(myArea, myVar, interpolationPoints, subsetInterpolationPoints, elevationPos);
                 //calculate value for every cell
                 for (unsigned cellIndex = 0; cellIndex < areaCells.size(); cellIndex = cellIndex + 2)
                 {
@@ -3360,44 +3326,11 @@ bool Project::interpolationGrid(meteoVariable myVar, const Crit3DTime& myTime)
             //load macro area and its cells
             Crit3DMacroArea myArea = interpolationSettings.getMacroAreas()[areaIndex];
             areaCells = myArea.getAreaCells();
+			std::vector<Crit3DInterpolationDataPoint> subsetInterpolationPoints;
 
             if (!areaCells.empty())
             {
-                //take the parameters+combination for that area
-                interpolationSettings.setFittingParameters(myArea.getParameters());
-                interpolationSettings.setCurrentCombination(myArea.getCombination());
-
-                //find the fitting functions vector based on the length of the parameters vector for every proxy
-                std::vector<std::function<double (double, std::vector<double> &)> > fittingFunction;
-                for (int l = 0; l < myArea.getParameters().size(); l++)
-                {
-                    if (myArea.getParameters()[l].size() == 2)
-                        fittingFunction.push_back(functionLinear_intercept);
-                    else if (myArea.getParameters()[l].size() == 4)
-                        fittingFunction.push_back(lapseRatePiecewise_two);
-                    else if (myArea.getParameters()[l].size() == 5)
-                        fittingFunction.push_back(lapseRatePiecewise_three);
-                    else if (myArea.getParameters()[l].size() == 6)
-                        fittingFunction.push_back(lapseRatePiecewise_three_free);
-                }
-                interpolationSettings.setFittingFunction(fittingFunction);
-
-                //create vector of macro area interpolation points
-                std::vector<int> temp = myArea.getMeteoPoints();
-                std::vector<Crit3DInterpolationDataPoint> subsetInterpolationPoints;
-                for (int l = 0; l < temp.size(); l++)
-                {
-                    for (int k = 0; k < interpolationPoints.size(); k++)
-                        if (interpolationPoints[k].index == temp[l])
-                            subsetInterpolationPoints.push_back(interpolationPoints[k]);
-                }
-
-                //detrending
-                if (elevationPos != NODATA && myCombination.isProxyActive(elevationPos))
-                    detrendingElevation(elevationPos, subsetInterpolationPoints, &interpolationSettings);
-
-                detrendingOtherProxies(elevationPos, subsetInterpolationPoints, &interpolationSettings);
-
+                macroAreaDetrending(myArea, myVar, interpolationPoints, subsetInterpolationPoints, elevationPos);
                 unsigned nrCols = meteoGridDbHandler->meteoGrid()->gridStructure().header().nrCols;
                 //calculate value for every cell
                 for (unsigned cellIndex = 0; cellIndex < areaCells.size(); cellIndex = cellIndex + 2)
@@ -3469,6 +3402,56 @@ bool Project::interpolationGrid(meteoVariable myVar, const Crit3DTime& myTime)
     }
 
     return true;
+}
+
+void Project::macroAreaDetrending(Crit3DMacroArea myArea, meteoVariable myVar, std::vector <Crit3DInterpolationDataPoint> interpolationPoints, std::vector <Crit3DInterpolationDataPoint> &subsetInterpolationPoints, int elevationPos)
+{
+    //take the parameters+combination for that area
+    interpolationSettings.setFittingParameters(myArea.getParameters());
+    interpolationSettings.setCurrentCombination(myArea.getCombination());
+
+    //find the fitting functions vector based on the length of the parameters vector for every proxy
+    std::vector<std::function<double (double, std::vector<double> &)> > fittingFunction;
+    for (int l = 0; l < myArea.getParameters().size(); l++)
+    {
+        if (myArea.getParameters()[l].size() == 2)
+            fittingFunction.push_back(functionLinear_intercept);
+        else if (myArea.getParameters()[l].size() == 4)
+            fittingFunction.push_back(lapseRatePiecewise_two);
+        else if (myArea.getParameters()[l].size() == 5)
+            fittingFunction.push_back(lapseRatePiecewise_three);
+        else if (myArea.getParameters()[l].size() == 6)
+            fittingFunction.push_back(lapseRatePiecewise_three_free);
+    }
+    interpolationSettings.setFittingFunction(fittingFunction);
+
+    //create vector of macro area interpolation points
+    std::vector<int> temp = myArea.getMeteoPoints();
+    for (int l = 0; l < temp.size(); l++)
+    {
+        for (int k = 0; k < interpolationPoints.size(); k++)
+            if (interpolationPoints[k].index == temp[l])
+                subsetInterpolationPoints.push_back(interpolationPoints[k]);
+    }
+
+    //detrending
+    if (elevationPos != NODATA && myArea.getCombination().isProxyActive(elevationPos))
+        detrendingElevation(elevationPos, subsetInterpolationPoints, &interpolationSettings);
+
+    detrendingOtherProxies(elevationPos, subsetInterpolationPoints, &interpolationSettings);
+
+    Crit3DMeteoPoint* myMeteoPoints = new Crit3DMeteoPoint[unsigned(myArea.getMeteoPoints().size())];
+    std::vector<int> meteoPointsList = myArea.getMeteoPoints();
+
+    for (int i = 0; i < meteoPointsList.size(); i++)
+        myMeteoPoints[i] = meteoPoints[meteoPointsList[i]];
+
+    if (interpolationSettings.getUseTD() && getUseTdVar(myVar))
+        topographicDistanceOptimize(myVar, myMeteoPoints, myArea.getMeteoPoints().size(), subsetInterpolationPoints, &interpolationSettings, meteoSettings);
+
+    myMeteoPoints->clear();
+
+    return;
 }
 
 

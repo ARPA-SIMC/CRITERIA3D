@@ -49,6 +49,8 @@
     bool preInterpolation(std::vector<Crit3DInterpolationDataPoint> &myPoints, Crit3DInterpolationSettings *mySettings, Crit3DMeteoSettings *meteoSettings, Crit3DClimateParameters* myClimate,
                           Crit3DMeteoPoint *myMeteoPoints, int nrMeteoPoints, meteoVariable myVar, Crit3DTime myTime, std::string &errorStr);
 
+    void topographicDistanceOptimize(meteoVariable myVar, Crit3DMeteoPoint* &myMeteoPoints, int nrMeteoPoints, std::vector <Crit3DInterpolationDataPoint> &interpolationPoints, Crit3DInterpolationSettings* mySettings, Crit3DMeteoSettings* meteoSettings);
+
     bool krigingEstimateVariogram(float *myDist, float *mySemiVar,int sizeMyVar, int nrMyPoints,float myMaxDistance, double *mySill, double *myNugget, double *myRange, double *mySlope, TkrigingMode *myMode, int nrPointData);
     bool krigLinearPrep(double *mySlope, double *myNugget, int nrPointData);
 
