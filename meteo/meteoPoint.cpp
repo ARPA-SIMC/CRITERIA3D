@@ -1218,37 +1218,68 @@ std::vector <double> Crit3DMeteoPoint::getProxyValues()
     return myValues;
 }
 
-bool Crit3DMeteoPoint::computeDerivedVariables(Crit3DTime dateTime)
+bool Crit3DMeteoPoint::computeHourlyDerivedVariables(Crit3DTime dateTime, std::vector <meteoVariable> variables, bool useNetRad)
 {
-    short leafW;
-    float temperature, windSpeed, height, netRadiation;
-
     Crit3DDate myDate = dateTime.date;
     int myHour = dateTime.getHour();
 
-    bool leafWres = false;
-    bool et0res = false;
-
-    double relHumidity = double(getMeteoPointValueH(myDate, myHour, 0, airRelHumidity));
-    double prec = double(getMeteoPointValueH(myDate, myHour, 0, precipitation));
-
-    if (computeLeafWetness(prec, relHumidity, &leafW))
-        leafWres = setMeteoPointValueH(myDate, myHour, 0, leafWetness, leafW);
-
-    temperature = getMeteoPointValueH(myDate, myHour, 0, airTemperature);
-    windSpeed = getMeteoPointValueH(myDate, myHour, 0, windScalarIntensity);
-    netRadiation = getMeteoPointValueH(myDate, myHour, 0, netIrradiance);
-    height = float(this->point.z);
-    float et0;
-
-    if (! isEqual(temperature, NODATA) && ! isEqual(relHumidity, NODATA) && ! isEqual(windSpeed, NODATA))
+    for (auto var : variables)
     {
-        et0 = float(ET0_Penman_hourly_net_rad(double(height), double(netRadiation),
-                          double(temperature), double(relHumidity), double(windSpeed)));
-        et0res = setMeteoPointValueH(myDate, myHour, 0, referenceEvapotranspiration, et0);
+        if (var == leafWetness)
+        {
+            short leafW;
+            if (computeLeafWetness(getMeteoPointValueH(myDate, myHour, 0, precipitation),
+                                   getMeteoPointValueH(myDate, myHour, 0, airRelHumidity), &leafW))
+                setMeteoPointValueH(myDate, myHour, 0, leafWetness, leafW);
+        }
+        else if (var == referenceEvapotranspiration)
+        {
+            float et0;
+
+            if (useNetRad)
+            {
+                et0 = float(ET0_Penman_hourly_net_rad(double(point.z),
+                                                      double(getMeteoPointValueH(myDate, myHour, 0, netIrradiance)),
+                                                      double(getMeteoPointValueH(myDate, myHour, 0, airTemperature)),
+                                                      double(getMeteoPointValueH(myDate, myHour, 0, airRelHumidity)),
+                                                      double(getMeteoPointValueH(myDate, myHour, 0, windScalarIntensity))));
+
+            }
+            else
+            {
+                //da sistemare
+                et0 = ET0_Penman_hourly(double(point.z),
+                                        double(getMeteoPointValueH(myDate, myHour, 0, atmTransmissivity) / 0.75),
+                                        double(getMeteoPointValueH(myDate, myHour, 0, globalIrradiance)),
+                                        double(getMeteoPointValueH(myDate, myHour, 0, airTemperature)),
+                                        double(getMeteoPointValueH(myDate, myHour, 0, airRelHumidity)),
+                                        double(getMeteoPointValueH(myDate, myHour, 0, windScalarIntensity)));
+            }
+
+            setMeteoPointValueH(myDate, myHour, 0, referenceEvapotranspiration, et0);
+        }
     }
-    return (leafWres && et0res);
+
+    return true;
 }
+
+bool Crit3DMeteoPoint::computeDailyDerivedVariables(Crit3DDate date, std::vector <meteoVariable> variables, Crit3DMeteoSettings& meteoSettings)
+{
+    for (auto var : variables)
+    {
+        if (var == dailyReferenceEvapotranspirationHS)
+        {
+            float et0 = dailyEtpHargreaves(getMeteoPointValueD(date, dailyAirTemperatureMin),
+                                   getMeteoPointValueD(date, dailyAirTemperatureMax),
+                                   date, latitude, &meteoSettings);
+
+            setMeteoPointValueD(date, dailyReferenceEvapotranspirationHS, et0);
+        }
+    }
+
+    return true;
+}
+
 
 bool Crit3DMeteoPoint::computeMonthlyAggregate(Crit3DDate firstDate, Crit3DDate lastDate, meteoVariable dailyMeteoVar,
                                                Crit3DMeteoSettings* meteoSettings, Crit3DQuality* qualityCheck,

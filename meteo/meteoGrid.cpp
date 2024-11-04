@@ -794,6 +794,24 @@ void Crit3DMeteoGrid::emptyGridData(Crit3DDate dateIni, Crit3DDate dateFin)
         }
 }
 
+void Crit3DMeteoGrid::computeRelativeHumidityFromTd(const Crit3DDate myDate, const int myHour)
+{
+    float t,td,rh;
+
+    for (unsigned row = 0; row < unsigned(gridStructure().header().nrRows); row++)
+        for (unsigned col = 0; col < unsigned(gridStructure().header().nrCols); col++)
+        {
+            t = _meteoPoints[row][col]->getMeteoPointValueH(myDate, myHour, 0, airTemperature);
+            td = _meteoPoints[row][col]->getMeteoPointValueH(myDate, myHour, 0, airDewTemperature);
+
+            if (! isEqual(t, NODATA) && ! isEqual(td, NODATA))
+            {
+                rh = relHumFromTdew(td, t);
+                _meteoPoints[row][col]->setMeteoPointValueH(myDate, myHour, 0, airRelHumidity, rh);
+            }
+        }
+}
+
 void Crit3DMeteoGrid::computeWindVectorHourly(const Crit3DDate myDate, const int myHour)
 {
     float intensity = NODATA, direction = NODATA;
@@ -1012,7 +1030,7 @@ void Crit3DMeteoGrid::saveRowColfromZone(gis::Crit3DRasterGrid* zoneGrid, std::v
 }
 
 
-void Crit3DMeteoGrid::computeHourlyDerivedVariables(Crit3DTime dateTime)
+void Crit3DMeteoGrid::computeHourlyDerivedVariables(Crit3DTime dateTime, std::vector<meteoVariable> variables, bool useNetRad)
 {
 
     for (unsigned row = 0; row < unsigned(gridStructure().header().nrRows); row++)
@@ -1021,7 +1039,22 @@ void Crit3DMeteoGrid::computeHourlyDerivedVariables(Crit3DTime dateTime)
         {
             if (_meteoPoints[row][col]->active)
             {
-                _meteoPoints[row][col]->computeDerivedVariables(dateTime);
+                _meteoPoints[row][col]->computeHourlyDerivedVariables(dateTime, variables, useNetRad);
+            }
+        }
+    }
+}
+
+void Crit3DMeteoGrid::computeDailyDerivedVariables(Crit3DDate date, std::vector<meteoVariable> variables, Crit3DMeteoSettings& meteoSettings)
+{
+
+    for (unsigned row = 0; row < unsigned(gridStructure().header().nrRows); row++)
+    {
+        for (unsigned col = 0; col < unsigned(gridStructure().header().nrCols); col++)
+        {
+            if (_meteoPoints[row][col]->active)
+            {
+                _meteoPoints[row][col]->computeDailyDerivedVariables(date, variables, meteoSettings);
             }
         }
     }

@@ -171,7 +171,8 @@
             void setAltitude(double altitude);
             void setLapseRateCode(std::string lapseRateCode);
 
-            bool computeDerivedVariables(Crit3DTime dateTime);
+            bool computeHourlyDerivedVariables(Crit3DTime dateTime, std::vector<meteoVariable> variables, bool useNetRad);
+            bool computeDailyDerivedVariables(Crit3DDate date, std::vector<meteoVariable> variables, Crit3DMeteoSettings &meteoSettings);
             bool computeMonthlyAggregate(Crit3DDate firstDate, Crit3DDate lastDate, meteoVariable dailyMeteoVar, Crit3DMeteoSettings *meteoSettings, Crit3DQuality *qualityCheck, Crit3DClimateParameters *climateParam);
             TObsDataH *getObsDataH() const;
             void initializeObsDataDFromMp(unsigned int numberOfDays, const Crit3DDate& firstDate, Crit3DMeteoPoint mp);

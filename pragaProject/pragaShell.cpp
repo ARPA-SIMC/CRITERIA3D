@@ -286,7 +286,6 @@ int cmdInterpolationGridPeriod(PragaProject* myProject, QList<QString> argumentL
     }
 
     QDate dateIni, dateFin;
-    bool saveRasters = false;
     QList <QString> varString;
     QList <meteoVariable> variables, aggrVariables;
     QString var;
@@ -341,8 +340,6 @@ int cmdInterpolationGridPeriod(PragaProject* myProject, QList<QString> argumentL
             dateFin = QDate::currentDate().addDays(-1);
             dateIni = dateFin.addDays(-6);
         }
-        else if (argumentList.at(i).left(2) == "-r")
-            saveRasters = true;
         else if (argumentList.at(i).left(3) == "-s:")
             saveInterval = argumentList[i].right(argumentList[i].length()-3).toInt(&parseSaveInterval);
         else if (argumentList.at(i).left(3) == "-l:")
@@ -374,7 +371,7 @@ int cmdInterpolationGridPeriod(PragaProject* myProject, QList<QString> argumentL
         return PRAGA_INVALID_COMMAND;
     }
 
-    if (! myProject->interpolationMeteoGridPeriod(dateIni, dateFin, variables, aggrVariables, saveRasters, loadInterval, saveInterval))
+    if (! myProject->interpolationMeteoGridPeriod(dateIni, dateFin, variables, aggrVariables, loadInterval, saveInterval))
         return PRAGA_ERROR;
 
     return PRAGA_OK;
@@ -445,10 +442,24 @@ int cmdHourlyDerivedVariablesGrid(PragaProject* myProject, QList<QString> argume
     // default date
     QDate first = QDate::currentDate();
     QDate last = first.addDays(9);
+    QList <meteoVariable> variables;
+    QList <QString> varString;
+    QString var;
+    meteoVariable meteoVar;
+    bool useNetRad = false;
 
     for (int i = 1; i < argumentList.size(); i++)
     {
-        if (argumentList.at(i).left(4) == "-d1:")
+        if (argumentList[i].left(3) == "-v:")
+        {
+            varString = argumentList[i].right(argumentList[i].length()-3).split(",");
+            foreach (var,varString)
+            {
+                meteoVar = getMeteoVar(var.toStdString());
+                if (meteoVar != noMeteoVar) variables << meteoVar;
+            }
+        }
+        else if (argumentList.at(i).left(4) == "-d1:")
         {
             QString dateIniStr = argumentList[i].right(argumentList[i].length()-4);
             first = QDate::fromString(dateIniStr, "dd/MM/yyyy");
@@ -457,6 +468,10 @@ int cmdHourlyDerivedVariablesGrid(PragaProject* myProject, QList<QString> argume
         {
             QString dateFinStr = argumentList[i].right(argumentList[i].length()-4);
             last = QDate::fromString(dateFinStr, "dd/MM/yyyy");
+        }
+        else if (argumentList.at(i).left(2) == "-n")
+        {
+            useNetRad = true;
         }
 
     }
@@ -473,7 +488,7 @@ int cmdHourlyDerivedVariablesGrid(PragaProject* myProject, QList<QString> argume
         return PRAGA_INVALID_COMMAND;
     }
 
-    if (! myProject->hourlyDerivedVariablesGrid(first, last, true, true))
+    if (! myProject->derivedVariablesGrid(first, last, variables, useNetRad))
         return PRAGA_ERROR;
 
     return PRAGA_OK;

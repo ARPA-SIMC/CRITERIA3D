@@ -147,8 +147,10 @@
 
             void saveRowColfromZone(gis::Crit3DRasterGrid* zoneGrid, std::vector<std::vector<int> > &meteoGridRow, std::vector<std::vector<int> > &meteoGridCol);
 
+            void computeRelativeHumidityFromTd(const Crit3DDate myDate, const int myHour);
             void computeWindVectorHourly(const Crit3DDate myDate, const int myHour);
-            void computeHourlyDerivedVariables(Crit3DTime dateTime);
+            void computeHourlyDerivedVariables(Crit3DTime dateTime, std::vector <meteoVariable> variables, bool useNetRad);
+            void computeDailyDerivedVariables(Crit3DDate date, std::vector <meteoVariable> variables, Crit3DMeteoSettings &meteoSettings);
 
     private:
 
