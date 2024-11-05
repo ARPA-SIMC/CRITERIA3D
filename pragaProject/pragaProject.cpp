@@ -2651,6 +2651,13 @@ bool PragaProject::interpolationMeteoGrid(meteoVariable myVar, frequencyType myF
                 if (! interpolationMeteoGrid(windVectorY, hourly, myTime)) return false;
                 meteoGridDbHandler->meteoGrid()->computeWindVectorHourly(myTime.date, myTime.getHour());
             }
+            else if (myVar == globalIrradiance)
+            {
+                // for radiation use dem and aggregate
+                if (! interpolateDemRadiation(myTime.addSeconds(-1800), radiationMaps->globalRadiationMap)) return false;
+                meteoGridDbHandler->meteoGrid()->spatialAggregateMeteoGrid(globalIrradiance, daily, myTime.date, myTime.getHour(), myTime.getMinutes(),
+                                                                           &DEM, radiationMaps->globalRadiationMap, interpolationSettings.getMeteoGridAggrMethod());
+            }
             else
             {
                 if (! interpolationGrid(myVar, myTime)) return false;
