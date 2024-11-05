@@ -2656,6 +2656,13 @@ bool PragaProject::interpolationMeteoGrid(meteoVariable myVar, frequencyType myF
                 if (! interpolationGrid(myVar, myTime)) return false;
             }
         }
+        else if (myFrequency == daily)
+        {
+            if (! interpolationGrid(myVar, myTime)) return false;
+            if (myVar == dailyAirTemperatureMax || myVar == dailyAirTemperatureMin) {
+                meteoGridDbHandler->meteoGrid()->fixDailyThermalConsistency(myTime.date);}
+
+        }
     }
 
     meteoGridDbHandler->meteoGrid()->fillMeteoRaster();

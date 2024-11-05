@@ -149,6 +149,7 @@
 
             void computeRelativeHumidityFromTd(const Crit3DDate myDate, const int myHour);
             void computeWindVectorHourly(const Crit3DDate myDate, const int myHour);
+            void fixDailyThermalConsistency(const Crit3DDate myDate);
             void computeHourlyDerivedVariables(Crit3DTime dateTime, std::vector <meteoVariable> variables, bool useNetRad);
             void computeDailyDerivedVariables(Crit3DDate date, std::vector <meteoVariable> variables, Crit3DMeteoSettings &meteoSettings);
 

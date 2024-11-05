@@ -834,6 +834,26 @@ void Crit3DMeteoGrid::computeWindVectorHourly(const Crit3DDate myDate, const int
         }
 }
 
+void Crit3DMeteoGrid::fixDailyThermalConsistency(const Crit3DDate myDate)
+{
+    float tmin = NODATA, tmax = NODATA;
+
+    for (unsigned row = 0; row < unsigned(gridStructure().header().nrRows); row++)
+        for (unsigned col = 0; col < unsigned(gridStructure().header().nrCols); col++)
+        {
+            tmin = _meteoPoints[row][col]->getMeteoPointValueD(myDate, dailyAirTemperatureMin);
+            tmax = _meteoPoints[row][col]->getMeteoPointValueD(myDate, dailyAirTemperatureMax);
+
+            if (! isEqual(tmin, NODATA) && ! isEqual(tmax, NODATA))
+            {
+                if (tmin > tmax)
+                {
+                    _meteoPoints[row][col]->setMeteoPointValueD(myDate, dailyAirTemperatureMin, tmax - 0.1);
+                }
+            }
+        }
+}
+
 void Crit3DMeteoGrid::spatialAggregateMeteoGrid(meteoVariable myVar, frequencyType freq, Crit3DDate date, int  hour, int minute,
                                          gis::Crit3DRasterGrid* myDEM, gis::Crit3DRasterGrid *myRaster, aggregationMethod elab)
 {
