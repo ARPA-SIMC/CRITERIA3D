@@ -2584,52 +2584,55 @@ bool PragaProject::interpolationMeteoGrid(meteoVariable myVar, frequencyType myF
                 passInterpolatedTemperatureToHumidityPoints(myTime, meteoSettings);
                 if (! interpolationDemMain(airDewTemperature, myTime, hourlyMeteoMaps->mapHourlyTdew)) return false;
                 hourlyMeteoMaps->computeRelativeHumidityMap(hourlyMeteoMaps->mapHourlyRelHum);
-                meteoGridDbHandler->meteoGrid()->spatialAggregateMeteoGrid(myVar, myFrequency, myTime.date, myTime.getHour(),
-                                                                           myTime.getMinutes(), &DEM, hourlyMeteoMaps->mapHourlyRelHum, interpolationSettings.getMeteoGridAggrMethod());
+                meteoGridDbHandler->meteoGrid()->spatialAggregateMeteoGrid(myVar, myFrequency, myTime.date, myTime.getHour(), myTime.getMinutes(),
+                                                                           &DEM, hourlyMeteoMaps->mapHourlyRelHum, interpolationSettings.getMeteoGridAggrMethod());
 
             }
             else if (myVar == windVectorDirection || myVar == windVectorIntensity)
             {
                 if (! interpolationDemMain(windVectorX, myTime, getPragaMapFromVar(windVectorX))) return false;
                 if (! interpolationDemMain(windVectorY, myTime, getPragaMapFromVar(windVectorY))) return false;
-                meteoGridDbHandler->meteoGrid()->spatialAggregateMeteoGrid(windVectorX, hourly, myTime.date, myTime.getHour(), 0, &DEM, getPragaMapFromVar(windVectorX), interpolationSettings.getMeteoGridAggrMethod());
-                meteoGridDbHandler->meteoGrid()->spatialAggregateMeteoGrid(windVectorY, hourly, myTime.date, myTime.getHour(), 0, &DEM, getPragaMapFromVar(windVectorY), interpolationSettings.getMeteoGridAggrMethod());
+                meteoGridDbHandler->meteoGrid()->spatialAggregateMeteoGrid(windVectorX, hourly, myTime.date, myTime.getHour(), myTime.getMinutes(),
+                                                                           &DEM, getPragaMapFromVar(windVectorX), interpolationSettings.getMeteoGridAggrMethod());
+                meteoGridDbHandler->meteoGrid()->spatialAggregateMeteoGrid(windVectorY, hourly, myTime.date, myTime.getHour(), myTime.getMinutes(),
+                                                                           &DEM, getPragaMapFromVar(windVectorY), interpolationSettings.getMeteoGridAggrMethod());
                 meteoGridDbHandler->meteoGrid()->computeWindVectorHourly(myTime.date, myTime.getHour());
             }
             else if (myVar == leafWetness)
             {
                 hourlyMeteoMaps->computeLeafWetnessMap() ;
-                meteoGridDbHandler->meteoGrid()->spatialAggregateMeteoGrid(myVar, myFrequency, myTime.date, myTime.getHour(),
-                                                                           myTime.getMinutes(), &DEM, hourlyMeteoMaps->mapHourlyLeafW, interpolationSettings.getMeteoGridAggrMethod());
+                meteoGridDbHandler->meteoGrid()->spatialAggregateMeteoGrid(myVar, myFrequency, myTime.date, myTime.getHour(), myTime.getMinutes(),
+                                                                           &DEM, hourlyMeteoMaps->mapHourlyLeafW, interpolationSettings.getMeteoGridAggrMethod());
 
             }
             else if (myVar == referenceEvapotranspiration)
             {
                 hourlyMeteoMaps->computeET0PMMap(DEM, radiationMaps);
-                meteoGridDbHandler->meteoGrid()->spatialAggregateMeteoGrid(myVar, myFrequency, myTime.date, myTime.getHour(),
-                                                                           myTime.getMinutes(), &DEM, hourlyMeteoMaps->mapHourlyET0, interpolationSettings.getMeteoGridAggrMethod());
+                meteoGridDbHandler->meteoGrid()->spatialAggregateMeteoGrid(myVar, myFrequency, myTime.date, myTime.getHour(), myTime.getMinutes(),
+                                                                           &DEM, hourlyMeteoMaps->mapHourlyET0, interpolationSettings.getMeteoGridAggrMethod());
             }
             else
             {
                 if (!interpolationDemMain(myVar, myTime, getPragaMapFromVar(myVar))) return false;
+                meteoGridDbHandler->meteoGrid()->spatialAggregateMeteoGrid(myVar, hourly, myTime.date, myTime.getHour(), myTime.getMinutes(),
+                                                                           &DEM, getPragaMapFromVar(myVar), interpolationSettings.getMeteoGridAggrMethod());
             }
-
-            meteoGridDbHandler->meteoGrid()->spatialAggregateMeteoGrid(myVar, hourly, myTime.date, 0, 0, &DEM, getPragaMapFromVar(myVar), interpolationSettings.getMeteoGridAggrMethod());
-
         }
         else if (myFrequency == daily)
         {
             if (myVar == dailyReferenceEvapotranspirationHS) {
                 pragaDailyMaps->computeHSET0Map(&gisSettings, myTime.date);}
-            else if (myVar == dailyAirTemperatureMax || myVar == dailyAirTemperatureMin) {
-                if (! pragaDailyMaps->fixDailyThermalConsistency()) return false;}
             else
             {
                 if (! interpolationDemMain(myVar, myTime, getPragaMapFromVar(myVar)))
                     return false;
             }
 
-            meteoGridDbHandler->meteoGrid()->spatialAggregateMeteoGrid(myVar, daily, myTime.date, 0, 0, &DEM, getPragaMapFromVar(myVar), interpolationSettings.getMeteoGridAggrMethod());
+            if (myVar == dailyAirTemperatureMax || myVar == dailyAirTemperatureMin) {
+                if (! pragaDailyMaps->fixDailyThermalConsistency()) return false;}
+
+            meteoGridDbHandler->meteoGrid()->spatialAggregateMeteoGrid(myVar, daily, myTime.date, myTime.getHour(), myTime.getMinutes(),
+                                                                       &DEM, getPragaMapFromVar(myVar), interpolationSettings.getMeteoGridAggrMethod());
         }
     }
     else
@@ -2694,7 +2697,7 @@ bool PragaProject::interpolationMeteoGridPeriod(QDate dateIni, QDate dateFin, QL
 
     // order variables for derived computation
     std::string errString;
-    QString myError, rasterName, varName;
+    QString myError;
     int myHour;
     QDate myDate = dateIni;
     meteoVariable myVar;
