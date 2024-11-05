@@ -2306,8 +2306,8 @@ bool PragaProject::derivedVariablesGrid(QDate first, QDate last, QList <meteoVar
 
     if (isDaily)
     {
-        QDate myDate = firstDateTime.date();
-        while (myDate <= lastDateTime.date())
+        QDate myDate = first;
+        while (myDate <= last)
         {
             meteoGridDbHandler->meteoGrid()->computeDailyDerivedVariables(getCrit3DDate(myDate), dailyVars, *meteoSettings);
             myDate = myDate.addDays(1);
