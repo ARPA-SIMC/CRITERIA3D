@@ -2546,9 +2546,11 @@ void Project::passGridTemperatureToHumidityPoints(Crit3DTime myTime, Crit3DMeteo
 
             if (! gis::isOutOfGridRowCol(row, col, meteoGridDbHandler->meteoGrid()->gridStructure().header()))
             {
-                meteoPoints[i].setMeteoPointValueH(myTime.date, myTime.getHour(), myTime.getMinutes(), airTemperature,
+                if (meteoGridDbHandler->meteoGrid()->meteoPoint(row,col).active)
+                {
+                    meteoPoints[i].setMeteoPointValueH(myTime.date, myTime.getHour(), myTime.getMinutes(), airTemperature,
                                                    meteoGridDbHandler->meteoGrid()->meteoPoint(row,col).getMeteoPointValueH(myTime.date, myTime.getHour(), myTime.getMinutes(), airTemperature));
-
+                }
             }
         }
     }

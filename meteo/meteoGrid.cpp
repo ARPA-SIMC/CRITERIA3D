@@ -801,13 +801,16 @@ void Crit3DMeteoGrid::computeRelativeHumidityFromTd(const Crit3DDate myDate, con
     for (unsigned row = 0; row < unsigned(gridStructure().header().nrRows); row++)
         for (unsigned col = 0; col < unsigned(gridStructure().header().nrCols); col++)
         {
-            t = _meteoPoints[row][col]->getMeteoPointValueH(myDate, myHour, 0, airTemperature);
-            td = _meteoPoints[row][col]->getMeteoPointValueH(myDate, myHour, 0, airDewTemperature);
-
-            if (! isEqual(t, NODATA) && ! isEqual(td, NODATA))
+            if (_meteoPoints[row][col]->active)
             {
-                rh = relHumFromTdew(td, t);
-                _meteoPoints[row][col]->setMeteoPointValueH(myDate, myHour, 0, airRelHumidity, rh);
+                t = _meteoPoints[row][col]->getMeteoPointValueH(myDate, myHour, 0, airTemperature);
+                td = _meteoPoints[row][col]->getMeteoPointValueH(myDate, myHour, 0, airDewTemperature);
+
+                if (! isEqual(t, NODATA) && ! isEqual(td, NODATA))
+                {
+                    rh = relHumFromTdew(td, t);
+                    _meteoPoints[row][col]->setMeteoPointValueH(myDate, myHour, 0, airRelHumidity, rh);
+                }
             }
         }
 }
@@ -820,15 +823,18 @@ void Crit3DMeteoGrid::computeWindVectorHourly(const Crit3DDate myDate, const int
     for (unsigned row = 0; row < unsigned(gridStructure().header().nrRows); row++)
         for (unsigned col = 0; col < unsigned(gridStructure().header().nrCols); col++)
         {
-            u = _meteoPoints[row][col]->getMeteoPointValueH(myDate, myHour, 0, windVectorX);
-            v = _meteoPoints[row][col]->getMeteoPointValueH(myDate, myHour, 0, windVectorY);
-
-            if (! isEqual(u, NODATA) && ! isEqual(v, NODATA))
+            if (_meteoPoints[row][col]->active)
             {
-                if (computeWindPolar(u, v, &intensity, &direction))
+                u = _meteoPoints[row][col]->getMeteoPointValueH(myDate, myHour, 0, windVectorX);
+                v = _meteoPoints[row][col]->getMeteoPointValueH(myDate, myHour, 0, windVectorY);
+
+                if (! isEqual(u, NODATA) && ! isEqual(v, NODATA))
                 {
-                    _meteoPoints[row][col]->setMeteoPointValueH(myDate, myHour, 0, windVectorIntensity, intensity);
-                    _meteoPoints[row][col]->setMeteoPointValueH(myDate, myHour, 0, windVectorDirection, direction);
+                    if (computeWindPolar(u, v, &intensity, &direction))
+                    {
+                        _meteoPoints[row][col]->setMeteoPointValueH(myDate, myHour, 0, windVectorIntensity, intensity);
+                        _meteoPoints[row][col]->setMeteoPointValueH(myDate, myHour, 0, windVectorDirection, direction);
+                    }
                 }
             }
         }
@@ -841,14 +847,17 @@ void Crit3DMeteoGrid::fixDailyThermalConsistency(const Crit3DDate myDate)
     for (unsigned row = 0; row < unsigned(gridStructure().header().nrRows); row++)
         for (unsigned col = 0; col < unsigned(gridStructure().header().nrCols); col++)
         {
-            tmin = _meteoPoints[row][col]->getMeteoPointValueD(myDate, dailyAirTemperatureMin);
-            tmax = _meteoPoints[row][col]->getMeteoPointValueD(myDate, dailyAirTemperatureMax);
-
-            if (! isEqual(tmin, NODATA) && ! isEqual(tmax, NODATA))
+            if (_meteoPoints[row][col]->active)
             {
-                if (tmin > tmax)
+                tmin = _meteoPoints[row][col]->getMeteoPointValueD(myDate, dailyAirTemperatureMin);
+                tmax = _meteoPoints[row][col]->getMeteoPointValueD(myDate, dailyAirTemperatureMax);
+
+                if (! isEqual(tmin, NODATA) && ! isEqual(tmax, NODATA))
                 {
-                    _meteoPoints[row][col]->setMeteoPointValueD(myDate, dailyAirTemperatureMin, tmax - 0.1);
+                    if (tmin > tmax)
+                    {
+                        _meteoPoints[row][col]->setMeteoPointValueD(myDate, dailyAirTemperatureMin, tmax - 0.1);
+                    }
                 }
             }
         }
