@@ -287,7 +287,7 @@ int cmdInterpolationGridPeriod(PragaProject* myProject, QList<QString> argumentL
 
     QDate dateIni, dateFin;
     QList <QString> varString;
-    QList <meteoVariable> variables, aggrVariables;
+    QList <meteoVariable> variables, aggrVariables, derivedVariables;
     QString var;
     meteoVariable meteoVar;
     int saveInterval = 1;
@@ -309,6 +309,21 @@ int cmdInterpolationGridPeriod(PragaProject* myProject, QList<QString> argumentL
                 }
 
                 variables << meteoVar;
+            }
+        }
+        else if (argumentList[i].left(3) == "-d:")
+        {
+            varString = argumentList[i].right(argumentList[i].length()-3).split(",");
+            foreach (var,varString)
+            {
+                meteoVar = getMeteoVar(var.toStdString());
+
+                if (meteoVar == noMeteoVar) {
+                    myProject->errorString = "Unknown variable: " + var;
+                    return PRAGA_INVALID_COMMAND;
+                }
+
+                derivedVariables << meteoVar;
             }
         }
         else if (argumentList[i].left(3) == "-a:")
@@ -371,7 +386,7 @@ int cmdInterpolationGridPeriod(PragaProject* myProject, QList<QString> argumentL
         return PRAGA_INVALID_COMMAND;
     }
 
-    if (! myProject->interpolationMeteoGridPeriod(dateIni, dateFin, variables, aggrVariables, loadInterval, saveInterval))
+    if (! myProject->interpolationMeteoGridPeriod(dateIni, dateFin, variables, derivedVariables, aggrVariables, loadInterval, saveInterval))
         return PRAGA_ERROR;
 
     return PRAGA_OK;
@@ -488,7 +503,7 @@ int cmdHourlyDerivedVariablesGrid(PragaProject* myProject, QList<QString> argume
         return PRAGA_INVALID_COMMAND;
     }
 
-    if (! myProject->derivedVariablesGrid(first, last, variables, useNetRad))
+    if (! myProject->derivedVariablesMeteoGridPeriod(first, last, variables, useNetRad))
         return PRAGA_ERROR;
 
     return PRAGA_OK;

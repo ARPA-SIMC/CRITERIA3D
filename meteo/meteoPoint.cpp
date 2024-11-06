@@ -1218,63 +1218,58 @@ std::vector <double> Crit3DMeteoPoint::getProxyValues()
     return myValues;
 }
 
-bool Crit3DMeteoPoint::computeHourlyDerivedVariables(Crit3DTime dateTime, std::vector <meteoVariable> variables, bool useNetRad)
+bool Crit3DMeteoPoint::computeHourlyDerivedVar(Crit3DTime dateTime, meteoVariable myVar, bool useNetRad)
 {
     Crit3DDate myDate = dateTime.date;
     int myHour = dateTime.getHour();
+    float value = NODATA;
+    short valueShort = NODATA;
 
-    for (auto var : variables)
+    if (myVar == leafWetness)
     {
-        if (var == leafWetness)
+        if (computeLeafWetness(getMeteoPointValueH(myDate, myHour, 0, precipitation),
+                               getMeteoPointValueH(myDate, myHour, 0, airRelHumidity), &valueShort))
+            setMeteoPointValueH(myDate, myHour, 0, leafWetness, float(valueShort));
+    }
+    else if (myVar == referenceEvapotranspiration)
+    {
+        if (useNetRad)
         {
-            short leafW;
-            if (computeLeafWetness(getMeteoPointValueH(myDate, myHour, 0, precipitation),
-                                   getMeteoPointValueH(myDate, myHour, 0, airRelHumidity), &leafW))
-                setMeteoPointValueH(myDate, myHour, 0, leafWetness, leafW);
+            value = float(ET0_Penman_hourly_net_rad(double(point.z),
+                                                  double(getMeteoPointValueH(myDate, myHour, 0, netIrradiance)),
+                                                  double(getMeteoPointValueH(myDate, myHour, 0, airTemperature)),
+                                                  double(getMeteoPointValueH(myDate, myHour, 0, airRelHumidity)),
+                                                  double(getMeteoPointValueH(myDate, myHour, 0, windScalarIntensity))));
+
         }
-        else if (var == referenceEvapotranspiration)
+        else
         {
-            float et0;
-
-            if (useNetRad)
-            {
-                et0 = float(ET0_Penman_hourly_net_rad(double(point.z),
-                                                      double(getMeteoPointValueH(myDate, myHour, 0, netIrradiance)),
-                                                      double(getMeteoPointValueH(myDate, myHour, 0, airTemperature)),
-                                                      double(getMeteoPointValueH(myDate, myHour, 0, airRelHumidity)),
-                                                      double(getMeteoPointValueH(myDate, myHour, 0, windScalarIntensity))));
-
-            }
-            else
-            {
-                //da sistemare
-                et0 = ET0_Penman_hourly(double(point.z),
-                                        double(getMeteoPointValueH(myDate, myHour, 0, atmTransmissivity) / 0.75),
-                                        double(getMeteoPointValueH(myDate, myHour, 0, globalIrradiance)),
-                                        double(getMeteoPointValueH(myDate, myHour, 0, airTemperature)),
-                                        double(getMeteoPointValueH(myDate, myHour, 0, airRelHumidity)),
-                                        double(getMeteoPointValueH(myDate, myHour, 0, windScalarIntensity)));
-            }
-
-            setMeteoPointValueH(myDate, myHour, 0, referenceEvapotranspiration, et0);
+            //da sistemare
+            value = ET0_Penman_hourly(double(point.z),
+                                    double(getMeteoPointValueH(myDate, myHour, 0, atmTransmissivity) / float(0.75)),
+                                    double(getMeteoPointValueH(myDate, myHour, 0, globalIrradiance)),
+                                    double(getMeteoPointValueH(myDate, myHour, 0, airTemperature)),
+                                    double(getMeteoPointValueH(myDate, myHour, 0, airRelHumidity)),
+                                    double(getMeteoPointValueH(myDate, myHour, 0, windScalarIntensity)));
         }
     }
+
+    setMeteoPointValueH(myDate, myHour, 0, myVar, value);
 
     return true;
 }
 
-bool Crit3DMeteoPoint::computeDailyDerivedVariables(Crit3DDate date, std::vector <meteoVariable> variables, Crit3DMeteoSettings& meteoSettings)
+bool Crit3DMeteoPoint::computeDailyDerivedVar(Crit3DDate date, meteoVariable myVar, Crit3DMeteoSettings& meteoSettings)
 {
-    for (auto var : variables)
-    {
-        if (var == dailyReferenceEvapotranspirationHS)
-        {
-            float et0 = dailyEtpHargreaves(getMeteoPointValueD(date, dailyAirTemperatureMin),
-                                   getMeteoPointValueD(date, dailyAirTemperatureMax),
-                                   date, latitude, &meteoSettings);
+    float value;
 
-            setMeteoPointValueD(date, dailyReferenceEvapotranspirationHS, et0);
-        }
+    if (myVar == dailyReferenceEvapotranspirationHS)
+    {
+        value = dailyEtpHargreaves(getMeteoPointValueD(date, dailyAirTemperatureMin),
+                               getMeteoPointValueD(date, dailyAirTemperatureMax),
+                               date, latitude, &meteoSettings);
+
+        setMeteoPointValueD(date, dailyReferenceEvapotranspirationHS, value);
     }
 
     return true;

@@ -856,7 +856,7 @@ void Crit3DMeteoGrid::fixDailyThermalConsistency(const Crit3DDate myDate)
                 {
                     if (tmin > tmax)
                     {
-                        _meteoPoints[row][col]->setMeteoPointValueD(myDate, dailyAirTemperatureMin, tmax - 0.1);
+                        _meteoPoints[row][col]->setMeteoPointValueD(myDate, dailyAirTemperatureMin, float(tmax - 0.1));
                     }
                 }
             }
@@ -1059,7 +1059,7 @@ void Crit3DMeteoGrid::saveRowColfromZone(gis::Crit3DRasterGrid* zoneGrid, std::v
 }
 
 
-void Crit3DMeteoGrid::computeHourlyDerivedVariables(Crit3DTime dateTime, std::vector<meteoVariable> variables, bool useNetRad)
+void Crit3DMeteoGrid::computeHourlyDerivedVar(Crit3DTime dateTime, meteoVariable myVar, bool useNetRad)
 {
 
     for (unsigned row = 0; row < unsigned(gridStructure().header().nrRows); row++)
@@ -1068,13 +1068,13 @@ void Crit3DMeteoGrid::computeHourlyDerivedVariables(Crit3DTime dateTime, std::ve
         {
             if (_meteoPoints[row][col]->active)
             {
-                _meteoPoints[row][col]->computeHourlyDerivedVariables(dateTime, variables, useNetRad);
+                _meteoPoints[row][col]->computeHourlyDerivedVar(dateTime, myVar, useNetRad);
             }
         }
     }
 }
 
-void Crit3DMeteoGrid::computeDailyDerivedVariables(Crit3DDate date, std::vector<meteoVariable> variables, Crit3DMeteoSettings& meteoSettings)
+void Crit3DMeteoGrid::computeDailyDerivedVar(Crit3DDate date, meteoVariable myVar, Crit3DMeteoSettings& meteoSettings)
 {
 
     for (unsigned row = 0; row < unsigned(gridStructure().header().nrRows); row++)
@@ -1083,7 +1083,7 @@ void Crit3DMeteoGrid::computeDailyDerivedVariables(Crit3DDate date, std::vector<
         {
             if (_meteoPoints[row][col]->active)
             {
-                _meteoPoints[row][col]->computeDailyDerivedVariables(date, variables, meteoSettings);
+                _meteoPoints[row][col]->computeDailyDerivedVar(date, myVar, meteoSettings);
             }
         }
     }
