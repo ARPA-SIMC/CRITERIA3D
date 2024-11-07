@@ -165,19 +165,15 @@ enum estimatedFunction {FUNCTION_CODE_SPHERICAL, FUNCTION_CODE_LINEAR, FUNCTION_
                                                                   std::vector<double> &parameters, std::vector<double> &parametersDelta,
                                                                   int maxIterationsNr, double myEpsilon,
                                                                   std::vector <double>& x, std::vector<double>& y);
-        double bestFittingMarquardt_nDimension_singleFunction(double (*func)(double, std::vector<double>&),
-                                                           int nrTrials, int nrMinima,
+        double bestFittingMarquardt_nDimension_singleFunction(double (*func)(double, std::vector<double>&), int nrMinima,
                                                            std::vector <double>& parametersMin, std::vector <double>& parametersMax,
                                                            std::vector <double>& parameters, std::vector <double>& parametersDelta,
-                                                           std::vector<double> &stepSize, int numSteps,
                                                            int maxIterationsNr, double myEpsilon, double deltaR2,
                                                            std::vector <double>& x , std::vector<double>& y,
                                                            std::vector<double>& weights, std::vector<std::vector<double> > firstGuessCombinations);
-        double bestFittingMarquardt_nDimension_singleFunction(double (*func)(double, std::vector<double>&),
-                                                              int nrTrials, int nrMinima,
+        double bestFittingMarquardt_nDimension_singleFunction(double (*func)(double, std::vector<double>&), int nrMinima,
                                                               std::vector <double>& parametersMin, std::vector <double>& parametersMax,
                                                               std::vector <double>& parameters, std::vector <double>& parametersDelta,
-                                                              std::vector<double> &stepSize, int numSteps,
                                                               int maxIterationsNr, double myEpsilon, double deltaR2,
                                                               std::vector <double>& x , std::vector<double>& y,
                                                               std::vector<std::vector<double> > firstGuessCombinations);

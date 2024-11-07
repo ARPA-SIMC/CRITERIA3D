@@ -2477,10 +2477,9 @@ namespace interpolation
         return norm;
     }
     double bestFittingMarquardt_nDimension_singleFunction(double (*func)(double, std::vector<double>&),
-                                                       int nrTrials, int nrMinima,
+                                                       int nrMinima,
                                                        std::vector <double>& parametersMin, std::vector <double>& parametersMax,
                                                        std::vector <double>& parameters, std::vector <double>& parametersDelta,
-                                                       std::vector <double>& stepSize, int numSteps,
                                                        int maxIterationsNr, double myEpsilon, double deltaR2,
                                                        std::vector <double>& x ,std::vector<double>& y,
                                                        std::vector<double>& weights, std::vector<std::vector<double>> firstGuessCombinations)
@@ -2547,10 +2546,9 @@ namespace interpolation
     }
 
     double bestFittingMarquardt_nDimension_singleFunction(double (*func)(double, std::vector<double>&),
-                                                          int nrTrials, int nrMinima,
+                                                          int nrMinima,
                                                           std::vector <double>& parametersMin, std::vector <double>& parametersMax,
                                                           std::vector <double>& parameters, std::vector <double>& parametersDelta,
-                                                          std::vector <double>& stepSize, int numSteps,
                                                           int maxIterationsNr, double myEpsilon, double deltaR2,
                                                           std::vector <double>& x ,std::vector<double>& y,
                                                           std::vector<std::vector<double>> firstGuessCombinations)
