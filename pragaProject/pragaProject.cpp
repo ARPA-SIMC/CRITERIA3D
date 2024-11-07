@@ -2585,6 +2585,12 @@ bool PragaProject::deriveVariableMeteoGrid(meteoVariable myVar, frequencyType my
             meteoGridDbHandler->meteoGrid()->spatialAggregateMeteoGrid(myVar, myFrequency, myTime.date, myTime.getHour(), myTime.getMinutes(),
                                                                        &DEM, hourlyMeteoMaps->mapHourlyET0, interpolationSettings.getMeteoGridAggrMethod());
         }
+        else if (myVar == dailyReferenceEvapotranspirationHS)
+        {
+            if (! pragaDailyMaps->computeHSET0Map(&gisSettings, myTime.date)) return false;
+            meteoGridDbHandler->meteoGrid()->spatialAggregateMeteoGrid(myVar, myFrequency, myTime.date, myTime.getHour(), myTime.getMinutes(),
+                                                                       &DEM, pragaDailyMaps->mapDailyET0HS, interpolationSettings.getMeteoGridAggrMethod());
+        }
     }
     else
     {
@@ -2628,18 +2634,6 @@ bool PragaProject::interpolationMeteoGrid(meteoVariable myVar, frequencyType myF
                                                                            &DEM, getPragaMapFromVar(windVectorY), interpolationSettings.getMeteoGridAggrMethod());
                 meteoGridDbHandler->meteoGrid()->computeWindVectorHourly(myTime.date, myTime.getHour());
             }
-            else if (myVar == leafWetness)
-            {
-                hourlyMeteoMaps->computeLeafWetnessMap() ;
-                meteoGridDbHandler->meteoGrid()->spatialAggregateMeteoGrid(myVar, myFrequency, myTime.date, myTime.getHour(), myTime.getMinutes(),
-                                                                           &DEM, hourlyMeteoMaps->mapHourlyLeafW, interpolationSettings.getMeteoGridAggrMethod());
-            }
-            else if (myVar == referenceEvapotranspiration)
-            {
-                hourlyMeteoMaps->computeET0PMMap(DEM, radiationMaps);
-                meteoGridDbHandler->meteoGrid()->spatialAggregateMeteoGrid(myVar, myFrequency, myTime.date, myTime.getHour(), myTime.getMinutes(),
-                                                                           &DEM, hourlyMeteoMaps->mapHourlyET0, interpolationSettings.getMeteoGridAggrMethod());
-            }
             else
             {
                 if (!interpolationDemMain(myVar, myTime, getPragaMapFromVar(myVar))) return false;
@@ -2649,13 +2643,8 @@ bool PragaProject::interpolationMeteoGrid(meteoVariable myVar, frequencyType myF
         }
         else if (myFrequency == daily)
         {
-            if (myVar == dailyReferenceEvapotranspirationHS) {
-                pragaDailyMaps->computeHSET0Map(&gisSettings, myTime.date);}
-            else
-            {
-                if (! interpolationDemMain(myVar, myTime, getPragaMapFromVar(myVar)))
+            if (! interpolationDemMain(myVar, myTime, getPragaMapFromVar(myVar)))
                     return false;
-            }
 
             if (myVar == dailyAirTemperatureMax || myVar == dailyAirTemperatureMin) {
                 if (! pragaDailyMaps->fixDailyThermalConsistency()) return false;}
