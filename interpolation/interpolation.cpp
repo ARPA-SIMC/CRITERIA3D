@@ -1093,12 +1093,12 @@ void localSelection(vector <Crit3DInterpolationDataPoint> &inputPoints, vector <
     for (unsigned long i = 0; i < inputPoints.size() ; i++)
         inputPoints[i].distance = gis::computeDistance(x, y, float((inputPoints[i]).point->utm.x), float((inputPoints[i]).point->utm.y));
 
-    unsigned int nrValid = 0;
+    int nrValid = 0;
     float stepRadius = 7500;           // [m]
     float r0 = 0;                       // [m]
     float r1 = stepRadius;              // [m]
     unsigned int i;
-    unsigned int nrPrimaries = 0;
+    int nrPrimaries = 0;
 
     int maxDistance = 0;
     while ((!mySettings.getUseLapseRateCode() && nrValid < minPoints) || (mySettings.getUseLapseRateCode() && nrPrimaries < minPoints))
@@ -1514,7 +1514,7 @@ void calculateFirstGuessCombinations(Crit3DProxy* myProxy)
     std::vector <double> tempFirstGuess;
     int numSteps = 15;
     std::vector <double> stepSize;
-    int nrParam = int(tempParam.size()/2);
+    unsigned nrParam = int(tempParam.size()/2);
 
     double min_,max_;
     for (unsigned j=0; j < nrParam; j++)
@@ -1801,13 +1801,13 @@ bool multipleDetrendingElevationFitting(int elevationPos, std::vector <Crit3DInt
     // multiple non linear fitting
     double R2 = NODATA;
     if (isWeighted)
-        R2 = interpolation::bestFittingMarquardt_nDimension_singleFunction(*(myFunc.target<double(*)(double, std::vector<double>&)>()), 400, 4, parametersMin, parametersMax, parameters, parametersDelta,
-                                                                  stepSize, numSteps, 1000, 0.002, 0.005, predictors, predictands, weights,firstGuessCombinations);
+        R2 = interpolation::bestFittingMarquardt_nDimension_singleFunction(*(myFunc.target<double(*)(double, std::vector<double>&)>()), 4, parametersMin, parametersMax, parameters, parametersDelta,
+                                                                  1000, 0.002, 0.005, predictors, predictands, weights,firstGuessCombinations);
     else
-        R2 = interpolation::bestFittingMarquardt_nDimension_singleFunction(*(myFunc.target<double(*)(double, std::vector<double>&)>()), 400, 4, parametersMin, parametersMax, parameters, parametersDelta,
-                                                                           stepSize, numSteps, 1000, 0.002, 0.005, predictors, predictands,firstGuessCombinations);
+        R2 = interpolation::bestFittingMarquardt_nDimension_singleFunction(*(myFunc.target<double(*)(double, std::vector<double>&)>()), 4, parametersMin, parametersMax, parameters, parametersDelta,
+                                                                  1000, 0.002, 0.005, predictors, predictands,firstGuessCombinations);
 
-    mySettings->getProxy(elevationPos)->setRegressionR2(R2);
+    mySettings->getProxy(elevationPos)->setRegressionR2(float(R2));
 
     std::vector<std::vector<double>> newParameters;
     newParameters.push_back(parameters);
