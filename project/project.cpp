@@ -235,7 +235,7 @@ bool Project::checkProxy(Crit3DProxy &myProxy, QString* error, bool isActive)
 
         if (myProxy.getFittingParametersRange().size() != nrParameters*2)
         {
-            *error = "wrong numer of parameters for proxy: " + QString::fromStdString(name_);
+            *error = "wrong number of parameters for proxy: " + QString::fromStdString(name_);
             return false;
         }
 
@@ -2288,9 +2288,9 @@ bool Project::loadGlocalStationsAndCells(bool isGrid)
     Crit3DMacroArea myArea;
 
     //per ogni area, rappresentata da righe di areaPoints, si fa ciclo sui meteopoints
-    for (int j = 0; j < areaPoints.size(); j++)
+    for (unsigned j = 0; j < areaPoints.size(); j++)
     {
-        for (int k = 0; k < areaPoints[j].size(); k++)
+        for (unsigned k = 0; k < areaPoints[j].size(); k++)
         {
             //controlla se id si trova nel vettore areaPoints[j] e salva l'indice del meteopoint
             for (int i=0; i < nrMeteoPoints; i++)
@@ -2424,11 +2424,9 @@ bool Project::loadGlocalStationsCsv(QString fileName, std::vector<std::vector<in
         return false;
     }
 
-    int nrLine = 0;
     std::vector<int> temp;
     while(!myStream.atEnd())
     {
-        nrLine++;
         line = myStream.readLine().split(',');
         for (int i = 1; i < line.size(); i++)
             temp.push_back(line[i].toInt());
@@ -3105,6 +3103,13 @@ bool Project::interpolationDemMain(meteoVariable myVar, const Crit3DTime& myTime
     if (! checkInterpolation(myVar))
         return false;
 
+    // check glocal
+    if (interpolationSettings.getUseGlocalDetrending() && ! interpolationSettings.isGlocalReady())
+    {
+        if (! loadGlocalAreasMap()) return false;
+        if (! loadGlocalStationsAndCells(!interpolationSettings.getMeteoGridUpscaleFromDem())) return false;
+    }
+
     // solar radiation model
     if (myVar == globalIrradiance)
     {
@@ -3168,12 +3173,6 @@ bool Project::interpolationGrid(meteoVariable myVar, const Crit3DTime& myTime)
 
     if (interpolationSettings.getUseMultipleDetrending())
         interpolationSettings.clearFitting();
-
-    if (interpolationSettings.getUseGlocalDetrending())
-    {
-        if (! loadGlocalAreasMap()) return false;
-        if (! loadGlocalStationsAndCells(!interpolationSettings.getMeteoGridUpscaleFromDem())) return false;
-    }
 
     // check quality and pass data to interpolation
     if (! checkAndPassDataToInterpolation(quality, myVar, meteoPoints, nrMeteoPoints, myTime,
@@ -4391,7 +4390,7 @@ void Project::showLocalProxyGraph(gis::Crit3DGeoPoint myPoint)
         myZDEM = DEM.value[row][col];
     }
 
-    if (interpolationSettings.getUseGlocalDetrending())
+    if (interpolationSettings.getUseGlocalDetrending() && ! interpolationSettings.isGlocalReady())
     {
         if (loadGlocalAreasMap())
             loadGlocalStationsAndCells(false);

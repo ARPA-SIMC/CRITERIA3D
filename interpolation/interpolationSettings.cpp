@@ -475,6 +475,7 @@ void Crit3DInterpolationSettings::initialize()
     initializeProxy();
 }
 
+
 std::string getKeyStringInterpolationMethod(TInterpolationMethod value)
 {
     std::map<std::string, TInterpolationMethod>::const_iterator it;
@@ -596,6 +597,11 @@ int Crit3DInterpolationSettings::getProxyPosFromName(TProxyVar name)
     }
 
     return NODATA;
+}
+
+bool Crit3DInterpolationSettings::isGlocalReady()
+{
+    return (getMacroAreasMap() != nullptr && getMacroAreas().size() > 0);
 }
 
 std::string Crit3DProxy::getName() const
