@@ -1,3 +1,4 @@
+#include <iostream>
 #include <stdio.h>
 #include <cmath>
 
@@ -338,7 +339,7 @@ bool checkData(Crit3DQuality* myQuality, meteoVariable myVar, Crit3DMeteoPoint* 
         for (int i = 0; i < nrMeteoPoints; i++)
         {
             meteoPoints[i].currentValue = meteoPoints[i].elaboration;
-            if (int(meteoPoints[i].currentValue) != int(NODATA))
+            if (isEqual(meteoPoints[i].currentValue, NODATA))
                 meteoPoints[i].quality = quality::accepted;
             else
                 meteoPoints[i].quality = quality::missing_data;
@@ -350,7 +351,7 @@ bool checkData(Crit3DQuality* myQuality, meteoVariable myVar, Crit3DMeteoPoint* 
         for (int i = 0; i < nrMeteoPoints; i++)
         {
             meteoPoints[i].currentValue = meteoPoints[i].anomaly;
-            if (int(meteoPoints[i].currentValue) != int(NODATA))
+            if (isEqual(meteoPoints[i].currentValue, NODATA))
                 meteoPoints[i].quality = quality::accepted;
             else
                 meteoPoints[i].quality = quality::missing_data;

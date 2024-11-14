@@ -153,7 +153,7 @@ void Crit3DQuality::syntacticQualityControl(meteoVariable myVar, Crit3DMeteoPoin
 
     for (int i = 0; i < nrMeteoPoints; i++)
     {
-        if (int(meteoPoints[i].currentValue) == int(NODATA))
+        if (isEqual(meteoPoints[i].currentValue, NODATA))
             meteoPoints[i].quality = quality::missing_data;
         else
         {

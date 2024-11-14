@@ -2851,7 +2851,7 @@ bool PragaProject::interpolationMeteoGridPeriod(QDate dateIni, QDate dateFin, QL
     QDate loadDateFin = QDate(1800, 1, 1);
 
     while (myDate <= dateFin)
-    {
+    {        
         countDaysSaving++;
 
         // check if load needed
@@ -2911,14 +2911,14 @@ bool PragaProject::interpolationMeteoGridPeriod(QDate dateIni, QDate dateFin, QL
                 if (getVarFrequency(myVar) == daily)
                 {
                     logInfo(QString::fromStdString(getMeteoVarName(myVar)));
-                    if (! interpolationMeteoGrid(myVar, daily, getCrit3DTime(myDate, myHour))) return false;
+                    if (! interpolationMeteoGrid(myVar, daily, getCrit3DTime(myDate, 1))) return false;
                 }
             }
 
             foreach (myVar, dailyDerivedVars)
             {
                 logInfo(QString::fromStdString(getMeteoVarName(myVar)));
-                deriveVariableMeteoGrid(myVar, daily, getCrit3DTime(myDate, myHour));
+                deriveVariableMeteoGrid(myVar, daily, getCrit3DTime(myDate, 1));
             }
         }
 
