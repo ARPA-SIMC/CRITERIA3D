@@ -2303,7 +2303,7 @@ bool Project::loadGlocalStationsAndCells(bool isGrid)
 {
     //leggi csv aree
     QString fileNameStations = getCompleteFileName(glocalPointsName, PATH_GEO);
-    std::vector<std::vector<int>> areaPoints;
+    std::vector<std::vector<std::string>> areaPoints;
 
     if (! loadGlocalStationsCsv(fileNameStations, areaPoints)) return false;
 
