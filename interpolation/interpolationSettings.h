@@ -230,6 +230,7 @@
         void setUseLocalDetrending(bool myValue);
         bool getUseLocalDetrending();
 
+        bool isGlocalReady();
 		void setUseGlocalDetrending(bool myValue);
         bool getUseGlocalDetrending();
         void setMacroAreasMap(gis::Crit3DRasterGrid *value);

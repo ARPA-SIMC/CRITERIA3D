@@ -42,7 +42,7 @@
 #include "meteo.h"
 
 #include <functional>
-
+#include <cmath>
 
 using namespace std;
 
@@ -1093,12 +1093,12 @@ void localSelection(vector <Crit3DInterpolationDataPoint> &inputPoints, vector <
     for (unsigned long i = 0; i < inputPoints.size() ; i++)
         inputPoints[i].distance = gis::computeDistance(x, y, float((inputPoints[i]).point->utm.x), float((inputPoints[i]).point->utm.y));
 
-    unsigned int nrValid = 0;
+    int nrValid = 0;
     float stepRadius = 7500;           // [m]
     float r0 = 0;                       // [m]
     float r1 = stepRadius;              // [m]
     unsigned int i;
-    unsigned int nrPrimaries = 0;
+    int nrPrimaries = 0;
 
     int maxDistance = 0;
     while ((!mySettings.getUseLapseRateCode() && nrValid < minPoints) || (mySettings.getUseLapseRateCode() && nrPrimaries < minPoints))
@@ -1514,7 +1514,7 @@ void calculateFirstGuessCombinations(Crit3DProxy* myProxy)
     std::vector <double> tempFirstGuess;
     int numSteps = 15;
     std::vector <double> stepSize;
-    int nrParam = int(tempParam.size()/2);
+    unsigned nrParam = int(tempParam.size()/2);
 
     double min_,max_;
     for (unsigned j=0; j < nrParam; j++)
@@ -1801,13 +1801,13 @@ bool multipleDetrendingElevationFitting(int elevationPos, std::vector <Crit3DInt
     // multiple non linear fitting
     double R2 = NODATA;
     if (isWeighted)
-        R2 = interpolation::bestFittingMarquardt_nDimension_singleFunction(*(myFunc.target<double(*)(double, std::vector<double>&)>()), 400, 4, parametersMin, parametersMax, parameters, parametersDelta,
-                                                                  stepSize, numSteps, 1000, 0.002, 0.005, predictors, predictands, weights,firstGuessCombinations);
+        R2 = interpolation::bestFittingMarquardt_nDimension_singleFunction(*(myFunc.target<double(*)(double, std::vector<double>&)>()), 4, parametersMin, parametersMax, parameters, parametersDelta,
+                                                                  1000, 0.002, 0.005, predictors, predictands, weights,firstGuessCombinations);
     else
-        R2 = interpolation::bestFittingMarquardt_nDimension_singleFunction(*(myFunc.target<double(*)(double, std::vector<double>&)>()), 400, 4, parametersMin, parametersMax, parameters, parametersDelta,
-                                                                           stepSize, numSteps, 1000, 0.002, 0.005, predictors, predictands,firstGuessCombinations);
+        R2 = interpolation::bestFittingMarquardt_nDimension_singleFunction(*(myFunc.target<double(*)(double, std::vector<double>&)>()), 4, parametersMin, parametersMax, parameters, parametersDelta,
+                                                                  1000, 0.002, 0.005, predictors, predictands,firstGuessCombinations);
 
-    mySettings->getProxy(elevationPos)->setRegressionR2(R2);
+    mySettings->getProxy(elevationPos)->setRegressionR2(float(R2));
 
     std::vector<std::vector<double>> newParameters;
     newParameters.push_back(parameters);
@@ -2129,6 +2129,56 @@ bool glocalDetrendingFitting(std::vector <Crit3DInterpolationDataPoint> &myPoint
     return true;
 }
 
+double goldenSectionSearch(meteoVariable myVar,Crit3DMeteoPoint* &myMeteoPoints,int nrMeteoPoints,
+                           std::vector <Crit3DInterpolationDataPoint> &interpolationPoints,Crit3DInterpolationSettings* mySettings,
+                           Crit3DMeteoSettings* meteoSettings, double a, double b)
+{
+    // this function finds the minimum by means of golden section method
+    double tol = 1;
+    //const double phi = (1 + std::sqrt(5)) / 2;  // golden section
+    double x1 = b - (b - a) / GOLDEN_SECTION;
+    double x2 = a + (b - a) / GOLDEN_SECTION;
+    int counter=0;
+    while (std::abs(b - a) > tol && counter<100)
+    {
+        counter++;
+        if (topographicDistanceInternalFunction(myVar,myMeteoPoints,nrMeteoPoints,interpolationPoints, mySettings,meteoSettings, x1) <
+            topographicDistanceInternalFunction(myVar,myMeteoPoints,nrMeteoPoints,interpolationPoints, mySettings,meteoSettings,x2))
+        {
+            b = x2;
+            x2 = x1;
+            x1 = b - (b - a) / GOLDEN_SECTION;
+            mySettings->addToKhSeries(float(x1), topographicDistanceInternalFunction(myVar,myMeteoPoints,nrMeteoPoints,interpolationPoints, mySettings,meteoSettings, x1));
+        }
+        else
+        {
+            a = x1;
+            x1 = x2;
+            x2 = a + (b - a) / GOLDEN_SECTION;
+            mySettings->addToKhSeries(float(x2), topographicDistanceInternalFunction(myVar,myMeteoPoints,nrMeteoPoints,interpolationPoints, mySettings,meteoSettings, x2));
+        }
+    }
+    mySettings->addToKhSeries(float((a + b) / 2), topographicDistanceInternalFunction(myVar,myMeteoPoints,nrMeteoPoints,interpolationPoints, mySettings,meteoSettings, (a + b) / 2));
+    return (a + b) / 2;  // approximated minimum
+}
+
+
+double topographicDistanceInternalFunction(meteoVariable myVar,
+                                 Crit3DMeteoPoint* &myMeteoPoints,
+                                 int nrMeteoPoints,
+                                 std::vector <Crit3DInterpolationDataPoint> &interpolationPoints,
+                                 Crit3DInterpolationSettings* mySettings,
+                                 Crit3DMeteoSettings* meteoSettings, double khFloat)
+{
+    float avgError = 0;
+    int kh = int(khFloat);
+    mySettings->setTopoDist_Kh(kh);
+    if (computeResiduals(myVar, myMeteoPoints, nrMeteoPoints, interpolationPoints, mySettings, meteoSettings, true, true))
+    {
+        avgError = computeErrorCrossValidation(myMeteoPoints, nrMeteoPoints);
+    }
+    return avgError;
+}
 
 void topographicDistanceOptimize(meteoVariable myVar,
                                  Crit3DMeteoPoint* &myMeteoPoints,
@@ -2137,19 +2187,28 @@ void topographicDistanceOptimize(meteoVariable myVar,
                                  Crit3DInterpolationSettings* mySettings,
                                  Crit3DMeteoSettings* meteoSettings)
 {
-    float avgError;
+    //float avgError;
 
     mySettings->initializeKhSeries();
 
-    int kh = 0;
-    int bestKh = kh;
-    float bestError = NODATA;
+    //float kh = 0;
+    double bestKh = 0;
+    //float bestError = NODATA;
+    std::vector<float> avgErrorVec;
+    float khMin = 0;
+    float khMax = mySettings->getTopoDist_maxKh();
+    //kh = 0.5*(khMin+khMax);
+    bestKh = goldenSectionSearch(myVar, myMeteoPoints, nrMeteoPoints,interpolationPoints,mySettings,meteoSettings, khMin,khMax);
+    mySettings->setTopoDist_Kh(int(bestKh));
+    /*
     while (kh <= mySettings->getTopoDist_maxKh())
     {
         mySettings->setTopoDist_Kh(kh);
         if (computeResiduals(myVar, myMeteoPoints, nrMeteoPoints, interpolationPoints, mySettings, meteoSettings, true, true))
         {
             avgError = computeErrorCrossValidation(myMeteoPoints, nrMeteoPoints);
+            avgErrorVec.push_back(avgError);
+
             if (isEqual(bestError, NODATA) || avgError < bestError)
             {
                 bestError = avgError;
@@ -2162,6 +2221,7 @@ void topographicDistanceOptimize(meteoVariable myVar,
     }
 
     mySettings->setTopoDist_Kh(bestKh);
+    */
 }
 
 

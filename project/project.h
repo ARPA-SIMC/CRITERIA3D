@@ -104,7 +104,8 @@
         QString aggregationPath;
         QString dbGridXMLFileName;
         QString parametersFileName;
-		QString glocalMapName;
+        QString glocalMapName;
+        QString glocalPointsName;
         std::ofstream logFile;
 
         // output points
