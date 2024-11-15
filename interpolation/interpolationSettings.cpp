@@ -342,8 +342,16 @@ void Crit3DInterpolationSettings::setChosenElevationFunction(TFittingFunction ch
 
     int elPos = NODATA;
     for (int i = 0; i < getProxyNr(); i++)
+    {
         if (getProxyPragaName(getProxy(i)->getName()) == proxyHeight)
             elPos = i;
+        else //if a proxy has been checked by the user but has no ranges for its parameters, add them
+        {
+            if (getProxy(i)->getFittingParametersRange().empty() && getSelectedCombination().isProxyActive(i))
+
+                getProxy(i)->setFittingParametersRange({-1, -40, 1, 50});
+        }
+    }
 
     double MIN_T = -20;
     double MAX_T = 40;
@@ -401,6 +409,8 @@ void Crit3DInterpolationSettings::setChosenElevationFunction(TFittingFunction ch
             getProxy(elPos)->setFittingFunctionName(chosenFunction);          
         }
     }
+
+
 }
 
 void Crit3DInterpolationSettings::setPointsRange(double min, double max)

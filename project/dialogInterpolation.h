@@ -71,6 +71,13 @@
             QComboBox _table;
             QLineEdit _proxyGridName;
             QCheckBox _forQuality;
+            QTextEdit _param0;
+            QTextEdit _param1;
+            QTextEdit _param2;
+            QTextEdit _param3;
+            QTextEdit _param4;
+            QTextEdit _param5;
+
 
             void changedProxy(bool savePrevious);
             void changedTable();

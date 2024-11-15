@@ -219,34 +219,63 @@ bool Project::checkProxy(Crit3DProxy &myProxy, QString* error, bool isActive)
     }
 
     if (interpolationSettings.getUseMultipleDetrending() && isActive)
-    {
-        int nrParameters = 0;
-        if (isHeight)
-        {
-            if (myProxy.getFittingFunctionName() == piecewiseTwo)
-                nrParameters = 4;
-            else if (myProxy.getFittingFunctionName() == piecewiseThree)
-                nrParameters = 5;
-            else if (myProxy.getFittingFunctionName() == piecewiseThreeFree)
-                nrParameters = 6;
-        }
-        else
-            nrParameters = 2;
-
-        if (myProxy.getFittingParametersRange().size() != nrParameters*2)
-        {
-            *error = "wrong numer of parameters for proxy: " + QString::fromStdString(name_);
-            return false;
-        }
-
-        if (isHeight && myProxy.getFittingFirstGuess().size() != nrParameters)
-        {
-            *error = "wrong number of first guess settings for proxy: " + QString::fromStdString(name_);
-            return false;
-        }
-    }
+        checkProxyForMultipleDetrending(myProxy, isHeight);
 
     return true;
+}
+
+void Project::checkProxyForMultipleDetrending(Crit3DProxy &myProxy, bool isHeight)
+{
+    const double H0_MIN = -350; //height of single inversion point (double piecewise) or first inversion point (triple piecewise)
+    const double H0_MAX = 2500;
+    const double DELTA_MIN = 300; //height difference between inversion points (for triple piecewise only)
+    const double DELTA_MAX = 1000;
+    const double SLOPE_MIN = 0.002; //ascending slope
+    const double SLOPE_MAX = 0.007;
+    const double INVSLOPE_MIN = -0.01; //inversion slope
+    const double INVSLOPE_MAX = -0.0015;
+
+    int nrParameters = 0;
+    if (isHeight)
+    {
+        if (myProxy.getFittingFunctionName() == piecewiseTwo)
+            nrParameters = 4;
+        else if (myProxy.getFittingFunctionName() == piecewiseThree)
+            nrParameters = 5;
+        else if (myProxy.getFittingFunctionName() == piecewiseThreeFree)
+            nrParameters = 6;
+    }
+    else
+        nrParameters = 2;
+
+    if (myProxy.getFittingParametersRange().size() != nrParameters*2)
+    {
+        logError("wrong number of parameters for proxy: " + QString::fromStdString(myProxy.getName()) + ". You can change them in the parameters.ini file, but default parameters will be used for now.");
+        if (nrParameters == 2)
+            myProxy.setFittingParametersRange({-10, -50, 11, 50});
+        else if (nrParameters == 4)
+            myProxy.setFittingParametersRange({0, -30, SLOPE_MIN, INVSLOPE_MIN,
+                                               H0_MAX, 50, SLOPE_MAX, INVSLOPE_MAX});
+        else if (nrParameters == 5)
+            myProxy.setFittingParametersRange({H0_MIN, -30, DELTA_MIN, SLOPE_MIN, INVSLOPE_MIN,
+                                               H0_MAX, 50, DELTA_MAX, SLOPE_MAX, INVSLOPE_MAX});
+        else if (nrParameters == 6)
+            myProxy.setFittingParametersRange({H0_MIN, -30, DELTA_MIN, SLOPE_MIN, INVSLOPE_MIN, INVSLOPE_MIN,
+                                               H0_MAX, 50, DELTA_MAX, SLOPE_MAX, INVSLOPE_MAX, INVSLOPE_MAX});
+    }
+
+    if (isHeight && myProxy.getFittingFirstGuess().size() != nrParameters)
+    {
+        logError("wrong number of first guess settings for proxy: " + QString::fromStdString(myProxy.getName()) + ". You can change them in the parameters.ini file, but default settings will be used for now.");
+        if (nrParameters == 4)
+            myProxy.setFittingFirstGuess({0, 1, 1, 1});
+        else if (nrParameters == 5)
+            myProxy.setFittingFirstGuess({0, 1, 1, 1, 1});
+        else if (nrParameters == 6)
+            myProxy.setFittingFirstGuess({0, 1, 1, 1, 1, 1});
+    }
+
+    return;
 }
 
 
@@ -626,11 +655,24 @@ bool Project::loadParameters(QString parametersFileName)
             if (parametersSettings->contains("topographicDistance"))
                 interpolationSettings.setUseTD(parametersSettings->value("topographicDistance").toBool());
 
+            if (parametersSettings->contains("optimalDetrending"))
+                interpolationSettings.setUseBestDetrending(parametersSettings->value("optimalDetrending").toBool());
+
+            if (parametersSettings->contains("multipleDetrending"))
+                interpolationSettings.setUseMultipleDetrending(parametersSettings->value("multipleDetrending").toBool());
+
             if (parametersSettings->contains("localDetrending"))
                 interpolationSettings.setUseLocalDetrending(parametersSettings->value("localDetrending").toBool());
 			
 			if (parametersSettings->contains("glocalDetrending"))
                 interpolationSettings.setUseGlocalDetrending(parametersSettings->value("glocalDetrending").toBool());
+
+            if (interpolationSettings.getUseMultipleDetrending() && interpolationSettings.getUseBestDetrending())
+            {
+                interpolationSettings.setUseMultipleDetrending(false);
+                interpolationSettings.setUseLocalDetrending(false);
+                interpolationSettings.setUseGlocalDetrending(false);
+            }
 
             if (parametersSettings->contains("glocalMapName"))
                 this->glocalMapName = parametersSettings->value("glocalMapName").toString();
@@ -638,17 +680,11 @@ bool Project::loadParameters(QString parametersFileName)
             if (parametersSettings->contains("meteogrid_upscalefromdem"))
                 interpolationSettings.setMeteoGridUpscaleFromDem(parametersSettings->value("meteogrid_upscalefromdem").toBool());
 
-            if (parametersSettings->contains("multipleDetrending"))
-                interpolationSettings.setUseMultipleDetrending(parametersSettings->value("multipleDetrending").toBool());
-
             if (parametersSettings->contains("lapseRateCode"))
             {
                 interpolationSettings.setUseLapseRateCode(parametersSettings->value("lapseRateCode").toBool());
                 qualityInterpolationSettings.setUseLapseRateCode(parametersSettings->value("lapseRateCode").toBool());
             }
-
-            if (parametersSettings->contains("optimalDetrending"))
-                interpolationSettings.setUseBestDetrending(parametersSettings->value("optimalDetrending").toBool());
 
             if (parametersSettings->contains("minRegressionR2"))
             {
@@ -2277,7 +2313,7 @@ bool Project::loadGlocalStationsAndCells(bool isGrid)
     //leggi csv aree
     QString mapsFolder = defaultPath + PATH_GEO;
     std::string fileNameStations = mapsFolder.toStdString() + glocalMapName.toStdString() + "_stations";
-    std::vector<std::vector<int>> areaPoints;
+    std::vector<std::vector<std::string>> areaPoints;
     std::string myError;
 
     loadGlocalStationsCsv(QString::fromStdString(fileNameStations), areaPoints);
@@ -2294,7 +2330,7 @@ bool Project::loadGlocalStationsAndCells(bool isGrid)
         {
             //controlla se id si trova nel vettore areaPoints[j] e salva l'indice del meteopoint
             for (int i=0; i < nrMeteoPoints; i++)
-                if (areaPoints[j][k] == std::stoi(meteoPoints[i].id))
+                if (areaPoints[j][k] == meteoPoints[i].id)
                 {
                     temp.push_back(i);
                     break;
@@ -2338,7 +2374,7 @@ bool Project::loadGlocalWeightMaps(std::vector<Crit3DMacroArea> &myAreas, bool i
     if (!isGrid)
     {
         nrCols = DEM.header->nrCols;
-        nrRows = DEM.header->nrCols;
+        nrRows = DEM.header->nrRows;
     }
     else
     {
@@ -2387,7 +2423,7 @@ bool Project::loadGlocalWeightMaps(std::vector<Crit3DMacroArea> &myAreas, bool i
     return true;
 }
 
-bool Project::loadGlocalStationsCsv(QString fileName, std::vector<std::vector<int>> &areaPoints)
+bool Project::loadGlocalStationsCsv(QString fileName, std::vector<std::vector<std::string>> &areaPoints)
 {
     std::string myError;
 
@@ -2425,13 +2461,13 @@ bool Project::loadGlocalStationsCsv(QString fileName, std::vector<std::vector<in
     }
 
     int nrLine = 0;
-    std::vector<int> temp;
+    std::vector<std::string> temp;
     while(!myStream.atEnd())
     {
         nrLine++;
         line = myStream.readLine().split(',');
         for (int i = 1; i < line.size(); i++)
-            temp.push_back(line[i].toInt());
+            temp.push_back(line[i].toStdString());
 
         areaPoints.resize(line[0].toInt() + 1);
         areaPoints[line[0].toInt()] = temp;
@@ -3750,8 +3786,8 @@ void Project::saveProxies()
             if (myProxy->getProxyField() != "") parametersSettings->setValue("field", QString::fromStdString(myProxy->getProxyField()));
             if (myProxy->getGridName() != "") parametersSettings->setValue("raster", getRelativePath(QString::fromStdString(myProxy->getGridName())));
             if (myProxy->getStdDevThreshold() != NODATA) parametersSettings->setValue("stddev_threshold", QString::number(myProxy->getStdDevThreshold()));
-            if (myProxy->getFittingParametersRange().size() > 0) parametersSettings->setValue("fitting_parameters_min", DoubleVectorToStringList(myProxy->getFittingParametersMin()));
-            if (myProxy->getFittingParametersRange().size() > 0) parametersSettings->setValue("fitting_parameters_max", DoubleVectorToStringList(myProxy->getFittingParametersMax()));
+            if (!myProxy->getFittingParametersMin().empty()) parametersSettings->setValue("fitting_parameters_min", DoubleVectorToStringList(myProxy->getFittingParametersMin()));
+            if (!myProxy->getFittingParametersMax().empty()) parametersSettings->setValue("fitting_parameters_max", DoubleVectorToStringList(myProxy->getFittingParametersMax()));
             if (myProxy->getFittingFirstGuess().size() > 0) parametersSettings->setValue("fitting_first_guess", IntVectorToStringList(myProxy->getFittingFirstGuess()));
             if (getProxyPragaName(myProxy->getName()) == proxyHeight && myProxy->getFittingFunctionName() != noFunction) parametersSettings->setValue("fitting_function", QString::fromStdString(getKeyStringElevationFunction(myProxy->getFittingFunctionName())));
         parametersSettings->endGroup();

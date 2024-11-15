@@ -187,6 +187,7 @@
         bool checkProxy(Crit3DProxy &myProxy, QString *error, bool isActive);
         bool addProxyToProject(std::vector <Crit3DProxy> proxyList, std::deque <bool> proxyActive, std::vector <int> proxyOrder);
         void addProxyGridSeries(QString name_, std::vector <QString> gridNames, std::vector <unsigned> gridYears);
+        void checkProxyForMultipleDetrending(Crit3DProxy &myProxy, bool isHeight);
         void setCurrentDate(QDate myDate);
         void setCurrentHour(int myHour);
         void setCurrentVariable(meteoVariable variable);
@@ -264,7 +265,7 @@
         bool loadGlocalAreasMap();
         bool loadGlocalStationsAndCells(bool isGrid);
         bool loadGlocalWeightMaps(std::vector<Crit3DMacroArea> &myAreas, bool isGrid);
-        bool loadGlocalStationsCsv(QString fileName, std::vector<std::vector<int>> &areaPoints);
+        bool loadGlocalStationsCsv(QString fileName, std::vector<std::vector<std::string> > &areaPoints);
         bool groupCellsInArea(std::vector<int> &areaPoints, unsigned index, bool isGrid);
         bool glocalWeightsMaps(float windowWidth);
 		void macroAreaDetrending(Crit3DMacroArea myArea, meteoVariable myVar, std::vector<Crit3DInterpolationDataPoint> interpolationPoints, std::vector<Crit3DInterpolationDataPoint> &subsetInterpolationPoints, int elevationPos);

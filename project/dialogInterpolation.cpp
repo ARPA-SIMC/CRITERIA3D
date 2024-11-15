@@ -113,6 +113,12 @@ DialogInterpolation::DialogInterpolation(Project *myProject)
 
     optimalDetrendingEdit = new QCheckBox(tr("optimal detrending"));
     optimalDetrendingEdit->setChecked(_interpolationSettings->getUseBestDetrending());
+    if (_interpolationSettings->getUseBestDetrending())
+    {
+        _interpolationSettings->setUseMultipleDetrending(false);
+        _interpolationSettings->setUseLocalDetrending(false);
+        _interpolationSettings->setUseGlocalDetrending(false);
+    }
     layoutDetrending->addWidget(optimalDetrendingEdit);
 
     connect(optimalDetrendingEdit, SIGNAL(stateChanged(int)), this, SLOT(optimalDetrendingChanged(int)));
@@ -234,7 +240,6 @@ void DialogInterpolation::upscaleFromDemChanged(int active)
 void DialogInterpolation::multipleDetrendingChanged(int active)
 {
     if (active == Qt::Checked) optimalDetrendingEdit->setChecked(Qt::Unchecked);
-    optimalDetrendingEdit->setEnabled(active == Qt::Unchecked);
 }
 
 void DialogInterpolation::localDetrendingChanged(int active)
@@ -244,21 +249,21 @@ void DialogInterpolation::localDetrendingChanged(int active)
     optimalDetrendingEdit->setEnabled(active == Qt::Unchecked);
     if (active == Qt::Checked) glocalDetrendingEdit->setChecked(Qt::Unchecked);
     glocalDetrendingEdit->setEnabled(active == Qt::Unchecked);
+    if (active == Qt::Checked) multipleDetrendingEdit->setChecked(Qt::Checked);
 }
 
 void DialogInterpolation::glocalDetrendingChanged(int active)
 {
-    if (active == Qt::Checked) topographicDistanceEdit->setChecked(Qt::Unchecked);
-    topographicDistanceEdit->setEnabled(active == Qt::Unchecked);
-    maxTdMultiplierEdit.setEnabled(active == Qt::Unchecked);
     if (active == Qt::Checked) optimalDetrendingEdit->setChecked(Qt::Unchecked);
     optimalDetrendingEdit->setEnabled(active == Qt::Unchecked);
     if (active == Qt::Checked) localDetrendingEdit->setChecked(Qt::Unchecked);
     localDetrendingEdit->setEnabled(active == Qt::Unchecked);
+    if (active == Qt::Checked) multipleDetrendingEdit->setChecked(Qt::Checked);
 }
 
 void DialogInterpolation::optimalDetrendingChanged(int active)
 {
+    if (active == Qt::Checked) multipleDetrendingEdit->setChecked(Qt::Unchecked);
     if (active == Qt::Checked) localDetrendingEdit->setChecked(Qt::Unchecked);
     localDetrendingEdit->setEnabled(active == Qt::Unchecked);
     if (active == Qt::Checked) glocalDetrendingEdit->setChecked(Qt::Unchecked);
@@ -387,6 +392,61 @@ void ProxyDialog::changedProxy(bool savePrevious)
     _field.setCurrentIndex(index);
     _proxyGridName.setText(QString::fromStdString(myProxy->getGridName()));
     _forQuality.setChecked(myProxy->getForQualityControl());
+
+    _param0.clear();
+    _param1.clear();
+    _param2.clear();
+    _param3.clear();
+    _param4.clear();
+    _param5.clear();
+
+    if (_project->interpolationSettings.getUseMultipleDetrending())
+    {
+    if (!myProxy->getFittingParametersMin().empty() && !myProxy->getFittingParametersMax().empty())
+    {
+        _param0.setText(QString("%1").arg(myProxy->getFittingParametersMin()[0], 0, 'f', 4) + ", " + QString("%1").arg(myProxy->getFittingParametersMax()[0], 0, 'f', 4));
+        _param1.setText(QString("%1").arg(myProxy->getFittingParametersMin()[1], 0, 'f', 4) + ", " + QString("%1").arg(myProxy->getFittingParametersMax()[1], 0, 'f', 4));
+        if (myProxy->getFittingParametersMin().size() > 2 && myProxy->getFittingParametersMax().size() > 2) {
+            _param2.setText(QString("%1").arg(myProxy->getFittingParametersMin()[2], 0, 'f', 4) + ", " + QString("%1").arg(myProxy->getFittingParametersMax()[2], 0, 'f', 4));
+            _param3.setText(QString("%1").arg(myProxy->getFittingParametersMin()[3], 0, 'f', 4) + ", " + QString("%1").arg(myProxy->getFittingParametersMax()[3], 0, 'f', 4));
+        }
+        if (myProxy->getFittingParametersMin().size() > 4 && myProxy->getFittingParametersMax().size() > 4)
+            _param4.setText(QString("%1").arg(myProxy->getFittingParametersMin()[4], 0, 'f', 4) + ", " + QString("%1").arg(myProxy->getFittingParametersMax()[4], 0, 'f', 4));
+        if (myProxy->getFittingParametersMin().size() > 5 && myProxy->getFittingParametersMax().size() > 5)
+            _param5.setText(QString("%1").arg(myProxy->getFittingParametersMin()[5], 0, 'f', 4) + ", " + QString("%1").arg(myProxy->getFittingParametersMax()[5], 0, 'f', 4));
+
+        _param0.setEnabled(true);
+        _param1.setEnabled(true);
+        _param2.setEnabled(true);
+        _param3.setEnabled(true);
+        _param4.setEnabled(true);
+        _param5.setEnabled(true);
+    }
+        if (getProxyPragaName(myProxy->getName()) != proxyHeight)
+        {
+            _param2.setEnabled(false);
+            _param3.setEnabled(false);
+            _param4.setEnabled(false);
+            _param5.setEnabled(false);
+        }
+        else
+        {
+            if (myProxy->getFittingFunctionName() != piecewiseThreeFree)
+                _param5.setEnabled(false);
+            if (myProxy->getFittingFunctionName() != piecewiseThree)
+                _param4.setEnabled(false);
+        }
+    }
+    else
+    {
+        _param0.setEnabled(false);
+        _param1.setEnabled(false);
+        _param2.setEnabled(false);
+        _param3.setEnabled(false);
+        _param4.setEnabled(false);
+        _param5.setEnabled(false);
+    }
+
 }
 
 void ProxyDialog::selectGridFile()
@@ -463,16 +523,67 @@ void ProxyDialog::saveProxy(Crit3DProxy* myProxy)
     if (_proxyGridName.text() != "")
         myProxy->setGridName(_proxyGridName.text().toStdString());
 
+    std::vector<double> parametersMin;
+    std::vector<double> parametersMax;
+    QString temp;
+    QStringList tempList;
+
+    temp.clear();
+    tempList.clear();
+    parametersMin.clear();
+    parametersMax.clear();
+
+    temp = _param0.toPlainText();
+    if (temp != "")
+    {
+        tempList.append(temp.split(QRegularExpression(",")));
+        temp = _param1.toPlainText();
+        tempList.append(temp.split(QRegularExpression(",")));
+        temp = _param2.toPlainText();
+        if (temp != "")
+        {
+            tempList.append(temp.split(QRegularExpression(",")));
+            temp = _param3.toPlainText();
+            tempList.append(temp.split(QRegularExpression(",")));
+            temp = _param4.toPlainText();
+            if (temp != "")
+            {
+                tempList.append(temp.split(QRegularExpression(",")));
+                temp = _param5.toPlainText();
+                if (temp != "")
+                    tempList.append(temp.split(QRegularExpression(",")));
+            }
+        }
+    }
+
+    for (int j = 0; j < tempList.size(); j = j + 2)
+    {
+        parametersMin.push_back(tempList[j].toDouble());
+        parametersMax.push_back(tempList[j+1].toDouble());
+    }
+
+    std::vector<double> parameters = parametersMin;
+    for (int j = 0; j < parametersMax.size(); j++)
+        parameters.push_back(parametersMax[j]);
+
+    myProxy->setFittingParametersRange(parameters);
+
     myProxy->setForQualityControl(_forQuality.isChecked());
 }
 
 ProxyDialog::ProxyDialog(Project *myProject)
 {
-    QVBoxLayout *layoutMain = new QVBoxLayout();
+    QVBoxLayout *layoutLeft = new QVBoxLayout();
     QHBoxLayout *layoutProxyCombo = new QHBoxLayout();
     QVBoxLayout *layoutProxy = new QVBoxLayout();
     QVBoxLayout *layoutPointValues = new QVBoxLayout();
     QVBoxLayout *layoutGrid = new QVBoxLayout();
+    QGroupBox *groupParameters = new QGroupBox(tr("Multiple detrending parameters"));
+    QHBoxLayout *layoutParametersUp = new QHBoxLayout;
+    QHBoxLayout *layoutParametersMiddle = new QHBoxLayout;
+    QHBoxLayout *layoutParametersDown = new QHBoxLayout;
+    QVBoxLayout *layoutRight = new QVBoxLayout;
+    QHBoxLayout *layoutMain = new QHBoxLayout();
 
     this->resize(300, 100);
 
@@ -499,7 +610,7 @@ ProxyDialog::ProxyDialog(Project *myProject)
     connect(_delete, &QPushButton::clicked, [=](){ this->deleteProxy(); });
 
     layoutProxy->addLayout(layoutProxyCombo);
-    layoutMain->addLayout(layoutProxy);
+    layoutLeft->addLayout(layoutProxy);
 
     QLabel *labelTableList = new QLabel(tr("table for point values"));
     layoutPointValues->addWidget(labelTableList);
@@ -514,7 +625,7 @@ ProxyDialog::ProxyDialog(Project *myProject)
     layoutPointValues->addWidget(labelFieldList);
     layoutPointValues->addWidget(&_field);
 
-    layoutMain->addLayout(layoutPointValues);
+    layoutLeft->addLayout(layoutPointValues);
 
     // grid
     QLabel *labelGrid = new QLabel(tr("proxy grid"));
@@ -524,11 +635,104 @@ ProxyDialog::ProxyDialog(Project *myProject)
     _proxyGridName.setEnabled(false);
     layoutGrid->addWidget(&_proxyGridName);
     connect(_selectGrid, &QPushButton::clicked, [=](){ this->selectGridFile(); });
-    layoutMain->addLayout(layoutGrid);
+    layoutLeft->addLayout(layoutGrid);
 
     // quality control
     _forQuality.setText("use for quality control");
-    layoutMain->addWidget(&_forQuality);
+    layoutLeft->addWidget(&_forQuality);
+
+    proxyIndex = NODATA;
+
+    if (_proxyCombo.count() > 0)
+        proxyIndex = 0;
+
+    //parameters
+
+    const double H0_MIN = -350; //height of single inversion point (double piecewise) or first inversion point (triple piecewise)
+    const double H0_MAX = 2500;
+    const double DELTA_MIN = 300; //height difference between inversion points (for triple piecewise only)
+    const double DELTA_MAX = 1000;
+    const double SLOPE_MIN = 0.002; //ascending slope
+    const double SLOPE_MAX = 0.007;
+    const double INVSLOPE_MIN = -0.01; //inversion slope
+    const double INVSLOPE_MAX = -0.0015;
+
+    QLabel *par0Label = new QLabel(tr("par0\n(min, max)"));
+    QLabel *par1Label = new QLabel(tr("par1\n(min, max)"));
+    QLabel *par2Label = new QLabel(tr("par2\n(min, max)"));
+    QLabel *par3Label = new QLabel(tr("par3\n(min, max)"));
+    QLabel *par4Label = new QLabel(tr("par4\n(min, max)"));
+    QLabel *par5Label = new QLabel(tr("par5\n(min, max)"));
+
+    std::vector<double> parametersMin = _proxy[proxyIndex].getFittingParametersMin();
+    std::vector<double> parametersMax = _proxy[proxyIndex].getFittingParametersMax();
+
+    if ((parametersMin.empty() || parametersMax.empty()) && _project->interpolationSettings.getSelectedCombination().isProxyActive(proxyIndex))
+    {
+        //se il proxy è stato attivato e non ci sono parametri caricati in precedenza, carica i default
+        if (_proxy[proxyIndex].getFittingFunctionName() == piecewiseTwo)
+        {
+            _proxy[proxyIndex].setFittingParametersRange({0, -20, SLOPE_MIN, INVSLOPE_MIN,
+                                                          H0_MAX, 40, SLOPE_MAX, INVSLOPE_MAX});
+            _proxy[proxyIndex].setFittingFirstGuess({0,1,1,1});
+        }
+        else if (_proxy[proxyIndex].getFittingFunctionName() == piecewiseThree)
+        {
+            _proxy[proxyIndex].setFittingParametersRange({H0_MIN, -20, DELTA_MIN, SLOPE_MIN, INVSLOPE_MIN,
+                                                          H0_MAX, 40, DELTA_MAX, SLOPE_MAX, INVSLOPE_MAX});
+            _proxy[proxyIndex].setFittingFirstGuess({0,1,1,1,1});
+        }
+        else if (_proxy[proxyIndex].getFittingFunctionName() == piecewiseThreeFree)
+        {
+            _proxy[proxyIndex].setFittingParametersRange({H0_MIN, -20, DELTA_MIN, SLOPE_MIN, INVSLOPE_MIN, INVSLOPE_MIN,
+                                                          H0_MAX, 40, DELTA_MAX, SLOPE_MAX, INVSLOPE_MAX, INVSLOPE_MAX});
+            _proxy[proxyIndex].setFittingFirstGuess({0,1,1,1,1,1});
+        }
+        else
+            _proxy[proxyIndex].setFittingParametersRange({-1, 50, 1, -40});
+
+        parametersMin = _proxy[proxyIndex].getFittingParametersMin();
+        parametersMax = _proxy[proxyIndex].getFittingParametersMax();
+    }
+
+    _param0.setText(QString("%1").arg(parametersMin[0], 0, 'f', 4) + ", " + QString("%1").arg(parametersMax[0], 0, 'f', 4));
+    _param1.setText(QString("%1").arg(parametersMin[1], 0, 'f', 4) + ", " + QString("%1").arg(parametersMax[1], 0, 'f', 4));
+    if (parametersMin.size() > 2 && parametersMax.size() > 2) {
+        _param2.setText(QString("%1").arg(parametersMin[2], 0, 'f', 4) + ", " + QString("%1").arg(parametersMax[2], 0, 'f', 4));
+        _param3.setText(QString("%1").arg(parametersMin[3], 0, 'f', 4) + ", " + QString("%1").arg(parametersMax[3], 0, 'f', 4));
+    }
+    if (parametersMin.size() > 4 && parametersMax.size() > 4)
+        _param4.setText(QString("%1").arg(parametersMin[4], 0, 'f', 4) + ", " + QString("%1").arg(parametersMax[4], 0, 'f', 4));
+    if (parametersMin.size() > 5 && parametersMax.size() > 5)
+        _param5.setText(QString("%1").arg(parametersMin[5], 0, 'f', 4) + ", " + QString("%1").arg(parametersMax[5], 0, 'f', 4));
+
+    layoutParametersUp->addWidget(par0Label);
+    _param0.setFixedHeight(45);
+    layoutParametersUp->addWidget(&_param0);
+    layoutParametersUp->addWidget(par3Label);
+    _param3.setFixedHeight(45);
+    layoutParametersUp->addWidget(&_param3);
+    layoutParametersMiddle->addWidget(par1Label);
+    _param1.setFixedHeight(45);
+    layoutParametersMiddle->addWidget(&_param1);
+    layoutParametersMiddle->addWidget(par4Label);
+    _param4.setFixedHeight(45);
+    layoutParametersMiddle->addWidget(&_param4);
+    layoutParametersDown->addWidget(par2Label);
+    _param2.setFixedHeight(45);
+    layoutParametersDown->addWidget(&_param2);
+    layoutParametersDown->addWidget(par5Label);
+    _param5.setFixedHeight(45);
+    layoutParametersDown->addWidget(&_param5);
+
+    layoutRight->addLayout(layoutParametersUp);
+    layoutRight->addLayout(layoutParametersMiddle);
+    layoutRight->addLayout(layoutParametersDown);
+
+    groupParameters->setLayout(layoutRight);
+
+    layoutMain->addLayout(layoutLeft);
+    layoutMain->addWidget(groupParameters);
 
     // buttons
     QDialogButtonBox *buttonBox = new QDialogButtonBox(QDialogButtonBox::Ok | QDialogButtonBox::Cancel);
@@ -579,6 +783,7 @@ bool ProxyDialog::checkProxies(QString *error)
 
 void ProxyDialog::saveProxies()
 {
+    Crit3DProxyCombination myCombination = _project->interpolationSettings.getSelectedCombination();
     _project->interpolationSettings.initializeProxy();
     _project->qualityInterpolationSettings.initializeProxy();
 
@@ -587,9 +792,9 @@ void ProxyDialog::saveProxies()
     std::vector <int> proxyOrder;
 
     for (unsigned i=0; i < _proxy.size(); i++)
-    {   
+    {
         proxyList.push_back(_proxy[i]);
-        proxyActive.push_back(true);
+        proxyActive.push_back(myCombination.isProxyActive(i));
         proxyOrder.push_back(i+1);
     }
 
