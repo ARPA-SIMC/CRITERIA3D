@@ -3127,7 +3127,7 @@ bool Project::interpolationDemMain(meteoVariable myVar, const Crit3DTime& myTime
     if (interpolationSettings.getUseGlocalDetrending() && ! interpolationSettings.isGlocalReady())
     {
         if (! loadGlocalAreasMap()) return false;
-        if (! loadGlocalStationsAndCells(!interpolationSettings.getMeteoGridUpscaleFromDem())) return false;
+        if (! loadGlocalStationsAndCells(false)) return false;
     }
 
     // solar radiation model
