@@ -380,3 +380,4 @@ bool topographicIndex(const gis::Crit3DRasterGrid& DEM, std::vector <float> wind
 
     return true;
 }
+

@@ -23,6 +23,7 @@
     ftomei@arpae.it
 */
 
+#include <iostream>
 #include <math.h>
 #include <algorithm>
 
@@ -630,6 +631,9 @@ double ET0_Penman_hourly_net_rad(double heigth, double netIrradiance, double air
     double lambda;                               /*!<  latent heat of vaporization in (J kg-1) */
     double gamma;                                /*!<  psychrometric constant (kPa C-1) */
     double firstTerm, secondTerm, denominator;
+
+    if (heigth == NODATA || netIrradiance == NODATA || airTemp == NODATA || airHum == NODATA || windSpeed10 == NODATA)
+        return NODATA;
 
     netRadiation = 3600 * netIrradiance;
 

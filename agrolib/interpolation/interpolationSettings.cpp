@@ -342,8 +342,16 @@ void Crit3DInterpolationSettings::setChosenElevationFunction(TFittingFunction ch
 
     int elPos = NODATA;
     for (int i = 0; i < getProxyNr(); i++)
+    {
         if (getProxyPragaName(getProxy(i)->getName()) == proxyHeight)
             elPos = i;
+        else //if a proxy has been checked by the user but has no ranges for its parameters, add them
+        {
+            if (getProxy(i)->getFittingParametersRange().empty() && getSelectedCombination().isProxyActive(i))
+
+                getProxy(i)->setFittingParametersRange({-1, -40, 1, 50});
+        }
+    }
 
     double MIN_T = -20;
     double MAX_T = 40;
@@ -401,6 +409,8 @@ void Crit3DInterpolationSettings::setChosenElevationFunction(TFittingFunction ch
             getProxy(elPos)->setFittingFunctionName(chosenFunction);          
         }
     }
+
+
 }
 
 void Crit3DInterpolationSettings::setPointsRange(double min, double max)
@@ -439,10 +449,12 @@ void Crit3DInterpolationSettings::initializeProxy()
 void Crit3DInterpolationSettings::initialize()
 {
     currentDEM = nullptr;
+	macroAreasMap = nullptr;
     interpolationMethod = idw;
     useThermalInversion = true;
     useTD = false;
     useLocalDetrending = false;
+	useGlocalDetrending = false;
     topoDist_maxKh = 128;
     useDewPoint = true;
     useInterpolatedTForRH = true;
@@ -459,6 +471,7 @@ void Crit3DInterpolationSettings::initialize()
 
     fittingFunction.clear();
     fittingParameters.clear();
+    macroAreas.clear();
 
     isKrigingReady = false;
     precipitationAllZero = false;
@@ -471,6 +484,7 @@ void Crit3DInterpolationSettings::initialize()
 
     initializeProxy();
 }
+
 
 std::string getKeyStringInterpolationMethod(TInterpolationMethod value)
 {
@@ -504,6 +518,26 @@ std::string getKeyStringElevationFunction(TFittingFunction value)
     return key;
 }
 
+void Crit3DInterpolationSettings::setMacroAreasMap(gis::Crit3DRasterGrid *value)
+{
+    macroAreasMap = value;
+}
+
+gis::Crit3DRasterGrid* Crit3DInterpolationSettings::getMacroAreasMap()
+{
+    return macroAreasMap;
+}
+
+std::vector<Crit3DMacroArea> Crit3DInterpolationSettings::getMacroAreas()
+{
+    return macroAreas;
+}
+
+void Crit3DInterpolationSettings::setMacroAreas(std::vector<Crit3DMacroArea> myAreas)
+{
+    macroAreas = myAreas;
+}
+
 TInterpolationMethod Crit3DInterpolationSettings::getInterpolationMethod()
 { return interpolationMethod;}
 
@@ -512,6 +546,9 @@ bool Crit3DInterpolationSettings::getUseTD()
 
 bool Crit3DInterpolationSettings::getUseLocalDetrending()
 { return useLocalDetrending;}
+
+bool Crit3DInterpolationSettings::getUseGlocalDetrending()
+{ return useGlocalDetrending;}
 
 bool Crit3DInterpolationSettings::getUseDoNotRetrend()
 { return useDoNotRetrend;}
@@ -536,6 +573,9 @@ void Crit3DInterpolationSettings::setUseTD(bool myValue)
 
 void Crit3DInterpolationSettings::setUseLocalDetrending(bool myValue)
 { useLocalDetrending = myValue;}
+
+void Crit3DInterpolationSettings::setUseGlocalDetrending(bool myValue)
+{ useGlocalDetrending = myValue;}
 
 void Crit3DInterpolationSettings::setUseDoNotRetrend(bool myValue)
 { useDoNotRetrend = myValue;}
@@ -567,6 +607,11 @@ int Crit3DInterpolationSettings::getProxyPosFromName(TProxyVar name)
     }
 
     return NODATA;
+}
+
+bool Crit3DInterpolationSettings::isGlocalReady()
+{
+    return (getMacroAreasMap() != nullptr && getMacroAreas().size() > 0);
 }
 
 std::string Crit3DProxy::getName() const
@@ -961,5 +1006,65 @@ bool Crit3DInterpolationSettings::getCombination(int combinationInteger, Crit3DP
     outCombination.setUseThermalInversion(binaryString[binaryString.length()-1] == '1' && selectedCombination.getUseThermalInversion());
 
     return true;
+}
+
+Crit3DMacroArea::Crit3DMacroArea()
+{
+    meteoPoints.clear();
+    areaParameters.clear();
+    areaCombination.clear();
+    areaCells.clear();
+}
+
+void Crit3DMacroArea::setMeteoPoints (std::vector<int> myMeteoPoints)
+{
+    meteoPoints = myMeteoPoints;
+    return;
+}
+
+std::vector<int> Crit3DMacroArea::getMeteoPoints()
+{
+    return meteoPoints;
+}
+
+void Crit3DMacroArea::setAreaCells (std::vector<float> myCells)
+{
+    areaCells = myCells;
+    return;
+}
+
+std::vector<float> Crit3DMacroArea::getAreaCells()
+{
+    return areaCells;
+}
+
+void Crit3DMacroArea::setParameters (std::vector<std::vector<double>> myParameters)
+{
+    areaParameters = myParameters;
+    return;
+}
+
+std::vector<std::vector<double>> Crit3DMacroArea::getParameters()
+{
+    return areaParameters;
+}
+
+void Crit3DMacroArea::setCombination (Crit3DProxyCombination myCombination)
+{
+    areaCombination = myCombination;
+    return;
+}
+
+void Crit3DMacroArea::clear()
+{
+    areaCells.clear();
+    areaParameters.clear();
+    areaCombination.clear();
+    meteoPoints.clear();
+}
+
+Crit3DProxyCombination Crit3DMacroArea::getCombination()
+{
+    return areaCombination;
 }
 

@@ -132,11 +132,35 @@
         void setUseThermalInversion(bool value) { _useThermalInversion = value; }
     };
 
+    class Crit3DMacroArea
+    {
+    private:
+        Crit3DProxyCombination areaCombination;
+        std::vector<std::vector<double>> areaParameters;
+        std::vector<int> meteoPoints;
+        std::vector<float> areaCells;
+
+    public:
+        Crit3DMacroArea();
+
+        void setMeteoPoints (std::vector<int> myMeteoPoints);
+        std::vector<int> getMeteoPoints();
+        void setParameters (std::vector<std::vector<double>> myParameters);
+        std::vector<std::vector<double>> getParameters();
+        void setCombination (Crit3DProxyCombination myCombination);
+        Crit3DProxyCombination getCombination();
+        void setAreaCells (std::vector<float> myCells);
+        std::vector<float> getAreaCells();
+        void clear();
+
+    };
+
 
     class Crit3DInterpolationSettings
     {
     private:
         gis::Crit3DRasterGrid* currentDEM; //for TD
+		gis::Crit3DRasterGrid* macroAreasMap; //for glocal detrending
 
         TInterpolationMethod interpolationMethod;
 
@@ -144,6 +168,7 @@
         bool useThermalInversion;
         bool useTD;
         bool useLocalDetrending;
+		bool useGlocalDetrending;
         int maxTdMultiplier;
         bool useLapseRateCode;
         bool useBestDetrending;
@@ -176,6 +201,8 @@
         std::vector<std::function<double(double, std::vector<double>&)>> fittingFunction;
         std::vector<double> pointsRange;
 
+        std::vector<Crit3DMacroArea> macroAreas;
+
 
     public:
         Crit3DInterpolationSettings();
@@ -202,6 +229,14 @@
 
         void setUseLocalDetrending(bool myValue);
         bool getUseLocalDetrending();
+
+        bool isGlocalReady();
+		void setUseGlocalDetrending(bool myValue);
+        bool getUseGlocalDetrending();
+        void setMacroAreasMap(gis::Crit3DRasterGrid *value);
+        gis::Crit3DRasterGrid *getMacroAreasMap();
+        std::vector<Crit3DMacroArea> getMacroAreas();
+        void setMacroAreas(std::vector<Crit3DMacroArea> myAreas);
 
         void setUseDoNotRetrend(bool myValue);
         bool getUseDoNotRetrend();

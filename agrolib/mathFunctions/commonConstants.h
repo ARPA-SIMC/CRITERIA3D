@@ -51,6 +51,7 @@
     #define PATH_LOG "LOG/"
     #define PATH_OUTPUT "OUTPUT/"
     #define PATH_TD "TD/"
+    #define PATH_GLOCAL "GLOCAL/"
     #define PATH_STATES "STATES/"
     #define PATH_NETCDF "NETCDF/"
 
@@ -226,6 +227,7 @@
     #define DEG_TO_RAD 0.0174532925
     #define RAD_TO_DEG 57.2957795
     #define SQRT_2 1.41421356237
+    #define GOLDEN_SECTION 1.6180339887498948482
 
     #define MINIMUM_PERCENTILE_DATA 3
 

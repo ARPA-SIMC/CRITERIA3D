@@ -18,6 +18,7 @@
 #include "dialogSummary.h"
 #include "waterTableWidget.h"
 #include "utilities.h"
+#include "furtherMathFunctions.h"
 
 
 #include <iostream>
@@ -100,7 +101,8 @@ void Project::initializeProject()
     dbGridXMLFileName = "";
     outputPointsFileName = "";
     currentDbOutputFileName = "";
-
+	glocalMapName = "";
+    glocalPointsName = "";
     meteoPointsLoaded = false;
     meteoGridLoaded = false;
     loadGridDataAtStart = false;
@@ -217,34 +219,63 @@ bool Project::checkProxy(Crit3DProxy &myProxy, QString* error, bool isActive)
     }
 
     if (interpolationSettings.getUseMultipleDetrending() && isActive)
-    {
-        int nrParameters = 0;
-        if (isHeight)
-        {
-            if (myProxy.getFittingFunctionName() == piecewiseTwo)
-                nrParameters = 4;
-            else if (myProxy.getFittingFunctionName() == piecewiseThree)
-                nrParameters = 5;
-            else if (myProxy.getFittingFunctionName() == piecewiseThreeFree)
-                nrParameters = 6;
-        }
-        else
-            nrParameters = 2;
-
-        if (myProxy.getFittingParametersRange().size() != nrParameters*2)
-        {
-            *error = "wrong numer of parameters for proxy: " + QString::fromStdString(name_);
-            return false;
-        }
-
-        if (isHeight && myProxy.getFittingFirstGuess().size() != nrParameters)
-        {
-            *error = "wrong number of first guess settings for proxy: " + QString::fromStdString(name_);
-            return false;
-        }
-    }
+        checkProxyForMultipleDetrending(myProxy, isHeight);
 
     return true;
+}
+
+void Project::checkProxyForMultipleDetrending(Crit3DProxy &myProxy, bool isHeight)
+{
+    const double H0_MIN = -350; //height of single inversion point (double piecewise) or first inversion point (triple piecewise)
+    const double H0_MAX = 2500;
+    const double DELTA_MIN = 300; //height difference between inversion points (for triple piecewise only)
+    const double DELTA_MAX = 1000;
+    const double SLOPE_MIN = 0.002; //ascending slope
+    const double SLOPE_MAX = 0.007;
+    const double INVSLOPE_MIN = -0.01; //inversion slope
+    const double INVSLOPE_MAX = -0.0015;
+
+    int nrParameters = 0;
+    if (isHeight)
+    {
+        if (myProxy.getFittingFunctionName() == piecewiseTwo)
+            nrParameters = 4;
+        else if (myProxy.getFittingFunctionName() == piecewiseThree)
+            nrParameters = 5;
+        else if (myProxy.getFittingFunctionName() == piecewiseThreeFree)
+            nrParameters = 6;
+    }
+    else
+        nrParameters = 2;
+
+    if (myProxy.getFittingParametersRange().size() != nrParameters*2)
+    {
+        logError("wrong number of parameters for proxy: " + QString::fromStdString(myProxy.getName()) + ". You can change them in the parameters.ini file, but default parameters will be used for now.");
+        if (nrParameters == 2)
+            myProxy.setFittingParametersRange({-10, -50, 11, 50});
+        else if (nrParameters == 4)
+            myProxy.setFittingParametersRange({0, -30, SLOPE_MIN, INVSLOPE_MIN,
+                                               H0_MAX, 50, SLOPE_MAX, INVSLOPE_MAX});
+        else if (nrParameters == 5)
+            myProxy.setFittingParametersRange({H0_MIN, -30, DELTA_MIN, SLOPE_MIN, INVSLOPE_MIN,
+                                               H0_MAX, 50, DELTA_MAX, SLOPE_MAX, INVSLOPE_MAX});
+        else if (nrParameters == 6)
+            myProxy.setFittingParametersRange({H0_MIN, -30, DELTA_MIN, SLOPE_MIN, INVSLOPE_MIN, INVSLOPE_MIN,
+                                               H0_MAX, 50, DELTA_MAX, SLOPE_MAX, INVSLOPE_MAX, INVSLOPE_MAX});
+    }
+
+    if (isHeight && myProxy.getFittingFirstGuess().size() != nrParameters)
+    {
+        logError("wrong number of first guess settings for proxy: " + QString::fromStdString(myProxy.getName()) + ". You can change them in the parameters.ini file, but default settings will be used for now.");
+        if (nrParameters == 4)
+            myProxy.setFittingFirstGuess({0, 1, 1, 1});
+        else if (nrParameters == 5)
+            myProxy.setFittingFirstGuess({0, 1, 1, 1, 1});
+        else if (nrParameters == 6)
+            myProxy.setFittingFirstGuess({0, 1, 1, 1, 1, 1});
+    }
+
+    return;
 }
 
 
@@ -624,23 +655,39 @@ bool Project::loadParameters(QString parametersFileName)
             if (parametersSettings->contains("topographicDistance"))
                 interpolationSettings.setUseTD(parametersSettings->value("topographicDistance").toBool());
 
-            if (parametersSettings->contains("localDetrending"))
-                interpolationSettings.setUseLocalDetrending(parametersSettings->value("localDetrending").toBool());
-
-            if (parametersSettings->contains("meteogrid_upscalefromdem"))
-                interpolationSettings.setMeteoGridUpscaleFromDem(parametersSettings->value("meteogrid_upscalefromdem").toBool());
+            if (parametersSettings->contains("optimalDetrending"))
+                interpolationSettings.setUseBestDetrending(parametersSettings->value("optimalDetrending").toBool());
 
             if (parametersSettings->contains("multipleDetrending"))
                 interpolationSettings.setUseMultipleDetrending(parametersSettings->value("multipleDetrending").toBool());
+
+            if (parametersSettings->contains("localDetrending"))
+                interpolationSettings.setUseLocalDetrending(parametersSettings->value("localDetrending").toBool());
+			
+			if (parametersSettings->contains("glocalDetrending"))
+                interpolationSettings.setUseGlocalDetrending(parametersSettings->value("glocalDetrending").toBool());
+
+            if (interpolationSettings.getUseMultipleDetrending() && interpolationSettings.getUseBestDetrending())
+            {
+                interpolationSettings.setUseMultipleDetrending(false);
+                interpolationSettings.setUseLocalDetrending(false);
+                interpolationSettings.setUseGlocalDetrending(false);
+            }
+
+            if (parametersSettings->contains("glocalMapName"))
+                glocalMapName = parametersSettings->value("glocalMapName").toString();
+
+            if (parametersSettings->contains("glocalPointsName"))
+                glocalPointsName = parametersSettings->value("glocalPointsName").toString();
+
+            if (parametersSettings->contains("meteogrid_upscalefromdem"))
+                interpolationSettings.setMeteoGridUpscaleFromDem(parametersSettings->value("meteogrid_upscalefromdem").toBool());
 
             if (parametersSettings->contains("lapseRateCode"))
             {
                 interpolationSettings.setUseLapseRateCode(parametersSettings->value("lapseRateCode").toBool());
                 qualityInterpolationSettings.setUseLapseRateCode(parametersSettings->value("lapseRateCode").toBool());
             }
-
-            if (parametersSettings->contains("optimalDetrending"))
-                interpolationSettings.setUseBestDetrending(parametersSettings->value("optimalDetrending").toBool());
 
             if (parametersSettings->contains("minRegressionR2"))
             {
@@ -2134,6 +2181,338 @@ bool Project::loadTopographicDistanceMaps(bool onlyWithData, bool showInfo)
     return true;
 }
 
+bool Project::glocalWeightsMaps(float windowWidth)
+{
+    //controlla se c'è mappa aree
+
+    gis::Crit3DRasterGrid* zoneGrid = interpolationSettings.getMacroAreasMap();
+    if (! zoneGrid->isLoaded)
+    {
+        errorString = "Load a zone grid before";
+        return false;
+    }
+
+    QString mapsFolder = projectPath + PATH_GLOCAL;
+    if (! QDir(mapsFolder).exists())
+    {
+        QDir().mkdir(mapsFolder);
+    }
+
+    std::vector <int> zoneCount((unsigned int)(zoneGrid->maximum));
+
+    int i, j;
+
+    //create raster for each zone
+    std::vector <gis::Crit3DRasterGrid> zoneWeightMaps((unsigned int)(zoneGrid->maximum));
+    for (i=0; i < zoneGrid->maximum; i++)
+        zoneWeightMaps[i].initializeGrid(*zoneGrid);
+
+    int cellNr = round(windowWidth / zoneGrid->header->cellSize);
+    float cellDelta;
+
+    int r1, r2, c1, c2, windowRow, windowCol, cellCount;
+
+    for (int zoneRow = 0; zoneRow < zoneGrid->header->nrRows; zoneRow++)
+    {
+        for (int zoneCol = 0; zoneCol < zoneGrid->header->nrCols; zoneCol++)
+        {
+            if (! isEqual(zoneGrid->value[zoneRow][zoneCol], zoneGrid->header->flag))
+            {
+                cellCount = 0;
+
+                for (j=0; j < zoneGrid->maximum; j++)
+                    zoneCount[j] = 0;
+
+                r1 = zoneRow - cellNr;
+                r2 = zoneRow + cellNr;
+                c1 = zoneCol - cellNr;
+                c2 = zoneCol + cellNr;
+
+                for (windowRow = r1; windowRow <= r2; windowRow++)
+                {
+                    for (windowCol = c1; windowCol <= c2; windowCol++)
+                    {
+                        if (! gis::isOutOfGridRowCol(windowRow, windowCol, *zoneGrid))
+                        {
+                            i = zoneGrid->value[windowRow][windowCol];
+
+                            if (! isEqual(i, zoneGrid->header->flag))
+                            {
+                                cellDelta = gis::computeDistance(windowRow, windowCol, zoneRow, zoneCol);
+
+                                if (cellDelta <= cellNr)
+                                {
+                                    cellCount++;
+                                    zoneCount[i-1]++;
+                                }
+                            }
+                        }
+                    }
+                }
+
+                for (i=0; i < zoneGrid->maximum; i++)
+                    if (cellCount > 0)
+                        zoneWeightMaps[i].value[zoneRow][zoneCol] = float(zoneCount[i]) / float(cellCount);
+
+            }
+        }
+    }
+
+    QString fileName;
+    std::string myError;
+    for (int i=0; i < zoneGrid->maximum; i++)
+    {
+        fileName = mapsFolder + "glocalWeight_" + QString::number(i+1);
+        if (! gis::writeEsriGrid(fileName.toStdString(), &zoneWeightMaps[i], myError))
+        {
+            errorString = QString::fromStdString(myError);
+            return false;
+        }
+    }
+
+    return true;
+}
+
+bool Project::loadGlocalAreasMap()
+{
+    //TODO: add a check for the code values?
+
+    std::string myError;
+    QString fileNameMap = getCompleteFileName(glocalMapName, PATH_GEO);
+
+    if (!QFile::exists(fileNameMap + ".flt"))
+    {
+        errorString = "Could not find " + fileNameMap + " file";
+        return false;
+    }
+
+    gis::Crit3DRasterGrid* macroAreasGrid = new gis::Crit3DRasterGrid();
+
+    if (gis::readEsriGrid(fileNameMap.toStdString(), macroAreasGrid, myError))
+        interpolationSettings.setMacroAreasMap(macroAreasGrid);
+    else
+    {
+        errorString = "Error loading:\n" + fileNameMap + "\n" + QString::fromStdString(myError);
+        return false;
+    }
+
+    return true;
+}
+
+bool Project::loadGlocalStationsAndCells(bool isGrid)
+{
+    //leggi csv aree
+    QString fileNameStations = getCompleteFileName(glocalPointsName, PATH_GEO);
+    std::vector<std::vector<std::string>> areaPoints;
+
+    if (! loadGlocalStationsCsv(fileNameStations, areaPoints)) return false;
+
+    //salva in vettore gli indici dei meteopoints che appartengono a area n, infine salva quel vettore
+    std::vector<int> temp;
+    std::vector<Crit3DMacroArea> myAreas;
+    Crit3DMacroArea myArea;
+
+    //per ogni area, rappresentata da righe di areaPoints, si fa ciclo sui meteopoints
+    for (unsigned j = 0; j < areaPoints.size(); j++)
+    {
+        for (unsigned k = 0; k < areaPoints[j].size(); k++)
+        {
+            //controlla se id si trova nel vettore areaPoints[j] e salva l'indice del meteopoint
+            for (int i=0; i < nrMeteoPoints; i++)
+                if (areaPoints[j][k] == meteoPoints[i].id)
+                {
+                    temp.push_back(i);
+                    break;
+                }
+        }
+        //salvataggio di temp dentro il corrispettivo crit3dmacroarea
+        myArea.setMeteoPoints(temp);
+        myAreas.push_back(myArea);
+        temp.clear();
+        myArea.clear();
+    }
+
+    //assegnazione pesi a ogni cella di ogni area
+    if (!loadGlocalWeightMaps(myAreas, isGrid))
+    {
+        errorString = "Error loading glocal weight maps";
+        return false;
+    }
+
+    interpolationSettings.setMacroAreas(myAreas);
+
+    return (areaPoints.size() > 0);
+}
+
+bool Project::loadGlocalWeightMaps(std::vector<Crit3DMacroArea> &myAreas, bool isGrid)
+{
+    QString mapsFolder = projectPath + PATH_GLOCAL;
+    if (! QDir(mapsFolder).exists())
+        glocalWeightsMaps(10000);
+
+    std::string myError;
+    gis::Crit3DRasterGrid* macroAreasGrid = new gis::Crit3DRasterGrid();
+    std::string fileName = mapsFolder.toStdString() + "glocalWeight_";
+
+
+    std::vector<float> areaCells;
+    int nrCols, nrRows;
+    double myX, myY;
+    float myValue = NODATA;
+
+    if (!isGrid)
+    {
+        nrCols = DEM.header->nrCols;
+        nrRows = DEM.header->nrRows;
+    }
+    else
+    {
+        nrCols = meteoGridDbHandler->gridStructure().header().nrCols;
+        nrRows = meteoGridDbHandler->gridStructure().header().nrRows;
+    }
+
+    for (int i = 0; i < myAreas.size(); i++)
+    {
+        if (QFile::exists(QString::fromStdString(fileName) + QString::number(i) + ".flt"))
+        {
+        if (gis::readEsriGrid(fileName + std::to_string(i), macroAreasGrid, myError))
+        {
+            for (int row = 0; row < nrRows; row++)
+            {
+                for (int col = 0; col < nrCols; col++)
+                {
+                    if (isGrid)
+                    {
+                        myX = meteoGridDbHandler->meteoGrid()->meteoPoints()[row][col]->point.utm.x;
+                        myY = meteoGridDbHandler->meteoGrid()->meteoPoints()[row][col]->point.utm.y;
+                    }
+                    else
+                        DEM.getXY(row, col, myX, myY);
+
+                    myValue = macroAreasGrid->getValueFromXY(myX, myY);
+
+                    if (!isEqual(myValue, NODATA) && !isEqual(myValue, 0))
+                    {
+                        areaCells.push_back(row*nrCols+col);
+                        areaCells.push_back(myValue);
+                    }
+                }
+            }
+            myAreas[i].setAreaCells(areaCells);
+            areaCells.clear();
+        }
+        else {
+            macroAreasGrid->clear();
+            return false;
+        }
+        }
+    }
+    macroAreasGrid->clear();
+
+    return true;
+}
+
+bool Project::loadGlocalStationsCsv(QString fileName, std::vector<std::vector<std::string>> &areaPoints)
+{
+    if (fileName == "")
+    {
+        errorString = "Missing csv filename";
+        return false;
+    }
+    areaPoints.clear();
+
+    if (! QFile(fileName).exists() || ! QFileInfo(fileName).isFile())
+    {
+        errorString = "Missing csv file: " + fileName;
+        return false;
+    }
+
+    QFile myFile(fileName);
+    if (!myFile.open(QIODevice::ReadOnly))
+    {
+        errorString = "Failed opening: " + fileName;
+        return false;
+    }
+
+    QTextStream myStream (&myFile);
+    QList<QString> line;
+
+    if (myStream.atEnd())
+    {
+        errorString = "File is void";
+        myFile.close();
+        return false;
+    }
+
+    std::vector<std::string> temp;
+    while(!myStream.atEnd())
+    {
+        line = myStream.readLine().split(',');
+        for (int i = 1; i < line.size(); i++)
+            temp.push_back(line[i].toStdString());
+
+        areaPoints.resize(line[0].toInt() + 1);
+        areaPoints[line[0].toInt()] = temp;
+        temp.clear();
+    }
+    myFile.close();
+
+    return true;
+}
+
+bool Project::groupCellsInArea(std::vector<int> &areaPoints, unsigned int index, bool isGrid)
+{
+    int zoneNr;
+    double myX, myY;
+    gis::Crit3DRasterGrid* macroAreas = interpolationSettings.getMacroAreasMap();
+    int nrCols;
+    areaPoints.clear();
+
+    if (!isGrid)
+    {
+        nrCols = DEM.header->nrCols;
+
+        for (int i = 0; i < DEM.header->nrRows; i++)
+        {
+            for (int j = 0; j < DEM.header->nrCols; j++)
+            {
+                if (!isEqual(DEM.getValueFromRowCol(i,j),DEM.header->flag))
+                {
+                    gis::getUtmXYFromRowCol(DEM.header, i, j, &myX, &myY);
+
+                    zoneNr = int(macroAreas->getValueFromXY(myX, myY));
+
+                    if (zoneNr == index)
+                        areaPoints.push_back(i*nrCols+j);
+                }
+            }
+        }
+    }
+    else
+    {
+        nrCols = meteoGridDbHandler->meteoGrid()->gridStructure().header().nrCols;
+
+        for (int i = 0; i < meteoGridDbHandler->meteoGrid()->gridStructure().header().nrRows; i++)
+        {
+            for (int j = 0; j < meteoGridDbHandler->meteoGrid()->gridStructure().header().nrCols; j++)
+            {
+                if (meteoGridDbHandler->meteoGrid()->meteoPoints()[i][j]->active)
+                {
+                    myX = meteoGridDbHandler->meteoGrid()->meteoPoints()[i][j]->point.utm.x;
+                    myY = meteoGridDbHandler->meteoGrid()->meteoPoints()[i][j]->point.utm.y;
+
+                    zoneNr = int(macroAreas->getValueFromXY(myX, myY));
+
+                    if (zoneNr == index)
+                        areaPoints.push_back(i*nrCols+j);
+                }
+            }
+        }
+    }
+
+    return true;
+}
+
 void Project::passInterpolatedTemperatureToHumidityPoints(Crit3DTime myTime, Crit3DMeteoSettings* meteoSettings)
 {
     if (! hourlyMeteoMaps->mapHourlyTair->isLoaded) return;
@@ -2158,6 +2537,42 @@ void Project::passInterpolatedTemperatureToHumidityPoints(Crit3DTime myTime, Cri
     }
 }
 
+void Project::passGridTemperatureToHumidityPoints(Crit3DTime myTime, Crit3DMeteoSettings* meteoSettings)
+{
+    float airRelHum, airT;
+    int row, col;
+    double lat, lon;
+
+    for (int i = 0; i < nrMeteoPoints; i++)
+    {
+        airRelHum = meteoPoints[i].getMeteoPointValue(myTime, airRelHumidity, meteoSettings);
+        airT = meteoPoints[i].getMeteoPointValue(myTime, airTemperature, meteoSettings);
+
+        if (! isEqual(airRelHum, NODATA) && isEqual(airT, NODATA))
+        {
+            if (meteoGridDbHandler->meteoGrid()->gridStructure().isUTM())
+            {
+                gis::getRowColFromLonLat(meteoGridDbHandler->meteoGrid()->gridStructure().header(),
+                                     meteoPoints[i].point.utm.x, meteoPoints[i].point.utm.y, &row, &col);
+            }
+            else
+            {
+                gis::getLatLonFromUtm(gisSettings, meteoPoints[i].point.utm.x, meteoPoints[i].point.utm.y, &lat, &lon);
+                gis::getRowColFromLonLat(meteoGridDbHandler->meteoGrid()->gridStructure().header(),
+                                         lon, lat, &row, &col);
+            }
+
+            if (! gis::isOutOfGridRowCol(row, col, meteoGridDbHandler->meteoGrid()->gridStructure().header()))
+            {
+                if (meteoGridDbHandler->meteoGrid()->meteoPoint(row,col).active)
+                {
+                    meteoPoints[i].setMeteoPointValueH(myTime.date, myTime.getHour(), myTime.getMinutes(), airTemperature,
+                                                   meteoGridDbHandler->meteoGrid()->meteoPoint(row,col).getMeteoPointValueH(myTime.date, myTime.getHour(), myTime.getMinutes(), airTemperature));
+                }
+            }
+        }
+    }
+}
 
 bool Project::interpolationOutputPoints(std::vector <Crit3DInterpolationDataPoint> &interpolationPoints,
                                         gis::Crit3DRasterGrid *outputGrid, meteoVariable myVar)
@@ -2474,6 +2889,104 @@ bool Project::interpolationDemLocalDetrending(meteoVariable myVar, const Crit3DT
     return true;
 }
 
+bool Project::interpolationDemGlocalDetrending(meteoVariable myVar, const Crit3DTime& myTime, gis::Crit3DRasterGrid *myRaster)
+{
+    if (!getUseDetrendingVar(myVar) || !interpolationSettings.getUseGlocalDetrending())
+        return false;
+
+    // pass data to interpolation
+    std::vector <Crit3DInterpolationDataPoint> interpolationPoints;
+    std::string errorStdStr;
+
+    if (!checkAndPassDataToInterpolation(quality, myVar, meteoPoints, nrMeteoPoints, myTime,
+                                         &qualityInterpolationSettings, &interpolationSettings, meteoSettings, &climateParameters, interpolationPoints,
+                                         checkSpatialQuality, errorStdStr))
+    {
+        errorString = "No data available: " + QString::fromStdString(getVariableString(myVar))
+                      + "\n" + QString::fromStdString(errorStdStr);
+        return false;
+    }
+
+    std::vector <double> proxyValues;
+    proxyValues.resize(unsigned(interpolationSettings.getProxyNr()));
+    double x, y;
+
+    Crit3DProxyCombination myCombination = interpolationSettings.getSelectedCombination();
+    interpolationSettings.setCurrentCombination(myCombination);
+
+    //obtain fitting parameters and combination for every macro area
+    if (! preInterpolation(interpolationPoints, &interpolationSettings, meteoSettings, &climateParameters,
+                          meteoPoints, nrMeteoPoints, myVar, myTime, errorStdStr))
+    {
+        errorString = "Error in function preInterpolation:\n" + QString::fromStdString(errorStdStr);
+        return false;
+    }
+
+    if (getComputeOnlyPoints())
+    {
+        //TODO
+    }
+    else
+    {
+        gis::Crit3DRasterHeader myHeader = *(DEM.header);
+        myRaster->initializeGrid(myHeader);
+
+        if(!setMultipleDetrendingHeightTemperatureRange(&interpolationSettings))
+        {
+            errorString = "Error in function preInterpolation: \n couldn't set temperature ranges for height proxy.";
+            return false;
+        }
+
+        //preparing to start a "global" interpolation for every single macro area
+        unsigned row, col;
+        float z;
+        std::vector<float> areaCells;
+
+        int elevationPos = NODATA;
+        for (unsigned int pos=0; pos < interpolationSettings.getCurrentCombination().getProxySize(); pos++)
+        {
+            if (getProxyPragaName(interpolationSettings.getProxy(pos)->getName()) == proxyHeight)
+                elevationPos = pos;
+        }
+
+        for (unsigned areaIndex = 0; areaIndex < interpolationSettings.getMacroAreas().size(); areaIndex++)
+        {
+            //load macro area and its cells
+            Crit3DMacroArea myArea = interpolationSettings.getMacroAreas()[areaIndex];
+            areaCells = myArea.getAreaCells();
+			std::vector<Crit3DInterpolationDataPoint> subsetInterpolationPoints;
+
+            if (!areaCells.empty())
+            {
+                macroAreaDetrending(myArea, myVar, interpolationPoints, subsetInterpolationPoints, elevationPos);
+                //calculate value for every cell
+                for (unsigned cellIndex = 0; cellIndex < areaCells.size(); cellIndex = cellIndex + 2)
+                {
+                    row = unsigned(areaCells[cellIndex]/DEM.header->nrCols);
+                    col = int(areaCells[cellIndex])%DEM.header->nrCols;
+                    z = DEM.value[row][col];
+
+                    if (! isEqual(z, myHeader.flag))
+                    {
+                        gis::getUtmXYFromRowCol(myHeader, row, col, &x, &y);
+
+                        getProxyValuesXY(x, y, &interpolationSettings, proxyValues);
+
+                        if (isEqual(myRaster->value[row][col], NODATA))
+                            myRaster->value[row][col] = interpolate(subsetInterpolationPoints, &interpolationSettings, meteoSettings,
+                                                                    myVar, x, y, z, proxyValues, true)*areaCells[cellIndex+1];
+                        else
+                            myRaster->value[row][col] += interpolate(subsetInterpolationPoints, &interpolationSettings, meteoSettings,
+                                                                     myVar, x, y, z, proxyValues, true)*areaCells[cellIndex+1];
+                    }
+                }
+            }
+        }
+    }
+
+    return true;
+}
+
 
 bool Project::interpolateDemRadiation(const Crit3DTime& myTime, gis::Crit3DRasterGrid *myRaster)
 {
@@ -2610,6 +3123,13 @@ bool Project::interpolationDemMain(meteoVariable myVar, const Crit3DTime& myTime
     if (! checkInterpolation(myVar))
         return false;
 
+    // check glocal
+    if (interpolationSettings.getUseGlocalDetrending() && ! interpolationSettings.isGlocalReady())
+    {
+        if (! loadGlocalAreasMap()) return false;
+        if (! loadGlocalStationsAndCells(false)) return false;
+    }
+
     // solar radiation model
     if (myVar == globalIrradiance)
     {
@@ -2624,6 +3144,10 @@ bool Project::interpolationDemMain(meteoVariable myVar, const Crit3DTime& myTime
     if (getUseDetrendingVar(myVar) && interpolationSettings.getUseLocalDetrending())
     {
         return interpolationDemLocalDetrending(myVar, myTime, myRaster);
+    }
+	else if (getUseDetrendingVar(myVar) && interpolationSettings.getUseGlocalDetrending())
+    {
+        return interpolationDemGlocalDetrending(myVar, myTime, myRaster);
     }
     else
     {
@@ -2716,6 +3240,8 @@ bool Project::interpolationGrid(meteoVariable myVar, const Crit3DTime& myTime)
     float interpolatedValue = NODATA;
     unsigned int i, proxyIndex;
 
+    if (!interpolationSettings.getUseGlocalDetrending())
+    {
     for (unsigned col = 0; col < unsigned(meteoGridDbHandler->meteoGrid()->gridStructure().header().nrCols); col++)
     {
         for (unsigned row = 0; row < unsigned(meteoGridDbHandler->meteoGrid()->gridStructure().header().nrRows); row++)
@@ -2788,8 +3314,165 @@ bool Project::interpolationGrid(meteoVariable myVar, const Crit3DTime& myTime)
             }
         }
     }
+	}
+    else
+    {
+        //set all cells to NODATA
+        for (unsigned col = 0; col < unsigned(meteoGridDbHandler->meteoGrid()->gridStructure().header().nrCols); col++)
+        {
+            for (unsigned row = 0; row < unsigned(meteoGridDbHandler->meteoGrid()->gridStructure().header().nrRows); row++)
+            {
+                if (meteoGridDbHandler->meteoGrid()->meteoPoints()[row][col]->active)
+                {
+                    if (freq == hourly)
+                        meteoGridDbHandler->meteoGrid()->meteoPoints()[row][col]->currentValue = NODATA;
+                    else if (freq == daily)
+                        meteoGridDbHandler->meteoGrid()->meteoPoints()[row][col]->currentValue = NODATA;
+                }
+            }
+        }
+        unsigned row, col;
+        std::vector<float> areaCells;
+        float myValue = NODATA;
+
+        int elevationPos = NODATA;
+        for (unsigned int pos=0; pos < interpolationSettings.getCurrentCombination().getProxySize(); pos++)
+        {
+            if (getProxyPragaName(interpolationSettings.getProxy(pos)->getName()) == proxyHeight)
+                elevationPos = pos;
+        }
+
+        for (unsigned areaIndex = 0; areaIndex < interpolationSettings.getMacroAreas().size(); areaIndex++)
+        {
+            //load macro area and its cells
+            Crit3DMacroArea myArea = interpolationSettings.getMacroAreas()[areaIndex];
+            areaCells = myArea.getAreaCells();
+			std::vector<Crit3DInterpolationDataPoint> subsetInterpolationPoints;
+
+            if (!areaCells.empty())
+            {
+                macroAreaDetrending(myArea, myVar, interpolationPoints, subsetInterpolationPoints, elevationPos);
+                unsigned nrCols = meteoGridDbHandler->meteoGrid()->gridStructure().header().nrCols;
+                //calculate value for every cell
+                for (unsigned cellIndex = 0; cellIndex < areaCells.size(); cellIndex = cellIndex + 2)
+                {
+                    row = unsigned(areaCells[cellIndex]/nrCols);
+                    col = int(areaCells[cellIndex])%nrCols;
+
+                    if (meteoGridDbHandler->meteoGrid()->meteoPoints()[row][col]->active)
+                    {
+                        myX = meteoGridDbHandler->meteoGrid()->meteoPoints()[row][col]->point.utm.x;
+                        myY = meteoGridDbHandler->meteoGrid()->meteoPoints()[row][col]->point.utm.y;
+                        myZ = meteoGridDbHandler->meteoGrid()->meteoPoints()[row][col]->point.z;
+
+                        if (getUseDetrendingVar(myVar))
+                        {
+                            proxyIndex = 0;
+
+                            for (i=0; i < interpolationSettings.getProxyNr(); i++)
+                            {
+                                proxyValues[i] = NODATA;
+
+                                if (interpolationSettings.getCurrentCombination().isProxyActive(i))
+                                {
+                                    if (proxyIndex < meteoGridProxies.size())
+                                    {
+                                        float proxyValue = gis::getValueFromXY(*meteoGridProxies[proxyIndex], myX, myY);
+                                        if (proxyValue != meteoGridProxies[proxyIndex]->header->flag)
+                                            proxyValues[i] = double(proxyValue);
+                                    }
+
+                                    proxyIndex++;
+                                }
+                            }
+                            interpolatedValue = interpolate(subsetInterpolationPoints, &interpolationSettings, meteoSettings, myVar, myX, myY, myZ, proxyValues, true)
+                                                * areaCells[cellIndex + 1];
+                        }
+                        if (freq == hourly)
+                        {
+                            if (meteoGridDbHandler->meteoGrid()->meteoPoints()[row][col]->nrObsDataDaysH == 0)
+                                meteoGridDbHandler->meteoGrid()->meteoPoints()[row][col]->initializeObsDataH(1, 1, myTime.date);
+
+                            myValue = meteoGridDbHandler->meteoGrid()->meteoPoints()[row][col]->currentValue;
+
+                            if (isEqual(myValue, NODATA))
+                                myValue = 0;
+
+                            meteoGridDbHandler->meteoGrid()->meteoPoints()[row][col]->setMeteoPointValueH(myTime.date, myTime.getHour(), myTime.getMinutes(), myVar, float(interpolatedValue+myValue));
+                            meteoGridDbHandler->meteoGrid()->meteoPoints()[row][col]->currentValue = float(interpolatedValue+myValue);
+
+                        }
+                        else if (freq == daily)
+                        {
+                            if (meteoGridDbHandler->meteoGrid()->meteoPoints()[row][col]->nrObsDataDaysD == 0)
+                                meteoGridDbHandler->meteoGrid()->meteoPoints()[row][col]->initializeObsDataD(1, myTime.date);
+
+                            myValue = meteoGridDbHandler->meteoGrid()->meteoPoints()[row][col]->currentValue;
+
+                            if (isEqual(myValue, NODATA))
+                                myValue = 0;
+
+                            meteoGridDbHandler->meteoGrid()->meteoPoints()[row][col]->setMeteoPointValueD(myTime.date, myVar, float(interpolatedValue+myValue));
+                            meteoGridDbHandler->meteoGrid()->meteoPoints()[row][col]->currentValue = float(interpolatedValue+myValue);
+
+                        }
+                    }
+                }
+            }
+        }
+    }
 
     return true;
+}
+
+void Project::macroAreaDetrending(Crit3DMacroArea myArea, meteoVariable myVar, std::vector <Crit3DInterpolationDataPoint> interpolationPoints, std::vector <Crit3DInterpolationDataPoint> &subsetInterpolationPoints, int elevationPos)
+{
+    //take the parameters+combination for that area
+    interpolationSettings.setFittingParameters(myArea.getParameters());
+    interpolationSettings.setCurrentCombination(myArea.getCombination());
+
+    //find the fitting functions vector based on the length of the parameters vector for every proxy
+    std::vector<std::function<double (double, std::vector<double> &)> > fittingFunction;
+    for (int l = 0; l < myArea.getParameters().size(); l++)
+    {
+        if (myArea.getParameters()[l].size() == 2)
+            fittingFunction.push_back(functionLinear_intercept);
+        else if (myArea.getParameters()[l].size() == 4)
+            fittingFunction.push_back(lapseRatePiecewise_two);
+        else if (myArea.getParameters()[l].size() == 5)
+            fittingFunction.push_back(lapseRatePiecewise_three);
+        else if (myArea.getParameters()[l].size() == 6)
+            fittingFunction.push_back(lapseRatePiecewise_three_free);
+    }
+    interpolationSettings.setFittingFunction(fittingFunction);
+
+    //create vector of macro area interpolation points
+    std::vector<int> temp = myArea.getMeteoPoints();
+    for (int l = 0; l < temp.size(); l++)
+    {
+        for (int k = 0; k < interpolationPoints.size(); k++)
+            if (interpolationPoints[k].index == temp[l])
+                subsetInterpolationPoints.push_back(interpolationPoints[k]);
+    }
+
+    //detrending
+    if (elevationPos != NODATA && myArea.getCombination().isProxyActive(elevationPos))
+        detrendingElevation(elevationPos, subsetInterpolationPoints, &interpolationSettings);
+
+    detrendingOtherProxies(elevationPos, subsetInterpolationPoints, &interpolationSettings);
+
+    Crit3DMeteoPoint* myMeteoPoints = new Crit3DMeteoPoint[unsigned(myArea.getMeteoPoints().size())];
+    std::vector<int> meteoPointsList = myArea.getMeteoPoints();
+
+    for (int i = 0; i < meteoPointsList.size(); i++)
+        myMeteoPoints[i] = meteoPoints[meteoPointsList[i]];
+
+    if (interpolationSettings.getUseTD() && getUseTdVar(myVar))
+        topographicDistanceOptimize(myVar, myMeteoPoints, myArea.getMeteoPoints().size(), subsetInterpolationPoints, &interpolationSettings, meteoSettings);
+
+    myMeteoPoints->clear();
+
+    return;
 }
 
 
@@ -3052,6 +3735,7 @@ void Project::saveInterpolationParameters()
         parametersSettings->setValue("topographicDistanceMaxMultiplier", QString::number(interpolationSettings.getTopoDist_maxKh()));
         parametersSettings->setValue("optimalDetrending", interpolationSettings.getUseBestDetrending());
         parametersSettings->setValue("multipleDetrending", interpolationSettings.getUseMultipleDetrending());
+        parametersSettings->setValue("glocalDetrending", interpolationSettings.getUseGlocalDetrending());
         parametersSettings->setValue("doNotRetrend", interpolationSettings.getUseDoNotRetrend());
         parametersSettings->setValue("retrendOnly", interpolationSettings.getUseRetrendOnly());
         parametersSettings->setValue("useDewPoint", interpolationSettings.getUseDewPoint());
@@ -3087,8 +3771,8 @@ void Project::saveProxies()
             if (myProxy->getProxyField() != "") parametersSettings->setValue("field", QString::fromStdString(myProxy->getProxyField()));
             if (myProxy->getGridName() != "") parametersSettings->setValue("raster", getRelativePath(QString::fromStdString(myProxy->getGridName())));
             if (myProxy->getStdDevThreshold() != NODATA) parametersSettings->setValue("stddev_threshold", QString::number(myProxy->getStdDevThreshold()));
-            if (myProxy->getFittingParametersRange().size() > 0) parametersSettings->setValue("fitting_parameters_min", DoubleVectorToStringList(myProxy->getFittingParametersMin()));
-            if (myProxy->getFittingParametersRange().size() > 0) parametersSettings->setValue("fitting_parameters_max", DoubleVectorToStringList(myProxy->getFittingParametersMax()));
+            if (!myProxy->getFittingParametersMin().empty()) parametersSettings->setValue("fitting_parameters_min", DoubleVectorToStringList(myProxy->getFittingParametersMin()));
+            if (!myProxy->getFittingParametersMax().empty()) parametersSettings->setValue("fitting_parameters_max", DoubleVectorToStringList(myProxy->getFittingParametersMax()));
             if (myProxy->getFittingFirstGuess().size() > 0) parametersSettings->setValue("fitting_first_guess", IntVectorToStringList(myProxy->getFittingFirstGuess()));
             if (getProxyPragaName(myProxy->getName()) == proxyHeight && myProxy->getFittingFunctionName() != noFunction) parametersSettings->setValue("fitting_function", QString::fromStdString(getKeyStringElevationFunction(myProxy->getFittingFunctionName())));
         parametersSettings->endGroup();
@@ -3726,7 +4410,11 @@ void Project::showLocalProxyGraph(gis::Crit3DGeoPoint myPoint)
         myZDEM = DEM.value[row][col];
     }
 
-
+    if (interpolationSettings.getUseGlocalDetrending() && ! interpolationSettings.isGlocalReady())
+    {
+        if (loadGlocalAreasMap())
+            loadGlocalStationsAndCells(false);
+    }
 
     localProxyWidget = new Crit3DLocalProxyWidget(myUtm.x, myUtm.y, myZDEM, myZGrid, this->gisSettings, &interpolationSettings, meteoPoints, nrMeteoPoints, currentVariable, currentFrequency, currentDate, currentHour, quality, &qualityInterpolationSettings, meteoSettings, &climateParameters, checkSpatialQuality);
     return;
