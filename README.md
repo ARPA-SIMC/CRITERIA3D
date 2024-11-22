@@ -38,7 +38,7 @@ Water fluxes equations may be coupled with the heat flux equations, which includ
 ## Contacts
 - ftomei@arpae.it   (CRITERIA3D)
 - gantolini@arpae.it  (VINE3D)
-- gsannino@arpae.ie (slope stability)
+- gsannino@arpae.it (slope stability)
 - avolta@arpae.it  (grapevine library)
 
 ## License
