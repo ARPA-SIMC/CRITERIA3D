@@ -2252,7 +2252,8 @@ void optimalDetrending(meteoVariable myVar, Crit3DMeteoPoint* &myMeteoPoints, in
             if (mySettings->getUseTD() && getUseTdVar(myVar))
                 topographicDistanceOptimize(myVar, myMeteoPoints, nrMeteoPoints, interpolationPoints, mySettings, meteoSettings);
 
-            if (computeResiduals(myVar, myMeteoPoints, nrMeteoPoints, interpolationPoints, mySettings, meteoSettings, true, true))
+            // TODO CATE : serve un check nei settings per excludeOutsideDem
+            if (computeResiduals(myVar, myMeteoPoints, nrMeteoPoints, interpolationPoints, mySettings, meteoSettings, false, true))
             {
                 avgError = computeErrorCrossValidation(myMeteoPoints, nrMeteoPoints);
                 if (! isEqual(avgError, NODATA) && (isEqual(minError, NODATA) || avgError < minError))
