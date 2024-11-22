@@ -119,15 +119,15 @@
         bool timeAggregateGrid(QDate dateIni, QDate dateFin, QList <meteoVariable> variables, bool loadData, bool saveData);
         bool computeDailyVariablesPoint(Crit3DMeteoPoint *meteoPoint, QDate first, QDate last, QList <meteoVariable> variables);
         bool derivedVariablesMeteoGridPeriod(QDate first, QDate last, QList<meteoVariable> variables, bool useNetRad);
-        bool elaborationPointsCycle(bool isAnomaly, bool showInfo);
-        bool elaborationPointsCycleGrid(bool isAnomaly, bool showInfo);
+        bool elaborationCyclePoints(bool isAnomaly, bool showInfo);
+        bool elaborationCycleGrid(bool isAnomaly, bool showInfo);
         bool elaborationCheck(bool isMeteoGrid, bool isAnomaly);
-        bool elaboration(bool isMeteoGrid, bool isAnomaly, bool saveClima);
+        bool computeElaboration(bool isMeteoGrid, bool isAnomaly, bool isClimate, bool showInfo);
         bool showClimateFields(bool isMeteoGrid, QList<QString> *climateDbElab, QList<QString> *climateDbVarList);
         void readClimate(bool isMeteoGrid, QString climateSelected, int climateIndex, bool showInfo);
         bool deleteClimate(bool isMeteoGrid, QString climaSelected);
-        bool climatePointsCycle(bool showInfo);
-        bool climatePointsCycleGrid(bool showInfo);
+        bool climateCyclePoints(bool showInfo);
+        bool climateCycleGrid(bool showInfo);
         bool averageSeriesOnZonesMeteoGrid(meteoVariable variable, meteoComputation elab1MeteoComp,
                                            QString aggregationString, float threshold, gis::Crit3DRasterGrid* zoneGrid,
                                            QDate startDate, QDate endDate, bool showInfo);
