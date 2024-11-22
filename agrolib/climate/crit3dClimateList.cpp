@@ -286,7 +286,7 @@ void Crit3DClimateList::parserElaboration(QString &errorStr)
         QString periodTypeStr = words[pos];
         _listPeriodType.push_back(getPeriodTypeFromString(periodTypeStr));
 
-        pos = pos + 1; // pos = 3
+        pos = pos + 1;
 
         if (words.size() == pos)
         {
@@ -295,17 +295,17 @@ void Crit3DClimateList::parserElaboration(QString &errorStr)
             continue;
         }
 
-        if ( (_listPeriodType[i] == genericPeriod) && ( (words[pos].at(0)).isDigit() ))
+        if ( (_listPeriodType[i] == genericPeriod) && (words[pos].at(0)).isDigit() )
         {
             _listPeriodStr.push_back(words[pos]);
             parserGenericPeriodString(i);
-            pos = pos + 1; // pos = 4
+            pos = pos + 1;
         }
         else
         {
             _listPeriodStr.push_back(periodTypeStr);
-            _listGenericPeriodDateStart.push_back( QDate(0,  0,  0) );
-            _listGenericPeriodDateEnd.push_back( QDate(0,  0,  0) );
+            _listGenericPeriodDateStart.push_back(QDate(0, 0, 0));
+            _listGenericPeriodDateEnd.push_back(QDate(0, 0, 0));
             _listNYears.push_back(0);
         }
 
@@ -447,28 +447,28 @@ void Crit3DClimateList::parserElaboration(QString &errorStr)
 
 bool Crit3DClimateList::parserGenericPeriodString(int index)
 {
-
     QString periodString = _listPeriodStr.at(index);
 
-    if ( periodString.isEmpty())
+    if (periodString.isEmpty())
     {
         return false;
     }
 
-    QString day = periodString.mid(0,2);
-    QString month = periodString.mid(3,2);
+    QString day = periodString.mid(0, 2);
+    QString month = periodString.mid(4, 2);
     int year = 2000;
-    _listGenericPeriodDateStart.push_back( QDate(year,  month.toInt(),  day.toInt()) );
+    _listGenericPeriodDateStart.push_back(QDate(year, month.toInt(), day.toInt()));
 
-    day = periodString.mid(6,2);
-    month = periodString.mid(9,2);
+    day = periodString.mid(7, 2);
+    month = periodString.mid(11, 2);
 
-    _listGenericPeriodDateEnd.push_back( QDate(year,  month.toInt(),  day.toInt()) );
+    _listGenericPeriodDateEnd.push_back(QDate(year, month.toInt(), day.toInt()));
 
-    if ( periodString.size() > 11 )
+    if (periodString.size() > 13)
     {
-        _listNYears.push_back((periodString.mid(13,2)).toInt());
+        QString nrYearsStr = periodString.mid(15, 2);
+        _listNYears.push_back(nrYearsStr.toInt());
     }
-    return true;
 
+    return true;
 }
