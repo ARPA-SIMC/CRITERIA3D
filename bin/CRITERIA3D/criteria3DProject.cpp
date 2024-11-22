@@ -678,6 +678,7 @@ bool Crit3DProject::loadCriteria3DProject(QString myFileName)
 
     if (meteoPointsLoaded)
     {
+        logInfoGUI("Check meteopoints dates...");
         meteoPointsDbFirstTime = findDbPointFirstTime();
     }
 
