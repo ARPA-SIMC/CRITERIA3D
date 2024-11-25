@@ -166,6 +166,7 @@
 
         float minRegressionR2;
         bool useThermalInversion;
+        bool useExcludeStationsOutsideDEM;
         bool useTD;
         bool useLocalDetrending;
 		bool useGlocalDetrending;
@@ -223,6 +224,9 @@
 
         void setUseThermalInversion(bool myValue);
         bool getUseThermalInversion();
+
+        bool getUseExcludeStationsOutsideDEM();
+        void setUseExcludeStationsOutsideDEM(bool myValue);
 
         void setUseTD(bool myValue);
         bool getUseTD();

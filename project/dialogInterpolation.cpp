@@ -111,6 +111,10 @@ DialogInterpolation::DialogInterpolation(Project *myProject)
     thermalInversionEdit->setChecked(_interpolationSettings->getUseThermalInversion());
     layoutDetrending->addWidget(thermalInversionEdit);
 
+    excludeStationsOutsideDEM = new QCheckBox(tr("exclude meteo stations outside DEM"));
+    excludeStationsOutsideDEM->setChecked(_interpolationSettings->getUseExcludeStationsOutsideDEM());
+    layoutDetrending->addWidget(excludeStationsOutsideDEM);
+
     optimalDetrendingEdit = new QCheckBox(tr("optimal detrending"));
     optimalDetrendingEdit->setChecked(_interpolationSettings->getUseBestDetrending());
     if (_interpolationSettings->getUseBestDetrending())
@@ -345,6 +349,7 @@ void DialogInterpolation::accept()
     _interpolationSettings->setUseDoNotRetrend(doNotRetrendEdit->isChecked());
     _interpolationSettings->setUseRetrendOnly(retrendOnlyEdit->isChecked());
     _interpolationSettings->setUseThermalInversion(thermalInversionEdit->isChecked());
+    _interpolationSettings->setUseExcludeStationsOutsideDEM(excludeStationsOutsideDEM->isChecked());
     _interpolationSettings->setUseDewPoint(useDewPointEdit->isChecked());
     _interpolationSettings->setUseInterpolatedTForRH((useInterpolTForRH->isChecked()));
     _interpolationSettings->setMinRegressionR2(QLocale().toFloat(minRegressionR2Edit.text()));

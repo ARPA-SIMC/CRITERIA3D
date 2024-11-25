@@ -455,6 +455,7 @@ void Crit3DInterpolationSettings::initialize()
     useTD = false;
     useLocalDetrending = false;
 	useGlocalDetrending = false;
+    useExcludeStationsOutsideDEM = false;
     topoDist_maxKh = 128;
     useDewPoint = true;
     useInterpolatedTForRH = true;
@@ -568,6 +569,9 @@ void Crit3DInterpolationSettings::setUseThermalInversion(bool myValue)
     selectedCombination.setUseThermalInversion(myValue);
 }
 
+void Crit3DInterpolationSettings::setUseExcludeStationsOutsideDEM(bool myValue)
+{ useExcludeStationsOutsideDEM = myValue; }
+
 void Crit3DInterpolationSettings::setUseTD(bool myValue)
 { useTD = myValue;}
 
@@ -588,6 +592,9 @@ void Crit3DInterpolationSettings::setUseDewPoint(bool myValue)
 
 bool Crit3DInterpolationSettings::getUseThermalInversion()
 { return (useThermalInversion);}
+
+bool Crit3DInterpolationSettings::getUseExcludeStationsOutsideDEM()
+{ return (useExcludeStationsOutsideDEM); }
 
 bool Crit3DInterpolationSettings::getUseDewPoint()
 { return (useDewPoint);}

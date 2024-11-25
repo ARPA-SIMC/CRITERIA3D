@@ -652,6 +652,9 @@ bool Project::loadParameters(QString parametersFileName)
                 qualityInterpolationSettings.setUseThermalInversion(parametersSettings->value("thermalInversion").toBool());
             }
 
+            if (parametersSettings->contains("excludeStationsOutsideDEM"))
+                interpolationSettings.setUseExcludeStationsOutsideDEM(parametersSettings->value("excludeStationsOutsideDEM").toBool());
+
             if (parametersSettings->contains("topographicDistance"))
                 interpolationSettings.setUseTD(parametersSettings->value("topographicDistance").toBool());
 
@@ -2712,7 +2715,7 @@ bool Project::interpolationCv(meteoVariable myVar, const Crit3DTime& myTime)
 
     if (! interpolationSettings.getUseLocalDetrending())
     {
-        if (! computeResiduals(myVar, meteoPoints, nrMeteoPoints, interpolationPoints, &interpolationSettings, meteoSettings, true, true))
+        if (! computeResiduals(myVar, meteoPoints, nrMeteoPoints, interpolationPoints, &interpolationSettings, meteoSettings, interpolationSettings.getUseExcludeStationsOutsideDEM(), true))
             return false;
     }
     else
@@ -3730,6 +3733,7 @@ void Project::saveInterpolationParameters()
         parametersSettings->setValue("lapseRateCode", interpolationSettings.getUseLapseRateCode());
         parametersSettings->setValue("meteogrid_upscalefromdem", interpolationSettings.getMeteoGridUpscaleFromDem());
         parametersSettings->setValue("thermalInversion", interpolationSettings.getUseThermalInversion());
+        parametersSettings->setValue("excludeStationsOutsideDEM", interpolationSettings.getUseExcludeStationsOutsideDEM());
         parametersSettings->setValue("topographicDistance", interpolationSettings.getUseTD());
         parametersSettings->setValue("localDetrending", interpolationSettings.getUseLocalDetrending());
         parametersSettings->setValue("topographicDistanceMaxMultiplier", QString::number(interpolationSettings.getTopoDist_maxKh()));
