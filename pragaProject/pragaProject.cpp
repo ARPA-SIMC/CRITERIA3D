@@ -741,41 +741,30 @@ bool PragaProject::deleteClimate(bool isMeteoGrid, QString climaSelected)
 }
 
 
-bool PragaProject::elaboration(bool isMeteoGrid, bool isAnomaly, bool saveClima)
+bool PragaProject::computeElaboration(bool isMeteoGrid, bool isAnomaly, bool isClimate, bool showInfo)
 {
     if (isMeteoGrid)
     {
-        if (saveClima)
+        if (isClimate)
         {
-            if (!climatePointsCycleGrid(true))
-            {
-                return false;
-            }
-            else
-            {
-                return true;
-            }
+            return climateCycleGrid(showInfo);
         }
-        if (!elaborationPointsCycleGrid(isAnomaly, true))
+
+        if (! elaborationCycleGrid(isAnomaly, showInfo))
         {
             return false;
         }
+
         meteoGridDbHandler->meteoGrid()->setIsElabValue(true);
     }
     else
     {
-        if (saveClima)
+        if (isClimate)
         {
-            if (!climatePointsCycle(true))
-            {
-                return false;
-            }
-            else
-            {
-                return true;
-            }
+            return climateCyclePoints(showInfo);
         }
-        if (!elaborationPointsCycle(isAnomaly, true))
+
+        if (! elaborationCyclePoints(isAnomaly, showInfo))
         {
             return false;
         }
@@ -787,7 +776,7 @@ bool PragaProject::elaboration(bool isMeteoGrid, bool isAnomaly, bool saveClima)
 }
 
 
-bool PragaProject::elaborationPointsCycle(bool isAnomaly, bool showInfo)
+bool PragaProject::elaborationCyclePoints(bool isAnomaly, bool showInfo)
 {
     // initialize
     for (int i = 0; i < nrMeteoPoints; i++)
@@ -1010,7 +999,7 @@ bool PragaProject::elaborationPointsCycle(bool isAnomaly, bool showInfo)
 }
 
 
-bool PragaProject::elaborationPointsCycleGrid(bool isAnomaly, bool showInfo)
+bool PragaProject::elaborationCycleGrid(bool isAnomaly, bool showInfo)
 {
 
     bool isMeteoGrid = true; // grid
@@ -1227,7 +1216,7 @@ bool PragaProject::elaborationPointsCycleGrid(bool isAnomaly, bool showInfo)
 }
 
 
-bool PragaProject::climatePointsCycle(bool showInfo)
+bool PragaProject::climateCyclePoints(bool showInfo)
 {
     bool isMeteoGrid = false;
     int infoStep;
@@ -1352,9 +1341,8 @@ bool PragaProject::climatePointsCycle(bool showInfo)
 }
 
 
-bool PragaProject::climatePointsCycleGrid(bool showInfo)
+bool PragaProject::climateCycleGrid(bool showInfo)
 {
-
     bool isMeteoGrid = true;
     int infoStep;
     QString infoStr;
@@ -1393,10 +1381,8 @@ bool PragaProject::climatePointsCycleGrid(bool showInfo)
 
         for (int col = 0; col < meteoGridDbHandler->gridStructure().header().nrCols; col++)
         {
-
            if (meteoGridDbHandler->meteoGrid()->getMeteoPointActiveId(row, col, &id))
            {
-
                Crit3DMeteoPoint* meteoPoint = meteoGridDbHandler->meteoGrid()->meteoPointPointer(row,col);
 
                meteoPointTemp->id = meteoPoint->id;
@@ -1408,14 +1394,11 @@ bool PragaProject::climatePointsCycleGrid(bool showInfo)
 
                for (int j = 0; j < climateList->listClimateElab().size(); j++)
                {
-
                    clima->resetParam();
                    clima->setClimateElab(climateList->listClimateElab().at(j));
 
-
                    if (climateList->listClimateElab().at(j)!= nullptr)
                    {
-
                        // copy current elaboration to clima
                        clima->setDailyCumulated(climateList->listDailyCumulated()[j]);
                        clima->setYearStart(climateList->listYearStart().at(j));
@@ -1448,7 +1431,6 @@ bool PragaProject::climatePointsCycleGrid(bool showInfo)
                            startDate.setDate(clima->yearStart(), 1, 1);
                            endDate.setDate(clima->yearEnd(), 12, 31);
                        }
-
                    }
                    else
                    {
@@ -1462,9 +1444,7 @@ bool PragaProject::climatePointsCycleGrid(bool showInfo)
                        validCell = validCell + 1;
                    }
                    changeDataSet = false;
-
                }
-
            }
        }
    }
@@ -1483,12 +1463,12 @@ bool PragaProject::climatePointsCycleGrid(bool showInfo)
     }
     else
     {
-       logInfo("climate saved");
+        logInfo("climate saved");
         delete meteoPointTemp;
         return true;
     }
-
 }
+
 
 bool PragaProject::downloadDailyDataArkimet(QList<QString> variables, bool prec0024, QDate startDate, QDate endDate, bool showInfo)
 {
@@ -3594,7 +3574,7 @@ void PragaProject::showPointStatisticsWidgetGrid(std::string id)
             clima->setElab2(listXMLElab->listElab2()[i]);
             clima->setParam2(listXMLElab->listParam2()[i]);
 
-            elaborationPointsCycleGrid(false, false);
+            elaborationCycleGrid(false, false);
             meteoGridDbHandler->meteoGrid()->fillMeteoRasterElabValue();
 
             QString netcdfName;
@@ -3674,9 +3654,9 @@ void PragaProject::showPointStatisticsWidgetGrid(std::string id)
             referenceClima->setElab2(listXMLAnomaly->listRefElab2()[i]);
             referenceClima->setParam2(listXMLAnomaly->listRefParam2()[i]);
 
-            elaborationPointsCycleGrid(false, false);
+            elaborationCycleGrid(false, false);
             qDebug() << "--------------------------------------------------";
-            elaborationPointsCycleGrid(true, false);
+            elaborationCycleGrid(true, false);
 
             if (!listXMLAnomaly->isPercentage()[i])
             {

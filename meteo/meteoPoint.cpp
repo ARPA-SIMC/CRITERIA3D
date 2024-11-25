@@ -1240,17 +1240,16 @@ bool Crit3DMeteoPoint::computeHourlyDerivedVar(Crit3DTime dateTime, meteoVariabl
                                                   double(getMeteoPointValueH(myDate, myHour, 0, airTemperature)),
                                                   double(getMeteoPointValueH(myDate, myHour, 0, airRelHumidity)),
                                                   double(getMeteoPointValueH(myDate, myHour, 0, windScalarIntensity))));
-
         }
         else
         {
-            //da sistemare
-            value = ET0_Penman_hourly(double(point.z),
+            // TODO improve transmissivity
+            value = float(ET0_Penman_hourly(double(point.z),
                                     double(getMeteoPointValueH(myDate, myHour, 0, atmTransmissivity) / float(0.75)),
                                     double(getMeteoPointValueH(myDate, myHour, 0, globalIrradiance)),
                                     double(getMeteoPointValueH(myDate, myHour, 0, airTemperature)),
                                     double(getMeteoPointValueH(myDate, myHour, 0, airRelHumidity)),
-                                    double(getMeteoPointValueH(myDate, myHour, 0, windScalarIntensity)));
+                                    double(getMeteoPointValueH(myDate, myHour, 0, windScalarIntensity))));
         }
     }
 
