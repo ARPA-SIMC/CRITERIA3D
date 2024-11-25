@@ -2282,7 +2282,7 @@ bool Project::loadGlocalAreasMap()
 
     if (!QFile::exists(fileNameMap + ".flt"))
     {
-        errorString = "Could not find " + fileNameMap + " file";
+        errorString = "Could not find file:\n" + fileNameMap;
         return false;
     }
 
@@ -4412,8 +4412,11 @@ void Project::showLocalProxyGraph(gis::Crit3DGeoPoint myPoint)
 
     if (interpolationSettings.getUseGlocalDetrending() && ! interpolationSettings.isGlocalReady())
     {
-        if (loadGlocalAreasMap())
-            loadGlocalStationsAndCells(false);
+        if (! loadGlocalAreasMap() || ! loadGlocalStationsAndCells(false))
+        {
+            logError();
+            return;
+        }
     }
 
     localProxyWidget = new Crit3DLocalProxyWidget(myUtm.x, myUtm.y, myZDEM, myZGrid, this->gisSettings, &interpolationSettings, meteoPoints, nrMeteoPoints, currentVariable, currentFrequency, currentDate, currentHour, quality, &qualityInterpolationSettings, meteoSettings, &climateParameters, checkSpatialQuality);
