@@ -24,6 +24,7 @@
             QLineEdit maxTdMultiplierEdit;
             QLineEdit minPointsLocalDetrendingEdit;
             QCheckBox* lapseRateCodeEdit;
+            QCheckBox* excludeStationsOutsideDEM;
             QCheckBox* thermalInversionEdit;
             QCheckBox* optimalDetrendingEdit;
             QCheckBox* multipleDetrendingEdit;

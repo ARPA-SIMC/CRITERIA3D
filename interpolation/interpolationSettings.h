@@ -132,6 +132,7 @@
         void setUseThermalInversion(bool value) { _useThermalInversion = value; }
     };
 
+
     class Crit3DMacroArea
     {
     private:
@@ -143,16 +144,22 @@
     public:
         Crit3DMacroArea();
 
-        void setMeteoPoints (std::vector<int> myMeteoPoints);
-        std::vector<int> getMeteoPoints();
-        void setParameters (std::vector<std::vector<double>> myParameters);
-        std::vector<std::vector<double>> getParameters();
-        void setCombination (Crit3DProxyCombination myCombination);
-        Crit3DProxyCombination getCombination();
-        void setAreaCells (std::vector<float> myCells);
-        std::vector<float> getAreaCells();
         void clear();
 
+        int getMeteoPointsNr()
+        { return int(meteoPoints.size()); }
+
+        void setMeteoPoints (std::vector<int> myMeteoPoints) { meteoPoints = myMeteoPoints; }
+        std::vector<int> getMeteoPoints() { return meteoPoints; }
+
+        void setAreaCells (std::vector<float> myCells) { areaCells = myCells; }
+        std::vector<float> getAreaCells() { return areaCells; }
+
+        void setParameters (std::vector<std::vector<double>> myParameters) { areaParameters = myParameters; }
+        std::vector<std::vector<double>> getParameters() { return areaParameters; }
+
+        void setCombination (Crit3DProxyCombination myCombination) { areaCombination = myCombination; }
+        Crit3DProxyCombination getCombination() { return areaCombination; }
     };
 
 
@@ -166,6 +173,7 @@
 
         float minRegressionR2;
         bool useThermalInversion;
+        bool useExcludeStationsOutsideDEM;
         bool useTD;
         bool useLocalDetrending;
 		bool useGlocalDetrending;
@@ -223,6 +231,9 @@
 
         void setUseThermalInversion(bool myValue);
         bool getUseThermalInversion();
+
+        bool getUseExcludeStationsOutsideDEM();
+        void setUseExcludeStationsOutsideDEM(bool myValue);
 
         void setUseTD(bool myValue);
         bool getUseTD();
