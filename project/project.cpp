@@ -2377,9 +2377,7 @@ bool Project::loadGlocalWeightMaps(std::vector<Crit3DMacroArea> &myAreas, bool i
 
     for (int i = 0; i < myAreas.size(); i++)
     {
-        if (QFile::exists(QString::fromStdString(fileName) + QString::number(i) + ".flt"))
-        {
-        if (gis::readEsriGrid(fileName + std::to_string(i), macroAreasGrid, myError))
+        if (QFile::exists(QString::fromStdString(fileName) + QString::number(i) + ".flt") && gis::readEsriGrid(fileName + std::to_string(i), macroAreasGrid, myError))
         {
             for (int row = 0; row < nrRows; row++)
             {
@@ -2405,10 +2403,11 @@ bool Project::loadGlocalWeightMaps(std::vector<Crit3DMacroArea> &myAreas, bool i
             myAreas[i].setAreaCells(areaCells);
             areaCells.clear();
         }
-        else {
+        else
+        {
             macroAreasGrid->clear();
+            errorString = "macroareas not found";
             return false;
-        }
         }
     }
     macroAreasGrid->clear();
