@@ -1872,6 +1872,7 @@ bool multipleDetrendingOtherProxiesFitting(int elevationPos, std::vector <Crit3D
     }
 
     // proxy spatial variability (1st step)
+    // this is done before check of incomplete to keep as many points as possible
     unsigned validNr;
     validNr = 0;
 
@@ -1947,6 +1948,7 @@ bool multipleDetrendingOtherProxiesFitting(int elevationPos, std::vector <Crit3D
     }
 
     // proxy spatial variability (2nd step)
+    // to be done because we might have excluded some points
     validNr = 0;
     for (int pos=0; pos < proxyNr; pos++)
     {
@@ -1972,20 +1974,20 @@ bool multipleDetrendingOtherProxiesFitting(int elevationPos, std::vector <Crit3D
     std::vector <double> predictands;
     std::vector <double> weights;
 
-    for (i=0; i < myPoints.size(); i++)
+    for (i=0; i < othersPoints.size(); i++)
     {
         rowPredictors.clear();
         for (int pos=0; pos < proxyNr; pos++)
-            if (pos != elevationPos && myCombination.isProxyActive(pos) && mySettings->getCurrentCombination().isProxySignificant(pos) && checkLapseRateCode(myPoints[i].lapseRateCode, mySettings->getUseLapseRateCode(), false))
+            if (pos != elevationPos && myCombination.isProxyActive(pos) && mySettings->getCurrentCombination().isProxySignificant(pos))
             {
-                proxyValue = myPoints[i].getProxyValue(pos);
+                proxyValue = othersPoints[i].getProxyValue(pos);
                 rowPredictors.push_back(proxyValue);
             }
 
         predictors.push_back(rowPredictors);
-        predictands.push_back(myPoints[i].value);
-        if (!isEqual(myPoints[i].regressionWeight, NODATA))
-            weights.push_back(myPoints[i].regressionWeight);
+        predictands.push_back(othersPoints[i].value);
+        if (!isEqual(othersPoints[i].regressionWeight, NODATA))
+            weights.push_back(othersPoints[i].regressionWeight);
         else
             weights.push_back(1);
     }
