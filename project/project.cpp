@@ -1209,6 +1209,7 @@ bool Project::loadMeteoPointsDB(QString fileName)
     listMeteoPoints.clear();
 
     // find dates
+    logInfoGUI("Check meteopoints dates...");
     meteoPointsDbLastTime = findDbPointLastTime();
     meteoPointsDbFirstTime.setSecsSinceEpoch(0);
 
@@ -3428,6 +3429,7 @@ bool Project::interpolationGrid(meteoVariable myVar, const Crit3DTime& myTime)
     return true;
 }
 
+
 void Project::macroAreaDetrending(Crit3DMacroArea myArea, meteoVariable myVar, std::vector <Crit3DInterpolationDataPoint> interpolationPoints, std::vector <Crit3DInterpolationDataPoint> &subsetInterpolationPoints, int elevationPos)
 {
     //take the parameters+combination for that area
@@ -3447,31 +3449,43 @@ void Project::macroAreaDetrending(Crit3DMacroArea myArea, meteoVariable myVar, s
         else if (myArea.getParameters()[l].size() == 6)
             fittingFunction.push_back(lapseRatePiecewise_three_free);
     }
+
     interpolationSettings.setFittingFunction(fittingFunction);
 
-    //create vector of macro area interpolation points
+    // create vector of macro area interpolation points
     std::vector<int> temp = myArea.getMeteoPoints();
     for (int l = 0; l < temp.size(); l++)
     {
         for (int k = 0; k < interpolationPoints.size(); k++)
+        {
             if (interpolationPoints[k].index == temp[l])
+            {
                 subsetInterpolationPoints.push_back(interpolationPoints[k]);
+            }
+        }
     }
 
     //detrending
     if (elevationPos != NODATA && myArea.getCombination().isProxyActive(elevationPos))
+    {
         detrendingElevation(elevationPos, subsetInterpolationPoints, &interpolationSettings);
+    }
 
     detrendingOtherProxies(elevationPos, subsetInterpolationPoints, &interpolationSettings);
 
-    Crit3DMeteoPoint* myMeteoPoints = new Crit3DMeteoPoint[unsigned(myArea.getMeteoPoints().size())];
+    Crit3DMeteoPoint* myMeteoPoints = new Crit3DMeteoPoint[unsigned(myArea.getMeteoPointsNr())];
     std::vector<int> meteoPointsList = myArea.getMeteoPoints();
 
     for (int i = 0; i < meteoPointsList.size(); i++)
+    {
         myMeteoPoints[i] = meteoPoints[meteoPointsList[i]];
+    }
 
     if (interpolationSettings.getUseTD() && getUseTdVar(myVar))
-        topographicDistanceOptimize(myVar, myMeteoPoints, myArea.getMeteoPoints().size(), subsetInterpolationPoints, &interpolationSettings, meteoSettings);
+    {
+        topographicDistanceOptimize(myVar, myMeteoPoints, myArea.getMeteoPointsNr(),
+                                    subsetInterpolationPoints, &interpolationSettings, meteoSettings);
+    }
 
     myMeteoPoints->clear();
 

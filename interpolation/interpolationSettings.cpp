@@ -1017,50 +1017,9 @@ bool Crit3DInterpolationSettings::getCombination(int combinationInteger, Crit3DP
 
 Crit3DMacroArea::Crit3DMacroArea()
 {
-    meteoPoints.clear();
-    areaParameters.clear();
-    areaCombination.clear();
-    areaCells.clear();
+    this->clear();
 }
 
-void Crit3DMacroArea::setMeteoPoints (std::vector<int> myMeteoPoints)
-{
-    meteoPoints = myMeteoPoints;
-    return;
-}
-
-std::vector<int> Crit3DMacroArea::getMeteoPoints()
-{
-    return meteoPoints;
-}
-
-void Crit3DMacroArea::setAreaCells (std::vector<float> myCells)
-{
-    areaCells = myCells;
-    return;
-}
-
-std::vector<float> Crit3DMacroArea::getAreaCells()
-{
-    return areaCells;
-}
-
-void Crit3DMacroArea::setParameters (std::vector<std::vector<double>> myParameters)
-{
-    areaParameters = myParameters;
-    return;
-}
-
-std::vector<std::vector<double>> Crit3DMacroArea::getParameters()
-{
-    return areaParameters;
-}
-
-void Crit3DMacroArea::setCombination (Crit3DProxyCombination myCombination)
-{
-    areaCombination = myCombination;
-    return;
-}
 
 void Crit3DMacroArea::clear()
 {
@@ -1068,10 +1027,5 @@ void Crit3DMacroArea::clear()
     areaParameters.clear();
     areaCombination.clear();
     meteoPoints.clear();
-}
-
-Crit3DProxyCombination Crit3DMacroArea::getCombination()
-{
-    return areaCombination;
 }
 
