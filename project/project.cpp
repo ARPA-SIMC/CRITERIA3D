@@ -5242,7 +5242,7 @@ void Project::logWarning()
 
     if (modality == MODE_GUI)
     {
-        QMessageBox::warning(nullptr, "WARNING!", errorString);
+        QMessageBox::warning(nullptr, "WARNING", errorString);
     }
     else
     {
