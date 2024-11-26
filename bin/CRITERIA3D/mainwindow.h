@@ -44,16 +44,6 @@
         void callNewMeteoWidget(std::string id, std::string name, std::string dataset, double altitude, std::string lapseRateCode, bool isGrid);
         void callAppendMeteoWidget(std::string id, std::string name, std::string dataset, double altitude, std::string lapseRateCode, bool isGrid);
 
-        void on_actionOpenProject_triggered();
-        void on_actionCloseProject_triggered();
-        void on_actionLoad_DEM_triggered();
-        void on_actionLoad_soil_map_triggered();
-        void on_actionLoad_soil_data_triggered();
-        void on_actionLoad_MeteoPoints_triggered();
-        void on_actionMeteoPointsImport_data_triggered();
-
-        void on_actionNew_meteoPointsDB_from_csv_triggered();
-
         void on_dateEdit_dateChanged(const QDate &date);
         void on_timeEdit_valueChanged(int myHour);
         void on_dayBeforeButton_clicked();
@@ -63,7 +53,18 @@
         void on_opacitySliderRasterInput_sliderMoved(int position);
         void on_opacitySliderRasterOutput_sliderMoved(int position);
 
-        // Menu show
+        // Menu File
+        void on_actionOpenProject_triggered();
+        void on_actionCloseProject_triggered();
+        void on_actionLoad_DEM__triggered();
+        void on_actionExtract_sub_basin_triggered();
+        void on_actionLoad_soil_map_triggered();
+        void on_actionLoad_soil_data_triggered();
+        void on_actionLoad_MeteoPoints_triggered();
+        void on_actionMeteoPointsImport_data_triggered();
+        void on_actionNew_meteoPointsDB_from_csv_triggered();
+
+        // Menu Show
         void on_actionShow_3D_viewer_triggered();
         void on_viewer3DClosed();
         void on_slopeChanged();

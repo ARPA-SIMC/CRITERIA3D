@@ -816,11 +816,11 @@ void MainWindow::on_timeEdit_valueChanged(int myHour)
 }
 
 
-void MainWindow::on_actionLoad_DEM_triggered()
+void MainWindow::on_actionLoad_DEM__triggered()
 {
-    QString fileName = QFileDialog::getOpenFileName(this, tr("Open Digital Elevation Model"), "",
+    QString demPath = myProject.getDefaultPath() + PATH_DEM;
+    QString fileName = QFileDialog::getOpenFileName(this, tr("Open Digital Elevation Model"), demPath,
                                     tr("ESRI float (*.flt);; ENVI image (*.img)"));
-
     if (fileName == "") return;
 
     clearRaster_GUI();
@@ -828,6 +828,20 @@ void MainWindow::on_actionLoad_DEM_triggered()
     if (! myProject.loadDEM(fileName)) return;
 
     renderDEM();
+}
+
+
+void MainWindow::on_actionExtract_sub_basin_triggered()
+{
+    if (! myProject.DEM.isLoaded)
+    {
+        myProject.logWarning(ERROR_STR_MISSING_DEM);
+        return;
+    }
+
+    //myProject.logInfoGUI("Select the basin closing point.");
+    myProject.logWarning("This feature will be available soon.");
+
 }
 
 

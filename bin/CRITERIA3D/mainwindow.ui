@@ -1293,7 +1293,7 @@
        <second>0</second>
        <year>1752</year>
        <month>9</month>
-       <day>10</day>
+       <day>9</day>
       </datetime>
      </property>
      <property name="maximumDate">
@@ -1795,7 +1795,7 @@
       <bool>true</bool>
      </property>
     </widget>
-    <widget class="QLabel" name="labelLayer_2">
+    <widget class="QLabel" name="labelTime">
      <property name="geometry">
       <rect>
        <x>10</x>
@@ -1871,7 +1871,7 @@
      </property>
      <widget class="QMenu" name="menuMeteo_points">
       <property name="title">
-       <string>Meteo points</string>
+       <string>Meteo points db</string>
       </property>
       <addaction name="actionNew_meteoPointsDB_from_csv"/>
       <addaction name="actionLoad_MeteoPoints"/>
@@ -1893,7 +1893,14 @@
       <addaction name="separator"/>
       <addaction name="actionCreate_new_land_use_map"/>
      </widget>
-     <addaction name="actionLoad_DEM"/>
+     <widget class="QMenu" name="menuDigital_Elevation_Model">
+      <property name="title">
+       <string>Digital Elevation Model...</string>
+      </property>
+      <addaction name="actionLoad_DEM_"/>
+      <addaction name="actionExtract_sub_basin"/>
+     </widget>
+     <addaction name="menuDigital_Elevation_Model"/>
      <addaction name="menuMeteo_points"/>
      <addaction name="menuSoil"/>
      <addaction name="menuLand_use"/>
@@ -2245,11 +2252,6 @@
    <addaction name="menuGIS_settings"/>
   </widget>
   <widget class="QStatusBar" name="statusBar"/>
-  <action name="actionLoad_DEM">
-   <property name="text">
-    <string>Digital Elevation Model...</string>
-   </property>
-  </action>
   <action name="actionMapOpenStreetMap">
    <property name="checkable">
     <bool>true</bool>
@@ -2416,7 +2418,7 @@
   </action>
   <action name="actionLoad_MeteoPoints">
    <property name="text">
-    <string>Open...</string>
+    <string>Open db...</string>
    </property>
   </action>
   <action name="actionMeteoPointsImport_data">
@@ -2459,7 +2461,7 @@
   </action>
   <action name="actionNew_meteoPointsDB_from_csv">
    <property name="text">
-    <string>New (from csv)...</string>
+    <string>New db (from csv)...</string>
    </property>
   </action>
   <action name="actionSnow_settings">
@@ -2788,12 +2790,12 @@
   </action>
   <action name="actionLoad_soil_map">
    <property name="text">
-    <string>Soil map...</string>
+    <string>Load soil map...</string>
    </property>
   </action>
   <action name="actionLoad_soil_data">
    <property name="text">
-    <string>Soil db...</string>
+    <string>Load soil db...</string>
    </property>
   </action>
   <action name="actionLoad_land_use_map">
@@ -2924,6 +2926,16 @@
   <action name="actionSave_outputRaster">
    <property name="text">
     <string>Save current output (raster)...</string>
+   </property>
+  </action>
+  <action name="actionLoad_DEM_">
+   <property name="text">
+    <string>Load DEM...</string>
+   </property>
+  </action>
+  <action name="actionExtract_sub_basin">
+   <property name="text">
+    <string>Extract sub-basin...</string>
    </property>
   </action>
  </widget>
