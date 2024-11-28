@@ -2126,6 +2126,11 @@ double Project3D::assignTranspiration(int row, int col, double currentLai, doubl
 }
 
 
+/*!
+     * \brief computeFactorOfSafety
+     * \return factor of safety FoS [-]
+     * if fos < 1 the slope is unstable
+     */
 float Project3D::computeFactorOfSafety(int row, int col, unsigned int layerIndex)
 {
     // check layer
@@ -2175,7 +2180,7 @@ float Project3D::computeFactorOfSafety(int row, int col, unsigned int layerIndex
     }
 
     // matric potential (with sign) [kPa]
-    double matricPotential = soilFluxes3D::getMatricPotential(nodeIndex) * GRAVITY;
+    double matricPotential = std::min(0.0, soilFluxes3D::getMatricPotential(nodeIndex) * GRAVITY);
 
     // suction stress [kPa]
     double suctionStress = matricPotential * saturationDegree;

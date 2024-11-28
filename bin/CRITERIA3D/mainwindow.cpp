@@ -2285,7 +2285,7 @@ void MainWindow::initializeCriteria3DInterface()
             ui->layerDepthEdit->setText(depthStr + " m");
         }
 
-        myProject.currentSeconds = 0;
+        myProject.currentSeconds = 3600;
         updateModelTime();
     }
 }
@@ -3258,13 +3258,13 @@ void MainWindow::on_actionView_DegreeOfSaturation_fixed_range_triggered()
 void MainWindow::on_actionView_Factor_of_safety_triggered()
 {
     int layerIndex = std::max(1, ui->layerNrEdit->value());
-    showCriteria3DVariable(factorOfSafety, layerIndex, true, true, 0, 4);
+    showCriteria3DVariable(factorOfSafety, layerIndex, true, true, 0, 2);
 }
 
 
 void MainWindow::on_actionView_Factor_of_safety_minimum_triggered()
 {
-    showCriteria3DVariable(minimumFactorOfSafety, NODATA, true, true, 0, 4);
+    showCriteria3DVariable(minimumFactorOfSafety, NODATA, true, true, 0, 2);
 }
 
 
