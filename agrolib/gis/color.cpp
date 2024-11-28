@@ -211,7 +211,7 @@ bool setSlopeStabilityScale(Crit3DColorScale* myScale)
 {
     myScale->initialize(5, 256);
 
-    myScale->keyColor[0] = Crit3DColor(128, 0, 128);       /*!< violet */
+    myScale->keyColor[0] = Crit3DColor(0, 0, 0);           /*!< black */
     myScale->keyColor[1] = Crit3DColor(255, 0, 0);         /*!< red */
     myScale->keyColor[2] = Crit3DColor(255, 255, 0);       /*!< yellow */
     myScale->keyColor[3] = Crit3DColor(64, 196, 64);       /*!< green */

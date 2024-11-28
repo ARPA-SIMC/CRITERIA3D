@@ -860,6 +860,10 @@ void MainWindow::on_actionOpenProject_triggered()
         myProject.loadCriteria3DProject(myProject.getApplicationPath() + "default.ini");
     }
 
+    ui->actionCriteria3D_update_subHourly->setChecked(myProject.showEachTimeStep);
+    ui->flagOutputPoints_save_output->setChecked(myProject.isSaveOutputPoints());
+    ui->flagCompute_only_points->setChecked(myProject.getComputeOnlyPoints());
+
     drawProject();
 }
 
@@ -3247,7 +3251,7 @@ void MainWindow::on_actionView_DegreeOfSaturation_automatic_range_triggered()
 void MainWindow::on_actionView_DegreeOfSaturation_fixed_range_triggered()
 {
     int layerIndex = ui->layerNrEdit->value();
-    showCriteria3DVariable(degreeOfSaturation, layerIndex, true, false, 0.1, 1.0);
+    showCriteria3DVariable(degreeOfSaturation, layerIndex, true, false, 0.2, 1.0);
 }
 
 
