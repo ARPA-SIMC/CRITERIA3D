@@ -396,6 +396,7 @@ void Crit3DProject::assignPrecipitation()
 // returns the water remaining on the surface after infiltration into soil cracks
 float Crit3DProject::checkSoilCracking(int row, int col, float precipitation)
 {
+    const double MIN_CRACKING_DEPTH = 0.2;              // [m]
     const double MAX_CRACKING_DEPTH = 0.6;              // [m]
     const double MIN_VOID_VOLUME = 0.15;                // [m3 m-3]
     const double MAX_VOID_VOLUME = 0.20;                // [m3 m-3]
@@ -412,12 +413,17 @@ float Crit3DProject::checkSoilCracking(int row, int col, float precipitation)
     if (precipitation <= minimumPond)
         return precipitation;
 
+    // check soil depth
+    double soilDepth = std::min(computationSoilDepth, soilList[soilIndex].totalDepth);
+    if (soilDepth <= MIN_CRACKING_DEPTH)
+        return precipitation;
+
     // check clay
-    double maxDepth = std::min(computationSoilDepth, MAX_CRACKING_DEPTH);   // [m]
     bool isFineFraction = true;
     int lastFineHorizon = NODATA;
     int h = 0;
-    while (soilList[soilIndex].horizon[h].upperDepth <= maxDepth && isFineFraction)
+    double maxDepth = std::min(soilDepth, MAX_CRACKING_DEPTH);   // [m]
+    while (h < soilList[soilIndex].nrHorizons && soilList[soilIndex].horizon[h].upperDepth < maxDepth && isFineFraction)
     {
         soil::Crit3DHorizon horizon = soilList[soilIndex].horizon[h];
 
@@ -439,7 +445,7 @@ float Crit3DProject::checkSoilCracking(int row, int col, float precipitation)
     maxDepth = std::min(soilList[soilIndex].horizon[lastFineHorizon].lowerDepth, MAX_CRACKING_DEPTH);
 
     // clay horizon is too thin
-    if (maxDepth < 0.2)
+    if (maxDepth < MIN_CRACKING_DEPTH)
         return precipitation;
 
     // compute void volume
