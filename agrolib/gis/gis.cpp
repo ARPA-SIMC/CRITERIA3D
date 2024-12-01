@@ -1532,7 +1532,7 @@ namespace gis
                 newGrid->value[row][col] = newGrid->header->flag;
 
                 float value = NODATA;
-                if (resampleFactor < 1. || elab == aggrCenter)
+                if (resampleFactor <= 1. || elab == aggrCenter)
                 {
                     double x, y;
                     newGrid->getXY(row, col, x, y);
@@ -1544,14 +1544,14 @@ namespace gis
                 }
                 else
                 {
+                    double step = oldGrid.header->cellSize * 0.5;
+
                     double x0, y0;
                     newGrid->getXY(row, col, x0, y0);
-                    myLL.utm.x = x0 - (newGrid->header->cellSize / 2);
-                    myLL.utm.y = y0 - (newGrid->header->cellSize / 2);
-                    myUR.utm.x = x0 + (newGrid->header->cellSize / 2);
-                    myUR.utm.y = y0 + (newGrid->header->cellSize / 2);
-
-                    double step = oldGrid.header->cellSize * 0.5;
+                    myLL.utm.x = x0 - (newGrid->header->cellSize / 2) + step;
+                    myLL.utm.y = y0 - (newGrid->header->cellSize / 2) + step;
+                    myUR.utm.x = x0 + (newGrid->header->cellSize / 2) - step;
+                    myUR.utm.y = y0 + (newGrid->header->cellSize / 2) - step;
 
                     values.clear();
                     maxValues = 0;

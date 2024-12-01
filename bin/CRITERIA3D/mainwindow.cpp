@@ -1865,8 +1865,8 @@ void MainWindow::on_actionNew_meteoPointsDB_from_csv_triggered()
 
 void MainWindow::on_actionLoad_soil_map_triggered()
 {
-    QString fileName = QFileDialog::getOpenFileName(this, tr("Open soil map"), "",
-                                                    tr("ESRI float (*.flt);; ENVI image (*.img)"));
+    QString soilPath = myProject.getDefaultPath() + PATH_SOIL;
+    QString fileName = QFileDialog::getOpenFileName(this, tr("Open soil map"), soilPath, tr("ESRI float (*.flt);; ENVI image (*.img)"));
     if (fileName == "") return;
 
     if (myProject.loadSoilMap(fileName))
@@ -1877,7 +1877,8 @@ void MainWindow::on_actionLoad_soil_map_triggered()
 
 void MainWindow::on_actionLoad_soil_data_triggered()
 {
-    QString fileName = QFileDialog::getOpenFileName(this, tr("Load soil data"), "", tr("SQLite files (*.db)"));
+    QString soilPath = myProject.getDefaultPath() + PATH_SOIL;
+    QString fileName = QFileDialog::getOpenFileName(this, tr("Load soil data"), soilPath, tr("SQLite files (*.db)"));
     if (fileName == "") return;
 
     myProject.loadSoilDatabase(fileName);
