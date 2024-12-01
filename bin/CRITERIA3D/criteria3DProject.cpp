@@ -1254,18 +1254,21 @@ bool Crit3DProject::runModelHour(const QString& hourlyOutputPath, bool isRestart
         {
             if (! interpolateAndSaveHourlyMeteo(airTemperature, myDateTime, hourlyOutputPath, isSaveOutputRaster()))
                 return false;
+            qApp->processEvents();
 
             if (! interpolateAndSaveHourlyMeteo(precipitation, myDateTime, hourlyOutputPath, isSaveOutputRaster()))
                 return false;
+            qApp->processEvents();
 
             if (! interpolateAndSaveHourlyMeteo(airRelHumidity, myDateTime, hourlyOutputPath, isSaveOutputRaster()))
                 return false;
+            qApp->processEvents();
 
             if (! interpolateAndSaveHourlyMeteo(windScalarIntensity, myDateTime, hourlyOutputPath, isSaveOutputRaster()))
                 return false;
+            qApp->processEvents();
 
             hourlyMeteoMaps->setComputed(true);
-            qApp->processEvents();
         }
 
         if (processes.computeRadiation)
