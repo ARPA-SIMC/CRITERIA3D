@@ -34,6 +34,7 @@
 #include "statistics.h"
 #include "project3D.h"
 #include "soilFluxes3D.h"
+#include "soil.h"
 
 #include <QtSql>
 #include <QPaintEvent>
@@ -421,13 +422,14 @@ float Crit3DProject::checkSoilCracking(int row, int col, float precipitation)
     // check clay
     bool isFineFraction = true;
     int lastFineHorizon = NODATA;
-    int h = 0;
+    unsigned int h = 0;
     double maxDepth = std::min(soilDepth, MAX_CRACKING_DEPTH);   // [m]
     while (h < soilList[soilIndex].nrHorizons && soilList[soilIndex].horizon[h].upperDepth < maxDepth && isFineFraction)
     {
         soil::Crit3DHorizon horizon = soilList[soilIndex].horizon[h];
 
-        double fineFraction = (horizon.texture.clay + horizon.texture.silt * 0.5) / 100 * (1 - horizon.coarseFragments);
+        double fineFraction = (horizon.texture.clay + horizon.texture.silt * 0.5) / 100
+                              * (1 - horizon.coarseFragments) * (1 - horizon.organicMatter);
         if (fineFraction < 0.5)
         {
             isFineFraction = false;
@@ -489,20 +491,24 @@ float Crit3DProject::checkSoilCracking(int row, int col, float precipitation)
         if (downWater <= 0)
             break;
 
-        double layerThick_cm = layerThickness[l] * 100;         // [cm]
-        double layerWater = layerThick_cm * 0.5;                // [mm]
-        layerWater = std::min(layerWater, downWater);
-
         long nodeIndex = indexMap.at(l).value[row][col];
-        double flow = area * (layerWater / 1000.);              // [m3 h-1]
-        waterSinkSource[nodeIndex] += flow / 3600.;             // [m3 s-1]
-        totalPrecipitation += flow;                             // [m3]
+        if (nodeIndex != indexMap.at(l).header->flag)
+        {
+            double layerThick_cm = layerThickness[l] * 100;         // [cm]
+            double layerWater = layerThick_cm * 0.5;                // [mm]
+            layerWater = std::min(layerWater, downWater);
 
-        downWater -= layerWater;
+            double flow = area * (layerWater / 1000.);              // [m3 h-1]
+
+            waterSinkSource[nodeIndex] += flow / 3600.;             // [m3 s-1]
+            totalPrecipitation += flow;                             // [m3]
+            downWater -= layerWater;
+        }
     }
 
     if (downWater > 0)
     {
+        // remaining water
         return surfaceWater + downWater;
     }
     else
