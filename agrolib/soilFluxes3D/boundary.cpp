@@ -26,6 +26,8 @@
 
 #include <stdio.h>
 #include <math.h>
+#include <iostream>
+#include <algorithm>
 
 #include "physics.h"
 #include "commonConstants.h"
@@ -37,7 +39,7 @@
 #include "header/water.h"
 #include "header/heat.h"
 
-#include <iostream>
+
 
 void initializeBoundary(Tboundary *myBoundary, int myType, float slope, float boundaryArea)
 {
@@ -254,7 +256,7 @@ void updateBoundaryWater (double deltaT)
                 double avgH = (nodeListPtr[i].H + nodeListPtr[i].oldH) * 0.5;        // [m]
 
                 // Surface water available for runoff [m]
-                double hs = MAXVALUE(avgH - (nodeListPtr[i].z + nodeListPtr[i].pond), 0.);
+                double hs = std::max(avgH - (nodeListPtr[i].z + nodeListPtr[i].pond), 0.);
                 if (hs > EPSILON_METER)
                 {
                     double maxFlow = (hs * nodeListPtr[i].volume_area) / deltaT;         // [m3 s-1] maximum flow available during the time step
@@ -262,7 +264,7 @@ void updateBoundaryWater (double deltaT)
                     double v = (1. / nodeListPtr[i].Soil->Roughness) * pow(hs, 2./3.) * sqrt(nodeListPtr[i].boundary->slope);
                     // on the surface boundaryArea is a side [m]
                     double flow = nodeListPtr[i].boundary->boundaryArea * hs * v;        // [m3 s-1]
-                    nodeListPtr[i].boundary->waterFlow = -MINVALUE(flow, maxFlow);
+                    nodeListPtr[i].boundary->waterFlow = -std::min(flow, maxFlow);
                 }
             }
             else if (nodeListPtr[i].boundary->type == BOUNDARY_FREEDRAINAGE)
@@ -329,7 +331,7 @@ void updateBoundaryWater (double deltaT)
                         evapFromSoil *= (1. - surfaceWaterFraction);
                         evapFromSurface *= surfaceWaterFraction;
 
-                        evapFromSurface = MAXVALUE(evapFromSurface, -waterVolume / deltaT);
+                        evapFromSurface = std::max(evapFromSurface, -waterVolume / deltaT);
 
                         if (nodeListPtr[upIndex].boundary != nullptr)
                             nodeListPtr[upIndex].boundary->waterFlow = evapFromSurface;
@@ -339,9 +341,9 @@ void updateBoundaryWater (double deltaT)
                     }
 
                     if (evapFromSoil < 0.)
-                        evapFromSoil = MAXVALUE(evapFromSoil, -(theta_from_Se(i) - nodeListPtr[i].Soil->Theta_r) * nodeListPtr[i].volume_area / deltaT);
+                        evapFromSoil = std::max(evapFromSoil, -(theta_from_Se(i) - nodeListPtr[i].Soil->Theta_r) * nodeListPtr[i].volume_area / deltaT);
                     else
-                        evapFromSoil = MINVALUE(evapFromSoil, (nodeListPtr[i].Soil->Theta_s - nodeListPtr[i].Soil->Theta_r) * nodeListPtr[i].volume_area / deltaT);
+                        evapFromSoil = std::min(evapFromSoil, (nodeListPtr[i].Soil->Theta_s - nodeListPtr[i].Soil->Theta_r) * nodeListPtr[i].volume_area / deltaT);
 
                     nodeListPtr[i].boundary->waterFlow = evapFromSoil;
                 }
