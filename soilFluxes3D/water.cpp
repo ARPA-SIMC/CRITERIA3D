@@ -131,7 +131,20 @@ double infiltration(long sup, long inf, TlinkedNode *link, double deltaT)
         if (maxInfiltrationRate <= 0.0) return(0.0);
 
         /*! first soil layer: mean between current k and k_sat */
-        double meanK = computeMean(nodeListPtr[inf].k, nodeListPtr[inf].Soil->K_sat);
+        double meanK = computeMean(nodeListPtr[inf].Soil->K_sat, nodeListPtr[inf].k);
+
+        if (nodeListPtr[inf].boundary != nullptr)
+        {
+            if (nodeListPtr[inf].boundary->type == BOUNDARY_URBAN)
+            {
+                // TODO improve with external parameters
+                meanK *= 0.1;
+            }
+            else if (nodeListPtr[inf].boundary->type == BOUNDARY_ROAD)
+            {
+                meanK = 0.0;
+            }
+        }
 
         double dH = nodeListPtr[sup].H - nodeListPtr[inf].H;
         double maxK = maxInfiltrationRate * (cellDistance / dH);
@@ -144,6 +157,19 @@ double infiltration(long sup, long inf, TlinkedNode *link, double deltaT)
  /*! saturated */
  else
     {
+        if (nodeListPtr[inf].boundary != nullptr)
+        {
+            if (nodeListPtr[inf].boundary->type == BOUNDARY_URBAN)
+            {
+                // TODO check?
+                return(nodeListPtr[inf].Soil->K_sat * 0.1 * link->area) / cellDistance;
+            }
+            else if (nodeListPtr[inf].boundary->type == BOUNDARY_ROAD)
+            {
+                return 0.;
+            }
+        }
+
         return(nodeListPtr[inf].Soil->K_sat * link->area) / cellDistance;
     }
 
