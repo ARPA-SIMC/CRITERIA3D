@@ -769,12 +769,32 @@ bool Project3D::setCrit3DTopography()
                             // SUB-SURFACE
                             if (int(boundaryMap.value[row][col]) == BOUNDARY_RUNOFF)
                             {
+                                // TODO problema se è urban o road
                                 float boundaryArea = lateralArea;
                                 myResult = soilFluxes3D::setNode(index, float(x), float(y), z, volume, false, true, BOUNDARY_FREELATERALDRAINAGE, boundarySlope, boundaryArea);
                             }
                             else
                             {
-                                myResult = soilFluxes3D::setNode(index, float(x), float(y), z, volume, false, false, BOUNDARY_NONE, 0, 0);
+                                int boundaryType = BOUNDARY_NONE;
+                                bool isBoundary = false;
+
+                                // check on urban or road land use
+                                if (layer == 1)
+                                {
+                                    int luIndex = getLandUnitIndexRowCol(row, col);
+                                    if (landUnitList[luIndex].landUseType == LANDUSE_ROAD)
+                                    {
+                                        boundaryType = BOUNDARY_ROAD;
+                                        isBoundary = true;
+                                    }
+                                    if (landUnitList[luIndex].landUseType == LANDUSE_URBAN)
+                                    {
+                                        boundaryType = BOUNDARY_URBAN;
+                                        isBoundary = true;
+                                    }
+                                }
+
+                                myResult = soilFluxes3D::setNode(index, float(x), float(y), z, volume, false, isBoundary, boundaryType, 0, 0);
                             }
                         }
                     }
@@ -1121,10 +1141,16 @@ bool Project3D::loadCropDatabase(const QString &fileName)
     }
 
     // land unit list
+    errorString = "";
     if (! loadLandUnitList(dbCrop, landUnitList, errorString))
     {
        logError("Error in reading land_units table\n" + errorString);
        return false;
+    }
+    else if (errorString != "")
+    {
+        logWarning("Warning in the land_units table of crop db: " + errorString + "\nThe default land use (FALLOW) will be used.");
+        errorString = "";
     }
 
     // crop list (same index of landUnitsList)
@@ -1187,15 +1213,6 @@ int Project3D::getLandUnitIndexRowCol(int row, int col)
     {
         return NODATA;
     }
-
-    /*
-    double x, y;
-    gis::getUtmXYFromRowCol(DEM.header, row, col, &x, &y);
-
-    int id = getLandUnitFromUtm(x, y);
-    if (id == NODATA)
-        return NODATA;
-    */
 
     return getLandUnitListIndex(id);
 }

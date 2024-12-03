@@ -13,7 +13,7 @@
     struct Tboundary
     {
         short type;
-        float slope;                        /*!< [m m-1]    */
+        float slope;                        /*!< [m m-1]   */
         float boundaryArea;                 /*!< [m2] (only for surface runoff [m]) */
         double waterFlow;                   /*!< [m3 s-1]   */
         double sumBoundaryWaterFlow;        /*!< [m3] sum of boundary water flow */
