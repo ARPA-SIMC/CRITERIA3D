@@ -683,7 +683,7 @@ bool Download::downloadHourlyData(const QDate &startDate, const QDate &endDate, 
 
                         // flag
                         flag = fields[6];
-                        if (flag.left(1) != "1" && flag.left(3) != "054")
+                        if (flag.left(1) != "1" && flag.left(1) != "2" && flag.left(3) != "054")
                         {
                             _dbMeteo->appendQueryHourly(dateTime, idPoint, idVariable, value, isFirstData);
                             isFirstData = false;
