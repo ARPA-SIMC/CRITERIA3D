@@ -638,7 +638,7 @@ bool Download::downloadHourlyData(const QDate &startDate, const QDate &endDate, 
             _dbMeteo->queryString = "";
 
             QString line, dateTime, idPoint, flag, varName;
-            QString idVariable, value, frequency;
+            QString idVariable, value, secondValue, frequency;
             QList<QString> fields;
             int i, idVarArkimet;
 
@@ -679,12 +679,18 @@ bool Download::downloadHourlyData(const QDate &startDate, const QDate &endDate, 
                     if (isVarOk && fields[3] != "")
                     {
                         value = fields[3];
+                        secondValue = fields[4];
 
                         // flag
                         flag = fields[6];
                         if (flag.left(1) != "1" && flag.left(3) != "054")
                         {
                             _dbMeteo->appendQueryHourly(dateTime, idPoint, idVariable, value, isFirstData);
+                            isFirstData = false;
+                        }
+                        else if(flag.left(1) == "2")
+                        {
+                            _dbMeteo->appendQueryHourly(dateTime, idPoint, idVariable, secondValue, isFirstData);
                             isFirstData = false;
                         }
                     }
