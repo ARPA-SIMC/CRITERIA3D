@@ -2185,7 +2185,7 @@ bool Project::loadTopographicDistanceMaps(bool onlyWithData, bool showInfo)
     return true;
 }
 
-bool Project::glocalWeightsMaps(float windowWidth)
+bool Project::writeGlocalWeightsMaps(float windowWidth)
 {
     //controlla se c'è mappa aree
 
@@ -2286,7 +2286,7 @@ bool Project::loadGlocalAreasMap()
 
     if (!QFile::exists(fileNameMap + ".flt"))
     {
-        errorString = "Could not find " + fileNameMap + " file";
+        errorString = "Could not find file:\n" + fileNameMap;
         return false;
     }
 
@@ -2338,10 +2338,7 @@ bool Project::loadGlocalStationsAndCells(bool isGrid)
 
     //assegnazione pesi a ogni cella di ogni area
     if (!loadGlocalWeightMaps(myAreas, isGrid))
-    {
-        errorString = "Error loading glocal weight maps";
         return false;
-    }
 
     interpolationSettings.setMacroAreas(myAreas);
 
@@ -2352,12 +2349,20 @@ bool Project::loadGlocalWeightMaps(std::vector<Crit3DMacroArea> &myAreas, bool i
 {
     QString mapsFolder = projectPath + PATH_GLOCAL;
     if (! QDir(mapsFolder).exists())
-        glocalWeightsMaps(10000);
+    {
+        errorString = "Glocal dir not found. Please create glocal weight maps";
+        return false;
+    }
+
+    if (QDir(mapsFolder).isEmpty(QDir::Files))
+    {
+        errorString = "Glocal dir empty. Please create glocal weight maps";
+        return false;
+    }
 
     std::string myError;
     gis::Crit3DRasterGrid* macroAreasGrid = new gis::Crit3DRasterGrid();
     std::string fileName = mapsFolder.toStdString() + "glocalWeight_";
-
 
     std::vector<float> areaCells;
     int nrCols, nrRows;
@@ -2375,43 +2380,54 @@ bool Project::loadGlocalWeightMaps(std::vector<Crit3DMacroArea> &myAreas, bool i
         nrRows = meteoGridDbHandler->gridStructure().header().nrRows;
     }
 
+    unsigned nrAreasWithCells = 0;
+
     for (int i = 0; i < myAreas.size(); i++)
     {
         if (QFile::exists(QString::fromStdString(fileName) + QString::number(i) + ".flt"))
         {
-        if (gis::readEsriGrid(fileName + std::to_string(i), macroAreasGrid, myError))
-        {
-            for (int row = 0; row < nrRows; row++)
+            if (readEsriGrid(fileName + std::to_string(i), macroAreasGrid, myError))
             {
-                for (int col = 0; col < nrCols; col++)
+                for (int row = 0; row < nrRows; row++)
                 {
-                    if (isGrid)
+                    for (int col = 0; col < nrCols; col++)
                     {
-                        myX = meteoGridDbHandler->meteoGrid()->meteoPoints()[row][col]->point.utm.x;
-                        myY = meteoGridDbHandler->meteoGrid()->meteoPoints()[row][col]->point.utm.y;
-                    }
-                    else
-                        DEM.getXY(row, col, myX, myY);
+                        if (isGrid)
+                        {
+                            myX = meteoGridDbHandler->meteoGrid()->meteoPoints()[row][col]->point.utm.x;
+                            myY = meteoGridDbHandler->meteoGrid()->meteoPoints()[row][col]->point.utm.y;
+                        }
+                        else
+                            DEM.getXY(row, col, myX, myY);
 
-                    myValue = macroAreasGrid->getValueFromXY(myX, myY);
+                        myValue = macroAreasGrid->getValueFromXY(myX, myY);
 
-                    if (!isEqual(myValue, NODATA) && !isEqual(myValue, 0))
-                    {
-                        areaCells.push_back(row*nrCols+col);
-                        areaCells.push_back(myValue);
+                        if (!isEqual(myValue, NODATA) && !isEqual(myValue, 0))
+                        {
+                            areaCells.push_back(row*nrCols+col);
+                            areaCells.push_back(myValue);
+                        }
                     }
                 }
+                if (areaCells.size() > 0) nrAreasWithCells++;
+                myAreas[i].setAreaCells(areaCells);
+                areaCells.clear();
             }
-            myAreas[i].setAreaCells(areaCells);
-            areaCells.clear();
-        }
-        else {
-            macroAreasGrid->clear();
-            return false;
-        }
+            else
+            {
+                macroAreasGrid->clear();
+                errorString = "macroareas not found";
+                return false;
+            }
         }
     }
     macroAreasGrid->clear();
+
+    if (nrAreasWithCells == 0)
+    {
+        errorString = "No valid files found in glocal dir. Please create glocal weight maps";
+        return false;
+    }
 
     return true;
 }
@@ -3476,7 +3492,7 @@ void Project::macroAreaDetrending(Crit3DMacroArea myArea, meteoVariable myVar, s
     Crit3DMeteoPoint* myMeteoPoints = new Crit3DMeteoPoint[unsigned(myArea.getMeteoPointsNr())];
     std::vector<int> meteoPointsList = myArea.getMeteoPoints();
 
-    for (int i = 0; i < meteoPointsList.size(); i++)
+    for (unsigned i = 0; i < meteoPointsList.size(); i++)
     {
         myMeteoPoints[i] = meteoPoints[meteoPointsList[i]];
     }
@@ -3488,6 +3504,7 @@ void Project::macroAreaDetrending(Crit3DMacroArea myArea, meteoVariable myVar, s
     }
 
     myMeteoPoints->clear();
+    delete[] myMeteoPoints;
 
     return;
 }
@@ -4430,8 +4447,11 @@ void Project::showLocalProxyGraph(gis::Crit3DGeoPoint myPoint)
 
     if (interpolationSettings.getUseGlocalDetrending() && ! interpolationSettings.isGlocalReady())
     {
-        if (loadGlocalAreasMap())
-            loadGlocalStationsAndCells(false);
+        if (! loadGlocalAreasMap() || ! loadGlocalStationsAndCells(false))
+        {
+            logError();
+            return;
+        }
     }
 
     localProxyWidget = new Crit3DLocalProxyWidget(myUtm.x, myUtm.y, myZDEM, myZGrid, this->gisSettings, &interpolationSettings, meteoPoints, nrMeteoPoints, currentVariable, currentFrequency, currentDate, currentHour, quality, &qualityInterpolationSettings, meteoSettings, &climateParameters, checkSpatialQuality);
@@ -5223,7 +5243,7 @@ void Project::logWarning()
 
     if (modality == MODE_GUI)
     {
-        QMessageBox::warning(nullptr, "WARNING!", errorString);
+        QMessageBox::warning(nullptr, "WARNING", errorString);
     }
     else
     {

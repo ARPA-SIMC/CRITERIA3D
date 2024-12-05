@@ -1520,7 +1520,7 @@ namespace gis
 
         double resampleFactor = newGrid->header->cellSize / oldGrid.header->cellSize;
 
-        int row, col, tmpRow, tmpCol, nrValues, maxValues;
+        int row, col, tmpRow, tmpCol, nrValues;
         gis::Crit3DPoint myLL, myUR;
         std::vector<float> values;
 
@@ -1529,62 +1529,69 @@ namespace gis
         for (row = 0; row < newGrid->header->nrRows; row++)
             for (col = 0; col < newGrid->header->nrCols; col++)
             {
+                // initialize
                 newGrid->value[row][col] = newGrid->header->flag;
-
                 float value = NODATA;
-                if (resampleFactor < 1. || elab == aggrCenter)
+
+                if (resampleFactor <= 1. || elab == aggrCenter)
                 {
                     double x, y;
                     newGrid->getXY(row, col, x, y);
                     oldGrid.getRowCol(x, y, tmpRow, tmpCol);
                     if (! gis::isOutOfGridRowCol(tmpRow, tmpCol, oldGrid))
                     {
-                        value = oldGrid.value[tmpRow][tmpCol];
+                        float tmpValue = oldGrid.value[tmpRow][tmpCol];
+                        if (! isEqual(tmpValue, oldGrid.header->flag))
+                            value = tmpValue;
                     }
                 }
                 else
                 {
+                    int nrStep = floor(resampleFactor) + 1;
+                    double step = newGrid->header->cellSize / nrStep;
+                    double halfStep = step * 0.5;
+
                     double x0, y0;
                     newGrid->getXY(row, col, x0, y0);
-                    myLL.utm.x = x0 - (newGrid->header->cellSize / 2);
-                    myLL.utm.y = y0 - (newGrid->header->cellSize / 2);
-                    myUR.utm.x = x0 + (newGrid->header->cellSize / 2);
-                    myUR.utm.y = y0 + (newGrid->header->cellSize / 2);
-
-                    double step = oldGrid.header->cellSize * 0.5;
+                    myLL.utm.x = x0 - (newGrid->header->cellSize / 2) + halfStep;
+                    myLL.utm.y = y0 - (newGrid->header->cellSize / 2) + halfStep;
+                    myUR.utm.x = x0 + (newGrid->header->cellSize / 2) - halfStep;
+                    myUR.utm.y = y0 + (newGrid->header->cellSize / 2) - halfStep;
 
                     values.clear();
-                    maxValues = 0;
-
-                    double x = myLL.utm.x;
-                    while(x <= myUR.utm.x)
+                    int maxNrValues = 0;
+                    for (int i = 0; i < nrStep; i++)
                     {
-                        double y = myLL.utm.y;
-                        while(y <= myUR.utm.y)
+                        double x = myLL.utm.x + step * i;
+                        for (int j = 0; j < nrStep; j++)
                         {
-                            maxValues++;
+                            double y = myLL.utm.y + step * j;
                             float tmpValue = gis::getValueFromXY(oldGrid, x, y);
                             if (! isEqual(tmpValue, oldGrid.header->flag))
                             {
                                 values.push_back(tmpValue);
                             }
-
-                            y += step;
+                            maxNrValues++;
                         }
-                        x += step;
                     }
                     nrValues = int(values.size());
 
-                    if (maxValues > 0)
+                    if (maxNrValues > 0)
                     {
-                        if ((float(nrValues) / float(maxValues)) > nodataRatioThreshold)
+                        if ((float(nrValues) / float(maxNrValues)) > nodataRatioThreshold)
                         {
                             if (elab == aggrAverage)
                                 value = statistics::mean(values);
                             else if (elab == aggrMedian)
                                 value = sorting::percentile(values, nrValues, 50, true);
                             else if (elab == aggrPrevailing)
-                                value = prevailingValue(values);
+                            {
+                                int nrMissing = maxNrValues - nrValues;
+                                if (nrMissing < nrValues)
+                                {
+                                    value = prevailingValue(values);
+                                }
+                            }
                         }
                     }
                 }

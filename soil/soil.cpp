@@ -755,13 +755,13 @@ namespace soil
 
 
     /*!
-     * \brief getSlopeStability
+     * \brief computeSlopeStability
      * \return factor of safety FoS [-]
      * if fos < 1 the slope is unstable
      */
     double Crit1DLayer::computeSlopeStability(double slope, double rootCohesion)
     {
-        double suctionStress = -waterPotential * getDegreeOfSaturation();    // [kPa]
+        double suctionStress = std::min(0.0, -waterPotential) * getDegreeOfSaturation();    // [kPa]
 
         double slopeAngle = std::max(asin(slope), EPSILON);                  // [rad]
         double frictionAngle = horizonPtr->frictionAngle * DEG_TO_RAD;       // [rad]
@@ -777,7 +777,7 @@ namespace soil
         double suctionEffect = (suctionStress * (tanAngle + 1/tanAngle) * tanFrictionAngle) / (unitWeight * depth);
 
         // factor of safety
-        return frictionEffect + cohesionEffect - suctionEffect;        // [-]
+        return std::max(0.0, frictionEffect + cohesionEffect - suctionEffect);        // [-]
     }
 
 

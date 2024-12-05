@@ -357,43 +357,43 @@ void Crit3DLocalProxyWidget::plot()
         areaCode = gis::getValueFromXY(*interpolationSettings->getMacroAreasMap(), x, y);
         if (areaCode < interpolationSettings->getMacroAreas().size())
         {
-        Crit3DMacroArea myArea = interpolationSettings->getMacroAreas()[areaCode];
-        std::vector<int> stations = myArea.getMeteoPoints();
-        if (detrended.isChecked())
-        {
-            outInterpolationPoints.clear();
-
-            checkAndPassDataToInterpolation(quality, myVar, meteoPoints, nrMeteoPoints, getCurrentTime(), SQinterpolationSettings,
-                                            interpolationSettings, meteoSettings, climateParam,
-                                            outInterpolationPoints, checkSpatialQuality, errorStdStr);
-
-            for (int k = 0; k < stations.size(); k++)
+            Crit3DMacroArea myArea = interpolationSettings->getMacroAreas()[areaCode];
+            std::vector<int> stations = myArea.getMeteoPoints();
+            if (detrended.isChecked())
             {
-                for (int j = 0; j < outInterpolationPoints.size(); j++)
-                    if (outInterpolationPoints[j].index == stations[k])
-                    {
-                        subsetInterpolationPoints.push_back(outInterpolationPoints[j]);
-                    }
+                outInterpolationPoints.clear();
+
+                checkAndPassDataToInterpolation(quality, myVar, meteoPoints, nrMeteoPoints, getCurrentTime(), SQinterpolationSettings,
+                                                interpolationSettings, meteoSettings, climateParam,
+                                                outInterpolationPoints, checkSpatialQuality, errorStdStr);
+
+                for (int k = 0; k < stations.size(); k++)
+                {
+                    for (int j = 0; j < outInterpolationPoints.size(); j++)
+                        if (outInterpolationPoints[j].index == stations[k])
+                        {
+                            subsetInterpolationPoints.push_back(outInterpolationPoints[j]);
+                        }
+                }
+
+                detrending(subsetInterpolationPoints, interpolationSettings->getSelectedCombination(), interpolationSettings, climateParam, myVar, getCurrentTime());
             }
-
-            detrending(subsetInterpolationPoints, interpolationSettings->getSelectedCombination(), interpolationSettings, climateParam, myVar, getCurrentTime());
-        }
-        else
-        {
-            outInterpolationPoints.clear();
-            checkAndPassDataToInterpolation(quality, myVar, meteoPoints, nrMeteoPoints, getCurrentTime(), SQinterpolationSettings,
-                                            interpolationSettings, meteoSettings, climateParam,
-                                            outInterpolationPoints, checkSpatialQuality, errorStdStr);
-
-            for (int k = 0; k < stations.size(); k++)
+            else
             {
-                for (int j = 0; j < outInterpolationPoints.size(); j++)
-                    if (outInterpolationPoints[j].index == stations[k])
-                    {
-                        subsetInterpolationPoints.push_back(outInterpolationPoints[j]);
-                    }
+                outInterpolationPoints.clear();
+                checkAndPassDataToInterpolation(quality, myVar, meteoPoints, nrMeteoPoints, getCurrentTime(), SQinterpolationSettings,
+                                                interpolationSettings, meteoSettings, climateParam,
+                                                outInterpolationPoints, checkSpatialQuality, errorStdStr);
+
+                for (int k = 0; k < stations.size(); k++)
+                {
+                    for (int j = 0; j < outInterpolationPoints.size(); j++)
+                        if (outInterpolationPoints[j].index == stations[k])
+                        {
+                            subsetInterpolationPoints.push_back(outInterpolationPoints[j]);
+                        }
+                }
             }
-        }
         }
     }
     QList<QPointF> pointListPrimary, pointListSecondary, pointListSupplemental, pointListMarked;

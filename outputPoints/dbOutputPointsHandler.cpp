@@ -243,6 +243,12 @@ bool Crit3DOutputPointsDbHandler::saveHourlyCriteria3D_Data(const QString &table
     int nrValues = int(waterContentDepth.size() + waterPotentialDepth.size()
                        + degreeOfSaturationDepth.size() + factorOfSafetyDepth.size());
 
+    if (nrValues == 0)
+    {
+        // no data requested
+        return true;
+    }
+
     if (nrValues != int(values.size()))
     {
         errorStr = "Error saving values: number of values is not as expected.";
