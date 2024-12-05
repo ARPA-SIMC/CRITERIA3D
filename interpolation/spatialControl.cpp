@@ -353,7 +353,7 @@ bool checkData(Crit3DQuality* myQuality, meteoVariable myVar, Crit3DMeteoPoint* 
         for (int i = 0; i < nrMeteoPoints; i++)
         {
             meteoPoints[i].currentValue = meteoPoints[i].anomaly;
-            if (isEqual(meteoPoints[i].currentValue, NODATA))
+            if (! isEqual(meteoPoints[i].currentValue, NODATA))
                 meteoPoints[i].quality = quality::accepted;
             else
                 meteoPoints[i].quality = quality::missing_data;
