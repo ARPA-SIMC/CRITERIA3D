@@ -2909,6 +2909,7 @@ bool Project::interpolationDemLocalDetrending(meteoVariable myVar, const Crit3DT
     return true;
 }
 
+
 bool Project::interpolationDemGlocalDetrending(meteoVariable myVar, const Crit3DTime& myTime, gis::Crit3DRasterGrid *myRaster)
 {
     if (!getUseDetrendingVar(myVar) || !interpolationSettings.getUseGlocalDetrending())
@@ -2971,15 +2972,16 @@ bool Project::interpolationDemGlocalDetrending(meteoVariable myVar, const Crit3D
 
         for (unsigned areaIndex = 0; areaIndex < interpolationSettings.getMacroAreas().size(); areaIndex++)
         {
-            //load macro area and its cells
+            // load macro area and its cells
             Crit3DMacroArea myArea = interpolationSettings.getMacroAreas()[areaIndex];
             areaCells = myArea.getAreaCells();
 			std::vector<Crit3DInterpolationDataPoint> subsetInterpolationPoints;
+            double interpolatedValue = NODATA;
 
-            if (!areaCells.empty())
+            if (! areaCells.empty())
             {
                 macroAreaDetrending(myArea, myVar, interpolationPoints, subsetInterpolationPoints, elevationPos);
-                //calculate value for every cell
+                // calculate value for every cell
                 for (unsigned cellIndex = 0; cellIndex < areaCells.size(); cellIndex = cellIndex + 2)
                 {
                     row = unsigned(areaCells[cellIndex]/DEM.header->nrCols);
@@ -2992,12 +2994,16 @@ bool Project::interpolationDemGlocalDetrending(meteoVariable myVar, const Crit3D
 
                         getProxyValuesXY(x, y, &interpolationSettings, proxyValues);
 
-                        if (isEqual(myRaster->value[row][col], NODATA))
-                            myRaster->value[row][col] = interpolate(subsetInterpolationPoints, &interpolationSettings, meteoSettings,
-                                                                    myVar, x, y, z, proxyValues, true)*areaCells[cellIndex+1];
-                        else
-                            myRaster->value[row][col] += interpolate(subsetInterpolationPoints, &interpolationSettings, meteoSettings,
-                                                                     myVar, x, y, z, proxyValues, true)*areaCells[cellIndex+1];
+                        interpolatedValue = interpolate(subsetInterpolationPoints, &interpolationSettings, meteoSettings,
+                                                        myVar, x, y, z, proxyValues, true);
+
+                        if (!isEqual(interpolatedValue, NODATA))
+                        {
+                            if (isEqual(myRaster->value[row][col], NODATA))
+                                myRaster->value[row][col] = interpolatedValue*areaCells[cellIndex+1];
+                            else
+                                myRaster->value[row][col] += interpolatedValue*areaCells[cellIndex+1];
+                        }
                     }
                 }
             }
