@@ -2976,6 +2976,7 @@ bool Project::interpolationDemGlocalDetrending(meteoVariable myVar, const Crit3D
             Crit3DMacroArea myArea = interpolationSettings.getMacroAreas()[areaIndex];
             areaCells = myArea.getAreaCells();
 			std::vector<Crit3DInterpolationDataPoint> subsetInterpolationPoints;
+            double interpolatedValue = NODATA;
 
             if (!areaCells.empty())
             {
@@ -2993,12 +2994,16 @@ bool Project::interpolationDemGlocalDetrending(meteoVariable myVar, const Crit3D
 
                         getProxyValuesXY(x, y, &interpolationSettings, proxyValues);
 
-                        if (isEqual(myRaster->value[row][col], NODATA))
-                            myRaster->value[row][col] = interpolate(subsetInterpolationPoints, &interpolationSettings, meteoSettings,
-                                                                    myVar, x, y, z, proxyValues, true)*areaCells[cellIndex+1];
-                        else
-                            myRaster->value[row][col] += interpolate(subsetInterpolationPoints, &interpolationSettings, meteoSettings,
-                                                                     myVar, x, y, z, proxyValues, true)*areaCells[cellIndex+1];
+                        interpolatedValue = interpolate(subsetInterpolationPoints, &interpolationSettings, meteoSettings,
+                                                        myVar, x, y, z, proxyValues, true);
+
+                        if (interpolatedValue != NODATA)
+                        {
+                            if (isEqual(myRaster->value[row][col], NODATA))
+                                myRaster->value[row][col] = interpolatedValue*areaCells[cellIndex+1];
+                            else
+                                myRaster->value[row][col] += interpolatedValue*areaCells[cellIndex+1];
+                        }
                     }
                 }
             }
