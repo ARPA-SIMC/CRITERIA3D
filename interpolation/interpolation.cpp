@@ -921,6 +921,7 @@ float modifiedShepardIdw(vector <Crit3DInterpolationDataPoint> &myPoints,
     S.resize(validPoints.size());
 
     weightSum = 0;
+
     for (unsigned int i=0; i < validPoints.size(); i++)
     {
         if (validPoints[i].distance > 0)
