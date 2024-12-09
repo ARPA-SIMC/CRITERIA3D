@@ -930,12 +930,14 @@ float modifiedShepardIdw(vector <Crit3DInterpolationDataPoint> &myPoints,
             else
                 S[i] = 0;
 
-            weightSum = weightSum + S[i];
+            weightSum += S[i];
         }
     }
 
     if (weightSum == 0)
+    {
         return NODATA;
+    }
 
     // including direction
     for (unsigned int i=0; i < validPoints.size(); i++)
@@ -2384,8 +2386,10 @@ float interpolate(vector <Crit3DInterpolationDataPoint> &myPoints, Crit3DInterpo
     }
     else myResult = 0;
 
-    if (int(myResult) == int(NODATA))
+    if (isEqual(myResult, NODATA))
+    {
         return NODATA;
+    }
     else if (!mySettings->getUseDoNotRetrend())
         myResult += retrend(myVar, myProxyValues, mySettings);
 
