@@ -2996,7 +2996,7 @@ bool Project::interpolationDemGlocalDetrending(meteoVariable myVar, const Crit3D
                         interpolatedValue = interpolate(subsetInterpolationPoints, &interpolationSettings, meteoSettings,
                                                         myVar, x, y, z, proxyValues, true);
 
-                        if (interpolatedValue != NODATA)
+                        if (!isEqual(interpolatedValue, NODATA))
                         {
                             if (isEqual(myRaster->value[row][col], NODATA))
                                 myRaster->value[row][col] = interpolatedValue*areaCells[cellIndex+1];
