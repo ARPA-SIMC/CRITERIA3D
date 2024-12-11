@@ -2804,13 +2804,16 @@ namespace interpolation
             mySSE += error * error;
         }
         int iterationNr = 0;
+        double pivot, mult, top;
+        std::vector<double> firstEst(nrData);
+        std::vector<std::vector<double>> P(nrParameters, std::vector<double>(nrData));
         do
         {
-            double pivot, mult, top;
+
             std::vector<double> g(nrParameters,0);
-            std::vector<double> firstEst(nrData);
+
             std::vector<std::vector<double>> a(nrParameters, std::vector<double>(nrParameters,0));
-            std::vector<std::vector<double>> P(nrParameters, std::vector<double>(nrData));
+
             //std::vector<std::vector<double>> weightsP(nrParameters, std::vector<double>(nrData));
 
             // matrix P corresponds to the Jacobian

@@ -68,7 +68,7 @@
     void clearInterpolationPoints();
     bool checkPrecipitationZero(const std::vector<Crit3DInterpolationDataPoint> &myPoints, float precThreshold, int &nrNotNull);
 
-    bool neighbourhoodVariability(meteoVariable myVar, std::vector<Crit3DInterpolationDataPoint> &myInterpolationPoints, Crit3DInterpolationSettings *mySettings, float x, float y, float z, int nMax,
+    bool neighbourhoodVariability(meteoVariable myVar, std::vector<Crit3DInterpolationDataPoint> &myInterpolationPoints, Crit3DInterpolationSettings *mySettings, float x, float y, float z, int maxNrPoints,
                                   float* devSt, float* avgDeltaZ, float* minDistance);
 
     float interpolate(std::vector<Crit3DInterpolationDataPoint> &myPoints, Crit3DInterpolationSettings *mySettings, Crit3DMeteoSettings *meteoSettings, meteoVariable myVar, float myX, float myY, float myZ, std::vector<double> myProxyValues, bool excludeSupplemental);
@@ -97,6 +97,9 @@
     bool getUseDetrendingVar(meteoVariable myVar);
     bool isThermal(meteoVariable myVar);
     bool getUseTdVar(meteoVariable myVar);
+
+    unsigned sortPointsByDistance(unsigned maxNrPoints, std::vector<Crit3DInterpolationDataPoint> &pointList,
+                                  std::vector<Crit3DInterpolationDataPoint> &validPointList);
 
     float getFirstIntervalHeightValue(std::vector <Crit3DInterpolationDataPoint> &myPoints, bool useLapseRateCode);
 
