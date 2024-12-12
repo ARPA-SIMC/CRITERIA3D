@@ -340,7 +340,7 @@ void Crit3DLocalProxyWidget::plot()
                                         interpolationSettings, meteoSettings, climateParam,
                                         outInterpolationPoints, checkSpatialQuality, errorStdStr);
 
-        localSelection(outInterpolationPoints, subsetInterpolationPoints, x, y, *interpolationSettings);
+        localSelection(outInterpolationPoints, subsetInterpolationPoints, x, y, *interpolationSettings, false);
         detrending(subsetInterpolationPoints, interpolationSettings->getSelectedCombination(), interpolationSettings, climateParam, myVar, getCurrentTime());
     }
     else
@@ -348,7 +348,7 @@ void Crit3DLocalProxyWidget::plot()
         checkAndPassDataToInterpolation(quality, myVar, meteoPoints, nrMeteoPoints, getCurrentTime(), SQinterpolationSettings,
                                         interpolationSettings, meteoSettings, climateParam,
                                         outInterpolationPoints, checkSpatialQuality, errorStdStr);
-        localSelection(outInterpolationPoints, subsetInterpolationPoints, x, y, *interpolationSettings);
+        localSelection(outInterpolationPoints, subsetInterpolationPoints, x, y, *interpolationSettings, false);
     }
     }
     else if (interpolationSettings->getUseGlocalDetrending())

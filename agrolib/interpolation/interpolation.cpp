@@ -978,7 +978,12 @@ float modifiedShepardIdw(vector <Crit3DInterpolationDataPoint> &myPoints,
     std::vector <Crit3DInterpolationDataPoint> validPoints;
 
     if (radius == NODATA)
+    {
         radius = shepardSearchNeighbour(myPoints, settings, validPoints);
+        /*settings->setMinPointsLocalDetrending(8);
+        localSelection(myPoints, validPoints, X, Y, *settings, true);
+        radius = settings->getLocalRadius() + EPSILON;*/
+    }
     else
         validPoints = myPoints;
 
@@ -1100,7 +1105,7 @@ float gaussWeighted(vector <Crit3DInterpolationDataPoint> &myPointList)
 
 // TODO elevation std dev?
 void localSelection(vector <Crit3DInterpolationDataPoint> &inputPoints, vector <Crit3DInterpolationDataPoint> &selectedPoints,
-                    float x, float y, Crit3DInterpolationSettings& mySettings)
+                    float x, float y, Crit3DInterpolationSettings& mySettings, bool excludeSupplemental)
 {
     // search more stations to assure min points with all valid proxies
     float ratioMinPoints = 1.2f;
@@ -1124,12 +1129,14 @@ void localSelection(vector <Crit3DInterpolationDataPoint> &inputPoints, vector <
     float stepRadius = 7500;            // [m]
     float r0 = 0;                       // [m]
     float r1 = stepRadius;              // [m]
+    bool beyondLastPoint = false;
 
-    while ((! mySettings.getUseLapseRateCode() && nrValid < minPoints) || (mySettings.getUseLapseRateCode() && nrPrimaries < minPoints))
+    while (((! mySettings.getUseLapseRateCode() && nrValid < minPoints) || (mySettings.getUseLapseRateCode() && nrPrimaries < minPoints)) && !beyondLastPoint)
     {
+        beyondLastPoint = true;
         for (unsigned int i=0; i < inputPoints.size(); i++)
         {
-            if (! isEqual(inputPoints[i].distance, NODATA) && inputPoints[i].distance > r0 && inputPoints[i].distance <= r1)
+            if ((! isEqual(inputPoints[i].distance, NODATA) && inputPoints[i].distance > r0 && inputPoints[i].distance <= r1) && ! (mySettings.getUseLapseRateCode() && excludeSupplemental && inputPoints[i].lapseRateCode == supplemental))
             {
                 selectedPoints.push_back(inputPoints[i]);
                 nrValid++;
@@ -1143,11 +1150,12 @@ void localSelection(vector <Crit3DInterpolationDataPoint> &inputPoints, vector <
                     nrPrimaries++;
                 }
             }
+            if (beyondLastPoint && inputPoints[i].distance > r1 && !(mySettings.getUseLapseRateCode() && excludeSupplemental && inputPoints[i].lapseRateCode == supplemental)) //check if there are still stations beyond current r1 value
+                beyondLastPoint = false;
         }
-        if (nrValid > unsigned(minPoints*0.8))
-        {
-            stepRadius = 1000;
-        }
+
+        if (nrValid > unsigned(minPoints*0.8)) stepRadius = 1000;
+
         r0 = r1;
         r1 += stepRadius;
     }
@@ -1164,6 +1172,8 @@ void localSelection(vector <Crit3DInterpolationDataPoint> &inputPoints, vector <
         }
     }
     mySettings.setLocalRadius(maxDistance);
+
+    return;
 }
 
 
