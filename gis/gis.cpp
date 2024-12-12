@@ -1718,5 +1718,42 @@ namespace gis
         return true;
     }
 
-}
 
+    // return nr of valid cells and avg value
+    bool rasterSummary(Crit3DRasterGrid *myGrid, int &nrValids, float &avgValue, std::string &error)
+    {
+        // initialize
+        nrValids = NODATA;
+        avgValue = NODATA;
+
+        if ((myGrid == nullptr) || (!myGrid->isLoaded))
+        {
+            error = "The raster is null or hasn't been loaded correctly.";
+            return false;
+        }
+
+        // list of valid values
+        float myValue;
+        std::vector <float> validValues;
+        for (int row = 0; row < myGrid->header->nrRows; row++)
+        {
+            for (int col = 0; col < myGrid->header->nrCols; col++)
+            {
+                myValue = myGrid->value[row][col];
+
+                if (! isEqual(myValue, myGrid->header->flag)  && ! isEqual(myValue, NODATA))
+                {
+                    validValues.push_back(myValue);
+                }
+            }
+        }
+
+        nrValids = int(validValues.size());
+        avgValue = statistics::mean(validValues);
+
+        validValues.clear();
+
+        return true;
+    }
+
+}
