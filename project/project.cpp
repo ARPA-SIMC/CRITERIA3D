@@ -3488,7 +3488,7 @@ void Project::macroAreaDetrending(Crit3DMacroArea myArea, meteoVariable myVar, s
     }
 
     //detrending
-    if (elevationPos != NODATA && myArea.getCombination().isProxyActive(elevationPos))
+    if (elevationPos != NODATA && myArea.getCombination().isProxyActive(elevationPos) && myArea.getCombination().isProxySignificant(elevationPos))
     {
         detrendingElevation(elevationPos, subsetInterpolationPoints, &interpolationSettings);
     }
