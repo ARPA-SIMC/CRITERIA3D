@@ -190,19 +190,26 @@ namespace gis
      */
     bool readEnviHeader(string fileName, gis::Crit3DRasterHeader *header, int currentUtmZone, string &errorStr)
     {
-        string myLine, key, upKey, valueStr;
+        errorStr = "";
 
-        fileName += ".hdr";
-        ifstream  myFile(fileName.c_str());
+        string completeFileName = fileName + ".hdr";
+        ifstream  myFile(completeFileName.c_str());
 
-        if (!myFile.is_open())
+        if (! myFile.is_open())
         {
-            errorStr = "Missing file: " + fileName;
+            completeFileName = fileName + ".img.hdr";
+            myFile.open(completeFileName.c_str());
+        }
+
+        if (! myFile.is_open())
+        {
+            errorStr = "Missing file: " + fileName + ".hdr";
             return false;
         }
 
         int nrKeys = 0;
         bool hasNoData = false;
+        string myLine, key, valueStr;
         while (myFile.good())
         {
             getline (myFile, myLine);
@@ -210,7 +217,7 @@ namespace gis
             {
                 // no spaces and uppercase for comparison
                 cleanSpaces(key);
-                upKey = upperCase(key);
+                string upKey = upperCase(key);
 
                 if ((upKey == "SAMPLES") || (upKey == "LINES") || (upKey == "MAPINFO")
                     || ((upKey == "DATAIGNOREVALUE") || (upKey == "NODATA")) )
@@ -297,9 +304,13 @@ namespace gis
         if (nrKeys < 4)
         {
             if (! hasNoData)
+            {
                 errorStr += "Wrong header file: missing data ignore value.";
+            }
             else
+            {
                 errorStr = "Wrong header file: missing samples, lines or map info.";
+            }
 
             return false;
         }
