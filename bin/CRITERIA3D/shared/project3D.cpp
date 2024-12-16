@@ -584,12 +584,15 @@ void Project3D::setIndexMaps()
                     else
                     {
                         // sub-surface (check land use and soil)
-                        if (getLandUnitIndexRowCol(row, col) != NODATA)
+                        int landUnitIndex = getLandUnitIndexRowCol(row, col);
+                        if (landUnitIndex != NODATA)
                         {
-                            int soilIndex = getSoilIndex(row, col);
-                            if (isWithinSoil(soilIndex, layerDepth.at(layer)))
+                            // ROAD is no soil
+                            if (landUnitList[landUnitIndex].landUseType != LANDUSE_ROAD)
                             {
-                                checkIndex = true;
+                                int soilIndex = getSoilIndex(row, col);
+                                if (isWithinSoil(soilIndex, layerDepth.at(layer)))
+                                    checkIndex = true;
                             }
                         }
                     }
@@ -926,6 +929,7 @@ bool Project3D::initializeWaterContent()
 }
 
 
+// assigns the soil to the nodes
 bool Project3D::setCrit3DNodeSoil()
 {
     int soilIndex, horizonIndex, myResult;

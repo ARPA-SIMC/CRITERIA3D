@@ -1850,32 +1850,35 @@ bool Crit3DProject::loadWaterPotentialState(QString waterPath)
                     else
                     {
                         // search first valid value
-                        int currentLayer = layer0 - 1;
-                        while (isEqual(wp0, flag) && currentLayer > 0)
+                        int lastDataLayer = layer0 - 1;
+                        while (isEqual(wp0, flag) && lastDataLayer > 0)
                         {
-                            wp0 = gis::getValueFromXY(*(waterPotentialMapList.at(currentLayer)), x, y);
+                            wp0 = gis::getValueFromXY(*(waterPotentialMapList.at(lastDataLayer)), x, y);
                             if (isEqual(wp0, flag))
                             {
-                                currentLayer--;
+                                lastDataLayer--;
                             }
                         }
 
-                        if (currentLayer == 0)
+                        if (lastDataLayer == 0)
                         {
                             errorString = "Missing water potential data in row, col: "
                                           + QString::number(row) + ", " +  QString::number(col);
-                            return false;
+                            //return false;
                         }
 
-                        double deltaDepth = (currentDepthCm - depthList[currentLayer]) / 100.;
+                        double deltaDepth = (currentDepthCm - depthList[lastDataLayer]) / 100.;
                         if ( (1. - deltaDepth/maxDepth) * 100 < meteoSettings->getMinimumPercentage())
                         {
                             errorString = "The water potential data is not enough to cover the data in row, col: "
                                             + QString::number(row) + ", " +  QString::number(col);
-                            return false;
+                            //return false;
                         }
 
-                        waterPotential = wp0;
+                        if (! isEqual(wp0, flag))
+                        {
+                            waterPotential = wp0;
+                        }
                     }
 
                     if (! isEqual(waterPotential, NODATA))
