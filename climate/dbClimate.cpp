@@ -39,7 +39,7 @@ bool saveDailyElab(QSqlDatabase db, QString *myError, QString id, std::vector<fl
         qry.addBindValue(i+1);
         qry.addBindValue(id);
         qry.addBindValue(elab);
-        qry.addBindValue(QString::number(allResults[i],'f',1));
+        qry.addBindValue(QString::number(allResults[i],'f',3));
 
         if( !qry.exec() )
         {
@@ -196,7 +196,7 @@ bool saveDecadalElab(QSqlDatabase db, QString *myError, QString id, std::vector<
         qry.addBindValue(i+1);
         qry.addBindValue(id);
         qry.addBindValue(elab);
-        qry.addBindValue(QString::number(allResults[i],'f',1));
+        qry.addBindValue(QString::number(allResults[i],'f',3));
 
         if( !qry.exec() )
         {
@@ -238,7 +238,7 @@ bool saveMonthlyElab(QSqlDatabase db, QString *myError, QString id, std::vector<
         qry.addBindValue(i+1);
         qry.addBindValue(id);
         qry.addBindValue(elab);
-        qry.addBindValue(QString::number(allResults[i],'f',1));
+        qry.addBindValue(QString::number(allResults[i],'f',3));
 
         if( !qry.exec() )
         {
@@ -280,7 +280,7 @@ bool saveSeasonalElab(QSqlDatabase db, QString *myError, QString id, std::vector
         qry.addBindValue(i+1);
         qry.addBindValue(id);
         qry.addBindValue(elab);
-        qry.addBindValue(QString::number(allResults[i],'f',1));
+        qry.addBindValue(QString::number(allResults[i],'f',3));
 
         if( !qry.exec() )
         {
@@ -319,7 +319,7 @@ bool saveAnnualElab(QSqlDatabase db, QString *myError, QString id, float result,
 
     qry.bindValue(":id_point", id);
     qry.bindValue(":elab", elab);
-    qry.bindValue(":value", QString::number(result,'f',1));
+    qry.bindValue(":value", QString::number(result,'f',3));
 
     if( !qry.exec() )
     {
@@ -357,7 +357,7 @@ bool saveGenericElab(QSqlDatabase db, QString *myError, QString id, float result
 
     qry.bindValue(":id_point", id);
     qry.bindValue(":elab", elab);
-    qry.bindValue(":value", QString::number(result,'f',1));
+    qry.bindValue(":value", QString::number(result,'f',3));
 
     if( !qry.exec() )
     {
