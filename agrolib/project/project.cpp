@@ -2468,12 +2468,22 @@ bool Project::loadGlocalStationsCsv(QString fileName, std::vector<std::vector<st
     while(!myStream.atEnd())
     {
         line = myStream.readLine().split(',');
-        for (int i = 1; i < line.size(); i++)
-            temp.push_back(line[i].toStdString());
+        if (line.size() > 1)
+        {
+            int areaNr = line[0].toInt();
+            for (int i = 1; i < line.size(); i++)
+            {
+                temp.push_back(line[i].toStdString());
+            }
 
-        areaPoints.resize(line[0].toInt() + 1);
-        areaPoints[line[0].toInt()] = temp;
-        temp.clear();
+            if (areaPoints.empty() || areaNr > (areaPoints.size() - 1))
+            {
+                areaPoints.resize(areaNr + 1);
+            }
+
+            areaPoints[areaNr] = temp;
+            temp.clear();
+        }
     }
     myFile.close();
 
@@ -3488,7 +3498,7 @@ void Project::macroAreaDetrending(Crit3DMacroArea myArea, meteoVariable myVar, s
     }
 
     //detrending
-    if (elevationPos != NODATA && myArea.getCombination().isProxyActive(elevationPos))
+    if (elevationPos != NODATA && myArea.getCombination().isProxyActive(elevationPos) && myArea.getCombination().isProxySignificant(elevationPos))
     {
         detrendingElevation(elevationPos, subsetInterpolationPoints, &interpolationSettings);
     }

@@ -1769,7 +1769,7 @@ bool multipleDetrendingMain(std::vector <Crit3DInterpolationDataPoint> &myPoints
         if (!multipleDetrendingElevationFitting(elevationPos, myPoints, mySettings, myVar, errorStr, true))
             return false;
 
-        detrendingElevation(elevationPos, myPoints, mySettings);
+        if (mySettings->getCurrentCombination().isProxySignificant(elevationPos)) detrendingElevation(elevationPos, myPoints, mySettings);
     }
 
     if (!multipleDetrendingOtherProxiesFitting(elevationPos, myPoints, mySettings, myVar, errorStr))
@@ -2159,7 +2159,7 @@ bool glocalDetrendingFitting(std::vector <Crit3DInterpolationDataPoint> &myPoint
             if (elevationPos != NODATA && mySettings->getSelectedCombination().isProxyActive(elevationPos))
             {
                 if (!multipleDetrendingElevationFitting(elevationPos, subsetPoints, mySettings, myVar, errorStr, false)) return false;
-                detrendingElevation(elevationPos, subsetPoints, mySettings);
+                if (mySettings->getCurrentCombination().isProxySignificant(elevationPos)) detrendingElevation(elevationPos, subsetPoints, mySettings);
             }
             if (!multipleDetrendingOtherProxiesFitting(elevationPos, subsetPoints, mySettings, myVar, errorStr))
                 return false;
