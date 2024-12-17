@@ -616,15 +616,17 @@ void Crit3DSoilWidget::on_actionParameterRestriction()
 
 void Crit3DSoilWidget::on_actionSave()
 {
-    QString errorStr;
-    QString soilCodeChanged = QString::fromStdString(mySoil.code);
+    if (mySoil.code.empty())
+        return;
 
+    QString soilCodeChanged = QString::fromStdString(mySoil.code);
     QString msg = "Are you sure you want to save " + soilCodeChanged + " ?";
     QMessageBox::StandardButton confirm = QMessageBox::question(nullptr, "Warning", msg, QMessageBox::Yes|QMessageBox::No, QMessageBox::No);
     if (confirm == QMessageBox::No)
         return;
 
-    if (!updateSoilData(dbSoil, soilCodeChanged, mySoil, errorStr))
+    QString errorStr;
+    if (! updateSoilData(dbSoil, soilCodeChanged, mySoil, errorStr))
     {
         QMessageBox::critical(nullptr, "Error in update horizon table!", errorStr);
         return;
