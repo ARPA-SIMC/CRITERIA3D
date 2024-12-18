@@ -139,7 +139,8 @@
         Crit3DProxyCombination areaCombination;
         std::vector<std::vector<double>> areaParameters;
         std::vector<int> meteoPoints;
-        std::vector<float> areaCells;
+        std::vector<float> areaCellsDEM;
+        std::vector<float> areaCellsGrid;
 
     public:
         Crit3DMacroArea();
@@ -152,8 +153,11 @@
         void setMeteoPoints (std::vector<int> myMeteoPoints) { meteoPoints = myMeteoPoints; }
         std::vector<int> getMeteoPoints() { return meteoPoints; }
 
-        void setAreaCells (std::vector<float> myCells) { areaCells = myCells; }
-        std::vector<float> getAreaCells() { return areaCells; }
+        void setAreaCellsDEM (std::vector<float> myCells) { areaCellsDEM = myCells; }
+        std::vector<float> getAreaCellsDEM() { return areaCellsDEM; }
+
+        void setAreaCellsGrid (std::vector<float> myCells) { areaCellsGrid = myCells; }
+        std::vector<float> getAreaCellsGrid() { return areaCellsGrid; }
 
         void setParameters (std::vector<std::vector<double>> myParameters) { areaParameters = myParameters; }
         std::vector<std::vector<double>> getParameters() { return areaParameters; }
@@ -241,7 +245,7 @@
         void setUseLocalDetrending(bool myValue);
         bool getUseLocalDetrending();
 
-        bool isGlocalReady();
+        bool isGlocalReady(bool isGrid);
 		void setUseGlocalDetrending(bool myValue);
         bool getUseGlocalDetrending();
         void setMacroAreasMap(gis::Crit3DRasterGrid *value);

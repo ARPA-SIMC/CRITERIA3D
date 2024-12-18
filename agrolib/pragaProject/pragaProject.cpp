@@ -2592,7 +2592,7 @@ bool PragaProject::interpolationMeteoGrid(meteoVariable myVar, frequencyType myF
     }
 
     // check glocal
-    if (interpolationSettings.getUseGlocalDetrending() && ! interpolationSettings.isGlocalReady())
+    if (interpolationSettings.getUseGlocalDetrending() && ! interpolationSettings.isGlocalReady(!interpolationSettings.getMeteoGridUpscaleFromDem()))
     {
         if (! loadGlocalAreasMap()) return false;
         if (! loadGlocalStationsAndCells(!interpolationSettings.getMeteoGridUpscaleFromDem())) return false;
@@ -2805,7 +2805,7 @@ bool PragaProject::interpolationMeteoGridPeriod(QDate dateIni, QDate dateFin, QL
             return false;
     }
 
-    if (interpolationSettings.getUseGlocalDetrending() && ! interpolationSettings.isGlocalReady())
+    if (interpolationSettings.getUseGlocalDetrending() && ! interpolationSettings.isGlocalReady(!interpolationSettings.getMeteoGridUpscaleFromDem()))
     {
         if (! loadGlocalAreasMap()) return false;
         if (! loadGlocalStationsAndCells(!interpolationSettings.getMeteoGridUpscaleFromDem())) return false;
