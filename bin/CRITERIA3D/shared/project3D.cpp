@@ -27,6 +27,7 @@
 #include "basicMath.h"
 #include "cropDbTools.h"
 #include "project3D.h"
+#include "project.h"
 #include "soilFluxes3D.h"
 #include "soilDbTools.h"
 
@@ -1646,7 +1647,7 @@ bool Project3D::computeCriteria3DMap(gis::Crit3DRasterGrid &outputRaster, criter
                 }
                 else
                 {
-                    // surface: water height
+                    // surface water level: from [m] to [mm]
                     if (var == volumetricWaterContent && layerIndex == 0)
                     {
                         value *= 1000;          // [m] -> [mm]
@@ -1663,6 +1664,47 @@ bool Project3D::computeCriteria3DMap(gis::Crit3DRasterGrid &outputRaster, criter
     }
 
     gis::updateMinMaxRasterGrid(&outputRaster);
+    return true;
+}
+
+
+/*!
+ * \brief computeSurfaceWaterContent
+ * \return
+ * wcSum: [m3] sum of surface water content
+ * nrVoxels: [-] number of valid voxels
+ */
+bool Project3D::computeSurfaceWaterContent(double &wcSum, long &nrVoxels)
+{
+    errorString = "";
+    if (! isCriteria3DInitialized)
+    {
+        errorString = ERROR_STR_INITIALIZE_3D;
+        return false;
+    }
+
+    nrVoxels = 0;
+    wcSum = 0.;
+    double voxelArea = DEM.header->cellSize * DEM.header->cellSize;                 // [m2]
+
+    for (int row = 0; row < indexMap.at(0).header->nrRows; row++)
+    {
+        for (int col = 0; col < indexMap.at(0).header->nrCols; col++)
+        {
+            long nodeIndex = indexMap.at(0).value[row][col];
+            if (nodeIndex != indexMap.at(0).header->flag)
+            {
+                double wc = getCriteria3DVar(volumetricWaterContent, nodeIndex);    //[m]
+
+                if (wc != NODATA)
+                {
+                    wcSum += wc * voxelArea;        // [m3]
+                    nrVoxels++;
+                }
+            }
+        }
+    }
+
     return true;
 }
 

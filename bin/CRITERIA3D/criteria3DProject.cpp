@@ -1234,7 +1234,7 @@ bool Crit3DProject::checkProcesses()
     {
         if (! isCriteria3DInitialized)
         {
-            errorString = "Initialize 3D model before";
+            errorString = ERROR_STR_INITIALIZE_3D;
             return false;
         }
     }

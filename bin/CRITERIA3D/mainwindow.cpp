@@ -1288,7 +1288,7 @@ void MainWindow::on_actionView_Boundary_triggered()
     }
     else
     {
-        myProject.logError("Initialize 3D Model before.");
+        myProject.logError(ERROR_STR_INITIALIZE_3D);
         return;
     }
 }
@@ -2399,6 +2399,31 @@ void MainWindow::on_actionCriteria3D_run_models_triggered()
 }
 
 
+void MainWindow::on_actionCriteria3D_Water_content_summary_triggered()
+{
+    double surfaceWaterContent = 0;
+    long nrSurfaceVoxels = 0;
+    if (! myProject.computeSurfaceWaterContent(surfaceWaterContent, nrSurfaceVoxels))
+    {
+        myProject.logError();
+        return;
+    }
+
+    double voxelArea = myProject.DEM.header->cellSize * myProject.DEM.header->cellSize;     // [m2]
+    double surfaceArea = voxelArea * nrSurfaceVoxels;                                       // [m2]
+    double surfaceAvgLevel = surfaceWaterContent / surfaceArea * 1000;                      // [mm]
+
+    QString summaryStr = "WATER CONTENT SUMMARY\n\n";
+
+    summaryStr += "Surface area: " + QString::number(surfaceArea / 10000, 'f', 1) + " [hectares]\n";
+    summaryStr += "Surface total water content: " + QString::number(surfaceWaterContent, 'f', 1) + " [m3]\n";
+    summaryStr += "Surface average water level: " + QString::number(surfaceAvgLevel, 'f', 1) + " [mm]\n";
+    summaryStr += "-------------------------------------------";
+
+    myProject.logInfoGUI(summaryStr);
+}
+
+
 void MainWindow::showCriteria3DVariable(criteria3DVariable var, int layerIndex, bool isFixedRange,
                                         bool isHideOutliers, double minimum, double maximum)
 {
@@ -3476,4 +3501,5 @@ void MainWindow::on_actionSave_outputRaster_triggered()
         myProject.logError(QString::fromStdString(errorStr));
     }
 }
+
 

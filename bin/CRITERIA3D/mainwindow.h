@@ -223,6 +223,8 @@
 
         void on_actionSave_outputRaster_triggered();
 
+        void on_actionCriteria3D_Water_content_summary_triggered();
+
     protected:
         /*!
          * \brief mouseReleaseEvent call moveCenter
