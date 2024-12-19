@@ -2364,6 +2364,8 @@ bool Project::loadGlocalWeightMaps(std::vector<Crit3DMacroArea> &myAreas, bool i
     gis::Crit3DRasterGrid* macroAreasGrid = new gis::Crit3DRasterGrid();
     std::string fileName = mapsFolder.toStdString() + "glocalWeight_";
 
+    std::vector<Crit3DMacroArea> existingAreas = interpolationSettings.getMacroAreas();
+
     std::vector<float> areaCells;
     int nrCols, nrRows;
     double myX, myY;
@@ -2384,6 +2386,13 @@ bool Project::loadGlocalWeightMaps(std::vector<Crit3DMacroArea> &myAreas, bool i
 
     for (int i = 0; i < myAreas.size(); i++)
     {
+        //se ci sono già celle caricate di DEM o grid, salvale
+        if (existingAreas.size() > i)
+        {
+            myAreas[i].setAreaCellsDEM(existingAreas[i].getAreaCellsDEM());
+            myAreas[i].setAreaCellsGrid(existingAreas[i].getAreaCellsGrid());
+        }
+
         if (QFile::exists(QString::fromStdString(fileName) + QString::number(i) + ".flt"))
         {
             if (readEsriGrid(fileName + std::to_string(i), macroAreasGrid, myError))
@@ -2410,7 +2419,12 @@ bool Project::loadGlocalWeightMaps(std::vector<Crit3DMacroArea> &myAreas, bool i
                     }
                 }
                 if (areaCells.size() > 0) nrAreasWithCells++;
-                myAreas[i].setAreaCells(areaCells);
+
+                if (isGrid)
+                    myAreas[i].setAreaCellsGrid(areaCells);
+                else
+                    myAreas[i].setAreaCellsDEM(areaCells);
+
                 areaCells.clear();
             }
             else
@@ -2984,7 +2998,7 @@ bool Project::interpolationDemGlocalDetrending(meteoVariable myVar, const Crit3D
         {
             // load macro area and its cells
             Crit3DMacroArea myArea = interpolationSettings.getMacroAreas()[areaIndex];
-            areaCells = myArea.getAreaCells();
+            areaCells = myArea.getAreaCellsDEM();
 			std::vector<Crit3DInterpolationDataPoint> subsetInterpolationPoints;
             double interpolatedValue = NODATA;
 
@@ -3160,7 +3174,7 @@ bool Project::interpolationDemMain(meteoVariable myVar, const Crit3DTime& myTime
         return false;
 
     // check glocal
-    if (interpolationSettings.getUseGlocalDetrending() && ! interpolationSettings.isGlocalReady())
+    if (interpolationSettings.getUseGlocalDetrending() && ! interpolationSettings.isGlocalReady(false))
     {
         if (! loadGlocalAreasMap()) return false;
         if (! loadGlocalStationsAndCells(false)) return false;
@@ -3382,7 +3396,7 @@ bool Project::interpolationGrid(meteoVariable myVar, const Crit3DTime& myTime)
         {
             //load macro area and its cells
             Crit3DMacroArea myArea = interpolationSettings.getMacroAreas()[areaIndex];
-            areaCells = myArea.getAreaCells();
+            areaCells = myArea.getAreaCellsGrid();
 			std::vector<Crit3DInterpolationDataPoint> subsetInterpolationPoints;
 
             if (!areaCells.empty())
@@ -4461,7 +4475,7 @@ void Project::showLocalProxyGraph(gis::Crit3DGeoPoint myPoint)
         myZDEM = DEM.value[row][col];
     }
 
-    if (interpolationSettings.getUseGlocalDetrending() && ! interpolationSettings.isGlocalReady())
+    if (interpolationSettings.getUseGlocalDetrending() && ! interpolationSettings.isGlocalReady(false))
     {
         if (! loadGlocalAreasMap() || ! loadGlocalStationsAndCells(false))
         {

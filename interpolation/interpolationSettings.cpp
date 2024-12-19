@@ -616,9 +616,19 @@ int Crit3DInterpolationSettings::getProxyPosFromName(TProxyVar name)
     return NODATA;
 }
 
-bool Crit3DInterpolationSettings::isGlocalReady()
+bool Crit3DInterpolationSettings::isGlocalReady(bool isGrid)
 {
-    return (getMacroAreasMap() != nullptr && getMacroAreas().size() > 0);
+    if (getMacroAreasMap() != nullptr && getMacroAreas().size() > 0)
+    {
+        for (int i = 0; i < getMacroAreas().size(); i++)
+        {
+            if ((isGrid && getMacroAreas()[i].getAreaCellsGrid().size() > 0) ||
+                (!isGrid && getMacroAreas()[i].getAreaCellsDEM().size() > 0))
+                return true;
+        }
+    }
+
+    return false;
 }
 
 std::string Crit3DProxy::getName() const
@@ -1023,7 +1033,8 @@ Crit3DMacroArea::Crit3DMacroArea()
 
 void Crit3DMacroArea::clear()
 {
-    areaCells.clear();
+    areaCellsDEM.clear();
+    areaCellsGrid.clear();
     areaParameters.clear();
     areaCombination.clear();
     meteoPoints.clear();
