@@ -681,13 +681,13 @@ bool Project3D::setCrit3DSoils()
             if ((myHorizon->texture.classUSDA > 0) && (myHorizon->texture.classUSDA <= 12))
             {
                 result = soilFluxes3D::setSoilProperties(signed(soilIndex), signed(horizIndex),
-                     myHorizon->vanGenuchten.alpha * GRAVITY,               // [kPa-1] -> [m-1]
+                     myHorizon->vanGenuchten.alpha * GRAVITY,                       // [kPa-1] -> [m-1]
                      myHorizon->vanGenuchten.n,
                      myHorizon->vanGenuchten.m,
-                     myHorizon->vanGenuchten.he / GRAVITY,                  // [kPa] -> [m]
+                     myHorizon->vanGenuchten.he / GRAVITY,                          // [kPa] -> [m]
                      myHorizon->vanGenuchten.thetaR,
                      myHorizon->vanGenuchten.thetaS,
-                     myHorizon->waterConductivity.kSat / DAY_SECONDS / 100, // [cm/d] -> [m/s]
+                     myHorizon->waterConductivity.kSat / (DAY_SECONDS * 100.),      // [cm/d] -> [m/s]
                      myHorizon->waterConductivity.l,
                      myHorizon->organicMatter,
                      double(myHorizon->texture.clay));
