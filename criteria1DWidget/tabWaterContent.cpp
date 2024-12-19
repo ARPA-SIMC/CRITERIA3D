@@ -153,7 +153,7 @@ void TabWaterContent::computeWaterContent(Crit1DCase &myCase, int firstYear, int
             {
                 if (isVolumetricWaterContent)
                 {
-                    waterContent = myCase.soilLayers[i].getVolumetricWaterContent();
+                    waterContent = myCase.soilLayers[i].getVolumetricWaterContent() * myCase.soilLayers[i].soilFraction;
                     maxWaterContent = MAXVALUE(waterContent, maxWaterContent);
                 }
                 else

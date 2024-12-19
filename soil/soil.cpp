@@ -235,8 +235,8 @@ namespace soil
         critical = FC;
 
         // hygroscopic humidity
-        double hygroscopicHumidity = -2000;                                                     // [kPa]
-        double volWaterContentHH = soil::thetaFromSignPsi(hygroscopicHumidity, *horizonPtr);    // [m3 m-3]
+        double hygroHumPotential = -2000;                                                       // [kPa]
+        double volWaterContentHH = soil::thetaFromSignPsi(hygroHumPotential, *horizonPtr);      // [m3 m-3]
         HH = volWaterContentHH * soilFraction * thickness * 1000.;                              // [mm]
 
         return true;
@@ -715,7 +715,7 @@ namespace soil
 
 
     /*!
-     * \brief return current volumetric water content [-]
+     * \brief return current volumetric water content (soil fraction) [-]
      */
     double Crit1DLayer::getVolumetricWaterContent()
     {
