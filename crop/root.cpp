@@ -588,8 +588,7 @@ namespace root
             int horIndex = currentSoil.getHorizonIndex(layerDepth[l]);
             if (horIndex != int(NODATA))
             {
-                double soilFraction = (1 - currentSoil.horizon[horIndex].coarseFragments);
-                myCrop.roots.rootDensity[l] *= soilFraction;
+                myCrop.roots.rootDensity[l] *= currentSoil.horizon[horIndex].getSoilFraction();
                 rootDensitySumSubset += myCrop.roots.rootDensity[l];
             }
         }

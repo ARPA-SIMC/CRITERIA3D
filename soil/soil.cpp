@@ -227,7 +227,7 @@ namespace soil
         double waterContentHH = soil::thetaFromSignPsi(hygroscopicHumidity, *horizonPtr);
 
         // [-]
-        soilFraction = (1.0 - horizonPtr->coarseFragments);
+        soilFraction = horizonPtr->getSoilFraction();
 
         // [mm]
         SAT = horizonPtr->vanGenuchten.thetaS * soilFraction * thickness * 1000;
