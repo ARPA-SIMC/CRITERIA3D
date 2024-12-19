@@ -729,7 +729,7 @@ double Crit3DCrop::computeTranspiration(double maxTranspiration, const std::vect
 
     double thetaWP;                                 // [m3 m-3] volumetric water content at Wilting Point
     double cropWP;                                  // [mm] wilting point specific for crop
-    double waterSurplusThreshold;                        // [mm] water surplus stress threshold
+    double waterSurplusThreshold;                   // [mm] water surplus stress threshold
     double waterScarcityThreshold;                  // [mm] water scarcity stress threshold
     double WSS;                                     // [] water surplus stress
 
@@ -763,7 +763,7 @@ double Crit3DCrop::computeTranspiration(double maxTranspiration, const std::vect
 
         thetaWP = soil::thetaFromSignPsi(-soil::cmTokPa(psiLeaf), *(soilLayers[i].horizonPtr));
         // [mm]
-        cropWP = thetaWP * soilLayers[i].thickness * soilLayers[i].soilFraction * 1000.0;
+        cropWP = thetaWP * soilLayers[i].thickness * soilLayers[i].soilFraction * 1000.;
 
         // [mm]
         waterScarcityThreshold = soilLayers[i].FC - fRAW * (soilLayers[i].FC - cropWP);

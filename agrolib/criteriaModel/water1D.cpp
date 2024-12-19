@@ -604,7 +604,7 @@ double getReadilyAvailableWater(const Crit3DCrop &myCrop, const std::vector<soil
     {
         double thetaWP = soil::thetaFromSignPsi(-soil::cmTokPa(myCrop.psiLeaf), *(soilLayers[i].horizonPtr));
         // [mm]
-        double cropWP = thetaWP * soilLayers[i].thickness * soilLayers[i].soilFraction * 1000.0;
+        double cropWP = thetaWP * soilLayers[i].thickness * soilLayers[i].soilFraction * 1000.;
         // [mm]
         double threshold = soilLayers[i].FC - myCrop.fRAW * (soilLayers[i].FC - cropWP);
 

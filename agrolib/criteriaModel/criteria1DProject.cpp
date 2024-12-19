@@ -1576,14 +1576,17 @@ bool Crit1DProject::restoreState(QString dbStateToRestoreName, QString &myError)
                 myError = "Invalid NR_LAYER";
                 return false;
             }
+
             // check values
             if (nrLayer > 0)
             {
                 wc = std::min(wc, myCase.soilLayers[unsigned(nrLayer)].SAT);
                 wc = std::max(wc, myCase.soilLayers[unsigned(nrLayer)].HH);
             }
+
             myCase.soilLayers[unsigned(nrLayer)].waterContent = wc;
         }
+
         if (nrLayer == -1)
         {
             myError = "waterContent table: idCase not found";

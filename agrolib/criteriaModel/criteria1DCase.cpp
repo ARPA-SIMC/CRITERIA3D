@@ -683,7 +683,7 @@ double Crit1DCase::getTotalWaterContent()
  */
 double Crit1DCase::getVolumetricWaterContent(double computationDepth)
 {
-    computationDepth /= 100;        // [cm] --> [m]
+    computationDepth /= 100.;        // [cm] --> [m]
 
     if (computationDepth <= 0 || computationDepth > mySoil.totalDepth)
         return NODATA;

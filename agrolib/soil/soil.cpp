@@ -152,6 +152,7 @@ namespace soil
 
         this->fieldCapacity = NODATA;
         this->wiltingPoint = NODATA;
+
         this->waterContentSAT = NODATA;
         this->waterContentFC = NODATA;
         this->waterContentWP = NODATA;
@@ -224,16 +225,19 @@ namespace soil
 
         horizonPtr = horizonPointer;
 
+        // [-]
+        soilFraction = horizonPtr->getSoilFraction();
+
         // [mm]
-        SAT = horizonPtr->waterContentSAT * thickness * 1000;
-        FC = horizonPtr->waterContentFC * thickness * 1000;
-        WP = horizonPtr->waterContentWP * thickness * 1000;
+        SAT = horizonPtr->waterContentSAT * thickness * 1000.;
+        FC = horizonPtr->waterContentFC * thickness * 1000.;
+        WP = horizonPtr->waterContentWP * thickness * 1000.;
         critical = FC;
 
         // hygroscopic humidity
-        double hygroscopicHumidity = -2000;     // [kPa]
-        double volWaterContentHH = soil::thetaFromSignPsi(hygroscopicHumidity, *horizonPtr);    // [m3 m-3]
-        HH = volWaterContentHH * horizonPtr->getSoilFraction() * thickness * 1000;
+        double hygroHumPotential = -2000;                                                       // [kPa]
+        double volWaterContentHH = soil::thetaFromSignPsi(hygroHumPotential, *horizonPtr);      // [m3 m-3]
+        HH = volWaterContentHH * soilFraction * thickness * 1000.;                              // [mm]
 
         return true;
     }
@@ -687,7 +691,7 @@ namespace soil
     double getWaterContentFromPsi(double psi, const Crit1DLayer &layer)
     {
         double theta = soil::thetaFromSignPsi(-psi, *(layer.horizonPtr));
-        return theta * layer.thickness * layer.soilFraction * 1000;
+        return theta * layer.thickness * layer.soilFraction * 1000.;
     }
 
 
@@ -711,7 +715,7 @@ namespace soil
 
 
     /*!
-     * \brief return current volumetric water content [-]
+     * \brief return current volumetric water content (soil fraction) [-]
      */
     double Crit1DLayer::getVolumetricWaterContent()
     {
