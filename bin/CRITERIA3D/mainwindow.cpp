@@ -45,6 +45,7 @@
 #include "dialogModelProcesses.h"
 #include "utilities.h"
 #include "formText.h"
+#include "soilFluxes3D.h"
 
 #include <QTime>
 
@@ -2401,7 +2402,7 @@ void MainWindow::on_actionCriteria3D_run_models_triggered()
 
 void MainWindow::on_actionCriteria3D_Water_content_summary_triggered()
 {
-    double surfaceWaterContent = 0;
+    double surfaceWaterContent = 0;                                                         // [m3]
     long nrSurfaceVoxels = 0;
     if (! myProject.computeSurfaceWaterContent(surfaceWaterContent, nrSurfaceVoxels))
     {
@@ -2412,13 +2413,19 @@ void MainWindow::on_actionCriteria3D_Water_content_summary_triggered()
     double voxelArea = myProject.DEM.header->cellSize * myProject.DEM.header->cellSize;     // [m2]
     double surfaceArea = voxelArea * nrSurfaceVoxels;                                       // [m2]
     double surfaceAvgLevel = surfaceWaterContent / surfaceArea * 1000;                      // [mm]
+    double totalWaterContent = soilFluxes3D::getTotalWaterContent();                        // [m3]
 
     QString summaryStr = "WATER CONTENT SUMMARY\n\n";
 
+    summaryStr += "Total water content: " + QString::number(totalWaterContent, 'f', 1) + " [m3]\n";
+    summaryStr += "-------------------------------------------\n";
     summaryStr += "Surface area: " + QString::number(surfaceArea / 10000, 'f', 1) + " [hectares]\n";
-    summaryStr += "Surface total water content: " + QString::number(surfaceWaterContent, 'f', 1) + " [m3]\n";
+    summaryStr += "Surface water content: " + QString::number(surfaceWaterContent, 'f', 1) + " [m3]\n";
     summaryStr += "Surface average water level: " + QString::number(surfaceAvgLevel, 'f', 1) + " [mm]\n";
-    summaryStr += "-------------------------------------------";
+    summaryStr += "-------------------------------------------\n";
+    summaryStr += "Soil area: [hectares]\n";
+    summaryStr += "Soil water content: [m3]\n";
+    summaryStr += "Soil average water content: [mm]\n";
 
     myProject.logInfoGUI(summaryStr);
 }

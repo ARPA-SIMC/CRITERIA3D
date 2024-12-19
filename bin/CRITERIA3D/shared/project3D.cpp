@@ -1922,7 +1922,7 @@ double Project3D::assignEvaporation(int row, int col, double lai, int soilIndex)
         }
     }
 
-    double area = DEM.header->cellSize * DEM.header->cellSize;            // [m2]
+    double area = DEM.header->cellSize * DEM.header->cellSize;                  // [m2]
 
     double et0 = double(hourlyMeteoMaps->mapHourlyET0->value[row][col]);        // [mm]
     double maxEvaporation = getPotentialEvaporation(et0, lai);                  // [mm]
@@ -1935,8 +1935,8 @@ double Project3D::assignEvaporation(int row, int col, double lai, int soilIndex)
     double surfaceEvaporation = std::min(maxEvaporation, surfaceWater);
 
     // TODO surface evaporation out of numerical solution
-    double surfaceFlow = area * (surfaceEvaporation / 1000);                    // [m3 h-1]
-    waterSinkSource.at(unsigned(surfaceNodeIndex)) -= (surfaceFlow / 3600);     // [m3 s-1]
+    double surfaceFlow = area * (surfaceEvaporation / 1000.);                   // [m3 h-1]
+    waterSinkSource.at(unsigned(surfaceNodeIndex)) -= (surfaceFlow / 3600.);    // [m3 s-1]
 
     actualEvaporationSum += surfaceEvaporation;
     double residualEvaporation = maxEvaporation - surfaceEvaporation;
@@ -1986,15 +1986,15 @@ double Project3D::assignEvaporation(int row, int col, double lai, int soilIndex)
                 double vwcAboveThreshold = std::max(getCriteria3DVar(volumetricWaterContent, nodeIndex) - evapThreshold, 0.0);   // [m3 m-3]
 
                 // [mm]
-                double evapAvailableWater = vwcAboveThreshold * layerThickness[layer] * 1000;
+                double evapAvailableWater = vwcAboveThreshold * layerThickness[layer] * 1000.;
 
                 double layerEvap = std::min(evapAvailableWater, residualEvaporation * layerCoeff[layer]);     // [mm]
                 if (layerEvap > 0)
                 {
                     actualEvaporationSum += layerEvap;
                     iterEvaporation += layerEvap;
-                    double flow = area * (layerEvap / 1000);                        // [m3 h-1]
-                    waterSinkSource.at(unsigned(nodeIndex)) -= (flow / 3600);       // [m3 s-1]
+                    double flow = area * (layerEvap / 1000.);                        // [m3 h-1]
+                    waterSinkSource.at(unsigned(nodeIndex)) -= (flow / 3600.);       // [m3 s-1]
                 }
             }
         }
@@ -2016,7 +2016,7 @@ double Project3D::assignEvaporation(int row, int col, double lai, int soilIndex)
  */
 double Project3D::assignTranspiration(int row, int col, double currentLai, double currentDegreeDays)
 {
-    double actualTranspiration = 0;                 // [mm]
+    double actualTranspiration = 0;   // [mm]
 
     // check lai and degree days
     if (currentLai < EPSILON || isEqual(currentDegreeDays, NODATA))
@@ -2175,11 +2175,11 @@ double Project3D::assignTranspiration(int row, int col, double currentLai, doubl
     actualTranspiration = 0;
     for (int layer = firstRootLayer; layer <= lastRootLayer; layer++)
     {
-        double flow = area * (layerTranspiration[layer] / 1000);        // [m3 h-1]
+        double flow = area * (layerTranspiration[layer] / 1000.);       // [m3 h-1]
         long nodeIndex = long(indexMap.at(layer).value[row][col]);
         if (! isEqual(nodeIndex, indexMap.at(layer).header->flag))
         {
-            waterSinkSource.at(nodeIndex) -= (flow / 3600);             // [m3 s-1]
+            waterSinkSource.at(nodeIndex) -= (flow / 3600.);            // [m3 s-1]
             actualTranspiration += layerTranspiration[layer];           // [mm]
         }
     }
