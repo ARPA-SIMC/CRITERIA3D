@@ -317,7 +317,7 @@ bool setRadiationScale(Crit3DColorScale* myScale)
 
 bool setSurfaceWaterScale(Crit3DColorScale* myScale)
 {
-    myScale->initialize(4, 512);
+    myScale->initialize(4, 256);
 
     myScale->keyColor[0] = Crit3DColor(255, 255, 255);      /*!< white */
     myScale->keyColor[1] = Crit3DColor(0, 255, 255);        /*!< cyan */

@@ -211,7 +211,9 @@
         bool computeMinimumFoS(gis::Crit3DRasterGrid &outputRaster);
 
         float computeFactorOfSafety(int row, int col, unsigned int layerIndex);
-        bool computeSurfaceWaterContent(double &wcSum, long &nrVoxels);
+
+        bool getTotalSurfaceWaterContent(double &wcSum, long &nrVoxels);
+        bool getTotalSoilWaterContent(double &wcSum, long &nrVoxels);
     };
 
     bool isCrit3dError(int result, QString &error);

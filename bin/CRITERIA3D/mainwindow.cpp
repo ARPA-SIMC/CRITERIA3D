@@ -2402,17 +2402,30 @@ void MainWindow::on_actionCriteria3D_run_models_triggered()
 
 void MainWindow::on_actionCriteria3D_Water_content_summary_triggered()
 {
+    double voxelArea = myProject.DEM.header->cellSize * myProject.DEM.header->cellSize;     // [m2]
+
+    // SURFACE
     double surfaceWaterContent = 0;                                                         // [m3]
     long nrSurfaceVoxels = 0;
-    if (! myProject.computeSurfaceWaterContent(surfaceWaterContent, nrSurfaceVoxels))
+    if (! myProject.getTotalSurfaceWaterContent(surfaceWaterContent, nrSurfaceVoxels))
     {
         myProject.logError();
         return;
     }
-
-    double voxelArea = myProject.DEM.header->cellSize * myProject.DEM.header->cellSize;     // [m2]
     double surfaceArea = voxelArea * nrSurfaceVoxels;                                       // [m2]
     double surfaceAvgLevel = surfaceWaterContent / surfaceArea * 1000;                      // [mm]
+
+    // SOIL
+    double soilWaterContent = 0;                                                            // [m3]
+    long nrSoilVoxels = 0;
+    if (! myProject.getTotalSoilWaterContent(soilWaterContent, nrSoilVoxels))
+    {
+        myProject.logError();
+        return;
+    }
+    double soilArea = voxelArea * nrSoilVoxels;                                             // [m2]
+    double soilAvgWC = soilWaterContent / soilArea * 1000;                                  // [mm]
+
     double totalWaterContent = soilFluxes3D::getTotalWaterContent();                        // [m3]
 
     QString summaryStr = "WATER CONTENT SUMMARY\n\n";
@@ -2423,9 +2436,9 @@ void MainWindow::on_actionCriteria3D_Water_content_summary_triggered()
     summaryStr += "Surface water content: " + QString::number(surfaceWaterContent, 'f', 1) + " [m3]\n";
     summaryStr += "Surface average water level: " + QString::number(surfaceAvgLevel, 'f', 1) + " [mm]\n";
     summaryStr += "-------------------------------------------\n";
-    summaryStr += "Soil area: [hectares]\n";
-    summaryStr += "Soil water content: [m3]\n";
-    summaryStr += "Soil average water content: [mm]\n";
+    summaryStr += "Soil area: " + QString::number(soilArea / 10000, 'f', 1) + " [hectares]\n";
+    summaryStr += "Soil water content: " + QString::number(soilWaterContent, 'f', 1) + " [m3]\n";
+    summaryStr += "Soil average water content: " + QString::number(soilAvgWC, 'f', 1) + " [mm]\n";
 
     myProject.logInfoGUI(summaryStr);
 }

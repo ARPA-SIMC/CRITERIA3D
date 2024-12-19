@@ -1669,12 +1669,12 @@ bool Project3D::computeCriteria3DMap(gis::Crit3DRasterGrid &outputRaster, criter
 
 
 /*!
- * \brief computeSurfaceWaterContent
+ * \brief getTotalSurfaceWaterContent
  * \return
  * wcSum: [m3] sum of surface water content
  * nrVoxels: [-] number of valid voxels
  */
-bool Project3D::computeSurfaceWaterContent(double &wcSum, long &nrVoxels)
+bool Project3D::getTotalSurfaceWaterContent(double &wcSum, long &nrVoxels)
 {
     errorString = "";
     if (! isCriteria3DInitialized)
@@ -1700,6 +1700,53 @@ bool Project3D::computeSurfaceWaterContent(double &wcSum, long &nrVoxels)
                 {
                     wcSum += surfaceWC * voxelArea;        // [m3]
                     nrVoxels++;
+                }
+            }
+        }
+    }
+
+    return true;
+}
+
+
+/*!
+ * \brief getTotalSoilWaterContent
+ * \return
+ * wcSum: [m3] sum of soil water content
+ * nrVoxels: [-] number of valid voxels
+ */
+bool Project3D::getTotalSoilWaterContent(double &wcSum, long &nrVoxels)
+{
+    errorString = "";
+    if (! isCriteria3DInitialized)
+    {
+        errorString = ERROR_STR_INITIALIZE_3D;
+        return false;
+    }
+
+    nrVoxels = 0;
+    wcSum = 0.;
+    double voxelArea = DEM.header->cellSize * DEM.header->cellSize;                 // [m2]
+
+    for (int layer = 1; layer < nrLayers; layer++)
+    {
+        double volume = voxelArea * layerThickness[layer];                          // [m3]
+
+        for (int row = 0; row < indexMap.at(layer).header->nrRows; row++)
+        {
+            for (int col = 0; col < indexMap.at(layer).header->nrCols; col++)
+            {
+                long nodeIndex = indexMap.at(layer).value[row][col];
+                if (nodeIndex != indexMap.at(layer).header->flag)
+                {
+                    double volWaterContent = getCriteria3DVar(volumetricWaterContent, nodeIndex);    // [m3 m-3]
+
+                    if (! isEqual(volWaterContent, NODATA))
+                    {
+                        wcSum += volWaterContent * volume;        // [m3]
+                        if (layer == 1)
+                            nrVoxels++;
+                    }
                 }
             }
         }
