@@ -75,6 +75,8 @@
         double K_sat;               /*!< [m sec-1] saturated hydraulic conductivity */
         double Mualem_L;            /*!< [-] Mualem tortuosity parameter */
 
+        double
+
         double Roughness;           /*!< [s m-1/3] surface: Manning roughness */
 
         //for heat
