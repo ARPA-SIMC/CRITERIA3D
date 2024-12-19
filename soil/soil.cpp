@@ -225,6 +225,9 @@ namespace soil
 
         horizonPtr = horizonPointer;
 
+        // [-]
+        soilFraction = horizonPtr->getSoilFraction();
+
         // [mm]
         SAT = horizonPtr->waterContentSAT * thickness * 1000.;
         FC = horizonPtr->waterContentFC * thickness * 1000.;
@@ -232,9 +235,9 @@ namespace soil
         critical = FC;
 
         // hygroscopic humidity
-        double hygroscopicHumidity = -2000;                     // [kPa]
+        double hygroscopicHumidity = -2000;                                                     // [kPa]
         double volWaterContentHH = soil::thetaFromSignPsi(hygroscopicHumidity, *horizonPtr);    // [m3 m-3]
-        HH = volWaterContentHH * horizonPtr->getSoilFraction() * thickness * 1000.;             // [mm]
+        HH = volWaterContentHH * soilFraction * thickness * 1000.;                              // [mm]
 
         return true;
     }
@@ -688,7 +691,7 @@ namespace soil
     double getWaterContentFromPsi(double psi, const Crit1DLayer &layer)
     {
         double theta = soil::thetaFromSignPsi(-psi, *(layer.horizonPtr));
-        return theta * layer.thickness * layer.soilFraction * 1000;
+        return theta * layer.thickness * layer.soilFraction * 1000.;
     }
 
 
