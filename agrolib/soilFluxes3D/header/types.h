@@ -77,7 +77,7 @@
 
         double Roughness;           /*!< [s m-1/3] surface: Manning roughness */
 
-        // for heat
+        // for heat flux
         double organicMatter;       /*!< [-] fraction of organic matter */
         double clay;                /*!< [-] fraction of clay */
     };
