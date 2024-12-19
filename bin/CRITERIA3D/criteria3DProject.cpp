@@ -925,15 +925,12 @@ double Crit3DProject::getSoilVar(int soilIndex, int layerIndex, soil::soilVariab
         return soilList[unsigned(soilIndex)].horizon[hIndex].wiltingPoint;
     else if (myVar == soil::soilWaterPotentialFC)
         return soilList[unsigned(soilIndex)].horizon[hIndex].fieldCapacity;
+    else if (myVar == soil::soilWaterContentSat)
+        return soilList[unsigned(soilIndex)].horizon[hIndex].waterContentSAT;
     else if (myVar == soil::soilWaterContentFC)
         return soilList[unsigned(soilIndex)].horizon[hIndex].waterContentFC;
-    else if (myVar == soil::soilWaterContentSat)
-        return soilList[unsigned(soilIndex)].horizon[hIndex].vanGenuchten.thetaS;
     else if (myVar == soil::soilWaterContentWP)
-    {
-        double signPsiLeaf = -160;      //[m]
-        return soil::thetaFromSignPsi(signPsiLeaf, soilList[unsigned(soilIndex)].horizon[hIndex]);
-    }
+        return soilList[unsigned(soilIndex)].horizon[hIndex].waterContentWP;
     else
         return NODATA;
 }

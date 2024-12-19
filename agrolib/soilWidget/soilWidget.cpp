@@ -754,13 +754,13 @@ void Crit3DSoilWidget::setInfoTextural(int nHorizon)
     }
     else
     {
-        if (mySoil.horizon[unsigned(nHorizon)].vanGenuchten.thetaS == NODATA)
+        if (mySoil.horizon[unsigned(nHorizon)].waterContentSAT == NODATA)
         {
             satValue->setText(QString::number(NODATA));
         }
         else
         {
-            satValue->setText(QString::number(mySoil.horizon[unsigned(nHorizon)].vanGenuchten.thetaS, 'f', 3));
+            satValue->setText(QString::number(mySoil.horizon[unsigned(nHorizon)].waterContentSAT, 'f', 3));
         }
 
         if (mySoil.horizon[unsigned(nHorizon)].waterContentFC == NODATA)

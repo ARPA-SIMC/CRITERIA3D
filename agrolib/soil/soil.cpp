@@ -152,6 +152,7 @@ namespace soil
 
         this->fieldCapacity = NODATA;
         this->wiltingPoint = NODATA;
+        this->waterContentSAT = NODATA;
         this->waterContentFC = NODATA;
         this->waterContentWP = NODATA;
 
@@ -223,18 +224,16 @@ namespace soil
 
         horizonPtr = horizonPointer;
 
-        double hygroscopicHumidity = -2000;     // [kPa]
-        double waterContentHH = soil::thetaFromSignPsi(hygroscopicHumidity, *horizonPtr);
-
-        // [-]
-        soilFraction = horizonPtr->getSoilFraction();
-
         // [mm]
-        SAT = horizonPtr->vanGenuchten.thetaS * soilFraction * thickness * 1000;
-        FC = horizonPtr->waterContentFC * soilFraction * thickness * 1000;
-        WP = horizonPtr->waterContentWP * soilFraction * thickness * 1000;
-        HH = waterContentHH * soilFraction * thickness * 1000;
+        SAT = horizonPtr->waterContentSAT * thickness * 1000;
+        FC = horizonPtr->waterContentFC * thickness * 1000;
+        WP = horizonPtr->waterContentWP * thickness * 1000;
         critical = FC;
+
+        // hygroscopic humidity
+        double hygroscopicHumidity = -2000;     // [kPa]
+        double volWaterContentHH = soil::thetaFromSignPsi(hygroscopicHumidity, *horizonPtr);    // [m3 m-3]
+        HH = volWaterContentHH * horizonPtr->getSoilFraction() * thickness * 1000;
 
         return true;
     }
@@ -413,8 +412,10 @@ namespace soil
     // estimate bulk density from total porosity
     double estimateBulkDensity(const Crit3DHorizon &horizon, double totalPorosity, bool increaseWithDepth)
     {
-        if (int(totalPorosity) == int(NODATA))
+        if (isEqual(totalPorosity, NODATA))
+        {
             totalPorosity = (horizon.vanGenuchten.refThetaS);
+        }
 
         double specificDensity = estimateSpecificDensity(horizon.organicMatter);
         double refBulkDensity = (1 - totalPorosity) * specificDensity;
@@ -630,7 +631,7 @@ namespace soil
      * \brief Compute volumetric water content from signed water potential
      * \param signPsi water potential       [kPa]
      * \param horizon
-     * \return volumetric water content     [m^3 m-3]
+     * \return volumetric water content     [m3 m-3]
      */
     double thetaFromSignPsi(double signPsi, const Crit3DHorizon &horizon)
     {     
@@ -710,14 +711,14 @@ namespace soil
 
 
     /*!
-     * \brief return current volumetric water content [m3 m^3]
+     * \brief return current volumetric water content [-]
      */
     double Crit1DLayer::getVolumetricWaterContent()
     {
-        // waterContent [mm]
-        // thickness [m]
-        double theta = waterContent / (thickness * soilFraction * 1000);
-        return theta;
+        // thickness [m] -> mm
+        double soilThickness = thickness * soilFraction * 1000.;
+
+        return waterContent / soilThickness;
     }
 
 
@@ -727,7 +728,7 @@ namespace soil
     double Crit1DLayer::getDegreeOfSaturation()
     {
         double theta = getVolumetricWaterContent();
-        return (theta - horizonPtr->vanGenuchten.thetaR) / (horizonPtr->vanGenuchten.thetaS - horizonPtr->vanGenuchten.thetaR);
+        return SeFromTheta(theta, *horizonPtr);
     }
 
 
@@ -963,8 +964,10 @@ namespace soil
 
         horizon.fieldCapacity = soil::getFieldCapacity(horizon.texture.clay, soil::KPA);
         horizon.wiltingPoint = soil::getWiltingPoint(soil::KPA);
-        horizon.waterContentFC = soil::thetaFromSignPsi(horizon.fieldCapacity, horizon);
-        horizon.waterContentWP = soil::thetaFromSignPsi(horizon.wiltingPoint, horizon);
+
+        horizon.waterContentSAT = horizon.vanGenuchten.thetaS * horizon.getSoilFraction();
+        horizon.waterContentFC = soil::thetaFromSignPsi(horizon.fieldCapacity, horizon) * horizon.getSoilFraction();
+        horizon.waterContentWP = soil::thetaFromSignPsi(horizon.wiltingPoint, horizon) * horizon.getSoilFraction();
 
         return true;
     }
@@ -999,8 +1002,9 @@ namespace soil
             psiMin = std::min(psiMin, horizon.dbData.waterRetention[i].water_potential);
             thetaMax = std::max(thetaMax, horizon.dbData.waterRetention[i].water_content);
         }
-        // add theta sat if minimum observed value is greater than 3 kPa
-        bool addThetaSat = ((thetaMax < horizon.vanGenuchten.thetaS) && (psiMin > 3));
+
+        // add theta sat if minimum observed value is greater than 5 kPa
+        bool addThetaSat = ((thetaMax < horizon.vanGenuchten.thetaS) && (psiMin > 5));
 
         // set values
         unsigned int nrValues = nrObsValues;

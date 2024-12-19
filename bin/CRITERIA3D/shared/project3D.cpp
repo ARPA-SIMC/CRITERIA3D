@@ -1691,14 +1691,14 @@ bool Project3D::computeSurfaceWaterContent(double &wcSum, long &nrVoxels)
     {
         for (int col = 0; col < indexMap.at(0).header->nrCols; col++)
         {
-            long nodeIndex = indexMap.at(0).value[row][col];
-            if (nodeIndex != indexMap.at(0).header->flag)
+            long surfaceNodeIndex = indexMap.at(0).value[row][col];
+            if (surfaceNodeIndex != indexMap.at(0).header->flag)
             {
-                double wc = getCriteria3DVar(volumetricWaterContent, nodeIndex);    //[m]
+                double surfaceWC = getCriteria3DVar(volumetricWaterContent, surfaceNodeIndex);    // [m]
 
-                if (wc != NODATA)
+                if (! isEqual(surfaceWC, NODATA))
                 {
-                    wcSum += wc * voxelArea;        // [m3]
+                    wcSum += surfaceWC * voxelArea;        // [m3]
                     nrVoxels++;
                 }
             }
@@ -2117,8 +2117,7 @@ double Project3D::assignTranspiration(int row, int col, double currentLai, doubl
 
         // [m3 m-3]
         double volWaterContent = getCriteria3DVar(volumetricWaterContent, nodeIndex);
-        double thetaSat = horizon.vanGenuchten.thetaS;
-        double volWaterSurplusThreshold = thetaSat - waterSurplusStressFraction * (thetaSat - horizon.waterContentFC);
+        double volWaterSurplusThreshold = horizon.waterContentSAT - waterSurplusStressFraction * (horizon.waterContentSAT - horizon.waterContentFC);
         double volWaterScarcityThreshold = horizon.waterContentFC - currentCrop.fRAW * (horizon.waterContentFC - horizon.waterContentWP);
 
         double ratio;
@@ -2137,7 +2136,7 @@ double Project3D::assignTranspiration(int row, int col, double currentLai, doubl
         else if  ((volWaterContent - volWaterSurplusThreshold)  > EPSILON)
         {
             // WATER SURPLUS
-            ratio = (thetaSat - volWaterContent) / (thetaSat - volWaterSurplusThreshold);
+            ratio = (horizon.waterContentSAT - volWaterContent) / (horizon.waterContentSAT - volWaterSurplusThreshold);
             isLayerStressed[layer] = true;
         }
         else
