@@ -57,6 +57,7 @@
 
         bool initializeCriteria3DModel();
 
+        void clearCropMaps();
         bool initializeCropMaps();
         void dailyUpdateCropMaps(const QDate &myDate);
 

@@ -87,6 +87,8 @@
     public:
         bool isCriteria3DInitialized;
         bool isCropInitialized;
+        bool isSnowInitialized;
+
         bool showEachTimeStep;
         bool increaseSlope;
 

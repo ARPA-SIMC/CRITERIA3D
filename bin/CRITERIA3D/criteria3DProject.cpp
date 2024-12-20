@@ -60,12 +60,15 @@ bool Crit3DProject::initializeCriteria3DModel()
 
     clearWaterBalance3D();
 
-    // it is necessary to reload the soils db (the fitting options may have changed)
-    if (! loadSoilDatabase(soilDbFileName))
-        return false;
+    if (! waterFluxesParameters.computeOnlySurface)
+    {
+        // it is necessary to reload the soils db (the fitting options may have changed)
+        if (! loadSoilDatabase(soilDbFileName))
+            return false;
 
-    if (! setSoilIndexMap())
-        return false;
+        if (! setSoilIndexMap())
+            return false;
+    }
 
     if (! initialize3DModel())
     {
@@ -76,6 +79,17 @@ bool Crit3DProject::initializeCriteria3DModel()
 
     isCriteria3DInitialized = true;
     return true;
+}
+
+
+void Crit3DProject::clearCropMaps()
+{
+    laiMap.clear();
+    degreeDaysMap.clear();
+    dailyTminMap.clear();
+    dailyTmaxMap.clear();
+
+    isCropInitialized = false;
 }
 
 
@@ -1083,6 +1097,7 @@ bool Crit3DProject::initializeSnowModel()
     }
 
     snowMaps.initializeSnowMaps(DEM, snowModel.snowParameters.skinThickness);
+    isSnowInitialized = true;
 
     return true;
 }
@@ -1590,13 +1605,18 @@ bool Crit3DProject::loadModelState(QString statePath)
 
     std::string errorStr, fileName;
 
+    bool isProcessesDefined = (isSnowInitialized || isCropInitialized || isCriteria3DInitialized);
+
     // snow model
     QString snowPath = statePath + "/snow";
     QDir snowDir(snowPath);
-    if (snowDir.exists())
+    if (snowDir.exists() && (!isProcessesDefined || isSnowInitialized))
     {
-        if (! initializeSnowModel())
-            return false;
+        if (! isSnowInitialized)
+        {
+            if (! initializeSnowModel())
+                return false;
+        }
 
         gis::Crit3DRasterGrid *tmpRaster = new gis::Crit3DRasterGrid();
 
@@ -1669,7 +1689,7 @@ bool Crit3DProject::loadModelState(QString statePath)
     // crop model
     QString cropPath = statePath + "/crop";
     QDir cropDir(cropPath);
-    if (cropDir.exists())
+    if (cropDir.exists() && (!isProcessesDefined || isCropInitialized))
     {
         gis::Crit3DRasterGrid myDegreeDaysMap;
         fileName = cropPath.toStdString() + "/degreeDays";
@@ -1688,7 +1708,7 @@ bool Crit3DProject::loadModelState(QString statePath)
     // water fluxes
     QString waterPath = statePath + "/water";
     QDir waterDir(waterPath);
-    if (waterDir.exists())
+    if (waterDir.exists() && (!isProcessesDefined || isCriteria3DInitialized))
     {
         if (! loadWaterPotentialState(waterPath))
         {

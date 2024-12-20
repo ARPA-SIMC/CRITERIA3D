@@ -145,6 +145,8 @@ void Project3D::initializeProject3D()
 
     isCriteria3DInitialized = false;
     isCropInitialized = false;
+    isSnowInitialized = false;
+
     showEachTimeStep = false;
     increaseSlope = false;
 
@@ -304,7 +306,7 @@ bool Project3D::initialize3DModel()
     logInfo("Initialize 3D model...");
 
     // check soil
-    if (! soilMap.isLoaded || soilList.size() == 0)
+    if (! waterFluxesParameters.computeOnlySurface && (!soilMap.isLoaded || soilList.size() == 0))
     {
         logInfo("WARNING: soil map or soil db is missing: only surface fluxes will be computed.");
         waterFluxesParameters.computeOnlySurface = true;

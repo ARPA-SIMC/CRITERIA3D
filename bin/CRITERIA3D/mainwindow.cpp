@@ -2315,6 +2315,11 @@ void MainWindow::on_actionCriteria3D_Initialize_triggered()
             return;
         }
     }
+    else
+    {
+        myProject.snowMaps.clear();
+        myProject.isSnowInitialized = false;
+    }
 
     if (myProject.processes.computeCrop)
     {
@@ -2323,6 +2328,10 @@ void MainWindow::on_actionCriteria3D_Initialize_triggered()
             myProject.logError();
             return;
         }
+    }
+    else
+    {
+        myProject.clearCropMaps();
     }
 
     if (myProject.processes.computeWater)
@@ -2342,9 +2351,12 @@ void MainWindow::on_actionCriteria3D_Initialize_triggered()
             return;
         }
     }
+    else
+    {
+        myProject.clearWaterBalance3D();
+    }
 
     initializeCriteria3DInterface();
-    myProject.isCriteria3DInitialized = true;
     myProject.logInfoGUI("The model is initialized.");
 }
 
