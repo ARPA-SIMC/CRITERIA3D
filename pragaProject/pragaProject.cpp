@@ -42,7 +42,7 @@ void PragaProject::initializePragaProject()
     pragaDefaultSettings = nullptr;
     pragaDailyMaps = nullptr;
     users.clear();
-    lastElabTargetisGrid = false;
+    lastElabTargetIsGrid = false;
 
     outputMeteoPointsDbHandler = nullptr;
     outputMeteoPointsLoaded = false;

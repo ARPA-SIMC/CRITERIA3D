@@ -37,6 +37,7 @@ INCLUDEPATH +=  ../crit3dDate ../mathFunctions ../phenology ../meteo ../gis  \
 
 
 SOURCES += \
+    dialogMeteoHourlyComputation.cpp \
     dialogPragaProject.cpp \
     dialogMeteoComputation.cpp \
     dialogPragaSettings.cpp \
@@ -48,6 +49,7 @@ SOURCES += \
 
 
 HEADERS  += \
+    dialogMeteoHourlyComputation.h \
     dialogPragaProject.h \
     dialogMeteoComputation.h \
     dialogPragaSettings.h \
