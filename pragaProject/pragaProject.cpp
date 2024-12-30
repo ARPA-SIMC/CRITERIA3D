@@ -776,24 +776,22 @@ bool PragaProject::computeElaboration(bool isMeteoGrid, bool isAnomaly, bool isC
 }
 
 
-bool PragaProject::computeElaborationHourly(bool isMeteoGrid, bool showInfo)
+bool PragaProject::computeElaborationHourly(bool isMeteoGrid, bool isShowInfo)
 {
+    bool result;
+
     if (isMeteoGrid)
     {
-        if (! elaborationCycleGridHourly(showInfo))
-            return false;
-
-        meteoGridDbHandler->meteoGrid()->setIsElabValue(true);
+        result = elaborationCycleGridHourly(isShowInfo);
+        meteoGridDbHandler->meteoGrid()->setIsElabValue(result);
     }
     else
     {
-        if (! elaborationCyclePointsHourly(showInfo))
-            return false;
-
-        setIsElabMeteoPointsValue(true);
+        result = elaborationCyclePointsHourly(isShowInfo);
+        setIsElabMeteoPointsValue(result);
     }
 
-    return true;
+    return result;
 }
 
 
@@ -1053,7 +1051,55 @@ bool PragaProject::elaborationCycleGridHourly(bool showInfo)
         infoStep = setProgressBar(infoStr, this->meteoGridDbHandler->gridStructure().header().nrRows);
     }
 
-    // TODO
+    for (int row = 0; row < meteoGridDbHandler->gridStructure().header().nrRows; row++)
+    {
+        if (showInfo && (row % infoStep) == 0)
+            updateProgressBar(row);
+
+        for (int col = 0; col < meteoGridDbHandler->gridStructure().header().nrCols; col++)
+        {
+            if (meteoGridDbHandler->meteoGrid()->getMeteoPointActiveId(row, col, &id))
+            {
+                Crit3DMeteoPoint* meteoPoint = meteoGridDbHandler->meteoGrid()->meteoPointPointer(row,col);
+
+                // copy data to meteoPointTemp
+                Crit3DMeteoPoint* meteoPointTemp = new Crit3DMeteoPoint;
+                meteoPointTemp->id = meteoPoint->id;
+                meteoPointTemp->point.z = meteoPoint->point.z;
+                meteoPointTemp->latitude = meteoPoint->latitude;
+
+                // meteoPointTemp should be init
+                meteoPointTemp->nrObsDataDaysH = 0;
+                meteoPointTemp->nrObsDataDaysD = 0;
+
+                bool isMeteoGrid = true;
+                if  (elaborationOnPointHourly(nullptr, meteoGridDbHandler, meteoPointTemp,
+                                       isMeteoGrid, currentElaboration, meteoSettings, errorString))
+                {
+                    nrValidCells++;
+                }
+
+                // save result to MP
+                meteoPoint->elaboration = meteoPointTemp->elaboration;
+                meteoPoint->anomaly = NODATA;
+                meteoPoint->anomalyPercentage = NODATA;
+
+                delete meteoPointTemp;
+            }
+        }
+    }
+
+    if (showInfo) closeProgressBar();
+    delete currentElaboration;
+
+    if (nrValidCells == 0)
+    {
+        if (errorString.isEmpty())
+        {
+            errorString = "No valid cells available.";
+        }
+        return false;
+    }
 
     return true;
 }

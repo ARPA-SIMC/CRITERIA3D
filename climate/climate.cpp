@@ -105,8 +105,31 @@ bool elaborationOnPoint(QString *myError, Crit3DMeteoPointsDbHandler* meteoPoint
     }
 
     return false;
-
 }
+
+
+bool elaborationOnPointHourly(Crit3DMeteoPointsDbHandler* meteoPointsDbHandler, Crit3DMeteoGridDbHandler* meteoGridDbHandler,
+                              Crit3DMeteoPoint* meteoPointTemp, bool isMeteoGrid, Crit3DClimate* climate, Crit3DMeteoSettings* meteoSettings, QString &myError)
+{
+    meteoPointTemp->elaboration = NODATA;
+
+    std::vector<float> outputValues;
+    QDateTime firstTime = QDateTime(climate->genericPeriodDateStart(), QTime(climate->hourStart(), 0), Qt::UTC);
+    QDateTime lastTime = QDateTime(climate->genericPeriodDateEnd(), QTime(climate->hourEnd(), 0), Qt::UTC);
+
+    float percValue = loadHourlyVarSeries_SaveOutput(myError, meteoPointsDbHandler, meteoGridDbHandler, meteoPointTemp,
+                                                    isMeteoGrid, climate->variable(), firstTime, lastTime, outputValues);
+
+    if ((percValue*100) < meteoSettings->getMinimumPercentage())
+        return false;
+
+    meteoComputation elab = getMeteoCompFromString(MapMeteoComputation, climate->elab1().toStdString());
+    float result = statisticalElab(elab, NODATA, outputValues, int(outputValues.size()), meteoSettings->getRainfallThreshold());
+    meteoPointTemp->elaboration = result;
+
+    return (result != NODATA);
+}
+
 
 bool anomalyOnPoint(Crit3DMeteoPoint* meteoPoint, float refValue)
 {
@@ -226,6 +249,7 @@ bool passingClimateToAnomalyGrid(QString *myError, Crit3DMeteoPoint* meteoPointT
     else
         return false;
 }
+
 
 bool climateOnPoint(QString *myError, Crit3DMeteoPointsDbHandler* meteoPointsDbHandler, Crit3DMeteoGridDbHandler* meteoGridDbHandler,
                     Crit3DClimate* clima, Crit3DMeteoPoint* meteoPointTemp, std::vector<float> &outputValues, bool isMeteoGrid, QDate startDate, QDate endDate, bool changeDataSet, Crit3DMeteoSettings* meteoSettings)
@@ -830,62 +854,45 @@ float loadDailyVarSeries(QString *myError, Crit3DMeteoPointsDbHandler *meteoPoin
 }
 
 
-float loadHourlyVarSeries_SaveOutput(QString *myError, Crit3DMeteoPointsDbHandler *meteoPointsDbHandler,
+float loadHourlyVarSeries_SaveOutput(QString &myError, Crit3DMeteoPointsDbHandler *meteoPointsDbHandler,
                                     Crit3DMeteoGridDbHandler *meteoGridDbHandler, Crit3DMeteoPoint* meteoPoint, bool isMeteoGrid,
-                                    meteoVariable variable, QDate firstDate, QDate lastDate, std::vector<float> &outputValues)
+                                    meteoVariable variable, QDateTime firstTime, QDateTime lastTime, std::vector<float> &outputValues)
 {
     std::vector<float> hourlyValues;
     QDateTime firstDateTimeDB;
 
+    QString meteoPointId = QString::fromStdString(meteoPoint->id);
+
     if (isMeteoGrid)
     {
-        QDateTime firstTime = QDateTime(firstDate, QTime(1,0,0,0));
-        QDateTime lastTime = QDateTime(lastDate.addDays(1), QTime(0,0,0,0));
-
         if (meteoGridDbHandler->gridStructure().isFixedFields())
         {
-            hourlyValues = meteoGridDbHandler->loadGridHourlyVarFixedFields(myError, QString::fromStdString(meteoPoint->id),
-                                                                            variable, firstTime, lastTime, &firstDateTimeDB);
+            hourlyValues = meteoGridDbHandler->loadGridHourlyVarFixedFields(variable, meteoPointId, firstTime, lastTime,
+                                                                            firstDateTimeDB, myError);
         }
         else
         {
-            hourlyValues = meteoGridDbHandler->loadGridHourlyVar(myError, QString::fromStdString(meteoPoint->id), variable,
-                                                                 firstTime, lastTime, &firstDateTimeDB);
+            hourlyValues = meteoGridDbHandler->loadGridHourlyVar(variable, meteoPointId, firstTime, lastTime, firstDateTimeDB, myError);
         }
     }
     else
     {
         // meteoPoints
-        hourlyValues = meteoPointsDbHandler->loadHourlyVar(myError, variable, getCrit3DDate(firstDate), getCrit3DDate(lastDate),
-                                                          &firstDateTimeDB, meteoPoint);
+        hourlyValues = meteoPointsDbHandler->loadHourlyVar(variable, meteoPointId, firstTime, lastTime, firstDateTimeDB, myError);
     }
 
     // no values
     if (hourlyValues.empty())
         return 0;
 
-    // number of days
-    QDateTime lastDateTimeDB = firstDateTimeDB.addSecs((hourlyValues.size()-1) * 3600);
-    int nrOfDays = firstDateTimeDB.daysTo(lastDateTimeDB);
-    if (lastDateTimeDB.time().hour() > 0)
-        nrOfDays++;
-
-    Crit3DDate firstCrit3DDate = getCrit3DDate(firstDateTimeDB.date());
+    // initialize meteopoint data
+    int nrOfDays = firstTime.daysTo(lastTime) + 1;
+    Crit3DDate firstCrit3DDate = getCrit3DDate(firstTime.date());
     meteoPoint->initializeObsDataH(meteoPoint->hourlyFraction, nrOfDays, firstCrit3DDate);
     meteoPoint->initializeObsDataD(nrOfDays, firstCrit3DDate);
 
-    int nrRequestedValues = (firstDate.daysTo(lastDate) + 1) * 24;
+    int nrRequestedValues = firstTime.secsTo(lastTime) / 3600 + 1;
     int nrValidValues = 0;
-
-    // fill initial NODATA (if firstHour > 1)
-    int firstHour = firstDateTimeDB.time().hour();
-    if (firstHour > 1)
-    {
-        for (int h = 1; h < firstHour; h++)
-        {
-            outputValues.push_back(NODATA);
-        }
-    }
 
     Crit3DQuality qualityCheck;
     Crit3DTime currentDateTime = getCrit3DTime(firstDateTimeDB);
@@ -897,22 +904,18 @@ float loadHourlyVarSeries_SaveOutput(QString *myError, Crit3DMeteoPointsDbHandle
             if (meteoPoint->setMeteoPointValueH(currentDateTime.date, currentDateTime.getHour(), currentDateTime.getMinutes(), variable, hourlyValues[i]))
             {
                 outputValues.push_back(hourlyValues[i]);
-                nrValidValues = nrValidValues + 1;
+                nrValidValues++;
             }
         }
         else
         {
-            if (meteoPoint->setMeteoPointValueH(currentDateTime.date, currentDateTime.getHour(), currentDateTime.getMinutes(), variable, NODATA))
-            {
-                outputValues.push_back(NODATA);
-            }
+            outputValues.push_back(NODATA);
         }
 
-        currentDateTime = currentDateTime.addSeconds(3600);
+        currentDateTime = currentDateTime.addSeconds(3600 / meteoPoint->hourlyFraction);
     }
 
-    float percValue = float(nrValidValues) / float(nrRequestedValues);
-    return percValue;
+    return float(nrValidValues) / float(nrRequestedValues);
 }
 
 
@@ -1001,33 +1004,37 @@ float loadFromMp_SaveOutput(Crit3DMeteoPoint* meteoPoint,
     return percValue;
 }
 
-float loadHourlyVarSeries(QString *myError, Crit3DMeteoPointsDbHandler* meteoPointsDbHandler,
+
+// todo generalizzare (ora funziona solo su giorni completi)
+float loadHourlyVarSeries(QString &myError, Crit3DMeteoPointsDbHandler* meteoPointsDbHandler,
            Crit3DMeteoGridDbHandler* meteoGridDbHandler, Crit3DMeteoPoint* meteoPoint, bool isMeteoGrid,
-           meteoVariable variable, QDateTime first, QDateTime last)
+           meteoVariable variable, const QDateTime &firstTime, const QDateTime &lastTime)
 {
     std::vector<float> hourlyValues;
     QDateTime firstDateDB;
     Crit3DQuality qualityCheck;
     int nrValidValues = 0;
-    int nrRequestedDays = first.daysTo(last);
+    int nrRequestedDays = firstTime.daysTo(lastTime);
     int nrRequestedValues = nrRequestedDays * 24 * meteoPoint->hourlyFraction;
+
+    QString meteoPointId = QString::fromStdString(meteoPoint->id);
 
     // meteoGrid
     if (isMeteoGrid)
     {
         if (meteoGridDbHandler->gridStructure().isFixedFields())
         {
-            hourlyValues = meteoGridDbHandler->loadGridHourlyVarFixedFields(myError, QString::fromStdString(meteoPoint->id), variable, first, last, &firstDateDB);
+            hourlyValues = meteoGridDbHandler->loadGridHourlyVarFixedFields(variable, meteoPointId, firstTime, lastTime, firstDateDB, myError);
         }
         else
         {
-            hourlyValues = meteoGridDbHandler->loadGridHourlyVar(myError, QString::fromStdString(meteoPoint->id), variable, first, last, &firstDateDB);
+            hourlyValues = meteoGridDbHandler->loadGridHourlyVar(variable, meteoPointId, firstTime, lastTime, firstDateDB, myError);
         }
     }
     // meteoPoint
     else
     {
-        hourlyValues = meteoPointsDbHandler->loadHourlyVar(myError, variable, getCrit3DDate(first.date()), getCrit3DDate(last.date()), &firstDateDB, meteoPoint );
+        hourlyValues = meteoPointsDbHandler->loadHourlyVar(variable, meteoPointId, firstTime, lastTime, firstDateDB, myError);
     }
 
 
@@ -1054,13 +1061,11 @@ float loadHourlyVarSeries(QString *myError, Crit3DMeteoPointsDbHandler* meteoPoi
 
             meteoPoint->setMeteoPointValueH(Crit3DDate(firstDateDB.date().day(), firstDateDB.date().month(), firstDateDB.date().year()), firstDateDB.time().hour(), firstDateDB.time().minute(), variable, hourlyValues[i]);
 
-            firstDateDB = firstDateDB.addSecs(3600);
+            firstDateDB = firstDateDB.addSecs(3600 / meteoPoint->hourlyFraction);
         }
 
-        float percValue = float(nrValidValues) / float(nrRequestedValues);
-        return percValue;
+        return float(nrValidValues) / float(nrRequestedValues);
     }
-
 }
 
 
@@ -2156,8 +2161,10 @@ std::vector<float> aggregatedHourlyToDailyList(meteoVariable myVar, Crit3DMeteoP
 }
 
 
-bool preElaboration(QString *myError, Crit3DMeteoPointsDbHandler* meteoPointsDbHandler, Crit3DMeteoGridDbHandler* meteoGridDbHandler, Crit3DMeteoPoint* meteoPoint, bool isMeteoGrid, meteoVariable variable, meteoComputation elab1,
-    QDate startDate, QDate endDate, std::vector<float> &outputValues, float* percValue, Crit3DMeteoSettings* meteoSettings)
+bool preElaboration(QString *myError, Crit3DMeteoPointsDbHandler* meteoPointsDbHandler, Crit3DMeteoGridDbHandler* meteoGridDbHandler,
+                    Crit3DMeteoPoint* meteoPoint, bool isMeteoGrid, meteoVariable variable, meteoComputation elab1,
+                    QDate startDate, QDate endDate, std::vector<float> &outputValues, float* percValue,
+                    Crit3DMeteoSettings* meteoSettings)
 {
     bool preElaboration = false;
     bool automaticETP = meteoSettings->getAutomaticET0HS();
@@ -2167,7 +2174,7 @@ bool preElaboration(QString *myError, Crit3DMeteoPointsDbHandler* meteoPointsDbH
     {
         case dailyLeafWetness:
         {
-            if ( loadHourlyVarSeries(myError, meteoPointsDbHandler, meteoGridDbHandler, meteoPoint, isMeteoGrid, leafWetness, QDateTime(startDate,QTime(1,0,0),Qt::UTC), QDateTime(endDate.addDays(1),QTime(0,0,0),Qt::UTC)) > 0)
+            if ( loadHourlyVarSeries(*myError, meteoPointsDbHandler, meteoGridDbHandler, meteoPoint, isMeteoGrid, leafWetness, QDateTime(startDate,QTime(1,0,0),Qt::UTC), QDateTime(endDate.addDays(1),QTime(0,0,0),Qt::UTC)) > 0)
             {
                 preElaboration = elaborateDailyAggregatedVar(dailyLeafWetness, *meteoPoint, outputValues, percValue, meteoSettings);
             }
@@ -2175,7 +2182,7 @@ bool preElaboration(QString *myError, Crit3DMeteoPointsDbHandler* meteoPointsDbH
         }
         case dailyTemperatureHoursAbove:
         {
-            if ( loadHourlyVarSeries(myError, meteoPointsDbHandler, meteoGridDbHandler, meteoPoint, isMeteoGrid, airTemperature, QDateTime(startDate,QTime(1,0,0),Qt::UTC), QDateTime(endDate.addDays(1),QTime(0,0,0),Qt::UTC)) > 0)
+            if ( loadHourlyVarSeries(*myError, meteoPointsDbHandler, meteoGridDbHandler, meteoPoint, isMeteoGrid, airTemperature, QDateTime(startDate,QTime(1,0,0),Qt::UTC), QDateTime(endDate.addDays(1),QTime(0,0,0),Qt::UTC)) > 0)
             {
                 preElaboration = elaborateDailyAggregatedVar(dailyTemperatureHoursAbove, *meteoPoint, outputValues, percValue, meteoSettings);
             }
@@ -2206,9 +2213,9 @@ bool preElaboration(QString *myError, Crit3DMeteoPointsDbHandler* meteoPointsDbH
         }
         case dailyThomAvg: case dailyThomMax: case dailyThomHoursAbove:
         {
-            if (loadHourlyVarSeries(myError, meteoPointsDbHandler, meteoGridDbHandler, meteoPoint, isMeteoGrid, airTemperature, QDateTime(startDate,QTime(1,0,0),Qt::UTC), QDateTime(endDate.addDays(1),QTime(0,0,0),Qt::UTC)) > 0)
+            if (loadHourlyVarSeries(*myError, meteoPointsDbHandler, meteoGridDbHandler, meteoPoint, isMeteoGrid, airTemperature, QDateTime(startDate,QTime(1,0,0),Qt::UTC), QDateTime(endDate.addDays(1),QTime(0,0,0),Qt::UTC)) > 0)
             {
-                if (loadHourlyVarSeries(myError, meteoPointsDbHandler, meteoGridDbHandler, meteoPoint, isMeteoGrid, airRelHumidity, QDateTime(startDate,QTime(1,0,0),Qt::UTC), QDateTime(endDate.addDays(1),QTime(0,0,0),Qt::UTC))  > 0)
+                if (loadHourlyVarSeries(*myError, meteoPointsDbHandler, meteoGridDbHandler, meteoPoint, isMeteoGrid, airRelHumidity, QDateTime(startDate,QTime(1,0,0),Qt::UTC), QDateTime(endDate.addDays(1),QTime(0,0,0),Qt::UTC))  > 0)
                 {
                     preElaboration = elaborateDailyAggregatedVar(variable, *meteoPoint, outputValues, percValue, meteoSettings);
                 }
@@ -2402,8 +2409,10 @@ bool preElaboration(QString *myError, Crit3DMeteoPointsDbHandler* meteoPointsDbH
                     // default variables / elaboration
                     if (getVarFrequency(variable) == hourly)
                     {
-                        *percValue = loadHourlyVarSeries_SaveOutput(myError, meteoPointsDbHandler, meteoGridDbHandler, meteoPoint,
-                                                                    isMeteoGrid, variable, startDate, endDate, outputValues);
+                        QDateTime startTime = QDateTime(startDate, QTime(1,0,0), Qt::UTC);
+                        QDateTime endTime = QDateTime(endDate.addDays(1), QTime(0,0,0), Qt::UTC);
+                        *percValue = loadHourlyVarSeries_SaveOutput(*myError, meteoPointsDbHandler, meteoGridDbHandler, meteoPoint,
+                                                                    isMeteoGrid, variable, startTime, endTime, outputValues);
                     }
                     else
                     {
@@ -5486,22 +5495,21 @@ void setMpValues(Crit3DMeteoPoint meteoPointGet, Crit3DMeteoPoint* meteoPointSet
 }
 
 
-meteoComputation getMeteoCompFromString(std::map<std::string, meteoComputation> map, std::string value)
+meteoComputation getMeteoCompFromString(const std::map<std::string, meteoComputation> &map, const std::string &computationStr)
 {
+    meteoComputation myComputation = noMeteoComp;
+    QString computationLower = QString::fromStdString(computationStr).toLower();
 
     std::map<std::string, meteoComputation>::const_iterator it;
-    meteoComputation meteoValue = noMeteoComp;
-    QString valueLower = QString::fromStdString(value).toLower();
-    QString mapStringToLower;
-
     for (it = map.begin(); it != map.end(); ++it)
     {
-        mapStringToLower = QString::fromStdString(it->first).toLower();
-        if (mapStringToLower == valueLower)
+        QString mapStringToLower = QString::fromStdString(it->first).toLower();
+        if (mapStringToLower == computationLower)
         {
-            meteoValue = it->second;
+            myComputation = it->second;
             break;
         }
     }
-    return meteoValue;
+
+    return myComputation;
 }

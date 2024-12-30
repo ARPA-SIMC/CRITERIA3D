@@ -125,7 +125,7 @@
         bool elaborationCycleGridHourly(bool showInfo);
         bool elaborationCheck(bool isMeteoGrid, bool isAnomaly);
         bool computeElaboration(bool isMeteoGrid, bool isAnomaly, bool isClimate, bool showInfo);
-        bool computeElaborationHourly(bool isMeteoGrid, bool showInfo);
+        bool computeElaborationHourly(bool isMeteoGrid, bool isShowInfo);
         bool showClimateFields(bool isMeteoGrid, QList<QString> *climateDbElab, QList<QString> *climateDbVarList);
         void readClimate(bool isMeteoGrid, QString climateSelected, int climateIndex, bool showInfo);
         bool deleteClimate(bool isMeteoGrid, QString climaSelected);

@@ -2708,11 +2708,12 @@ std::vector<float> Crit3DMeteoGridDbHandler::loadGridDailyVarFixedFields(QString
 }
 
 
-std::vector<float> Crit3DMeteoGridDbHandler::loadGridHourlyVar(QString *errorStr, QString meteoPoint, meteoVariable variable,
-                                                               QDateTime first, QDateTime last, QDateTime* firstDateDB)
+std::vector<float> Crit3DMeteoGridDbHandler::loadGridHourlyVar(meteoVariable variable, const QString& meteoPointId,
+                                                               const QDateTime &firstTime, const QDateTime &lastTime,
+                                                               QDateTime &firstDateDB, QString &errorStr)
 {
     QSqlQuery qry(_db);
-    QString tableH = _tableHourly.prefix + meteoPoint + _tableHourly.postFix;
+    QString tableH = _tableHourly.prefix + meteoPointId + _tableHourly.postFix;
     QDateTime dateTime, previousDateTime;
     dateTime.setTimeSpec(Qt::UTC);
     previousDateTime.setTimeSpec(Qt::UTC);
@@ -2726,21 +2727,22 @@ std::vector<float> Crit3DMeteoGridDbHandler::loadGridHourlyVar(QString *errorStr
     int varCode = getHourlyVarCode(variable);
     if (varCode == NODATA)
     {
-        *errorStr = "Variable not existing";
+        errorStr = "Variable not existing";
         return hourlyVarList;
     }
 
-    if (!_meteoGrid->findMeteoPointFromId(&row, &col, meteoPoint.toStdString()) )
+    if (! _meteoGrid->findMeteoPointFromId(&row, &col, meteoPointId.toStdString()) )
     {
-        *errorStr = "Missing MeteoPoint id";
+        errorStr = "Missing MeteoPoint id";
         return hourlyVarList;
     }
 
     QString statement = QString("SELECT * FROM `%1` WHERE VariableCode = '%2' AND `%3` >= '%4' AND `%3` <= '%5' ORDER BY `%3`")
-                            .arg(tableH).arg(varCode).arg(_tableHourly.fieldTime, first.toString("yyyy-MM-dd hh:mm"), last.toString("yyyy-MM-dd hh:mm"));
+                            .arg(tableH).arg(varCode).arg(_tableHourly.fieldTime,
+                                 firstTime.toString("yyyy-MM-dd hh:mm"), lastTime.toString("yyyy-MM-dd hh:mm"));
     if(! qry.exec(statement) )
     {
-        *errorStr = qry.lastError().text();
+        errorStr = qry.lastError().text();
     }
     else
     {
@@ -2748,25 +2750,25 @@ std::vector<float> Crit3DMeteoGridDbHandler::loadGridHourlyVar(QString *errorStr
         {
             if (firstRow)
             {
-                if (! getValue(qry.value(_tableHourly.fieldTime), firstDateDB))
+                if (! getValue(qry.value(_tableHourly.fieldTime), &firstDateDB))
                 {
-                    *errorStr = "Missing fieldTime";
+                    errorStr = "Missing fieldTime";
                     return hourlyVarList;
                 }
 
                 if (! getValue(qry.value("Value"), &value))
                 {
-                    *errorStr = "Missing Value";
+                    errorStr = "Missing Value";
                 }
                 hourlyVarList.push_back(value);
-                previousDateTime = *firstDateDB;
+                previousDateTime = firstDateDB;
                 firstRow = false;
             }
             else
             {
                 if (! getValue(qry.value(_tableHourly.fieldTime), &dateTime))
                 {
-                    *errorStr = "Missing fieldTime";
+                    errorStr = "Missing fieldTime";
                     return hourlyVarList;
                 }
 
@@ -2778,7 +2780,7 @@ std::vector<float> Crit3DMeteoGridDbHandler::loadGridHourlyVar(QString *errorStr
 
                 if (! getValue(qry.value("Value"), &value))
                 {
-                    *errorStr = "Missing Value";
+                    errorStr = "Missing Value";
                 }
 
                 hourlyVarList.push_back(value);
@@ -2791,11 +2793,12 @@ std::vector<float> Crit3DMeteoGridDbHandler::loadGridHourlyVar(QString *errorStr
 }
 
 
-std::vector<float> Crit3DMeteoGridDbHandler::loadGridHourlyVarFixedFields(QString *errorStr, QString meteoPoint, meteoVariable variable,
-                                                                          QDateTime first, QDateTime last, QDateTime* firstDateDB)
+std::vector<float> Crit3DMeteoGridDbHandler::loadGridHourlyVarFixedFields(meteoVariable variable, const QString &meteoPointId,
+                                                                          const QDateTime &firstTime, const QDateTime &lastTime,
+                                                                          QDateTime &firstDateDB, QString &errorStr)
 {
     QSqlQuery qry(_db);
-    QString tableH = _tableHourly.prefix + meteoPoint + _tableHourly.postFix;
+    QString tableH = _tableHourly.prefix + meteoPointId + _tableHourly.postFix;
     QDateTime dateTime, previousDateTime;
 
     std::vector<float> hourlyVarList;
@@ -2808,7 +2811,7 @@ std::vector<float> Crit3DMeteoGridDbHandler::loadGridHourlyVarFixedFields(QStrin
 
     if (varCode == NODATA)
     {
-        *errorStr = "Variable not existing";
+        errorStr = "Variable not existing";
         return hourlyVarList;
     }
 
@@ -2820,40 +2823,38 @@ std::vector<float> Crit3DMeteoGridDbHandler::loadGridHourlyVarFixedFields(QStrin
             break;
         }
     }
-    // take also 00:00 day after
-    last = last.addSecs(3600);
 
-    QString statement = QString("SELECT `%1`, `%2` FROM `%3` WHERE `%1` >= '%4' AND `%1` <= '%5' ORDER BY `%1`").arg(_tableHourly.fieldTime).arg(varField).arg(tableH).arg(first.toString("yyyy-MM-dd hh:mm")).arg(last.toString("yyyy-MM-dd hh:mm"));
-    if( !qry.exec(statement) )
+    QString statement = QString("SELECT `%1`, `%2` FROM `%3` WHERE `%1` >= '%4' AND `%1` <= '%5' ORDER BY `%1`")
+                            .arg(_tableHourly.fieldTime).arg(varField).arg(tableH).arg(firstTime.toString("yyyy-MM-dd hh:mm")).arg(lastTime.toString("yyyy-MM-dd hh:mm"));
+    if( ! qry.exec(statement) )
     {
-        *errorStr = qry.lastError().text();
+        errorStr = qry.lastError().text();
     }
     else
     {
-
         while (qry.next())
         {
             if (firstRow)
             {
-                if (!getValue(qry.value(_tableHourly.fieldTime), firstDateDB))
+                if (! getValue(qry.value(_tableHourly.fieldTime), &firstDateDB))
                 {
-                    *errorStr = "Missing fieldTime";
+                    errorStr = "Missing fieldTime";
                     return hourlyVarList;
                 }
 
-                if (!getValue(qry.value(varField), &value))
+                if (! getValue(qry.value(varField), &value))
                 {
-                    *errorStr = "Missing Value";
+                    errorStr = "Missing Value";
                 }
                 hourlyVarList.push_back(value);
-                previousDateTime = *firstDateDB;
+                previousDateTime = firstDateDB;
                 firstRow = 0;
             }
             else
             {
-                if (!getValue(qry.value(_tableHourly.fieldTime), &dateTime))
+                if (! getValue(qry.value(_tableHourly.fieldTime), &dateTime))
                 {
-                    *errorStr = "Missing fieldTime";
+                    errorStr = "Missing fieldTime";
                     return hourlyVarList;
                 }
 
@@ -2865,15 +2866,13 @@ std::vector<float> Crit3DMeteoGridDbHandler::loadGridHourlyVarFixedFields(QStrin
 
                 if (!getValue(qry.value(varField), &value))
                 {
-                    *errorStr = "Missing Value";
+                    errorStr = "Missing Value";
                 }
+
                 hourlyVarList.push_back(value);
                 previousDateTime = dateTime;
             }
-
-
         }
-
     }
 
     return hourlyVarList;

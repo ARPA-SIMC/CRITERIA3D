@@ -41,8 +41,14 @@
       { "correctedDegreeDaysSum", 1 }
     };
 
-    bool elaborationOnPoint(QString *myError, Crit3DMeteoPointsDbHandler* meteoPointsDbHandler, Crit3DMeteoGridDbHandler* meteoGridDbHandler,
-        Crit3DMeteoPoint* meteoPointTemp, Crit3DClimate* clima, bool isMeteoGrid, QDate startDate, QDate endDate, bool isAnomaly, Crit3DMeteoSettings *meteoSettings, bool dataAlreadyLoaded);
+    bool elaborationOnPoint(QString *myError, Crit3DMeteoPointsDbHandler* meteoPointsDbHandler,
+                            Crit3DMeteoGridDbHandler* meteoGridDbHandler, Crit3DMeteoPoint* meteoPointTemp,
+                            Crit3DClimate* clima, bool isMeteoGrid, QDate startDate, QDate endDate,
+                            bool isAnomaly, Crit3DMeteoSettings *meteoSettings, bool dataAlreadyLoaded);
+
+    bool elaborationOnPointHourly(Crit3DMeteoPointsDbHandler* meteoPointsDbHandler,
+                                  Crit3DMeteoGridDbHandler* meteoGridDbHandler, Crit3DMeteoPoint* meteoPointTemp,
+                                  bool isMeteoGrid, Crit3DClimate* climate, Crit3DMeteoSettings* meteoSettings, QString &myError);
 
     frequencyType getAggregationFrequency(meteoVariable myVar);
 
@@ -104,13 +110,13 @@
                         Crit3DMeteoGridDbHandler *meteoGridDbHandler, Crit3DMeteoPoint &meteoPoint, bool isMeteoGrid,
                         meteoVariable variable, QDate first, QDate last, std::vector<float> &outputValues);
 
-    float loadHourlyVarSeries_SaveOutput(QString *myError, Crit3DMeteoPointsDbHandler *meteoPointsDbHandler,
+    float loadHourlyVarSeries_SaveOutput(QString &myError, Crit3DMeteoPointsDbHandler *meteoPointsDbHandler,
                                          Crit3DMeteoGridDbHandler *meteoGridDbHandler, Crit3DMeteoPoint* meteoPoint, bool isMeteoGrid,
-                                         meteoVariable variable, QDate firstDate, QDate lastDate, std::vector<float> &outputValues);
+                                         meteoVariable variable, QDateTime firstTime, QDateTime lastTime, std::vector<float> &outputValues);
 
-    float loadHourlyVarSeries(QString *myError, Crit3DMeteoPointsDbHandler *meteoPointsDbHandler, 
-						Crit3DMeteoGridDbHandler *meteoGridDbHandler, Crit3DMeteoPoint* meteoPoint, 
-						bool isMeteoGrid, meteoVariable variable, QDateTime first, QDateTime last);
+    float loadHourlyVarSeries(QString &myError, Crit3DMeteoPointsDbHandler *meteoPointsDbHandler,
+                        Crit3DMeteoGridDbHandler *meteoGridDbHandler, Crit3DMeteoPoint* meteoPoint,
+                        bool isMeteoGrid, meteoVariable variable, const QDateTime &firstTime, const QDateTime &lastTime);
 
     void extractValidValuesCC(std::vector<float> &outputValues);
 
@@ -168,7 +174,8 @@
 					meteoVariable variable, QDate first, QDate last, std::vector<float> &outputValues);
 
 	void setMpValues(Crit3DMeteoPoint meteoPointGet, Crit3DMeteoPoint* meteoPointSet, QDate myDate, meteoVariable myVar, Crit3DMeteoSettings* meteoSettings);
-					meteoComputation getMeteoCompFromString(std::map<std::string, meteoComputation> map, std::string value);
+
+    meteoComputation getMeteoCompFromString(const std::map<std::string, meteoComputation> &map, const std::string &computationStr);
 
 
 #endif // CLIMATE_H
