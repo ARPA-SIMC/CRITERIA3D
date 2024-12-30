@@ -28,7 +28,7 @@
 
         void resetCurrentValues();
 
-        void copyParam(Crit3DClimate* clima);
+        void copyParam(Crit3DClimate* myClimate);
 
         const QSqlDatabase &db() const;
         void setDb(const QSqlDatabase &db);
@@ -36,11 +36,17 @@
         QString climateElab() const;
         void setClimateElab(const QString &climateElab);
 
-        int yearStart() const;
-        void setYearStart(int yearStart);
+        int yearStart() const { return _yearStart; }
+        int yearEnd() const { return _yearEnd; }
 
-        int yearEnd() const;
-        void setYearEnd(int yearEnd);
+        void setYearStart(int yearStart) { _yearStart = yearStart; }
+        void setYearEnd(int yearEnd) { _yearEnd = yearEnd; }
+
+        int hourStart() const { return _hourStart; }
+        int hourEnd() const { return _hourEnd; }
+
+        void setHourStart(int hourStart) { _hourStart = hourStart; }
+        void setHourEnd(int hourEnd) { _hourEnd = hourEnd; }
 
         meteoVariable variable() const;
         void setVariable(const meteoVariable &variable);
@@ -119,6 +125,8 @@
         QString _periodStr;
         QDate _genericPeriodDateStart;
         QDate _genericPeriodDateEnd;
+        int _hourStart;
+        int _hourEnd;
         int _nYears;
         QString _elab1;
         float _param1;

@@ -120,9 +120,12 @@
         bool computeDailyVariablesPoint(Crit3DMeteoPoint *meteoPoint, QDate first, QDate last, QList <meteoVariable> variables);
         bool derivedVariablesMeteoGridPeriod(QDate first, QDate last, QList<meteoVariable> variables, bool useNetRad);
         bool elaborationCyclePoints(bool isAnomaly, bool showInfo);
+        bool elaborationCyclePointsHourly(bool showInfo);
         bool elaborationCycleGrid(bool isAnomaly, bool showInfo);
+        bool elaborationCycleGridHourly(bool showInfo);
         bool elaborationCheck(bool isMeteoGrid, bool isAnomaly);
         bool computeElaboration(bool isMeteoGrid, bool isAnomaly, bool isClimate, bool showInfo);
+        bool computeElaborationHourly(bool isMeteoGrid, bool showInfo);
         bool showClimateFields(bool isMeteoGrid, QList<QString> *climateDbElab, QList<QString> *climateDbVarList);
         void readClimate(bool isMeteoGrid, QString climateSelected, int climateIndex, bool showInfo);
         bool deleteClimate(bool isMeteoGrid, QString climaSelected);

@@ -11,15 +11,11 @@ DialogMeteoHourlyComputation::DialogMeteoHourlyComputation(QSettings *settings, 
     setWindowTitle("Hourly computation");
 
     QVBoxLayout mainLayout;
-    QHBoxLayout varLayout;
     QHBoxLayout targetLayout;
-    QHBoxLayout dateLayout;
-    QHBoxLayout periodLayout;
-    QHBoxLayout displayLayout;
-    QHBoxLayout genericPeriodLayout;
-    QHBoxLayout layoutOk;
-
+    QHBoxLayout varLayout;
+    QHBoxLayout timeRangeLayout;
     QHBoxLayout elaborationLayout;
+    QHBoxLayout layoutOk;
 
     QGroupBox *targetGroupBox = new QGroupBox("Target");
     pointsButton.setText("meteo points");
@@ -79,109 +75,59 @@ DialogMeteoHourlyComputation::DialogMeteoHourlyComputation(QSettings *settings, 
     targetLayout.addWidget(&gridButton);
     targetGroupBox->setLayout(&targetLayout);
 
-    meteoVariable var;
+    // VARIABLES
 
     Q_FOREACH (QString group, settings->childGroups())
     {
         if (! group.endsWith("_VarToElab1"))
             continue;
 
-        std::string item;
-        std::string variable = group.left(group.size()-11).toStdString(); // remove "_VarToElab1"
-        try {
-            var = MapHourlyMeteoVar.at(variable);
-            item = MapHourlyMeteoVarToString.at(var);
-        }
-        catch (const std::out_of_range& ) {
-            // check daily variable
-            continue;
-        }
+        std::string varStr = group.left(group.size()-11).toStdString(); // remove '_VarToElab1'
 
-        variableList.addItem(QString::fromStdString(item));
+        // check hourly variables
+        if (MapHourlyMeteoVar.find(varStr) != MapHourlyMeteoVar.end())
+        {
+            variableList.addItem(QString::fromStdString(varStr));
+        }
     }
 
     QLabel variableLabel("Variable: ");
     varLayout.addWidget(&variableLabel);
     varLayout.addWidget(&variableList);
 
-    int currentYear = myProject.getCurrentDate().year();
+    // TIME RANGE
 
-    firstYearEdit.setText(QString::number(currentYear));
-    firstYearEdit.setFixedWidth(110);
-    firstYearEdit.setValidator(new QIntValidator(1800, 3000));
+    QLabel timeStartLabel("Start Date:");
+    QLabel timeEndLabel("End Date:");
 
-    lastYearEdit.setText(QString::number(currentYear));
-    lastYearEdit.setFixedWidth(110);
-    lastYearEdit.setValidator(new QIntValidator(1800, 3000));
+    timeRangeStart.setDate(myProject.getCurrentDate());
+    timeRangeStart.setDisplayFormat("yyyy-MM-dd  ");
+    timeRangeStart.setCalendarPopup(true);
+    hourStart.setRange(0,23);
+    hourStart.setValue(0);
 
-    QLabel firstYearLabel("Start Year:");
-    firstYearLabel.setBuddy(&firstYearEdit);
+    timeRangeEnd.setDate(myProject.getCurrentDate());
+    timeRangeEnd.setDisplayFormat("yyyy-MM-dd  ");
+    timeRangeEnd.setCalendarPopup(true);
+    hourEnd.setRange(0,23);
+    hourEnd.setValue(23);
 
-    dateLayout.addWidget(&firstYearLabel);
-    dateLayout.addWidget(&firstYearEdit);
+    timeRangeLayout.addWidget(&timeStartLabel);
+    timeRangeLayout.addWidget(&timeRangeStart);
+    timeRangeLayout.addWidget(&hourStart);
+    timeRangeLayout.addWidget(&timeEndLabel);
+    timeRangeLayout.addWidget(&timeRangeEnd);
+    timeRangeLayout.addWidget(&hourEnd);
 
-    QLabel lastYearLabel("End Year:");
-    lastYearLabel.setBuddy(&lastYearEdit);
-
-    dateLayout.addWidget(&lastYearLabel);
-    dateLayout.addWidget(&lastYearEdit);
-
-    QLabel periodTypeLabel("Period Type: ");
-    periodTypeList.addItem("Generic");
-
-    periodLayout.addWidget(&periodTypeLabel);
-    periodLayout.addWidget(&periodTypeList);
-
-    genericStartLabel.setText("Start Date:");
-    genericPeriodStart.setDisplayFormat("dd/MM");
-    genericStartLabel.setBuddy(&genericPeriodStart);
-    genericEndLabel.setText("End Date:");
-    genericPeriodEnd.setDisplayFormat("dd/MM");
-    genericEndLabel.setBuddy(&genericPeriodEnd);
-    nrYearLabel.setText("Delta Years:");
-    nrYear.setValidator(new QIntValidator(-500, 500));
-    nrYear.setText("0");
-    nrYearLabel.setBuddy(&nrYear);
-
-    genericStartLabel.setVisible(true);
-    genericEndLabel.setVisible(true);
-    genericPeriodStart.setVisible(true);
-    genericPeriodEnd.setVisible(true);
-    nrYearLabel.setVisible(true);
-    nrYear.setVisible(true);
-
-    genericPeriodLayout.addWidget(&genericStartLabel);
-    genericPeriodLayout.addWidget(&genericPeriodStart);
-    genericPeriodLayout.addWidget(&genericEndLabel);
-    genericPeriodLayout.addWidget(&genericPeriodEnd);
-    genericPeriodLayout.addWidget(&nrYearLabel);
-    genericPeriodLayout.addWidget(&nrYear);
-
-    displayPeriod("Generic");
+    // ELABORATION
 
     elaborationLayout.addWidget(new QLabel("Elaboration: "));
     QString currentVar = variableList.currentText();
     listElaboration(currentVar);
     elaborationLayout.addWidget(&elaborationList);
 
-    elab1Parameter.setPlaceholderText("Parameter");
-    elab1Parameter.setFixedWidth(90);
-    elab1Parameter.setValidator(new QDoubleValidator(-9999., 9999., 2));
-
-    QString elaborationField = elaborationList.currentText();
-    if (MapElabWithParam.find(elaborationField.toStdString()) == MapElabWithParam.end())
-    {
-        elab1Parameter.clear();
-        elab1Parameter.setReadOnly(true);
-        adjustSize();
-    }
-
-    elaborationLayout.addWidget(&elab1Parameter);
-
     connect(&pointsButton, &QRadioButton::clicked, [=](){ targetChange(); });
     connect(&gridButton, &QRadioButton::clicked, [=](){ targetChange(); });
-
-    connect(&periodTypeList, &QComboBox::currentTextChanged, [=](const QString &newVar){ this->displayPeriod(newVar); });
     connect(&variableList, &QComboBox::currentTextChanged, [=](const QString &newVar){ this->listElaboration(newVar); });
 
     QDialogButtonBox buttonBox(QDialogButtonBox::Ok | QDialogButtonBox::Cancel);
@@ -193,10 +139,7 @@ DialogMeteoHourlyComputation::DialogMeteoHourlyComputation(QSettings *settings, 
 
     mainLayout.addWidget(targetGroupBox);
     mainLayout.addLayout(&varLayout);
-    mainLayout.addLayout(&dateLayout);
-    mainLayout.addLayout(&periodLayout);
-    mainLayout.addLayout(&displayLayout);
-    mainLayout.addLayout(&genericPeriodLayout);
+    mainLayout.addLayout(&timeRangeLayout);
     mainLayout.addLayout(&elaborationLayout);
     mainLayout.addLayout(&layoutOk);
 
@@ -223,23 +166,33 @@ void DialogMeteoHourlyComputation::done(bool res)
         return;
     }
 
+    // check time range
+    QDateTime dateStart, dateEnd;
+    dateStart.setDate(timeRangeStart.date());
+    dateStart.setTime(QTime(hourStart.value(), 0));
+    dateEnd.setDate(timeRangeEnd.date());
+    dateEnd.setTime(QTime(hourEnd.value(), 0));
+    if (dateEnd < dateStart)
+    {
+        myProject.logWarning("Wrong time period!");
+        return;
+    }
+
     myProject.clima->setDailyCumulated(false);
 
-    QString periodSelected = periodTypeList.currentText();
     QString value = variableList.currentText();
     meteoVariable var = getKeyMeteoVarMeteoMap(MapHourlyMeteoVarToString, value.toStdString());
 
     myProject.clima->setVariable(var);
-    myProject.clima->setYearStart(firstYearEdit.text().toInt());
-    myProject.clima->setYearEnd(lastYearEdit.text().toInt());
-    myProject.clima->setPeriodStr(periodSelected);
 
-    if (periodSelected == "Generic")
-    {
-        myProject.clima->setGenericPeriodDateStart(genericPeriodStart.date());
-        myProject.clima->setGenericPeriodDateEnd(genericPeriodEnd.date());
-        myProject.clima->setNYears(nrYear.text().toInt());
-    }
+    myProject.clima->setGenericPeriodDateStart(timeRangeStart.date());
+    myProject.clima->setGenericPeriodDateEnd(timeRangeEnd.date());
+
+    myProject.clima->setYearStart(timeRangeStart.date().year());
+    myProject.clima->setYearEnd(timeRangeEnd.date().year());
+
+    myProject.clima->setHourStart(hourStart.value());
+    myProject.clima->setHourEnd(hourEnd.value());
 
     if (elaborationList.currentText() == "No elaboration available")
     {
@@ -250,52 +203,18 @@ void DialogMeteoHourlyComputation::done(bool res)
         myProject.clima->setElab1(elaborationList.currentText());
     }
 
+    // no parameters
     myProject.clima->setParam1IsClimate(false);
-    if (! elab1Parameter.text().isEmpty())
-    {
-        myProject.clima->setParam1(elab1Parameter.text().toFloat());
-    }
-    else
-    {
-        myProject.clima->setParam1(NODATA);
-    }
+    myProject.clima->setParam1(NODATA);
 
     QDialog::done(QDialog::Accepted);
 }
 
 
-void DialogMeteoHourlyComputation::displayPeriod(const QString value)
-{
-    if (value == "Generic")
-    {
-        elaborationList.setEnabled(true);
-
-        genericStartLabel.setVisible(true);
-        genericEndLabel.setVisible(true);
-        genericPeriodStart.setVisible(true);
-        genericPeriodEnd.setVisible(true);
-
-        nrYearLabel.setVisible(true);
-        nrYear.setVisible(true);
-        nrYear.setText("0");
-        nrYear.setEnabled(true);
-
-        QDate defaultStart(firstYearEdit.text().toInt(),1,1);
-        QDate defaultEnd(lastYearEdit.text().toInt(),1,1);
-        genericPeriodStart.setDate(defaultStart);
-        genericPeriodStart.setDisplayFormat("dd/MM");
-        genericPeriodEnd.setDisplayFormat("dd/MM");
-        genericPeriodEnd.setDate(defaultEnd);
-        nrYear.setText("0");
-        nrYear.setEnabled(true);
-    }
-}
-
-
-void DialogMeteoHourlyComputation::listElaboration(const QString value)
+void DialogMeteoHourlyComputation::listElaboration(const QString variable)
 {
     elaborationList.blockSignals(true);
-    meteoVariable key = getKeyMeteoVarMeteoMap(MapHourlyMeteoVarToString, value.toStdString());
+    meteoVariable key = getKeyMeteoVarMeteoMap(MapHourlyMeteoVarToString, variable.toStdString());
     std::string keyString = getKeyStringMeteoMap(MapHourlyMeteoVar, key);
 
     QString group = QString::fromStdString(keyString) + "_VarToElab1";
@@ -334,45 +253,6 @@ void DialogMeteoHourlyComputation::listElaboration(const QString value)
     {
         elaborationList.setCurrentText(prevElabStr);
     }
-}
-
-
-bool DialogMeteoHourlyComputation::checkValidData()
-{
-    if (firstYearEdit.text().size() != 4)
-    {
-        QMessageBox::information(nullptr, "Missing year", "Insert first year");
-        return false;
-    }
-
-    if (lastYearEdit.text().size() != 4)
-    {
-        QMessageBox::information(nullptr, "Missing year", "Insert last year");
-        return false;
-    }
-
-    if (firstYearEdit.text().toInt() > lastYearEdit.text().toInt())
-    {
-        QMessageBox::information(nullptr, "Invalid year", "first year greater than last year");
-        return false;
-    }
-
-    if (MapElabWithParam.find(elaborationList.currentText().toStdString()) != MapElabWithParam.end())
-    {
-        if (elab1Parameter.text().isEmpty())
-        {
-            myProject.logWarning("Missing parameter!");
-            return false;
-        }
-    }
-
-    if (periodTypeList.currentText() == "Generic" && nrYear.text().isEmpty())
-    {
-        QMessageBox::information(nullptr, "Missing Parameter", "insert Nr Years");
-        return false;
-    }
-
-    return true;
 }
 
 

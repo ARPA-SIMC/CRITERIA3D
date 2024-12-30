@@ -3,8 +3,11 @@
 
 #include <QString>
 #include <QSettings>
+#include <QDialog>
 #include <QComboBox>
-#include <QtWidgets>
+#include <QSpinBox>
+#include <QRadioButton>
+#include <QDateEdit>
 
 
 class DialogMeteoHourlyComputation : public QDialog
@@ -12,41 +15,27 @@ class DialogMeteoHourlyComputation : public QDialog
     Q_OBJECT
 
     private:
+        bool isMeteoGrid;
         QSettings* settings;
 
         QRadioButton pointsButton;
         QRadioButton gridButton;
 
-        bool isMeteoGrid;
-
         QComboBox variableList;
-
-        QLineEdit firstYearEdit;
-        QLineEdit lastYearEdit;
-
-        QLabel genericStartLabel;
-        QLabel genericEndLabel;
-        QLabel nrYearLabel;
-
-        QDateEdit genericPeriodStart;
-        QDateEdit genericPeriodEnd;
-        QLineEdit nrYear;
-
-        QComboBox periodTypeList;
         QComboBox elaborationList;
 
-        QLineEdit elab1Parameter;
-
+        QDateEdit timeRangeStart;
+        QDateEdit timeRangeEnd;
+        QSpinBox hourStart;
+        QSpinBox hourEnd;
 
     public:
         DialogMeteoHourlyComputation(QSettings *settings, bool isMeteoGridLoaded, bool isMeteoPointLoaded);
         void done(bool res);
 
-        void displayPeriod(const QString value);
-        void listElaboration(const QString value);
-
-        bool checkValidData();
         void targetChange();
+
+        void listElaboration(const QString variable);
 
         bool getIsMeteoGrid() const { return isMeteoGrid; }
 };
