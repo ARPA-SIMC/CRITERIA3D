@@ -107,23 +107,18 @@ DialogMeteoComputation::DialogMeteoComputation(QSettings *settings, bool isMeteo
     targetLayout.addWidget(&gridButton);
     targetGroupBox->setLayout(&targetLayout);
 
-    meteoVariable var;
-
     Q_FOREACH (QString group, settings->childGroups())
     {
-        if (!group.endsWith("_VarToElab1"))
+        if (! group.endsWith("_VarToElab1"))
             continue;
-        std::string item;
-        std::string variable = group.left(group.size()-11).toStdString(); // remove "_VarToElab1"
-        try {
-            var = MapDailyMeteoVar.at(variable);
-            item = MapDailyMeteoVarToString.at(var);
+
+        QString varStr = group.left(group.size()-11);  // remove '_VarToElab1'
+
+        // check daily variables
+        if (MapDailyMeteoVar.find(varStr.toStdString()) != MapDailyMeteoVar.end())
+        {
+            variableList.addItem(varStr);
         }
-        catch (const std::out_of_range& ) {
-            // check hourly variable
-            continue;
-        }
-        variableList.addItem(QString::fromStdString(item));
     }
 
     QLabel variableLabel("Variable: ");
