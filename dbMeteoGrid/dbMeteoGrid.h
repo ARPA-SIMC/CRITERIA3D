@@ -136,7 +136,7 @@
 
         std::vector<float> loadGridHourlyVar(meteoVariable variable, const QString& meteoPointId,
                                              const QDateTime &firstTime, const QDateTime &lastTime,
-                                             QDateTime &firstDateDB, QString &errorStr);
+                                             QDateTime &firstTimeDB, QString &errorStr);
 
         std::vector<float> loadGridHourlyVarFixedFields(meteoVariable variable, const QString &meteoPointId,
                                                         const QDateTime &firstTime, const QDateTime &lastTime,

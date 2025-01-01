@@ -2683,7 +2683,7 @@ std::vector<float> Crit3DMeteoGridDbHandler::loadGridDailyVarFixedFields(const Q
 
 std::vector<float> Crit3DMeteoGridDbHandler::loadGridHourlyVar(meteoVariable variable, const QString& meteoPointId,
                                                                const QDateTime &firstTime, const QDateTime &lastTime,
-                                                               QDateTime &firstDateDB, QString &errorStr)
+                                                               QDateTime &firstDateTimeDB, QString &errorStr)
 {
     QSqlQuery qry(_db);
     QString tableH = _tableHourly.prefix + meteoPointId + _tableHourly.postFix;
@@ -2723,7 +2723,7 @@ std::vector<float> Crit3DMeteoGridDbHandler::loadGridHourlyVar(meteoVariable var
         {
             if (firstRow)
             {
-                if (! getValue(qry.value(_tableHourly.fieldTime), &firstDateDB))
+                if (! getValue(qry.value(_tableHourly.fieldTime), &firstDateTimeDB))
                 {
                     errorStr = "Missing fieldTime";
                     return hourlyVarList;
@@ -2734,7 +2734,7 @@ std::vector<float> Crit3DMeteoGridDbHandler::loadGridHourlyVar(meteoVariable var
                     errorStr = "Missing Value";
                 }
                 hourlyVarList.push_back(value);
-                previousDateTime = firstDateDB;
+                previousDateTime = firstDateTimeDB;
                 firstRow = false;
             }
             else
@@ -2745,8 +2745,8 @@ std::vector<float> Crit3DMeteoGridDbHandler::loadGridHourlyVar(meteoVariable var
                     return hourlyVarList;
                 }
 
-                int missingDateTime = previousDateTime.secsTo(dateTime) / 3600;
-                for (int i = 1; i < missingDateTime; i++)
+                int missingHours = previousDateTime.secsTo(dateTime) / 3600 - 1;
+                for (int i = 1; i <= missingHours; i++)
                 {
                     hourlyVarList.push_back(NODATA);
                 }

@@ -112,10 +112,9 @@
                         Crit3DMeteoGridDbHandler *meteoGridDbHandler, Crit3DMeteoPoint &meteoPoint, bool isMeteoGrid,
                         meteoVariable variable, QDate first, QDate last, std::vector<float> &outputValues, QString &myError);
 
-    float loadHourlyVarSeries_SaveOutput(Crit3DMeteoPointsDbHandler *meteoPointsDbHandler,
-                                         Crit3DMeteoGridDbHandler *meteoGridDbHandler, Crit3DMeteoPoint* meteoPoint, bool isMeteoGrid,
-                                         meteoVariable variable, QDateTime firstTime, QDateTime lastTime,
-                                         std::vector<float> &outputValues, QString &myError);
+    float loadHourlyVarSeries_SaveOutput(Crit3DMeteoPointsDbHandler *meteoPointsDbHandler, Crit3DMeteoGridDbHandler *meteoGridDbHandler,
+                                         const QString &meteoPointId, bool isMeteoGrid, meteoVariable variable, const QDateTime &firstTime,
+                                         const QDateTime &lastTime, std::vector<float> &outputValues, QString &myError);
 
     float loadHourlyVarSeries(Crit3DMeteoPointsDbHandler *meteoPointsDbHandler,
                         Crit3DMeteoGridDbHandler *meteoGridDbHandler, Crit3DMeteoPoint* meteoPoint,
