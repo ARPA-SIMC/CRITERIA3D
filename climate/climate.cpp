@@ -936,9 +936,6 @@ float loadDailyVarSeries_SaveOutput(Crit3DMeteoPointsDbHandler *meteoPointsDbHan
 {
     std::vector<float> dailyValues;
     QDate firstDateDB;
-    Crit3DQuality qualityCheck;
-    int nrValidValues = 0;
-    int nrRequestedDays = first.daysTo(last) +1;
 
     // meteoGrid
     if (isMeteoGrid)
@@ -963,47 +960,48 @@ float loadDailyVarSeries_SaveOutput(Crit3DMeteoPointsDbHandler *meteoPointsDbHan
     {
         return 0;
     }
-    else
+
+    int nrRequestedDays = first.daysTo(last) + 1;
+    meteoPoint->initializeObsDataD(nrRequestedDays, getCrit3DDate(first));
+
+    // fills the missing initial output data
+    int nrMissingDays = first.daysTo(firstDateDB);
+    for (int i = 1; i <= nrMissingDays; i++)
     {
-        meteoPoint->initializeObsDataD(nrRequestedDays, getCrit3DDate(first));
-
-        // fills the missing initial output data
-        int nrMissingDays = first.daysTo(firstDateDB);
-        for (int i = 1; i <= nrMissingDays; i++)
-        {
-            outputValues.push_back(NODATA);
-        }
-
-        // fill data
-        Crit3DDate currentDate = getCrit3DDate(firstDateDB);
-        for (unsigned int i = 0; i < dailyValues.size(); i++)
-        {
-            quality::qualityType qualityT = qualityCheck.syntacticQualitySingleValue(variable, dailyValues[i]);
-            if (qualityT == quality::accepted)
-            {
-                meteoPoint->setMeteoPointValueD(currentDate, variable, dailyValues[i]);
-                outputValues.push_back(dailyValues[i]);
-                nrValidValues++;
-            }
-            else
-            {
-                meteoPoint->setMeteoPointValueD(currentDate, variable, NODATA);
-                outputValues.push_back(NODATA);
-            }
-
-            currentDate = currentDate.addDays(1);
-        }
-
-        // fills the missing final output data
-        QDate lastDateDB = firstDateDB.addDays(dailyValues.size() - 1);
-        nrMissingDays = lastDateDB.daysTo(last);
-        for (int i = 1; i <= nrMissingDays; i++)
-        {
-            outputValues.push_back(NODATA);
-        }
-
-        return float(nrValidValues) / float(nrRequestedDays);
+        outputValues.push_back(NODATA);
     }
+
+    // fill data
+    Crit3DDate currentCrit3DDate = getCrit3DDate(firstDateDB);
+    Crit3DQuality qualityCheck;
+    int nrValidValues = 0;
+    for (unsigned int i = 0; i < dailyValues.size(); i++)
+    {
+        quality::qualityType qualityT = qualityCheck.syntacticQualitySingleValue(variable, dailyValues[i]);
+        if (qualityT == quality::accepted)
+        {
+            meteoPoint->setMeteoPointValueD(currentCrit3DDate, variable, dailyValues[i]);
+            outputValues.push_back(dailyValues[i]);
+            nrValidValues++;
+        }
+        else
+        {
+            meteoPoint->setMeteoPointValueD(currentCrit3DDate, variable, NODATA);
+            outputValues.push_back(NODATA);
+        }
+
+        currentCrit3DDate = currentCrit3DDate.addDays(1);
+    }
+
+    // fills the missing final output data
+    QDate lastDateDB = firstDateDB.addDays(dailyValues.size() - 1);
+    nrMissingDays = lastDateDB.daysTo(last);
+    for (int i = 1; i <= nrMissingDays; i++)
+    {
+        outputValues.push_back(NODATA);
+    }
+
+    return float(nrValidValues) / float(nrRequestedDays);
 }
 
 
@@ -1218,13 +1216,12 @@ float thomDailyMean(TObsDataH* hourlyValues, float minimumPercentage)
 
 
     return thomDailyMean;
-
 }
+
 
 // compute # hours per day where temperature >  threshold
 int temperatureDailyNHoursAbove(TObsDataH* hourlyValues, float temperaturethreshold, float minimumPercentage)
 {
-
     int nData = 0;
     int nrHours = NODATA;
     for (int hour = 0; hour < 24; hour++)
@@ -1243,25 +1240,28 @@ int temperatureDailyNHoursAbove(TObsDataH* hourlyValues, float temperaturethresh
     return nrHours;
 }
 
+
 float dailyLeafWetnessComputation(TObsDataH* hourlyValues, float minimumPercentage)
 {
-
-    int nData = 0;
-    float dailyLeafWetnessRes = 0;
+    int nrData = 0;
+    float dailyLeafWetness = 0;
 
     for (int hour = 0; hour < 24; hour++)
     {
         if (hourlyValues->leafW[hour] == 0 || hourlyValues->leafW[hour] == 1)
         {
-                dailyLeafWetnessRes = dailyLeafWetnessRes + hourlyValues->leafW[hour];
-                nData++; //nData = nData + 1;
+            dailyLeafWetness += hourlyValues->leafW[hour];
+            nrData++;
         }
     }
-    if ( (float(nData) / 24 * 100) < minimumPercentage)
-        dailyLeafWetnessRes = NODATA;
 
-    return dailyLeafWetnessRes;
+    float dataPercentage = float(nrData) / 24 * 100;
+    if (dataPercentage < minimumPercentage)
+    {
+        dailyLeafWetness = NODATA;
+    }
 
+    return dailyLeafWetness;
 }
 
 
