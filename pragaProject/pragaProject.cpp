@@ -1136,8 +1136,7 @@ bool PragaProject::elaborationCycleGrid(bool isAnomaly, bool showInfo)
         }
     }
 
-    QDate startDate;
-    QDate endDate;
+    QDate startDate, endDate;
 
     if (climaUsed->nYears() > 0)
     {
@@ -1145,10 +1144,11 @@ bool PragaProject::elaborationCycleGrid(bool isAnomaly, bool showInfo)
         int myYearEnd = climaUsed->yearEnd() + climaUsed->nYears();
         startDate.setDate(myYearStart, climaUsed->genericPeriodDateStart().month(), climaUsed->genericPeriodDateStart().day());
         endDate.setDate(myYearEnd, climaUsed->genericPeriodDateEnd().month(), climaUsed->genericPeriodDateEnd().day());
+
         // check dates - leap case
         if (climaUsed->genericPeriodDateStart().month() == 2 && climaUsed->genericPeriodDateStart().day() == 29)
         {
-            if (!isLeapYear(myYearStart))
+            if (! isLeapYear(myYearStart))
             {
                 if (climaUsed->periodType() != dailyPeriod)
                 {
@@ -1162,7 +1162,7 @@ bool PragaProject::elaborationCycleGrid(bool isAnomaly, bool showInfo)
         }
         if (climaUsed->genericPeriodDateEnd().month() == 2 && climaUsed->genericPeriodDateEnd().day() == 29)
         {
-            if (!isLeapYear(myYearEnd))
+            if (! isLeapYear(myYearEnd))
             {
                 if (climaUsed->periodType() != dailyPeriod)
                 {
@@ -1184,7 +1184,7 @@ bool PragaProject::elaborationCycleGrid(bool isAnomaly, bool showInfo)
         // check dates - leap case
         if (climaUsed->genericPeriodDateStart().month() == 2 && climaUsed->genericPeriodDateStart().day() == 29)
         {
-            if (!isLeapYear(myYearStart))
+            if (! isLeapYear(myYearStart))
             {
                 if (climaUsed->periodType() != dailyPeriod)
                 {
@@ -1198,7 +1198,7 @@ bool PragaProject::elaborationCycleGrid(bool isAnomaly, bool showInfo)
         }
         if (climaUsed->genericPeriodDateEnd().month() == 2 && climaUsed->genericPeriodDateEnd().day() == 29)
         {
-            if (!isLeapYear(myYearEnd))
+            if (! isLeapYear(myYearEnd))
             {
                 if (climaUsed->periodType() != dailyPeriod)
                 {
@@ -1220,7 +1220,7 @@ bool PragaProject::elaborationCycleGrid(bool isAnomaly, bool showInfo)
         // check dates - leap case
         if (climaUsed->genericPeriodDateStart().month() == 2 && climaUsed->genericPeriodDateStart().day() == 29)
         {
-            if (!isLeapYear(myYearStart))
+            if (! isLeapYear(myYearStart))
             {
                 if (climaUsed->periodType() != dailyPeriod)
                 {
@@ -1234,7 +1234,7 @@ bool PragaProject::elaborationCycleGrid(bool isAnomaly, bool showInfo)
         }
         if (climaUsed->genericPeriodDateEnd().month() == 2 && climaUsed->genericPeriodDateEnd().day() == 29)
         {
-            if (!isLeapYear(myYearEnd))
+            if (! isLeapYear(myYearEnd))
             {
                 if (climaUsed->periodType() != dailyPeriod)
                 {
@@ -1275,7 +1275,7 @@ bool PragaProject::elaborationCycleGrid(bool isAnomaly, bool showInfo)
 
                 if (isAnomaly && climaUsed->getIsClimateAnomalyFromDb())
                 {
-                    if ( passingClimateToAnomalyGrid(&errorString, meteoPointTemp, climaUsed))
+                    if (passingClimateToAnomalyGrid(&errorString, meteoPointTemp, climaUsed))
                     {
                         nrValidCells++;
                     }
@@ -1283,7 +1283,9 @@ bool PragaProject::elaborationCycleGrid(bool isAnomaly, bool showInfo)
                 else
                 {
                     bool isMeteoGrid = true;
-                    if  ( elaborationOnPoint(&errorString, nullptr, meteoGridDbHandler, meteoPointTemp, climaUsed, isMeteoGrid, startDate, endDate, isAnomaly, meteoSettings, dataAlreadyLoaded))
+                    if  (elaborationOnPoint(&errorString, nullptr, meteoGridDbHandler, meteoPointTemp,
+                                           climaUsed, isMeteoGrid, startDate, endDate, isAnomaly,
+                                           meteoSettings, dataAlreadyLoaded))
                     {
                         nrValidCells++;
                     }
@@ -1869,8 +1871,9 @@ bool PragaProject::averageSeriesOnZonesMeteoGrid(meteoVariable variable, meteoCo
                 outputValues.clear();
                 float percValue;
                 bool isMeteoGrid = true;
-                if (preElaboration(&errorString, nullptr, meteoGridDbHandler, meteoPointTemp, isMeteoGrid,
-                                   variable, elab1MeteoComp, startDate, endDate, outputValues, &percValue, meteoSettings))
+                if (preElaboration(nullptr, meteoGridDbHandler, meteoPointTemp, isMeteoGrid,
+                                   variable, elab1MeteoComp, startDate, endDate, outputValues,
+                                   &percValue, meteoSettings, errorString))
                 {
                     outputSeries.insert(outputSeries.end(), outputValues.begin(), outputValues.end());
                     indexRowCol[row][col] = indexSeries;

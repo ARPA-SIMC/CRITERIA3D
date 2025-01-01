@@ -2435,26 +2435,24 @@ bool Crit3DMeteoGridDbHandler::loadGridAllMonthlyData(QString &errorStr, QDate f
 }
 
 
-std::vector<float> Crit3DMeteoGridDbHandler::loadGridDailyVar(QString *errorStr, QString meteoPoint,
-                                    meteoVariable variable, QDate first, QDate last, QDate* firstDateDB)
+std::vector<float> Crit3DMeteoGridDbHandler::loadGridDailyVar(const QString &meteoPointId, meteoVariable variable, const QDate &first,
+                                                              const QDate &last, QDate &firstDateDB, QString &errorStr)
 {
-
     QSqlQuery qry(_db);
-    QString tableD = _tableDaily.prefix + meteoPoint + _tableDaily.postFix;
-    QDate currentDate, lastDateDB;
+    QString tableD = _tableDaily.prefix + meteoPointId + _tableDaily.postFix;
     std::vector<float> dailyVarList;
 
     int varCode = getDailyVarCode(variable);
     if (varCode == NODATA)
     {
-        *errorStr = "Variable not existing";
+        errorStr = "Variable not existing";
         return dailyVarList;
     }
 
     unsigned row, col;
-    if (!_meteoGrid->findMeteoPointFromId(&row, &col, meteoPoint.toStdString()) )
+    if (! _meteoGrid->findMeteoPointFromId(&row, &col, meteoPointId.toStdString()) )
     {
-        *errorStr = "Missing MeteoPoint id";
+        errorStr = "Missing MeteoPoint id";
         return dailyVarList;
     }
 
@@ -2462,57 +2460,34 @@ std::vector<float> Crit3DMeteoGridDbHandler::loadGridDailyVar(QString *errorStr,
 
     if(! qry.exec(statement) )
     {
-        *errorStr = qry.lastError().text();
-        if (!_db.isOpen())
-        {
-            qDebug() << "qry exec: db is not open: " << *errorStr;
-            exit(EXIT_FAILURE);
-        }
-        else
-        {
-            return dailyVarList;
-        }
+        errorStr = qry.lastError().text();
+        return dailyVarList;
     }
 
     // read first date
-    if (!qry.first())
+    if (! qry.first())
     {
-        *errorStr = qry.lastError().text();
-        if (!_db.isOpen())
-        {
-            qDebug() << "qry.first: db is not open: " << *errorStr;
-            exit(EXIT_FAILURE);
-        }
-        else
-        {
-            return dailyVarList;
-        }
+        errorStr = qry.lastError().text();
+        return dailyVarList;
     }
 
-    if (!getValue(qry.value(_tableDaily.fieldTime), firstDateDB))
+    if (! getValue(qry.value(_tableDaily.fieldTime), &firstDateDB))
     {
-        *errorStr = "Missing first date";
-        if (!_db.isOpen())
-        {
-            qDebug() << "qry.value: db is not open: " << *errorStr;
-            exit(EXIT_FAILURE);
-        }
-        else
-        {
-            return dailyVarList;
-        }
+        errorStr = "Missing first date";
+        return dailyVarList;
     }
 
     // read last date
+    QDate lastDateDB;
     qry.last();
     if (! getValue(qry.value(_tableDaily.fieldTime), &lastDateDB))
     {
-        *errorStr = "Missing last date";
+        errorStr = "Missing last date";
         return dailyVarList;
     }
 
     // resize vector
-    int nrValues = int(firstDateDB->daysTo(lastDateDB)) + 1;
+    int nrValues = int(firstDateDB.daysTo(lastDateDB)) + 1;
     dailyVarList.resize(unsigned(nrValues));
     for (unsigned int i = 0; i < dailyVarList.size(); i++)
     {
@@ -2524,8 +2499,8 @@ std::vector<float> Crit3DMeteoGridDbHandler::loadGridDailyVar(QString *errorStr,
     qry.first();
     do
     {
-        currentDate = qry.value(_tableDaily.fieldTime).toDate();
-        int currentIndex = int(firstDateDB->daysTo(currentDate));
+        QDate currentDate = qry.value(_tableDaily.fieldTime).toDate();
+        int currentIndex = int(firstDateDB.daysTo(currentDate));
         if (getValue(qry.value("Value"), &value))
         {
             dailyVarList[unsigned(currentIndex)] = value;
@@ -2623,10 +2598,11 @@ std::vector<float> Crit3DMeteoGridDbHandler::exportAllDataVar(QString *errorStr,
 }
 
 
-std::vector<float> Crit3DMeteoGridDbHandler::loadGridDailyVarFixedFields(QString *errorStr, QString meteoPoint, meteoVariable variable, QDate first, QDate last, QDate* firstDateDB)
+std::vector<float> Crit3DMeteoGridDbHandler::loadGridDailyVarFixedFields(const QString &meteoPointId, meteoVariable variable,
+                                                                         const QDate &first, const QDate &last, QDate &firstDateDB, QString &errorStr)
 {
     QSqlQuery qry(_db);
-    QString tableD = _tableDaily.prefix + meteoPoint + _tableDaily.postFix;
+    QString tableD = _tableDaily.prefix + meteoPointId + _tableDaily.postFix;
     QDate date, previousDate;
 
     std::vector<float> dailyVarList;
@@ -2639,7 +2615,7 @@ std::vector<float> Crit3DMeteoGridDbHandler::loadGridDailyVarFixedFields(QString
 
     if (varCode == NODATA)
     {
-        *errorStr = "Variable not existing";
+        errorStr = "Variable not existing";
         return dailyVarList;
     }
 
@@ -2653,36 +2629,35 @@ std::vector<float> Crit3DMeteoGridDbHandler::loadGridDailyVarFixedFields(QString
     }
 
     QString statement = QString("SELECT `%1`, `%2` FROM `%3` WHERE `%1` >= '%4' AND `%1` <= '%5' ORDER BY `%1`").arg(_tableDaily.fieldTime).arg(varField).arg(tableD).arg(first.toString("yyyy-MM-dd")).arg(last.toString("yyyy-MM-dd"));
-    if( !qry.exec(statement) )
+    if(! qry.exec(statement) )
     {
-        *errorStr = qry.lastError().text();
+        errorStr = qry.lastError().text();
     }
     else
     {
-
         while (qry.next())
         {
             if (firstRow)
             {
-                if (!getValue(qry.value(_tableDaily.fieldTime), firstDateDB))
+                if (! getValue(qry.value(_tableDaily.fieldTime), &firstDateDB))
                 {
-                    *errorStr = "Missing fieldTime";
+                    errorStr = "Missing fieldTime";
                     return dailyVarList;
                 }
 
-                if (!getValue(qry.value(varField), &value))
+                if (! getValue(qry.value(varField), &value))
                 {
-                    *errorStr = "Missing Value";
+                    errorStr = "Missing Value";
                 }
                 dailyVarList.push_back(value);
-                previousDate = *firstDateDB;
+                previousDate = firstDateDB;
                 firstRow = 0;
             }
             else
             {
-                if (!getValue(qry.value(_tableDaily.fieldTime), &date))
+                if (! getValue(qry.value(_tableDaily.fieldTime), &date))
                 {
-                    *errorStr = "Missing fieldTime";
+                    errorStr = "Missing fieldTime";
                     return dailyVarList;
                 }
 
@@ -2692,16 +2667,14 @@ std::vector<float> Crit3DMeteoGridDbHandler::loadGridDailyVarFixedFields(QString
                     dailyVarList.push_back(NODATA);
                 }
 
-                if (!getValue(qry.value(varField), &value))
+                if (! getValue(qry.value(varField), &value))
                 {
-                    *errorStr = "Missing Value";
+                    errorStr = "Missing Value";
                 }
                 dailyVarList.push_back(value);
                 previousDate = date;
             }
-
         }
-
     }
 
     return dailyVarList;

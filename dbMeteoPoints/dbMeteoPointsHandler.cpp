@@ -638,7 +638,6 @@ std::vector<float> Crit3DMeteoPointsDbHandler::loadDailyVar(meteoVariable variab
                                                             const Crit3DMeteoPoint &meteoPoint, QDate &firstDateDB)
 {
     QString dateStr;
-    QDate d, previousDate;
     float value;
     std::vector<float> dailyVarList;
     bool firstRow = true;
@@ -661,6 +660,7 @@ std::vector<float> Crit3DMeteoPointsDbHandler::loadDailyVar(meteoVariable variab
     }
     else
     {
+        QDate previousDate;
         while (query.next())
         {
             if (firstRow)
@@ -678,9 +678,9 @@ std::vector<float> Crit3DMeteoPointsDbHandler::loadDailyVar(meteoVariable variab
             else
             {
                 dateStr = query.value(0).toString();
-                d = QDate::fromString(dateStr, "yyyy-MM-dd");
+                QDate currentDate = QDate::fromString(dateStr, "yyyy-MM-dd");
 
-                int missingDate = previousDate.daysTo(d);
+                int missingDate = previousDate.daysTo(currentDate);
                 for (int i=1; i < missingDate; i++)
                 {
                     dailyVarList.push_back(NODATA);
@@ -688,8 +688,7 @@ std::vector<float> Crit3DMeteoPointsDbHandler::loadDailyVar(meteoVariable variab
                 value = query.value(2).toFloat();
 
                 dailyVarList.push_back(value);
-                previousDate = d;
-
+                previousDate = currentDate;
             }
         }
     }

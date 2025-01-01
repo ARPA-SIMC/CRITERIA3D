@@ -128,8 +128,11 @@
         bool loadGridAllMonthlyData(QString &errorStr, QDate firstDate, QDate lastDate);
         bool loadGridMonthlySingleDate(QString &errorStr, const QString &meteoPoint, const QDate &myDate);
 
-        std::vector<float> loadGridDailyVar(QString *errorStr, QString meteoPoint, meteoVariable variable, QDate first, QDate last, QDate *firstDateDB);
-        std::vector<float> loadGridDailyVarFixedFields(QString *errorStr, QString meteoPoint, meteoVariable variable, QDate first, QDate last, QDate* firstDateDB);
+        std::vector<float> loadGridDailyVar(const QString &meteoPointId, meteoVariable variable,
+                                            const QDate &first, const QDate &last, QDate &firstDateDB, QString &errorStr);
+
+        std::vector<float> loadGridDailyVarFixedFields(const QString &meteoPointId, meteoVariable variable,
+                                                       const QDate &first, const QDate &last, QDate &firstDateDB, QString &errorStr);
 
         std::vector<float> loadGridHourlyVar(meteoVariable variable, const QString& meteoPointId,
                                              const QDateTime &firstTime, const QDateTime &lastTime,
