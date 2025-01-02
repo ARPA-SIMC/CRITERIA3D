@@ -9,7 +9,9 @@
         #include "statistics.h"
     #endif
 
-    #include <map>
+    #ifndef _MAP_
+        #include <map>
+    #endif
 
     #define DEFAULT_MIN_PERCENTAGE 80
     #define DEFAULT_RAINFALL_THRESHOLD 0.2f
