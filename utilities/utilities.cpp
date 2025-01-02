@@ -71,8 +71,7 @@ bool getValue(const QVariant &myRs, int* myValue)
 {
     *myValue = NODATA;
 
-    if (! myRs.isValid() || myRs.isNull()) return false;
-    if (myRs == "" || myRs == "NULL" || myRs == "nan") return false;
+    if (! myRs.isValid() || myRs.isNull() || myRs == "nan") return false;
 
     bool isOk;
     *myValue = myRs.toInt(&isOk);
@@ -91,8 +90,7 @@ bool getValue(const QVariant &myRs, float* myValue)
 {
     *myValue = NODATA;
 
-    if (! myRs.isValid() || myRs.isNull()) return false;
-    if (myRs == "" || myRs == "NULL" || myRs == "nan") return false;
+    if (! myRs.isValid() || myRs.isNull() || myRs == "nan") return false;
 
     bool isOk;
     *myValue = myRs.toFloat(&isOk);
@@ -111,8 +109,7 @@ bool getValue(const QVariant &myRs, double* myValue)
 {
     *myValue = NODATA;
 
-    if (! myRs.isValid() || myRs.isNull()) return false;
-    if (myRs == "" || myRs == "NULL" || myRs == "nan") return false;
+    if (! myRs.isValid() || myRs.isNull() || myRs == "nan") return false;
 
     bool isOk;
     *myValue = myRs.toDouble(&isOk);
