@@ -128,10 +128,20 @@
         bool loadGridAllMonthlyData(QString &errorStr, QDate firstDate, QDate lastDate);
         bool loadGridMonthlySingleDate(QString &errorStr, const QString &meteoPoint, const QDate &myDate);
 
-        std::vector<float> loadGridDailyVar(QString *errorStr, QString meteoPoint, meteoVariable variable, QDate first, QDate last, QDate *firstDateDB);
-        std::vector<float> loadGridDailyVarFixedFields(QString *errorStr, QString meteoPoint, meteoVariable variable, QDate first, QDate last, QDate* firstDateDB);
-        std::vector<float> loadGridHourlyVar(QString *errorStr, QString meteoPoint, meteoVariable variable, QDateTime first, QDateTime last, QDateTime* firstDateDB);
-        std::vector<float> loadGridHourlyVarFixedFields(QString *errorStr, QString meteoPoint, meteoVariable variable, QDateTime first, QDateTime last, QDateTime* firstDateDB);
+        std::vector<float> loadGridDailyVar(const QString &meteoPointId, meteoVariable variable,
+                                            const QDate &first, const QDate &last, QDate &firstDateDB, QString &errorStr);
+
+        std::vector<float> loadGridDailyVarFixedFields(const QString &meteoPointId, meteoVariable variable,
+                                                       const QDate &first, const QDate &last, QDate &firstDateDB, QString &errorStr);
+
+        std::vector<float> loadGridHourlyVar(meteoVariable variable, const QString& meteoPointId,
+                                             const QDateTime &firstTime, const QDateTime &lastTime,
+                                             QDateTime &firstTimeDB, QString &errorStr);
+
+        std::vector<float> loadGridHourlyVarFixedFields(meteoVariable variable, const QString &meteoPointId,
+                                                        const QDateTime &firstTime, const QDateTime &lastTime,
+                                                        QDateTime &firstDateDB, QString &errorStr);
+
         std::vector<float> exportAllDataVar(QString *errorStr, frequencyType freq, meteoVariable variable, QString id, QDateTime myFirstTime, QDateTime myLastTime, std::vector<QString> &dateStr);
 
         bool getYearList(QString *errorStr, QString meteoPoint, QList<QString>* yearList);

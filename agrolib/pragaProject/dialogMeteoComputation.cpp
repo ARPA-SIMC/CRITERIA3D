@@ -7,21 +7,20 @@
 
 extern PragaProject myProject;
 
-DialogMeteoComputation::DialogMeteoComputation(QSettings *settings, bool isMeteoGridLoaded, bool isMeteoPointLoaded, bool isAnomaly, bool saveClima)
-    : settings(settings), isMeteoGridLoaded(isMeteoGridLoaded), isMeteoPointLoaded(isMeteoPointLoaded), isAnomaly(isAnomaly), saveClima(saveClima)
+DialogMeteoComputation::DialogMeteoComputation(QSettings *settings, bool isMeteoGridLoaded, bool isMeteoPointLoaded, bool isAnomaly, bool isSaveClima)
+    : settings(settings), isAnomaly(isAnomaly), saveClima(isSaveClima)
 {
-
     if (saveClima)
     {
         setWindowTitle("Climate Elaboration");
     }
-    else if (!isAnomaly)
+    else if (this->isAnomaly)
     {
-        setWindowTitle("Elaboration");
+        setWindowTitle("Anomaly");
     }
     else
     {
-        setWindowTitle("Anomaly");
+        setWindowTitle("Elaboration");
     }
 
     QVBoxLayout mainLayout;
@@ -57,7 +56,7 @@ DialogMeteoComputation::DialogMeteoComputation(QSettings *settings, bool isMeteo
     if (isMeteoPointLoaded)
     {
         pointsButton.setEnabled(true);
-        if (!isMeteoGridLoaded)
+        if (! isMeteoGridLoaded)
         {
             pointsButton.setChecked(true);
         }
@@ -69,7 +68,7 @@ DialogMeteoComputation::DialogMeteoComputation(QSettings *settings, bool isMeteo
     if (isMeteoGridLoaded)
     {
         gridButton.setEnabled(true);
-        if (!isMeteoPointLoaded)
+        if (! isMeteoPointLoaded)
         {
             gridButton.setChecked(true);
         }
@@ -81,7 +80,7 @@ DialogMeteoComputation::DialogMeteoComputation(QSettings *settings, bool isMeteo
 
     if (isMeteoPointLoaded && isMeteoGridLoaded)
     {
-        if (myProject.lastElabTargetisGrid)
+        if (myProject.lastElabTargetIsGrid)
         {
             gridButton.setChecked(true);
             pointsButton.setChecked(false);
@@ -108,23 +107,18 @@ DialogMeteoComputation::DialogMeteoComputation(QSettings *settings, bool isMeteo
     targetLayout.addWidget(&gridButton);
     targetGroupBox->setLayout(&targetLayout);
 
-    meteoVariable var;
-
     Q_FOREACH (QString group, settings->childGroups())
     {
-        if (!group.endsWith("_VarToElab1"))
+        if (! group.endsWith("_VarToElab1"))
             continue;
-        std::string item;
-        std::string variable = group.left(group.size()-11).toStdString(); // remove "_VarToElab1"
-        try {
-            var = MapDailyMeteoVar.at(variable);
-            item = MapDailyMeteoVarToString.at(var);
+
+        QString varStr = group.left(group.size()-11);  // remove '_VarToElab1'
+
+        // check daily variables
+        if (MapDailyMeteoVar.find(varStr.toStdString()) != MapDailyMeteoVar.end())
+        {
+            variableList.addItem(varStr);
         }
-        catch (const std::out_of_range& ) {
-            // check hourly variable
-            continue;
-        }
-        variableList.addItem(QString::fromStdString(item));
     }
 
     QLabel variableLabel("Variable: ");
@@ -420,15 +414,15 @@ DialogMeteoComputation::DialogMeteoComputation(QSettings *settings, bool isMeteo
     }
     else if(saveClima)
     {
-        add.setText("Add");
-        del.setText("Delete");
+        addClimate.setText("Add");
+        delClimate.setText("Delete");
         delAll.setText("Delete all");
-        buttonLayout.addWidget(&add);
-        buttonLayout.addWidget(&del);
+        buttonLayout.addWidget(&addClimate);
+        buttonLayout.addWidget(&delClimate);
         buttonLayout.addWidget(&delAll);
 
-        connect(&add, &QPushButton::clicked, [=](){ this->copyDataToSaveLayout(); });
-        connect(&del, &QPushButton::clicked, [=](){ saveClimaLayout.deleteRaw(); });
+        connect(&addClimate, &QPushButton::clicked, [=](){ this->copyDataToSaveLayout(); });
+        connect(&delClimate, &QPushButton::clicked, [=](){ saveClimaLayout.deleteRaw(); });
         connect(&delAll, &QPushButton::clicked, [=](){ saveClimaLayout.deleteAll(); });
         mainLayout.addLayout(&buttonLayout);
         mainLayout.addLayout(&saveClimaMainLayout);
@@ -932,11 +926,11 @@ void DialogMeteoComputation::displayPeriod(const QString value)
 
 void DialogMeteoComputation::listElaboration(const QString value)
 {
-
     elaborationList.blockSignals(true);
     meteoVariable key = getKeyMeteoVarMeteoMap(MapDailyMeteoVarToString, value.toStdString());
     std::string keyString = getKeyStringMeteoMap(MapDailyMeteoVar, key);
-    QString group = QString::fromStdString(keyString)+"_VarToElab1";
+
+    QString group = QString::fromStdString(keyString) + "_VarToElab1";
     settings->beginGroup(group);
     int size = settings->beginReadArray(QString::fromStdString(keyString));
     QString prevElab = elaborationList.currentText();
@@ -1076,7 +1070,6 @@ void DialogMeteoComputation::activeSecondParameter(const QString value)
 
 void DialogMeteoComputation::readParameter(int state)
 {
-
     climateDbElabList.clear();
     climateDbElab.clear();
 
@@ -1160,22 +1153,22 @@ void DialogMeteoComputation::copyDataToAnomaly()
         anomaly.AnomalySetSecondElaboration(secondElabList.currentText());
         anomaly.AnomalySetParam2(elab2Parameter.text());
     }
-
 }
+
 
 void DialogMeteoComputation::copyDataToSaveLayout()
 {
-
-    if (!checkValidData())
+    if (! checkValidData())
     {
         return;
     }
+
     saveClimaLayout.setFirstYear(firstYearEdit.text());
     saveClimaLayout.setLastYear(lastYearEdit.text());
     QString variable = variableList.currentText();
     if (periodTypeList.currentText() == "Daily" && dailyCumulated.isChecked())
     {
-        variable = variable+"CUMULATED";
+        variable += "CUMULATED";
     }
     saveClimaLayout.setVariable(variable);
     saveClimaLayout.setPeriod(periodTypeList.currentText());
@@ -1247,8 +1240,8 @@ void DialogMeteoComputation::copyDataToSaveLayout()
     }
 
     saveClimaLayout.addElab();
-
 }
+
 
 bool DialogMeteoComputation::checkValidData()
 {
@@ -1303,12 +1296,6 @@ bool DialogMeteoComputation::checkValidData()
         }
     }
     return true;
-}
-
-
-QList<QString> DialogMeteoComputation::getElabSaveList()
-{
-    return saveClimaLayout.getList();
 }
 
 
@@ -1561,6 +1548,7 @@ void DialogMeteoComputation::copyDataFromXML()
     }
 }
 
+
 void DialogMeteoComputation::saveDataToXML()
 {
     if (!checkValidData())
@@ -1793,10 +1781,8 @@ void DialogMeteoComputation::saveDataToXML()
         }
         delete listXMLAnomaly;
     }
-
-
-
 }
+
 
 void DialogMeteoComputation::targetChange()
 {
@@ -1820,8 +1806,4 @@ void DialogMeteoComputation::targetChange()
     }
 }
 
-bool DialogMeteoComputation::getIsMeteoGrid() const
-{
-    return isMeteoGrid;
-}
 

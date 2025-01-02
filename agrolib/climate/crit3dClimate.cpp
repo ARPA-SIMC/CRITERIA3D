@@ -14,6 +14,8 @@ Crit3DClimate::Crit3DClimate()
     _periodStr = "";
     _genericPeriodDateStart.setDate(1800,1,1);
     _genericPeriodDateEnd.setDate(1800,1,1);
+    _hourStart = NODATA;
+    _hourEnd = NODATA;
     _nYears = NODATA;
     _elab1 = "";
     _param1 = NODATA;
@@ -45,6 +47,8 @@ void Crit3DClimate::resetParam()
     _periodStr = "";
     _genericPeriodDateStart.setDate(1800,1,1);
     _genericPeriodDateEnd.setDate(1800,1,1);
+    _hourStart = NODATA;
+    _hourEnd = NODATA;
     _nYears = NODATA;
     _elab1 = "";
     _param1 = NODATA;
@@ -67,27 +71,29 @@ void Crit3DClimate::resetCurrentValues()
     _currentPeriodType = noPeriodType;
 }
 
-void Crit3DClimate::copyParam(Crit3DClimate* clima)
+void Crit3DClimate::copyParam(Crit3DClimate* myClimate)
 {
-    _db = clima->db();
-    _climateElab = clima->climateElab();
-    _yearStart = clima->yearStart();
-    _yearEnd = clima->yearEnd();
-    _periodType = clima->periodType();
-    _variable = clima->variable();
-    _periodStr = clima->periodStr();
-    _genericPeriodDateStart = clima->genericPeriodDateStart();
-    _genericPeriodDateEnd = clima->genericPeriodDateEnd();
-    _nYears = clima->nYears();
-    _elab1 = clima->elab1();
-    _param1 = clima->param1();
-    _param1IsClimate = clima->param1IsClimate();
-    _param1ClimateField = clima->param1ClimateField();
-    _param1ClimateIndex = clima->getParam1ClimateIndex();
-    _isClimateAnomalyFromDb = clima->getIsClimateAnomalyFromDb();
-    _elab2 = clima->elab2();
-    _param2 = clima->param2();
-    _dailyCumulated = clima->dailyCumulated();
+    _db = myClimate->db();
+    _climateElab = myClimate->climateElab();
+    _yearStart = myClimate->yearStart();
+    _yearEnd = myClimate->yearEnd();
+    _periodType = myClimate->periodType();
+    _variable = myClimate->variable();
+    _periodStr = myClimate->periodStr();
+    _genericPeriodDateStart = myClimate->genericPeriodDateStart();
+    _genericPeriodDateEnd = myClimate->genericPeriodDateEnd();
+    _hourStart = myClimate->hourStart();
+    _hourEnd = myClimate->hourEnd();
+    _nYears = myClimate->nYears();
+    _elab1 = myClimate->elab1();
+    _param1 = myClimate->param1();
+    _param1IsClimate = myClimate->param1IsClimate();
+    _param1ClimateField = myClimate->param1ClimateField();
+    _param1ClimateIndex = myClimate->getParam1ClimateIndex();
+    _isClimateAnomalyFromDb = myClimate->getIsClimateAnomalyFromDb();
+    _elab2 = myClimate->elab2();
+    _param2 = myClimate->param2();
+    _dailyCumulated = myClimate->dailyCumulated();
 
 }
 
@@ -105,25 +111,6 @@ void Crit3DClimate::setClimateElab(const QString &climateElab)
     _climateElab = climateElab;
 }
 
-int Crit3DClimate::yearStart() const
-{
-    return _yearStart;
-}
-
-void Crit3DClimate::setYearStart(int yearStart)
-{
-    _yearStart = yearStart;
-}
-
-int Crit3DClimate::yearEnd() const
-{
-    return _yearEnd;
-}
-
-void Crit3DClimate::setYearEnd(int yearEnd)
-{
-    _yearEnd = yearEnd;
-}
 
 meteoVariable Crit3DClimate::variable() const
 {

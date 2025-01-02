@@ -943,9 +943,9 @@ std::string getVariableString(meteoVariable myVar)
         return "No variable";
 }
 
+
 std::string getKeyStringMeteoMap(std::map<std::string, meteoVariable> map, meteoVariable value)
 {
-
     std::map<std::string, meteoVariable>::const_iterator it;
     std::string key = "";
 
@@ -957,6 +957,7 @@ std::string getKeyStringMeteoMap(std::map<std::string, meteoVariable> map, meteo
             break;
         }
     }
+
     return key;
 }
 
@@ -995,6 +996,7 @@ meteoVariable getKeyMeteoVarMeteoMap(std::map<meteoVariable,std::string> map, co
             break;
         }
     }
+
     return key;
 }
 

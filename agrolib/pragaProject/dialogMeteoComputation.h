@@ -13,29 +13,33 @@
 
 class DialogMeteoComputation : public QDialog
 {
-
     Q_OBJECT
 
     private:
         QSettings* settings;
-        bool isMeteoPointLoaded;
-        bool isMeteoGridLoaded;
+
+        QRadioButton pointsButton;
+        QRadioButton gridButton;
+
         bool isMeteoGrid;
         bool isAnomaly;
         bool saveClima;
-        QString title;
+
+        QComboBox variableList;
+
         QDateEdit currentDay;
         QLabel currentDayLabel;
-        QRadioButton pointsButton;
-        QRadioButton gridButton;
-        QComboBox variableList;
+
         QLineEdit firstYearEdit;
         QLineEdit lastYearEdit;
+
         QLabel genericStartLabel;
         QLabel genericEndLabel;
         QLabel nrYearLabel;
+
         QDateEdit genericPeriodStart;
         QDateEdit genericPeriodEnd;
+
         QLineEdit nrYear;
         QCheckBox readParam;
         QCheckBox dailyCumulated;
@@ -51,11 +55,12 @@ class DialogMeteoComputation : public QDialog
         DialogAnomaly anomaly;
         QPushButton copyData;
 
-        QPushButton add;
-        QPushButton del;
+        QPushButton addClimate;
+        QPushButton delClimate;
         QPushButton loadXML;
         QPushButton appendXML;
         QPushButton delAll;
+
         SaveClimaLayout saveClimaLayout;
 
         QList<QString> climateDbElab;
@@ -63,8 +68,9 @@ class DialogMeteoComputation : public QDialog
 
 
     public:
-        DialogMeteoComputation(QSettings *settings, bool isMeteoGridLoaded, bool isMeteoPointLoaded, bool isAnomaly, bool saveClima);
+        DialogMeteoComputation(QSettings *settings, bool isMeteoGridLoaded, bool isMeteoPointLoaded, bool isAnomaly, bool isSaveClima);
         void done(bool res);
+
         void displayPeriod(const QString value);
         void checkYears();
         void listElaboration(const QString value);
@@ -74,11 +80,13 @@ class DialogMeteoComputation : public QDialog
         void copyDataToAnomaly();
         void copyDataToSaveLayout();
         bool checkValidData();
-        QList<QString> getElabSaveList();
+
         void copyDataFromXML();
         void saveDataToXML();
         void targetChange();
-        bool getIsMeteoGrid() const;
+
+        bool getIsMeteoGrid() const { return isMeteoGrid; }
+        QList<QString> getElabSaveList() { return saveClimaLayout.getList(); }
 };
 
 

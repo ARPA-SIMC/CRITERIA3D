@@ -42,7 +42,7 @@ void PragaProject::initializePragaProject()
     pragaDefaultSettings = nullptr;
     pragaDailyMaps = nullptr;
     users.clear();
-    lastElabTargetisGrid = false;
+    lastElabTargetIsGrid = false;
 
     outputMeteoPointsDbHandler = nullptr;
     outputMeteoPointsLoaded = false;
@@ -498,9 +498,9 @@ bool PragaProject::saveGrid(meteoVariable myVar, frequencyType myFrequency, cons
     return true;
 }
 
+
 bool PragaProject::elaborationCheck(bool isMeteoGrid, bool isAnomaly)
 {
-
     if (isMeteoGrid)
     {
         if (this->meteoGridDbHandler == nullptr)
@@ -776,6 +776,25 @@ bool PragaProject::computeElaboration(bool isMeteoGrid, bool isAnomaly, bool isC
 }
 
 
+bool PragaProject::computeElaborationHourly(bool isMeteoGrid, bool isShowInfo)
+{
+    bool result;
+
+    if (isMeteoGrid)
+    {
+        result = elaborationCycleGridHourly(isShowInfo);
+        meteoGridDbHandler->meteoGrid()->setIsElabValue(result);
+    }
+    else
+    {
+        result = elaborationCyclePointsHourly(isShowInfo);
+        setIsElabMeteoPointsValue(result);
+    }
+
+    return result;
+}
+
+
 bool PragaProject::elaborationCyclePoints(bool isAnomaly, bool showInfo)
 {
     // initialize
@@ -999,13 +1018,97 @@ bool PragaProject::elaborationCyclePoints(bool isAnomaly, bool showInfo)
 }
 
 
-bool PragaProject::elaborationCycleGrid(bool isAnomaly, bool showInfo)
+bool PragaProject::elaborationCyclePointsHourly(bool showInfo)
 {
+    // initialize
+    for (int i = 0; i < nrMeteoPoints; i++)
+    {
+        meteoPoints[i].elaboration = NODATA;
+        meteoPoints[i].anomaly = NODATA;
+        meteoPoints[i].anomalyPercentage = NODATA;
+    }
 
-    bool isMeteoGrid = true; // grid
+    // TODO
+
+    return true;
+}
+
+
+bool PragaProject::elaborationCycleGridHourly(bool showInfo)
+{
+    errorString.clear();
 
     std::string id;
-    int validCell = 0;
+    int nrValidCells = 0;
+
+    Crit3DClimate* currentElaboration = new Crit3DClimate();
+    currentElaboration->copyParam(clima);
+
+    int infoStep = 1;
+    if (showInfo)
+    {
+        QString infoStr = "Elaboration - Meteo Grid";
+        infoStep = setProgressBar(infoStr, this->meteoGridDbHandler->gridStructure().header().nrRows);
+    }
+
+    for (int row = 0; row < meteoGridDbHandler->gridStructure().header().nrRows; row++)
+    {
+        if (showInfo && (row % infoStep) == 0)
+            updateProgressBar(row);
+
+        for (int col = 0; col < meteoGridDbHandler->gridStructure().header().nrCols; col++)
+        {
+            if (meteoGridDbHandler->meteoGrid()->getMeteoPointActiveId(row, col, &id))
+            {
+                Crit3DMeteoPoint* meteoPoint = meteoGridDbHandler->meteoGrid()->meteoPointPointer(row,col);
+
+                // copy data to meteoPointTemp
+                Crit3DMeteoPoint* meteoPointTemp = new Crit3DMeteoPoint;
+                meteoPointTemp->id = meteoPoint->id;
+                meteoPointTemp->point.z = meteoPoint->point.z;
+                meteoPointTemp->latitude = meteoPoint->latitude;
+
+                // meteoPointTemp should be init
+                meteoPointTemp->nrObsDataDaysH = 0;
+                meteoPointTemp->nrObsDataDaysD = 0;
+
+                bool isMeteoGrid = true;
+                if  (elaborationOnPointHourly(nullptr, meteoGridDbHandler, meteoPointTemp,
+                                       isMeteoGrid, currentElaboration, meteoSettings, errorString))
+                {
+                    nrValidCells++;
+                }
+
+                // save result to MP
+                meteoPoint->elaboration = meteoPointTemp->elaboration;
+                meteoPoint->anomaly = NODATA;
+                meteoPoint->anomalyPercentage = NODATA;
+
+                delete meteoPointTemp;
+            }
+        }
+    }
+
+    if (showInfo) closeProgressBar();
+    delete currentElaboration;
+
+    if (nrValidCells == 0)
+    {
+        if (errorString.isEmpty())
+        {
+            errorString = "No valid cells available.";
+        }
+        return false;
+    }
+
+    return true;
+}
+
+
+bool PragaProject::elaborationCycleGrid(bool isAnomaly, bool showInfo)
+{
+    std::string id;
+    int nrValidCells = 0;
 
     int infoStep = 1;
     QString infoStr;
@@ -1033,8 +1136,7 @@ bool PragaProject::elaborationCycleGrid(bool isAnomaly, bool showInfo)
         }
     }
 
-    QDate startDate;
-    QDate endDate;
+    QDate startDate, endDate;
 
     if (climaUsed->nYears() > 0)
     {
@@ -1042,10 +1144,11 @@ bool PragaProject::elaborationCycleGrid(bool isAnomaly, bool showInfo)
         int myYearEnd = climaUsed->yearEnd() + climaUsed->nYears();
         startDate.setDate(myYearStart, climaUsed->genericPeriodDateStart().month(), climaUsed->genericPeriodDateStart().day());
         endDate.setDate(myYearEnd, climaUsed->genericPeriodDateEnd().month(), climaUsed->genericPeriodDateEnd().day());
+
         // check dates - leap case
         if (climaUsed->genericPeriodDateStart().month() == 2 && climaUsed->genericPeriodDateStart().day() == 29)
         {
-            if (!isLeapYear(myYearStart))
+            if (! isLeapYear(myYearStart))
             {
                 if (climaUsed->periodType() != dailyPeriod)
                 {
@@ -1059,7 +1162,7 @@ bool PragaProject::elaborationCycleGrid(bool isAnomaly, bool showInfo)
         }
         if (climaUsed->genericPeriodDateEnd().month() == 2 && climaUsed->genericPeriodDateEnd().day() == 29)
         {
-            if (!isLeapYear(myYearEnd))
+            if (! isLeapYear(myYearEnd))
             {
                 if (climaUsed->periodType() != dailyPeriod)
                 {
@@ -1081,7 +1184,7 @@ bool PragaProject::elaborationCycleGrid(bool isAnomaly, bool showInfo)
         // check dates - leap case
         if (climaUsed->genericPeriodDateStart().month() == 2 && climaUsed->genericPeriodDateStart().day() == 29)
         {
-            if (!isLeapYear(myYearStart))
+            if (! isLeapYear(myYearStart))
             {
                 if (climaUsed->periodType() != dailyPeriod)
                 {
@@ -1095,7 +1198,7 @@ bool PragaProject::elaborationCycleGrid(bool isAnomaly, bool showInfo)
         }
         if (climaUsed->genericPeriodDateEnd().month() == 2 && climaUsed->genericPeriodDateEnd().day() == 29)
         {
-            if (!isLeapYear(myYearEnd))
+            if (! isLeapYear(myYearEnd))
             {
                 if (climaUsed->periodType() != dailyPeriod)
                 {
@@ -1117,7 +1220,7 @@ bool PragaProject::elaborationCycleGrid(bool isAnomaly, bool showInfo)
         // check dates - leap case
         if (climaUsed->genericPeriodDateStart().month() == 2 && climaUsed->genericPeriodDateStart().day() == 29)
         {
-            if (!isLeapYear(myYearStart))
+            if (! isLeapYear(myYearStart))
             {
                 if (climaUsed->periodType() != dailyPeriod)
                 {
@@ -1131,7 +1234,7 @@ bool PragaProject::elaborationCycleGrid(bool isAnomaly, bool showInfo)
         }
         if (climaUsed->genericPeriodDateEnd().month() == 2 && climaUsed->genericPeriodDateEnd().day() == 29)
         {
-            if (!isLeapYear(myYearEnd))
+            if (! isLeapYear(myYearEnd))
             {
                 if (climaUsed->periodType() != dailyPeriod)
                 {
@@ -1172,16 +1275,19 @@ bool PragaProject::elaborationCycleGrid(bool isAnomaly, bool showInfo)
 
                 if (isAnomaly && climaUsed->getIsClimateAnomalyFromDb())
                 {
-                    if ( passingClimateToAnomalyGrid(&errorString, meteoPointTemp, climaUsed))
+                    if (passingClimateToAnomalyGrid(&errorString, meteoPointTemp, climaUsed))
                     {
-                        validCell += 1;
+                        nrValidCells++;
                     }
                 }
                 else
                 {
-                    if  ( elaborationOnPoint(&errorString, nullptr, meteoGridDbHandler, meteoPointTemp, climaUsed, isMeteoGrid, startDate, endDate, isAnomaly, meteoSettings, dataAlreadyLoaded))
+                    bool isMeteoGrid = true;
+                    if  (elaborationOnPoint(&errorString, nullptr, meteoGridDbHandler, meteoPointTemp,
+                                           climaUsed, isMeteoGrid, startDate, endDate, isAnomaly,
+                                           meteoSettings, dataAlreadyLoaded))
                     {
-                        validCell += 1;
+                        nrValidCells++;
                     }
                 }
 
@@ -1190,15 +1296,13 @@ bool PragaProject::elaborationCycleGrid(bool isAnomaly, bool showInfo)
                 meteoPoint->anomaly = meteoPointTemp->anomaly;
                 meteoPoint->anomalyPercentage = meteoPointTemp->anomalyPercentage;
                 delete meteoPointTemp;
-
             }
-
         }
     }
 
     if (showInfo) closeProgressBar();
 
-    if (validCell == 0)
+    if (nrValidCells == 0)
     {
         if (errorString.isEmpty())
         {
@@ -1207,22 +1311,18 @@ bool PragaProject::elaborationCycleGrid(bool isAnomaly, bool showInfo)
         delete climaUsed;
         return false;
     }
-    else
-    {
-        delete climaUsed;
-        return true;
-    }
 
+    delete climaUsed;
+    return true;
 }
 
 
 bool PragaProject::climateCyclePoints(bool showInfo)
 {
-    bool isMeteoGrid = false;
     int infoStep;
     QString infoStr;
 
-    int validCell = 0;
+    int nrValidCells = 0;
     QDate startDate;
     QDate endDate;
     bool changeDataSet = true;
@@ -1310,19 +1410,19 @@ bool PragaProject::climateCyclePoints(bool showInfo)
                     return false;
                 }
 
+                bool isMeteoGrid = false;
                 if (climateOnPoint(&errorString, meteoPointsDbHandler, nullptr, clima, meteoPointTemp, outputValues, isMeteoGrid, startDate, endDate, changeDataSet, meteoSettings))
                 {
-                    validCell = validCell + 1;
+                    nrValidCells++;
                 }
+
                 changeDataSet = false;
-
             }
-
         }
     }
     if (showInfo) closeProgressBar();
 
-    if (validCell == 0)
+    if (nrValidCells == 0)
     {
         if (errorString.isEmpty())
         {
@@ -1330,20 +1430,19 @@ bool PragaProject::climateCyclePoints(bool showInfo)
         }
         logError(errorString);
         delete meteoPointTemp;
+
         return false;
     }
-    else
-    {
-        logInfo("climate saved");
-        delete meteoPointTemp;
-        return true;
-    }
+
+    logInfo("climate saved");
+    delete meteoPointTemp;
+
+    return true;
 }
 
 
 bool PragaProject::climateCycleGrid(bool showInfo)
 {
-    bool isMeteoGrid = true;
     int infoStep;
     QString infoStr;
 
@@ -1439,6 +1538,7 @@ bool PragaProject::climateCycleGrid(bool showInfo)
                        return false;
                    }
 
+                   bool isMeteoGrid = true;
                    if (climateOnPoint(&errorString, nullptr, meteoGridDbHandler, clima, meteoPointTemp, outputValues, isMeteoGrid, startDate, endDate, changeDataSet, meteoSettings))
                    {
                        validCell = validCell + 1;
@@ -1771,8 +1871,9 @@ bool PragaProject::averageSeriesOnZonesMeteoGrid(meteoVariable variable, meteoCo
                 outputValues.clear();
                 float percValue;
                 bool isMeteoGrid = true;
-                if (preElaboration(&errorString, nullptr, meteoGridDbHandler, meteoPointTemp, isMeteoGrid,
-                                   variable, elab1MeteoComp, startDate, endDate, outputValues, &percValue, meteoSettings))
+                if (preElaboration(nullptr, meteoGridDbHandler, meteoPointTemp, isMeteoGrid,
+                                   variable, elab1MeteoComp, startDate, endDate, outputValues,
+                                   &percValue, meteoSettings, errorString))
                 {
                     outputSeries.insert(outputSeries.end(), outputValues.begin(), outputValues.end());
                     indexRowCol[row][col] = indexSeries;

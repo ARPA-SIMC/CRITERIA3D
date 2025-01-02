@@ -74,9 +74,8 @@
 
         bool loadHourlyData(const Crit3DDate &firstDate, const Crit3DDate &lastDate, Crit3DMeteoPoint &meteoPoint);
 
-        std::vector<float> loadHourlyVar(QString *myError, meteoVariable variable,
-                                         Crit3DDate dateStart, Crit3DDate dateEnd,
-                                         QDateTime* firstDateDB, Crit3DMeteoPoint *meteoPoint);
+        std::vector<float> loadHourlyVar(meteoVariable variable, const QString& meteoPointId, const QDateTime& startTime,
+                                         const QDateTime& endTime, QDateTime &firstDateDB, QString &myError);
 
         bool loadVariableProperties();
         bool getFieldList(const QString &tableName, QList<QString> &fieldList);

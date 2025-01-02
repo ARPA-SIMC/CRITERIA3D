@@ -52,7 +52,6 @@
         Crit3DClimateList();
         ~Crit3DClimateList();
 
-
         QList<QString> listClimateElab() const;
         void setListClimateElab(const QList<QString> &listClimateElab);
 
