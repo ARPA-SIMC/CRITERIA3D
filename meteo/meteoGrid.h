@@ -4,13 +4,6 @@
     #ifndef METEOPOINT_H
         #include "meteoPoint.h"
     #endif
-    #ifndef COMMONCONSTANTS_H
-        #include "commonConstants.h"
-    #endif
-
-    #ifndef VECTOR_H
-        #include <vector>
-    #endif
 
     #define GRID_MIN_COVERAGE 0
 

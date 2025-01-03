@@ -897,6 +897,7 @@ float loadHourlyVarSeries_SaveOutput(Crit3DMeteoPointsDbHandler *meteoPointsDbHa
     int nrValidValues = 0;
 
     // fills the missing initial output data
+    firstDateTimeDB.setTimeSpec(Qt::UTC);
     int nrMissingHours = firstTime.secsTo(firstDateTimeDB) / 3600;
     for (int i = 1; i <= nrMissingHours; i++)
     {
@@ -919,7 +920,8 @@ float loadHourlyVarSeries_SaveOutput(Crit3DMeteoPointsDbHandler *meteoPointsDbHa
     }
 
     // fills the missing final output data
-    QDateTime lastDateTimeDB = firstDateTimeDB.addSecs(hourlyValues.size() * 3600);
+    int nrDataHours = int(hourlyValues.size()) -1;
+    QDateTime lastDateTimeDB = firstDateTimeDB.addSecs(nrDataHours * 3600);
     nrMissingHours = lastDateTimeDB.secsTo(lastTime) / 3600;
     for (int i = 1; i <= nrMissingHours; i++)
     {
@@ -1074,6 +1076,7 @@ float loadHourlyVarSeries(Crit3DMeteoPointsDbHandler* meteoPointsDbHandler,
     }
 
     QDateTime currentDateTime = firstDateTimeDB;
+    currentDateTime.setTimeSpec(Qt::UTC);
     for (unsigned int i = 0; i < hourlyValues.size(); i++)
     {
         quality::qualityType qualityT = qualityCheck.syntacticQualitySingleValue(variable, hourlyValues[i]);
@@ -2198,8 +2201,8 @@ bool preElaboration(Crit3DMeteoPointsDbHandler* meteoPointsDbHandler, Crit3DMete
         case dailyLeafWetness:
         {
             if (loadHourlyVarSeries(meteoPointsDbHandler, meteoGridDbHandler, meteoPoint, isMeteoGrid, leafWetness,
-                                    QDateTime(startDate,QTime(1,0,0),Qt::UTC),
-                                    QDateTime(endDate.addDays(1),QTime(0,0,0),Qt::UTC), myError) > 0)
+                                    QDateTime(startDate, QTime(1,0,0), Qt::UTC),
+                                    QDateTime(endDate.addDays(1), QTime(0,0,0), Qt::UTC), myError) > 0)
             {
                 myResult = elaborateDailyAggregatedVar(dailyLeafWetness, *meteoPoint, outputValues, percValue, meteoSettings);
             }
@@ -2208,8 +2211,8 @@ bool preElaboration(Crit3DMeteoPointsDbHandler* meteoPointsDbHandler, Crit3DMete
         case dailyTemperatureHoursAbove:
         {
             if (loadHourlyVarSeries(meteoPointsDbHandler, meteoGridDbHandler, meteoPoint, isMeteoGrid, airTemperature,
-                                    QDateTime(startDate,QTime(1,0,0),Qt::UTC),
-                                    QDateTime(endDate.addDays(1),QTime(0,0,0),Qt::UTC), myError) > 0)
+                                    QDateTime(startDate, QTime(1,0,0), Qt::UTC),
+                                    QDateTime(endDate.addDays(1), QTime(0,0,0), Qt::UTC), myError) > 0)
             {
                 myResult = elaborateDailyAggregatedVar(dailyTemperatureHoursAbove, *meteoPoint, outputValues, percValue, meteoSettings);
             }

@@ -1,13 +1,14 @@
 #ifndef MATHEMATICALFUNCTIONS_H
 #define MATHEMATICALFUNCTIONS_H
 
-    #ifndef VECTOR_H
+    #ifndef _VECTOR_
         #include <vector>
     #endif
     #ifndef _STRING_
         #include <string>
     #endif
-#include <functional>
+    #include <functional>
+
 enum estimatedFunction {FUNCTION_CODE_SPHERICAL, FUNCTION_CODE_LINEAR, FUNCTION_CODE_PARABOLIC,
                    FUNCTION_CODE_EXPONENTIAL, FUNCTION_CODE_LOGARITMIC,
                    FUNCTION_CODE_TWOPARAMETERSPOLYNOMIAL, FUNCTION_CODE_FOURIER_2_HARMONICS,

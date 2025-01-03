@@ -918,7 +918,7 @@ bool PragaProject::elaborationCyclePoints(bool isAnomaly, bool showInfo)
         // check dates - leap case
         if (climaUsed->genericPeriodDateStart().month() == 2 && climaUsed->genericPeriodDateStart().day() == 29)
         {
-            if (!isLeapYear(myYearStart))
+            if (! isLeapYear(myYearStart))
             {
                 if (climaUsed->periodType() != dailyPeriod)
                 {
@@ -932,7 +932,7 @@ bool PragaProject::elaborationCyclePoints(bool isAnomaly, bool showInfo)
         }
         if (climaUsed->genericPeriodDateEnd().month() == 2 && climaUsed->genericPeriodDateEnd().day() == 29)
         {
-            if (!isLeapYear(myYearEnd))
+            if (! isLeapYear(myYearEnd))
             {
                 if (climaUsed->periodType() != dailyPeriod)
                 {
@@ -946,13 +946,7 @@ bool PragaProject::elaborationCyclePoints(bool isAnomaly, bool showInfo)
         }
     }
 
-
-//    if (clima->elab1() == "phenology")
-//    {
-//        Then currentPheno.setPhenoPoint i;  // TODO
-//    }
-
-    int validPoints = 0;
+    int nrValidPoints = 0;
 
     Crit3DMeteoPoint* meteoPointTemp = new Crit3DMeteoPoint;
     bool dataAlreadyLoaded = false;
@@ -974,61 +968,102 @@ bool PragaProject::elaborationCyclePoints(bool isAnomaly, bool showInfo)
             meteoPointTemp->nrObsDataDaysD = 0;
 
             if (showInfo && (i % infoStep) == 0)
-                        updateProgressBar(i);
+                updateProgressBar(i);
 
             if (isAnomaly && climaUsed->getIsClimateAnomalyFromDb())
             {
                 if ( passingClimateToAnomaly(&errorString, meteoPointTemp, climaUsed, meteoPoints, nrMeteoPoints, clima->getElabSettings()) )
-                {
-                    validPoints++;
-                }
+                    nrValidPoints++;
             }
             else
             {
                 bool isMeteoGrid = false;
                 if ( elaborationOnPoint(&errorString, meteoPointsDbHandler, nullptr, meteoPointTemp, climaUsed, isMeteoGrid, startDate, endDate, isAnomaly, meteoSettings, dataAlreadyLoaded))
-                {
-                    validPoints++;
-                }
+                    nrValidPoints++;
             }
-
             // save result to MP
             meteoPoints[i].elaboration = meteoPointTemp->elaboration;
             meteoPoints[i].anomaly = meteoPointTemp->anomaly;
             meteoPoints[i].anomalyPercentage = meteoPointTemp->anomalyPercentage;
         }
-
-    } // end for
+    }
     if (showInfo) closeProgressBar();
 
     delete meteoPointTemp;
     delete climaUsed;
 
-    if (validPoints == 0)
+    if (nrValidPoints == 0)
     {
         if (errorString.isEmpty())
         {
             errorString = "No valid points available:";
-            errorString += "\ncheck Settings->Parameters->Meteo->minimum percentage of valid data [%]";
+            errorString += "\nCheck Settings->Parameters->Meteo->minimum percentage of valid data [%]";
         }
         return false;
     }
-    else return true;
 
+    return true;
 }
 
 
 bool PragaProject::elaborationCyclePointsHourly(bool showInfo)
 {
-    // initialize
+    Crit3DClimate* currentElaboration = new Crit3DClimate();
+    currentElaboration->copyParam(clima);
+    Crit3DMeteoPoint* meteoPointTemp = new Crit3DMeteoPoint;
+
+    int infoStep;
+    if (showInfo)
+    {
+        infoStep = setProgressBar("Elaboration - Meteo Points", nrMeteoPoints);
+    }
+
+    int nrValidPoints = 0;
+    bool isMeteoGrid = false;
+
     for (int i = 0; i < nrMeteoPoints; i++)
     {
+        if (showInfo && (i % infoStep) == 0)
+            updateProgressBar(i);
+
+        // initialize
         meteoPoints[i].elaboration = NODATA;
         meteoPoints[i].anomaly = NODATA;
         meteoPoints[i].anomalyPercentage = NODATA;
-    }
 
-    // TODO
+        if (meteoPoints[i].active)
+        {
+            // copy data to meteoPointTemp
+            meteoPointTemp->id = meteoPoints[i].id;
+            meteoPointTemp->point.z = meteoPoints[i].point.z;
+            meteoPointTemp->latitude = meteoPoints[i].latitude;
+
+            // meteoPointTemp should be init
+            meteoPointTemp->nrObsDataDaysH = 0;
+            meteoPointTemp->nrObsDataDaysD = 0;
+
+            if  (elaborationOnPointHourly(meteoPointsDbHandler, nullptr, meteoPointTemp,
+                                         isMeteoGrid, currentElaboration, meteoSettings, errorString))
+            {
+                nrValidPoints++;
+                meteoPoints[i].elaboration = meteoPointTemp->elaboration;
+            }
+        }
+    }
+    if (showInfo) closeProgressBar();
+
+    delete meteoPointTemp;
+    delete currentElaboration;
+
+    if (nrValidPoints == 0)
+    {
+        if (errorString.isEmpty())
+        {
+            errorString = "No valid points available:";
+            errorString += "\nCheck Settings->Parameters->Meteo->minimum percentage of valid data [%]";
+        }
+        return false;
+    }
 
     return true;
 }
@@ -1043,6 +1078,7 @@ bool PragaProject::elaborationCycleGridHourly(bool showInfo)
 
     Crit3DClimate* currentElaboration = new Crit3DClimate();
     currentElaboration->copyParam(clima);
+    Crit3DMeteoPoint* meteoPointTemp = new Crit3DMeteoPoint;
 
     int infoStep = 1;
     if (showInfo)
@@ -1062,8 +1098,12 @@ bool PragaProject::elaborationCycleGridHourly(bool showInfo)
             {
                 Crit3DMeteoPoint* meteoPoint = meteoGridDbHandler->meteoGrid()->meteoPointPointer(row,col);
 
+                // initialize
+                meteoPoint->elaboration = NODATA;
+                meteoPoint->anomaly = NODATA;
+                meteoPoint->anomalyPercentage = NODATA;
+
                 // copy data to meteoPointTemp
-                Crit3DMeteoPoint* meteoPointTemp = new Crit3DMeteoPoint;
                 meteoPointTemp->id = meteoPoint->id;
                 meteoPointTemp->point.z = meteoPoint->point.z;
                 meteoPointTemp->latitude = meteoPoint->latitude;
@@ -1077,26 +1117,21 @@ bool PragaProject::elaborationCycleGridHourly(bool showInfo)
                                        isMeteoGrid, currentElaboration, meteoSettings, errorString))
                 {
                     nrValidCells++;
+                    meteoPoint->elaboration = meteoPointTemp->elaboration;
                 }
-
-                // save result to MP
-                meteoPoint->elaboration = meteoPointTemp->elaboration;
-                meteoPoint->anomaly = NODATA;
-                meteoPoint->anomalyPercentage = NODATA;
-
-                delete meteoPointTemp;
             }
         }
     }
-
     if (showInfo) closeProgressBar();
+
+    delete meteoPointTemp;
     delete currentElaboration;
 
     if (nrValidCells == 0)
     {
         if (errorString.isEmpty())
         {
-            errorString = "No valid cells available.";
+            errorString = "Not enough data.";
         }
         return false;
     }
@@ -1306,7 +1341,7 @@ bool PragaProject::elaborationCycleGrid(bool isAnomaly, bool showInfo)
     {
         if (errorString.isEmpty())
         {
-            errorString = "no valid cells available";
+            errorString = "Not enough data.";
         }
         delete climaUsed;
         return false;
@@ -1426,7 +1461,7 @@ bool PragaProject::climateCyclePoints(bool showInfo)
     {
         if (errorString.isEmpty())
         {
-            errorString = "no valid cells available";
+            errorString = "Not enough data.";
         }
         logError(errorString);
         delete meteoPointTemp;
@@ -1555,7 +1590,7 @@ bool PragaProject::climateCycleGrid(bool showInfo)
    {
        if (errorString.isEmpty())
        {
-           errorString = "no valid cells available";
+           errorString = "Not enough data.";
        }
        logError(errorString);
        delete meteoPointTemp;
@@ -5034,7 +5069,7 @@ bool PragaProject::computeClimatePointXML(QString xmlName)
     {
         if (errorString.isEmpty())
         {
-            errorString = "no valid cells available";
+            errorString = "Not enough data.";
         }
         logError(errorString);
         delete meteoPointTemp;
