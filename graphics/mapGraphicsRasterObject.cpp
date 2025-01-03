@@ -144,10 +144,9 @@ gis::Crit3DLatLonHeader RasterObject::getLatLonHeader() const
  * \brief getRasterMaxSize
  * \return max of raster width and height (decimal degree)
  */
-float RasterObject::getRasterMaxSize()
+double RasterObject::getRasterMaxSize()
 {
-    return float(MAXVALUE(latLonHeader.nrRows * latLonHeader.dy,
-                          latLonHeader.nrCols * latLonHeader.dx));
+    return MAXVALUE(latLonHeader.nrRows * latLonHeader.dy, latLonHeader.nrCols * latLonHeader.dx);
 }
 
 
