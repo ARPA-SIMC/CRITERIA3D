@@ -42,7 +42,7 @@
      */
 	double theta_from_Se (unsigned long myIndex)
 	{
-        return ((nodeListPtr[myIndex].Se * (nodeListPtr[myIndex].Soil->Theta_s - nodeListPtr[myIndex].Soil->Theta_r)) + nodeListPtr[myIndex].Soil->Theta_r);
+        return ((nodeList[myIndex].Se * (nodeList[myIndex].Soil->Theta_s - nodeList[myIndex].Soil->Theta_r)) + nodeList[myIndex].Soil->Theta_r);
 	}
 
     /*!
@@ -53,7 +53,7 @@
      */
 	double theta_from_Se (double Se, unsigned long myIndex)
 	{
-        return ((Se * (nodeListPtr[myIndex].Soil->Theta_s - nodeListPtr[myIndex].Soil->Theta_r)) + nodeListPtr[myIndex].Soil->Theta_r);
+        return ((Se * (nodeList[myIndex].Soil->Theta_s - nodeList[myIndex].Soil->Theta_r)) + nodeList[myIndex].Soil->Theta_r);
 	}
 
     /*!
@@ -64,16 +64,16 @@
      */
     double theta_from_sign_Psi (double signPsi, unsigned long index)
 	{
-        if (nodeListPtr[index].isSurface) return 1.;
+        if (nodeList[index].isSurface) return 1.;
 
         if (signPsi >= 0.0)
         {
             // saturated
-            return nodeListPtr[index].Soil->Theta_s;
+            return nodeList[index].Soil->Theta_s;
         }
 		else
         {
-            double Se = computeSefromPsi_unsat(fabs(signPsi),nodeListPtr[index].Soil);
+            double Se = computeSefromPsi_unsat(fabs(signPsi),nodeList[index].Soil);
             return theta_from_Se(Se, index);
         }
 	}
@@ -88,9 +88,9 @@
 	double Se_from_theta (unsigned long myIndex, double theta)
 	{
         /*! check range */
-        if (theta >= nodeListPtr[myIndex].Soil->Theta_s) return(1.);
-        else if (theta <= nodeListPtr[myIndex].Soil->Theta_r) return(0.);
-        else return ((theta - nodeListPtr[myIndex].Soil->Theta_r) / (nodeListPtr[myIndex].Soil->Theta_s - nodeListPtr[myIndex].Soil->Theta_r));
+        if (theta >= nodeList[myIndex].Soil->Theta_s) return(1.);
+        else if (theta <= nodeList[myIndex].Soil->Theta_r) return(0.);
+        else return ((theta - nodeList[myIndex].Soil->Theta_r) / (nodeList[myIndex].Soil->Theta_s - nodeList[myIndex].Soil->Theta_r));
 	}
 
     /*!
@@ -131,7 +131,7 @@
      */
     double computeSe(unsigned long myIndex)
     {
-        if (nodeListPtr[myIndex].H >= nodeListPtr[myIndex].z)
+        if (nodeList[myIndex].H >= nodeList[myIndex].z)
         {
             // saturated
             return 1.;
@@ -139,8 +139,8 @@
         else
         {
             // unsaturated
-            double psi = fabs(nodeListPtr[myIndex].H - nodeListPtr[myIndex].z);   /*!< [m] */
-            return computeSefromPsi_unsat(psi, nodeListPtr[myIndex].Soil);
+            double psi = fabs(nodeList[myIndex].H - nodeList[myIndex].z);   /*!< [m] */
+            return computeSefromPsi_unsat(psi, nodeList[myIndex].Soil);
         }
     }
 
@@ -208,15 +208,15 @@
      */
     double computeK(unsigned long myIndex)
     {
-        double k = compute_K_Mualem(nodeListPtr[myIndex].Soil->K_sat, nodeListPtr[myIndex].Se,
-                                nodeListPtr[myIndex].Soil->VG_Sc, nodeListPtr[myIndex].Soil->VG_m,
-                                nodeListPtr[myIndex].Soil->Mualem_L);
+        double k = compute_K_Mualem(nodeList[myIndex].Soil->K_sat, nodeList[myIndex].Se,
+                                nodeList[myIndex].Soil->VG_Sc, nodeList[myIndex].Soil->VG_m,
+                                nodeList[myIndex].Soil->Mualem_L);
 
         // vapor isothermal flow
         if (myStructure.computeHeat && myStructure.computeHeatVapor)
         {
             double avgT = getTMean(myIndex);
-            double kv = IsothermalVaporConductivity(myIndex, nodeListPtr[myIndex].H - nodeListPtr[myIndex].z, avgT);
+            double kv = IsothermalVaporConductivity(myIndex, nodeList[myIndex].H - nodeList[myIndex].z, avgT);
             // from kg s m-3 to m s-1
             kv *= (GRAVITY / WATER_DENSITY);
 
@@ -234,15 +234,15 @@
      */
     double psi_from_Se(unsigned long myIndex)
 	{
-        double m = nodeListPtr[myIndex].Soil->VG_m;
+        double m = nodeList[myIndex].Soil->VG_m;
 		double temp = NODATA;
 
         if (myParameters.waterRetentionCurve == MODIFIEDVANGENUCHTEN)
-                temp = pow(1./ (nodeListPtr[myIndex].Se * nodeListPtr[myIndex].Soil->VG_Sc) , 1./ m ) - 1.;
+                temp = pow(1./ (nodeList[myIndex].Se * nodeList[myIndex].Soil->VG_Sc) , 1./ m ) - 1.;
         else if (myParameters.waterRetentionCurve == VANGENUCHTEN)
-                temp = pow(1./ nodeListPtr[myIndex].Se, 1./ m ) - 1.;
+                temp = pow(1./ nodeList[myIndex].Se, 1./ m ) - 1.;
 
-        return((1./ nodeListPtr[myIndex].Soil->VG_alpha) * pow(temp, 1./ nodeListPtr[myIndex].Soil->VG_n));
+        return((1./ nodeList[myIndex].Soil->VG_alpha) * pow(temp, 1./ nodeList[myIndex].Soil->VG_n));
 	}
 
     /*!
@@ -252,13 +252,13 @@
      */
     double dThetav_dH(unsigned long i, double temperature, double dTheta_dH)
     {
-        double h = nodeListPtr[i].H - nodeListPtr[i].z;
+        double h = nodeList[i].H - nodeList[i].z;
         double hr = SoilRelativeHumidity(h, temperature);
         double satVapPressure = saturationVaporPressure(temperature - ZEROCELSIUS);
         double satVapConc = vaporConcentrationFromPressure(satVapPressure, temperature);
         double theta = theta_from_sign_Psi(h, i);
         double dThetav_dPsi = (satVapConc * hr / WATER_DENSITY) *
-                ((nodeListPtr[i].Soil->Theta_s - theta) * MH2O / (R_GAS * temperature) - dTheta_dH / GRAVITY);
+                ((nodeList[i].Soil->Theta_s - theta) * MH2O / (R_GAS * temperature) - dTheta_dH / GRAVITY);
         return dThetav_dPsi * GRAVITY;
     }
 
@@ -272,17 +272,17 @@
      */
 	double dTheta_dH(unsigned long myIndex)
     {
-        double alfa = nodeListPtr[myIndex].Soil->VG_alpha;
-        double n    = nodeListPtr[myIndex].Soil->VG_n;
-        double m    = nodeListPtr[myIndex].Soil->VG_m;
+        double alfa = nodeList[myIndex].Soil->VG_alpha;
+        double n    = nodeList[myIndex].Soil->VG_n;
+        double m    = nodeList[myIndex].Soil->VG_m;
 
-        double psi_abs = fabs(MINVALUE(nodeListPtr[myIndex].H - nodeListPtr[myIndex].z, 0.));
-        double psiPrevious_abs = fabs(MINVALUE(nodeListPtr[myIndex].oldH - nodeListPtr[myIndex].z, 0.));
+        double psi_abs = fabs(MINVALUE(nodeList[myIndex].H - nodeList[myIndex].z, 0.));
+        double psiPrevious_abs = fabs(MINVALUE(nodeList[myIndex].oldH - nodeList[myIndex].z, 0.));
 
         if (myParameters.waterRetentionCurve == MODIFIEDVANGENUCHTEN)
         {
             // saturated
-            if ((psi_abs <= nodeListPtr[myIndex].Soil->VG_he) && (psiPrevious_abs <= nodeListPtr[myIndex].Soil->VG_he)) return 0.;
+            if ((psi_abs <= nodeList[myIndex].Soil->VG_he) && (psiPrevious_abs <= nodeList[myIndex].Soil->VG_he)) return 0.;
         }
 
         if (myParameters.waterRetentionCurve == VANGENUCHTEN)
@@ -297,18 +297,18 @@
             dSe_dH = alfa * n * m * pow(1. + pow(alfa * psi_abs, n), -(m + 1.)) * pow(alfa * psi_abs, n - 1.);
             if (myParameters.waterRetentionCurve == MODIFIEDVANGENUCHTEN)
             {
-                dSe_dH *= (1. / nodeListPtr[myIndex].Soil->VG_Sc);
+                dSe_dH *= (1. / nodeList[myIndex].Soil->VG_Sc);
             }
         }
         else
         {
-            double theta = computeSefromPsi_unsat(psi_abs, nodeListPtr[myIndex].Soil);
-            double thetaPrevious = computeSefromPsi_unsat(psiPrevious_abs, nodeListPtr[myIndex].Soil);
-            double delta_H = nodeListPtr[myIndex].H - nodeListPtr[myIndex].oldH;
+            double theta = computeSefromPsi_unsat(psi_abs, nodeList[myIndex].Soil);
+            double thetaPrevious = computeSefromPsi_unsat(psiPrevious_abs, nodeList[myIndex].Soil);
+            double delta_H = nodeList[myIndex].H - nodeList[myIndex].oldH;
             dSe_dH = fabs((theta - thetaPrevious) / delta_H);
         }
 
-        return dSe_dH * (nodeListPtr[myIndex].Soil->Theta_s - nodeListPtr[myIndex].Soil->Theta_r);
+        return dSe_dH * (nodeList[myIndex].Soil->Theta_s - nodeList[myIndex].Soil->Theta_r);
     }
 
 
@@ -316,9 +316,9 @@
 	{
         double myHMean = getHMean(i);
 
-        if (nodeListPtr[i].isSurface)
+        if (nodeList[i].isSurface)
 		{
-            double mySurfaceWater = MAXVALUE(myHMean - nodeListPtr[i].z, 0.);		//[m]
+            double mySurfaceWater = MAXVALUE(myHMean - nodeList[i].z, 0.);		//[m]
             return (MINVALUE(mySurfaceWater / 0.01, 1.));
 		}
 		else
@@ -330,14 +330,14 @@
 
     double getTheta(long i, double H)
     {
-        double psi = H - nodeListPtr[i].z;
+        double psi = H - nodeList[i].z;
         return (theta_from_sign_Psi(psi, i));
     }
 
     double getTMean(long i)
     {
-        if (myStructure.computeHeat && nodeListPtr[i].extra->Heat != nullptr)
-            return arithmeticMean(nodeListPtr[i].extra->Heat->oldT, nodeListPtr[i].extra->Heat->T);
+        if (myStructure.computeHeat && nodeList[i].extra->Heat != nullptr)
+            return arithmeticMean(nodeList[i].extra->Heat->oldT, nodeList[i].extra->Heat->T);
         else
             return NODATA;
     }
@@ -345,14 +345,14 @@
     double getHMean(long i)
     {
         // is there any efficient way to compute a geometric mean of H?
-        return arithmeticMean(nodeListPtr[i].oldH, nodeListPtr[i].H);
+        return arithmeticMean(nodeList[i].oldH, nodeList[i].H);
     }
 
     double getPsiMean(long i)
 	{
         double Psi;
         double meanH = getHMean(i);
-        Psi = MINVALUE(0., (meanH - nodeListPtr[i].z));
+        Psi = MINVALUE(0., (meanH - nodeList[i].z));
         return Psi;
 	}
 
@@ -380,9 +380,9 @@
         double particleDensity;
         double totalPorosity;
 
-        particleDensity = ParticleDensity(nodeListPtr[i].Soil->organicMatter);
+        particleDensity = ParticleDensity(nodeList[i].Soil->organicMatter);
 
-        totalPorosity = nodeListPtr[i].Soil->Theta_s;
+        totalPorosity = nodeList[i].Soil->Theta_s;
 
         return (1. - totalPorosity) * particleDensity;
     }
