@@ -80,16 +80,16 @@ void InitializeBalanceWater()
     /*! initialize link flow */
     for (long n = 0; n < myStructure.nrNodes; n++)
         {
-        nodeListPtr[n].up.sumFlow = 0.;
-        nodeListPtr[n].down.sumFlow = 0.;
+        nodeList[n].up.sumFlow = 0.;
+        nodeList[n].down.sumFlow = 0.;
         for (short i = 0; i < myStructure.nrLateralLinks; i++)
-             nodeListPtr[n].lateral[i].sumFlow = 0.;
+             nodeList[n].lateral[i].sumFlow = 0.;
         }
 
     /*! initialize boundary flow */
     for (long n = 0; n < myStructure.nrNodes; n++)
-        if (nodeListPtr[n].boundary != nullptr)
-            nodeListPtr[n].boundary->sumBoundaryWaterFlow = 0.;
+        if (nodeList[n].boundary != nullptr)
+            nodeList[n].boundary->sumBoundaryWaterFlow = 0.;
 }
 
 
@@ -102,14 +102,14 @@ double computeTotalWaterContent()
    double theta, sum = 0.0;
 
    for (unsigned long i = 0; i < unsigned(myStructure.nrNodes); i++)
-       if  (nodeListPtr[i].isSurface)
+       if  (nodeList[i].isSurface)
        {
-           sum += (nodeListPtr[i].H - double(nodeListPtr[i].z)) * nodeListPtr[i].volume_area;
+           sum += (nodeList[i].H - double(nodeList[i].z)) * nodeList[i].volume_area;
        }
        else
        {
            theta = theta_from_Se(i);
-           sum += theta * nodeListPtr[i].volume_area;
+           sum += theta * nodeList[i].volume_area;
        }
    return(sum);
 }
@@ -125,8 +125,8 @@ double sumWaterFlow(double deltaT)
     double sum = 0.0;
     for (long n = 0; n < myStructure.nrNodes; n++)
     {
-        if (nodeListPtr[n].Qw != 0.)
-            sum += nodeListPtr[n].Qw * deltaT;
+        if (nodeList[n].Qw != 0.)
+            sum += nodeList[n].Qw * deltaT;
     }
     return (sum);
 }
@@ -185,7 +185,7 @@ void update_flux(long index, TlinkedNode *link, double delta_t)
 void saveBestStep()
 {
 	for (long n = 0; n < myStructure.nrNodes; n++)
-        nodeListPtr[n].bestH = nodeListPtr[n].H;
+        nodeList[n].bestH = nodeList[n].H;
 }
 
 
@@ -195,11 +195,11 @@ void restoreBestStep(double deltaT)
 {
     for (unsigned long n = 0; n < unsigned(myStructure.nrNodes); n++)
     {
-        nodeListPtr[n].H = nodeListPtr[n].bestH;
+        nodeList[n].H = nodeList[n].bestH;
 
         /*! compute new soil moisture (only sub-surface nodes) */
-        if (!nodeListPtr[n].isSurface)
-                nodeListPtr[n].Se = computeSe(n);
+        if (!nodeList[n].isSurface)
+                nodeList[n].Se = computeSe(n);
     }
 
      computeMassBalance(deltaT);
@@ -216,13 +216,13 @@ void acceptStep(double deltaT)
     /*! update sum of flow */
     for (long i = 0; i < myStructure.nrNodes; i++)
         {
-        update_flux(i, &(nodeListPtr[i].up), deltaT);
-        update_flux(i, &(nodeListPtr[i].down), deltaT);
+        update_flux(i, &(nodeList[i].up), deltaT);
+        update_flux(i, &(nodeList[i].down), deltaT);
         for (short j = 0; j < myStructure.nrLateralLinks; j++)
-            update_flux(i, &(nodeListPtr[i].lateral[j]), deltaT);
+            update_flux(i, &(nodeList[i].lateral[j]), deltaT);
 
-        if (nodeListPtr[i].boundary != nullptr)
-            nodeListPtr[i].boundary->sumBoundaryWaterFlow += nodeListPtr[i].boundary->waterFlow * deltaT;
+        if (nodeList[i].boundary != nullptr)
+            nodeList[i].boundary->sumBoundaryWaterFlow += nodeList[i].boundary->waterFlow * deltaT;
         }
 
 }

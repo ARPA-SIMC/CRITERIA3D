@@ -52,7 +52,7 @@ double getWaterExchange(long i, TlinkedNode *link, double deltaT)
     if (link != nullptr)
         {
 		double matrixValue = getMatrixValue(i, link);
-		double flow = matrixValue * (nodeListPtr[i].H - nodeListPtr[link->index].H) * deltaT;
+		double flow = matrixValue * (nodeList[i].H - nodeList[link->index].H) * deltaT;
         return (flow);
         }
 	else
@@ -78,24 +78,24 @@ double runoff(long i, long j, TlinkedNode *link, double deltaT, unsigned long ap
 
     if (approximationNr == 0)
     {
-        double flux_i = (nodeListPtr[i].Qw * deltaT) / nodeListPtr[i].volume_area;
-        double flux_j = (nodeListPtr[j].Qw * deltaT) / nodeListPtr[j].volume_area;
-        Hi = nodeListPtr[i].oldH + flux_i;
-        Hj = nodeListPtr[j].oldH + flux_j;
+        double flux_i = (nodeList[i].Qw * deltaT) / nodeList[i].volume_area;
+        double flux_j = (nodeList[j].Qw * deltaT) / nodeList[j].volume_area;
+        Hi = nodeList[i].oldH + flux_i;
+        Hj = nodeList[j].oldH + flux_j;
     }
     else
     {
 		
-		Hi = nodeListPtr[i].H;
-		Hj = nodeListPtr[j].H;
+		Hi = nodeList[i].H;
+		Hj = nodeList[j].H;
 		/*
-		Hi = (nodeListPtr[i].H + nodeListPtr[i].oldH) / 2.0;
-        Hj = (nodeListPtr[j].H + nodeListPtr[j].oldH) / 2.0;
+		Hi = (nodeList[i].H + nodeList[i].oldH) / 2.0;
+        Hj = (nodeList[j].H + nodeList[j].oldH) / 2.0;
 		*/
     }
 
     double H = MAXVALUE(Hi, Hj);
-    double z = MAXVALUE(nodeListPtr[i].z + nodeListPtr[i].pond, nodeListPtr[j].z + nodeListPtr[j].pond);
+    double z = MAXVALUE(nodeList[i].z + nodeList[i].pond, nodeList[j].z + nodeList[j].pond);
     double Hs = H - z;
     if (Hs <= 0.) return(0.);
 
@@ -103,7 +103,7 @@ double runoff(long i, long j, TlinkedNode *link, double deltaT, unsigned long ap
     double cellDistance = distance2D(i,j);
     if ((dH/cellDistance) < EPSILON_mm) return(0.);
 
-    double roughness = (nodeListPtr[i].Soil->Roughness + nodeListPtr[j].Soil->Roughness) / 2.;
+    double roughness = (nodeList[i].Soil->Roughness + nodeList[j].Soil->Roughness) / 2.;
 
     //Manning
     double v = pow(Hs, 2./3.) * sqrt(dH/cellDistance) / roughness;
@@ -117,36 +117,36 @@ double runoff(long i, long j, TlinkedNode *link, double deltaT, unsigned long ap
 
 double infiltration(long sup, long inf, TlinkedNode *link, double deltaT)
 {
- double cellDistance = (nodeListPtr[sup].z - nodeListPtr[inf].z) * 2.0;
+ double cellDistance = (nodeList[sup].z - nodeList[inf].z) * 2.0;
 
  /*! unsaturated */
- if (nodeListPtr[inf].H < nodeListPtr[sup].z)
+ if (nodeList[inf].H < nodeList[sup].z)
         {
         /*! surface water content [m] */
-        // double surfaceH = (nodeListPtr[sup].H + nodeListPtr[sup].oldH) * 0.5;
-		double surfaceH = nodeListPtr[sup].H;
+        // double surfaceH = (nodeList[sup].H + nodeList[sup].oldH) * 0.5;
+		double surfaceH = nodeList[sup].H;
 
         /*! maximum water infiltration rate [m/s] */
-        double maxInfiltrationRate = (surfaceH - nodeListPtr[sup].z) / deltaT;
+        double maxInfiltrationRate = (surfaceH - nodeList[sup].z) / deltaT;
         if (maxInfiltrationRate <= 0.0) return(0.0);
 
         /*! first soil layer: mean between current k and k_sat */
-        double meanK = computeMean(nodeListPtr[inf].Soil->K_sat, nodeListPtr[inf].k);
+        double meanK = computeMean(nodeList[inf].Soil->K_sat, nodeList[inf].k);
 
-        if (nodeListPtr[inf].boundary != nullptr)
+        if (nodeList[inf].boundary != nullptr)
         {
-            if (nodeListPtr[inf].boundary->type == BOUNDARY_URBAN)
+            if (nodeList[inf].boundary->type == BOUNDARY_URBAN)
             {
                 // TODO improve with external parameters
                 meanK *= 0.1;
             }
-            else if (nodeListPtr[inf].boundary->type == BOUNDARY_ROAD)
+            else if (nodeList[inf].boundary->type == BOUNDARY_ROAD)
             {
                 meanK = 0.0;
             }
         }
 
-        double dH = nodeListPtr[sup].H - nodeListPtr[inf].H;
+        double dH = nodeList[sup].H - nodeList[inf].H;
         double maxK = maxInfiltrationRate * (cellDistance / dH);
 
         double k = MINVALUE(meanK , maxK);
@@ -157,20 +157,20 @@ double infiltration(long sup, long inf, TlinkedNode *link, double deltaT)
  /*! saturated */
  else
     {
-        if (nodeListPtr[inf].boundary != nullptr)
+        if (nodeList[inf].boundary != nullptr)
         {
-            if (nodeListPtr[inf].boundary->type == BOUNDARY_URBAN)
+            if (nodeList[inf].boundary->type == BOUNDARY_URBAN)
             {
                 // TODO check?
-                return(nodeListPtr[inf].Soil->K_sat * 0.1 * link->area) / cellDistance;
+                return(nodeList[inf].Soil->K_sat * 0.1 * link->area) / cellDistance;
             }
-            else if (nodeListPtr[inf].boundary->type == BOUNDARY_ROAD)
+            else if (nodeList[inf].boundary->type == BOUNDARY_ROAD)
             {
                 return 0.;
             }
         }
 
-        return(nodeListPtr[inf].Soil->K_sat * link->area) / cellDistance;
+        return(nodeList[inf].Soil->K_sat * link->area) / cellDistance;
     }
 
 }
@@ -179,8 +179,8 @@ double infiltration(long sup, long inf, TlinkedNode *link, double deltaT)
 double redistribution(long i, TlinkedNode *link, int linkType)
 {
     double cellDistance;
-    double k1 = nodeListPtr[i].k;
-    double k2 = nodeListPtr[(*link).index].k;
+    double k1 = nodeList[i].k;
+    double k2 = nodeList[(*link).index].k;
 
     /*! horizontal */
     if (linkType == LATERAL)
@@ -191,7 +191,7 @@ double redistribution(long i, TlinkedNode *link, int linkType)
     }
     else
     {
-        cellDistance = fabs(nodeListPtr[i].z - nodeListPtr[(*link).index].z);
+        cellDistance = fabs(nodeList[i].z - nodeList[(*link).index].z);
     }
     double k = computeMean(k1, k2);
 
@@ -207,16 +207,16 @@ bool computeFlux(long i, int matrixIndex, TlinkedNode *link, double deltaT, unsi
     double val;
     long j = (*link).index;
 
-    if (nodeListPtr[i].isSurface)
+    if (nodeList[i].isSurface)
     {
-		if (nodeListPtr[j].isSurface)
+		if (nodeList[j].isSurface)
 			val = runoff(i, j, link, deltaT, myApprox);
         else
             val = infiltration(i, j, link, deltaT);
     }
     else
     {
-        if (nodeListPtr[j].isSurface)
+        if (nodeList[j].isSurface)
             val = infiltration(j, i, link, deltaT);
         else
             val = redistribution(i, link, linkType);
@@ -226,7 +226,7 @@ bool computeFlux(long i, int matrixIndex, TlinkedNode *link, double deltaT, unsi
     A[i][matrixIndex].val = val;
 
     if (myStructure.computeHeat &&
-        ! nodeListPtr[i].isSurface && ! nodeListPtr[j].isSurface)
+        ! nodeList[i].isSurface && ! nodeList[j].isSurface)
     {
         if (myStructure.computeHeatVapor)
         {
@@ -267,18 +267,18 @@ bool waterFlowComputation(double deltaT)
         for (i = 0; i < myStructure.nrNodes; i++)
         {
             invariantFlux[i] = 0.;
-            if (!nodeListPtr[i].isSurface)
+            if (!nodeList[i].isSurface)
             {
-                nodeListPtr[i].k = computeK(unsigned(i));
+                nodeList[i].k = computeK(unsigned(i));
                 dThetadH = dTheta_dH(unsigned(i));
-                 C[i] = nodeListPtr[i].volume_area  * dThetadH;
+                 C[i] = nodeList[i].volume_area  * dThetadH;
 
                  // vapor capacity term
                  if (myStructure.computeHeat && myStructure.computeHeatVapor)
                  {
                      avgTemperature = getTMean(i);
                      dthetavdh = dThetav_dH(unsigned(i), avgTemperature, dThetadH);
-                     C[i] += nodeListPtr[i].volume_area  * dthetavdh;
+                     C[i] += nodeList[i].volume_area  * dthetavdh;
                  }
             }
         }
@@ -290,10 +290,10 @@ bool waterFlowComputation(double deltaT)
         for (i = 0; i < myStructure.nrNodes; i++)
         {
             short j = 1;
-            if (computeFlux(i, j, &(nodeListPtr[i].up), deltaT, approximationNr, UP)) j++;
+            if (computeFlux(i, j, &(nodeList[i].up), deltaT, approximationNr, UP)) j++;
             for (short l = 0; l < myStructure.nrLateralLinks; l++)
-                    if (computeFlux(i, j, &(nodeListPtr[i].lateral[l]), deltaT, approximationNr, LATERAL)) j++;
-            if (computeFlux(i, j, &(nodeListPtr[i].down), deltaT, approximationNr, DOWN)) j++;
+                    if (computeFlux(i, j, &(nodeList[i].lateral[l]), deltaT, approximationNr, LATERAL)) j++;
+            if (computeFlux(i, j, &(nodeList[i].down), deltaT, approximationNr, DOWN)) j++;
 
             /*! closure */
             while (j < myStructure.maxNrColumns) A[i][j++].index = NOLINK;
@@ -311,7 +311,7 @@ bool waterFlowComputation(double deltaT)
             A[i][0].val = C[i]/deltaT + sum;
 
             /*! b vector(vector of constant terms) */
-            b[i] = ((C[i] / deltaT) * nodeListPtr[i].oldH) + nodeListPtr[i].Qw + invariantFlux[i];
+            b[i] = ((C[i] / deltaT) * nodeList[i].oldH) + nodeList[i].Qw + invariantFlux[i];
 
             /*! preconditioning */
             j = 1;
@@ -339,9 +339,9 @@ bool waterFlowComputation(double deltaT)
         /*! set new potential - compute new degree of saturation */
         for (i = 0; i < myStructure.nrNodes; i++)
         {
-            nodeListPtr[i].H = X[i];
-            if (!nodeListPtr[i].isSurface)
-                nodeListPtr[i].Se = computeSe(unsigned(i));
+            nodeList[i].H = X[i];
+            if (!nodeList[i].isSurface)
+                nodeList[i].Se = computeSe(unsigned(i));
         }
 
         /*! water balance */
@@ -373,18 +373,18 @@ bool computeWater(double maxTime, double *acceptedTime)
         /*! save the instantaneous H values - Prepare the solutions vector (X = H) */
         for (long n = 0; n < myStructure.nrNodes; n++)
         {
-            nodeListPtr[n].oldH = nodeListPtr[n].H;
-            X[n] = nodeListPtr[n].H;
+            nodeList[n].oldH = nodeList[n].H;
+            X[n] = nodeList[n].H;
         }
 
         /*! assign Theta_e
             for the surface nodes C = area */
         for (long n = 0; n < myStructure.nrNodes; n++)
         {
-            if (nodeListPtr[n].isSurface)
-                C[n] = nodeListPtr[n].volume_area;
+            if (nodeList[n].isSurface)
+                C[n] = nodeList[n].volume_area;
             else
-                nodeListPtr[n].Se = computeSe(unsigned(n));
+                nodeList[n].Se = computeSe(unsigned(n));
         }
 
         /*! update boundary conditions */
@@ -402,5 +402,5 @@ bool computeWater(double maxTime, double *acceptedTime)
 void restoreWater()
 {
     for (long n = 0; n < myStructure.nrNodes; n++)
-         nodeListPtr[n].H = nodeListPtr[n].oldH;
+         nodeList[n].H = nodeList[n].oldH;
 }
