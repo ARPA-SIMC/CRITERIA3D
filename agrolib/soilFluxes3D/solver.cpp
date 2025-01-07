@@ -137,21 +137,22 @@ double GaussSeidelIterationWater(short direction)
             j++;
         }
 
-        /*! surface check */
+        // surface check (H cannot go below z)
         if (nodeListPtr[i].isSurface)
             if (newX < double(nodeListPtr[i].z))
                 newX = double(nodeListPtr[i].z);
 
-        /*! water potential [m] */
+        // water potential [m]
         double psi = fabs(newX - double(nodeListPtr[i].z));
 
-        /*! infinity norm (normalized if psi > 1m) */
+        // infinity norm (normalized if psi > 1m)
         if (psi > 1)
             currentNorm = (fabs(newX - X[i])) / psi;
         else
             currentNorm = fabs(newX - X[i]);
 
-        if (currentNorm > infinityNorm) infinityNorm = currentNorm;
+        if (currentNorm > infinityNorm)
+            infinityNorm = currentNorm;
 
         X[i] = newX;
 

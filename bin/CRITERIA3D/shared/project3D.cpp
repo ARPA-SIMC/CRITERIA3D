@@ -170,7 +170,7 @@ void Project3D::initializeProject3D()
     nrSoils = 0;
     nrLayers = 0;
     nrNodes = 0;
-    nrLateralLink = 8;
+    nrLateralLink = 8;                  // lateral neighbours
 
     currentSeconds = 0;                 // [s]
     previousTotalWaterContent = 0;      // [m3]
