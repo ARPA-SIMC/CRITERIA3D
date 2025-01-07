@@ -77,7 +77,12 @@
         bool initializeUTM(gis::Crit3DRasterGrid* myRaster, const gis::Crit3DGisSettings& gisSettings, bool isGrid_);
         bool initializeLatLon(gis::Crit3DRasterGrid* myRaster, const gis::Crit3DGisSettings& gisSettings,
                               const gis::Crit3DLatLonHeader& latLonHeader, bool isGrid_);
-        float getRasterMaxSize();
+
+        // degrees
+        double getRasterMaxSize();
+        double getSizeX() { return latLonHeader.nrCols * latLonHeader.dx; }
+        double getSizeY() { return latLonHeader.nrRows * latLonHeader.dy; }
+
         gis::Crit3DGeoPoint* getRasterCenter();
 
         void setRaster(gis::Crit3DRasterGrid* rasterPtr) { rasterPointer = rasterPtr; }

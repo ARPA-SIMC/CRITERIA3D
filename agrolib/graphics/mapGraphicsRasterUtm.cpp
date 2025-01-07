@@ -212,11 +212,11 @@ Position RasterUtmObject::getRasterCenter()
  * \brief getRasterMaxSize
  * \return the maximum size of the raster in decimal degrees (width or height)
  */
-float RasterUtmObject::getRasterMaxSize()
+double RasterUtmObject::getRasterMaxSize()
 {
-    return float(MAXVALUE(_latLonHeader.nrRows * _latLonHeader.dy,
-                          _latLonHeader.nrCols * _latLonHeader.dx));
+    return MAXVALUE(_latLonHeader.nrRows * _latLonHeader.dy, _latLonHeader.nrCols * _latLonHeader.dx);
 }
+
 
 
 /*!

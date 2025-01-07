@@ -24,9 +24,8 @@
 */
 
 
-#include "commonConstants.h"
 #include "geoMap.h"
-#include "math.h"
+#include <math.h>
 
 namespace gis
 {

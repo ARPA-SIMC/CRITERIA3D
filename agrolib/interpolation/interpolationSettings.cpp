@@ -29,6 +29,7 @@
 #include "basicMath.h"
 #include "commonConstants.h"
 
+
 bool Crit3DInterpolationSettings::getPrecipitationAllZero() const
 {
     return precipitationAllZero;
@@ -279,7 +280,7 @@ std::vector<std::vector<double> > Crit3DInterpolationSettings::getFittingParamet
 
 std::vector<double> Crit3DInterpolationSettings::getProxyFittingParameters(int tempIndex)
 {
-    if (tempIndex < fittingParameters.size())
+    if (tempIndex < int(fittingParameters.size()))
         return fittingParameters[tempIndex];
     else {
         fittingParameters.resize(tempIndex + 1);
@@ -317,7 +318,7 @@ void Crit3DInterpolationSettings::addFittingFunction(const std::function<double 
 TFittingFunction Crit3DInterpolationSettings::getChosenElevationFunction()
 {
     int elPos = NODATA;
-    for (int i = 0; i < getProxyNr(); i++)
+    for (int i = 0; i < int(getProxyNr()); i++)
         if (getProxyPragaName(getProxy(i)->getName()) == proxyHeight)
             elPos = i;
 
@@ -341,7 +342,7 @@ void Crit3DInterpolationSettings::setChosenElevationFunction(TFittingFunction ch
     if (getUseMultipleDetrending()) clearFitting();
 
     int elPos = NODATA;
-    for (int i = 0; i < getProxyNr(); i++)
+    for (int i = 0; i < int(getProxyNr()); i++)
     {
         if (getProxyPragaName(getProxy(i)->getName()) == proxyHeight)
             elPos = i;
@@ -607,7 +608,7 @@ Crit3DProxy* Crit3DInterpolationSettings::getProxy(unsigned pos)
 
 int Crit3DInterpolationSettings::getProxyPosFromName(TProxyVar name)
 {
-    for (int i = 0; i < getProxyNr(); i++)
+    for (int i = 0; i < int(getProxyNr()); i++)
     {
         if (getProxyPragaName(getProxyName(i)) == name)
             return i;
@@ -620,7 +621,7 @@ bool Crit3DInterpolationSettings::isGlocalReady(bool isGrid)
 {
     if (getMacroAreasMap() != nullptr && getMacroAreas().size() > 0)
     {
-        for (int i = 0; i < getMacroAreas().size(); i++)
+        for (int i = 0; i < int(getMacroAreas().size()); i++)
         {
             if ((isGrid && getMacroAreas()[i].getAreaCellsGrid().size() > 0) ||
                 (!isGrid && getMacroAreas()[i].getAreaCellsDEM().size() > 0))

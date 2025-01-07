@@ -67,17 +67,22 @@
         bool initialize(gis::Crit3DRasterGrid* rasterPtr, const gis::Crit3DGisSettings& gisSettings);
 
         void setDrawing(bool value) {_isDrawing = value;}
-        void setColorLegend(ColorLegend* colorLegendPtr) {_colorLegendPointer = colorLegendPtr;}
-        void setRaster(gis::Crit3DRasterGrid* rasterPtr) {_rasterPointer = rasterPtr;}
+        void setColorLegend(ColorLegend* colorLegendPtr) { _colorLegendPointer = colorLegendPtr; }
+        void setRaster(gis::Crit3DRasterGrid* rasterPtr) { _rasterPointer = rasterPtr; }
 
-        gis::Crit3DRasterGrid* getRasterPointer() {return _rasterPointer;}
+        gis::Crit3DRasterGrid* getRasterPointer() { return _rasterPointer; }
 
         float getValue(Position& pos);
-        float getRasterMaxSize();
+
         Position getCurrentCenter();
         Position getRasterCenter();
         QPointF getPixel(const QPointF &geoPoint);
-        gis::Crit3DLatLonHeader getLatLonHeader() {return _latLonHeader;}
+        gis::Crit3DLatLonHeader getLatLonHeader() { return _latLonHeader; }
+
+        // degrees
+        double getRasterMaxSize();
+        double getSizeX() { return _latLonHeader.nrCols * _latLonHeader.dx; }
+        double getSizeY() { return _latLonHeader.nrRows * _latLonHeader.dy; }
 
         void updateCenter();
 

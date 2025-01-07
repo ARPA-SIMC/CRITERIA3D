@@ -598,10 +598,10 @@ namespace gis
     {
         // è possibile sapere in quale cella (row,col) si trova la stazione?
         std::vector<float> distance(stations.size());
-        for (int i=0;i<stations.size();i++)
+            for (int i=0; i < int(stations.size()); i++)
         {
             distance[i] = (float)(stations[i][0] - cells[0][0])*(stations[i][0] - cells[0][0])+(stations[i][1] - cells[0][1])*(stations[i][1] - cells[0][1]);
-            for (int j=1;j<cells[i].size();j++)
+            for (int j=1; j < int(cells[i].size()); j++)
             {
                 distance[i] = MINVALUE(distance[i],(stations[i][0] - cells[j][0])*(stations[i][0] - cells[j][0])+(stations[i][1] - cells[j][1])*(stations[i][1] - cells[j][1]));
             }
@@ -615,10 +615,10 @@ namespace gis
     {
         // è possibile sapere in quale cella (row,col) si trova la stazione?
         std::vector<int> distance(stations.size());
-        for (int i=0; i<stations.size(); i++)
+        for (int i=0; i < int(stations.size()); i++)
         {
-            distance[i] = abs(stations[i][0] - cells[0][0])+abs(stations[i][1] - cells[0][1]);
-            for (int j=1;j<cells[i].size();j++)
+            distance[i] = abs(stations[i][0] - cells[0][0]) + abs(stations[i][1] - cells[0][1]);
+            for (int j=1; j < int(cells[i].size()); j++)
             {
                 distance[i] = MINVALUE(distance[i],abs(stations[i][0] - cells[j][0])+abs(stations[i][1] - cells[j][1]));
             }
@@ -1547,7 +1547,7 @@ namespace gis
                 }
                 else
                 {
-                    int nrStep = floor(resampleFactor) + 1;
+                    int nrStep = int(floor(resampleFactor)) + 1;
                     double step = newGrid->header->cellSize / nrStep;
                     double halfStep = step * 0.5;
 

@@ -246,15 +246,25 @@ void DialogInterpolation::multipleDetrendingChanged(int active)
     if (active == Qt::Checked) optimalDetrendingEdit->setChecked(Qt::Unchecked);
 }
 
+
 void DialogInterpolation::localDetrendingChanged(int active)
 {
     minPointsLocalDetrendingEdit.setEnabled(active == Qt::Checked);
-    if (active == Qt::Checked) optimalDetrendingEdit->setChecked(Qt::Unchecked);
+
+    if (active == Qt::Checked)
+        optimalDetrendingEdit->setChecked(Qt::Unchecked);
+
     optimalDetrendingEdit->setEnabled(active == Qt::Unchecked);
-    if (active == Qt::Checked) glocalDetrendingEdit->setChecked(Qt::Unchecked);
+
+    if (active == Qt::Checked)
+        glocalDetrendingEdit->setChecked(Qt::Unchecked);
+
     glocalDetrendingEdit->setEnabled(active == Qt::Unchecked);
-    if (active == Qt::Checked) multipleDetrendingEdit->setChecked(Qt::Checked);
+
+    if (active == Qt::Checked)
+        multipleDetrendingEdit->setChecked(true);
 }
+
 
 void DialogInterpolation::glocalDetrendingChanged(int active)
 {
@@ -262,8 +272,9 @@ void DialogInterpolation::glocalDetrendingChanged(int active)
     optimalDetrendingEdit->setEnabled(active == Qt::Unchecked);
     if (active == Qt::Checked) localDetrendingEdit->setChecked(Qt::Unchecked);
     localDetrendingEdit->setEnabled(active == Qt::Unchecked);
-    if (active == Qt::Checked) multipleDetrendingEdit->setChecked(Qt::Checked);
+    if (active == Qt::Checked) multipleDetrendingEdit->setChecked(true);
 }
+
 
 void DialogInterpolation::optimalDetrendingChanged(int active)
 {

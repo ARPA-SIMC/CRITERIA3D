@@ -1,9 +1,7 @@
 #ifndef CRIT3DDATE_H
 #define CRIT3DDATE_H
 
-    #ifndef _STRING_
-        #include <string>
-    #endif
+    #include <string>
 
     #ifndef HOUR_SECONDS
         #define HOUR_SECONDS 3600

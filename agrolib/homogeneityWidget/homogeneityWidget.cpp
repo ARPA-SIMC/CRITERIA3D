@@ -714,14 +714,10 @@ void Crit3DHomogeneityWidget::findReferenceStations()
         QMessageBox::critical(nullptr, "Error", "Data unavailable for candidate station");
         return;
     }
-    int myNrStations = 0;
-    QProgressDialog progress("Finding stations...", "Abort", 0, minNumStations.text().toInt(), this);
-    progress.setWindowModality(Qt::WindowModal);
-    progress.show();
-    int i = 0;
-    for (i = 0; i<sortedId.size(); i++)
+
+    int nrStations = 0;
+    for (int i = 0; i<sortedId.size(); i++)
     {
-        progress.setValue(myNrStations);
         if (idPointsJointed.contains(sortedId[i]))
         {
             continue;
@@ -906,7 +902,7 @@ void Crit3DHomogeneityWidget::findReferenceStations()
         {
             if ( (float)validYears / (float)(lastYear - firstYear + 1) > meteoSettings->getMinimumPercentage() / 100.f)
             {
-                myNrStations = myNrStations + 1;
+                nrStations++;
                 sortedIdFound.append(sortedId[i]);   
                 mapNameId.insert(name, sortedId[i]);
                 mapNameAnnualSeries.insert(name,mpToBeComputedAnnualSeries);
@@ -914,21 +910,20 @@ void Crit3DHomogeneityWidget::findReferenceStations()
                 myAnnualSeriesFound.append(mpToBeComputedAnnualSeries);
             }
         }
-        if (myNrStations == minNumStations.text().toInt())
+        if (nrStations == minNumStations.text().toInt())
         {
             break;
         }
     }
-    progress.setValue(myNrStations);
-    progress.close();
 
-    if (myNrStations == 0)
+    if (nrStations == 0)
     {
         QMessageBox::critical(nullptr, "Error", "No reference stations found");
         return;
     }
-    stationsTable.setRowCount(myNrStations);
-    for (int z = 0; z<myNrStations; z++)
+
+    stationsTable.setRowCount(nrStations);
+    for (int z = 0; z<nrStations; z++)
     {
         float r2, y_intercept, trend;
         QString name;
@@ -956,6 +951,7 @@ void Crit3DHomogeneityWidget::findReferenceStations()
         }
     }
 }
+
 
 void Crit3DHomogeneityWidget::addFoundStationClicked()
 {
