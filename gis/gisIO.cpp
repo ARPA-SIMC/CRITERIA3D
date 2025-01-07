@@ -28,7 +28,6 @@
 #include <sstream>
 #include <fstream>
 #include <math.h>
-#include <algorithm>
 
 #include "gis.h"
 

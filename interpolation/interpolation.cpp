@@ -167,7 +167,7 @@ unsigned sortPointsByDistance(unsigned maxNrPoints, std::vector<Crit3DInterpolat
             break;
     }
 
-    return validPointList.size();
+    return unsigned(validPointList.size());
 }
 
 /*
@@ -2195,17 +2195,17 @@ double goldenSectionSearch(meteoVariable myVar,Crit3DMeteoPoint* &myMeteoPoints,
             b = x2;
             x2 = x1;
             x1 = b - (b - a) / GOLDEN_SECTION;
-            mySettings->addToKhSeries(float(x1), topographicDistanceInternalFunction(myVar,myMeteoPoints,nrMeteoPoints,interpolationPoints, mySettings,meteoSettings, x1));
+            mySettings->addToKhSeries(float(x1), (float)topographicDistanceInternalFunction(myVar,myMeteoPoints,nrMeteoPoints,interpolationPoints, mySettings,meteoSettings, x1));
         }
         else
         {
             a = x1;
             x1 = x2;
             x2 = a + (b - a) / GOLDEN_SECTION;
-            mySettings->addToKhSeries(float(x2), topographicDistanceInternalFunction(myVar,myMeteoPoints,nrMeteoPoints,interpolationPoints, mySettings,meteoSettings, x2));
+            mySettings->addToKhSeries(float(x2), (float)topographicDistanceInternalFunction(myVar,myMeteoPoints,nrMeteoPoints,interpolationPoints, mySettings,meteoSettings, x2));
         }
     }
-    mySettings->addToKhSeries(float((a + b) / 2), topographicDistanceInternalFunction(myVar,myMeteoPoints,nrMeteoPoints,interpolationPoints, mySettings,meteoSettings, (a + b) / 2));
+    mySettings->addToKhSeries(float((a + b) / 2), (float)topographicDistanceInternalFunction(myVar,myMeteoPoints,nrMeteoPoints,interpolationPoints, mySettings,meteoSettings, (a + b) / 2));
     return (a + b) / 2;  // approximated minimum
 }
 

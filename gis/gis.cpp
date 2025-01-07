@@ -1547,7 +1547,7 @@ namespace gis
                 }
                 else
                 {
-                    int nrStep = floor(resampleFactor) + 1;
+                    int nrStep = int(floor(resampleFactor)) + 1;
                     double step = newGrid->header->cellSize / nrStep;
                     double halfStep = step * 0.5;
 
