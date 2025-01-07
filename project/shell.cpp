@@ -73,12 +73,16 @@ bool attachOutputToConsole()
     return true;
 }
 
+
 bool isConsoleForeground()
 {
     #ifdef _WIN32
         return (GetConsoleWindow() == GetForegroundWindow());
     #endif
+
+    return true;
 }
+
 
 void sendEnterKey(void)
 {

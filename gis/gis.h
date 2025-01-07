@@ -1,12 +1,9 @@
 #ifndef GIS_H
 #define GIS_H
 
-    #ifndef _VECTOR_
-        #include <vector>
-    #endif
-    #ifndef _STRING_
-        #include <string>
-    #endif
+    #include <vector>
+    #include <string>
+
     #ifndef CRIT3DCOLOR_H
         #include "color.h"
     #endif

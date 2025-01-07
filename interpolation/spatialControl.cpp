@@ -1,6 +1,6 @@
 #include <iostream>
 #include <stdio.h>
-#include <cmath>
+#include <math.h>
 
 #include "commonConstants.h"
 #include "basicMath.h"

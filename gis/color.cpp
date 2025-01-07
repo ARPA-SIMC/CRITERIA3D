@@ -23,12 +23,12 @@
     gantolini@arpae.it
 */
 
-#include <algorithm>
-#include <math.h>
-
 #include "commonConstants.h"
 #include "basicMath.h"
 #include "color.h"
+
+#include <algorithm>
+#include <math.h>
 
 
 Crit3DColor::Crit3DColor()

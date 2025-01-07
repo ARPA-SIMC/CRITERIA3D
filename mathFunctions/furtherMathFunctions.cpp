@@ -1565,10 +1565,9 @@ namespace interpolation
                 break;
         }
 
-
         return counter;
-
     }
+
 
     int bestFittingMarquardt_nDimension_clean(double (*func)(std::vector<std::function<double(double, std::vector<double>&)>>&, std::vector<double>& , std::vector <std::vector <double>>&),
                                         std::vector<std::function<double(double, std::vector<double>&)>>& myFunc,
@@ -1578,21 +1577,21 @@ namespace interpolation
                                         std::vector <std::vector <double>>& x ,std::vector<double>& y,
                                         std::vector<double>& weights)
     {
-        int i,j;
         int nrData = int(y.size());
         std::vector <int> nrParameters(parameters.size());
         int nrParametersTotal = 0;
-        for (i=0; i<parameters.size();i++)
+        for (unsigned i=0; i < parameters.size();i++)
         {
             nrParameters[i]= int(parameters[i].size());
             nrParametersTotal += nrParameters[i];
         }
+
         std::vector <std::vector <double>> bestParameters(parameters.size());
         std::vector <std::vector <int>> correspondenceTag(2,std::vector<int>(nrParametersTotal));
         int counterTag = 0;
-        for (i=0; i<parameters.size();i++)
+        for (unsigned i=0; i < parameters.size();i++)
         {
-            for (j=0; j<nrParameters[i];j++)
+            for (int j=0; j < nrParameters[i];j++)
             {
                 correspondenceTag[0][counterTag] = i;
                 correspondenceTag[1][counterTag] = j;
@@ -1602,22 +1601,21 @@ namespace interpolation
             bestParameters[i].resize(nrParameters[i]) ;
         }
 
-        double R2;
         std::vector<double> ySim(nrData);
 
         fittingMarquardt_nDimension_noSquares(func,myFunc,parametersMin, parametersMax,
                                               parameters, parametersDelta,correspondenceTag, maxIterationsNr,
                                               myEpsilon, x, y, weights);
 
-        for (i=0;i<nrData;i++)
+        for (int i=0;i < nrData; i++)
         {
             ySim[i]= func(myFunc,x[i], parameters);
         }
-        R2 = computeWeighted_R2(y,ySim,weights);
+        double R2 = computeWeighted_R2(y,ySim,weights);
 
         return 1;
-
     }
+
 
     int bestFittingMarquardt_nDimension_clean(double (*func)(std::vector<std::function<double(double, std::vector<double>&)>>&, std::vector<double>& , std::vector <std::vector <double>>&),
                                               std::vector<std::function<double(double, std::vector<double>&)>>& myFunc,
@@ -2567,7 +2565,7 @@ namespace interpolation
         std::vector<double> ySim(nrData);
 
         //grigliato
-        for (int k = 0; k < firstGuessCombinations.size(); k++)
+        for (int k = 0; k < int(firstGuessCombinations.size()); k++)
         {
             parameters = firstGuessCombinations[k];
             fittingMarquardt_nDimension_noSquares_singleFunction(func,parametersMin,

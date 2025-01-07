@@ -21,6 +21,7 @@
  * \param sbsky
  * \return
  */
+
 long RSUN_compute_solar_position (
                     float longitude, float latitude, int timezone,
                     int year, int month, int day, int hour, int minute, int second,
