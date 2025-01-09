@@ -153,7 +153,7 @@ int DLL_EXPORT __STDCALL setNumericalParameters(float minDeltaT, float maxDeltaT
 
     if (maxIterationNumber < 10) maxIterationNumber = 10;
     if (maxIterationNumber > MAX_NUMBER_ITERATIONS) maxIterationNumber = MAX_NUMBER_ITERATIONS;
-    myParameters.iterazioni_max = maxIterationNumber;
+    myParameters.maxIterationsNumber = maxIterationNumber;
 
     if (maxApproximationsNumber < 1) maxApproximationsNumber = 1;
 

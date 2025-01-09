@@ -285,9 +285,9 @@ void updateBoundaryWater (double deltaT)
             else if (nodeList[i].boundary->type == BOUNDARY_PRESCRIBEDTOTALPOTENTIAL)
             {
                 // water table
-                double L = 1.0;                         // [m]
-                double boundaryZ = nodeList[i].z - L;     // [m]
-                double boundaryK;                       // [m s-1]
+                double L = 1.0;                             // [m]
+                double boundaryZ = nodeList[i].z - L;       // [m]
+                double boundaryK;                           // [m s-1]
 
                 if (nodeList[i].boundary->prescribedTotalPotential >= boundaryZ)
                 {

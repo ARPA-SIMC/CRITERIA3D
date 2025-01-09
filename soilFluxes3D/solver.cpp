@@ -100,11 +100,11 @@ TlinkedNode* getLink(long i, long j)
 }
 
 
-int calcola_iterazioni_max(int num_approssimazione)
+int getMaxIterationsNr(int approximationNr)
 {
-    float max_iterazioni = float(myParameters.iterazioni_max)
-                            / float(myParameters.maxApproximationsNumber) * float(num_approssimazione + 1);
-    return MAXVALUE(20, int(max_iterazioni));
+    int maxIterationsNr = int((approximationNr + 1) * (float(myParameters.maxIterationsNumber)
+                                                      / float(myParameters.maxApproximationsNumber)));
+    return MAXVALUE(20, maxIterationsNr);
 }
 
 
@@ -139,8 +139,10 @@ double GaussSeidelIterationWater(short direction)
 
         // surface check (H cannot go below z)
         if (nodeList[i].isSurface)
+        {
             if (newX < double(nodeList[i].z))
                 newX = double(nodeList[i].z);
+        }
 
         // water potential [m]
         double psi = fabs(newX - double(nodeList[i].z));
@@ -191,16 +193,15 @@ double GaussSeidelIterationHeat()
  }
 
 
-bool GaussSeidelRelaxation (int approximation, double residualTolerance, int process)
+bool GaussSeidelRelaxation (int approximation, double toleranceThreshold, int process)
 {
-    const double MAX_NORM = 1.0;
-    double currentNorm = MAX_NORM;
-    double bestNorm = MAX_NORM;
+    double currentNorm = 1.0;
+    double bestNorm = currentNorm;
+
+    int maxIterationsNr = getMaxIterationsNr(approximation);
     int iteration = 0;
 
-    int maxIterationsNr = calcola_iterazioni_max(approximation);
-
-    while ((currentNorm > residualTolerance) && (iteration < maxIterationsNr))
+    while ((currentNorm > toleranceThreshold) && (iteration < maxIterationsNr))
 	{
         if (process == PROCESS_HEAT)
             currentNorm = GaussSeidelIterationHeat();
@@ -218,7 +219,8 @@ bool GaussSeidelRelaxation (int approximation, double residualTolerance, int pro
 
             if (currentNorm > (bestNorm * 10.0))
             {
-                return false;                    // not converging
+                // non-convergent system
+                return false;
             }
             else if (currentNorm < bestNorm)
             {
