@@ -142,7 +142,7 @@
 
     extern TCrit3DStructure myStructure;
     extern TParameters myParameters;
-    extern TCrit3Dnode *nodeListPtr;
+    extern TCrit3Dnode *nodeList;
     extern TmatrixElement **A;
     extern Tculvert myCulvert;
     extern double *b, *C, *X;
