@@ -4,16 +4,16 @@
     struct Tsoil;
 
     double computeWaterConductivity(double Se, Tsoil *mySoil);
-    double computeSefromPsi_unsat(double myPsi, Tsoil *mySoil);
-    double theta_from_Se(unsigned long myIndex);
-    double theta_from_Se (double Se, unsigned long myIndex);
-    double theta_from_sign_Psi (double myPsi, unsigned long myIndex);
-    double Se_from_theta (unsigned long myIndex, double myTheta);
-    double psi_from_Se(unsigned long myIndex);
-    double computeSe(unsigned long myIndex);
-    double dTheta_dH(unsigned long myIndex);
-    double dThetav_dH(unsigned long myIndex, double temperature, double dTheta_dH);
-    double computeK(unsigned long myIndex);
+    double computeSefromPsi_unsat(double psi, Tsoil *mySoil);
+    double theta_from_Se(unsigned long index);
+    double theta_from_Se (double Se, unsigned long index);
+    double theta_from_sign_Psi (double myPsi, unsigned long index);
+    double Se_from_theta (unsigned long index, double myTheta);
+    double psi_from_Se(unsigned long index);
+    double computeSe(unsigned long index);
+    double dTheta_dH(unsigned long index);
+    double dThetav_dH(unsigned long index, double temperature, double dTheta_dH);
+    double computeK(unsigned long index);
     double compute_K_Mualem(double Ksat, double Se, double VG_Sc, double VG_m, double Mualem_L);
     double getThetaMean(long i);
     double getTheta(long i, double H);

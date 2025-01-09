@@ -37,29 +37,26 @@
 
      /*!
      * \brief Computes volumetric water content from current degree of saturation
-     * \param myIndex
      * \return result
      */
-	double theta_from_Se (unsigned long myIndex)
+    double theta_from_Se (unsigned long index)
 	{
-        return ((nodeList[myIndex].Se * (nodeList[myIndex].Soil->Theta_s - nodeList[myIndex].Soil->Theta_r)) + nodeList[myIndex].Soil->Theta_r);
+        return ((nodeList[index].Se * (nodeList[index].Soil->Theta_s - nodeList[index].Soil->Theta_r)) + nodeList[index].Soil->Theta_r);
 	}
 
     /*!
      * \brief Computes volumetric water content from degree of saturation
-     * \param Se
-     * \param myIndex
+     * \param Se degree of saturation [-]
      * \return result
      */
-	double theta_from_Se (double Se, unsigned long myIndex)
+    double theta_from_Se (double Se, unsigned long index)
 	{
-        return ((Se * (nodeList[myIndex].Soil->Theta_s - nodeList[myIndex].Soil->Theta_r)) + nodeList[myIndex].Soil->Theta_r);
+        return ((Se * (nodeList[index].Soil->Theta_s - nodeList[index].Soil->Theta_r)) + nodeList[index].Soil->Theta_r);
 	}
 
     /*!
      * \brief Computes volumetric water content from water potential (with sign)
      * \param signPsi   water potential with sign [m]
-     * \param index
      * \return volumetric water content [m3 m-3]
      */
     double theta_from_sign_Psi (double signPsi, unsigned long index)
@@ -81,44 +78,43 @@
 
     /*!
      * \brief Computes degree of saturation from volumetric water content
-     * \param myIndex
-     * \param theta
+     * \param theta  volumetric water content [m3 m-3]
      * \return result
      */
-	double Se_from_theta (unsigned long myIndex, double theta)
+    double Se_from_theta (unsigned long index, double theta)
 	{
         /*! check range */
-        if (theta >= nodeList[myIndex].Soil->Theta_s) return(1.);
-        else if (theta <= nodeList[myIndex].Soil->Theta_r) return(0.);
-        else return ((theta - nodeList[myIndex].Soil->Theta_r) / (nodeList[myIndex].Soil->Theta_s - nodeList[myIndex].Soil->Theta_r));
+        if (theta >= nodeList[index].Soil->Theta_s) return(1.);
+        else if (theta <= nodeList[index].Soil->Theta_r) return(0.);
+        else return ((theta - nodeList[index].Soil->Theta_r) / (nodeList[index].Soil->Theta_s - nodeList[index].Soil->Theta_r));
 	}
 
     /*!
-     * \brief Computes degree of saturation from matric potential (Van Genutchen) Se = [1+(alfa*|h|)^n]^-m
-     * valid only for unsaturated soil
-     * \param myPsi  water potential (absolute value) [m]
+     * \brief Computes degree of saturation from matric potential  Se = [1+(alfa*|h|)^n]^-m
+     * \param psi    [m] water potential (absolute value)
      * \param mySoil
      * \return degree of saturation [-]
      */
-    double computeSefromPsi_unsat(double myPsi, Tsoil *mySoil)
+    double computeSefromPsi_unsat(double psi, Tsoil *mySoil)
 	{
 		double Se = NODATA;
 
         if (myParameters.waterRetentionCurve == MODIFIEDVANGENUCHTEN)
         {
-            if (myPsi <=  mySoil->VG_he)
+            if (psi <=  mySoil->VG_he)
             {
+                // saturated
                 Se = 1.;
             }
 			else
             {
-                Se = pow(1. + pow(mySoil->VG_alpha * myPsi, mySoil->VG_n), - mySoil->VG_m);
+                Se = pow(1. + pow(mySoil->VG_alpha * psi, mySoil->VG_n), - mySoil->VG_m);
                 Se *= (1. / mySoil->VG_Sc);
             }
         }
         else if (myParameters.waterRetentionCurve == VANGENUCHTEN)
         {
-            Se = pow(1. + pow(mySoil->VG_alpha * myPsi, mySoil->VG_n), - mySoil->VG_m);
+            Se = pow(1. + pow(mySoil->VG_alpha * psi, mySoil->VG_n), - mySoil->VG_m);
         }
 
 		return Se;
@@ -126,12 +122,11 @@
 
     /*!
      * \brief Computes current degree of saturation
-     * \param myIndex
-     * \return result
+     * \return degree of saturation [-]
      */
-    double computeSe(unsigned long myIndex)
+    double computeSe(unsigned long index)
     {
-        if (nodeList[myIndex].H >= nodeList[myIndex].z)
+        if (nodeList[index].H >= nodeList[index].z)
         {
             // saturated
             return 1.;
@@ -139,84 +134,83 @@
         else
         {
             // unsaturated
-            double psi = fabs(nodeList[myIndex].H - nodeList[myIndex].z);   /*!< [m] */
-            return computeSefromPsi_unsat(psi, nodeList[myIndex].Soil);
+            double psi = fabs(nodeList[index].H - nodeList[index].z);   /*!< [m] */
+            return computeSefromPsi_unsat(psi, nodeList[index].Soil);
         }
     }
 
 
     /*!
-     * \brief Computes hydraulic conductivity [m/sec]  (Mualem)
+     * \brief Computes hydraulic conductivity, passing a soil structure
+     * Mualem equation:
      * K(Se) = Ksat * Se^(L) * {1-[1-Se^(1/m)]^m}^2
      * WARNING: very low values are possible (es: 10^12)
-     * \param Se
-     * \param mySoil Tsoil pointer
-     * \return result
+     * \param Se        degree of saturation [-]
+     * \param mySoil    Tsoil pointer
+     * \return hydraulic conductivity [m/sec]
      */
     double computeWaterConductivity(double Se, Tsoil *mySoil)
 	{
 		if (Se >= 1.) return(mySoil->K_sat );
 
-		double myTmp = NODATA;
+        double tmp = NODATA;
         if (myParameters.waterRetentionCurve == MODIFIEDVANGENUCHTEN)
 		{
 			double myNumerator = 1. - pow(1. - pow(Se*mySoil->VG_Sc, 1./mySoil->VG_m), mySoil->VG_m);
-			myTmp = myNumerator / (1. - pow(1. - pow(mySoil->VG_Sc, 1./mySoil->VG_m), mySoil->VG_m));
+            tmp = myNumerator / (1. - pow(1. - pow(mySoil->VG_Sc, 1./mySoil->VG_m), mySoil->VG_m));
 		}
         else if (myParameters.waterRetentionCurve == VANGENUCHTEN)
-			myTmp = 1. - pow(1. - pow(Se, 1./mySoil->VG_m), mySoil->VG_m);
+        {
+            tmp = 1. - pow(1. - pow(Se, 1./mySoil->VG_m), mySoil->VG_m);
+        }
 
-		return (mySoil->K_sat * pow(Se, mySoil->Mualem_L) * pow(myTmp , 2.));
+        return (mySoil->K_sat * pow(Se, mySoil->Mualem_L) * pow(tmp, 2.));
 	}
 
 
     /*!
-     * \brief Computes hydraulic conductivity [m/sec]  (Mualem)
+     * \brief Computes hydraulic conductivity, passing soil parameters
+     * Mualem equation:
      * K(Se) = Ksat * Se^(L) * {1-[1-Se^(1/m)]^m}^2
      * WARNING: very low values are possible (es: 10^12)
-     * \param Ksat
-     * \param Se
-     * \param VG_Sc
-	 * \param VG_n
-     * \param VG_m
-     * \param Mualem_L
-     * \return result
+     * \param Se        degree of saturation [-]
+     * \return hydraulic conductivity [m/sec]
      */
     double compute_K_Mualem(double Ksat, double Se, double VG_Sc, double VG_m, double Mualem_L)
 	{
 		if (Se >= 1.) return(Ksat);
-		double temp= NODATA;
+        double tmp= NODATA;
 
         if (myParameters.waterRetentionCurve == MODIFIEDVANGENUCHTEN)
         {
             double num = 1. - pow(1. - pow(Se*VG_Sc, 1./VG_m), VG_m);
-            temp = num / (1. - pow(1. - pow(VG_Sc, 1./VG_m), VG_m));
+            tmp = num / (1. - pow(1. - pow(VG_Sc, 1./VG_m), VG_m));
         }
         else if (myParameters.waterRetentionCurve == VANGENUCHTEN)
         {
-			temp = 1. - pow(1. - pow(Se, 1./VG_m), VG_m);
+            tmp = 1. - pow(1. - pow(Se, 1./VG_m), VG_m);
         }
 
-		return (Ksat * pow(Se, Mualem_L) * pow(temp , 2.));
+        return (Ksat * pow(Se, Mualem_L) * pow(tmp , 2.));
 	}
 
 
     /*!
      * \brief Computes current soil water total (liquid + vapor) conductivity [m sec^-1]
-     * \param myIndex
+     * \param index
      * \return result
      */
-    double computeK(unsigned long myIndex)
+    double computeK(unsigned long index)
     {
-        double k = compute_K_Mualem(nodeList[myIndex].Soil->K_sat, nodeList[myIndex].Se,
-                                nodeList[myIndex].Soil->VG_Sc, nodeList[myIndex].Soil->VG_m,
-                                nodeList[myIndex].Soil->Mualem_L);
+        double k = compute_K_Mualem(nodeList[index].Soil->K_sat, nodeList[index].Se,
+                                nodeList[index].Soil->VG_Sc, nodeList[index].Soil->VG_m,
+                                nodeList[index].Soil->Mualem_L);
 
         // vapor isothermal flow
         if (myStructure.computeHeat && myStructure.computeHeatVapor)
         {
-            double avgT = getTMean(myIndex);
-            double kv = IsothermalVaporConductivity(myIndex, nodeList[myIndex].H - nodeList[myIndex].z, avgT);
+            double avgT = getTMean(index);
+            double kv = IsothermalVaporConductivity(index, nodeList[index].H - nodeList[index].z, avgT);
             // from kg s m-3 to m s-1
             kv *= (GRAVITY / WATER_DENSITY);
 
@@ -228,26 +222,26 @@
 
 
     /*!
-     * \brief Computes Water Potential from degree of saturation
-     * \param myIndex
-     * \return result
+     * \brief Computes current water potential from degree of saturation
+     * \param index
+     * \return water potential [m]
      */
-    double psi_from_Se(unsigned long myIndex)
+    double psi_from_Se(unsigned long index)
 	{
-        double m = nodeList[myIndex].Soil->VG_m;
+        double m = nodeList[index].Soil->VG_m;
 		double temp = NODATA;
 
         if (myParameters.waterRetentionCurve == MODIFIEDVANGENUCHTEN)
-                temp = pow(1./ (nodeList[myIndex].Se * nodeList[myIndex].Soil->VG_Sc) , 1./ m ) - 1.;
+                temp = pow(1./ (nodeList[index].Se * nodeList[index].Soil->VG_Sc) , 1./ m ) - 1.;
         else if (myParameters.waterRetentionCurve == VANGENUCHTEN)
-                temp = pow(1./ nodeList[myIndex].Se, 1./ m ) - 1.;
+                temp = pow(1./ nodeList[index].Se, 1./ m ) - 1.;
 
-        return((1./ nodeList[myIndex].Soil->VG_alpha) * pow(temp, 1./ nodeList[myIndex].Soil->VG_n));
+        return((1./ nodeList[index].Soil->VG_alpha) * pow(temp, 1./ nodeList[index].Soil->VG_n));
 	}
 
     /*!
      * \brief [m-1] dThetaV/dH
-     * \param myIndex
+     * \param index
      * \return derivative of vapor volumetric content with respect to H
      */
     double dThetav_dH(unsigned long i, double temperature, double dTheta_dH)
@@ -267,48 +261,49 @@
      * \brief [m-1] dTheta/dH  (Van Genutchen)
      * dTheta/dH = dSe/dH (Theta_s-Theta_r)
      * dSe/dH = -sgn(H-z) alfa n m [1+(alfa|(H-z)|)^n]^(-m-1) (alfa|(H-z)|)^n-1
-     * \param myIndex
      * \return derivative of water volumetric content with respect to H
      */
-	double dTheta_dH(unsigned long myIndex)
+    double dTheta_dH(unsigned long index)
     {
-        double alfa = nodeList[myIndex].Soil->VG_alpha;
-        double n    = nodeList[myIndex].Soil->VG_n;
-        double m    = nodeList[myIndex].Soil->VG_m;
+        double alfa = nodeList[index].Soil->VG_alpha;
+        double n    = nodeList[index].Soil->VG_n;
+        double m    = nodeList[index].Soil->VG_m;
 
-        double psi_abs = fabs(MINVALUE(nodeList[myIndex].H - nodeList[myIndex].z, 0.));
-        double psiPrevious_abs = fabs(MINVALUE(nodeList[myIndex].oldH - nodeList[myIndex].z, 0.));
+        double currentPsi = fabs(MINVALUE(nodeList[index].H - nodeList[index].z, 0.));
+        double previousPsi = fabs(MINVALUE(nodeList[index].oldH - nodeList[index].z, 0.));
+
+        if (myParameters.waterRetentionCurve == VANGENUCHTEN)
+        {
+            // saturated
+            if ((currentPsi == 0.) && (previousPsi == 0.))
+                return 0.;
+        }
 
         if (myParameters.waterRetentionCurve == MODIFIEDVANGENUCHTEN)
         {
             // saturated
-            if ((psi_abs <= nodeList[myIndex].Soil->VG_he) && (psiPrevious_abs <= nodeList[myIndex].Soil->VG_he)) return 0.;
-        }
-
-        if (myParameters.waterRetentionCurve == VANGENUCHTEN)
-        {
-            if ((psi_abs == 0.) && (psiPrevious_abs == 0.)) return 0.;
+            if ((currentPsi <= nodeList[index].Soil->VG_he) && (previousPsi <= nodeList[index].Soil->VG_he))
+                return 0.;
         }
 
         double dSe_dH;
 
-        if (psi_abs == psiPrevious_abs)
+        if (currentPsi == previousPsi)
         {
-            dSe_dH = alfa * n * m * pow(1. + pow(alfa * psi_abs, n), -(m + 1.)) * pow(alfa * psi_abs, n - 1.);
+            dSe_dH = alfa * n * m * pow(1. + pow(alfa * currentPsi, n), -(m + 1.)) * pow(alfa * currentPsi, n - 1.);
             if (myParameters.waterRetentionCurve == MODIFIEDVANGENUCHTEN)
             {
-                dSe_dH *= (1. / nodeList[myIndex].Soil->VG_Sc);
+                dSe_dH *= (1. / nodeList[index].Soil->VG_Sc);
             }
         }
         else
         {
-            double theta = computeSefromPsi_unsat(psi_abs, nodeList[myIndex].Soil);
-            double thetaPrevious = computeSefromPsi_unsat(psiPrevious_abs, nodeList[myIndex].Soil);
-            double delta_H = nodeList[myIndex].H - nodeList[myIndex].oldH;
-            dSe_dH = fabs((theta - thetaPrevious) / delta_H);
+            double theta = computeSefromPsi_unsat(currentPsi, nodeList[index].Soil);
+            double previousTheta = computeSefromPsi_unsat(previousPsi, nodeList[index].Soil);
+            dSe_dH = fabs((theta - previousTheta) / (nodeList[index].H - nodeList[index].oldH));
         }
 
-        return dSe_dH * (nodeList[myIndex].Soil->Theta_s - nodeList[myIndex].Soil->Theta_r);
+        return dSe_dH * (nodeList[index].Soil->Theta_s - nodeList[index].Soil->Theta_r);
     }
 
 

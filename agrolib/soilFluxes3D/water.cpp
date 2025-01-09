@@ -31,6 +31,7 @@
 
 #include "physics.h"
 #include "commonConstants.h"
+#include "basicMath.h"
 #include "header/types.h"
 #include "header/water.h"
 #include "header/soilPhysics.h"
@@ -114,21 +115,28 @@ double runoff(long i, long j, TlinkedNode *link, double deltaT, unsigned long ap
 }
 
 
-
 double infiltration(long sup, long inf, TlinkedNode *link, double deltaT)
 {
- double cellDistance = (nodeList[sup].z - nodeList[inf].z) * 2.0;
+    double cellDistance = nodeList[sup].z - nodeList[inf].z;
 
- /*! unsaturated */
- if (nodeList[inf].H < nodeList[sup].z)
-        {
+    /*! unsaturated */
+    if (nodeList[inf].H < nodeList[sup].z)
+    {
         /*! surface water content [m] */
-        // double surfaceH = (nodeList[sup].H + nodeList[sup].oldH) * 0.5;
-		double surfaceH = nodeList[sup].H;
+        //double surfaceH = (nodeList[sup].H + nodeList[sup].oldH) * 0.5;
+
+        double initialSurfaceWater = MAXVALUE(nodeList[sup].oldH - nodeList[sup].z, 0);     // [m]
+
+        // precipitation: positive  -  evaporation: negative
+        double precOrEvapRate = nodeList[sup].Qw / nodeList[sup].volume_area;               // [m s-1]
 
         /*! maximum water infiltration rate [m/s] */
-        double maxInfiltrationRate = (surfaceH - nodeList[sup].z) / deltaT;
-        if (maxInfiltrationRate <= 0.0) return(0.0);
+        double maxInfiltrationRate = initialSurfaceWater / deltaT + precOrEvapRate;         // [m s-1]
+        if (maxInfiltrationRate <= 0)
+            return 0.;
+
+        double dH = nodeList[sup].H - nodeList[inf].H;
+        double maxK = maxInfiltrationRate * (cellDistance / dH);                            // [m s-1]
 
         /*! first soil layer: mean between current k and k_sat */
         double meanK = computeMean(nodeList[inf].Soil->K_sat, nodeList[inf].k);
@@ -146,17 +154,12 @@ double infiltration(long sup, long inf, TlinkedNode *link, double deltaT)
             }
         }
 
-        double dH = nodeList[sup].H - nodeList[inf].H;
-        double maxK = maxInfiltrationRate * (cellDistance / dH);
-
-        double k = MINVALUE(meanK , maxK);
-
+        double k = MINVALUE(meanK, maxK);
         return (k * link->area) / cellDistance;
-        }
-
- /*! saturated */
- else
+    }
+    else
     {
+        /*! saturated */
         if (nodeList[inf].boundary != nullptr)
         {
             if (nodeList[inf].boundary->type == BOUNDARY_URBAN)
@@ -172,7 +175,6 @@ double infiltration(long sup, long inf, TlinkedNode *link, double deltaT)
 
         return(nodeList[inf].Soil->K_sat * link->area) / cellDistance;
     }
-
 }
 
 
@@ -246,10 +248,7 @@ bool computeFlux(long i, int matrixIndex, TlinkedNode *link, double deltaT, unsi
 
 bool waterFlowComputation(double deltaT)
  {
-     bool isValidStep;
-     long i;
-     double dThetadH, dthetavdh;
-     double avgTemperature;
+     bool isValidStep = false;
 
      int approximationNr = 0;
      do
@@ -257,46 +256,53 @@ bool waterFlowComputation(double deltaT)
         Courant = 0.0;
         if (approximationNr == 0)
         {
-            for (i = 0; i < myStructure.nrNodes; i++)
+            // diagonal indexes
+            for (int i = 0; i < myStructure.nrNodes; i++)
             {
                 A[i][0].index = i;
             }
         }
 
         /*! hydraulic conductivity and theta derivative */
-        for (i = 0; i < myStructure.nrNodes; i++)
+        for (unsigned i = 0; i < unsigned(myStructure.nrNodes); i++)
         {
             invariantFlux[i] = 0.;
-            if (!nodeList[i].isSurface)
+            if (! nodeList[i].isSurface)
             {
-                nodeList[i].k = computeK(unsigned(i));
-                dThetadH = dTheta_dH(unsigned(i));
-                 C[i] = nodeList[i].volume_area  * dThetadH;
+                nodeList[i].k = computeK(i);
+                double dThetadH = dTheta_dH(i);
+                C[i] = nodeList[i].volume_area  * dThetadH;
 
-                 // vapor capacity term
-                 if (myStructure.computeHeat && myStructure.computeHeatVapor)
-                 {
-                     avgTemperature = getTMean(i);
-                     dthetavdh = dThetav_dH(unsigned(i), avgTemperature, dThetadH);
-                     C[i] += nodeList[i].volume_area  * dthetavdh;
-                 }
+                // vapor capacity term
+                if (myStructure.computeHeat && myStructure.computeHeatVapor)
+                {
+                    double avgTemperature = getTMean(i);
+                    double dthetavdh = dThetav_dH(i, avgTemperature, dThetadH);
+                    C[i] += nodeList[i].volume_area  * dthetavdh;
+                }
             }
         }
 
         // update boundary conditions
-        // updateBoundaryWater(deltaT);
+        //updateBoundaryWater(deltaT);
 
         /*! computes the matrix elements */
-        for (i = 0; i < myStructure.nrNodes; i++)
+        for (int i = 0; i < myStructure.nrNodes; i++)
         {
             short j = 1;
-            if (computeFlux(i, j, &(nodeList[i].up), deltaT, approximationNr, UP)) j++;
+            if (computeFlux(i, j, &(nodeList[i].up), deltaT, approximationNr, UP))
+                j++;
             for (short l = 0; l < myStructure.nrLateralLinks; l++)
-                    if (computeFlux(i, j, &(nodeList[i].lateral[l]), deltaT, approximationNr, LATERAL)) j++;
-            if (computeFlux(i, j, &(nodeList[i].down), deltaT, approximationNr, DOWN)) j++;
+            {
+                if (computeFlux(i, j, &(nodeList[i].lateral[l]), deltaT, approximationNr, LATERAL))
+                    j++;
+            }
+            if (computeFlux(i, j, &(nodeList[i].down), deltaT, approximationNr, DOWN))
+                j++;
 
             /*! closure */
-            while (j < myStructure.maxNrColumns) A[i][j++].index = NOLINK;
+            while (j < myStructure.maxNrColumns)
+                A[i][j++].index = NOLINK;
 
             j = 1;
             double sum = 0.;
@@ -307,47 +313,54 @@ bool waterFlowComputation(double deltaT)
                 j++;
             }
 
-            /*! sum of the diagonal elements */
+            /*! diagonal */
             A[i][0].val = C[i]/deltaT + sum;
 
-            /*! b vector(vector of constant terms) */
+            /*! b vector (vector of constant terms) */
             b[i] = ((C[i] / deltaT) * nodeList[i].oldH) + nodeList[i].Qw + invariantFlux[i];
 
             /*! preconditioning */
             j = 1;
-            while ((j < myStructure.maxNrColumns) && (A[i][j].index != NOLINK))
-                    A[i][j++].val /= A[i][0].val;
+            while ((A[i][j].index != NOLINK) && (j < myStructure.maxNrColumns))
+            {
+                A[i][j++].val /= A[i][0].val;
+            }
             b[i] /= A[i][0].val;
         }
 
-        if (Courant > 1.0)
+        if (Courant > 1.0 && deltaT > myParameters.delta_t_min)
+        {
+            halveTimeStep();
+            setForcedHalvedTime(true);
+            return false;
+        }
+
+        if (! GaussSeidelRelaxation(approximationNr, myParameters.ResidualTolerance, PROCESS_WATER))
+        {
             if (deltaT > myParameters.delta_t_min)
             {
                 halveTimeStep();
                 setForcedHalvedTime(true);
                 return false;
             }
-
-        if (! GaussSeidelRelaxation(approximationNr, myParameters.ResidualTolerance, PROCESS_WATER))
-            if (deltaT > myParameters.delta_t_min)
-            {
-                halveTimeStep();
-                setForcedHalvedTime(true);
-                return (false);
-            }
+        }
 
         /*! set new potential - compute new degree of saturation */
-        for (i = 0; i < myStructure.nrNodes; i++)
+        for (int i = 0; i < myStructure.nrNodes; i++)
         {
             nodeList[i].H = X[i];
-            if (!nodeList[i].isSurface)
+            if (! nodeList[i].isSurface)
+            {
                 nodeList[i].Se = computeSe(unsigned(i));
+            }
         }
 
-        /*! water balance */
+        // check water balance
         isValidStep = waterBalance(deltaT, approximationNr);
-        if (getForcedHalvedTime()) return (false);
-        }
+
+        if (getForcedHalvedTime())
+            return false;
+    }
     while ((! isValidStep) && (++approximationNr < myParameters.maxApproximationsNumber));
 
     return isValidStep;

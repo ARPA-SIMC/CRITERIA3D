@@ -449,7 +449,7 @@ bool Project3D::setAccuracy()
     // Mass Balance Ratio precision (digit at which error is accepted)
     int digitMBR = waterFluxesParameters.modelAccuracy;
 
-    int myResult = soilFluxes3D::setNumericalParameters(minimumDeltaT, 3600, 100, 10, 12, digitMBR);
+    int myResult = soilFluxes3D::setNumericalParameters(minimumDeltaT, 3600, 100, 10, 6, digitMBR);
 
     // check result
     if (isCrit3dError(myResult, errorString))
@@ -1730,7 +1730,7 @@ bool Project3D::getTotalSoilWaterContent(double &wcSum, long &nrVoxels)
     wcSum = 0.;
     double voxelArea = DEM.header->cellSize * DEM.header->cellSize;                 // [m2]
 
-    for (int layer = 1; layer < nrLayers; layer++)
+    for (unsigned layer = 1; layer < nrLayers; layer++)
     {
         double volume = voxelArea * layerThickness[layer];                          // [m3]
 
