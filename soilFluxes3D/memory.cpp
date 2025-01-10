@@ -53,15 +53,15 @@ void cleanArrays()
 
 void cleanNodes()
 {
-    if (nodeListPtr != nullptr)
+    if (nodeList != nullptr)
     {
         for (long i = 0; i < myStructure.nrNodes; i++)
         {
-            if (nodeListPtr[i].boundary != nullptr) free(nodeListPtr[i].boundary);
-            free(nodeListPtr[i].lateral);
+            if (nodeList[i].boundary != nullptr) free(nodeList[i].boundary);
+            free(nodeList[i].lateral);
         }
-        free(nodeListPtr);
-        nodeListPtr = nullptr;
+        free(nodeList);
+        nodeList = nullptr;
     }
 }
 

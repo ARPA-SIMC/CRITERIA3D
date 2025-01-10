@@ -35,16 +35,16 @@
 
 double distance(unsigned long i, unsigned long j)
 {
-    return sqrt(square(fabs(double(nodeListPtr[i].x - nodeListPtr[j].x)))
-                + square(fabs(double(nodeListPtr[i].y - nodeListPtr[j].y)))
-                + square(fabs(double(nodeListPtr[i].z - nodeListPtr[j].z))));
+    return sqrt(square(fabs(double(nodeList[i].x - nodeList[j].x)))
+                + square(fabs(double(nodeList[i].y - nodeList[j].y)))
+                + square(fabs(double(nodeList[i].z - nodeList[j].z))));
 }
 
 
 double distance2D(unsigned long i, unsigned long j)
 {
-    return sqrt(square(fabs(double(nodeListPtr[i].x - nodeListPtr[j].x)))
-                + square(fabs(double(nodeListPtr[i].y - nodeListPtr[j].y))));
+    return sqrt(square(fabs(double(nodeList[i].x - nodeList[j].x)))
+                + square(fabs(double(nodeList[i].y - nodeList[j].y))));
 }
 
 double arithmeticMean(double v1, double v2)
@@ -84,27 +84,27 @@ double computeMean(double v1, double v2)
 
 TlinkedNode* getLink(long i, long j)
 {
-    if (nodeListPtr[i].up.index == j)
-        return &(nodeListPtr[i].up);
+    if (nodeList[i].up.index == j)
+        return &(nodeList[i].up);
 
-    if (nodeListPtr[i].down.index == j)
-        return &(nodeListPtr[i].down);
+    if (nodeList[i].down.index == j)
+        return &(nodeList[i].down);
 
     for (short l = 0; l < myStructure.nrLateralLinks; l++)
     {
-         if (nodeListPtr[i].lateral[l].index == j)
-             return &(nodeListPtr[i].lateral[l]);
+         if (nodeList[i].lateral[l].index == j)
+             return &(nodeList[i].lateral[l]);
     }
 
     return nullptr;
 }
 
 
-int calcola_iterazioni_max(int num_approssimazione)
+int getMaxIterationsNr(int approximationNr)
 {
-    float max_iterazioni = float(myParameters.iterazioni_max)
-                            / float(myParameters.maxApproximationsNumber) * float(num_approssimazione + 1);
-    return MAXVALUE(20, int(max_iterazioni));
+    int maxIterationsNr = int((approximationNr + 1) * (float(myParameters.maxIterationsNumber)
+                                                      / float(myParameters.maxApproximationsNumber)));
+    return MAXVALUE(20, maxIterationsNr);
 }
 
 
@@ -137,21 +137,24 @@ double GaussSeidelIterationWater(short direction)
             j++;
         }
 
-        /*! surface check */
-        if (nodeListPtr[i].isSurface)
-            if (newX < double(nodeListPtr[i].z))
-                newX = double(nodeListPtr[i].z);
+        // surface check (H cannot go below z)
+        if (nodeList[i].isSurface)
+        {
+            if (newX < double(nodeList[i].z))
+                newX = double(nodeList[i].z);
+        }
 
-        /*! water potential [m] */
-        double psi = fabs(newX - double(nodeListPtr[i].z));
+        // water potential [m]
+        double psi = fabs(newX - double(nodeList[i].z));
 
-        /*! infinity norm (normalized if psi > 1m) */
+        // infinity norm (normalized if psi > 1m)
         if (psi > 1)
             currentNorm = (fabs(newX - X[i])) / psi;
         else
             currentNorm = fabs(newX - X[i]);
 
-        if (currentNorm > infinityNorm) infinityNorm = currentNorm;
+        if (currentNorm > infinityNorm)
+            infinityNorm = currentNorm;
 
         X[i] = newX;
 
@@ -168,7 +171,7 @@ double GaussSeidelIterationHeat()
     short j;
 
     for (long i = 1; i < myStructure.nrNodes; i++)
-        if (!nodeListPtr[i].isSurface)
+        if (!nodeList[i].isSurface)
         {
             if (A[i][0].val != 0.)
             {
@@ -190,16 +193,15 @@ double GaussSeidelIterationHeat()
  }
 
 
-bool GaussSeidelRelaxation (int approximation, double residualTolerance, int process)
+bool GaussSeidelRelaxation (int approximation, double toleranceThreshold, int process)
 {
-    const double MAX_NORM = 1.0;
-    double currentNorm = MAX_NORM;
-    double bestNorm = MAX_NORM;
+    double currentNorm = 1.0;
+    double bestNorm = currentNorm;
+
+    int maxIterationsNr = getMaxIterationsNr(approximation);
     int iteration = 0;
 
-    int maxIterationsNr = calcola_iterazioni_max(approximation);
-
-    while ((currentNorm > residualTolerance) && (iteration < maxIterationsNr))
+    while ((currentNorm > toleranceThreshold) && (iteration < maxIterationsNr))
 	{
         if (process == PROCESS_HEAT)
             currentNorm = GaussSeidelIterationHeat();
@@ -217,7 +219,8 @@ bool GaussSeidelRelaxation (int approximation, double residualTolerance, int pro
 
             if (currentNorm > (bestNorm * 10.0))
             {
-                return false;                    // not converging
+                // non-convergent system
+                return false;
             }
             else if (currentNorm < bestNorm)
             {

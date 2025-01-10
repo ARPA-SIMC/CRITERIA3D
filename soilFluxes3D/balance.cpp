@@ -77,129 +77,145 @@ void InitializeBalanceWater()
      balanceWholePeriod.waterMBE = 0.;
      balanceWholePeriod.waterMBR = 0.;
 
-    /*! initialize link flow */
+    // initialize link flow
     for (long n = 0; n < myStructure.nrNodes; n++)
-        {
-        nodeListPtr[n].up.sumFlow = 0.;
-        nodeListPtr[n].down.sumFlow = 0.;
+    {
+        nodeList[n].up.sumFlow = 0.;
+        nodeList[n].down.sumFlow = 0.;
         for (short i = 0; i < myStructure.nrLateralLinks; i++)
-             nodeListPtr[n].lateral[i].sumFlow = 0.;
+        {
+             nodeList[n].lateral[i].sumFlow = 0.;
         }
+    }
 
-    /*! initialize boundary flow */
+    // initialize boundary flow
     for (long n = 0; n < myStructure.nrNodes; n++)
-        if (nodeListPtr[n].boundary != nullptr)
-            nodeListPtr[n].boundary->sumBoundaryWaterFlow = 0.;
+    {
+        if (nodeList[n].boundary != nullptr)
+            nodeList[n].boundary->sumBoundaryWaterFlow = 0.;
+    }
 }
 
 
 /*!
- * \brief computes total water content          [m^3]
- * \return result
+ * \brief computes the total water content
+ * \return total water content [m3]
  */
 double computeTotalWaterContent()
 {
-   double theta, sum = 0.0;
+   double sum = 0.0;
 
    for (unsigned long i = 0; i < unsigned(myStructure.nrNodes); i++)
-       if  (nodeListPtr[i].isSurface)
+   {
+       if (nodeList[i].isSurface)
        {
-           sum += (nodeListPtr[i].H - double(nodeListPtr[i].z)) * nodeListPtr[i].volume_area;
+           sum += (nodeList[i].H - double(nodeList[i].z)) * nodeList[i].volume_area;
        }
        else
        {
-           theta = theta_from_Se(i);
-           sum += theta * nodeListPtr[i].volume_area;
+           sum += theta_from_Se(i) * nodeList[i].volume_area;
        }
-   return(sum);
+   }
+
+   return sum;
 }
 
 
 /*!
- * \brief computes sum of water sink/source          [m^3]
- * \param deltaT
- * \return result
+ * \brief computes sum of water sink/source
+ * \param deltaT    [s]
+ * \return sum of water sink/source  [m3]
  */
 double sumWaterFlow(double deltaT)
 {
     double sum = 0.0;
     for (long n = 0; n < myStructure.nrNodes; n++)
     {
-        if (nodeListPtr[n].Qw != 0.)
-            sum += nodeListPtr[n].Qw * deltaT;
+        if (nodeList[n].Qw != 0.)
+            sum += nodeList[n].Qw * deltaT;
     }
-    return (sum);
+    return sum;
 }
 
 
-
+/*!
+ * \brief computes the mass balance error in balanceCurrentTimeStep
+ * \param deltaT    [s]
+ */
 void computeMassBalance(double deltaT)
 {
-     balanceCurrentTimeStep.storageWater = computeTotalWaterContent();
+    balanceCurrentTimeStep.storageWater = computeTotalWaterContent();       // [m3]
 
-	 double dStorage = balanceCurrentTimeStep.storageWater - balancePreviousTimeStep.storageWater;
+    double dStorage = balanceCurrentTimeStep.storageWater - balancePreviousTimeStep.storageWater;   // [m3]
 
-     balanceCurrentTimeStep.sinkSourceWater = sumWaterFlow(deltaT);
+    balanceCurrentTimeStep.sinkSourceWater = sumWaterFlow(deltaT);          // [m3]
 
-     balanceCurrentTimeStep.waterMBE = dStorage - balanceCurrentTimeStep.sinkSourceWater;
+    balanceCurrentTimeStep.waterMBE = dStorage - balanceCurrentTimeStep.sinkSourceWater;            // [m3]
 
-     /*! reference water: sumWaterFlow or 0.1% of storage */
-     double denominator = MAXVALUE(fabs(balanceCurrentTimeStep.sinkSourceWater), balanceCurrentTimeStep.storageWater * 1e-3);
+    // minimum reference water storage: 0.1% of current storage, minimum 1 liter
+    double minRefWaterStorage = MAXVALUE(balanceCurrentTimeStep.storageWater * 1e-3, 0.001);        // [m3]
 
-     /*! no water - minimum 1 liter */
-     denominator = MAXVALUE(denominator, 0.001);
+    // reference water for computation of mass balance ratio
+    double referenceWater = MAXVALUE(fabs(balanceCurrentTimeStep.sinkSourceWater), minRefWaterStorage);   // [m3]
 
-	 balanceCurrentTimeStep.waterMBR = balanceCurrentTimeStep.waterMBE / denominator;
+    balanceCurrentTimeStep.waterMBR = balanceCurrentTimeStep.waterMBE / referenceWater;
 }
 
 
 double getMatrixValue(long i, TlinkedNode *link)
 {
 	if (link != nullptr)
-        {
+    {
         int j = 1;
-        while ((j < myStructure.maxNrColumns) && (A[i][j].index != NOLINK) && (A[i][j].index != (*link).index)) j++;
+        while ((j < myStructure.maxNrColumns) && (A[i][j].index != NOLINK) && (A[i][j].index != (*link).index))
+            j++;
 
         /*! Rebuild the A elements (previously normalized) */
 		if (A[i][j].index == (*link).index)
+        {
 			return (A[i][j].val * A[i][0].val);
         }
+    }
+
 	return double(INDEX_ERROR);
 }
 
 
 /*!
- * \brief updating of in- and out-flows [m^3]
+ * \brief updates in and out flows [m3]
  * \param index
- * \param link TlinkedNode pointer
- * \param delta_t
+ * \param link      TlinkedNode pointer
+ * \param delta_t   [s]
  */
 void update_flux(long index, TlinkedNode *link, double delta_t)
 {
     if (link->index != NOLINK)
-        (*link).sumFlow += float(getWaterExchange(index, link, delta_t));
+    {
+        (*link).sumFlow += float(getWaterExchange(index, link, delta_t));       // [m3]
+    }
 }
-
 
 
 void saveBestStep()
 {
 	for (long n = 0; n < myStructure.nrNodes; n++)
-        nodeListPtr[n].bestH = nodeListPtr[n].H;
+    {
+        nodeList[n].bestH = nodeList[n].H;
+    }
 }
-
-
 
 
 void restoreBestStep(double deltaT)
 {
     for (unsigned long n = 0; n < unsigned(myStructure.nrNodes); n++)
     {
-        nodeListPtr[n].H = nodeListPtr[n].bestH;
+        nodeList[n].H = nodeList[n].bestH;
 
         /*! compute new soil moisture (only sub-surface nodes) */
-        if (!nodeListPtr[n].isSurface)
-                nodeListPtr[n].Se = computeSe(n);
+        if (! nodeList[n].isSurface)
+        {
+            nodeList[n].Se = computeSe(n);
+        }
     }
 
      computeMassBalance(deltaT);
@@ -215,17 +231,19 @@ void acceptStep(double deltaT)
 
     /*! update sum of flow */
     for (long i = 0; i < myStructure.nrNodes; i++)
-        {
-        update_flux(i, &(nodeListPtr[i].up), deltaT);
-        update_flux(i, &(nodeListPtr[i].down), deltaT);
+    {
+        update_flux(i, &(nodeList[i].up), deltaT);
+        update_flux(i, &(nodeList[i].down), deltaT);
         for (short j = 0; j < myStructure.nrLateralLinks; j++)
-            update_flux(i, &(nodeListPtr[i].lateral[j]), deltaT);
-
-        if (nodeListPtr[i].boundary != nullptr)
-            nodeListPtr[i].boundary->sumBoundaryWaterFlow += nodeListPtr[i].boundary->waterFlow * deltaT;
+        {
+            update_flux(i, &(nodeList[i].lateral[j]), deltaT);
         }
 
+        if (nodeList[i].boundary != nullptr)
+            nodeList[i].boundary->sumBoundaryWaterFlow += nodeList[i].boundary->waterFlow * deltaT;
+    }
 }
+
 
 bool waterBalance(double deltaT, int approxNr)
 {
@@ -243,15 +261,15 @@ bool waterBalance(double deltaT, int approxNr)
 
     /*! best case */
     if (MBRerror < myParameters.MBRThreshold)
-        {
+    {
         acceptStep(deltaT);
-		if ((approxNr < 2) && (Courant < 0.5) && (MBRerror < (myParameters.MBRThreshold * 0.5)))
-            {
+        if ((approxNr <= 2) && (Courant < 0.5) && (MBRerror < (myParameters.MBRThreshold * 0.5)))
+        {
             /*! system is stable: double time step */
             doubleTimeStep();
-            }
-        return (true);
         }
+        return true;
+    }
 
     /*! worst case: error high or last approximation */
     if ((MBRerror > (bestMBRerror * 2.0))
@@ -272,7 +290,7 @@ bool waterBalance(double deltaT, int approxNr)
         }
 
     // default
-    return (false);
+    return false;
 }
 
 
