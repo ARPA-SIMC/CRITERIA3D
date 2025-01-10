@@ -850,14 +850,11 @@ float shepardSearchNeighbour(vector <Crit3DInterpolationDataPoint> &inputPoints,
                              Crit3DInterpolationSettings* settings,
                              vector <Crit3DInterpolationDataPoint> &outputPoints)
 {
-    std::vector <Crit3DInterpolationDataPoint> shepardNeighbourPoints;
-
-    float radius;
-    unsigned int nrValid = 0;
     float shepardInitialRadius = computeShepardInitialRadius(settings->getPointsBoundingBoxArea(),
                                                              unsigned(inputPoints.size()), SHEPARD_AVG_NRPOINTS);
 
     // define a first neighborhood inside initial radius
+    std::vector <Crit3DInterpolationDataPoint> shepardNeighbourPoints;
     for (unsigned int i=0; i < inputPoints.size(); i++)
     {
         if (inputPoints[i].distance <= shepardInitialRadius &&
@@ -865,12 +862,11 @@ float shepardSearchNeighbour(vector <Crit3DInterpolationDataPoint> &inputPoints,
             inputPoints[i].index != settings->getIndexPointCV())
         {
             shepardNeighbourPoints.push_back(inputPoints[i]);
-            nrValid++;
         }
     }
 
     // If the points are too few, double the check radius
-    if (shepardNeighbourPoints.size() <= SHEPARD_MIN_NRPOINTS)
+    if (shepardNeighbourPoints.size() < SHEPARD_MIN_NRPOINTS)
     {
         float doubleRadius = shepardInitialRadius * 2;
         for (unsigned int i=0; i < inputPoints.size(); i++)
@@ -880,29 +876,21 @@ float shepardSearchNeighbour(vector <Crit3DInterpolationDataPoint> &inputPoints,
                 inputPoints[i].index != settings->getIndexPointCV())
             {
                 shepardNeighbourPoints.push_back(inputPoints[i]);
-                nrValid++;
             }
         }
+        shepardInitialRadius = doubleRadius;
     }
 
-    if (shepardNeighbourPoints.size() <= SHEPARD_MIN_NRPOINTS)
+    float radius;
+    if (shepardNeighbourPoints.size() < SHEPARD_MIN_NRPOINTS)
     {
-        nrValid = sortPointsByDistance(SHEPARD_MIN_NRPOINTS + 1, inputPoints, outputPoints);
-        if (nrValid > SHEPARD_MIN_NRPOINTS)
-        {
-            radius = outputPoints[SHEPARD_MIN_NRPOINTS].distance;
-            outputPoints.pop_back();
-        }
-        else
-        {
-            radius = outputPoints[nrValid-1].distance + float(EPSILON);
-        }
+        int nrPoints = sortPointsByDistance(SHEPARD_MIN_NRPOINTS, inputPoints, outputPoints);
+        radius = outputPoints[nrPoints-1].distance + float(EPSILON);
     }
     else if (shepardNeighbourPoints.size() > SHEPARD_MAX_NRPOINTS)
     {
-        nrValid = sortPointsByDistance(SHEPARD_MAX_NRPOINTS + 1, shepardNeighbourPoints, outputPoints);
-        radius = outputPoints[SHEPARD_MAX_NRPOINTS].distance;
-        outputPoints.pop_back();
+        int nrPoints = sortPointsByDistance(SHEPARD_MAX_NRPOINTS, shepardNeighbourPoints, outputPoints);
+        radius = outputPoints[nrPoints-1].distance + float(EPSILON);
     }
     else
     {
