@@ -869,6 +869,22 @@ float shepardSearchNeighbour(vector <Crit3DInterpolationDataPoint> &inputPoints,
         }
     }
 
+    // If the points are too few, double the check radius
+    if (shepardNeighbourPoints.size() <= SHEPARD_MIN_NRPOINTS)
+    {
+        float doubleRadius = shepardInitialRadius * 2;
+        for (unsigned int i=0; i < inputPoints.size(); i++)
+        {
+            if (inputPoints[i].distance <= doubleRadius &&
+                inputPoints[i].distance > shepardInitialRadius &&
+                inputPoints[i].index != settings->getIndexPointCV())
+            {
+                shepardNeighbourPoints.push_back(inputPoints[i]);
+                nrValid++;
+            }
+        }
+    }
+
     if (shepardNeighbourPoints.size() <= SHEPARD_MIN_NRPOINTS)
     {
         nrValid = sortPointsByDistance(SHEPARD_MIN_NRPOINTS + 1, inputPoints, outputPoints);
