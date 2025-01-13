@@ -233,3 +233,39 @@ bool GaussSeidelRelaxation (int approximation, double toleranceThreshold, int pr
 
     return true;
 }
+
+
+bool JacobiRelaxation (int approximation, double toleranceThreshold, int process)
+{
+    double currentNorm = 1.0;
+    double bestNorm = currentNorm;
+
+    int maxIterationsNr = getMaxIterationsNr(approximation);
+    int iteration = 0;
+
+    while ((currentNorm > toleranceThreshold) && (iteration < maxIterationsNr))
+    {
+        if (process == PROCESS_HEAT)
+        {
+            currentNorm = GaussSeidelIterationHeat();
+        }
+        if (process == PROCESS_WATER)
+        {
+            // TODO Jacobi method
+
+            if (currentNorm < bestNorm)
+            {
+                bestNorm = currentNorm;
+            }
+            else if (currentNorm > (bestNorm * 10.0))
+            {
+                // non-convergent system
+                return false;
+            }
+        }
+
+        iteration++;
+    }
+
+    return true;
+}
