@@ -13,5 +13,7 @@
 
     bool GaussSeidelRelaxation (int myApproximation, double myResidualTolerance, int myProcess);
 
+    bool JacobiRelaxation (int approximation, double toleranceThreshold, int process);
+
 #endif  // SOLVER_H
 

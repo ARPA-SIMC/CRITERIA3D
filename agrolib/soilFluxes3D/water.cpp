@@ -201,7 +201,6 @@ double redistribution(long i, TlinkedNode *link, int linkType)
 }
 
 
-
 bool computeFlux(long i, int matrixIndex, TlinkedNode *link, double deltaT, unsigned long myApprox, int linkType)
 {
     if ((*link).index == NOLINK) return false;

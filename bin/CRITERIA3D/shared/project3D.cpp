@@ -711,21 +711,22 @@ bool Project3D::setCrit3DSoils()
 
 bool Project3D::setCrit3DTopography()
 {
-    double x, y;
-    float lateralArea;
-    long linkIndex, soilIndex;
-    int myResult;
-    QString myError;
-
     double area = DEM.header->cellSize * DEM.header->cellSize;
 
     for (size_t layer = 0; layer < nrLayers; layer++)
     {
         double volume = area * layerThickness[layer];
+        float lateralArea;
         if (layer == 0)
+        {
+            // [m]
             lateralArea = DEM.header->cellSize;
+        }
         else
+        {
+            // [m2]
             lateralArea = DEM.header->cellSize * layerThickness[layer];
+        }
 
         for (int row = 0; row < indexMap.at(layer).header->nrRows; row++)
         {
@@ -735,12 +736,14 @@ bool Project3D::setCrit3DTopography()
                 long flag = long(indexMap.at(layer).header->flag);
                 if (index != flag)
                 {
+                    double x, y;
                     DEM.getXY(row, col, x, y);
                     float slopeDegree = radiationMaps->slopeMap->value[row][col];
                     float boundarySlope = tan(slopeDegree * DEG_TO_RAD);
                     float z = DEM.value[row][col] - float(layerDepth[layer]);
 
-                    soilIndex = getSoilIndex(row, col);
+                    int soilIndex = getSoilIndex(row, col);
+                    int myResult;
 
                     if (layer == 0)
                     {
@@ -806,24 +809,24 @@ bool Project3D::setCrit3DTopography()
                     }
 
                     // check error
-                    if (isCrit3dError(myResult, myError))
+                    if (isCrit3dError(myResult, errorString))
                     {
-                        errorString = "setTopography:" + myError + " in layer nr:" + QString::number(layer);
+                        errorString = "setTopography:" + errorString + " in layer nr:" + QString::number(layer);
                         return(false);
                     }
 
                     // up link
                     if (layer > 0)
                     {
-                        linkIndex = long(indexMap.at(layer - 1).value[row][col]);
+                        int linkIndex = int(indexMap.at(layer - 1).value[row][col]);
 
-                        if (linkIndex != long(indexMap.at(layer - 1).header->flag))
+                        if (linkIndex != int(indexMap.at(layer - 1).header->flag))
                         {
                             myResult = soilFluxes3D::setNodeLink(index, linkIndex, UP, float(area));
-                            if (isCrit3dError(myResult, myError))
+                            if (isCrit3dError(myResult, errorString))
                             {
-                                errorString = "setNodeLink:" + myError + " in layer nr:" + QString::number(layer);
-                                return(false);
+                                errorString = "setNodeLink:" + errorString + " in layer nr:" + QString::number(layer);
+                                return false;
                             }
                         }
                     }
@@ -831,16 +834,16 @@ bool Project3D::setCrit3DTopography()
                     // down link
                     if (layer < (nrLayers - 1) && isWithinSoil(soilIndex, layerDepth.at(size_t(layer + 1))))
                     {
-                        linkIndex = long(indexMap.at(layer + 1).value[row][col]);
+                        int linkIndex = int(indexMap.at(layer + 1).value[row][col]);
 
-                        if (linkIndex != long(indexMap.at(layer + 1).header->flag))
+                        if (linkIndex != int(indexMap.at(layer + 1).header->flag))
                         {
                             myResult = soilFluxes3D::setNodeLink(index, linkIndex, DOWN, float(area));
 
-                            if (isCrit3dError(myResult, myError))
+                            if (isCrit3dError(myResult, errorString))
                             {
-                                errorString = "setNodeLink:" + myError + " in layer nr:" + QString::number(layer);
-                                return(false);
+                                errorString = "setNodeLink:" + errorString + " in layer nr:" + QString::number(layer);
+                                return false;
                             }
                         }
                     }
@@ -854,14 +857,15 @@ bool Project3D::setCrit3DTopography()
                             {
                                 if (! gis::isOutOfGridRowCol(row+i, col+j, indexMap.at(layer)))
                                 {
-                                    linkIndex = long(indexMap.at(layer).value[row+i][col+j]);
-                                    if (linkIndex != long(indexMap.at(layer).header->flag))
+                                    int linkIndex = int(indexMap.at(layer).value[row+i][col+j]);
+                                    if (linkIndex != int(indexMap.at(layer).header->flag))
                                     {
+                                        // eight lateral nodes: each is assigned half a side (conceptual octagon)
                                         myResult = soilFluxes3D::setNodeLink(index, linkIndex, LATERAL, lateralArea * 0.5);
-                                        if (isCrit3dError(myResult, myError))
+                                        if (isCrit3dError(myResult, errorString))
                                         {
-                                            errorString = "setNodeLink:" + myError + " in layer nr:" + QString::number(layer);
-                                            return(false);
+                                            errorString = "setNodeLink:" + errorString + " in layer nr:" + QString::number(layer);
+                                            return false;
                                         }
                                     }
                                 }
