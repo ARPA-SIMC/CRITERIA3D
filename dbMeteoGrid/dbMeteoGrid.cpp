@@ -3427,7 +3427,9 @@ bool Crit3DMeteoGridDbHandler::saveGridData(QString *errorStr, QDateTime firstTi
     if (lastTime.time().hour() == 0) lastDate = lastDate.addDays(-1);
 
     for (int row = 0; row < gridStructure().header().nrRows; row++)
+    {
         for (int col = 0; col < gridStructure().header().nrCols; col++)
+        {
             if (meteoGrid()->getMeteoPointActiveId(row, col, &id))
             {
                 if (! gridStructure().isFixedFields())
@@ -3441,6 +3443,8 @@ bool Crit3DMeteoGridDbHandler::saveGridData(QString *errorStr, QDateTime firstTi
                     if (isDaily) saveCellGridDailyDataFF(errorStr, QString::fromStdString(id), row, col, firstTime.date(), lastDate, meteoSettings);
                 }
             }
+        }
+    }
 
     return true;
 }
@@ -3506,7 +3510,7 @@ bool Crit3DMeteoGridDbHandler::saveCellGridHourlyData(QString *errorStr, QString
     QString statement = QString("CREATE TABLE IF NOT EXISTS `%1` "
                                 "(`%2` datetime, VariableCode tinyint(3) UNSIGNED, Value float(6,1), PRIMARY KEY(`%2`,VariableCode))").arg(tableH, _tableHourly.fieldTime);
 
-    if( !qry.exec(statement) )
+    if(! qry.exec(statement) )
     {
         *errorStr = qry.lastError().text();
         return false;
@@ -3516,6 +3520,7 @@ bool Crit3DMeteoGridDbHandler::saveCellGridHourlyData(QString *errorStr, QString
         statement =  QString(("REPLACE INTO `%1` VALUES")).arg(tableH);
 
         foreach (meteoVariable meteoVar, meteoVariableList)
+        {
             if (getVarFrequency(meteoVar) == hourly)
             {
                 for (QDateTime myTime = firstTime; myTime <= lastTime; myTime = myTime.addSecs(3600))
@@ -3528,10 +3533,11 @@ bool Crit3DMeteoGridDbHandler::saveCellGridHourlyData(QString *errorStr, QString
                     statement += QString(" ('%1','%2',%3),").arg(myTime.toString("yyyy-MM-dd hh:mm")).arg(varCode).arg(valueS);
                 }
             }
+        }
 
         statement = statement.left(statement.length() - 1);
 
-        if( !qry.exec(statement) )
+        if(! qry.exec(statement))
         {
             *errorStr = qry.lastError().text();
             return false;
@@ -3562,6 +3568,7 @@ bool Crit3DMeteoGridDbHandler::saveCellGridHourlyDataEnsemble(QString *errorStr,
         statement =  QString(("REPLACE INTO `%1` (%2, VariableCode, Value, MemberNr) VALUES ")).arg(tableH, _tableHourly.fieldTime);
 
         foreach (meteoVariable meteoVar, meteoVariableList)
+        {
             if (getVarFrequency(meteoVar) == hourly)
             {
                 for (QDateTime myTime = firstTime; myTime <= lastTime; myTime = myTime.addSecs(3600))
@@ -3574,10 +3581,11 @@ bool Crit3DMeteoGridDbHandler::saveCellGridHourlyDataEnsemble(QString *errorStr,
                     statement += QString(" ('%1','%2',%3,'%4'),").arg(myTime.toString("yyyy-MM-dd hh:mm")).arg(varCode).arg(valueS).arg(memberNr);
                 }
             }
+        }
 
         statement = statement.left(statement.length() - 1);
 
-        if( !qry.exec(statement) )
+        if(! qry.exec(statement))
         {
             *errorStr = qry.lastError().text();
             return false;
@@ -3587,12 +3595,12 @@ bool Crit3DMeteoGridDbHandler::saveCellGridHourlyDataEnsemble(QString *errorStr,
     return true;
 }
 
+
 bool Crit3DMeteoGridDbHandler::saveCellGridHourlyDataFF(QString *errorStr, QString meteoPointID, int row, int col, QDateTime firstTime, QDateTime lastTime)
 {
     QSqlQuery qry(_db);
     QString tableH = _tableHourly.prefix + meteoPointID + _tableHourly.postFix;
     QString tableFields;
-
 
     for (unsigned int i=0; i < _tableHourly.varcode.size(); i++)
     {
