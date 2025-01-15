@@ -2947,6 +2947,10 @@ bool PragaProject::interpolationMeteoGridPeriod(QDate dateIni, QDate dateFin, QL
         if (! loadGlocalStationsAndCells(!interpolationSettings.getMeteoGridUpscaleFromDem())) return false;
     }
 
+    // save also derived variables
+    foreach (myVar, derivedVariables)
+        varToSave.push_back(myVar);
+
     // save also time aggregated variables
     foreach (myVar, aggrVariables)
         varToSave.push_back(myVar);
