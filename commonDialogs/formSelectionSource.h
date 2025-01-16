@@ -15,6 +15,7 @@
     private:
         QRadioButton* pointButton;
         QRadioButton* gridButton;
+        QRadioButton* interpolationButton;
 
         void done(int res);
     };

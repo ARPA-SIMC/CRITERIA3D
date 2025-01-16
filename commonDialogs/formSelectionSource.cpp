@@ -13,10 +13,12 @@ FormSelectionSource::FormSelectionSource()
 
     gridButton = new QRadioButton(tr("Meteo Grid"));
     pointButton =new QRadioButton(tr("Meteo Points"));
+    interpolationButton =new QRadioButton(tr("Interpolation Raster"));
 
     QHBoxLayout *sourceLayout = new QHBoxLayout;
     sourceLayout->addWidget(gridButton);
     sourceLayout->addWidget(pointButton);
+    sourceLayout->addWidget(interpolationButton);
 
     QGroupBox *sourceGroupBox = new QGroupBox("Source");
     sourceGroupBox->setLayout(sourceLayout);
@@ -39,7 +41,7 @@ void FormSelectionSource::done(int res)
 {
     if (res == QDialog::Accepted) // ok
     {
-        if (!pointButton->isChecked() && !gridButton->isChecked())
+        if (!pointButton->isChecked() && !gridButton->isChecked() && !interpolationButton->isChecked())
         {
             QMessageBox::information(nullptr, "Missing source selection.", "Please choose a data source.");
             return;
@@ -64,6 +66,10 @@ int FormSelectionSource::getSourceSelectionId()
     else if (gridButton->isChecked())
     {
         return 2;
+    }
+    else if (interpolationButton->isChecked())
+    {
+        return 3;
     }
     else
     {
