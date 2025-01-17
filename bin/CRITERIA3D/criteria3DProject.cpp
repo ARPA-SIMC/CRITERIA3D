@@ -35,6 +35,7 @@
 #include "project3D.h"
 #include "soilFluxes3D.h"
 #include "soil.h"
+#include "hydrall.h"
 
 #include <QtSql>
 #include <QPaintEvent>
@@ -1339,6 +1340,10 @@ bool Crit3DProject::runModelHour(const QString& hourlyOutputPath, bool isRestart
             if (processes.computeCrop)
             {
                 updateDailyTemperatures();
+                if (1) //if Hydrall is on processes.computeForestModel
+                {
+                    computeHydrall(myDateTime, 25, 200);
+                }
             }
             if (processes.computeWater)
             {
