@@ -5,14 +5,16 @@
 #
 #---------------------------------------------------
 
-QT      -= core gui
+QT       -= core gui
 
 TEMPLATE = lib
 CONFIG += staticlib
 
-DEFINES += _CRT_SECURE_NO_WARNINGS
-
 CONFIG += debug_and_release
+CONFIG += c++11 c++14 c++17
+
+#DEFINES += _CRT_SECURE_NO_WARNINGS
+
 
 unix:{
     CONFIG(debug, debug|release) {
@@ -31,5 +33,4 @@ SOURCES += hydrall.cpp
 
 
 HEADERS += hydrall.h 
-
 
