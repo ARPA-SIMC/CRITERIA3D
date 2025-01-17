@@ -1342,7 +1342,7 @@ bool Crit3DProject::runModelHour(const QString& hourlyOutputPath, bool isRestart
                 updateDailyTemperatures();
                 if (1) //if Hydrall is on processes.computeForestModel
                 {
-                    computeHydrall(myDateTime, 25, 200);
+                    //computeHydrall(myDateTime, 25, 200);
                 }
             }
             if (processes.computeWater)
