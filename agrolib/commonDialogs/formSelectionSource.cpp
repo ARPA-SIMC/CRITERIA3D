@@ -20,6 +20,7 @@ FormSelectionSource::FormSelectionSource()
     sourceLayout->addWidget(pointButton);
     sourceLayout->addWidget(interpolationButton);
 
+
     QGroupBox *sourceGroupBox = new QGroupBox("Source");
     sourceGroupBox->setLayout(sourceLayout);
 
@@ -56,6 +57,12 @@ void FormSelectionSource::done(int res)
     }
 }
 
+void FormSelectionSource::disableRadioButtons(bool pointDisable, bool gridDisable, bool interpolationDisable)
+{
+    pointButton->setCheckable(!pointDisable);
+    gridButton->setCheckable(!gridDisable);
+    interpolationButton->setCheckable(!interpolationDisable);
+}
 
 int FormSelectionSource::getSourceSelectionId()
 {
@@ -76,4 +83,3 @@ int FormSelectionSource::getSourceSelectionId()
         return NODATA;
     }
 }
-
