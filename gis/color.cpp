@@ -97,6 +97,9 @@ bool Crit3DColorScale::classify()
         nrIntervals = MAXVALUE(_nrKeyColors -1, 1);
         nrStep = _nrColors / nrIntervals;
 
+        _nrColors = nrStep * nrIntervals;
+        color.resize(_nrColors);
+
         for (i = 0; i < nrIntervals; i++)
         {
             dRed = float(keyColor[i+1].red - keyColor[i].red) / float(nrStep);
@@ -120,24 +123,7 @@ bool Crit3DColorScale::classify()
 
 Crit3DColor* Crit3DColorScale::getColor(float value)
 {
-    unsigned int index = 0;
-
-    if (value <= _minimum)
-    {
-        index = 0;
-    }
-    else if (value >= _maximum)
-    {
-        index = _nrColors-1;
-    }
-    else
-    {
-        if (_classification == classificationMethod::EqualInterval)
-        {
-            index = unsigned(float(_nrColors-1) * ((value - _minimum) / (_maximum - _minimum)));
-        }
-    }
-
+    unsigned int index = getColorIndex(value);
     return &color[index];
 }
 
@@ -237,7 +223,7 @@ bool setAnomalyScale(Crit3DColorScale* myScale)
 
 bool setPrecipitationScale(Crit3DColorScale* myScale)
 {
-    myScale->initialize(6, 252);
+    myScale->initialize(6, 256);
 
     myScale->keyColor[0] = Crit3DColor(255, 255, 255);      /*!< white */
     myScale->keyColor[1] = Crit3DColor(0, 0, 255);          /*!< blue */

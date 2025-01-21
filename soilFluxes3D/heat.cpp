@@ -991,7 +991,7 @@ bool HeatComputation(double timeStep, double timeStepWater)
             return (false);
         }
 
-    GaussSeidelRelaxation(0, myParameters.ResidualTolerance, PROCESS_HEAT);
+    solver(0, myParameters.ResidualTolerance, PROCESS_HEAT);
 
     for (i = 1; i < myStructure.nrNodes; i++)
         nodeList[i].extra->Heat->T = X[i];
