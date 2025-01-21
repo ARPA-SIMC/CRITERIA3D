@@ -89,6 +89,7 @@ void Crit3DProject::clearCropMaps()
     degreeDaysMap.clear();
     dailyTminMap.clear();
     dailyTmaxMap.clear();
+    lastMonthTavgMap.clear();
 
     isCropInitialized = false;
 }
@@ -110,6 +111,7 @@ bool Crit3DProject::initializeCropMaps()
 
     dailyTminMap.initializeGrid(*(DEM.header));
     dailyTmaxMap.initializeGrid(*(DEM.header));
+    lastMonthTavgMap.initializeGrid(*(DEM.header));
 
     return true;
 }
@@ -189,6 +191,7 @@ bool Crit3DProject::initializeCropWithClimateData()
                     laiMap.value[row][col] = cropList[index].computeSimpleLAI(degreeDays, gisSettings.startLocation.latitude, currentDate.dayOfYear());
                 }
             }
+            lastMonthTavgMap.value[row][col]= 15; // initialize to 15°C
         }
     }
 
@@ -1189,6 +1192,20 @@ bool Crit3DProject::computeSnowModel()
     return true;
 }
 
+bool Crit3DProject::updateLast30DaysTavg()
+{
+    if (! dailyTminMap.isLoaded || ! dailyTmaxMap.isLoaded || ! hourlyMeteoMaps->mapHourlyTair->isLoaded)
+        return false;
+
+    for (long row = 0; row < dailyTminMap.header->nrRows; row++)
+    {
+        for (long col = 0; col < dailyTminMap.header->nrCols; col++)
+        {
+            lastMonthTavgMap.value[row][col] = (29./30.)*lastMonthTavgMap.value[row][col] + (dailyTmaxMap.value[row][col] + dailyTminMap.value[row][col])/30;
+        }
+    }
+    return true;
+}
 
 bool Crit3DProject::updateDailyTemperatures()
 {

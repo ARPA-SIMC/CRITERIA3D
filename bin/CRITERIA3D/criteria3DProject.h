@@ -32,6 +32,7 @@
         void clear3DProject();
         bool check3DProject();
         bool updateDailyTemperatures();
+        bool updateLast30DaysTavg();
 
         bool saveSnowModelState(const QString &currentStatePath);
         bool saveSoilWaterState(const QString &currentStatePath);
@@ -47,6 +48,7 @@
         gis::Crit3DRasterGrid degreeDaysMap;
         gis::Crit3DRasterGrid dailyTminMap;
         gis::Crit3DRasterGrid dailyTmaxMap;
+        gis::Crit3DRasterGrid lastMonthTavgMap;
 
         Crit3DSnow snowModel;
 
