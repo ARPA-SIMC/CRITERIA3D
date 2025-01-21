@@ -27,7 +27,7 @@ bool Vine3D_Grapevine::compute(bool computeDaily, int secondsPerStep, Crit3DMode
 {
     simulationStepInSeconds = double(secondsPerStep);
     isAmphystomatic = true;
-    myLeafWidth = 0.2;       // [m]
+    myLeafWidth = 0.2;       // [cm]
     // Stomatal conductance Adjust stom conductance-photosynth ratio for soil water (Pa)
     alphaLeuning = modelCase->cultivar->parameterWangLeuning.alpha;
     getFixSimulationParameters();

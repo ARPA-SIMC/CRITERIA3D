@@ -90,6 +90,8 @@
         void initializePragaProject();
         void clearPragaProject();
 
+        QString getVersion();
+
         void createPragaProject(QString path_, QString name_, QString description_);
         void savePragaProject();
         void savePragaParameters();
