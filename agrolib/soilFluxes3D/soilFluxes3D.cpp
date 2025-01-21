@@ -53,8 +53,9 @@ TmatrixElement **A = nullptr;
 
 double *invariantFlux = nullptr;
 double *C = nullptr;
-double *X = nullptr;
 double *b = nullptr;
+double *X = nullptr;
+double *X1 = nullptr;
 
 std::vector< std::vector<Tsoil>> Soil_List;
 std::vector<Tsoil> Surface_List;

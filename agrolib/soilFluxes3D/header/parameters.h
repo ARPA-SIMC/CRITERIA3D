@@ -22,7 +22,7 @@
 
         void initialize()
         {
-            numericalSolutionMethod = RELAXATION;
+            numericalSolutionMethod = GAUSS_SEIDEL;
             delta_t_min = 1;
             delta_t_max = 600;
             current_delta_t = delta_t_max;

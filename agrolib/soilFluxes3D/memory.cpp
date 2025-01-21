@@ -44,10 +44,11 @@ void cleanArrays()
     }
 
     /*! free arrays */
+    if (invariantFlux != nullptr) { free(invariantFlux); invariantFlux = nullptr; }
     if (b != nullptr) { free(b); b = nullptr; }
     if (C != nullptr) { free(C); C = nullptr; }
-    if (invariantFlux != nullptr) { free(invariantFlux); invariantFlux = nullptr; }
     if (X != nullptr) { free(X); X = nullptr; }
+    if (X1 != nullptr) { free(X1); X1 = nullptr; }
 }
 
 
@@ -72,38 +73,49 @@ void cleanNodes()
  */
 int initializeArrays()
 {
-    long i, j, n;
-
     /*! clean previous arrays */
     cleanArrays();
 
-    /*! matrix solver: rows */
+    /*! matrix A: rows */
     A = (TmatrixElement **) calloc(myStructure.nrNodes, sizeof(TmatrixElement *));
 
-    /*! matrix solver: columns */
-    for (i = 0; i < myStructure.nrNodes; i++)
-            A[i] = (TmatrixElement *) calloc(myStructure.maxNrColumns, sizeof(TmatrixElement));
+    /*! matrix A: columns */
+    for (long i = 0; i < myStructure.nrNodes; i++)
+    {
+        A[i] = (TmatrixElement *) calloc(myStructure.maxNrColumns, sizeof(TmatrixElement));
+    }
 
-    /*! initialize matrix solver */
-    for (i = 0; i < myStructure.nrNodes; i++)
-        for (j = 0; j < (myStructure.nrLateralLinks + 2); j++)
+    /*! initialize matrix A */
+    for (long i = 0; i < myStructure.nrNodes; i++)
+    {
+        for (int j = 0; j < myStructure.maxNrColumns; j++)
         {
             A[i][j].index   = NOLINK;
             A[i][j].val     = 0.;
         }
+    }
 
     b = (double *) calloc(myStructure.nrNodes, sizeof(double));
-    for (n = 0; n < myStructure.nrNodes; n++) b[n] = 0.;
+    for (long i = 0; i < myStructure.nrNodes; i++)
+    {
+        b[i] = 0.;
+    }
 
     X = (double *) calloc(myStructure.nrNodes, sizeof(double));
 
-    /*! mass diagonal matrix */
-    C = (double *) calloc(myStructure.nrNodes, sizeof(double));
-    for (n = 0; n < myStructure.nrNodes; n++) C[n] = 0.;
+    if (myParameters.numericalSolutionMethod == JACOBI)
+    {
+        X1 = (double *) calloc(myStructure.nrNodes, sizeof(double));
+    }
 
     /*! mass diagonal matrix */
+    C = (double *) calloc(myStructure.nrNodes, sizeof(double));
     invariantFlux = (double *) calloc(myStructure.nrNodes, sizeof(double));
-    for (n = 0; n < myStructure.nrNodes; n++) invariantFlux[n] = 0.;
+    for (long n = 0; n < myStructure.nrNodes; n++)
+    {
+        C[n] = 0.;
+        invariantFlux[n] = 0.;
+    }
 
     if (A == nullptr)
         return MEMORY_ERROR;

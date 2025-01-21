@@ -109,7 +109,8 @@
     #define BOUNDARY_SOLUTEFLUX 30
     #define BOUNDARY_NONE 99
 
-    #define RELAXATION 1
+    #define GAUSS_SEIDEL 1
+    #define JACOBI 2
 
     // --------------- heat model -----------------
     #define SAVE_HEATFLUXES_NONE 0

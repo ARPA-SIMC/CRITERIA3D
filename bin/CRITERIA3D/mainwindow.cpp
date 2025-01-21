@@ -2485,6 +2485,8 @@ void MainWindow::showCriteria3DVariable(criteria3DVariable var, int layerIndex, 
         {
             // SURFACE
             setSurfaceWaterScale(myProject.criteria3DMap.colorScale);
+            myProject.criteria3DMap.colorScale->setHideOutliers(true);
+            myProject.criteria3DMap.colorScale->setTransparent(true);
             ui->labelOutputRaster->setText("Surface water content [mm]");
             myProject.criteria3DMap.colorScale->setTransparent(true);
         }

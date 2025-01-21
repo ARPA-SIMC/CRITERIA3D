@@ -2364,8 +2364,8 @@ bool Crit3DProject::update3DColors(gis::Crit3DRasterGrid *rasterPointer)
                             // check outliers
                             if (rasterPointer->colorScale->isHideOutliers())
                             {
-                                if (value <= rasterPointer->colorScale->minimum()
-                                    || value > rasterPointer->colorScale->maximum())
+                                if (value == 0 || value < rasterPointer->colorScale->minimum()
+                                    || value > rasterPointer->colorScale->maximum() )
                                     alpha = 0;
                             }
                             if (rasterPointer->colorScale->isTransparent())
