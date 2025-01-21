@@ -24,8 +24,10 @@
 
     #define NOT_INITIALIZED_VINE -1
 
+    bool computeHydrall(Crit3DDate myDate, double myTemperature, double myElevation, int secondPerStep);
     double getCO2(Crit3DDate myDate, double myTemperature, double myElevation);
     double getPressureFromElevation(double myTemperature, double myElevation);
-
+    double getLAI();
+    double meanLastMonthTemperature(double previousLastMonthTemp, double simulationStepInSeconds, double myInstantTemp);
 
 #endif // HYDRALL_H
