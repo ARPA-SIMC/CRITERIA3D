@@ -11,10 +11,12 @@
         FormSelectionSource();
 
         int getSourceSelectionId();
+        void disableRadioButtons(bool pointDisable, bool gridDisable, bool interpolationDisable);
 
     private:
         QRadioButton* pointButton;
         QRadioButton* gridButton;
+        QRadioButton* interpolationButton;
 
         void done(int res);
     };

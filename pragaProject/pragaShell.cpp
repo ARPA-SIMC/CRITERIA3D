@@ -13,6 +13,7 @@ QList<QString> getPragaCommandList()
 
     // praga commands
     cmdList.append("List            | ListCommands");
+    cmdList.append("Version         | PragaVersion");
     cmdList.append("Proj            | OpenProject");
     cmdList.append("Download        | Download");
     cmdList.append("AggrOnZones     | GridAggregationOnZones");
@@ -50,6 +51,14 @@ int cmdList(PragaProject* myProject)
 }
 
 
+int pragaVersion(PragaProject* myProject)
+{
+    myProject->logInfo(myProject->getVersion());
+
+    return PRAGA_OK;
+}
+
+
 int PragaProject::executePragaCommand(QList<QString> argumentList, bool* isCommandFound)
 {
     *isCommandFound = false;
@@ -57,10 +66,15 @@ int PragaProject::executePragaCommand(QList<QString> argumentList, bool* isComma
 
     QString command = argumentList[0].toUpper();
 
-    if (command == "?" || command == "LIST" || command == "LISTCOMMANDS")
+    if (command == "?" || command == "LS" || command == "LIST" || command == "LISTCOMMANDS")
     {
         *isCommandFound = true;
         return cmdList(this);
+    }
+    if (command == "VERSION" || command == "PRAGAVERSION")
+    {
+        *isCommandFound = true;
+        return pragaVersion(this);
     }
     else if (command == "PROJ" || command == "OPENPROJECT")
     {
@@ -900,7 +914,7 @@ int pragaBatch(PragaProject* myProject, QString scriptFileName)
         attachOutputToConsole();
     #endif
 
-    myProject->logInfo("\nPRAGA v2.0.0");
+    myProject->logInfo(myProject->getVersion());
     myProject->logInfo("Execute script: " + scriptFileName);
 
     if (scriptFileName == "")
