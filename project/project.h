@@ -269,7 +269,6 @@
         bool loadGlocalStationsCsv(QString fileName, std::vector<std::vector<std::string> > &areaPoints);
         bool groupCellsInArea(std::vector<int> &areaPoints, unsigned index, bool isGrid);
         bool writeGlocalWeightsMaps(float windowWidth);
-		void macroAreaDetrending(Crit3DMacroArea myArea, meteoVariable myVar, std::vector<Crit3DInterpolationDataPoint> interpolationPoints, std::vector<Crit3DInterpolationDataPoint> &subsetInterpolationPoints, int elevationPos);
 
 
         bool checkInterpolation(meteoVariable myVar);
