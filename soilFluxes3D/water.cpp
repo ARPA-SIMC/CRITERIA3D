@@ -75,7 +75,6 @@ double getWaterExchange(long i, TlinkedNode *link, double deltaT)
 double runoff(long i, long j, TlinkedNode *link, double deltaT, unsigned long approximationNr)
 {
     double Hi, Hj;
-    double const EPSILON_mm = 0.0001;
 
     if (approximationNr == 0)
     {
@@ -86,23 +85,25 @@ double runoff(long i, long j, TlinkedNode *link, double deltaT, unsigned long ap
     }
     else
     {
-		
-		Hi = nodeList[i].H;
-		Hj = nodeList[j].H;
-		/*
+        Hi = nodeList[i].H;
+        Hj = nodeList[j].H;
+
+        /*
 		Hi = (nodeList[i].H + nodeList[i].oldH) / 2.0;
         Hj = (nodeList[j].H + nodeList[j].oldH) / 2.0;
-		*/
+        */
     }
 
     double H = MAXVALUE(Hi, Hj);
     double z = MAXVALUE(nodeList[i].z + nodeList[i].pond, nodeList[j].z + nodeList[j].pond);
     double Hs = H - z;
-    if (Hs <= 0.) return(0.);
+    if (Hs <= 0.)
+        return 0.;
 
     double dH = fabs(Hi - Hj);
     double cellDistance = distance2D(i,j);
-    if ((dH/cellDistance) < EPSILON_mm) return(0.);
+    if ((dH/cellDistance) < EPSILON)
+        return 0.;
 
     double roughness = (nodeList[i].Soil->Roughness + nodeList[j].Soil->Roughness) / 2.;
 
@@ -334,7 +335,7 @@ bool waterFlowComputation(double deltaT)
             return false;
         }
 
-        if (! GaussSeidelRelaxation(approximationNr, myParameters.ResidualTolerance, PROCESS_WATER))
+        if (! solver(approximationNr, myParameters.ResidualTolerance, PROCESS_WATER))
         {
             if (deltaT > myParameters.delta_t_min)
             {
