@@ -5,9 +5,9 @@
 #include <QMessageBox>
 #include <QBoxLayout>
 
-FormSelectionSource::FormSelectionSource()
-{
 
+FormSelectionSource::FormSelectionSource(bool pointVisible, bool gridVisible, bool interpolationVisible)
+{
     this->setWindowTitle("Select data source");
     this->resize(300, 150);
 
@@ -16,9 +16,12 @@ FormSelectionSource::FormSelectionSource()
     interpolationButton =new QRadioButton(tr("Interpolation Raster"));
 
     QHBoxLayout *sourceLayout = new QHBoxLayout;
-    sourceLayout->addWidget(gridButton);
-    sourceLayout->addWidget(pointButton);
-    sourceLayout->addWidget(interpolationButton);
+    if (gridVisible)
+        sourceLayout->addWidget(gridButton);
+    if (pointVisible)
+        sourceLayout->addWidget(pointButton);
+    if (interpolationVisible)
+        sourceLayout->addWidget(interpolationButton);
 
     QGroupBox *sourceGroupBox = new QGroupBox("Source");
     sourceGroupBox->setLayout(sourceLayout);
@@ -56,15 +59,6 @@ void FormSelectionSource::done(int res)
     }
 }
 
-void FormSelectionSource::disableRadioButtons(bool pointDisable, bool gridDisable, bool interpolationDisable)
-{
-    pointButton->setDisabled(pointDisable);
-    pointButton->setVisible(pointDisable);
-    gridButton->setDisabled(gridDisable);
-    gridButton->setVisible(gridDisable);
-    interpolationButton->setDisabled(interpolationDisable);
-    interpolationButton->setVisible(interpolationDisable);
-}
 
 int FormSelectionSource::getSourceSelectionId()
 {
