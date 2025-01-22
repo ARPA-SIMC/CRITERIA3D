@@ -232,6 +232,7 @@ void GaussSeidel(int start, int end, double *infinityNorm, short direction)
         }
 
         currentNorm = fabs(newX - X[i]);
+        X[i] = newX;
 
         // water potential [m]
         double psi = fabs(newX - nodeList[i].z);
@@ -243,8 +244,6 @@ void GaussSeidel(int start, int end, double *infinityNorm, short direction)
 
         if (currentNorm > *infinityNorm)
             *infinityNorm = currentNorm;
-
-        X[i] = newX;
 
         (direction == UP)? i++ : i--;
     }
@@ -382,20 +381,28 @@ bool solver (int approximation, double toleranceThreshold, int process)
 
         else if (process == PROCESS_WATER)
         {
-            if (myParameters.numericalSolutionMethod == GAUSS_SEIDEL)
+            if (myStructure.nrNodes < 1000)
             {
-                if (iteration%2 == 0)
-                {
-                    currentNorm = GaussSeidelThreads(DOWN);
-                }
-                else
-                {
-                    currentNorm = GaussSeidelThreads(UP);
-                }
+                currentNorm = GaussSeidelIterationWater(UP);
             }
-            else if (myParameters.numericalSolutionMethod == JACOBI)
+            else
             {
-                currentNorm = JacobiThreads();
+                // parallel computing
+                if (myParameters.numericalSolutionMethod == GAUSS_SEIDEL)
+                {
+                    if (iteration%2 == 0)
+                    {
+                        currentNorm = GaussSeidelThreads(DOWN);
+                    }
+                    else
+                    {
+                        currentNorm = GaussSeidelThreads(UP);
+                    }
+                }
+                else if (myParameters.numericalSolutionMethod == JACOBI)
+                {
+                    currentNorm = JacobiThreads();
+                }
             }
 
             if (currentNorm > (bestNorm * 10.0))
