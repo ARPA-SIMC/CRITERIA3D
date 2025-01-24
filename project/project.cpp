@@ -2382,6 +2382,12 @@ bool Project::loadGlocalWeightMaps(std::vector<Crit3DMacroArea> &myAreas, bool i
         nrRows = meteoGridDbHandler->gridStructure().header().nrRows;
     }
 
+    if (nrCols == 0 || nrRows == 0)
+    {
+        errorString = "DEM file missing. You can open it manually or add it in the .ini file.";
+        return false;
+    }
+
     unsigned nrAreasWithCells = 0;
 
     for (int i = 0; i < myAreas.size(); i++)
