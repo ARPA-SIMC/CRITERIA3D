@@ -1,6 +1,7 @@
 #ifndef PROJECT_H
 #define PROJECT_H
 
+#include "hydrall.h"
 #include <deque>
 #ifndef QUALITY_H
         #include "quality.h"
@@ -143,6 +144,7 @@
 
         Crit3DRadiationMaps *radiationMaps;
         Crit3DHourlyMeteoMaps *hourlyMeteoMaps;
+        Crit3DHydrallMaps *hydrallMaps;
 
         gis::Crit3DRasterGrid DEM;
 

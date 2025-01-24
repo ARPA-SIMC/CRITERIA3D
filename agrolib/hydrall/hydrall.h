@@ -7,6 +7,9 @@
     #ifndef CRIT3DDATE_H
         #include "crit3dDate.h"
     #endif
+    #ifndef GIS_H
+        #include "gis.h"
+    #endif
 
     #define UPSCALINGFUNC(z,LAI) ((1.0 - exp(-(z)*(LAI))) / (z))
 
@@ -32,8 +35,23 @@
 
     };
 
+    class Crit3DHydrallMaps
+    {
+    private:
 
-    bool computeHydrall(Crit3DDate myDate, double myTemperature, double myElevation, int secondPerStep);
+    public:
+        gis::Crit3DRasterGrid* mapLAI;
+        gis::Crit3DRasterGrid* mapLast30DaysTavg;
+
+        Crit3DHydrallMaps(const gis::Crit3DRasterGrid& DEM);
+        ~Crit3DHydrallMaps();
+
+        void clear();
+        void initialize();
+    };
+
+
+    bool computeHydrallPoint(Crit3DDate myDate, double myTemperature, double myElevation, int secondPerStep);
     double getCO2(Crit3DDate myDate, double myTemperature, double myElevation);
     double getPressureFromElevation(double myTemperature, double myElevation);
     double getLAI();

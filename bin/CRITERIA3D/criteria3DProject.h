@@ -96,7 +96,7 @@
 
         bool initializeSnowModel();
 
-        bool computeHydrallModel();
+        bool computeHydrallModel(double temperature, int secondsPerStep);
         bool computeSnowModel();
         void computeSnowPoint(int row, int col);
 

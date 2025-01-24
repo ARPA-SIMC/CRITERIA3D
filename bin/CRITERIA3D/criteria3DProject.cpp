@@ -1192,7 +1192,7 @@ bool Crit3DProject::computeSnowModel()
     return true;
 }
 
-bool Crit3DProject::computeHydrallModel()
+bool Crit3DProject::computeHydrallModel(double temperature, int secondsPerStep)
 {
     // check
     if (! snowMaps.isInitialized)
@@ -1219,7 +1219,7 @@ bool Crit3DProject::computeHydrallModel()
         {
             if (! isEqual(DEM.value[row][col], DEM.header->flag))
             {
-                //computeSnowPoint(row, col);
+                //computeHydrallPoint(getCrit3DDate(getCurrentDate()), temperature, double(DEM.value[row][col]), secondsPerStep);
             }
             else
             {
@@ -1403,8 +1403,8 @@ bool Crit3DProject::runModelHour(const QString& hourlyOutputPath, bool isRestart
                     updateLast30DaysTavg();
                     double temperature, elevation;
                     int secondsPerStep;
-                    Crit3DDate myDate;
-                    computeHydrallModel();
+                    Crit3DDate myDate = getCrit3DDate(getCurrentDate());
+                    computeHydrallModel(temperature, secondsPerStep);
                 }
             }
             if (processes.computeWater)

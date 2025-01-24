@@ -14,7 +14,17 @@
 #include "furtherMathFunctions.h"
 #include "physics.h"
 
-bool computeHydrall(Crit3DDate myDate, double myTemperature, double myElevation, int secondPerStep)
+Crit3DHydrallMaps::Crit3DHydrallMaps(const gis::Crit3DRasterGrid& DEM)
+{
+    mapLAI = new gis::Crit3DRasterGrid;
+    mapLast30DaysTavg = new gis::Crit3DRasterGrid;
+
+    mapLAI->initializeGrid(DEM);
+    mapLast30DaysTavg->initializeGrid(DEM);
+}
+
+
+bool computeHydrallPoint(Crit3DDate myDate, double myTemperature, double myElevation, int secondPerStep)
 {
     getCO2(myDate, myTemperature, myElevation);
 
@@ -72,13 +82,13 @@ double photosynthesisAndTranspiration()
     return 0;
 }
 
-void weatherVariables(double myInstantTemp,double myRelativeHumidity,TweatherDerivedVariable weatherDerivedVariable)
+void weatherVariables(double myInstantTemp,double myRelativeHumidity,double myCloudiness,TweatherDerivedVariable weatherDerivedVariable)
 {
     // taken from Hydrall Model, Magnani UNIBO
-    //weatherDerivedVariable.airVapourPressure = saturationVaporPressure(myInstantTemp)*myRelativeHumidity/100.;
-    //weatherDerivedVariable.emissivitySky = 1.24 * pow((weatherDerivedVariable.airVapourPressure/100.0) / (myInstantTemp+ZEROCELSIUS),(1.0/7.0))*(1 - 0.84*myCloudiness)+ 0.84*myCloudiness;
-    //myLongWaveIrradiance = pow(myInstantTemp+ZEROCELSIUS,4) * myEmissivitySky * STEFAN_BOLTZMANN ;
-    //mySlopeSatVapPressureVSTemp = 2588464.2 / pow(240.97 + myInstantTemp, 2) * exp(17.502 * myInstantTemp / (240.97 + myInstantTemp)) ;
+    weatherDerivedVariable.airVapourPressure = saturationVaporPressure(myInstantTemp)*myRelativeHumidity/100.;
+    weatherDerivedVariable.emissivitySky = 1.24 * pow((weatherDerivedVariable.airVapourPressure/100.0) / (myInstantTemp+ZEROCELSIUS),(1.0/7.0))*(1 - 0.84*myCloudiness)+ 0.84*myCloudiness;
+    weatherDerivedVariable.longWaveIrradiance = pow(myInstantTemp+ZEROCELSIUS,4) * weatherDerivedVariable.emissivitySky * STEFAN_BOLTZMANN ;
+    weatherDerivedVariable.slopeSatVapPressureVSTemp = 2588464.2 / pow(240.97 + myInstantTemp, 2) * exp(17.502 * myInstantTemp / (240.97 + myInstantTemp)) ;
 }
 /*
 double meanLastMonthTemperature(double previousLastMonthTemp, double simulationStepInSeconds, double myInstantTemp)
