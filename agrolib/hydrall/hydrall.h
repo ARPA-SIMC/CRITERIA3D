@@ -24,10 +24,19 @@
 
     #define NOT_INITIALIZED_VINE -1
 
+    struct TweatherDerivedVariable {
+        double airVapourPressure;
+        double emissivitySky;
+        double longWaveIrradiance;
+        double slopeSatVapPressureVSTemp;
+
+    };
+
+
     bool computeHydrall(Crit3DDate myDate, double myTemperature, double myElevation, int secondPerStep);
     double getCO2(Crit3DDate myDate, double myTemperature, double myElevation);
     double getPressureFromElevation(double myTemperature, double myElevation);
     double getLAI();
     double meanLastMonthTemperature(double previousLastMonthTemp, double simulationStepInSeconds, double myInstantTemp);
-
+    double photosynthesisAndTranspiration();
 #endif // HYDRALL_H

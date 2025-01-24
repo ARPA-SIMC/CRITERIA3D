@@ -1192,6 +1192,47 @@ bool Crit3DProject::computeSnowModel()
     return true;
 }
 
+bool Crit3DProject::computeHydrallModel()
+{
+    // check
+    if (! snowMaps.isInitialized)
+    {
+        logError("Initialize snow model before.");
+        return false;
+    }
+
+    if (! hourlyMeteoMaps->getComputed())
+    {
+        logError("Missing meteo maps.");
+        return false;
+    }
+
+    if (! radiationMaps->getComputed())
+    {
+        logError("Missing radiation map.");
+        return false;
+    }
+
+    for (int row = 0; row < DEM.header->nrRows; row++)
+    {
+        for (int col = 0; col < DEM.header->nrCols; col++)
+        {
+            if (! isEqual(DEM.value[row][col], DEM.header->flag))
+            {
+                //computeSnowPoint(row, col);
+            }
+            else
+            {
+                //snowMaps.flagMapRowCol(row, col);
+            }
+        }
+    }
+
+    //snowMaps.updateRangeMaps();
+
+    return true;
+}
+
 bool Crit3DProject::updateLast30DaysTavg()
 {
     if (! dailyTminMap.isLoaded || ! dailyTmaxMap.isLoaded || ! hourlyMeteoMaps->mapHourlyTair->isLoaded)
@@ -1357,9 +1398,13 @@ bool Crit3DProject::runModelHour(const QString& hourlyOutputPath, bool isRestart
             if (processes.computeCrop)
             {
                 updateDailyTemperatures();
-                if (1) //if Hydrall is on processes.computeForestModel
+                if (processes.computeHydrall) //if Hydrall is on processes.computeForestModel
                 {
-                    //computeHydrall(myDateTime, 25, 200);
+                    updateLast30DaysTavg();
+                    double temperature, elevation;
+                    int secondsPerStep;
+                    Crit3DDate myDate;
+                    computeHydrallModel();
                 }
             }
             if (processes.computeWater)

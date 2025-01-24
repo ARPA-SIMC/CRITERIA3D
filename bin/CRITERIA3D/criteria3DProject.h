@@ -95,6 +95,8 @@
         bool computeAllMeteoMaps(const QDateTime& myTime, bool showInfo);
 
         bool initializeSnowModel();
+
+        bool computeHydrallModel();
         bool computeSnowModel();
         void computeSnowPoint(int row, int col);
 

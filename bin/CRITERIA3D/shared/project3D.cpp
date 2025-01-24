@@ -89,11 +89,24 @@ void Crit3DProcesses::initialize()
     computeRadiation = false;
     computeWater = false;
     computeCrop = false;
+    computeHydrall = false;
     computeSnow = false;
     computeSolutes = false;
     computeHeat = false;
     computeAdvectiveHeat = false;
     computeLatentHeat = false;
+}
+
+void Crit3DProcesses::setComputeHydrall(bool value)
+{
+    computeHydrall = value;
+
+    // prerequisites
+    if (computeHydrall)
+    {
+        computeMeteo = true;
+        computeRadiation = true;
+    }
 }
 
 void Crit3DProcesses::setComputeCrop(bool value)

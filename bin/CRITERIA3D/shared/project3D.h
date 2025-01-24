@@ -53,12 +53,13 @@
     public:
 
         bool computeMeteo, computeRadiation, computeWater;
-        bool computeCrop, computeSnow, computeSolutes;
+        bool computeCrop, computeSnow, computeSolutes,computeHydrall;
         bool computeHeat, computeAdvectiveHeat, computeLatentHeat;
 
         Crit3DProcesses();
         void initialize();
 
+        void setComputeHydrall(bool value);
         void setComputeCrop(bool value);
         void setComputeSnow(bool value);
         void setComputeWater(bool value);

@@ -11,11 +11,15 @@
 #include "crit3dDate.h"
 #include "commonConstants.h"
 #include "hydrall.h"
-
+#include "furtherMathFunctions.h"
+#include "physics.h"
 
 bool computeHydrall(Crit3DDate myDate, double myTemperature, double myElevation, int secondPerStep)
 {
     getCO2(myDate, myTemperature, myElevation);
+
+    // da qui in poi bisogna fare un ciclo su tutte le righe e le colonne
+
     double actualLAI = getLAI();
     /* necessaria per ogni specie:
      *  il contenuto di clorofilla (g cm-2) il default è 500
@@ -59,6 +63,22 @@ double getLAI()
 {
     // TODO
     return 4;
+}
+
+double photosynthesisAndTranspiration()
+{
+    TweatherDerivedVariable weatherDerivedVariable;
+
+    return 0;
+}
+
+void weatherVariables(double myInstantTemp,double myRelativeHumidity,TweatherDerivedVariable weatherDerivedVariable)
+{
+    // taken from Hydrall Model, Magnani UNIBO
+    //weatherDerivedVariable.airVapourPressure = saturationVaporPressure(myInstantTemp)*myRelativeHumidity/100.;
+    //weatherDerivedVariable.emissivitySky = 1.24 * pow((weatherDerivedVariable.airVapourPressure/100.0) / (myInstantTemp+ZEROCELSIUS),(1.0/7.0))*(1 - 0.84*myCloudiness)+ 0.84*myCloudiness;
+    //myLongWaveIrradiance = pow(myInstantTemp+ZEROCELSIUS,4) * myEmissivitySky * STEFAN_BOLTZMANN ;
+    //mySlopeSatVapPressureVSTemp = 2588464.2 / pow(240.97 + myInstantTemp, 2) * exp(17.502 * myInstantTemp / (240.97 + myInstantTemp)) ;
 }
 /*
 double meanLastMonthTemperature(double previousLastMonthTemp, double simulationStepInSeconds, double myInstantTemp)

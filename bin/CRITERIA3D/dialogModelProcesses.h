@@ -9,6 +9,7 @@
     private:
 
     public:
+        QCheckBox *hydrallProcess;
         QCheckBox *snowProcess;
         QCheckBox *cropProcess;
         QCheckBox *waterFluxesProcess;

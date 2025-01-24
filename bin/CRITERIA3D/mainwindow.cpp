@@ -2189,6 +2189,7 @@ void MainWindow::on_actionCriteria3D_set_processes_triggered()
     dialogProcesses.snowProcess->setChecked(myProject.processes.computeSnow);
     dialogProcesses.cropProcess->setChecked(myProject.processes.computeCrop);
     dialogProcesses.waterFluxesProcess->setChecked(myProject.processes.computeWater);
+    dialogProcesses.hydrallProcess->setChecked(myProject.processes.computeHydrall);
 
     dialogProcesses.exec();
 
@@ -2197,6 +2198,7 @@ void MainWindow::on_actionCriteria3D_set_processes_triggered()
         myProject.processes.setComputeSnow(dialogProcesses.snowProcess->isChecked());
         myProject.processes.setComputeCrop(dialogProcesses.cropProcess->isChecked());
         myProject.processes.setComputeWater(dialogProcesses.waterFluxesProcess->isChecked());
+        myProject.processes.setComputeHydrall(dialogProcesses.waterFluxesProcess->isChecked());
     }
 }
 
@@ -2295,7 +2297,7 @@ void MainWindow::initializeCriteria3DInterface()
 
 void MainWindow::on_actionCriteria3D_Initialize_triggered()
 {
-    if (! (myProject.processes.computeSnow || myProject.processes.computeCrop || myProject.processes.computeWater))
+    if (! (myProject.processes.computeSnow || myProject.processes.computeCrop || myProject.processes.computeWater || myProject.processes.computeHydrall))
     {
         myProject.logWarning("Set active processes before.");
         return;
