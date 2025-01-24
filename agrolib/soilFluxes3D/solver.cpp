@@ -137,26 +137,12 @@ double GaussSeidelIterationHeat()
 }
 
 
-double GaussSeidelIterationWater(short direction)
+double GaussSeidelIterationWater()
 {
-    long firstIndex, lastIndex;
-
-    if (direction == UP)
-    {
-        firstIndex = 0;
-        lastIndex = myStructure.nrNodes;
-    }
-    else
-    {
-        firstIndex = myStructure.nrNodes -1;
-        lastIndex = -1;
-    }
-
     double currentNorm = 0.;
     double infinityNorm = 0.;
-    long i = firstIndex;
 
-    while (i != lastIndex)
+    for (long i = 0; i < myStructure.nrNodes; i++)
     {
         double newX = b[i];
         short j = 1;
@@ -173,6 +159,7 @@ double GaussSeidelIterationWater(short direction)
         }
 
         currentNorm = fabs(newX - X[i]);
+        X[i] = newX;
 
         // water potential [m]
         double psi = fabs(newX - nodeList[i].z);
@@ -184,10 +171,6 @@ double GaussSeidelIterationWater(short direction)
 
         if (currentNorm > infinityNorm)
             infinityNorm = currentNorm;
-
-        X[i] = newX;
-
-        (direction == UP)? i++ : i--;
     }
 
     return infinityNorm;
@@ -232,6 +215,7 @@ void GaussSeidel(int start, int end, double *infinityNorm, short direction)
         }
 
         currentNorm = fabs(newX - X[i]);
+        X[i] = newX;
 
         // water potential [m]
         double psi = fabs(newX - nodeList[i].z);
@@ -243,8 +227,6 @@ void GaussSeidel(int start, int end, double *infinityNorm, short direction)
 
         if (currentNorm > *infinityNorm)
             *infinityNorm = currentNorm;
-
-        X[i] = newX;
 
         (direction == UP)? i++ : i--;
     }
@@ -382,20 +364,28 @@ bool solver (int approximation, double toleranceThreshold, int process)
 
         else if (process == PROCESS_WATER)
         {
-            if (myParameters.numericalSolutionMethod == GAUSS_SEIDEL)
+            if (myStructure.nrNodes < 1000)
             {
-                if (iteration%2 == 0)
-                {
-                    currentNorm = GaussSeidelThreads(DOWN);
-                }
-                else
-                {
-                    currentNorm = GaussSeidelThreads(UP);
-                }
+                currentNorm = GaussSeidelIterationWater();
             }
-            else if (myParameters.numericalSolutionMethod == JACOBI)
+            else
             {
-                currentNorm = JacobiThreads();
+                // parallel computing
+                if (myParameters.numericalSolutionMethod == GAUSS_SEIDEL)
+                {
+                    if (iteration%2 == 0)
+                    {
+                        currentNorm = GaussSeidelThreads(DOWN);
+                    }
+                    else
+                    {
+                        currentNorm = GaussSeidelThreads(UP);
+                    }
+                }
+                else if (myParameters.numericalSolutionMethod == JACOBI)
+                {
+                    currentNorm = JacobiThreads();
+                }
             }
 
             if (currentNorm > (bestNorm * 10.0))
