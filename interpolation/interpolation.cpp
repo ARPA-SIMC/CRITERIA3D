@@ -1754,6 +1754,69 @@ std::vector <double> getfittingParameters(Crit3DProxyCombination myCombination, 
     return myParam;
 }
 
+void macroAreaDetrending(Crit3DMacroArea myArea, meteoVariable myVar, Crit3DInterpolationSettings &mySettings, Crit3DMeteoSettings* meteoSettings, Crit3DMeteoPoint* meteoPoints, std::vector <Crit3DInterpolationDataPoint> interpolationPoints, std::vector <Crit3DInterpolationDataPoint> &subsetInterpolationPoints, int elevationPos)
+{
+    //take the parameters+combination for that area
+    mySettings.setFittingParameters(myArea.getParameters());
+    mySettings.setCurrentCombination(myArea.getCombination());
+
+    //find the fitting functions vector based on the length of the parameters vector for every proxy
+    std::vector<std::function<double (double, std::vector<double> &)> > fittingFunction;
+    for (int l = 0; l < myArea.getParameters().size(); l++)
+    {
+        if (myArea.getParameters()[l].size() == 2)
+            fittingFunction.push_back(functionLinear_intercept);
+        else if (myArea.getParameters()[l].size() == 4)
+            fittingFunction.push_back(lapseRatePiecewise_two);
+        else if (myArea.getParameters()[l].size() == 5)
+            fittingFunction.push_back(lapseRatePiecewise_three);
+        else if (myArea.getParameters()[l].size() == 6)
+            fittingFunction.push_back(lapseRatePiecewise_three_free);
+    }
+
+    mySettings.setFittingFunction(fittingFunction);
+
+    // create vector of macro area interpolation points
+    std::vector<int> temp = myArea.getMeteoPoints();
+    for (int l = 0; l < temp.size(); l++)
+    {
+        for (int k = 0; k < interpolationPoints.size(); k++)
+        {
+            if (interpolationPoints[k].index == temp[l])
+            {
+                subsetInterpolationPoints.push_back(interpolationPoints[k]);
+            }
+        }
+    }
+
+    //detrending
+    if (elevationPos != NODATA && myArea.getCombination().isProxyActive(elevationPos) && myArea.getCombination().isProxySignificant(elevationPos))
+    {
+        detrendingElevation(elevationPos, subsetInterpolationPoints, &mySettings);
+    }
+
+    detrendingOtherProxies(elevationPos, subsetInterpolationPoints, &mySettings);
+
+    Crit3DMeteoPoint* myMeteoPoints = new Crit3DMeteoPoint[unsigned(myArea.getMeteoPointsNr())];
+    std::vector<int> meteoPointsList = myArea.getMeteoPoints();
+
+    for (unsigned i = 0; i < meteoPointsList.size(); i++)
+    {
+        myMeteoPoints[i] = meteoPoints[meteoPointsList[i]];
+    }
+
+    if (mySettings.getUseTD() && getUseTdVar(myVar))
+    {
+        topographicDistanceOptimize(myVar, myMeteoPoints, myArea.getMeteoPointsNr(),
+                                    subsetInterpolationPoints, &mySettings, meteoSettings);
+    }
+
+    myMeteoPoints->clear();
+    delete[] myMeteoPoints;
+
+    return;
+}
+
 bool multipleDetrendingMain(std::vector <Crit3DInterpolationDataPoint> &myPoints,
                             Crit3DInterpolationSettings* mySettings, meteoVariable myVar, std::string &errorStr)
 {

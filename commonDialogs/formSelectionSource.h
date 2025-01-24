@@ -8,10 +8,9 @@
         Q_OBJECT
 
     public:
-        FormSelectionSource();
+        FormSelectionSource(bool pointVisible, bool gridVisible, bool interpolationVisible);
 
         int getSourceSelectionId();
-        void disableRadioButtons(bool pointDisable, bool gridDisable, bool interpolationDisable);
 
     private:
         QRadioButton* pointButton;
