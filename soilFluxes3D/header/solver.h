@@ -13,5 +13,7 @@
 
     bool solver(int myApproximation, double myResidualTolerance, int myProcess);
 
+    void initializeThreads();
+
 #endif  // SOLVER_H
 

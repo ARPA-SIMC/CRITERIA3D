@@ -1460,6 +1460,7 @@ namespace statistics
         }
     }
 
+
     void correlationsMatrixNoCheck(int nrRowCol, double**myLists,int nrLists, double** c)
     {
         // input: myLists matrix
@@ -1480,49 +1481,44 @@ namespace statistics
     }
 
 
-
     float maxList(std::vector<float> values, int nValue)
     {
-
-        float max = -FLT_MAX;
-
         if (nValue == 0)
             return NODATA;
 
+        float maximum = -FLT_MAX;
         for (int i = 0; i < nValue; i++)
         {
-            if ((values[i] > max) && (values[i] != NODATA))
+            if ((values[i] > maximum) && (values[i] != NODATA))
             {
-                max = values[i] ;
+                maximum = values[i];
             }
         }
 
-        return max;
+        return maximum;
     }
 
 
     float minList(std::vector<float> values, int nValue)
     {
-
-        float min = FLT_MAX;
-
         if (nValue == 0)
             return NODATA;
 
+        float minimum = FLT_MAX;
         for (int i = 0; i < nValue; i++)
         {
-            if ((values[i] < min) && (values[i] != NODATA))
+            if ((values[i] < minimum) && (values[i] != NODATA))
             {
-                min = values[i] ;
+                minimum = values[i];
             }
         }
 
-        return min;
+        return minimum;
     }
+
 
     float sumList(std::vector<float> values, int nValue)
     {
-
         float sum = 0;
 
         if (nValue == 0)
