@@ -331,6 +331,7 @@
 
         Crit3DCrossValidationStatistics getCrossValidationStatistics() const;
         void setCrossValidationStatistics(const Crit3DCrossValidationStatistics &newCrossValidationStatistics);
+        void MeteoPointsToVector(std::vector<float> *validValues);
 
     private slots:
         void deleteMeteoWidgetPoint(int id);
