@@ -145,7 +145,7 @@ bool Crit1DCase::initializeNumericalFluxes(std::string &error)
     int lastLayer = nrLayers-1;
     int nrlateralLinks = 0;
 
-    int result = soilFluxes3D::initialize(nrLayers, nrLayers, nrlateralLinks, true, false, false);
+    int result = soilFluxes3D::initializeFluxes(nrLayers, nrLayers, nrlateralLinks, true, false, false);
     if (result != CRIT3D_OK)
     {
         error = "Error in initialize numerical fluxes";
