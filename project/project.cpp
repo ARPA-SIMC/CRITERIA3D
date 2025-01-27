@@ -5668,3 +5668,29 @@ bool Project::assignAltitudeToAggregationPoints()
     return true;
 }
 
+
+void Project::MeteoPointsToVector(std::vector<float> *validValues)
+{
+    // user has selected a set of points
+    for (int i = 0; i < nrMeteoPoints; i++)
+    {
+        if (meteoPoints[i].active && meteoPoints[i].selected)
+        {
+            if (meteoPoints[i].currentValue != NODATA)
+            {
+                validValues->push_back(meteoPoints[i].currentValue);
+            }
+        }
+    }
+    // no selection: all points
+    if (validValues->size() == 0)
+    {
+        for (int i = 0; i < nrMeteoPoints; i++)
+        {
+            if (meteoPoints[i].active && meteoPoints[i].currentValue != NODATA)
+            {
+                validValues->push_back(meteoPoints[i].currentValue);
+            }
+        }
+    }
+}
