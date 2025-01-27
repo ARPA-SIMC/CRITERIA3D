@@ -7,6 +7,9 @@
     #ifndef CRIT3DDATE_H
         #include "crit3dDate.h"
     #endif
+    #ifndef GIS_H
+        #include "gis.h"
+    #endif
 
     #define UPSCALINGFUNC(z,LAI) ((1.0 - exp(-(z)*(LAI))) / (z))
 
@@ -24,10 +27,34 @@
 
     #define NOT_INITIALIZED_VINE -1
 
-    bool computeHydrall(Crit3DDate myDate, double myTemperature, double myElevation, int secondPerStep);
+    struct TweatherDerivedVariable {
+        double airVapourPressure;
+        double emissivitySky;
+        double longWaveIrradiance;
+        double slopeSatVapPressureVSTemp;
+
+    };
+
+    class Crit3DHydrallMaps
+    {
+    private:
+
+    public:
+        gis::Crit3DRasterGrid* mapLAI;
+        gis::Crit3DRasterGrid* mapLast30DaysTavg;
+
+        Crit3DHydrallMaps(const gis::Crit3DRasterGrid& DEM);
+        ~Crit3DHydrallMaps();
+
+        void clear();
+        void initialize();
+    };
+
+
+    bool computeHydrallPoint(Crit3DDate myDate, double myTemperature, double myElevation, int secondPerStep);
     double getCO2(Crit3DDate myDate, double myTemperature, double myElevation);
     double getPressureFromElevation(double myTemperature, double myElevation);
     double getLAI();
     double meanLastMonthTemperature(double previousLastMonthTemp, double simulationStepInSeconds, double myInstantTemp);
-
+    double photosynthesisAndTranspiration();
 #endif // HYDRALL_H
