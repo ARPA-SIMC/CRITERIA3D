@@ -33,6 +33,7 @@
         double conductivityHorizVertRatio;          // [-]
 
         int modelAccuracy;                          // [-]
+        int numberOfThreads;                        // [-]
 
         bool freeCatchmentRunoff;
         bool freeLateralDrainage;
@@ -53,7 +54,7 @@
     public:
 
         bool computeMeteo, computeRadiation, computeWater;
-        bool computeCrop, computeSnow, computeSolutes,computeHydrall;
+        bool computeCrop, computeSnow, computeSolutes, computeHydrall;
         bool computeHeat, computeAdvectiveHeat, computeLatentHeat;
 
         Crit3DProcesses();

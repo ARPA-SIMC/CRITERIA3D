@@ -8,6 +8,7 @@
     struct TParameters
     {
         int numericalSolutionMethod;
+        int threadsNumber;
         double MBRThreshold;
         double ResidualTolerance;
         double delta_t_min;
@@ -23,6 +24,7 @@
         void initialize()
         {
             numericalSolutionMethod = GAUSS_SEIDEL;
+            threadsNumber = 1;
             delta_t_min = 1;
             delta_t_max = 600;
             current_delta_t = delta_t_max;

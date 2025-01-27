@@ -846,6 +846,11 @@ bool Crit3DProject::loadCriteria3DParameters()
                 waterFluxesParameters.modelAccuracy = parametersSettings->value("modelAccuracy").toInt();
             }
 
+            if (parametersSettings->contains("numberOfThreads") && ! parametersSettings->value("numberOfThreads").toString().isEmpty())
+            {
+                waterFluxesParameters.numberOfThreads = parametersSettings->value("numberOfThreads").toInt();
+            }
+
             parametersSettings->endGroup();
         }
 
@@ -905,6 +910,7 @@ bool Crit3DProject::writeCriteria3DParameters(bool isSnow, bool isWater, bool is
         parametersSettings->setValue("soilWaterFluxes/freeLateralDrainage", waterFluxesParameters.freeLateralDrainage);
 
         parametersSettings->setValue("soilWaterFluxes/modelAccuracy", waterFluxesParameters.modelAccuracy);
+        parametersSettings->setValue("soilWaterFluxes/numberOfThreads", waterFluxesParameters.numberOfThreads);
     }
 
     if (isSoilCrack)
