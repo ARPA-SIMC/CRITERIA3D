@@ -4651,6 +4651,31 @@ bool Project::setMarkedFromPointList(QString fileName)
     return true;
 }
 
+bool Project::setMarkedPointsOfMacroArea(int areaNumber)
+{
+    for (int i = 0; i < nrMeteoPoints; i++)
+    {
+        meteoPoints[i].marked = false;
+    }
+
+    std::vector <int> pointList;
+    if (areaNumber < 0 || areaNumber >= interpolationSettings.getMacroAreas().size())
+    {
+        logError("Invalid macro area number.");
+        return false;
+    }
+
+    pointList = interpolationSettings.getMacroAreas()[areaNumber].getMeteoPoints();
+
+    for (int j = 0; j < pointList.size(); j++)
+    {
+        if (meteoPoints[pointList[j]].currentValue != NODATA)
+            meteoPoints[pointList[j]].marked = true;
+    }
+
+    return true;
+}
+
 
 bool Project::deleteMeteoPoints(const QList<QString>& pointList)
 {
