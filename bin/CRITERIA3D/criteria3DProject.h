@@ -19,6 +19,9 @@
     #ifndef GEOMETRY_H
         #include "geometry.h"
     #endif
+    #ifndef HYDRALL_H
+        #include "hydrall.h"
+    #endif
 
     #include <QString>
 
@@ -49,6 +52,8 @@
         gis::Crit3DRasterGrid dailyTminMap;
         gis::Crit3DRasterGrid dailyTmaxMap;
         gis::Crit3DRasterGrid lastMonthTavgMap;
+
+        Crit3DHydrallMaps *hydrallMaps;
 
         Crit3DSnow snowModel;
 
