@@ -1910,10 +1910,10 @@ bool multipleDetrendingElevationFitting(int elevationPos, std::vector <Crit3DInt
     // multiple non linear fitting
     double R2 = NODATA;
     if (isWeighted)
-        R2 = interpolation::bestFittingMarquardt_nDimension_singleFunction(*(myFunc.target<double(*)(double, std::vector<double>&)>()), 4, parametersMin, parametersMax, parameters, parametersDelta,
+        R2 = interpolation::bestFittingMarquardt_nDimension(*(myFunc.target<double(*)(double, std::vector<double>&)>()), 4, parametersMin, parametersMax, parameters, parametersDelta,
                                                                   1000, 0.002, 0.005, predictors, predictands, weights,firstGuessCombinations);
     else
-        R2 = interpolation::bestFittingMarquardt_nDimension_singleFunction(*(myFunc.target<double(*)(double, std::vector<double>&)>()), 4, parametersMin, parametersMax, parameters, parametersDelta,
+        R2 = interpolation::bestFittingMarquardt_nDimension(*(myFunc.target<double(*)(double, std::vector<double>&)>()), 4, parametersMin, parametersMax, parameters, parametersDelta,
                                                                   1000, 0.002, 0.005, predictors, predictands,firstGuessCombinations);
 
     mySettings->getProxy(elevationPos)->setRegressionR2(float(R2));
@@ -2125,7 +2125,7 @@ bool multipleDetrendingOtherProxiesFitting(int elevationPos, std::vector <Crit3D
 
 
     // multilinear fitting
-    interpolation::bestFittingMarquardt_nDimension_clean(&functionSum, myFunc, parametersMin, parametersMax, parameters, parametersDelta,
+    interpolation::bestFittingMarquardt_nDimension(&functionSum, myFunc, parametersMin, parametersMax, parameters, parametersDelta,
                                                    100, 0.005, predictors, predictands, weights);
 
 
