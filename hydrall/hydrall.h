@@ -35,6 +35,24 @@
 
     };
 
+    struct TbigLeaf
+    {
+        double absorbedPAR ;
+        double isothermalNetRadiation;
+        double leafAreaIndex ;
+        double totalConductanceHeatExchange;
+        double aerodynamicConductanceHeatExchange;
+        double aerodynamicConductanceCO2Exchange ;
+        double leafTemperature ;
+        double darkRespiration ;
+        double minimalStomatalConductance;
+        double maximalCarboxylationRate,maximalElectronTrasportRate ;
+        double carbonMichaelisMentenConstant, oxygenMichaelisMentenConstant ;
+        double compensationPoint, convexityFactorNonRectangularHyperbola ;
+        double quantumYieldPS2 ;
+        double assimilation,transpiration,stomatalConductance ;
+    };
+
     class Crit3DHydrallMaps
     {
     private:
@@ -49,7 +67,18 @@
         void clear();
         void initialize();
     };
+    class hydrall{
+    public:
+        TbigLeaf sunlit,shaded;
+        double myLongWaveIrradiance;
+        double myInstantTemp;
+        double myDirectIrradiance;
+        double myDiffuseIrradiance;
+        double myEmissivitySky;
+        double chlorophyllContent;
+        void radiationAbsorption(double mySunElevation, double leafAreaIndex);
 
+    };
 
     bool computeHydrallPoint(Crit3DDate myDate, double myTemperature, double myElevation, int secondPerStep);
     double getCO2(Crit3DDate myDate, double myTemperature, double myElevation);
@@ -57,4 +86,5 @@
     double getLAI();
     double meanLastMonthTemperature(double previousLastMonthTemp, double simulationStepInSeconds, double myInstantTemp);
     double photosynthesisAndTranspiration();
+
 #endif // HYDRALL_H
