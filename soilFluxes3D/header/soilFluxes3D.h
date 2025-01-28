@@ -21,12 +21,14 @@
 
     // INITIALIZATION
     __EXTERN void DLL_EXPORT __STDCALL cleanMemory();
-    __EXTERN int DLL_EXPORT __STDCALL initialize(long nrNodes, int nrLayers, int nrLateralLinks, bool computeWater_, bool computeHeat_, bool computeSolutes_);
+    __EXTERN int DLL_EXPORT __STDCALL initializeFluxes(long nrNodes, int nrLayers, int nrLateralLinks, bool isComputeWater, bool isComputeHeat, bool isComputeSolutes);
     __EXTERN void DLL_EXPORT __STDCALL initializeHeat(short saveHeatFluxes_, bool computeAdvectiveHeat, bool computeLatentHeat);
 
     __EXTERN int DLL_EXPORT __STDCALL setNumericalParameters(float minDeltaT, float maxDeltaT,
                               int maxIterationNumber, int maxApproximationsNumber,
                               int errorMagnitude, float MBRMagnitude);
+
+    int DLL_EXPORT __STDCALL setThreads(int nrThreads);
 
     // TOPOLOGY
     __EXTERN int DLL_EXPORT __STDCALL setNode(long myIndex, float x, float y, double z, double volume_or_area,
