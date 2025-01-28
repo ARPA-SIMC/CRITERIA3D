@@ -7,8 +7,6 @@
 
 QT       += network sql widgets
 
-QT       -= gui
-
 TEMPLATE = lib
 CONFIG += staticlib
 
