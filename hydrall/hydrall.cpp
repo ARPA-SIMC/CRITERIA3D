@@ -51,8 +51,10 @@ double getCO2(Crit3DDate myDate, double myTemperature, double myElevation)
     double year[24] = {1750,1800,1850,1900,1910,1920,1930,1940,1950,1960,1970,1980,1990,2000,2010,2020,2030,2040,2050,2060,2070,2080,2090,2100};
     double valueCO2[24] = {278,283,285,296,300,303,307,310,311,317,325,339,354,369,389,413,443,473,503,530,550,565,570,575};
 
+    interpolation::linearInterpolation(double(myDate.year), year, valueCO2, 24);
+
     // exponential fitting Mauna Loa
-    if (myDate.year < 1990)
+    /*if (myDate.year < 1990)
     {
         atmCO2= 280 * exp(0.0014876*(myDate.year -1840));//exponential change in CO2 concentration (ppm)
     }
@@ -60,6 +62,7 @@ double getCO2(Crit3DDate myDate, double myTemperature, double myElevation)
     {
         atmCO2= 353 * exp(0.00630*(myDate.year - 1990));
     }
+*/
     atmCO2 += 3*cos(2*PI*getDoyFromDate(myDate)/365.0);		     // to consider the seasonal effects
     return atmCO2*getPressureFromElevation(myTemperature, myElevation)/1000000  ;   // [Pa] in +- ppm/10
 }
