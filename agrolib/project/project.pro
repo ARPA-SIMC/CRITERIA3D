@@ -27,7 +27,7 @@ win32:{
 }
 
 
-INCLUDEPATH += ../crit3dDate ../mathFunctions ../hydrall ../gis ../meteo   \
+INCLUDEPATH += ../crit3dDate ../mathFunctions ../gis ../meteo   \
             ../solarRadiation ../interpolation ../utilities     \
             ../netcdfHandler ../dbMeteoPoints ../outputPoints ../dbMeteoGrid    \
             ../meteoWidget ../commonDialogs ../commonChartElements ../climate \
