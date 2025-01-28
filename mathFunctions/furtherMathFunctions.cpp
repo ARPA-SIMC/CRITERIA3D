@@ -99,13 +99,13 @@ double lapseRatePiecewise_three_noSlope(double x, std::vector <double>& par)
     }
 }
 
-/*
+/*!
  * The following three functions are only used for the height proxy when the multiple detrending check is enabled.
  * One function among these three (lapseRatePiecewise_two, _three and _three_free) is selected by the user and used to
  * look for the fitting parameters with the Marquardt algorithm.
-*/
+ */
 
-/*
+/*!
  *  functions for MARQUARDT use
  */
 
@@ -273,7 +273,6 @@ double harmonicsFourierGeneral(double x, double* par,int nrPar)
         return y;
     }
 }
-
 
 
 namespace integration
@@ -1263,8 +1262,7 @@ namespace interpolation
         return sqrt(MSE);
     }
 
-    /*
-     *
+    /*!
      *
      *      MARQUARDT FUNCTIONS
      *    in the following order:
@@ -1274,14 +1272,14 @@ namespace interpolation
      *
      */
 
-    /*
-     *
-     *  BEST FITTING MARQUARDT
-     *
+    /*!
+     *      BEST FITTING MARQUARDT
      */
 
-    // bestFittingMarquardt for ELEVATION fitting with WEIGHTS (local detrending)
 
+    /*! bestFittingMarquardt for ELEVATION
+     *  fitting with WEIGHTS (local detrending)
+     */
     double bestFittingMarquardt_nDimension(double (*func)(double, std::vector<double>&),
                                            int nrMinima,
                                            std::vector <double>& parametersMin, std::vector <double>& parametersMax,
@@ -1351,8 +1349,10 @@ namespace interpolation
         return bestR2;
     }
 
-    // bestFittingMarquardt for ELEVATION fitting with NO weights (glocal and multiple detrending)
 
+    /*! bestFittingMarquardt for ELEVATION
+     *  fitting with NO weights (glocal and multiple detrending)
+     */
     double bestFittingMarquardt_nDimension(double (*func)(double, std::vector<double>&),
                                            int nrMinima,
                                            std::vector <double>& parametersMin, std::vector <double>& parametersMax,
@@ -1430,11 +1430,14 @@ namespace interpolation
                                         parametersDelta,maxIterationsNr,
                                         myEpsilon,x,y);
         }
+
         return bestR2;
     }
 
-    //bestFittingMarquardt for linear proxies (all but elevation proxy), with WEIGHTS (all multiple detrending options)
 
+    /*! bestFittingMarquardt for linear proxies (all but elevation proxy)
+     *  with WEIGHTS (all multiple detrending options)
+     */
     int bestFittingMarquardt_nDimension(double (*func)(std::vector<std::function<double(double, std::vector<double>&)>>&, std::vector<double>& , std::vector <std::vector <double>>&),
                                         std::vector<std::function<double(double, std::vector<double>&)>>& myFunc,
                                         std::vector <std::vector <double>>& parametersMin, std::vector <std::vector <double>>& parametersMax,
@@ -1477,13 +1480,15 @@ namespace interpolation
         {
             ySim[i]= func(myFunc,x[i], parameters);
         }
-        double R2 = computeWeighted_R2(y,ySim,weights);
+        //double R2 = computeWeighted_R2(y,ySim,weights);
 
         return 1;
     }
 
-    //bestFittingMarquardt for linear proxies (all but elevation proxy), with NO weights (currently unused)
 
+    /*! bestFittingMarquardt for linear proxies (all but elevation proxy)
+     *  with NO weights (currently unused)
+     */
     int bestFittingMarquardt_nDimension(double (*func)(std::vector<std::function<double(double, std::vector<double>&)>>&, std::vector<double>& , std::vector <std::vector <double>>&),
                                         std::vector<std::function<double(double, std::vector<double>&)>>& myFunc,
                                         std::vector <std::vector <double>>& parametersMin, std::vector <std::vector <double>>& parametersMax,
@@ -1500,6 +1505,7 @@ namespace interpolation
             nrParameters[i]= int(parameters[i].size());
             nrParametersTotal += nrParameters[i];
         }
+
         std::vector <std::vector <double>> bestParameters(parameters.size());
         std::vector <std::vector <int>> correspondenceTag(2,std::vector<int>(nrParametersTotal));
         int counterTag = 0;
@@ -1530,14 +1536,15 @@ namespace interpolation
         return 1;
     }
 
-    /*
+    /*!
      *
      *  FITTING MARQUARDT
      *
      */
 
-    //fittingMarquardt called in bestFittingMarquardt, with least squares function. currently unused
-
+    /*! fittingMarquardt called in bestFittingMarquardt
+     *  with least squares function. currently unused
+     */
     bool fittingMarquardt_nDimension_withSquares(double (*func)(std::vector<std::function<double(double, std::vector<double>&)>>&, std::vector<double>& , std::vector <std::vector <double>>&),
                                      std::vector<std::function<double (double, std::vector<double> &)> >& myFunc,
                                      std::vector<std::vector<double> > &parametersMin, std::vector<std::vector<double> > &parametersMax,
@@ -1631,8 +1638,11 @@ namespace interpolation
         return (fabs(diffSSE) <= myEpsilon);
     }
 
-    //fittingMarquardt called in bestFittingMarquardt for linear proxies (all but elevation proxy), with WEIGHTS (all multiple detrending options)
 
+    /*!
+     * fittingMarquardt called in bestFittingMarquardt for linear proxies (all but elevation proxy)
+     * with WEIGHTS (all multiple detrending options)
+     */
     bool fittingMarquardt_nDimension(double (*func)(std::vector<std::function<double(double, std::vector<double>&)>>&, std::vector<double>& , std::vector <std::vector <double>>&),
                                      std::vector<std::function<double (double, std::vector<double> &)> >& myFunc,
                                      std::vector<std::vector<double> > &parametersMin, std::vector<std::vector<double> > &parametersMax,
@@ -1841,8 +1851,11 @@ namespace interpolation
         return (fabs(diffSSE) <= myEpsilon);
     }
 
-    //fittingMarquardt (called inside bestFittingMarquardt) without least squares function, for ELEVATION only, with WEIGHTS (local detrending)
 
+    /*!
+     *  fittingMarquardt (called inside bestFittingMarquardt) without least squares function
+     *  for ELEVATION only, with WEIGHTS (local detrending)
+     */
     bool fittingMarquardt_nDimension(double (*func) (double, std::vector<double>&),
                                      std::vector<double> &parametersMin, std::vector<double> &parametersMax,
                                      std::vector<double> &parameters, std::vector<double> &parametersDelta,
@@ -2009,8 +2022,11 @@ namespace interpolation
         return (fabs(diffSSE) <= myEpsilon);
     }
 
-    //fittingMarquardt (called inside bestFittingMarquardt) without least squares function, for ELEVATION only, with NO WEIGHTS (multiple and glocal detrending)
 
+    /*!
+     * fittingMarquardt (called inside bestFittingMarquardt) without least squares function
+     * for ELEVATION only, with NO WEIGHTS (multiple and glocal detrending)
+     */
     bool fittingMarquardt_nDimension(double (*func) (double, std::vector<double>&),
                                      std::vector<double> &parametersMin, std::vector<double> &parametersMax,
                                      std::vector<double> &parameters, std::vector<double> &parametersDelta,
