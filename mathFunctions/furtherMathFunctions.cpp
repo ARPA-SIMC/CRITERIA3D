@@ -1374,6 +1374,14 @@ namespace interpolation
         std::vector <double> R2Previous(nrMinima,NODATA);
         std::vector<double> ySim(nrData);
 
+        double maxZ = x.front();
+        for (int k = 0; k < x.size(); k++)
+        {
+            if (x[k] > maxZ) maxZ = x[k]; //look for max elevation station
+        }
+
+        bool isValid = 1;
+
         //grigliato
         for (int k = 0; k < int(firstGuessCombinations.size()); k++)
         {
@@ -1396,7 +1404,10 @@ namespace interpolation
                 RMSEindex = k;
             }
 
-            if (isEqual(bestR2, NODATA) || R2 > (bestR2 + deltaR2))
+            if (parameters.size() > 4)
+                isValid = ((parameters[0] + parameters[2]) < maxZ); //double inversion only: check whether second inversion point is above last available station
+
+            if (isEqual(bestR2, NODATA) || (R2 > (bestR2 + deltaR2) && isValid))
             {
                 for (j=0; j<nrParameters; j++)
                 {
