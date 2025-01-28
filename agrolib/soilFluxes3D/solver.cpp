@@ -109,13 +109,13 @@ int getMaxIterationsNr(int approximationNr)
 }
 
 
-double GaussSeidelIterationHeat()
+double GaussSeidelHeat()
 {
     double delta, new_x, norma_inf = 0.;
     short j;
 
     for (long i = 1; i < myStructure.nrNodes; i++)
-        if (!nodeList[i].isSurface)
+        if (! nodeList[i].isSurface)
         {
             if (A[i][0].val != 0.)
             {
@@ -128,8 +128,10 @@ double GaussSeidelIterationHeat()
                 }
 
                 delta = fabs(new_x - X[i]);
-                if (delta > norma_inf) norma_inf = delta;
                 X[i] = new_x;
+
+                if (delta > norma_inf)
+                    norma_inf = delta;
             }
         }
 
@@ -137,7 +139,7 @@ double GaussSeidelIterationHeat()
 }
 
 
-double GaussSeidelIterationWater()
+double GaussSeidelWater()
 {
     double currentNorm = 0.;
     double infinityNorm = 0.;
@@ -178,7 +180,7 @@ double GaussSeidelIterationWater()
 
 
 //-------------  THREADS -------------
-
+/*
 void GaussSeidel(int start, int end, double *infinityNorm, short direction)
 {
     long firstIndex, lastIndex;
@@ -233,42 +235,6 @@ void GaussSeidel(int start, int end, double *infinityNorm, short direction)
 }
 
 
-double GaussSeidelThreads(short direction)
-{
-    int nrThreads = 4;
-    int step = myStructure.nrNodes / nrThreads;
-
-    std::vector<std::thread> threads(nrThreads);
-    std::vector<double> norm(nrThreads);
-
-    for (int n = 0; n < nrThreads; n++)
-    {
-        int start = n * step;
-        int end = (n+1) * step - 1;
-
-        if (n == nrThreads-1)
-            end = myStructure.nrNodes-1;
-
-        threads[n] = std::thread(GaussSeidel, start, end, &(norm[n]), direction);
-    }
-
-    // wait threads
-    for (auto& th : threads) {
-        th.join();
-    }
-
-    // compute norm
-    double infinityNorm = norm[0];
-    for (int n = 1; n < nrThreads; n++)
-    {
-        if (norm[n] > infinityNorm)
-            infinityNorm = norm[n];
-    }
-
-    return infinityNorm;
-}
-
-
 void Jacobi(int start, int end, double *infinityNorm)
 {
     *infinityNorm = 0;
@@ -304,43 +270,77 @@ void Jacobi(int start, int end, double *infinityNorm)
             *infinityNorm = currentNorm;
     }
 }
+*/
 
 
-double JacobiThreads()
+void GaussSeidelThread(long start, long end, double *infinityNorm)
 {
-    int nrThreads = 4;
-    int step = myStructure.nrNodes / nrThreads;
+    *infinityNorm = 0.;
 
-    std::vector<std::thread> threads(nrThreads);
-    std::vector<double> norm(nrThreads);
+    for (long i = start; i <= end; i++)
+    {
+        double newX = b[i];
+        short j = 1;
+        while ((A[i][j].index != NOLINK) && (j < myStructure.maxNrColumns))
+        {
+            newX -= A[i][j].val * X[A[i][j].index];
+            j++;
+        }
+
+        // surface check (H cannot go below z)
+        if (nodeList[i].isSurface && newX < nodeList[i].z)
+        {
+            newX = nodeList[i].z;
+        }
+
+        double currentNorm = fabs(newX - X[i]);
+        X[i] = newX;
+
+        // water potential [m]
+        double psi = fabs(newX - nodeList[i].z);
+        if (psi > 1)
+        {
+            // normalized if psi > 1m
+            currentNorm /= psi;
+        }
+
+        if (currentNorm > *infinityNorm)
+            *infinityNorm = currentNorm;
+    }
+}
+
+
+double iterationThreads()
+{
+    int nrThreads = myParameters.threadsNumber;
+    int lastThread = nrThreads - 1;
+    long step = myStructure.nrNodes / nrThreads;
+
+    std::vector<std::thread> threadVector(nrThreads);
+    std::vector<double> normVector(nrThreads);
 
     for (int n = 0; n < nrThreads; n++)
     {
-        int start = n * step;
-        int end = (n+1) * step - 1;
+        long start = n * step;
+        long end = (n+1) * step - 1;
 
-        if (n == nrThreads-1)
+        if (n == lastThread)
             end = myStructure.nrNodes-1;
 
-        threads[n] = std::thread(Jacobi, start, end, &(norm[n]));
+        threadVector[n] = std::thread(GaussSeidelThread, start, end, &(normVector[n]));
     }
 
     // wait threads
-    for (auto& th : threads) {
+    for (auto& th : threadVector) {
         th.join();
     }
 
-    // update X
-    for (long i = 0; i < myStructure.nrNodes; i++)
+    // compute norm
+    double infinityNorm = normVector[0];
+    for (int n = 1; n < myParameters.threadsNumber; n++)
     {
-        X[i] = X1[i];
-    }
-
-    double infinityNorm = norm[0];
-    for (int n = 1; n < nrThreads; n++)
-    {
-        if (norm[n] > infinityNorm)
-            infinityNorm = norm[n];
+        if (normVector[n] > infinityNorm)
+            infinityNorm = normVector[n];
     }
 
     return infinityNorm;
@@ -360,32 +360,18 @@ bool solver (int approximation, double toleranceThreshold, int process)
     while ((currentNorm > toleranceThreshold) && (iteration < maxIterationsNr))
 	{
         if (process == PROCESS_HEAT)
-            currentNorm = GaussSeidelIterationHeat();
+            currentNorm = GaussSeidelHeat();
 
         else if (process == PROCESS_WATER)
         {
-            if (myStructure.nrNodes < 1000)
+            if (myParameters.threadsNumber == 1)
             {
-                currentNorm = GaussSeidelIterationWater();
+                currentNorm = GaussSeidelWater();
             }
             else
             {
                 // parallel computing
-                if (myParameters.numericalSolutionMethod == GAUSS_SEIDEL)
-                {
-                    if (iteration%2 == 0)
-                    {
-                        currentNorm = GaussSeidelThreads(DOWN);
-                    }
-                    else
-                    {
-                        currentNorm = GaussSeidelThreads(UP);
-                    }
-                }
-                else if (myParameters.numericalSolutionMethod == JACOBI)
-                {
-                    currentNorm = JacobiThreads();
-                }
+                currentNorm = iterationThreads();
             }
 
             if (currentNorm > (bestNorm * 10.0))

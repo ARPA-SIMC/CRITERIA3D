@@ -74,6 +74,7 @@ void WaterFluxesParameters::initialize()
     conductivityHorizVertRatio = 10.0;      // [-] default: ten times
 
     modelAccuracy = 3;                      // [-] default: error on the third digit
+    numberOfThreads = 4;                    // [-] default: 4 parallel threads
 }
 
 
@@ -97,6 +98,7 @@ void Crit3DProcesses::initialize()
     computeLatentHeat = false;
 }
 
+
 void Crit3DProcesses::setComputeHydrall(bool value)
 {
     computeHydrall = value;
@@ -104,10 +106,11 @@ void Crit3DProcesses::setComputeHydrall(bool value)
     // prerequisites
     if (computeHydrall)
     {
-        computeMeteo = true;
-        computeRadiation = true;
+        computeCrop = true;
+        computeWater = true;
     }
 }
+
 
 void Crit3DProcesses::setComputeCrop(bool value)
 {
@@ -120,6 +123,7 @@ void Crit3DProcesses::setComputeCrop(bool value)
         computeRadiation = true;
     }
 }
+
 
 void Crit3DProcesses::setComputeSnow(bool value)
 {
@@ -390,10 +394,10 @@ bool Project3D::initialize3DModel()
     logInfo("Lateral boundary computed");
 
     // initialize soil fluxes
-    int myResult = soilFluxes3D::initialize(long(nrNodes), int(nrLayers), nrLateralLink, true, false, false);
+    int myResult = soilFluxes3D::initializeFluxes(long(nrNodes), int(nrLayers), nrLateralLink, true, false, false);
     if (isCrit3dError(myResult, errorString))
     {
-        logError("initialize3DModel:" + errorString);
+        logError("initializeFluxes:" + errorString);
         return false;
     }
     logInfo("Memory initialized");
@@ -470,6 +474,13 @@ bool Project3D::setAccuracy()
         errorString = "setAccuracy: " + errorString;
         return false;
     }
+
+    // parallel computing
+    if (waterFluxesParameters.numberOfThreads < 1)
+    {
+        waterFluxesParameters.numberOfThreads = 1;
+    }
+    soilFluxes3D::setThreads(waterFluxesParameters.numberOfThreads);
 
     return true;
 }

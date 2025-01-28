@@ -6,21 +6,6 @@ DialogWaterFluxesSettings::DialogWaterFluxesSettings()
 {
     setWindowTitle("Soil water flow settings");
 
-    // model accuracy
-    _isUpdateAccuracy = false;
-    accuracySlider = new QSlider(Qt::Horizontal);
-    accuracySlider->setRange(1, 5);
-    accuracySlider->setSingleStep(1);
-    accuracySlider->setPageStep(1);
-    accuracySlider->setTickInterval(1);
-    accuracySlider->setTickPosition(QSlider::TicksBelow);
-    updateButton = new QPushButton("  Update accuracy  ");
-    QHBoxLayout *accuracyLayout = new QHBoxLayout();
-    accuracyLayout->addWidget(accuracySlider);
-    accuracyLayout->addWidget(updateButton);
-    QGroupBox *accuracyGroupBox = new QGroupBox("Model accuracy");
-    accuracyGroupBox->setLayout(accuracyLayout);
-
     // initial conditions
     useInitialWaterPotential = new QRadioButton("Water potential [m]");
     useInitialDegreeOfSaturation = new QRadioButton("Degree of saturation [-]");
@@ -81,6 +66,29 @@ DialogWaterFluxesSettings::DialogWaterFluxesSettings()
 
     QGroupBox* soilGroupBox = new QGroupBox("Soil properties");
     soilGroupBox->setLayout(soilLayout);
+
+    // model accuracy
+    _isUpdateAccuracy = false;
+    accuracySlider = new QSlider(Qt::Horizontal);
+    accuracySlider->setRange(1, 5);
+    accuracySlider->setSingleStep(1);
+    accuracySlider->setPageStep(1);
+    accuracySlider->setTickInterval(1);
+    accuracySlider->setTickPosition(QSlider::TicksBelow);
+    updateButton = new QPushButton("Update");
+
+    QLabel *threadsNumberLabel = new QLabel(tr("Number of threads "));
+    threadsNumberEdit = new QLineEdit();
+    threadsNumberEdit->setFixedWidth(40);
+
+    QGridLayout *accuracyLayout = new QGridLayout();
+    accuracyLayout->addWidget(accuracySlider, 0, 0);
+    accuracyLayout->addWidget(updateButton, 0, 1);
+    accuracyLayout->addWidget(threadsNumberLabel, 1, 0);
+    accuracyLayout->addWidget(threadsNumberEdit, 1, 1);
+
+    QGroupBox *accuracyGroupBox = new QGroupBox("Model accuracy");
+    accuracyGroupBox->setLayout(accuracyLayout);
 
     // ok/cancel buttons
     QDialogButtonBox *buttonBox = new QDialogButtonBox(QDialogButtonBox::Ok | QDialogButtonBox::Cancel);

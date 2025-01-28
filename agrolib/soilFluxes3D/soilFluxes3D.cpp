@@ -65,7 +65,7 @@ namespace soilFluxes3D {
 
 int DLL_EXPORT __STDCALL test()
 {
-    return(CRIT3D_OK);
+    return CRIT3D_OK;
 }
 
 void DLL_EXPORT __STDCALL cleanMemory()
@@ -83,23 +83,23 @@ void DLL_EXPORT __STDCALL initializeHeat(short myType, bool computeAdvectiveHeat
 }
 
 
-int DLL_EXPORT __STDCALL initialize(long nrNodes, int nrLayers, int nrLateralLinks,
-                                    bool computeWater_, bool computeHeat_, bool computeSolutes_)
+int DLL_EXPORT __STDCALL initializeFluxes(long nrNodes, int nrLayers, int nrLateralLinks,
+                                    bool isComputeWater, bool isComputeHeat, bool isComputeSolutes)
 {
-    /*! clean the old data structures */
+    // clean the old data structures
     cleanMemory();
 
     myParameters.initialize();
     myStructure.initialize();   
 
-    myStructure.computeWater = computeWater_;
-    myStructure.computeHeat = computeHeat_;
-    if (computeHeat_)
+    myStructure.computeWater = isComputeWater;
+    myStructure.computeHeat = isComputeHeat;
+    if (myStructure.computeHeat)
     {
         myStructure.computeHeatVapor = true;
         myStructure.computeHeatAdvection = true;
     }
-    myStructure.computeSolutes = computeSolutes_;
+    myStructure.computeSolutes = isComputeSolutes;
 
     myStructure.nrNodes = nrNodes;
     myStructure.nrLayers = nrLayers;
@@ -107,7 +107,7 @@ int DLL_EXPORT __STDCALL initialize(long nrNodes, int nrLayers, int nrLateralLin
     /*! max nr columns = nr. of lateral links + 2 columns for up and down link + 1 column for diagonal */
     myStructure.maxNrColumns = nrLateralLinks + 2 + 1;
 
-    /*! build the nodes vector */
+    // build the nodes vector
     nodeList = (TCrit3Dnode *) calloc(myStructure.nrNodes, sizeof(TCrit3Dnode));
 	for (long i = 0; i < myStructure.nrNodes; i++)
 	{
@@ -126,7 +126,7 @@ int DLL_EXPORT __STDCALL initialize(long nrNodes, int nrLayers, int nrLateralLin
         }
     }
 
-    /*! build the matrix */
+    // build the matrix
     if (nodeList == nullptr)
         return MEMORY_ERROR;
     else
@@ -136,7 +136,7 @@ int DLL_EXPORT __STDCALL initialize(long nrNodes, int nrLayers, int nrLateralLin
 
 /*!
    \brief setNumericalParameters
-   \return numerical solution parameters
+   sets numerical solution parameters
 */
 int DLL_EXPORT __STDCALL setNumericalParameters(float minDeltaT, float maxDeltaT, int maxIterationNumber,
                         int maxApproximationsNumber, int ResidualTolerance, float MBRThreshold)
@@ -170,6 +170,19 @@ int DLL_EXPORT __STDCALL setNumericalParameters(float minDeltaT, float maxDeltaT
     if (MBRThreshold < 1) MBRThreshold = 1;
     if (MBRThreshold > 6) MBRThreshold = 6;
     myParameters.MBRThreshold = pow(double(10.), double(-MBRThreshold));
+
+    return CRIT3D_OK;
+}
+
+
+/*!
+   \brief setThreads
+   sets threads for parallel computing
+*/
+int DLL_EXPORT __STDCALL setThreads(int nrThreads)
+{
+    if (nrThreads < 1) nrThreads = 1;
+    myParameters.threadsNumber = nrThreads;
 
     return CRIT3D_OK;
 }

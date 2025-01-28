@@ -2178,7 +2178,6 @@ void MainWindow::on_actionSnow_settings_triggered()
     {
         myProject.logError("Error writing snow parameters");
     }
-
 }
 
 
@@ -2198,7 +2197,7 @@ void MainWindow::on_actionCriteria3D_set_processes_triggered()
         myProject.processes.setComputeSnow(dialogProcesses.snowProcess->isChecked());
         myProject.processes.setComputeCrop(dialogProcesses.cropProcess->isChecked());
         myProject.processes.setComputeWater(dialogProcesses.waterFluxesProcess->isChecked());
-        myProject.processes.setComputeHydrall(dialogProcesses.waterFluxesProcess->isChecked());
+        myProject.processes.setComputeHydrall(dialogProcesses.hydrallProcess->isChecked());
     }
 }
 
@@ -2215,6 +2214,7 @@ void MainWindow::on_actionCriteria3D_waterFluxes_settings_triggered()
     dialogWaterFluxes.setImposedComputationDepth(myProject.waterFluxesParameters.imposedComputationDepth);
 
     dialogWaterFluxes.accuracySlider->setValue(myProject.waterFluxesParameters.modelAccuracy);
+    dialogWaterFluxes.setThreadsNumber(myProject.waterFluxesParameters.numberOfThreads);
 
     if (myProject.waterFluxesParameters.computeOnlySurface)
         dialogWaterFluxes.onlySurface->setChecked(true);
@@ -2231,6 +2231,7 @@ void MainWindow::on_actionCriteria3D_waterFluxes_settings_triggered()
     if (dialogWaterFluxes.isUpdateAccuracy())
     {
         myProject.waterFluxesParameters.modelAccuracy = dialogWaterFluxes.accuracySlider->value();
+        myProject.waterFluxesParameters.numberOfThreads = dialogWaterFluxes.getThreadsNumber();
         if (myProject.isCriteria3DInitialized)
         {
             myProject.setAccuracy();
@@ -2250,6 +2251,7 @@ void MainWindow::on_actionCriteria3D_waterFluxes_settings_triggered()
         myProject.waterFluxesParameters.computeAllSoilDepth = dialogWaterFluxes.allSoilDepth->isChecked();
 
         myProject.waterFluxesParameters.modelAccuracy = dialogWaterFluxes.accuracySlider->value();
+        myProject.waterFluxesParameters.numberOfThreads = dialogWaterFluxes.getThreadsNumber();
 
         myProject.fittingOptions.useWaterRetentionData = dialogWaterFluxes.useWaterRetentionFitting->isChecked();
 

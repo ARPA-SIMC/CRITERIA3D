@@ -5,19 +5,23 @@ DialogModelProcesses::DialogModelProcesses()
 {
     setWindowTitle("3D model processes");
 
-    QGroupBox* processesGroupBox = new QGroupBox("Required processes");
+    QGroupBox* processesGroupBox = new QGroupBox("Required");
     QLabel *snowLabel = new QLabel(tr("Snow accumulation and melt"));
     snowProcess = new QCheckBox();
     QLabel *cropLabel = new QLabel(tr("Crop development "));
     cropProcess = new QCheckBox();
     QLabel *waterLabel = new QLabel(tr("Soil water flow "));
     waterFluxesProcess = new QCheckBox();
+    QLabel *hydrallLabel = new QLabel(tr("Hydrall model "));
+    hydrallProcess = new QCheckBox();
 
     QHBoxLayout *layoutProcesses = new QHBoxLayout();
     layoutProcesses->addWidget(waterFluxesProcess);
     layoutProcesses->addWidget(waterLabel);
     layoutProcesses->addWidget(cropProcess);
     layoutProcesses->addWidget(cropLabel);
+    layoutProcesses->addWidget(hydrallProcess);
+    layoutProcesses->addWidget(hydrallLabel);
     layoutProcesses->addWidget(snowProcess);
     layoutProcesses->addWidget(snowLabel);
     processesGroupBox->setLayout(layoutProcesses);

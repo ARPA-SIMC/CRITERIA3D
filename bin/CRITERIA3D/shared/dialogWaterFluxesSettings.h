@@ -14,6 +14,7 @@
         QLineEdit *initialDegreeOfSaturationEdit;
         QLineEdit *imposedComputationDepthEdit;
         QLineEdit *conductivityHVRatioEdit;
+        QLineEdit *threadsNumberEdit;
 
         bool _isUpdateAccuracy;
 
@@ -34,6 +35,12 @@
         QSlider *accuracySlider;
 
         DialogWaterFluxesSettings();
+
+        double getThreadsNumber() const
+        { return threadsNumberEdit->text().toInt(); }
+
+        void setThreadsNumber(int value)
+        { threadsNumberEdit->setText(QString::number(value)); }
 
         double getConductivityHVRatio() const
         { return conductivityHVRatioEdit->text().toDouble(); }
