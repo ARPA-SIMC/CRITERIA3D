@@ -223,16 +223,16 @@
 
     // --------------------MATH---------------------
     #ifndef PI
-        #define PI 3.141592653589793238462643383
+        #define PI 3.1415926535898
     #endif
     #ifndef EPSILON
-        #define EPSILON 0.0000001
+        #define EPSILON 0.000001
     #endif
     #define EULER 2.718281828459
     #define DEG_TO_RAD 0.0174532925
     #define RAD_TO_DEG 57.2957795
     #define SQRT_2 1.41421356237
-    #define GOLDEN_SECTION 1.6180339887498948482
+    #define GOLDEN_SECTION 1.6180339887499
 
     #define MINIMUM_PERCENTILE_DATA 3
 

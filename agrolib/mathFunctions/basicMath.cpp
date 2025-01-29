@@ -456,11 +456,11 @@
                 // remove nodata
                 list.erase(std::remove(list.begin(), list.end(), float(NODATA)), list.end());
 
-                // sort
-                std::sort(list.begin(), list.end());
-
                 // check on data presence
                 if (list.size() < MINIMUM_PERCENTILE_DATA) return NODATA;
+
+                // sort
+                std::sort(list.begin(), list.end());
             }
 
             float nrValuesF = float(list.size());
@@ -475,13 +475,13 @@
                 if (isEqual(value, list[i]))
                 {
                     float rank = float(i + 1) / nrValuesF;
-                    return rank * 100;
+                    return rank * 100.f;
                 }
                 if (i < lastIndex && list[i] < value && list[i+1] > value)
                 {
                     float rank = float(i + 1) / nrValuesF;
                     rank += (value - list[i]) / (list[i+1] - list[i]) / nrValuesF;
-                    return rank * 100;
+                    return rank * 100.f;
                 }
             }
 
