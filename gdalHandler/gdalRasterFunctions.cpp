@@ -102,14 +102,16 @@ bool convertGdalRaster(GDALDataset* dataset, gis::Crit3DRasterGrid* myRaster, in
 
     int             bGotMin, bGotMax;
     double          adfMinMax[2];
-    qDebug() << "Type =" << GDALGetDataTypeName(band->GetRasterDataType());
+
+    QString dataType = QString(GDALGetDataTypeName(band->GetRasterDataType()));
+    qDebug() << "Data type =" << dataType;
     qDebug() << "ColorInterpretation =" << GDALGetColorInterpretationName(band->GetColorInterpretation());
 
     adfMinMax[0] = band->GetMinimum( &bGotMin );
     adfMinMax[1] = band->GetMaximum( &bGotMax );
 
     // min e max
-    if( ! (bGotMin && bGotMax) )
+    if(! (bGotMin && bGotMax) )
     {
         GDALComputeRasterMinMax(GDALRasterBandH(band), TRUE, adfMinMax);
     }
@@ -139,7 +141,15 @@ bool convertGdalRaster(GDALDataset* dataset, gis::Crit3DRasterGrid* myRaster, in
     myRaster->header->cellSize = adfGeoTransform[1];
     myRaster->header->llCorner.x = adfGeoTransform[0];
     myRaster->header->llCorner.y = adfGeoTransform[3] - myRaster->header->cellSize * myRaster->header->nrRows;
-    myRaster->header->flag = float(nodataValue);
+    if (dataType == "Float64")
+    {
+        qDebug() << "NODATA will be converted to " << NODATA;
+        myRaster->header->flag = float(NODATA);
+    }
+    else
+    {
+        myRaster->header->flag = float(nodataValue);
+    }
 
     if (! myRaster->initializeGrid(myRaster->header->flag))
     {
@@ -147,24 +157,57 @@ bool convertGdalRaster(GDALDataset* dataset, gis::Crit3DRasterGrid* myRaster, in
         return false;
     }
 
-    // read data
-    float* data = (float *) CPLMalloc(sizeof(float) * xSize * ySize);
-    CPLErr errGdal = band->RasterIO(GF_Read, 0, 0, xSize, ySize, data, xSize, ySize, GDT_Float32, 0, 0);
-
-    if (errGdal > CE_Warning)
+    if (dataType == "Float64")
     {
-        errorStr = "Error in RasterIO";
+        // read 64 bit data
+        double* data = (double *) CPLMalloc(sizeof(double) * xSize * ySize);
+        CPLErr errGdal = band->RasterIO(GF_Read, 0, 0, xSize, ySize, data, xSize, ySize, GDT_Float64, 0, 0);
+
+        if (errGdal > CE_Warning)
+        {
+            errorStr = "Error in RasterIO";
+            CPLFree(data);
+            return false;
+        }
+
+        // set data
+        for (int row = 0; row < myRaster->header->nrRows; row++)
+            for (int col = 0; col < myRaster->header->nrCols; col++)
+            {
+                if (data[row*xSize+col] == nodataValue)
+                {
+                    myRaster->value[row][col] = myRaster->header->flag;
+                }
+                else
+                {
+                    myRaster->value[row][col] = float(data[row*xSize+col]);
+                }
+            }
+
+        // free memory
         CPLFree(data);
-        return false;
     }
+    else
+    {
+        // read 32 bit data
+        float* data = (float *) CPLMalloc(sizeof(float) * xSize * ySize);
+        CPLErr errGdal = band->RasterIO(GF_Read, 0, 0, xSize, ySize, data, xSize, ySize, GDT_Float32, 0, 0);
 
-    // set data
-    for (int row = 0; row < myRaster->header->nrRows; row++)
-        for (int col = 0; col < myRaster->header->nrCols; col++)
-            myRaster->value[row][col] = data[row*xSize+col];
+        if (errGdal > CE_Warning)
+        {
+            errorStr = "Error in RasterIO";
+            CPLFree(data);
+            return false;
+        }
 
-    // free memory
-    CPLFree(data);
+        // set data
+        for (int row = 0; row < myRaster->header->nrRows; row++)
+            for (int col = 0; col < myRaster->header->nrCols; col++)
+                myRaster->value[row][col] = data[row*xSize+col];
+
+        // free memory
+        CPLFree(data);
+    }
 
     // min & max
     if (noDataOk)
