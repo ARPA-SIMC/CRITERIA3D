@@ -2360,6 +2360,20 @@ void MainWindow::on_actionCriteria3D_Initialize_triggered()
         myProject.clearWaterBalance3D();
     }
 
+    if (myProject.processes.computeHydrall)
+    {
+        if (! myProject.processes.computeCrop ||  myProject.processes.computeWater)
+        {
+            myProject.logError("Active water and crop processes before.");
+        }
+
+        if (! myProject.initializeHydrall())
+        {
+            myProject.logError();
+            return;
+        }
+    }
+
     initializeCriteria3DInterface();
     myProject.logInfoGUI("The model is initialized.");
 }

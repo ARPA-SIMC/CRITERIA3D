@@ -95,6 +95,31 @@ void Crit3DProject::clearCropMaps()
 }
 
 
+bool Crit3DProject::initializeHydrall()
+{
+    if (! DEM.isLoaded)
+    {
+        errorString = ERROR_STR_MISSING_DEM;
+        return false;
+    }
+    logInfo("Initialize hydrall model...");
+
+    lastMonthTavgMap.initializeGrid(*(DEM.header));
+
+    for (int row = 0; row < DEM.header->nrRows; row++)
+    {
+        for (int col = 0; col < DEM.header->nrCols; col++)
+        {
+            float height = DEM.value[row][col];
+            if (! isEqual(height, DEM.header->flag))
+            {
+                lastMonthTavgMap.value[row][col] = 15.f; // initialize to 15°C
+            }
+        }
+    }
+}
+
+
 bool Crit3DProject::initializeCropMaps()
 {
     if (! DEM.isLoaded)
@@ -111,7 +136,6 @@ bool Crit3DProject::initializeCropMaps()
 
     dailyTminMap.initializeGrid(*(DEM.header));
     dailyTmaxMap.initializeGrid(*(DEM.header));
-    lastMonthTavgMap.initializeGrid(*(DEM.header));
 
     return true;
 }
@@ -191,7 +215,6 @@ bool Crit3DProject::initializeCropWithClimateData()
                     laiMap.value[row][col] = cropList[index].computeSimpleLAI(degreeDays, gisSettings.startLocation.latitude, currentDate.dayOfYear());
                 }
             }
-            lastMonthTavgMap.value[row][col]= 15; // initialize to 15°C
         }
     }
 
@@ -588,6 +611,7 @@ bool Crit3DProject::runModels(QDateTime firstTime, QDateTime lastTime, bool isRe
         {
             dailyUpdateCropMaps(myDate);
         }
+        // TODO Antonio hydrall giornaliero
         if (processes.computeWater)
         {
             dailyUpdatePond();
@@ -1239,6 +1263,7 @@ bool Crit3DProject::computeHydrallModel(double temperature, int secondsPerStep)
     return true;
 }
 
+
 bool Crit3DProject::updateLast30DaysTavg()
 {
     if (! dailyTminMap.isLoaded || ! dailyTmaxMap.isLoaded || ! hourlyMeteoMaps->mapHourlyTair->isLoaded)
@@ -1253,6 +1278,7 @@ bool Crit3DProject::updateLast30DaysTavg()
     }
     return true;
 }
+
 
 bool Crit3DProject::updateDailyTemperatures()
 {
