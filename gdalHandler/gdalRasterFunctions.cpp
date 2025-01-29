@@ -15,7 +15,7 @@
  * \brief open a raster file with GDAL library
  * \return GDALDataset
  */
-bool readGdalRaster(QString fileName, gis::Crit3DRasterGrid* rasterPointer, int &utmZone, QString &error)
+bool readGdalRaster(QString fileName, gis::Crit3DRasterGrid* rasterPointer, int &utmZone, QString &errorStr)
 {
     // check parameters
     if (rasterPointer == nullptr) return false;
@@ -24,11 +24,11 @@ bool readGdalRaster(QString fileName, gis::Crit3DRasterGrid* rasterPointer, int 
     GDALDataset* dataset = (GDALDataset*) GDALOpen(fileName.toStdString().data(), GA_ReadOnly);
     if(! dataset)
     {
-        error = "Load raster failed!";
+        errorStr = "Load raster failed!";
         return false;
     }
 
-    bool myResult = convertGdalRaster(dataset, rasterPointer, utmZone, error);
+    bool myResult = convertGdalRaster(dataset, rasterPointer, utmZone, errorStr);
     GDALClose(dataset);
 
     return myResult;
@@ -38,7 +38,7 @@ bool readGdalRaster(QString fileName, gis::Crit3DRasterGrid* rasterPointer, int 
 /*! convertGdalRaster
  * \brief convert a GDAL dataset in a Crit3DRasterGrid
  */
-bool convertGdalRaster(GDALDataset* dataset, gis::Crit3DRasterGrid* myRaster, int &utmZone, QString &error)
+bool convertGdalRaster(GDALDataset* dataset, gis::Crit3DRasterGrid* myRaster, int &utmZone, QString &errorStr)
 {
     myRaster->isLoaded = false;
 
@@ -63,7 +63,7 @@ bool convertGdalRaster(GDALDataset* dataset, gis::Crit3DRasterGrid* myRaster, in
         // TODO geo projection?
         if (! spatialReference->IsProjected())
         {
-            error = "Not projected data";
+            errorStr = "Not projected data: " + QString::fromStdString(dataset->GetProjectionRef());
             return false;
         }
 
@@ -88,7 +88,7 @@ bool convertGdalRaster(GDALDataset* dataset, gis::Crit3DRasterGrid* myRaster, in
     }
     if (adfGeoTransform[1] != fabs(adfGeoTransform[5]))
     {
-        error = "Not regular pixel size! Will be used x size.";
+        errorStr = "Not regular pixel size! Will be used x size.";
     }
 
     // TODO choose band
@@ -96,7 +96,7 @@ bool convertGdalRaster(GDALDataset* dataset, gis::Crit3DRasterGrid* myRaster, in
     GDALRasterBand* band = dataset->GetRasterBand(1);
     if(band == nullptr)
     {
-        error = "Missing data!";
+        errorStr = "Missing data!";
         return false;
     }
 
@@ -143,7 +143,7 @@ bool convertGdalRaster(GDALDataset* dataset, gis::Crit3DRasterGrid* myRaster, in
 
     if (! myRaster->initializeGrid(myRaster->header->flag))
     {
-        error = "Memory error: file too big.";
+        errorStr = "Memory error: file too big.";
         return false;
     }
 
@@ -153,7 +153,7 @@ bool convertGdalRaster(GDALDataset* dataset, gis::Crit3DRasterGrid* myRaster, in
 
     if (errGdal > CE_Warning)
     {
-        error = "Error in RasterIO";
+        errorStr = "Error in RasterIO";
         CPLFree(data);
         return false;
     }
