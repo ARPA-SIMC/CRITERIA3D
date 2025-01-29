@@ -10,9 +10,9 @@
 #include <gdal_priv.h>
 
 
-QStringList getGdalExtensions(GdalFileType type, GdalFileIO io)
+QList<QString> getGdalExtensions(GdalFileType type, GdalFileIO io)
 {
-    QStringList extensionsList;
+    QList<QString> extensionsList;
 
     const char* gdalType;
     if (type == GdalFileType::raster)
@@ -73,22 +73,22 @@ QStringList getGdalExtensions(GdalFileType type, GdalFileIO io)
 }
 
 
-QStringList getGdalRasterReadExtension()
+QList<QString> getGdalRasterReadExtension()
 {
     return getGdalExtensions(GdalFileType::raster, GdalFileIO::read);
 }
 
-QStringList getGdalRasterWriteExtension()
+QList<QString> getGdalRasterWriteExtension()
 {
     return getGdalExtensions(GdalFileType::raster, GdalFileIO::write);
 }
 
-QStringList getGdalVectorReadExtension()
+QList<QString> getGdalVectorReadExtension()
 {
     return getGdalExtensions(GdalFileType::vector, GdalFileIO::read);
 }
 
-QStringList getGdalVectorWriteExtension()
+QList<QString> getGdalVectorWriteExtension()
 {
     return getGdalExtensions(GdalFileType::vector, GdalFileIO::write);
 }
