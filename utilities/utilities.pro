@@ -5,8 +5,8 @@
 #
 #-------------------------------------------------
 
-QT      += core sql
-QT      -= gui
+QT     += sql
+QT     -= gui
 
 TEMPLATE = lib
 CONFIG += staticlib
