@@ -36,7 +36,8 @@ void StationMarker::setToolTip()
     QString municipality = QString::fromStdString(_municipality);
     QString lapseRateName = QString::fromStdString(getLapseRateCodeName(_lapseRateCode));
 
-    QString toolTipText = QString("Point: <b> %1 </b> <br/> ID: %2 <br/> dataset: %3 <br/> altitude: %4 m <br/> region: %5 <br/> province: %6 <br/> <br/> municipality: %7 <br/> <br/> lapse rate code: %8")
+    QString toolTipText = QString("Point: <b> %1 </b> <br/> ID: %2 <br/> dataset: %3 <br/> altitude: %4 m <br/>"
+                                  "<br/> municipality: %7 <br/> province: %6 <br/> region: %5 <br/> <br/> lapse rate code: %8")
                             .arg(name, idpoint, dataset, altitude, region, province, municipality, lapseRateName);
 
     double value = currentValue();
