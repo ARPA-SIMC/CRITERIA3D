@@ -6,21 +6,23 @@
 #include <iostream>
 #include <fstream>
 
-#include <QtSql>
+#include <QFile>
+#include <QTextStream>
 
-long getFileLenght(QString fileName)
+
+long getFileLenght(const QString fileName, QString &errorStr)
 {
     QFile file(fileName);
-    if ( !file.open(QFile::ReadOnly | QFile::Text) )
+    if (! file.open(QFile::ReadOnly | QFile::Text) )
     {
-        qDebug() << "data file not exists";
+        errorStr = "data file not exists";
         return 0;
     }
 
     QTextStream inputStream(&file);
 
     long nrRows = 0;
-    while( !inputStream.atEnd())
+    while(! inputStream.atEnd())
     {
         inputStream.readLine();
         nrRows++;
@@ -52,7 +54,8 @@ bool getFieldList(QString fieldListFileName, QMap<QString, QList<QString>>& fiel
     QTextStream in(&fileRef);
     // skip header
     QString line = in.readLine();
-    while (!in.atEnd())
+
+    while (! in.atEnd())
     {
         QString line = in.readLine();
         QList<QString> items = line.split(",");
@@ -68,6 +71,7 @@ bool getFieldList(QString fieldListFileName, QMap<QString, QList<QString>>& fiel
             error = "invalid field list: missing field name";
             return false;
         }
+
         fieldList.insert(key,items);
     }
 
@@ -100,7 +104,7 @@ bool shapeFromCsv(Crit3DShapeHandler &refShapeFile, QString csvFileName,
     int defaultDoubleDecimals = 2;
 
     // check csv data
-    long nrRows = getFileLenght(csvFileName);
+    long nrRows = getFileLenght(csvFileName, errorStr);
     if (nrRows < 2)
     {
         errorStr = "CSV data file is void: " + csvFileName;
