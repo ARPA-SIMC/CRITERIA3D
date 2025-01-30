@@ -5,6 +5,9 @@
         #include "shapeHandler.h"
     #endif
     #include <QString>
+    #include <QMap>
+
+    long getFileLenght(const QString fileName, QString &errorStr);
 
     bool getFieldList(QString fieldListFileName, QMap<QString, QList<QString>>& fieldList, QString &error);
 

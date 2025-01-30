@@ -3,7 +3,7 @@
 #include "zonalStatistic.h"
 #include "shapeToRaster.h"
 #include "shapeUtilities.h"
-#include "formInfo.h"
+//#include "formInfo.h"
 #include "computationUnitsDb.h"
 
 #include <QFile>
@@ -11,7 +11,7 @@
 
 bool computeUcmPrevailing(Crit3DShapeHandler &shapeUCM, Crit3DShapeHandler &shapeCrop, Crit3DShapeHandler &shapeSoil, Crit3DShapeHandler &shapeMeteo,
                  std::string idCrop, std::string idSoil, std::string idMeteo, double cellSize, double threshold,
-                 QString ucmFileName, std::string &error, bool showInfo)
+                 QString ucmFileName, std::string &errorStr, bool showInfo)
 {
 
     // make a copy of crop shapefile (reference shape)
@@ -19,9 +19,9 @@ bool computeUcmPrevailing(Crit3DShapeHandler &shapeUCM, Crit3DShapeHandler &shap
     QString refFileName = QString::fromStdString(shapeCrop.getFilepath());
     QString ucmShapeFileName = cloneShapeFile(refFileName, ucmFileName);
 
-    if (!shapeUCM.open(ucmShapeFileName.toStdString()))
+    if (! shapeUCM.open(ucmShapeFileName.toStdString()))
     {
-        error = "Load shapefile failed: " + ucmShapeFileName.toStdString();
+        errorStr = "Load shapefile failed: " + ucmShapeFileName.toStdString();
         return false;
     }
 
@@ -31,39 +31,39 @@ bool computeUcmPrevailing(Crit3DShapeHandler &shapeUCM, Crit3DShapeHandler &shap
     initializeRasterFromShape(shapeUCM, rasterRef, cellSize);
     initializeRasterFromShape(shapeUCM, rasterVal, cellSize);
 
-    FormInfo formInfo;
+    //FormInfo formInfo;
 
     // CROP (reference shape)
-    if (showInfo) formInfo.start("[1/8] Rasterize crop (reference)...", 0);
+    //if (showInfo) formInfo.start("[1/8] Rasterize crop (reference)...", 0);
     fillRasterWithShapeNumber(rasterRef, shapeUCM);
 
     // meteo grid
-    if (showInfo) formInfo.setText("[2/8] Rasterize meteo grid...");
+    //if (showInfo) formInfo.setText("[2/8] Rasterize meteo grid...");
     fillRasterWithShapeNumber(rasterVal, shapeMeteo);
 
-    if (showInfo) formInfo.setText("[3/8] Compute matrix crop/meteo...");
+    //if (showInfo) formInfo.setText("[3/8] Compute matrix crop/meteo...");
     std::vector <int> vectorNull;
     std::vector <std::vector<int> > matrix = computeMatrixAnalysis(shapeUCM, shapeMeteo, rasterRef, rasterVal, vectorNull);
 
-    if (showInfo) formInfo.setText("[4/8] Zonal statistic crop/meteo...");
-    bool isOk = zonalStatisticsShapeMajority(shapeUCM, shapeMeteo, matrix, vectorNull, idMeteo, "ID_METEO", threshold, error);
+    //if (showInfo) formInfo.setText("[4/8] Zonal statistic crop/meteo...");
+    bool isOk = zonalStatisticsShapeMajority(shapeUCM, shapeMeteo, matrix, vectorNull, idMeteo, "ID_METEO", threshold, errorStr);
 
     // zonal statistic on soil map
     if (isOk)
     {
-        if (showInfo) formInfo.setText("[5/8] Rasterize soil...");
+        //if (showInfo) formInfo.setText("[5/8] Rasterize soil...");
         fillRasterWithShapeNumber(rasterVal, shapeSoil);
 
-        if (showInfo) formInfo.setText("[6/8] Compute matrix crop/soil...");
+        //if (showInfo) formInfo.setText("[6/8] Compute matrix crop/soil...");
         matrix = computeMatrixAnalysis(shapeUCM, shapeSoil, rasterRef, rasterVal, vectorNull);
 
-        if (showInfo) formInfo.setText("[7/8] Zonal statistic crop/soil...");
-        isOk = zonalStatisticsShapeMajority(shapeUCM, shapeSoil, matrix, vectorNull, idSoil, "ID_SOIL", threshold, error);
+        //if (showInfo) formInfo.setText("[7/8] Zonal statistic crop/soil...");
+        isOk = zonalStatisticsShapeMajority(shapeUCM, shapeSoil, matrix, vectorNull, idSoil, "ID_SOIL", threshold, errorStr);
     }
 
     if (! isOk)
     {
-        error = "ZonalStatisticsShape: " + error;
+        errorStr = "zonalStatisticsShapeMajority: " + errorStr;
     }
 
     rasterRef.clear();
@@ -73,11 +73,11 @@ bool computeUcmPrevailing(Crit3DShapeHandler &shapeUCM, Crit3DShapeHandler &shap
 
     if (! isOk)
     {
-        if (showInfo) formInfo.close();
+        //if (showInfo) formInfo.close();
         return false;
     }
 
-    if (showInfo) formInfo.setText("[8/8] Write UCM...");
+    //if (showInfo) formInfo.setText("[8/8] Write UCM...");
 
     // add ID CASE
     shapeUCM.addField("ID_CASE", FTString, 20, 0);
@@ -96,21 +96,21 @@ bool computeUcmPrevailing(Crit3DShapeHandler &shapeUCM, Crit3DShapeHandler &shap
     int cropIndex = shapeUCM.getFieldPos(idCrop);
     if(cropIndex == -1)
     {
-        error = "Missing idCrop: " + idCrop;
+        errorStr = "Missing idCrop: " + idCrop;
         return false;
     }
 
     int soilIndex = shapeUCM.getFieldPos("ID_SOIL");
     if(soilIndex == -1)
     {
-        error = "Missing idSoil: " + idSoil;
+        errorStr = "Missing idSoil: " + idSoil;
         return false;
     }
 
     int meteoIndex = shapeUCM.getFieldPos("ID_METEO");
     if(meteoIndex == -1)
     {
-        error = "Missing idMeteo: " + idMeteo;
+        errorStr = "Missing idMeteo: " + idMeteo;
         return false;
     }
 
@@ -169,8 +169,7 @@ bool computeUcmPrevailing(Crit3DShapeHandler &shapeUCM, Crit3DShapeHandler &shap
         shapeUCM.writeStringAttribute(shapeNr, idCasePos, caseStr.c_str());
     }
 
-    if (showInfo)
-        formInfo.close();
+    //if (showInfo) formInfo.close();
     cleanShapeFile(shapeUCM);
 
     return isOk;
@@ -218,12 +217,12 @@ bool fillUcmIdCase(Crit3DShapeHandler &ucm, std::string idCrop, std::string idSo
 }
 
 
-bool writeUcmListToDb(Crit3DShapeHandler &shapeHandler, QString dbName, QString &error)
+bool writeUcmListToDb(Crit3DShapeHandler &shapeHandler, QString dbName, QString &errorStr)
 {
     int nrShape = shapeHandler.getShapeCount();
     if (nrShape <= 0)
     {
-        error = "Shapefile is void.";
+        errorStr = "Shapefile is void.";
         return false;
     }
 
@@ -260,10 +259,10 @@ bool writeUcmListToDb(Crit3DShapeHandler &shapeHandler, QString dbName, QString 
         }
     }
 
-    ComputationUnitsDB compUnitsDb(dbName, error);
-    if (error != "")
+    ComputationUnitsDB compUnitsDb(dbName, errorStr);
+    if (errorStr != "")
         return false;
 
-    return compUnitsDb.writeListToCompUnitsTable(idCase, idCrop, idMeteo, idSoil, ha, error);
+    return compUnitsDb.writeListToCompUnitsTable(idCase, idCrop, idMeteo, idSoil, ha, errorStr);
 
 }

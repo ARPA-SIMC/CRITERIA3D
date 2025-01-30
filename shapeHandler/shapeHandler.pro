@@ -12,7 +12,7 @@
 #
 #--------------------------------------------------------
 
-QT    -= gui core
+QT    -= core gui
 
 unix:{
     CONFIG(debug, debug|release) {

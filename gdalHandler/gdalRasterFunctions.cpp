@@ -15,7 +15,7 @@
  * \brief open a raster file with GDAL library
  * \return GDALDataset
  */
-bool readGdalRaster(QString fileName, gis::Crit3DRasterGrid* rasterPointer, int &utmZone, QString &error)
+bool readGdalRaster(QString fileName, gis::Crit3DRasterGrid* rasterPointer, int &utmZone, QString &errorStr)
 {
     // check parameters
     if (rasterPointer == nullptr) return false;
@@ -24,11 +24,11 @@ bool readGdalRaster(QString fileName, gis::Crit3DRasterGrid* rasterPointer, int 
     GDALDataset* dataset = (GDALDataset*) GDALOpen(fileName.toStdString().data(), GA_ReadOnly);
     if(! dataset)
     {
-        error = "Load raster failed!";
+        errorStr = "Load raster failed!";
         return false;
     }
 
-    bool myResult = convertGdalRaster(dataset, rasterPointer, utmZone, error);
+    bool myResult = convertGdalRaster(dataset, rasterPointer, utmZone, errorStr);
     GDALClose(dataset);
 
     return myResult;
@@ -38,7 +38,7 @@ bool readGdalRaster(QString fileName, gis::Crit3DRasterGrid* rasterPointer, int 
 /*! convertGdalRaster
  * \brief convert a GDAL dataset in a Crit3DRasterGrid
  */
-bool convertGdalRaster(GDALDataset* dataset, gis::Crit3DRasterGrid* myRaster, int &utmZone, QString &error)
+bool convertGdalRaster(GDALDataset* dataset, gis::Crit3DRasterGrid* myRaster, int &utmZone, QString &errorStr)
 {
     myRaster->isLoaded = false;
 
@@ -63,7 +63,7 @@ bool convertGdalRaster(GDALDataset* dataset, gis::Crit3DRasterGrid* myRaster, in
         // TODO geo projection?
         if (! spatialReference->IsProjected())
         {
-            error = "Not projected data";
+            errorStr = "Not projected data: " + QString::fromStdString(dataset->GetProjectionRef());
             return false;
         }
 
@@ -88,7 +88,7 @@ bool convertGdalRaster(GDALDataset* dataset, gis::Crit3DRasterGrid* myRaster, in
     }
     if (adfGeoTransform[1] != fabs(adfGeoTransform[5]))
     {
-        error = "Not regular pixel size! Will be used x size.";
+        errorStr = "Not regular pixel size! Will be used x size.";
     }
 
     // TODO choose band
@@ -96,20 +96,22 @@ bool convertGdalRaster(GDALDataset* dataset, gis::Crit3DRasterGrid* myRaster, in
     GDALRasterBand* band = dataset->GetRasterBand(1);
     if(band == nullptr)
     {
-        error = "Missing data!";
+        errorStr = "Missing data!";
         return false;
     }
 
     int             bGotMin, bGotMax;
     double          adfMinMax[2];
-    qDebug() << "Type =" << GDALGetDataTypeName(band->GetRasterDataType());
+
+    QString dataType = QString(GDALGetDataTypeName(band->GetRasterDataType()));
+    qDebug() << "Data type =" << dataType;
     qDebug() << "ColorInterpretation =" << GDALGetColorInterpretationName(band->GetColorInterpretation());
 
     adfMinMax[0] = band->GetMinimum( &bGotMin );
     adfMinMax[1] = band->GetMaximum( &bGotMax );
 
     // min e max
-    if( ! (bGotMin && bGotMax) )
+    if(! (bGotMin && bGotMax) )
     {
         GDALComputeRasterMinMax(GDALRasterBandH(band), TRUE, adfMinMax);
     }
@@ -139,32 +141,73 @@ bool convertGdalRaster(GDALDataset* dataset, gis::Crit3DRasterGrid* myRaster, in
     myRaster->header->cellSize = adfGeoTransform[1];
     myRaster->header->llCorner.x = adfGeoTransform[0];
     myRaster->header->llCorner.y = adfGeoTransform[3] - myRaster->header->cellSize * myRaster->header->nrRows;
-    myRaster->header->flag = float(nodataValue);
+    if (dataType == "Float64")
+    {
+        qDebug() << "NODATA will be converted to " << NODATA;
+        myRaster->header->flag = float(NODATA);
+    }
+    else
+    {
+        myRaster->header->flag = float(nodataValue);
+    }
 
     if (! myRaster->initializeGrid(myRaster->header->flag))
     {
-        error = "Memory error: file too big.";
+        errorStr = "Memory error: file too big.";
         return false;
     }
 
-    // read data
-    float* data = (float *) CPLMalloc(sizeof(float) * xSize * ySize);
-    CPLErr errGdal = band->RasterIO(GF_Read, 0, 0, xSize, ySize, data, xSize, ySize, GDT_Float32, 0, 0);
-
-    if (errGdal > CE_Warning)
+    if (dataType == "Float64")
     {
-        error = "Error in RasterIO";
+        // read 64 bit data
+        double* data = (double *) CPLMalloc(sizeof(double) * xSize * ySize);
+        CPLErr errGdal = band->RasterIO(GF_Read, 0, 0, xSize, ySize, data, xSize, ySize, GDT_Float64, 0, 0);
+
+        if (errGdal > CE_Warning)
+        {
+            errorStr = "Error in RasterIO";
+            CPLFree(data);
+            return false;
+        }
+
+        // set data
+        for (int row = 0; row < myRaster->header->nrRows; row++)
+            for (int col = 0; col < myRaster->header->nrCols; col++)
+            {
+                if (data[row*xSize+col] == nodataValue)
+                {
+                    myRaster->value[row][col] = myRaster->header->flag;
+                }
+                else
+                {
+                    myRaster->value[row][col] = float(data[row*xSize+col]);
+                }
+            }
+
+        // free memory
         CPLFree(data);
-        return false;
     }
+    else
+    {
+        // read 32 bit data
+        float* data = (float *) CPLMalloc(sizeof(float) * xSize * ySize);
+        CPLErr errGdal = band->RasterIO(GF_Read, 0, 0, xSize, ySize, data, xSize, ySize, GDT_Float32, 0, 0);
 
-    // set data
-    for (int row = 0; row < myRaster->header->nrRows; row++)
-        for (int col = 0; col < myRaster->header->nrCols; col++)
-            myRaster->value[row][col] = data[row*xSize+col];
+        if (errGdal > CE_Warning)
+        {
+            errorStr = "Error in RasterIO";
+            CPLFree(data);
+            return false;
+        }
 
-    // free memory
-    CPLFree(data);
+        // set data
+        for (int row = 0; row < myRaster->header->nrRows; row++)
+            for (int col = 0; col < myRaster->header->nrCols; col++)
+                myRaster->value[row][col] = data[row*xSize+col];
+
+        // free memory
+        CPLFree(data);
+    }
 
     // min & max
     if (noDataOk)
