@@ -66,6 +66,7 @@
 
         void clearCropMaps();
         bool initializeCropMaps();
+        bool initializeHydrall();
         void dailyUpdateCropMaps(const QDate &myDate);
 
         bool initializeCropWithClimateData();
