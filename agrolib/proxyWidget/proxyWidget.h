@@ -13,7 +13,7 @@
         Q_OBJECT
 
         public:
-            Crit3DProxyWidget(Crit3DInterpolationSettings* interpolationSettings, Crit3DMeteoPoint* meteoPoints, int nrMeteoPoints, frequencyType currentFrequency, QDate currentDate, int currentHour, Crit3DQuality* quality,  Crit3DInterpolationSettings* SQinterpolationSettings, Crit3DMeteoSettings *meteoSettings, Crit3DClimateParameters *climateParam, bool checkSpatialQuality);
+            Crit3DProxyWidget(Crit3DInterpolationSettings* interpolationSettings, Crit3DMeteoPoint* meteoPoints, int nrMeteoPoints, frequencyType currentFrequency, QDate currentDate, int currentHour, Crit3DQuality* quality,  Crit3DInterpolationSettings* SQinterpolationSettings, Crit3DMeteoSettings *meteoSettings, Crit3DClimateParameters *climateParam, bool checkSpatialQuality, int macroAreaNumber);
             ~Crit3DProxyWidget();
             void closeEvent(QCloseEvent *event);
             void updateDateTime(QDate newDate, int newHour);
@@ -23,6 +23,7 @@
             void plot();
             void climatologicalLRClicked(int toggled);
             void modelLRClicked(int toggled);
+            void addMacroAreaLR();
 
     private:
             Crit3DInterpolationSettings* interpolationSettings;
@@ -47,6 +48,7 @@
             ChartView *chartView;
             meteoVariable myVar;
             int proxyPos;
+            int macroAreaNumber;
 
             Crit3DTime getCurrentTime();
 

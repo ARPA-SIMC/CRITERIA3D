@@ -4384,7 +4384,7 @@ void Project::deleteProxyWidget()
 }
 
 
-void Project::showProxyGraph()
+void Project::showProxyGraph(int macroAreaNumber)
 {
     Crit3DMeteoPoint* meteoPointsSelected;
     int nSelected = 0;
@@ -4397,7 +4397,7 @@ void Project::showProxyGraph()
     }
     if (nSelected == 0)
     {
-        proxyWidget = new Crit3DProxyWidget(&interpolationSettings, meteoPoints, nrMeteoPoints, currentFrequency, currentDate, currentHour, quality, &qualityInterpolationSettings, meteoSettings, &climateParameters, checkSpatialQuality);
+        proxyWidget = new Crit3DProxyWidget(&interpolationSettings, meteoPoints, nrMeteoPoints, currentFrequency, currentDate, currentHour, quality, &qualityInterpolationSettings, meteoSettings, &climateParameters, checkSpatialQuality, macroAreaNumber);
     }
     else
     {
@@ -4411,7 +4411,7 @@ void Project::showProxyGraph()
                 posMpSelected = posMpSelected + 1;
             }
         }
-        proxyWidget = new Crit3DProxyWidget(&interpolationSettings, meteoPointsSelected, nSelected, currentFrequency, currentDate, currentHour, quality, &qualityInterpolationSettings, meteoSettings, &climateParameters, checkSpatialQuality);
+        proxyWidget = new Crit3DProxyWidget(&interpolationSettings, meteoPointsSelected, nSelected, currentFrequency, currentDate, currentHour, quality, &qualityInterpolationSettings, meteoSettings, &climateParameters, checkSpatialQuality, macroAreaNumber);
     }
     QObject::connect(proxyWidget, SIGNAL(closeProxyWidget()), this, SLOT(deleteProxyWidget()));
     return;
