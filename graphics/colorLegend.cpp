@@ -40,13 +40,13 @@ void ColorLegend::paintEvent(QPaintEvent *event)
     int legendWidth = painter.window().width() - BLANK_DX*2;
 
     unsigned int nrStep = this->colorScale->nrColors();
-    unsigned int nrStepText = MAXVALUE(nrStep / 4, 1);
+    unsigned int nrStepText = MAXVALUE(round(float(nrStep) / 4.f), 1);
 
     double dx = double(legendWidth) / double(nrStep+1);
 
     double value = this->colorScale->minimum();
     double step = (colorScale->maximum() - colorScale->minimum()) / double(nrStep);
-    double stepText = (colorScale->maximum() - colorScale->minimum()) / double(nrStepText);
+    double range = (colorScale->maximum() - colorScale->minimum());
 
     QString valueStr;
     int nrDigits;
@@ -71,7 +71,7 @@ void ColorLegend::paintEvent(QPaintEvent *event)
             if (value < 0) nrDigits++;
 
             double decimal = fabs(value - round(value));
-            if ((decimal / stepText) > 1)
+            if ((decimal / range) > 0.1)
             {
                 // two decimals
                 valueStr = QString::number(value, 'f', 2);
@@ -79,7 +79,7 @@ void ColorLegend::paintEvent(QPaintEvent *event)
             }
             else
             {
-                if ((decimal / stepText) > 0.1)
+                if ((decimal / range) > 0.01)
                 {
                     // one decimal
                     valueStr = QString::number(value, 'f', 1);
