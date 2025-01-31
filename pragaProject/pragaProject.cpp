@@ -1813,7 +1813,9 @@ bool PragaProject::averageSeriesOnZonesMeteoGrid(meteoVariable variable, meteoCo
                                                  bool showInfo)
 {
     if (showInfo)
+    {
         logInfoGUI("Assign aggregation points...");
+    }
 
     std::vector <std::vector<int> > meteoGridRow(zoneGrid->header->nrRows, std::vector<int>(zoneGrid->header->nrCols, NODATA));
     std::vector <std::vector<int> > meteoGridCol(zoneGrid->header->nrRows, std::vector<int>(zoneGrid->header->nrCols, NODATA));
@@ -1848,9 +1850,9 @@ bool PragaProject::averageSeriesOnZonesMeteoGrid(meteoVariable variable, meteoCo
 
                 if (zoneIndex > 0 && zoneIndex <= zoneGrid->maximum)
                 {
-                    utmXvector[zoneIndex-1] = utmXvector[zoneIndex-1] + utmx;
-                    utmYvector[zoneIndex-1] = utmYvector[zoneIndex-1] + utmy;
-                    count[zoneIndex-1] = count[zoneIndex-1] + 1;
+                    utmXvector[zoneIndex-1] += utmx;
+                    utmYvector[zoneIndex-1] += utmy;
+                    count[zoneIndex-1]++;
                 }
             }
         }
@@ -1860,8 +1862,9 @@ bool PragaProject::averageSeriesOnZonesMeteoGrid(meteoVariable variable, meteoCo
     for (unsigned int zonePos = 0; zonePos < zoneValues.size(); zonePos++)
     {
         // average x, y
-        utmXvector[zonePos] = utmXvector[zonePos] / count[zonePos];
-        utmYvector[zonePos] = utmYvector[zonePos] / count[zonePos];
+        utmXvector[zonePos] /= count[zonePos];
+        utmYvector[zonePos] /= count[zonePos];
+
         double lat, lon;
         gis::getLatLonFromUtm(gisSettings, utmXvector[zonePos], utmYvector[zonePos], &lat, &lon);
         latVector.push_back(lat);
