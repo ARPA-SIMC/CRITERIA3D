@@ -36,6 +36,7 @@
         bool check3DProject();
         bool updateDailyTemperatures();
         bool updateLast30DaysTavg();
+        void updateHydrallLAI();
 
         bool saveSnowModelState(const QString &currentStatePath);
         bool saveSoilWaterState(const QString &currentStatePath);
@@ -51,12 +52,12 @@
         gis::Crit3DRasterGrid degreeDaysMap;
         gis::Crit3DRasterGrid dailyTminMap;
         gis::Crit3DRasterGrid dailyTmaxMap;
-        gis::Crit3DRasterGrid lastMonthTavgMap;
 
-        Crit3DHydrallMaps *hydrallMaps;
+        gis::Crit3DRasterGrid* hydrallStateMaps;
 
         Crit3DSnow snowModel;
-
+        Crit3D_Hydrall hydrallModel;
+        Crit3DHydrallMaps dailyHydrallMaps;
         QDateTime modelFirstTime, modelLastTime;
         QDateTime meteoPointsDbFirstTime;
 
@@ -102,7 +103,9 @@
 
         bool initializeSnowModel();
 
-        bool computeHydrallModel(double temperature, int secondsPerStep);
+        bool computeHydrallModel();
+        void dailyUpdateHydrallMaps();
+
         bool computeSnowModel();
         void computeSnowPoint(int row, int col);
 

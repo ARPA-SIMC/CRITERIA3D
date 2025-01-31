@@ -89,7 +89,7 @@ void Crit3DProject::clearCropMaps()
     degreeDaysMap.clear();
     dailyTminMap.clear();
     dailyTmaxMap.clear();
-    lastMonthTavgMap.clear();
+    dailyHydrallMaps.mapLast30DaysTavg->clear();
 
     isCropInitialized = false;
 }
@@ -104,7 +104,9 @@ bool Crit3DProject::initializeHydrall()
     }
     logInfo("Initialize hydrall model...");
 
-    lastMonthTavgMap.initializeGrid(*(DEM.header));
+
+
+    dailyHydrallMaps.mapLast30DaysTavg->initializeGrid(*(DEM.header));
 
     for (int row = 0; row < DEM.header->nrRows; row++)
     {
@@ -113,7 +115,7 @@ bool Crit3DProject::initializeHydrall()
             float height = DEM.value[row][col];
             if (! isEqual(height, DEM.header->flag))
             {
-                lastMonthTavgMap.value[row][col] = 15.f; // initialize to 15°C
+                dailyHydrallMaps.mapLast30DaysTavg->value[row][col] = 15.f; // initialize to 15°C
             }
         }
     }
@@ -332,6 +334,13 @@ void Crit3DProject::dailyUpdateCropMaps(const QDate &myDate)
     // cleans daily temperature maps
     dailyTminMap.emptyGrid();
     dailyTmaxMap.emptyGrid();
+}
+
+void Crit3DProject::dailyUpdateHydrallMaps()
+{
+    updateLast30DaysTavg();
+    updateHydrallLAI();
+    return;
 }
 
 
@@ -611,10 +620,16 @@ bool Crit3DProject::runModels(QDateTime firstTime, QDateTime lastTime, bool isRe
         {
             dailyUpdateCropMaps(myDate);
         }
-        // TODO Antonio hydrall giornaliero
+
         if (processes.computeWater)
         {
             dailyUpdatePond();
+        }
+
+        // TODO Antonio hydrall giornaliero
+        if (processes.computeHydrall)
+        {
+            dailyUpdateHydrallMaps();
         }
 
         if (isSaveOutputRaster())
@@ -1222,7 +1237,7 @@ bool Crit3DProject::computeSnowModel()
     return true;
 }
 
-bool Crit3DProject::computeHydrallModel(double temperature, int secondsPerStep)
+bool Crit3DProject::computeHydrallModel()
 {
     // check
     if (! snowMaps.isInitialized)
@@ -1249,6 +1264,15 @@ bool Crit3DProject::computeHydrallModel(double temperature, int secondsPerStep)
         {
             if (! isEqual(DEM.value[row][col], DEM.header->flag))
             {
+                double chlorophyllContent = 500;
+
+                /*hydrallModel.setHourlyVariables(double(hourlyMeteoMaps->mapHourlyTair->value[row][col]), double(radiationMaps->globalRadiationMap->value[row][col]),
+                                                double(hourlyMeteoMaps->mapHourlyPrec->value[row][col]), double(hourlyMeteoMaps->mapHourlyRelHum->value[row][col]),
+                                                double(hourlyMeteoMaps->mapHourlyWindScalarInt->value[row][col]), double(radiationMaps->beamRadiationMap->value[row][col]),
+                                                double(radiationMaps->diffuseRadiationMap->value[row][col]),
+                                                 double(radiationMaps->transmissivityMap->value[row][col] / CLEAR_SKY_TRANSMISSIVITY_DEFAULT));
+*/
+                //hydrallModel.setPlantVariables(chlorophyllContent);
                 //computeHydrallPoint(getCrit3DDate(getCurrentDate()), temperature, double(DEM.value[row][col]), secondsPerStep);
             }
             else
@@ -1273,10 +1297,15 @@ bool Crit3DProject::updateLast30DaysTavg()
     {
         for (long col = 0; col < dailyTminMap.header->nrCols; col++)
         {
-            lastMonthTavgMap.value[row][col] = (29./30.)*lastMonthTavgMap.value[row][col] + (dailyTmaxMap.value[row][col] + dailyTminMap.value[row][col])/30;
+            dailyHydrallMaps.mapLast30DaysTavg->value[row][col] = (29./30.)*dailyHydrallMaps.mapLast30DaysTavg->value[row][col] + (dailyTmaxMap.value[row][col] + dailyTminMap.value[row][col])/30;
         }
     }
     return true;
+}
+
+void Crit3DProject::updateHydrallLAI()
+{
+    dailyHydrallMaps.mapLAI = &laiMap;
 }
 
 
@@ -1436,7 +1465,7 @@ bool Crit3DProject::runModelHour(const QString& hourlyOutputPath, bool isRestart
                     double temperature, elevation;
                     int secondsPerStep;
                     Crit3DDate myDate = getCrit3DDate(getCurrentDate());
-                    computeHydrallModel(temperature, secondsPerStep);
+                    computeHydrallModel();
                 }
             }
             if (processes.computeWater)

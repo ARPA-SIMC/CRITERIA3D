@@ -2362,10 +2362,12 @@ void MainWindow::on_actionCriteria3D_Initialize_triggered()
 
     if (myProject.processes.computeHydrall)
     {
-        if (! myProject.processes.computeCrop ||  myProject.processes.computeWater)
+        if (! myProject.processes.computeCrop || ! myProject.processes.computeWater)
         {
             myProject.logError("Active water and crop processes before.");
         }
+
+        myProject.dailyHydrallMaps.initialize(myProject.DEM);
 
         if (! myProject.initializeHydrall())
         {

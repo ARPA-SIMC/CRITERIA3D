@@ -27,11 +27,31 @@
 
     #define NOT_INITIALIZED_VINE -1
 
+
     struct TweatherDerivedVariable {
         double airVapourPressure;
         double emissivitySky;
         double longWaveIrradiance;
         double slopeSatVapPressureVSTemp;
+        double myDirectIrradiance;
+        double myDiffuseIrradiance;
+        double myEmissivitySky;
+        double myLongWaveIrradiance;
+
+    };
+
+    struct TweatherVariable {
+        TweatherDerivedVariable derived;
+
+        double myInstantTemp;
+        double prec;
+        double irradiance;
+        double relativeHumidity;
+        double windSpeed;
+        double atmosphericPressure;
+        //double meanDailyTemperature;
+        double vaporPressureDeficit;
+
 
     };
 
@@ -51,6 +71,8 @@
         double compensationPoint, convexityFactorNonRectangularHyperbola ;
         double quantumYieldPS2 ;
         double assimilation,transpiration,stomatalConductance ;
+
+
     };
 
     class Crit3DHydrallMaps
@@ -61,22 +83,31 @@
         gis::Crit3DRasterGrid* mapLAI;
         gis::Crit3DRasterGrid* mapLast30DaysTavg;
 
-        Crit3DHydrallMaps(const gis::Crit3DRasterGrid& DEM);
+        Crit3DHydrallMaps();
         ~Crit3DHydrallMaps();
 
-        void clear();
-        void initialize();
+        void initialize(const gis::Crit3DRasterGrid& DEM);
     };
-    class hydrall{
+    class Crit3D_Hydrall{
     public:
+
+        // Crit3D_Hydrall();
+        // ~Crit3D_Hydrall();
+
+        void initialize();
+        void initializeLeaf(TbigLeaf myLeaf);
+        //gis::Crit3DRasterGrid* stateMaps;
+
         TbigLeaf sunlit,shaded;
-        double myLongWaveIrradiance;
-        double myInstantTemp;
-        double myDirectIrradiance;
-        double myDiffuseIrradiance;
-        double myEmissivitySky;
-        double chlorophyllContent;
+        TweatherVariable weatherVariable;
+        double myChlorophyllContent;
+        double elevation;
+
         void radiationAbsorption(double mySunElevation, double leafAreaIndex);
+        void setHourlyVariables(double temp, double irradiance , double prec , double relativeHumidity , double windSpeed, double directIrradiance, double diffuseIrradiance, double cloudIndex);
+        bool setWeatherVariables(double temp, double irradiance , double prec , double relativeHumidity , double windSpeed, double directIrradiance, double diffuseIrradiance, double cloudIndex);
+        void setDerivedWeatherVariables(double directIrradiance, double diffuseIrradiance, double cloudIndex);
+        void setPlantVariables(double chlorophyllContent);
 
     };
 

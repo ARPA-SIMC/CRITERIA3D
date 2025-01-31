@@ -17,9 +17,9 @@ CONFIG += c++11 c++14 c++17
 
 INCLUDEPATH +=  ./shared  \
                 ../../agrolib/soilFluxes3D/header  \
-                ../../agrolib/crit3dDate ../../agrolib/mathFunctions ../../agrolib/hydrall\
+                ../../agrolib/crit3dDate ../../agrolib/mathFunctions \
                 ../../agrolib/crop ../../agrolib/soil ../../agrolib/meteo ../../agrolib/gis \
-                ../../agrolib/interpolation ../../agrolib/solarRadiation ../../agrolib/snow \
+                ../../agrolib/interpolation ../../agrolib/solarRadiation ../../agrolib/snow ../../agrolib/hydrall\
                 ../../agrolib/outputPoints ../../agrolib/soilWidget ../../agrolib/utilities  \
                 ../../agrolib/dbMeteoPoints ../../agrolib/outputPoints ../../agrolib/dbMeteoGrid \
                 ../../agrolib/proxyWidget ../../agrolib/project \
@@ -48,6 +48,7 @@ CONFIG(debug, debug|release) {
     LIBS += -L../../agrolib/utilities/debug -lutilities
     LIBS += -L../../agrolib/waterTable/debug -lwaterTable
     LIBS += -L../../agrolib/snow/debug -lsnow
+    LIBS += -L../../agrolib/hydrall/debug -lhydrall
     LIBS += -L../../agrolib/commonChartElements/debug -lcommonChartElements
     LIBS += -L../../agrolib/solarRadiation/debug -lsolarRadiation
     LIBS += -L../../agrolib/interpolation/debug -linterpolation
@@ -73,6 +74,7 @@ CONFIG(debug, debug|release) {
     LIBS += -L../../agrolib/utilities/release -lutilities
     LIBS += -L../../agrolib/waterTable/release -lwaterTable
     LIBS += -L../../agrolib/snow/release -lsnow
+    LIBS += -L../../agrolib/hydrall/release -lhydrall
     LIBS += -L../../agrolib/commonChartElements/release -lcommonChartElements
     LIBS += -L../../agrolib/solarRadiation/release -lsolarRadiation
     LIBS += -L../../agrolib/interpolation/release -linterpolation
