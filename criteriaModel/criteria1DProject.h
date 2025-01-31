@@ -83,7 +83,6 @@
         std::vector<float> precSeries;
 
         QString outputString;
-        QString logFileName;
         QString outputCsvFileName;
         std::ofstream outputCsvFile;
 
