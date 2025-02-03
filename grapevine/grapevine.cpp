@@ -27,7 +27,7 @@ bool Vine3D_Grapevine::compute(bool computeDaily, int secondsPerStep, Crit3DMode
 {
     simulationStepInSeconds = double(secondsPerStep);
     isAmphystomatic = true;
-    myLeafWidth = 0.2;       // [m]
+    myLeafWidth = 0.2;       // [cm]
     // Stomatal conductance Adjust stom conductance-photosynth ratio for soil water (Pa)
     alphaLeuning = modelCase->cultivar->parameterWangLeuning.alpha;
     getFixSimulationParameters();
@@ -442,7 +442,7 @@ void Vine3D_Grapevine::radiationAbsorption()
 {
     // taken from Hydrall Model, Magnani UNIBO
     double sineSolarElevation;
-
+    // TODO chiedere a Magnani questi parametri
     static double   leafAbsorbanceNIR= 0.2;
     static double   hemisphericalIsotropyParameter = 0. ; // in order to change the hemispherical isotropy from -0.4 to 0.6 Wang & Leuning 1998
     static double   clumpingParameter = 1.0 ; // from 0 to 1 <1 for needles

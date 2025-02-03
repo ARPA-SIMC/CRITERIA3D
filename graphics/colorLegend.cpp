@@ -38,58 +38,61 @@ void ColorLegend::paintEvent(QPaintEvent *event)
 
     const int BLANK_DX = 16;
     int legendWidth = painter.window().width() - BLANK_DX*2;
+
     unsigned int nrStep = this->colorScale->nrColors();
-    double step = (colorScale->maximum() - colorScale->minimum()) / double(nrStep);
+    unsigned int nrStepText = MAXVALUE(round(float(nrStep) / 4.f), 1);
+
     double dx = double(legendWidth) / double(nrStep+1);
-    unsigned int stepText = MAXVALUE(nrStep / 4, 1);
-    QString valueStr;
-    int nrDigits;
-    double dblValue, shiftFatctor;
 
     double value = this->colorScale->minimum();
+    double step = (colorScale->maximum() - colorScale->minimum()) / double(nrStep);
+    double range = (colorScale->maximum() - colorScale->minimum());
+
+    QString valueStr;
+    int nrDigits;
     for (unsigned int i = 0; i <= nrStep; i++)
     {
-        dblValue = double(value);
         myColor = this->colorScale->getColor(value);
         painter.setBrush(QColor(myColor->red, myColor->green, myColor->blue));
         painter.fillRect(int(BLANK_DX + dx*i +1), 0, int(ceil(dx)), 20, painter.brush());
 
-        if ((i % stepText) == 0)
+        if ((i % nrStepText) == 0)
         {
-            if (fabs(dblValue) <= 1)
+            if (fabs(value) <= 1)
             {
                 nrDigits = 1;
             }
             else
             {
-                nrDigits = int(ceil(log10(fabs(dblValue))));
+                nrDigits = int(ceil(log10(fabs(value))));
             }
 
             // negative numbers
-            if (dblValue < 0) nrDigits++;
+            if (value < 0) nrDigits++;
 
-            // integer numbers
-            if (isEqual(round(dblValue), dblValue))
+            double decimal = fabs(value - round(value));
+            if ((decimal / range) > 0.1)
             {
-                valueStr = QString::number(round(dblValue));
+                // two decimals
+                valueStr = QString::number(value, 'f', 2);
+                nrDigits += 2;
             }
             else
             {
-                // one decimal
-                if (fabs(round(dblValue*10) - (dblValue*10)) < 0.1)
+                if ((decimal / range) > 0.01)
                 {
-                    valueStr = QString::number(dblValue, 'f', 1);
+                    // one decimal
+                    valueStr = QString::number(value, 'f', 1);
                     nrDigits += 1;
                 }
-                // two decimals
                 else
                 {
-                    valueStr = QString::number(dblValue, 'f', 2);
-                    nrDigits += 2;
+                    // integer
+                    valueStr = QString::number(round(value));
                 }
             }
 
-            shiftFatctor = 1.0 / nrDigits;
+            double shiftFatctor = 1. / double(nrDigits);
             painter.drawText(int(BLANK_DX*shiftFatctor + dx*i -1), 36, valueStr);
         }
 

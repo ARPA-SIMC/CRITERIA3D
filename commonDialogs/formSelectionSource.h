@@ -8,13 +8,14 @@
         Q_OBJECT
 
     public:
-        FormSelectionSource();
+        FormSelectionSource(bool pointVisible, bool gridVisible, bool interpolationVisible);
 
         int getSourceSelectionId();
 
     private:
         QRadioButton* pointButton;
         QRadioButton* gridButton;
+        QRadioButton* interpolationButton;
 
         void done(int res);
     };

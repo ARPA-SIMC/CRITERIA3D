@@ -51,11 +51,12 @@ bool loadLandUnitList(const QSqlDatabase &dbCrop, std::vector<Crit3DLandUnit> &l
         landUnitList[i].idCrop = query.value("id_crop").toString();
         landUnitList[i].idLandUse = query.value("id_landuse").toString().toUpper();
 
-        try
+        auto search = MapLandUseFromString.find(landUnitList[i].idLandUse.toStdString());
+        if (search != MapLandUseFromString.end())
         {
             landUnitList[i].landUseType = MapLandUseFromString.at(landUnitList[i].idLandUse.toStdString());
         }
-        catch (const std::out_of_range& outOfErrorStr)
+        else
         {
             errorStr = QString("%1 is not a valid landUse type" ).arg(landUnitList[i].idLandUse);
             landUnitList[i].landUseType = LANDUSE_FALLOW;

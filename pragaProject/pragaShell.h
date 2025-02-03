@@ -7,6 +7,7 @@
 
     QList<QString> getPragaCommandList();
     int cmdList(PragaProject* myProject);
+    int pragaVersion(PragaProject* myProject);
 
     int executeCommand(QList<QString> argumentList, PragaProject* myProject);
     int pragaShell(PragaProject* myProject);

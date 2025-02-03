@@ -38,6 +38,12 @@
             void setLapseRateCode(lapseRateCodeType code)
             { _lapseRateCode = code; }
 
+            void setRegion(const std::string &region)
+            { _region = region; }
+
+            void setProvince(const std::string &province)
+            { _province = province; }
+
             void setMunicipality(const std::string &municipality)
             { _municipality = municipality; }
 
@@ -48,6 +54,8 @@
             std::string _id;
             std::string _name;
             std::string _dataset;
+            std::string _region;
+            std::string _province;
             std::string _municipality;
 
             double _altitude;

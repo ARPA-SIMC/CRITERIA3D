@@ -145,7 +145,7 @@ bool Crit1DCase::initializeNumericalFluxes(std::string &error)
     int lastLayer = nrLayers-1;
     int nrlateralLinks = 0;
 
-    int result = soilFluxes3D::initialize(nrLayers, nrLayers, nrlateralLinks, true, false, false);
+    int result = soilFluxes3D::initializeFluxes(nrLayers, nrLayers, nrlateralLinks, true, false, false);
     if (result != CRIT3D_OK)
     {
         error = "Error in initialize numerical fluxes";
@@ -154,7 +154,7 @@ bool Crit1DCase::initializeNumericalFluxes(std::string &error)
 
     float horizontalConductivityRatio = 10.0;
     soilFluxes3D::setHydraulicProperties(fittingOptions.waterRetentionCurve, MEAN_LOGARITHMIC, horizontalConductivityRatio);
-    soilFluxes3D::setNumericalParameters(60, 3600, 100, 10, 12, 3);
+    soilFluxes3D::setNumericalParameters(60, 3600, 100, 10, 10, 3);
 
     // set soil properties (units of measurement: MKS)
     int soilIndex = 0;

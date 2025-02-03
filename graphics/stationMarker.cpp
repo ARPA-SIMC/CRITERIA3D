@@ -31,11 +31,14 @@ void StationMarker::setToolTip()
     QString name = QString::fromStdString(_name);
     QString dataset = QString::fromStdString(_dataset);
     QString altitude = QString::number(_altitude);
+    QString region = QString::fromStdString(_region);
+    QString province = QString::fromStdString(_province);
     QString municipality = QString::fromStdString(_municipality);
     QString lapseRateName = QString::fromStdString(getLapseRateCodeName(_lapseRateCode));
 
-    QString toolTipText = QString("Point: <b> %1 </b> <br/> ID: %2 <br/> dataset: %3 <br/> altitude: %4 m <br/> municipality: %5 <br/> lapse rate code: %6")
-                            .arg(name, idpoint, dataset, altitude, municipality, lapseRateName);
+    QString toolTipText = QString("Point: <b> %1 </b> <br/> ID: %2 <br/> dataset: %3 <br/> altitude: %4 m <br/>"
+                                  "<br/> municipality: %7 <br/> province: %6 <br/> region: %5 <br/> <br/> lapse rate code: %8")
+                            .arg(name, idpoint, dataset, altitude, region, province, municipality, lapseRateName);
 
     double value = currentValue();
     if (! isEqual(value, NODATA) || isMarked())

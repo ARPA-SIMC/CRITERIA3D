@@ -8,13 +8,13 @@
     struct TParameters
     {
         int numericalSolutionMethod;
+        int threadsNumber;
         double MBRThreshold;
         double ResidualTolerance;
         double delta_t_min;
         double delta_t_max;
         double current_delta_t;
-        int iterazioni_min;
-        int iterazioni_max;
+        int maxIterationsNumber;
         int maxApproximationsNumber;
         int waterRetentionCurve;
         int meanType;
@@ -23,11 +23,12 @@
 
         void initialize()
         {
-            numericalSolutionMethod = RELAXATION;
+            numericalSolutionMethod = GAUSS_SEIDEL;
+            threadsNumber = 1;
             delta_t_min = 1;
             delta_t_max = 600;
             current_delta_t = delta_t_max;
-            iterazioni_max = 200;
+            maxIterationsNumber = 200;
             maxApproximationsNumber = 10;
             MBRThreshold = 1E-6;
             ResidualTolerance = 1E-10;
