@@ -304,9 +304,9 @@
         bool setActiveStateSelectedPoints(bool isActive);
         bool setActiveStatePointList(QString fileName, bool isActive);
         bool setSelectedStatePointList(QString fileName);
-        bool setSelectedStatePointList(QList<QString> pointList);
+        bool selectPointList(const QList<QString> &pointList);
         bool setActiveStateWithCriteria(bool isActive);
-        bool setSelectedStateWithCriteria(bool isSelected);
+        bool setSelectedStateWithCriteria();
         bool setMarkedFromPointList(QString fileName);
         bool setMarkedPointsOfMacroArea(int areaNumber);
         bool deleteMeteoPoints(const QList<QString>& pointList);
