@@ -156,7 +156,7 @@ bool Vine3DProject::modelDailyCycle(bool isInitialState, Crit3DDate myDate, int 
                                 double(hourlyMeteoMaps->mapHourlyPrec->value[row][col]),
                                 double(hourlyMeteoMaps->mapHourlyRelHum->value[row][col]),
                                 double(hourlyMeteoMaps->mapHourlyWindScalarInt->value[row][col]),
-                                SEA_LEVEL_PRESSURE))
+                                P0))
                     {
                         errorString = grapevineError(myCurrentTime, row, col, "Weather data missing");
                         return(false);
