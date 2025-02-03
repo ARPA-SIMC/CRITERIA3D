@@ -1467,9 +1467,9 @@ namespace gis
         return true;
     }
 
+
     float closestDistanceFromGrid(Crit3DPoint myPoint, const gis::Crit3DRasterGrid& dem)
     {
-
         int row, col;
         float closestDistanceFromGrid;
         float distance;
@@ -1487,7 +1487,6 @@ namespace gis
         {
             for (col = 0; col < dem.header->nrCols; col++)
             {
-
                 if (!isEqual(dem.getValueFromRowCol(row,col), dem.header->flag))
                 {
                     dem.getXY(row, col, gridX, gridY);
