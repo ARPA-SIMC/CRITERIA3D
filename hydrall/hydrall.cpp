@@ -32,7 +32,7 @@ Crit3DHydrallMaps::~Crit3DHydrallMaps()
     mapLast30DaysTavg->clear();
 }
 
-bool computeHydrallPoint(Crit3DDate myDate, double myTemperature, double myElevation, int secondPerStep)
+bool Crit3D_Hydrall::computeHydrallPoint(Crit3DDate myDate, double myTemperature, double myElevation, int secondPerStep)
 {
     getCO2(myDate, myTemperature, myElevation);
 
@@ -53,7 +53,7 @@ bool computeHydrallPoint(Crit3DDate myDate, double myTemperature, double myEleva
     return true;
 }
 
-double getCO2(Crit3DDate myDate, double myTemperature, double myElevation)
+double Crit3D_Hydrall::getCO2(Crit3DDate myDate, double myTemperature, double myElevation)
 {
     double atmCO2 = 400 ; //https://www.eea.europa.eu/data-and-maps/daviz/atmospheric-concentration-of-carbon-dioxide-5/download.table
     double year[24] = {1750,1800,1850,1900,1910,1920,1930,1940,1950,1960,1970,1980,1990,2000,2010,2020,2030,2040,2050,2060,2070,2080,2090,2100};
@@ -115,7 +115,6 @@ bool Crit3D_Hydrall::setWeatherVariables(double temp, double irradiance , double
     weatherVariable.prec = prec ;
     weatherVariable.relativeHumidity = relativeHumidity ;
     weatherVariable.windSpeed = windSpeed ;
-    weatherVariable.atmosphericPressure = getPressureFromElevation(weatherVariable.myInstantTemp, elevation) ;
     //weatherVariable.meanDailyTemperature = meanDailyTemp;
     double deltaRelHum = MAXVALUE(100.0 - weatherVariable.relativeHumidity, 0.01);
     weatherVariable.vaporPressureDeficit = 0.01 * deltaRelHum * 613.75 * exp(17.502 * weatherVariable.myInstantTemp / (240.97 + weatherVariable.myInstantTemp));
@@ -123,7 +122,7 @@ bool Crit3D_Hydrall::setWeatherVariables(double temp, double irradiance , double
     setDerivedWeatherVariables(directIrradiance, diffuseIrradiance, cloudIndex);
 
     if ((int(prec) != NODATA) && (int(temp) != NODATA) && (int(windSpeed) != NODATA)
-        && (int(irradiance) != NODATA) && (int(relativeHumidity) != NODATA) && (int(weatherVariable.atmosphericPressure) != NODATA))
+        && (int(irradiance) != NODATA) && (int(relativeHumidity) != NODATA))
         isReadingOK = true;
 
     return isReadingOK;
