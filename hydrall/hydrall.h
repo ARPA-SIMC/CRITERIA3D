@@ -37,6 +37,7 @@
         double myDiffuseIrradiance;
         double myEmissivitySky;
         double myLongWaveIrradiance;
+        double psychrometricConstant;
 
     };
 
@@ -48,7 +49,7 @@
         double irradiance;
         double relativeHumidity;
         double windSpeed;
-        //double atmosphericPressure;
+        double atmosphericPressure;
         //double meanDailyTemperature;
         double vaporPressureDeficit;
 
@@ -59,7 +60,7 @@
     {
         double absorbedPAR ;
         double isothermalNetRadiation;
-        double leafAreaIndex ;
+        double leafAreaIndex;
         double totalConductanceHeatExchange;
         double aerodynamicConductanceHeatExchange;
         double aerodynamicConductanceCO2Exchange ;
@@ -103,19 +104,24 @@
         double sineSolarElevation;
         double elevation;
         int simulationStepInSeconds;
-
-        void radiationAbsorption(double mySunElevation, double leafAreaIndex);
+        double leafAreaIndex;
+        double plantHeight;
+        double myLeafWidth;
+        bool isAmphystomatic;
+        void radiationAbsorption(double mySunElevation);
         void setHourlyVariables(double temp, double irradiance , double prec , double relativeHumidity , double windSpeed, double directIrradiance, double diffuseIrradiance, double cloudIndex);
         bool setWeatherVariables(double temp, double irradiance , double prec , double relativeHumidity , double windSpeed, double directIrradiance, double diffuseIrradiance, double cloudIndex);
         void setDerivedWeatherVariables(double directIrradiance, double diffuseIrradiance, double cloudIndex);
         void setPlantVariables(double chlorophyllContent);
         bool computeHydrallPoint(Crit3DDate myDate, double myTemperature, double myElevation, int secondPerStep);
         double getCO2(Crit3DDate myDate, double myTemperature, double myElevation);
-        double getPressureFromElevation(double myTemperature, double myElevation);
+        //double getPressureFromElevation(double myTemperature, double myElevation);
         double getLAI();
         double meanLastMonthTemperature(double previousLastMonthTemp, double simulationStepInSeconds, double myInstantTemp);
         double photosynthesisAndTranspiration();
         void leafTemperature();
+        void aerodynamicalCoupling();
+        double leafWidth();
 
     };
 
