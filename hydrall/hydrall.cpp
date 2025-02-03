@@ -72,21 +72,23 @@ double getCO2(Crit3DDate myDate, double myTemperature, double myElevation)
     }
 */
     atmCO2 += 3*cos(2*PI*getDoyFromDate(myDate)/365.0);		     // to consider the seasonal effects
-    return atmCO2*getPressureFromElevation(myTemperature, myElevation)/1000000  ;   // [Pa] in +- ppm/10
-}
+    //return atmCO2*getPressureFromElevation(myTemperature, myElevation)/1000000  ;   // [Pa] in +- ppm/10 formula changed from the original Hydrall
 
+    return atmCO2 * pressureFromAltitude(myElevation)/1000000;
+}
+/*
 double getPressureFromElevation(double myTemperature, double myElevation)
 {
     return SEA_LEVEL_PRESSURE * exp((- GRAVITY * M_AIR * myElevation) / (R_GAS * myTemperature));
 }
-
-double getLAI()
+*/
+double Crit3D_Hydrall::getLAI()
 {
     // TODO
     return 4;
 }
 
-double photosynthesisAndTranspiration()
+double Crit3D_Hydrall::photosynthesisAndTranspiration()
 {
     TweatherDerivedVariable weatherDerivedVariable;
 
@@ -95,36 +97,8 @@ double photosynthesisAndTranspiration()
 
 void Crit3D_Hydrall::initialize()
 {
-    //initializeLeaf(sunlit);
-    //initializeLeaf(shaded);
-    //weatherVariable.initialize();
     myChlorophyllContent = NODATA;
     elevation = NODATA;
-}
-
-void initializeLeaf(TbigLeaf myLeaf)
-{
-    myLeaf.leafAreaIndex = NODATA;
-    myLeaf.leafTemperature = NODATA;
-    myLeaf.absorbedPAR = NODATA;
-    myLeaf.aerodynamicConductanceCO2Exchange = NODATA;
-    myLeaf.aerodynamicConductanceHeatExchange = NODATA;
-    myLeaf.totalConductanceHeatExchange = NODATA;
-    myLeaf.minimalStomatalConductance = NODATA;
-    myLeaf.assimilation = NODATA;
-    myLeaf.isothermalNetRadiation = NODATA;
-    myLeaf.darkRespiration  = NODATA;
-    myLeaf.maximalCarboxylationRate = NODATA;
-    myLeaf.maximalElectronTrasportRate  = NODATA;
-    myLeaf.carbonMichaelisMentenConstant = NODATA;
-    myLeaf.oxygenMichaelisMentenConstant  = NODATA;
-    myLeaf.compensationPoint  = NODATA;
-    myLeaf.convexityFactorNonRectangularHyperbola  = NODATA;
-    myLeaf.quantumYieldPS2  = NODATA;
-    myLeaf.assimilation = NODATA;
-    myLeaf.transpiration = NODATA;
-    myLeaf.stomatalConductance = NODATA;
-
 }
 
 void Crit3D_Hydrall::setHourlyVariables(double temp, double irradiance , double prec , double relativeHumidity , double windSpeed, double directIrradiance, double diffuseIrradiance, double cloudIndex)
@@ -176,7 +150,7 @@ void Crit3D_Hydrall::setPlantVariables(double chlorophyllContent)
 void Crit3D_Hydrall::radiationAbsorption(double mySunElevation, double leafAreaIndex)
 {
     // taken from Hydrall Model, Magnani UNIBO
-    double sineSolarElevation;
+
     // TODO chiedere a Magnani questi parametri
     static double   leafAbsorbanceNIR= 0.2;
     static double   hemisphericalIsotropyParameter = 0. ; // in order to change the hemispherical isotropy from -0.4 to 0.6 Wang & Leuning 1998
@@ -205,7 +179,7 @@ void Crit3D_Hydrall::radiationAbsorption(double mySunElevation, double leafAreaI
     //Include effects of leaf clumping (see Goudriaan & van Laar 1994, p 110)
     directLightK  *= clumpingParameter ;//direct light
     diffuseLightK *= clumpingParameter ;//diffuse light
-    if (0.001 < sineSolarElevation)
+    if (sineSolarElevation > 0.001)
     {
         //Leaf area index of sunlit (1) and shaded (2) big-leaf
         sunlit.leafAreaIndex = UPSCALINGFUNC(directLightK,leafAreaIndex);
@@ -286,3 +260,25 @@ void Crit3D_Hydrall::radiationAbsorption(double mySunElevation, double leafAreaI
     shaded.absorbedPAR *= 4.57E-6 ;
 }
 
+void Crit3D_Hydrall::leafTemperature()
+{
+    if (sineSolarElevation > 0.001)
+    {
+        double sunlitGlobalRadiation,shadedGlobalRadiation;
+
+        //shadedIrradiance = myDiffuseIrradiance * shaded.leafAreaIndex / statePlant.stateGrowth.leafAreaIndex;
+        shadedGlobalRadiation = weatherVariable.derived.myDiffuseIrradiance * simulationStepInSeconds ;
+        shaded.leafTemperature = weatherVariable.myInstantTemp + 1.67*1.0e-6 * shadedGlobalRadiation - 0.25 * weatherVariable.vaporPressureDeficit / psychro(pressureFromAltitude(elevation),weatherVariable.myInstantTemp); // by Stanghellini 1987 phd thesis
+
+        // sunlitIrradiance = myDiffuseIrradiance * sunlit.leafAreaIndex/ statePlant.stateGrowth.leafAreaIndex;
+        //sunlitIrradiance = myDirectIrradiance * sunlit.leafAreaIndex/ statePlant.stateGrowth.leafAreaIndex;
+        sunlitGlobalRadiation = weatherVariable.myInstantTemp * simulationStepInSeconds ;
+        sunlit.leafTemperature = weatherVariable.myInstantTemp + 1.67*1.0e-6 * sunlitGlobalRadiation - 0.25 * weatherVariable.vaporPressureDeficit / psychro(pressureFromAltitude(elevation),weatherVariable.myInstantTemp) ; // by Stanghellini 1987 phd thesis
+    }
+    else
+    {
+        sunlit.leafTemperature = shaded.leafTemperature = weatherVariable.myInstantTemp;
+    }
+    sunlit.leafTemperature += ZEROCELSIUS;
+    shaded.leafTemperature += ZEROCELSIUS;
+}
