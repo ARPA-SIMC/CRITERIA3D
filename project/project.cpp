@@ -5719,3 +5719,27 @@ void Project::MeteoPointsToVector(std::vector<float> *validValues)
         }
     }
 }
+
+
+bool Project::setSelectedStatePointList(QString fileName, bool isSelected)
+{
+    QList<QString> pointList = readListSingleColumn(fileName, errorString);
+    if (pointList.size() == 0)
+    {
+        logError();
+        return false;
+    }
+
+    for (int j = 0; j < pointList.size(); j++)
+    {
+        for (int i = 0; i < nrMeteoPoints; i++)
+        {
+            if (meteoPoints[i].id == pointList[j].toStdString())
+            {
+                meteoPoints[i].selected = true;
+            }
+        }
+    }
+
+    return true;
+}
