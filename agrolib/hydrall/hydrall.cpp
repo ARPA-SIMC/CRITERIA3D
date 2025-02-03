@@ -115,7 +115,6 @@ bool Crit3D_Hydrall::setWeatherVariables(double temp, double irradiance , double
     weatherVariable.prec = prec ;
     weatherVariable.relativeHumidity = relativeHumidity ;
     weatherVariable.windSpeed = windSpeed ;
-    weatherVariable.atmosphericPressure = pressureFromAltitude(weatherVariable.myInstantTemp, elevation) ;
     //weatherVariable.meanDailyTemperature = meanDailyTemp;
     double deltaRelHum = MAXVALUE(100.0 - weatherVariable.relativeHumidity, 0.01);
     weatherVariable.vaporPressureDeficit = 0.01 * deltaRelHum * 613.75 * exp(17.502 * weatherVariable.myInstantTemp / (240.97 + weatherVariable.myInstantTemp));
@@ -123,7 +122,7 @@ bool Crit3D_Hydrall::setWeatherVariables(double temp, double irradiance , double
     setDerivedWeatherVariables(directIrradiance, diffuseIrradiance, cloudIndex);
 
     if ((int(prec) != NODATA) && (int(temp) != NODATA) && (int(windSpeed) != NODATA)
-        && (int(irradiance) != NODATA) && (int(relativeHumidity) != NODATA) && (int(weatherVariable.atmosphericPressure) != NODATA))
+        && (int(irradiance) != NODATA) && (int(relativeHumidity) != NODATA))
         isReadingOK = true;
 
     return isReadingOK;
