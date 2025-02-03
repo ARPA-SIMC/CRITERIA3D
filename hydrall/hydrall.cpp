@@ -95,36 +95,8 @@ double photosynthesisAndTranspiration()
 
 void Crit3D_Hydrall::initialize()
 {
-    //initializeLeaf(sunlit);
-    //initializeLeaf(shaded);
-    //weatherVariable.initialize();
     myChlorophyllContent = NODATA;
     elevation = NODATA;
-}
-
-void initializeLeaf(TbigLeaf myLeaf)
-{
-    myLeaf.leafAreaIndex = NODATA;
-    myLeaf.leafTemperature = NODATA;
-    myLeaf.absorbedPAR = NODATA;
-    myLeaf.aerodynamicConductanceCO2Exchange = NODATA;
-    myLeaf.aerodynamicConductanceHeatExchange = NODATA;
-    myLeaf.totalConductanceHeatExchange = NODATA;
-    myLeaf.minimalStomatalConductance = NODATA;
-    myLeaf.assimilation = NODATA;
-    myLeaf.isothermalNetRadiation = NODATA;
-    myLeaf.darkRespiration  = NODATA;
-    myLeaf.maximalCarboxylationRate = NODATA;
-    myLeaf.maximalElectronTrasportRate  = NODATA;
-    myLeaf.carbonMichaelisMentenConstant = NODATA;
-    myLeaf.oxygenMichaelisMentenConstant  = NODATA;
-    myLeaf.compensationPoint  = NODATA;
-    myLeaf.convexityFactorNonRectangularHyperbola  = NODATA;
-    myLeaf.quantumYieldPS2  = NODATA;
-    myLeaf.assimilation = NODATA;
-    myLeaf.transpiration = NODATA;
-    myLeaf.stomatalConductance = NODATA;
-
 }
 
 void Crit3D_Hydrall::setHourlyVariables(double temp, double irradiance , double prec , double relativeHumidity , double windSpeed, double directIrradiance, double diffuseIrradiance, double cloudIndex)
