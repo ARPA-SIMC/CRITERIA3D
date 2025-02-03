@@ -4,6 +4,7 @@
     #include <vector>
 
     double pressureFromAltitude(double myHeight);
+double pressureFromAltitude(double temperature, double height);
     double airMolarDensity(double myPressure, double myT);
     double airVolumetricSpecificHeat(double myPressure, double myT);
     double saturationVaporPressure(double myTCelsius);
