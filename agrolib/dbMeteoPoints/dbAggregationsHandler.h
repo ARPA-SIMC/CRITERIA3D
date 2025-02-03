@@ -30,12 +30,15 @@
         bool existIdPoint(const QString& idPoint);
         bool writeAggregationZonesTable(QString name, QString filename, QString field);
         bool getAggregationZonesReference(QString name, QString* filename, QString* field);
-        void initAggregatedTables(int numZones, QString aggrType, QString periodType, QDate startDate, QDate endDate, meteoVariable variable);
+        void initAggregatedTables(const std::vector<int> &idZoneVector, const QString &aggrType, const QString &periodType,
+                                  const QDate &startDate, const QDate &endDate, meteoVariable variable);
 
-        bool writeAggregationPointProperties(int nrPoints, QString aggrType, std::vector <double> lonVector, std::vector <double> latVector);
+        bool writeAggregationPointProperties(const QString &aggrType, const std::vector<int> &idZoneVector,
+                                             const std::vector<double> &lonVector, const std::vector<double> &latVector);
 
-        bool saveAggregationData(int nZones, QString aggrType, QString periodType, QDate startDate, QDate endDate,
-                          meteoVariable variable, std::vector< std::vector<float> > aggregatedValues);
+        bool saveAggregationData(const std::vector<int> &idZoneVector, const QString &aggrType,
+                                const QString &periodType, const QDate &startDate, const QDate &endDate,
+                                meteoVariable variable, const std::vector<std::vector<float>> &aggregatedValues);
 
         bool insertTmpAggr(QDate startDate, QDate endDate, meteoVariable variable, std::vector< std::vector<float> > aggregatedValues, int nZones);
         bool saveTmpAggrData(QString aggrType, QString periodType, int nZones);

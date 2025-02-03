@@ -141,15 +141,7 @@ bool convertGdalRaster(GDALDataset* dataset, gis::Crit3DRasterGrid* myRaster, in
     myRaster->header->cellSize = adfGeoTransform[1];
     myRaster->header->llCorner.x = adfGeoTransform[0];
     myRaster->header->llCorner.y = adfGeoTransform[3] - myRaster->header->cellSize * myRaster->header->nrRows;
-    if (dataType == "Float64")
-    {
-        qDebug() << "NODATA will be converted to " << NODATA;
-        myRaster->header->flag = float(NODATA);
-    }
-    else
-    {
-        myRaster->header->flag = float(nodataValue);
-    }
+    myRaster->header->flag = float(NODATA);
 
     if (! myRaster->initializeGrid(myRaster->header->flag))
     {
@@ -203,7 +195,16 @@ bool convertGdalRaster(GDALDataset* dataset, gis::Crit3DRasterGrid* myRaster, in
         // set data
         for (int row = 0; row < myRaster->header->nrRows; row++)
             for (int col = 0; col < myRaster->header->nrCols; col++)
-                myRaster->value[row][col] = data[row*xSize+col];
+            {
+                if (data[row*xSize+col] == nodataValue)
+                {
+                    myRaster->value[row][col] = myRaster->header->flag;
+                }
+                else
+                {
+                    myRaster->value[row][col] = data[row*xSize+col];
+                }
+            }
 
         // free memory
         CPLFree(data);

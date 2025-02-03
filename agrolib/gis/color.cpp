@@ -97,9 +97,6 @@ bool Crit3DColorScale::classify()
         nrIntervals = MAXVALUE(_nrKeyColors -1, 1);
         nrStep = _nrColors / nrIntervals;
 
-        _nrColors = nrStep * nrIntervals;
-        color.resize(_nrColors);
-
         for (i = 0; i < nrIntervals; i++)
         {
             dRed = float(keyColor[i+1].red - keyColor[i].red) / float(nrStep);
@@ -114,7 +111,13 @@ bool Crit3DColorScale::classify()
                 color[n].blue = keyColor[i].blue + short(dBlue * float(j));
             }
         }
-        color[_nrColors-1] = keyColor[_nrKeyColors -1];
+
+        // last colors
+        int lastIndex = nrStep * nrIntervals;
+        for (i = lastIndex; i < _nrColors; i++)
+        {
+            color[i] = keyColor[_nrKeyColors -1];
+        }
     }
 
     return true;

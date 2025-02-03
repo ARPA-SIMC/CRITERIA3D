@@ -37,20 +37,21 @@ Crit3DAggregationsDbHandler::~Crit3DAggregationsDbHandler()
 }
 
 
-bool Crit3DAggregationsDbHandler::saveAggregationData(int nZones, QString aggrType, QString periodType, QDate startDate, QDate endDate, meteoVariable variable,
-                                               std::vector< std::vector<float> > aggregatedValues)
+bool Crit3DAggregationsDbHandler::saveAggregationData(const std::vector<int> &idZoneVector, const QString &aggrType,
+                                                        const QString &periodType, const QDate &startDate,
+                                                        const QDate &endDate, meteoVariable variable,
+                                                        const std::vector<std::vector<float> > &aggregatedValues)
 {
-    initAggregatedTables(nZones, aggrType, periodType, startDate, endDate, variable);
+    initAggregatedTables(idZoneVector, aggrType, periodType, startDate, endDate, variable);
     createTmpAggrTable();
 
     int idVariable = getIdfromMeteoVar(variable);
     long nrDays = long(startDate.daysTo(endDate)) + 1;
     QSqlQuery qry(_db);
 
-    // LC warning: the zones start from 1
-    for (unsigned int zone = 1; zone <= unsigned(nZones); zone++)
+    for (unsigned int i = 0; i < idZoneVector.size(); i++)
     {
-        QString queryString = QString("REPLACE INTO `%1_%2_%3` VALUES").arg(QString::number(zone), aggrType, periodType);
+        QString queryString = QString("REPLACE INTO `%1_%2_%3` VALUES").arg(QString::number(idZoneVector[i]), aggrType, periodType);
 
         if (periodType == "H")
         {
@@ -60,9 +61,9 @@ bool Crit3DAggregationsDbHandler::saveAggregationData(int nZones, QString aggrTy
                 for (int hour = 0; hour < 24; hour++)
                 {
                     QString valueString = "NULL";
-                    if (! isEqual(aggregatedValues[day*24 + hour][zone-1], NODATA))
+                    if (! isEqual(aggregatedValues[day*24 + hour][i], NODATA))
                     {
-                        valueString = QString::number(double(aggregatedValues[day*24 + hour][zone-1]), 'f', 1);
+                        valueString = QString::number(double(aggregatedValues[day*24 + hour][i]), 'f', 1);
                     }
 
                     // the data refers to the past hour
@@ -91,9 +92,9 @@ bool Crit3DAggregationsDbHandler::saveAggregationData(int nZones, QString aggrTy
             for (unsigned int day = 0; day < unsigned(nrDays); day++)
             {
                 QString valueString = "NULL";
-                if (! isEqual(aggregatedValues[day][zone-1], NODATA))
+                if (! isEqual(aggregatedValues[day][i], NODATA))
                 {
-                    valueString = QString::number(double(aggregatedValues[day][zone-1]), 'f', 1);
+                    valueString = QString::number(double(aggregatedValues[day][i]), 'f', 1);
                 }
 
                 QString dateString = startDate.addDays(day).toString("yyyy-MM-dd");
@@ -213,14 +214,14 @@ bool Crit3DAggregationsDbHandler::getAggregationZonesReference(QString name, QSt
 }
 
 
-void Crit3DAggregationsDbHandler::initAggregatedTables(int numZones, QString aggrType, QString periodType, QDate startDate, QDate endDate, meteoVariable variable)
+void Crit3DAggregationsDbHandler::initAggregatedTables(const std::vector<int> &idZoneVector, const QString &aggrType, const QString &periodType, const QDate &startDate, const QDate &endDate, meteoVariable variable)
 {
     int idVariable = getIdfromMeteoVar(variable);
-    for (int i = 1; i <= numZones; i++)
+    for (int i = 0; i < idZoneVector.size(); i++)
     {
         QString statement = QString("CREATE TABLE IF NOT EXISTS `%1_%2_%3` "
                                     "(date_time TEXT, id_variable INTEGER, value REAL, PRIMARY KEY(date_time,id_variable))")
-                                .arg(i).arg(aggrType, periodType);
+                                    .arg(idZoneVector[i]).arg(aggrType, periodType);
 
         QSqlQuery qry(statement, _db);
         if(! qry.exec() )
@@ -230,7 +231,7 @@ void Crit3DAggregationsDbHandler::initAggregatedTables(int numZones, QString agg
 
         statement = QString("DELETE FROM `%1_%2_%3` WHERE date_time >= DATE('%4') "
                             "AND date_time < DATE('%5', '+1 day') AND id_variable = %6")
-                        .arg(i).arg(aggrType, periodType, startDate.toString("yyyy-MM-dd"), endDate.toString("yyyy-MM-dd")).arg(idVariable);
+                            .arg(idZoneVector[i]).arg(aggrType, periodType, startDate.toString("yyyy-MM-dd"), endDate.toString("yyyy-MM-dd")).arg(idVariable);
 
         qry = QSqlQuery(statement, _db);
         if(! qry.exec() )
@@ -253,8 +254,8 @@ bool Crit3DAggregationsDbHandler::existIdPoint(const QString& idPoint)
 }
 
 
-bool Crit3DAggregationsDbHandler::writeAggregationPointProperties(int nrPoints, QString aggrType,
-                                                                  std::vector <double> lonVector, std::vector <double> latVector)
+bool Crit3DAggregationsDbHandler::writeAggregationPointProperties(const QString &aggrType, const std::vector<int> &idZoneVector,
+                                                                  const std::vector<double> &lonVector, const std::vector<double> &latVector)
 {
     if (! _db.tables().contains(QLatin1String("point_properties")) )
     {
@@ -262,9 +263,9 @@ bool Crit3DAggregationsDbHandler::writeAggregationPointProperties(int nrPoints, 
     }
 
     QSqlQuery qry(_db);
-    for (int i = 1; i <= nrPoints; i++)
+    for (int i = 0; i < idZoneVector.size(); i++)
     {
-        QString id = QString::number(i) + "_" + aggrType;
+        QString id = QString::number(idZoneVector[i]) + "_" + aggrType;
         QString name = id;
 
         if (! existIdPoint(id))
@@ -274,8 +275,8 @@ bool Crit3DAggregationsDbHandler::writeAggregationPointProperties(int nrPoints, 
 
             qry.bindValue(":id_point", id);
             qry.bindValue(":name", name);
-            qry.bindValue(":latitude", latVector[i-1]);
-            qry.bindValue(":longitude", lonVector[i-1]);
+            qry.bindValue(":latitude", latVector[i]);
+            qry.bindValue(":longitude", lonVector[i]);
             qry.bindValue(":altitude", 0);
             qry.bindValue(":is_active", 1);
 
