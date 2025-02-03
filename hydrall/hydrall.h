@@ -48,7 +48,7 @@
         double irradiance;
         double relativeHumidity;
         double windSpeed;
-        double atmosphericPressure;
+        //double atmosphericPressure;
         //double meanDailyTemperature;
         double vaporPressureDeficit;
 
@@ -95,27 +95,29 @@
         // ~Crit3D_Hydrall();
 
         void initialize();
-        void initializeLeaf(TbigLeaf myLeaf);
         //gis::Crit3DRasterGrid* stateMaps;
 
         TbigLeaf sunlit,shaded;
         TweatherVariable weatherVariable;
         double myChlorophyllContent;
+        double sineSolarElevation;
         double elevation;
+        int simulationStepInSeconds;
 
         void radiationAbsorption(double mySunElevation, double leafAreaIndex);
         void setHourlyVariables(double temp, double irradiance , double prec , double relativeHumidity , double windSpeed, double directIrradiance, double diffuseIrradiance, double cloudIndex);
         bool setWeatherVariables(double temp, double irradiance , double prec , double relativeHumidity , double windSpeed, double directIrradiance, double diffuseIrradiance, double cloudIndex);
         void setDerivedWeatherVariables(double directIrradiance, double diffuseIrradiance, double cloudIndex);
         void setPlantVariables(double chlorophyllContent);
+        bool computeHydrallPoint(Crit3DDate myDate, double myTemperature, double myElevation, int secondPerStep);
+        double getCO2(Crit3DDate myDate, double myTemperature, double myElevation);
+        double getPressureFromElevation(double myTemperature, double myElevation);
+        double getLAI();
+        double meanLastMonthTemperature(double previousLastMonthTemp, double simulationStepInSeconds, double myInstantTemp);
+        double photosynthesisAndTranspiration();
+        void leafTemperature();
 
     };
 
-    bool computeHydrallPoint(Crit3DDate myDate, double myTemperature, double myElevation, int secondPerStep);
-    double getCO2(Crit3DDate myDate, double myTemperature, double myElevation);
-    double getPressureFromElevation(double myTemperature, double myElevation);
-    double getLAI();
-    double meanLastMonthTemperature(double previousLastMonthTemp, double simulationStepInSeconds, double myInstantTemp);
-    double photosynthesisAndTranspiration();
 
 #endif // HYDRALL_H
