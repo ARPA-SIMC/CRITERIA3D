@@ -174,7 +174,7 @@
     // [K m-1] constant lapse rate of moist air
     #define LAPSE_RATE_MOIST_AIR 0.0065
     // [Pa] standard atmospheric pressure at sea level
-    #define P0 101300.
+    #define P0 101325.
     // [K] temperature at reference pressure level (P0)
     #define TP0 293.16
     // [g s-2] surface tension at 25 degC
@@ -211,7 +211,7 @@
     #define	 VAPOR_DIFFUSIVITY0 0.0000212
 
     // [Pa] default atmospheric pressure at sea level
-    #define SEA_LEVEL_PRESSURE 101325.
+    //#define SEA_LEVEL_PRESSURE 101325.
 
     #define ALBEDO_WATER 0.05
     #define ALBEDO_SOIL 0.15
