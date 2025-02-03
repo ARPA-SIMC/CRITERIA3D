@@ -303,6 +303,7 @@
         void clearSelectedOutputPoints();
         bool setActiveStateSelectedPoints(bool isActive);
         bool setActiveStatePointList(QString fileName, bool isActive);
+        bool setSelectedStatePointList(QString fileName, bool isSelected);
         bool setActiveStateWithCriteria(bool isActive);
         bool setMarkedFromPointList(QString fileName);
         bool setMarkedPointsOfMacroArea(int areaNumber);
