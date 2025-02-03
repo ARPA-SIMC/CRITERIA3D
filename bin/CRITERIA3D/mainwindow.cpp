@@ -1918,7 +1918,7 @@ void MainWindow::on_actionProxy_analysis_triggered()
         return;
     }
 
-    return myProject.showProxyGraph();
+    return myProject.showProxyGraph(NODATA);
 }
 
 void MainWindow::on_actionComputeHour_meteoVariables_triggered()
