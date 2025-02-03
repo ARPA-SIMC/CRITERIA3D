@@ -95,7 +95,6 @@
         // ~Crit3D_Hydrall();
 
         void initialize();
-        void initializeLeaf(TbigLeaf myLeaf);
         //gis::Crit3DRasterGrid* stateMaps;
 
         TbigLeaf sunlit,shaded;
