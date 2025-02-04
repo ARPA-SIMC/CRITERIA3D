@@ -53,11 +53,14 @@
         gis::Crit3DRasterGrid dailyTminMap;
         gis::Crit3DRasterGrid dailyTmaxMap;
 
-        gis::Crit3DRasterGrid* hydrallStateMaps;
+        gis::Crit3DRasterGrid* aboveGroundBiomassMap;
+        gis::Crit3DRasterGrid* rootBiomassMap;
+        Crit3DHydrallMaps dailyHydrallMaps;
+
 
         Crit3DSnow snowModel;
         Crit3D_Hydrall hydrallModel;
-        Crit3DHydrallMaps dailyHydrallMaps;
+
         QDateTime modelFirstTime, modelLastTime;
         QDateTime meteoPointsDbFirstTime;
 

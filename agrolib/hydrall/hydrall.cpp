@@ -32,9 +32,10 @@ Crit3DHydrallMaps::~Crit3DHydrallMaps()
     mapLast30DaysTavg->clear();
 }
 
-bool Crit3D_Hydrall::computeHydrallPoint(Crit3DDate myDate, double myTemperature, double myElevation, int secondPerStep)
+bool Crit3D_Hydrall::computeHydrallPoint(Crit3DDate myDate, double myTemperature, double myElevation, int secondPerStep, double &AGBiomass, double &rootBiomass)
 {
     getCO2(myDate, myTemperature, myElevation);
+
 
     // da qui in poi bisogna fare un ciclo su tutte le righe e le colonne
 
@@ -47,8 +48,6 @@ bool Crit3D_Hydrall::computeHydrallPoint(Crit3DDate myDate, double myTemperature
      *
     */
     // la temperatura del mese precedente arriva da fuori
-
-
 
     return true;
 }
@@ -161,8 +160,7 @@ void Crit3D_Hydrall::radiationAbsorption(double mySunElevation)
     double directIncomingPAR, directIncomingNIR , diffuseIncomingPAR , diffuseIncomingNIR,leafAbsorbancePAR;
     double directReflectionCoefficientPAR , directReflectionCoefficientNIR , diffuseReflectionCoefficientPAR , diffuseReflectionCoefficientNIR;
     //projection of the unit leaf area in the direction of the sun's beam, following Sellers 1985 (in Wang & Leuning 1998)
-    double diffuseLightK,diffuseLightKPAR,diffuseLightKNIR;
-    double directLightK,directLightKPAR,directLightKNIR;
+    double diffuseLightK;
 
     sineSolarElevation = MAXVALUE(0.0001,sin(mySunElevation*DEG_TO_RAD));
     directLightK = (0.5 - hemisphericalIsotropyParameter*(0.633-1.11*sineSolarElevation) - pow(hemisphericalIsotropyParameter,2)*(0.33-0.579*sineSolarElevation))/ sineSolarElevation;
@@ -412,4 +410,120 @@ double  Crit3D_Hydrall::leafWidth()
     // la funzione deve essere scritta secondo regole che possono fr variare lo spessore in base alla fenologia
     // come per la vite?
     return myLeafWidth;
+}
+
+void Crit3D_Hydrall::upscale()
+{
+    //cultivar->parameterWangLeuning.maxCarbonRate era input, ora da prendere da classe e leggere da tipo di pianta
+    double maxCarboxRate = 0.0;
+
+    // taken from Hydrall Model, Magnani UNIBO
+    static double BETA = 0.5 ;
+
+    //CONSTANTS (only used here)
+    const double CRD = 18.7;             /*!< scaling factor in RD0 response to temperature (-)  */
+    const double HARD = 46.39;           /*!< activation energy of RD0 (kJ mol-1)   */
+    const double CKC = 38.05;            /*!< scaling factor in KCT0 response to temperature (-)  */
+    const double CKO = 20.30;            /*!< scaling factor in KOT0 response to temperature (-)  */
+    const double HAKO = 36.38;           /*!< activation energy of KOT0 (kJ mol-1)  */
+    const double HAGSTAR = 37.83;        /*!< activation energy of Gamma_star (kJ mol-1)  */
+    const double HAKC = 79.43;           /*!< activation energy of KCT0 (kJ mol-1)  */
+    const double CGSTAR = 19.02;         /*!< scaling factor in Gamma_star response to temperature (-)  */
+    const double HAJM = 43.9;            /*!< activation energy of JMOP (kJ mol-1 e-)  */
+    const double HDEACTIVATION = 200;    /*!< deactivation energy from Kattge & Knorr 2007 (kJ mol-1)  */
+    const double HAVCM = 65.33;          /*!< activation energy of VCMOP (kJ mol-1)  */
+
+
+    double dum[10],darkRespirationT0;
+    double optimalCarboxylationRate,optimalElectronTransportRate ;
+    double leafConvexityFactor ;
+    //     Preliminary computations
+    dum[0]= R_GAS/1000.0 * sunlit.leafTemperature ; //[kJ mol-1]
+    dum[1]= R_GAS/1000.0 * shaded.leafTemperature ;
+    dum[2]= sunlit.leafTemperature - ZEROCELSIUS ; // [oC]
+    dum[3]= shaded.leafTemperature - ZEROCELSIUS ;
+
+
+
+    // optimalCarboxylationRate = (nitrogen.interceptLeaf + nitrogen.slopeLeaf * nitrogen.leafNitrogen/specificLeafArea*1000)*1e-6; // carboxylation rate based on nitrogen leaf
+    optimalCarboxylationRate = maxCarboxRate * 1.0e-6; // [mol m-2 s-1] from Greer et al. 2011
+    darkRespirationT0 = 0.0089 * optimalCarboxylationRate ;
+    //   Adjust unit dark respiration rate for temperature (mol m-2 s-1)
+    sunlit.darkRespiration = darkRespirationT0 * exp(CRD - HARD/dum[0])* UPSCALINGFUNC((directLightK + diffuseLightKPAR),leafAreaIndex); //sunlit big-leaf
+    shaded.darkRespiration = darkRespirationT0 * exp(CRD - HARD/dum[1]); //shaded big-leaf
+    shaded.darkRespiration *= (UPSCALINGFUNC(diffuseLightKPAR,leafAreaIndex) - UPSCALINGFUNC((directLightK + diffuseLightKPAR),leafAreaIndex)); //originariamente statePlant.stateGrowth.leafAreaIndex, è giusto quel leafAreaIndex?
+    double entropicFactorElectronTransporRate = (-0.75*(weatherVariable.last30DaysTAvg)+660);  // entropy term for J (kJ mol-1 oC-1)
+    double entropicFactorCarboxyliation = (-1.07*(weatherVariable.last30DaysTAvg)+668); // entropy term for VCmax (kJ mol-1 oC-1)
+    if (sineSolarElevation > 1.0e-3)
+    {
+        //Stomatal conductance to CO2 in darkness (molCO2 m-2 s-1)
+        sunlit.minimalStomatalConductance = parameterWangLeuningFix.stomatalConductanceMin  * UPSCALINGFUNC((directLightK+diffuseLightKPAR),leafAreaIndex)	;
+        shaded.minimalStomatalConductance = parameterWangLeuningFix.stomatalConductanceMin  * (UPSCALINGFUNC(diffuseLightKPAR,leafAreaIndex) - UPSCALINGFUNC((directLightK+diffuseLightKPAR),leafAreaIndex));
+        // Carboxylation rate
+        //sunlit.maximalCarboxylationRate = optimalCarboxylationRate * exp(CVCM - HAVCM/dum[0]); //sunlit big leaf
+        //shaded.maximalCarboxylationRate = optimalCarboxylationRate * exp(CVCM - HAVCM/dum[1]); //shaded big leaf
+        sunlit.maximalCarboxylationRate = optimalCarboxylationRate * acclimationFunction(HAVCM*1000,HDEACTIVATION*1000,sunlit.leafTemperature,entropicFactorCarboxyliation,parameterWangLeuningFix.optimalTemperatureForPhotosynthesis); //sunlit big leaf
+        shaded.maximalCarboxylationRate = optimalCarboxylationRate * acclimationFunction(HAVCM*1000,HDEACTIVATION*1000,shaded.leafTemperature,entropicFactorCarboxyliation,parameterWangLeuningFix.optimalTemperatureForPhotosynthesis); //shaded big leaf
+        // Scale-up maximum carboxylation rate (mol m-2 s-1)
+        sunlit.maximalCarboxylationRate *= UPSCALINGFUNC((directLightK+diffuseLightKPAR),leafAreaIndex);
+        shaded.maximalCarboxylationRate *= (UPSCALINGFUNC(diffuseLightKPAR,leafAreaIndex) - UPSCALINGFUNC((directLightK+diffuseLightKPAR),leafAreaIndex));
+        //CO2 compensation point in dark
+        sunlit.carbonMichaelisMentenConstant = exp(CKC - HAKC/dum[0]) * 1.0e-6 * weatherVariable.atmosphericPressure ;
+        shaded.carbonMichaelisMentenConstant = exp(CKC - HAKC/dum[1]) * 1.0E-6 * weatherVariable.atmosphericPressure ;
+        // Adjust Michaelis constant of oxygenation for temp (Pa)
+        sunlit.oxygenMichaelisMentenConstant = exp(CKO - HAKO/dum[0])* 1.0e-3 * weatherVariable.atmosphericPressure ;
+        shaded.oxygenMichaelisMentenConstant = exp(CKO - HAKO/dum[1])* 1.0E-3 * weatherVariable.atmosphericPressure ;
+        // CO2 compensation point with no dark respiration (Pa)
+        sunlit.compensationPoint = exp(CGSTAR - HAGSTAR/dum[0]) * 1.0e-6 * weatherVariable.atmosphericPressure ;
+        shaded.compensationPoint = exp(CGSTAR - HAGSTAR/dum[1]) * 1.0e-6 * weatherVariable.atmosphericPressure ;
+        // Electron transport
+        // Compute potential e- transport at ref temp (mol e m-2 s-1) from correlation with Vcmax
+        optimalElectronTransportRate = 1.5 * optimalCarboxylationRate ; //general correlation based on Leuning (1997)
+        // check value and compare with 2.5 value in Medlyn et al (1999) and 1.67 value in Medlyn et al (2002) Based on greer Weedon 2011
+        // Adjust maximum potential electron transport for temperature (mol m-2 s-1)
+        //sunlit.maximalElectronTrasportRate = optimalElectronTransportRate * exp(CJM - HAJM/dum[0]);
+        //shaded.maximalElectronTrasportRate = optimalElectronTransportRate * exp(CJM - HAJM/dum[1]);
+        sunlit.maximalElectronTrasportRate = optimalElectronTransportRate * acclimationFunction(HAJM*1000,HDEACTIVATION*1000,sunlit.leafTemperature,entropicFactorElectronTransporRate,parameterWangLeuningFix.optimalTemperatureForPhotosynthesis);
+        shaded.maximalElectronTrasportRate = optimalElectronTransportRate * acclimationFunction(HAJM*1000,HDEACTIVATION*1000,shaded.leafTemperature,entropicFactorElectronTransporRate,parameterWangLeuningFix.optimalTemperatureForPhotosynthesis);
+
+        // Compute maximum PSII quantum yield, light-acclimated (mol e- mol-1 quanta absorbed)
+        sunlit.quantumYieldPS2 = 0.352 + 0.022*dum[2] - 3.4E-4*pow(dum[2],2);      //sunlit big-leaf
+        shaded.quantumYieldPS2 = 0.352 + 0.022*dum[3] - 3.4E-4*pow(dum[3],2);      //shaded big-leaf
+        // Compute convexity factor of light response curve (-)
+        // The value derived from leaf Chl content is modified for temperature effects, according to Bernacchi et al. (2003)
+        leafConvexityFactor = 1 - myChlorophyllContent * 6.93E-4 ;    //from Pons & Anten (2004), fig. 3b
+        sunlit.convexityFactorNonRectangularHyperbola = leafConvexityFactor/0.98 * (0.76 + 0.018*dum[2] - 3.7E-4*pow(dum[2],2));  //sunlit big-leaf
+        shaded.convexityFactorNonRectangularHyperbola = leafConvexityFactor/0.98 * (0.76 + 0.018*dum[3] - 3.7E-4*pow(dum[3],2));  //shaded big-leaf
+        // Scale-up potential electron transport of sunlit big-leaf (mol m-2 s-1)
+        sunlit.maximalElectronTrasportRate *= UPSCALINGFUNC((directLightK+diffuseLightKPAR),leafAreaIndex);
+        // Adjust electr transp of sunlit big-leaf for PAR effects (mol e- m-2 s-1)
+        dum[4]= sunlit.absorbedPAR * sunlit.quantumYieldPS2 * BETA ; //  potential PSII e- transport of sunlit big-leaf (mol m-2 s-1)
+        dum[5]= dum[4] + sunlit.maximalElectronTrasportRate ;
+        dum[6]= dum[4] * sunlit.maximalElectronTrasportRate ;
+        sunlit.maximalElectronTrasportRate = (dum[5] - sqrt(pow(dum[5],2) - 4.0*sunlit.convexityFactorNonRectangularHyperbola*dum[6])) / (2.0*sunlit.convexityFactorNonRectangularHyperbola);
+        // Scale-up potential electron transport of shaded big-leaf (mol m-2 s-1)
+        // The simplified formulation proposed by de Pury & Farquhar (1999) is applied
+        shaded.maximalElectronTrasportRate *= (UPSCALINGFUNC(diffuseLightKPAR,leafAreaIndex) - UPSCALINGFUNC((directLightK+diffuseLightKPAR),leafAreaIndex));
+        // Adjust electr transp of shaded big-leaf for PAR effects (mol e- m-2 s-1)
+        dum[4]= shaded.absorbedPAR * shaded.quantumYieldPS2 * BETA ; // potential PSII e- transport of sunlit big-leaf (mol m-2 s-1)
+        dum[5]= dum[4] + shaded.maximalElectronTrasportRate ;
+        dum[6]= dum[4] * shaded.maximalElectronTrasportRate ;
+        shaded.maximalElectronTrasportRate = (dum[5] - sqrt(pow(dum[5],2) - 4.0*shaded.convexityFactorNonRectangularHyperbola*dum[6])) / (2.0*shaded.convexityFactorNonRectangularHyperbola);
+    }
+    else
+    {  //night-time computations
+        sunlit.maximalElectronTrasportRate = 0.0;
+        shaded.maximalElectronTrasportRate = 0.0;
+        sunlit.darkRespiration = 0.0;
+        sunlit.maximalCarboxylationRate = 0.0;
+    }
+}
+
+double Crit3D_Hydrall::acclimationFunction(double Ha , double Hd, double leafTemp,
+                                             double entropicTerm,double optimumTemp)
+{
+    // taken from Hydrall Model, Magnani UNIBO
+    return exp(Ha*(leafTemp - optimumTemp)/(optimumTemp*R_GAS*leafTemp))
+           *(1+exp((optimumTemp*entropicTerm-Hd)/(optimumTemp*R_GAS)))
+           /(1+exp((leafTemp*entropicTerm-Hd)/(leafTemp*R_GAS))) ;
 }

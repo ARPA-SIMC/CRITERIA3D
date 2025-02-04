@@ -643,6 +643,8 @@ bool Crit3DProject::runModels(QDateTime firstTime, QDateTime lastTime, bool isRe
             }
         }
 
+        if (myDate.day() == 1) hydrallModel.writeHydrallMaps = 1;
+
         // cycle on hours
         int firstHour = (myDate == firstDate) ? hour1 : 0;
         int lastHour = (myDate == lastDate) ? hour2 : 23;
@@ -681,6 +683,7 @@ bool Crit3DProject::runModels(QDateTime firstTime, QDateTime lastTime, bool isRe
         {
             saveModelsState();
         }
+
     }
 
     if (isSaveEndOfRunState())
@@ -1258,6 +1261,9 @@ bool Crit3DProject::computeHydrallModel()
         return false;
     }
 
+    double AGBiomass = NODATA;
+    double rootBiomass = NODATA;
+
     for (int row = 0; row < DEM.header->nrRows; row++)
     {
         for (int col = 0; col < DEM.header->nrCols; col++)
@@ -1265,21 +1271,47 @@ bool Crit3DProject::computeHydrallModel()
             if (! isEqual(DEM.value[row][col], DEM.header->flag))
             {
                 double chlorophyllContent = 500;
+                int secondsPerStep = 2;
 
-                /*hydrallModel.setHourlyVariables(double(hourlyMeteoMaps->mapHourlyTair->value[row][col]), double(radiationMaps->globalRadiationMap->value[row][col]),
+                //tutte le variabili che servono
+                AGBiomass = aboveGroundBiomassMap->value[row][col];
+                rootBiomass = rootBiomassMap->value[row][col]; //o si può saltare l'assegnazione e poi riassegnazione, passando direttamente alla funzione computeHydrallPoint con &?
+
+                hydrallModel.setHourlyVariables(double(hourlyMeteoMaps->mapHourlyTair->value[row][col]), double(radiationMaps->globalRadiationMap->value[row][col]),
                                                 double(hourlyMeteoMaps->mapHourlyPrec->value[row][col]), double(hourlyMeteoMaps->mapHourlyRelHum->value[row][col]),
                                                 double(hourlyMeteoMaps->mapHourlyWindScalarInt->value[row][col]), double(radiationMaps->beamRadiationMap->value[row][col]),
                                                 double(radiationMaps->diffuseRadiationMap->value[row][col]),
                                                  double(radiationMaps->transmissivityMap->value[row][col] / CLEAR_SKY_TRANSMISSIVITY_DEFAULT));
-*/
-                //hydrallModel.setPlantVariables(chlorophyllContent);
-                //computeHydrallPoint(getCrit3DDate(getCurrentDate()), temperature, double(DEM.value[row][col]), secondsPerStep);
+
+                hydrallModel.setPlantVariables(chlorophyllContent);
+                hydrallModel.computeHydrallPoint(getCrit3DDate(getCurrentDate()), double(hourlyMeteoMaps->mapHourlyTair->value[row][col]), double(DEM.value[row][col]), secondsPerStep, AGBiomass, rootBiomass);
+
+                if (! isEqual(AGBiomass, NODATA) && ! isEqual(rootBiomass, NODATA))
+                {
+                    aboveGroundBiomassMap->value[row][col] = AGBiomass;
+                    rootBiomassMap->value[row][col] = rootBiomass;
+                }
             }
             else
             {
                 //snowMaps.flagMapRowCol(row, col);
             }
         }
+    }
+
+
+    if (hydrallModel.writeHydrallMaps)
+    {
+        //se writeHydrallMaps, scrivi le mappe (mensili?) di LAI, biomassa, etc
+        std::string fileName;
+        std::string myError;
+        if (! gis::writeEsriGrid(fileName, aboveGroundBiomassMap, myError))
+        {
+            errorString = QString::fromStdString(myError);
+            return false;
+        }
+
+        //etc
     }
 
     //snowMaps.updateRangeMaps();
