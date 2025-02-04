@@ -303,7 +303,10 @@
         void clearSelectedOutputPoints();
         bool setActiveStateSelectedPoints(bool isActive);
         bool setActiveStatePointList(QString fileName, bool isActive);
+        bool setSelectedStatePointList(QString fileName);
+        bool selectPointList(const QList<QString> &pointList);
         bool setActiveStateWithCriteria(bool isActive);
+        bool setSelectedStateWithCriteria();
         bool setMarkedFromPointList(QString fileName);
         bool setMarkedPointsOfMacroArea(int areaNumber);
         bool deleteMeteoPoints(const QList<QString>& pointList);
@@ -332,7 +335,7 @@
 
         Crit3DCrossValidationStatistics getCrossValidationStatistics() const;
         void setCrossValidationStatistics(const Crit3DCrossValidationStatistics &newCrossValidationStatistics);
-        void MeteoPointsToVector(std::vector<float> *validValues);
+        void getMeteoPointsCurrentValues(std::vector<float> &validValues);
 
     private slots:
         void deleteMeteoWidgetPoint(int id);
