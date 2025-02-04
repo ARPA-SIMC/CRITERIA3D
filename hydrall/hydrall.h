@@ -52,6 +52,7 @@
         double atmosphericPressure;
         //double meanDailyTemperature;
         double vaporPressureDeficit;
+        double last30DaysTAvg;
 
 
     };
@@ -76,6 +77,14 @@
 
     };
 
+    struct TparameterWangLeuningFix
+    {
+        double optimalTemperatureForPhotosynthesis;
+        double stomatalConductanceMin;
+
+
+    };
+
     class Crit3DHydrallMaps
     {
     private:
@@ -96,10 +105,13 @@
         // ~Crit3D_Hydrall();
 
         void initialize();
-        //gis::Crit3DRasterGrid* stateMaps;
+        bool writeHydrallMaps;
 
         TbigLeaf sunlit,shaded;
         TweatherVariable weatherVariable;
+        TparameterWangLeuningFix parameterWangLeuningFix;
+
+
         double myChlorophyllContent;
         double sineSolarElevation;
         double elevation;
@@ -108,12 +120,20 @@
         double plantHeight;
         double myLeafWidth;
         bool isAmphystomatic;
+
+        double directLightK;
+        double diffuseLightKPAR;
+        double diffuseLightKNIR;
+        double directLightKPAR;
+        double directLightKNIR;
+
+
         void radiationAbsorption(double mySunElevation);
         void setHourlyVariables(double temp, double irradiance , double prec , double relativeHumidity , double windSpeed, double directIrradiance, double diffuseIrradiance, double cloudIndex);
         bool setWeatherVariables(double temp, double irradiance , double prec , double relativeHumidity , double windSpeed, double directIrradiance, double diffuseIrradiance, double cloudIndex);
         void setDerivedWeatherVariables(double directIrradiance, double diffuseIrradiance, double cloudIndex);
         void setPlantVariables(double chlorophyllContent);
-        bool computeHydrallPoint(Crit3DDate myDate, double myTemperature, double myElevation, int secondPerStep);
+        bool computeHydrallPoint(Crit3DDate myDate, double myTemperature, double myElevation, int secondPerStep, double &AGBiomass, double &rootBiomass);
         double getCO2(Crit3DDate myDate, double myTemperature, double myElevation);
         //double getPressureFromElevation(double myTemperature, double myElevation);
         double getLAI();
@@ -122,6 +142,8 @@
         void leafTemperature();
         void aerodynamicalCoupling();
         double leafWidth();
+        void upscale();
+        double acclimationFunction(double Ha , double Hd, double leafTemp, double entropicTerm,double optimumTemp);
 
     };
 
