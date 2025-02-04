@@ -1,7 +1,7 @@
 #include "dialogSelectionMeteoPoint.h"
 
-DialogSelectionMeteoPoint::DialogSelectionMeteoPoint(bool active, Crit3DMeteoPointsDbHandler *meteoPointsDbHandler)
-    :active(active)
+DialogSelectionMeteoPoint::DialogSelectionMeteoPoint(bool isActive, bool isSelect, Crit3DMeteoPointsDbHandler *meteoPointsDbHandler)
+    :isActive(isActive), isSelect(isSelect)
 {
     municipalityList = meteoPointsDbHandler->getMunicipalityList();
     provinceList = meteoPointsDbHandler->getProvinceList();
@@ -41,13 +41,20 @@ DialogSelectionMeteoPoint::DialogSelectionMeteoPoint(bool active, Crit3DMeteoPoi
 
     QDialogButtonBox buttonBox;
     QPushButton activeButton;
-    if (active)
+    if (isActive)
     {
         activeButton.setText("Active");
     }
     else
     {
-        activeButton.setText("Deactive");
+        if (isSelect)
+        {
+            activeButton.setText("Select");
+        }
+        else
+        {
+            activeButton.setText("Deactive");
+        }
     }
     activeButton.setCheckable(true);
     activeButton.setAutoDefault(false);
@@ -124,6 +131,7 @@ void DialogSelectionMeteoPoint::selectionModeChanged()
     else if (selectionMode.currentText() == "name" || selectionMode.currentText() == "id_point")
     {
         selectionOperation.addItem("Like");
+        selectionOperation.addItem("=");
         selectionItems.setVisible(false);
         editItems.setVisible(true);
         itemFromList = false;

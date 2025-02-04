@@ -134,10 +134,11 @@ QList<QString> Crit3DMeteoPointsDbHandler::getDatasetsActive()
 void Crit3DMeteoPointsDbHandler::setDatasetsActive(QString active)
 {
     QString statement = QString("UPDATE datasets SET active = 0");
-    _db.exec(statement);
+    QSqlQuery myQuery(_db);
+    myQuery.exec(statement);
 
     statement = QString("UPDATE datasets SET active = 1 WHERE dataset IN ( %1 )").arg(active);
-    _db.exec(statement);
+    myQuery.exec(statement);
 }
 
 
@@ -1962,7 +1963,7 @@ int Crit3DMeteoPointsDbHandler::getArkIdFromVar(const QString& variable)
 }
 
 
-bool Crit3DMeteoPointsDbHandler::setActiveStateIfCondition(bool activeState, QString condition)
+bool Crit3DMeteoPointsDbHandler::setActiveStateIfCondition(bool activeState, const QString &condition)
 {
     QSqlQuery qry(_db);
     QString statement;
@@ -2034,7 +2035,7 @@ QList<QString> Crit3DMeteoPointsDbHandler::getJointStations(const QString& idPoi
 }
 
 
-bool Crit3DMeteoPointsDbHandler::setJointStations(const QString& idPoint, QList<QString> stationsList)
+bool Crit3DMeteoPointsDbHandler::setJointStations(const QString& idPoint, const QList<QString> &stationsList)
 {
     QSqlQuery qry(_db);
 
@@ -2078,3 +2079,24 @@ bool Crit3DMeteoPointsDbHandler::setJointStations(const QString& idPoint, QList<
     }
 }
 
+
+bool Crit3DMeteoPointsDbHandler::getPointListWithCriteria(QList<QString> &selectedPointsList, const QString &condition)
+{
+    QSqlQuery qry(_db);
+    QString queryString;
+
+    queryString = QString("SELECT id_point FROM point_properties WHERE %1 ").arg(condition);
+
+    if(! qry.exec(queryString))
+    {
+        errorStr += "\nError in getting the ids of the points which satisfy the: " + condition + " " + qry.lastError().text();
+        return false;
+    }
+
+    while (qry.next()) {
+        QString idPoint = qry.value("id_point").toString();;
+        selectedPointsList.append(idPoint);
+    }
+
+    return true;
+}
