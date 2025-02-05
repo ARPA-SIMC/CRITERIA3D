@@ -31,6 +31,9 @@ void Crit1DProject::initialize()
     outputCsvFileName = "";
     addDateTimeLogFile = false;
 
+    computeAllSoilDepth = true;
+    computationSoilDepth = NODATA;
+
     dbCropName = "";
     dbSoilName = "";
     dbMeteoName = "";
@@ -195,10 +198,11 @@ bool Crit1DProject::readSettings()
 
     // SETTINGS
     projectSettings->beginGroup("settings");
-        addDateTimeLogFile = projectSettings->value("add_date_to_log","").toBool();
+        addDateTimeLogFile = projectSettings->value("add_date_to_log", false).toBool();
 
-        // TODO computation depth
-
+        // soil computation depth
+        computeAllSoilDepth = projectSettings->value("compute_all_soil_depth", true).toBool();
+        computationSoilDepth = projectSettings->value("computationDepth", NODATA).toDouble();
     projectSettings->endGroup();
 
     // FORECAST
@@ -483,11 +487,14 @@ bool Crit1DProject::setSoil(QString soilCode, QString &errorStr)
     if (! loadSoil(dbSoil, soilCode, myCase.mySoil, texturalClassList, geotechnicsClassList, myCase.fittingOptions, errorStr))
         return false;
 
-    // warning: some soil data are wrong
+    // cancel warnings (some soil data are wrong)
     if (errorStr != "")
-    {
-        //logger.writeInfo("WARNING: " + errorStr);
         errorStr = "";
+
+    // check soil depth (if fixed depth is required)
+    if (! computeAllSoilDepth)
+    {
+        myCase.mySoil.totalDepth = std::min(myCase.mySoil.totalDepth, computationSoilDepth);
     }
 
     std::string errorStdString;
@@ -2034,6 +2041,7 @@ QString getOutputStringNullZero(double value)
 }
 
 
+// variableDepth [cm] (integer numbers)
 bool setVariableDepth(const QList<QString>& depthList, std::vector<int>& variableDepth)
 {
     int nrDepth = depthList.size();
