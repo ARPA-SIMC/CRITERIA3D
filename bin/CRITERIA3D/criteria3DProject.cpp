@@ -36,6 +36,7 @@
 #include "soilFluxes3D.h"
 #include "soil.h"
 #include "hydrall.h"
+#include "physics.h"
 
 #include <QtSql>
 #include <QPaintEvent>
@@ -119,6 +120,8 @@ bool Crit3DProject::initializeHydrall()
             }
         }
     }
+
+
 }
 
 
@@ -1272,24 +1275,29 @@ bool Crit3DProject::computeHydrallModel()
             {
                 double chlorophyllContent = 500;
                 int secondsPerStep = 2;
+                double atmosphericPressure;
+
 
                 //tutte le variabili che servono
-                AGBiomass = aboveGroundBiomassMap->value[row][col];
-                rootBiomass = rootBiomassMap->value[row][col]; //o si può saltare l'assegnazione e poi riassegnazione, passando direttamente alla funzione computeHydrallPoint con &?
+                AGBiomass = dailyHydrallMaps.aboveGroundBiomassMap->value[row][col];
+                rootBiomass = dailyHydrallMaps.rootBiomassMap->value[row][col]; //o si può saltare l'assegnazione e poi riassegnazione, passando direttamente alla funzione computeHydrallPoint con &?
 
                 hydrallModel.setHourlyVariables(double(hourlyMeteoMaps->mapHourlyTair->value[row][col]), double(radiationMaps->globalRadiationMap->value[row][col]),
                                                 double(hourlyMeteoMaps->mapHourlyPrec->value[row][col]), double(hourlyMeteoMaps->mapHourlyRelHum->value[row][col]),
                                                 double(hourlyMeteoMaps->mapHourlyWindScalarInt->value[row][col]), double(radiationMaps->beamRadiationMap->value[row][col]),
                                                 double(radiationMaps->diffuseRadiationMap->value[row][col]),
-                                                 double(radiationMaps->transmissivityMap->value[row][col] / CLEAR_SKY_TRANSMISSIVITY_DEFAULT));
+                                                double(radiationMaps->transmissivityMap->value[row][col] / CLEAR_SKY_TRANSMISSIVITY_DEFAULT),
+                                                pressureFromAltitude(double(hourlyMeteoMaps->mapHourlyTair->value[row][col]), DEM.getValueFromRowCol(row, col)),
+                                                hydrallModel.getCO2(getCrit3DDate(getCurrentDate()), double(hourlyMeteoMaps->mapHourlyTair->value[row][col]), DEM.getValueFromRowCol(row, col)),
+                                                double(radiationMaps->sunElevationMap->value[row][col]));
 
                 hydrallModel.setPlantVariables(chlorophyllContent);
                 hydrallModel.computeHydrallPoint(getCrit3DDate(getCurrentDate()), double(hourlyMeteoMaps->mapHourlyTair->value[row][col]), double(DEM.value[row][col]), secondsPerStep, AGBiomass, rootBiomass);
 
                 if (! isEqual(AGBiomass, NODATA) && ! isEqual(rootBiomass, NODATA))
                 {
-                    aboveGroundBiomassMap->value[row][col] = AGBiomass;
-                    rootBiomassMap->value[row][col] = rootBiomass;
+                    dailyHydrallMaps.aboveGroundBiomassMap->value[row][col] = AGBiomass;
+                    dailyHydrallMaps.rootBiomassMap->value[row][col] = rootBiomass;
                 }
             }
             else
@@ -1305,7 +1313,7 @@ bool Crit3DProject::computeHydrallModel()
         //se writeHydrallMaps, scrivi le mappe (mensili?) di LAI, biomassa, etc
         std::string fileName;
         std::string myError;
-        if (! gis::writeEsriGrid(fileName, aboveGroundBiomassMap, myError))
+        if (! gis::writeEsriGrid(fileName, dailyHydrallMaps.aboveGroundBiomassMap, myError))
         {
             errorString = QString::fromStdString(myError);
             return false;

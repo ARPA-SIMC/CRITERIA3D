@@ -53,8 +53,7 @@
         gis::Crit3DRasterGrid dailyTminMap;
         gis::Crit3DRasterGrid dailyTmaxMap;
 
-        gis::Crit3DRasterGrid* aboveGroundBiomassMap;
-        gis::Crit3DRasterGrid* rootBiomassMap;
+
         Crit3DHydrallMaps dailyHydrallMaps;
 
 
