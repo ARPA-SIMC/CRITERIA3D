@@ -6,7 +6,7 @@
 #----------------------------------------------------
 
 QT -= gui
-QT += core sql
+QT += sql
 
 TARGET = soil
 TEMPLATE = lib

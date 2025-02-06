@@ -7,7 +7,7 @@
 #
 #------------------------------------------------------
 
-QT  += gui widgets
+QT  += widgets
 
 TEMPLATE = lib
 CONFIG += staticlib

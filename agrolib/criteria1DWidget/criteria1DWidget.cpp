@@ -1580,27 +1580,12 @@ void Criteria1DWidget::on_actionChooseSoil(QString soilCode)
     if (soilCode.isEmpty())
         return;
 
-    QString errorStr;
     myProject.myCase.mySoil.cleanSoil();
 
-    if (! loadSoil(myProject.dbSoil, soilCode, myProject.myCase.mySoil, myProject.texturalClassList,
-                  myProject.geotechnicsClassList, myProject.myCase.fittingOptions, errorStr))
+    QString errorStr;
+    if (! myProject.setSoil(soilCode, errorStr))
     {
         QMessageBox::critical(nullptr, "Error!", errorStr);
-        return;
-    }
-
-    // warning: some soil data are wrong
-    if (errorStr != "")
-    {
-        QMessageBox::information(nullptr, "SOIL Warning", errorStr);
-        errorStr = "";
-    }
-
-    std::string errorStdString;
-    if (! myProject.myCase.initializeSoil(errorStdString))
-    {
-        QMessageBox::critical(nullptr, "Error!", QString::fromStdString(errorStdString));
         return;
     }
 
