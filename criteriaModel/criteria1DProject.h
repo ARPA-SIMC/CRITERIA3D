@@ -58,8 +58,11 @@
 
         void initialize();
         int initializeProject(QString settingsFileName);
+
         int computeAllUnits();
         bool computeUnit(const Crit1DCompUnit& myUnit);
+
+        bool setSoil(QString soilCode, QString &errorStr);
 
     private:
         QString projectName;
@@ -79,25 +82,27 @@
         int firstMonth;
         int daysOfForecast;
         int nrYears;
-        std::vector<float> irriSeries;
-        std::vector<float> precSeries;
+        std::vector<float> irriSeries;                  // [mm]
+        std::vector<float> precSeries;                  // [mm]
 
         QString outputString;
         QString outputCsvFileName;
         std::ofstream outputCsvFile;
 
         bool addDateTimeLogFile;
+        bool computeAllSoilDepth;
+        double computationSoilDepth;                    // [m]
 
         // specific output
         bool isClimateOutput;
-        std::vector<int> waterContentDepth;
-        std::vector<int> degreeOfSaturationDepth;
-        std::vector<int> waterPotentialDepth;
-        std::vector<int> waterDeficitDepth;
-        std::vector<int> awcDepth;
-        std::vector<int> availableWaterDepth;
-        std::vector<int> fractionAvailableWaterDepth;
-        std::vector<int> factorOfSafetyDepth;
+        std::vector<int> waterContentDepth;             // [cm]
+        std::vector<int> degreeOfSaturationDepth;       // [cm]
+        std::vector<int> waterPotentialDepth;           // [cm]
+        std::vector<int> waterDeficitDepth;             // [cm]
+        std::vector<int> awcDepth;                      // [cm]
+        std::vector<int> availableWaterDepth;           // [cm]
+        std::vector<int> fractionAvailableWaterDepth;   // [cm]
+        std::vector<int> factorOfSafetyDepth;           // [cm]
 
         // DATABASE
         QSqlDatabase dbForecast;
@@ -111,8 +116,6 @@
         void closeAllDatabase();
         int openAllDatabase();
         void checkSimulationDates();
-
-        bool setSoil(QString soilCode, QString &errorStr);
 
         bool setMeteoSqlite(QString idMeteo, QString idForecast);
         bool setMeteoXmlGrid(QString idMeteo, QString idForecast, unsigned int memberNr);
