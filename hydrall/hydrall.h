@@ -57,6 +57,28 @@
 
     };
 
+    struct TenvironmentalVariable {
+
+        double CO2;
+        double sineSolarElevation;
+    };
+
+    struct Tplant {
+
+        double myChlorophyllContent;
+        double height;
+        double myLeafWidth;
+        bool isAmphystomatic;
+
+    };
+
+    struct Tsoil {
+
+        int soilLayersNr;
+        double soilTotalDepth;
+        double* rootDensity;
+    };
+
     struct TbigLeaf
     {
         double absorbedPAR ;
@@ -77,11 +99,24 @@
 
     };
 
-    struct TparameterWangLeuningFix
+    struct TparameterWangLeuning
     {
         double optimalTemperatureForPhotosynthesis;
         double stomatalConductanceMin;
+        double sensitivityToVapourPressureDeficit;
+        double alpha;
+        double psiLeaf;                 // kPa
+        double waterStressThreshold;
+        double maxCarboxRate;           // Vcmo at optimal temperature
 
+
+    };
+
+    struct TlightExtinctionCoefficient
+    {
+        double global;
+        double par;
+        double nir;
 
     };
 
@@ -90,6 +125,8 @@
     private:
 
     public:
+        gis::Crit3DRasterGrid* aboveGroundBiomassMap;
+        gis::Crit3DRasterGrid* rootBiomassMap;
         gis::Crit3DRasterGrid* mapLAI;
         gis::Crit3DRasterGrid* mapLast30DaysTavg;
 
@@ -109,28 +146,27 @@
 
         TbigLeaf sunlit,shaded;
         TweatherVariable weatherVariable;
-        TparameterWangLeuningFix parameterWangLeuningFix;
+        TenvironmentalVariable environmentalVariable;
+        TparameterWangLeuning parameterWangLeuning;
+        Tplant plant;
+        Tsoil soil;
+        TlightExtinctionCoefficient directLightExtinctionCoefficient;
+        TlightExtinctionCoefficient diffuseLightExtinctionCoefficient;
 
 
-        double myChlorophyllContent;
-        double sineSolarElevation;
+
         double elevation;
         int simulationStepInSeconds;
         double leafAreaIndex;
-        double plantHeight;
-        double myLeafWidth;
-        bool isAmphystomatic;
 
-        double directLightK;
-        double diffuseLightKPAR;
-        double diffuseLightKNIR;
-        double directLightKPAR;
-        double directLightKNIR;
+        double* transpirationInstantLayer;          //molH2O m^-2 s^-1
+
+
 
 
         void radiationAbsorption(double mySunElevation);
-        void setHourlyVariables(double temp, double irradiance , double prec , double relativeHumidity , double windSpeed, double directIrradiance, double diffuseIrradiance, double cloudIndex);
-        bool setWeatherVariables(double temp, double irradiance , double prec , double relativeHumidity , double windSpeed, double directIrradiance, double diffuseIrradiance, double cloudIndex);
+        void setHourlyVariables(double temp, double irradiance , double prec , double relativeHumidity , double windSpeed, double directIrradiance, double diffuseIrradiance, double cloudIndex, double atmosphericPressure, double CO2, double sunElevation);
+        bool setWeatherVariables(double temp, double irradiance , double prec , double relativeHumidity , double windSpeed, double directIrradiance, double diffuseIrradiance, double cloudIndex, double atmosphericPressure);
         void setDerivedWeatherVariables(double directIrradiance, double diffuseIrradiance, double cloudIndex);
         void setPlantVariables(double chlorophyllContent);
         bool computeHydrallPoint(Crit3DDate myDate, double myTemperature, double myElevation, int secondPerStep, double &AGBiomass, double &rootBiomass);
@@ -144,6 +180,8 @@
         double leafWidth();
         void upscale();
         double acclimationFunction(double Ha , double Hd, double leafTemp, double entropicTerm,double optimumTemp);
+        void photosynthesisKernel(double COMP,double GAC,double GHR,double GSCD,double J,double KC,double KO
+                                                  ,double RD,double RNI,double STOMWL,double VCmax,double *ASS,double *GSC,double *TR);
 
     };
 

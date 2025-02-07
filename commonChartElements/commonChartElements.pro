@@ -6,7 +6,7 @@
 #
 #------------------------------------------------------
 
-QT  += widgets charts
+QT  += widgets
 
 TEMPLATE = lib
 CONFIG += staticlib

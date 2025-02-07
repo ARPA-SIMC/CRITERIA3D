@@ -17,18 +17,24 @@
 Crit3DHydrallMaps::Crit3DHydrallMaps()
 {
     mapLAI = new gis::Crit3DRasterGrid;
+    aboveGroundBiomassMap = new gis::Crit3DRasterGrid;
+    rootBiomassMap = new gis::Crit3DRasterGrid;
     mapLast30DaysTavg = new gis::Crit3DRasterGrid;
 }
 
 void Crit3DHydrallMaps::initialize(const gis::Crit3DRasterGrid& DEM)
 {
     mapLAI->initializeGrid(DEM);
+    aboveGroundBiomassMap->initializeGrid(DEM);
+    rootBiomassMap->initializeGrid(DEM);
     mapLast30DaysTavg->initializeGrid(DEM);
 }
 
 Crit3DHydrallMaps::~Crit3DHydrallMaps()
 {
     mapLAI->clear();
+    aboveGroundBiomassMap->clear();
+    rootBiomassMap->clear();
     mapLast30DaysTavg->clear();
 }
 
@@ -96,16 +102,18 @@ double Crit3D_Hydrall::photosynthesisAndTranspiration()
 
 void Crit3D_Hydrall::initialize()
 {
-    myChlorophyllContent = NODATA;
+    plant.myChlorophyllContent = NODATA;
     elevation = NODATA;
 }
 
-void Crit3D_Hydrall::setHourlyVariables(double temp, double irradiance , double prec , double relativeHumidity , double windSpeed, double directIrradiance, double diffuseIrradiance, double cloudIndex)
+void Crit3D_Hydrall::setHourlyVariables(double temp, double irradiance , double prec , double relativeHumidity , double windSpeed, double directIrradiance, double diffuseIrradiance, double cloudIndex, double atmosphericPressure, double CO2, double sunElevation)
 {
-    setWeatherVariables(temp, irradiance, prec, relativeHumidity, windSpeed, directIrradiance, diffuseIrradiance, cloudIndex);
+    setWeatherVariables(temp, irradiance, prec, relativeHumidity, windSpeed, directIrradiance, diffuseIrradiance, cloudIndex, atmosphericPressure);
+    environmentalVariable.CO2 = CO2;
+    environmentalVariable.sineSolarElevation = MAXVALUE(0.0001,sin(sunElevation*DEG_TO_RAD));
 }
 
-bool Crit3D_Hydrall::setWeatherVariables(double temp, double irradiance , double prec , double relativeHumidity , double windSpeed, double directIrradiance, double diffuseIrradiance, double cloudIndex)
+bool Crit3D_Hydrall::setWeatherVariables(double temp, double irradiance , double prec , double relativeHumidity , double windSpeed, double directIrradiance, double diffuseIrradiance, double cloudIndex, double atmosphericPressure)
 {
 
     bool isReadingOK = false ;
@@ -117,11 +125,14 @@ bool Crit3D_Hydrall::setWeatherVariables(double temp, double irradiance , double
     //weatherVariable.meanDailyTemperature = meanDailyTemp;
     double deltaRelHum = MAXVALUE(100.0 - weatherVariable.relativeHumidity, 0.01);
     weatherVariable.vaporPressureDeficit = 0.01 * deltaRelHum * 613.75 * exp(17.502 * weatherVariable.myInstantTemp / (240.97 + weatherVariable.myInstantTemp));
+    weatherVariable.atmosphericPressure = atmosphericPressure;
+
 
     setDerivedWeatherVariables(directIrradiance, diffuseIrradiance, cloudIndex);
 
     if ((int(prec) != NODATA) && (int(temp) != NODATA) && (int(windSpeed) != NODATA)
-        && (int(irradiance) != NODATA) && (int(relativeHumidity) != NODATA))
+        && (int(irradiance) != NODATA) && (int(relativeHumidity) != NODATA)
+        && (int(atmosphericPressure) != NODATA))
         isReadingOK = true;
 
     return isReadingOK;
@@ -142,7 +153,7 @@ void Crit3D_Hydrall::setDerivedWeatherVariables(double directIrradiance, double 
 
 void Crit3D_Hydrall::setPlantVariables(double chlorophyllContent)
 {
-    myChlorophyllContent = chlorophyllContent;
+    plant.myChlorophyllContent = chlorophyllContent;
 }
 
 void Crit3D_Hydrall::radiationAbsorption(double mySunElevation)
@@ -160,10 +171,8 @@ void Crit3D_Hydrall::radiationAbsorption(double mySunElevation)
     double directIncomingPAR, directIncomingNIR , diffuseIncomingPAR , diffuseIncomingNIR,leafAbsorbancePAR;
     double directReflectionCoefficientPAR , directReflectionCoefficientNIR , diffuseReflectionCoefficientPAR , diffuseReflectionCoefficientNIR;
     //projection of the unit leaf area in the direction of the sun's beam, following Sellers 1985 (in Wang & Leuning 1998)
-    double diffuseLightK;
 
-    sineSolarElevation = MAXVALUE(0.0001,sin(mySunElevation*DEG_TO_RAD));
-    directLightK = (0.5 - hemisphericalIsotropyParameter*(0.633-1.11*sineSolarElevation) - pow(hemisphericalIsotropyParameter,2)*(0.33-0.579*sineSolarElevation))/ sineSolarElevation;
+    directLightExtinctionCoefficient.global = (0.5 - hemisphericalIsotropyParameter*(0.633-1.11*environmentalVariable.sineSolarElevation) - pow(hemisphericalIsotropyParameter,2)*(0.33-0.579*environmentalVariable.sineSolarElevation))/ environmentalVariable.sineSolarElevation;
 
     /*Extinction coeff for canopy of black leaves, diffuse radiation
     The average extinctio coefficient is computed considering three sky sectors,
@@ -171,32 +180,32 @@ void Crit3D_Hydrall::radiationAbsorption(double mySunElevation)
     diffuseLightSector1K = (0.5 - hemisphericalIsotropyParameter*(0.633-1.11*0.259) - hemisphericalIsotropyParameter*hemisphericalIsotropyParameter*(0.33-0.579*0.259))/0.259;  //projection of unit leaf for first sky sector (0-30 elevation)
     diffuseLightSector2K = (0.5 - hemisphericalIsotropyParameter*(0.633-1.11*0.707) - hemisphericalIsotropyParameter*hemisphericalIsotropyParameter*(0.33-0.579*0.707))/0.707 ; //second sky sector (30-60 elevation)
     diffuseLightSector3K = (0.5 - hemisphericalIsotropyParameter*(0.633-1.11*0.966) - hemisphericalIsotropyParameter*hemisphericalIsotropyParameter*(0.33-0.579*0.966))/ 0.966 ; // third sky sector (60-90 elevation)
-    diffuseLightK =- 1.0/leafAreaIndex * log(0.178 * exp(-diffuseLightSector1K*leafAreaIndex) + 0.514 * exp(-diffuseLightSector2K*leafAreaIndex)
+    diffuseLightExtinctionCoefficient.global =- 1.0/leafAreaIndex * log(0.178 * exp(-diffuseLightSector1K*leafAreaIndex) + 0.514 * exp(-diffuseLightSector2K*leafAreaIndex)
                                                                       + 0.308 * exp(-diffuseLightSector3K*leafAreaIndex));  //approximation based on relative radiance from 3 sky sectors
     //Include effects of leaf clumping (see Goudriaan & van Laar 1994, p 110)
-    directLightK  *= clumpingParameter ;//direct light
-    diffuseLightK *= clumpingParameter ;//diffuse light
-    if (sineSolarElevation > 0.001)
+    directLightExtinctionCoefficient.global  *= clumpingParameter ;//direct light
+    diffuseLightExtinctionCoefficient.global *= clumpingParameter ;//diffuse light
+    if (environmentalVariable.sineSolarElevation > 0.001)
     {
         //Leaf area index of sunlit (1) and shaded (2) big-leaf
-        sunlit.leafAreaIndex = UPSCALINGFUNC(directLightK,leafAreaIndex);
+        sunlit.leafAreaIndex = UPSCALINGFUNC(directLightExtinctionCoefficient.global,leafAreaIndex);
         shaded.leafAreaIndex = leafAreaIndex - sunlit.leafAreaIndex ;
         //Extinction coefficients for direct and diffuse PAR and NIR radiation, scattering leaves
         //Based on approximation by Goudriaan 1977 (in Goudriaan & van Laar 1994)
-        double exponent= -pow(10,0.28 + 0.63*log10(myChlorophyllContent*0.85/1000));
+        double exponent= -pow(10,0.28 + 0.63*log10(plant.myChlorophyllContent*0.85/1000));
         leafAbsorbancePAR = 1 - pow(10,exponent);//from Agusti et al (1994), Eq. 1, assuming Chl a = 0.85 Chl (a+b)
         scatteringCoefPAR = 1.0 - leafAbsorbancePAR ; //scattering coefficient for PAR
         scatteringCoefNIR = 1.0 - leafAbsorbanceNIR ; //scattering coefficient for NIR
         dum[0]= sqrt(1-scatteringCoefPAR);
         dum[1]= sqrt(1-scatteringCoefNIR);
-        diffuseLightKPAR = diffuseLightK * dum[0] ;//extinction coeff of PAR, direct light
-        diffuseLightKNIR = diffuseLightK * dum[1]; //extinction coeff of NIR radiation, direct light
-        directLightKPAR  = directLightK * dum[0]; //extinction coeff of PAR, diffuse light
-        directLightKNIR  = directLightK * dum[1]; //extinction coeff of NIR radiation, diffuse light
+        diffuseLightExtinctionCoefficient.par = diffuseLightExtinctionCoefficient.global * dum[0] ;//extinction coeff of PAR, direct light
+        diffuseLightExtinctionCoefficient.nir = diffuseLightExtinctionCoefficient.global * dum[1]; //extinction coeff of NIR radiation, direct light
+        directLightExtinctionCoefficient.par  = directLightExtinctionCoefficient.global * dum[0]; //extinction coeff of PAR, diffuse light
+        directLightExtinctionCoefficient.nir  = directLightExtinctionCoefficient.global * dum[1]; //extinction coeff of NIR radiation, diffuse light
         //Canopy+soil reflection coefficients for direct, diffuse PAR, NIR radiation
         dum[2]= (1-dum[0]) / (1+dum[0]);
         dum[3]= (1-dum[1]) / (1+dum[1]);
-        dum[4]= 2.0 * directLightK / (directLightK + diffuseLightK) ;
+        dum[4]= 2.0 * directLightExtinctionCoefficient.global / (directLightExtinctionCoefficient.global + diffuseLightExtinctionCoefficient.global) ;
         directReflectionCoefficientNIR = directReflectionCoefficientPAR = dum[4] * dum[2];
         diffuseReflectionCoefficientNIR = diffuseReflectionCoefficientPAR = dum[4] * dum[3];
         //Incoming direct PAR and NIR (W m-2)
@@ -204,31 +213,31 @@ void Crit3D_Hydrall::radiationAbsorption(double mySunElevation)
         //Incoming diffuse PAR and NIR (W m-2)
         diffuseIncomingNIR = diffuseIncomingPAR = weatherVariable.derived.myDiffuseIrradiance * 0.5 ;
         //Preliminary computations
-        dum[5]= diffuseIncomingPAR * (1.0-diffuseReflectionCoefficientPAR) * diffuseLightKPAR ;
-        dum[6]= directIncomingPAR * (1.0-directReflectionCoefficientPAR) * directLightKPAR ;
-        dum[7]= directIncomingPAR * (1.0-scatteringCoefPAR) * directLightK ;
-        dum[8]=  diffuseIncomingNIR * (1.0-diffuseReflectionCoefficientNIR) * diffuseLightKNIR;
-        dum[9]= directIncomingNIR * (1.0-directReflectionCoefficientNIR) * directLightKNIR;
-        dum[10]= directIncomingNIR * (1.0-scatteringCoefNIR) * directLightKNIR ;
-        dum[11]= UPSCALINGFUNC((diffuseLightKPAR+directLightK),leafAreaIndex);
-        dum[12]= UPSCALINGFUNC((directLightKPAR+directLightK),leafAreaIndex);
-        dum[13]= UPSCALINGFUNC((diffuseLightKPAR+directLightK),leafAreaIndex);
-        dum[14]= UPSCALINGFUNC((directLightKNIR+directLightK),leafAreaIndex);
-        dum[15]= UPSCALINGFUNC(directLightK,leafAreaIndex) - UPSCALINGFUNC((2.0*directLightK),leafAreaIndex) ;
+        dum[5]= diffuseIncomingPAR * (1.0-diffuseReflectionCoefficientPAR) * diffuseLightExtinctionCoefficient.par ;
+        dum[6]= directIncomingPAR * (1.0-directReflectionCoefficientPAR) * directLightExtinctionCoefficient.par ;
+        dum[7]= directIncomingPAR * (1.0-scatteringCoefPAR) * directLightExtinctionCoefficient.global ;
+        dum[8]=  diffuseIncomingNIR * (1.0-diffuseReflectionCoefficientNIR) * diffuseLightExtinctionCoefficient.nir;
+        dum[9]= directIncomingNIR * (1.0-directReflectionCoefficientNIR) * directLightExtinctionCoefficient.nir;
+        dum[10]= directIncomingNIR * (1.0-scatteringCoefNIR) * directLightExtinctionCoefficient.nir ;
+        dum[11]= UPSCALINGFUNC((diffuseLightExtinctionCoefficient.par+directLightExtinctionCoefficient.global),leafAreaIndex);
+        dum[12]= UPSCALINGFUNC((directLightExtinctionCoefficient.par+directLightExtinctionCoefficient.global),leafAreaIndex);
+        dum[13]= UPSCALINGFUNC((diffuseLightExtinctionCoefficient.par+directLightExtinctionCoefficient.global),leafAreaIndex);
+        dum[14]= UPSCALINGFUNC((directLightExtinctionCoefficient.nir+directLightExtinctionCoefficient.global),leafAreaIndex);
+        dum[15]= UPSCALINGFUNC(directLightExtinctionCoefficient.global,leafAreaIndex) - UPSCALINGFUNC((2.0*directLightExtinctionCoefficient.global),leafAreaIndex) ;
         // PAR absorbed by sunlit (1) and shaded (2) big-leaf (W m-2) from Wang & Leuning 1998
         sunlit.absorbedPAR = dum[5] * dum[11] + dum[6] * dum[12] + dum[7] * dum[15] ;
-        shaded.absorbedPAR = dum[5]*(UPSCALINGFUNC(diffuseLightKPAR,leafAreaIndex)- dum[11]) + dum[6]*(UPSCALINGFUNC(directLightKPAR,leafAreaIndex)- dum[12]) - dum[7] * dum[15];
+        shaded.absorbedPAR = dum[5]*(UPSCALINGFUNC(diffuseLightExtinctionCoefficient.par,leafAreaIndex)- dum[11]) + dum[6]*(UPSCALINGFUNC(directLightExtinctionCoefficient.par,leafAreaIndex)- dum[12]) - dum[7] * dum[15];
         // NIR absorbed by sunlit (1) and shaded (2) big-leaf (W m-2) fromWang & Leuning 1998
         sunlitAbsorbedNIR = dum[8]*dum[13]+dum[9]*dum[14]+dum[10]*dum[15];
-        shadedAbsorbedNIR = dum[8]*(UPSCALINGFUNC(diffuseLightKNIR,leafAreaIndex)-dum[13])+dum[9]*(UPSCALINGFUNC(directLightKNIR,leafAreaIndex)- dum[14]) - dum[10] * dum[15];
+        shadedAbsorbedNIR = dum[8]*(UPSCALINGFUNC(diffuseLightExtinctionCoefficient.nir,leafAreaIndex)-dum[13])+dum[9]*(UPSCALINGFUNC(directLightExtinctionCoefficient.nir,leafAreaIndex)- dum[14]) - dum[10] * dum[15];
         // Long-wave radiation balance by sunlit (1) and shaded (2) big-leaf (W m-2) from Wang & Leuning 1998
         dum[16]= weatherVariable.derived.myLongWaveIrradiance -STEFAN_BOLTZMANN*pow(weatherVariable.myInstantTemp+ZEROCELSIUS,4); //negativo
-        dum[16] *= diffuseLightK ;
+        dum[16] *= diffuseLightExtinctionCoefficient.global ;
         double emissivityLeaf, emissivitySoil;
         emissivityLeaf = 0.96 ; // supposed constant because variation is very small
         emissivitySoil= 0.94 ;   // supposed constant because variation is very small
-        sunlitAbsorbedLW = (dum[16] * UPSCALINGFUNC((directLightK+diffuseLightK),leafAreaIndex))*emissivityLeaf+(1.0-emissivitySoil)*(emissivityLeaf-weatherVariable.derived.myEmissivitySky)* UPSCALINGFUNC((2*diffuseLightK),leafAreaIndex)* UPSCALINGFUNC((directLightK-diffuseLightK),leafAreaIndex);
-        shadedAbsorbedLW = dum[16] * UPSCALINGFUNC(diffuseLightK,leafAreaIndex) - sunlitAbsorbedLW ;
+        sunlitAbsorbedLW = (dum[16] * UPSCALINGFUNC((directLightExtinctionCoefficient.global+diffuseLightExtinctionCoefficient.global),leafAreaIndex))*emissivityLeaf+(1.0-emissivitySoil)*(emissivityLeaf-weatherVariable.derived.myEmissivitySky)* UPSCALINGFUNC((2*diffuseLightExtinctionCoefficient.global),leafAreaIndex)* UPSCALINGFUNC((directLightExtinctionCoefficient.global-diffuseLightExtinctionCoefficient.global),leafAreaIndex);
+        shadedAbsorbedLW = dum[16] * UPSCALINGFUNC(diffuseLightExtinctionCoefficient.global,leafAreaIndex) - sunlitAbsorbedLW ;
         // Isothermal net radiation for sunlit (1) and shaded (2) big-leaf
         sunlit.isothermalNetRadiation= sunlit.absorbedPAR + sunlitAbsorbedNIR + sunlitAbsorbedLW ;
         shaded.isothermalNetRadiation = shaded.absorbedPAR + shadedAbsorbedNIR + shadedAbsorbedLW ;
@@ -247,8 +256,8 @@ void Crit3D_Hydrall::radiationAbsorption(double mySunElevation)
         shaded.absorbedPAR = 0.0 ;
         shadedAbsorbedNIR = 0.0 ;
         dum[16]= weatherVariable.derived.myLongWaveIrradiance -STEFAN_BOLTZMANN*pow(weatherVariable.myInstantTemp + ZEROCELSIUS,4) ;
-        dum[16] *= diffuseLightK ;
-        shadedAbsorbedLW= dum[16] * (UPSCALINGFUNC(diffuseLightK,leafAreaIndex) - UPSCALINGFUNC(directLightK+diffuseLightK,leafAreaIndex)) ;
+        dum[16] *= diffuseLightExtinctionCoefficient.global ;
+        shadedAbsorbedLW= dum[16] * (UPSCALINGFUNC(diffuseLightExtinctionCoefficient.global,leafAreaIndex) - UPSCALINGFUNC(directLightExtinctionCoefficient.global+diffuseLightExtinctionCoefficient.global,leafAreaIndex)) ;
         shaded.isothermalNetRadiation = shaded.absorbedPAR + shadedAbsorbedNIR + shadedAbsorbedLW ;
     }
 
@@ -259,7 +268,7 @@ void Crit3D_Hydrall::radiationAbsorption(double mySunElevation)
 
 void Crit3D_Hydrall::leafTemperature()
 {
-    if (sineSolarElevation > 0.001)
+    if (environmentalVariable.sineSolarElevation > 0.001)
     {
         double sunlitGlobalRadiation,shadedGlobalRadiation;
 
@@ -293,11 +302,11 @@ void Crit3D_Hydrall::aerodynamicalCoupling()
     double windSpeed;
 
     windSpeed = MAXVALUE(5,weatherVariable.windSpeed);
-    heightReference = plantHeight + 5 ; // [m]
+    heightReference = plant.height + 5 ; // [m]
     dummy = 0.2 * leafAreaIndex ;
-    zeroPlaneDisplacement = MINVALUE(plantHeight * (log(1+pow(dummy,0.166)) + 0.03*log(1+pow(dummy,6))), 0.99*plantHeight) ;
-    if (dummy < 0.2) roughnessLength = 0.01 + 0.28*sqrt(dummy) * plantHeight ;
-    else roughnessLength = 0.3 * plantHeight * (1.0 - zeroPlaneDisplacement/plantHeight);
+    zeroPlaneDisplacement = MINVALUE(plant.height * (log(1+pow(dummy,0.166)) + 0.03*log(1+pow(dummy,6))), 0.99*plant.height) ;
+    if (dummy < 0.2) roughnessLength = 0.01 + 0.28*sqrt(dummy) * plant.height ;
+    else roughnessLength = 0.3 * plant.height * (1.0 - zeroPlaneDisplacement/plant.height);
 
     // Canopy energy balance.
     // Compute iteratively:
@@ -348,7 +357,7 @@ void Crit3D_Hydrall::aerodynamicalCoupling()
         frictionVelocity = MAXVALUE(frictionVelocity,1.0e-4);
 
         // Wind speed at canopy top	(m s-1)
-        windSpeedTopCanopy = (frictionVelocity/KARM) * log((plantHeight - zeroPlaneDisplacement)/roughnessLength);
+        windSpeedTopCanopy = (frictionVelocity/KARM) * log((plant.height - zeroPlaneDisplacement)/roughnessLength);
         windSpeedTopCanopy = MAXVALUE(windSpeedTopCanopy,1.0e-4);
 
         // Average leaf boundary-layer conductance cumulated over the canopy (m s-1)
@@ -398,7 +407,7 @@ void Crit3D_Hydrall::aerodynamicalCoupling()
         sensibleHeat = HEAT_CAPACITY_AIR_MOLAR * (sunlit.aerodynamicConductanceHeatExchange*sunlitDeltaTemp + shaded.aerodynamicConductanceHeatExchange*shadedDeltaTemp);
     }
 
-    if (isAmphystomatic) aerodynamicConductanceToCO2 = 0.78 * aerodynamicConductanceForHeat; //amphystomatous species. Ratio of diffusivities from Wang & Leuning 1998
+    if (plant.isAmphystomatic) aerodynamicConductanceToCO2 = 0.78 * aerodynamicConductanceForHeat; //amphystomatous species. Ratio of diffusivities from Wang & Leuning 1998
     else aerodynamicConductanceToCO2 = 0.78 * (canopyAerodynamicConductanceToMomentum * leafBoundaryLayerConductance)/(leafBoundaryLayerConductance + 2.0*canopyAerodynamicConductanceToMomentum) * dummy; //hypostomatous species
 
     sunlit.aerodynamicConductanceCO2Exchange = aerodynamicConductanceToCO2 * sunlit.leafAreaIndex/leafAreaIndex ; //sunlit big-leaf
@@ -409,7 +418,7 @@ double  Crit3D_Hydrall::leafWidth()
 {
     // la funzione deve essere scritta secondo regole che possono fr variare lo spessore in base alla fenologia
     // come per la vite?
-    return myLeafWidth;
+    return plant.myLeafWidth;
 }
 
 void Crit3D_Hydrall::upscale()
@@ -449,24 +458,24 @@ void Crit3D_Hydrall::upscale()
     optimalCarboxylationRate = maxCarboxRate * 1.0e-6; // [mol m-2 s-1] from Greer et al. 2011
     darkRespirationT0 = 0.0089 * optimalCarboxylationRate ;
     //   Adjust unit dark respiration rate for temperature (mol m-2 s-1)
-    sunlit.darkRespiration = darkRespirationT0 * exp(CRD - HARD/dum[0])* UPSCALINGFUNC((directLightK + diffuseLightKPAR),leafAreaIndex); //sunlit big-leaf
+    sunlit.darkRespiration = darkRespirationT0 * exp(CRD - HARD/dum[0])* UPSCALINGFUNC((directLightExtinctionCoefficient.global + diffuseLightExtinctionCoefficient.par),leafAreaIndex); //sunlit big-leaf
     shaded.darkRespiration = darkRespirationT0 * exp(CRD - HARD/dum[1]); //shaded big-leaf
-    shaded.darkRespiration *= (UPSCALINGFUNC(diffuseLightKPAR,leafAreaIndex) - UPSCALINGFUNC((directLightK + diffuseLightKPAR),leafAreaIndex)); //originariamente statePlant.stateGrowth.leafAreaIndex, è giusto quel leafAreaIndex?
+    shaded.darkRespiration *= (UPSCALINGFUNC(diffuseLightExtinctionCoefficient.par,leafAreaIndex) - UPSCALINGFUNC((directLightExtinctionCoefficient.global + diffuseLightExtinctionCoefficient.par),leafAreaIndex));
     double entropicFactorElectronTransporRate = (-0.75*(weatherVariable.last30DaysTAvg)+660);  // entropy term for J (kJ mol-1 oC-1)
     double entropicFactorCarboxyliation = (-1.07*(weatherVariable.last30DaysTAvg)+668); // entropy term for VCmax (kJ mol-1 oC-1)
-    if (sineSolarElevation > 1.0e-3)
+    if (environmentalVariable.sineSolarElevation > 1.0e-3)
     {
         //Stomatal conductance to CO2 in darkness (molCO2 m-2 s-1)
-        sunlit.minimalStomatalConductance = parameterWangLeuningFix.stomatalConductanceMin  * UPSCALINGFUNC((directLightK+diffuseLightKPAR),leafAreaIndex)	;
-        shaded.minimalStomatalConductance = parameterWangLeuningFix.stomatalConductanceMin  * (UPSCALINGFUNC(diffuseLightKPAR,leafAreaIndex) - UPSCALINGFUNC((directLightK+diffuseLightKPAR),leafAreaIndex));
+        sunlit.minimalStomatalConductance = parameterWangLeuning.stomatalConductanceMin  * UPSCALINGFUNC((directLightExtinctionCoefficient.global+diffuseLightExtinctionCoefficient.par),leafAreaIndex)	;
+        shaded.minimalStomatalConductance = parameterWangLeuning.stomatalConductanceMin  * (UPSCALINGFUNC(diffuseLightExtinctionCoefficient.par,leafAreaIndex) - UPSCALINGFUNC((directLightExtinctionCoefficient.global+diffuseLightExtinctionCoefficient.par),leafAreaIndex));
         // Carboxylation rate
         //sunlit.maximalCarboxylationRate = optimalCarboxylationRate * exp(CVCM - HAVCM/dum[0]); //sunlit big leaf
         //shaded.maximalCarboxylationRate = optimalCarboxylationRate * exp(CVCM - HAVCM/dum[1]); //shaded big leaf
-        sunlit.maximalCarboxylationRate = optimalCarboxylationRate * acclimationFunction(HAVCM*1000,HDEACTIVATION*1000,sunlit.leafTemperature,entropicFactorCarboxyliation,parameterWangLeuningFix.optimalTemperatureForPhotosynthesis); //sunlit big leaf
-        shaded.maximalCarboxylationRate = optimalCarboxylationRate * acclimationFunction(HAVCM*1000,HDEACTIVATION*1000,shaded.leafTemperature,entropicFactorCarboxyliation,parameterWangLeuningFix.optimalTemperatureForPhotosynthesis); //shaded big leaf
+        sunlit.maximalCarboxylationRate = optimalCarboxylationRate * acclimationFunction(HAVCM*1000,HDEACTIVATION*1000,sunlit.leafTemperature,entropicFactorCarboxyliation,parameterWangLeuning.optimalTemperatureForPhotosynthesis); //sunlit big leaf
+        shaded.maximalCarboxylationRate = optimalCarboxylationRate * acclimationFunction(HAVCM*1000,HDEACTIVATION*1000,shaded.leafTemperature,entropicFactorCarboxyliation,parameterWangLeuning.optimalTemperatureForPhotosynthesis); //shaded big leaf
         // Scale-up maximum carboxylation rate (mol m-2 s-1)
-        sunlit.maximalCarboxylationRate *= UPSCALINGFUNC((directLightK+diffuseLightKPAR),leafAreaIndex);
-        shaded.maximalCarboxylationRate *= (UPSCALINGFUNC(diffuseLightKPAR,leafAreaIndex) - UPSCALINGFUNC((directLightK+diffuseLightKPAR),leafAreaIndex));
+        sunlit.maximalCarboxylationRate *= UPSCALINGFUNC((directLightExtinctionCoefficient.global+diffuseLightExtinctionCoefficient.par),leafAreaIndex);
+        shaded.maximalCarboxylationRate *= (UPSCALINGFUNC(diffuseLightExtinctionCoefficient.par,leafAreaIndex) - UPSCALINGFUNC((directLightExtinctionCoefficient.global+diffuseLightExtinctionCoefficient.par),leafAreaIndex));
         //CO2 compensation point in dark
         sunlit.carbonMichaelisMentenConstant = exp(CKC - HAKC/dum[0]) * 1.0e-6 * weatherVariable.atmosphericPressure ;
         shaded.carbonMichaelisMentenConstant = exp(CKC - HAKC/dum[1]) * 1.0E-6 * weatherVariable.atmosphericPressure ;
@@ -483,19 +492,19 @@ void Crit3D_Hydrall::upscale()
         // Adjust maximum potential electron transport for temperature (mol m-2 s-1)
         //sunlit.maximalElectronTrasportRate = optimalElectronTransportRate * exp(CJM - HAJM/dum[0]);
         //shaded.maximalElectronTrasportRate = optimalElectronTransportRate * exp(CJM - HAJM/dum[1]);
-        sunlit.maximalElectronTrasportRate = optimalElectronTransportRate * acclimationFunction(HAJM*1000,HDEACTIVATION*1000,sunlit.leafTemperature,entropicFactorElectronTransporRate,parameterWangLeuningFix.optimalTemperatureForPhotosynthesis);
-        shaded.maximalElectronTrasportRate = optimalElectronTransportRate * acclimationFunction(HAJM*1000,HDEACTIVATION*1000,shaded.leafTemperature,entropicFactorElectronTransporRate,parameterWangLeuningFix.optimalTemperatureForPhotosynthesis);
+        sunlit.maximalElectronTrasportRate = optimalElectronTransportRate * acclimationFunction(HAJM*1000,HDEACTIVATION*1000,sunlit.leafTemperature,entropicFactorElectronTransporRate,parameterWangLeuning.optimalTemperatureForPhotosynthesis);
+        shaded.maximalElectronTrasportRate = optimalElectronTransportRate * acclimationFunction(HAJM*1000,HDEACTIVATION*1000,shaded.leafTemperature,entropicFactorElectronTransporRate,parameterWangLeuning.optimalTemperatureForPhotosynthesis);
 
         // Compute maximum PSII quantum yield, light-acclimated (mol e- mol-1 quanta absorbed)
         sunlit.quantumYieldPS2 = 0.352 + 0.022*dum[2] - 3.4E-4*pow(dum[2],2);      //sunlit big-leaf
         shaded.quantumYieldPS2 = 0.352 + 0.022*dum[3] - 3.4E-4*pow(dum[3],2);      //shaded big-leaf
         // Compute convexity factor of light response curve (-)
         // The value derived from leaf Chl content is modified for temperature effects, according to Bernacchi et al. (2003)
-        leafConvexityFactor = 1 - myChlorophyllContent * 6.93E-4 ;    //from Pons & Anten (2004), fig. 3b
+        leafConvexityFactor = 1 - plant.myChlorophyllContent * 6.93E-4 ;    //from Pons & Anten (2004), fig. 3b
         sunlit.convexityFactorNonRectangularHyperbola = leafConvexityFactor/0.98 * (0.76 + 0.018*dum[2] - 3.7E-4*pow(dum[2],2));  //sunlit big-leaf
         shaded.convexityFactorNonRectangularHyperbola = leafConvexityFactor/0.98 * (0.76 + 0.018*dum[3] - 3.7E-4*pow(dum[3],2));  //shaded big-leaf
         // Scale-up potential electron transport of sunlit big-leaf (mol m-2 s-1)
-        sunlit.maximalElectronTrasportRate *= UPSCALINGFUNC((directLightK+diffuseLightKPAR),leafAreaIndex);
+        sunlit.maximalElectronTrasportRate *= UPSCALINGFUNC((directLightExtinctionCoefficient.global+diffuseLightExtinctionCoefficient.par),leafAreaIndex);
         // Adjust electr transp of sunlit big-leaf for PAR effects (mol e- m-2 s-1)
         dum[4]= sunlit.absorbedPAR * sunlit.quantumYieldPS2 * BETA ; //  potential PSII e- transport of sunlit big-leaf (mol m-2 s-1)
         dum[5]= dum[4] + sunlit.maximalElectronTrasportRate ;
@@ -503,7 +512,7 @@ void Crit3D_Hydrall::upscale()
         sunlit.maximalElectronTrasportRate = (dum[5] - sqrt(pow(dum[5],2) - 4.0*sunlit.convexityFactorNonRectangularHyperbola*dum[6])) / (2.0*sunlit.convexityFactorNonRectangularHyperbola);
         // Scale-up potential electron transport of shaded big-leaf (mol m-2 s-1)
         // The simplified formulation proposed by de Pury & Farquhar (1999) is applied
-        shaded.maximalElectronTrasportRate *= (UPSCALINGFUNC(diffuseLightKPAR,leafAreaIndex) - UPSCALINGFUNC((directLightK+diffuseLightKPAR),leafAreaIndex));
+        shaded.maximalElectronTrasportRate *= (UPSCALINGFUNC(diffuseLightExtinctionCoefficient.par,leafAreaIndex) - UPSCALINGFUNC((directLightExtinctionCoefficient.global+diffuseLightExtinctionCoefficient.par),leafAreaIndex));
         // Adjust electr transp of shaded big-leaf for PAR effects (mol e- m-2 s-1)
         dum[4]= shaded.absorbedPAR * shaded.quantumYieldPS2 * BETA ; // potential PSII e- transport of sunlit big-leaf (mol m-2 s-1)
         dum[5]= dum[4] + shaded.maximalElectronTrasportRate ;
@@ -526,4 +535,107 @@ double Crit3D_Hydrall::acclimationFunction(double Ha , double Hd, double leafTem
     return exp(Ha*(leafTemp - optimumTemp)/(optimumTemp*R_GAS*leafTemp))
            *(1+exp((optimumTemp*entropicTerm-Hd)/(optimumTemp*R_GAS)))
            /(1+exp((leafTemp*entropicTerm-Hd)/(leafTemp*R_GAS))) ;
+}
+
+
+/*void Crit3D_Hydrall::carbonWaterFluxesProfile()
+{
+    // taken from Hydrall Model, Magnani UNIBO
+    double assimilationInstant = 0 ;
+
+    double totalStomatalConductance = 0 ;
+    for (int i=0; i < modelCase->soilLayersNr; i++)
+    {
+        transpirationInstantLayer[i] = 0 ;
+
+        if(sunlit.leafAreaIndex > 0)
+        {
+            Crit3D_Hydrall::photosynthesisKernel(modelCase->cultivar, sunlit.compensationPoint, sunlit.minimalStomatalConductance,
+                                                             sunlit.maximalElectronTrasportRate, sunlit.carbonMichaelisMentenConstant,
+                                                             sunlit.oxygenMichaelisMentenConstant,sunlit.darkRespiration,
+                                                             alphaLeuning * stressCoefficientProfile[i], sunlit.maximalCarboxylationRate,
+                                                             &(sunlit.assimilation), &(sunlit.stomatalConductance),
+                                                             &(sunlit.transpiration));
+        }
+        else
+        {
+            sunlit.assimilation = 0.0;
+            sunlit.stomatalConductance = 0.0;
+            sunlit.transpiration = 0.0;
+        }
+
+        assimilationInstant += sunlit.assimilation * modelCase->rootDensity[i] ;
+        transpirationInstantLayer[i] += sunlit.transpiration * modelCase->rootDensity[i] ;
+        totalStomatalConductance += sunlit.stomatalConductance * modelCase->rootDensity[i] ;
+        // shaded big leaf
+        Crit3D_Hydrall::photosynthesisKernel(modelCase->cultivar, shaded.compensationPoint, shaded.minimalStomatalConductance,
+                                                         shaded.maximalElectronTrasportRate, shaded.carbonMichaelisMentenConstant,
+                                                         shaded.oxygenMichaelisMentenConstant,shaded.darkRespiration,
+                                                         alphaLeuning * stressCoefficientProfile[i], shaded.maximalCarboxylationRate,
+                                                         &(shaded.assimilation), &(shaded.stomatalConductance),
+                                                         &(shaded.transpiration));
+        assimilationInstant += shaded.assimilation * modelCase->rootDensity[i] ; //canopy gross assimilation (mol m-2 s-1)
+        transpirationInstantLayer[i] += shaded.transpiration * modelCase->rootDensity[i] ; //canopy transpiration (mol m-2 s-1)
+        totalStomatalConductance += shaded.stomatalConductance * modelCase->rootDensity[i] ; //canopy conductance to CO2 (mol m-2 s-1)
+    }
+}*/
+
+
+void Crit3D_Hydrall::photosynthesisKernel(double COMP,double GAC,double GHR,double GSCD,double J,double KC,double KO
+                                            ,double RD,double RNI,double STOMWL,double VCmax,double *ASS,double *GSC,double *TR)
+{
+// taken from Hydrall Model, Magnani UNIBO
+// daily time computation
+#define NODATA_TOLERANCE 9999
+#define OSS              21176       /*!< oxygen part pressure in the atmosphere, Pa  */
+
+    double myStromalCarbonDioxide, VPDS, WC,WJ,VC,DUM1,CS; //, myPreviousVPDS;
+    double ASSOLD, deltaAssimilation, myTolerance; //, myPreviousDelta;
+    int I,Imax ;
+
+
+    Imax = 1000 ;
+    myTolerance = 1e-7;
+    deltaAssimilation = NODATA_TOLERANCE;
+    //myPreviousDelta = deltaAssimilation;
+    if (J >= 1.0e-7)
+    {
+        // Initialize variables
+        myStromalCarbonDioxide = 0.7 * environmentalVariable.CO2 ;
+        VPDS = weatherVariable.vaporPressureDeficit;
+        //myPreviousVPDS = VPDS;
+        ASSOLD = NODATA ;
+        DUM1 = 1.6*weatherVariable.derived.slopeSatVapPressureVSTemp/weatherVariable.derived.psychrometricConstant+ GHR/GAC;
+        I = 0 ; // initialize the cycle variable
+        while ((I++ < Imax) && (deltaAssimilation > myTolerance))
+        {
+            //Assimilation
+            WC = VCmax * myStromalCarbonDioxide / (myStromalCarbonDioxide + KC * (1.0 + OSS / KO));  //RuBP-limited carboxylation (mol m-2 s-1)
+            WJ = J * myStromalCarbonDioxide / (4.5 * myStromalCarbonDioxide + 10.5 * COMP);  //electr transp-limited carboxyl (mol m-2 s-1)
+            VC = MINVALUE(WC,WJ);  //carboxylation rate (mol m-2 s-1)
+
+            *ASS = MAXVALUE(0.0, VC * (1.0 - COMP / myStromalCarbonDioxide));  //gross assimilation (mol m-2 s-1)
+            CS = environmentalVariable.CO2 - weatherVariable.atmosphericPressure * (*ASS - RD) / GAC;	//CO2 concentration at leaf surface (Pa)
+            CS = MAXVALUE(1e-4,CS);
+            //Stomatal conductance
+            *GSC = GSCD + STOMWL * (*ASS-RD) / (CS-COMP) * parameterWangLeuning.sensitivityToVapourPressureDeficit / (parameterWangLeuning.sensitivityToVapourPressureDeficit +VPDS); //stom conduct to CO2 (mol m-2 s-1)
+            *GSC = MAXVALUE(*GSC,1.0e-5);
+            // Stromal CO2 concentration
+            myStromalCarbonDioxide = CS - weatherVariable.atmosphericPressure * (*ASS - RD) / (*GSC);	 //CO2 concentr at carboxyl sites (Pa)
+            myStromalCarbonDioxide = MAXVALUE(1.0e-2,myStromalCarbonDioxide) ;
+            //Vapour pressure deficit at leaf surface
+            VPDS = (weatherVariable.derived.slopeSatVapPressureVSTemp / HEAT_CAPACITY_AIR_MOLAR*RNI + weatherVariable.vaporPressureDeficit * GHR) / (GHR+(*GSC)*DUM1);  //VPD at the leaf surface (Pa)
+            deltaAssimilation = fabs((*ASS) - ASSOLD);
+            ASSOLD = *ASS ;
+        }
+    }
+    else //night time computation
+    {
+        *ASS= 0.0;
+        *GSC= GSCD;
+        VPDS= weatherVariable.vaporPressureDeficit ;
+    }
+    //  Transpiration rate
+    *TR = (*GSC / 0.64) * VPDS/weatherVariable.atmosphericPressure ;  //Transpiration rate (mol m-2 s-1). Ratio of diffusivities from Wang & Leuning 1998
+    *TR = MAXVALUE(1.0E-8,*TR) ;
 }
