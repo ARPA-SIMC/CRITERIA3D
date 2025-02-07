@@ -3052,6 +3052,8 @@ bool Project::interpolationDemGlocalDetrending(meteoVariable myVar, const Crit3D
                             else
                                 myRaster->value[row][col] += interpolatedValue*areaCells[cellIndex+1];
                         }
+                        else
+                            return false;
                     }
                 }
             }
@@ -3459,8 +3461,13 @@ bool Project::interpolationGrid(meteoVariable myVar, const Crit3DTime& myTime)
                                     proxyIndex++;
                                 }
                             }
-                            interpolatedValue = interpolate(subsetInterpolationPoints, &interpolationSettings, meteoSettings, myVar, myX, myY, myZ, proxyValues, true)
+
+                            double temp = interpolate(subsetInterpolationPoints, &interpolationSettings, meteoSettings, myVar, myX, myY, myZ, proxyValues, true);
+                            if (! isEqual(temp, NODATA))
+                                interpolatedValue = interpolate(subsetInterpolationPoints, &interpolationSettings, meteoSettings, myVar, myX, myY, myZ, proxyValues, true)
                                                 * areaCells[cellIndex + 1];
+                            else
+                                return false;
                         }
                         if (freq == hourly)
                         {
