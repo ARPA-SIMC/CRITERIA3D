@@ -2477,7 +2477,7 @@ void MainWindow::on_actionCriteria3D_Water_content_summary_triggered()
 
 
 void MainWindow::showCriteria3DVariable(criteria3DVariable var, int layerIndex, bool isFixedRange,
-                                        bool isHideOutliers, double minimum, double maximum)
+                                        bool isHideMinimum, double minimum, double maximum)
 {
     if (! myProject.isCriteria3DInitialized)
     {
@@ -2496,7 +2496,7 @@ void MainWindow::showCriteria3DVariable(criteria3DVariable var, int layerIndex, 
     current3DlayerIndex = layerIndex;
 
     myProject.criteria3DMap.colorScale->setFixedRange(false);
-    myProject.criteria3DMap.colorScale->setHideOutliers(false);
+    myProject.criteria3DMap.colorScale->setHideMinimum(false);
     myProject.criteria3DMap.colorScale->setTransparent(false);
 
     if (current3DVariable == volumetricWaterContent)
@@ -2505,10 +2505,9 @@ void MainWindow::showCriteria3DVariable(criteria3DVariable var, int layerIndex, 
         {
             // SURFACE
             setSurfaceWaterScale(myProject.criteria3DMap.colorScale);
-            myProject.criteria3DMap.colorScale->setHideOutliers(true);
+            myProject.criteria3DMap.colorScale->setHideMinimum(true);
             myProject.criteria3DMap.colorScale->setTransparent(true);
             ui->labelOutputRaster->setText("Surface water content [mm]");
-            myProject.criteria3DMap.colorScale->setTransparent(true);
         }
         else
         {
@@ -2547,17 +2546,11 @@ void MainWindow::showCriteria3DVariable(criteria3DVariable var, int layerIndex, 
         myProject.criteria3DMap.colorScale->setRange(minimum, maximum);
         myProject.criteria3DMap.colorScale->setFixedRange(true);
     }
-    // hide outliers
-    if (isHideOutliers)
+
+    if (isHideMinimum)
     {
-        if (! isEqual(minimum, NODATA) || ! isEqual(maximum, NODATA))
-        {
-            if (! isEqual(minimum, NODATA))
-                myProject.criteria3DMap.colorScale->setMinimum(minimum);
-            if (! isEqual(maximum, NODATA))
-                myProject.criteria3DMap.colorScale->setMaximum(maximum);  
-        }
-        myProject.criteria3DMap.colorScale->setHideOutliers(true);
+        myProject.criteria3DMap.colorScale->setRange(minimum, maximum);
+        myProject.criteria3DMap.colorScale->setHideMinimum(true);
     }
 
     setCurrentRasterOutput(&(myProject.criteria3DMap));
@@ -3381,9 +3374,9 @@ void MainWindow::on_layerNrEdit_valueChanged(int layerIndex)
     ui->layerDepthEdit->setText(depthStr + " m");
 
     bool isRangeFixed = myProject.criteria3DMap.colorScale->isFixedRange();
-    bool isHideOutliers = myProject.criteria3DMap.colorScale->isHideOutliers();
+    bool isHideMinimum = myProject.criteria3DMap.colorScale->isHideMinimum();
 
-    showCriteria3DVariable(current3DVariable, layerIndex, isRangeFixed, isHideOutliers,
+    showCriteria3DVariable(current3DVariable, layerIndex, isRangeFixed, isHideMinimum,
                            myProject.criteria3DMap.colorScale->minimum(),
                            myProject.criteria3DMap.colorScale->maximum());
 
