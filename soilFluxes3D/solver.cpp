@@ -180,99 +180,6 @@ double GaussSeidelWater()
 
 
 //-------------  THREADS -------------
-/*
-void GaussSeidel(int start, int end, double *infinityNorm, short direction)
-{
-    long firstIndex, lastIndex;
-
-    if (direction == UP)
-    {
-        firstIndex = start;
-        lastIndex = end + 1;
-    }
-    else
-    {
-        firstIndex = end;
-        lastIndex = start - 1;
-    }
-
-    double currentNorm = 0.;
-    *infinityNorm = 0.;
-
-    long i = firstIndex;
-    while (i != lastIndex)
-    {
-        double newX = b[i];
-        short j = 1;
-        while ((A[i][j].index != NOLINK) && (j < myStructure.maxNrColumns))
-        {
-            newX -= A[i][j].val * X[A[i][j].index];
-            j++;
-        }
-
-        // surface check (H cannot go below z)
-        if (nodeList[i].isSurface && newX < nodeList[i].z)
-        {
-            newX = nodeList[i].z;
-        }
-
-        currentNorm = fabs(newX - X[i]);
-        X[i] = newX;
-
-        // water potential [m]
-        double psi = fabs(newX - nodeList[i].z);
-        if (psi > 1)
-        {
-            // normalized if psi > 1m
-            currentNorm /= psi;
-        }
-
-        if (currentNorm > *infinityNorm)
-            *infinityNorm = currentNorm;
-
-        (direction == UP)? i++ : i--;
-    }
-}
-
-
-void Jacobi(int start, int end, double *infinityNorm)
-{
-    *infinityNorm = 0;
-    double currentNorm = 0;
-
-    for (long i = start; i <= end; i++)
-    {
-        X1[i] = b[i];
-        short j = 1;
-        while ((A[i][j].index != NOLINK) && (j < myStructure.maxNrColumns))
-        {
-            X1[i] -= (A[i][j].val * X[A[i][j].index]);
-            j++;
-        }
-
-        // surface check (H cannot go below z)
-        if (nodeList[i].isSurface && X1[i] < nodeList[i].z)
-        {
-            X1[i] = nodeList[i].z;
-        }
-
-        currentNorm = fabs(X1[i] - X[i]);
-
-        // water potential [m]
-        double psi = fabs(X1[i] - nodeList[i].z);
-        if (psi > 1)
-        {
-            // normalized if psi > 1m
-            currentNorm /= psi;
-        }
-
-        if (currentNorm > *infinityNorm)
-            *infinityNorm = currentNorm;
-    }
-}
-*/
-
-
 void GaussSeidelThread(long start, long end, double *infinityNorm)
 {
     *infinityNorm = 0.;
@@ -349,7 +256,7 @@ double iterationThreads()
 
 //-------------  SOLVER -------------
 
-bool solver (int approximation, double toleranceThreshold, int process)
+bool solveLinearSystem(int approximation, double residualTolerance, int computationType)
 {
     double currentNorm = 1.0;
     double bestNorm = currentNorm;
@@ -357,12 +264,12 @@ bool solver (int approximation, double toleranceThreshold, int process)
     int maxIterationsNr = getMaxIterationsNr(approximation);
     int iteration = 0;
 
-    while ((currentNorm > toleranceThreshold) && (iteration < maxIterationsNr))
+    while ((currentNorm > residualTolerance) && (iteration < maxIterationsNr))
 	{
-        if (process == PROCESS_HEAT)
+        if (computationType == PROCESS_HEAT)
             currentNorm = GaussSeidelHeat();
 
-        else if (process == PROCESS_WATER)
+        else if (computationType == PROCESS_WATER)
         {
             if (myParameters.threadsNumber == 1)
             {

@@ -11,9 +11,7 @@
 
     double arithmeticMean(double v1, double v2);
 
-    bool solver(int myApproximation, double myResidualTolerance, int myProcess);
-
-    void initializeThreads();
+    bool solveLinearSystem(int approximation, double residualTolerance, int computationType);
 
 #endif  // SOLVER_H
 
