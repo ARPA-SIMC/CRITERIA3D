@@ -72,7 +72,7 @@
 
     };
 
-    struct Tsoil {
+    struct ThydrallSoil {
 
         int soilLayersNr;
         double soilTotalDepth;
@@ -149,7 +149,7 @@
         TenvironmentalVariable environmentalVariable;
         TparameterWangLeuning parameterWangLeuning;
         Tplant plant;
-        Tsoil soil;
+        ThydrallSoil soil;
         TlightExtinctionCoefficient directLightExtinctionCoefficient;
         TlightExtinctionCoefficient diffuseLightExtinctionCoefficient;
 

@@ -1264,8 +1264,15 @@ bool Crit3DProject::computeHydrallModel()
         return false;
     }
 
+
     double AGBiomass = NODATA;
     double rootBiomass = NODATA;
+    std::vector<double> waterContent(nrLayers);
+    std::vector<double> stressCoefficient(nrLayers);
+
+    soil::Crit3DHorizon horizon;
+    long currentNode;
+    int horizonIndex;
 
     for (int row = 0; row < DEM.header->nrRows; row++)
     {
@@ -1273,15 +1280,40 @@ bool Crit3DProject::computeHydrallModel()
         {
             if (! isEqual(DEM.value[row][col], DEM.header->flag))
             {
+                //TODO
                 double chlorophyllContent = 500;
                 int secondsPerStep = 2;
-                double atmosphericPressure;
 
+                // check soil
+                int soilIndex = int(soilIndexMap.value[row][col]);
+                if (soilIndex == NODATA)
+                {
+                    //TODO
+                }
 
                 //tutte le variabili che servono
                 AGBiomass = dailyHydrallMaps.aboveGroundBiomassMap->value[row][col];
                 rootBiomass = dailyHydrallMaps.rootBiomassMap->value[row][col]; //o si può saltare l'assegnazione e poi riassegnazione, passando direttamente alla funzione computeHydrallPoint con &?
 
+                //get water content and stress coefficient
+                for (int i = 0; i < nrLayers; i++)
+                {
+                    currentNode = indexMap.at(i).value[row][col];
+
+                    horizonIndex = soilList[soilIndex].getHorizonIndex(layerDepth[i]);
+                    if (horizonIndex == NODATA)
+                        continue;
+
+                    horizon = soilList[soilIndex].horizon[horizonIndex];
+
+                    if (currentNode != indexMap.at(i).header->flag)
+                    {
+                        waterContent[i] = soilFluxes3D::getWaterContent(currentNode);
+                        stressCoefficient[i] = MINVALUE(1.0, (10*(waterContent[i]-horizon.waterContentWP))/(3*(horizon.waterContentFC-horizon.waterContentWP)));
+                    }
+                }
+
+                //set all variables
                 hydrallModel.setHourlyVariables(double(hourlyMeteoMaps->mapHourlyTair->value[row][col]), double(radiationMaps->globalRadiationMap->value[row][col]),
                                                 double(hourlyMeteoMaps->mapHourlyPrec->value[row][col]), double(hourlyMeteoMaps->mapHourlyRelHum->value[row][col]),
                                                 double(hourlyMeteoMaps->mapHourlyWindScalarInt->value[row][col]), double(radiationMaps->beamRadiationMap->value[row][col]),
@@ -1292,8 +1324,13 @@ bool Crit3DProject::computeHydrallModel()
                                                 double(radiationMaps->sunElevationMap->value[row][col]));
 
                 hydrallModel.setPlantVariables(chlorophyllContent);
+
+
+                //compute
                 hydrallModel.computeHydrallPoint(getCrit3DDate(getCurrentDate()), double(hourlyMeteoMaps->mapHourlyTair->value[row][col]), double(DEM.value[row][col]), secondsPerStep, AGBiomass, rootBiomass);
 
+
+                //check and save data
                 if (! isEqual(AGBiomass, NODATA) && ! isEqual(rootBiomass, NODATA))
                 {
                     dailyHydrallMaps.aboveGroundBiomassMap->value[row][col] = AGBiomass;
