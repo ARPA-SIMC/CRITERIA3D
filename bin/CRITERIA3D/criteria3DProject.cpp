@@ -121,7 +121,7 @@ bool Crit3DProject::initializeHydrall()
         }
     }
 
-
+    return true;
 }
 
 

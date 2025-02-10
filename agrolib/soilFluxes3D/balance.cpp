@@ -39,7 +39,7 @@
 
 
 Tbalance balanceCurrentTimeStep, balancePreviousTimeStep, balanceCurrentPeriod, balanceWholePeriod;
-double Courant = 0.0;
+double CourantWater = 0.0;
 
 static double bestMBRerror;
 static bool isHalfTimeStepForced = false;
@@ -252,18 +252,18 @@ bool waterBalance(double deltaT, int approxNr)
 
 	isHalfTimeStepForced = false;
 
-    /*! error better than previuosly */
-	if ((approxNr == 0) || (MBRerror < bestMBRerror))
+    // error is better than previuosly
+    if (approxNr == 0 || MBRerror < bestMBRerror)
 	{
 		saveBestStep();
 		bestMBRerror = MBRerror;
 	}
 
-    /*! best case */
+    // best case
     if (MBRerror < myParameters.MBRThreshold)
     {
         acceptStep(deltaT);
-        if ((approxNr <= 2) && (Courant < 0.5) && (MBRerror < (myParameters.MBRThreshold * 0.5)))
+        if (approxNr <= 2 && CourantWater < 0.5 && MBRerror < (myParameters.MBRThreshold * 0.5))
         {
             /*! system is stable: double time step */
             doubleTimeStep();
@@ -271,23 +271,22 @@ bool waterBalance(double deltaT, int approxNr)
         return true;
     }
 
-    /*! worst case: error high or last approximation */
-    if ((MBRerror > (bestMBRerror * 2.0))
-        ||(approxNr == (myParameters.maxApproximationsNumber-1)))
-        {
+    // worst case: error is high or last approximation
+    if ( MBRerror > (bestMBRerror * 2.0) || approxNr == (myParameters.maxApproximationsNumber-1) )
+    {
         if (deltaT > myParameters.delta_t_min)
-            {
+        {
             halveTimeStep();
             isHalfTimeStepForced = true;
-            return (false);
-            }
+            return false;
+        }
         else
-            {
+        {
             restoreBestStep(deltaT);
             acceptStep(deltaT);
-            return (true);
-            }
+            return true;
         }
+    }
 
     // default
     return false;

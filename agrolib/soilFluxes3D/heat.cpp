@@ -991,7 +991,8 @@ bool HeatComputation(double timeStep, double timeStepWater)
             return (false);
         }
 
-    solver(0, myParameters.ResidualTolerance, PROCESS_HEAT);
+    int approximation = 0;
+    solveLinearSystem(approximation, myParameters.ResidualTolerance, PROCESS_HEAT);
 
     for (i = 1; i < myStructure.nrNodes; i++)
         nodeList[i].extra->Heat->T = X[i];
