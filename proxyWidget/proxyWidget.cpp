@@ -98,6 +98,8 @@ Crit3DProxyWidget::Crit3DProxyWidget(Crit3DInterpolationSettings* interpolationS
     selectionOptionBoxLayout->addWidget(&modelLR);
     selectionOptionBoxLayout->addWidget(&climatologicalLR);
 
+    if (macroAreaNumber != NODATA) modelLR.setEnabled(false);
+
     selectionOptionEditLayout->addWidget(r2Label);
     selectionOptionEditLayout->addWidget(&r2);
     selectionOptionEditLayout->addStretch(150);
@@ -585,7 +587,6 @@ void Crit3DProxyWidget::addMacroAreaLR()
             point_vector.append(point);
         }
 
-        macroAreaNumber = NODATA;
         chartView->drawModelLapseRate(point_vector);
     }
     return;
