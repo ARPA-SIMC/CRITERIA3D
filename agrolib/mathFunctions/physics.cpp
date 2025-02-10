@@ -48,7 +48,7 @@ double pressureFromAltitude(double height)
 
 double pressureFromAltitude(double temperature, double height)
 {
-    return P0 * exp((- GRAVITY * M_AIR * height) / (R_GAS * temperature));
+    return P0 * exp((- GRAVITY * M_AIR * height) / (R_GAS * (temperature + 273.15)));
 }
 
 /*!
