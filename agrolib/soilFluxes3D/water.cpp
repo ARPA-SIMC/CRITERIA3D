@@ -107,11 +107,11 @@ double runoff(long i, long j, TlinkedNode *link, double deltaT, unsigned long ap
 
     double roughness = (nodeList[i].Soil->Roughness + nodeList[j].Soil->Roughness) / 2.;
 
-    //Manning
+    // Manning equation
     double v = pow(Hs, 2./3.) * sqrt(dH/cellDistance) / roughness;
     double flowArea = link->area * Hs;
 
-    Courant = MAXVALUE(Courant, v * deltaT / cellDistance);
+    CourantWater = MAXVALUE(CourantWater, v * deltaT / cellDistance);
     return (v * flowArea) / dH;
 }
 
@@ -248,20 +248,17 @@ bool computeFlux(long i, int matrixIndex, TlinkedNode *link, double deltaT, unsi
 
 bool waterFlowComputation(double deltaT)
  {
-     bool isValidStep = false;
+     // initialize the indices on the diagonal
+     for (int i = 0; i < myStructure.nrNodes; i++)
+     {
+         A[i][0].index = i;
+     }
 
+     bool isValidStep = false;
      int approximationNr = 0;
      do
      {
-        Courant = 0.0;
-        if (approximationNr == 0)
-        {
-            // diagonal indexes
-            for (int i = 0; i < myStructure.nrNodes; i++)
-            {
-                A[i][0].index = i;
-            }
-        }
+        CourantWater = 0.0;
 
         /*! hydraulic conductivity and theta derivative */
         for (unsigned i = 0; i < unsigned(myStructure.nrNodes); i++)
@@ -284,7 +281,7 @@ bool waterFlowComputation(double deltaT)
         }
 
         // update boundary conditions
-        //updateBoundaryWater(deltaT);
+        // updateBoundaryWater(deltaT);
 
         /*! computes the matrix elements */
         for (int i = 0; i < myStructure.nrNodes; i++)
@@ -300,7 +297,7 @@ bool waterFlowComputation(double deltaT)
             if (computeFlux(i, j, &(nodeList[i].down), deltaT, approximationNr, DOWN))
                 j++;
 
-            /*! closure */
+            // void elements
             while (j < myStructure.maxNrColumns)
                 A[i][j++].index = NOLINK;
 
@@ -313,13 +310,13 @@ bool waterFlowComputation(double deltaT)
                 j++;
             }
 
-            /*! diagonal */
+            // diagonal
             A[i][0].val = C[i]/deltaT + sum;
 
-            /*! b vector (vector of constant terms) */
+            // b vector (vector of constant terms)
             b[i] = ((C[i] / deltaT) * nodeList[i].oldH) + nodeList[i].Qw + invariantFlux[i];
 
-            /*! preconditioning */
+            // preconditioning
             j = 1;
             while ((A[i][j].index != NOLINK) && (j < myStructure.maxNrColumns))
             {
@@ -328,14 +325,14 @@ bool waterFlowComputation(double deltaT)
             b[i] /= A[i][0].val;
         }
 
-        if (Courant > 1.0 && deltaT > myParameters.delta_t_min)
+        if (CourantWater > 1.0 && deltaT > myParameters.delta_t_min)
         {
             halveTimeStep();
             setForcedHalvedTime(true);
             return false;
         }
 
-        if (! solver(approximationNr, myParameters.ResidualTolerance, PROCESS_WATER))
+        if (! solveLinearSystem(approximationNr, myParameters.ResidualTolerance, PROCESS_WATER))
         {
             if (deltaT > myParameters.delta_t_min)
             {
