@@ -55,6 +55,7 @@
 
 
         Crit3DHydrallMaps dailyHydrallMaps;
+        gis::Crit3DRasterGrid treeSpeciesMap;
 
 
         Crit3DSnow snowModel;

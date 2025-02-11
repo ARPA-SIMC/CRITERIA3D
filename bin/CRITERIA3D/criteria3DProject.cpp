@@ -1269,6 +1269,7 @@ bool Crit3DProject::computeHydrallModel()
     double rootBiomass = NODATA;
     std::vector<double> waterContent(nrLayers);
     std::vector<double> stressCoefficient(nrLayers);
+    std::vector<double> rootDensity(nrLayers, 0);
 
     soil::Crit3DHorizon horizon;
     long currentNode;
@@ -1292,8 +1293,12 @@ bool Crit3DProject::computeHydrallModel()
                 }
 
                 //tutte le variabili che servono
-                AGBiomass = dailyHydrallMaps.aboveGroundBiomassMap->value[row][col];
+                AGBiomass = dailyHydrallMaps.standBiomassMap->value[row][col]; //foliage fine roots and sapwood
                 rootBiomass = dailyHydrallMaps.rootBiomassMap->value[row][col]; //o si può saltare l'assegnazione e poi riassegnazione, passando direttamente alla funzione computeHydrallPoint con &?
+
+
+                //root density
+                Crit3DCrop currentCrop = cropList[treeSpeciesMap.value[row][col]];
 
                 //get water content and stress coefficient
                 for (int i = 0; i < nrLayers; i++)
@@ -1311,7 +1316,13 @@ bool Crit3DProject::computeHydrallModel()
                         waterContent[i] = soilFluxes3D::getWaterContent(currentNode);
                         stressCoefficient[i] = MINVALUE(1.0, (10*(waterContent[i]-horizon.waterContentWP))/(3*(horizon.waterContentFC-horizon.waterContentWP)));
                     }
+
+                    if (i >= currentCrop.roots.firstRootLayer && i <= currentCrop.roots.lastRootLayer)
+                        rootDensity[i] = currentCrop.roots.rootDensity[i];
                 }
+
+
+
 
                 //set all variables
                 hydrallModel.setHourlyVariables(double(hourlyMeteoMaps->mapHourlyTair->value[row][col]), double(radiationMaps->globalRadiationMap->value[row][col]),
@@ -1333,7 +1344,7 @@ bool Crit3DProject::computeHydrallModel()
                 //check and save data
                 if (! isEqual(AGBiomass, NODATA) && ! isEqual(rootBiomass, NODATA))
                 {
-                    dailyHydrallMaps.aboveGroundBiomassMap->value[row][col] = AGBiomass;
+                    dailyHydrallMaps.standBiomassMap->value[row][col] = AGBiomass;
                     dailyHydrallMaps.rootBiomassMap->value[row][col] = rootBiomass;
                 }
             }
@@ -1350,7 +1361,7 @@ bool Crit3DProject::computeHydrallModel()
         //se writeHydrallMaps, scrivi le mappe (mensili?) di LAI, biomassa, etc
         std::string fileName;
         std::string myError;
-        if (! gis::writeEsriGrid(fileName, dailyHydrallMaps.aboveGroundBiomassMap, myError))
+        if (! gis::writeEsriGrid(fileName, dailyHydrallMaps.standBiomassMap, myError))
         {
             errorString = QString::fromStdString(myError);
             return false;
