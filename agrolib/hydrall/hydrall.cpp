@@ -17,7 +17,7 @@
 Crit3DHydrallMaps::Crit3DHydrallMaps()
 {
     mapLAI = new gis::Crit3DRasterGrid;
-    aboveGroundBiomassMap = new gis::Crit3DRasterGrid;
+    standBiomassMap = new gis::Crit3DRasterGrid;
     rootBiomassMap = new gis::Crit3DRasterGrid;
     mapLast30DaysTavg = new gis::Crit3DRasterGrid;
 }
@@ -25,7 +25,7 @@ Crit3DHydrallMaps::Crit3DHydrallMaps()
 void Crit3DHydrallMaps::initialize(const gis::Crit3DRasterGrid& DEM)
 {
     mapLAI->initializeGrid(DEM);
-    aboveGroundBiomassMap->initializeGrid(DEM);
+    standBiomassMap->initializeGrid(DEM);
     rootBiomassMap->initializeGrid(DEM);
     mapLast30DaysTavg->initializeGrid(DEM);
 }
@@ -33,7 +33,7 @@ void Crit3DHydrallMaps::initialize(const gis::Crit3DRasterGrid& DEM)
 Crit3DHydrallMaps::~Crit3DHydrallMaps()
 {
     mapLAI->clear();
-    aboveGroundBiomassMap->clear();
+    standBiomassMap->clear();
     rootBiomassMap->clear();
     mapLast30DaysTavg->clear();
 }
@@ -156,7 +156,7 @@ void Crit3D_Hydrall::setPlantVariables(double chlorophyllContent)
     plant.myChlorophyllContent = chlorophyllContent;
 }
 
-void Crit3D_Hydrall::radiationAbsorption(double mySunElevation)
+void Crit3D_Hydrall::radiationAbsorption()
 {
     // taken from Hydrall Model, Magnani UNIBO
 
@@ -190,6 +190,7 @@ void Crit3D_Hydrall::radiationAbsorption(double mySunElevation)
         //Leaf area index of sunlit (1) and shaded (2) big-leaf
         sunlit.leafAreaIndex = UPSCALINGFUNC(directLightExtinctionCoefficient.global,leafAreaIndex);
         shaded.leafAreaIndex = leafAreaIndex - sunlit.leafAreaIndex ;
+        understorey.leafAreaIndex = 0.2;
         //Extinction coefficients for direct and diffuse PAR and NIR radiation, scattering leaves
         //Based on approximation by Goudriaan 1977 (in Goudriaan & van Laar 1994)
         double exponent= -pow(10,0.28 + 0.63*log10(plant.myChlorophyllContent*0.85/1000));
@@ -241,6 +242,11 @@ void Crit3D_Hydrall::radiationAbsorption(double mySunElevation)
         // Isothermal net radiation for sunlit (1) and shaded (2) big-leaf
         sunlit.isothermalNetRadiation= sunlit.absorbedPAR + sunlitAbsorbedNIR + sunlitAbsorbedLW ;
         shaded.isothermalNetRadiation = shaded.absorbedPAR + shadedAbsorbedNIR + shadedAbsorbedLW ;
+
+        //TODO: cover
+        double cover = 1;
+        understorey.absorbedPAR = (directIncomingPAR + diffuseIncomingPAR - sunlit.absorbedPAR - shaded.absorbedPAR) * cover + (directIncomingPAR + diffuseIncomingPAR) * (1 - cover);
+        understorey.absorbedPAR *= (1-std::exp(-0.8*understorey.leafAreaIndex));
     }
     else
     {
@@ -251,6 +257,9 @@ void Crit3D_Hydrall::radiationAbsorption(double mySunElevation)
         sunlitAbsorbedNIR = 0.0 ;
         sunlitAbsorbedLW = 0.0 ;
         sunlit.isothermalNetRadiation =  0.0 ;
+
+        understorey.absorbedPAR = 0.0;
+        understorey.leafAreaIndex = 0.0;
 
         shaded.leafAreaIndex = leafAreaIndex;
         shaded.absorbedPAR = 0.0 ;
@@ -429,20 +438,6 @@ void Crit3D_Hydrall::upscale()
     // taken from Hydrall Model, Magnani UNIBO
     static double BETA = 0.5 ;
 
-    //CONSTANTS (only used here)
-    const double CRD = 18.7;             /*!< scaling factor in RD0 response to temperature (-)  */
-    const double HARD = 46.39;           /*!< activation energy of RD0 (kJ mol-1)   */
-    const double CKC = 38.05;            /*!< scaling factor in KCT0 response to temperature (-)  */
-    const double CKO = 20.30;            /*!< scaling factor in KOT0 response to temperature (-)  */
-    const double HAKO = 36.38;           /*!< activation energy of KOT0 (kJ mol-1)  */
-    const double HAGSTAR = 37.83;        /*!< activation energy of Gamma_star (kJ mol-1)  */
-    const double HAKC = 79.43;           /*!< activation energy of KCT0 (kJ mol-1)  */
-    const double CGSTAR = 19.02;         /*!< scaling factor in Gamma_star response to temperature (-)  */
-    const double HAJM = 43.9;            /*!< activation energy of JMOP (kJ mol-1 e-)  */
-    const double HDEACTIVATION = 200;    /*!< deactivation energy from Kattge & Knorr 2007 (kJ mol-1)  */
-    const double HAVCM = 65.33;          /*!< activation energy of VCMOP (kJ mol-1)  */
-
-
     double dum[10],darkRespirationT0;
     double optimalCarboxylationRate,optimalElectronTransportRate ;
     double leafConvexityFactor ;
@@ -454,7 +449,7 @@ void Crit3D_Hydrall::upscale()
 
 
 
-    // optimalCarboxylationRate = (nitrogen.interceptLeaf + nitrogen.slopeLeaf * nitrogen.leafNitrogen/specificLeafArea*1000)*1e-6; // carboxylation rate based on nitrogen leaf
+    // optimalCarboxylationRate = (nitrogenContent.interceptLeaf + nitrogenContent.slopeLeaf * nitrogenContent.leafNitrogen/specificLeafArea*1000)*1e-6; // carboxylation rate based on nitrogen leaf
     optimalCarboxylationRate = maxCarboxRate * 1.0e-6; // [mol m-2 s-1] from Greer et al. 2011
     darkRespirationT0 = 0.0089 * optimalCarboxylationRate ;
     //   Adjust unit dark respiration rate for temperature (mol m-2 s-1)
@@ -538,22 +533,24 @@ double Crit3D_Hydrall::acclimationFunction(double Ha , double Hd, double leafTem
 }
 
 
-/*void Crit3D_Hydrall::carbonWaterFluxesProfile()
+void Crit3D_Hydrall::carbonWaterFluxesProfile()
 {
     // taken from Hydrall Model, Magnani UNIBO
-    double assimilationInstant = 0 ;
+    assimilationInstant = 0 ;
+
+    transpirationInstantLayer.resize(soil.layersNr);
 
     double totalStomatalConductance = 0 ;
-    for (int i=0; i < modelCase->soilLayersNr; i++)
+    for (int i=0; i < soil.layersNr; i++)
     {
         transpirationInstantLayer[i] = 0 ;
 
         if(sunlit.leafAreaIndex > 0)
         {
-            Crit3D_Hydrall::photosynthesisKernel(modelCase->cultivar, sunlit.compensationPoint, sunlit.minimalStomatalConductance,
+            Crit3D_Hydrall::photosynthesisKernel(sunlit.compensationPoint, sunlit.aerodynamicConductanceCO2Exchange, sunlit.aerodynamicConductanceHeatExchange, sunlit.minimalStomatalConductance,
                                                              sunlit.maximalElectronTrasportRate, sunlit.carbonMichaelisMentenConstant,
-                                                             sunlit.oxygenMichaelisMentenConstant,sunlit.darkRespiration,
-                                                             alphaLeuning * stressCoefficientProfile[i], sunlit.maximalCarboxylationRate,
+                                                             sunlit.oxygenMichaelisMentenConstant,sunlit.darkRespiration, sunlit.isothermalNetRadiation,
+                                                             parameterWangLeuning.alpha * soil.stressCoefficient[i], sunlit.maximalCarboxylationRate,
                                                              &(sunlit.assimilation), &(sunlit.stomatalConductance),
                                                              &(sunlit.transpiration));
         }
@@ -564,21 +561,21 @@ double Crit3D_Hydrall::acclimationFunction(double Ha , double Hd, double leafTem
             sunlit.transpiration = 0.0;
         }
 
-        assimilationInstant += sunlit.assimilation * modelCase->rootDensity[i] ;
-        transpirationInstantLayer[i] += sunlit.transpiration * modelCase->rootDensity[i] ;
-        totalStomatalConductance += sunlit.stomatalConductance * modelCase->rootDensity[i] ;
+        assimilationInstant += sunlit.assimilation * soil.rootDensity[i] ;
+        transpirationInstantLayer[i] += sunlit.transpiration * soil.rootDensity[i] ;
+
         // shaded big leaf
-        Crit3D_Hydrall::photosynthesisKernel(modelCase->cultivar, shaded.compensationPoint, shaded.minimalStomatalConductance,
+        Crit3D_Hydrall::photosynthesisKernel(shaded.compensationPoint, shaded.aerodynamicConductanceCO2Exchange,shaded.aerodynamicConductanceHeatExchange, shaded.minimalStomatalConductance,
                                                          shaded.maximalElectronTrasportRate, shaded.carbonMichaelisMentenConstant,
-                                                         shaded.oxygenMichaelisMentenConstant,shaded.darkRespiration,
-                                                         alphaLeuning * stressCoefficientProfile[i], shaded.maximalCarboxylationRate,
+                                                         shaded.oxygenMichaelisMentenConstant,shaded.darkRespiration, shaded.isothermalNetRadiation,
+                                                         parameterWangLeuning.alpha * soil.stressCoefficient[i], shaded.maximalCarboxylationRate,
                                                          &(shaded.assimilation), &(shaded.stomatalConductance),
                                                          &(shaded.transpiration));
-        assimilationInstant += shaded.assimilation * modelCase->rootDensity[i] ; //canopy gross assimilation (mol m-2 s-1)
-        transpirationInstantLayer[i] += shaded.transpiration * modelCase->rootDensity[i] ; //canopy transpiration (mol m-2 s-1)
-        totalStomatalConductance += shaded.stomatalConductance * modelCase->rootDensity[i] ; //canopy conductance to CO2 (mol m-2 s-1)
+        assimilationInstant += shaded.assimilation * soil.rootDensity[i] ; //canopy gross assimilation (mol m-2 s-1)
+        transpirationInstantLayer[i] += shaded.transpiration * soil.rootDensity[i] ; //canopy transpiration (mol m-2 s-1)
+
     }
-}*/
+}
 
 
 void Crit3D_Hydrall::photosynthesisKernel(double COMP,double GAC,double GHR,double GSCD,double J,double KC,double KO
@@ -639,3 +636,113 @@ void Crit3D_Hydrall::photosynthesisKernel(double COMP,double GAC,double GHR,doub
     *TR = (*GSC / 0.64) * VPDS/weatherVariable.atmosphericPressure ;  //Transpiration rate (mol m-2 s-1). Ratio of diffusivities from Wang & Leuning 1998
     *TR = MAXVALUE(1.0E-8,*TR) ;
 }
+
+
+void Crit3D_Hydrall::cumulatedResults()
+{
+    // taken from Hydrall Model, Magnani UNIBO
+    // Cumulate hourly values of gas exchange
+    deltaTime.absorbedPAR = simulationStepInSeconds*(sunlit.absorbedPAR+shaded.absorbedPAR);  //absorbed PAR (mol m-2 yr-1)
+    deltaTime.grossAssimilation = simulationStepInSeconds * assimilationInstant ; // canopy gross assimilation (mol m-2)
+    deltaTime.respiration = simulationStepInSeconds * Crit3D_Hydrall::plantRespiration() ;
+    deltaTime.netAssimilation = deltaTime.grossAssimilation- deltaTime.respiration ;
+    deltaTime.netAssimilation = deltaTime.netAssimilation*12/1000.0/CARBONFACTOR ;
+
+    //statePlant.stateGrowth.cumulatedBiomass += deltaTime.netAssimilation ; TODO stand biomass
+
+    deltaTime.transpiration = 0.;
+
+    for (int i=0; i < soil.layersNr; i++)
+    {
+        transpirationInstantLayer[i] = simulationStepInSeconds * MH2O * transpirationInstantLayer[i]; // [mm]
+        deltaTime.transpiration += transpirationInstantLayer[i];
+    }
+
+
+}
+
+
+double Crit3D_Hydrall::plantRespiration()
+{
+    // taken from Hydrall Model, Magnani UNIBO
+    double leafRespiration,rootRespiration,sapwoodRespiration,shootRespiration ;
+    double totalRespiration;
+    nitrogenContent.leaf = 0.02;    //[kg kgDM-1] //0.02 * 10^3 [g kgDM-1]
+    nitrogenContent.root = 0.0078;  //[kg kgDM-1]
+    nitrogenContent.stem = 0.0021;  //[kg kgDM-1]
+
+    // Compute hourly stand respiration at 10 oC (mol m-2 h-1)
+    leafRespiration = 0.0106/2.0 * (biomass.leaf * nitrogenContent.leaf/0.014) / 3600 ; //TODO: CHECK se veramente erano output orari da trasformare in respirazione al secondo
+    sapwoodRespiration = 0.0106/2.0 * (biomass.sapwood * nitrogenContent.stem/0.014) / 3600 ;
+    rootRespiration = 0.0106/2.0 * (biomass.fineRoot * nitrogenContent.root/0.014) / 3600 ;
+
+    // Adjust for temperature effects
+    //leafRespiration *= MAXVALUE(0,MINVALUE(1,Vine3D_Grapevine::temperatureMoistureFunction(myInstantTemp + ZEROCELSIUS))) ;
+    //sapwoodRespiration *= MAXVALUE(0,MINVALUE(1,Vine3D_Grapevine::temperatureMoistureFunction(myInstantTemp + ZEROCELSIUS))) ;
+    //shootRespiration *= MAXVALUE(0,MINVALUE(1,Vine3D_Grapevine::temperatureMoistureFunction(myInstantTemp + ZEROCELSIUS))) ;
+    soil.temperature = Crit3D_Hydrall::soilTemperatureModel();
+    rootRespiration *= MAXVALUE(0,MINVALUE(1,Crit3D_Hydrall::temperatureMoistureFunction(soil.temperature + ZEROCELSIUS))) ;
+    // hourly canopy respiration (sapwood+fine roots)
+    totalRespiration =(leafRespiration + sapwoodRespiration + rootRespiration);
+    // per second respiration
+    totalRespiration /= double(HOUR_SECONDS);
+    return totalRespiration;
+}
+
+double Crit3D_Hydrall::soilTemperatureModel()
+{
+    // taken from Hydrall Model, Magnani UNIBO
+    double temp;
+    temp = 0.8 * weatherVariable.last30DaysTAvg + 0.2 * weatherVariable.myInstantTemp;
+    return temp;
+}
+
+double Crit3D_Hydrall::temperatureMoistureFunction(double temperature)
+{
+    double temperatureMoistureFactor;
+    /*// taken from Hydrall Model, Magnani UNIBO
+    int   MODEL;
+    double temperatureMoistureFactor,correctionSoilMoisture; //K_VW
+    //K_VW= 1.5;
+    temperatureMoistureFactor = 1. ;
+    MODEL = 2;
+    //T = climate.instantT;
+    //1. AP_H model
+    if (MODEL == 1) {
+
+        if(psiSoilAverage >= psiFieldCapacityAverage)
+        {
+            correctionSoilMoisture = 1.0; //effects of soil water potential
+        }
+        else if (psiSoilAverage <= wiltingPoint)
+        {
+            correctionSoilMoisture = 0.0;
+        }
+        else
+        {
+            correctionSoilMoisture = log(wiltingPoint/psiSoilAverage) / log(wiltingPoint/psiFieldCapacityAverage);
+        }
+        temperatureMoistureFactor = pow(2.0,((temperature - parameterWangLeuningFix.optimalTemperatureForPhotosynthesis)/10.0)); // temperature dependence of respiration, based on Q10 approach
+        temperatureMoistureFactor *= correctionSoilMoisture;
+    }
+    // 2. AP_LT model
+    else if (MODEL == 2){
+        //effects of soil water potential
+        if (psiSoilAverage >= psiFieldCapacityAverage)
+        {
+            correctionSoilMoisture = 1.0;
+        }
+        else if (psiSoilAverage <= wiltingPoint)
+        {
+            correctionSoilMoisture = 0.0;
+        }
+        else
+        {
+            correctionSoilMoisture = log(wiltingPoint/psiSoilAverage) / log(wiltingPoint/psiFieldCapacityAverage);
+        }
+        temperatureMoistureFactor= exp(308.56 * (1.0/(parameterWangLeuningFix.optimalTemperatureForPhotosynthesis + 46.02) - 1.0/(temperature+46.02)));  //temperature dependence of respiration, based on Lloyd & Taylor (1994)
+        temperatureMoistureFactor *= correctionSoilMoisture;
+    }*/
+    return temperatureMoistureFactor;
+}
+
