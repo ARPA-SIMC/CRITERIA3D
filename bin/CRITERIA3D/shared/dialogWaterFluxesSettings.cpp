@@ -80,6 +80,8 @@ DialogWaterFluxesSettings::DialogWaterFluxesSettings()
     QLabel *threadsNumberLabel = new QLabel(tr("Number of threads "));
     threadsNumberEdit = new QLineEdit();
     threadsNumberEdit->setFixedWidth(40);
+    QIntValidator* threadNrValidator = new QIntValidator(1, 100, threadsNumberEdit);
+    threadsNumberEdit->setValidator(threadNrValidator);
 
     QGridLayout *accuracyLayout = new QGridLayout();
     accuracyLayout->addWidget(accuracySlider, 0, 0);

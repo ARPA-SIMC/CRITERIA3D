@@ -325,7 +325,7 @@
         void showMeteoVariable(meteoVariable var);
         void showSnowVariable(meteoVariable var);
         void showCriteria3DVariable(criteria3DVariable var, int layerIndex, bool isFixedRange,
-                                    bool isHideOutliers, double minimum, double maximum);
+                                    bool isHideMinimum, double minimum, double maximum);
 
         bool setRadiationAsCurrentVariable();
         bool startModels(QDateTime firstTime, QDateTime lastTime);
