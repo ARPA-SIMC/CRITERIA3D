@@ -25,7 +25,7 @@
         std::vector<Crit3DColor> color;
         double _minimum, _maximum;
         bool _isFixedRange;
-        bool _isHideOutliers;
+        bool _isHideMinimum;
         bool _isTransparent;
         int _classification;
 
@@ -54,8 +54,8 @@
         void setFixedRange(bool fixedRange) { _isFixedRange = fixedRange; }
         bool isFixedRange() { return _isFixedRange; }
 
-        void setHideOutliers(bool hideOutliers) { _isHideOutliers = hideOutliers; }
-        bool isHideOutliers() { return _isHideOutliers; }
+        void setHideMinimum(bool isHideMinimum) { _isHideMinimum = isHideMinimum; }
+        bool isHideMinimum() { return _isHideMinimum; }
 
         void setTransparent(bool transparent) { _isTransparent = transparent; }
         bool isTransparent() { return _isTransparent; }

@@ -367,10 +367,10 @@ bool RasterUtmObject::drawRaster(QPainter* painter)
             if (isEqual(value, _rasterPointer->header->flag) || isEqual(value, NODATA))
                 continue;
 
-            // check outliers (transparent)
-            if (_rasterPointer->colorScale->isHideOutliers())
+            // check minimum (transparent)
+            if (_rasterPointer->colorScale->isHideMinimum())
             {
-                if (isEqual(value, 0) || value <= _rasterPointer->colorScale->minimum() || value > _rasterPointer->colorScale->maximum())
+                if (isEqual(value, 0) || value <= _rasterPointer->colorScale->minimum())
                     continue;
             }
 
