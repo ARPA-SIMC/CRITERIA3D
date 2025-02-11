@@ -56,7 +56,7 @@ Crit3DColorScale::Crit3DColorScale()
     _minimum = NODATA;
     _maximum = NODATA;
     _isFixedRange = false;
-    _isHideOutliers = false;
+    _isHideMinimum = false;
     _isTransparent = false;
 
     _classification = classificationMethod::EqualInterval;
