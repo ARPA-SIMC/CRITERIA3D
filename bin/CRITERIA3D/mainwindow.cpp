@@ -2251,7 +2251,11 @@ void MainWindow::on_actionCriteria3D_waterFluxes_settings_triggered()
         myProject.waterFluxesParameters.computeAllSoilDepth = dialogWaterFluxes.allSoilDepth->isChecked();
 
         myProject.waterFluxesParameters.modelAccuracy = dialogWaterFluxes.accuracySlider->value();
-        myProject.waterFluxesParameters.numberOfThreads = dialogWaterFluxes.getThreadsNumber();
+
+        // check nr of threads
+        int threadNumber = dialogWaterFluxes.getThreadsNumber();
+        threadNumber = soilFluxes3D::setThreads(threadNumber);
+        myProject.waterFluxesParameters.numberOfThreads = threadNumber;
 
         myProject.fittingOptions.useWaterRetentionData = dialogWaterFluxes.useWaterRetentionFitting->isChecked();
 
