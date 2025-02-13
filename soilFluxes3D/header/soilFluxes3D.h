@@ -28,7 +28,7 @@
                               int maxIterationNumber, int maxApproximationsNumber,
                               int errorMagnitude, float MBRMagnitude);
 
-    int DLL_EXPORT __STDCALL setThreads(int nrThreads);
+    __EXTERN int DLL_EXPORT __STDCALL setThreads(int nrThreads);
 
     // TOPOLOGY
     __EXTERN int DLL_EXPORT __STDCALL setNode(long myIndex, float x, float y, double z, double volume_or_area,
