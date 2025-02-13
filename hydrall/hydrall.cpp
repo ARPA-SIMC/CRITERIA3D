@@ -40,7 +40,7 @@ Crit3DHydrallMaps::~Crit3DHydrallMaps()
 
 bool Crit3D_Hydrall::computeHydrallPoint(Crit3DDate myDate, double myTemperature, double myElevation, int secondPerStep, double &AGBiomass, double &rootBiomass)
 {
-    getCO2(myDate, myTemperature, myElevation);
+    //getCO2(myDate, myTemperature, myElevation);
 
 
     // da qui in poi bisogna fare un ciclo su tutte le righe e le colonne
@@ -97,8 +97,64 @@ double Crit3D_Hydrall::photosynthesisAndTranspiration()
 {
     TweatherDerivedVariable weatherDerivedVariable;
 
+    Crit3D_Hydrall::radiationAbsorption();
+    Crit3D_Hydrall::aerodynamicalCoupling();
+    Crit3D_Hydrall::upscale();
+
+    Crit3D_Hydrall::carbonWaterFluxesProfile();
+    Crit3D_Hydrall::cumulatedResults();
+
     return 0;
 }
+
+double Crit3D_Hydrall::photosynthesisAndTranspirationUnderstorey()
+{
+    const double rootEfficiencyInWaterExtraction = 1.25e-3;  //[kgH2O kgDM-1 s-1]
+    const double understoreyLightUtilization = 1.77e-9;      //[kgC J-1]
+    double cumulatedUnderstoreyTranspirationRate = 0;
+    double waterUseEfficiency;                               //[molC molH2O-1]
+
+    if (understorey.absorbedPAR > EPSILON)
+    {
+        waterUseEfficiency = environmentalVariable.CO2 * 0.1875 / weatherVariable.vaporPressureDeficit;
+
+        double lightLimitedUnderstoreyAssimilation;          //[molC m-2 s-1]
+        double waterLimitedUnderstoreyAssimilation;          //[molC m-2 s-1]
+
+        lightLimitedUnderstoreyAssimilation = understoreyLightUtilization * understorey.absorbedPAR / MC; //convert units from kgC m-2 s-1 into molC m-2 s-1
+
+        for (int i = 0; i < soil.layersNr; i++)
+        {
+            understoreyTranspirationRate[i] = rootEfficiencyInWaterExtraction * understoreyBiomass.fineRoot * soil.stressCoefficient[i];
+            cumulatedUnderstoreyTranspirationRate += understoreyTranspirationRate[i];
+        }
+
+        cumulatedUnderstoreyTranspirationRate /= MH2O;  //convert units from kgH2O m-2 s-1 into molH2O m-2 s-1
+        waterLimitedUnderstoreyAssimilation = cumulatedUnderstoreyTranspirationRate * waterUseEfficiency;
+
+        if (lightLimitedUnderstoreyAssimilation > waterLimitedUnderstoreyAssimilation)
+        {
+            understoreyAssimilationRate = waterLimitedUnderstoreyAssimilation;
+        }
+        else
+        {
+            understoreyAssimilationRate = lightLimitedUnderstoreyAssimilation;
+            double lightWaterRatio = lightLimitedUnderstoreyAssimilation/waterLimitedUnderstoreyAssimilation;
+            for (int j = 0; j < soil.layersNr; j++)
+            {
+                understoreyTranspirationRate[j] *= lightWaterRatio;
+            }
+        }
+    }
+    else
+    {
+        for (int i = 0; i < understoreyTranspirationRate.size(); i++)
+            understoreyTranspirationRate[i] = 0;
+        understoreyAssimilationRate = 0;
+    }
+    return 0;
+}
+
 
 void Crit3D_Hydrall::initialize()
 {
@@ -536,14 +592,14 @@ double Crit3D_Hydrall::acclimationFunction(double Ha , double Hd, double leafTem
 void Crit3D_Hydrall::carbonWaterFluxesProfile()
 {
     // taken from Hydrall Model, Magnani UNIBO
-    assimilationInstant = 0 ;
+    treeAssimilationRate = 0 ;
 
-    transpirationInstantLayer.resize(soil.layersNr);
+    treeTranspirationRate.resize(soil.layersNr);
 
     double totalStomatalConductance = 0 ;
     for (int i=0; i < soil.layersNr; i++)
     {
-        transpirationInstantLayer[i] = 0 ;
+        treeTranspirationRate[i] = 0 ;
 
         if(sunlit.leafAreaIndex > 0)
         {
@@ -561,8 +617,8 @@ void Crit3D_Hydrall::carbonWaterFluxesProfile()
             sunlit.transpiration = 0.0;
         }
 
-        assimilationInstant += sunlit.assimilation * soil.rootDensity[i] ;
-        transpirationInstantLayer[i] += sunlit.transpiration * soil.rootDensity[i] ;
+        treeAssimilationRate += sunlit.assimilation * soil.rootDensity[i] ;
+        treeTranspirationRate[i] += sunlit.transpiration * soil.rootDensity[i] ;
 
         // shaded big leaf
         Crit3D_Hydrall::photosynthesisKernel(shaded.compensationPoint, shaded.aerodynamicConductanceCO2Exchange,shaded.aerodynamicConductanceHeatExchange, shaded.minimalStomatalConductance,
@@ -571,8 +627,8 @@ void Crit3D_Hydrall::carbonWaterFluxesProfile()
                                                          parameterWangLeuning.alpha * soil.stressCoefficient[i], shaded.maximalCarboxylationRate,
                                                          &(shaded.assimilation), &(shaded.stomatalConductance),
                                                          &(shaded.transpiration));
-        assimilationInstant += shaded.assimilation * soil.rootDensity[i] ; //canopy gross assimilation (mol m-2 s-1)
-        transpirationInstantLayer[i] += shaded.transpiration * soil.rootDensity[i] ; //canopy transpiration (mol m-2 s-1)
+        treeAssimilationRate += shaded.assimilation * soil.rootDensity[i] ; //canopy gross assimilation (mol m-2 s-1)
+        treeTranspirationRate[i] += shaded.transpiration * soil.rootDensity[i] ; //canopy transpiration (mol m-2 s-1)
 
     }
 }
@@ -672,9 +728,9 @@ double Crit3D_Hydrall::plantRespiration()
     nitrogenContent.stem = 0.0021;  //[kg kgDM-1]
 
     // Compute hourly stand respiration at 10 oC (mol m-2 h-1)
-    leafRespiration = 0.0106/2.0 * (biomass.leaf * nitrogenContent.leaf/0.014) / 3600 ; //TODO: CHECK se veramente erano output orari da trasformare in respirazione al secondo
-    sapwoodRespiration = 0.0106/2.0 * (biomass.sapwood * nitrogenContent.stem/0.014) / 3600 ;
-    rootRespiration = 0.0106/2.0 * (biomass.fineRoot * nitrogenContent.root/0.014) / 3600 ;
+    leafRespiration = 0.0106/2.0 * (treeBiomass.leaf * nitrogenContent.leaf/0.014) / 3600 ; //TODO: CHECK se veramente erano output orari da trasformare in respirazione al secondo
+    sapwoodRespiration = 0.0106/2.0 * (treeBiomass.sapwood * nitrogenContent.stem/0.014) / 3600 ;
+    rootRespiration = 0.0106/2.0 * (treeBiomass.fineRoot * nitrogenContent.root/0.014) / 3600 ;
 
     // Adjust for temperature effects
     //leafRespiration *= MAXVALUE(0,MINVALUE(1,Vine3D_Grapevine::temperatureMoistureFunction(myInstantTemp + ZEROCELSIUS))) ;
@@ -686,6 +742,9 @@ double Crit3D_Hydrall::plantRespiration()
     totalRespiration =(leafRespiration + sapwoodRespiration + rootRespiration);
     // per second respiration
     totalRespiration /= double(HOUR_SECONDS);
+
+    //TODO understorey respiration
+
     return totalRespiration;
 }
 
