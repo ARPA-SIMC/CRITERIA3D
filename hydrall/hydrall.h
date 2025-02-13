@@ -279,7 +279,7 @@
         double plantRespiration();
         double soilTemperatureModel();
         double temperatureMoistureFunction(double temperature);
-        bool Crit3D_Hydrall::growthStand();
+        bool growthStand();
 
     };
 
