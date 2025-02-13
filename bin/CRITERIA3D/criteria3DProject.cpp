@@ -646,7 +646,19 @@ bool Crit3DProject::runModels(QDateTime firstTime, QDateTime lastTime, bool isRe
             }
         }
 
-        if (myDate.day() == 1) hydrallModel.writeHydrallMaps = 1;
+        if (myDate.day() == 1)
+        {
+            hydrallModel.writeHydrallMaps = true;
+            /* in case of th first day of the year,
+             * one updates maps running the models rothC
+             * and the algorithms devoted to allocate dry matter
+             * into the biomass pools (foliage, sapwood and fine roots)
+             * */
+        }
+        else
+        {
+            hydrallModel.writeHydrallMaps = false;
+        }
 
         // cycle on hours
         int firstHour = (myDate == firstDate) ? hour1 : 0;
