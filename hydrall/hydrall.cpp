@@ -759,6 +759,7 @@ double Crit3D_Hydrall::soilTemperatureModel()
 double Crit3D_Hydrall::temperatureMoistureFunction(double temperature)
 {
     double temperatureMoistureFactor;
+    // TODO
     /*// taken from Hydrall Model, Magnani UNIBO
     int   MODEL;
     double temperatureMoistureFactor,correctionSoilMoisture; //K_VW
@@ -805,3 +806,8 @@ double Crit3D_Hydrall::temperatureMoistureFunction(double temperature)
     return temperatureMoistureFactor;
 }
 
+bool Crit3D_Hydrall::growthStand()
+{
+
+    return true;
+}
