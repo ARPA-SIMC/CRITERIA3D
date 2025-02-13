@@ -699,7 +699,7 @@ void Crit3D_Hydrall::cumulatedResults()
     // taken from Hydrall Model, Magnani UNIBO
     // Cumulate hourly values of gas exchange
     deltaTime.absorbedPAR = simulationStepInSeconds*(sunlit.absorbedPAR+shaded.absorbedPAR);  //absorbed PAR (mol m-2 yr-1)
-    deltaTime.grossAssimilation = simulationStepInSeconds * assimilationInstant ; // canopy gross assimilation (mol m-2)
+    deltaTime.grossAssimilation = simulationStepInSeconds * treeAssimilationRate ; // canopy gross assimilation (mol m-2)
     deltaTime.respiration = simulationStepInSeconds * Crit3D_Hydrall::plantRespiration() ;
     deltaTime.netAssimilation = deltaTime.grossAssimilation- deltaTime.respiration ;
     deltaTime.netAssimilation = deltaTime.netAssimilation*12/1000.0/CARBONFACTOR ;
@@ -710,8 +710,8 @@ void Crit3D_Hydrall::cumulatedResults()
 
     for (int i=0; i < soil.layersNr; i++)
     {
-        transpirationInstantLayer[i] = simulationStepInSeconds * MH2O * transpirationInstantLayer[i]; // [mm]
-        deltaTime.transpiration += transpirationInstantLayer[i];
+        treeTranspirationRate[i] = simulationStepInSeconds * MH2O * treeTranspirationRate[i]; // [mm]
+        deltaTime.transpiration += treeTranspirationRate[i];
     }
 
 
