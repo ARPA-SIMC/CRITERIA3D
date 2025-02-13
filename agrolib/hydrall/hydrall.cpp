@@ -808,6 +808,6 @@ double Crit3D_Hydrall::temperatureMoistureFunction(double temperature)
 
 bool Crit3D_Hydrall::growthStand()
 {
-
+    const double allocationCoefficientToRoot = 0.5;
     return true;
 }
