@@ -649,11 +649,14 @@ bool Crit3DProject::runModels(QDateTime firstTime, QDateTime lastTime, bool isRe
         if (myDate.day() == 1)
         {
             hydrallModel.writeHydrallMaps = true;
-            /* in case of th first day of the year,
-             * one updates maps running the models rothC
-             * and the algorithms devoted to allocate dry matter
+            // update of rothC (monthly)
+            if (myDate.month() == 1)
+            {
+            /* in case of the first day of the year
+             * the algorithms devoted to allocate dry matter
              * into the biomass pools (foliage, sapwood and fine roots)
              * */
+            }
         }
         else
         {
