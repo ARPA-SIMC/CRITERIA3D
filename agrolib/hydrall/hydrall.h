@@ -133,6 +133,10 @@
         double temperature;
         std::vector <double> rootDensity;
         std::vector <double> stressCoefficient;
+        std::vector <double> waterContent;
+        std::vector <double> wiltingPoint;
+        std::vector <double> fieldCapacity;
+        std::vector <double> saturation;
     };
 
     struct TbigLeaf
@@ -236,7 +240,7 @@
         TlightExtinctionCoefficient diffuseLightExtinctionCoefficient;
         ThydrallDeltaTimeOutputs deltaTime;
         ThydrallNitrogen nitrogenContent;
-        ThydrallBiomass biomass;
+        ThydrallBiomass treeBiomass, understoreyBiomass;
 
 
 
@@ -244,10 +248,11 @@
         int simulationStepInSeconds;
         double leafAreaIndex;
 
-        std::vector<double> transpirationInstantLayer;          //molH2O m^-2 s^-1
-        double assimilationInstant;
-
-
+        //gasflux results
+        std::vector<double> treeTranspirationRate;          //molH2O m^-2 s^-1
+        double treeAssimilationRate;
+        std::vector<double> understoreyTranspirationRate;
+        double understoreyAssimilationRate;
 
 
         void radiationAbsorption();
@@ -261,6 +266,7 @@
         double getLAI();
         double meanLastMonthTemperature(double previousLastMonthTemp, double simulationStepInSeconds, double myInstantTemp);
         double photosynthesisAndTranspiration();
+        double photosynthesisAndTranspirationUnderstorey();
         void leafTemperature();
         void aerodynamicalCoupling();
         double leafWidth();

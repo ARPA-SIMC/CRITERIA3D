@@ -1336,6 +1336,8 @@ bool Crit3DProject::computeHydrallModel()
 
                 hydrallModel.setPlantVariables(chlorophyllContent);
 
+                //setsoilvariables TODO
+
 
                 //compute
                 hydrallModel.computeHydrallPoint(getCrit3DDate(getCurrentDate()), double(hourlyMeteoMaps->mapHourlyTair->value[row][col]), double(DEM.value[row][col]), secondsPerStep, AGBiomass, rootBiomass);
