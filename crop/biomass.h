@@ -37,7 +37,7 @@
     #define      RADRT      1.E-3           //    root radius (m)
     #define      STH0       0.8561          //    intercept in self-thinning eq. (log(TREES) vs log(WST)) (m-2)
     #define      STH1       1.9551          //    slope in self-thinning eq. (log(TREES) vs log(WST)) (kgDM-1)
-    #define      ALLRUND    0.5             //    coeff of allocation to roots in understorey (-)
+    //#define      ALLRUND    0.5             //    coeff of allocation to roots in understorey (-)
 
     /*!
      * Define soil respiration parameters, partition soil C into young and old components

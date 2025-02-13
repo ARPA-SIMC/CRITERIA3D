@@ -81,6 +81,17 @@
     #define NOT_INITIALIZED_VINE -1
 
 
+    struct TstatePlant
+    {
+        double treecumulatedBiomass;
+        double treecumulatedBiomassFoliage;
+        double treecumulatedBiomassRoot;
+        double treecumulatedBiomassSapwood;
+        double understoreycumulatedBiomass;
+        double understoreycumulatedBiomassFoliage;
+        double understoreycumulatedBiomassRoot;
+    };
+
     struct TweatherDerivedVariable {
         double airVapourPressure;
         double emissivitySky;
@@ -122,6 +133,9 @@
         double height;
         double myLeafWidth;
         bool isAmphystomatic;
+        double foliageLongevity;
+        double sapwoodLongevity;
+        double fineRootLongevity;
 
 
     };
@@ -241,7 +255,7 @@
         ThydrallDeltaTimeOutputs deltaTime;
         ThydrallNitrogen nitrogenContent;
         ThydrallBiomass treeBiomass, understoreyBiomass;
-
+        TstatePlant statePlant;
 
 
         double elevation;
