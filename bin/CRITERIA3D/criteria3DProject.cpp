@@ -648,19 +648,21 @@ bool Crit3DProject::runModels(QDateTime firstTime, QDateTime lastTime, bool isRe
 
         if (myDate.day() == 1)
         {
-            hydrallModel.writeHydrallMaps = true;
+            hydrallModel.firstDayOfMonth = true;
             // update of rothC (monthly)
-            if (myDate.month() == 1)
+            if (myDate.month() == hydrallModel.firstMonthVegetativeSeason) //TODO
             {
             /* in case of the first day of the year
              * the algorithms devoted to allocate dry matter
              * into the biomass pools (foliage, sapwood and fine roots)
              * */
+                //growthstand
+
             }
         }
         else
         {
-            hydrallModel.writeHydrallMaps = false;
+            hydrallModel.firstDayOfMonth = false;
         }
 
         // cycle on hours
@@ -1373,9 +1375,9 @@ bool Crit3DProject::computeHydrallModel()
     }
 
 
-    if (hydrallModel.writeHydrallMaps)
+    if (hydrallModel.firstDayOfMonth)
     {
-        //se writeHydrallMaps, scrivi le mappe (mensili?) di LAI, biomassa, etc
+        //se firstDayOfMonth, scrivi le mappe (mensili?) di LAI, biomassa, etc
         std::string fileName;
         std::string myError;
         if (! gis::writeEsriGrid(fileName, dailyHydrallMaps.standBiomassMap, myError))

@@ -698,13 +698,16 @@ void Crit3D_Hydrall::cumulatedResults()
 {
     // taken from Hydrall Model, Magnani UNIBO
     // Cumulate hourly values of gas exchange
-    deltaTime.absorbedPAR = simulationStepInSeconds*(sunlit.absorbedPAR+shaded.absorbedPAR);  //absorbed PAR (mol m-2 yr-1)
+    deltaTime.absorbedPAR = simulationStepInSeconds*(sunlit.absorbedPAR+shaded.absorbedPAR);  //absorbed PAR (mol m-2)
     deltaTime.grossAssimilation = simulationStepInSeconds * treeAssimilationRate ; // canopy gross assimilation (mol m-2)
     deltaTime.respiration = simulationStepInSeconds * Crit3D_Hydrall::plantRespiration() ;
     deltaTime.netAssimilation = deltaTime.grossAssimilation- deltaTime.respiration ;
-    deltaTime.netAssimilation = deltaTime.netAssimilation*12/1000.0/CARBONFACTOR ;
+    deltaTime.netAssimilation = deltaTime.netAssimilation*12/1000.0 ; //CARBONFACTOR DA METTERE dopo convert to kg DM m-2
 
-    //statePlant.stateGrowth.cumulatedBiomass += deltaTime.netAssimilation ; TODO stand biomass
+    statePlant.treeNetPrimaryProduction += deltaTime.netAssimilation ;
+
+    //understorey
+
 
     deltaTime.transpiration = 0.;
 
@@ -812,11 +815,51 @@ bool Crit3D_Hydrall::growthStand()
     // understorey update
     statePlant.understoreycumulatedBiomassFoliage = statePlant.understoreycumulatedBiomass * (1.-understoreyAllocationCoefficientToRoot);    //understorey growth: foliage...
     statePlant.understoreycumulatedBiomassRoot = statePlant.understoreycumulatedBiomass * understoreyAllocationCoefficientToRoot;         //...and roots
+
     // canopy update
     statePlant.treecumulatedBiomassFoliage -= (statePlant.treecumulatedBiomassFoliage/plant.foliageLongevity);
     statePlant.treecumulatedBiomassSapwood -= (statePlant.treecumulatedBiomassSapwood/plant.sapwoodLongevity);
     statePlant.treecumulatedBiomassRoot -= (statePlant.treecumulatedBiomassRoot/plant.fineRootLongevity);
 
+    double annualGrossStandGrowth;
+    double store;
+    //annual stand growth
+    if (isFirstYearSimulation)
+    {
+        annualGrossStandGrowth = statePlant.treeNetPrimaryProduction / CARBONFACTOR; //kg DM m-2
+        store = 0;
+    }
+    else
+    {
+        annualGrossStandGrowth = (store + statePlant.treeNetPrimaryProduction) / 2 / CARBONFACTOR;
+        store = (store + statePlant.treeNetPrimaryProduction) / 2;
+    }
 
+    if (isFirstYearSimulation)
+    {
+        //optimal
+    }
+    else
+    {
+        double allocationCoeffientFoliageOld = allocationCoefficient.toFoliage;
+        double allocationCoeffientFineRootsOld = allocationCoefficient.toFineRoots;
+        double allocationCoeffientSapwoodOld = allocationCoefficient.toSapwood;
+
+        //optimal
+
+        allocationCoefficient.toFoliage = (allocationCoeffientFoliageOld + allocationCoefficient.toFoliage) / 2;
+        allocationCoefficient.toFineRoots = (allocationCoeffientFineRootsOld + allocationCoefficient.toFineRoots) / 2;
+        allocationCoefficient.toSapwood = (allocationCoeffientSapwoodOld + allocationCoefficient.toSapwood) / 2;
+    }
+
+    if (annualGrossStandGrowth * allocationCoefficient.toFoliage > statePlant.treecumulatedBiomassFoliage/(plant.foliageLongevity - 1))
+
+    isFirstYearSimulation = false;
     return true;
+}
+
+
+void Crit3D_Hydrall::resetStandVariables()
+{
+    statePlant.treeNetPrimaryProduction = 0;
 }
