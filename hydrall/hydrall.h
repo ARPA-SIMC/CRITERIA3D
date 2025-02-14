@@ -83,7 +83,7 @@
 
     struct TstatePlant
     {
-        double treecumulatedBiomass;
+        double treeNetPrimaryProduction;
         double treecumulatedBiomassFoliage;
         double treecumulatedBiomassRoot;
         double treecumulatedBiomassSapwood;
@@ -218,6 +218,13 @@
         double fineRoot ;
     };
 
+    struct TallocationCoefficient {
+
+        double toFoliage;
+        double toFineRoots;
+        double toSapwood;
+    };
+
 
     class Crit3DHydrallMaps
     {
@@ -238,11 +245,13 @@
     class Crit3D_Hydrall{
     public:
 
-        // Crit3D_Hydrall();
-        // ~Crit3D_Hydrall();
+        //Crit3D_Hydrall();
+        //~Crit3D_Hydrall();
 
         void initialize();
-        bool writeHydrallMaps;
+        bool firstDayOfMonth;
+        int firstMonthVegetativeSeason;
+        bool isFirstYearSimulation;
 
         TbigLeaf sunlit,shaded, understorey;
         TweatherVariable weatherVariable;
@@ -256,6 +265,7 @@
         ThydrallNitrogen nitrogenContent;
         ThydrallBiomass treeBiomass, understoreyBiomass;
         TstatePlant statePlant;
+        TallocationCoefficient allocationCoefficient;
 
 
         double elevation;
@@ -294,6 +304,7 @@
         double soilTemperatureModel();
         double temperatureMoistureFunction(double temperature);
         bool growthStand();
+        void resetStandVariables();
 
     };
 
