@@ -258,14 +258,13 @@ void ChartView::tooltipScatterSeries(QPointF point, bool state)
                 }
             }
         }
-
         m_tooltip->setText(QString("%1\n%2 %3 ").arg(key).arg(xValue, 0, 'f', 1).arg(yValue, 0, 'f', 3));
         m_tooltip->setSeries(serie);
         m_tooltip->setAnchor(point);
         m_tooltip->setZValue(11);
         m_tooltip->updateGeometry();
         m_tooltip->show();
-    }
+        }
     else
     {
         m_tooltip->hide();
