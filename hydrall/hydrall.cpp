@@ -808,6 +808,15 @@ double Crit3D_Hydrall::temperatureMoistureFunction(double temperature)
 
 bool Crit3D_Hydrall::growthStand()
 {
+    const double understoreyAllocationCoefficientToRoot = 0.5;
+    // understorey update
+    statePlant.understoreycumulatedBiomassFoliage = statePlant.understoreycumulatedBiomass * (1.-understoreyAllocationCoefficientToRoot);    //understorey growth: foliage...
+    statePlant.understoreycumulatedBiomassRoot = statePlant.understoreycumulatedBiomass * understoreyAllocationCoefficientToRoot;         //...and roots
+    // canopy update
+    statePlant.treecumulatedBiomassFoliage -= (statePlant.treecumulatedBiomassFoliage/plant.foliageLongevity);
+    statePlant.treecumulatedBiomassSapwood -= (statePlant.treecumulatedBiomassSapwood/plant.sapwoodLongevity);
+    statePlant.treecumulatedBiomassRoot -= (statePlant.treecumulatedBiomassRoot/plant.fineRootLongevity);
+
 
     return true;
 }
