@@ -3052,6 +3052,8 @@ bool Project::interpolationDemGlocalDetrending(meteoVariable myVar, const Crit3D
                             else
                                 myRaster->value[row][col] += interpolatedValue*areaCells[cellIndex+1];
                         }
+                        else
+                            return false;
                     }
                 }
             }
@@ -3459,8 +3461,13 @@ bool Project::interpolationGrid(meteoVariable myVar, const Crit3DTime& myTime)
                                     proxyIndex++;
                                 }
                             }
-                            interpolatedValue = interpolate(subsetInterpolationPoints, &interpolationSettings, meteoSettings, myVar, myX, myY, myZ, proxyValues, true)
+
+                            double temp = interpolate(subsetInterpolationPoints, &interpolationSettings, meteoSettings, myVar, myX, myY, myZ, proxyValues, true);
+                            if (! isEqual(temp, NODATA))
+                                interpolatedValue = interpolate(subsetInterpolationPoints, &interpolationSettings, meteoSettings, myVar, myX, myY, myZ, proxyValues, true)
                                                 * areaCells[cellIndex + 1];
+                            else
+                                return false;
                         }
                         if (freq == hourly)
                         {
@@ -4540,7 +4547,8 @@ bool Project::setActiveStateWithCriteria(bool isActive)
         return false;
     }
 
-    DialogSelectionMeteoPoint dialogPointSelection(isActive, meteoPointsDbHandler);
+    bool isSelect = false;
+    DialogSelectionMeteoPoint dialogPointSelection(isActive, isSelect, meteoPointsDbHandler);
     if (dialogPointSelection.result() != QDialog::Accepted)
         return false;
 
@@ -5694,7 +5702,7 @@ bool Project::assignAltitudeToAggregationPoints()
 }
 
 
-void Project::MeteoPointsToVector(std::vector<float> *validValues)
+void Project::getMeteoPointsCurrentValues(std::vector<float> &validValues)
 {
     // user has selected a set of points
     for (int i = 0; i < nrMeteoPoints; i++)
@@ -5703,42 +5711,154 @@ void Project::MeteoPointsToVector(std::vector<float> *validValues)
         {
             if (meteoPoints[i].currentValue != NODATA)
             {
-                validValues->push_back(meteoPoints[i].currentValue);
+                validValues.push_back(meteoPoints[i].currentValue);
             }
         }
     }
+
     // no selection: all points
-    if (validValues->size() == 0)
+    if (validValues.size() == 0)
     {
         for (int i = 0; i < nrMeteoPoints; i++)
         {
             if (meteoPoints[i].active && meteoPoints[i].currentValue != NODATA)
             {
-                validValues->push_back(meteoPoints[i].currentValue);
+                validValues.push_back(meteoPoints[i].currentValue);
             }
         }
     }
 }
 
 
-bool Project::setSelectedStatePointList(QString fileName, bool isSelected)
+bool Project::setSelectedStatePointList(QString fileName)
 {
     QList<QString> pointList = readListSingleColumn(fileName, errorString);
-    if (pointList.size() == 0)
+    if (! selectPointList(pointList))
     {
-        logError();
+        logWarning("No points to select.");
         return false;
     }
 
-    for (int j = 0; j < pointList.size(); j++)
+    return true;
+}
+
+
+bool Project::selectPointList(const QList<QString> &pointList)
+{
+    if (pointList.size() == 0)
+        return false;
+
+    int nrValidPoints = 0;
+    for (int i = 0; i < nrMeteoPoints; i++)
     {
+        if (pointList.contains(QString::fromStdString(meteoPoints[i].id)))
+        {
+            meteoPoints[i].selected = true;
+            nrValidPoints++;
+        }
+    }
+
+    return (nrValidPoints > 0);
+}
+
+
+bool Project::setSelectedStateWithCriteria()
+{
+    if (! meteoPointsLoaded)
+    {
+        logError(ERROR_STR_MISSING_DB);
+        return false;
+    }
+
+    bool isActive = false;
+    bool isSelect = true;
+    DialogSelectionMeteoPoint dialogPointSelection(isActive, isSelect, meteoPointsDbHandler);
+    if (dialogPointSelection.result() != QDialog::Accepted)
+    {
+        return false;
+    }
+
+    QString selection = dialogPointSelection.getSelection();
+    QString operation = dialogPointSelection.getOperation();
+    QString item = dialogPointSelection.getItem();
+
+    QString condition;
+    QList<QString> selectedPointsList;
+
+    if (operation == "Like")
+    {
+        condition = selection + " " + operation + " '%" + item + "%'";
+    }
+    else
+    {
+        condition = selection + " " + operation + " '" + item + "'";
+    }
+
+    if (selection != "DEM distance [m]")
+    {
+        if (! meteoPointsDbHandler->getPointListWithCriteria(selectedPointsList, condition))
+        {
+            logError(meteoPointsDbHandler->getErrorString());
+            return false;
+        }
+    }
+    else
+    {
+        if (! DEM.isLoaded)
+        {
+            logError(ERROR_STR_MISSING_DEM);
+            return false;
+        }
+        setProgressBar("Checking distance...", nrMeteoPoints);
         for (int i = 0; i < nrMeteoPoints; i++)
         {
-            if (meteoPoints[i].id == pointList[j].toStdString())
+            updateProgressBar(i);
+            if (!meteoPoints[i].selected)
             {
-                meteoPoints[i].selected = true;
+                float distance = gis::closestDistanceFromGrid(meteoPoints[i].point, DEM);
+                if (operation == "=")
+                {
+                    if (isEqual(distance, item.toFloat()))
+                    {
+                        selectedPointsList.append(QString::fromStdString(meteoPoints[i].id));
+                    }
+                }
+                else if (operation == "!=")
+                {
+                    if (! isEqual(distance, item.toFloat()))
+                    {
+                        selectedPointsList.append(QString::fromStdString(meteoPoints[i].id));
+                    }
+                }
+                else if (operation == ">")
+                {
+                    if (distance > item.toFloat())
+                    {
+                        selectedPointsList.append(QString::fromStdString(meteoPoints[i].id));
+                    }
+                }
+                else if (operation == "<")
+                {
+                    if (distance < item.toFloat())
+                    {
+                        selectedPointsList.append(QString::fromStdString(meteoPoints[i].id));
+                    }
+                }
             }
         }
+        closeProgressBar();
+    }
+
+    if (selectedPointsList.isEmpty())
+    {
+        logWarning("No point matches your requirements.");
+        return false;
+    }
+
+    if (! selectPointList(selectedPointsList))
+    {
+        logWarning("No points to select");
+        return false;
     }
 
     return true;

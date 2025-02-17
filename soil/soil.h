@@ -198,10 +198,11 @@
             std::string code;
             std::string name;
             unsigned int nrHorizons;
-            double totalDepth;                  /*!<   [m]  */
+            double totalDepth;                          /*!<   [m]  */
+
             std::vector <Crit3DHorizon> horizon;
 
-            Crit3DSoil();
+            Crit3DSoil() { this->cleanSoil(); }
 
             void initialize(const std::string &soilCode, int nrHorizons);
             void cleanSoil();

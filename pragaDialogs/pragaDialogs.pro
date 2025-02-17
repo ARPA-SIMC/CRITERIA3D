@@ -7,7 +7,7 @@
 #
 #------------------------------------------------------
 
-QT  += core gui widgets sql xml
+QT  += widgets sql xml
 
 TEMPLATE = lib
 CONFIG += staticlib

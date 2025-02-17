@@ -359,11 +359,12 @@ bool loadSoil(const QSqlDatabase &dbSoil, const QString &soilCode, soil::Crit3DS
               const std::vector<soil::Crit3DGeotechnicsClass> &geotechnicsClassList,
               const soil::Crit3DFittingOptions &fittingOptions, QString& errorStr)
 {
-    if (!loadSoilInfo(dbSoil, soilCode, mySoil, errorStr))
+    if (! loadSoilInfo(dbSoil, soilCode, mySoil, errorStr))
     {
         return false;
     }
-    if (!loadSoilData(dbSoil, soilCode, mySoil, errorStr))
+
+    if (! loadSoilData(dbSoil, soilCode, mySoil, errorStr))
     {
         return false;
     }
@@ -558,7 +559,7 @@ bool updateSoilData(const QSqlDatabase &dbSoil, const QString &soilCode, soil::C
 }
 
 
-bool updateWaterRetentionData(QSqlDatabase &dbSoil, const QString &soilCode, soil::Crit3DSoil &mySoil, int horizon, QString &errorStr)
+bool updateWaterRetentionData(QSqlDatabase &dbSoil, const QString &soilCode, soil::Crit3DSoil &mySoil, int horizonNr, QString &errorStr)
 {
     QSqlQuery qry(dbSoil);
     if (soilCode.isEmpty())
@@ -570,7 +571,7 @@ bool updateWaterRetentionData(QSqlDatabase &dbSoil, const QString &soilCode, soi
     // delete all row from table horizons of soil:soilCode
     qry.prepare( "DELETE FROM water_retention WHERE soil_code = :soil_code AND horizon_nr = :horizon_nr");
     qry.bindValue(":soil_code", soilCode);
-    qry.bindValue(":horizon_nr", horizon);
+    qry.bindValue(":horizon_nr", horizonNr);
 
     if( !qry.exec() )
     {
@@ -587,11 +588,11 @@ bool updateWaterRetentionData(QSqlDatabase &dbSoil, const QString &soilCode, soi
     QVariantList water_potential;
     QVariantList water_content;
 
-    unsigned int horizon_index = unsigned(horizon-1);
+    unsigned int horizon_index = unsigned(horizonNr-1);
     for (unsigned int i=0; i < mySoil.horizon[horizon_index].dbData.waterRetention.size(); i++)
     {
         soil_code << soilCode;
-        horizon_nr << horizon;
+        horizon_nr << horizonNr;
         water_potential << mySoil.horizon[horizon_index].dbData.waterRetention[i].water_potential;
         water_content << mySoil.horizon[horizon_index].dbData.waterRetention[i].water_content;
     }

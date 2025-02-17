@@ -28,6 +28,7 @@
 #include <stdio.h>
 #include <math.h>
 #include <stdlib.h>
+#include <thread>
 
 #include "physics.h"
 #include "commonConstants.h"
@@ -72,7 +73,7 @@ double getWaterExchange(long i, TlinkedNode *link, double deltaT)
  * \param approximationNr
  * \return result
  */
-double runoff(long i, long j, TlinkedNode *link, double deltaT, unsigned long approximationNr)
+double runoff(long i, long j, TlinkedNode *link, double deltaT, unsigned approximationNr)
 {
     double Hi, Hj;
 
@@ -107,11 +108,11 @@ double runoff(long i, long j, TlinkedNode *link, double deltaT, unsigned long ap
 
     double roughness = (nodeList[i].Soil->Roughness + nodeList[j].Soil->Roughness) / 2.;
 
-    //Manning
+    // Manning equation
     double v = pow(Hs, 2./3.) * sqrt(dH/cellDistance) / roughness;
     double flowArea = link->area * Hs;
 
-    Courant = MAXVALUE(Courant, v * deltaT / cellDistance);
+    CourantWater = MAXVALUE(CourantWater, v * deltaT / cellDistance);
     return (v * flowArea) / dH;
 }
 
@@ -202,7 +203,7 @@ double redistribution(long i, TlinkedNode *link, int linkType)
 }
 
 
-bool computeFlux(long i, int matrixIndex, TlinkedNode *link, double deltaT, unsigned long myApprox, int linkType)
+bool computeFlux(long i, int matrixIndex, TlinkedNode *link, double deltaT, unsigned approximationNr, int linkType)
 {
     if ((*link).index == NOLINK) return false;
 
@@ -212,7 +213,7 @@ bool computeFlux(long i, int matrixIndex, TlinkedNode *link, double deltaT, unsi
     if (nodeList[i].isSurface)
     {
 		if (nodeList[j].isSurface)
-			val = runoff(i, j, link, deltaT, myApprox);
+            val = runoff(i, j, link, deltaT, approximationNr);
         else
             val = infiltration(i, j, link, deltaT);
     }
@@ -246,96 +247,147 @@ bool computeFlux(long i, int matrixIndex, TlinkedNode *link, double deltaT, unsi
 }
 
 
+/*! ------------------ parallel computing -------------------------*/
+void computeCapacity_thread(unsigned long start, unsigned long end)
+{
+    for (unsigned long i = start; i <= end; i++)
+    {
+        invariantFlux[i] = 0.;
+        if (! nodeList[i].isSurface)
+        {
+            // hydraulic conductivity
+            nodeList[i].k = computeK(i);
+
+            // theta derivative
+            double dThetadH = dTheta_dH(i);
+            C[i] = nodeList[i].volume_area  * dThetadH;
+
+            // vapor capacity term
+            if (myStructure.computeHeat && myStructure.computeHeatVapor)
+            {
+                double avgTemperature = getTMean(i);
+                double dthetavdh = dThetav_dH(i, avgTemperature, dThetadH);
+                C[i] += nodeList[i].volume_area  * dthetavdh;
+            }
+        }
+    }
+}
+
+
+void computeMatrixElements_thread(unsigned long start, unsigned long end, unsigned approximationNr, double deltaT)
+{
+    for (unsigned long i = start; i <= end; i++)
+    {
+        // UP
+        short j = 1;
+        if (computeFlux(i, j, &(nodeList[i].up), deltaT, approximationNr, UP))
+            j++;
+
+        // LATERAL
+        for (short l = 0; l < myStructure.nrLateralLinks; l++)
+        {
+            if (computeFlux(i, j, &(nodeList[i].lateral[l]), deltaT, approximationNr, LATERAL))
+                j++;
+        }
+
+        // DOWN
+        if (computeFlux(i, j, &(nodeList[i].down), deltaT, approximationNr, DOWN))
+            j++;
+
+        // void elements
+        while (j < myStructure.maxNrColumns)
+            A[i][j++].index = NOLINK;
+
+        j = 1;
+        double sum = 0.0;
+        while ((j < myStructure.maxNrColumns) && (A[i][j].index != NOLINK))
+        {
+            sum += A[i][j].val;
+            A[i][j].val *= -1.0;
+            j++;
+        }
+
+        // diagonal
+        A[i][0].val = C[i]/deltaT + sum;
+
+        // b vector (vector of constant terms)
+        b[i] = ((C[i] / deltaT) * nodeList[i].oldH) + nodeList[i].Qw + invariantFlux[i];
+
+        // preconditioning
+        j = 1;
+        while ((A[i][j].index != NOLINK) && (j < myStructure.maxNrColumns))
+        {
+            A[i][j++].val /= A[i][0].val;
+        }
+        b[i] /= A[i][0].val;
+    }
+}
+
+
 bool waterFlowComputation(double deltaT)
  {
-     bool isValidStep = false;
+     // initialize the indices on the diagonal
+     for (int i = 0; i < myStructure.nrNodes; i++)
+     {
+         A[i][0].index = i;
+     }
 
-     int approximationNr = 0;
+     int nrThreads = myParameters.threadsNumber;
+     int lastThread = nrThreads - 1;
+     long step = myStructure.nrNodes / nrThreads;
+     std::vector<std::thread> threadVector;
+
+     bool isValidStep = false;
+     unsigned approximationNr = 0;
      do
      {
-        Courant = 0.0;
-        if (approximationNr == 0)
+        // compute capacity term
+        for (int n = 0; n < nrThreads; n++)
         {
-            // diagonal indexes
-            for (int i = 0; i < myStructure.nrNodes; i++)
-            {
-                A[i][0].index = i;
-            }
-        }
+            unsigned long start = n * step;
+            unsigned long end = (n+1) * step - 1;
 
-        /*! hydraulic conductivity and theta derivative */
-        for (unsigned i = 0; i < unsigned(myStructure.nrNodes); i++)
-        {
-            invariantFlux[i] = 0.;
-            if (! nodeList[i].isSurface)
-            {
-                nodeList[i].k = computeK(i);
-                double dThetadH = dTheta_dH(i);
-                C[i] = nodeList[i].volume_area  * dThetadH;
+            if (n == lastThread)
+                end = myStructure.nrNodes-1;
 
-                // vapor capacity term
-                if (myStructure.computeHeat && myStructure.computeHeatVapor)
-                {
-                    double avgTemperature = getTMean(i);
-                    double dthetavdh = dThetav_dH(i, avgTemperature, dThetadH);
-                    C[i] += nodeList[i].volume_area  * dthetavdh;
-                }
-            }
+            threadVector.push_back(std::thread(computeCapacity_thread, start, end));
         }
+        // wait threads
+        for (auto& th : threadVector) {
+            th.join();
+        }
+        threadVector.clear();
 
         // update boundary conditions
-        //updateBoundaryWater(deltaT);
+        // updateBoundaryWater(deltaT);
 
-        /*! computes the matrix elements */
-        for (int i = 0; i < myStructure.nrNodes; i++)
+        CourantWater = 0.0;
+
+        // compute matrix elements
+        for (int n = 0; n < nrThreads; n++)
         {
-            short j = 1;
-            if (computeFlux(i, j, &(nodeList[i].up), deltaT, approximationNr, UP))
-                j++;
-            for (short l = 0; l < myStructure.nrLateralLinks; l++)
-            {
-                if (computeFlux(i, j, &(nodeList[i].lateral[l]), deltaT, approximationNr, LATERAL))
-                    j++;
-            }
-            if (computeFlux(i, j, &(nodeList[i].down), deltaT, approximationNr, DOWN))
-                j++;
+            unsigned long start = n * step;
+            unsigned long end = (n+1) * step - 1;
 
-            /*! closure */
-            while (j < myStructure.maxNrColumns)
-                A[i][j++].index = NOLINK;
+            if (n == lastThread)
+                end = myStructure.nrNodes-1;
 
-            j = 1;
-            double sum = 0.;
-            while ((j < myStructure.maxNrColumns) && (A[i][j].index != NOLINK))
-            {
-                sum += A[i][j].val;
-                A[i][j].val *= -1.0;
-                j++;
-            }
-
-            /*! diagonal */
-            A[i][0].val = C[i]/deltaT + sum;
-
-            /*! b vector (vector of constant terms) */
-            b[i] = ((C[i] / deltaT) * nodeList[i].oldH) + nodeList[i].Qw + invariantFlux[i];
-
-            /*! preconditioning */
-            j = 1;
-            while ((A[i][j].index != NOLINK) && (j < myStructure.maxNrColumns))
-            {
-                A[i][j++].val /= A[i][0].val;
-            }
-            b[i] /= A[i][0].val;
+            threadVector.push_back(std::thread(computeMatrixElements_thread, start, end, approximationNr, deltaT));
         }
+        // wait threads
+        for (auto& th : threadVector) {
+            th.join();
+        }
+        threadVector.clear();
 
-        if (Courant > 1.0 && deltaT > myParameters.delta_t_min)
+        if (CourantWater > 1.0 && deltaT > myParameters.delta_t_min)
         {
             halveTimeStep();
             setForcedHalvedTime(true);
             return false;
         }
 
-        if (! solver(approximationNr, myParameters.ResidualTolerance, PROCESS_WATER))
+        if (! solveLinearSystem(approximationNr, myParameters.ResidualTolerance, PROCESS_WATER))
         {
             if (deltaT > myParameters.delta_t_min)
             {
@@ -361,7 +413,7 @@ bool waterFlowComputation(double deltaT)
         if (getForcedHalvedTime())
             return false;
     }
-    while ((! isValidStep) && (++approximationNr < myParameters.maxApproximationsNumber));
+     while ( (! isValidStep) && (++approximationNr < unsigned(myParameters.maxApproximationsNumber)) );
 
     return isValidStep;
  }

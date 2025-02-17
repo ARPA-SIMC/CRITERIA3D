@@ -147,7 +147,7 @@
     extern Tculvert myCulvert;
     extern double *b, *C, *X, *X1;
     extern double *invariantFlux;         // array accessorio per flussi avvettivi e latenti
-    extern double Courant;
+    extern double CourantWater;
 
     extern Tbalance balanceCurrentTimeStep, balancePreviousTimeStep, balanceCurrentPeriod, balanceWholePeriod;
 

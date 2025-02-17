@@ -27,6 +27,7 @@
 #include <stdio.h>
 #include <math.h>
 #include <stdlib.h>
+#include <thread>
 
 #include "commonConstants.h"
 #include "physics.h"
@@ -177,14 +178,19 @@ int DLL_EXPORT __STDCALL setNumericalParameters(float minDeltaT, float maxDeltaT
 
 /*!
    \brief setThreads
-   sets threads for parallel computing
+    sets number of threads for parallel computing
+    if nrThreads < 1, hardware_concurrency get the number of logical processors
+    returns the number of threads
 */
 int DLL_EXPORT __STDCALL setThreads(int nrThreads)
 {
-    if (nrThreads < 1) nrThreads = 1;
+    if (nrThreads < 1)
+    {
+        nrThreads = std::thread::hardware_concurrency();
+    }
     myParameters.threadsNumber = nrThreads;
 
-    return CRIT3D_OK;
+    return nrThreads;
 }
 
 
