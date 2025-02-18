@@ -117,6 +117,7 @@
         //double meanDailyTemperature;
         double vaporPressureDeficit;
         double last30DaysTAvg;
+        double meanDailyTemp;
 
 
     };
@@ -136,6 +137,7 @@
         double foliageLongevity;
         double sapwoodLongevity;
         double fineRootLongevity;
+        double foliageDensity;
 
 
     };
@@ -272,6 +274,8 @@
         int simulationStepInSeconds;
         double leafAreaIndex;
 
+        double annualGrossStandGrowth;
+
         //gasflux results
         std::vector<double> treeTranspirationRate;          //molH2O m^-2 s^-1
         double treeAssimilationRate;
@@ -305,6 +309,8 @@
         double temperatureMoistureFunction(double temperature);
         bool growthStand();
         void resetStandVariables();
+        void optimal();
+        void rootfind(double &allf, double &allr, double &alls, bool &sol);
 
     };
 
