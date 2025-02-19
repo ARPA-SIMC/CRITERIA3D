@@ -932,18 +932,16 @@ void Crit3D_Hydrall::optimal()
 void Crit3D_Hydrall::rootfind(double &allf, double &allr, double &alls, bool &sol)
 {
     //search for a solution to hydraulic constraint
-    double foliageBiomassNew, heightNew;
 
     //new foliage biomass of tree after growth
-    if (allf < 0) allf = 0;
+    allf = MAXVALUE(0,allf);
+    //if (allf < 0) allf = 0;
 
-    foliageBiomassNew = statePlant.treecumulatedBiomassFoliage + (allf*annualGrossStandGrowth);
+    statePlant.treecumulatedBiomassFoliage += (allf*annualGrossStandGrowth);
 
     //new tree height after growth
     if (allf*annualGrossStandGrowth > statePlant.treecumulatedBiomassFoliage/(plant.foliageLongevity-1)) {
-        heightNew = plant.height + (allf*annualGrossStandGrowth-statePlant.treecumulatedBiomassFoliage/(plant.foliageLongevity-1)/plant.foliageDensity);
-    } else {
-        heightNew = plant.height;
+        plant.height += (allf*annualGrossStandGrowth-statePlant.treecumulatedBiomassFoliage/(plant.foliageLongevity-1)/plant.foliageDensity);
     }
 
     //soil hydraulic conductivity
@@ -951,34 +949,57 @@ void Crit3D_Hydrall::rootfind(double &allf, double &allr, double &alls, bool &so
 
     //specific hydraulic conductivity of soil+roots
     double soilRootsSpecificConductivity = 1/(1/KR + 1/ksl);
-    double dum = 0.5151 + 0.0242*soil.temperature;
-    if (dum < 0.5151) dum = 0.5151;
-    soilRootsSpecificConductivity *= dum; //adjust for temp effects on water viscosity
-
+    //double dum = 0.5151 + MAXVALUE(0,0.0242*soil.temperature);
+    //if (dum < 0.5151) dum = 0.5151;
+    //soilRootsSpecificConductivity *= dum; //adjust for temp effects on water viscosity
+    soilRootsSpecificConductivity *= 0.5151 + MAXVALUE(0,0.0242*soil.temperature);
     //new sapwood specific conductivity
-    double sapwoodSpecificConductivity = KSMAX * (1-std::exp(-0.69315*heightNew/H50)); //adjust for height effects
-    dum = 0.5151 + 0.0242*weatherVariable.meanDailyTemp;
-    if (dum < 0.5151) dum = 0.5151;
-    sapwoodSpecificConductivity *= dum;     //adjust for temp effects on water viscosity
+    double sapwoodSpecificConductivity = KSMAX * (1-std::exp(-0.69315*plant.height/H50)); //adjust for height effects
+    //dum = 0.5151 + MAXVALUE(0,0.0242*weatherVariable.meanDailyTemp);
+    //dum = MAXVALUE(0.5151,dum);
+    //if (dum < 0.5151) dum = 0.5151;
+    //sapwoodSpecificConductivity *= dum;     //adjust for temp effects on water viscosity
+    sapwoodSpecificConductivity *= 0.5151 + MAXVALUE(0,0.0242*weatherVariable.meanDailyTemp);
 
     //optimal coefficient of allocation to fine roots and sapwood for set allocation to foliage
-    double quadraticEqCoefficient = std::sqrt(soilRootsSpecificConductivity/sapwoodSpecificConductivity*plant.sapwoodLongevity/plant.fineRootLongevity*RHOS); //TODO: check if rhos or ros
-    allr = (statePlant.treecumulatedBiomassSapwood - quadraticEqCoefficient*heightNew*statePlant.treecumulatedBiomassRoot +
-            annualGrossStandGrowth*(1-allf))/annualGrossStandGrowth/(1+quadraticEqCoefficient*heightNew);
+    double quadraticEqCoefficient = std::sqrt(soilRootsSpecificConductivity/sapwoodSpecificConductivity*plant.sapwoodLongevity/plant.fineRootLongevity*plant.woodDensity);
+    allr = (statePlant.treecumulatedBiomassSapwood - quadraticEqCoefficient*plant.height*statePlant.treecumulatedBiomassRoot +
+            annualGrossStandGrowth*(1-allf))/annualGrossStandGrowth/(1+quadraticEqCoefficient*plant.height);
 
-    if (allr < EPSILON) allr = EPSILON; //bracket ALLR between (1-ALLF) and a small value
-    if (allr > (1-allf)) allr = 1-allf;
-
-    alls = 1 - allf - allr;
-    if (alls < EPSILON) alls = EPSILON; //bracket ALLS between 1 and a small value
-    if (alls > 1) alls = 1;
-
+    //allr = MAXVALUE(EPSILON,allr); //bracket ALLR between (1-ALLF) and a small value
+    //allr = MINVALUE(MAXVALUE(EPSILON,allr),1-allf);
+    allr = BOUNDFUNCTION(EPSILON,1-allf,allr); // TODO to be checked
+    //alls = 1 - allf - allr;
+    // alls = MAXVALUE(alls,EPSILON); //bracket ALLS between 1 and a small value
+    //alls = MINVALUE(1,MAXVALUE(alls,EPSILON));
+    alls = BOUNDFUNCTION(EPSILON,1,1-allf-allr); // TODO to be checked
     //resulting fine root and sapwood biomass
-
+    statePlant.treecumulatedBiomassRoot += allr * annualGrossStandGrowth;
+    statePlant.treecumulatedBiomassRoot = MAXVALUE(EPSILON,statePlant.treecumulatedBiomassRoot);
+    statePlant.treecumulatedBiomassSapwood += alls * annualGrossStandGrowth;
+    statePlant.treecumulatedBiomassSapwood = MAXVALUE(EPSILON,statePlant.treecumulatedBiomassSapwood);
 
     //resulting leaf specific resistance (MPa s m2 m-3)
-
+    double hydraulicResistancePerFoliageArea;
+    hydraulicResistancePerFoliageArea = (1./(statePlant.treecumulatedBiomassRoot*soilRootsSpecificConductivity)
+        + (plant.height*plant.height*plant.woodDensity)/(statePlant.treecumulatedBiomassSapwood*sapwoodSpecificConductivity))
+        * (statePlant.treecumulatedBiomassFoliage*plant.specificLeafArea);
     //resulting minimum leaf water potential
 
+    plant.psiLeafMinimum = plant.psiLeafCritical - (0.01 * plant.height)-(plant.transpirationPerUnitFoliageAreaCritical * 0.018/1000. * hydraulicResistancePerFoliageArea);
     //check if given value of ALLF satisfies optimality constraint
+    if(plant.psiLeafMinimum >= PSITHR)
+        sol = true;
+    else
+    {
+        sol = false;
+        allr = statePlant.treecumulatedBiomassSapwood
+                +  annualGrossStandGrowth -statePlant.treecumulatedBiomassRoot*quadraticEqCoefficient*plant.height;
+        allr /= (annualGrossStandGrowth * (1.+quadraticEqCoefficient*plant.height));
+        //allr = MINVALUE(1,MAXVALUE(allr,EPSILON));
+        allr = BOUNDFUNCTION(EPSILON,1,allr); // TODO to be checked
+        alls = 1.-allr;
+        allf = 0; // TODO verify its value
+    }
+
 }
