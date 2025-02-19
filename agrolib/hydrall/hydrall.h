@@ -159,6 +159,9 @@
         std::vector <double> wiltingPoint;
         std::vector <double> fieldCapacity;
         std::vector <double> saturation;
+        std::vector <double> saturatedConductivity;
+
+
     };
 
     struct TbigLeaf

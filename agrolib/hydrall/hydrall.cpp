@@ -724,7 +724,7 @@ void Crit3D_Hydrall::cumulatedResults()
 double Crit3D_Hydrall::plantRespiration()
 {
     // taken from Hydrall Model, Magnani UNIBO
-    double leafRespiration,rootRespiration,sapwoodRespiration,shootRespiration ;
+    double leafRespiration,rootRespiration,sapwoodRespiration;
     double totalRespiration;
     nitrogenContent.leaf = 0.02;    //[kg kgDM-1] //0.02 * 10^3 [g kgDM-1]
     nitrogenContent.root = 0.0078;  //[kg kgDM-1]
@@ -740,7 +740,8 @@ double Crit3D_Hydrall::plantRespiration()
     //sapwoodRespiration *= MAXVALUE(0,MINVALUE(1,Vine3D_Grapevine::temperatureMoistureFunction(myInstantTemp + ZEROCELSIUS))) ;
     //shootRespiration *= MAXVALUE(0,MINVALUE(1,Vine3D_Grapevine::temperatureMoistureFunction(myInstantTemp + ZEROCELSIUS))) ;
     soil.temperature = Crit3D_Hydrall::soilTemperatureModel();
-    rootRespiration *= MAXVALUE(0,MINVALUE(1,Crit3D_Hydrall::temperatureMoistureFunction(soil.temperature + ZEROCELSIUS))) ;
+    //rootRespiration *= MAXVALUE(0,MINVALUE(1,Crit3D_Hydrall::temperatureMoistureFunction(soil.temperature + ZEROCELSIUS))) ;
+    rootRespiration *= BOUNDFUNCTION(0,1,Crit3D_Hydrall::temperatureMoistureFunction(soil.temperature + ZEROCELSIUS));
     // hourly canopy respiration (sapwood+fine roots)
     totalRespiration =(leafRespiration + sapwoodRespiration + rootRespiration);
     // per second respiration
@@ -822,7 +823,7 @@ bool Crit3D_Hydrall::growthStand()
     statePlant.treecumulatedBiomassRoot -= (statePlant.treecumulatedBiomassRoot/plant.fineRootLongevity);
 
 
-    double store;
+    double store; // TODO to understand what's that, afterwards the uninitialized value is used
     //annual stand growth
     if (isFirstYearSimulation)
     {
