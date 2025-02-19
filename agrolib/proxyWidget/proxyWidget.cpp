@@ -1,3 +1,4 @@
+#include "dialogChangeAxis.h"
 #include "meteo.h"
 #include "proxyWidget.h"
 #include "utilities.h"
@@ -9,6 +10,8 @@
 
 #include <QLayout>
 #include <QDate>
+#include <QColorDialog>
+
 
 
 Crit3DProxyWidget::Crit3DProxyWidget(Crit3DInterpolationSettings* interpolationSettings, Crit3DMeteoPoint *meteoPoints, int nrMeteoPoints, frequencyType currentFrequency, QDate currentDate, int currentHour, Crit3DQuality *quality, Crit3DInterpolationSettings* SQinterpolationSettings, Crit3DMeteoSettings *meteoSettings, Crit3DClimateParameters *climateParam, bool checkSpatialQuality, int macroAreaNumber)
@@ -18,7 +21,7 @@ Crit3DProxyWidget::Crit3DProxyWidget(Crit3DInterpolationSettings* interpolationS
     this->resize(1024, 700);
     this->setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Preferred);
     this->setAttribute(Qt::WA_DeleteOnClose);
-    
+
     // layout
     QVBoxLayout *mainLayout = new QVBoxLayout();
     QGroupBox *horizontalGroupBox = new QGroupBox();
@@ -130,7 +133,10 @@ Crit3DProxyWidget::Crit3DProxyWidget(Crit3DInterpolationSettings* interpolationS
     QMenuBar* menuBar = new QMenuBar();
     QMenu *editMenu = new QMenu("Edit");
     QAction* updateStations = new QAction(tr("&Update"), this);
+    QAction* changeLeftAxis = new QAction(tr("&Change axis left"), this);
+
     editMenu->addAction(updateStations);
+    editMenu->addAction(changeLeftAxis);
 
     menuBar->addMenu(editMenu);
     mainLayout->setMenuBar(menuBar);
@@ -143,6 +149,8 @@ Crit3DProxyWidget::Crit3DProxyWidget(Crit3DInterpolationSettings* interpolationS
     connect(&modelLR, &QCheckBox::toggled, [=](int toggled){ this->modelLRClicked(toggled); });
     connect(&detrended, &QCheckBox::toggled, [=](){ this->plot(); });
     connect(updateStations, &QAction::triggered, this, [=](){ this->plot(); });
+    connect(changeLeftAxis, &QAction::triggered, this, &Crit3DProxyWidget::on_actionChangeLeftAxis);
+
 
     if (currentFrequency != noFrequency)
     {
@@ -547,6 +555,20 @@ void Crit3DProxyWidget::modelLRClicked(int toggled)
         chartView->drawModelLapseRate(point_vector);
     }
 }
+
+void Crit3DProxyWidget::on_actionChangeLeftAxis()
+{
+
+    DialogChangeAxis changeAxisDialog(1, false);
+    if (changeAxisDialog.result() == QDialog::Accepted)
+    {
+        //axisY_sx->setMin(changeAxisDialog.getMinVal());
+        //axisY_sx->setMax(changeAxisDialog.getMaxVal());
+        chartView->axisY->setMin(floor(changeAxisDialog.getMinVal()));
+        chartView->axisY->setMax(ceil(changeAxisDialog.getMaxVal()));
+    }
+}
+
 
 void Crit3DProxyWidget::addMacroAreaLR()
 {
