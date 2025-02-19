@@ -1174,6 +1174,69 @@ namespace gis
         return true;
     }
 
+
+    /*!
+     * \brief extract a basin starting from point (x,y)
+     */
+    bool extractBasin(const Crit3DRasterGrid& inputRaster, Crit3DRasterGrid& outputRaster, double x, double y)
+    {
+        outputRaster.initializeGrid(*inputRaster.header);
+
+        // check start point
+        int row, col;
+        inputRaster.getRowCol(x, y, row, col);
+        if (inputRaster.isOutOfGrid(row, col))
+            return false;
+
+        float value = inputRaster.value[row][col];
+        if (isEqual(value, inputRaster.header->flag))
+            return false;
+
+        outputRaster.value[row][col] = value;
+
+        // cycle
+        bool hasNewPoints = true;
+        while (hasNewPoints)
+        {
+            hasNewPoints = false;
+            for (row=0; row < outputRaster.header->nrRows; row++)
+            {
+                for (col=0; col < outputRaster.header->nrCols; col++)
+                {
+                    float refValue = outputRaster.value[row][col];
+                    if (! isEqual(refValue, outputRaster.header->flag))
+                    {
+                        for (int r = -1; r <= 1; r++)
+                        {
+                            for (int c = -1; c <= 1; c++)
+                            {
+                                if (r != 0 || c != 0)
+                                {
+                                    float checkValue = outputRaster.getValueFromRowCol(row+r, col+c);
+                                    if (isEqual(checkValue, outputRaster.header->flag))
+                                    {
+                                        value = inputRaster.getValueFromRowCol(row+r, col+c);
+                                        if (! isEqual(value, inputRaster.header->flag))
+                                        {
+                                            if (value >= refValue)
+                                            {
+                                                outputRaster.value[row][col] = value;
+                                                hasNewPoints = true;
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        return true;
+    }
+
+
     /*!
      * \brief return true if value(row, col) > values of all neighbours
      */

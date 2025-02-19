@@ -225,20 +225,20 @@ void MainWindow::mouseMove(QPoint eventPos)
 
     Position pos = this->mapView->mapToScene(eventPos);
 
-    QString infoStr = "Lat:"+QString::number(pos.latitude())
-                      + "  Lon:" + QString::number(pos.longitude());
+    QString infoStr = "Lat:" + QString::number(pos.latitude()) + " Lon:" + QString::number(pos.longitude());
 
-    float value = NODATA;
     if (rasterOutput->visible())
     {
-        value = rasterOutput->getValue(pos);
+        float value = rasterOutput->getValue(pos);
+        if (! isEqual(value, NODATA))
+            infoStr += "  Value:" + QString::number(double(value));
     }
     else if (rasterDEM->visible())
     {
-        value = rasterDEM->getValue(pos);
+        float value = rasterDEM->getValue(pos);
+        if (! isEqual(value, NODATA))
+            infoStr += "  DEM value:" + QString::number(double(value));
     }
-    if (! isEqual(value, NODATA))
-        infoStr += "  Value:" + QString::number(double(value));
 
     this->ui->statusBar->showMessage(infoStr);
 }
@@ -411,6 +411,16 @@ bool MainWindow::contextMenuRequested(QPoint localPos)
         }
     }
 
+    if (myProject.DEM.isLoaded)
+    {
+        if (isInsideDEM(mapPos))
+        {
+            contextMenu.addSeparator();
+            contextMenu.addAction("Extract the basin from this point");
+            nrItems++;
+        }
+    }
+
     if (nrItems == 0)
         return false;
 
@@ -426,6 +436,29 @@ bool MainWindow::contextMenuRequested(QPoint localPos)
             else
             {
                 myProject.logError("Load soil database before.");
+            }
+        }
+
+        if (selection->text().contains("Extract the basin"))
+        {
+            double x, y;
+            Position geoPos = mapView->mapToScene(mapPos);
+            gis::latLonToUtmForceZone(myProject.gisSettings.utmZone, geoPos.latitude(), geoPos.longitude(), &x, &y);
+            gis::Crit3DRasterGrid basinRaster;
+            gis::extractBasin(myProject.DEM, basinRaster, x, y);
+
+            // choose fileName
+            QString completeFileName = QFileDialog::getSaveFileName(this, tr("Save basin raster"), "", tr("ESRI float (*.flt)"));
+            if (completeFileName.isEmpty())
+                return false;
+            std::string fileName = completeFileName.left(completeFileName.size() - 4).toStdString();
+
+            // save map
+            std::string errorStr;
+            if (! gis::writeEsriGrid(fileName, &basinRaster, errorStr))
+            {
+                myProject.logError(QString::fromStdString(errorStr));
+                return false;
             }
         }
 
@@ -1671,6 +1704,20 @@ void MainWindow::setTileMapSource(WebTileSource::WebTileType tileSource)
 
 
 // --------------- SOIL AND LAND USE --------------------------------
+
+bool MainWindow::isInsideDEM(QPoint mapPos)
+{
+    if (! myProject.DEM.isLoaded)
+        return false;
+
+    double x, y;
+    Position geoPos = mapView->mapToScene(mapPos);
+    gis::latLonToUtmForceZone(myProject.gisSettings.utmZone, geoPos.latitude(), geoPos.longitude(), &x, &y);
+
+    float value = myProject.DEM.getValueFromXY(x, y);
+    return (value != myProject.DEM.header->flag);
+}
+
 
 bool MainWindow::isSoil(QPoint mapPos)
 {

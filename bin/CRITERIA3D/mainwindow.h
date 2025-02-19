@@ -299,6 +299,8 @@
 
         bool checkMapVariable(bool isComputed);
 
+        bool isInsideDEM(QPoint mapPos);
+
         bool isSoil(QPoint mapPos);
         void openSoilWidget(QPoint mapPos);
         void showSoilMap();

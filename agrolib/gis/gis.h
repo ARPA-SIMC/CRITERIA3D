@@ -278,6 +278,8 @@
                                          int myYear, float minValue, float maxValue, gis::Crit3DRasterGrid* outGrid);
 
         bool rasterSummary(Crit3DRasterGrid *myGrid, int &nrValids, float &avgValue, std::string &error);
+
+        bool extractBasin(const Crit3DRasterGrid& inputRaster, Crit3DRasterGrid& outputRaster, double x, double y);
     }
 
 
