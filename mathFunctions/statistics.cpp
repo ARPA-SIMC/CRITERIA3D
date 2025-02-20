@@ -303,6 +303,92 @@ namespace statistics
         return mean ;
     }
 
+    double weighedMean(std::vector<double> weights,std::vector<double> data)
+    {
+        double mean =0;
+        double normalizationCoefficient=0;
+        int nrData = int(data.size());
+        for (int i = 0 ; i<nrData;i++)
+            normalizationCoefficient += weights[i];
+        for (int i = 0 ; i<nrData;i++)
+            mean += weights[i]*data[i];
+
+        mean /= normalizationCoefficient;
+        return mean;
+    }
+
+    double weighedMeanMultifactor(meanType type, std::vector <std::vector <double>> weights, std::vector<double> &data)
+    {
+        double mean = NODATA;
+        int nrData = data.size();
+        int nrWeightFactors = weights.size();
+        std::vector<double> compositeWeights(nrData,1);
+        std::vector<double> normalizationCoefficient(nrWeightFactors,0);
+
+        // weights normalization
+        for (int j= 0; j<nrWeightFactors;j++)
+        {
+            //normalizationCoefficient[j] = 0;
+            for (int i = 0 ; i<nrData;i++)
+            {
+                normalizationCoefficient[j] += weights[j][i];
+            }
+        }
+        for (int j= 0; j<nrWeightFactors;j++)
+        {
+            for (int i = 0 ; i<nrData;i++)
+            {
+                weights[j][i] /= normalizationCoefficient[j];
+            }
+        }
+        // weights composition
+        for (int i = 0 ; i<nrData;i++)
+        {
+            for (int j= 0; j<nrWeightFactors;j++)
+            {
+                compositeWeights[i] *= weights[j][i];
+            }
+            compositeWeights[i] = BOUNDFUNCTION(0,1,compositeWeights[i]);
+        }
+
+        if (type == linearValues)
+        {
+            mean = weighedMean(compositeWeights,data);
+        }
+        else if (type == logarithmicValues)
+        {
+            for (int i = 0 ; i<nrData;i++)
+            {
+                if (data[i] <= 0)
+                    return NODATA;
+                data[i] = log(data[i]);
+            }
+            mean = weighedMean(compositeWeights,data);
+            mean = std::exp(mean);
+        }
+        else if (type == logarithmic10Values)
+        {
+            for (int i = 0 ; i<nrData;i++)
+            {
+                if (data[i] <= 0)
+                    return NODATA;
+                data[i] = log10(data[i]);
+            }
+            mean = weighedMean(compositeWeights,data);
+            mean = std::pow(10.,mean);
+        }
+        else if (type == exponentialValues)
+        {
+            for (int i = 0 ; i<nrData;i++)
+            {
+                data[i] = std::exp(data[i]);
+            }
+            mean = weighedMean(compositeWeights,data);
+            mean = log(mean);
+        }
+        return mean;
+    }
+
     float linearInterpolation(float x1, float y1, float x2, float y2, float xx)
     {
         float rate;

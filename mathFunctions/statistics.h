@@ -4,7 +4,7 @@
     #ifndef _VECTOR_
         #include <vector>
     #endif
-
+    enum meanType {linearValues, logarithmicValues, logarithmic10Values, exponentialValues};
     enum meteoComputation { average, stdDev, sum, maxInList, minInList, timeIntegration,
                             differenceWithThreshold, lastDayBelowThreshold,
                             sumAbove, avgAbove, stdDevAbove,
@@ -30,6 +30,8 @@
         double NashSutcliffeEfficiency(std::vector <float> measured, std::vector <float> simulated);
         float coefficientOfVariation(float *measured , float *simulated , int nrData);
         float weighedMean(float *data , float *weights, int nrData);
+        double weighedMean(std::vector<double> weights,std::vector<double> data);
+        double weighedMeanMultifactor(meanType type, const std::vector <std::vector <double>> weights, std::vector<double> &data);
         float linearInterpolation(float x1, float y1, float x2, float y2, float xx);
         void weightedMultiRegressionLinear(float** x,  float* y, float* weight, long nrItems,float* q,float* m, int nrPredictors);
         void weightedMultiRegressionLinear(const std::vector <std::vector <float>> &x, std::vector <float> &y, const std::vector <float> &weight, long nrItems,float* q,std::vector <float> &m, int nrPredictors);
