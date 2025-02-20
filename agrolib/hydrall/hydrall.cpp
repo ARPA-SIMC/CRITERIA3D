@@ -13,6 +13,7 @@
 #include "hydrall.h"
 #include "furtherMathFunctions.h"
 #include "physics.h"
+#include "statistics.h"
 
 Crit3DHydrallMaps::Crit3DHydrallMaps()
 {
@@ -947,7 +948,13 @@ void Crit3D_Hydrall::rootfind(double &allf, double &allr, double &alls, bool &so
 
     //soil hydraulic conductivity
     double ksl;
-
+    std::vector <std::vector <double>> conductivityWeights(2, std::vector<double>(soil.layersNr, NODATA));
+    for (int i=0; i<soil.layersNr; i++)
+    {
+        conductivityWeights[0][i] = soil.rootDensity[i];
+        conductivityWeights[1][i] = soil.nodeThickness[i];
+    }
+    ksl = statistics::weighedMeanMultifactor(logarithmic10Values,conductivityWeights,soil.hydraulicConductivity);
     //specific hydraulic conductivity of soil+roots
     double soilRootsSpecificConductivity = 1/(1/KR + 1/ksl);
     //double dum = 0.5151 + MAXVALUE(0,0.0242*soil.temperature);
