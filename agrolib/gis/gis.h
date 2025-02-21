@@ -279,6 +279,7 @@
 
         bool rasterSummary(Crit3DRasterGrid *myGrid, int &nrValids, float &avgValue, std::string &error);
 
+        float getNeighboursMinimumValue(const Crit3DRasterGrid& raster, int row, int col);
         bool extractBasin(const Crit3DRasterGrid& inputRaster, Crit3DRasterGrid& outputRaster, double xClosure, double yClosure);
         bool cleanRaster(const Crit3DRasterGrid& inputRaster, Crit3DRasterGrid& outputRaster);
     }

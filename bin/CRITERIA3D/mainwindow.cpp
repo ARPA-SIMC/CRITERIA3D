@@ -444,8 +444,11 @@ bool MainWindow::contextMenuRequested(QPoint localPos)
             double x, y;
             Position geoPos = mapView->mapToScene(mapPos);
             gis::latLonToUtmForceZone(myProject.gisSettings.utmZone, geoPos.latitude(), geoPos.longitude(), &x, &y);
+
+            // extract basin
             gis::Crit3DRasterGrid basinRaster;
-            gis::extractBasin(myProject.DEM, basinRaster, x, y);
+            if (! gis::extractBasin(myProject.DEM, basinRaster, x, y))
+                return false;
 
             // choose fileName
             QString completeFileName = QFileDialog::getSaveFileName(this, tr("Save basin raster"), "", tr("ESRI float (*.flt)"));
