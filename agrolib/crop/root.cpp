@@ -390,7 +390,7 @@ namespace root
 
             int numberOfRootedLayers, numberOfTopUnrootedLayers;
             numberOfTopUnrootedLayers = int(round(myCrop->roots.rootDepthMin / minimumThickness));
-            numberOfRootedLayers = int(round(MINVALUE(myCrop->roots.currentRootLength, soilDepth) / minimumThickness));
+            numberOfRootedLayers = int(round(std::min(myCrop->roots.currentRootLength, soilDepth) / minimumThickness));
 
             // roots are still too short
             if (numberOfRootedLayers == 0)
@@ -529,7 +529,7 @@ namespace root
 
         int numberOfRootedLayers, numberOfTopUnrootedLayers;
         numberOfTopUnrootedLayers = int(round(myCrop.roots.rootDepthMin / minimumThickness));
-        numberOfRootedLayers = int(round(MINVALUE(myCrop.roots.currentRootLength, currentSoil.totalDepth) / minimumThickness));
+        numberOfRootedLayers = int(round(std::min(myCrop.roots.currentRootLength, currentSoil.totalDepth) / minimumThickness));
 
         // roots are still too short
         if (numberOfRootedLayers == 0)
