@@ -419,6 +419,7 @@ void Crit3DLocalProxyWidget::plot()
             point.setY(varValue);
             QString text = "id: " + QString::fromStdString(meteoPoints[subsetInterpolationPoints[i].index].id) + "\n"
                            + "name: " + QString::fromStdString(meteoPoints[subsetInterpolationPoints[i].index].name) + "\n"
+                           + "province: " + QString::fromStdString(meteoPoints[subsetInterpolationPoints[i].index].province) + "\n"
                            + "weight: " + QString::number(subsetInterpolationPoints[i].regressionWeight, 'f', 5);
             if (subsetInterpolationPoints[i].isMarked)
             {
