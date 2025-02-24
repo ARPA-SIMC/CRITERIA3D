@@ -27,8 +27,10 @@ public:
     void cleanModelLapseRate();
     void drawModelLapseRate(QList<QPointF> pointList);
     void tooltipScatterSeries(QPointF point, bool state);
-    void setIdPointMap(const QMap<QString, QPointF> &valuePrimary, const QMap<QString, QPointF> &valueSecondary, const QMap<QString, QPointF> &valueSupplemental, const QMap<QString, QPointF> &valueMarked);
+    void setIdPointMap(const QMap<QString, QPointF> &valuePrimary, const QMap<QString, QPointF> &valueSecondary,
+                       const QMap<QString, QPointF> &valueSupplemental, const QMap<QString, QPointF> &valueMarked);
     void setProvince(const std::string &province);
+
 private:
     QScatterSeries *series1;
     QScatterSeries *series2;
@@ -36,12 +38,11 @@ private:
     QScatterSeries *seriesMarked;
     QLineSeries* climLapseRatelineSeries;
     QLineSeries* modelLapseRatelineSeries;
-    Callout *m_tooltip;
-    QMap< QString, QPointF > idPointMap1;
-    QMap< QString, QPointF > idPointMap2;
-    QMap< QString, QPointF > idPointMap3;
-    QMap< QString, QPointF > idPointMapMarked;
-    QMap< QString, QPointF > _province;
+    Callout* m_tooltip;
+    QMap< QString, QPointF > _idPointMap1;
+    QMap< QString, QPointF > _idPointMap2;
+    QMap< QString, QPointF > _idPointMap3;
+    QMap< QString, QPointF > _idPointMapMarked;
 };
 
 #endif // CHARTVIEW_H

@@ -177,8 +177,8 @@ bool WaterTable::computeETP_allSeries(bool isUpdateAvgCWB)
     int nrOfData = (int)inputTMin.size();
     for (int i = 0; i < nrOfData; i++)
     {
-        QDate currentDate = firstMeteoDate.addDays(i);
-        Crit3DDate myDate = Crit3DDate(currentDate.day(), currentDate.month(), currentDate.year());
+        QDate myCurrentDate = firstMeteoDate.addDays(i);
+        Crit3DDate myDate = Crit3DDate(myCurrentDate.day(), myCurrentDate.month(), myCurrentDate.year());
 
         Tmin = inputTMin[i];
         Tmax = inputTMax[i];
@@ -417,7 +417,7 @@ float WaterTable::getWaterTableClimate(QDate myDate)
 }
 
 
-bool WaterTable::computeWaterTableClimate(QDate currentDate, int yearFrom, int yearTo, float* myValue)
+bool WaterTable::computeWaterTableClimate(QDate mycurrentDate, int yearFrom, int yearTo, float* myValue)
 {
     *myValue = NODATA;
 
@@ -430,7 +430,7 @@ bool WaterTable::computeWaterTableClimate(QDate currentDate, int yearFrom, int y
 
     for (int myYear = yearFrom; myYear <= yearTo; myYear++)
     {
-        QDate myDate(myYear, currentDate.month(), currentDate.day());
+        QDate myDate(myYear, mycurrentDate.month(), mycurrentDate.day());
         if (getWaterTableInterpolation(myDate, &myDepth, &myDelta, &myDeltaDays))
         {
             nrValidYears = nrValidYears + 1;

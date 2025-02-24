@@ -191,17 +191,17 @@ void ChartView::drawModelLapseRate(QList<QPointF> pointList)
 }
 
 void ChartView::setIdPointMap(const QMap<QString, QPointF> &valuePrimary, const QMap<QString, QPointF> &valueSecondary,
-                              const QMap<QString, QPointF> &valueSupplemental, const QMap<QString, QPointF> &valueMarked)
+                                const QMap<QString, QPointF> &valueSupplemental, const QMap<QString, QPointF> &valueMarked)
 {
-    idPointMap1.clear();
-    idPointMap2.clear();
-    idPointMap3.clear();
-    idPointMapMarked.clear();
+    _idPointMap1.clear();
+    _idPointMap2.clear();
+    _idPointMap3.clear();
+    _idPointMapMarked.clear();
 
-    idPointMap1 = valuePrimary;
-    idPointMap2 = valueSecondary;
-    idPointMap3 = valueSupplemental;
-    idPointMapMarked = valueMarked;
+    _idPointMap1 = valuePrimary;
+    _idPointMap2 = valueSecondary;
+    _idPointMap3 = valueSupplemental;
+    _idPointMapMarked = valueMarked;
 }
 
 void ChartView::tooltipScatterSeries(QPointF point, bool state)
@@ -211,12 +211,12 @@ void ChartView::tooltipScatterSeries(QPointF point, bool state)
     {
         double xValue = point.x();
         double yValue = point.y();
-        QString province = QString::fromStdString(_province);
+
         QString key;
 
         if (serie->name() == "Primary")
         {
-            QMapIterator<QString, QPointF> i(idPointMap1);
+            QMapIterator<QString, QPointF> i(_idPointMap1);
             while (i.hasNext()) {
                 i.next();
                 if (i.value() == point)
@@ -227,7 +227,7 @@ void ChartView::tooltipScatterSeries(QPointF point, bool state)
         }
         else if (serie->name() == "Secondary")
         {
-            QMapIterator<QString, QPointF> i(idPointMap2);
+            QMapIterator<QString, QPointF> i(_idPointMap2);
             while (i.hasNext()) {
                 i.next();
                 if (i.value() == point)
@@ -238,7 +238,7 @@ void ChartView::tooltipScatterSeries(QPointF point, bool state)
         }
         else if (serie->name() == "Supplemental")
         {
-            QMapIterator<QString, QPointF> i(idPointMap3);
+            QMapIterator<QString, QPointF> i(_idPointMap3);
             while (i.hasNext()) {
                 i.next();
                 if (i.value() == point)
@@ -249,7 +249,7 @@ void ChartView::tooltipScatterSeries(QPointF point, bool state)
         }
         else if (serie->name() == "Marked")
         {
-            QMapIterator<QString, QPointF> i(idPointMapMarked);
+            QMapIterator<QString, QPointF> i(_idPointMapMarked);
             while (i.hasNext()) {
                 i.next();
                 if (i.value() == point)
@@ -258,7 +258,8 @@ void ChartView::tooltipScatterSeries(QPointF point, bool state)
                 }
             }
         }
-        m_tooltip->setText(QString("%1\n%2 %3\n%4 ").arg(key).arg(xValue, 0, 'f', 1).arg(yValue, 0, 'f', 3).arg(province));
+
+        m_tooltip->setText(QString("%1\n%2 %3\n").arg(key).arg(xValue, 0, 'f', 1).arg(yValue, 0, 'f', 3));
         m_tooltip->setSeries(serie);
         m_tooltip->setAnchor(point);
         m_tooltip->setZValue(11);
