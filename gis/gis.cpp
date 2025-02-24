@@ -1174,6 +1174,10 @@ namespace gis
         return true;
     }
 
+
+
+
+
     /*!
      * \brief return true if value(row, col) > values of all neighbours
      */
@@ -1751,6 +1755,299 @@ namespace gis
         avgValue = statistics::mean(validValues);
 
         validValues.clear();
+
+        return true;
+    }
+
+
+    /*!
+     * \brief returns the minimum value of neighboring cells.
+     * if no neighbors are valid, returns NODATA
+     */
+    float getNeighboursMinimumValue(const Crit3DRasterGrid& raster, int row, int col)
+    {
+        if (raster.isOutOfGrid(row, col))
+            return NODATA;
+
+        float minimum = NODATA;
+        for (int r = -1; r <= 1; r++)
+        {
+            for (int c = -1; c <= 1; c++)
+            {
+                if (r != 0 || c != 0)
+                {
+                    float value = raster.getValueFromRowCol(row+r, col+c);
+
+                    if (! isEqual(value, raster.header->flag))
+                        if (minimum == NODATA || value < minimum)
+                            minimum = value;
+                }
+            }
+        }
+
+        return minimum;
+    }
+
+
+    /*!
+     * \brief extract a basin from a digital terrain model, starting from point (xClosure, yClosure)
+     */
+    bool extractBasin(const Crit3DRasterGrid& inputRaster, Crit3DRasterGrid& outputRaster, double xClosure, double yClosure)
+    {
+        // check closure point
+        float refValue = inputRaster.getValueFromXY(xClosure, yClosure);
+        if (isEqual(refValue, inputRaster.header->flag))
+            return false;
+
+        // fill depressions (not at the border)
+        Crit3DRasterGrid noHolesRaster;
+        noHolesRaster.copyGrid(inputRaster);
+        int nrFixed;
+
+        do
+        {
+            nrFixed = 0;
+            for (int row=1; row < noHolesRaster.header->nrRows-1; row++)
+            {
+                for (int col=1; col < noHolesRaster.header->nrCols-1; col++)
+                {
+                    refValue = noHolesRaster.value[row][col];
+                    if (! isEqual(refValue, noHolesRaster.header->flag))
+                    {
+                        float minimum = getNeighboursMinimumValue(noHolesRaster, row, col);
+                        if (minimum != NODATA && refValue < minimum)
+                        {
+                            noHolesRaster.value[row][col] = minimum;
+                            nrFixed++;
+                        }
+                    }
+                }
+            }
+        }
+        while (nrFixed > 0);
+
+        // new raster
+        Crit3DRasterGrid basinRaster;
+        basinRaster.initializeGrid(*inputRaster.header);
+
+        // insert closure point as first value in the queue
+        int firstRow, firstCol;
+        inputRaster.getRowCol(xClosure, yClosure, firstRow, firstCol);
+        basinRaster.value[firstRow][firstCol] = inputRaster.value[firstRow][firstCol];
+        std::vector<int> rowList, colList, newRowList, newColList;
+        rowList.push_back(firstRow);
+        colList.push_back(firstCol);
+
+        // add new points to the queue
+        float value, outputValue;
+        while (! rowList.empty())
+        {
+            for (int i=0; i < rowList.size(); i++)
+            {
+                int row = rowList[i];
+                int col = colList[i];
+                refValue = basinRaster.value[row][col];
+                if (! isEqual(refValue, basinRaster.header->flag))
+                {
+                    for (int r = -3; r <= 3; r++)
+                    {
+                        for (int c = -3; c <= 3; c++)
+                        {
+                            if (r != 0 || c != 0)
+                            {
+                                value = noHolesRaster.getValueFromRowCol(row+r, col+c);
+                                if (! isEqual(value, noHolesRaster.header->flag))
+                                {
+                                    outputValue = basinRaster.getValueFromRowCol(row+r, col+c);
+                                    if (isEqual(outputValue, basinRaster.header->flag))
+                                    {
+                                        float minimum = getNeighboursMinimumValue(noHolesRaster, row+r, col+c);
+                                        if (minimum != NODATA && refValue <= minimum)
+                                        {
+                                            newRowList.push_back(row+r);
+                                            newColList.push_back(col+c);
+                                            basinRaster.value[row+r][col+c] = value;
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            rowList = newRowList;
+            colList = newColList;
+            newRowList.clear();
+            newColList.clear();
+        }
+
+        noHolesRaster.clear();
+
+        // delete empty borders
+        cleanRaster(basinRaster, outputRaster);
+        basinRaster.clear();
+
+        return true;
+    }
+
+
+    /*!
+     * \brief extract a basin from a digital terrain model, starting from point (xClosure, yClosure)
+     */
+    /*
+    bool extractBasin(const Crit3DRasterGrid& inputRaster, Crit3DRasterGrid& outputRaster, double xClosure, double yClosure)
+    {
+        float value, refValue, outputValue;
+        int row, col;
+
+        Crit3DRasterGrid basinRaster;
+        basinRaster.initializeGrid(*inputRaster.header);
+
+        // check start point
+        refValue = inputRaster.getValueFromXY(xClosure, yClosure);
+        if (isEqual(refValue, inputRaster.header->flag))
+            return false;
+
+        // first value
+        inputRaster.getRowCol(xClosure, yClosure, row, col);
+        basinRaster.value[row][col] = refValue;
+        std::vector<int> rowList, colList, newRowList, newColList;
+        rowList.push_back(row);
+        colList.push_back(col);
+
+        // search new points
+        while (! rowList.empty())
+        {
+            for (int i=0; i < rowList.size(); i++)
+            {
+                row = rowList[i];
+                col = colList[i];
+                refValue = basinRaster.value[row][col];
+                if (! isEqual(refValue, basinRaster.header->flag))
+                {
+                    for (int r = -3; r <= 3; r++)
+                    {
+                        for (int c = -3; c <= 3; c++)
+                        {
+                            if (r != 0 || c != 0)
+                            {
+                                value = inputRaster.getValueFromRowCol(row+r, col+c);
+                                if (! isEqual(value, inputRaster.header->flag) && (value >= refValue))
+                                {
+                                    outputValue = basinRaster.getValueFromRowCol(row+r, col+c);
+                                    if (isEqual(outputValue, basinRaster.header->flag))
+                                    {
+                                        newRowList.push_back(row+r);
+                                        newColList.push_back(col+c);
+                                        basinRaster.value[row+r][col+c] = value;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            rowList = newRowList;
+            colList = newColList;
+            newRowList.clear();
+            newColList.clear();
+        }
+
+        // remove points of other catchments
+        for (int row = 0; row < basinRaster.header->nrRows; row++)
+        {
+            for (int col = 0; col < basinRaster.header->nrCols; col++)
+            {
+                if (! isEqual(basinRaster.value[row][col], basinRaster.header->flag))
+                {
+                    refValue = basinRaster.value[row][col];
+
+                    int newRow = row;
+                    int newCol = col;
+                    bool isNewPoint = true;
+
+                    // move to maximum slope (in original raster)
+                    while (isNewPoint)
+                    {
+                        int currentRow = newRow;
+                        int currentCol = newCol;
+                        isNewPoint = false;
+                        for (int r = -1; r <= 1; r++)
+                        {
+                            for (int c = -1; c <= 1; c++)
+                            {
+                                if (r != 0 || c != 0)
+                                {
+                                    value = inputRaster.getValueFromRowCol(currentRow+r, currentCol+c);
+                                    if (! isEqual(value, inputRaster.header->flag) && (value < refValue))
+                                    {
+                                        refValue = value;
+                                        newRow = currentRow+r;
+                                        newCol = currentCol+c;
+                                        isNewPoint = true;
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+                    // check last point
+                    // remove point if direction is outside basin
+                    if (isEqual(basinRaster.value[newRow][newCol], basinRaster.header->flag))
+                    {
+                        basinRaster.value[row][col] = basinRaster.header->flag;
+                    }
+                }
+            }
+        }
+
+        cleanRaster(basinRaster, outputRaster);
+
+        return true;
+    }
+    */
+
+
+    /*!
+     * \brief clean a raster, deleting empty borders
+     */
+    bool cleanRaster(const Crit3DRasterGrid& inputRaster, Crit3DRasterGrid& outputRaster)
+    {
+        int row0 = inputRaster.header->nrRows-1;
+        int row1 = 0;
+        int col0 = inputRaster.header->nrCols-1;
+        int col1 = 0;
+
+        // search range of valid values
+        for (int row = 0; row < inputRaster.header->nrRows; row++)
+            for (int col = 0; col < inputRaster.header->nrCols; col++)
+                if (! isEqual(inputRaster.value[row][col], inputRaster.header->flag))
+                {
+                    row0 = std::min(row0, row);
+                    row1 = std::max(row1, row);
+                    col0 = std::min(col0, col);
+                    col1 = std::max(col1, col);
+                }
+
+        // set header
+        outputRaster.header->flag = inputRaster.header->flag;
+        outputRaster.header->cellSize = inputRaster.header->cellSize;
+
+        outputRaster.header->nrRows = row1 - row0 +1;
+        outputRaster.header->nrCols = col1 - col0 +1;
+
+        outputRaster.header->llCorner.x = inputRaster.header->llCorner.x + col0 * outputRaster.header->cellSize;
+        int deltaRow = inputRaster.header->nrRows - row1 -1;
+        outputRaster.header->llCorner.y = inputRaster.header->llCorner.y + deltaRow * outputRaster.header->cellSize;
+
+        outputRaster.initializeGrid();
+
+        // move the data
+        for (int row = 0; row < outputRaster.header->nrRows; row++)
+            for (int col = 0; col < outputRaster.header->nrCols; col++)
+                outputRaster.value[row][col] = inputRaster.value[row+row0][col+col0];
 
         return true;
     }

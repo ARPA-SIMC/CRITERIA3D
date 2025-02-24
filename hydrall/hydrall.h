@@ -16,7 +16,7 @@
     // Tree-plant properties
     #define FORM   0.5          // stem form factor
     #define RHOF   0.1          // [KgDM m-3] foliage density
-    #define RHOS   750          // [KgDM m-3] wood-stem density
+    #define RHOS   750          // [KgDM m-3] default wood-stem density
 
     // Hydraulic properties
     #define H50     0.4         // height for 50% maturation of xylem cells (m) [not relevant]
@@ -131,13 +131,19 @@
     struct Tplant {
 
         double myChlorophyllContent;
-        double height;
+        double height; // in cm
         double myLeafWidth;
         bool isAmphystomatic;
         double foliageLongevity;
         double sapwoodLongevity;
         double fineRootLongevity;
         double foliageDensity;
+        double woodDensity = RHOS;
+        double specificLeafArea;
+        double psiLeaf;
+        double psiLeafCritical;
+        double psiLeafMinimum;
+        double transpirationPerUnitFoliageAreaCritical;
 
 
     };
@@ -153,6 +159,10 @@
         std::vector <double> wiltingPoint;
         std::vector <double> fieldCapacity;
         std::vector <double> saturation;
+        std::vector <double> hydraulicConductivity;
+        std::vector <double> nodeThickness;
+
+
     };
 
     struct TbigLeaf

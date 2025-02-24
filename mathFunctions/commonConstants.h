@@ -8,6 +8,9 @@
     #ifndef MAXVALUE
         #define MAXVALUE(a, b) (((a) > (b))? (a) : (b))
     #endif
+    #ifndef BOUNDFUNCTION
+        #define BOUNDFUNCTION(lowerValue, upperValue, x) (MAXVALUE((lowerValue), MINVALUE((upperValue), (x))) )
+    #endif
 
     #ifndef sgnVariable
         #define sgnVariable(a) (((a) < 0 )? -1 : 1)
