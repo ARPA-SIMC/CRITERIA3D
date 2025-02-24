@@ -167,8 +167,8 @@ double Crit3DCrop::getDailyDegreeIncrease(double tmin, double tmax, int doy)
         return 0;
     }
 
-    double tmed = (tmin + MINVALUE(tmax, upperThermalThreshold)) * 0.5;
-    return MAXVALUE(tmed - thermalThreshold, 0);
+    double tmed = (tmin + std::min(tmax, upperThermalThreshold)) * 0.5;
+    return std::max(tmed - thermalThreshold, 0.);
 }
 
 
@@ -564,7 +564,7 @@ double Crit3DCrop::computeRootLength(double currentDD, double waterTableDepth)
             else
             {
                 // in order to avoid numerical divergences when calculating density through cardioid and gamma function
-                currentDD = MAXVALUE(currentDD, 1.0);
+                currentDD = std::max(currentDD, 1.0);
                 newRootLength = root::getRootLengthDD(roots, currentDD, degreeDaysEmergence);
             }
         }
@@ -594,13 +594,13 @@ double Crit3DCrop::computeRootLength(double currentDD, double waterTableDepth)
         if (currentDD > roots.degreeDaysRootGrowth)
             newRootLength = roots.currentRootLength;
         else
-            newRootLength = MINVALUE(newRootLength, roots.currentRootLength + MAX_DAILY_GROWTH);
+            newRootLength = std::min(newRootLength, roots.currentRootLength + MAX_DAILY_GROWTH);
 
         // maximum root lenght
         double maxRootLenght = waterTableDepth - MIN_WATERTABLE_DISTANCE - roots.rootDepthMin;
         if (newRootLength > maxRootLenght)
         {
-            newRootLength = MAXVALUE(roots.currentRootLength, maxRootLenght);
+            newRootLength = std::max(roots.currentRootLength, maxRootLenght);
         }
     }
 
@@ -646,7 +646,7 @@ void Crit3DCrop::computeRootLength3D(double currentDegreeDays, double totalSoilD
             else
             {
                 // in order to avoid numerical divergences
-                currentDegreeDays = MAXVALUE(currentDegreeDays, 1);
+                currentDegreeDays = std::max(currentDegreeDays, 1.0);
                 roots.currentRootLength = root::getRootLengthDD(roots, currentDegreeDays, degreeDaysEmergence);
             }
         }
@@ -709,7 +709,7 @@ double Crit3DCrop::getCropWaterDeficit(const std::vector<soil::Crit1DLayer> &soi
         waterDeficit += soilLayers[unsigned(i)].FC - soilLayers[unsigned(i)].waterContent;
     }
 
-    return MAXVALUE(waterDeficit, 0);
+    return std::max(waterDeficit, 0.);
 }
 
 
@@ -825,7 +825,7 @@ double Crit3DCrop::computeTranspiration(double maxTranspiration, const std::vect
     if (firstWaterStress > EPSILON && totRootDensityWithoutStress > EPSILON)
     {
         // redistribution acts on not stressed roots
-        redistribution = MINVALUE(firstWaterStress, totRootDensityWithoutStress) * maxTranspiration;
+        redistribution = std::min(firstWaterStress, totRootDensityWithoutStress) * maxTranspiration;
 
         for (int i = roots.firstRootLayer; i <= roots.lastRootLayer; i++)
         {
