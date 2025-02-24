@@ -211,7 +211,7 @@ void ChartView::tooltipScatterSeries(QPointF point, bool state)
     {
         double xValue = point.x();
         double yValue = point.y();
-
+        QString province = QString::fromStdString(_province);
         QString key;
 
         if (serie->name() == "Primary")
@@ -258,7 +258,7 @@ void ChartView::tooltipScatterSeries(QPointF point, bool state)
                 }
             }
         }
-        m_tooltip->setText(QString("%1\n%2 %3 ").arg(key).arg(xValue, 0, 'f', 1).arg(yValue, 0, 'f', 3));
+        m_tooltip->setText(QString("%1\n%2 %3\n%4 ").arg(key).arg(xValue, 0, 'f', 1).arg(yValue, 0, 'f', 3).arg(province));
         m_tooltip->setSeries(serie);
         m_tooltip->setAnchor(point);
         m_tooltip->setZValue(11);

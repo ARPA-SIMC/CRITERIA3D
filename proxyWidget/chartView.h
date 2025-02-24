@@ -28,7 +28,7 @@ public:
     void drawModelLapseRate(QList<QPointF> pointList);
     void tooltipScatterSeries(QPointF point, bool state);
     void setIdPointMap(const QMap<QString, QPointF> &valuePrimary, const QMap<QString, QPointF> &valueSecondary, const QMap<QString, QPointF> &valueSupplemental, const QMap<QString, QPointF> &valueMarked);
-
+    void setProvince(const std::string &province);
 private:
     QScatterSeries *series1;
     QScatterSeries *series2;
@@ -41,6 +41,7 @@ private:
     QMap< QString, QPointF > idPointMap2;
     QMap< QString, QPointF > idPointMap3;
     QMap< QString, QPointF > idPointMapMarked;
+    QMap< QString, QPointF > _province;
 };
 
 #endif // CHARTVIEW_H
