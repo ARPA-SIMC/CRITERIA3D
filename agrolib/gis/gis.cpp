@@ -2055,6 +2055,7 @@ namespace gis
         }
 
         // step 3: cleans the basin (removes points relating to other basins)
+        float threshold = basinRaster.header->cellSize * 5;
         for (int row = 0; row < basinRaster.header->nrRows; row++)
         {
             for (int col = 0; col < basinRaster.header->nrCols; col++)
@@ -2063,37 +2064,43 @@ namespace gis
                 {
                     refValue = basinRaster.value[row][col];
 
-                    int newRow = row;
-                    int newCol = col;
+                    int lastRow = row;
+                    int lastCol = col;
                     bool isNewPoint = true;
+                    double x, y;
 
                     // descends following the maximum slope
                     while (isNewPoint)
                     {
-                        int currentRow = newRow;
-                        int currentCol = newCol;
                         isNewPoint = false;
-                        for (int r = -1; r <= 1; r++)
+                        int currentRow = lastRow;
+                        int currentCol = lastCol;
+                        inputRaster.getXY(currentRow, currentCol, x, y);
+
+                        if (computeDistance(x, y, xClosure, yClosure) > threshold)
                         {
-                            for (int c = -1; c <= 1; c++)
+                            for (int r = -1; r <= 1; r++)
                             {
-                                if (r != 0 || c != 0)
+                                for (int c = -1; c <= 1; c++)
                                 {
-                                    rasterValue = inputRaster.getValueFromRowCol(currentRow+r, currentCol+c);
-                                    if (! isEqual(rasterValue, inputRaster.header->flag) && (rasterValue < refValue))
+                                    if (r != 0 || c != 0)
                                     {
-                                        refValue = rasterValue;
-                                        newRow = currentRow+r;
-                                        newCol = currentCol+c;
-                                        isNewPoint = true;
+                                        rasterValue = inputRaster.getValueFromRowCol(currentRow+r, currentCol+c);
+                                        if (! isEqual(rasterValue, inputRaster.header->flag) && (rasterValue < refValue))
+                                        {
+                                            refValue = rasterValue;
+                                            lastRow = currentRow+r;
+                                            lastCol = currentCol+c;
+                                            isNewPoint = true;
+                                        }
                                     }
                                 }
                             }
                         }
                     }
 
-                    // check the last point: remove the point if it is outside the basin
-                    if (isEqual(basinRaster.value[newRow][newCol], basinRaster.header->flag))
+                    // remove the origin point if the last point of path is outside the basin
+                    if (isEqual(basinRaster.value[lastRow][lastCol], basinRaster.header->flag))
                     {
                         basinRaster.value[row][col] = basinRaster.header->flag;
                     }

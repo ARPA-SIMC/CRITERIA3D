@@ -120,11 +120,9 @@
         return dist;
     }
 
-    float distance2D(float x1,float y1, float x2, float y2)
+    float distance2D(float x1, float y1, float x2, float y2)
     {
-        float dist;
-        dist = sqrtf(powf((x1-x2),2) + powf((y1-y2),2));
-        return dist;
+        return sqrtf((x1-x2)*(x1-x2) + (y1-y2)*(y1-y2));
     }
 
     float norm(float* x, int vectorLength)
