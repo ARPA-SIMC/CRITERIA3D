@@ -160,6 +160,7 @@
         std::vector <double> fieldCapacity;
         std::vector <double> saturation;
         std::vector <double> hydraulicConductivity;
+        std::vector <double> satHydraulicConductivity;
         std::vector <double> nodeThickness;
 
 
