@@ -46,7 +46,7 @@ bool Crit3D_Hydrall::computeHydrallPoint(Crit3DDate myDate, double myTemperature
 
     // da qui in poi bisogna fare un ciclo su tutte le righe e le colonne
 
-    double actualLAI = getLAI();
+    leafAreaIndex = getLAI(myDate);
     /* necessaria per ogni specie:
      *  il contenuto di clorofilla (g cm-2) il default è 500
      *  lo spessore della foglia 0.2 cm default
@@ -88,10 +88,18 @@ double Crit3D_Hydrall::getPressureFromElevation(double myTemperature, double myE
     return P0 * exp((- GRAVITY * M_AIR * myElevation) / (R_GAS * myTemperature));
 }
 */
-double Crit3D_Hydrall::getLAI()
+double Crit3D_Hydrall::getLAI(Crit3DDate myDate)
 {
     // TODO
-    return 4;
+
+    if (getDoyFromDate(myDate) < 100)
+        return LAIMIN;
+    else if (getDoyFromDate(myDate) > 300)
+        return LAIMIN;
+    else if (getDoyFromDate(myDate) >= 100 && getDoyFromDate(myDate) <= 200)
+        return LAIMIN+(LAIMAX-LAIMIN)/100*(getDoyFromDate(myDate)-100);
+    else
+        return LAIMAX;
 }
 
 double Crit3D_Hydrall::photosynthesisAndTranspiration()
@@ -717,10 +725,23 @@ void Crit3D_Hydrall::cumulatedResults()
         treeTranspirationRate[i] = simulationStepInSeconds * MH2O * treeTranspirationRate[i]; // [mm]
         deltaTime.transpiration += treeTranspirationRate[i];
     }
+    deltaTime.transpiration += understorey.transpiration;
 
+    //evaporation
+    deltaTime.evaporation = computeEvaporation();
 
 }
 
+double Crit3D_Hydrall::computeEvaporation()
+{
+    double ETP = 0.5;
+    double totalLAI = understorey.leafAreaIndex + leafAreaIndex;
+
+    if (totalLAI == LAIMAX)
+        return 0.2 * ETP;
+    else
+        return -0.8 / LAIMAX *ETP;
+}
 
 double Crit3D_Hydrall::plantRespiration()
 {

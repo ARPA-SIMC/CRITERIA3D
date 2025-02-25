@@ -17,6 +17,8 @@
     #define FORM   0.5          // stem form factor
     #define RHOF   0.1          // [KgDM m-3] foliage density
     #define RHOS   750          // [KgDM m-3] default wood-stem density
+    #define LAIMIN 0.1          //[m2 m-2]
+    #define LAIMAX 4            //[m2 m-2]
 
     // Hydraulic properties
     #define H50     0.4         // height for 50% maturation of xylem cells (m) [not relevant]
@@ -216,6 +218,8 @@
         double respiration ;
         double transpirationGrass;
         double transpirationNoStress;
+        double evaporation;
+        double evapoTranspiration;
     };
 
     struct ThydrallNitrogen {
@@ -302,7 +306,7 @@
         bool computeHydrallPoint(Crit3DDate myDate, double myTemperature, double myElevation, int secondPerStep, double &AGBiomass, double &rootBiomass);
         double getCO2(Crit3DDate myDate, double myTemperature, double myElevation);
         //double getPressureFromElevation(double myTemperature, double myElevation);
-        double getLAI();
+        double getLAI(Crit3DDate myDate);
         double meanLastMonthTemperature(double previousLastMonthTemp, double simulationStepInSeconds, double myInstantTemp);
         double photosynthesisAndTranspiration();
         double photosynthesisAndTranspirationUnderstorey();
@@ -316,6 +320,7 @@
         void carbonWaterFluxesProfile();
         void cumulatedResults();
         double plantRespiration();
+        double computeEvaporation();
         double soilTemperatureModel();
         double temperatureMoistureFunction(double temperature);
         bool growthStand();
