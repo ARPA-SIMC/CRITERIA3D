@@ -575,7 +575,7 @@ namespace soil
 
     /*!
      * \brief Compute degree of saturation from volumetric water content
-     * \param theta [m^3 m-3] volumetric water content
+     * \param theta [m3 m-3] volumetric water content
      * \param horizon pointer to Crit3DHorizon class
      * \return [-] degree of saturation
      */
