@@ -217,19 +217,17 @@ Crit3DDate getDateFromDoy(int year, int doy)
         { 0,  31,  59,  90, 120, 151, 181, 212, 243, 273, 304, 334, 365 }, // Non leap year
         { 0,  31,  60,  91, 121, 152, 182, 213, 244, 274, 305, 335, 366 }  // Leap year
     };
-    int month, day;
-    bool leap = isLeapYear(year);
-    int m = 1;
+    int leap = int(isLeapYear(year));       // leap: 1  -  not leap: 0
+    int month = 1;
 
     // Compute the month
-    while (doy > daysBeforeMonth[leap][m]) {
-        m++;
+    while (doy > daysBeforeMonth[leap][month]) {
+        month++;
     }
 
     // Compute the day
-    month = m;
-    day = doy - daysBeforeMonth[leap][m - 1];
-    return {day,month,year};
+    int day = doy - daysBeforeMonth[leap][month - 1];
+    return {day, month, year};
 }
 
 
@@ -251,23 +249,14 @@ int difference(const Crit3DDate &firstDate, const Crit3DDate &lastDate)
     return firstDate.daysTo(lastDate);
 }
 
-/*
-bool isLeapYear(int year)
-{
-    // No year 0 in Gregorian calendar, so -1, -5, -9 etc are leap years
-    if (year < 1)
-        ++year;
-
-    if (year % 4 != 0) return false;
-    if (year % 100 != 0) return true;
-    return (year % 400 == 0);
-}
-*/
 bool isLeapYear(int year)
 {
     // No year 0 in Gregorian calendar, so -1, -5, -9 etc are leap years
     year += (year < 1);
-    return (year % 4 == 0 && (year % 100 != 0 || year % 400 == 0));
+
+    if (year % 4 != 0) return false;
+    if (year % 100 != 0) return true;
+    return (year % 400 == 0);
 }
 
 int getDoyFromDate(const Crit3DDate& myDate)
@@ -282,7 +271,9 @@ int getDoyFromDate(const Crit3DDate& myDate)
 
 int getMonthFromDoy(int doy,int year)
 {
-    if (doy <1 || doy > 366) return NODATA;
+    if ((doy < 1) || (doy > 366))
+        return NODATA;
+
     int month = 0;
     int doyMonthSpecific[12];
     for (int i=0;i<12;i++)
