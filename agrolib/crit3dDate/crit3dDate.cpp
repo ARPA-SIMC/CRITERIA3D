@@ -205,10 +205,31 @@ Crit3DDate min(const Crit3DDate& myDate1, const Crit3DDate& myDate2)
         return myDate2;
 }
 
-
+/*
 Crit3DDate getDateFromDoy(int year, int doy)
 {
     return Crit3DDate(1, 1, year).addDays(doy-1);
+}
+*/
+Crit3DDate getDateFromDoy(int year, int doy)
+{
+    static const int daysBeforeMonth[2][13] = {
+        { 0,  31,  59,  90, 120, 151, 181, 212, 243, 273, 304, 334, 365 }, // Non leap year
+        { 0,  31,  60,  91, 121, 152, 182, 213, 244, 274, 305, 335, 366 }  // Leap year
+    };
+    int month, day;
+    bool leap = isLeapYear(year);
+    int m = 1;
+
+    // Compute the month
+    while (doy > daysBeforeMonth[leap][m]) {
+        m++;
+    }
+
+    // Compute the day
+    month = m;
+    day = doy - daysBeforeMonth[leap][m - 1];
+    return {day,month,year};
 }
 
 
@@ -230,7 +251,7 @@ int difference(const Crit3DDate &firstDate, const Crit3DDate &lastDate)
     return firstDate.daysTo(lastDate);
 }
 
-
+/*
 bool isLeapYear(int year)
 {
     // No year 0 in Gregorian calendar, so -1, -5, -9 etc are leap years
@@ -241,7 +262,13 @@ bool isLeapYear(int year)
     if (year % 100 != 0) return true;
     return (year % 400 == 0);
 }
-
+*/
+bool isLeapYear(int year)
+{
+    // No year 0 in Gregorian calendar, so -1, -5, -9 etc are leap years
+    year += (year < 1);
+    return (year % 4 == 0 && (year % 100 != 0 || year % 400 == 0));
+}
 
 int getDoyFromDate(const Crit3DDate& myDate)
 {
