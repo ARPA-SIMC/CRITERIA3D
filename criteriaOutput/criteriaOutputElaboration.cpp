@@ -431,9 +431,9 @@ int writeCsvOutputUnit(QString idCase, QString idCropClass, QSqlDatabase& dbData
             // there is no climate computation
             if (outputVariable.climateComputation[i].isEmpty())
             {
-                // fraction of available water [0-1] requires 3 decimal digits
+                // fraction and index [0-1] requires 3 decimal digits
                 QString varName = outputVariable.varName[i];
-                if (varName == "FRACTION_AW" || varName.left(3) == "FAW")
+                if (varName == "FRACTION_AW" || varName.left(3) == "FAW" || varName.left(3) == "SWI")
                 {
                     resultList.append(QString::number(result,'f', 3));
                 }
