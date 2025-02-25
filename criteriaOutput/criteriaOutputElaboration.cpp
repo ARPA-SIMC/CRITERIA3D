@@ -422,7 +422,7 @@ int writeCsvOutputUnit(QString idCase, QString idCropClass, QSqlDatabase& dbData
             }
         }
 
-        if (int(result) == int(NODATA))
+        if (isEqual(result, NODATA))
         {
             resultList.append(QString::number(result));
         }
@@ -552,11 +552,12 @@ int writeCsvOutputUnit(QString idCase, QString idCropClass, QSqlDatabase& dbData
     // write CSV
     QFile outputFile;
     outputFile.setFileName(csvFileName);
-    if (!outputFile.open(QIODevice::ReadWrite | QIODevice::Append))
+    if (! outputFile.open(QIODevice::ReadWrite | QIODevice::Append))
     {
         errorStr = "Open failure: " + csvFileName;
         return false;
     }
+
     QTextStream out(&outputFile);
     out << dateComputation.toString("yyyy-MM-dd");
     out << "," << idCase;
@@ -652,8 +653,8 @@ int selectSimpleVar(QSqlDatabase& db, QString idCase, QString varName, QString c
     }
 
     return CRIT1D_OK;
-
 }
+
 
 int computeDTX(QSqlDatabase &db, QString idCase, int period, QString computation,
                QDate firstDate, QDate lastDate, std::vector<float>& resultVector, QString &errorStr)
