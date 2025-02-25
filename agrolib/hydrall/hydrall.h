@@ -17,8 +17,8 @@
     #define FORM   0.5          // stem form factor
     #define RHOF   0.1          // [KgDM m-3] foliage density
     #define RHOS   750          // [KgDM m-3] default wood-stem density
-    #define LAIMIN 0.1          //[m2 m-2]
-    #define LAIMAX 4            //[m2 m-2]
+    #define LAIMIN 0.1          //[-]
+    #define LAIMAX 1            //[-]
 
     // Hydraulic properties
     #define H50     0.4         // height for 50% maturation of xylem cells (m) [not relevant]
@@ -146,7 +146,8 @@
         double psiLeafCritical;
         double psiLeafMinimum;
         double transpirationPerUnitFoliageAreaCritical;
-
+        double leafAreaIndexCanopy;
+        double leafAreaIndexCanopyMax;
 
     };
 
@@ -287,7 +288,10 @@
 
         double elevation;
         int simulationStepInSeconds;
-        double leafAreaIndex;
+        double understoreyLeafAreaIndexMax;
+        double cover = 1; // TODO
+
+
 
         double annualGrossStandGrowth;
 
@@ -306,7 +310,7 @@
         bool computeHydrallPoint(Crit3DDate myDate, double myTemperature, double myElevation, int secondPerStep, double &AGBiomass, double &rootBiomass);
         double getCO2(Crit3DDate myDate, double myTemperature, double myElevation);
         //double getPressureFromElevation(double myTemperature, double myElevation);
-        double getLAI(Crit3DDate myDate);
+        double computeLAI(Crit3DDate myDate);
         double meanLastMonthTemperature(double previousLastMonthTemp, double simulationStepInSeconds, double myInstantTemp);
         double photosynthesisAndTranspiration();
         double photosynthesisAndTranspirationUnderstorey();
