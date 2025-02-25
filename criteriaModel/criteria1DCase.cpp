@@ -145,7 +145,7 @@ bool Crit1DCase::initializeNumericalFluxes(std::string &error)
     int lastLayer = nrLayers-1;
     int nrlateralLinks = 0;
 
-    int result = soilFluxes3D::initialize(nrLayers, nrLayers, nrlateralLinks, true, false, false);
+    int result = soilFluxes3D::initializeFluxes(nrLayers, nrLayers, nrlateralLinks, true, false, false);
     if (result != CRIT3D_OK)
     {
         error = "Error in initialize numerical fluxes";
@@ -155,6 +155,7 @@ bool Crit1DCase::initializeNumericalFluxes(std::string &error)
     float horizontalConductivityRatio = 10.0;
     soilFluxes3D::setHydraulicProperties(fittingOptions.waterRetentionCurve, MEAN_LOGARITHMIC, horizontalConductivityRatio);
     soilFluxes3D::setNumericalParameters(60, 3600, 100, 10, 10, 3);
+    soilFluxes3D::setThreads(1);
 
     // set soil properties (units of measurement: MKS)
     int soilIndex = 0;
@@ -723,11 +724,58 @@ double Crit1DCase::getDegreeOfSaturation(double computationDepth)
         lowerDepth = soilLayers[i].depth + soilLayers[i].thickness * 0.5;
         if (computationDepth >= upperDepth && computationDepth <= lowerDepth)
         {
-            return soilLayers[i].waterContent / soilLayers[i].SAT;
+            return soilLayers[i].getDegreeOfSaturation();
         }
     }
 
     return NODATA;
+}
+
+
+/*!
+ * \brief getSoilWaterIndex
+ * compute Soil Water Index (SWI)
+ * 0: wilting point
+ * 1: soil saturation
+ * \param computationDepth = computation soil depth  [cm]
+ * \return soil water index [-] averaged from zero to specific depth
+ */
+double Crit1DCase::getSoilWaterIndex(double computationDepth)
+{
+    computationDepth /= 100;            // [cm] --> [m]
+    if (computationDepth <= 0 || mySoil.totalDepth < (computationDepth * 0.25))
+    {
+        return NODATA;
+    }
+
+    double lowerDepth, upperDepth;      // [m]
+    double depthFraction;               // [-]
+    double currentWaterSum;             // [mm]
+    double potentialWaterSum = 0;       // [mm]
+
+    currentWaterSum = soilLayers[0].waterContent;                   // pond [mm]
+
+    bool islastComputationLayer = false;
+    unsigned int i = 1;
+    while (i < soilLayers.size() && ! islastComputationLayer)
+    {
+        upperDepth = soilLayers[i].depth - soilLayers[i].thickness * 0.5;
+        lowerDepth = soilLayers[i].depth + soilLayers[i].thickness * 0.5;
+
+        if (lowerDepth < computationDepth)
+            depthFraction = 1;
+        else
+        {
+            depthFraction = (computationDepth - upperDepth) / soilLayers[i].thickness;
+            islastComputationLayer = true;
+        }
+
+        currentWaterSum += (soilLayers[i].waterContent - soilLayers[i].WP) * depthFraction;
+        potentialWaterSum += (soilLayers[i].SAT - soilLayers[i].WP) * depthFraction;
+        i++;
+    }
+
+    return currentWaterSum / potentialWaterSum;
 }
 
 
@@ -798,27 +846,28 @@ double Crit1DCase::getSlopeStability(double computationDepth)
 /*!
  * \brief getWaterDeficit
  * \param computationDepth = computation soil depth  [cm]
- * \return sum of water deficit from zero to computationDepth (mm)
+ * \return sum of soil water deficit (mm) from zero to computationDepth
  */
 double Crit1DCase::getWaterDeficitSum(double computationDepth)
 {
-    computationDepth /= 100;                // [cm] --> [m]
+    computationDepth /= 100.;               // [cm] --> [m]
     double lowerDepth, upperDepth;          // [m]
+    double layerDeficit;                    // [mm]
     double waterDeficitSum = 0;             // [mm]
 
     for (unsigned int i = 1; i < soilLayers.size(); i++)
     {
         lowerDepth = soilLayers[i].depth + soilLayers[i].thickness * 0.5;
+        layerDeficit = soilLayers[i].FC - soilLayers[i].waterContent;
 
         if (lowerDepth < computationDepth)
         {
-            waterDeficitSum += soilLayers[i].FC - soilLayers[i].waterContent;
+            waterDeficitSum += layerDeficit;
         }
         else
         {
             // fraction of last layer
             upperDepth = soilLayers[i].depth - soilLayers[i].thickness * 0.5;
-            double layerDeficit = soilLayers[i].FC - soilLayers[i].waterContent;
             double depthFraction = (computationDepth - upperDepth) / soilLayers[i].thickness;
             return waterDeficitSum + layerDeficit * depthFraction;
         }
@@ -902,6 +951,11 @@ double Crit1DCase::getAvailableWaterSum(double computationDepth)
 double Crit1DCase::getFractionAW(double computationDepth)
 {
     computationDepth /= 100;            // [cm] --> [m]
+    if (computationDepth <= 0 || mySoil.totalDepth < (computationDepth * 0.25))
+    {
+        return NODATA;
+    }
+
     double lowerDepth, upperDepth;      // [m]
     double depthFraction;               // [-]
     double availableWaterSum = 0;       // [mm]

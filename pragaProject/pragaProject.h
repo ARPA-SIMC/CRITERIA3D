@@ -165,13 +165,13 @@
         bool saveLogProceduresGrid(QString nameProc, QDate date);
 
         bool dailyZoneAggregationMeteoGrid(meteoVariable variable, const QString& aggregationString, float threshold,
-                                           gis::Crit3DRasterGrid* zoneGrid, std::vector<std::vector<float>> &zoneValues, std::vector<float> &outputSeries,
+                                           gis::Crit3DRasterGrid* zoneGrid, std::vector<int> &idZoneVector, std::vector<float> &outputSeries,
                                            std::vector<std::vector<int>> &indexRowCol,
                                            std::vector<std::vector<int>> &meteoGridRow, std::vector<std::vector<int>> &meteoGridcol,
                                            const Crit3DDate& startDate, int nrDays, bool showInfo);
 
         bool hourlyZoneAggregationMeteoGrid(meteoVariable variable, const QString& aggregationString, float threshold,
-                                           gis::Crit3DRasterGrid* zoneRaster, std::vector<std::vector<float>> &zoneValues, std::vector<float> &outputSeries,
+                                           gis::Crit3DRasterGrid* zoneRaster, std::vector<int> &idZoneVector, std::vector<float> &outputSeries,
                                            std::vector<std::vector<int>> &indexRowCol,
                                            std::vector<std::vector<int>> &meteoGridRow, std::vector<std::vector<int>> &meteoGridcol,
                                            const Crit3DDate& startDate, int nrDays, bool showInfo);

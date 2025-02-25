@@ -8,7 +8,7 @@
 #
 #------------------------------------------------------
 
-QT  += core gui widgets
+QT  += widgets
 
 TEMPLATE = lib
 CONFIG += staticlib

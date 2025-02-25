@@ -161,10 +161,6 @@ namespace soil
         this->CEC = NODATA;
     }
 
-    Crit3DSoil::Crit3DSoil()
-    {
-        this->cleanSoil();
-    }
 
     void Crit3DSoil::initialize(const std::string &soilCode, int nrHorizons)
     {
@@ -180,8 +176,8 @@ namespace soil
 
     void Crit3DSoil::addHorizon(int nHorizon, const Crit3DHorizon &newHorizon)
     {
-        horizon.insert(horizon.begin() + nHorizon, newHorizon);
-        nrHorizons = nrHorizons + 1;
+        this->horizon.insert(this->horizon.begin() + nHorizon, newHorizon);
+        this->nrHorizons++;
     }
 
     void Crit3DSoil::deleteHorizon(int nHorizon)
@@ -579,7 +575,7 @@ namespace soil
 
     /*!
      * \brief Compute degree of saturation from volumetric water content
-     * \param theta [m^3 m-3] volumetric water content
+     * \param theta [m3 m-3] volumetric water content
      * \param horizon pointer to Crit3DHorizon class
      * \return [-] degree of saturation
      */

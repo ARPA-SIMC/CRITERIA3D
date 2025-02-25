@@ -882,9 +882,11 @@ float shepardSearchNeighbour(vector <Crit3DInterpolationDataPoint> &inputPoints,
     }
 
     float radius;
+
     if (shepardNeighbourPoints.size() < SHEPARD_MIN_NRPOINTS)
     {
         int nrPoints = sortPointsByDistance(SHEPARD_MIN_NRPOINTS, inputPoints, outputPoints);
+        if (outputPoints.empty()) return NODATA;
         radius = outputPoints[nrPoints-1].distance + float(EPSILON);
     }
     else if (shepardNeighbourPoints.size() > SHEPARD_MAX_NRPOINTS)
@@ -989,6 +991,9 @@ float modifiedShepardIdw(vector <Crit3DInterpolationDataPoint> &myPoints,
     }
     else
         validPoints = myPoints;
+
+    if (myPoints.empty())
+        return NODATA;
 
     weight.resize(validPoints.size());
     t.resize(validPoints.size());

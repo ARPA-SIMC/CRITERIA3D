@@ -8,6 +8,9 @@
     #ifndef MAXVALUE
         #define MAXVALUE(a, b) (((a) > (b))? (a) : (b))
     #endif
+    #ifndef BOUNDFUNCTION
+        #define BOUNDFUNCTION(lowerValue, upperValue, x) (MAXVALUE((lowerValue), MINVALUE((upperValue), (x))) )
+    #endif
 
     #ifndef sgnVariable
         #define sgnVariable(a) (((a) < 0 )? -1 : 1)
@@ -160,6 +163,8 @@
     #define	MO2		0.032
     // [kg mol-1] mass of molecular nitrogen (N2)
     #define	MN2		0.028
+    // [kg mol-1] mass of carbon (C)
+    #define MC      0.012
     // [kg mol-1] mass of air
     #define M_AIR    0.029
     // [K] zero Celsius
@@ -174,7 +179,7 @@
     // [K m-1] constant lapse rate of moist air
     #define LAPSE_RATE_MOIST_AIR 0.0065
     // [Pa] standard atmospheric pressure at sea level
-    #define P0 101300.
+    #define P0 101325.
     // [K] temperature at reference pressure level (P0)
     #define TP0 293.16
     // [g s-2] surface tension at 25 degC
@@ -211,7 +216,7 @@
     #define	 VAPOR_DIFFUSIVITY0 0.0000212
 
     // [Pa] default atmospheric pressure at sea level
-    #define SEA_LEVEL_PRESSURE 101325.
+    //#define SEA_LEVEL_PRESSURE 101325.
 
     #define ALBEDO_WATER 0.05
     #define ALBEDO_SOIL 0.15

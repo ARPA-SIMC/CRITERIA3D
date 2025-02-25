@@ -108,10 +108,11 @@
         QList<QString> getRegionList();
         QList<QString> getStateList();
         QList<QString> getDatasetList();
-        bool setActiveStateIfCondition(bool activeState, QString condition);
+        bool setActiveStateIfCondition(bool activeState, const QString &condition);
+        bool getPointListWithCriteria(QList<QString> &selectedPointsList, const QString &condition);
         bool setOrogCode(QString id, int orogCode);
         QList<QString> getJointStations(const QString& idPoint);
-        bool setJointStations(const QString& idPoint, QList<QString> stationsList);
+        bool setJointStations(const QString& idPoint, const QList<QString> &stationsList);
         QString getNameGivenId(QString id);
         double getAltitudeGivenId(QString id);
 

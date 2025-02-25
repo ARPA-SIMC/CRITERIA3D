@@ -7,7 +7,7 @@
 #
 #-----------------------------------------------------
 
-QT       += core gui widgets charts sql xml
+QT       += widgets charts sql xml
 greaterThan(QT_MAJOR_VERSION, 5): QT += core5compat
 
 TEMPLATE = lib

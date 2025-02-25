@@ -23,6 +23,7 @@ public:
     void plot();
     void climatologicalLRClicked(int toggled);
     void modelLRClicked(int toggled);
+
 private:
     double x;
     double y;

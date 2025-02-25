@@ -4,7 +4,7 @@
 #
 #-------------------------------------------------
 
-QT      += core sql xml
+QT      += sql xml
 QT      -= gui
 
 TEMPLATE = lib
