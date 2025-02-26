@@ -82,7 +82,7 @@
         double getVolumetricWaterContent(double computationDepth);
         double getDegreeOfSaturation(double computationDepth);
         double getWaterPotential(double computationDepth);
-        double getFractionAW(double computationDepth);
+        double getAvailableWaterFraction(double computationDepth);
         double getSlopeStability(double computationDepth);
 
         double getWaterDeficitSum(double computationDepth);
