@@ -2055,7 +2055,7 @@ namespace gis
         }
 
         // step 3: cleans the basin (removes points relating to other basins)
-        float threshold = basinRaster.header->cellSize * 5;
+        double threshold = basinRaster.header->cellSize * 3.;
         for (int row = 0; row < basinRaster.header->nrRows; row++)
         {
             for (int col = 0; col < basinRaster.header->nrCols; col++)
