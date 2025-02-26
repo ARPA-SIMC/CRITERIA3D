@@ -875,7 +875,7 @@ namespace interpolation
     /*!
      * \brief Compute soil water content from water potential
      * \param water potential (psi) [kPa]
-     * \return volumetric water content [m^3 m-3]
+     * \return volumetric water content [m3 m-3]
      */
     double modifiedVanGenuchten(double psi, double *parameters, bool isRestricted)
     {
@@ -883,13 +883,13 @@ namespace interpolation
         double thetaS, thetaR, he;
         double alpha, n, m;
 
-        thetaS = parameters[0];         // water content at saturation [m^3 m^-3]
-        thetaR = parameters[1];         // water content residual [m^3 m^-3]
+        thetaS = parameters[0];         // water content at saturation [m3 m-3]
+        thetaR = parameters[1];         // water content residual [m3 m-3]
         he = parameters[2];             // air entry [kPa]
 
         if (psi <= he) return thetaS;
 
-        alpha = parameters[3];          // Van Genuchten curve parameter [kPa^-1]
+        alpha = parameters[3];          // Van Genuchten curve parameter [kPa-1]
         n = parameters[4];              // Van Genuchten curve parameter [-]
         if (isRestricted) {
             m = 1 - 1/n;                // Van Genuchten curve parameter (restricted: 1-1/n) [-]
@@ -904,7 +904,7 @@ namespace interpolation
         // degree of saturation [-]
         double Se = pow(1 + pow(alpha * psi, n), -m) / sc;
 
-        // volumetric water content [m^3 m^-3]
+        // volumetric water content [m3 m-3]
         return Se * (thetaS - thetaR) + thetaR;
     }
 

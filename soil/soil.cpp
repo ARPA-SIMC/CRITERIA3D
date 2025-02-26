@@ -575,7 +575,7 @@ namespace soil
 
     /*!
      * \brief Compute degree of saturation from volumetric water content
-     * \param theta [m^3 m-3] volumetric water content
+     * \param theta [m3 m-3] volumetric water content
      * \param horizon pointer to Crit3DHorizon class
      * \return [-] degree of saturation
      */
@@ -592,7 +592,7 @@ namespace soil
     /*!
      * \brief Compute water potential from volumetric water content
      * \brief using modified Van Genuchten model
-     * \param theta: volumetric water content   [m^3 m-3]
+     * \param theta: volumetric water content   [m3 m-3]
      * \param horizon: pointer to Crit3DHorizon class
      * \return water potential                  [kPa]
      */
@@ -1049,12 +1049,12 @@ namespace soil
         double* pmax = new double[nrParameters];
         double* pdelta = new double[nrParameters];
 
-        // water content at saturation [m^3 m^-3]
+        // water content at saturation [m3 m-3]
         param[0] = horizon.vanGenuchten.thetaS;
         pmin[0] = 0;
         pmax[0] = 1;
 
-        // water content residual [m^3 m^-3]
+        // water content residual [m3 m-3]
         param[1] = horizon.vanGenuchten.thetaR;
         pmin[1] = 0;
         pmax[1] = std::max(0.1, horizon.vanGenuchten.thetaR*2);
