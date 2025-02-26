@@ -654,7 +654,7 @@ bool Crit1DCase::computeDailyModel(Crit3DDate &myDate, std::string &error)
     output.dailySurfaceWaterContent = soilLayers[0].waterContent;
     output.dailySoilWaterContent = getSoilWaterContentSum(soilLayers, 100);
     output.dailyAvailableWater = getAvailableWaterSum(100);
-    output.dailyFractionAW = getFractionAW(100);
+    output.dailyFractionAW = getAvailableWaterFraction(100);
     output.dailyReadilyAW = getReadilyAvailableWater(crop, soilLayers);
 
     return true;
@@ -944,11 +944,11 @@ double Crit1DCase::getAvailableWaterSum(double computationDepth)
 
 
 /*!
- * \brief getFractionAW
+ * \brief getAvailableWaterFraction
  * \param computationDepth = computation soil depth  [cm]
- * \return fraction of available water from zero to computationDepth (mm)
+ * \return fraction of available water [-] from zero to computationDepth
  */
-double Crit1DCase::getFractionAW(double computationDepth)
+double Crit1DCase::getAvailableWaterFraction(double computationDepth)
 {
     computationDepth /= 100;            // [cm] --> [m]
     if (computationDepth <= 0 || mySoil.totalDepth < (computationDepth * 0.25))
@@ -962,8 +962,8 @@ double Crit1DCase::getFractionAW(double computationDepth)
     double potentialAWSum = 0;          // [mm]
 
     unsigned int i = 1;
-    bool isDepthLower = true;
-    while (i < soilLayers.size() && isDepthLower)
+    bool isLastComputationLayer = false;
+    while (i < soilLayers.size() && ! isLastComputationLayer)
     {
         upperDepth = soilLayers[i].depth - soilLayers[i].thickness * 0.5;
         lowerDepth = soilLayers[i].depth + soilLayers[i].thickness * 0.5;
@@ -973,7 +973,7 @@ double Crit1DCase::getFractionAW(double computationDepth)
         else
         {
             depthFraction = (computationDepth - upperDepth) / soilLayers[i].thickness;
-            isDepthLower = false;
+            isLastComputationLayer = true;
         }
 
         availableWaterSum += (soilLayers[i].waterContent - soilLayers[i].WP) * depthFraction;
