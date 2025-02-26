@@ -56,7 +56,7 @@
     struct TlinkedNode
     {
         long index;                             /*!< index of linked elements */
-        float area;                             /*!< interface area [m^2] */
+        float area;                             /*!< interface area [m2] */
         float sumFlow;                          /*!< [m3] sum of flow(i,j) */
 
         TCrit3DLinkedNodeExtra* linkedExtra;    /*!< extra variables for heat flux */

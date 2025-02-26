@@ -320,8 +320,8 @@ namespace statistics
     double weighedMeanMultifactor(meanType type, std::vector <std::vector <double>> weights, std::vector<double> &data)
     {
         double mean = NODATA;
-        int nrData = data.size();
-        int nrWeightFactors = weights.size();
+        int nrData = int(data.size());
+        int nrWeightFactors = int(weights.size());
         std::vector<double> compositeWeights(nrData,1);
         std::vector<double> normalizationCoefficient(nrWeightFactors,0);
 
