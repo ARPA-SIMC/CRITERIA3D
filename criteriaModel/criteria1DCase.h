@@ -88,6 +88,7 @@
         double getWaterDeficitSum(double computationDepth);
         double getWaterCapacitySum(double computationDepth);
         double getAvailableWaterSum(double computationDepth);
+        double getSoilWaterIndex(double computationDepth);
 
     private:
         double minLayerThickness;       // [m]
