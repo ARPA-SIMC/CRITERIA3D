@@ -182,7 +182,7 @@ bool Crit1DCase::initializeNumericalFluxes(std::string &error)
 
     // set surface properties
     double maxSurfaceWater = crop.getSurfaceWaterPonding() * 0.001;     // [m]
-    double roughnessManning = 0.024;                                    // [s m^-0.33]
+    double roughnessManning = 0.024;                                    // [s m-0.33]
     int surfaceIndex = 0;
     soilFluxes3D::setSurfaceProperties(surfaceIndex, roughnessManning);
 
@@ -203,7 +203,7 @@ bool Crit1DCase::initializeNumericalFluxes(std::string &error)
     isSurface = false;
     for (int i = 1; i < nrLayers; i++)
     {
-        double volume = area * soilLayers[unsigned(i)].thickness;             // [m^3]
+        double volume = area * soilLayers[unsigned(i)].thickness;             // [m3]
         double z = z0 - soilLayers[unsigned(i)].depth;                        // [m]
         if (i == lastLayer)
         {
