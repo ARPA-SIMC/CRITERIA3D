@@ -2,6 +2,7 @@
     \name hydrall.cpp
     \brief
     \authors Antonio Volta, Caterina Toscano
+    \email avolta@arpae.it ctoscano@arpae.it
 
 */
 
