@@ -100,9 +100,9 @@
         class Crit3DDriessen
         {
         public:
-            double k0;                      /*!<   [cm day^-1] saturated hydraulic conductivity */
-            double maxSorptivity;           /*!<   [cm day^-1/2] maximum sorptivity (sorptivity of a completely dry matrix) */
-            double gravConductivity;        /*!<   [cm day^-1] infiltration due to gravitational force */
+            double k0;                      /*!<   [cm day-1] saturated hydraulic conductivity */
+            double maxSorptivity;           /*!<   [cm day-1/2] maximum sorptivity (sorptivity of a completely dry matrix) */
+            double gravConductivity;        /*!<   [cm day-1] infiltration due to gravitational force */
 
             Crit3DDriessen();
         };
@@ -111,7 +111,7 @@
         class Crit3DWaterConductivity
         {
         public:
-            double kSat;                    /*!<   [cm day^-1] saturated conductivity  */
+            double kSat;                    /*!<   [cm day-1] saturated conductivity  */
             double l;                       /*!<   [-] tortuosity parameter (Van Genuchten - Mualem)  */
 
             Crit3DWaterConductivity();

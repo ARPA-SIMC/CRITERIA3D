@@ -390,7 +390,7 @@ void updateBoundaryWater (double deltaT)
         else if (waterLevel > nodeList[i].pond)
 		{
 			// open channel flow
-            double boundaryArea = myCulvert.width * waterLevel;					// [m^2]
+            double boundaryArea = myCulvert.width * waterLevel;					// [m2]
             double wettedPerimeter = myCulvert.width + 2.0 * waterLevel;        // [m]
             double hydraulicRadius = boundaryArea / wettedPerimeter;			// [m]
 

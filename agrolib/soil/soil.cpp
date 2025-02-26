@@ -648,7 +648,7 @@ namespace soil
      * \brief using Mualem equation for modified Van Genuchten model
      * \param Se: degree of saturation      [-]
      * \param horizon: pointer to Crit3DHorizon class
-     * \return hydraulic conductivity       [cm day^-1]
+     * \return hydraulic conductivity       [cm day-1]
      * \warning very low values are possible (es: 10^12)
      */
     double waterConductivity(double Se, const Crit3DHorizon &horizon)
@@ -745,7 +745,7 @@ namespace soil
 
     /*!
      * \brief get current water conductivity
-     * \return hydraulic conductivity   [cm day^-1]
+     * \return hydraulic conductivity   [cm day-1]
      */
     double Crit1DLayer::getWaterConductivity()
     {
@@ -1092,7 +1092,7 @@ namespace soil
             pmax[2] = heMax;
         }
 
-        // Van Genuchten alpha parameter [kPa^-1]
+        // Van Genuchten alpha parameter [kPa-1]
         param[3] = horizon.vanGenuchten.alpha;
         pmin[3] = 0.01;
         pmax[3] = 10;
