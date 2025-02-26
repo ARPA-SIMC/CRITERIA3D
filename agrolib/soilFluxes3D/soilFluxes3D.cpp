@@ -342,7 +342,7 @@ int DLL_EXPORT __STDCALL setHydraulicProperties(int waterRetentionCurve,
 	 }
 
 	 myCulvert.index = nodeIndex;
-	 myCulvert.roughness = roughness;			// [s m^-1/3]
+     myCulvert.roughness = roughness;			// [s m-1/3]
 	 myCulvert.slope = slope;					// [-]
 	 myCulvert.width = width;					// [m]
 	 myCulvert.height = height;					// [m]
@@ -605,7 +605,7 @@ int DLL_EXPORT __STDCALL setHydraulicProperties(int waterRetentionCurve,
 /*!
  * \brief setWaterSinkSource
  * \param nodeIndex
- * \param waterSinkSource [m^3/sec] flow
+ * \param waterSinkSource [m3 sec-1]
  * \return OK/ERROR
  */
  int DLL_EXPORT __STDCALL setWaterSinkSource(long nodeIndex, double waterSinkSource)
@@ -840,7 +840,7 @@ int DLL_EXPORT __STDCALL setHydraulicProperties(int waterRetentionCurve,
   * \brief getWaterFlow
   * \param nodeIndex
   * \param direction
-  * \return maximum integrated flow in the requested direction [m^3]
+  * \return maximum integrated flow in the requested direction [m3]
   */
  double DLL_EXPORT __STDCALL getWaterFlow(long nodeIndex, short direction)
  {
@@ -890,7 +890,7 @@ int DLL_EXPORT __STDCALL setHydraulicProperties(int waterRetentionCurve,
  /*!
   * \brief getSumLateralWaterFlow
   * \param nodeIndex
-  * \return integrated lateral flow over the time step [m^3]
+  * \return integrated lateral flow over the time step [m3]
   */
  double DLL_EXPORT __STDCALL getSumLateralWaterFlow(long nodeIndex)
  {
@@ -910,7 +910,7 @@ int DLL_EXPORT __STDCALL setHydraulicProperties(int waterRetentionCurve,
  /*!
   * \brief getSumLateralWaterFlowIn
   * \param nodeIndex
-  * \return integrated lateral inflow over the time step [m^3]
+  * \return integrated lateral inflow over the time step [m3]
   */
  double DLL_EXPORT __STDCALL getSumLateralWaterFlowIn(long nodeIndex)
  {
@@ -932,7 +932,7 @@ int DLL_EXPORT __STDCALL setHydraulicProperties(int waterRetentionCurve,
  /*!
   * \brief getSumLateralWaterFlowOut
   * \param nodeIndex
-  * \return integrated lateral outflow over the time step  [m^3]
+  * \return integrated lateral outflow over the time step  [m3]
   */
  double DLL_EXPORT __STDCALL getSumLateralWaterFlowOut(long nodeIndex)
  {
@@ -990,7 +990,7 @@ int DLL_EXPORT __STDCALL setHydraulicProperties(int waterRetentionCurve,
  /*!
   * \brief getBoundaryWaterFlow
   * \param nodeIndex
-  * \return integrated water flow from boundary over the time step [m^3]
+  * \return integrated water flow from boundary over the time step [m3]
   */
  double DLL_EXPORT __STDCALL getBoundaryWaterFlow(long nodeIndex)
  {
@@ -1008,7 +1008,7 @@ int DLL_EXPORT __STDCALL setHydraulicProperties(int waterRetentionCurve,
  /*!
   * \brief getBoundaryWaterSumFlow
   * \param boundaryType
-  * \return integrated water flow from all boundary over the time step  [m^3]
+  * \return integrated water flow from all boundary over the time step  [m3]
   */
  double DLL_EXPORT __STDCALL getBoundaryWaterSumFlow(int boundaryType)
  {

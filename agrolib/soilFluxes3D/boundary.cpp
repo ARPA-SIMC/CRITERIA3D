@@ -390,11 +390,11 @@ void updateBoundaryWater (double deltaT)
         else if (waterLevel > nodeList[i].pond)
 		{
 			// open channel flow
-            double boundaryArea = myCulvert.width * waterLevel;					// [m^2]
+            double boundaryArea = myCulvert.width * waterLevel;					// [m2]
             double wettedPerimeter = myCulvert.width + 2.0 * waterLevel;        // [m]
             double hydraulicRadius = boundaryArea / wettedPerimeter;			// [m]
 
-			// Manning equation [m^3 s^-1] 
+            // Manning equation [m3 s-1]
             flow = (boundaryArea / myCulvert.roughness) * sqrt(myCulvert.slope) * pow(hydraulicRadius, 2./3.);
 		}
 

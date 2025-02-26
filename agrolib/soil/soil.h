@@ -22,7 +22,7 @@
         struct Crit3DWaterRetention
         {
             double water_potential;             /*!<  [kPa]      */
-            double water_content;               /*!<  [m^3 m^-3] */
+            double water_content;               /*!<  [m3 m-3] */
         };
 
 
@@ -34,9 +34,9 @@
             double sand, silt, clay;            /*!<   [%]          */
             double coarseFragments;             /*!<   [%]          */
             double organicMatter;               /*!<   [%]          */
-            double bulkDensity;                 /*!<   [g cm^-3]    */
-            double thetaSat;                    /*!<   [m^3 m^-3]   */
-            double kSat;                        /*!<   [cm day^-1]  */
+            double bulkDensity;                 /*!<   [g cm-3]    */
+            double thetaSat;                    /*!<   [m3 m-3]   */
+            double kSat;                        /*!<   [cm day-1]  */
             double effectiveCohesion;           /*!<   [kPa]        */
             double frictionAngle;               /*!<   [degrees]    */
 
@@ -72,14 +72,14 @@
         class Crit3DVanGenuchten
         {
         public:
-            double alpha;                   /*!<  [kPa^-1] Van Genuchten parameter */
+            double alpha;                   /*!<  [kPa-1] Van Genuchten parameter */
             double n;                       /*!<  [-] Van Genuchten parameter */
             double m;                       /*!<  [-] Van Genuchten parameter (restricted: 1-1/n) */
             double he;                      /*!<  [kPa] air potential (modified VG - Ippisch, 2006) */
             double sc;                      /*!<  [-] reduction factor (modified VG - Ippisch, 2006) */
-            double thetaR;                  /*!<  [m^3 m^-3] */
-            double thetaS;                  /*!<  [m^3 m^-3] volumetric water content at saturation */
-            double refThetaS;               /*!<  [m^3 m^-3] reference volumetric water content at saturation */
+            double thetaR;                  /*!<  [m3 m-3] */
+            double thetaS;                  /*!<  [m3 m-3] volumetric water content at saturation */
+            double refThetaS;               /*!<  [m3 m-3] reference volumetric water content at saturation */
 
             Crit3DVanGenuchten();
         };
@@ -100,9 +100,9 @@
         class Crit3DDriessen
         {
         public:
-            double k0;                      /*!<   [cm day^-1] saturated hydraulic conductivity */
-            double maxSorptivity;           /*!<   [cm day^-1/2] maximum sorptivity (sorptivity of a completely dry matrix) */
-            double gravConductivity;        /*!<   [cm day^-1] infiltration due to gravitational force */
+            double k0;                      /*!<   [cm day-1] saturated hydraulic conductivity */
+            double maxSorptivity;           /*!<   [cm day-1/2] maximum sorptivity (sorptivity of a completely dry matrix) */
+            double gravConductivity;        /*!<   [cm day-1] infiltration due to gravitational force */
 
             Crit3DDriessen();
         };
@@ -111,7 +111,7 @@
         class Crit3DWaterConductivity
         {
         public:
-            double kSat;                    /*!<   [cm day^-1] saturated conductivity  */
+            double kSat;                    /*!<   [cm day-1] saturated conductivity  */
             double l;                       /*!<   [-] tortuosity parameter (Van Genuchten - Mualem)  */
 
             Crit3DWaterConductivity();

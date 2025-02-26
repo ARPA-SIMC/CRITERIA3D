@@ -43,7 +43,7 @@
 
 
 /*!
- * \brief [m^3] water flow between node i and Link
+ * \brief [m3] water flow between node i and Link
  * \param i
  * \param link TlinkedNode pointer
  * \param deltaT
