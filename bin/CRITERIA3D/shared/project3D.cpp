@@ -1137,19 +1137,19 @@ void Project3D::runWaterFluxes3DModel(double totalTimeStep, bool isRestart)
     emit updateOutputSignal();
 
     double runoff = soilFluxes3D::getBoundaryWaterSumFlow(BOUNDARY_RUNOFF);
-    logInfo("runoff [m^3]: " + QString::number(runoff));
+    logInfo("runoff [m3]: " + QString::number(runoff));
 
     double freeDrainage = soilFluxes3D::getBoundaryWaterSumFlow(BOUNDARY_FREEDRAINAGE);
-    logInfo("free drainage [m^3]: " + QString::number(freeDrainage));
+    logInfo("free drainage [m3]: " + QString::number(freeDrainage));
 
     double lateralDrainage = soilFluxes3D::getBoundaryWaterSumFlow(BOUNDARY_FREELATERALDRAINAGE);
-    logInfo("lateral drainage [m^3]: " + QString::number(lateralDrainage));
+    logInfo("lateral drainage [m3]: " + QString::number(lateralDrainage));
 
     double currentWaterContent = soilFluxes3D::getTotalWaterContent();
     double forecastWaterContent = previousTotalWaterContent + runoff + freeDrainage + lateralDrainage
                                   + totalPrecipitation - totalEvaporation - totalTranspiration;
     double massBalanceError = currentWaterContent - forecastWaterContent;
-    logInfo("Mass balance error [m^3]: " + QString::number(massBalanceError));
+    logInfo("Mass balance error [m3]: " + QString::number(massBalanceError));
 }
 
 
