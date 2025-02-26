@@ -1868,7 +1868,7 @@ void Crit1DProject::updateOutput(Crit3DDate myDate, bool isFirst)
     }
     for (unsigned int i = 0; i < fractionAvailableWaterDepth.size(); i++)
     {
-        outputString += "," + QString::number(myCase.getFractionAW(fractionAvailableWaterDepth[i]), 'g', 4);
+        outputString += "," + QString::number(myCase.getAvailableWaterFraction(fractionAvailableWaterDepth[i]), 'g', 4);
     }
     for (unsigned int i = 0; i < factorOfSafetyDepth.size(); i++)
     {
