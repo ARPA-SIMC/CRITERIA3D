@@ -41,10 +41,10 @@ namespace leafDevelopment
      * \brief getTheoreticalLAIGrowth   return theoritical (not stressed) Leaf Area Index from degree days
      * \param degreeDays    [DD]
      * \param a             [-] LAI shape form factor a
-     * \param b             [DD^-1] LAI shape form factor b
-     * \param laiMIN        [m^2 m^-2]
-     * \param laiMAX        [m^2 m^-2]
-     * \return LAI          [m^2 m^-2]
+     * \param b             [DD-1] LAI shape form factor b
+     * \param laiMIN        [m2 m-2]
+     * \param laiMAX        [m2 m-2]
+     * \return LAI          [m2 m-2]
      */
     double getTheoreticalLAIGrowth(double degreeDays, double a, double b,double laiMIN,double laiMAX)
     {
@@ -54,11 +54,11 @@ namespace leafDevelopment
 
     /*!
      * \brief getDDfromLAIGrowth
-     * \param lai           [m^2 m^-2] current Leaf Area Index
+     * \param lai           [m2 m-2] current Leaf Area Index
      * \param a             [-] LAI shape form factor a
-     * \param b             [DD^-1] LAI shape form factor b
-     * \param laiMIN        [m^2 m^-2]
-     * \param laiMAX        [m^2 m^-2]
+     * \param b             [DD-1] LAI shape form factor b
+     * \param laiMIN        [m2 m-2]
+     * \param laiMAX        [m2 m-2]
      * \return degreeDays
      */
     double getDDfromLAIGrowth(double lai, double a, double b,double laiMIN,double laiMAX)

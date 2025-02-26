@@ -152,16 +152,16 @@ void Crit3DSnow::computeSnowBrooksModel()
     double longWaveAtmEmissivity;                /*!<   [-]        */
     double albedo;                               /*!<   [-]        */
 
-    double QSolar;                               /*!<   [kJ/m^2]   integrale della radiazione solare */
-    double QPrecip;                              /*!<   [kJ/m^2]   avvezione (trasferimento di calore dalla precipitazione) */
-    double QPrecipW;                             /*!<   [kJ/m^2]   */
-    double QPrecipS;                             /*!<   [kJ/m^2]   */
-    double QLongWave;                            /*!<   [kJ/m^2]   emissione di radiazione onda lunga (eq. Stefan Boltzmann) */
-    double QTempGradient;                        /*!<   [kJ/m^2]   scambio di calore sensibile (dovuto al gradiente di temperatura) */
-    double QVaporGradient;                       /*!<   [kJ/m^2]   scambio di calore latente (vapore) */
-    double QTotal;                               /*!<   [kJ/m^2]   */
-    double QWaterHeat;                           /*!<   [kJ/m^2]   */
-    double QWaterKinetic;                        /*!<   [kJ/m^2]   */
+    double QSolar;                               /*!<   [kJ m-2]   integrale della radiazione solare */
+    double QPrecip;                              /*!<   [kJ m-2]   avvezione (trasferimento di calore dalla precipitazione) */
+    double QPrecipW;                             /*!<   [kJ m-2]   */
+    double QPrecipS;                             /*!<   [kJ m-2]   */
+    double QLongWave;                            /*!<   [kJ m-2]   emissione di radiazione onda lunga (eq. Stefan Boltzmann) */
+    double QTempGradient;                        /*!<   [kJ m-2]   scambio di calore sensibile (dovuto al gradiente di temperatura) */
+    double QVaporGradient;                       /*!<   [kJ m-2]   scambio di calore latente (vapore) */
+    double QTotal;                               /*!<   [kJ m-2]   */
+    double QWaterHeat;                           /*!<   [kJ m-2]   */
+    double QWaterKinetic;                        /*!<   [kJ m-2]   */
 
     double sublimation;                          /*!<   [mm]       */
     double aerodynamicResistance;                /*!<   [s m-1]    */

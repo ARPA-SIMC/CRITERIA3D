@@ -342,7 +342,7 @@ int DLL_EXPORT __STDCALL setHydraulicProperties(int waterRetentionCurve,
 	 }
 
 	 myCulvert.index = nodeIndex;
-	 myCulvert.roughness = roughness;			// [s m^-1/3]
+     myCulvert.roughness = roughness;			// [s m-1/3]
 	 myCulvert.slope = slope;					// [-]
 	 myCulvert.width = width;					// [m]
 	 myCulvert.height = height;					// [m]
