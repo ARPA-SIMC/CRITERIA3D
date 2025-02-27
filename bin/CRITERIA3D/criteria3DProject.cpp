@@ -1284,13 +1284,12 @@ bool Crit3DProject::computeHydrallModel()
     }
 
 
-    std::vector<double> waterContent(nrLayers);
-    std::vector<double> stressCoefficient(nrLayers);
-    std::vector<double> rootDensity(nrLayers, 0);
+    //std::vector<double> waterContent(nrLayers);
+    //std::vector<double> stressCoefficient(nrLayers);
+    //std::vector<double> rootDensity(nrLayers, 0);
 
     soil::Crit3DHorizon horizon;
-    long currentNode;
-    int horizonIndex;
+
 
     for (int row = 0; row < DEM.header->nrRows; row++)
     {
@@ -1332,6 +1331,7 @@ bool Crit3DProject::computeHydrallModel()
                 // TODO scrivere funzione settaggio profilo 1D suolo
 
                 //root density
+                hydrallMaps.treeSpeciesMap.value[row][col] = 1.0;
                 Crit3DCrop currentCrop = cropList[hydrallMaps.treeSpeciesMap.value[row][col]];
                 for (int i = 0; i < nrLayers; i++)
                     hydrallModel.setSoilVariables(i,indexMap.at(i).value[row][col],indexMap.at(i).header->flag,
