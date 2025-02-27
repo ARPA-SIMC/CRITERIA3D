@@ -96,7 +96,7 @@ double runoff(long i, long j, TlinkedNode *link, double deltaT, unsigned approxi
     double H = MAXVALUE(Hi, Hj);
     double z = MAXVALUE(nodeList[i].z + nodeList[i].pond, nodeList[j].z + nodeList[j].pond);
     double Hs = H - z;
-    if (Hs <= 0.)
+    if (Hs < EPSILON)
         return 0.;
 
     double dH = fabs(Hi - Hj);
@@ -383,7 +383,11 @@ bool waterFlowComputation(double deltaT)
 
         if (CourantWater > 1.0 && deltaT > myParameters.delta_t_min)
         {
-            halveTimeStep();
+            myParameters.current_delta_t = std::max(myParameters.current_delta_t / CourantWater, myParameters.delta_t_min);
+            if (myParameters.current_delta_t > 1)
+            {
+                myParameters.current_delta_t = ceil(myParameters.current_delta_t);
+            }
             setForcedHalvedTime(true);
             return false;
         }
