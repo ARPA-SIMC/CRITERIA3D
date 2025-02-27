@@ -53,10 +53,7 @@
         gis::Crit3DRasterGrid dailyTminMap;
         gis::Crit3DRasterGrid dailyTmaxMap;
 
-
         Crit3DHydrallMaps hydrallMaps;
-        gis::Crit3DRasterGrid treeSpeciesMap;
-
 
         Crit3DSnow snowModel;
         Crit3D_Hydrall hydrallModel;

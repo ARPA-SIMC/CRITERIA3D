@@ -259,6 +259,7 @@
         gis::Crit3DRasterGrid* rootBiomassMap;
         gis::Crit3DRasterGrid* mapLAI;
         gis::Crit3DRasterGrid* mapLast30DaysTavg;
+        gis::Crit3DRasterGrid treeSpeciesMap;
 
         Crit3DHydrallMaps();
         ~Crit3DHydrallMaps();
@@ -297,6 +298,9 @@
         double understoreyLeafAreaIndexMax;
         double cover = 1; // TODO
 
+        std::vector<double> waterContentProfile;
+        std::vector<double> stressCoefficientProfile;
+        std::vector<double> rootDensityProfile;
 
 
         double annualGrossStandGrowth;
@@ -309,6 +313,7 @@
 
 
         void radiationAbsorption();
+        void setSoilVariables(int iLayer, int currentNode,float checkFlag, int horizonIndex, double waterContent, double waterContentFC, double waterContentWP, int firstRootLayer, int lastRootLayer, double rootDensity);
         void setHourlyVariables(double temp, double irradiance , double prec , double relativeHumidity , double windSpeed, double directIrradiance, double diffuseIrradiance, double cloudIndex, double atmosphericPressure, double CO2, double sunElevation);
         bool setWeatherVariables(double temp, double irradiance , double prec , double relativeHumidity , double windSpeed, double directIrradiance, double diffuseIrradiance, double cloudIndex, double atmosphericPressure);
         void setDerivedWeatherVariables(double directIrradiance, double diffuseIrradiance, double cloudIndex);

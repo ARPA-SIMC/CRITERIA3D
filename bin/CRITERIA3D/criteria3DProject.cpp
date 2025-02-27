@@ -1266,12 +1266,6 @@ bool Crit3DProject::computeSnowModel()
 bool Crit3DProject::computeHydrallModel()
 {
     // check
-    if (! snowMaps.isInitialized)
-    {
-        logError("Initialize snow model before.");
-        return false;
-    }
-
     if (! hourlyMeteoMaps->getComputed())
     {
         logError("Missing meteo maps.");
@@ -1281,6 +1275,11 @@ bool Crit3DProject::computeHydrallModel()
     if (! radiationMaps->getComputed())
     {
         logError("Missing radiation map.");
+        return false;
+    }
+    if (! isCriteria3DInitialized)
+    {
+        logError("initialize soil fluxes before.");
         return false;
     }
 
@@ -1330,21 +1329,28 @@ bool Crit3DProject::computeHydrallModel()
                 //tutte le variabili che servono
                 hydrallModel.setStateVariables(hydrallMaps, row, col);
 
+                // TODO scrivere funzione settaggio profilo 1D suolo
 
                 //root density
-                Crit3DCrop currentCrop = cropList[treeSpeciesMap.value[row][col]];
-
-                //get water content and stress coefficient
+                Crit3DCrop currentCrop = cropList[hydrallMaps.treeSpeciesMap.value[row][col]];
                 for (int i = 0; i < nrLayers; i++)
+                    hydrallModel.setSoilVariables(i,indexMap.at(i).value[row][col],indexMap.at(i).header->flag,
+                                                  soilList[soilIndex].getHorizonIndex(layerDepth[i]),
+                                                  soilFluxes3D::getWaterContent(indexMap.at(i).value[row][col]),
+                                                  soilList[soilIndex].horizon[soilList[soilIndex].getHorizonIndex(layerDepth[i])].waterContentFC,
+                                                  soilList[soilIndex].horizon[soilList[soilIndex].getHorizonIndex(layerDepth[i])].waterContentWP,
+                                                  currentCrop.roots.firstRootLayer,currentCrop.roots.lastRootLayer,currentCrop.roots.rootDensity[i]);
+                //get water content and stress coefficient
+                /*for (int i = 0; i < nrLayers; i++)
                 {
                     currentNode = indexMap.at(i).value[row][col];
 
                     horizonIndex = soilList[soilIndex].getHorizonIndex(layerDepth[i]);
+
                     if (horizonIndex == NODATA)
                         continue;
 
                     horizon = soilList[soilIndex].horizon[horizonIndex];
-
                     if (currentNode != indexMap.at(i).header->flag)
                     {
                         waterContent[i] = soilFluxes3D::getWaterContent(currentNode);
@@ -1353,7 +1359,7 @@ bool Crit3DProject::computeHydrallModel()
 
                     if (i >= currentCrop.roots.firstRootLayer && i <= currentCrop.roots.lastRootLayer)
                         rootDensity[i] = currentCrop.roots.rootDensity[i];
-                }
+                }*/
 
 
 
