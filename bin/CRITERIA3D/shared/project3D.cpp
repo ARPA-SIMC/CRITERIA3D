@@ -476,11 +476,7 @@ bool Project3D::setAccuracy()
     }
 
     // parallel computing
-    if (waterFluxesParameters.numberOfThreads < 1)
-    {
-        waterFluxesParameters.numberOfThreads = 1;
-    }
-    soilFluxes3D::setThreads(waterFluxesParameters.numberOfThreads);
+    waterFluxesParameters.numberOfThreads = soilFluxes3D::setThreads(waterFluxesParameters.numberOfThreads);
 
     return true;
 }

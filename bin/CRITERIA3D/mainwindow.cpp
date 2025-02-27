@@ -2281,7 +2281,10 @@ void MainWindow::on_actionCriteria3D_waterFluxes_settings_triggered()
     if (dialogWaterFluxes.isUpdateAccuracy())
     {
         myProject.waterFluxesParameters.modelAccuracy = dialogWaterFluxes.accuracySlider->value();
-        myProject.waterFluxesParameters.numberOfThreads = dialogWaterFluxes.getThreadsNumber();
+        int nrThread = dialogWaterFluxes.getThreadsNumber();
+        nrThread = soilFluxes3D::setThreads(nrThread);                  // check
+        myProject.waterFluxesParameters.numberOfThreads = nrThread;
+
         if (myProject.isCriteria3DInitialized)
         {
             myProject.setAccuracy();

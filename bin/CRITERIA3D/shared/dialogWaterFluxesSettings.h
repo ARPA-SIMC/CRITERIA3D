@@ -19,7 +19,7 @@
         bool _isUpdateAccuracy;
 
     private slots :
-        void updateAccuracy() { _isUpdateAccuracy = true; }
+        void updateAccuracy();
 
     public:
         QPushButton *updateButton;
@@ -36,7 +36,7 @@
 
         DialogWaterFluxesSettings();
 
-        double getThreadsNumber() const
+        int getThreadsNumber() const
         { return threadsNumberEdit->text().toInt(); }
 
         void setThreadsNumber(int value)
