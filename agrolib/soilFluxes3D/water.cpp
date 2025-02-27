@@ -386,7 +386,7 @@ bool waterFlowComputation(double deltaT)
             myParameters.current_delta_t = std::max(myParameters.current_delta_t / CourantWater, myParameters.delta_t_min);
             if (myParameters.current_delta_t > 1)
             {
-                myParameters.current_delta_t = ceil(myParameters.current_delta_t);
+                myParameters.current_delta_t = floor(myParameters.current_delta_t);
             }
             setForcedHalvedTime(true);
             return false;
