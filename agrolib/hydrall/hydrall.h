@@ -82,6 +82,11 @@
 
     #define NOT_INITIALIZED_VINE -1
 
+    struct Tstate
+    {
+        double standBiomass;
+        double rootBiomass;
+    };
 
     struct TstatePlant
     {
@@ -271,6 +276,7 @@
         int firstMonthVegetativeSeason;
         bool isFirstYearSimulation;
 
+        Tstate stateVariable;
         TbigLeaf sunlit,shaded, understorey;
         TweatherVariable weatherVariable;
         TenvironmentalVariable environmentalVariable;
@@ -307,7 +313,7 @@
         bool setWeatherVariables(double temp, double irradiance , double prec , double relativeHumidity , double windSpeed, double directIrradiance, double diffuseIrradiance, double cloudIndex, double atmosphericPressure);
         void setDerivedWeatherVariables(double directIrradiance, double diffuseIrradiance, double cloudIndex);
         void setPlantVariables(double chlorophyllContent);
-        bool computeHydrallPoint(Crit3DDate myDate, double myTemperature, double myElevation, int secondPerStep, double &AGBiomass, double &rootBiomass);
+        bool computeHydrallPoint(Crit3DDate myDate, double myTemperature, double myElevation, int secondPerStep);
         double getCO2(Crit3DDate myDate, double myTemperature, double myElevation);
         //double getPressureFromElevation(double myTemperature, double myElevation);
         double computeLAI(Crit3DDate myDate);
@@ -331,6 +337,9 @@
         void resetStandVariables();
         void optimal();
         void rootfind(double &allf, double &allr, double &alls, bool &sol);
+
+        void setStateVariables(Crit3DHydrallMaps &stateMap, int row, int col);
+        void getStateVariables(Crit3DHydrallMaps &stateMap, int row, int col);
 
     };
 

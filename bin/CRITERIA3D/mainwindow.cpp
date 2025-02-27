@@ -2421,7 +2421,7 @@ void MainWindow::on_actionCriteria3D_Initialize_triggered()
             myProject.logError("Active water and crop processes before.");
         }
 
-        myProject.dailyHydrallMaps.initialize(myProject.DEM);
+        myProject.hydrallMaps.initialize(myProject.DEM);
 
         if (! myProject.initializeHydrall())
         {

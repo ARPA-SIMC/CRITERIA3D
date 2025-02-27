@@ -54,7 +54,7 @@
         gis::Crit3DRasterGrid dailyTmaxMap;
 
 
-        Crit3DHydrallMaps dailyHydrallMaps;
+        Crit3DHydrallMaps hydrallMaps;
         gis::Crit3DRasterGrid treeSpeciesMap;
 
 

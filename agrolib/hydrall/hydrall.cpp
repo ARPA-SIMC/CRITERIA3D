@@ -40,7 +40,7 @@ Crit3DHydrallMaps::~Crit3DHydrallMaps()
     mapLast30DaysTavg->clear();
 }
 
-bool Crit3D_Hydrall::computeHydrallPoint(Crit3DDate myDate, double myTemperature, double myElevation, int secondPerStep, double &AGBiomass, double &rootBiomass)
+bool Crit3D_Hydrall::computeHydrallPoint(Crit3DDate myDate, double myTemperature, double myElevation, int secondPerStep)
 {
     //getCO2(myDate, myTemperature, myElevation);
 
@@ -223,6 +223,18 @@ void Crit3D_Hydrall::setDerivedWeatherVariables(double directIrradiance, double 
 void Crit3D_Hydrall::setPlantVariables(double chlorophyllContent)
 {
     plant.myChlorophyllContent = chlorophyllContent;
+}
+
+void Crit3D_Hydrall::setStateVariables(Crit3DHydrallMaps &stateMap, int row, int col)
+{
+    stateVariable.standBiomass = stateMap.standBiomassMap->value[row][col];
+    stateVariable.rootBiomass = stateMap.rootBiomassMap->value[row][col];
+}
+
+void Crit3D_Hydrall::getStateVariables(Crit3DHydrallMaps &stateMap, int row, int col)
+{
+    stateMap.standBiomassMap->value[row][col] = stateVariable.standBiomass;
+    stateMap.rootBiomassMap->value[row][col] = stateVariable.rootBiomass;
 }
 
 void Crit3D_Hydrall::radiationAbsorption()

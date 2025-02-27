@@ -90,7 +90,7 @@ void Crit3DProject::clearCropMaps()
     degreeDaysMap.clear();
     dailyTminMap.clear();
     dailyTmaxMap.clear();
-    dailyHydrallMaps.mapLast30DaysTavg->clear();
+    hydrallMaps.mapLast30DaysTavg->clear();
 
     isCropInitialized = false;
 }
@@ -106,8 +106,11 @@ bool Crit3DProject::initializeHydrall()
     logInfo("Initialize hydrall model...");
 
 
-
-    dailyHydrallMaps.mapLast30DaysTavg->initializeGrid(*(DEM.header));
+    //funzione TODO e anche clear hydrall maps
+    hydrallMaps.mapLast30DaysTavg->initializeGrid(*(DEM.header));
+    hydrallMaps.mapLAI->initializeGrid(*(DEM.header));
+    hydrallMaps.rootBiomassMap->initializeGrid(*(DEM.header));
+    hydrallMaps.standBiomassMap->initializeGrid(*(DEM.header));
 
     for (int row = 0; row < DEM.header->nrRows; row++)
     {
@@ -116,7 +119,7 @@ bool Crit3DProject::initializeHydrall()
             float height = DEM.value[row][col];
             if (! isEqual(height, DEM.header->flag))
             {
-                dailyHydrallMaps.mapLast30DaysTavg->value[row][col] = 15.f; // initialize to 15°C
+                hydrallMaps.mapLast30DaysTavg->value[row][col] = 15.f; // initialize to 15°C
             }
         }
     }
@@ -1282,8 +1285,6 @@ bool Crit3DProject::computeHydrallModel()
     }
 
 
-    double AGBiomass = NODATA;
-    double rootBiomass = NODATA;
     std::vector<double> waterContent(nrLayers);
     std::vector<double> stressCoefficient(nrLayers);
     std::vector<double> rootDensity(nrLayers, 0);
@@ -1302,6 +1303,23 @@ bool Crit3DProject::computeHydrallModel()
                 double chlorophyllContent = 500;
                 int secondsPerStep = 2;
 
+                //set all variables
+                hydrallModel.setHourlyVariables(double(hourlyMeteoMaps->mapHourlyTair->value[row][col]), double(radiationMaps->globalRadiationMap->value[row][col]),
+                                                double(hourlyMeteoMaps->mapHourlyPrec->value[row][col]), double(hourlyMeteoMaps->mapHourlyRelHum->value[row][col]),
+                                                double(hourlyMeteoMaps->mapHourlyWindScalarInt->value[row][col]), double(radiationMaps->beamRadiationMap->value[row][col]),
+                                                double(radiationMaps->diffuseRadiationMap->value[row][col]),
+                                                double(radiationMaps->transmissivityMap->value[row][col] / CLEAR_SKY_TRANSMISSIVITY_DEFAULT),
+                                                pressureFromAltitude(double(hourlyMeteoMaps->mapHourlyTair->value[row][col]), DEM.getValueFromRowCol(row, col)),
+                                                hydrallModel.getCO2(getCrit3DDate(getCurrentDate()), double(hourlyMeteoMaps->mapHourlyTair->value[row][col]), DEM.getValueFromRowCol(row, col)),
+                                                double(radiationMaps->sunElevationMap->value[row][col]));
+
+                hydrallModel.setPlantVariables(chlorophyllContent);
+
+
+
+                //setsoilvariables TODO
+
+
                 // check soil
                 int soilIndex = int(soilIndexMap.value[row][col]);
                 if (soilIndex == NODATA)
@@ -1310,8 +1328,7 @@ bool Crit3DProject::computeHydrallModel()
                 }
 
                 //tutte le variabili che servono
-                AGBiomass = dailyHydrallMaps.standBiomassMap->value[row][col]; //foliage fine roots and sapwood
-                rootBiomass = dailyHydrallMaps.rootBiomassMap->value[row][col]; //o si può saltare l'assegnazione e poi riassegnazione, passando direttamente alla funzione computeHydrallPoint con &?
+                hydrallModel.setStateVariables(hydrallMaps, row, col);
 
 
                 //root density
@@ -1341,31 +1358,16 @@ bool Crit3DProject::computeHydrallModel()
 
 
 
-                //set all variables
-                hydrallModel.setHourlyVariables(double(hourlyMeteoMaps->mapHourlyTair->value[row][col]), double(radiationMaps->globalRadiationMap->value[row][col]),
-                                                double(hourlyMeteoMaps->mapHourlyPrec->value[row][col]), double(hourlyMeteoMaps->mapHourlyRelHum->value[row][col]),
-                                                double(hourlyMeteoMaps->mapHourlyWindScalarInt->value[row][col]), double(radiationMaps->beamRadiationMap->value[row][col]),
-                                                double(radiationMaps->diffuseRadiationMap->value[row][col]),
-                                                double(radiationMaps->transmissivityMap->value[row][col] / CLEAR_SKY_TRANSMISSIVITY_DEFAULT),
-                                                pressureFromAltitude(double(hourlyMeteoMaps->mapHourlyTair->value[row][col]), DEM.getValueFromRowCol(row, col)),
-                                                hydrallModel.getCO2(getCrit3DDate(getCurrentDate()), double(hourlyMeteoMaps->mapHourlyTair->value[row][col]), DEM.getValueFromRowCol(row, col)),
-                                                double(radiationMaps->sunElevationMap->value[row][col]));
-
-                hydrallModel.setPlantVariables(chlorophyllContent);
-
-                //setsoilvariables TODO
 
 
                 //compute
-                hydrallModel.computeHydrallPoint(getCrit3DDate(getCurrentDate()), double(hourlyMeteoMaps->mapHourlyTair->value[row][col]), double(DEM.value[row][col]), secondsPerStep, AGBiomass, rootBiomass);
+                //hydrallModel.computeHydrallPoint(getCrit3DDate(getCurrentDate()), double(hourlyMeteoMaps->mapHourlyTair->value[row][col]), double(DEM.value[row][col]), secondsPerStep);
 
 
-                //check and save data
-                if (! isEqual(AGBiomass, NODATA) && ! isEqual(rootBiomass, NODATA))
-                {
-                    dailyHydrallMaps.standBiomassMap->value[row][col] = AGBiomass;
-                    dailyHydrallMaps.rootBiomassMap->value[row][col] = rootBiomass;
-                }
+
+
+                //check and save data TODO CHECK NODATA
+                hydrallModel.getStateVariables(hydrallMaps, row, col);
             }
             else
             {
@@ -1380,7 +1382,7 @@ bool Crit3DProject::computeHydrallModel()
         //se firstDayOfMonth, scrivi le mappe (mensili?) di LAI, biomassa, etc
         std::string fileName;
         std::string myError;
-        if (! gis::writeEsriGrid(fileName, dailyHydrallMaps.standBiomassMap, myError))
+        if (! gis::writeEsriGrid(fileName, hydrallMaps.standBiomassMap, myError))
         {
             errorString = QString::fromStdString(myError);
             return false;
@@ -1404,7 +1406,7 @@ bool Crit3DProject::updateLast30DaysTavg()
     {
         for (long col = 0; col < dailyTminMap.header->nrCols; col++)
         {
-            dailyHydrallMaps.mapLast30DaysTavg->value[row][col] = (29./30.)*dailyHydrallMaps.mapLast30DaysTavg->value[row][col] + (dailyTmaxMap.value[row][col] + dailyTminMap.value[row][col])/30;
+            hydrallMaps.mapLast30DaysTavg->value[row][col] = (29./30.)*hydrallMaps.mapLast30DaysTavg->value[row][col] + (dailyTmaxMap.value[row][col] + dailyTminMap.value[row][col])/30;
         }
     }
     return true;
@@ -1412,7 +1414,7 @@ bool Crit3DProject::updateLast30DaysTavg()
 
 void Crit3DProject::updateHydrallLAI()
 {
-    dailyHydrallMaps.mapLAI = &laiMap;
+    hydrallMaps.mapLAI = &laiMap;
 }
 
 
