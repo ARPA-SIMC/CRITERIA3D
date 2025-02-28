@@ -4,6 +4,15 @@
     #ifndef _VECTOR_
         #include <vector>
     #endif
+    #ifndef POWER4
+        #define POWER4(x) ((x) * (x) * (x) * (x))
+    #endif
+    #ifndef POWER3
+        #define POWER3(x) ((x) * (x) * (x))
+    #endif
+    #ifndef POWER2
+        #define POWER2(x) ((x) * (x))
+    #endif
 
     bool sameSignNoZero(float a, float b);
     bool sameSign(float a, float b);
@@ -28,6 +37,7 @@
     char* decimal_to_binary(unsigned int n, int nrBits);
     float getSinDecimalDegree(float angle);
     float getCosDecimalDegree(float angle);
+    double powerIntegerExponent(double base, int exp);
 
     namespace sorting
     {

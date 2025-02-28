@@ -13,6 +13,7 @@
 #include "commonConstants.h"
 #include "hydrall.h"
 #include "furtherMathFunctions.h"
+#include "basicMath.h"
 #include "physics.h"
 #include "statistics.h"
 
@@ -203,9 +204,9 @@ void Crit3D_Hydrall::setDerivedWeatherVariables(double directIrradiance, double 
     weatherVariable.derived.slopeSatVapPressureVSTemp = 2588464.2 / pow(240.97 + weatherVariable.myInstantTemp, 2) * exp(17.502 * weatherVariable.myInstantTemp / (240.97 + weatherVariable.myInstantTemp)) ;
     weatherVariable.derived.myDirectIrradiance = directIrradiance;
     weatherVariable.derived.myDiffuseIrradiance = diffuseIrradiance;
-    double myCloudiness = MINVALUE(1,MAXVALUE(0,cloudIndex));
+    double myCloudiness = BOUNDFUNCTION(0,1,cloudIndex);
     weatherVariable.derived.myEmissivitySky = 1.24 * pow((weatherVariable.derived.airVapourPressure/100.0) / (weatherVariable.myInstantTemp+ZEROCELSIUS),(1.0/7.0))*(1 - 0.84*myCloudiness)+ 0.84*myCloudiness;
-    weatherVariable.derived.myLongWaveIrradiance = pow(weatherVariable.myInstantTemp+ZEROCELSIUS,4) * weatherVariable.derived.myEmissivitySky * STEFAN_BOLTZMANN ;
+    weatherVariable.derived.myLongWaveIrradiance = POWER4(weatherVariable.myInstantTemp+ZEROCELSIUS) * weatherVariable.derived.myEmissivitySky * STEFAN_BOLTZMANN ;
     weatherVariable.derived.psychrometricConstant = psychro(weatherVariable.atmosphericPressure,weatherVariable.myInstantTemp);
     return;
 }
