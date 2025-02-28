@@ -223,6 +223,21 @@
         return float(cos(double(angle) * DEG_TO_RAD));
     }
 
+    double powerIntegerExponent(double base, int exp)
+    {
+        if (exp == 0) return 1;
+        if (exp < 0) return 1.0 / powerIntegerExponent(base, -exp);  // negative exponents
+
+        double result = 1.0;
+        while (exp > 0) {
+            if (exp%2 == 1)  // odd exponent
+                result *= base;
+            base *= base;  // the base is doubled
+            exp /= 2;
+        }
+        return result;
+    }
+
     namespace sorting
     {
         void quicksortAscendingInteger(int *x, int first,int last)
