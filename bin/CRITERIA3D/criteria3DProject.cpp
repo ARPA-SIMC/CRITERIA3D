@@ -1331,23 +1331,19 @@ bool Crit3DProject::computeHydrallModel()
                 // TODO scrivere funzione settaggio profilo 1D suolo
 
                 //root density
-                hydrallMaps.treeSpeciesMap.value[row][col] = 1.0;
-                Crit3DCrop currentCrop = cropList[hydrallMaps.treeSpeciesMap.value[row][col]];
+                hydrallMaps.treeSpeciesMap.value[row][col] = 0;
+                Crit3DCrop currentCrop = cropList[int(hydrallMaps.treeSpeciesMap.value[row][col])];
+                currentCrop.roots.rootDensity.resize(nrLayers); // TODO
                 for (int i = 0; i < nrLayers; i++)
                 {
 
-                    int currentNode = indexMap.at(i).value[row][col];
-                    int checkCurrentNode = indexMap.at(i).header->flag;
-                    int horizonIndex = soilList[soilIndex].getHorizonIndex(layerDepth[i]);
-                    double waterContentNodeI = soilFluxes3D::getWaterContent(indexMap.at(i).value[row][col]);
-                    horizon = soilList[soilIndex].horizon[horizonIndex];
-                    double WP, FC;
-                    WP = horizon.waterContentWP;
-                    FC = horizon.waterContentFC;
-                    int firstLayer, lastLayer;
-                    double rootDensityNodeI = currentCrop.roots.rootDensity[i];
-                    firstLayer = currentCrop.roots.firstRootLayer;
-                    lastLayer = currentCrop.roots.lastRootLayer;
+                    if (i <2 )
+                        currentCrop.roots.rootDensity[i] = 0.5;
+                    else
+                        currentCrop.roots.rootDensity[i] = 0;
+                    // TODO
+                    currentCrop.roots.firstRootLayer = 0;
+                    currentCrop.roots.lastRootLayer = 1;
 
                     hydrallModel.setSoilVariables(i,indexMap.at(i).value[row][col],indexMap.at(i).header->flag,
                                                   soilList[soilIndex].getHorizonIndex(layerDepth[i]),
