@@ -72,20 +72,9 @@ double Crit3D_Hydrall::getCO2(Crit3DDate myDate, double myTemperature, double my
 
     atmCO2 = interpolation::linearInterpolation(double(myDate.year), year, valueCO2, 24);
 
-    // exponential fitting Mauna Loa
-    /*if (myDate.year < 1990)
-    {
-        atmCO2= 280 * exp(0.0014876*(myDate.year -1840));//exponential change in CO2 concentration (ppm)
-    }
-    else
-    {
-        atmCO2= 353 * exp(0.00630*(myDate.year - 1990));
-    }
-*/
-    atmCO2 += 3*cos(2*PI*getDoyFromDate(myDate)/365.0);		     // to consider the seasonal effects
-    //return atmCO2*getPressureFromElevation(myTemperature, myElevation)/1000000  ;   // [Pa] in +- ppm/10 formula changed from the original Hydrall
 
-    return atmCO2 * weatherVariable.atmosphericPressure/1000000;
+    atmCO2 += 3*cos(2*PI*getDoyFromDate(myDate)/365.0);		     // to consider the seasonal effects
+    return atmCO2 * weatherVariable.atmosphericPressure/1000000;   // [Pa] in +- ppm/10 formula changed from the original Hydrall
 }
 /*
 double Crit3D_Hydrall::getPressureFromElevation(double myTemperature, double myElevation)
