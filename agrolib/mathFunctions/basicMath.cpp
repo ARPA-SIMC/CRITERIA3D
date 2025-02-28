@@ -223,17 +223,17 @@
         return float(cos(double(angle) * DEG_TO_RAD));
     }
 
-    double powerIntegerExponent(double base, int exp)
+    double powerIntegerExponent(double base, int exponent)
     {
-        if (exp == 0) return 1;
-        if (exp < 0) return 1.0 / powerIntegerExponent(base, -exp);  // negative exponents
+        if (exponent == 0) return 1;
+        if (exponent < 0) return 1.0 / powerIntegerExponent(base, -exponent);  // negative exponents
 
         double result = 1.0;
-        while (exp > 0) {
-            if (exp%2 == 1)  // odd exponent
+        while (exponent > 0) {
+            if (exponent%2 == 1)  // odd exponent
                 result *= base;
             base *= base;  // the base is doubled
-            exp /= 2;
+            exponent /= 2;
         }
         return result;
     }
