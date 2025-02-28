@@ -1334,12 +1334,28 @@ bool Crit3DProject::computeHydrallModel()
                 hydrallMaps.treeSpeciesMap.value[row][col] = 1.0;
                 Crit3DCrop currentCrop = cropList[hydrallMaps.treeSpeciesMap.value[row][col]];
                 for (int i = 0; i < nrLayers; i++)
+                {
+
+                    int currentNode = indexMap.at(i).value[row][col];
+                    int checkCurrentNode = indexMap.at(i).header->flag;
+                    int horizonIndex = soilList[soilIndex].getHorizonIndex(layerDepth[i]);
+                    double waterContentNodeI = soilFluxes3D::getWaterContent(indexMap.at(i).value[row][col]);
+                    horizon = soilList[soilIndex].horizon[horizonIndex];
+                    double WP, FC;
+                    WP = horizon.waterContentWP;
+                    FC = horizon.waterContentFC;
+                    int firstLayer, lastLayer;
+                    double rootDensityNodeI = currentCrop.roots.rootDensity[i];
+                    firstLayer = currentCrop.roots.firstRootLayer;
+                    lastLayer = currentCrop.roots.lastRootLayer;
+
                     hydrallModel.setSoilVariables(i,indexMap.at(i).value[row][col],indexMap.at(i).header->flag,
                                                   soilList[soilIndex].getHorizonIndex(layerDepth[i]),
                                                   soilFluxes3D::getWaterContent(indexMap.at(i).value[row][col]),
                                                   soilList[soilIndex].horizon[soilList[soilIndex].getHorizonIndex(layerDepth[i])].waterContentFC,
                                                   soilList[soilIndex].horizon[soilList[soilIndex].getHorizonIndex(layerDepth[i])].waterContentWP,
                                                   currentCrop.roots.firstRootLayer,currentCrop.roots.lastRootLayer,currentCrop.roots.rootDensity[i]);
+                }
                 //get water content and stress coefficient
                 /*for (int i = 0; i < nrLayers; i++)
                 {
