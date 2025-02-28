@@ -180,17 +180,18 @@ int DLL_EXPORT __STDCALL setNumericalParameters(float minDeltaT, float maxDeltaT
    \brief setThreads
     sets number of threads for parallel computing
     if nrThreads < 1, hardware_concurrency get the number of logical processors
-    returns the number of threads
+    returns the current number of threads
 */
 int DLL_EXPORT __STDCALL setThreads(int nrThreads)
 {
-    if (nrThreads < 1)
+    int nrProcessors = std::thread::hardware_concurrency();
+    if (nrThreads < 1 || nrThreads > nrProcessors)
     {
-        nrThreads = std::thread::hardware_concurrency();
+        nrThreads = nrProcessors;
     }
     myParameters.threadsNumber = nrThreads;
 
-    return nrThreads;
+    return myParameters.threadsNumber;
 }
 
 
