@@ -65,7 +65,7 @@ bool Crit3D_Hydrall::computeHydrallPoint(Crit3DDate myDate, double myTemperature
     return true;
 }
 
-double Crit3D_Hydrall::getCO2(Crit3DDate myDate, double myTemperature, double myElevation)
+double Crit3D_Hydrall::getCO2(Crit3DDate myDate, double myTemperature)
 {
     double atmCO2 = 400 ; //https://www.eea.europa.eu/data-and-maps/daviz/atmospheric-concentration-of-carbon-dioxide-5/download.table
     double year[24] = {1750,1800,1850,1900,1910,1920,1930,1940,1950,1960,1970,1980,1990,2000,2010,2020,2030,2040,2050,2060,2070,2080,2090,2100};
