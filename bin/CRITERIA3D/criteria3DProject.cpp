@@ -1300,15 +1300,15 @@ bool Crit3DProject::computeHydrallModel()
                 //TODO
                 double chlorophyllContent = 500;
                 int secondsPerStep = 2;
-
+                hydrallModel.elevation = DEM.value[row][col];
                 //set all variables
                 hydrallModel.setHourlyVariables(double(hourlyMeteoMaps->mapHourlyTair->value[row][col]), double(radiationMaps->globalRadiationMap->value[row][col]),
                                                 double(hourlyMeteoMaps->mapHourlyPrec->value[row][col]), double(hourlyMeteoMaps->mapHourlyRelHum->value[row][col]),
                                                 double(hourlyMeteoMaps->mapHourlyWindScalarInt->value[row][col]), double(radiationMaps->beamRadiationMap->value[row][col]),
                                                 double(radiationMaps->diffuseRadiationMap->value[row][col]),
                                                 double(radiationMaps->transmissivityMap->value[row][col] / CLEAR_SKY_TRANSMISSIVITY_DEFAULT),
-                                                pressureFromAltitude(double(hourlyMeteoMaps->mapHourlyTair->value[row][col]), DEM.getValueFromRowCol(row, col)),
-                                                hydrallModel.getCO2(getCrit3DDate(getCurrentDate()), double(hourlyMeteoMaps->mapHourlyTair->value[row][col]), DEM.getValueFromRowCol(row, col)),
+                                                pressureFromAltitude(double(hourlyMeteoMaps->mapHourlyTair->value[row][col]), hydrallModel.elevation),
+                                                hydrallModel.getCO2(getCrit3DDate(getCurrentDate()), double(hourlyMeteoMaps->mapHourlyTair->value[row][col])),
                                                 double(radiationMaps->sunElevationMap->value[row][col]));
 
                 hydrallModel.setPlantVariables(chlorophyllContent);

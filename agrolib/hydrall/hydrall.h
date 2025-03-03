@@ -319,7 +319,7 @@
         void setDerivedWeatherVariables(double directIrradiance, double diffuseIrradiance, double cloudIndex);
         void setPlantVariables(double chlorophyllContent);
         bool computeHydrallPoint(Crit3DDate myDate, double myTemperature, double myElevation, int secondPerStep);
-        double getCO2(Crit3DDate myDate, double myTemperature, double myElevation);
+        double getCO2(Crit3DDate myDate, double myTemperature);
         //double getPressureFromElevation(double myTemperature, double myElevation);
         double computeLAI(Crit3DDate myDate);
         double meanLastMonthTemperature(double previousLastMonthTemp, double simulationStepInSeconds, double myInstantTemp);
