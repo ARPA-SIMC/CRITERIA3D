@@ -13,7 +13,9 @@
     #ifndef POWER2
         #define POWER2(x) ((x) * (x))
     #endif
-
+    #ifndef LOGICAL_IO
+        #define LOGICAL_IO(logicCondition, val1, val2) ((logicCondition) ? (val1) : (val2))
+    #endif
     bool sameSignNoZero(float a, float b);
     bool sameSign(float a, float b);
     bool greaterThan(float a, float b);
