@@ -159,9 +159,9 @@ void decomp(int timeFact, double &DPM, double &RPM, double &BIO, double &HUM, do
     const double BIO_k = 0.66;
     const double HUM_k = 0.02;
 
-    const double conr = 0.0001244876401867718; // equivalent to std::log(2.0)/5568.0;
+    //const double conr = 0.0001244876401867718; // equivalent to std::log(2.0)/5568.0;
     double tstep = 1.0/timeFact; //monthly 1/12 or daily 1/365
-    double exc = std::exp(-conr*tstep);
+    double exc = std::exp(-CONR*tstep);
 
     //decomposition
     double DPM1 = DPM*std::exp(-RateM*DPM_k*tstep);
@@ -218,22 +218,22 @@ void decomp(int timeFact, double &DPM, double &RPM, double &BIO, double &HUM, do
     HUM = HUM + FYM_C_HUM;
 
     //calc new ract of each pool
-    double DPM_Ract = DPM1 * std::exp(-conr*DPM_Rage);
-    double RPM_Ract = RPM1 * std::exp(-conr*RPM_Rage);
+    double DPM_Ract = DPM1 * std::exp(-CONR*DPM_Rage);
+    double RPM_Ract = RPM1 * std::exp(-CONR*RPM_Rage);
 
-    double BIO_Ract = BIO1 * std::exp(-conr*BIO_Rage);
-    double DPM_BIO_Ract = DPM_BIO * std::exp(-conr*DPM_Rage);
-    double RPM_BIO_Ract = RPM_BIO * std::exp(-conr*RPM_Rage);
-    double BIO_BIO_Ract = BIO_BIO * std::exp(-conr*BIO_Rage);
-    double HUM_BIO_Ract = HUM_BIO * std::exp(-conr*HUM_Rage);
+    double BIO_Ract = BIO1 * std::exp(-CONR*BIO_Rage);
+    double DPM_BIO_Ract = DPM_BIO * std::exp(-CONR*DPM_Rage);
+    double RPM_BIO_Ract = RPM_BIO * std::exp(-CONR*RPM_Rage);
+    double BIO_BIO_Ract = BIO_BIO * std::exp(-CONR*BIO_Rage);
+    double HUM_BIO_Ract = HUM_BIO * std::exp(-CONR*HUM_Rage);
 
-    double HUM_Ract = HUM1 *std::exp(-conr*HUM_Rage);
-    double DPM_HUM_Ract = DPM_HUM * std::exp(-conr*DPM_Rage);
-    double RPM_HUM_Ract = RPM_HUM * std::exp(-conr*RPM_Rage);
-    double BIO_HUM_Ract = BIO_HUM * std::exp(-conr*BIO_Rage);
-    double HUM_HUM_Ract = HUM_HUM * std::exp(-conr*HUM_Rage);
+    double HUM_Ract = HUM1 *std::exp(-CONR*HUM_Rage);
+    double DPM_HUM_Ract = DPM_HUM * std::exp(-CONR*DPM_Rage);
+    double RPM_HUM_Ract = RPM_HUM * std::exp(-CONR*RPM_Rage);
+    double BIO_HUM_Ract = BIO_HUM * std::exp(-CONR*BIO_Rage);
+    double HUM_HUM_Ract = HUM_HUM * std::exp(-CONR*HUM_Rage);
 
-    double IOM_Ract = IOM * std::exp(-conr*IOM_Rage);
+    double IOM_Ract = IOM * std::exp(-CONR*IOM_Rage);
 
     //assign new C from plant and FYM the correct age
     double PI_DPM_Ract = modernC * PI_C_DPM;
@@ -258,30 +258,30 @@ void decomp(int timeFact, double &DPM, double &RPM, double &BIO, double &HUM, do
     if (DPM <= EPSILON)
         DPM_Rage = 0;
     else
-        DPM_Rage = (std::log(DPM/DPM_Ract_new) ) / conr;
+        DPM_Rage = (std::log(DPM/DPM_Ract_new) ) / CONR;
 
 
     if(RPM <= EPSILON)
         RPM_Rage = 0;
     else
-        RPM_Rage = (std::log(RPM/RPM_Ract_new) ) / conr;
+        RPM_Rage = (std::log(RPM/RPM_Ract_new) ) / CONR;
 
     if(BIO <= EPSILON)
         BIO_Rage = 0;
     else
-        BIO_Rage = ( std::log(BIO/BIO_Ract_new) ) / conr;
+        BIO_Rage = ( std::log(BIO/BIO_Ract_new) ) / CONR;
 
 
     if(HUM <= EPSILON)
         HUM_Rage = 0;
     else
-        HUM_Rage = ( std::log(HUM/HUM_Ract_new) ) / conr;
+        HUM_Rage = ( std::log(HUM/HUM_Ract_new) ) / CONR;
 
 
     if(SOC <= EPSILON)
         Total_Rage = 0;
     else
-        Total_Rage = ( std::log(SOC/Total_Ract) ) / conr;
+        Total_Rage = ( std::log(SOC/Total_Ract) ) / CONR;
 
     return;
 }
