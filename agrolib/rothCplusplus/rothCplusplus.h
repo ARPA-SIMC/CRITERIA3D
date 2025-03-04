@@ -52,16 +52,21 @@
 #ifndef ROTHCPLUSPLUS_H
 #define ROTHCPLUSPLUS_H
 
-
+/*
 #ifndef COMMONCONSTANTS_H
 #include "commonConstants.h"
 #endif
 #ifndef CRIT3DDATE_H
 #include "crit3dDate.h"
 #endif
+*/
 #ifndef GIS_H
 #include "gis.h"
 #endif
+
+#define CONR  0.0001244876401867718 // equivalent to std::log(2.0)/5568.0;
+#define EXP_DECAY(FACTOR, EXT_COEF,RAGE) ((FACTOR) * std::exp(-(EXT_COEF) * (RAGE)))
+#define LOG_RAGE(PLANT_MATERIAL, PLAT_MATERIAL_ACT) (std::log((PLANT_MATERIAL)/(PLAT_MATERIAL_ACT)) ) / CONR
 
 class Crit3D_RothCplusplusMaps
 {

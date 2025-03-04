@@ -241,11 +241,11 @@ void Crit3D_Hydrall::setSoilVariables(int iLayer, int currentNode,float checkFla
             waterContentProfile[i] = waterContent;
             stressCoefficientProfile[i] = MINVALUE(1.0, (10*(waterContentProfile[i]-waterContentWP))/(3*(waterContentFC-waterContentWP)));
         }
-
-        if (i >= firstRootLayer && i <= lastRootLayer)
+        rootDensityProfile[i] = LOGICAL_IO((i >= firstRootLayer && i <= lastRootLayer),rootDensity,0);
+        /*if (i >= firstRootLayer && i <= lastRootLayer)
             rootDensityProfile[i] = rootDensity;
         else
-            rootDensityProfile[i] = 0;
+            rootDensityProfile[i] = 0;*/
     }
 }
 
