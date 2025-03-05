@@ -20,7 +20,12 @@ Crit3DLocalProxyWidget::Crit3DLocalProxyWidget(double x, double y, double zDEM, 
     localUtmPoint.y = y;
     gis::getLatLonFromUtm(gisSettings, localUtmPoint, localGeoPoint);
 
-    this->setWindowTitle("Local proxy analysis for point of coordinates (" + QString::number(localGeoPoint.latitude) + ", " + QString::number(localGeoPoint.longitude) + ")." + " z value: " + QString::number(zDEM) + " (DEM), macro area nr. " + QString::number(gis::getValueFromXY(*interpolationSettings->getMacroAreasMap(), x, y))); // + QString::number(zGrid) + " (Grid)");
+    QString windowTitle = "Local proxy analysis for point of coordinates (" + QString::number(localGeoPoint.latitude) + ", " + QString::number(localGeoPoint.longitude) + ")." + " z value: " + QString::number(zDEM) + " (DEM)";
+
+    if (interpolationSettings->getUseGlocalDetrending())
+        windowTitle += "macro area nr. " + QString::number(gis::getValueFromXY(*interpolationSettings->getMacroAreasMap(), x, y));
+
+    this->setWindowTitle(windowTitle); // + QString::number(zGrid) + " (Grid)");
     this->resize(1024, 700);
     this->setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Preferred);
     this->setAttribute(Qt::WA_DeleteOnClose);
@@ -414,6 +419,7 @@ void Crit3DLocalProxyWidget::plot()
             point.setY(varValue);
             QString text = "id: " + QString::fromStdString(meteoPoints[subsetInterpolationPoints[i].index].id) + "\n"
                            + "name: " + QString::fromStdString(meteoPoints[subsetInterpolationPoints[i].index].name) + "\n"
+                           + "province: " + QString::fromStdString(meteoPoints[subsetInterpolationPoints[i].index].province) + "\n"
                            + "weight: " + QString::number(subsetInterpolationPoints[i].regressionWeight, 'f', 5);
             if (subsetInterpolationPoints[i].isMarked)
             {

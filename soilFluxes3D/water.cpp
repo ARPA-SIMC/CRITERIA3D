@@ -43,22 +43,20 @@
 
 
 /*!
- * \brief [m^3] water flow between node i and Link
- * \param i
+ * \brief getWaterExchange
  * \param link TlinkedNode pointer
- * \param deltaT
- * \return result
+ * \param deltaT [s]
+ * \return water exchange [m3] between node i and Link
  */
 double getWaterExchange(long i, TlinkedNode *link, double deltaT)
 {
     if (link != nullptr)
-        {
+    {
 		double matrixValue = getMatrixValue(i, link);
-		double flow = matrixValue * (nodeList[i].H - nodeList[link->index].H) * deltaT;
-        return (flow);
-        }
+        return matrixValue * (nodeList[i].H - nodeList[link->index].H) * deltaT;
+    }
 	else
-		return(double(INDEX_ERROR));
+        return double(INDEX_ERROR);
 }
 
 
@@ -98,7 +96,7 @@ double runoff(long i, long j, TlinkedNode *link, double deltaT, unsigned approxi
     double H = MAXVALUE(Hi, Hj);
     double z = MAXVALUE(nodeList[i].z + nodeList[i].pond, nodeList[j].z + nodeList[j].pond);
     double Hs = H - z;
-    if (Hs <= 0.)
+    if (Hs < EPSILON)
         return 0.;
 
     double dH = fabs(Hi - Hj);
@@ -205,7 +203,8 @@ double redistribution(long i, TlinkedNode *link, int linkType)
 
 bool computeFlux(long i, int matrixIndex, TlinkedNode *link, double deltaT, unsigned approximationNr, int linkType)
 {
-    if ((*link).index == NOLINK) return false;
+    if ((*link).index == NOLINK)
+        return false;
 
     double val;
     long j = (*link).index;
@@ -370,7 +369,9 @@ bool waterFlowComputation(double deltaT)
             unsigned long end = (n+1) * step - 1;
 
             if (n == lastThread)
+            {
                 end = myStructure.nrNodes-1;
+            }
 
             threadVector.push_back(std::thread(computeMatrixElements_thread, start, end, approximationNr, deltaT));
         }
@@ -382,7 +383,11 @@ bool waterFlowComputation(double deltaT)
 
         if (CourantWater > 1.0 && deltaT > myParameters.delta_t_min)
         {
-            halveTimeStep();
+            myParameters.current_delta_t = std::max(myParameters.current_delta_t / CourantWater, myParameters.delta_t_min);
+            if (myParameters.current_delta_t > 1)
+            {
+                myParameters.current_delta_t = floor(myParameters.current_delta_t);
+            }
             setForcedHalvedTime(true);
             return false;
         }

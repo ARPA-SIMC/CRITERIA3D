@@ -75,6 +75,7 @@ void Crit1DProject::initialize()
     availableWaterDepth.clear();
     fractionAvailableWaterDepth.clear();
     factorOfSafetyDepth.clear();
+    soilWaterIndexDepth.clear();
     awcDepth.clear();
 
     texturalClassList.resize(13);
@@ -364,6 +365,13 @@ bool Crit1DProject::readSettings()
         if (! setVariableDepth(depthList, factorOfSafetyDepth))
         {
             projectError = "Wrong slope stability depth in " + configFileName;
+            return false;
+        }
+
+        depthList = projectSettings->value("soilWaterIndex").toStringList();
+        if (! setVariableDepth(depthList, soilWaterIndexDepth))
+        {
+            projectError = "Wrong Soil Water Index depth in " + configFileName;
             return false;
         }
 
@@ -1709,6 +1717,11 @@ bool Crit1DProject::createOutputTable(QString &myError)
         QString fieldName = "FoS_" + QString::number(factorOfSafetyDepth[i]);
         queryString += ", " + fieldName + " REAL";
     }
+    for (unsigned int i = 0; i < soilWaterIndexDepth.size(); i++)
+    {
+        QString fieldName = "SWI_" + QString::number(soilWaterIndexDepth[i]);
+        queryString += ", " + fieldName + " REAL";
+    }
 
     // close query
     queryString += ")";
@@ -1784,6 +1797,11 @@ void Crit1DProject::updateOutput(Crit3DDate myDate, bool isFirst)
             QString fieldName = "FoS_" + QString::number(factorOfSafetyDepth[i]);
             outputString += ", " + fieldName;
         }
+        for (unsigned int i = 0; i < soilWaterIndexDepth.size(); i++)
+        {
+            QString fieldName = "SWI_" + QString::number(soilWaterIndexDepth[i]);
+            outputString += ", " + fieldName;
+        }
 
         outputString += ") VALUES ";
     }
@@ -1808,7 +1826,7 @@ void Crit1DProject::updateOutput(Crit3DDate myDate, bool isFirst)
                     + "," + QString::number(myCase.output.dailySurfaceWaterContent, 'g', 3)
                     + "," + QString::number(myCase.output.dailyAvailableWater, 'g', 4)
                     + "," + QString::number(myCase.output.dailyReadilyAW, 'g', 4)
-                    + "," + QString::number(myCase.output.dailyFractionAW, 'g', 3)
+                    + "," + QString::number(myCase.output.dailyFractionAW, 'g', 4)
                     + "," + QString::number(myCase.output.dailySurfaceRunoff, 'g', 3)
                     + "," + QString::number(myCase.output.dailyDrainage, 'g', 3)
                     + "," + QString::number(myCase.output.dailyLateralDrainage, 'g', 3)
@@ -1850,11 +1868,15 @@ void Crit1DProject::updateOutput(Crit3DDate myDate, bool isFirst)
     }
     for (unsigned int i = 0; i < fractionAvailableWaterDepth.size(); i++)
     {
-        outputString += "," + QString::number(myCase.getFractionAW(fractionAvailableWaterDepth[i]), 'g', 3);
+        outputString += "," + QString::number(myCase.getAvailableWaterFraction(fractionAvailableWaterDepth[i]), 'g', 4);
     }
     for (unsigned int i = 0; i < factorOfSafetyDepth.size(); i++)
     {
         outputString += "," + QString::number(myCase.getSlopeStability(factorOfSafetyDepth[i]), 'g', 4);
+    }
+    for (unsigned int i = 0; i < soilWaterIndexDepth.size(); i++)
+    {
+        outputString += "," + QString::number(myCase.getSoilWaterIndex(soilWaterIndexDepth[i]), 'g', 4);
     }
 
     outputString += ")";

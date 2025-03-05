@@ -4877,7 +4877,7 @@ bool Project::exportMeteoGridToRasterFlt(QString fileName, double cellSize)
 
     std::string myError = errorString.toStdString();
     QString fileWithoutExtension = QFileInfo(fileName).absolutePath() + QDir::separator() + QFileInfo(fileName).baseName();
-    if (!gis::writeEsriGrid(fileWithoutExtension.toStdString(), &myGrid, myError))
+    if (! gis::writeEsriGrid(fileWithoutExtension.toStdString(), &myGrid, myError))
     {
         errorString = QString::fromStdString(myError);
         return false;

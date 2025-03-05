@@ -124,7 +124,7 @@ bool loadVanGenuchtenParameters(const QSqlDatabase &dbSoil, std::vector<soil::Cr
             }
 
         textureClassList[id].classNameUSDA = query.value(1).toString().toStdString();
-        textureClassList[id].vanGenuchten.alpha = query.value(2).toDouble();    //[kPa^-1]
+        textureClassList[id].vanGenuchten.alpha = query.value(2).toDouble();    //[kPa-1]
         textureClassList[id].vanGenuchten.n = query.value(3).toDouble();
         textureClassList[id].vanGenuchten.he = query.value(4).toDouble();       //[kPa]
 
