@@ -243,6 +243,21 @@ void Crit3DElabList::insertNYears(int nYears)
     _listNYears.push_back(nYears);
 }
 
+std::vector<int> Crit3DElabList::listOffset() const
+{
+    return _listOffset;
+}
+
+void Crit3DElabList::setListOffset(const std::vector<int> &listOffset)
+{
+    _listOffset = listOffset;
+}
+
+void Crit3DElabList::insertOffset(int offset)
+{
+    _listOffset.push_back(offset);
+}
+
 std::vector<QString> Crit3DElabList::listElab1() const
 {
     return _listElab1;
@@ -355,10 +370,12 @@ bool Crit3DElabList::addElab(unsigned int index)
         variable = variable+"CUMULATED";
     }
     QString period = _listPeriodStr[index];
-    QString periodStartDay = QString::number(_listDateStart[index].day());
-    QString periodStartMonth = QString::number(_listDateStart[index].month());
-    QString periodEndDay = QString::number(_listDateEnd[index].day());
-    QString periodEndMonth = QString::number(_listDateEnd[index].month());
+    QDate tempDate = QDate(yearStart.toInt(), 1, 1).addDays(_listDateStart[index].dayOfYear()-1);
+    QString periodStartDay = QString::number(tempDate.day());
+    QString periodStartMonth = QString::number(tempDate.month());
+    tempDate = QDate(yearEnd.toInt(), 1, 1).addDays(_listDateEnd[index].dayOfYear()-1);
+    QString periodEndDay = QString::number(tempDate.day());
+    QString periodEndMonth = QString::number(tempDate.month());
     QString nYear = QString::number(_listNYears[index]);
     QString elab1 = _listElab1[index];
     QString secondElab = _listElab2[index];

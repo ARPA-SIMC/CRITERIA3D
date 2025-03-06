@@ -115,6 +115,9 @@
         bool dailyCumulated() const;
         void setDailyCumulated(bool newDailyCumulated);
 
+        void setOffset(int offset);
+        int offset();
+
     private:
         QSqlDatabase _db;
         QString _climateElab;
@@ -137,6 +140,7 @@
         QString _elab2;
         float _param2;
         bool _dailyCumulated;
+        int _offset;
         Crit3DElaborationSettings *elabSettings;
 
         meteoVariable _currentVar;

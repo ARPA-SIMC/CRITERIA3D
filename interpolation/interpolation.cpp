@@ -2519,7 +2519,7 @@ bool getMultipleDetrendingValues(Crit3DInterpolationSettings mySettings, const s
         {
             elevationPos = i;
 
-            if (allProxyValues[i] == NODATA)
+            if (allProxyValues[i] == NODATA) //TODO: escludi celle senza tutti i proxy
             {
                 myFunc.erase(myFunc.begin());
                 myParameters.erase(myParameters.begin());

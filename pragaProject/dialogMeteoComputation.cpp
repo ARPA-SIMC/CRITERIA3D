@@ -30,6 +30,7 @@ DialogMeteoComputation::DialogMeteoComputation(QSettings *settings, bool isMeteo
     QHBoxLayout periodLayout;
     QHBoxLayout displayLayout;
     QHBoxLayout genericPeriodLayout;
+    QHBoxLayout offsetLayout;
     QHBoxLayout layoutXML;
     QHBoxLayout layoutOk;
 
@@ -204,6 +205,17 @@ DialogMeteoComputation::DialogMeteoComputation(QSettings *settings, bool isMeteo
     dailyCumulated.setChecked(false);
     QString periodSelected = periodTypeList.currentText();
     periodLayout.addWidget(&dailyCumulated);
+    //aggiungi connect per offset
+
+    dailyOffsetLabel.setText("Offset (-/+)");
+    QDate displayDate = QDate(firstYearEdit.text().toInt(), 1, 1).addDays(dailyOffset.text().toInt());
+    offsetDateDisplayLabel.setText("Offset date: ");
+    offsetDateDisplay.setDate(displayDate);
+    offsetDateDisplay.setReadOnly(true);
+    offsetLayout.addWidget(&dailyOffsetLabel);
+    offsetLayout.addWidget(&dailyOffset);
+    offsetLayout.addWidget(&offsetDateDisplayLabel);
+    offsetLayout.addWidget(&offsetDateDisplay);
 
     int dayOfYear = currentDay.date().dayOfYear();
     periodDisplay.setText("Day Of Year: " + QString::number(dayOfYear));
@@ -375,11 +387,14 @@ DialogMeteoComputation::DialogMeteoComputation(QSettings *settings, bool isMeteo
     connect(&lastYearEdit, &QLineEdit::editingFinished, [=](){ this->checkYears(); });
     connect(&currentDay, &QDateEdit::dateChanged, [=](){ this->displayPeriod(periodTypeList.currentText()); });
     connect(&periodTypeList, &QComboBox::currentTextChanged, [=](const QString &newVar){ this->displayPeriod(newVar); });
+    //connect(&dailyCumulated, &QCheckBox::checkStateChanged, [=](int state){ this->displayPeriod(periodTypeList.currentText()); });
+    connect(&firstYearEdit, &QLineEdit::editingFinished, [=]() {this->changeOffsetDate();});
+    connect(&dailyOffset, &QLineEdit::editingFinished, [=]() {this->changeOffsetDate();});
 
     connect(&variableList, &QComboBox::currentTextChanged, [=](const QString &newVar){ this->listElaboration(newVar); });
     connect(&elaborationList, &QComboBox::currentTextChanged, [=](const QString &newElab){ this->listSecondElab(newElab); });
     connect(&secondElabList, &QComboBox::currentTextChanged, [=](const QString &newSecElab){ this->activeSecondParameter(newSecElab); });
-    connect(&readParam, &QCheckBox::stateChanged, [=](int state){ this->readParameter(state); });
+    connect(&readParam, &QCheckBox::checkStateChanged, [=](int state){ this->readParameter(state); });
     connect(&copyData, &QPushButton::clicked, [=](){ this->copyDataToAnomaly(); });
 
 
@@ -402,6 +417,7 @@ DialogMeteoComputation::DialogMeteoComputation(QSettings *settings, bool isMeteo
     mainLayout.addLayout(&varLayout);
     mainLayout.addLayout(&dateLayout);
     mainLayout.addLayout(&periodLayout);
+    mainLayout.addLayout(&offsetLayout);
     mainLayout.addLayout(&displayLayout);
     mainLayout.addLayout(&genericPeriodLayout);
     mainLayout.addLayout(&elaborationLayout);
@@ -542,8 +558,7 @@ void DialogMeteoComputation::done(bool res)
                 myProject.clima->setNYears(start.year() - firstYearEdit.text().toInt());
                 myProject.clima->setGenericPeriodDateStart(start);
                 myProject.clima->setGenericPeriodDateEnd(end);
-            }
-
+            } 
             if (elaborationList.currentText() == "No elaboration available")
             {
                 myProject.clima->setElab1("noMeteoComp");
@@ -723,7 +738,6 @@ void DialogMeteoComputation::checkYears()
     }
 }
 
-
 void DialogMeteoComputation::displayPeriod(const QString value)
 {
     if (value == "Daily")
@@ -731,6 +745,7 @@ void DialogMeteoComputation::displayPeriod(const QString value)
         elaborationList.setCurrentText("No elaboration available");
         elaborationList.setEnabled(false);
         dailyCumulated.setVisible(true);
+
         if (saveClima)
         {
             periodDisplay.setVisible(false);
@@ -742,6 +757,13 @@ void DialogMeteoComputation::displayPeriod(const QString value)
             genericPeriodEnd.setVisible(false);
             nrYearLabel.setVisible(false);
             nrYear.setVisible(false);
+            dailyOffsetLabel.setVisible(true);
+            dailyOffset.setVisible(true);
+            dailyOffset.setEnabled(true);
+            offsetDateDisplayLabel.setVisible(true);
+            offsetDateDisplay.setVisible(true);
+            /*if (! dailyCumulated.isChecked())
+                dailyOffset.setEnabled(false);*/
             return;
         }
         periodDisplay.setVisible(true);
@@ -760,6 +782,10 @@ void DialogMeteoComputation::displayPeriod(const QString value)
     {
         elaborationList.setEnabled(true);
         dailyCumulated.setVisible(false);
+        dailyOffsetLabel.setVisible(false);
+        dailyOffset.setVisible(false);
+        offsetDateDisplayLabel.setVisible(false);
+        offsetDateDisplay.setVisible(false);
         if (saveClima)
         {
             periodDisplay.setVisible(false);
@@ -789,6 +815,10 @@ void DialogMeteoComputation::displayPeriod(const QString value)
     {
         elaborationList.setEnabled(true);
         dailyCumulated.setVisible(false);
+        dailyOffsetLabel.setVisible(false);
+        dailyOffset.setVisible(false);
+        offsetDateDisplayLabel.setVisible(false);
+        offsetDateDisplay.setVisible(false);
         if (saveClima)
         {
             periodDisplay.setVisible(false);
@@ -817,6 +847,10 @@ void DialogMeteoComputation::displayPeriod(const QString value)
     {
         elaborationList.setEnabled(true);
         dailyCumulated.setVisible(false);
+        dailyOffsetLabel.setVisible(false);
+        dailyOffset.setVisible(false);
+        offsetDateDisplayLabel.setVisible(false);
+        offsetDateDisplay.setVisible(false);
         if (saveClima)
         {
             periodDisplay.setVisible(false);
@@ -846,6 +880,10 @@ void DialogMeteoComputation::displayPeriod(const QString value)
     {
         elaborationList.setEnabled(true);
         dailyCumulated.setVisible(false);
+        dailyOffsetLabel.setVisible(false);
+        dailyOffset.setVisible(false);
+        offsetDateDisplayLabel.setVisible(false);
+        offsetDateDisplay.setVisible(false);
         if (saveClima)
         {
             periodDisplay.setVisible(false);
@@ -876,6 +914,10 @@ void DialogMeteoComputation::displayPeriod(const QString value)
         periodDisplay.setVisible(false);
         currentDayLabel.setVisible(false);
         currentDay.setVisible(false);
+        dailyOffsetLabel.setVisible(false);
+        dailyOffset.setVisible(false);
+        offsetDateDisplayLabel.setVisible(false);
+        offsetDateDisplay.setVisible(false);
 
         genericStartLabel.setVisible(true);
         genericEndLabel.setVisible(true);
@@ -1051,6 +1093,11 @@ void DialogMeteoComputation::listSecondElab(const QString value)
     }
     settings->endArray();
     settings->endGroup();
+}
+
+void DialogMeteoComputation::changeOffsetDate()
+{
+    offsetDateDisplay.setDate(QDate(firstYearEdit.text().toInt(), 1, 1).addDays(dailyOffset.text().toInt()));
 }
 
 
@@ -1239,7 +1286,17 @@ void DialogMeteoComputation::copyDataToSaveLayout()
         saveClimaLayout.setElab1ParamFromdB("");
     }
 
+    if (periodTypeList.currentText() == "Daily")
+    {
+        if (! dailyOffset.text().isEmpty())
+            saveClimaLayout.setOffsetDoy(dailyOffset.text());
+    }
+
+    //saveClima
+
+
     saveClimaLayout.addElab();
+
 }
 
 

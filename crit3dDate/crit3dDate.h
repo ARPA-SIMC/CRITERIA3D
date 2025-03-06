@@ -99,5 +99,7 @@
     inline long getJulianDay(int day, int month, int year);
     Crit3DDate getDateFromJulianDay(long julianDay);
 
+    int daysTo(const Crit3DDate& firstDate, const Crit3DDate& lastDate);
+
 
 #endif // CRIT3DDATE_H

@@ -105,6 +105,9 @@
         void insertDailyCumulated(bool dailyCumulated);
         std::vector<bool> listDailyCumulated() const;
 
+        std::vector<int> listOffset() const;
+        void setListOffset(int offset);
+
 
     private:
 
@@ -124,6 +127,7 @@
         std::vector<QString> _listElab2;
         std::vector<float> _listParam2;
         std::vector<bool> _listDailyCumulated;
+        std::vector<int> _listOffset;
 
     };
 

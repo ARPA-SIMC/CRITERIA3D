@@ -23,7 +23,7 @@ Crit3DLocalProxyWidget::Crit3DLocalProxyWidget(double x, double y, double zDEM, 
     QString windowTitle = "Local proxy analysis for point of coordinates (" + QString::number(localGeoPoint.latitude) + ", " + QString::number(localGeoPoint.longitude) + ")." + " z value: " + QString::number(zDEM) + " (DEM)";
 
     if (interpolationSettings->getUseGlocalDetrending())
-        windowTitle += "macro area nr. " + QString::number(gis::getValueFromXY(*interpolationSettings->getMacroAreasMap(), x, y));
+        windowTitle += ", macro area nr. " + QString::number(gis::getValueFromXY(*interpolationSettings->getMacroAreasMap(), x, y));
 
     this->setWindowTitle(windowTitle); // + QString::number(zGrid) + " (Grid)");
     this->resize(1024, 700);
