@@ -2055,7 +2055,7 @@ namespace gis
         }
 
         // *** step 3: cleans the basin (removes points relating to other basins)
-        double threshold = basinRaster.header->cellSize * 3.;
+        double threshold = basinRaster.header->cellSize * 5.;
         for (int row = 0; row < basinRaster.header->nrRows; row++)
         {
             for (int col = 0; col < basinRaster.header->nrCols; col++)
@@ -2086,7 +2086,7 @@ namespace gis
                                     if (r != 0 || c != 0)
                                     {
                                         rasterValue = inputRaster.getValueFromRowCol(currentRow+r, currentCol+c);
-                                        if (! isEqual(rasterValue, inputRaster.header->flag) && (rasterValue < refValue))
+                                        if (! isEqual(rasterValue, inputRaster.header->flag) && (rasterValue <= refValue))
                                         {
                                             refValue = rasterValue;
                                             lastRow = currentRow+r;
