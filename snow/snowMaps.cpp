@@ -171,8 +171,8 @@ void Crit3DSnowMaps::setPoint(Crit3DSnow &snowPoint, int row, int col)
 
 void Crit3DSnowMaps::resetSnowModel(double skinThickness)
 {
-    float initSWE;                  /*!<  [mm]     */
-    int surfaceBulkDensity;         /*!<  [kg/m^3] */
+    float initSWE;                  //  [mm]
+    int surfaceBulkDensity;         //  [kg m-3]
 
     // TODO pass real bulk density
     surfaceBulkDensity = DEFAULT_BULK_DENSITY;

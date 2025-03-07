@@ -575,7 +575,7 @@ namespace soil
 
     /*!
      * \brief Compute degree of saturation from volumetric water content
-     * \param theta [m^3 m-3] volumetric water content
+     * \param theta [m3 m-3] volumetric water content
      * \param horizon pointer to Crit3DHorizon class
      * \return [-] degree of saturation
      */
@@ -592,7 +592,7 @@ namespace soil
     /*!
      * \brief Compute water potential from volumetric water content
      * \brief using modified Van Genuchten model
-     * \param theta: volumetric water content   [m^3 m-3]
+     * \param theta: volumetric water content   [m3 m-3]
      * \param horizon: pointer to Crit3DHorizon class
      * \return water potential                  [kPa]
      */
@@ -648,7 +648,7 @@ namespace soil
      * \brief using Mualem equation for modified Van Genuchten model
      * \param Se: degree of saturation      [-]
      * \param horizon: pointer to Crit3DHorizon class
-     * \return hydraulic conductivity       [cm day^-1]
+     * \return hydraulic conductivity       [cm day-1]
      * \warning very low values are possible (es: 10^12)
      */
     double waterConductivity(double Se, const Crit3DHorizon &horizon)
@@ -745,7 +745,7 @@ namespace soil
 
     /*!
      * \brief get current water conductivity
-     * \return hydraulic conductivity   [cm day^-1]
+     * \return hydraulic conductivity   [cm day-1]
      */
     double Crit1DLayer::getWaterConductivity()
     {
@@ -1049,12 +1049,12 @@ namespace soil
         double* pmax = new double[nrParameters];
         double* pdelta = new double[nrParameters];
 
-        // water content at saturation [m^3 m^-3]
+        // water content at saturation [m3 m-3]
         param[0] = horizon.vanGenuchten.thetaS;
         pmin[0] = 0;
         pmax[0] = 1;
 
-        // water content residual [m^3 m^-3]
+        // water content residual [m3 m-3]
         param[1] = horizon.vanGenuchten.thetaR;
         pmin[1] = 0;
         pmax[1] = std::max(0.1, horizon.vanGenuchten.thetaR*2);
@@ -1092,7 +1092,7 @@ namespace soil
             pmax[2] = heMax;
         }
 
-        // Van Genuchten alpha parameter [kPa^-1]
+        // Van Genuchten alpha parameter [kPa-1]
         param[3] = horizon.vanGenuchten.alpha;
         pmin[3] = 0.01;
         pmax[3] = 10;

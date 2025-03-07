@@ -41,10 +41,10 @@ namespace leafDevelopment
      * \brief getTheoreticalLAIGrowth   return theoritical (not stressed) Leaf Area Index from degree days
      * \param degreeDays    [DD]
      * \param a             [-] LAI shape form factor a
-     * \param b             [DD^-1] LAI shape form factor b
-     * \param laiMIN        [m^2 m^-2]
-     * \param laiMAX        [m^2 m^-2]
-     * \return LAI          [m^2 m^-2]
+     * \param b             [DD-1] LAI shape form factor b
+     * \param laiMIN        [m2 m-2]
+     * \param laiMAX        [m2 m-2]
+     * \return LAI          [m2 m-2]
      */
     double getTheoreticalLAIGrowth(double degreeDays, double a, double b,double laiMIN,double laiMAX)
     {
@@ -54,11 +54,11 @@ namespace leafDevelopment
 
     /*!
      * \brief getDDfromLAIGrowth
-     * \param lai           [m^2 m^-2] current Leaf Area Index
+     * \param lai           [m2 m-2] current Leaf Area Index
      * \param a             [-] LAI shape form factor a
-     * \param b             [DD^-1] LAI shape form factor b
-     * \param laiMIN        [m^2 m^-2]
-     * \param laiMAX        [m^2 m^-2]
+     * \param b             [DD-1] LAI shape form factor b
+     * \param laiMIN        [m2 m-2]
+     * \param laiMAX        [m2 m-2]
      * \return degreeDays
      */
     double getDDfromLAIGrowth(double lai, double a, double b,double laiMIN,double laiMAX)
@@ -88,11 +88,11 @@ namespace leafDevelopment
                 incrementalRatio = (getTheoreticalLAIGrowth(DD+5,a,b,laiMIN,laiMAX)-getTheoreticalLAIGrowth(DD-5,a,b,laiMIN,laiMAX))/(10.);
                 incrementalRatio *= getLaiStressCoefficient(fractionTranspirableSoilWater);
                 if (currentDD < growthDD)
-                newLai = MINVALUE(previousLai + thermalUnits*incrementalRatio,laiMAX);
+                newLai = std::min(previousLai + thermalUnits*incrementalRatio,laiMAX);
                 else
                 {
                     *isSenescence = true;
-                    newLai = MINVALUE(previousLai + (thermalUnits-currentDD+growthDD)*incrementalRatio,laiMAX);
+                    newLai = std::min(previousLai + (thermalUnits-currentDD+growthDD)*incrementalRatio,laiMAX);
                 }
                 *actualLaiMax = newLai;
             }
@@ -121,8 +121,8 @@ namespace leafDevelopment
         if (daysFromStartSenescence > LENGTH_SENESCENCE)
             return LaiMin;
 
-        a = log(MAXVALUE(LAIStartSenescence, 0.1));
-        b = (log(MAXVALUE(LaiMin, 0.01)) - a) / LENGTH_SENESCENCE;
+        a = log(std::max(LAIStartSenescence, 0.1));
+        b = (log(std::max(LaiMin, 0.01)) - a) / LENGTH_SENESCENCE;
 
         return exp(a + b * daysFromStartSenescence);
     }
@@ -148,7 +148,7 @@ namespace leafDevelopment
             double n4 = 4.0;
             return myCrop->LAImin + (myCrop->LAImax - myCrop->LAImin) /
                                      (1 + pow(10 * ((myDegreeDays - myCrop->degreeDaysIncrease)
-                                      / MAXVALUE(myCrop->degreeDaysDecrease, 1)) / c4, n4));
+                                      / std::max(myCrop->degreeDaysDecrease, 1.)) / c4, n4));
         }
     }
 

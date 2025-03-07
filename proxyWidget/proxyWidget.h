@@ -27,22 +27,22 @@
 
     private:
 
-            int nrMeteoPoints;
-            bool checkSpatialQuality;
-            int currentHour;
-            int proxyPos;
-            int macroAreaNumber;
+            int _nrMeteoPoints;
+            bool _checkSpatialQuality;
+            int _currentHour;
+            int _proxyPos;
+            int _macroAreaNumber;
 
-            std::vector <Crit3DInterpolationDataPoint> outInterpolationPoints;
-            Crit3DInterpolationSettings* interpolationSettings;
-            Crit3DQuality* quality;
-            Crit3DInterpolationSettings* SQinterpolationSettings;
-            Crit3DMeteoSettings *meteoSettings;
-            Crit3DMeteoPoint* meteoPoints;
-            Crit3DClimateParameters *climateParam;
+            std::vector <Crit3DInterpolationDataPoint> _outInterpolationPoints;
+            Crit3DInterpolationSettings* _interpolationSettings;
+            Crit3DQuality* _quality;
+            Crit3DInterpolationSettings* _SQinterpolationSettings;
+            Crit3DMeteoSettings* _meteoSettings;
+            Crit3DMeteoPoint* _meteoPoints;
+            Crit3DClimateParameters* _climateParam;
 
-            frequencyType currentFrequency;
-            QDate currentDate;
+            frequencyType _currentFrequency;
+            QDate _currentDate;
 
             QValueAxis *axisY_sx;
             QComboBox comboVariable;

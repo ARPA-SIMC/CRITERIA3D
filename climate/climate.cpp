@@ -2085,7 +2085,8 @@ bool aggregatedHourlyToDaily(meteoVariable myVar, Crit3DMeteoPoint* meteoPoint, 
             break;
     }
 
-    if (hourlyVar == noMeteoVar || elab == noMeteoComp) return false;
+    if (hourlyVar == noMeteoVar || elab == noMeteoComp)
+        return false;
 
     for (date = dateIni; date <= dateFin; date = date.addDays(1))
     {
