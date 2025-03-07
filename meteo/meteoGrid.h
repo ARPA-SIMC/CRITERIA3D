@@ -4,13 +4,6 @@
     #ifndef METEOPOINT_H
         #include "meteoPoint.h"
     #endif
-    #ifndef COMMONCONSTANTS_H
-        #include "commonConstants.h"
-    #endif
-
-    #ifndef VECTOR_H
-        #include <vector>
-    #endif
 
     #define GRID_MIN_COVERAGE 0
 
@@ -147,8 +140,11 @@
 
             void saveRowColfromZone(gis::Crit3DRasterGrid* zoneGrid, std::vector<std::vector<int> > &meteoGridRow, std::vector<std::vector<int> > &meteoGridCol);
 
+            void computeRelativeHumidityFromTd(const Crit3DDate myDate, const int myHour);
             void computeWindVectorHourly(const Crit3DDate myDate, const int myHour);
-            void computeHourlyDerivedVariables(Crit3DTime dateTime);
+            void fixDailyThermalConsistency(const Crit3DDate myDate);
+            void computeHourlyDerivedVar(Crit3DTime dateTime, meteoVariable myVar, bool useNetRad);
+            void computeDailyDerivedVar(Crit3DDate date, meteoVariable myVar, Crit3DMeteoSettings &meteoSettings);
 
     private:
 

@@ -3,6 +3,7 @@
 #include "project.h"
 #include "shell.h"
 #include "dbMeteoGrid.h"
+#include "utilities.h"
 
 #include <iostream>
 #include <sstream>
@@ -72,12 +73,16 @@ bool attachOutputToConsole()
     return true;
 }
 
+
 bool isConsoleForeground()
 {
     #ifdef _WIN32
         return (GetConsoleWindow() == GetForegroundWindow());
     #endif
+
+    return true;
 }
+
 
 void sendEnterKey(void)
 {
@@ -185,7 +190,9 @@ int cmdExit(Project* myProject)
 {
     myProject->requestedExit = true;
 
-    // TODO: close project
+    #ifdef _WIN32
+        FreeConsole();
+    #endif
 
     return PRAGA_OK;
 }
@@ -195,7 +202,7 @@ int cmdLoadDEM(Project* myProject, QList<QString> argumentList)
 {
     if (argumentList.size() < 2)
     {
-        myProject->logError("Missing DEM file name.");
+        myProject->errorString = "Missing DEM file name.";
         // TODO: USAGE
         return PRAGA_MISSING_FILE;
     }
@@ -216,7 +223,7 @@ int cmdOpenDbPoint(Project* myProject, QList<QString> argumentList)
 {
     if (argumentList.size() < 2)
     {
-        myProject->logError("Missing db point name");
+        myProject->errorString = "Missing db point name";
         return PRAGA_INVALID_COMMAND;
     }
 
@@ -235,7 +242,7 @@ int cmdLoadMeteoGrid(Project* myProject, QList<QString> argumentList)
 {
     if (argumentList.size() < 2)
     {
-        myProject->logError("Missing Grid file name.");
+        myProject->errorString = "Missing grid file name";
         // TODO: USAGE
         return PRAGA_MISSING_FILE;
     }
@@ -258,7 +265,7 @@ int cmdSetLogFile(Project* myProject, QList<QString> argumentList)
 {
     if (argumentList.size() < 2)
     {
-        myProject->logError("Missing Log file name.");
+        myProject->errorString = "Missing log file name";
         // TODO: USAGE
         return PRAGA_INVALID_COMMAND;
     }
@@ -278,6 +285,7 @@ int cmdSetLogFile(Project* myProject, QList<QString> argumentList)
 
 int cmdExportDailyDataCsv(Project* myProject, QList<QString> argumentList)
 {
+    // GA questa funzione scrive degli errori ed esce, ma ritorna sempre PRAGA_OK. e' giusto?
     QString outputPath = myProject->getProjectPath() + PATH_OUTPUT;
 
     if (argumentList.size() < 2)
@@ -380,6 +388,14 @@ int cmdExportDailyDataCsv(Project* myProject, QList<QString> argumentList)
                     QString completeOutputPath = myProject->getProjectPath() + outputPath;
                     outputPath = QDir().cleanPath(completeOutputPath);
                 }
+                else
+                {
+                    if(getFileName(outputPath) == outputPath)
+                    {
+                        QString completeOutputPath = myProject->getProjectPath() + PATH_OUTPUT + outputPath;
+                        outputPath = QDir().cleanPath(completeOutputPath);
+                    }
+                }
             }
         }
     }
@@ -429,8 +445,8 @@ int cmdExportDailyDataCsv(Project* myProject, QList<QString> argumentList)
             return PRAGA_ERROR;
         }
 
-        if (! myProject->meteoGridDbHandler->exportDailyDataCsv(myProject->errorString, variableList,
-                                             firstDate, lastDate, idListFileName, outputPath))
+        if (! myProject->meteoGridDbHandler->exportDailyDataCsv(variableList, firstDate, lastDate,
+                                                               idListFileName, outputPath, myProject->errorString))
         {
             myProject->logError();
             return PRAGA_ERROR;

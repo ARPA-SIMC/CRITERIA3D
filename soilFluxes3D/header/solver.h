@@ -1,7 +1,7 @@
 #ifndef SOLVER_H
 #define SOLVER_H
 
-    inline double square(double x) {return ((x)*(x));}
+    inline double square(double x) { return ((x)*(x)); }
 
     double distance(unsigned long index1, unsigned long index2);
 
@@ -11,7 +11,7 @@
 
     double arithmeticMean(double v1, double v2);
 
-    bool GaussSeidelRelaxation (int myApproximation, double myResidualTolerance, int myProcess);
+    bool solveLinearSystem(int approximation, double residualTolerance, int computationType);
 
 #endif  // SOLVER_H
 

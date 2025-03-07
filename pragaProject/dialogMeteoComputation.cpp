@@ -7,21 +7,20 @@
 
 extern PragaProject myProject;
 
-DialogMeteoComputation::DialogMeteoComputation(QSettings *settings, bool isMeteoGridLoaded, bool isMeteoPointLoaded, bool isAnomaly, bool saveClima)
-    : settings(settings), isMeteoGridLoaded(isMeteoGridLoaded), isMeteoPointLoaded(isMeteoPointLoaded), isAnomaly(isAnomaly), saveClima(saveClima)
+DialogMeteoComputation::DialogMeteoComputation(QSettings *settings, bool isMeteoGridLoaded, bool isMeteoPointLoaded, bool isAnomaly, bool isSaveClima)
+    : settings(settings), isAnomaly(isAnomaly), saveClima(isSaveClima)
 {
-
     if (saveClima)
     {
         setWindowTitle("Climate Elaboration");
     }
-    else if (!isAnomaly)
+    else if (this->isAnomaly)
     {
-        setWindowTitle("Elaboration");
+        setWindowTitle("Anomaly");
     }
     else
     {
-        setWindowTitle("Anomaly");
+        setWindowTitle("Elaboration");
     }
 
     QVBoxLayout mainLayout;
@@ -57,7 +56,7 @@ DialogMeteoComputation::DialogMeteoComputation(QSettings *settings, bool isMeteo
     if (isMeteoPointLoaded)
     {
         pointsButton.setEnabled(true);
-        if (!isMeteoGridLoaded)
+        if (! isMeteoGridLoaded)
         {
             pointsButton.setChecked(true);
         }
@@ -69,7 +68,7 @@ DialogMeteoComputation::DialogMeteoComputation(QSettings *settings, bool isMeteo
     if (isMeteoGridLoaded)
     {
         gridButton.setEnabled(true);
-        if (!isMeteoPointLoaded)
+        if (! isMeteoPointLoaded)
         {
             gridButton.setChecked(true);
         }
@@ -81,7 +80,7 @@ DialogMeteoComputation::DialogMeteoComputation(QSettings *settings, bool isMeteo
 
     if (isMeteoPointLoaded && isMeteoGridLoaded)
     {
-        if (myProject.lastElabTargetisGrid)
+        if (myProject.lastElabTargetIsGrid)
         {
             gridButton.setChecked(true);
             pointsButton.setChecked(false);
@@ -108,23 +107,18 @@ DialogMeteoComputation::DialogMeteoComputation(QSettings *settings, bool isMeteo
     targetLayout.addWidget(&gridButton);
     targetGroupBox->setLayout(&targetLayout);
 
-    meteoVariable var;
-
     Q_FOREACH (QString group, settings->childGroups())
     {
-        if (!group.endsWith("_VarToElab1"))
+        if (! group.endsWith("_VarToElab1"))
             continue;
-        std::string item;
-        std::string variable = group.left(group.size()-11).toStdString(); // remove "_VarToElab1"
-        try {
-          var = MapDailyMeteoVar.at(variable);
-          item = MapDailyMeteoVarToString.at(var);
+
+        QString varStr = group.left(group.size()-11);  // remove '_VarToElab1'
+
+        // check daily variables
+        if (MapDailyMeteoVar.find(varStr.toStdString()) != MapDailyMeteoVar.end())
+        {
+            variableList.addItem(varStr);
         }
-        catch (const std::out_of_range& ) {
-           myProject.logError("variable " + QString::fromStdString(variable) + " missing in MapDailyMeteoVar");
-           continue;
-        }
-        variableList.addItem(QString::fromStdString(item));
     }
 
     QLabel variableLabel("Variable: ");
@@ -275,13 +269,9 @@ DialogMeteoComputation::DialogMeteoComputation(QSettings *settings, bool isMeteo
     settings->endGroup();
     elaborationLayout.addWidget(&elaborationList);
 
-    QLocale local(QLocale::system().language());
-    local.setNumberOptions(QLocale::RejectGroupSeparator);
     elab1Parameter.setPlaceholderText("Parameter");
     elab1Parameter.setFixedWidth(90);
-    QDoubleValidator* validator = new QDoubleValidator(-9999.0, 9999.0, 2);
-    validator->setLocale(local);
-    elab1Parameter.setValidator(validator);
+    elab1Parameter.setValidator(new QDoubleValidator(-9999.0, 9999.0, 2));
     readParam.setText("Read param from db Climate");
     readParam.setChecked(false);
     climateDbElabList.setVisible(false);
@@ -331,7 +321,7 @@ DialogMeteoComputation::DialogMeteoComputation(QSettings *settings, bool isMeteo
 
     elab2Parameter.setPlaceholderText("Parameter");
     elab2Parameter.setFixedWidth(90);
-    elab2Parameter.setValidator(validator);
+    elab2Parameter.setValidator(new QDoubleValidator(-9999.0, 9999.0, 2));
 
     QString elab2Field = secondElabList.currentText();
     if ( MapElabWithParam.find(elab2Field.toStdString()) == MapElabWithParam.end())
@@ -424,15 +414,15 @@ DialogMeteoComputation::DialogMeteoComputation(QSettings *settings, bool isMeteo
     }
     else if(saveClima)
     {
-        add.setText("Add");
-        del.setText("Delete");
+        addClimate.setText("Add");
+        delClimate.setText("Delete");
         delAll.setText("Delete all");
-        buttonLayout.addWidget(&add);
-        buttonLayout.addWidget(&del);
+        buttonLayout.addWidget(&addClimate);
+        buttonLayout.addWidget(&delClimate);
         buttonLayout.addWidget(&delAll);
 
-        connect(&add, &QPushButton::clicked, [=](){ this->copyDataToSaveLayout(); });
-        connect(&del, &QPushButton::clicked, [=](){ saveClimaLayout.deleteRaw(); });
+        connect(&addClimate, &QPushButton::clicked, [=](){ this->copyDataToSaveLayout(); });
+        connect(&delClimate, &QPushButton::clicked, [=](){ saveClimaLayout.deleteRaw(); });
         connect(&delAll, &QPushButton::clicked, [=](){ saveClimaLayout.deleteAll(); });
         mainLayout.addLayout(&buttonLayout);
         mainLayout.addLayout(&saveClimaMainLayout);
@@ -501,11 +491,11 @@ void DialogMeteoComputation::done(bool res)
 {
     if(res)  // ok was pressed
     {
-        if ( (!saveClima && !checkValidData()) || (saveClima && saveClimaLayout.getList().empty()) )
+        if ( (! saveClima && !checkValidData()) || (saveClima && saveClimaLayout.getList().empty()) )
         {
             return;
         }
-        else if (isAnomaly && !anomaly.AnomalyCheckValidData())
+        else if (isAnomaly && ! anomaly.AnomalyCheckValidData())
         {
             return;
         }
@@ -564,10 +554,10 @@ void DialogMeteoComputation::done(bool res)
             }
 
 
-            if (!readParam.isChecked())
+            if (! readParam.isChecked())
             {
                 myProject.clima->setParam1IsClimate(false);
-                if (elab1Parameter.text() != "")
+                if (! elab1Parameter.text().isEmpty())
                 {
                     myProject.clima->setParam1(elab1Parameter.text().toFloat());
                 }
@@ -936,11 +926,11 @@ void DialogMeteoComputation::displayPeriod(const QString value)
 
 void DialogMeteoComputation::listElaboration(const QString value)
 {
-
     elaborationList.blockSignals(true);
     meteoVariable key = getKeyMeteoVarMeteoMap(MapDailyMeteoVarToString, value.toStdString());
     std::string keyString = getKeyStringMeteoMap(MapDailyMeteoVar, key);
-    QString group = QString::fromStdString(keyString)+"_VarToElab1";
+
+    QString group = QString::fromStdString(keyString) + "_VarToElab1";
     settings->beginGroup(group);
     int size = settings->beginReadArray(QString::fromStdString(keyString));
     QString prevElab = elaborationList.currentText();
@@ -1080,7 +1070,6 @@ void DialogMeteoComputation::activeSecondParameter(const QString value)
 
 void DialogMeteoComputation::readParameter(int state)
 {
-
     climateDbElabList.clear();
     climateDbElab.clear();
 
@@ -1164,22 +1153,22 @@ void DialogMeteoComputation::copyDataToAnomaly()
         anomaly.AnomalySetSecondElaboration(secondElabList.currentText());
         anomaly.AnomalySetParam2(elab2Parameter.text());
     }
-
 }
+
 
 void DialogMeteoComputation::copyDataToSaveLayout()
 {
-
-    if (!checkValidData())
+    if (! checkValidData())
     {
         return;
     }
+
     saveClimaLayout.setFirstYear(firstYearEdit.text());
     saveClimaLayout.setLastYear(lastYearEdit.text());
     QString variable = variableList.currentText();
     if (periodTypeList.currentText() == "Daily" && dailyCumulated.isChecked())
     {
-        variable = variable+"CUMULATED";
+        variable += "CUMULATED";
     }
     saveClimaLayout.setVariable(variable);
     saveClimaLayout.setPeriod(periodTypeList.currentText());
@@ -1231,9 +1220,16 @@ void DialogMeteoComputation::copyDataToSaveLayout()
     }
     saveClimaLayout.setSecondElab(secondElabList.currentText());
     saveClimaLayout.setElab2Param(elab2Parameter.text());
-    if (elaborationList.currentText() == "No elaboration available")
+    if (elaborationList.currentText() == "None" || elaborationList.currentText() == "No elaboration available")
     {
-        saveClimaLayout.setElab("noMeteoComp");
+        if (periodTypeList.currentText().toUpper() == "DAILY")
+        {
+            saveClimaLayout.setElab("average");
+        }
+        else
+        {
+            saveClimaLayout.setElab("noMeteoComp");
+        }
     }
     else
     {
@@ -1251,68 +1247,76 @@ void DialogMeteoComputation::copyDataToSaveLayout()
     }
 
     saveClimaLayout.addElab();
-
 }
+
 
 bool DialogMeteoComputation::checkValidData()
 {
-
     if (firstYearEdit.text().size() != 4)
     {
-        QMessageBox::information(nullptr, "Missing year", "Insert first year");
+        myProject.logWarning("Insert first year");
         return false;
     }
+
     if (lastYearEdit.text().size() != 4)
     {
-        QMessageBox::information(nullptr, "Missing year", "Insert last year");
+        myProject.logWarning("Insert last year");
         return false;
     }
 
     if (firstYearEdit.text().toInt() > lastYearEdit.text().toInt())
     {
-        QMessageBox::information(nullptr, "Invalid year", "first year greater than last year");
+        myProject.logWarning("First year greater than last year");
         return false;
     }
-    if (elaborationList.currentText().toStdString() == "huglin" || elaborationList.currentText().toStdString() == "winkler" || elaborationList.currentText().toStdString() == "fregoni")
-    {
-        if (secondElabList.currentText().toStdString() == "None")
-        {
-            QMessageBox::information(nullptr, "Second Elaboration missing", elaborationList.currentText() + " requires second elaboration");
-            return false;
-        }
 
-    }
-    if ( MapElabWithParam.find(elaborationList.currentText().toStdString()) != MapElabWithParam.end())
-    {
-        if ( (!readParam.isChecked() && elab1Parameter.text().isEmpty()) || (readParam.isChecked() && climateDbElabList.currentText() == "No saved elaborations found" ))
-        {
-            QMessageBox::information(nullptr, "Missing Parameter", "insert parameter");
-            return false;
-        }
-    }
-    if ( MapElabWithParam.find(secondElabList.currentText().toStdString()) != MapElabWithParam.end())
-    {
-        if (elab2Parameter.text().isEmpty())
-        {
-            QMessageBox::information(nullptr, "Missing Parameter", "insert second elaboration parameter");
-            return false;
-        }
-    }
     if (periodTypeList.currentText() == "Generic")
     {
         if (nrYear.text().isEmpty())
         {
-            QMessageBox::information(nullptr, "Missing Parameter", "insert Nr Years");
+            myProject.logWarning("Missing Parameter: insert Nr Years");
             return false;
         }
     }
+
+    QString firstElaboration = elaborationList.currentText();
+    if (periodTypeList.currentText().toUpper() != "DAILY")
+    {
+        if (firstElaboration.isEmpty() || firstElaboration == "None" || firstElaboration == "No elaboration available")
+        {
+            myProject.logWarning("First elaboration required");
+            return false;
+        }
+    }
+
+    if (firstElaboration == "huglin" || firstElaboration == "winkler" || firstElaboration == "fregoni")
+    {
+        if (secondElabList.currentText().toStdString() == "None")
+        {
+            myProject.logWarning("Second elaboration required");
+            return false;
+        }
+    }
+
+    if ( MapElabWithParam.find(firstElaboration.toStdString()) != MapElabWithParam.end())
+    {
+        if ( (!readParam.isChecked() && elab1Parameter.text().isEmpty()) || (readParam.isChecked() && climateDbElabList.currentText() == "No saved elaborations found" ))
+        {
+            myProject.logWarning("Insert parameter");
+            return false;
+        }
+    }
+
+    if ( MapElabWithParam.find(secondElabList.currentText().toStdString()) != MapElabWithParam.end())
+    {
+        if (elab2Parameter.text().isEmpty())
+        {
+            myProject.logWarning("Insert second elaboration parameter");
+            return false;
+        }
+    }
+
     return true;
-}
-
-
-QList<QString> DialogMeteoComputation::getElabSaveList()
-{
-    return saveClimaLayout.getList();
 }
 
 
@@ -1323,17 +1327,18 @@ void DialogMeteoComputation::copyDataFromXML()
     Crit3DDroughtList listXMLDrought;
     Crit3DPhenologyList listXMLPhenology;
 
-    QString *myError = new QString();
+    QString myError;
     QString xmlName = QFileDialog::getOpenFileName(this, tr("Open XML"), "", tr("xml files (*.xml)"));
     if (xmlName != "")
     {
-        if (!parseXMLElaboration(&listXMLElab, &listXMLAnomaly, &listXMLDrought, &listXMLPhenology, xmlName, myError))
+        if (! parseXMLElaboration(&listXMLElab, &listXMLAnomaly, &listXMLDrought, &listXMLPhenology, xmlName, &myError))
         {
             QMessageBox::information(nullptr, "XML error", "Check XML");
             return;
         }
     }
-    if (!isAnomaly)
+
+    if (! isAnomaly)
     {
         if (isMeteoGrid && listXMLElab.isMeteoGrid() == false)
         {
@@ -1565,28 +1570,27 @@ void DialogMeteoComputation::copyDataFromXML()
     }
 }
 
+
 void DialogMeteoComputation::saveDataToXML()
 {
-    if (!checkValidData())
-    {
+    if (! checkValidData())
         return;
-    }
+
     if (isAnomaly && !anomaly.AnomalyCheckValidData())
-    {
         return;
-    }
+
     QString xmlName = QFileDialog::getOpenFileName(this, tr("Open XML"), "", tr("xml files (*.xml)"));
-    QString *myError = new QString();
     if (xmlName == "")
-    {
         return;
-    }
-    if (!checkDataType(xmlName, isMeteoGrid, myError))
+
+    QString *myError = new QString();
+    if (! checkDataType(xmlName, isMeteoGrid, myError))
     {
         QMessageBox::information(nullptr, "Error", *myError);
         return;
     }
-    if(!isAnomaly)
+
+    if(! isAnomaly)
     {
         Crit3DElabList *listXMLElab = new Crit3DElabList();
         listXMLElab->setIsMeteoGrid(isMeteoGrid);
@@ -1797,10 +1801,8 @@ void DialogMeteoComputation::saveDataToXML()
         }
         delete listXMLAnomaly;
     }
-
-
-
 }
+
 
 void DialogMeteoComputation::targetChange()
 {
@@ -1824,8 +1826,4 @@ void DialogMeteoComputation::targetChange()
     }
 }
 
-bool DialogMeteoComputation::getIsMeteoGrid() const
-{
-    return isMeteoGrid;
-}
 

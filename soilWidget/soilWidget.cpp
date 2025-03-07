@@ -1,5 +1,5 @@
 /*!
-    CRITERIA3D
+    soilWidget.cpp
 
     \copyright 2016 Fausto Tomei, Gabriele Antolini, Laura Costantini
     Alberto Pistocchi, Marco Bittelli, Antonio Volta
@@ -55,7 +55,7 @@ Crit3DSoilWidget::Crit3DSoilWidget()
     geotechnicsClassList.resize(19);
 
     this->setWindowTitle(QStringLiteral("CRITERIA - Soil Editor"));
-    this->resize(1240, 700);
+    this->resize(1400, 700);
 
     // layout
     QVBoxLayout *mainLayout = new QVBoxLayout();
@@ -286,12 +286,15 @@ void Crit3DSoilWidget::setDbSoil(QSqlDatabase dbOpened, QString soilCode)
     // load default VG parameters
     if (! loadVanGenuchtenParameters(dbSoil, textureClassList, errorStr))
     {
-        QMessageBox::critical(nullptr, "Error", "loadVanGenuchtenParameters: " + errorStr);
+        QMessageBox::critical(nullptr, "Error", "loadVanGenuchtenParameters\n" + errorStr);
         return;
     }
 
     // load default geotechnics parameters (not mandatory)
-    loadGeotechnicsParameters(dbSoil, geotechnicsClassList, errorStr);
+    if (! loadGeotechnicsParameters(dbSoil, geotechnicsClassList, errorStr))
+    {
+        QMessageBox::warning(nullptr, "Warning", "Failed to load geotecnical parameters for slope stability: missing reference db");
+    }
 
     // read soil list
     QList<QString> soilStringList;
@@ -445,27 +448,25 @@ void Crit3DSoilWidget::on_actionChooseSoil(QString soilCode)
     // circle inside triangle
     for (unsigned int i = 0; i < mySoil.nrHorizons; i++)
     {
+        if (soil::getUSDATextureClass(mySoil.horizon[i].dbData.sand, mySoil.horizon[i].dbData.silt, mySoil.horizon[i].dbData.clay) != NODATA)
         {
-            if (soil::getUSDATextureClass(mySoil.horizon[i].dbData.sand, mySoil.horizon[i].dbData.silt, mySoil.horizon[i].dbData.clay) != NODATA)
-            {
-                // the pic has white space around the triangle: widthTriangle and heightTriangle define triangle size without white space
-                double widthOffset = (pic.width() - widthTriangle)/2;
-                double heightOffset = (pic.height() - heightTriangle)/2;
-                double factor = ( pow ( (pow(100.0, 2.0) - pow(50.0, 2.0)), 0.5) ) / 100;
-                // draw new point
-                double cx = widthTriangle * ((mySoil.horizon[i].dbData.silt + mySoil.horizon[i].dbData.clay / 2) / 100);
-                double cy =  heightTriangle * (1 - mySoil.horizon[i].dbData.clay  / 2 * pow (3, 0.5) / 100 / factor); // tg(60°)=3^0.5
-                painter.begin(&pic);
-                QPen pen(Qt::red);
-                painter.setPen(pen);
+            // the pic has white space around the triangle: widthTriangle and heightTriangle define triangle size without white space
+            double widthOffset = (pic.width() - widthTriangle)/2;
+            double heightOffset = (pic.height() - heightTriangle)/2;
+            double factor = ( pow ( (pow(100.0, 2.0) - pow(50.0, 2.0)), 0.5) ) / 100;
+            // draw new point
+            double cx = widthTriangle * ((mySoil.horizon[i].dbData.silt + mySoil.horizon[i].dbData.clay / 2) / 100);
+            double cy =  heightTriangle * (1 - mySoil.horizon[i].dbData.clay  / 2 * pow (3, 0.5) / 100 / factor); // tg(60°)=3^0.5
+            painter.begin(&pic);
+            QPen pen(Qt::red);
+            painter.setPen(pen);
 
-                QPointF center(widthOffset + cx, heightOffset + cy);
-                painter.setBrush(Qt::transparent);
-                painter.drawEllipse(center,4.5,4.5);
+            QPointF center(widthOffset + cx, heightOffset + cy);
+            painter.setBrush(Qt::transparent);
+            painter.drawEllipse(center,4.5,4.5);
 
-                painter.end();
-                labelPic->setPixmap(pic);
-            }
+            painter.end();
+            labelPic->setPixmap(pic);
         }
     }
     tabChanged(tabWidget->currentIndex());   
@@ -613,15 +614,17 @@ void Crit3DSoilWidget::on_actionParameterRestriction()
 
 void Crit3DSoilWidget::on_actionSave()
 {
-    QString errorStr;
-    QString soilCodeChanged = QString::fromStdString(mySoil.code);
+    if (mySoil.code.empty())
+        return;
 
+    QString soilCodeChanged = QString::fromStdString(mySoil.code);
     QString msg = "Are you sure you want to save " + soilCodeChanged + " ?";
     QMessageBox::StandardButton confirm = QMessageBox::question(nullptr, "Warning", msg, QMessageBox::Yes|QMessageBox::No, QMessageBox::No);
     if (confirm == QMessageBox::No)
         return;
 
-    if (!updateSoilData(dbSoil, soilCodeChanged, mySoil, errorStr))
+    QString errorStr;
+    if (! updateSoilData(dbSoil, soilCodeChanged, mySoil, errorStr))
     {
         QMessageBox::critical(nullptr, "Error in update horizon table!", errorStr);
         return;
@@ -749,13 +752,13 @@ void Crit3DSoilWidget::setInfoTextural(int nHorizon)
     }
     else
     {
-        if (mySoil.horizon[unsigned(nHorizon)].vanGenuchten.thetaS == NODATA)
+        if (mySoil.horizon[unsigned(nHorizon)].waterContentSAT == NODATA)
         {
             satValue->setText(QString::number(NODATA));
         }
         else
         {
-            satValue->setText(QString::number(mySoil.horizon[unsigned(nHorizon)].vanGenuchten.thetaS, 'f', 3));
+            satValue->setText(QString::number(mySoil.horizon[unsigned(nHorizon)].waterContentSAT, 'f', 3));
         }
 
         if (mySoil.horizon[unsigned(nHorizon)].waterContentFC == NODATA)

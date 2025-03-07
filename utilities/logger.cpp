@@ -13,8 +13,10 @@ Logger::Logger()
 
 bool Logger::setLog(QString path, QString fileName, bool addDateTime)
 {
-    if (!QDir(path + "log").exists())
+    if (! QDir(path + "log").exists())
+    {
          QDir().mkdir(path + "log");
+    }
 
     m_showDate = true;
     if (!fileName.isEmpty())

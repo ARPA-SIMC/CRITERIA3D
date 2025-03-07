@@ -5,7 +5,7 @@
 #
 #-----------------------------------------------------
 
-QT  += core gui widgets charts sql xml
+QT  += widgets charts sql xml
 
 TEMPLATE = lib
 CONFIG += staticlib
@@ -30,7 +30,8 @@ win32:{
 INCLUDEPATH += ../crit3dDate ../mathFunctions ../gis ../meteo   \
             ../solarRadiation ../interpolation ../utilities     \
             ../netcdfHandler ../dbMeteoPoints ../outputPoints ../dbMeteoGrid    \
-            ../meteoWidget ../commonDialogs ../commonChartElements ../climate ../proxyWidget ../inOutDataXML
+            ../meteoWidget ../commonDialogs ../commonChartElements ../climate \
+            ../proxyWidget ../waterTable
 
 
 SOURCES += \

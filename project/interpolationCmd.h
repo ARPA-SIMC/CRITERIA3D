@@ -19,18 +19,18 @@
 
     class QDate;
 
-    class crossValidationStatistics {
+    class Crit3DCrossValidationStatistics {
     private:
         Crit3DTime refTime;
         Crit3DProxyCombination proxyCombination;
         float meanAbsoluteError;
         float rootMeanSquareError;
-        float compoundRelativeError;
+        float NashSutcliffeEfficiency;
         float meanBiasError;
         float R2;
 
     public:
-        crossValidationStatistics();
+        Crit3DCrossValidationStatistics();
         void initialize();
 
         const Crit3DProxyCombination &getProxyCombination() const;
@@ -39,8 +39,8 @@
         void setMeanAbsoluteError(float newMeanAbsoluteError);
         float getRootMeanSquareError() const;
         void setRootMeanSquareError(float newRootMeanSquareError);
-        float getCompoundRelativeError() const;
-        void setCompoundRelativeError(float newCompoundRelativeError);
+        float getNashSutcliffeEfficiency() const;
+        void setNashSutcliffeEfficiency(float newNashSutcliffeEfficiency);
         float getMeanBiasError() const;
         void setMeanBiasError(float newMeanBiasError);
         const Crit3DTime &getRefTime() const;
@@ -68,10 +68,15 @@
     };
 
     bool checkProxyGridSeries(Crit3DInterpolationSettings* mySettings, const gis::Crit3DRasterGrid &gridBase,
-                              std::vector <Crit3DProxyGridSeries> mySeries, QDate myDate, QString *error);
+                              std::vector <Crit3DProxyGridSeries> mySeries, QDate myDate, QString &errorStr);
 
-    bool interpolationRaster(std::vector <Crit3DInterpolationDataPoint> &myPoints, Crit3DInterpolationSettings* mySettings, Crit3DMeteoSettings *meteoSettings,
-                            gis::Crit3DRasterGrid* outputGrid, const gis::Crit3DRasterGrid& raster, meteoVariable myVar);
+    bool interpolationRaster(std::vector <Crit3DInterpolationDataPoint> &myPoints, Crit3DInterpolationSettings* mySettings,
+                             Crit3DMeteoSettings *meteoSettings, gis::Crit3DRasterGrid* outputGrid,
+                             gis::Crit3DRasterGrid &raster, meteoVariable myVar);
 
+    bool interpolateProxyGridSeries(const Crit3DProxyGridSeries& mySeries, QDate myDate, const gis::Crit3DRasterGrid& gridBase,
+                                    gis::Crit3DRasterGrid *gridOut, QString &errorStr);
+
+    bool topographicIndex(const gis::Crit3DRasterGrid &DEM, std::vector <float> windowWidths, gis::Crit3DRasterGrid& outGrid);
 
 #endif // INTERPOLATIONCMD_H

@@ -8,8 +8,7 @@
 #
 #-----------------------------------------------------
 
-QT += core
-QT -= gui
+QT -= core gui
 
 CONFIG += staticlib
 CONFIG += debug_and_release

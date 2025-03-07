@@ -2,7 +2,7 @@
     \file crop.cpp
 
     \abstract
-    Crop class functions
+    Crop development (Crit3DCrop class)
 
     \authors
     Fausto Tomei        ftomei@arpae.it
@@ -49,7 +49,7 @@ Crit3DCrop::Crit3DCrop()
 void Crit3DCrop::clear()
 {
     idCrop = "";
-    type = HERBACEOUS_ANNUAL;
+    type = BARESOIL;
 
     roots.clear();
 
@@ -107,21 +107,36 @@ void Crit3DCrop::initialize(double latitude, unsigned int nrLayers, double total
     // initialize root depth
     roots.rootDepth = 0;
 
-    if (totalSoilDepth == 0 || roots.rootDepthMax < totalSoilDepth)
-        roots.actualRootDepthMax = roots.rootDepthMax;
+    if (isBareSoil())
+    {
+        roots.rootDepthMax = 0;
+        roots.actualRootDepthMax = 0;
+    }
     else
-        roots.actualRootDepthMax = totalSoilDepth;
+    {
+        if (totalSoilDepth == 0 || roots.rootDepthMax < totalSoilDepth)
+        {
+            roots.actualRootDepthMax = roots.rootDepthMax;
+        }
+        else
+        {
+            roots.actualRootDepthMax = totalSoilDepth;
+        }
+    }
 
     degreeDays = 0;
 
     if (latitude > 0)
+    {
         doyStartSenescence = 305;
+    }
     else
+    {
         doyStartSenescence = 120;
+    }
 
     LAIstartSenescence = NODATA;
     currentSowingDoy = NODATA;
-
     daysSinceIrrigation = NODATA;
 
     // check if the crop is living
@@ -134,7 +149,7 @@ void Crit3DCrop::initialize(double latitude, unsigned int nrLayers, double total
     }
     else
     {
-        isLiving = true;
+        isLiving = !isBareSoil();
     }
 
     resetCrop(nrLayers);
@@ -152,8 +167,8 @@ double Crit3DCrop::getDailyDegreeIncrease(double tmin, double tmax, int doy)
         return 0;
     }
 
-    double tmed = (tmin + MINVALUE(tmax, upperThermalThreshold)) * 0.5;
-    return MAXVALUE(tmed - thermalThreshold, 0);
+    double tmed = (tmin + std::min(tmax, upperThermalThreshold)) * 0.5;
+    return std::max(tmed - thermalThreshold, 0.);
 }
 
 
@@ -399,7 +414,7 @@ bool Crit3DCrop::needReset(Crit3DDate myDate, double latitude, double waterTable
 void Crit3DCrop::resetCrop(unsigned int nrLayers)
 {
     // roots
-    if (! isRootStatic())
+    if (! isBareSoil() && ! isRootStatic())
     {
         for (unsigned int i = 0; i < nrLayers; i++)
             roots.rootDensity[i] = 0;
@@ -455,7 +470,7 @@ bool Crit3DCrop::dailyUpdate(const Crit3DDate &myDate, double latitude, const st
         double dailyDD = getDailyDegreeIncrease(tmin, tmax, currentDoy);
         if (isEqual(dailyDD, NODATA))
         {
-            myError = "Error in computing degree days for " + myDate.toStdString();
+            myError = "Error in computing degree days for " + myDate.toISOString();
             return false;
         }
         degreeDays += dailyDD;
@@ -549,7 +564,7 @@ double Crit3DCrop::computeRootLength(double currentDD, double waterTableDepth)
             else
             {
                 // in order to avoid numerical divergences when calculating density through cardioid and gamma function
-                currentDD = MAXVALUE(currentDD, 1.0);
+                currentDD = std::max(currentDD, 1.0);
                 newRootLength = root::getRootLengthDD(roots, currentDD, degreeDaysEmergence);
             }
         }
@@ -579,13 +594,13 @@ double Crit3DCrop::computeRootLength(double currentDD, double waterTableDepth)
         if (currentDD > roots.degreeDaysRootGrowth)
             newRootLength = roots.currentRootLength;
         else
-            newRootLength = MINVALUE(newRootLength, roots.currentRootLength + MAX_DAILY_GROWTH);
+            newRootLength = std::min(newRootLength, roots.currentRootLength + MAX_DAILY_GROWTH);
 
         // maximum root lenght
         double maxRootLenght = waterTableDepth - MIN_WATERTABLE_DISTANCE - roots.rootDepthMin;
         if (newRootLength > maxRootLenght)
         {
-            newRootLength = MAXVALUE(roots.currentRootLength, maxRootLenght);
+            newRootLength = std::max(roots.currentRootLength, maxRootLenght);
         }
     }
 
@@ -631,7 +646,7 @@ void Crit3DCrop::computeRootLength3D(double currentDegreeDays, double totalSoilD
             else
             {
                 // in order to avoid numerical divergences
-                currentDegreeDays = MAXVALUE(currentDegreeDays, 1);
+                currentDegreeDays = std::max(currentDegreeDays, 1.0);
                 roots.currentRootLength = root::getRootLengthDD(roots, currentDegreeDays, degreeDaysEmergence);
             }
         }
@@ -694,7 +709,7 @@ double Crit3DCrop::getCropWaterDeficit(const std::vector<soil::Crit1DLayer> &soi
         waterDeficit += soilLayers[unsigned(i)].FC - soilLayers[unsigned(i)].waterContent;
     }
 
-    return MAXVALUE(waterDeficit, 0);
+    return std::max(waterDeficit, 0.);
 }
 
 
@@ -703,7 +718,8 @@ double Crit3DCrop::getCropWaterDeficit(const std::vector<soil::Crit1DLayer> &soi
  * \return total transpiration and layerTranspiration vector [mm]
  * or percentage of water stress (if returnWaterStress = true)
  */
-double Crit3DCrop::computeTranspiration(double maxTranspiration, const std::vector<soil::Crit1DLayer> &soilLayers, double& waterStress)
+double Crit3DCrop::computeTranspiration(double maxTranspiration, const std::vector<soil::Crit1DLayer> &soilLayers,
+                                        double& waterStress, double& waterExcessStress)
 {
     // check
     if (idCrop == "" || ! isLiving) return 0;
@@ -713,7 +729,7 @@ double Crit3DCrop::computeTranspiration(double maxTranspiration, const std::vect
 
     double thetaWP;                                 // [m3 m-3] volumetric water content at Wilting Point
     double cropWP;                                  // [mm] wilting point specific for crop
-    double waterSurplusThreshold;                        // [mm] water surplus stress threshold
+    double waterSurplusThreshold;                   // [mm] water surplus stress threshold
     double waterScarcityThreshold;                  // [mm] water scarcity stress threshold
     double WSS;                                     // [] water surplus stress
 
@@ -747,7 +763,7 @@ double Crit3DCrop::computeTranspiration(double maxTranspiration, const std::vect
 
         thetaWP = soil::thetaFromSignPsi(-soil::cmTokPa(psiLeaf), *(soilLayers[i].horizonPtr));
         // [mm]
-        cropWP = thetaWP * soilLayers[i].thickness * soilLayers[i].soilFraction * 1000.0;
+        cropWP = thetaWP * soilLayers[i].thickness * soilLayers[i].soilFraction * 1000.;
 
         // [mm]
         waterScarcityThreshold = soilLayers[i].FC - fRAW * (soilLayers[i].FC - cropWP);
@@ -809,7 +825,7 @@ double Crit3DCrop::computeTranspiration(double maxTranspiration, const std::vect
     if (firstWaterStress > EPSILON && totRootDensityWithoutStress > EPSILON)
     {
         // redistribution acts on not stressed roots
-        redistribution = MINVALUE(firstWaterStress, totRootDensityWithoutStress) * maxTranspiration;
+        redistribution = std::min(firstWaterStress, totRootDensityWithoutStress) * maxTranspiration;
 
         for (int i = roots.firstRootLayer; i <= roots.lastRootLayer; i++)
         {
@@ -823,6 +839,7 @@ double Crit3DCrop::computeTranspiration(double maxTranspiration, const std::vect
     }
 
     waterStress = 1 - (TRs / maxTranspiration);
+    waterExcessStress = 1 - (TRe / maxTranspiration);
 
     double actualTranspiration = 0;
     for (int i = roots.firstRootLayer; i <= roots.lastRootLayer; i++)
@@ -853,9 +870,12 @@ speciesType getCropType(std::string cropType)
         return FALLOW_ANNUAL;
     else if (cropType == "tree" || cropType == "fruit_tree")
         return TREE;
+    else if (cropType == "bare" || cropType == "bare_soil")
+        return BARESOIL;
     else
         return HERBACEOUS_ANNUAL;
 }
+
 
 std::string getCropTypeString(speciesType cropType)
 {
@@ -875,6 +895,8 @@ std::string getCropTypeString(speciesType cropType)
         return "fallow_annual";
     case TREE:
         return "tree";
+    case BARESOIL:
+        return "bare_soil";
     }
 
     return "No crop type";

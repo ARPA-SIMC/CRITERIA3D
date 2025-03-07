@@ -706,10 +706,9 @@ void Crit3DMeteoPoint::cleanObsDataM()
 }
 
 
-
 bool Crit3DMeteoPoint::setMeteoPointValueH(const Crit3DDate& myDate, int myHour, int myMinutes, meteoVariable myVar, float myValue)
 {
-    //check
+    // check
     if (myVar == noMeteoVar || obsDataH == nullptr)
     {
         return false;
@@ -718,13 +717,13 @@ bool Crit3DMeteoPoint::setMeteoPointValueH(const Crit3DDate& myDate, int myHour,
     // day index
     int i = obsDataH[0].date.daysTo(myDate);
 
-    //check if out of range (accept +1 date exceed)
+    // check if out of range (accept +1 date exceed)
     if (i < 0 || i > nrObsDataDaysH) return false;
 
     // sub hourly index
     int subH = int(ceil(float(myMinutes) / float(60 / hourlyFraction)));
 
-    //if +1 date exceed accept only hour 00:00
+    // if +1 date exceed accept only hour 00:00
     if (i == nrObsDataDaysH && (myHour != 0 || subH != 0)) return false;
 
     // hour 0 becomes hour 24 of the previous day
@@ -1007,6 +1006,14 @@ Crit3DDate Crit3DMeteoPoint::getLastDailyData()
     return obsDataD[nrObsDataDaysD-1].date;
 }
 
+Crit3DDate Crit3DMeteoPoint::getFirstDailyData()
+{
+    if (obsDataD.size() == 0)
+        return NO_DATE;
+
+    return obsDataD[0].date;
+}
+
 
 float Crit3DMeteoPoint::getMeteoPointValueD(const Crit3DDate &myDate, meteoVariable myVar, Crit3DMeteoSettings* meteoSettings)
 {
@@ -1211,37 +1218,62 @@ std::vector <double> Crit3DMeteoPoint::getProxyValues()
     return myValues;
 }
 
-bool Crit3DMeteoPoint::computeDerivedVariables(Crit3DTime dateTime)
+bool Crit3DMeteoPoint::computeHourlyDerivedVar(Crit3DTime dateTime, meteoVariable myVar, bool useNetRad)
 {
-    short leafW;
-    float temperature, windSpeed, height, netRadiation;
-
     Crit3DDate myDate = dateTime.date;
     int myHour = dateTime.getHour();
+    float value = NODATA;
+    short valueShort = NODATA;
 
-    bool leafWres = false;
-    bool et0res = false;
-
-    double relHumidity = double(getMeteoPointValueH(myDate, myHour, 0, airRelHumidity));
-    double prec = double(getMeteoPointValueH(myDate, myHour, 0, precipitation));
-
-    if (computeLeafWetness(prec, relHumidity, &leafW))
-        leafWres = setMeteoPointValueH(myDate, myHour, 0, leafWetness, leafW);
-
-    temperature = getMeteoPointValueH(myDate, myHour, 0, airTemperature);
-    windSpeed = getMeteoPointValueH(myDate, myHour, 0, windScalarIntensity);
-    netRadiation = getMeteoPointValueH(myDate, myHour, 0, netIrradiance);
-    height = float(this->point.z);
-    float et0;
-
-    if (! isEqual(temperature, NODATA) && ! isEqual(relHumidity, NODATA) && ! isEqual(windSpeed, NODATA))
+    if (myVar == leafWetness)
     {
-        et0 = float(ET0_Penman_hourly_net_rad(double(height), double(netRadiation),
-                          double(temperature), double(relHumidity), double(windSpeed)));
-        et0res = setMeteoPointValueH(myDate, myHour, 0, referenceEvapotranspiration, et0);
+        if (computeLeafWetness(getMeteoPointValueH(myDate, myHour, 0, precipitation),
+                               getMeteoPointValueH(myDate, myHour, 0, airRelHumidity), &valueShort))
+            setMeteoPointValueH(myDate, myHour, 0, leafWetness, float(valueShort));
     }
-    return (leafWres && et0res);
+    else if (myVar == referenceEvapotranspiration)
+    {
+        if (useNetRad)
+        {
+            value = float(ET0_Penman_hourly_net_rad(double(point.z),
+                                                  double(getMeteoPointValueH(myDate, myHour, 0, netIrradiance)),
+                                                  double(getMeteoPointValueH(myDate, myHour, 0, airTemperature)),
+                                                  double(getMeteoPointValueH(myDate, myHour, 0, airRelHumidity)),
+                                                  double(getMeteoPointValueH(myDate, myHour, 0, windScalarIntensity))));
+        }
+        else
+        {
+            // TODO improve transmissivity
+            value = float(ET0_Penman_hourly(double(point.z),
+                                    double(getMeteoPointValueH(myDate, myHour, 0, atmTransmissivity) / float(0.75)),
+                                    double(getMeteoPointValueH(myDate, myHour, 0, globalIrradiance)),
+                                    double(getMeteoPointValueH(myDate, myHour, 0, airTemperature)),
+                                    double(getMeteoPointValueH(myDate, myHour, 0, airRelHumidity)),
+                                    double(getMeteoPointValueH(myDate, myHour, 0, windScalarIntensity))));
+        }
+    }
+
+    setMeteoPointValueH(myDate, myHour, 0, myVar, value);
+
+    return true;
 }
+
+bool Crit3DMeteoPoint::computeDailyDerivedVar(Crit3DDate date, meteoVariable myVar, Crit3DMeteoSettings& meteoSettings)
+{
+    float value;
+
+    if (myVar == dailyReferenceEvapotranspirationHS)
+    {
+        value = dailyEtpHargreaves(getMeteoPointValueD(date, dailyAirTemperatureMin),
+                               getMeteoPointValueD(date, dailyAirTemperatureMax),
+                               date, latitude, &meteoSettings);
+
+        setMeteoPointValueD(date, dailyReferenceEvapotranspirationHS, value);
+    }
+
+    return true;
+}
+
 
 bool Crit3DMeteoPoint::computeMonthlyAggregate(Crit3DDate firstDate, Crit3DDate lastDate, meteoVariable dailyMeteoVar,
                                                Crit3DMeteoSettings* meteoSettings, Crit3DQuality* qualityCheck,
@@ -1318,10 +1350,10 @@ bool Crit3DMeteoPoint::getDailyDataCsv_TPrec(std::string &outStr)
     outStr = "Date, Tmin (C), Tmax (C), Tavg (C), Prec (mm)\n";
 
     std::ostringstream valueStream;
-    for (int i = 0; i < obsDataD.size(); i++)
+    for (int i = 0; i < int(obsDataD.size()); i++)
     {
         // Date
-        outStr += obsDataD[i].date.toStdString() + ",";
+        outStr += obsDataD[i].date.toISOString() + ",";
 
         if (obsDataD[i].tMin != NODATA)
         {
@@ -1353,6 +1385,25 @@ bool Crit3DMeteoPoint::getDailyDataCsv_TPrec(std::string &outStr)
     }
 
     return true;
+}
+
+float Crit3DMeteoPoint::getPercValueVariable(Crit3DDate firstDate, Crit3DDate lastDate, meteoVariable dailyMeteoVar)
+{
+    Crit3DQuality qualityCheck;
+    int nrValidValues = 0;
+    int nrTotValues = 0;
+    for (Crit3DDate myDate = firstDate; myDate<=lastDate; myDate=myDate.addDays(1))
+    {
+        nrTotValues = nrTotValues + 1;
+        float value = getMeteoPointValueD(myDate, dailyMeteoVar);
+        quality::qualityType qualityT = qualityCheck.syntacticQualitySingleValue(dailyMeteoVar, value);
+        if (qualityT == quality::accepted)
+        {
+            nrValidValues = nrValidValues + 1;
+        }
+    }
+    float percValue = float(nrValidValues) / float(nrTotValues);
+    return percValue;
 }
 
 // ---- end class

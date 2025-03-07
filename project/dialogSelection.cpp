@@ -170,11 +170,11 @@ frequencyType chooseFrequency(const Project &myProject)
 }
 
 
-meteoVariable chooseMeteoVariable(const Project &myProject)
+meteoVariable chooseMeteoVariable(Project &myProject)
 {
     if (myProject.getCurrentFrequency() == noFrequency)
     {
-        QMessageBox::information(nullptr, "No frequency", "Choose frequency before");
+        myProject.logError("Choose frequency before.");
         return noMeteoVar;
     }
 

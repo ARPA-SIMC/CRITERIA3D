@@ -5,8 +5,8 @@
 #
 #--------------------------------------------------------
 
+QT    += sql
 QT    -= gui
-QT    += core widgets sql
 
 unix:{
     CONFIG(debug, debug|release) {
@@ -24,7 +24,7 @@ CONFIG += staticlib
 
 DEFINES += _CRT_SECURE_NO_WARNINGS
 
-INCLUDEPATH =  ../crit3dDate ../mathFunctions ../gis ../shapeHandler  ../utilities ../commonDialogs
+INCLUDEPATH =  ../crit3dDate ../mathFunctions ../gis ../shapeHandler  ../utilities
 
 SOURCES += \
     shapeFromCsv.cpp \

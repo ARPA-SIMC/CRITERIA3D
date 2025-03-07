@@ -366,7 +366,7 @@ bool Drought::computeSpeiParameters()
         if ((float)n / (mySums.size()/12) >= minPerc / 100)
         {
             // Sort values
-            sorting::quicksortAscendingFloat(monthSeries, 0, monthSeries.size()-1);
+            sorting::quicksortAscendingFloat(monthSeries, 0, int(monthSeries.size())-1);
             // Compute probability weighted moments
             probabilityWeightedMoments(monthSeries, n, pwm, 0, 0, false);
             // Fit a Log Logistic probability function

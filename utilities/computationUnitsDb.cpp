@@ -55,12 +55,12 @@ ComputationUnitsDB::~ComputationUnitsDB()
 }
 
 
-bool ComputationUnitsDB::writeListToCompUnitsTable(QList<QString> idCase, QList<QString> idCrop,
-                                                   QList<QString> idMeteo, QList<QString> idSoil,
-                                                   QList<double> hectares, QString &error)
+bool ComputationUnitsDB::writeListToCompUnitsTable(QList<QString> &idCase, QList<QString> &idCrop,
+                                                   QList<QString> &idMeteo, QList<QString> &idSoil,
+                                                   QList<double> &hectares, QString &error)
 {
     QSqlQuery qry(db);
-    qry.prepare("CREATE TABLE computational_units (ID_CASE TEXT, ID_CROP TEXT, ID_METEO TEXT, ID_SOIL TEXT, hectares NUMERIC, PRIMARY KEY(ID_CASE))");
+    qry.prepare("CREATE TABLE computational_units (ID_CASE TEXT, ID_CROP TEXT, ID_METEO TEXT, ID_SOIL TEXT, HECTARES NUMERIC, PRIMARY KEY(ID_CASE))");
     if( !qry.exec() )
     {
         error = qry.lastError().text();
@@ -68,7 +68,7 @@ bool ComputationUnitsDB::writeListToCompUnitsTable(QList<QString> idCase, QList<
     }
     qry.clear();
 
-    QString myQuery = "INSERT INTO computational_units (ID_CASE, ID_CROP, ID_METEO, ID_SOIL, hectares) VALUES ";
+    QString myQuery = "INSERT INTO computational_units (ID_CASE, ID_CROP, ID_METEO, ID_SOIL, HECTARES) VALUES ";
 
     for (int i = 0; i < idCase.size(); i++)
     {

@@ -111,6 +111,10 @@ void TabHorizons::insertSoilHorizons(soil::Crit3DSoil *soil, std::vector<soil::C
         tableDb->item(i,8)->setTextAlignment(Qt::AlignRight);
         tableDb->setItem(i, 9, new QTableWidgetItem( QString::number(mySoil->horizon[i].dbData.thetaSat, 'f', 3)));
         tableDb->item(i,9)->setTextAlignment(Qt::AlignRight);
+        tableDb->setItem(i, 10, new QTableWidgetItem( QString::number(mySoil->horizon[i].dbData.effectiveCohesion, 'f', 0)));
+        tableDb->item(i,10)->setTextAlignment(Qt::AlignRight);
+        tableDb->setItem(i, 11, new QTableWidgetItem( QString::number(mySoil->horizon[i].dbData.frictionAngle, 'f', 0)));
+        tableDb->item(i,11)->setTextAlignment(Qt::AlignRight);
 
         tableModel->setItem(i, 0, new QTableWidgetItem( QString::fromStdString(mySoil->horizon[i].texture.classNameUSDA)));
         if (mySoil->horizon[i].coarseFragments != NODATA)
@@ -149,6 +153,10 @@ void TabHorizons::insertSoilHorizons(soil::Crit3DSoil *soil, std::vector<soil::C
         tableModel->item(i,9)->setTextAlignment(Qt::AlignRight);
         tableModel->setItem(i, 10, new QTableWidgetItem( QString::number(mySoil->horizon[i].vanGenuchten.m, 'f', 3 )));   
         tableModel->item(i,10)->setTextAlignment(Qt::AlignRight);
+        tableModel->setItem(i, 11, new QTableWidgetItem( QString::number(mySoil->horizon[i].effectiveCohesion, 'f', 0 )));
+        tableModel->item(i,11)->setTextAlignment(Qt::AlignRight);
+        tableModel->setItem(i, 12, new QTableWidgetItem( QString::number(mySoil->horizon[i].frictionAngle, 'f', 0 )));
+        tableModel->item(i,12)->setTextAlignment(Qt::AlignRight);
     }
 
     // check all Depths
@@ -237,6 +245,10 @@ void TabHorizons::updateTableModel(soil::Crit3DSoil *soil)
         tableModel->item(i,9)->setTextAlignment(Qt::AlignRight);
         tableModel->setItem(i, 10, new QTableWidgetItem( QString::number(mySoil->horizon[i].vanGenuchten.m, 'f', 3 )));
         tableModel->item(i,10)->setTextAlignment(Qt::AlignRight);
+        tableModel->setItem(i, 11, new QTableWidgetItem( QString::number(mySoil->horizon[i].effectiveCohesion, 'f', 0 )));
+        tableModel->item(i,11)->setTextAlignment(Qt::AlignRight);
+        tableModel->setItem(i, 12, new QTableWidgetItem( QString::number(mySoil->horizon[i].frictionAngle, 'f', 0 )));
+        tableModel->item(i,12)->setTextAlignment(Qt::AlignRight);
     }
 
     // check other values
@@ -263,7 +275,7 @@ bool TabHorizons::checkDepths()
     for (int horizonNum = 0; horizonNum<tableDb->rowCount(); horizonNum++)
     {
         //except first row
-        if ( horizonNum > 0)
+        if (horizonNum > 0)
         {
             if (mySoil->horizon[unsigned(horizonNum)].dbData.upperDepth != mySoil->horizon[horizonNum-1].dbData.lowerDepth)
             {
@@ -334,7 +346,7 @@ bool TabHorizons::checkHorizonData(int horizonNum)
         tableDb->item(horizonNum,5)->setBackground(Qt::red);
     }
 
-    if (dbData->organicMatter != NODATA && (dbData->organicMatter < 0 || dbData->organicMatter > 100))
+    if ( dbData->organicMatter != NODATA && ((dbData->organicMatter < 0) || (dbData->organicMatter > 100)) )
     {
         tableDb->item(horizonNum,6)->setBackground(Qt::red);
     }
@@ -354,6 +366,17 @@ bool TabHorizons::checkHorizonData(int horizonNum)
         tableDb->item(horizonNum,9)->setBackground(Qt::red);
     }
 
+    if (dbData->effectiveCohesion != NODATA && (dbData->effectiveCohesion < 0 || dbData->effectiveCohesion > 110))
+    {
+        tableDb->item(horizonNum,10)->setBackground(Qt::red);
+    }
+
+    if (dbData->frictionAngle != NODATA && (dbData->frictionAngle < 0 || dbData->frictionAngle > 50))
+    {
+        tableDb->item(horizonNum,11)->setBackground(Qt::red);
+    }
+
+
     return goOn;
 }
 
@@ -372,6 +395,8 @@ void TabHorizons::setInvalidTableModelRow(int horizonNum)
     tableModel->item(horizonNum,8)->setBackground(Qt::red);
     tableModel->item(horizonNum,9)->setBackground(Qt::red);
     tableModel->item(horizonNum,10)->setBackground(Qt::red);
+    tableModel->item(horizonNum,11)->setBackground(Qt::red);
+    tableModel->item(horizonNum,12)->setBackground(Qt::red);
 }
 
 
@@ -436,6 +461,17 @@ void TabHorizons::checkComputedValues(int horizonNum)
     {
         tableModel->item(horizonNum,5)->setBackground(Qt::yellow);
     }
+
+    if (abs(horizon->dbData.effectiveCohesion - horizon->effectiveCohesion) > EPSILON)
+    {
+        tableModel->item(horizonNum,11)->setBackground(Qt::yellow);
+    }
+
+    if (abs(horizon->dbData.frictionAngle - horizon->frictionAngle) > EPSILON)
+    {
+        tableModel->item(horizonNum,12)->setBackground(Qt::yellow);
+    }
+
 }
 
 
@@ -703,6 +739,34 @@ void TabHorizons::cellChanged(int row, int column)
             }
             break;
         }
+        case 10:
+        {
+            if (data == QString::number(NODATA) || data.isEmpty())
+            {
+                mySoil->horizon[unsigned(row)].dbData.effectiveCohesion = NODATA;
+                tableDb->item(row, column)->setText("");
+            }
+            else
+            {
+                mySoil->horizon[unsigned(row)].dbData.effectiveCohesion = data.toDouble();
+                tableDb->item(row, column)->setText(QString::number(data.toDouble(), 'f', 0));
+            }
+            break;
+        }
+        case 11:
+        {
+            if (data == QString::number(NODATA) || data.isEmpty())
+            {
+                mySoil->horizon[unsigned(row)].dbData.frictionAngle = NODATA;
+                tableDb->item(row, column)->setText("");
+            }
+            else
+            {
+                mySoil->horizon[unsigned(row)].dbData.frictionAngle = data.toDouble();
+                tableDb->item(row, column)->setText(QString::number(data.toDouble(), 'f', 0));
+            }
+            break;
+        }
     }
 
     std::string errorString;
@@ -737,6 +801,9 @@ void TabHorizons::cellChanged(int row, int column)
     tableModel->item(row,8)->setText(QString::number(mySoil->horizon[unsigned(row)].vanGenuchten.alpha, 'f', 3));
     tableModel->item(row,9)->setText(QString::number(mySoil->horizon[unsigned(row)].vanGenuchten.n, 'f', 3));
     tableModel->item(row,10)->setText(QString::number(mySoil->horizon[unsigned(row)].vanGenuchten.m, 'f', 3));
+    tableModel->item(row,11)->setText(QString::number(mySoil->horizon[unsigned(row)].effectiveCohesion, 'f', 0));
+    tableModel->item(row,12)->setText(QString::number(mySoil->horizon[unsigned(row)].frictionAngle, 'f', 0));
+
 
     // reset background color for the row changed
     for (int j = 0; j < tableDb->columnCount(); j++)
@@ -843,6 +910,8 @@ void TabHorizons::addRowClicked()
     newHorizon->dbData.bulkDensity = NODATA;
     newHorizon->dbData.thetaSat = NODATA;
     newHorizon->dbData.kSat = NODATA;
+    newHorizon->dbData.effectiveCohesion = NODATA;
+    newHorizon->dbData.frictionAngle = NODATA;
 
     mySoil->addHorizon(numRow, *newHorizon);
     // check all Depths

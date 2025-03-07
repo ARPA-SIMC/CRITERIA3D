@@ -28,9 +28,11 @@ void Crit1DProject::initialize()
 
     path = "";
     projectName = "";
-    logFileName = "";
     outputCsvFileName = "";
     addDateTimeLogFile = false;
+
+    computeAllSoilDepth = true;
+    computationSoilDepth = NODATA;
 
     dbCropName = "";
     dbSoilName = "";
@@ -73,6 +75,7 @@ void Crit1DProject::initialize()
     availableWaterDepth.clear();
     fractionAvailableWaterDepth.clear();
     factorOfSafetyDepth.clear();
+    soilWaterIndexDepth.clear();
     awcDepth.clear();
 
     texturalClassList.resize(13);
@@ -100,82 +103,107 @@ bool Crit1DProject::readSettings()
     // PROJECT
     projectSettings->beginGroup("project");
 
-    path += projectSettings->value("path","").toString();
-    projectName = projectSettings->value("name", "CRITERIA1D").toString();
+        projectName = projectSettings->value("name", "CRITERIA1D").toString();
+        path += projectSettings->value("path", "").toString();
 
-    dbCropName = projectSettings->value("db_crop","").toString();
-    if (dbCropName.left(1) == ".")
-        dbCropName = path + dbCropName;
-
-    dbSoilName = projectSettings->value("db_soil","").toString();
-    if (dbSoilName.left(1) == ".")
-        dbSoilName = path + dbSoilName;
-
-    dbMeteoName = projectSettings->value("db_meteo","").toString();
-    if (dbMeteoName.left(1) == ".")
-    {
-        dbMeteoName = QDir::cleanPath(path + dbMeteoName);
-    }
-    if (dbMeteoName.right(3).toUpper() == "XML")
-    {
-        isXmlMeteoGrid = true;
-    }
-
-    dbForecastName = projectSettings->value("db_forecast","").toString();
-    if (dbForecastName.left(1) == ".")
-        dbForecastName = path + dbForecastName;
-
-    // computational units db
-    dbComputationUnitsName = projectSettings->value("db_comp_units","").toString();
-    if (dbComputationUnitsName == "")
-    {
-        // check old name
-        dbComputationUnitsName = projectSettings->value("db_units","").toString();
-    }
-    if (dbComputationUnitsName == "")
-    {
-        projectError = "Missing information on computational units";
-        return false;
-    }
-    if (dbComputationUnitsName.left(1) == ".")
-        dbComputationUnitsName = path + dbComputationUnitsName;
-
-   // output db
-    dbOutputName = projectSettings->value("db_output","").toString();
-    if (dbOutputName.left(1) == ".")
-        dbOutputName = path + dbOutputName;
-
-    // date
-    if (firstSimulationDate == QDate(1800,1,1))
-    {
-        firstSimulationDate = projectSettings->value("firstDate",0).toDate();
-        if (! firstSimulationDate.isValid())
+        dbCropName = projectSettings->value("db_crop", "").toString();
+        if (dbCropName == "")
         {
-            firstSimulationDate = projectSettings->value("first_date",0).toDate();
+            dbCropName = projectSettings->value("crop_db", "").toString();
         }
-        if (! firstSimulationDate.isValid())
+        if (dbCropName.left(1) == ".")
         {
-            firstSimulationDate = QDate(1800,1,1);
+            dbCropName = QDir::cleanPath(path + dbCropName);
         }
-    }
 
-    if (lastSimulationDate == QDate(1800,1,1))
-    {
-        lastSimulationDate = projectSettings->value("lastDate",0).toDate();
-        if (! lastSimulationDate.isValid())
+        dbSoilName = projectSettings->value("db_soil", "").toString();
+        if (dbSoilName == "")
         {
-             lastSimulationDate = projectSettings->value("last_date",0).toDate();
+            dbSoilName = projectSettings->value("soil_db", "").toString();
         }
-        if (! lastSimulationDate.isValid())
+        if (dbSoilName.left(1) == ".")
         {
-            lastSimulationDate = QDate(1800,1,1);
+            dbSoilName = QDir::cleanPath(path + dbSoilName);
         }
-    }
 
-    addDateTimeLogFile = projectSettings->value("add_date_to_log","").toBool();
-    isSaveState = projectSettings->value("save_state","").toBool();
-    isRestart = projectSettings->value("restart","").toBool();
+        dbMeteoName = projectSettings->value("db_meteo", "").toString();
+        if (dbMeteoName.left(1) == ".")
+        {
+            dbMeteoName = QDir::cleanPath(path + dbMeteoName);
+        }
+        if (dbMeteoName.right(3).toUpper() == "XML")
+        {
+            isXmlMeteoGrid = true;
+        }
 
+        dbForecastName = projectSettings->value("db_forecast", "").toString();
+        if (dbForecastName.left(1) == ".")
+        {
+            dbForecastName = QDir::cleanPath(path + dbForecastName);
+        }
+
+        dbComputationUnitsName = projectSettings->value("db_comp_units", "").toString();
+        if (dbComputationUnitsName == "")
+        {
+            // checks the old name
+            dbComputationUnitsName = projectSettings->value("db_units", "").toString();
+        }
+        if (dbComputationUnitsName == "")
+        {
+            projectError = "Missing information on computational units";
+            return false;
+        }
+        if (dbComputationUnitsName.left(1) == ".")
+        {
+            dbComputationUnitsName = QDir::cleanPath(path + dbComputationUnitsName);
+        }
+
+        // output db
+        dbOutputName = projectSettings->value("db_output", "").toString();
+        if (dbOutputName.left(1) == ".")
+        {
+            dbOutputName = QDir::cleanPath(path + dbOutputName);
+        }
+
+        // first and last date
+        if (firstSimulationDate == QDate(1800,1,1))
+        {
+            firstSimulationDate = projectSettings->value("firstDate",0).toDate();
+            if (! firstSimulationDate.isValid())
+            {
+                firstSimulationDate = projectSettings->value("first_date",0).toDate();
+            }
+            if (! firstSimulationDate.isValid())
+            {
+                firstSimulationDate = QDate(1800,1,1);
+            }
+        }
+
+        if (lastSimulationDate == QDate(1800,1,1))
+        {
+            lastSimulationDate = projectSettings->value("lastDate",0).toDate();
+            if (! lastSimulationDate.isValid())
+            {
+                 lastSimulationDate = projectSettings->value("last_date",0).toDate();
+            }
+            if (! lastSimulationDate.isValid())
+            {
+                lastSimulationDate = QDate(1800,1,1);
+            }
+        }
+
+        isSaveState = projectSettings->value("save_state","").toBool();
+        isRestart = projectSettings->value("restart","").toBool();
+
+    projectSettings->endGroup();
+
+    // SETTINGS
+    projectSettings->beginGroup("settings");
+        addDateTimeLogFile = projectSettings->value("add_date_to_log", false).toBool();
+
+        // soil computation depth
+        computeAllSoilDepth = projectSettings->value("compute_all_soil_depth", true).toBool();
+        computationSoilDepth = projectSettings->value("computationDepth", NODATA).toDouble();
     projectSettings->endGroup();
 
     // FORECAST
@@ -340,6 +368,13 @@ bool Crit1DProject::readSettings()
             return false;
         }
 
+        depthList = projectSettings->value("soilWaterIndex").toStringList();
+        if (! setVariableDepth(depthList, soilWaterIndexDepth))
+        {
+            projectError = "Wrong Soil Water Index depth in " + configFileName;
+            return false;
+        }
+
     projectSettings->endGroup();
 
     return true;
@@ -460,11 +495,14 @@ bool Crit1DProject::setSoil(QString soilCode, QString &errorStr)
     if (! loadSoil(dbSoil, soilCode, myCase.mySoil, texturalClassList, geotechnicsClassList, myCase.fittingOptions, errorStr))
         return false;
 
-    // warning: some soil data are wrong
+    // cancel warnings (some soil data are wrong)
     if (errorStr != "")
-    {
-        //logger.writeInfo("WARNING: " + errorStr);
         errorStr = "";
+
+    // check soil depth (if fixed depth is required)
+    if (! computeAllSoilDepth)
+    {
+        myCase.mySoil.totalDepth = std::min(myCase.mySoil.totalDepth, computationSoilDepth);
     }
 
     std::string errorStdString;
@@ -495,7 +533,22 @@ bool Crit1DProject::setMeteoXmlGrid(QString idMeteo, QString idForecast, unsigne
     unsigned nrDays = unsigned(firstSimulationDate.daysTo(lastSimulationDate)) + 1;
 
     unsigned row, col;
-    if (! observedMeteoGrid->meteoGrid()->findMeteoPointFromId(&row, &col, idMeteo.toStdString()) )
+    bool isMeteoCellFound = false;
+    if (observedMeteoGrid->meteoGrid()->findMeteoPointFromId(&row, &col, idMeteo.toStdString()))
+    {
+        isMeteoCellFound = true;
+    }
+    else if (idMeteo.at(0) == '0')
+    {
+        // try with one digit less
+        idMeteo = idMeteo.right(idMeteo.size()-1);
+        if (observedMeteoGrid->meteoGrid()->findMeteoPointFromId(&row, &col, idMeteo.toStdString()))
+        {
+            isMeteoCellFound = true;
+        }
+    }
+
+    if (! isMeteoCellFound)
     {
         projectError = "Missing observed meteo cell: " + idMeteo;
         return false;
@@ -649,9 +702,18 @@ bool Crit1DProject::setMeteoSqlite(QString idMeteo, QString idForecast)
     QSqlQuery query = dbMeteo.exec(queryString);
     query.last();
 
+    if (! query.isValid() && idMeteo.at(0) == '0')
+    {
+        // try with one digit less
+        QString idMeteoShort = idMeteo.right(idMeteo.size()-1);
+        queryString = "SELECT * FROM point_properties WHERE id_meteo='" + idMeteoShort + "'";
+        query = dbMeteo.exec(queryString);
+        query.last();
+    }
+
     if (! query.isValid())
     {
-        // previous code version
+        // try the previous code version
         queryString = "SELECT * FROM meteo_locations WHERE id_meteo='" + idMeteo + "'";
         query = dbMeteo.exec(queryString);
         query.last();
@@ -893,8 +955,10 @@ bool Crit1DProject::computeUnit(unsigned int unitIndex, unsigned int memberNr)
 // use memberNr = 0 for deterministic run
 bool Crit1DProject::computeCase(unsigned int memberNr)
 {
+    // initialize
+    myCase.nrMissingPrec = 0;
     myCase.fittingOptions.useWaterRetentionData = myCase.unit.useWaterRetentionData;
-    // user wants to compute factor of safety
+    // the user wants to compute the factor of safety
     myCase.computeFactorOfSafety = (factorOfSafetyDepth.size() > 0);
 
     if (! loadCropParameters(dbCrop, myCase.unit.idCrop, myCase.crop, projectError))
@@ -931,7 +995,7 @@ bool Crit1DProject::computeCase(unsigned int memberNr)
     {
         float irriRatio = getIrriRatioFromCropClass(dbCrop, "crop_class", "id_class",
                                                 myCase.unit.idCropClass, projectError);
-        if (irriRatio < 0.001f)
+        if (irriRatio < 0.001)
         {
             // No irrigation: nothing to do
             return true;
@@ -1051,7 +1115,11 @@ int Crit1DProject::computeAllUnits()
         }
     }
 
-    int infoStep = std::max(1, int(compUnitList.size() / 20));
+    int infoStep = int(compUnitList.size());
+    if (compUnitList.size() >= 20)
+    {
+        infoStep = int(compUnitList.size() / 20);
+    }
     logger.writeInfo("COMPUTE...");
 
     try
@@ -1064,25 +1132,20 @@ int Crit1DProject::computeAllUnits()
                 logger.writeInfo(compUnitList[i].idCase + " - numerical computation...");
             }
 
-            // CROP
+            // check if it is crop class
             compUnitList[i].idCrop = getIdCropFromClass(dbCrop, "crop_class", "id_class",
                                                          compUnitList[i].idCropClass, projectError);
             if (compUnitList[i].idCrop == "")
             {
-                logger.writeInfo("Unit " + compUnitList[i].idCase + " " + compUnitList[i].idCropClass + " ***** missing CROP *****");
-                isErrorCrop = true;
-                continue;
+                compUnitList[i].idCrop = compUnitList[i].idCropClass;
             }
 
             // IRRI_RATIO
             float irriRatio = getIrriRatioFromCropClass(dbCrop, "crop_class", "id_class",
                                                     compUnitList[i].idCropClass, projectError);
-
-            if ((isYearlyStatistics || isMonthlyStatistics || isSeasonalForecast || isEnsembleForecast || isShortTermForecast)
-                && (int(irriRatio) == int(NODATA)))
+            if (isEqual(irriRatio, NODATA))
             {
-                logger.writeInfo("Unit " + compUnitList[i].idCase + " " + compUnitList[i].idCropClass + " ***** missing IRRIGATION RATIO *****");
-                continue;
+                irriRatio = 1;
             }
 
             // SOIL
@@ -1127,7 +1190,7 @@ int Crit1DProject::computeAllUnits()
                 }
             }
 
-            if ((i+1) % infoStep == 0 && nrUnitsComputed > 0)
+            if ((i+1) % infoStep == 0 && nrUnitsComputed > 20)
             {
                 double percentage = (i+1) * 100.0 / compUnitList.size();
                 logger.writeInfo("..." + QString::number(round(percentage)) + "%");
@@ -1357,19 +1420,21 @@ bool Crit1DProject::setPercentileOutputCsv()
     QString outputCsvPath = getFilePath(outputCsvFileName);
     if (! QDir(outputCsvPath).exists())
     {
-        QDir().mkdir(outputCsvPath);
+        if (! QDir().mkdir(outputCsvPath))
+        {
+            logger.writeError("Error creating directory: " + outputCsvPath);
+            return false;
+        }
     }
 
     outputCsvFile.open(outputCsvFileName.toStdString().c_str(), std::ios::out | std::ios::trunc);
     if ( outputCsvFile.fail())
     {
-        logger.writeError("open failure: " + QString(strerror(errno)) + '\n');
+        logger.writeError("Open failure: " + outputCsvFileName + "\n" + QString(strerror(errno)));
         return false;
     }
-    else
-    {
-        logger.writeInfo("Statistics output file (csv): " + outputCsvFileName + "\n");
-    }
+
+    logger.writeInfo("Statistics output file (csv): " + outputCsvFileName + "\n");
 
     if (isYearlyStatistics || isMonthlyStatistics || isSeasonalForecast)
     {
@@ -1531,14 +1596,17 @@ bool Crit1DProject::restoreState(QString dbStateToRestoreName, QString &myError)
                 myError = "Invalid NR_LAYER";
                 return false;
             }
+
             // check values
             if (nrLayer > 0)
             {
                 wc = std::min(wc, myCase.soilLayers[unsigned(nrLayer)].SAT);
                 wc = std::max(wc, myCase.soilLayers[unsigned(nrLayer)].HH);
             }
+
             myCase.soilLayers[unsigned(nrLayer)].waterContent = wc;
         }
+
         if (nrLayer == -1)
         {
             myError = "waterContent table: idCase not found";
@@ -1649,6 +1717,11 @@ bool Crit1DProject::createOutputTable(QString &myError)
         QString fieldName = "FoS_" + QString::number(factorOfSafetyDepth[i]);
         queryString += ", " + fieldName + " REAL";
     }
+    for (unsigned int i = 0; i < soilWaterIndexDepth.size(); i++)
+    {
+        QString fieldName = "SWI_" + QString::number(soilWaterIndexDepth[i]);
+        queryString += ", " + fieldName + " REAL";
+    }
 
     // close query
     queryString += ")";
@@ -1724,6 +1797,11 @@ void Crit1DProject::updateOutput(Crit3DDate myDate, bool isFirst)
             QString fieldName = "FoS_" + QString::number(factorOfSafetyDepth[i]);
             outputString += ", " + fieldName;
         }
+        for (unsigned int i = 0; i < soilWaterIndexDepth.size(); i++)
+        {
+            QString fieldName = "SWI_" + QString::number(soilWaterIndexDepth[i]);
+            outputString += ", " + fieldName;
+        }
 
         outputString += ") VALUES ";
     }
@@ -1734,21 +1812,21 @@ void Crit1DProject::updateOutput(Crit3DDate myDate, bool isFirst)
 
     if (isClimateOutput)
     {
-        outputString += "('" + QString::fromStdString(myDate.toStdString()) + "'"
+        outputString += "('" + QString::fromStdString(myDate.toISOString()) + "'"
                         + "," + QString::number(myCase.output.dailyAvailableWater, 'g', 4)
                         + "," + QString::number(myCase.output.dailyMaxTranspiration, 'g', 3)
                         + "," + QString::number(myCase.output.dailyTranspiration, 'g', 3);
     }
     else
     {
-        outputString += "('" + QString::fromStdString(myDate.toStdString()) + "'"
+        outputString += "('" + QString::fromStdString(myDate.toISOString()) + "'"
                     + "," + QString::number(myCase.output.dailyPrec)
                     + "," + QString::number(myCase.output.dailyIrrigation)
                     + "," + QString::number(myCase.output.dailySoilWaterContent, 'g', 4)
                     + "," + QString::number(myCase.output.dailySurfaceWaterContent, 'g', 3)
                     + "," + QString::number(myCase.output.dailyAvailableWater, 'g', 4)
                     + "," + QString::number(myCase.output.dailyReadilyAW, 'g', 4)
-                    + "," + QString::number(myCase.output.dailyFractionAW, 'g', 3)
+                    + "," + QString::number(myCase.output.dailyFractionAW, 'g', 4)
                     + "," + QString::number(myCase.output.dailySurfaceRunoff, 'g', 3)
                     + "," + QString::number(myCase.output.dailyDrainage, 'g', 3)
                     + "," + QString::number(myCase.output.dailyLateralDrainage, 'g', 3)
@@ -1790,11 +1868,15 @@ void Crit1DProject::updateOutput(Crit3DDate myDate, bool isFirst)
     }
     for (unsigned int i = 0; i < fractionAvailableWaterDepth.size(); i++)
     {
-        outputString += "," + QString::number(myCase.getFractionAW(fractionAvailableWaterDepth[i]), 'g', 3);
+        outputString += "," + QString::number(myCase.getAvailableWaterFraction(fractionAvailableWaterDepth[i]), 'g', 4);
     }
     for (unsigned int i = 0; i < factorOfSafetyDepth.size(); i++)
     {
         outputString += "," + QString::number(myCase.getSlopeStability(factorOfSafetyDepth[i]), 'g', 4);
+    }
+    for (unsigned int i = 0; i < soilWaterIndexDepth.size(); i++)
+    {
+        outputString += "," + QString::number(myCase.getSoilWaterIndex(soilWaterIndexDepth[i]), 'g', 4);
     }
 
     outputString += ")";
@@ -1981,6 +2063,7 @@ QString getOutputStringNullZero(double value)
 }
 
 
+// variableDepth [cm] (integer numbers)
 bool setVariableDepth(const QList<QString>& depthList, std::vector<int>& variableDepth)
 {
     int nrDepth = depthList.size();

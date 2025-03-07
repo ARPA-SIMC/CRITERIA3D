@@ -5,7 +5,7 @@
 #
 #----------------------------------------------------
 
-QT -= gui
+QT -= core gui
 
 TARGET = carbonNitrogen
 TEMPLATE = lib

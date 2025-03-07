@@ -120,11 +120,9 @@
         return dist;
     }
 
-    float distance2D(float x1,float y1, float x2, float y2)
+    float distance2D(float x1, float y1, float x2, float y2)
     {
-        float dist;
-        dist = sqrtf(powf((x1-x2),2) + powf((y1-y2),2));
-        return dist;
+        return sqrtf((x1-x2)*(x1-x2) + (y1-y2)*(y1-y2));
     }
 
     float norm(float* x, int vectorLength)
@@ -456,11 +454,11 @@
                 // remove nodata
                 list.erase(std::remove(list.begin(), list.end(), float(NODATA)), list.end());
 
-                // sort
-                std::sort(list.begin(), list.end());
-
                 // check on data presence
                 if (list.size() < MINIMUM_PERCENTILE_DATA) return NODATA;
+
+                // sort
+                std::sort(list.begin(), list.end());
             }
 
             float nrValuesF = float(list.size());
@@ -475,13 +473,13 @@
                 if (isEqual(value, list[i]))
                 {
                     float rank = float(i + 1) / nrValuesF;
-                    return rank * 100;
+                    return rank * 100.f;
                 }
                 if (i < lastIndex && list[i] < value && list[i+1] > value)
                 {
                     float rank = float(i + 1) / nrValuesF;
                     rank += (value - list[i]) / (list[i+1] - list[i]) / nrValuesF;
-                    return rank * 100;
+                    return rank * 100.f;
                 }
             }
 

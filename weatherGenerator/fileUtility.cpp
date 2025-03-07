@@ -8,12 +8,13 @@
 #include "fileUtility.h"
 
 
-bool readMeteoDataCsv (QString &fileName, char mySeparator, double noData, TinputObsData* inputData)
+bool readMeteoDataCsv (const QString &fileName, char mySeparator, double noData, TinputObsData &inputData)
 {
     clearInputData(inputData);
 
     QFile file(fileName);
-    if (!file.open(QIODevice::ReadOnly)) {
+    if (! file.open(QIODevice::ReadOnly))
+    {
         qDebug() << "\nERROR!\n" << fileName << file.errorString();
         return false;
     }
@@ -33,15 +34,16 @@ bool readMeteoDataCsv (QString &fileName, char mySeparator, double noData, Tinpu
     // header
     file.readLine();
 
-    while (!file.atEnd()) {
+    while (!file.atEnd())
+    {
         QByteArray line = file.readLine();
 
-        //check format
+        // check format
         if (line.split(mySeparator).count() < 5)
         {
             qDebug() << "ERROR!" << "\nfile =" << fileName << "\nline =" << indexLine+2;;
-            qDebug() << "missing data / invalid format / invalid separator";
-            qDebug() << "required separator =" << mySeparator <<"\n";
+            qDebug() << "missing data or invalid format or invalid separator";
+            qDebug() << "required separator = " << mySeparator <<"\n";
             return false;
         }
 
@@ -55,20 +57,20 @@ bool readMeteoDataCsv (QString &fileName, char mySeparator, double noData, Tinpu
         // save the first date into the struct and check it is a valid date
         if (indexLine == 0)
         {
-            inputData->inputFirstDate.year = listDate[indexLine].mid(0,4).toInt();
-            if (inputData->inputFirstDate.year == 0)
+            inputData.inputFirstDate.year = listDate[indexLine].mid(0,4).toInt();
+            if (inputData.inputFirstDate.year == 0)
             {
                 qDebug() << "Invalid date format ";
                 return false;
             }
-            inputData->inputFirstDate.month = listDate[indexLine].mid(5,2).toInt();
-            if (inputData->inputFirstDate.month == 0 || inputData->inputFirstDate.month > 12 )
+            inputData.inputFirstDate.month = listDate[indexLine].mid(5,2).toInt();
+            if (inputData.inputFirstDate.month == 0 || inputData.inputFirstDate.month > 12 )
             {
                 qDebug() << "Invalid date format ";
                 return false;
             }
-            inputData->inputFirstDate.day = listDate[indexLine].mid(8,2).toInt();
-            if (inputData->inputFirstDate.day == 0 || inputData->inputFirstDate.day > 31)
+            inputData.inputFirstDate.day = listDate[indexLine].mid(8,2).toInt();
+            if (inputData.inputFirstDate.day == 0 || inputData.inputFirstDate.day > 31)
             {
                 qDebug() << "Invalid date format ";
                 return false;
@@ -80,7 +82,7 @@ bool readMeteoDataCsv (QString &fileName, char mySeparator, double noData, Tinpu
             tempDate.month = listDate[indexLine].mid(5,2).toInt();
             tempDate.day = listDate[indexLine].mid(8,2).toInt();
 
-            indexDate = difference(inputData->inputFirstDate , tempDate );
+            indexDate = difference(inputData.inputFirstDate , tempDate );
 
             // check LACK of data
             if (indexDate != indexLine)
@@ -120,18 +122,18 @@ bool readMeteoDataCsv (QString &fileName, char mySeparator, double noData, Tinpu
     file.close();
 
     // save and check the last date
-    inputData->inputLastDate = tempDate;
-    if (inputData->inputLastDate.year == 0)
+    inputData.inputLastDate = tempDate;
+    if (inputData.inputLastDate.year == 0)
     {
         qDebug() << "Invalid date format ";
         return false;
     }
-    if (inputData->inputLastDate.month == 0 || inputData->inputLastDate.month > 12 )
+    if (inputData.inputLastDate.month == 0 || inputData.inputLastDate.month > 12 )
     {
         qDebug() << "Invalid date format ";
         return false;
     }
-    if (inputData->inputLastDate.day == 0 || inputData->inputLastDate.day > 31)
+    if (inputData.inputLastDate.day == 0 || inputData.inputLastDate.day > 31)
     {
         qDebug() << "Invalid date format ";
         return false;
@@ -143,25 +145,24 @@ bool readMeteoDataCsv (QString &fileName, char mySeparator, double noData, Tinpu
         return false;
     }
 
-    inputData->dataLenght = listDate.length();
-    inputData->inputTMin.resize(inputData->dataLenght);
-    inputData->inputTMax.resize(inputData->dataLenght);
-    inputData->inputPrecip.resize(inputData->dataLenght);
+    inputData.dataLength = listDate.length();
+    inputData.inputTMin.resize(inputData.dataLength);
+    inputData.inputTMax.resize(inputData.dataLength);
+    inputData.inputPrecip.resize(inputData.dataLength);
 
-    for (int i = 0; i < inputData->dataLenght; i++)
+    for (int i = 0; i < inputData.dataLength; i++)
     {
-        inputData->inputTMin[i] = listTMin[i].toFloat();
-        inputData->inputTMax[i] = listTMax[i].toFloat();
-        inputData->inputPrecip[i] = listPrecip[i].toFloat();
+        inputData.inputTMin[i] = listTMin[i].toFloat();
+        inputData.inputTMax[i] = listTMax[i].toFloat();
+        inputData.inputPrecip[i] = listPrecip[i].toFloat();
 
         // check tmin <= tmax
-        if ((inputData->inputTMin[i] != noData) && (inputData->inputTMax[i] != noData)
-             && (inputData->inputTMin[i] > inputData->inputTMax[i]))
+        if ((inputData.inputTMin[i] != noData) && (inputData.inputTMax[i] != noData)
+             && (inputData.inputTMin[i] > inputData.inputTMax[i]))
         {
-            //qDebug() << "Warning: TMIN > TMAX: " << listDate[i];
             // switch
-            inputData->inputTMin[i] = listTMax[i].toFloat();
-            inputData->inputTMax[i] = listTMin[i].toFloat();
+            inputData.inputTMin[i] = listTMax[i].toFloat();
+            inputData.inputTMax[i] = listTMin[i].toFloat();
         }
     }
 
@@ -174,7 +175,7 @@ bool readMeteoDataCsv (QString &fileName, char mySeparator, double noData, Tinpu
 
 
 // Write the output of weather generator: a daily series of tmin, tmax, prec data
-bool writeMeteoDataCsv(QString &fileName, char separator, std::vector<ToutputDailyMeteo> &dailyData)
+bool writeMeteoDataCsv(const QString &fileName, char separator, std::vector<ToutputDailyMeteo> &dailyData, bool isWaterTable)
 {
     QFile file(fileName);
     if (!file.open(QIODevice::WriteOnly | QIODevice::Truncate | QIODevice::Text)) {
@@ -183,23 +184,49 @@ bool writeMeteoDataCsv(QString &fileName, char separator, std::vector<ToutputDai
     }
 
     QTextStream stream( &file );
-    stream << "date" << separator << "tmin" << separator << "tmax" << separator << "prec\n";
 
-    for (unsigned int i=0; i < dailyData.size(); i++)
+    if (isWaterTable)
     {
-        if (dailyData[i].date == NO_DATE)
-            break;
+        stream << "date" << separator << "tmin" << separator << "tmax" << separator << "prec" << separator << "depth \n";
 
-        QString year = QString::number(dailyData[i].date.year);
-        QString month = QString::number(dailyData[i].date.month).rightJustified(2, '0');
-        QString day = QString::number(dailyData[i].date.day).rightJustified(2, '0');
-        QString myDate = year + "-" + month + "-" + day;
+        for (unsigned int i=0; i < dailyData.size(); i++)
+        {
+            if (dailyData[i].date == NO_DATE)
+                break;
 
-        QString tMin = QString::number(double(dailyData[i].minTemp), 'f', 1);
-        QString tMax = QString::number(double(dailyData[i].maxTemp), 'f', 1);
-        QString prec = QString::number(double(dailyData[i].prec), 'f', 1);
+            QString year = QString::number(dailyData[i].date.year);
+            QString month = QString::number(dailyData[i].date.month).rightJustified(2, '0');
+            QString day = QString::number(dailyData[i].date.day).rightJustified(2, '0');
+            QString myDate = year + "-" + month + "-" + day;
 
-        stream << myDate << separator << tMin << separator << tMax << separator << prec << "\n";
+            QString tMin = QString::number(double(dailyData[i].minTemp), 'f', 1);
+            QString tMax = QString::number(double(dailyData[i].maxTemp), 'f', 1);
+            QString prec = QString::number(double(dailyData[i].prec), 'f', 1);
+            QString depth = QString::number(double(dailyData[i].waterTableDepth), 'f', 1);
+
+            stream << myDate << separator << tMin << separator << tMax << separator << prec << separator << depth << "\n";
+        }
+    }
+    else
+    {
+        stream << "date" << separator << "tmin" << separator << "tmax" << separator << "prec\n";
+
+        for (unsigned int i=0; i < dailyData.size(); i++)
+        {
+            if (dailyData[i].date == NO_DATE)
+                break;
+
+            QString year = QString::number(dailyData[i].date.year);
+            QString month = QString::number(dailyData[i].date.month).rightJustified(2, '0');
+            QString day = QString::number(dailyData[i].date.day).rightJustified(2, '0');
+            QString myDate = year + "-" + month + "-" + day;
+
+            QString tMin = QString::number(double(dailyData[i].minTemp), 'f', 1);
+            QString tMax = QString::number(double(dailyData[i].maxTemp), 'f', 1);
+            QString prec = QString::number(double(dailyData[i].prec), 'f', 1);
+
+            stream << myDate << separator << tMin << separator << tMax << separator << prec << "\n";
+        }
     }
 
     return true;

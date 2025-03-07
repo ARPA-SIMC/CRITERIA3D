@@ -134,8 +134,8 @@ Crit3DHomogeneityWidget::Crit3DHomogeneityWidget(Crit3DMeteoPointsDbHandler* met
         QDate lastDaily = meteoPointsDbHandler->getLastDate(daily, jointStationsMyMp[i].toStdString()).date();
         if (indexMp != -1)
         {
-            jointStationsSelected.addItem(QString::fromStdString(this->meteoPointsNearDistanceList[indexMp].id)+" "+QString::fromStdString(this->meteoPointsNearDistanceList[indexMp].name));
-            meteoPointsDbHandler->loadDailyData(getCrit3DDate(firstDaily), getCrit3DDate(lastDaily), &this->meteoPointsNearDistanceList[indexMp]);
+            jointStationsSelected.addItem(QString::fromStdString(this->meteoPointsNearDistanceList[indexMp].id) + " " + QString::fromStdString(this->meteoPointsNearDistanceList[indexMp].name));
+            meteoPointsDbHandler->loadDailyData(getCrit3DDate(firstDaily), getCrit3DDate(lastDaily), this->meteoPointsNearDistanceList[indexMp]);
         }
     }
 
@@ -493,7 +493,7 @@ void Crit3DHomogeneityWidget::addJointStationClicked()
         QDate firstDailyNewId = meteoPointsDbHandler->getFirstDate(daily, newId).date();
         QDate lastDailyNewId = meteoPointsDbHandler->getLastDate(daily, newId).date();
 
-        meteoPointsDbHandler->loadDailyData(getCrit3DDate(firstDailyNewId), getCrit3DDate(lastDailyNewId), &meteoPointsNearDistanceList[indexMp]);
+        meteoPointsDbHandler->loadDailyData(getCrit3DDate(firstDailyNewId), getCrit3DDate(lastDailyNewId), meteoPointsNearDistanceList[indexMp]);
         updateYears();
     }
 
@@ -565,7 +565,7 @@ void Crit3DHomogeneityWidget::updateYears()
 
 void Crit3DHomogeneityWidget::on_actionChangeLeftAxis()
 {
-    DialogChangeAxis changeAxisDialog(true);
+    DialogChangeAxis changeAxisDialog(1, false);
     if (changeAxisDialog.result() == QDialog::Accepted)
     {
         homogeneityChartView->setYmax(changeAxisDialog.getMaxVal());
@@ -714,14 +714,10 @@ void Crit3DHomogeneityWidget::findReferenceStations()
         QMessageBox::critical(nullptr, "Error", "Data unavailable for candidate station");
         return;
     }
-    int myNrStations = 0;
-    QProgressDialog progress("Finding stations...", "Abort", 0, minNumStations.text().toInt(), this);
-    progress.setWindowModality(Qt::WindowModal);
-    progress.show();
-    int i = 0;
-    for (i = 0; i<sortedId.size(); i++)
+
+    int nrStations = 0;
+    for (int i = 0; i<sortedId.size(); i++)
     {
-        progress.setValue(myNrStations);
         if (idPointsJointed.contains(sortedId[i]))
         {
             continue;
@@ -736,7 +732,7 @@ void Crit3DHomogeneityWidget::findReferenceStations()
         mpToBeComputed.id = sortedId[i];
         QString name = meteoPointsDbHandler->getNameGivenId(QString::fromStdString(sortedId[i]));
         QList<QString> jointStationsListMpToBeComputed = meteoPointsDbHandler->getJointStations(QString::fromStdString(mpToBeComputed.id));
-        meteoPointsDbHandler->loadDailyData(getCrit3DDate(firstDate), getCrit3DDate(lastDate), &mpToBeComputed);
+        meteoPointsDbHandler->loadDailyData(getCrit3DDate(firstDate), getCrit3DDate(lastDate), mpToBeComputed);
 
         // copy data to MPTemp
         Crit3DMeteoPoint meteoPointTemp;
@@ -749,7 +745,7 @@ void Crit3DHomogeneityWidget::findReferenceStations()
             {
                 Crit3DMeteoPoint mpGet;
                 mpGet.id = jointStationsListMpToBeComputed[j].toStdString();
-                meteoPointsDbHandler->loadDailyData(getCrit3DDate(firstDate), getCrit3DDate(lastDate), &mpGet);
+                meteoPointsDbHandler->loadDailyData(getCrit3DDate(firstDate), getCrit3DDate(lastDate), mpGet);
                 jointStationsMpList.push_back(mpGet);
             }
 
@@ -906,7 +902,7 @@ void Crit3DHomogeneityWidget::findReferenceStations()
         {
             if ( (float)validYears / (float)(lastYear - firstYear + 1) > meteoSettings->getMinimumPercentage() / 100.f)
             {
-                myNrStations = myNrStations + 1;
+                nrStations++;
                 sortedIdFound.append(sortedId[i]);   
                 mapNameId.insert(name, sortedId[i]);
                 mapNameAnnualSeries.insert(name,mpToBeComputedAnnualSeries);
@@ -914,21 +910,20 @@ void Crit3DHomogeneityWidget::findReferenceStations()
                 myAnnualSeriesFound.append(mpToBeComputedAnnualSeries);
             }
         }
-        if (myNrStations == minNumStations.text().toInt())
+        if (nrStations == minNumStations.text().toInt())
         {
             break;
         }
     }
-    progress.setValue(myNrStations);
-    progress.close();
 
-    if (myNrStations == 0)
+    if (nrStations == 0)
     {
         QMessageBox::critical(nullptr, "Error", "No reference stations found");
         return;
     }
-    stationsTable.setRowCount(myNrStations);
-    for (int z = 0; z<myNrStations; z++)
+
+    stationsTable.setRowCount(nrStations);
+    for (int z = 0; z<nrStations; z++)
     {
         float r2, y_intercept, trend;
         QString name;
@@ -956,6 +951,7 @@ void Crit3DHomogeneityWidget::findReferenceStations()
         }
     }
 }
+
 
 void Crit3DHomogeneityWidget::addFoundStationClicked()
 {
@@ -1060,7 +1056,7 @@ void Crit3DHomogeneityWidget::executeClicked()
                 myValidValues.push_back((double)myAnnualSeries[i]);
             }
         }
-        double myAverage = statistics::mean(myValidValues, int(myValidValues.size()));
+        double myAverage = statistics::mean(myValidValues);
         std::vector<double> myRefAverage;
         std::vector<float> r2;
         std::vector<std::vector<float>> refSeriesVector;
@@ -1079,7 +1075,7 @@ void Crit3DHomogeneityWidget::executeClicked()
                     myRefValidValues.push_back((double)refSeries[i]);
                 }
             }
-            myRefAverage.push_back(statistics::mean(myRefValidValues, int(myRefValidValues.size())));
+            myRefAverage.push_back(statistics::mean(myRefValidValues));
             statistics::linearRegression(myAnnualSeries, refSeries, long(myAnnualSeries.size()), false, &y_intercept, &trend, &r2Value);
             r2.push_back(r2Value);
         }
@@ -1148,7 +1144,7 @@ void Crit3DHomogeneityWidget::executeClicked()
                 myValidValues.push_back(myQ[i]);
             }
         }
-        double myQAverage = statistics::mean(myValidValues, int(myValidValues.size()));
+        double myQAverage = statistics::mean(myValidValues);
         double myQDevStd = statistics::standardDeviation(myValidValues, int(myValidValues.size()));
         std::vector<double> myZ;
         for (int i = 0; i<myQ.size(); i++)
@@ -1171,9 +1167,9 @@ void Crit3DHomogeneityWidget::executeClicked()
             }
         }
 
-        double myZAverage = statistics::mean(myValidValues, int(myValidValues.size()));
+        double myZAverage = statistics::mean(myValidValues);
 
-        isHomogeneous = (qAbs(myZAverage) <= TOLERANCE);
+        isHomogeneous = (qAbs(myZAverage) <= EPSILON);
         std::vector<double> z1;
         std::vector<double> z2;
 
@@ -1205,7 +1201,7 @@ void Crit3DHomogeneityWidget::executeClicked()
                     myValidValues.push_back(z1[i]);
                 }
             }
-            double myZ1Average = statistics::mean(myValidValues, int(myValidValues.size()));
+            double myZ1Average = statistics::mean(myValidValues);
             myValidValues.clear();
             for (int i = 0; i<z2.size(); i++)
             {
@@ -1214,7 +1210,7 @@ void Crit3DHomogeneityWidget::executeClicked()
                     myValidValues.push_back(z2[i]);
                 }
             }
-            double myZ2Average = statistics::mean(myValidValues, int(myValidValues.size()));
+            double myZ2Average = statistics::mean(myValidValues);
             if (myZ1Average != NODATA && myZ2Average != NODATA)
             {
                 myTValues[a] = ( (a+1) * pow(myZ1Average,2)) + ((myZ.size() - (a+1)) * pow(myZ2Average,2));

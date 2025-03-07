@@ -30,8 +30,16 @@
 
     bool computeResiduals(meteoVariable myVar, Crit3DMeteoPoint* meteoPoints, int nrMeteoPoints,
                           std::vector <Crit3DInterpolationDataPoint> &interpolationPoints, Crit3DInterpolationSettings* settings, Crit3DMeteoSettings* meteoSettings, bool excludeOutsideDem, bool excludeSupplemental);
+    bool computeResidualsLocalDetrending(meteoVariable myVar, Crit3DTime myTime, Crit3DMeteoPoint* meteoPoints, int nrMeteoPoints,
+                                         std::vector <Crit3DInterpolationDataPoint> &interpolationPoints, Crit3DInterpolationSettings* settings,
+                                         Crit3DMeteoSettings* meteoSettings, Crit3DClimateParameters *climateParameters, bool excludeOutsideDem, bool excludeSupplemental);
 
-    float computeErrorCrossValidation(meteoVariable myVar, Crit3DMeteoPoint *myPoints, int nrMeteoPoints, const Crit3DTime& myTime, Crit3DMeteoSettings *meteoSettings);
+    bool computeResidualsGlocalDetrending(meteoVariable myVar, Crit3DTime myTime, Crit3DMeteoPoint* meteoPoints, int nrMeteoPoints,
+                                         std::vector <Crit3DInterpolationDataPoint> &interpolationPoints, Crit3DInterpolationSettings* settings,
+                                         Crit3DMeteoSettings* meteoSettings, Crit3DClimateParameters* climateParameters,
+                                         bool excludeOutsideDem, bool excludeSupplemental);
+
+    float computeErrorCrossValidation(Crit3DMeteoPoint *myPoints, int nrMeteoPoints);
 
     bool spatialQualityControl(meteoVariable myVar, Crit3DMeteoPoint* meteoPoints, int nrMeteoPoints,
                                Crit3DInterpolationSettings *settings, Crit3DMeteoSettings* meteoSettings,

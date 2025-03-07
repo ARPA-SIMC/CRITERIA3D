@@ -14,7 +14,6 @@ TEMPLATE = lib
 CONFIG += staticlib
 
 CONFIG += debug_and_release
-QMAKE_CXXFLAGS += -std=c++11
 
 unix:{
     CONFIG(debug, debug|release) {

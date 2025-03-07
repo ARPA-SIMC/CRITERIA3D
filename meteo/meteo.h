@@ -9,7 +9,9 @@
         #include "statistics.h"
     #endif
 
-    #include <map>
+    #ifndef _MAP_
+        #include <map>
+    #endif
 
     #define DEFAULT_MIN_PERCENTAGE 80
     #define DEFAULT_RAINFALL_THRESHOLD 0.2f
@@ -101,14 +103,14 @@
                     snowWaterEquivalent, snowFall, snowSurfaceTemperature, snowInternalEnergy, snowSurfaceEnergy,
                     snowAge, snowLiquidWaterContent, snowMelt, sensibleHeat, latentHeat,
                     dailyWaterTableDepth, leafAreaIndex,
-                    anomaly, elaboration, noMeteoTerrain,
+                    anomaly, elaboration, cvResidual, noMeteoTerrain,
                     noMeteoVar};
 
 
     enum criteria3DVariable {volumetricWaterContent, waterTotalPotential, waterMatricPotential,
                               availableWaterContent, degreeOfSaturation, soilTemperature,
                               soilSurfaceMoisture, bottomDrainage, waterDeficit, waterInflow, waterOutflow,
-                              factorOfSafety};
+                              factorOfSafety, minimumFactorOfSafety, surfacePond, maximumVolumetricWaterContent};
 
 
     const std::map<std::string, meteoVariable> MapDailyMeteoVar = {

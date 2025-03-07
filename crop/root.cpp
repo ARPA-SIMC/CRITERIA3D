@@ -261,12 +261,13 @@ namespace root
         lunetteDensity.resize(nrLayersWithRoot*2);
 
         double sinAlfa, cosAlfa, alfa;
+        double halfPI = PI / 2.;
         for (i = 0; i < nrLayersWithRoot; i++)
         {
             sinAlfa = 1 - double(i+1) / double(nrLayersWithRoot);
-            cosAlfa = MAXVALUE(sqrt(1 - pow(sinAlfa,2)), 0.0001);
+            cosAlfa = MAXVALUE(sqrt(1 - pow(sinAlfa, 2)), 0.0001);
             alfa = atan(sinAlfa/cosAlfa);
-            lunette[i] = ((PI/2) - alfa - sinAlfa*cosAlfa) / PI;
+            lunette[i] = (halfPI - alfa - sinAlfa*cosAlfa) / PI;
         }
 
         lunetteDensity[0] = lunette[0];
@@ -282,8 +283,7 @@ namespace root
         LiMin = -log(0.2) / nrLayersWithRoot;
         Limax = -log(0.05) / nrLayersWithRoot;
 
-        // TODO verify
-        k = LiMin + (Limax - LiMin) * (shapeFactor-1);
+        k = LiMin + (Limax - LiMin) * (shapeFactor-1);         // TODO verify
 
         rootDensitySum = 0 ;
         for (i = 0; i < (2*nrLayersWithRoot); i++)
@@ -291,10 +291,13 @@ namespace root
             lunetteDensity[i] *= exp(-k*(i+0.5));
             rootDensitySum += lunetteDensity[i];
         }
+
+        // normalize
         for (i = 0; i < (2*nrLayersWithRoot); i++)
         {
             lunetteDensity[i] /= rootDensitySum;
         }
+
         for  (i = 0; i < totalLayers; i++)
         {
             densityThinLayers[i] = 0;
@@ -387,7 +390,7 @@ namespace root
 
             int numberOfRootedLayers, numberOfTopUnrootedLayers;
             numberOfTopUnrootedLayers = int(round(myCrop->roots.rootDepthMin / minimumThickness));
-            numberOfRootedLayers = int(round(MINVALUE(myCrop->roots.currentRootLength, soilDepth) / minimumThickness));
+            numberOfRootedLayers = int(round(std::min(myCrop->roots.currentRootLength, soilDepth) / minimumThickness));
 
             // roots are still too short
             if (numberOfRootedLayers == 0)
@@ -497,7 +500,7 @@ namespace root
                               const std::vector<double> &layerDepth, const std::vector<double> &layerThickness)
     {
         // check soil
-        if (nrLayers == 0)
+        if (nrLayers <= 1)
         {
             myCrop.roots.firstRootLayer = NODATA;
             myCrop.roots.lastRootLayer = NODATA;
@@ -526,7 +529,7 @@ namespace root
 
         int numberOfRootedLayers, numberOfTopUnrootedLayers;
         numberOfTopUnrootedLayers = int(round(myCrop.roots.rootDepthMin / minimumThickness));
-        numberOfRootedLayers = int(round(MINVALUE(myCrop.roots.currentRootLength, currentSoil.totalDepth) / minimumThickness));
+        numberOfRootedLayers = int(round(std::min(myCrop.roots.currentRootLength, currentSoil.totalDepth) / minimumThickness));
 
         // roots are still too short
         if (numberOfRootedLayers == 0)
@@ -588,8 +591,7 @@ namespace root
             int horIndex = currentSoil.getHorizonIndex(layerDepth[l]);
             if (horIndex != int(NODATA))
             {
-                double soilFraction = (1 - currentSoil.horizon[horIndex].coarseFragments);
-                myCrop.roots.rootDensity[l] *= soilFraction;
+                myCrop.roots.rootDensity[l] *= currentSoil.horizon[horIndex].getSoilFraction();
                 rootDensitySumSubset += myCrop.roots.rootDensity[l];
             }
         }

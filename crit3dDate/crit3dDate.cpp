@@ -205,33 +205,31 @@ Crit3DDate min(const Crit3DDate& myDate1, const Crit3DDate& myDate2)
         return myDate2;
 }
 
-
+/*
 Crit3DDate getDateFromDoy(int year, int doy)
 {
-    if (doy < 1) return NO_DATE;
-    short month;
+    return Crit3DDate(1, 1, year).addDays(doy-1);
+}
+*/
+Crit3DDate getDateFromDoy(int year, int doy)
+{
+    static const int daysBeforeMonth[2][13] = {
+        { 0,  31,  59,  90, 120, 151, 181, 212, 243, 273, 304, 334, 365 }, // Non leap year
+        { 0,  31,  60,  91, 121, 152, 182, 213, 244, 274, 305, 335, 366 }  // Leap year
+    };
+    int leap = int(isLeapYear(year));       // leap: 1  -  not leap: 0
+    int month = 1;
 
-    // before 29 february
-    if (doy <= 59)
-    {
-        month = (doy <= 31) ? 1 : 2;
-        return Crit3DDate(doy-doyMonth[month-1], month, year);
+    // Compute the month
+    while (doy > daysBeforeMonth[leap][month]) {
+        month++;
     }
 
-    const short leap = isLeapYear(year) ? 1 : 0;
-    if (doy > (365 + leap)) return NO_DATE;
-
-    // 29 february
-    if (doy == 60 && leap == 1)
-        return Crit3DDate(29, 2, year);
-
-    // after
-    month = 3;
-    while (month <= 12 && doy > (doyMonth[month]+leap))
-        month++;
-
-    return Crit3DDate(doy-(doyMonth[month-1]+leap), month, year);
+    // Compute the day
+    int day = doy - daysBeforeMonth[leap][month - 1];
+    return {day, month, year};
 }
+
 
 void Crit3DDate::setNullDate()
 {
@@ -246,23 +244,20 @@ bool Crit3DDate::isNullDate()
 }
 
 
-int difference(Crit3DDate firstDate, Crit3DDate lastDate)
+int difference(const Crit3DDate &firstDate, const Crit3DDate &lastDate)
 {
     return firstDate.daysTo(lastDate);
 }
 
-
 bool isLeapYear(int year)
 {
     // No year 0 in Gregorian calendar, so -1, -5, -9 etc are leap years
-    if (year < 1)
-        ++year;
+    year += (year < 1);
 
     if (year % 4 != 0) return false;
     if (year % 100 != 0) return true;
     return (year % 400 == 0);
 }
-
 
 int getDoyFromDate(const Crit3DDate& myDate)
 {
@@ -274,6 +269,24 @@ int getDoyFromDate(const Crit3DDate& myDate)
     return doy;
 }
 
+int getMonthFromDoy(int doy,int year)
+{
+    if ((doy < 1) || (doy > 366))
+        return NODATA;
+
+    int month = 0;
+    int doyMonthSpecific[12];
+    for (int i=0;i<12;i++)
+    {
+        doyMonthSpecific[i] = doyMonth[i+1];
+        if (isLeapYear(year) && i>0)
+            doyMonthSpecific[i]++;
+    }
+    while (doy > doyMonthSpecific[month])
+        month++;
+
+    return month;
+}
 
 static inline long floordiv(long a, long b)
 {
@@ -324,28 +337,10 @@ Crit3DDate getDateFromJulianDay(long julianDay)
 }
 
 
-std::string Crit3DDate::toStdString()
+std::string Crit3DDate::toISOString() const
 {
     char myStr[11];
     sprintf (myStr, "%d-%02d-%02d", this->year, this->month, this->day);
-
-    return std::string(myStr);
-}
-
-
-std::string Crit3DDate::toStdString() const
-{
-    char myStr[11];
-    sprintf (myStr, "%d-%02d-%02d", this->year, this->month, this->day);
-
-    return std::string(myStr);
-}
-
-
-std::string Crit3DDate::toString()
-{
-    char myStr[9];
-    sprintf (myStr, "%d%02d%02d", this->year, this->month, this->day);
 
     return std::string(myStr);
 }
@@ -358,4 +353,3 @@ std::string Crit3DDate::toString() const
 
     return std::string(myStr);
 }
-

@@ -78,7 +78,7 @@ void InterpolationChartView::drawGraphInterpolation(std::vector<float> values, Q
     axisX->setRange(QDateTime(myStartDate, QTime(1,0,0),Qt::UTC), QDateTime(myStartDate.addDays(values.size()-1), QTime(1,0,0),Qt::UTC));
     if ( values.size() <= 10)
     {
-        axisX->setTickCount(values.size());
+        axisX->setTickCount(int(values.size()));
     }
     else
     {

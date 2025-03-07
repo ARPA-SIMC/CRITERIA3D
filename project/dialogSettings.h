@@ -44,6 +44,7 @@
         QLineEdit deltaTSuspectEdit;
         QLineEdit deltaTWrongEdit;
         QLineEdit humidityToleranceEdit;
+        QLineEdit waterTableDepthEdit;
 
     private:
 

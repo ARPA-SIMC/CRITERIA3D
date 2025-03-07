@@ -18,23 +18,22 @@ Crit3DSoilTable::Crit3DSoilTable(tableType type) : type(type)
     QList<QString> tableHeader;
     if (type == dbTable)
     {
-        this->setColumnCount(10);
-        tableHeader << "Upper depth [cm]" << "Lower depth [cm]" << "Sand [%]" << "Silt  [%]" << "Clay [%]" << "Coarse [%]" << "O.M. [%]"
-                        << "B.D. [g/cm3]" << "K Sat [cm/d]" << "Theta S [-]";
+        this->setColumnCount(12);
+        tableHeader << "Upper depth [cm]" << "Lower depth [cm]" << "Sand [%]" << "Silt [%]" << "Clay [%]" << "Coarse [%]" << "O.M. [%]"
+                    << "B.D. [g/cm3]" << "K Sat [cm/d]" << "Theta S [-]" << "c' [kPa]" << "Φ' [°]";
     }
     else if (type == modelTable)
     {
-        this->setColumnCount(11);
+        this->setColumnCount(13);
         tableHeader << "USDA Texture" << "Coarse [%]" << "O.M. [%]"
                         << "B.D. [g/cm3]" << "K Sat [cm/d]" << "ThetaS [-]" << "ThetaR [-]" << "Air entry [KPa]"
-                        << "alpha [KPa^-1]" << "  n  [-] " << " m   [-] ";
+                        << "α [KPa^-1]" << "  n  [-] " << " m   [-] " << "c' [kPa]" << "Φ' [°]";
     }
 
     this->setHorizontalHeaderLabels(tableHeader);
     this->resizeColumnsToContents(); 
     this->setSelectionMode(QAbstractItemView::SingleSelection);
     this->setShowGrid(true);
-    //this->setStyleSheet("QTableView {selection-background-color: green;}");
     this->setStyleSheet("QTableView::item:selected { color:black;  border: 3px solid black}");
 
     if (type == dbTable)
@@ -45,6 +44,103 @@ Crit3DSoilTable::Crit3DSoilTable(tableType type) : type(type)
     {
         this->setEditTriggers(QAbstractItemView::NoEditTriggers);
     }
+
+    if (type == dbTable)
+    {
+        QTableWidgetItem *currentHeaderItem = horizontalHeaderItem(2);
+        if (currentHeaderItem)
+            currentHeaderItem->setToolTip("Percentage of sand (from 2.0 to 0.05 mm)");
+
+        currentHeaderItem = horizontalHeaderItem(3);
+        if (currentHeaderItem)
+            currentHeaderItem->setToolTip("Percentage of silt (from 0.05 to 0.002 mm)");
+
+        currentHeaderItem = this->horizontalHeaderItem(4);
+        if (currentHeaderItem)
+            currentHeaderItem->setToolTip("Percentage of clay (minor than 0.002 mm)");
+
+        currentHeaderItem = this->horizontalHeaderItem(5);
+        if (currentHeaderItem)
+            currentHeaderItem->setToolTip("Percentage of coarse fragments (major than 2.0 mm)");
+
+        currentHeaderItem = this->horizontalHeaderItem(6);
+        if (currentHeaderItem)
+            currentHeaderItem->setToolTip("Percentage of organic matter");
+
+        currentHeaderItem = this->horizontalHeaderItem(7);
+        if (currentHeaderItem)
+            currentHeaderItem->setToolTip("Bulk density");
+
+        currentHeaderItem = this->horizontalHeaderItem(8);
+        if (currentHeaderItem)
+            currentHeaderItem->setToolTip("Saturated hydraulic conductivity");
+
+        currentHeaderItem = this->horizontalHeaderItem(9);
+        if (currentHeaderItem)
+            currentHeaderItem->setToolTip("Water content at saturation (SAT)");
+
+        currentHeaderItem = this->horizontalHeaderItem(10);
+        if (currentHeaderItem)
+            currentHeaderItem->setToolTip("Soil effective cohesion");
+
+        currentHeaderItem = this->horizontalHeaderItem(11);
+        if (currentHeaderItem)
+            currentHeaderItem->setToolTip("Soil friction angle");
+    }
+    else if (type == modelTable)
+    {
+        QTableWidgetItem *currentHeaderItem = horizontalHeaderItem(0);
+        if (currentHeaderItem)
+            currentHeaderItem->setToolTip("USDA textural soil classification");
+
+        currentHeaderItem = horizontalHeaderItem(1);
+        if (currentHeaderItem)
+            currentHeaderItem->setToolTip("Percentage of coarse fragments (major than 2.0 mm)");
+
+        currentHeaderItem = this->horizontalHeaderItem(2);
+        if (currentHeaderItem)
+            currentHeaderItem->setToolTip("Percentage of organic matter");
+
+        currentHeaderItem = this->horizontalHeaderItem(3);
+        if (currentHeaderItem)
+            currentHeaderItem->setToolTip("Bulk density");
+
+        currentHeaderItem = this->horizontalHeaderItem(4);
+        if (currentHeaderItem)
+            currentHeaderItem->setToolTip("Saturated hydraulic conductivity");
+
+        currentHeaderItem = this->horizontalHeaderItem(5);
+        if (currentHeaderItem)
+            currentHeaderItem->setToolTip("Water content at saturation (SAT)");
+
+        currentHeaderItem = this->horizontalHeaderItem(6);
+        if (currentHeaderItem)
+            currentHeaderItem->setToolTip("Water content at wilting point (WP)");
+
+        currentHeaderItem = this->horizontalHeaderItem(7);
+        if (currentHeaderItem)
+            currentHeaderItem->setToolTip("Air entry value");
+
+        currentHeaderItem = this->horizontalHeaderItem(8);
+        if (currentHeaderItem)
+            currentHeaderItem->setToolTip("Van Genuchten parameter α");
+
+        currentHeaderItem = this->horizontalHeaderItem(9);
+        if (currentHeaderItem)
+            currentHeaderItem->setToolTip("Van Genuchten parameter n");
+
+        currentHeaderItem = this->horizontalHeaderItem(10);
+        if (currentHeaderItem)
+            currentHeaderItem->setToolTip("Van Genuchten parameter m");
+
+        currentHeaderItem = this->horizontalHeaderItem(11);
+        if (currentHeaderItem)
+            currentHeaderItem->setToolTip("Soil effective cohesion");
+
+        currentHeaderItem = this->horizontalHeaderItem(12);
+        if (currentHeaderItem)
+            currentHeaderItem->setToolTip("Soil friction angle");
+    }
 }
 
 
@@ -52,7 +148,8 @@ void Crit3DSoilTable::mouseMoveEvent(QMouseEvent *event)
 {
     QPoint pos = event->pos();
     QTableWidgetItem *item = this->itemAt(pos);
-    if(!item) return;
+    if(! item)
+        return;
 
     if (item->background().color() == Qt::red)
     {
@@ -62,7 +159,7 @@ void Crit3DSoilTable::mouseMoveEvent(QMouseEvent *event)
         }
         else if (type == modelTable)
         {
-            QToolTip::showText(this->viewport()->mapToGlobal(pos), "wrong horizon", this, QRect(pos,QSize(100,100)), 800);
+            QToolTip::showText(this->viewport()->mapToGlobal(pos), "wrong horizon or missing db", this, QRect(pos,QSize(100,100)), 800);
         }
     }
     else if(item->background().color() == Qt::yellow)

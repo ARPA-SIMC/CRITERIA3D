@@ -32,21 +32,23 @@
     QList<QString> getFieldsUpperCase(const QSqlQuery &query);
     bool fieldExists(const QSqlQuery &query, const QString fieldName);
 
-    bool getValue(QVariant myRs);
-    bool getValue(QVariant myRs, int* myValue);
-    bool getValue(QVariant myRs, float* myValue);
-    bool getValue(QVariant myRs, double* myValue);
-    bool getValue(QVariant myRs, QDate* myValue);
-    bool getValue(QVariant myRs, QDateTime* myValue);
-    bool getValue(QVariant myRs, QString* myValue);
+    bool getValue(const QVariant &myRs);
+    bool getValue(const QVariant &myRs, int* myValue);
+    bool getValue(const QVariant &myRs, float* myValue);
+    bool getValue(const QVariant &myRs, double* myValue);
+    bool getValue(const QVariant &myRs, QDate* myValue);
+    bool getValue(const QVariant &myRs, QDateTime* myValue);
+    bool getValue(const QVariant &myRs, QString* myValue);
 
     QString getFilePath(const QString &fileNameComplete);
     QString getFileName(const QString &fileNameComplete);
 
     std::vector <float> StringListToFloat(QList<QString> myList);
     std::vector <double> StringListToDouble(QList<QString> myList);
+    std::vector <int> StringListToInt(QList<QString> myList);
     QStringList FloatVectorToStringList(std::vector <float> myVector);
     QStringList DoubleVectorToStringList(std::vector <double> myVector);
+    QStringList IntVectorToStringList(std::vector <int> myVector);
     QList<QString> readListSingleColumn(QString fileName, QString& error);
 
     bool removeDirectory(QString myPath);

@@ -7,7 +7,7 @@
 #
 #-----------------------------------------------------
 
-QT       += core gui widgets charts sql xml
+QT       += widgets charts sql xml
 greaterThan(QT_MAJOR_VERSION, 5): QT += core5compat
 
 TEMPLATE = lib
@@ -33,10 +33,11 @@ INCLUDEPATH +=  ../crit3dDate ../mathFunctions ../phenology ../meteo ../gis  \
                 ../drought ../interpolation ../solarRadiation ../utilities  \
                 ../outputPoints ../dbMeteoPoints ../dbMeteoGrid ../meteoWidget  \
                 ../proxyWidget ../pointStatisticsWidget ../homogeneityWidget ../synchronicityWidget ../climate ../netcdfHandler  \
-                ../graphics ../commonDialogs ../commonChartElements ../pragaDialogs ../inOutDataXML ../project
+                ../graphics ../commonDialogs ../commonChartElements ../pragaDialogs ../inOutDataXML ../waterTable ../project
 
 
 SOURCES += \
+    dialogMeteoHourlyComputation.cpp \
     dialogPragaProject.cpp \
     dialogMeteoComputation.cpp \
     dialogPragaSettings.cpp \
@@ -48,6 +49,7 @@ SOURCES += \
 
 
 HEADERS  += \
+    dialogMeteoHourlyComputation.h \
     dialogPragaProject.h \
     dialogMeteoComputation.h \
     dialogPragaSettings.h \

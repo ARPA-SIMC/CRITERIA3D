@@ -28,6 +28,7 @@
 #include "shapeHandler.h"
 #include "commonConstants.h"
 #include <fstream>
+#include <algorithm>
 #include <string.h>
 
 
@@ -269,9 +270,9 @@ bool Crit3DShapeHandler::setUTMzone(std::string prjFileName)
 }
 
 
-bool Crit3DShapeHandler::getShape(int index, ShapeObject &shape)
+bool Crit3DShapeHandler::getShape(int index, ShapeObject &shape) const
 {
-    if ( (m_handle == nullptr) || (m_dbf == nullptr)) return false;
+    if ((m_handle == nullptr) || (m_dbf == nullptr)) return false;
 
     SHPObject *obj = SHPReadObject(m_handle, index);
     shape.assign(obj);
@@ -281,38 +282,56 @@ bool Crit3DShapeHandler::getShape(int index, ShapeObject &shape)
 }
 
 
-int	Crit3DShapeHandler::getDBFFieldIndex(const char *pszFieldName)
+int	Crit3DShapeHandler::getDBFFieldIndex(const char *pszFieldName) const
 {
     return DBFGetFieldIndex(m_dbf, pszFieldName);
 }
 
-int	Crit3DShapeHandler::isDBFRecordDeleted(int record)
+int	Crit3DShapeHandler::isDBFRecordDeleted(int record) const
 {
     return DBFIsRecordDeleted(m_dbf, record);
 }
 
 
-int	Crit3DShapeHandler::getFieldPos(std::string fieldName)
+int	Crit3DShapeHandler::getFieldPos(std::string fieldName) const
 {
+    // upper case
+    std::transform(fieldName.begin(), fieldName.end(), fieldName.begin(), ::toupper);
+
     for (int i = 0; i < m_fields; i++)
-        if (m_fieldsList.at(unsigned(i)) == fieldName)
+    {
+        std::string currentField = m_fieldsList.at(unsigned(i));
+        // upper case
+        std::transform(currentField.begin(), currentField.end(), currentField.begin(), ::toupper);
+
+        if (currentField == fieldName)
             return i;
+    }
 
     return -1;
 }
 
 
-bool Crit3DShapeHandler::existField(std::string fieldName)
+bool Crit3DShapeHandler::existField(std::string fieldName) const
 {
+    // upper case
+    std::transform(fieldName.begin(), fieldName.end(), fieldName.begin(), ::toupper);
+
     for (int i = 0; i < m_fields; i++)
-        if (m_fieldsList.at(unsigned(i)) == fieldName)
+    {
+        std::string currentField = m_fieldsList.at(unsigned(i));
+        // upper case
+        std::transform(currentField.begin(), currentField.end(), currentField.begin(), ::toupper);
+
+        if (currentField == fieldName)
             return true;
+    }
 
     return false;
 }
 
 
-DBFFieldType Crit3DShapeHandler::getFieldType(std::string fieldName)
+DBFFieldType Crit3DShapeHandler::getFieldType(std::string fieldName) const
 {
     int pos = getFieldPos(fieldName);
 
@@ -326,13 +345,14 @@ DBFFieldType Crit3DShapeHandler::getFieldType(std::string fieldName)
 double Crit3DShapeHandler::getNumericValue(int shapeNumber, std::string fieldName)
 {
     int fieldPos = getFieldPos(fieldName);
-
-    if (fieldPos == -1) return NODATA;
+    if (fieldPos == -1)
+        return NODATA;
 
     return getNumericValue(shapeNumber, fieldPos);
 }
 
 
+// return NODATA as null value
 double Crit3DShapeHandler::getNumericValue(int shapeNumber, int fieldPos)
 {
     DBFFieldType fieldType = getFieldType(fieldPos);
@@ -364,7 +384,8 @@ double Crit3DShapeHandler::getNumericValue(int shapeNumber, int fieldPos)
 std::string Crit3DShapeHandler::getStringValue(int shapeNumber, std::string fieldName)
 {
     int fieldPos = getFieldPos(fieldName);
-    if (fieldPos == -1) return "";
+    if (fieldPos == -1)
+        return "";
 
     return readStringAttribute(shapeNumber, fieldPos);
 }
@@ -704,4 +725,6 @@ std::string Crit3DShapeHandler::getAttributesList(int index)
 
     return shapeData;
 }
+
+
 

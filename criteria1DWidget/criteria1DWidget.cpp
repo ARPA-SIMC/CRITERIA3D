@@ -171,10 +171,15 @@ Criteria1DWidget::Criteria1DWidget()
     waterContentGroup->setFixedWidth(this->width() * widthRatio);
     carbonNitrogenGroup->setFixedWidth(this->width() * widthRatio);
 
-    infoCaseGroup->setTitle("Case");
-    infoCropGroup->setTitle("Crop");
+    QFont normalFont, boldFont;
+    boldFont.setBold(true);
+    normalFont.setBold(false);
+
+    infoCaseGroup->setFont(boldFont);
+    infoCaseGroup->setTitle("Case study");
     infoMeteoGroup->setTitle("Meteo");
     infoSoilGroup->setTitle("Soil");
+    infoCropGroup->setTitle("Crop");
     laiParametersGroup->setTitle("Crop parameters");
     rootParametersGroup->setTitle("Root parameters");
     irrigationParametersGroup->setTitle("Irrigation parameters");
@@ -182,6 +187,7 @@ Criteria1DWidget::Criteria1DWidget()
     waterContentGroup->setTitle("Water Content variable");
     carbonNitrogenGroup->setTitle("Carbon Nitrogen variable");
 
+    caseListComboBox.setFont(normalFont);
     caseInfoLayout->addWidget(&caseListComboBox);
 
     cropInfoLayout->addWidget(cropId, 0, 0);
@@ -435,9 +441,9 @@ Criteria1DWidget::Criteria1DWidget()
     carbonNitrogenGroup->setLayout(carbonNitrogenLayout);
 
     infoLayout->addWidget(infoCaseGroup);
-    infoLayout->addWidget(infoCropGroup);
     infoLayout->addWidget(infoMeteoGroup);
     infoLayout->addWidget(infoSoilGroup);
+    infoLayout->addWidget(infoCropGroup);
     infoLayout->addWidget(laiParametersGroup);
     infoLayout->addWidget(rootParametersGroup);
     infoLayout->addWidget(irrigationParametersGroup);
@@ -594,6 +600,7 @@ void Criteria1DWidget::on_actionOpenProject()
     this->lastYearListComboBox.blockSignals(false);
 
     openComputationUnitsDB(myProject.dbComputationUnitsName);
+
     viewMenu->setEnabled(true);
     if (soilListComboBox.count() == 0)
     {
@@ -1053,15 +1060,20 @@ void Criteria1DWidget::on_actionChooseCase()
     // METEO
     meteoListComboBox.setCurrentText(myProject.myCase.unit.idMeteo);
 
-    // CROP
+    // CROP ID
     myProject.myCase.unit.idCrop = getIdCropFromClass(myProject.dbCrop, "crop_class", "id_class", myProject.myCase.unit.idCropClass, errorStr);
-    if (myProject.myCase.unit.idCrop != "")
+    if (myProject.myCase.unit.idCrop == "")
+    {
+        // it is a single crop, not a crop class
+        myProject.myCase.unit.idCrop = myProject.myCase.unit.idCropClass;
+    }
+    if ( cropListComboBox.findText(myProject.myCase.unit.idCrop) != -1 )
     {
         cropListComboBox.setCurrentText(myProject.myCase.unit.idCrop);
     }
     else
     {
-        QMessageBox::critical(nullptr, "Error!", "Missing crop class: " + myProject.myCase.unit.idCropClass + "\n" + errorStr);
+        QMessageBox::critical(nullptr, "Error!", "Missing crop: " + myProject.myCase.unit.idCropClass + "\n" + errorStr);
     }
 
     // SOIL
@@ -1568,27 +1580,12 @@ void Criteria1DWidget::on_actionChooseSoil(QString soilCode)
     if (soilCode.isEmpty())
         return;
 
-    QString errorStr;
     myProject.myCase.mySoil.cleanSoil();
 
-    if (! loadSoil(myProject.dbSoil, soilCode, myProject.myCase.mySoil, myProject.texturalClassList,
-                  myProject.geotechnicsClassList, myProject.myCase.fittingOptions, errorStr))
+    QString errorStr;
+    if (! myProject.setSoil(soilCode, errorStr))
     {
         QMessageBox::critical(nullptr, "Error!", errorStr);
-        return;
-    }
-
-    // warning: some soil data are wrong
-    if (errorStr != "")
-    {
-        QMessageBox::information(nullptr, "SOIL Warning", errorStr);
-        errorStr = "";
-    }
-
-    std::string errorStdString;
-    if (! myProject.myCase.initializeSoil(errorStdString))
-    {
-        QMessageBox::critical(nullptr, "Error!", QString::fromStdString(errorStdString));
         return;
     }
 
@@ -2111,27 +2108,22 @@ bool Criteria1DWidget::checkCropIsChanged()
     return isCropChanged;
 }
 
+
 void Criteria1DWidget::irrigationVolumeChanged()
 {
     double irrigationVolume = QLocale().toDouble(irrigationVolumeValue->text());
 
     if (irrigationVolume == 0)
     {
-        irrigationShiftValue->setValue(0);
         irrigationShiftValue->setEnabled(false);
-        degreeDaysStartValue->setText(nullptr);
         degreeDaysStartValue->setEnabled(false);
-        degreeDaysEndValue->setText(nullptr);
         degreeDaysEndValue->setEnabled(false);
     }
     else if (irrigationVolume > 0)
     {
         irrigationShiftValue->setEnabled(true);
-        irrigationShiftValue->setValue(cropFromDB.irrigationShift);
         degreeDaysStartValue->setEnabled(true);
-        degreeDaysStartValue->setText(QString::number(cropFromDB.degreeDaysStartIrrigation));
         degreeDaysEndValue->setEnabled(true);
-        degreeDaysEndValue->setText(QString::number(cropFromDB.degreeDaysEndIrrigation));
     }
 }
 

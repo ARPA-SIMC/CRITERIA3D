@@ -23,6 +23,7 @@
     ftomei@arpae.it
 */
 
+#include <iostream>
 #include <math.h>
 #include <algorithm>
 
@@ -179,12 +180,14 @@ float computeTminHourlyWeight(int myHour)
 
 float Crit3DClimateParameters::getClimateLapseRate(meteoVariable myVar, Crit3DTime myTime)
 {
+    const float DEFAULT_LAPSERATE = -0.006f;
+
     Crit3DDate myDate = myTime.date;
     int myHour = myTime.getNearestHour();
 
     // TODO improve!
     if (myDate.isNullDate() || myHour == NODATA)
-        return -0.006f;
+        return DEFAULT_LAPSERATE;
 
     unsigned int indexMonth = unsigned(myDate.month - 1);
 
@@ -208,7 +211,7 @@ float Crit3DClimateParameters::getClimateLapseRate(meteoVariable myVar, Crit3DTi
             lapseTmax = tdMaxLapseRate[indexMonth];
         }
         else
-            return NODATA;
+            return DEFAULT_LAPSERATE;
 
         float tminWeight = computeTminHourlyWeight(myHour);
         return (lapseTmin * tminWeight + lapseTmax * (1 - tminWeight));
@@ -629,6 +632,9 @@ double ET0_Penman_hourly_net_rad(double heigth, double netIrradiance, double air
     double gamma;                                /*!<  psychrometric constant (kPa C-1) */
     double firstTerm, secondTerm, denominator;
 
+    if (heigth == NODATA || netIrradiance == NODATA || airTemp == NODATA || airHum == NODATA || windSpeed10 == NODATA)
+        return NODATA;
+
     netRadiation = 3600 * netIrradiance;
 
     es = saturationVaporPressure(airTemp) / 1000.;
@@ -786,6 +792,12 @@ bool setColorScale(meteoVariable variable, Crit3DColorScale *colorScale)
         case snowFall: case snowWaterEquivalent: case snowLiquidWaterContent: case snowMelt:
         case dailyWaterTableDepth:
             setPrecipitationScale(colorScale);
+            if (variable == precipitation || variable == snowFall || variable == snowWaterEquivalent
+                || variable == snowLiquidWaterContent || variable == snowMelt)
+            {
+                colorScale->setHideMinimum(true);
+                colorScale->setTransparent(true);
+            }
             break;  
         case snowAge:
             setGrayScale(colorScale);
@@ -921,15 +933,19 @@ std::string getVariableString(meteoVariable myVar)
     else if (myVar == leafAreaIndex)
             return "Leaf area index (m2 m-2)";
 
+    else if (myVar == elaboration)
+        return "Elaboration";
+    else if (myVar == anomaly)
+        return "Anomaly";
     else if (myVar == noMeteoTerrain)
         return "Elevation (m)";
     else
         return "No variable";
 }
 
+
 std::string getKeyStringMeteoMap(std::map<std::string, meteoVariable> map, meteoVariable value)
 {
-
     std::map<std::string, meteoVariable>::const_iterator it;
     std::string key = "";
 
@@ -941,12 +957,13 @@ std::string getKeyStringMeteoMap(std::map<std::string, meteoVariable> map, meteo
             break;
         }
     }
+
     return key;
 }
 
+
 std::string getUnitFromVariable(meteoVariable var)
 {
-
     std::string unit = "";
     std::map<std::vector<meteoVariable>, std::string>::const_iterator it;
     std::vector<meteoVariable> key;
@@ -961,8 +978,10 @@ std::string getUnitFromVariable(meteoVariable var)
         }
         key.clear();
     }
+
     return unit;
 }
+
 
 meteoVariable getKeyMeteoVarMeteoMap(std::map<meteoVariable,std::string> map, const std::string& value)
 {
@@ -977,8 +996,10 @@ meteoVariable getKeyMeteoVarMeteoMap(std::map<meteoVariable,std::string> map, co
             break;
         }
     }
+
     return key;
 }
+
 
 meteoVariable getKeyMeteoVarMeteoMapWithoutUnderscore(std::map<meteoVariable,std::string> map, const std::string& value)
 {

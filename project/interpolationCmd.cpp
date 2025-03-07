@@ -1,93 +1,95 @@
 #include <QDate>
 #include <QString>
+#include <math.h>
 
 #include "basicMath.h"
 #include "gis.h"
 #include "utilities.h"
 #include "interpolation.h"
 #include "interpolationCmd.h"
+#include "interpolationSettings.h"
 
 
-float crossValidationStatistics::getMeanAbsoluteError() const
+float Crit3DCrossValidationStatistics::getMeanAbsoluteError() const
 {
     return meanAbsoluteError;
 }
 
-void crossValidationStatistics::setMeanAbsoluteError(float newMeanAbsoluteError)
+void Crit3DCrossValidationStatistics::setMeanAbsoluteError(float newMeanAbsoluteError)
 {
     meanAbsoluteError = newMeanAbsoluteError;
 }
 
-float crossValidationStatistics::getRootMeanSquareError() const
+float Crit3DCrossValidationStatistics::getRootMeanSquareError() const
 {
     return rootMeanSquareError;
 }
 
-void crossValidationStatistics::setRootMeanSquareError(float newRootMeanSquareError)
+void Crit3DCrossValidationStatistics::setRootMeanSquareError(float newRootMeanSquareError)
 {
     rootMeanSquareError = newRootMeanSquareError;
 }
 
-float crossValidationStatistics::getCompoundRelativeError() const
+float Crit3DCrossValidationStatistics::getNashSutcliffeEfficiency() const
 {
-    return compoundRelativeError;
+    return NashSutcliffeEfficiency;
 }
 
-void crossValidationStatistics::setCompoundRelativeError(float newCompoundRelativeError)
+void Crit3DCrossValidationStatistics::setNashSutcliffeEfficiency(float newNashSutcliffeEfficiency)
 {
-    compoundRelativeError = newCompoundRelativeError;
+    NashSutcliffeEfficiency = newNashSutcliffeEfficiency;
 }
 
-float crossValidationStatistics::getMeanBiasError() const
+float Crit3DCrossValidationStatistics::getMeanBiasError() const
 {
     return meanBiasError;
 }
 
-void crossValidationStatistics::setMeanBiasError(float newMeanBiasError)
+void Crit3DCrossValidationStatistics::setMeanBiasError(float newMeanBiasError)
 {
     meanBiasError = newMeanBiasError;
 }
 
-const Crit3DTime &crossValidationStatistics::getRefTime() const
+const Crit3DTime &Crit3DCrossValidationStatistics::getRefTime() const
 {
     return refTime;
 }
 
-void crossValidationStatistics::setRefTime(const Crit3DTime &newRefTime)
+void Crit3DCrossValidationStatistics::setRefTime(const Crit3DTime &newRefTime)
 {
     refTime = newRefTime;
 }
 
-const Crit3DProxyCombination &crossValidationStatistics::getProxyCombination() const
+const Crit3DProxyCombination &Crit3DCrossValidationStatistics::getProxyCombination() const
 {
     return proxyCombination;
 }
 
-void crossValidationStatistics::setProxyCombination(const Crit3DProxyCombination &newProxyCombination)
+void Crit3DCrossValidationStatistics::setProxyCombination(const Crit3DProxyCombination &newProxyCombination)
 {
     proxyCombination = newProxyCombination;
 }
 
-float crossValidationStatistics::getR2() const
+float Crit3DCrossValidationStatistics::getR2() const
 {
     return R2;
 }
 
-void crossValidationStatistics::setR2(float newR2)
+void Crit3DCrossValidationStatistics::setR2(float newR2)
 {
     R2 = newR2;
 }
 
-crossValidationStatistics::crossValidationStatistics()
+Crit3DCrossValidationStatistics::Crit3DCrossValidationStatistics()
 {
     initialize();
 }
 
-void crossValidationStatistics::initialize()
+void Crit3DCrossValidationStatistics::initialize()
 {
     meanAbsoluteError = NODATA;
     rootMeanSquareError = NODATA;
-    compoundRelativeError = NODATA;
+    NashSutcliffeEfficiency = NODATA;
     meanBiasError = NODATA;
     R2 = NODATA;
 }
@@ -131,23 +133,23 @@ void Crit3DProxyGridSeries::addGridToSeries(QString name_, int year_)
     gridYear.push_back(year_);
 }
 
-bool interpolateProxyGridSeries(const Crit3DProxyGridSeries& mySeries, QDate myDate, const gis::Crit3DRasterGrid& gridBase, gis::Crit3DRasterGrid* gridOut, QString* error)
+
+bool interpolateProxyGridSeries(const Crit3DProxyGridSeries& mySeries, QDate myDate, const gis::Crit3DRasterGrid& gridBase,
+                                gis::Crit3DRasterGrid *gridOut, QString &errorStr)
 {
-    std::string myError;
-    *error = "";
+    errorStr = "";
     std::vector <QString> gridNames = mySeries.getGridName();
     std::vector <int> gridYears = mySeries.getGridYear();
     size_t nrGrids = gridNames.size();
 
-    if (gridOut == nullptr) return false;
-
     gis::Crit3DRasterGrid tmpGrid;
+    std::string myError;
 
     if (nrGrids == 1)
     {
         if (! gis::readEsriGrid(gridNames[0].toStdString(), &tmpGrid, myError))
         {
-            *error = QString::fromStdString(myError);
+            errorStr = QString::fromStdString(myError);
             return false;
         }
 
@@ -177,13 +179,13 @@ bool interpolateProxyGridSeries(const Crit3DProxyGridSeries& mySeries, QDate myD
     gis::Crit3DRasterGrid firstGrid, secondGrid;
     if (! gis::readEsriGrid(gridNames[first].toStdString(), &firstGrid, myError))
     {
-        *error = QString::fromStdString(myError);
+        errorStr = QString::fromStdString(myError);
         return false;
     }
 
     if (! gis::readEsriGrid(gridNames[second].toStdString(), &secondGrid, myError))
     {
-        *error = QString::fromStdString(myError);
+        errorStr = QString::fromStdString(myError);
         return false;
     }
 
@@ -204,7 +206,7 @@ bool interpolateProxyGridSeries(const Crit3DProxyGridSeries& mySeries, QDate myD
 
     if (! gis::temporalYearlyInterpolation(firstGrid, secondGrid, myDate.year(), myMin, myMax, &tmpGrid))
     {
-        *error = "Error interpolatinn proxy grid series";
+        errorStr = "Error interpolatinn proxy grid series";
         return false;
     }
 
@@ -219,23 +221,28 @@ bool interpolateProxyGridSeries(const Crit3DProxyGridSeries& mySeries, QDate myD
     return true;
 }
 
-bool checkProxyGridSeries(Crit3DInterpolationSettings* mySettings, const gis::Crit3DRasterGrid& gridBase, std::vector <Crit3DProxyGridSeries> mySeries, QDate myDate, QString* error)
+
+bool checkProxyGridSeries(Crit3DInterpolationSettings* mySettings, const gis::Crit3DRasterGrid& gridBase,
+                          std::vector <Crit3DProxyGridSeries> myProxySeries, QDate myDate, QString &errorStr)
 {
     unsigned i,j;
     gis::Crit3DRasterGrid* gridOut;
-    *error = "";
+    errorStr = "";
 
     for (i=0; i < mySettings->getProxyNr(); i++)
     {
-        for (j=0; j < mySeries.size(); j++)
+        for (j=0; j < myProxySeries.size(); j++)
         {
-            if (mySeries[j].getProxyName() == QString::fromStdString(mySettings->getProxyName(i)))
+            if (myProxySeries[j].getProxyName() == QString::fromStdString(mySettings->getProxyName(i)))
             {
-                if (mySeries[j].getGridName().size() > 0)
+                if (myProxySeries[j].getGridName().size() > 0)
                 {
                     gridOut = new gis::Crit3DRasterGrid();
-                    if (! interpolateProxyGridSeries(mySeries[j], myDate, gridBase, gridOut, error))
+                    if (! interpolateProxyGridSeries(myProxySeries[j], myDate, gridBase, gridOut, errorStr))
+                    {
+                        errorStr = "Error in interpolate proxy gris series: " + errorStr;
                         return false;
+                    }
 
                     mySettings->getProxy(i)->setGrid(gridOut);
                     return true;
@@ -245,12 +252,13 @@ bool checkProxyGridSeries(Crit3DInterpolationSettings* mySettings, const gis::Cr
         }
     }
 
-    return false;
+    return true;
 }
 
 
-bool interpolationRaster(std::vector <Crit3DInterpolationDataPoint> &myPoints, Crit3DInterpolationSettings* mySettings, Crit3DMeteoSettings* meteoSettings,
-                        gis::Crit3DRasterGrid* outputGrid, const gis::Crit3DRasterGrid& raster, meteoVariable myVar)
+bool interpolationRaster(std::vector <Crit3DInterpolationDataPoint> &myPoints, Crit3DInterpolationSettings* mySettings,
+                         Crit3DMeteoSettings* meteoSettings, gis::Crit3DRasterGrid* outputGrid,
+                         gis::Crit3DRasterGrid& raster, meteoVariable myVar)
 {
     if (! outputGrid->initializeGrid(raster))
     {
@@ -270,15 +278,105 @@ bool interpolationRaster(std::vector <Crit3DInterpolationDataPoint> &myPoints, C
             if (! isEqual(myZ, outputGrid->header->flag))
             {
                 if (getUseDetrendingVar(myVar))
+                {
                     getProxyValuesXY(myX, myY, mySettings, proxyValues);
+                }
 
-                outputGrid->value[myRow][myCol] = interpolate(myPoints, mySettings, meteoSettings, myVar, myX, myY, myZ, proxyValues, true);
+                outputGrid->value[myRow][myCol] = interpolate(myPoints, mySettings, meteoSettings,
+                                                              myVar, myX, myY, myZ, proxyValues, true);
             }
         }
     }
 
     if (! gis::updateMinMaxRasterGrid(outputGrid))
         return false;
+
+    return true;
+}
+
+bool topographicIndex(const gis::Crit3DRasterGrid& DEM, std::vector <float> windowWidths, gis::Crit3DRasterGrid& outGrid)
+{
+
+    if (! outGrid.initializeGrid(DEM))
+        return false;
+
+    if (windowWidths.size() == 0)
+        return false;
+
+    float threshold = float(EPSILON);
+
+    float z, value, cellNr, cellDelta;
+    int r1, r2, c1, c2, windowRow, windowCol;
+    float higherSum, lowerSum, equalSum, weightSum;
+
+    for (auto width : windowWidths)
+    {
+        cellNr = round(width / DEM.header->cellSize);
+
+        for (int row = 0; row < outGrid.header->nrRows ; row++)
+        {
+            for (int col = 0; col < outGrid.header->nrCols; col++)
+            {
+
+                z = DEM.value[row][col];
+                if (! isEqual(z, DEM.header->flag))
+                {
+                    r1 = row - cellNr;
+                    r2 = row + cellNr;
+                    c1 = col - cellNr;
+                    c2 = col + cellNr;
+
+                    higherSum = 0;
+                    lowerSum = 0;
+                    equalSum = 0;
+                    weightSum = 0;
+
+                    for (windowRow = r1; windowRow <= r2; windowRow++)
+                    {
+                        for (windowCol = c1; windowCol <= c2; windowCol++)
+                        {
+                            if (! gis::isOutOfGridRowCol(windowRow, windowCol, DEM))
+                            {
+                                value = DEM.value[windowRow][windowCol];
+
+                                if (! isEqual(value, DEM.header->flag))
+                                {
+                                    if (windowRow != row && windowCol != col)
+                                    {
+                                        cellDelta = gis::computeDistance(windowRow, windowCol, row, col);
+
+                                        if (cellDelta <= cellNr)
+                                        {
+                                            float weight = 1 - (cellDelta / cellNr);
+
+                                            if (value - z > threshold)
+                                                higherSum += weight;
+                                            else if (value - z < -threshold)
+                                                lowerSum += weight;
+                                            else
+                                                equalSum += weight;
+
+                                            weightSum += weight;
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+                    if (weightSum > 0)
+                    {
+                        if (isEqual(outGrid.value[row][col], outGrid.header->flag))
+                            outGrid.value[row][col] = (lowerSum - higherSum - equalSum * 0.5) / weightSum;
+                        else
+                            outGrid.value[row][col] += (lowerSum - higherSum - equalSum * 0.5) / weightSum;
+                    }
+                }
+            }
+        }
+    }
+
+    gis::updateMinMaxRasterGrid(&outGrid);
 
     return true;
 }

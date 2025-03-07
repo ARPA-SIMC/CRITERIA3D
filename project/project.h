@@ -1,7 +1,8 @@
 #ifndef PROJECT_H
 #define PROJECT_H
 
-    #ifndef QUALITY_H
+#include <deque>
+#ifndef QUALITY_H
         #include "quality.h"
     #endif
     #ifndef GIS_H
@@ -9,6 +10,9 @@
     #endif
     #ifndef OUTPUTPOINTS_H
         #include "outputPoints.h"
+    #endif
+    #ifndef WELL_H
+        #include "well.h"
     #endif
     #ifndef DBOUTPUTPOINTSHANDLER_H
         #include "dbOutputPointsHandler.h"
@@ -34,6 +38,12 @@
     #ifndef PROXYWIDGET_H
         #include "proxyWidget.h"
     #endif
+    #ifndef LOCALPROXYWIDGET_H
+        #include "localProxyWidget.h"
+    #endif
+    #ifndef WATERTABLE_H
+        #include "waterTable.h"
+    #endif
 
     #ifndef _FSTREAM_
         #include <fstream>
@@ -50,7 +60,7 @@
     #define ERROR_STR_MISSING_DEM "Load a Digital Elevation Model (DEM) before."
     #define ERROR_STR_MISSING_PROJECT "Open a project before."
     #define ERROR_STR_MISSING_GRID "Load a meteo grid DB before."
-    #define ERROR_STR_MISSING_POINT_GRID "Load meteo Points or grid."
+    #define ERROR_STR_MISSING_POINT_GRID "Load a meteo points DB or a meteo grid before."
 
     class Crit3DMeteoWidget;
     class FormInfo;
@@ -94,19 +104,22 @@
         QString aggregationPath;
         QString dbGridXMLFileName;
         QString parametersFileName;
+        QString glocalMapName;
+        QString glocalPointsName;
         std::ofstream logFile;
 
         // output points
         QString outputPointsFileName;
         QString currentDbOutputFileName;
 
-        QSettings* parameters;
+        QSettings* parametersSettings;
         QSettings* projectSettings;
 
         bool meteoPointsLoaded;
         int nrMeteoPoints;
         Crit3DMeteoPoint* meteoPoints;
         std::vector<gis::Crit3DOutputPoint> outputPoints;
+        std::vector<Well> wellPoints;
 
         Crit3DMeteoPointsDbHandler* meteoPointsDbHandler;
         Crit3DOutputPointsDbHandler* outputPointsDbHandler;
@@ -135,6 +148,7 @@
 
         Crit3DInterpolationSettings interpolationSettings;
         Crit3DInterpolationSettings qualityInterpolationSettings;
+        Crit3DCrossValidationStatistics crossValidationStatistics;
 
         std::vector <Crit3DProxyGridSeries> proxyGridSeries;
 
@@ -144,6 +158,9 @@
         QList<Crit3DMeteoWidget*> meteoWidgetGridList;
 
         Crit3DProxyWidget* proxyWidget;
+        Crit3DLocalProxyWidget* localProxyWidget;
+
+        QList<WaterTable> waterTableList;
 
         Project();
 
@@ -168,9 +185,10 @@
 
         void setProxyDEM();
         void clearProxyDEM();
-        bool checkProxy(const Crit3DProxy &myProxy, QString *error);
+        bool checkProxy(Crit3DProxy &myProxy, QString *error, bool isActive);
         bool addProxyToProject(std::vector <Crit3DProxy> proxyList, std::deque <bool> proxyActive, std::vector <int> proxyOrder);
         void addProxyGridSeries(QString name_, std::vector <QString> gridNames, std::vector <unsigned> gridYears);
+        void checkProxyForMultipleDetrending(Crit3DProxy &myProxy, bool isHeight);
         void setCurrentDate(QDate myDate);
         void setCurrentHour(int myHour);
         void setCurrentVariable(meteoVariable variable);
@@ -190,11 +208,16 @@
         QString getCompleteFileName(QString fileName, QString secondaryPath);
 
         bool setLogFile(QString myFileName);
-        void logError(QString myStr);
+
         void logInfo(QString myStr);
         void logInfoGUI(QString myStr);
         void closeLogInfo();
+
+        void logError(QString myStr);
         void logError();
+
+        void logWarning(QString myStr);
+        void logWarning();
 
         int setProgressBar(QString myStr, int nrValues);
         void updateProgressBar(int value);
@@ -223,6 +246,7 @@
         bool loadMeteoGridHourlyData(QDateTime firstDate, QDateTime lastDate, bool showInfo);
         bool loadMeteoGridMonthlyData(QDate firstDate, QDate lastDate, bool showInfo);
         void loadMeteoGridData(QDate firstDate, QDate lastDate, bool showInfo);
+
         QDateTime findDbPointLastTime();
         QDateTime findDbPointFirstTime();
 
@@ -238,6 +262,14 @@
         bool writeTopographicDistanceMap(int pointIndex, const gis::Crit3DRasterGrid& demMap, QString pathTd);
         bool loadTopographicDistanceMaps(bool onlyWithData, bool showInfo);
         void passInterpolatedTemperatureToHumidityPoints(Crit3DTime myTime, Crit3DMeteoSettings *meteoSettings);
+        void passGridTemperatureToHumidityPoints(Crit3DTime myTime, Crit3DMeteoSettings* meteoSettings);
+        bool loadGlocalAreasMap();
+        bool loadGlocalStationsAndCells(bool isGrid);
+        bool loadGlocalWeightMaps(std::vector<Crit3DMacroArea> &myAreas, bool isGrid);
+        bool loadGlocalStationsCsv(QString fileName, std::vector<std::vector<std::string> > &areaPoints);
+        bool groupCellsInArea(std::vector<int> &areaPoints, unsigned index, bool isGrid);
+        bool writeGlocalWeightsMaps(float windowWidth);
+
 
         bool checkInterpolation(meteoVariable myVar);
         bool checkInterpolationGrid(meteoVariable myVar);
@@ -245,11 +277,13 @@
         bool interpolationDemMain(meteoVariable myVar, const Crit3DTime& myTime, gis::Crit3DRasterGrid *myRaster);
         bool interpolationDem(meteoVariable myVar, const Crit3DTime& myTime, gis::Crit3DRasterGrid *myRaster);
         bool interpolationDemLocalDetrending(meteoVariable myVar, const Crit3DTime& myTime, gis::Crit3DRasterGrid *myRaster);
+        bool interpolationDemGlocalDetrending(meteoVariable myVar, const Crit3DTime& myTime, gis::Crit3DRasterGrid *myRaster);
         bool interpolateDemRadiation(const Crit3DTime& myTime, gis::Crit3DRasterGrid *myRaster);
         bool interpolationOutputPoints(std::vector <Crit3DInterpolationDataPoint> &interpolationPoints,
                                        gis::Crit3DRasterGrid *outputGrid, meteoVariable myVar);
-        bool interpolationCv(meteoVariable myVar, const Crit3DTime& myTime, crossValidationStatistics* myStats);
-        bool computeStatisticsCrossValidation(Crit3DTime myTime, meteoVariable myVar, crossValidationStatistics *myStats);
+        bool interpolationCv(meteoVariable myVar, const Crit3DTime& myTime);
+
+        bool computeStatisticsCrossValidation();
         bool meteoGridAggregateProxy(std::vector<gis::Crit3DRasterGrid *> &myGrids);
 
         frequencyType getCurrentFrequency() const;
@@ -262,14 +296,19 @@
         void showMeteoWidgetPoint(std::string idMeteoPoint, std::string namePoint, std::string dataset,
                                   double altitude, std::string lapseRateCode, bool isAppend);
         void showMeteoWidgetGrid(std::string idCell, bool isAppend);
-        void showProxyGraph();
+        void showProxyGraph(int macroAreaNumber);
+        void showLocalProxyGraph(gis::Crit3DGeoPoint myPoint);
 
         void clearSelectedPoints();
         void clearSelectedOutputPoints();
         bool setActiveStateSelectedPoints(bool isActive);
         bool setActiveStatePointList(QString fileName, bool isActive);
+        bool setSelectedStatePointList(QString fileName);
+        bool selectPointList(const QList<QString> &pointList);
         bool setActiveStateWithCriteria(bool isActive);
+        bool setSelectedStateWithCriteria();
         bool setMarkedFromPointList(QString fileName);
+        bool setMarkedPointsOfMacroArea(int areaNumber);
         bool deleteMeteoPoints(const QList<QString>& pointList);
         bool deleteMeteoPointsData(const QList<QString>& pointList);
         bool loadOutputPointList(QString fileName);
@@ -284,6 +323,19 @@
 
         void setComputeOnlyPoints(bool value);
         bool getComputeOnlyPoints();
+
+        bool waterTableImportLocation(const QString &csvFileName);
+        bool waterTableImportDepths(const QString &csvDepthsFileName);
+        bool waterTableComputeSingleWell(int indexWell);
+        void waterTableShowSingleWell(WaterTable &waterTable, const QString &idWell);
+        bool waterTableAssignNearestMeteoPoint(bool isMeteoGridLoaded, double wellUtmX, double wellUtmY, QDate firstMeteoDate, Crit3DMeteoPoint* linkedMeteoPoint);
+        bool waterTableAssignMeteoData(Crit3DMeteoPoint* linkedMeteoPoint, QDate firstMeteoDate);
+
+        bool assignAltitudeToAggregationPoints();
+
+        Crit3DCrossValidationStatistics getCrossValidationStatistics() const;
+        void setCrossValidationStatistics(const Crit3DCrossValidationStatistics &newCrossValidationStatistics);
+        void getMeteoPointsCurrentValues(std::vector<float> &validValues);
 
     private slots:
         void deleteMeteoWidgetPoint(int id);

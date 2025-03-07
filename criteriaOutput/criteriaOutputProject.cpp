@@ -180,12 +180,13 @@ int CriteriaOutputProject::initializeProjectCsv()
 }
 
 
-int CriteriaOutputProject::initializeProject(QString settingsFileName, QString operation, QDate dateComputation, bool isLog)
+int CriteriaOutputProject::initializeProject(const QString &settingsFileName, const QString &operationStr,
+                                             const QDate &_dateComputation, bool isLog)
 {
     closeProject();
     initialize();
-    this->dateComputation = dateComputation;
-    this->operation = operation;
+    this->dateComputation = _dateComputation;
+    this->operation = operationStr;
 
     if (settingsFileName == "")
     {
@@ -209,7 +210,7 @@ int CriteriaOutputProject::initializeProject(QString settingsFileName, QString o
         return ERROR_SETTINGS_WRONGFILENAME;
     }
 
-    if (!readSettings())
+    if (! readSettings())
     {
         projectError = "Read settings: " + projectError;
         return ERROR_SETTINGS_MISSINGDATA;
@@ -500,7 +501,7 @@ int CriteriaOutputProject::createCsvFile()
     }
     logger.writeInfo("Query result: " + QString::number(compUnitList.size()) + " distinct computational units.");
 
-    if (!initializeCsvOutputFile())
+    if (! initializeCsvOutputFile())
     {
         return ERROR_PARSERCSV;
     }
@@ -521,8 +522,9 @@ int CriteriaOutputProject::createCsvFile()
                                       dateComputation, outputVariable, outputCsvFileName, projectError);
         if (myResult != CRIT1D_OK)
         {
-            if (QFile(outputCsvFileName).exists())
+            if (QFile(outputCsvFileName).exists() && i == 0)
             {
+                // delete empty file
                 QDir().remove(outputCsvFileName);
             }
             return myResult;
@@ -561,7 +563,7 @@ int CriteriaOutputProject::createShapeFile()
 
     Crit3DShapeHandler inputShape;
 
-    if (!inputShape.open(ucmFileName.toStdString()))
+    if (! inputShape.open(ucmFileName.toStdString()))
     {
         projectError = "Wrong shapefile: " + ucmFileName;
         return ERROR_SHAPEFILE;
@@ -1015,19 +1017,19 @@ int CriteriaOutputProject::createNetcdf()
 }
 
 
-bool CriteriaOutputProject::convertShapeToNetcdf(Crit3DShapeHandler &shape, std::string outputFileName,
+bool CriteriaOutputProject::convertShapeToNetcdf(Crit3DShapeHandler &shapeHandler, std::string outputFileName,
                                                  std::string field, std::string variableName, std::string variableUnit, double cellSize,
-                                                 Crit3DDate computationDate, int nrDays)
+                                                 const Crit3DDate &computationDate, int nrDays)
 {
-    if (! shape.getIsWGS84())
+    if (! shapeHandler.getIsWGS84())
     {
         projectError = "Shapefile is not WGS84.";
         return false;
     }
 
     // rasterize shape
-    gis::Crit3DRasterGrid myRaster;
-    if (! rasterizeShape(shape, myRaster, field, cellSize))
+    gis::Crit3DRasterGrid tmpRaster;
+    if (! rasterizeShape(shapeHandler, tmpRaster, field, cellSize))
     {
         projectError = "Error in rasterize shape.";
         return false;
@@ -1035,14 +1037,14 @@ bool CriteriaOutputProject::convertShapeToNetcdf(Crit3DShapeHandler &shape, std:
 
     // set UTM zone and emisphere
     gis::Crit3DGisSettings gisSettings;
-    gisSettings.utmZone = shape.getUtmZone();
+    gisSettings.utmZone = shapeHandler.getUtmZone();
     double sign = 1;
-    if (! shape.getIsNorth()) sign = -1;
+    if (! shapeHandler.getIsNorth()) sign = -1;
     gisSettings.startLocation.latitude = sign * abs(gisSettings.startLocation.latitude);
 
     // convert to lat lon raster
     gis::Crit3DLatLonHeader latLonHeader;
-    gis::getGeoExtentsFromUTMHeader(gisSettings, myRaster.header, &latLonHeader);
+    gis::getGeoExtentsFromUTMHeader(gisSettings, tmpRaster.header, &latLonHeader);
 
     // initialize data raster (only for values)
     gis::Crit3DRasterGrid dataRaster;
@@ -1063,11 +1065,11 @@ bool CriteriaOutputProject::convertShapeToNetcdf(Crit3DShapeHandler &shape, std:
         {
             gis::getLatLonFromRowCol(latLonHeader, row, col, &lat, &lon);
             gis::latLonToUtmForceZone(gisSettings.utmZone, lat, lon, &x, &y);
-            if (! gis::isOutOfGridXY(x, y, myRaster.header))
+            if (! gis::isOutOfGridXY(x, y, tmpRaster.header))
             {
-                gis::getRowColFromXY(*(myRaster.header), x, y, &utmRow, &utmCol);
-                float value = myRaster.getValueFromRowCol(utmRow, utmCol);
-                if (int(value) != int(myRaster.header->flag))
+                gis::getRowColFromXY(*(tmpRaster.header), x, y, &utmRow, &utmCol);
+                float value = tmpRaster.getValueFromRowCol(utmRow, utmCol);
+                if (int(value) != int(tmpRaster.header->flag))
                 {
                     dataRaster.value[row][col] = value;
                 }
@@ -1255,9 +1257,8 @@ bool CriteriaOutputProject::getDbDataDates(QDate &firstDate, QDate &lastDate)
 }
 
 
-int CriteriaOutputProject::createCsvFileFromGUI(QDate dateComputation, QString csvFileName)
+int CriteriaOutputProject::createCsvFileFromGUI(const QDate &dateComputation, const QString &csvFileName)
 {
-
     int myResult = initializeProjectCsv();
     if (myResult != CRIT1D_OK)
     {
@@ -1295,8 +1296,9 @@ int CriteriaOutputProject::createCsvFileFromGUI(QDate dateComputation, QString c
         myResult = writeCsvOutputUnit(idCase, idCropClass, dbData, dbCrop, dbClimateData, dateComputation, outputVariable, csvFileName, projectError);
         if (myResult != CRIT1D_OK)
         {
-            if (QFile(csvFileName).exists())
+            if (QFile(csvFileName).exists() && i == 0)
             {
+                // delete empty file
                 QDir().remove(csvFileName);
             }
             return myResult;

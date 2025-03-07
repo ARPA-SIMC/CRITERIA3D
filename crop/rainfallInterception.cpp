@@ -1,4 +1,5 @@
 #include <math.h>
+#include <algorithm>
 
 #include "rainfallInterception.h"
 
@@ -6,61 +7,64 @@
 namespace canopy {
 
 
-    double canopyInterceptionHydrall(double laiCanopy,double laiUnderstorey, double prec)
+    double canopyInterceptionHydrall(double laiCanopy, double laiUnderstorey, double prec)
     {
-        double canopyCapacity;
-        double interception;
-        double maxInterception;
         double upperBoundPrec = 20;
-        if (prec > upperBoundPrec) maxInterception = 0.15 * upperBoundPrec;
-        else maxInterception = 0.15 * prec;
-        canopyCapacity = 0.07 * (laiCanopy + laiUnderstorey);
-        if (canopyCapacity > maxInterception) interception = maxInterception ;
-        else interception = canopyCapacity;
+
+        double maxInterception = 0.15 * std::min(prec, upperBoundPrec);
+        double canopyCapacity = 0.07 * (laiCanopy + laiUnderstorey);
+        double interception = std::min(canopyCapacity, maxInterception);
+
         return interception;
     }
 
-    double canopyNoInterceptedRainfallHydrall(double laiCanopy,double laiUnderstorey, double prec)
+    double canopyNoInterceptedRainfallHydrall(double laiCanopy, double laiUnderstorey, double prec)
     {
         double interception = canopyInterceptionHydrall(laiCanopy, laiUnderstorey, prec);
         return (prec - interception);
     }
 
-    double plantCover(double lai, double extinctionCoefficient,double laiMin)
+    double plantCover(double lai, double extinctionCoefficient, double laiMin)
     {
-        if (lai < laiMin) lai=laiMin;
+        lai = std::max(lai, laiMin);
         return (1-exp(-extinctionCoefficient*(lai))); //Van Dijk  A.I.J.M, Bruijnzeel L.A., 2001
     }
 
-    double waterStorageCapacity(double lai,double leafStorage,double stemStorage)
+    double waterStorageCapacity(double lai, double leafStorage, double stemStorage)
     {
         return leafStorage*lai + stemStorage; //Van Dijk  A.I.J.M, Bruijnzeel L.A., 2001
     }
 
-    double freeRainThroughfall(double rainfall,double cover)
+    double freeRainThroughfall(double rainfall, double cover)
     {
         return (rainfall*(1 - cover));
     }
 
-    double rainfallInterceptedByCanopy(double rainfall,double cover)
+    double rainfallInterceptedByCanopy(double rainfall, double cover)
     {
         return (rainfall*cover);
     }
-    double evaporationFromCanopy(double waterFreeEvaporation, double storage,double grossStorage)
+    double evaporationFromCanopy(double waterFreeEvaporation, double storage, double grossStorage)
     {
-        if (grossStorage < 0.01*storage) return grossStorage;
+        if (grossStorage < 0.01*storage)
+            return grossStorage;
 
-        if (grossStorage >= storage) return waterFreeEvaporation;
+        if (grossStorage >= storage)
+        {
+            return waterFreeEvaporation;
+        }
         else
         {
-            return waterFreeEvaporation*grossStorage/storage ;
+            return waterFreeEvaporation * grossStorage/storage;
         }
     }
 
     double drainageFromTree(double grossStorage, double storage)
     {
-        if (grossStorage > storage) return (grossStorage - storage);
-        else return 0;
+        if (grossStorage > storage)
+            return (grossStorage - storage);
+        else
+            return 0;
     }
 
     double stemFlowRate(double maxStemFlowRate)

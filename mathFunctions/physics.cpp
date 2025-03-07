@@ -46,6 +46,10 @@ double pressureFromAltitude(double height)
     return pressure;
 }
 
+double pressureFromAltitude(double temperature, double height)
+{
+    return P0 * exp((- GRAVITY * M_AIR * height) / (R_GAS * (temperature + 273.15)));
+}
 
 /*!
  * \brief Boyle-Charles law

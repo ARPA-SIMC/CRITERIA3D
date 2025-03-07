@@ -12,7 +12,7 @@
 
     meteoVariable chooseColorScale();
     frequencyType chooseFrequency(const Project &myProject);
-    meteoVariable chooseMeteoVariable(const Project &myProject);
+    meteoVariable chooseMeteoVariable(Project &myProject);
 
 
 #endif // DIALOGSELECTION_H

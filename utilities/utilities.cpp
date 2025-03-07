@@ -57,7 +57,7 @@ bool fieldExists(const QSqlQuery &query, const QString fieldName)
 
 
 // return boolean (false if recordset is not valid)
-bool getValue(QVariant myRs)
+bool getValue(const QVariant &myRs)
 {
     if (! myRs.isValid() || myRs.isNull()) return false;
 
@@ -67,12 +67,11 @@ bool getValue(QVariant myRs)
 }
 
 
-bool getValue(QVariant myRs, int* myValue)
+bool getValue(const QVariant &myRs, int* myValue)
 {
     *myValue = NODATA;
 
-    if (! myRs.isValid() || myRs.isNull()) return false;
-    if (myRs == "" || myRs == "NULL" || myRs == "nan") return false;
+    if (! myRs.isValid() || myRs.isNull() || myRs == "nan") return false;
 
     bool isOk;
     *myValue = myRs.toInt(&isOk);
@@ -87,12 +86,11 @@ bool getValue(QVariant myRs, int* myValue)
 }
 
 
-bool getValue(QVariant myRs, float* myValue)
+bool getValue(const QVariant &myRs, float* myValue)
 {
     *myValue = NODATA;
 
-    if (! myRs.isValid() || myRs.isNull()) return false;
-    if (myRs == "" || myRs == "NULL" || myRs == "nan") return false;
+    if (! myRs.isValid() || myRs.isNull() || myRs == "nan") return false;
 
     bool isOk;
     *myValue = myRs.toFloat(&isOk);
@@ -107,12 +105,11 @@ bool getValue(QVariant myRs, float* myValue)
 }
 
 
-bool getValue(QVariant myRs, double* myValue)
+bool getValue(const QVariant &myRs, double* myValue)
 {
     *myValue = NODATA;
 
-    if (! myRs.isValid() || myRs.isNull()) return false;
-    if (myRs == "" || myRs == "NULL" || myRs == "nan") return false;
+    if (! myRs.isValid() || myRs.isNull() || myRs == "nan") return false;
 
     bool isOk;
     *myValue = myRs.toDouble(&isOk);
@@ -127,38 +124,27 @@ bool getValue(QVariant myRs, double* myValue)
 }
 
 
-bool getValue(QVariant myRs, QDate* myValue)
+bool getValue(const QVariant &myRs, QDate* myValue)
 {
-    if (myRs.isNull())
+    if (myRs.isNull() || myRs == "")
         return false;
-    else
-    {
-        if (myRs == "")
-             return false;
-        else
-            *myValue = myRs.toDate();
-    }
 
-    return true;
-}
-
-bool getValue(QVariant myRs, QDateTime* myValue)
-{
-    if (myRs.isNull())
-        return false;
-    else
-    {
-        if (myRs == "")
-             return false;
-        else
-            *myValue = myRs.toDateTime();
-    }
-
+    *myValue = myRs.toDate();
     return true;
 }
 
 
-bool getValue(QVariant myRs, QString* myValue)
+bool getValue(const QVariant &myRs, QDateTime* myValue)
+{
+    if (myRs.isNull() || myRs == "")
+        return false;
+
+    *myValue = myRs.toDateTime();
+    return true;
+}
+
+
+bool getValue(const QVariant &myRs, QString* myValue)
 {
     *myValue = "";
     if (! myRs.isValid() || myRs.isNull()) return false;
@@ -212,8 +198,7 @@ Crit3DTime getCrit3DTime(const QDate& t, int hour)
 
 QDate getQDate(const Crit3DDate& d)
 {
-    QDate myDate = QDate(d.year, d.month, d.day);
-    return myDate;
+    return QDate(d.year, d.month, d.day);
 }
 
 
@@ -448,6 +433,16 @@ std::vector <double> StringListToDouble(QList<QString> myList)
     return myVector;
 }
 
+std::vector<int> StringListToInt(QList<QString> myList)
+{
+    std::vector <int> myVector;
+    myVector.resize(unsigned(myList.size()));
+    for (unsigned i=0; i < unsigned(myList.size()); i++)
+        myVector[i] = myList[int(i)].toInt();
+
+    return myVector;
+}
+
 QStringList FloatVectorToStringList(std::vector <float> myVector)
 {
     QList<QString> myList;
@@ -462,6 +457,15 @@ QStringList DoubleVectorToStringList(std::vector <double> myVector)
     QList<QString> myList;
     for (unsigned i=0; i < unsigned(myVector.size()); i++)
         myList.push_back(QString::number(double(myVector[i])));
+
+    return myList;
+}
+
+QStringList IntVectorToStringList(std::vector <int> myVector)
+{
+    QList<QString> myList;
+    for (unsigned i=0; i < unsigned(myVector.size()); i++)
+        myList.push_back(QString::number(int(myVector[i])));
 
     return myList;
 }
@@ -672,12 +676,12 @@ bool writeJson(const QString & ancestor, const std::vector <QString> &fieldNames
 
     bool isFloat = false;
 
-    for (int i=0; i < values.size(); i++)
+    for (int i=0; i < int(values.size()); i++)
     {
         if (values[i].size() != fieldNames.size() || values[i].size() != dataType.size()) return false;
 
         recordObject.empty();
-        for (int j=0; j < values[i].size(); j++)
+        for (int j=0; j < int(values[i].size()); j++)
         {
             if (dataType[j] == "float")
                 recordObject.insert(fieldNames[j], values[i][j].toFloat(&isFloat));

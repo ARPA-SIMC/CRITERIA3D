@@ -45,7 +45,8 @@ void SaveClimaLayout::addElab()
     QString elabAdded = firstYear + "-" + lastYear + "_" + variable.remove("_") + "_" + period;
     if (period == "Generic")
     {
-        elabAdded = elabAdded + "_" + genericPeriodStartDay + "of" + genericPeriodStartMonth + "-" + genericPeriodEndDay + "of" + genericPeriodEndMonth;
+        elabAdded = elabAdded + "_" + genericPeriodStartDay + "of" + genericPeriodStartMonth
+                    + "-" + genericPeriodEndDay + "of" + genericPeriodEndMonth;
         if (genericNYear != "0")
         {
             elabAdded = elabAdded + "-+" + genericNYear + "y";
@@ -152,9 +153,9 @@ QList<QString> SaveClimaLayout::getList() const
     return list;
 }
 
-void SaveClimaLayout::setList(const QList<QString> &value)
+void SaveClimaLayout::setList(const QList<QString> &valueList)
 {
-    list = value;
+    list = valueList;
     listView.addItems(list);
 }
 
@@ -163,9 +164,9 @@ QString SaveClimaLayout::getElab1ParamFromdB() const
     return elab1ParamFromdB;
 }
 
-void SaveClimaLayout::setElab1ParamFromdB(const QString &value)
+void SaveClimaLayout::setElab1ParamFromdB(const QString &valueStr)
 {
-    elab1ParamFromdB = value;
+    elab1ParamFromdB = valueStr;
 }
 
 QString SaveClimaLayout::getFirstYear() const
@@ -173,9 +174,9 @@ QString SaveClimaLayout::getFirstYear() const
     return firstYear;
 }
 
-void SaveClimaLayout::setFirstYear(const QString &value)
+void SaveClimaLayout::setFirstYear(const QString &valueStr)
 {
-    firstYear = value;
+    firstYear = valueStr;
 }
 
 QString SaveClimaLayout::getLastYear() const
@@ -183,9 +184,9 @@ QString SaveClimaLayout::getLastYear() const
     return lastYear;
 }
 
-void SaveClimaLayout::setLastYear(const QString &value)
+void SaveClimaLayout::setLastYear(const QString &valueStr)
 {
-    lastYear = value;
+    lastYear = valueStr;
 }
 
 QString SaveClimaLayout::getVariable() const
@@ -193,9 +194,9 @@ QString SaveClimaLayout::getVariable() const
     return variable;
 }
 
-void SaveClimaLayout::setVariable(const QString &value)
+void SaveClimaLayout::setVariable(const QString &valueStr)
 {
-    variable = value;
+    variable = valueStr;
 }
 
 QString SaveClimaLayout::getPeriod() const
@@ -203,9 +204,9 @@ QString SaveClimaLayout::getPeriod() const
     return period;
 }
 
-void SaveClimaLayout::setPeriod(const QString &value)
+void SaveClimaLayout::setPeriod(const QString &valueStr)
 {
-    period = value;
+    period = valueStr;
 }
 
 QString SaveClimaLayout::getGenericPeriodStartDay() const
@@ -223,9 +224,9 @@ QString SaveClimaLayout::getGenericPeriodStartMonth() const
     return genericPeriodStartMonth;
 }
 
-void SaveClimaLayout::setGenericPeriodStartMonth(const QString &value)
+void SaveClimaLayout::setGenericPeriodStartMonth(const QString &valueStr)
 {
-    genericPeriodStartMonth = value;
+    genericPeriodStartMonth = valueStr;
 }
 
 QString SaveClimaLayout::getGenericPeriodEndDay() const
@@ -233,9 +234,9 @@ QString SaveClimaLayout::getGenericPeriodEndDay() const
     return genericPeriodEndDay;
 }
 
-void SaveClimaLayout::setGenericPeriodEndDay(const QString &value)
+void SaveClimaLayout::setGenericPeriodEndDay(const QString &valueStr)
 {
-    genericPeriodEndDay = value;
+    genericPeriodEndDay = valueStr;
 }
 
 QString SaveClimaLayout::getGenericPeriodEndMonth() const
@@ -243,9 +244,9 @@ QString SaveClimaLayout::getGenericPeriodEndMonth() const
     return genericPeriodEndMonth;
 }
 
-void SaveClimaLayout::setGenericPeriodEndMonth(const QString &value)
+void SaveClimaLayout::setGenericPeriodEndMonth(const QString &valueStr)
 {
-    genericPeriodEndMonth = value;
+    genericPeriodEndMonth = valueStr;
 }
 
 QString SaveClimaLayout::getGenericNYear() const
@@ -253,9 +254,9 @@ QString SaveClimaLayout::getGenericNYear() const
     return genericNYear;
 }
 
-void SaveClimaLayout::setGenericNYear(const QString &value)
+void SaveClimaLayout::setGenericNYear(const QString &valueStr)
 {
-    genericNYear = value;
+    genericNYear = valueStr;
 }
 
 QString SaveClimaLayout::getSecondElab() const
@@ -263,9 +264,9 @@ QString SaveClimaLayout::getSecondElab() const
     return secondElab;
 }
 
-void SaveClimaLayout::setSecondElab(const QString &value)
+void SaveClimaLayout::setSecondElab(const QString &valueStr)
 {
-    secondElab = value;
+    secondElab = valueStr;
 }
 
 QString SaveClimaLayout::getElab2Param() const
@@ -273,9 +274,9 @@ QString SaveClimaLayout::getElab2Param() const
     return elab2Param;
 }
 
-void SaveClimaLayout::setElab2Param(const QString &value)
+void SaveClimaLayout::setElab2Param(const QString &valueStr)
 {
-    elab2Param = value;
+    elab2Param = valueStr;
 }
 
 QString SaveClimaLayout::getElab() const
@@ -283,9 +284,9 @@ QString SaveClimaLayout::getElab() const
     return elab;
 }
 
-void SaveClimaLayout::setElab(const QString &value)
+void SaveClimaLayout::setElab(const QString &valueStr)
 {
-    elab = value;
+    elab = valueStr;
 }
 
 QString SaveClimaLayout::getElab1Param() const
@@ -293,7 +294,7 @@ QString SaveClimaLayout::getElab1Param() const
     return elab1Param;
 }
 
-void SaveClimaLayout::setElab1Param(const QString &value)
+void SaveClimaLayout::setElab1Param(const QString &valueStr)
 {
-    elab1Param = value;
+    elab1Param = valueStr;
 }

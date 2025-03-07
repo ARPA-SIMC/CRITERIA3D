@@ -1,9 +1,7 @@
 #ifndef CRIT3DDATE_H
 #define CRIT3DDATE_H
 
-    #ifndef _STRING_
-        #include <string>
-    #endif
+    #include <string>
 
     #ifndef HOUR_SECONDS
         #define HOUR_SECONDS 3600
@@ -45,11 +43,12 @@
         void setDate(int myDay, int myMonth, int myYear);
         bool isNullDate();
         void setNullDate();
+
         Crit3DDate addDays(long offset) const;
         int daysTo(const Crit3DDate& myDate) const;
-        std::string toStdString();
-        std::string toStdString() const;
-        std::string toString();
+
+        std::string toISOString() const;
+
         std::string toString() const;
     };
 
@@ -81,20 +80,21 @@
         int getMinutes() const;
         int getSeconds() const;
 
-        std::string toISOString();
-        std::string toString();
+        std::string toISOString() const;
+        std::string toString() const;
     };
 
     bool isLeapYear(int year);
     int getDaysInMonth(int month, int year);
 
     int getDoyFromDate(const Crit3DDate& myDate);
+    int getMonthFromDoy(int doy,int year);
     Crit3DDate getDateFromDoy(int year, int doy);
 
     Crit3DDate max(const Crit3DDate& myDate1, const Crit3DDate& myDate2);
     Crit3DDate min(const Crit3DDate& myDate1, const Crit3DDate& myDate2);
 
-    int difference(Crit3DDate firstDate, Crit3DDate lastDate);
+    int difference(const Crit3DDate &firstDate, const Crit3DDate &lastDate);
 
     inline long getJulianDay(int day, int month, int year);
     Crit3DDate getDateFromJulianDay(long julianDay);

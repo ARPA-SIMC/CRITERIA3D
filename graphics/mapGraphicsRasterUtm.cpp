@@ -1,7 +1,7 @@
 /*!
-    \file mapGraphicsRasterObject.cpp
+    \file mapGraphicsRasterUtm.cpp
 
-    \abstract draw raster in MapGraphics widget
+    \abstract draws a UTM raster in the MapGraphics widget
 
     This file is part of CRITERIA-3D distribution.
 
@@ -29,6 +29,7 @@
 #include "commonConstants.h"
 #include "mapGraphicsRasterUtm.h"
 #include "basicMath.h"
+#include "color.h"
 
 #include <math.h>
 #include <QMenu>
@@ -211,11 +212,11 @@ Position RasterUtmObject::getRasterCenter()
  * \brief getRasterMaxSize
  * \return the maximum size of the raster in decimal degrees (width or height)
  */
-float RasterUtmObject::getRasterMaxSize()
+double RasterUtmObject::getRasterMaxSize()
 {
-    return float(MAXVALUE(_latLonHeader.nrRows * _latLonHeader.dy,
-                          _latLonHeader.nrCols * _latLonHeader.dx));
+    return MAXVALUE(_latLonHeader.nrRows * _latLonHeader.dy, _latLonHeader.nrCols * _latLonHeader.dx);
 }
+
 
 
 /*!
@@ -326,7 +327,7 @@ bool RasterUtmObject::drawRaster(QPainter* painter)
     }
 
     // dynamic color scale
-    if (! _rasterPointer->colorScale->isRangeBlocked())
+    if (! _rasterPointer->colorScale->isFixedRange())
     {
         gis::updateColorScale(_rasterPointer, rasterWindow);
         roundColorScale(_rasterPointer->colorScale, 4, true);
@@ -362,9 +363,16 @@ bool RasterUtmObject::drawRaster(QPainter* painter)
             // raster value
             float value = _rasterPointer->value[rowCenter][colCenter];
 
-            // skip the NODATA value
+            // check NODATA value (transparent)
             if (isEqual(value, _rasterPointer->header->flag) || isEqual(value, NODATA))
                 continue;
+
+            // check minimum (transparent)
+            if (_rasterPointer->colorScale->isHideMinimum())
+            {
+                if (isEqual(value, 0) || value <= _rasterPointer->colorScale->minimum())
+                    continue;
+            }
 
             // set color
             myColor = _rasterPointer->colorScale->getColor(value);
@@ -394,6 +402,3 @@ bool RasterUtmObject::drawRaster(QPainter* painter)
 
     return true;
 }
-
-
-

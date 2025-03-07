@@ -31,7 +31,6 @@ DialogMeteoTable::DialogMeteoTable(Crit3DMeteoSettings *meteoSettings_, QVector<
     QVBoxLayout* mainLayout = new QVBoxLayout;
     this->resize(800, 600);
 
-
     meteoTable = new MeteoTable();
     mainLayout->addWidget(meteoTable);
 

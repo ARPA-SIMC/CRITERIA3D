@@ -1,7 +1,7 @@
 /*!
     \file mapGraphicsRasterObject.cpp
 
-    \abstract draw raster in MapGraphics widget
+    \abstract draws a lat-lon raster in the MapGraphics widget
 
     This file is part of CRITERIA-3D distribution.
 
@@ -52,6 +52,7 @@ void RasterObject::clear()
 {
     setDrawing(false);
     setDrawBorders(false);
+    setVisible(false);
     freeIndexesMatrix();
 
     latLonHeader.nrCols = 0;
@@ -71,16 +72,6 @@ void RasterObject::clear()
     isLoaded = false;
 }
 
-
-void RasterObject::setRaster(gis::Crit3DRasterGrid* rasterPtr)
-{
-    rasterPointer = rasterPtr;
-}
-
-gis::Crit3DRasterGrid* RasterObject::getRaster()
-{
-    return rasterPointer;
-}
 
 void RasterObject::setDrawing(bool value)
 {
@@ -153,10 +144,9 @@ gis::Crit3DLatLonHeader RasterObject::getLatLonHeader() const
  * \brief getRasterMaxSize
  * \return max of raster width and height (decimal degree)
  */
-float RasterObject::getRasterMaxSize()
+double RasterObject::getRasterMaxSize()
 {
-    return float(MAXVALUE(latLonHeader.nrRows * latLonHeader.dy,
-                          latLonHeader.nrCols * latLonHeader.dx));
+    return MAXVALUE(latLonHeader.nrRows * latLonHeader.dy, latLonHeader.nrCols * latLonHeader.dx);
 }
 
 
@@ -239,6 +229,7 @@ bool RasterObject::initializeUTM(gis::Crit3DRasterGrid* myRaster, const gis::Cri
 
     setDrawing(true);
     setDrawBorders(isGrid);
+    setVisible(true);
     isLoaded = true;
 
     return true;
@@ -270,7 +261,8 @@ bool RasterObject::initializeLatLon(gis::Crit3DRasterGrid* myRaster, const gis::
     }
 
     setDrawing(true);
-    setDrawBorders(isGrid_);
+    setDrawBorders(isGrid);
+    setVisible(true);
     isLoaded = true;
 
     return true;
@@ -378,7 +370,7 @@ bool RasterObject::drawRaster(gis::Crit3DRasterGrid *myRaster, QPainter* myPaint
     }
 
     // dynamic color scale
-    if (! myRaster->colorScale->isRangeBlocked())
+    if (! myRaster->colorScale->isFixedRange())
     {
         if (this->isLatLon)
         {
@@ -526,9 +518,9 @@ bool RasterObject::getRowCol(gis::Crit3DGeoPoint geoPoint, int* row, int* col)
     if (! this->isGrid)
         return false;
 
-    gis::getGridRowColFromXY(this->latLonHeader, geoPoint.longitude, geoPoint.latitude, row, col);
+    gis::getRowColFromLonLat(this->latLonHeader, geoPoint.longitude, geoPoint.latitude, row, col);
 
-    // check out of grid
+    // check boundary
     if (gis::isOutOfGridRowCol(*row, *col, this->latLonHeader))
     {
         return false;

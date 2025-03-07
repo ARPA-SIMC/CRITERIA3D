@@ -28,6 +28,7 @@
 #include "gis.h"
 #include "commonConstants.h"
 
+
 Crit3DInterpolationDataPoint::Crit3DInterpolationDataPoint()
 {
     index = NODATA;

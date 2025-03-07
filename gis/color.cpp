@@ -25,6 +25,7 @@
 
 #include <algorithm>
 #include <math.h>
+
 #include "commonConstants.h"
 #include "basicMath.h"
 #include "color.h"
@@ -54,7 +55,9 @@ Crit3DColorScale::Crit3DColorScale()
 
     _minimum = NODATA;
     _maximum = NODATA;
-    _isRangeBlocked = false;
+    _isFixedRange = false;
+    _isHideMinimum = false;
+    _isTransparent = false;
 
     _classification = classificationMethod::EqualInterval;
 }
@@ -108,7 +111,13 @@ bool Crit3DColorScale::classify()
                 color[n].blue = keyColor[i].blue + short(dBlue * float(j));
             }
         }
-        color[_nrColors-1] = keyColor[_nrKeyColors -1];
+
+        // last colors
+        int lastIndex = nrStep * nrIntervals;
+        for (i = lastIndex; i < _nrColors; i++)
+        {
+            color[i] = keyColor[_nrKeyColors -1];
+        }
     }
 
     return true;
@@ -117,24 +126,7 @@ bool Crit3DColorScale::classify()
 
 Crit3DColor* Crit3DColorScale::getColor(float value)
 {
-    unsigned int index = 0;
-
-    if (value <= _minimum)
-    {
-        index = 0;
-    }
-    else if (value >= _maximum)
-    {
-        index = _nrColors-1;
-    }
-    else
-    {
-        if (_classification == classificationMethod::EqualInterval)
-        {
-            index = unsigned(float(_nrColors-1) * ((value - _minimum) / (_maximum - _minimum)));
-        }
-    }
-
+    unsigned int index = getColorIndex(value);
     return &color[index];
 }
 
@@ -179,11 +171,12 @@ bool setDTMScale(Crit3DColorScale* myScale)
 
 bool setLAIScale(Crit3DColorScale* myScale)
 {
-    myScale->initialize(3, 256);
+    myScale->initialize(4, 256);
 
-    myScale->keyColor[0] = Crit3DColor(200, 150, 0);        /*!<  ocra */
-    myScale->keyColor[1] = Crit3DColor(32, 150, 32);        /*!<  dark green */
-    myScale->keyColor[2] = Crit3DColor(0, 255, 0);          /*!<  green */
+    myScale->keyColor[0] = Crit3DColor(200, 160, 0);        /*!<  ocra */
+    myScale->keyColor[1] = Crit3DColor(160, 160, 0);        /*!<  yellow */
+    myScale->keyColor[2] = Crit3DColor(32, 160, 32);        /*!<  dark green */
+    myScale->keyColor[3] = Crit3DColor(0, 255, 0);          /*!<  green */
 
     return(myScale->classify());
 }
@@ -205,19 +198,13 @@ bool setTemperatureScale(Crit3DColorScale* myScale)
 
 bool setSlopeStabilityScale(Crit3DColorScale* myScale)
 {
-    myScale->initialize(11, 220);
+    myScale->initialize(5, 256);
 
-    myScale->keyColor[0] = Crit3DColor(128, 0, 128);       /*!< violet */
-    myScale->keyColor[1] = Crit3DColor(255, 0, 0);         /*!< red */
-    myScale->keyColor[2] = Crit3DColor(255, 255, 0);       /*!< yellow */
-    myScale->keyColor[3] = Crit3DColor(128, 220, 0);       /*!< yellow/green */
+    myScale->keyColor[0] = Crit3DColor(0, 0, 0);           /*!< black */
+    myScale->keyColor[1] = Crit3DColor(128, 0, 128);       /*!< violet */
+    myScale->keyColor[2] = Crit3DColor(255, 0, 0);         /*!< red */
+    myScale->keyColor[3] = Crit3DColor(255, 255, 0);       /*!< yellow */
     myScale->keyColor[4] = Crit3DColor(64, 196, 64);       /*!< green */
-    myScale->keyColor[5] = Crit3DColor(64, 196, 64);       /*!< green */
-    myScale->keyColor[6] = Crit3DColor(64, 196, 64);       /*!< green */
-    myScale->keyColor[7] = Crit3DColor(64, 196, 64);       /*!< green */
-    myScale->keyColor[8] = Crit3DColor(64, 196, 64);       /*!< green */
-    myScale->keyColor[9] = Crit3DColor(64, 196, 64);       /*!< green */
-    myScale->keyColor[10] = Crit3DColor(64, 196, 64);      /*!< green */
 
     return(myScale->classify());
 }
@@ -319,11 +306,12 @@ bool setRadiationScale(Crit3DColorScale* myScale)
 
 bool setSurfaceWaterScale(Crit3DColorScale* myScale)
 {
-    myScale->initialize(3, 256);
+    myScale->initialize(4, 256);
 
     myScale->keyColor[0] = Crit3DColor(255, 255, 255);      /*!< white */
     myScale->keyColor[1] = Crit3DColor(0, 255, 255);        /*!< cyan */
     myScale->keyColor[2] = Crit3DColor(0, 0, 255);          /*!< blue */
+    myScale->keyColor[3] = Crit3DColor(128, 0, 255);        /*!< violet */
 
     return(myScale->classify());
 }
@@ -366,6 +354,23 @@ bool reverseColorScale(Crit3DColorScale* myScale)
 
     // reclassify
     return myScale->classify();
+}
+
+
+void mixColor(const Crit3DColor &backColor, const Crit3DColor &foreColor, Crit3DColor &colorOut, float alpha)
+{
+    if (alpha == 0)
+    {
+        colorOut.red = backColor.red;
+        colorOut.green = backColor.green;
+        colorOut.blue = backColor.blue;
+    }
+    else
+    {
+        colorOut.red = std::min(255, int(backColor.red * (1. - alpha)) + int(foreColor.red * alpha));
+        colorOut.green = std::min(255, int(backColor.green * (1. - alpha)) + int(foreColor.green * alpha));
+        colorOut.blue = std::min(255, int(backColor.blue * (1. - alpha)) +int( foreColor.blue * alpha));
+    }
 }
 
 

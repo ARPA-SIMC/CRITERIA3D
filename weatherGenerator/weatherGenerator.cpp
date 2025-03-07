@@ -5,7 +5,7 @@
     \copyright
     2016 Fausto Tomei, Laura Costantini
 
-    This file is part of CRITERIA3D.
+    This file is part of agrolib distribution .
     CRITERIA3D has been developed under contract issued by A.R.P.A. Emilia-Romagna
 
     CRITERIA3D is free software: you can redistribute it and/or modify
@@ -162,7 +162,7 @@ void initializeDailyDataBasic(ToutputDailyMeteo* dailyData, Crit3DDate myDate)
     dailyData->maxTemp = NODATA;
     dailyData->minTemp = NODATA;
     dailyData->prec = NODATA;
-
+    dailyData->waterTableDepth = NODATA;
 }
 
 
@@ -231,14 +231,14 @@ void initializeWeather(TweatherGenClimate &wGen)
         mMeanPrecip[m] = mMeanPrecip[m] / (fWetDays[m] * float(daysInMonth));
     }
 
-    cubicSplineYearInterpolate(mpww, wGen.daily.pww);
-    cubicSplineYearInterpolate(mpwd, wGen.daily.pwd);
-    cubicSplineYearInterpolate(mMeanDryTMax, wGen.daily.meanDryTMax);
-    cubicSplineYearInterpolate(mMeanPrecip, wGen.daily.meanPrecip);
-    cubicSplineYearInterpolate(mMeanWetTMax, wGen.daily.meanWetTMax);
-    cubicSplineYearInterpolate(mMeanTMin, wGen.daily.meanTMin);
-    cubicSplineYearInterpolate(mMinTempStd, wGen.daily.minTempStd);
-    cubicSplineYearInterpolate(mMaxTempStd, wGen.daily.maxTempStd);
+    interpolation::cubicSplineYearInterpolate(mpww, wGen.daily.pww);
+    interpolation::cubicSplineYearInterpolate(mpwd, wGen.daily.pwd);
+    interpolation::cubicSplineYearInterpolate(mMeanDryTMax, wGen.daily.meanDryTMax);
+    interpolation::cubicSplineYearInterpolate(mMeanPrecip, wGen.daily.meanPrecip);
+    interpolation::cubicSplineYearInterpolate(mMeanWetTMax, wGen.daily.meanWetTMax);
+    interpolation::cubicSplineYearInterpolate(mMeanTMin, wGen.daily.meanTMin);
+    interpolation::cubicSplineYearInterpolate(mMinTempStd, wGen.daily.minTempStd);
+    interpolation::cubicSplineYearInterpolate(mMaxTempStd, wGen.daily.maxTempStd);
 }
 
 
@@ -315,111 +315,6 @@ float weibull (float dailyAvgPrec, float precThreshold)
 }
 
 
-
-/*!
-  * \brief Computes daily values starting from monthly mean
-  * using cubic spline
-*/
-void cubicSplineYearInterpolate(float *meanY, float *dayVal)
-{
-    double monthMid [16] = {-61, - 31, 0, 31, 59, 90, 120, 151, 181, 212, 243, 273, 304, 334, 365, 396};
-
-    for (int iMonth=0; iMonth<16; iMonth++)
-    {
-        monthMid[iMonth] += 15;
-    }
-
-    double* averageMonthlyAmountPrecLarger = new double[16];
-    for (int iMonth = 0; iMonth < 12; iMonth++)
-    {
-        averageMonthlyAmountPrecLarger[iMonth+2] = double(meanY[iMonth]);
-    }
-
-    averageMonthlyAmountPrecLarger[0] = double(meanY[10]);
-    averageMonthlyAmountPrecLarger[1] = double(meanY[11]);
-    averageMonthlyAmountPrecLarger[14] = double(meanY[0]);
-    averageMonthlyAmountPrecLarger[15] = double(meanY[1]);
-
-    for (int jjj=0; jjj<365; jjj++)
-    {
-        dayVal[jjj] = interpolation::cubicSpline(jjj*1.0, monthMid, averageMonthlyAmountPrecLarger, 16);
-    }
-
-    delete [] averageMonthlyAmountPrecLarger;
-}
-
-
-/*!
-  * \brief Computes daily values starting from monthly mean
-  * using quadratic spline
-  * original Campbell function
-  * it has a discontinuity between end and start of the year
-*/
-void quadrSplineYearInterpolate(float *meanY, float *dayVal)
-{
-    float a[13] = {0};
-    float b[14] = {0};
-    float c[13] = {0};
-    float aa[13] = {0};
-    float bb[13] = {0};
-    float cc[13] = {0};
-    float d[14] = {0};
-    float h[13] = {0};
-    float t = 0;
-
-    int i,j;
-
-    int monthends [13] = {0, 31, 59, 90, 120, 151, 181, 212, 243, 273, 304, 334, 365};
-
-    d[1] = meanY[0] - meanY[11];
-    h[0] = 30;
-
-    for (i = 1; i<=12; i++)
-    {
-        if (i == 12)
-            d[i + 1] = meanY[0] - meanY[i-1];
-        else
-            d[i + 1] = meanY[i] - meanY[i-1];
-
-        h[i] = monthends[i] - monthends[i - 1] - 1;
-        aa[i] = h[i - 1] / 6;
-        bb[i] = (h[i - 1] + h[i]) / 3;
-        cc[i] = h[i] / 6;
-    }
-
-    for (i = 1; i<= 11; i++)
-    {
-        cc[i] = cc[i] / bb[i];
-        d[i] = d[i] / bb[i];
-        bb[i + 1] = bb[i + 1] - aa[i + 1] * cc[i];
-        d[i + 1] = d[i + 1] - aa[i + 1] * d[i];
-    }
-
-    b[12] = d[12] / bb[12];
-    for (i = 11; i>=1; i--)
-        b[i] = d[i] - cc[i] * b[i + 1];
-
-    for (i = 1; i<=12; i++)
-    {
-        a[i] = (b[i + 1] - b[i]) / (2 * h[i]);
-        c[i] = meanY[i-1] - (b[i + 1] + 2 * b[i]) * h[i] / 6;
-    }
-
-    j = 0;
-    for (i = 1; i<=365; i++)
-    {
-        if (monthends[j] < i)
-            j = j + 1;
-        t = i - monthends[j - 1] - 1;
-
-        dayVal[i-1] = c[j] + b[j] * t + a[j] * t * t;
-
-    }
-
-    dayVal[365] = dayVal[0];
-}
-
-
 /*!
   * \brief generates maximum and minimum temperature
 */
@@ -488,11 +383,11 @@ bool isWGDate(Crit3DDate myDate, int wgDoy1, int wgDoy2)
 }
 
 
-void clearInputData(TinputObsData* myData)
+void clearInputData(TinputObsData &myData)
 {
-    myData->inputTMin.clear();
-    myData->inputTMax.clear();
-    myData->inputPrecip.clear();
+    myData.inputTMin.clear();
+    myData.inputTMax.clear();
+    myData.inputPrecip.clear();
 }
 
 
@@ -606,7 +501,7 @@ bool assignAnomalyPrec(float myAnomaly, int anomalyMonth1, int anomalyMonth2,
     float myNewSumPrec = 0;
     float myFraction = 0;
 
-    int nrMonths = numMonthsInPeriod(anomalyMonth1, anomalyMonth2);
+    int nrMonths = getMonthsInPeriod(anomalyMonth1, anomalyMonth2);
 
     // compute sum of precipitation
     mySumClimatePrec = 0;
@@ -660,6 +555,89 @@ bool assignAnomalyPrec(float myAnomaly, int anomalyMonth1, int anomalyMonth2,
 }
 
 
+bool assignXMLAnomalyScenario(XMLScenarioAnomaly* XMLAnomaly,int modelIndex, int* anomalyMonth1, int* anomalyMonth2, TweatherGenClimate& wGenNoAnomaly, TweatherGenClimate &wGen)
+{
+    //unsigned int i = 0;
+    QString myVar;
+    float myValue = 0.0;
+
+    bool result;
+
+    // loop for all XMLValuesList (Tmin, Tmax, TminVar, TmaxVar, Prec3M, Wetdays)
+    for (int iSeason=0;iSeason<4;iSeason++)
+    {
+        for (unsigned int iWeatherVariable = 0; iWeatherVariable < 4; iWeatherVariable++)
+        {
+            if (XMLAnomaly->period[iSeason].seasonalScenarios[iWeatherVariable].attribute.toUpper() == "ANOMALY")
+            {
+                myVar = XMLAnomaly->period[iSeason].seasonalScenarios[iWeatherVariable].type.toUpper();
+                result = false;
+                //if (XMLAnomaly->forecast[i].value[modelIndex] != nullptr)
+                    myValue = XMLAnomaly->period[iSeason].seasonalScenarios[iWeatherVariable].value[modelIndex].toFloat();
+                //else
+                    //myValue = NODATA;
+
+                if (int(myValue) != int(NODATA))
+                {
+                    if ( (myVar == "TMIN") || (myVar == "AVGTMIN") )
+                        result = assignAnomalyNoPrec(myValue, anomalyMonth1[iSeason], anomalyMonth2[iSeason], wGenNoAnomaly.monthly.monthlyTmin, wGen.monthly.monthlyTmin);
+                    else if ( (myVar == "TMAX") || (myVar == "AVGTMAX") )
+                        result = assignAnomalyNoPrec(myValue, anomalyMonth1[iSeason], anomalyMonth2[iSeason], wGenNoAnomaly.monthly.monthlyTmax, wGen.monthly.monthlyTmax);
+                    else if ( (myVar == "PREC3M") || (myVar == "PREC") )
+                        result = assignAnomalyPrec(myValue, anomalyMonth1[iSeason], anomalyMonth2[iSeason], wGenNoAnomaly.monthly.sumPrec, wGen.monthly.sumPrec);
+                    else if ( (myVar == "WETDAYSFREQUENCY") )
+                        result = assignAnomalyNoPrec(myValue, anomalyMonth1[iSeason], anomalyMonth2[iSeason], wGenNoAnomaly.monthly.fractionWetDays, wGen.monthly.fractionWetDays);
+                    else if ( (myVar == "WETWETDAYSFREQUENCY") )
+                        result = assignAnomalyNoPrec(myValue, anomalyMonth1[iSeason], anomalyMonth2[iSeason], wGenNoAnomaly.monthly.probabilityWetWet, wGen.monthly.probabilityWetWet);
+                    else if ( (myVar == "DELTATMAXDRYWET") )
+                        result = assignAnomalyNoPrec(myValue, anomalyMonth1[iSeason], anomalyMonth2[iSeason], wGenNoAnomaly.monthly.dw_Tmax, wGen.monthly.dw_Tmax);
+
+                }
+
+
+                else
+                {
+                    // not critical variables
+                    if ((myVar == "DELTATMAXDRYWET") || (myVar == "WETWETDAYSFREQUENCY"))
+                        result = true;
+                }
+
+                if (result == false)
+                {
+                    qDebug() << "wrong anomaly: " + myVar;
+                    return false;
+                }
+            }
+        }
+        // move to the next season
+        //anomalyMonth1 = (anomalyMonth1 + 3)%12;
+        //if (anomalyMonth1 == 0) anomalyMonth1 +=12;
+        //anomalyMonth2 = (anomalyMonth2 + 3)%12;
+        //if (anomalyMonth2 == 0) anomalyMonth2 +=12;
+    }
+    /* DEBUG
+    QString anomaly="anomaly.txt";
+    QFile file(anomaly);
+    file.open(QIODevice::WriteOnly | QIODevice::Truncate | QIODevice::Text);
+    QTextStream stream( &file );
+    for (int m = 0; m < 12; m++)
+    {
+        stream << "month = " << m +1 << endl;
+        stream << "wGen.monthly.monthlyTmin = " << wGen.monthly.monthlyTmin[m] << endl;
+        stream << "wGen.monthly.monthlyTmax = " << wGen.monthly.monthlyTmax[m] << endl;
+        stream << "wGen.monthly.sumPrec = " << wGen.monthly.sumPrec[m] << endl;
+        stream << "wGen.monthly.stDevTmin[m] = " << wGen.monthly.stDevTmin[m] << endl;
+        stream << "wGen.monthly.stDevTmax = " << wGen.monthly.stDevTmax[m] << endl;
+        stream << "wGen.monthly.fractionWetDays[m] = " << wGen.monthly.fractionWetDays[m] << endl;
+        stream << "wGen.monthly.probabilityWetWet[m] = " << wGen.monthly.probabilityWetWet[m] << endl;
+        stream << "wGen.monthly.dw_Tmax[m] = " << wGen.monthly.dw_Tmax[m] << endl;
+        stream << "-------------------------------------------" << endl;
+    }
+    */
+
+    return true;
+}
+
 /*!
   * \name makeSeasonalForecast
   * \brief Generates a time series of daily data (Tmin, Tmax, Prec)
@@ -668,7 +646,7 @@ bool assignAnomalyPrec(float myAnomaly, int anomalyMonth1, int anomalyMonth2,
   * Output is written on outputFileName (csv)
 */
 bool makeSeasonalForecast(QString outputFileName, char separator, XMLSeasonalAnomaly* XMLAnomaly,
-                          TweatherGenClimate& wGenClimate, TinputObsData* lastYearDailyObsData,
+                          TweatherGenClimate& wGenClimate, TinputObsData* dailyObsData,
                           int nrRepetitions, int myPredictionYear, int wgDoy1, int wgDoy2,
                           float rainfallThreshold)
 {
@@ -687,8 +665,8 @@ bool makeSeasonalForecast(QString outputFileName, char separator, XMLSeasonalAno
 
     // it checks if observed data includes the last 9 months before wgDoy1
     int nrDaysBeforeWgDoy1;
-    if (! checkLastYearDate(lastYearDailyObsData->inputFirstDate, lastYearDailyObsData->inputLastDate,
-                            lastYearDailyObsData->dataLenght, myPredictionYear, &wgDoy1, &nrDaysBeforeWgDoy1))
+    if (! checkLastYearDate(dailyObsData->inputFirstDate, dailyObsData->inputLastDate,
+                            dailyObsData->dataLength, myPredictionYear, wgDoy1, nrDaysBeforeWgDoy1))
     {
         qDebug() << "ERROR: observed data should include at least 9 months before wgDoy1";
         return false;
@@ -740,10 +718,10 @@ bool makeSeasonalForecast(QString outputFileName, char separator, XMLSeasonalAno
     for (int tmp = 0; tmp < nrDaysBeforeWgDoy1; tmp++)
     {
         dailyPredictions[tmp].date = myDate;
-        obsIndex = difference(lastYearDailyObsData->inputFirstDate, dailyPredictions[tmp].date);
-        dailyPredictions[tmp].minTemp = lastYearDailyObsData->inputTMin[obsIndex];
-        dailyPredictions[tmp].maxTemp = lastYearDailyObsData->inputTMax[obsIndex];
-        dailyPredictions[tmp].prec = lastYearDailyObsData->inputPrecip[obsIndex];
+        obsIndex = difference(dailyObsData->inputFirstDate, dailyPredictions[tmp].date);
+        dailyPredictions[tmp].minTemp = dailyObsData->inputTMin[obsIndex];
+        dailyPredictions[tmp].maxTemp = dailyObsData->inputTMax[obsIndex];
+        dailyPredictions[tmp].prec = dailyObsData->inputPrecip[obsIndex];
 
         if ((int(dailyPredictions[tmp].maxTemp) == int(NODATA))
                 || (int(dailyPredictions[tmp].minTemp) == int(NODATA))
@@ -751,12 +729,12 @@ bool makeSeasonalForecast(QString outputFileName, char separator, XMLSeasonalAno
         {
             if (tmp == 0)
             {
-                qDebug() << "ERROR: Missing data:" << QString::fromStdString(dailyPredictions[tmp].date.toStdString());
+                qDebug() << "ERROR: Missing data:" << QString::fromStdString(dailyPredictions[tmp].date.toISOString());
                 return false;
             }
             else
             {
-                qDebug() << "WARNING: Missing data:" << QString::fromStdString(dailyPredictions[tmp].date.toStdString());
+                qDebug() << "WARNING: Missing data:" << QString::fromStdString(dailyPredictions[tmp].date.toISOString());
 
                 if (int(dailyPredictions[tmp].maxTemp) == int(NODATA))
                     dailyPredictions[tmp].maxTemp = lastTmax;
@@ -777,7 +755,7 @@ bool makeSeasonalForecast(QString outputFileName, char separator, XMLSeasonalAno
     }
 
     qDebug() << "Observed OK";
-    int outputDataLenght = nrDaysBeforeWgDoy1;
+    int outputDataLength = nrDaysBeforeWgDoy1;
 
     // store the climate without anomalies
     wGen = wGenClimate;
@@ -802,10 +780,11 @@ bool makeSeasonalForecast(QString outputFileName, char separator, XMLSeasonalAno
             isLastMember = true;
         }
         // compute seasonal prediction
-        if (!computeSeasonalPredictions(lastYearDailyObsData, wGen,
+        std::vector<int> indexWg;
+        if (! computeSeasonalPredictions(dailyObsData, wGen,
                                         myPredictionYear, myYear, nrRepetitions,
                                         wgDoy1, wgDoy2, rainfallThreshold, isLastMember,
-                                        dailyPredictions, &outputDataLenght ))
+                                        dailyPredictions, &outputDataLength, indexWg))
         {
             qDebug() << "Error in computeSeasonalPredictions";
             return false;
@@ -817,7 +796,280 @@ bool makeSeasonalForecast(QString outputFileName, char separator, XMLSeasonalAno
 
     qDebug() << "\n>>> output:" << outputFileName;
 
-    writeMeteoDataCsv (outputFileName, separator, dailyPredictions);
+    writeMeteoDataCsv (outputFileName, separator, dailyPredictions, false);
+
+    dailyPredictions.clear();
+
+    return true;
+}
+
+
+bool initializeWaterTableData(TinputObsData* dailyObsData, WaterTable *waterTable,
+                              int predictionYear, int wgDoy1, int nrDaysBeforeWgDoy1, int daysWg)
+{
+    Crit3DDate seasonFirstDate = getDateFromDoy(predictionYear, wgDoy1);
+    Crit3DDate outputFirstDate = seasonFirstDate.addDays(-nrDaysBeforeWgDoy1);
+
+    int firstIndex = difference(dailyObsData->inputFirstDate, outputFirstDate);
+    int totDays = firstIndex + nrDaysBeforeWgDoy1 + daysWg;
+
+    std::vector<float> inputTMin, inputTMax, inputPrec;
+    for (int i = 0; i < totDays; i++)
+    {
+        if (i < (firstIndex + nrDaysBeforeWgDoy1))
+        {
+            inputTMin.push_back(dailyObsData->inputTMin[i]);
+            inputTMax.push_back(dailyObsData->inputTMax[i]);
+            inputPrec.push_back(dailyObsData->inputPrecip[i]);
+        }
+        else
+        {
+            // aggiungo giorni (vuoti) a watertable
+            inputTMin.push_back(NODATA);
+            inputTMax.push_back(NODATA);
+            inputPrec.push_back(NODATA);
+        }
+    }
+
+    waterTable->setInputTMin(inputTMin);
+    waterTable->setInputTMax(inputTMax);
+    waterTable->setInputPrec(inputPrec);
+
+    QDate firstDate = QDate(dailyObsData->inputFirstDate.year, dailyObsData->inputFirstDate.month, dailyObsData->inputFirstDate.day);
+    QDate lastDate = firstDate.addDays(totDays-1);
+
+    waterTable->setFirstMeteoDate(firstDate);
+    waterTable->setLastMeteoDate(lastDate);
+
+    waterTable->computeETP_allSeries(false);
+
+    return true;
+}
+
+
+/*!
+  * \name makeSeasonalForecastWaterTable
+  * \brief Generates a time series of daily data (Tmin, Tmax, Prec, WaterTable depth)
+  * for a period of nrYears = numMembers * nrRepetitions
+  * Different members of anomalies loaded by xml files are added to the climate
+  * Output is written on outputFileName (csv)
+*/
+bool makeSeasonalForecastWaterTable(QString outputFileName, char separator, XMLSeasonalAnomaly* XMLAnomaly,
+                          TweatherGenClimate& wGenClimate, TinputObsData* dailyObsData, WaterTable *waterTable,
+                          int nrRepetitions, int predictionYear, int wgDoy1, int wgDoy2,
+                          float rainfallThreshold)
+{
+    // it checks if observed data includes the last 9 months before wgDoy1
+    int nrDaysBeforeWgDoy1;
+    if (! checkLastYearDate(dailyObsData->inputFirstDate, dailyObsData->inputLastDate,
+                           dailyObsData->dataLength, predictionYear, wgDoy1, nrDaysBeforeWgDoy1))
+    {
+        qDebug() << "ERROR: observed data should include at least 9 months before wgDoy1";
+        return false;
+    }
+
+    Crit3DDate seasonLastDate;
+    int daysWg;
+    Crit3DDate seasonFirstDate = getDateFromDoy (predictionYear, wgDoy1);
+    if (wgDoy1 < wgDoy2)
+    {
+        seasonLastDate = getDateFromDoy (predictionYear, wgDoy2);
+        daysWg = wgDoy2 - wgDoy1 + 1;
+    }
+    else
+    {
+        seasonLastDate = getDateFromDoy (predictionYear+1, wgDoy2);
+        if (isLeapYear(predictionYear))
+        {
+            daysWg = (366 - wgDoy1) + wgDoy2 + 1;
+        }
+        else
+        {
+            daysWg = (365 - wgDoy1) + wgDoy2 + 1;
+        }
+    }
+
+    if (! initializeWaterTableData(dailyObsData, waterTable, predictionYear, wgDoy1, nrDaysBeforeWgDoy1, daysWg))
+    {
+        qDebug() << "ERROR in initializeWaterTableData";
+        return false;
+    }
+
+    TweatherGenClimate wGen;
+    std::vector<ToutputDailyMeteo> dailyPredictions;
+
+    unsigned int nrMembers;         // number of models into xml anomaly file
+    unsigned int nrYears;           // number of years of the output series. It is the length of the virtual period where all the previsions (one for each model) are given one after another
+    unsigned int nrValues;          // number of days between the first and the last prediction year
+
+    nrMembers = 0;
+    for (int i = 0; i<XMLAnomaly->modelMember.size(); i++)
+    {
+        nrMembers += XMLAnomaly->modelMember[i].toUInt();
+    }
+
+    nrYears = nrMembers * unsigned(nrRepetitions);
+    int lastYear = predictionYear + signed(nrYears) - 1;
+    if (wgDoy2 < wgDoy1) lastYear++;
+
+    Crit3DDate firstDatePrediction = seasonFirstDate.addDays(-nrDaysBeforeWgDoy1);
+
+    unsigned int addday = 0;
+    for (int i = predictionYear; i <= lastYear; i++)
+    {
+        if (isLeapYear(i))
+            addday++;
+    }
+
+    nrValues = nrYears * 365 + addday +1;
+    if (nrValues <= 0)
+    {
+        qDebug() << "ERROR: wrong date";
+        return false;
+    }
+
+    dailyPredictions.resize(nrValues);
+
+    float lastTmax = NODATA;
+    float lastTmin = NODATA;
+
+    float wtDepth;
+    float myDelta;
+    int myDeltaDays;
+
+    Crit3DDate myDate = firstDatePrediction;
+    for (int tmp = 0; tmp < nrDaysBeforeWgDoy1; tmp++)
+    {
+        dailyPredictions[tmp].date = myDate;
+        int obsIndex = difference(dailyObsData->inputFirstDate, dailyPredictions[tmp].date);
+        dailyPredictions[tmp].minTemp = dailyObsData->inputTMin[obsIndex];
+        dailyPredictions[tmp].maxTemp = dailyObsData->inputTMax[obsIndex];
+        dailyPredictions[tmp].prec = dailyObsData->inputPrecip[obsIndex];
+        if (waterTable->getWaterTableInterpolation(QDate(myDate.year, myDate.month, myDate.day), &wtDepth, &myDelta, &myDeltaDays))
+        {
+            dailyPredictions[tmp].waterTableDepth = wtDepth;
+        }
+
+        if ((int(dailyPredictions[tmp].maxTemp) == int(NODATA))
+            || (int(dailyPredictions[tmp].minTemp) == int(NODATA))
+            || (int(dailyPredictions[tmp].prec) == int(NODATA)))
+        {
+            if (tmp == 0)
+            {
+                qDebug() << "ERROR: Missing data:" << QString::fromStdString(dailyPredictions[tmp].date.toISOString());
+                return false;
+            }
+            else
+            {
+                qDebug() << "WARNING: Missing data:" << QString::fromStdString(dailyPredictions[tmp].date.toISOString());
+
+                if (int(dailyPredictions[tmp].maxTemp) == int(NODATA))
+                    dailyPredictions[tmp].maxTemp = lastTmax;
+
+                if (int(dailyPredictions[tmp].minTemp) == int(NODATA))
+                    dailyPredictions[tmp].minTemp = lastTmin;
+
+                if (int(dailyPredictions[tmp].prec) == int(NODATA))
+                    dailyPredictions[tmp].prec = 0;
+            }
+        }
+        else
+        {
+            lastTmax = dailyPredictions[tmp].maxTemp;
+            lastTmin = dailyPredictions[tmp].minTemp;
+        }
+        ++myDate;
+    }
+    qDebug() << "Observed OK";
+    int outputDataLength = nrDaysBeforeWgDoy1;
+
+    // store the climate without anomalies
+    wGen = wGenClimate;
+    int myYear = predictionYear;
+    bool isLastMember = false;
+
+    int anomalyMonth1 = seasonFirstDate.month;
+    int anomalyMonth2 = seasonLastDate.month;
+
+    for (unsigned int modelIndex = 0; modelIndex < nrMembers; modelIndex++)
+    {
+        // assign anomaly
+        if (! assignXMLAnomaly(XMLAnomaly, modelIndex, anomalyMonth1, anomalyMonth2, wGenClimate, wGen))
+        {
+            qDebug() << "Error in Scenario: assignXMLAnomaly returns false";
+            return false;
+        }
+
+        if (modelIndex == nrMembers-1 )
+        {
+            isLastMember = true;
+        }
+        // compute seasonal prediction
+        std::vector<int> indexWg;
+        if (! computeSeasonalPredictions(dailyObsData, wGen,
+                                        predictionYear, myYear, nrRepetitions,
+                                        wgDoy1, wgDoy2, rainfallThreshold, isLastMember,
+                                        dailyPredictions, &outputDataLength, indexWg))
+        {
+            qDebug() << "Error in computeSeasonalPredictions";
+            return false;
+        }
+        if (indexWg.size() != 0)
+        {
+            QDate myDate(seasonFirstDate.year, seasonFirstDate.month, seasonFirstDate.day);
+            QDate lastDate(seasonLastDate.year, seasonLastDate.month, seasonLastDate.day);
+            for (int currentIndex = indexWg[0]; currentIndex <= indexWg[indexWg.size()-1]; currentIndex++)
+            {
+                float tmin = dailyPredictions[currentIndex].minTemp;
+                float tmax = dailyPredictions[currentIndex].maxTemp;
+                float prec = dailyPredictions[currentIndex].prec;
+                if (isLastMember && myDate>lastDate)
+                {
+                    myDate.setDate(myDate.year()-1, myDate.month(), myDate.day());   // l'ultimo membro può prendere 2 periodi di wg
+                }
+                if (waterTable->setMeteoData(myDate, tmin, tmax, prec))
+                {
+                    if (waterTable->getWaterTableInterpolation(myDate, &wtDepth, &myDelta, &myDeltaDays))
+                    {
+                        dailyPredictions[currentIndex].waterTableDepth = wtDepth;
+                    }
+                }
+                myDate = myDate.addDays(1);
+            }
+        }
+        // next model
+        myYear = myYear + nrRepetitions;
+    }
+
+    qDebug() << "\n>>> output:" << outputFileName;
+
+    // copy all waterTableDepth outside wg period
+    int fixWgDoy1 = wgDoy1;
+    int fixWgDoy2 = wgDoy2;
+    int index = 0;
+    QDate firstDate(dailyPredictions[0].date.year, dailyPredictions[0].date.month, dailyPredictions[0].date.day);
+    QDate lastDate = firstDate.addDays(nrValues);
+
+    for (QDate myDate = firstDate; myDate < lastDate; myDate=myDate.addDays(1))
+    {
+        setCorrectWgDoy(wgDoy1, wgDoy2, predictionYear, myDate.year(), fixWgDoy1, fixWgDoy2);
+        if (! isWGDate(Crit3DDate(myDate.day(), myDate.month(), myDate.year()), fixWgDoy1, fixWgDoy2)
+            && dailyPredictions[index].waterTableDepth == NODATA)
+        {
+            for (int indexToBeCopyed = 0; indexToBeCopyed < 366; indexToBeCopyed++)
+            {
+                if (dailyPredictions[indexToBeCopyed].date.month == myDate.month() && dailyPredictions[indexToBeCopyed].date.day == myDate.day() && dailyPredictions[indexToBeCopyed].waterTableDepth != NODATA)
+                {
+                    dailyPredictions[index].waterTableDepth =  dailyPredictions[indexToBeCopyed].waterTableDepth;
+                    break;
+                }
+            }
+
+        }
+        index++;
+    }
+
+    writeMeteoDataCsv (outputFileName, separator, dailyPredictions, true);
 
     dailyPredictions.clear();
 
@@ -828,29 +1080,27 @@ bool makeSeasonalForecast(QString outputFileName, char separator, XMLSeasonalAno
 /*!
   \name computeSeasonalPredictions
   \brief Generates a time series of daily data (Tmin, Tmax, Prec)
-    The lenght is equals to nrRepetitions years, starting from firstYear
+    The Length is equals to nrRepetitions years, starting from firstYear
     Period between wgDoy1 and wgDoy2 is produced by the WG
     Others data are a copy of the observed data of predictionYear
     Weather generator climate is stored in wgClimate
-    Observed data (Tmin, Tmax, Prec) are in lastYearDailyObsData
+    Observed data (Tmin, Tmax, Prec) are in dailyObsData
   \return outputDailyData
 */
-bool computeSeasonalPredictions(TinputObsData *lastYearDailyObsData, TweatherGenClimate &wgClimate,
+bool computeSeasonalPredictions(TinputObsData *dailyObsData, TweatherGenClimate &wgClimate,
                                 int predictionYear, int firstYear, int nrRepetitions,
                                 int wgDoy1, int wgDoy2, float rainfallThreshold, bool isLastMember,
-                                std::vector<ToutputDailyMeteo>& outputDailyData, int *outputDataLenght)
+                                std::vector<ToutputDailyMeteo>& outputDailyData, int *outputDataLength, std::vector<int>& indexWg)
 
 {
     Crit3DDate myDate, obsDate;
     Crit3DDate firstDate, lastDate;
     int lastYear, myDoy;
     int obsIndex, currentIndex;
-    int fixwgDoy1 = wgDoy1;
-    int fixwgDoy2 = wgDoy2;
+    int fixWgDoy1 = wgDoy1;
+    int fixWgDoy2 = wgDoy2;
 
-    // TODO etp e falda
-
-    currentIndex = *outputDataLenght;
+    currentIndex = *outputDataLength;
 
     firstDate = outputDailyData[currentIndex-1].date.addDays(1);
 
@@ -861,13 +1111,15 @@ bool computeSeasonalPredictions(TinputObsData *lastYearDailyObsData, TweatherGen
         if (isLastMember)
         {
             if ( (!isLeapYear(predictionYear) && !isLeapYear(lastYear)) || (isLeapYear(predictionYear) && isLeapYear(lastYear)))
+            {
                 lastDate = getDateFromDoy(lastYear,wgDoy2);
+            }
             else
             {
                 if(isLeapYear(predictionYear) && wgDoy2 >= 60 )
-                    lastDate = getDateFromDoy(lastYear,wgDoy2-1);
+                    lastDate = getDateFromDoy(lastYear, wgDoy2-1);
                 if(isLeapYear(lastYear) && wgDoy2 >= 59 )
-                    lastDate = getDateFromDoy(lastYear,wgDoy2+1);
+                    lastDate = getDateFromDoy(lastYear, wgDoy2+1);
             }
         }
         else
@@ -883,13 +1135,15 @@ bool computeSeasonalPredictions(TinputObsData *lastYearDailyObsData, TweatherGen
         if (isLastMember)
         {
             if ( (!isLeapYear(predictionYear+1) && !isLeapYear(lastYear)) || (isLeapYear(predictionYear+1) && isLeapYear(lastYear)))
-                lastDate = getDateFromDoy(lastYear,wgDoy2);
+            {
+                lastDate = getDateFromDoy(lastYear, wgDoy2);
+            }
             else
             {
                 if(isLeapYear(predictionYear+1) && wgDoy2 >= 60)
-                    lastDate = getDateFromDoy(lastYear,wgDoy2-1);
+                    lastDate = getDateFromDoy(lastYear, wgDoy2-1);
                 if(isLeapYear(lastYear) && wgDoy2 >= 59 )
-                    lastDate = getDateFromDoy(lastYear,wgDoy2+1);
+                    lastDate = getDateFromDoy(lastYear, wgDoy2+1);
             }
         }
         else
@@ -906,17 +1160,26 @@ bool computeSeasonalPredictions(TinputObsData *lastYearDailyObsData, TweatherGen
     for (myDate = firstDate; myDate <= lastDate; ++myDate)
     {
 
-        fixWgDoy(wgDoy1, wgDoy2, predictionYear, myDate.year, &fixwgDoy1, &fixwgDoy2);
+        setCorrectWgDoy(wgDoy1, wgDoy2, predictionYear, myDate.year, fixWgDoy1, fixWgDoy2);
         myDoy = getDoyFromDate(myDate);
 
         // fill mydailyData.date
         initializeDailyDataBasic (&outputDailyData[currentIndex], myDate);
 
-        if ( isWGDate(myDate, fixwgDoy1, fixwgDoy2) )
+        if ( isWGDate(myDate, fixWgDoy1, fixWgDoy2) )
         {
             outputDailyData[currentIndex].maxTemp = getTMax(myDoy, rainfallThreshold, wgClimate);
             outputDailyData[currentIndex].minTemp = getTMin(myDoy, rainfallThreshold, wgClimate);
+            if (outputDailyData[currentIndex].maxTemp < outputDailyData[currentIndex].minTemp)
+            {
+                float average,diff;
+                average = 0.5*(outputDailyData[currentIndex].maxTemp + outputDailyData[currentIndex].minTemp);
+                diff = outputDailyData[currentIndex].minTemp - outputDailyData[currentIndex].maxTemp;
+                outputDailyData[currentIndex].maxTemp = average + 0.5*diff;
+                outputDailyData[currentIndex].minTemp = average - 0.5*diff;
+            }
             outputDailyData[currentIndex].prec = getPrecip(myDoy, rainfallThreshold, wgClimate);
+            indexWg.push_back(currentIndex);
         }
         else
         {
@@ -924,18 +1187,18 @@ bool computeSeasonalPredictions(TinputObsData *lastYearDailyObsData, TweatherGen
             obsDate.day = myDate.day;
             obsDate.month = myDate.month;
 
-            if (myDoy < fixwgDoy1)
+            if (myDoy < fixWgDoy1)
                 obsDate.year = predictionYear;
-            else if (myDoy > fixwgDoy2)
+            else if (myDoy > fixWgDoy2)
                 obsDate.year = predictionYear-1;
 
-            obsIndex = difference(lastYearDailyObsData->inputFirstDate, obsDate);
+            obsIndex = difference(dailyObsData->inputFirstDate, obsDate);
 
-            if ( obsIndex >= 0 && obsIndex <= lastYearDailyObsData->dataLenght )
+            if ( obsIndex >= 0 && obsIndex <= dailyObsData->dataLength )
             {
-                outputDailyData[currentIndex].maxTemp = lastYearDailyObsData->inputTMax[obsIndex];
-                outputDailyData[currentIndex].minTemp = lastYearDailyObsData->inputTMin[obsIndex];
-                outputDailyData[currentIndex].prec = lastYearDailyObsData->inputPrecip[obsIndex];
+                outputDailyData[currentIndex].maxTemp = dailyObsData->inputTMax[obsIndex];
+                outputDailyData[currentIndex].minTemp = dailyObsData->inputTMin[obsIndex];
+                outputDailyData[currentIndex].prec = dailyObsData->inputPrecip[obsIndex];
             }
             else
             {
@@ -947,7 +1210,7 @@ bool computeSeasonalPredictions(TinputObsData *lastYearDailyObsData, TweatherGen
         currentIndex++;
      }
 
-     *outputDataLenght = currentIndex;
+     *outputDataLength = currentIndex;
      return true;
 }
 
@@ -955,7 +1218,7 @@ bool computeSeasonalPredictions(TinputObsData *lastYearDailyObsData, TweatherGen
 /*!
   \name computeClimate
   \brief Generates a time series of daily data (Tmin, Tmax, Prec)
-    The lenght is equals to nrRepetitions years, starting from firstYear
+    The Length is equals to nrRepetitions years, starting from firstYear
     climate indexes are stored in wgClimate
   \return outputDailyData
 */
@@ -989,3 +1252,4 @@ bool computeClimate(TweatherGenClimate &wgClimate, int firstYear, int nrRepetiti
 
     return true;
 }
+

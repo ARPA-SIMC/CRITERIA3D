@@ -61,7 +61,7 @@
         Crit3DClimate* clima;
         Crit3DClimate* climaFromDb;
         Crit3DClimate* referenceClima;
-        bool lastElabTargetisGrid;
+        bool lastElabTargetIsGrid;
 
         bool isElabMeteoPointsValue;
         QString climateIndex;
@@ -90,6 +90,8 @@
         void initializePragaProject();
         void clearPragaProject();
 
+        QString getVersion();
+
         void createPragaProject(QString path_, QString name_, QString description_);
         void savePragaProject();
         void savePragaParameters();
@@ -109,28 +111,31 @@
 
         bool interpolationOutputPointsPeriod(QDate dateIni, QDate lastDate, QList <meteoVariable> variables);
 
+        bool deriveVariableMeteoGrid(meteoVariable myVar, frequencyType myFrequency, const Crit3DTime& myTime);
         bool interpolationMeteoGrid(meteoVariable myVar, frequencyType myFrequency, const Crit3DTime& myTime);
-        bool interpolationMeteoGridPeriod(QDate dateIni, QDate dateFin, QList <meteoVariable> variables,
-                                          QList<meteoVariable> aggrVariables, bool saveRasters, int nrDaysLoading, int nrDaysSaving);
-
+        bool interpolationMeteoGridPeriod(QDate dateIni, QDate dateFin, QList <meteoVariable> variables, QList <meteoVariable> aggrVariables,
+                                          QList<meteoVariable> derivedVariables, int nrDaysLoading, int nrDaysSaving);
+        bool interpolationCrossValidationPeriod(QDate dateIni, QDate dateFin, meteoVariable myVar, QString filename);
         bool saveGrid(meteoVariable myVar, frequencyType myFrequency, const Crit3DTime& myTime, bool showInfo);
         bool timeAggregateGridVarHourlyInDaily(meteoVariable dailyVar, Crit3DDate dateIni, Crit3DDate dateFin);
         bool timeAggregateGrid(QDate dateIni, QDate dateFin, QList <meteoVariable> variables, bool loadData, bool saveData);
         bool computeDailyVariablesPoint(Crit3DMeteoPoint *meteoPoint, QDate first, QDate last, QList <meteoVariable> variables);
-        bool hourlyDerivedVariablesGrid(QDate first, QDate last, bool loadData, bool saveData);
-        bool elaborationPointsCycle(bool isAnomaly, bool showInfo);
-        bool elaborationPointsCycleGrid(bool isAnomaly, bool showInfo);
+        bool derivedVariablesMeteoGridPeriod(QDate first, QDate last, QList<meteoVariable> variables, bool useNetRad);
+        bool elaborationCyclePoints(bool isAnomaly, bool showInfo);
+        bool elaborationCyclePointsHourly(bool showInfo);
+        bool elaborationCycleGrid(bool isAnomaly, bool showInfo);
+        bool elaborationCycleGridHourly(bool showInfo);
         bool elaborationCheck(bool isMeteoGrid, bool isAnomaly);
-        bool elaboration(bool isMeteoGrid, bool isAnomaly, bool saveClima);
+        bool computeElaboration(bool isMeteoGrid, bool isAnomaly, bool isClimate, bool showInfo);
+        bool computeElaborationHourly(bool isMeteoGrid, bool isShowInfo);
         bool showClimateFields(bool isMeteoGrid, QList<QString> *climateDbElab, QList<QString> *climateDbVarList);
         void readClimate(bool isMeteoGrid, QString climateSelected, int climateIndex, bool showInfo);
         bool deleteClimate(bool isMeteoGrid, QString climaSelected);
-        bool climatePointsCycle(bool showInfo);
-        bool climatePointsCycleGrid(bool showInfo);
+        bool climateCyclePoints(bool showInfo);
+        bool climateCycleGrid(bool showInfo);
         bool averageSeriesOnZonesMeteoGrid(meteoVariable variable, meteoComputation elab1MeteoComp,
                                            QString aggregationString, float threshold, gis::Crit3DRasterGrid* zoneGrid,
-                                           QDate startDate, QDate endDate, QString periodType,
-                                           std::vector<float> &outputValues, bool showInfo);
+                                           QDate startDate, QDate endDate, bool showInfo);
         bool getIsElabMeteoPointsValue() const;
         void setIsElabMeteoPointsValue(bool value);
         bool dbMeteoPointDataCount(QDate myFirstDate, QDate myLastDate, meteoVariable myVar, QString dataset, std::vector<int> &myCounter);
@@ -158,6 +163,18 @@
         bool computeClimatePointXML(QString xmlName);
         bool cleanClimatePoint();
         bool saveLogProceduresGrid(QString nameProc, QDate date);
+
+        bool dailyZoneAggregationMeteoGrid(meteoVariable variable, const QString& aggregationString, float threshold,
+                                           gis::Crit3DRasterGrid* zoneGrid, std::vector<int> &idZoneVector, std::vector<float> &outputSeries,
+                                           std::vector<std::vector<int>> &indexRowCol,
+                                           std::vector<std::vector<int>> &meteoGridRow, std::vector<std::vector<int>> &meteoGridcol,
+                                           const Crit3DDate& startDate, int nrDays, bool showInfo);
+
+        bool hourlyZoneAggregationMeteoGrid(meteoVariable variable, const QString& aggregationString, float threshold,
+                                           gis::Crit3DRasterGrid* zoneRaster, std::vector<int> &idZoneVector, std::vector<float> &outputSeries,
+                                           std::vector<std::vector<int>> &indexRowCol,
+                                           std::vector<std::vector<int>> &meteoGridRow, std::vector<std::vector<int>> &meteoGridcol,
+                                           const Crit3DDate& startDate, int nrDays, bool showInfo);
 
         #ifdef NETCDF
                 bool exportMeteoGridToNetCDF(QString fileName, QString title, QString variableName, std::string variableUnit, Crit3DDate myDate, int nDays, int refYearStart, int refYearEnd);

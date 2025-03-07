@@ -460,9 +460,9 @@ void weatherGenerator2D::computeMonthlyVariables()
         weibullDailyParameterLambda[i] = (double*)calloc(365,sizeof(double));
         interpolatedDailyValuePrecAverage[i] = (float*)calloc(365,sizeof(float));
         interpolatedDailyValuePrecVariance[i] = (float*)calloc(365,sizeof(float));
-        cubicSplineYearInterpolate(monthlyAveragePrec[i],interpolatedDailyValuePrecAverage[i]);
-        cubicSplineYearInterpolate(monthlyStdDevPrec[i],interpolatedDailyValuePrecVariance[i]);
-        for (int j=0;j<365;j++)
+        interpolation::cubicSplineYearInterpolate(monthlyAveragePrec[i], interpolatedDailyValuePrecAverage[i]);
+        interpolation::cubicSplineYearInterpolate(monthlyStdDevPrec[i], interpolatedDailyValuePrecVariance[i]);
+        for (int j=0; j < 365; j++)
         {
             interpolatedDailyValuePrecVariance[i][j] *= interpolatedDailyValuePrecVariance[i][j];
         }

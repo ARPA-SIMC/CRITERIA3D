@@ -373,8 +373,6 @@ double computeCapillaryRise(std::vector<soil::Crit1DLayer> &soilLayers, double w
 
 double computeEvaporation(std::vector<soil::Crit1DLayer> &soilLayers, double maxEvaporation)
 {
-   // TODO extend to geometric soilLayers
-
     // surface evaporation
     double surfaceEvaporation = MINVALUE(maxEvaporation, soilLayers[0].waterContent);
     soilLayers[0].waterContent -= surfaceEvaporation;
@@ -383,45 +381,68 @@ double computeEvaporation(std::vector<soil::Crit1DLayer> &soilLayers, double max
 
     double residualEvaporation = maxEvaporation - surfaceEvaporation;
     if (residualEvaporation < EPSILON)
+    {
         return actualEvaporation;
+    }
 
     // soil evaporation
     int nrEvapLayers = int(floor(MAX_EVAPORATION_DEPTH / soilLayers[1].thickness)) +1;
     nrEvapLayers = std::min(nrEvapLayers, int(soilLayers.size()-1));
-    double* coeffEvap = new double[nrEvapLayers];
-    double layerDepth, coeffDepth;
 
-    double sumCoeff = 0;
+    std::vector<double> coeffEvap;
+    coeffEvap.resize(nrEvapLayers);
+
     double minDepth = soilLayers[1].depth + soilLayers[1].thickness / 2;
+    double sumCoeff = 0;
     for (int i=1; i <= nrEvapLayers; i++)
     {
-        layerDepth = soilLayers[i].depth + soilLayers[i].thickness / 2.0;
+        double layerDepth = soilLayers[i].depth + soilLayers[i].thickness / 2.0;
 
-        coeffDepth = MAXVALUE((layerDepth - minDepth) / (MAX_EVAPORATION_DEPTH - minDepth), 0);
-        // evaporation coefficient: 1 at depthMin, ~0.1 at MAX_EVAPORATION_DEPTH
+        double coeffDepth = MAXVALUE((layerDepth - minDepth) / (MAX_EVAPORATION_DEPTH - minDepth), 0);
+        // evaporation coefficient: 1 at depthMin, ~0.1 at maximum depth for evaporation
         coeffEvap[i-1] = exp(-2 * coeffDepth);
 
         sumCoeff += coeffEvap[i-1];
     }
 
+    // normalize
+    std::vector<double> coeffThreshold;
+    coeffThreshold.resize(nrEvapLayers);
+    for (int i=0; i < nrEvapLayers; i++)
+    {
+        coeffThreshold[i] = (1.0 - coeffEvap[i]) * 0.5;
+        coeffEvap[i] /= sumCoeff;
+    }
+
     bool isWaterSupply = true;
     double sumEvap, evapLayerThreshold, evapLayer;
-    while ((residualEvaporation > EPSILON) && (isWaterSupply == true))
+    int nrIteration = 0;
+    while ((residualEvaporation > EPSILON) && (isWaterSupply == true) && nrIteration < 3)
     {
-        isWaterSupply = false;
         sumEvap = 0.0;
 
         for (int i=1; i <= nrEvapLayers; i++)
         {
-            evapLayerThreshold = soilLayers[i].HH + (1 - coeffEvap[i-1]) * (soilLayers[i].FC - soilLayers[i].HH) * 0.5;
-            evapLayer = (coeffEvap[i-1] / sumCoeff) * residualEvaporation;
+            evapLayer = residualEvaporation * coeffEvap[i-1];
+            evapLayerThreshold = soilLayers[i].HH + (soilLayers[i].FC - soilLayers[i].HH) * coeffThreshold[i-1];
 
             if (soilLayers[i].waterContent > (evapLayerThreshold + evapLayer))
+            {
                 isWaterSupply = true;
-            else if (soilLayers[i].waterContent > evapLayerThreshold)
-                evapLayer = soilLayers[i].waterContent - evapLayerThreshold;
+            }
             else
-                evapLayer = 0.0;
+            {
+                if (soilLayers[i].waterContent > evapLayerThreshold)
+                {
+                    evapLayer = soilLayers[i].waterContent - evapLayerThreshold;
+                }
+                else
+                {
+                    evapLayer = 0.0;
+                }
+
+                isWaterSupply = false;
+            }
 
             soilLayers[i].waterContent -= evapLayer;
             sumEvap += evapLayer;
@@ -429,9 +450,8 @@ double computeEvaporation(std::vector<soil::Crit1DLayer> &soilLayers, double max
 
         residualEvaporation -= sumEvap;
         actualEvaporation  += sumEvap;
+        nrIteration++;
     }
-
-    delete[] coeffEvap;
 
     return actualEvaporation;
 }
@@ -539,7 +559,7 @@ double assignOptimalIrrigation(std::vector<soil::Crit1DLayer> &soilLayers, unsig
  * \brief getSoilWaterContentSum
  * \param soilLayers
  * \param computationDepth = computation soil depth [cm]
- * \return sum of water content from zero to computationSoilDepth [mm]
+ * \return sum of water content from zero to computationDepth [mm]
  */
 double getSoilWaterContentSum(const std::vector<soil::Crit1DLayer> &soilLayers, double computationDepth)
 {
@@ -584,7 +604,7 @@ double getReadilyAvailableWater(const Crit3DCrop &myCrop, const std::vector<soil
     {
         double thetaWP = soil::thetaFromSignPsi(-soil::cmTokPa(myCrop.psiLeaf), *(soilLayers[i].horizonPtr));
         // [mm]
-        double cropWP = thetaWP * soilLayers[i].thickness * soilLayers[i].soilFraction * 1000.0;
+        double cropWP = thetaWP * soilLayers[i].thickness * soilLayers[i].soilFraction * 1000.;
         // [mm]
         double threshold = soilLayers[i].FC - myCrop.fRAW * (soilLayers[i].FC - cropWP);
 

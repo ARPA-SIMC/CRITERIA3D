@@ -11,8 +11,8 @@
         #include "root.h"
     #endif
 
-    enum speciesType {HERBACEOUS_ANNUAL, HERBACEOUS_PERENNIAL, HORTICULTURAL, GRASS, TREE, FALLOW, FALLOW_ANNUAL};
-    #define NR_CROP_SPECIES 7
+    enum speciesType {HERBACEOUS_ANNUAL, HERBACEOUS_PERENNIAL, HORTICULTURAL, GRASS, TREE, FALLOW, FALLOW_ANNUAL, BARESOIL};
+    #define NR_CROP_SPECIES 8
 
     /*!
      * \brief The Crit3DCrop class
@@ -43,8 +43,8 @@
         /*!
          * water need
          */
-        double kcMax;                               /*!< [-] */
-        int psiLeaf;                                /*!< [cm] */
+        double kcMax;                               /*!< [-] maximum crop coefficient */
+        int psiLeaf;                                /*!< [cm] maximum water suction potential */
         double stressTolerance;                     /*!< [-] */
         double fRAW;                                /*!< [-] fraction of Readily Available Water */
 
@@ -81,6 +81,9 @@
         bool isSowingCrop() const;
         bool isRootStatic() const;
 
+        bool isBareSoil() const
+        { return (type == BARESOIL); }
+
         double getDailyDegreeIncrease(double tmin, double tmax, int doy);
 
         void initialize(double latitude, unsigned int nrLayers, double totalSoilDepth, int currentDoy);
@@ -107,7 +110,8 @@
 
         double getCropWaterDeficit(const std::vector<soil::Crit1DLayer> & soilLayers);
 
-        double computeTranspiration(double maxTranspiration, const std::vector<soil::Crit1DLayer>& soilLayers, double& waterStress);
+        double computeTranspiration(double maxTranspiration, const std::vector<soil::Crit1DLayer>& soilLayers,
+                                    double& waterStress, double &waterExcessStress);
     };
 
 

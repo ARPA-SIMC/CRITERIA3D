@@ -71,11 +71,11 @@ Crit3DPointStatisticsWidget::Crit3DPointStatisticsWidget(bool isGrid, Crit3DMete
                     jointStationsSelected.addItem(QString::fromStdString(this->meteoPoints[n].id)+" "+QString::fromStdString(this->meteoPoints[n].name));
                     if (firstDaily.isValid() && lastDaily.isValid())
                     {
-                        meteoPointsDbHandler->loadDailyData(getCrit3DDate(firstDaily), getCrit3DDate(lastDaily), &(this->meteoPoints[n]));
+                        meteoPointsDbHandler->loadDailyData(getCrit3DDate(firstDaily), getCrit3DDate(lastDaily), this->meteoPoints[n]);
                     }
                     if (firstHourly.isValid() && lastHourly.isValid())
                     {
-                        meteoPointsDbHandler->loadHourlyData(getCrit3DDate(firstHourly.date()), getCrit3DDate(lastHourly.date()), &(this->meteoPoints[n]));
+                        meteoPointsDbHandler->loadHourlyData(getCrit3DDate(firstHourly.date()), getCrit3DDate(lastHourly.date()), this->meteoPoints[n]);
                     }
                     break;
                 }
@@ -697,7 +697,8 @@ void Crit3DPointStatisticsWidget::plot()
 
             double availab = double(validData) / double(count) * 100.0;
             availability.setText(QString::number(availab, 'f', 3));
-            double mkendall = statisticalElab(mannKendall, NODATA, outputValues, outputValues.size(), meteoSettings->getRainfallThreshold());
+            double mkendall = statisticalElab(mannKendall, NODATA, outputValues, int(outputValues.size()),
+                                              meteoSettings->getRainfallThreshold());
             significance.setText(QString::number(mkendall, 'f', 3));
             double averageValue = sum / double(validData);
             average.setText(QString::number(averageValue, 'f', 1));
@@ -707,7 +708,7 @@ void Crit3DPointStatisticsWidget::plot()
             float myR2 = NODATA;
             bool isZeroIntercept = false;
             std::vector<float> yearsFloat(years.begin(), years.end());
-            statistics::linearRegression(yearsFloat, outputValues, outputValues.size(), isZeroIntercept,
+            statistics::linearRegression(yearsFloat, outputValues, int(outputValues.size()), isZeroIntercept,
                                              &myIntercept, &myCoeff, &myR2);
             r2.setText(QString::number(double(myR2), 'f', 3));
             rate.setText(QString::number(double(myCoeff), 'f', 3));
@@ -868,7 +869,8 @@ void Crit3DPointStatisticsWidget::plot()
 
             float availab = ((float)validData/(float)count)*100.0;
             availability.setText(QString::number(availab, 'f', 3));
-            float mkendall = statisticalElab(mannKendall, NODATA, outputValues, outputValues.size(), meteoSettings->getRainfallThreshold());
+            float mkendall = statisticalElab(mannKendall, NODATA, outputValues, int(outputValues.size()),
+                                             meteoSettings->getRainfallThreshold());
             significance.setText(QString::number(mkendall, 'f', 3));
             float averageValue = sum/validYears;
             average.setText(QString::number(averageValue, 'f', 1));
@@ -878,7 +880,7 @@ void Crit3DPointStatisticsWidget::plot()
             float myR2 = NODATA;
             bool isZeroIntercept = false;
             std::vector<float> yearsFloat(years.begin(), years.end());
-            statistics::linearRegression(yearsFloat, outputValues, outputValues.size(), isZeroIntercept,
+            statistics::linearRegression(yearsFloat, outputValues, int(outputValues.size()), isZeroIntercept,
                                              &myIntercept, &myCoeff, &myR2);
             r2.setText(QString::number(myR2, 'f', 3));
             rate.setText(QString::number(myCoeff, 'f', 3));
@@ -1169,10 +1171,10 @@ void Crit3DPointStatisticsWidget::plot()
                         visualizedNrValues = visualizedNrValues + 1;
                     }
                 }
-                avg = statistics::mean(series, nrValues);
+                avg = statistics::mean(series);
                 dev_std = statistics::standardDeviation(series, nrValues);
-                millile3dev = sorting::percentile(sortedSeries, nrValues, 99.73, true);
-                millile_3Dev = sorting::percentile(sortedSeries, nrValues, 0.27, false);
+                millile3dev = sorting::percentile(sortedSeries, nrValues, 99.73f, true);
+                millile_3Dev = sorting::percentile(sortedSeries, nrValues, 0.27f, false);
             }
 
             availability.setText(QString::number((float)nrValues/(float)totDays * 100, 'f', 3));
@@ -1447,10 +1449,10 @@ void Crit3DPointStatisticsWidget::plot()
                     }
                 }
             }
-            avg = statistics::mean(series, nrValues);
+            avg = statistics::mean(series);
             dev_std = statistics::standardDeviation(series, nrValues);
-            millile3dev = sorting::percentile(sortedSeries, nrValues, 99.73, true);
-            millile_3Dev = sorting::percentile(sortedSeries, nrValues, 0.27, false);
+            millile3dev = sorting::percentile(sortedSeries, nrValues, 99.73f, true);
+            millile_3Dev = sorting::percentile(sortedSeries, nrValues, 0.27f, false);
         }
         availability.setText(QString::number((float)nrValues/(float)totDays * 100, 'f', 3));
         average.setText(QString::number(avg, 'f', 1));
@@ -1626,7 +1628,7 @@ void Crit3DPointStatisticsWidget::showElaboration()
 
         float availab = ((float)validYears/(float)years.size())*100.0;
         availability.setText(QString::number(availab, 'f', 3));
-        float mkendall = statisticalElab(mannKendall, NODATA, outputValues, outputValues.size(), meteoSettings->getRainfallThreshold());
+        float mkendall = statisticalElab(mannKendall, NODATA, outputValues, int(outputValues.size()), meteoSettings->getRainfallThreshold());
         significance.setText(QString::number(mkendall, 'f', 3));
         float averageValue = sum/validYears;
         average.setText(QString::number(averageValue, 'f', 1));
@@ -1636,7 +1638,7 @@ void Crit3DPointStatisticsWidget::showElaboration()
         float myR2 = NODATA;
         bool isZeroIntercept = false;
         std::vector<float> yearsFloat(years.begin(), years.end());
-        statistics::linearRegression(yearsFloat, outputValues, outputValues.size(), isZeroIntercept,
+        statistics::linearRegression(yearsFloat, outputValues, int(outputValues.size()), isZeroIntercept,
                                          &myIntercept, &myCoeff, &myR2);
         r2.setText(QString::number(myR2, 'f', 3));
         rate.setText(QString::number(myCoeff, 'f', 3));
@@ -1687,7 +1689,7 @@ void Crit3DPointStatisticsWidget::computePlot()
 
 void Crit3DPointStatisticsWidget::on_actionChangeLeftAxis()
 {
-    DialogChangeAxis changeAxisDialog(true);
+    DialogChangeAxis changeAxisDialog(1, false);
     if (changeAxisDialog.result() == QDialog::Accepted)
     {
         chartView->setYmax(changeAxisDialog.getMaxVal());
@@ -1827,11 +1829,11 @@ void Crit3DPointStatisticsWidget::addStationClicked()
         QDateTime lastHourly = meteoPointsDbHandler->getLastDate(hourly, newId);
         if (firstDaily.isValid() && lastDaily.isValid())
         {
-            meteoPointsDbHandler->loadDailyData(getCrit3DDate(firstDaily), getCrit3DDate(lastDaily), &meteoPoints[indexMp]);
+            meteoPointsDbHandler->loadDailyData(getCrit3DDate(firstDaily), getCrit3DDate(lastDaily), meteoPoints[indexMp]);
         }
         if (firstHourly.isValid() && lastHourly.isValid())
         {
-            meteoPointsDbHandler->loadHourlyData(getCrit3DDate(firstHourly.date()), getCrit3DDate(lastHourly.date()), &meteoPoints[indexMp]);
+            meteoPointsDbHandler->loadHourlyData(getCrit3DDate(firstHourly.date()), getCrit3DDate(lastHourly.date()), meteoPoints[indexMp]);
         }
         updateYears();
     }

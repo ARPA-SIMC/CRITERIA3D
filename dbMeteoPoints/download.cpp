@@ -1,4 +1,6 @@
 #include "download.h"
+#include "dbMeteoPointsHandler.h"
+#include "gis.h"
 
 #include <QtNetwork>
 
@@ -20,9 +22,9 @@ DbArkimet* Download::getDbArkimet()
     return _dbMeteo;
 }
 
-bool Download::getPointProperties(QList<QString> datasetList)
-{
 
+bool Download::getPointProperties(const QList<QString> &datasetList, int utmZone, QString &errorString)
+{
     bool result = true;
     QEventLoop loop;
 
@@ -42,7 +44,7 @@ bool Download::getPointProperties(QList<QString> datasetList)
 
     if (reply->error() != QNetworkReply::NoError)
     {
-            qDebug() << "Network Error: " << reply->error();
+            errorString =  "Network Error: " + reply->errorString();
             result = false;
     }
     else
@@ -55,7 +57,12 @@ bool Download::getPointProperties(QList<QString> datasetList)
         qDebug() << "err: " << error->errorString() << " -> " << error->offset;
 
         // check validity of the document
-        if(!doc.isNull() && doc.isArray())
+        if(doc.isNull() || ! doc.isArray())
+        {
+            errorString = "Invalid JSON";
+            result = false;
+        }
+        else
         {
             QJsonArray jsonArr = doc.array();
 
@@ -67,20 +74,19 @@ bool Download::getPointProperties(QList<QString> datasetList)
 
                 if (jsonDataset.isUndefined())
                     qDebug() << "jsonDataset: key id does not exist";
-                else if (!jsonDataset.isString())
+                else if (! jsonDataset.isString())
                     qDebug() << "jsonDataset: value is not string";
                 else
+                {
                     foreach(QString item, _datasetsList)
-                        if (jsonDataset == item)
+                    {
+                        if (jsonDataset.toString().toUpper() == item.toUpper())
                         {
-                            this->downloadMetadata(obj);
+                            this->downloadMetadata(obj, utmZone);
                         }
+                    }
+                }
             }
-        }
-         else
-        {
-            qDebug() << "Invalid JSON...\n";
-            result = false;
         }
     }
 
@@ -88,6 +94,7 @@ bool Download::getPointProperties(QList<QString> datasetList)
     delete manager;
     return result;
 }
+
 
 QMap<QString, QString> Download::getArmiketIdList(QList<QString> datasetList)
 {
@@ -140,7 +147,7 @@ QMap<QString, QString> Download::getArmiketIdList(QList<QString> datasetList)
                     qDebug() << "jsonDataset: value is not string";
                 else
                     foreach(QString item, _datasetsList)
-                        if (jsonDataset == item)
+                        if (jsonDataset.toString().toUpper() == item.toUpper())
                         {
                             QString idValue;
                             QString nameValue;
@@ -175,9 +182,10 @@ QMap<QString, QString> Download::getArmiketIdList(QList<QString> datasetList)
     return idList;
 }
 
-void Download::downloadMetadata(QJsonObject obj)
+
+void Download::downloadMetadata(const QJsonObject &obj, int utmZone)
 {
-    Crit3DMeteoPoint* pointProp = new Crit3DMeteoPoint();
+    Crit3DMeteoPoint pointProp;
 
     QJsonValue jsonId = obj.value("id");
 
@@ -188,79 +196,78 @@ void Download::downloadMetadata(QJsonObject obj)
     }
 
     int idInt = jsonId.toInt();
-    pointProp->id = std::to_string(idInt);
+    pointProp.id = std::to_string(idInt);
 
     QJsonValue jsonName = obj.value("name");
     if (jsonName.isNull())
           qDebug() << "name is null\n";
-    pointProp->name = jsonName.toString().toStdString();
+    pointProp.name = jsonName.toString().toStdString();
 
     QJsonValue jsonNetwork = obj.value("network");
-    pointProp->dataset = jsonNetwork.toString().toStdString();
+    pointProp.dataset = jsonNetwork.toString().toStdString();
 
     QJsonValue jsonGeometry = obj.value("geometry").toObject().value("coordinates");
     QJsonValue jsonLon = jsonGeometry.toArray()[0];
     if (jsonLon.isNull() || jsonLon.toInt() < -180 || jsonLon.toInt() > 180)
         qDebug() << "invalid Longitude\n";
-    pointProp->longitude = jsonLon.toDouble();
+    pointProp.longitude = jsonLon.toDouble();
 
     QJsonValue jsonLat = jsonGeometry.toArray()[1];
     if (jsonLat.isNull() || jsonLat.toInt() < -90 || jsonLat.toInt() > 90)
         qDebug() << "invalid Latitude\n";
-    pointProp->latitude = jsonLat.toDouble();
+    pointProp.latitude = jsonLat.toDouble();
 
     QJsonValue jsonLatInt = obj.value("lat");
     if (jsonLatInt.isNull())
         jsonLatInt = NODATA;
-    pointProp->latInt = jsonLatInt.toInt();
+    pointProp.latInt = jsonLatInt.toInt();
 
     QJsonValue jsonLonInt = obj.value("lon");
     if (jsonLonInt.isNull())
         jsonLonInt = NODATA;
-    pointProp->lonInt = jsonLonInt.toInt();
+    pointProp.lonInt = jsonLonInt.toInt();
 
     QJsonValue jsonAltitude = obj.value("height");
-    pointProp->point.z = jsonAltitude.toDouble();
+    pointProp.point.z = jsonAltitude.toDouble();
 
     QJsonValue jsonState = obj.value("country").toObject().value("name");
-    pointProp->state = jsonState.toString().toStdString();
+    pointProp.state = jsonState.toString().toStdString();
 
     if (obj.value("region").isNull())
-        pointProp->region = "";
+        pointProp.region = "";
     else
     {
         QJsonValue jsonRegion = obj.value("region").toObject().value("name");
-        pointProp->region = jsonRegion.toString().toStdString();
+        pointProp.region = jsonRegion.toString().toStdString();
     }
 
     if (obj.value("province").isNull())
-        pointProp->province = "";
+        pointProp.province = "";
     else
     {
         QJsonValue jsonProvince = obj.value("province").toObject().value("name");
-        pointProp->province = jsonProvince.toString().toStdString();
+        pointProp.province = jsonProvince.toString().toStdString();
     }
 
     if (obj.value("municipality").isNull())
-        pointProp->municipality = "";
+        pointProp.municipality = "";
     else
     {
         QJsonValue jsonMunicipality = obj.value("municipality").toObject().value("name");
-        pointProp->municipality = jsonMunicipality.toString().toStdString();
+        pointProp.municipality = jsonMunicipality.toString().toStdString();
     }
 
     double utmx, utmy;
-    int utmZone = 32; // dove far inserire la utmZone? c'è funzione che data lat,lon restituisce utm zone?
-    gis::latLonToUtmForceZone(utmZone, pointProp->latitude, pointProp->longitude, &utmx, &utmy);
-    pointProp->point.utm.x = utmx;
-    pointProp->point.utm.y = utmy;
+    gis::latLonToUtmForceZone(utmZone, pointProp.latitude, pointProp.longitude, &utmx, &utmy);
+    pointProp.point.utm.x = utmx;
+    pointProp.point.utm.y = utmy;
 
     _dbMeteo->writePointProperties(pointProp);
 }
 
-bool Download::getPointPropertiesFromId(QString id, Crit3DMeteoPoint* pointProp)
-{
 
+bool Download::getPointPropertiesFromId(const QString &id, int utmZone, Crit3DMeteoPoint &pointProp)
+{
     bool result = true;
     QEventLoop loop;
 
@@ -291,7 +298,7 @@ bool Download::getPointPropertiesFromId(QString id, Crit3DMeteoPoint* pointProp)
         qDebug() << "err: " << error->errorString() << " -> " << error->offset;
 
         // check validity of the document
-        if(!doc.isNull() && doc.isArray())
+        if(! doc.isNull() && doc.isArray())
         {
             QJsonArray jsonArr = doc.array();
 
@@ -306,72 +313,71 @@ bool Download::getPointPropertiesFromId(QString id, Crit3DMeteoPoint* pointProp)
                 else
                         if (jsonIdValue == id)
                         {
-                            pointProp->id = id.toStdString();
+                            pointProp.id = id.toStdString();
 
                             QJsonValue jsonName = obj.value("name");
                             if (jsonName.isNull())
                                   qDebug() << "name is null\n";
-                            pointProp->name = jsonName.toString().toStdString();
+                            pointProp.name = jsonName.toString().toStdString();
 
                             QJsonValue jsonNetwork = obj.value("network");
-                            pointProp->dataset = jsonNetwork.toString().toStdString();
+                            pointProp.dataset = jsonNetwork.toString().toStdString();
 
                             QJsonValue jsonGeometry = obj.value("geometry").toObject().value("coordinates");
                             QJsonValue jsonLon = jsonGeometry.toArray()[0];
                             if (jsonLon.isNull() || jsonLon.toInt() < -180 || jsonLon.toInt() > 180)
                                 qDebug() << "invalid Longitude\n";
-                            pointProp->longitude = jsonLon.toDouble();
+                            pointProp.longitude = jsonLon.toDouble();
 
                             QJsonValue jsonLat = jsonGeometry.toArray()[1];
                             if (jsonLat.isNull() || jsonLat.toInt() < -90 || jsonLat.toInt() > 90)
                                 qDebug() << "invalid Latitude\n";
-                            pointProp->latitude = jsonLat.toDouble();
+                            pointProp.latitude = jsonLat.toDouble();
 
                             QJsonValue jsonLatInt = obj.value("lat");
                             if (jsonLatInt.isNull())
                                 jsonLatInt = NODATA;
-                            pointProp->latInt = jsonLatInt.toInt();
+                            pointProp.latInt = jsonLatInt.toInt();
 
                             QJsonValue jsonLonInt = obj.value("lon");
                             if (jsonLonInt.isNull())
                                 jsonLonInt = NODATA;
-                            pointProp->lonInt = jsonLonInt.toInt();
+                            pointProp.lonInt = jsonLonInt.toInt();
 
                             QJsonValue jsonAltitude = obj.value("height");
-                            pointProp->point.z = jsonAltitude.toDouble();
+                            pointProp.point.z = jsonAltitude.toDouble();
 
                             QJsonValue jsonState = obj.value("country").toObject().value("name");
-                            pointProp->state = jsonState.toString().toStdString();
+                            pointProp.state = jsonState.toString().toStdString();
 
                             if (obj.value("region").isNull())
-                                pointProp->region = "";
+                                pointProp.region = "";
                             else
                             {
                                 QJsonValue jsonRegion = obj.value("region").toObject().value("name");
-                                pointProp->region = jsonRegion.toString().toStdString();
+                                pointProp.region = jsonRegion.toString().toStdString();
                             }
 
                             if (obj.value("province").isNull())
-                                pointProp->province = "";
+                                pointProp.province = "";
                             else
                             {
                                 QJsonValue jsonProvince = obj.value("province").toObject().value("name");
-                                pointProp->province = jsonProvince.toString().toStdString();
+                                pointProp.province = jsonProvince.toString().toStdString();
                             }
 
                             if (obj.value("municipality").isNull())
-                                pointProp->municipality = "";
+                                pointProp.municipality = "";
                             else
                             {
                                 QJsonValue jsonMunicipality = obj.value("municipality").toObject().value("name");
-                                pointProp->municipality = jsonMunicipality.toString().toStdString();
+                                pointProp.municipality = jsonMunicipality.toString().toStdString();
                             }
 
                             double utmx, utmy;
-                            int utmZone = 32; // dove far inserire la utmZone? c'è funzione che data lat,lon restituisce utm zone?
-                            gis::latLonToUtmForceZone(utmZone, pointProp->latitude, pointProp->longitude, &utmx, &utmy);
-                            pointProp->point.utm.x = utmx;
-                            pointProp->point.utm.y = utmy;
+                            gis::latLonToUtmForceZone(utmZone, pointProp.latitude, pointProp.longitude, &utmx, &utmy);
+                            pointProp.point.utm.x = utmx;
+                            pointProp.point.utm.y = utmy;
 
                             delete reply;
                             delete manager;
@@ -392,7 +398,8 @@ bool Download::getPointPropertiesFromId(QString id, Crit3DMeteoPoint* pointProp)
 }
 
 
-bool Download::downloadDailyData(QDate startDate, QDate endDate, QString dataset, QList<QString> stations, QList<int> variables, bool prec0024)
+bool Download::downloadDailyData(const QDate &startDate, const QDate &endDate, const QString &dataset,
+                                 QList<QString> &stations, QList<int> &variables, bool prec0024, QString &errorString)
 {
     QString area, product, refTime;
     QDate myDate;
@@ -403,13 +410,15 @@ bool Download::downloadDailyData(QDate startDate, QDate endDate, QString dataset
 
     QList<QString> idVar;
     for (int i = 0; i < variableList.size(); i++)
+    {
         idVar.append(QString::number(variableList[i].id()));
+    }
 
     // create station tables
     _dbMeteo->initStationsDailyTables(startDate, endDate, stations, idVar);
 
     // attenzione: il reference time dei giornalieri è a fine giornata (ore 00 di day+1)
-    refTime = QString("reftime:>%1,<=%2").arg(startDate.toString("yyyy-MM-dd")).arg(endDate.addDays(1).toString("yyyy-MM-dd"));
+    refTime = QString("reftime:>%1,<=%2").arg(startDate.toString("yyyy-MM-dd"), endDate.addDays(1).toString("yyyy-MM-dd"));
 
     product = QString(";product: VM2,%1").arg(variables[0]);
 
@@ -432,20 +441,27 @@ bool Download::downloadDailyData(QDate startDate, QDate endDate, QString dataset
         if (j == 0)
         {
             area = QString(";area: VM2,%1").arg(stations[countStation]);
-            j = j+1;
-            countStation = countStation+1;
+            countStation++;
+            j++;
         }
         while (countStation < stations.size() && j < maxStationSize)
         {
             area = area % QString(" or VM2,%1").arg(stations[countStation]);
-            countStation = countStation+1;
-            j = j+1;
+            countStation++;
+            j++;
+        }
+
+        bool isOk;
+        url = QUrl(QString("%1/query").arg(_dbMeteo->getDatasetURL(dataset, isOk)));
+        if (! isOk)
+        {
+            errorString = _dbMeteo->getErrorString();
+            return false;
         }
 
         QNetworkAccessManager* manager = new QNetworkAccessManager(this);
         connect(manager, SIGNAL(finished(QNetworkReply*)), &loop, SLOT(quit()));
 
-        url = QUrl(QString("%1/query").arg(_dbMeteo->getDatasetURL(dataset)));
         request.setUrl(url);
         request.setRawHeader("Authorization", _authorization);
         request.setHeader(QNetworkRequest::ContentTypeHeader, QVariant("application/x-www-form-urlencoded"));
@@ -460,7 +476,7 @@ bool Download::downloadDailyData(QDate startDate, QDate endDate, QString dataset
 
         if (reply->error() != QNetworkReply::NoError)
         {
-            qDebug( "Network Error" );
+            errorString = "Network Error";
             downloadOk = false;
         }
         else
@@ -487,13 +503,17 @@ bool Download::downloadDailyData(QDate startDate, QDate endDate, QString dataset
 
                 if (idPoint != "" && flag.left(1) != "1" && flag.left(3) != "054")
                 {
+                    value = NODATA;
+                    if (flag.left(1) == "2")
+                        value = fields[4].toDouble();
+                    else
+                        value = fields[3].toDouble();
+
                     idArkimet = fields[2].toInt();
 
                     if (idArkimet == PREC_ID)
                         if ((prec0024 && fields[0].mid(8,2) != "00") || (!prec0024 && fields[0].mid(8,2) != "08"))
                             continue;
-
-                    value = fields[3].toDouble();
 
                     // conversion from average daily radiation to integral radiation
                     if (idArkimet == RAD_ID)
@@ -515,7 +535,7 @@ bool Download::downloadDailyData(QDate startDate, QDate endDate, QString dataset
 
                 }
             }
-            if (!emptyLine)
+            if (! emptyLine)
             {
                 downloadOk = _dbMeteo->saveDailyData();
             }
@@ -533,10 +553,10 @@ bool Download::downloadDailyData(QDate startDate, QDate endDate, QString dataset
 }
 
 
-bool Download::downloadHourlyData(QDate startDate, QDate endDate, QString dataset, QList<QString> stations, QList<int> variables)
+bool Download::downloadHourlyData(const QDate &startDate, const QDate &endDate, const QString &dataset,
+                                  const QList<QString> &stationList, const QList<int> &varList, QString &errorString)
 {
-
-    QList<VariablesList> variableList = _dbMeteo->getVariableProperties(variables);
+    QList<VariablesList> variableList = _dbMeteo->getVariableProperties(varList);
     if (variableList.size() == 0)
         return false;
 
@@ -546,13 +566,13 @@ bool Download::downloadHourlyData(QDate startDate, QDate endDate, QString datase
         idVar.append(QString::number(variableList[i].id()));
 
     // create station tables
-    _dbMeteo->initStationsHourlyTables(startDate, endDate, stations, idVar);
+    _dbMeteo->initStationsHourlyTables(startDate, endDate, stationList, idVar);
 
-    QString product = QString(";product: VM2,%1").arg(variables[0]);
+    QString product = QString(";product: VM2,%1").arg(varList[0]);
 
-    for (int i = 1; i < variables.size(); i++)
+    for (int i = 1; i < varList.size(); i++)
     {
-        product = product % QString(" or VM2,%1").arg(variables[i]);
+        product = product % QString(" or VM2,%1").arg(varList[i]);
     }
 
     // start from 01:00
@@ -562,7 +582,7 @@ bool Download::downloadHourlyData(QDate startDate, QDate endDate, QString datase
     endTime = endTime.addSecs(3600 * 24);
 
     // reftime
-    QString refTime = QString("reftime:>=%1,<=%2").arg(startTime.toString("yyyy-MM-dd hh:mm")).arg(endTime.toString("yyyy-MM-dd hh:mm"));
+    QString refTime = QString("reftime:>=%1,<=%2").arg(startTime.toString("yyyy-MM-dd hh:mm"), endTime.toString("yyyy-MM-dd hh:mm"));
 
     QEventLoop loop;
 
@@ -573,24 +593,32 @@ bool Download::downloadHourlyData(QDate startDate, QDate endDate, QString datase
     QNetworkRequest request;
     int countStation = 0;
 
-    while (countStation < stations.size())
+    while (countStation < stationList.size())
     {
         if (j == 0)
         {
-            area = QString(";area: VM2,%1").arg(stations[countStation]);
+            area = QString(";area: VM2,%1").arg(stationList[countStation]);
             j = j+1;
             countStation = countStation+1;
         }
-        while (countStation < stations.size() && j < maxStationSize)
+        while (countStation < stationList.size() && j < maxStationSize)
         {
-            area = area % QString(" or VM2,%1").arg(stations[countStation]);
+            area = area % QString(" or VM2,%1").arg(stationList[countStation]);
             countStation = countStation+1;
             j = j+1;
         }
+
+        bool isOk;
+        url = QUrl(QString("%1/query").arg(_dbMeteo->getDatasetURL(dataset, isOk)));
+        if (! isOk)
+        {
+            errorString = _dbMeteo->getErrorString();
+            return false;
+        }
+
         QNetworkAccessManager* manager = new QNetworkAccessManager(this);
         connect(manager, SIGNAL(finished(QNetworkReply*)), &loop, SLOT(quit()));
 
-        url = QUrl(QString("%1/query").arg(_dbMeteo->getDatasetURL(dataset)));
         request.setUrl(url);
         request.setRawHeader("Authorization", _authorization);
         request.setHeader(QNetworkRequest::ContentTypeHeader, QVariant("application/x-www-form-urlencoded"));
@@ -604,7 +632,7 @@ bool Download::downloadHourlyData(QDate startDate, QDate endDate, QString datase
 
         if (reply->error() != QNetworkReply::NoError)
         {
-                qDebug( "Network Error" );
+                errorString = "Network Error";
                 delete reply;
                 delete manager;
                 return false;
@@ -614,7 +642,7 @@ bool Download::downloadHourlyData(QDate startDate, QDate endDate, QString datase
             _dbMeteo->queryString = "";
 
             QString line, dateTime, idPoint, flag, varName;
-            QString idVariable, value, frequency;
+            QString idVariable, value, secondValue, frequency;
             QList<QString> fields;
             int i, idVarArkimet;
 
@@ -655,12 +683,18 @@ bool Download::downloadHourlyData(QDate startDate, QDate endDate, QString datase
                     if (isVarOk && fields[3] != "")
                     {
                         value = fields[3];
+                        secondValue = fields[4];
 
                         // flag
                         flag = fields[6];
-                        if (flag.left(1) != "1" && flag.left(3) != "054")
+                        if (flag.left(1) != "1" && flag.left(1) != "2" && flag.left(3) != "054")
                         {
                             _dbMeteo->appendQueryHourly(dateTime, idPoint, idVariable, value, isFirstData);
+                            isFirstData = false;
+                        }
+                        else if(flag.left(1) == "2")
+                        {
+                            _dbMeteo->appendQueryHourly(dateTime, idPoint, idVariable, secondValue, isFirstData);
                             isFirstData = false;
                         }
                     }

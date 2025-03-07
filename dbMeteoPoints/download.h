@@ -12,12 +12,17 @@
             explicit Download(QString dbName, QObject* parent = nullptr);
             ~Download();
 
-            bool getPointProperties(QList<QString> datasetList);
-            bool getPointPropertiesFromId(QString id, Crit3DMeteoPoint* pointProp);
+            bool getPointProperties(const QList<QString> &datasetList, int utmZone, QString &errorString);
+            bool getPointPropertiesFromId(const QString &id, int utmZone, Crit3DMeteoPoint &pointProp);
+
             QMap<QString,QString> getArmiketIdList(QList<QString> datasetList);
-            void downloadMetadata(QJsonObject obj);
-            bool downloadDailyData(QDate startDate, QDate endDate, QString dataset, QList<QString> stations, QList<int> variables, bool prec0024);
-            bool downloadHourlyData(QDate startDate, QDate endDate, QString dataset, QList<QString> stations, QList<int> variables);
+            void downloadMetadata(const QJsonObject &obj, int utmZone);
+
+            bool downloadDailyData(const QDate &startDate, const QDate &endDate, const QString &dataset,
+                                   QList<QString> &stations, QList<int> &variables, bool prec0024, QString &errorString);
+
+            bool downloadHourlyData(const QDate &startDate, const QDate &endDate, const QString &dataset,
+                                    const QList<QString> &stationList, const QList<int> &varList, QString &errorString);
 
             DbArkimet* getDbArkimet();
 

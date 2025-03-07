@@ -1,24 +1,29 @@
 /*!
-    CRITERIA3D
-    \copyright 2016 Fausto Tomei, Gabriele Antolini, Laura Costantini
-    Alberto Pistocchi, Marco Bittelli, Antonio Volta
-    You should have received a copy of the GNU General Public License
-    along with Nome-Programma.  If not, see <http://www.gnu.org/licenses/>.
+    \file meteoWidget.cpp
+
+    \abstract this widget displays hourly or daily weather data sets
+
+    \copyright
     This file is part of CRITERIA3D.
-    CRITERIA3D has been developed under contract issued by A.R.P.A. Emilia-Romagna
+    CRITERIA3D has been developed by ARPAE Emilia-Romagna.
+
     CRITERIA3D is free software: you can redistribute it and/or modify
     it under the terms of the GNU Lesser General Public License as published by
     the Free Software Foundation, either version 3 of the License, or
     (at your option) any later version.
+
     CRITERIA3D is distributed in the hope that it will be useful,
     but WITHOUT ANY WARRANTY; without even the implied warranty of
     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
     GNU Lesser General Public License for more details.
-    You should have received a copy of the /NU Lesser General Public License
+
+    You should have received a copy of the GNU Lesser General Public License
     along with CRITERIA3D.  If not, see <http://www.gnu.org/licenses/>.
-    contacts:
-    fausto.tomei@gmail.com
-    ftomei@arpae.it
+
+    \authors
+    Laura Costantini
+    Fausto Tomei ftomei@arpae.it
+    Gabriele Antolini gantolini@arpae.it
 */
 
 
@@ -34,6 +39,7 @@
 
 #include <QLayout>
 #include <QDate>
+#include <QColorDialog>
 
 
 Crit3DMeteoWidget::Crit3DMeteoWidget(bool isGrid_, QString projectPath, Crit3DMeteoSettings* meteoSettings_)
@@ -58,7 +64,7 @@ Crit3DMeteoWidget::Crit3DMeteoWidget(bool isGrid_, QString projectPath, Crit3DMe
 
     this->resize(1240, 700);
     this->setAttribute(Qt::WA_DeleteOnClose);
-    currentFreq = noFrequency;
+    _currentFrequency = noFrequency;
 
     QDate noDate = QDate(1800,1,1);
     currentDate = noDate;
@@ -116,7 +122,7 @@ Crit3DMeteoWidget::Crit3DMeteoWidget(bool isGrid_, QString projectPath, Crit3DMe
     currentVariables.clear();
     QTextStream in(&fileDefaultGraph);
     in.readLine(); //skip first line
-    while (!in.atEnd())
+    while (! in.atEnd())
     {
         QString line = in.readLine();
         QList<QString> items = line.split(",");
@@ -134,13 +140,17 @@ Crit3DMeteoWidget::Crit3DMeteoWidget(bool isGrid_, QString projectPath, Crit3DMe
         }
         if (key.contains("DAILY"))
         {
-            currentFreq = daily;
+            _currentFrequency = daily;
         }
         else
         {
-            currentFreq = hourly;
+            _currentFrequency = hourly;
         }
+
         MapCSVDefault.insert(key,items);
+        zeroLine = new QLineSeries();
+        zeroLine->setColor(Qt::gray);
+        zeroLine->setName("zero");
         if (items[0] == "line")
         {
             auto search = MapDailyMeteoVar.find(key.toStdString());
@@ -187,17 +197,18 @@ Crit3DMeteoWidget::Crit3DMeteoWidget(bool isGrid_, QString projectPath, Crit3DMe
     {
         if (currentVariables[i].contains("DAILY"))
         {
-            dailyVar = dailyVar+1;
+            dailyVar++;
         }
         else
         {
-            hourlyVar = hourlyVar+1;
+            hourlyVar++;
         }
     }
+
     if (currentVariables.isEmpty() || (dailyVar != 0 && hourlyVar != 0))
     {
         QMessageBox::information(nullptr, "Warning", "Wrong variables in Crit3DPlotDefault.csv");
-        currentFreq = noFrequency;
+        _currentFrequency = noFrequency;
         currentVariables.clear();
         nameLines.clear();
         nameBar.clear();
@@ -283,19 +294,19 @@ Crit3DMeteoWidget::Crit3DMeteoWidget(bool isGrid_, QString projectPath, Crit3DMe
     firstDate->setMinimumWidth(firstDate->width()-firstDate->width()*0.3);
     lastDate->setMinimumWidth(lastDate->width()-lastDate->width()*0.3);
 
-    if (currentFreq == daily || currentFreq == noFrequency)
+    if (_currentFrequency == daily || _currentFrequency == noFrequency)
     {
         dailyButton->setEnabled(false);
         hourlyButton->setEnabled(true);
         monthlyButton->setEnabled(true);
     }
-    else if (currentFreq == hourly)
+    else if (_currentFrequency == hourly)
     {
         hourlyButton->setEnabled(false);
         dailyButton->setEnabled(true);
         monthlyButton->setEnabled(true);
     }
-    else if (currentFreq == monthly)
+    else if (_currentFrequency == monthly)
     {
         monthlyButton->setEnabled(false);
         dailyButton->setEnabled(true);
@@ -322,23 +333,23 @@ Crit3DMeteoWidget::Crit3DMeteoWidget(bool isGrid_, QString projectPath, Crit3DMe
     axisX = new QBarCategoryAxis();
     axisXvirtual = new QBarCategoryAxis();
 
-    axisY = new QValueAxis();
-    axisYdx = new QValueAxis();
+    axisY_sx = new QValueAxis();
+    axisY_dx = new QValueAxis();
 
     axisX->setTitleText("Date");
     axisXvirtual->setTitleText("Date");
     axisXvirtual->setGridLineVisible(false);
 
-    axisY->setRange(0,30);
-    axisY->setGridLineVisible(false);
+    axisY_sx->setRange(0,30);
+    axisY_sx->setGridLineVisible(false);
 
-    axisYdx->setRange(0,8);
-    axisYdx->setGridLineVisible(false);
+    axisY_dx->setRange(0,8);
+    axisY_dx->setGridLineVisible(false);
 
     chart->addAxis(axisX, Qt::AlignBottom);
     chart->addAxis(axisXvirtual, Qt::AlignBottom);
-    chart->addAxis(axisY, Qt::AlignLeft);
-    chart->addAxis(axisYdx, Qt::AlignRight);
+    chart->addAxis(axisY_sx, Qt::AlignLeft);
+    chart->addAxis(axisY_dx, Qt::AlignRight);
 
     chart->legend()->setVisible(true);
     chart->legend()->setAlignment(Qt::AlignBottom);
@@ -411,20 +422,46 @@ Crit3DMeteoWidget::~Crit3DMeteoWidget()
 }
 
 
-void Crit3DMeteoWidget::setDateIntervalDaily(QDate firstDate, QDate lastDate)
+void Crit3DMeteoWidget::setFrequency(frequencyType frequency)
+{
+    _currentFrequency = frequency;
+
+    // update gui
+    if (_currentFrequency == daily || _currentFrequency == noFrequency)
+    {
+        dailyButton->setEnabled(false);
+        hourlyButton->setEnabled(true);
+        monthlyButton->setEnabled(true);
+    }
+    else if (_currentFrequency == hourly)
+    {
+        hourlyButton->setEnabled(false);
+        dailyButton->setEnabled(true);
+        monthlyButton->setEnabled(true);
+    }
+    else if (_currentFrequency == monthly)
+    {
+        monthlyButton->setEnabled(false);
+        dailyButton->setEnabled(true);
+        hourlyButton->setEnabled(true);
+    }
+}
+
+
+void Crit3DMeteoWidget::setDailyRange(QDate firstDate, QDate lastDate)
 {
     firstDailyDate = firstDate;
     lastDailyDate = lastDate;
 }
 
 
-void Crit3DMeteoWidget::setDateIntervalHourly(QDate firstDate, QDate lastDate)
+void Crit3DMeteoWidget::setHourlyRange(QDate firstDate, QDate lastDate)
 {
     firstHourlyDate = firstDate;
     lastHourlyDate = lastDate;
 }
 
-void Crit3DMeteoWidget::setDateIntervalMonthly(QDate firstDate, QDate lastDate)
+void Crit3DMeteoWidget::setMonthlyRange(QDate firstDate, QDate lastDate)
 {
     firstMonthlyDate = firstDate;
     lastMonthlyDate = lastDate;
@@ -459,8 +496,8 @@ void Crit3DMeteoWidget::updateTimeRange()
 
         QDate myHourlyDateFirst;
         myHourlyDateFirst.setDate(meteoPoints[i].getMeteoPointHourlyValuesDate(0).year,
-                                      meteoPoints[i].getMeteoPointHourlyValuesDate(0).month,
-                                      meteoPoints[i].getMeteoPointHourlyValuesDate(0).day);
+                                  meteoPoints[i].getMeteoPointHourlyValuesDate(0).month,
+                                  meteoPoints[i].getMeteoPointHourlyValuesDate(0).day);
         QDate myHourlyDateLast = myHourlyDateFirst.addDays(meteoPoints[i].nrObsDataDaysH-1);
         // updates hourly range
         if (myHourlyDateFirst.isValid() &&
@@ -479,8 +516,8 @@ void Crit3DMeteoWidget::updateTimeRange()
         if (meteoPoints[i].obsDataM.size() != 0)
         {
             myMonthlyDateFirst.setDate(meteoPoints[i].obsDataM[0]._year,
-                                     meteoPoints[i].obsDataM[0]._month,
-                                     1);
+                                       meteoPoints[i].obsDataM[0]._month,
+                                       1);
             myMonthlyDateLast = myMonthlyDateFirst.addMonths(meteoPoints[i].nrObsDataDaysM-1);
         }
         // updates monthly range
@@ -495,28 +532,8 @@ void Crit3DMeteoWidget::updateTimeRange()
             lastMonthlyDate = myMonthlyDateLast;
         }
     }
-    checkExistingData();
-}
 
-void Crit3DMeteoWidget::checkExistingData()
-{
-    // set enable/disable buttons if daily/hourly/monthly data are available
-    if ( (!firstDailyDate.isValid() || firstDailyDate.year() == 1800) && (!lastDailyDate.isValid() || lastDailyDate.year() == 1800) )
-    {
-        dailyButton->setVisible(false);
-    }
-    else
-    {
-        dailyButton->setVisible(true);
-    }
-    if ( (!firstHourlyDate.isValid() || firstHourlyDate.year() == 1800) && (!lastHourlyDate.isValid() || lastHourlyDate.year() == 1800) )
-    {
-        hourlyButton->setVisible(false);
-    }
-    else
-    {
-        hourlyButton->setVisible(true);
-    }
+    // enable/disable monthly button if monthly data are available
     if ( (!firstMonthlyDate.isValid() || firstMonthlyDate.year() == 1800) && (!lastMonthlyDate.isValid() || lastMonthlyDate.year() == 1800) )
     {
         monthlyButton->setVisible(false);
@@ -544,11 +561,11 @@ void Crit3DMeteoWidget::drawMeteoPoint(Crit3DMeteoPoint mp, bool isAppend)
         lastDate->setDate(currentDate);
 
         // draw period (31 days for daily, 3 days for hourly)
-        if (currentFreq == daily)
+        if (_currentFrequency == daily)
         {
             firstDate->setDate(currentDate.addDays(-30));
         }
-        else if (currentFreq == hourly)
+        else if (_currentFrequency == hourly)
         {
             firstDate->setDate(currentDate.addDays(-2));
         }
@@ -590,6 +607,10 @@ QString getFormattedLabel(QString pointName, QString varName)
     {
         varName = varName.remove("DAILY_");
     }
+    else if (varName.contains("MONTHLY_"))
+    {
+        varName = varName.remove("MONTHLY_");
+    }
 
     label = pointName + '_' + varName;
 
@@ -620,13 +641,16 @@ void Crit3DMeteoWidget::drawEnsemble()
     {
         lastDailyDate = myDailyDateLast;
     }
+
     myHourlyDateFirst.setDate(meteoPointsEnsemble[0].getMeteoPointHourlyValuesDate(0).year, meteoPointsEnsemble[0].getMeteoPointHourlyValuesDate(0).month,
                               meteoPointsEnsemble[0].getMeteoPointHourlyValuesDate(0).day);
     myHourlyDateLast = myHourlyDateFirst.addDays(meteoPointsEnsemble[0].nrObsDataDaysH-1);
+
     if (myHourlyDateFirst.isValid() && myHourlyDateFirst < firstHourlyDate)
     {
         firstHourlyDate = myHourlyDateFirst;
     }
+
     if (myHourlyDateLast.isValid() && myHourlyDateLast > lastHourlyDate)
     {
         lastHourlyDate = myHourlyDateLast;
@@ -635,9 +659,9 @@ void Crit3DMeteoWidget::drawEnsemble()
     lastDate->setDate(currentDate);
 
     // draw period (31 days for daily, 3 days for hourly)
-    if (currentFreq == daily)
+    if (_currentFrequency == daily)
         firstDate->setDate(currentDate.addDays(-30));
-    else if (currentFreq == hourly)
+    else if (_currentFrequency == hourly)
         firstDate->setDate(currentDate.addDays(-2));
 
     redraw();
@@ -651,6 +675,10 @@ void Crit3DMeteoWidget::drawEnsemble()
 
 void Crit3DMeteoWidget::resetValues()
 {
+    if (chart->series().contains(zeroLine))
+    {
+        chart->removeSeries(zeroLine);
+    }
     int nMeteoPoints = meteoPoints.size();
     // clear prev series values
     if (!lineSeries.isEmpty())
@@ -659,7 +687,6 @@ void Crit3DMeteoWidget::resetValues()
         {
             for (int i = 0; i < lineSeries[mp].size(); i++)
             {
-                lineSeries[mp][i]->clear();
                 if (chart->series().contains(lineSeries[mp][i]))
                 {
                     chart->removeSeries(lineSeries[mp][i]);
@@ -674,7 +701,6 @@ void Crit3DMeteoWidget::resetValues()
         for (int mp = 0; mp < barSeries.size(); mp++)
         {
             setVector[mp].clear();
-            barSeries[mp]->clear();
             if (chart->series().contains(barSeries[mp]))
             {
                 chart->removeSeries(barSeries[mp]);
@@ -700,15 +726,53 @@ void Crit3DMeteoWidget::resetValues()
                 QLineSeries* line = new QLineSeries();
                 line->setName(getFormattedLabel(pointName, nameLines[i]));
                 QColor lineColor = colorLines[i];
-                if (nMeteoPoints == 1)
+                if (mp == 0)
                 {
-                    lineColor.setAlpha(255);
+                    line->setColor(lineColor);
                 }
                 else
                 {
-                    lineColor.setAlpha( 255-(mp*(150/(nMeteoPoints-1))));
+                    QColor newColor = lineColor.toHsl();
+                    int h = newColor.hslHue();
+                    if (h >= 180)
+                    {
+                        newColor.setHsl(h-(mp*27), newColor.hslSaturation(), newColor.lightness());
+                    }
+                    else
+                    {
+                        newColor.setHsl(h+(mp*27), newColor.hslSaturation(), newColor.lightness());
+                    }
+                    if (colorLinesMpAppended.isEmpty() || !colorLinesMpAppended.contains(lineColor.name()))
+                    {
+                        line->setColor(newColor);
+                        QList<QColor> myList;
+                        myList.append(newColor);
+                        colorLinesMpAppended.insert(lineColor.name(), myList);
+                    }
+                    else
+                    {
+                        QMapIterator<QString, QList<QColor>> iterator(colorLinesMpAppended);
+                        while (iterator.hasNext())
+                        {
+                            iterator.next();
+                            if (iterator.key() == lineColor.name())
+                            {
+                                QList<QColor> myList = colorLinesMpAppended[lineColor.name()];
+                                if (myList.size()>=mp)
+                                {
+                                    line->setColor(myList[mp-1]);
+                                }
+                                else
+                                {
+                                    myList.append(newColor);
+                                    colorLinesMpAppended[lineColor.name()] = myList;
+                                    line->setColor(newColor);
+                                }
+                                break;
+                            }
+                        }
+                    }
                 }
-                line->setColor(lineColor);
                 vectorLine.append(line);
             }
             if (vectorLine.size() != 0)
@@ -736,21 +800,64 @@ void Crit3DMeteoWidget::resetValues()
                 QColor barColor = colorBar[i];
                 if (meteoPointsEnsemble.size() == 0)
                 {
-                    if (nMeteoPoints == 1)
+                    if (mp == 0)
                     {
-                        barColor.setAlpha(255);
+                        bar->setColor(barColor);
+                        bar->setBorderColor(barColor);
                     }
                     else
                     {
-                        barColor.setAlpha( 255-(mp*(150/(nMeteoPoints-1))) );
+                        QColor newColor = barColor.toHsl();
+                        int h = newColor.hslHue();
+                        if (h >= 180)
+                        {
+                            newColor.setHsl(h-(mp*27), newColor.hslSaturation(), newColor.lightness());
+                        }
+                        else
+                        {
+                            newColor.setHsl(h+(mp*27), newColor.hslSaturation(), newColor.lightness());
+                        }
+                        if (colorBarMpAppended.isEmpty() || !colorBarMpAppended.contains(barColor.name()))
+                        {
+                            bar->setColor(newColor);
+                            bar->setBorderColor(newColor);
+                            QList<QColor> myList;
+                            myList.append(newColor);
+                            colorBarMpAppended.insert(barColor.name(), myList);
+                        }
+                        else
+                        {
+                            QMapIterator<QString, QList<QColor>> iterator(colorBarMpAppended);
+                            while (iterator.hasNext())
+                            {
+                                iterator.next();
+
+                                if (iterator.key() == barColor.name())
+                                {
+                                    QList<QColor> myList = colorBarMpAppended[barColor.name()];
+                                    if (myList.size() >= mp)
+                                    {
+                                        bar->setColor(myList[mp-1]);
+                                        bar->setBorderColor(myList[mp-1]);
+                                    }
+                                    else
+                                    {
+                                        myList.append(newColor);
+                                        colorBarMpAppended[barColor.name()] = myList;
+                                        bar->setColor(newColor);
+                                        bar->setBorderColor(newColor);
+                                    }
+                                    break;
+                                }
+                            }
+                        }
                     }
-                    bar->setColor(barColor);
                 }
                 else
                 {
                     bar->setColor(Qt::transparent);
+                    bar->setBorderColor(barColor);
                 }
-                bar->setBorderColor(barColor);
                 vectorBarSet.append(bar);
             }
             if (vectorBarSet.size() != 0)
@@ -835,7 +942,7 @@ void Crit3DMeteoWidget::drawEnsembleDailyVar()
         categories.append(QString::number(day));
     }
 
-    QList<double> sortedList;
+    std::vector<double> sortedList;
     QList<QBoxSet*> listBoxSet;
 
     if (isLine)
@@ -861,7 +968,7 @@ void Crit3DMeteoWidget::drawEnsembleDailyVar()
                     double value = meteoPointsEnsemble[mp].getMeteoPointValueD(myDate, meteoVar, meteoSettings);
                     if (value != NODATA)
                     {
-                        sortedList.append(value);
+                        sortedList.push_back(value);
                         if (value > maxEnsembleLine)
                         {
                             maxEnsembleLine = value;
@@ -873,15 +980,15 @@ void Crit3DMeteoWidget::drawEnsembleDailyVar()
                     }
                 }
                 QBoxSet *box = new QBoxSet();
-                if (!sortedList.isEmpty())
+                if (! sortedList.empty())
                 {
                     std::sort(sortedList.begin(), sortedList.end());
-                    int count = sortedList.count();
-                    box->setValue(QBoxSet::LowerExtreme, sortedList.first());
-                    box->setValue(QBoxSet::UpperExtreme, sortedList.last());
-                    box->setValue(QBoxSet::Median, findMedian(sortedList, 0, count));
-                    box->setValue(QBoxSet::LowerQuartile, findMedian(sortedList, 0, count / 2));
-                    box->setValue(QBoxSet::UpperQuartile, findMedian(sortedList, count / 2 + (count % 2), count));
+                    int lastIndex = int(sortedList.size())-1;
+                    box->setValue(QBoxSet::LowerExtreme, sortedList.front());
+                    box->setValue(QBoxSet::UpperExtreme, sortedList.back());
+                    box->setValue(QBoxSet::Median, findMedian(sortedList, 0, lastIndex));
+                    box->setValue(QBoxSet::LowerQuartile, findMedian(sortedList, 0, lastIndex / 2));
+                    box->setValue(QBoxSet::UpperQuartile, findMedian(sortedList, lastIndex / 2 + (lastIndex % 2), lastIndex));
                 }
                 else
                 {
@@ -901,7 +1008,7 @@ void Crit3DMeteoWidget::drawEnsembleDailyVar()
                 ensembleSeries.append(series);
                 chart->addSeries(series);
                 series->attachAxis(axisX);
-                series->attachAxis(axisY);
+                series->attachAxis(axisY_sx);
             }
         }
     }
@@ -928,7 +1035,7 @@ void Crit3DMeteoWidget::drawEnsembleDailyVar()
                     double value = meteoPointsEnsemble[mp].getMeteoPointValueD(myDate, meteoVar, meteoSettings);
                     if (value != NODATA)
                     {
-                        sortedList.append(value);
+                        sortedList.push_back(value);
                         if (value > maxEnsembleBar)
                         {
                             maxEnsembleBar = value;
@@ -936,15 +1043,15 @@ void Crit3DMeteoWidget::drawEnsembleDailyVar()
                     }
                 }
                 QBoxSet *box = new QBoxSet();
-                if (!sortedList.isEmpty())
+                if (! sortedList.empty())
                 {
                     std::sort(sortedList.begin(), sortedList.end());
-                    int count = sortedList.count();
-                    box->setValue(QBoxSet::LowerExtreme, sortedList.first());
-                    box->setValue(QBoxSet::UpperExtreme, sortedList.last());
-                    box->setValue(QBoxSet::Median, findMedian(sortedList, 0, count));
-                    box->setValue(QBoxSet::LowerQuartile, findMedian(sortedList, 0, count / 2));
-                    box->setValue(QBoxSet::UpperQuartile, findMedian(sortedList, count / 2 + (count % 2), count));
+                    int lastIndex = int(sortedList.size())-1;
+                    box->setValue(QBoxSet::LowerExtreme, sortedList.front());
+                    box->setValue(QBoxSet::UpperExtreme, sortedList.back());
+                    box->setValue(QBoxSet::Median, findMedian(sortedList, 0, lastIndex));
+                    box->setValue(QBoxSet::LowerQuartile, findMedian(sortedList, 0, lastIndex / 2));
+                    box->setValue(QBoxSet::UpperQuartile, findMedian(sortedList, lastIndex / 2 + (lastIndex % 2), lastIndex));
                 }
                 else
                 {
@@ -964,7 +1071,7 @@ void Crit3DMeteoWidget::drawEnsembleDailyVar()
                 ensembleSeries.append(series);
                 chart->addSeries(series);
                 series->attachAxis(axisX);
-                series->attachAxis(axisYdx);
+                series->attachAxis(axisY_dx);
             }
         }
     }
@@ -973,62 +1080,123 @@ void Crit3DMeteoWidget::drawEnsembleDailyVar()
     {
         if (maxEnsembleLine == NODATA && minEnsembleLine == -NODATA)
         {
-            axisY->setVisible(false);
+            axisY_sx->setVisible(false);
         }
         else
         {
-            axisY->setVisible(true);
-            axisY->setMax(maxEnsembleLine);
-            axisY->setMin(minEnsembleLine);
-            if (axisY->max() == axisY->min())
+            axisY_sx->setVisible(true);
+            axisY_sx->setMax(maxEnsembleLine);
+            axisY_sx->setMin(minEnsembleLine);
+            if (axisY_sx->max() == axisY_sx->min())
             {
-                axisY->setRange(axisY->min()-axisY->min()/100, axisY->max()+axisY->max()/100);
+                axisY_sx->setRange(axisY_sx->min()-axisY_sx->min()/100, axisY_sx->max()+axisY_sx->max()/100);
             }
         }
     }
     else
     {
-        axisY->setVisible(false);
+        axisY_sx->setVisible(false);
     }
 
     if (isBar)
     {
         if (maxEnsembleBar == -1)
         {
-            axisYdx->setVisible(false);
+            axisY_dx->setVisible(false);
         }
         else
         {
-            axisYdx->setVisible(true);
+            axisY_dx->setVisible(true);
             if (maxEnsembleBar != 0)
             {
-                axisYdx->setRange(0,maxEnsembleBar);
+                axisY_dx->setRange(0,maxEnsembleBar);
             }
             else
             {
-                axisYdx->setRange(0,1);
+                axisY_dx->setRange(0,1);
             }
         }
     }
     else
     {
-        axisYdx->setVisible(false);
+        axisY_dx->setVisible(false);
     }
 
     axisX->setCategories(categories);
     axisXvirtual->setCategories(categoriesVirtual);
     axisXvirtual->setGridLineVisible(false);
 
+    drawAxisTitle();
+    formInfo.close();
+
     firstDate->blockSignals(false);
     lastDate->blockSignals(false);
+}
 
-    formInfo.close();
+
+void Crit3DMeteoWidget::drawAxisTitle()
+{
+    if (! isInitialized)
+        return;
+
+    QList<QString> unitList;
+    QString axisTitle = "";
+
+    // axis sx (lines)
+    for (int i = 0; i < nameLines.size(); i++)
+    {
+        meteoVariable meteoVar = getMeteoVar(nameLines[i].toStdString());
+        QString unitStr = QString::fromStdString(getUnitFromVariable(meteoVar));
+        if (! unitList.contains(unitStr))
+        {
+            unitList.append(unitStr);
+        }
+    }
+
+    if (! unitList.empty())
+    {
+        for (int i = 0; i < unitList.size(); i++)
+        {
+            if (i > 0)
+                axisTitle += "    ,    ";
+
+            axisTitle += unitList[i];
+        }
+    }
+    axisY_sx->setTitleText(axisTitle);
+
+    // axis dx (bar)
+    unitList.clear();
+    for (int i = 0; i < nameBar.size(); i++)
+    {
+        meteoVariable meteoVar = getMeteoVar(nameBar[i].toStdString());
+        QString unitStr = QString::fromStdString(getUnitFromVariable(meteoVar));
+        if (! unitList.contains(unitStr))
+        {
+            unitList.append(unitStr);
+        }
+    }
+
+    axisTitle.clear();
+    if (! unitList.empty())
+    {
+        for (int i = 0; i < unitList.size(); i++)
+        {
+            if (i > 0)
+                axisTitle += "    ,    ";
+
+            axisTitle += unitList[i];
+        }
+    }
+
+    axisY_dx->setTitleText(axisTitle);
 }
 
 
 void Crit3DMeteoWidget::drawDailyVar()
 {
-    if (! isInitialized) return;
+    if (! isInitialized)
+        return;
 
     FormInfo formInfo;
     formInfo.showInfo("Draw daily data...");
@@ -1111,7 +1279,8 @@ void Crit3DMeteoWidget::drawDailyVar()
                     {
                         if (meteoPoints[mp].isDateLoadedD(myDate))
                         {
-                            lineSeries[mp][i]->append(day, value); // nodata days are not drawed if they are the first of the last day of the serie
+                            // nodata days are not drawed if they are the first of the last day of the series
+                            lineSeries[mp][i]->append(day, value);
                         }
                     }
                 }
@@ -1158,37 +1327,38 @@ void Crit3DMeteoWidget::drawDailyVar()
         for (int mp = 0; mp < nMeteoPoints; mp++)
         {
             connect(barSeries[mp], &QBarSeries::hovered, this, &Crit3DMeteoWidget::tooltipBar);
+            connect(barSeries[mp], &QBarSeries::clicked, this, &Crit3DMeteoWidget::editBar);
             if (nameBar.size() != 0)
             {
                 chart->addSeries(barSeries[mp]);
                 barSeries[mp]->attachAxis(axisX);
-                barSeries[mp]->attachAxis(axisYdx);
+                barSeries[mp]->attachAxis(axisY_dx);
             }
         }
         if (maxEnsembleBar == -1 && maxBar == -1)
         {
-            axisYdx->setVisible(false);
+            axisY_dx->setVisible(false);
         }
         else
         {
-            axisYdx->setVisible(true);
+            axisY_dx->setVisible(true);
             if (maxEnsembleBar > maxBar)
             {
-                axisYdx->setRange(0,maxEnsembleBar);
+                axisY_dx->setRange(0,maxEnsembleBar);
             }
             else
             {
-                axisYdx->setRange(0,maxBar);
+                axisY_dx->setRange(0,maxBar);
             }
-            if (axisYdx->max() == axisYdx->min())
+            if (axisY_dx->max() == axisY_dx->min())
             {
-                axisYdx->setRange(0,1);
+                axisY_dx->setRange(0,1);
             }
         }
     }
     else
     {
-        axisYdx->setVisible(false);
+        axisY_dx->setVisible(false);
     }
 
     if (isLine)
@@ -1201,44 +1371,58 @@ void Crit3DMeteoWidget::drawDailyVar()
                 {
                     chart->addSeries(lineSeries[mp][i]);
                     lineSeries[mp][i]->attachAxis(axisX);
-                    lineSeries[mp][i]->attachAxis(axisY);
+                    lineSeries[mp][i]->attachAxis(axisY_sx);
                     connect(lineSeries[mp][i], &QLineSeries::hovered, this, &Crit3DMeteoWidget::tooltipLineSeries);
+                    connect(lineSeries[mp][i], &QLineSeries::clicked, this, &Crit3DMeteoWidget::editLineSeries);
                 }
             }
         }
         if (maxLine == NODATA && minLine == -NODATA && maxEnsembleLine == NODATA && minEnsembleLine == -NODATA)
         {
-            axisY->setVisible(false);
+            axisY_sx->setVisible(false);
         }
         else
         {
-            axisY->setVisible(true);
+            axisY_sx->setVisible(true);
             if (maxEnsembleLine > maxLine)
             {
-                axisY->setMax(maxEnsembleLine);
+                axisY_sx->setMax(maxEnsembleLine);
             }
             else
             {
-                axisY->setMax(maxLine);
+                axisY_sx->setMax(maxLine);
             }
 
             if (minEnsembleLine < minLine)
             {
-                axisY->setMin(minEnsembleLine);
+                axisY_sx->setMin(minEnsembleLine);
             }
             else
             {
-                axisY->setMin(minLine);
+                axisY_sx->setMin(minLine);
             }
-            if (axisY->max() == axisY->min())
+            if (axisY_sx->max() == axisY_sx->min())
             {
-                axisY->setRange(axisY->min()-axisY->min()/100, axisY->max()+axisY->max()/100);
+                axisY_sx->setRange(axisY_sx->min()-axisY_sx->min()/100, axisY_sx->max()+axisY_sx->max()/100);
             }
         }
     }
     else
     {
-        axisY->setVisible(false);
+        axisY_sx->setVisible(false);
+    }
+
+    // add zeroLine
+    if (axisY_sx->min() <= 0 && axisY_sx->max() >= 0)
+    {
+        zeroLine->clear();
+        for (int day = 0; day < nDays; day++)
+        {
+            zeroLine->append(day, 0);
+        }
+        chart->addSeries(zeroLine);
+        zeroLine->attachAxis(axisX);
+        zeroLine->attachAxis(axisY_sx);
     }
 
     // add minimimum values required
@@ -1270,30 +1454,9 @@ void Crit3DMeteoWidget::drawDailyVar()
     {
         for (int j = 0; j < nameBar.size(); j++)
         {
-            if (nDays < 5)
+            if (nDays < 5 || meteoPointsEnsemble.size() != 0)
             {
                 setVector[mp][j]->setColor(QColor("transparent"));
-            }
-            else
-            {
-                QColor barColor = colorBar[j];
-                if (meteoPointsEnsemble.size() == 0)
-                {
-                    if (nMeteoPoints == 1)
-                    {
-                        barColor.setAlpha(255);
-                    }
-                    else
-                    {
-                        barColor.setAlpha( 255-(mp*(150/(nMeteoPoints-1))) );
-                    }
-                    setVector[mp][j]->setColor(barColor);
-                }
-                else
-                {
-                    setVector[mp][j]->setColor(Qt::transparent);
-                }
-                setVector[mp][j]->setBorderColor(barColor);
             }
         }
     }
@@ -1307,11 +1470,20 @@ void Crit3DMeteoWidget::drawDailyVar()
 
     foreach(QLegendMarker* marker, chart->legend()->markers())
     {
-        marker->setVisible(true);
-        marker->series()->setVisible(true);
-        QObject::connect(marker, &QLegendMarker::clicked, this, &Crit3DMeteoWidget::handleMarkerClicked);
+        if (marker->series()->name() != "zero")
+        {
+            marker->setVisible(true);
+            marker->series()->setVisible(true);
+            QObject::connect(marker, &QLegendMarker::clicked, this, &Crit3DMeteoWidget::handleMarkerClicked);
+        }
+        else
+        {
+            marker->setVisible(false);
+            marker->series()->setVisible(true);
+        }
     }
 
+    drawAxisTitle();
     formInfo.close();
 }
 
@@ -1342,8 +1514,8 @@ void Crit3DMeteoWidget::drawHourlyVar()
     double maxLine = NODATA;
     double minLine = -NODATA;
 
-    int nrDays = firstDate->date().daysTo(lastDate->date())+1;
-    int nrValues = nrDays*24;
+    int nDays = firstDate->date().daysTo(lastDate->date())+1;
+    int nrValues = nDays*24;
 
     // virtual x axis
     int nrIntervals;
@@ -1364,7 +1536,7 @@ void Crit3DMeteoWidget::drawHourlyVar()
     Crit3DDate myCrit3DDate;
     QDateTime myDateTime;
 
-    for (int d = 0; d < nrDays; d++)
+    for (int d = 0; d < nDays; d++)
     {
         myCrit3DDate = getCrit3DDate(myDate);
 
@@ -1388,7 +1560,12 @@ void Crit3DMeteoWidget::drawHourlyVar()
                 {
                     for (int i = 0; i < nameLines.size(); i++)
                     {
-                        meteoVariable meteoVar = MapHourlyMeteoVar.at(nameLines[i].toStdString());
+                        meteoVariable meteoVar = getMeteoVar(nameLines[i].toStdString());
+                        if (meteoVar == noMeteoVar)
+                        {
+                            continue;
+                        }
+
                         double value = meteoPoints[mp].getMeteoPointValueH(myCrit3DDate, h, 0, meteoVar);
                         if (value != NODATA)
                         {
@@ -1416,7 +1593,12 @@ void Crit3DMeteoWidget::drawHourlyVar()
                 {
                     for (int j = 0; j < nameBar.size(); j++)
                     {
-                        meteoVariable meteoVar = MapHourlyMeteoVar.at(nameBar[j].toStdString());
+                        meteoVariable meteoVar = getMeteoVar(nameBar[j].toStdString());
+                        if (meteoVar == noMeteoVar)
+                        {
+                            continue;
+                        }
+
                         double value = meteoPoints[mp].getMeteoPointValueH(myCrit3DDate, h, 0, meteoVar);
                         if (value != NODATA)
                         {
@@ -1440,30 +1622,16 @@ void Crit3DMeteoWidget::drawHourlyVar()
 
     if (isBar)
     {
-        for (int mp=0; mp < nMeteoPoints; mp++)
+        for (int mp = 0; mp < nMeteoPoints; mp++)
         {
             QBarSeries* barMpSeries = new QBarSeries();
             for (int i = 0; i < nameBar.size(); i++)
             {
-                QColor barColor = colorBar[i];
-                if (meteoPointsEnsemble.size() == 0)
-                {
-                    if (nMeteoPoints == 1)
-                    {
-                        barColor.setAlpha(255);
-                    }
-                    else
-                    {
-                        barColor.setAlpha( 255-(mp*(150/(nMeteoPoints-1))) );
-                    }
-                    setVector[mp][i]->setColor(barColor);
-                }
-                else
+                barMpSeries->append(setVector[mp][i]);
+                if (meteoPointsEnsemble.size() != 0)
                 {
                     setVector[mp][i]->setColor(Qt::transparent);
                 }
-                setVector[mp][i]->setBorderColor(barColor);
-                barMpSeries->append(setVector[mp][i]);
             }
             barSeries.append(barMpSeries);
         }
@@ -1471,33 +1639,34 @@ void Crit3DMeteoWidget::drawHourlyVar()
         for (int mp=0; mp<nMeteoPoints;mp++)
         {
             connect(barSeries[mp], &QBarSeries::hovered, this, &Crit3DMeteoWidget::tooltipBar);
+            connect(barSeries[mp], &QBarSeries::clicked, this, &Crit3DMeteoWidget::editBar);
             if (nameBar.size() != 0)
             {
                 chart->addSeries(barSeries[mp]);
                 barSeries[mp]->attachAxis(axisX);
-                barSeries[mp]->attachAxis(axisYdx);
+                barSeries[mp]->attachAxis(axisY_dx);
             }
         }
         if (maxBar == -1)
         {
-            axisYdx->setVisible(false);
+            axisY_dx->setVisible(false);
         }
         else
         {
-            axisYdx->setVisible(true);
+            axisY_dx->setVisible(true);
             if (maxBar != 0)
             {
-                axisYdx->setRange(0,maxBar);
+                axisY_dx->setRange(0,maxBar);
             }
             else
             {
-                axisYdx->setRange(0,1);
+                axisY_dx->setRange(0,1);
             }
         }
     }
     else
     {
-        axisYdx->setVisible(false);
+        axisY_dx->setVisible(false);
     }
 
     if (isLine)
@@ -1508,29 +1677,47 @@ void Crit3DMeteoWidget::drawHourlyVar()
             {
                 chart->addSeries(lineSeries[mp][i]);
                 lineSeries[mp][i]->attachAxis(axisX);
-                lineSeries[mp][i]->attachAxis(axisY);
+                lineSeries[mp][i]->attachAxis(axisY_sx);
                 connect(lineSeries[mp][i], &QLineSeries::hovered, this, &Crit3DMeteoWidget::tooltipLineSeries);
+                connect(lineSeries[mp][i], &QLineSeries::clicked, this, &Crit3DMeteoWidget::editLineSeries);
             }
         }
         if (maxLine == NODATA && minLine == -NODATA)
         {
-            axisY->setVisible(false);
+            axisY_sx->setVisible(false);
         }
         else
         {
-            axisY->setVisible(true);
-            axisY->setMax(maxLine);
-            axisY->setMin(minLine);
+            axisY_sx->setVisible(true);
+            axisY_sx->setMax(maxLine);
+            axisY_sx->setMin(minLine);
 
-            if (axisY->max() == axisY->min())
+            if (axisY_sx->max() == axisY_sx->min())
             {
-                axisY->setRange(axisY->min()-axisY->min()/100, axisY->max()+axisY->max()/100);
+                axisY_sx->setRange(axisY_sx->min()-axisY_sx->min()/100, axisY_sx->max()+axisY_sx->max()/100);
             }
         }
     }
     else
     {
-        axisY->setVisible(false);
+        axisY_sx->setVisible(false);
+    }
+
+    // add zeroLine
+    if (axisY_sx->min() <= 0 && axisY_sx->max() >= 0)
+    {
+        zeroLine->clear();
+        for (int d = 0; d < nDays; d++)
+        {
+            for (int h = 0; h < 24; h++)
+            {
+                int index = d*24+h;
+                zeroLine->append(index, 0);
+            }
+        }
+        chart->addSeries(zeroLine);
+        zeroLine->attachAxis(axisX);
+        zeroLine->attachAxis(axisY_sx);
     }
 
     axisX->setCategories(categories);
@@ -1542,14 +1729,23 @@ void Crit3DMeteoWidget::drawHourlyVar()
 
     foreach(QLegendMarker* marker, chart->legend()->markers())
     {
-        marker->setVisible(true);
-        marker->series()->setVisible(true);
-        QObject::connect(marker, &QLegendMarker::clicked, this, &Crit3DMeteoWidget::handleMarkerClicked);
+        if (marker->series()->name() != "zero")
+        {
+            marker->setVisible(true);
+            marker->series()->setVisible(true);
+            QObject::connect(marker, &QLegendMarker::clicked, this, &Crit3DMeteoWidget::handleMarkerClicked);
+        }
+        else
+        {
+            marker->setVisible(false);
+            marker->series()->setVisible(true);
+        }
     }
 
+    drawAxisTitle();
     formInfo.close();
-
 }
+
 
 void Crit3DMeteoWidget::drawMonthlyVar()
 {
@@ -1680,37 +1876,38 @@ void Crit3DMeteoWidget::drawMonthlyVar()
         for (int mp = 0; mp < nMeteoPoints; mp++)
         {
             connect(barSeries[mp], &QBarSeries::hovered, this, &Crit3DMeteoWidget::tooltipBar);
+            connect(barSeries[mp], &QBarSeries::clicked, this, &Crit3DMeteoWidget::editBar);
             if (nameBar.size() != 0)
             {
                 chart->addSeries(barSeries[mp]);
                 barSeries[mp]->attachAxis(axisX);
-                barSeries[mp]->attachAxis(axisYdx);
+                barSeries[mp]->attachAxis(axisY_dx);
             }
         }
         if (maxEnsembleBar == -1 && maxBar == -1)
         {
-            axisYdx->setVisible(false);
+            axisY_dx->setVisible(false);
         }
         else
         {
-            axisYdx->setVisible(true);
+            axisY_dx->setVisible(true);
             if (maxEnsembleBar > maxBar)
             {
-                axisYdx->setRange(0,maxEnsembleBar);
+                axisY_dx->setRange(0,maxEnsembleBar);
             }
             else
             {
-                axisYdx->setRange(0,maxBar);
+                axisY_dx->setRange(0,maxBar);
             }
-            if (axisYdx->max() == axisYdx->min())
+            if (axisY_dx->max() == axisY_dx->min())
             {
-                axisYdx->setRange(0,1);
+                axisY_dx->setRange(0,1);
             }
         }
     }
     else
     {
-        axisYdx->setVisible(false);
+        axisY_dx->setVisible(false);
     }
 
     if (isLine)
@@ -1723,44 +1920,58 @@ void Crit3DMeteoWidget::drawMonthlyVar()
                 {
                     chart->addSeries(lineSeries[mp][i]);
                     lineSeries[mp][i]->attachAxis(axisX);
-                    lineSeries[mp][i]->attachAxis(axisY);
+                    lineSeries[mp][i]->attachAxis(axisY_sx);
                     connect(lineSeries[mp][i], &QLineSeries::hovered, this, &Crit3DMeteoWidget::tooltipLineSeries);
+                    connect(lineSeries[mp][i], &QLineSeries::clicked, this, &Crit3DMeteoWidget::editLineSeries);
                 }
             }
         }
         if (maxLine == NODATA && minLine == -NODATA && maxEnsembleLine == NODATA && minEnsembleLine == -NODATA)
         {
-            axisY->setVisible(false);
+            axisY_sx->setVisible(false);
         }
         else
         {
-            axisY->setVisible(true);
+            axisY_sx->setVisible(true);
             if (maxEnsembleLine > maxLine)
             {
-                axisY->setMax(maxEnsembleLine);
+                axisY_sx->setMax(maxEnsembleLine);
             }
             else
             {
-                axisY->setMax(maxLine);
+                axisY_sx->setMax(maxLine);
             }
 
             if (minEnsembleLine < minLine)
             {
-                axisY->setMin(minEnsembleLine);
+                axisY_sx->setMin(minEnsembleLine);
             }
             else
             {
-                axisY->setMin(minLine);
+                axisY_sx->setMin(minLine);
             }
-            if (axisY->max() == axisY->min())
+            if (axisY_sx->max() == axisY_sx->min())
             {
-                axisY->setRange(axisY->min()-axisY->min()/100, axisY->max()+axisY->max()/100);
+                axisY_sx->setRange(axisY_sx->min()-axisY_sx->min()/100, axisY_sx->max()+axisY_sx->max()/100);
             }
         }
     }
     else
     {
-        axisY->setVisible(false);
+        axisY_sx->setVisible(false);
+    }
+
+    // add zeroLine
+    if (axisY_sx->min() <= 0 && axisY_sx->max() >= 0)
+    {
+        zeroLine->clear();
+        for (int month = 0; month < numberOfMonths; month++)
+        {
+            zeroLine->append(month, 0);
+        }
+        chart->addSeries(zeroLine);
+        zeroLine->attachAxis(axisX);
+        zeroLine->attachAxis(axisY_sx);
     }
 
     // add minimimum values required
@@ -1796,27 +2007,6 @@ void Crit3DMeteoWidget::drawMonthlyVar()
             {
                 setVector[mp][j]->setColor(QColor("transparent"));
             }
-            else
-            {
-                QColor barColor = colorBar[j];
-                if (meteoPointsEnsemble.size() == 0)
-                {
-                    if (nMeteoPoints == 1)
-                    {
-                        barColor.setAlpha(255);
-                    }
-                    else
-                    {
-                        barColor.setAlpha( 255-(mp*(150/(nMeteoPoints-1))) );
-                    }
-                    setVector[mp][j]->setColor(barColor);
-                }
-                else
-                {
-                    setVector[mp][j]->setColor(Qt::transparent);
-                }
-                setVector[mp][j]->setBorderColor(barColor);
-            }
         }
     }
 
@@ -1829,11 +2019,20 @@ void Crit3DMeteoWidget::drawMonthlyVar()
 
     foreach(QLegendMarker* marker, chart->legend()->markers())
     {
-        marker->setVisible(true);
-        marker->series()->setVisible(true);
-        QObject::connect(marker, &QLegendMarker::clicked, this, &Crit3DMeteoWidget::handleMarkerClicked);
+        if (marker->series()->name() != "zero")
+        {
+            marker->setVisible(true);
+            marker->series()->setVisible(true);
+            QObject::connect(marker, &QLegendMarker::clicked, this, &Crit3DMeteoWidget::handleMarkerClicked);
+        }
+        else
+        {
+            marker->setVisible(false);
+            marker->series()->setVisible(true);
+        }
     }
 
+    drawAxisTitle();
     formInfo.close();
 }
 
@@ -1842,19 +2041,19 @@ void Crit3DMeteoWidget::showVar()
 {
     if (! isInitialized) return;
 
-    if (currentFreq == noFrequency)
+    if (_currentFrequency == noFrequency)
     {
         if (dailyButton->isChecked()) // dailyButton is pressed
         {
-            currentFreq = daily;
+            _currentFrequency = daily;
         }
         else if (hourlyButton->isChecked())
         {
-            currentFreq = hourly;
+            _currentFrequency = hourly;
         }
         else if (monthlyButton->isChecked())
         {
-            currentFreq = monthly;
+            _currentFrequency = monthly;
         }
     }
     QList<QString> allKeys = MapCSVStyles.keys();
@@ -1862,21 +2061,21 @@ void Crit3DMeteoWidget::showVar()
     QList<QString> allVar;
     for (int i = 0; i<allKeys.size(); i++)
     {
-        if (currentFreq == daily)
+        if (_currentFrequency == daily)
         {
             if (allKeys[i].contains("DAILY") && !selectedVar.contains(allKeys[i]))
             {
                 allVar.append(allKeys[i]);
             }
         }
-        else if (currentFreq == hourly)
+        else if (_currentFrequency == hourly)
         {
             if (!allKeys[i].contains("DAILY") && !allKeys[i].contains("MONTHLY") && !selectedVar.contains(allKeys[i]))
             {
                 allVar.append(allKeys[i]);
             }
         }
-        else if (currentFreq == monthly)
+        else if (_currentFrequency == monthly)
         {
             if (allKeys[i].contains("MONTHLY") && !selectedVar.contains(allKeys[i]))
             {
@@ -1898,8 +2097,8 @@ void Crit3DMeteoWidget::showVar()
 void Crit3DMeteoWidget::showMonthlyGraph()
 {
     if (! isInitialized) return;
-    frequencyType prevFreq = currentFreq;
-    currentFreq = monthly;
+    frequencyType prevFreq = _currentFrequency;
+    _currentFrequency = monthly;
 
     // change freq, reset sum data settings
     varToSumList.clear();
@@ -1964,8 +2163,8 @@ void Crit3DMeteoWidget::showMonthlyGraph()
 void Crit3DMeteoWidget::showDailyGraph()
 {
     if (! isInitialized) return;
-    frequencyType prevFreq = currentFreq;
-    currentFreq = daily;
+    frequencyType prevFreq = _currentFrequency;
+    _currentFrequency = daily;
 
     // change freq, reset sum data settings
     varToSumList.clear();
@@ -2030,8 +2229,8 @@ void Crit3DMeteoWidget::showDailyGraph()
 void Crit3DMeteoWidget::showHourlyGraph()
 {
     if (! isInitialized) return;
-    frequencyType prevFreq = currentFreq;
-    currentFreq = hourly;
+    frequencyType prevFreq = _currentFrequency;
+    _currentFrequency = hourly;
 
     // change freq, reset sum data settings
     varToSumList.clear();
@@ -2099,7 +2298,9 @@ void Crit3DMeteoWidget::updateSeries()
 
     nameLines.clear();
     colorLines.clear();
+    colorLinesMpAppended.clear();
     nameBar.clear();
+    colorBarMpAppended.clear();
     colorBar.clear();
     isLine = false;
     isBar = false;
@@ -2117,13 +2318,33 @@ void Crit3DMeteoWidget::updateSeries()
                 {
                     isLine = true;
                     nameLines.append(i.key());
-                    colorLines.append(QColor(items[1]));
+                    QColor myColor = QColor(items[1]);
+                    colorLines.append(myColor);
+                    QList<QColor> appendedList;
+                    for (int colorAppended = 2; colorAppended < items.size(); colorAppended++)
+                    {
+                        appendedList.append(QColor(items[colorAppended]));
+                    }
+                    if (!appendedList.isEmpty())
+                    {
+                        colorLinesMpAppended.insert(myColor.name(), appendedList);
+                    }
                 }
                 if (items[0] == "bar")
                 {
                     isBar = true;
                     nameBar.append(i.key());
-                    colorBar.append(QColor(items[1]));
+                    QColor myColor = QColor(items[1]);
+                    colorBar.append(myColor);
+                    QList<QColor> appendedList;
+                    for (int colorAppended = 2; colorAppended < items.size(); colorAppended++)
+                    {
+                        appendedList.append(QColor(items[colorAppended]));
+                    }
+                    if (!appendedList.isEmpty())
+                    {
+                        colorBarMpAppended.insert(myColor.name(), appendedList);
+                    }
                 }
             }
         }
@@ -2150,7 +2371,7 @@ void Crit3DMeteoWidget::redraw()
         resetValues();
     }
 
-    if (currentFreq == daily)
+    if (_currentFrequency == daily)
     {
         if (isEnsemble || meteoPointsEnsemble.size() != 0)
         {
@@ -2165,7 +2386,7 @@ void Crit3DMeteoWidget::redraw()
             }
         }
     }
-    else if (currentFreq == hourly)
+    else if (_currentFrequency == hourly)
     {
         if (isEnsemble || meteoPointsEnsemble.size() != 0)
         {
@@ -2180,7 +2401,7 @@ void Crit3DMeteoWidget::redraw()
             }
         }
     }
-    else if (currentFreq == monthly)
+    else if (_currentFrequency == monthly)
     {
         if (isEnsemble || meteoPointsEnsemble.size() != 0)
         {
@@ -2195,7 +2416,6 @@ void Crit3DMeteoWidget::redraw()
             }
         }
     }
-
 }
 
 
@@ -2204,21 +2424,21 @@ void Crit3DMeteoWidget::shiftPrevious()
     int nDays = firstDate->date().daysTo(lastDate->date());
 
     QDate firstValidDate;
-    if (currentFreq == daily)
+    if (_currentFrequency == daily)
     {
         if (! firstDailyDate.isValid() || firstDailyDate.year() == 1800)
             return;
 
         firstValidDate = firstDailyDate;
     }
-    else if (currentFreq == hourly)
+    else if (_currentFrequency == hourly)
     {
         if (! firstHourlyDate.isValid() || firstHourlyDate.year() == 1800)
             return;
 
         firstValidDate = firstHourlyDate;
     }
-    else if (currentFreq == monthly)
+    else if (_currentFrequency == monthly)
     {
         if (! firstMonthlyDate.isValid() || firstMonthlyDate.year() == 1800)
             return;
@@ -2246,7 +2466,7 @@ void Crit3DMeteoWidget::shiftFollowing()
     int nDays = firstDate->date().daysTo(lastDate->date());
 
     QDate lastValidDate;
-    if (currentFreq == daily)
+    if (_currentFrequency == daily)
     {
         if (! lastDailyDate.isValid() || lastDailyDate.year() == 1800)
             return;
@@ -2278,13 +2498,80 @@ void Crit3DMeteoWidget::shiftFollowing()
 
 void Crit3DMeteoWidget::showTable()
 {
-    DialogMeteoTable meteoTable(meteoSettings, meteoPoints, firstDate->date(), lastDate->date(), currentFreq, currentVariables);
+    DialogMeteoTable meteoTable(meteoSettings, meteoPoints, firstDate->date(), lastDate->date(), _currentFrequency, currentVariables);
 }
 
 void Crit3DMeteoWidget::tooltipLineSeries(QPointF point, bool state)
 {
     QLineSeries *series = qobject_cast<QLineSeries *>(sender());
     computeTooltipLineSeries(series, point, state);
+}
+
+void Crit3DMeteoWidget::editLineSeries()
+{
+    QLineSeries *series = qobject_cast<QLineSeries *>(sender());
+    QMenu menu("Edit");
+    QAction* editColor = menu.addAction(QString("Set color"));
+    QAction *selection =  menu.exec(QCursor::pos());
+
+    if (selection != nullptr)
+    {
+        if (selection == editColor)
+        {
+            QColorDialog colorSelection;
+            QColor newColor = colorSelection.getColor(series->color(), this );
+            if( newColor.isValid() )
+            {
+                for (int i = 0; i<nameLines.size(); i++)
+                {
+                    QString myName = nameLines[i];
+                    if (nameLines[i].contains("DAILY"))
+                    {
+                        myName.remove("DAILY_");
+                    }
+                    if (nameLines[i].contains("MONTHLY"))
+                    {
+                        myName.remove("MONTHLY_");
+                    }
+                    if (series->name().contains(myName))
+                    {
+                        QMapIterator<QString, QList<QString>> iterator(MapCSVStyles);
+                        while (iterator.hasNext())
+                        {
+                            iterator.next();
+
+                            if (iterator.key() == nameLines[i])
+                            {
+                                QList<QString> newItems = iterator.value();
+                                // check which mp is
+                                for (int mp = 0; mp < meteoPoints.size(); mp++)
+                                {
+                                    QString pointName = QString::fromStdString(meteoPoints[mp].name);
+                                    QString label = getFormattedLabel(pointName, nameLines[i]);
+                                    if (series->name() == label)
+                                    {
+                                        if (newItems.size() > mp+1)
+                                        {
+                                            newItems[mp+1] = newColor.name();
+                                        }
+                                        else
+                                        {
+                                            newItems.append(newColor.name());
+                                        }
+                                    }
+                                }
+                                MapCSVStyles[nameLines[i]] = newItems;
+                                break;
+                            }
+                        }
+                    }
+                }
+                updateSeries();
+                redraw();
+            }
+        }
+    }
+
 }
 
 bool Crit3DMeteoWidget::computeTooltipLineSeries(QLineSeries *series, QPointF point, bool state)
@@ -2310,18 +2597,18 @@ bool Crit3DMeteoWidget::computeTooltipLineSeries(QLineSeries *series, QPointF po
             if (!valueExist)
             {
                 // missing data
-                if (currentFreq == daily)
+                if (_currentFrequency == daily)
                 {
                     QDate xDate = firstDate->date().addDays(doy);
                     m_tooltip->setText(QString("%1 \n%2 nan ").arg(series->name()).arg(xDate.toString("MMM dd yyyy")));
                 }
-                else if (currentFreq == hourly)
+                else if (_currentFrequency == hourly)
                 {
                     QDateTime xDate(firstDate->date(), QTime(0,0,0), Qt::UTC);
                     xDate = xDate.addSecs(3600*doy);
                     m_tooltip->setText(QString("%1 \n%2 nan ").arg(series->name()).arg(xDate.toString("MMM dd yyyy hh:mm")));
                 }
-                else if (currentFreq == monthly)
+                else if (_currentFrequency == monthly)
                 {
                     QDate xDate = firstDate->date().addMonths(doy);
                     m_tooltip->setText(QString("%1 \n%2 nan ").arg(series->name()).arg(xDate.toString("MMM yyyy")));
@@ -2441,7 +2728,7 @@ bool Crit3DMeteoWidget::computeTooltipLineSeries(QLineSeries *series, QPointF po
 
         }
 
-        if (currentFreq == daily)
+        if (_currentFrequency == daily)
         {
             QDate xDate = firstDate->date().addDays(doy);
             for(int i = 0; i < series->count(); i++)
@@ -2455,7 +2742,7 @@ bool Crit3DMeteoWidget::computeTooltipLineSeries(QLineSeries *series, QPointF po
             double value = series->at(doyRelative).y();
             m_tooltip->setText(QString("%1 \n%2 %3 ").arg(series->name()).arg(xDate.toString("MMM dd yyyy")).arg(value, 0, 'f', 1));
         }
-        else if (currentFreq == hourly)
+        else if (_currentFrequency == hourly)
         {
             QDateTime xDate(firstDate->date(), QTime(0,0,0), Qt::UTC);
             xDate = xDate.addSecs(3600*doy);
@@ -2470,7 +2757,7 @@ bool Crit3DMeteoWidget::computeTooltipLineSeries(QLineSeries *series, QPointF po
             double value = series->at(doyRelative).y();
             m_tooltip->setText(QString("%1 \n%2 %3 ").arg(series->name()).arg(xDate.toString("MMM dd yyyy hh:mm")).arg(value, 0, 'f', 1));
         }
-        else if (currentFreq == monthly)
+        else if (_currentFrequency == monthly)
         {
             QDate xDate = firstDate->date().addMonths(doy);
             for(int i = 0; i < series->count(); i++)
@@ -2531,19 +2818,19 @@ void Crit3DMeteoWidget::tooltipBar(bool state, int index, QBarSet *barset)
         }
 
         QString valueStr;
-        if (currentFreq == daily)
+        if (_currentFrequency == daily)
         {
             QDate xDate = firstDate->date().addDays(index);
             valueStr = QString("%1 \n%2 %3 ").arg(xDate.toString("MMM dd yyyy")).arg(barset->label()).arg(barset->at(index), 0, 'f', 1);
         }
-        else if (currentFreq == hourly)
+        else if (_currentFrequency == hourly)
         {
 
             QDateTime xDate(firstDate->date(), QTime(0,0,0), Qt::UTC);
             xDate = xDate.addSecs(3600*index);
             valueStr = QString("%1 \n%2 %3 ").arg(xDate.toString("MMM dd yyyy hh:mm")).arg(barset->label()).arg(barset->at(index), 0, 'f', 1);
         }
-        else if (currentFreq == monthly)
+        else if (_currentFrequency == monthly)
         {
             QDate xDate = firstDate->date().addMonths(index);
             valueStr = QString("%1 \n%2 %3 ").arg(xDate.toString("MMM yyyy")).arg(barset->label()).arg(barset->at(index), 0, 'f', 1);
@@ -2560,6 +2847,75 @@ void Crit3DMeteoWidget::tooltipBar(bool state, int index, QBarSet *barset)
     else
     {
         m_tooltip->hide();
+    }
+
+}
+
+void Crit3DMeteoWidget::editBar()
+{
+    QBarSeries *series = qobject_cast<QBarSeries *>(sender());
+    QBarSet *barset = series->barSets()[0];
+    QMenu menu("Edit");
+    QAction* editColor = menu.addAction(QString("Set color"));
+    QAction *selection =  menu.exec(QCursor::pos());
+
+    if (selection != nullptr)
+    {
+        if (selection == editColor)
+        {
+            QColorDialog colorSelection;
+            QColor newColor = colorSelection.getColor(barset->color(), this );
+            if( newColor.isValid() )
+            {
+                for (int i = 0; i<nameBar.size(); i++)
+                {
+                    QString myName = nameBar[i];
+                    if (nameBar[i].contains("DAILY"))
+                    {
+                        myName.remove("DAILY_");
+                    }
+                    if (nameBar[i].contains("MONTHLY"))
+                    {
+                        myName.remove("MONTHLY_");
+                    }
+                    if (barset->label().contains(myName))
+                    {
+                        QMapIterator<QString, QList<QString>> iterator(MapCSVStyles);
+                        while (iterator.hasNext())
+                        {
+                            iterator.next();
+
+                            if (iterator.key() == nameBar[i])
+                            {
+                                QList<QString> newItems = iterator.value();
+                                // check which mp is
+                                for (int mp = 0; mp < meteoPoints.size(); mp++)
+                                {
+                                    QString pointName = QString::fromStdString(meteoPoints[mp].name);
+                                    QString label = getFormattedLabel(pointName, nameBar[i]);
+                                    if (barset->label() == label)
+                                    {
+                                        if (newItems.size() > mp+1)
+                                        {
+                                            newItems[mp+1] = newColor.name();
+                                        }
+                                        else
+                                        {
+                                            newItems.append(newColor.name());
+                                        }
+                                        break;
+                                    }
+                                }
+                                MapCSVStyles[nameBar[i]] = newItems;
+                                break;
+                            }
+                        }
+                    }
+                }
+                updateSeries();
+                redraw();
+            }
+        }
     }
 
 }
@@ -2629,49 +2985,25 @@ void Crit3DMeteoWidget::setIsEnsemble(bool value)
     tableButton->setEnabled(!value);
 }
 
-bool Crit3DMeteoWidget::getIsEnsemble()
-{
-    return isEnsemble;
-}
-
-void Crit3DMeteoWidget::setNrMembers(int value)
-{
-    nrMembers = value;
-}
-
-int Crit3DMeteoWidget::getMeteoWidgetID() const
-{
-    return meteoWidgetID;
-}
-
-void Crit3DMeteoWidget::setMeteoWidgetID(int value)
-{
-    meteoWidgetID = value;
-}
-
-void Crit3DMeteoWidget::setCurrentDate(QDate myDate)
-{
-    currentDate = myDate;
-}
 
 void Crit3DMeteoWidget::on_actionChangeLeftAxis()
 {
-    DialogChangeAxis changeAxisDialog(true);
+    DialogChangeAxis changeAxisDialog(1, false);
     if (changeAxisDialog.result() == QDialog::Accepted)
     {
-        axisY->setMax(changeAxisDialog.getMaxVal());
-        axisY->setMin(changeAxisDialog.getMinVal());
+        axisY_sx->setMax(changeAxisDialog.getMaxVal());
+        axisY_sx->setMin(changeAxisDialog.getMinVal());
     }
 }
 
 
 void Crit3DMeteoWidget::on_actionChangeRightAxis()
 {
-    DialogChangeAxis changeAxisDialog(false);
+    DialogChangeAxis changeAxisDialog(2, false);
     if (changeAxisDialog.result() == QDialog::Accepted)
     {
-        axisYdx->setMax(changeAxisDialog.getMaxVal());
-        axisYdx->setMin(changeAxisDialog.getMinVal());
+        axisY_dx->setMax(changeAxisDialog.getMaxVal());
+        axisY_dx->setMin(changeAxisDialog.getMinVal());
     }
 }
 
@@ -2755,7 +3087,7 @@ void Crit3DMeteoWidget::on_actionInfoPoint()
         else
         {
             infoStr = QString("Point: <b> %1 </b> <br/> ID: %2 <br/> dataset: %3 <br/> altitude: %4 m <br/> lapse rate code: %5")
-                                  .arg(stationsName, stationId, dataset, altitude, lapseRateName);
+                          .arg(stationsName, stationId, dataset, altitude, lapseRateName);
         }
         QTextEdit* plainTextEdit = new QTextEdit(infoStr);
         plainTextEdit->setReadOnly(true);
@@ -2919,7 +3251,7 @@ void Crit3DMeteoWidget::drawSum()
                 if (nameLines[j] == varToSumList[i])
                 {
                     QVector<QPointF> points;
-                    QVector<QPointF> cumulativePoints;   
+                    QVector<QPointF> cumulativePoints;
                     for (int mp=0; mp<nMeteoPoints;mp++)
                     {
                         for (int n = 0; n<lineSeries[mp][j]->points().size(); n++)
@@ -2940,7 +3272,7 @@ void Crit3DMeteoWidget::drawSum()
                         cumulativePoints.clear();
                     }
                 }
-                axisY->setRange(axisY->min(),max);
+                axisY_sx->setRange(axisY_sx->min(),max);
             }
         }
         if (! barSeries.isEmpty())
@@ -2972,24 +3304,24 @@ void Crit3DMeteoWidget::drawSum()
                         cumulativeValues.clear();
                     }
                 }
-                axisYdx->setRange(axisYdx->min(),max);
+                axisY_dx->setRange(axisY_dx->min(),max);
             }
         }
     }
 }
 
 
-qreal findMedian(QList<double> sortedList, int begin, int end)
+qreal findMedian(std::vector<double> sortedList, int begin, int end)
 {
     int count = end - begin;
-    if (count % 2) {
+    if (count % 2)
+    {
         return sortedList.at(count / 2 + begin);
-    } else {
+    }
+    else
+    {
         qreal right = sortedList.at(count / 2 + begin);
         qreal left = sortedList.at(count / 2 - 1 + begin);
         return (right + left) / 2.0;
     }
 }
-
-
-
