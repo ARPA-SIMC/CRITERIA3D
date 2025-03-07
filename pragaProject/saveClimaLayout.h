@@ -43,6 +43,8 @@ class SaveClimaLayout : public QDialog
         void setGenericPeriodEndDay(const QString &valueStr);
         QString getGenericPeriodEndMonth() const;
         void setGenericPeriodEndMonth(const QString &valueStr);
+        QString getOffsetDoy();
+        void setOffsetDoy(const QString &valueStr);
 
         void addElab();
         void deleteRaw();
@@ -73,6 +75,7 @@ private:
         QString lastYear;
         QString variable;
         QString period;
+        QString offsetDoy;
 
         QString genericPeriodStartDay;
         QString genericPeriodStartMonth;

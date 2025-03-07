@@ -82,6 +82,11 @@
 
     #define NOT_INITIALIZED_VINE -1
 
+    struct Tstate
+    {
+        double standBiomass;
+        double rootBiomass;
+    };
 
     struct TstatePlant
     {
@@ -254,6 +259,7 @@
         gis::Crit3DRasterGrid* rootBiomassMap;
         gis::Crit3DRasterGrid* mapLAI;
         gis::Crit3DRasterGrid* mapLast30DaysTavg;
+        gis::Crit3DRasterGrid treeSpeciesMap;
 
         Crit3DHydrallMaps();
         ~Crit3DHydrallMaps();
@@ -271,6 +277,7 @@
         int firstMonthVegetativeSeason;
         bool isFirstYearSimulation;
 
+        Tstate stateVariable;
         TbigLeaf sunlit,shaded, understorey;
         TweatherVariable weatherVariable;
         TenvironmentalVariable environmentalVariable;
@@ -291,6 +298,9 @@
         double understoreyLeafAreaIndexMax;
         double cover = 1; // TODO
 
+        std::vector<double> waterContentProfile;
+        std::vector<double> stressCoefficientProfile;
+        std::vector<double> rootDensityProfile;
 
 
         double annualGrossStandGrowth;
@@ -303,12 +313,13 @@
 
 
         void radiationAbsorption();
+        void setSoilVariables(int iLayer, int currentNode,float checkFlag, int horizonIndex, double waterContent, double waterContentFC, double waterContentWP, int firstRootLayer, int lastRootLayer, double rootDensity);
         void setHourlyVariables(double temp, double irradiance , double prec , double relativeHumidity , double windSpeed, double directIrradiance, double diffuseIrradiance, double cloudIndex, double atmosphericPressure, double CO2, double sunElevation);
         bool setWeatherVariables(double temp, double irradiance , double prec , double relativeHumidity , double windSpeed, double directIrradiance, double diffuseIrradiance, double cloudIndex, double atmosphericPressure);
         void setDerivedWeatherVariables(double directIrradiance, double diffuseIrradiance, double cloudIndex);
         void setPlantVariables(double chlorophyllContent);
-        bool computeHydrallPoint(Crit3DDate myDate, double myTemperature, double myElevation, int secondPerStep, double &AGBiomass, double &rootBiomass);
-        double getCO2(Crit3DDate myDate, double myTemperature, double myElevation);
+        bool computeHydrallPoint(Crit3DDate myDate, double myTemperature, double myElevation, int secondPerStep);
+        double getCO2(Crit3DDate myDate, double myTemperature);
         //double getPressureFromElevation(double myTemperature, double myElevation);
         double computeLAI(Crit3DDate myDate);
         double meanLastMonthTemperature(double previousLastMonthTemp, double simulationStepInSeconds, double myInstantTemp);
@@ -331,6 +342,9 @@
         void resetStandVariables();
         void optimal();
         void rootfind(double &allf, double &allr, double &alls, bool &sol);
+
+        void setStateVariables(Crit3DHydrallMaps &stateMap, int row, int col);
+        void getStateVariables(Crit3DHydrallMaps &stateMap, int row, int col);
 
     };
 

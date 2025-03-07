@@ -32,13 +32,18 @@ class DialogMeteoComputation : public QDialog
 
         QLineEdit firstYearEdit;
         QLineEdit lastYearEdit;
+        QLineEdit offsetEdit;
 
         QLabel genericStartLabel;
         QLabel genericEndLabel;
         QLabel nrYearLabel;
+        QLabel dailyOffsetLabel;
+        QLabel offsetDateDisplayLabel;
 
         QDateEdit genericPeriodStart;
         QDateEdit genericPeriodEnd;
+        QLineEdit dailyOffset;
+        QDateEdit offsetDateDisplay;
 
         QLineEdit nrYear;
         QCheckBox readParam;
@@ -84,9 +89,11 @@ class DialogMeteoComputation : public QDialog
         void copyDataFromXML();
         void saveDataToXML();
         void targetChange();
+        void changeOffsetDate();
 
         bool getIsMeteoGrid() const { return isMeteoGrid; }
         QList<QString> getElabSaveList() { return saveClimaLayout.getList(); }
+
 };
 
 

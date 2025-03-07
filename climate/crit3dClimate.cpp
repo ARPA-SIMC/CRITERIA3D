@@ -26,6 +26,7 @@ Crit3DClimate::Crit3DClimate()
     _elab2 = "";
     _param2 = NODATA;
     _dailyCumulated = false;
+    _offset = 0;
 
     _currentVar = noMeteoVar;
     _currentElab1 = "";
@@ -59,6 +60,7 @@ void Crit3DClimate::resetParam()
     _elab2 = "";
     _param2 = NODATA;
     _dailyCumulated = false;
+    _offset = 0;
 
 }
 
@@ -94,6 +96,7 @@ void Crit3DClimate::copyParam(Crit3DClimate* myClimate)
     _elab2 = myClimate->elab2();
     _param2 = myClimate->param2();
     _dailyCumulated = myClimate->dailyCumulated();
+    _offset = myClimate->offset();
 
 }
 
@@ -335,6 +338,16 @@ bool Crit3DClimate::dailyCumulated() const
 void Crit3DClimate::setDailyCumulated(bool newDailyCumulated)
 {
     _dailyCumulated = newDailyCumulated;
+}
+
+void Crit3DClimate::setOffset(int offset)
+{
+    _offset = offset;
+}
+
+int Crit3DClimate::offset()
+{
+    return _offset;
 }
 
 const QSqlDatabase& Crit3DClimate::db() const

@@ -371,7 +371,7 @@ namespace gis
     }
 
 
-    // clean the grid (all NO DATA)
+    // clean the grid (set all NO DATA)
     void Crit3DRasterGrid::emptyGrid()
     {
         for (int row = 0; row < header->nrRows; row++)
@@ -1909,23 +1909,24 @@ namespace gis
         basinRaster.initializeGrid(*inputRaster.header);
 
         // set first value
-        int row, col;
-        inputRaster.getRowCol(xClosure, yClosure, row, col);
-        basinRaster.value[row][col] = refValue;
+        int rowClosure, colClosure;
+        inputRaster.getRowCol(xClosure, yClosure, rowClosure, colClosure);
+        basinRaster.value[rowClosure][colClosure] = refValue;
 
         // initialize queue
         std::vector<int> rowList, colList, newRowList, newColList;
-        rowList.push_back(row);
-        colList.push_back(col);
+        rowList.push_back(rowClosure);
+        colList.push_back(colClosure);
 
-        // step 1: adds points with higher topographic elevation
+        // *** step 1: adds points with higher topographic elevation
+
         float rasterValue, basinValue;
         while (! rowList.empty())
         {
             for (int i=0; i < rowList.size(); i++)
             {
-                row = rowList[i];
-                col = colList[i];
+                int row = rowList[i];
+                int col = colList[i];
                 refValue = basinRaster.value[row][col];
                 if (! isEqual(refValue, basinRaster.header->flag))
                 {
@@ -1961,7 +1962,8 @@ namespace gis
         rowList.clear();
         colList.clear();
 
-        // step 2: adds terrain depressions
+        // *** step 2: adds terrain depressions
+
         for (int row = 0; row < basinRaster.header->nrRows; row++)
         {
             // left and right edge
@@ -1996,9 +1998,7 @@ namespace gis
         boundariesRaster.initializeGrid(*inputRaster.header);
         for (int i=0; i < rowList.size(); i++)
         {
-            row = rowList[i];
-            col = colList[i];
-            boundariesRaster.value[row][col] = 1;
+            boundariesRaster.value[rowList[i]][colList[i]] = 1;
         }
 
         // adds empty points
@@ -2007,8 +2007,8 @@ namespace gis
         {
             for (int i=0; i < rowList.size(); i++)
             {
-                row = rowList[i];
-                col = colList[i];
+                int row = rowList[i];
+                int col = colList[i];
                 for (int r = -1; r <= 1; r++)
                 {
                     for (int c = -1; c <= 1; c++)
@@ -2054,8 +2054,8 @@ namespace gis
             }
         }
 
-        // step 3: cleans the basin (removes points relating to other basins)
-        double threshold = basinRaster.header->cellSize * 3.;
+        // *** step 3: cleans the basin (removes points relating to other basins)
+        double threshold = basinRaster.header->cellSize * 5.;
         for (int row = 0; row < basinRaster.header->nrRows; row++)
         {
             for (int col = 0; col < basinRaster.header->nrCols; col++)
@@ -2086,7 +2086,7 @@ namespace gis
                                     if (r != 0 || c != 0)
                                     {
                                         rasterValue = inputRaster.getValueFromRowCol(currentRow+r, currentCol+c);
-                                        if (! isEqual(rasterValue, inputRaster.header->flag) && (rasterValue < refValue))
+                                        if (! isEqual(rasterValue, inputRaster.header->flag) && (rasterValue <= refValue))
                                         {
                                             refValue = rasterValue;
                                             lastRow = currentRow+r;
@@ -2108,17 +2108,80 @@ namespace gis
             }
         }
 
-        // delete empty edges
-        cleanRaster(basinRaster, outputRaster);
+        // *** step 4: removes separate areas
+
+        // initialize raster boundaries
+        boundariesRaster.emptyGrid();
+        boundariesRaster.value[rowClosure][colClosure] = 1;
+
+        // initialize queue
+        rowList.clear();
+        colList.clear();
+        rowList.push_back(rowClosure);
+        colList.push_back(colClosure);
+
+        // adds points that have value
+        while (! rowList.empty())
+        {
+            for (int i=0; i < rowList.size(); i++)
+            {
+                int row = rowList[i];
+                int col = colList[i];
+                for (int r = -1; r <= 1; r++)
+                {
+                    for (int c = -1; c <= 1; c++)
+                    {
+                        if (r != 0 || c != 0)
+                        {
+                            if (! basinRaster.isOutOfGrid(row+r, col+c))
+                            {
+                                basinValue = basinRaster.value[row+r][col+c];
+                                if (! isEqual(basinValue, basinRaster.header->flag))
+                                {
+                                    boundaryValue = boundariesRaster.value[row+r][col+c];
+                                    if (isEqual(boundaryValue, boundariesRaster.header->flag))
+                                    {
+                                        newRowList.push_back(row+r);
+                                        newColList.push_back(col+c);
+                                        boundariesRaster.value[row+r][col+c] = 1;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            rowList = newRowList;
+            colList = newColList;
+            newRowList.clear();
+            newColList.clear();
+        }
+
+        // remove cell in separate areas
+        for (int row = 0; row < basinRaster.header->nrRows; row++)
+        {
+            for (int col = 0; col < basinRaster.header->nrCols; col++)
+            {
+                basinValue = basinRaster.value[row][col];
+                boundaryValue = boundariesRaster.value[row][col];
+                if (!isEqual(basinValue, basinRaster.header->flag) && isEqual(boundaryValue, boundariesRaster.header->flag))
+                {
+                    basinRaster.value[row][col] = basinRaster.header->flag;
+                }
+            }
+        }
+
+        // *** step 5: delete empty edges
+        cleanRasterEmptyFrame(basinRaster, outputRaster);
 
         return true;
     }
 
 
     /*!
-     * \brief clean a raster, deleting empty edges
+     * \brief remove the empty edges of a smaller raster
      */
-    bool cleanRaster(const Crit3DRasterGrid& inputRaster, Crit3DRasterGrid& outputRaster)
+    bool cleanRasterEmptyFrame(const Crit3DRasterGrid& inputRaster, Crit3DRasterGrid& outputRaster)
     {
         int row0 = inputRaster.header->nrRows-1;
         int row1 = 0;
