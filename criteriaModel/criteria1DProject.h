@@ -103,6 +103,7 @@
         std::vector<int> availableWaterDepth;           // [cm]
         std::vector<int> fractionAvailableWaterDepth;   // [cm]
         std::vector<int> factorOfSafetyDepth;           // [cm]
+        std::vector<int> soilWaterIndexDepth;           // [cm]
 
         // DATABASE
         QSqlDatabase dbForecast;

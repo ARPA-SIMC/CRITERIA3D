@@ -501,7 +501,7 @@ int CriteriaOutputProject::createCsvFile()
     }
     logger.writeInfo("Query result: " + QString::number(compUnitList.size()) + " distinct computational units.");
 
-    if (!initializeCsvOutputFile())
+    if (! initializeCsvOutputFile())
     {
         return ERROR_PARSERCSV;
     }
@@ -522,8 +522,9 @@ int CriteriaOutputProject::createCsvFile()
                                       dateComputation, outputVariable, outputCsvFileName, projectError);
         if (myResult != CRIT1D_OK)
         {
-            if (QFile(outputCsvFileName).exists())
+            if (QFile(outputCsvFileName).exists() && i == 0)
             {
+                // delete empty file
                 QDir().remove(outputCsvFileName);
             }
             return myResult;
@@ -1295,8 +1296,9 @@ int CriteriaOutputProject::createCsvFileFromGUI(const QDate &dateComputation, co
         myResult = writeCsvOutputUnit(idCase, idCropClass, dbData, dbCrop, dbClimateData, dateComputation, outputVariable, csvFileName, projectError);
         if (myResult != CRIT1D_OK)
         {
-            if (QFile(csvFileName).exists())
+            if (QFile(csvFileName).exists() && i == 0)
             {
+                // delete empty file
                 QDir().remove(csvFileName);
             }
             return myResult;

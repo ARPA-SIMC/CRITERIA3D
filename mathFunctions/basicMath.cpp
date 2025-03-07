@@ -120,11 +120,9 @@
         return dist;
     }
 
-    float distance2D(float x1,float y1, float x2, float y2)
+    float distance2D(float x1, float y1, float x2, float y2)
     {
-        float dist;
-        dist = sqrtf(powf((x1-x2),2) + powf((y1-y2),2));
-        return dist;
+        return sqrtf((x1-x2)*(x1-x2) + (y1-y2)*(y1-y2));
     }
 
     float norm(float* x, int vectorLength)
@@ -223,6 +221,26 @@
         while (angle > 360) angle -= 360 ;
         while (angle < -360) angle +=360 ;
         return float(cos(double(angle) * DEG_TO_RAD));
+    }
+
+    double powerIntegerExponent(double base, int exponent)
+    {
+        if(exponent > 0)
+        {
+            double result = 1.0;
+            while (exponent > 0)
+            {
+                if (exponent%2 == 1)  // odd exponent
+                    result *= base;
+                base *= base;  // the base is doubled
+                exponent /= 2;
+            }
+            return result;
+        }
+        else if (exponent < 0)
+            return 1.0 / powerIntegerExponent(base, -exponent);  // negative exponents
+        else
+            return 1;
     }
 
     namespace sorting

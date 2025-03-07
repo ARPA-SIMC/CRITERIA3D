@@ -4677,8 +4677,7 @@ bool Project::setMarkedPointsOfMacroArea(int areaNumber)
 
     for (int j = 0; j < pointList.size(); j++)
     {
-        if (meteoPoints[pointList[j]].currentValue != NODATA)
-            meteoPoints[pointList[j]].marked = true;
+        meteoPoints[pointList[j]].marked = true;
     }
 
     return true;
@@ -4877,7 +4876,7 @@ bool Project::exportMeteoGridToRasterFlt(QString fileName, double cellSize)
 
     std::string myError = errorString.toStdString();
     QString fileWithoutExtension = QFileInfo(fileName).absolutePath() + QDir::separator() + QFileInfo(fileName).baseName();
-    if (!gis::writeEsriGrid(fileWithoutExtension.toStdString(), &myGrid, myError))
+    if (! gis::writeEsriGrid(fileWithoutExtension.toStdString(), &myGrid, myError))
     {
         errorString = QString::fromStdString(myError);
         return false;

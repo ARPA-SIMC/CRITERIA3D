@@ -8,6 +8,9 @@
     #ifndef MAXVALUE
         #define MAXVALUE(a, b) (((a) > (b))? (a) : (b))
     #endif
+    #ifndef BOUNDFUNCTION
+        #define BOUNDFUNCTION(lowerValue, upperValue, x) (MAXVALUE((lowerValue), MINVALUE((upperValue), (x))) )
+    #endif
 
     #ifndef sgnVariable
         #define sgnVariable(a) (((a) < 0 )? -1 : 1)
@@ -228,7 +231,7 @@
         #define PI 3.1415926535898
     #endif
     #ifndef EPSILON
-        #define EPSILON 0.000001
+        #define EPSILON 0.00001
     #endif
     #define EULER 2.718281828459
     #define DEG_TO_RAD 0.0174532925
