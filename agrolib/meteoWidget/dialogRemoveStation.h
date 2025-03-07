@@ -8,9 +8,9 @@ class DialogRemoveStation : public QDialog
     Q_OBJECT
 
 private:
-    QList<QString> allStations;
-    QList<QString> selectedStations;
-    QListWidget* listAllStations;
+    QList<QString> _activeStationsList;
+    QList<QString> _selectedStations;
+    QListWidget* _listStationsWidget;
 
 public:
     DialogRemoveStation(QList<QString> allStations);
