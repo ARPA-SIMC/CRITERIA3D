@@ -85,6 +85,10 @@ public:
     void setListParam2(const std::vector<float> &listParam2);
     void insertParam2(float param2);
 
+    std::vector<int> listOffset() const;
+    void setListOffset(const std::vector<int> &listOffset);
+    void insertOffset(int offset);
+
     bool addElab(unsigned int index);
 
     std::vector<QString> listFileName() const;
@@ -114,6 +118,7 @@ private:
     std::vector<float> _listParam2;
     std::vector<QString> _listFileName;
     std::vector<bool> _listDailyCumulated;
+    std::vector<int> _listOffset;
 };
 
 #endif // CRIT3DELABLIST_H

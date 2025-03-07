@@ -183,6 +183,13 @@ int Crit3DDate::daysTo(const Crit3DDate& myDate) const
     return j2-j1;
 }
 
+int daysTo(const Crit3DDate& firstDate, const Crit3DDate& lastDate)
+{
+    long j1 = getJulianDay(firstDate.day, firstDate.month, firstDate.year);
+    long j2 = getJulianDay(lastDate.day, lastDate.month, lastDate.year);
+    return j2-j1;
+}
+
 
 Crit3DDate max(const Crit3DDate& myDate1, const Crit3DDate& myDate2)
 {
@@ -259,7 +266,8 @@ bool isLeapYear(int year)
     return (year % 400 == 0);
 }
 
-int getDoyFromDate(const Crit3DDate& myDate)
+
+int getDoyFromDate(const Crit3DDate &myDate)
 {
     int doy = doyMonth[myDate.month-1] + myDate.day;
     if (myDate.month > 2)

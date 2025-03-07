@@ -41,6 +41,7 @@ void Crit3DClimateList::resetListClimateElab()
     _listVariable.clear();
     _listYearEnd.clear();
     _listYearStart.clear();
+    _listOffset.clear();
 }
 
 std::vector<int> Crit3DClimateList::listYearStart() const
@@ -193,6 +194,15 @@ std::vector<bool> Crit3DClimateList::listDailyCumulated() const
    return _listDailyCumulated;
 }
 
+std::vector<int> Crit3DClimateList::listOffset() const
+{
+    return _listOffset;
+}
+
+void Crit3DClimateList::setListOffset(int offset)
+{
+    _listOffset.push_back(offset);
+}
 
 void Crit3DClimateList::parserElaboration(QString &errorStr)
 {
@@ -441,6 +451,32 @@ void Crit3DClimateList::parserElaboration(QString &errorStr)
             _listParam1IsClimate.push_back(param1IsClimate);
             _listParam1ClimateField.push_back(param1ClimateField);
         }
+
+        pos = pos + 1;
+
+        if (words.size() > pos)
+        {
+            int firstNumPos = NODATA;
+            for (int i = 0; i < words[pos].length(); ++i) {
+                if (words[pos][i].isDigit() || words[pos][i] == '-') {
+                    firstNumPos = i;
+                    break;
+                }
+            }
+
+            if (firstNumPos == NODATA)  return;
+
+            QString offsetString = words[pos].mid(firstNumPos);
+            if (offsetString != "")
+                _listOffset.push_back(offsetString.toInt());
+            else
+                _listOffset.push_back(0);
+        }
+        else
+        {
+            _listOffset.push_back(0);
+        }
+
     }
 }
 

@@ -4677,8 +4677,7 @@ bool Project::setMarkedPointsOfMacroArea(int areaNumber)
 
     for (int j = 0; j < pointList.size(); j++)
     {
-        if (meteoPoints[pointList[j]].currentValue != NODATA)
-            meteoPoints[pointList[j]].marked = true;
+        meteoPoints[pointList[j]].marked = true;
     }
 
     return true;
