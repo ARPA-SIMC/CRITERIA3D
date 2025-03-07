@@ -401,7 +401,7 @@ bool climateTemporalCycle(QString *myError, Crit3DClimate* clima, std::vector<fl
 
             result = computeStatistic(outputValues, meteoPoint, clima, startD, endD, clima->nYears(), elab1, elab2, meteoSettings, dataAlreadyLoaded);
 
-            if (result != NODATA)
+            if (! isEqual(result, NODATA))
             {
                 okAtLeastOne = true;
             }
@@ -701,18 +701,18 @@ bool dailyCumulatedClimate(QString *myError, std::vector<float> &inputValues, Cr
     endDate.year += (clima->yearEnd() - clima->yearStart() + 1);
     totalDays = daysTo(startDate, endDate);
 
-    Crit3DDate firstDate = startDate;
-    Crit3DDate secondDate = startDate;
-    secondDate.year += 1;
+    Crit3DDate currentDate = startDate;
+    Crit3DDate nextDate = startDate;
+    nextDate.year += 1;
     std::vector <int> daysOfYear;
 
 
     //create vector of number of days for every (shifted year)
     for (int year = startDate.year; year < endDate.year; year++)
     {
-        daysOfYear.push_back(daysTo(firstDate, secondDate));
-        firstDate.year++;
-        secondDate.year++;
+        daysOfYear.push_back(daysTo(currentDate, nextDate));
+        currentDate.year++;
+        nextDate.year++;
     }
 
     for (int day = 0; day < totalDays; day++)
@@ -844,7 +844,7 @@ bool dailyCumulatedClimate(QString *myError, std::vector<float> &inputValues, Cr
         }
         cumulatedValuesPerDay.clear();
 
-        if (result != NODATA)
+        if (! isEqual(result, NODATA))
         {
             okAtLeastOne = true;
         }
@@ -2780,7 +2780,7 @@ float computeStatistic(std::vector<float> &inputValues, Crit3DMeteoPoint* meteoP
                             }
                         }
 
-                        if (int(value) != NODATA)
+                        if (! isEqual(value, NODATA))
                         {
                             values.push_back(value);
                             nValidValues = nValidValues + 1;
@@ -3129,6 +3129,7 @@ bool parseXMLElaboration(Crit3DElabList *listXMLElab, Crit3DAnomalyList *listXML
     QDomNodeList primaryElab;
     QDomNodeList anomalySecElab;
     QDomNodeList anomalyRefSecElab;
+    QDomNodeList offset;
     TXMLvar varTable;
 
     QDomNode ancestor = xmlDoc.documentElement().firstChild();
@@ -3142,6 +3143,7 @@ bool parseXMLElaboration(Crit3DElabList *listXMLElab, Crit3DAnomalyList *listXML
     QString variable;
     QString period;
     QString refPeriod;
+    QString offsetStr;
 
     QString elab;
     QString elabParam1;
@@ -3227,6 +3229,16 @@ bool parseXMLElaboration(Crit3DElabList *listXMLElab, Crit3DAnomalyList *listXML
                 listXMLElab->insertParam1ClimateField("");
             }
 
+            offset = ancestor.toElement().elementsByTagName("Offset");
+            if (! offset.isEmpty() && (listXMLElab->listPeriodStr().back() != "Daily" || listXMLElab->listDailyCumulated().back() == false))
+            {
+                listXMLElab->eraseElement(nElab);
+                ancestor = ancestor.nextSibling(); // something is wrong, go to next elab
+                qDebug() << "offset present with period type != dailyPeriod or variable is non cumulated";
+                continue;
+            }
+
+            periodPresent = false;
             child = ancestor.firstChild();
             while( !child.isNull())
             {
@@ -3377,6 +3389,18 @@ bool parseXMLElaboration(Crit3DElabList *listXMLElab, Crit3DAnomalyList *listXML
                         secondChild = secondChild.nextSibling();
                     }
                 }
+                if (myTag == "OFFSET")
+                {
+                    offsetStr = child.toElement().text();
+                    bool isOk;
+                    listXMLElab->insertOffset(offsetStr.toInt(&isOk));
+                    if (! isOk)
+                    {
+                        listXMLElab->eraseElement(nElab);
+                        qDebug() << "offset ";
+                        errorElab = true;
+                    }
+                }
                 if (errorElab)
                 {
                     errorElab = false;
@@ -3395,7 +3419,10 @@ bool parseXMLElaboration(Crit3DElabList *listXMLElab, Crit3DAnomalyList *listXML
                 listXMLElab->insertDateEnd(QDate(lastYear.toInt(), 0, 0));
                 listXMLElab->insertNYears(0);
             }
-            nElab = nElab + 1;
+            if (listXMLElab->listOffset().size() < nElab+1)
+                listXMLElab->insertOffset(0);
+
+            nElab++;
             qDebug() << "nElab " << nElab;
         }
         else if (ancestor.toElement().tagName().toUpper() == "ANOMALY")

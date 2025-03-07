@@ -1562,6 +1562,7 @@ bool PragaProject::climateCycleGrid(bool showInfo)
                        clima->setParam2(climateList->listParam2().at(j));
                        clima->setParam1IsClimate(climateList->listParam1IsClimate().at(j));
                        clima->setParam1ClimateField(climateList->listParam1ClimateField().at(j));
+                       clima->setOffset(climateList->listOffset().at(j));
 
                        if (clima->periodType() == genericPeriod)
                        {
@@ -1577,6 +1578,11 @@ bool PragaProject::climateCycleGrid(bool showInfo)
                        {
                            startDate.setDate(clima->yearStart(), 1, 1);
                            endDate.setDate(clima->yearEnd(), 12, 31);
+                           if (clima->offset() != 0)
+                           {
+                               startDate = startDate.addDays(clima->offset());
+                               endDate = endDate.addDays(clima->offset());
+                           }
                        }
                    }
                    else
@@ -5048,10 +5054,11 @@ bool PragaProject::computeClimatePointXML(QString xmlName)
                 clima->setGenericPeriodDateEnd(listXMLElab->listDateEnd()[i]);
                 clima->setNYears(listXMLElab->listNYears()[i]);
                 clima->setElab1(listXMLElab->listElab1()[i]);
-                if (i < listXMLElab->listOffset().size())
-                    clima->setOffset(listXMLElab->listOffset()[i]);
-                else
+
+                if (! clima->dailyCumulated()) //offset doesn't matter for non cumlated variables
                     clima->setOffset(0);
+                else
+                    clima->setOffset(listXMLElab->listOffset()[i]);
 
                 if (!listXMLElab->listParam1IsClimate()[i])
                 {
@@ -5083,6 +5090,11 @@ bool PragaProject::computeClimatePointXML(QString xmlName)
                 {
                     startDate.setDate(clima->yearStart(), 1, 1);
                     endDate.setDate(clima->yearEnd(), 12, 31);
+                    if (clima->offset() != 0) //if period != daily, offset is always 0
+                    {
+                        startDate = startDate.addDays(clima->offset());
+                        endDate = endDate.addDays(clima->offset());
+                    }
                 }
 
                 if (climateOnPoint(&errorString, meteoPointsDbHandler, nullptr, clima, meteoPointTemp, outputValues, listXMLElab->isMeteoGrid(), startDate, endDate, changeDataSet, meteoSettings))
