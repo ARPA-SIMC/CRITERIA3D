@@ -30,6 +30,7 @@
 #include "meteoWidget.h"
 #include "dialogSelectVar.h"
 #include "dialogRemoveStation.h"
+#include "dialogAddStation.h"
 #include "dialogMeteoTable.h"
 #include "dialogChangeAxis.h"
 #include "dialogVariableToSum.h"
@@ -372,11 +373,13 @@ Crit3DMeteoWidget::Crit3DMeteoWidget(bool isGrid_, QString projectPath, Crit3DMe
     QAction* changeRightAxis = new QAction(tr("&Change axis right"), this);
     QAction* exportGraph = new QAction(tr("&Export graph"), this);
     QAction* removeStation = new QAction(tr("&Remove stations"), this);
+    QAction* addStation = new QAction(tr("Add stations"), this);
 
     editMenu->addAction(changeLeftAxis);
     editMenu->addAction(changeRightAxis);
     editMenu->addAction(exportGraph);
     editMenu->addAction(removeStation);
+    editMenu->addAction(addStation);
 
     QAction* infoPoint = new QAction(tr("&Info meteo point"), this);
     QAction* dataAvailability = new QAction(tr("&Data availability"), this);
@@ -399,6 +402,7 @@ Crit3DMeteoWidget::Crit3DMeteoWidget(bool isGrid_, QString projectPath, Crit3DMe
     connect(changeRightAxis, &QAction::triggered, this, &Crit3DMeteoWidget::on_actionChangeRightAxis);
     connect(exportGraph, &QAction::triggered, this, &Crit3DMeteoWidget::on_actionExportGraph);
     connect(removeStation, &QAction::triggered, this, &Crit3DMeteoWidget::on_actionRemoveStation);
+    connect(addStation, &QAction::triggered, this, &Crit3DMeteoWidget::on_actionAddStation);
     connect(infoPoint, &QAction::triggered, this, &Crit3DMeteoWidget::on_actionInfoPoint);
     connect(dataAvailability, &QAction::triggered, this, &Crit3DMeteoWidget::on_actionDataAvailability);
     connect(dataSum, &QAction::triggered, this, &Crit3DMeteoWidget::on_actionDataSum);
@@ -2094,6 +2098,7 @@ void Crit3DMeteoWidget::showVar()
     }
 }
 
+
 void Crit3DMeteoWidget::showMonthlyGraph()
 {
     if (! isInitialized) return;
@@ -3061,6 +3066,38 @@ void Crit3DMeteoWidget::on_actionRemoveStation()
         updateSeries();
         redraw();
     }
+}
+
+void Crit3DMeteoWidget::on_actionAddStation()
+{
+    QList<QString> allStations;
+    for (int mp=0; mp<meteoPoints.size();mp++)
+    {
+        QString stationId = QString::fromStdString(meteoPoints[mp].id);
+        QString stationsName = QString::fromStdString(meteoPoints[mp].name);
+        QString station = stationId+"_"+stationsName;
+        allStations << station;
+    }
+    DialogAddStation selectStation(allStations);
+    //if (selectStation.result() == QDialog::Accepted)
+    /*{
+        QList<QString> stationsToCalculateDistance = selectStation.getSelectedStations();
+        for (int n=0; n<stationsToRemoveList.size();n++)
+        {
+            QString id = stationsToRemoveList[n].split("_")[0];
+            for (int indexMp=0; indexMp<meteoPoints.size();indexMp++)
+            {
+                if (meteoPoints[indexMp].id == id.toStdString())
+                {
+                    meteoPoints.removeAt(indexMp);
+                    indexMp = indexMp - 1;
+                }
+            }
+        }
+        updateSeries();
+        redraw();
+    }*/
+
 }
 
 void Crit3DMeteoWidget::on_actionInfoPoint()

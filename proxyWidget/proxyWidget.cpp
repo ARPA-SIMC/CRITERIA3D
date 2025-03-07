@@ -562,10 +562,8 @@ void Crit3DProxyWidget::on_actionChangeLeftAxis()
     DialogChangeAxis changeAxisDialog(1, false);
     if (changeAxisDialog.result() == QDialog::Accepted)
     {
-        //axisY_sx->setMin(changeAxisDialog.getMinVal());
-        //axisY_sx->setMax(changeAxisDialog.getMaxVal());
-        chartView->axisY->setMin(floor(changeAxisDialog.getMinVal()));
-        chartView->axisY->setMax(ceil(changeAxisDialog.getMaxVal()));
+        chartView->axisY->setMin(changeAxisDialog.getMinVal());
+        chartView->axisY->setMax(changeAxisDialog.getMaxVal());
     }
 }
 
@@ -576,7 +574,7 @@ void Crit3DProxyWidget::addMacroAreaLR()
     chartView->cleanModelLapseRate();
     r2.clear();
     lapseRate.clear();
-    if (macroAreaNumber < interpolationSettings->getMacroAreas().size())
+    if (macroAreaNumber < int(interpolationSettings->getMacroAreas().size()))
     {
         std::string errorStr;
         setMultipleDetrendingHeightTemperatureRange(interpolationSettings);

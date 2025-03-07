@@ -248,7 +248,7 @@ void Project::checkProxyForMultipleDetrending(Crit3DProxy &myProxy, bool isHeigh
     else
         nrParameters = 2;
 
-    if (myProxy.getFittingParametersRange().size() != nrParameters*2)
+    if (int(myProxy.getFittingParametersRange().size()) != nrParameters*2)
     {
         logError("wrong number of parameters for proxy: " + QString::fromStdString(myProxy.getName()) + ". You can change them in the parameters.ini file, but default parameters will be used for now.");
         if (nrParameters == 2)
@@ -264,7 +264,7 @@ void Project::checkProxyForMultipleDetrending(Crit3DProxy &myProxy, bool isHeigh
                                                H0_MAX, 50, DELTA_MAX, SLOPE_MAX, INVSLOPE_MAX, INVSLOPE_MAX});
     }
 
-    if (isHeight && myProxy.getFittingFirstGuess().size() != nrParameters)
+    if (isHeight && int(myProxy.getFittingFirstGuess().size()) != nrParameters)
     {
         logError("wrong number of first guess settings for proxy: " + QString::fromStdString(myProxy.getName()) + ". You can change them in the parameters.ini file, but default settings will be used for now.");
         if (nrParameters == 4)
@@ -1675,7 +1675,7 @@ bool Project::loadMeteoGridHourlyData(QDateTime firstDate, QDateTime lastDate, b
     int infoStep = 1;
     if (showInfo)
     {
-        QString infoStr = "Load meteo grid hourly data: " + firstDate.toString("yyyy-MM-dd:hh") + " - " + lastDate.toString("yyyy-MM-dd:hh");
+        QString infoStr = "Load meteo grid hourly data: " + firstDate.toString("yyyy-MM-dd") + " 01:00 - " + lastDate.toString("yyyy-MM-dd") + " 00:00";
         infoStep = setProgressBar(infoStr, this->meteoGridDbHandler->gridStructure().header().nrRows);
     }
 
