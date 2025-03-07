@@ -394,7 +394,7 @@ DialogMeteoComputation::DialogMeteoComputation(QSettings *settings, bool isMeteo
     connect(&variableList, &QComboBox::currentTextChanged, [=](const QString &newVar){ this->listElaboration(newVar); });
     connect(&elaborationList, &QComboBox::currentTextChanged, [=](const QString &newElab){ this->listSecondElab(newElab); });
     connect(&secondElabList, &QComboBox::currentTextChanged, [=](const QString &newSecElab){ this->activeSecondParameter(newSecElab); });
-    connect(&readParam, &QCheckBox::checkStateChanged, [=](int state){ this->readParameter(state); });
+    connect(&readParam, &QCheckBox::stateChanged, [=](int state){ this->readParameter(state); });
     connect(&copyData, &QPushButton::clicked, [=](){ this->copyDataToAnomaly(); });
 
 
