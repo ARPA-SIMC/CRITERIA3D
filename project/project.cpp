@@ -4138,7 +4138,7 @@ void Project::showMeteoWidgetPoint(std::string idMeteoPoint, std::string namePoi
     {
         bool isGrid = false;
         Crit3DMeteoWidget* meteoWidgetPoint = new Crit3DMeteoWidget(isGrid, projectPath, meteoSettings);
-        if (!meteoWidgetPointList.isEmpty())
+        if (! meteoWidgetPointList.isEmpty())
         {
             meteoWidgetId = meteoWidgetPointList[meteoWidgetPointList.size()-1]->getMeteoWidgetID()+1;
         }
@@ -4147,6 +4147,7 @@ void Project::showMeteoWidgetPoint(std::string idMeteoPoint, std::string namePoi
             meteoWidgetId = 0;
         }
         meteoWidgetPoint->setMeteoWidgetID(meteoWidgetId);
+        meteoWidgetPoint->setAllMeteoPointsPointer(meteoPoints);
         meteoWidgetPointList.append(meteoWidgetPoint);
         QObject::connect(meteoWidgetPoint, SIGNAL(closeWidgetPoint(int)), this, SLOT(deleteMeteoWidgetPoint(int)));
         meteoPointsDbHandler->loadDailyData(getCrit3DDate(firstDaily), getCrit3DDate(lastDaily), mp);
