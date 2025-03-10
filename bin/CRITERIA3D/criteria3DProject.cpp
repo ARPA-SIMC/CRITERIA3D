@@ -632,11 +632,7 @@ bool Crit3DProject::runModels(QDateTime firstTime, QDateTime lastTime, bool isRe
             dailyUpdatePond();
         }
 
-        // TODO Antonio hydrall giornaliero
-        if (processes.computeHydrall)
-        {
-            dailyUpdateHydrallMaps();
-        }
+
 
         if (isSaveOutputRaster())
         {
@@ -700,6 +696,12 @@ bool Crit3DProject::runModels(QDateTime firstTime, QDateTime lastTime, bool isRe
             {
                 return true;
             }
+        }
+
+        // TODO Antonio hydrall giornaliero
+        if (processes.computeHydrall)
+        {
+            dailyUpdateHydrallMaps();
         }
 
         if (isSaveDailyState())
@@ -1435,6 +1437,9 @@ bool Crit3DProject::updateLast30DaysTavg()
     {
         for (long col = 0; col < dailyTminMap.header->nrCols; col++)
         {
+            float testTemp;
+            testTemp = dailyTmaxMap.value[row][col];
+            testTemp = dailyTminMap.value[row][col];
             hydrallMaps.mapLast30DaysTavg->value[row][col] = (29./30.)*hydrallMaps.mapLast30DaysTavg->value[row][col] + (dailyTmaxMap.value[row][col] + dailyTminMap.value[row][col])/30;
         }
     }
@@ -1599,7 +1604,7 @@ bool Crit3DProject::runModelHour(const QString& hourlyOutputPath, bool isRestart
                 updateDailyTemperatures();
                 if (processes.computeHydrall) //if Hydrall is on processes.computeForestModel
                 {
-                    updateLast30DaysTavg();
+                    //updateLast30DaysTavg();
                     double temperature, elevation;
                     int secondsPerStep;
                     Crit3DDate myDate = getCrit3DDate(getCurrentDate());
