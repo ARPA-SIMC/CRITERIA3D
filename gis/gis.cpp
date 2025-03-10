@@ -1789,109 +1789,63 @@ namespace gis
     }
 
 
-    /*!
-     * \brief extract a basin from a digital terrain model, starting from point (xClosure, yClosure)
-     */
-    /*
-    bool extractBasin(const Crit3DRasterGrid& inputRaster, Crit3DRasterGrid& outputRaster, double xClosure, double yClosure)
+    // removes points relating to other basins
+    void cleanBasin(const Crit3DRasterGrid& inputRaster, Crit3DRasterGrid& basinRaster, double xClosure, double yClosure)
     {
-        // check closure point
-        float refValue = inputRaster.getValueFromXY(xClosure, yClosure);
-        if (isEqual(refValue, inputRaster.header->flag))
-            return false;
+        double threshold = basinRaster.header->cellSize *3.;
 
-        // fill depressions (not at the border)
-        Crit3DRasterGrid noHolesRaster;
-        noHolesRaster.copyGrid(inputRaster);
-        int nrFixed;
-
-        do
+        for (int row = 0; row < basinRaster.header->nrRows; row++)
         {
-            nrFixed = 0;
-            for (int row=1; row < noHolesRaster.header->nrRows-1; row++)
+            for (int col = 0; col < basinRaster.header->nrCols; col++)
             {
-                for (int col=1; col < noHolesRaster.header->nrCols-1; col++)
+                if (! isEqual(basinRaster.value[row][col], basinRaster.header->flag))
                 {
-                    refValue = noHolesRaster.value[row][col];
-                    if (! isEqual(refValue, noHolesRaster.header->flag))
+                    float refValue = basinRaster.value[row][col];
+
+                    int lastRow = row;
+                    int lastCol = col;
+                    bool isNewPoint = true;
+                    double x, y;
+
+                    // descends following the maximum slope
+                    while (isNewPoint)
                     {
-                        float minimum = getNeighboursMinimumValue(noHolesRaster, row, col);
-                        if (minimum != NODATA && refValue < minimum)
+                        isNewPoint = false;
+                        int currentRow = lastRow;
+                        int currentCol = lastCol;
+                        inputRaster.getXY(currentRow, currentCol, x, y);
+
+                        if (computeDistance(x, y, xClosure, yClosure) > threshold)
                         {
-                            noHolesRaster.value[row][col] = minimum;
-                            nrFixed++;
-                        }
-                    }
-                }
-            }
-        }
-        while (nrFixed > 0);
-
-        // new raster
-        Crit3DRasterGrid basinRaster;
-        basinRaster.initializeGrid(*inputRaster.header);
-
-        // insert closure point as first value in the queue
-        int firstRow, firstCol;
-        inputRaster.getRowCol(xClosure, yClosure, firstRow, firstCol);
-        basinRaster.value[firstRow][firstCol] = inputRaster.value[firstRow][firstCol];
-        std::vector<int> rowList, colList, newRowList, newColList;
-        rowList.push_back(firstRow);
-        colList.push_back(firstCol);
-
-        // add new points to the queue
-        float value, outputValue;
-        while (! rowList.empty())
-        {
-            for (int i=0; i < rowList.size(); i++)
-            {
-                int row = rowList[i];
-                int col = colList[i];
-                refValue = basinRaster.value[row][col];
-                if (! isEqual(refValue, basinRaster.header->flag))
-                {
-                    for (int r = -3; r <= 3; r++)
-                    {
-                        for (int c = -3; c <= 3; c++)
-                        {
-                            if (r != 0 || c != 0)
+                            for (int r = -1; r <= 1; r++)
                             {
-                                value = noHolesRaster.getValueFromRowCol(row+r, col+c);
-                                if (! isEqual(value, noHolesRaster.header->flag))
+                                for (int c = -1; c <= 1; c++)
                                 {
-                                    outputValue = basinRaster.getValueFromRowCol(row+r, col+c);
-                                    if (isEqual(outputValue, basinRaster.header->flag))
+                                    if (r != 0 || c != 0)
                                     {
-                                        float minimum = getNeighboursMinimumValue(noHolesRaster, row+r, col+c);
-                                        if (minimum != NODATA && refValue <= minimum)
+                                        float rasterValue = inputRaster.getValueFromRowCol(currentRow+r, currentCol+c);
+                                        if (! isEqual(rasterValue, inputRaster.header->flag) && (rasterValue <= refValue))
                                         {
-                                            newRowList.push_back(row+r);
-                                            newColList.push_back(col+c);
-                                            basinRaster.value[row+r][col+c] = value;
+                                            refValue = rasterValue;
+                                            lastRow = currentRow+r;
+                                            lastCol = currentCol+c;
+                                            isNewPoint = true;
                                         }
                                     }
                                 }
                             }
                         }
                     }
+
+                    // remove the origin point if the last point of path is outside the basin
+                    if (isEqual(basinRaster.value[lastRow][lastCol], basinRaster.header->flag))
+                    {
+                        basinRaster.value[row][col] = basinRaster.header->flag;
+                    }
                 }
             }
-
-            rowList = newRowList;
-            colList = newColList;
-            newRowList.clear();
-            newColList.clear();
         }
-
-        noHolesRaster.clear();
-
-        // delete empty borders
-        cleanRaster(basinRaster, outputRaster);
-        basinRaster.clear();
-
-        return true;
     }
-    */
 
 
     /*!
@@ -1937,7 +1891,7 @@ namespace gis
                             if (r != 0 || c != 0)
                             {
                                 rasterValue = inputRaster.getValueFromRowCol(row+r, col+c);
-                                if (! isEqual(rasterValue, inputRaster.header->flag) && (rasterValue >= refValue))
+                                if (! isEqual(rasterValue, inputRaster.header->flag) && (rasterValue > refValue))
                                 {
                                     basinValue = basinRaster.getValueFromRowCol(row+r, col+c);
                                     if (isEqual(basinValue, basinRaster.header->flag))
@@ -2054,62 +2008,12 @@ namespace gis
             }
         }
 
-        // *** step 3: cleans the basin (removes points relating to other basins)
-        double threshold = basinRaster.header->cellSize * 5.;
-        for (int row = 0; row < basinRaster.header->nrRows; row++)
-        {
-            for (int col = 0; col < basinRaster.header->nrCols; col++)
-            {
-                if (! isEqual(basinRaster.value[row][col], basinRaster.header->flag))
-                {
-                    refValue = basinRaster.value[row][col];
+        // *** step 3: clean the basin (removes points relating to other basins)
+        for (int i = 0; i < 2; i++)
+            cleanBasin(inputRaster, basinRaster, xClosure, yClosure);
 
-                    int lastRow = row;
-                    int lastCol = col;
-                    bool isNewPoint = true;
-                    double x, y;
-
-                    // descends following the maximum slope
-                    while (isNewPoint)
-                    {
-                        isNewPoint = false;
-                        int currentRow = lastRow;
-                        int currentCol = lastCol;
-                        inputRaster.getXY(currentRow, currentCol, x, y);
-
-                        if (computeDistance(x, y, xClosure, yClosure) > threshold)
-                        {
-                            for (int r = -1; r <= 1; r++)
-                            {
-                                for (int c = -1; c <= 1; c++)
-                                {
-                                    if (r != 0 || c != 0)
-                                    {
-                                        rasterValue = inputRaster.getValueFromRowCol(currentRow+r, currentCol+c);
-                                        if (! isEqual(rasterValue, inputRaster.header->flag) && (rasterValue <= refValue))
-                                        {
-                                            refValue = rasterValue;
-                                            lastRow = currentRow+r;
-                                            lastCol = currentCol+c;
-                                            isNewPoint = true;
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    }
-
-                    // remove the origin point if the last point of path is outside the basin
-                    if (isEqual(basinRaster.value[lastRow][lastCol], basinRaster.header->flag))
-                    {
-                        basinRaster.value[row][col] = basinRaster.header->flag;
-                    }
-                }
-            }
-        }
 
         // *** step 4: removes separate areas
-
         // initialize raster boundaries
         boundariesRaster.emptyGrid();
         boundariesRaster.value[rowClosure][colClosure] = 1;
