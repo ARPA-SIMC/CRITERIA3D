@@ -585,12 +585,28 @@ namespace gis
     }
 
 
+    float computeDistance(int x1, int y1, int x2, int y2)
+    {
+        float dx = float(x2 - x1);
+        float dy = float(y2 - y1);
+
+        return sqrtf((dx * dx) + (dy * dy));
+    }
+
     float computeDistance(float x1, float y1, float x2, float y2)
     {
             float dx = x2 - x1;
             float dy = y2 - y1;
 
             return sqrtf((dx * dx) + (dy * dy));
+    }
+
+    double computeDistance(double x1, double y1, double x2, double y2)
+    {
+        double dx = x2 - x1;
+        double dy = y2 - y1;
+
+        return sqrt((dx * dx) + (dy * dy));
     }
 
 
@@ -1262,9 +1278,7 @@ namespace gis
         float value = rasterRef.getValueFromRowCol(row,col);
         float aspect = aspectMap.getValueFromRowCol(row,col);
         if (isEqual(value, rasterRef.header->flag) || isEqual(aspect, aspectMap.header->flag))
-        {
             return false;
-        }
 
         int r = 0;
         int c = 0;
@@ -1279,9 +1293,8 @@ namespace gis
             c = -1;
 
         float valueBoundary = rasterRef.getValueFromRowCol(row + r, col + c);
-        bool isBoundary = isEqual(valueBoundary, rasterRef.header->flag);
 
-        return isBoundary;
+        return isEqual(valueBoundary, rasterRef.header->flag);
     }
 
 
@@ -1296,7 +1309,7 @@ namespace gis
 
         for (int r = -1; r <= 1; r++)
             for (int c = -1; c <= 1; c++)
-                if ((r != 0 || c != 0))
+                if (r != 0 || c != 0)
                 {
                     float zBoundary = myGrid.getValueFromRowCol(row + r, col + c);
                     if (isEqual(zBoundary, myGrid.header->flag))
@@ -1792,7 +1805,7 @@ namespace gis
     // removes points relating to other basins
     void cleanBasin(const Crit3DRasterGrid& inputRaster, Crit3DRasterGrid& basinRaster, double xClosure, double yClosure)
     {
-        double threshold = basinRaster.header->cellSize *3.;
+        double threshold = basinRaster.header->cellSize * 3.;
 
         for (int row = 0; row < basinRaster.header->nrRows; row++)
         {
@@ -1805,6 +1818,7 @@ namespace gis
                     int lastRow = row;
                     int lastCol = col;
                     bool isNewPoint = true;
+                    bool isNearClosure = false;
                     double x, y;
 
                     // descends following the maximum slope
@@ -1815,7 +1829,11 @@ namespace gis
                         int currentCol = lastCol;
                         inputRaster.getXY(currentRow, currentCol, x, y);
 
-                        if (computeDistance(x, y, xClosure, yClosure) > threshold)
+                        if (computeDistance(x, y, xClosure, yClosure) <= threshold)
+                        {
+                            isNearClosure = true;
+                        }
+                        else
                         {
                             for (int r = -1; r <= 1; r++)
                             {
@@ -1824,7 +1842,7 @@ namespace gis
                                     if (r != 0 || c != 0)
                                     {
                                         float rasterValue = inputRaster.getValueFromRowCol(currentRow+r, currentCol+c);
-                                        if (! isEqual(rasterValue, inputRaster.header->flag) && (rasterValue <= refValue))
+                                        if (! isEqual(rasterValue, inputRaster.header->flag) && (rasterValue < refValue))
                                         {
                                             refValue = rasterValue;
                                             lastRow = currentRow+r;
@@ -1834,13 +1852,24 @@ namespace gis
                                     }
                                 }
                             }
+                            if (! isNewPoint)
+                            {
+                                if (! isBoundary(inputRaster, currentRow, currentCol))
+                                {
+                                    // depressions
+
+                                }
+                            }
                         }
                     }
 
-                    // remove the origin point if the last point of path is outside the basin
-                    if (isEqual(basinRaster.value[lastRow][lastCol], basinRaster.header->flag))
+                    if (! isNearClosure)
                     {
-                        basinRaster.value[row][col] = basinRaster.header->flag;
+                        // remove the origin point if the last point of path is outside the basin
+                        if (isEqual(basinRaster.value[lastRow][lastCol], basinRaster.header->flag))
+                        {
+                            basinRaster.value[row][col] = basinRaster.header->flag;
+                        }
                     }
                 }
             }
