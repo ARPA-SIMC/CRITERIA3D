@@ -1922,12 +1922,16 @@ namespace gis
                                 rasterValue = inputRaster.getValueFromRowCol(row+r, col+c);
                                 if (! isEqual(rasterValue, inputRaster.header->flag) && (rasterValue > refValue))
                                 {
-                                    basinValue = basinRaster.getValueFromRowCol(row+r, col+c);
-                                    if (isEqual(basinValue, basinRaster.header->flag))
+                                    float checkValue = gis::getNeighboursMinimumValue(inputRaster, row+r, col+c);
+                                    if (checkValue >= refValue || checkValue == NODATA)
                                     {
-                                        newRowList.push_back(row+r);
-                                        newColList.push_back(col+c);
-                                        basinRaster.value[row+r][col+c] = rasterValue;
+                                        basinValue = basinRaster.getValueFromRowCol(row+r, col+c);
+                                        if (isEqual(basinValue, basinRaster.header->flag))
+                                        {
+                                            newRowList.push_back(row+r);
+                                            newColList.push_back(col+c);
+                                            basinRaster.value[row+r][col+c] = rasterValue;
+                                        }
                                     }
                                 }
                             }
