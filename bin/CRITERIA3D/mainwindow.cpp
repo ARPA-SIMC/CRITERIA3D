@@ -448,7 +448,10 @@ bool MainWindow::contextMenuRequested(QPoint localPos)
             // extract basin
             gis::Crit3DRasterGrid basinRaster;
             if (! gis::extractBasin(myProject.DEM, basinRaster, x, y))
+            {
+                myProject.logWarning("Wrong closure point.");
                 return false;
+            }
 
             // choose fileName
             QString completeFileName = QFileDialog::getSaveFileName(this, tr("Save basin raster"), "", tr("ESRI float (*.flt)"));
