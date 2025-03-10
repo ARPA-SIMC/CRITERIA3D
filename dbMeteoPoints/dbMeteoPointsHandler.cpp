@@ -844,6 +844,12 @@ bool Crit3DMeteoPointsDbHandler::setAndOpenDb(QString dbname_)
         return false;
     }
 
+    if (! QFile(dbname_).exists())
+    {
+        errorStr = "Meteo points DB does not exists:\n" + dbname_;
+        return false;
+    }
+
     _db = QSqlDatabase::addDatabase("QSQLITE", QUuid::createUuid().toString());
     _db.setDatabaseName(dbname_);
 

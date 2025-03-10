@@ -38,6 +38,7 @@ INCLUDEPATH += ../crit3dDate ../mathFunctions ../gis ../meteo ../utilities ../co
 SOURCES += \
     dialogMeteoTable.cpp \
     dialogRemoveStation.cpp \
+    dialogAddStation.cpp \
     dialogSelectVar.cpp \
     dialogVariableToSum.cpp \
     meteoTable.cpp \
@@ -47,6 +48,7 @@ SOURCES += \
 HEADERS += \
     dialogMeteoTable.h \
     dialogRemoveStation.h \
+    dialogAddStation.h \
     dialogSelectVar.h \
     dialogVariableToSum.h \
     meteoTable.h \
