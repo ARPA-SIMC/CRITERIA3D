@@ -3443,6 +3443,7 @@ bool Project::interpolationGrid(meteoVariable myVar, const Crit3DTime& myTime)
 
                         if (getUseDetrendingVar(myVar))
                         {
+                            bool proxyFlag = true;
                             proxyIndex = 0;
 
                             for (i=0; i < interpolationSettings.getProxyNr(); i++)
@@ -3456,11 +3457,18 @@ bool Project::interpolationGrid(meteoVariable myVar, const Crit3DTime& myTime)
                                         float proxyValue = gis::getValueFromXY(*meteoGridProxies[proxyIndex], myX, myY);
                                         if (proxyValue != meteoGridProxies[proxyIndex]->header->flag)
                                             proxyValues[i] = double(proxyValue);
+                                        else
+                                        {
+                                            proxyFlag = false;
+                                            break;
+                                        }
                                     }
-
                                     proxyIndex++;
                                 }
                             }
+
+                            if (! proxyFlag)
+                                continue;
 
                             double temp = interpolate(subsetInterpolationPoints, &interpolationSettings, meteoSettings, myVar, myX, myY, myZ, proxyValues, true);
                             if (! isEqual(temp, NODATA))
