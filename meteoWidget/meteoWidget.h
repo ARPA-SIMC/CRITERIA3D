@@ -1,7 +1,7 @@
 #ifndef METEOWIDGET_H
 #define METEOWIDGET_H
 
-    #include <QtWidgets>
+    #include <QWidget>
     #include <QtCharts>
     #include "meteo.h"
     #include "meteoPoint.h"
@@ -12,17 +12,18 @@
         Q_OBJECT
 
         public:
-            Crit3DMeteoWidget(bool isGrid_, QString projectPath, Crit3DMeteoSettings* meteoSettings_);
+        Crit3DMeteoWidget(bool isGrid, QString projectPath, Crit3DMeteoSettings* meteoSettings);
             ~Crit3DMeteoWidget() override;
 
-            int getMeteoWidgetID() const { return meteoWidgetID; }
-            void setMeteoWidgetID(int value) { meteoWidgetID = value; }
+            int getMeteoWidgetID() const { return _meteoWidgetID; }
+            void setMeteoWidgetID(int id) { _meteoWidgetID = id; }
 
-            void setCurrentDate(QDate myDate) { currentDate = myDate; }
+            void setCurrentDate(QDate myDate) { _currentDate = myDate; }
 
             void setIsEnsemble(bool value);
-            bool getIsEnsemble() { return isEnsemble; }
-            void setNrMembers(int value) { nrMembers = value; }
+            bool getIsEnsemble() { return _isEnsemble; }
+            void setNrMembers(int value) { _nrMembers = value; }
+            void setAllMeteoPointsPointer(Crit3DMeteoPoint* pointer) { _allMeteoPointsPointer = pointer; }
 
             void setFrequency(frequencyType frequency);
 
@@ -36,24 +37,26 @@
             void drawEnsemble();
 
     private:
-            int meteoWidgetID;
-            bool isGrid;
-            bool isEnsemble;
-            bool isInitialized;
-            int nrMembers;
+            int _meteoWidgetID;
+            bool _isGrid;
+            bool _isEnsemble;
+            bool _isInitialized;
+            int _nrMembers;
 
-            QVector<Crit3DMeteoPoint> meteoPoints;
-            QVector<Crit3DMeteoPoint> meteoPointsEnsemble;
-            Crit3DMeteoSettings* meteoSettings;
+            QVector<Crit3DMeteoPoint> _meteoPoints;
+            QVector<Crit3DMeteoPoint> _meteoPointsEnsemble;
+            Crit3DMeteoSettings* _meteoSettings;
+            Crit3DMeteoPoint* _allMeteoPointsPointer;
 
             frequencyType _currentFrequency;
+            QDate _currentDate;
+
             QDate firstDailyDate;
             QDate lastDailyDate;
             QDate firstHourlyDate;
             QDate lastHourlyDate;
             QDate firstMonthlyDate;
             QDate lastMonthlyDate;
-            QDate currentDate;
 
             QAction* dataSum;
             QPushButton *addVarButton;
@@ -126,13 +129,13 @@
             void on_actionChangeRightAxis();
             void on_actionExportGraph();
             void on_actionRemoveStation();
+            void on_actionAddStation();
             void on_actionInfoPoint();
             void on_actionDataAvailability();
             void on_actionDataSum();
 
             void drawAxisTitle();
             void drawSum();
-
 
     signals:
         void closeWidgetPoint(int);

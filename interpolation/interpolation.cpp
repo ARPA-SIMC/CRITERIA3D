@@ -2521,8 +2521,12 @@ bool getMultipleDetrendingValues(Crit3DInterpolationSettings mySettings, const s
 
             if (allProxyValues[i] == NODATA)
             {
-                myFunc.erase(myFunc.begin());
-                myParameters.erase(myParameters.begin());
+                //code for using present proxies only
+                //myFunc.erase(myFunc.begin());
+                //myParameters.erase(myParameters.begin());
+
+                activeProxyValues.clear();
+                return false;
             }
             else
                 activeProxyValues.push_back(allProxyValues[i]);
@@ -2530,16 +2534,22 @@ bool getMultipleDetrendingValues(Crit3DInterpolationSettings mySettings, const s
     }
 
     for (unsigned int i=0; i < myCombination.getProxySize(); i++)
+    {
         if (i != unsigned(elevationPos) && myCombination.isProxyActive(i) && myCombination.isProxySignificant(i))
         {
             if (allProxyValues[i] == NODATA)
             {
-                myFunc.erase(myFunc.begin()+activeProxyValues.size());
-                myParameters.erase(myParameters.begin()+activeProxyValues.size());
+                //code for using present proxies only
+                //myFunc.erase(myFunc.begin()+activeProxyValues.size());
+                //myParameters.erase(myParameters.begin()+activeProxyValues.size());
+
+                activeProxyValues.clear();
+                return false;
             }
             else
                 activeProxyValues.push_back(allProxyValues[i]);
         }
+    }
 
     return (activeProxyValues.size() > 0);
 }

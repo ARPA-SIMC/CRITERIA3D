@@ -74,7 +74,7 @@ void PragaProject::clearPragaProject()
 
 QString PragaProject::getVersion()
 {
-    return "PRAGA V2.0.2 (2025)";
+    return "PRAGA V2.0.3 (2025)";
 }
 
 void PragaProject::createPragaProject(QString path_, QString name_, QString description_)
@@ -650,6 +650,7 @@ void PragaProject::readClimate(bool isMeteoGrid, QString climateSelected, int cl
     clima->setParam2(climateList.listParam2().at(0));
     clima->setParam1IsClimate(climateList.listParam1IsClimate().at(0));
     clima->setParam1ClimateField(climateList.listParam1ClimateField().at(0));
+    clima->setOffset(climateList.listOffset().at(0));
 
     QString table;
     if (clima->periodType() == genericPeriod)
@@ -1427,6 +1428,7 @@ bool PragaProject::climateCyclePoints(bool showInfo)
                     clima->setParam2(climateList->listParam2().at(j));
                     clima->setParam1IsClimate(climateList->listParam1IsClimate().at(j));
                     clima->setParam1ClimateField(climateList->listParam1ClimateField().at(j));
+                    clima->setOffset(climateList->listOffset().at(j));
 
                     if (clima->periodType() == genericPeriod)
                     {
@@ -1442,6 +1444,11 @@ bool PragaProject::climateCyclePoints(bool showInfo)
                     {
                         startDate.setDate(clima->yearStart(), 1, 1);
                         endDate.setDate(clima->yearEnd(), 12, 31);
+                        if (clima->offset() != 0)
+                        {
+                            startDate = startDate.addDays(clima->offset());
+                            endDate = endDate.addDays(clima->offset());
+                        }
                     }
                 }
                 else
@@ -1555,6 +1562,7 @@ bool PragaProject::climateCycleGrid(bool showInfo)
                        clima->setParam2(climateList->listParam2().at(j));
                        clima->setParam1IsClimate(climateList->listParam1IsClimate().at(j));
                        clima->setParam1ClimateField(climateList->listParam1ClimateField().at(j));
+                       clima->setOffset(climateList->listOffset().at(j));
 
                        if (clima->periodType() == genericPeriod)
                        {
@@ -1570,6 +1578,11 @@ bool PragaProject::climateCycleGrid(bool showInfo)
                        {
                            startDate.setDate(clima->yearStart(), 1, 1);
                            endDate.setDate(clima->yearEnd(), 12, 31);
+                           if (clima->offset() != 0)
+                           {
+                               startDate = startDate.addDays(clima->offset());
+                               endDate = endDate.addDays(clima->offset());
+                           }
                        }
                    }
                    else
@@ -5042,6 +5055,11 @@ bool PragaProject::computeClimatePointXML(QString xmlName)
                 clima->setNYears(listXMLElab->listNYears()[i]);
                 clima->setElab1(listXMLElab->listElab1()[i]);
 
+                if (! clima->dailyCumulated()) //offset doesn't matter for non cumlated variables
+                    clima->setOffset(0);
+                else
+                    clima->setOffset(listXMLElab->listOffset()[i]);
+
                 if (!listXMLElab->listParam1IsClimate()[i])
                 {
                     clima->setParam1IsClimate(false);
@@ -5072,6 +5090,11 @@ bool PragaProject::computeClimatePointXML(QString xmlName)
                 {
                     startDate.setDate(clima->yearStart(), 1, 1);
                     endDate.setDate(clima->yearEnd(), 12, 31);
+                    if (clima->offset() != 0) //if period != daily, offset is always 0
+                    {
+                        startDate = startDate.addDays(clima->offset());
+                        endDate = endDate.addDays(clima->offset());
+                    }
                 }
 
                 if (climateOnPoint(&errorString, meteoPointsDbHandler, nullptr, clima, meteoPointTemp, outputValues, listXMLElab->isMeteoGrid(), startDate, endDate, changeDataSet, meteoSettings))

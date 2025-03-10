@@ -71,6 +71,11 @@ void SaveClimaLayout::addElab()
         elabAdded = elabAdded + "_|" + elab1ParamFromdB + "||";
     }
 
+    if (period == "Daily" && offsetDoy != '0' && ! offsetDoy.isEmpty())
+    {
+        elabAdded = elabAdded + "_offset" + offsetDoy;
+    }
+
     if (list.contains(elabAdded)!= 0)
     {
         return;
@@ -82,7 +87,6 @@ void SaveClimaLayout::addElab()
     listView.clear();
     listView.addItems(list);
 }
-
 
 void SaveClimaLayout::deleteRaw()
 {
@@ -257,6 +261,16 @@ QString SaveClimaLayout::getGenericNYear() const
 void SaveClimaLayout::setGenericNYear(const QString &valueStr)
 {
     genericNYear = valueStr;
+}
+
+QString SaveClimaLayout::getOffsetDoy()
+{
+    return offsetDoy;
+}
+
+void SaveClimaLayout::setOffsetDoy(const QString &valueStr)
+{
+    offsetDoy = valueStr;
 }
 
 QString SaveClimaLayout::getSecondElab() const
