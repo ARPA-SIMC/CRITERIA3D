@@ -1346,7 +1346,7 @@ bool Crit3DProject::computeHydrallModel()
                     // TODO
                     currentCrop.roots.firstRootLayer = 0;
                     currentCrop.roots.lastRootLayer = 1;
-                    /*
+
                     int zcurrentNode = indexMap.at(i).value[row][col];
                     float zflag =  indexMap.at(i).header->flag;
                     int zhorizonIndex = soilList[soilIndex].getHorizonIndex(layerDepth[i]);
@@ -1364,7 +1364,7 @@ bool Crit3DProject::computeHydrallModel()
                                                   soilList[soilIndex].horizon[soilList[soilIndex].getHorizonIndex(layerDepth[i])].waterContentFC,
                                                   soilList[soilIndex].horizon[soilList[soilIndex].getHorizonIndex(layerDepth[i])].waterContentWP,
                                                   currentCrop.roots.firstRootLayer,currentCrop.roots.lastRootLayer,currentCrop.roots.rootDensity[i]);
-                */}
+                }
                 //get water content and stress coefficient
                 /*for (int i = 0; i < nrLayers; i++)
                 {
@@ -1604,9 +1604,6 @@ bool Crit3DProject::runModelHour(const QString& hourlyOutputPath, bool isRestart
                 updateDailyTemperatures();
                 if (processes.computeHydrall) //if Hydrall is on processes.computeForestModel
                 {
-                    //updateLast30DaysTavg();
-                    double temperature, elevation;
-                    int secondsPerStep;
                     Crit3DDate myDate = getCrit3DDate(getCurrentDate());
                     computeHydrallModel();
                 }
