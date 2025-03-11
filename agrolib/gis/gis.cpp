@@ -1828,7 +1828,7 @@ namespace gis
                         int currentCol = lastCol;
                         inputRaster.getXY(currentRow, currentCol, x, y);
 
-                        if (! computeDistance(x, y, xClosure, yClosure) <= threshold)
+                        if (computeDistance(x, y, xClosure, yClosure) > threshold)
                         {
                             for (int r = -1; r <= 1; r++)
                             {
@@ -2035,7 +2035,7 @@ namespace gis
     /*!
      * \brief remove the empty edges of a smaller raster
      */
-    bool cleanRasterEmptyFrame(const Crit3DRasterGrid& inputRaster, Crit3DRasterGrid& outputRaster)
+    void cleanRasterEmptyFrame(const Crit3DRasterGrid& inputRaster, Crit3DRasterGrid& outputRaster)
     {
         int row0 = inputRaster.header->nrRows-1;
         int row1 = 0;
@@ -2070,8 +2070,6 @@ namespace gis
         for (int row = 0; row < outputRaster.header->nrRows; row++)
             for (int col = 0; col < outputRaster.header->nrCols; col++)
                 outputRaster.value[row][col] = inputRaster.value[row+row0][col+col0];
-
-        return true;
     }
 
 
