@@ -1358,7 +1358,7 @@ bool Crit3DProject::computeHydrallModel()
                     double zrootDensity=currentCrop.roots.rootDensity[i];
 
 
-                    hydrallModel.setSoilVariables(i,indexMap.at(i).value[row][col],indexMap.at(i).header->flag,
+                    hydrallModel.setSoilVariables(nrLayers, i,indexMap.at(i).value[row][col],indexMap.at(i).header->flag,
                                                   soilList[soilIndex].getHorizonIndex(layerDepth[i]),
                                                   soilFluxes3D::getWaterContent(indexMap.at(i).value[row][col]),
                                                   soilList[soilIndex].horizon[soilList[soilIndex].getHorizonIndex(layerDepth[i])].waterContentFC,

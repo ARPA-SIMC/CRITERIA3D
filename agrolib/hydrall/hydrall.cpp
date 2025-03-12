@@ -222,8 +222,9 @@ void Crit3D_Hydrall::setStateVariables(Crit3DHydrallMaps &stateMap, int row, int
     stateVariable.rootBiomass = stateMap.rootBiomassMap->value[row][col];
 }
 
-void Crit3D_Hydrall::setSoilVariables(int iLayer, int currentNode,float checkFlag, int horizonIndex, double waterContent, double waterContentFC, double waterContentWP, int firstRootLayer, int lastRootLayer, double rootDensity)
+void Crit3D_Hydrall::setSoilVariables(int nrLayers, int iLayer, int currentNode,float checkFlag, int horizonIndex, double waterContent, double waterContentFC, double waterContentWP, int firstRootLayer, int lastRootLayer, double rootDensity)
 {
+    soil.layersNr = nrLayers;
     if (iLayer == 0)
     {
         waterContentProfile.resize(soil.layersNr);
