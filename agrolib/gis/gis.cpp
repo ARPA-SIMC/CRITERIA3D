@@ -1805,7 +1805,7 @@ namespace gis
     // removes points relating to other basins
     void cleanBasin(const Crit3DRasterGrid& inputRaster, Crit3DRasterGrid& basinRaster, double xClosure, double yClosure)
     {
-        double threshold = basinRaster.header->cellSize * 2.0;
+        double threshold = basinRaster.header->cellSize * 3.0;
 
         for (int row = 0; row < basinRaster.header->nrRows; row++)
         {
@@ -1888,7 +1888,7 @@ namespace gis
         // *** step 1: adds points with higher topographic elevation
 
         float rasterValue, basinValue;
-        int side = 3;
+        int side = 5;
         while (! rowList.empty())
         {
             for (int i=0; i < rowList.size(); i++)
@@ -2079,7 +2079,7 @@ namespace gis
         Crit3DRasterGrid basinRaster;
         basinRaster.copyGrid(inputRaster);
 
-        for (int i = 0; i < 3; i++)
+        for (int i = 0; i < 2; i++)
         {
             if (! extractBasin_singleStep(basinRaster, outputRaster, xClosure, yClosure))
                 return false;
