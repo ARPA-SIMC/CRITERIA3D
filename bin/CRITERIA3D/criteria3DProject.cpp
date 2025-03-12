@@ -769,7 +769,7 @@ bool Crit3DProject::loadCriteria3DProject(QString myFileName)
 
     if (! loadProject())
     {
-        if (errorType != ERROR_DBGRID && errorType != ERROR_DBPOINT)
+        if (errorType != ERROR_DBGRID && errorType != ERROR_OUTPUTPOINTLIST)
             return false;
     }
 
