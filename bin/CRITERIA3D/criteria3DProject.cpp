@@ -1346,7 +1346,7 @@ bool Crit3DProject::computeHydrallModel()
                     // TODO
                     currentCrop.roots.firstRootLayer = 0;
                     currentCrop.roots.lastRootLayer = 1;
-
+                    /*
                     int zcurrentNode = indexMap.at(i).value[row][col];
                     float zflag =  indexMap.at(i).header->flag;
                     int zhorizonIndex = soilList[soilIndex].getHorizonIndex(layerDepth[i]);
@@ -1356,9 +1356,10 @@ bool Crit3DProject::computeHydrallModel()
                     int zfirstLayer=currentCrop.roots.firstRootLayer;
                     int zlastLayer=currentCrop.roots.lastRootLayer;
                     double zrootDensity=currentCrop.roots.rootDensity[i];
-
-
-                    hydrallModel.setSoilVariables(nrLayers, i,indexMap.at(i).value[row][col],indexMap.at(i).header->flag,
+                    */
+                    if (soilList[soilIndex].getHorizonIndex(layerDepth[i]) == NODATA)
+                        continue;
+                    hydrallModel.setSoilVariables(i,indexMap.at(i).value[row][col],indexMap.at(i).header->flag,
                                                   soilList[soilIndex].getHorizonIndex(layerDepth[i]),
                                                   soilFluxes3D::getWaterContent(indexMap.at(i).value[row][col]),
                                                   soilList[soilIndex].horizon[soilList[soilIndex].getHorizonIndex(layerDepth[i])].waterContentFC,
