@@ -11,6 +11,7 @@ greaterThan(QT_MAJOR_VERSION, 5): QT += core5compat openglwidgets
 
 TEMPLATE = app
 TARGET = CRITERIA3D
+VERSION = 1.0.5
 
 CONFIG += debug_and_release
 CONFIG += c++11 c++14 c++17
