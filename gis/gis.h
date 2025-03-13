@@ -190,8 +190,10 @@
             Crit3DEllipsoid();
         };
 
-
+        float computeDistance(int x1, int y1, int x2, int y2);
         float computeDistance(float x1, float y1, float x2, float y2);
+        double computeDistance(double x1, double y1, double x2, double y2);
+
         double computeDistancePoint(Crit3DUtmPoint *p0, Crit3DUtmPoint *p1);
         std::vector<float> computeEuclideanDistanceStation2Area(std::vector<std::vector<int>>& cells,std::vector<std::vector<int>>& stations);
         std::vector<int> computeMetropolisDistanceStation2Area(std::vector<std::vector<int>>& cells,std::vector<std::vector<int>>& stations);
@@ -281,7 +283,7 @@
 
         float getNeighboursMinimumValue(const Crit3DRasterGrid& raster, int row, int col);
         bool extractBasin(const Crit3DRasterGrid& inputRaster, Crit3DRasterGrid& outputRaster, double xClosure, double yClosure);
-        bool cleanRasterEmptyFrame(const Crit3DRasterGrid& inputRaster, Crit3DRasterGrid& outputRaster);
+        void cleanRasterEmptyFrame(const Crit3DRasterGrid& inputRaster, Crit3DRasterGrid& outputRaster);
     }
 
 
