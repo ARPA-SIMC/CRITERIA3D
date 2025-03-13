@@ -372,24 +372,26 @@ void Crit3DProject::assignETreal()
                 DEM.getXY(row, col, utmX, utmY);
                 int soilIndex = getSoilListIndex(utmX, utmY);
 
-                float lai = laiMap.value[row][col];
-                if (isEqual(lai, NODATA))
+                float currentLAI = 0;          // Leaf Area Index [m3 m-3]
+                if (laiMap.isLoaded)
                 {
-                    lai = 0;
+                    float laiMapValue = laiMap.getValueFromRowCol(row, col);
+                    if (! isEqual(laiMapValue, laiMap.header->flag))
+                        currentLAI = laiMapValue;
                 }
 
                 // assigns actual evaporation
-                double actualEvap = assignEvaporation(row, col, lai, soilIndex);    // [mm h-1]
-                double evapFlow = area * (actualEvap / 1000.);                      // [m3 h-1]
-                totalEvaporation += evapFlow;                                       // [m3 h-1]
+                double actualEvap = assignEvaporation(row, col, currentLAI, soilIndex);     // [mm h-1]
+                double evapFlow = area * (actualEvap / 1000.);                              // [m3 h-1]
+                totalEvaporation += evapFlow;                                               // [m3 h-1]
 
                 // assigns actual transpiration
-                if (lai > 0)
+                if (currentLAI > 0)
                 {
                     float degreeDays = degreeDaysMap.value[row][col];
-                    double actualTransp = assignTranspiration(row, col, lai, degreeDays);   // [mm h-1]
-                    double traspFlow = area * (actualTransp / 1000.);                       // [m3 h-1]
-                    totalTranspiration += traspFlow;                                        // [m3 h-1]
+                    double actualTransp = assignTranspiration(row, col, currentLAI, degreeDays);    // [mm h-1]
+                    double traspFlow = area * (actualTransp / 1000.);                               // [m3 h-1]
+                    totalTranspiration += traspFlow;                                                // [m3 h-1]
                 }
             }
         }
