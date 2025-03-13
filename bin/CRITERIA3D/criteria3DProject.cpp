@@ -1336,6 +1336,7 @@ bool Crit3DProject::computeHydrallModel()
                 hydrallMaps.treeSpeciesMap.value[row][col] = 0;
                 Crit3DCrop currentCrop = cropList[int(hydrallMaps.treeSpeciesMap.value[row][col])];
                 currentCrop.roots.rootDensity.resize(nrLayers); // TODO
+                // the condition on this for cycle includes the check of existance of the layers
                 for (int i = 0; ((i < nrLayers) && (soilList[soilIndex].getHorizonIndex(layerDepth[i]))!= NODATA); i++)
                 {
 
