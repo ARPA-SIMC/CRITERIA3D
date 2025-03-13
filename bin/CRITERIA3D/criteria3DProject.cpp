@@ -1338,7 +1338,8 @@ bool Crit3DProject::computeHydrallModel()
                 hydrallMaps.treeSpeciesMap.value[row][col] = 0;
                 Crit3DCrop currentCrop = cropList[int(hydrallMaps.treeSpeciesMap.value[row][col])];
                 currentCrop.roots.rootDensity.resize(nrLayers); // TODO
-                for (int i = 0; i < nrLayers; i++)
+                // the condition on this for cycle includes the check of existance of the layers
+                for (int i = 0; ((i < nrLayers) && (soilList[soilIndex].getHorizonIndex(layerDepth[i]))!= NODATA); i++)
                 {
 
                     if (i <2 )
@@ -1359,8 +1360,8 @@ bool Crit3DProject::computeHydrallModel()
                     int zlastLayer=currentCrop.roots.lastRootLayer;
                     double zrootDensity=currentCrop.roots.rootDensity[i];
                     */
-                    if (soilList[soilIndex].getHorizonIndex(layerDepth[i]) == NODATA)
-                        continue;
+                    //if (soilList[soilIndex].getHorizonIndex(layerDepth[i]) == NODATA)
+                        //continue;
                     hydrallModel.setSoilVariables(i,indexMap.at(i).value[row][col],indexMap.at(i).header->flag,
                                                   soilList[soilIndex].getHorizonIndex(layerDepth[i]),
                                                   soilFluxes3D::getWaterContent(indexMap.at(i).value[row][col]),
