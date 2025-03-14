@@ -1369,34 +1369,8 @@ bool Crit3DProject::computeHydrallModel()
                                                   soilList[soilIndex].horizon[soilList[soilIndex].getHorizonIndex(layerDepth[i])].waterContentWP,
                                                   currentCrop.roots.firstRootLayer,currentCrop.roots.lastRootLayer,currentCrop.roots.rootDensity[i]);
                 }
-                //get water content and stress coefficient
-                /*for (int i = 0; i < nrLayers; i++)
-                {
-                    currentNode = indexMap.at(i).value[row][col];
-
-                    horizonIndex = soilList[soilIndex].getHorizonIndex(layerDepth[i]);
-
-                    if (horizonIndex == NODATA)
-                        continue;
-
-                    horizon = soilList[soilIndex].horizon[horizonIndex];
-                    if (currentNode != indexMap.at(i).header->flag)
-                    {
-                        waterContent[i] = soilFluxes3D::getWaterContent(currentNode);
-                        stressCoefficient[i] = MINVALUE(1.0, (10*(waterContent[i]-horizon.waterContentWP))/(3*(horizon.waterContentFC-horizon.waterContentWP)));
-                    }
-
-                    if (i >= currentCrop.roots.firstRootLayer && i <= currentCrop.roots.lastRootLayer)
-                        rootDensity[i] = currentCrop.roots.rootDensity[i];
-                }*/
-
-
-
-
-
-
                 //compute
-                //hydrallModel.computeHydrallPoint(getCrit3DDate(getCurrentDate()), double(hourlyMeteoMaps->mapHourlyTair->value[row][col]), double(DEM.value[row][col]), secondsPerStep);
+                hydrallModel.computeHydrallPoint(getCrit3DDate(getCurrentDate()), double(hourlyMeteoMaps->mapHourlyTair->value[row][col]), double(DEM.value[row][col]), secondsPerStep);
 
 
 

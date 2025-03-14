@@ -49,9 +49,9 @@ bool Crit3D_Hydrall::computeHydrallPoint(Crit3DDate myDate, double myTemperature
 
     // da qui in poi bisogna fare un ciclo su tutte le righe e le colonne
     plant.leafAreaIndexCanopyMax = statePlant.treecumulatedBiomassFoliage *  plant.specificLeafArea / cover;
-    plant.leafAreaIndexCanopy = plant.leafAreaIndexCanopyMax * computeLAI(myDate);
+    plant.leafAreaIndexCanopy = MAXVALUE(LAIMIN,plant.leafAreaIndexCanopyMax * computeLAI(myDate));
     understoreyLeafAreaIndexMax = statePlant.understoreycumulatedBiomassFoliage * plant.specificLeafArea;
-    understorey.leafAreaIndex = understoreyLeafAreaIndexMax* computeLAI(myDate);
+    understorey.leafAreaIndex = MAXVALUE(LAIMIN,understoreyLeafAreaIndexMax* computeLAI(myDate));
 
     /* necessaria per ogni specie:
      *  il contenuto di clorofilla (g cm-2) il default è 500
