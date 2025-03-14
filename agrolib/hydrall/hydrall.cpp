@@ -53,6 +53,8 @@ bool Crit3D_Hydrall::computeHydrallPoint(Crit3DDate myDate, double myTemperature
     understoreyLeafAreaIndexMax = statePlant.understoreycumulatedBiomassFoliage * plant.specificLeafArea;
     understorey.leafAreaIndex = MAXVALUE(LAIMIN,understoreyLeafAreaIndexMax* computeLAI(myDate));
 
+    Crit3D_Hydrall::radiationAbsorption();
+
     /* necessaria per ogni specie:
      *  il contenuto di clorofilla (g cm-2) il default è 500
      *  lo spessore della foglia 0.2 cm default
@@ -614,7 +616,7 @@ void Crit3D_Hydrall::upscale()
     }
 }
 
-double Crit3D_Hydrall::acclimationFunction(double Ha , double Hd, double leafTemp,
+inline double Crit3D_Hydrall::acclimationFunction(double Ha , double Hd, double leafTemp,
                                              double entropicTerm,double optimumTemp)
 {
     // taken from Hydrall Model, Magnani UNIBO
