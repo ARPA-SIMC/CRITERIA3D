@@ -1,6 +1,7 @@
 #ifndef DIALOGADDSTATION_H
 #define DIALOGADDSTATION_H
 
+#include "meteoPoint.h"
 #include <QtWidgets>
 
 class DialogAddStation : public QDialog
@@ -14,13 +15,14 @@ private:
 
     QListWidget* _listActiveStationsWidget;
     QLineEdit _singleValueEdit;  //per scegliere la distanza
-    QComboBox* _listNearStationsWidget; //non so se serve, forse come lista di risultato sì
+    Crit3DMeteoPoint* _allMeteoPointsPointer;
+    QListWidget* _listNearStationsWidget;
 
 public:
     DialogAddStation(QList<QString> _activeStationsList);
-    QList<QString> getSelectedStations();
-    void searchStations(bool res);
     double getSingleValue();
+    void searchStations(bool res, Crit3DMeteoPoint* _allMeteoPointsPointer, int nrMeteoPoints);
+
 };
 
 #endif // DIALOGADDSTATION_H
