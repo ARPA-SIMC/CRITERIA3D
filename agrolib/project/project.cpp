@@ -4668,7 +4668,7 @@ bool Project::setMarkedFromPointList(QString fileName)
     return true;
 }
 
-bool Project::setMarkedPointsOfMacroArea(int areaNumber)
+bool Project::setMarkedPointsOfMacroArea(int areaNumber, bool viewNotActivePoints)
 {
     for (int i = 0; i < nrMeteoPoints; i++)
     {
@@ -4686,7 +4686,8 @@ bool Project::setMarkedPointsOfMacroArea(int areaNumber)
 
     for (int j = 0; j < pointList.size(); j++)
     {
-        meteoPoints[pointList[j]].marked = true;
+        if (meteoPoints[pointList[j]].active || viewNotActivePoints)
+            meteoPoints[pointList[j]].marked = true;
     }
 
     return true;
