@@ -329,7 +329,7 @@
         void aerodynamicalCoupling();
         double leafWidth();
         void upscale();
-        double acclimationFunction(double Ha , double Hd, double leafTemp, double entropicTerm,double optimumTemp);
+        inline double acclimationFunction(double Ha , double Hd, double leafTemp, double entropicTerm,double optimumTemp);
         void photosynthesisKernel(double COMP,double GAC,double GHR,double GSCD,double J,double KC,double KO
                                                   ,double RD,double RNI,double STOMWL,double VCmax,double *ASS,double *GSC,double *TR);
         void carbonWaterFluxesProfile();
