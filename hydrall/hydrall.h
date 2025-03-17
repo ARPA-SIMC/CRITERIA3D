@@ -298,9 +298,7 @@
         double understoreyLeafAreaIndexMax;
         double cover = 1; // TODO
 
-        std::vector<double> waterContentProfile;
-        std::vector<double> stressCoefficientProfile;
-        std::vector<double> rootDensityProfile;
+
 
 
         double annualGrossStandGrowth;
