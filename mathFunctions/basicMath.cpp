@@ -177,12 +177,12 @@
       return 0;
     }
 
-    inline bool isEqual(float value1, float value2)
+    bool isEqual(float value1, float value2)
     {
         return (fabs(double(value1 - value2)) < EPSILON);
     }
 
-    inline bool isEqual(double value1, double value2)
+    bool isEqual(double value1, double value2)
     {
         return (fabs(value1 - value2) < EPSILON);
     }

@@ -34,8 +34,8 @@
     bool findLinesIntersection(float q1, float m1, float q2, float m2, float* x, float* y);
     bool findLinesIntersectionAboveThreshold(float q1, float m1, float q2, float m2, float myThreshold, float* x, float* y);
     int sgn(float v);
-    inline bool isEqual(float value1, float value2);
-    inline bool isEqual(double value1, double value2);
+    bool isEqual(float value1, float value2);
+    bool isEqual(double value1, double value2);
     char* decimal_to_binary(unsigned int n, int nrBits);
     float getSinDecimalDegree(float angle);
     float getCosDecimalDegree(float angle);
