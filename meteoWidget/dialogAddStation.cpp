@@ -20,14 +20,13 @@ DialogAddStation::DialogAddStation(QList<QString> _activeStationsList)
     _listActiveStationsWidget = new QListWidget;
     _listActiveStationsWidget->setSelectionMode(QAbstractItemView::SingleSelection);
 
-    _listNearStationsWidget = new QComboBox;
-    //ma forse ci vorrebbe una combobox per scegliere quale tra le attive usare
+    _listNearStationsWidget = new QListWidget;
 
-    QLabel *stationHeader = new QLabel("Active stations"); //header stazioni
+    QLabel *stationHeader = new QLabel("Active stations");
     _listActiveStationsWidget->addItems(_activeStationsList);
     stationLayout->addWidget(_listActiveStationsWidget);
 
-    QLabel singleValueLabel("Insert distance [m]:"); //check unità di misura
+    QLabel singleValueLabel("Insert distance [m]:"); //TODO check unità di misura
     singleValueLayout->addWidget(&singleValueLabel);
     singleValueLabel.setBuddy(&_singleValueEdit);
 
@@ -36,9 +35,9 @@ DialogAddStation::DialogAddStation(QList<QString> _activeStationsList)
 
     singleValueLayout->addWidget(&_singleValueEdit);
 
-    QLabel nearStationsLabel("Near stations"); //header stazioni vicine
+    QLabel nearStationsLabel("Near stations");
     nearStationsLayout->addWidget(&nearStationsLabel);
-    _listNearStationsWidget->addItems(_nearStationsList); //qua bisognerà aggiungere le stazioni vicine
+    _listNearStationsWidget->addItems(_nearStationsList);
     nearStationsLayout->addWidget(_listNearStationsWidget);
 
     QPushButton *_add = new QPushButton("Add station");
@@ -55,42 +54,53 @@ DialogAddStation::DialogAddStation(QList<QString> _activeStationsList)
     mainLayout->addLayout(addButtonLayout);
     setLayout(mainLayout);
 
-    // Bottoni ok e cancel. Infatti this è il puntatore al dialog che ha la funzione 'done'
-    connect(&buttonBox, &QDialogButtonBox::accepted, [=](){ this->searchStations(true); });
-    connect(&buttonBox, &QDialogButtonBox::rejected, [=](){ this->searchStations(false); });
+    // Bottoni ok e cancel.
+    //connect(&buttonBox, &QDialogButtonBox::accepted, [=](){ this->searchStations(true, _allMeteoPointsPointer); });
+    //connect(&buttonBox, &QDialogButtonBox::rejected, [=](){ this->searchStations(false, _allMeteoPointsPointer); });
 
     show();
     exec();
 
 }
 
-void DialogAddStation::searchStations(bool res)
+double DialogAddStation::getSingleValue()
 {
-    if (res)
+    double chosenDistance = _singleValueEdit.text().toFloat();
+    return chosenDistance;
+}
+
+void DialogAddStation::searchStations(bool res, Crit3DMeteoPoint* _allMeteoPointsPointer, int nrMeteoPoints)
+{
+    if (res) //l'utente ha inserito la distanza e cliccato su ok
     {
-        QList<QListWidgetItem*> _nearStationsList = _listActiveStationsWidget->selectedItems();
+        QList<QListWidgetItem*> _selectedStation = _listActiveStationsWidget->selectedItems();
+        for (int i=0; i == _selectedStation.count(); i++)
+        {
+            std::string myStation = _selectedStation[i]->text().toStdString();
 
-        //qua andrà inserita la funzione che cerca i meteopoints entro la distanza scelta
-        //connect(this(la widget), SIGNAL(nomeFunzioneChiamante), object2(la main window), SLOT(widgetListaStazioniVicine));
+            double chosenDistance = DialogAddStation::getSingleValue();
+            //prende la distanza
 
+            for (int j=0; j < nrMeteoPoints; j++)
+            {
+                if (myStation == _allMeteoPointsPointer[j].name)
+                {
+                    Crit3DMeteoPoint myStationMp = _allMeteoPointsPointer[j];
+                    if (myStationMp.latitude - _allMeteoPointsPointer[j].latitude <= chosenDistance)
+                    {
+                        _nearStationsList.append(QString::fromStdString(_allMeteoPointsPointer[j].name)); //il vettore da riempire
+                        QDialog::done(QDialog::Accepted);
+                    }
 
-        QDialog::done(QDialog::Accepted);
+                }
+            }
+        };
     }
     else    // cancel, close or exc was pressed
     {
         QDialog::done(QDialog::Rejected);
         return;
     }
-}
-
-double DialogAddStation::getSingleValue()
-{
-    return _singleValueEdit.text().toFloat();
-}
-
-QList<QString> DialogAddStation::getSelectedStations()
-{
-    return _selectedStations;
 }
 
 

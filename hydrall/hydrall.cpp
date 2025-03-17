@@ -49,9 +49,9 @@ bool Crit3D_Hydrall::computeHydrallPoint(Crit3DDate myDate, double myTemperature
 
     // da qui in poi bisogna fare un ciclo su tutte le righe e le colonne
     plant.leafAreaIndexCanopyMax = statePlant.treecumulatedBiomassFoliage *  plant.specificLeafArea / cover;
-    plant.leafAreaIndexCanopy = plant.leafAreaIndexCanopyMax * computeLAI(myDate);
+    plant.leafAreaIndexCanopy = MAXVALUE(LAIMIN,plant.leafAreaIndexCanopyMax * computeLAI(myDate));
     understoreyLeafAreaIndexMax = statePlant.understoreycumulatedBiomassFoliage * plant.specificLeafArea;
-    understorey.leafAreaIndex = understoreyLeafAreaIndexMax* computeLAI(myDate);
+    understorey.leafAreaIndex = MAXVALUE(LAIMIN,understoreyLeafAreaIndexMax* computeLAI(myDate));
 
     /* necessaria per ogni specie:
      *  il contenuto di clorofilla (g cm-2) il default è 500
@@ -226,27 +226,20 @@ void Crit3D_Hydrall::setSoilVariables(int iLayer, int currentNode,float checkFla
 {
     if (iLayer == 0)
     {
-        waterContentProfile.resize(soil.layersNr);
-        stressCoefficientProfile.resize(soil.layersNr);
-        rootDensityProfile.resize(soil.layersNr);
+        soil.layersNr = 1;
     }
+    (soil.layersNr)++;
+    waterContentProfile.resize(soil.layersNr);
+    stressCoefficientProfile.resize(soil.layersNr);
+    rootDensityProfile.resize(soil.layersNr);
 
-    for (int i = 0; i < soil.layersNr; i++)
+    if (currentNode != checkFlag)
     {
-        if (horizonIndex == NODATA)
-            continue;
-
-        if (currentNode != checkFlag)
-        {
-            waterContentProfile[i] = waterContent;
-            stressCoefficientProfile[i] = MINVALUE(1.0, (10*(waterContentProfile[i]-waterContentWP))/(3*(waterContentFC-waterContentWP)));
-        }
-        rootDensityProfile[i] = LOGICAL_IO((i >= firstRootLayer && i <= lastRootLayer),rootDensity,0);
-        /*if (i >= firstRootLayer && i <= lastRootLayer)
-            rootDensityProfile[i] = rootDensity;
-        else
-            rootDensityProfile[i] = 0;*/
+        waterContentProfile[iLayer] = waterContent;
+        stressCoefficientProfile[iLayer] = MINVALUE(1.0, (10*(waterContentProfile[iLayer]-waterContentWP))/(3*(waterContentFC-waterContentWP)));
     }
+    rootDensityProfile[iLayer] = LOGICAL_IO((iLayer >= firstRootLayer && iLayer <= lastRootLayer),rootDensity,0);
+
 }
 
 void Crit3D_Hydrall::getStateVariables(Crit3DHydrallMaps &stateMap, int row, int col)
