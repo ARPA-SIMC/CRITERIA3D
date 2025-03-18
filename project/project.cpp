@@ -2026,13 +2026,13 @@ bool Project::writeTopographicDistanceMaps(bool onlyWithData, bool showInfo)
 {
     if (nrMeteoPoints == 0)
     {
-        logError("Open a meteo points DB before.");
+        logError(ERROR_STR_MISSING_DB);
         return false;
     }
 
     if (! DEM.isLoaded)
     {
-        logError("Load a Digital Elevation Map before.");
+        logError(ERROR_STR_MISSING_DEM);
         return false;
     }
 
@@ -2086,13 +2086,13 @@ bool Project::writeTopographicDistanceMap(int pointIndex, const gis::Crit3DRaste
 {
     if (nrMeteoPoints == 0)
     {
-        logError("Open a meteo points DB before.");
+        logError(ERROR_STR_MISSING_DB);
         return false;
     }
 
     if (! demMap.isLoaded)
     {
-        logError("Load a Digital Elevation Map before.");
+        logError(ERROR_STR_MISSING_DEM);
         return false;
     }
 
@@ -2119,7 +2119,7 @@ bool Project::loadTopographicDistanceMaps(bool onlyWithData, bool showInfo)
 {
     if (nrMeteoPoints == 0)
     {
-        logError("Open a meteo points DB before.");
+        logError(ERROR_STR_MISSING_DB);
         return false;
     }
 
@@ -3156,13 +3156,13 @@ bool Project::checkInterpolation(meteoVariable myVar)
 {
     if (! DEM.isLoaded)
     {
-        logError("Load a Digital Elevation Model before.");
+        logError(ERROR_STR_MISSING_DEM);
         return false;
     }
 
     if (nrMeteoPoints == 0)
     {
-        logError("Open a meteo points DB before.");
+        logError(ERROR_STR_MISSING_DB);
         return false;
     }
 
@@ -3180,7 +3180,7 @@ bool Project::checkInterpolationGrid(meteoVariable myVar)
 {
     if (nrMeteoPoints == 0)
     {
-        logError("Open a meteo points DB before.");
+        logError(ERROR_STR_MISSING_DB);
         return false;
     }
 
@@ -4020,7 +4020,7 @@ bool Project::checkMeteoGridForExport()
 {
     if (! meteoGridLoaded || meteoGridDbHandler == nullptr)
     {
-        logError("Open meteo grid before.");
+        logError(ERROR_STR_MISSING_GRID);
         return false;
     }
 
@@ -5372,9 +5372,6 @@ void Project::closeProgressBar()
 }
 
 
-
-
-
 bool Project::waterTableImportLocation(const QString &csvFileName)
 {
     if (logFileName == "")
@@ -5392,8 +5389,7 @@ bool Project::waterTableImportLocation(const QString &csvFileName)
     if (wrongLines > 0)
     {
         logInfo(errorString);
-        QMessageBox::warning(nullptr, "Warning!", QString::number(wrongLines)
-                            + " wrong lines of data were not loaded\nSee the log file for more information:\n" + logFileName);
+        logWarning(QString::number(wrongLines) + " wrong lines of data were not loaded\nSee the log file for more information:\n" + logFileName);
     }
 
     errorString = "";
@@ -5410,11 +5406,10 @@ bool Project::waterTableImportDepths(const QString &csvDepthsFileName)
         return false;
     }
 
-    if (wrongLines>0)
+    if (wrongLines > 0)
     {
         logInfo(errorString);
-        QMessageBox::warning(nullptr, "Warning!", QString::number(wrongLines)
-                            + " wrong lines of data were not loaded\nSee the log file for more information:\n" + logFileName);
+        logWarning(QString::number(wrongLines) + " wrong lines of data were not loaded\nSee the log file for more information:\n" + logFileName);
     }
 
     errorString = "";
@@ -5629,7 +5624,7 @@ bool Project::assignAltitudeToAggregationPoints()
 
     if (meteoPointsLoaded)
     {
-        errorString = "Close Meteo Points db before execute this operation!";
+        errorString = "Close Meteo Points db before execute this operation.";
         return false;
     }
 
