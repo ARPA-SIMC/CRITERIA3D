@@ -256,7 +256,7 @@ int difference(const Crit3DDate &firstDate, const Crit3DDate &lastDate)
     return firstDate.daysTo(lastDate);
 }
 
-inline bool isLeapYear(int year)
+bool isLeapYear(int year)
 {
     // No year 0 in Gregorian calendar, so -1, -5, -9 etc are leap years
     year += (year < 1);
