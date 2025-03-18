@@ -7,21 +7,6 @@
 
 const QByteArray Download::_authorization = QString("Basic " + QString("ugo:Ul1ss&").toLocal8Bit().toBase64()).toLocal8Bit();
 
-Download::Download(QString dbName, QObject* parent) : QObject(parent)
-{
-    _dbMeteo = new DbArkimet(dbName);
-}
-
-Download::~Download()
-{
-    delete _dbMeteo;
-}
-
-DbArkimet* Download::getDbArkimet()
-{
-    return _dbMeteo;
-}
-
 
 bool Download::getPointProperties(const QList<QString> &datasetList, int utmZone, QString &errorString)
 {
@@ -398,7 +383,7 @@ bool Download::getPointPropertiesFromId(const QString &id, int utmZone, Crit3DMe
 }
 
 
-bool Download::readArkimetVMData(const QString &vmFileName, QString &errorString)
+bool Download::readArkimetVMData_daily(const QString &vmFileName, QString &errorString)
 {
     QFile myFile(vmFileName);
     if (! myFile.open(QIODevice::ReadOnly))
@@ -421,6 +406,8 @@ bool Download::readArkimetVMData(const QString &vmFileName, QString &errorString
         return false;
     }
 
+    // all variables
+    QList<VariablesList> variableList = _dbMeteo->getAllVariableProperties();
     bool isFirstData = true;
 
     while(! myStream.atEnd())
@@ -445,36 +432,36 @@ bool Download::readArkimetVMData(const QString &vmFileName, QString &errorString
 
             if (valueStr != "")
             {
-                double value = valueStr.toDouble();
-
-                int idArkimet = fields[2].toInt();
-
-                // conversion from average daily radiation to integral radiation
-                if (idArkimet == RAD_ID)
+                bool isNumber;
+                double value = valueStr.toDouble(&isNumber);
+                if (isNumber)
                 {
-                    value *= DAY_SECONDS / 1000000.0;
-                }
+                    int idArkimet = fields[2].toInt();
 
-                /*
-                // variable
-                int i = 0;
-                while (i < variableList.size()
-                       && variableList[i].arkId() != idArkimet) i++;
+                    // conversion from average daily radiation to integral radiation
+                    if (idArkimet == RAD_ID)
+                    {
+                        value *= DAY_SECONDS / 1000000.;
+                    }
 
-                if (i < variableList.size())
-                {
-                    int idVar = variableList[i].id();
-                    _dbMeteo->appendQueryDaily(dateStr, idPoint, QString::number(idVar), QString::number(value), isFirstData);
-                    isFirstData = false;
+                    // variable
+                    int i = 0;
+                    while (i < variableList.size() && variableList[i].arkId() != idArkimet)
+                        i++;
+
+                    if (i < variableList.size())
+                    {
+                        int idVariable = variableList[i].id();
+                        _dbMeteo->appendQueryDaily(dateStr, idPoint, QString::number(idVariable), QString::number(value), isFirstData);
+                        isFirstData = false;
+                    }
                 }
-*/
             }
         }
     }
 
     return _dbMeteo->saveDailyData();
 }
-
 
 
 bool Download::downloadDailyData(const QDate &startDate, const QDate &endDate, const QString &dataset,

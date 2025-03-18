@@ -10,6 +10,29 @@ DbArkimet::DbArkimet(QString dbName) : Crit3DMeteoPointsDbHandler(dbName)
 }
 
 
+QList<VariablesList> DbArkimet::getAllVariableProperties()
+{
+     QList<VariablesList> variableList;
+
+    QString statement = QString("SELECT * FROM variable_properties");
+    QSqlQuery qry(statement, _db);
+
+    if(! qry.exec() )
+    {
+        qDebug() << qry.lastError();
+    }
+    else
+    {
+        while (qry.next())
+        {
+            variableList.append(VariablesList(qry.value("id_variable").toInt(), qry.value("id_arkimet").toInt(), qry.value("variable").toString(), qry.value("frequency").toInt() ));
+        }
+    }
+
+    return variableList;
+}
+
+
 QList<VariablesList> DbArkimet::getVariableProperties(QList<int> id)
 {
     QList<VariablesList> variableList;
