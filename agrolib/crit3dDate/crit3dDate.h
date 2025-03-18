@@ -84,7 +84,7 @@
         std::string toString() const;
     };
 
-    inline bool isLeapYear(int year);
+    bool isLeapYear(int year);
     int getDaysInMonth(int month, int year);
 
     int getDoyFromDate(const Crit3DDate& myDate);
