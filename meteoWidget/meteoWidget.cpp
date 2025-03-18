@@ -3063,6 +3063,12 @@ void Crit3DMeteoWidget::on_actionRemoveStation()
 
 void Crit3DMeteoWidget::on_actionAddStation()
 {
+    if (_isGrid)
+    {
+        QMessageBox::information(nullptr, "Warning", "This option can only be used on meteo points. Meteo grid is not compatible.");
+        return;
+    }
+
     QList<QString> allStations;
     for (int mp=0; mp<_meteoPoints.size();mp++)
     {
@@ -3072,24 +3078,6 @@ void Crit3DMeteoWidget::on_actionAddStation()
         allStations << station;
     }
     DialogAddStation selectStation(allStations);
-    //if (selectStation.result() == QDialog::Accepted)
-    /*{
-        QList<QString> stationsToCalculateDistance = selectStation.getSelectedStations();
-        for (int n=0; n<stationsToRemoveList.size();n++)
-        {
-            QString id = stationsToRemoveList[n].split("_")[0];
-            for (int indexMp=0; indexMp<_meteoPoints.size();indexMp++)
-            {
-                if (_meteoPoints[indexMp].id == id.toStdString())
-                {
-                    _meteoPoints.removeAt(indexMp);
-                    indexMp = indexMp - 1;
-                }
-            }
-        }
-        updateSeries();
-        redraw();
-    }*/
 
 }
 

@@ -152,130 +152,130 @@ double RMF_Tmp(double TEMP) {
     return RM_TMP;
 }
 
-void decomp(int timeFact, double &DPM, double &RPM, double &BIO, double &HUM, double &IOM, double &SOC, double &DPM_Rage, double &RPM_Rage, double &BIO_Rage, double &HUM_Rage, double &IOM_Rage, double &Total_Rage, double &modernC, double &RateM, double &clay, double &C_Inp, double &FYM_Inp, double &DPM_RPM)
+void decomp(int timeFact, double &decomposablePlantMatter, double &resistantPlantMatter, double &microbialBiomass, double &humifiedOrganicMatter, double &IOM, double &SOC, double &decomposablePlantMatter_Rage, double &resistantPlantMatter_Rage, double &microbialBiomass_Rage, double &humifiedOrganicMatter_Rage, double &IOM_Rage, double &Total_Rage, double &modernC, double &modifyingRate, double &clay, double &C_Inp, double &FYM_Inp, double &decomposablePlantMatter_resistantPlantMatter)
 {
-    const double DPM_k = 10.0;
-    const double RPM_k = 0.3;
-    const double BIO_k = 0.66;
-    const double HUM_k = 0.02;
+    const double decomposablePlantMatter_k = 10.0;
+    const double resistantPlantMatter_k = 0.3;
+    const double microbialBiomass_k = 0.66;
+    const double humifiedOrganicMatter_k = 0.02;
 
     //const double conr = 0.0001244876401867718; // equivalent to std::log(2.0)/5568.0;
     double tstep = 1.0/timeFact; //monthly 1/12 or daily 1/365
     double exc = std::exp(-CONR*tstep);
 
     //decomposition
-    double DPM1 = DPM*std::exp(-RateM*DPM_k*tstep);
-    double RPM1 = RPM*std::exp(-RateM*RPM_k*tstep);
-    double BIO1 = BIO*std::exp(-RateM*BIO_k*tstep);
-    double HUM1 = HUM*std::exp(-RateM*HUM_k*tstep);
+    double decomposablePlantMatter1 = decomposablePlantMatter*std::exp(-modifyingRate*decomposablePlantMatter_k*tstep);
+    double resistantPlantMatter1 = resistantPlantMatter*std::exp(-modifyingRate*resistantPlantMatter_k*tstep);
+    double microbialBiomass1 = microbialBiomass*std::exp(-modifyingRate*microbialBiomass_k*tstep);
+    double humifiedOrganicMatter1 = humifiedOrganicMatter*std::exp(-modifyingRate*humifiedOrganicMatter_k*tstep);
 
-    double DPM_d = DPM - DPM1;
-    double RPM_d = RPM - RPM1;
-    double BIO_d = BIO - BIO1;
-    double HUM_d = HUM - HUM1;
+    double decomposablePlantMatterDelta = decomposablePlantMatter - decomposablePlantMatter1;
+    double resistantPlantMatterDelta = resistantPlantMatter - resistantPlantMatter1;
+    double microbialBiomassDelta = microbialBiomass - microbialBiomass1;
+    double humifiedOrganicMatterDelta = humifiedOrganicMatter - humifiedOrganicMatter1;
 
+    //calculating redistribution of carbon into each pool
     double x = 1.67*(1.85+1.60*std::exp(-0.0786*clay));
-    double xPlusPlus = x + 1;
     double ratioFactor[3];
-    ratioFactor[0] = x / xPlusPlus;
-    ratioFactor[1] = 0.46 / xPlusPlus;
-    ratioFactor[2] = 0.54 / xPlusPlus;
-    //proportion C from each pool into CO2, BIO and HUM
-    double DPM_co2 = DPM_d * ratioFactor[0];
-    double DPM_BIO = DPM_d * ratioFactor[1];
-    double DPM_HUM = DPM_d * ratioFactor[2];
+    ratioFactor[0] = x / (x + 1);
+    ratioFactor[1] = 0.46 / (x + 1);
+    ratioFactor[2] = 0.54 / (x + 1);
+    //proportion C from each pool into CO2, microbialBiomass and humifiedOrganicMatter
+    double decomposablePlantMatterToCo2 = decomposablePlantMatterDelta * ratioFactor[0];
+    double decomposablePlantMatterToMicrobialBiomass = decomposablePlantMatterDelta * ratioFactor[1];
+    double decomposablePlantMatterToHumifiedOrganicMatter = decomposablePlantMatterDelta * ratioFactor[2];
 
-    double RPM_co2 = RPM_d * ratioFactor[0];
-    double RPM_BIO = RPM_d * ratioFactor[1];
-    double RPM_HUM = RPM_d * ratioFactor[2];
+    double resistantPlantMatterToCo2 = resistantPlantMatterDelta * ratioFactor[0];
+    double resistantPlantMatterToMicrobialBiomass = resistantPlantMatterDelta * ratioFactor[1];
+    double resistantPlantMatterToHumifiedOrganicMatter = resistantPlantMatterDelta * ratioFactor[2];
 
-    double BIO_co2 = BIO_d * ratioFactor[0];
-    double BIO_BIO = BIO_d * ratioFactor[1];
-    double BIO_HUM = BIO_d * ratioFactor[2];
+    double microbialBiomassToCo2 = microbialBiomassDelta * ratioFactor[0];
+    double microbialBiomassToMicrobialBiomass = microbialBiomassDelta * ratioFactor[1];
+    double microbialBiomassToHumifiedOrganicMatter = microbialBiomassDelta * ratioFactor[2];
 
-    double HUM_co2 = HUM_d * ratioFactor[0];
-    double HUM_BIO = HUM_d * ratioFactor[1];
-    double HUM_HUM = HUM_d * ratioFactor[2];
+    double humifiedOrganicMatter_co2 = humifiedOrganicMatterDelta * ratioFactor[0];
+    double humifiedOrganicMatter_microbialBiomass = humifiedOrganicMatterDelta * ratioFactor[1];
+    double humifiedOrganicMatter_humifiedOrganicMatter = humifiedOrganicMatterDelta * ratioFactor[2];
 
     //update C pools
-    DPM = DPM1;
-    RPM = RPM1;
-    BIO = BIO1 + DPM_BIO + RPM_BIO + BIO_BIO + HUM_BIO;
-    HUM = HUM1 + DPM_HUM + RPM_HUM + BIO_HUM + HUM_HUM;
+    decomposablePlantMatter = decomposablePlantMatter1;
+    resistantPlantMatter = resistantPlantMatter1;
+    microbialBiomass = microbialBiomass1 + decomposablePlantMatterToMicrobialBiomass + resistantPlantMatterToMicrobialBiomass + microbialBiomassToMicrobialBiomass + humifiedOrganicMatter_microbialBiomass;
+    humifiedOrganicMatter = humifiedOrganicMatter1 + decomposablePlantMatterToHumifiedOrganicMatter + resistantPlantMatterToHumifiedOrganicMatter + microbialBiomassToHumifiedOrganicMatter + humifiedOrganicMatter_humifiedOrganicMatter;
 
-    //split plant C to DPM and RPM
-    double PI_C_DPM = DPM_RPM / (DPM_RPM + 1.0) * C_Inp;
-    double PI_C_RPM = 1.0 / (DPM_RPM + 1.0) * C_Inp;
+    //split plant C to decomposablePlantMatter and resistantPlantMatter
+    double PI_C_decomposablePlantMatter = decomposablePlantMatter_resistantPlantMatter / (decomposablePlantMatter_resistantPlantMatter + 1.0) * C_Inp;
+    double PI_C_resistantPlantMatter = 1.0 / (decomposablePlantMatter_resistantPlantMatter + 1.0) * C_Inp;
 
-    //split FYM C to DPM, RPM and HUM
-    double FYM_C_DPM = 0.49*FYM_Inp;
-    double FYM_C_RPM = 0.49*FYM_Inp;
-    double FYM_C_HUM = 0.02*FYM_Inp;
+    //split FYM C to decomposablePlantMatter, resistantPlantMatter and humifiedOrganicMatter
+    double FYM_C_decomposablePlantMatter = 0.49*FYM_Inp;
+    double FYM_C_resistantPlantMatter = 0.49*FYM_Inp;
+    double FYM_C_humifiedOrganicMatter = 0.02*FYM_Inp;
 
-    //add plant C and FYM_C to DPM, RPM and HUM
-    DPM = DPM + PI_C_DPM + FYM_C_DPM;
-    RPM = RPM + PI_C_RPM + FYM_C_RPM;
-    HUM = HUM + FYM_C_HUM;
+    //add plant C and FYM_C to decomposablePlantMatter, resistantPlantMatter and humifiedOrganicMatter
+    decomposablePlantMatter = decomposablePlantMatter + PI_C_decomposablePlantMatter + FYM_C_decomposablePlantMatter;
+    resistantPlantMatter = resistantPlantMatter + PI_C_resistantPlantMatter + FYM_C_resistantPlantMatter;
+    humifiedOrganicMatter = humifiedOrganicMatter + FYM_C_humifiedOrganicMatter;
 
     //calc new ract of each pool
-    double DPM_Ract = DPM1 * std::exp(-CONR*DPM_Rage);
-    double RPM_Ract = RPM1 * std::exp(-CONR*RPM_Rage);
+    double decomposablePlantMatter_Ract = decomposablePlantMatter1 * std::exp(-CONR*decomposablePlantMatter_Rage);
+    double resistantPlantMatter_Ract = resistantPlantMatter1 * std::exp(-CONR*resistantPlantMatter_Rage);
 
-    double BIO_Ract = BIO1 * std::exp(-CONR*BIO_Rage);
-    double DPM_BIO_Ract = DPM_BIO * std::exp(-CONR*DPM_Rage);
-    double RPM_BIO_Ract = RPM_BIO * std::exp(-CONR*RPM_Rage);
-    double BIO_BIO_Ract = BIO_BIO * std::exp(-CONR*BIO_Rage);
-    double HUM_BIO_Ract = HUM_BIO * std::exp(-CONR*HUM_Rage);
+    double microbialBiomass_Ract = microbialBiomass1 * std::exp(-CONR*microbialBiomass_Rage);
+    double decomposablePlantMatter_microbialBiomass_Ract = decomposablePlantMatterToMicrobialBiomass * std::exp(-CONR*decomposablePlantMatter_Rage);
+    double resistantPlantMatter_microbialBiomass_Ract = resistantPlantMatterToMicrobialBiomass * std::exp(-CONR*resistantPlantMatter_Rage);
+    double microbialBiomass_microbialBiomass_Ract = microbialBiomassToMicrobialBiomass * std::exp(-CONR*microbialBiomass_Rage);
+    double humifiedOrganicMatter_microbialBiomass_Ract = humifiedOrganicMatter_microbialBiomass * std::exp(-CONR*humifiedOrganicMatter_Rage);
 
-    double HUM_Ract = HUM1 *std::exp(-CONR*HUM_Rage);
-    double DPM_HUM_Ract = DPM_HUM * std::exp(-CONR*DPM_Rage);
-    double RPM_HUM_Ract = RPM_HUM * std::exp(-CONR*RPM_Rage);
-    double BIO_HUM_Ract = BIO_HUM * std::exp(-CONR*BIO_Rage);
-    double HUM_HUM_Ract = HUM_HUM * std::exp(-CONR*HUM_Rage);
+    double humifiedOrganicMatter_Ract = humifiedOrganicMatter1 *std::exp(-CONR*humifiedOrganicMatter_Rage);
+    double decomposablePlantMatter_humifiedOrganicMatter_Ract = decomposablePlantMatterToHumifiedOrganicMatter * std::exp(-CONR*decomposablePlantMatter_Rage);
+    double resistantPlantMatter_humifiedOrganicMatter_Ract = resistantPlantMatterToHumifiedOrganicMatter * std::exp(-CONR*resistantPlantMatter_Rage);
+    double microbialBiomass_humifiedOrganicMatter_Ract = microbialBiomassToHumifiedOrganicMatter * std::exp(-CONR*microbialBiomass_Rage);
+    double humifiedOrganicMatter_humifiedOrganicMatter_Ract = humifiedOrganicMatter_humifiedOrganicMatter * std::exp(-CONR*humifiedOrganicMatter_Rage);
 
     double IOM_Ract = IOM * std::exp(-CONR*IOM_Rage);
 
     //assign new C from plant and FYM the correct age
-    double PI_DPM_Ract = modernC * PI_C_DPM;
-    double PI_RPM_Ract = modernC * PI_C_RPM;
+    double PI_decomposablePlantMatter_Ract = modernC * PI_C_decomposablePlantMatter;
+    double PI_resistantPlantMatter_Ract = modernC * PI_C_resistantPlantMatter;
 
-    double FYM_DPM_Ract = modernC * FYM_C_DPM;
-    double FYM_RPM_Ract = modernC * FYM_C_RPM;
-    double FYM_HUM_Ract = modernC * FYM_C_HUM;
+    double FYM_decomposablePlantMatter_Ract = modernC * FYM_C_decomposablePlantMatter;
+    double FYM_resistantPlantMatter_Ract = modernC * FYM_C_resistantPlantMatter;
+    double FYM_humifiedOrganicMatter_Ract = modernC * FYM_C_humifiedOrganicMatter;
 
     // update ract for each pool
-    double DPM_Ract_new = FYM_DPM_Ract + PI_DPM_Ract + DPM_Ract*exc;
-    double RPM_Ract_new = FYM_RPM_Ract + PI_RPM_Ract + RPM_Ract*exc;
+    double decomposablePlantMatter_Ract_new = FYM_decomposablePlantMatter_Ract + PI_decomposablePlantMatter_Ract + decomposablePlantMatter_Ract*exc;
+    double resistantPlantMatter_Ract_new = FYM_resistantPlantMatter_Ract + PI_resistantPlantMatter_Ract + resistantPlantMatter_Ract*exc;
 
-    double BIO_Ract_new = (BIO_Ract + DPM_BIO_Ract + RPM_BIO_Ract + BIO_BIO_Ract + HUM_BIO_Ract )*exc;
+    double microbialBiomass_Ract_new = (microbialBiomass_Ract + decomposablePlantMatter_microbialBiomass_Ract + resistantPlantMatter_microbialBiomass_Ract + microbialBiomass_microbialBiomass_Ract + humifiedOrganicMatter_microbialBiomass_Ract )*exc;
 
-    double HUM_Ract_new = FYM_HUM_Ract + (HUM_Ract + DPM_HUM_Ract + RPM_HUM_Ract + BIO_HUM_Ract + HUM_HUM_Ract)*exc;
+    double humifiedOrganicMatter_Ract_new = FYM_humifiedOrganicMatter_Ract + (humifiedOrganicMatter_Ract + decomposablePlantMatter_humifiedOrganicMatter_Ract + resistantPlantMatter_humifiedOrganicMatter_Ract + microbialBiomass_humifiedOrganicMatter_Ract + humifiedOrganicMatter_humifiedOrganicMatter_Ract)*exc;
 
-    SOC = DPM + RPM + BIO + HUM + IOM;
-    double Total_Ract = DPM_Ract_new + RPM_Ract_new + BIO_Ract_new + HUM_Ract_new + IOM_Ract;
+    SOC = decomposablePlantMatter + resistantPlantMatter + microbialBiomass + humifiedOrganicMatter + IOM;
+    double Total_Ract = decomposablePlantMatter_Ract_new + resistantPlantMatter_Ract_new + microbialBiomass_Ract_new + humifiedOrganicMatter_Ract_new + IOM_Ract;
 
     //calculate rage of each pool
-    if (DPM <= EPSILON)
-        DPM_Rage = 0;
+    if (decomposablePlantMatter <= EPSILON)
+        decomposablePlantMatter_Rage = 0;
     else
-        DPM_Rage = (std::log(DPM/DPM_Ract_new) ) / CONR;
+        decomposablePlantMatter_Rage = (std::log(decomposablePlantMatter/decomposablePlantMatter_Ract_new) ) / CONR;
 
 
-    if(RPM <= EPSILON)
-        RPM_Rage = 0;
+    if(resistantPlantMatter <= EPSILON)
+        resistantPlantMatter_Rage = 0;
     else
-        RPM_Rage = (std::log(RPM/RPM_Ract_new) ) / CONR;
+        resistantPlantMatter_Rage = (std::log(resistantPlantMatter/resistantPlantMatter_Ract_new) ) / CONR;
 
-    if(BIO <= EPSILON)
-        BIO_Rage = 0;
+    if(microbialBiomass <= EPSILON)
+        microbialBiomass_Rage = 0;
     else
-        BIO_Rage = ( std::log(BIO/BIO_Ract_new) ) / CONR;
+        microbialBiomass_Rage = ( std::log(microbialBiomass/microbialBiomass_Ract_new) ) / CONR;
 
 
-    if(HUM <= EPSILON)
-        HUM_Rage = 0;
+    if(humifiedOrganicMatter <= EPSILON)
+        humifiedOrganicMatter_Rage = 0;
     else
-        HUM_Rage = ( std::log(HUM/HUM_Ract_new) ) / CONR;
+        humifiedOrganicMatter_Rage = ( std::log(humifiedOrganicMatter/humifiedOrganicMatter_Ract_new) ) / CONR;
 
 
     if(SOC <= EPSILON)
@@ -304,9 +304,9 @@ void RothC(int timeFact, double &DPM, double &RPM, double &BIO, double &HUM, dou
     double RM_PC = RMF_PC(PC);
 
     // Combine RMF's into one.
-    double RateM = RM_TMP * RM_Moist * RM_PC;
+    double modifyingRate = RM_TMP * RM_Moist * RM_PC;
 
-    decomp(timeFact, DPM, RPM, BIO, HUM, IOM, SOC, DPM_Rage, RPM_Rage, BIO_Rage, HUM_Rage, IOM_Rage, Total_Rage, modernC, RateM, clay, C_Inp, FYM_Inp, DPM_RPM);
+    decomp(timeFact, DPM, RPM, BIO, HUM, IOM, SOC, DPM_Rage, RPM_Rage, BIO_Rage, HUM_Rage, IOM_Rage, Total_Rage, modernC, modifyingRate, clay, C_Inp, FYM_Inp, DPM_RPM);
 
     return;
 }

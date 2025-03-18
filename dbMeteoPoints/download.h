@@ -26,6 +26,8 @@
 
             DbArkimet* getDbArkimet();
 
+            bool readArkimetVMData(const QString &vmFileName, QString &errorString);
+
         private:
             QList<QString> _datasetsList;
             DbArkimet* _dbMeteo;

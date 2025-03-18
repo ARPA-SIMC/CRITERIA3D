@@ -36,7 +36,7 @@
 
             void createTmpTableHourly();
             void deleteTmpTableHourly();
-            void createTmpTableDaily();
+            bool createTmpTableDaily(QString &errorStr);
             void deleteTmpTableDaily();
 
             bool saveHourlyData();

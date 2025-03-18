@@ -222,16 +222,19 @@ void DbArkimet::createTmpTableHourly()
 }
 
 
-void DbArkimet::createTmpTableDaily()
+bool DbArkimet::createTmpTableDaily(QString &errorStr)
 {
     this->deleteTmpTableDaily();
 
     QSqlQuery qry(_db);
     qry.prepare("CREATE TABLE TmpDailyData (date TEXT, id_point TEXT, id_variable INTEGER, value REAL)");
-    if( !qry.exec() )
+    if(! qry.exec())
     {
-        qDebug() << qry.lastError();
+        errorStr = qry.lastError().text();
+        return false;
     }
+
+    return true;
 }
 
 
