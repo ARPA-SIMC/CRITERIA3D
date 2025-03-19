@@ -5,7 +5,7 @@
 #include <QSqlQuery>
 #include <QSqlError>
 #include <QFile>
-
+#include <QDebug>
 
 
 DbArkimet::DbArkimet(QString dbName) : Crit3DMeteoPointsDbHandler(dbName)
