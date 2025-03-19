@@ -383,87 +383,6 @@ bool Download::getPointPropertiesFromId(const QString &id, int utmZone, Crit3DMe
 }
 
 
-bool Download::readArkimetVMData_daily(const QString &vmFileName, QString &errorString)
-{
-    QFile myFile(vmFileName);
-    if (! myFile.open(QIODevice::ReadOnly))
-    {
-        errorString = "Open failed: " + vmFileName + "\n " + myFile.errorString();
-        return false;
-    }
-
-    QTextStream myStream (&myFile);
-    if (myStream.atEnd())
-    {
-        errorString = "File is empty: " + vmFileName;
-        myFile.close();
-        return false;
-    }
-
-    if (! _dbMeteo->createTmpTableDaily(errorString))
-    {
-        errorString = "Error in creating daily tmp table: " + errorString;
-        return false;
-    }
-
-    // all variables
-    QList<VariablesList> variableList = _dbMeteo->getAllVariableProperties();
-    bool isFirstData = true;
-
-    while(! myStream.atEnd())
-    {
-        QList<QString> fields = myStream.readLine().split(',');
-
-        // warning: reference date arkimet: hour 00 of day+1
-        QString dateStr = fields[0];
-        QDate myDate = QDate::fromString(dateStr.left(8), "yyyyMMdd").addDays(-1);
-        dateStr = myDate.toString("yyyy-MM-dd");
-
-        QString idPoint = fields[1];
-        QString flag = fields[6];
-
-        if (idPoint != "" && flag.left(1) != "1" && flag.left(3) != "054")
-        {
-            QString valueStr;
-            if (flag.left(1) == "2")
-                valueStr = fields[4];
-            else
-                valueStr = fields[3];
-
-            if (valueStr != "")
-            {
-                bool isNumber;
-                double value = valueStr.toDouble(&isNumber);
-                if (isNumber)
-                {
-                    int idArkimet = fields[2].toInt();
-
-                    // conversion from average daily radiation to integral radiation
-                    if (idArkimet == RAD_ID)
-                    {
-                        value *= DAY_SECONDS / 1000000.;
-                    }
-
-                    // variable
-                    int i = 0;
-                    while (i < variableList.size() && variableList[i].arkId() != idArkimet)
-                        i++;
-
-                    if (i < variableList.size())
-                    {
-                        int idVariable = variableList[i].id();
-                        _dbMeteo->appendQueryDaily(dateStr, idPoint, QString::number(idVariable), QString::number(value), isFirstData);
-                        isFirstData = false;
-                    }
-                }
-            }
-        }
-    }
-
-    return _dbMeteo->saveDailyData();
-}
-
-
 bool Download::downloadDailyData(const QDate &startDate, const QDate &endDate, const QString &dataset,
                                  QList<QString> &stations, QList<int> &variables, bool prec0024, QString &errorString)
 {
@@ -547,8 +466,11 @@ bool Download::downloadDailyData(const QDate &startDate, const QDate &endDate, c
         }
         else
         {
-            if (! _dbMeteo->createTmpTableDaily(errorString))
+            if (! _dbMeteo->createTmpTableDaily())
+            {
+                errorString = _dbMeteo->getErrorString();
                 return false;
+            }
 
             bool isFirstData = true;
             QString dateStr, idPoint, flag;

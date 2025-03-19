@@ -1,4 +1,5 @@
 #include "project.h"
+#include "dbArkimet.h"
 #include "dbMeteoGrid.h"
 #include "commonConstants.h"
 #include "basicMath.h"
@@ -5864,6 +5865,51 @@ bool Project::setSelectedStateWithCriteria()
         logWarning("No points to select");
         return false;
     }
+
+    return true;
+}
+
+
+bool Project::readVmArkimetData(const QList<QString> &vmFileList, frequencyType frequency)
+{
+    if(nrMeteoPoints == 0)
+    {
+        errorString = ERROR_STR_MISSING_DB;
+        return false;
+    }
+
+    if (vmFileList.isEmpty())
+    {
+        errorString = "No data.";
+        return false;
+    }
+
+    // open db meteo
+    QString dbName = meteoPointsDbHandler->getDbName();
+    DbArkimet *dbMeteoArkimet = new DbArkimet(dbName);
+    if (! dbMeteoArkimet->getErrorString().isEmpty())
+    {
+        errorString = dbMeteoArkimet->getErrorString();
+        return false;
+    }
+
+    setProgressBar("Loading data...", vmFileList.size());
+    for (int i=0; i < vmFileList.size(); i++)
+    {
+        updateProgressBar(i);
+        if (frequency == daily)
+        {
+            if (! dbMeteoArkimet->readVmDataDaily(vmFileList[i], errorString))
+                return false;
+        }
+        else
+        {
+            // todo hourly
+        }
+    }
+    closeProgressBar();
+
+    delete dbMeteoArkimet;
 
     return true;
 }

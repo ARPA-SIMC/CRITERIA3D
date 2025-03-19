@@ -28,10 +28,6 @@
             bool downloadHourlyData(const QDate &startDate, const QDate &endDate, const QString &dataset,
                                     const QList<QString> &stationList, const QList<int> &varList, QString &errorString);
 
-            bool readArkimetVMData_daily(const QString &vmFileName, QString &errorString);
-
-            bool readArkimetVMData(const QString &vmFileName, QString &errorString);
-
         private:
             QList<QString> _datasetsList;
             DbArkimet* _dbMeteo;

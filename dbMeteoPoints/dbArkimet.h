@@ -20,7 +20,7 @@
     {
         public:
             explicit DbArkimet(QString dbName);
-            void dbManager();
+
             QString queryString;
 
             QString getVarName(int id);
@@ -37,14 +37,17 @@
 
             void createTmpTableHourly();
             void deleteTmpTableHourly();
-            bool createTmpTableDaily(QString &errorStr);
+            bool createTmpTableDaily();
             void deleteTmpTableDaily();
 
             bool saveHourlyData();
             bool saveDailyData();
 
-            void appendQueryHourly(QString dateTime, QString idPoint, QString idVar, QString value, bool isFirstData);
-            void appendQueryDaily(QString date, QString idPoint, QString idVar, QString value, bool isFirstData);
+            void appendQueryHourly(const QString &dateTime, const QString &idPoint, const QString &idVar, const QString &value, bool isFirstData);
+            void appendQueryDaily(const QString &date, const QString &idPoint, const QString &idVar, const QString &value, bool isFirstData);
+
+            bool readVmDataDaily(const QString &vmFileName, QString &errorString);
+
     signals:
 
         protected slots:

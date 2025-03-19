@@ -1,7 +1,11 @@
 #include "commonConstants.h"
 #include "dbArkimet.h"
+#include "dbMeteoPointsHandler.h"
 
-#include <QtSql>
+#include <QSqlQuery>
+#include <QSqlError>
+#include <QFile>
+
 
 
 DbArkimet::DbArkimet(QString dbName) : Crit3DMeteoPointsDbHandler(dbName)
@@ -12,7 +16,7 @@ DbArkimet::DbArkimet(QString dbName) : Crit3DMeteoPointsDbHandler(dbName)
 
 QList<VariablesList> DbArkimet::getAllVariableProperties()
 {
-     QList<VariablesList> variableList;
+    QList<VariablesList> variableList;
 
     QString statement = QString("SELECT * FROM variable_properties");
     QSqlQuery qry(statement, _db);
@@ -43,15 +47,15 @@ QList<VariablesList> DbArkimet::getVariableProperties(QList<int> id)
 
     for (int i = 1; i < id.size(); i++)
     {
-        idlist = idlist % QString(",%1").arg(id[i]);
+        idlist += QString(",%1").arg(id[i]);
     }
-    idlist = idlist % QString(")");
+    idlist += QString(")");
 
     QString statement = QString("SELECT * FROM variable_properties WHERE id_arkimet IN %1").arg(idlist);
 
     QSqlQuery qry(statement, _db);
 
-    if( !qry.exec() )
+    if(! qry.exec() )
         qDebug() << qry.lastError();
     else
     {
@@ -73,7 +77,7 @@ QString DbArkimet::getVarName(int id)
     qry.prepare( "SELECT variable FROM variable_properties WHERE id_arkimet = :id" );
     qry.bindValue(":id", id);
 
-    if( !qry.exec() )
+    if(! qry.exec() )
     {
         qDebug() << qry.lastError();
     }
@@ -123,7 +127,7 @@ QList<int> DbArkimet::getDailyVar()
 
     qry.prepare( "SELECT id_arkimet FROM variable_properties WHERE frequency = 86400" );
 
-    if( !qry.exec() )
+    if(! qry.exec() )
     {
         qDebug() << qry.lastError();
     }
@@ -149,7 +153,7 @@ QList<int> DbArkimet::getHourlyVar()
 
     qry.prepare( "SELECT id_arkimet FROM variable_properties WHERE frequency < 86400" );
 
-    if( !qry.exec() )
+    if(! qry.exec() )
     {
         qDebug() << qry.lastError();
     }
@@ -166,11 +170,9 @@ QList<int> DbArkimet::getHourlyVar()
 }
 
 
-
 void DbArkimet::initStationsDailyTables(const QDate &startDate, const QDate &endDate,
                                         const QList<QString> &stationList, const QList<QString> &idVarList)
 {
-
     QList<QString> varList;
     for (int i=0; i < idVarList.size(); i++)
     {
@@ -193,7 +195,6 @@ void DbArkimet::initStationsDailyTables(const QDate &startDate, const QDate &end
         qry = QSqlQuery(statement, _db);
         qry.exec();
     }
-
 }
 
 
@@ -245,15 +246,16 @@ void DbArkimet::createTmpTableHourly()
 }
 
 
-bool DbArkimet::createTmpTableDaily(QString &errorStr)
+bool DbArkimet::createTmpTableDaily()
 {
     this->deleteTmpTableDaily();
 
     QSqlQuery qry(_db);
+
     qry.prepare("CREATE TABLE TmpDailyData (date TEXT, id_point TEXT, id_variable INTEGER, value REAL)");
     if(! qry.exec())
     {
-        errorStr = qry.lastError().text();
+        setErrorString(qry.lastError().text());
         return false;
     }
 
@@ -278,22 +280,25 @@ void DbArkimet::deleteTmpTableDaily()
 {
     QSqlQuery qry(_db);
 
-    qry.prepare( "DROP TABLE TmpDailyData" );
+    qry.prepare("DROP TABLE TmpDailyData");
 
-    if( !qry.exec() )
+    if(! qry.exec() )
     {
         //qDebug() << "DROP TABLE TmpDailyData" << qry.lastError();
     }
 }
 
 
-void DbArkimet::appendQueryHourly(QString dateTime, QString idPoint, QString idVar, QString value, bool isFirstData)
+void DbArkimet::appendQueryHourly(const QString &dateTime, const QString &idPoint, const QString &idVar, const QString &value, bool isFirstData)
 {
     if (isFirstData)
+    {
         queryString = "INSERT INTO TmpHourlyData VALUES ";
+    }
     else
+    {
         queryString += ",";
-
+    }
     queryString += "('" + dateTime + "'"
             + ",'" + idPoint + "'"
             + "," + idVar
@@ -302,13 +307,16 @@ void DbArkimet::appendQueryHourly(QString dateTime, QString idPoint, QString idV
 }
 
 
-void DbArkimet::appendQueryDaily(QString date, QString idPoint, QString idVar, QString value, bool isFirstData)
+void DbArkimet::appendQueryDaily(const QString &date, const QString &idPoint, const QString &idVar, const QString &value, bool isFirstData)
 {
     if (isFirstData)
+    {
         queryString = "INSERT INTO TmpDailyData VALUES ";
+    }
     else
+    {
         queryString += ",";
-
+    }
     queryString += "('" + date + "'"
             + ",'" + idPoint + "'"
             + "," + idVar
@@ -319,7 +327,6 @@ void DbArkimet::appendQueryDaily(QString date, QString idPoint, QString idVar, Q
 
 bool DbArkimet::saveDailyData()
 {
-
     if (queryString == "")
         return false;
 
@@ -328,12 +335,14 @@ bool DbArkimet::saveDailyData()
 
     // query stations with data
     QString statement = QString("SELECT DISTINCT id_point FROM TmpDailyData");
-    QSqlQuery qry = _db.exec(statement);
+    QSqlQuery qryStations = _db.exec(statement);
 
     // create data stations list
     QList<QString> stations;
-    while (qry.next())
-        stations.append(qry.value(0).toString());
+    while (qryStations.next())
+    {
+        stations.append(qryStations.value(0).toString());
+    }
 
     // insert data
     foreach (QString id_point, stations)
@@ -345,7 +354,7 @@ bool DbArkimet::saveDailyData()
         _db.exec(statement);
         if (_db.lastError().type() != QSqlError::NoError)
         {
-            qDebug() << _db.lastError();
+            setErrorString(_db.lastError().text());
             return false;
         }
     }
@@ -385,6 +394,101 @@ bool DbArkimet::saveHourlyData()
             qDebug() << _db.lastError();
             return false;
         }
+    }
+
+    return true;
+}
+
+
+bool DbArkimet::readVmDataDaily(const QString &vmFileName, QString &errorString)
+{
+    QFile myFile(vmFileName);
+    if (! myFile.open(QIODevice::ReadOnly))
+    {
+        errorString = "Open failed: " + vmFileName + "\n " + myFile.errorString();
+        return false;
+    }
+
+    QTextStream myStream (&myFile);
+    if (myStream.atEnd())
+    {
+        errorString = "File is empty: " + vmFileName;
+        myFile.close();
+        return false;
+    }
+
+    // list variables
+    QList<VariablesList> variableList = this->getAllVariableProperties();
+    if (variableList.isEmpty())
+    {
+        errorString = "table 'variable_properties' is missing or empty,";
+        myFile.close();
+        return false;
+    }
+
+    if (! this->createTmpTableDaily())
+    {
+        errorString = "Error in creating daily tmp table: " + this->getErrorString();
+        myFile.close();
+        return false;
+    }
+
+    bool isFirstData = true;
+
+    while(! myStream.atEnd())
+    {
+        QList<QString> fields = myStream.readLine().split(',');
+
+        // warning: reference date arkimet: hour 00 of day+1
+        QString dateStr = fields[0];
+        QDate myDate = QDate::fromString(dateStr.left(8), "yyyyMMdd").addDays(-1);
+        dateStr = myDate.toString("yyyy-MM-dd");
+
+        QString idPoint = fields[1];
+        QString flag = fields[6];
+
+        if (idPoint != "" && flag.left(1) != "1" && flag.left(3) != "054")
+        {
+            QString valueStr;
+            if (flag.left(1) == "2")
+                valueStr = fields[4];
+            else
+                valueStr = fields[3];
+
+            if (valueStr != "")
+            {
+                bool isNumber;
+                double value = valueStr.toDouble(&isNumber);
+                if (isNumber)
+                {
+                    int idArkimet = fields[2].toInt();
+
+                    // conversion from average daily radiation to integral radiation
+                    if (idArkimet == RAD_ID)
+                    {
+                        value *= DAY_SECONDS / 1000000.;
+                    }
+
+                    // variable
+                    int i = 0;
+                    while (i < variableList.size() && variableList[i].arkId() != idArkimet)
+                        i++;
+
+                    if (i < variableList.size())
+                    {
+                        int idVariable = variableList[i].id();
+                        this->appendQueryDaily(dateStr, idPoint, QString::number(idVariable), QString::number(value), isFirstData);
+                        isFirstData = false;
+                    }
+                }
+            }
+        }
+    }
+
+    if (! this->saveDailyData())
+    {
+        errorString = this->getErrorString();
+        return false;
     }
 
     return true;

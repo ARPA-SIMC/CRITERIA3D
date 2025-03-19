@@ -338,6 +338,8 @@
         void setCrossValidationStatistics(const Crit3DCrossValidationStatistics &newCrossValidationStatistics);
         void getMeteoPointsCurrentValues(std::vector<float> &validValues);
 
+        bool readVmArkimetData(const QList<QString> &vmFileList, frequencyType frequency);
+
     private slots:
         void deleteMeteoWidgetPoint(int id);
         void deleteMeteoWidgetGrid(int id);
