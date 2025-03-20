@@ -142,6 +142,7 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->flagCompute_only_points->setChecked(myProject.getComputeOnlyPoints());
 
     this->setMouseTracking(true);
+    this->setTitle();
 
     connect(&myProject, &Crit3DProject::updateOutputSignal, this, &MainWindow::updateOutputMap);
 }
@@ -697,6 +698,18 @@ void MainWindow::setProjectTileMap()
 }
 
 
+void MainWindow::setTitle()
+{
+    QString title = "CRITERIA3D " + QString(CRITERIA3D_VERSION);
+    if (! myProject.projectName.isEmpty())
+    {
+        title += " - " + myProject.projectName;
+    }
+
+    this->setWindowTitle(title);
+}
+
+
 void MainWindow::drawProject()
 {
     this->setProjectTileMap();
@@ -714,14 +727,10 @@ void MainWindow::drawProject()
     }
 
     this->drawMeteoPoints();
-    // drawMeteoGrid();
+
     this->addOutputPointsGUI();
 
-    QString title = "CRITERIA3D";
-    if (myProject.projectName != "")
-        title += " - " + myProject.projectName;
-
-    this->setWindowTitle(title);
+    this->setTitle();
 }
 
 

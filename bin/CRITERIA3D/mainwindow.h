@@ -321,6 +321,8 @@
         void clearRaster_GUI();
         void clearMeteoPoints_GUI();
 
+        void setTitle();
+
         void setMeteoVariable(meteoVariable myVar, gis::Crit3DRasterGrid *myGrid);
         void setOutputMeteoVariable(meteoVariable myVar, gis::Crit3DRasterGrid *myGrid);
 
