@@ -10,7 +10,7 @@
 #include <QTextStream>
 
 
-long getFileLenght(const QString fileName, QString &errorStr)
+long getFileLenght(const QString &fileName, QString &errorStr)
 {
     QFile file(fileName);
     if (! file.open(QFile::ReadOnly | QFile::Text) )
@@ -34,20 +34,21 @@ long getFileLenght(const QString fileName, QString &errorStr)
 }
 
 
-bool getFieldList(QString fieldListFileName, QMap<QString, QList<QString>>& fieldList, QString &error)
+bool getShapeFieldList(const QString &fileName, QMap<QString, QList<QString>> &fieldList, QString &error)
 {
     int requiredItems = 5;
 
     // check fieldList
-    if (fieldListFileName.isEmpty())
+    if (fileName.isEmpty())
     {
         error = "Missing field list.";
         return false;
     }
 
-    QFile fileRef(fieldListFileName);
-    if ( !fileRef.open(QFile::ReadOnly | QFile::Text) ) {
-        error = "Field list not exists: " + fieldListFileName;
+    QFile fileRef(fileName);
+    if (! fileRef.open(QFile::ReadOnly | QFile::Text) )
+    {
+        error = "Field list not exists: " + fileName;
         return false;
     }
 
@@ -61,16 +62,17 @@ bool getFieldList(QString fieldListFileName, QMap<QString, QList<QString>>& fiel
         QList<QString> items = line.split(",");
         if (items.size() < requiredItems)
         {
-            error = "invalid field list: missing parameters";
+            error = "Invalid field list, missing parameters in line: " + line;
             return false;
         }
+        if (items[0].isEmpty() || items[1].isEmpty())
+        {
+            error = "Invalid field list, missing field name in line: " + line;
+            return false;
+        }
+
         QString key = items[1];
         items.removeAt(1);
-        if (key.isEmpty() || items[0].isEmpty())
-        {
-            error = "invalid field list: missing field name";
-            return false;
-        }
 
         fieldList.insert(key,items);
     }
@@ -96,8 +98,8 @@ bool getFieldList(QString fieldListFileName, QMap<QString, QList<QString>>& fiel
  *
  * \return true if all is correct
 */
-bool shapeFromCsv(Crit3DShapeHandler &refShapeFile, QString csvFileName,
-                  QString fieldListFileName, QString outputFileName, QString &errorStr)
+bool shapeFromCsv(const Crit3DShapeHandler &refShapeFile, const QString &csvFileName,
+                  const QString &fieldListFileName, QString &outputFileName, QString &errorStr)
 {
     int defaultStringLenght = 20;
     int defaultDoubleLenght = 10;
@@ -163,7 +165,7 @@ bool shapeFromCsv(Crit3DShapeHandler &refShapeFile, QString csvFileName,
     }
     else
     {
-        if (! getFieldList(fieldListFileName, fieldList, errorStr))
+        if (! getShapeFieldList(fieldListFileName, fieldList, errorStr))
         {
             errorStr += "\nError in reading file: " + fieldListFileName;
             return false;

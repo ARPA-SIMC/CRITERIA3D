@@ -989,7 +989,7 @@ int CriteriaOutputProject::createNetcdf()
 
     // read field list
     QMap<QString, QList<QString>> fieldList;
-    if (! getFieldList(fieldListFileName, fieldList, projectError))
+    if (! getShapeFieldList(fieldListFileName, fieldList, projectError))
     {
         return ERROR_NETCDF;
     }
