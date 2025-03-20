@@ -1947,19 +1947,18 @@ bool PragaProject::averageSeriesOnZonesMeteoGrid(meteoVariable variable, meteoCo
     if (showInfo)
         closeProgressBar();
 
-    int nrDays = meteoPointTemp->nrObsDataDaysD;
-    Crit3DDate valuesFirstDate = meteoPointTemp->getFirstDailyData();
     delete meteoPointTemp;
+    int nrDays = startDate.daysTo(endDate) + 1;
 
     if (getVarFrequency(variable) == hourly)
     {
         return hourlyZoneAggregationMeteoGrid(variable, aggregationString, threshold, zoneGrid, idZoneVector, outputSeries,
-                                             indexRowCol, meteoGridRow, meteoGridCol, valuesFirstDate, nrDays, showInfo);
+                                             indexRowCol, meteoGridRow, meteoGridCol, getCrit3DDate(startDate), nrDays, showInfo);
     }
     else
     {
         return dailyZoneAggregationMeteoGrid(variable, aggregationString, threshold, zoneGrid, idZoneVector, outputSeries,
-                                             indexRowCol, meteoGridRow, meteoGridCol, valuesFirstDate, nrDays, showInfo);
+                                             indexRowCol, meteoGridRow, meteoGridCol, getCrit3DDate(startDate), nrDays, showInfo);
     }
 }
 

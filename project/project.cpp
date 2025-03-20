@@ -1,4 +1,5 @@
 #include "project.h"
+#include "dbArkimet.h"
 #include "dbMeteoGrid.h"
 #include "commonConstants.h"
 #include "basicMath.h"
@@ -4092,6 +4093,24 @@ void Project::importHourlyMeteoData(const QString& csvFileName, bool importAllFi
 void Project::showMeteoWidgetPoint(std::string idMeteoPoint, std::string namePoint, std::string dataset,
                                    double altitude, std::string lapseRateCode, bool isAppend)
 {
+    // check
+    if (isAppend)
+    {
+        if (meteoWidgetPointList.isEmpty())
+        {
+            isAppend = false;
+        }
+        else
+        {
+            int lastIndex = meteoWidgetPointList.size() - 1;
+            if (meteoWidgetPointList[lastIndex]->isAlreadyPresent(idMeteoPoint))
+            {
+                logWarning("This meteo point is already present.");
+                return;
+            }
+        }
+    }
+
     logInfoGUI("Loading data...");
 
     // check dates
@@ -4127,12 +4146,6 @@ void Project::showMeteoWidgetPoint(std::string idMeteoPoint, std::string namePoi
         lastDate = lastHourly.date();
     }
 
-    int meteoWidgetId = 0;
-    if (meteoWidgetPointList.isEmpty())
-    {
-        isAppend = false;
-    }
-
     Crit3DMeteoPoint mp;
     mp.setId(idMeteoPoint);
     mp.setName(namePoint);
@@ -4150,6 +4163,7 @@ void Project::showMeteoWidgetPoint(std::string idMeteoPoint, std::string namePoi
     {
         bool isGrid = false;
         Crit3DMeteoWidget* meteoWidgetPoint = new Crit3DMeteoWidget(isGrid, projectPath, meteoSettings);
+        int meteoWidgetId;
         if (! meteoWidgetPointList.isEmpty())
         {
             meteoWidgetId = meteoWidgetPointList[meteoWidgetPointList.size()-1]->getMeteoWidgetID()+1;
@@ -4184,6 +4198,24 @@ void Project::showMeteoWidgetPoint(std::string idMeteoPoint, std::string namePoi
 
 void Project::showMeteoWidgetGrid(std::string idCell, bool isAppend)
 {
+    // check
+    if (isAppend)
+    {
+        if (meteoWidgetGridList.isEmpty())
+        {
+            isAppend = false;
+        }
+        else
+        {
+            int lastIndex = meteoWidgetGridList.size() - 1;
+            if (meteoWidgetGridList[lastIndex]->isAlreadyPresent(idCell))
+            {
+                logWarning("This grid cell is already present.");
+                return;
+            }
+        }
+    }
+
     QDate firstDate = meteoGridDbHandler->firstDate();
     QDate lastDate = meteoGridDbHandler->lastDate();
     QDate firstMonthlyDate = meteoGridDbHandler->getFirstMonthlytDate();
@@ -4197,12 +4229,6 @@ void Project::showMeteoWidgetGrid(std::string idCell, bool isAppend)
     if (meteoGridDbHandler->getLastHourlyDate().isValid())
     {
         lastDateTime = QDateTime(meteoGridDbHandler->getLastHourlyDate().addDays(1), QTime(0,0), Qt::UTC);
-    }
-
-    int meteoWidgetId = 0;
-    if (meteoWidgetGridList.isEmpty())
-    {
-        isAppend = false;
     }
 
     if (meteoGridDbHandler->gridStructure().isEnsemble())
@@ -4268,6 +4294,7 @@ void Project::showMeteoWidgetGrid(std::string idCell, bool isAppend)
     }
     else
     {
+        int meteoWidgetId;
         bool isGrid = true;
         Crit3DMeteoWidget* meteoWidgetGrid = new Crit3DMeteoWidget(isGrid, projectPath, meteoSettings);
         if (! meteoWidgetGridList.isEmpty())
@@ -5868,6 +5895,51 @@ bool Project::setSelectedStateWithCriteria()
         logWarning("No points to select");
         return false;
     }
+
+    return true;
+}
+
+
+bool Project::readVmArkimetData(const QList<QString> &vmFileList, frequencyType frequency)
+{
+    if(nrMeteoPoints == 0)
+    {
+        errorString = ERROR_STR_MISSING_DB;
+        return false;
+    }
+
+    if (vmFileList.isEmpty())
+    {
+        errorString = "No data.";
+        return false;
+    }
+
+    // open db meteo
+    QString dbName = meteoPointsDbHandler->getDbName();
+    DbArkimet *dbMeteoArkimet = new DbArkimet(dbName);
+    if (! dbMeteoArkimet->getErrorString().isEmpty())
+    {
+        errorString = dbMeteoArkimet->getErrorString();
+        return false;
+    }
+
+    setProgressBar("Loading data...", vmFileList.size());
+    for (int i=0; i < vmFileList.size(); i++)
+    {
+        updateProgressBar(i);
+        if (frequency == daily)
+        {
+            if (! dbMeteoArkimet->readVmDataDaily(vmFileList[i], errorString))
+                return false;
+        }
+        else
+        {
+            // todo hourly
+        }
+    }
+    closeProgressBar();
+
+    delete dbMeteoArkimet;
 
     return true;
 }
