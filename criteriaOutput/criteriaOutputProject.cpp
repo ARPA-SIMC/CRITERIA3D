@@ -565,7 +565,7 @@ int CriteriaOutputProject::createShapeFile()
 
     if (! inputShape.open(ucmFileName.toStdString()))
     {
-        projectError = "Wrong shapefile: " + ucmFileName;
+        projectError = "Wrong UCM shapefile: " + ucmFileName;
         return ERROR_SHAPEFILE;
     }
 

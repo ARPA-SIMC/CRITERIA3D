@@ -53,7 +53,7 @@ bool getFieldList(QString fieldListFileName, QMap<QString, QList<QString>>& fiel
 
     QTextStream in(&fileRef);
     // skip header
-    QString line = in.readLine();
+    in.readLine();
 
     while (! in.atEnd())
     {
@@ -107,7 +107,7 @@ bool shapeFromCsv(Crit3DShapeHandler &refShapeFile, QString csvFileName,
     long nrRows = getFileLenght(csvFileName, errorStr);
     if (nrRows < 2)
     {
-        errorStr = "CSV data file is void: " + csvFileName;
+        errorStr = "CSV data file is empty: " + csvFileName;
         return false;
     }
 
@@ -141,17 +141,17 @@ bool shapeFromCsv(Crit3DShapeHandler &refShapeFile, QString csvFileName,
     QString firstRow = inputStream.readLine();
     QList<QString> newFields = firstRow.split(",");
 
-    // read field list
+    // read field list (empty from GEO)
     QMap<QString, QList<QString>> fieldList;
     if (fieldListFileName.isEmpty())
     {
-        // fill fieldList with default values (call from GEO)
+        // field list is empty (call from GEO): it will be filled with default values
         QString key = newFields.last();
         QList<QString> items;
         items << "outputVar" << "FLOAT" << "8";
 
-        // fraction of available water [0-1] requires 3 decimal digits
-        if (key == "FRACTION_AW" || key.left(3) == "FAW")
+        // fraction variables [0-1] requires 3 decimal digits
+        if (key == "FRACTION_AW" || key.left(3) == "FAW" || key.left(3) == "SWI")
         {
             items << "3";
         }
