@@ -3040,7 +3040,11 @@ bool Project::interpolationDemGlocalDetrending(meteoVariable myVar, const Crit3D
                     {
                         gis::getUtmXYFromRowCol(myHeader, row, col, &x, &y);
 
-                        getProxyValuesXY(x, y, &interpolationSettings, proxyValues);
+                        if (! getProxyValuesXY(x, y, &interpolationSettings, proxyValues))
+                        {
+                            myRaster->value[row][col] = NODATA;
+                            continue;
+                        }
 
                         interpolatedValue = interpolate(subsetInterpolationPoints, &interpolationSettings, meteoSettings,
                                                         myVar, x, y, z, proxyValues, true);
