@@ -32,6 +32,7 @@ void Crit3DHydrallMaps::initialize(const gis::Crit3DRasterGrid& DEM)
     rootBiomassMap->initializeGrid(DEM);
     mapLast30DaysTavg->initializeGrid(DEM);
     treeSpeciesMap.initializeGrid(DEM);
+    plantHeight.initializeGrid(DEM);
 }
 
 Crit3DHydrallMaps::~Crit3DHydrallMaps()
@@ -104,7 +105,7 @@ double Crit3D_Hydrall::photosynthesisAndTranspiration()
     TweatherDerivedVariable weatherDerivedVariable;
 
     Crit3D_Hydrall::radiationAbsorption();
-    //Crit3D_Hydrall::aerodynamicalCoupling();
+    Crit3D_Hydrall::aerodynamicalCoupling();
     //Crit3D_Hydrall::upscale();
 
     //Crit3D_Hydrall::carbonWaterFluxesProfile();
@@ -213,9 +214,10 @@ void Crit3D_Hydrall::setDerivedWeatherVariables(double directIrradiance, double 
     return;
 }
 
-void Crit3D_Hydrall::setPlantVariables(double chlorophyllContent)
+void Crit3D_Hydrall::setPlantVariables(double chlorophyllContent, double height)
 {
     plant.myChlorophyllContent = chlorophyllContent;
+    plant.height = height;
 }
 
 void Crit3D_Hydrall::setStateVariables(Crit3DHydrallMaps &stateMap, int row, int col)
@@ -367,7 +369,7 @@ void Crit3D_Hydrall::preliminaryComputations(double diffuseIncomingPAR, double d
     dum[7]= directIncomingPAR * (1.0-scatteringCoefPAR) * directLightExtinctionCoefficient.global ;
     dum[8]=  diffuseIncomingNIR * (1.0-diffuseReflectionCoefficientNIR) * diffuseLightExtinctionCoefficient.nir;
     dum[9]= directIncomingNIR * (1.0-directReflectionCoefficientNIR) * directLightExtinctionCoefficient.nir;
-    dum[10]= directIncomingNIR * (1.0-scatteringCoefNIR) * directLightExtinctionCoefficient.nir ;
+    dum[10]= directIncomingNIR * (1.0-scatteringCoefNIR) * directLightExtinctionCoefficient.global ;
     dum[11]= UPSCALINGFUNC((diffuseLightExtinctionCoefficient.par+directLightExtinctionCoefficient.global),plant.leafAreaIndexCanopy);
     dum[12]= UPSCALINGFUNC((directLightExtinctionCoefficient.par+directLightExtinctionCoefficient.global),plant.leafAreaIndexCanopy);
     dum[13]= UPSCALINGFUNC((diffuseLightExtinctionCoefficient.par+directLightExtinctionCoefficient.global),plant.leafAreaIndexCanopy);
@@ -434,7 +436,15 @@ void Crit3D_Hydrall::aerodynamicalCoupling()
     double sensibleHeatOld = -9999;
     double threshold = fabs(sensibleHeat/10000.0);
 
-    while( (20 > i++) && (fabs(sensibleHeat - sensibleHeatOld)> threshold)) {
+    while( (20 > i++) && (fabs(sensibleHeat - sensibleHeatOld)> threshold))
+    {
+        //first occurence of the loop
+        if (isEqual(sunlit.aerodynamicConductanceCO2Exchange, 0))
+        {
+            sunlit.aerodynamicConductanceCO2Exchange = 1.05 * sunlit.leafAreaIndex/plant.leafAreaIndexCanopy;
+            shaded.aerodynamicConductanceCO2Exchange = 1.05 * shaded.leafAreaIndex/plant.leafAreaIndexCanopy;
+        }
+
         // Monin-Obukhov length (m) and nondimensional height
         // Note: imposed a limit to non-dimensional height under stable
         // conditions, corresponding to a value of 0.2 for the generalized
@@ -490,7 +500,7 @@ void Crit3D_Hydrall::aerodynamicalCoupling()
         shaded.totalConductanceHeatExchange = totalConductanceToHeatExchange - sunlit.totalConductanceHeatExchange;  //shaded big-leaf
 
         // Temperature of big-leaf (approx. expression)
-        if (sunlit.leafAreaIndex > 1.0E-6)
+        if (sunlit.leafAreaIndex > EPSILON)
         {
             stomatalConductanceWater= (10.0/sunlit.leafAreaIndex); //dummy stom res for sunlit big-leaf
             //if (sunlit.isothermalNetRadiation > 100) stomatalConductanceWater *= pow(100/sunlit.isothermalNetRadiation,0.5);
@@ -500,12 +510,12 @@ void Crit3D_Hydrall::aerodynamicalCoupling()
                               /sunlit.totalConductanceHeatExchange/(weatherVariable.derived.psychrometricConstant
                               *(stomatalConductanceWater+1.0/sunlit.aerodynamicConductanceCO2Exchange)
                               +weatherVariable.derived.slopeSatVapPressureVSTemp/sunlit.totalConductanceHeatExchange);
-        }
+        } //(1+0.001*sunlit.isothermalNetRadiation) sospetto TODO
         else
         {
             sunlitDeltaTemp = 0.0;
         }
-        sunlitDeltaTemp = 0.0;  // TODO: check
+        //sunlitDeltaTemp = 0.0;  // TODO: check
 
         sunlit.leafTemperature = weatherVariable.myInstantTemp + sunlitDeltaTemp	+ ZEROCELSIUS ; //sunlit big-leaf
         stomatalConductanceWater = 10.0/shaded.leafAreaIndex ; //dummy stom res for shaded big-leaf
@@ -514,7 +524,7 @@ void Crit3D_Hydrall::aerodynamicalCoupling()
                            - weatherVariable.vaporPressureDeficit*(1+0.001*shaded.isothermalNetRadiation))/shaded.totalConductanceHeatExchange
                            /(weatherVariable.derived.psychrometricConstant*(stomatalConductanceWater + 1.0/shaded.aerodynamicConductanceHeatExchange)
                            + weatherVariable.derived.slopeSatVapPressureVSTemp/shaded.totalConductanceHeatExchange);
-        shadedDeltaTemp = 0.0;
+        //shadedDeltaTemp = 0.0;
         shaded.leafTemperature = weatherVariable.myInstantTemp + shadedDeltaTemp + ZEROCELSIUS;  //shaded big-leaf
         // Sensible heat flux from the whole canopy
         sensibleHeat = HEAT_CAPACITY_AIR_MOLAR * (sunlit.aerodynamicConductanceHeatExchange*sunlitDeltaTemp + shaded.aerodynamicConductanceHeatExchange*shadedDeltaTemp);
@@ -531,6 +541,8 @@ double  Crit3D_Hydrall::leafWidth()
 {
     // la funzione deve essere scritta secondo regole che possono fr variare lo spessore in base alla fenologia
     // come per la vite?
+    //TODO leaf width
+    plant.myLeafWidth = 0.1;
     return plant.myLeafWidth;
 }
 
