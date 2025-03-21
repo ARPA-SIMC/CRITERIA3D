@@ -295,7 +295,7 @@
 
 
         double elevation;
-        int simulationStepInSeconds;
+        int simulationStepInSeconds = 3600;
         double understoreyLeafAreaIndexMax;
         double cover = 1; // TODO
 
