@@ -546,6 +546,20 @@ void Crit3DMeteoWidget::updateTimeRange()
 }
 
 
+bool Crit3DMeteoWidget::isAlreadyPresent(const std::string &idMeteoPoint)
+{
+    for (int i = 0; i < _meteoPoints.size(); i++)
+    {
+        if (_meteoPoints[i].id == idMeteoPoint)
+        {
+            return true;
+        }
+    }
+
+    return false;
+}
+
+
 void Crit3DMeteoWidget::drawMeteoPoint(Crit3DMeteoPoint mp, bool isAppend)
 {
     if (! _isInitialized) return;

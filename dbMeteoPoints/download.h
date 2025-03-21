@@ -9,8 +9,12 @@
     {
         Q_OBJECT
         public:
-            explicit Download(QString dbName, QObject* parent = nullptr);
-            ~Download();
+            explicit Download(QString dbName, QObject* parent = nullptr): QObject(parent)
+            { _dbMeteo = new DbArkimet(dbName); }
+
+            ~Download() { delete _dbMeteo; }
+
+            DbArkimet* getDbArkimet() { return _dbMeteo; }
 
             bool getPointProperties(const QList<QString> &datasetList, int utmZone, QString &errorString);
             bool getPointPropertiesFromId(const QString &id, int utmZone, Crit3DMeteoPoint &pointProp);
@@ -23,10 +27,6 @@
 
             bool downloadHourlyData(const QDate &startDate, const QDate &endDate, const QString &dataset,
                                     const QList<QString> &stationList, const QList<int> &varList, QString &errorString);
-
-            DbArkimet* getDbArkimet();
-
-            bool readArkimetVMData(const QString &vmFileName, QString &errorString);
 
         private:
             QList<QString> _datasetsList;
