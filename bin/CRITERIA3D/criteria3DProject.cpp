@@ -1315,7 +1315,9 @@ bool Crit3DProject::computeHydrallModel()
                                                 hydrallModel.getCO2(getCrit3DDate(getCurrentDate()), double(hourlyMeteoMaps->mapHourlyTair->value[row][col])),
                                                 double(radiationMaps->sunElevationMap->value[row][col]));
 
-                hydrallModel.setPlantVariables(chlorophyllContent);
+                //TODO: plant height map
+                hydrallMaps.plantHeight.value[row][col] = 10;
+                hydrallModel.setPlantVariables(chlorophyllContent, hydrallMaps.plantHeight.value[row][col]);
 
 
 
@@ -1335,7 +1337,7 @@ bool Crit3DProject::computeHydrallModel()
                 // TODO scrivere funzione settaggio profilo 1D suolo
 
                 //root density
-                hydrallMaps.treeSpeciesMap.value[row][col] = 0;
+                hydrallMaps.treeSpeciesMap.value[row][col] = 0; //TODO treeSpeciesMap
                 Crit3DCrop currentCrop = cropList[int(hydrallMaps.treeSpeciesMap.value[row][col])];
                 currentCrop.roots.rootDensity.resize(nrLayers); // TODO
                 // the condition on this for cycle includes the check of existance of the layers
