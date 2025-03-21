@@ -289,7 +289,7 @@ void DbArkimet::deleteTmpTableDaily()
 }
 
 
-void DbArkimet::appendQueryHourly(const QString &dateTime, const QString &idPoint, const QString &idVar, const QString &value, bool isFirstData)
+void DbArkimet::appendQueryHourly(const QString &dateTimeStr, const QString &idPoint, const QString &idVar, const QString &value, bool isFirstData)
 {
     if (isFirstData)
     {
@@ -299,7 +299,7 @@ void DbArkimet::appendQueryHourly(const QString &dateTime, const QString &idPoin
     {
         queryString += ",";
     }
-    queryString += "('" + dateTime + "'"
+    queryString += "('" + dateTimeStr + "'"
             + ",'" + idPoint + "'"
             + "," + idVar
             + "," + value
@@ -307,7 +307,7 @@ void DbArkimet::appendQueryHourly(const QString &dateTime, const QString &idPoin
 }
 
 
-void DbArkimet::appendQueryDaily(const QString &date, const QString &idPoint, const QString &idVar, const QString &value, bool isFirstData)
+void DbArkimet::appendQueryDaily(const QString &dateStr, const QString &idPoint, const QString &idVar, const QString &value, bool isFirstData)
 {
     if (isFirstData)
     {
@@ -317,7 +317,7 @@ void DbArkimet::appendQueryDaily(const QString &date, const QString &idPoint, co
     {
         queryString += ",";
     }
-    queryString += "('" + date + "'"
+    queryString += "('" + dateStr + "'"
             + ",'" + idPoint + "'"
             + "," + idVar
             + "," + value
@@ -347,6 +347,14 @@ bool DbArkimet::saveDailyData()
     // insert data
     foreach (QString id_point, stations)
     {
+        QString tableName = id_point + "_D";
+        if (! _db.tables().contains(tableName))
+        {
+            statement = QString("CREATE TABLE IF NOT EXISTS `%1`"
+                        "(date_time TEXT(20), id_variable INTEGER, value REAL, PRIMARY KEY(date_time, id_variable))").arg(tableName);
+            _db.exec(statement);
+        }
+
         statement = QString("INSERT INTO `%1_D` ").arg(id_point);
         statement += QString("SELECT date, id_variable, value FROM TmpDailyData ");
         statement += QString("WHERE id_point = %1").arg(id_point);
