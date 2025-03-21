@@ -3,6 +3,7 @@
 #include "shapeFromCsv.h"
 #include "shapeUtilities.h"
 #include "commonConstants.h"
+#include "basicMath.h"
 
 #include <math.h>
 #include <iostream>
@@ -87,7 +88,7 @@ bool getShapeFieldList(const QString &fileName, QMap<QString, QList<QString>> &f
 bool prepareFieldsList(const QString &keyVariable, QMap<QString, QList<QString>> &fieldsList)
 {
     QList<QString> items;
-    items << "outputVar" << "FLOAT" << "8";
+    items << "outputVar" << "FLOAT" << "9";
 
     // decimal digits
     // fraction [0-1] requires 3 decimal digits
@@ -281,7 +282,6 @@ bool shapeFromCsv(const Crit3DShapeHandler &refShapeFile, const QString &csvFile
     // main cycle
     int step = nrRows * 0.1;
     int currentRow = 0;
-    int nrValidValues = 0;
     while (! inputCsvStream.atEnd())
     {
         // counter
@@ -322,10 +322,6 @@ bool shapeFromCsv(const Crit3DShapeHandler &refShapeFile, const QString &csvFile
                         csvFile.close();
                         return false;
                     }
-                    else
-                    {
-                        nrValidValues++;
-                    }
                 }
             }
         }
@@ -335,16 +331,7 @@ bool shapeFromCsv(const Crit3DShapeHandler &refShapeFile, const QString &csvFile
     outputShapeFile.close();
     csvFile.close();
 
-    if (nrValidValues == 0)
-    {
-        std::cout << "\n";
-        errorStr = "No valid data.";
-        return false;
-    }
-    else
-    {
-        std::cout << " done.\n";
-        return true;
-    }
+    std::cout << " done.\n";
+    return true;
 }
 
