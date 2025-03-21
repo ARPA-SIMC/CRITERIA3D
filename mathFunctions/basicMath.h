@@ -16,6 +16,7 @@
     #ifndef LOGICAL_IO
         #define LOGICAL_IO(logicCondition, val1, val2) ((logicCondition) ? (val1) : (val2))
     #endif
+
     bool sameSignNoZero(float a, float b);
     bool sameSign(float a, float b);
     bool greaterThan(float a, float b);
@@ -36,6 +37,7 @@
     int sgn(float v);
     bool isEqual(float value1, float value2);
     bool isEqual(double value1, double value2);
+
     char* decimal_to_binary(unsigned int n, int nrBits);
     float getSinDecimalDegree(float angle);
     float getCosDecimalDegree(float angle);

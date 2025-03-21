@@ -27,12 +27,12 @@ void DialogPragaProject::accept()
         // check
         if (! netCDF->isLoaded())
         {
-            QMessageBox::information(nullptr, "No data", "Load NetCDF before");
+            QMessageBox::warning(nullptr, "WARNING", ERROR_STR_MISSING_NETCDF);
             return false;
         }
         if (! netCDF->isTimeReadable())
         {
-            QMessageBox::information(nullptr, "Wrong Time", "Wrong Time dimension in the NetCDF file.");
+            QMessageBox::warning(nullptr, "WARNING", "Wrong Time dimension in the NetCDF.");
             return false;
         }
 
@@ -140,31 +140,31 @@ void DialogPragaProject::accept()
         // check netcdf
         if (! netCDF->isLoaded())
         {
-            QMessageBox::information(nullptr, "No data", "Load a NetCDF file before.");
+            QMessageBox::warning(nullptr, "No data", "Load a NetCDF file before.");
             return false;
         }
         if (! netCDF->isTimeReadable())
         {
-            QMessageBox::information(nullptr, "Wrong Time", "Wrong Time dimension in the NetCDF file.");
+            QMessageBox::warning(nullptr, "Wrong Time", "Wrong Time dimension in the NetCDF file.");
             return false;
         }
 
         // check frequency
         if (currentFrequency != daily && currentFrequency != hourly)
         {
-            QMessageBox::information(nullptr, "Wrong frequency", "Choose hourly or daily frequency.");
+            QMessageBox::warning(nullptr, "Wrong frequency", "Choose hourly or daily frequency.");
             return false;
         }
         if (currentFrequency == hourly && !(netCDF->isStandardTime || netCDF->isHourly))
         {
             QString errorMsg = "No data at hourly frequency.\nTime unit: " + QString::fromStdString(netCDF->getTimeUnit());
-            QMessageBox::information(nullptr, "No Variable", errorMsg);
+            QMessageBox::warning(nullptr, "No Variable", errorMsg);
             return false;
         }
         if (currentFrequency == daily && ! netCDF->isDaily)
         {
             QString errorMsg = "No data at daily frequency.\nTime unit: " + QString::fromStdString(netCDF->getTimeUnit());
-            QMessageBox::information(nullptr, "No Variable", errorMsg);
+            QMessageBox::warning(nullptr, "No Variable", errorMsg);
             return false;
         }
 

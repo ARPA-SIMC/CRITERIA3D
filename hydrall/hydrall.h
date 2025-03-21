@@ -298,9 +298,7 @@
         double understoreyLeafAreaIndexMax;
         double cover = 1; // TODO
 
-        std::vector<double> waterContentProfile;
-        std::vector<double> stressCoefficientProfile;
-        std::vector<double> rootDensityProfile;
+
 
 
         double annualGrossStandGrowth;
@@ -327,6 +325,9 @@
         double photosynthesisAndTranspirationUnderstorey();
         void leafTemperature();
         void aerodynamicalCoupling();
+        void preliminaryComputations(double diffuseIncomingPAR, double diffuseReflectionCoefficientPAR, double directIncomingPAR, double directReflectionCoefficientPAR,
+                                                     double diffuseIncomingNIR, double diffuseReflectionCoefficientNIR, double directIncomingNIR, double directReflectionCoefficientNIR,
+                                     double scatteringCoefPAR, double scatteringCoefNIR, std::vector<double> &dum);
         double leafWidth();
         void upscale();
         inline double acclimationFunction(double Ha , double Hd, double leafTemp, double entropicTerm,double optimumTemp);

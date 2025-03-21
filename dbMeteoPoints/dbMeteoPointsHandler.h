@@ -24,7 +24,7 @@
         Q_OBJECT
 
     private:
-        QString errorStr;
+        QString _errorStr;
 
     public:
         explicit Crit3DMeteoPointsDbHandler();
@@ -32,13 +32,12 @@
         explicit Crit3DMeteoPointsDbHandler(QString provider_, QString host_, QString dbname_, int port_, QString user_, QString pass_);
 
         ~Crit3DMeteoPointsDbHandler();
-        void dbManager();
 
         QString getDbName() { return _db.databaseName(); }
         QSqlDatabase getDb() const { return _db; }
         void setDb(const QSqlDatabase &db) { _db = db; }
-        QString getErrorString() { return errorStr; }
-        void setErrorString(QString str) { errorStr = str; }
+        QString getErrorString() { return _errorStr; }
+        void setErrorString(QString str) { _errorStr = str; }
 
         QString getDatasetURL(QString dataset, bool &isOk);
         bool setAndOpenDb(QString dbname_);
