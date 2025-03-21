@@ -1,6 +1,9 @@
+#include <shapelib/shapefil.h>
+#include "shapeHandler.h"
 #include "shapeFromCsv.h"
 #include "shapeUtilities.h"
 #include "commonConstants.h"
+#include "basicMath.h"
 
 #include <math.h>
 #include <iostream>
@@ -81,11 +84,32 @@ bool getShapeFieldList(const QString &fileName, QMap<QString, QList<QString>> &f
 }
 
 
+// call from Criteria GEO: fieldsList will be filled with default values
+bool prepareFieldsList(const QString &keyVariable, QMap<QString, QList<QString>> &fieldsList)
+{
+    QList<QString> items;
+    items << "outputVar" << "FLOAT" << "9";
+
+    // decimal digits
+    // fraction [0-1] requires 3 decimal digits
+    if (keyVariable == "FRACTION_AW" || keyVariable.left(3) == "FAW" || keyVariable.left(3) == "SWI")
+    {
+        items << "3";
+    }
+    else
+    {
+        items << "1";
+    }
+    fieldsList.insert(keyVariable, items);
+
+    return true;
+}
+
+
 /*! shapeFromCsv
  * \brief import data on a shapeFile from a csv
  *
  * \param refShapeFile is the handler to reference shapeFile (will be cloned)
- * \param outputShapeFile is the handler to output shapeFile
  * \param csvFileName is the filename od input data (csv)
  * \param fieldListFileName is the filename of the field list to export (csv)
  * \param outputFileName is the filename of output shapefile
@@ -137,59 +161,46 @@ bool shapeFromCsv(const Crit3DShapeHandler &refShapeFile, const QString &csvFile
     }
 
     // Create a thread to retrieve data from a file
-    QTextStream inputStream(&csvFile);
+    QTextStream inputCsvStream(&csvFile);
 
     // read first row (header)
-    QString firstRow = inputStream.readLine();
-    QList<QString> newFields = firstRow.split(",");
+    QString firstRow = inputCsvStream.readLine();
+    QList<QString> headerList = firstRow.split(",");
 
-    // read field list (empty from GEO)
-    QMap<QString, QList<QString>> fieldList;
+    // read field list
+    QMap<QString, QList<QString>> fieldsList;
     if (fieldListFileName.isEmpty())
     {
-        // field list is empty (call from GEO): it will be filled with default values
-        QString key = newFields.last();
-        QList<QString> items;
-        items << "outputVar" << "FLOAT" << "8";
-
-        // fraction variables [0-1] requires 3 decimal digits
-        if (key == "FRACTION_AW" || key.left(3) == "FAW" || key.left(3) == "SWI")
-        {
-            items << "3";
-        }
-        else
-        {
-            items << "1";
-        }
-        fieldList.insert(key, items);
+        // filename doesn't exist (call from GEO)
+        QString variable = headerList.last();
+        prepareFieldsList (variable, fieldsList);
     }
     else
     {
-        if (! getShapeFieldList(fieldListFileName, fieldList, errorStr))
+        if (! getShapeFieldList(fieldListFileName, fieldsList, errorStr))
         {
             errorStr += "\nError in reading file: " + fieldListFileName;
             return false;
         }
     }
 
-    int type;
-    int nWidth;
-    int nDecimals;
-
+    int type, nWidth, nDecimals;
     QMap<int, int> myPosMap;
 
     int idCaseIndexShape = outputShapeFile.getFieldPos("ID_CASE");
-    int idCaseIndexCsv = NODATA;
+    bool isIdCasePresent = false;
+    int idCaseIndex = NODATA;
 
-    for (int i = 0; i < newFields.size(); i++)
+    for (int i = 0; i < headerList.size(); i++)
     {
-        if (newFields[i] == "ID_CASE")
+        if (headerList[i] == "ID_CASE")
         {
-            idCaseIndexCsv = i;
+            isIdCasePresent = true;
+            idCaseIndex = i;
         }
-        if (fieldList.contains(newFields[i]))
+        if (fieldsList.contains(headerList[i]))
         {
-            QList<QString> valuesList = fieldList.value(newFields[i]);
+            QList<QString> valuesList = fieldsList.value(headerList[i]);
             QString field = valuesList[0];
             if (valuesList[1] == "STRING" || valuesList[1] == "TEXT")
             {
@@ -246,9 +257,9 @@ bool shapeFromCsv(const Crit3DShapeHandler &refShapeFile, const QString &csvFile
         }
     }
 
-    if (idCaseIndexCsv == NODATA)
+    if (! isIdCasePresent)
     {
-        errorStr = "invalid CSV: missing ID_CASE";
+        errorStr = "Invalid CSV: missing ID_CASE";
         return false;
     }
 
@@ -271,19 +282,18 @@ bool shapeFromCsv(const Crit3DShapeHandler &refShapeFile, const QString &csvFile
     // main cycle
     int step = nrRows * 0.1;
     int currentRow = 0;
-    int nrValidValues = 0;
-    while (! inputStream.atEnd())
+    while (! inputCsvStream.atEnd())
     {
         // counter
         if (currentRow % step == 0)
         {
-            int percentage = round(currentRow * 100.0 / nrRows);
+            int percentage = round(currentRow * 100. / nrRows);
             std::cout << percentage << "...";
         }
 
-        line = inputStream.readLine();
+        line = inputCsvStream.readLine();
         items = line.split(",");
-        idCase = items[idCaseIndexCsv];
+        idCase = items[idCaseIndex];
         idCaseStr = idCase.toStdString();
 
         for (int shapeIndex = 0; shapeIndex < nrShapes; shapeIndex++)
@@ -312,30 +322,16 @@ bool shapeFromCsv(const Crit3DShapeHandler &refShapeFile, const QString &csvFile
                         csvFile.close();
                         return false;
                     }
-                    else
-                    {
-                        nrValidValues++;
-                    }
                 }
             }
         }
-
         currentRow++;
     }
 
     outputShapeFile.close();
     csvFile.close();
 
-    if (nrValidValues == 0)
-    {
-        std::cout << "\n";
-        errorStr = "No valid data.";
-        return false;
-    }
-    else
-    {
-        std::cout << " done.\n";
-        return true;
-    }
+    std::cout << " done.\n";
+    return true;
 }
 

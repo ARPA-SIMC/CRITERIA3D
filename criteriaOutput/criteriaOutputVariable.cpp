@@ -45,7 +45,7 @@ bool CriteriaOutputVariable::parserOutputVariable(QString fileName, QString &err
                 error = "missing output var name";
                 return false;
             }
-            outputVarName.push_back(items[pos]);
+            outputVarNameList.push_back(items[pos]);
 
             pos = int(header.indexOf("var name"));
             if (pos == -1)
@@ -53,7 +53,7 @@ bool CriteriaOutputVariable::parserOutputVariable(QString fileName, QString &err
                 error = "missing var name";
                 return false;
             }
-            varName.push_back(items[pos].toUpper());
+            varNameList.push_back(items[pos].toUpper());
 
             pos = int(header.indexOf("reference day"));
             if (pos == -1)
@@ -74,7 +74,7 @@ bool CriteriaOutputVariable::parserOutputVariable(QString fileName, QString &err
                 error = "missing computation";
                 return false;
             }
-            computation.push_back(items[pos]);
+            computationList.push_back(items[pos]);
 
             pos = int(header.indexOf("nr days"));
             if (pos == -1)

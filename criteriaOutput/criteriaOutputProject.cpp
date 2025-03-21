@@ -513,12 +513,15 @@ int CriteriaOutputProject::createCsvFile()
     QString idCropClass;
     int step = compUnitList.size() * 0.01;
 
+    // list of data tables
+    QList<QString> dataTables = dbData.tables();
+
     for (unsigned int i=0; i < compUnitList.size(); i++)
     {
         idCase = compUnitList[i].idCase;
         idCropClass = compUnitList[i].idCropClass;
 
-        myResult = writeCsvOutputUnit(idCase, idCropClass, dbData, dbCrop, dbClimateData,
+        myResult = writeCsvOutputUnit(idCase, idCropClass, dataTables, dbData, dbCrop, dbClimateData,
                                       dateComputation, outputVariable, outputCsvFileName, projectError);
         if (myResult != CRIT1D_OK)
         {
@@ -1132,7 +1135,7 @@ bool CriteriaOutputProject::initializeCsvOutputFile()
         logger.writeInfo("Output file: " + outputCsvFileName);
     }
 
-    QString header = "date,ID_CASE,CROP," + outputVariable.outputVarName.join(",");
+    QString header = "date,ID_CASE,CROP," + outputVariable.outputVarNameList.join(",");
     QTextStream out(&outputFile);
     out << header << "\n";
     outputFile.close();
@@ -1201,7 +1204,7 @@ bool CriteriaOutputProject::getAllDbVariable()
     }
     else
     {
-        outputVariable.varName = varList;
+        outputVariable.varNameList = varList;
         return true;
     }
 }
@@ -1266,15 +1269,16 @@ int CriteriaOutputProject::createCsvFileFromGUI(const QDate &dateComputation, co
     }
 
     outputCsvFileName = csvFileName;
+
     // open outputCsvFileName and write header
     outputFile.setFileName(outputCsvFileName);
-    if (!outputFile.open(QIODevice::ReadWrite | QIODevice::Truncate))
+    if (! outputFile.open(QIODevice::ReadWrite | QIODevice::Truncate))
     {
         projectError = "Open failure: " + outputCsvFileName;
         return ERROR_CSVFILE;
     }
 
-    QString header = "date,ID_CASE,CROP," + outputVariable.outputVarName[0];
+    QString header = "date,ID_CASE,CROP," + outputVariable.outputVarNameList[0];
     QTextStream out(&outputFile);
     out << header << "\n";
     outputFile.close();
@@ -1285,15 +1289,17 @@ int CriteriaOutputProject::createCsvFileFromGUI(const QDate &dateComputation, co
         return ERROR_READ_UNITS;
     }
 
+    // list of data tables
+    QList<QString> dataTables = dbData.tables();
+
     // write output
-    QString idCase;
-    QString idCropClass;
     for (unsigned int i=0; i < compUnitList.size(); i++)
     {
-        idCase = compUnitList[i].idCase;
-        idCropClass = compUnitList[i].idCropClass;
+        QString idCase = compUnitList[i].idCase;
+        QString idCropClass = compUnitList[i].idCropClass;
 
-        myResult = writeCsvOutputUnit(idCase, idCropClass, dbData, dbCrop, dbClimateData, dateComputation, outputVariable, csvFileName, projectError);
+        myResult = writeCsvOutputUnit(idCase, idCropClass, dataTables, dbData, dbCrop, dbClimateData,
+                                      dateComputation, outputVariable, csvFileName, projectError);
         if (myResult != CRIT1D_OK)
         {
             if (QFile(csvFileName).exists() && i == 0)
@@ -1307,11 +1313,12 @@ int CriteriaOutputProject::createCsvFileFromGUI(const QDate &dateComputation, co
     return CRIT1D_OK;
 }
 
+
 int CriteriaOutputProject::createShapeFileFromGUI()
 {
     Crit3DShapeHandler inputShape;
 
-    if (!inputShape.open(ucmFileName.toStdString()))
+    if (! inputShape.open(ucmFileName.toStdString()))
     {
         projectError = "Wrong shapefile: " + ucmFileName;
         return ERROR_SHAPEFILE;
