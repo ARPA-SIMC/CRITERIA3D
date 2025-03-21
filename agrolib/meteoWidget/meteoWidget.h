@@ -31,6 +31,8 @@
             void setHourlyRange(QDate firstDate, QDate lastDate);
             void setMonthlyRange(QDate firstDate, QDate lastDate);
 
+            bool isAlreadyPresent(const std::string &idMeteoPoint);
+
             void addMeteoPointsEnsemble(Crit3DMeteoPoint mp);
 
             void drawMeteoPoint(Crit3DMeteoPoint mp, bool isAppend);

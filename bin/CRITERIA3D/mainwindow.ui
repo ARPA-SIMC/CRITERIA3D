@@ -243,7 +243,7 @@
    </font>
   </property>
   <property name="windowTitle">
-   <string>CRITERIA-3D</string>
+   <string/>
   </property>
   <property name="autoFillBackground">
    <bool>false</bool>
@@ -1293,7 +1293,7 @@
        <second>0</second>
        <year>1752</year>
        <month>9</month>
-       <day>7</day>
+       <day>6</day>
       </datetime>
      </property>
      <property name="maximumDate">

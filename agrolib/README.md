@@ -26,20 +26,19 @@ Algorithms for potential/actual solar radiation computation.
 Algorithms for the spatialization of meteorological data ([PRAGA](https://github.com/ARPA-SIMC/PRAGA)).
 
 ## License
-agrolib has been developed under contract issued by 
-[ARPAE Hydro-Meteo-Climate Service](https://github.com/ARPA-SIMC), Emilia-Romagna, Italy.
-
+agrolib has been developed under contract issued by [ARPAE Hydro-Meteo-Climate Service](https://github.com/ARPA-SIMC), Emilia-Romagna, Italy.  
 agrolib is released under the GNU LGPL license.
 
 ## Authors
 - Fausto Tomei <ftomei@arpae.it>
 - Gabriele Antolini	 <gantolini@arpae.it>
 - Antonio Volta		<avolta@arpae.it>
+- Caterina Topscano <ctoscano@arpae.it>
 - Laura Costantini  <laura.costantini0@gmail.com>
 
 ### Contributions
-- Marco Bittelli   <marco.bittelli@unibo.it>
 - Vittorio Marletto <vmarletto@arpae.it>
+- Marco Bittelli <marco.bittelli@unibo.it>
 - Alberto Pistocchi	 <alberto.pistocchi@jrc.ec.europa.eu>
 - Tomaso Tonelli <ttonelli@arpae.it>
 - Margot Van Soetendaal <margot@farnet.eu>
