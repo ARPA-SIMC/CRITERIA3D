@@ -105,8 +105,8 @@ double Crit3D_Hydrall::photosynthesisAndTranspiration()
     TweatherDerivedVariable weatherDerivedVariable;
 
     Crit3D_Hydrall::radiationAbsorption();
-    Crit3D_Hydrall::leafTemperature();
-    //Crit3D_Hydrall::aerodynamicalCoupling();
+    //Crit3D_Hydrall::leafTemperature();
+    Crit3D_Hydrall::aerodynamicalCoupling();
     //Crit3D_Hydrall::upscale();
 
     //Crit3D_Hydrall::carbonWaterFluxesProfile();
@@ -417,8 +417,9 @@ void Crit3D_Hydrall::aerodynamicalCoupling()
     double aerodynamicConductanceForHeat=0;
     double windSpeed;
     canopyAerodynamicConductanceToMomentum = aerodynamicConductanceToCO2 = dummy = sunlitDeltaTemp = shadedDeltaTemp = NODATA;
-    windSpeed = MAXVALUE(0.5,weatherVariable.windSpeed);
     heightReference = plant.height + 5 ; // [m]
+    windSpeed = weatherVariable.windSpeed * pow((heightReference/10.),0.14);
+    windSpeed = MAXVALUE(3,weatherVariable.windSpeed);
     dummy = 0.2 * plant.leafAreaIndexCanopy ;
     zeroPlaneDisplacement = MINVALUE(plant.height * (log(1+pow(dummy,0.166)) + 0.03*log(1+powerIntegerExponent(dummy,6))), 0.99*plant.height) ;
     if (dummy < 0.2) roughnessLength = 0.01 + 0.28*sqrt(dummy) * plant.height ;
@@ -507,7 +508,7 @@ void Crit3D_Hydrall::aerodynamicalCoupling()
             //if (sunlit.isothermalNetRadiation > 100) stomatalConductanceWater *= pow(100/sunlit.isothermalNetRadiation,0.5);
             sunlitDeltaTemp = ((stomatalConductanceWater+1.0/sunlit.aerodynamicConductanceHeatExchange)
                               *weatherVariable.derived.psychrometricConstant*sunlit.isothermalNetRadiation/HEAT_CAPACITY_AIR_MOLAR
-                              - weatherVariable.vaporPressureDeficit*(1+0.001*sunlit.isothermalNetRadiation))
+                              - weatherVariable.vaporPressureDeficit)
                               /sunlit.totalConductanceHeatExchange/(weatherVariable.derived.psychrometricConstant
                               *(stomatalConductanceWater+1.0/sunlit.aerodynamicConductanceCO2Exchange)
                               +weatherVariable.derived.slopeSatVapPressureVSTemp/sunlit.totalConductanceHeatExchange);
@@ -522,7 +523,7 @@ void Crit3D_Hydrall::aerodynamicalCoupling()
         stomatalConductanceWater = 10.0/shaded.leafAreaIndex ; //dummy stom res for shaded big-leaf
         //if (shaded.isothermalNetRadiation > 100) stomatalConductanceWater *= pow(100/shaded.isothermalNetRadiation,0.5);
         shadedDeltaTemp = ((stomatalConductanceWater + 1.0/shaded.aerodynamicConductanceHeatExchange)*weatherVariable.derived.psychrometricConstant*shaded.isothermalNetRadiation/HEAT_CAPACITY_AIR_MOLAR
-                           - weatherVariable.vaporPressureDeficit*(1+0.001*shaded.isothermalNetRadiation))/shaded.totalConductanceHeatExchange
+                           - weatherVariable.vaporPressureDeficit)/shaded.totalConductanceHeatExchange
                            /(weatherVariable.derived.psychrometricConstant*(stomatalConductanceWater + 1.0/shaded.aerodynamicConductanceHeatExchange)
                            + weatherVariable.derived.slopeSatVapPressureVSTemp/shaded.totalConductanceHeatExchange);
         //shadedDeltaTemp = 0.0;
@@ -543,7 +544,7 @@ double  Crit3D_Hydrall::leafWidth()
     // la funzione deve essere scritta secondo regole che possono fr variare lo spessore in base alla fenologia
     // come per la vite?
     //TODO leaf width
-    plant.myLeafWidth = 0.1;
+    plant.myLeafWidth = 0.02;
     return plant.myLeafWidth;
 }
 
