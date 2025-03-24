@@ -26,7 +26,9 @@ FormInfo::FormInfo()
 int FormInfo::start(QString info, int nrValues)
 {
     if (nrValues <= 0)
+    {
         this->progressBar->setVisible(false);
+    }
     else
     {
         this->progressBar->setMaximum(nrValues);
@@ -34,9 +36,9 @@ int FormInfo::start(QString info, int nrValues)
         this->progressBar->setVisible(true);
     }
 
-    this->show();
-
     this->label->setText(info);
+    this->show();
+    this->update();
     qApp->processEvents();
 
     return std::max(1, int(nrValues / 50));
@@ -45,12 +47,14 @@ int FormInfo::start(QString info, int nrValues)
 void FormInfo::setValue(int myValue)
 {
     this->progressBar->setValue(myValue);
+    this->update();
     qApp->processEvents();
 }
 
 void FormInfo::setText(QString myText)
 {
     this->label->setText(myText);
+    this->update();
     qApp->processEvents();
 }
 
@@ -60,5 +64,6 @@ void FormInfo::showInfo(QString info)
     this->progressBar->setVisible(false);
 
     this->show();
+    this->update();
     qApp->processEvents();
 }

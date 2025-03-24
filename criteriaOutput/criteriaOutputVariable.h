@@ -9,10 +9,10 @@
     class CriteriaOutputVariable
     {
     public:
-        QList<QString> outputVarName;
-        QList<QString> varName;
+        QList<QString> outputVarNameList;
+        QList<QString> varNameList;
+        QList<QString> computationList;
         QList<int> referenceDay;
-        QList<QString> computation;
         QList<QString> nrDays;
         QList<QString> climateComputation;
         QList<int> param1;
