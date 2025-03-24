@@ -404,7 +404,7 @@ bool DbArkimet::readVmDataDaily(const QString &vmFileName, bool isPrec0024, QStr
         // warning: reference date arkimet: hour 00 of day+1
         QString dateTimeStr = fields[0];
         QDate myDate = QDate::fromString(dateTimeStr.left(8), "yyyyMMdd").addDays(-1);
-        int hour = dateTimeStr.sliced(8,2).toInt();
+        int hour = dateTimeStr.mid(8,2).toInt();
         QString dateStr = myDate.toString("yyyy-MM-dd");
 
         // check id
