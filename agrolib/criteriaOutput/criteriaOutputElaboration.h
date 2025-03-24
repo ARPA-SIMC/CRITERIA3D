@@ -21,9 +21,10 @@
     bool writeDtxToDB(QSqlDatabase db, QString idCase, std::vector<double> &dt30,
                       std::vector<double> &dt90, std::vector<double> &dt180, QString &errorStr);
 
-    int writeCsvOutputUnit(QString idCase, QString idCropClass, QSqlDatabase &dbData, QSqlDatabase &dbCrop,
-                           QSqlDatabase &dbClimateData, QDate dateComputation,
-                           CriteriaOutputVariable outputVariable, QString csvFileName, QString &errorStr);
+    int writeCsvOutputUnit(const QString &idCase, const QString &idCropClass, const QList<QString> &dataTables,
+                            QSqlDatabase &dbData, QSqlDatabase &dbCrop, QSqlDatabase &dbClimateData,
+                            const QDate &dateComputation, const CriteriaOutputVariable &outputVariable,
+                            const QString &csvFileName, QString &errorStr);
 
     int selectSimpleVar(QSqlDatabase &db, QString idCase, QString varName, QString computation, QDate firstDate,
                         QDate lastDate, float irriRatio, std::vector<float> &resultVector, QString &errorStr);

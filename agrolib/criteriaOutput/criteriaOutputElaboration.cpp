@@ -288,11 +288,21 @@ bool writeDtxToDB(QSqlDatabase db, QString idCase, std::vector<double>& dt30,
 }
 
 
-int writeCsvOutputUnit(QString idCase, QString idCropClass, QSqlDatabase& dbData, QSqlDatabase& dbCrop, QSqlDatabase& dbClimateData,
-                       QDate dateComputation, CriteriaOutputVariable outputVariable, QString csvFileName, QString &errorStr)
+int writeCsvOutputUnit(const QString &idCase, const QString &idCropClass, const QList<QString> &dataTables,
+                       QSqlDatabase &dbData, QSqlDatabase &dbCrop, QSqlDatabase &dbClimateData,
+                       const QDate &dateComputation, const CriteriaOutputVariable &outputVariable,
+                       const QString &csvFileName, QString &errorStr)
 {
     // IRRI RATIO (parameter for elaboration on IRRIGATION variable)
-    float irriRatio = getIrriRatioFromCropClass(dbCrop, "crop_class", "id_class", idCropClass, errorStr);
+    float irriRatio = NODATA;
+    for (int i = 0; i < outputVariable.varNameList.size(); i++)
+    {
+        if (outputVariable.varNameList[i].toUpper() == "IRRIGATION")
+        {
+            irriRatio = getIrriRatioFromCropClass(dbCrop, "crop_class", "id_class", idCropClass, errorStr);
+            break;
+        }
+    }
 
     QList<QString> resultList;
     QString statement;
@@ -303,16 +313,16 @@ int writeCsvOutputUnit(QString idCase, QString idCropClass, QSqlDatabase& dbData
     int periodTDX = NODATA;
 
     // check if table for idCase exist (skip otherwise)
-    if (! dbData.tables().contains(idCase))
+    if (! dataTables.contains(idCase))
     {
         return CRIT1D_OK;
     }
 
-    for (int i = 0; i < outputVariable.varName.size(); i++)
+    for (int i = 0; i < outputVariable.varNameList.size(); i++)
     {
         resultVector.clear();
-        QString varName = outputVariable.varName[i];
-        QString computation = outputVariable.computation[i];
+        QString varName = outputVariable.varNameList[i];
+        QString computation = outputVariable.computationList[i];
         if (! computation.isEmpty())
         {
             // nrDays is required, because the computation should be done between values into interval referenceDate+-nrDays
@@ -401,7 +411,7 @@ int writeCsvOutputUnit(QString idCase, QString idCropClass, QSqlDatabase& dbData
             // DTX case
             bool ok;
             periodTDX = varName.right(varName.size()-2).toInt(&ok, 10);
-            if (!ok)
+            if (! ok)
             {
                 errorStr = "Parser CSV errorStr";
                 return ERROR_PARSERCSV;
@@ -432,7 +442,7 @@ int writeCsvOutputUnit(QString idCase, QString idCropClass, QSqlDatabase& dbData
             if (outputVariable.climateComputation[i].isEmpty())
             {
                 // fraction and index [0-1] requires 3 decimal digits
-                QString varName = outputVariable.varName[i];
+                QString varName = outputVariable.varNameList[i];
                 if (varName == "FRACTION_AW" || varName.left(3) == "FAW" || varName.left(3) == "SWI")
                 {
                     resultList.append(QString::number(result,'f', 3));
