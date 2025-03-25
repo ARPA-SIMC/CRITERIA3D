@@ -109,7 +109,7 @@ double Crit3D_Hydrall::photosynthesisAndTranspiration()
     Crit3D_Hydrall::aerodynamicalCoupling();
     Crit3D_Hydrall::upscale();
 
-    //Crit3D_Hydrall::carbonWaterFluxesProfile();
+    Crit3D_Hydrall::carbonWaterFluxesProfile();
     //Crit3D_Hydrall::cumulatedResults();
 
     return 0;
@@ -626,7 +626,7 @@ void Crit3D_Hydrall::upscale()
         dum[4]= sunlit.absorbedPAR * sunlit.quantumYieldPS2 * BETA ; //  potential PSII e- transport of sunlit big-leaf (mol m-2 s-1)
         dum[5]= dum[4] + sunlit.maximalElectronTrasportRate ;
         dum[6]= dum[4] * sunlit.maximalElectronTrasportRate ;
-        sunlit.maximalElectronTrasportRate = (dum[5] - sqrt(pow(dum[5],2) - 4.0*sunlit.convexityFactorNonRectangularHyperbola*dum[6])) / (2.0*sunlit.convexityFactorNonRectangularHyperbola);
+        sunlit.maximalElectronTrasportRate = (dum[5] - sqrt(POWER2((dum[5])) - 4.0*sunlit.convexityFactorNonRectangularHyperbola*dum[6])) / (2.0*sunlit.convexityFactorNonRectangularHyperbola);
         // Scale-up potential electron transport of shaded big-leaf (mol m-2 s-1)
         // The simplified formulation proposed by de Pury & Farquhar (1999) is applied
         shaded.maximalElectronTrasportRate *= (UPSCALINGFUNC(diffuseLightExtinctionCoefficient.par,plant.leafAreaIndexCanopy) - UPSCALINGFUNC((directLightExtinctionCoefficient.global+diffuseLightExtinctionCoefficient.par),plant.leafAreaIndexCanopy));
@@ -634,7 +634,7 @@ void Crit3D_Hydrall::upscale()
         dum[4]= shaded.absorbedPAR * shaded.quantumYieldPS2 * BETA ; // potential PSII e- transport of sunlit big-leaf (mol m-2 s-1)
         dum[5]= dum[4] + shaded.maximalElectronTrasportRate ;
         dum[6]= dum[4] * shaded.maximalElectronTrasportRate ;
-        shaded.maximalElectronTrasportRate = (dum[5] - sqrt(pow(dum[5],2) - 4.0*shaded.convexityFactorNonRectangularHyperbola*dum[6])) / (2.0*shaded.convexityFactorNonRectangularHyperbola);
+        shaded.maximalElectronTrasportRate = (dum[5] - sqrt(POWER2((dum[5])) - 4.0*shaded.convexityFactorNonRectangularHyperbola*dum[6])) / (2.0*shaded.convexityFactorNonRectangularHyperbola);
     }
     else
     {  //night-time computations
@@ -651,7 +651,7 @@ inline double Crit3D_Hydrall::acclimationFunction(double Ha , double Hd, double 
     // taken from Hydrall Model, Magnani UNIBO
     return exp(Ha*(leafTemp - optimumTemp)/(optimumTemp*R_GAS*leafTemp))
            *(1+exp((optimumTemp*entropicTerm-Hd)/(optimumTemp*R_GAS)))
-           /(1+exp((leafTemp*entropicTerm-Hd)/(leafTemp*R_GAS))) ;
+           /(1+exp((leafTemp*entropicTerm-Hd)/(leafTemp*R_GAS)));
 }
 
 
@@ -662,7 +662,7 @@ void Crit3D_Hydrall::carbonWaterFluxesProfile()
 
     treeTranspirationRate.resize(soil.layersNr);
 
-    double totalStomatalConductance = 0;
+    //double totalStomatalConductance = 0;
     for (int i=0; i < soil.layersNr; i++)
     {
         treeTranspirationRate[i] = 0;
@@ -723,8 +723,8 @@ void Crit3D_Hydrall::photosynthesisKernel(double COMP,double GAC,double GHR,doub
         myStromalCarbonDioxide = 0.7 * environmentalVariable.CO2 ;
         VPDS = weatherVariable.vaporPressureDeficit;
         //myPreviousVPDS = VPDS;
-        ASSOLD = NODATA ;
-        DUM1 = 1.6*weatherVariable.derived.slopeSatVapPressureVSTemp/weatherVariable.derived.psychrometricConstant+ GHR/GAC;
+        ASSOLD = NODATA;
+        DUM1 = 1.6 * weatherVariable.derived.slopeSatVapPressureVSTemp/weatherVariable.derived.psychrometricConstant + GHR/GAC;
         I = 0 ; // initialize the cycle variable
         while ((I++ < Imax) && (deltaAssimilation > myTolerance))
         {
@@ -741,11 +741,11 @@ void Crit3D_Hydrall::photosynthesisKernel(double COMP,double GAC,double GHR,doub
             *GSC = MAXVALUE(*GSC,1.0e-5);
             // Stromal CO2 concentration
             myStromalCarbonDioxide = CS - weatherVariable.atmosphericPressure * (*ASS - RD) / (*GSC);	 //CO2 concentr at carboxyl sites (Pa)
-            myStromalCarbonDioxide = MAXVALUE(1.0e-2,myStromalCarbonDioxide) ;
+            myStromalCarbonDioxide = MAXVALUE(1.0e-2,myStromalCarbonDioxide);
             //Vapour pressure deficit at leaf surface
             VPDS = (weatherVariable.derived.slopeSatVapPressureVSTemp / HEAT_CAPACITY_AIR_MOLAR*RNI + weatherVariable.vaporPressureDeficit * GHR) / (GHR+(*GSC)*DUM1);  //VPD at the leaf surface (Pa)
             deltaAssimilation = fabs((*ASS) - ASSOLD);
-            ASSOLD = *ASS ;
+            ASSOLD = *ASS;
         }
     }
     else //night time computation
