@@ -1,7 +1,8 @@
 #include "dialogAddStation.h"
+#include "gis.h"
 
-DialogAddStation::DialogAddStation(QList<QString> _activeStationsList)
-: _activeStationsList(_activeStationsList)
+DialogAddStation::DialogAddStation(QList<QString> activeStationsList, Crit3DMeteoPoint* allMeteoPointsPointer, QVector<Crit3DMeteoPoint> _meteoPoints)
+    : _activeStationsList(activeStationsList), _allMeteoPointsPointer(allMeteoPointsPointer), _meteoPoints(_meteoPoints)
 {
     setWindowTitle("Add stations");
     //finestra generale
@@ -11,14 +12,16 @@ DialogAddStation::DialogAddStation(QList<QString> _activeStationsList)
     QHBoxLayout *stationLayout = new QHBoxLayout;
     QHBoxLayout *singleValueLayout = new QHBoxLayout; //distanza
     QHBoxLayout *nearStationsLayout = new QHBoxLayout;
+    QHBoxLayout *searchButtonLayout = new QHBoxLayout;
     QHBoxLayout *buttonsLayout = new QHBoxLayout;
-    QHBoxLayout *addButtonLayout = new QHBoxLayout();
+
+
+    QPushButton *_search = new QPushButton("Search stations");
+    searchButtonLayout->addWidget(_search);
+    connect(_search, &QPushButton::clicked, [=](){ this->searchStations(); });
 
     QDialogButtonBox buttonBox(QDialogButtonBox::Ok | QDialogButtonBox::Cancel);
     buttonsLayout->addWidget(&buttonBox);
-
-    _listActiveStationsWidget = new QListWidget;
-    _listActiveStationsWidget->setSelectionMode(QAbstractItemView::SingleSelection);
 
     _listNearStationsWidget = new QListWidget;
 
@@ -40,24 +43,19 @@ DialogAddStation::DialogAddStation(QList<QString> _activeStationsList)
     _listNearStationsWidget->addItems(_nearStationsList);
     nearStationsLayout->addWidget(_listNearStationsWidget);
 
-    QPushButton *_add = new QPushButton("Add station");
-    addButtonLayout->addWidget(_add);
-    //connect(_add, &QPushButton::clicked, [=](){ this->addStation(); });
-
     headerLayout->addWidget(stationHeader);
     headerLayout->addSpacing(_listActiveStationsWidget->width());
     mainLayout->addLayout(headerLayout);
     mainLayout->addLayout(stationLayout);
     mainLayout->addLayout(singleValueLayout);
-    mainLayout->addLayout(buttonsLayout);
+    mainLayout->addLayout(searchButtonLayout);
     mainLayout->addLayout(nearStationsLayout);
-    mainLayout->addLayout(addButtonLayout);
+    mainLayout->addLayout(buttonsLayout);
     setLayout(mainLayout);
 
     // Bottoni ok e cancel.
-    //connect(&buttonBox, &QDialogButtonBox::accepted, [=](){ this->searchStations(true, _allMeteoPointsPointer); });
-    //connect(&buttonBox, &QDialogButtonBox::rejected, [=](){ this->searchStations(false, _allMeteoPointsPointer); });
-
+    //connect(&buttonBox, &QDialogButtonBox::accepted, [=](){ this->addStation(true); });
+    //connect(&buttonBox, &QDialogButtonBox::rejected, [=](){ this->addStation(false); });
     show();
     exec();
 
@@ -65,42 +63,49 @@ DialogAddStation::DialogAddStation(QList<QString> _activeStationsList)
 
 double DialogAddStation::getSingleValue()
 {
-    double chosenDistance = _singleValueEdit.text().toFloat();
-    return chosenDistance;
+    bool isNumber = false;
+    double chosenDistance = _singleValueEdit.text().toFloat(&isNumber);
+    if (isNumber)
+    {
+        if (chosenDistance > 0)
+        {
+            return chosenDistance;
+        }
+    }
+    return NODATA;
 }
 
-void DialogAddStation::searchStations(bool res, Crit3DMeteoPoint* _allMeteoPointsPointer, int nrMeteoPoints)
+void DialogAddStation::searchStations()
 {
-    if (res) //l'utente ha inserito la distanza e cliccato su ok
+    std::string myStation = _listActiveStationsWidget->currentText().toStdString();
+    double chosenDistance = DialogAddStation::getSingleValue();
+
+    if (chosenDistance == NODATA)
     {
-        QList<QListWidgetItem*> _selectedStation = _listActiveStationsWidget->selectedItems();
-        for (int i=0; i == _selectedStation.count(); i++)
-        {
-            std::string myStation = _selectedStation[i]->text().toStdString();
-
-            double chosenDistance = DialogAddStation::getSingleValue();
-            //prende la distanza
-
-            for (int j=0; j < nrMeteoPoints; j++)
-            {
-                if (myStation == _allMeteoPointsPointer[j].name)
-                {
-                    Crit3DMeteoPoint myStationMp = _allMeteoPointsPointer[j];
-                    if (myStationMp.latitude - _allMeteoPointsPointer[j].latitude <= chosenDistance)
-                    {
-                        _nearStationsList.append(QString::fromStdString(_allMeteoPointsPointer[j].name)); //il vettore da riempire
-                        QDialog::done(QDialog::Accepted);
-                    }
-
-                }
-            }
-        };
-    }
-    else    // cancel, close or exc was pressed
-    {
-        QDialog::done(QDialog::Rejected);
+        QMessageBox::warning(this, "Warning!", "Wrong value: distance must be a positive number.");
         return;
     }
-}
 
+    for (int i=0; i < _nrAllMeteoPoints; i++)
+    {
+        if (myStation == _allMeteoPointsPointer[i].name)
+        {
+            Crit3DMeteoPoint myStationMp = _allMeteoPointsPointer[i];
+            double X0 = myStationMp.point.utm.x;
+            double Y0 = myStationMp.point.utm.y;
+
+            for (int j=0; j < _nrAllMeteoPoints; j++)
+            {
+                double computedDistance = gis::computeDistance(X0, Y0, _allMeteoPointsPointer[j].point.utm.x, _allMeteoPointsPointer[j].point.utm.y);
+                if (computedDistance <= chosenDistance)
+                {
+                    _nearStationsList.append(QString::fromStdString(_allMeteoPointsPointer[j].name));
+                }
+            }
+        }
+    }
+
+    this->update(); //aggiorna tutta la widget
+    QDialog::done(QDialog::Accepted);
+}
 

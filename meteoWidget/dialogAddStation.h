@@ -13,15 +13,17 @@ private:
     QList<QString> _selectedStations;
     QList<QString> _nearStationsList;
 
-    QListWidget* _listActiveStationsWidget;
-    QLineEdit _singleValueEdit;  //per scegliere la distanza
+    QComboBox* _listActiveStationsWidget;
+    QLineEdit _singleValueEdit;
     Crit3DMeteoPoint* _allMeteoPointsPointer;
+    int _nrAllMeteoPoints;
     QListWidget* _listNearStationsWidget;
+    QVector<Crit3DMeteoPoint> _meteoPoints;
 
 public:
-    DialogAddStation(QList<QString> _activeStationsList);
+    DialogAddStation(QList<QString> _activeStationsList, Crit3DMeteoPoint *allMeteoPointsPointer, QVector<Crit3DMeteoPoint> _meteoPoints);
     double getSingleValue();
-    void searchStations(bool res, Crit3DMeteoPoint* _allMeteoPointsPointer, int nrMeteoPoints);
+    void searchStations();
 
 };
 
