@@ -4629,6 +4629,9 @@ bool checkDataType(QString xmlFileName, bool isMeteoGrid, QString *myError)
     myFile.close();
     QDomNode ancestor = xmlDoc.documentElement().firstChild();
 
+    if(ancestor.isNull()) //empty xml file
+        return true;
+
     while(!ancestor.isNull())
     {
         if (ancestor.toElement().tagName().toUpper() == "ELABORATION" || ancestor.toElement().tagName().toUpper() == "ANOMALY")
