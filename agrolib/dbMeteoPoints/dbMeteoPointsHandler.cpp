@@ -407,6 +407,12 @@ bool Crit3DMeteoPointsDbHandler::existData(const Crit3DMeteoPoint &meteoPoint, f
 bool Crit3DMeteoPointsDbHandler::deleteData(QString pointCode, frequencyType myFreq, QDate first, QDate last)
 {
     QString tableName = pointCode + ((myFreq == daily) ?  "_D" : "_H");
+    if (! _db.tables().contains(tableName))
+    {
+        // table doesn't exist
+        return true;
+    }
+
     QSqlQuery qry(_db);
     QString statement;
     if (myFreq == daily)
