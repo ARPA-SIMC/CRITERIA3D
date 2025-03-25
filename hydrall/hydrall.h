@@ -195,14 +195,13 @@
 
     struct TparameterWangLeuning
     {
-        double optimalTemperatureForPhotosynthesis;
-        double stomatalConductanceMin;
-        double sensitivityToVapourPressureDeficit;
-        double alpha;
-        double psiLeaf;                 // kPa
-        double waterStressThreshold;
-        double maxCarboxRate;           // Vcmo at optimal temperature
-
+        double optimalTemperatureForPhotosynthesis = 298.15; // K
+        double stomatalConductanceMin = 0.01;
+        double sensitivityToVapourPressureDeficit = 1300;
+        double alpha = 11;
+        double psiLeaf = 1800;                 // kPa
+        double waterStressThreshold = NODATA;
+        double maxCarboxRate = 150;           // Vcmo at optimal temperature  umol m-2 s-1
     };
 
     struct TlightExtinctionCoefficient
@@ -313,8 +312,8 @@
 
         void radiationAbsorption();
         void setSoilVariables(int iLayer, int currentNode, float checkFlag, int horizonIndex, double waterContent, double waterContentFC, double waterContentWP, int firstRootLayer, int lastRootLayer, double rootDensity);
-        void setHourlyVariables(double temp, double irradiance , double prec , double relativeHumidity , double windSpeed, double directIrradiance, double diffuseIrradiance, double cloudIndex, double atmosphericPressure, double CO2, double sunElevation);
-        bool setWeatherVariables(double temp, double irradiance , double prec , double relativeHumidity , double windSpeed, double directIrradiance, double diffuseIrradiance, double cloudIndex, double atmosphericPressure);
+        void setHourlyVariables(double temp, double irradiance , double prec , double relativeHumidity , double windSpeed, double directIrradiance, double diffuseIrradiance, double cloudIndex, double atmosphericPressure, double CO2, double sunElevation,double meanTemp30Days);
+        bool setWeatherVariables(double temp, double irradiance , double prec , double relativeHumidity , double windSpeed, double directIrradiance, double diffuseIrradiance, double cloudIndex, double atmosphericPressure, double meanTemp30Days);
         void setDerivedWeatherVariables(double directIrradiance, double diffuseIrradiance, double cloudIndex);
         void setPlantVariables(double chlorophyllContent, double height);
         bool computeHydrallPoint(Crit3DDate myDate, double myTemperature, double myElevation, int secondPerStep);
