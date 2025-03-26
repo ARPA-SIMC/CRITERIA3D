@@ -35,18 +35,15 @@
             void initStationsHourlyTables(const QDate &startDate, const QDate &endDate,
                                           const QList<QString> &stationList, const QList<QString> &idVarList);
 
-            void createTmpTableHourly();
-            void deleteTmpTableHourly();
-            bool createTmpTableDaily();
-            void deleteTmpTableDaily();
+            void deleteTmpTable();
+            bool createTmpTable();
+
+            void appendTmpData(const QString &dateTime, const QString &idPoint, const QString &idVar, const QString &value, bool isFirstData);
 
             bool saveHourlyData();
             bool saveDailyData();
 
-            void appendQueryHourly(const QString &dateTime, const QString &idPoint, const QString &idVar, const QString &value, bool isFirstData);
-            void appendQueryDaily(const QString &date, const QString &idPoint, const QString &idVar, const QString &value, bool isFirstData);
-
-            bool readVmDataDaily(const QString &vmFileName, QString &errorString);
+            bool readVmDataDaily(const QString &vmFileName, bool isPrec0024, QString &errorString);
 
     signals:
 

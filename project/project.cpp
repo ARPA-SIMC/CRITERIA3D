@@ -4784,7 +4784,7 @@ bool Project::deleteMeteoPointsData(const QList<QString>& pointList)
 
         if (allDaily)
         {
-            if (!meteoPointsDbHandler->deleteData(pointList[i], daily, startDate, endDate))
+            if (! meteoPointsDbHandler->deleteData(pointList[i], daily, startDate, endDate))
             {
                 closeProgressBar();
                 return false;
@@ -4792,9 +4792,9 @@ bool Project::deleteMeteoPointsData(const QList<QString>& pointList)
         }
         else
         {
-            if (!dailyVarList.isEmpty())
+            if (! dailyVarList.isEmpty())
             {
-                if (!meteoPointsDbHandler->deleteData(pointList[i], daily, dailyVarList, startDate, endDate))
+                if (! meteoPointsDbHandler->deleteData(pointList[i], daily, dailyVarList, startDate, endDate))
                 {
                     closeProgressBar();
                     return false;
@@ -4803,7 +4803,7 @@ bool Project::deleteMeteoPointsData(const QList<QString>& pointList)
         }
         if (allHourly)
         {
-            if (!meteoPointsDbHandler->deleteData(pointList[i], hourly, startDate, endDate))
+            if (! meteoPointsDbHandler->deleteData(pointList[i], hourly, startDate, endDate))
             {
                 closeProgressBar();
                 return false;
@@ -4811,9 +4811,9 @@ bool Project::deleteMeteoPointsData(const QList<QString>& pointList)
         }
         else
         {
-            if (!hourlyVarList.isEmpty())
+            if (! hourlyVarList.isEmpty())
             {
-                if (!meteoPointsDbHandler->deleteData(pointList[i], hourly, hourlyVarList, startDate, endDate))
+                if (! meteoPointsDbHandler->deleteData(pointList[i], hourly, hourlyVarList, startDate, endDate))
                 {
                     closeProgressBar();
                     return false;
@@ -4825,6 +4825,7 @@ bool Project::deleteMeteoPointsData(const QList<QString>& pointList)
 
     return true;
 }
+
 
 bool Project::loadOutputPointList(QString fileName)
 {
@@ -5900,7 +5901,7 @@ bool Project::setSelectedStateWithCriteria()
 }
 
 
-bool Project::readVmArkimetData(const QList<QString> &vmFileList, frequencyType frequency)
+bool Project::readVmArkimetData(const QList<QString> &vmFileList, frequencyType frequency, bool isPrec0024)
 {
     if(nrMeteoPoints == 0)
     {
@@ -5929,7 +5930,7 @@ bool Project::readVmArkimetData(const QList<QString> &vmFileList, frequencyType 
         updateProgressBar(i);
         if (frequency == daily)
         {
-            if (! dbMeteoArkimet->readVmDataDaily(vmFileList[i], errorString))
+            if (! dbMeteoArkimet->readVmDataDaily(vmFileList[i], isPrec0024, errorString))
                 return false;
         }
         else

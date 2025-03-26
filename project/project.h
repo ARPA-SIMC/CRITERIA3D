@@ -338,7 +338,7 @@
         void setCrossValidationStatistics(const Crit3DCrossValidationStatistics &newCrossValidationStatistics);
         void getMeteoPointsCurrentValues(std::vector<float> &validValues);
 
-        bool readVmArkimetData(const QList<QString> &vmFileList, frequencyType frequency);
+        bool readVmArkimetData(const QList<QString> &vmFileList, frequencyType frequency, bool isPrec0024);
 
     private slots:
         void deleteMeteoWidgetPoint(int id);
