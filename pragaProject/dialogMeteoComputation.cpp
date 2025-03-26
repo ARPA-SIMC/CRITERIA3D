@@ -205,18 +205,19 @@ DialogMeteoComputation::DialogMeteoComputation(QSettings *settings, bool isMeteo
     dailyCumulated.setChecked(false);
     QString periodSelected = periodTypeList.currentText();
     periodLayout.addWidget(&dailyCumulated);
-    //aggiungi connect per offset
 
-    dailyOffsetLabel.setText("Offset (-/+)");
-    QDate displayDate = QDate(firstYearEdit.text().toInt(), 1, 1).addDays(dailyOffset.text().toInt());
-    offsetDateDisplayLabel.setText("Offset date: ");
-    offsetDateDisplay.setDate(displayDate);
-    offsetDateDisplay.setReadOnly(true);
-    offsetLayout.addWidget(&dailyOffsetLabel);
-    offsetLayout.addWidget(&dailyOffset);
-    offsetLayout.addWidget(&offsetDateDisplayLabel);
-    offsetLayout.addWidget(&offsetDateDisplay);
-
+    if (saveClima)
+    {
+        dailyOffsetLabel.setText("Offset (-/+)");
+        QDate displayDate = QDate(firstYearEdit.text().toInt(), 1, 1).addDays(dailyOffset.text().toInt());
+        offsetDateDisplayLabel.setText("Offset date: ");
+        offsetDateDisplay.setDate(displayDate);
+        offsetDateDisplay.setReadOnly(true);
+        offsetLayout.addWidget(&dailyOffsetLabel);
+        offsetLayout.addWidget(&dailyOffset);
+        offsetLayout.addWidget(&offsetDateDisplayLabel);
+        offsetLayout.addWidget(&offsetDateDisplay);
+    }
     int dayOfYear = currentDay.date().dayOfYear();
     periodDisplay.setText("Day Of Year: " + QString::number(dayOfYear));
     periodDisplay.setReadOnly(true);
@@ -400,11 +401,14 @@ DialogMeteoComputation::DialogMeteoComputation(QSettings *settings, bool isMeteo
 
     loadXML.setText("Load from XML");
     appendXML.setText("Append to XML");
+    createXML.setText("Create empty XML");
     layoutXML.addWidget(&loadXML);
     layoutXML.addWidget(&appendXML);
+    layoutXML.addWidget(&createXML);
 
     connect(&loadXML, &QPushButton::clicked, [=](){ this->copyDataFromXML(); });
     connect(&appendXML, &QPushButton::clicked, [=](){ this->saveDataToXML(); });
+    connect(&createXML, &QPushButton::clicked, [=](){ this->createEmptyXML(); });
 
     QDialogButtonBox buttonBox(QDialogButtonBox::Ok | QDialogButtonBox::Cancel);
 
@@ -1860,6 +1864,13 @@ void DialogMeteoComputation::saveDataToXML()
     }
 }
 
+void DialogMeteoComputation::createEmptyXML()
+{
+    QString xmlFileName = QFileDialog::getSaveFileName(this, tr("New xml file"), "", tr("xml files (*.xml)"));
+    QString *myError = new QString();
+
+    createXMLFile(xmlFileName, myError);
+}
 
 void DialogMeteoComputation::targetChange()
 {
