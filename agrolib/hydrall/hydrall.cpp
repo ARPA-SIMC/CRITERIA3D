@@ -105,12 +105,11 @@ double Crit3D_Hydrall::photosynthesisAndTranspiration()
     TweatherDerivedVariable weatherDerivedVariable;
 
     Crit3D_Hydrall::radiationAbsorption();
-    //Crit3D_Hydrall::leafTemperature();
     Crit3D_Hydrall::aerodynamicalCoupling();
     Crit3D_Hydrall::upscale();
 
     Crit3D_Hydrall::carbonWaterFluxesProfile();
-    //Crit3D_Hydrall::cumulatedResults();
+    Crit3D_Hydrall::cumulatedResults();
 
     return 0;
 }
@@ -767,8 +766,8 @@ void Crit3D_Hydrall::cumulatedResults()
     deltaTime.absorbedPAR = simulationStepInSeconds*(sunlit.absorbedPAR+shaded.absorbedPAR);  //absorbed PAR (mol m-2)
     deltaTime.grossAssimilation = simulationStepInSeconds * treeAssimilationRate ; // canopy gross assimilation (mol m-2)
     deltaTime.respiration = simulationStepInSeconds * Crit3D_Hydrall::plantRespiration() ;
-    deltaTime.netAssimilation = deltaTime.grossAssimilation- deltaTime.respiration ;
-    deltaTime.netAssimilation = deltaTime.netAssimilation*12/1000.0 ; //CARBONFACTOR DA METTERE dopo convert to kg DM m-2
+    deltaTime.netAssimilation = deltaTime.grossAssimilation - deltaTime.respiration ;
+    deltaTime.netAssimilation = deltaTime.netAssimilation*12/1000.0 ; // KgC m-2 TODO da motiplicare dopo per CARBONFACTOR DA METTERE dopo convert to kg DM m-2
 
     statePlant.treeNetPrimaryProduction += deltaTime.netAssimilation ;
 
@@ -810,13 +809,13 @@ double Crit3D_Hydrall::plantRespiration()
     nitrogenContent.stem = 0.0021;  //[kg kgDM-1]
 
     // Compute hourly stand respiration at 10 oC (mol m-2 h-1)
-    leafRespiration = 0.0106/2.0 * (treeBiomass.leaf * nitrogenContent.leaf/0.014) / 3600 ; //TODO: CHECK se veramente erano output orari da trasformare in respirazione al secondo
-    sapwoodRespiration = 0.0106/2.0 * (treeBiomass.sapwood * nitrogenContent.stem/0.014) / 3600 ;
-    rootRespiration = 0.0106/2.0 * (treeBiomass.fineRoot * nitrogenContent.root/0.014) / 3600 ;
+    leafRespiration = 0.0106/2.0 * (treeBiomass.leaf * nitrogenContent.leaf/0.014);
+    sapwoodRespiration = 0.0106/2.0 * (treeBiomass.sapwood * nitrogenContent.stem/0.014);
+    rootRespiration = 0.0106/2.0 * (treeBiomass.fineRoot * nitrogenContent.root/0.014);
 
     // Adjust for temperature effects
-    //leafRespiration *= MAXVALUE(0,MINVALUE(1,Vine3D_Grapevine::temperatureMoistureFunction(myInstantTemp + ZEROCELSIUS))) ;
-    //sapwoodRespiration *= MAXVALUE(0,MINVALUE(1,Vine3D_Grapevine::temperatureMoistureFunction(myInstantTemp + ZEROCELSIUS))) ;
+    leafRespiration *= MAXVALUE(0,MINVALUE(1,Crit3D_Hydrall::temperatureMoistureFunction(weatherVariable.myInstantTemp + ZEROCELSIUS))) ;
+    sapwoodRespiration *= MAXVALUE(0,MINVALUE(1,Crit3D_Hydrall::temperatureMoistureFunction(weatherVariable.myInstantTemp + ZEROCELSIUS))) ;
     //shootRespiration *= MAXVALUE(0,MINVALUE(1,Vine3D_Grapevine::temperatureMoistureFunction(myInstantTemp + ZEROCELSIUS))) ;
     soil.temperature = Crit3D_Hydrall::soilTemperatureModel();
     //rootRespiration *= MAXVALUE(0,MINVALUE(1,Crit3D_Hydrall::temperatureMoistureFunction(soil.temperature + ZEROCELSIUS))) ;
@@ -824,24 +823,22 @@ double Crit3D_Hydrall::plantRespiration()
     // hourly canopy respiration (sapwood+fine roots)
     totalRespiration =(leafRespiration + sapwoodRespiration + rootRespiration);
     // per second respiration
-    totalRespiration /= double(HOUR_SECONDS);
+   // totalRespiration /= double(HOUR_SECONDS);
 
     //TODO understorey respiration
 
     return totalRespiration;
 }
 
-double Crit3D_Hydrall::soilTemperatureModel()
+inline double Crit3D_Hydrall::soilTemperatureModel()
 {
     // taken from Hydrall Model, Magnani UNIBO
-    double temp;
-    temp = 0.8 * weatherVariable.last30DaysTAvg + 0.2 * weatherVariable.myInstantTemp;
-    return temp;
+    return 0.8 * weatherVariable.last30DaysTAvg + 0.2 * weatherVariable.myInstantTemp;
 }
 
 double Crit3D_Hydrall::temperatureMoistureFunction(double temperature)
 {
-    double temperatureMoistureFactor;
+    double temperatureMoistureFactor = 1;
     // TODO
     /*// taken from Hydrall Model, Magnani UNIBO
     int   MODEL;
