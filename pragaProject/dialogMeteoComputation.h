@@ -65,6 +65,7 @@ class DialogMeteoComputation : public QDialog
         QPushButton loadXML;
         QPushButton appendXML;
         QPushButton delAll;
+        QPushButton createXML;
 
         SaveClimaLayout saveClimaLayout;
 
@@ -88,6 +89,7 @@ class DialogMeteoComputation : public QDialog
 
         void copyDataFromXML();
         void saveDataToXML();
+        void createEmptyXML();
         void targetChange();
         void changeOffsetDate();
 
