@@ -337,7 +337,7 @@
         void cumulatedResults();
         double plantRespiration();
         double computeEvaporation();
-        double soilTemperatureModel();
+        inline double soilTemperatureModel();
         double temperatureMoistureFunction(double temperature);
         bool growthStand();
         void resetStandVariables();
