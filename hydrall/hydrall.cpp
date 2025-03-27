@@ -130,7 +130,7 @@ double Crit3D_Hydrall::photosynthesisAndTranspirationUnderstorey()
 
         lightLimitedUnderstoreyAssimilation = understoreyLightUtilization * understorey.absorbedPAR / MC; //convert units from kgC m-2 s-1 into molC m-2 s-1
 
-        for (int i = 0; i < soil.layersNr; i++)
+        for (int i = 1; i < soil.layersNr; i++)
         {
             understoreyTranspirationRate[i] = rootEfficiencyInWaterExtraction * understoreyBiomass.fineRoot * soil.stressCoefficient[i];
             cumulatedUnderstoreyTranspirationRate += understoreyTranspirationRate[i];
@@ -147,7 +147,7 @@ double Crit3D_Hydrall::photosynthesisAndTranspirationUnderstorey()
         {
             understoreyAssimilationRate = lightLimitedUnderstoreyAssimilation;
             double lightWaterRatio = lightLimitedUnderstoreyAssimilation/waterLimitedUnderstoreyAssimilation;
-            for (int j = 0; j < soil.layersNr; j++)
+            for (int j = 1; j < soil.layersNr; j++)
             {
                 understoreyTranspirationRate[j] *= lightWaterRatio;
             }
@@ -155,7 +155,7 @@ double Crit3D_Hydrall::photosynthesisAndTranspirationUnderstorey()
     }
     else
     {
-        for (int i = 0; i < understoreyTranspirationRate.size(); i++)
+        for (int i = 1; i < understoreyTranspirationRate.size(); i++)
             understoreyTranspirationRate[i] = 0;
         understoreyAssimilationRate = 0;
     }
@@ -662,7 +662,7 @@ void Crit3D_Hydrall::carbonWaterFluxesProfile()
     treeTranspirationRate.resize(soil.layersNr);
 
     //double totalStomatalConductance = 0;
-    for (int i=0; i < soil.layersNr; i++)
+    for (int i=1; i < soil.layersNr; i++)
     {
         treeTranspirationRate[i] = 0;
 
@@ -776,7 +776,7 @@ void Crit3D_Hydrall::cumulatedResults()
 
     deltaTime.transpiration = 0.;
 
-    for (int i=0; i < soil.layersNr; i++)
+    for (int i=1; i < soil.layersNr; i++)
     {
         treeTranspirationRate[i] = HOUR_SECONDS * MH2O * treeTranspirationRate[i]; // [mm]
         deltaTime.transpiration += treeTranspirationRate[i];
@@ -1025,22 +1025,16 @@ void Crit3D_Hydrall::rootfind(double &allf, double &allr, double &alls, bool &so
     std::vector <std::vector <double>> conductivityWeights(2, std::vector<double>(soil.layersNr, NODATA));
     for (int i=0; i<soil.layersNr; i++)
     {
+        // it is ok to start with 0 because the weights of the first layer will be anyhow 0
         conductivityWeights[0][i] = soil.rootDensity[i];
         conductivityWeights[1][i] = soil.nodeThickness[i];
     }
     ksl = statistics::weighedMeanMultifactor(logarithmic10Values,conductivityWeights,soil.satHydraulicConductivity);
     //specific hydraulic conductivity of soil+roots
     double soilRootsSpecificConductivity = 1/(1/KR + 1/ksl);
-    //double dum = 0.5151 + MAXVALUE(0,0.0242*soil.temperature);
-    //if (dum < 0.5151) dum = 0.5151;
-    //soilRootsSpecificConductivity *= dum; //adjust for temp effects on water viscosity
     soilRootsSpecificConductivity *= 0.5151 + MAXVALUE(0,0.0242*soil.temperature);
     //new sapwood specific conductivity
     double sapwoodSpecificConductivity = KSMAX * (1-std::exp(-0.69315*plant.height/H50)); //adjust for height effects
-    //dum = 0.5151 + MAXVALUE(0,0.0242*weatherVariable.meanDailyTemp);
-    //dum = MAXVALUE(0.5151,dum);
-    //if (dum < 0.5151) dum = 0.5151;
-    //sapwoodSpecificConductivity *= dum;     //adjust for temp effects on water viscosity
     sapwoodSpecificConductivity *= 0.5151 + MAXVALUE(0,0.0242*weatherVariable.meanDailyTemp);
 
     //optimal coefficient of allocation to fine roots and sapwood for set allocation to foliage
@@ -1078,7 +1072,6 @@ void Crit3D_Hydrall::rootfind(double &allf, double &allr, double &alls, bool &so
         allr = statePlant.treecumulatedBiomassSapwood
                 +  annualGrossStandGrowth -statePlant.treecumulatedBiomassRoot*quadraticEqCoefficient*plant.height;
         allr /= (annualGrossStandGrowth * (1.+quadraticEqCoefficient*plant.height));
-        //allr = MINVALUE(1,MAXVALUE(allr,EPSILON));
         allr = BOUNDFUNCTION(EPSILON,1,allr); // TODO to be checked
         alls = 1.-allr;
         allf = 0; // TODO verify its value
