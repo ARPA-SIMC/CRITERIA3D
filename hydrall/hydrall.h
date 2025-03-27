@@ -30,6 +30,7 @@
      * Assign physical and miscellaneous constants
     */
 
+    #define RESPIRATION_PARAMETER  0.00000147222 // to compute respiration
     #define      CARBONFACTOR 0.5           /*!< coeff for conversion of carbon into DM, kgC kgDM-1  */
     #define      GAMMA  66.2                /*!< psychrometer constant, Pa K-1  */
     #define      LATENT  43956              /*!< latent heat of vaporization, J mol-1  */
@@ -276,7 +277,7 @@
         bool firstDayOfMonth;
         int firstMonthVegetativeSeason;
         bool isFirstYearSimulation;
-
+        Crit3DDate currentDate;
         Tstate stateVariable;
         TbigLeaf sunlit,shaded, understorey;
         TweatherVariable weatherVariable;
@@ -294,7 +295,6 @@
 
 
         double elevation;
-        int simulationStepInSeconds = 3600;
         double understoreyLeafAreaIndexMax;
         double cover = 1; // TODO
 
@@ -312,15 +312,15 @@
 
         void radiationAbsorption();
         void setSoilVariables(int iLayer, int currentNode, float checkFlag, int horizonIndex, double waterContent, double waterContentFC, double waterContentWP, int firstRootLayer, int lastRootLayer, double rootDensity);
-        void setHourlyVariables(double temp, double irradiance , double prec , double relativeHumidity , double windSpeed, double directIrradiance, double diffuseIrradiance, double cloudIndex, double atmosphericPressure, double CO2, double sunElevation,double meanTemp30Days);
+        void setHourlyVariables(double temp, double irradiance , double prec , double relativeHumidity , double windSpeed, double directIrradiance, double diffuseIrradiance, double cloudIndex, double atmosphericPressure, Crit3DDate currentDate, double sunElevation,double meanTemp30Days);
         bool setWeatherVariables(double temp, double irradiance , double prec , double relativeHumidity , double windSpeed, double directIrradiance, double diffuseIrradiance, double cloudIndex, double atmosphericPressure, double meanTemp30Days);
         void setDerivedWeatherVariables(double directIrradiance, double diffuseIrradiance, double cloudIndex);
         void setPlantVariables(double chlorophyllContent, double height);
-        bool computeHydrallPoint(Crit3DDate myDate, double myTemperature, double myElevation, int secondPerStep);
-        double getCO2(Crit3DDate myDate, double myTemperature);
+        bool computeHydrallPoint(Crit3DDate myDate, double myTemperature, double myElevation);
+        double getCO2(Crit3DDate myDate);
         //double getPressureFromElevation(double myTemperature, double myElevation);
         double computeLAI(Crit3DDate myDate);
-        double meanLastMonthTemperature(double previousLastMonthTemp, double simulationStepInSeconds, double myInstantTemp);
+        //double meanLastMonthTemperature(double previousLastMonthTemp, double myInstantTemp);
         double photosynthesisAndTranspiration();
         double photosynthesisAndTranspirationUnderstorey();
         void leafTemperature();
