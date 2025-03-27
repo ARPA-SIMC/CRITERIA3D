@@ -1303,7 +1303,6 @@ bool Crit3DProject::computeHydrallModel()
             {
                 //TODO
                 double chlorophyllContent = 500;
-                int secondsPerStep = 2;
                 hydrallModel.elevation = DEM.value[row][col];
                 //set all variables
                 hydrallModel.setHourlyVariables(double(hourlyMeteoMaps->mapHourlyTair->value[row][col]), double(radiationMaps->globalRadiationMap->value[row][col]),
@@ -1312,8 +1311,8 @@ bool Crit3DProject::computeHydrallModel()
                                                 double(radiationMaps->diffuseRadiationMap->value[row][col]),
                                                 double(radiationMaps->transmissivityMap->value[row][col] / CLEAR_SKY_TRANSMISSIVITY_DEFAULT),
                                                 pressureFromAltitude(double(hourlyMeteoMaps->mapHourlyTair->value[row][col]), hydrallModel.elevation),
-                                                hydrallModel.getCO2(getCrit3DDate(getCurrentDate()), double(hourlyMeteoMaps->mapHourlyTair->value[row][col])),
-                                                double(radiationMaps->sunElevationMap->value[row][col]),hydrallMaps.mapLast30DaysTavg->value[row][col]);
+                                                getCrit3DDate(getCurrentDate()),double(radiationMaps->sunElevationMap->value[row][col]),
+                                                hydrallMaps.mapLast30DaysTavg->value[row][col]);
 
                 //TODO: plant height map
                 hydrallMaps.plantHeight.value[row][col] = 10;
@@ -1344,7 +1343,7 @@ bool Crit3DProject::computeHydrallModel()
                 for (unsigned int i = 0; ((i < nrLayers) && (soilList[soilIndex].getHorizonIndex(layerDepth[i]))!= NODATA); i++)
                 {
 
-                    if (i <2 )
+                    if (i <3 && i != 0)
                         currentCrop.roots.rootDensity[i] = 0.5;
                     else
                         currentCrop.roots.rootDensity[i] = 0;
@@ -1372,7 +1371,7 @@ bool Crit3DProject::computeHydrallModel()
                                                   currentCrop.roots.firstRootLayer,currentCrop.roots.lastRootLayer,currentCrop.roots.rootDensity[i]);
                 }
                 //compute
-                hydrallModel.computeHydrallPoint(getCrit3DDate(getCurrentDate()), double(hourlyMeteoMaps->mapHourlyTair->value[row][col]), double(DEM.value[row][col]), secondsPerStep);
+                hydrallModel.computeHydrallPoint(getCrit3DDate(getCurrentDate()), double(hourlyMeteoMaps->mapHourlyTair->value[row][col]), double(DEM.value[row][col]));
 
 
 

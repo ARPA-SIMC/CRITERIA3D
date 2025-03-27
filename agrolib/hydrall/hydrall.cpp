@@ -43,7 +43,7 @@ Crit3DHydrallMaps::~Crit3DHydrallMaps()
     mapLast30DaysTavg->clear();
 }
 
-bool Crit3D_Hydrall::computeHydrallPoint(Crit3DDate myDate, double myTemperature, double myElevation, int secondPerStep)
+bool Crit3D_Hydrall::computeHydrallPoint(Crit3DDate myDate, double myTemperature, double myElevation)
 {
     //getCO2(myDate, myTemperature, myElevation);
 
@@ -68,7 +68,7 @@ bool Crit3D_Hydrall::computeHydrallPoint(Crit3DDate myDate, double myTemperature
     return true;
 }
 
-double Crit3D_Hydrall::getCO2(Crit3DDate myDate, double myTemperature)
+double Crit3D_Hydrall::getCO2(Crit3DDate myDate)
 {
     double atmCO2 = 400 ; //https://www.eea.europa.eu/data-and-maps/daviz/atmospheric-concentration-of-carbon-dioxide-5/download.table
     double year[24] = {1750,1800,1850,1900,1910,1920,1930,1940,1950,1960,1970,1980,1990,2000,2010,2020,2030,2040,2050,2060,2070,2080,2090,2100};
@@ -169,10 +169,10 @@ void Crit3D_Hydrall::initialize()
     elevation = NODATA;
 }
 
-void Crit3D_Hydrall::setHourlyVariables(double temp, double irradiance , double prec , double relativeHumidity , double windSpeed, double directIrradiance, double diffuseIrradiance, double cloudIndex, double atmosphericPressure, double CO2, double sunElevation,double meanTemp30Days)
+void Crit3D_Hydrall::setHourlyVariables(double temp, double irradiance , double prec , double relativeHumidity , double windSpeed, double directIrradiance, double diffuseIrradiance, double cloudIndex, double atmosphericPressure, Crit3DDate currentDate, double sunElevation,double meanTemp30Days)
 {
     setWeatherVariables(temp, irradiance, prec, relativeHumidity, windSpeed, directIrradiance, diffuseIrradiance, cloudIndex, atmosphericPressure,meanTemp30Days);
-    environmentalVariable.CO2 = CO2;
+    environmentalVariable.CO2 = getCO2(currentDate);
     environmentalVariable.sineSolarElevation = MAXVALUE(0.0001,sin(sunElevation*DEG_TO_RAD));
 }
 
@@ -389,12 +389,12 @@ void Crit3D_Hydrall::leafTemperature()
         double sunlitGlobalRadiation,shadedGlobalRadiation;
 
         //double shadedIrradiance = myDiffuseIrradiance * shaded.leafAreaIndex / statePlant.stateGrowth.leafAreaIndex;
-        shadedGlobalRadiation = weatherVariable.derived.myDiffuseIrradiance * simulationStepInSeconds ;
+        shadedGlobalRadiation = weatherVariable.derived.myDiffuseIrradiance * HOUR_SECONDS ;
         shaded.leafTemperature = weatherVariable.myInstantTemp + 1.67*1.0e-6 * shadedGlobalRadiation - 0.25 * weatherVariable.vaporPressureDeficit / weatherVariable.derived.psychrometricConstant; // by Stanghellini 1987 phd thesis
 
         // sunlitIrradiance = myDiffuseIrradiance * sunlit.leafAreaIndex/ statePlant.stateGrowth.leafAreaIndex;
         //sunlitIrradiance = myDirectIrradiance * sunlit.leafAreaIndex/ statePlant.stateGrowth.leafAreaIndex;
-        sunlitGlobalRadiation = (weatherVariable.derived.myDiffuseIrradiance + weatherVariable.derived.myDirectIrradiance) * simulationStepInSeconds ;
+        sunlitGlobalRadiation = (weatherVariable.derived.myDiffuseIrradiance + weatherVariable.derived.myDirectIrradiance) * HOUR_SECONDS ;
         sunlit.leafTemperature = weatherVariable.myInstantTemp + 1.67*1.0e-6 * sunlitGlobalRadiation - 0.25 * weatherVariable.vaporPressureDeficit / weatherVariable.derived.psychrometricConstant; // by Stanghellini 1987 phd thesis
     }
     else
@@ -763,9 +763,9 @@ void Crit3D_Hydrall::cumulatedResults()
 {
     // taken from Hydrall Model, Magnani UNIBO
     // Cumulate hourly values of gas exchange
-    deltaTime.absorbedPAR = simulationStepInSeconds*(sunlit.absorbedPAR+shaded.absorbedPAR);  //absorbed PAR (mol m-2)
-    deltaTime.grossAssimilation = simulationStepInSeconds * treeAssimilationRate ; // canopy gross assimilation (mol m-2)
-    deltaTime.respiration = simulationStepInSeconds * Crit3D_Hydrall::plantRespiration() ;
+    deltaTime.absorbedPAR = HOUR_SECONDS*(sunlit.absorbedPAR+shaded.absorbedPAR);  //absorbed PAR (mol m-2)
+    deltaTime.grossAssimilation = HOUR_SECONDS * treeAssimilationRate ; // canopy gross assimilation (mol m-2)
+    deltaTime.respiration = HOUR_SECONDS * Crit3D_Hydrall::plantRespiration() ;
     deltaTime.netAssimilation = deltaTime.grossAssimilation - deltaTime.respiration ;
     deltaTime.netAssimilation = deltaTime.netAssimilation*12/1000.0 ; // KgC m-2 TODO da motiplicare dopo per CARBONFACTOR DA METTERE dopo convert to kg DM m-2
 
@@ -778,7 +778,7 @@ void Crit3D_Hydrall::cumulatedResults()
 
     for (int i=0; i < soil.layersNr; i++)
     {
-        treeTranspirationRate[i] = simulationStepInSeconds * MH2O * treeTranspirationRate[i]; // [mm]
+        treeTranspirationRate[i] = HOUR_SECONDS * MH2O * treeTranspirationRate[i]; // [mm]
         deltaTime.transpiration += treeTranspirationRate[i];
     }
     deltaTime.transpiration += understorey.transpiration;
@@ -808,22 +808,21 @@ double Crit3D_Hydrall::plantRespiration()
     nitrogenContent.root = 0.0078;  //[kg kgDM-1]
     nitrogenContent.stem = 0.0021;  //[kg kgDM-1]
 
-    // Compute hourly stand respiration at 10 oC (mol m-2 h-1)
-    leafRespiration = 0.0106/2.0 * (treeBiomass.leaf * nitrogenContent.leaf/0.014);
-    sapwoodRespiration = 0.0106/2.0 * (treeBiomass.sapwood * nitrogenContent.stem/0.014);
-    rootRespiration = 0.0106/2.0 * (treeBiomass.fineRoot * nitrogenContent.root/0.014);
+    // Compute stand respiration rate at 10 oC (mol m-2 s-1)
+    leafRespiration = RESPIRATION_PARAMETER * (treeBiomass.leaf * nitrogenContent.leaf/0.014);
+    sapwoodRespiration = RESPIRATION_PARAMETER * (treeBiomass.sapwood * nitrogenContent.stem/0.014);
+    rootRespiration = RESPIRATION_PARAMETER * (treeBiomass.fineRoot * nitrogenContent.root/0.014);
 
     // Adjust for temperature effects
-    leafRespiration *= MAXVALUE(0,MINVALUE(1,Crit3D_Hydrall::temperatureMoistureFunction(weatherVariable.myInstantTemp + ZEROCELSIUS))) ;
-    sapwoodRespiration *= MAXVALUE(0,MINVALUE(1,Crit3D_Hydrall::temperatureMoistureFunction(weatherVariable.myInstantTemp + ZEROCELSIUS))) ;
+    leafRespiration *= BOUNDFUNCTION(0,1,Crit3D_Hydrall::temperatureMoistureFunction(weatherVariable.myInstantTemp + ZEROCELSIUS)) ;
+    sapwoodRespiration *= BOUNDFUNCTION(0,1,Crit3D_Hydrall::temperatureMoistureFunction(weatherVariable.myInstantTemp + ZEROCELSIUS));
     //shootRespiration *= MAXVALUE(0,MINVALUE(1,Vine3D_Grapevine::temperatureMoistureFunction(myInstantTemp + ZEROCELSIUS))) ;
     soil.temperature = Crit3D_Hydrall::soilTemperatureModel();
     //rootRespiration *= MAXVALUE(0,MINVALUE(1,Crit3D_Hydrall::temperatureMoistureFunction(soil.temperature + ZEROCELSIUS))) ;
     rootRespiration *= BOUNDFUNCTION(0,1,Crit3D_Hydrall::temperatureMoistureFunction(soil.temperature + ZEROCELSIUS));
-    // hourly canopy respiration (sapwood+fine roots)
+    // canopy respiration (sapwood+fine roots)
     totalRespiration =(leafRespiration + sapwoodRespiration + rootRespiration);
-    // per second respiration
-   // totalRespiration /= double(HOUR_SECONDS);
+
 
     //TODO understorey respiration
 
