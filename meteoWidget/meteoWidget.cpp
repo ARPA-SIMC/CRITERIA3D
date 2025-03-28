@@ -3083,16 +3083,17 @@ void Crit3DMeteoWidget::on_actionAddStation()
         return;
     }
 
-    QList<QString> allWidgetStations;
+    QList<QString> allStations;
     for (int mp=0; mp<_meteoPoints.size();mp++)
     {
+        QString stationId = QString::fromStdString(_meteoPoints[mp].id);
         QString stationsName = QString::fromStdString(_meteoPoints[mp].name);
-        allWidgetStations << stationsName;
+        QString station = stationId+"_"+stationsName;
+        allStations << station;
     }
 
-    DialogAddStation dialogAddStation(allWidgetStations, _allMeteoPointsPointer, _nrAllMeteoPoints);
+    DialogAddStation dialogAddStation(allStations, _allMeteoPointsPointer, _meteoPoints);
 }
-
 
 void Crit3DMeteoWidget::on_actionInfoPoint()
 {
