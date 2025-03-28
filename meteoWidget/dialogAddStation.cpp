@@ -1,7 +1,8 @@
 #include "dialogAddStation.h"
+#include "commonConstants.h"
 #include "gis.h"
 
-DialogAddStation::DialogAddStation(const QList<QString> &activeStationsList, Crit3DMeteoPoint* allMeteoPointsPointer, int nrAllMeteoPoints)
+DialogAddStation::DialogAddStation(const QList<QString> &activeStationsList, Crit3DMeteoPoint *allMeteoPointsPointer, int nrAllMeteoPoints)
     : _activeStationsList(activeStationsList), _allMeteoPointsPointer(allMeteoPointsPointer), _nrAllMeteoPoints(nrAllMeteoPoints)
 {
     setWindowTitle("Add stations");
@@ -21,24 +22,22 @@ DialogAddStation::DialogAddStation(const QList<QString> &activeStationsList, Cri
     buttonsLayout->addWidget(&buttonBox);
 
     QLabel *stationHeader = new QLabel("Active stations");
+    stationLayout->addWidget(stationHeader);
     _listActiveStationsWidget = new QComboBox;
     _listActiveStationsWidget->addItems(_activeStationsList);
-    stationLayout->addWidget(stationHeader);
     stationLayout->addWidget(_listActiveStationsWidget);
 
-    QLabel *singleValueLabel = new QLabel("Insert max distance [m]:");    //TODO check unità di misura
-    singleValueLayout->addWidget(singleValueLabel);
-
+    QLabel singleValueLabel("Insert distance [m]:");
     _singleValueEdit = new QLineEdit;
-    _singleValueEdit->setValidator(new QIntValidator(0, 20000));
-    _singleValueEdit->setText("100");
+    _singleValueEdit->setValidator(new QIntValidator(0, 10000));
+    _singleValueEdit->setText("1000");
+    singleValueLayout->addWidget(&singleValueLabel);
     singleValueLayout->addWidget(_singleValueEdit);
-    singleValueLabel->setBuddy(_singleValueEdit);
 
     QLabel nearStationsLabel("Near stations");
+    nearStationsLayout->addWidget(&nearStationsLabel);
     _listNearStationsWidget = new QListWidget;
     _listNearStationsWidget->addItems(_nearStationsList);
-    nearStationsLayout->addWidget(&nearStationsLabel);
     nearStationsLayout->addWidget(_listNearStationsWidget);
 
     mainLayout->addLayout(stationLayout);
@@ -48,7 +47,6 @@ DialogAddStation::DialogAddStation(const QList<QString> &activeStationsList, Cri
     mainLayout->addLayout(buttonsLayout);
     setLayout(mainLayout);
 
-    // Bottoni ok e cancel.
     //connect(&buttonBox, &QDialogButtonBox::accepted, [=](){ this->addStation(true); });
     connect(&buttonBox, &QDialogButtonBox::rejected, [=](){ this->close(); });
 
@@ -74,7 +72,7 @@ double DialogAddStation::getSingleValue()
 
 void DialogAddStation::searchStations()
 {
-    std::string myStationName = _listActiveStationsWidget->currentText().toStdString();
+    std::string myStation = _listActiveStationsWidget->currentText().toStdString();
     double chosenDistance = DialogAddStation::getSingleValue();
 
     if (chosenDistance == NODATA)
@@ -85,12 +83,13 @@ void DialogAddStation::searchStations()
 
     for (int i=0; i < _nrAllMeteoPoints; i++)
     {
-        if (myStationName == _allMeteoPointsPointer[i].name)
+        if (myStation == _allMeteoPointsPointer[i].name)
         {
             Crit3DMeteoPoint myStationMp = _allMeteoPointsPointer[i];
             double X0 = myStationMp.point.utm.x;
             double Y0 = myStationMp.point.utm.y;
 
+            _nearStationsList.clear();
             for (int j=0; j < _nrAllMeteoPoints; j++)
             {
                 double computedDistance = gis::computeDistance(X0, Y0, _allMeteoPointsPointer[j].point.utm.x, _allMeteoPointsPointer[j].point.utm.y);
@@ -99,10 +98,13 @@ void DialogAddStation::searchStations()
                     _nearStationsList.append(QString::fromStdString(_allMeteoPointsPointer[j].name));
                 }
             }
+
+            _listNearStationsWidget->clear();
+            _listNearStationsWidget->addItems(_nearStationsList);
+            break;
         }
     }
 
-    this->update(); //aggiorna tutta la widget
-    QDialog::done(QDialog::Accepted);
+    this->update(); // aggiorna la widget
 }
 

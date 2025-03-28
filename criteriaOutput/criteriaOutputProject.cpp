@@ -38,11 +38,14 @@ void CriteriaOutputProject::initialize()
     dbDataName = "";
     dbClimateDataName = "";
     dbCropName = "";
+
     variableListFileName = "";
     ucmFileName = "";
-    aggregationShapeFileName = "";
-    shapeFieldName = "";
     fieldListFileName = "";
+    computationListFileName = "";
+
+    aggregationShapeFileName = "";
+    aggregationShapeField = "";
     aggregationListFileName = "";
     aggregationCellSize = "";
     aggregationThreshold = "";
@@ -340,6 +343,12 @@ bool CriteriaOutputProject::readSettings()
         fieldListFileName = QDir::cleanPath(path + fieldListFileName);
     }
 
+    computationListFileName = projectSettings->value("computation_list", "").toString();
+    if (! computationListFileName.isEmpty() && computationListFileName.at(0) == '.')
+    {
+        computationListFileName = QDir::cleanPath(path + computationListFileName);
+    }
+
     // output shapefile
     outputShapeFilePath = getFilePath(outputCsvFileName) + dateStr;
     QFileInfo csvFileInfo(outputCsvFileName);
@@ -356,10 +365,10 @@ bool CriteriaOutputProject::readSettings()
         aggregationShapeFileName = QDir::cleanPath(path + aggregationShapeFileName);
     }
 
-    shapeFieldName = projectSettings->value("shape_field", "").toString();
-    if (shapeFieldName.left(1) == ".")
+    aggregationShapeField = projectSettings->value("shape_field", "").toString();
+    if (aggregationShapeField.left(1) == ".")
     {
-        shapeFieldName = QDir::cleanPath(path + shapeFieldName);
+        aggregationShapeField = QDir::cleanPath(path + aggregationShapeField);
     }
 
     aggregationListFileName = projectSettings->value("aggregation_list","").toString();
@@ -574,7 +583,11 @@ int CriteriaOutputProject::createShapeFile()
 
     logger.writeInfo("UCM shapefile: " + ucmFileName);
     logger.writeInfo("CSV data: " + outputCsvFileName);
-    logger.writeInfo("Shape field list: " + fieldListFileName);
+    logger.writeInfo("Shape fields list: " + fieldListFileName);
+    if (! computationListFileName.isEmpty())
+    {
+        logger.writeInfo("Computation list: " + computationListFileName);
+    }
     logger.writeInfo("Output shapefile: " + outputShapeFileName);
     logger.writeInfo("Write shapefile...");
 
@@ -586,6 +599,11 @@ int CriteriaOutputProject::createShapeFile()
     {
         return ERROR_SHAPEFILE;
     }
+    /*
+    if (! shapeComputation(outputShapeFileName, computationListFileName, projectError))
+    {
+        return ERROR_SHAPEFILE;
+    }*/
 
     return CRIT1D_OK;
 }
@@ -778,9 +796,9 @@ int CriteriaOutputProject::createAggregationFile()
         QFile().remove(outputAggrCsvFileName);
     }
 
-    if (shapeFieldName.isNull() || shapeFieldName.isEmpty())
+    if (aggregationShapeField.isNull() || aggregationShapeField.isEmpty())
     {
-        projectError = "Missing shape field name.";
+        projectError = "Missing aggregation shape field.";
         return ERROR_SETTINGS_MISSINGDATA;
     }
 
@@ -932,7 +950,7 @@ int CriteriaOutputProject::createAggregationFile()
 
     // write csv aggregation data
     int myResult = writeCsvAggrFromShape(shapeRef, outputAggrCsvFileName, dateComputation,
-                                 aggregationVariable.outputVarName, shapeFieldName, projectError);
+                                 aggregationVariable.outputVarName, aggregationShapeField, projectError);
 
     shapeRef.close();
 

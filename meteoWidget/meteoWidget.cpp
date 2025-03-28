@@ -50,6 +50,7 @@ Crit3DMeteoWidget::Crit3DMeteoWidget(bool isGrid, QString projectPath, Crit3DMet
     _isEnsemble = false;
     _nrMembers = NODATA;
     _allMeteoPointsPointer = nullptr;
+    _nrAllMeteoPoints = 0;
 
     maxEnsembleBar = -1;
     maxEnsembleLine = NODATA;
@@ -3083,14 +3084,17 @@ void Crit3DMeteoWidget::on_actionAddStation()
         return;
     }
 
-    QList<QString> allWidgetStations;
+    if (_nrAllMeteoPoints == NODATA || _nrAllMeteoPoints <= 1)
+        return;
+
+    QList<QString> allStationsName;
     for (int mp=0; mp<_meteoPoints.size();mp++)
     {
         QString stationsName = QString::fromStdString(_meteoPoints[mp].name);
-        allWidgetStations << stationsName;
+        allStationsName << stationsName;
     }
 
-    DialogAddStation dialogAddStation(allWidgetStations, _allMeteoPointsPointer, _nrAllMeteoPoints);
+    DialogAddStation selectStation(allStationsName, _allMeteoPointsPointer, _nrAllMeteoPoints);
 }
 
 
