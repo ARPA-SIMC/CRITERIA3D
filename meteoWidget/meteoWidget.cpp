@@ -3091,8 +3091,8 @@ void Crit3DMeteoWidget::on_actionAddStation()
         QString station = stationId+"_"+stationsName;
         allStations << station;
     }
-    DialogAddStation selectStation(allStations);
 
+    DialogAddStation dialogAddStation(allStations, _allMeteoPointsPointer, _meteoPoints);
 }
 
 void Crit3DMeteoWidget::on_actionInfoPoint()
