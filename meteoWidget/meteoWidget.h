@@ -144,7 +144,6 @@
     signals:
         void closeWidgetPoint(int);
         void closeWidgetGrid(int);
-
     };
 
 
