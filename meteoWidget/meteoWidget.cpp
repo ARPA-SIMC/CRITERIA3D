@@ -3084,15 +3084,19 @@ void Crit3DMeteoWidget::on_actionAddStation()
         return;
     }
 
+    if (_nrAllMeteoPoints == NODATA || _nrAllMeteoPoints <= 1)
+        return;
+
     QList<QString> allStationsName;
     for (int mp=0; mp<_meteoPoints.size();mp++)
     {
         QString stationsName = QString::fromStdString(_meteoPoints[mp].name);
         allStationsName << stationsName;
     }
-    DialogAddStation selectStation(allStationsName, _allMeteoPointsPointer, _nrAllMeteoPoints);
 
+    DialogAddStation selectStation(allStationsName, _allMeteoPointsPointer, _nrAllMeteoPoints);
 }
+
 
 void Crit3DMeteoWidget::on_actionInfoPoint()
 {
