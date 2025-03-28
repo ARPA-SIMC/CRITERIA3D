@@ -21,21 +21,22 @@ DialogAddStation::DialogAddStation(const QList<QString> &activeStationsList, Cri
     QDialogButtonBox buttonBox(QDialogButtonBox::Ok | QDialogButtonBox::Cancel);
     buttonsLayout->addWidget(&buttonBox);
 
-    _listNearStationsWidget = new QListWidget;
     QLabel *stationHeader = new QLabel("Active stations");
-    _listActiveStationsWidget->addItems(_activeStationsList);
     stationLayout->addWidget(stationHeader);
+    _listActiveStationsWidget = new QComboBox;
+    _listActiveStationsWidget->addItems(_activeStationsList);
     stationLayout->addWidget(_listActiveStationsWidget);
 
     QLabel singleValueLabel("Insert distance [m]:");
     _singleValueEdit = new QLineEdit;
-    _singleValueEdit->setValidator(new QDoubleValidator(0.0, 9999.0,1));
-    _singleValueEdit->setText(QString::number(getSingleValue()));
+    _singleValueEdit->setValidator(new QIntValidator(0, 10000));
+    _singleValueEdit->setText("1000");
     singleValueLayout->addWidget(&singleValueLabel);
     singleValueLayout->addWidget(_singleValueEdit);
 
     QLabel nearStationsLabel("Near stations");
     nearStationsLayout->addWidget(&nearStationsLabel);
+    _listNearStationsWidget = new QListWidget;
     _listNearStationsWidget->addItems(_nearStationsList);
     nearStationsLayout->addWidget(_listNearStationsWidget);
 
