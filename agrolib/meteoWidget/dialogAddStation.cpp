@@ -91,6 +91,7 @@ void DialogAddStation::searchStations()
             double X0 = myStationMp.point.utm.x;
             double Y0 = myStationMp.point.utm.y;
 
+            _nearStationsList.clear();
             for (int j=0; j < _nrAllMeteoPoints; j++)
             {
                 double computedDistance = gis::computeDistance(X0, Y0, _allMeteoPointsPointer[j].point.utm.x, _allMeteoPointsPointer[j].point.utm.y);
@@ -99,10 +100,13 @@ void DialogAddStation::searchStations()
                     _nearStationsList.append(QString::fromStdString(_allMeteoPointsPointer[j].name));
                 }
             }
+
+            _listNearStationsWidget->clear();
+            _listNearStationsWidget->addItems(_nearStationsList);
+            break;
         }
     }
 
     this->update(); //aggiorna tutta la widget
-    QDialog::done(QDialog::Accepted);
 }
 
