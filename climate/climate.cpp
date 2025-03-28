@@ -4629,6 +4629,9 @@ bool checkDataType(QString xmlFileName, bool isMeteoGrid, QString *myError)
     myFile.close();
     QDomNode ancestor = xmlDoc.documentElement().firstChild();
 
+    if(ancestor.isNull()) //empty xml file
+        return true;
+
     while(!ancestor.isNull())
     {
         if (ancestor.toElement().tagName().toUpper() == "ELABORATION" || ancestor.toElement().tagName().toUpper() == "ANOMALY")
@@ -4846,6 +4849,21 @@ bool appendXMLElaboration(Crit3DElabList *listXMLElab, QString xmlFileName, QStr
     outputFile.close();
     return true;
 
+}
+
+void createXMLFile(QString xmlFileName, QString *myError)
+{
+    QFile xmlFile(xmlFileName);
+    if (!xmlFile.open(QFile::WriteOnly | QFile::Text ))
+    {
+        qDebug() << "Already opened or there is another issue";
+        xmlFile.close();
+    }
+    QTextStream xmlContent(&xmlFile);
+
+    xmlContent << "<xml></xml>\n";
+
+    xmlFile.close();
 }
 
 bool appendXMLAnomaly(Crit3DAnomalyList *listXMLAnomaly, QString xmlFileName, QString *myError)
