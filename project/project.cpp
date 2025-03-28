@@ -1,4 +1,5 @@
 #include "project.h"
+#include "dbArkimet.h"
 #include "dbMeteoGrid.h"
 #include "commonConstants.h"
 #include "basicMath.h"
@@ -2026,13 +2027,13 @@ bool Project::writeTopographicDistanceMaps(bool onlyWithData, bool showInfo)
 {
     if (nrMeteoPoints == 0)
     {
-        logError("Open a meteo points DB before.");
+        logError(ERROR_STR_MISSING_DB);
         return false;
     }
 
     if (! DEM.isLoaded)
     {
-        logError("Load a Digital Elevation Map before.");
+        logError(ERROR_STR_MISSING_DEM);
         return false;
     }
 
@@ -2086,13 +2087,13 @@ bool Project::writeTopographicDistanceMap(int pointIndex, const gis::Crit3DRaste
 {
     if (nrMeteoPoints == 0)
     {
-        logError("Open a meteo points DB before.");
+        logError(ERROR_STR_MISSING_DB);
         return false;
     }
 
     if (! demMap.isLoaded)
     {
-        logError("Load a Digital Elevation Map before.");
+        logError(ERROR_STR_MISSING_DEM);
         return false;
     }
 
@@ -2119,7 +2120,7 @@ bool Project::loadTopographicDistanceMaps(bool onlyWithData, bool showInfo)
 {
     if (nrMeteoPoints == 0)
     {
-        logError("Open a meteo points DB before.");
+        logError(ERROR_STR_MISSING_DB);
         return false;
     }
 
@@ -3040,7 +3041,11 @@ bool Project::interpolationDemGlocalDetrending(meteoVariable myVar, const Crit3D
                     {
                         gis::getUtmXYFromRowCol(myHeader, row, col, &x, &y);
 
-                        getProxyValuesXY(x, y, &interpolationSettings, proxyValues);
+                        if (! getProxyValuesXY(x, y, &interpolationSettings, proxyValues))
+                        {
+                            myRaster->value[row][col] = NODATA;
+                            continue;
+                        }
 
                         interpolatedValue = interpolate(subsetInterpolationPoints, &interpolationSettings, meteoSettings,
                                                         myVar, x, y, z, proxyValues, true);
@@ -3156,13 +3161,13 @@ bool Project::checkInterpolation(meteoVariable myVar)
 {
     if (! DEM.isLoaded)
     {
-        logError("Load a Digital Elevation Model before.");
+        logError(ERROR_STR_MISSING_DEM);
         return false;
     }
 
     if (nrMeteoPoints == 0)
     {
-        logError("Open a meteo points DB before.");
+        logError(ERROR_STR_MISSING_DB);
         return false;
     }
 
@@ -3180,7 +3185,7 @@ bool Project::checkInterpolationGrid(meteoVariable myVar)
 {
     if (nrMeteoPoints == 0)
     {
-        logError("Open a meteo points DB before.");
+        logError(ERROR_STR_MISSING_DB);
         return false;
     }
 
@@ -4020,7 +4025,7 @@ bool Project::checkMeteoGridForExport()
 {
     if (! meteoGridLoaded || meteoGridDbHandler == nullptr)
     {
-        logError("Open meteo grid before.");
+        logError(ERROR_STR_MISSING_GRID);
         return false;
     }
 
@@ -4088,6 +4093,24 @@ void Project::importHourlyMeteoData(const QString& csvFileName, bool importAllFi
 void Project::showMeteoWidgetPoint(std::string idMeteoPoint, std::string namePoint, std::string dataset,
                                    double altitude, std::string lapseRateCode, bool isAppend)
 {
+    // check
+    if (isAppend)
+    {
+        if (meteoWidgetPointList.isEmpty())
+        {
+            isAppend = false;
+        }
+        else
+        {
+            int lastIndex = meteoWidgetPointList.size() - 1;
+            if (meteoWidgetPointList[lastIndex]->isAlreadyPresent(idMeteoPoint))
+            {
+                logWarning("This meteo point is already present.");
+                return;
+            }
+        }
+    }
+
     logInfoGUI("Loading data...");
 
     // check dates
@@ -4123,12 +4146,6 @@ void Project::showMeteoWidgetPoint(std::string idMeteoPoint, std::string namePoi
         lastDate = lastHourly.date();
     }
 
-    int meteoWidgetId = 0;
-    if (meteoWidgetPointList.isEmpty())
-    {
-        isAppend = false;
-    }
-
     Crit3DMeteoPoint mp;
     mp.setId(idMeteoPoint);
     mp.setName(namePoint);
@@ -4146,6 +4163,7 @@ void Project::showMeteoWidgetPoint(std::string idMeteoPoint, std::string namePoi
     {
         bool isGrid = false;
         Crit3DMeteoWidget* meteoWidgetPoint = new Crit3DMeteoWidget(isGrid, projectPath, meteoSettings);
+        int meteoWidgetId;
         if (! meteoWidgetPointList.isEmpty())
         {
             meteoWidgetId = meteoWidgetPointList[meteoWidgetPointList.size()-1]->getMeteoWidgetID()+1;
@@ -4180,6 +4198,24 @@ void Project::showMeteoWidgetPoint(std::string idMeteoPoint, std::string namePoi
 
 void Project::showMeteoWidgetGrid(std::string idCell, bool isAppend)
 {
+    // check
+    if (isAppend)
+    {
+        if (meteoWidgetGridList.isEmpty())
+        {
+            isAppend = false;
+        }
+        else
+        {
+            int lastIndex = meteoWidgetGridList.size() - 1;
+            if (meteoWidgetGridList[lastIndex]->isAlreadyPresent(idCell))
+            {
+                logWarning("This grid cell is already present.");
+                return;
+            }
+        }
+    }
+
     QDate firstDate = meteoGridDbHandler->firstDate();
     QDate lastDate = meteoGridDbHandler->lastDate();
     QDate firstMonthlyDate = meteoGridDbHandler->getFirstMonthlytDate();
@@ -4193,12 +4229,6 @@ void Project::showMeteoWidgetGrid(std::string idCell, bool isAppend)
     if (meteoGridDbHandler->getLastHourlyDate().isValid())
     {
         lastDateTime = QDateTime(meteoGridDbHandler->getLastHourlyDate().addDays(1), QTime(0,0), Qt::UTC);
-    }
-
-    int meteoWidgetId = 0;
-    if (meteoWidgetGridList.isEmpty())
-    {
-        isAppend = false;
     }
 
     if (meteoGridDbHandler->gridStructure().isEnsemble())
@@ -4264,6 +4294,7 @@ void Project::showMeteoWidgetGrid(std::string idCell, bool isAppend)
     }
     else
     {
+        int meteoWidgetId;
         bool isGrid = true;
         Crit3DMeteoWidget* meteoWidgetGrid = new Crit3DMeteoWidget(isGrid, projectPath, meteoSettings);
         if (! meteoWidgetGridList.isEmpty())
@@ -4753,7 +4784,7 @@ bool Project::deleteMeteoPointsData(const QList<QString>& pointList)
 
         if (allDaily)
         {
-            if (!meteoPointsDbHandler->deleteData(pointList[i], daily, startDate, endDate))
+            if (! meteoPointsDbHandler->deleteData(pointList[i], daily, startDate, endDate))
             {
                 closeProgressBar();
                 return false;
@@ -4761,9 +4792,9 @@ bool Project::deleteMeteoPointsData(const QList<QString>& pointList)
         }
         else
         {
-            if (!dailyVarList.isEmpty())
+            if (! dailyVarList.isEmpty())
             {
-                if (!meteoPointsDbHandler->deleteData(pointList[i], daily, dailyVarList, startDate, endDate))
+                if (! meteoPointsDbHandler->deleteData(pointList[i], daily, dailyVarList, startDate, endDate))
                 {
                     closeProgressBar();
                     return false;
@@ -4772,7 +4803,7 @@ bool Project::deleteMeteoPointsData(const QList<QString>& pointList)
         }
         if (allHourly)
         {
-            if (!meteoPointsDbHandler->deleteData(pointList[i], hourly, startDate, endDate))
+            if (! meteoPointsDbHandler->deleteData(pointList[i], hourly, startDate, endDate))
             {
                 closeProgressBar();
                 return false;
@@ -4780,9 +4811,9 @@ bool Project::deleteMeteoPointsData(const QList<QString>& pointList)
         }
         else
         {
-            if (!hourlyVarList.isEmpty())
+            if (! hourlyVarList.isEmpty())
             {
-                if (!meteoPointsDbHandler->deleteData(pointList[i], hourly, hourlyVarList, startDate, endDate))
+                if (! meteoPointsDbHandler->deleteData(pointList[i], hourly, hourlyVarList, startDate, endDate))
                 {
                     closeProgressBar();
                     return false;
@@ -4794,6 +4825,7 @@ bool Project::deleteMeteoPointsData(const QList<QString>& pointList)
 
     return true;
 }
+
 
 bool Project::loadOutputPointList(QString fileName)
 {
@@ -5372,9 +5404,6 @@ void Project::closeProgressBar()
 }
 
 
-
-
-
 bool Project::waterTableImportLocation(const QString &csvFileName)
 {
     if (logFileName == "")
@@ -5392,8 +5421,7 @@ bool Project::waterTableImportLocation(const QString &csvFileName)
     if (wrongLines > 0)
     {
         logInfo(errorString);
-        QMessageBox::warning(nullptr, "Warning!", QString::number(wrongLines)
-                            + " wrong lines of data were not loaded\nSee the log file for more information:\n" + logFileName);
+        logWarning(QString::number(wrongLines) + " wrong lines of data were not loaded\nSee the log file for more information:\n" + logFileName);
     }
 
     errorString = "";
@@ -5410,11 +5438,10 @@ bool Project::waterTableImportDepths(const QString &csvDepthsFileName)
         return false;
     }
 
-    if (wrongLines>0)
+    if (wrongLines > 0)
     {
         logInfo(errorString);
-        QMessageBox::warning(nullptr, "Warning!", QString::number(wrongLines)
-                            + " wrong lines of data were not loaded\nSee the log file for more information:\n" + logFileName);
+        logWarning(QString::number(wrongLines) + " wrong lines of data were not loaded\nSee the log file for more information:\n" + logFileName);
     }
 
     errorString = "";
@@ -5629,7 +5656,7 @@ bool Project::assignAltitudeToAggregationPoints()
 
     if (meteoPointsLoaded)
     {
-        errorString = "Close Meteo Points db before execute this operation!";
+        errorString = "Close Meteo Points db before execute this operation.";
         return false;
     }
 
@@ -5869,6 +5896,51 @@ bool Project::setSelectedStateWithCriteria()
         logWarning("No points to select");
         return false;
     }
+
+    return true;
+}
+
+
+bool Project::readVmArkimetData(const QList<QString> &vmFileList, frequencyType frequency, bool isPrec0024)
+{
+    if(nrMeteoPoints == 0)
+    {
+        errorString = ERROR_STR_MISSING_DB;
+        return false;
+    }
+
+    if (vmFileList.isEmpty())
+    {
+        errorString = "No data.";
+        return false;
+    }
+
+    // open db meteo
+    QString dbName = meteoPointsDbHandler->getDbName();
+    DbArkimet *dbMeteoArkimet = new DbArkimet(dbName);
+    if (! dbMeteoArkimet->getErrorString().isEmpty())
+    {
+        errorString = dbMeteoArkimet->getErrorString();
+        return false;
+    }
+
+    setProgressBar("Loading data...", vmFileList.size());
+    for (int i=0; i < vmFileList.size(); i++)
+    {
+        updateProgressBar(i);
+        if (frequency == daily)
+        {
+            if (! dbMeteoArkimet->readVmDataDaily(vmFileList[i], isPrec0024, errorString))
+                return false;
+        }
+        else
+        {
+            // todo hourly
+        }
+    }
+    closeProgressBar();
+
+    delete dbMeteoArkimet;
 
     return true;
 }

@@ -16,10 +16,23 @@
 
     #include <fstream>
 
+    #define CRITERIA_VERSION "V1.8.7 (2025)"
+
     class Crit1DProject
     {
 
     public:
+        QSqlDatabase dbCrop;
+        QSqlDatabase dbSoil;
+        QSqlDatabase dbMeteo;
+        Crit3DMeteoGridDbHandler* observedMeteoGrid;
+
+        // dates
+        QDate firstSimulationDate;
+        QDate lastSimulationDate;
+
+        double computationSoilDepth;                    // [m]
+
         bool isProjectLoaded;
         QString projectError;
         Logger logger;
@@ -33,15 +46,6 @@
         QString dbMeteoName;
         QString dbForecastName;
         QString dbComputationUnitsName;
-
-        QSqlDatabase dbCrop;
-        QSqlDatabase dbSoil;
-        QSqlDatabase dbMeteo;
-        Crit3DMeteoGridDbHandler* observedMeteoGrid;
-
-        // dates
-        QDate firstSimulationDate;
-        QDate lastSimulationDate;
 
         bool isXmlMeteoGrid;
 
@@ -65,8 +69,11 @@
         bool setSoil(QString soilCode, QString &errorStr);
 
     private:
+        bool computeAllSoilDepth;
+
         QString projectName;
         QString configFileName;
+        bool addDateTimeLogFile;
 
         // save/restart
         bool isSaveState;
@@ -88,10 +95,6 @@
         QString outputString;
         QString outputCsvFileName;
         std::ofstream outputCsvFile;
-
-        bool addDateTimeLogFile;
-        bool computeAllSoilDepth;
-        double computationSoilDepth;                    // [m]
 
         // specific output
         bool isClimateOutput;
@@ -139,7 +142,6 @@
         bool saveOutput(QString &errorStr);
 
     };
-
 
     QString getOutputStringNullZero(double value);
     bool setVariableDepth(const QList<QString> &depthList, std::vector<int> &variableDepth);

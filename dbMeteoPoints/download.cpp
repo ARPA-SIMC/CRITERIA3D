@@ -7,21 +7,6 @@
 
 const QByteArray Download::_authorization = QString("Basic " + QString("ugo:Ul1ss&").toLocal8Bit().toBase64()).toLocal8Bit();
 
-Download::Download(QString dbName, QObject* parent) : QObject(parent)
-{
-    _dbMeteo = new DbArkimet(dbName);
-}
-
-Download::~Download()
-{
-    delete _dbMeteo;
-}
-
-DbArkimet* Download::getDbArkimet()
-{
-    return _dbMeteo;
-}
-
 
 bool Download::getPointProperties(const QList<QString> &datasetList, int utmZone, QString &errorString)
 {
@@ -398,85 +383,6 @@ bool Download::getPointPropertiesFromId(const QString &id, int utmZone, Crit3DMe
 }
 
 
-bool Download::readArkimetVMData(const QString &vmFileName, QString &errorString)
-{
-    QFile myFile(vmFileName);
-    if (! myFile.open(QIODevice::ReadOnly))
-    {
-        errorString = "Open failed: " + vmFileName + "\n " + myFile.errorString();
-        return false;
-    }
-
-    QTextStream myStream (&myFile);
-    if (myStream.atEnd())
-    {
-        errorString = "File is empty: " + vmFileName;
-        myFile.close();
-        return false;
-    }
-
-    if (! _dbMeteo->createTmpTableDaily(errorString))
-    {
-        errorString = "Error in creating daily tmp table: " + errorString;
-        return false;
-    }
-
-    bool isFirstData = true;
-
-    while(! myStream.atEnd())
-    {
-        QList<QString> fields = myStream.readLine().split(',');
-
-        // warning: reference date arkimet: hour 00 of day+1
-        QString dateStr = fields[0];
-        QDate myDate = QDate::fromString(dateStr.left(8), "yyyyMMdd").addDays(-1);
-        dateStr = myDate.toString("yyyy-MM-dd");
-
-        QString idPoint = fields[1];
-        QString flag = fields[6];
-
-        if (idPoint != "" && flag.left(1) != "1" && flag.left(3) != "054")
-        {
-            QString valueStr;
-            if (flag.left(1) == "2")
-                valueStr = fields[4];
-            else
-                valueStr = fields[3];
-
-            if (valueStr != "")
-            {
-                double value = valueStr.toDouble();
-
-                int idArkimet = fields[2].toInt();
-
-                // conversion from average daily radiation to integral radiation
-                if (idArkimet == RAD_ID)
-                {
-                    value *= DAY_SECONDS / 1000000.0;
-                }
-
-                /*
-                // variable
-                int i = 0;
-                while (i < variableList.size()
-                       && variableList[i].arkId() != idArkimet) i++;
-
-                if (i < variableList.size())
-                {
-                    int idVar = variableList[i].id();
-                    _dbMeteo->appendQueryDaily(dateStr, idPoint, QString::number(idVar), QString::number(value), isFirstData);
-                    isFirstData = false;
-                }
-*/
-            }
-        }
-    }
-
-    return _dbMeteo->saveDailyData();
-}
-
-
-
 bool Download::downloadDailyData(const QDate &startDate, const QDate &endDate, const QString &dataset,
                                  QList<QString> &stations, QList<int> &variables, bool prec0024, QString &errorString)
 {
@@ -560,8 +466,11 @@ bool Download::downloadDailyData(const QDate &startDate, const QDate &endDate, c
         }
         else
         {
-            if (! _dbMeteo->createTmpTableDaily(errorString))
+            if (! _dbMeteo->createTmpTable())
+            {
+                errorString = _dbMeteo->getErrorString();
                 return false;
+            }
 
             bool isFirstData = true;
             QString dateStr, idPoint, flag;
@@ -610,7 +519,7 @@ bool Download::downloadDailyData(const QDate &startDate, const QDate &endDate, c
                     if (i < variableList.size())
                     {
                         idVar = variableList[i].id();
-                        _dbMeteo->appendQueryDaily(dateStr, idPoint, QString::number(idVar), QString::number(value), isFirstData);
+                        _dbMeteo->appendTmpData(dateStr, idPoint, QString::number(idVar), QString::number(value), isFirstData);
                         isFirstData = false;
                     }
 
@@ -629,7 +538,7 @@ bool Download::downloadDailyData(const QDate &startDate, const QDate &endDate, c
 
     } // end while
 
-    _dbMeteo->deleteTmpTableDaily();
+    _dbMeteo->deleteTmpTable();
     return downloadOk;
 }
 
@@ -722,12 +631,12 @@ bool Download::downloadHourlyData(const QDate &startDate, const QDate &endDate, 
         {
             _dbMeteo->queryString = "";
 
-            QString line, dateTime, idPoint, flag, varName;
+            QString line, dateTimeStr, idPoint, flag, varName;
             QString idVariable, value, secondValue, frequency;
             QList<QString> fields;
             int i, idVarArkimet;
 
-            _dbMeteo->createTmpTableHourly();
+            _dbMeteo->createTmpTable();
             bool isVarOk, isFirstData = true;
             bool emptyLine = true;
 
@@ -735,7 +644,7 @@ bool Download::downloadHourlyData(const QDate &startDate, const QDate &endDate, 
             {
                 emptyLine = false;
                 fields = line.split(",");
-                dateTime = QString("%1-%2-%3 %4:%5:00").arg(fields[0].left(4))
+                dateTimeStr = QString("%1-%2-%3 %4:%5:00").arg(fields[0].left(4))
                                                            .arg(fields[0].mid(4, 2))
                                                            .arg(fields[0].mid(6, 2))
                                                            .arg(fields[0].mid(8, 2))
@@ -770,12 +679,12 @@ bool Download::downloadHourlyData(const QDate &startDate, const QDate &endDate, 
                         flag = fields[6];
                         if (flag.left(1) != "1" && flag.left(1) != "2" && flag.left(3) != "054")
                         {
-                            _dbMeteo->appendQueryHourly(dateTime, idPoint, idVariable, value, isFirstData);
+                            _dbMeteo->appendTmpData(dateTimeStr, idPoint, idVariable, value, isFirstData);
                             isFirstData = false;
                         }
                         else if(flag.left(1) == "2")
                         {
-                            _dbMeteo->appendQueryHourly(dateTime, idPoint, idVariable, secondValue, isFirstData);
+                            _dbMeteo->appendTmpData(dateTimeStr, idPoint, idVariable, secondValue, isFirstData);
                             isFirstData = false;
                         }
                     }
@@ -794,7 +703,7 @@ bool Download::downloadHourlyData(const QDate &startDate, const QDate &endDate, 
         j = 0; //reset block stations counter
     }
 
-    _dbMeteo->deleteTmpTableHourly();
+    _dbMeteo->deleteTmpTable();
     return true;
 }
 

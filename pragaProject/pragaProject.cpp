@@ -1947,19 +1947,18 @@ bool PragaProject::averageSeriesOnZonesMeteoGrid(meteoVariable variable, meteoCo
     if (showInfo)
         closeProgressBar();
 
-    int nrDays = meteoPointTemp->nrObsDataDaysD;
-    Crit3DDate valuesFirstDate = meteoPointTemp->getFirstDailyData();
     delete meteoPointTemp;
+    int nrDays = startDate.daysTo(endDate) + 1;
 
     if (getVarFrequency(variable) == hourly)
     {
         return hourlyZoneAggregationMeteoGrid(variable, aggregationString, threshold, zoneGrid, idZoneVector, outputSeries,
-                                             indexRowCol, meteoGridRow, meteoGridCol, valuesFirstDate, nrDays, showInfo);
+                                             indexRowCol, meteoGridRow, meteoGridCol, getCrit3DDate(startDate), nrDays, showInfo);
     }
     else
     {
         return dailyZoneAggregationMeteoGrid(variable, aggregationString, threshold, zoneGrid, idZoneVector, outputSeries,
-                                             indexRowCol, meteoGridRow, meteoGridCol, valuesFirstDate, nrDays, showInfo);
+                                             indexRowCol, meteoGridRow, meteoGridCol, getCrit3DDate(startDate), nrDays, showInfo);
     }
 }
 
@@ -2503,7 +2502,7 @@ bool PragaProject::interpolationOutputPointsPeriod(QDate firstDate, QDate lastDa
 
     if (! DEM.isLoaded)
     {
-        errorString = "Load a Digital Elevation Model before.";
+        errorString = ERROR_STR_MISSING_DEM;
         return false;
     }
 
@@ -2760,7 +2759,7 @@ bool PragaProject::interpolationMeteoGrid(meteoVariable myVar, frequencyType myF
 {
     if (meteoGridDbHandler == nullptr)
     {
-        errorString = "Open a Meteo Grid before.";
+        errorString = ERROR_STR_MISSING_GRID;
         return false;
     }
 
@@ -3964,7 +3963,7 @@ bool PragaProject::loadForecastToGrid(QString fileName, bool overWrite, bool che
     }
     if (meteoGridDbHandler == nullptr)
     {
-        logError("Open a Meteo Grid before.");
+        logError(ERROR_STR_MISSING_GRID);
         return false;
     }
     ForecastDataset dataset;

@@ -1,12 +1,39 @@
 #include "commonConstants.h"
 #include "dbArkimet.h"
+#include "dbMeteoPointsHandler.h"
 
-#include <QtSql>
+#include <QSqlQuery>
+#include <QSqlError>
+#include <QFile>
+#include <QDebug>
 
 
 DbArkimet::DbArkimet(QString dbName) : Crit3DMeteoPointsDbHandler(dbName)
 {
     queryString = "";
+}
+
+
+QList<VariablesList> DbArkimet::getAllVariableProperties()
+{
+    QList<VariablesList> variableList;
+
+    QString statement = QString("SELECT * FROM variable_properties");
+    QSqlQuery qry(statement, _db);
+
+    if(! qry.exec() )
+    {
+        qDebug() << qry.lastError();
+    }
+    else
+    {
+        while (qry.next())
+        {
+            variableList.append(VariablesList(qry.value("id_variable").toInt(), qry.value("id_arkimet").toInt(), qry.value("variable").toString(), qry.value("frequency").toInt() ));
+        }
+    }
+
+    return variableList;
 }
 
 
@@ -20,15 +47,15 @@ QList<VariablesList> DbArkimet::getVariableProperties(QList<int> id)
 
     for (int i = 1; i < id.size(); i++)
     {
-        idlist = idlist % QString(",%1").arg(id[i]);
+        idlist += QString(",%1").arg(id[i]);
     }
-    idlist = idlist % QString(")");
+    idlist += QString(")");
 
     QString statement = QString("SELECT * FROM variable_properties WHERE id_arkimet IN %1").arg(idlist);
 
     QSqlQuery qry(statement, _db);
 
-    if( !qry.exec() )
+    if(! qry.exec() )
         qDebug() << qry.lastError();
     else
     {
@@ -50,7 +77,7 @@ QString DbArkimet::getVarName(int id)
     qry.prepare( "SELECT variable FROM variable_properties WHERE id_arkimet = :id" );
     qry.bindValue(":id", id);
 
-    if( !qry.exec() )
+    if(! qry.exec() )
     {
         qDebug() << qry.lastError();
     }
@@ -100,7 +127,7 @@ QList<int> DbArkimet::getDailyVar()
 
     qry.prepare( "SELECT id_arkimet FROM variable_properties WHERE frequency = 86400" );
 
-    if( !qry.exec() )
+    if(! qry.exec() )
     {
         qDebug() << qry.lastError();
     }
@@ -126,7 +153,7 @@ QList<int> DbArkimet::getHourlyVar()
 
     qry.prepare( "SELECT id_arkimet FROM variable_properties WHERE frequency < 86400" );
 
-    if( !qry.exec() )
+    if(! qry.exec() )
     {
         qDebug() << qry.lastError();
     }
@@ -143,11 +170,9 @@ QList<int> DbArkimet::getHourlyVar()
 }
 
 
-
 void DbArkimet::initStationsDailyTables(const QDate &startDate, const QDate &endDate,
                                         const QList<QString> &stationList, const QList<QString> &idVarList)
 {
-
     QList<QString> varList;
     for (int i=0; i < idVarList.size(); i++)
     {
@@ -170,7 +195,6 @@ void DbArkimet::initStationsDailyTables(const QDate &startDate, const QDate &end
         qry = QSqlQuery(statement, _db);
         qry.exec();
     }
-
 }
 
 
@@ -209,28 +233,15 @@ void DbArkimet::initStationsHourlyTables(const QDate &startDate, const QDate &en
 }
 
 
-void DbArkimet::createTmpTableHourly()
+bool DbArkimet::createTmpTable()
 {
-    this->deleteTmpTableHourly();
+    this->deleteTmpTable();
 
     QSqlQuery qry(_db);
-    qry.prepare("CREATE TABLE TmpHourlyData (date_time TEXT, id_point TEXT, id_variable INTEGER, value REAL)");
-    if( !qry.exec() )
+    qry.prepare("CREATE TABLE TmpData (date_time TEXT, id_point TEXT, id_variable INTEGER, value REAL)");
+    if(! qry.exec() )
     {
-        qDebug() << qry.lastError();
-    }
-}
-
-
-bool DbArkimet::createTmpTableDaily(QString &errorStr)
-{
-    this->deleteTmpTableDaily();
-
-    QSqlQuery qry(_db);
-    qry.prepare("CREATE TABLE TmpDailyData (date TEXT, id_point TEXT, id_variable INTEGER, value REAL)");
-    if(! qry.exec())
-    {
-        errorStr = qry.lastError().text();
+        setErrorString(qry.lastError().text());
         return false;
     }
 
@@ -238,55 +249,30 @@ bool DbArkimet::createTmpTableDaily(QString &errorStr)
 }
 
 
-void DbArkimet::deleteTmpTableHourly()
+void DbArkimet::deleteTmpTable()
 {
     QSqlQuery qry(_db);
 
-    qry.prepare( "DROP TABLE TmpHourlyData" );
+    qry.prepare("DROP TABLE TmpData");
 
-    if( !qry.exec() )
+    if(! qry.exec() )
     {
-        //qDebug() << "DROP TABLE TmpHourlyData" << qry.lastError();
+        //qDebug() << "DROP TABLE TmpData" << qry.lastError();
     }
 }
 
 
-void DbArkimet::deleteTmpTableDaily()
+void DbArkimet::appendTmpData(const QString &dateTimeStr, const QString &idPoint, const QString &idVar, const QString &value, bool isFirstData)
 {
-    QSqlQuery qry(_db);
-
-    qry.prepare( "DROP TABLE TmpDailyData" );
-
-    if( !qry.exec() )
+    if (isFirstData)
     {
-        //qDebug() << "DROP TABLE TmpDailyData" << qry.lastError();
+        queryString = "INSERT INTO TmpData VALUES ";
     }
-}
-
-
-void DbArkimet::appendQueryHourly(QString dateTime, QString idPoint, QString idVar, QString value, bool isFirstData)
-{
-    if (isFirstData)
-        queryString = "INSERT INTO TmpHourlyData VALUES ";
     else
+    {
         queryString += ",";
-
-    queryString += "('" + dateTime + "'"
-            + ",'" + idPoint + "'"
-            + "," + idVar
-            + "," + value
-            + ")";
-}
-
-
-void DbArkimet::appendQueryDaily(QString date, QString idPoint, QString idVar, QString value, bool isFirstData)
-{
-    if (isFirstData)
-        queryString = "INSERT INTO TmpDailyData VALUES ";
-    else
-        queryString += ",";
-
-    queryString += "('" + date + "'"
+    }
+    queryString += "('" + dateTimeStr + "'"
             + ",'" + idPoint + "'"
             + "," + idVar
             + "," + value
@@ -296,7 +282,6 @@ void DbArkimet::appendQueryDaily(QString date, QString idPoint, QString idVar, Q
 
 bool DbArkimet::saveDailyData()
 {
-
     if (queryString == "")
         return false;
 
@@ -304,25 +289,35 @@ bool DbArkimet::saveDailyData()
     _db.exec(queryString);
 
     // query stations with data
-    QString statement = QString("SELECT DISTINCT id_point FROM TmpDailyData");
-    QSqlQuery qry = _db.exec(statement);
+    QString statement = QString("SELECT DISTINCT id_point FROM TmpData");
+    QSqlQuery qryStations = _db.exec(statement);
 
     // create data stations list
     QList<QString> stations;
-    while (qry.next())
-        stations.append(qry.value(0).toString());
+    while (qryStations.next())
+    {
+        stations.append(qryStations.value(0).toString());
+    }
 
     // insert data
     foreach (QString id_point, stations)
     {
+        QString tableName = id_point + "_D";
+        if (! _db.tables().contains(tableName))
+        {
+            statement = QString("CREATE TABLE IF NOT EXISTS `%1`"
+                        "(date_time TEXT(20), id_variable INTEGER, value REAL, PRIMARY KEY(date_time, id_variable))").arg(tableName);
+            _db.exec(statement);
+        }
+
         statement = QString("INSERT INTO `%1_D` ").arg(id_point);
-        statement += QString("SELECT date, id_variable, value FROM TmpDailyData ");
+        statement += QString("SELECT date_time, id_variable, value FROM TmpData ");
         statement += QString("WHERE id_point = %1").arg(id_point);
 
         _db.exec(statement);
         if (_db.lastError().type() != QSqlError::NoError)
         {
-            qDebug() << _db.lastError();
+            setErrorString(_db.lastError().text());
             return false;
         }
     }
@@ -333,7 +328,6 @@ bool DbArkimet::saveDailyData()
 
 bool DbArkimet::saveHourlyData()
 {
-
     if (queryString == "")
         return false;
 
@@ -341,7 +335,7 @@ bool DbArkimet::saveHourlyData()
     _db.exec(queryString);
 
     // query stations with data
-    QString statement = QString("SELECT DISTINCT id_point FROM TmpHourlyData");
+    QString statement = QString("SELECT DISTINCT id_point FROM TmpData");
     QSqlQuery qry = _db.exec(statement);
 
     // create data stations list
@@ -353,7 +347,7 @@ bool DbArkimet::saveHourlyData()
     foreach (QString id_point, stations)
     {
         statement = QString("INSERT INTO `%1_H` ").arg(id_point);
-        statement += QString("SELECT date_time, id_variable, value FROM TmpHourlyData ");
+        statement += QString("SELECT date_time, id_variable, value FROM TmpData ");
         statement += QString("WHERE id_point = %1 AND strftime('%M', date_time) = '00'").arg(id_point);
 
         _db.exec(statement);
@@ -362,6 +356,114 @@ bool DbArkimet::saveHourlyData()
             qDebug() << _db.lastError();
             return false;
         }
+    }
+
+    return true;
+}
+
+
+bool DbArkimet::readVmDataDaily(const QString &vmFileName, bool isPrec0024, QString &errorString)
+{
+    QFile myFile(vmFileName);
+    if (! myFile.open(QIODevice::ReadOnly))
+    {
+        errorString = "Open failed: " + vmFileName + "\n " + myFile.errorString();
+        return false;
+    }
+
+    QTextStream myStream (&myFile);
+    if (myStream.atEnd())
+    {
+        errorString = "File is empty: " + vmFileName;
+        myFile.close();
+        return false;
+    }
+
+    // list variables
+    QList<VariablesList> variableList = this->getAllVariableProperties();
+    if (variableList.isEmpty())
+    {
+        errorString = "table 'variable_properties' is missing or empty,";
+        myFile.close();
+        return false;
+    }
+
+    if (! this->createTmpTable())
+    {
+        errorString = "Error in creating tmp table: " + this->getErrorString();
+        myFile.close();
+        return false;
+    }
+
+    bool isFirstData = true;
+
+    while(! myStream.atEnd())
+    {
+        QList<QString> fields = myStream.readLine().split(',');
+
+        // warning: reference date arkimet: hour 00 of day+1
+        QString dateTimeStr = fields[0];
+        QDate myDate = QDate::fromString(dateTimeStr.left(8), "yyyyMMdd").addDays(-1);
+        int hour = dateTimeStr.mid(8,2).toInt();
+        QString dateStr = myDate.toString("yyyy-MM-dd");
+
+        // check id
+        QString idPoint = fields[1];
+        if (idPoint == "")
+            continue;
+
+        int idArkimet = fields[2].toInt();
+
+        // check prec (00-24 or 08-08)
+        if (idArkimet == PREC_ID)
+        {
+            if ((isPrec0024 && hour != 0) || (! isPrec0024 && hour != 8))
+                continue;
+        }
+
+        // check flag
+        QString flag = fields[6];
+        if (flag.left(1) == "1" || flag.left(3) == "054")
+            continue;
+
+        // check value
+        QString valueStr;
+        if (flag.left(1) == "2")
+            valueStr = fields[4];
+        else
+            valueStr = fields[3];
+
+        if (valueStr == "")
+            continue;
+
+        bool isNumber;
+        double value = valueStr.toDouble(&isNumber);
+        if (isNumber)
+        {
+            // conversion from average daily radiation to integral radiation
+            if (idArkimet == RAD_ID)
+            {
+                value *= DAY_SECONDS / 1000000.;
+            }
+
+            // variable
+            int i = 0;
+            while (i < variableList.size() && variableList[i].arkId() != idArkimet)
+                i++;
+
+            if (i < variableList.size())
+            {
+                int idVariable = variableList[i].id();
+                this->appendTmpData(dateStr, idPoint, QString::number(idVariable), QString::number(value), isFirstData);
+                isFirstData = false;
+            }
+        }
+    }
+
+    if (! this->saveDailyData())
+    {
+        errorString = this->getErrorString();
+        return false;
     }
 
     return true;
