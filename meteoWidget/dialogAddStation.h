@@ -21,7 +21,7 @@ private:
     QListWidget* _listNearStationsWidget;
 
 public:
-    DialogAddStation(const QList<QString> &_activeStationsList, Crit3DMeteoPoint *allMeteoPointsPointer, int nrAllMeteoPoints);
+    DialogAddStation(const QList<QString> &activeStationsList, Crit3DMeteoPoint *allMeteoPointsPointer, int nrAllMeteoPoints);
 
     double getSingleValue();
     void searchStations();
