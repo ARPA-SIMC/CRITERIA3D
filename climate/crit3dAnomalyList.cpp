@@ -747,10 +747,10 @@ bool Crit3DAnomalyList::addAnomaly(unsigned int index)
         anomalyAdded = anomalyAdded + "_PERC";
     }
 
-    if (_listAll.contains(anomalyAdded)!= 0)
+    /*if (_listAll.contains(anomalyAdded)!= 0)
     {
         return false;
-    }
+    }*/
 
     _listAll.append(anomalyAdded);
     return true;
