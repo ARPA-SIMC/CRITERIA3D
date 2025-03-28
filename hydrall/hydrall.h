@@ -197,9 +197,9 @@
     struct TparameterWangLeuning
     {
         double optimalTemperatureForPhotosynthesis = 298.15; // K
-        double stomatalConductanceMin = 0.01;
+        double stomatalConductanceMin = 0.01; // [Pa Pa-1]
         double sensitivityToVapourPressureDeficit = 1300;
-        double alpha = 11;
+        double alpha = 340000; //1100000; // this parameter must be multiplied by 10^-6 in order to be compliant with literature
         double psiLeaf = 1800;                 // kPa
         double waterStressThreshold = NODATA;
         double maxCarboxRate = 150;           // Vcmo at optimal temperature  umol m-2 s-1
