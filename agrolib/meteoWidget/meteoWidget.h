@@ -23,7 +23,7 @@
             void setIsEnsemble(bool value);
             bool getIsEnsemble() { return _isEnsemble; }
             void setNrMembers(int value) { _nrMembers = value; }
-            void setAllMeteoPointsPointer(Crit3DMeteoPoint* pointer) { _allMeteoPointsPointer = pointer; }
+            void setAllMeteoPointsPointer(Crit3DMeteoPoint* pointer, int nrAllMeteoPoints) { _allMeteoPointsPointer = pointer; _nrAllMeteoPoints = nrAllMeteoPoints;}
 
             void setFrequency(frequencyType frequency);
 
@@ -44,6 +44,8 @@
             bool _isEnsemble;
             bool _isInitialized;
             int _nrMembers;
+            int _nrAllMeteoPoints;
+
 
             QVector<Crit3DMeteoPoint> _meteoPoints;
             QVector<Crit3DMeteoPoint> _meteoPointsEnsemble;
