@@ -235,10 +235,10 @@
 
     struct ThydrallBiomass {
 
-        double total ;
-        double leaf ;
-        double sapwood ;
-        double fineRoot ;
+        double total;
+        double leaf = EPSILON;
+        double sapwood = EPSILON;
+        double fineRoot = EPSILON;
     };
 
     struct TallocationCoefficient {

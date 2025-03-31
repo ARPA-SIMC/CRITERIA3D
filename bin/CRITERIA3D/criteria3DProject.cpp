@@ -1348,8 +1348,8 @@ bool Crit3DProject::computeHydrallModel()
                     else
                         currentCrop.roots.rootDensity[i] = 0;
                     // TODO
-                    currentCrop.roots.firstRootLayer = 0;
-                    currentCrop.roots.lastRootLayer = 1;
+                    currentCrop.roots.firstRootLayer = 1;
+                    currentCrop.roots.lastRootLayer = 2;
                     /*
                     int zcurrentNode = indexMap.at(i).value[row][col];
                     float zflag =  indexMap.at(i).header->flag;
