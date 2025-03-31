@@ -234,7 +234,7 @@ void Crit3D_Hydrall::setStateVariables(Crit3DHydrallMaps &stateMap, int row, int
     stateVariable.rootBiomass = stateMap.rootBiomassMap->value[row][col];
 }
 
-void Crit3D_Hydrall::setSoilVariables(int iLayer, int currentNode,float checkFlag, int horizonIndex, double waterContent, double waterContentFC, double waterContentWP, int firstRootLayer, int lastRootLayer, double rootDensity)
+void Crit3D_Hydrall::setSoilVariables(int iLayer, int currentNode,float checkFlag, int horizonIndex, double waterContent, double waterContentFC, double waterContentWP, int firstRootLayer, int lastRootLayer, double rootDensity,double clay, double sand,double thickness)
 {
     if (iLayer == 0)
     {
@@ -244,14 +244,22 @@ void Crit3D_Hydrall::setSoilVariables(int iLayer, int currentNode,float checkFla
     soil.waterContent.resize(soil.layersNr);
     soil.stressCoefficient.resize(soil.layersNr);
     soil.rootDensity.resize(soil.layersNr);
+    soil.clay.resize(soil.layersNr);
+    soil.sand.resize(soil.layersNr);
+    soil.nodeThickness.resize(soil.layersNr);
 
     if (currentNode != checkFlag)
     {
         soil.waterContent[iLayer] = waterContent;
         soil.stressCoefficient[iLayer] = MINVALUE(1.0, (10*(soil.waterContent[iLayer]-waterContentWP))/(3*(waterContentFC-waterContentWP)));
+        soil.clay[iLayer] = clay;
+        soil.sand[iLayer] = sand;
+        soil.nodeThickness[iLayer] = thickness;
     }
     soil.rootDensity[iLayer] = LOGICAL_IO((iLayer >= firstRootLayer && iLayer <= lastRootLayer),rootDensity,0);
-
+    soil.clayAverage = statistics::weighedMean(soil.nodeThickness,soil.clay);
+    soil.clayAverage = statistics::weighedMean(soil.nodeThickness,soil.sand);
+    soil.siltAverage = 1 - soil.clayAverage - soil.sandAverage;
 }
 
 void Crit3D_Hydrall::getStateVariables(Crit3DHydrallMaps &stateMap, int row, int col)
@@ -803,10 +811,10 @@ void Crit3D_Hydrall::cumulatedResults()
 
     for (int i=1; i < soil.layersNr; i++)
     {
-        treeTranspirationRate[i] = HOUR_SECONDS * MH2O * treeTranspirationRate[i]; // [mm]
+        treeTranspirationRate[i] *= (HOUR_SECONDS * MH2O); // [mm]
+        understoreyTranspirationRate[i] *= (HOUR_SECONDS * MH2O); // [mm]
         deltaTime.transpiration += (treeTranspirationRate[i] + understoreyTranspirationRate[i]);
     }
-    deltaTime.transpiration += understorey.transpiration;
 
     //evaporation
     deltaTime.evaporation = computeEvaporation();
@@ -822,6 +830,40 @@ double Crit3D_Hydrall::computeEvaporation()
         return 0.2 * ETP;
     else
         return -0.8 / LAIMAX *ETP;
+}
+
+double Crit3D_Hydrall::understoreyRespiration()
+{
+    double understorey10DegRespirationFoliage;
+    double understorey10DegRespirationFineroot;
+
+    if(firstMonthVegetativeSeason)
+    {
+        understorey10DegRespirationFoliage = 0.0106/2. * (understoreyBiomass.leaf * nitrogenContent.leaf);
+        understorey10DegRespirationFineroot= 0.0106/2. * (understoreyBiomass.fineRoot * nitrogenContent.root);
+    }
+    //double understoreyRespirationFoliage,understoreyRespirationFineroot;
+    //understoreyRespirationFoliage = understorey10DegRespirationFoliage*;
+    double PSI0 = -2;// * 101.972; //(m)
+    double PENTRY,BSL,RVW_0,RVW_50,SIGMAG;
+    PENTRY = std::sqrt(std::exp(soil.clayAverage*std::log(0.001) + soil.siltAverage*std::log(0.026) + soil.sandAverage*std::log(1.025)));
+    PENTRY = -0.5 / PENTRY;
+    SIGMAG =std::exp(std::sqrt(soil.clayAverage*POWER2(std::log(0.001)) + soil.siltAverage*POWER2(std::log(0.026)) + soil.sandAverage*POWER2(std::log(1.025))));
+
+    /*
+         RVW_0= (PSIS0/PENTRY)**(-1/BSL)                       !soil water content for null respiration
+         RVW_50= RVW_0 + (1.-RVW_0)/K_VW
+         RVWSL= VWSL / VWSAT                                   !relative soil water content (as a fraction of value at saturation)
+         IF(RVWSL.LT.RVW_0) THEN
+           VWCORR= 0.
+         ELSE
+           VWCORR= (RVWSL-RVW_0)/((RVWSL-RVW_0)+(RVW_50-RVW_0))  !effects of soil water content
+         END IF
+
+         Q10= A_Q10 + B_Q10 * RVWSL                            !effects of soil humidity on sensitivity to temperature
+         TFUN= Q10 ** ((T-TREF)/10.)                           !temperature dependence of respiration, based on Q10 approach
+         TFUN= TFUN * VWCORR*/
+    return 0;
 }
 
 double Crit3D_Hydrall::plantRespiration()
