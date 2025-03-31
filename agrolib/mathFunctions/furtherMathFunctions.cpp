@@ -22,6 +22,7 @@
     ftomei@arpae.it
     gantolini@arpae.it
     avolta@arpae.it
+    ctoscano@arpae.it
 */
 
 #include <math.h>
@@ -74,7 +75,7 @@ double lapseRatePiecewise_three_noSlope(double x, std::vector <double>& par)
 
     // the piecewise line is parameterized as follows
     // the line passes through A(par[0];par[1])and B(par[0]+par[2];par[3]). par[4] is the slope of the 2 externals pieces
-    // "y = mx + q" piecewise function;
+    // "y = mx + q" piecewise function
 
     double xb;
     // par[2] means the delta between the two quotes. It must be positive.
