@@ -160,7 +160,7 @@ void Callout::updateGeometry()
     {
         if (m_chart->mapToPosition(m_anchor).x() > m_chart->plotArea().center().x())
         {
-            setPos(m_chart->mapToPosition(m_anchor, m_series) + QPoint(-130, -50));
+            setPos(m_chart->mapToPosition(m_anchor, m_series) + QPoint(-180, -50));
         }
         else
         {
@@ -171,7 +171,7 @@ void Callout::updateGeometry()
     {   
         if (m_chart->mapToPosition(m_anchor).x() > m_chart->plotArea().center().x())
         {
-            setPos(m_chart->mapToPosition(m_anchor) + QPoint(-130, -50));
+            setPos(m_chart->mapToPosition(m_anchor) + QPoint(-180, -50));
         }
         else
         {
