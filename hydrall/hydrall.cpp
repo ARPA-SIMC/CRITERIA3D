@@ -105,6 +105,7 @@ double Crit3D_Hydrall::photosynthesisAndTranspiration()
     TweatherDerivedVariable weatherDerivedVariable;
 
     Crit3D_Hydrall::radiationAbsorption();
+    Crit3D_Hydrall::photosynthesisAndTranspirationUnderstorey();
     Crit3D_Hydrall::aerodynamicalCoupling();
     Crit3D_Hydrall::upscale();
 
@@ -116,23 +117,29 @@ double Crit3D_Hydrall::photosynthesisAndTranspiration()
 
 double Crit3D_Hydrall::photosynthesisAndTranspirationUnderstorey()
 {
-    const double rootEfficiencyInWaterExtraction = 1.25e-3;  //[kgH2O kgDM-1 s-1]
-    const double understoreyLightUtilization = 1.77e-9;      //[kgC J-1]
-    double cumulatedUnderstoreyTranspirationRate = 0;
-    double waterUseEfficiency;                               //[molC molH2O-1]
+    understoreyTranspirationRate.resize(1);
+    understoreyTranspirationRate[0] = 0;
 
     if (understorey.absorbedPAR > EPSILON)
     {
+        const double rootEfficiencyInWaterExtraction = 1.25e-3;  //[kgH2O kgDM-1 s-1]
+        const double understoreyLightUtilization = 1.77e-9;      //[kgC J-1]
+        double cumulatedUnderstoreyTranspirationRate = 0;
+        double waterUseEfficiency;                               //[molC molH2O-1]
+
         waterUseEfficiency = environmentalVariable.CO2 * 0.1875 / weatherVariable.vaporPressureDeficit;
 
         double lightLimitedUnderstoreyAssimilation;          //[molC m-2 s-1]
         double waterLimitedUnderstoreyAssimilation;          //[molC m-2 s-1]
 
         lightLimitedUnderstoreyAssimilation = understoreyLightUtilization * understorey.absorbedPAR / MC; //convert units from kgC m-2 s-1 into molC m-2 s-1
+        double density=1;
+        if (soil.layersNr > 1)
+            density = 1/(soil.layersNr-1);
 
         for (int i = 1; i < soil.layersNr; i++)
         {
-            understoreyTranspirationRate[i] = rootEfficiencyInWaterExtraction * understoreyBiomass.fineRoot * soil.stressCoefficient[i];
+            understoreyTranspirationRate.push_back(rootEfficiencyInWaterExtraction * understoreyBiomass.fineRoot * soil.stressCoefficient[i]*density);
             cumulatedUnderstoreyTranspirationRate += understoreyTranspirationRate[i];
         }
 
@@ -155,8 +162,8 @@ double Crit3D_Hydrall::photosynthesisAndTranspirationUnderstorey()
     }
     else
     {
-        for (int i = 1; i < understoreyTranspirationRate.size(); i++)
-            understoreyTranspirationRate[i] = 0;
+        for (int i = 1; i < soil.layersNr; i++)
+            understoreyTranspirationRate.push_back(0);
         understoreyAssimilationRate = 0;
     }
     return 0;
@@ -693,7 +700,7 @@ void Crit3D_Hydrall::carbonWaterFluxesProfile()
                                                                  &(sunlit.transpiration));
             }
 
-            treeAssimilationRate += sunlit.assimilation * soil.rootDensity[i] ;
+            //treeAssimilationRate += sunlit.assimilation * soil.rootDensity[i] ;
 
             // shaded big leaf
             Crit3D_Hydrall::photosynthesisKernel(shaded.compensationPoint, shaded.aerodynamicConductanceCO2Exchange,shaded.aerodynamicConductanceHeatExchange, shaded.minimalStomatalConductance,
@@ -702,7 +709,7 @@ void Crit3D_Hydrall::carbonWaterFluxesProfile()
                                                              parameterWangLeuning.alpha * soil.stressCoefficient[i], shaded.maximalCarboxylationRate,
                                                              &(shaded.assimilation), &(shaded.stomatalConductance),
                                                              &(shaded.transpiration));
-            treeAssimilationRate += shaded.assimilation * soil.rootDensity[i] ; //canopy gross assimilation (mol m-2 s-1)
+            treeAssimilationRate += ( shaded.assimilation + sunlit.assimilation) * soil.rootDensity[i] ; //canopy gross assimilation (mol m-2 s-1)
         }
         treeTranspirationRate[i] += (shaded.transpiration + sunlit.transpiration) * soil.rootDensity[i] ;
     }
@@ -797,7 +804,7 @@ void Crit3D_Hydrall::cumulatedResults()
     for (int i=1; i < soil.layersNr; i++)
     {
         treeTranspirationRate[i] = HOUR_SECONDS * MH2O * treeTranspirationRate[i]; // [mm]
-        deltaTime.transpiration += treeTranspirationRate[i];
+        deltaTime.transpiration += (treeTranspirationRate[i] + understoreyTranspirationRate[i]);
     }
     deltaTime.transpiration += understorey.transpiration;
 
