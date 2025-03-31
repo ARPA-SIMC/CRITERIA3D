@@ -53,15 +53,19 @@
         QString operation;
         QString configFileName;
         QString projectError;
+        // csv
+        QString variableListFileName;
+        // shape
         QString ucmFileName;
         QString fieldListFileName;
-        QString variableListFileName;
+        QString computationListFileName;
+        // aggregation
         QString aggregationShapeFileName;
-        QString shapeFieldName;
+        QString aggregationShapeField;
         QString aggregationListFileName;
         QString aggregationCellSize;
         QString aggregationThreshold;
-
+        // map
         QString mapListFileName;
         QString mapPalettePath;
         QString mapCellSize;
