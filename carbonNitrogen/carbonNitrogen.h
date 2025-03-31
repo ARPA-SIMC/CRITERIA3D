@@ -210,5 +210,3 @@
 
 
 #endif // CARBON_NITROGEN_H
-
-
