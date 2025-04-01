@@ -198,14 +198,14 @@ bool Crit3DDroughtList::addDrought(unsigned int index)
         }
     }
 
-    if(std::find(_listAll.begin(), _listAll.end(), droughtAdded) != _listAll.end())
+    /*if(std::find(_listAll.begin(), _listAll.end(), droughtAdded) != _listAll.end())
     {
         return false;
     }
     else
-    {
-        _listAll.push_back(droughtAdded);
-        return true;
-    }
+    {*/
+
+    _listAll.push_back(droughtAdded);
+    return true;
 
 }

@@ -437,11 +437,11 @@ bool Crit3DElabList::addElab(unsigned int index)
     if (offset != "0" && offset != "" && _listDailyCumulated[index] == true)
         elabAdded = elabAdded + "_offset" + offset;
 
-    if (_listAll.contains(elabAdded)!= 0)
+    /*if (_listAll.contains(elabAdded)!= 0)
     {
         qDebug() << "return false elabAdded: " << elabAdded;
         return false;
-    }
+    }*/
 
     _listAll.append(elabAdded);
     return true;
