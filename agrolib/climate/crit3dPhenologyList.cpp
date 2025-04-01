@@ -204,14 +204,15 @@ bool Crit3DPhenologyList::addPhenology(unsigned int index)
     QString crop = QString::fromStdString(getStringMapPhenoCrop(MapPhenoCropToString, _listCrop[index]));
 
     QString phenologyAdded = computation + "_" + crop + "_" + variety + "_" + scale + "_VERN:" + QString::number(_listVernalization[index]) + "_" + dateStart + "_"+ dateEnd;
-    if(std::find(_listAll.begin(), _listAll.end(), phenologyAdded) != _listAll.end())
+
+    /*if(std::find(_listAll.begin(), _listAll.end(), phenologyAdded) != _listAll.end())
     {
         return false;
     }
     else
-    {
-        _listAll.push_back(phenologyAdded);
-        return true;
-    }
+    {*/
+
+    _listAll.push_back(phenologyAdded);
+    return true;
 
 }
