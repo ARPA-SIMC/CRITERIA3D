@@ -23,7 +23,8 @@
     double getSoilWaterContentSum(const std::vector<soil::Crit1DLayer> &soilLayers, double computationDepth);
 
     double getReadilyAvailableWater(const Crit3DCrop &myCrop, const std::vector<soil::Crit1DLayer> &soilLayers);
-
+    
+    // test
 
 #endif // WATER1D_H
 
