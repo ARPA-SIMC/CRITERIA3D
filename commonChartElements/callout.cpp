@@ -164,7 +164,7 @@ void Callout::updateGeometry()
         }
         else
         {
-            setPos(m_chart->mapToPosition(m_anchor, m_series) + QPoint(10, -50));
+            setPos(m_chart->mapToPosition(m_anchor, m_series) + QPoint(20, -50));
         }
     }
     else
@@ -175,7 +175,7 @@ void Callout::updateGeometry()
         }
         else
         {
-            setPos(m_chart->mapToPosition(m_anchor) + QPoint(10, -50));
+            setPos(m_chart->mapToPosition(m_anchor) + QPoint(20, -50));
         }
     }
 }
