@@ -33,6 +33,7 @@
     enum TradiationAlgorithm{RADIATION_ALGORITHM_RSUN = 0};
     enum TradiationRealSkyAlgorithm{RADIATION_REALSKY_TOTALTRANSMISSIVITY, RADIATION_REALSKY_LINKE};
     enum TparameterMode {PARAM_MODE_FIXED = 0, PARAM_MODE_MAP = 1, PARAM_MODE_MONTHLY = 2} ;
+    enum TlandUse {LAND_USE_MOUNTAIN = 0, LAND_USE_RURAL = 1, LAND_USE_CITY = 2, LAND_USE_INDUSTRIAL = 3};
     enum TtiltMode{TILT_TYPE_FIXED=1, TILT_TYPE_DEM=2};
     //enum TtransmissivityAlgorithm{TRANSMISSIVITY_MODEL_HOURLY = 0, TRANSMISSIVITY_MODEL_DAILY = 1, TRANSMISSIVITY_MODEL_SAMANI = 2};
     //enum TtransmissivityComputationPeriod{TRANSMISSIVITY_COMPUTATION_DYNAMIC = 0,TRANSMISSIVITY_COMPUTATION_DAILY = 1};
@@ -55,6 +56,13 @@
     const std::map<std::string, TtiltMode> tiltModeToString = {
       { "fixed", TILT_TYPE_FIXED },
       { "dem", TILT_TYPE_DEM }
+    };
+
+    const std::map<std::string, TlandUse> landUseToString = {
+        { "industrial land use", LAND_USE_INDUSTRIAL },
+        { "urban land use", LAND_USE_CITY },
+        { "country land use ", LAND_USE_RURAL },
+        { "mountain land use", LAND_USE_MOUNTAIN }
     };
 
     struct TsunPosition
@@ -87,6 +95,14 @@
         double reflected;
         double global;
         double transmissivity;
+    };
+
+    struct TelabRadPoint
+    {
+        TradPoint radPoint;
+        std::string fileName;
+        Crit3DDate iniDate, endDate;
+        int iniHour, endHour;
     };
 
 
