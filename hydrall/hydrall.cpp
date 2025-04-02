@@ -871,9 +871,9 @@ double Crit3D_Hydrall::understoreyRespiration()
     for (int iLayer = 1; iLayer<soil.layersNr; iLayer++)
     {
         PENTRY = std::sqrt(std::exp(soil.clay[iLayer]*std::log(0.001) + soil.silt[iLayer]*std::log(0.026) + soil.sand[iLayer]*std::log(1.025)));
-        PENTRY = -0.5 / PENTRY;
+        PENTRY = -0.5 / PENTRY / 1000;
         SIGMAG =std::exp(std::sqrt(soil.clay[iLayer]*POWER2(std::log(0.001)) + soil.silt[iLayer]*POWER2(std::log(0.026)) + soil.sand[iLayer]*POWER2(std::log(1.025))));
-        BSL = -2*PENTRY + 0.2*SIGMAG;
+        BSL = -2*PENTRY*1000 + 0.2*SIGMAG;
         PENTRY *= (std::pow(soil.bulkDensity[iLayer]/1.3,0.67*BSL));
         RVW_0= std::pow((PSIS0/PENTRY),(-1/BSL)); // soil water content for null respiration
         RVW_50= RVW_0 + (1.-RVW_0)/K_VW;//
@@ -881,7 +881,7 @@ double Crit3D_Hydrall::understoreyRespiration()
 
         if (RVWSL < RVW_0)
         {
-            VWCORR = 0.;
+            VWCORR = 1.;
         }
         else
         {
