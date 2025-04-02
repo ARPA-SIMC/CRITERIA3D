@@ -250,6 +250,16 @@ void Crit3DRadiationSettings::setTiltMode(const TtiltMode &value)
     tiltMode = value;
 }
 
+TlandUse Crit3DRadiationSettings::getLandUse() const
+{
+    return landUse;
+}
+
+void Crit3DRadiationSettings::setLandUse(const TlandUse &value)
+{
+    landUse = value;
+}
+
 gis::Crit3DRasterGrid *Crit3DRadiationSettings::getLinkeMap() const
 {
     return linkeMap;
