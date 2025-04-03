@@ -26,6 +26,4 @@
 
     };
 
-    // test
-
 #endif // LOGGER_H
