@@ -876,7 +876,7 @@ double Crit3D_Hydrall::understoreyRespiration()
         BSL = -2*PENTRY*1000 + 0.2*SIGMAG;
         PENTRY *= (std::pow(soil.bulkDensity[iLayer]/1.3,0.67*BSL));
         RVW_0= std::pow((PSIS0/PENTRY),(-1/BSL)); // soil water content for null respiration
-        RVW_50= RVW_0 + (1.-RVW_0)/K_VW;//
+        RVW_50= RVW_0 + (1.-RVW_0)/K_VW;
         RVWSL= soil.waterContent[iLayer]/ soil.saturation[iLayer];//relative soil water content (as a fraction of value at saturation)
 
         if (RVWSL < RVW_0)
