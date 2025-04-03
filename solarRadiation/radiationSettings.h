@@ -15,6 +15,7 @@
         TradiationRealSkyAlgorithm realSkyAlgorithm;
         TparameterMode linkeMode;
         TparameterMode albedoMode;
+        TlandUse landUse;
         TtiltMode tiltMode;
 
         bool realSky;
@@ -70,6 +71,8 @@
         void setAlbedoMode(const TparameterMode &value);
         TtiltMode getTiltMode() const;
         void setTiltMode(const TtiltMode &value);
+        TlandUse getLandUse() const;
+        void setLandUse(const TlandUse &value);
         gis::Crit3DRasterGrid *getLinkeMap() const;
         void setLinkeMap(gis::Crit3DRasterGrid *value);
         gis::Crit3DRasterGrid *getAlbedoMap() const;
@@ -87,5 +90,6 @@
     std::string getKeyStringRealSky(TradiationRealSkyAlgorithm value);
     std::string getKeyStringParamMode(TparameterMode value);
     std::string getKeyStringTiltMode(TtiltMode value);
+    std::string getKeyStringLandUse(TlandUse value);
 
 #endif // RADIATIONSETTINGS_H
