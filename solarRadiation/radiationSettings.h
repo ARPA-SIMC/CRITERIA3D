@@ -90,5 +90,6 @@
     std::string getKeyStringRealSky(TradiationRealSkyAlgorithm value);
     std::string getKeyStringParamMode(TparameterMode value);
     std::string getKeyStringTiltMode(TtiltMode value);
+    std::string getKeyStringLandUse(TlandUse value);
 
 #endif // RADIATIONSETTINGS_H

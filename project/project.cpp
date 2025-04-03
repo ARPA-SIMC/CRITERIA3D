@@ -615,6 +615,18 @@ bool Project::loadParameters(QString parametersFileName)
                 radSettings.setAlbedoMonthly(StringListToFloat(myAlbedoStr));
             }
 
+            if (parametersSettings->contains("land_use"))
+            {
+                std::string landUse = parametersSettings->value("land_use").toString().toStdString();
+                if (landUseToString.find(landUse) == landUseToString.end())
+                {
+                    errorString = "Unknown land use: " + QString::fromStdString(landUse);
+                    return false;
+                }
+                else
+                    radSettings.setLandUse(landUseToString.at(landUse));
+            }
+
             parametersSettings->endGroup();
         }
 
@@ -3763,6 +3775,7 @@ void Project::saveRadiationParameters()
         parametersSettings->setValue("linke_map", getRelativePath(QString::fromStdString(radSettings.getLinkeMapName())));
         parametersSettings->setValue("albedo_map", getRelativePath(QString::fromStdString(radSettings.getAlbedoMapName())));
         parametersSettings->setValue("linke_monthly", FloatVectorToStringList(radSettings.getLinkeMonthly()));
+        parametersSettings->setValue("land_use", QString::fromStdString(getKeyStringLandUse(radSettings.getLandUse())));
     parametersSettings->endGroup();
 }
 

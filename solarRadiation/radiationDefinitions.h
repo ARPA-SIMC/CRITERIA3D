@@ -59,10 +59,10 @@
     };
 
     const std::map<std::string, TlandUse> landUseToString = {
-        { "industrial land use", LAND_USE_INDUSTRIAL },
-        { "urban land use", LAND_USE_CITY },
-        { "country land use ", LAND_USE_RURAL },
-        { "mountain land use", LAND_USE_MOUNTAIN }
+        { "industrial", LAND_USE_INDUSTRIAL },
+        { "urban", LAND_USE_CITY },
+        { "country", LAND_USE_RURAL },
+        { "mountain", LAND_USE_MOUNTAIN }
     };
 
     struct TsunPosition
