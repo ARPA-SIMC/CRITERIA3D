@@ -885,7 +885,7 @@ double Crit3D_Hydrall::understoreyRespiration()
         }
         else
         {
-            VWCORR= (RVWSL-RVW_0)/((RVWSL-RVW_0)+(RVW_50-RVW_0)); //!effects of soil water content
+            VWCORR= 1-((RVWSL-RVW_0)/((RVWSL-RVW_0)+(RVW_50-RVW_0))); //!effects of soil water content
         }
         Q10= A_Q10 + B_Q10 * RVWSL; // effects of soil humidity on sensitivity to temperature
         correctionFactorFoliageVector.push_back(VWCORR * std::pow(Q10,((weatherVariable.myInstantTemp-25)/10.))); //temperature dependence of respiration, based on Q10 approach
