@@ -387,3 +387,18 @@ std::string getKeyStringRealSky(TradiationRealSkyAlgorithm value)
     return key;
 }
 
+std::string getKeyStringLandUse(TlandUse value)
+{
+    std::map<std::string, TlandUse>::const_iterator it;
+    std::string key = "";
+
+    for (it = landUseToString.begin(); it != landUseToString.end(); ++it)
+    {
+        if (it->second == value)
+        {
+            key = it->first;
+            break;
+        }
+    }
+    return key;
+}
