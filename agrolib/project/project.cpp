@@ -591,7 +591,7 @@ bool Project::loadParameters(QString parametersFileName)
             if (parametersSettings->contains("albedo_map"))
                 radSettings.setAlbedoMapName(parametersSettings->value("albedo_map").toString().toStdString());
 
-            if (parametersSettings->contains("linke_monthly"))
+            if (parametersSettings->contains("linke_monthly") && parametersSettings->contains("land_use"))
             {
                 QList<QString> myLinkeStr = parametersSettings->value("linke_monthly").toStringList();
                 if (myLinkeStr.size() < 12)
@@ -601,6 +601,18 @@ bool Project::loadParameters(QString parametersFileName)
                 }
 
                 radSettings.setLinkeMonthly(StringListToFloat(myLinkeStr));
+            }
+
+            if (parametersSettings->contains("land_use") && !parametersSettings->contains("linke_monthly"))
+            {
+                std::string landUse = parametersSettings->value("land_use").toString().toStdString();
+                if (landUseToString.find(landUse) == landUseToString.end())
+                {
+                    errorString = "Unknown land use: " + QString::fromStdString(landUse);
+                    return false;
+                }
+                else
+                    radSettings.setLandUse(landUseToString.at(landUse));
             }
 
             if (parametersSettings->contains("albedo_monthly"))
@@ -613,18 +625,6 @@ bool Project::loadParameters(QString parametersFileName)
                 }
 
                 radSettings.setAlbedoMonthly(StringListToFloat(myAlbedoStr));
-            }
-
-            if (parametersSettings->contains("land_use"))
-            {
-                std::string landUse = parametersSettings->value("land_use").toString().toStdString();
-                if (landUseToString.find(landUse) == landUseToString.end())
-                {
-                    errorString = "Unknown land use: " + QString::fromStdString(landUse);
-                    return false;
-                }
-                else
-                    radSettings.setLandUse(landUseToString.at(landUse));
             }
 
             parametersSettings->endGroup();
