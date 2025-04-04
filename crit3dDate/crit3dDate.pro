@@ -1,7 +1,7 @@
 #----------------------------------------------------
 #
 #   crit3dDate library
-#   this project is part of CRITERIA3D distribution
+#   this project is part of ARPAE agrolib distribution
 #
 #----------------------------------------------------
 

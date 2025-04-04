@@ -313,6 +313,7 @@
         std::vector<double> understoreyTranspirationRate;
         double understoreyAssimilationRate;
 
+        double moistureCorrectionFactor(int index);
         double understoreyRespiration();
         void radiationAbsorption();
         void setSoilVariables(int iLayer, int currentNode, float checkFlag, int horizonIndex, double waterContent, double waterContentFC, double waterContentWP, int firstRootLayer, int lastRootLayer, double rootDensity, double clay, double sand, double thickness, double bulkDensity, double waterContentSat);
@@ -342,7 +343,7 @@
         double plantRespiration();
         double computeEvaporation();
         inline double soilTemperatureModel();
-        double temperatureMoistureFunction(double temperature);
+        double temperatureFunction(double temperature);
         bool growthStand();
         void resetStandVariables();
         void optimal();
