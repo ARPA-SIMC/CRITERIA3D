@@ -878,15 +878,7 @@ double Crit3D_Hydrall::understoreyRespiration()
         RVW_0= std::pow((PSIS0/PENTRY),(-1/BSL)); // soil water content for null respiration
         RVW_50= RVW_0 + (1.-RVW_0)/K_VW; //
         RVWSL= soil.waterContent[iLayer]/ soil.saturation[iLayer];//relative soil water content (as a fraction of value at saturation)
-
-        if (RVWSL < RVW_0)
-        {
-            VWCORR = 1.;
-        }
-        else
-        {
-            VWCORR= 1-((RVWSL-RVW_0)/((RVWSL-RVW_0)+(RVW_50-RVW_0))); //!effects of soil water content
-        }
+        VWCORR = moistureCorrectionFactor(iLayer);
         Q10= A_Q10 + B_Q10 * RVWSL; // effects of soil humidity on sensitivity to temperature
         correctionFactorFoliageVector.push_back(VWCORR * std::pow(Q10,((weatherVariable.myInstantTemp-25)/10.))); //temperature dependence of respiration, based on Q10 approach
         correctionFactorFinerootVector.push_back(VWCORR * std::pow(Q10,((soil.temperature-25)/10.)));
@@ -930,6 +922,21 @@ inline double Crit3D_Hydrall::soilTemperatureModel()
 {
     // taken from Hydrall Model, Magnani UNIBO
     return 0.8 * weatherVariable.last30DaysTAvg + 0.2 * weatherVariable.myInstantTemp;
+}
+
+double Crit3D_Hydrall::moistureCorrectionFactor(int index)
+{
+    double correctionSoilMoisture = 1;
+    double stressThreshold = 0.5*(soil.saturation[index]+soil.fieldCapacity[index]);
+    if (soil.waterContent[index] <= soil.fieldCapacity[index])
+    {
+        correctionSoilMoisture = log(soil.wiltingPoint[index]/soil.waterContent[index]) / log(soil.wiltingPoint[index]/soil.fieldCapacity[index]);
+    }
+    else if(soil.waterContent[index] > stressThreshold)
+    {
+        correctionSoilMoisture = log(soil.saturation[index]/soil.waterContent[index]) / log(soil.saturation[index]/stressThreshold);
+    }
+    return correctionSoilMoisture;
 }
 
 double Crit3D_Hydrall::temperatureMoistureFunction(double temperature)
