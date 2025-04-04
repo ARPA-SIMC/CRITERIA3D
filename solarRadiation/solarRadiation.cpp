@@ -223,6 +223,19 @@ namespace radiation
         return output;
     }
 
+    void readLinke(Crit3DRadiationSettings* radSettings, std::vector<float> &linkeMonthly)
+    {
+        switch(radSettings->getLinkeMode())
+        {
+
+        case PARAM_MODE_MONTHLY:
+            linkeMonthly = radSettings->getLinkeMonthly();
+
+            break;
+        }
+        return;
+    }
+
     float readLinke(Crit3DRadiationSettings* radSettings, int row, int col)
     {
         float output = NODATA;
@@ -717,7 +730,11 @@ bool computeRadiationRsun(Crit3DRadiationSettings* radSettings, float temperatur
         radPoint.lat = latDegrees;
         radPoint.lon = lonDegrees;
 
-        linke = readLinke(radSettings, point);
+        if (radSettings->getLinkeMode() == PARAM_MODE_MONTHLY)
+            linke = radSettings->getMonthlyLinke(myTime.date.month);
+        else
+            linke = readLinke(radSettings, point);
+
         albedo = readAlbedo(radSettings, point);
         clearSkyTransmissivity = radSettings->getClearSky();
 
@@ -795,7 +812,13 @@ bool computeRadiationRsun(Crit3DRadiationSettings* radSettings, float temperatur
         radPoint.slope = readSlope(radSettings, radiationMaps->slopeMap, row, col);
         radPoint.aspect = readAspect(radSettings, radiationMaps->aspectMap, row, col);
 
-        float linke = readLinke(radSettings, row, col);
+        float linke;
+
+        if (radSettings->getLinkeMode() == PARAM_MODE_MONTHLY)
+            linke = radSettings->getMonthlyLinke(myTime.date.month);
+        else
+            linke = readLinke(radSettings, row, col);
+
         float albedo = readAlbedo(radSettings, row, col);
 
         float transmissivity = radiationMaps->transmissivityMap->value[row][col];
@@ -828,7 +851,13 @@ bool computeRadiationRsun(Crit3DRadiationSettings* radSettings, float temperatur
 
         gis::Crit3DPoint myPoint = myMeteoPoint->point;
 
-        float linke = readLinke(radSettings, myPoint);
+        float linke;
+
+        if (radSettings->getLinkeMode() == PARAM_MODE_MONTHLY)
+            linke = radSettings->getMonthlyLinke(myTime.date.month);
+        else
+            linke = readLinke(radSettings, myPoint);
+
         float albedo = readAlbedo(radSettings, myPoint);
 
         TsunPosition sunPosition;
@@ -849,7 +878,13 @@ bool computeRadiationRsun(Crit3DRadiationSettings* radSettings, float temperatur
 
         gis::Crit3DPoint myPoint = myMeteoPoint->point;
 
-        float linke = readLinke(radSettings, myPoint);
+        float linke;
+
+        if (radSettings->getLinkeMode() == PARAM_MODE_MONTHLY)
+            linke = radSettings->getMonthlyLinke(myTime.date.month);
+        else
+            linke = readLinke(radSettings, myPoint);
+
         float albedo = readAlbedo(radSettings, myPoint);
 
         float transmissivity = myMeteoPoint->getMeteoPointValueH(myTime.date, myTime.getHour(), myTime.getMinutes(), atmTransmissivity);
@@ -1117,7 +1152,11 @@ bool computeRadiationRsun(Crit3DRadiationSettings* radSettings, float temperatur
         radPoint.lat = latDegrees;
         radPoint.lon = lonDegrees;
 
-        linke = readLinke(radSettings, point);
+        if (radSettings->getLinkeMode() == PARAM_MODE_MONTHLY)
+            linke = radSettings->getMonthlyLinke(myTime.date.month);
+        else
+            linke = readLinke(radSettings, point);
+
         albedo = readAlbedo(radSettings, point);
         clearSkyTransmissivity = radSettings->getClearSky();
 

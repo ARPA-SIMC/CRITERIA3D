@@ -145,6 +145,15 @@ float Crit3DRadiationSettings::getLinke(const gis::Crit3DPoint& myPoint) const
     return myLinke;
 }
 
+
+float Crit3DRadiationSettings::getMonthlyLinke(int month)
+{
+    if (month > 0 && month < 13 && LinkeMonthly.size() == 12)
+        return LinkeMonthly[month];
+    else
+        return NODATA;
+}
+
 void Crit3DRadiationSettings::setLinke(float value)
 {
     linke = value;
@@ -258,6 +267,16 @@ TlandUse Crit3DRadiationSettings::getLandUse() const
 void Crit3DRadiationSettings::setLandUse(const TlandUse &value)
 {
     landUse = value;
+
+    if (landUse == LAND_USE_INDUSTRIAL)
+        LinkeMonthly = {4.1, 4.3, 4.7, 5.3, 5.5, 5.7, 5.8, 5.7, 5.3, 4.9, 4.5, 4.2, 5.0};
+    else if (landUse == LAND_USE_CITY)
+        LinkeMonthly = {3.1, 3.2, 3.5, 4.0, 4.2, 4.3, 4.4, 4.3, 4.0, 3.6, 3.3, 3.1, 3.75};
+    else if (landUse == LAND_USE_RURAL)
+        LinkeMonthly = {2.1, 2.2, 2.5, 2.9, 3.2, 3.4, 3.5, 3.3, 2.9, 2.6, 2.3, 2.2, 2.75};
+    else if (landUse == LAND_USE_MOUNTAIN)
+        LinkeMonthly = {1.5, 1.6, 1.8, 1.9, 2.0, 2.3, 2.3, 2.3, 2.1, 1.8, 1.6, 1.5, 1.9};
+
 }
 
 gis::Crit3DRasterGrid *Crit3DRadiationSettings::getLinkeMap() const
