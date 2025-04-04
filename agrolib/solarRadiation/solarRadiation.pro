@@ -1,12 +1,12 @@
-#-----------------------------------------------------
+#-------------------------------------------------------
 #
 #   solarRadiation library
-#   This project is part of CRITERIA3D distribution
+#   This project is part of ARPAE agrolib distribution
 #
 #   It uses code from:
 #   G_calc_solar_position() by Markus Neteler
 #
-#-----------------------------------------------------
+#-------------------------------------------------------
 
 QT       -= core gui
 
