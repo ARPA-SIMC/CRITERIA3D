@@ -3,7 +3,7 @@
 #   common dialogs library
 #   contains dialogs for generic purpose
 #
-#   This project is part of agrolib distribution
+#   This project is part of ARPAE agrolib distribution
 #
 #------------------------------------------------------
 
