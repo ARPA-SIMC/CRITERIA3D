@@ -902,13 +902,27 @@ double Crit3D_Hydrall::plantRespiration()
     sapwoodRespiration = RESPIRATION_PARAMETER * (treeBiomass.sapwood * nitrogenContent.stem/0.014);
     rootRespiration = RESPIRATION_PARAMETER * (treeBiomass.fineRoot * nitrogenContent.root/0.014);
 
+    //calcolo temperatureMoistureFactor che deve passare per media del moisture ?
+    double temperatureFactor = Crit3D_Hydrall::temperatureFunction(weatherVariable.myInstantTemp + ZEROCELSIUS);
+
+    std::vector<double> moistureFactorVector(soil.layersNr);
+    for (int i = 1; i < soil.layersNr; i++)
+        moistureFactorVector[i] = moistureCorrectionFactor(i);
+    double moistureFactor = statistics::weighedMean(soil.nodeThickness, moistureFactorVector);
+
+
     // Adjust for temperature effects
-    leafRespiration *= BOUNDFUNCTION(0,1,Crit3D_Hydrall::temperatureMoistureFunction(weatherVariable.myInstantTemp + ZEROCELSIUS)) ;
-    sapwoodRespiration *= BOUNDFUNCTION(0,1,Crit3D_Hydrall::temperatureMoistureFunction(weatherVariable.myInstantTemp + ZEROCELSIUS));
+    leafRespiration *= BOUNDFUNCTION(0,1,temperatureFactor*moistureFactor) ;
+    sapwoodRespiration *= BOUNDFUNCTION(0,1,temperatureFactor*moistureFactor);
     //shootRespiration *= MAXVALUE(0,MINVALUE(1,Vine3D_Grapevine::temperatureMoistureFunction(myInstantTemp + ZEROCELSIUS))) ;
+    std::vector<std::vector<double>> weights;
+    weights.push_back(soil.nodeThickness);
+    weights.push_back(soil.rootDensity);
+
     soil.temperature = Crit3D_Hydrall::soilTemperatureModel();
+    moistureFactor = statistics::weighedMeanMultifactor(linearValues, weights, moistureFactorVector);
     //rootRespiration *= MAXVALUE(0,MINVALUE(1,Crit3D_Hydrall::temperatureMoistureFunction(soil.temperature + ZEROCELSIUS))) ;
-    rootRespiration *= BOUNDFUNCTION(0,1,Crit3D_Hydrall::temperatureMoistureFunction(soil.temperature + ZEROCELSIUS));
+    rootRespiration *= BOUNDFUNCTION(0,1,temperatureFactor*moistureFactor);
     // canopy respiration (sapwood+fine roots)
     totalRespiration =(leafRespiration + sapwoodRespiration + rootRespiration);
 
@@ -939,12 +953,20 @@ double Crit3D_Hydrall::moistureCorrectionFactor(int index)
     return correctionSoilMoisture;
 }
 
-double Crit3D_Hydrall::temperatureMoistureFunction(double temperature)
+double Crit3D_Hydrall::temperatureFunction(double temperature)
 {
+    // taken from Hydrall Model, Magnani UNIBO
     double temperatureMoistureFactor = 1;
     // TODO
-    /*// taken from Hydrall Model, Magnani UNIBO
-    int   MODEL;
+    int MODEL = 2;
+    //1. AP_H model
+    if (MODEL == 1)
+        temperatureMoistureFactor = pow(2.0,((temperature - parameterWangLeuning.optimalTemperatureForPhotosynthesis)/10.0)); // temperature dependence of respiration, based on Q10 approach
+    else if (MODEL == 2)
+        temperatureMoistureFactor= exp(308.56 * (1.0/(parameterWangLeuning.optimalTemperatureForPhotosynthesis + 46.02) - 1.0/(temperature+46.02)));  //temperature dependence of respiration, based on Lloyd & Taylor (1994)
+
+
+    /*int   MODEL;
     double temperatureMoistureFactor,correctionSoilMoisture; //K_VW
     //K_VW= 1.5;
     temperatureMoistureFactor = 1. ;

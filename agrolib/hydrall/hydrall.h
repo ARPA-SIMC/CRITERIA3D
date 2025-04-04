@@ -343,7 +343,7 @@
         double plantRespiration();
         double computeEvaporation();
         inline double soilTemperatureModel();
-        double temperatureMoistureFunction(double temperature);
+        double temperatureFunction(double temperature);
         bool growthStand();
         void resetStandVariables();
         void optimal();
