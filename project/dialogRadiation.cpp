@@ -24,6 +24,7 @@ DialogRadiation::DialogRadiation(Project* myProject)
     checkRealSky = new QCheckBox("real sky");
     comboRealSky = new QComboBox();
     comboLinkeMode = new QComboBox();
+    landUseLinke = new QComboBox();
     groupLinke = new QGroupBox("Linke turbidity factor");
     editLinke = new QLineEdit(QLocale().toString(project_->radSettings.getLinke()));
     buttonLinke = new QPushButton("Load Linke map...");
@@ -99,8 +100,11 @@ DialogRadiation::DialogRadiation(Project* myProject)
     QVBoxLayout* layoutLinke = new QVBoxLayout();
 
     QHBoxLayout* layoutLinkeMode = new QHBoxLayout();
+    QHBoxLayout* layoutLinkeLandUse = new QHBoxLayout();
     QLabel* labelLinkeMode = new QLabel("mode");
+    QLabel* labelLinkeLandUse = new QLabel("Linke land use (monthly)");
     layoutLinkeMode->addWidget(labelLinkeMode);
+    layoutLinkeLandUse->addWidget(labelLinkeLandUse);
 
     connect(comboLinkeMode,  &QComboBox::currentTextChanged, [=](const QString &newVar){ this->updateLinkeMode(newVar); });
 
@@ -113,8 +117,19 @@ DialogRadiation::DialogRadiation(Project* myProject)
     if (indexCombo != -1)
        comboLinkeMode->setCurrentIndex(indexCombo);
 
+    std::map<std::string, TlandUse>::const_iterator itLandUse;
+    for (itLandUse = landUseToString.begin(); itLandUse != landUseToString.end(); ++itLandUse)
+        landUseLinke->addItem(QString::fromStdString(itLandUse->first), QString::fromStdString(itLandUse->first));
+
+    QString landUseString = QString::fromStdString(getKeyStringLandUse(project_->radSettings.getLandUse()));
+    indexCombo = landUseLinke->findData(landUseString);
+    if (indexCombo != -1)
+        landUseLinke->setCurrentIndex(indexCombo);
+
     layoutLinkeMode->addWidget(comboLinkeMode);
+    layoutLinkeLandUse->addWidget(landUseLinke);
     layoutLinke->addLayout(layoutLinkeMode);
+    layoutLinke->addLayout(layoutLinkeLandUse);
 
     QHBoxLayout* layoutLinkeFixed = new QHBoxLayout();
     QLabel* linkeFixed = new QLabel("fixed Linke value");
@@ -259,6 +274,7 @@ void DialogRadiation::updateLinkeMode(const QString myString)
     TparameterMode myMode = paramModeToString.at(myString.toStdString());
     buttonLinke->setEnabled(myMode == PARAM_MODE_MAP);
     editLinke->setEnabled(myMode == PARAM_MODE_FIXED);
+    landUseLinke->setEnabled(myMode == PARAM_MODE_MONTHLY);
 }
 
 void DialogRadiation::updateAlbedoMode(const QString myString)
@@ -321,6 +337,7 @@ void DialogRadiation::accept()
     TparameterMode linkeMode = paramModeToString.at(comboLinkeMode->currentText().toStdString());
     TparameterMode albedoMode = paramModeToString.at(comboAlbedoMode->currentText().toStdString());
     TtiltMode tiltMode = tiltModeToString.at(comboTiltMode->currentText().toStdString());
+    TlandUse landUse = landUseToString.at(landUseLinke->currentText().toStdString());
 
     bool realSky = checkRealSky->isChecked();
 
@@ -409,6 +426,8 @@ void DialogRadiation::accept()
     project_->radSettings.setRealSky(realSky);
     project_->radSettings.setShadowing(checkShadowing->isChecked());
     project_->radSettings.setClearSky(QLocale().toFloat(editTransClearSky->text()));
+    if (linkeMode == PARAM_MODE_MONTHLY)
+        project_->radSettings.setLandUse(landUse);
 
     if (linke != NODATA) project_->radSettings.setLinke(linke);
     if (albedo != NODATA) project_->radSettings.setAlbedo(albedo);

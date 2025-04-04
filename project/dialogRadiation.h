@@ -24,6 +24,7 @@
 
             QGroupBox* groupLinke;
             QComboBox* comboLinkeMode;
+            QComboBox* landUseLinke;
             QLineEdit* editLinke;
             QLineEdit* editLinkeMap;
             QPushButton* buttonLinke;
