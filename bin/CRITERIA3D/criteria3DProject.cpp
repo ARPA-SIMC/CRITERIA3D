@@ -390,8 +390,8 @@ void Crit3DProject::assignETreal()
                 {
                     float degreeDays = degreeDaysMap.value[row][col];
                     double actualTransp = assignTranspiration(row, col, currentLAI, degreeDays);    // [mm h-1]
-                    double traspFlow = area * (actualTransp / 1000.);                               // [m3 h-1]
-                    totalTranspiration += traspFlow;                                                // [m3 h-1]
+                    double traspFlow = area * (actualTransp / 1000.);                               // [m3 h-1] flux
+                    totalTranspiration += traspFlow;                                                // [m3 h-1] flux
                 }
             }
         }

@@ -2030,7 +2030,7 @@ double Project3D::assignEvaporation(int row, int col, double lai, int soilIndex)
         double depthCoeff = std::max((layerDepth[layer] - layerDepth[1]) / (MAX_EVAPORATION_DEPTH - layerDepth[1]), 0.0);
         // evaporation coefficient: 1 at depthMin, ~0.1 at MAX_EVAPORATION_DEPTH
         evapCoeff[layer] = exp(-2 * depthCoeff);
-        // modify by layer thickness
+        // modify by layer thickness (normalized for a layer of 4 cm)
         layerCoeff[layer] = evapCoeff[layer] * (layerThickness[layer] / 0.04);
         coeffSum += layerCoeff[layer];
     }
