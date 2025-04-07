@@ -26,7 +26,7 @@ win32:{
 
 TEMPLATE = lib
 
-INCLUDEPATH += ../crit3dDate ../mathFunctions ../gis ../meteo
+INCLUDEPATH += ../../agrolib/crit3dDate ../../agrolib/mathFunctions ../../agrolib/gis ../../agrolib/meteo
 
 SOURCES += \
     snow.cpp \

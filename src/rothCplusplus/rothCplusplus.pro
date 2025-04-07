@@ -27,7 +27,7 @@ win32:{
     TARGET = rothCplusplus
 }
 
-INCLUDEPATH += ../crit3dDate ../mathFunctions ../soil ../crop ../gis
+INCLUDEPATH += ../../agrolib/crit3dDate ../../agrolib/mathFunctions ../../agrolib/soil ../../agrolib/crop ../../agrolib/gis
 
 SOURCES += rothCplusplus.cpp 
 

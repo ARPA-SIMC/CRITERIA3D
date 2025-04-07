@@ -6,13 +6,13 @@
 #
 #-----------------------------------------------------
 
-QT  += core gui network widgets sql xml charts
+QT  += network widgets sql xml charts
 greaterThan(QT_MAJOR_VERSION, 5): QT += core5compat openglwidgets
 
 TEMPLATE = app
 TARGET = CRITERIA3D
 
-VERSION = 1.0.5
+VERSION = 1.0.6
 
 CONFIG += debug_and_release
 CONFIG += c++11 c++14 c++17
@@ -21,14 +21,14 @@ INCLUDEPATH +=  ./shared  \
                 ../../agrolib/soilFluxes3D/header  \
                 ../../agrolib/crit3dDate ../../agrolib/mathFunctions \
                 ../../agrolib/crop ../../agrolib/soil ../../agrolib/meteo ../../agrolib/gis \
-                ../../agrolib/interpolation ../../agrolib/solarRadiation ../../agrolib/snow \
-                ../../agrolib/hydrall ../../agrolib/rothCplusplus \
+                ../../agrolib/interpolation ../../agrolib/solarRadiation \
                 ../../agrolib/outputPoints ../../agrolib/soilWidget ../../agrolib/utilities  \
                 ../../agrolib/dbMeteoPoints ../../agrolib/outputPoints ../../agrolib/dbMeteoGrid \
                 ../../agrolib/proxyWidget ../../agrolib/project \
                 ../../agrolib/graphics  ../../agrolib/commonChartElements ../../agrolib/commonDialogs \
-                ../../mapGraphics ../../agrolib/meteoWidget \
-                ../../agrolib/waterTable
+                ../../agrolib/meteoWidget ../../agrolib/waterTable  \
+                ../../src/snow ../../src/hydrall ../../src/rothCplusplus ../../src/project3D \
+                ../../mapGraphics
 
 CONFIG(debug, debug|release) {
     LIBS += -L../../agrolib/graphics/debug -lgraphics
@@ -38,6 +38,7 @@ CONFIG(debug, debug|release) {
     unix:{
         LIBS += -L../../mapGraphics/release -lMapGraphics
     }
+    LIBS += -L../../src/project3D/debug -lproject3D
     LIBS += -L../../agrolib/project/debug -lproject
     LIBS += -L../../agrolib/proxyWidget/debug -lproxyWidget
     LIBS += -L../../agrolib/meteoWidget/debug -lmeteoWidget
@@ -50,9 +51,9 @@ CONFIG(debug, debug|release) {
     LIBS += -L../../agrolib/soil/debug -lsoil
     LIBS += -L../../agrolib/utilities/debug -lutilities
     LIBS += -L../../agrolib/waterTable/debug -lwaterTable
-    LIBS += -L../../agrolib/snow/debug -lsnow
-    LIBS += -L../../agrolib/hydrall/debug -lhydrall
-    LIBS += -L../../agrolib/rothCplusplus/debug -lrothCplusplus
+    LIBS += -L../../src/snow/debug -lsnow
+    LIBS += -L../../src/hydrall/debug -lhydrall
+    LIBS += -L../../src/rothCplusplus/debug -lrothCplusplus
     LIBS += -L../../agrolib/commonChartElements/debug -lcommonChartElements
     LIBS += -L../../agrolib/solarRadiation/debug -lsolarRadiation
     LIBS += -L../../agrolib/interpolation/debug -linterpolation
@@ -65,6 +66,7 @@ CONFIG(debug, debug|release) {
 } else {
     LIBS += -L../../agrolib/graphics/release -lgraphics
     LIBS += -L../../mapGraphics/release -lMapGraphics
+    LIBS += -L../../src/project3D/release -lproject3D
     LIBS += -L../../agrolib/project/release -lproject
     LIBS += -L../../agrolib/proxyWidget/release -lproxyWidget
     LIBS += -L../../agrolib/meteoWidget/release -lmeteoWidget
@@ -77,9 +79,9 @@ CONFIG(debug, debug|release) {
     LIBS += -L../../agrolib/soil/release -lsoil
     LIBS += -L../../agrolib/utilities/release -lutilities
     LIBS += -L../../agrolib/waterTable/release -lwaterTable
-    LIBS += -L../../agrolib/snow/release -lsnow
-    LIBS += -L../../agrolib/hydrall/release -lhydrall
-    LIBS += -L../../agrolib/rothCplusplus/release -lrothCplusplus
+    LIBS += -L../../src/snow/release -lsnow
+    LIBS += -L../../src/hydrall/release -lhydrall
+    LIBS += -L../../src/rothCplusplus/release -lrothCplusplus
     LIBS += -L../../agrolib/commonChartElements/release -lcommonChartElements
     LIBS += -L../../agrolib/solarRadiation/release -lsolarRadiation
     LIBS += -L../../agrolib/interpolation/release -linterpolation
@@ -92,8 +94,6 @@ CONFIG(debug, debug|release) {
 
 
 HEADERS += \
-    shared/project3D.h \
-    shared/dialogWaterFluxesSettings.h \
     dialogModelProcesses.h \
     mainwindow.h \
     criteria3DProject.h \
@@ -104,8 +104,6 @@ HEADERS += \
     viewer3D.h
 
 SOURCES += \
-    shared/project3D.cpp \
-    shared/dialogWaterFluxesSettings.cpp \
     dialogModelProcesses.cpp \
     mainwindow.cpp \
     criteria3DProject.cpp \

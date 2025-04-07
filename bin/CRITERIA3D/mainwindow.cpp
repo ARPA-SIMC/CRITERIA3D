@@ -700,7 +700,7 @@ void MainWindow::setProjectTileMap()
 
 void MainWindow::setTitle()
 {
-    QString title = "CRITERIA3D " + QString(CRITERIA3D_VERSION);
+    QString title = "CRITERIA3D  " + QString(CRITERIA3D_VERSION);
     if (! myProject.projectName.isEmpty())
     {
         title += " - " + myProject.projectName;

@@ -27,7 +27,7 @@ win32:{
     TARGET = hydrall
 }
 
-INCLUDEPATH += ../crit3dDate ../mathFunctions ../soil ../crop ../gis
+INCLUDEPATH += ../../agrolib/crit3dDate ../../agrolib/mathFunctions ../../agrolib/soil ../../agrolib/crop ../../agrolib/gis
 
 SOURCES += hydrall.cpp 
 
