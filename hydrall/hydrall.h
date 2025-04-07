@@ -31,11 +31,11 @@
     */
 
     #define RESPIRATION_PARAMETER  0.00000147222 // to compute respiration
-    #define      CARBONFACTOR 0.5           /*!< coeff for conversion of carbon into DM, kgC kgDM-1  */
-    #define      GAMMA  66.2                /*!< psychrometer constant, Pa K-1  */
-    #define      LATENT  43956              /*!< latent heat of vaporization, J mol-1  */
-    #define      H2OMOLECULARWEIGHT  0.018  /*!< molecular weight of H2O, kg mol-1  */
-    #define      OSS 21176                  /*!< oxygen part pressure in the atmosphere, Pa  */
+    #define CARBONFACTOR 0.5           /*!< coeff for conversion of carbon into DM, kgC kgDM-1  */
+    #define GAMMA  66.2                /*!< psychrometer constant, Pa K-1  */
+    #define LATENT  43956              /*!< latent heat of vaporization, J mol-1  */
+    #define H2OMOLECULARWEIGHT  0.018  /*!< molecular weight of H2O, kg mol-1  */
+    #define OSS 21176                  /*!< oxygen part pressure in the atmosphere, Pa  */
 
         /*!
         * Define additional photosynthetic parameters
@@ -110,6 +110,7 @@
         double myEmissivitySky;
         double myLongWaveIrradiance;
         double psychrometricConstant;
+        double et0;
 
     };
 
@@ -154,6 +155,8 @@
         double transpirationPerUnitFoliageAreaCritical;
         double leafAreaIndexCanopy;
         double leafAreaIndexCanopyMax;
+        double standVolume; // maps referred to stand volume MUST be initialized
+        double currentIncrementalVolume = EPSILON;
 
     };
 
@@ -234,7 +237,9 @@
 
     struct ThydrallNitrogen {
         double interceptLeaf, slopeLeaf;
-        double leaf , stem , root;
+        double leaf = 0.024;  //[kg kgDM-1]
+        double stem = 0.0078; //[kg kgDM-1]
+        double root = 0.0021; //[kg kgDM-1]
     };
 
     struct ThydrallBiomass {
@@ -317,9 +322,9 @@
         double understoreyRespiration();
         void radiationAbsorption();
         void setSoilVariables(int iLayer, int currentNode, float checkFlag, int horizonIndex, double waterContent, double waterContentFC, double waterContentWP, int firstRootLayer, int lastRootLayer, double rootDensity, double clay, double sand, double thickness, double bulkDensity, double waterContentSat);
-        void setHourlyVariables(double temp, double irradiance , double prec , double relativeHumidity , double windSpeed, double directIrradiance, double diffuseIrradiance, double cloudIndex, double atmosphericPressure, Crit3DDate currentDate, double sunElevation,double meanTemp30Days);
-        bool setWeatherVariables(double temp, double irradiance , double prec , double relativeHumidity , double windSpeed, double directIrradiance, double diffuseIrradiance, double cloudIndex, double atmosphericPressure, double meanTemp30Days);
-        void setDerivedWeatherVariables(double directIrradiance, double diffuseIrradiance, double cloudIndex);
+        void setHourlyVariables(double temp, double irradiance , double prec , double relativeHumidity , double windSpeed, double directIrradiance, double diffuseIrradiance, double cloudIndex, double atmosphericPressure, Crit3DDate currentDate, double sunElevation,double meanTemp30Days,double et0);
+        bool setWeatherVariables(double temp, double irradiance , double prec , double relativeHumidity , double windSpeed, double directIrradiance, double diffuseIrradiance, double cloudIndex, double atmosphericPressure, double meanTemp30Days,double et0);
+        void setDerivedWeatherVariables(double directIrradiance, double diffuseIrradiance, double cloudIndex, double et0);
         void setPlantVariables(double chlorophyllContent, double height);
         bool computeHydrallPoint(Crit3DDate myDate, double myTemperature, double myElevation);
         double getCO2(Crit3DDate myDate);
