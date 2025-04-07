@@ -1312,7 +1312,7 @@ bool Crit3DProject::computeHydrallModel()
                                                 double(radiationMaps->transmissivityMap->value[row][col] / CLEAR_SKY_TRANSMISSIVITY_DEFAULT),
                                                 pressureFromAltitude(double(hourlyMeteoMaps->mapHourlyTair->value[row][col]), hydrallModel.elevation),
                                                 getCrit3DDate(getCurrentDate()),double(radiationMaps->sunElevationMap->value[row][col]),
-                                                hydrallMaps.mapLast30DaysTavg->value[row][col]);
+                                                hydrallMaps.mapLast30DaysTavg->value[row][col],double(hourlyMeteoMaps->mapHourlyET0->value[row][col]));
 
                 //TODO: plant height map
                 hydrallMaps.plantHeight.value[row][col] = 10;

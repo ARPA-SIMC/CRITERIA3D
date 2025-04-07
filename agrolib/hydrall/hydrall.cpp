@@ -50,7 +50,7 @@ bool Crit3D_Hydrall::computeHydrallPoint(Crit3DDate myDate, double myTemperature
 
     // da qui in poi bisogna fare un ciclo su tutte le righe e le colonne
     plant.leafAreaIndexCanopyMax = statePlant.treecumulatedBiomassFoliage *  plant.specificLeafArea / cover;
-    plant.leafAreaIndexCanopy = MAXVALUE(5,plant.leafAreaIndexCanopyMax * computeLAI(myDate));
+    plant.leafAreaIndexCanopy = MAXVALUE(4,plant.leafAreaIndexCanopyMax * computeLAI(myDate));
     understoreyLeafAreaIndexMax = statePlant.understoreycumulatedBiomassFoliage * plant.specificLeafArea;
     understorey.leafAreaIndex = MAXVALUE(LAIMIN,understoreyLeafAreaIndexMax* computeLAI(myDate));
 
@@ -176,14 +176,14 @@ void Crit3D_Hydrall::initialize()
     elevation = NODATA;
 }
 
-void Crit3D_Hydrall::setHourlyVariables(double temp, double irradiance , double prec , double relativeHumidity , double windSpeed, double directIrradiance, double diffuseIrradiance, double cloudIndex, double atmosphericPressure, Crit3DDate currentDate, double sunElevation,double meanTemp30Days)
+void Crit3D_Hydrall::setHourlyVariables(double temp, double irradiance , double prec , double relativeHumidity , double windSpeed, double directIrradiance, double diffuseIrradiance, double cloudIndex, double atmosphericPressure, Crit3DDate currentDate, double sunElevation,double meanTemp30Days,double et0)
 {
-    setWeatherVariables(temp, irradiance, prec, relativeHumidity, windSpeed, directIrradiance, diffuseIrradiance, cloudIndex, atmosphericPressure,meanTemp30Days);
+    setWeatherVariables(temp, irradiance, prec, relativeHumidity, windSpeed, directIrradiance, diffuseIrradiance, cloudIndex, atmosphericPressure,meanTemp30Days,et0);
     environmentalVariable.CO2 = getCO2(currentDate);
     environmentalVariable.sineSolarElevation = MAXVALUE(0.0001,sin(sunElevation*DEG_TO_RAD));
 }
 
-bool Crit3D_Hydrall::setWeatherVariables(double temp, double irradiance , double prec , double relativeHumidity , double windSpeed, double directIrradiance, double diffuseIrradiance, double cloudIndex, double atmosphericPressure, double meanTemp30Days)
+bool Crit3D_Hydrall::setWeatherVariables(double temp, double irradiance , double prec , double relativeHumidity , double windSpeed, double directIrradiance, double diffuseIrradiance, double cloudIndex, double atmosphericPressure, double meanTemp30Days, double et0)
 {
 
     bool isReadingOK = false ;
@@ -199,7 +199,7 @@ bool Crit3D_Hydrall::setWeatherVariables(double temp, double irradiance , double
     weatherVariable.last30DaysTAvg = meanTemp30Days;
 
 
-    setDerivedWeatherVariables(directIrradiance, diffuseIrradiance, cloudIndex);
+    setDerivedWeatherVariables(directIrradiance, diffuseIrradiance, cloudIndex,et0);
 
     if ((int(prec) != NODATA) && (int(temp) != NODATA) && (int(windSpeed) != NODATA)
         && (int(irradiance) != NODATA) && (int(relativeHumidity) != NODATA)
@@ -209,7 +209,7 @@ bool Crit3D_Hydrall::setWeatherVariables(double temp, double irradiance , double
     return isReadingOK;
 }
 
-void Crit3D_Hydrall::setDerivedWeatherVariables(double directIrradiance, double diffuseIrradiance, double cloudIndex)
+void Crit3D_Hydrall::setDerivedWeatherVariables(double directIrradiance, double diffuseIrradiance, double cloudIndex,double et0)
 {
     weatherVariable.derived.airVapourPressure = saturationVaporPressure(weatherVariable.myInstantTemp)*weatherVariable.relativeHumidity/100.;
     weatherVariable.derived.slopeSatVapPressureVSTemp = 2588464.2 / POWER2(240.97 + weatherVariable.myInstantTemp) * exp(17.502 * weatherVariable.myInstantTemp / (240.97 + weatherVariable.myInstantTemp)) ;
@@ -219,6 +219,7 @@ void Crit3D_Hydrall::setDerivedWeatherVariables(double directIrradiance, double 
     weatherVariable.derived.myEmissivitySky = 1.24 * pow((weatherVariable.derived.airVapourPressure/100.0) / (weatherVariable.myInstantTemp+ZEROCELSIUS),(1.0/7.0))*(1 - 0.84*myCloudiness)+ 0.84*myCloudiness;
     weatherVariable.derived.myLongWaveIrradiance = POWER4(weatherVariable.myInstantTemp+ZEROCELSIUS) * weatherVariable.derived.myEmissivitySky * STEFAN_BOLTZMANN ;
     weatherVariable.derived.psychrometricConstant = psychro(weatherVariable.atmosphericPressure,weatherVariable.myInstantTemp);
+    weatherVariable.derived.et0 = et0;
     return;
 }
 
@@ -814,7 +815,7 @@ void Crit3D_Hydrall::cumulatedResults()
     deltaTime.netAssimilation = deltaTime.grossAssimilation - deltaTime.respiration ;
     deltaTime.netAssimilation = deltaTime.netAssimilation*12/1000.0 ; // KgC m-2 TODO da motiplicare dopo per CARBONFACTOR DA METTERE dopo convert to kg DM m-2
     deltaTime.understoreyNetAssimilation = HOUR_SECONDS * MH2O * understoreyAssimilationRate - MH2O*understoreyRespiration();
-    statePlant.treeNetPrimaryProduction += deltaTime.netAssimilation ;
+    statePlant.treeNetPrimaryProduction += deltaTime.netAssimilation ; // state plant considers the biomass stored during the current year
 
     //understorey
 
@@ -829,19 +830,13 @@ void Crit3D_Hydrall::cumulatedResults()
     }
 
     //evaporation
-    deltaTime.evaporation = computeEvaporation();
-
+    deltaTime.evaporation = computeEvaporation(); // TODO chiedere a Fausto come gestire l'evaporazione sui layer
+    int aaa = 0;
 }
 
 double Crit3D_Hydrall::computeEvaporation()
 {
-    double ETP = 0.5;
-    double totalLAI = understorey.leafAreaIndex + plant.leafAreaIndexCanopy;
-
-    if (totalLAI == LAIMAX)
-        return 0.2 * ETP;
-    else
-        return -0.8 / LAIMAX *ETP;
+    return weatherVariable.derived.et0 * MAXVALUE(0.2, 1 - 0.8*((understorey.leafAreaIndex + plant.leafAreaIndexCanopy)/4)); //-0.8 / LAIMAX *ETP;
 }
 
 double Crit3D_Hydrall::understoreyRespiration()
@@ -852,8 +847,7 @@ double Crit3D_Hydrall::understoreyRespiration()
     double correctionFactorFineroot;
     std::vector<double> correctionFactorFoliageVector;
     std::vector<double> correctionFactorFinerootVector;
-    correctionFactorFinerootVector.push_back(0);
-    correctionFactorFoliageVector.push_back(0);
+
     if(firstMonthVegetativeSeason)
     {
         understorey10DegRespirationFoliage = 0.0106/2. * (understoreyBiomass.leaf * nitrogenContent.leaf);
@@ -861,29 +855,33 @@ double Crit3D_Hydrall::understoreyRespiration()
     }
     //double understoreyRespirationFoliage,understoreyRespirationFineroot;
     //understoreyRespirationFoliage = understorey10DegRespirationFoliage*;
-    const double PSIS0 = -2;// MPa * 101.972; //(m)
-    const double K_VW= 1.5;
+    //const double PSIS0 = -2;// MPa * 101.972; //(m)
+    //const double K_VW= 1.5;
     const double A_Q10= 0.503;
     const double B_Q10= 1.619;
-    double PENTRY,BSL,RVW_0,RVW_50,SIGMAG,Q10;
+    //double PENTRY,BSL,RVW_0,RVW_50,SIGMAG,Q10;
+    double Q10;
     double VWCORR;
     double RVWSL;
+    std::vector<double> nodeThicknessRealSoil(soil.layersNr-1);
     for (int iLayer = 1; iLayer<soil.layersNr; iLayer++)
     {
-        PENTRY = std::sqrt(std::exp(soil.clay[iLayer]*std::log(0.001) + soil.silt[iLayer]*std::log(0.026) + soil.sand[iLayer]*std::log(1.025)));
-        PENTRY = -0.5 / PENTRY / 1000;
-        SIGMAG =std::exp(std::sqrt(soil.clay[iLayer]*POWER2(std::log(0.001)) + soil.silt[iLayer]*POWER2(std::log(0.026)) + soil.sand[iLayer]*POWER2(std::log(1.025))));
-        BSL = -2*PENTRY*1000 + 0.2*SIGMAG;
-        PENTRY *= (std::pow(soil.bulkDensity[iLayer]/1.3,0.67*BSL));
-        RVW_0= std::pow((PSIS0/PENTRY),(-1/BSL)); // soil water content for null respiration
-        RVW_50= RVW_0 + (1.-RVW_0)/K_VW; //
+        nodeThicknessRealSoil[iLayer-1] = soil.nodeThickness[iLayer];
+        //PENTRY = std::sqrt(std::exp(soil.clay[iLayer]*std::log(0.001) + soil.silt[iLayer]*std::log(0.026) + soil.sand[iLayer]*std::log(1.025)));
+        //PENTRY = -0.5 / PENTRY / 1000;
+        //SIGMAG =std::exp(std::sqrt(soil.clay[iLayer]*POWER2(std::log(0.001)) + soil.silt[iLayer]*POWER2(std::log(0.026)) + soil.sand[iLayer]*POWER2(std::log(1.025))));
+        //BSL = -2*PENTRY*1000 + 0.2*SIGMAG;
+        //PENTRY *= (std::pow(soil.bulkDensity[iLayer]/1.3,0.67*BSL));
+        //RVW_0= std::pow((PSIS0/PENTRY),(-1/BSL)); // soil water content for null respiration
+        //RVW_50= RVW_0 + (1.-RVW_0)/K_VW; //
         RVWSL= soil.waterContent[iLayer]/ soil.saturation[iLayer];//relative soil water content (as a fraction of value at saturation)
         VWCORR = moistureCorrectionFactor(iLayer);
         Q10= A_Q10 + B_Q10 * RVWSL; // effects of soil humidity on sensitivity to temperature
         correctionFactorFoliageVector.push_back(VWCORR * std::pow(Q10,((weatherVariable.myInstantTemp-25)/10.))); //temperature dependence of respiration, based on Q10 approach
         correctionFactorFinerootVector.push_back(VWCORR * std::pow(Q10,((soil.temperature-25)/10.)));
     }
-    correctionFactorFoliage = statistics::weighedMean(soil.nodeThickness,correctionFactorFoliageVector);
+
+    correctionFactorFoliage = statistics::weighedMean(nodeThicknessRealSoil,correctionFactorFoliageVector);
     correctionFactorFineroot = statistics::weighedMean(soil.nodeThickness,correctionFactorFinerootVector);
     return (understorey10DegRespirationFoliage * correctionFactorFoliage + understorey10DegRespirationFineroot * correctionFactorFineroot);
 }
@@ -893,7 +891,7 @@ double Crit3D_Hydrall::plantRespiration()
     // taken from Hydrall Model, Magnani UNIBO
     double leafRespiration,rootRespiration,sapwoodRespiration;
     double totalRespiration;
-    nitrogenContent.leaf = 0.02;    //[kg kgDM-1] //0.02 * 10^3 [g kgDM-1]
+    nitrogenContent.leaf = 0.02;    //[kg kgDM-1]
     nitrogenContent.root = 0.0078;  //[kg kgDM-1]
     nitrogenContent.stem = 0.0021;  //[kg kgDM-1]
 
@@ -905,9 +903,13 @@ double Crit3D_Hydrall::plantRespiration()
     //calcolo temperatureMoistureFactor che deve passare per media del moisture ?
     double temperatureFactor = Crit3D_Hydrall::temperatureFunction(weatherVariable.myInstantTemp + ZEROCELSIUS);
 
-    std::vector<double> moistureFactorVector(soil.layersNr);
+    std::vector<double> moistureFactorVector(soil.layersNr-1);
+    std::vector<double> nodeThicknessRealSoil(soil.layersNr-1);
     for (int i = 1; i < soil.layersNr; i++)
-        moistureFactorVector[i] = moistureCorrectionFactor(i);
+    {
+        moistureFactorVector[i-1] = moistureCorrectionFactor(i);
+        nodeThicknessRealSoil[i-1] = soil.nodeThickness[i];
+    }
     double moistureFactor = statistics::weighedMean(soil.nodeThickness, moistureFactorVector);
 
 
@@ -1055,6 +1057,12 @@ bool Crit3D_Hydrall::growthStand()
     }
 
     if (annualGrossStandGrowth * allocationCoefficient.toFoliage > statePlant.treecumulatedBiomassFoliage/(plant.foliageLongevity - 1))
+    {
+        treeBiomass.leaf = MAXVALUE(treeBiomass.leaf + annualGrossStandGrowth * allocationCoefficient.toFoliage, EPSILON);
+        treeBiomass.fineRoot = MAXVALUE(treeBiomass.fineRoot + annualGrossStandGrowth * allocationCoefficient.toFineRoots, EPSILON);
+        treeBiomass.sapwood = MAXVALUE(treeBiomass.sapwood + annualGrossStandGrowth * allocationCoefficient.toSapwood, EPSILON);
+    }
+    // TODO manca il computo del volume sia generale che incrementale vedi funzione grstand.for
 
     isFirstYearSimulation = false;
     return true;
