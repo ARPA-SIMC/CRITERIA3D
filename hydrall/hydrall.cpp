@@ -831,7 +831,6 @@ void Crit3D_Hydrall::cumulatedResults()
 
     //evaporation
     deltaTime.evaporation = computeEvaporation(); // TODO chiedere a Fausto come gestire l'evaporazione sui layer
-    int aaa = 0;
 }
 
 double Crit3D_Hydrall::computeEvaporation()
