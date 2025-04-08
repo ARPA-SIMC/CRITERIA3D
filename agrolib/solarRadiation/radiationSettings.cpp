@@ -269,13 +269,13 @@ void Crit3DRadiationSettings::setLandUse(const TlandUse &value)
     landUse = value;
 
     if (landUse == LAND_USE_INDUSTRIAL)
-        LinkeMonthly = {4.1, 4.3, 4.7, 5.3, 5.5, 5.7, 5.8, 5.7, 5.3, 4.9, 4.5, 4.2, 5.0};
+        LinkeMonthly = {4.1, 4.3, 4.7, 5.3, 5.5, 5.7, 5.8, 5.7, 5.3, 4.9, 4.5, 4.2};
     else if (landUse == LAND_USE_CITY)
-        LinkeMonthly = {3.1, 3.2, 3.5, 4.0, 4.2, 4.3, 4.4, 4.3, 4.0, 3.6, 3.3, 3.1, 3.75};
+        LinkeMonthly = {3.1, 3.2, 3.5, 4.0, 4.2, 4.3, 4.4, 4.3, 4.0, 3.6, 3.3, 3.1};
     else if (landUse == LAND_USE_RURAL)
-        LinkeMonthly = {2.1, 2.2, 2.5, 2.9, 3.2, 3.4, 3.5, 3.3, 2.9, 2.6, 2.3, 2.2, 2.75};
+        LinkeMonthly = {2.1, 2.2, 2.5, 2.9, 3.2, 3.4, 3.5, 3.3, 2.9, 2.6, 2.3, 2.2};
     else if (landUse == LAND_USE_MOUNTAIN)
-        LinkeMonthly = {1.5, 1.6, 1.8, 1.9, 2.0, 2.3, 2.3, 2.3, 2.1, 1.8, 1.6, 1.5, 1.9};
+        LinkeMonthly = {1.5, 1.6, 1.8, 1.9, 2.0, 2.3, 2.3, 2.3, 2.1, 1.8, 1.6, 1.5};
 
 }
 

@@ -40,7 +40,7 @@ enum estimatedFunction {FUNCTION_CODE_SPHERICAL, FUNCTION_CODE_LINEAR, FUNCTION_
 
 
     double twoParametersAndExponentialPolynomialFunctions(double x, double* par);
-    double twoHarmonicsFourier(double x, double* par);
+    inline double twoHarmonicsFourier(double x, double* par);
     double harmonicsFourierGeneral(double x, double* par,int nrPar);
     float errorFunctionPrimitive(float x);
     double errorFunctionPrimitive(double x);
