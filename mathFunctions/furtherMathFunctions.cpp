@@ -249,7 +249,7 @@ double twoParametersAndExponentialPolynomialFunctions(double x, double* par)
     return double(par[0]+par[1]*pow(x,par[2]));
 }
 
-double twoHarmonicsFourier(double x, double* par)
+inline double twoHarmonicsFourier(double x, double* par)
 {
     return par[0] + par[1]*cos(2*PI/par[5]*x) + par[2]*sin(2*PI/par[5]*x) + par[3]*cos(4*PI/par[5]*x) + par[4]*sin(4*PI/par[5]*x);
 }
