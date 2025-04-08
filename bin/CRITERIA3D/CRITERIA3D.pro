@@ -1,10 +1,10 @@
-#-----------------------------------------------------
+#-----------------------------------------------------------
 #
 #   CRITERIA3D
-#   3D soil water balance
-#   This project is part of CRITERIA-3D distribution
+#   3D agro-hydrological model
+#   This project is part of ARPAE CRITERIA-3D distribution
 #
-#-----------------------------------------------------
+#-----------------------------------------------------------
 
 QT  += network widgets sql xml charts
 greaterThan(QT_MAJOR_VERSION, 5): QT += core5compat openglwidgets
