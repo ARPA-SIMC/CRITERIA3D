@@ -1025,22 +1025,22 @@ bool Crit3D_Hydrall::growthStand()
     statePlant.treecumulatedBiomassRoot -= (statePlant.treecumulatedBiomassRoot/plant.fineRootLongevity);
 
 
-    double store; // TODO to understand what's that, afterwards the uninitialized value is used
+    // TODO to understand what's internalCarbonStoragwe (STORE), afterwards the uninitialized value is used
     //annual stand growth
     if (isFirstYearSimulation)
     {
         annualGrossStandGrowth = statePlant.treeNetPrimaryProduction / CARBONFACTOR; //kg DM m-2
-        store = 0;
+        internalCarbonStorage = 0;
     }
     else
     {
-        annualGrossStandGrowth = (store + statePlant.treeNetPrimaryProduction) / 2 / CARBONFACTOR;
-        store = (store + statePlant.treeNetPrimaryProduction) / 2;
+        annualGrossStandGrowth = (internalCarbonStorage + statePlant.treeNetPrimaryProduction) / 2 / CARBONFACTOR;
+        internalCarbonStorage = (internalCarbonStorage + statePlant.treeNetPrimaryProduction) / 2;
     }
 
     if (isFirstYearSimulation)
     {
-        //optimal
+        optimal();
     }
     else
     {
@@ -1048,7 +1048,7 @@ bool Crit3D_Hydrall::growthStand()
         double allocationCoeffientFineRootsOld = allocationCoefficient.toFineRoots;
         double allocationCoeffientSapwoodOld = allocationCoefficient.toSapwood;
 
-        //optimal
+        optimal();
 
         allocationCoefficient.toFoliage = (allocationCoeffientFoliageOld + allocationCoefficient.toFoliage) / 2;
         allocationCoefficient.toFineRoots = (allocationCoeffientFineRootsOld + allocationCoefficient.toFineRoots) / 2;
@@ -1062,6 +1062,7 @@ bool Crit3D_Hydrall::growthStand()
         treeBiomass.sapwood = MAXVALUE(treeBiomass.sapwood + annualGrossStandGrowth * allocationCoefficient.toSapwood, EPSILON);
     }
     // TODO manca il computo del volume sia generale che incrementale vedi funzione grstand.for
+
 
     isFirstYearSimulation = false;
     return true;

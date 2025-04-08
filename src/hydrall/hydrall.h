@@ -311,6 +311,7 @@
 
 
         double annualGrossStandGrowth;
+        double internalCarbonStorage ; // [kgC m-2]
 
         //gasflux results
         std::vector<double> treeTranspirationRate;          //molH2O m^-2 s^-1
