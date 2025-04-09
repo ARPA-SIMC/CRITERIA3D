@@ -60,6 +60,8 @@ enum estimatedFunction {FUNCTION_CODE_SPHERICAL, FUNCTION_CODE_LINEAR, FUNCTION_
     double lapseRatePiecewise_three(double x, std::vector <double>& par);
     double lapseRatePiecewise_three_free(double x, std::vector <double>& par);
 
+    int dijkstraFindMinDistanceNode(const std::vector<double>& dist, const std::vector<bool>& visited, int n);
+    void dijkstraShortestPathway(const std::vector<std::vector<double>>& graph, int src, std::vector<double> &dist);
 
     namespace integration
     {
