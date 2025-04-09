@@ -219,10 +219,18 @@ double aerodynamicConductance(double heightTemperature,
     psiH = 0.;
     Ch = airVolumetricSpecificHeat(pressureFromAltitude(heightWind), airTemperature);
 
-    for (short i = 1; i <= 3; i++)
+    double dK = 1000;
+    int counter = 0;
+    double oldK = NODATA;
+
+    while(dK > 0.1 && counter < 100)
     {
         uStar = VON_KARMAN_CONST * windSpeed / (log((heightWind - zeroPlane + roughnessMomentum) / roughnessMomentum) + psiM);
         K = VON_KARMAN_CONST * uStar / (log((heightTemperature - zeroPlane + roughnessHeat) / roughnessHeat) + psiH);
+        if (oldK != NODATA)
+        {
+            dK = fabs(K - oldK);
+        }
         H = K * Ch * (soilSurfaceTemperature - airTemperature);
         Sp = -VON_KARMAN_CONST * heightWind * GRAVITY * H / (Ch * airTemperature * (pow(uStar, 3)));
         if (Sp > 0)
@@ -237,10 +245,12 @@ double aerodynamicConductance(double heightTemperature,
             psiH = -2 * log((1 + sqrt(1 - 16 * Sp)) / 2);
             psiM = 0.6 * psiH;
         }
+
+        counter++;
+        oldK = K;
     }
 
     return K;
-
 }
 
 
