@@ -33,6 +33,24 @@ int main(int argc, char *argv[])
 {
     QApplication myApp(argc, argv);
 
+    // set modality (default: GUI)
+    myProject.modality = MODE_GUI;
+
+    if (argc > 1)
+    {
+        QString arg1 = QString::fromStdString(argv[1]);
+        if (arg1.toUpper() == "CONSOLE" || arg1.toUpper() == "SHELL")
+        {
+            myProject.modality = MODE_CONSOLE;
+        }
+        else
+        {
+            myProject.modality = MODE_BATCH;
+        }
+    }
+
+    QNetworkProxyFactory::setUseSystemConfiguration(true);
+
     if (! myProject.start(myApp.applicationDirPath()))
     {
         myProject.logError();
@@ -43,8 +61,6 @@ int main(int argc, char *argv[])
     {
         myProject.logWarning();
     }
-
-    QNetworkProxyFactory::setUseSystemConfiguration(true);
 
     QApplication::setOverrideCursor(Qt::ArrowCursor);
 

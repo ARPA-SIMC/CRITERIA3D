@@ -591,18 +591,6 @@ bool Project::loadParameters(QString parametersFileName)
             if (parametersSettings->contains("albedo_map"))
                 radSettings.setAlbedoMapName(parametersSettings->value("albedo_map").toString().toStdString());
 
-            if (parametersSettings->contains("linke_monthly") && parametersSettings->contains("land_use"))
-            {
-                QList<QString> myLinkeStr = parametersSettings->value("linke_monthly").toStringList();
-                if (myLinkeStr.size() < 12)
-                {
-                    errorString = "Incomplete monthly Linke values";
-                    return  false;
-                }
-
-                radSettings.setLinkeMonthly(StringListToFloat(myLinkeStr));
-            }
-
             if (parametersSettings->contains("land_use") && !parametersSettings->contains("linke_monthly"))
             {
                 std::string landUse = parametersSettings->value("land_use").toString().toStdString();
@@ -614,6 +602,17 @@ bool Project::loadParameters(QString parametersFileName)
                 else
                     radSettings.setLandUse(landUseToString.at(landUse));
             }
+            else if (parametersSettings->contains("linke_monthly"))
+            {
+                QList<QString> myLinkeStr = parametersSettings->value("linke_monthly").toStringList();
+                if (myLinkeStr.size() < 12)
+                {
+                    errorString = "Incomplete monthly Linke values";
+                    return  false;
+                }
+
+                radSettings.setLinkeMonthly(StringListToFloat(myLinkeStr));
+            }            
 
             if (parametersSettings->contains("albedo_monthly"))
             {
