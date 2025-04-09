@@ -34,6 +34,7 @@ INCLUDEPATH +=  ../../agrolib/soilFluxes3D/header  \
                 ../../agrolib/dbMeteoPoints ../../agrolib/dbMeteoGrid ../../agrolib/commonChartElements \
                 ../../agrolib/outputPoints ../../agrolib/waterTable ../../agrolib/project
 
+
 SOURCES += \
 project3D.cpp \
 dialogWaterFluxesSettings.cpp 

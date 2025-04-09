@@ -147,8 +147,11 @@ double computeAtmosphericLatentFlux(long i)
  */
 double computeAtmosphericLatentFluxSurfaceWater(long i)
 {
-    if (! nodeList[i].isSurface) return 0.;
-    if (&(nodeList[i].down) == nullptr) return 0.;
+    if (! nodeList[i].isSurface)
+        return 0.;
+
+    if (nodeList[i].down.index == NOLINK)
+        return 0.;
 
     long downIndex = nodeList[i].down.index;
 
@@ -314,7 +317,7 @@ void updateBoundaryWater (double deltaT)
                     long upIndex;
 
                     double surfaceWaterFraction = 0.;
-                    if (&(nodeList[i].up) != nullptr)
+                    if (nodeList[i].up.index != NOLINK)
                     {
                         upIndex = nodeList[i].up.index;
                         surfaceWaterFraction = getSurfaceWaterFraction(upIndex);
