@@ -80,11 +80,12 @@ void initializeBoundary(Tboundary *myBoundary, int myType, float slope, float bo
     else (*myBoundary).Heat = nullptr;
 }
 
-double computeSoilSurfaceResistance(double myThetaTop)
+double computeSoilSurfaceResistance(double thetaTop)
 {	// soil surface resistance (s m-1)
     // Van De Griend and Owe (1994)
     const double THETAMIN = 0.15;
-    return (10 * exp(0.3563 * (THETAMIN - myThetaTop) * 100));
+    double surfaceResistance = 10 * exp(0.3563 * (THETAMIN - thetaTop) * 100);
+    return surfaceResistance;
 }
 
 double computeSoilSurfaceResistanceCG(double theta, double thetaSat)
