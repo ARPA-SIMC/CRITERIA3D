@@ -55,15 +55,16 @@ bool convertGdalRaster(GDALDataset* dataset, gis::Crit3DRasterGrid* myRaster, in
 
     // projection
     OGRSpatialReference* spatialReference;
-    if (dataset->GetProjectionRef() != "")
+    QString projectionRef = QString::fromStdString(dataset->GetProjectionRef());
+    if (projectionRef != "")
     {
-        qDebug() << "Projection =" << dataset->GetProjectionRef();
+        qDebug() << "Projection =" << projectionRef;
         spatialReference = new OGRSpatialReference(dataset->GetProjectionRef());
 
-        // TODO geo projection?
+        // TODO geo projection
         if (! spatialReference->IsProjected())
         {
-            errorStr = "Not projected data: " + QString::fromStdString(dataset->GetProjectionRef());
+            errorStr = "Not projected data: " + projectionRef;
             return false;
         }
 
