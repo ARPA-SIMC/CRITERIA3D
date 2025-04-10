@@ -164,7 +164,7 @@ double infiltration(long sup, long inf, TlinkedNode *link, double deltaT)
         {
             if (nodeList[inf].boundary->type == BOUNDARY_URBAN)
             {
-                // TODO check?
+                // TODO improve with external parameters
                 return(nodeList[inf].Soil->K_sat * 0.1 * link->area) / cellDistance;
             }
             else if (nodeList[inf].boundary->type == BOUNDARY_ROAD)

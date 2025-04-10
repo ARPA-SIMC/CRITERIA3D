@@ -3,7 +3,6 @@
 #include "zonalStatistic.h"
 #include "shapeToRaster.h"
 #include "shapeUtilities.h"
-//#include "formInfo.h"
 #include "computationUnitsDb.h"
 
 #include <QFile>
@@ -11,9 +10,8 @@
 
 bool computeUcmPrevailing(Crit3DShapeHandler &shapeUCM, Crit3DShapeHandler &shapeCrop, Crit3DShapeHandler &shapeSoil, Crit3DShapeHandler &shapeMeteo,
                  std::string idCrop, std::string idSoil, std::string idMeteo, double cellSize, double threshold,
-                 QString ucmFileName, std::string &errorStr, bool showInfo)
+                 QString ucmFileName, std::string &errorStr)
 {
-
     // make a copy of crop shapefile (reference shape)
     // and return complete path of the output shapefile
     QString refFileName = QString::fromStdString(shapeCrop.getFilepath());
