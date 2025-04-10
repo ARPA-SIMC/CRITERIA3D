@@ -702,7 +702,7 @@ void saveNodeWaterFlux(long i, TlinkedNode *link, double timeStepHeat, double ti
     if (matrixValue != INDEX_ERROR)
         isothLiqFlux = matrixValue * (avgH - avgHLink);
 
-    if (!nodeList[i].isSurface && ! nodeList[link->index].isSurface)
+    if (! nodeList[i].isSurface && ! nodeList[link->index].isSurface)
     {
         // compute isothermal vapor flux and subtract from total water flux
         // (because fluxLiquid is computed from A matrix which include isothermal vapor flux component)
@@ -732,25 +732,26 @@ void saveNodeWaterFlux(long i, TlinkedNode *link, double timeStepHeat, double ti
     return;
 }
 
+
 void saveWaterFluxes(double dtHeat, double dtWater)
 {
     for (long i = 0; i < myStructure.nrNodes; i++)
         {
-            if (&nodeList[i].up != nullptr)
+            if (nodeList[i].up.index != NOLINK)
                 if (nodeList[i].up.linkedExtra != nullptr)
                     saveNodeWaterFlux(i, &nodeList[i].up, dtHeat, dtWater);
 
-            if (&nodeList[i].down != nullptr)
+            if (nodeList[i].down.index != NOLINK)
                 if (nodeList[i].down.linkedExtra != nullptr)
                     saveNodeWaterFlux(i, &nodeList[i].down, dtHeat, dtWater);
 
             for (short j = 0; j < myStructure.nrLateralLinks; j++)
-                if (&nodeList[i].lateral[j] != nullptr)
+                if (nodeList[i].lateral[j].index != NOLINK)
                     if (nodeList[i].lateral[j].linkedExtra != nullptr)
                         saveNodeWaterFlux(i, &nodeList[i].lateral[j], dtHeat, dtWater);
-
         }
 }
+
 
 void saveNodeHeatFlux(long myIndex, TlinkedNode *myLink, double timeStep, double timeStepWater)
 // [W] heat flow between node nodeList[myIndex] and link node myLink

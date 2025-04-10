@@ -16,21 +16,23 @@ TEMPLATE = app
 
 DEFINES += VINE3D
 
-INCLUDEPATH +=  ../../mapGraphics \
-                ../../agrolib/crit3dDate ../../agrolib/mathFunctions ../../agrolib/soilFluxes3D/header \
+INCLUDEPATH +=  ../../agrolib/crit3dDate ../../agrolib/mathFunctions ../../agrolib/soilFluxes3D/header \
                 ../../agrolib/gis ../../agrolib/meteo ../../agrolib/interpolation \
                 ../../agrolib/solarRadiation ../../agrolib/soil  \
-                ../../agrolib/crop ../../agrolib/grapevine ../../agrolib/outputPoints \
+                ../../agrolib/crop  ../../agrolib/outputPoints \
                 ../../agrolib/utilities ../../agrolib/dbMeteoPoints ../../agrolib/dbMeteoGrid \
                 ../../agrolib/proxyWidget ../../agrolib/waterTable \
                 ../../agrolib/commonDialogs ../../agrolib/project \
                 ../../agrolib/graphics ../../agrolib/commonChartElements ../../agrolib/meteoWidget  \
-                ../CRITERIA3D/shared
+                ../../src/grapevine ../../src/project3D \
+                ../../mapGraphics
 
 CONFIG += debug_and_release
 
 
 CONFIG(debug, debug|release) {
+    LIBS += -L../../src/project3D/debug -lproject3D
+    LIBS += -L../../src/grapevine/debug -lgrapevine
     LIBS += -L../../agrolib/graphics/debug -lgraphics
     win32:{
         LIBS += -L../../mapGraphics/debug -lMapGraphics
@@ -48,7 +50,6 @@ CONFIG(debug, debug|release) {
     LIBS += -L../../agrolib/outputPoints/debug -loutputPoints
     LIBS += -L../../agrolib/utilities/debug -lutilities
     LIBS += -L../../agrolib/waterTable/debug -lwaterTable
-    LIBS += -L../../agrolib/grapevine/debug -lgrapevine
     LIBS += -L../../agrolib/soil/debug -lsoil
     LIBS += -L../../agrolib/crop/debug -lcrop
     LIBS += -L../../agrolib/solarRadiation/debug -lsolarRadiation
@@ -59,6 +60,8 @@ CONFIG(debug, debug|release) {
     LIBS += -L../../agrolib/crit3dDate/debug -lcrit3dDate
     LIBS += -L../../agrolib/mathFunctions/debug -lmathFunctions
 } else {
+    LIBS += -L../../src/project3D/release -lproject3D
+    LIBS += -L../../src/grapevine/release -lgrapevine
     LIBS += -L../../agrolib/graphics/release -lgraphics
     LIBS += -L../../mapGraphics/release -lMapGraphics
     LIBS += -L../../agrolib/project/release -lproject
@@ -71,7 +74,6 @@ CONFIG(debug, debug|release) {
     LIBS += -L../../agrolib/outputPoints/release -loutputPoints
     LIBS += -L../../agrolib/utilities/release -lutilities
     LIBS += -L../../agrolib/waterTable/release -lwaterTable
-    LIBS += -L../../agrolib/grapevine/release -lgrapevine
     LIBS += -L../../agrolib/soil/release -lsoil
     LIBS += -L../../agrolib/crop/release -lcrop
     LIBS += -L../../agrolib/solarRadiation/release -lsolarRadiation
@@ -84,8 +86,6 @@ CONFIG(debug, debug|release) {
 }
 
 SOURCES += \
-    ../CRITERIA3D/shared/project3D.cpp \
-    ../CRITERIA3D/shared/dialogWaterFluxesSettings.cpp \
     disease.cpp \
     modelCore.cpp \
     plant.cpp \
@@ -97,8 +97,6 @@ SOURCES += \
 
 
 HEADERS += \
-    ../CRITERIA3D/shared/project3D.h \
-    ../CRITERIA3D/shared/dialogWaterFluxesSettings.h \
     disease.h \
     plant.h \
     waterBalance.h \

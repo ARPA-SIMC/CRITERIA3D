@@ -209,6 +209,7 @@ bool computeResidualsLocalDetrending(meteoVariable myVar, Crit3DTime myTime, Cri
     return true;
 }
 
+
 bool computeResidualsGlocalDetrending(meteoVariable myVar, Crit3DTime myTime, Crit3DMeteoPoint* meteoPoints, int nrMeteoPoints,
                                      std::vector <Crit3DInterpolationDataPoint> &interpolationPoints, Crit3DInterpolationSettings* settings,
                                      Crit3DMeteoSettings* meteoSettings, Crit3DClimateParameters* climateParameters,
@@ -532,15 +533,17 @@ bool checkAndPassDataToInterpolation(Crit3DQuality* myQuality, meteoVariable myV
 
 
 bool passDataToInterpolation(Crit3DMeteoPoint* meteoPoints, int nrMeteoPoints,
-                            std::vector <Crit3DInterpolationDataPoint> &myInterpolationPoints,
+                            std::vector <Crit3DInterpolationDataPoint> &interpolationPoints,
                             Crit3DInterpolationSettings* mySettings)
 {
-    int nrValid = 0;
-    float xMin=NODATA, xMax, yMin, yMax;
-    float valueMin=NODATA, valueMax;
-    bool isSelection = isSelectionPointsActive(meteoPoints, nrMeteoPoints);
+    float xMin, xMax, yMin, yMax;
+    float valueMin, valueMax;
 
-    myInterpolationPoints.clear();
+    bool isSelection = isSelectionPointsActive(meteoPoints, nrMeteoPoints);
+    bool isFirst = true;
+    int nrValid = 0;
+
+    interpolationPoints.clear();
 
     for (int i = 0; i < nrMeteoPoints; i++)
     {
@@ -559,12 +562,15 @@ bool passDataToInterpolation(Crit3DMeteoPoint* meteoPoints, int nrMeteoPoints,
             myPoint.isActive = true;
             myPoint.isMarked = meteoPoints[i].marked;
 
-            if (isEqual(xMin, NODATA))
+            if (isFirst)
             {
                 xMin = float(myPoint.point->utm.x);
                 xMax = float(myPoint.point->utm.x);
                 yMin = float(myPoint.point->utm.y);
                 yMax = float(myPoint.point->utm.y);
+                valueMin = myPoint.value;
+                valueMax = myPoint.value;
+                isFirst = false;
             }
             else
             {
@@ -572,33 +578,21 @@ bool passDataToInterpolation(Crit3DMeteoPoint* meteoPoints, int nrMeteoPoints,
                 xMax = MAXVALUE(xMax, (float)myPoint.point->utm.x);
                 yMin = MINVALUE(yMin, (float)myPoint.point->utm.y);
                 yMax = MAXVALUE(yMax, (float)myPoint.point->utm.y);
+                valueMin = MINVALUE(valueMin, myPoint.value);
+                valueMax = MAXVALUE(valueMax, myPoint.value);
             }
 
-            if (isEqual(valueMin, NODATA))
-            {
-                valueMin = myPoint.value;
-                valueMax = myPoint.value;
-            }
-            else
-            {
-                if (myPoint.value < valueMin) valueMin = myPoint.value;
-                if (myPoint.value > valueMax) valueMax = myPoint.value;
-            }
-
-            myInterpolationPoints.push_back(myPoint);
+            interpolationPoints.push_back(myPoint);
 
             if (checkLapseRateCode(myPoint.lapseRateCode, mySettings->getUseLapseRateCode(), false))
                 nrValid++;
         }
     }
 
-    if (nrValid > 0)
-    {
-        mySettings->setPointsBoundingBoxArea((xMax - xMin) * (yMax - yMin));
-        mySettings->setPointsRange(valueMin, valueMax);
-        return true;
-    }
-    else
+    if (nrValid == 0)
         return false;
 
+    mySettings->setPointsBoundingBoxArea((xMax - xMin) * (yMax - yMin));
+    mySettings->setPointsRange(valueMin, valueMax);
+    return true;
 }
