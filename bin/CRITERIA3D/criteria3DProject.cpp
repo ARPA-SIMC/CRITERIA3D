@@ -1383,6 +1383,7 @@ bool Crit3DProject::computeHydrallModel()
 
                 //check and save data TODO CHECK NODATA
                 hydrallModel.getStateVariables(hydrallMaps, row, col);
+
             }
             else
             {

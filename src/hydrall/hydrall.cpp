@@ -133,9 +133,9 @@ double Crit3D_Hydrall::photosynthesisAndTranspirationUnderstorey()
         double waterLimitedUnderstoreyAssimilation;          //[molC m-2 s-1]
 
         lightLimitedUnderstoreyAssimilation = understoreyLightUtilization * understorey.absorbedPAR / MC; //convert units from kgC m-2 s-1 into molC m-2 s-1
-        double density=1;
+        double density=1.;
         if (soil.layersNr > 1)
-            density = 1/(soil.layersNr-1);
+            density = 1./(soil.layersNr-1);
 
         for (int i = 1; i < soil.layersNr; i++)
         {
