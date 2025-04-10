@@ -199,7 +199,7 @@ double aerodynamicConductance(double heightTemperature,
                               double airTemperature,
                               double windSpeed)
 {
-    double K;                           // (m s-1) aerodynamic conductance
+    double K= NODATA;                   // (m s-1) aerodynamic conductance
     double psiM, psiH;					// () diabatic correction factors for momentum and for heat
     double uStar;						// (m s-1) friction velocity
     double zeroPlane;					// (m) zero place displacement

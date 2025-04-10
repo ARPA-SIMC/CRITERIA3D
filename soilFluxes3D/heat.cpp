@@ -595,7 +595,7 @@ double AdvectiveFlux(long i, TlinkedNode *myLink)
     else
         TliqAdv = nodeList[myLink->index].extra->Heat->T;
 
-    fluxCourant += HEAT_CAPACITY_WATER * liqWaterFlux;
+    fluxCourant = HEAT_CAPACITY_WATER * liqWaterFlux;
     advection = fluxCourant * TliqAdv;
 
     vapWaterFlux = (*myLink).linkedExtra->heatFlux->vaporFlux;
@@ -615,7 +615,7 @@ double AdvectiveFlux(long i, TlinkedNode *myLink)
 
 double Conduction(long i, TlinkedNode *myLink, double timeStep, double timeStepWater)
 {
-	double myConductivity, linkConductivity, meanKh;
+    double myConductivity, linkConductivity, meanKh;            // [W m-1 K-1]
     double zeta;
     double hAvg, hLinkAvg;
     double myH, myHLink;
@@ -634,7 +634,10 @@ double Conduction(long i, TlinkedNode *myLink, double timeStep, double timeStepW
     linkConductivity = SoilHeatConductivity(j, nodeList[j].extra->Heat->T, hLinkAvg);
     meanKh = computeMean(myConductivity, linkConductivity);
 
-    return (zeta * meanKh);
+    // TODO capacità termica
+    //CourantHeat = MAXVALUE(CourantHeat, v * timeStep / myDistance);
+
+    return zeta * meanKh;
 }
 
 bool computeHeatFlux(long i, int myMatrixIndex, TlinkedNode *myLink, double timeStep, double timeStepWater)
@@ -650,6 +653,7 @@ bool computeHeatFlux(long i, int myMatrixIndex, TlinkedNode *myLink, double time
 
     myAdvectiveFlux = 0.;
     myLatentFlux = 0.;
+    // initialize global variable
     fluxCourant = 0.;
 
     myConduction = Conduction(i, myLink, timeStep, timeStepWater);
@@ -984,13 +988,12 @@ bool HeatComputation(double timeStep, double timeStepWater)
     }
 
     // avoiding oscillations (Courant number)
-    if (CourantHeat > 1.0)
-        if (timeStep > myParameters.delta_t_min)
-        {
-            halveTimeStep();
-            setForcedHalvedTime(true);
-            return (false);
-        }
+    if (CourantHeat > 1.0 && timeStep > myParameters.delta_t_min)
+    {
+        myParameters.current_delta_t = std::max(myParameters.current_delta_t / CourantHeat, myParameters.delta_t_min);
+        setForcedHalvedTime(true);
+        return false;
+    }
 
     int approximation = 0;
     solveLinearSystem(approximation, myParameters.ResidualTolerance, PROCESS_HEAT);
