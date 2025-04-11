@@ -9,8 +9,6 @@ class DialogAddStation : public QDialog
     Q_OBJECT
 
 private:
-    int _nrAllMeteoPoints;
-
     QList<QString> _activeStationsList;
     QList<QString> _selectedStations;
     QList<QString> _nearStationsList;
@@ -19,6 +17,8 @@ private:
     QLineEdit* _singleValueEdit;
     Crit3DMeteoPoint* _allMeteoPointsPointer;
     QListWidget* _listNearStationsWidget;
+
+    int _nrAllMeteoPoints;
 
 public:
     DialogAddStation(const QList<QString> &activeStationsList, Crit3DMeteoPoint *allMeteoPointsPointer, int nrAllMeteoPoints);

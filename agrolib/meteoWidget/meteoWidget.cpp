@@ -547,11 +547,11 @@ void Crit3DMeteoWidget::updateTimeRange()
 }
 
 
-bool Crit3DMeteoWidget::isAlreadyPresent(const std::string &idMeteoPoint)
+bool Crit3DMeteoWidget::isAlreadyPresent(const std::string &idMeteoPoint, const std::string &dataset)
 {
     for (int i = 0; i < _meteoPoints.size(); i++)
     {
-        if (_meteoPoints[i].id == idMeteoPoint)
+        if (_meteoPoints[i].id == idMeteoPoint && _meteoPoints[i].dataset == dataset)
         {
             return true;
         }

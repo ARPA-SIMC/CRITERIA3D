@@ -1432,7 +1432,7 @@ bool Project::loadMeteoGridDB(QString xmlName)
 
     if (! this->meteoGridDbHandler->openDatabase(&errorString)) return false;
 
-    if (! this->meteoGridDbHandler->loadCellProperties(&errorString)) return false;
+    if (! this->meteoGridDbHandler->loadCellProperties(errorString)) return false;
 
     if (! this->meteoGridDbHandler->meteoGrid()->createRasterGrid()) return false;
 
@@ -1463,19 +1463,24 @@ bool Project::newMeteoGridDB(QString xmlName)
     meteoGridDbHandler = new Crit3DMeteoGridDbHandler();
     meteoGridDbHandler->meteoGrid()->setGisSettings(this->gisSettings);
 
-    if (! meteoGridDbHandler->parseXMLGrid(xmlName, &errorString)) return false;
+    if (! meteoGridDbHandler->parseXMLGrid(xmlName, &errorString))
+        return false;
 
-    if (! this->meteoGridDbHandler->newDatabase(&errorString)) return false;
+    if (! this->meteoGridDbHandler->newDatabase(&errorString))
+        return false;
 
-    if (! this->meteoGridDbHandler->newCellProperties(&errorString)) return false;
+    if (! this->meteoGridDbHandler->newCellProperties(&errorString))
+        return false;
 
     Crit3DMeteoGridStructure structure = this->meteoGridDbHandler->meteoGrid()->gridStructure();
 
-    if (! this->meteoGridDbHandler->writeCellProperties(&errorString, structure.nrRow(), structure.nrCol())) return false;
+    if (! this->meteoGridDbHandler->writeCellProperties(structure.nrRow(), structure.nrCol(), errorString))
+        return false;
 
-    if (! this->meteoGridDbHandler->meteoGrid()->createRasterGrid()) return false;
+    if (! this->meteoGridDbHandler->meteoGrid()->createRasterGrid())
+        return false;
 
-    if (!meteoGridDbHandler->updateMeteoGridDate(errorString))
+    if (! meteoGridDbHandler->updateMeteoGridDate(errorString))
     {
         logInfoGUI("Error in updateMeteoGridDate: " + errorString);
     }
@@ -1488,6 +1493,7 @@ bool Project::newMeteoGridDB(QString xmlName)
 
     return true;
 }
+
 
 bool Project::deleteMeteoGridDB()
 {
@@ -4115,7 +4121,7 @@ void Project::showMeteoWidgetPoint(std::string idMeteoPoint, std::string namePoi
         else
         {
             int lastIndex = meteoWidgetPointList.size() - 1;
-            if (meteoWidgetPointList[lastIndex]->isAlreadyPresent(idMeteoPoint))
+            if (meteoWidgetPointList[lastIndex]->isAlreadyPresent(idMeteoPoint, dataset))
             {
                 logWarning("This meteo point is already present.");
                 return;
@@ -4208,7 +4214,7 @@ void Project::showMeteoWidgetPoint(std::string idMeteoPoint, std::string namePoi
 }
 
 
-void Project::showMeteoWidgetGrid(std::string idCell, bool isAppend)
+void Project::showMeteoWidgetGrid(const std::string &idCell, const std::string &dataset, bool isAppend)
 {
     // check
     if (isAppend)
@@ -4220,7 +4226,7 @@ void Project::showMeteoWidgetGrid(std::string idCell, bool isAppend)
         else
         {
             int lastIndex = meteoWidgetGridList.size() - 1;
-            if (meteoWidgetGridList[lastIndex]->isAlreadyPresent(idCell))
+            if (meteoWidgetGridList[lastIndex]->isAlreadyPresent(idCell, dataset))
             {
                 logWarning("This grid cell is already present.");
                 return;

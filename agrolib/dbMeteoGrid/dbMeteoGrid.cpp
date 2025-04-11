@@ -1064,7 +1064,7 @@ bool Crit3DMeteoGridDbHandler::newDatabase(QString *errorStr)
 
     QSqlQuery query(_db);
 
-    query.exec( "CREATE DATABASE IF NOT EXISTS "+_connection.name);
+    query.exec("CREATE DATABASE IF NOT EXISTS " + _connection.name);
 
     if (!query.exec())
     {
@@ -1165,16 +1165,19 @@ void Crit3DMeteoGridDbHandler::closeDatabase()
     }
 }
 
-bool Crit3DMeteoGridDbHandler::loadCellProperties(QString *errorStr)
+
+bool Crit3DMeteoGridDbHandler::loadCellProperties(QString &errorStr)
 {
     QSqlQuery qry(_db);
     int row, col, active, height;
     QString code, name, tableCellsProp;
 
+    std::string dataset = _connection.name.toStdString();
+
     qry.prepare( "SHOW TABLES LIKE '%ells%roperties'" );
-    if( !qry.exec() )
+    if(! qry.exec() )
     {
-        *errorStr = qry.lastError().text();
+        errorStr = qry.lastError().text();
         return false;
     }
     else
@@ -1185,9 +1188,9 @@ bool Crit3DMeteoGridDbHandler::loadCellProperties(QString *errorStr)
 
     QString statement = QString("SELECT * FROM `%1` ORDER BY Code").arg(tableCellsProp);
 
-    if( !qry.exec(statement) )
+    if(! qry.exec(statement) )
     {
-        *errorStr = qry.lastError().text();
+        errorStr = qry.lastError().text();
         return false;
     }
     else
@@ -1198,7 +1201,7 @@ bool Crit3DMeteoGridDbHandler::loadCellProperties(QString *errorStr)
 
             if (! getValue(qry.value("Code"), &code))
             {
-                *errorStr = "Missing data: Code";
+                errorStr = "Missing data: Code";
                 return false;
             }
 
@@ -1210,13 +1213,13 @@ bool Crit3DMeteoGridDbHandler::loadCellProperties(QString *errorStr)
 
             if (! getValue(qry.value("Row"), &row))
             {
-                *errorStr = "Missing data: Row";
+                errorStr = "Missing data: Row";
                 return false;
             }
 
             if (! getValue(qry.value("Col"), &col))
             {
-                *errorStr = "Missing data: Col";
+                errorStr = "Missing data: Col";
                 return false;
             }
 
@@ -1232,22 +1235,23 @@ bool Crit3DMeteoGridDbHandler::loadCellProperties(QString *errorStr)
 
             if (! getValue(qry.value("Active"), &active))
             {
-                *errorStr = "Missing data: Active";
+                errorStr = "Missing data: Active";
                 return false;
             }
 
             if (row < _meteoGrid->gridStructure().header().nrRows
                 && col < _meteoGrid->gridStructure().header().nrCols)
             {
-                _meteoGrid->fillMeteoPoint(row, col, code.toStdString(), name.toStdString(), height, active);
+                _meteoGrid->fillMeteoPoint(row, col, code.toStdString(), name.toStdString(), dataset, height, active);
             }
             else
             {
-                *errorStr = "Row or Col > nrRows or nrCols";
+                errorStr = "Row or Col > nrRows or nrCols";
                 return false;
             }
         }
     }
+
     return true;
 }
 
@@ -1269,30 +1273,35 @@ bool Crit3DMeteoGridDbHandler::newCellProperties(QString *errorStr)
 }
 
 
-bool Crit3DMeteoGridDbHandler::writeCellProperties(QString *errorStr, int nRow, int nCol)
+bool Crit3DMeteoGridDbHandler::writeCellProperties(int nRows, int nCols, QString &errorStr)
 {
     QSqlQuery qry(_db);
     QString table = "CellsProperties";
     int id = 0;
+
+    std::string dataset = _connection.name.toStdString();
     QString statement = QString(("INSERT INTO `%1` (`Code`, `Name`, `Row`, `Col`, `Active`) VALUES ")).arg(table);
+
     // standard QGis: first value at top left
-    for (int c = 0; c<nCol; c++)
+    for (int col = 0; col<nCols; col++)
     {
-        for (int r = nRow-1; r>=0; r--)
+        for (int row = nRows-1; row>=0; row--)
         {
             id = id + 1;
-            statement += QString(" ('%1','%2','%3','%4',1),").arg(id, 6, 10, QChar('0')).arg(id, 6, 10, QChar('0')).arg(r).arg(c);
-            _meteoGrid->fillMeteoPoint(r, c, QString("%1").arg(id, 6, 10, QChar('0')).toStdString(), QString("%1").arg(id, 6, 10, QChar('0')).toStdString(), 0, 1);
+            statement += QString(" ('%1','%2','%3','%4',1),").arg(id, 6, 10, QChar('0')).arg(id, 6, 10, QChar('0')).arg(row).arg(col);
+            _meteoGrid->fillMeteoPoint(row, col, QString("%1").arg(id, 6, 10, QChar('0')).toStdString(),
+                                       QString("%1").arg(id, 6, 10, QChar('0')).toStdString(),
+                                       dataset, 0, 1);
         }
     }
-
     statement = statement.left(statement.length() - 1);
 
-    if( !qry.exec(statement) )
+    if(! qry.exec(statement) )
     {
-        *errorStr = qry.lastError().text();
+        errorStr = qry.lastError().text();
         return false;
     }
+
     return true;
 }
 
@@ -1329,16 +1338,17 @@ bool Crit3DMeteoGridDbHandler::setActiveStateCellsInList(QString *errorStr, QLis
     }
 }
 
-bool Crit3DMeteoGridDbHandler::loadIdMeteoProperties(QString *errorStr, QString idMeteo)
+
+bool Crit3DMeteoGridDbHandler::loadIdMeteoProperties(const QString &idMeteo, QString &errorStr)
 {
-    QSqlQuery qry(_db);
     int row, col, active, height;
     QString code, name, tableCellsProp;
 
+    QSqlQuery qry(_db);
     qry.prepare( "SHOW TABLES LIKE '%ells%roperties'" );
-    if( !qry.exec() )
+    if(! qry.exec() )
     {
-        *errorStr = qry.lastError().text();
+        errorStr = qry.lastError().text();
         return false;
     }
     else
@@ -1347,11 +1357,13 @@ bool Crit3DMeteoGridDbHandler::loadIdMeteoProperties(QString *errorStr, QString 
         tableCellsProp = qry.value(0).toString();
     }
 
+    std::string dataset = _connection.name.toStdString();
+
     QString statement = QString("SELECT * FROM `%1` WHERE `Code` = '%2'").arg(tableCellsProp, idMeteo);
 
-    if( !qry.exec(statement) )
+    if(! qry.exec(statement) )
     {
-        *errorStr = qry.lastError().text();
+        errorStr = qry.lastError().text();
         return false;
     }
     else
@@ -1362,7 +1374,7 @@ bool Crit3DMeteoGridDbHandler::loadIdMeteoProperties(QString *errorStr, QString 
 
             if (! getValue(qry.value("Code"), &code))
             {
-                *errorStr = "Missing data: Code";
+                errorStr = "Missing data: Code";
                 return false;
             }
 
@@ -1374,13 +1386,13 @@ bool Crit3DMeteoGridDbHandler::loadIdMeteoProperties(QString *errorStr, QString 
 
             if (! getValue(qry.value("Row"), &row))
             {
-                *errorStr = "Missing data: Row";
+                errorStr = "Missing data: Row";
                 return false;
             }
 
             if (! getValue(qry.value("Col"), &col))
             {
-                *errorStr = "Missing data: Col";
+                errorStr = "Missing data: Col";
                 return false;
             }
 
@@ -1396,22 +1408,23 @@ bool Crit3DMeteoGridDbHandler::loadIdMeteoProperties(QString *errorStr, QString 
 
             if (! getValue(qry.value("Active"), &active))
             {
-                *errorStr = "Missing data: Active";
+                errorStr = "Missing data: Active";
                 return false;
             }
 
             if (row < _meteoGrid->gridStructure().header().nrRows
                 && col < _meteoGrid->gridStructure().header().nrCols)
             {
-                _meteoGrid->fillMeteoPoint(row, col, code.toStdString(), name.toStdString(), height, active);
+                _meteoGrid->fillMeteoPoint(row, col, code.toStdString(), name.toStdString(), dataset, height, active);
             }
             else
             {
-                *errorStr = "Row or Col > nrRows or nrCols";
+                errorStr = "wrong Row or Col";
                 return false;
             }
         }
     }
+
     return true;
 }
 
