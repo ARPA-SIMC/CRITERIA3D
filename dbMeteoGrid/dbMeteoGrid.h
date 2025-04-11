@@ -111,10 +111,10 @@
         std::string getHourlyPragaName(meteoVariable meteoVar);
         std::string getMonthlyPragaName(meteoVariable meteoVar);
 
-        bool loadCellProperties(QString *errorStr);
+        bool loadCellProperties(QString &errorStr);
         bool newCellProperties(QString *errorStr);
-        bool writeCellProperties(QString *errorStr, int nRow, int nCol);
-        bool loadIdMeteoProperties(QString *errorStr, QString idMeteo);
+        bool writeCellProperties(int nRows, int nCols, QString &errorStr);
+        bool loadIdMeteoProperties(const QString &idMeteo, QString &errorStr);
         bool updateMeteoGridDate(QString &errorStr);
 
         bool loadGridDailyData(QString &errorStr, const QString &meteoPointId, const QDate &firstDate, const QDate &lastDate);

@@ -275,11 +275,12 @@ void Crit3DMeteoGrid::setActive(unsigned int row,unsigned int col, bool active)
 
 
 // for visualization raster
-void Crit3DMeteoGrid::fillMeteoPoint(unsigned int row, unsigned int col, const std::string& code, const std::string& name, int height, bool active)
+void Crit3DMeteoGrid::fillMeteoPoint(unsigned int row, unsigned int col, const std::string& code, const std::string& name,
+                                     const std::string& dataset, int height, bool active)
 {
-
     _meteoPoints[row][col]->id = code;
     _meteoPoints[row][col]->name = name;
+    _meteoPoints[row][col]->dataset = dataset;
     _meteoPoints[row][col]->point.z = height;
     _meteoPoints[row][col]->active = active;
 
