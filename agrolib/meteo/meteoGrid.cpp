@@ -582,14 +582,13 @@ bool Crit3DMeteoGrid::getIdFromLatLon(double lat, double lon, std::string* id)
 }
 
 
-bool Crit3DMeteoGrid::getMeteoPointActiveId(int row, int col, std::string* id)
+bool Crit3DMeteoGrid::getMeteoPointActiveId(int row, int col, std::string &id)
 {
-    if (row >= 0 && row < _gridStructure.header().nrRows
-        && col >= 0 && col < _gridStructure.header().nrCols)
+    if (row >= 0 && row < _gridStructure.header().nrRows && col >= 0 && col < _gridStructure.header().nrCols)
     {
         if (_meteoPoints[row][col]->active)
         {
-            *id = _meteoPoints[row][col]->id;
+            id = _meteoPoints[row][col]->id;
             return true;
         }
     }

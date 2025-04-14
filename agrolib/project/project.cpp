@@ -1428,9 +1428,9 @@ bool Project::loadMeteoGridDB(QString xmlName)
     meteoGridDbHandler = new Crit3DMeteoGridDbHandler();
     meteoGridDbHandler->meteoGrid()->setGisSettings(this->gisSettings);
 
-    if (! meteoGridDbHandler->parseXMLGrid(xmlName, &errorString)) return false;
+    if (! meteoGridDbHandler->parseXMLGrid(xmlName, errorString)) return false;
 
-    if (! this->meteoGridDbHandler->openDatabase(&errorString)) return false;
+    if (! this->meteoGridDbHandler->openDatabase(errorString)) return false;
 
     if (! this->meteoGridDbHandler->loadCellProperties(errorString)) return false;
 
@@ -1463,13 +1463,13 @@ bool Project::newMeteoGridDB(QString xmlName)
     meteoGridDbHandler = new Crit3DMeteoGridDbHandler();
     meteoGridDbHandler->meteoGrid()->setGisSettings(this->gisSettings);
 
-    if (! meteoGridDbHandler->parseXMLGrid(xmlName, &errorString))
+    if (! meteoGridDbHandler->parseXMLGrid(xmlName, errorString))
         return false;
 
-    if (! this->meteoGridDbHandler->newDatabase(&errorString))
+    if (! this->meteoGridDbHandler->newDatabase(errorString))
         return false;
 
-    if (! this->meteoGridDbHandler->newCellProperties(&errorString))
+    if (! this->meteoGridDbHandler->newCellProperties(errorString))
         return false;
 
     Crit3DMeteoGridStructure structure = this->meteoGridDbHandler->meteoGrid()->gridStructure();
@@ -1497,7 +1497,7 @@ bool Project::newMeteoGridDB(QString xmlName)
 
 bool Project::deleteMeteoGridDB()
 {
-    if (!meteoGridDbHandler->deleteDatabase(&errorString))
+    if (!meteoGridDbHandler->deleteDatabase(errorString))
     {
         logInfoGUI("delete meteo grid error: " + errorString);
         return false;
@@ -1643,7 +1643,7 @@ bool Project::loadMeteoGridDailyData(QDate firstDate, QDate lastDate, bool showI
 
         for (int col = 0; col < this->meteoGridDbHandler->gridStructure().header().nrCols; col++)
         {
-            if (this->meteoGridDbHandler->meteoGrid()->getMeteoPointActiveId(row, col, &id))
+            if (this->meteoGridDbHandler->meteoGrid()->getMeteoPointActiveId(row, col, id))
             {
                 if (!this->meteoGridDbHandler->gridStructure().isFixedFields())
                 {
@@ -1708,7 +1708,7 @@ bool Project::loadMeteoGridHourlyData(QDateTime firstDate, QDateTime lastDate, b
         for (int col = 0; col < this->meteoGridDbHandler->gridStructure().header().nrCols; col++)
         {
             std::string id;
-            if (this->meteoGridDbHandler->meteoGrid()->getMeteoPointActiveId(row, col, &id))
+            if (this->meteoGridDbHandler->meteoGrid()->getMeteoPointActiveId(row, col, id))
             {
                 if (!this->meteoGridDbHandler->gridStructure().isFixedFields())
                 {
@@ -1764,7 +1764,7 @@ bool Project::loadMeteoGridMonthlyData(QDate firstDate, QDate lastDate, bool sho
 
         for (int col = 0; col < this->meteoGridDbHandler->gridStructure().header().nrCols; col++)
         {
-            if (this->meteoGridDbHandler->meteoGrid()->getMeteoPointActiveId(row, col, &id))
+            if (this->meteoGridDbHandler->meteoGrid()->getMeteoPointActiveId(row, col, id))
             {
                 bool isOk;
                 if (firstDate == lastDate)
