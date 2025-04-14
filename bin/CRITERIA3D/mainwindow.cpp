@@ -619,7 +619,7 @@ void MainWindow::callNewMeteoWidget(std::string id, std::string name, std::strin
     bool isAppend = false;
     if (isGrid)
     {
-        myProject.showMeteoWidgetGrid(id, isAppend);
+        myProject.showMeteoWidgetGrid(id, dataset, isAppend);
     }
     else
     {
@@ -634,7 +634,7 @@ void MainWindow::callAppendMeteoWidget(std::string id, std::string name, std::st
     bool isAppend = true;
     if (isGrid)
     {
-        myProject.showMeteoWidgetGrid(id, isAppend);
+        myProject.showMeteoWidgetGrid(id, dataset, isAppend);
     }
     else
     {
