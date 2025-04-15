@@ -13,39 +13,38 @@ public:
 
     Well();
 
-    QString getId() const { return id; }
-    void setId(const QString &newId) { id = newId; }
+    QString getId() const { return _id; }
+    void setId(const QString &newId) { _id = newId; }
 
-    double getUtmX() const { return utmX; }
-    void setUtmX(double newUtmX) { utmX = newUtmX; }
+    double getUtmX() const { return _utmX; }
+    void setUtmX(double newUtmX) { _utmX = newUtmX; }
 
-    double getUtmY() const { return utmY; }
-    void setUtmY(double newUtmY) { utmY = newUtmY; }
+    double getUtmY() const { return _utmY; }
+    void setUtmY(double newUtmY) { _utmY = newUtmY; }
 
-    double getLatitude() const { return lat; }
-    void setLatitude(double newLat) { lat = newLat; }
+    double getLatitude() const { return _lat; }
+    void setLatitude(double newLat) { _lat = newLat; }
 
-    double getLongitude() const { return lon; }
-    void setLongitude(double newLon) { lon = newLon; }
+    double getLongitude() const { return _lon; }
+    void setLongitude(double newLon) { _lon = newLon; }
 
-    void insertData(QDate myDate, float myValue)
-    { depths.insert(myDate, myValue); }
+    void insertData(const QDate &myDate, float myValue) { depths.insert(myDate, myValue); }
 
     int getObsDepthNr() const { return depths.size(); }
 
-    QDate getFirstDate();
-    QDate getLastDate();
+    QDate getFirstObsDate();
+    QDate getLastObsDate();
 
     int minValuesPerMonth();
 
 private:
-    QString id;
+    QString _id;
 
-    double utmX, utmY;
-    double lat, lon;
+    double _utmX, _utmY;
+    double _lat, _lon;
 
-    QDate firstDate;
-    QDate lastDate;
+    QDate _firstDate, _lastDate;
 };
+
 
 #endif // WELL_H

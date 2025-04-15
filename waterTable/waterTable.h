@@ -10,10 +10,12 @@
 #ifndef GIS_H
     #include "gis.h"
 #endif
+
 #include <QDate>
 
 #define MAXWELLDISTANCE 5000                           // maximum distance: 5 km
 #define WATERTABLE_MAXDELTADAYS 90
+
 
 class WaterTable
 {
@@ -21,36 +23,37 @@ class WaterTable
         float WTClimateMonthly[12];
         float WTClimateDaily[366];
 
-        QDate firstDate;
         std::vector<float> hindcastSeries;
         std::vector<float> interpolationSeries;
 
         WaterTable(std::vector<float> &inputTMin, std::vector<float> &inputTMax, std::vector<float> &inputPrec,
                    QDate firstMeteoDate, QDate lastMeteoDate, Crit3DMeteoSettings meteoSettings);
 
-        void initializeWaterTable(Well myWell);
-        bool computeWaterTableParameters(Well myWell, int stepDays);
+        void initializeWaterTable(const Well &myWell);
+        bool computeWaterTableParameters(const Well &myWell, int stepDays);
         bool computeWTClimate();
         bool computeETP_allSeries(bool isUpdateAvgCWB);
         bool computeCWBCorrelation(int stepDays);
-        double computeCWB(QDate myDate, int nrDays);
+        double computeCWB(const QDate &myDate, int nrDays);
         bool computeWaterTableIndices();
-        float getWaterTableDaily(QDate myDate);
-        float getWaterTableClimate(QDate myDate);
+        float getWaterTableDaily(const QDate &myDate);
+        float getWaterTableClimate(const QDate &myDate);
+
         bool computeWaterTableClimate(QDate mycurrentDate, int yearFrom, int yearTo, float* myValue);
         bool getWaterTableInterpolation(QDate myDate, float* myValue, float* myDelta, int* myDeltaDays);
+
         void computeWaterTableSeries();
 
-        bool setMeteoData(QDate myDate, float tmin, float tmax, float prec);
+        bool setMeteoData(const QDate &date, float tmin, float tmax, float prec);
 
         void setInputTMin(const std::vector<float> &newInputTMin);
         void setInputTMax(const std::vector<float> &newInputTMax);
         void setInputPrec(const std::vector<float> &newInputPrec);
 
-        void setFirstMeteoDate(QDate myDate) { firstMeteoDate = myDate; }
-        void setLastMeteoDate(QDate myDate) { lastMeteoDate = myDate; }
+        void setFirstMeteoDate(const QDate &myDate) { _firstMeteoDate = myDate; }
+        void setLastMeteoDate(const QDate &myDate) { _lastMeteoDate = myDate; }
 
-        QString getError() const { return errorStr; }
+        QString getError() const { return _errorStr; }
 
         double getAlpha() const { return alpha; }
         double getH0() const { return h0; }
@@ -62,31 +65,32 @@ class WaterTable
         int getNrDaysPeriod() const { return nrDaysPeriod; }
         int getNrObsData() const { return nrObsData; }
 
-        QString getIdWell() const { return well.getId(); }
-        QDate getFirstDateWell() { return well.getFirstDate(); }
-        QDate getLastDateWell() { return well.getLastDate(); }
+        QString getIdWell() const { return _well.getId(); }
+        QDate getFirstDate() { return std::min(_well.getFirstObsDate(), _firstMeteoDate); }
+        QDate getFirstDateWell() { return _well.getFirstObsDate(); }
+        QDate getLastDateWell() { return _well.getLastObsDate(); }
 
-        Well* getWell() { return &well; }
+        Well* getWell() { return &_well; }
 
         void cleanAllMeteoVector();
 
     private:
-        Crit3DMeteoSettings meteoSettings;
+        Crit3DMeteoSettings _meteoSettings;
 
-        QDate firstMeteoDate;
-        QDate lastMeteoDate;
-        Well well;
-        QString errorStr;
+        QDate _firstMeteoDate;
+        QDate _lastMeteoDate;
+        Well _well;
+        QString _errorStr;
 
-        std::vector<float> inputTMin;
-        std::vector<float> inputTMax;
-        std::vector<float> inputPrec;
-        std::vector<float> etpValues;
-        std::vector<float> precValues;
+        std::vector<float> _inputTMin;
+        std::vector<float> _inputTMax;
+        std::vector<float> _inputPrec;
+        std::vector<float> _etpValues;
+        std::vector<float> _precValues;
 
-        int nrDaysPeriod;
+        int nrDaysPeriod;           // [days]
         double alpha;
-        double h0;
+        double h0;                  // unit of observed watertable data, usually [cm]
 
         float R2;
         float RMSE;
@@ -96,7 +100,7 @@ class WaterTable
         int nrObsData;
 
         bool isCWBEquationReady;
-        double avgDailyCWB; //[mm]
+        double avgDailyCWB;         // [mm]
 };
 
 #endif // WATERTABLE_H
