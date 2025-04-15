@@ -39,8 +39,8 @@ class WaterTable
         float getWaterTableDaily(const QDate &myDate);
         float getWaterTableClimate(const QDate &myDate);
 
-        bool computeWaterTableClimate(QDate mycurrentDate, int yearFrom, int yearTo, float* myValue);
-        bool getWaterTableInterpolation(QDate myDate, float* myValue, float* myDelta, int* myDeltaDays);
+        bool computeWaterTableClimate(const QDate &currentDate, int yearFrom, int yearTo, float &myValue);
+        bool getWaterTableInterpolation(const QDate &myDate, float &myValue, float &myDelta, int &deltaDays);
 
         void computeWaterTableSeries();
 

@@ -420,45 +420,42 @@ float WaterTable::getWaterTableClimate(const QDate &myDate)
 }
 
 
-bool WaterTable::computeWaterTableClimate(QDate mycurrentDate, int yearFrom, int yearTo, float* myValue)
+bool WaterTable::computeWaterTableClimate(const QDate &currentDate, int yearFrom, int yearTo, float &myValue)
 {
-    *myValue = NODATA;
+    myValue = NODATA;
 
     int nrYears = yearTo - yearFrom + 1;
     float sumDepth = 0;
     int nrValidYears = 0;
-    float myDepth;
-    float myDelta;
+    float myDepth, myDelta;
     int myDeltaDays;
 
     for (int myYear = yearFrom; myYear <= yearTo; myYear++)
     {
-        QDate myDate(myYear, mycurrentDate.month(), mycurrentDate.day());
-        if (getWaterTableInterpolation(myDate, &myDepth, &myDelta, &myDeltaDays))
+        QDate myDate(myYear, currentDate.month(), currentDate.day());
+        if (getWaterTableInterpolation(myDate, myDepth, myDelta, myDeltaDays))
         {
             nrValidYears = nrValidYears + 1;
             sumDepth = sumDepth + myDepth;
         }
     }
 
-    if ( (nrValidYears / nrYears) >= _meteoSettings.getMinimumPercentage() )
-    {
-        *myValue = sumDepth / nrValidYears;
-        return true;
-    }
-    else
-    {
+    // check nr of data
+    if ((nrValidYears / nrYears) < _meteoSettings.getMinimumPercentage())
         return false;
-    }
+
+    myValue = sumDepth / nrValidYears;
+    return true;
 }
 
 
 // restituisce il dato interpolato di profondità considerando i dati osservati
 // nella stessa unità di misura degli osservati (default: cm)
-bool WaterTable::getWaterTableInterpolation(QDate myDate, float* myValue, float* myDelta, int* myDeltaDays)
+bool WaterTable::getWaterTableInterpolation(const QDate &myDate, float &myValue, float &myDelta, int &deltaDays)
 {
-    *myValue = NODATA;
-    *myDelta = NODATA;
+    myValue = NODATA;
+    myDelta = NODATA;
+    deltaDays = NODATA;
 
     if (! myDate.isValid())
     {
@@ -489,7 +486,6 @@ bool WaterTable::getWaterTableInterpolation(QDate myDate, float* myValue, float*
     int diffWithPrev = NODATA;
     QDate previousDate;
     QDate nextDate;
-    int dT;
 
     QList<QDate> keys = _well.depths.keys();
 
@@ -557,7 +553,7 @@ bool WaterTable::getWaterTableInterpolation(QDate myDate, float* myValue, float*
     // check lenght of missing data period
     if (previousDz != NODATA && nextDz != NODATA)
     {
-        dT =  previousDate.daysTo(nextDate);
+        int dT =  previousDate.daysTo(nextDate);
         if (dT > WATERTABLE_MAXDELTADAYS * 2)
         {
             if (diffWithPrev <= diffWithNext)
@@ -573,38 +569,38 @@ bool WaterTable::getWaterTableInterpolation(QDate myDate, float* myValue, float*
 
     if (previousDz != NODATA && nextDz != NODATA)
     {
-        dT = previousDate.daysTo(nextDate);
+        int dT = previousDate.daysTo(nextDate);
         if (dT == 0)
         {
-            *myDelta = previousDz;
-            *myDeltaDays = 0;
+            myDelta = previousDz;
+            deltaDays = 0;
         }
         else
         {
-            *myDelta = previousDz * (1.0 - (float(diffWithPrev) / float(dT))) + nextDz * (1.0 - (float(diffWithNext) / float(dT)));
-            *myDeltaDays = std::min(diffWithPrev, diffWithNext);
+            myDelta = previousDz * (1.0 - (float(diffWithPrev) / float(dT))) + nextDz * (1.0 - (float(diffWithNext) / float(dT)));
+            deltaDays = std::min(diffWithPrev, diffWithNext);
         }
     }
     else if (previousDz != NODATA)
     {
-        dT = diffWithPrev;
-        *myDelta = previousDz * std::max((1.f - (float(dT) / float(WATERTABLE_MAXDELTADAYS))), 0.f);
-        *myDeltaDays = dT;
+        int dT = diffWithPrev;
+        myDelta = previousDz * std::max((1.f - (float(dT) / float(WATERTABLE_MAXDELTADAYS))), 0.f);
+        deltaDays = dT;
     }
     else if (nextDz != NODATA)
     {
-        dT = diffWithNext;
-        *myDelta = nextDz * std::max((1.f - (float(dT) / float(WATERTABLE_MAXDELTADAYS))), 0.f);
-        *myDeltaDays = dT;
+        int dT = diffWithNext;
+        myDelta = nextDz * std::max((1.f - (float(dT) / float(WATERTABLE_MAXDELTADAYS))), 0.f);
+        deltaDays = dT;
     }
     else
     {
         // no observed value
-        *myDelta = 0;
-        *myDeltaDays = NODATA;
+        myDelta = 0;
+        deltaDays = NODATA;
     }
 
-    *myValue = myWT_computation + *myDelta;
+    myValue = myWT_computation + myDelta;
     return true;
 }
 
@@ -613,9 +609,6 @@ void WaterTable::computeWaterTableSeries()
 {
     hindcastSeries.clear();
     interpolationSeries.clear();
-
-    float myDelta;
-    int myDeltaDays;
 
     QDate firstDate = std::min(_well.getFirstObsDate(), _firstMeteoDate);
     int numValues = firstDate.daysTo(_lastMeteoDate) + 1;
@@ -627,9 +620,11 @@ void WaterTable::computeWaterTableSeries()
         float currentDepth = getWaterTableDaily(currentDate);
         hindcastSeries.push_back(currentDepth);
 
-        if (getWaterTableInterpolation(currentDate, &currentDepth, &myDelta, &myDeltaDays))
+        int deltaDays;
+        float interpolationDepth, deltaDepth;
+        if (getWaterTableInterpolation(currentDate, interpolationDepth, deltaDepth, deltaDays))
         {
-            interpolationSeries.push_back(currentDepth);
+            interpolationSeries.push_back(interpolationDepth);
         }
         else
         {

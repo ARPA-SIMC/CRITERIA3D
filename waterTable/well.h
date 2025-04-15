@@ -2,14 +2,13 @@
 #define WELL_H
 
 #include <QString>
-#include <QList>
 #include <QDate>
 #include <QMap>
 
 class Well
 {
 public:
-    QMap<QDate, float> depths;
+    QMap<QDate, float> depths;            // unit of observed watertable data, usually [cm]
 
     Well();
 
@@ -28,7 +27,7 @@ public:
     double getLongitude() const { return _lon; }
     void setLongitude(double newLon) { _lon = newLon; }
 
-    void insertData(const QDate &myDate, float myValue) { depths.insert(myDate, myValue); }
+    void insertData(const QDate &myDate, float myDepth) { depths.insert(myDate, myDepth); }
 
     int getObsDepthNr() const { return depths.size(); }
 
