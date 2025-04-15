@@ -1001,20 +1001,6 @@ bool HeatComputation(double timeStep, double timeStepWater)
     for (i = 1; i < myStructure.nrNodes; i++)
         nodeList[i].extra->Heat->T = X[i];
 
-    // avoiding oscillations (maximum temperature change allowed)
-    /*double maxDeltaT = computeMaximumDeltaT();
-    double ratioDeltaT = maxDeltaT / myParameters.heatMaximumDeltaT;
-    if (maxDeltaT > myParameters.heatMaximumDeltaT)
-    {
-        while (timeStep / myParameters.current_delta_t < ratioDeltaT && myParameters.current_delta_t > myParameters.delta_t_min)
-            {
-                halveTimeStep();
-                setForcedHalvedTime(true);
-            }
-
-        if (myParameters.current_delta_t > myParameters.delta_t_min) return false;
-    }*/
-
     heatBalance(timeStep, timeStepWater);
     updateBalanceHeat();
 

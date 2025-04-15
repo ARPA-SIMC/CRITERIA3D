@@ -1080,11 +1080,11 @@ double DLL_EXPORT __STDCALL computeStep(double maxTime)
         {
             dtHeatCurrent = MINVALUE(dtHeat, dtWater - dtHeatSum);
 
-            updateBoundaryHeat();
+            while (! updateBoundaryHeat(&dtHeatCurrent)) {};
 
             if (HeatComputation(dtHeatCurrent, dtWater))
             {
-                dtHeatSum += dtHeat;
+                dtHeatSum += dtHeatCurrent;
             }
             else
             {
