@@ -385,13 +385,26 @@ void Crit3DProject::assignETreal()
                 double evapFlow = area * (actualEvap / 1000.);                              // [m3 h-1]
                 totalEvaporation += evapFlow;                                               // [m3 h-1]
 
-                // assigns actual transpiration
-                if (currentLAI > 0)
+                int cropIndex = getLandUnitIndexRowCol(row, col);
+                if (cropIndex != NODATA && ! landUnitList[cropIndex].idCrop.isEmpty())
                 {
-                    float degreeDays = degreeDaysMap.value[row][col];
-                    double actualTransp = assignTranspiration(row, col, currentLAI, degreeDays);    // [mm h-1]
-                    double traspFlow = area * (actualTransp / 1000.);                               // [m3 h-1] flux
-                    totalTranspiration += traspFlow;                                                // [m3 h-1] flux
+                    Crit3DCrop currentCrop = cropList[cropIndex];
+
+                    // assigns actual transpiration
+                    if (currentLAI > 0)
+                    {
+                        float degreeDays = degreeDaysMap.value[row][col];
+                        double actualTransp = assignTranspiration(row, col, currentCrop, currentLAI, degreeDays);   // [mm h-1]
+                        double traspFlow = area * (actualTransp / 1000.);                                           // [m3 h-1] flux
+                        totalTranspiration += traspFlow;                                                            // [m3 h-1] flux
+                    }
+
+                    if (processes.computeHydrall)
+                    {
+                        // TODO Cate spostare Hydrall model
+                        // currentCrop.root
+
+                    }
                 }
             }
         }
@@ -634,8 +647,6 @@ bool Crit3DProject::runModels(QDateTime firstTime, QDateTime lastTime, bool isRe
             dailyUpdatePond();
         }
 
-
-
         if (isSaveOutputRaster())
         {
             // create directory for hourly raster output
@@ -647,23 +658,27 @@ bool Crit3DProject::runModels(QDateTime firstTime, QDateTime lastTime, bool isRe
             }
         }
 
-        if (myDate.day() == 1)
+        if (processes.computeWater)
         {
-            hydrallModel.firstDayOfMonth = true;
-            // update of rothC (monthly)
-            if (myDate.month() == hydrallModel.firstMonthVegetativeSeason) //TODO
+            // TODO Cate sostituire con dailyUpdate Hydrall
+            if (myDate.day() == 1)
             {
-            /* in case of the first day of the year
-             * the algorithms devoted to allocate dry matter
-             * into the biomass pools (foliage, sapwood and fine roots)
-             * */
-                //growthstand
+                hydrallModel.firstDayOfMonth = true;
+                // update of rothC (monthly)
+                if (myDate.month() == hydrallModel.firstMonthVegetativeSeason) //TODO
+                {
+                /* in case of the first day of the year
+                 * the algorithms devoted to allocate dry matter
+                 * into the biomass pools (foliage, sapwood and fine roots)
+                 * */
+                    //growthstand
 
+                }
             }
-        }
-        else
-        {
-            hydrallModel.firstDayOfMonth = false;
+            else
+            {
+                hydrallModel.firstDayOfMonth = false;
+            }
         }
 
         // cycle on hours
@@ -1267,6 +1282,7 @@ bool Crit3DProject::computeSnowModel()
     return true;
 }
 
+
 bool Crit3DProject::computeHydrallModel()
 {
     // check
@@ -1589,7 +1605,6 @@ bool Crit3DProject::runModelHour(const QString& hourlyOutputPath, bool isRestart
                 updateDailyTemperatures();
                 if (processes.computeHydrall) //if Hydrall is on processes.computeForestModel
                 {
-                    Crit3DDate myDate = getCrit3DDate(getCurrentDate());
                     computeHydrallModel();
                 }
             }

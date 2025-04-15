@@ -2087,41 +2087,25 @@ double Project3D::assignEvaporation(int row, int col, double lai, int soilIndex)
  *  \param currentDegreeDays: degree days sum [°C]
  *  \return actual transpiration [mm]
  */
-double Project3D::assignTranspiration(int row, int col, double currentLai, double currentDegreeDays)
+double Project3D::assignTranspiration(int row, int col, Crit3DCrop currentCrop, double currentLai, double currentDegreeDays)
 {
-    double actualTranspiration = 0;   // [mm]
-
     // check lai and degree days
     if (currentLai < EPSILON || isEqual(currentDegreeDays, NODATA))
     {
-        return actualTranspiration;
+        return 0;       // [mm]
     }
 
     // only surface
     if (nrLayers <= 1)
     {
-        return actualTranspiration;
+        return 0;       // [mm]
     }
-
-    // check land unit
-    int cropIndex = getLandUnitIndexRowCol(row, col);
-    if (cropIndex == NODATA)
-    {
-        return actualTranspiration;
-    }
-
-    // check crop
-    if (landUnitList[cropIndex].idCrop.isEmpty())
-    {
-        return actualTranspiration;
-    }
-    Crit3DCrop currentCrop = cropList[cropIndex];
 
     // check soil
     int soilIndex = int(soilIndexMap.value[row][col]);
     if (soilIndex == NODATA)
     {
-        return actualTranspiration;
+        return 0;       // [mm]
     }
 
     // maximum transpiration
@@ -2131,25 +2115,25 @@ double Project3D::assignTranspiration(int row, int col, double currentLai, doubl
 
     if (maxTranspiration < EPSILON)
     {
-        return actualTranspiration;
+        return 0;
     }
 
     // compute root lenght
     currentCrop.computeRootLength3D(currentDegreeDays, soilList[soilIndex].totalDepth);
     if (currentCrop.roots.currentRootLength <= 0)
     {
-        return actualTranspiration;
+        return 0;
     }
 
     // compute root density
     if (! root::computeRootDensity3D(currentCrop, soilList[soilIndex], nrLayers, layerDepth, layerThickness))
     {
-        return actualTranspiration;
+        return 0;
     }
     // check root layers
     if (currentCrop.roots.firstRootLayer == NODATA || currentCrop.roots.lastRootLayer == NODATA)
     {
-        return actualTranspiration;
+        return 0;
     }
 
     // initialize vectors
@@ -2174,7 +2158,8 @@ double Project3D::assignTranspiration(int row, int col, double currentLai, doubl
     double rootDensityWithoutStress = 0.0;                   // [-]
     int firstRootLayer = currentCrop.roots.firstRootLayer;
     int lastRootLayer = currentCrop.roots.lastRootLayer;
-    double transpirationSubsetMax = 0;
+    double transpirationSubsetMax = 0; 
+    double actualTranspiration = 0;             // [mm]
 
     for (int layer = firstRootLayer; layer <= lastRootLayer; layer++)
     {

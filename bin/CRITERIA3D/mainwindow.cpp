@@ -2259,6 +2259,7 @@ void MainWindow::on_actionCriteria3D_set_processes_triggered()
         myProject.processes.setComputeSnow(dialogProcesses.snowProcess->isChecked());
         myProject.processes.setComputeCrop(dialogProcesses.cropProcess->isChecked());
         myProject.processes.setComputeWater(dialogProcesses.waterFluxesProcess->isChecked());
+        // TODO Cate usare logWarning per avvisare che verranno attivati processi
         myProject.processes.setComputeHydrall(dialogProcesses.hydrallProcess->isChecked());
     }
 }
