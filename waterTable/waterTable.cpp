@@ -28,14 +28,14 @@ void WaterTable::initializeWaterTable(const Well &myWell)
     isCWBEquationReady = false;
     isClimateReady = false;
 
-    alpha = NODATA;
-    h0 = NODATA;
-    R2 = NODATA;
-    nrDaysPeriod = NODATA;
-    nrObsData = 0;
-    EF = NODATA;
-    RMSE = NODATA;
-    avgDailyCWB = NODATA;
+    _alpha = NODATA;
+    _h0 = NODATA;
+    _R2 = NODATA;
+    _nrDaysPeriod = NODATA;
+    _nrObsData = 0;
+    _EF = NODATA;
+    _RMSE = NODATA;
+    _avgDailyCWB = NODATA;
     _errorStr = "";
 }
 
@@ -84,8 +84,7 @@ bool WaterTable::computeWaterTableParameters(const Well &myWell, int stepDays)
         return false;
     }
 
-    isCWBEquationReady = computeCWBCorrelation(stepDays);
-    if (! isCWBEquationReady)
+    if (! computeCWBCorrelation(stepDays))
     {
         return false;
     }
@@ -201,7 +200,7 @@ bool WaterTable::computeETP_allSeries(bool isUpdateAvgCWB)
     {
         if (nrValidDays > 0)
         {
-            avgDailyCWB = sumCWB / nrValidDays;
+            _avgDailyCWB = sumCWB / nrValidDays;
         }
         else
         {
@@ -262,18 +261,19 @@ bool WaterTable::computeCWBCorrelation(int stepDays)
         return false;
     }
 
-    nrObsData = int(myObsWT.size());
-    nrDaysPeriod = bestNrDays;
-    h0 = bestH0;
-    alpha = bestAlfaCoeff;
-    R2 = bestR2;
+    _nrObsData = int(myObsWT.size());
+    _nrDaysPeriod = bestNrDays;
+    _h0 = bestH0;
+    _alpha = bestAlfaCoeff;
+    _R2 = bestR2;
     isCWBEquationReady = true;
 
     return true;
 }
 
 
-// Climatic WaterBalance (CWB) on a nrDaysPeriod  [mm]
+// compute Climatic Water Balance (CWB) on a nrDaysPeriod
+// expressed as anomaly in [cm] with average value
 double WaterTable::computeCWB(const QDate &myDate, int nrDays)
 {
     double sumCWB = 0;
@@ -304,7 +304,7 @@ double WaterTable::computeCWB(const QDate &myDate, int nrDays)
     }
 
     // Climate
-    double climateCWB = avgDailyCWB * nrDays * 0.5;
+    double climateCWB = _avgDailyCWB * nrDays * 0.5;
 
     // conversion: from [mm] to [cm]
     return (sumCWB - climateCWB) * 0.1;
@@ -334,7 +334,7 @@ bool WaterTable::computeWaterTableIndices()
         }
     }
 
-    statistics::linearRegression(myObs, myComputed, int(myObs.size()), false, &myIntercept, &myCoeff, &R2);
+    statistics::linearRegression(myObs, myComputed, int(myObs.size()), false, &myIntercept, &myCoeff, &_R2);
 
     float mySum = 0;
     float mySumerrorStr = 0;
@@ -364,59 +364,52 @@ bool WaterTable::computeWaterTableIndices()
         }
     }
 
-    RMSE = sqrt(mySumerrorStr / nrObs);
+    _RMSE = sqrt(mySumerrorStr / nrObs);
 
     if (isClimateReady)
     {
-        EF = 1 - mySumerrorStr / mySumDiffClimate;
+        _EF = 1 - mySumerrorStr / mySumDiffClimate;
     }
     else
     {
-        EF = NODATA;
+        _EF = NODATA;
     }
     return true;
 }
 
 
-// restituisce il valore stimato di falda
+// return assessement value of watertable depth [cm]
 float WaterTable::getWaterTableDaily(const QDate &myDate)
 {
-    float getWaterTableDaily = NODATA;
-    bool isComputed = false;
-
     if (isCWBEquationReady)
     {
-        float myCWB = computeCWB(myDate, nrDaysPeriod);
-        if (myCWB != NODATA)
+        float deltaCWB = computeCWB(myDate, _nrDaysPeriod);
+        if (deltaCWB != NODATA)
         {
-            float myH = h0 + alpha * myCWB;
-            getWaterTableDaily = myH;
-            isComputed = true;
+            return _h0 + _alpha * deltaCWB;            // [cm]
         }
     }
 
-    // No data: climatic value
-    if (!isComputed && isClimateReady)
+    // No equation: climatic value
+    if (isClimateReady)
     {
-        getWaterTableDaily = getWaterTableClimate(myDate);
+        return getWaterTableClimate(myDate);
     }
 
-    return getWaterTableDaily;
+    // default: no data
+    return NODATA;
 }
 
 
 float WaterTable::getWaterTableClimate(const QDate &myDate)
 {
-    float getWaterTableClimate = NODATA;
-
-    if (!isClimateReady)
+    if (! isClimateReady)
     {
-        return getWaterTableClimate;
+        return NODATA;
     }
 
     int myDoy = myDate.dayOfYear();
-    getWaterTableClimate = WTClimateDaily[myDoy-1];  // start from 0
-    return getWaterTableClimate;
+    return WTClimateDaily[myDoy-1];     // start from 0
 }
 
 

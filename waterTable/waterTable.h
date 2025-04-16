@@ -53,17 +53,27 @@ class WaterTable
         void setFirstMeteoDate(const QDate &myDate) { _firstMeteoDate = myDate; }
         void setLastMeteoDate(const QDate &myDate) { _lastMeteoDate = myDate; }
 
+        void setParameters(int nrDaysPeriod, double alpha, double h0, double avgDailyCWB)
+        {
+            _nrDaysPeriod = nrDaysPeriod;
+            _alpha = alpha;
+            _h0 = h0;
+            _avgDailyCWB = avgDailyCWB;
+            isCWBEquationReady = true;
+        }
+
         QString getError() const { return _errorStr; }
 
-        double getAlpha() const { return alpha; }
-        double getH0() const { return h0; }
+        double getAlpha() const { return _alpha; }
+        double getH0() const { return _h0; }
+        double getAvgDailyCWB() const { return _avgDailyCWB; }
+        int getNrDaysPeriod() const { return _nrDaysPeriod; }
 
-        float getR2() const { return R2; }
-        float getRMSE() const { return RMSE; }
-        float getEF() const { return EF; }
+        float getR2() const { return _R2; }
+        float getRMSE() const { return _RMSE; }
+        float getEF() const { return _EF; }
 
-        int getNrDaysPeriod() const { return nrDaysPeriod; }
-        int getNrObsData() const { return nrObsData; }
+        int getNrObsData() const { return _nrObsData; }
 
         QString getIdWell() const { return _well.getId(); }
         QDate getFirstDate() { return std::min(_well.getFirstObsDate(), _firstMeteoDate); }
@@ -88,19 +98,20 @@ class WaterTable
         std::vector<float> _etpValues;
         std::vector<float> _precValues;
 
-        int nrDaysPeriod;           // [days]
-        double alpha;
-        double h0;                  // unit of observed watertable data, usually [cm]
+        int _nrDaysPeriod;           // [days]
+        double _alpha;               // [-]
+        double _h0;                  // unit of observed watertable data, usually [cm]
+        double _avgDailyCWB;         // [mm]
 
-        float R2;
-        float RMSE;
-        float EF;
+        float _R2;
+        float _RMSE;
+        float _EF;
 
         bool isClimateReady;
-        int nrObsData;
+        int _nrObsData;
 
         bool isCWBEquationReady;
-        double avgDailyCWB;         // [mm]
 };
+
 
 #endif // WATERTABLE_H
