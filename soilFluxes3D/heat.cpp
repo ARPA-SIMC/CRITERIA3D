@@ -100,7 +100,7 @@ bool heatBalance(double timeStepHeat, double timeStepWater, double &newtimeStepH
 {
     computeHeatBalance(timeStepHeat, timeStepWater);
 
-    double MBRerror = abs(balanceCurrentTimeStep.heatMBR);
+    double MBRerror = fabs(balanceCurrentTimeStep.heatMBR);
 
     // wrong case
     if (MBRerror > myParameters.MBRThreshold && timeStepHeat > myParameters.delta_t_min)
@@ -135,7 +135,7 @@ void computeHeatBalance(double timeStepHeat, double timeStepWater)
     double minRefHeatStorage = std::max(balanceCurrentTimeStep.storageHeat * 1e-6, 1.0);        // [J]
 
     // reference heat for computation of mass balance ratio
-    double referenceHeat = std::max(abs(balanceCurrentTimeStep.sinkSourceHeat), minRefHeatStorage);   // [J]
+    double referenceHeat = std::max(fabs(balanceCurrentTimeStep.sinkSourceHeat), minRefHeatStorage);   // [J]
 
     balanceCurrentTimeStep.heatMBR = balanceCurrentTimeStep.heatMBE / referenceHeat;
 }
