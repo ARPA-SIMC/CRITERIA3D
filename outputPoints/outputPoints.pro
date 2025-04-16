@@ -1,9 +1,9 @@
-#------------------------------------------------------
+#--------------------------------------------------------
 #
 #   outputPoints library
-#   This project is part of CRITERIA-3D distribution
+#   This project is part of ARPAE agrolib distribution
 #
-#------------------------------------------------------
+#--------------------------------------------------------
 
 QT       += network sql widgets
 

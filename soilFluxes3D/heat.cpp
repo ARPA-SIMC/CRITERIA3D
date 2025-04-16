@@ -595,7 +595,7 @@ double AdvectiveFlux(long i, TlinkedNode *myLink)
     else
         TliqAdv = nodeList[myLink->index].extra->Heat->T;
 
-    fluxCourant += HEAT_CAPACITY_WATER * liqWaterFlux;
+    fluxCourant = HEAT_CAPACITY_WATER * liqWaterFlux;
     advection = fluxCourant * TliqAdv;
 
     vapWaterFlux = (*myLink).linkedExtra->heatFlux->vaporFlux;
@@ -615,7 +615,7 @@ double AdvectiveFlux(long i, TlinkedNode *myLink)
 
 double Conduction(long i, TlinkedNode *myLink, double timeStep, double timeStepWater)
 {
-	double myConductivity, linkConductivity, meanKh;
+    double myConductivity, linkConductivity, meanKh;            // [W m-1 K-1]
     double zeta;
     double hAvg, hLinkAvg;
     double myH, myHLink;
@@ -634,7 +634,10 @@ double Conduction(long i, TlinkedNode *myLink, double timeStep, double timeStepW
     linkConductivity = SoilHeatConductivity(j, nodeList[j].extra->Heat->T, hLinkAvg);
     meanKh = computeMean(myConductivity, linkConductivity);
 
-    return (zeta * meanKh);
+    // TODO capacità termica
+    //CourantHeat = MAXVALUE(CourantHeat, v * timeStep / myDistance);
+
+    return zeta * meanKh;
 }
 
 bool computeHeatFlux(long i, int myMatrixIndex, TlinkedNode *myLink, double timeStep, double timeStepWater)
@@ -650,6 +653,7 @@ bool computeHeatFlux(long i, int myMatrixIndex, TlinkedNode *myLink, double time
 
     myAdvectiveFlux = 0.;
     myLatentFlux = 0.;
+    // initialize global variable
     fluxCourant = 0.;
 
     myConduction = Conduction(i, myLink, timeStep, timeStepWater);
@@ -702,7 +706,7 @@ void saveNodeWaterFlux(long i, TlinkedNode *link, double timeStepHeat, double ti
     if (matrixValue != INDEX_ERROR)
         isothLiqFlux = matrixValue * (avgH - avgHLink);
 
-    if (!nodeList[i].isSurface && ! nodeList[link->index].isSurface)
+    if (! nodeList[i].isSurface && ! nodeList[link->index].isSurface)
     {
         // compute isothermal vapor flux and subtract from total water flux
         // (because fluxLiquid is computed from A matrix which include isothermal vapor flux component)
@@ -732,25 +736,26 @@ void saveNodeWaterFlux(long i, TlinkedNode *link, double timeStepHeat, double ti
     return;
 }
 
+
 void saveWaterFluxes(double dtHeat, double dtWater)
 {
     for (long i = 0; i < myStructure.nrNodes; i++)
         {
-            if (&nodeList[i].up != nullptr)
+            if (nodeList[i].up.index != NOLINK)
                 if (nodeList[i].up.linkedExtra != nullptr)
                     saveNodeWaterFlux(i, &nodeList[i].up, dtHeat, dtWater);
 
-            if (&nodeList[i].down != nullptr)
+            if (nodeList[i].down.index != NOLINK)
                 if (nodeList[i].down.linkedExtra != nullptr)
                     saveNodeWaterFlux(i, &nodeList[i].down, dtHeat, dtWater);
 
             for (short j = 0; j < myStructure.nrLateralLinks; j++)
-                if (&nodeList[i].lateral[j] != nullptr)
+                if (nodeList[i].lateral[j].index != NOLINK)
                     if (nodeList[i].lateral[j].linkedExtra != nullptr)
                         saveNodeWaterFlux(i, &nodeList[i].lateral[j], dtHeat, dtWater);
-
         }
 }
+
 
 void saveNodeHeatFlux(long myIndex, TlinkedNode *myLink, double timeStep, double timeStepWater)
 // [W] heat flow between node nodeList[myIndex] and link node myLink
@@ -983,33 +988,18 @@ bool HeatComputation(double timeStep, double timeStepWater)
     }
 
     // avoiding oscillations (Courant number)
-    if (CourantHeat > 1.0)
-        if (timeStep > myParameters.delta_t_min)
-        {
-            halveTimeStep();
-            setForcedHalvedTime(true);
-            return (false);
-        }
+    if (CourantHeat > 1.0 && timeStep > myParameters.delta_t_min)
+    {
+        myParameters.current_delta_t = std::max(myParameters.current_delta_t / CourantHeat, myParameters.delta_t_min);
+        setForcedHalvedTime(true);
+        return false;
+    }
 
     int approximation = 0;
     solveLinearSystem(approximation, myParameters.ResidualTolerance, PROCESS_HEAT);
 
     for (i = 1; i < myStructure.nrNodes; i++)
         nodeList[i].extra->Heat->T = X[i];
-
-    // avoiding oscillations (maximum temperature change allowed)
-    /*double maxDeltaT = computeMaximumDeltaT();
-    double ratioDeltaT = maxDeltaT / myParameters.heatMaximumDeltaT;
-    if (maxDeltaT > myParameters.heatMaximumDeltaT)
-    {
-        while (timeStep / myParameters.current_delta_t < ratioDeltaT && myParameters.current_delta_t > myParameters.delta_t_min)
-            {
-                halveTimeStep();
-                setForcedHalvedTime(true);
-            }
-
-        if (myParameters.current_delta_t > myParameters.delta_t_min) return false;
-    }*/
 
     heatBalance(timeStep, timeStepWater);
     updateBalanceHeat();

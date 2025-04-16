@@ -466,7 +466,7 @@ bool Download::downloadDailyData(const QDate &startDate, const QDate &endDate, c
         }
         else
         {
-            if (! _dbMeteo->createTmpTableDaily())
+            if (! _dbMeteo->createTmpTable())
             {
                 errorString = _dbMeteo->getErrorString();
                 return false;
@@ -519,7 +519,7 @@ bool Download::downloadDailyData(const QDate &startDate, const QDate &endDate, c
                     if (i < variableList.size())
                     {
                         idVar = variableList[i].id();
-                        _dbMeteo->appendQueryDaily(dateStr, idPoint, QString::number(idVar), QString::number(value), isFirstData);
+                        _dbMeteo->appendTmpData(dateStr, idPoint, QString::number(idVar), QString::number(value), isFirstData);
                         isFirstData = false;
                     }
 
@@ -538,7 +538,7 @@ bool Download::downloadDailyData(const QDate &startDate, const QDate &endDate, c
 
     } // end while
 
-    _dbMeteo->deleteTmpTableDaily();
+    _dbMeteo->deleteTmpTable();
     return downloadOk;
 }
 
@@ -631,12 +631,12 @@ bool Download::downloadHourlyData(const QDate &startDate, const QDate &endDate, 
         {
             _dbMeteo->queryString = "";
 
-            QString line, dateTime, idPoint, flag, varName;
+            QString line, dateTimeStr, idPoint, flag, varName;
             QString idVariable, value, secondValue, frequency;
             QList<QString> fields;
             int i, idVarArkimet;
 
-            _dbMeteo->createTmpTableHourly();
+            _dbMeteo->createTmpTable();
             bool isVarOk, isFirstData = true;
             bool emptyLine = true;
 
@@ -644,7 +644,7 @@ bool Download::downloadHourlyData(const QDate &startDate, const QDate &endDate, 
             {
                 emptyLine = false;
                 fields = line.split(",");
-                dateTime = QString("%1-%2-%3 %4:%5:00").arg(fields[0].left(4))
+                dateTimeStr = QString("%1-%2-%3 %4:%5:00").arg(fields[0].left(4))
                                                            .arg(fields[0].mid(4, 2))
                                                            .arg(fields[0].mid(6, 2))
                                                            .arg(fields[0].mid(8, 2))
@@ -679,12 +679,12 @@ bool Download::downloadHourlyData(const QDate &startDate, const QDate &endDate, 
                         flag = fields[6];
                         if (flag.left(1) != "1" && flag.left(1) != "2" && flag.left(3) != "054")
                         {
-                            _dbMeteo->appendQueryHourly(dateTime, idPoint, idVariable, value, isFirstData);
+                            _dbMeteo->appendTmpData(dateTimeStr, idPoint, idVariable, value, isFirstData);
                             isFirstData = false;
                         }
                         else if(flag.left(1) == "2")
                         {
-                            _dbMeteo->appendQueryHourly(dateTime, idPoint, idVariable, secondValue, isFirstData);
+                            _dbMeteo->appendTmpData(dateTimeStr, idPoint, idVariable, secondValue, isFirstData);
                             isFirstData = false;
                         }
                     }
@@ -703,7 +703,7 @@ bool Download::downloadHourlyData(const QDate &startDate, const QDate &endDate, 
         j = 0; //reset block stations counter
     }
 
-    _dbMeteo->deleteTmpTableHourly();
+    _dbMeteo->deleteTmpTable();
     return true;
 }
 

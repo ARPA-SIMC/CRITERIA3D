@@ -43,16 +43,15 @@ WaterTableChartView::WaterTableChartView(QWidget *parent) :
 
 void WaterTableChartView::drawWaterTable(WaterTable &waterTable, float maximumObservedDepth)
 {
-    axisY->setMax(maximumObservedDepth);  // unit of observed watertable data, usually [cm]
+    axisY->setMax(maximumObservedDepth);    // unit of observed watertable data, usually [cm]
     axisY->setMin(0);
     axisY->setLabelFormat("%d");
     axisY->setTickCount(16);
 
     QDateTime firstDateTime, lastDateTime;
     int nrDays = int(waterTable.interpolationSeries.size());
-    firstDateTime.setDate(waterTable.firstDate);
-    lastDateTime.setDate(waterTable.firstDate);
-    lastDateTime = lastDateTime.addDays(nrDays-1);
+    firstDateTime.setDate(waterTable.getFirstDate());
+    lastDateTime = firstDateTime.addDays(nrDays-1);
 
     axisX->setRange(firstDateTime, lastDateTime);
     axisX->setTickCount(15);

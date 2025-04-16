@@ -62,5 +62,7 @@
 
         int getNrAtoms(const std::vector<soil::Crit1DLayer> &soilLayers, double &minThickness, std::vector<int> &atoms);
     }
+    
+    // test
 
 #endif // ROOT_H

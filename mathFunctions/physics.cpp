@@ -199,14 +199,14 @@ double aerodynamicConductance(double heightTemperature,
                               double airTemperature,
                               double windSpeed)
 {
-    double K = NODATA;				    // (m s-1) aerodynamic conductance
+    double K= NODATA;                   // (m s-1) aerodynamic conductance
     double psiM, psiH;					// () diabatic correction factors for momentum and for heat
     double uStar;						// (m s-1) friction velocity
     double zeroPlane;					// (m) zero place displacement
     double roughnessMomentum;           // () surface roughness parameter for momentum
     double roughnessHeat;				// () surface roughness parameter for heat
     double Sp;                          // () stability parameter
-    double H;                           // (W m-2) sensible heat flux
+    double H, oldH;                     // (W m-2) sensible heat flux
     double Ch;                          // (J m-3 K-1) volumetric specific heat of air
 
     windSpeed = MAXVALUE(windSpeed, 0.1);
@@ -219,7 +219,11 @@ double aerodynamicConductance(double heightTemperature,
     psiH = 0.;
     Ch = airVolumetricSpecificHeat(pressureFromAltitude(heightWind), airTemperature);
 
-    for (short i = 1; i <= 3; i++)
+    double dH = 1000;
+    int counter = 0;
+    bool isFirst = true;
+
+    while(dH > 0.01 && counter < 100)
     {
         uStar = VON_KARMAN_CONST * windSpeed / (log((heightWind - zeroPlane + roughnessMomentum) / roughnessMomentum) + psiM);
         K = VON_KARMAN_CONST * uStar / (log((heightTemperature - zeroPlane + roughnessHeat) / roughnessHeat) + psiH);
@@ -237,10 +241,20 @@ double aerodynamicConductance(double heightTemperature,
             psiH = -2 * log((1 + sqrt(1 - 16 * Sp)) / 2);
             psiM = 0.6 * psiH;
         }
+
+        if (isFirst)
+        {
+            isFirst = false;
+        }
+        else
+        {
+            dH = fabs(H - oldH);
+        }
+        oldH = H;
+        counter++;
     }
 
     return K;
-
 }
 
 

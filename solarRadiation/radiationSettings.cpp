@@ -145,6 +145,15 @@ float Crit3DRadiationSettings::getLinke(const gis::Crit3DPoint& myPoint) const
     return myLinke;
 }
 
+
+float Crit3DRadiationSettings::getMonthlyLinke(int month)
+{
+    if (month > 0 && month < 13 && LinkeMonthly.size() == 12)
+        return LinkeMonthly[month];
+    else
+        return NODATA;
+}
+
 void Crit3DRadiationSettings::setLinke(float value)
 {
     linke = value;
@@ -248,6 +257,26 @@ TtiltMode Crit3DRadiationSettings::getTiltMode() const
 void Crit3DRadiationSettings::setTiltMode(const TtiltMode &value)
 {
     tiltMode = value;
+}
+
+TlandUse Crit3DRadiationSettings::getLandUse() const
+{
+    return landUse;
+}
+
+void Crit3DRadiationSettings::setLandUse(const TlandUse &value)
+{
+    landUse = value;
+
+    if (landUse == LAND_USE_INDUSTRIAL)
+        LinkeMonthly = {4.1f, 4.3f, 4.7f, 5.3f, 5.5f, 5.7f, 5.8f, 5.7f, 5.3f, 4.9f, 4.5f, 4.2f};
+    else if (landUse == LAND_USE_CITY)
+        LinkeMonthly = {3.1f, 3.2f, 3.5f, 4.0f, 4.2f, 4.3f, 4.4f, 4.3f, 4.0f, 3.6f, 3.3f, 3.1f};
+    else if (landUse == LAND_USE_RURAL)
+        LinkeMonthly = {2.1f, 2.2f, 2.5f, 2.9f, 3.2f, 3.4f, 3.5f, 3.3f, 2.9f, 2.6f, 2.3f, 2.2f};
+    else if (landUse == LAND_USE_MOUNTAIN)
+        LinkeMonthly = {1.5f, 1.6f, 1.8f, 1.9f, 2.0f, 2.3f, 2.3f, 2.3f, 2.1f, 1.8f, 1.6f, 1.5f};
+
 }
 
 gis::Crit3DRasterGrid *Crit3DRadiationSettings::getLinkeMap() const
@@ -377,3 +406,18 @@ std::string getKeyStringRealSky(TradiationRealSkyAlgorithm value)
     return key;
 }
 
+std::string getKeyStringLandUse(TlandUse value)
+{
+    std::map<std::string, TlandUse>::const_iterator it;
+    std::string key = "";
+
+    for (it = landUseToString.begin(); it != landUseToString.end(); ++it)
+    {
+        if (it->second == value)
+        {
+            key = it->first;
+            break;
+        }
+    }
+    return key;
+}

@@ -118,5 +118,4 @@
     speciesType getCropType(std::string cropType);
     std::string getCropTypeString(speciesType cropType);
 
-
 #endif // CROP_H

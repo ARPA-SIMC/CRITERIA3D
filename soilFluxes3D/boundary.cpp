@@ -80,11 +80,12 @@ void initializeBoundary(Tboundary *myBoundary, int myType, float slope, float bo
     else (*myBoundary).Heat = nullptr;
 }
 
-double computeSoilSurfaceResistance(double myThetaTop)
+double computeSoilSurfaceResistance(double thetaTop)
 {	// soil surface resistance (s m-1)
     // Van De Griend and Owe (1994)
     const double THETAMIN = 0.15;
-    return (10 * exp(0.3563 * (THETAMIN - myThetaTop) * 100));
+    double surfaceResistance = 10 * exp(0.3563 * (THETAMIN - thetaTop) * 100);
+    return surfaceResistance;
 }
 
 double computeSoilSurfaceResistanceCG(double theta, double thetaSat)
@@ -147,8 +148,11 @@ double computeAtmosphericLatentFlux(long i)
  */
 double computeAtmosphericLatentFluxSurfaceWater(long i)
 {
-    if (! nodeList[i].isSurface) return 0.;
-    if (&(nodeList[i].down) == nullptr) return 0.;
+    if (! nodeList[i].isSurface)
+        return 0.;
+
+    if (nodeList[i].down.index == NOLINK)
+        return 0.;
 
     long downIndex = nodeList[i].down.index;
 
@@ -314,7 +318,7 @@ void updateBoundaryWater (double deltaT)
                     long upIndex;
 
                     double surfaceWaterFraction = 0.;
-                    if (&(nodeList[i].up) != nullptr)
+                    if (nodeList[i].up.index != NOLINK)
                     {
                         upIndex = nodeList[i].up.index;
                         surfaceWaterFraction = getSurfaceWaterFraction(upIndex);
@@ -405,9 +409,10 @@ void updateBoundaryWater (double deltaT)
 }
 
 
-void updateBoundaryHeat()
+bool updateBoundaryHeat(double* timeStep)
 {
     double myWaterFlux, advTemperature, heatFlux;
+    float CourantHeatBoundary;
 
     for (long i = 1; i < myStructure.nrNodes; i++)
     {
@@ -457,6 +462,13 @@ void updateBoundaryHeat()
                                                                       nodeList[i].boundary->Heat->sensibleFlux +
                                                                       nodeList[i].boundary->Heat->latentFlux +
                                                                       nodeList[i].boundary->Heat->advectiveHeatFlux);
+
+                    CourantHeatBoundary = fabs(nodeList[i].extra->Heat->Qh * *timeStep / SoilHeatCapacity(i, nodeList[i].oldH, nodeList[i].extra->Heat->oldT));
+                    if (CourantHeatBoundary > 1.0 && *timeStep > myParameters.delta_t_min)
+                    {
+                        *timeStep = std::max(*timeStep / CourantHeatBoundary, myParameters.delta_t_min);
+                        return false;
+                    }
                 }
                 else if (nodeList[i].boundary->type == BOUNDARY_FREEDRAINAGE ||
                          nodeList[i].boundary->type == BOUNDARY_PRESCRIBEDTOTALPOTENTIAL)
@@ -487,4 +499,6 @@ void updateBoundaryHeat()
             }
         }
     }
+
+    return true;
 }

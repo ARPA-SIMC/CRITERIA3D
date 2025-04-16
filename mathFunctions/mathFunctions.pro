@@ -1,11 +1,11 @@
-#----------------------------------------------------
+#-------------------------------------------------------
 #
 #   mathFunctions library
+#   contains common constants, math, physics and statistic functions
 #
-#   contains common constants,
-#   math, physics and statistic functions
+#   This project is part of ARPAE agrolib distribution
 #
-#----------------------------------------------------
+#--------------------------------------------------------
 
 QT       -= core gui
 

@@ -296,7 +296,7 @@
         gis::Crit3DRasterGrid* getHourlyMeteoRaster(meteoVariable myVar);
         void showMeteoWidgetPoint(std::string idMeteoPoint, std::string namePoint, std::string dataset,
                                   double altitude, std::string lapseRateCode, bool isAppend);
-        void showMeteoWidgetGrid(std::string idCell, bool isAppend);
+        void showMeteoWidgetGrid(const std::string &idCell, const std::string &dataset, bool isAppend);
         void showProxyGraph(int macroAreaNumber);
         void showLocalProxyGraph(gis::Crit3DGeoPoint myPoint);
 
@@ -338,7 +338,7 @@
         void setCrossValidationStatistics(const Crit3DCrossValidationStatistics &newCrossValidationStatistics);
         void getMeteoPointsCurrentValues(std::vector<float> &validValues);
 
-        bool readVmArkimetData(const QList<QString> &vmFileList, frequencyType frequency);
+        bool readVmArkimetData(const QList<QString> &vmFileList, frequencyType frequency, bool isPrec0024);
 
     private slots:
         void deleteMeteoWidgetPoint(int id);

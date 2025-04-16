@@ -10,9 +10,6 @@ Surface water flow is described by the two-dimensional parabolic approximation o
 
 Water fluxes equations may be coupled with the heat flux equations, which include diffusive, latent and advective terms. Atmospheric data (net irradiance, air temperature and relative humidity, wind speed) could be used as top boundary conditions. See [CRITERIA3D](http://www.sciencedirect.com/science/article/pii/S0309170809001754) for more information.
 
-## criteriaModel library
-Algorithms for 1D water balance ([CRITERIA1D](https://github.com/ARPA-SIMC/CRITERIA1D)): soil water infiltration, drainage and capillary rise, crop water demand, evaporation and crop transpiration. 
-
 ## crop library
 Algorithms for crop development, leaf area index, root growth and distribution, based on daily temperature.
 
@@ -21,6 +18,9 @@ Modified Van Genuchten-Mualem model for soil water retention curve and water con
 
 ## solarRadiation library
 Algorithms for potential/actual solar radiation computation.
+
+## waterTable library
+Algorithms for the assessment of watertable depth from hydro-climatic balance.
 
 ## interpolation library
 Algorithms for the spatialization of meteorological data ([PRAGA](https://github.com/ARPA-SIMC/PRAGA)).

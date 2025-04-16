@@ -22,6 +22,7 @@
     ftomei@arpae.it
     gantolini@arpae.it
     avolta@arpae.it
+    ctoscano@arpae.it
 */
 
 #include <math.h>
@@ -32,6 +33,7 @@
 #include "basicMath.h"
 #include "commonConstants.h"
 #include "furtherMathFunctions.h"
+
 
 double lapseRateRotatedSigmoid(double x, std::vector <double> par)
 {
@@ -74,7 +76,7 @@ double lapseRatePiecewise_three_noSlope(double x, std::vector <double>& par)
 
     // the piecewise line is parameterized as follows
     // the line passes through A(par[0];par[1])and B(par[0]+par[2];par[3]). par[4] is the slope of the 2 externals pieces
-    // "y = mx + q" piecewise function;
+    // "y = mx + q" piecewise function
 
     double xb;
     // par[2] means the delta between the two quotes. It must be positive.
@@ -248,7 +250,7 @@ double twoParametersAndExponentialPolynomialFunctions(double x, double* par)
     return double(par[0]+par[1]*pow(x,par[2]));
 }
 
-double twoHarmonicsFourier(double x, double* par)
+inline double twoHarmonicsFourier(double x, double* par)
 {
     return par[0] + par[1]*cos(2*PI/par[5]*x) + par[2]*sin(2*PI/par[5]*x) + par[3]*cos(4*PI/par[5]*x) + par[4]*sin(4*PI/par[5]*x);
 }
@@ -274,6 +276,59 @@ double harmonicsFourierGeneral(double x, double* par,int nrPar)
     }
 }
 
+int dijkstraFindMinDistanceNode(const std::vector<double>& dist, const std::vector<bool>& visited, int n)
+{
+    // minimal distance for unvsited nodes
+    double minDist = std::numeric_limits<double>::max();
+    int minIndex = -1;
+    for (int i = 0; i < n; ++i) {
+        if (!visited[i] && dist[i] < minDist) {
+            minDist = dist[i];
+            minIndex = i;
+        }
+    }
+    return minIndex;
+}
+
+
+void dijkstraShortestPathway(const std::vector<std::vector<double>>& graph, int src, std::vector<double>& dist)
+{
+    // Dijkstra's algorithm for oriented graphs
+    // graph is represented by a matrix. It can be asymmetric
+    // src is the node whose we want to compute the distances
+
+    const double INF = std::numeric_limits<double>::max();
+    int n = graph.size();
+    //std::vector<double> dist(n, INF);  // between nodes minimal distance
+    std::vector<bool> visited(n, false);  // take track of visited nodes
+    for (int i = 0; i < n; ++i)
+    {
+        dist[i] = INF;
+    }
+    dist[src] = 0;  // source node distance equals to zero
+    for (int i = 0; i < n - 1; ++i)
+    {
+
+        // find the node with minimal distance
+        int u = dijkstraFindMinDistanceNode(dist, visited, n);
+        if (u == -1) break;  // no achievable nodes
+        visited[u] = true;  // flag as visited node
+
+        // update of the visited nodes
+        for (int v = 0; v < n; ++v) {
+            // Conditions to update the distance:
+            // - v is not yet visited
+            // - it exists connection between u and v (graph[u][v] > 0)
+            // - finite u distance
+            // - shortest pathway
+            if (!visited[v] && graph[u][v] > EPSILON && dist[u] != INF && dist[u] + graph[u][v] < dist[v])
+            {
+                dist[v] = dist[u] + graph[u][v];
+            }
+        }
+    }
+
+}
 
 namespace integration
 {

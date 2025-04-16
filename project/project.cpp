@@ -591,7 +591,18 @@ bool Project::loadParameters(QString parametersFileName)
             if (parametersSettings->contains("albedo_map"))
                 radSettings.setAlbedoMapName(parametersSettings->value("albedo_map").toString().toStdString());
 
-            if (parametersSettings->contains("linke_monthly"))
+            if (parametersSettings->contains("land_use") && !parametersSettings->contains("linke_monthly"))
+            {
+                std::string landUse = parametersSettings->value("land_use").toString().toStdString();
+                if (landUseToString.find(landUse) == landUseToString.end())
+                {
+                    errorString = "Unknown land use: " + QString::fromStdString(landUse);
+                    return false;
+                }
+                else
+                    radSettings.setLandUse(landUseToString.at(landUse));
+            }
+            else if (parametersSettings->contains("linke_monthly"))
             {
                 QList<QString> myLinkeStr = parametersSettings->value("linke_monthly").toStringList();
                 if (myLinkeStr.size() < 12)
@@ -601,7 +612,7 @@ bool Project::loadParameters(QString parametersFileName)
                 }
 
                 radSettings.setLinkeMonthly(StringListToFloat(myLinkeStr));
-            }
+            }            
 
             if (parametersSettings->contains("albedo_monthly"))
             {
@@ -1417,11 +1428,11 @@ bool Project::loadMeteoGridDB(QString xmlName)
     meteoGridDbHandler = new Crit3DMeteoGridDbHandler();
     meteoGridDbHandler->meteoGrid()->setGisSettings(this->gisSettings);
 
-    if (! meteoGridDbHandler->parseXMLGrid(xmlName, &errorString)) return false;
+    if (! meteoGridDbHandler->parseXMLGrid(xmlName, errorString)) return false;
 
-    if (! this->meteoGridDbHandler->openDatabase(&errorString)) return false;
+    if (! this->meteoGridDbHandler->openDatabase(errorString)) return false;
 
-    if (! this->meteoGridDbHandler->loadCellProperties(&errorString)) return false;
+    if (! this->meteoGridDbHandler->loadCellProperties(errorString)) return false;
 
     if (! this->meteoGridDbHandler->meteoGrid()->createRasterGrid()) return false;
 
@@ -1452,19 +1463,24 @@ bool Project::newMeteoGridDB(QString xmlName)
     meteoGridDbHandler = new Crit3DMeteoGridDbHandler();
     meteoGridDbHandler->meteoGrid()->setGisSettings(this->gisSettings);
 
-    if (! meteoGridDbHandler->parseXMLGrid(xmlName, &errorString)) return false;
+    if (! meteoGridDbHandler->parseXMLGrid(xmlName, errorString))
+        return false;
 
-    if (! this->meteoGridDbHandler->newDatabase(&errorString)) return false;
+    if (! this->meteoGridDbHandler->newDatabase(errorString))
+        return false;
 
-    if (! this->meteoGridDbHandler->newCellProperties(&errorString)) return false;
+    if (! this->meteoGridDbHandler->newCellProperties(errorString))
+        return false;
 
     Crit3DMeteoGridStructure structure = this->meteoGridDbHandler->meteoGrid()->gridStructure();
 
-    if (! this->meteoGridDbHandler->writeCellProperties(&errorString, structure.nrRow(), structure.nrCol())) return false;
+    if (! this->meteoGridDbHandler->writeCellProperties(structure.nrRow(), structure.nrCol(), errorString))
+        return false;
 
-    if (! this->meteoGridDbHandler->meteoGrid()->createRasterGrid()) return false;
+    if (! this->meteoGridDbHandler->meteoGrid()->createRasterGrid())
+        return false;
 
-    if (!meteoGridDbHandler->updateMeteoGridDate(errorString))
+    if (! meteoGridDbHandler->updateMeteoGridDate(errorString))
     {
         logInfoGUI("Error in updateMeteoGridDate: " + errorString);
     }
@@ -1478,9 +1494,10 @@ bool Project::newMeteoGridDB(QString xmlName)
     return true;
 }
 
+
 bool Project::deleteMeteoGridDB()
 {
-    if (!meteoGridDbHandler->deleteDatabase(&errorString))
+    if (!meteoGridDbHandler->deleteDatabase(errorString))
     {
         logInfoGUI("delete meteo grid error: " + errorString);
         return false;
@@ -1626,7 +1643,7 @@ bool Project::loadMeteoGridDailyData(QDate firstDate, QDate lastDate, bool showI
 
         for (int col = 0; col < this->meteoGridDbHandler->gridStructure().header().nrCols; col++)
         {
-            if (this->meteoGridDbHandler->meteoGrid()->getMeteoPointActiveId(row, col, &id))
+            if (this->meteoGridDbHandler->meteoGrid()->getMeteoPointActiveId(row, col, id))
             {
                 if (!this->meteoGridDbHandler->gridStructure().isFixedFields())
                 {
@@ -1691,7 +1708,7 @@ bool Project::loadMeteoGridHourlyData(QDateTime firstDate, QDateTime lastDate, b
         for (int col = 0; col < this->meteoGridDbHandler->gridStructure().header().nrCols; col++)
         {
             std::string id;
-            if (this->meteoGridDbHandler->meteoGrid()->getMeteoPointActiveId(row, col, &id))
+            if (this->meteoGridDbHandler->meteoGrid()->getMeteoPointActiveId(row, col, id))
             {
                 if (!this->meteoGridDbHandler->gridStructure().isFixedFields())
                 {
@@ -1747,7 +1764,7 @@ bool Project::loadMeteoGridMonthlyData(QDate firstDate, QDate lastDate, bool sho
 
         for (int col = 0; col < this->meteoGridDbHandler->gridStructure().header().nrCols; col++)
         {
-            if (this->meteoGridDbHandler->meteoGrid()->getMeteoPointActiveId(row, col, &id))
+            if (this->meteoGridDbHandler->meteoGrid()->getMeteoPointActiveId(row, col, id))
             {
                 bool isOk;
                 if (firstDate == lastDate)
@@ -3763,6 +3780,7 @@ void Project::saveRadiationParameters()
         parametersSettings->setValue("linke_map", getRelativePath(QString::fromStdString(radSettings.getLinkeMapName())));
         parametersSettings->setValue("albedo_map", getRelativePath(QString::fromStdString(radSettings.getAlbedoMapName())));
         parametersSettings->setValue("linke_monthly", FloatVectorToStringList(radSettings.getLinkeMonthly()));
+        parametersSettings->setValue("land_use", QString::fromStdString(getKeyStringLandUse(radSettings.getLandUse())));
     parametersSettings->endGroup();
 }
 
@@ -4103,7 +4121,7 @@ void Project::showMeteoWidgetPoint(std::string idMeteoPoint, std::string namePoi
         else
         {
             int lastIndex = meteoWidgetPointList.size() - 1;
-            if (meteoWidgetPointList[lastIndex]->isAlreadyPresent(idMeteoPoint))
+            if (meteoWidgetPointList[lastIndex]->isAlreadyPresent(idMeteoPoint, dataset))
             {
                 logWarning("This meteo point is already present.");
                 return;
@@ -4173,7 +4191,7 @@ void Project::showMeteoWidgetPoint(std::string idMeteoPoint, std::string namePoi
             meteoWidgetId = 0;
         }
         meteoWidgetPoint->setMeteoWidgetID(meteoWidgetId);
-        meteoWidgetPoint->setAllMeteoPointsPointer(meteoPoints);
+        meteoWidgetPoint->setAllMeteoPointsPointer(meteoPoints, nrMeteoPoints);
         meteoWidgetPointList.append(meteoWidgetPoint);
         QObject::connect(meteoWidgetPoint, SIGNAL(closeWidgetPoint(int)), this, SLOT(deleteMeteoWidgetPoint(int)));
         meteoPointsDbHandler->loadDailyData(getCrit3DDate(firstDaily), getCrit3DDate(lastDaily), mp);
@@ -4196,7 +4214,7 @@ void Project::showMeteoWidgetPoint(std::string idMeteoPoint, std::string namePoi
 }
 
 
-void Project::showMeteoWidgetGrid(std::string idCell, bool isAppend)
+void Project::showMeteoWidgetGrid(const std::string &idCell, const std::string &dataset, bool isAppend)
 {
     // check
     if (isAppend)
@@ -4208,7 +4226,7 @@ void Project::showMeteoWidgetGrid(std::string idCell, bool isAppend)
         else
         {
             int lastIndex = meteoWidgetGridList.size() - 1;
-            if (meteoWidgetGridList[lastIndex]->isAlreadyPresent(idCell))
+            if (meteoWidgetGridList[lastIndex]->isAlreadyPresent(idCell, dataset))
             {
                 logWarning("This grid cell is already present.");
                 return;
@@ -4784,7 +4802,7 @@ bool Project::deleteMeteoPointsData(const QList<QString>& pointList)
 
         if (allDaily)
         {
-            if (!meteoPointsDbHandler->deleteData(pointList[i], daily, startDate, endDate))
+            if (! meteoPointsDbHandler->deleteData(pointList[i], daily, startDate, endDate))
             {
                 closeProgressBar();
                 return false;
@@ -4792,9 +4810,9 @@ bool Project::deleteMeteoPointsData(const QList<QString>& pointList)
         }
         else
         {
-            if (!dailyVarList.isEmpty())
+            if (! dailyVarList.isEmpty())
             {
-                if (!meteoPointsDbHandler->deleteData(pointList[i], daily, dailyVarList, startDate, endDate))
+                if (! meteoPointsDbHandler->deleteData(pointList[i], daily, dailyVarList, startDate, endDate))
                 {
                     closeProgressBar();
                     return false;
@@ -4803,7 +4821,7 @@ bool Project::deleteMeteoPointsData(const QList<QString>& pointList)
         }
         if (allHourly)
         {
-            if (!meteoPointsDbHandler->deleteData(pointList[i], hourly, startDate, endDate))
+            if (! meteoPointsDbHandler->deleteData(pointList[i], hourly, startDate, endDate))
             {
                 closeProgressBar();
                 return false;
@@ -4811,9 +4829,9 @@ bool Project::deleteMeteoPointsData(const QList<QString>& pointList)
         }
         else
         {
-            if (!hourlyVarList.isEmpty())
+            if (! hourlyVarList.isEmpty())
             {
-                if (!meteoPointsDbHandler->deleteData(pointList[i], hourly, hourlyVarList, startDate, endDate))
+                if (! meteoPointsDbHandler->deleteData(pointList[i], hourly, hourlyVarList, startDate, endDate))
                 {
                     closeProgressBar();
                     return false;
@@ -4825,6 +4843,7 @@ bool Project::deleteMeteoPointsData(const QList<QString>& pointList)
 
     return true;
 }
+
 
 bool Project::loadOutputPointList(QString fileName)
 {
@@ -5454,7 +5473,8 @@ bool Project::waterTableComputeSingleWell(int indexWell)
         return false;
 
     bool isMeteoGridLoaded;
-    QDate firstMeteoDate = wellPoints[indexWell].getFirstDate().addDays(-730); // necessari 24 mesi di dati meteo precedenti il primo dato di falda
+    // sono necessari 24 mesi di dati meteo precedenti il primo dato osservato di falda
+    QDate firstMeteoDate = wellPoints[indexWell].getFirstObsDate().addDays(-730);
     double wellUtmX = wellPoints[indexWell].getUtmX();
     double wellUtmY = wellPoints[indexWell].getUtmY();
     Crit3DMeteoPoint linkedMeteoPoint;
@@ -5900,7 +5920,7 @@ bool Project::setSelectedStateWithCriteria()
 }
 
 
-bool Project::readVmArkimetData(const QList<QString> &vmFileList, frequencyType frequency)
+bool Project::readVmArkimetData(const QList<QString> &vmFileList, frequencyType frequency, bool isPrec0024)
 {
     if(nrMeteoPoints == 0)
     {
@@ -5929,7 +5949,7 @@ bool Project::readVmArkimetData(const QList<QString> &vmFileList, frequencyType 
         updateProgressBar(i);
         if (frequency == daily)
         {
-            if (! dbMeteoArkimet->readVmDataDaily(vmFileList[i], errorString))
+            if (! dbMeteoArkimet->readVmDataDaily(vmFileList[i], isPrec0024, errorString))
                 return false;
         }
         else

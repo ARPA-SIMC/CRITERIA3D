@@ -23,7 +23,8 @@
             void setIsEnsemble(bool value);
             bool getIsEnsemble() { return _isEnsemble; }
             void setNrMembers(int value) { _nrMembers = value; }
-            void setAllMeteoPointsPointer(Crit3DMeteoPoint* pointer) { _allMeteoPointsPointer = pointer; }
+            void setAllMeteoPointsPointer(Crit3DMeteoPoint* pointer, int nrAllMeteoPoits)
+                { _allMeteoPointsPointer = pointer; _nrAllMeteoPoints = nrAllMeteoPoits; }
 
             void setFrequency(frequencyType frequency);
 
@@ -31,7 +32,7 @@
             void setHourlyRange(QDate firstDate, QDate lastDate);
             void setMonthlyRange(QDate firstDate, QDate lastDate);
 
-            bool isAlreadyPresent(const std::string &idMeteoPoint);
+            bool isAlreadyPresent(const std::string &idMeteoPoint, const std::string &dataset);
 
             void addMeteoPointsEnsemble(Crit3DMeteoPoint mp);
 
@@ -44,6 +45,7 @@
             bool _isEnsemble;
             bool _isInitialized;
             int _nrMembers;
+            int _nrAllMeteoPoints;
 
             QVector<Crit3DMeteoPoint> _meteoPoints;
             QVector<Crit3DMeteoPoint> _meteoPointsEnsemble;
