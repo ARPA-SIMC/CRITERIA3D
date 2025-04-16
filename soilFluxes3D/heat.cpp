@@ -92,21 +92,54 @@ double sumHeatFlow(double deltaT)
         if (nodeList[n].extra->Heat->Qh != 0.)
             sum += nodeList[n].extra->Heat->Qh * deltaT;
     }
-    return (sum);
+    return sum;
 }
 
-void computeHeatBalance(double myTimeStep, double timeStepWater)
-{
-    balanceCurrentTimeStep.sinkSourceHeat = sumHeatFlow(myTimeStep);
 
-    balanceCurrentTimeStep.storageHeat = computeHeatStorage(myTimeStep, timeStepWater);
+bool heatBalance(double timeStepHeat, double timeStepWater, double &newtimeStepHeat)
+{
+    computeHeatBalance(timeStepHeat, timeStepWater);
+
+    double MBRerror = abs(balanceCurrentTimeStep.heatMBR);
+
+    // wrong case
+    if (MBRerror > myParameters.MBRThreshold && timeStepHeat > myParameters.delta_t_min)
+    {
+        newtimeStepHeat = std::max(timeStepHeat * 0.5, myParameters.delta_t_min);
+        return false;
+    }
+
+    // best case
+    if (MBRerror < (myParameters.MBRThreshold * 0.1) && timeStepHeat < timeStepWater)
+    {
+        // system is stable: double time step
+        newtimeStepHeat = std::min(timeStepHeat * 2.0, timeStepWater);
+        return true;
+    }
+
+    newtimeStepHeat = timeStepHeat;
+    return true;
+}
+
+
+void computeHeatBalance(double timeStepHeat, double timeStepWater)
+{
+    balanceCurrentTimeStep.sinkSourceHeat = sumHeatFlow(timeStepHeat);
+
+    balanceCurrentTimeStep.storageHeat = computeHeatStorage(timeStepHeat, timeStepWater);
 
     double deltaHeatStorage = balanceCurrentTimeStep.storageHeat - balancePreviousTimeStep.storageHeat;
     balanceCurrentTimeStep.heatMBE = deltaHeatStorage - balanceCurrentTimeStep.sinkSourceHeat;
 
-    double referenceHeat = MAXVALUE(fabs(balanceCurrentTimeStep.sinkSourceHeat), balanceCurrentTimeStep.storageHeat * 1e-6);
-    balanceCurrentTimeStep.heatMBR = 1. - balanceCurrentTimeStep.heatMBE / referenceHeat;
+    // minimum reference heat storage: minimum 1 Joule
+    double minRefHeatStorage = std::max(balanceCurrentTimeStep.storageHeat * 1e-6, 1.0);        // [J]
+
+    // reference heat for computation of mass balance ratio
+    double referenceHeat = std::max(abs(balanceCurrentTimeStep.sinkSourceHeat), minRefHeatStorage);   // [J]
+
+    balanceCurrentTimeStep.heatMBR = balanceCurrentTimeStep.heatMBE / referenceHeat;
 }
+
 
 float readHeatFlux(TlinkedNode* myLink, int fluxType)
 {
@@ -817,6 +850,7 @@ void updateHeatFluxes(double timeStep, double timeStepWater)
     }
 }
 
+
 void updateBalanceHeat()
 {
     balancePreviousTimeStep.storageHeat = balanceCurrentTimeStep.storageHeat;
@@ -824,11 +858,7 @@ void updateBalanceHeat()
     balanceCurrentPeriod.sinkSourceHeat += balanceCurrentTimeStep.sinkSourceHeat;
 }
 
-bool heatBalance(double timeStep, double timeStepWater)
-{
-    computeHeatBalance(timeStep, timeStepWater);
-    return ((fabs(1.-balanceCurrentTimeStep.heatMBR) < myParameters.MBRThreshold));
-}
+
 
 void initializeBalanceHeat()
 {
@@ -898,9 +928,9 @@ double computeMaximumDeltaT()
     return maxDeltaT;
 }
 
-bool HeatComputation(double timeStep, double timeStepWater)
-{
 
+bool HeatComputation(double timeStepHeat, double timeStepWater, double &newTimeStepHeat)
+{
 	long i, j;
     double sum = 0;
     double sumFlow0 = 0;
@@ -919,7 +949,7 @@ bool HeatComputation(double timeStep, double timeStepWater)
         X[i] = nodeList[i].extra->Heat->T;
         nodeList[i].extra->Heat->oldT = nodeList[i].extra->Heat->T;
 
-        myH = getH_timeStep(i, timeStep, timeStepWater);
+        myH = getH_timeStep(i, timeStepHeat, timeStepWater);
         avgh = arithmeticMean(nodeList[i].oldH, myH) - nodeList[i].z;
         C[i] = SoilHeatCapacity(i, avgh, nodeList[i].extra->Heat->T) * nodeList[i].volume_area;
     }
@@ -928,7 +958,7 @@ bool HeatComputation(double timeStep, double timeStepWater)
     {
         invariantFlux[i] = 0.;
 
-        myH = getH_timeStep(i, timeStep, timeStepWater);
+        myH = getH_timeStep(i, timeStepHeat, timeStepWater);
 
         // compute heat capacity temporal variation
         // due to changes in water and vapor
@@ -948,10 +978,10 @@ bool HeatComputation(double timeStep, double timeStepWater)
         heatCapacityVar *= nodeList[i].volume_area;
 
         j = 1;
-        if (computeHeatFlux(i, j, &(nodeList[i].up), timeStep, timeStepWater)) j++;
+        if (computeHeatFlux(i, j, &(nodeList[i].up), timeStepHeat, timeStepWater)) j++;
         for (short l = 0; l < myStructure.nrLateralLinks; l++)
-            if (computeHeatFlux(i, j, &(nodeList[i].lateral[l]), timeStep, timeStepWater)) j++;
-        if (computeHeatFlux(i, j, &(nodeList[i].down), timeStep, timeStepWater)) j++;
+            if (computeHeatFlux(i, j, &(nodeList[i].lateral[l]), timeStepHeat, timeStepWater)) j++;
+        if (computeHeatFlux(i, j, &(nodeList[i].down), timeStepHeat, timeStepWater)) j++;
 
         // closure
         while (j < myStructure.maxNrColumns)
@@ -960,7 +990,6 @@ bool HeatComputation(double timeStep, double timeStepWater)
         j = 1;
         sum = 0.;
         sumFlow0 = 0;
-        myDeltaTemp0 = 0;
 
         while ((j < myStructure.maxNrColumns) && (A[i][j].index != NOLINK))
         {
@@ -972,10 +1001,10 @@ bool HeatComputation(double timeStep, double timeStepWater)
 
         /*! sum of diagonal elements */
         avgh = arithmeticMean(nodeList[i].oldH, myH) - nodeList[i].z;
-        A[i][0].val = SoilHeatCapacity(i, avgh, nodeList[i].extra->Heat->T) * nodeList[i].volume_area / timeStep + sum;
+        A[i][0].val = SoilHeatCapacity(i, avgh, nodeList[i].extra->Heat->T) * nodeList[i].volume_area / timeStepHeat + sum;
 
         /*! b vector (constant terms) */
-        b[i] = C[i] * nodeList[i].extra->Heat->oldT / timeStep - heatCapacityVar / timeStep + nodeList[i].extra->Heat->Qh + invariantFlux[i] + sumFlow0;
+        b[i] = C[i] * nodeList[i].extra->Heat->oldT / timeStepHeat - heatCapacityVar / timeStepHeat + nodeList[i].extra->Heat->Qh + invariantFlux[i] + sumFlow0;
 
         // preconditioning
         if (A[i][0].val > 0)
@@ -987,28 +1016,24 @@ bool HeatComputation(double timeStep, double timeStepWater)
         }
     }
 
-    // avoiding oscillations (Courant number)
-    if (CourantHeat > 1.0 && timeStep > myParameters.delta_t_min)
-    {
-        myParameters.current_delta_t = std::max(myParameters.current_delta_t / CourantHeat, myParameters.delta_t_min);
-        setForcedHalvedTime(true);
-        return false;
-    }
-
-    int approximation = 0;
+    int approximation = myParameters.maxApproximationsNumber;
     solveLinearSystem(approximation, myParameters.ResidualTolerance, PROCESS_HEAT);
 
     for (i = 1; i < myStructure.nrNodes; i++)
         nodeList[i].extra->Heat->T = X[i];
 
-    heatBalance(timeStep, timeStepWater);
+    if (! heatBalance(timeStepHeat, timeStepWater, newTimeStepHeat))
+    {
+        return false;
+    }
+
     updateBalanceHeat();
 
-    updateHeatFluxes(timeStep, timeStepWater);
+    updateHeatFluxes(timeStepHeat, timeStepWater);
 
 	// save old temperatures
     for (long n = 1; n < myStructure.nrNodes; n++)
         nodeList[n].extra->Heat->oldT = nodeList[n].extra->Heat->T;
 
-    return (true);
+    return true;
 }

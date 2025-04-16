@@ -409,10 +409,10 @@ void updateBoundaryWater (double deltaT)
 }
 
 
-bool updateBoundaryHeat(double* timeStep)
+bool updateBoundaryHeat(double &timeStepHeat)
 {
     double myWaterFlux, advTemperature, heatFlux;
-    float CourantHeatBoundary;
+    double CourantHeatBoundary;
 
     for (long i = 1; i < myStructure.nrNodes; i++)
     {
@@ -463,10 +463,10 @@ bool updateBoundaryHeat(double* timeStep)
                                                                       nodeList[i].boundary->Heat->latentFlux +
                                                                       nodeList[i].boundary->Heat->advectiveHeatFlux);
 
-                    CourantHeatBoundary = fabs(nodeList[i].extra->Heat->Qh * *timeStep / SoilHeatCapacity(i, nodeList[i].oldH, nodeList[i].extra->Heat->oldT));
-                    if (CourantHeatBoundary > 1.0 && *timeStep > myParameters.delta_t_min)
+                    CourantHeatBoundary = abs(nodeList[i].extra->Heat->Qh * timeStepHeat / SoilHeatCapacity(i, nodeList[i].oldH, nodeList[i].extra->Heat->oldT));
+                    if (CourantHeatBoundary > 1.0 && timeStepHeat > myParameters.delta_t_min)
                     {
-                        *timeStep = std::max(*timeStep / CourantHeatBoundary, myParameters.delta_t_min);
+                        timeStepHeat = std::max(timeStepHeat / CourantHeatBoundary, myParameters.delta_t_min);
                         return false;
                     }
                 }

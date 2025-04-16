@@ -4,7 +4,7 @@
     struct Tboundary;
 
     void updateConductance();
-    bool updateBoundaryHeat(double* timeStep);
+    bool updateBoundaryHeat(double &timeStepHeat);
     void updateBoundaryWater(double deltaT);
     void initializeBoundary(Tboundary *myBoundary, int myType, float slope, float boundaryArea);
 
