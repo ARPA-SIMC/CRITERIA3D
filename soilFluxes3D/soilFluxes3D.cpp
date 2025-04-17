@@ -139,17 +139,17 @@ int DLL_EXPORT __STDCALL initializeFluxes(long nrNodes, int nrLayers, int nrLate
    \brief setNumericalParameters
    sets numerical solution parameters
 */
-int DLL_EXPORT __STDCALL setNumericalParameters(float minDeltaT, float maxDeltaT, int maxIterationNumber,
-                        int maxApproximationsNumber, int ResidualTolerance, float MBRThreshold)
+int DLL_EXPORT __STDCALL setNumericalParameters(double minDeltaT, double maxDeltaT, int maxIterationNumber,
+                        int maxApproximationsNumber, int ResidualTolerance, double MBRThreshold)
 {
     if (minDeltaT < 0.1f) minDeltaT = 0.1f;
     if (minDeltaT > 3600) minDeltaT = 3600;
-    myParameters.delta_t_min = double(minDeltaT);
+    myParameters.delta_t_min = minDeltaT;
 
     if (maxDeltaT < 60) maxDeltaT = 60;
     if (maxDeltaT > 3600) maxDeltaT = 3600;
     if (maxDeltaT < minDeltaT) maxDeltaT = minDeltaT;
-    myParameters.delta_t_max = double(maxDeltaT);
+    myParameters.delta_t_max = maxDeltaT;
 
     myParameters.current_delta_t = myParameters.delta_t_max;
 
@@ -166,11 +166,11 @@ int DLL_EXPORT __STDCALL setNumericalParameters(float minDeltaT, float maxDeltaT
 
     if (ResidualTolerance < 4) ResidualTolerance = 4;
     if (ResidualTolerance > 16) ResidualTolerance = 16;
-    myParameters.ResidualTolerance = pow(double(10.), -ResidualTolerance);
+    myParameters.ResidualTolerance = pow(10.0, -ResidualTolerance);
 
     if (MBRThreshold < 1) MBRThreshold = 1;
     if (MBRThreshold > 6) MBRThreshold = 6;
-    myParameters.MBRThreshold = pow(double(10.), double(-MBRThreshold));
+    myParameters.MBRThreshold = pow(10.0, -MBRThreshold);
 
     return CRIT3D_OK;
 }
@@ -1080,17 +1080,20 @@ double DLL_EXPORT __STDCALL computeStep(double maxTime)
         {
             dtHeatCurrent = MINVALUE(dtHeat, dtWater - dtHeatSum);
 
-            while (! updateBoundaryHeat(&dtHeatCurrent)) {};
+            // it sets dtHeatCurrent using Courant
+            while (! updateBoundaryHeat(dtHeatCurrent))
+            {};
 
-            if (HeatComputation(dtHeatCurrent, dtWater))
+            double newtimeStepHeat;
+            if (HeatComputation(dtHeatCurrent, dtWater, newtimeStepHeat))
             {
                 dtHeatSum += dtHeatCurrent;
             }
             else
             {
                 restoreHeat();
-                dtHeat = myParameters.current_delta_t;
             }
+            dtHeat = newtimeStepHeat;
         }
     }
 

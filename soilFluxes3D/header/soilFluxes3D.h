@@ -24,9 +24,8 @@
     __EXTERN int DLL_EXPORT __STDCALL initializeFluxes(long nrNodes, int nrLayers, int nrLateralLinks, bool isComputeWater, bool isComputeHeat, bool isComputeSolutes);
     __EXTERN void DLL_EXPORT __STDCALL initializeHeat(short saveHeatFluxes_, bool computeAdvectiveHeat, bool computeLatentHeat);
 
-    __EXTERN int DLL_EXPORT __STDCALL setNumericalParameters(float minDeltaT, float maxDeltaT,
-                              int maxIterationNumber, int maxApproximationsNumber,
-                              int errorMagnitude, float MBRMagnitude);
+    __EXTERN int DLL_EXPORT __STDCALL setNumericalParameters(double minDeltaT, double maxDeltaT, int maxIterationNumber,
+                                                             int maxApproximationsNumber, int ResidualTolerance, double MBRThreshold);
 
     __EXTERN int DLL_EXPORT __STDCALL setThreads(int nrThreads);
 
