@@ -10,7 +10,7 @@
     #include <QSqlDatabase>
     #include <vector>
 
-class QSqlDatabase;
+    class QSqlDatabase;
 
     class Crit1DCompUnit
     {
@@ -18,6 +18,7 @@ class QSqlDatabase;
         QString idCase;
         QString idCropClass;
         QString idCrop;
+        QString idWaterTable;
 
         QString idMeteo;
         QString idForecast;
@@ -48,7 +49,7 @@ class QSqlDatabase;
         bool readComputationUnitList(std::vector<Crit1DCompUnit> &compUnitList, QString &error);
 
     private:
-        QSqlDatabase db;
+        QSqlDatabase _db;
     };
 
     bool readComputationUnitList(QString dbComputationUnitsName, std::vector<Crit1DCompUnit> &compUnitList, QString &error);
