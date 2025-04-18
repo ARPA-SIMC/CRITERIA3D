@@ -416,7 +416,7 @@ bool roundColorScale(Crit3DColorScale* myScale, int nrIntervals, bool lessRounde
     }
     else
     {
-        double logAvg = log10(abs(avg));
+        double logAvg = log10(fabs(avg));
         if (lessRounded)
         {
             myExp = int((floor(logStep) + floor(logAvg))/2 - 1);

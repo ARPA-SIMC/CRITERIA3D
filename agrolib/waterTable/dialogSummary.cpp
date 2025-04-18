@@ -30,6 +30,10 @@ DialogSummary::DialogSummary(WaterTable myWaterTable)
     QLineEdit* myNrDays = new QLineEdit(QString::number(myWaterTable.getNrDaysPeriod()));
     myNrDays->setReadOnly(true);
 
+    QLabel* labelAvgDailyCWB = new QLabel("Avg daily CWB [mm]: ");
+    QLineEdit* myAvgDailyCWB = new QLineEdit(QString::number(myWaterTable.getAvgDailyCWB()));
+    myAvgDailyCWB->setReadOnly(true);
+
     QLabel* labelR2 = new QLabel("R2 [-]: ");
     QLineEdit* myR2 = new QLineEdit(QString::number(myWaterTable.getR2(),'f', 2));
     myR2->setReadOnly(true);
@@ -57,11 +61,14 @@ DialogSummary::DialogSummary(WaterTable myWaterTable)
     infoLayout->addWidget(labelNrDays,4,0,1,1);
     infoLayout->addWidget(myNrDays,4,1,1,1);
 
-    infoLayout->addWidget(labelR2,5,0,1,1);
-    infoLayout->addWidget(myR2,5,1,1,1);
+    infoLayout->addWidget(labelAvgDailyCWB,5,0,1,1);
+    infoLayout->addWidget(myAvgDailyCWB,5,1,1,1);
 
-    infoLayout->addWidget(labelRMSE,6,0,1,1);
-    infoLayout->addWidget(myRMSE,6,1,1,1);
+    infoLayout->addWidget(labelR2,6,0,1,1);
+    infoLayout->addWidget(myR2,6,1,1,1);
+
+    infoLayout->addWidget(labelRMSE,7,0,1,1);
+    infoLayout->addWidget(myRMSE,7,1,1,1);
 
     infoLayout->addWidget(labelEfIndex,8,0,1,1);
     infoLayout->addWidget(myEfIndex,8,1,1,1);

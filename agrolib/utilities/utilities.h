@@ -27,7 +27,7 @@
     QString getStringSeasonFromDate(QDate date);
     bool getPeriodDates(QString periodSelected, int year, QDate myDate, QDate* startDate, QDate* endDate);
 
-    QList<QString> getFields(QSqlDatabase* db_, QString tableName);
+    QList<QString> getFields(QSqlDatabase* dbPointer, QString tableName);
     QList<QString> getFields(const QSqlQuery& query);
     QList<QString> getFieldsUpperCase(const QSqlQuery &query);
     bool fieldExists(const QSqlQuery &query, const QString fieldName);

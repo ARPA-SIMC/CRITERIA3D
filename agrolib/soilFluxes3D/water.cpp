@@ -104,7 +104,7 @@ double runoff(long i, long j, TlinkedNode *link, double deltaT, unsigned approxi
     if ((dH/cellDistance) < EPSILON)
         return 0.;
 
-    double roughness = (nodeList[i].Soil->Roughness + nodeList[j].Soil->Roughness) / 2.;
+    double roughness = (nodeList[i].Soil->roughness + nodeList[j].Soil->roughness) / 2.;
 
     // Manning equation
     double v = pow(Hs, 2./3.) * sqrt(dH/cellDistance) / roughness;
@@ -402,9 +402,13 @@ bool waterFlowComputation(double deltaT)
             }
         }
 
-        /*! set new potential - compute new degree of saturation */
+        /*! set new potential and compute new degree of saturation */
         for (int i = 0; i < myStructure.nrNodes; i++)
         {
+            if (isnan(X[i]))
+            {
+                X[i] = 0.;
+            }
             nodeList[i].H = X[i];
             if (! nodeList[i].isSurface)
             {
@@ -418,7 +422,7 @@ bool waterFlowComputation(double deltaT)
         if (getForcedHalvedTime())
             return false;
     }
-     while ( (! isValidStep) && (++approximationNr < unsigned(myParameters.maxApproximationsNumber)) );
+    while ( (! isValidStep) && (++approximationNr < unsigned(myParameters.maxApproximationsNumber)) );
 
     return isValidStep;
  }
@@ -465,12 +469,14 @@ bool computeWater(double maxTime, double *acceptedTime)
 
         if (! isStepOK) restoreWater();
     }
-    return (isStepOK);
+    return isStepOK;
 }
 
 
 void restoreWater()
 {
     for (long n = 0; n < myStructure.nrNodes; n++)
-         nodeList[n].H = nodeList[n].oldH;
+    {
+        nodeList[n].H = nodeList[n].oldH;
+    }
 }
