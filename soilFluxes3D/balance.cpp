@@ -152,8 +152,8 @@ void computeMassBalance(double deltaT)
 
     balanceCurrentTimeStep.waterMBE = dStorage - balanceCurrentTimeStep.sinkSourceWater;            // [m3]
 
-    // minimum reference water storage: 0.1% of current storage, minimum 1 liter
-    double minRefWaterStorage = MAXVALUE(balanceCurrentTimeStep.storageWater * 1e-3, 0.001);        // [m3]
+    // minimum reference water storage: 0.01% of current storage, minimum 1 dl
+    double minRefWaterStorage = MAXVALUE(balanceCurrentTimeStep.storageWater * 1e-4, 0.0001);       // [m3]
 
     // reference water for computation of mass balance ratio
     double referenceWater = MAXVALUE(fabs(balanceCurrentTimeStep.sinkSourceWater), minRefWaterStorage);   // [m3]

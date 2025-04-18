@@ -142,7 +142,7 @@ int DLL_EXPORT __STDCALL initializeFluxes(long nrNodes, int nrLayers, int nrLate
 int DLL_EXPORT __STDCALL setNumericalParameters(double minDeltaT, double maxDeltaT, int maxIterationNumber,
                         int maxApproximationsNumber, int ResidualTolerance, double MBRThreshold)
 {
-    if (minDeltaT < 0.1f) minDeltaT = 0.1f;
+    if (minDeltaT < 0.1) minDeltaT = 0.1;
     if (minDeltaT > 3600) minDeltaT = 3600;
     myParameters.delta_t_min = minDeltaT;
 
@@ -164,7 +164,7 @@ int DLL_EXPORT __STDCALL setNumericalParameters(double minDeltaT, double maxDelt
 
     myParameters.maxApproximationsNumber = maxApproximationsNumber;
 
-    if (ResidualTolerance < 4) ResidualTolerance = 4;
+    if (ResidualTolerance < 5) ResidualTolerance = 5;
     if (ResidualTolerance > 16) ResidualTolerance = 16;
     myParameters.ResidualTolerance = pow(10.0, -ResidualTolerance);
 

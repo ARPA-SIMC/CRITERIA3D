@@ -195,6 +195,8 @@ double computeAtmosphericLatentHeatFlux(long i)
     return latentHeatFlow;
 }
 
+
+// [-]
 double getSurfaceWaterFraction(int i)
 {
     if (! nodeList[i].isSurface)
@@ -202,10 +204,11 @@ double getSurfaceWaterFraction(int i)
     else
     {
         double h = std::max(nodeList[i].H - nodeList[i].z, 0.);       // [m]
-        double h0 = std::max(double(nodeList[i].pond), 0.001);           // [m]
-        return h / h0;
+        double h0 = std::max(double(nodeList[i].pond), 0.001);        // [m]
+        return std::min(h / h0, 1.);
     }
 }
+
 
 void updateConductance()
 {
