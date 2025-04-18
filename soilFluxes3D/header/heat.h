@@ -20,7 +20,8 @@
     void saveWaterFluxes(double dtHeat, double timeStepWater);
     void saveHeatFlux(TlinkedNode* myLink, int fluxType, double myValue);
     float readHeatFlux(TlinkedNode* myLink, int fluxType);
-    bool HeatComputation(double timeStepHeat, double timeStepWater, double &newTimeStepHeat);
+    bool isGoodHeatBalance(double timeStepHeat, double timeStepWater, double &newtimeStepHeat);
+    bool HeatComputation(double timeStepHeat, double timeStepWater);
     void computeHeatBalance(double timeStepHeat, double timeStepWater);
 
 #endif

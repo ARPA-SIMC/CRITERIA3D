@@ -463,7 +463,7 @@ bool updateBoundaryHeat(double timeStep, double &newTimeStep)
                                                                       nodeList[i].boundary->Heat->latentFlux +
                                                                       nodeList[i].boundary->Heat->advectiveHeatFlux);
 
-                    double currentCourant = fabs(nodeList[i].extra->Heat->Qh * timeStep / SoilHeatCapacity(i, nodeList[i].oldH, nodeList[i].extra->Heat->oldT));
+                    double currentCourant = fabs(nodeList[i].extra->Heat->Qh) * timeStep / SoilHeatCapacity(i, nodeList[i].oldH, nodeList[i].extra->Heat->oldT);
                     CourantHeatBoundary = std::max(CourantHeatBoundary, currentCourant);
                 }
                 else if (nodeList[i].boundary->type == BOUNDARY_FREEDRAINAGE ||

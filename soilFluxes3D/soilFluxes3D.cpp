@@ -1088,15 +1088,8 @@ double DLL_EXPORT __STDCALL computeStep(double maxTime)
                 dtHeat = newTimeStep;
             }
 
-            if (HeatComputation(dtHeat, dtWater, newTimeStep))
-            {
-                dtHeatSum += dtHeat;
-            }
-            else
-            {
-                restoreHeat();
-            }
-            dtHeat = newTimeStep;
+            HeatComputation(dtHeat, dtWater);
+            dtHeatSum += dtHeat;
         }
     }
 

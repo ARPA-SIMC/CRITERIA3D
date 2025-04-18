@@ -40,7 +40,7 @@
 #include "header/soilFluxes3D.h"
 #include "header/boundary.h"
 
-static double CourantHeatAdvective;
+//static double CourantHeatAdvective;
 
 bool isHeatNode(long i)
 {
@@ -99,7 +99,7 @@ double sumHeatFlow(double deltaT)
 }
 
 
-bool heatBalance(double timeStepHeat, double timeStepWater, double &newtimeStepHeat)
+bool isGoodHeatBalance(double timeStepHeat, double timeStepWater, double &newtimeStepHeat)
 {
     computeHeatBalance(timeStepHeat, timeStepWater);
 
@@ -120,7 +120,9 @@ bool heatBalance(double timeStepHeat, double timeStepWater, double &newtimeStepH
         return true;
     }
 
+    // default case
     newtimeStepHeat = timeStepHeat;
+
     return true;
 }
 
@@ -181,78 +183,86 @@ void saveHeatFlux(TlinkedNode* myLink, int fluxType, double myValue)
 }
 
 /*!
- * \brief [m3 m-3] vapor volumetric water equivalent
+ * \brief vapor volumetric water equivalent
  * \param [m] h
  * \param [K] temperature
  * \param i
- * \return result
+ * \return [m3 m-3] vapor volumetric water equivalent
  */
 double VaporThetaV(double h, double T, long i)
 {
     double theta = theta_from_sign_Psi(h, i);
     double vaporConc = VaporFromPsiTemp(h, T);
-    return (vaporConc / WATER_DENSITY * (nodeList[i].Soil->Theta_s - theta));
+    return vaporConc / WATER_DENSITY * (nodeList[i].Soil->Theta_s - theta);
 }
 
 /*!
- * \brief [m2 s-1] binary vapor diffusivity
+ * \brief binary vapor diffusivity
  * (Do) in Bittelli (2008) or vapor diffusion coefficient in air (Dva) in Monteith (1973)
  * \param myPressure
  * \param myTemperature
- * \return result
+ * \return binary vapor diffusivity [m2 s-1]
  */
 double VaporBinaryDiffusivity(double myTemperature)
-{	return (VAPOR_DIFFUSIVITY0 * pow(myTemperature / ZEROCELSIUS, 2)); }
+{
+    return VAPOR_DIFFUSIVITY0 * pow(myTemperature / ZEROCELSIUS, 2.);
+}
+
 
 /*!
- * \brief [m2 s-1] vapor diffusivity
+ * \brief vapor diffusivity
  * \param i
  * \param myT
- * \return result
+ * \return vapor diffusivity [m2 s-1]
  */
 double SoilVaporDiffusivity(double ThetaS, double Theta, double myT)
 {
 	double binaryDiffusivity;	// [m2 s-1]
 	double airFilledPorosity;	// [m3 m-3]
     double const beta = 0.66;	// [] Penman 1940
-    double const emme = 1;      // [] idem
+    double const emme = 1.;     // [] idem
 
     binaryDiffusivity = VaporBinaryDiffusivity(myT);
     airFilledPorosity = ThetaS - Theta;
 
-    return (binaryDiffusivity  * beta * pow(airFilledPorosity, emme));
+    return binaryDiffusivity  * beta * pow(airFilledPorosity, emme);
 }
 
-/*!
- * \brief [] soil relative humidity
- * \param [m] h
- * \param [K] myT
- * \return result
- */
-double SoilRelativeHumidity(double h, double myT)
-{	return (exp(MH2O * h * GRAVITY / (R_GAS * myT))); }
 
 /*!
- * \brief [kg s m-3] isothermal vapor conductivity
+ * \brief soil relative humidity
+ * \param [m] h
+ * \param [K] myT
+ * \return soil relative humidity [-]
+ */
+double SoilRelativeHumidity(double h, double myT)
+{
+    return exp(MH2O * h * GRAVITY / (R_GAS * myT));
+}
+
+
+/*!
+ * \brief isothermal vapor conductivity
  * \param i
  * \param h
  * \param myT
- * \return result
+ * \return isothermal vapor conductivity [kg s m-3]
  */
 double IsothermalVaporConductivity(long i, double h, double myT)
 {
     double theta = theta_from_sign_Psi(h, i);
     double Dv = SoilVaporDiffusivity(nodeList[i].Soil->Theta_s, theta, myT);
     double vapor = VaporFromPsiTemp(h, myT);
-    return (Dv * vapor * MH2O / (R_GAS * myT));
+    return (Dv * vapor * MH2O) / (R_GAS * myT);
 }
 
+
 /*!
- * \brief [J m-3 K-1] volumetric heat capacity
+ * \brief volumetric heat capacity
  * \param i
  * \param h
  * \param T
- * \return result
+ * \return volumetric heat capacity [J m-3 K-1]
  */
 double SoilHeatCapacity(long i, double h, double T)
 {
@@ -262,18 +272,21 @@ double SoilHeatCapacity(long i, double h, double T)
     double heatCapacity = (bulkDensity / 2.65) * HEAT_CAPACITY_MINERAL + theta * HEAT_CAPACITY_WATER;
 
     if (myStructure.computeHeatVapor)
+    {
         heatCapacity += thetaV * HEAT_CAPACITY_AIR;
+    }
 
     return heatCapacity;
 }
 
+
 /*!
- * \brief [] water return flow factor
+ * \brief water return flow factor
  * Campbell 1994
  * \param myTheta
  * \param myClayFraction
  * \param myTemperature
- * \return result
+ * \return water return flow factor [-]
  */
 double WaterReturnFlowFactor(double myTheta, double myClayFraction, double myTemperature)
 {
@@ -284,11 +297,12 @@ double WaterReturnFlowFactor(double myTheta, double myClayFraction, double myTem
 	else
     {
         Q0 = 7.25 * myClayFraction + 2.52;
-        Q = Q0 * (pow(myTemperature / 303., 2));
+        Q = Q0 * (pow(myTemperature / 303., 2.));
     }
 
-    return (1 / (1 + pow(myTheta / xw0, -Q)));
+    return 1. / (1. + pow(myTheta / xw0, -Q));
 }
+
 
 /*!
  * \brief compute vapor concentration from matric potential and temperature
@@ -687,7 +701,6 @@ bool computeHeatFlux(long i, int myMatrixIndex, TlinkedNode *myLink, double time
     double myAdvectiveFlux = 0.;
     double myLatentFlux = 0.;
 
-    double advectiveFluxCourant = 0;
     double myConduction = Conduction(i, myLink, timeStep, timeStepWater);
 
     if (myStructure.computeWater)
@@ -700,8 +713,15 @@ bool computeHeatFlux(long i, int myMatrixIndex, TlinkedNode *myLink, double time
 
         if (myStructure.computeHeatAdvection)
         {
+            double advectiveFluxCourant = 0;
             myAdvectiveFlux = AdvectiveFlux(i, myLink, advectiveFluxCourant);
             saveHeatFlux(myLink, HEATFLUX_ADVECTIVE, myAdvectiveFlux);
+
+            /*if (! isEqual(advectiveFluxCourant, 0))
+            {
+                double currentCourant = fabs(advectiveFluxCourant) * timeStep / (C[i] * distance(i, linkIndex));
+                CourantHeatAdvective = std::max(CourantHeatAdvective, currentCourant);
+            }*/
         }
     }
 
@@ -709,12 +729,6 @@ bool computeHeatFlux(long i, int myMatrixIndex, TlinkedNode *myLink, double time
     A[i][myMatrixIndex].val = myConduction;
 
     invariantFlux[i] += myAdvectiveFlux + myLatentFlux;
-
-    if (! isEqual(advectiveFluxCourant, 0))
-    {
-        double currentCourant = fabs(advectiveFluxCourant) * timeStep / (C[i] * distance(i, linkIndex));
-        CourantHeatAdvective = std::max(CourantHeatAdvective, currentCourant);
-    }
 
     return true;
 }
@@ -929,7 +943,7 @@ double computeMaximumDeltaT()
 }
 
 
-bool HeatComputation(double timeStepHeat, double timeStepWater, double &newTimeStepHeat)
+bool HeatComputation(double timeStepHeat, double timeStepWater)
 {
 	long i, j;
     double sum = 0;
@@ -941,7 +955,7 @@ bool HeatComputation(double timeStepHeat, double timeStepWater, double &newTimeS
     double myH;
 
     initializeHeatFluxes(true, false);
-    CourantHeatAdvective = 0.;
+    //CourantHeatAdvective = 0.;
 
     for (i = 1; i < myStructure.nrNodes; i++)
     {
@@ -1016,14 +1030,14 @@ bool HeatComputation(double timeStepHeat, double timeStepWater, double &newTimeS
         }
     }
 
-    if (CourantHeatAdvective > 1.0 && timeStepHeat > myParameters.delta_t_min)
+    /*if (CourantHeatAdvective > 1.0 && timeStepHeat > myParameters.delta_t_min)
     {
         newTimeStepHeat = std::max(timeStepHeat / CourantHeatAdvective, myParameters.delta_t_min);
         if (newTimeStepHeat > 1)
             newTimeStepHeat = floor(newTimeStepHeat);
 
         return false;
-    }
+    }*/
 
     int approximation = myParameters.maxApproximationsNumber - 1;
     solveLinearSystem(approximation, myParameters.ResidualTolerance, PROCESS_HEAT);
@@ -1031,10 +1045,7 @@ bool HeatComputation(double timeStepHeat, double timeStepWater, double &newTimeS
     for (i = 1; i < myStructure.nrNodes; i++)
         nodeList[i].extra->Heat->T = X[i];
 
-    if (! heatBalance(timeStepHeat, timeStepWater, newTimeStepHeat))
-    {
-        return false;
-    }
+    computeHeatBalance(timeStepHeat, timeStepWater);
 
     updateBalanceHeat();
 
