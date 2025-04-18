@@ -104,7 +104,7 @@ double runoff(long i, long j, TlinkedNode *link, double deltaT, unsigned approxi
     if ((dH/cellDistance) < EPSILON)
         return 0.;
 
-    double roughness = (nodeList[i].Soil->Roughness + nodeList[j].Soil->Roughness) / 2.;
+    double roughness = (nodeList[i].Soil->roughness + nodeList[j].Soil->roughness) / 2.;
 
     // Manning equation
     double v = pow(Hs, 2./3.) * sqrt(dH/cellDistance) / roughness;

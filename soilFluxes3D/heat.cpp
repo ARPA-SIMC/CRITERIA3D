@@ -29,6 +29,7 @@
 #include <stdlib.h>
 
 #include "commonConstants.h"
+#include "basicMath.h"
 #include "physics.h"
 #include "header/types.h"
 #include "header/heat.h"
@@ -39,7 +40,7 @@
 #include "header/soilFluxes3D.h"
 #include "header/boundary.h"
 
-static double CourantHeat, fluxCourant;
+static double CourantHeatAdvective;
 
 bool isHeatNode(long i)
 {
@@ -63,9 +64,10 @@ double getH_timeStep(long i, double timeStep, double timeStepWater)
     return (nodeList[i].H - nodeList[i].oldH) / timeStepWater * timeStep + nodeList[i].oldH;
 }
 
+// [J]
 double computeHeatStorage(double timeStepHeat, double timeStepWater)
-{ // [J]
-    double myHeatStorage = 0.;
+{
+    double heatStorage = 0.;
     double myH;
     for (long i = 1; i < myStructure.nrNodes; i++)
     {
@@ -74,9 +76,10 @@ double computeHeatStorage(double timeStepHeat, double timeStepWater)
         else
             myH = nodeList[i].H;
 
-        myHeatStorage += soilFluxes3D::getHeat(i, myH - nodeList[i].z);
+        heatStorage += soilFluxes3D::getHeat(i, myH - nodeList[i].z);
     }
-    return myHeatStorage;
+
+    return heatStorage;
 }
 
 /*!
@@ -253,12 +256,10 @@ double IsothermalVaporConductivity(long i, double h, double myT)
  */
 double SoilHeatCapacity(long i, double h, double T)
 {
-    double heatCapacity;
     double theta = theta_from_sign_Psi(h, i);
     double thetaV = VaporThetaV(h, T, i);
     double bulkDensity = estimateBulkDensity(i);
-    heatCapacity = bulkDensity / 2.65 * HEAT_CAPACITY_MINERAL +
-            theta * HEAT_CAPACITY_WATER;
+    double heatCapacity = (bulkDensity / 2.65) * HEAT_CAPACITY_MINERAL + theta * HEAT_CAPACITY_WATER;
 
     if (myStructure.computeHeatVapor)
         heatCapacity += thetaV * HEAT_CAPACITY_AIR;
@@ -609,17 +610,17 @@ double IsothermalLatentHeatFlux(long i, TlinkedNode *myLink, double timeStep, do
     return (myLatentFlux);
 }
 
+
 /*!
  * \brief advective isothermal liquid water heat flux
  * \param i
  * \param myLink
  * \return advective liquid water heat flux [W]
  */
-double AdvectiveFlux(long i, TlinkedNode *myLink)
+double AdvectiveFlux(long i, TlinkedNode *myLink, double &advectiveFluxCourant)
 {
     double TliqAdv, TvapAdv;
     double liqWaterFlux, vapWaterFlux;
-    double advection;
 
     liqWaterFlux = (*myLink).linkedExtra->heatFlux->waterFlux;
 
@@ -628,8 +629,8 @@ double AdvectiveFlux(long i, TlinkedNode *myLink)
     else
         TliqAdv = nodeList[myLink->index].extra->Heat->T;
 
-    fluxCourant = HEAT_CAPACITY_WATER * liqWaterFlux;
-    advection = fluxCourant * TliqAdv;
+    advectiveFluxCourant = HEAT_CAPACITY_WATER * liqWaterFlux;
+    double advection = advectiveFluxCourant * TliqAdv;
 
     vapWaterFlux = (*myLink).linkedExtra->heatFlux->vaporFlux;
 
@@ -639,10 +640,10 @@ double AdvectiveFlux(long i, TlinkedNode *myLink)
         TvapAdv = nodeList[myLink->index].extra->Heat->T;
 
     double fluxCourantVap = HEAT_CAPACITY_WATER_VAPOR * vapWaterFlux;
-    fluxCourant += fluxCourantVap;
+    advectiveFluxCourant += fluxCourantVap;
     advection += fluxCourantVap * TvapAdv;
 
-    return (advection);
+    return advection;
 }
 
 
@@ -667,29 +668,28 @@ double Conduction(long i, TlinkedNode *myLink, double timeStep, double timeStepW
     linkConductivity = SoilHeatConductivity(j, nodeList[j].extra->Heat->T, hLinkAvg);
     meanKh = computeMean(myConductivity, linkConductivity);
 
-    // TODO capacità termica
-    //CourantHeat = MAXVALUE(CourantHeat, v * timeStep / myDistance);
-
     return zeta * meanKh;
 }
 
+
 bool computeHeatFlux(long i, int myMatrixIndex, TlinkedNode *myLink, double timeStep, double timeStepWater)
 {
-    if (myLink == nullptr) return false;
-    if ((*myLink).index == NOLINK) return false;
+    if (myLink == nullptr)
+        return false;
+    if ((*myLink).index == NOLINK)
+        return false;
 
-    long myLinkIndex = (*myLink).index;
-    double myConduction, myAdvectiveFlux, myLatentFlux;
-    double nodeDistance;
+    long linkIndex = (*myLink).index;
 
-    if (! isHeatNode(myLinkIndex)) return false;
+    if (! isHeatNode(linkIndex))
+        return false;
 
-    myAdvectiveFlux = 0.;
-    myLatentFlux = 0.;
-    // initialize global variable
-    fluxCourant = 0.;
+    double myAdvectiveFlux = 0.;
+    double myLatentFlux = 0.;
 
-    myConduction = Conduction(i, myLink, timeStep, timeStepWater);
+    double advectiveFluxCourant = 0;
+    double myConduction = Conduction(i, myLink, timeStep, timeStepWater);
+
     if (myStructure.computeWater)
     {
         if (myStructure.computeHeatVapor)
@@ -700,24 +700,25 @@ bool computeHeatFlux(long i, int myMatrixIndex, TlinkedNode *myLink, double time
 
         if (myStructure.computeHeatAdvection)
         {
-            myAdvectiveFlux = AdvectiveFlux(i, myLink);
+            myAdvectiveFlux = AdvectiveFlux(i, myLink, advectiveFluxCourant);
             saveHeatFlux(myLink, HEATFLUX_ADVECTIVE, myAdvectiveFlux);
         }
     }
 
-    A[i][myMatrixIndex].index = myLinkIndex;
+    A[i][myMatrixIndex].index = linkIndex;
     A[i][myMatrixIndex].val = myConduction;
 
     invariantFlux[i] += myAdvectiveFlux + myLatentFlux;
 
-    if (fluxCourant != 0)
+    if (! isEqual(advectiveFluxCourant, 0))
     {
-        nodeDistance = distance(i, myLinkIndex);
-        CourantHeat = MAXVALUE(CourantHeat, fabs(fluxCourant) * timeStep / (C[i] * nodeDistance));
+        double currentCourant = fabs(advectiveFluxCourant) * timeStep / (C[i] * distance(i, linkIndex));
+        CourantHeatAdvective = std::max(CourantHeatAdvective, currentCourant);
     }
 
-    return (true);
+    return true;
 }
+
 
 // should be called only BEFORE heat computation, since A matrix should contain water flux values
 void saveNodeWaterFlux(long i, TlinkedNode *link, double timeStepHeat, double timeStepWater)
@@ -859,7 +860,6 @@ void updateBalanceHeat()
 }
 
 
-
 void initializeBalanceHeat()
 {
      balanceCurrentTimeStep.sinkSourceHeat = 0.;
@@ -941,7 +941,7 @@ bool HeatComputation(double timeStepHeat, double timeStepWater, double &newTimeS
     double myH;
 
     initializeHeatFluxes(true, false);
-    CourantHeat = 0.;
+    CourantHeatAdvective = 0.;
 
     for (i = 1; i < myStructure.nrNodes; i++)
     {
@@ -1016,7 +1016,16 @@ bool HeatComputation(double timeStepHeat, double timeStepWater, double &newTimeS
         }
     }
 
-    int approximation = myParameters.maxApproximationsNumber;
+    if (CourantHeatAdvective > 1.0 && timeStepHeat > myParameters.delta_t_min)
+    {
+        newTimeStepHeat = std::max(timeStepHeat / CourantHeatAdvective, myParameters.delta_t_min);
+        if (newTimeStepHeat > 1)
+            newTimeStepHeat = floor(newTimeStepHeat);
+
+        return false;
+    }
+
+    int approximation = myParameters.maxApproximationsNumber - 1;
     solveLinearSystem(approximation, myParameters.ResidualTolerance, PROCESS_HEAT);
 
     for (i = 1; i < myStructure.nrNodes; i++)

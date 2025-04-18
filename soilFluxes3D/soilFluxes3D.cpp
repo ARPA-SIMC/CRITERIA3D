@@ -380,10 +380,10 @@ int DLL_EXPORT __STDCALL setHydraulicProperties(int waterRetentionCurve,
  /*!
  * \brief setNodePond
  * \param nodeIndex
- * \param pond      [m]
+ * \param pond            maximum pond height [m]
  * \return OK/ERROR
  */
- int DLL_EXPORT __STDCALL setNodePond(long nodeIndex, float pond)
+ int DLL_EXPORT __STDCALL setNodePond(long nodeIndex, double pond)
  {
      if (nodeList == nullptr)
          return MEMORY_ERROR;
@@ -473,7 +473,7 @@ int DLL_EXPORT __STDCALL setHydraulicProperties(int waterRetentionCurve,
     if (surfaceIndex > int(Surface_List.size()-1))
         Surface_List.resize(surfaceIndex+1);
 
-    Surface_List[surfaceIndex].Roughness = roughness;
+    Surface_List[surfaceIndex].roughness = roughness;
 
     return CRIT3D_OK;
  }
@@ -644,7 +644,7 @@ int DLL_EXPORT __STDCALL setHydraulicProperties(int waterRetentionCurve,
  * \param nodeIndex
  * \return surface maximum pond [m]
  */
- float DLL_EXPORT __STDCALL getPond(long nodeIndex)
+ double DLL_EXPORT __STDCALL getPond(long nodeIndex)
  {
      if (nodeList == nullptr)
          return MEMORY_ERROR;
@@ -1054,50 +1054,53 @@ int DLL_EXPORT __STDCALL setHydraulicProperties(int waterRetentionCurve,
  */
 double DLL_EXPORT __STDCALL computeStep(double maxTime)
 {
-    double dtWater, dtHeat;
-
     if (myStructure.computeHeat)
     {
         initializeHeatFluxes(false, true);
         updateConductance();
     }
 
+    double dtWater;
     if (myStructure.computeWater)
+    {
         computeWater(maxTime, &dtWater);
+    }
     else
+    {
         dtWater = MINVALUE(maxTime, myParameters.delta_t_max);
+    }
 
-    dtHeat = dtWater;
+    double dtHeat = dtWater;
 
     if (myStructure.computeHeat)
     {
-        double dtHeatCurrent = dtHeat;
-
-        saveWaterFluxes(dtHeatCurrent, dtWater);
+        saveWaterFluxes(dtHeat, dtWater);
 
         double dtHeatSum = 0;
         while (dtHeatSum < dtWater)
         {
-            dtHeatCurrent = MINVALUE(dtHeat, dtWater - dtHeatSum);
+            dtHeat = std::min(dtHeat, dtWater - dtHeatSum);
 
-            // it sets dtHeatCurrent using Courant
-            while (! updateBoundaryHeat(dtHeatCurrent))
-            {};
-
-            double newtimeStepHeat;
-            if (HeatComputation(dtHeatCurrent, dtWater, newtimeStepHeat))
+            // it sets dtHeat using Courant
+            double newTimeStep = dtHeat;
+            while (! updateBoundaryHeat(dtHeat, newTimeStep))
             {
-                dtHeatSum += dtHeatCurrent;
+                dtHeat = newTimeStep;
+            }
+
+            if (HeatComputation(dtHeat, dtWater, newTimeStep))
+            {
+                dtHeatSum += dtHeat;
             }
             else
             {
                 restoreHeat();
             }
-            dtHeat = newtimeStepHeat;
+            dtHeat = newTimeStep;
         }
     }
 
-    return MINVALUE(dtWater, dtHeat);
+    return dtWater;
 }
 
 /*!
@@ -1539,7 +1542,7 @@ double DLL_EXPORT __STDCALL getHeat(long i, double h)
         myHeat += thetaV * latentHeatVaporization(nodeList[i].extra->Heat->T - ZEROCELSIUS) * WATER_DENSITY * nodeList[i].volume_area;
     }
 
-    return (myHeat);
+    return myHeat;
 }
 
 }

@@ -48,7 +48,7 @@
     // SURFACE
     __EXTERN int DLL_EXPORT __STDCALL setSurfaceProperties(int surfaceIndex, double Roughness);
     __EXTERN int DLL_EXPORT __STDCALL setNodeSurface(long nodeIndex, int surfaceIndex);
-    __EXTERN int DLL_EXPORT __STDCALL setNodePond(long nodeIndex, float pond);
+    __EXTERN int DLL_EXPORT __STDCALL setNodePond(long nodeIndex, double pond);
 
     // WATER
     __EXTERN int DLL_EXPORT __STDCALL setHydraulicProperties(int waterRetentionCurve, int conductivityMeanType, float conductivityHorizVertRatio);
@@ -76,7 +76,7 @@
     __EXTERN double DLL_EXPORT __STDCALL getSumLateralWaterFlowIn(long nodeIndex);
     __EXTERN double DLL_EXPORT __STDCALL getSumLateralWaterFlowOut(long nodeIndex);
     __EXTERN double DLL_EXPORT __STDCALL getWaterStorage();
-    __EXTERN float DLL_EXPORT __STDCALL getPond(long nodeIndex);
+    __EXTERN double getPond(long nodeIndex);
 
     // HEAT
     __EXTERN int DLL_EXPORT __STDCALL setHeatSinkSource(long nodeIndex, double myHeatFlow);

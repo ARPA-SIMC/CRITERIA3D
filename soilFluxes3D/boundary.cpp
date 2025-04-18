@@ -265,7 +265,7 @@ void updateBoundaryWater (double deltaT)
                 {
                     double maxFlow = (hs * nodeList[i].volume_area) / deltaT;         // [m3 s-1] maximum flow available during the time step
                     // Manning equation
-                    double v = (1. / nodeList[i].Soil->Roughness) * pow(hs, 2./3.) * sqrt(nodeList[i].boundary->slope);
+                    double v = (1. / nodeList[i].Soil->roughness) * pow(hs, 2./3.) * sqrt(nodeList[i].boundary->slope);
                     // on the surface boundaryArea is a side [m]
                     double flow = nodeList[i].boundary->boundaryArea * hs * v;        // [m3 s-1]
                     nodeList[i].boundary->waterFlow = -std::min(flow, maxFlow);
@@ -409,10 +409,10 @@ void updateBoundaryWater (double deltaT)
 }
 
 
-bool updateBoundaryHeat(double &timeStepHeat)
+bool updateBoundaryHeat(double timeStep, double &newTimeStep)
 {
     double myWaterFlux, advTemperature, heatFlux;
-    double CourantHeatBoundary;
+    double CourantHeatBoundary = 0;
 
     for (long i = 1; i < myStructure.nrNodes; i++)
     {
@@ -463,12 +463,8 @@ bool updateBoundaryHeat(double &timeStepHeat)
                                                                       nodeList[i].boundary->Heat->latentFlux +
                                                                       nodeList[i].boundary->Heat->advectiveHeatFlux);
 
-                    CourantHeatBoundary = fabs(nodeList[i].extra->Heat->Qh * timeStepHeat / SoilHeatCapacity(i, nodeList[i].oldH, nodeList[i].extra->Heat->oldT));
-                    if (CourantHeatBoundary > 1.0 && timeStepHeat > myParameters.delta_t_min)
-                    {
-                        timeStepHeat = std::max(timeStepHeat / CourantHeatBoundary, myParameters.delta_t_min);
-                        return false;
-                    }
+                    double currentCourant = fabs(nodeList[i].extra->Heat->Qh * timeStep / SoilHeatCapacity(i, nodeList[i].oldH, nodeList[i].extra->Heat->oldT));
+                    CourantHeatBoundary = std::max(CourantHeatBoundary, currentCourant);
                 }
                 else if (nodeList[i].boundary->type == BOUNDARY_FREEDRAINAGE ||
                          nodeList[i].boundary->type == BOUNDARY_PRESCRIBEDTOTALPOTENTIAL)
@@ -498,6 +494,17 @@ bool updateBoundaryHeat(double &timeStepHeat)
                 }
             }
         }
+    }
+
+    if (CourantHeatBoundary > 0.01 && timeStep > myParameters.delta_t_min)
+    {
+        newTimeStep = std::max(timeStep / (CourantHeatBoundary * 100.), myParameters.delta_t_min);
+        if (newTimeStep > 1)
+        {
+            newTimeStep = floor(newTimeStep);
+        }
+
+        return false;
     }
 
     return true;
