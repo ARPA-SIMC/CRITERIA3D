@@ -45,22 +45,22 @@ Crit3DTime::Crit3DTime(Crit3DDate myDate, int mySeconds)
 
 int Crit3DTime::getHour() const
 {
-    return (time / 3600);
+    return (time / HOUR_SECONDS);
 }
 
 int Crit3DTime::getNearestHour() const
 {
-    return int(round(time / 3600));
+    return int(round(time / HOUR_SECONDS));
 }
 
 int Crit3DTime::getMinutes() const
 {
-    return (time - getHour()*3600) / 60;
+    return (time - getHour()*HOUR_SECONDS) / 60;
 }
 
 int Crit3DTime::getSeconds() const
 {
-    return (time - getHour()*3600 - getMinutes()*60);
+    return (time - getHour()*HOUR_SECONDS - getMinutes()*60);
 }
 
 bool operator < (const Crit3DTime& time1, const Crit3DTime& time2)

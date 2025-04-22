@@ -184,8 +184,8 @@ void saveHeatFlux(TlinkedNode* myLink, int fluxType, double myValue)
 
 /*!
  * \brief vapor volumetric water equivalent
- * \param [m] h
- * \param [K] temperature
+ * \param h     water potential with sign [m]
+ * \param T     temperature [K]
  * \param i
  * \return [m3 m-3] vapor volumetric water equivalent
  */
@@ -259,9 +259,9 @@ double IsothermalVaporConductivity(long i, double h, double myT)
 
 /*!
  * \brief volumetric heat capacity
- * \param i
- * \param h
- * \param T
+ * \param i     node index
+ * \param h     water potential with sign [m]
+ * \param T     [K]
  * \return volumetric heat capacity [J m-3 K-1]
  */
 double SoilHeatCapacity(long i, double h, double T)
@@ -269,7 +269,7 @@ double SoilHeatCapacity(long i, double h, double T)
     double theta = theta_from_sign_Psi(h, i);
     double thetaV = VaporThetaV(h, T, i);
     double bulkDensity = estimateBulkDensity(i);
-    double heatCapacity = (bulkDensity / 2.65) * HEAT_CAPACITY_MINERAL + theta * HEAT_CAPACITY_WATER;
+    double heatCapacity = (bulkDensity / QUARTZ_DENSITY) * HEAT_CAPACITY_MINERAL + theta * HEAT_CAPACITY_WATER;
 
     if (myStructure.computeHeatVapor)
     {

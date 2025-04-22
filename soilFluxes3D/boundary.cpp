@@ -412,9 +412,8 @@ void updateBoundaryWater (double deltaT)
 }
 
 
-bool updateBoundaryHeat(double timeStep, double &newTimeStep)
+bool updateBoundaryHeat(double timeStep, double &reducedTimeStep)
 {
-    double myWaterFlux, advTemperature, heatFlux;
     double CourantHeatBoundary = 0;
 
     for (long i = 1; i < myStructure.nrNodes; i++)
@@ -442,23 +441,20 @@ bool updateBoundaryHeat(double timeStep, double &newTimeStep)
 
                     if (myStructure.computeWater && myStructure.computeHeatAdvection)
                     {
+                        double advTemperature = nodeList[i].boundary->Heat->temperature;
+
                         // advective heat from rain
-                        myWaterFlux = nodeList[i].up.linkedExtra->heatFlux->waterFlux;
-                        if (myWaterFlux > 0.)
+                        double waterFlux = nodeList[i].up.linkedExtra->heatFlux->waterFlux;
+                        if (waterFlux > 0.)
                         {
-                            advTemperature = nodeList[i].boundary->Heat->temperature;
-                            heatFlux =  myWaterFlux * HEAT_CAPACITY_WATER * advTemperature / nodeList[i].up.area;
-                            nodeList[i].boundary->Heat->advectiveHeatFlux += heatFlux;
+                            nodeList[i].boundary->Heat->advectiveHeatFlux = waterFlux * HEAT_CAPACITY_WATER * advTemperature / nodeList[i].up.area;
                         }
 
                         // advective heat from evaporation/condensation
                         if (nodeList[i].boundary->waterFlow < 0.)
                             advTemperature = nodeList[i].extra->Heat->T;
-                        else
-                            advTemperature = nodeList[i].boundary->Heat->temperature;
 
                         nodeList[i].boundary->Heat->advectiveHeatFlux += nodeList[i].boundary->waterFlow * WATER_DENSITY * HEAT_CAPACITY_WATER_VAPOR * advTemperature / nodeList[i].up.area;
-
                     }
 
                     nodeList[i].extra->Heat->Qh += nodeList[i].up.area * (nodeList[i].boundary->Heat->radiativeFlux +
@@ -466,23 +462,25 @@ bool updateBoundaryHeat(double timeStep, double &newTimeStep)
                                                                       nodeList[i].boundary->Heat->latentFlux +
                                                                       nodeList[i].boundary->Heat->advectiveHeatFlux);
 
-                    double currentCourant = fabs(nodeList[i].extra->Heat->Qh) * timeStep / SoilHeatCapacity(i, nodeList[i].oldH, nodeList[i].extra->Heat->oldT);
+                    // [J m-3 K-1]
+                    double heatCapacity = SoilHeatCapacity(i, nodeList[i].oldH, nodeList[i].extra->Heat->oldT);
+                    // [K-1] ?
+                    double currentCourant = fabs(nodeList[i].extra->Heat->Qh) * timeStep / (heatCapacity * nodeList[i].volume_area);
                     CourantHeatBoundary = std::max(CourantHeatBoundary, currentCourant);
                 }
-                else if (nodeList[i].boundary->type == BOUNDARY_FREEDRAINAGE ||
-                         nodeList[i].boundary->type == BOUNDARY_PRESCRIBEDTOTALPOTENTIAL)
+                else if (nodeList[i].boundary->type == BOUNDARY_FREEDRAINAGE || nodeList[i].boundary->type == BOUNDARY_PRESCRIBEDTOTALPOTENTIAL)
                 {
                     if (myStructure.computeWater && myStructure.computeHeatAdvection)
                     {
-                        myWaterFlux = nodeList[i].boundary->waterFlow;
+                        double waterFlux = nodeList[i].boundary->waterFlow;
 
-                        if (myWaterFlux < 0)
+                        double advTemperature = nodeList[i].boundary->Heat->fixedTemperature;
+                        if (waterFlux < 0)
+                        {
                             advTemperature = nodeList[i].extra->Heat->T;
-                        else
-                            advTemperature = nodeList[i].boundary->Heat->fixedTemperature;
+                        }
 
-                        heatFlux =  myWaterFlux * HEAT_CAPACITY_WATER * advTemperature / nodeList[i].up.area;
-                        nodeList[i].boundary->Heat->advectiveHeatFlux = heatFlux;
+                        nodeList[i].boundary->Heat->advectiveHeatFlux = waterFlux * HEAT_CAPACITY_WATER * advTemperature / nodeList[i].up.area;
 
                         nodeList[i].extra->Heat->Qh += nodeList[i].up.area * nodeList[i].boundary->Heat->advectiveHeatFlux;
                     }
@@ -499,12 +497,12 @@ bool updateBoundaryHeat(double timeStep, double &newTimeStep)
         }
     }
 
-    if (CourantHeatBoundary > 0.01 && timeStep > myParameters.delta_t_min)
+    if (CourantHeatBoundary > 1. && timeStep > myParameters.delta_t_min)
     {
-        newTimeStep = std::max(timeStep / (CourantHeatBoundary * 100.), myParameters.delta_t_min);
-        if (newTimeStep > 1)
+        reducedTimeStep = std::max(timeStep / CourantHeatBoundary, myParameters.delta_t_min);
+        if (reducedTimeStep > 1.)
         {
-            newTimeStep = floor(newTimeStep);
+            reducedTimeStep = floor(reducedTimeStep);
         }
 
         return false;
