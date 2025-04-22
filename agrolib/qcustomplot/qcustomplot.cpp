@@ -2068,41 +2068,45 @@ QCPRange QCPRange::sanitizedForLogScale() const
   QCPRange sanitizedRange(lower, upper);
   sanitizedRange.normalize();
   // can't have range spanning negative and positive values in log plot, so change range to fix it
-  //if (qFuzzyCompare(sanitizedRange.lower+1, 1) && !qFuzzyCompare(sanitizedRange.upper+1, 1))
   if (sanitizedRange.lower == 0.0 && sanitizedRange.upper != 0.0)
   {
-    // case lower is 0
-    if (rangeFac < sanitizedRange.upper*rangeFac)
-      sanitizedRange.lower = rangeFac;
-    else
-      sanitizedRange.lower = sanitizedRange.upper*rangeFac;
-  } //else if (!qFuzzyCompare(lower+1, 1) && qFuzzyCompare(upper+1, 1))
-  else if (sanitizedRange.lower != 0.0 && sanitizedRange.upper == 0.0)
-  {
-    // case upper is 0
-    if (-rangeFac > sanitizedRange.lower*rangeFac)
-      sanitizedRange.upper = -rangeFac;
-    else
-      sanitizedRange.upper = sanitizedRange.lower*rangeFac;
-  } else if (sanitizedRange.lower < 0 && sanitizedRange.upper > 0)
-  {
-    // find out whether negative or positive interval is wider to decide which sign domain will be chosen
-    if (-sanitizedRange.lower > sanitizedRange.upper)
-    {
-      // negative is wider, do same as in case upper is 0
-      if (-rangeFac > sanitizedRange.lower*rangeFac)
-        sanitizedRange.upper = -rangeFac;
-      else
-        sanitizedRange.upper = sanitizedRange.lower*rangeFac;
-    } else
-    {
-      // positive is wider, do same as in case lower is 0
+      // case lower is 0
       if (rangeFac < sanitizedRange.upper*rangeFac)
         sanitizedRange.lower = rangeFac;
       else
         sanitizedRange.lower = sanitizedRange.upper*rangeFac;
-    }
   }
+
+  if (sanitizedRange.lower != 0.0 && sanitizedRange.upper == 0.0)
+  {
+      // case upper is 0
+      if (-rangeFac > sanitizedRange.lower*rangeFac)
+        sanitizedRange.upper = -rangeFac;
+      else
+        sanitizedRange.upper = sanitizedRange.lower*rangeFac;
+  }
+
+  if (sanitizedRange.lower < 0 && sanitizedRange.upper > 0)
+  {
+      // find out whether negative or positive interval is wider to decide which sign domain will be chosen
+      if (-sanitizedRange.lower > sanitizedRange.upper)
+      {
+          // negative is wider, do same as in case upper is 0
+          if (-rangeFac > sanitizedRange.lower*rangeFac)
+            sanitizedRange.upper = -rangeFac;
+          else
+            sanitizedRange.upper = sanitizedRange.lower*rangeFac;
+      }
+      else
+      {
+          // positive is wider, do same as in case lower is 0
+          if (rangeFac < sanitizedRange.upper*rangeFac)
+            sanitizedRange.lower = rangeFac;
+          else
+            sanitizedRange.lower = sanitizedRange.upper*rangeFac;
+      }
+  }
+
   // due to normalization, case lower>0 && upper<0 should never occur, because that implies upper<lower
   return sanitizedRange;
 }

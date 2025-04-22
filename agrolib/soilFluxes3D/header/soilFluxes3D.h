@@ -109,7 +109,7 @@
 
     // COMPUTATION
     __EXTERN void DLL_EXPORT __STDCALL initializeBalance();
-    __EXTERN void DLL_EXPORT __STDCALL computePeriod(double myPeriod);
+    __EXTERN void DLL_EXPORT __STDCALL computePeriod(double timePeriod);
 	__EXTERN double DLL_EXPORT __STDCALL computeStep(double maxTime);
 
 }
