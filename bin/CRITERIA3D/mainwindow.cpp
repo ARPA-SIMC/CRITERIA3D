@@ -2259,7 +2259,9 @@ void MainWindow::on_actionCriteria3D_set_processes_triggered()
         myProject.processes.setComputeSnow(dialogProcesses.snowProcess->isChecked());
         myProject.processes.setComputeCrop(dialogProcesses.cropProcess->isChecked());
         myProject.processes.setComputeWater(dialogProcesses.waterFluxesProcess->isChecked());
-        // TODO Cate usare logWarning per avvisare che verranno attivati processi
+
+        if (dialogProcesses.hydrallProcess->isChecked() && (! dialogProcesses.cropProcess->isChecked() || ! dialogProcesses.waterFluxesProcess->isChecked()))
+            myProject.logWarning("Crop and water processes will be activated in order to compute Hydrall model.");
         myProject.processes.setComputeHydrall(dialogProcesses.hydrallProcess->isChecked());
     }
 }

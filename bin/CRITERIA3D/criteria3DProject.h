@@ -105,7 +105,7 @@
 
         bool initializeSnowModel();
 
-        bool computeHydrallModel();
+        bool computeHydrallModel(int row, int col);
         void dailyUpdateHydrallMaps();
 
         bool computeSnowModel();

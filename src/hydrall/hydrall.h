@@ -93,8 +93,11 @@
     };
 
 
-    struct TstatePlant
+    class Crit3DHydrallStatePlant
     {
+    public:
+        Crit3DHydrallStatePlant();
+
         double treeNetPrimaryProduction;
         double treecumulatedBiomassFoliage;
         double treecumulatedBiomassRoot;
@@ -104,7 +107,11 @@
         double understoreycumulatedBiomassRoot;
     };
 
-    struct TweatherDerivedVariable {
+    class Crit3DHydrallWeatherDerivedVariable {
+
+    public:
+        Crit3DHydrallWeatherDerivedVariable();
+
         double airVapourPressure;
         double emissivitySky;
         double longWaveIrradiance;
@@ -119,7 +126,7 @@
     };
 
     struct TweatherVariable {
-        TweatherDerivedVariable derived;
+        Crit3DHydrallWeatherDerivedVariable derived;
 
         double myInstantTemp;
         double prec;
@@ -310,7 +317,7 @@
         ThydrallDeltaTimeOutputs deltaTime;
         ThydrallNitrogen nitrogenContent;
         ThydrallBiomass treeBiomass, understoreyBiomass;
-        TstatePlant statePlant;
+        Crit3DHydrallStatePlant statePlant;
         TallocationCoefficient allocationCoefficient;
 
 
@@ -331,7 +338,7 @@
         double moistureCorrectionFactor(int index);
         double understoreyRespiration();
         void radiationAbsorption();
-        void setSoilVariables(int iLayer, int currentNode, float checkFlag, int horizonIndex, double waterContent, double waterContentFC, double waterContentWP, int firstRootLayer, int lastRootLayer, double rootDensity, double clay, double sand, double thickness, double bulkDensity, double waterContentSat);
+        void setSoilVariables(int iLayer, int currentNode, float checkFlag, int horizonIndex, double waterContent, double waterContentFC, double waterContentWP, double rootDensity, double clay, double sand, double thickness, double bulkDensity, double waterContentSat);
         void setHourlyVariables(double temp, double irradiance , double prec , double relativeHumidity , double windSpeed, double directIrradiance, double diffuseIrradiance, double cloudIndex, double atmosphericPressure, Crit3DDate currentDate, double sunElevation,double meanTemp30Days,double et0);
         bool setWeatherVariables(double temp, double irradiance , double prec , double relativeHumidity , double windSpeed, double directIrradiance, double diffuseIrradiance, double cloudIndex, double atmosphericPressure, double meanTemp30Days,double et0);
         void setDerivedWeatherVariables(double directIrradiance, double diffuseIrradiance, double cloudIndex, double et0);

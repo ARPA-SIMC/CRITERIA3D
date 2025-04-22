@@ -108,6 +108,8 @@ void Crit3DProcesses::setComputeHydrall(bool value)
     {
         computeCrop = true;
         computeWater = true;
+        computeMeteo = true;
+        computeRadiation = true;
     }
 }
 
@@ -2087,7 +2089,7 @@ double Project3D::assignEvaporation(int row, int col, double lai, int soilIndex)
  *  \param currentDegreeDays: degree days sum [°C]
  *  \return actual transpiration [mm]
  */
-double Project3D::assignTranspiration(int row, int col, Crit3DCrop currentCrop, double currentLai, double currentDegreeDays)
+double Project3D::assignTranspiration(int row, int col, Crit3DCrop &currentCrop, double currentLai, double currentDegreeDays)
 {
     // check lai and degree days
     if (currentLai < EPSILON || isEqual(currentDegreeDays, NODATA))

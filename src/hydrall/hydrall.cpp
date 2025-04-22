@@ -31,6 +31,31 @@ Crit3DHydrallState::Crit3DHydrallState()
     rootBiomass = NODATA;
 }
 
+Crit3DHydrallStatePlant::Crit3DHydrallStatePlant()
+{
+    treeNetPrimaryProduction = NODATA;
+    treecumulatedBiomassFoliage = NODATA;
+    treecumulatedBiomassRoot = NODATA;
+    treecumulatedBiomassSapwood = NODATA;
+    understoreycumulatedBiomass = NODATA;
+    understoreycumulatedBiomassFoliage = NODATA;
+    understoreycumulatedBiomassRoot = NODATA;
+}
+
+Crit3DHydrallWeatherDerivedVariable::Crit3DHydrallWeatherDerivedVariable()
+{
+    airVapourPressure = NODATA;
+    emissivitySky = NODATA;
+    longWaveIrradiance = NODATA;
+    slopeSatVapPressureVSTemp = NODATA;
+    myDirectIrradiance = NODATA;
+    myDiffuseIrradiance = NODATA;
+    myEmissivitySky = NODATA;
+    myLongWaveIrradiance = NODATA;
+    psychrometricConstant = NODATA;
+    et0 = NODATA;
+}
+
 Crit3DHydrallMaps::Crit3DHydrallMaps()
 {
     mapLAI = new gis::Crit3DRasterGrid;
@@ -116,7 +141,7 @@ double Crit3D_Hydrall::computeLAI(Crit3DDate myDate)
 
 double Crit3D_Hydrall::photosynthesisAndTranspiration()
 {
-    TweatherDerivedVariable weatherDerivedVariable;
+    Crit3DHydrallWeatherDerivedVariable weatherDerivedVariable;
 
     Crit3D_Hydrall::radiationAbsorption();
     Crit3D_Hydrall::photosynthesisAndTranspirationUnderstorey();
@@ -256,7 +281,7 @@ void Crit3D_Hydrall::setStateVariables(Crit3DHydrallMaps &stateMap, int row, int
     stateVariable.rootBiomass = stateMap.rootBiomassMap->value[row][col];
 }
 
-void Crit3D_Hydrall::setSoilVariables(int iLayer, int currentNode,float checkFlag, int horizonIndex, double waterContent, double waterContentFC, double waterContentWP, int firstRootLayer, int lastRootLayer, double rootDensity,double clay, double sand,double thickness,double bulkDensity,double waterContentSat)
+void Crit3D_Hydrall::setSoilVariables(int iLayer, int currentNode,float checkFlag, int horizonIndex, double waterContent, double waterContentFC, double waterContentWP, double rootDensity,double clay, double sand,double thickness,double bulkDensity,double waterContentSat)
 {
     if (iLayer == 0)
     {
@@ -265,7 +290,7 @@ void Crit3D_Hydrall::setSoilVariables(int iLayer, int currentNode,float checkFla
     (soil.layersNr)++;
     soil.waterContent.resize(soil.layersNr);
     soil.stressCoefficient.resize(soil.layersNr);
-    soil.rootDensity.resize(soil.layersNr);
+    //soil.rootDensity.resize(soil.layersNr);
     soil.clay.resize(soil.layersNr);
     soil.sand.resize(soil.layersNr);
     soil.silt.resize(soil.layersNr);
@@ -274,6 +299,7 @@ void Crit3D_Hydrall::setSoilVariables(int iLayer, int currentNode,float checkFla
     soil.saturation.resize(soil.layersNr);
     soil.fieldCapacity.resize(soil.layersNr);
     soil.wiltingPoint.resize(soil.layersNr);
+
 
     if (currentNode != checkFlag)
     {
@@ -287,7 +313,7 @@ void Crit3D_Hydrall::setSoilVariables(int iLayer, int currentNode,float checkFla
         soil.fieldCapacity[iLayer] = waterContentFC;
         soil.wiltingPoint[iLayer] = waterContentWP;
         soil.saturation[iLayer] = waterContentSat;
-        soil.rootDensity[iLayer] = LOGICAL_IO((iLayer >= firstRootLayer && iLayer <= lastRootLayer),rootDensity,0);
+        //soil.rootDensity[iLayer] = LOGICAL_IO((iLayer >= firstRootLayer && iLayer <= lastRootLayer),rootDensity,0);
     }
 
     //soil.clayAverage = statistics::weighedMean(soil.nodeThickness,soil.clay);
