@@ -319,6 +319,7 @@
         std::vector<double> understoreyTranspirationRate;
         double understoreyAssimilationRate;
 
+        double moistureCorrectionFactorOld(int index);
         double moistureCorrectionFactor(int index);
         double understoreyRespiration();
         void radiationAbsorption();

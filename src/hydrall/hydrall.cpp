@@ -941,7 +941,7 @@ inline double Crit3D_Hydrall::soilTemperatureModel()
     return 0.8 * weatherVariable.last30DaysTAvg + 0.2 * weatherVariable.myInstantTemp;
 }
 
-double Crit3D_Hydrall::moistureCorrectionFactor(int index)
+double Crit3D_Hydrall::moistureCorrectionFactorOld(int index)
 {
     double correctionSoilMoisture = 1;
     double stressThreshold = 0.5*(soil.saturation[index]+soil.fieldCapacity[index]);
@@ -954,6 +954,18 @@ double Crit3D_Hydrall::moistureCorrectionFactor(int index)
         correctionSoilMoisture = log(soil.saturation[index]/soil.waterContent[index]) / log(soil.saturation[index]/stressThreshold);
     }
     return correctionSoilMoisture;
+}
+
+double Crit3D_Hydrall::moistureCorrectionFactor(int index)
+{
+    if (soil.waterContent[index] < soil.fieldCapacity[index])
+    {
+        return MINVALUE(1, 10/3 * (soil.waterContent[index]-soil.wiltingPoint[index])/(soil.fieldCapacity[index]- soil.wiltingPoint[index]));
+    }
+    else
+    {
+        return MINVALUE(1, (soil.waterContent[index] - 2* soil.fieldCapacity[index])/(soil.saturation[index]-2 * soil.fieldCapacity[index]));
+    }
 }
 
 double Crit3D_Hydrall::temperatureFunction(double temperature)
