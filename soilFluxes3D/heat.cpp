@@ -517,8 +517,9 @@ double ThermalLiquidFlux(long i, TlinkedNode *myLink, int myProcess, double time
     // m3 s-1
     double myFlow = myFlowDensity * (*myLink).area;
 
-    return (myFlow);
+    return myFlow;
 }
+
 
 /*!
  * \brief [kg s-1] Thermal vapor flux
@@ -528,8 +529,6 @@ double ThermalLiquidFlux(long i, TlinkedNode *myLink, int myProcess, double time
  */
 double ThermalVaporFlux(long i, TlinkedNode *myLink, int myProcess, double timeStep, double timeStepWater)
 {
-    //TODO: inserire time step water per calcolo più preciso
-
     long j = (*myLink).index;
 
     // temperatures (K) and water potential (m)
@@ -560,13 +559,12 @@ double ThermalVaporFlux(long i, TlinkedNode *myLink, int myProcess, double timeS
     double meanKv = computeMean(Kvt, KvtLink);
 
     // kg m-2 s-1
-    double myFlowDensity = meanKv * (tavgLink - tavg) / distance(i, j);
+    double flowDensity = meanKv * (tavgLink - tavg) / distance(i, j);
 
     // kg s-1
-    double myFlow = myFlowDensity * (*myLink).area;
-
-    return (myFlow);
+    return flowDensity * (*myLink).area;
 }
+
 
 /*!
  * \brief isothermal vapor flux
@@ -780,8 +778,6 @@ void saveNodeWaterFlux(long i, TlinkedNode *link, double timeStepHeat, double ti
         link->linkedExtra->heatFlux->fluxes[WATERFLUX_VAPOR_ISOTHERMAL] = float(isothVapFlux);
         link->linkedExtra->heatFlux->fluxes[WATERFLUX_VAPOR_THERMAL] = float(thermVapFlux);
     }
-
-    return;
 }
 
 

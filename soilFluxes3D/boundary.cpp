@@ -247,7 +247,7 @@ void updateConductance()
 
 void updateBoundaryWater (double deltaT)
 {
-    double const EPSILON_METER = 0.0001;          // [m] 0.1 mm
+    double const EPSILON_RUNOFF = 0.0001;          // [m] 0.1 mm
 
     for (long i = 0; i < myStructure.nrNodes; i++)
     {
@@ -264,7 +264,7 @@ void updateBoundaryWater (double deltaT)
 
                 // Surface water available for runoff [m]
                 double hs = std::max(avgH - (nodeList[i].z + nodeList[i].pond), 0.);
-                if (hs > EPSILON_METER)
+                if (hs > EPSILON_RUNOFF)
                 {
                     double maxFlow = (hs * nodeList[i].volume_area) / deltaT;         // [m3 s-1] maximum flow available during the time step
                     // Manning equation
@@ -464,7 +464,7 @@ bool updateBoundaryHeat(double timeStep, double &reducedTimeStep)
 
                     // [J m-3 K-1]
                     double heatCapacity = SoilHeatCapacity(i, nodeList[i].oldH, nodeList[i].extra->Heat->oldT);
-                    // [K-1] ?
+                    // TODO [K] ?
                     double currentCourant = fabs(nodeList[i].extra->Heat->Qh) * timeStep / (heatCapacity * nodeList[i].volume_area);
                     CourantHeatBoundary = std::max(CourantHeatBoundary, currentCourant);
                 }
