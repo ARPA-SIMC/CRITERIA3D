@@ -83,11 +83,15 @@
 
     #define NOT_INITIALIZED_VINE -1
 
-    struct Tstate
-    {
+    class Crit3DHydrallState
+    { 
+    public:
+        Crit3DHydrallState();
+
         double standBiomass;
         double rootBiomass;
     };
+
 
     struct TstatePlant
     {
@@ -138,7 +142,7 @@
     };
 
     struct Tplant {
-
+        // TODO Cate unità di misura
         double myChlorophyllContent;
         double height; // in cm
         double myLeafWidth;
@@ -211,13 +215,17 @@
         double maxCarboxRate = 150;           // Vcmo at optimal temperature  umol m-2 s-1
     };
 
-    struct TlightExtinctionCoefficient
+
+    class Crit3DHydrallLightExtinctionCoefficient
     {
+    public:
+        Crit3DHydrallLightExtinctionCoefficient();
+
         double global;
         double par;
         double nir;
-
     };
+
 
     struct ThydrallDeltaTimeOutputs {
 
@@ -276,26 +284,29 @@
 
         void initialize(const gis::Crit3DRasterGrid& DEM);
     };
+
+
     class Crit3D_Hydrall{
     public:
 
-        //Crit3D_Hydrall();
+        Crit3D_Hydrall();
         //~Crit3D_Hydrall();
 
         void initialize();
+
         bool firstDayOfMonth;
         int firstMonthVegetativeSeason;
         bool isFirstYearSimulation;
         Crit3DDate currentDate;
-        Tstate stateVariable;
+        Crit3DHydrallState stateVariable;
         TbigLeaf sunlit,shaded, understorey;
         TweatherVariable weatherVariable;
         TenvironmentalVariable environmentalVariable;
         TparameterWangLeuning parameterWangLeuning;
         Tplant plant;
         ThydrallSoil soil;
-        TlightExtinctionCoefficient directLightExtinctionCoefficient;
-        TlightExtinctionCoefficient diffuseLightExtinctionCoefficient;
+        Crit3DHydrallLightExtinctionCoefficient directLightExtinctionCoefficient;
+        Crit3DHydrallLightExtinctionCoefficient diffuseLightExtinctionCoefficient;
         ThydrallDeltaTimeOutputs deltaTime;
         ThydrallNitrogen nitrogenContent;
         ThydrallBiomass treeBiomass, understoreyBiomass;
@@ -306,9 +317,6 @@
         double elevation;
         double understoreyLeafAreaIndexMax;
         double cover = 1; // TODO
-
-
-
 
         double annualGrossStandGrowth;
         double internalCarbonStorage ; // [kgC m-2]

@@ -275,11 +275,12 @@ void Crit3DMeteoGrid::setActive(unsigned int row,unsigned int col, bool active)
 
 
 // for visualization raster
-void Crit3DMeteoGrid::fillMeteoPoint(unsigned int row, unsigned int col, const std::string& code, const std::string& name, int height, bool active)
+void Crit3DMeteoGrid::fillMeteoPoint(unsigned int row, unsigned int col, const std::string& code, const std::string& name,
+                                     const std::string& dataset, int height, bool active)
 {
-
     _meteoPoints[row][col]->id = code;
     _meteoPoints[row][col]->name = name;
+    _meteoPoints[row][col]->dataset = dataset;
     _meteoPoints[row][col]->point.z = height;
     _meteoPoints[row][col]->active = active;
 
@@ -581,14 +582,13 @@ bool Crit3DMeteoGrid::getIdFromLatLon(double lat, double lon, std::string* id)
 }
 
 
-bool Crit3DMeteoGrid::getMeteoPointActiveId(int row, int col, std::string* id)
+bool Crit3DMeteoGrid::getMeteoPointActiveId(int row, int col, std::string &id)
 {
-    if (row >= 0 && row < _gridStructure.header().nrRows
-        && col >= 0 && col < _gridStructure.header().nrCols)
+    if (row >= 0 && row < _gridStructure.header().nrRows && col >= 0 && col < _gridStructure.header().nrCols)
     {
         if (_meteoPoints[row][col]->active)
         {
-            *id = _meteoPoints[row][col]->id;
+            id = _meteoPoints[row][col]->id;
             return true;
         }
     }

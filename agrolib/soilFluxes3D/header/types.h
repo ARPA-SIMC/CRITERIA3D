@@ -75,7 +75,7 @@
         double K_sat;               /*!< [m sec-1] saturated hydraulic conductivity */
         double Mualem_L;            /*!< [-] Mualem tortuosity parameter */
 
-        double Roughness;           /*!< [s m-1/3] surface: Manning roughness */
+        double roughness;           /*!< [s m-1/3] surface: Manning roughness */
 
         // for heat flux
         double organicMatter;       /*!< [-] fraction of organic matter */
@@ -98,7 +98,7 @@
         float x, y;                 /*!< [m] coordinates of the center of the voxel */
         double z;                   /*!< [m] heigth of the center of the voxel */
 
-        float pond;                 /*!< [m] only surface: height of immobilized water */
+        double pond;                /*!< [m] only surface: height of immobilized water */
 
         Tsoil *Soil;                /*!< soil pointer */
         Tboundary *boundary;        /*!< boundary pointer */

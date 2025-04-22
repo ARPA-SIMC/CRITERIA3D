@@ -195,6 +195,8 @@ double computeAtmosphericLatentHeatFlux(long i)
     return latentHeatFlow;
 }
 
+
+// [-]
 double getSurfaceWaterFraction(int i)
 {
     if (! nodeList[i].isSurface)
@@ -202,10 +204,11 @@ double getSurfaceWaterFraction(int i)
     else
     {
         double h = std::max(nodeList[i].H - nodeList[i].z, 0.);       // [m]
-        double h0 = std::max(double(nodeList[i].pond), 0.001);           // [m]
-        return h / h0;
+        double h0 = std::max(double(nodeList[i].pond), 0.001);        // [m]
+        return std::min(h / h0, 1.);
     }
 }
+
 
 void updateConductance()
 {
@@ -265,7 +268,7 @@ void updateBoundaryWater (double deltaT)
                 {
                     double maxFlow = (hs * nodeList[i].volume_area) / deltaT;         // [m3 s-1] maximum flow available during the time step
                     // Manning equation
-                    double v = (1. / nodeList[i].Soil->Roughness) * pow(hs, 2./3.) * sqrt(nodeList[i].boundary->slope);
+                    double v = (1. / nodeList[i].Soil->roughness) * pow(hs, 2./3.) * sqrt(nodeList[i].boundary->slope);
                     // on the surface boundaryArea is a side [m]
                     double flow = nodeList[i].boundary->boundaryArea * hs * v;        // [m3 s-1]
                     nodeList[i].boundary->waterFlow = -std::min(flow, maxFlow);
@@ -409,9 +412,10 @@ void updateBoundaryWater (double deltaT)
 }
 
 
-void updateBoundaryHeat()
+bool updateBoundaryHeat(double timeStep, double &newTimeStep)
 {
     double myWaterFlux, advTemperature, heatFlux;
+    double CourantHeatBoundary = 0;
 
     for (long i = 1; i < myStructure.nrNodes; i++)
     {
@@ -461,6 +465,9 @@ void updateBoundaryHeat()
                                                                       nodeList[i].boundary->Heat->sensibleFlux +
                                                                       nodeList[i].boundary->Heat->latentFlux +
                                                                       nodeList[i].boundary->Heat->advectiveHeatFlux);
+
+                    double currentCourant = fabs(nodeList[i].extra->Heat->Qh) * timeStep / SoilHeatCapacity(i, nodeList[i].oldH, nodeList[i].extra->Heat->oldT);
+                    CourantHeatBoundary = std::max(CourantHeatBoundary, currentCourant);
                 }
                 else if (nodeList[i].boundary->type == BOUNDARY_FREEDRAINAGE ||
                          nodeList[i].boundary->type == BOUNDARY_PRESCRIBEDTOTALPOTENTIAL)
@@ -491,4 +498,17 @@ void updateBoundaryHeat()
             }
         }
     }
+
+    if (CourantHeatBoundary > 0.01 && timeStep > myParameters.delta_t_min)
+    {
+        newTimeStep = std::max(timeStep / (CourantHeatBoundary * 100.), myParameters.delta_t_min);
+        if (newTimeStep > 1)
+        {
+            newTimeStep = floor(newTimeStep);
+        }
+
+        return false;
+    }
+
+    return true;
 }

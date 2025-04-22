@@ -10,6 +10,7 @@ Crit1DCompUnit::Crit1DCompUnit()
     idCase = "";
     idCropClass = "";
     idCrop = "";
+    idWaterTable = "";
 
     idSoil = "";
     idSoilNumber = NODATA;
@@ -30,27 +31,27 @@ Crit1DCompUnit::Crit1DCompUnit()
 
 ComputationUnitsDB::ComputationUnitsDB(QString dbname, QString &error)
 {
-    if(db.isOpen())
+    if(_db.isOpen())
     {
-        qDebug() << db.connectionName() << "is already open";
-        db.close();
+        qDebug() << _db.connectionName() << "is already open";
+        _db.close();
     }
 
-    db = QSqlDatabase::addDatabase("QSQLITE", QUuid::createUuid().toString());
-    db.setDatabaseName(dbname);
+    _db = QSqlDatabase::addDatabase("QSQLITE", QUuid::createUuid().toString());
+    _db.setDatabaseName(dbname);
 
-    if (!db.open())
+    if (!_db.open())
     {
-       error = db.lastError().text();
+       error = _db.lastError().text();
     }
 }
 
 
 ComputationUnitsDB::~ComputationUnitsDB()
 {
-    if ((db.isValid()) && (db.isOpen()))
+    if ((_db.isValid()) && (_db.isOpen()))
     {
-        db.close();
+        _db.close();
     }
 }
 
@@ -59,7 +60,7 @@ bool ComputationUnitsDB::writeListToCompUnitsTable(QList<QString> &idCase, QList
                                                    QList<QString> &idMeteo, QList<QString> &idSoil,
                                                    QList<double> &hectares, QString &error)
 {
-    QSqlQuery qry(db);
+    QSqlQuery qry(_db);
     qry.prepare("CREATE TABLE computational_units (ID_CASE TEXT, ID_CROP TEXT, ID_METEO TEXT, ID_SOIL TEXT, HECTARES NUMERIC, PRIMARY KEY(ID_CASE))");
     if( !qry.exec() )
     {
@@ -96,11 +97,12 @@ bool ComputationUnitsDB::writeListToCompUnitsTable(QList<QString> &idCase, QList
 bool ComputationUnitsDB::readComputationUnitList(std::vector<Crit1DCompUnit> &compUnitList, QString &error)
 {
     QString compUnitsTable = "computational_units";
-    QList<QString> fieldList = getFields(&db, compUnitsTable);
+    QList<QString> fieldList = getFields(&_db, compUnitsTable);
+    bool existWaterTableId = fieldList.contains("ID_WATERTABLE");
     bool existNumericalInfiltration = fieldList.contains("numerical_solution");
     bool existComputeLateralDrainage = fieldList.contains("compute_lateral_drainage");
     bool existWaterRetentionData = fieldList.contains("water_retention_fitting");
-    bool existWaterTable = fieldList.contains("use_water_table");
+    bool existUseWaterTable = fieldList.contains("use_water_table");
     bool existOptimalIrrigation = fieldList.contains("optimal_irrigation");
     bool existSlope = fieldList.contains("slope");
     // TODO others
@@ -108,7 +110,7 @@ bool ComputationUnitsDB::readComputationUnitList(std::vector<Crit1DCompUnit> &co
     QString queryString = "SELECT * FROM " + compUnitsTable;
     queryString += " ORDER BY ID_CROP, ID_SOIL, ID_METEO";
 
-    QSqlQuery query = db.exec(queryString);
+    QSqlQuery query = _db.exec(queryString);
     query.last();
     if (! query.isValid())
     {
@@ -143,11 +145,16 @@ bool ComputationUnitsDB::readComputationUnitList(std::vector<Crit1DCompUnit> &co
             compUnitList[i].idSoilNumber = NODATA;
         }
 
+        if (existWaterTableId)
+        {
+            compUnitList[i].idWaterTable = query.value("ID_WATERTABLE").toString();
+        }
+
         if (existNumericalInfiltration)
             compUnitList[i].isNumericalInfiltration = query.value("numerical_solution").toBool();
         if (existComputeLateralDrainage)
             compUnitList[i].isComputeLateralDrainage = query.value("compute_lateral_drainage").toBool();
-        if (existWaterTable)
+        if (existUseWaterTable)
             compUnitList[i].useWaterTableData = query.value("use_water_table").toBool();
         if (existOptimalIrrigation)
             compUnitList[i].isOptimalIrrigation = query.value("optimal_irrigation").toBool();

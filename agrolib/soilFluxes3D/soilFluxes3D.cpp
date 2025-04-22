@@ -139,17 +139,17 @@ int DLL_EXPORT __STDCALL initializeFluxes(long nrNodes, int nrLayers, int nrLate
    \brief setNumericalParameters
    sets numerical solution parameters
 */
-int DLL_EXPORT __STDCALL setNumericalParameters(float minDeltaT, float maxDeltaT, int maxIterationNumber,
-                        int maxApproximationsNumber, int ResidualTolerance, float MBRThreshold)
+int DLL_EXPORT __STDCALL setNumericalParameters(double minDeltaT, double maxDeltaT, int maxIterationNumber,
+                        int maxApproximationsNumber, int ResidualTolerance, double MBRThreshold)
 {
-    if (minDeltaT < 0.1f) minDeltaT = 0.1f;
+    if (minDeltaT < 0.1) minDeltaT = 0.1;
     if (minDeltaT > 3600) minDeltaT = 3600;
-    myParameters.delta_t_min = double(minDeltaT);
+    myParameters.delta_t_min = minDeltaT;
 
     if (maxDeltaT < 60) maxDeltaT = 60;
     if (maxDeltaT > 3600) maxDeltaT = 3600;
     if (maxDeltaT < minDeltaT) maxDeltaT = minDeltaT;
-    myParameters.delta_t_max = double(maxDeltaT);
+    myParameters.delta_t_max = maxDeltaT;
 
     myParameters.current_delta_t = myParameters.delta_t_max;
 
@@ -164,13 +164,13 @@ int DLL_EXPORT __STDCALL setNumericalParameters(float minDeltaT, float maxDeltaT
 
     myParameters.maxApproximationsNumber = maxApproximationsNumber;
 
-    if (ResidualTolerance < 4) ResidualTolerance = 4;
+    if (ResidualTolerance < 5) ResidualTolerance = 5;
     if (ResidualTolerance > 16) ResidualTolerance = 16;
-    myParameters.ResidualTolerance = pow(double(10.), -ResidualTolerance);
+    myParameters.ResidualTolerance = pow(10.0, -ResidualTolerance);
 
     if (MBRThreshold < 1) MBRThreshold = 1;
     if (MBRThreshold > 6) MBRThreshold = 6;
-    myParameters.MBRThreshold = pow(double(10.), double(-MBRThreshold));
+    myParameters.MBRThreshold = pow(10.0, -MBRThreshold);
 
     return CRIT3D_OK;
 }
@@ -380,10 +380,10 @@ int DLL_EXPORT __STDCALL setHydraulicProperties(int waterRetentionCurve,
  /*!
  * \brief setNodePond
  * \param nodeIndex
- * \param pond      [m]
+ * \param pond            maximum pond height [m]
  * \return OK/ERROR
  */
- int DLL_EXPORT __STDCALL setNodePond(long nodeIndex, float pond)
+ int DLL_EXPORT __STDCALL setNodePond(long nodeIndex, double pond)
  {
      if (nodeList == nullptr)
          return MEMORY_ERROR;
@@ -473,7 +473,7 @@ int DLL_EXPORT __STDCALL setHydraulicProperties(int waterRetentionCurve,
     if (surfaceIndex > int(Surface_List.size()-1))
         Surface_List.resize(surfaceIndex+1);
 
-    Surface_List[surfaceIndex].Roughness = roughness;
+    Surface_List[surfaceIndex].roughness = roughness;
 
     return CRIT3D_OK;
  }
@@ -644,7 +644,7 @@ int DLL_EXPORT __STDCALL setHydraulicProperties(int waterRetentionCurve,
  * \param nodeIndex
  * \return surface maximum pond [m]
  */
- float DLL_EXPORT __STDCALL getPond(long nodeIndex)
+ double DLL_EXPORT __STDCALL getPond(long nodeIndex)
  {
      if (nodeList == nullptr)
          return MEMORY_ERROR;
@@ -1054,47 +1054,46 @@ int DLL_EXPORT __STDCALL setHydraulicProperties(int waterRetentionCurve,
  */
 double DLL_EXPORT __STDCALL computeStep(double maxTime)
 {
-    double dtWater, dtHeat;
-
     if (myStructure.computeHeat)
     {
         initializeHeatFluxes(false, true);
         updateConductance();
     }
 
+    double dtWater;
     if (myStructure.computeWater)
+    {
         computeWater(maxTime, &dtWater);
+    }
     else
+    {
         dtWater = MINVALUE(maxTime, myParameters.delta_t_max);
+    }
 
-    dtHeat = dtWater;
+    double dtHeat = dtWater;
 
     if (myStructure.computeHeat)
     {
-        double dtHeatCurrent = dtHeat;
-
-        saveWaterFluxes(dtHeatCurrent, dtWater);
+        saveWaterFluxes(dtHeat, dtWater);
 
         double dtHeatSum = 0;
         while (dtHeatSum < dtWater)
         {
-            dtHeatCurrent = MINVALUE(dtHeat, dtWater - dtHeatSum);
+            dtHeat = std::min(dtHeat, dtWater - dtHeatSum);
 
-            updateBoundaryHeat();
+            // it sets dtHeat using Courant
+            double newTimeStep = dtHeat;
+            while (! updateBoundaryHeat(dtHeat, newTimeStep))
+            {
+                dtHeat = newTimeStep;
+            }
 
-            if (HeatComputation(dtHeatCurrent, dtWater))
-            {
-                dtHeatSum += dtHeat;
-            }
-            else
-            {
-                restoreHeat();
-                dtHeat = myParameters.current_delta_t;
-            }
+            HeatComputation(dtHeat, dtWater);
+            dtHeatSum += dtHeat;
         }
     }
 
-    return MINVALUE(dtWater, dtHeat);
+    return dtWater;
 }
 
 /*!
@@ -1536,7 +1535,7 @@ double DLL_EXPORT __STDCALL getHeat(long i, double h)
         myHeat += thetaV * latentHeatVaporization(nodeList[i].extra->Heat->T - ZEROCELSIUS) * WATER_DENSITY * nodeList[i].volume_area;
     }
 
-    return (myHeat);
+    return myHeat;
 }
 
 }

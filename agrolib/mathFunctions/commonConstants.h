@@ -204,7 +204,7 @@
     #define HEAT_CAPACITY_WATER 4182000.
     #define HEAT_CAPACITY_AIR  1290.
     #define HEAT_CAPACITY_SNOW 2100000.
-    #define HEAT_CAPACITY_MINERAL 231000
+    #define HEAT_CAPACITY_MINERAL 231000.
 
     // [J kg-1 K-1] specific heat
     #define HEAT_CAPACITY_WATER_VAPOR 1996.

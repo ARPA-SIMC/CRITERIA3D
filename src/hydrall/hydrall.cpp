@@ -17,6 +17,20 @@
 #include "physics.h"
 #include "statistics.h"
 
+
+Crit3DHydrallLightExtinctionCoefficient::Crit3DHydrallLightExtinctionCoefficient()
+{
+    global = NODATA;
+    par = NODATA;
+    nir = NODATA;
+}
+
+Crit3DHydrallState::Crit3DHydrallState()
+{
+    standBiomass = NODATA;
+    rootBiomass = NODATA;
+}
+
 Crit3DHydrallMaps::Crit3DHydrallMaps()
 {
     mapLAI = new gis::Crit3DRasterGrid;
@@ -170,10 +184,17 @@ double Crit3D_Hydrall::photosynthesisAndTranspirationUnderstorey()
 }
 
 
+Crit3D_Hydrall::Crit3D_Hydrall()
+{
+    initialize();
+}
+
+
 void Crit3D_Hydrall::initialize()
 {
     plant.myChlorophyllContent = NODATA;
     elevation = NODATA;
+    // .. TODO
 }
 
 void Crit3D_Hydrall::setHourlyVariables(double temp, double irradiance , double prec , double relativeHumidity , double windSpeed, double directIrradiance, double diffuseIrradiance, double cloudIndex, double atmosphericPressure, Crit3DDate currentDate, double sunElevation,double meanTemp30Days,double et0)

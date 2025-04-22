@@ -619,7 +619,7 @@ void MainWindow::callNewMeteoWidget(std::string id, std::string name, std::strin
     bool isAppend = false;
     if (isGrid)
     {
-        myProject.showMeteoWidgetGrid(id, isAppend);
+        myProject.showMeteoWidgetGrid(id, dataset, isAppend);
     }
     else
     {
@@ -634,7 +634,7 @@ void MainWindow::callAppendMeteoWidget(std::string id, std::string name, std::st
     bool isAppend = true;
     if (isGrid)
     {
-        myProject.showMeteoWidgetGrid(id, isAppend);
+        myProject.showMeteoWidgetGrid(id, dataset, isAppend);
     }
     else
     {
@@ -2259,6 +2259,7 @@ void MainWindow::on_actionCriteria3D_set_processes_triggered()
         myProject.processes.setComputeSnow(dialogProcesses.snowProcess->isChecked());
         myProject.processes.setComputeCrop(dialogProcesses.cropProcess->isChecked());
         myProject.processes.setComputeWater(dialogProcesses.waterFluxesProcess->isChecked());
+        // TODO Cate usare logWarning per avvisare che verranno attivati processi
         myProject.processes.setComputeHydrall(dialogProcesses.hydrallProcess->isChecked());
     }
 }

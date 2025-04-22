@@ -30,10 +30,12 @@ INCLUDEPATH += ../crit3dDate ../mathFunctions
 SOURCES += \
     computationUnitsDb.cpp \
     logger.cpp \
-    utilities.cpp
+    utilities.cpp \
+    waterTableDb.cpp
 
 HEADERS += \
     computationUnitsDb.h \
     logger.h \
-    utilities.h
+    utilities.h \
+    waterTableDb.h
 

@@ -1,5 +1,6 @@
 #include "gdalRasterFunctions.h"
 #include "commonConstants.h"
+#include "basicMath.h"
 
 #include <iostream>
 #include <cmath>
@@ -55,15 +56,16 @@ bool convertGdalRaster(GDALDataset* dataset, gis::Crit3DRasterGrid* myRaster, in
 
     // projection
     OGRSpatialReference* spatialReference;
-    if (dataset->GetProjectionRef() != "")
+    QString projectionRef = QString::fromStdString(dataset->GetProjectionRef());
+    if (projectionRef != "")
     {
-        qDebug() << "Projection =" << dataset->GetProjectionRef();
+        qDebug() << "Projection =" << projectionRef;
         spatialReference = new OGRSpatialReference(dataset->GetProjectionRef());
 
-        // TODO geo projection?
+        // TODO geo projection
         if (! spatialReference->IsProjected())
         {
-            errorStr = "Not projected data: " + QString::fromStdString(dataset->GetProjectionRef());
+            errorStr = "Not projected data: " + projectionRef;
             return false;
         }
 
@@ -166,7 +168,7 @@ bool convertGdalRaster(GDALDataset* dataset, gis::Crit3DRasterGrid* myRaster, in
         for (int row = 0; row < myRaster->header->nrRows; row++)
             for (int col = 0; col < myRaster->header->nrCols; col++)
             {
-                if (data[row*xSize+col] == nodataValue)
+                if (isEqual(data[row*xSize+col], nodataValue))
                 {
                     myRaster->value[row][col] = myRaster->header->flag;
                 }
@@ -196,7 +198,7 @@ bool convertGdalRaster(GDALDataset* dataset, gis::Crit3DRasterGrid* myRaster, in
         for (int row = 0; row < myRaster->header->nrRows; row++)
             for (int col = 0; col < myRaster->header->nrCols; col++)
             {
-                if (data[row*xSize+col] == nodataValue)
+                if (isEqual(data[row*xSize+col], float(nodataValue)))
                 {
                     myRaster->value[row][col] = myRaster->header->flag;
                 }
