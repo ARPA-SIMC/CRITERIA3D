@@ -1,8 +1,24 @@
+#include "commonConstants.h"
 #include "waterTableDb.h"
 #include <QtSql>
 
 
-WaterTableDb::WaterTableDb(QString dbName, QString &error)
+Crit1DWaterTableParameters::Crit1DWaterTableParameters()
+{
+    id = "";
+    lat = NODATA;
+    lon = NODATA;
+
+    nrDaysPeriod = NODATA;
+    alpha = NODATA;
+    h0 = NODATA;
+    avgDailyCWB = NODATA;
+
+    isLoaded = false;
+}
+
+
+WaterTableDb::WaterTableDb(QString dbName, QString &errorString)
 {
     if(_db.isOpen())
     {
@@ -10,12 +26,17 @@ WaterTableDb::WaterTableDb(QString dbName, QString &error)
         _db.close();
     }
 
+    if (! QFile::exists(dbName))
+    {
+        errorString = "waterTable DB doesn't exist:\n" + dbName;
+    }
+
     _db = QSqlDatabase::addDatabase("QSQLITE", QUuid::createUuid().toString());
     _db.setDatabaseName(dbName);
 
     if (!_db.open())
     {
-        error = _db.lastError().text();
+        errorString = _db.lastError().text();
     }
 }
 
@@ -30,7 +51,7 @@ WaterTableDb::~WaterTableDb()
 
 
 
-bool WaterTableDb::readSingleWaterTableParameters(const QString &id, waterTableParameters &waterTable, QString &error)
+bool WaterTableDb::readSingleWaterTableParameters(const QString &id, Crit1DWaterTableParameters &wtParameters, QString &error)
 {
     QString queryString = "SELECT * FROM wellProperties WHERE ID_WATERTABLE='" + id + "'";
 
@@ -40,23 +61,25 @@ bool WaterTableDb::readSingleWaterTableParameters(const QString &id, waterTableP
     {
         if (! query.lastError().text().isEmpty())
         {
-            error = "Error in reading wellProperties.\n" + query.lastError().text();
+            error = "Error in reading wellProperties in waterTable db.\n" + query.lastError().text();
         }
         else
         {
-            error = "Missing parameters for the id: " + id;
+            error = "Missing waterTable ID in wellProperties table: " + id;
         }
 
         return false;
     }
 
-    waterTable.id = query.value("ID_WATERTABLE").toString();
-    waterTable.lat = query.value("lat").toDouble();
-    waterTable.lon = query.value("lon").toDouble();
-    waterTable.alpha = query.value("alpha").toDouble();
-    waterTable.h0  = query.value("h0").toDouble();
-    waterTable.avgDailyCWB = query.value("avgDailyCWB").toDouble();
-    waterTable.nrDaysPeriod = query.value("nrDays").toInt();
+    wtParameters.id = query.value("ID_WATERTABLE").toString();
+    wtParameters.lat = query.value("lat").toDouble();
+    wtParameters.lon = query.value("lon").toDouble();
+    wtParameters.alpha = query.value("alpha").toDouble();
+    wtParameters.h0  = query.value("h0").toDouble();
+    wtParameters.avgDailyCWB = query.value("avgDailyCWB").toDouble();
+    wtParameters.nrDaysPeriod = query.value("nrDays").toInt();
+
+    wtParameters.isLoaded = true;
 
     return true;
 }
