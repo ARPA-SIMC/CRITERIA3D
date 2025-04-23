@@ -426,7 +426,16 @@ void Crit3DProject::assignETreal()
 
                     if (processes.computeHydrall)
                     {
-                        hydrallModel.soil.rootDensity = currentCrop.roots.rootDensity; //TODO cate change soil to class
+                        if (! currentCrop.roots.rootDensity.empty())
+                        {
+                            hydrallModel.soil.rootDensity = currentCrop.roots.rootDensity; //TODO cate make hydrall classes private
+                        }
+                        else
+                        {
+                            hydrallModel.soil.rootDensity.clear();
+                            hydrallModel.soil.rootDensity.resize(nrLayers);
+                        }
+                        hydrallModel.plant.leafAreaIndexCanopy = MAXVALUE(0, currentLAI);
                         computeHydrallModel(row, col);
 
                     }

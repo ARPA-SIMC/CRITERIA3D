@@ -223,9 +223,9 @@ bool Crit3D_Hydrall::computeHydrallPoint(Crit3DDate myDate, double myTemperature
     //getCO2(myDate, myTemperature, myElevation);
 
 
-    // da qui in poi bisogna fare un ciclo su tutte le righe e le colonne
+
     plant.leafAreaIndexCanopyMax = statePlant.treecumulatedBiomassFoliage *  plant.specificLeafArea / cover;
-    plant.leafAreaIndexCanopy = MAXVALUE(4,plant.leafAreaIndexCanopyMax * computeLAI(myDate));
+    //plant.leafAreaIndexCanopy = MAXVALUE(4,plant.leafAreaIndexCanopyMax * computeLAI(myDate));
     understoreyLeafAreaIndexMax = statePlant.understoreycumulatedBiomassFoliage * plant.specificLeafArea;
     understorey.leafAreaIndex = MAXVALUE(LAIMIN,understoreyLeafAreaIndexMax* computeLAI(myDate));
 
