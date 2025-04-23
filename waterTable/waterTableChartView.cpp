@@ -1,4 +1,5 @@
 #include "waterTableChartView.h"
+#include "commonConstants.h"
 
 
 WaterTableChartView::WaterTableChartView(QWidget *parent) :
@@ -41,7 +42,7 @@ WaterTableChartView::WaterTableChartView(QWidget *parent) :
 }
 
 
-void WaterTableChartView::drawWaterTable(WaterTable &waterTable, float maximumObservedDepth)
+void WaterTableChartView::drawWaterTable(const WaterTable &waterTable, float maximumObservedDepth)
 {
     axisY->setMax(maximumObservedDepth);    // unit of observed watertable data, usually [cm]
     axisY->setMin(0);
@@ -63,15 +64,14 @@ void WaterTableChartView::drawWaterTable(WaterTable &waterTable, float maximumOb
         interpolationSeries->append(currentDateTime.toMSecsSinceEpoch(), waterTable.getInterpolatedData(index));
         climateSeries->append(currentDateTime.toMSecsSinceEpoch(), waterTable.getWaterTableClimate(currentDateTime.date()));
 
-        if(waterTable.getWell()->depths.contains(currentDateTime.date()))
+        int obsDepth = waterTable.getObsDepth(currentDateTime.date());
+        if  (obsDepth != NODATA)
         {
-            int myDepth = waterTable.getWell()->depths[currentDateTime.date()];
-            obsDepthSeries->append(currentDateTime.toMSecsSinceEpoch(), myDepth);
+            obsDepthSeries->append(currentDateTime.toMSecsSinceEpoch(), obsDepth);
         }
 
         currentDateTime = currentDateTime.addDays(1);
     }
-
 
     chart()->addSeries(hindcastSeries);
     chart()->addSeries(climateSeries);

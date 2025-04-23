@@ -56,7 +56,7 @@ class WaterTable
         bool computeWaterTableIndices();
 
         float getWaterTableDaily(const QDate &myDate);
-        float getWaterTableClimate(const QDate &myDate);
+        float getWaterTableClimate(const QDate &myDate) const;
 
         bool computeWaterTableClimate(const QDate &currentDate, int yearFrom, int yearTo, float &myValue);
         bool getWaterTableInterpolation(const QDate &myDate, float &myValue, float &myDelta, int &deltaDays);
@@ -78,13 +78,12 @@ class WaterTable
         int getNrInterpolatedData() const { return (int)_interpolationSeries.size(); }
 
         QString getIdWell() const { return _well.getId(); }
-        QDate getFirstDate() { return std::min(_well.getFirstObsDate(), _firstMeteoDate); }
-        QDate getFirstDateWell() { return _well.getFirstObsDate(); }
-        QDate getLastDateWell() { return _well.getLastObsDate(); }
-        Well* getWell() { return &_well; }
+        QDate getFirstDate() const { return std::min(_well.getFirstObsDate(), _firstMeteoDate); }
 
-        float getHindcast(int index);
-        float getInterpolatedData(int index);
+        float getObsDepth(const QDate &myDate) const;
+
+        float getHindcast(int index) const;
+        float getInterpolatedData(int index) const;
 
     private:
         float _WTClimateMonthly[12];
@@ -104,7 +103,6 @@ class WaterTable
         std::vector<float> _inputTMax;
         std::vector<float> _inputPrec;
         std::vector<float> _etpValues;
-        std::vector<float> _precValues;
 
         int _nrDaysPeriod;           // [days]
         double _alpha;               // [-]

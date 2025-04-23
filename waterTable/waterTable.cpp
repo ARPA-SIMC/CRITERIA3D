@@ -16,18 +16,11 @@ WaterTable::WaterTable(const std::vector<float> &inputTMin, const std::vector<fl
                        const QDate &firstMeteoDate, const QDate &lastMeteoDate, const Crit3DMeteoSettings &meteoSettings)
     : _inputTMin(inputTMin), _inputTMax(inputTMax), _inputPrec(inputPrec),
     _firstMeteoDate(firstMeteoDate), _lastMeteoDate(lastMeteoDate), _meteoSettings(meteoSettings)
-{
-    initializeWaterTable();
-}
+{ }
 
 
 void WaterTable::initializeWaterTable()
 {
-    cleanAllVectors();
-
-    _firstMeteoDate = QDate();
-    _lastMeteoDate = QDate();
-
     _isCWBEquationReady = false;
     _isClimateReady = false;
 
@@ -59,7 +52,6 @@ void WaterTable::cleanAllVectors()
     _inputTMax.clear();
     _inputPrec.clear();
     _etpValues.clear();
-    _precValues.clear();
     _hindcastSeries.clear();
     _interpolationSeries.clear();
 
@@ -148,11 +140,11 @@ bool WaterTable::setMeteoData(const QDate &date, float tmin, float tmax, float p
 {
     int index = _firstMeteoDate.daysTo(date);
 
-    if (index < int(_etpValues.size()) && index < int(_precValues.size()))
+    if (index < int(_etpValues.size()) && index < int(_inputTMin.size()))
     {
         Crit3DDate myDate = Crit3DDate(date.day(), date.month(), date.year());
         _etpValues[index] = dailyEtpHargreaves(tmin, tmax, myDate, _well.getLatitude(), &_meteoSettings);
-        _precValues[index] = prec;
+        _inputTMin[index] = prec;
         return true;
     }
 
@@ -170,7 +162,7 @@ void WaterTable::setParameters(int nrDaysPeriod, double alpha, double h0, double
 }
 
 
-float WaterTable::getHindcast(int index)
+float WaterTable::getHindcast(int index) const
 {
     if (index >= _hindcastSeries.size())
     {
@@ -181,7 +173,7 @@ float WaterTable::getHindcast(int index)
 }
 
 
-float WaterTable::getInterpolatedData(int index)
+float WaterTable::getInterpolatedData(int index) const
 {
     if (index >= _interpolationSeries.size())
     {
@@ -195,7 +187,6 @@ float WaterTable::getInterpolatedData(int index)
 bool WaterTable::computeWholeSeriesETP(bool isUpdateAvgCWB)
 {
     _etpValues.clear();
-    _precValues.clear();
 
     if (_inputTMin.size() != _inputTMax.size() || _inputTMin.size() != _inputPrec.size())
     {
@@ -211,7 +202,7 @@ bool WaterTable::computeWholeSeriesETP(bool isUpdateAvgCWB)
 
     float sumCWB = 0;
     int nrValidDays = 0;
-    int nrOfData = (int)_inputTMin.size();
+    int nrOfData = (int)_inputPrec.size();
     for (int i = 0; i < nrOfData; i++)
     {
         QDate myCurrentDate = _firstMeteoDate.addDays(i);
@@ -223,7 +214,6 @@ bool WaterTable::computeWholeSeriesETP(bool isUpdateAvgCWB)
         etp = dailyEtpHargreaves(Tmin, Tmax, myDate, lat, &_meteoSettings);
 
         _etpValues.push_back(etp);
-        _precValues.push_back(prec);
 
         if (etp != NODATA && prec != NODATA)
         {
@@ -319,10 +309,10 @@ double WaterTable::computeCWB(const QDate &myDate, int nrDays)
     {
         actualDate = myDate.addDays(-shift);
         int index = _firstMeteoDate.daysTo(actualDate);
-        if (index >= 0 && index < int(_precValues.size()))
+        if (index >= 0 && index < int(_inputPrec.size()))
         {
             float etp = _etpValues[index];
-            float prec = _precValues[index];
+            float prec = _inputPrec[index];
             if (! isEqual(etp, NODATA) && ! isEqual(prec, NODATA))
             {
                 double currentCWB = double(prec - etp);
@@ -437,7 +427,16 @@ float WaterTable::getWaterTableDaily(const QDate &myDate)
 }
 
 
-float WaterTable::getWaterTableClimate(const QDate &myDate)
+float WaterTable::getObsDepth(const QDate &myDate) const
+{
+    if (! _well.depths.contains(myDate))
+        return NODATA;
+
+    return _well.depths[myDate];
+}
+
+
+float WaterTable::getWaterTableClimate(const QDate &myDate) const
 {
     if (! _isClimateReady)
     {
