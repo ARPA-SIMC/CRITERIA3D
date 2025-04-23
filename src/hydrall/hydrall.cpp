@@ -70,6 +70,128 @@ Crit3DHydrallWeatherVariable::Crit3DHydrallWeatherVariable()
     meanDailyTemp = NODATA;
 }
 
+Crit3DHydrallEnvironmentalVariable::Crit3DHydrallEnvironmentalVariable()
+{
+    CO2 = NODATA;
+    sineSolarElevation = NODATA;
+}
+
+Crit3DHydrallPlant::Crit3DHydrallPlant()
+{
+    myChlorophyllContent = NODATA;
+    height = NODATA; // in cm
+    myLeafWidth = NODATA;
+    isAmphystomatic = false;
+    foliageLongevity = NODATA;
+    sapwoodLongevity = NODATA;
+    fineRootLongevity = NODATA;
+    foliageDensity = NODATA;
+    woodDensity = RHOS;
+    specificLeafArea = NODATA;
+    psiLeaf = NODATA;
+    psiLeafCritical = NODATA;
+    psiLeafMinimum = NODATA;
+    transpirationPerUnitFoliageAreaCritical = NODATA;
+    leafAreaIndexCanopy = NODATA;
+    leafAreaIndexCanopyMax = NODATA;
+    standVolume = NODATA; // maps referred to stand volume MUST be initialized
+    currentIncrementalVolume = EPSILON;
+}
+
+Crit3DHydrallSoil::Crit3DHydrallSoil()
+{
+    layersNr = NODATA;
+    totalDepth = NODATA;
+    temperature = NODATA;
+    rootDensity.clear();
+    stressCoefficient.clear();
+    waterContent.clear();
+    wiltingPoint.clear();
+    fieldCapacity.clear();
+    saturation.clear();
+    hydraulicConductivity.clear();
+    satHydraulicConductivity.clear();
+    nodeThickness.clear();
+    clay.clear();
+    sand.clear();
+    silt.clear();
+    bulkDensity.clear();
+}
+
+Crit3DHydrallBigLeaf::Crit3DHydrallBigLeaf()
+{
+    absorbedPAR = NODATA;
+    isothermalNetRadiation = NODATA;
+    leafAreaIndex = NODATA;
+    totalConductanceHeatExchange = NODATA;
+    aerodynamicConductanceHeatExchange = NODATA;
+    aerodynamicConductanceCO2Exchange = NODATA;
+    leafTemperature = NODATA;
+    darkRespiration = NODATA;
+    minimalStomatalConductance = NODATA;
+    maximalCarboxylationRate = NODATA;
+    maximalElectronTrasportRate = NODATA;
+    carbonMichaelisMentenConstant = NODATA;
+    oxygenMichaelisMentenConstant = NODATA;
+    compensationPoint = NODATA;
+    convexityFactorNonRectangularHyperbola = NODATA;
+    quantumYieldPS2 = NODATA;
+    assimilation = NODATA;
+    transpiration = NODATA;
+    stomatalConductance = NODATA;
+}
+
+Crit3DHydrallParameterWangLeuning::Crit3DHydrallParameterWangLeuning()
+{
+    optimalTemperatureForPhotosynthesis = 298.15; // K
+    stomatalConductanceMin = 0.01; // [Pa Pa-1]
+    sensitivityToVapourPressureDeficit = 1300;
+    alpha = 340000; //1100000; // this parameter must be multiplied by 10^-6 in order to be compliant with literature
+    psiLeaf = 1800;                 // kPa
+    waterStressThreshold = NODATA;
+    maxCarboxRate = 150;           // Vcmo at optimal temperature  umol m-2 s-1
+}
+
+Crit3DHydrallDeltaTimeOutputs::Crit3DHydrallDeltaTimeOutputs()
+{
+    netAssimilation = NODATA;
+    grossAssimilation = NODATA;
+    transpiration = NODATA;
+    interceptedWater = NODATA;
+    netDryMatter = NODATA;
+    absorbedPAR = NODATA;
+    respiration = NODATA;
+    transpirationGrass = NODATA;
+    transpirationNoStress = NODATA;
+    evaporation = NODATA;
+    evapoTranspiration = NODATA;
+    understoreyNetAssimilation = NODATA;
+}
+
+Crit3DHydrallNitrogen::Crit3DHydrallNitrogen()
+{
+    interceptLeaf = NODATA;
+    slopeLeaf = NODATA;
+    leaf = 0.024;  //[kg kgDM-1]
+    stem = 0.0078; //[kg kgDM-1]
+    root = 0.0021; //[kg kgDM-1]
+}
+
+Crit3DHydrallBiomass::Crit3DHydrallBiomass()
+{
+    total = NODATA;
+    leaf = 0.1;
+    sapwood = 0.2;
+    fineRoot = 0.05;
+}
+
+Crit3DHydrallAllocationCoefficient::Crit3DHydrallAllocationCoefficient()
+{
+    toFoliage = NODATA;
+    toFineRoots = NODATA;
+    toSapwood = NODATA;
+}
+
 Crit3DHydrallMaps::Crit3DHydrallMaps()
 {
     mapLAI = new gis::Crit3DRasterGrid;

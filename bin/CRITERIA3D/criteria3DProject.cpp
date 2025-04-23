@@ -658,7 +658,7 @@ bool Crit3DProject::runModels(QDateTime firstTime, QDateTime lastTime, bool isRe
             }
         }
 
-        if (processes.computeWater)
+        if (processes.computeHydrall)
         {
             // TODO Cate sostituire con dailyUpdate Hydrall
             if (myDate.day() == 1)
