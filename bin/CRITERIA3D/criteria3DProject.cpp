@@ -349,6 +349,31 @@ void Crit3DProject::dailyUpdateHydrallMaps()
     return;
 }
 
+bool Crit3DProject::dailyUpdateHydrall(const QDate &myDate)
+{
+
+    // TODO Cate sostituire con dailyUpdate Hydrall
+    if (myDate.day() == 1)
+    {
+        hydrallModel.firstDayOfMonth = true;
+        // update of rothC (monthly)
+        if (myDate.month() == hydrallModel.firstMonthVegetativeSeason) //TODO
+        {
+            /* in case of the first day of the year
+                 * the algorithms devoted to allocate dry matter
+                 * into the biomass pools (foliage, sapwood and fine roots)
+                 * */
+            //growthstand
+
+        }
+    }
+    else
+    {
+        hydrallModel.firstDayOfMonth = false;
+    }
+    return true;
+}
+
 
 /*!
  * \brief assignETreal
@@ -660,25 +685,7 @@ bool Crit3DProject::runModels(QDateTime firstTime, QDateTime lastTime, bool isRe
 
         if (processes.computeHydrall)
         {
-            // TODO Cate sostituire con dailyUpdate Hydrall
-            if (myDate.day() == 1)
-            {
-                hydrallModel.firstDayOfMonth = true;
-                // update of rothC (monthly)
-                if (myDate.month() == hydrallModel.firstMonthVegetativeSeason) //TODO
-                {
-                /* in case of the first day of the year
-                 * the algorithms devoted to allocate dry matter
-                 * into the biomass pools (foliage, sapwood and fine roots)
-                 * */
-                    //growthstand
-
-                }
-            }
-            else
-            {
-                hydrallModel.firstDayOfMonth = false;
-            }
+            dailyUpdateHydrall(myDate);
         }
 
         // cycle on hours

@@ -107,6 +107,7 @@
 
         bool computeHydrallModel(int row, int col);
         void dailyUpdateHydrallMaps();
+        bool dailyUpdateHydrall(const QDate &myDate);
 
         bool computeSnowModel();
         void computeSnowPoint(int row, int col);
