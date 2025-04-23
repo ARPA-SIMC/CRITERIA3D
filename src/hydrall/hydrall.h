@@ -125,7 +125,11 @@
 
     };
 
-    struct TweatherVariable {
+    class Crit3DHydrallWeatherVariable {
+
+    public:
+        Crit3DHydrallWeatherVariable();
+
         Crit3DHydrallWeatherDerivedVariable derived;
 
         double myInstantTemp;
@@ -307,7 +311,7 @@
         Crit3DDate currentDate;
         Crit3DHydrallState stateVariable;
         TbigLeaf sunlit,shaded, understorey;
-        TweatherVariable weatherVariable;
+        Crit3DHydrallWeatherVariable weatherVariable;
         TenvironmentalVariable environmentalVariable;
         TparameterWangLeuning parameterWangLeuning;
         Tplant plant;

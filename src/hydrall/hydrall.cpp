@@ -56,6 +56,20 @@ Crit3DHydrallWeatherDerivedVariable::Crit3DHydrallWeatherDerivedVariable()
     et0 = NODATA;
 }
 
+Crit3DHydrallWeatherVariable::Crit3DHydrallWeatherVariable()
+{
+    myInstantTemp = NODATA;
+    prec = NODATA;
+    irradiance = NODATA;
+    relativeHumidity = NODATA;
+    windSpeed = NODATA;
+    atmosphericPressure = NODATA;
+    //meanDailyTemperature;
+    vaporPressureDeficit = NODATA;
+    last30DaysTAvg = NODATA;
+    meanDailyTemp = NODATA;
+}
+
 Crit3DHydrallMaps::Crit3DHydrallMaps()
 {
     mapLAI = new gis::Crit3DRasterGrid;
