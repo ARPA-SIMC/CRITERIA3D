@@ -184,8 +184,8 @@ void saveHeatFlux(TlinkedNode* myLink, int fluxType, double myValue)
 
 /*!
  * \brief vapor volumetric water equivalent
- * \param [m] h
- * \param [K] temperature
+ * \param h     water potential with sign [m]
+ * \param T     temperature [K]
  * \param i
  * \return [m3 m-3] vapor volumetric water equivalent
  */
@@ -259,9 +259,9 @@ double IsothermalVaporConductivity(long i, double h, double myT)
 
 /*!
  * \brief volumetric heat capacity
- * \param i
- * \param h
- * \param T
+ * \param i     node index
+ * \param h     water potential with sign [m]
+ * \param T     [K]
  * \return volumetric heat capacity [J m-3 K-1]
  */
 double SoilHeatCapacity(long i, double h, double T)
@@ -269,7 +269,7 @@ double SoilHeatCapacity(long i, double h, double T)
     double theta = theta_from_sign_Psi(h, i);
     double thetaV = VaporThetaV(h, T, i);
     double bulkDensity = estimateBulkDensity(i);
-    double heatCapacity = (bulkDensity / 2.65) * HEAT_CAPACITY_MINERAL + theta * HEAT_CAPACITY_WATER;
+    double heatCapacity = (bulkDensity / QUARTZ_DENSITY) * HEAT_CAPACITY_MINERAL + theta * HEAT_CAPACITY_WATER;
 
     if (myStructure.computeHeatVapor)
     {
@@ -517,8 +517,9 @@ double ThermalLiquidFlux(long i, TlinkedNode *myLink, int myProcess, double time
     // m3 s-1
     double myFlow = myFlowDensity * (*myLink).area;
 
-    return (myFlow);
+    return myFlow;
 }
+
 
 /*!
  * \brief [kg s-1] Thermal vapor flux
@@ -528,8 +529,6 @@ double ThermalLiquidFlux(long i, TlinkedNode *myLink, int myProcess, double time
  */
 double ThermalVaporFlux(long i, TlinkedNode *myLink, int myProcess, double timeStep, double timeStepWater)
 {
-    //TODO: inserire time step water per calcolo più preciso
-
     long j = (*myLink).index;
 
     // temperatures (K) and water potential (m)
@@ -560,13 +559,12 @@ double ThermalVaporFlux(long i, TlinkedNode *myLink, int myProcess, double timeS
     double meanKv = computeMean(Kvt, KvtLink);
 
     // kg m-2 s-1
-    double myFlowDensity = meanKv * (tavgLink - tavg) / distance(i, j);
+    double flowDensity = meanKv * (tavgLink - tavg) / distance(i, j);
 
     // kg s-1
-    double myFlow = myFlowDensity * (*myLink).area;
-
-    return (myFlow);
+    return flowDensity * (*myLink).area;
 }
+
 
 /*!
  * \brief isothermal vapor flux
@@ -780,8 +778,6 @@ void saveNodeWaterFlux(long i, TlinkedNode *link, double timeStepHeat, double ti
         link->linkedExtra->heatFlux->fluxes[WATERFLUX_VAPOR_ISOTHERMAL] = float(isothVapFlux);
         link->linkedExtra->heatFlux->fluxes[WATERFLUX_VAPOR_THERMAL] = float(thermVapFlux);
     }
-
-    return;
 }
 
 

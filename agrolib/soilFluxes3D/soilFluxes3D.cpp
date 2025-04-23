@@ -142,12 +142,12 @@ int DLL_EXPORT __STDCALL initializeFluxes(long nrNodes, int nrLayers, int nrLate
 int DLL_EXPORT __STDCALL setNumericalParameters(double minDeltaT, double maxDeltaT, int maxIterationNumber,
                         int maxApproximationsNumber, int ResidualTolerance, double MBRThreshold)
 {
-    if (minDeltaT < 0.1) minDeltaT = 0.1;
-    if (minDeltaT > 3600) minDeltaT = 3600;
+    if (minDeltaT < 0.01) minDeltaT = 0.01;
+    if (minDeltaT > HOUR_SECONDS) minDeltaT = HOUR_SECONDS;
     myParameters.delta_t_min = minDeltaT;
 
     if (maxDeltaT < 60) maxDeltaT = 60;
-    if (maxDeltaT > 3600) maxDeltaT = 3600;
+    if (maxDeltaT > HOUR_SECONDS) maxDeltaT = HOUR_SECONDS;
     if (maxDeltaT < minDeltaT) maxDeltaT = minDeltaT;
     myParameters.delta_t_max = maxDeltaT;
 
@@ -1026,20 +1026,19 @@ int DLL_EXPORT __STDCALL setHydraulicProperties(int waterRetentionCurve,
 
  /*!
   * \brief computePeriod
-  * \param myPeriod
-  * \return a period of time [s]
+  * \param timePeriod     [s]
   */
- void DLL_EXPORT __STDCALL computePeriod(double myPeriod)
+ void DLL_EXPORT __STDCALL computePeriod(double timePeriod)
     {
-        double sumTime = 0.0;
+        double sumCurrentTime = 0.0;
 
         balanceCurrentPeriod.sinkSourceWater = 0.;
         balanceCurrentPeriod.sinkSourceHeat = 0.;
 
-        while (sumTime < myPeriod)
+        while (sumCurrentTime < timePeriod)
         {
-            double ResidualTime = myPeriod - sumTime;
-            sumTime += computeStep(ResidualTime);
+            double ResidualTime = timePeriod - sumCurrentTime;
+            sumCurrentTime += computeStep(ResidualTime);
         }
 
         if (myStructure.computeWater) updateBalanceWaterWholePeriod();
@@ -1049,10 +1048,10 @@ int DLL_EXPORT __STDCALL setHydraulicProperties(int waterRetentionCurve,
 
  /*!
  * \brief computeStep
- * \param maxTime
- * \return single step of time [s]
+ * \param maxTimeStep           [s]
+ * \return computed time step   [s]
  */
-double DLL_EXPORT __STDCALL computeStep(double maxTime)
+double DLL_EXPORT __STDCALL computeStep(double maxTimeStep)
 {
     if (myStructure.computeHeat)
     {
@@ -1063,11 +1062,11 @@ double DLL_EXPORT __STDCALL computeStep(double maxTime)
     double dtWater;
     if (myStructure.computeWater)
     {
-        computeWater(maxTime, &dtWater);
+        computeWater(maxTimeStep, &dtWater);
     }
     else
     {
-        dtWater = MINVALUE(maxTime, myParameters.delta_t_max);
+        dtWater = MINVALUE(maxTimeStep, myParameters.delta_t_max);
     }
 
     double dtHeat = dtWater;
@@ -1082,10 +1081,10 @@ double DLL_EXPORT __STDCALL computeStep(double maxTime)
             dtHeat = std::min(dtHeat, dtWater - dtHeatSum);
 
             // it sets dtHeat using Courant
-            double newTimeStep = dtHeat;
-            while (! updateBoundaryHeat(dtHeat, newTimeStep))
+            double reducedTimeStep;
+            while (! updateBoundaryHeat(dtHeat, reducedTimeStep))
             {
-                dtHeat = newTimeStep;
+                dtHeat = reducedTimeStep;
             }
 
             HeatComputation(dtHeat, dtWater);

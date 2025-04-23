@@ -227,8 +227,7 @@ bool computeFlux(long i, int matrixIndex, TlinkedNode *link, double deltaT, unsi
     A[i][matrixIndex].index = j;
     A[i][matrixIndex].val = val;
 
-    if (myStructure.computeHeat &&
-        ! nodeList[i].isSurface && ! nodeList[j].isSurface)
+    if (myStructure.computeHeat && ! nodeList[i].isSurface && ! nodeList[j].isSurface)
     {
         if (myStructure.computeHeatVapor)
         {
@@ -405,10 +404,6 @@ bool waterFlowComputation(double deltaT)
         /*! set new potential and compute new degree of saturation */
         for (int i = 0; i < myStructure.nrNodes; i++)
         {
-            if (isnan(X[i]))
-            {
-                X[i] = 0.;
-            }
             nodeList[i].H = X[i];
             if (! nodeList[i].isSurface)
             {
