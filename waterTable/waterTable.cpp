@@ -2,6 +2,7 @@
 #include "commonConstants.h"
 #include "furtherMathFunctions.h"
 #include "basicMath.h"
+#include "crit3dDate.h"
 
 #include <math.h>
 
@@ -52,6 +53,7 @@ void WaterTable::cleanAllVectors()
     _inputTMax.clear();
     _inputPrec.clear();
     _etpValues.clear();
+
     _hindcastSeries.clear();
     _interpolationSeries.clear();
 
@@ -63,6 +65,54 @@ void WaterTable::cleanAllVectors()
     {
         _WTClimateDaily[d] = NODATA;
     }
+}
+
+
+bool WaterTable::initializeMeteoData(const QDate &firstDate, const QDate &lastDate)
+{
+    if (lastDate <= firstDate)
+    {
+        return false;
+    }
+
+    cleanAllVectors();
+
+    _firstMeteoDate = firstDate;
+    _lastMeteoDate = lastDate;
+    int nrOfData = firstDate.daysTo(lastDate);
+
+    _inputTMin.resize(nrOfData);
+    _inputTMax.resize(nrOfData);
+    _inputPrec.resize(nrOfData);
+    _etpValues.resize(nrOfData);
+
+    return true;
+}
+
+
+bool WaterTable::setMeteoData(const QDate &date, float tmin, float tmax, float prec)
+{
+    int index = _firstMeteoDate.daysTo(date);
+
+    if (index < int(_etpValues.size()) && index < int(_inputTMin.size()))
+    {
+        Crit3DDate myDate = Crit3DDate(date.day(), date.month(), date.year());
+        _etpValues[index] = dailyEtpHargreaves(tmin, tmax, myDate, _well.getLatitude(), &_meteoSettings);
+        _inputTMin[index] = prec;
+        return true;
+    }
+
+    return false;
+}
+
+
+void WaterTable::setParameters(int nrDaysPeriod, double alpha, double h0, double avgDailyCWB)
+{
+    _nrDaysPeriod = nrDaysPeriod;
+    _alpha = alpha;
+    _h0 = h0;
+    _avgDailyCWB = avgDailyCWB;
+    _isCWBEquationReady = true;
 }
 
 
@@ -133,32 +183,6 @@ bool WaterTable::computeWTClimate()
     _isClimateReady = true;
 
     return true;
-}
-
-
-bool WaterTable::setMeteoData(const QDate &date, float tmin, float tmax, float prec)
-{
-    int index = _firstMeteoDate.daysTo(date);
-
-    if (index < int(_etpValues.size()) && index < int(_inputTMin.size()))
-    {
-        Crit3DDate myDate = Crit3DDate(date.day(), date.month(), date.year());
-        _etpValues[index] = dailyEtpHargreaves(tmin, tmax, myDate, _well.getLatitude(), &_meteoSettings);
-        _inputTMin[index] = prec;
-        return true;
-    }
-
-    return false;
-}
-
-
-void WaterTable::setParameters(int nrDaysPeriod, double alpha, double h0, double avgDailyCWB)
-{
-    _nrDaysPeriod = nrDaysPeriod;
-    _alpha = alpha;
-    _h0 = h0;
-    _avgDailyCWB = avgDailyCWB;
-    _isCWBEquationReady = true;
 }
 
 
