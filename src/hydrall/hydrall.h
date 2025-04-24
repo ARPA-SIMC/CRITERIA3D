@@ -332,7 +332,6 @@
 
         void initialize();
 
-        bool firstDayOfMonth;
         int firstMonthVegetativeSeason;
         bool isFirstYearSimulation;
         Crit3DDate currentDate;

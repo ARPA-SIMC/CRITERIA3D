@@ -33,13 +33,13 @@ Crit3DHydrallState::Crit3DHydrallState()
 
 Crit3DHydrallStatePlant::Crit3DHydrallStatePlant()
 {
-    treeNetPrimaryProduction = NODATA;
-    treecumulatedBiomassFoliage = NODATA;
-    treecumulatedBiomassRoot = NODATA;
-    treecumulatedBiomassSapwood = NODATA;
-    understoreyNetPrimaryProduction = NODATA;
-    understoreycumulatedBiomassFoliage = NODATA;
-    understoreycumulatedBiomassRoot = NODATA;
+    treeNetPrimaryProduction = 0;
+    treecumulatedBiomassFoliage = 0;
+    treecumulatedBiomassRoot = 0;
+    treecumulatedBiomassSapwood = 0;
+    understoreyNetPrimaryProduction = 0;
+    understoreycumulatedBiomassFoliage = 0;
+    understoreycumulatedBiomassRoot = 0;
 }
 
 Crit3DHydrallWeatherDerivedVariable::Crit3DHydrallWeatherDerivedVariable()
@@ -198,6 +198,8 @@ Crit3DHydrallMaps::Crit3DHydrallMaps()
     standBiomassMap = new gis::Crit3DRasterGrid;
     rootBiomassMap = new gis::Crit3DRasterGrid;
     mapLast30DaysTavg = new gis::Crit3DRasterGrid;
+    treeNetPrimaryProduction = new gis::Crit3DRasterGrid;
+    understoreyNetPrimaryProduction = new gis::Crit3DRasterGrid;
 }
 
 void Crit3DHydrallMaps::initialize(const gis::Crit3DRasterGrid& DEM)
@@ -206,6 +208,8 @@ void Crit3DHydrallMaps::initialize(const gis::Crit3DRasterGrid& DEM)
     standBiomassMap->initializeGrid(DEM);
     rootBiomassMap->initializeGrid(DEM);
     mapLast30DaysTavg->initializeGrid(DEM);
+    treeNetPrimaryProduction->initializeGrid(DEM, 0); //TODO: initial maps must be loaded
+    understoreyNetPrimaryProduction->initializeGrid(DEM, 0);
     treeSpeciesMap.initializeGrid(DEM);
     plantHeight.initializeGrid(DEM);
 }
@@ -355,6 +359,7 @@ void Crit3D_Hydrall::initialize()
 {
     plant.myChlorophyllContent = NODATA;
     elevation = NODATA;
+    isFirstYearSimulation = true;
     // .. TODO
 }
 

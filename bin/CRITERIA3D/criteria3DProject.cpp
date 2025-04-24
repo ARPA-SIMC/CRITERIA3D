@@ -345,32 +345,47 @@ void Crit3DProject::dailyUpdateCropMaps(const QDate &myDate)
 void Crit3DProject::dailyUpdateHydrallMaps()
 {
     updateLast30DaysTavg();
-    updateHydrallLAI();
+    updateHydrallLAI(); //todo non serve?
     return;
 }
 
 bool Crit3DProject::dailyUpdateHydrall(const QDate &myDate)
 {
 
-    // TODO Cate sostituire con dailyUpdate Hydrall
+    //set daily variables like temp, co2
+
     if (myDate.day() == 1)
     {
-        hydrallModel.firstDayOfMonth = true;
         // update of rothC (monthly)
+
+        //se firstDayOfMonth, scrivi le mappe (mensili?) di LAI, biomassa, etc
+        /*std::string myError;
+        if (! gis::writeEsriGrid(getCompleteFileName("treeNPP_"+myDate.toString("yyyyMMdd"), PATH_OUTPUT).toStdString(), hydrallMaps.treeNetPrimaryProduction, myError))
+        {
+            errorString = QString::fromStdString(myError);
+            return false;
+        }
+
+        if (! gis::writeEsriGrid(getCompleteFileName("understoreyNPP_"+myDate.toString("yyyyMMdd"), PATH_OUTPUT).toStdString(), hydrallMaps.understoreyNetPrimaryProduction, myError))
+        {
+            errorString = QString::fromStdString(myError);
+            return false;
+        }*/
+
+
+
         if (myDate.month() == hydrallModel.firstMonthVegetativeSeason) //TODO
         {
             /* in case of the first day of the year
                  * the algorithms devoted to allocate dry matter
                  * into the biomass pools (foliage, sapwood and fine roots)
                  * */
-            //growthstand
+            hydrallModel.growthStand();
+            //grtree
 
         }
     }
-    else
-    {
-        hydrallModel.firstDayOfMonth = false;
-    }
+
     return true;
 }
 
@@ -693,11 +708,6 @@ bool Crit3DProject::runModels(QDateTime firstTime, QDateTime lastTime, bool isRe
             }
         }
 
-        if (processes.computeHydrall)
-        {
-            dailyUpdateHydrall(myDate);
-        }
-
         // cycle on hours
         int firstHour = (myDate == firstDate) ? hour1 : 0;
         int lastHour = (myDate == lastDate) ? hour2 : 23;
@@ -736,6 +746,7 @@ bool Crit3DProject::runModels(QDateTime firstTime, QDateTime lastTime, bool isRe
         if (processes.computeHydrall)
         {
             dailyUpdateHydrallMaps();
+            dailyUpdateHydrall(myDate);
         }
 
         if (isSaveDailyState())
@@ -1504,22 +1515,6 @@ bool Crit3DProject::computeHydrallModel(int row, int col)
         }
     }*/
 
-
-    if (hydrallModel.firstDayOfMonth)
-    {
-        //se firstDayOfMonth, scrivi le mappe (mensili?) di LAI, biomassa, etc
-        std::string fileName;
-        std::string myError;
-        if (! gis::writeEsriGrid(fileName, hydrallMaps.standBiomassMap, myError))
-        {
-            errorString = QString::fromStdString(myError);
-            return false;
-        }
-
-        //etc
-    }
-
-    //snowMaps.updateRangeMaps();
 
     return true;
 }
