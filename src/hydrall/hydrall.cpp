@@ -37,7 +37,7 @@ Crit3DHydrallStatePlant::Crit3DHydrallStatePlant()
     treecumulatedBiomassFoliage = NODATA;
     treecumulatedBiomassRoot = NODATA;
     treecumulatedBiomassSapwood = NODATA;
-    understoreycumulatedBiomass = NODATA;
+    understoreyNetPrimaryProduction = NODATA;
     understoreycumulatedBiomassFoliage = NODATA;
     understoreycumulatedBiomassRoot = NODATA;
 }
@@ -413,8 +413,8 @@ void Crit3D_Hydrall::setPlantVariables(double chlorophyllContent, double height)
 
 void Crit3D_Hydrall::setStateVariables(Crit3DHydrallMaps &stateMap, int row, int col)
 {
-    stateVariable.standBiomass = stateMap.standBiomassMap->value[row][col];
-    stateVariable.rootBiomass = stateMap.rootBiomassMap->value[row][col];
+    statePlant.treeNetPrimaryProduction = stateMap.treeNetPrimaryProduction->value[row][col];
+    statePlant.understoreyNetPrimaryProduction = stateMap.understoreyNetPrimaryProduction->value[row][col];
 }
 
 void Crit3D_Hydrall::setSoilVariables(int iLayer, int currentNode,float checkFlag, int horizonIndex, double waterContent, double waterContentFC, double waterContentWP, double rootDensity,double clay, double sand,double thickness,double bulkDensity,double waterContentSat)
@@ -460,8 +460,8 @@ void Crit3D_Hydrall::setSoilVariables(int iLayer, int currentNode,float checkFla
 
 void Crit3D_Hydrall::getStateVariables(Crit3DHydrallMaps &stateMap, int row, int col)
 {
-    stateMap.standBiomassMap->value[row][col] = stateVariable.standBiomass;
-    stateMap.rootBiomassMap->value[row][col] = stateVariable.rootBiomass;
+    stateMap.treeNetPrimaryProduction->value[row][col] = statePlant.treeNetPrimaryProduction;
+    stateMap.understoreyNetPrimaryProduction->value[row][col] = statePlant.understoreyNetPrimaryProduction;
 }
 
 void Crit3D_Hydrall::radiationAbsorption()
@@ -999,7 +999,7 @@ void Crit3D_Hydrall::cumulatedResults()
     deltaTime.netAssimilation = deltaTime.netAssimilation*12/1000.0; // [KgC m-2] TODO da motiplicare dopo per CARBONFACTOR DA METTERE dopo convert to kg DM m-2
     deltaTime.understoreyNetAssimilation = HOUR_SECONDS * MH2O * understoreyAssimilationRate - MH2O*understoreyRespiration();
     statePlant.treeNetPrimaryProduction += deltaTime.netAssimilation; // state plant considers the biomass stored during the current year
-    statePlant.understoreycumulatedBiomass += deltaTime.understoreyNetAssimilation; // [KgC m-2]
+    statePlant.understoreyNetPrimaryProduction += deltaTime.understoreyNetAssimilation; // [KgC m-2]
     //understorey
 
 
@@ -1212,9 +1212,9 @@ double Crit3D_Hydrall::temperatureFunction(double temperature)
 bool Crit3D_Hydrall::growthStand()
 {
     const double understoreyAllocationCoefficientToRoot = 0.5;
-    // understorey update
-    statePlant.understoreycumulatedBiomassFoliage = statePlant.understoreycumulatedBiomass * (1.-understoreyAllocationCoefficientToRoot);    //understorey growth: foliage...
-    statePlant.understoreycumulatedBiomassRoot = statePlant.understoreycumulatedBiomass * understoreyAllocationCoefficientToRoot;         //...and roots
+    // understorey update TODO IMPORTANTE: SERVE CARBONFACTOR ANCHE QUI?
+    statePlant.understoreycumulatedBiomassFoliage = statePlant.understoreyNetPrimaryProduction * (1.-understoreyAllocationCoefficientToRoot);    //understorey growth: foliage...
+    statePlant.understoreycumulatedBiomassRoot = statePlant.understoreyNetPrimaryProduction * understoreyAllocationCoefficientToRoot;         //...and roots
 
     // canopy update
     statePlant.treecumulatedBiomassFoliage -= (statePlant.treecumulatedBiomassFoliage/plant.foliageLongevity);

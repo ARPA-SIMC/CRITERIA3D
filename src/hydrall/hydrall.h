@@ -102,7 +102,7 @@
         double treecumulatedBiomassFoliage;
         double treecumulatedBiomassRoot;
         double treecumulatedBiomassSapwood;
-        double understoreycumulatedBiomass;
+        double understoreyNetPrimaryProduction;
         double understoreycumulatedBiomassFoliage;
         double understoreycumulatedBiomassRoot;
     };
@@ -313,6 +313,9 @@
         gis::Crit3DRasterGrid* mapLast30DaysTavg;
         gis::Crit3DRasterGrid treeSpeciesMap;
         gis::Crit3DRasterGrid plantHeight;
+
+        gis::Crit3DRasterGrid* treeNetPrimaryProduction;
+        gis::Crit3DRasterGrid* understoreyNetPrimaryProduction;
 
         Crit3DHydrallMaps();
         ~Crit3DHydrallMaps();
