@@ -94,11 +94,11 @@ bool WaterTable::setMeteoData(const QDate &date, float tmin, float tmax, float p
 {
     int index = _firstMeteoDate.daysTo(date);
 
-    if (index < int(_etpValues.size()) && index < int(_inputTMin.size()))
+    if (index < int(_etpValues.size()) && index < int(_inputPrec.size()))
     {
         Crit3DDate myDate = Crit3DDate(date.day(), date.month(), date.year());
         _etpValues[index] = dailyEtpHargreaves(tmin, tmax, myDate, _well.getLatitude(), &_meteoSettings);
-        _inputTMin[index] = prec;
+        _inputPrec[index] = prec;
         return true;
     }
 
@@ -429,11 +429,11 @@ bool WaterTable::computeWaterTableIndices()
 
 
 // return assessement value of watertable depth [cm]
-float WaterTable::getWaterTableDaily(const QDate &myDate)
+double WaterTable::getWaterTableDaily(const QDate &myDate)
 {
     if (_isCWBEquationReady)
     {
-        float deltaCWB = computeCWB(myDate, _nrDaysPeriod);
+        double deltaCWB = computeCWB(myDate, _nrDaysPeriod);
         if (deltaCWB != NODATA)
         {
             return _h0 + _alpha * deltaCWB;            // [cm]

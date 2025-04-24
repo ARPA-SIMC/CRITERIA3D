@@ -32,6 +32,7 @@
 #include "basicMath.h"
 #include "meteoPoint.h"
 #include "quality.h"
+#include "crit3dDate.h"
 
 
 Crit3DMeteoPoint::Crit3DMeteoPoint()

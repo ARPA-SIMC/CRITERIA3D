@@ -404,7 +404,6 @@ float dailyEtpHargreaves(float Tmin, float Tmax, Crit3DDate date, double latitud
     quality::qualityType qualityTmin = qualityCheck.syntacticQualitySingleValue(dailyAirTemperatureMin, Tmin);
     quality::qualityType qualityTmax = qualityCheck.syntacticQualitySingleValue(dailyAirTemperatureMax, Tmax);
 
-
     if (qualityTmin != quality::accepted || qualityTmax != quality::accepted)
         return NODATA;
 
