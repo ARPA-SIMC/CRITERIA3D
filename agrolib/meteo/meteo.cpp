@@ -401,14 +401,15 @@ float dailyEtpHargreaves(float Tmin, float Tmax, Crit3DDate date, double latitud
 {
     Crit3DQuality qualityCheck;
 
-    // TODO nella versione vb ammessi anche i qualitySuspectData, questo tipo per ora non è stato implementato
     quality::qualityType qualityTmin = qualityCheck.syntacticQualitySingleValue(dailyAirTemperatureMin, Tmin);
     quality::qualityType qualityTmax = qualityCheck.syntacticQualitySingleValue(dailyAirTemperatureMax, Tmax);
-    int dayOfYear = getDoyFromDate(date);
-    if (qualityTmin  == quality::accepted && qualityTmax == quality::accepted)
-            return float(ET0_Hargreaves(meteoSettings->getTransSamaniCoefficient(), latitude, dayOfYear, Tmax, Tmin));
-    else
+
+
+    if (qualityTmin != quality::accepted || qualityTmax != quality::accepted)
         return NODATA;
+
+    int dayOfYear = getDoyFromDate(date);
+    return float(ET0_Hargreaves(meteoSettings->getTransSamaniCoefficient(), latitude, dayOfYear, Tmax, Tmin));
 }
 
 

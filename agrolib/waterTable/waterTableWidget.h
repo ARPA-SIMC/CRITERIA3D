@@ -10,7 +10,7 @@
     {
         Q_OBJECT
     public:
-        WaterTableWidget(const QString &id, WaterTable &waterTable, float maxObservedDepth);
+        WaterTableWidget(const QString &id, const WaterTable &waterTable, float maxObservedDepth);
 
         ~WaterTableWidget() { ; }
 

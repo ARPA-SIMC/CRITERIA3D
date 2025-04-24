@@ -1006,6 +1006,7 @@ Crit3DDate Crit3DMeteoPoint::getLastDailyData()
     return obsDataD[nrObsDataDaysD-1].date;
 }
 
+
 Crit3DDate Crit3DMeteoPoint::getFirstDailyData()
 {
     if (obsDataD.size() == 0)

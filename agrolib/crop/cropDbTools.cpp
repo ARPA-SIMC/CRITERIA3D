@@ -89,7 +89,7 @@ bool loadCropParameters(const QSqlDatabase &dbCrop, QString idCrop, Crit3DCrop &
     if (! getValue(query.value("psi_leaf"), &(myCrop.psiLeaf)))
     {
         // default
-        myCrop.psiLeaf = 16000;
+        myCrop.psiLeaf = 16000;          // Attenzione Giulia! [cm]
     }
 
     myCrop.stressTolerance = query.value("stress_tolerance").toDouble();

@@ -222,7 +222,7 @@ bool loadSoilInfo(const QSqlDatabase &dbSoil, const QString &soilCode, soil::Cri
         }
         else
         {
-            errorStr = "soilCode not found";
+            errorStr = "soilCode not found: " + soilCode ;
             return false;
         }
     }
