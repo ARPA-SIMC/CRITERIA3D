@@ -996,10 +996,10 @@ void Crit3D_Hydrall::cumulatedResults()
     deltaTime.grossAssimilation = HOUR_SECONDS * treeAssimilationRate ; // canopy gross assimilation (mol m-2)
     deltaTime.respiration = HOUR_SECONDS * Crit3D_Hydrall::plantRespiration() ;
     deltaTime.netAssimilation = deltaTime.grossAssimilation - deltaTime.respiration ;
-    deltaTime.netAssimilation = deltaTime.netAssimilation*12/1000.0 ; // KgC m-2 TODO da motiplicare dopo per CARBONFACTOR DA METTERE dopo convert to kg DM m-2
+    deltaTime.netAssimilation = deltaTime.netAssimilation*12/1000.0; // [KgC m-2] TODO da motiplicare dopo per CARBONFACTOR DA METTERE dopo convert to kg DM m-2
     deltaTime.understoreyNetAssimilation = HOUR_SECONDS * MH2O * understoreyAssimilationRate - MH2O*understoreyRespiration();
-    statePlant.treeNetPrimaryProduction += deltaTime.netAssimilation ; // state plant considers the biomass stored during the current year
-
+    statePlant.treeNetPrimaryProduction += deltaTime.netAssimilation; // state plant considers the biomass stored during the current year
+    statePlant.understoreycumulatedBiomass += deltaTime.understoreyNetAssimilation; // [KgC m-2]
     //understorey
 
 

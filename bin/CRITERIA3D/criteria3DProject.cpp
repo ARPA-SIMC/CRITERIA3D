@@ -420,6 +420,7 @@ void Crit3DProject::assignETreal()
                     {
                         float degreeDays = degreeDaysMap.value[row][col];
                         double actualTransp = assignTranspiration(row, col, currentCrop, currentLAI, degreeDays);   // [mm h-1]
+                        // TODO verificare che la traspirazione ottenuta da hydrall sia confrontabile e nel caso mettere un if che decida come computare la traspirazione
                         double traspFlow = area * (actualTransp / 1000.);                                           // [m3 h-1] flux
                         totalTranspiration += traspFlow;                                                            // [m3 h-1] flux
                     }
@@ -1368,8 +1369,8 @@ bool Crit3DProject::computeHydrallModel(int row, int col)
     // the condition on this for cycle includes the check of existance of the layers
     for (unsigned int i = 0; ((i < nrLayers) && (soilList[soilIndex].getHorizonIndex(layerDepth[i]))!= NODATA); i++)
     {
-        currentCrop.roots.firstRootLayer = 1;
-        currentCrop.roots.lastRootLayer = 2;
+        //currentCrop.roots.firstRootLayer = 1;
+        //currentCrop.roots.lastRootLayer = 2;
         /*
                     int zcurrentNode = indexMap.at(i).value[row][col];
                     float zflag =  indexMap.at(i).header->flag;
