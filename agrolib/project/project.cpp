@@ -5532,7 +5532,7 @@ bool Project::waterTableComputeSingleWell(int indexWell)
 }
 
 
-void Project::waterTableShowSingleWell(WaterTable &waterTable, const QString &idWell)
+void Project::waterTableShowSingleWell(const WaterTable &waterTable, const QString &idWell)
 {
     DialogSummary* dialogResult = new DialogSummary(waterTable);   // show results
     dialogResult->show();

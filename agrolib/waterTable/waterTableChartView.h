@@ -11,7 +11,7 @@
         public:
             WaterTableChartView(QWidget *parent = 0);
 
-            void drawWaterTable(WaterTable &waterTable, float maximumObservedDepth);
+            void drawWaterTable(const WaterTable &waterTable, float maximumObservedDepth);
 
             void tooltipObsDepthSeries(QPointF point, bool state);
             void tooltipLineSeries(QPointF point, bool state);
