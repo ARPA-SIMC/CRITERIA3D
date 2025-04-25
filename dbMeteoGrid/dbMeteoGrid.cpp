@@ -3926,8 +3926,8 @@ bool Crit3DMeteoGridDbHandler::getYearList(QString &errorStr, QString meteoPoint
                 yearList->append(year);
             }
         }
-
     }
+
     return true;
 }
 
