@@ -33,6 +33,7 @@
 #include "meteoPoint.h"
 #include "quality.h"
 #include "crit3dDate.h"
+#include "meteo.h"
 
 
 Crit3DMeteoPoint::Crit3DMeteoPoint()
@@ -1017,7 +1018,7 @@ Crit3DDate Crit3DMeteoPoint::getFirstDailyData()
 }
 
 
-float Crit3DMeteoPoint::getMeteoPointValueD(const Crit3DDate &myDate, meteoVariable myVar, Crit3DMeteoSettings* meteoSettings)
+float Crit3DMeteoPoint::getMeteoPointValueD(const Crit3DDate &myDate, meteoVariable myVar, Crit3DMeteoSettings* meteoSettings) const
 {
     //check
     if (myVar == noMeteoVar) return NODATA;
@@ -1090,11 +1091,11 @@ float Crit3DMeteoPoint::getMeteoPointValueD(const Crit3DDate &myDate, meteoVaria
     else if (myVar == dailyWaterTableDepth)
         return (obsDataD[i].waterTable);
     else
-        return (NODATA);
+        return NODATA;
 }
 
 
-float Crit3DMeteoPoint::getMeteoPointValueD(const Crit3DDate &myDate, meteoVariable myVar)
+float Crit3DMeteoPoint::getMeteoPointValueD(const Crit3DDate &myDate, meteoVariable myVar) const
 {
     //check
     if (myVar == noMeteoVar) return NODATA;
@@ -1144,7 +1145,7 @@ float Crit3DMeteoPoint::getMeteoPointValueD(const Crit3DDate &myDate, meteoVaria
     else if (myVar == dailyWaterTableDepth)
         return (obsDataD[i].waterTable);
     else
-        return (NODATA);
+        return NODATA;
 }
 
 float Crit3DMeteoPoint::getMeteoPointValueM(const Crit3DDate &myDate, meteoVariable myVar)
@@ -1188,7 +1189,7 @@ float Crit3DMeteoPoint::getMeteoPointValueM(const Crit3DDate &myDate, meteoVaria
     else if (myVar == monthlyBIC)
         return (obsDataM[i].bic);
     else
-        return (NODATA);
+        return NODATA;
 }
 
 

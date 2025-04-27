@@ -273,6 +273,7 @@ bool solveLinearSystem(int approximation, double residualTolerance, int computat
         {
             if (myParameters.threadsNumber == 1)
             {
+                // single thread
                 currentNorm = GaussSeidelWater();
             }
             else
