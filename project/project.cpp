@@ -5472,13 +5472,14 @@ bool Project::waterTableComputeSingleWell(int indexWell)
     if (indexWell == NODATA)
         return false;
 
-    bool isMeteoGridLoaded;
     // sono necessari 24 mesi di dati meteo precedenti il primo dato osservato di falda
+    wellPoints[indexWell].updateDates();
     QDate firstMeteoDate = wellPoints[indexWell].getFirstObsDate().addDays(-730);
     double wellUtmX = wellPoints[indexWell].getUtmX();
     double wellUtmY = wellPoints[indexWell].getUtmY();
     Crit3DMeteoPoint linkedMeteoPoint;
 
+    bool isMeteoGridLoaded;
     if (this->meteoGridDbHandler != nullptr)
     {
         isMeteoGridLoaded = true;
