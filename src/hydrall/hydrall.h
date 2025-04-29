@@ -102,7 +102,7 @@
         double treecumulatedBiomassFoliage;
         double treecumulatedBiomassRoot;
         double treecumulatedBiomassSapwood;
-        double understoreycumulatedBiomass;
+        double understoreyNetPrimaryProduction;
         double understoreycumulatedBiomassFoliage;
         double understoreycumulatedBiomassRoot;
     };
@@ -125,7 +125,11 @@
 
     };
 
-    struct TweatherVariable {
+    class Crit3DHydrallWeatherVariable {
+
+    public:
+        Crit3DHydrallWeatherVariable();
+
         Crit3DHydrallWeatherDerivedVariable derived;
 
         double myInstantTemp;
@@ -142,13 +146,20 @@
 
     };
 
-    struct TenvironmentalVariable {
+    class Crit3DHydrallEnvironmentalVariable {
+
+    public:
+        Crit3DHydrallEnvironmentalVariable();
 
         double CO2;
         double sineSolarElevation;
     };
 
-    struct Tplant {
+    class Crit3DHydrallPlant {
+
+    public:
+        Crit3DHydrallPlant();
+
         // TODO Cate unità di misura
         double myChlorophyllContent;
         double height; // in cm
@@ -158,7 +169,7 @@
         double sapwoodLongevity;
         double fineRootLongevity;
         double foliageDensity;
-        double woodDensity = RHOS;
+        double woodDensity;
         double specificLeafArea;
         double psiLeaf;
         double psiLeafCritical;
@@ -167,11 +178,13 @@
         double leafAreaIndexCanopy;
         double leafAreaIndexCanopyMax;
         double standVolume; // maps referred to stand volume MUST be initialized
-        double currentIncrementalVolume = EPSILON;
+        double currentIncrementalVolume;
 
     };
 
-    struct ThydrallSoil {
+    class Crit3DHydrallSoil {
+    public:
+        Crit3DHydrallSoil();
 
         int layersNr;
         double totalDepth;
@@ -192,8 +205,11 @@
 
     };
 
-    struct TbigLeaf
+    class Crit3DHydrallBigLeaf
     {
+    public:
+        Crit3DHydrallBigLeaf();
+
         double absorbedPAR ;
         double isothermalNetRadiation;
         double leafAreaIndex;
@@ -211,15 +227,18 @@
 
     };
 
-    struct TparameterWangLeuning
+    class Crit3DHydrallParameterWangLeuning
     {
-        double optimalTemperatureForPhotosynthesis = 298.15; // K
-        double stomatalConductanceMin = 0.01; // [Pa Pa-1]
-        double sensitivityToVapourPressureDeficit = 1300;
-        double alpha = 340000; //1100000; // this parameter must be multiplied by 10^-6 in order to be compliant with literature
-        double psiLeaf = 1800;                 // kPa
-        double waterStressThreshold = NODATA;
-        double maxCarboxRate = 150;           // Vcmo at optimal temperature  umol m-2 s-1
+    public:
+        Crit3DHydrallParameterWangLeuning();
+
+        double optimalTemperatureForPhotosynthesis;
+        double stomatalConductanceMin;
+        double sensitivityToVapourPressureDeficit;
+        double alpha;
+        double psiLeaf;
+        double waterStressThreshold;
+        double maxCarboxRate;
     };
 
 
@@ -234,7 +253,9 @@
     };
 
 
-    struct ThydrallDeltaTimeOutputs {
+    class Crit3DHydrallDeltaTimeOutputs {
+    public:
+        Crit3DHydrallDeltaTimeOutputs();
 
         double netAssimilation;
         double grossAssimilation ;
@@ -250,22 +271,29 @@
         double understoreyNetAssimilation;
     };
 
-    struct ThydrallNitrogen {
+    class Crit3DHydrallNitrogen {
+    public:
+        Crit3DHydrallNitrogen();
+
         double interceptLeaf, slopeLeaf;
-        double leaf = 0.024;  //[kg kgDM-1]
-        double stem = 0.0078; //[kg kgDM-1]
-        double root = 0.0021; //[kg kgDM-1]
+        double leaf;
+        double stem;
+        double root;
     };
 
-    struct ThydrallBiomass {
+    class Crit3DHydrallBiomass {
+    public:
+        Crit3DHydrallBiomass();
 
         double total;
-        double leaf = 0.1;
-        double sapwood = 0.2;
-        double fineRoot = 0.05;
+        double leaf;
+        double sapwood;
+        double fineRoot;
     };
 
-    struct TallocationCoefficient {
+    class Crit3DHydrallAllocationCoefficient {
+    public:
+        Crit3DHydrallAllocationCoefficient();
 
         double toFoliage;
         double toFineRoots;
@@ -286,6 +314,9 @@
         gis::Crit3DRasterGrid treeSpeciesMap;
         gis::Crit3DRasterGrid plantHeight;
 
+        gis::Crit3DRasterGrid* treeNetPrimaryProduction;
+        gis::Crit3DRasterGrid* understoreyNetPrimaryProduction;
+
         Crit3DHydrallMaps();
         ~Crit3DHydrallMaps();
 
@@ -301,24 +332,23 @@
 
         void initialize();
 
-        bool firstDayOfMonth;
         int firstMonthVegetativeSeason;
         bool isFirstYearSimulation;
         Crit3DDate currentDate;
         Crit3DHydrallState stateVariable;
-        TbigLeaf sunlit,shaded, understorey;
-        TweatherVariable weatherVariable;
-        TenvironmentalVariable environmentalVariable;
-        TparameterWangLeuning parameterWangLeuning;
-        Tplant plant;
-        ThydrallSoil soil;
+        Crit3DHydrallBigLeaf sunlit,shaded, understorey;
+        Crit3DHydrallWeatherVariable weatherVariable;
+        Crit3DHydrallEnvironmentalVariable environmentalVariable;
+        Crit3DHydrallParameterWangLeuning parameterWangLeuning;
+        Crit3DHydrallPlant plant;
+        Crit3DHydrallSoil soil;
         Crit3DHydrallLightExtinctionCoefficient directLightExtinctionCoefficient;
         Crit3DHydrallLightExtinctionCoefficient diffuseLightExtinctionCoefficient;
-        ThydrallDeltaTimeOutputs deltaTime;
-        ThydrallNitrogen nitrogenContent;
-        ThydrallBiomass treeBiomass, understoreyBiomass;
+        Crit3DHydrallDeltaTimeOutputs deltaTime;
+        Crit3DHydrallNitrogen nitrogenContent;
+        Crit3DHydrallBiomass treeBiomass, understoreyBiomass;
         Crit3DHydrallStatePlant statePlant;
-        TallocationCoefficient allocationCoefficient;
+        Crit3DHydrallAllocationCoefficient allocationCoefficient;
 
 
         double elevation;

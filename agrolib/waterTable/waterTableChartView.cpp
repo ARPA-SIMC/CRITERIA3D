@@ -1,4 +1,5 @@
 #include "waterTableChartView.h"
+#include "commonConstants.h"
 
 
 WaterTableChartView::WaterTableChartView(QWidget *parent) :
@@ -41,7 +42,7 @@ WaterTableChartView::WaterTableChartView(QWidget *parent) :
 }
 
 
-void WaterTableChartView::drawWaterTable(WaterTable &waterTable, float maximumObservedDepth)
+void WaterTableChartView::drawWaterTable(const WaterTable &waterTable, float maximumObservedDepth)
 {
     axisY->setMax(maximumObservedDepth);    // unit of observed watertable data, usually [cm]
     axisY->setMin(0);
@@ -49,7 +50,7 @@ void WaterTableChartView::drawWaterTable(WaterTable &waterTable, float maximumOb
     axisY->setTickCount(16);
 
     QDateTime firstDateTime, lastDateTime;
-    int nrDays = int(waterTable.interpolationSeries.size());
+    int nrDays = int(waterTable.getNrInterpolatedData());
     firstDateTime.setDate(waterTable.getFirstDate());
     lastDateTime = firstDateTime.addDays(nrDays-1);
 
@@ -57,25 +58,20 @@ void WaterTableChartView::drawWaterTable(WaterTable &waterTable, float maximumOb
     axisX->setTickCount(15);
 
     QDateTime currentDateTime = firstDateTime;
-    for (int day = 0; day < nrDays; day++)
+    for (int index = 0; index < nrDays; index++)
     {
-        QDate firstJanuary;
-        firstJanuary.setDate(currentDateTime.date().year(), 1, 1);
-        int doyIndex = firstJanuary.daysTo(currentDateTime.date());     // from 0 to 365
+        hindcastSeries->append(currentDateTime.toMSecsSinceEpoch(), waterTable.getHindcast(index));
+        interpolationSeries->append(currentDateTime.toMSecsSinceEpoch(), waterTable.getInterpolatedData(index));
+        climateSeries->append(currentDateTime.toMSecsSinceEpoch(), waterTable.getWaterTableClimate(currentDateTime.date()));
 
-        hindcastSeries->append(currentDateTime.toMSecsSinceEpoch(), waterTable.hindcastSeries[day]);
-        interpolationSeries->append(currentDateTime.toMSecsSinceEpoch(), waterTable.interpolationSeries[day]);
-        climateSeries->append(currentDateTime.toMSecsSinceEpoch(), waterTable.WTClimateDaily[doyIndex]);
-
-        if(waterTable.getWell()->depths.contains(currentDateTime.date()))
+        int obsDepth = waterTable.getObsDepth(currentDateTime.date());
+        if  (obsDepth != NODATA)
         {
-            int myDepth = waterTable.getWell()->depths[currentDateTime.date()];
-            obsDepthSeries->append(currentDateTime.toMSecsSinceEpoch(), myDepth);
+            obsDepthSeries->append(currentDateTime.toMSecsSinceEpoch(), obsDepth);
         }
 
         currentDateTime = currentDateTime.addDays(1);
     }
-
 
     chart()->addSeries(hindcastSeries);
     chart()->addSeries(climateSeries);

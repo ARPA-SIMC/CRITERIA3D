@@ -11,8 +11,11 @@
 
     class QSqlDatabase;
 
-    struct waterTableParameters
+    class Crit1DWaterTableParameters
     {
+        public:
+        Crit1DWaterTableParameters();
+
         QString id;
         double lat, lon;
 
@@ -20,16 +23,17 @@
         double alpha;               // [-]
         double h0;                  // unit of observed watertable data, usually [cm]
         double avgDailyCWB;         // [mm]
+
+        bool isLoaded;
     };
 
     class WaterTableDb
     {
     public:
-        WaterTableDb(QString dbName, QString &error);
+        WaterTableDb(QString dbName, QString &errorString);
         ~WaterTableDb();
 
-        //bool readWaterTableList(std::vector<waterTableParameters> &waterTableList, QString &error);
-        bool readSingleWaterTableParameters(const QString &id, waterTableParameters &waterTableList, QString &error);
+        bool readSingleWaterTableParameters(const QString &id, Crit1DWaterTableParameters &wtParameters, QString &error);
 
     private:
         QSqlDatabase _db;

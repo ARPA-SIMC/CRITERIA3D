@@ -345,8 +345,48 @@ void Crit3DProject::dailyUpdateCropMaps(const QDate &myDate)
 void Crit3DProject::dailyUpdateHydrallMaps()
 {
     updateLast30DaysTavg();
-    updateHydrallLAI();
+    updateHydrallLAI(); //todo non serve?
     return;
+}
+
+bool Crit3DProject::dailyUpdateHydrall(const QDate &myDate)
+{
+
+    //set daily variables like temp, co2
+
+    if (myDate.day() == 1)
+    {
+        // update of rothC (monthly)
+
+        //se firstDayOfMonth, scrivi le mappe (mensili?) di LAI, biomassa, etc
+        /*std::string myError;
+        if (! gis::writeEsriGrid(getCompleteFileName("treeNPP_"+myDate.toString("yyyyMMdd"), PATH_OUTPUT).toStdString(), hydrallMaps.treeNetPrimaryProduction, myError))
+        {
+            errorString = QString::fromStdString(myError);
+            return false;
+        }
+
+        if (! gis::writeEsriGrid(getCompleteFileName("understoreyNPP_"+myDate.toString("yyyyMMdd"), PATH_OUTPUT).toStdString(), hydrallMaps.understoreyNetPrimaryProduction, myError))
+        {
+            errorString = QString::fromStdString(myError);
+            return false;
+        }*/
+
+
+
+        if (myDate.month() == hydrallModel.firstMonthVegetativeSeason) //TODO
+        {
+            /* in case of the first day of the year
+                 * the algorithms devoted to allocate dry matter
+                 * into the biomass pools (foliage, sapwood and fine roots)
+                 * */
+            hydrallModel.growthStand();
+            //grtree
+
+        }
+    }
+
+    return true;
 }
 
 
@@ -395,13 +435,23 @@ void Crit3DProject::assignETreal()
                     {
                         float degreeDays = degreeDaysMap.value[row][col];
                         double actualTransp = assignTranspiration(row, col, currentCrop, currentLAI, degreeDays);   // [mm h-1]
+                        // TODO verificare che la traspirazione ottenuta da hydrall sia confrontabile e nel caso mettere un if che decida come computare la traspirazione
                         double traspFlow = area * (actualTransp / 1000.);                                           // [m3 h-1] flux
                         totalTranspiration += traspFlow;                                                            // [m3 h-1] flux
                     }
 
                     if (processes.computeHydrall)
                     {
-                        hydrallModel.soil.rootDensity = currentCrop.roots.rootDensity; //TODO cate change soil to class
+                        if (! currentCrop.roots.rootDensity.empty())
+                        {
+                            hydrallModel.soil.rootDensity = currentCrop.roots.rootDensity; //TODO cate make hydrall classes private
+                        }
+                        else
+                        {
+                            hydrallModel.soil.rootDensity.clear();
+                            hydrallModel.soil.rootDensity.resize(nrLayers);
+                        }
+                        hydrallModel.plant.leafAreaIndexCanopy = MAXVALUE(0, currentLAI);
                         computeHydrallModel(row, col);
 
                     }
@@ -658,29 +708,6 @@ bool Crit3DProject::runModels(QDateTime firstTime, QDateTime lastTime, bool isRe
             }
         }
 
-        if (processes.computeWater)
-        {
-            // TODO Cate sostituire con dailyUpdate Hydrall
-            if (myDate.day() == 1)
-            {
-                hydrallModel.firstDayOfMonth = true;
-                // update of rothC (monthly)
-                if (myDate.month() == hydrallModel.firstMonthVegetativeSeason) //TODO
-                {
-                /* in case of the first day of the year
-                 * the algorithms devoted to allocate dry matter
-                 * into the biomass pools (foliage, sapwood and fine roots)
-                 * */
-                    //growthstand
-
-                }
-            }
-            else
-            {
-                hydrallModel.firstDayOfMonth = false;
-            }
-        }
-
         // cycle on hours
         int firstHour = (myDate == firstDate) ? hour1 : 0;
         int lastHour = (myDate == lastDate) ? hour2 : 23;
@@ -719,6 +746,7 @@ bool Crit3DProject::runModels(QDateTime firstTime, QDateTime lastTime, bool isRe
         if (processes.computeHydrall)
         {
             dailyUpdateHydrallMaps();
+            dailyUpdateHydrall(myDate);
         }
 
         if (isSaveDailyState())
@@ -1352,8 +1380,8 @@ bool Crit3DProject::computeHydrallModel(int row, int col)
     // the condition on this for cycle includes the check of existance of the layers
     for (unsigned int i = 0; ((i < nrLayers) && (soilList[soilIndex].getHorizonIndex(layerDepth[i]))!= NODATA); i++)
     {
-        currentCrop.roots.firstRootLayer = 1;
-        currentCrop.roots.lastRootLayer = 2;
+        //currentCrop.roots.firstRootLayer = 1;
+        //currentCrop.roots.lastRootLayer = 2;
         /*
                     int zcurrentNode = indexMap.at(i).value[row][col];
                     float zflag =  indexMap.at(i).header->flag;
@@ -1487,22 +1515,6 @@ bool Crit3DProject::computeHydrallModel(int row, int col)
         }
     }*/
 
-
-    if (hydrallModel.firstDayOfMonth)
-    {
-        //se firstDayOfMonth, scrivi le mappe (mensili?) di LAI, biomassa, etc
-        std::string fileName;
-        std::string myError;
-        if (! gis::writeEsriGrid(fileName, hydrallMaps.standBiomassMap, myError))
-        {
-            errorString = QString::fromStdString(myError);
-            return false;
-        }
-
-        //etc
-    }
-
-    //snowMaps.updateRangeMaps();
 
     return true;
 }

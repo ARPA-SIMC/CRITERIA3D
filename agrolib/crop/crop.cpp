@@ -37,6 +37,7 @@
 #include "commonConstants.h"
 #include "basicMath.h"
 #include "crop.h"
+#include "soil.h"
 #include "root.h"
 #include "development.h"
 

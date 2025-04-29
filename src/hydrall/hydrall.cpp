@@ -33,13 +33,13 @@ Crit3DHydrallState::Crit3DHydrallState()
 
 Crit3DHydrallStatePlant::Crit3DHydrallStatePlant()
 {
-    treeNetPrimaryProduction = NODATA;
-    treecumulatedBiomassFoliage = NODATA;
-    treecumulatedBiomassRoot = NODATA;
-    treecumulatedBiomassSapwood = NODATA;
-    understoreycumulatedBiomass = NODATA;
-    understoreycumulatedBiomassFoliage = NODATA;
-    understoreycumulatedBiomassRoot = NODATA;
+    treeNetPrimaryProduction = 0;
+    treecumulatedBiomassFoliage = 0;
+    treecumulatedBiomassRoot = 0;
+    treecumulatedBiomassSapwood = 0;
+    understoreyNetPrimaryProduction = 0;
+    understoreycumulatedBiomassFoliage = 0;
+    understoreycumulatedBiomassRoot = 0;
 }
 
 Crit3DHydrallWeatherDerivedVariable::Crit3DHydrallWeatherDerivedVariable()
@@ -56,12 +56,150 @@ Crit3DHydrallWeatherDerivedVariable::Crit3DHydrallWeatherDerivedVariable()
     et0 = NODATA;
 }
 
+Crit3DHydrallWeatherVariable::Crit3DHydrallWeatherVariable()
+{
+    myInstantTemp = NODATA;
+    prec = NODATA;
+    irradiance = NODATA;
+    relativeHumidity = NODATA;
+    windSpeed = NODATA;
+    atmosphericPressure = NODATA;
+    //meanDailyTemperature;
+    vaporPressureDeficit = NODATA;
+    last30DaysTAvg = NODATA;
+    meanDailyTemp = NODATA;
+}
+
+Crit3DHydrallEnvironmentalVariable::Crit3DHydrallEnvironmentalVariable()
+{
+    CO2 = NODATA;
+    sineSolarElevation = NODATA;
+}
+
+Crit3DHydrallPlant::Crit3DHydrallPlant()
+{
+    myChlorophyllContent = NODATA;
+    height = NODATA; // in cm
+    myLeafWidth = NODATA;
+    isAmphystomatic = false;
+    foliageLongevity = NODATA;
+    sapwoodLongevity = NODATA;
+    fineRootLongevity = NODATA;
+    foliageDensity = NODATA;
+    woodDensity = RHOS;
+    specificLeafArea = NODATA;
+    psiLeaf = NODATA;
+    psiLeafCritical = NODATA;
+    psiLeafMinimum = NODATA;
+    transpirationPerUnitFoliageAreaCritical = NODATA;
+    leafAreaIndexCanopy = NODATA;
+    leafAreaIndexCanopyMax = NODATA;
+    standVolume = NODATA; // maps referred to stand volume MUST be initialized
+    currentIncrementalVolume = EPSILON;
+}
+
+Crit3DHydrallSoil::Crit3DHydrallSoil()
+{
+    layersNr = NODATA;
+    totalDepth = NODATA;
+    temperature = NODATA;
+    rootDensity.clear();
+    stressCoefficient.clear();
+    waterContent.clear();
+    wiltingPoint.clear();
+    fieldCapacity.clear();
+    saturation.clear();
+    hydraulicConductivity.clear();
+    satHydraulicConductivity.clear();
+    nodeThickness.clear();
+    clay.clear();
+    sand.clear();
+    silt.clear();
+    bulkDensity.clear();
+}
+
+Crit3DHydrallBigLeaf::Crit3DHydrallBigLeaf()
+{
+    absorbedPAR = NODATA;
+    isothermalNetRadiation = NODATA;
+    leafAreaIndex = NODATA;
+    totalConductanceHeatExchange = NODATA;
+    aerodynamicConductanceHeatExchange = NODATA;
+    aerodynamicConductanceCO2Exchange = NODATA;
+    leafTemperature = NODATA;
+    darkRespiration = NODATA;
+    minimalStomatalConductance = NODATA;
+    maximalCarboxylationRate = NODATA;
+    maximalElectronTrasportRate = NODATA;
+    carbonMichaelisMentenConstant = NODATA;
+    oxygenMichaelisMentenConstant = NODATA;
+    compensationPoint = NODATA;
+    convexityFactorNonRectangularHyperbola = NODATA;
+    quantumYieldPS2 = NODATA;
+    assimilation = NODATA;
+    transpiration = NODATA;
+    stomatalConductance = NODATA;
+}
+
+Crit3DHydrallParameterWangLeuning::Crit3DHydrallParameterWangLeuning()
+{
+    optimalTemperatureForPhotosynthesis = 298.15; // K
+    stomatalConductanceMin = 0.01; // [Pa Pa-1]
+    sensitivityToVapourPressureDeficit = 1300;
+    alpha = 340000; //1100000; // this parameter must be multiplied by 10^-6 in order to be compliant with literature
+    psiLeaf = 1800;                 // kPa
+    waterStressThreshold = NODATA;
+    maxCarboxRate = 150;           // Vcmo at optimal temperature  umol m-2 s-1
+}
+
+Crit3DHydrallDeltaTimeOutputs::Crit3DHydrallDeltaTimeOutputs()
+{
+    netAssimilation = NODATA;
+    grossAssimilation = NODATA;
+    transpiration = NODATA;
+    interceptedWater = NODATA;
+    netDryMatter = NODATA;
+    absorbedPAR = NODATA;
+    respiration = NODATA;
+    transpirationGrass = NODATA;
+    transpirationNoStress = NODATA;
+    evaporation = NODATA;
+    evapoTranspiration = NODATA;
+    understoreyNetAssimilation = NODATA;
+}
+
+Crit3DHydrallNitrogen::Crit3DHydrallNitrogen()
+{
+    interceptLeaf = NODATA;
+    slopeLeaf = NODATA;
+    leaf = 0.024;  //[kg kgDM-1]
+    stem = 0.0078; //[kg kgDM-1]
+    root = 0.0021; //[kg kgDM-1]
+}
+
+Crit3DHydrallBiomass::Crit3DHydrallBiomass()
+{
+    total = NODATA;
+    leaf = 0.1;
+    sapwood = 0.2;
+    fineRoot = 0.05;
+}
+
+Crit3DHydrallAllocationCoefficient::Crit3DHydrallAllocationCoefficient()
+{
+    toFoliage = NODATA;
+    toFineRoots = NODATA;
+    toSapwood = NODATA;
+}
+
 Crit3DHydrallMaps::Crit3DHydrallMaps()
 {
     mapLAI = new gis::Crit3DRasterGrid;
     standBiomassMap = new gis::Crit3DRasterGrid;
     rootBiomassMap = new gis::Crit3DRasterGrid;
     mapLast30DaysTavg = new gis::Crit3DRasterGrid;
+    treeNetPrimaryProduction = new gis::Crit3DRasterGrid;
+    understoreyNetPrimaryProduction = new gis::Crit3DRasterGrid;
 }
 
 void Crit3DHydrallMaps::initialize(const gis::Crit3DRasterGrid& DEM)
@@ -70,6 +208,8 @@ void Crit3DHydrallMaps::initialize(const gis::Crit3DRasterGrid& DEM)
     standBiomassMap->initializeGrid(DEM);
     rootBiomassMap->initializeGrid(DEM);
     mapLast30DaysTavg->initializeGrid(DEM);
+    treeNetPrimaryProduction->initializeGrid(DEM, 0); //TODO: initial maps must be loaded
+    understoreyNetPrimaryProduction->initializeGrid(DEM, 0);
     treeSpeciesMap.initializeGrid(DEM);
     plantHeight.initializeGrid(DEM);
 }
@@ -87,9 +227,9 @@ bool Crit3D_Hydrall::computeHydrallPoint(Crit3DDate myDate, double myTemperature
     //getCO2(myDate, myTemperature, myElevation);
 
 
-    // da qui in poi bisogna fare un ciclo su tutte le righe e le colonne
+
     plant.leafAreaIndexCanopyMax = statePlant.treecumulatedBiomassFoliage *  plant.specificLeafArea / cover;
-    plant.leafAreaIndexCanopy = MAXVALUE(4,plant.leafAreaIndexCanopyMax * computeLAI(myDate));
+    //plant.leafAreaIndexCanopy = MAXVALUE(4,plant.leafAreaIndexCanopyMax * computeLAI(myDate));
     understoreyLeafAreaIndexMax = statePlant.understoreycumulatedBiomassFoliage * plant.specificLeafArea;
     understorey.leafAreaIndex = MAXVALUE(LAIMIN,understoreyLeafAreaIndexMax* computeLAI(myDate));
 
@@ -219,6 +359,7 @@ void Crit3D_Hydrall::initialize()
 {
     plant.myChlorophyllContent = NODATA;
     elevation = NODATA;
+    isFirstYearSimulation = true;
     // .. TODO
 }
 
@@ -277,8 +418,8 @@ void Crit3D_Hydrall::setPlantVariables(double chlorophyllContent, double height)
 
 void Crit3D_Hydrall::setStateVariables(Crit3DHydrallMaps &stateMap, int row, int col)
 {
-    stateVariable.standBiomass = stateMap.standBiomassMap->value[row][col];
-    stateVariable.rootBiomass = stateMap.rootBiomassMap->value[row][col];
+    statePlant.treeNetPrimaryProduction = stateMap.treeNetPrimaryProduction->value[row][col];
+    statePlant.understoreyNetPrimaryProduction = stateMap.understoreyNetPrimaryProduction->value[row][col];
 }
 
 void Crit3D_Hydrall::setSoilVariables(int iLayer, int currentNode,float checkFlag, int horizonIndex, double waterContent, double waterContentFC, double waterContentWP, double rootDensity,double clay, double sand,double thickness,double bulkDensity,double waterContentSat)
@@ -324,8 +465,8 @@ void Crit3D_Hydrall::setSoilVariables(int iLayer, int currentNode,float checkFla
 
 void Crit3D_Hydrall::getStateVariables(Crit3DHydrallMaps &stateMap, int row, int col)
 {
-    stateMap.standBiomassMap->value[row][col] = stateVariable.standBiomass;
-    stateMap.rootBiomassMap->value[row][col] = stateVariable.rootBiomass;
+    stateMap.treeNetPrimaryProduction->value[row][col] = statePlant.treeNetPrimaryProduction;
+    stateMap.understoreyNetPrimaryProduction->value[row][col] = statePlant.understoreyNetPrimaryProduction;
 }
 
 void Crit3D_Hydrall::radiationAbsorption()
@@ -860,10 +1001,10 @@ void Crit3D_Hydrall::cumulatedResults()
     deltaTime.grossAssimilation = HOUR_SECONDS * treeAssimilationRate ; // canopy gross assimilation (mol m-2)
     deltaTime.respiration = HOUR_SECONDS * Crit3D_Hydrall::plantRespiration() ;
     deltaTime.netAssimilation = deltaTime.grossAssimilation - deltaTime.respiration ;
-    deltaTime.netAssimilation = deltaTime.netAssimilation*12/1000.0 ; // KgC m-2 TODO da motiplicare dopo per CARBONFACTOR DA METTERE dopo convert to kg DM m-2
+    deltaTime.netAssimilation = deltaTime.netAssimilation*12/1000.0; // [KgC m-2] TODO da motiplicare dopo per CARBONFACTOR DA METTERE dopo convert to kg DM m-2
     deltaTime.understoreyNetAssimilation = HOUR_SECONDS * MH2O * understoreyAssimilationRate - MH2O*understoreyRespiration();
-    statePlant.treeNetPrimaryProduction += deltaTime.netAssimilation ; // state plant considers the biomass stored during the current year
-
+    statePlant.treeNetPrimaryProduction += deltaTime.netAssimilation; // state plant considers the biomass stored during the current year
+    statePlant.understoreyNetPrimaryProduction += deltaTime.understoreyNetAssimilation; // [KgC m-2]
     //understorey
 
 
@@ -1076,9 +1217,9 @@ double Crit3D_Hydrall::temperatureFunction(double temperature)
 bool Crit3D_Hydrall::growthStand()
 {
     const double understoreyAllocationCoefficientToRoot = 0.5;
-    // understorey update
-    statePlant.understoreycumulatedBiomassFoliage = statePlant.understoreycumulatedBiomass * (1.-understoreyAllocationCoefficientToRoot);    //understorey growth: foliage...
-    statePlant.understoreycumulatedBiomassRoot = statePlant.understoreycumulatedBiomass * understoreyAllocationCoefficientToRoot;         //...and roots
+    // understorey update TODO IMPORTANTE: SERVE CARBONFACTOR ANCHE QUI?
+    statePlant.understoreycumulatedBiomassFoliage = statePlant.understoreyNetPrimaryProduction * (1.-understoreyAllocationCoefficientToRoot);    //understorey growth: foliage...
+    statePlant.understoreycumulatedBiomassRoot = statePlant.understoreyNetPrimaryProduction * understoreyAllocationCoefficientToRoot;         //...and roots
 
     // canopy update
     statePlant.treecumulatedBiomassFoliage -= (statePlant.treecumulatedBiomassFoliage/plant.foliageLongevity);
