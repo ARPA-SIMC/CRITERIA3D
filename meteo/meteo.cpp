@@ -723,6 +723,7 @@ float computeThomIndex(float temp, float relHum)
         return NODATA;
 }
 
+
 bool computeWindCartesian(float intensity, float direction, float* u, float* v)
 {
     if (isEqual(intensity, NODATA) || isEqual(direction, NODATA))
