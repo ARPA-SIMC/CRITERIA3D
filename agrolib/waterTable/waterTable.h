@@ -48,7 +48,7 @@ class WaterTable
         double computeCWB(const QDate &myDate, int nrDays);
         bool computeWaterTableIndices();
 
-        float getWaterTableDaily(const QDate &myDate);
+        double getWaterTableDaily(const QDate &myDate);
         float getWaterTableClimate(const QDate &myDate) const;
 
         bool computeWaterTableClimate(const QDate &currentDate, int yearFrom, int yearTo, float &myValue);

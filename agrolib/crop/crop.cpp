@@ -291,24 +291,36 @@ bool Crit3DCrop::updateLAI(double latitude, unsigned int nrLayers, int currentDo
 }
 
 
-int Crit3DCrop::getDaysFromTypicalSowing(int myDoy) const
+int Crit3DCrop::getDaysFromTypicalSowing(int doy) const
 {
-    return (myDoy - sowingDoy) % 365;
+    return (doy - sowingDoy) % 365;
 }
 
 
-int Crit3DCrop::getDaysFromCurrentSowing(int myDoy) const
+int Crit3DCrop::getDaysFromCurrentSowing(int doy) const
 {
     if (currentSowingDoy != NODATA)
-        return (myDoy - currentSowingDoy) % 365;
+    {
+        return (doy - currentSowingDoy) % 365;
+    }
     else
-        return getDaysFromTypicalSowing(myDoy);
+    {
+        return getDaysFromTypicalSowing(doy);
+    }
 }
 
 
-bool Crit3DCrop::isInsideTypicalCycle(int myDoy) const
+bool Crit3DCrop::isInsideTypicalCycle(int doy) const
 {
-    return (getDaysFromTypicalSowing(myDoy) < plantCycle);
+    int daysFromSowing = getDaysFromTypicalSowing(doy);
+    if (daysFromSowing >= 0)
+    {
+        return (daysFromSowing < plantCycle);
+    }
+    else
+    {
+        return ((doy + 365 - sowingDoy) < plantCycle);
+    }
 }
 
 
@@ -450,9 +462,9 @@ void Crit3DCrop::resetCrop(unsigned int nrLayers)
 
 
 bool Crit3DCrop::dailyUpdate(const Crit3DDate &myDate, double latitude, const std::vector<soil::Crit1DLayer> &soilLayers,
-                             double tmin, double tmax, double waterTableDepth, std::string &myError)
+                             double tmin, double tmax, double waterTableDepth, std::string &errorStr)
 {
-    myError = "";
+    errorStr = "";
     if (idCrop == "") return false;
 
     unsigned int nrLayers = unsigned(soilLayers.size());
@@ -471,7 +483,7 @@ bool Crit3DCrop::dailyUpdate(const Crit3DDate &myDate, double latitude, const st
         double dailyDD = getDailyDegreeIncrease(tmin, tmax, currentDoy);
         if (isEqual(dailyDD, NODATA))
         {
-            myError = "Error in computing degree days for " + myDate.toISOString();
+            errorStr = "Error in computing degree days for " + myDate.toISOString();
             return false;
         }
         degreeDays += dailyDD;
@@ -479,7 +491,7 @@ bool Crit3DCrop::dailyUpdate(const Crit3DDate &myDate, double latitude, const st
         // update LAI
         if ( !updateLAI(latitude, nrLayers, currentDoy))
         {
-            myError = "Error in updating LAI for crop " + idCrop;
+            errorStr = "Error in updating LAI for crop " + idCrop;
             return false;
         }
 
