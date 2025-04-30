@@ -232,7 +232,6 @@ Crit3DDate getDateFromDoy(int year, int doy)
     while (doy > daysBeforeMonth[leap][month]) {
         month++;
     }
-
     // Compute the day
     int day = doy - daysBeforeMonth[leap][month - 1];
     return {day, month, year};
