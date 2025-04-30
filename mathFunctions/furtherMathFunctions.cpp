@@ -298,7 +298,7 @@ void dijkstraShortestPathway(const std::vector<std::vector<double>>& graph, int 
     // src is the node whose we want to compute the distances
 
     const double INF = std::numeric_limits<double>::max();
-    int n = graph.size();
+    int n = int(graph.size());
     //std::vector<double> dist(n, INF);  // between nodes minimal distance
     std::vector<bool> visited(n, false);  // take track of visited nodes
     for (int i = 0; i < n; ++i)

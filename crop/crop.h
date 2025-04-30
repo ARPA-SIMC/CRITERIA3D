@@ -73,9 +73,9 @@
 
         void clear();
 
-        int getDaysFromTypicalSowing(int myDoy) const;
-        int getDaysFromCurrentSowing(int myDoy) const;
-        bool isInsideTypicalCycle(int myDoy) const;
+        int getDaysFromTypicalSowing(int doy) const;
+        int getDaysFromCurrentSowing(int doy) const;
+        bool isInsideTypicalCycle(int doy) const;
 
         bool isWaterSurplusResistant() const;
         bool isSowingCrop() const;
@@ -99,7 +99,7 @@
         double computeSimpleLAI(double myDegreeDays, double latitude, int currentDoy);
 
         bool dailyUpdate(const Crit3DDate &myDate, double latitude, const std::vector<soil::Crit1DLayer> &soilLayers,
-                         double tmin, double tmax, double waterTableDepth, std::string &myError);
+                         double tmin, double tmax, double waterTableDepth, std::string &errorStr);
         bool restore(const Crit3DDate &myDate, double latitude, const std::vector<soil::Crit1DLayer> &soilLayers,
                      double currentWaterTable, std::string &myError);
 

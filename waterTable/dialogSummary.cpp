@@ -1,6 +1,6 @@
 #include "dialogSummary.h"
 
-DialogSummary::DialogSummary(WaterTable myWaterTable)
+DialogSummary::DialogSummary(const WaterTable &myWaterTable)
 {
     setWindowTitle("Summary");
     QVBoxLayout* mainLayout = new QVBoxLayout();

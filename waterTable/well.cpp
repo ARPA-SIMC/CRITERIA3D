@@ -2,7 +2,14 @@
 #include "well.h"
 #include <algorithm>
 
+
 Well::Well()
+{
+    initialize();
+}
+
+
+void Well::initialize()
 {
     _lat = NODATA;
     _lon = NODATA;
@@ -14,35 +21,23 @@ Well::Well()
 }
 
 
-QDate Well::getFirstObsDate()
+void Well::updateDates()
 {
     QList<QDate> obsDateList = depths.keys();
     _firstDate = obsDateList[0];
+    _lastDate = obsDateList[0];
+
     for (int i = 0; i < obsDateList.size(); i++)
     {
         if (obsDateList[i] < _firstDate)
         {
             _firstDate = obsDateList[i];
         }
-    }
-
-    return _firstDate;
-}
-
-
-QDate Well::getLastObsDate()
-{
-    QList<QDate> obsDateList = depths.keys();
-    _lastDate = obsDateList[0];
-    for (int i = 0; i < obsDateList.size(); i++)
-    {
         if (obsDateList[i] > _lastDate)
         {
             _lastDate = obsDateList[i];
         }
     }
-
-    return _lastDate;
 }
 
 
@@ -54,6 +49,7 @@ int Well::minValuesPerMonth()
     {
         H_num.push_back(0);
     }
+
     while (it.hasNext())
     {
         it.next();

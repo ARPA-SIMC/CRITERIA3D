@@ -1,7 +1,7 @@
 #include "waterTableWidget.h"
 #include "dialogChangeAxis.h"
 
-WaterTableWidget::WaterTableWidget(const QString &id, WaterTable &waterTable, float maxObservedDepth)
+WaterTableWidget::WaterTableWidget(const QString &id, const WaterTable &waterTable, float maxObservedDepth)
 {
     this->setWindowTitle("Graph Id well: "+ id);
     this->resize(1240, 700);
