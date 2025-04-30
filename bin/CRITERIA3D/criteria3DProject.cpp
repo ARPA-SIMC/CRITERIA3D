@@ -359,7 +359,7 @@ bool Crit3DProject::dailyUpdateHydrall(const QDate &myDate)
         // update of rothC (monthly)
 
         //se firstDayOfMonth, scrivi le mappe (mensili?) di LAI, biomassa, etc
-        /*std::string myError;
+        std::string myError;
         if (! gis::writeEsriGrid(getCompleteFileName("treeNPP_"+myDate.toString("yyyyMMdd"), PATH_OUTPUT).toStdString(), hydrallMaps.treeNetPrimaryProduction, myError))
         {
             errorString = QString::fromStdString(myError);
@@ -370,7 +370,7 @@ bool Crit3DProject::dailyUpdateHydrall(const QDate &myDate)
         {
             errorString = QString::fromStdString(myError);
             return false;
-        }*/
+        }
 
 
 
@@ -441,7 +441,7 @@ void Crit3DProject::assignETreal()
                     }
 
                     if (processes.computeHydrall)
-                    {
+                    { //problema lunghezza del vettore soil.rootDensity, che il 22 aprile alle 21 è risultato di lunghezza 15 mentre i layers del suolo erano 10 (dentro hydrall e in particolare dentro moisture factor...)
                         if (! currentCrop.roots.rootDensity.empty())
                         {
                             hydrallModel.soil.rootDensity = currentCrop.roots.rootDensity; //TODO cate make hydrall classes private
@@ -1374,9 +1374,12 @@ bool Crit3DProject::computeHydrallModel(int row, int col)
     // TODO scrivere funzione settaggio profilo 1D suolo
 
     //root density
-    hydrallMaps.treeSpeciesMap.value[row][col] = 0; //TODO treeSpeciesMap
-    Crit3DCrop currentCrop = cropList[int(hydrallMaps.treeSpeciesMap.value[row][col])];
-    currentCrop.roots.rootDensity.resize(nrLayers); // TODO
+    hydrallMaps.treeSpeciesMap.value[row][col] = 0; //TODO treeSpeciesMap. valutare tabelle tra crop e tabella hydrall
+    //Crit3DCrop currentCrop = cropList[int(hydrallMaps.treeSpeciesMap.value[row][col])];
+    Crit3DCrop currentCrop = cropList[getLandUnitIndexRowCol(row, col)];
+
+
+    //currentCrop.roots.rootDensity.resize(nrLayers); // TODO
     // the condition on this for cycle includes the check of existance of the layers
     for (unsigned int i = 0; ((i < nrLayers) && (soilList[soilIndex].getHorizonIndex(layerDepth[i]))!= NODATA); i++)
     {
@@ -1400,7 +1403,6 @@ bool Crit3DProject::computeHydrallModel(int row, int col)
                                       soilFluxes3D::getWaterContent(indexMap.at(i).value[row][col]),
                                       soilList[soilIndex].horizon[soilList[soilIndex].getHorizonIndex(layerDepth[i])].waterContentFC,
                                       soilList[soilIndex].horizon[soilList[soilIndex].getHorizonIndex(layerDepth[i])].waterContentWP,
-                                      currentCrop.roots.rootDensity[i],
                                       soilList[soilIndex].horizon[soilList[soilIndex].getHorizonIndex(layerDepth[i])].texture.clay,
                                       soilList[soilIndex].horizon[soilList[soilIndex].getHorizonIndex(layerDepth[i])].texture.sand,
                                       fabs(soilList[soilIndex].horizon[soilList[soilIndex].getHorizonIndex(layerDepth[i])].lowerDepth-soilList[soilIndex].horizon[soilList[soilIndex].getHorizonIndex(layerDepth[i])].upperDepth),

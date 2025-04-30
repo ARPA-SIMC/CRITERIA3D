@@ -179,10 +179,10 @@ Crit3DHydrallNitrogen::Crit3DHydrallNitrogen()
 
 Crit3DHydrallBiomass::Crit3DHydrallBiomass()
 {
-    total = NODATA;
     leaf = 0.1;
     sapwood = 0.2;
     fineRoot = 0.05;
+    total = 0.1+0.2+0.05;
 }
 
 Crit3DHydrallAllocationCoefficient::Crit3DHydrallAllocationCoefficient()
@@ -422,7 +422,7 @@ void Crit3D_Hydrall::setStateVariables(Crit3DHydrallMaps &stateMap, int row, int
     statePlant.understoreyNetPrimaryProduction = stateMap.understoreyNetPrimaryProduction->value[row][col];
 }
 
-void Crit3D_Hydrall::setSoilVariables(int iLayer, int currentNode,float checkFlag, int horizonIndex, double waterContent, double waterContentFC, double waterContentWP, double rootDensity,double clay, double sand,double thickness,double bulkDensity,double waterContentSat)
+void Crit3D_Hydrall::setSoilVariables(int iLayer, int currentNode,float checkFlag, int horizonIndex, double waterContent, double waterContentFC, double waterContentWP,double clay, double sand,double thickness,double bulkDensity,double waterContentSat)
 {
     if (iLayer == 0)
     {
@@ -1231,7 +1231,7 @@ bool Crit3D_Hydrall::growthStand()
     //annual stand growth
     if (isFirstYearSimulation)
     {
-        annualGrossStandGrowth = statePlant.treeNetPrimaryProduction / CARBONFACTOR; //kg DM m-2
+        annualGrossStandGrowth = statePlant.treeNetPrimaryProduction / CARBONFACTOR; //conversion to kg DM m-2
         internalCarbonStorage = 0;
     }
     else
