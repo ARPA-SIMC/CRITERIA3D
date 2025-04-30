@@ -373,14 +373,14 @@ bool Crit3DProject::dailyUpdateHydrall(const QDate &myDate)
         }
 
 
-
+        hydrallModel.growthStand(); // TODO quit this line - temporary position to prompt check
         if (myDate.month() == hydrallModel.firstMonthVegetativeSeason) //TODO
         {
             /* in case of the first day of the year
                  * the algorithms devoted to allocate dry matter
                  * into the biomass pools (foliage, sapwood and fine roots)
                  * */
-            hydrallModel.growthStand();
+            //hydrallModel.growthStand();
             //grtree
 
         }
@@ -448,8 +448,12 @@ void Crit3DProject::assignETreal()
                         }
                         else
                         {
-                            hydrallModel.soil.rootDensity.clear();
-                            hydrallModel.soil.rootDensity.resize(nrLayers);
+                            // compute root lenght
+                            currentCrop.computeRootLength3D(degreeDaysMap.value[row][col], soilList[soilIndex].totalDepth);
+
+                            // compute root density
+                            root::computeRootDensity3D(currentCrop, soilList[soilIndex], nrLayers, layerDepth, layerThickness);
+
                         }
                         hydrallModel.plant.leafAreaIndexCanopy = MAXVALUE(0, currentLAI);
                         computeHydrallModel(row, col);

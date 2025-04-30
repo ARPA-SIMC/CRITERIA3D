@@ -8,7 +8,9 @@
 
 
 //#include <stdio.h>
+#include <iostream>
 #include <math.h>
+#include <ostream>
 #include "crit3dDate.h"
 #include "commonConstants.h"
 #include "hydrall.h"
@@ -1017,7 +1019,7 @@ void Crit3D_Hydrall::cumulatedResults()
         understoreyTranspirationRate[i] *= (HOUR_SECONDS * MH2O); // [mm]
         deltaTime.transpiration += (treeTranspirationRate[i] + understoreyTranspirationRate[i]);
     }
-
+    //std::cout << deltaTime.grossAssimilation << "," << deltaTime.respiration << std::endl;
     //evaporation
     //deltaTime.evaporation = computeEvaporation(); // TODO chiedere a Fausto come gestire l'evaporazione sui layer.
 
