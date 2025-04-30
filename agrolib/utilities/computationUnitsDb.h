@@ -46,13 +46,13 @@
         bool writeListToCompUnitsTable(QList<QString> &idCase, QList<QString> &idCrop, QList<QString> &idMeteo,
                                    QList<QString> &idSoil, QList<double> &hectares, QString &error);
 
-        bool readComputationUnitList(std::vector<Crit1DCompUnit> &compUnitList, QString &error);
+        bool readComputationUnitList(std::vector<Crit1DCompUnit> &unitList, QString &error);
 
     private:
         QSqlDatabase _db;
     };
 
-    bool readComputationUnitList(QString dbComputationUnitsName, std::vector<Crit1DCompUnit> &compUnitList, QString &error);
+    bool readComputationUnitList(QString dbComputationUnitsName, std::vector<Crit1DCompUnit> &unitList, QString &error);
 
 
 #endif // COMPUTATIONUNITSDB_H

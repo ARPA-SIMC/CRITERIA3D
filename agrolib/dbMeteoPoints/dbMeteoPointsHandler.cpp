@@ -565,8 +565,12 @@ bool Crit3DMeteoPointsDbHandler::loadDailyData(const Crit3DDate &firstDate, cons
         QDate d = QDate::fromString(dateStr, "yyyy-MM-dd");
 
         // variable
+        meteoVariable variable = noMeteoVar;
         int idVar = query.value(1).toInt();
-        meteoVariable variable = _mapIdMeteoVar.at(idVar);
+        if (idVar != NODATA)
+        {
+            variable = _mapIdMeteoVar.at(idVar);
+        }
 
         // value
         float value = query.value(2).toFloat();

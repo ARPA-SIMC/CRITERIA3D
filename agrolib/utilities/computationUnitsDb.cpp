@@ -94,7 +94,7 @@ bool ComputationUnitsDB::writeListToCompUnitsTable(QList<QString> &idCase, QList
 
 
 // load computation units list
-bool ComputationUnitsDB::readComputationUnitList(std::vector<Crit1DCompUnit> &compUnitList, QString &error)
+bool ComputationUnitsDB::readComputationUnitList(std::vector<Crit1DCompUnit> &unitList, QString &error)
 {
     QString compUnitsTable = "computational_units";
     QList<QString> fieldList = getFields(&_db, compUnitsTable);
@@ -124,47 +124,47 @@ bool ComputationUnitsDB::readComputationUnitList(std::vector<Crit1DCompUnit> &co
     }
 
     unsigned int nrUnits = unsigned(query.at() + 1);     // SQLITE doesn't support SIZE
-    compUnitList.clear();
-    compUnitList.resize(nrUnits);
+    unitList.clear();
+    unitList.resize(nrUnits);
 
     unsigned int i = 0;
     query.first();
     do
     {
-        compUnitList[i].idCase = query.value("ID_CASE").toString();
-        compUnitList[i].idCropClass = query.value("ID_CROP").toString();
-        compUnitList[i].idMeteo = query.value("ID_METEO").toString();
-        compUnitList[i].idForecast = query.value("ID_METEO").toString();
+        unitList[i].idCase = query.value("ID_CASE").toString();
+        unitList[i].idCropClass = query.value("ID_CROP").toString();
+        unitList[i].idMeteo = query.value("ID_METEO").toString();
+        unitList[i].idForecast = query.value("ID_METEO").toString();
 
         bool isNumber = false;
-        compUnitList[i].idSoilNumber = query.value("ID_SOIL").toInt(&isNumber);
+        unitList[i].idSoilNumber = query.value("ID_SOIL").toInt(&isNumber);
         if (! isNumber)
         {
             // read soilCode
-            compUnitList[i].idSoil = query.value("ID_SOIL").toString();
-            compUnitList[i].idSoilNumber = NODATA;
+            unitList[i].idSoil = query.value("ID_SOIL").toString();
+            unitList[i].idSoilNumber = NODATA;
         }
 
         if (existWaterTableId)
         {
-            compUnitList[i].idWaterTable = query.value("ID_WATERTABLE").toString();
+            unitList[i].idWaterTable = query.value("ID_WATERTABLE").toString();
         }
 
         if (existNumericalInfiltration)
-            compUnitList[i].isNumericalInfiltration = query.value("numerical_solution").toBool();
+            unitList[i].isNumericalInfiltration = query.value("numerical_solution").toBool();
         if (existComputeLateralDrainage)
-            compUnitList[i].isComputeLateralDrainage = query.value("compute_lateral_drainage").toBool();
+            unitList[i].isComputeLateralDrainage = query.value("compute_lateral_drainage").toBool();
         if (existUseWaterTable)
-            compUnitList[i].useWaterTableData = query.value("use_water_table").toBool();
+            unitList[i].useWaterTableData = query.value("use_water_table").toBool();
         if (existOptimalIrrigation)
-            compUnitList[i].isOptimalIrrigation = query.value("optimal_irrigation").toBool();
+            unitList[i].isOptimalIrrigation = query.value("optimal_irrigation").toBool();
         if (existWaterRetentionData)
-            compUnitList[i].useWaterRetentionData = query.value("water_retention_fitting").toBool();
+            unitList[i].useWaterRetentionData = query.value("water_retention_fitting").toBool();
         if (existSlope)
         {
             double slope;
             if (getValue(query.value("slope"), &slope))
-                compUnitList[i].slope = slope;
+                unitList[i].slope = slope;
         }
 
         i++;
@@ -175,14 +175,14 @@ bool ComputationUnitsDB::readComputationUnitList(std::vector<Crit1DCompUnit> &co
 }
 
 
-bool readComputationUnitList(QString dbComputationUnitsName, std::vector<Crit1DCompUnit> &compUnitList, QString &error)
+bool readComputationUnitList(QString dbComputationUnitsName, std::vector<Crit1DCompUnit> &unitList, QString &error)
 {
     ComputationUnitsDB dbCompUnits(dbComputationUnitsName, error);
     if (error != "")
     {
         return false;
     }
-    if (! dbCompUnits.readComputationUnitList(compUnitList, error))
+    if (! dbCompUnits.readComputationUnitList(unitList, error))
     {
         return false;
     }
