@@ -422,7 +422,7 @@ void Crit3D_Hydrall::setStateVariables(Crit3DHydrallMaps &stateMap, int row, int
     statePlant.understoreyNetPrimaryProduction = stateMap.understoreyNetPrimaryProduction->value[row][col];
 }
 
-void Crit3D_Hydrall::setSoilVariables(int iLayer, int currentNode,float checkFlag, int horizonIndex, double waterContent, double waterContentFC, double waterContentWP,double clay, double sand,double thickness,double bulkDensity,double waterContentSat)
+void Crit3D_Hydrall::setSoilVariables(int iLayer, int currentNode,float checkFlag, int horizonIndex, double waterContent, double waterContentFC, double waterContentWP,double clay, double sand,double thickness,double bulkDensity,double waterContentSat, double rootDensity)
 {
     if (iLayer == 0)
     {
@@ -440,6 +440,7 @@ void Crit3D_Hydrall::setSoilVariables(int iLayer, int currentNode,float checkFla
     soil.saturation.resize(soil.layersNr);
     soil.fieldCapacity.resize(soil.layersNr);
     soil.wiltingPoint.resize(soil.layersNr);
+    soil.rootDensity.resize(soil.layersNr);
 
 
     if (currentNode != checkFlag)
@@ -454,7 +455,7 @@ void Crit3D_Hydrall::setSoilVariables(int iLayer, int currentNode,float checkFla
         soil.fieldCapacity[iLayer] = waterContentFC;
         soil.wiltingPoint[iLayer] = waterContentWP;
         soil.saturation[iLayer] = waterContentSat;
-        //soil.rootDensity[iLayer] = LOGICAL_IO((iLayer >= firstRootLayer && iLayer <= lastRootLayer),rootDensity,0);
+        soil.rootDensity[iLayer] = rootDensity;
     }
 
     //soil.clayAverage = statistics::weighedMean(soil.nodeThickness,soil.clay);

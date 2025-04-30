@@ -1377,6 +1377,7 @@ bool Crit3DProject::computeHydrallModel(int row, int col)
     hydrallMaps.treeSpeciesMap.value[row][col] = 0; //TODO treeSpeciesMap. valutare tabelle tra crop e tabella hydrall
     //Crit3DCrop currentCrop = cropList[int(hydrallMaps.treeSpeciesMap.value[row][col])];
     Crit3DCrop currentCrop = cropList[getLandUnitIndexRowCol(row, col)];
+    std::vector <double> tempRootDensity = hydrallModel.soil.rootDensity;
 
 
     //currentCrop.roots.rootDensity.resize(nrLayers); // TODO
@@ -1398,6 +1399,7 @@ bool Crit3DProject::computeHydrallModel(int row, int col)
                     */
         //if (soilList[soilIndex].getHorizonIndex(layerDepth[i]) == NODATA)
         //continue;
+
         hydrallModel.setSoilVariables(i,indexMap.at(i).value[row][col],indexMap.at(i).header->flag,
                                       soilList[soilIndex].getHorizonIndex(layerDepth[i]),
                                       soilFluxes3D::getWaterContent(indexMap.at(i).value[row][col]),
@@ -1407,7 +1409,8 @@ bool Crit3DProject::computeHydrallModel(int row, int col)
                                       soilList[soilIndex].horizon[soilList[soilIndex].getHorizonIndex(layerDepth[i])].texture.sand,
                                       fabs(soilList[soilIndex].horizon[soilList[soilIndex].getHorizonIndex(layerDepth[i])].lowerDepth-soilList[soilIndex].horizon[soilList[soilIndex].getHorizonIndex(layerDepth[i])].upperDepth),
                                       soilList[soilIndex].horizon[soilList[soilIndex].getHorizonIndex(layerDepth[i])].bulkDensity,
-                                      soilList[soilIndex].horizon[soilList[soilIndex].getHorizonIndex(layerDepth[i])].waterContentSAT);
+                                      soilList[soilIndex].horizon[soilList[soilIndex].getHorizonIndex(layerDepth[i])].waterContentSAT,
+                                      tempRootDensity[i]);
     }
     //compute
     hydrallModel.computeHydrallPoint(getCrit3DDate(getCurrentDate()), double(hourlyMeteoMaps->mapHourlyTair->value[row][col]), double(DEM.value[row][col]));
