@@ -332,7 +332,7 @@
 
         void initialize();
 
-        int firstMonthVegetativeSeason;
+        int firstMonthVegetativeSeason = 1;
         bool isFirstYearSimulation;
         Crit3DDate currentDate;
         Crit3DHydrallState stateVariable;

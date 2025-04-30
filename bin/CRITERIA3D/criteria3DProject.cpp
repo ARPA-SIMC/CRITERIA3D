@@ -442,19 +442,15 @@ void Crit3DProject::assignETreal()
 
                     if (processes.computeHydrall)
                     { //problema lunghezza del vettore soil.rootDensity, che il 22 aprile alle 21 è risultato di lunghezza 15 mentre i layers del suolo erano 10 (dentro hydrall e in particolare dentro moisture factor...)
-                        if (! currentCrop.roots.rootDensity.empty())
-                        {
-                            hydrallModel.soil.rootDensity = currentCrop.roots.rootDensity; //TODO cate make hydrall classes private
-                        }
-                        else
+                        if (currentCrop.roots.rootDensity.empty())
                         {
                             // compute root lenght
                             currentCrop.computeRootLength3D(degreeDaysMap.value[row][col], soilList[soilIndex].totalDepth);
 
                             // compute root density
                             root::computeRootDensity3D(currentCrop, soilList[soilIndex], nrLayers, layerDepth, layerThickness);
-
                         }
+                        hydrallModel.soil.rootDensity = currentCrop.roots.rootDensity; //TODO cate make hydrall classes private
                         hydrallModel.plant.leafAreaIndexCanopy = MAXVALUE(0, currentLAI);
                         computeHydrallModel(row, col);
 

@@ -362,6 +362,7 @@ void Crit3D_Hydrall::initialize()
     plant.myChlorophyllContent = NODATA;
     elevation = NODATA;
     isFirstYearSimulation = true;
+
     // .. TODO
 }
 
@@ -478,9 +479,10 @@ void Crit3D_Hydrall::radiationAbsorption()
 
     // TODO chiedere a Magnani questi parametri
     static double   leafAbsorbanceNIR= 0.2;
-    static double   hemisphericalIsotropyParameter = 0. ; // in order to change the hemispherical isotropy from -0.4 to 0.6 Wang & Leuning 1998
     static double   clumpingParameter = 1.0 ; // from 0 to 1 <1 for needles
-    double  diffuseLightSector1K,diffuseLightSector2K,diffuseLightSector3K ;
+    double  diffuseLightSector1K = 0.5;
+    double diffuseLightSector2K = 0.5;
+    double diffuseLightSector3K = 0.5;
     double scatteringCoefPAR, scatteringCoefNIR ;
     std::vector<double> dum(17, NODATA);
     double  sunlitAbsorbedNIR ,  shadedAbsorbedNIR, sunlitAbsorbedLW , shadedAbsorbedLW;
@@ -488,17 +490,26 @@ void Crit3D_Hydrall::radiationAbsorption()
     double directReflectionCoefficientPAR , directReflectionCoefficientNIR , diffuseReflectionCoefficientPAR , diffuseReflectionCoefficientNIR;
     //projection of the unit leaf area in the direction of the sun's beam, following Sellers 1985 (in Wang & Leuning 1998)
 
-    directLightExtinctionCoefficient.global = MINVALUE(50,(0.5 - hemisphericalIsotropyParameter*(0.633-1.11*environmentalVariable.sineSolarElevation) - POWER2(hemisphericalIsotropyParameter)*(0.33-0.579*environmentalVariable.sineSolarElevation))/ environmentalVariable.sineSolarElevation);
+    //directLightExtinctionCoefficient.global = MINVALUE(50,(0.5 - hemisphericalIsotropyParameter*(0.633-1.11*environmentalVariable.sineSolarElevation) - POWER2(hemisphericalIsotropyParameter)*(0.33-0.579*environmentalVariable.sineSolarElevation))/ environmentalVariable.sineSolarElevation);
 
+    directLightExtinctionCoefficient.global = MINVALUE(50,0.5/environmentalVariable.sineSolarElevation);
     /*Extinction coeff for canopy of black leaves, diffuse radiation
     The average extinctio coefficient is computed considering three sky sectors,
     assuming SOC conditions (Goudriaan & van Laar 1994, p 98-99)*/
-    diffuseLightSector1K = (0.5 - hemisphericalIsotropyParameter*(0.633-1.11*0.259) - hemisphericalIsotropyParameter*hemisphericalIsotropyParameter*(0.33-0.579*0.259))/0.259;  //projection of unit leaf for first sky sector (0-30 elevation)
-    diffuseLightSector2K = (0.5 - hemisphericalIsotropyParameter*(0.633-1.11*0.707) - hemisphericalIsotropyParameter*hemisphericalIsotropyParameter*(0.33-0.579*0.707))/0.707 ; //second sky sector (30-60 elevation)
-    diffuseLightSector3K = (0.5 - hemisphericalIsotropyParameter*(0.633-1.11*0.966) - hemisphericalIsotropyParameter*hemisphericalIsotropyParameter*(0.33-0.579*0.966))/ 0.966 ; // third sky sector (60-90 elevation)
-    diffuseLightExtinctionCoefficient.global =- 1.0/plant.leafAreaIndexCanopy * log(0.178 * exp(-diffuseLightSector1K*plant.leafAreaIndexCanopy) + 0.514 * exp(-diffuseLightSector2K*plant.leafAreaIndexCanopy)
-                                                                      + 0.308 * exp(-diffuseLightSector3K*plant.leafAreaIndexCanopy));  //approximation based on relative radiance from 3 sky sectors
-    //Include effects of leaf clumping (see Goudriaan & van Laar 1994, p 110)
+    //diffuseLightSector1K = (0.5 - hemisphericalIsotropyParameter*(0.633-1.11*0.259) - hemisphericalIsotropyParameter*hemisphericalIsotropyParameter*(0.33-0.579*0.259))/0.259;  //projection of unit leaf for first sky sector (0-30 elevation)
+    //diffuseLightSector2K = (0.5 - hemisphericalIsotropyParameter*(0.633-1.11*0.707) - hemisphericalIsotropyParameter*hemisphericalIsotropyParameter*(0.33-0.579*0.707))/0.707 ; //second sky sector (30-60 elevation)
+    //diffuseLightSector3K = (0.5 - hemisphericalIsotropyParameter*(0.633-1.11*0.966) - hemisphericalIsotropyParameter*hemisphericalIsotropyParameter*(0.33-0.579*0.966))/ 0.966 ; // third sky sector (60-90 elevation)
+
+    if (plant.leafAreaIndexCanopy > EPSILON)
+    {
+        diffuseLightExtinctionCoefficient.global =- 1.0/plant.leafAreaIndexCanopy * log(0.178 * exp(-diffuseLightSector1K*plant.leafAreaIndexCanopy) + 0.514 * exp(-diffuseLightSector2K*plant.leafAreaIndexCanopy)
+                                                                                          + 0.308 * exp(-diffuseLightSector3K*plant.leafAreaIndexCanopy));  //approximation based on relative radiance from 3 sky sectors
+    }
+    else
+    {
+        diffuseLightExtinctionCoefficient.global = (diffuseLightSector1K+diffuseLightSector2K+diffuseLightSector3K)/3;
+    }
+        //Include effects of leaf clumping (see Goudriaan & van Laar 1994, p 110)
     directLightExtinctionCoefficient.global  *= clumpingParameter ;//direct light
     diffuseLightExtinctionCoefficient.global *= clumpingParameter ;//diffuse light
     //Based on approximation by Goudriaan 1977 (in Goudriaan & van Laar 1994)
@@ -1040,11 +1051,15 @@ double Crit3D_Hydrall::understoreyRespiration()
     std::vector<double> correctionFactorFoliageVector;
     std::vector<double> correctionFactorFinerootVector;
 
-    if(firstMonthVegetativeSeason)
+    /*if(firstMonthVegetativeSeason) //maca inizializzazione di questo
     {
         understorey10DegRespirationFoliage = 0.0106/2. * (understoreyBiomass.leaf * nitrogenContent.leaf);
         understorey10DegRespirationFineroot= 0.0106/2. * (understoreyBiomass.fineRoot * nitrogenContent.root);
-    }
+    }*/
+
+    understorey10DegRespirationFoliage = 0.0106/2. * (understoreyBiomass.leaf * nitrogenContent.leaf);
+    understorey10DegRespirationFineroot= 0.0106/2. * (understoreyBiomass.fineRoot * nitrogenContent.root);
+
     //double understoreyRespirationFoliage,understoreyRespirationFineroot;
     //understoreyRespirationFoliage = understorey10DegRespirationFoliage*;
     //const double PSIS0 = -2;// MPa * 101.972; //(m)
