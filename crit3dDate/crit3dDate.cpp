@@ -237,6 +237,28 @@ Crit3DDate getDateFromDoy(int year, int doy)
     return {day, month, year};
 }
 
+bool getDateFromDoy(int year, int doy,Crit3DDate* date)
+{
+    if (doy < 1 || doy > 365 + int(isLeapYear(year)))
+        return false;
+    static const int daysBeforeMonth[2][13] = {
+        { 0,  31,  59,  90, 120, 151, 181, 212, 243, 273, 304, 334, 365 }, // Non leap year
+        { 0,  31,  60,  91, 121, 152, 182, 213, 244, 274, 305, 335, 366 }  // Leap year
+    };
+    int leap = int(isLeapYear(year));       // leap: 1  -  not leap: 0
+    int month = 1;
+
+    // Compute the month
+    while (doy > daysBeforeMonth[leap][month])
+    {
+        month++;
+    }
+    // Compute the day
+    int day = doy - daysBeforeMonth[leap][month - 1];
+    *date = {day, month, year};
+    return true;
+}
+
 
 void Crit3DDate::setNullDate()
 {
