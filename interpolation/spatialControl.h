@@ -34,10 +34,10 @@
                                          std::vector <Crit3DInterpolationDataPoint> &interpolationPoints, Crit3DInterpolationSettings* settings,
                                          Crit3DMeteoSettings* meteoSettings, Crit3DClimateParameters *climateParameters, bool excludeOutsideDem, bool excludeSupplemental);
 
-    bool computeResidualsGlocalDetrending(meteoVariable myVar, Crit3DTime myTime, Crit3DMeteoPoint* meteoPoints, int nrMeteoPoints,
-                                         std::vector <Crit3DInterpolationDataPoint> &interpolationPoints, Crit3DInterpolationSettings* settings,
-                                         Crit3DMeteoSettings* meteoSettings, Crit3DClimateParameters* climateParameters,
-                                         bool excludeOutsideDem, bool excludeSupplemental);
+    bool computeResidualsGlocalDetrending(meteoVariable myVar, Crit3DTime myTime, Crit3DMacroArea myArea, int elevationPos, Crit3DMeteoPoint* meteoPoints, int nrMeteoPoints,
+                                          std::vector <Crit3DInterpolationDataPoint> &interpolationPoints, Crit3DInterpolationSettings* settings,
+                                          Crit3DMeteoSettings* meteoSettings, Crit3DClimateParameters* climateParameters,
+                                          bool excludeOutsideDem, bool excludeSupplemental);
 
     float computeErrorCrossValidation(Crit3DMeteoPoint *myPoints, int nrMeteoPoints);
 

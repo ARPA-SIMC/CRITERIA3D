@@ -150,6 +150,7 @@
         Crit3DInterpolationSettings interpolationSettings;
         Crit3DInterpolationSettings qualityInterpolationSettings;
         Crit3DCrossValidationStatistics crossValidationStatistics;
+        std::vector<Crit3DCrossValidationStatistics> glocalCrossValidationStatistics;
 
         std::vector <Crit3DProxyGridSeries> proxyGridSeries;
 
@@ -283,8 +284,10 @@
         bool interpolationOutputPoints(std::vector <Crit3DInterpolationDataPoint> &interpolationPoints,
                                        gis::Crit3DRasterGrid *outputGrid, meteoVariable myVar);
         bool interpolationCv(meteoVariable myVar, const Crit3DTime& myTime);
+        bool computeResidualsGlocalDetrending(meteoVariable myVar, Crit3DTime myTime, std::vector<Crit3DInterpolationDataPoint> &interpolationPoints);
 
         bool computeStatisticsCrossValidation();
+        bool computeStatisticsGlocalCrossValidation(Crit3DMacroArea myArea);
         bool meteoGridAggregateProxy(std::vector<gis::Crit3DRasterGrid *> &myGrids);
 
         frequencyType getCurrentFrequency() const;
