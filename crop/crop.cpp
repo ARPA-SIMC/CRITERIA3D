@@ -115,7 +115,7 @@ void Crit3DCrop::initialize(double latitude, unsigned int nrLayers, double total
     }
     else
     {
-        if (totalSoilDepth == 0 || roots.rootDepthMax < totalSoilDepth)
+        if (totalSoilDepth == 0 || roots.rootDepthMax <= totalSoilDepth)
         {
             roots.actualRootDepthMax = roots.rootDepthMax;
         }
@@ -136,6 +136,7 @@ void Crit3DCrop::initialize(double latitude, unsigned int nrLayers, double total
         doyStartSenescence = 120;
     }
 
+    roots.currentRootLength = NODATA;
     LAIstartSenescence = NODATA;
     currentSowingDoy = NODATA;
     daysSinceIrrigation = NODATA;
@@ -442,7 +443,8 @@ void Crit3DCrop::resetCrop(unsigned int nrLayers)
         // LAI
         LAI = LAImin;
         LAIpreviousDay = LAImin;
-        if (type == TREE) LAI += LAIgrass;
+        if (type == TREE)
+            LAI += LAIgrass;
     }
     else
     {
@@ -452,7 +454,7 @@ void Crit3DCrop::resetCrop(unsigned int nrLayers)
         currentSowingDoy = NODATA;
 
         // roots
-        roots.currentRootLength = 0.0;
+        roots.currentRootLength = NODATA;
         roots.rootDepth = NODATA;
     }
 
@@ -489,7 +491,7 @@ bool Crit3DCrop::dailyUpdate(const Crit3DDate &myDate, double latitude, const st
         degreeDays += dailyDD;
 
         // update LAI
-        if ( !updateLAI(latitude, nrLayers, currentDoy))
+        if (! updateLAI(latitude, nrLayers, currentDoy))
         {
             errorStr = "Error in updating LAI for crop " + idCrop;
             return false;
@@ -542,7 +544,7 @@ void Crit3DCrop::updateRootDepth(double currentDD, double waterTableDepth)
 {
     if (! isLiving)
     {
-        roots.currentRootLength = 0.0;
+        roots.currentRootLength = NODATA;
         roots.rootDepth = NODATA;
     }
     else
