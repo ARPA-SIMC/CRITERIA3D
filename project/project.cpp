@@ -2321,10 +2321,9 @@ bool Project::loadGlocalAreasMap()
     return true;
 }
 
-bool Project::loadGlocalStationsAndCells(bool isGrid)
+bool Project::loadGlocalStationsAndCells(bool isGrid, QString fileNameStations)
 {
     //leggi csv aree
-    QString fileNameStations = getCompleteFileName(glocalPointsName, PATH_GEO);
     std::vector<std::vector<std::string>> areaPoints;
 
     if (! loadGlocalStationsCsv(fileNameStations, areaPoints)) return false;
@@ -2769,7 +2768,7 @@ bool Project::computeStatisticsGlocalCrossValidation(Crit3DMacroArea myArea)
     return true;
 }
 
-bool Project::interpolationCv(meteoVariable myVar, const Crit3DTime& myTime)
+bool Project::interpolationCv(meteoVariable myVar, const Crit3DTime& myTime, QString glocalCVPointsName)
 {
 
     if (! checkInterpolation(myVar)) return false;
@@ -2778,7 +2777,13 @@ bool Project::interpolationCv(meteoVariable myVar, const Crit3DTime& myTime)
     if (interpolationSettings.getUseGlocalDetrending() && ! interpolationSettings.isGlocalReady(false))
     {
         if (! loadGlocalAreasMap()) return false;
-        if (! loadGlocalStationsAndCells(false)) return false;
+        if (glocalCVPointsName.isEmpty())
+        {
+            if (! loadGlocalStationsAndCells(false, getCompleteFileName(glocalPointsName, PATH_GEO))) return false;
+        }
+        else {
+            if (! loadGlocalStationsAndCells(false, getCompleteFileName(glocalCVPointsName, PATH_GEO))) return false;
+        }
     }
 
     // check variables
@@ -3270,7 +3275,7 @@ bool Project::interpolationDemMain(meteoVariable myVar, const Crit3DTime& myTime
     if (interpolationSettings.getUseGlocalDetrending() && ! interpolationSettings.isGlocalReady(false))
     {
         if (! loadGlocalAreasMap()) return false;
-        if (! loadGlocalStationsAndCells(false)) return false;
+        if (! loadGlocalStationsAndCells(false, getCompleteFileName(glocalPointsName, PATH_GEO))) return false;
     }
 
     // solar radiation model
@@ -4547,7 +4552,7 @@ void Project::showLocalProxyGraph(gis::Crit3DGeoPoint myPoint)
 
     if (interpolationSettings.getUseGlocalDetrending() && ! interpolationSettings.isGlocalReady(false))
     {
-        if (! loadGlocalAreasMap() || ! loadGlocalStationsAndCells(false))
+        if (! loadGlocalAreasMap() || ! loadGlocalStationsAndCells(false, getCompleteFileName(glocalPointsName, PATH_GEO)))
         {
             logError();
             return;
