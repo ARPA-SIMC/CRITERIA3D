@@ -266,7 +266,7 @@
         void passInterpolatedTemperatureToHumidityPoints(Crit3DTime myTime, Crit3DMeteoSettings *meteoSettings);
         void passGridTemperatureToHumidityPoints(Crit3DTime myTime, Crit3DMeteoSettings* meteoSettings);
         bool loadGlocalAreasMap();
-        bool loadGlocalStationsAndCells(bool isGrid);
+        bool loadGlocalStationsAndCells(bool isGrid, QString fileNameStations);
         bool loadGlocalWeightMaps(std::vector<Crit3DMacroArea> &myAreas, bool isGrid);
         bool loadGlocalStationsCsv(QString fileName, std::vector<std::vector<std::string> > &areaPoints);
         bool groupCellsInArea(std::vector<int> &areaPoints, unsigned index, bool isGrid);
@@ -283,7 +283,7 @@
         bool interpolateDemRadiation(const Crit3DTime& myTime, gis::Crit3DRasterGrid *myRaster);
         bool interpolationOutputPoints(std::vector <Crit3DInterpolationDataPoint> &interpolationPoints,
                                        gis::Crit3DRasterGrid *outputGrid, meteoVariable myVar);
-        bool interpolationCv(meteoVariable myVar, const Crit3DTime& myTime);
+        bool interpolationCv(meteoVariable myVar, const Crit3DTime& myTime, QString glocalCVPointsName);
         bool computeResidualsGlocalDetrending(meteoVariable myVar, Crit3DTime myTime, std::vector<Crit3DInterpolationDataPoint> &interpolationPoints);
 
         bool computeStatisticsCrossValidation();
