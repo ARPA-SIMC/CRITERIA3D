@@ -81,8 +81,7 @@
         bool isSowingCrop() const;
         bool isRootStatic() const;
 
-        bool isBareSoil() const
-        { return (type == BARESOIL); }
+        bool isBareSoil() const { return (type == BARESOIL); }
 
         double getDailyDegreeIncrease(double tmin, double tmax, int doy);
 
