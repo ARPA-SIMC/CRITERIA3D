@@ -374,6 +374,7 @@ bool Crit3DProject::dailyUpdateHydrall(const QDate &myDate)
 
 
         hydrallModel.growthStand(); // TODO quit this line - temporary position to prompt check
+        hydrallModel.resetStandVariables();
         if (myDate.month() == hydrallModel.firstMonthVegetativeSeason) //TODO
         {
             /* in case of the first day of the year
@@ -381,6 +382,7 @@ bool Crit3DProject::dailyUpdateHydrall(const QDate &myDate)
                  * into the biomass pools (foliage, sapwood and fine roots)
                  * */
             //hydrallModel.growthStand();
+            //hydrallModel.resetStandVariables();
             //grtree
 
         }
@@ -452,6 +454,7 @@ void Crit3DProject::assignETreal()
                         }
                         hydrallModel.soil.rootDensity = currentCrop.roots.rootDensity; //TODO cate make hydrall classes private
                         hydrallModel.plant.leafAreaIndexCanopy = MAXVALUE(0, currentLAI);
+                        hydrallModel.plant.leafAreaIndexCanopyMin = currentCrop.LAImin;
                         computeHydrallModel(row, col);
 
                     }

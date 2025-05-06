@@ -177,6 +177,7 @@
         double transpirationPerUnitFoliageAreaCritical;
         double leafAreaIndexCanopy;
         double leafAreaIndexCanopyMax;
+        double leafAreaIndexCanopyMin;
         double standVolume; // maps referred to stand volume MUST be initialized
         double currentIncrementalVolume;
 

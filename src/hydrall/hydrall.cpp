@@ -84,9 +84,9 @@ Crit3DHydrallPlant::Crit3DHydrallPlant()
     height = NODATA; // in cm
     myLeafWidth = NODATA;
     isAmphystomatic = false;
-    foliageLongevity = NODATA;
-    sapwoodLongevity = NODATA;
-    fineRootLongevity = NODATA;
+    foliageLongevity = 1;
+    sapwoodLongevity = 35;
+    fineRootLongevity = 1;
     foliageDensity = NODATA;
     woodDensity = RHOS;
     specificLeafArea = NODATA;
@@ -230,11 +230,13 @@ bool Crit3D_Hydrall::computeHydrallPoint(Crit3DDate myDate, double myTemperature
 
 
 
-    plant.leafAreaIndexCanopyMax = statePlant.treecumulatedBiomassFoliage *  plant.specificLeafArea / cover;
+    //plant.leafAreaIndexCanopyMax = statePlant.treecumulatedBiomassFoliage *  plant.specificLeafArea / cover;
     //plant.leafAreaIndexCanopy = MAXVALUE(4,plant.leafAreaIndexCanopyMax * computeLAI(myDate));
-    understoreyLeafAreaIndexMax = statePlant.understoreycumulatedBiomassFoliage * plant.specificLeafArea;
-    understorey.leafAreaIndex = MAXVALUE(LAIMIN,understoreyLeafAreaIndexMax* computeLAI(myDate));
-
+    //understoreyLeafAreaIndexMax = statePlant.understoreycumulatedBiomassFoliage * plant.specificLeafArea;
+    //understorey.leafAreaIndex = MAXVALUE(LAIMIN,understoreyLeafAreaIndexMax* computeLAI(myDate));
+    plant.leafAreaIndexCanopy -= plant.leafAreaIndexCanopyMin;
+    plant.leafAreaIndexCanopy = MAXVALUE(0,plant.leafAreaIndexCanopy);
+    understorey.leafAreaIndex = 1;
     Crit3D_Hydrall::photosynthesisAndTranspiration();
 
     /* necessaria per ogni specie:
@@ -1256,7 +1258,7 @@ bool Crit3D_Hydrall::growthStand()
     statePlant.treecumulatedBiomassRoot -= (statePlant.treecumulatedBiomassRoot/plant.fineRootLongevity);
 
 
-    // TODO to understand what's internalCarbonStoragwe (STORE), afterwards the uninitialized value is used
+    // TODO to understand what's internalCarbonStorage (STORE), afterwards the uninitialized value is used
     //annual stand growth
     if (isFirstYearSimulation)
     {
