@@ -291,11 +291,11 @@ void intervalDecade(int decade, int year, int* dayStart, int* dayEnd, int* month
     else
     {
         *dayStart = 21;
-        QDate temp(year, *month, 1);
-        *dayEnd = temp.daysInMonth();
+        QDate firstDateMonth(year, *month, 1);
+        *dayEnd = firstDateMonth.daysInMonth();
     }
-
 }
+
 
 int getSeasonFromDate(QDate date)
 {
