@@ -2774,7 +2774,7 @@ bool Project::interpolationCv(meteoVariable myVar, const Crit3DTime& myTime, QSt
     if (! checkInterpolation(myVar)) return false;
 
     // check glocal
-    if (interpolationSettings.getUseGlocalDetrending() && ! interpolationSettings.isGlocalReady(false))
+    if (interpolationSettings.getUseGlocalDetrending() && (! interpolationSettings.isGlocalReady(false) || ! glocalCVPointsName.isEmpty()))
     {
         if (! loadGlocalAreasMap()) return false;
         if (glocalCVPointsName.isEmpty())
@@ -6055,6 +6055,9 @@ bool Project::computeResidualsGlocalDetrending(meteoVariable myVar, Crit3DTime m
         if (! computeStatisticsGlocalCrossValidation(myArea))
             return false;
     }
+
+    //statistiche generali media tra quelle delle aree
+    //crossValidationStatistics.setMeanAbsoluteError() etc...
 
     return true;
 }
