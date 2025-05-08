@@ -545,6 +545,7 @@ bool searchDataPath(QString* dataPath)
     return true;
 }
 
+
 void clearDir( const QString path )
 {
     QDir dir( path );
