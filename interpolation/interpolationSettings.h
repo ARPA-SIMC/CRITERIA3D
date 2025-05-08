@@ -214,6 +214,7 @@
         std::vector<double> pointsRange;
 
         std::vector<Crit3DMacroArea> macroAreas;
+        std::vector <int> macroAreaNumbers;
 
 
     public:
@@ -252,6 +253,9 @@
         gis::Crit3DRasterGrid *getMacroAreasMap();
         std::vector<Crit3DMacroArea> getMacroAreas();
         void setMacroAreas(std::vector<Crit3DMacroArea> myAreas);
+        void pushMacroAreaNumber(int number);
+        std::vector<int> getMacroAreaNumber();
+        void clearMacroAreaNumber();
 
         void setUseDoNotRetrend(bool myValue);
         bool getUseDoNotRetrend();
