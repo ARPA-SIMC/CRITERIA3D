@@ -237,6 +237,7 @@ bool Crit3D_Hydrall::computeHydrallPoint(Crit3DDate myDate, double myTemperature
     plant.leafAreaIndexCanopy -= plant.leafAreaIndexCanopyMin;
     plant.leafAreaIndexCanopy = MAXVALUE(0,plant.leafAreaIndexCanopy);
     understorey.leafAreaIndex = 1;
+    //plant.leafAreaIndexCanopy = 0.1;
     Crit3D_Hydrall::photosynthesisAndTranspiration();
 
     /* necessaria per ogni specie:
@@ -282,17 +283,31 @@ double Crit3D_Hydrall::computeLAI(Crit3DDate myDate)
     else
         return LAIMAX;
 }
-
+void Crit3D_Hydrall::nullPhotosynthesis()
+{
+    treeAssimilationRate = 0 ;
+    treeTranspirationRate.resize(soil.layersNr);
+    for (int i=0; i < soil.layersNr; i++)
+        treeTranspirationRate[i] = 0;
+}
 double Crit3D_Hydrall::photosynthesisAndTranspiration()
 {
-    Crit3DHydrallWeatherDerivedVariable weatherDerivedVariable;
+    //Crit3DHydrallWeatherDerivedVariable weatherDerivedVariable;
+    const double minLaiToComputePhotosynthesis = 0.1;
+    if (plant.leafAreaIndexCanopy > minLaiToComputePhotosynthesis && environmentalVariable.sineSolarElevation > 0.001)
+    {
+        Crit3D_Hydrall::radiationAbsorption();
+        Crit3D_Hydrall::photosynthesisAndTranspirationUnderstorey();
+        Crit3D_Hydrall::aerodynamicalCoupling();
+        Crit3D_Hydrall::upscale();
+        Crit3D_Hydrall::carbonWaterFluxesProfile();
+    }
+    else
+    {
+        Crit3D_Hydrall::nullPhotosynthesis();
+        Crit3D_Hydrall::photosynthesisAndTranspirationUnderstorey();
+    }
 
-    Crit3D_Hydrall::radiationAbsorption();
-    Crit3D_Hydrall::photosynthesisAndTranspirationUnderstorey();
-    Crit3D_Hydrall::aerodynamicalCoupling();
-    Crit3D_Hydrall::upscale();
-
-    Crit3D_Hydrall::carbonWaterFluxesProfile();
     Crit3D_Hydrall::cumulatedResults();
 
     return 0;
@@ -502,15 +517,15 @@ void Crit3D_Hydrall::radiationAbsorption()
     //diffuseLightSector2K = (0.5 - hemisphericalIsotropyParameter*(0.633-1.11*0.707) - hemisphericalIsotropyParameter*hemisphericalIsotropyParameter*(0.33-0.579*0.707))/0.707 ; //second sky sector (30-60 elevation)
     //diffuseLightSector3K = (0.5 - hemisphericalIsotropyParameter*(0.633-1.11*0.966) - hemisphericalIsotropyParameter*hemisphericalIsotropyParameter*(0.33-0.579*0.966))/ 0.966 ; // third sky sector (60-90 elevation)
 
-    if (plant.leafAreaIndexCanopy > EPSILON)
-    {
+    //if (plant.leafAreaIndexCanopy > EPSILON)
+    //{
         diffuseLightExtinctionCoefficient.global =- 1.0/plant.leafAreaIndexCanopy * log(0.178 * exp(-diffuseLightSector1K*plant.leafAreaIndexCanopy) + 0.514 * exp(-diffuseLightSector2K*plant.leafAreaIndexCanopy)
                                                                                           + 0.308 * exp(-diffuseLightSector3K*plant.leafAreaIndexCanopy));  //approximation based on relative radiance from 3 sky sectors
-    }
-    else
-    {
-        diffuseLightExtinctionCoefficient.global = (diffuseLightSector1K+diffuseLightSector2K+diffuseLightSector3K)/3;
-    }
+    //}
+    //else
+    //{
+        //diffuseLightExtinctionCoefficient.global = (diffuseLightSector1K+diffuseLightSector2K+diffuseLightSector3K)/3;
+    //}
         //Include effects of leaf clumping (see Goudriaan & van Laar 1994, p 110)
     directLightExtinctionCoefficient.global  *= clumpingParameter ;//direct light
     diffuseLightExtinctionCoefficient.global *= clumpingParameter ;//diffuse light
@@ -529,7 +544,7 @@ void Crit3D_Hydrall::radiationAbsorption()
         //Leaf area index of sunlit (1) and shaded (2) big-leaf
         sunlit.leafAreaIndex = UPSCALINGFUNC(directLightExtinctionCoefficient.global,plant.leafAreaIndexCanopy);
         shaded.leafAreaIndex = plant.leafAreaIndexCanopy - sunlit.leafAreaIndex ;
-        understorey.leafAreaIndex = 0.2;
+        //understorey.leafAreaIndex = 0.2;
         //Extinction coefficients for direct and diffuse PAR and NIR radiation, scattering leaves
         //Based on approximation by Goudriaan 1977 (in Goudriaan & van Laar 1994)
         /*double exponent= -pow(10,0.28 + 0.63*log10(plant.myChlorophyllContent*0.85/1000));
@@ -650,7 +665,7 @@ void Crit3D_Hydrall::leafTemperature()
 
 void Crit3D_Hydrall::aerodynamicalCoupling()
 {
-    double laiMinToComputeAerodynamicalCoupling = 0.1;
+    double laiMinToComputeAerodynamicalCoupling = 0.05;
     if (plant.leafAreaIndexCanopy > laiMinToComputeAerodynamicalCoupling)
     {
         // taken from Hydrall Model, Magnani UNIBO
@@ -1024,7 +1039,7 @@ void Crit3D_Hydrall::cumulatedResults()
 {
     // taken from Hydrall Model, Magnani UNIBO
     // Cumulate hourly values of gas exchange
-    deltaTime.absorbedPAR = HOUR_SECONDS*(sunlit.absorbedPAR+shaded.absorbedPAR);  //absorbed PAR (mol m-2)
+    //deltaTime.absorbedPAR = HOUR_SECONDS*(sunlit.absorbedPAR+shaded.absorbedPAR);  //absorbed PAR (mol m-2)
     deltaTime.grossAssimilation = HOUR_SECONDS * treeAssimilationRate ; // canopy gross assimilation (mol m-2)
     deltaTime.respiration = HOUR_SECONDS * Crit3D_Hydrall::plantRespiration() ;
     deltaTime.netAssimilation = deltaTime.grossAssimilation - deltaTime.respiration ;
