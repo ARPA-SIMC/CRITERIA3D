@@ -561,7 +561,7 @@ namespace radiation
         *td = (*Tt) * (1 - expf(maximumDiffuseTransmissivity - (maximumDiffuseTransmissivity * clearSkyTransmissivity) / (*Tt)));
 
         /*! FT 0.12 stimato da Settefonti agosto 2007 */
-        if ((*Tt) > 0.6f) *td = MAXVALUE(*td, 0.1f);
+        if ((*Tt) > 0.6f) *td = MAXVALUE(*td, 0.12f);
     }
 
 

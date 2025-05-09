@@ -56,35 +56,24 @@ void WaterTable::cleanAllVectors()
 
     _hindcastSeries.clear();
     _interpolationSeries.clear();
-
-    for (int m = 0; m < 12; m++)
-    {
-        _WTClimateMonthly[m] = NODATA;
-    }
-    for (int d = 0; d < 366; d++)
-    {
-        _WTClimateDaily[d] = NODATA;
-    }
 }
 
 
 bool WaterTable::initializeMeteoData(const QDate &firstDate, const QDate &lastDate)
 {
     if (lastDate <= firstDate)
-    {
         return false;
-    }
 
     cleanAllVectors();
 
     _firstMeteoDate = firstDate;
     _lastMeteoDate = lastDate;
-    int nrOfData = firstDate.daysTo(lastDate);
+    int nrData = firstDate.daysTo(lastDate);
 
-    _inputTMin.resize(nrOfData);
-    _inputTMax.resize(nrOfData);
-    _inputPrec.resize(nrOfData);
-    _etpValues.resize(nrOfData);
+    _inputTMin.resize(nrData, NODATA);
+    _inputTMax.resize(nrData, NODATA);
+    _inputPrec.resize(nrData, NODATA);
+    _etpValues.resize(nrData, NODATA);
 
     return true;
 }
@@ -436,7 +425,7 @@ double WaterTable::getWaterTableDaily(const QDate &myDate)
         double deltaCWB = computeCWB(myDate, _nrDaysPeriod);
         if (deltaCWB != NODATA)
         {
-            return _h0 + _alpha * deltaCWB;            // [cm]
+            return std::max(0., _h0 + _alpha * deltaCWB);            // [cm]
         }
     }
 
@@ -476,7 +465,7 @@ bool WaterTable::computeWaterTableClimate(const QDate &currentDate, int yearFrom
 {
     myValue = NODATA;
 
-    int nrYears = yearTo - yearFrom + 1;
+    int nrRequestedYears = yearTo - yearFrom + 1;
     float sumDepth = 0;
     int nrValidYears = 0;
     float myDepth, myDelta;
@@ -493,7 +482,7 @@ bool WaterTable::computeWaterTableClimate(const QDate &currentDate, int yearFrom
     }
 
     // check nr of data
-    if ((nrValidYears / nrYears) < _meteoSettings.getMinimumPercentage())
+    if ((nrValidYears / nrRequestedYears) < _meteoSettings.getMinimumPercentage())
         return false;
 
     myValue = sumDepth / nrValidYears;

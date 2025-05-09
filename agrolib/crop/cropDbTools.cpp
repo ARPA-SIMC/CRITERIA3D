@@ -65,7 +65,6 @@ bool loadCropParameters(const QSqlDatabase &dbCrop, QString idCrop, Crit3DCrop &
     myCrop.roots.shapeDeformation = query.value("root_shape_deformation").toDouble();
     myCrop.roots.rootDepthMin = query.value("root_depth_zero").toDouble();
     myCrop.roots.rootDepthMax = query.value("root_depth_max").toDouble();
-    myCrop.roots.actualRootDepthMax = myCrop.roots.rootDepthMax;
 
     if (fieldExists(query, "roots_additional_cohesion"))
     {

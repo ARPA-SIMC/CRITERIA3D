@@ -540,6 +540,21 @@ void Crit3DInterpolationSettings::setMacroAreas(std::vector<Crit3DMacroArea> myA
     macroAreas = myAreas;
 }
 
+void Crit3DInterpolationSettings::pushMacroAreaNumber(int number)
+{
+    macroAreaNumbers.push_back(number);
+}
+
+std::vector<int> Crit3DInterpolationSettings::getMacroAreaNumber()
+{
+    return macroAreaNumbers;
+}
+
+void Crit3DInterpolationSettings::clearMacroAreaNumber()
+{
+    macroAreaNumbers.clear();
+}
+
 TInterpolationMethod Crit3DInterpolationSettings::getInterpolationMethod()
 { return interpolationMethod;}
 
