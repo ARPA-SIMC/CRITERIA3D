@@ -68,7 +68,7 @@ bool WaterTable::initializeMeteoData(const QDate &firstDate, const QDate &lastDa
 
     _firstMeteoDate = firstDate;
     _lastMeteoDate = lastDate;
-    int nrData = firstDate.daysTo(lastDate);
+    int nrData = firstDate.daysTo(lastDate) +1;
 
     _inputTMin.resize(nrData, NODATA);
     _inputTMax.resize(nrData, NODATA);
