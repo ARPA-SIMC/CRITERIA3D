@@ -373,8 +373,8 @@ bool Crit3DProject::dailyUpdateHydrall(const QDate &myDate)
         }
 
 
-        hydrallModel.growthStand(); // TODO quit this line - temporary position to prompt check
-        hydrallModel.resetStandVariables();
+        //hydrallModel.growthStand(); // TODO quit this line - temporary position to prompt check
+        //hydrallModel.resetStandVariables();
         if (myDate.month() == hydrallModel.firstMonthVegetativeSeason) //TODO
         {
             /* in case of the first day of the year
@@ -443,7 +443,7 @@ void Crit3DProject::assignETreal()
                     }
 
                     if (processes.computeHydrall)
-                    { //problema lunghezza del vettore soil.rootDensity, che il 22 aprile alle 21 è risultato di lunghezza 15 mentre i layers del suolo erano 10 (dentro hydrall e in particolare dentro moisture factor...)
+                    {
                         if (currentCrop.roots.rootDensity.empty())
                         {
                             // compute root lenght
