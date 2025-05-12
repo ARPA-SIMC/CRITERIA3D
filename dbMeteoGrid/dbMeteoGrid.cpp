@@ -3389,7 +3389,7 @@ bool Crit3DMeteoGridDbHandler::saveCellCurrentGridDailyFF(QString& errorStr, QSt
 
 
 bool Crit3DMeteoGridDbHandler::saveCellGridMonthlyData(QString &errorStr, const QString &meteoPointID, int row, int col,
-                                                       QDate firstDate, QDate lastDate, QList<meteoVariable> meteoVariableList)
+                                                       QDate firstDate, QDate lastDate, const QList<meteoVariable> &meteoVariableList)
 {
     QSqlQuery qry(_db);
     QString table = "MonthlyData";
