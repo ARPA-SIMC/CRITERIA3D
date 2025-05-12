@@ -2729,7 +2729,6 @@ bool Project::computeStatisticsGlocalCrossValidation(Crit3DMacroArea myArea)
 {
     std::vector<int> meteoPointsList = myArea.getMeteoPoints();
 
-    glocalCrossValidationStatistics.clear();
 
     Crit3DCrossValidationStatistics cvStatistics;
     cvStatistics.initialize();
@@ -2772,19 +2771,6 @@ bool Project::interpolationCv(meteoVariable myVar, const Crit3DTime& myTime, QSt
 {
 
     if (! checkInterpolation(myVar)) return false;
-
-    // check glocal
-    if (interpolationSettings.getUseGlocalDetrending() && ! interpolationSettings.isGlocalReady(false))
-    {
-        if (! loadGlocalAreasMap()) return false;
-        if (glocalCVPointsName.isEmpty())
-        {
-            if (! loadGlocalStationsAndCells(false, getCompleteFileName(glocalPointsName, PATH_GEO))) return false;
-        }
-        else {
-            if (! loadGlocalStationsAndCells(false, getCompleteFileName(glocalCVPointsName, PATH_GEO))) return false;
-        }
-    }
 
     // check variables
     if ( interpolationSettings.getUseDewPoint() &&
@@ -2839,16 +2825,20 @@ bool Project::interpolationCv(meteoVariable myVar, const Crit3DTime& myTime, QSt
     }
     else if (interpolationSettings.getUseGlocalDetrending())
     {
+        glocalCrossValidationStatistics.clear();
+        interpolationSettings.clearMacroAreaNumber();
+
         if(!setMultipleDetrendingHeightTemperatureRange(&interpolationSettings))
         {
             errorString = "Error in function preInterpolation: \n couldn't set temperature ranges for height proxy.";
             return false;
         }
 
-        if (! computeResidualsGlocalDetrending(myVar, myTime, interpolationPoints))
+        if (! computeResidualsAndStatisticsGlocalDetrending(myVar, myTime, interpolationPoints))
         {
             return false;
         }
+
     }
     else if (interpolationSettings.getUseLocalDetrending())
     {
@@ -6016,7 +6006,7 @@ bool Project::readVmArkimetData(const QList<QString> &vmFileList, frequencyType 
 }
 
 
-bool Project::computeResidualsGlocalDetrending(meteoVariable myVar, Crit3DTime myTime, std::vector<Crit3DInterpolationDataPoint> &interpolationPoints)
+bool Project::computeResidualsAndStatisticsGlocalDetrending(meteoVariable myVar, Crit3DTime myTime, std::vector<Crit3DInterpolationDataPoint> &interpolationPoints)
 {
     //TODO: glocal cv with grid ONLY (no DEM)
 
@@ -6040,6 +6030,7 @@ bool Project::computeResidualsGlocalDetrending(meteoVariable myVar, Crit3DTime m
     //ciclo sulle aree
     for (int k = 0; k < macroAreas.size(); k++)
     {
+
         Crit3DMacroArea myArea = macroAreas[k];
         std::vector<int> meteoPointsList = myArea.getMeteoPoints();
         std::vector<float> areaCells;
@@ -6047,13 +6038,16 @@ bool Project::computeResidualsGlocalDetrending(meteoVariable myVar, Crit3DTime m
         //if (! myArea.getAreaCellsGrid().empty() || ! myArea.getAreaCellsDEM().empty() )
         if (! myArea.getAreaCellsDEM().empty() && ! meteoPointsList.empty())
         {
+            interpolationSettings.pushMacroAreaNumber(k);
+
             if (! ::computeResidualsGlocalDetrending(myVar, myTime, myArea, elevationPos, meteoPoints, nrMeteoPoints, interpolationPoints,
                                                      &interpolationSettings, meteoSettings, &climateParameters, true, true))
                 return false;
+
+            if (! computeStatisticsGlocalCrossValidation(myArea))
+                return false;
         }
 
-        if (! computeStatisticsGlocalCrossValidation(myArea))
-            return false;
     }
 
     return true;

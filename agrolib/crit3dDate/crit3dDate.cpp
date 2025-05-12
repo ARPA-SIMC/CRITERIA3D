@@ -221,10 +221,19 @@ Crit3DDate min(const Crit3DDate& myDate1, const Crit3DDate& myDate2)
 }
 
 
+Crit3DDate getDateFromDoyGeneric(int year, int doy)
+{
+    Crit3DDate firstJan = Crit3DDate(1, 1, year);
+    return firstJan.addDays(doy);
+}
+
+
 Crit3DDate getDateFromDoy(int year, int doy)
 {
     if ((doy < 1) || (doy > 366))
-        return {0, 0, 0};               // null date
+    {
+        return NO_DATE;               // null date
+    }
 
     int day;
     int month = 1;
@@ -238,7 +247,9 @@ Crit3DDate getDateFromDoy(int year, int doy)
     else
     {
         if (doy == 366)
+        {
             return {31, 12, year};
+        }
 
         while (doy > doyMonth[month] && month < 12)
             month++;

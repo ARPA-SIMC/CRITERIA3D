@@ -405,6 +405,9 @@
         void setStateVariables(Crit3DHydrallMaps &stateMap, int row, int col);
         void getStateVariables(Crit3DHydrallMaps &stateMap, int row, int col);
 
+    private:
+        void nullPhotosynthesis();
+
     };
 
 

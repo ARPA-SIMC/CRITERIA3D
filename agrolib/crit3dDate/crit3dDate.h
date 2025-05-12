@@ -91,6 +91,7 @@
     int getMonthFromDoy(int doy,int year);
 
     Crit3DDate getDateFromDoy(int year, int doy);
+    Crit3DDate getDateFromDoyGeneric(int year, int doy);
 
     Crit3DDate max(const Crit3DDate& myDate1, const Crit3DDate& myDate2);
     Crit3DDate min(const Crit3DDate& myDate1, const Crit3DDate& myDate2);
