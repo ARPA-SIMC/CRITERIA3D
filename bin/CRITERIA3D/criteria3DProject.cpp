@@ -443,7 +443,7 @@ void Crit3DProject::assignETreal()
                     }
 
                     if (processes.computeHydrall)
-                    { //problema lunghezza del vettore soil.rootDensity, che il 22 aprile alle 21 è risultato di lunghezza 15 mentre i layers del suolo erano 10 (dentro hydrall e in particolare dentro moisture factor...)
+                    {
                         if (currentCrop.roots.rootDensity.empty())
                         {
                             // compute root lenght

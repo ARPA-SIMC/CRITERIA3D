@@ -10,7 +10,7 @@
 //#include <stdio.h>
 #include <iostream>
 #include <math.h>
-#include <ostream>
+#include <fstream>
 #include "crit3dDate.h"
 #include "commonConstants.h"
 #include "hydrall.h"
@@ -1043,6 +1043,13 @@ void Crit3D_Hydrall::cumulatedResults()
     deltaTime.grossAssimilation = HOUR_SECONDS * treeAssimilationRate ; // canopy gross assimilation (mol m-2)
     deltaTime.respiration = HOUR_SECONDS * Crit3D_Hydrall::plantRespiration() ;
     deltaTime.netAssimilation = deltaTime.grossAssimilation - deltaTime.respiration ;
+    //std::cout << deltaTime.grossAssimilation * 10e6 << ", " << deltaTime.respiration * 10e6 << ", " << deltaTime.netAssimilation *10e6 << std::endl;
+
+    /*std::ofstream myFile;
+    myFile.open("/autofs/nfshomes/ctoscano/Github/CRITERIA3D/DATA/PROJECT/VERA_test/outputLAIetc.csv", std::ios_base::app);
+    myFile << deltaTime.grossAssimilation/HOUR_SECONDS*10e6 <<","<<deltaTime.respiration/HOUR_SECONDS*10e6<<","<<deltaTime.netAssimilation/HOUR_SECONDS*10e6<<","<<plant.leafAreaIndexCanopy<<"\n";
+    myFile.close();*/
+
     deltaTime.netAssimilation = deltaTime.netAssimilation*12/1000.0; // [KgC m-2] TODO da motiplicare dopo per CARBONFACTOR DA METTERE dopo convert to kg DM m-2
     deltaTime.understoreyNetAssimilation = HOUR_SECONDS * MH2O * understoreyAssimilationRate - MH2O*understoreyRespiration();
     statePlant.treeNetPrimaryProduction += deltaTime.netAssimilation; // state plant considers the biomass stored during the current year
@@ -1058,7 +1065,7 @@ void Crit3D_Hydrall::cumulatedResults()
         understoreyTranspirationRate[i] *= (HOUR_SECONDS * MH2O); // [mm]
         deltaTime.transpiration += (treeTranspirationRate[i] + understoreyTranspirationRate[i]);
     }
-    //std::cout << deltaTime.grossAssimilation << "," << deltaTime.respiration << std::endl;
+
     //evaporation
     //deltaTime.evaporation = computeEvaporation(); // TODO chiedere a Fausto come gestire l'evaporazione sui layer.
 
