@@ -2048,7 +2048,7 @@ bool Crit3DMeteoGridDbHandler::loadGridHourlyData(QString &errorStr, QString met
     }
 
     QSqlQuery qry(_db);
-    QDateTime date;
+    QDateTime dateTime;
     int varCode;
     float value;
     QString statement = QString("SELECT * FROM `%1` WHERE `%2` >= '%3' AND `%2` <= '%4' ORDER BY `%2`")
@@ -2067,9 +2067,9 @@ bool Crit3DMeteoGridDbHandler::loadGridHourlyData(QString &errorStr, QString met
 
             if (value != NODATA)
             {
-                if (! getValue(qry.value(_tableHourly.fieldTime), &date))
+                if (! getValue(qry.value(_tableHourly.fieldTime), &dateTime))
                 {
-                    errorStr = "Missing fieldTime";
+                    errorStr = "Missing " + _tableHourly.fieldTime;
                     return false;
                 }
 
@@ -2080,8 +2080,8 @@ bool Crit3DMeteoGridDbHandler::loadGridHourlyData(QString &errorStr, QString met
                 }
                 meteoVariable variable = getHourlyVarEnum(varCode);
 
-                if (! _meteoGrid->meteoPointPointer(row,col)->setMeteoPointValueH(getCrit3DDate(date.date()),
-                                                     date.time().hour(), date.time().minute(), variable, value))
+                if (! _meteoGrid->meteoPointPointer(row, col)->setMeteoPointValueH(getCrit3DDate(dateTime.date()),
+                                                     dateTime.time().hour(), dateTime.time().minute(), variable, value))
                 {
                     errorStr = "Wrong VariableCode: " + QString::number(varCode);
                     return false;
@@ -2704,8 +2704,8 @@ std::vector<float> Crit3DMeteoGridDbHandler::loadGridHourlyVar(meteoVariable var
     QSqlQuery qry(_db);
     QString tableH = _tableHourly.prefix + meteoPointId + _tableHourly.postFix;
     QDateTime dateTime, previousDateTime;
-    dateTime.setTimeSpec(Qt::UTC);
-    previousDateTime.setTimeSpec(Qt::UTC);
+    dateTime.setTimeZone(QTimeZone::utc());
+    previousDateTime.setTimeZone(QTimeZone::utc());
 
     std::vector<float> hourlyVarList;
 

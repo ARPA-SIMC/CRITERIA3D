@@ -33,12 +33,12 @@
     bool fieldExists(const QSqlQuery &query, const QString fieldName);
 
     bool getValue(const QVariant &myRs);
-    bool getValue(const QVariant &myRs, int* myValue);
-    bool getValue(const QVariant &myRs, float* myValue);
-    bool getValue(const QVariant &myRs, double* myValue);
-    bool getValue(const QVariant &myRs, QDate* myValue);
-    bool getValue(const QVariant &myRs, QDateTime* myValue);
-    bool getValue(const QVariant &myRs, QString* myValue);
+    bool getValue(const QVariant &myRs, int* value);
+    bool getValue(const QVariant &myRs, float* value);
+    bool getValue(const QVariant &myRs, double* value);
+    bool getValue(const QVariant &myRs, QDate* date);
+    bool getValue(const QVariant &myRs, QDateTime* dateTime);
+    bool getValue(const QVariant &myRs, QString* valueStr);
 
     QString getFilePath(const QString &fileNameComplete);
     QString getFileName(const QString &fileNameComplete);
