@@ -136,7 +136,7 @@ bool getValue(const QVariant &myRs, QDate* date)
         return false;
 
     *date = myRs.toDate();
-    return true;
+    return date->isValid();
 }
 
 
