@@ -1278,36 +1278,37 @@ bool Crit3DMeteoPoint::computeMonthlyAggregate(const Crit3DDate &firstDate, cons
                                                Crit3DMeteoSettings* meteoSettings, Crit3DQuality* qualityCheck,
                                                Crit3DClimateParameters* climateParam)
 {
-
     int currentMonth = firstDate.month;
     int nrDays = getDaysInMonth(currentMonth, firstDate.year);
 
-    float sum = 0;
+    double sum = 0;
     int nrValid = 0;
     int indexMonth = 0;
     bool aggregateDailyInMonthly = false;
 
-    for (Crit3DDate actualDate = firstDate; actualDate<=lastDate; actualDate=actualDate.addDays(1))
+    for (Crit3DDate actualDate = firstDate; actualDate<=lastDate; ++actualDate)
     {
-        float myDailyValue = getMeteoPointValueD(actualDate, dailyMeteoVar, meteoSettings);
+        float dailyValue = getMeteoPointValueD(actualDate, dailyMeteoVar, meteoSettings);
         quality::qualityType qualityT = qualityCheck->checkFastValueDaily_SingleValue(dailyMeteoVar, climateParam,
-                                                                                      myDailyValue, currentMonth, float(point.z));
+                                                                                      dailyValue, currentMonth, float(point.z));
         if (qualityT == quality::accepted)
         {
-            sum = sum + myDailyValue;
-            nrValid = nrValid + 1;
+            sum += dailyValue;
+            nrValid++;
         }
         if (actualDate.day == nrDays || actualDate == lastDate)
         {
-            indexMonth = indexMonth + 1;
-            if ((float(nrValid)/float(nrDays)*100) >= meteoSettings->getMinimumPercentage())
+            indexMonth++;
+            float dataPercentage = float(nrValid) / float(nrDays) * 100;
+            if (dataPercentage >= meteoSettings->getMinimumPercentage())
             {
                 aggregateDailyInMonthly = true;
-                if (dailyMeteoVar == dailyAirTemperatureMin || dailyMeteoVar == dailyAirTemperatureMax || dailyMeteoVar == dailyAirTemperatureAvg)
+                if (dailyMeteoVar == dailyAirTemperatureMin || dailyMeteoVar == dailyAirTemperatureMax
+                    || dailyMeteoVar == dailyAirTemperatureAvg)
                 {
                     if (nrValid != 0)
                     {
-                        setMeteoPointValueM(actualDate, updateMeteoVariable(dailyMeteoVar, monthly), sum/float(nrValid));
+                        setMeteoPointValueM(actualDate, updateMeteoVariable(dailyMeteoVar, monthly), float(sum / nrValid));
                     }
                     else
                     {
@@ -1315,14 +1316,20 @@ bool Crit3DMeteoPoint::computeMonthlyAggregate(const Crit3DDate &firstDate, cons
                     }
                 }
                 else if (dailyMeteoVar == dailyPrecipitation || dailyMeteoVar == dailyReferenceEvapotranspirationHS
-                         || dailyMeteoVar == dailyReferenceEvapotranspirationPM || dailyMeteoVar == dailyGlobalRadiation)
+                         || dailyMeteoVar == dailyReferenceEvapotranspirationPM || dailyMeteoVar == dailyGlobalRadiation
+                         || dailyMeteoVar == dailyBIC)
                 {
-                    setMeteoPointValueM(actualDate,updateMeteoVariable(dailyMeteoVar, monthly), sum);
+                    setMeteoPointValueM(actualDate, updateMeteoVariable(dailyMeteoVar, monthly), float(sum));
+                }
+                else if (updateMeteoVariable(dailyMeteoVar, monthly) != noMeteoVar)
+                {
+                    // default: average
+                    setMeteoPointValueM(actualDate, updateMeteoVariable(dailyMeteoVar, monthly), float(sum / nrValid));
                 }
             }
             else
             {
-                setMeteoPointValueM(actualDate,updateMeteoVariable(dailyMeteoVar, monthly),NODATA);
+                setMeteoPointValueM(actualDate,updateMeteoVariable(dailyMeteoVar, monthly), NODATA);
             }
             sum = 0;
             nrValid = 0;
