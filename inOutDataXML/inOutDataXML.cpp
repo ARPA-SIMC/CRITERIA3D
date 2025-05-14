@@ -3,7 +3,7 @@
 #include <QTextStream>
 #include <QFile>
 #include <QFileInfo>
-
+#include <QTimeZone>
 
 
 InOutDataXML::InOutDataXML(bool isGrid, Crit3DMeteoPointsDbHandler *meteoPointsDbHandler, Crit3DMeteoGridDbHandler *meteoGridDbHandler, QString xmlFileName)
@@ -1212,7 +1212,7 @@ QDateTime InOutDataXML::parseXMLDateTime(QString text)
     QString format = time.getFormat();
 
     QDateTime myDateTime = QDateTime::fromString(myDateStr,format);
-    myDateTime.setTimeSpec(Qt::UTC);
+    myDateTime.setTimeZone(QTimeZone::utc());
 
     return myDateTime;
 }
