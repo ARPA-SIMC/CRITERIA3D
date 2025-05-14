@@ -587,7 +587,7 @@ bool Crit3DMeteoPointsDbHandler::loadHourlyData(const Crit3DDate &firstDate, con
     // check dates
     if (firstDate > lastDate)
     {
-        _errorStr = "wrong dates: first > last";
+        _errorStr = "wrong dates: firstDate > lastDate";
         return false;
     }
 
@@ -608,14 +608,17 @@ bool Crit3DMeteoPointsDbHandler::loadHourlyData(const Crit3DDate &firstDate, con
         _errorStr = qry.lastError().text();
         return false;
     }
-    else
-    {
-        meteoVariable variable;
-        while (qry.next())
-        {
-            QDateTime d = qry.value(0).toDateTime();
-            Crit3DDate myDate = Crit3DDate(d.date().day(), d.date().month(), d.date().year());
 
+    while (qry.next())
+    {
+        QDateTime dateTime;
+        if (getValue(qry.value(0), &dateTime))
+        {
+            Crit3DDate myDate = getCrit3DDate(dateTime.date());
+            int hour = dateTime.time().hour();
+            int minute = dateTime.time().minute();
+
+            meteoVariable variable;
             int idVar = qry.value(1).toInt();
             try
             {
@@ -629,13 +632,13 @@ bool Crit3DMeteoPointsDbHandler::loadHourlyData(const Crit3DDate &firstDate, con
             if (variable != noMeteoVar)
             {
                 float value = qry.value(2).toFloat();
-                meteoPoint.setMeteoPointValueH(myDate, d.time().hour(), d.time().minute(), variable, value);
+                meteoPoint.setMeteoPointValueH(myDate, hour, minute, variable, value);
 
                 // copy scalar intensity to vector intensity (instantaneous values are equivalent, following WMO)
                 // should be removed when hourly averages are available
                 if (variable == windScalarIntensity)
                 {
-                    meteoPoint.setMeteoPointValueH(myDate, d.time().hour(), d.time().minute(), windVectorIntensity, value);
+                    meteoPoint.setMeteoPointValueH(myDate, hour, minute, windVectorIntensity, value);
                 }
             }
         }

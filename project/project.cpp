@@ -70,8 +70,8 @@ void Project::initializeProject()
     meteoGridDbHandler = nullptr;
     aggregationDbHandler = nullptr;
 
-    meteoPointsDbFirstTime.setTimeSpec(Qt::UTC);
-    meteoPointsDbLastTime.setTimeSpec(Qt::UTC);
+    meteoPointsDbFirstTime.setTimeZone(QTimeZone::utc());
+    meteoPointsDbLastTime.setTimeZone(QTimeZone::utc());
     meteoPointsDbFirstTime.setSecsSinceEpoch(0);
     meteoPointsDbLastTime.setSecsSinceEpoch(0);
 
@@ -974,7 +974,7 @@ QDateTime Project::getCurrentTime()
     QDateTime myDateTime;
     if (gisSettings.isUTC)
     {
-        myDateTime.setTimeSpec(Qt::UTC);
+        myDateTime.setTimeZone(QTimeZone::utc());
     }
 
     myDateTime.setDate(currentDate);
@@ -1796,10 +1796,10 @@ bool Project::loadMeteoGridMonthlyData(QDate firstDate, QDate lastDate, bool sho
 QDateTime Project::findDbPointLastTime()
 {
     QDateTime lastTime;
-    lastTime.setTimeSpec(Qt::UTC);
+    lastTime.setTimeZone(QTimeZone::utc());
 
     QDateTime lastDateD;
-    lastDateD.setTimeSpec(Qt::UTC);
+    lastDateD.setTimeZone(QTimeZone::utc());
     lastDateD = meteoPointsDbHandler->getLastDate(daily);
     if (! lastDateD.isNull())
     {
@@ -1807,7 +1807,7 @@ QDateTime Project::findDbPointLastTime()
     }
 
     QDateTime lastDateH;
-    lastDateH.setTimeSpec(Qt::UTC);
+    lastDateH.setTimeZone(QTimeZone::utc());
     lastDateH = meteoPointsDbHandler->getLastDate(hourly);
 
     if (! lastDateH.isNull())
@@ -1829,15 +1829,15 @@ QDateTime Project::findDbPointLastTime()
 QDateTime Project::findDbPointFirstTime()
 {
     QDateTime firstTime;
-    firstTime.setTimeSpec(Qt::UTC);
+    firstTime.setTimeZone(QTimeZone::utc());
 
     QDateTime firstDateD;
-    firstDateD.setTimeSpec(Qt::UTC);
+    firstDateD.setTimeZone(QTimeZone::utc());
     firstDateD = meteoPointsDbHandler->getFirstDate(daily);
     if (! firstDateD.isNull()) firstTime = firstDateD;
 
     QDateTime firstDateH;
-    firstDateH.setTimeSpec(Qt::UTC);
+    firstDateH.setTimeZone(QTimeZone::utc());
     firstDateH = meteoPointsDbHandler->getFirstDate(hourly);
 
     if (! firstDateH.isNull())
