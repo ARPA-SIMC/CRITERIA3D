@@ -2834,7 +2834,7 @@ bool Project::interpolationCv(meteoVariable myVar, const Crit3DTime& myTime, QSt
             return false;
         }
 
-        if (! computeResidualsAndStatisticsGlocalDetrending(myVar, myTime, interpolationPoints))
+        if (! computeResidualsAndStatisticsGlocalDetrending(myVar, interpolationPoints))
         {
             return false;
         }
@@ -6006,13 +6006,13 @@ bool Project::readVmArkimetData(const QList<QString> &vmFileList, frequencyType 
 }
 
 
-bool Project::computeResidualsAndStatisticsGlocalDetrending(meteoVariable myVar, Crit3DTime myTime, std::vector<Crit3DInterpolationDataPoint> &interpolationPoints)
+bool Project::computeResidualsAndStatisticsGlocalDetrending(meteoVariable myVar, std::vector<Crit3DInterpolationDataPoint> &interpolationPoints)
 {
     //TODO: glocal cv with grid ONLY (no DEM)
 
-    if (myVar == noMeteoVar) return false;
+    if (myVar == noMeteoVar)
+        return false;
 
-    std::string errorStdString;
     std::vector <Crit3DMacroArea> macroAreas = interpolationSettings.getMacroAreas();
 
     int elevationPos = NODATA;
@@ -6030,24 +6030,21 @@ bool Project::computeResidualsAndStatisticsGlocalDetrending(meteoVariable myVar,
     //ciclo sulle aree
     for (int k = 0; k < macroAreas.size(); k++)
     {
-
         Crit3DMacroArea myArea = macroAreas[k];
         std::vector<int> meteoPointsList = myArea.getMeteoPoints();
-        std::vector<float> areaCells;
 
         //if (! myArea.getAreaCellsGrid().empty() || ! myArea.getAreaCellsDEM().empty() )
         if (! myArea.getAreaCellsDEM().empty() && ! meteoPointsList.empty())
         {
             interpolationSettings.pushMacroAreaNumber(k);
 
-            if (! ::computeResidualsGlocalDetrending(myVar, myTime, myArea, elevationPos, meteoPoints, nrMeteoPoints, interpolationPoints,
-                                                     &interpolationSettings, meteoSettings, &climateParameters, true, true))
+            if (! computeResidualsGlocalDetrending(myVar, myArea, elevationPos, meteoPoints, interpolationPoints,
+                                                     &interpolationSettings, meteoSettings, true, true))
                 return false;
 
             if (! computeStatisticsGlocalCrossValidation(myArea))
                 return false;
         }
-
     }
 
     return true;

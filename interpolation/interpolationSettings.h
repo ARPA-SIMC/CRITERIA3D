@@ -151,19 +151,19 @@
         { return int(meteoPoints.size()); }
 
         void setMeteoPoints (std::vector<int> myMeteoPoints) { meteoPoints = myMeteoPoints; }
-        std::vector<int> getMeteoPoints() { return meteoPoints; }
+        std::vector<int> getMeteoPoints() const { return meteoPoints; }
 
         void setAreaCellsDEM (std::vector<float> myCells) { areaCellsDEM = myCells; }
-        std::vector<float> getAreaCellsDEM() { return areaCellsDEM; }
+        std::vector<float> getAreaCellsDEM() const { return areaCellsDEM; }
 
         void setAreaCellsGrid (std::vector<float> myCells) { areaCellsGrid = myCells; }
-        std::vector<float> getAreaCellsGrid() { return areaCellsGrid; }
+        std::vector<float> getAreaCellsGrid() const { return areaCellsGrid; }
 
         void setParameters (std::vector<std::vector<double>> myParameters) { areaParameters = myParameters; }
-        std::vector<std::vector<double>> getParameters() { return areaParameters; }
+        std::vector<std::vector<double>> getParameters() const { return areaParameters; }
 
         void setCombination (Crit3DProxyCombination myCombination) { areaCombination = myCombination; }
-        Crit3DProxyCombination getCombination() { return areaCombination; }
+        Crit3DProxyCombination getCombination() const { return areaCombination; }
     };
 
 
@@ -223,9 +223,12 @@
         void initialize();
         void initializeProxy();
 
-        Crit3DProxy* getProxy(unsigned pos);
-        std::string getProxyName(unsigned pos);
-        size_t getProxyNr();
+        Crit3DProxy* getProxy(unsigned pos) { return &(currentProxy[pos]); }
+
+        std::string getProxyName(unsigned pos) const { return currentProxy[pos].getName(); }
+
+        size_t getProxyNr() const { return currentProxy.size(); }
+
         void addProxy(Crit3DProxy myProxy, bool isActive_);
         double getProxyValue(unsigned pos, std::vector<double> proxyValues);
         bool getCombination(int combinationInteger, Crit3DProxyCombination &outCombination);

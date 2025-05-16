@@ -183,10 +183,10 @@ Crit3DDate Crit3DDate::addDays(long offset) const
 }
 
 
-int Crit3DDate::daysTo(const Crit3DDate& myDate) const
+int Crit3DDate::daysTo(const Crit3DDate& newDate) const
 {
     long j1 = getJulianDay(this->day, this->month, this->year);
-    long j2 = getJulianDay(myDate.day, myDate.month, myDate.year);
+    long j2 = getJulianDay(newDate.day, newDate.month, newDate.year);
     return j2-j1;
 }
 

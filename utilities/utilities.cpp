@@ -130,6 +130,19 @@ bool getValue(const QVariant &myRs, double* value)
 }
 
 
+bool getValue(const QVariant &myRs, QString* valueStr)
+{
+    *valueStr = "";
+    if (! myRs.isValid() || myRs.isNull())
+        return false;
+    if (myRs == "NULL")
+        return false;
+
+    *valueStr = myRs.toString();
+    return true;
+}
+
+
 bool getValue(const QVariant &myRs, QDate* date)
 {
     if (myRs.isNull() || myRs == "")
@@ -145,23 +158,19 @@ bool getValue(const QVariant &myRs, QDateTime* dateTime)
     if (myRs.isNull() || myRs == "")
         return false;
 
+    *dateTime = myRs.toDateTime();
     dateTime->setTimeZone(QTimeZone::utc());
-    dateTime->fromString(myRs.toString(), "yyyy-MM-dd HH:mm:ss");
 
     return dateTime->isValid();
 }
 
 
-bool getValue(const QVariant &myRs, QString* valueStr)
+bool getValueCrit3DTime(const QVariant &myRs, Crit3DTime* dateTime)
 {
-    *valueStr = "";
-    if (! myRs.isValid() || myRs.isNull())
-        return false;
-    if (myRs == "NULL")
+    if (myRs.isNull())
         return false;
 
-    *valueStr = myRs.toString();
-    return true;
+    return dateTime->setFromISOString(myRs.toString().toStdString());
 }
 
 
@@ -214,13 +223,13 @@ QDate getQDate(const Crit3DDate& d)
 
 QDateTime getQDateTime(const Crit3DTime& t)
 {
-    QDate myDate = QDate(t.date.year, t.date.month, t.date.day);
+    QDateTime dateTime;
+    dateTime.setTimeZone(QTimeZone::utc());
 
-    QDateTime myDateTime;
-    myDateTime.setTimeZone(QTimeZone::utc());
-    myDateTime.setDate(myDate);
-    myDateTime.setTime(QTime(0,0,0,0));
-    return myDateTime.addSecs(t.time);
+    dateTime.setDate(QDate(t.date.year, t.date.month, t.date.day));
+    dateTime.setTime(QTime(0,0,0,0));
+
+    return dateTime.addSecs(t.time);
 }
 
 
