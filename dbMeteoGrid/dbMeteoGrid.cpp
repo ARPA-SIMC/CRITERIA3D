@@ -12,6 +12,7 @@
 #include <QDir>
 #include <QSqlQuery>
 #include <QSqlError>
+#include <QTextStream>
 
 
 Crit3DMeteoGridDbHandler::Crit3DMeteoGridDbHandler()
@@ -732,7 +733,7 @@ int Crit3DMeteoGridDbHandler::getDailyVarCode(meteoVariable meteoGridDailyVar)
 
     if (_gridDailyVar.empty())
     {
-        qDebug() << "_gridDailyVar is empty";
+        //qDebug() << "_gridDailyVar is empty";
         return varCode;
     }
 
