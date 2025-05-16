@@ -611,12 +611,11 @@ bool Crit3DMeteoPointsDbHandler::loadHourlyData(const Crit3DDate &firstDate, con
 
     while (qry.next())
     {
-        QDateTime dateTime;
-        if (getValue(qry.value(0), &dateTime))
+        Crit3DTime dateTime;
+        if (getValueCrit3DTime(qry.value(0), &dateTime))
         {
-            Crit3DDate myDate = getCrit3DDate(dateTime.date());
-            int hour = dateTime.time().hour();
-            int minute = dateTime.time().minute();
+            int hour = dateTime.getHour();
+            int minute = dateTime.getMinutes();
 
             meteoVariable variable;
             int idVar = qry.value(1).toInt();
@@ -632,13 +631,13 @@ bool Crit3DMeteoPointsDbHandler::loadHourlyData(const Crit3DDate &firstDate, con
             if (variable != noMeteoVar)
             {
                 float value = qry.value(2).toFloat();
-                meteoPoint.setMeteoPointValueH(myDate, hour, minute, variable, value);
+                meteoPoint.setMeteoPointValueH(dateTime.date, hour, minute, variable, value);
 
                 // copy scalar intensity to vector intensity (instantaneous values are equivalent, following WMO)
                 // should be removed when hourly averages are available
                 if (variable == windScalarIntensity)
                 {
-                    meteoPoint.setMeteoPointValueH(myDate, hour, minute, windVectorIntensity, value);
+                    meteoPoint.setMeteoPointValueH(dateTime.date, hour, minute, windVectorIntensity, value);
                 }
             }
         }
@@ -713,20 +712,12 @@ std::vector<float> Crit3DMeteoPointsDbHandler::loadDailyVar(meteoVariable variab
 
 std::vector<float> Crit3DMeteoPointsDbHandler::exportAllDataVar(QString *myError, frequencyType freq, meteoVariable variable, QString id, QDateTime myFirstTime, QDateTime myLastTime, std::vector<QString> &dateStr)
 {
-    QString myDateStr;
-    QDateTime dateTime;
-    QDate date;
-    float value;
     std::vector<float> allDataVarList;
 
     int idVar = getIdfromMeteoVar(variable);
 
-
     QSqlQuery query(_db);
-    QString tableName;
-    QString startDate;
-    QString endDate;
-    QString statement;
+    QString tableName, startDate, endDate, statement;
 
     if (freq == daily)
     {
@@ -734,8 +725,7 @@ std::vector<float> Crit3DMeteoPointsDbHandler::exportAllDataVar(QString *myError
         startDate = myFirstTime.date().toString("yyyy-MM-dd");
         endDate = myLastTime.date().toString("yyyy-MM-dd");
         statement = QString( "SELECT * FROM `%1` WHERE `%2` = %3 AND date_time >= DATE('%4') AND date_time <= DATE('%5')")
-                                .arg(tableName).arg(FIELD_METEO_VARIABLE).arg(idVar).arg(startDate).arg(endDate);
-
+                                .arg(tableName, FIELD_METEO_VARIABLE).arg(idVar).arg(startDate, endDate);
     }
     else if (freq == hourly)
     {
@@ -743,7 +733,7 @@ std::vector<float> Crit3DMeteoPointsDbHandler::exportAllDataVar(QString *myError
         startDate = myFirstTime.date().toString("yyyy-MM-dd") + " " + myFirstTime.time().toString("hh:mm");
         endDate = myLastTime.date().toString("yyyy-MM-dd") + " " + myLastTime.time().toString("hh:mm");
         statement = QString( "SELECT * FROM `%1` WHERE `%2` = %3 AND date_time >= DATETIME('%4') AND date_time <= DATETIME('%5')")
-                                .arg(tableName).arg(FIELD_METEO_VARIABLE).arg(idVar).arg(startDate).arg(endDate);
+                                .arg(tableName, FIELD_METEO_VARIABLE).arg(idVar).arg(startDate, endDate);
     }
     else
     {
@@ -751,38 +741,40 @@ std::vector<float> Crit3DMeteoPointsDbHandler::exportAllDataVar(QString *myError
         return allDataVarList;
     }
 
-    if( !query.exec(statement) )
+    if(! query.exec(statement) )
     {
         *myError = query.lastError().text();
         return allDataVarList;
     }
-    else
+
+    QDate date;
+    float value;
+    QString myDateStr;
+    Crit3DTime dateTime;
+
+    while (query.next())
     {
-        while (query.next())
+        if (freq == daily)
         {
-            if (freq == daily)
+            if (! getValue(query.value(0), &date))
             {
-                if (! getValue(query.value(0), &date))
-                {
-                    *myError = "Missing fieldTime";
-                    return allDataVarList;
-                }
-                myDateStr = date.toString("yyyy-MM-dd");
+                *myError = "Missing date_time";
+                return allDataVarList;
             }
-            else if (freq == hourly)
-            {
-                if (! getValue(query.value(0), &dateTime))
-                {
-                    *myError = "Missing fieldTime";
-                    return allDataVarList;
-                }
-                // LC dateTime.toString direttamente ritorna una stringa vuota nelle ore di passaggio all'ora legale
-                myDateStr = dateTime.date().toString("yyyy-MM-dd") + " " + dateTime.time().toString("hh:mm");
-            }
-            dateStr.push_back(myDateStr);
-            value = query.value(2).toFloat();
-            allDataVarList.push_back(value);
+            myDateStr = date.toString("yyyy-MM-dd");
         }
+        else if (freq == hourly)
+        {
+            if (! getValueCrit3DTime(query.value(0), &dateTime))
+            {
+                *myError = "Missing date_time";
+                return allDataVarList;
+            }
+            myDateStr = QString::fromStdString(dateTime.toISOString());
+        }
+        dateStr.push_back(myDateStr);
+        value = query.value(2).toFloat();
+        allDataVarList.push_back(value);
     }
 
     return allDataVarList;

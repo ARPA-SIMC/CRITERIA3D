@@ -36,9 +36,10 @@
     bool getValue(const QVariant &myRs, int* value);
     bool getValue(const QVariant &myRs, float* value);
     bool getValue(const QVariant &myRs, double* value);
+    bool getValue(const QVariant &myRs, QString* valueStr);
     bool getValue(const QVariant &myRs, QDate* date);
     bool getValue(const QVariant &myRs, QDateTime* dateTime);
-    bool getValue(const QVariant &myRs, QString* valueStr);
+    bool getValueCrit3DTime(const QVariant &myRs, Crit3DTime *dateTime);
 
     QString getFilePath(const QString &fileNameComplete);
     QString getFileName(const QString &fileNameComplete);

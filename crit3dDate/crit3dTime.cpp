@@ -36,12 +36,42 @@ Crit3DTime::Crit3DTime()
     time = 0;
 }
 
-Crit3DTime::Crit3DTime(Crit3DDate myDate, int mySeconds)
+Crit3DTime::Crit3DTime(const Crit3DDate &myDate, int mySeconds)
     : date{myDate}
 {
     time = 0;
     *this = addSeconds(mySeconds);
 }
+
+
+bool Crit3DTime::setFromISOString(const std::string &dateTimeStr)
+{
+    if (dateTimeStr.size() < 16)
+        return false;
+
+    int hour= 0;
+    int minutes = 0;
+    int seconds = 0;
+    int result;
+
+    if (dateTimeStr.at(10) == 'T')
+    {
+        // MYSQL format: yyyy-MM-ddThh:mm:ss:00
+        result = sscanf(dateTimeStr.data(), "%04d-%02d-%02dT%02d:%02d:%02d", &date.year, &date.month, &date.day, &hour, &minutes, &seconds);
+    }
+    else
+    {
+        // ISO 8601: yyyy-MM-dd hh:mm:ss
+        result = sscanf(dateTimeStr.data(), "%04d-%02d-%02d %02d:%02d:%02d", &date.year, &date.month, &date.day, &hour, &minutes, &seconds);
+    }
+    if (result < 4)
+        return false;
+
+    time = hour * HOUR_SECONDS + minutes * 60 + seconds;
+
+    return true;
+}
+
 
 int Crit3DTime::getHour() const
 {
@@ -132,6 +162,14 @@ Crit3DTime Crit3DTime::addSeconds(long mySeconds) const
     }
 
     return myTime;
+}
+
+
+int Crit3DTime::hourTo(const Crit3DTime &newTime)
+{
+    int nrDays = this->date.daysTo(newTime.date);
+    int nrHours = newTime.getHour() - this->getHour();
+    return nrDays * 24 + nrHours;
 }
 
 
