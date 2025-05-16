@@ -145,8 +145,8 @@ bool getValue(const QVariant &myRs, QDateTime* dateTime)
     if (myRs.isNull() || myRs == "")
         return false;
 
-    *dateTime = myRs.toDateTime();
     dateTime->setTimeZone(QTimeZone::utc());
+    dateTime->fromString(myRs.toString(), "yyyy-MM-dd HH:mm:ss");
 
     return dateTime->isValid();
 }
