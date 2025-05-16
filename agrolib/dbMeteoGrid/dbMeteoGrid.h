@@ -163,7 +163,7 @@
                                            QList<meteoVariable> meteoVariableList, int memberNr, Crit3DMeteoSettings *meteoSettings);
 
         bool saveCellGridMonthlyData(QString &errorStr, const QString &meteoPointID, int row, int col,
-                                     QDate firstDate, QDate lastDate, QList<meteoVariable> meteoVariableList);
+                                     QDate firstDate, QDate lastDate, const QList<meteoVariable> &meteoVariableList);
 
         bool saveListDailyDataEnsemble(QString &errorStr, const QString &meteoPointID, const QDate &date,
                                        meteoVariable meteoVar, const QList<float> &values);

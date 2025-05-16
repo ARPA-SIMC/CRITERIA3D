@@ -54,12 +54,13 @@ Crit3DQuality::Crit3DQuality()
     qualityTransmissivity = new quality::Range(0, 1);
 
     qualityDailyT = new quality::Range(-60, 60);
-    qualityDailyP = new quality::Range(0, 800);
+    qualityDailyP = new quality::Range(0, 1000);        // [mm]
     qualityDailyRH = new quality::Range(1, 104);
     qualityDailyWInt = new quality::Range(0, 150);
     qualityDailyWDir = new quality::Range(0, 360);
     qualityDailyGRad = new quality::Range(-20, 120);
-    qualityDailyET0 = new quality::Range(0, 20);
+    qualityDailyET0 = new quality::Range(0, 20);        // [mm]
+    qualityDailyBIC = new quality::Range(-20, 1000);    // [mm]
 
     initialize();
 }
@@ -86,6 +87,7 @@ Crit3DQuality::~Crit3DQuality()
     delete qualityDailyWDir;
     delete qualityDailyGRad;
     delete qualityDailyET0;
+    delete qualityDailyBIC;
 }
 
 
@@ -134,6 +136,9 @@ quality::Range* Crit3DQuality::getQualityRange(meteoVariable myVar)
 
     else if (myVar == dailyReferenceEvapotranspirationHS || myVar == dailyReferenceEvapotranspirationPM)
         return qualityDailyET0;
+
+    else if (myVar == dailyBIC)
+        return qualityDailyBIC;
 
     return nullptr;
 }
@@ -200,10 +205,11 @@ quality::qualityType Crit3DQuality::syntacticQualitySingleValue(meteoVariable my
     }
 }
 
-quality::qualityType Crit3DQuality::checkFastValueDaily_SingleValue(meteoVariable myVar, Crit3DClimateParameters* climateParam, float myValue, int month, float height)
-{
 
-    if (int(myValue) == int(NODATA))
+quality::qualityType Crit3DQuality::checkFastValueDaily_SingleValue(meteoVariable myVar, Crit3DClimateParameters* climateParam,
+                                                                    float myValue, int month, float height)
+{
+    if (isEqual(myValue, NODATA))
         return quality::missing_data;
     else if (wrongValueDaily_SingleValue(myVar, climateParam, myValue, month, height))
         return quality::wrong_spatial;
@@ -211,44 +217,51 @@ quality::qualityType Crit3DQuality::checkFastValueDaily_SingleValue(meteoVariabl
         return quality::accepted;
 }
 
-bool Crit3DQuality::wrongValueDaily_SingleValue(meteoVariable myVar, Crit3DClimateParameters* climateParam, float myValue, int month, float height)
+
+bool Crit3DQuality::wrongValueDaily_SingleValue(meteoVariable myVar, Crit3DClimateParameters* climateParam,
+                                                float myValue, int month, float height)
 {
-
-    float tminClima = climateParam->getClimateVar(dailyAirTemperatureMin, month, height, getReferenceHeight());
-    float tmaxClima = climateParam->getClimateVar(dailyAirTemperatureMax, month, height, getReferenceHeight());
-
     if (myVar == dailyAirTemperatureMin || myVar == dailyAirTemperatureMax || myVar == dailyAirTemperatureAvg)
+    {
+        float tminClima = climateParam->getClimateVar(dailyAirTemperatureMin, month, height, getReferenceHeight());
+        float tmaxClima = climateParam->getClimateVar(dailyAirTemperatureMax, month, height, getReferenceHeight());
+
         if (isEqual(tminClima, NODATA) || isEqual(tmaxClima, NODATA))
             return false;
 
-    if (myVar == dailyAirTemperatureMin)
-    {
-        if (myValue < tminClima - getDeltaTWrong() ||
-            myValue > tminClima + getDeltaTWrong()) return true;
-    }
-    else if (myVar == dailyAirTemperatureAvg)
-    {
-        if (myValue < tminClima - getDeltaTWrong() ||
-            myValue > tmaxClima + getDeltaTWrong()) return true;
-    }
-    else if (myVar == dailyAirTemperatureMax)
-    {
-        if (myValue < tmaxClima - getDeltaTWrong() ||
-            myValue > tmaxClima + getDeltaTWrong()) return true;
+        if (myVar == dailyAirTemperatureMin)
+        {
+            if (myValue < tminClima - getDeltaTWrong() ||
+                myValue > tminClima + getDeltaTWrong()) return true;
+        }
+        else if (myVar == dailyAirTemperatureAvg)
+        {
+            if (myValue < tminClima - getDeltaTWrong() ||
+                myValue > tmaxClima + getDeltaTWrong()) return true;
+        }
+        else if (myVar == dailyAirTemperatureMax)
+        {
+            if (myValue < tmaxClima - getDeltaTWrong() ||
+                myValue > tmaxClima + getDeltaTWrong()) return true;
+        }
     }
     else
     {
-        if (myValue < getQualityRange(myVar)->getMin() || myValue > getQualityRange(myVar)->getMax())
-            return true;
+        quality::Range* qualityRange = getQualityRange(myVar);
+        if (qualityRange != nullptr)
+        {
+            if (myValue < qualityRange->getMin() || myValue > qualityRange->getMax())
+                return true;
+        }
     }
 
     return false;
 }
 
+
 quality::qualityType Crit3DQuality::checkFastValueHourly_SingleValue(meteoVariable myVar, Crit3DClimateParameters* climateParam, float myValue, int month, float height)
 {
-
-    if (int(myValue) == int(NODATA))
+    if (isEqual(myValue, NODATA))
         return quality::missing_data;
     else if (wrongValueHourly_SingleValue(myVar, climateParam, myValue, month, height))
         return quality::wrong_spatial;
@@ -256,7 +269,9 @@ quality::qualityType Crit3DQuality::checkFastValueHourly_SingleValue(meteoVariab
         return quality::accepted;
 }
 
-bool Crit3DQuality::wrongValueHourly_SingleValue(meteoVariable myVar, Crit3DClimateParameters* climateParam, float myValue, int month, float height)
+
+bool Crit3DQuality::wrongValueHourly_SingleValue(meteoVariable myVar, Crit3DClimateParameters* climateParam,
+                                                 float myValue, int month, float height)
 {
     float tminClima = NODATA;
     float tmaxClima = NODATA;
@@ -321,10 +336,13 @@ bool Crit3DQuality::wrongValueHourly_SingleValue(meteoVariable myVar, Crit3DClim
     }
     else
     {
-        if (myValue < getQualityRange(myVar)->getMin() || myValue > getQualityRange(myVar)->getMax())
-            return true;
+        quality::Range* qualityRange = getQualityRange(myVar);
+        if (qualityRange != nullptr)
+        {
+            if (myValue < qualityRange->getMin() || myValue > qualityRange->getMax())
+                return true;
+        }
     }
 
     return false;
 }
-

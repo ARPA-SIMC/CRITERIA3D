@@ -2048,7 +2048,7 @@ bool Crit3DMeteoGridDbHandler::loadGridHourlyData(QString &errorStr, QString met
     }
 
     QSqlQuery qry(_db);
-    QDateTime date;
+    QDateTime dateTime;
     int varCode;
     float value;
     QString statement = QString("SELECT * FROM `%1` WHERE `%2` >= '%3' AND `%2` <= '%4' ORDER BY `%2`")
@@ -2067,9 +2067,9 @@ bool Crit3DMeteoGridDbHandler::loadGridHourlyData(QString &errorStr, QString met
 
             if (value != NODATA)
             {
-                if (! getValue(qry.value(_tableHourly.fieldTime), &date))
+                if (! getValue(qry.value(_tableHourly.fieldTime), &dateTime))
                 {
-                    errorStr = "Missing fieldTime";
+                    errorStr = "Missing " + _tableHourly.fieldTime;
                     return false;
                 }
 
@@ -2080,8 +2080,8 @@ bool Crit3DMeteoGridDbHandler::loadGridHourlyData(QString &errorStr, QString met
                 }
                 meteoVariable variable = getHourlyVarEnum(varCode);
 
-                if (! _meteoGrid->meteoPointPointer(row,col)->setMeteoPointValueH(getCrit3DDate(date.date()),
-                                                     date.time().hour(), date.time().minute(), variable, value))
+                if (! _meteoGrid->meteoPointPointer(row, col)->setMeteoPointValueH(getCrit3DDate(dateTime.date()),
+                                                     dateTime.time().hour(), dateTime.time().minute(), variable, value))
                 {
                     errorStr = "Wrong VariableCode: " + QString::number(varCode);
                     return false;
@@ -2704,8 +2704,8 @@ std::vector<float> Crit3DMeteoGridDbHandler::loadGridHourlyVar(meteoVariable var
     QSqlQuery qry(_db);
     QString tableH = _tableHourly.prefix + meteoPointId + _tableHourly.postFix;
     QDateTime dateTime, previousDateTime;
-    dateTime.setTimeSpec(Qt::UTC);
-    previousDateTime.setTimeSpec(Qt::UTC);
+    dateTime.setTimeZone(QTimeZone::utc());
+    previousDateTime.setTimeZone(QTimeZone::utc());
 
     std::vector<float> hourlyVarList;
 
@@ -3061,49 +3061,51 @@ bool Crit3DMeteoGridDbHandler::saveListDailyData(QString &errorStr, const QStrin
     QSqlQuery qry(_db);
     QString tableD = _tableDaily.prefix + meteoPointID + _tableDaily.postFix;
     int varCode = getDailyVarCode(meteoVar);
-
-    QString statement = QString("CREATE TABLE IF NOT EXISTS `%1`"
-                                "(%2 date, VariableCode tinyint(3) UNSIGNED, Value float(6,1), PRIMARY KEY(%2,VariableCode))").arg(tableD, _tableDaily.fieldTime);
-
-    qry.exec(statement);
     int nDays = values.size();
 
+    QString statement = QString("CREATE TABLE IF NOT EXISTS `%1`"
+                       "(%2 date, VariableCode tinyint(3) UNSIGNED, Value float(6,1), PRIMARY KEY(%2,VariableCode))").arg(tableD, _tableDaily.fieldTime);
+    qry.exec(statement);
+
+    // delete old data
     QDate lastDate = firstDate.addDays(nDays-1);
     statement = QString("DELETE FROM `%1` WHERE %2 BETWEEN CAST('%3' AS DATE) AND CAST('%4' AS DATE) AND VariableCode = '%5'")
-                            .arg(tableD, _tableDaily.fieldTime).arg(firstDate.toString("yyyy-MM-dd")).arg(lastDate.toString("yyyy-MM-dd")).arg(varCode);
+                            .arg(tableD, _tableDaily.fieldTime, firstDate.toString("yyyy-MM-dd"), lastDate.toString("yyyy-MM-dd")).arg(varCode);
 
-    if( !qry.exec(statement) )
+    if(! qry.exec(statement) )
     {
         errorStr = qry.lastError().text();
         return false;
     }
-    else
+
+    // write data
+    statement =  QString(("INSERT INTO `%1` (%2, VariableCode, Value) VALUES ")).arg(tableD, _tableDaily.fieldTime);
+    for (int i = 0; i < values.size(); i++)
     {
-        statement =  QString(("INSERT INTO `%1` (%2, VariableCode, Value) VALUES ")).arg(tableD, _tableDaily.fieldTime);
-        for (int i = 0; i<values.size(); i++)
+        float value;
+        if (reverseOrder)
         {
-            float value;
-            if (reverseOrder)
-            {
-                value = values[values.size()-1-i];  // reverse order
-            }
-            else
-            {
-                value = values[i];
-            }
-            QString valueS = QString("'%1'").arg(value);
-            QDate date = firstDate.addDays(i);
-            if (isEqual(value, NODATA)) valueS = "NULL";
-            statement += QString(" ('%1','%2',%3),").arg(date.toString("yyyy-MM-dd")).arg(varCode).arg(valueS);
+            value = values[values.size()-1-i];  // reverse order
         }
-
-        statement = statement.left(statement.length() - 1);
-
-        if( !qry.exec(statement) )
+        else
         {
-            errorStr = qry.lastError().text();
-            return false;
+            value = values[i];
         }
+        QString dateStr = firstDate.addDays(i).toString("yyyy-MM-dd");
+
+        QString valueS = QString("'%1'").arg(value);
+        if (isEqual(value, NODATA))
+            valueS = "NULL";
+
+        statement += QString(" ('%1','%2',%3),").arg(dateStr).arg(varCode).arg(valueS);
+    }
+
+    statement = statement.left(statement.length() - 1);
+
+    if(! qry.exec(statement))
+    {
+        errorStr = qry.lastError().text();
+        return false;
     }
 
     return true;
@@ -3389,7 +3391,7 @@ bool Crit3DMeteoGridDbHandler::saveCellCurrentGridDailyFF(QString& errorStr, QSt
 
 
 bool Crit3DMeteoGridDbHandler::saveCellGridMonthlyData(QString &errorStr, const QString &meteoPointID, int row, int col,
-                                                       QDate firstDate, QDate lastDate, QList<meteoVariable> meteoVariableList)
+                                                       QDate firstDate, QDate lastDate, const QList<meteoVariable> &meteoVariableList)
 {
     QSqlQuery qry(_db);
     QString table = "MonthlyData";

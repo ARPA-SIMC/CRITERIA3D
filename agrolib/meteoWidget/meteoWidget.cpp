@@ -1565,7 +1565,7 @@ void Crit3DMeteoWidget::drawHourlyVar()
             {
                 myDateTime.setDate(myDate);
                 myDateTime.setTime(QTime(h, 0, 0));
-                myDateTime.setTimeSpec(Qt::UTC);
+                myDateTime.setTimeZone(QTimeZone::utc());
                 categoriesVirtual.append(myDateTime.toString("MMM dd <br> yyyy <br> hh:mm"));
                 nextIndex += step;
             }
