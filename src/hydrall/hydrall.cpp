@@ -181,10 +181,10 @@ Crit3DHydrallNitrogen::Crit3DHydrallNitrogen()
 
 Crit3DHydrallBiomass::Crit3DHydrallBiomass()
 {
-    leaf = 0.1;
-    sapwood = 0.2;
-    fineRoot = 0.05;
-    total = 0.1+0.2+0.05;
+    leaf = 0.1; //[kgDM m-2]
+    sapwood = 0.2; //[kgDM m-2]
+    fineRoot = 0.05; //[kgDM m-2]
+    total = leaf + sapwood + fineRoot; //[kgDM m-2]
 }
 
 Crit3DHydrallAllocationCoefficient::Crit3DHydrallAllocationCoefficient()
@@ -237,7 +237,7 @@ bool Crit3D_Hydrall::computeHydrallPoint(Crit3DDate myDate, double myTemperature
     plant.leafAreaIndexCanopy -= plant.leafAreaIndexCanopyMin;
     plant.leafAreaIndexCanopy = MAXVALUE(0,plant.leafAreaIndexCanopy);
     understorey.leafAreaIndex = 1;
-    //plant.leafAreaIndexCanopy = 0.1;
+    plant.leafAreaIndexCanopy = 5;
     Crit3D_Hydrall::photosynthesisAndTranspiration();
 
     /* necessaria per ogni specie:
@@ -467,6 +467,7 @@ void Crit3D_Hydrall::setSoilVariables(int iLayer, int currentNode,float checkFla
     {
         soil.waterContent[iLayer] = waterContent;
         soil.stressCoefficient[iLayer] = MINVALUE(1.0, (10*(soil.waterContent[iLayer]-waterContentWP))/(3*(waterContentFC-waterContentWP)));
+        soil.stressCoefficient[iLayer] = 0.01;
         soil.clay[iLayer] = clay/100.;
         soil.sand[iLayer] = sand/100.;
         soil.silt[iLayer] = 1 - soil.sand[iLayer] - soil.clay[iLayer];
@@ -982,7 +983,7 @@ void Crit3D_Hydrall::photosynthesisKernel(double COMP,double GAC,double GHR,doub
     double myStromalCarbonDioxideOld;
 
 
-    Imax = 1000 ;
+    Imax = 10000 ;
     myTolerance = 1e-7;
     deltaAssimilation = NODATA_TOLERANCE;
     //myPreviousDelta = deltaAssimilation;
@@ -994,7 +995,7 @@ void Crit3D_Hydrall::photosynthesisKernel(double COMP,double GAC,double GHR,doub
         //myPreviousVPDS = VPDS;
         ASSOLD = NODATA;
         DUM1 = 1.6 * weatherVariable.derived.slopeSatVapPressureVSTemp/weatherVariable.derived.psychrometricConstant + GHR/GAC;
-        double dampingPar = 0.5;
+        double dampingPar = 0.01;
         for (I=0; (I<Imax) && (deltaAssimilation > myTolerance); I++)
         {
             //Assimilation
@@ -1044,11 +1045,11 @@ void Crit3D_Hydrall::cumulatedResults()
     deltaTime.respiration = HOUR_SECONDS * Crit3D_Hydrall::plantRespiration() ;
     deltaTime.netAssimilation = deltaTime.grossAssimilation - deltaTime.respiration ;
     //std::cout << deltaTime.grossAssimilation * 10e6 << ", " << deltaTime.respiration * 10e6 << ", " << deltaTime.netAssimilation *10e6 << std::endl;
-
-    /*std::ofstream myFile;
-    myFile.open("/autofs/nfshomes/ctoscano/Github/CRITERIA3D/DATA/PROJECT/VERA_test/outputLAIetc.csv", std::ios_base::app);
-    myFile << deltaTime.grossAssimilation/HOUR_SECONDS*10e6 <<","<<deltaTime.respiration/HOUR_SECONDS*10e6<<","<<deltaTime.netAssimilation/HOUR_SECONDS*10e6<<","<<plant.leafAreaIndexCanopy<<"\n";
-    myFile.close();*/
+    std::ofstream myFile;
+    double stressMean = statistics::weighedMean(soil.rootDensity,soil.stressCoefficient);
+    myFile.open("outputLAIetc.csv", std::ios_base::app);
+    myFile << deltaTime.grossAssimilation/HOUR_SECONDS*1e6 <<","<<deltaTime.respiration/HOUR_SECONDS*1e6<<","<<deltaTime.netAssimilation/HOUR_SECONDS*1e6<<","<< stressMean <<"\n";
+    myFile.close();
 
     deltaTime.netAssimilation = deltaTime.netAssimilation*12/1000.0; // [KgC m-2] TODO da motiplicare dopo per CARBONFACTOR DA METTERE dopo convert to kg DM m-2
     deltaTime.understoreyNetAssimilation = HOUR_SECONDS * MH2O * understoreyAssimilationRate - MH2O*understoreyRespiration();
@@ -1201,7 +1202,7 @@ double Crit3D_Hydrall::moistureCorrectionFactor(int index)
 {
     if (soil.waterContent[index] < soil.fieldCapacity[index])
     {
-        return MINVALUE(1, 10/3 * (soil.waterContent[index]-soil.wiltingPoint[index])/(soil.fieldCapacity[index]- soil.wiltingPoint[index]));
+        return MINVALUE(1, 10./3. * (soil.waterContent[index]-soil.wiltingPoint[index])/(soil.fieldCapacity[index]- soil.wiltingPoint[index]));
     }
     else
     {
