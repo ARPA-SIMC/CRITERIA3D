@@ -3,7 +3,7 @@
 #include <QtSql>
 
 
-Crit1DWaterTableParameters::Crit1DWaterTableParameters()
+WaterTableParameters::WaterTableParameters()
 {
     id = "";
     lat = NODATA;
@@ -51,7 +51,7 @@ WaterTableDb::~WaterTableDb()
 
 
 
-bool WaterTableDb::readSingleWaterTableParameters(const QString &id, Crit1DWaterTableParameters &wtParameters, QString &error)
+bool WaterTableDb::readSingleWaterTableParameters(const QString &id, WaterTableParameters &wtParameters, QString &errorStr)
 {
     QString queryString = "SELECT * FROM wellProperties WHERE ID_WATERTABLE='" + id + "'";
 
@@ -61,11 +61,11 @@ bool WaterTableDb::readSingleWaterTableParameters(const QString &id, Crit1DWater
     {
         if (! query.lastError().text().isEmpty())
         {
-            error = "Error in reading wellProperties in waterTable db.\n" + query.lastError().text();
+            errorStr = "Error in reading wellProperties in waterTable db.\n" + query.lastError().text();
         }
         else
         {
-            error = "Missing waterTable ID in wellProperties table: " + id;
+            errorStr = "Missing waterTable ID in wellProperties table: " + id;
         }
 
         return false;
