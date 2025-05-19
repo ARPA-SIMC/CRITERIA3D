@@ -405,7 +405,6 @@ bool Crit3D_Hydrall::setWeatherVariables(double temp, double irradiance , double
     weatherVariable.atmosphericPressure = atmosphericPressure;
     weatherVariable.last30DaysTAvg = meanTemp30Days;
 
-
     setDerivedWeatherVariables(directIrradiance, diffuseIrradiance, cloudIndex,et0);
 
     if ((int(prec) != NODATA) && (int(temp) != NODATA) && (int(windSpeed) != NODATA)
@@ -1018,6 +1017,12 @@ void Crit3D_Hydrall::photosynthesisKernel(double COMP,double GAC,double GHR,doub
             //Vapour pressure deficit at leaf surface
             VPDS = (weatherVariable.derived.slopeSatVapPressureVSTemp / HEAT_CAPACITY_AIR_MOLAR*RNI + weatherVariable.vaporPressureDeficit * GHR) / (GHR+(*GSC)*DUM1);  //VPD at the leaf surface (Pa)
             deltaAssimilation = fabs((*ASS) - ASSOLD);
+
+            if (I>0)
+            {
+                double ratioAssimilation = *ASS/ASSOLD; // RD(new):RD(old)=ASS(new):ASS(old)
+                RD *= ratioAssimilation;
+            }
             ASSOLD = *ASS;
         }
     }
