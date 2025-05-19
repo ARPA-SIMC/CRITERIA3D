@@ -343,7 +343,7 @@ bool DbArkimet::saveHourlyData()
     while (qry.next())
         stations.append(qry.value(0).toString());
 
-    // insert data (only timestamp HH::00)
+    // insert data (only timestamp hh::00)
     foreach (QString id_point, stations)
     {
         statement = QString("INSERT INTO `%1_H` ").arg(id_point);

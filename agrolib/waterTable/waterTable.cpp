@@ -17,7 +17,9 @@ WaterTable::WaterTable(const std::vector<float> &inputTMin, const std::vector<fl
                        const QDate &firstMeteoDate, const QDate &lastMeteoDate, const Crit3DMeteoSettings &meteoSettings)
     : _inputTMin(inputTMin), _inputTMax(inputTMax), _inputPrec(inputPrec),
     _firstMeteoDate(firstMeteoDate), _lastMeteoDate(lastMeteoDate), _meteoSettings(meteoSettings)
-{ }
+{
+    initializeWaterTable();
+}
 
 
 void WaterTable::initializeWaterTable()

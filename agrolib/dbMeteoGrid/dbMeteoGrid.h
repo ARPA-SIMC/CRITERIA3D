@@ -131,7 +131,7 @@
 
         std::vector<float> loadGridHourlyVarFixedFields(meteoVariable variable, const QString &meteoPointId,
                                                         const QDateTime &firstTime, const QDateTime &lastTime,
-                                                        QDateTime &firstDateDB, QString &errorStr);
+                                                        QDateTime &firstDateTimeDB, QString &errorStr);
 
         std::vector<float> exportAllDataVar(QString &errorStr, frequencyType freq, meteoVariable variable,
                                             const QString &id, const QDateTime &myFirstTime, const QDateTime &myLastTime,

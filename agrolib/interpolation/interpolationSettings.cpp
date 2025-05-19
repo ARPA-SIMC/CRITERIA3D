@@ -615,12 +615,6 @@ bool Crit3DInterpolationSettings::getUseExcludeStationsOutsideDEM()
 bool Crit3DInterpolationSettings::getUseDewPoint()
 { return (useDewPoint);}
 
-size_t Crit3DInterpolationSettings::getProxyNr()
-{ return currentProxy.size();}
-
-Crit3DProxy* Crit3DInterpolationSettings::getProxy(unsigned pos)
-{ return &(currentProxy[pos]);}
-
 int Crit3DInterpolationSettings::getProxyPosFromName(TProxyVar name)
 {
     for (int i = 0; i < int(getProxyNr()); i++)
@@ -954,8 +948,6 @@ void Crit3DInterpolationSettings::addProxy(Crit3DProxy myProxy, bool isActive_)
     selectedCombination.addProxySignificant(false);
 }
 
-std::string Crit3DInterpolationSettings::getProxyName(unsigned pos)
-{ return currentProxy[pos].getName();}
 
 double Crit3DInterpolationSettings::getProxyValue(unsigned pos, std::vector <double> proxyValues)
 {
@@ -991,6 +983,7 @@ void Crit3DProxyCombination::resetCombination(unsigned int size)
     _useThermalInversion = false;
 }
 
+
 unsigned int Crit3DProxyCombination::getActiveProxySize()
 {
     unsigned int size = 0;
@@ -1000,6 +993,7 @@ unsigned int Crit3DProxyCombination::getActiveProxySize()
     return size;
 }
 
+
 void Crit3DProxyCombination::setAllActiveToFalse()
 {
     for (unsigned int i = 0; i < _isActiveList.size(); i++)
@@ -1007,6 +1001,7 @@ void Crit3DProxyCombination::setAllActiveToFalse()
 
     return;
 }
+
 
 void Crit3DProxyCombination::setAllSignificantToFalse()
 {
@@ -1040,6 +1035,7 @@ bool Crit3DInterpolationSettings::getCombination(int combinationInteger, Crit3DP
 
     return true;
 }
+
 
 Crit3DMacroArea::Crit3DMacroArea()
 {
