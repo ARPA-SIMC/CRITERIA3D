@@ -4046,6 +4046,7 @@ bool Crit3DMeteoGridDbHandler::exportDailyDataCsv(const QList<meteoVariable> &va
         }
     }
 
+    int nrValidCells = 0;
     for (int row = 0; row < gridStructure().header().nrRows; row++)
     {
         for (int col = 0; col < gridStructure().header().nrCols; col++)
@@ -4062,7 +4063,11 @@ bool Crit3DMeteoGridDbHandler::exportDailyDataCsv(const QList<meteoVariable> &va
                         {
                             QString csvFileName = outputPath + "/" + id + "_" + QString::number(i) + ".csv";
 
-                            if (! saveDailyDataCsv(csvFileName, variableList, firstDate, lastDate, row, col, errorStr))
+                            if (saveDailyDataCsv(csvFileName, variableList, firstDate, lastDate, row, col, errorStr))
+                            {
+                                nrValidCells++;
+                            }
+                            else
                             {
                                 std::cout << errorStr.toStdString();
                             }
@@ -4085,7 +4090,11 @@ bool Crit3DMeteoGridDbHandler::exportDailyDataCsv(const QList<meteoVariable> &va
                         isOk = loadGridDailyData(errorStr, id, firstDate, lastDate);
                     }
 
-                    if (! isOk)
+                    if (isOk)
+                    {
+                        nrValidCells++;
+                    }
+                    else
                     {
                         std::cout << "Error in reading cell id: " << id.toStdString() << "\n";
                         continue;
@@ -4099,6 +4108,12 @@ bool Crit3DMeteoGridDbHandler::exportDailyDataCsv(const QList<meteoVariable> &va
                 }
             }
         }
+    }
+
+    if (nrValidCells == 0)
+    {
+        errorStr = "No valid cell.";
+        return false;
     }
 
     return true;

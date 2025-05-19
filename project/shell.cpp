@@ -502,12 +502,7 @@ int executeSharedCommand(Project* myProject, QList<QString> argumentList, bool* 
         *isCommandFound = true;
         return cmdExportDailyDataCsv(myProject, argumentList);
     }
-    else
-    {
-        // TODO:
-        // other shared commands
-    }
 
-    return PRAGA_INVALID_COMMAND;
+    return NOT_SHARED_COMMAND;
 }
 
