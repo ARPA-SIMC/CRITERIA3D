@@ -2,16 +2,18 @@
 #define SHELL_H
 
     #include <string>
+
     class QString;
     template <typename T> class QList;
     class Project;
 
     bool attachOutputToConsole();
     void openNewConsole();
+    bool closeConsole();
     void sendEnterKey(void);
     bool isConsoleForeground();
 
-    QString getTimeStamp(QList<QString> argumentList);
+    QString getTimeStamp(const QList<QString> &argumentList);
     QList<QString> getArgumentList(QString commandLine);
     QString getCommandLine(QString programName);
     QList<QString> getSharedCommandList();

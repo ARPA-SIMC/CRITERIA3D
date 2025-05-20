@@ -7,6 +7,7 @@
 
 #include <iostream>
 #include <sstream>
+
 #include <QString>
 #include <QList>
 #include <QFile>
@@ -16,7 +17,6 @@
     #include "Windows.h"
     #pragma comment(lib, "User32.lib")
 #endif
-
 
 
 bool attachOutputToConsole()
@@ -74,6 +74,16 @@ bool attachOutputToConsole()
 }
 
 
+bool closeConsole()
+{
+    #ifdef _WIN32
+        FreeConsole();
+    #endif
+
+    return true;
+}
+
+
 bool isConsoleForeground()
 {
     #ifdef _WIN32
@@ -105,6 +115,7 @@ void sendEnterKey(void)
     #endif
 }
 
+
 void openNewConsole()
 {
     #ifdef _WIN32
@@ -127,7 +138,7 @@ void openNewConsole()
 }
 
 
-QString getTimeStamp(QList<QString> argumentList)
+QString getTimeStamp(const QList<QString> &argumentList)
 {
     QString myString = ">> ";
 
@@ -164,8 +175,8 @@ QString getCommandLine(QString programName)
 {
     std::string commandLine;
 
-    std::cout << "\n" << programName.toStdString() << ">";
-    getline (std::cin, commandLine);
+    std::cout << programName.toStdString() << ">";
+    std::getline(std::cin, commandLine);
 
     return QString::fromStdString(commandLine);
 }
@@ -189,11 +200,6 @@ QList<QString> getSharedCommandList()
 int cmdExit(Project* myProject)
 {
     myProject->requestedExit = true;
-
-    #ifdef _WIN32
-        FreeConsole();
-    #endif
-
     return PRAGA_OK;
 }
 
