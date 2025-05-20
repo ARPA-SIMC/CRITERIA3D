@@ -674,26 +674,14 @@ void Crit3DMeteoPoint::cleanObsDataH()
 }
 
 
-void Crit3DMeteoPoint::cleanObsDataD()
-{
-    quality = quality::missing_data;
-
-    obsDataD.clear();
-}
-
-void Crit3DMeteoPoint::cleanObsDataM()
-{
-    quality = quality::missing_data;
-
-    obsDataM.clear();
-}
-
-
 void Crit3DMeteoPoint::cleanAllData()
 {
     cleanObsDataH();
-    cleanObsDataD();
-    cleanObsDataM();
+
+    obsDataD.clear();
+    obsDataM.clear();
+
+    quality = quality::missing_data;
 }
 
 
