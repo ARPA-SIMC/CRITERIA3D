@@ -131,6 +131,7 @@
             void cleanObsDataH();
             void cleanObsDataD();
             void cleanObsDataM();
+            void cleanAllData();
 
             bool isDateLoadedH(const Crit3DDate& myDate);
             bool isDateTimeLoadedH(const Crit3DTime& myDateTime);

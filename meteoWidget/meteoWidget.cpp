@@ -422,8 +422,7 @@ Crit3DMeteoWidget::~Crit3DMeteoWidget()
 {
     for (int i = 0; i < _meteoPoints.size(); i++)
     {
-        _meteoPoints[i].cleanObsDataH();
-        _meteoPoints[i].cleanObsDataD();
+        _meteoPoints[i].cleanAllData();
     }
     _meteoPoints.clear();
 }

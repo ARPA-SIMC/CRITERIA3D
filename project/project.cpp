@@ -1016,9 +1016,7 @@ void Project::cleanMeteoPointsData()
     {
         for (int i = 0; i < nrMeteoPoints; i++)
         {
-            meteoPoints[i].cleanObsDataH();
-            meteoPoints[i].cleanObsDataD();
-            meteoPoints[i].cleanObsDataM();
+            meteoPoints[i].cleanAllData();
         }
     }
 }
@@ -1029,9 +1027,8 @@ void Project::clearMeteoPoints()
     {
         for (int i = 0; i < nrMeteoPoints; i++)
         {
-            meteoPoints[i].cleanObsDataH();
-            meteoPoints[i].cleanObsDataD();
-            meteoPoints[i].cleanObsDataM();
+            meteoPoints[i].cleanAllData();
+
             meteoPoints[i].proxyValues.clear();
             if (meteoPoints[i].topographicDistance != nullptr)
             {
