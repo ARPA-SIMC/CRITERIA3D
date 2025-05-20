@@ -880,7 +880,7 @@ bool Crit3DMeteoPointsDbHandler::getPropertiesFromDb(QList<Crit3DMeteoPoint>& me
 
     qry.prepare( "SELECT id_point, name, dataset, latitude, longitude, utm_x, utm_y, altitude, state, region, province, municipality, is_active, is_utc, orog_code from point_properties ORDER BY id_point" );
 
-    if( !qry.exec() )
+    if(!qry.exec() )
     {
         errorString = qry.lastError().text();
         return false;

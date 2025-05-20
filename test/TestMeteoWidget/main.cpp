@@ -96,6 +96,8 @@ int main(int argc, char *argv[])
         widget.drawMeteoPoint(meteoPointList[1], true);
     }
 
+    meteoPointList.clear();
+
     return a.exec();
 }
  
