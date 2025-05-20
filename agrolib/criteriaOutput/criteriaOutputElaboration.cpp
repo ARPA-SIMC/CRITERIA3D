@@ -636,7 +636,7 @@ int selectSimpleVar(QSqlDatabase& db, QString idCase, QString varName, QString c
     qry.first();
     if (!qry.isValid())
     {
-        errorStr = "Missing data: " + statement;
+        errorStr = "Missing data:\n" + statement;
         return ERROR_DB_MISSING_DATA ;
     }
 
