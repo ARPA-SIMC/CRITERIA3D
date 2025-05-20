@@ -351,7 +351,7 @@
         Crit3DHydrallStatePlant statePlant;
         Crit3DHydrallAllocationCoefficient allocationCoefficient;
 
-
+        double maxIterationNumber;
         double elevation;
         double understoreyLeafAreaIndexMax;
         double cover = 1; // TODO

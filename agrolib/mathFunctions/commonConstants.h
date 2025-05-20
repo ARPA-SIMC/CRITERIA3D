@@ -8,8 +8,17 @@
     #ifndef MAXVALUE
         #define MAXVALUE(a, b) (((a) > (b))? (a) : (b))
     #endif
+
     #ifndef BOUNDFUNCTION
         #define BOUNDFUNCTION(lowerValue, upperValue, x) (MAXVALUE((lowerValue), MINVALUE((upperValue), (x))) )
+    #endif
+
+    #ifndef MAXVALUE3
+        #define MAXVALUE3(a, b, c) ((MAXVALUE((a), (b))),(c))
+    #endif
+
+    #ifndef MINVALUE3
+        #define MINVALUE3(a, b, c) ((MINVALUE((a), (b))),(c))
     #endif
 
     #ifndef sgnVariable

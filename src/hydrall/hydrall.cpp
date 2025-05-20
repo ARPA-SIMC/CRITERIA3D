@@ -465,8 +465,8 @@ void Crit3D_Hydrall::setSoilVariables(int iLayer, int currentNode,float checkFla
     if (currentNode != checkFlag)
     {
         soil.waterContent[iLayer] = waterContent;
-        soil.stressCoefficient[iLayer] = MINVALUE(1.0, (10*(soil.waterContent[iLayer]-waterContentWP))/(3*(waterContentFC-waterContentWP)));
-        soil.stressCoefficient[iLayer] = 0.01;
+        soil.stressCoefficient[iLayer] = BOUNDFUNCTION(0,MINVALUE(1.0,(waterContent - 2* waterContentFC)/(waterContentSat-2 * waterContentFC)), (10*(soil.waterContent[iLayer]-waterContentWP))/(3*(waterContentFC-waterContentWP)));
+        //soil.stressCoefficient[iLayer] = 0.01;
         soil.clay[iLayer] = clay/100.;
         soil.sand[iLayer] = sand/100.;
         soil.silt[iLayer] = 1 - soil.sand[iLayer] - soil.clay[iLayer];
@@ -931,6 +931,7 @@ void Crit3D_Hydrall::carbonWaterFluxesProfile()
     treeTranspirationRate.resize(soil.layersNr);
 
     //double totalStomatalConductance = 0;
+    maxIterationNumber = 0;
     for (int i=0; i < soil.layersNr; i++)
     {
         treeTranspirationRate[i] = 0;
@@ -962,8 +963,10 @@ void Crit3D_Hydrall::carbonWaterFluxesProfile()
                                                              &(shaded.transpiration));
             treeAssimilationRate += ( shaded.assimilation + sunlit.assimilation) * soil.rootDensity[i] ; //canopy gross assimilation (mol m-2 s-1)
         }
+
         treeTranspirationRate[i] += (shaded.transpiration + sunlit.transpiration) * soil.rootDensity[i] ;
     }
+    maxIterationNumber /= soil.layersNr;
 }
 
 
@@ -1024,6 +1027,7 @@ void Crit3D_Hydrall::photosynthesisKernel(double COMP,double GAC,double GHR,doub
                 RD *= ratioAssimilation;
             }
             ASSOLD = *ASS;
+            maxIterationNumber++;
         }
     }
     else //night time computation
@@ -1053,7 +1057,7 @@ void Crit3D_Hydrall::cumulatedResults()
     std::ofstream myFile;
     double stressMean = statistics::weighedMean(soil.rootDensity,soil.stressCoefficient);
     myFile.open("outputLAIetc.csv", std::ios_base::app);
-    myFile << deltaTime.grossAssimilation/HOUR_SECONDS*1e6 <<","<<deltaTime.respiration/HOUR_SECONDS*1e6<<","<<deltaTime.netAssimilation/HOUR_SECONDS*1e6<<","<< stressMean <<"\n";
+    myFile << deltaTime.grossAssimilation/HOUR_SECONDS*1e6 <<","<<deltaTime.respiration/HOUR_SECONDS*1e6<<","<<deltaTime.netAssimilation/HOUR_SECONDS*1e6<<","<< stressMean<<","<< maxIterationNumber <<"\n";
     myFile.close();
 
     deltaTime.netAssimilation = deltaTime.netAssimilation*12/1000.0; // [KgC m-2] TODO da motiplicare dopo per CARBONFACTOR DA METTERE dopo convert to kg DM m-2
