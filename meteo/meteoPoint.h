@@ -152,7 +152,7 @@
             Crit3DDate getLastDailyData() const;
 
             bool existDailyData() { return ! obsDataD.empty(); }
-            bool existHourlyData() { return (_obsDataH != nullptr); }
+            bool existHourlyData() { return (nrObsDataDaysH > 0); }
 
             float getMeteoPointValueH(const Crit3DDate& myDate, int myHour, int myMinutes, meteoVariable myVar);
             bool setMeteoPointValueH(const Crit3DDate& myDate, int myHour, int myMinutes, meteoVariable myVar, float myValue);

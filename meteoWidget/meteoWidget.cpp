@@ -420,7 +420,12 @@ Crit3DMeteoWidget::Crit3DMeteoWidget(bool isGrid, QString projectPath, Crit3DMet
 
 Crit3DMeteoWidget::~Crit3DMeteoWidget()
 {
-
+    for (int i = 0; i < _meteoPoints.size(); i++)
+    {
+        _meteoPoints[i].cleanObsDataH();
+        _meteoPoints[i].cleanObsDataD();
+    }
+    _meteoPoints.clear();
 }
 
 
@@ -3236,9 +3241,10 @@ void Crit3DMeteoWidget::on_actionDataAvailability()
                 hourlyTextEdit->setMaximumHeight(fontMetrics.height()+10);
                 hourlyTextEdit->setReadOnly(true);
                 vbox->addWidget(hourlyTextEdit);
-                groupBox->setLayout(vbox);
-                layout->addWidget(groupBox);
             }
+
+            groupBox->setLayout(vbox);
+            layout->addWidget(groupBox);
         }
     }
 
