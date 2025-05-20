@@ -221,7 +221,7 @@ QDate getQDate(const Crit3DDate& d)
 }
 
 
-QDateTime getQDateTime(const Crit3DTime& t)
+QDateTime getQDateTime(const Crit3DTime &t)
 {
     QDateTime dateTime;
     dateTime.setTimeZone(QTimeZone::utc());
