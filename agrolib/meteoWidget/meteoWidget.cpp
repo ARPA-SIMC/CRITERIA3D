@@ -3203,41 +3203,49 @@ void Crit3DMeteoWidget::on_actionDataAvailability()
             QGroupBox *groupBox = new QGroupBox(stationString);
             QVBoxLayout *vbox = new QVBoxLayout;
 
-            QString infoDaily = QString("Daily Data:");
-            QLabel* labelDaily = new QLabel(infoDaily);
-            vbox->addWidget(labelDaily);
-            myFirstDailyDate.setDate(_meteoPoints[mp].obsDataD[0].date.year, _meteoPoints[mp].obsDataD[0].date.month, _meteoPoints[mp].obsDataD[0].date.day);
-            myLastDailyDate = myFirstDailyDate.addDays(_meteoPoints[mp].nrObsDataDaysD-1);
-            QString dailyInfo = QString("%1 - %2")
-                                    .arg(myFirstDailyDate.toString("yyyy/MM/dd"), myLastDailyDate.toString("yyyy/MM/dd"));
-            QTextEdit* dailyTextEdit = new QTextEdit(dailyInfo);
-            QFont font = dailyTextEdit->font();
-            QFontMetrics fontMetrics = QFontMetrics(font);
-            dailyTextEdit->setMaximumHeight(fontMetrics.height()+10);
-            dailyTextEdit->setReadOnly(true);
-            vbox->addWidget(dailyTextEdit);
+            if (_meteoPoints[mp].existDailyData())
+            {
+                QString infoDaily = QString("Daily Data:");
+                QLabel* labelDaily = new QLabel(infoDaily);
+                vbox->addWidget(labelDaily);
+                myFirstDailyDate = getQDate(_meteoPoints[mp].getFirstDailyData());
+                myLastDailyDate = myFirstDailyDate.addDays(_meteoPoints[mp].nrObsDataDaysD-1);
+                QString dailyInfo = QString("%1 - %2")
+                                        .arg(myFirstDailyDate.toString("yyyy/MM/dd"), myLastDailyDate.toString("yyyy/MM/dd"));
+                QTextEdit* dailyTextEdit = new QTextEdit(dailyInfo);
+                QFont font = dailyTextEdit->font();
+                QFontMetrics fontMetrics = QFontMetrics(font);
+                dailyTextEdit->setMaximumHeight(fontMetrics.height()+10);
+                dailyTextEdit->setReadOnly(true);
+                vbox->addWidget(dailyTextEdit);
+            }
 
-            QString infoHourly = QString("Hourly Data:");
-            QLabel* labelHourly = new QLabel(infoHourly);
-            vbox->addWidget(labelHourly);
-            myFirstHourlyDate.setDate(_meteoPoints[mp].getMeteoPointHourlyValuesDate(0).year, _meteoPoints[mp].getMeteoPointHourlyValuesDate(0).month,
-                                      _meteoPoints[mp].getMeteoPointHourlyValuesDate(0).day);
-            myLastHourlyDate = myFirstHourlyDate.addDays(_meteoPoints[mp].nrObsDataDaysH-1);
+            if (_meteoPoints[mp].existHourlyData())
+            {
+                QString infoHourly = QString("Hourly Data:");
+                QLabel* labelHourly = new QLabel(infoHourly);
+                vbox->addWidget(labelHourly);
+                myFirstHourlyDate = getQDate(_meteoPoints[mp].getMeteoPointHourlyValuesDate(0));
+                myLastHourlyDate = myFirstHourlyDate.addDays(_meteoPoints[mp].nrObsDataDaysH-1);
 
-            QString hourlyInfo = QString("%1 - %2")
-                                     .arg(myFirstHourlyDate.toString("yyyy/MM/dd"), myLastHourlyDate.toString("yyyy/MM/dd"));
-            QTextEdit* hourlyTextEdit = new QTextEdit(hourlyInfo);
-            hourlyTextEdit->setMaximumHeight(fontMetrics.height()+10);
-            hourlyTextEdit->setReadOnly(true);
-            vbox->addWidget(hourlyTextEdit);
-            groupBox->setLayout(vbox);
-            layout->addWidget(groupBox);
+                QString hourlyInfo = QString("%1 - %2")
+                                         .arg(myFirstHourlyDate.toString("yyyy/MM/dd"), myLastHourlyDate.toString("yyyy/MM/dd"));
+                QTextEdit* hourlyTextEdit = new QTextEdit(hourlyInfo);
+                QFont font = hourlyTextEdit->font();
+                QFontMetrics fontMetrics = QFontMetrics(font);
+                hourlyTextEdit->setMaximumHeight(fontMetrics.height()+10);
+                hourlyTextEdit->setReadOnly(true);
+                vbox->addWidget(hourlyTextEdit);
+                groupBox->setLayout(vbox);
+                layout->addWidget(groupBox);
+            }
         }
     }
 
     infoWindow.setLayout(layout);
     infoWindow.exec();
 }
+
 
 void Crit3DMeteoWidget::on_actionDataSum()
 {
