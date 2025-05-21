@@ -113,6 +113,21 @@ void Crit3DProcesses::setComputeHydrall(bool value)
     }
 }
 
+void Crit3DProcesses::setComputeRothC(bool value)
+{
+    computeRothC = value;
+
+    //prerequisites
+    if (computeRothC)
+    {
+        computeCrop = true;
+        computeWater = true;
+        computeMeteo = true;
+        computeRadiation = true;
+        computeHydrall = true;
+    }
+}
+
 
 void Crit3DProcesses::setComputeCrop(bool value)
 {

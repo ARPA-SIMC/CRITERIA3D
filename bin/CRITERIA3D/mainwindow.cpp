@@ -2251,6 +2251,7 @@ void MainWindow::on_actionCriteria3D_set_processes_triggered()
     dialogProcesses.cropProcess->setChecked(myProject.processes.computeCrop);
     dialogProcesses.waterFluxesProcess->setChecked(myProject.processes.computeWater);
     dialogProcesses.hydrallProcess->setChecked(myProject.processes.computeHydrall);
+    dialogProcesses.rothCProcess->setChecked(myProject.processes.computeRothC);
 
     dialogProcesses.exec();
 
@@ -2263,6 +2264,11 @@ void MainWindow::on_actionCriteria3D_set_processes_triggered()
         if (dialogProcesses.hydrallProcess->isChecked() && (! dialogProcesses.cropProcess->isChecked() || ! dialogProcesses.waterFluxesProcess->isChecked()))
             myProject.logWarning("Crop and water processes will be activated in order to compute Hydrall model.");
         myProject.processes.setComputeHydrall(dialogProcesses.hydrallProcess->isChecked());
+
+        if (dialogProcesses.rothCProcess->isChecked() && (! dialogProcesses.hydrallProcess->isChecked() || ! dialogProcesses.cropProcess->isChecked()
+                                                          || ! dialogProcesses.waterFluxesProcess->isChecked()))
+            myProject.logWarning("Hydrall, crop and water processes will be activated in order to compute RothC model.");
+        myProject.processes.setComputeRothC(dialogProcesses.rothCProcess->isChecked());
     }
 }
 
@@ -2443,7 +2449,16 @@ void MainWindow::on_actionCriteria3D_Initialize_triggered()
 
         if (! myProject.initializeHydrall())
         {
-            myProject.logError();
+            myProject.logError("Couldn't initialize Hydrall model.");
+            return;
+        }
+    }
+
+    if (myProject.processes.computeRothC)
+    {
+        if (! myProject.initializeRothC())
+        {
+            myProject.logError("Couldn't initialize RothC model.");
             return;
         }
     }

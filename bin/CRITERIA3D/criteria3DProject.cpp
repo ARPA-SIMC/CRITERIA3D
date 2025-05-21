@@ -127,6 +127,14 @@ bool Crit3DProject::initializeHydrall()
     return true;
 }
 
+bool Crit3DProject::initializeRothC()
+{
+    rothCModel.initialize();
+    //todo
+
+    return true;
+}
+
 
 bool Crit3DProject::initializeCropMaps()
 {
@@ -352,7 +360,6 @@ void Crit3DProject::dailyUpdateHydrallMaps()
 bool Crit3DProject::dailyUpdateHydrall(const QDate &myDate)
 {
 
-    // TODO Cate sostituire con dailyUpdate Hydrall
     if (myDate.day() == 1)
     {
         hydrallModel.firstDayOfMonth = true;
@@ -374,6 +381,28 @@ bool Crit3DProject::dailyUpdateHydrall(const QDate &myDate)
     return true;
 }
 
+
+bool Crit3DProject::updateRothC(int row, int col, double hourlyETreal)
+{
+    //monthly or yearly(?) BIC needs to be cumulated with hourly values
+    double hourlyBIC = hourlyMeteoMaps->mapHourlyPrec->getValueFromRowCol(row, col) - hourlyETreal;
+    double cumulatedBIC = rothCModel.meteoVariable.getBIC() + hourlyBIC;
+    rothCModel.meteoVariable.setBIC(cumulatedBIC);
+
+    if (rothCModel.getIsUpdate())
+    {
+        rothCModel.setInputC(hydrallModel.getOutputC()); //to be read from hydrall and from crop?
+        rothCModel.meteoVariable.setTemperature(hydrallMaps.mapLast30DaysTavg->getValueFromRowCol(row, col));
+
+        //chiamata a rothC
+
+        //reset BIC for next month/year
+        rothCModel.meteoVariable.setBIC(0);
+        rothCModel.setInputC(0);
+    }
+
+    return true;
+}
 
 /*!
  * \brief assignETreal
@@ -414,12 +443,13 @@ void Crit3DProject::assignETreal()
                 if (cropIndex != NODATA && ! landUnitList[cropIndex].idCrop.isEmpty())
                 {
                     Crit3DCrop currentCrop = cropList[cropIndex];
+                    double actualTransp = 0;
 
                     // assigns actual transpiration
                     if (currentLAI > 0)
                     {
                         float degreeDays = degreeDaysMap.value[row][col];
-                        double actualTransp = assignTranspiration(row, col, currentCrop, currentLAI, degreeDays);   // [mm h-1]
+                        actualTransp = assignTranspiration(row, col, currentCrop, currentLAI, degreeDays);   // [mm h-1]
                         // TODO verificare che la traspirazione ottenuta da hydrall sia confrontabile e nel caso mettere un if che decida come computare la traspirazione
                         double traspFlow = area * (actualTransp / 1000.);                                           // [m3 h-1] flux
                         totalTranspiration += traspFlow;                                                            // [m3 h-1] flux
@@ -438,7 +468,11 @@ void Crit3DProject::assignETreal()
                         }
                         hydrallModel.plant.leafAreaIndexCanopy = MAXVALUE(0, currentLAI);
                         computeHydrallModel(row, col);
+                    }
 
+                    if (processes.computeRothC)
+                    {
+                        //updateRothC(row, col, actualEvap + actualTransp);
                     }
                 }
             }
@@ -682,6 +716,17 @@ bool Crit3DProject::runModels(QDateTime firstTime, QDateTime lastTime, bool isRe
             dailyUpdatePond();
         }
 
+        if (processes.computeHydrall)
+        {
+            dailyUpdateHydrall(myDate);
+        }
+
+        if (processes.computeRothC)
+        {
+            rothCModel.setIsUpdate(myDate.day() == 1);
+            //rothCModel.setIsUpdate(myDate.doy() == 1);
+        }
+
         if (isSaveOutputRaster())
         {
             // create directory for hourly raster output
@@ -691,11 +736,6 @@ bool Crit3DProject::runModels(QDateTime firstTime, QDateTime lastTime, bool isRe
                 logError("Creation of directory for hourly raster output failed:" + currentOutputPath);
                 setSaveOutputRaster(false);
             }
-        }
-
-        if (processes.computeHydrall)
-        {
-            dailyUpdateHydrall(myDate);
         }
 
         // cycle on hours
@@ -1705,7 +1745,6 @@ bool Crit3DProject::runModelHour(const QString& hourlyOutputPath, bool isRestart
             {
                 assignETreal();
             }
-
             qApp->processEvents();
         }
 

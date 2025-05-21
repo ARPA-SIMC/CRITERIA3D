@@ -14,6 +14,8 @@ DialogModelProcesses::DialogModelProcesses()
     waterFluxesProcess = new QCheckBox();
     QLabel *hydrallLabel = new QLabel(tr("Hydrall model "));
     hydrallProcess = new QCheckBox();
+    QLabel *rothCLabel = new QLabel (tr("RothC model"));
+    rothCProcess = new QCheckBox();
 
     QHBoxLayout *layoutProcesses = new QHBoxLayout();
     layoutProcesses->addWidget(waterFluxesProcess);
@@ -24,6 +26,8 @@ DialogModelProcesses::DialogModelProcesses()
     layoutProcesses->addWidget(hydrallLabel);
     layoutProcesses->addWidget(snowProcess);
     layoutProcesses->addWidget(snowLabel);
+    layoutProcesses->addWidget(rothCProcess);
+    layoutProcesses->addWidget(rothCLabel);
     processesGroupBox->setLayout(layoutProcesses);
 
     QDialogButtonBox *buttonBox = new QDialogButtonBox(QDialogButtonBox::Ok | QDialogButtonBox::Cancel);

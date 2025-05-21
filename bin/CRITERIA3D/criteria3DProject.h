@@ -22,6 +22,9 @@
     #ifndef HYDRALL_H
         #include "hydrall.h"
     #endif
+    #ifndef ROTHCPLUSPLUS_H
+        #include "rothCplusplus.h"
+    #endif
 
     #include <QString>
 
@@ -58,7 +61,8 @@
         Crit3DHydrallMaps hydrallMaps;
 
         Crit3DSnow snowModel;
-        Crit3D_Hydrall hydrallModel;
+        Crit3DHydrall hydrallModel;
+        Crit3D_RothCplusplus rothCModel;
 
         QDateTime modelFirstTime, modelLastTime;
         QDateTime meteoPointsDbFirstTime;
@@ -70,6 +74,7 @@
         void clearCropMaps();
         bool initializeCropMaps();
         bool initializeHydrall();
+        bool initializeRothC();
         void dailyUpdateCropMaps(const QDate &myDate);
 
         bool initializeCropWithClimateData();
@@ -108,6 +113,8 @@
         bool computeHydrallModel(int row, int col);
         void dailyUpdateHydrallMaps();
         bool dailyUpdateHydrall(const QDate &myDate);
+
+        bool updateRothC(int row, int col, double hourlyETreal);
 
         bool computeSnowModel();
         void computeSnowPoint(int row, int col);

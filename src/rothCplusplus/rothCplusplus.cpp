@@ -73,19 +73,49 @@ void Crit3D_RothCplusplusMaps::initialize(const gis::Crit3DRasterGrid& DEM)
     inertOrganicMatter->initializeGrid(DEM);
     soilOrganicMatter->initializeGrid(DEM);
 }
+
+Crit3D_RothCplusplus::Crit3D_RothCplusplus()
+{
+    initialize();
+}
+
+
+void Crit3D_RothCplusplus::initialize()
+{
+    //TODO qui inizializzazione dei pool, per ora come fare?
+
+    decomposablePlantMatter = 0;
+    resistantPlantMatter = 0;
+    microbialBiomass = 0;
+    humifiedOrganicMatter = 0;
+    inorganicMatter = 3.0041;
+    soilOrganicCarbon = 0;
+    inputC = 0;
+    inputFYM = 0;
+
+    decomposablePMResistantPMRatio = 1.44;
+
+    isUpdate = false;
+
+    //todo
+    clay = 13.0;     //[%]
+    depth = 25.0;    //[cm]
+    // .. TODO
+}
+
 // Calculates the plant retainment modifying factor (RMF_PC)
-double RMF_PC(bool PC) {
-    double RM_PC;
-    if (!PC) {
-        RM_PC = 1.0;
+double Crit3D_RothCplusplus::RMF_plantCover(bool plantCover) {
+    double RM_plantCover;
+    if (!plantCover) {
+        RM_plantCover = 1.0;
     } else {
-        RM_PC = 0.6;
+        RM_plantCover = 0.6;
     }
-    return RM_PC;
+    return RM_plantCover;
 }
 
 // Calculates the rate modifying factor for moisture (RMF_Moist)
-double RMF_Moist(double RAIN, double PEVAP, double clay, double depth, bool PC, double &SWC) {
+double Crit3D_RothCplusplus::RMF_Moist(double RAIN, double PEVAP, double clay, double depth, bool PC, double &SWC) {
     const double RMFMax = 1.0;
     const double RMFMin = 0.2;
 
@@ -113,7 +143,7 @@ double RMF_Moist(double RAIN, double PEVAP, double clay, double depth, bool PC, 
     return RM_Moist;
 }
 
-double RMF_Moist(double monthlyBIC, double clay, double depth, bool PC, double &SWC) {
+double Crit3D_RothCplusplus::RMF_Moist(double monthlyBIC, double clay, double depth, bool PC, double &SWC) {
     const double RMFMax = 1.0;
     const double RMFMin = 0.2;
 
@@ -142,7 +172,7 @@ double RMF_Moist(double monthlyBIC, double clay, double depth, bool PC, double &
 }
 
 // Calculates the rate modifying factor for temperature (RMF_Tmp)
-double RMF_Tmp(double TEMP) {
+double Crit3D_RothCplusplus::RMF_Tmp(double TEMP) {
     double RM_TMP;
     if (TEMP < -5.0) {
         RM_TMP = 0.0;
@@ -152,7 +182,9 @@ double RMF_Tmp(double TEMP) {
     return RM_TMP;
 }
 
-void decomp(int timeFact, double &decomposablePlantMatter, double &resistantPlantMatter, double &microbialBiomass, double &humifiedOrganicMatter, double &IOM, double &SOC, double &decomposablePlantMatter_Rage, double &resistantPlantMatter_Rage, double &microbialBiomass_Rage, double &humifiedOrganicMatter_Rage, double &IOM_Rage, double &Total_Rage, double &modernC, double &modifyingRate, double &clay, double &C_Inp, double &FYM_Inp, double &decomposablePlantMatter_resistantPlantMatter)
+void Crit3D_RothCplusplus::decomp(int timeFact, double &decomposablePlantMatter_Rage, double &resistantPlantMatter_Rage,
+                                  double &microbialBiomass_Rage, double &humifiedOrganicMatter_Rage, double &IOM_Rage, double &Total_Rage, double &modernC,
+                                  double &modifyingRate)
 {
     const double decomposablePlantMatter_k = 10.0;
     const double resistantPlantMatter_k = 0.3;
@@ -204,13 +236,13 @@ void decomp(int timeFact, double &decomposablePlantMatter, double &resistantPlan
     humifiedOrganicMatter = humifiedOrganicMatter1 + decomposablePlantMatterToHumifiedOrganicMatter + resistantPlantMatterToHumifiedOrganicMatter + microbialBiomassToHumifiedOrganicMatter + humifiedOrganicMatter_humifiedOrganicMatter;
 
     //split plant C to decomposablePlantMatter and resistantPlantMatter
-    double PI_C_decomposablePlantMatter = decomposablePlantMatter_resistantPlantMatter / (decomposablePlantMatter_resistantPlantMatter + 1.0) * C_Inp;
-    double PI_C_resistantPlantMatter = 1.0 / (decomposablePlantMatter_resistantPlantMatter + 1.0) * C_Inp;
+    double PI_C_decomposablePlantMatter = decomposablePMResistantPMRatio / (decomposablePMResistantPMRatio + 1.0) * inputC;
+    double PI_C_resistantPlantMatter = 1.0 / (decomposablePMResistantPMRatio + 1.0) * inputC;
 
     //split FYM C to decomposablePlantMatter, resistantPlantMatter and humifiedOrganicMatter
-    double FYM_C_decomposablePlantMatter = 0.49*FYM_Inp;
-    double FYM_C_resistantPlantMatter = 0.49*FYM_Inp;
-    double FYM_C_humifiedOrganicMatter = 0.02*FYM_Inp;
+    double FYM_C_decomposablePlantMatter = 0.49*inputFYM;
+    double FYM_C_resistantPlantMatter = 0.49*inputFYM;
+    double FYM_C_humifiedOrganicMatter = 0.02*inputFYM;
 
     //add plant C and FYM_C to decomposablePlantMatter, resistantPlantMatter and humifiedOrganicMatter
     decomposablePlantMatter = decomposablePlantMatter + PI_C_decomposablePlantMatter + FYM_C_decomposablePlantMatter;
@@ -233,7 +265,7 @@ void decomp(int timeFact, double &decomposablePlantMatter, double &resistantPlan
     double microbialBiomass_humifiedOrganicMatter_Ract = microbialBiomassToHumifiedOrganicMatter * std::exp(-CONR*microbialBiomass_Rage);
     double humifiedOrganicMatter_humifiedOrganicMatter_Ract = humifiedOrganicMatter_humifiedOrganicMatter * std::exp(-CONR*humifiedOrganicMatter_Rage);
 
-    double IOM_Ract = IOM * std::exp(-CONR*IOM_Rage);
+    double IOM_Ract = inorganicMatter * std::exp(-CONR*IOM_Rage);
 
     //assign new C from plant and FYM the correct age
     double PI_decomposablePlantMatter_Ract = modernC * PI_C_decomposablePlantMatter;
@@ -251,7 +283,7 @@ void decomp(int timeFact, double &decomposablePlantMatter, double &resistantPlan
 
     double humifiedOrganicMatter_Ract_new = FYM_humifiedOrganicMatter_Ract + (humifiedOrganicMatter_Ract + decomposablePlantMatter_humifiedOrganicMatter_Ract + resistantPlantMatter_humifiedOrganicMatter_Ract + microbialBiomass_humifiedOrganicMatter_Ract + humifiedOrganicMatter_humifiedOrganicMatter_Ract)*exc;
 
-    SOC = decomposablePlantMatter + resistantPlantMatter + microbialBiomass + humifiedOrganicMatter + IOM;
+    soilOrganicCarbon = decomposablePlantMatter + resistantPlantMatter + microbialBiomass + humifiedOrganicMatter + inorganicMatter;
     double Total_Ract = decomposablePlantMatter_Ract_new + resistantPlantMatter_Ract_new + microbialBiomass_Ract_new + humifiedOrganicMatter_Ract_new + IOM_Ract;
 
     //calculate rage of each pool
@@ -278,40 +310,101 @@ void decomp(int timeFact, double &decomposablePlantMatter, double &resistantPlan
         humifiedOrganicMatter_Rage = ( std::log(humifiedOrganicMatter/humifiedOrganicMatter_Ract_new) ) / CONR;
 
 
-    if(SOC <= EPSILON)
+    if(soilOrganicCarbon <= EPSILON)
         Total_Rage = 0;
     else
-        Total_Rage = ( std::log(SOC/Total_Ract) ) / CONR;
+        Total_Rage = ( std::log(soilOrganicCarbon/Total_Ract) ) / CONR;
 
     return;
 }
 
 // The Rothamsted Carbon Model: RothC
-void RothC(int timeFact, double &DPM, double &RPM, double &BIO, double &HUM, double &IOM, double &SOC, double &DPM_Rage, double &RPM_Rage, double &BIO_Rage, double &HUM_Rage, double &IOM_Rage, double &Total_Rage, double &modernC, double &clay, double &depth, double &TEMP, double &RAIN, double &WATERLOSS,bool isET0, bool &PC, double &DPM_RPM, double C_Inp, double FYM_Inp, double &SWC) {
+void Crit3D_RothCplusplus::RothC(int timeFact, double &DPM_Rage, double &RPM_Rage, double &BIO_Rage, double &HUM_Rage,
+                                 double &IOM_Rage, double &Total_Rage, double &modernC,
+                                 bool isET0, bool &PC, double &DPM_RPM, double &SWC)
+{
     // Calculate RMFs
-    double RM_TMP = RMF_Tmp(TEMP);
+    double RM_TMP = RMF_Tmp(meteoVariable.getTemperature());
     double RM_Moist;
     if (isET0)
     {
-        double monthlyBIC = RAIN - WATERLOSS;
+        double monthlyBIC = meteoVariable.getPrecipitation() - meteoVariable.getWaterLoss();
         RM_Moist = RMF_Moist(monthlyBIC, clay, depth, PC, SWC);
     }
     else
     {
-        RM_Moist = RMF_Moist(RAIN, WATERLOSS, clay, depth, PC, SWC);
+        RM_Moist = RMF_Moist(meteoVariable.getPrecipitation(), meteoVariable.getWaterLoss(), clay, depth, PC, SWC);
     }
 
-    double RM_PC = RMF_PC(PC);
+    double RM_PC = RMF_plantCover(PC);
 
     // Combine RMF's into one.
     double modifyingRate = RM_TMP * RM_Moist * RM_PC;
 
-    decomp(timeFact, DPM, RPM, BIO, HUM, IOM, SOC, DPM_Rage, RPM_Rage, BIO_Rage, HUM_Rage, IOM_Rage, Total_Rage, modernC, modifyingRate, clay, C_Inp, FYM_Inp, DPM_RPM);
+    decomp(timeFact, DPM_Rage, RPM_Rage, BIO_Rage, HUM_Rage, IOM_Rage, Total_Rage, modernC, modifyingRate);
 
     return;
 }
 
+void Crit3D_RothCplusplus::setInputC(double myInputC)
+{
+    inputC = myInputC;
+}
 
+double Crit3D_RothCplusplus::getInputC()
+{
+    return inputC;
+}
+
+void Crit3DRothCMeteoVariable::setTemperature (double myTemperature)
+{
+    temp = myTemperature;
+}
+
+double Crit3DRothCMeteoVariable::getTemperature()
+{
+    return temp;
+}
+
+void Crit3DRothCMeteoVariable::setPrecipitation(double myPrecipitation)
+{
+    prec = myPrecipitation;
+}
+
+double Crit3DRothCMeteoVariable::getPrecipitation()
+{
+    return prec;
+}
+
+void Crit3DRothCMeteoVariable::setBIC(double myBIC)
+{
+    BIC = myBIC;
+}
+
+double Crit3DRothCMeteoVariable::getBIC()
+{
+    return BIC;
+}
+
+void Crit3DRothCMeteoVariable::setWaterLoss(double myWaterLoss)
+{
+    waterLoss = myWaterLoss;
+}
+
+double Crit3DRothCMeteoVariable::getWaterLoss()
+{
+    return waterLoss;
+}
+
+void Crit3D_RothCplusplus::setIsUpdate(bool value)
+{
+    isUpdate = value;
+}
+
+bool Crit3D_RothCplusplus::getIsUpdate()
+{
+    return isUpdate;
+}
 
 std::vector<std::vector<double>> leggi_csv(const std::string& nome_file) {
     std::vector<std::vector<double>> dati;
@@ -368,15 +461,15 @@ void scrivi_csv(const std::string& nome_file, const std::vector<std::vector<doub
     file.close();
 }
 
-/*
-int main()
+
+int Crit3D_RothCplusplus::main()
 {
     //set initial pool values
-    double DPM = 0;
+    /*double DPM = 0;
     double RPM = 0;
     double BIO = 0;
     double HUM = 0;
-    double SOC = 0;
+    double SOC = 0;*/
 
     double DPM_Rage = 0.0;
     double RPM_Rage = 0.0;
@@ -389,10 +482,10 @@ int main()
     double TOC1 = 0;
 
     //TODO: read in RothC input data file
-    double clay = 13.0;     //[%]
-    double depth = 25.0;    //[cm]
-    double IOM = 3.0041;    //[t C/ha]
-    int nsteps = 840;       //[-]
+    //double clay = 13.0;     //[%]
+    //double depth = 25.0;    //[cm]
+    //double IOM = 3.0041;    //[t C/ha]
+    //int nsteps = 840;       //[-]
 
     //std::vector<std::vector<double>> data = createDataMatrix();
     std::vector<std::vector<double>> data = leggi_csv("C:/Github/rothCStandAlone/data_input.csv");
@@ -400,21 +493,21 @@ int main()
     int k = -1;
     int j = -1;
 
-    SOC = DPM + RPM + BIO + HUM + IOM;
+    //SOC = DPM + RPM + BIO + HUM + IOM;
+    soilOrganicCarbon = decomposablePlantMatter + resistantPlantMatter + microbialBiomass + humifiedOrganicMatter + inorganicMatter;
 
-    std::cout << j << "," << DPM << ","<< RPM << ","<< BIO << ","<< HUM << ","<< IOM << ","<< SOC << "\n";
+    std::cout << j << "," << decomposablePlantMatter << ","<< resistantPlantMatter << ","<< microbialBiomass << ","
+              << humifiedOrganicMatter << ","<< inorganicMatter << ","<< soilOrganicCarbon << "\n";
 
     int timeFact = 12;
     double Total_Rage;
 
-    double TEMP;
+    /*double TEMP;
     double RAIN;
-    double PEVAP;
+    double PEVAP;*/
     bool isET0 = false;
     bool PC;
     double DPM_RPM;
-    double C_Inp;
-    double FYM_Inp;
     double modernC;
 
     double test = 100;
@@ -425,30 +518,32 @@ int main()
 
         if (k == timeFact) k = 0;
 
-        TEMP = data[k][3];
-        RAIN = data[k][4];
-        PEVAP = data[k][5];
+        meteoVariable.setTemperature(data[k][3]);
+        meteoVariable.setPrecipitation(data[k][4]);
+        meteoVariable.setWaterLoss(data[k][5]);
         PC = bool(data[k][8]);
         DPM_RPM = data[k][9];
-        C_Inp = data[k][6];
-        FYM_Inp = data[k][7];
+        inputC = data[k][6];
+        inputFYM = data[k][7];
         modernC = data[k][2]/100;
 
         Total_Rage = 0;
 
-        RothC(timeFact, DPM, RPM, BIO, HUM, IOM, SOC, DPM_Rage, RPM_Rage, BIO_Rage, HUM_Rage, IOM_Rage, Total_Rage, modernC, clay, depth, TEMP, RAIN, PEVAP, isET0, PC, DPM_RPM, C_Inp, FYM_Inp, SWC);
+        RothC(timeFact, DPM_Rage, RPM_Rage, BIO_Rage, HUM_Rage, IOM_Rage, Total_Rage,
+              modernC, isET0, PC, DPM_RPM, SWC);
 
         if (((k+1)%timeFact) == 0)
         {
             double TOC0 = TOC1;
-            TOC1 = DPM + RPM + BIO + HUM;
+            TOC1 = decomposablePlantMatter + resistantPlantMatter + microbialBiomass + humifiedOrganicMatter;
             test = fabs(TOC1-TOC0);
         }
     }
 
     double totalDelta = (std::exp(-Total_Rage/8035.0) - 1) * 1000;
 
-    std::cout << j << "," << DPM << "," << RPM << "," << BIO << "," << HUM << "," << SOC << "," << totalDelta << "\n";
+    std::cout << j << "," << decomposablePlantMatter << ","<< resistantPlantMatter << ","<< microbialBiomass << ","
+              << humifiedOrganicMatter << ","<< inorganicMatter << ","<< soilOrganicCarbon << "\n";
 
     std::vector<std::vector<double>> yearList;
 //    std::vector<std::vector<double>> yearList = {{double(1), double(j+1), DPM, RPM, BIO, HUM, IOM, SOC, totalDelta}};
@@ -457,30 +552,32 @@ int main()
     std::vector<std::vector<double>> monthList;
     int timeFactIndex;
 
-    for (int i = timeFact; i < nsteps; i++)
+    for (int i = timeFact; i < data.size(); i++)
     {
-        TEMP = data[i][3];
-        RAIN = data[i][4];
-        PEVAP = data[i][5];
+        meteoVariable.setTemperature(data[i][3]);
+        meteoVariable.setPrecipitation(data[i][4]);
+        meteoVariable.setWaterLoss(data[i][5]);
         PC = bool(data[i][8]);
         DPM_RPM = data[i][9];
-        C_Inp = data[i][6];
-        FYM_Inp = data[i][7];
+        inputC = data[i][6];
+        inputFYM = data[i][7];
         modernC = data[i][2]/100;
 
-        RothC(timeFact, DPM, RPM, BIO, HUM, IOM, SOC, DPM_Rage, RPM_Rage, BIO_Rage, HUM_Rage, IOM_Rage, Total_Rage, modernC, clay, depth, TEMP, RAIN, PEVAP, isET0, PC, DPM_RPM, C_Inp, FYM_Inp, SWC);
+        RothC(timeFact, DPM_Rage, RPM_Rage, BIO_Rage, HUM_Rage, IOM_Rage, Total_Rage, modernC, isET0, PC, DPM_RPM, SWC);
 
         totalDelta = (std::exp(-Total_Rage/8035.0) - 1.0) * 1000;
 
         //std::cout << C_Inp << "," << FYM_Inp << "," << TEMP << "," << RAIN << "," << PEVAP << "," << SWC << ","
                   //<< PC << "," << DPM <<"," << RPM <<"," << BIO <<"," << HUM <<"," << IOM <<"," << SOC << "\n";
 
-        monthList.push_back({double(i-timeFact), double(data[i][0]), double(data[i][1]), DPM, RPM, BIO, HUM, IOM, SOC, totalDelta});
+        monthList.push_back({double(i-timeFact), double(data[i][0]), double(data[i][1]), decomposablePlantMatter,
+                             resistantPlantMatter, microbialBiomass, humifiedOrganicMatter, inorganicMatter, soilOrganicCarbon, totalDelta});
 
         if (int(data[i][1]) == timeFact)
         {
             timeFactIndex = int(i/timeFact);
-            yearList.push_back({double(timeFactIndex), data[i][0], data[i][1], DPM, RPM, BIO, HUM, IOM, SOC, totalDelta});
+            yearList.push_back({double(timeFactIndex), data[i][0], data[i][1], decomposablePlantMatter,
+                                resistantPlantMatter, microbialBiomass, humifiedOrganicMatter, inorganicMatter, soilOrganicCarbon, totalDelta});
             //std::cout << i << "," << DPM << "," << RPM << "," << BIO << "," << HUM << "," << IOM << "," << SOC << "," << totalDelta << "\n";
         }
     }
@@ -493,7 +590,7 @@ int main()
 
 }
 
-*/
+
 
 
 

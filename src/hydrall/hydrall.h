@@ -324,11 +324,11 @@
     };
 
 
-    class Crit3D_Hydrall{
+    class Crit3DHydrall{
     public:
 
-        Crit3D_Hydrall();
-        //~Crit3D_Hydrall();
+        Crit3DHydrall();
+        //~Crit3DHydrall();
 
         void initialize();
 
@@ -364,6 +364,8 @@
         double treeAssimilationRate;
         std::vector<double> understoreyTranspirationRate;
         double understoreyAssimilationRate;
+
+        double getOutputC() { return outputC; };
 
         double moistureCorrectionFactorOld(int index);
         double moistureCorrectionFactor(int index);
@@ -404,6 +406,9 @@
 
         void setStateVariables(Crit3DHydrallMaps &stateMap, int row, int col);
         void getStateVariables(Crit3DHydrallMaps &stateMap, int row, int col);
+
+    private:
+        double outputC;
 
     };
 

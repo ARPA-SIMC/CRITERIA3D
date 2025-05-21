@@ -68,6 +68,25 @@
 #define EXP_DECAY(FACTOR, EXT_COEF,RAGE) ((FACTOR) * std::exp(-(EXT_COEF) * (RAGE)))
 #define LOG_RAGE(PLANT_MATERIAL, PLAT_MATERIAL_ACT) (std::log((PLANT_MATERIAL)/(PLAT_MATERIAL_ACT)) ) / CONR
 
+class Crit3DRothCMeteoVariable {
+
+public:
+    void setTemperature (double myTemperature);
+    double getTemperature();
+    void setPrecipitation(double myPrecipitation);
+    double getPrecipitation();
+    void setBIC(double myBIC);
+    double getBIC();
+    void setWaterLoss(double myWaterLoss);
+    double getWaterLoss();
+
+private:
+    double temp;
+    double prec;
+    double BIC;
+    double waterLoss;
+};
+
 class Crit3D_RothCplusplusMaps
 {
 private:
@@ -88,35 +107,55 @@ public:
 
     void initialize(const gis::Crit3DRasterGrid& DEM);
 };
+
 class Crit3D_RothCplusplus{
+
 public:
 
-    //Crit3D_RothCplusplus();
+    Crit3D_RothCplusplus();
     //~Crit3D_RothCplusplus();
+
+    void initialize();
+    int main();
+
+    double getInputC();
+    void setInputC(double myInputC);
+
+    void setIsUpdate(bool value);
+    bool getIsUpdate();
+
+    Crit3DRothCMeteoVariable meteoVariable;
+
+
+private:
+    double decomposablePlantMatter; //[t C /ha]
+    double resistantPlantMatter; //[t C /ha]
+    double microbialBiomass; //[t C /ha]
+    double humifiedOrganicMatter; //[t C /ha]
+    double inorganicMatter; //[t C /ha]
+    double soilOrganicCarbon; //[t C /ha]
+    double inputC; //[t C /ha]
+    double inputFYM; //[t C /ha]
+
+    double decomposablePMResistantPMRatio; //[-]
+
+    bool isUpdate;
+
+    double clay;
+    double depth;
+
+    double RMF_plantCover(bool plantCover);
+    double RMF_Moist(double RAIN, double PEVAP, double clay, double depth, bool PC, double &SWC);
+    double RMF_Moist(double monthlyBIC, double clay, double depth, bool PC, double &SWC);
+    double RMF_Tmp(double TEMP);
+    void decomp(int timeFact, double &decomposablePlantMatter_Rage, double &resistantPlantMatter_Rage,
+                double &microbialBiomass_Rage, double &humifiedOrganicMatter_Rage, double &IOM_Rage, double &Total_Rage, double &modernC,
+                double &modifyingRate);
+    void RothC(int timeFact, double &DPM_Rage, double &RPM_Rage, double &BIO_Rage, double &HUM_Rage, double &IOM_Rage,
+               double &Total_Rage, double &modernC, bool isET0, bool &PC, double &DPM_RPM, double &SWC);
 
 
 };
-
-
-double RMF_PC(bool PC);
-double RMF_Moist(double RAIN, double PEVAP, double clay, double depth, bool PC, double &SWC);
-double RMF_Moist(double monthlyBIC, double clay, double depth, bool PC, double &SWC);
-double RMF_Tmp(double TEMP);
-void decomp(int timeFact, double &DPM, double &RPM, double &BIO, double &HUM, double &IOM,
-            double &SOC, double &DPM_Rage, double &RPM_Rage, double &BIO_Rage, double &HUM_Rage,
-            double &IOM_Rage, double &Total_Rage, double &modernC, double &RateM, double &clay,
-            double &C_Inp, double &FYM_Inp, double &DPM_RPM);
-void RothC(int timeFact, double &DPM, double &RPM, double &BIO, double &HUM, double &IOM, double &SOC,
-           double &DPM_Rage, double &RPM_Rage, double &BIO_Rage, double &HUM_Rage, double &IOM_Rage,
-           double &Total_Rage, double &modernC, double &clay, double &depth, double &TEMP, double &RAIN,
-           double &WATERLOSS, bool isET0, bool &PC, double &DPM_RPM, double C_Inp, double FYM_Inp, double &SWC);
-
-
-
-
-
-
-
 
 
 
