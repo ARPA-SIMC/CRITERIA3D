@@ -30,7 +30,7 @@ win32:{
 
 
 INCLUDEPATH += ../crit3dDate ../mathFunctions ../gis ../meteo \
-               ../shapeHandler ../../mapGraphics
+               ../shapeHandler ../../MapGraphics
 
 
 SOURCES += \

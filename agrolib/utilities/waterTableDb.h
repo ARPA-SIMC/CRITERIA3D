@@ -11,10 +11,10 @@
 
     class QSqlDatabase;
 
-    class Crit1DWaterTableParameters
+    class WaterTableParameters
     {
         public:
-        Crit1DWaterTableParameters();
+        WaterTableParameters();
 
         QString id;
         double lat, lon;
@@ -33,7 +33,7 @@
         WaterTableDb(QString dbName, QString &errorString);
         ~WaterTableDb();
 
-        bool readSingleWaterTableParameters(const QString &id, Crit1DWaterTableParameters &wtParameters, QString &error);
+        bool readSingleWaterTableParameters(const QString &id, WaterTableParameters &wtParameters, QString &errorStr);
 
     private:
         QSqlDatabase _db;

@@ -13,6 +13,7 @@
 #include <QDir>
 #include <QDirIterator>
 #include <QTextStream>
+#include <QTimeZone>
 
 
 QList<QString> getFields(QSqlDatabase* dbPointer, QString tableName)
@@ -56,29 +57,32 @@ bool fieldExists(const QSqlQuery &query, const QString fieldName)
 }
 
 
-// return boolean (false if recordset is not valid)
+// return boolean record (false if recordset is not valid)
 bool getValue(const QVariant &myRs)
 {
-    if (! myRs.isValid() || myRs.isNull()) return false;
+    if (! myRs.isValid() || myRs.isNull())
+        return false;
 
-    if (myRs == "" || myRs == "NULL") return false;
+    if (myRs == "" || myRs == "NULL")
+        return false;
 
     return myRs.toBool();
 }
 
 
-bool getValue(const QVariant &myRs, int* myValue)
+bool getValue(const QVariant &myRs, int* value)
 {
-    *myValue = NODATA;
+    *value = NODATA;
 
-    if (! myRs.isValid() || myRs.isNull() || myRs == "nan") return false;
+    if (! myRs.isValid() || myRs.isNull() || myRs == "nan")
+        return false;
 
     bool isOk;
-    *myValue = myRs.toInt(&isOk);
+    *value = myRs.toInt(&isOk);
 
     if (! isOk)
     {
-        *myValue = NODATA;
+        *value = NODATA;
         return false;
     }
 
@@ -86,18 +90,19 @@ bool getValue(const QVariant &myRs, int* myValue)
 }
 
 
-bool getValue(const QVariant &myRs, float* myValue)
+bool getValue(const QVariant &myRs, float* value)
 {
-    *myValue = NODATA;
+    *value = NODATA;
 
-    if (! myRs.isValid() || myRs.isNull() || myRs == "nan") return false;
+    if (! myRs.isValid() || myRs.isNull() || myRs == "nan")
+        return false;
 
     bool isOk;
-    *myValue = myRs.toFloat(&isOk);
+    *value = myRs.toFloat(&isOk);
 
     if (! isOk)
     {
-        *myValue = NODATA;
+        *value = NODATA;
         return false;
     }
 
@@ -105,18 +110,19 @@ bool getValue(const QVariant &myRs, float* myValue)
 }
 
 
-bool getValue(const QVariant &myRs, double* myValue)
+bool getValue(const QVariant &myRs, double* value)
 {
-    *myValue = NODATA;
+    *value = NODATA;
 
-    if (! myRs.isValid() || myRs.isNull() || myRs == "nan") return false;
+    if (! myRs.isValid() || myRs.isNull() || myRs == "nan")
+        return false;
 
     bool isOk;
-    *myValue = myRs.toDouble(&isOk);
+    *value = myRs.toDouble(&isOk);
 
     if (! isOk)
     {
-        *myValue = NODATA;
+        *value = NODATA;
         return false;
     }
 
@@ -124,34 +130,47 @@ bool getValue(const QVariant &myRs, double* myValue)
 }
 
 
-bool getValue(const QVariant &myRs, QDate* myValue)
+bool getValue(const QVariant &myRs, QString* valueStr)
+{
+    *valueStr = "";
+    if (! myRs.isValid() || myRs.isNull())
+        return false;
+    if (myRs == "NULL")
+        return false;
+
+    *valueStr = myRs.toString();
+    return true;
+}
+
+
+bool getValue(const QVariant &myRs, QDate* date)
 {
     if (myRs.isNull() || myRs == "")
         return false;
 
-    *myValue = myRs.toDate();
-    return true;
+    *date = myRs.toDate();
+    return date->isValid();
 }
 
 
-bool getValue(const QVariant &myRs, QDateTime* myValue)
+bool getValue(const QVariant &myRs, QDateTime* dateTime)
 {
     if (myRs.isNull() || myRs == "")
         return false;
 
-    *myValue = myRs.toDateTime();
-    return true;
+    *dateTime = myRs.toDateTime();
+    dateTime->setTimeZone(QTimeZone::utc());
+
+    return dateTime->isValid();
 }
 
 
-bool getValue(const QVariant &myRs, QString* myValue)
+bool getValueCrit3DTime(const QVariant &myRs, Crit3DTime* dateTime)
 {
-    *myValue = "";
-    if (! myRs.isValid() || myRs.isNull()) return false;
-    if (myRs == "NULL") return false;
+    if (myRs.isNull())
+        return false;
 
-    *myValue = myRs.toString();
-    return true;
+    return dateTime->setFromISOString(myRs.toString().toStdString());
 }
 
 
@@ -202,15 +221,15 @@ QDate getQDate(const Crit3DDate& d)
 }
 
 
-QDateTime getQDateTime(const Crit3DTime& t)
+QDateTime getQDateTime(const Crit3DTime &t)
 {
-    QDate myDate = QDate(t.date.year, t.date.month, t.date.day);
+    QDateTime dateTime;
+    dateTime.setTimeZone(QTimeZone::utc());
 
-    QDateTime myDateTime;
-    myDateTime.setTimeSpec(Qt::UTC);
-    myDateTime.setDate(myDate);
-    myDateTime.setTime(QTime(0,0,0,0));
-    return myDateTime.addSecs(t.time);
+    dateTime.setDate(QDate(t.date.year, t.date.month, t.date.day));
+    dateTime.setTime(QTime(0,0,0,0));
+
+    return dateTime.addSecs(t.time);
 }
 
 
@@ -291,11 +310,11 @@ void intervalDecade(int decade, int year, int* dayStart, int* dayEnd, int* month
     else
     {
         *dayStart = 21;
-        QDate temp(year, *month, 1);
-        *dayEnd = temp.daysInMonth();
+        QDate firstDateMonth(year, *month, 1);
+        *dayEnd = firstDateMonth.daysInMonth();
     }
-
 }
+
 
 int getSeasonFromDate(QDate date)
 {
@@ -544,6 +563,7 @@ bool searchDataPath(QString* dataPath)
     *dataPath = QDir::cleanPath(myPath) + "/DATA/";
     return true;
 }
+
 
 void clearDir( const QString path )
 {

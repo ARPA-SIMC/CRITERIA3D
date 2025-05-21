@@ -177,6 +177,7 @@
         double transpirationPerUnitFoliageAreaCritical;
         double leafAreaIndexCanopy;
         double leafAreaIndexCanopyMax;
+        double leafAreaIndexCanopyMin;
         double standVolume; // maps referred to stand volume MUST be initialized
         double currentIncrementalVolume;
 
@@ -332,8 +333,7 @@
 
         void initialize();
 
-        bool firstDayOfMonth;
-        int firstMonthVegetativeSeason;
+        int firstMonthVegetativeSeason = 1;
         bool isFirstYearSimulation;
         Crit3DDate currentDate;
         Crit3DHydrallState stateVariable;
@@ -351,7 +351,7 @@
         Crit3DHydrallStatePlant statePlant;
         Crit3DHydrallAllocationCoefficient allocationCoefficient;
 
-
+        double maxIterationNumber;
         double elevation;
         double understoreyLeafAreaIndexMax;
         double cover = 1; // TODO
@@ -371,7 +371,7 @@
         double moistureCorrectionFactor(int index);
         double understoreyRespiration();
         void radiationAbsorption();
-        void setSoilVariables(int iLayer, int currentNode, float checkFlag, int horizonIndex, double waterContent, double waterContentFC, double waterContentWP, double rootDensity, double clay, double sand, double thickness, double bulkDensity, double waterContentSat);
+        void setSoilVariables(int iLayer, int currentNode, float checkFlag, int horizonIndex, double waterContent, double waterContentFC, double waterContentWP, double clay, double sand, double thickness, double bulkDensity, double waterContentSat, double rootDensity);
         void setHourlyVariables(double temp, double irradiance , double prec , double relativeHumidity , double windSpeed, double directIrradiance, double diffuseIrradiance, double cloudIndex, double atmosphericPressure, Crit3DDate currentDate, double sunElevation,double meanTemp30Days,double et0);
         bool setWeatherVariables(double temp, double irradiance , double prec , double relativeHumidity , double windSpeed, double directIrradiance, double diffuseIrradiance, double cloudIndex, double atmosphericPressure, double meanTemp30Days,double et0);
         void setDerivedWeatherVariables(double directIrradiance, double diffuseIrradiance, double cloudIndex, double et0);
@@ -409,6 +409,7 @@
 
     private:
         double outputC;
+        void nullPhotosynthesis();
 
     };
 

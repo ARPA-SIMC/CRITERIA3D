@@ -70,8 +70,8 @@ void Project::initializeProject()
     meteoGridDbHandler = nullptr;
     aggregationDbHandler = nullptr;
 
-    meteoPointsDbFirstTime.setTimeSpec(Qt::UTC);
-    meteoPointsDbLastTime.setTimeSpec(Qt::UTC);
+    meteoPointsDbFirstTime.setTimeZone(QTimeZone::utc());
+    meteoPointsDbLastTime.setTimeZone(QTimeZone::utc());
     meteoPointsDbFirstTime.setSecsSinceEpoch(0);
     meteoPointsDbLastTime.setSecsSinceEpoch(0);
 
@@ -974,7 +974,7 @@ QDateTime Project::getCurrentTime()
     QDateTime myDateTime;
     if (gisSettings.isUTC)
     {
-        myDateTime.setTimeSpec(Qt::UTC);
+        myDateTime.setTimeZone(QTimeZone::utc());
     }
 
     myDateTime.setDate(currentDate);
@@ -1016,9 +1016,7 @@ void Project::cleanMeteoPointsData()
     {
         for (int i = 0; i < nrMeteoPoints; i++)
         {
-            meteoPoints[i].cleanObsDataH();
-            meteoPoints[i].cleanObsDataD();
-            meteoPoints[i].cleanObsDataM();
+            meteoPoints[i].cleanAllData();
         }
     }
 }
@@ -1029,9 +1027,8 @@ void Project::clearMeteoPoints()
     {
         for (int i = 0; i < nrMeteoPoints; i++)
         {
-            meteoPoints[i].cleanObsDataH();
-            meteoPoints[i].cleanObsDataD();
-            meteoPoints[i].cleanObsDataM();
+            meteoPoints[i].cleanAllData();
+
             meteoPoints[i].proxyValues.clear();
             if (meteoPoints[i].topographicDistance != nullptr)
             {
@@ -1796,10 +1793,10 @@ bool Project::loadMeteoGridMonthlyData(QDate firstDate, QDate lastDate, bool sho
 QDateTime Project::findDbPointLastTime()
 {
     QDateTime lastTime;
-    lastTime.setTimeSpec(Qt::UTC);
+    lastTime.setTimeZone(QTimeZone::utc());
 
     QDateTime lastDateD;
-    lastDateD.setTimeSpec(Qt::UTC);
+    lastDateD.setTimeZone(QTimeZone::utc());
     lastDateD = meteoPointsDbHandler->getLastDate(daily);
     if (! lastDateD.isNull())
     {
@@ -1807,7 +1804,7 @@ QDateTime Project::findDbPointLastTime()
     }
 
     QDateTime lastDateH;
-    lastDateH.setTimeSpec(Qt::UTC);
+    lastDateH.setTimeZone(QTimeZone::utc());
     lastDateH = meteoPointsDbHandler->getLastDate(hourly);
 
     if (! lastDateH.isNull())
@@ -1829,15 +1826,15 @@ QDateTime Project::findDbPointLastTime()
 QDateTime Project::findDbPointFirstTime()
 {
     QDateTime firstTime;
-    firstTime.setTimeSpec(Qt::UTC);
+    firstTime.setTimeZone(QTimeZone::utc());
 
     QDateTime firstDateD;
-    firstDateD.setTimeSpec(Qt::UTC);
+    firstDateD.setTimeZone(QTimeZone::utc());
     firstDateD = meteoPointsDbHandler->getFirstDate(daily);
     if (! firstDateD.isNull()) firstTime = firstDateD;
 
     QDateTime firstDateH;
-    firstDateH.setTimeSpec(Qt::UTC);
+    firstDateH.setTimeZone(QTimeZone::utc());
     firstDateH = meteoPointsDbHandler->getFirstDate(hourly);
 
     if (! firstDateH.isNull())
@@ -2321,10 +2318,9 @@ bool Project::loadGlocalAreasMap()
     return true;
 }
 
-bool Project::loadGlocalStationsAndCells(bool isGrid)
+bool Project::loadGlocalStationsAndCells(bool isGrid, QString fileNameStations)
 {
     //leggi csv aree
-    QString fileNameStations = getCompleteFileName(glocalPointsName, PATH_GEO);
     std::vector<std::vector<std::string>> areaPoints;
 
     if (! loadGlocalStationsCsv(fileNameStations, areaPoints)) return false;
@@ -2726,17 +2722,52 @@ bool Project::computeStatisticsCrossValidation()
     return true;
 }
 
-bool Project::interpolationCv(meteoVariable myVar, const Crit3DTime& myTime)
+bool Project::computeStatisticsGlocalCrossValidation(Crit3DMacroArea myArea)
+{
+    std::vector<int> meteoPointsList = myArea.getMeteoPoints();
+
+
+    Crit3DCrossValidationStatistics cvStatistics;
+    cvStatistics.initialize();
+
+    std::vector <float> obs;
+    std::vector <float> pre;
+
+    for (int i = 0; i < meteoPointsList.size(); i++)
+    {
+        if (meteoPoints[meteoPointsList[i]].active)
+        {
+            float value = meteoPoints[meteoPointsList[i]].currentValue;
+
+            if (! isEqual(value, NODATA) && ! isEqual(meteoPoints[meteoPointsList[i]].residual, NODATA))
+            {
+                obs.push_back(value);
+                pre.push_back(value - meteoPoints[meteoPointsList[i]].residual);
+            }
+        }
+    }
+
+    if (obs.size() > 0)
+    {
+        cvStatistics.setMeanAbsoluteError(statistics::meanAbsoluteError(obs, pre));
+        cvStatistics.setMeanBiasError(statistics::meanError(obs, pre));
+        cvStatistics.setRootMeanSquareError(statistics::rootMeanSquareError(obs, pre));
+        cvStatistics.setNashSutcliffeEfficiency(statistics::NashSutcliffeEfficiency(obs, pre));
+
+        float intercept, slope, r2;
+        statistics::linearRegression(obs, pre, int(obs.size()), false, &intercept, &slope, &r2);
+        cvStatistics.setR2(r2);
+    }
+
+    glocalCrossValidationStatistics.push_back(cvStatistics);
+
+    return true;
+}
+
+bool Project::interpolationCv(meteoVariable myVar, const Crit3DTime& myTime, QString glocalCVPointsName)
 {
 
     if (! checkInterpolation(myVar)) return false;
-
-    // check glocal
-    if (interpolationSettings.getUseGlocalDetrending() && ! interpolationSettings.isGlocalReady(false))
-    {
-        if (! loadGlocalAreasMap()) return false;
-        if (! loadGlocalStationsAndCells(false)) return false;
-    }
 
     // check variables
     if ( interpolationSettings.getUseDewPoint() &&
@@ -2791,15 +2822,20 @@ bool Project::interpolationCv(meteoVariable myVar, const Crit3DTime& myTime)
     }
     else if (interpolationSettings.getUseGlocalDetrending())
     {
+        glocalCrossValidationStatistics.clear();
+        interpolationSettings.clearMacroAreaNumber();
+
         if(!setMultipleDetrendingHeightTemperatureRange(&interpolationSettings))
         {
             errorString = "Error in function preInterpolation: \n couldn't set temperature ranges for height proxy.";
             return false;
         }
 
-        if (! computeResidualsGlocalDetrending(myVar, myTime, meteoPoints, nrMeteoPoints, interpolationPoints,
-                                             &interpolationSettings, meteoSettings, &climateParameters, true, true))
+        if (! computeResidualsAndStatisticsGlocalDetrending(myVar, interpolationPoints))
+        {
             return false;
+        }
+
     }
     else if (interpolationSettings.getUseLocalDetrending())
     {
@@ -2814,8 +2850,9 @@ bool Project::interpolationCv(meteoVariable myVar, const Crit3DTime& myTime)
             return false;
     }
 
-    if (! computeStatisticsCrossValidation())
-        return false;
+    if (! interpolationSettings.getUseGlocalDetrending())
+        if (! computeStatisticsCrossValidation())
+            return false;
 
     return true;
 }
@@ -3225,7 +3262,7 @@ bool Project::interpolationDemMain(meteoVariable myVar, const Crit3DTime& myTime
     if (interpolationSettings.getUseGlocalDetrending() && ! interpolationSettings.isGlocalReady(false))
     {
         if (! loadGlocalAreasMap()) return false;
-        if (! loadGlocalStationsAndCells(false)) return false;
+        if (! loadGlocalStationsAndCells(false, getCompleteFileName(glocalPointsName, PATH_GEO))) return false;
     }
 
     // solar radiation model
@@ -4502,7 +4539,7 @@ void Project::showLocalProxyGraph(gis::Crit3DGeoPoint myPoint)
 
     if (interpolationSettings.getUseGlocalDetrending() && ! interpolationSettings.isGlocalReady(false))
     {
-        if (! loadGlocalAreasMap() || ! loadGlocalStationsAndCells(false))
+        if (! loadGlocalAreasMap() || ! loadGlocalStationsAndCells(false, getCompleteFileName(glocalPointsName, PATH_GEO)))
         {
             logError();
             return;
@@ -5472,13 +5509,14 @@ bool Project::waterTableComputeSingleWell(int indexWell)
     if (indexWell == NODATA)
         return false;
 
-    bool isMeteoGridLoaded;
     // sono necessari 24 mesi di dati meteo precedenti il primo dato osservato di falda
+    wellPoints[indexWell].updateDates();
     QDate firstMeteoDate = wellPoints[indexWell].getFirstObsDate().addDays(-730);
     double wellUtmX = wellPoints[indexWell].getUtmX();
     double wellUtmY = wellPoints[indexWell].getUtmY();
     Crit3DMeteoPoint linkedMeteoPoint;
 
+    bool isMeteoGridLoaded;
     if (this->meteoGridDbHandler != nullptr)
     {
         isMeteoGridLoaded = true;
@@ -5960,6 +5998,51 @@ bool Project::readVmArkimetData(const QList<QString> &vmFileList, frequencyType 
     closeProgressBar();
 
     delete dbMeteoArkimet;
+
+    return true;
+}
+
+
+bool Project::computeResidualsAndStatisticsGlocalDetrending(meteoVariable myVar, std::vector<Crit3DInterpolationDataPoint> &interpolationPoints)
+{
+    //TODO: glocal cv with grid ONLY (no DEM)
+
+    if (myVar == noMeteoVar)
+        return false;
+
+    std::vector <Crit3DMacroArea> macroAreas = interpolationSettings.getMacroAreas();
+
+    int elevationPos = NODATA;
+    for (unsigned int pos=0; pos < interpolationSettings.getCurrentCombination().getProxySize(); pos++)
+    {
+        if (getProxyPragaName(interpolationSettings.getProxy(pos)->getName()) == proxyHeight)
+            elevationPos = pos;
+    }
+
+    for (int j = 0; j < nrMeteoPoints; j++)
+    {
+        meteoPoints[j].residual = NODATA;
+    }
+
+    //ciclo sulle aree
+    for (int k = 0; k < macroAreas.size(); k++)
+    {
+        Crit3DMacroArea myArea = macroAreas[k];
+        std::vector<int> meteoPointsList = myArea.getMeteoPoints();
+
+        //if (! myArea.getAreaCellsGrid().empty() || ! myArea.getAreaCellsDEM().empty() )
+        if (! myArea.getAreaCellsDEM().empty() && ! meteoPointsList.empty())
+        {
+            interpolationSettings.pushMacroAreaNumber(k);
+
+            if (! computeResidualsGlocalDetrending(myVar, myArea, elevationPos, meteoPoints, interpolationPoints,
+                                                     &interpolationSettings, meteoSettings, true, true))
+                return false;
+
+            if (! computeStatisticsGlocalCrossValidation(myArea))
+                return false;
+        }
+    }
 
     return true;
 }

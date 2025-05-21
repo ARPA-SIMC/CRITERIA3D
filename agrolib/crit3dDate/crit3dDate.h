@@ -45,7 +45,7 @@
         void setNullDate();
 
         Crit3DDate addDays(long offset) const;
-        int daysTo(const Crit3DDate& myDate) const;
+        int daysTo(const Crit3DDate& newDate) const;
 
         std::string toISOString() const;
 
@@ -57,10 +57,10 @@
     {
     public:
         Crit3DDate date;
-        int time;
+        int time;               // [s]
 
         Crit3DTime();
-        Crit3DTime(Crit3DDate myDate, int myTime);
+        Crit3DTime(const Crit3DDate &myDate, int myTime);
 
         friend bool operator > (const Crit3DTime& myFirstTime, const Crit3DTime& mySecondTime);
         friend bool operator < (const Crit3DTime& myFirstTime, const Crit3DTime& mySecondTime);
@@ -75,10 +75,14 @@
 
         void setNullTime();
 
+        bool setFromISOString(const std::string &dateTimeStr);
+
         int getHour() const;
         int getNearestHour() const;
         int getMinutes() const;
         int getSeconds() const;
+
+        int hourTo(const Crit3DTime &newTime);
 
         std::string toISOString() const;
         std::string toString() const;
@@ -89,7 +93,9 @@
 
     int getDoyFromDate(const Crit3DDate& myDate);
     int getMonthFromDoy(int doy,int year);
+
     Crit3DDate getDateFromDoy(int year, int doy);
+    Crit3DDate getDateFromDoyGeneric(int year, int doy);
 
     Crit3DDate max(const Crit3DDate& myDate1, const Crit3DDate& myDate2);
     Crit3DDate min(const Crit3DDate& myDate1, const Crit3DDate& myDate2);

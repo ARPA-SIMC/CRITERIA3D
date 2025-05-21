@@ -353,31 +353,48 @@ void Crit3DProject::dailyUpdateCropMaps(const QDate &myDate)
 void Crit3DProject::dailyUpdateHydrallMaps()
 {
     updateLast30DaysTavg();
-    updateHydrallLAI();
+    updateHydrallLAI(); //todo non serve?
     return;
 }
 
 bool Crit3DProject::dailyUpdateHydrall(const QDate &myDate)
 {
 
+    //set daily variables like temp, co2
     if (myDate.day() == 1)
     {
-        hydrallModel.firstDayOfMonth = true;
         // update of rothC (monthly)
+
+        //se firstDayOfMonth, scrivi le mappe (mensili?) di LAI, biomassa, etc
+        std::string myError;
+        if (! gis::writeEsriGrid(getCompleteFileName("treeNPP_"+myDate.toString("yyyyMMdd"), PATH_OUTPUT).toStdString(), hydrallMaps.treeNetPrimaryProduction, myError))
+        {
+            errorString = QString::fromStdString(myError);
+            return false;
+        }
+
+        if (! gis::writeEsriGrid(getCompleteFileName("understoreyNPP_"+myDate.toString("yyyyMMdd"), PATH_OUTPUT).toStdString(), hydrallMaps.understoreyNetPrimaryProduction, myError))
+        {
+            errorString = QString::fromStdString(myError);
+            return false;
+        }
+
+
+        //hydrallModel.growthStand(); // TODO quit this line - temporary position to prompt check
+        //hydrallModel.resetStandVariables();
         if (myDate.month() == hydrallModel.firstMonthVegetativeSeason) //TODO
         {
             /* in case of the first day of the year
                  * the algorithms devoted to allocate dry matter
                  * into the biomass pools (foliage, sapwood and fine roots)
                  * */
-            //growthstand
+            //hydrallModel.growthStand();
+            //hydrallModel.resetStandVariables();
+            //grtree
 
         }
     }
-    else
-    {
-        hydrallModel.firstDayOfMonth = false;
-    }
+
     return true;
 }
 
@@ -457,16 +474,17 @@ void Crit3DProject::assignETreal()
 
                     if (processes.computeHydrall)
                     {
-                        if (! currentCrop.roots.rootDensity.empty())
+                        if (currentCrop.roots.rootDensity.empty())
                         {
-                            hydrallModel.soil.rootDensity = currentCrop.roots.rootDensity; //TODO cate make hydrall classes private
+                            // compute root lenght
+                            currentCrop.computeRootLength3D(degreeDaysMap.value[row][col], soilList[soilIndex].totalDepth);
+
+                            // compute root density
+                            root::computeRootDensity3D(currentCrop, soilList[soilIndex], nrLayers, layerDepth, layerThickness);
                         }
-                        else
-                        {
-                            hydrallModel.soil.rootDensity.clear();
-                            hydrallModel.soil.rootDensity.resize(nrLayers);
-                        }
+                        hydrallModel.soil.rootDensity = currentCrop.roots.rootDensity; //TODO cate make hydrall classes private
                         hydrallModel.plant.leafAreaIndexCanopy = MAXVALUE(0, currentLAI);
+                        hydrallModel.plant.leafAreaIndexCanopyMin = currentCrop.LAImin;
                         computeHydrallModel(row, col);
                     }
 
@@ -776,6 +794,7 @@ bool Crit3DProject::runModels(QDateTime firstTime, QDateTime lastTime, bool isRe
         if (processes.computeHydrall)
         {
             dailyUpdateHydrallMaps();
+            dailyUpdateHydrall(myDate);
         }
 
         if (isSaveDailyState())
@@ -1403,9 +1422,13 @@ bool Crit3DProject::computeHydrallModel(int row, int col)
     // TODO scrivere funzione settaggio profilo 1D suolo
 
     //root density
-    hydrallMaps.treeSpeciesMap.value[row][col] = 0; //TODO treeSpeciesMap
-    Crit3DCrop currentCrop = cropList[int(hydrallMaps.treeSpeciesMap.value[row][col])];
-    currentCrop.roots.rootDensity.resize(nrLayers); // TODO
+    hydrallMaps.treeSpeciesMap.value[row][col] = 0; //TODO treeSpeciesMap. valutare tabelle tra crop e tabella hydrall
+    //Crit3DCrop currentCrop = cropList[int(hydrallMaps.treeSpeciesMap.value[row][col])];
+    Crit3DCrop currentCrop = cropList[getLandUnitIndexRowCol(row, col)];
+    std::vector <double> tempRootDensity = hydrallModel.soil.rootDensity;
+
+
+    //currentCrop.roots.rootDensity.resize(nrLayers); // TODO
     // the condition on this for cycle includes the check of existance of the layers
     for (unsigned int i = 0; ((i < nrLayers) && (soilList[soilIndex].getHorizonIndex(layerDepth[i]))!= NODATA); i++)
     {
@@ -1424,17 +1447,18 @@ bool Crit3DProject::computeHydrallModel(int row, int col)
                     */
         //if (soilList[soilIndex].getHorizonIndex(layerDepth[i]) == NODATA)
         //continue;
+
         hydrallModel.setSoilVariables(i,indexMap.at(i).value[row][col],indexMap.at(i).header->flag,
                                       soilList[soilIndex].getHorizonIndex(layerDepth[i]),
                                       soilFluxes3D::getWaterContent(indexMap.at(i).value[row][col]),
                                       soilList[soilIndex].horizon[soilList[soilIndex].getHorizonIndex(layerDepth[i])].waterContentFC,
                                       soilList[soilIndex].horizon[soilList[soilIndex].getHorizonIndex(layerDepth[i])].waterContentWP,
-                                      currentCrop.roots.rootDensity[i],
                                       soilList[soilIndex].horizon[soilList[soilIndex].getHorizonIndex(layerDepth[i])].texture.clay,
                                       soilList[soilIndex].horizon[soilList[soilIndex].getHorizonIndex(layerDepth[i])].texture.sand,
                                       fabs(soilList[soilIndex].horizon[soilList[soilIndex].getHorizonIndex(layerDepth[i])].lowerDepth-soilList[soilIndex].horizon[soilList[soilIndex].getHorizonIndex(layerDepth[i])].upperDepth),
                                       soilList[soilIndex].horizon[soilList[soilIndex].getHorizonIndex(layerDepth[i])].bulkDensity,
-                                      soilList[soilIndex].horizon[soilList[soilIndex].getHorizonIndex(layerDepth[i])].waterContentSAT);
+                                      soilList[soilIndex].horizon[soilList[soilIndex].getHorizonIndex(layerDepth[i])].waterContentSAT,
+                                      tempRootDensity[i]);
     }
     //compute
     hydrallModel.computeHydrallPoint(getCrit3DDate(getCurrentDate()), double(hourlyMeteoMaps->mapHourlyTair->value[row][col]), double(DEM.value[row][col]));
@@ -1544,22 +1568,6 @@ bool Crit3DProject::computeHydrallModel(int row, int col)
         }
     }*/
 
-
-    if (hydrallModel.firstDayOfMonth)
-    {
-        //se firstDayOfMonth, scrivi le mappe (mensili?) di LAI, biomassa, etc
-        std::string fileName;
-        std::string myError;
-        if (! gis::writeEsriGrid(fileName, hydrallMaps.standBiomassMap, myError))
-        {
-            errorString = QString::fromStdString(myError);
-            return false;
-        }
-
-        //etc
-    }
-
-    //snowMaps.updateRangeMaps();
 
     return true;
 }

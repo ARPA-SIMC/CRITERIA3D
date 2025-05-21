@@ -62,6 +62,7 @@
         quality::Range* qualityDailyWDir;
         quality::Range* qualityDailyGRad;
         quality::Range* qualityDailyET0;
+        quality::Range* qualityDailyBIC;
 
         float referenceHeight;
         float deltaTSuspect;

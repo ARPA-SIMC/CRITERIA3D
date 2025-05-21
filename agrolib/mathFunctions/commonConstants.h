@@ -8,8 +8,17 @@
     #ifndef MAXVALUE
         #define MAXVALUE(a, b) (((a) > (b))? (a) : (b))
     #endif
+
     #ifndef BOUNDFUNCTION
         #define BOUNDFUNCTION(lowerValue, upperValue, x) (MAXVALUE((lowerValue), MINVALUE((upperValue), (x))) )
+    #endif
+
+    #ifndef MAXVALUE3
+        #define MAXVALUE3(a, b, c) ((MAXVALUE((a), (b))),(c))
+    #endif
+
+    #ifndef MINVALUE3
+        #define MINVALUE3(a, b, c) ((MINVALUE((a), (b))),(c))
     #endif
 
     #ifndef sgnVariable
@@ -64,6 +73,8 @@
     #define PRAGA_INVALID_COMMAND 101
     #define PRAGA_MISSING_FILE 102
     #define PRAGA_ENV_ERROR 103
+    #define PRAGA_MISSING_PARAMETERS 104
+    #define NOT_SHARED_COMMAND 105
     #define NO_ACTIVE -8888
     #define MAXDAYS_DOWNLOAD_DAILY 180
     #define MAXDAYS_DOWNLOAD_HOURLY 10

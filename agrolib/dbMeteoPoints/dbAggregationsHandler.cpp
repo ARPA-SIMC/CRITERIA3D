@@ -75,7 +75,7 @@ bool Crit3DAggregationsDbHandler::saveAggregationData(const std::vector<int> &id
                         currentDay++;
                     }
                     QDateTime currentDateTime;
-                    currentDateTime.setTimeSpec(Qt::UTC);
+                    currentDateTime.setTimeZone(QTimeZone::utc());
                     currentDateTime.setDate(startDate.addDays(currentDay));
                     currentDateTime.setTime(QTime(currentHour, 0, 0, 0));
 
@@ -389,9 +389,9 @@ bool Crit3DAggregationsDbHandler::loadVariableProperties()
     return true;
 }
 
+
 int Crit3DAggregationsDbHandler::getIdfromMeteoVar(meteoVariable meteoVar)
 {
-
     std::map<int, meteoVariable>::const_iterator it;
     int key = NODATA;
 

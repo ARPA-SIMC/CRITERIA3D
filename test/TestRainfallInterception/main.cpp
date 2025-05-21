@@ -6,9 +6,11 @@
 #include "readWeatherMonticolo.h"
 #include "commonConstants.h"
 
+
 double laiEstimation(int doy);
 void getDailyTemperatures (double* meanT, double* maxT, double* minT, double* temp, int iLine,int nrLines, int* day);
 double getEvapotranspiration (double meanT, double maxT, double minT, double timeLagInMinutes, double latitude, int doy);
+
 
 int main(int argc, char *argv[])
 {

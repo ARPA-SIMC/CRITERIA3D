@@ -1760,6 +1760,7 @@ std::vector <double> getfittingParameters(Crit3DProxyCombination myCombination, 
     return myParam;
 }
 
+
 void macroAreaDetrending(Crit3DMacroArea myArea, meteoVariable myVar, Crit3DInterpolationSettings &mySettings, Crit3DMeteoSettings* meteoSettings, Crit3DMeteoPoint* meteoPoints, std::vector <Crit3DInterpolationDataPoint> interpolationPoints, std::vector <Crit3DInterpolationDataPoint> &subsetInterpolationPoints, int elevationPos)
 {
     //take the parameters+combination for that area
@@ -2503,7 +2504,10 @@ float interpolate(vector <Crit3DInterpolationDataPoint> &myPoints, Crit3DInterpo
 }
 
 
-bool getMultipleDetrendingValues(Crit3DInterpolationSettings mySettings, const std::vector<double> &allProxyValues, std::vector<double> &activeProxyValues, std::vector<std::function<double(double, std::vector<double>&)>> &myFunc, std::vector<std::vector<double>> &myParameters)
+bool getMultipleDetrendingValues(Crit3DInterpolationSettings &mySettings, const std::vector<double> &allProxyValues,
+                                 std::vector<double> &activeProxyValues,
+                                 std::vector< std::function<double(double, std::vector<double>&)> > &myFunc,
+                                 std::vector<std::vector<double>> &myParameters)
 {
     //this function should be used for multiple detrending only, since it loads the elevation proxy before the others
     Crit3DProxyCombination myCombination = mySettings.getCurrentCombination();
@@ -2516,7 +2520,8 @@ bool getMultipleDetrendingValues(Crit3DInterpolationSettings mySettings, const s
 
     for (unsigned int i = 0; i < myCombination.getProxySize(); i++)
     {
-        if (getProxyPragaName(mySettings.getProxy(i)->getName()) == proxyHeight && myCombination.isProxyActive(i) && myCombination.isProxySignificant(i))
+        if (getProxyPragaName(mySettings.getProxy(i)->getName()) == proxyHeight && myCombination.isProxyActive(i)
+            && myCombination.isProxySignificant(i))
         {
             elevationPos = i;
 

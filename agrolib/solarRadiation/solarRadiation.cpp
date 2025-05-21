@@ -561,7 +561,7 @@ namespace radiation
         *td = (*Tt) * (1 - expf(maximumDiffuseTransmissivity - (maximumDiffuseTransmissivity * clearSkyTransmissivity) / (*Tt)));
 
         /*! FT 0.12 stimato da Settefonti agosto 2007 */
-        if ((*Tt) > 0.6f) *td = MAXVALUE(*td, 0.1f);
+        if ((*Tt) > 0.6f) *td = MAXVALUE(*td, 0.12f);
     }
 
 
@@ -731,7 +731,7 @@ bool computeRadiationRsun(Crit3DRadiationSettings* radSettings, float temperatur
         radPoint.lon = lonDegrees;
 
         if (radSettings->getLinkeMode() == PARAM_MODE_MONTHLY)
-            linke = radSettings->getMonthlyLinke(myTime.date.month-1);
+            linke = radSettings->getLinke(myTime.date.month-1);
         else
             linke = readLinke(radSettings, point);
 
@@ -815,7 +815,7 @@ bool computeRadiationRsun(Crit3DRadiationSettings* radSettings, float temperatur
         float linke;
 
         if (radSettings->getLinkeMode() == PARAM_MODE_MONTHLY)
-            linke = radSettings->getMonthlyLinke(myTime.date.month-1);
+            linke = radSettings->getLinke(myTime.date.month-1);
         else
             linke = readLinke(radSettings, row, col);
 
@@ -854,7 +854,7 @@ bool computeRadiationRsun(Crit3DRadiationSettings* radSettings, float temperatur
         float linke;
 
         if (radSettings->getLinkeMode() == PARAM_MODE_MONTHLY)
-            linke = radSettings->getMonthlyLinke(myTime.date.month-1);
+            linke = radSettings->getLinke(myTime.date.month-1);
         else
             linke = readLinke(radSettings, myPoint);
 
@@ -881,7 +881,7 @@ bool computeRadiationRsun(Crit3DRadiationSettings* radSettings, float temperatur
         float linke;
 
         if (radSettings->getLinkeMode() == PARAM_MODE_MONTHLY)
-            linke = radSettings->getMonthlyLinke(myTime.date.month-1);
+            linke = radSettings->getLinke(myTime.date.month-1);
         else
             linke = readLinke(radSettings, myPoint);
 
@@ -1153,7 +1153,7 @@ bool computeRadiationRsun(Crit3DRadiationSettings* radSettings, float temperatur
         radPoint.lon = lonDegrees;
 
         if (radSettings->getLinkeMode() == PARAM_MODE_MONTHLY)
-            linke = radSettings->getMonthlyLinke(myTime.date.month-1);
+            linke = radSettings->getLinke(myTime.date.month-1);
         else
             linke = readLinke(radSettings, point);
 
