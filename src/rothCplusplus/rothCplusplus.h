@@ -87,7 +87,7 @@ private:
     double waterLoss;
 };
 
-class Crit3D_RothCplusplusMaps
+class Crit3DRothCplusplusMaps
 {
 private:
 
@@ -102,20 +102,21 @@ public:
 
 
 
-    Crit3D_RothCplusplusMaps();
-    ~Crit3D_RothCplusplusMaps();
+    Crit3DRothCplusplusMaps();
+    ~Crit3DRothCplusplusMaps();
 
     void initialize(const gis::Crit3DRasterGrid& DEM);
 };
 
-class Crit3D_RothCplusplus{
+class Crit3DRothCplusplus{
 
 public:
 
-    Crit3D_RothCplusplus();
-    //~Crit3D_RothCplusplus();
+    Crit3DRothCplusplus();
+    //~Crit3DRothCplusplus();
 
     void initialize();
+    bool computeRothCPoint();
     int main();
 
     double getInputC();
@@ -136,8 +137,10 @@ private:
     double soilOrganicCarbon; //[t C /ha]
     double inputC; //[t C /ha]
     double inputFYM; //[t C /ha]
+    double plantCover; // formerly bool
 
     double decomposablePMResistantPMRatio; //[-]
+    double totalRage;
 
     bool isUpdate;
 
@@ -145,14 +148,14 @@ private:
     double depth;
 
     double RMF_plantCover(bool plantCover);
+    double RMF_plantCover(double plantCover);
     double RMF_Moist(double RAIN, double PEVAP, double clay, double depth, bool PC, double &SWC);
     double RMF_Moist(double monthlyBIC, double clay, double depth, bool PC, double &SWC);
     double RMF_Tmp(double TEMP);
     void decomp(int timeFact, double &decomposablePlantMatter_Rage, double &resistantPlantMatter_Rage,
-                double &microbialBiomass_Rage, double &humifiedOrganicMatter_Rage, double &IOM_Rage, double &Total_Rage, double &modernC,
+                double &microbialBiomass_Rage, double &humifiedOrganicMatter_Rage, double &IOM_Rage, double &modernC,
                 double &modifyingRate);
-    void RothC(int timeFact, double &DPM_Rage, double &RPM_Rage, double &BIO_Rage, double &HUM_Rage, double &IOM_Rage,
-               double &Total_Rage, double &modernC, bool isET0, bool &PC, double &DPM_RPM, double &SWC);
+    void RothC(int timeFact, double &DPM_Rage, double &RPM_Rage, double &BIO_Rage, double &HUM_Rage, double &IOM_Rage, double &modernC, bool isET0, bool &PC, double &SWC);
 
 
 };

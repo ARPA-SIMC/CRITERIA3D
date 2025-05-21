@@ -401,17 +401,18 @@ bool Crit3DProject::dailyUpdateHydrall(const QDate &myDate)
 
 bool Crit3DProject::updateRothC(int row, int col, double hourlyETreal)
 {
-    //monthly or yearly(?) BIC needs to be cumulated with hourly values
+    //monthly or yearly(?) BIC needs to be cumulated with hourly values. hourlyETreal is in mm/h
     double hourlyBIC = hourlyMeteoMaps->mapHourlyPrec->getValueFromRowCol(row, col) - hourlyETreal;
     double cumulatedBIC = rothCModel.meteoVariable.getBIC() + hourlyBIC;
     rothCModel.meteoVariable.setBIC(cumulatedBIC);
 
     if (rothCModel.getIsUpdate())
     {
-        rothCModel.setInputC(hydrallModel.getOutputC()); //to be read from hydrall and from crop?
+        rothCModel.setInputC(hydrallModel.getOutputC()); //read from hydrall (and from crop too?)
         rothCModel.meteoVariable.setTemperature(hydrallMaps.mapLast30DaysTavg->getValueFromRowCol(row, col));
 
         //chiamata a rothC
+        computeRothCModel();
 
         //reset BIC for next month/year
         rothCModel.meteoVariable.setBIC(0);
@@ -485,6 +486,7 @@ void Crit3DProject::assignETreal()
                         hydrallModel.soil.rootDensity = currentCrop.roots.rootDensity; //TODO cate make hydrall classes private
                         hydrallModel.plant.leafAreaIndexCanopy = MAXVALUE(0, currentLAI);
                         hydrallModel.plant.leafAreaIndexCanopyMin = currentCrop.LAImin;
+
                         computeHydrallModel(row, col);
                     }
 
@@ -794,7 +796,7 @@ bool Crit3DProject::runModels(QDateTime firstTime, QDateTime lastTime, bool isRe
         if (processes.computeHydrall)
         {
             dailyUpdateHydrallMaps();
-            dailyUpdateHydrall(myDate);
+            dailyUpdateHydrall(myDate); //CT è giusto qui? dailyUpdateHydrall c'è anche sopra
         }
 
         if (isSaveDailyState())
@@ -1569,6 +1571,12 @@ bool Crit3DProject::computeHydrallModel(int row, int col)
     }*/
 
 
+    return true;
+}
+
+bool Crit3DProject::computeRothCModel()
+{
+    rothCModel.computeRothCPoint();
     return true;
 }
 

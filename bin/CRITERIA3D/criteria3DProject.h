@@ -62,7 +62,7 @@
 
         Crit3DSnow snowModel;
         Crit3DHydrall hydrallModel;
-        Crit3D_RothCplusplus rothCModel;
+        Crit3DRothCplusplus rothCModel;
 
         QDateTime modelFirstTime, modelLastTime;
         QDateTime meteoPointsDbFirstTime;
@@ -114,6 +114,7 @@
         void dailyUpdateHydrallMaps();
         bool dailyUpdateHydrall(const QDate &myDate);
 
+        bool computeRothCModel();
         bool updateRothC(int row, int col, double hourlyETreal);
 
         bool computeSnowModel();
