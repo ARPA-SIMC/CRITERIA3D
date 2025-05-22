@@ -289,47 +289,50 @@ int DLL_EXPORT __STDCALL setHydraulicProperties(int waterRetentionCurve,
     switch (direction)
     {
         case UP :
-                    nodeList[n].up.index = linkIndex;
-                    nodeList[n].up.area = interfaceArea;
-                    nodeList[n].up.sumFlow = 0;
+                nodeList[n].up.index = linkIndex;
+                nodeList[n].up.area = interfaceArea;
+                nodeList[n].up.sumFlow = 0;
 
-                    if (myStructure.computeHeat || myStructure.computeSolutes)
-                    {
-                        nodeList[n].up.linkedExtra = new(TCrit3DLinkedNodeExtra);
-                        initializeLinkExtra(nodeList[n].up.linkedExtra, myStructure.computeHeat, myStructure.computeSolutes);
-                    }
+                if (myStructure.computeHeat || myStructure.computeSolutes)
+                {
+                    nodeList[n].up.linkedExtra = new(TCrit3DLinkedNodeExtra);
+                    initializeLinkExtra(nodeList[n].up.linkedExtra, myStructure.computeHeat, myStructure.computeSolutes);
+                }
 
-                    break;
+                break;
         case DOWN :
-                    nodeList[n].down.index = linkIndex;
-                    nodeList[n].down.area = interfaceArea;
-                    nodeList[n].down.sumFlow = 0;
+                nodeList[n].down.index = linkIndex;
+                nodeList[n].down.area = interfaceArea;
+                nodeList[n].down.sumFlow = 0;
 
-                    if (myStructure.computeHeat || myStructure.computeSolutes)
-                    {
-                        nodeList[n].down.linkedExtra = new(TCrit3DLinkedNodeExtra);
-                        initializeLinkExtra(nodeList[n].down.linkedExtra, myStructure.computeHeat, myStructure.computeSolutes);
-                    }
+                if (myStructure.computeHeat || myStructure.computeSolutes)
+                {
+                    nodeList[n].down.linkedExtra = new(TCrit3DLinkedNodeExtra);
+                    initializeLinkExtra(nodeList[n].down.linkedExtra, myStructure.computeHeat, myStructure.computeSolutes);
+                }
 
-                    break;
+                break;
         case LATERAL :
-                    j = 0;
-                    while ((j < myStructure.nrLateralLinks) && (nodeList[n].lateral[j].index != NOLINK)) j++;
-                    if (j == myStructure.nrLateralLinks) return (TOPOGRAPHY_ERROR);
-                    nodeList[n].lateral[j].index = linkIndex;
-                    nodeList[n].lateral[j].area = interfaceArea;
-                    nodeList[n].lateral[j].sumFlow = 0;
+                j = 0;
+                while ((j < myStructure.nrLateralLinks) && (nodeList[n].lateral[j].index != NOLINK)) j++;
+                if (j == myStructure.nrLateralLinks)
+                    return (TOPOGRAPHY_ERROR);
 
-                    if (myStructure.computeHeat || myStructure.computeSolutes)
-                    {
-                        nodeList[n].lateral[j].linkedExtra = new(TCrit3DLinkedNodeExtra);
-                        initializeLinkExtra(nodeList[n].lateral[j].linkedExtra, myStructure.computeHeat, myStructure.computeSolutes);
-                    }
+                nodeList[n].lateral[j].index = linkIndex;
+                nodeList[n].lateral[j].area = interfaceArea;
+                nodeList[n].lateral[j].sumFlow = 0;
 
-                    break;
+                if (myStructure.computeHeat || myStructure.computeSolutes)
+                {
+                    nodeList[n].lateral[j].linkedExtra = new(TCrit3DLinkedNodeExtra);
+                    initializeLinkExtra(nodeList[n].lateral[j].linkedExtra, myStructure.computeHeat, myStructure.computeSolutes);
+                }
+
+                break;
         default :
-                    return PARAMETER_ERROR;
+                return PARAMETER_ERROR;
     }
+
     return CRIT3D_OK;
  }
 
