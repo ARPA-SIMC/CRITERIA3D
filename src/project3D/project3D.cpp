@@ -257,7 +257,7 @@ void Project3D::clearWaterBalance3D()
 
     for (unsigned int i = 0; i < indexMap.size(); i++)
     {
-        indexMap[i].clear();
+        indexMap[i].value.clear();
     }
     indexMap.clear();
     soilIndexMap.clear();
@@ -606,7 +606,7 @@ void Project3D::setIndexMaps()
     unsigned long currentIndex = 0;
     for (unsigned int layer = 0; layer < nrLayers; layer++)
     {
-        indexMap.at(layer).initializeGrid(DEM);
+        indexMap.at(layer).initializeGrid(*(DEM.header));
 
         for (int row = 0; row < indexMap.at(layer).header->nrRows; row++)
         {
@@ -645,7 +645,7 @@ void Project3D::setIndexMaps()
                     else
                     {
                         // test
-                        indexMap.at(layer).value[row][col] = indexMap.at(layer).header->flag;
+                        indexMap.at(layer).value[row][col] = long(indexMap.at(layer).header->flag);
                     }
                 }
             }
@@ -664,7 +664,7 @@ bool Project3D::setLateralBoundary()
         return false;
     }
 
-    boundaryMap.initializeGrid(indexMap[0]);
+    boundaryMap.initializeGrid(DEM);
     for (int row = 0; row < boundaryMap.header->nrRows; row++)
     {
         for (int col = 0; col < boundaryMap.header->nrCols; col++)
@@ -855,14 +855,14 @@ bool Project3D::setCrit3DTopography()
                     // up link
                     if (layer > 0)
                     {
-                        int linkIndex = int(indexMap.at(layer - 1).value[row][col]);
+                        long linkIndex = indexMap.at(layer - 1).value[row][col];
 
-                        if (linkIndex != int(indexMap.at(layer - 1).header->flag))
+                        if (linkIndex != long(indexMap.at(layer - 1).header->flag))
                         {
                             myResult = soilFluxes3D::setNodeLink(index, linkIndex, UP, float(area));
                             if (isCrit3dError(myResult, errorString))
                             {
-                                errorString = "setNodeLink:" + errorString + " in layer nr:" + QString::number(layer);
+                                errorString = "setNodeLink (up):" + errorString + " in layer nr:" + QString::number(layer);
                                 return false;
                             }
                         }
@@ -871,15 +871,15 @@ bool Project3D::setCrit3DTopography()
                     // down link
                     if (layer < (nrLayers - 1) && isWithinSoil(soilIndex, layerDepth.at(size_t(layer + 1))))
                     {
-                        int linkIndex = int(indexMap.at(layer + 1).value[row][col]);
+                        long linkIndex = indexMap.at(layer + 1).value[row][col];
 
-                        if (linkIndex != int(indexMap.at(layer + 1).header->flag))
+                        if (linkIndex != long(indexMap.at(layer + 1).header->flag))
                         {
                             myResult = soilFluxes3D::setNodeLink(index, linkIndex, DOWN, float(area));
 
                             if (isCrit3dError(myResult, errorString))
                             {
-                                errorString = "setNodeLink:" + errorString + " in layer nr:" + QString::number(layer);
+                                errorString = "setNodeLink (down):" + errorString + " in layer nr:" + QString::number(layer);
                                 return false;
                             }
                         }
@@ -892,16 +892,16 @@ bool Project3D::setCrit3DTopography()
                         {
                             if ((i != 0)||(j != 0))
                             {
-                                if (! gis::isOutOfGridRowCol(row+i, col+j, indexMap.at(layer)))
+                                if (! indexMap.at(layer).isOutOfGrid(row+i, col+j))
                                 {
-                                    int linkIndex = int(indexMap.at(layer).value[row+i][col+j]);
-                                    if (linkIndex != int(indexMap.at(layer).header->flag))
+                                    long linkIndex = indexMap.at(layer).value[row+i][col+j];
+                                    if (linkIndex != long(indexMap.at(layer).header->flag))
                                     {
                                         // eight lateral nodes: each is assigned half a side (conceptual octagon)
                                         myResult = soilFluxes3D::setNodeLink(index, linkIndex, LATERAL, lateralArea * 0.5);
                                         if (isCrit3dError(myResult, errorString))
                                         {
-                                            errorString = "setNodeLink:" + errorString + " in layer nr:" + QString::number(layer);
+                                            errorString = "setNodeLink (lateral):" + errorString + " in layer nr:" + QString::number(layer);
                                             return false;
                                         }
                                     }
@@ -1664,7 +1664,7 @@ bool Project3D::computeCriteria3DMap(gis::Crit3DRasterGrid &outputRaster, criter
         return false;
     }
 
-    outputRaster.initializeGrid(indexMap.at(layerIndex));
+    outputRaster.initializeGrid(*(indexMap.at(layerIndex).header));
 
     // compute map
     for (int row = 0; row < indexMap.at(layerIndex).header->nrRows; row++)
@@ -1801,7 +1801,7 @@ bool Project3D::getTotalSoilWaterContent(double &wcSum, long &nrVoxels)
 
 bool Project3D::computeMinimumFoS(gis::Crit3DRasterGrid &outputRaster)
 {
-    outputRaster.initializeGrid(indexMap.at(0));
+    outputRaster.initializeGrid(*(indexMap.at(0).header));
 
     for (int row = 0; row < indexMap.at(0).header->nrRows; row++)
     {

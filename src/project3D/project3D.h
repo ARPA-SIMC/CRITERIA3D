@@ -126,7 +126,7 @@
 
         gis::Crit3DRasterGrid boundaryMap;
         gis::Crit3DRasterGrid criteria3DMap;
-        std::vector <gis::Crit3DRasterGrid> indexMap;
+        std::vector<gis::Crit3DIndexGrid> indexMap;
 
         // soil properties
         unsigned int nrSoils;
