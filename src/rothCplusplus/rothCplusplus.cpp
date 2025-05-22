@@ -79,7 +79,6 @@ Crit3DRothCplusplus::Crit3DRothCplusplus()
     initialize();
 }
 
-
 void Crit3DRothCplusplus::initialize()
 {
     //TODO qui inizializzazione dei pool, per ora come fare? Inizializzato su python, copiato i pool all'equilibrio
