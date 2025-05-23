@@ -130,6 +130,9 @@ bool Crit3DProject::initializeHydrall()
 bool Crit3DProject::initializeRothC()
 {
     rothCModel.initialize();
+    hourlyMeteoMaps->mapHourlyETReal->initializeGrid(DEM, 0);
+
+
     //todo
 
     return true;
@@ -341,6 +344,10 @@ void Crit3DProject::dailyUpdateCropMaps(const QDate &myDate)
                         }
                     }
                 }
+                if(processes.computeRothC)
+                {
+                    //update delle mappe mensili di prec ed ETreal
+                }
             }
         }
     }
@@ -399,24 +406,35 @@ bool Crit3DProject::dailyUpdateHydrall(const QDate &myDate)
 }
 
 
-bool Crit3DProject::updateRothC(int row, int col, double hourlyETreal)
+bool Crit3DProject::updateRothC()
 {
-    //monthly or yearly(?) BIC needs to be cumulated with hourly values. hourlyETreal is in mm/h
-    double hourlyBIC = hourlyMeteoMaps->mapHourlyPrec->getValueFromRowCol(row, col) - hourlyETreal;
-    double cumulatedBIC = rothCModel.meteoVariable.getBIC() + hourlyBIC;
-    rothCModel.meteoVariable.setBIC(cumulatedBIC);
-
     if (rothCModel.getIsUpdate())
     {
-        rothCModel.setInputC(hydrallModel.getOutputC()); //read from hydrall (and from crop too?)
-        rothCModel.meteoVariable.setTemperature(hydrallMaps.mapLast30DaysTavg->getValueFromRowCol(row, col));
+        for (int row = 0; row < DEM.header->nrRows; row++)
+        {
+            for (int col = 0; col < DEM.header->nrCols; col++)
+            {
+                // is valid point
+                float height = DEM.value[row][col];
+                if (! isEqual(height, DEM.header->flag))
+                {
+                    rothCModel.meteoVariable.setPrecipitation(monthlyPrec.getValueFromRowCol(row, col));
+                    rothCModel.meteoVariable.setWaterLoss(monthlyETReal.getValueFromRowCol(row, col));
+                    rothCModel.meteoVariable.setBIC(monthlyPrec.getValueFromRowCol(row, col) - monthlyETReal.getValueFromRowCol(row, col));
+                    rothCModel.meteoVariable.setTemperature(hydrallMaps.mapLast30DaysTavg->getValueFromRowCol(row, col));
+                    rothCModel.setInputC(hydrallModel.getOutputC()); //read from hydrall (and from crop too?)
 
-        //chiamata a rothC
-        computeRothCModel();
 
-        //reset BIC for next month/year
-        rothCModel.meteoVariable.setBIC(0);
-        rothCModel.setInputC(0);
+                    //chiamata a rothC
+                    computeRothCModel();
+
+                    //reset meteo variables and C input for next month/year
+                    rothCModel.resetInputVariables();
+                    monthlyPrec.value[row][col] = 0;
+                    monthlyETReal.value[row][col] = 0;
+                }
+            }
+        }
     }
 
     return true;
@@ -492,7 +510,7 @@ void Crit3DProject::assignETreal()
 
                     if (processes.computeRothC)
                     {
-                        //updateRothC(row, col, actualEvap + actualTransp);
+                        hourlyMeteoMaps->mapHourlyETReal->value[row][col] = actualEvap + actualTransp;
                     }
                 }
             }
@@ -745,6 +763,7 @@ bool Crit3DProject::runModels(QDateTime firstTime, QDateTime lastTime, bool isRe
         {
             rothCModel.setIsUpdate(myDate.day() == 1);
             //rothCModel.setIsUpdate(myDate.doy() == 1);
+
         }
 
         if (isSaveOutputRaster())
@@ -768,11 +787,22 @@ bool Crit3DProject::runModels(QDateTime firstTime, QDateTime lastTime, bool isRe
             if (currentSeconds == 0 || currentSeconds == 3600)
                 isRestart = false;
 
+            if (processes.computeRothC)
+            {
+                rothCModel.setIsUpdate(rothCModel.getIsUpdate() && hour == 0);
+            }
+
             if (! runModelHour(currentOutputPath, isRestart))
             {
                 isModelRunning = false;
                 logError();
                 return false;
+            }
+
+            if (processes.computeRothC)
+            {
+                //rothC maps update must be done hourly, otherwise ETReal data is not stored
+                updateRothCMonthlyMaps();
             }
 
             // output points
@@ -817,6 +847,21 @@ bool Crit3DProject::runModels(QDateTime firstTime, QDateTime lastTime, bool isRe
     return true;
 }
 
+void Crit3DProject::updateRothCMonthlyMaps()
+{
+    for (int row = 0; row < indexMap.at(0).header->nrRows; row++)
+    {
+        for (int col = 0; col < indexMap.at(0).header->nrCols; col++)
+        {
+            int surfaceIndex = indexMap.at(0).value[row][col];
+            if (surfaceIndex != indexMap.at(0).header->flag)
+            {
+                monthlyETReal.value[row][col] += hourlyMeteoMaps->mapHourlyETReal->value[row][col];
+                monthlyPrec.value[row][col] += hourlyMeteoMaps->mapHourlyPrec->value[row][col];
+            }
+        }
+    }
+}
 
 void Crit3DProject::setSaveOutputRaster(bool isSave)
 {
@@ -1771,6 +1816,7 @@ bool Crit3DProject::runModelHour(const QString& hourlyOutputPath, bool isRestart
             if (! setSinkSource())
                 return false;
         }
+
 
         emit updateOutputSignal();
     }

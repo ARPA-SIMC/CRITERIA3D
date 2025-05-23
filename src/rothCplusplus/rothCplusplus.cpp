@@ -59,6 +59,7 @@
 //#include <math.h>
 
 
+#include "basicMath.h"
 #include "commonConstants.h"
 #include "rothCplusplus.h"
 
@@ -72,6 +73,19 @@ void Crit3DRothCplusplusMaps::initialize(const gis::Crit3DRasterGrid& DEM)
     humifiedOrganicMatter->initializeGrid(DEM);
     inertOrganicMatter->initializeGrid(DEM);
     soilOrganicMatter->initializeGrid(DEM);
+}
+
+Crit3DRothCMeteoVariable::Crit3DRothCMeteoVariable()
+{
+    initialize();
+}
+
+void Crit3DRothCMeteoVariable::initialize()
+{
+    temp = NODATA;
+    BIC = NODATA;
+    prec = NODATA;
+    waterLoss = NODATA;
 }
 
 Crit3DRothCplusplus::Crit3DRothCplusplus()
@@ -124,12 +138,12 @@ bool Crit3DRothCplusplus::computeRothCPoint()
     //SOC = DPM + RPM + BIO + HUM + IOM;
     soilOrganicCarbon = decomposablePlantMatter + resistantPlantMatter + microbialBiomass + humifiedOrganicMatter + inorganicMatter;
 
-    std::cout << j << "," << decomposablePlantMatter << ","<< resistantPlantMatter << ","<< microbialBiomass << ","
-              << humifiedOrganicMatter << ","<< inorganicMatter << ","<< soilOrganicCarbon << "\n";
+    /*std::cout << j << "," << decomposablePlantMatter << ","<< resistantPlantMatter << ","<< microbialBiomass << ","
+              << humifiedOrganicMatter << ","<< inorganicMatter << ","<< soilOrganicCarbon << "\n";*/
 
     int timeFact = 12;
 
-    bool isET0 = false;
+    bool isET0 = true;
     bool PC = 1; //TODO: LAI dependant
     double modernC = 100;
 
@@ -160,8 +174,8 @@ bool Crit3DRothCplusplus::computeRothCPoint()
 
     double totalDelta = (std::exp(-totalRage/8035.0) - 1) * 1000;
 
-    std::cout << j << "," << decomposablePlantMatter << ","<< resistantPlantMatter << ","<< microbialBiomass << ","
-              << humifiedOrganicMatter << ","<< inorganicMatter << ","<< soilOrganicCarbon << "\n";
+    /*std::cout << j << "," << decomposablePlantMatter << ","<< resistantPlantMatter << ","<< microbialBiomass << ","
+              << humifiedOrganicMatter << ","<< inorganicMatter << ","<< soilOrganicCarbon << "\n";*/
 
     std::vector<std::vector<double>> yearList;
     //    std::vector<std::vector<double>> yearList = {{double(1), double(j+1), DPM, RPM, BIO, HUM, IOM, SOC, totalDelta}};
@@ -173,7 +187,7 @@ bool Crit3DRothCplusplus::computeRothCPoint()
     inputFYM = 0;
     modernC = 100; //TODO is this necessary?
 
-    RothC(timeFact, DPM_Rage, RPM_Rage, BIO_Rage, HUM_Rage, IOM_Rage, modernC, isET0, PC, SWC);
+    RothC(timeFact, DPM_Rage, RPM_Rage, BIO_Rage, HUM_Rage, IOM_Rage, modernC, PC, SWC);
 
     totalDelta = (std::exp(-totalRage/8035.0) - 1.0) * 1000;
 
@@ -182,15 +196,17 @@ bool Crit3DRothCplusplus::computeRothCPoint()
     int year = 2000;
     int month = 1;
 
-    monthList.push_back({double(year), double(month), decomposablePlantMatter, resistantPlantMatter, microbialBiomass, humifiedOrganicMatter,
-                         inorganicMatter, soilOrganicCarbon, totalDelta});
+    monthList.push_back({decomposablePlantMatter, resistantPlantMatter, microbialBiomass, humifiedOrganicMatter,
+                         inorganicMatter, soilOrganicCarbon});
 
-    if (month == timeFact)
+    /*if (month == timeFact)
     {
         yearList.push_back({double(year), double(month), decomposablePlantMatter, resistantPlantMatter, microbialBiomass, humifiedOrganicMatter,
                             inorganicMatter, soilOrganicCarbon, totalDelta});
         //std::cout << i << "," << DPM << "," << RPM << "," << BIO << "," << HUM << "," << IOM << "," << SOC << "," << totalDelta << "\n";
-    }
+    }*/
+
+    scrivi_csv("/autofs/nfshomes/ctoscano/Github/CRITERIA3D/CMonthResults.csv", monthList);
 
     return true;
 }
@@ -418,20 +434,18 @@ void Crit3DRothCplusplus::decomp(int timeFact, double &decomposablePlantMatter_R
 
 // The Rothamsted Carbon Model: RothC
 void Crit3DRothCplusplus::RothC(int timeFact, double &DPM_Rage, double &RPM_Rage, double &BIO_Rage, double &HUM_Rage,
-                                 double &IOM_Rage, double &modernC,
-                                 bool isET0, bool &PC, double &SWC)
+                                 double &IOM_Rage, double &modernC, bool &PC, double &SWC)
 {
     // Calculate RMFs
     double RM_TMP = RMF_Tmp(meteoVariable.getTemperature());
     double RM_Moist;
-    if (isET0)
+    if (isEqual (meteoVariable.getBIC(), NODATA)) //todo: check next time
     {
-        double monthlyBIC = meteoVariable.getPrecipitation() - meteoVariable.getWaterLoss();
-        RM_Moist = RMF_Moist(monthlyBIC, clay, depth, PC, SWC);
+        RM_Moist = RMF_Moist(meteoVariable.getPrecipitation(), meteoVariable.getWaterLoss(), clay, depth, PC, SWC);
     }
     else
     {
-        RM_Moist = RMF_Moist(meteoVariable.getPrecipitation(), meteoVariable.getWaterLoss(), clay, depth, PC, SWC);
+        RM_Moist = RMF_Moist(meteoVariable.getBIC(), clay, depth, PC, SWC);
     }
 
     double RM_PC = RMF_plantCover(PC);
@@ -442,6 +456,14 @@ void Crit3DRothCplusplus::RothC(int timeFact, double &DPM_Rage, double &RPM_Rage
     decomp(timeFact, DPM_Rage, RPM_Rage, BIO_Rage, HUM_Rage, IOM_Rage, modernC, modifyingRate);
 
     return;
+}
+
+void Crit3DRothCplusplus::resetInputVariables()
+{
+    inputC = 0;
+    meteoVariable.setBIC(0);
+    meteoVariable.setPrecipitation(0);
+    meteoVariable.setWaterLoss(0);
 }
 
 void Crit3DRothCplusplus::setInputC(double myInputC)
@@ -474,6 +496,14 @@ double Crit3DRothCMeteoVariable::getPrecipitation()
     return prec;
 }
 
+void Crit3DRothCMeteoVariable::cumulatePrec(double myPrec)
+{
+    if (! isEqual(prec, NODATA))
+        prec += myPrec;
+    else
+        prec = myPrec;
+}
+
 void Crit3DRothCMeteoVariable::setBIC(double myBIC)
 {
     BIC = myBIC;
@@ -484,6 +514,14 @@ double Crit3DRothCMeteoVariable::getBIC()
     return BIC;
 }
 
+void Crit3DRothCMeteoVariable::cumulateBIC(double myBIC)
+{
+    if (! isEqual(BIC, NODATA))
+        BIC += myBIC;
+    else
+        BIC = myBIC;
+}
+
 void Crit3DRothCMeteoVariable::setWaterLoss(double myWaterLoss)
 {
     waterLoss = myWaterLoss;
@@ -492,6 +530,14 @@ void Crit3DRothCMeteoVariable::setWaterLoss(double myWaterLoss)
 double Crit3DRothCMeteoVariable::getWaterLoss()
 {
     return waterLoss;
+}
+
+void Crit3DRothCMeteoVariable::cumulateWaterLoss(double myWaterLoss)
+{
+    if (! isEqual(waterLoss, NODATA))
+        waterLoss += myWaterLoss;
+    else
+        waterLoss = myWaterLoss;
 }
 
 void Crit3DRothCplusplus::setIsUpdate(bool value)
@@ -536,7 +582,7 @@ std::vector<std::vector<double>> leggi_csv(const std::string& nome_file) {
     return dati;
 }
 
-void scrivi_csv(const std::string& nome_file, const std::vector<std::vector<double>>& dati) {
+void Crit3DRothCplusplus::scrivi_csv(const std::string& nome_file, const std::vector<std::vector<double>>& dati) {
     std::ofstream file(nome_file);
 
     if (!file.is_open()) {
@@ -544,7 +590,7 @@ void scrivi_csv(const std::string& nome_file, const std::vector<std::vector<doub
         return;
     }
 
-    file << "index,Year,Month,DPM_t_C_ha,RPM_t_C_ha,BIO_t_C_ha,HUM_t_C_ha,IOM_t_C_ha,SOC_t_C_ha,deltaC" << std::endl;
+    //file << "index,Year,Month,DPM_t_C_ha,RPM_t_C_ha,BIO_t_C_ha,HUM_t_C_ha,IOM_t_C_ha,SOC_t_C_ha,deltaC" << std::endl;
 
     for (const auto& riga : dati) {
         std::stringstream ss;
@@ -627,7 +673,7 @@ int Crit3DRothCplusplus::main()
 
         totalRage = 0;
 
-        RothC(timeFact, DPM_Rage, RPM_Rage, BIO_Rage, HUM_Rage, IOM_Rage, modernC, isET0,PC,SWC);
+        RothC(timeFact, DPM_Rage, RPM_Rage, BIO_Rage, HUM_Rage, IOM_Rage, modernC,PC,SWC);
 
         if (((k+1)%timeFact) == 0)
         {
@@ -660,7 +706,7 @@ int Crit3DRothCplusplus::main()
         inputFYM = data[i][7];
         modernC = data[i][2]/100;
 
-        RothC(timeFact, DPM_Rage, RPM_Rage, BIO_Rage, HUM_Rage, IOM_Rage, modernC, isET0, PC, SWC);
+        RothC(timeFact, DPM_Rage, RPM_Rage, BIO_Rage, HUM_Rage, IOM_Rage, modernC, PC, SWC);
 
         totalDelta = (std::exp(-totalRage/8035.0) - 1.0) * 1000;
 

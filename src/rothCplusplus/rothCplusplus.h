@@ -71,20 +71,26 @@
 class Crit3DRothCMeteoVariable {
 
 public:
+    Crit3DRothCMeteoVariable();
+    void initialize();
+
     void setTemperature (double myTemperature);
     double getTemperature();
     void setPrecipitation(double myPrecipitation);
+    void cumulatePrec(double myPrec);
     double getPrecipitation();
     void setBIC(double myBIC);
+    void cumulateBIC(double myBIC);
     double getBIC();
     void setWaterLoss(double myWaterLoss);
+    void cumulateWaterLoss(double myWaterLoss);
     double getWaterLoss();
 
 private:
     double temp;
     double prec;
     double BIC;
-    double waterLoss;
+    double waterLoss; //hourly water loss is temporarily stored here, then cumulated BIC is calculated
 };
 
 class Crit3DRothCplusplusMaps
@@ -125,6 +131,10 @@ public:
     void setIsUpdate(bool value);
     bool getIsUpdate();
 
+    void resetInputVariables();
+
+    void scrivi_csv(const std::string& nome_file, const std::vector<std::vector<double>>& dati) ;
+
     Crit3DRothCMeteoVariable meteoVariable;
 
 
@@ -155,7 +165,7 @@ private:
     void decomp(int timeFact, double &decomposablePlantMatter_Rage, double &resistantPlantMatter_Rage,
                 double &microbialBiomass_Rage, double &humifiedOrganicMatter_Rage, double &IOM_Rage, double &modernC,
                 double &modifyingRate);
-    void RothC(int timeFact, double &DPM_Rage, double &RPM_Rage, double &BIO_Rage, double &HUM_Rage, double &IOM_Rage, double &modernC, bool isET0, bool &PC, double &SWC);
+    void RothC(int timeFact, double &DPM_Rage, double &RPM_Rage, double &BIO_Rage, double &HUM_Rage, double &IOM_Rage, double &modernC, bool &PC, double &SWC);
 
 
 };
