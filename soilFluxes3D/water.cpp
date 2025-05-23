@@ -111,6 +111,7 @@ double runoff(long i, long j, TlinkedNode *link, double deltaT, unsigned approxi
     double flowArea = link->area * Hs;
 
     CourantWater = MAXVALUE(CourantWater, v * deltaT / cellDistance);
+
     return (v * flowArea) / dH;
 }
 
