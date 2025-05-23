@@ -193,6 +193,55 @@ namespace gis
                 && (nrRows == header.nrRows));
     }
 
+
+    /******************     INDEX GRID     ********************/
+
+    Crit3DIndexGrid::Crit3DIndexGrid()
+    {
+        header = new Crit3DRasterHeader();
+    }
+
+    Crit3DIndexGrid::~Crit3DIndexGrid()
+    {
+        value.clear();
+    }
+
+    long Crit3DIndexGrid::getValueFromRowCol(int row, int col) const
+    {
+        if (isOutOfGrid(row, col))
+            return long(header->flag);
+        else
+            return value[row][col];
+    }
+
+    bool Crit3DIndexGrid::isOutOfGrid(int row, int col) const
+    {
+        return (row < 0 || row > (header->nrRows - 1) || col < 0 || col > header->nrCols - 1);
+    }
+
+    void Crit3DIndexGrid::initializeGrid()
+    {
+        value.resize(header->nrRows);
+        for (int row = 0; row < header->nrRows; row++)
+        {
+            value[row].resize(header->nrCols);
+            for (int col = 0; col < header->nrCols; col++)
+            {
+                value[row][col] = long(header->flag);
+            }
+        }
+    }
+
+    void Crit3DIndexGrid::initializeGrid(const Crit3DRasterHeader& initHeader)
+    {
+        value.clear();
+        *header = initHeader;
+        initializeGrid();
+    }
+
+
+    /******************     RASTER GRID     ********************/
+
     Crit3DRasterGrid::Crit3DRasterGrid()
     {
         isLoaded = false;
@@ -204,14 +253,44 @@ namespace gis
     }
 
 
-    void Crit3DRasterGrid::setConstantValue(float initValue)
+    Crit3DRasterGrid::~Crit3DRasterGrid()
     {
-        for (int row = 0; row < this->header->nrRows; row++)
-            for (int col = 0; col < header->nrCols; col++)
-                value[row][col] = initValue;
+        clear();
+    }
 
-        this->minimum = initValue;
-        this->maximum = initValue;
+
+    void Crit3DRasterGrid::clear()
+    {
+        if (value != nullptr && header->nrRows > 0)
+        {
+            for (int row = 0; row < header->nrRows; row++)
+                if (value[row] != nullptr)
+                    delete [] value[row];
+
+            delete [] value;
+            value = nullptr;
+        }
+
+        mapTime.setNullTime();
+        minimum = NODATA;
+        maximum = NODATA;
+
+        header->nrRows = 0;
+        header->nrCols = 0;
+        header->nrBytes = 4;
+        header->cellSize = NODATA;
+        header->llCorner.initialize();
+
+        isLoaded = false;
+    }
+
+
+    // clean the grid (set all NO DATA)
+    void Crit3DRasterGrid::emptyGrid()
+    {
+        for (int row = 0; row < header->nrRows; row++)
+            for (int col = 0; col < header->nrCols; col++)
+                value[row][col] = header->flag;
     }
 
 
@@ -286,6 +365,17 @@ namespace gis
     }
 
 
+    void Crit3DRasterGrid::setConstantValue(float initValue)
+    {
+        for (int row = 0; row < this->header->nrRows; row++)
+            for (int col = 0; col < header->nrCols; col++)
+                value[row][col] = initValue;
+
+        this->minimum = initValue;
+        this->maximum = initValue;
+    }
+
+
     bool Crit3DRasterGrid::copyGrid(const Crit3DRasterGrid& initGrid)
     {
         clear();
@@ -342,47 +432,6 @@ namespace gis
         getLatLonFromUtm(gisSettings, utmCenter, geoCenter);
 
         return geoCenter;
-    }
-
-
-    void Crit3DRasterGrid::clear()
-    {
-        if (value != nullptr && header->nrRows > 0)
-        {
-            for (int row = 0; row < header->nrRows; row++)
-                if (value[row] != nullptr)
-                    delete [] value[row];
-
-            delete [] value;
-            value = nullptr;
-        }
-
-        mapTime.setNullTime();
-        minimum = NODATA;
-        maximum = NODATA;
-
-        header->nrRows = 0;
-        header->nrCols = 0;
-        header->nrBytes = 4;
-        header->cellSize = NODATA;
-        header->llCorner.initialize();
-
-        isLoaded = false;
-    }
-
-
-    // clean the grid (set all NO DATA)
-    void Crit3DRasterGrid::emptyGrid()
-    {
-        for (int row = 0; row < header->nrRows; row++)
-            for (int col = 0; col < header->nrCols; col++)
-                value[row][col] = header->flag;
-    }
-
-
-    Crit3DRasterGrid::~Crit3DRasterGrid()
-    {
-        clear();
     }
 
 
@@ -1273,11 +1322,13 @@ namespace gis
     }
 
 
-    bool isBoundaryRunoff(const Crit3DRasterGrid& rasterRef, const Crit3DRasterGrid& aspectMap, int row, int col)
+    bool isBoundaryRunoff(const Crit3DIndexGrid& indexMap, const Crit3DRasterGrid& aspectMap, int row, int col)
     {
-        float value = rasterRef.getValueFromRowCol(row,col);
+        long index = indexMap.getValueFromRowCol(row,col);
+        long nullIndex = long(indexMap.header->flag);
         float aspect = aspectMap.getValueFromRowCol(row,col);
-        if (isEqual(value, rasterRef.header->flag) || isEqual(aspect, aspectMap.header->flag))
+
+        if ((index == nullIndex) || isEqual(aspect, aspectMap.header->flag))
             return false;
 
         int r = 0;
@@ -1292,9 +1343,9 @@ namespace gis
         else if (aspect >= 225 && aspect <= 315)
             c = -1;
 
-        float valueBoundary = rasterRef.getValueFromRowCol(row + r, col + c);
+        long indexBoundary = indexMap.getValueFromRowCol(row + r, col + c);
 
-        return isEqual(valueBoundary, rasterRef.header->flag);
+        return (indexBoundary == nullIndex);
     }
 
 

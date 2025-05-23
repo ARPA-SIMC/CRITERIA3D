@@ -1238,10 +1238,8 @@ bool Project::loadMeteoPointsDB(QString fileName)
 
     // load proxy values for detrending
     logInfoGUI("Read proxy values: " + fileName);
-    if (! readProxyValues())
-    {
-        logWarning("Error reading proxy values");
-    }
+    readProxyValues();
+
     closeLogInfo();
 
     // position with respect to DEM
@@ -1337,10 +1335,7 @@ bool Project::loadAggregationDBAsMeteoPoints(QString fileName)
 
     // load proxy values for detrending
     logInfoGUI("Read proxy values: " + fileName);
-    if (! readProxyValues())
-    {
-        logWarning("Error reading proxy values");
-    }
+    readProxyValues();
 
     //position with respect to DEM
     if (DEM.isLoaded)
