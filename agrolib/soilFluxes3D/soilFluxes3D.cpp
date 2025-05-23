@@ -142,11 +142,13 @@ int DLL_EXPORT __STDCALL initializeFluxes(long nrNodes, int nrLayers, int nrLate
 int DLL_EXPORT __STDCALL setNumericalParameters(double minDeltaT, double maxDeltaT, int maxIterationNumber,
                         int maxApproximationsNumber, int ResidualTolerance, double MBRThreshold)
 {
-    if (minDeltaT < 0.01) minDeltaT = 0.01;
+    // check minimum dt
+    if (minDeltaT < 0.01) minDeltaT = 0.01;                     // [s]
     if (minDeltaT > HOUR_SECONDS) minDeltaT = HOUR_SECONDS;
     myParameters.delta_t_min = minDeltaT;
 
-    if (maxDeltaT < 60) maxDeltaT = 60;
+    // check maximum dt
+    if (maxDeltaT < 60) maxDeltaT = 60;                         // [s]
     if (maxDeltaT > HOUR_SECONDS) maxDeltaT = HOUR_SECONDS;
     if (maxDeltaT < minDeltaT) maxDeltaT = minDeltaT;
     myParameters.delta_t_max = maxDeltaT;
