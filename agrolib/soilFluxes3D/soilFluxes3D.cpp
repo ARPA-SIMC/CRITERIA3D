@@ -614,12 +614,12 @@ int DLL_EXPORT __STDCALL setHydraulicProperties(int waterRetentionCurve,
  * \param waterSinkSource [m3 sec-1]
  * \return OK/ERROR
  */
- int DLL_EXPORT __STDCALL setWaterSinkSource(long nodeIndex, double waterSinkSource)
+ int DLL_EXPORT __STDCALL setWaterSinkSource(long nodeIndex, double sinkSource)
  {
     if (nodeList == nullptr) return MEMORY_ERROR;
     if ((nodeIndex < 0) || (nodeIndex >= myStructure.nrNodes)) return INDEX_ERROR;
 
-    nodeList[nodeIndex].waterSinkSource = waterSinkSource;
+    nodeList[nodeIndex].waterSinkSource = sinkSource;
 
     return CRIT3D_OK;
  }

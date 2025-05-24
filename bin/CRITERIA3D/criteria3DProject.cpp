@@ -539,11 +539,14 @@ void Crit3DProject::assignPrecipitation()
                     }
                     if (liquidWater > 0)
                     {
-                        float surfaceWater = checkSoilCracking(row, col, liquidWater);
+                        float precSurfaceWater = checkSoilCracking(row, col, liquidWater);
 
-                        double flow = area * (surfaceWater / 1000.);        // [m3 h-1]
-                        waterSinkSource[surfaceIndex] += flow / 3600.;      // [m3 s-1]
-                        totalPrecipitation += flow;                         // [m3]
+                        double flow = area * (precSurfaceWater / 1000.);            // [m3 h-1]
+                        if ((flow / 3600.) > DBL_EPSILON)
+                        {
+                            waterSinkSource[surfaceIndex] += flow / 3600.;          // [m3 s-1]
+                            totalPrecipitation += flow;                             // [m3 h-1]
+                        }
                     }
                 }
             }
@@ -554,7 +557,8 @@ void Crit3DProject::assignPrecipitation()
 
 // Water infiltration into soil cracks
 // input: rainfall [mm]
-// returns the water remaining on the surface after infiltration into soil cracks
+// output: water remaining on the surface [mm]
+// after infiltration into soil cracks
 float Crit3DProject::checkSoilCracking(int row, int col, float precipitation)
 {
     const double MIN_CRACKING_DEPTH = 0.2;              // [m]
@@ -659,10 +663,12 @@ float Crit3DProject::checkSoilCracking(int row, int col, float precipitation)
             layerWater = std::min(layerWater, downWater);
 
             double flow = area * (layerWater / 1000.);              // [m3 h-1]
-
-            waterSinkSource[nodeIndex] += flow / 3600.;             // [m3 s-1]
-            totalPrecipitation += flow;                             // [m3]
-            downWater -= layerWater;
+            if ((flow / 3600.) > DBL_EPSILON)
+            {
+                waterSinkSource[nodeIndex] += flow / 3600.;         // [m3 s-1]
+                totalPrecipitation += flow;                         // [m3 h-1]
+                downWater -= layerWater;                            // [mm]
+            }
         }
     }
 
@@ -1735,7 +1741,7 @@ bool Crit3DProject::runModelHour(const QString& hourlyOutputPath, bool isRestart
             // initalize sink / source
             for (unsigned long i = 0; i < nrNodes; i++)
             {
-                waterSinkSource.at(size_t(i)) = 0.;
+                waterSinkSource[i] = 0.;                    // [m3 s-1]
             }
         }
 
