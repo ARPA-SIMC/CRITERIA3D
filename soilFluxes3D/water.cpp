@@ -62,7 +62,7 @@ double getWaterExchange(long i, TlinkedNode *link, double deltaT)
 
 /*!
  * \brief runoff
- * Manning formulation
+ * Manning equation
  * Qij=((Hi+Hj-zi-zj)/2)^(5/3) * Sij / roughness * sqrt(abs(Hi-Hj)/Lij) * sgn(Hi-Hj)
  * \param i
  * \param j
@@ -79,18 +79,18 @@ double runoff(long i, long j, TlinkedNode *link, double deltaT, unsigned approxi
     {
         double flux_i = (nodeList[i].Qw * deltaT) / nodeList[i].volume_area;
         double flux_j = (nodeList[j].Qw * deltaT) / nodeList[j].volume_area;
-        Hi = nodeList[i].oldH + flux_i;
-        Hj = nodeList[j].oldH + flux_j;
+        Hi = nodeList[i].oldH + flux_i * 0.5;
+        Hj = nodeList[j].oldH + flux_j * 0.5;
     }
     else
     {
+        /*
         Hi = nodeList[i].H;
         Hj = nodeList[j].H;
-
-        /*
-		Hi = (nodeList[i].H + nodeList[i].oldH) / 2.0;
-        Hj = (nodeList[j].H + nodeList[j].oldH) / 2.0;
         */
+        // avg value
+        Hi = (nodeList[i].H + nodeList[i].oldH) * 0.5;
+        Hj = (nodeList[j].H + nodeList[j].oldH) * 0.5;
     }
 
     double H = MAXVALUE(Hi, Hj);
@@ -100,7 +100,7 @@ double runoff(long i, long j, TlinkedNode *link, double deltaT, unsigned approxi
         return 0.;
 
     double dH = fabs(Hi - Hj);
-    double cellDistance = distance2D(i,j);
+    double cellDistance = distance2D(i, j);
     if ((dH/cellDistance) < EPSILON)
         return 0.;
 
@@ -108,10 +108,9 @@ double runoff(long i, long j, TlinkedNode *link, double deltaT, unsigned approxi
 
     // Manning equation
     double v = pow(Hs, 2./3.) * sqrt(dH/cellDistance) / roughness;
+    CourantWater = std::max(CourantWater, v * deltaT / cellDistance);
+
     double flowArea = link->area * Hs;
-
-    CourantWater = MAXVALUE(CourantWater, v * deltaT / cellDistance);
-
     return (v * flowArea) / dH;
 }
 
@@ -120,26 +119,28 @@ double infiltration(long sup, long inf, TlinkedNode *link, double deltaT)
 {
     double cellDistance = nodeList[sup].z - nodeList[inf].z;
 
-    /*! unsaturated */
+    // unsaturated
     if (nodeList[inf].H < nodeList[sup].z)
     {
-        /*! surface water content [m] */
-        //double surfaceH = (nodeList[sup].H + nodeList[sup].oldH) * 0.5;
+        double surfaceH = (nodeList[sup].H + nodeList[sup].oldH) * 0.5;
+        double soilH = (nodeList[inf].H + nodeList[inf].oldH) * 0.5;
 
-        double initialSurfaceWater = MAXVALUE(nodeList[sup].oldH - nodeList[sup].z, 0);     // [m]
+        // surface avg water content [m]
+        double surfaceWater = MAXVALUE(surfaceH - nodeList[sup].z, 0);              // [m]
 
-        // precipitation: positive  -  evaporation: negative
-        double precOrEvapRate = nodeList[sup].Qw / nodeList[sup].volume_area;               // [m s-1]
+        // precipitation: positive
+        // evaporation: negative
+        double precOrEvapRate = nodeList[sup].Qw / nodeList[sup].volume_area;       // [m s-1]
 
-        /*! maximum water infiltration rate [m/s] */
-        double maxInfiltrationRate = initialSurfaceWater / deltaT + precOrEvapRate;         // [m s-1]
-        if (maxInfiltrationRate <= 0)
+        // maximum water infiltration rate [m/s]
+        double maxInfRate = surfaceWater / deltaT + precOrEvapRate;                 // [m s-1]
+        if (maxInfRate < DBL_EPSILON)
             return 0.;
 
-        double dH = nodeList[sup].H - nodeList[inf].H;
-        double maxK = maxInfiltrationRate * (cellDistance / dH);                            // [m s-1]
+        double dH = surfaceH - soilH;                                               // [m]
+        double maxK = maxInfRate * (cellDistance / dH);                             // [m s-1]
 
-        /*! first soil layer: mean between current k and k_sat */
+        // first soil layer: mean between current k and k_sat
         double meanK = computeMean(nodeList[inf].Soil->K_sat, nodeList[inf].k);
 
         if (nodeList[inf].boundary != nullptr)
@@ -160,7 +161,7 @@ double infiltration(long sup, long inf, TlinkedNode *link, double deltaT)
     }
     else
     {
-        /*! saturated */
+        // saturated
         if (nodeList[inf].boundary != nullptr)
         {
             if (nodeList[inf].boundary->type == BOUNDARY_URBAN)
@@ -381,10 +382,11 @@ bool waterFlowComputation(double deltaT)
         }
         threadVector.clear();
 
-        if (CourantWater > 1.0 && deltaT > myParameters.delta_t_min)
+        // check Courant
+        if (CourantWater > 1.01 && deltaT > myParameters.delta_t_min)
         {
             myParameters.current_delta_t = std::max(myParameters.current_delta_t / CourantWater, myParameters.delta_t_min);
-            if (myParameters.current_delta_t > 1)
+            if (myParameters.current_delta_t > 1.)
             {
                 myParameters.current_delta_t = floor(myParameters.current_delta_t);
             }
@@ -418,7 +420,7 @@ bool waterFlowComputation(double deltaT)
         if (getForcedHalvedTime())
             return false;
     }
-    while ( (! isValidStep) && (++approximationNr < unsigned(myParameters.maxApproximationsNumber)) );
+    while ((! isValidStep) && (++approximationNr < unsigned(myParameters.maxApproximationsNumber)));
 
     return isValidStep;
  }
