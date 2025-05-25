@@ -64,12 +64,8 @@ double getWaterExchange(long i, TlinkedNode *link, double deltaT)
  * \brief runoff
  * Manning equation
  * Qij=((Hi+Hj-zi-zj)/2)^(5/3) * Sij / roughness * sqrt(abs(Hi-Hj)/Lij) * sgn(Hi-Hj)
- * \param i
- * \param j
- * \param link TlinkedNode pointer
- * \param deltaT
- * \param approximationNr
- * \return result
+ * \param link  linkedNode pointer
+ * \param deltaT    [s]
  */
 double runoff(long i, long j, TlinkedNode *link, double deltaT, unsigned approximationNr)
 {
@@ -85,33 +81,36 @@ double runoff(long i, long j, TlinkedNode *link, double deltaT, unsigned approxi
     else
     {
         /*
-        Hi = nodeList[i].H;
-        Hj = nodeList[j].H;
-        */
         // avg value
         Hi = (nodeList[i].H + nodeList[i].oldH) * 0.5;
         Hj = (nodeList[j].H + nodeList[j].oldH) * 0.5;
+        */
+        Hi = (nodeList[i].H);
+        Hj = (nodeList[j].H);
     }
 
-    double H = MAXVALUE(Hi, Hj);
-    double z = MAXVALUE(nodeList[i].z + nodeList[i].pond, nodeList[j].z + nodeList[j].pond);
-    double Hs = H - z;
-    if (Hs < EPSILON)
+    double zi = nodeList[i].z + nodeList[i].pond;
+    double zj = nodeList[j].z + nodeList[j].pond;
+    double Hmax = std::max(Hi, Hj);
+    double zmax = std::max(zi, zj);
+    double Hs = Hmax - zmax;
+    if (Hs < 1.e-4)
         return 0.;
 
     double dH = fabs(Hi - Hj);
     double cellDistance = distance2D(i, j);
-    if ((dH/cellDistance) < EPSILON)
+    double slope = dH / cellDistance;
+    if (slope < EPSILON)
         return 0.;
 
-    double roughness = (nodeList[i].Soil->roughness + nodeList[j].Soil->roughness) / 2.;
+    double roughness = (nodeList[i].Soil->roughness + nodeList[j].Soil->roughness) * 0.5;
 
     // Manning equation
-    double v = pow(Hs, 2./3.) * sqrt(dH/cellDistance) / roughness;
+    double v = pow(Hs, 2./3.) * sqrt(slope) / roughness;                // [m s-1]
     CourantWater = std::max(CourantWater, v * deltaT / cellDistance);
 
-    double flowArea = link->area * Hs;
-    return (v * flowArea) / dH;
+    double flowArea = link->area * Hs;                                  // [m2]
+    return v * flowArea / dH;
 }
 
 

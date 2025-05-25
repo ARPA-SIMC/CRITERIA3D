@@ -472,13 +472,11 @@ bool Project3D::initialize3DModel()
 
 bool Project3D::setAccuracy()
 {
-    double vmax = 10.0;                                                             // [m s-1]
-    if (waterFluxesParameters.modelAccuracy < 3)
-    {
-        vmax = 5.0;                                                                 // [m s-1]
-    }
+    // maximum water velocity
+    double vMax = 5.0 * waterFluxesParameters.modelAccuracy;                        // [m s-1]
 
-    double minimumDeltaT = std::min(30.0, DEM.header->cellSize / vmax);             // [s]
+    // minimum dT
+    double minimumDeltaT = std::min(30.0, DEM.header->cellSize / vMax);             // [s]
 
     // Mass Balance Ratio precision (digit at which error is accepted)
     int digitMBR = waterFluxesParameters.modelAccuracy;
