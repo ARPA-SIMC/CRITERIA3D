@@ -27,6 +27,7 @@
 
 #include <stdio.h>
 #include <math.h>
+#include <algorithm>
 
 #include "commonConstants.h"
 #include "header/types.h"
@@ -254,11 +255,24 @@ bool waterBalance(double deltaT, int approxNr)
     if (MBRerror < myParameters.MBRThreshold)
     {
         acceptStep(deltaT);
-        // best case: system is stable, double time step
-        if (approxNr <= 2 && CourantWater < 0.5 && MBRerror < (myParameters.MBRThreshold * 0.5))
+
+        // best case: system is stable, try to increase time step
+        if (CourantWater < 0.9 && approxNr <= 2 && MBRerror < (myParameters.MBRThreshold * 0.5))
         {
-            doubleTimeStep();
+            if (CourantWater < 0.5)
+            {
+                doubleTimeStep();
+            }
+            else
+            {
+                myParameters.current_delta_t = std::min(myParameters.current_delta_t / CourantWater, myParameters.delta_t_max);
+                if (myParameters.current_delta_t > 1.)
+                {
+                    myParameters.current_delta_t = floor(myParameters.current_delta_t);
+                }
+            }
         }
+
         return true;
     }
 

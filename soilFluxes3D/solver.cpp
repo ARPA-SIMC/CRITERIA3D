@@ -105,7 +105,7 @@ int getMaxIterationsNr(int approximationNr)
 {
     int maxIterationsNr = int((approximationNr + 1) * (float(myParameters.maxIterationsNumber)
                                                       / float(myParameters.maxApproximationsNumber)));
-    return MAXVALUE(20, maxIterationsNr);
+    return std::max(20, maxIterationsNr);
 }
 
 
@@ -282,7 +282,7 @@ bool solveLinearSystem(int approximation, double residualTolerance, int computat
                 currentNorm = iterationThreads();
             }
 
-            if (currentNorm > (bestNorm * 10.0))
+            if (currentNorm > (bestNorm * 10.))
             {
                 // non-convergent system
                 return false;
