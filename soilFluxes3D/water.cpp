@@ -29,6 +29,7 @@
 #include <math.h>
 #include <stdlib.h>
 #include <thread>
+#include <float.h>
 
 #include "physics.h"
 #include "commonConstants.h"
