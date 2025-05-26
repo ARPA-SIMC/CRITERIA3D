@@ -2563,6 +2563,61 @@ void MainWindow::on_actionCriteria3D_Water_content_summary_triggered()
 }
 
 
+void MainWindow::on_actionDEM_summary_triggered()
+{
+    if (! myProject.DEM.isLoaded)
+    {
+        myProject.logWarning(ERROR_STR_MISSING_DEM);
+        return;
+    }
+
+    long nrVoxels = 0;
+    double elevationSum = 0;
+    float maxElevation = NODATA;
+    float minElevation = NODATA;
+    bool isFirst = true;
+    for (int row = 0; row < myProject.DEM.header->nrRows; row++)
+    {
+        for (int col = 0; col < myProject.DEM.header->nrCols; col++)
+        {
+            float elevation = myProject.DEM.value[row][col];
+            if (! isEqual(elevation, myProject.DEM.header->flag))
+            {
+                if (isFirst)
+                {
+                    maxElevation = elevation;
+                    minElevation = elevation;
+                    isFirst = false;
+                }
+                else
+                {
+                    maxElevation = std::max(maxElevation, elevation);
+                    minElevation = std::min(minElevation, elevation);
+                }
+
+                elevationSum += elevation;
+                nrVoxels++;
+            }
+        }
+    }
+
+    double voxelArea = myProject.DEM.header->cellSize * myProject.DEM.header->cellSize;     // [m2]
+    double area = voxelArea * nrVoxels;                                                     // [m2]
+
+    QString summaryStr = "DIGITAL ELEVATION MODEL SUMMARY\n\n";
+
+    summaryStr += "Number of pixels:  " + QString::number(nrVoxels) + "\n";
+    summaryStr += "Area:  " + QString::number(area, 'f', 0) + " [m2]\n";
+    summaryStr += "Hectares:  " + QString::number(area / 10000., 'f', 2) + " [ha]\n";
+    summaryStr += "Area (km2):  " + QString::number(area / 1000000, 'f', 3) + " [km2]\n";
+    summaryStr += "Max. elevation:  " + QString::number(maxElevation, 'f', 1) + " [m]\n";
+    summaryStr += "Min. elevation:  " + QString::number(minElevation, 'f', 1) + " [m]\n";
+    summaryStr += "Avg. elevation:  " + QString::number(elevationSum / nrVoxels, 'f', 1) + " [m]\n";
+
+    myProject.logInfoGUI(summaryStr);
+}
+
+
 void MainWindow::showCriteria3DVariable(criteria3DVariable var, int layerIndex, bool isFixedRange,
                                         bool isHideMinimum, double minimum, double maximum)
 {
@@ -3635,5 +3690,4 @@ void MainWindow::on_actionSave_outputRaster_triggered()
         myProject.logError(QString::fromStdString(errorStr));
     }
 }
-
 
