@@ -163,6 +163,7 @@
         // TODO Cate unità di misura
         double myChlorophyllContent;
         double height; // in cm
+        double hydraulicResistancePerFoliageArea; //(MPa s m2 m-3)
         double myLeafWidth;
         bool isAmphystomatic;
         double foliageLongevity;
@@ -371,7 +372,7 @@
         double moistureCorrectionFactor(int index);
         double understoreyRespiration();
         void radiationAbsorption();
-        void setSoilVariables(int iLayer, int currentNode, float checkFlag, int horizonIndex, double waterContent, double waterContentFC, double waterContentWP, double clay, double sand, double thickness, double bulkDensity, double waterContentSat, double rootDensity);
+        void setSoilVariables(int iLayer, int currentNode, float checkFlag, int horizonIndex, double waterContent, double waterContentFC, double waterContentWP, double clay, double sand, double thickness, double bulkDensity, double waterContentSat, double rootDensity, double kSat);
         void setHourlyVariables(double temp, double irradiance , double prec , double relativeHumidity , double windSpeed, double directIrradiance, double diffuseIrradiance, double cloudIndex, double atmosphericPressure, Crit3DDate currentDate, double sunElevation,double meanTemp30Days,double et0);
         bool setWeatherVariables(double temp, double irradiance , double prec , double relativeHumidity , double windSpeed, double directIrradiance, double diffuseIrradiance, double cloudIndex, double atmosphericPressure, double meanTemp30Days,double et0);
         void setDerivedWeatherVariables(double directIrradiance, double diffuseIrradiance, double cloudIndex, double et0);

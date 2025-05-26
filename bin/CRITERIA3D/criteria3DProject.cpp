@@ -810,10 +810,6 @@ bool Crit3DProject::runModels(QDateTime firstTime, QDateTime lastTime, bool isRe
             dailyUpdatePond();
         }
 
-        if (processes.computeHydrall)
-        {
-            dailyUpdateHydrall(myDate);
-        }
 
         if (processes.computeRothC && myDate.day() == 1)
         {
@@ -1569,7 +1565,7 @@ bool Crit3DProject::computeHydrallModel(int row, int col)
                                       fabs(soilList[soilIndex].horizon[soilList[soilIndex].getHorizonIndex(layerDepth[i])].lowerDepth-soilList[soilIndex].horizon[soilList[soilIndex].getHorizonIndex(layerDepth[i])].upperDepth),
                                       soilList[soilIndex].horizon[soilList[soilIndex].getHorizonIndex(layerDepth[i])].bulkDensity,
                                       soilList[soilIndex].horizon[soilList[soilIndex].getHorizonIndex(layerDepth[i])].waterContentSAT,
-                                      tempRootDensity[i]);
+                                      tempRootDensity[i], soilList[soilIndex].horizon[soilList[soilIndex].getHorizonIndex(layerDepth[i])].waterConductivity.kSat);
     }
     //compute
     hydrallModel.computeHydrallPoint(getCrit3DDate(getCurrentDate()), double(hourlyMeteoMaps->mapHourlyTair->value[row][col]), double(DEM.value[row][col]));

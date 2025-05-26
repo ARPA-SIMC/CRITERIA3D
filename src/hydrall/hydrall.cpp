@@ -36,12 +36,12 @@ Crit3DHydrallState::Crit3DHydrallState()
 Crit3DHydrallStatePlant::Crit3DHydrallStatePlant()
 {
     treeNetPrimaryProduction = 0;
-    //treecumulatedBiomassFoliage = 0;
-    //treecumulatedBiomassRoot = 0;
-    //treecumulatedBiomassSapwood = 0;
+    treeBiomassFoliage = 0.1; //[kgDM m-2]
+    treeBiomassRoot = 0.05; //[kgDM m-2]
+    treeBiomassSapwood = 0.2; //[kgDM m-2]
     understoreyNetPrimaryProduction = 0;
-    //understoreycumulatedBiomassFoliage = 0;
-    //understoreycumulatedBiomassRoot = 0;
+    understoreyBiomassFoliage = 0.08; //[kgDM m-2]
+    understoreyBiomassRoot = 0.02; //[kgDM m-2]
 }
 
 Crit3DHydrallWeatherDerivedVariable::Crit3DHydrallWeatherDerivedVariable()
@@ -87,7 +87,7 @@ Crit3DHydrallPlant::Crit3DHydrallPlant()
     foliageLongevity = 1;
     sapwoodLongevity = 35;
     fineRootLongevity = 1;
-    foliageDensity = NODATA;
+    foliageDensity = 0.1; //[kgDM m-3]
     woodDensity = RHOS;
     specificLeafArea = NODATA;
     psiLeaf = NODATA;
@@ -214,11 +214,7 @@ void Crit3DHydrallMaps::initialize(const gis::Crit3DRasterGrid& DEM)
     treeNetPrimaryProduction->initializeGrid(DEM, 0); //TODO: initial maps must be loaded
     understoreyNetPrimaryProduction->initializeGrid(DEM, 0);
     treeSpeciesMap.initializeGrid(DEM);
-    plantHeight.initializeGrid(DEM);
-
-    treeNetPrimaryProduction->initializeGrid(DEM);
-    understoreyNetPrimaryProduction->initializeGrid(DEM);
-
+    plantHeight.initializeGrid(DEM); //TODO
 }
 
 Crit3DHydrallMaps::~Crit3DHydrallMaps()
@@ -328,7 +324,7 @@ double Crit3DHydrall::photosynthesisAndTranspirationUnderstorey()
     understoreyTranspirationRate.resize(1);
     understoreyTranspirationRate[0] = 0;
 
-    if (understorey.absorbedPAR > EPSILON)
+    if (understorey.absorbedPAR > EPSILON && environmentalVariable.sineSolarElevation > 0.001)
     {
         const double rootEfficiencyInWaterExtraction = 1.25e-3;  //[kgH2O kgDM-1 s-1]
         const double understoreyLightUtilization = 1.77e-9;      //[kgC J-1]
@@ -451,7 +447,7 @@ void Crit3DHydrall::setStateVariables(Crit3DHydrallMaps &stateMap, int row, int 
     statePlant.understoreyNetPrimaryProduction = stateMap.understoreyNetPrimaryProduction->value[row][col];
 }
 
-void Crit3DHydrall::setSoilVariables(int iLayer, int currentNode,float checkFlag, int horizonIndex, double waterContent, double waterContentFC, double waterContentWP,double clay, double sand,double thickness,double bulkDensity,double waterContentSat, double rootDensity)
+void Crit3DHydrall::setSoilVariables(int iLayer, int currentNode,float checkFlag, int horizonIndex, double waterContent, double waterContentFC, double waterContentWP,double clay, double sand,double thickness,double bulkDensity,double waterContentSat, double rootDensity, double kSat)
 {
     if (iLayer == 0)
     {
@@ -470,6 +466,7 @@ void Crit3DHydrall::setSoilVariables(int iLayer, int currentNode,float checkFlag
     soil.fieldCapacity.resize(soil.layersNr);
     soil.wiltingPoint.resize(soil.layersNr);
     soil.rootDensity.resize(soil.layersNr);
+    soil.satHydraulicConductivity.resize(soil.layersNr);
 
 
     if (currentNode != checkFlag)
@@ -488,6 +485,7 @@ void Crit3DHydrall::setSoilVariables(int iLayer, int currentNode,float checkFlag
         soil.wiltingPoint[iLayer] = waterContentWP;
         soil.saturation[iLayer] = waterContentSat;
         soil.rootDensity[iLayer] = rootDensity;
+        soil.satHydraulicConductivity[iLayer] = kSat;
     }
 
     //soil.clayAverage = statistics::weighedMean(soil.nodeThickness,soil.clay);
@@ -1299,7 +1297,7 @@ bool Crit3DHydrall::growthStand()
     statePlant.understoreyBiomassFoliage = statePlant.understoreyNetPrimaryProduction * (1.-understoreyAllocationCoefficientToRoot);    //understorey growth: foliage...
     statePlant.understoreyBiomassRoot = statePlant.understoreyNetPrimaryProduction * understoreyAllocationCoefficientToRoot;         //...and roots
 
-    //outputC calculation for RothC model. necessario [t C/ha]
+    //outputC calculation for RothC model. necessario [t C/ha] ora in kgDM m-2
     //MANCA OUTPUT DA TAGLIO
     outputC = statePlant.treeBiomassFoliage/plant.foliageLongevity + statePlant.treeBiomassSapwood/plant.sapwoodLongevity +
               statePlant.treeBiomassRoot/plant.fineRootLongevity;
@@ -1352,6 +1350,21 @@ bool Crit3DHydrall::growthStand()
     isFirstYearSimulation = false;
     return true;
 }
+
+/*void Crit3DHydrall::cavitationConditions()
+{
+    plant.psiLeaf =
+
+PSILEAF= PSISL - (0.01 * H)
+     +            - (ETOT(HOUR)/LAI * 0.018/1000. * RESF) !leaf water potential (MPa)
+          IF(PSILEAF.LT.PSILMIN)  THEN                    !if leaf wat pot is lowest in year, then...
+            PSILMIN= PSILEAF
+            PSISCRIT= PSISL	                            !... store critical value of soil wat pot
+            ECRIT= ETOT(HOUR)/LAI                         !... and transpiration
+            DAYCRIT= DAY                                  !... and annotate Julian day
+          END IF
+
+}*/
 
 
 void Crit3DHydrall::resetStandVariables()
@@ -1436,7 +1449,7 @@ void Crit3DHydrall::rootfind(double &allf, double &allr, double &alls, bool &sol
 
     //new tree-height after growth
     if (allf*annualGrossStandGrowth > statePlant.treeBiomassFoliage/(plant.foliageLongevity-1)) {
-        plant.height += (allf*annualGrossStandGrowth-statePlant.treeBiomassFoliage/(plant.foliageLongevity-1)/plant.foliageDensity);
+        plant.height += (allf*annualGrossStandGrowth-statePlant.treeBiomassFoliage/(plant.foliageLongevity-1))/plant.foliageDensity;
     }
 
     //soil hydraulic conductivity
@@ -1475,13 +1488,12 @@ void Crit3DHydrall::rootfind(double &allf, double &allr, double &alls, bool &sol
     statePlant.treeBiomassSapwood = MAXVALUE(EPSILON,statePlant.treeBiomassSapwood);
 
     //resulting leaf specific resistance (MPa s m2 m-3)
-    double hydraulicResistancePerFoliageArea;
-    hydraulicResistancePerFoliageArea = (1./(statePlant.treeBiomassRoot*soilRootsSpecificConductivity)
+    plant.hydraulicResistancePerFoliageArea = (1./(statePlant.treeBiomassRoot*soilRootsSpecificConductivity)
         + (plant.height*plant.height*plant.woodDensity)/(statePlant.treeBiomassSapwood*sapwoodSpecificConductivity))
         * (statePlant.treeBiomassFoliage*plant.specificLeafArea);
     //resulting minimum leaf water potential
 
-    plant.psiLeafMinimum = plant.psiLeafCritical - (0.01 * plant.height)-(plant.transpirationPerUnitFoliageAreaCritical * 0.018/1000. * hydraulicResistancePerFoliageArea);
+    plant.psiLeafMinimum = plant.psiLeafCritical - (0.01 * plant.height)-(plant.transpirationPerUnitFoliageAreaCritical * 0.018/1000. * plant.hydraulicResistancePerFoliageArea);
     //check if given value of ALLF satisfies optimality constraint
     if(plant.psiLeafMinimum >= PSITHR)
         sol = true;
