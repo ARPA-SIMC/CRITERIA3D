@@ -30,6 +30,7 @@
 #include "project.h"
 #include "soilFluxes3D.h"
 #include "soilDbTools.h"
+#include <float.h>
 
 #include "math.h"
 #include "utilities.h"

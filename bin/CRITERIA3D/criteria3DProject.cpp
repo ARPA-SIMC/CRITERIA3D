@@ -41,6 +41,7 @@
 #include <QtSql>
 #include <QPaintEvent>
 #include <QVector3D>
+#include <float.h>
 
 
 Crit3DProject::Crit3DProject() : Project3D()
@@ -424,8 +425,8 @@ bool Crit3DProject::dailyUpdateHydrall(const QDate &myDate)
         }
 
 
-        //hydrallModel.growthStand(); // TODO quit this line - temporary position to prompt check
-        //hydrallModel.resetStandVariables();
+        hydrallModel.growthStand(); // TODO quit this line - temporary position to prompt check
+        hydrallModel.resetStandVariables();
         if (myDate.month() == hydrallModel.firstMonthVegetativeSeason) //TODO
         {
             /* in case of the first day of the year

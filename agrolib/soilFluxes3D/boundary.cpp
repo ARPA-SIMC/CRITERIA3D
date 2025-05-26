@@ -28,6 +28,7 @@
 #include <math.h>
 #include <iostream>
 #include <algorithm>
+#include <float.h>
 
 #include "physics.h"
 #include "commonConstants.h"
