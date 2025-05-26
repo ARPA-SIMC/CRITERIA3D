@@ -475,7 +475,9 @@ void Crit3DHydrall::setSoilVariables(int iLayer, int currentNode,float checkFlag
     if (currentNode != checkFlag)
     {
         soil.waterContent[iLayer] = waterContent;
-        soil.stressCoefficient[iLayer] = BOUNDFUNCTION(0,MINVALUE(1.0,(waterContent - 2* waterContentFC)/(waterContentSat-2 * waterContentFC)), (10*(soil.waterContent[iLayer]-waterContentWP))/(3*(waterContentFC-waterContentWP)));
+        double stress = BOUNDFUNCTION(0.01,1, MINVALUE((10*(waterContent-waterContentWP))/(3*(waterContentFC-waterContentWP)),  log(waterContentSat/waterContent)/log(2*waterContentSat/(waterContentFC+waterContentSat))));
+        soil.stressCoefficient[iLayer] = BOUNDFUNCTION(0.01,1, MINVALUE((10*(waterContent-waterContentWP))/(3*(waterContentFC-waterContentWP)),  log(waterContentSat/waterContent)/log(2*waterContentSat/(waterContentFC+waterContentSat))));
+        //soil.stressCoefficient[iLayer] = BOUNDFUNCTION(0,MINVALUE(1.0,(waterContent - 2* waterContentFC)/(waterContentSat-2 * waterContentFC)), (10*(soil.waterContent[iLayer]-waterContentWP))/(3*(waterContentFC-waterContentWP)));
         //soil.stressCoefficient[iLayer] = 0.01;
         soil.clay[iLayer] = clay/100.;
         soil.sand[iLayer] = sand/100.;
@@ -1219,14 +1221,17 @@ double Crit3DHydrall::moistureCorrectionFactorOld(int index)
 
 double Crit3DHydrall::moistureCorrectionFactor(int index)
 {
-    if (soil.waterContent[index] < soil.fieldCapacity[index])
+    /*if (soil.waterContent[index] < soil.fieldCapacity[index])
     {
         return MINVALUE(1, 10./3. * (soil.waterContent[index]-soil.wiltingPoint[index])/(soil.fieldCapacity[index]- soil.wiltingPoint[index]));
     }
     else
     {
         return MINVALUE(1, (soil.waterContent[index] - 2* soil.fieldCapacity[index])/(soil.saturation[index]-2 * soil.fieldCapacity[index]));
-    }
+    }*/
+
+    return BOUNDFUNCTION(0.01,1, MINVALUE((10*(soil.waterContent[index]-soil.wiltingPoint[index]))/(3*(soil.fieldCapacity[index]-soil.wiltingPoint[index])),
+                                           log(soil.saturation[index]/soil.waterContent[index])/log(2*soil.saturation[index]/(soil.fieldCapacity[index]+soil.saturation[index]))));;
 }
 
 double Crit3DHydrall::temperatureFunction(double temperature)

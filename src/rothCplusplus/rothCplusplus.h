@@ -96,8 +96,6 @@ private:
 class Crit3DRothCplusplusMaps
 {
 private:
-
-public:
     //
     gis::Crit3DRasterGrid* decomposablePlantMaterial; //[tC/ha]
     gis::Crit3DRasterGrid* resistantPlantMaterial; //[tC/ha]
@@ -106,12 +104,35 @@ public:
     gis::Crit3DRasterGrid* inertOrganicMatter; //[tC/ha]
     gis::Crit3DRasterGrid* soilOrganicMatter; //[tC/ha]
 
+    gis::Crit3DRasterGrid* depthMap; //[?]
+    gis::Crit3DRasterGrid* clayMap; // [-]
+
+public:
 
 
-    Crit3DRothCplusplusMaps();
-    ~Crit3DRothCplusplusMaps();
+
+
+    Crit3DRothCplusplusMaps() {};
+    //~Crit3DRothCplusplusMaps();
 
     void initialize(const gis::Crit3DRasterGrid& DEM);
+    void setClay(double myClay, int row, int col);
+    double getClay(int row, int col);
+    void setDepth(double myDepth, int row, int col);
+    double getDepth(int row, int col);
+};
+
+struct Crit3DRothCRadioCarbon {
+public:
+    double decomposablePlantMatter_age;
+    double resistantPlantMatter_age;
+    double microbialBiomass_age;
+    double humifiedOrganicMatter_age;
+    double IOM_age;
+    double modernC;
+
+    bool isActive = false;
+
 };
 
 class Crit3DRothCplusplus{
@@ -131,11 +152,19 @@ public:
     void setIsUpdate(bool value);
     bool getIsUpdate();
 
+    void setClay(double myClay) {clay = myClay;};
+    double getClay() {return clay;};
+
+    void setDepth(double myDepth) {depth=myDepth;};
+    double getDepth() {return depth;};
+
     void resetInputVariables();
 
     void scrivi_csv(const std::string& nome_file, const std::vector<std::vector<double>>& dati) ;
 
     Crit3DRothCMeteoVariable meteoVariable;
+    Crit3DRothCRadioCarbon radioCarbon;
+    Crit3DRothCplusplusMaps map;
 
 
 private:
@@ -154,6 +183,7 @@ private:
 
     bool isUpdate;
 
+
     double clay;
     double depth;
 
@@ -162,10 +192,9 @@ private:
     double RMF_Moist(double RAIN, double PEVAP, double clay, double depth, bool PC, double &SWC);
     double RMF_Moist(double monthlyBIC, double clay, double depth, bool PC, double &SWC);
     double RMF_Tmp(double TEMP);
-    void decomp(int timeFact, double &decomposablePlantMatter_Rage, double &resistantPlantMatter_Rage,
-                double &microbialBiomass_Rage, double &humifiedOrganicMatter_Rage, double &IOM_Rage, double &modernC,
+    void decomp(int timeFact,
                 double &modifyingRate);
-    void RothC(int timeFact, double &DPM_Rage, double &RPM_Rage, double &BIO_Rage, double &HUM_Rage, double &IOM_Rage, double &modernC, bool &PC, double &SWC);
+    void RothC(int timeFact, bool &PC, double &SWC);
 
 
 };
