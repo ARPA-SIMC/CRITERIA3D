@@ -49,16 +49,19 @@
 
         QDateTime getFirstDate(frequencyType frequency);
         QDateTime getLastDate(frequencyType frequency);
-        QDateTime getFirstDate(frequencyType frequency, std::string idMeteoPoint);
-        QDateTime getLastDate(frequencyType frequency, std::string idMeteoPoint);
+        QDateTime getFirstDate(frequencyType frequency, const std::string& idMeteoPoint);
+        QDateTime getLastDate(frequencyType frequency, const std::string& idMeteoPoint);
 
         bool existData(const Crit3DMeteoPoint &meteoPoint, frequencyType myFreq);
-        bool deleteData(QString pointCode, frequencyType myFreq, QDate first, QDate last);
-        bool deleteData(QString pointCode, frequencyType myFreq, QList<meteoVariable> varList, QDate first, QDate last);
-        bool deleteAllData(frequencyType myFreq);
+        bool deleteData(const QString& pointCode, frequencyType frequency, const QDate& firstDate, const QDate& lastDate);
+        bool deleteData(const QString& pointCode, frequencyType frequency, const QList<meteoVariable>& varList,
+                        const QDate& firstDate, const QDate& lastDate);
+        bool deleteAllData(frequencyType frequency);
+
         bool writePointProperties(const Crit3DMeteoPoint &pointProp);
         bool updatePointProperties(const QList<QString> &columnList, const QList<QString> &valueList);
-        bool updatePointPropertiesGivenId(QString id, QList<QString> columnList, QList<QString> valueList);
+        bool updatePointPropertiesGivenId(const QString& idStr, const QList<QString>& columnList, QList<QString> &valueList);
+
         bool getPropertiesFromDb(QList<Crit3DMeteoPoint>& meteoPointsList,
                                  const gis::Crit3DGisSettings& gisSettings, QString& errorString);
         bool getPropertiesGivenId(const QString &id, Crit3DMeteoPoint &meteoPoint,
@@ -66,8 +69,8 @@
 
         bool loadDailyData(const Crit3DDate &firstDate, const Crit3DDate &lastDate, Crit3DMeteoPoint &meteoPoint);
 
-        std::vector<float> loadDailyVar(meteoVariable variable, const Crit3DDate &dateStart, const Crit3DDate &dateEnd,
-                                        const Crit3DMeteoPoint &meteoPoint, QDate &firstDateDB);
+        std::vector<float> loadDailyVar(meteoVariable variable, const Crit3DDate &dateStart,
+                                        const Crit3DDate &dateEnd, const QString& idStr, QDate &firstDateDB);
 
         std::vector<float> exportAllDataVar(QString *myError, frequencyType freq, meteoVariable variable, QString id, QDateTime myFirstTime, QDateTime myLastTime, std::vector<QString> &dateStr);
 

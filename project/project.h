@@ -83,10 +83,10 @@
         bool verboseStdoutLogging;
 
     protected:
-        frequencyType currentFrequency;
-        meteoVariable currentVariable;
-        QDate currentDate;
-        int currentHour;
+        frequencyType _currentFrequency;
+        meteoVariable _currentVariable;
+        QDate _currentDate;
+        int _currentHour;
 
     public:
         QString projectName = "";
