@@ -36,12 +36,12 @@ Crit3DHydrallState::Crit3DHydrallState()
 Crit3DHydrallStatePlant::Crit3DHydrallStatePlant()
 {
     treeNetPrimaryProduction = 0;
-    treecumulatedBiomassFoliage = 0;
-    treecumulatedBiomassRoot = 0;
-    treecumulatedBiomassSapwood = 0;
+    //treecumulatedBiomassFoliage = 0;
+    //treecumulatedBiomassRoot = 0;
+    //treecumulatedBiomassSapwood = 0;
     understoreyNetPrimaryProduction = 0;
-    understoreycumulatedBiomassFoliage = 0;
-    understoreycumulatedBiomassRoot = 0;
+    //understoreycumulatedBiomassFoliage = 0;
+    //understoreycumulatedBiomassRoot = 0;
 }
 
 Crit3DHydrallWeatherDerivedVariable::Crit3DHydrallWeatherDerivedVariable()
@@ -1296,18 +1296,18 @@ bool Crit3DHydrall::growthStand()
 {
     const double understoreyAllocationCoefficientToRoot = 0.5;
     // understorey update TODO IMPORTANTE: SERVE CARBONFACTOR ANCHE QUI?
-    statePlant.understoreycumulatedBiomassFoliage = statePlant.understoreyNetPrimaryProduction * (1.-understoreyAllocationCoefficientToRoot);    //understorey growth: foliage...
-    statePlant.understoreycumulatedBiomassRoot = statePlant.understoreyNetPrimaryProduction * understoreyAllocationCoefficientToRoot;         //...and roots
+    statePlant.understoreyBiomassFoliage = statePlant.understoreyNetPrimaryProduction * (1.-understoreyAllocationCoefficientToRoot);    //understorey growth: foliage...
+    statePlant.understoreyBiomassRoot = statePlant.understoreyNetPrimaryProduction * understoreyAllocationCoefficientToRoot;         //...and roots
 
     //outputC calculation for RothC model. necessario [t C/ha]
     //MANCA OUTPUT DA TAGLIO
-    outputC = statePlant.treecumulatedBiomassFoliage/plant.foliageLongevity + statePlant.treecumulatedBiomassSapwood/plant.sapwoodLongevity +
-              statePlant.treecumulatedBiomassRoot/plant.fineRootLongevity;
+    outputC = statePlant.treeBiomassFoliage/plant.foliageLongevity + statePlant.treeBiomassSapwood/plant.sapwoodLongevity +
+              statePlant.treeBiomassRoot/plant.fineRootLongevity;
 
     // canopy update
-    statePlant.treecumulatedBiomassFoliage -= (statePlant.treecumulatedBiomassFoliage/plant.foliageLongevity);
-    statePlant.treecumulatedBiomassSapwood -= (statePlant.treecumulatedBiomassSapwood/plant.sapwoodLongevity);
-    statePlant.treecumulatedBiomassRoot -= (statePlant.treecumulatedBiomassRoot/plant.fineRootLongevity);
+    statePlant.treeBiomassFoliage -= (statePlant.treeBiomassFoliage/plant.foliageLongevity);
+    statePlant.treeBiomassSapwood -= (statePlant.treeBiomassSapwood/plant.sapwoodLongevity);
+    statePlant.treeBiomassRoot -= (statePlant.treeBiomassRoot/plant.fineRootLongevity);
 
 
     // TODO to understand what's internalCarbonStorage (STORE), afterwards the uninitialized value is used
@@ -1340,7 +1340,7 @@ bool Crit3DHydrall::growthStand()
         allocationCoefficient.toSapwood = (allocationCoeffientSapwoodOld + allocationCoefficient.toSapwood) / 2;
     }
 
-    if (annualGrossStandGrowth * allocationCoefficient.toFoliage > statePlant.treecumulatedBiomassFoliage/(plant.foliageLongevity - 1))
+    if (annualGrossStandGrowth * allocationCoefficient.toFoliage > statePlant.treeBiomassFoliage/(plant.foliageLongevity - 1))
     {
         treeBiomass.leaf = MAXVALUE(treeBiomass.leaf + annualGrossStandGrowth * allocationCoefficient.toFoliage, EPSILON);
         treeBiomass.fineRoot = MAXVALUE(treeBiomass.fineRoot + annualGrossStandGrowth * allocationCoefficient.toFineRoots, EPSILON);
@@ -1364,7 +1364,7 @@ void Crit3DHydrall::optimal()
     double allocationCoefficientFoliageOld;
     double increment;
     double incrementStart = 5e-2;
-    bool sol = 0;
+    bool sol = false;
     double allocationCoefficientFoliage0;
     double bisectionMethodIntervalALLF;
     int jmax = 40;
@@ -1432,11 +1432,11 @@ void Crit3DHydrall::rootfind(double &allf, double &allr, double &alls, bool &sol
     allf = MAXVALUE(0,allf);
     //if (allf < 0) allf = 0;
     // TODO verificare le unità di misura di rootfind con la routine originale di hydrall c'è un fattore 1000
-    statePlant.treecumulatedBiomassFoliage += (allf*annualGrossStandGrowth);
+    statePlant.treeBiomassFoliage += (allf*annualGrossStandGrowth);
 
-    //new tree height after growth
-    if (allf*annualGrossStandGrowth > statePlant.treecumulatedBiomassFoliage/(plant.foliageLongevity-1)) {
-        plant.height += (allf*annualGrossStandGrowth-statePlant.treecumulatedBiomassFoliage/(plant.foliageLongevity-1)/plant.foliageDensity);
+    //new tree-height after growth
+    if (allf*annualGrossStandGrowth > statePlant.treeBiomassFoliage/(plant.foliageLongevity-1)) {
+        plant.height += (allf*annualGrossStandGrowth-statePlant.treeBiomassFoliage/(plant.foliageLongevity-1)/plant.foliageDensity);
     }
 
     //soil hydraulic conductivity
@@ -1458,7 +1458,7 @@ void Crit3DHydrall::rootfind(double &allf, double &allr, double &alls, bool &sol
 
     //optimal coefficient of allocation to fine roots and sapwood for set allocation to foliage
     double quadraticEqCoefficient = std::sqrt(soilRootsSpecificConductivity/sapwoodSpecificConductivity*plant.sapwoodLongevity/plant.fineRootLongevity*plant.woodDensity);
-    allr = (statePlant.treecumulatedBiomassSapwood - quadraticEqCoefficient*plant.height*statePlant.treecumulatedBiomassRoot +
+    allr = (statePlant.treeBiomassSapwood - quadraticEqCoefficient*plant.height*statePlant.treeBiomassRoot +
             annualGrossStandGrowth*(1-allf))/annualGrossStandGrowth/(1+quadraticEqCoefficient*plant.height);
 
     //allr = MAXVALUE(EPSILON,allr); //bracket ALLR between (1-ALLF) and a small value
@@ -1469,16 +1469,16 @@ void Crit3DHydrall::rootfind(double &allf, double &allr, double &alls, bool &sol
     //alls = MINVALUE(1,MAXVALUE(alls,EPSILON));
     alls = BOUNDFUNCTION(EPSILON,1,1-allf-allr); // TODO to be checked
     //resulting fine root and sapwood biomass
-    statePlant.treecumulatedBiomassRoot += allr * annualGrossStandGrowth;
-    statePlant.treecumulatedBiomassRoot = MAXVALUE(EPSILON,statePlant.treecumulatedBiomassRoot);
-    statePlant.treecumulatedBiomassSapwood += alls * annualGrossStandGrowth;
-    statePlant.treecumulatedBiomassSapwood = MAXVALUE(EPSILON,statePlant.treecumulatedBiomassSapwood);
+    statePlant.treeBiomassRoot += allr * annualGrossStandGrowth;
+    statePlant.treeBiomassRoot = MAXVALUE(EPSILON,statePlant.treeBiomassRoot);
+    statePlant.treeBiomassSapwood += alls * annualGrossStandGrowth;
+    statePlant.treeBiomassSapwood = MAXVALUE(EPSILON,statePlant.treeBiomassSapwood);
 
     //resulting leaf specific resistance (MPa s m2 m-3)
     double hydraulicResistancePerFoliageArea;
-    hydraulicResistancePerFoliageArea = (1./(statePlant.treecumulatedBiomassRoot*soilRootsSpecificConductivity)
-        + (plant.height*plant.height*plant.woodDensity)/(statePlant.treecumulatedBiomassSapwood*sapwoodSpecificConductivity))
-        * (statePlant.treecumulatedBiomassFoliage*plant.specificLeafArea);
+    hydraulicResistancePerFoliageArea = (1./(statePlant.treeBiomassRoot*soilRootsSpecificConductivity)
+        + (plant.height*plant.height*plant.woodDensity)/(statePlant.treeBiomassSapwood*sapwoodSpecificConductivity))
+        * (statePlant.treeBiomassFoliage*plant.specificLeafArea);
     //resulting minimum leaf water potential
 
     plant.psiLeafMinimum = plant.psiLeafCritical - (0.01 * plant.height)-(plant.transpirationPerUnitFoliageAreaCritical * 0.018/1000. * hydraulicResistancePerFoliageArea);
@@ -1488,8 +1488,8 @@ void Crit3DHydrall::rootfind(double &allf, double &allr, double &alls, bool &sol
     else
     {
         sol = false;
-        allr = statePlant.treecumulatedBiomassSapwood
-                +  annualGrossStandGrowth -statePlant.treecumulatedBiomassRoot*quadraticEqCoefficient*plant.height;
+        allr = statePlant.treeBiomassSapwood
+                +  annualGrossStandGrowth -statePlant.treeBiomassRoot*quadraticEqCoefficient*plant.height;
         allr /= (annualGrossStandGrowth * (1.+quadraticEqCoefficient*plant.height));
         allr = BOUNDFUNCTION(EPSILON,1,allr); // TODO to be checked
         alls = 1.-allr;

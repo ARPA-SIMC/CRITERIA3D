@@ -99,12 +99,12 @@
         Crit3DHydrallStatePlant();
 
         double treeNetPrimaryProduction;
-        double treecumulatedBiomassFoliage;
-        double treecumulatedBiomassRoot;
-        double treecumulatedBiomassSapwood;
+        double treeBiomassFoliage;
+        double treeBiomassRoot;
+        double treeBiomassSapwood;
         double understoreyNetPrimaryProduction;
-        double understoreycumulatedBiomassFoliage;
-        double understoreycumulatedBiomassRoot;
+        double understoreyBiomassFoliage;
+        double understoreyBiomassRoot;
     };
 
     class Crit3DHydrallWeatherDerivedVariable {
