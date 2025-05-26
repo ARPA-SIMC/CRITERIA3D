@@ -214,7 +214,6 @@ bool Crit3DRothCplusplus::computeRothCPoint()
         inorganicMatter<<","<< soilOrganicCarbon << "\n";
     myFile.close();
 
-
     return true;
 }
 
