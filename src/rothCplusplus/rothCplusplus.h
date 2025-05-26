@@ -158,6 +158,9 @@ public:
     void setDepth(double myDepth) {depth=myDepth;};
     double getDepth() {return depth;};
 
+    void setSWC(double mySWC) {SWC = mySWC;};
+    double getSWC() {return SWC; };
+
     void resetInputVariables();
 
     void scrivi_csv(const std::string& nome_file, const std::vector<std::vector<double>>& dati) ;
@@ -184,17 +187,18 @@ private:
     bool isUpdate;
 
 
+    double SWC;
     double clay;
     double depth;
 
     double RMF_plantCover(bool plantCover);
     double RMF_plantCover(double plantCover);
-    double RMF_Moist(double RAIN, double PEVAP, double clay, double depth, bool PC, double &SWC);
-    double RMF_Moist(double monthlyBIC, double clay, double depth, bool PC, double &SWC);
+    double RMF_Moist(double RAIN, double PEVAP, bool PC);
+    double RMF_Moist(double monthlyBIC, bool PC);
     double RMF_Tmp(double TEMP);
     void decomp(int timeFact,
                 double &modifyingRate);
-    void RothC(int timeFact, bool &PC, double &SWC);
+    void RothC(int timeFact, bool &PC);
 
 
 };

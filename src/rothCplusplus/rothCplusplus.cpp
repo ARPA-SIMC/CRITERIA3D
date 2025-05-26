@@ -147,6 +147,7 @@ void Crit3DRothCplusplus::initialize()
     //todo
     clay = NODATA;     //[%]
     depth = NODATA;    //[cm]
+    SWC = NODATA; //[mm per depth]
     // .. TODO
 
     std::ofstream myFile;
@@ -156,7 +157,6 @@ void Crit3DRothCplusplus::initialize()
 bool Crit3DRothCplusplus::computeRothCPoint()
 {
     //set initial soil water content (deficit)
-    double SWC = 0;
 
     soilOrganicCarbon = decomposablePlantMatter + resistantPlantMatter + microbialBiomass + humifiedOrganicMatter + inorganicMatter;
 
@@ -165,7 +165,6 @@ bool Crit3DRothCplusplus::computeRothCPoint()
 
     int timeFact = 12;
 
-    bool isET0 = true;
     bool PC = 1; //TODO: LAI dependant
     double modernC = 100;
 
@@ -202,7 +201,7 @@ bool Crit3DRothCplusplus::computeRothCPoint()
     inputFYM = 0;
 
 
-    RothC(timeFact, PC, SWC);
+    RothC(timeFact, PC);
     if (radioCarbon.isActive)
         double totalDelta = (std::exp(-totalRage/8035.0) - 1.0) * 1000;
 
@@ -235,7 +234,7 @@ double Crit3DRothCplusplus::RMF_plantCover(double plantCover)
 }
 
 // Calculates the rate modifying factor for moisture (RMF_Moist)
-double Crit3DRothCplusplus::RMF_Moist(double RAIN, double PEVAP, double clay, double depth, bool PC, double &SWC) {
+double Crit3DRothCplusplus::RMF_Moist(double RAIN, double PEVAP, bool PC) {
     const double RMFMax = 1.0;
     const double RMFMin = 0.2;
 
@@ -263,7 +262,7 @@ double Crit3DRothCplusplus::RMF_Moist(double RAIN, double PEVAP, double clay, do
     return RM_Moist;
 }
 
-double Crit3DRothCplusplus::RMF_Moist(double monthlyBIC, double clay, double depth, bool PC, double &SWC) {
+double Crit3DRothCplusplus::RMF_Moist(double monthlyBIC, bool PC) {
     const double RMFMax = 1.0;
     const double RMFMin = 0.2;
 
@@ -442,18 +441,18 @@ void Crit3DRothCplusplus::decomp(int timeFact, double &modifyingRate)
 }
 
 // The Rothamsted Carbon Model: RothC
-void Crit3DRothCplusplus::RothC(int timeFact, bool &PC, double &SWC)
+void Crit3DRothCplusplus::RothC(int timeFact, bool &PC)
 {
     // Calculate RMFs
     double RM_TMP = RMF_Tmp(meteoVariable.getTemperature());
     double RM_Moist;
     if (isEqual (meteoVariable.getBIC(), NODATA)) //todo: check next time
     {
-        RM_Moist = RMF_Moist(meteoVariable.getPrecipitation(), meteoVariable.getWaterLoss(), clay, depth, PC, SWC);
+        RM_Moist = RMF_Moist(meteoVariable.getPrecipitation(), meteoVariable.getWaterLoss(), PC);
     }
     else
     {
-        RM_Moist = RMF_Moist(meteoVariable.getBIC(), clay, depth, PC, SWC);
+        RM_Moist = RMF_Moist(meteoVariable.getBIC(), PC);
     }
 
     double RM_PC = RMF_plantCover(PC);
@@ -681,7 +680,7 @@ int Crit3DRothCplusplus::main()
 
         totalRage = 0;
 
-        RothC(timeFact, PC,SWC);
+        RothC(timeFact, PC);
 
         if (((k+1)%timeFact) == 0)
         {
@@ -714,7 +713,7 @@ int Crit3DRothCplusplus::main()
         inputFYM = data[i][7];
         modernC = data[i][2]/100;
 
-        RothC(timeFact, PC, SWC);
+        RothC(timeFact, PC);
 
         totalDelta = (std::exp(-totalRage/8035.0) - 1.0) * 1000;
 

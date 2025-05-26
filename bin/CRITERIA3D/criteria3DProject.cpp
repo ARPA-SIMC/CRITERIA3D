@@ -461,7 +461,17 @@ bool Crit3DProject::updateRothC()
                     rothCModel.meteoVariable.setWaterLoss(monthlyETReal.getValueFromRowCol(row, col));
                     rothCModel.meteoVariable.setBIC(monthlyPrec.getValueFromRowCol(row, col) - monthlyETReal.getValueFromRowCol(row, col));
                     rothCModel.meteoVariable.setTemperature(hydrallMaps.mapLast30DaysTavg->getValueFromRowCol(row, col));
-                    rothCModel.setInputC(hydrallModel.getOutputC()); //read from hydrall (eventually from crop too?)
+                    //rothCModel.setInputC(hydrallModel.getOutputC()); //read from hydrall (eventually from crop too?)
+                    rothCModel.setInputC(1);
+
+                    double SWC = 0;
+
+                    for (int i = 0; i < hydrallModel.soil.waterContent.size(); i++)
+                    {
+                        SWC += hydrallModel.soil.waterContent[i]*hydrallModel.soil.nodeThickness[i]*1000;
+                    }
+
+                    rothCModel.setSWC(SWC);
 
 
                     //chiamata a rothC
