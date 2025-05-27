@@ -370,6 +370,7 @@
         double treeAssimilationRate;
         std::vector<double> understoreyTranspirationRate;
         double understoreyAssimilationRate;
+        double totalTranspirationRate; //molH2O m^-2 s^-1
 
         double getOutputC() { return outputC; };
 
@@ -414,6 +415,8 @@
         void getStateVariables(Crit3DHydrallMaps &stateMap, int row, int col);
 
         void getPlantAndSoilVariables(Crit3DHydrallMaps &map, int row, int col);
+        void updateCriticalPsi();
+        double cavitationConditions();
 
     private:
         double outputC;

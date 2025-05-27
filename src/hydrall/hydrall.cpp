@@ -391,6 +391,7 @@ void Crit3DHydrall::initialize()
     plant.myChlorophyllContent = NODATA;
     elevation = NODATA;
     isFirstYearSimulation = true;
+    totalTranspirationRate = 0;
 
     // .. TODO
 }
@@ -1095,7 +1096,7 @@ void Crit3DHydrall::cumulatedResults()
 
 
     deltaTime.transpiration = 0.;
-    double totalTranspirationRate = 0;
+    totalTranspirationRate = 0;
     for (int i=1; i < soil.layersNr; i++)
     {
         totalTranspirationRate += treeTranspirationRate[i];
@@ -1103,7 +1104,32 @@ void Crit3DHydrall::cumulatedResults()
         understoreyTranspirationRate[i] *= (HOUR_SECONDS * MH2O); // [mm]
         deltaTime.transpiration += (treeTranspirationRate[i] + understoreyTranspirationRate[i]);
     }
+
+    updateCriticalPsi();
+
+
+    //evaporation
+    //deltaTime.evaporation = computeEvaporation(); // TODO chiedere a Fausto come gestire l'evaporazione sui layer.
+
+}
+
+void Crit3DHydrall::updateCriticalPsi()
+{
     double averageSoilWaterPotential = statistics::weighedMean(soil.nodeThickness,soil.waterPotential) * 0.009804139432; // Converted to MPa
+    cavitationConditions();
+    plant.psiLeaf = averageSoilWaterPotential - (0.01 * plant.height) - (totalTranspirationRate/plant.leafAreaIndexCanopy * MH2O/1000. * plant.hydraulicResistancePerFoliageArea);
+
+    if (plant.psiLeaf < plant.psiLeafMinimum || isEqual(plant.psiLeafMinimum,NODATA))
+    {
+        plant.psiLeafMinimum = plant.psiLeaf;
+        plant.psiSoilCritical = averageSoilWaterPotential;
+        plant.transpirationCritical = totalTranspirationRate / plant.leafAreaIndexCanopy;
+    }
+
+}
+
+double Crit3DHydrall::cavitationConditions()
+{
     std::vector <std::vector <double>> conductivityWeights(2, std::vector<double>(soil.layersNr, NODATA));
     for (int i=0; i<soil.layersNr; i++)
     {
@@ -1117,23 +1143,14 @@ void Crit3DHydrall::cumulatedResults()
     //new sapwood specific conductivity
     double sapwoodSpecificConductivity = KSMAX * (1-std::exp(-0.69315*plant.height/H50)); //adjust for height effects
     sapwoodSpecificConductivity *= 0.5151 + MAXVALUE(0,0.0242*weatherVariable.meanDailyTemp);
+
+    //resulting leaf specific resistance (MPa s m2 m-3)
     plant.hydraulicResistancePerFoliageArea = (1./(statePlant.treeBiomassRoot*soilRootsSpecificConductivity)
-       + (plant.height*plant.height*plant.woodDensity)/(statePlant.treeBiomassSapwood*sapwoodSpecificConductivity))
-      * (statePlant.treeBiomassFoliage*plant.specificLeafArea);
+                                               + (plant.height*plant.height*plant.woodDensity)/(statePlant.treeBiomassSapwood*sapwoodSpecificConductivity))
+                                              * (statePlant.treeBiomassFoliage*plant.specificLeafArea);
 
-    plant.psiLeaf = averageSoilWaterPotential - (0.01 * plant.height) - (totalTranspirationRate/plant.leafAreaIndexCanopy * MH2O/1000. * plant.hydraulicResistancePerFoliageArea);
-    if (plant.psiLeaf < plant.psiLeafMinimum || isEqual(plant.psiLeafMinimum,NODATA))
-    {
-        plant.psiLeafMinimum = plant.psiLeaf;
-        plant.psiSoilCritical = averageSoilWaterPotential;
-        plant.transpirationCritical = totalTranspirationRate / plant.leafAreaIndexCanopy;
-    }
-
-
-    //evaporation
-    //deltaTime.evaporation = computeEvaporation(); // TODO chiedere a Fausto come gestire l'evaporazione sui layer.
-
-
+    //return coefficient only when called in rootfind
+    return std::sqrt(soilRootsSpecificConductivity/sapwoodSpecificConductivity*plant.sapwoodLongevity/plant.fineRootLongevity*plant.woodDensity);
 }
 
 double Crit3DHydrall::computeEvaporation()
@@ -1482,24 +1499,9 @@ void Crit3DHydrall::rootfind(double &allf, double &allr, double &alls, bool &sol
     }
 
     //soil hydraulic conductivity
-    double ksl;
-    std::vector <std::vector <double>> conductivityWeights(2, std::vector<double>(soil.layersNr, NODATA));
-    for (int i=0; i<soil.layersNr; i++)
-    {
-        // it is ok to start with 0 because the weights of the first layer will be anyhow 0
-        conductivityWeights[0][i] = soil.rootDensity[i];
-        conductivityWeights[1][i] = soil.nodeThickness[i];
-    }
-    ksl = statistics::weighedMeanMultifactor(logarithmic10Values,conductivityWeights,soil.satHydraulicConductivity);
-    //specific hydraulic conductivity of soil+roots
-    double soilRootsSpecificConductivity = 1/(1/KR + 1/ksl);
-    soilRootsSpecificConductivity *= 0.5151 + MAXVALUE(0,0.0242*soil.temperature);
-    //new sapwood specific conductivity
-    double sapwoodSpecificConductivity = KSMAX * (1-std::exp(-0.69315*plant.height/H50)); //adjust for height effects
-    sapwoodSpecificConductivity *= 0.5151 + MAXVALUE(0,0.0242*weatherVariable.meanDailyTemp);
-
     //optimal coefficient of allocation to fine roots and sapwood for set allocation to foliage
-    double quadraticEqCoefficient = std::sqrt(soilRootsSpecificConductivity/sapwoodSpecificConductivity*plant.sapwoodLongevity/plant.fineRootLongevity*plant.woodDensity);
+    //cavitationConditions does other calculations and returns quadraticEqCoefficient
+    double quadraticEqCoefficient = cavitationConditions();
     allr = (statePlant.treeBiomassSapwood - quadraticEqCoefficient*plant.height*statePlant.treeBiomassRoot +
             annualGrossStandGrowth*(1-allf))/annualGrossStandGrowth/(1+quadraticEqCoefficient*plant.height);
 
@@ -1516,10 +1518,6 @@ void Crit3DHydrall::rootfind(double &allf, double &allr, double &alls, bool &sol
     statePlant.treeBiomassSapwood += alls * annualGrossStandGrowth;
     statePlant.treeBiomassSapwood = MAXVALUE(EPSILON,statePlant.treeBiomassSapwood);
 
-    //resulting leaf specific resistance (MPa s m2 m-3)
-    plant.hydraulicResistancePerFoliageArea = (1./(statePlant.treeBiomassRoot*soilRootsSpecificConductivity)
-        + (plant.height*plant.height*plant.woodDensity)/(statePlant.treeBiomassSapwood*sapwoodSpecificConductivity))
-        * (statePlant.treeBiomassFoliage*plant.specificLeafArea);
     //resulting minimum leaf water potential
 
     plant.psiLeafMinimum = plant.psiSoilCritical - (0.01 * plant.height)-(plant.transpirationCritical * MH2O/1000. * plant.hydraulicResistancePerFoliageArea);
