@@ -836,6 +836,7 @@ bool Crit3DProject::runModels(QDateTime firstTime, QDateTime lastTime, bool isRe
 
         for (int hour = firstHour; hour <= lastHour; hour++)
         {
+            QDateTime startTime = QDateTime::currentDateTime();
             setCurrentHour(hour);
             if (currentSeconds == 0 || currentSeconds == 3600)
                 isRestart = false;
@@ -851,6 +852,9 @@ bool Crit3DProject::runModels(QDateTime firstTime, QDateTime lastTime, bool isRe
                 logError();
                 return false;
             }
+
+            QDateTime endTime = QDateTime::currentDateTime();
+            logInfo("Tempo di calcolo [ms]: " + QString::number(startTime.msecsTo(endTime)));
 
             if (processes.computeRothC)
             {
