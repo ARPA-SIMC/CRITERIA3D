@@ -44,14 +44,14 @@ SOURCES +=  \
 
 
 HEADERS += \
-    header/types.h \
-    header/parameters.h \
-    header/boundary.h \
-    header/balance.h \
-    header/water.h \
-    header/solver.h \
-    header/memory.h \
-    header/soilPhysics.h \
-    header/soilFluxes3D.h \
-    header/extra.h \
-    header/heat.h
+    types.h \
+    parameters.h \
+    boundary.h \
+    balance.h \
+    water.h \
+    solver.h \
+    memory.h \
+    soilPhysics.h \
+    soilFluxes3D.h \
+    extra.h \
+    heat.h

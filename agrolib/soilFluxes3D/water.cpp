@@ -34,13 +34,13 @@
 #include "physics.h"
 #include "commonConstants.h"
 #include "basicMath.h"
-#include "header/types.h"
-#include "header/water.h"
-#include "header/soilPhysics.h"
-#include "header/solver.h"
-#include "header/balance.h"
-#include "header/boundary.h"
-#include "header/heat.h"
+#include "types.h"
+#include "water.h"
+#include "soilPhysics.h"
+#include "solver.h"
+#include "balance.h"
+#include "boundary.h"
+#include "heat.h"
 
 
 /*!

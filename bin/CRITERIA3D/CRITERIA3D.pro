@@ -18,7 +18,7 @@ CONFIG += debug_and_release
 CONFIG += c++11 c++14 c++17
 
 INCLUDEPATH +=  ./shared  \
-                ../../agrolib/soilFluxes3D/header  \
+                ../../agrolib/soilFluxes3D  \
                 ../../agrolib/crit3dDate ../../agrolib/mathFunctions \
                 ../../agrolib/crop ../../agrolib/soil ../../agrolib/meteo ../../agrolib/gis \
                 ../../agrolib/interpolation ../../agrolib/solarRadiation \

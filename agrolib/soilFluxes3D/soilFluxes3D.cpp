@@ -31,16 +31,16 @@
 
 #include "commonConstants.h"
 #include "physics.h"
-#include "header/types.h"
-#include "header/memory.h"
-#include "header/soilPhysics.h"
-#include "header/soilFluxes3D.h"
-#include "header/solver.h"
-#include "header/balance.h"
-#include "header/water.h"
-#include "header/boundary.h"
-#include "header/heat.h"
-#include "header/extra.h"
+#include "types.h"
+#include "memory.h"
+#include "soilPhysics.h"
+#include "soilFluxes3D.h"
+#include "solver.h"
+#include "balance.h"
+#include "water.h"
+#include "boundary.h"
+#include "heat.h"
+#include "extra.h"
 
 /*! global variables */
 

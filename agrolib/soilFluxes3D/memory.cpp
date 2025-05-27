@@ -26,7 +26,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-#include "header/types.h"
+#include "types.h"
 
 
 void cleanArrays()
