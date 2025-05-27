@@ -31,14 +31,14 @@
 #include "commonConstants.h"
 #include "basicMath.h"
 #include "physics.h"
-#include "header/types.h"
-#include "header/heat.h"
-#include "header/soilPhysics.h"
-#include "header/balance.h"
-#include "header/water.h"
-#include "header/solver.h"
-#include "header/soilFluxes3D.h"
-#include "header/boundary.h"
+#include "types.h"
+#include "heat.h"
+#include "soilPhysics.h"
+#include "balance.h"
+#include "water.h"
+#include "solver.h"
+#include "soilFluxes3D.h"
+#include "boundary.h"
 
 //static double CourantHeatAdvective;
 

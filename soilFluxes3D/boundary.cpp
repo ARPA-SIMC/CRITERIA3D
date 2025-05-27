@@ -32,13 +32,13 @@
 
 #include "physics.h"
 #include "commonConstants.h"
-#include "header/types.h"
-#include "header/solver.h"
-#include "header/soilPhysics.h"
-#include "header/boundary.h"
-#include "header/soilFluxes3D.h"
-#include "header/water.h"
-#include "header/heat.h"
+#include "types.h"
+#include "solver.h"
+#include "soilPhysics.h"
+#include "boundary.h"
+#include "soilFluxes3D.h"
+#include "water.h"
+#include "heat.h"
 
 
 

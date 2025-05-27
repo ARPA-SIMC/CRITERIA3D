@@ -30,8 +30,8 @@
 #include <thread>
 
 #include "basicMath.h"
-#include "header/types.h"
-#include "header/solver.h"
+#include "types.h"
+#include "solver.h"
 
 
 double distance(unsigned long i, unsigned long j)

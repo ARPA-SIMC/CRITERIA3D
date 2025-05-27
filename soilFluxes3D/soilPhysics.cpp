@@ -29,11 +29,11 @@
 
 #include "commonConstants.h"
 #include "physics.h"
-#include "header/types.h"
-#include "header/soilPhysics.h"
-#include "header/solver.h"
-#include "header/heat.h"
-#include "header/extra.h"
+#include "types.h"
+#include "soilPhysics.h"
+#include "solver.h"
+#include "heat.h"
+#include "extra.h"
 
      /*!
      * \brief Computes volumetric water content from current degree of saturation
