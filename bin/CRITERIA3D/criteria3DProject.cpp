@@ -224,7 +224,7 @@ bool Crit3DProject::initializeCropWithClimateData()
                 {
                     double degreeDays = 0;
                     int firstDoy = 1;
-                    int lastDoy = currentDate.dayOfYear();
+                    int lastDoy = _currentDate.dayOfYear();
 
                     if (gisSettings.startLocation.latitude >= 0)
                     {
@@ -234,7 +234,7 @@ bool Crit3DProject::initializeCropWithClimateData()
                     else
                     {
                         // Southern hemisphere
-                        if (currentDate.dayOfYear() >= 182)
+                        if (_currentDate.dayOfYear() >= 182)
                         {
                             firstDoy = 182;
                         }
@@ -248,7 +248,7 @@ bool Crit3DProject::initializeCropWithClimateData()
                     for (int doy = firstDoy; doy <= lastDoy; doy++)
                     {
                         int currentDoy = doy;
-                        int currentYear = currentDate.year();
+                        int currentYear = _currentDate.year();
                         if (currentDoy <= 0)
                         {
                             currentYear--;
@@ -269,13 +269,13 @@ bool Crit3DProject::initializeCropWithClimateData()
                     }
 
                     degreeDaysMap.value[row][col] = float(degreeDays);
-                    laiMap.value[row][col] = cropList[index].computeSimpleLAI(degreeDays, gisSettings.startLocation.latitude, currentDate.dayOfYear());
+                    laiMap.value[row][col] = cropList[index].computeSimpleLAI(degreeDays, gisSettings.startLocation.latitude, _currentDate.dayOfYear());
                 }
             }
         }
     }
 
-    logInfo("LAI initialized with climate data - doy: " + QString::number(currentDate.dayOfYear()));
+    logInfo("LAI initialized with climate data - doy: " + QString::number(_currentDate.dayOfYear()));
     isCropInitialized = true;
 
     return true;
@@ -318,7 +318,7 @@ bool Crit3DProject::initializeCropFromDegreeDays(gis::Crit3DRasterGrid &myDegree
                     {
                         degreeDaysMap.value[row][col] = currentDegreeDay;
                         laiMap.value[row][col] = cropList[index].computeSimpleLAI(degreeDaysMap.value[row][col],
-                                                         gisSettings.startLocation.latitude, currentDate.dayOfYear());
+                                                         gisSettings.startLocation.latitude, _currentDate.dayOfYear());
                     }
                 }
             }
@@ -365,7 +365,7 @@ void Crit3DProject::dailyUpdateCropMaps(const QDate &myDate)
                     float tmax = dailyTmaxMap.value[row][col];
                     if (! isEqual(tmin, dailyTminMap.header->flag) && ! isEqual(tmax, dailyTmaxMap.header->flag))
                     {
-                        double dailyDD = cropList[index].getDailyDegreeIncrease(tmin, tmax, currentDate.dayOfYear());
+                        double dailyDD = cropList[index].getDailyDegreeIncrease(tmin, tmax, _currentDate.dayOfYear());
                         if (! isEqual(dailyDD, NODATA))
                         {
                             if (isEqual(degreeDaysMap.value[row][col], degreeDaysMap.header->flag))
@@ -378,7 +378,7 @@ void Crit3DProject::dailyUpdateCropMaps(const QDate &myDate)
                             }
 
                             laiMap.value[row][col] = cropList[index].computeSimpleLAI(degreeDaysMap.value[row][col],
-                                                            gisSettings.startLocation.latitude, currentDate.dayOfYear());
+                                                            gisSettings.startLocation.latitude, _currentDate.dayOfYear());
                         }
                     }
                 }
@@ -1914,8 +1914,8 @@ bool Crit3DProject::saveModelsState()
     }
 
     char hourStr[3];
-    sprintf(hourStr, "%02d", currentHour);
-    QString dateFolder = currentDate.toString("yyyyMMdd") + "_H" + hourStr;
+    sprintf(hourStr, "%02d", _currentHour);
+    QString dateFolder = _currentDate.toString("yyyyMMdd") + "_H" + hourStr;
     QString currentStatePath = statePath + "/" + dateFolder;
     if (! QDir(currentStatePath).exists())
     {
