@@ -204,6 +204,12 @@ Crit3DHydrallMaps::Crit3DHydrallMaps()
 
     treeNetPrimaryProduction = new gis::Crit3DRasterGrid;
     understoreyNetPrimaryProduction = new gis::Crit3DRasterGrid;
+
+    criticalSoilWaterPotential = new gis::Crit3DRasterGrid;
+    criticalTranspiration = new gis::Crit3DRasterGrid;
+    minLeafWaterPotential = new gis::Crit3DRasterGrid;
+
+
 }
 
 void Crit3DHydrallMaps::initialize(const gis::Crit3DRasterGrid& DEM)
@@ -482,7 +488,6 @@ void Crit3DHydrall::setSoilVariables(int iLayer, int currentNode,float checkFlag
     if (currentNode != checkFlag)
     {
         soil.waterContent[iLayer] = waterContent;
-        double stress = BOUNDFUNCTION(0.01,1, MINVALUE((10*(waterContent-waterContentWP))/(3*(waterContentFC-waterContentWP)),  log(waterContentSat/waterContent)/log(2*waterContentSat/(waterContentFC+waterContentSat))));
         soil.stressCoefficient[iLayer] = BOUNDFUNCTION(0.01,1, MINVALUE((10*(waterContent-waterContentWP))/(3*(waterContentFC-waterContentWP)),  log(waterContentSat/waterContent)/log(2*waterContentSat/(waterContentFC+waterContentSat))));
         //soil.stressCoefficient[iLayer] = BOUNDFUNCTION(0,MINVALUE(1.0,(waterContent - 2* waterContentFC)/(waterContentSat-2 * waterContentFC)), (10*(soil.waterContent[iLayer]-waterContentWP))/(3*(waterContentFC-waterContentWP)));
         //soil.stressCoefficient[iLayer] = 0.01;
