@@ -779,7 +779,8 @@ int CriteriaOutputProject::createMaps()
 #endif
 
 
-int CriteriaOutputProject::createAggregationFile()
+//  isReorder:  enable/disable csv reorder
+int CriteriaOutputProject::createAggregationFile(bool isReorder)
 {
     logger.writeInfo("AGGREGATION");
 
@@ -805,7 +806,7 @@ int CriteriaOutputProject::createAggregationFile()
     // check aggregation cell size
     bool ok;
     int cellSize = aggregationCellSize.toInt(&ok, 10);
-    if (!ok)
+    if (! ok)
     {
         projectError = "Invalid aggregation_cellsize: " + aggregationCellSize;
         return ERROR_WRONGPARAMETER;
@@ -813,7 +814,7 @@ int CriteriaOutputProject::createAggregationFile()
 
     // check aggregation threshold
     double threshold = aggregationThreshold.toDouble(&ok);
-    if (!ok)
+    if (! ok)
     {
         projectError = "Invalid aggregation_threshold: " + aggregationThreshold;
         return ERROR_WRONGPARAMETER;
@@ -828,16 +829,16 @@ int CriteriaOutputProject::createAggregationFile()
     if (! QFile(outputShapeFileName).exists())
     {
         // create shapefile
-        int myResult = createShapeFile();
-        if (myResult != CRIT1D_OK)
+        int result = createShapeFile();
+        if (result != CRIT1D_OK)
         {
-            return myResult;
+            return result;
         }
     }
 
     Crit3DShapeHandler shapeVal, shapeRef;
 
-    if (!shapeVal.open(outputShapeFileName.toStdString()))
+    if (! shapeVal.open(outputShapeFileName.toStdString()))
     {
         projectError = "Load shapefile failed: " + outputShapeFileName;
         return ERROR_SHAPEFILE;
@@ -863,7 +864,7 @@ int CriteriaOutputProject::createAggregationFile()
     }
 
     // check shape type
-    if ( shapeRef.getTypeString() != shapeVal.getTypeString() || shapeRef.getTypeString() != "2D Polygon" )
+    if (shapeRef.getTypeString() != shapeVal.getTypeString() || shapeRef.getTypeString() != "2D Polygon" )
     {
         projectError = "shape type error: not 2D Polygon type" ;
         return ERROR_SHAPEFILE;
@@ -889,7 +890,7 @@ int CriteriaOutputProject::createAggregationFile()
     }
 
     // parser aggregation list
-    if (!aggregationVariable.parserAggregationVariable(aggregationListFileName, projectError))
+    if (! aggregationVariable.parserAggregationVariable(aggregationListFileName, projectError))
     {
         projectError = "Open failure: " + aggregationListFileName + "\n" + projectError;
         return ERROR_ZONAL_STATISTICS_SHAPE;
@@ -929,7 +930,7 @@ int CriteriaOutputProject::createAggregationFile()
                                         threshold, error);
         }
 
-        if (!isOk)
+        if (! isOk)
         {
             projectError = QString::fromStdString(error);
             break;
@@ -942,25 +943,26 @@ int CriteriaOutputProject::createAggregationFile()
     matrix.clear();
     shapeVal.close();
 
-    if (!isOk)
+    if (! isOk)
     {
         shapeRef.close();
         return ERROR_ZONAL_STATISTICS_SHAPE;
     }
 
     // write csv aggregation data
-    int myResult = writeCsvAggrFromShape(shapeRef, outputAggrCsvFileName, dateComputation,
+    int result = writeCsvAggrFromShape(shapeRef, outputAggrCsvFileName, dateComputation,
                                  aggregationVariable.outputVarName, aggregationShapeField, projectError);
-
     shapeRef.close();
 
-    bool reorder = true;  // enable/disable csv reorder
-    if (reorder)
+    if (result == CRIT1D_OK)
     {
-        return orderCsvByField(outputAggrCsvFileName,"ZONE ID",projectError);
+        if (isReorder)
+        {
+            return orderCsvByField(outputAggrCsvFileName, "ZONE ID", projectError);
+        }
     }
 
-    return myResult;
+    return result;
 }
 
 
