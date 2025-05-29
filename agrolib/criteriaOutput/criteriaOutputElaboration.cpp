@@ -762,7 +762,7 @@ int writeCsvAggrFromShape(Crit3DShapeHandler &refShapeFile, QString csvFileName,
     // write CSV
     QFile outputFile;
     outputFile.setFileName(csvFileName);
-    if (!outputFile.open(QIODevice::ReadWrite | QIODevice::Truncate))
+    if (! outputFile.open(QIODevice::ReadWrite | QIODevice::Truncate))
     {
         errorStr = "Open failure: " + csvFileName;
         return ERROR_WRITECSV;
@@ -780,7 +780,7 @@ int writeCsvAggrFromShape(Crit3DShapeHandler &refShapeFile, QString csvFileName,
         fieldIndex = refShapeFile.getDBFFieldIndex(shapeFieldStdString.c_str());
         if (fieldIndex == -1)
         {
-            errorStr = QString::fromStdString(refShapeFile.getFilepath()) + "has not field called " + shapeField;
+            errorStr = "Aggregation shapefile has not field called: " + shapeField;
             return ERROR_SHAPEFILE;
         }
         DBFFieldType fieldType = refShapeFile.getFieldType(fieldIndex);
@@ -805,7 +805,7 @@ int writeCsvAggrFromShape(Crit3DShapeHandler &refShapeFile, QString csvFileName,
             fieldIndex = refShapeFile.getDBFFieldIndex(valField.c_str());
             if (fieldIndex == -1)
             {
-                errorStr = QString::fromStdString(refShapeFile.getFilepath()) + "has not field called " + outputVarName[field];
+                errorStr = QString::fromStdString(refShapeFile.getFilepath()) + " has not field called " + outputVarName[field];
                 return ERROR_SHAPEFILE;
             }
 
@@ -850,7 +850,7 @@ int orderCsvByField(QString csvFileName, QString field, QString &errorStr)
 {
     QFile fileCsv;
     fileCsv.setFileName(csvFileName);
-    if (!fileCsv.open(QIODevice::ReadWrite))
+    if (! fileCsv.open(QIODevice::ReadWrite))
     {
         errorStr = "Open failure: " + csvFileName;
         return ERROR_WRITECSV;
@@ -872,7 +872,7 @@ int orderCsvByField(QString csvFileName, QString field, QString &errorStr)
     QList<QString> keyList;
     QList<QList<QString>> itemsList;
 
-    while (!in.atEnd())
+    while (! in.atEnd())
     {
         line = in.readLine();
         QList<QString> items = line.split(",");
