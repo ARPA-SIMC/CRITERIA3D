@@ -526,7 +526,7 @@ void Crit3DProject::assignETreal()
                 totalEvaporation += evapFlow;                                               // [m3 h-1]
 
                 int cropIndex = getLandUnitIndexRowCol(row, col);
-                if (cropIndex != NODATA && ! landUnitList[cropIndex].idCrop.isEmpty())
+                if (cropIndex != NODATA && cropList.size() > cropIndex)
                 {
                     Crit3DCrop currentCrop = cropList[cropIndex];
                     double actualTransp = 0;
@@ -535,7 +535,7 @@ void Crit3DProject::assignETreal()
                     if (currentLAI > 0)
                     {
                         float degreeDays = degreeDaysMap.value[row][col];
-                        actualTransp = assignTranspiration(row, col, currentCrop, currentLAI, degreeDays);   // [mm h-1]
+                        actualTransp = assignTranspiration(row, col, currentCrop, currentLAI, degreeDays);          // [mm h-1]
                         // TODO verificare che la traspirazione ottenuta da hydrall sia confrontabile e nel caso mettere un if che decida come computare la traspirazione
                         double traspFlow = area * (actualTransp / 1000.);                                           // [m3 h-1] flux
                         totalTranspiration += traspFlow;                                                            // [m3 h-1] flux

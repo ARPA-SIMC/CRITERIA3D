@@ -1547,18 +1547,16 @@ float Project3D::computeCurrentPond(int row, int col)
         return NODATA;
 
     double maximumPond = landUnitList[unitIndex].pond;
-
     double soilMaximumPond = maximumPond / (slope + 1.);
-    if (isCrop(unitIndex))
-    {
-        soilMaximumPond *= 0.5;
-    }
 
     double currentInterception = 0;
     if (processes.computeCrop)
     {
         if (isCrop(unitIndex))
         {
+            // distributes the pond between the soil and the interception
+            soilMaximumPond *= 0.5;
+
             // landUnit list and crop list have the same index
             float currentLai = laiMap.value[row][col];
             if (! isEqual(currentLai, laiMap.header->flag))

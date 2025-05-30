@@ -152,7 +152,7 @@ void computeMassBalance(double deltaT)
     balanceCurrentTimeStep.waterMBE = dStorage - balanceCurrentTimeStep.sinkSourceWater;            // [m3]
 
     // minimum reference water storage [m3] as % of current storage
-    double minRefWaterStorage = balanceCurrentTimeStep.storageWater * std::min(0.001, myParameters.MBRThreshold);
+    double minRefWaterStorage = balanceCurrentTimeStep.storageWater * std::min(0.0001, myParameters.MBRThreshold);
     minRefWaterStorage = MAXVALUE(minRefWaterStorage, 0.001);        // [m3] minimum 1 liter
 
     // reference water for computation of mass balance ratio

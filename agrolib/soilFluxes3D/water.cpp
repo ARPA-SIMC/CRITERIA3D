@@ -71,7 +71,6 @@ double getWaterExchange(long i, TlinkedNode *link, double deltaT)
 double runoff(long i, long j, TlinkedNode *link, double deltaT, unsigned approximationNr)
 {
     double Hi, Hj;
-
     if (approximationNr == 0)
     {
         double flux_i = (nodeList[i].Qw * deltaT) / nodeList[i].volume_area;
@@ -90,15 +89,25 @@ double runoff(long i, long j, TlinkedNode *link, double deltaT, unsigned approxi
         Hj = (nodeList[j].H);
     }
 
+    double dH = fabs(Hi - Hj);
+    if (dH < DBL_EPSILON)
+        return 0.;
+
     double zi = nodeList[i].z + nodeList[i].pond;
     double zj = nodeList[j].z + nodeList[j].pond;
+
     double Hmax = std::max(Hi, Hj);
     double zmax = std::max(zi, zj);
     double Hs = Hmax - zmax;
+
+    // Land Depression
+    if ((Hi > Hj && zi < zj) || (Hj > Hi && zj < zi))
+    {
+        Hs = std::min(Hs, dH);
+    }
     if (Hs < 1.e-4)
         return 0.;
 
-    double dH = fabs(Hi - Hj);
     double cellDistance = distance2D(i, j);
     double slope = dH / cellDistance;
     if (slope < EPSILON)
