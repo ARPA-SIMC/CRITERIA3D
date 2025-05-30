@@ -84,20 +84,21 @@ Crit3DHydrallPlant::Crit3DHydrallPlant()
     height = NODATA; // in cm
     myLeafWidth = NODATA;
     isAmphystomatic = false;
-    foliageLongevity = 1;
-    sapwoodLongevity = 35;
-    fineRootLongevity = 1;
+    foliageLongevity = 1; //[yr]
+    sapwoodLongevity = 35; //[yr]
+    fineRootLongevity = 1; //[yr]
     foliageDensity = 0.1; //[kgDM m-3]
     woodDensity = RHOS;
     specificLeafArea = NODATA;
     psiLeaf = NODATA;
     psiSoilCritical = NODATA;
-    psiLeafMinimum = NODATA;
+    psiLeafMinimum = NODATA; //[MPa]
     transpirationPerUnitFoliageAreaCritical = NODATA;
     leafAreaIndexCanopy = NODATA;
     leafAreaIndexCanopyMax = NODATA;
     standVolume = NODATA; // maps referred to stand volume MUST be initialized
     currentIncrementalVolume = EPSILON;
+    transpirationCritical = NODATA; //(mol m-2 s-1)
 }
 
 Crit3DHydrallSoil::Crit3DHydrallSoil()
@@ -250,6 +251,7 @@ bool Crit3DHydrall::computeHydrallPoint(Crit3DDate myDate, double myTemperature,
     plant.leafAreaIndexCanopy = MAXVALUE(0,plant.leafAreaIndexCanopy);
     understorey.leafAreaIndex = 1;
     plant.leafAreaIndexCanopy = 5;
+    plant.leafAreaIndexCanopyMax = 6;
     plant.specificLeafArea = plant.leafAreaIndexCanopyMax/statePlant.treeBiomassFoliage;
     Crit3DHydrall::photosynthesisAndTranspiration();
 
@@ -1142,6 +1144,7 @@ double Crit3DHydrall::cavitationConditions()
         conductivityWeights[0][i] = soil.rootDensity[i];
         conductivityWeights[1][i] = soil.nodeThickness[i];
     }
+
     double ksl = statistics::weighedMeanMultifactor(logarithmic10Values,conductivityWeights,soil.satHydraulicConductivity);
     double soilRootsSpecificConductivity = 1/(1/KR + 1/ksl);
     soilRootsSpecificConductivity *= 0.5151 + MAXVALUE(0,0.0242*soil.temperature);
@@ -1149,6 +1152,9 @@ double Crit3DHydrall::cavitationConditions()
     double sapwoodSpecificConductivity = KSMAX * (1-std::exp(-0.69315*plant.height/H50)); //adjust for height effects
     sapwoodSpecificConductivity *= 0.5151 + MAXVALUE(0,0.0242*weatherVariable.meanDailyTemp);
 
+    /*double a = 1./(statePlant.treeBiomassRoot*soilRootsSpecificConductivity);
+    double b = (plant.height*plant.height*plant.woodDensity)/(statePlant.treeBiomassSapwood*sapwoodSpecificConductivity);
+    double c = statePlant.treeBiomassFoliage*plant.specificLeafArea;*/
     //resulting leaf specific resistance (MPa s m2 m-3)
     plant.hydraulicResistancePerFoliageArea = (1./(statePlant.treeBiomassRoot*soilRootsSpecificConductivity)
                                                + (plant.height*plant.height*plant.woodDensity)/(statePlant.treeBiomassSapwood*sapwoodSpecificConductivity))
@@ -1404,6 +1410,11 @@ bool Crit3DHydrall::growthStand()
         allocationCoefficient.toSapwood = (allocationCoeffientSapwoodOld + allocationCoefficient.toSapwood) / 2;
     }
 
+    std::ofstream myFile;
+    myFile.open("outputAlloc.csv", std::ios_base::app);
+    myFile << allocationCoefficient.toFoliage <<","<< allocationCoefficient.toFineRoots <<","<<allocationCoefficient.toSapwood <<"\n";
+    myFile.close();
+
     if (annualGrossStandGrowth * allocationCoefficient.toFoliage > statePlant.treeBiomassFoliage/(plant.foliageLongevity - 1))
     {
         treeBiomass.leaf = MAXVALUE(treeBiomass.leaf + annualGrossStandGrowth * allocationCoefficient.toFoliage, EPSILON);
@@ -1440,7 +1451,7 @@ void Crit3DHydrall::optimal()
         increment = incrementStart / std::pow(10, j);
         allocationCoefficient.toFoliage = 1;
 
-        while(! sol && allocationCoefficient.toFoliage > -EPSILON)
+        while(! sol && allocationCoefficient.toFoliage > 0)
         {
             rootfind(allocationCoefficient.toFoliage, allocationCoefficient.toFineRoots, allocationCoefficient.toSapwood, sol);
 
@@ -1448,7 +1459,7 @@ void Crit3DHydrall::optimal()
                 break;
 
             allocationCoefficientFoliageOld = allocationCoefficient.toFoliage;
-            allocationCoefficient.toFoliage -= increment;
+            allocationCoefficient.toFoliage = 1 - increment;
 
         }
         if (sol)
@@ -1525,7 +1536,7 @@ void Crit3DHydrall::rootfind(double &allf, double &allr, double &alls, bool &sol
 
     //resulting minimum leaf water potential
 
-    plant.psiLeafMinimum = plant.psiSoilCritical - (0.01 * plant.height)-(plant.transpirationCritical * MH2O/1000. * plant.hydraulicResistancePerFoliageArea);
+    plant.psiLeafMinimum = plant.psiSoilCritical - (0.01 * plant.height * 9.806650e-5)-(plant.transpirationCritical * MH2O/1000. * plant.hydraulicResistancePerFoliageArea);
     //check if given value of ALLF satisfies optimality constraint
     if(plant.psiLeafMinimum >= PSITHR)
         sol = true;
@@ -1537,7 +1548,7 @@ void Crit3DHydrall::rootfind(double &allf, double &allr, double &alls, bool &sol
         allr /= (annualGrossStandGrowth * (1.+quadraticEqCoefficient*plant.height));
         allr = BOUNDFUNCTION(EPSILON,1,allr); // TODO to be checked
         alls = 1.-allr;
-        allf = 0; // TODO verify its value
+        //allf = 0; // TODO verify its value
     }
 
 }

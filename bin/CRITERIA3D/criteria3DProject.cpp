@@ -1576,6 +1576,7 @@ bool Crit3DProject::computeHydrallModel(int row, int col)
 
     //check and save data TODO CHECK NODATA
     hydrallModel.getStateVariables(hydrallMaps, row, col);
+    hydrallModel.getPlantAndSoilVariables(hydrallMaps, row, col);
 
 
 
