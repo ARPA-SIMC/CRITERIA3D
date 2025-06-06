@@ -340,6 +340,7 @@
     double getHMean(long i)
     {
         // is there any efficient way to compute a geometric mean of H?
+        // TODO log mean
         return arithmeticMean(nodeList[i].oldH, nodeList[i].H);
     }
 
