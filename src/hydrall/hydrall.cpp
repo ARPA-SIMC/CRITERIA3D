@@ -963,6 +963,9 @@ void Crit3DHydrall::carbonWaterFluxesProfile()
     // taken from Hydrall Model, Magnani UNIBO
     treeAssimilationRate = 0 ;
 
+    //ball-berry constants
+    double mi = 30;
+
     treeTranspirationRate.resize(soil.layersNr);
 
     //double totalStomatalConductance = 0;
@@ -982,7 +985,7 @@ void Crit3DHydrall::carbonWaterFluxesProfile()
                 Crit3DHydrall::photosynthesisKernel(sunlit.compensationPoint, sunlit.aerodynamicConductanceCO2Exchange, sunlit.aerodynamicConductanceHeatExchange, sunlit.minimalStomatalConductance,
                                                                  sunlit.maximalElectronTrasportRate, sunlit.carbonMichaelisMentenConstant,
                                                                  sunlit.oxygenMichaelisMentenConstant,sunlit.darkRespiration, sunlit.isothermalNetRadiation,
-                                                                 parameterWangLeuning.alpha * soil.stressCoefficient[i], sunlit.maximalCarboxylationRate,
+                                                                 mi * soil.stressCoefficient[i], sunlit.maximalCarboxylationRate,
                                                                  &(sunlit.assimilation), &(sunlit.stomatalConductance),
                                                                  &(sunlit.transpiration), sunlit.leafTemperature);
             }
@@ -993,7 +996,7 @@ void Crit3DHydrall::carbonWaterFluxesProfile()
             Crit3DHydrall::photosynthesisKernel(shaded.compensationPoint, shaded.aerodynamicConductanceCO2Exchange,shaded.aerodynamicConductanceHeatExchange, shaded.minimalStomatalConductance,
                                                              shaded.maximalElectronTrasportRate, shaded.carbonMichaelisMentenConstant,
                                                              shaded.oxygenMichaelisMentenConstant,shaded.darkRespiration, shaded.isothermalNetRadiation,
-                                                             parameterWangLeuning.alpha * soil.stressCoefficient[i], shaded.maximalCarboxylationRate,
+                                                             mi * soil.stressCoefficient[i], shaded.maximalCarboxylationRate,
                                                              &(shaded.assimilation), &(shaded.stomatalConductance),
                                                              &(shaded.transpiration), shaded.leafTemperature);
             treeAssimilationRate += ( shaded.assimilation + sunlit.assimilation) * soil.rootDensity[i] ; //canopy gross assimilation (mol m-2 s-1)
@@ -1020,8 +1023,8 @@ void Crit3DHydrall::photosynthesisKernel(double COMP,double GAC,double GHR,doubl
     double myStromalCarbonDioxideOld;
 
     //leaf surface relative humidity conversion factor from VPD
-
-
+    double RHFactor = (613.75 * exp(17.502 * weatherVariable.myInstantTemp / (240.97 + weatherVariable.myInstantTemp)));
+    double RH;
 
     Imax = 10000 ;
     myTolerance = 1e-7;
@@ -1033,6 +1036,7 @@ void Crit3DHydrall::photosynthesisKernel(double COMP,double GAC,double GHR,doubl
         myStromalCarbonDioxide = 0.7 * environmentalVariable.CO2 ;
         VPDS = weatherVariable.vaporPressureDeficit;
         //myPreviousVPDS = VPDS;
+        RH = 1 - VPDS / RHFactor;
         ASSOLD = NODATA;
         DUM1 = 1.6 * weatherVariable.derived.slopeSatVapPressureVSTemp/weatherVariable.derived.psychrometricConstant + GHR/GAC;
         double dampingPar = 0.01;
@@ -1047,7 +1051,7 @@ void Crit3DHydrall::photosynthesisKernel(double COMP,double GAC,double GHR,doubl
             CS = environmentalVariable.CO2 - weatherVariable.atmosphericPressure * (*ASS - RD) / GAC;	//CO2 concentration at leaf surface (Pa)
             CS = MAXVALUE(1e-4,CS);
             //Stomatal conductance
-            *GSC = GSCD + STOMWL * (*ASS-RD) / (CS-COMP) * parameterWangLeuning.sensitivityToVapourPressureDeficit / (parameterWangLeuning.sensitivityToVapourPressureDeficit +VPDS); //stom conduct to CO2 (mol m-2 s-1)
+            *GSC = GSCD + STOMWL * (*ASS-RD) / (CS-COMP) * RH; //stom conduct to CO2 (mol m-2 s-1)
             *GSC = MAXVALUE(*GSC,1.0e-5);
             // Stromal CO2 concentration
             myStromalCarbonDioxideOld = myStromalCarbonDioxide;
@@ -1057,6 +1061,7 @@ void Crit3DHydrall::photosynthesisKernel(double COMP,double GAC,double GHR,doubl
             myStromalCarbonDioxide = BOUNDFUNCTION(0.01,environmentalVariable.CO2,myStromalCarbonDioxide);
             //Vapour pressure deficit at leaf surface
             VPDS = (weatherVariable.derived.slopeSatVapPressureVSTemp / HEAT_CAPACITY_AIR_MOLAR*RNI + weatherVariable.vaporPressureDeficit * GHR) / (GHR+(*GSC)*DUM1);  //VPD at the leaf surface (Pa)
+            RH = 1 - VPDS / RHFactor;
             deltaAssimilation = fabs((*ASS) - ASSOLD);
 
             if (I>0)
