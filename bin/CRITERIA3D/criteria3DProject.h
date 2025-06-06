@@ -57,6 +57,8 @@
         gis::Crit3DRasterGrid degreeDaysMap;
         gis::Crit3DRasterGrid dailyTminMap;
         gis::Crit3DRasterGrid dailyTmaxMap;
+        gis::Crit3DRasterGrid monthlyPrec;
+        gis::Crit3DRasterGrid monthlyETReal;
 
         Crit3DHydrallMaps hydrallMaps;
 
@@ -75,6 +77,7 @@
         bool initializeCropMaps();
         bool initializeHydrall();
         bool initializeRothC();
+        void updateRothCMonthlyMaps();
         void dailyUpdateCropMaps(const QDate &myDate);
 
         bool initializeCropWithClimateData();
@@ -115,7 +118,7 @@
         bool dailyUpdateHydrall(const QDate &myDate);
 
         bool computeRothCModel();
-        bool updateRothC(int row, int col, double hourlyETreal);
+        bool updateRothC();
 
         bool computeSnowModel();
         void computeSnowPoint(int row, int col);

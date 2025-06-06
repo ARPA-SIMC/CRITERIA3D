@@ -99,12 +99,12 @@
         Crit3DHydrallStatePlant();
 
         double treeNetPrimaryProduction;
-        double treecumulatedBiomassFoliage;
-        double treecumulatedBiomassRoot;
-        double treecumulatedBiomassSapwood;
+        double treeBiomassFoliage;
+        double treeBiomassRoot;
+        double treeBiomassSapwood;
         double understoreyNetPrimaryProduction;
-        double understoreycumulatedBiomassFoliage;
-        double understoreycumulatedBiomassRoot;
+        double understoreyBiomassFoliage;
+        double understoreyBiomassRoot;
     };
 
     class Crit3DHydrallWeatherDerivedVariable {
@@ -163,6 +163,7 @@
         // TODO Cate unità di misura
         double myChlorophyllContent;
         double height; // in cm
+        double hydraulicResistancePerFoliageArea; //(MPa s m2 m-3)
         double myLeafWidth;
         bool isAmphystomatic;
         double foliageLongevity;
@@ -172,7 +173,8 @@
         double woodDensity;
         double specificLeafArea;
         double psiLeaf;
-        double psiLeafCritical;
+        double psiSoilCritical;
+        double transpirationCritical;
         double psiLeafMinimum;
         double transpirationPerUnitFoliageAreaCritical;
         double leafAreaIndexCanopy;
@@ -203,6 +205,7 @@
         std::vector <double> sand;
         std::vector <double> silt;
         std::vector <double> bulkDensity;
+        std::vector <double> waterPotential;
 
     };
 
@@ -314,6 +317,9 @@
         gis::Crit3DRasterGrid* mapLast30DaysTavg;
         gis::Crit3DRasterGrid treeSpeciesMap;
         gis::Crit3DRasterGrid plantHeight;
+        gis::Crit3DRasterGrid* criticalTranspiration;
+        gis::Crit3DRasterGrid* criticalSoilWaterPotential;
+        gis::Crit3DRasterGrid* minLeafWaterPotential;
 
         gis::Crit3DRasterGrid* treeNetPrimaryProduction;
         gis::Crit3DRasterGrid* understoreyNetPrimaryProduction;
@@ -364,6 +370,7 @@
         double treeAssimilationRate;
         std::vector<double> understoreyTranspirationRate;
         double understoreyAssimilationRate;
+        double totalTranspirationRate; //molH2O m^-2 s^-1
 
         double getOutputC() { return outputC; };
 
@@ -371,11 +378,11 @@
         double moistureCorrectionFactor(int index);
         double understoreyRespiration();
         void radiationAbsorption();
-        void setSoilVariables(int iLayer, int currentNode, float checkFlag, int horizonIndex, double waterContent, double waterContentFC, double waterContentWP, double clay, double sand, double thickness, double bulkDensity, double waterContentSat, double rootDensity);
+        void setSoilVariables(int iLayer, int currentNode, float checkFlag, int horizonIndex, double waterContent, double waterContentFC, double waterContentWP, double clay, double sand, double thickness, double bulkDensity, double waterContentSat, double rootDensity, double kSat, double waterPotential);
         void setHourlyVariables(double temp, double irradiance , double prec , double relativeHumidity , double windSpeed, double directIrradiance, double diffuseIrradiance, double cloudIndex, double atmosphericPressure, Crit3DDate currentDate, double sunElevation,double meanTemp30Days,double et0);
         bool setWeatherVariables(double temp, double irradiance , double prec , double relativeHumidity , double windSpeed, double directIrradiance, double diffuseIrradiance, double cloudIndex, double atmosphericPressure, double meanTemp30Days,double et0);
         void setDerivedWeatherVariables(double directIrradiance, double diffuseIrradiance, double cloudIndex, double et0);
-        void setPlantVariables(double chlorophyllContent, double height);
+        void setPlantVariables(double chlorophyllContent, double height, double psiMinimum, double psiCritical);
         bool computeHydrallPoint(Crit3DDate myDate, double myTemperature, double myElevation);
         double getCO2(Crit3DDate myDate);
         //double getPressureFromElevation(double myTemperature, double myElevation);
@@ -406,6 +413,10 @@
 
         void setStateVariables(Crit3DHydrallMaps &stateMap, int row, int col);
         void getStateVariables(Crit3DHydrallMaps &stateMap, int row, int col);
+
+        void getPlantAndSoilVariables(Crit3DHydrallMaps &map, int row, int col);
+        void updateCriticalPsi();
+        double cavitationConditions();
 
     private:
         double outputC;

@@ -41,6 +41,7 @@
 #include <QtSql>
 #include <QPaintEvent>
 #include <QVector3D>
+#include <float.h>
 
 
 Crit3DProject::Crit3DProject() : Project3D()
@@ -91,6 +92,8 @@ void Crit3DProject::clearCropMaps()
     dailyTminMap.clear();
     dailyTmaxMap.clear();
     hydrallMaps.mapLast30DaysTavg->clear();
+    monthlyETReal.clear();
+    monthlyPrec.clear();
 
     isCropInitialized = false;
 }
@@ -130,6 +133,41 @@ bool Crit3DProject::initializeHydrall()
 bool Crit3DProject::initializeRothC()
 {
     rothCModel.initialize();
+    rothCModel.map.initialize(DEM);
+    hourlyMeteoMaps->mapHourlyETReal->initializeGrid(DEM, 0);
+
+    for (int row = 0; row < DEM.header->nrRows; row ++)
+    {
+        for (int col = 0; col < DEM.header->nrCols; col++)
+        {
+            if (! isEqual(DEM.value[row][col], DEM.header->flag))
+            {
+            int soilIndex = int(soilIndexMap.value[row][col]);
+            if (soilIndex == NODATA)
+            {
+                //TODO
+            }
+
+            rothCModel.map.setDepth(soilList[soilIndex].totalDepth, row, col);
+
+            double clayContent = 0;
+            unsigned int i;
+            for (i = 0; ((i < nrLayers) && (soilList[soilIndex].getHorizonIndex(layerDepth[i]))!= NODATA); i++)
+            {
+                clayContent += soilList[soilIndex].horizon[soilList[soilIndex].getHorizonIndex(layerDepth[i])].texture.clay;
+            }
+
+            if (i > 0)
+                rothCModel.map.setClay(clayContent/i, row, col);
+
+            }
+        }
+
+    }
+
+
+
+
     //todo
 
     return true;
@@ -152,6 +190,9 @@ bool Crit3DProject::initializeCropMaps()
 
     dailyTminMap.initializeGrid(*(DEM.header));
     dailyTmaxMap.initializeGrid(*(DEM.header));
+
+    monthlyETReal.initializeGrid(*(DEM.header));
+    monthlyPrec.initializeGrid(*(DEM.header));
 
     return true;
 }
@@ -183,7 +224,7 @@ bool Crit3DProject::initializeCropWithClimateData()
                 {
                     double degreeDays = 0;
                     int firstDoy = 1;
-                    int lastDoy = currentDate.dayOfYear();
+                    int lastDoy = _currentDate.dayOfYear();
 
                     if (gisSettings.startLocation.latitude >= 0)
                     {
@@ -193,7 +234,7 @@ bool Crit3DProject::initializeCropWithClimateData()
                     else
                     {
                         // Southern hemisphere
-                        if (currentDate.dayOfYear() >= 182)
+                        if (_currentDate.dayOfYear() >= 182)
                         {
                             firstDoy = 182;
                         }
@@ -207,7 +248,7 @@ bool Crit3DProject::initializeCropWithClimateData()
                     for (int doy = firstDoy; doy <= lastDoy; doy++)
                     {
                         int currentDoy = doy;
-                        int currentYear = currentDate.year();
+                        int currentYear = _currentDate.year();
                         if (currentDoy <= 0)
                         {
                             currentYear--;
@@ -228,13 +269,13 @@ bool Crit3DProject::initializeCropWithClimateData()
                     }
 
                     degreeDaysMap.value[row][col] = float(degreeDays);
-                    laiMap.value[row][col] = cropList[index].computeSimpleLAI(degreeDays, gisSettings.startLocation.latitude, currentDate.dayOfYear());
+                    laiMap.value[row][col] = cropList[index].computeSimpleLAI(degreeDays, gisSettings.startLocation.latitude, _currentDate.dayOfYear());
                 }
             }
         }
     }
 
-    logInfo("LAI initialized with climate data - doy: " + QString::number(currentDate.dayOfYear()));
+    logInfo("LAI initialized with climate data - doy: " + QString::number(_currentDate.dayOfYear()));
     isCropInitialized = true;
 
     return true;
@@ -277,7 +318,7 @@ bool Crit3DProject::initializeCropFromDegreeDays(gis::Crit3DRasterGrid &myDegree
                     {
                         degreeDaysMap.value[row][col] = currentDegreeDay;
                         laiMap.value[row][col] = cropList[index].computeSimpleLAI(degreeDaysMap.value[row][col],
-                                                         gisSettings.startLocation.latitude, currentDate.dayOfYear());
+                                                         gisSettings.startLocation.latitude, _currentDate.dayOfYear());
                     }
                 }
             }
@@ -324,7 +365,7 @@ void Crit3DProject::dailyUpdateCropMaps(const QDate &myDate)
                     float tmax = dailyTmaxMap.value[row][col];
                     if (! isEqual(tmin, dailyTminMap.header->flag) && ! isEqual(tmax, dailyTmaxMap.header->flag))
                     {
-                        double dailyDD = cropList[index].getDailyDegreeIncrease(tmin, tmax, currentDate.dayOfYear());
+                        double dailyDD = cropList[index].getDailyDegreeIncrease(tmin, tmax, _currentDate.dayOfYear());
                         if (! isEqual(dailyDD, NODATA))
                         {
                             if (isEqual(degreeDaysMap.value[row][col], degreeDaysMap.header->flag))
@@ -337,9 +378,13 @@ void Crit3DProject::dailyUpdateCropMaps(const QDate &myDate)
                             }
 
                             laiMap.value[row][col] = cropList[index].computeSimpleLAI(degreeDaysMap.value[row][col],
-                                                            gisSettings.startLocation.latitude, currentDate.dayOfYear());
+                                                            gisSettings.startLocation.latitude, _currentDate.dayOfYear());
                         }
                     }
+                }
+                if(processes.computeRothC)
+                {
+                    //update delle mappe mensili di prec ed ETreal
                 }
             }
         }
@@ -380,8 +425,8 @@ bool Crit3DProject::dailyUpdateHydrall(const QDate &myDate)
         }
 
 
-        //hydrallModel.growthStand(); // TODO quit this line - temporary position to prompt check
-        //hydrallModel.resetStandVariables();
+        hydrallModel.growthStand(); // TODO quit this line - temporary position to prompt check
+        hydrallModel.resetStandVariables();
         if (myDate.month() == hydrallModel.firstMonthVegetativeSeason) //TODO
         {
             /* in case of the first day of the year
@@ -399,24 +444,47 @@ bool Crit3DProject::dailyUpdateHydrall(const QDate &myDate)
 }
 
 
-bool Crit3DProject::updateRothC(int row, int col, double hourlyETreal)
+bool Crit3DProject::updateRothC()
 {
-    //monthly or yearly(?) BIC needs to be cumulated with hourly values. hourlyETreal is in mm/h
-    double hourlyBIC = hourlyMeteoMaps->mapHourlyPrec->getValueFromRowCol(row, col) - hourlyETreal;
-    double cumulatedBIC = rothCModel.meteoVariable.getBIC() + hourlyBIC;
-    rothCModel.meteoVariable.setBIC(cumulatedBIC);
-
     if (rothCModel.getIsUpdate())
     {
-        rothCModel.setInputC(hydrallModel.getOutputC()); //read from hydrall (and from crop too?)
-        rothCModel.meteoVariable.setTemperature(hydrallMaps.mapLast30DaysTavg->getValueFromRowCol(row, col));
+        for (int row = 0; row < DEM.header->nrRows; row++)
+        {
+            for (int col = 0; col < DEM.header->nrCols; col++)
+            {
+                // is valid point
+                float height = DEM.value[row][col];
+                if (! isEqual(height, DEM.header->flag))
+                {
+                    rothCModel.setDepth(rothCModel.map.getDepth(row, col));
+                    rothCModel.setClay(rothCModel.map.getClay(row, col));
+                    rothCModel.meteoVariable.setPrecipitation(monthlyPrec.getValueFromRowCol(row, col));
+                    rothCModel.meteoVariable.setWaterLoss(monthlyETReal.getValueFromRowCol(row, col));
+                    rothCModel.meteoVariable.setBIC(monthlyPrec.getValueFromRowCol(row, col) - monthlyETReal.getValueFromRowCol(row, col));
+                    rothCModel.meteoVariable.setTemperature(hydrallMaps.mapLast30DaysTavg->getValueFromRowCol(row, col));
+                    //rothCModel.setInputC(hydrallModel.getOutputC()); //read from hydrall (eventually from crop too?)
+                    rothCModel.setInputC(1);
 
-        //chiamata a rothC
-        computeRothCModel();
+                    double SWC = 0;
 
-        //reset BIC for next month/year
-        rothCModel.meteoVariable.setBIC(0);
-        rothCModel.setInputC(0);
+                    for (int i = 0; i < hydrallModel.soil.waterContent.size(); i++)
+                    {
+                        SWC += hydrallModel.soil.waterContent[i]*hydrallModel.soil.nodeThickness[i]*1000;
+                    }
+
+                    rothCModel.setSWC(SWC);
+
+
+                    //chiamata a rothC
+                    computeRothCModel();
+
+                    //reset meteo variables and C input for next month/year
+                    rothCModel.resetInputVariables();
+                    monthlyPrec.value[row][col] = 0;
+                    monthlyETReal.value[row][col] = 0;
+                }
+            }
+        }
     }
 
     return true;
@@ -458,7 +526,7 @@ void Crit3DProject::assignETreal()
                 totalEvaporation += evapFlow;                                               // [m3 h-1]
 
                 int cropIndex = getLandUnitIndexRowCol(row, col);
-                if (cropIndex != NODATA && ! landUnitList[cropIndex].idCrop.isEmpty())
+                if (cropIndex != NODATA && cropList.size() > cropIndex)
                 {
                     Crit3DCrop currentCrop = cropList[cropIndex];
                     double actualTransp = 0;
@@ -467,7 +535,7 @@ void Crit3DProject::assignETreal()
                     if (currentLAI > 0)
                     {
                         float degreeDays = degreeDaysMap.value[row][col];
-                        actualTransp = assignTranspiration(row, col, currentCrop, currentLAI, degreeDays);   // [mm h-1]
+                        actualTransp = assignTranspiration(row, col, currentCrop, currentLAI, degreeDays);          // [mm h-1]
                         // TODO verificare che la traspirazione ottenuta da hydrall sia confrontabile e nel caso mettere un if che decida come computare la traspirazione
                         double traspFlow = area * (actualTransp / 1000.);                                           // [m3 h-1] flux
                         totalTranspiration += traspFlow;                                                            // [m3 h-1] flux
@@ -492,7 +560,7 @@ void Crit3DProject::assignETreal()
 
                     if (processes.computeRothC)
                     {
-                        //updateRothC(row, col, actualEvap + actualTransp);
+                        hourlyMeteoMaps->mapHourlyETReal->value[row][col] = actualEvap + actualTransp;
                     }
                 }
             }
@@ -539,11 +607,14 @@ void Crit3DProject::assignPrecipitation()
                     }
                     if (liquidWater > 0)
                     {
-                        float surfaceWater = checkSoilCracking(row, col, liquidWater);
+                        float precSurfaceWater = checkSoilCracking(row, col, liquidWater);
 
-                        double flow = area * (surfaceWater / 1000.);        // [m3 h-1]
-                        waterSinkSource[surfaceIndex] += flow / 3600.;      // [m3 s-1]
-                        totalPrecipitation += flow;                         // [m3]
+                        double flow = area * (precSurfaceWater / 1000.);            // [m3 h-1]
+                        if ((flow / 3600.) > DBL_EPSILON)
+                        {
+                            waterSinkSource[surfaceIndex] += flow / 3600.;          // [m3 s-1]
+                            totalPrecipitation += flow;                             // [m3 h-1]
+                        }
                     }
                 }
             }
@@ -554,7 +625,8 @@ void Crit3DProject::assignPrecipitation()
 
 // Water infiltration into soil cracks
 // input: rainfall [mm]
-// returns the water remaining on the surface after infiltration into soil cracks
+// output: water remaining on the surface [mm]
+// after infiltration into soil cracks
 float Crit3DProject::checkSoilCracking(int row, int col, float precipitation)
 {
     const double MIN_CRACKING_DEPTH = 0.2;              // [m]
@@ -659,10 +731,12 @@ float Crit3DProject::checkSoilCracking(int row, int col, float precipitation)
             layerWater = std::min(layerWater, downWater);
 
             double flow = area * (layerWater / 1000.);              // [m3 h-1]
-
-            waterSinkSource[nodeIndex] += flow / 3600.;             // [m3 s-1]
-            totalPrecipitation += flow;                             // [m3]
-            downWater -= layerWater;
+            if ((flow / 3600.) > DBL_EPSILON)
+            {
+                waterSinkSource[nodeIndex] += flow / 3600.;         // [m3 s-1]
+                totalPrecipitation += flow;                         // [m3 h-1]
+                downWater -= layerWater;                            // [mm]
+            }
         }
     }
 
@@ -736,15 +810,13 @@ bool Crit3DProject::runModels(QDateTime firstTime, QDateTime lastTime, bool isRe
             dailyUpdatePond();
         }
 
-        if (processes.computeHydrall)
-        {
-            dailyUpdateHydrall(myDate);
-        }
 
-        if (processes.computeRothC)
+        if (processes.computeRothC && myDate.day() == 1)
         {
             rothCModel.setIsUpdate(myDate.day() == 1);
             //rothCModel.setIsUpdate(myDate.doy() == 1);
+            updateRothC();
+
         }
 
         if (isSaveOutputRaster())
@@ -768,11 +840,22 @@ bool Crit3DProject::runModels(QDateTime firstTime, QDateTime lastTime, bool isRe
             if (currentSeconds == 0 || currentSeconds == 3600)
                 isRestart = false;
 
+            /*if (processes.computeRothC)
+            {
+                rothCModel.setIsUpdate(rothCModel.getIsUpdate() && hour == 0);
+            }*/
+
             if (! runModelHour(currentOutputPath, isRestart))
             {
                 isModelRunning = false;
                 logError();
                 return false;
+            }
+
+            if (processes.computeRothC)
+            {
+                //rothC maps update must be done hourly, otherwise ETReal data is not stored
+                updateRothCMonthlyMaps();
             }
 
             // output points
@@ -817,6 +900,28 @@ bool Crit3DProject::runModels(QDateTime firstTime, QDateTime lastTime, bool isRe
     return true;
 }
 
+void Crit3DProject::updateRothCMonthlyMaps()
+{
+    for (int row = 0; row < indexMap.at(0).header->nrRows; row++)
+    {
+        for (int col = 0; col < indexMap.at(0).header->nrCols; col++)
+        {
+            int surfaceIndex = indexMap.at(0).value[row][col];
+            if (surfaceIndex != indexMap.at(0).header->flag)
+            {
+                if (! isEqual(monthlyETReal.value[row][col], NODATA))
+                    monthlyETReal.value[row][col] += hourlyMeteoMaps->mapHourlyETReal->value[row][col];
+                else
+                    monthlyETReal.value[row][col] = hourlyMeteoMaps->mapHourlyETReal->value[row][col];
+
+                if (! isEqual(monthlyPrec.value[row][col], NODATA))
+                    monthlyPrec.value[row][col] += hourlyMeteoMaps->mapHourlyPrec->value[row][col];
+                else
+                    monthlyPrec.value[row][col] = hourlyMeteoMaps->mapHourlyPrec->value[row][col];
+            }
+        }
+    }
+}
 
 void Crit3DProject::setSaveOutputRaster(bool isSave)
 {
@@ -1404,7 +1509,7 @@ bool Crit3DProject::computeHydrallModel(int row, int col)
 
     //TODO: plant height map
     hydrallMaps.plantHeight.value[row][col] = 10;
-    hydrallModel.setPlantVariables(chlorophyllContent, hydrallMaps.plantHeight.value[row][col]);
+    hydrallModel.setPlantVariables(chlorophyllContent, hydrallMaps.plantHeight.value[row][col], hydrallMaps.minLeafWaterPotential->value[row][col], hydrallMaps.criticalSoilWaterPotential->value[row][col]);
 
 
 
@@ -1460,7 +1565,8 @@ bool Crit3DProject::computeHydrallModel(int row, int col)
                                       fabs(soilList[soilIndex].horizon[soilList[soilIndex].getHorizonIndex(layerDepth[i])].lowerDepth-soilList[soilIndex].horizon[soilList[soilIndex].getHorizonIndex(layerDepth[i])].upperDepth),
                                       soilList[soilIndex].horizon[soilList[soilIndex].getHorizonIndex(layerDepth[i])].bulkDensity,
                                       soilList[soilIndex].horizon[soilList[soilIndex].getHorizonIndex(layerDepth[i])].waterContentSAT,
-                                      tempRootDensity[i]);
+                                      tempRootDensity[i], soilList[soilIndex].horizon[soilList[soilIndex].getHorizonIndex(layerDepth[i])].waterConductivity.kSat,
+                                      soilFluxes3D::getMatricPotential(indexMap.at(i).value[row][col]));
     }
     //compute
     hydrallModel.computeHydrallPoint(getCrit3DDate(getCurrentDate()), double(hourlyMeteoMaps->mapHourlyTair->value[row][col]), double(DEM.value[row][col]));
@@ -1470,6 +1576,7 @@ bool Crit3DProject::computeHydrallModel(int row, int col)
 
     //check and save data TODO CHECK NODATA
     hydrallModel.getStateVariables(hydrallMaps, row, col);
+    hydrallModel.getPlantAndSoilVariables(hydrallMaps, row, col);
 
 
 
@@ -1735,7 +1842,7 @@ bool Crit3DProject::runModelHour(const QString& hourlyOutputPath, bool isRestart
             // initalize sink / source
             for (unsigned long i = 0; i < nrNodes; i++)
             {
-                waterSinkSource.at(size_t(i)) = 0.;
+                waterSinkSource[i] = 0.;                    // [m3 s-1]
             }
         }
 
@@ -1772,6 +1879,7 @@ bool Crit3DProject::runModelHour(const QString& hourlyOutputPath, bool isRestart
                 return false;
         }
 
+
         emit updateOutputSignal();
     }
 
@@ -1807,8 +1915,8 @@ bool Crit3DProject::saveModelsState()
     }
 
     char hourStr[3];
-    sprintf(hourStr, "%02d", currentHour);
-    QString dateFolder = currentDate.toString("yyyyMMdd") + "_H" + hourStr;
+    sprintf(hourStr, "%02d", _currentHour);
+    QString dateFolder = _currentDate.toString("yyyyMMdd") + "_H" + hourStr;
     QString currentStatePath = statePath + "/" + dateFolder;
     if (! QDir(currentStatePath).exists())
     {

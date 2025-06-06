@@ -225,6 +225,8 @@
 
         void on_actionCriteria3D_Water_content_summary_triggered();
 
+        void on_actionDEM_summary_triggered();
+
     protected:
         /*!
          * \brief mouseReleaseEvent call moveCenter

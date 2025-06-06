@@ -1293,7 +1293,7 @@
        <second>0</second>
        <year>1752</year>
        <month>9</month>
-       <day>6</day>
+       <day>5</day>
       </datetime>
      </property>
      <property name="maximumDate">
@@ -2000,6 +2000,7 @@
     <addaction name="flagSave_state_daily_step"/>
     <addaction name="separator"/>
     <addaction name="actionCriteria3D_Water_content_summary"/>
+    <addaction name="actionDEM_summary"/>
    </widget>
    <widget class="QMenu" name="menuShow">
     <property name="title">
@@ -2942,6 +2943,11 @@
   <action name="actionCriteria3D_Water_content_summary">
    <property name="text">
     <string>Water Content summary...</string>
+   </property>
+  </action>
+  <action name="actionDEM_summary">
+   <property name="text">
+    <string>Digital Elevation Model summary...</string>
    </property>
   </action>
  </widget>

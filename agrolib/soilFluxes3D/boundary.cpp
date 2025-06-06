@@ -28,6 +28,7 @@
 #include <math.h>
 #include <iostream>
 #include <algorithm>
+#include <float.h>
 
 #include "physics.h"
 #include "commonConstants.h"
@@ -247,7 +248,7 @@ void updateConductance()
 
 void updateBoundaryWater (double deltaT)
 {
-    double const EPSILON_RUNOFF = 0.0001;          // [m] 0.1 mm
+    double const EPSILON_RUNOFF = 0.001;          // [m] 1 mm
 
     for (long i = 0; i < myStructure.nrNodes; i++)
     {
@@ -268,7 +269,7 @@ void updateBoundaryWater (double deltaT)
                 {
                     double maxFlow = (hs * nodeList[i].volume_area) / deltaT;         // [m3 s-1] maximum flow available during the time step
                     // Manning equation
-                    double v = (1. / nodeList[i].Soil->roughness) * pow(hs, 2./3.) * sqrt(nodeList[i].boundary->slope);
+                    double v = pow(hs, 2./3.) * sqrt(nodeList[i].boundary->slope) / nodeList[i].Soil->roughness;
                     // on the surface boundaryArea is a side [m]
                     double flow = nodeList[i].boundary->boundaryArea * hs * v;        // [m3 s-1]
                     nodeList[i].boundary->waterFlow = -std::min(flow, maxFlow);
@@ -318,7 +319,7 @@ void updateBoundaryWater (double deltaT)
             {
                 if (myStructure.computeHeat && myStructure.computeHeatVapor)
                 {
-                    long upIndex;
+                    long upIndex = NOLINK;
 
                     double surfaceWaterFraction = 0.;
                     if (nodeList[i].up.index != NOLINK)
@@ -330,7 +331,7 @@ void updateBoundaryWater (double deltaT)
                     double evapFromSoil = computeAtmosphericLatentFlux(i) / WATER_DENSITY * nodeList[i].up.area;
 
                     // surface water
-                    if (surfaceWaterFraction > 0.)
+                    if (surfaceWaterFraction > 0. && upIndex != NOLINK)
                     {
                         double waterVolume = (nodeList[upIndex].H - nodeList[upIndex].z) * nodeList[upIndex].volume_area;
                         double evapFromSurface = computeAtmosphericLatentFluxSurfaceWater(upIndex) / WATER_DENSITY * nodeList[i].up.area;
@@ -341,22 +342,37 @@ void updateBoundaryWater (double deltaT)
                         evapFromSurface = std::max(evapFromSurface, -waterVolume / deltaT);
 
                         if (nodeList[upIndex].boundary != nullptr)
+                        {
                             nodeList[upIndex].boundary->waterFlow = evapFromSurface;
+                        }
                         else
+                        {
                             nodeList[upIndex].Qw += evapFromSurface;
-
+                        }
                     }
 
                     if (evapFromSoil < 0.)
+                    {
                         evapFromSoil = std::max(evapFromSoil, -(theta_from_Se(i) - nodeList[i].Soil->Theta_r) * nodeList[i].volume_area / deltaT);
+                    }
                     else
+                    {
                         evapFromSoil = std::min(evapFromSoil, (nodeList[i].Soil->Theta_s - nodeList[i].Soil->Theta_r) * nodeList[i].volume_area / deltaT);
+                    }
 
                     nodeList[i].boundary->waterFlow = evapFromSoil;
                 }
-            }            
+            }
 
-            nodeList[i].Qw += nodeList[i].boundary->waterFlow;
+            // check epsilon
+            if (abs(nodeList[i].boundary->waterFlow) > DBL_EPSILON)
+            {
+                nodeList[i].Qw += nodeList[i].boundary->waterFlow;
+            }
+            else
+            {
+                nodeList[i].boundary->waterFlow = 0.;
+            }
         }
     }
 
@@ -384,7 +400,7 @@ void updateBoundaryWater (double deltaT)
 
             // maximum Manning flow [m3 s-1]
             double ManningFlow = (nodeList[i].boundary->boundaryArea / myCulvert.roughness)
-                                * sqrt(myCulvert.slope) * pow(hydraulicRadius, 2. / 3.);
+                                * sqrt(myCulvert.slope) * pow(hydraulicRadius, 2./3.);
 
 			// pressure flow - Hazen-Williams equation - roughness = 70
 			double equivalentDiameter = sqrt((4. * myCulvert.width * myCulvert.height) / PI);

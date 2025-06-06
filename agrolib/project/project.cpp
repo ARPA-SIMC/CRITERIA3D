@@ -63,6 +63,11 @@ void Project::initializeProject()
     errorType = ERROR_NONE;
     currentTileMap = "";
 
+    _currentVariable = noMeteoVar;
+    _currentFrequency = noFrequency;
+    _currentDate.setDate(1800,1,1);
+    _currentHour = 12;
+
     nrMeteoPoints = 0;
     meteoPoints = nullptr;
     meteoPointsDbHandler = nullptr;
@@ -77,12 +82,7 @@ void Project::initializeProject()
 
     meteoSettings->initialize();
     quality->initialize();
-
     checkSpatialQuality = true;
-    currentVariable = noMeteoVar;
-    currentFrequency = noFrequency;
-    currentDate.setDate(1800,1,1);
-    currentHour = 12;
 
     parametersSettings = nullptr;
     projectSettings = nullptr;
@@ -917,54 +917,54 @@ QString Project::getProjectPath()
 
 void Project::setCurrentVariable(meteoVariable variable)
 {
-    this->currentVariable = variable;
+    _currentVariable = variable;
 }
 
 meteoVariable Project::getCurrentVariable() const
 {
-    return this->currentVariable;
+    return _currentVariable;
 }
 
 void Project::setCurrentDate(QDate myDate)
 {
-    if (myDate != this->currentDate)
+    if (myDate != _currentDate)
     {
-        this->currentDate = myDate;
+        _currentDate = myDate;
         if (proxyWidget != nullptr)
         {
-            proxyWidget->updateDateTime(currentDate, currentHour);
+            proxyWidget->updateDateTime(_currentDate, _currentHour);
         }
     }
 }
 
 QDate Project::getCurrentDate()
 {
-    return this->currentDate;
+    return _currentDate;
 }
 
 void Project::setCurrentHour(int myHour)
 {
-    this->currentHour = myHour;
+    _currentHour = myHour;
     if (proxyWidget != nullptr)
     {
-        proxyWidget->updateDateTime(currentDate, currentHour);
+        proxyWidget->updateDateTime(_currentDate, _currentHour);
     }
 }
 
 int Project::getCurrentHour()
 {
-    return this->currentHour;
+    return _currentHour;
 }
 
 Crit3DTime Project::getCrit3DCurrentTime()
 {
-    if (currentFrequency == hourly)
+    if (_currentFrequency == hourly)
     {
-        return getCrit3DTime(this->currentDate, this->currentHour);
+        return getCrit3DTime(_currentDate, _currentHour);
     }
     else
     {
-        return getCrit3DTime(this->currentDate, 0);
+        return getCrit3DTime(_currentDate, 0);
     }
 }
 
@@ -977,8 +977,8 @@ QDateTime Project::getCurrentTime()
         myDateTime.setTimeZone(QTimeZone::utc());
     }
 
-    myDateTime.setDate(currentDate);
-    return myDateTime.addSecs(currentHour * HOUR_SECONDS);
+    myDateTime.setDate(_currentDate);
+    return myDateTime.addSecs(_currentHour * HOUR_SECONDS);
 }
 
 
@@ -987,7 +987,7 @@ void Project::getMeteoPointsRange(float& minimum, float& maximum, bool useNotAct
     minimum = NODATA;
     maximum = NODATA;
 
-    if (currentFrequency == noFrequency || currentVariable == noMeteoVar)
+    if (_currentFrequency == noFrequency || _currentVariable == noMeteoVar)
         return;
 
     float v;
@@ -1238,10 +1238,8 @@ bool Project::loadMeteoPointsDB(QString fileName)
 
     // load proxy values for detrending
     logInfoGUI("Read proxy values: " + fileName);
-    if (! readProxyValues())
-    {
-        logWarning("Error reading proxy values");
-    }
+    readProxyValues();
+
     closeLogInfo();
 
     // position with respect to DEM
@@ -1337,10 +1335,7 @@ bool Project::loadAggregationDBAsMeteoPoints(QString fileName)
 
     // load proxy values for detrending
     logInfoGUI("Read proxy values: " + fileName);
-    if (! readProxyValues())
-    {
-        logWarning("Error reading proxy values");
-    }
+    readProxyValues();
 
     //position with respect to DEM
     if (DEM.isLoaded)
@@ -3750,16 +3745,16 @@ void Project::setCrossValidationStatistics(const Crit3DCrossValidationStatistics
 
 frequencyType Project::getCurrentFrequency() const
 {
-    return currentFrequency;
+    return _currentFrequency;
 }
 
 
 void Project::setCurrentFrequency(const frequencyType &value)
 {
-    currentFrequency = value;
+    _currentFrequency = value;
     if (proxyWidget != nullptr)
     {
-        proxyWidget->updateFrequency(currentFrequency);
+        proxyWidget->updateFrequency(_currentFrequency);
     }
 }
 
@@ -4243,7 +4238,7 @@ void Project::showMeteoWidgetPoint(std::string idMeteoPoint, std::string namePoi
             meteoWidgetPoint->setHourlyRange(firstHourly.date(), lastHourly.date());
         }
 
-        meteoWidgetPoint->setCurrentDate(this->currentDate);
+        meteoWidgetPoint->setCurrentDate(_currentDate);
         meteoWidgetPoint->drawMeteoPoint(mp, isAppend);
     }
 
@@ -4362,7 +4357,7 @@ void Project::showMeteoWidgetGrid(const std::string &idCell, const std::string &
         }
 
         meteoWidgetGrid->setMeteoWidgetID(meteoWidgetId);
-        meteoWidgetGrid->setCurrentDate(currentDate);
+        meteoWidgetGrid->setCurrentDate(_currentDate);
         meteoWidgetGridList.append(meteoWidgetGrid);
 
         QObject::connect(meteoWidgetGrid, SIGNAL(closeWidgetGrid(int)), this, SLOT(deleteMeteoWidgetGrid(int)));
@@ -4499,7 +4494,8 @@ void Project::showProxyGraph(int macroAreaNumber)
     }
     if (nSelected == 0)
     {
-        proxyWidget = new Crit3DProxyWidget(&interpolationSettings, meteoPoints, nrMeteoPoints, currentFrequency, currentDate, currentHour, quality, &qualityInterpolationSettings, meteoSettings, &climateParameters, checkSpatialQuality, macroAreaNumber);
+        proxyWidget = new Crit3DProxyWidget(&interpolationSettings, meteoPoints, nrMeteoPoints, _currentFrequency,
+                                            _currentDate, _currentHour, quality, &qualityInterpolationSettings, meteoSettings, &climateParameters, checkSpatialQuality, macroAreaNumber);
     }
     else
     {
@@ -4513,7 +4509,8 @@ void Project::showProxyGraph(int macroAreaNumber)
                 posMpSelected = posMpSelected + 1;
             }
         }
-        proxyWidget = new Crit3DProxyWidget(&interpolationSettings, meteoPointsSelected, nSelected, currentFrequency, currentDate, currentHour, quality, &qualityInterpolationSettings, meteoSettings, &climateParameters, checkSpatialQuality, macroAreaNumber);
+        proxyWidget = new Crit3DProxyWidget(&interpolationSettings, meteoPointsSelected, nSelected, _currentFrequency,
+                                            _currentDate, _currentHour, quality, &qualityInterpolationSettings, meteoSettings, &climateParameters, checkSpatialQuality, macroAreaNumber);
     }
     QObject::connect(proxyWidget, SIGNAL(closeProxyWidget()), this, SLOT(deleteProxyWidget()));
     return;
@@ -4546,7 +4543,9 @@ void Project::showLocalProxyGraph(gis::Crit3DGeoPoint myPoint)
         }
     }
 
-    localProxyWidget = new Crit3DLocalProxyWidget(myUtm.x, myUtm.y, myZDEM, myZGrid, this->gisSettings, &interpolationSettings, meteoPoints, nrMeteoPoints, currentVariable, currentFrequency, currentDate, currentHour, quality, &qualityInterpolationSettings, meteoSettings, &climateParameters, checkSpatialQuality);
+    localProxyWidget = new Crit3DLocalProxyWidget(myUtm.x, myUtm.y, myZDEM, myZGrid, this->gisSettings, &interpolationSettings,
+                                                  meteoPoints, nrMeteoPoints, _currentVariable, _currentFrequency,
+                                                  _currentDate, _currentHour, quality, &qualityInterpolationSettings, meteoSettings, &climateParameters, checkSpatialQuality);
     return;
 }
 
@@ -4813,7 +4812,7 @@ bool Project::deleteMeteoPointsData(const QList<QString>& pointList)
         return true;
     }
 
-    DialogPointDeleteData dialogPointDelete(currentDate);
+    DialogPointDeleteData dialogPointDelete(_currentDate);
     if (dialogPointDelete.result() != QDialog::Accepted)
         return true;
 
