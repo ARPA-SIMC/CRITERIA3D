@@ -1046,7 +1046,7 @@ int DLL_EXPORT __STDCALL setHydraulicProperties(int waterRetentionCurve,
             sumCurrentTime += computeStep(ResidualTime);
         }
 
-        if (myStructure.computeWater) updateBalanceWaterWholePeriod();
+        if (myStructure.computeWater) updateBalanceWaterWholePeriod();  // todo check
         if (myStructure.computeHeat) updateBalanceHeatWholePeriod();
     }
 
