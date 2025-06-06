@@ -128,7 +128,7 @@
         double storageHeat;
         double sinkSourceHeat;
         double heatMBE = 0.0;
-        double heatMBR = 1.0;
+        double heatMBR = 0.0;
     };
 
     struct Tculvert
