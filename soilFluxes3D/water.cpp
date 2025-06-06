@@ -135,7 +135,7 @@ double infiltration(long sup, long inf, TlinkedNode *link, double deltaT)
         double soilH = (nodeList[inf].H + nodeList[inf].oldH) * 0.5;
 
         // surface avg water content [m]
-        double surfaceWater = MAXVALUE(surfaceH - nodeList[sup].z, 0);              // [m]
+        double surfaceWater = std::max(surfaceH - nodeList[sup].z, 0.);              // [m]
 
         // precipitation: positive
         // evaporation: negative
@@ -165,7 +165,7 @@ double infiltration(long sup, long inf, TlinkedNode *link, double deltaT)
             }
         }
 
-        double k = MINVALUE(meanK, maxK);
+        double k = std::min(meanK, maxK);
         return (k * link->area) / cellDistance;
     }
     else
@@ -449,7 +449,7 @@ bool computeWater(double maxTime, double *acceptedTime)
 
      while (!isStepOK)
      {
-        *acceptedTime = MINVALUE(myParameters.current_delta_t, maxTime);
+        *acceptedTime = std::min(myParameters.current_delta_t, maxTime);
 
         /*! save the instantaneous H values - Prepare the solutions vector (X = H) */
         for (long n = 0; n < myStructure.nrNodes; n++)

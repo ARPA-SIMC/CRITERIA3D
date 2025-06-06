@@ -30,6 +30,7 @@
 #include <algorithm>
 
 #include "commonConstants.h"
+#include "basicMath.h"
 #include "header/types.h"
 #include "header/balance.h"
 #include "header/soilPhysics.h"
@@ -49,14 +50,14 @@ static bool _isHalfTimeStepForced = false;
 inline void doubleTimeStep()
 {
     myParameters.current_delta_t *= 2.0;
-    myParameters.current_delta_t = MINVALUE(myParameters.current_delta_t, myParameters.delta_t_max);
+    myParameters.current_delta_t = std::min(myParameters.current_delta_t, myParameters.delta_t_max);
 }
 
 
 void halveTimeStep()
 {
     myParameters.current_delta_t /= 2.0;
-    myParameters.current_delta_t = MAXVALUE(myParameters.current_delta_t, myParameters.delta_t_min);
+    myParameters.current_delta_t = std::max(myParameters.current_delta_t, myParameters.delta_t_min);
 }
 
 
@@ -153,11 +154,11 @@ void computeMassBalance(double deltaT)
 
     // minimum reference water storage [m3] as % of current storage
     double minRefWaterStorage = balanceCurrentTimeStep.storageWater * std::min(0.0001, myParameters.MBRThreshold);
-    minRefWaterStorage = MAXVALUE(minRefWaterStorage, 0.001);        // [m3] minimum 1 liter
+    minRefWaterStorage = std::max(minRefWaterStorage, 0.001);        // [m3] minimum 1 liter
 
     // reference water for computation of mass balance ratio
     // when the water sink/source is low, use the reference water storage
-    double referenceWater = MAXVALUE(fabs(balanceCurrentTimeStep.sinkSourceWater), minRefWaterStorage);   // [m3]
+    double referenceWater = std::max(fabs(balanceCurrentTimeStep.sinkSourceWater), minRefWaterStorage);   // [m3]
 
     balanceCurrentTimeStep.waterMBR = balanceCurrentTimeStep.waterMBE / referenceWater;
 }
@@ -313,19 +314,18 @@ bool waterBalance(double deltaT, int approxNr)
 void updateBalanceWaterWholePeriod()
 {
     /*! update the flows in the balance (balanceWholePeriod) */
-    balanceWholePeriod.sinkSourceWater  += balanceCurrentPeriod.sinkSourceWater;
-
-    double deltaStoragePeriod = balanceCurrentTimeStep.storageWater - balanceCurrentPeriod.storageWater;
-
-    double deltaStorageHistorical = balanceCurrentTimeStep.storageWater - balanceWholePeriod.storageWater;
+    balanceWholePeriod.sinkSourceWater += balanceCurrentPeriod.sinkSourceWater;
 
     /*! compute waterMBE and waterMBR */
-    balanceCurrentPeriod.waterMBE = fabs(deltaStoragePeriod - balanceCurrentPeriod.sinkSourceWater);
-    if ((balanceWholePeriod.storageWater == 0.) && (balanceWholePeriod.sinkSourceWater == 0.)) balanceWholePeriod.waterMBR = 1.;
-    else if (balanceCurrentTimeStep.storageWater > fabs(balanceWholePeriod.sinkSourceWater))
-        balanceWholePeriod.waterMBR = balanceCurrentTimeStep.storageWater / (balanceWholePeriod.storageWater + balanceWholePeriod.sinkSourceWater);
-    else
-        balanceWholePeriod.waterMBR = deltaStorageHistorical / balanceWholePeriod.sinkSourceWater;
+    double dStoragePeriod = balanceCurrentTimeStep.storageWater - balanceCurrentPeriod.storageWater;
+    balanceCurrentPeriod.waterMBE = dStoragePeriod - balanceCurrentPeriod.sinkSourceWater;
+
+    double dStorageHistorical = balanceCurrentTimeStep.storageWater - balanceWholePeriod.storageWater;
+    balanceWholePeriod.waterMBE = dStorageHistorical - balanceWholePeriod.sinkSourceWater;
+
+    /*! reference water volume [m3] minimum 1 liter */
+    double refWater = std::max(balanceWholePeriod.sinkSourceWater, 0.001);
+    balanceWholePeriod.waterMBR = balanceWholePeriod.waterMBE / refWater;
 
     /*! update storageWater in balanceCurrentPeriod */
     balanceCurrentPeriod.storageWater = balanceCurrentTimeStep.storageWater;

@@ -53,6 +53,7 @@ double arithmeticMean(double v1, double v2)
     return (v1 + v2) * 0.5;
 }
 
+// assumes that the two values ​​have the same sign
 double logarithmicMean(double v1, double v2)
 {
     if (v1 == v2)
@@ -65,6 +66,7 @@ double logarithmicMean(double v1, double v2)
     }
 }
 
+// assumes that the two values ​​have the same sign
 double geometricMean(double v1, double v2)
 {
     double sign = v1 / fabs(v1);
