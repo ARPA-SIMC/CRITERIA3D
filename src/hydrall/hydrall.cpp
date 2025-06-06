@@ -89,7 +89,7 @@ Crit3DHydrallPlant::Crit3DHydrallPlant()
     fineRootLongevity = 1; //[yr]
     foliageDensity = 0.1; //[kgDM m-3]
     woodDensity = RHOS;
-    specificLeafArea = NODATA;
+    specificLeafArea = NODATA; //[m2 kg-1]
     psiLeaf = NODATA;
     psiSoilCritical = NODATA;
     psiLeafMinimum = NODATA; //[MPa]
@@ -1124,7 +1124,8 @@ void Crit3DHydrall::updateCriticalPsi()
 {
     double averageSoilWaterPotential = statistics::weighedMean(soil.nodeThickness,soil.waterPotential) * 0.009804139432; // Converted to MPa
     cavitationConditions();
-    plant.psiLeaf = averageSoilWaterPotential - (0.01 * plant.height) - (totalTranspirationRate/plant.leafAreaIndexCanopy * MH2O/1000. * plant.hydraulicResistancePerFoliageArea);
+    double lastTerm = (totalTranspirationRate/plant.leafAreaIndexCanopy * MH2O/1000. * plant.hydraulicResistancePerFoliageArea);
+    plant.psiLeaf = averageSoilWaterPotential - (plant.height * 0.009804139432 ) - (totalTranspirationRate/plant.leafAreaIndexCanopy * MH2O/1000. * plant.hydraulicResistancePerFoliageArea);
 
     if (plant.psiLeaf < plant.psiLeafMinimum || isEqual(plant.psiLeafMinimum,NODATA))
     {
@@ -1449,9 +1450,8 @@ void Crit3DHydrall::optimal()
     {
         allocationCoefficientFoliageOld = 1;
         increment = incrementStart / std::pow(10, j);
-        allocationCoefficient.toFoliage = 1;
 
-        while(! sol && allocationCoefficient.toFoliage > 0)
+        for (allocationCoefficient.toFoliage = 1; allocationCoefficient.toFoliage > 0; allocationCoefficient.toFoliage -= increment)
         {
             rootfind(allocationCoefficient.toFoliage, allocationCoefficient.toFineRoots, allocationCoefficient.toSapwood, sol);
 
@@ -1459,8 +1459,6 @@ void Crit3DHydrall::optimal()
                 break;
 
             allocationCoefficientFoliageOld = allocationCoefficient.toFoliage;
-            allocationCoefficient.toFoliage = 1 - increment;
-
         }
         if (sol)
             break;
@@ -1536,7 +1534,9 @@ void Crit3DHydrall::rootfind(double &allf, double &allr, double &alls, bool &sol
 
     //resulting minimum leaf water potential
 
-    plant.psiLeafMinimum = plant.psiSoilCritical - (0.01 * plant.height * 9.806650e-5)-(plant.transpirationCritical * MH2O/1000. * plant.hydraulicResistancePerFoliageArea);
+    //plant.psiSoilCritical = PSITHR - 0.5;
+    plant.psiLeafMinimum = plant.psiSoilCritical - (plant.height)* 0.009804139432 -(plant.transpirationCritical * MH2O/1000. * plant.hydraulicResistancePerFoliageArea);
+    //plant.psiLeafMinimum = plant.psiSoilCritical - (0.01 * plant.height * 9.806650e-5)-(plant.transpirationCritical * MH2O/1000. * plant.hydraulicResistancePerFoliageArea);
     //check if given value of ALLF satisfies optimality constraint
     if(plant.psiLeafMinimum >= PSITHR)
         sol = true;
