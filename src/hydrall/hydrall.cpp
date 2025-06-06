@@ -984,7 +984,7 @@ void Crit3DHydrall::carbonWaterFluxesProfile()
                                                                  sunlit.oxygenMichaelisMentenConstant,sunlit.darkRespiration, sunlit.isothermalNetRadiation,
                                                                  parameterWangLeuning.alpha * soil.stressCoefficient[i], sunlit.maximalCarboxylationRate,
                                                                  &(sunlit.assimilation), &(sunlit.stomatalConductance),
-                                                                 &(sunlit.transpiration));
+                                                                 &(sunlit.transpiration), sunlit.leafTemperature);
             }
 
             //treeAssimilationRate += sunlit.assimilation * soil.rootDensity[i] ;
@@ -995,7 +995,7 @@ void Crit3DHydrall::carbonWaterFluxesProfile()
                                                              shaded.oxygenMichaelisMentenConstant,shaded.darkRespiration, shaded.isothermalNetRadiation,
                                                              parameterWangLeuning.alpha * soil.stressCoefficient[i], shaded.maximalCarboxylationRate,
                                                              &(shaded.assimilation), &(shaded.stomatalConductance),
-                                                             &(shaded.transpiration));
+                                                             &(shaded.transpiration), shaded.leafTemperature);
             treeAssimilationRate += ( shaded.assimilation + sunlit.assimilation) * soil.rootDensity[i] ; //canopy gross assimilation (mol m-2 s-1)
         }
 
@@ -1006,7 +1006,7 @@ void Crit3DHydrall::carbonWaterFluxesProfile()
 
 
 void Crit3DHydrall::photosynthesisKernel(double COMP,double GAC,double GHR,double GSCD,double J,double KC,double KO
-                                            ,double RD,double RNI,double STOMWL,double VCmax,double *ASS,double *GSC,double *TR)
+                                            ,double RD,double RNI,double STOMWL,double VCmax,double *ASS,double *GSC,double *TR, double T)
 {
 // taken from Hydrall Model, Magnani UNIBO
 // daily time computation
@@ -1018,6 +1018,9 @@ void Crit3DHydrall::photosynthesisKernel(double COMP,double GAC,double GHR,doubl
     double ASSOLD, deltaAssimilation, myTolerance; //, myPreviousDelta;
     int I,Imax ;
     double myStromalCarbonDioxideOld;
+
+    //leaf surface relative humidity conversion factor from VPD
+
 
 
     Imax = 10000 ;
