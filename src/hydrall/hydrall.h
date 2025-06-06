@@ -392,7 +392,7 @@
         void upscale();
         inline double acclimationFunction(double Ha , double Hd, double leafTemp, double entropicTerm,double optimumTemp);
         void photosynthesisKernel(double COMP,double GAC,double GHR,double GSCD,double J,double KC,double KO
-                                                  ,double RD,double RNI,double STOMWL,double VCmax,double *ASS,double *GSC,double *TR);
+                                                  ,double RD,double RNI,double STOMWL,double VCmax,double *ASS,double *GSC,double *TR, double T);
         void carbonWaterFluxesProfile();
         void cumulatedResults();
         double plantRespiration();
