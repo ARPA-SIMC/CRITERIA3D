@@ -189,7 +189,10 @@ void Project::setProxyDEM()
 
         // if no alternative DEM defined and project DEM loaded, use it for elevation proxy
         if (proxyHeight->getGridName() == "" && DEM.isLoaded)
+        {
             proxyHeight->setGrid(&DEM);
+            proxyHeight->setGridName(getCompleteFileName(demFileName, PATH_DEM).toStdString());
+        }
     }
 
     if (indexQuality != NODATA)
@@ -3084,13 +3087,14 @@ bool Project::interpolationDemGlocalDetrending(meteoVariable myVar, const Crit3D
                 {
                     row = unsigned(areaCells[cellIndex]/DEM.header->nrCols);
                     col = int(areaCells[cellIndex])%DEM.header->nrCols;
+
                     z = DEM.value[row][col];
 
                     if (! isEqual(z, myHeader.flag))
                     {
                         gis::getUtmXYFromRowCol(myHeader, row, col, &x, &y);
 
-                        if (! getProxyValuesXY(x, y, &interpolationSettings, proxyValues))
+                        if (! getSignificantProxyValuesXY(x, y, &interpolationSettings, proxyValues))
                         {
                             myRaster->value[row][col] = NODATA;
                             continue;

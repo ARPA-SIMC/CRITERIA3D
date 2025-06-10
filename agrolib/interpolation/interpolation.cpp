@@ -2590,6 +2590,35 @@ bool getProxyValuesXY(float x, float y, Crit3DInterpolationSettings* mySettings,
     return proxyComplete;
 }
 
+bool getSignificantProxyValuesXY(float x, float y, Crit3DInterpolationSettings* mySettings, std::vector<double> &myValues)
+{
+    float myValue;
+    gis::Crit3DRasterGrid* proxyGrid;
+    bool proxyComplete = true;
+
+    Crit3DProxyCombination myCombination = mySettings->getCurrentCombination();
+
+    for (unsigned int i=0; i < mySettings->getProxyNr(); i++)
+    {
+        myValues[i] = NODATA;
+
+        if (myCombination.isProxyActive(i) && myCombination.isProxySignificant(i))
+        {
+            proxyGrid = mySettings->getProxy(i)->getGrid();
+            if (proxyGrid != nullptr && proxyGrid->isLoaded)
+            {
+                myValue = gis::getValueFromXY(*proxyGrid, x, y);
+                if (myValue != proxyGrid->header->flag)
+                    myValues[i] = myValue;
+                else
+                    proxyComplete = false;
+            }
+        }
+    }
+
+    return proxyComplete;
+}
+
 
 float getFirstIntervalHeightValue(std::vector <Crit3DInterpolationDataPoint> &myPoints, bool useLapseRateCode)
 {
