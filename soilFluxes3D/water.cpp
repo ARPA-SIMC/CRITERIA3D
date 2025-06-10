@@ -65,7 +65,7 @@ double getWaterExchange(long i, TlinkedNode *link, double deltaT)
  * \brief runoff
  * Manning equation
  * Qij=((Hi+Hj-zi-zj)/2)^(5/3) * Sij / roughness * sqrt(abs(Hi-Hj)/Lij) * sgn(Hi-Hj)
- * \param link  linkedNode pointer
+ * \param link      linked node pointer
  * \param deltaT    [s]
  */
 double runoff(long i, long j, TlinkedNode *link, double deltaT, unsigned approximationNr)
