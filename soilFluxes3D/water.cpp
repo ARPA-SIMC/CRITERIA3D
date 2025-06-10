@@ -117,7 +117,7 @@ double runoff(long i, long j, TlinkedNode *link, double deltaT, unsigned approxi
 
     // Manning equation
     double v = pow(Hs, 2./3.) * sqrt(slope) / roughness;                // [m s-1]
-    CourantWater = std::max(CourantWater, 0.1 * v * deltaT / cellDistance);
+    CourantWater = std::max(CourantWater, 0.5 * v * deltaT / cellDistance);
 
     double flowArea = link->area * Hs;                                  // [m2]
     return v * flowArea / dH;
