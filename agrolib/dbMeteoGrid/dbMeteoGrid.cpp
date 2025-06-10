@@ -2380,7 +2380,7 @@ bool Crit3DMeteoGridDbHandler::loadGridAllMonthlyData(QString &errorStr, QDate f
     float value;
 
     QString statement = QString("SELECT * FROM `%1` WHERE `PragaYear` BETWEEN %2 AND %3 ORDER BY `PointCode`").arg(table).arg(firstDate.year()).arg(lastDate.year());
-    if( !qry.exec(statement) )
+    if(! qry.exec(statement) )
     {
         errorStr = qry.lastError().text();
         return false;
