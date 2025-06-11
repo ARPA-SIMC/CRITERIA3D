@@ -392,7 +392,7 @@ bool waterFlowComputation(double deltaT)
         threadVector.clear();
 
         // check Courant
-        if (CourantWater > 1.01 && deltaT > myParameters.delta_t_min)
+        if (CourantWater > 1. && deltaT > myParameters.delta_t_min)
         {
             myParameters.current_delta_t = std::max(myParameters.current_delta_t / CourantWater, myParameters.delta_t_min);
             if (myParameters.current_delta_t > 1.)
