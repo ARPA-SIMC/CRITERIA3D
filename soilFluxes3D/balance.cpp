@@ -144,22 +144,22 @@ double sumWaterFlow(double deltaT)
  */
 void computeMassBalance(double deltaT)
 {
-    balanceCurrentTimeStep.storageWater = computeTotalWaterContent();       // [m3]
+    balanceCurrentTimeStep.storageWater = computeTotalWaterContent();                               // [m3]
 
     double dStorage = balanceCurrentTimeStep.storageWater - balancePreviousTimeStep.storageWater;   // [m3]
 
-    balanceCurrentTimeStep.sinkSourceWater = sumWaterFlow(deltaT);          // [m3]
+    balanceCurrentTimeStep.sinkSourceWater = sumWaterFlow(deltaT);                                  // [m3]
 
     balanceCurrentTimeStep.waterMBE = dStorage - balanceCurrentTimeStep.sinkSourceWater;            // [m3]
 
     // minimum reference water storage [m3] as % of current storage
-    double timePercentage = 0.1 * std::max(deltaT, 1.) / HOUR_SECONDS;
+    double timePercentage = 0.01 * std::max(deltaT, 1.) / HOUR_SECONDS;
     double minRefWaterStorage = balanceCurrentTimeStep.storageWater * timePercentage;
-    minRefWaterStorage = std::max(minRefWaterStorage, 0.001);        // [m3] minimum 1 liter
+    minRefWaterStorage = std::max(minRefWaterStorage, 0.001);                                       // [m3] minimum 1 liter
 
-    // reference water for computation of mass balance ratio
-    // when the water sink/source is low, use the reference water storage
-    double referenceWater = std::max(fabs(balanceCurrentTimeStep.sinkSourceWater), minRefWaterStorage);   // [m3]
+    // reference water for computation of mass balance error ratio
+    // when the water sink/source is too low, use the reference water storage
+    double referenceWater = std::max(fabs(balanceCurrentTimeStep.sinkSourceWater), minRefWaterStorage);     // [m3]
 
     balanceCurrentTimeStep.waterMBR = balanceCurrentTimeStep.waterMBE / referenceWater;
 }
