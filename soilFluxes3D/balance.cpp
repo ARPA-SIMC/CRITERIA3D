@@ -261,7 +261,7 @@ bool waterBalance(double deltaT, int approxNr)
         acceptStep(deltaT);
 
         // best case: system is stable, try to increase time step
-        if (CourantWater < 0.9 && approxNr <= 2 && MBRerror < (myParameters.MBRThreshold * 0.5))
+        if (CourantWater < 0.8 && approxNr <= 3 && MBRerror < (myParameters.MBRThreshold * 0.5))
         {
             if (CourantWater < 0.5)
             {
@@ -289,7 +289,7 @@ bool waterBalance(double deltaT, int approxNr)
 
     // system is unstable or last approximation
     int lastApproximation = myParameters.maxApproximationsNumber-1;
-    if (MBRerror > (_bestMBRerror * 2.0) || approxNr == lastApproximation)
+    if (MBRerror > (_bestMBRerror * 3.0) || approxNr == lastApproximation)
     {
         if (deltaT > myParameters.delta_t_min)
         {
