@@ -482,14 +482,7 @@ bool Project3D::setAccuracy()
     // Mass Balance Ratio precision (digit at which error is accepted)
     int digitMBR = waterFluxesParameters.modelAccuracy;
 
-    int myResult = soilFluxes3D::setNumericalParameters(minimumDeltaT, 3600, 100, 10, 8, digitMBR);
-
-    // check result
-    if (isCrit3dError(myResult, errorString))
-    {
-        errorString = "setAccuracy: " + errorString;
-        return false;
-    }
+    soilFluxes3D::setNumericalParameters(minimumDeltaT, 3600, 100, 10, 8, digitMBR);
 
     // parallel computing
     waterFluxesParameters.numberOfThreads = soilFluxes3D::setThreads(waterFluxesParameters.numberOfThreads);
