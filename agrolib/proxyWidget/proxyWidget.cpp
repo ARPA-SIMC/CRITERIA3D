@@ -14,8 +14,14 @@
 
 
 
-Crit3DProxyWidget::Crit3DProxyWidget(Crit3DInterpolationSettings* _interpolationSettings, Crit3DMeteoPoint *meteoPoints, int nrMeteoPoints, frequencyType currentFrequency, QDate currentDate, int currentHour, Crit3DQuality *quality, Crit3DInterpolationSettings* SQinterpolationSettings, Crit3DMeteoSettings *meteoSettings, Crit3DClimateParameters *climateParam, bool checkSpatialQuality, int macroAreaNumber)
-    :_interpolationSettings(_interpolationSettings), _meteoPoints(meteoPoints), _nrMeteoPoints(nrMeteoPoints), _currentFrequency(currentFrequency), _currentDate(currentDate), _currentHour(currentHour), _quality(quality), _SQinterpolationSettings(SQinterpolationSettings), _meteoSettings(meteoSettings), _climateParam(climateParam), _checkSpatialQuality(checkSpatialQuality), _macroAreaNumber(macroAreaNumber)
+Crit3DProxyWidget::Crit3DProxyWidget(Crit3DInterpolationSettings* _interpolationSettings, Crit3DMeteoPoint *meteoPoints, int nrMeteoPoints,
+                                     frequencyType currentFrequency, QDate currentDate, int currentHour, Crit3DQuality *quality,
+                                     Crit3DInterpolationSettings* SQinterpolationSettings, Crit3DMeteoSettings *meteoSettings,
+                                     Crit3DClimateParameters *climateParam, bool checkSpatialQuality, int macroAreaNumber)
+    :_interpolationSettings(_interpolationSettings), _meteoPoints(meteoPoints), _nrMeteoPoints(nrMeteoPoints),
+    _currentFrequency(currentFrequency), _currentDate(currentDate), _currentHour(currentHour), _quality(quality),
+    _SQinterpolationSettings(SQinterpolationSettings), _meteoSettings(meteoSettings), _checkSpatialQuality(checkSpatialQuality),
+    _macroAreaNumber(macroAreaNumber), _climateParam(climateParam)
 {
     this->setWindowTitle("Proxy analysis over " + QString::number(nrMeteoPoints) +  " points");
     this->resize(1024, 700);
@@ -576,7 +582,7 @@ void Crit3DProxyWidget::addMacroAreaLR()
     chartView->cleanModelLapseRate();
     r2.clear();
     lapseRate.clear();
-    if (_macroAreaNumber < _interpolationSettings->getMacroAreas().size())
+    if (_macroAreaNumber < (int)_interpolationSettings->getMacroAreas().size())
     {
         std::string errorStr;
         setMultipleDetrendingHeightTemperatureRange(_interpolationSettings);

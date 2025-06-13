@@ -467,7 +467,7 @@ bool Crit3DProject::updateRothC()
 
                     double SWC = 0;
 
-                    for (int i = 0; i < hydrallModel.soil.waterContent.size(); i++)
+                    for (int i = 0; i < (int)hydrallModel.soil.waterContent.size(); i++)
                     {
                         SWC += hydrallModel.soil.waterContent[i]*hydrallModel.soil.nodeThickness[i]*1000;
                     }
@@ -526,7 +526,7 @@ void Crit3DProject::assignETreal()
                 totalEvaporation += evapFlow;                                               // [m3 h-1]
 
                 int cropIndex = getLandUnitIndexRowCol(row, col);
-                if (cropIndex != NODATA && cropList.size() > cropIndex)
+                if (cropIndex != NODATA && (int)cropList.size() > cropIndex)
                 {
                     Crit3DCrop currentCrop = cropList[cropIndex];
                     double actualTransp = 0;
@@ -577,10 +577,13 @@ void Crit3DProject::assignPrecipitation()
     double area = DEM.header->cellSize * DEM.header->cellSize;
 
     gis::Crit3DRasterGrid *snowFallMap, *snowMeltMap;
+    bool isSnowOk = false;
     if (processes.computeSnow)
     {
         snowFallMap = snowMaps.getSnowFallMap();
         snowMeltMap = snowMaps.getSnowMeltMap();
+        if (snowFallMap != nullptr && snowMeltMap != nullptr)
+            isSnowOk = true;
     }
 
     // precipitation
@@ -595,7 +598,7 @@ void Crit3DProject::assignPrecipitation()
                 if (! isEqual(prec, hourlyMeteoMaps->mapHourlyPrec->header->flag))
                 {
                     float liquidWater = prec;
-                    if (processes.computeSnow)
+                    if (processes.computeSnow && isSnowOk)
                     {
                         float currentSnowFall = snowFallMap->value[row][col];
                         float currentSnowMelt = snowMeltMap->value[row][col];
@@ -1697,9 +1700,6 @@ bool Crit3DProject::updateLast30DaysTavg()
     {
         for (long col = 0; col < dailyTminMap.header->nrCols; col++)
         {
-            float testTemp;
-            testTemp = dailyTmaxMap.value[row][col];
-            testTemp = dailyTminMap.value[row][col];
             hydrallMaps.mapLast30DaysTavg->value[row][col] = (29./30.)*hydrallMaps.mapLast30DaysTavg->value[row][col] + (dailyTmaxMap.value[row][col] + dailyTminMap.value[row][col])/30;
         }
     }
@@ -2271,7 +2271,7 @@ bool Crit3DProject::loadWaterPotentialState(QString waterPath)
     }
 
     std::vector<int> depthList;
-    for (unsigned i = 0; i < fileList.size(); i++)
+    for (unsigned i = 0; i < (unsigned)fileList.size(); i++)
     {
         QString fileName = fileList.at(i).fileName();
         QString leftFileName = fileName.left(fileName.size() - 4);
@@ -2486,28 +2486,28 @@ bool Crit3DProject::writeOutputPointsTables()
             }
             if (processes.computeWater)
             {
-                for (int l = 0; l < waterContentDepth.size(); l++)
+                for (int l = 0; l < (int)waterContentDepth.size(); l++)
                 {
                     int depth_cm = waterContentDepth[l];
                     if (! outputPointsDbHandler->addCriteria3DColumn(tableName, volumetricWaterContent, depth_cm, errorString))
                         return false;
                 }
 
-                for (int l = 0; l < waterPotentialDepth.size(); l++)
+                for (int l = 0; l < (int)waterPotentialDepth.size(); l++)
                 {
                     int depth_cm = waterPotentialDepth[l];
                     if (! outputPointsDbHandler->addCriteria3DColumn(tableName, waterMatricPotential, depth_cm, errorString))
                         return false;
                 }
 
-                for (int l = 0; l < degreeOfSaturationDepth.size(); l++)
+                for (int l = 0; l < (int)degreeOfSaturationDepth.size(); l++)
                 {
                     int depth_cm = degreeOfSaturationDepth[l];
                     if (! outputPointsDbHandler->addCriteria3DColumn(tableName, degreeOfSaturation, depth_cm, errorString))
                         return false;
                 }
 
-                for (int l = 0; l < factorOfSafetyDepth.size(); l++)
+                for (int l = 0; l < (int)factorOfSafetyDepth.size(); l++)
                 {
                     int depth_cm = factorOfSafetyDepth[l];
                     if (! outputPointsDbHandler->addCriteria3DColumn(tableName, factorOfSafety, depth_cm, errorString))
@@ -2625,7 +2625,7 @@ bool Crit3DProject::writeOutputPointsData()
 void Crit3DProject::appendCriteria3DOutputValue(criteria3DVariable myVar, int row, int col,
                                                 const std::vector<int> &depthList, std::vector<float> &outputList)
 {
-    for (int l = 0; l < depthList.size(); l++)
+    for (int l = 0; l < (int)depthList.size(); l++)
     {
         float depth = depthList[l] * 0.01;                          // [cm] -> [m]
         int layerIndex = getSoilLayerIndex(depth);

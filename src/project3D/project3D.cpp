@@ -2497,7 +2497,7 @@ QString getOutputNameHourly(meteoVariable hourlyVar, QDateTime myTime)
 }
 
 
-bool readHourlyMap(meteoVariable myVar, QString hourlyPath, QDateTime myTime, QString myArea, gis::Crit3DRasterGrid* myGrid)
+bool readHourlyMap(meteoVariable myVar, QString hourlyPath, QDateTime myTime, gis::Crit3DRasterGrid* myGrid)
 {
     QString fileName = hourlyPath + getOutputNameHourly(myVar, myTime);
     std::string error;
@@ -2509,7 +2509,7 @@ bool readHourlyMap(meteoVariable myVar, QString hourlyPath, QDateTime myTime, QS
 }
 
 
-float readDataHourly(meteoVariable myVar, QString hourlyPath, QDateTime myTime, QString myArea, int row, int col)
+float readDataHourly(meteoVariable myVar, QString hourlyPath, QDateTime myTime, int row, int col)
 {
     gis::Crit3DRasterGrid* myGrid = new gis::Crit3DRasterGrid();
     QString fileName = hourlyPath + getOutputNameHourly(myVar, myTime);

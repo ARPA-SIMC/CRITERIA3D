@@ -223,18 +223,6 @@ namespace radiation
         return output;
     }
 
-    void readLinke(Crit3DRadiationSettings* radSettings, std::vector<float> &linkeMonthly)
-    {
-        switch(radSettings->getLinkeMode())
-        {
-
-        case PARAM_MODE_MONTHLY:
-            linkeMonthly = radSettings->getLinkeMonthly();
-
-            break;
-        }
-        return;
-    }
 
     float readLinke(Crit3DRadiationSettings* radSettings, int row, int col)
     {

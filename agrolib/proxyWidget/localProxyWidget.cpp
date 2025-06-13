@@ -360,7 +360,7 @@ void Crit3DLocalProxyWidget::plot()
     {
 
         areaCode = gis::getValueFromXY(*interpolationSettings->getMacroAreasMap(), x, y);
-        if (areaCode < interpolationSettings->getMacroAreas().size())
+        if (areaCode < (int)interpolationSettings->getMacroAreas().size())
         {
             Crit3DMacroArea myArea = interpolationSettings->getMacroAreas()[areaCode];
             std::vector<int> stations = myArea.getMeteoPoints();
@@ -372,9 +372,9 @@ void Crit3DLocalProxyWidget::plot()
                                                 interpolationSettings, meteoSettings, climateParam,
                                                 outInterpolationPoints, checkSpatialQuality, errorStdStr);
 
-                for (int k = 0; k < stations.size(); k++)
+                for (int k = 0; k < (int)stations.size(); k++)
                 {
-                    for (int j = 0; j < outInterpolationPoints.size(); j++)
+                    for (int j = 0; j < (int)outInterpolationPoints.size(); j++)
                         if (outInterpolationPoints[j].index == stations[k])
                         {
                             subsetInterpolationPoints.push_back(outInterpolationPoints[j]);
@@ -390,9 +390,9 @@ void Crit3DLocalProxyWidget::plot()
                                                 interpolationSettings, meteoSettings, climateParam,
                                                 outInterpolationPoints, checkSpatialQuality, errorStdStr);
 
-                for (int k = 0; k < stations.size(); k++)
+                for (int k = 0; k < (int)stations.size(); k++)
                 {
-                    for (int j = 0; j < outInterpolationPoints.size(); j++)
+                    for (int j = 0; j < (int)outInterpolationPoints.size(); j++)
                         if (outInterpolationPoints[j].index == stations[k])
                         {
                             subsetInterpolationPoints.push_back(outInterpolationPoints[j]);
