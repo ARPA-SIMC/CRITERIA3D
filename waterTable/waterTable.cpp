@@ -15,8 +15,8 @@ WaterTable::WaterTable()
 
 WaterTable::WaterTable(const std::vector<float> &inputTMin, const std::vector<float> &inputTMax, const std::vector<float> &inputPrec,
                        const QDate &firstMeteoDate, const QDate &lastMeteoDate, const Crit3DMeteoSettings &meteoSettings)
-    : _inputTMin(inputTMin), _inputTMax(inputTMax), _inputPrec(inputPrec),
-    _firstMeteoDate(firstMeteoDate), _lastMeteoDate(lastMeteoDate), _meteoSettings(meteoSettings)
+    : _meteoSettings(meteoSettings), _firstMeteoDate(firstMeteoDate), _lastMeteoDate(lastMeteoDate),
+    _inputTMin(inputTMin), _inputTMax(inputTMax), _inputPrec(inputPrec)
 {
     initializeWaterTable();
 }
@@ -179,7 +179,7 @@ bool WaterTable::computeWTClimate()
 
 float WaterTable::getHindcast(int index) const
 {
-    if (index >= _hindcastSeries.size())
+    if (index >= (int)_hindcastSeries.size())
     {
         return NODATA;
     }
@@ -190,7 +190,7 @@ float WaterTable::getHindcast(int index) const
 
 float WaterTable::getInterpolatedData(int index) const
 {
-    if (index >= _interpolationSeries.size())
+    if (index >= (int)_interpolationSeries.size())
     {
         return NODATA;
     }

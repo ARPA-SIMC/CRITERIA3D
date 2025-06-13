@@ -19,7 +19,6 @@
 #include "dialogSummary.h"
 #include "waterTableWidget.h"
 #include "utilities.h"
-#include "furtherMathFunctions.h"
 
 
 #include <iostream>
@@ -2402,10 +2401,10 @@ bool Project::loadGlocalWeightMaps(std::vector<Crit3DMacroArea> &myAreas, bool i
 
     unsigned nrAreasWithCells = 0;
 
-    for (int i = 0; i < myAreas.size(); i++)
+    for (int i = 0; i < (int)myAreas.size(); i++)
     {
         //se ci sono già celle caricate di DEM o grid, salvale
-        if (existingAreas.size() > i)
+        if (i < (int)existingAreas.size())
         {
             myAreas[i].setAreaCellsDEM(existingAreas[i].getAreaCellsDEM());
             myAreas[i].setAreaCellsGrid(existingAreas[i].getAreaCellsGrid());
@@ -2508,7 +2507,7 @@ bool Project::loadGlocalStationsCsv(QString fileName, std::vector<std::vector<st
                 temp.push_back(line[i].toStdString());
             }
 
-            if (areaPoints.empty() || areaNr > (areaPoints.size() - 1))
+            if (areaPoints.empty() || areaNr > ((int)areaPoints.size() - 1))
             {
                 areaPoints.resize(areaNr + 1);
             }
@@ -2522,7 +2521,8 @@ bool Project::loadGlocalStationsCsv(QString fileName, std::vector<std::vector<st
     return true;
 }
 
-bool Project::groupCellsInArea(std::vector<int> &areaPoints, unsigned int index, bool isGrid)
+
+bool Project::groupCellsInArea(std::vector<int> &areaPoints, int index, bool isGrid)
 {
     int zoneNr;
     double myX, myY;
@@ -2542,9 +2542,9 @@ bool Project::groupCellsInArea(std::vector<int> &areaPoints, unsigned int index,
                 {
                     gis::getUtmXYFromRowCol(DEM.header, i, j, &myX, &myY);
 
-                    zoneNr = int(macroAreas->getValueFromXY(myX, myY));
+                    zoneNr = macroAreas->getValueFromXY(myX, myY);
 
-                    if (zoneNr == index)
+                    if ((int)zoneNr == index)
                         areaPoints.push_back(i*nrCols+j);
                 }
             }
@@ -2563,9 +2563,9 @@ bool Project::groupCellsInArea(std::vector<int> &areaPoints, unsigned int index,
                     myX = meteoGridDbHandler->meteoGrid()->meteoPoints()[i][j]->point.utm.x;
                     myY = meteoGridDbHandler->meteoGrid()->meteoPoints()[i][j]->point.utm.y;
 
-                    zoneNr = int(macroAreas->getValueFromXY(myX, myY));
+                    zoneNr = macroAreas->getValueFromXY(myX, myY);
 
-                    if (zoneNr == index)
+                    if ((int)zoneNr == index)
                         areaPoints.push_back(i*nrCols+j);
                 }
             }
@@ -2731,7 +2731,7 @@ bool Project::computeStatisticsGlocalCrossValidation(Crit3DMacroArea myArea)
     std::vector <float> obs;
     std::vector <float> pre;
 
-    for (int i = 0; i < meteoPointsList.size(); i++)
+    for (int i = 0; i < (int)meteoPointsList.size(); i++)
     {
         if (meteoPoints[meteoPointsList[i]].active)
         {
@@ -2762,9 +2762,9 @@ bool Project::computeStatisticsGlocalCrossValidation(Crit3DMacroArea myArea)
     return true;
 }
 
-bool Project::interpolationCv(meteoVariable myVar, const Crit3DTime& myTime, QString glocalCVPointsName)
-{
 
+bool Project::interpolationCv(meteoVariable myVar, const Crit3DTime& myTime)
+{
     if (! checkInterpolation(myVar)) return false;
 
     // check variables
@@ -4765,7 +4765,7 @@ bool Project::setMarkedPointsOfMacroArea(int areaNumber, bool viewNotActivePoint
     }
 
     std::vector <int> pointList;
-    if (areaNumber < 0 || areaNumber >= interpolationSettings.getMacroAreas().size())
+    if (areaNumber < 0 || areaNumber >= (int)interpolationSettings.getMacroAreas().size())
     {
         logError("Invalid macro area number.");
         return false;
@@ -4773,7 +4773,7 @@ bool Project::setMarkedPointsOfMacroArea(int areaNumber, bool viewNotActivePoint
 
     pointList = interpolationSettings.getMacroAreas()[areaNumber].getMeteoPoints();
 
-    for (int j = 0; j < pointList.size(); j++)
+    for (int j = 0; j < (int)pointList.size(); j++)
     {
         if (meteoPoints[pointList[j]].active || viewNotActivePoints)
             meteoPoints[pointList[j]].marked = true;
@@ -6028,7 +6028,7 @@ bool Project::computeResidualsAndStatisticsGlocalDetrending(meteoVariable myVar,
     }
 
     //ciclo sulle aree
-    for (int k = 0; k < macroAreas.size(); k++)
+    for (int k = 0; k < (int)macroAreas.size(); k++)
     {
         Crit3DMacroArea myArea = macroAreas[k];
         std::vector<int> meteoPointsList = myArea.getMeteoPoints();
