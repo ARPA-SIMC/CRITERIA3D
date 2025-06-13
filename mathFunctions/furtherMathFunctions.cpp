@@ -3539,7 +3539,7 @@ double cauchyRandom(double gamma)
             // Box-Muller transformation to get two normal deviates. Return one and save the other for next time.
 
             fac = float(sqrt(-2 * log(r) / r));
-            *gasDevGset = v1 * fac; //Gaussian random deviates
+            *gasDevGset = float(v1 * fac); //Gaussian random deviates
             normalRandom = v2 * fac;
             *gasDevIset = 1; //set the flag
         }
@@ -3549,8 +3549,9 @@ double cauchyRandom(double gamma)
             *gasDevIset = 0; //unset the flag
             normalRandom = *gasDevGset;
         }
-        return normalRandom;
+        return float(normalRandom);
     }
+
 
     double normalRandom(int *gasDevIset,double *gasDevGset)
     {
