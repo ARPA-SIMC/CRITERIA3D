@@ -1618,7 +1618,6 @@ bool Project::loadMeteoGridDailyData(QDate firstDate, QDate lastDate, bool showI
 
     std::string id;
     int count = 0;
-
     int infoStep = 1;
 
     if (showInfo)
@@ -1639,19 +1638,21 @@ bool Project::loadMeteoGridDailyData(QDate firstDate, QDate lastDate, bool showI
         {
             if (this->meteoGridDbHandler->meteoGrid()->getMeteoPointActiveId(row, col, id))
             {
-                if (!this->meteoGridDbHandler->gridStructure().isFixedFields())
+                if (! this->meteoGridDbHandler->gridStructure().isFixedFields())
                 {
                     if (this->meteoGridDbHandler->gridStructure().isEnsemble())
                     {
                         int memberNr = 1;
-                        if (this->meteoGridDbHandler->loadGridDailyDataEnsemble(errorString, QString::fromStdString(id), memberNr, firstDate, lastDate))
+                        if (this->meteoGridDbHandler->loadGridDailyDataEnsemble(errorString, QString::fromStdString(id),
+                                                                                memberNr, firstDate, lastDate))
                         {
                             count++;
                         }
                     }
                     else
                     {
-                        if (this->meteoGridDbHandler->loadGridDailyData(errorString, QString::fromStdString(id), firstDate, lastDate))
+                        if (this->meteoGridDbHandler->loadGridDailyDataRowCol(row, col, QString::fromStdString(id),
+                                                                              firstDate, lastDate, errorString))
                         {
                             count++;
                         }
@@ -1887,7 +1888,7 @@ bool Project::readPointProxyValues(Crit3DMeteoPoint* myPoint, QSqlDatabase* myDb
 
         if (proxyField != "" && proxyTable != "")
         {
-            statement = QString("SELECT %1 FROM %2 WHERE id_point = '%3'").arg(proxyField).arg(proxyTable).arg(QString::fromStdString((*myPoint).id));
+            statement = QString("SELECT %1 FROM %2 WHERE id_point = '%3'").arg(proxyField, proxyTable, QString::fromStdString((*myPoint).id));
             if(qry.exec(statement))
             {
                 qry.last();
@@ -1945,7 +1946,8 @@ bool Project::loadProxyGrids()
             }
             else
             {
-                errorString = "Error loading raster proxy:\n" + fileName + "\nHow to fix it: check the proxy section in the parameters.ini";
+                errorString = "Error loading raster proxy:\n" + fileName
+                        + "\nHow to fix it: check the proxy section in the parameters.ini";
                 return false;
             }
 

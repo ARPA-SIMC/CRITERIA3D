@@ -25,10 +25,12 @@
     ctoscano@arpae.it
 */
 
+#include <limits>
+#include <functional>
+#include <algorithm>
 #include <math.h>
 #include <stdlib.h>
 #include <time.h>
-#include <functional>
 #include "basicMath.h"
 #include "commonConstants.h"
 #include "furtherMathFunctions.h"
