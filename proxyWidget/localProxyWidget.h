@@ -4,6 +4,7 @@
 #include <QtWidgets>
 #include <QtCharts>
 #include "chartView.h"
+#include "meteo.h"
 #include "meteoPoint.h"
 #include "interpolationSettings.h"
 #include "interpolationPoint.h"
@@ -18,7 +19,8 @@ public:
                            int nrMeteoPoints, meteoVariable currentVariable, frequencyType currentFrequency,
                            QDate currentDate, int currentHour, Crit3DQuality* quality,
                            Crit3DInterpolationSettings* SQinterpolationSettings, Crit3DMeteoSettings *meteoSettings,
-                           Crit3DClimateParameters *climateParam, bool checkSpatialQuality);
+                           Crit3DClimateParameters *climateParameters, bool checkSpatialQuality);
+
     ~Crit3DLocalProxyWidget();
     void closeEvent(QCloseEvent *event);
     void updateDateTime(QDate newDate, int newHour);
@@ -30,28 +32,28 @@ public:
     void modelLRClicked(int toggled);
 
 private:
-    double x;
-    double y;
-    double zDEM;
-    double zGrid;
+    double _x;
+    double _y;
+    double _zDEM;
+    double _zGrid;
 
-    gis::Crit3DGisSettings gisSettings;
-    Crit3DInterpolationSettings* interpolationSettings;
+    gis::Crit3DGisSettings _gisSettings;
+    Crit3DInterpolationSettings* _interpolationSettings;
 
-    Crit3DMeteoPoint* meteoPoints;
-    int nrMeteoPoints;
-    meteoVariable currentVariable;
-    frequencyType currentFrequency;
+    Crit3DMeteoPoint* _meteoPoints;
+    int _nrMeteoPoints;
+    meteoVariable _currentVariable;
+    frequencyType _currentFrequency;
 
-    QDate currentDate;
-    int currentHour;
+    QDate _currentDate;
+    int _currentHour;
 
-    Crit3DQuality* quality;
-    Crit3DInterpolationSettings* SQinterpolationSettings;
-    Crit3DMeteoSettings *meteoSettings;
-    Crit3DClimateParameters *climateParam;
+    Crit3DQuality* _quality;
+    Crit3DInterpolationSettings* _SQinterpolationSettings;
+    Crit3DMeteoSettings *_meteoSettings;
+    Crit3DClimateParameters *_climateParameters;
 
-    bool checkSpatialQuality;
+    bool _checkSpatialQuality;
 
     std::vector <Crit3DInterpolationDataPoint> outInterpolationPoints;
     std::vector <Crit3DInterpolationDataPoint> subsetInterpolationPoints;

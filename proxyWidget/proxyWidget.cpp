@@ -17,11 +17,11 @@
 Crit3DProxyWidget::Crit3DProxyWidget(Crit3DInterpolationSettings* _interpolationSettings, Crit3DMeteoPoint *meteoPoints, int nrMeteoPoints,
                                      frequencyType currentFrequency, QDate currentDate, int currentHour, Crit3DQuality *quality,
                                      Crit3DInterpolationSettings* SQinterpolationSettings, Crit3DMeteoSettings *meteoSettings,
-                                     Crit3DClimateParameters *climateParam, bool checkSpatialQuality, int macroAreaNumber)
+                                     Crit3DClimateParameters *climateParameters, bool checkSpatialQuality, int macroAreaNumber)
     :_interpolationSettings(_interpolationSettings), _meteoPoints(meteoPoints), _nrMeteoPoints(nrMeteoPoints),
     _currentFrequency(currentFrequency), _currentDate(currentDate), _currentHour(currentHour), _quality(quality),
     _SQinterpolationSettings(SQinterpolationSettings), _meteoSettings(meteoSettings), _checkSpatialQuality(checkSpatialQuality),
-    _macroAreaNumber(macroAreaNumber), _climateParam(climateParam)
+    _macroAreaNumber(macroAreaNumber), _climateParameters(climateParameters)
 {
     this->setWindowTitle("Proxy analysis over " + QString::number(nrMeteoPoints) +  " points");
     this->resize(1024, 700);
@@ -290,15 +290,15 @@ void Crit3DProxyWidget::plot()
         _outInterpolationPoints.clear();
 
         checkAndPassDataToInterpolation(_quality, myVar, _meteoPoints, _nrMeteoPoints, getCurrentTime(), _SQinterpolationSettings,
-                                        _interpolationSettings, _meteoSettings, _climateParam,
+                                        _interpolationSettings, _meteoSettings, _climateParameters,
                                         _outInterpolationPoints, _checkSpatialQuality, errorStdStr);
 
-        detrending(_outInterpolationPoints, _interpolationSettings->getSelectedCombination(), _interpolationSettings, _climateParam, myVar, getCurrentTime());
+        detrending(_outInterpolationPoints, _interpolationSettings->getSelectedCombination(), _interpolationSettings, _climateParameters, myVar, getCurrentTime());
     }
     else
     {
         checkAndPassDataToInterpolation(_quality, myVar, _meteoPoints, _nrMeteoPoints, getCurrentTime(), _SQinterpolationSettings,
-                                        _interpolationSettings, _meteoSettings, _climateParam,
+                                        _interpolationSettings, _meteoSettings, _climateParameters,
                                         _outInterpolationPoints, _checkSpatialQuality, errorStdStr);
     }
     QList<QPointF> pointListPrimary, pointListSecondary, pointListSupplemental, pointListMarked;
@@ -414,7 +414,7 @@ void Crit3DProxyWidget::climatologicalLRClicked(int toggled)
         float zMax = getZmax(_outInterpolationPoints);
         float zMin = getZmin(_outInterpolationPoints);
         float firstIntervalHeightValue = getFirstIntervalHeightValue(_outInterpolationPoints, _interpolationSettings->getUseLapseRateCode());
-        float lapseRate = _climateParam->getClimateLapseRate(myVar, getCurrentTime());
+        float lapseRate = _climateParameters->getClimateLapseRate(myVar, getCurrentTime());
         if (lapseRate == NODATA)
         {
             return;
@@ -446,7 +446,7 @@ void Crit3DProxyWidget::modelLRClicked(int toggled)
             if (! _interpolationSettings->getUseMultipleDetrending())
             {
                 if (!regressionOrography(_outInterpolationPoints,_interpolationSettings->getSelectedCombination(),
-                                         _interpolationSettings, _climateParam, getCurrentTime(), myVar, _proxyPos))
+                                         _interpolationSettings, _climateParameters, getCurrentTime(), myVar, _proxyPos))
                 {
                     return;
                 }
