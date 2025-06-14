@@ -27,6 +27,7 @@
 
 #include <limits>
 #include <functional>
+#include <algorithm>
 #include <math.h>
 #include <stdlib.h>
 #include <time.h>
