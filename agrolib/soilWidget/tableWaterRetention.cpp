@@ -1,5 +1,4 @@
 #include "tableWaterRetention.h"
-#include "tableWidgetItem.h"
 #include <QClipboard>
 #include <QApplication>
 
@@ -42,7 +41,6 @@ void TableWaterRetention::keyPressEvent(QKeyEvent *event){
         }
         else if(event->matches(QKeySequence::Paste))
         {
-
             QString text = QApplication::clipboard()->text();
             #if (QT_VERSION >= QT_VERSION_CHECK(6, 0, 0))
                 QList<QString> rowContents = text.split("\n", Qt::SkipEmptyParts);

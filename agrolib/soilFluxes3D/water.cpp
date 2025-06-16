@@ -90,7 +90,7 @@ double runoff(long i, long j, TlinkedNode *link, double deltaT, unsigned approxi
     }
 
     double dH = fabs(Hi - Hj);
-    if (dH < DBL_EPSILON)
+    if (dH < 0.0001)
         return 0.;
 
     double zi = nodeList[i].z + nodeList[i].pond;
@@ -99,14 +99,14 @@ double runoff(long i, long j, TlinkedNode *link, double deltaT, unsigned approxi
     double Hmax = std::max(Hi, Hj);
     double zmax = std::max(zi, zj);
     double Hs = Hmax - zmax;
+    if (Hs < 0.0001)
+        return 0.;
 
-    // Land Depression
+    // Land depression
     if ((Hi > Hj && zi < zj) || (Hj > Hi && zj < zi))
     {
         Hs = std::min(Hs, dH);
     }
-    if (Hs < 1.e-4)
-        return 0.;
 
     double cellDistance = distance2D(i, j);
     double slope = dH / cellDistance;
@@ -117,7 +117,7 @@ double runoff(long i, long j, TlinkedNode *link, double deltaT, unsigned approxi
 
     // Manning equation
     double v = pow(Hs, 2./3.) * sqrt(slope) / roughness;                // [m s-1]
-    CourantWater = std::max(CourantWater, 0.5 * v * deltaT / cellDistance);
+    CourantWater = std::max(CourantWater, v * deltaT / cellDistance);
 
     double flowArea = link->area * Hs;                                  // [m2]
     return v * flowArea / dH;
@@ -368,7 +368,7 @@ bool waterFlowComputation(double deltaT)
         threadVector.clear();
 
         // update boundary conditions
-        // updateBoundaryWater(deltaT);
+        updateBoundaryWater(deltaT);
 
         CourantWater = 0.0;
 
@@ -392,7 +392,7 @@ bool waterFlowComputation(double deltaT)
         threadVector.clear();
 
         // check Courant
-        if (CourantWater > 1.01 && deltaT > myParameters.delta_t_min)
+        if (CourantWater > 1. && deltaT > myParameters.delta_t_min)
         {
             myParameters.current_delta_t = std::max(myParameters.current_delta_t / CourantWater, myParameters.delta_t_min);
             if (myParameters.current_delta_t > 1.)
@@ -437,17 +437,17 @@ bool waterFlowComputation(double deltaT)
 
 
 /*!
-  * \brief computes water balance in the assigned period.
+  * \brief computes water fluxes in the assigned period.
   * We assume that, by means of maxTime, we are sure to not exit from meteorology of the assigned hour
   * \param maxTime [s] maximum period for computation (max 3600 s)
   * \param acceptedTime [s] current seconds for simulation step
   * \return
   */
-bool computeWater(double maxTime, double *acceptedTime)
+bool computeWaterFluxes(double maxTime, double *acceptedTime)
 {
      bool isStepOK = false;
 
-     while (!isStepOK)
+     while (! isStepOK)
      {
         *acceptedTime = std::min(myParameters.current_delta_t, maxTime);
 

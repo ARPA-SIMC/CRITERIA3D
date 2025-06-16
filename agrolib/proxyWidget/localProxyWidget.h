@@ -4,6 +4,7 @@
 #include <QtWidgets>
 #include <QtCharts>
 #include "chartView.h"
+#include "meteo.h"
 #include "meteoPoint.h"
 #include "interpolationSettings.h"
 #include "interpolationPoint.h"
@@ -13,7 +14,13 @@ class Crit3DLocalProxyWidget : public QWidget
     Q_OBJECT
 
 public:
-    Crit3DLocalProxyWidget(double x, double y, double zGrid, double zDEM, gis::Crit3DGisSettings gisSettings, Crit3DInterpolationSettings* interpolationSettings, Crit3DMeteoPoint* meteoPoints, int nrMeteoPoints, meteoVariable currentVariable, frequencyType currentFrequency, QDate currentDate, int currentHour, Crit3DQuality* quality,  Crit3DInterpolationSettings* SQinterpolationSettings, Crit3DMeteoSettings *meteoSettings, Crit3DClimateParameters *climateParam, bool checkSpatialQuality);
+    Crit3DLocalProxyWidget(double x, double y, double zDEM, double zGrid, gis::Crit3DGisSettings gisSettings,
+                           Crit3DInterpolationSettings* interpolationSettings, Crit3DMeteoPoint* meteoPoints,
+                           int nrMeteoPoints, meteoVariable currentVariable, frequencyType currentFrequency,
+                           QDate currentDate, int currentHour, Crit3DQuality* quality,
+                           Crit3DInterpolationSettings* SQinterpolationSettings, Crit3DMeteoSettings *meteoSettings,
+                           Crit3DClimateParameters *climateParameters, bool checkSpatialQuality);
+
     ~Crit3DLocalProxyWidget();
     void closeEvent(QCloseEvent *event);
     void updateDateTime(QDate newDate, int newHour);
@@ -25,25 +32,32 @@ public:
     void modelLRClicked(int toggled);
 
 private:
-    double x;
-    double y;
-    double zGrid;
-    double zDEM;
-    gis::Crit3DGisSettings gisSettings;
-    Crit3DInterpolationSettings* interpolationSettings;
-    Crit3DQuality* quality;
-    Crit3DInterpolationSettings* SQinterpolationSettings;
-    Crit3DMeteoSettings *meteoSettings;
-    Crit3DMeteoPoint* meteoPoints;
-    Crit3DClimateParameters *climateParam;
-    meteoVariable currentVariable;
-    int nrMeteoPoints;
-    bool checkSpatialQuality;
-    frequencyType currentFrequency;
-    QDate currentDate;
-    int currentHour;
+    double _x;
+    double _y;
+    double _zDEM;
+    double _zGrid;
+
+    gis::Crit3DGisSettings _gisSettings;
+    Crit3DInterpolationSettings* _interpolationSettings;
+
+    Crit3DMeteoPoint* _meteoPoints;
+    int _nrMeteoPoints;
+    meteoVariable _currentVariable;
+    frequencyType _currentFrequency;
+
+    QDate _currentDate;
+    int _currentHour;
+
+    Crit3DQuality* _quality;
+    Crit3DInterpolationSettings* _SQinterpolationSettings;
+    Crit3DMeteoSettings *_meteoSettings;
+    Crit3DClimateParameters *_climateParameters;
+
+    bool _checkSpatialQuality;
+
     std::vector <Crit3DInterpolationDataPoint> outInterpolationPoints;
     std::vector <Crit3DInterpolationDataPoint> subsetInterpolationPoints;
+
     QComboBox comboVariable;
     QComboBox comboAxisX;
     QCheckBox detrended;
