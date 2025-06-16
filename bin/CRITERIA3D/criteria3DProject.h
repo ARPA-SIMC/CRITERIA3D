@@ -116,6 +116,7 @@
         bool computeHydrallModel(int row, int col);
         void dailyUpdateHydrallMaps();
         bool dailyUpdateHydrall(const QDate &myDate);
+        void setHydrallVariables(int row, int col);
 
         bool computeRothCModel();
         bool updateRothC();

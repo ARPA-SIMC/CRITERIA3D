@@ -165,7 +165,6 @@ bool Crit3DRothCplusplus::computeRothCPoint()
 
     int timeFact = 12;
 
-    bool PC = 1; //TODO: LAI dependant
     double modernC = 100;
 
     //INIZIALIZZAZIONE
@@ -197,11 +196,10 @@ bool Crit3DRothCplusplus::computeRothCPoint()
 
     std::vector<std::vector<double>> monthList;
 
-    PC = 1; //TODO based on LAI
     inputFYM = 0;
 
 
-    RothC(timeFact, PC);
+    RothC(timeFact, plantCover);
     if (radioCarbon.isActive)
         double totalDelta = (std::exp(-totalRage/8035.0) - 1.0) * 1000;
 
@@ -441,18 +439,18 @@ void Crit3DRothCplusplus::decomp(int timeFact, double &modifyingRate)
 }
 
 // The Rothamsted Carbon Model: RothC
-void Crit3DRothCplusplus::RothC(int timeFact, bool &PC)
+void Crit3DRothCplusplus::RothC(int timeFact, double &PC)
 {
     // Calculate RMFs
     double RM_TMP = RMF_Tmp(meteoVariable.getTemperature());
     double RM_Moist;
     if (isEqual (meteoVariable.getBIC(), NODATA)) //todo: check next time
     {
-        RM_Moist = RMF_Moist(meteoVariable.getPrecipitation(), meteoVariable.getWaterLoss(), PC);
+        RM_Moist = RMF_Moist(meteoVariable.getPrecipitation(), meteoVariable.getWaterLoss(), bool(PC > 0));
     }
     else
     {
-        RM_Moist = RMF_Moist(meteoVariable.getBIC(), PC);
+        RM_Moist = RMF_Moist(meteoVariable.getBIC(), bool(PC > 0));
     }
 
     double RM_PC = RMF_plantCover(PC);
@@ -655,11 +653,11 @@ int Crit3DRothCplusplus::main()
 
     /*double TEMP;
     double RAIN;
-    double PEVAP;*/
+    double PEVAP;
     bool isET0 = false;
     bool PC;
     double DPM_RPM;
-    double modernC;
+    double modernC;*/
 
     double test = 100;
     while (test > 0.000001)
@@ -672,15 +670,15 @@ int Crit3DRothCplusplus::main()
         meteoVariable.setTemperature(data[k][3]);
         meteoVariable.setPrecipitation(data[k][4]);
         meteoVariable.setWaterLoss(data[k][5]);
-        PC = bool(data[k][8]);
-        DPM_RPM = data[k][9];
+        //PC = bool(data[k][8]);
+        //DPM_RPM = data[k][9];
         inputC = data[k][6];
         inputFYM = data[k][7];
-        modernC = data[k][2]/100;
+        //modernC = data[k][2]/100;
 
         totalRage = 0;
 
-        RothC(timeFact, PC);
+        RothC(timeFact, plantCover);
 
         if (((k+1)%timeFact) == 0)
         {
@@ -707,13 +705,13 @@ int Crit3DRothCplusplus::main()
         meteoVariable.setTemperature(data[i][3]);
         meteoVariable.setPrecipitation(data[i][4]);
         meteoVariable.setWaterLoss(data[i][5]);
-        PC = bool(data[i][8]);
-        DPM_RPM = data[i][9];
+        //PC = bool(data[i][8]);
+        //DPM_RPM = data[i][9];
         inputC = data[i][6];
         inputFYM = data[i][7];
-        modernC = data[i][2]/100;
+        //modernC = data[i][2]/100;
 
-        RothC(timeFact, PC);
+        RothC(timeFact, plantCover);
 
         totalDelta = (std::exp(-totalRage/8035.0) - 1.0) * 1000;
 

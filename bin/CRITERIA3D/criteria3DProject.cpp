@@ -467,13 +467,12 @@ bool Crit3DProject::updateRothC()
 
                     double SWC = 0;
 
-                    for (int i = 0; i < hydrallModel.soil.waterContent.size(); i++)
+                    for (unsigned int i = 0; i < hydrallModel.soil.waterContent.size(); i++)
                     {
                         SWC += hydrallModel.soil.waterContent[i]*hydrallModel.soil.nodeThickness[i]*1000;
                     }
 
                     rothCModel.setSWC(SWC);
-
 
                     //chiamata a rothC
                     computeRothCModel();
@@ -551,9 +550,10 @@ void Crit3DProject::assignETreal()
                             // compute root density
                             root::computeRootDensity3D(currentCrop, soilList[soilIndex], nrLayers, layerDepth, layerThickness);
                         }
-                        hydrallModel.soil.rootDensity = currentCrop.roots.rootDensity; //TODO cate make hydrall classes private
-                        hydrallModel.plant.leafAreaIndexCanopy = MAXVALUE(0, currentLAI);
-                        hydrallModel.plant.leafAreaIndexCanopyMin = currentCrop.LAImin;
+                        hydrallModel.soil.setRootDensity(currentCrop.roots.rootDensity); //TODO cate make hydrall classes private
+                        hydrallModel.plant.setLAICanopy(MAXVALUE(0, currentLAI));
+                        hydrallModel.plant.setLAICanopyMin(currentCrop.LAImin);
+                        hydrallModel.plant.setLAICanopyMax(currentCrop.LAImax);
 
                         computeHydrallModel(row, col);
                     }
@@ -561,6 +561,7 @@ void Crit3DProject::assignETreal()
                     if (processes.computeRothC)
                     {
                         hourlyMeteoMaps->mapHourlyETReal->value[row][col] = actualEvap + actualTransp;
+                        rothCModel.setPlantCover(currentLAI/currentCrop.LAImax);
                     }
                 }
             }
@@ -1486,35 +1487,45 @@ bool Crit3DProject::computeHydrallModel(int row, int col)
         return false;
     }
 
+    //set all necessary input variables
+    setHydrallVariables(row, col);
 
-    //std::vector<double> waterContent(nrLayers);
-    //std::vector<double> stressCoefficient(nrLayers);
-    //std::vector<double> rootDensity(nrLayers, 0);
+    //read state variables from corresponding state maps
+    hydrallModel.setStateVariables(hydrallMaps, row, col);
 
-    soil::Crit3DHorizon horizon;
+    //compute
+    hydrallModel.computeHydrallPoint();
 
+    //check and save data
+    //TODO CHECK NODATA
+    hydrallModel.getStateVariables(hydrallMaps, row, col);
+    hydrallModel.getPlantAndSoilVariables(hydrallMaps, row, col);
 
-    //TODO
-    double chlorophyllContent = 500;
-    hydrallModel.elevation = DEM.value[row][col];
-    //set all variables
+    return true;
+}
+
+void Crit3DProject::setHydrallVariables(int row, int col)
+{
+
+    Crit3DCrop currentCrop = cropList[getLandUnitIndexRowCol(row, col)];
+
+    //hourly variables
     hydrallModel.setHourlyVariables(double(hourlyMeteoMaps->mapHourlyTair->value[row][col]), double(radiationMaps->globalRadiationMap->value[row][col]),
                                     double(hourlyMeteoMaps->mapHourlyPrec->value[row][col]), double(hourlyMeteoMaps->mapHourlyRelHum->value[row][col]),
                                     double(hourlyMeteoMaps->mapHourlyWindScalarInt->value[row][col]), double(radiationMaps->beamRadiationMap->value[row][col]),
                                     double(radiationMaps->diffuseRadiationMap->value[row][col]),
                                     double(radiationMaps->transmissivityMap->value[row][col] / CLEAR_SKY_TRANSMISSIVITY_DEFAULT),
-                                    pressureFromAltitude(double(hourlyMeteoMaps->mapHourlyTair->value[row][col]), hydrallModel.elevation),
+                                    pressureFromAltitude(double(hourlyMeteoMaps->mapHourlyTair->value[row][col]), DEM.value[row][col]),
                                     getCrit3DDate(getCurrentDate()),double(radiationMaps->sunElevationMap->value[row][col]),
                                     hydrallMaps.mapLast30DaysTavg->value[row][col],double(hourlyMeteoMaps->mapHourlyET0->value[row][col]));
 
     //TODO: plant height map
     hydrallMaps.plantHeight.value[row][col] = 10;
-    hydrallModel.setPlantVariables(chlorophyllContent, hydrallMaps.plantHeight.value[row][col], hydrallMaps.minLeafWaterPotential->value[row][col], hydrallMaps.criticalSoilWaterPotential->value[row][col]);
+    double chlorophyllContent = 500; //da tabella
+    hydrallMaps.treeSpeciesMap.value[row][col] = 0; //TODO treeSpeciesMap. valutare tabelle tra crop e tabella hydrall
 
-
-
-    //setsoilvariables TODO
-
+    hydrallModel.setPlantVariables(chlorophyllContent, hydrallMaps.plantHeight.value[row][col],
+                                   hydrallMaps.minLeafWaterPotential->value[row][col], hydrallMaps.criticalSoilWaterPotential->value[row][col]);
 
     // check soil
     int soilIndex = int(soilIndexMap.value[row][col]);
@@ -1523,40 +1534,10 @@ bool Crit3DProject::computeHydrallModel(int row, int col)
         //TODO
     }
 
-    //tutte le variabili che servono
-    hydrallModel.setStateVariables(hydrallMaps, row, col);
-
-    // TODO scrivere funzione settaggio profilo 1D suolo
-
-    //root density
-    hydrallMaps.treeSpeciesMap.value[row][col] = 0; //TODO treeSpeciesMap. valutare tabelle tra crop e tabella hydrall
-    //Crit3DCrop currentCrop = cropList[int(hydrallMaps.treeSpeciesMap.value[row][col])];
-    Crit3DCrop currentCrop = cropList[getLandUnitIndexRowCol(row, col)];
-    std::vector <double> tempRootDensity = hydrallModel.soil.rootDensity;
-
-
-    //currentCrop.roots.rootDensity.resize(nrLayers); // TODO
     // the condition on this for cycle includes the check of existance of the layers
     for (unsigned int i = 0; ((i < nrLayers) && (soilList[soilIndex].getHorizonIndex(layerDepth[i]))!= NODATA); i++)
     {
-        //currentCrop.roots.firstRootLayer = 1;
-        //currentCrop.roots.lastRootLayer = 2;
-        /*
-                    int zcurrentNode = indexMap.at(i).value[row][col];
-                    float zflag =  indexMap.at(i).header->flag;
-                    int zhorizonIndex = soilList[soilIndex].getHorizonIndex(layerDepth[i]);
-                    double zWC=soilFluxes3D::getWaterContent(indexMap.at(i).value[row][col]);
-                    double zFC=soilList[soilIndex].horizon[soilList[soilIndex].getHorizonIndex(layerDepth[i])].waterContentFC;
-                    double zWP=soilList[soilIndex].horizon[soilList[soilIndex].getHorizonIndex(layerDepth[i])].waterContentWP;
-                    int zfirstLayer=currentCrop.roots.firstRootLayer;
-                    int zlastLayer=currentCrop.roots.lastRootLayer;
-                    double zrootDensity=currentCrop.roots.rootDensity[i];
-                    */
-        //if (soilList[soilIndex].getHorizonIndex(layerDepth[i]) == NODATA)
-        //continue;
-
         hydrallModel.setSoilVariables(i,indexMap.at(i).value[row][col],indexMap.at(i).header->flag,
-                                      soilList[soilIndex].getHorizonIndex(layerDepth[i]),
                                       soilFluxes3D::getWaterContent(indexMap.at(i).value[row][col]),
                                       soilList[soilIndex].horizon[soilList[soilIndex].getHorizonIndex(layerDepth[i])].waterContentFC,
                                       soilList[soilIndex].horizon[soilList[soilIndex].getHorizonIndex(layerDepth[i])].waterContentWP,
@@ -1565,120 +1546,11 @@ bool Crit3DProject::computeHydrallModel(int row, int col)
                                       fabs(soilList[soilIndex].horizon[soilList[soilIndex].getHorizonIndex(layerDepth[i])].lowerDepth-soilList[soilIndex].horizon[soilList[soilIndex].getHorizonIndex(layerDepth[i])].upperDepth),
                                       soilList[soilIndex].horizon[soilList[soilIndex].getHorizonIndex(layerDepth[i])].bulkDensity,
                                       soilList[soilIndex].horizon[soilList[soilIndex].getHorizonIndex(layerDepth[i])].waterContentSAT,
-                                      tempRootDensity[i], soilList[soilIndex].horizon[soilList[soilIndex].getHorizonIndex(layerDepth[i])].waterConductivity.kSat,
+                                      soilList[soilIndex].horizon[soilList[soilIndex].getHorizonIndex(layerDepth[i])].waterConductivity.kSat,
                                       soilFluxes3D::getMatricPotential(indexMap.at(i).value[row][col]));
     }
-    //compute
-    hydrallModel.computeHydrallPoint(getCrit3DDate(getCurrentDate()), double(hourlyMeteoMaps->mapHourlyTair->value[row][col]), double(DEM.value[row][col]));
 
-
-
-
-    //check and save data TODO CHECK NODATA
-    hydrallModel.getStateVariables(hydrallMaps, row, col);
-    hydrallModel.getPlantAndSoilVariables(hydrallMaps, row, col);
-
-
-
-    /*for (int row = 0; row < DEM.header->nrRows; row++)
-    {
-        for (int col = 0; col < DEM.header->nrCols; col++)
-        {
-            if (! isEqual(DEM.value[row][col], DEM.header->flag))
-            {
-                //TODO
-                double chlorophyllContent = 500;
-                hydrallModel.elevation = DEM.value[row][col];
-                //set all variables
-                hydrallModel.setHourlyVariables(double(hourlyMeteoMaps->mapHourlyTair->value[row][col]), double(radiationMaps->globalRadiationMap->value[row][col]),
-                                                double(hourlyMeteoMaps->mapHourlyPrec->value[row][col]), double(hourlyMeteoMaps->mapHourlyRelHum->value[row][col]),
-                                                double(hourlyMeteoMaps->mapHourlyWindScalarInt->value[row][col]), double(radiationMaps->beamRadiationMap->value[row][col]),
-                                                double(radiationMaps->diffuseRadiationMap->value[row][col]),
-                                                double(radiationMaps->transmissivityMap->value[row][col] / CLEAR_SKY_TRANSMISSIVITY_DEFAULT),
-                                                pressureFromAltitude(double(hourlyMeteoMaps->mapHourlyTair->value[row][col]), hydrallModel.elevation),
-                                                getCrit3DDate(getCurrentDate()),double(radiationMaps->sunElevationMap->value[row][col]),
-                                                hydrallMaps.mapLast30DaysTavg->value[row][col],double(hourlyMeteoMaps->mapHourlyET0->value[row][col]));
-
-                //TODO: plant height map
-                hydrallMaps.plantHeight.value[row][col] = 10;
-                hydrallModel.setPlantVariables(chlorophyllContent, hydrallMaps.plantHeight.value[row][col]);
-
-
-
-                //setsoilvariables TODO
-
-
-                // check soil
-                int soilIndex = int(soilIndexMap.value[row][col]);
-                if (soilIndex == NODATA)
-                {
-                    //TODO
-                }
-
-                //tutte le variabili che servono
-                hydrallModel.setStateVariables(hydrallMaps, row, col);
-
-                // TODO scrivere funzione settaggio profilo 1D suolo
-
-                //root density
-                hydrallMaps.treeSpeciesMap.value[row][col] = 0; //TODO treeSpeciesMap
-                Crit3DCrop currentCrop = cropList[int(hydrallMaps.treeSpeciesMap.value[row][col])];
-                currentCrop.roots.rootDensity.resize(nrLayers); // TODO
-                // the condition on this for cycle includes the check of existance of the layers
-                for (unsigned int i = 0; ((i < nrLayers) && (soilList[soilIndex].getHorizonIndex(layerDepth[i]))!= NODATA); i++)
-                {
-
-                    if (i <3 && i != 0)
-                        currentCrop.roots.rootDensity[i] = 0.5;
-                    else
-                        currentCrop.roots.rootDensity[i] = 0;
-                    // TODO
-                    currentCrop.roots.firstRootLayer = 1;
-                    currentCrop.roots.lastRootLayer = 2;
-
-                    int zcurrentNode = indexMap.at(i).value[row][col];
-                    float zflag =  indexMap.at(i).header->flag;
-                    int zhorizonIndex = soilList[soilIndex].getHorizonIndex(layerDepth[i]);
-                    double zWC=soilFluxes3D::getWaterContent(indexMap.at(i).value[row][col]);
-                    double zFC=soilList[soilIndex].horizon[soilList[soilIndex].getHorizonIndex(layerDepth[i])].waterContentFC;
-                    double zWP=soilList[soilIndex].horizon[soilList[soilIndex].getHorizonIndex(layerDepth[i])].waterContentWP;
-                    int zfirstLayer=currentCrop.roots.firstRootLayer;
-                    int zlastLayer=currentCrop.roots.lastRootLayer;
-                    double zrootDensity=currentCrop.roots.rootDensity[i];
-
-                    //if (soilList[soilIndex].getHorizonIndex(layerDepth[i]) == NODATA)
-                        //continue;
-                    hydrallModel.setSoilVariables(i,indexMap.at(i).value[row][col],indexMap.at(i).header->flag,
-                                                  soilList[soilIndex].getHorizonIndex(layerDepth[i]),
-                                                  soilFluxes3D::getWaterContent(indexMap.at(i).value[row][col]),
-                                                  soilList[soilIndex].horizon[soilList[soilIndex].getHorizonIndex(layerDepth[i])].waterContentFC,
-                                                  soilList[soilIndex].horizon[soilList[soilIndex].getHorizonIndex(layerDepth[i])].waterContentWP,
-                                                  currentCrop.roots.firstRootLayer,currentCrop.roots.lastRootLayer,currentCrop.roots.rootDensity[i],
-                                                  soilList[soilIndex].horizon[soilList[soilIndex].getHorizonIndex(layerDepth[i])].texture.clay,
-                                                  soilList[soilIndex].horizon[soilList[soilIndex].getHorizonIndex(layerDepth[i])].texture.sand,
-                                                  fabs(soilList[soilIndex].horizon[soilList[soilIndex].getHorizonIndex(layerDepth[i])].lowerDepth-soilList[soilIndex].horizon[soilList[soilIndex].getHorizonIndex(layerDepth[i])].upperDepth),
-                                                  soilList[soilIndex].horizon[soilList[soilIndex].getHorizonIndex(layerDepth[i])].bulkDensity,
-                                                  soilList[soilIndex].horizon[soilList[soilIndex].getHorizonIndex(layerDepth[i])].waterContentSAT);
-                }
-                //compute
-                hydrallModel.computeHydrallPoint(getCrit3DDate(getCurrentDate()), double(hourlyMeteoMaps->mapHourlyTair->value[row][col]), double(DEM.value[row][col]));
-
-
-
-
-                //check and save data TODO CHECK NODATA
-                hydrallModel.getStateVariables(hydrallMaps, row, col);
-
-            }
-            else
-            {
-                //snowMaps.flagMapRowCol(row, col);
-            }
-        }
-    }*/
-
-
-    return true;
+    return;
 }
 
 bool Crit3DProject::computeRothCModel()
@@ -1697,9 +1569,6 @@ bool Crit3DProject::updateLast30DaysTavg()
     {
         for (long col = 0; col < dailyTminMap.header->nrCols; col++)
         {
-            float testTemp;
-            testTemp = dailyTmaxMap.value[row][col];
-            testTemp = dailyTminMap.value[row][col];
             hydrallMaps.mapLast30DaysTavg->value[row][col] = (29./30.)*hydrallMaps.mapLast30DaysTavg->value[row][col] + (dailyTmaxMap.value[row][col] + dailyTminMap.value[row][col])/30;
         }
     }
