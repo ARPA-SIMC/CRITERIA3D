@@ -252,7 +252,7 @@ void updateBoundaryWater (double deltaT)
 
     for (long i = 0; i < myStructure.nrNodes; i++)
     {
-        // water sink-source
+        // initialize: water sink-source
         nodeList[i].Qw = nodeList[i].waterSinkSource;
 
         if (nodeList[i].boundary != nullptr)

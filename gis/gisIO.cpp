@@ -116,12 +116,20 @@ namespace gis
         string myLine, myKey, upKey, valueStr;
         int nrKeys = 0;
 
-        string myFileName = fileName + ".hdr";
-        ifstream  myFile (myFileName.c_str());
+        // check suffix
+        string fn = fileName;
+        std::string key (".flt");
+        std::size_t found = fn.rfind(key);
+        if (found != std::string::npos)
+            fn.replace (found, key.length(), "");
+
+        // open file
+        fn += ".hdr";
+        ifstream  myFile (fn.c_str());
 
         if (! myFile.is_open())
         {
-            errorStr = "Missing file: " + myFileName;
+            errorStr = "Missing file: " + fn;
             return false;
         }
 
@@ -487,7 +495,18 @@ namespace gis
 
         if(gis::readEsriGridHeader(fileName, rasterGrid->header, errorStr))
         {
-            string fltFileName = fileName + ".flt";
+            // check suffix
+            std::size_t found = fileName.rfind(".flt");
+            string fltFileName;
+            if (found != std::string::npos)
+            {
+                fltFileName = fileName;
+            }
+            else
+            {
+                fltFileName = fileName + ".flt";
+            }
+
             if (gis::readRasterFloatData(fltFileName, rasterGrid, errorStr))
             {
                 gis::updateMinMaxRasterGrid(rasterGrid);

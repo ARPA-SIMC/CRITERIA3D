@@ -25,11 +25,12 @@
     ctoscano@arpae.it
 */
 
+#include <limits>
+#include <functional>
+#include <algorithm>
 #include <math.h>
 #include <stdlib.h>
 #include <time.h>
-#include <functional>
-#include <random>
 #include "basicMath.h"
 #include "commonConstants.h"
 #include "furtherMathFunctions.h"
@@ -1357,7 +1358,7 @@ namespace interpolation
         std::vector<double> ySim(nrData);
 
         //grigliato
-        for (int k = 0; k < firstGuessCombinations.size(); k++)
+        for (int k = 0; k < (int)firstGuessCombinations.size(); k++)
         {
             parameters = firstGuessCombinations[k];
             fittingMarquardt_nDimension(func,parametersMin,
@@ -1430,7 +1431,8 @@ namespace interpolation
         std::vector<double> ySim(nrData);
 
         double maxZ = x.front();
-        for (int k = 0; k < x.size(); k++)
+
+        for (int k = 0; k < (int)x.size(); k++)
         {
             if (x[k] > maxZ) maxZ = x[k]; //look for max elevation station
         }
@@ -1551,11 +1553,12 @@ namespace interpolation
                                         int maxIterationsNr, double myEpsilon,
                                         std::vector <std::vector <double>>& x ,std::vector<double>& y)
     {
-        int i,j;
+        unsigned int i;
+        int j;
         //int nrData = int(y.size());
         std::vector <int> nrParameters(parameters.size());
         int nrParametersTotal = 0;
-        for (i=0; i<parameters.size();i++)
+        for (i=0; i < (int)parameters.size();i++)
         {
             nrParameters[i]= int(parameters[i].size());
             nrParametersTotal += nrParameters[i];
@@ -1564,9 +1567,9 @@ namespace interpolation
         std::vector <std::vector <double>> bestParameters(parameters.size());
         std::vector <std::vector <int>> correspondenceTag(2,std::vector<int>(nrParametersTotal));
         int counterTag = 0;
-        for (i=0; i<parameters.size();i++)
+        for (i=0; i < (int)parameters.size();i++)
         {
-            for (j=0; j<nrParameters[i];j++)
+            for (j=0; j < nrParameters[i];j++)
             {
                 correspondenceTag[0][counterTag] = i;
                 correspondenceTag[1][counterTag] = j;
@@ -1708,7 +1711,8 @@ namespace interpolation
     {
         int i;
         int nrPredictors = 0;
-        for (int k = 0; k < parameters.size(); k++)
+
+        for (int k = 0; k < (int)parameters.size(); k++)
             if (parameters[k].size() == 2) nrPredictors++;
         int nrData = int(y.size());
         double mySSE, diffSSE, newSSE;
@@ -2254,7 +2258,8 @@ namespace interpolation
     {
         int i;
         int nrPredictors = 0;
-        for (int k = 0; k < parameters.size(); k++)
+
+        for (int k = 0; k < (int)parameters.size(); k++)
             if (parameters[k].size() == 2) nrPredictors++;
         int nrData = int(y.size());
         double mySSE, diffSSE, newSSE;
@@ -3522,24 +3527,25 @@ double cauchyRandom(double gamma)
     //----------------------------------------------------------------------
     float normalRandom(int *gasDevIset,float *gasDevGset)
     {
-        float fac = 0;
-        float r = 0;
-        float v1, v2, normalRandom;
-        float temp;
+        double fac = 0;
+        double r = 0;
+        double v1, v2, normalRandom;
+        double temp;
 
         if (*gasDevIset == 0) //We don't have an extra deviate
         {
             do
             {
-                temp = (float) rand() / (RAND_MAX);
+                temp = rand() / (RAND_MAX);
                 v1 = 2*temp - 1;
-                temp = (float) rand() / (RAND_MAX);
+                temp = rand() / (RAND_MAX);
                 v2 = 2*temp - 1;
                 r = v1 * v1 + v2 * v2;
             } while ( (r>=1) | (r==0) ); // see if they are in the unit circle, and if they are not, try again.
             // Box-Muller transformation to get two normal deviates. Return one and save the other for next time.
+
             fac = float(sqrt(-2 * log(r) / r));
-            *gasDevGset = v1 * fac; //Gaussian random deviates
+            *gasDevGset = float(v1 * fac); //Gaussian random deviates
             normalRandom = v2 * fac;
             *gasDevIset = 1; //set the flag
         }
@@ -3549,8 +3555,9 @@ double cauchyRandom(double gamma)
             *gasDevIset = 0; //unset the flag
             normalRandom = *gasDevGset;
         }
-        return normalRandom;
+        return float(normalRandom);
     }
+
 
     double normalRandom(int *gasDevIset,double *gasDevGset)
     {
