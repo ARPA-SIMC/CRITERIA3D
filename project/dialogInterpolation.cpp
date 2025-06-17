@@ -579,7 +579,7 @@ void ProxyDialog::saveProxy(Crit3DProxy* myProxy)
     }
 
     std::vector<double> parameters = parametersMin;
-    for (int j = 0; j < parametersMax.size(); j++)
+    for (unsigned int j = 0; j < parametersMax.size(); j++)
         parameters.push_back(parametersMax[j]);
 
     myProxy->setFittingParametersRange(parameters);

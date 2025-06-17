@@ -217,7 +217,7 @@ bool Crit3DAggregationsDbHandler::getAggregationZonesReference(QString name, QSt
 void Crit3DAggregationsDbHandler::initAggregatedTables(const std::vector<int> &idZoneVector, const QString &aggrType, const QString &periodType, const QDate &startDate, const QDate &endDate, meteoVariable variable)
 {
     int idVariable = getIdfromMeteoVar(variable);
-    for (int i = 0; i < idZoneVector.size(); i++)
+    for (unsigned int i = 0; i < idZoneVector.size(); i++)
     {
         QString statement = QString("CREATE TABLE IF NOT EXISTS `%1_%2_%3` "
                                     "(date_time TEXT, id_variable INTEGER, value REAL, PRIMARY KEY(date_time,id_variable))")
@@ -263,7 +263,7 @@ bool Crit3DAggregationsDbHandler::writeAggregationPointProperties(const QString 
     }
 
     QSqlQuery qry(_db);
-    for (int i = 0; i < idZoneVector.size(); i++)
+    for (unsigned int i = 0; i < idZoneVector.size(); i++)
     {
         QString id = QString::number(idZoneVector[i]) + "_" + aggrType;
         QString name = id;

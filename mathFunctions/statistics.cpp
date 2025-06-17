@@ -1294,7 +1294,7 @@ namespace statistics
         int nrValidValues = 0;
         double sum = 0.;
 
-        for (int i = 0; i < list.size(); i++)
+        for (unsigned int i = 0; i < list.size(); i++)
         {
             if (! isEqual(list[i], NODATA))
             {

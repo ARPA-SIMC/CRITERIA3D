@@ -1357,7 +1357,7 @@ namespace interpolation
         std::vector<double> ySim(nrData);
 
         //grigliato
-        for (int k = 0; k < firstGuessCombinations.size(); k++)
+        for (unsigned int k = 0; k < firstGuessCombinations.size(); k++)
         {
             parameters = firstGuessCombinations[k];
             fittingMarquardt_nDimension(func,parametersMin,
@@ -1430,7 +1430,7 @@ namespace interpolation
         std::vector<double> ySim(nrData);
 
         double maxZ = x.front();
-        for (int k = 0; k < x.size(); k++)
+        for (unsigned int k = 0; k < x.size(); k++)
         {
             if (x[k] > maxZ) maxZ = x[k]; //look for max elevation station
         }
@@ -1551,7 +1551,8 @@ namespace interpolation
                                         int maxIterationsNr, double myEpsilon,
                                         std::vector <std::vector <double>>& x ,std::vector<double>& y)
     {
-        int i,j;
+        unsigned int i;
+        int j;
         //int nrData = int(y.size());
         std::vector <int> nrParameters(parameters.size());
         int nrParametersTotal = 0;
@@ -1708,7 +1709,7 @@ namespace interpolation
     {
         int i;
         int nrPredictors = 0;
-        for (int k = 0; k < parameters.size(); k++)
+        for (unsigned int k = 0; k < parameters.size(); k++)
             if (parameters[k].size() == 2) nrPredictors++;
         int nrData = int(y.size());
         double mySSE, diffSSE, newSSE;
@@ -2254,7 +2255,7 @@ namespace interpolation
     {
         int i;
         int nrPredictors = 0;
-        for (int k = 0; k < parameters.size(); k++)
+        for (unsigned int k = 0; k < parameters.size(); k++)
             if (parameters[k].size() == 2) nrPredictors++;
         int nrData = int(y.size());
         double mySSE, diffSSE, newSSE;

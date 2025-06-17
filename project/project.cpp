@@ -2399,7 +2399,7 @@ bool Project::loadGlocalWeightMaps(std::vector<Crit3DMacroArea> &myAreas, bool i
 
     unsigned nrAreasWithCells = 0;
 
-    for (int i = 0; i < myAreas.size(); i++)
+    for (unsigned int i = 0; i < myAreas.size(); i++)
     {
         //se ci sono già celle caricate di DEM o grid, salvale
         if (existingAreas.size() > i)
@@ -2499,7 +2499,7 @@ bool Project::loadGlocalStationsCsv(QString fileName, std::vector<std::vector<st
         line = myStream.readLine().split(',');
         if (line.size() > 1)
         {
-            int areaNr = line[0].toInt();
+            unsigned int areaNr = line[0].toInt();
             for (int i = 1; i < line.size(); i++)
             {
                 temp.push_back(line[i].toStdString());
@@ -2521,7 +2521,7 @@ bool Project::loadGlocalStationsCsv(QString fileName, std::vector<std::vector<st
 
 bool Project::groupCellsInArea(std::vector<int> &areaPoints, unsigned int index, bool isGrid)
 {
-    int zoneNr;
+    unsigned int zoneNr;
     double myX, myY;
     gis::Crit3DRasterGrid* macroAreas = interpolationSettings.getMacroAreasMap();
     int nrCols;
@@ -2728,7 +2728,7 @@ bool Project::computeStatisticsGlocalCrossValidation(Crit3DMacroArea myArea)
     std::vector <float> obs;
     std::vector <float> pre;
 
-    for (int i = 0; i < meteoPointsList.size(); i++)
+    for (unsigned int i = 0; i < meteoPointsList.size(); i++)
     {
         if (meteoPoints[meteoPointsList[i]].active)
         {
@@ -4769,7 +4769,7 @@ bool Project::setMarkedPointsOfMacroArea(int areaNumber, bool viewNotActivePoint
 
     pointList = interpolationSettings.getMacroAreas()[areaNumber].getMeteoPoints();
 
-    for (int j = 0; j < pointList.size(); j++)
+    for (unsigned int j = 0; j < pointList.size(); j++)
     {
         if (meteoPoints[pointList[j]].active || viewNotActivePoints)
             meteoPoints[pointList[j]].marked = true;
@@ -6024,7 +6024,7 @@ bool Project::computeResidualsAndStatisticsGlocalDetrending(meteoVariable myVar,
     }
 
     //ciclo sulle aree
-    for (int k = 0; k < macroAreas.size(); k++)
+    for (unsigned int k = 0; k < macroAreas.size(); k++)
     {
         Crit3DMacroArea myArea = macroAreas[k];
         std::vector<int> meteoPointsList = myArea.getMeteoPoints();

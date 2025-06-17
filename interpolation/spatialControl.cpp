@@ -227,7 +227,7 @@ bool computeResidualsGlocalDetrending(meteoVariable myVar, const Crit3DMacroArea
     macroAreaDetrending(myArea, myVar, *settings, meteoSettings, meteoPoints, interpolationPoints, areaInterpolationPoints, elevationPos);
 
     //ciclo sui meteopoint dell'area
-    for (int i = 0; i < meteoPointsList.size(); i++)
+    for (unsigned int i = 0; i < meteoPointsList.size(); i++)
     {
         myProxyValues = meteoPoints[meteoPointsList[i]].getProxyValues();
 
@@ -246,7 +246,7 @@ bool computeResidualsGlocalDetrending(meteoVariable myVar, const Crit3DMacroArea
             gis::getRowColFromXY(*settings->getCurrentDEM()->header, meteoPoints[meteoPointsList[i]].point.utm, &row, &col);
             temp = settings->getCurrentDEM()->header->nrCols*row + col;
 
-            for (int k = 0; k < areaCells.size(); k = k + 2)
+            for (unsigned int k = 0; k < areaCells.size(); k = k + 2)
             {
                 if (areaCells[k] == temp)
                     weight = areaCells[k+1];

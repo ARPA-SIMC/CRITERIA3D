@@ -31,7 +31,7 @@
             bool _checkSpatialQuality;
             int _currentHour;
             int _proxyPos;
-            int _macroAreaNumber;
+            unsigned int _macroAreaNumber;
 
             std::vector <Crit3DInterpolationDataPoint> _outInterpolationPoints;
             Crit3DInterpolationSettings* _interpolationSettings;
