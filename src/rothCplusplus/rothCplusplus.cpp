@@ -196,7 +196,8 @@ bool Crit3DRothCplusplus::computeRothCPoint()
 
     std::vector<std::vector<double>> monthList;
 
-    inputFYM = 0;
+    inputFYM = 0.4; //kg C day-1 ha-1
+    inputFYM *= 0.03; //t C month-1 ha-1
 
 
     RothC(timeFact, plantCover);

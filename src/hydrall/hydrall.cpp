@@ -962,7 +962,7 @@ void Crit3DHydrall::carbonWaterFluxesProfile()
     treeAssimilationRate = 0 ;
 
     //ball-berry constants. TODO
-    double mi = 30;
+    double mi = 9.31;
 
     treeTranspirationRate.resize(soil.layersNr);
 
@@ -1027,6 +1027,8 @@ void Crit3DHydrall::photosynthesisKernel(double COMP,double GAC,double GHR,doubl
     Imax = 10000 ;
     myTolerance = 1e-7;
     deltaAssimilation = NODATA_TOLERANCE;
+    double CSmolFraction = NODATA;
+    double COMPmolFraction = NODATA;
     //myPreviousDelta = deltaAssimilation;
     if (J >= 1.0e-7)
     {
@@ -1037,7 +1039,7 @@ void Crit3DHydrall::photosynthesisKernel(double COMP,double GAC,double GHR,doubl
         RH = 1 - VPDS / RHFactor;
         ASSOLD = NODATA;
         DUM1 = 1.6 * weatherVariable.derived.slopeSatVapPressureVSTemp/weatherVariable.derived.psychrometricConstant + GHR/GAC;
-        double dampingPar = 0.01;
+        double dampingPar = 0.5;
         for (I=0; (I<Imax) && (deltaAssimilation > myTolerance); I++)
         {
             //Assimilation
@@ -1047,9 +1049,15 @@ void Crit3DHydrall::photosynthesisKernel(double COMP,double GAC,double GHR,doubl
 
             *ASS = MAXVALUE(0.0, VC * (1.0 - COMP / myStromalCarbonDioxide));  //gross assimilation (mol m-2 s-1)
             CS = environmentalVariable.CO2 - weatherVariable.atmosphericPressure * (*ASS - RD) / GAC;	//CO2 concentration at leaf surface (Pa)
+            CSmolFraction = CS/weatherVariable.atmosphericPressure*1e6;
+            COMPmolFraction= COMP/weatherVariable.atmosphericPressure*1e6;
             CS = MAXVALUE(1e-4,CS);
+            CSmolFraction = MAXVALUE(1e-3, CSmolFraction);
             //Stomatal conductance
-            *GSC = GSCD + STOMWL * (*ASS-RD) / (CS-COMP) * RH; //stom conduct to CO2 (mol m-2 s-1)
+            double temp = (CS-COMP)*weatherVariable.atmosphericPressure/1e6;
+            double temp2 = (*ASS-RD) / ((CSmolFraction-COMP)*weatherVariable.atmosphericPressure) * RH;
+            //*GSC = GSCD + STOMWL * (*ASS-RD) / (CS-COMP) * RH; //stom conduct to CO2 (mol m-2 s-1)
+            *GSC = GSCD + STOMWL * (*ASS-RD)*1e6/ (CSmolFraction-COMPmolFraction) * RH; //stom conduct to CO2 (mol m-2 s-1)
             *GSC = MAXVALUE(*GSC,1.0e-5);
             // Stromal CO2 concentration
             myStromalCarbonDioxideOld = myStromalCarbonDioxide;
