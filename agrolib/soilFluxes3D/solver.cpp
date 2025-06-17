@@ -28,44 +28,44 @@
 #include <math.h>
 #include <stdlib.h>
 #include <thread>
+#include <omp.h>
 
-#include "basicMath.h"
 #include "types.h"
 #include "solver.h"
 
+__SF3DINLINE double square(double x)
+{
+    return ((x)*(x));
+}
 
-double distance(unsigned long i, unsigned long j)
+__SF3DINLINE double distance(unsigned long i, unsigned long j)
 {
     return sqrt(square(fabs(double(nodeList[i].x - nodeList[j].x)))
                 + square(fabs(double(nodeList[i].y - nodeList[j].y)))
                 + square(fabs(double(nodeList[i].z - nodeList[j].z))));
 }
 
-
-double distance2D(unsigned long i, unsigned long j)
+__SF3DINLINE double distance2D(unsigned long i, unsigned long j)
 {
     return sqrt(square(fabs(double(nodeList[i].x - nodeList[j].x)))
                 + square(fabs(double(nodeList[i].y - nodeList[j].y))));
 }
 
-double arithmeticMean(double v1, double v2)
+__SF3DINLINE double arithmeticMean(double v1, double v2)
 {
     return (v1 + v2) * 0.5;
 }
 
-double logarithmicMean(double v1, double v2)
+__SF3DINLINE double logarithmicMean(double v1, double v2)
 {
     if (v1 == v2)
-    {
         return v1;
-    }
-    else
-    {
-        return (v1 - v2) / log(v1/v2);
-    }
+
+    return (v1 - v2) / log(v1/v2);
 }
 
-double geometricMean(double v1, double v2)
+//Assume that v1 and v2 are both negative (or both positive)
+__SF3DINLINE double geometricMean(double v1, double v2)
 {
     double sign = v1 / fabs(v1);
     return sign * sqrt(v1 * v2);
@@ -73,13 +73,14 @@ double geometricMean(double v1, double v2)
 
 double computeMean(double v1, double v2)
 {
-    if (myParameters.meanType == MEAN_LOGARITHMIC)
-        return logarithmicMean(v1, v2);
-    else if (myParameters.meanType == MEAN_GEOMETRIC)
-        return geometricMean(v1, v2);
-    else
-        // default: logarithmic
-        return logarithmicMean(v1, v2);
+    switch (myParameters.meanType)
+    {
+        case MEAN_GEOMETRIC:
+            return geometricMean(v1, v2);
+        case MEAN_LOGARITHMIC:
+        default:
+            return logarithmicMean(v1, v2);
+    }
 }
 
 
@@ -92,16 +93,14 @@ TlinkedNode* getLink(long i, long j)
         return &(nodeList[i].down);
 
     for (short l = 0; l < myStructure.nrLateralLinks; l++)
-    {
-         if (nodeList[i].lateral[l].index == j)
-             return &(nodeList[i].lateral[l]);
-    }
+        if (nodeList[i].lateral[l].index == j)
+            return &(nodeList[i].lateral[l]);
 
     return nullptr;
 }
 
 
-int getMaxIterationsNr(int approximationNr)
+__SF3DINLINE int getMaxIterationsNr(int approximationNr)
 {
     int maxIterationsNr = int((approximationNr + 1) * (float(myParameters.maxIterationsNumber)
                                                       / float(myParameters.maxApproximationsNumber)));
@@ -115,25 +114,27 @@ double GaussSeidelHeat()
     short j;
 
     for (long i = 1; i < myStructure.nrNodes; i++)
-        if (! nodeList[i].isSurface)
+    {
+        if (nodeList[i].isSurface)
+            continue;
+
+        if (A[i][0].val == 0.)
+            continue;
+
+        j = 1;
+        new_x = b[i];
+        while ((A[i][j].index != NOLINK) && (j < myStructure.maxNrColumns))
         {
-            if (A[i][0].val != 0.)
-            {
-                j = 1;
-                new_x = b[i];
-                while ((A[i][j].index != NOLINK) && (j < myStructure.maxNrColumns))
-                {
-                    new_x -= A[i][j].val * X[A[i][j].index];
-                    j++;
-                }
-
-                delta = fabs(new_x - X[i]);
-                X[i] = new_x;
-
-                if (delta > norma_inf)
-                    norma_inf = delta;
-            }
+            new_x -= A[i][j].val * X[A[i][j].index];
+            j++;
         }
+
+        delta = fabs(new_x - X[i]);
+        X[i] = new_x;
+
+        if (delta > norma_inf)
+            norma_inf = delta;
+    }
 
     return norma_inf;
 }
@@ -156,24 +157,115 @@ double GaussSeidelWater()
 
         // surface check (H cannot go below z)
         if (nodeList[i].isSurface && newX < nodeList[i].z)
-        {
             newX = nodeList[i].z;
-        }
 
         currentNorm = fabs(newX - X[i]);
         X[i] = newX;
 
         // water potential [m]
         double psi = fabs(newX - nodeList[i].z);
+
+        // normalizenorm if psi > 1m
         if (psi > 1)
-        {
-            // normalized if psi > 1m
             currentNorm /= psi;
-        }
 
         if (currentNorm > infinityNorm)
             infinityNorm = currentNorm;
     }
+
+    return infinityNorm;
+}
+
+//-------------  openMP -------------
+double GaussSeidelWater_openMP()
+{
+    logLinSyst.solver = typeSolver(GaussSeidel_openMP);
+    int nrThreads = myParameters.threadsNumber;
+    omp_set_num_threads(nrThreads);
+
+    double currentNorm = 0.;
+    double infinityNorm = 0;
+
+    #pragma omp parallel for firstprivate(currentNorm) reduction(max: infinityNorm)
+    for (long i = 0; i < myStructure.nrNodes; i++)
+    {
+        if (i==0) //inizializzazione stupida, da sistemare
+            infinityNorm = 0.;
+
+        double newX = b[i];
+        short j = 1;
+        while ((A[i][j].index != NOLINK) && (j < myStructure.maxNrColumns))
+        {
+            newX -= A[i][j].val * X[A[i][j].index];
+            j++;
+        }
+
+        // surface check (H cannot go below z)
+        if (nodeList[i].isSurface && newX < nodeList[i].z)
+            newX = nodeList[i].z;
+
+        currentNorm = fabs(newX - X[i]);
+        X[i] = newX;
+
+        // water potential [m]
+        double psi = fabs(newX - nodeList[i].z);
+
+        // normalizenorm if psi > 1m
+        if (psi > 1)
+            currentNorm /= psi;
+
+        if (currentNorm > infinityNorm)
+            infinityNorm = currentNorm;
+    }
+
+    return infinityNorm;
+}
+
+
+double JacobiWater_openMP()
+{
+    logLinSyst.solver = typeSolver(Jacobi_openMP);
+    int nrThreads = myParameters.threadsNumber;
+    omp_set_num_threads(nrThreads);
+
+    double currentNorm = 0.;
+    double infinityNorm = 0.;
+
+    double* newX = (double *) calloc(myStructure.nrNodes, sizeof(double));
+
+    #pragma omp parallel for firstprivate(currentNorm) shared(newX) reduction(max: infinityNorm)
+    for (long i = 0; i < myStructure.nrNodes; i++)
+    {
+        if (i==0) //inizializzazione stupida, da sistemare
+            infinityNorm = 0.;
+
+        newX[i] = b[i];
+        short j = 1;
+        while ((A[i][j].index != NOLINK) && (j < myStructure.maxNrColumns))
+        {
+            newX[i] -= A[i][j].val * X[A[i][j].index];
+            j++;
+        }
+
+        // surface check (H cannot go below z)
+        if (nodeList[i].isSurface && newX[i] < nodeList[i].z)
+            newX[i] = nodeList[i].z;
+
+        currentNorm = fabs(newX[i] - X[i]);
+
+        // water potential [m]
+        double psi = fabs(newX[i] - nodeList[i].z);
+
+        // normalizenorm if psi > 1m
+        if (psi > 1)
+            currentNorm /= psi;
+
+        if (currentNorm > infinityNorm)
+            infinityNorm = currentNorm;
+    }
+    #pragma omp parallel for
+    for (long i = 0; i < myStructure.nrNodes; i++)
+        X[i] = newX[i];
 
     return infinityNorm;
 }
@@ -196,20 +288,17 @@ void GaussSeidelThread(long start, long end, double *infinityNorm)
 
         // surface check (H cannot go below z)
         if (nodeList[i].isSurface && newX < nodeList[i].z)
-        {
             newX = nodeList[i].z;
-        }
 
         double currentNorm = fabs(newX - X[i]);
         X[i] = newX;
 
         // water potential [m]
         double psi = fabs(newX - nodeList[i].z);
+
+        // normalizenorm if psi > 1m
         if (psi > 1)
-        {
-            // normalized if psi > 1m
             currentNorm /= psi;
-        }
 
         if (currentNorm > *infinityNorm)
             *infinityNorm = currentNorm;
@@ -219,6 +308,7 @@ void GaussSeidelThread(long start, long end, double *infinityNorm)
 
 double iterationThreads()
 {
+    logLinSyst.solver = typeSolver(GaussSeidel_thread);
     int nrThreads = myParameters.threadsNumber;
     int lastThread = nrThreads - 1;
     long step = myStructure.nrNodes / nrThreads;
@@ -238,17 +328,14 @@ double iterationThreads()
     }
 
     // wait threads
-    for (auto& th : threadVector) {
+    for (auto& th : threadVector)
         th.join();
-    }
 
     // compute norm
     double infinityNorm = normVector[0];
     for (int n = 1; n < myParameters.threadsNumber; n++)
-    {
         if (normVector[n] > infinityNorm)
             infinityNorm = normVector[n];
-    }
 
     return infinityNorm;
 }
@@ -263,39 +350,48 @@ bool solveLinearSystem(int approximation, double residualTolerance, int computat
 
     int maxIterationsNr = getMaxIterationsNr(approximation);
     int iteration = 0;
-
-    while ((currentNorm > residualTolerance) && (iteration < maxIterationsNr))
-	{
-        if (computationType == PROCESS_HEAT)
-            currentNorm = GaussSeidelHeat();
-
-        else if (computationType == PROCESS_WATER)
+    for(iteration = 0; iteration < maxIterationsNr; iteration++)
+    {
+        switch (computationType)
         {
-            if (myParameters.threadsNumber == 1)
-            {
-                // single thread
-                currentNorm = GaussSeidelWater();
-            }
-            else
-            {
-                // parallel computing
+            case PROCESS_HEAT:
+                currentNorm = GaussSeidelHeat();
+                break;
+            case PROCESS_WATER:
                 currentNorm = iterationThreads();
-            }
+                // currentNorm = GaussSeidelWater_openMP();
+                // currentNorm = JacobiWater_openMP();
 
-            if (currentNorm > (bestNorm * 10.))
-            {
-                // non-convergent system
-                return false;
-            }
-            else if (currentNorm < bestNorm)
-            {
-                bestNorm = currentNorm;
-            }
+                /*
+                    //check number of threads available
+                    if (myParameters.threadsNumber == 1)
+                        currentNorm = GaussSeidelWater();
+                    else
+                        currentNorm = iterationThreads();
+                */
+
+                //non-convergent system
+                if (currentNorm > (bestNorm * 10.))
+                    return false;
+
+                //update bestNorm
+                if (currentNorm < bestNorm)
+                    bestNorm = currentNorm;
+
+                break;
         }
 
-        iteration++;
+        //check exit condition
+        if (currentNorm <= residualTolerance)
+            break;
+
+        //test condition
+        //if (iteration <= 7)
+        //    break;
 	}
+    //extern linSystData logLinSyst;
+    logLinSyst.numberIterations.push_back(iteration);
+    logLinSyst.maxNumberIterations.push_back(maxIterationsNr);
 
     return true;
 }
-

@@ -10,7 +10,10 @@
 #
 #-----------------------------------------------------
 
-QT   -= core gui
+QT   -= gui
+
+QMAKE_CXXFLAGS += -fopenmp
+QMAKE_LFLAGS += -fopenmp
 
 TEMPLATE = lib
 CONFIG += staticlib
@@ -34,6 +37,7 @@ INCLUDEPATH += ../mathFunctions
 SOURCES +=  \
     boundary.cpp \
     balance.cpp \
+    dataLogging.cpp \
     water.cpp \
     solver.cpp \
     memory.cpp \
@@ -44,6 +48,7 @@ SOURCES +=  \
 
 
 HEADERS += \
+    macro.h \
     types.h \
     parameters.h \
     boundary.h \

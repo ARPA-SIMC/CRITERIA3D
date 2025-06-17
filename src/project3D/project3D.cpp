@@ -1109,7 +1109,7 @@ bool Project3D::initializeSoilMoisture(int month)
  */
 void Project3D::runWaterFluxes3DModel(double totalTimeStep, bool isRestart)
 {
-    if (! isRestart)
+    if (!isRestart)
     {
         currentSeconds = 0;                                 // [s]
         soilFluxes3D::initializeBalance();
@@ -1128,6 +1128,14 @@ void Project3D::runWaterFluxes3DModel(double totalTimeStep, bool isRestart)
     while (currentSeconds < totalTimeStep)
     {
         currentSeconds += soilFluxes3D::computeStep(totalTimeStep - currentSeconds);
+
+        QString matrixLog = soilFluxes3D::getMatrixLog();
+        QString matrixLogHeader = "Matrix - " + getCurrentTime().toString() + " s=" + QString::number(currentSeconds);
+        logData(matrixLogHeader, matrixLog);
+
+        QString vectorLog = soilFluxes3D::getVectorLog();
+        QString vectorLogHeader = "Vector - " + getCurrentTime().toString() + " s=" + QString::number(currentSeconds);
+        logData(vectorLogHeader, vectorLog);
 
         if (isModelPaused && currentSeconds < totalTimeStep)
         {
@@ -1162,6 +1170,14 @@ void Project3D::runWaterFluxes3DModel(double totalTimeStep, bool isRestart)
                                   + totalPrecipitation - totalEvaporation - totalTranspiration;
     double massBalanceError = currentWaterContent - forecastWaterContent;
     logInfo("Mass balance error [m3]: " + QString::number(massBalanceError));
+
+
+    // //Log temporaneo delle variabili
+    // QString matrixLog = soilFluxes3D::getMatrixLog();
+    // logData("Matrix", matrixLog);
+
+    // QString vectorLog = soilFluxes3D::getVectorLog();
+    // logData("Vector", vectorLog);
 }
 
 

@@ -856,16 +856,26 @@ bool Crit3DProject::runModels(QDateTime firstTime, QDateTime lastTime, bool isRe
             QDateTime endTime = QDateTime::currentDateTime();
             logInfo("Tempo di calcolo [ms]: " + QString::number(startTime.msecsTo(endTime)));
 
+            //Log temporaneo delle variabili
+            QString matrixLog = soilFluxes3D::getMatrixLog();
+            logData("MatrixFinal", matrixLog);
+
+            QString vectorLog = soilFluxes3D::getVectorLog();
+            logData("VectorFinal", vectorLog);
+
+            QString linSystLog = soilFluxes3D::getLinSystLog();
+            logData("LinSystInfo", linSystLog);
+            logInfo("LinSystInfo\n" + linSystLog);
+
+
+            //rothC maps update must be done hourly, otherwise ETReal data is not stored
             if (processes.computeRothC)
-            {
-                //rothC maps update must be done hourly, otherwise ETReal data is not stored
                 updateRothCMonthlyMaps();
-            }
 
             // output points
             if (isSaveOutputPoints() && currentSeconds == 3600)
             {
-                if (! writeOutputPointsData())
+                if (!writeOutputPointsData())
                 {
                     isModelRunning = false;
                     logError();
@@ -2623,11 +2633,10 @@ bool Crit3DProject::writeOutputPointsData()
     return true;
 }
 
-
 void Crit3DProject::appendCriteria3DOutputValue(criteria3DVariable myVar, int row, int col,
                                                 const std::vector<int> &depthList, std::vector<float> &outputList)
 {
-    for (int l = 0; l < depthList.size(); l++)
+    for (unsigned int l = 0; l < depthList.size(); l++)
     {
         float depth = depthList[l] * 0.01;                          // [cm] -> [m]
         int layerIndex = getSoilLayerIndex(depth);

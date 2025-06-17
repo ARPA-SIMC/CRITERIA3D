@@ -33,7 +33,6 @@
 #include "types.h"
 #include "balance.h"
 #include "soilPhysics.h"
-#include "solver.h"
 #include "boundary.h"
 #include "heat.h"
 #include "water.h"
@@ -46,14 +45,14 @@ static double _bestMBRerror;
 static bool _isHalfTimeStepForced = false;
 
 
-inline void doubleTimeStep()
+__SF3DINLINE void doubleTimeStep()
 {
     myParameters.current_delta_t *= 2.0;
     myParameters.current_delta_t = MINVALUE(myParameters.current_delta_t, myParameters.delta_t_max);
 }
 
 
-void halveTimeStep()
+__SF3DINLINE void halveTimeStep()
 {
     myParameters.current_delta_t /= 2.0;
     myParameters.current_delta_t = MAXVALUE(myParameters.current_delta_t, myParameters.delta_t_min);
@@ -82,17 +81,13 @@ void InitializeBalanceWater()
         nodeList[n].up.sumFlow = 0.;
         nodeList[n].down.sumFlow = 0.;
         for (short i = 0; i < myStructure.nrLateralLinks; i++)
-        {
-             nodeList[n].lateral[i].sumFlow = 0.;
-        }
+            nodeList[n].lateral[i].sumFlow = 0.;
     }
 
     // initialize boundary flow
     for (long n = 0; n < myStructure.nrNodes; n++)
-    {
         if (nodeList[n].boundary != nullptr)
             nodeList[n].boundary->sumBoundaryWaterFlow = 0.;
-    }
 }
 
 
@@ -102,21 +97,15 @@ void InitializeBalanceWater()
  */
 double computeTotalWaterContent()
 {
-   double sum = 0.0;
+    double sum = 0.0;
 
-   for (unsigned long i = 0; i < unsigned(myStructure.nrNodes); i++)
-   {
-       if (nodeList[i].isSurface)
-       {
-           sum += (nodeList[i].H - double(nodeList[i].z)) * nodeList[i].volume_area;
-       }
-       else
-       {
-           sum += theta_from_Se(i) * nodeList[i].volume_area;
-       }
-   }
+    for (unsigned long i = 0; i < unsigned(myStructure.nrNodes); i++)
+    {
+        double theta = nodeList[i].isSurface ? (nodeList[i].H - double(nodeList[i].z)) : theta_from_Se(i);
+        sum += theta * nodeList[i].volume_area;
+    }
 
-   return sum;
+    return sum;
 }
 
 
@@ -129,10 +118,8 @@ double sumWaterFlow(double deltaT)
 {
     double sum = 0.0;
     for (long n = 0; n < myStructure.nrNodes; n++)
-    {
         if (nodeList[n].Qw != 0.)
             sum += nodeList[n].Qw * deltaT;
-    }
     return sum;
 }
 
@@ -163,20 +150,18 @@ void computeMassBalance(double deltaT)
 
 double getMatrixValue(long i, TlinkedNode *link)
 {
-	if (link != nullptr)
-    {
-        int j = 1;
-        while ((j < myStructure.maxNrColumns) && (A[i][j].index != NOLINK) && (A[i][j].index != (*link).index))
-            j++;
+    if (link == nullptr)
+        return double(INDEX_ERROR);
 
-        /*! Rebuild the A elements (previously normalized) */
-		if (A[i][j].index == (*link).index)
-        {
-			return (A[i][j].val * A[i][0].val);
-        }
-    }
+    int j = 1;
+    while ((j < myStructure.maxNrColumns) && (A[i][j].index != NOLINK) && (A[i][j].index != (*link).index))
+        j++;
 
-	return double(INDEX_ERROR);
+    if (A[i][j].index != (*link).index)
+        return double(INDEX_ERROR);
+
+    /*! Rebuild the A elements (previously normalized) */
+    return (A[i][j].val * A[i][0].val);
 }
 
 
@@ -186,21 +171,17 @@ double getMatrixValue(long i, TlinkedNode *link)
  * \param link      TlinkedNode pointer
  * \param delta_t   [s]
  */
-void update_flux(long index, TlinkedNode *link, double delta_t)
+__SF3DINLINE void updateFlux(long index, TlinkedNode *link, double delta_t)
 {
     if (link->index != NOLINK)
-    {
         (*link).sumFlow += float(getWaterExchange(index, link, delta_t));       // [m3]
-    }
 }
 
 
-void saveBestStep()
+__SF3DINLINE void saveBestStep()
 {
-	for (long n = 0; n < myStructure.nrNodes; n++)
-    {
+    for (unsigned long n = 0; n < unsigned(myStructure.nrNodes); n++)
         nodeList[n].bestH = nodeList[n].H;
-    }
 }
 
 
@@ -211,13 +192,11 @@ void restoreBestStep(double deltaT)
         nodeList[n].H = nodeList[n].bestH;
 
         /*! compute new soil moisture (only sub-surface nodes) */
-        if (! nodeList[n].isSurface)
-        {
+        if (!nodeList[n].isSurface)
             nodeList[n].Se = computeSe(n);
-        }
     }
 
-     computeMassBalance(deltaT);
+    computeMassBalance(deltaT);
 }
 
 
@@ -231,12 +210,10 @@ void acceptStep(double deltaT)
     /*! update sum of flow */
     for (long i = 0; i < myStructure.nrNodes; i++)
     {
-        update_flux(i, &(nodeList[i].up), deltaT);
-        update_flux(i, &(nodeList[i].down), deltaT);
+        updateFlux(i, &(nodeList[i].up), deltaT);
+        updateFlux(i, &(nodeList[i].down), deltaT);
         for (short j = 0; j < myStructure.nrLateralLinks; j++)
-        {
-            update_flux(i, &(nodeList[i].lateral[j]), deltaT);
-        }
+            updateFlux(i, &(nodeList[i].lateral[j]), deltaT);
 
         if (nodeList[i].boundary != nullptr)
             nodeList[i].boundary->sumBoundaryWaterFlow += nodeList[i].boundary->waterFlow * deltaT;
@@ -267,9 +244,7 @@ bool waterBalance(double deltaT, int approxNr)
             {
                 myParameters.current_delta_t = std::min(myParameters.current_delta_t / CourantWater, myParameters.delta_t_max);
                 if (myParameters.current_delta_t > 1.)
-                {
                     myParameters.current_delta_t = floor(myParameters.current_delta_t);
-                }
             }
         }
 
@@ -284,7 +259,7 @@ bool waterBalance(double deltaT, int approxNr)
 	}
 
     // system is unstable or last approximation
-    int lastApproximation = myParameters.maxApproximationsNumber-1;
+    int lastApproximation = myParameters.maxApproximationsNumber - 1;
     if (MBRerror > (_bestMBRerror * 2.0) || approxNr == lastApproximation)
     {
         if (deltaT > myParameters.delta_t_min)
@@ -293,13 +268,11 @@ bool waterBalance(double deltaT, int approxNr)
             setForcedHalvedTime(true);
             return false;
         }
-        else
-        {
-            // worst case: forced to accept the time step, restore best error
-            restoreBestStep(deltaT);
-            acceptStep(deltaT);
-            return true;
-        }
+
+        // worst case: forced to accept the time step, restore best error
+        restoreBestStep(deltaT);
+        acceptStep(deltaT);
+        return true;
     }
 
     // move to the next approximation
@@ -311,15 +284,16 @@ bool waterBalance(double deltaT, int approxNr)
 void updateBalanceWaterWholePeriod()
 {
     /*! update the flows in the balance (balanceWholePeriod) */
-    balanceWholePeriod.sinkSourceWater  += balanceCurrentPeriod.sinkSourceWater;
+    balanceWholePeriod.sinkSourceWater += balanceCurrentPeriod.sinkSourceWater;
 
     double deltaStoragePeriod = balanceCurrentTimeStep.storageWater - balanceCurrentPeriod.storageWater;
-
     double deltaStorageHistorical = balanceCurrentTimeStep.storageWater - balanceWholePeriod.storageWater;
 
     /*! compute waterMBE and waterMBR */
     balanceCurrentPeriod.waterMBE = fabs(deltaStoragePeriod - balanceCurrentPeriod.sinkSourceWater);
-    if ((balanceWholePeriod.storageWater == 0.) && (balanceWholePeriod.sinkSourceWater == 0.)) balanceWholePeriod.waterMBR = 1.;
+
+    if ((balanceWholePeriod.storageWater == 0.) && (balanceWholePeriod.sinkSourceWater == 0.))
+        balanceWholePeriod.waterMBR = 1.;
     else if (balanceCurrentTimeStep.storageWater > fabs(balanceWholePeriod.sinkSourceWater))
         balanceWholePeriod.waterMBR = balanceCurrentTimeStep.storageWater / (balanceWholePeriod.storageWater + balanceWholePeriod.sinkSourceWater);
     else
@@ -330,12 +304,12 @@ void updateBalanceWaterWholePeriod()
 }
 
 
-bool getForcedHalvedTime()
+__SF3DINLINE bool getForcedHalvedTime()
 {
     return (_isHalfTimeStepForced);
 }
 
-void setForcedHalvedTime(bool isForced)
+__SF3DINLINE void setForcedHalvedTime(bool isForced)
 {
     _isHalfTimeStepForced = isForced;
 }

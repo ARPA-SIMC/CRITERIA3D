@@ -34,17 +34,16 @@ void cleanArrays()
     /*! free matrix A */
     if (A != nullptr)
     {
-            for (long i=0; i < myStructure.nrNodes; i++)
-            {
-                if (A[i] != nullptr)
-                    free(A[i]);
-            }
-            free(A);
-            A = nullptr;
+        for (long i=0; i < myStructure.nrNodes; i++)
+            if (A[i] != nullptr)
+                free(A[i]);
+
+        free(A);
+        A = nullptr;
     }
 
     /*! free arrays */
-    if (invariantFlux != nullptr) { free(invariantFlux); invariantFlux = nullptr; }
+    if (invariantFlux != nullptr) { free(invariantFlux); invariantFlux = nullptr;}
     if (b != nullptr) { free(b); b = nullptr; }
     if (C != nullptr) { free(C); C = nullptr; }
     if (X != nullptr) { free(X); X = nullptr; }
@@ -54,16 +53,18 @@ void cleanArrays()
 
 void cleanNodes()
 {
-    if (nodeList != nullptr)
+    if (nodeList == nullptr)
+        return;
+
+    for (long i = 0; i < myStructure.nrNodes; i++)
     {
-        for (long i = 0; i < myStructure.nrNodes; i++)
-        {
-            if (nodeList[i].boundary != nullptr) free(nodeList[i].boundary);
-            free(nodeList[i].lateral);
-        }
-        free(nodeList);
-        nodeList = nullptr;
+        if (nodeList[i].boundary != nullptr)
+            free(nodeList[i].boundary);
+
+        free(nodeList[i].lateral);
     }
+    free(nodeList);
+    nodeList = nullptr;
 }
 
 
@@ -81,32 +82,24 @@ int initializeArrays()
 
     /*! matrix A: columns */
     for (long i = 0; i < myStructure.nrNodes; i++)
-    {
         A[i] = (TmatrixElement *) calloc(myStructure.maxNrColumns, sizeof(TmatrixElement));
-    }
 
     /*! initialize matrix A */
     for (long i = 0; i < myStructure.nrNodes; i++)
-    {
         for (int j = 0; j < myStructure.maxNrColumns; j++)
         {
             A[i][j].index   = NOLINK;
             A[i][j].val     = 0.;
         }
-    }
 
     b = (double *) calloc(myStructure.nrNodes, sizeof(double));
     for (long i = 0; i < myStructure.nrNodes; i++)
-    {
         b[i] = 0.;
-    }
 
     X = (double *) calloc(myStructure.nrNodes, sizeof(double));
 
     if (myParameters.numericalSolutionMethod == JACOBI)
-    {
         X1 = (double *) calloc(myStructure.nrNodes, sizeof(double));
-    }
 
     /*! mass diagonal matrix */
     C = (double *) calloc(myStructure.nrNodes, sizeof(double));
@@ -119,6 +112,6 @@ int initializeArrays()
 
     if (A == nullptr)
         return MEMORY_ERROR;
-    else
-        return CRIT3D_OK;
+
+    return CRIT3D_OK;
 }

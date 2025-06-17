@@ -31,9 +31,10 @@
 #include "commonConstants.h"
 #include "extra.h"
 #include "types.h"
+#include "macro.h"
 
 
-void initializeExtraHeat(TCrit3DNodeHeat* myNodeExtraHeat)
+__SF3DINLINE void initializeExtraHeat(TCrit3DNodeHeat* myNodeExtraHeat)
 {
     (*myNodeExtraHeat).T = ZEROCELSIUS + 20;
     (*myNodeExtraHeat).oldT = ZEROCELSIUS + 20;
@@ -58,32 +59,37 @@ void initializeExtra(TCrit3DnodeExtra *myNodeExtra, bool computeHeat, bool compu
 
 void initializeNodeHeatFlux(TCrit3DLinkedNodeExtra* myLinkExtra, bool initHeat, bool initWater)
 {
-    if (myLinkExtra == nullptr) return;
-    if (myLinkExtra->heatFlux == nullptr) return;
-    if (! myStructure.computeHeat) return;
+    if (myLinkExtra == nullptr)
+        return;
+    if (myLinkExtra->heatFlux == nullptr)
+        return;
+    if (!myStructure.computeHeat)
+        return;
 
-    if (myStructure.saveHeatFluxesType == SAVE_HEATFLUXES_TOTAL && initHeat)
-        myLinkExtra->heatFlux->fluxes[HEATFLUX_TOTAL] = NODATA;
-    else if (myStructure.saveHeatFluxesType == SAVE_HEATFLUXES_ALL)
+    if (initHeat)
     {
-        if (initHeat)
+        switch (myStructure.saveHeatFluxesType)
         {
-            myLinkExtra->heatFlux->fluxes[HEATFLUX_TOTAL] = NODATA;
-            myLinkExtra->heatFlux->fluxes[HEATFLUX_DIFFUSIVE] = NODATA;
-            myLinkExtra->heatFlux->fluxes[HEATFLUX_LATENT_ISOTHERMAL] = NODATA;
-            myLinkExtra->heatFlux->fluxes[HEATFLUX_LATENT_THERMAL] = NODATA;
-            myLinkExtra->heatFlux->fluxes[HEATFLUX_ADVECTIVE] = NODATA;
-        }
-
-        if (initWater)
-        {
-            myLinkExtra->heatFlux->fluxes[WATERFLUX_LIQUID_ISOTHERMAL] = NODATA;
-            myLinkExtra->heatFlux->fluxes[WATERFLUX_LIQUID_THERMAL] = NODATA;
-            myLinkExtra->heatFlux->fluxes[WATERFLUX_VAPOR_ISOTHERMAL] = NODATA;
-            myLinkExtra->heatFlux->fluxes[WATERFLUX_VAPOR_THERMAL] = NODATA;
+            case SAVE_HEATFLUXES_TOTAL:
+                myLinkExtra->heatFlux->fluxes[HEATFLUX_TOTAL] = NODATA;
+                break;
+            case SAVE_HEATFLUXES_ALL:
+                myLinkExtra->heatFlux->fluxes[HEATFLUX_TOTAL] = NODATA;
+                myLinkExtra->heatFlux->fluxes[HEATFLUX_DIFFUSIVE] = NODATA;
+                myLinkExtra->heatFlux->fluxes[HEATFLUX_LATENT_ISOTHERMAL] = NODATA;
+                myLinkExtra->heatFlux->fluxes[HEATFLUX_LATENT_THERMAL] = NODATA;
+                myLinkExtra->heatFlux->fluxes[HEATFLUX_ADVECTIVE] = NODATA;
+                break;
         }
     }
 
+    if (initWater && myStructure.saveHeatFluxesType == SAVE_HEATFLUXES_ALL)
+    {
+        myLinkExtra->heatFlux->fluxes[WATERFLUX_LIQUID_ISOTHERMAL] = NODATA;
+        myLinkExtra->heatFlux->fluxes[WATERFLUX_LIQUID_THERMAL] = NODATA;
+        myLinkExtra->heatFlux->fluxes[WATERFLUX_VAPOR_ISOTHERMAL] = NODATA;
+        myLinkExtra->heatFlux->fluxes[WATERFLUX_VAPOR_THERMAL] = NODATA;
+    }
 }
 
 void initializeLinkExtra(TCrit3DLinkedNodeExtra* myLinkedNodeExtra, bool computeHeat, bool computeSolutes)
@@ -95,15 +101,18 @@ void initializeLinkExtra(TCrit3DLinkedNodeExtra* myLinkedNodeExtra, bool compute
         (*myLinkedNodeExtra).heatFlux->waterFlux = 0.;
         (*myLinkedNodeExtra).heatFlux->vaporFlux = 0.;
 
-        if (myStructure.saveHeatFluxesType == SAVE_HEATFLUXES_ALL)
-            (*myLinkedNodeExtra).heatFlux->fluxes = new float[9];
-        else if (myStructure.saveHeatFluxesType == SAVE_HEATFLUXES_TOTAL)
-            (*myLinkedNodeExtra).heatFlux->fluxes = new float[1];
-        else
-            (*myLinkedNodeExtra).heatFlux->fluxes = nullptr;
-
+        switch (myStructure.saveHeatFluxesType)
+        {
+            case SAVE_HEATFLUXES_ALL:
+                (*myLinkedNodeExtra).heatFlux->fluxes = new float[9];
+                break;
+            case SAVE_HEATFLUXES_TOTAL:
+                (*myLinkedNodeExtra).heatFlux->fluxes = new float[1];
+                break;
+            default:
+                (*myLinkedNodeExtra).heatFlux->fluxes = nullptr;
+        }
         initializeNodeHeatFlux(myLinkedNodeExtra, true, true);
-
     }
     else (*myLinkedNodeExtra).heatFlux = nullptr;
 

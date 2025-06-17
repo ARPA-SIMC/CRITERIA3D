@@ -9,6 +9,9 @@
 QT  += network widgets sql xml charts
 greaterThan(QT_MAJOR_VERSION, 5): QT += core5compat openglwidgets
 
+QMAKE_CXXFLAGS += -fopenmp
+QMAKE_LFLAGS += -fopenmp
+
 TEMPLATE = app
 TARGET = CRITERIA3D
 

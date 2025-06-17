@@ -9,6 +9,8 @@
     #endif
 
     #include "commonConstants.h"
+    #include <stdlib.h>
+    #include <vector>
 
     struct Tboundary
     {
@@ -150,5 +152,18 @@
     extern double CourantWater;
 
     extern Tbalance balanceCurrentTimeStep, balancePreviousTimeStep, balanceCurrentPeriod, balanceWholePeriod;
+
+    //logData types
+    enum typeSolver {Jacobi_thread, GaussSeidel_thread, Jacobi_openMP, GaussSeidel_openMP};
+
+    struct linSystData
+    {
+        int numberApprox = NULL;
+        std::vector<int> numberIterations;
+        std::vector<int> maxNumberIterations;
+        typeSolver solver;
+    };
+
+    extern linSystData logLinSyst;
 
 #endif // SOILFLUXES3DTYPES
