@@ -1431,6 +1431,7 @@ namespace interpolation
         std::vector<double> ySim(nrData);
 
         double maxZ = x.front();
+
         for (int k = 0; k < (int)x.size(); k++)
         {
             if (x[k] > maxZ) maxZ = x[k]; //look for max elevation station
@@ -1552,7 +1553,8 @@ namespace interpolation
                                         int maxIterationsNr, double myEpsilon,
                                         std::vector <std::vector <double>>& x ,std::vector<double>& y)
     {
-        int i,j;
+        unsigned int i;
+        int j;
         //int nrData = int(y.size());
         std::vector <int> nrParameters(parameters.size());
         int nrParametersTotal = 0;
@@ -1709,6 +1711,7 @@ namespace interpolation
     {
         int i;
         int nrPredictors = 0;
+
         for (int k = 0; k < (int)parameters.size(); k++)
             if (parameters[k].size() == 2) nrPredictors++;
         int nrData = int(y.size());
@@ -2255,6 +2258,7 @@ namespace interpolation
     {
         int i;
         int nrPredictors = 0;
+
         for (int k = 0; k < (int)parameters.size(); k++)
             if (parameters[k].size() == 2) nrPredictors++;
         int nrData = int(y.size());

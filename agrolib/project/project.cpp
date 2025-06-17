@@ -2503,7 +2503,7 @@ bool Project::loadGlocalStationsCsv(QString fileName, std::vector<std::vector<st
         line = myStream.readLine().split(',');
         if (line.size() > 1)
         {
-            int areaNr = line[0].toInt();
+            unsigned int areaNr = line[0].toInt();
             for (int i = 1; i < line.size(); i++)
             {
                 temp.push_back(line[i].toStdString());
@@ -2526,7 +2526,7 @@ bool Project::loadGlocalStationsCsv(QString fileName, std::vector<std::vector<st
 
 bool Project::groupCellsInArea(std::vector<int> &areaPoints, int index, bool isGrid)
 {
-    int zoneNr;
+    unsigned int zoneNr;
     double myX, myY;
     gis::Crit3DRasterGrid* macroAreas = interpolationSettings.getMacroAreasMap();
     int nrCols;

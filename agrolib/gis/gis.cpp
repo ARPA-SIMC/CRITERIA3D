@@ -2015,6 +2015,7 @@ namespace gis
         // initialize new raster (boundaries)
         Crit3DRasterGrid boundariesRaster;
         boundariesRaster.initializeGrid(*inputRaster.header);
+
         for (int i=0; i < (int)rowList.size(); i++)
         {
             boundariesRaster.value[rowList[i]][colList[i]] = 1;
