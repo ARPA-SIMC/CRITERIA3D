@@ -1,11 +1,15 @@
 #ifndef BALANCE_H
 #define BALANCE_H
 
+    #ifndef MACRO_H
+        #include "macro.h"
+    #endif
+
     struct TlinkedNode;
 
-    void halveTimeStep();
-    bool getForcedHalvedTime();
-    void setForcedHalvedTime(bool isForced);
+    __SF3DINLINE void halveTimeStep();
+    __SF3DINLINE bool getForcedHalvedTime();
+    __SF3DINLINE void setForcedHalvedTime(bool isForced);
     double computeTotalWaterContent();
     double getMatrixValue(long i, TlinkedNode *link);
     void InitializeBalanceWater();

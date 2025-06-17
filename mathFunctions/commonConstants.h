@@ -253,5 +253,11 @@
 
     #define MINIMUM_PERCENTILE_DATA 3
 
+    //-----NEW COSTANT - TO DO: MOVE THEM IN THE APPROPRIATE SECTION
+    //boundary.cpp/computeSoilSurfaceResistance
+    #define THETAMIN 0.15
+    //boundary.cpp/updateBoundaryWater
+    #define EPSILON_RUNOFF 0.001        // [m] 1 mm
+
 
 #endif // COMMONCONSTANTS_H
