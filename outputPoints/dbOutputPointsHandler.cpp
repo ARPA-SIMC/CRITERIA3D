@@ -283,7 +283,7 @@ void Crit3DOutputPointsDbHandler::appendCriteria3DOutputValue(criteria3DVariable
 {
     QString variableString = QString::fromStdString(getCriteria3DVarName(myVar));
 
-    for (unsigned int l = 0; l < depthList.size(); l++)
+    for (int l = 0; l < (int)depthList.size(); l++)
     {
         float depth_cm = depthList[l];
         QString fieldName = variableString + "_" + QString::number(depth_cm);

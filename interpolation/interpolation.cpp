@@ -1769,7 +1769,8 @@ void macroAreaDetrending(Crit3DMacroArea myArea, meteoVariable myVar, Crit3DInte
 
     //find the fitting functions vector based on the length of the parameters vector for every proxy
     std::vector<std::function<double (double, std::vector<double> &)> > fittingFunction;
-    for (unsigned int l = 0; l < myArea.getParameters().size(); l++)
+
+    for (int l = 0; l < (int)myArea.getParameters().size(); l++)
     {
         if (myArea.getParameters()[l].size() == 2)
             fittingFunction.push_back(functionLinear_intercept);
@@ -1785,9 +1786,10 @@ void macroAreaDetrending(Crit3DMacroArea myArea, meteoVariable myVar, Crit3DInte
 
     // create vector of macro area interpolation points
     std::vector<int> temp = myArea.getMeteoPoints();
-    for (unsigned int l = 0; l < temp.size(); l++)
+
+    for (int l = 0; l < (int)temp.size(); l++)
     {
-        for (unsigned int k = 0; k < interpolationPoints.size(); k++)
+        for (int k = 0; k < (int)interpolationPoints.size(); k++)
         {
             if (interpolationPoints[k].index == temp[l])
             {
@@ -2574,6 +2576,35 @@ bool getProxyValuesXY(float x, float y, Crit3DInterpolationSettings* mySettings,
         myValues[i] = NODATA;
 
         if (myCombination.isProxyActive(i))
+        {
+            proxyGrid = mySettings->getProxy(i)->getGrid();
+            if (proxyGrid != nullptr && proxyGrid->isLoaded)
+            {
+                myValue = gis::getValueFromXY(*proxyGrid, x, y);
+                if (myValue != proxyGrid->header->flag)
+                    myValues[i] = myValue;
+                else
+                    proxyComplete = false;
+            }
+        }
+    }
+
+    return proxyComplete;
+}
+
+bool getSignificantProxyValuesXY(float x, float y, Crit3DInterpolationSettings* mySettings, std::vector<double> &myValues)
+{
+    float myValue;
+    gis::Crit3DRasterGrid* proxyGrid;
+    bool proxyComplete = true;
+
+    Crit3DProxyCombination myCombination = mySettings->getCurrentCombination();
+
+    for (unsigned int i=0; i < mySettings->getProxyNr(); i++)
+    {
+        myValues[i] = NODATA;
+
+        if (myCombination.isProxyActive(i) && myCombination.isProxySignificant(i))
         {
             proxyGrid = mySettings->getProxy(i)->getGrid();
             if (proxyGrid != nullptr && proxyGrid->isLoaded)

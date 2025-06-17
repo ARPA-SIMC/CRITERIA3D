@@ -1942,7 +1942,7 @@ namespace gis
         int side = 5;
         while (! rowList.empty())
         {
-            for (unsigned int i=0; i < rowList.size(); i++)
+            for (int i=0; i < (int)rowList.size(); i++)
             {
                 int row = rowList[i];
                 int col = colList[i];
@@ -2015,7 +2015,8 @@ namespace gis
         // initialize new raster (boundaries)
         Crit3DRasterGrid boundariesRaster;
         boundariesRaster.initializeGrid(*inputRaster.header);
-        for (unsigned int i=0; i < rowList.size(); i++)
+
+        for (int i=0; i < (int)rowList.size(); i++)
         {
             boundariesRaster.value[rowList[i]][colList[i]] = 1;
         }
@@ -2024,7 +2025,7 @@ namespace gis
         float boundaryValue;
         while (! rowList.empty())
         {
-            for (unsigned int i=0; i < rowList.size(); i++)
+            for (int i=0; i < (int)rowList.size(); i++)
             {
                 int row = rowList[i];
                 int col = colList[i];

@@ -30,6 +30,7 @@
 #include "mapGraphicsRasterUtm.h"
 #include "basicMath.h"
 #include "color.h"
+#include "geoMap.h"
 
 #include <math.h>
 #include <QMenu>
@@ -82,6 +83,8 @@ bool RasterUtmObject::initialize(gis::Crit3DRasterGrid* rasterPtr, const gis::Cr
         return false;
     if (! rasterPtr->isLoaded)
         return false;
+
+    setDrawing(false);
 
     _utmZone = gisSettings.utmZone;
     _rasterPointer = rasterPtr;

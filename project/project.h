@@ -269,7 +269,7 @@
         bool loadGlocalStationsAndCells(bool isGrid, QString fileNameStations);
         bool loadGlocalWeightMaps(std::vector<Crit3DMacroArea> &myAreas, bool isGrid);
         bool loadGlocalStationsCsv(QString fileName, std::vector<std::vector<std::string> > &areaPoints);
-        bool groupCellsInArea(std::vector<int> &areaPoints, unsigned index, bool isGrid);
+        bool groupCellsInArea(std::vector<int> &areaPoints, int index, bool isGrid);
         bool writeGlocalWeightsMaps(float windowWidth);
 
 
@@ -283,7 +283,7 @@
         bool interpolateDemRadiation(const Crit3DTime& myTime, gis::Crit3DRasterGrid *myRaster);
         bool interpolationOutputPoints(std::vector <Crit3DInterpolationDataPoint> &interpolationPoints,
                                        gis::Crit3DRasterGrid *outputGrid, meteoVariable myVar);
-        bool interpolationCv(meteoVariable myVar, const Crit3DTime& myTime, QString glocalCVPointsName);
+        bool interpolationCv(meteoVariable myVar, const Crit3DTime& myTime);
         bool computeResidualsAndStatisticsGlocalDetrending(meteoVariable myVar, std::vector<Crit3DInterpolationDataPoint> &interpolationPoints);
 
         bool computeStatisticsCrossValidation();
