@@ -191,7 +191,14 @@ void Project::setProxyDEM()
         if (proxyHeight->getGridName() == "" && DEM.isLoaded)
         {
             proxyHeight->setGrid(&DEM);
-            proxyHeight->setGridName(getCompleteFileName(demFileName, PATH_DEM).toStdString());
+            std::string completeDem = getCompleteFileName(demFileName, PATH_DEM).toStdString();
+            auto pos = completeDem.find_last_of('.');
+            if (pos != std::string::npos) {
+                proxyHeight->setGridName(completeDem.substr (0,pos));
+            }
+            else {
+                proxyHeight->setGridName(completeDem);
+            }
         }
     }
 
@@ -3070,6 +3077,7 @@ bool Project::interpolationDemGlocalDetrending(meteoVariable myVar, const Crit3D
             if (getProxyPragaName(interpolationSettings.getProxy(pos)->getName()) == proxyHeight)
                 elevationPos = pos;
         }
+
 
         for (unsigned areaIndex = 0; areaIndex < interpolationSettings.getMacroAreas().size(); areaIndex++)
         {
