@@ -544,11 +544,11 @@ namespace gis
      * \brief Read a ESRI/ENVI float raster (header and data)
      * \return true on success, false otherwise
      */
-    bool openRaster(string fileName, Crit3DRasterGrid *rasterGrid, int currentUtmZone, string &error)
+    bool openRaster(string fileName, Crit3DRasterGrid *rasterGrid, int currentUtmZone, string &errorStr)
     {
         if (fileName.size() <= 4)
         {
-            error = "Wrong filename.";
+            errorStr = "Wrong filename.";
             return false;
         }
 
@@ -558,11 +558,11 @@ namespace gis
         bool isOk = false;
         if (fileExtension == ".flt")
         {
-            isOk = gis::readEsriGrid(fileNameWithoutExt, rasterGrid, error);
+            isOk = gis::readEsriGrid(fileNameWithoutExt, rasterGrid, errorStr);
         }
         else if (fileExtension == ".img")
         {
-            isOk = gis::readEnviGrid(fileNameWithoutExt, rasterGrid, currentUtmZone, error);
+            isOk = gis::readEnviGrid(fileNameWithoutExt, rasterGrid, currentUtmZone, errorStr);
         }
 
         return isOk;

@@ -37,9 +37,8 @@
 #include "soil.h"
 #include "hydrall.h"
 #include "physics.h"
+#include "shell.h"
 
-#include <QtSql>
-#include <QPaintEvent>
 #include <QVector3D>
 #include <float.h>
 
@@ -958,14 +957,15 @@ bool Crit3DProject::isSaveOutputPoints()
 }
 
 
-bool Crit3DProject::loadCriteria3DProject(QString myFileName)
+bool Crit3DProject::loadCriteria3DProject(const QString &fileName)
 {
-    if (myFileName == "") return(false);
+    if (fileName.isEmpty())
+        return false;
 
     clear3DProject();
     initializeProject3D();
 
-    if (! loadProjectSettings(myFileName))
+    if (! loadProjectSettings(fileName))
         return false;
 
     if (! loadProject3DSettings())
@@ -2846,4 +2846,217 @@ bool Crit3DProject::update3DColors(gis::Crit3DRasterGrid *rasterPointer)
 
     return true;
 }
+
+
+// -------------------------  SHELL -------------------------
+
+int Crit3DProject::criteria3DShell()
+{
+    #ifdef _WIN32
+        openNewConsole();
+    #endif
+
+    printCriteria3DVersion();
+
+    while (! requestedExit)
+    {
+        QString commandLine = getCommandLine("CRITERIA3D");
+        if (commandLine != "")
+        {
+            QList<QString> argumentList = getArgumentList(commandLine);
+            if (argumentList.size() > 0)
+            {
+                int result = executeCommand(argumentList);
+                if (result != CRIT3D_OK)
+                {
+                    logError();
+                }
+            }
+        }
+    }
+
+    #ifdef _WIN32
+        closeConsole();
+    #endif
+
+    return CRIT3D_OK;
+}
+
+
+int Crit3DProject::criteria3DBatch(const QString &scriptFileName)
+{
+    #ifdef _WIN32
+        attachOutputToConsole();
+    #endif
+
+    printCriteria3DVersion();
+
+    int result = executeScript(scriptFileName);
+    if (result != CRIT3D_OK)
+    {
+        logError();
+    }
+
+    logInfo("Batch finished at: " + QDateTime::currentDateTime().toString("yyyy-MM-dd hh:mm:ss"));
+
+    #ifdef _WIN32
+        // Send "enter" to release application from the console
+        // This is a hack, but if not used the console doesn't know the application has
+        // returned. The "enter" key only sent if the console window is in focus.
+        if ( isConsoleForeground() )
+            sendEnterKey();
+    #endif
+
+    return result;
+}
+
+
+int Crit3DProject::executeScript(const QString &scriptFileName)
+{
+    if (scriptFileName.isEmpty())
+    {
+        errorString = "No script file provided.";
+        return CRIT3D_ERROR;
+    }
+    logInfo("Execute script: " + scriptFileName + "\n");
+
+    QFile scriptFile(scriptFileName);
+    if(! scriptFile.open (QIODevice::ReadOnly))
+    {
+        errorString = "Error in opening: " + scriptFileName + " " + scriptFile.errorString();
+        return CRIT3D_ERROR;
+    }
+
+    while (! scriptFile.atEnd())
+    {
+        QString cmdLine = scriptFile.readLine();
+        QList<QString> argumentList = getArgumentList(cmdLine);
+
+        int result = executeCommand(argumentList);
+        if (result != CRIT3D_OK)
+            return result;
+
+        logInfo("");
+    }
+    scriptFile.close();
+
+    return CRIT3D_OK;
+}
+
+
+int Crit3DProject::executeCommand(const QList<QString> &argumentList)
+{
+    if (argumentList.size() == 0)
+        return CRIT3D_OK;
+
+    logInfo(getTimeStamp(argumentList));
+
+    // comment
+    if (argumentList[0].at(0) == '#')
+        return CRIT3D_OK;
+
+    bool isCommandFound;
+
+    int result = executeSharedCommand(this, argumentList, &isCommandFound);
+    if (isCommandFound)
+        return result;
+
+    result = executeCriteria3DCommand(argumentList, isCommandFound);
+    if (isCommandFound)
+        return result;
+
+    errorString = "This is not a valid CRITERIA3D command: " + argumentList[0];
+    return CRIT3D_INVALID_COMMAND;
+}
+
+
+int Crit3DProject::executeCriteria3DCommand(const QList<QString> &argumentList, bool &isCommandFound)
+{
+    isCommandFound = false;
+    if (argumentList.empty())
+        return CRIT3D_INVALID_COMMAND;
+
+    QString command = argumentList[0].toUpper();
+
+    if (command == "?" || command == "LS" || command == "LIST" || command == "LISTCOMMANDS")
+    {
+        isCommandFound = true;
+        return printCriteria3DCommandList();
+    }
+    if (command == "VERSION" || command == "CRITERIA3DVERSION")
+    {
+        isCommandFound = true;
+        return printCriteria3DVersion();
+    }
+    else if (command == "PROJ" || command == "OPENPROJECT")
+    {
+        isCommandFound = true;
+        return cmdOpenCriteria3DProject(argumentList);
+    }
+
+    return CRIT3D_INVALID_COMMAND;
+}
+
+
+int Crit3DProject::printCriteria3DVersion()
+{
+    logInfo("CRITERIA3D " + QString(CRITERIA3D_VERSION));
+    return CRIT3D_OK;
+}
+
+
+int Crit3DProject::printCriteria3DCommandList()
+{
+    QList<QString> list = getSharedCommandList();
+
+    // criteria3D commands
+    list.append("List            | ListCommands");
+    list.append("Version         | Criteria3DVersion");
+    list.append("Proj            | OpenProject");
+    //..
+
+    logInfo("Available Console commands:");
+    logInfo("(short          | long version)");
+    for (int i = 0; i < list.size(); i++)
+    {
+        logInfo(list[i]);
+    }
+
+    return CRIT3D_OK;
+}
+
+
+int Crit3DProject::cmdOpenCriteria3DProject(const QList<QString> &argumentList)
+{
+    if (argumentList.size() < 2)
+    {
+        errorString = "Missing project file name";
+        return CRIT3D_INVALID_COMMAND;
+    }
+
+    // set fileName and projectFolder
+    QString filename = argumentList.at(1);
+    QString filePath = getFilePath(filename);
+
+    QString projectFolder = "";
+    if (filePath.isEmpty())
+    {
+        if (filename.left(filename.length()-4) == ".ini")
+            projectFolder = filename.left(filename.length()-4) + "/";
+        else
+        {
+            projectFolder = filename + "/";
+            filename += ".ini";
+        }
+    }
+
+    projectFolder = PATH_PROJECT + projectFolder;
+    QString projectName = getCompleteFileName(filename, projectFolder);
+
+    if (! loadCriteria3DProject(projectName))
+        return CRIT3D_ERROR;
+
+    return CRIT3D_OK;
+}
+
 

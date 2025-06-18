@@ -95,6 +95,7 @@ CONFIG(debug, debug|release) {
 
 HEADERS += \
     dialogModelProcesses.h \
+    mainGUI.h \
     mainwindow.h \
     criteria3DProject.h \
     dialogLoadState.h \
@@ -105,6 +106,7 @@ HEADERS += \
 
 SOURCES += \
     dialogModelProcesses.cpp \
+    mainGUI.cpp \
     mainwindow.cpp \
     criteria3DProject.cpp \
     dialogLoadState.cpp \

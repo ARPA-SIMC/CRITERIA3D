@@ -102,7 +102,7 @@
         void setSaveOutputPoints(bool isSave);
         bool isSaveOutputPoints();
 
-        bool loadCriteria3DProject(QString myFileName);
+        bool loadCriteria3DProject(const QString &fileName);
         bool loadCriteria3DParameters();
         bool writeCriteria3DParameters(bool isSnow, bool isWater, bool isSoilCrack);
 
@@ -146,6 +146,18 @@
         bool initializeGeometry();
         void shadowColor(const Crit3DColor &colorIn, Crit3DColor &colorOut, int row, int col);
         bool update3DColors(gis::Crit3DRasterGrid *rasterPointer = nullptr);
+
+        // SHELL
+        int criteria3DShell();
+        int criteria3DBatch(const QString &scriptFileName);
+
+        int executeScript(const QString &scriptFileName);
+        int executeCommand(const QList<QString> &argumentList);
+        int executeCriteria3DCommand(const QList<QString> &argumentList, bool &isCommandFound);
+
+        int cmdOpenCriteria3DProject(const QList<QString> &argumentList);
+        int printCriteria3DVersion();
+        int printCriteria3DCommandList();
 
     };
 

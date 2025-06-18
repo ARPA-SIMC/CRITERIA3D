@@ -1095,31 +1095,31 @@ void Project::closeMeteoGridDB()
 
 /*!
  * \brief loadDEM
- * \param myFileName the name of the Digital Elevation Model file
+ * \param fileName the name of the Digital Elevation Model file
  * \return true if file is ok, false otherwise
  */
-bool Project::loadDEM(QString myFileName)
+bool Project::loadDEM(const QString &fileName)
 {
-    if (myFileName == "")
+    if (fileName == "")
     {
         logError("Missing DEM filename");
         return false;
     }
 
-    logInfoGUI("Load Digital Elevation Model = " + myFileName);
+    logInfoGUI("Load Digital Elevation Model = " + fileName);
 
-    demFileName = myFileName;
-    myFileName = getCompleteFileName(myFileName, PATH_DEM);
+    demFileName = fileName;
+    QString completeFileName = getCompleteFileName(fileName, PATH_DEM);
 
-    std::string error;
-    if (! gis::openRaster(myFileName.toStdString(), &DEM, gisSettings.utmZone, error))
+    std::string errorStr;
+    if (! gis::openRaster(completeFileName.toStdString(), &DEM, gisSettings.utmZone, errorStr))
     {
         closeLogInfo();
-        logError("Wrong Digital Elevation Model:\n" + QString::fromStdString(error));
+        logError("Wrong Digital Elevation Model: " + completeFileName + "\n" + QString::fromStdString(errorStr));
         errorType = ERROR_DEM;
         return false;
     }
-    logInfo("Digital Elevation Model = " + myFileName);
+    logInfo("Digital Elevation Model = " + completeFileName);
 
     // check nodata
     if (! isEqual(DEM.header->flag, NODATA))
@@ -2510,7 +2510,7 @@ bool Project::loadGlocalStationsCsv(QString fileName, std::vector<std::vector<st
         line = myStream.readLine().split(',');
         if (line.size() > 1)
         {
-            unsigned int areaNr = line[0].toInt();
+            int areaNr = line[0].toInt();
             for (int i = 1; i < line.size(); i++)
             {
                 temp.push_back(line[i].toStdString());

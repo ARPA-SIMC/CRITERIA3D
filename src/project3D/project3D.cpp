@@ -1040,7 +1040,6 @@ bool Project3D::setCrit3DNodeSoil()
 
 bool Project3D::initializeSoilMoisture(int month)
 {
-    int crit3dResult = CRIT3D_OK;
     long index, soilIndex, horizonIndex;
     double moistureIndex, waterPotential;
     double fieldCapacity;                    // [m]
@@ -1063,6 +1062,8 @@ bool Project3D::initializeSoilMoisture(int month)
                 index = long(indexMap.at(size_t(layer)).value[row][col]);
                 if (index != long(indexMap.at(size_t(layer)).header->flag))
                 {
+                    int crit3dResult = CRIT3D_OK;
+
                     if (layer == 0)
                     {
                         // surface
@@ -2368,7 +2369,8 @@ float Project3D::computeFactorOfSafety(int row, int col, unsigned int layerIndex
 
 bool isCrit3dError(int result, QString& error)
 {
-    if (result == CRIT3D_OK) return false;
+    if (result == CRIT3D_OK)
+        return false;
 
     switch (result)
     {
