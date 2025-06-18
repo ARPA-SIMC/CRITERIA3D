@@ -1,5 +1,5 @@
 #include "mainGUI.h"
-#include "mainWindow.h"
+#include "mainwindow.h"
 #include <QApplication>
 #include <QMessageBox>
 

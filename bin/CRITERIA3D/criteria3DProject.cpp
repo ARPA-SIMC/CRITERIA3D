@@ -39,6 +39,7 @@
 #include "physics.h"
 #include "shell.h"
 
+#include <iostream>
 #include <QVector3D>
 #include <float.h>
 
@@ -3000,7 +3001,7 @@ int Crit3DProject::executeCriteria3DCommand(const QList<QString> &argumentList, 
 
 int Crit3DProject::printCriteria3DVersion()
 {
-    logInfo("CRITERIA3D " + QString(CRITERIA3D_VERSION));
+    std::cout << "CRITERIA3D " << CRITERIA3D_VERSION << std::endl;
     return CRIT3D_OK;
 }
 
@@ -3015,11 +3016,11 @@ int Crit3DProject::printCriteria3DCommandList()
     list.append("Proj            | OpenProject");
     //..
 
-    logInfo("Available Console commands:");
-    logInfo("(short          | long version)");
+    std::cout << "Available Console commands:" << std::endl;
+    std::cout << "(short          | long version)" << std::endl;
     for (int i = 0; i < list.size(); i++)
     {
-        logInfo(list[i]);
+        std::cout << list[i].toStdString() << std::endl;
     }
 
     return CRIT3D_OK;
