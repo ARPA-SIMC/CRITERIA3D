@@ -70,6 +70,9 @@ Crit3DHydrallWeatherVariable::Crit3DHydrallWeatherVariable()
     vaporPressureDeficit = NODATA;
     last30DaysTAvg = NODATA;
     meanDailyTemp = NODATA;
+
+    monthlyETreal = NODATA;
+    monthlyPrec = NODATA;
 }
 
 Crit3DHydrallEnvironmentalVariable::Crit3DHydrallEnvironmentalVariable()
@@ -99,6 +102,7 @@ Crit3DHydrallPlant::Crit3DHydrallPlant()
     standVolume = NODATA; // maps referred to stand volume MUST be initialized
     currentIncrementalVolume = EPSILON;
     transpirationCritical = NODATA; //(mol m-2 s-1)
+    rootShootRatioRef = 0.33; //TODO
 }
 
 Crit3DHydrallSoil::Crit3DHydrallSoil()
@@ -1381,6 +1385,69 @@ double Crit3DHydrall::temperatureFunction(double temperature)
         temperatureMoistureFactor *= correctionSoilMoisture;
     }*/
     return temperatureMoistureFactor;
+}
+
+bool Crit3DHydrall::simplifiedGrowthStand()
+{
+    const double understoreyAllocationCoefficientToRoot = 0.5;
+    // understorey update TODO IMPORTANTE: SERVE CARBONFACTOR ANCHE QUI?
+    statePlant.understoreyBiomassFoliage = statePlant.understoreyNetPrimaryProduction * (1.-understoreyAllocationCoefficientToRoot);    //understorey growth: foliage...
+    statePlant.understoreyBiomassRoot = statePlant.understoreyNetPrimaryProduction * understoreyAllocationCoefficientToRoot;         //...and roots
+
+    //outputC calculation for RothC model. necessario [t C/ha] ora in kgDM m-2
+    //MANCA OUTPUT DA TAGLIO
+    outputC = statePlant.treeBiomassFoliage/plant.foliageLongevity + statePlant.treeBiomassSapwood/plant.sapwoodLongevity +
+              statePlant.treeBiomassRoot/plant.fineRootLongevity /CARBONFACTOR * 1e5;
+
+    // canopy update
+    statePlant.treeBiomassFoliage -= (statePlant.treeBiomassFoliage/plant.foliageLongevity);
+    statePlant.treeBiomassSapwood -= (statePlant.treeBiomassSapwood/plant.sapwoodLongevity);
+    statePlant.treeBiomassRoot -= (statePlant.treeBiomassRoot/plant.fineRootLongevity);
+
+    // TODO to understand what's internalCarbonStorage (STORE), afterwards the uninitialized value is used
+    //annual stand growth
+    if (isFirstYearSimulation)
+    {
+        annualGrossStandGrowth = statePlant.treeNetPrimaryProduction / CARBONFACTOR; //conversion to kg DM m-2
+        internalCarbonStorage = 0;
+    }
+    else
+    {
+        annualGrossStandGrowth = (internalCarbonStorage + statePlant.treeNetPrimaryProduction) / 2 / CARBONFACTOR;
+        internalCarbonStorage = (internalCarbonStorage + statePlant.treeNetPrimaryProduction) / 2;
+    }
+
+    //if (isFirstYearSimulation) è necessario?
+
+    //computing root/shoot ratio based on values found in [Vitullo et al. 2007] and modified to account for water scarcity
+    double rootShootRatio;
+    double alpha = 0.7;
+
+    rootShootRatio = MAXVALUE(MINVALUE(plant.rootShootRatioRef*(alpha*0.5 + 1), plant.rootShootRatioRef*(alpha*(1-weatherVariable.monthlyPrec/weatherVariable.monthlyETreal)+1)), plant.rootShootRatioRef);
+
+    allocationCoefficient.toFineRoots = rootShootRatio / (1 + rootShootRatio);
+    allocationCoefficient.toFoliage = ( 1 - allocationCoefficient.toFineRoots ) * 0.05;
+    allocationCoefficient.toSapwood = 1 - allocationCoefficient.toFineRoots - allocationCoefficient.toFoliage;
+
+
+    std::ofstream myFile;
+    myFile.open("outputAlloc.csv", std::ios_base::app);
+    myFile << allocationCoefficient.toFoliage <<","<< allocationCoefficient.toFineRoots <<","<<allocationCoefficient.toSapwood <<","<< rootShootRatio <<"\n";
+    myFile.close();
+
+    if (annualGrossStandGrowth * allocationCoefficient.toFoliage > statePlant.treeBiomassFoliage/(plant.foliageLongevity - 1))
+    {
+        treeBiomass.leaf = MAXVALUE(treeBiomass.leaf + annualGrossStandGrowth * allocationCoefficient.toFoliage, EPSILON);
+        treeBiomass.fineRoot = MAXVALUE(treeBiomass.fineRoot + annualGrossStandGrowth * allocationCoefficient.toFineRoots, EPSILON);
+        treeBiomass.sapwood = MAXVALUE(treeBiomass.sapwood + annualGrossStandGrowth * allocationCoefficient.toSapwood, EPSILON);
+    }
+    // TODO manca il computo del volume sia generale che incrementale vedi funzione grstand.for
+
+
+    isFirstYearSimulation = false;
+    return true;
+
+    return true;
 }
 
 bool Crit3DHydrall::growthStand()

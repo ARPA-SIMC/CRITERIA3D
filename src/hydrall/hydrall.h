@@ -143,6 +143,9 @@
         double last30DaysTAvg;
         double meanDailyTemp;
 
+        double monthlyETreal;
+        double monthlyPrec;
+
 
     };
 
@@ -179,6 +182,7 @@
         double transpirationPerUnitFoliageAreaCritical;
         double standVolume; // maps referred to stand volume MUST be initialized
         double currentIncrementalVolume;
+        double rootShootRatioRef;
 
         void setLAICanopy(double myLAI) { leafAreaIndexCanopy = myLAI; };
         double getLAICanopy() { return leafAreaIndexCanopy; };
@@ -424,6 +428,7 @@
         inline double soilTemperatureModel();
         double temperatureFunction(double temperature);
         bool growthStand();
+        bool simplifiedGrowthStand();
         void resetStandVariables();
         void optimal();
         void rootfind(double &allf, double &allr, double &alls, bool &sol);

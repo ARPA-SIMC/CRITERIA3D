@@ -408,35 +408,48 @@ bool Crit3DProject::dailyUpdateHydrall(const QDate &myDate)
     //set daily variables like temp, co2
     if (myDate.day() == 1)
     {
-        // update of rothC (monthly)
-
-        //se firstDayOfMonth, scrivi le mappe (mensili?) di LAI, biomassa, etc
-        std::string myError;
-        if (! gis::writeEsriGrid(getCompleteFileName("treeNPP_"+myDate.toString("yyyyMMdd"), PATH_OUTPUT).toStdString(), hydrallMaps.treeNetPrimaryProduction, myError))
+        for (int row = 0; row < indexMap.at(0).header->nrRows; row++)
         {
-            errorString = QString::fromStdString(myError);
-            return false;
-        }
+            for (int col = 0; col < indexMap.at(0).header->nrCols; col++)
+            {
+                int surfaceIndex = indexMap.at(0).value[row][col];
+                if (surfaceIndex != indexMap.at(0).header->flag)
+                {
+                    //se firstDayOfMonth, scrivi le mappe (mensili?) di LAI, biomassa, etc
+                    std::string myError;
+                    if (! gis::writeEsriGrid(getCompleteFileName("treeNPP_"+myDate.toString("yyyyMMdd"), PATH_OUTPUT).toStdString(), hydrallMaps.treeNetPrimaryProduction, myError))
+                    {
+                        errorString = QString::fromStdString(myError);
+                        return false;
+                    }
 
-        if (! gis::writeEsriGrid(getCompleteFileName("understoreyNPP_"+myDate.toString("yyyyMMdd"), PATH_OUTPUT).toStdString(), hydrallMaps.understoreyNetPrimaryProduction, myError))
-        {
-            errorString = QString::fromStdString(myError);
-            return false;
-        }
+                    if (! gis::writeEsriGrid(getCompleteFileName("understoreyNPP_"+myDate.toString("yyyyMMdd"), PATH_OUTPUT).toStdString(), hydrallMaps.understoreyNetPrimaryProduction, myError))
+                    {
+                        errorString = QString::fromStdString(myError);
+                        return false;
+                    }
 
 
-        hydrallModel.growthStand(); // TODO quit this line - temporary position to prompt check
-        hydrallModel.resetStandVariables();
-        if (myDate.month() == hydrallModel.firstMonthVegetativeSeason) //TODO
-        {
-            /* in case of the first day of the year
-                 * the algorithms devoted to allocate dry matter
-                 * into the biomass pools (foliage, sapwood and fine roots)
-                 * */
-            //hydrallModel.growthStand();
-            //hydrallModel.resetStandVariables();
-            //grtree
+                    hydrallModel.weatherVariable.monthlyETreal = monthlyETReal.getValueFromRowCol(row, col);
+                    hydrallModel.weatherVariable.monthlyPrec = monthlyPrec.getValueFromRowCol(row, col);
 
+                    hydrallModel.simplifiedGrowthStand(); // TODO quit this line - temporary position to prompt check
+
+                    hydrallModel.resetStandVariables();
+
+                    if (myDate.month() == hydrallModel.firstMonthVegetativeSeason) //TODO
+                    {
+                        /* in case of the first day of the year
+                         * the algorithms devoted to allocate dry matter
+                         * into the biomass pools (foliage, sapwood and fine roots)
+                         * */
+                        //hydrallModel.growthStand();
+                        //hydrallModel.resetStandVariables();
+                        //grtree
+
+                    }
+                }
+            }
         }
     }
 
