@@ -177,11 +177,22 @@
         double transpirationCritical;
         double psiLeafMinimum;
         double transpirationPerUnitFoliageAreaCritical;
+        double standVolume; // maps referred to stand volume MUST be initialized
+        double currentIncrementalVolume;
+
+        void setLAICanopy(double myLAI) { leafAreaIndexCanopy = myLAI; };
+        double getLAICanopy() { return leafAreaIndexCanopy; };
+
+        void setLAICanopyMin(double myLAIMin) { leafAreaIndexCanopyMin = myLAIMin; };
+        double getLAICanopyMin() { return leafAreaIndexCanopyMin; };
+
+        void setLAICanopyMax(double myLAIMax) { leafAreaIndexCanopyMax = myLAIMax; };
+        double getLAICanopyMax() { return leafAreaIndexCanopyMax; };
+
+    private:
         double leafAreaIndexCanopy;
         double leafAreaIndexCanopyMax;
         double leafAreaIndexCanopyMin;
-        double standVolume; // maps referred to stand volume MUST be initialized
-        double currentIncrementalVolume;
 
     };
 
@@ -192,7 +203,7 @@
         int layersNr;
         double totalDepth;
         double temperature;
-        std::vector <double> rootDensity;
+
         std::vector <double> stressCoefficient;
         std::vector <double> waterContent;
         std::vector <double> wiltingPoint;
@@ -206,6 +217,12 @@
         std::vector <double> silt;
         std::vector <double> bulkDensity;
         std::vector <double> waterPotential;
+
+        void setRootDensity(std::vector<double> myRD) { rootDensity = myRD; };
+        std::vector<double> getRootDensity() { return rootDensity; };
+
+    private:
+        std::vector <double> rootDensity;
 
     };
 
@@ -358,7 +375,6 @@
         Crit3DHydrallAllocationCoefficient allocationCoefficient;
 
         double maxIterationNumber;
-        double elevation;
         double understoreyLeafAreaIndexMax;
         double cover = 1; // TODO
 
@@ -373,17 +389,18 @@
         double totalTranspirationRate; //molH2O m^-2 s^-1
 
         double getOutputC() { return outputC; };
+        void setElevation(double myElevation) {elevation = myElevation;};
 
         double moistureCorrectionFactorOld(int index);
         double moistureCorrectionFactor(int index);
         double understoreyRespiration();
         void radiationAbsorption();
-        void setSoilVariables(int iLayer, int currentNode, float checkFlag, int horizonIndex, double waterContent, double waterContentFC, double waterContentWP, double clay, double sand, double thickness, double bulkDensity, double waterContentSat, double rootDensity, double kSat, double waterPotential);
+        void setSoilVariables(int iLayer, int currentNode, float checkFlag, double waterContent, double waterContentFC, double waterContentWP, double clay, double sand, double thickness, double bulkDensity, double waterContentSat, double kSat, double waterPotential);
         void setHourlyVariables(double temp, double irradiance , double prec , double relativeHumidity , double windSpeed, double directIrradiance, double diffuseIrradiance, double cloudIndex, double atmosphericPressure, Crit3DDate currentDate, double sunElevation,double meanTemp30Days,double et0);
         bool setWeatherVariables(double temp, double irradiance , double prec , double relativeHumidity , double windSpeed, double directIrradiance, double diffuseIrradiance, double cloudIndex, double atmosphericPressure, double meanTemp30Days,double et0);
         void setDerivedWeatherVariables(double directIrradiance, double diffuseIrradiance, double cloudIndex, double et0);
         void setPlantVariables(double chlorophyllContent, double height, double psiMinimum, double psiCritical);
-        bool computeHydrallPoint(Crit3DDate myDate, double myTemperature, double myElevation);
+        bool computeHydrallPoint();
         double getCO2(Crit3DDate myDate);
         //double getPressureFromElevation(double myTemperature, double myElevation);
         double computeLAI(Crit3DDate myDate);
@@ -398,8 +415,8 @@
         double leafWidth();
         void upscale();
         inline double acclimationFunction(double Ha , double Hd, double leafTemp, double entropicTerm,double optimumTemp);
-        void photosynthesisKernel(double COMP,double GAC,double GHR,double GSCD,double J,double KC,double KO
-                                                  ,double RD,double RNI,double STOMWL,double VCmax,double *ASS,double *GSC,double *TR, double T);
+        void photosynthesisKernel(double COMP, double GAC, double GHR, double GSCD, double J, double KC, double KO
+                                  , double RD, double RNI, double STOMWL, double VCmax, double *ASS, double *GSC, double *TR);
         void carbonWaterFluxesProfile();
         void cumulatedResults();
         double plantRespiration();
@@ -420,6 +437,7 @@
 
     private:
         double outputC;
+        double elevation;
         void nullPhotosynthesis();
 
     };

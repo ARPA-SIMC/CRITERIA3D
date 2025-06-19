@@ -230,8 +230,8 @@
     QString getOutputNameHourly(meteoVariable myVar, QDateTime myTime);
     QString getDailyPrefixFromVar(QDate myDate, criteria3DVariable myVar);
 
-    float readDataHourly(meteoVariable myVar, QString hourlyPath, QDateTime myTime, QString myArea, int row, int col);
-    bool readHourlyMap(meteoVariable myVar, QString hourlyPath, QDateTime myTime, QString myArea, gis::Crit3DRasterGrid* myGrid);
+    float readDataHourly(meteoVariable myVar, QString hourlyPath, QDateTime myTime, int row, int col);
+    bool readHourlyMap(meteoVariable myVar, QString hourlyPath, QDateTime myTime, gis::Crit3DRasterGrid* myGrid);
 
     bool setVariableDepth(const QList<QString> &depthList, std::vector<int> &variableDepth);
 

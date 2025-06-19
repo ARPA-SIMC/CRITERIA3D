@@ -37,9 +37,9 @@
 #include "soil.h"
 #include "hydrall.h"
 #include "physics.h"
+#include "shell.h"
 
-#include <QtSql>
-#include <QPaintEvent>
+#include <iostream>
 #include <QVector3D>
 #include <float.h>
 
@@ -467,13 +467,12 @@ bool Crit3DProject::updateRothC()
 
                     double SWC = 0;
 
-                    for (int i = 0; i < hydrallModel.soil.waterContent.size(); i++)
+                    for (int i = 0; i < (int)hydrallModel.soil.waterContent.size(); i++)
                     {
                         SWC += hydrallModel.soil.waterContent[i]*hydrallModel.soil.nodeThickness[i]*1000;
                     }
 
                     rothCModel.setSWC(SWC);
-
 
                     //chiamata a rothC
                     computeRothCModel();
@@ -526,7 +525,7 @@ void Crit3DProject::assignETreal()
                 totalEvaporation += evapFlow;                                               // [m3 h-1]
 
                 int cropIndex = getLandUnitIndexRowCol(row, col);
-                if (cropIndex != NODATA && cropList.size() > cropIndex)
+                if (cropIndex != NODATA && (int)cropList.size() > cropIndex)
                 {
                     Crit3DCrop currentCrop = cropList[cropIndex];
                     double actualTransp = 0;
@@ -551,9 +550,10 @@ void Crit3DProject::assignETreal()
                             // compute root density
                             root::computeRootDensity3D(currentCrop, soilList[soilIndex], nrLayers, layerDepth, layerThickness);
                         }
-                        hydrallModel.soil.rootDensity = currentCrop.roots.rootDensity; //TODO cate make hydrall classes private
-                        hydrallModel.plant.leafAreaIndexCanopy = MAXVALUE(0, currentLAI);
-                        hydrallModel.plant.leafAreaIndexCanopyMin = currentCrop.LAImin;
+                        hydrallModel.soil.setRootDensity(currentCrop.roots.rootDensity); //TODO cate make hydrall classes private
+                        hydrallModel.plant.setLAICanopy(MAXVALUE(0, currentLAI));
+                        hydrallModel.plant.setLAICanopyMin(currentCrop.LAImin);
+                        hydrallModel.plant.setLAICanopyMax(currentCrop.LAImax);
 
                         computeHydrallModel(row, col);
                     }
@@ -561,6 +561,7 @@ void Crit3DProject::assignETreal()
                     if (processes.computeRothC)
                     {
                         hourlyMeteoMaps->mapHourlyETReal->value[row][col] = actualEvap + actualTransp;
+                        rothCModel.setPlantCover(currentLAI/currentCrop.LAImax);
                     }
                 }
             }
@@ -577,10 +578,13 @@ void Crit3DProject::assignPrecipitation()
     double area = DEM.header->cellSize * DEM.header->cellSize;
 
     gis::Crit3DRasterGrid *snowFallMap, *snowMeltMap;
+    bool isSnowOk = false;
     if (processes.computeSnow)
     {
         snowFallMap = snowMaps.getSnowFallMap();
         snowMeltMap = snowMaps.getSnowMeltMap();
+        if (snowFallMap != nullptr && snowMeltMap != nullptr)
+            isSnowOk = true;
     }
 
     // precipitation
@@ -595,7 +599,7 @@ void Crit3DProject::assignPrecipitation()
                 if (! isEqual(prec, hourlyMeteoMaps->mapHourlyPrec->header->flag))
                 {
                     float liquidWater = prec;
-                    if (processes.computeSnow)
+                    if (processes.computeSnow && isSnowOk)
                     {
                         float currentSnowFall = snowFallMap->value[row][col];
                         float currentSnowMelt = snowMeltMap->value[row][col];
@@ -954,14 +958,15 @@ bool Crit3DProject::isSaveOutputPoints()
 }
 
 
-bool Crit3DProject::loadCriteria3DProject(QString myFileName)
+bool Crit3DProject::loadCriteria3DProject(const QString &fileName)
 {
-    if (myFileName == "") return(false);
+    if (fileName.isEmpty())
+        return false;
 
     clear3DProject();
     initializeProject3D();
 
-    if (! loadProjectSettings(myFileName))
+    if (! loadProjectSettings(fileName))
         return false;
 
     if (! loadProject3DSettings())
@@ -1486,35 +1491,45 @@ bool Crit3DProject::computeHydrallModel(int row, int col)
         return false;
     }
 
+    //set all necessary input variables
+    setHydrallVariables(row, col);
 
-    //std::vector<double> waterContent(nrLayers);
-    //std::vector<double> stressCoefficient(nrLayers);
-    //std::vector<double> rootDensity(nrLayers, 0);
+    //read state variables from corresponding state maps
+    hydrallModel.setStateVariables(hydrallMaps, row, col);
 
-    soil::Crit3DHorizon horizon;
+    //compute
+    hydrallModel.computeHydrallPoint();
 
+    //check and save data
+    //TODO CHECK NODATA
+    hydrallModel.getStateVariables(hydrallMaps, row, col);
+    hydrallModel.getPlantAndSoilVariables(hydrallMaps, row, col);
 
-    //TODO
-    double chlorophyllContent = 500;
-    hydrallModel.elevation = DEM.value[row][col];
-    //set all variables
+    return true;
+}
+
+void Crit3DProject::setHydrallVariables(int row, int col)
+{
+
+    Crit3DCrop currentCrop = cropList[getLandUnitIndexRowCol(row, col)];
+
+    //hourly variables
     hydrallModel.setHourlyVariables(double(hourlyMeteoMaps->mapHourlyTair->value[row][col]), double(radiationMaps->globalRadiationMap->value[row][col]),
                                     double(hourlyMeteoMaps->mapHourlyPrec->value[row][col]), double(hourlyMeteoMaps->mapHourlyRelHum->value[row][col]),
                                     double(hourlyMeteoMaps->mapHourlyWindScalarInt->value[row][col]), double(radiationMaps->beamRadiationMap->value[row][col]),
                                     double(radiationMaps->diffuseRadiationMap->value[row][col]),
                                     double(radiationMaps->transmissivityMap->value[row][col] / CLEAR_SKY_TRANSMISSIVITY_DEFAULT),
-                                    pressureFromAltitude(double(hourlyMeteoMaps->mapHourlyTair->value[row][col]), hydrallModel.elevation),
+                                    pressureFromAltitude(double(hourlyMeteoMaps->mapHourlyTair->value[row][col]), DEM.value[row][col]),
                                     getCrit3DDate(getCurrentDate()),double(radiationMaps->sunElevationMap->value[row][col]),
                                     hydrallMaps.mapLast30DaysTavg->value[row][col],double(hourlyMeteoMaps->mapHourlyET0->value[row][col]));
 
     //TODO: plant height map
     hydrallMaps.plantHeight.value[row][col] = 10;
-    hydrallModel.setPlantVariables(chlorophyllContent, hydrallMaps.plantHeight.value[row][col], hydrallMaps.minLeafWaterPotential->value[row][col], hydrallMaps.criticalSoilWaterPotential->value[row][col]);
+    double chlorophyllContent = 500; //da tabella
+    hydrallMaps.treeSpeciesMap.value[row][col] = 0; //TODO treeSpeciesMap. valutare tabelle tra crop e tabella hydrall
 
-
-
-    //setsoilvariables TODO
-
+    hydrallModel.setPlantVariables(chlorophyllContent, hydrallMaps.plantHeight.value[row][col],
+                                   hydrallMaps.minLeafWaterPotential->value[row][col], hydrallMaps.criticalSoilWaterPotential->value[row][col]);
 
     // check soil
     int soilIndex = int(soilIndexMap.value[row][col]);
@@ -1523,40 +1538,10 @@ bool Crit3DProject::computeHydrallModel(int row, int col)
         //TODO
     }
 
-    //tutte le variabili che servono
-    hydrallModel.setStateVariables(hydrallMaps, row, col);
-
-    // TODO scrivere funzione settaggio profilo 1D suolo
-
-    //root density
-    hydrallMaps.treeSpeciesMap.value[row][col] = 0; //TODO treeSpeciesMap. valutare tabelle tra crop e tabella hydrall
-    //Crit3DCrop currentCrop = cropList[int(hydrallMaps.treeSpeciesMap.value[row][col])];
-    Crit3DCrop currentCrop = cropList[getLandUnitIndexRowCol(row, col)];
-    std::vector <double> tempRootDensity = hydrallModel.soil.rootDensity;
-
-
-    //currentCrop.roots.rootDensity.resize(nrLayers); // TODO
     // the condition on this for cycle includes the check of existance of the layers
     for (unsigned int i = 0; ((i < nrLayers) && (soilList[soilIndex].getHorizonIndex(layerDepth[i]))!= NODATA); i++)
     {
-        //currentCrop.roots.firstRootLayer = 1;
-        //currentCrop.roots.lastRootLayer = 2;
-        /*
-                    int zcurrentNode = indexMap.at(i).value[row][col];
-                    float zflag =  indexMap.at(i).header->flag;
-                    int zhorizonIndex = soilList[soilIndex].getHorizonIndex(layerDepth[i]);
-                    double zWC=soilFluxes3D::getWaterContent(indexMap.at(i).value[row][col]);
-                    double zFC=soilList[soilIndex].horizon[soilList[soilIndex].getHorizonIndex(layerDepth[i])].waterContentFC;
-                    double zWP=soilList[soilIndex].horizon[soilList[soilIndex].getHorizonIndex(layerDepth[i])].waterContentWP;
-                    int zfirstLayer=currentCrop.roots.firstRootLayer;
-                    int zlastLayer=currentCrop.roots.lastRootLayer;
-                    double zrootDensity=currentCrop.roots.rootDensity[i];
-                    */
-        //if (soilList[soilIndex].getHorizonIndex(layerDepth[i]) == NODATA)
-        //continue;
-
         hydrallModel.setSoilVariables(i,indexMap.at(i).value[row][col],indexMap.at(i).header->flag,
-                                      soilList[soilIndex].getHorizonIndex(layerDepth[i]),
                                       soilFluxes3D::getWaterContent(indexMap.at(i).value[row][col]),
                                       soilList[soilIndex].horizon[soilList[soilIndex].getHorizonIndex(layerDepth[i])].waterContentFC,
                                       soilList[soilIndex].horizon[soilList[soilIndex].getHorizonIndex(layerDepth[i])].waterContentWP,
@@ -1565,120 +1550,11 @@ bool Crit3DProject::computeHydrallModel(int row, int col)
                                       fabs(soilList[soilIndex].horizon[soilList[soilIndex].getHorizonIndex(layerDepth[i])].lowerDepth-soilList[soilIndex].horizon[soilList[soilIndex].getHorizonIndex(layerDepth[i])].upperDepth),
                                       soilList[soilIndex].horizon[soilList[soilIndex].getHorizonIndex(layerDepth[i])].bulkDensity,
                                       soilList[soilIndex].horizon[soilList[soilIndex].getHorizonIndex(layerDepth[i])].waterContentSAT,
-                                      tempRootDensity[i], soilList[soilIndex].horizon[soilList[soilIndex].getHorizonIndex(layerDepth[i])].waterConductivity.kSat,
+                                      soilList[soilIndex].horizon[soilList[soilIndex].getHorizonIndex(layerDepth[i])].waterConductivity.kSat,
                                       soilFluxes3D::getMatricPotential(indexMap.at(i).value[row][col]));
     }
-    //compute
-    hydrallModel.computeHydrallPoint(getCrit3DDate(getCurrentDate()), double(hourlyMeteoMaps->mapHourlyTair->value[row][col]), double(DEM.value[row][col]));
 
-
-
-
-    //check and save data TODO CHECK NODATA
-    hydrallModel.getStateVariables(hydrallMaps, row, col);
-    hydrallModel.getPlantAndSoilVariables(hydrallMaps, row, col);
-
-
-
-    /*for (int row = 0; row < DEM.header->nrRows; row++)
-    {
-        for (int col = 0; col < DEM.header->nrCols; col++)
-        {
-            if (! isEqual(DEM.value[row][col], DEM.header->flag))
-            {
-                //TODO
-                double chlorophyllContent = 500;
-                hydrallModel.elevation = DEM.value[row][col];
-                //set all variables
-                hydrallModel.setHourlyVariables(double(hourlyMeteoMaps->mapHourlyTair->value[row][col]), double(radiationMaps->globalRadiationMap->value[row][col]),
-                                                double(hourlyMeteoMaps->mapHourlyPrec->value[row][col]), double(hourlyMeteoMaps->mapHourlyRelHum->value[row][col]),
-                                                double(hourlyMeteoMaps->mapHourlyWindScalarInt->value[row][col]), double(radiationMaps->beamRadiationMap->value[row][col]),
-                                                double(radiationMaps->diffuseRadiationMap->value[row][col]),
-                                                double(radiationMaps->transmissivityMap->value[row][col] / CLEAR_SKY_TRANSMISSIVITY_DEFAULT),
-                                                pressureFromAltitude(double(hourlyMeteoMaps->mapHourlyTair->value[row][col]), hydrallModel.elevation),
-                                                getCrit3DDate(getCurrentDate()),double(radiationMaps->sunElevationMap->value[row][col]),
-                                                hydrallMaps.mapLast30DaysTavg->value[row][col],double(hourlyMeteoMaps->mapHourlyET0->value[row][col]));
-
-                //TODO: plant height map
-                hydrallMaps.plantHeight.value[row][col] = 10;
-                hydrallModel.setPlantVariables(chlorophyllContent, hydrallMaps.plantHeight.value[row][col]);
-
-
-
-                //setsoilvariables TODO
-
-
-                // check soil
-                int soilIndex = int(soilIndexMap.value[row][col]);
-                if (soilIndex == NODATA)
-                {
-                    //TODO
-                }
-
-                //tutte le variabili che servono
-                hydrallModel.setStateVariables(hydrallMaps, row, col);
-
-                // TODO scrivere funzione settaggio profilo 1D suolo
-
-                //root density
-                hydrallMaps.treeSpeciesMap.value[row][col] = 0; //TODO treeSpeciesMap
-                Crit3DCrop currentCrop = cropList[int(hydrallMaps.treeSpeciesMap.value[row][col])];
-                currentCrop.roots.rootDensity.resize(nrLayers); // TODO
-                // the condition on this for cycle includes the check of existance of the layers
-                for (unsigned int i = 0; ((i < nrLayers) && (soilList[soilIndex].getHorizonIndex(layerDepth[i]))!= NODATA); i++)
-                {
-
-                    if (i <3 && i != 0)
-                        currentCrop.roots.rootDensity[i] = 0.5;
-                    else
-                        currentCrop.roots.rootDensity[i] = 0;
-                    // TODO
-                    currentCrop.roots.firstRootLayer = 1;
-                    currentCrop.roots.lastRootLayer = 2;
-
-                    int zcurrentNode = indexMap.at(i).value[row][col];
-                    float zflag =  indexMap.at(i).header->flag;
-                    int zhorizonIndex = soilList[soilIndex].getHorizonIndex(layerDepth[i]);
-                    double zWC=soilFluxes3D::getWaterContent(indexMap.at(i).value[row][col]);
-                    double zFC=soilList[soilIndex].horizon[soilList[soilIndex].getHorizonIndex(layerDepth[i])].waterContentFC;
-                    double zWP=soilList[soilIndex].horizon[soilList[soilIndex].getHorizonIndex(layerDepth[i])].waterContentWP;
-                    int zfirstLayer=currentCrop.roots.firstRootLayer;
-                    int zlastLayer=currentCrop.roots.lastRootLayer;
-                    double zrootDensity=currentCrop.roots.rootDensity[i];
-
-                    //if (soilList[soilIndex].getHorizonIndex(layerDepth[i]) == NODATA)
-                        //continue;
-                    hydrallModel.setSoilVariables(i,indexMap.at(i).value[row][col],indexMap.at(i).header->flag,
-                                                  soilList[soilIndex].getHorizonIndex(layerDepth[i]),
-                                                  soilFluxes3D::getWaterContent(indexMap.at(i).value[row][col]),
-                                                  soilList[soilIndex].horizon[soilList[soilIndex].getHorizonIndex(layerDepth[i])].waterContentFC,
-                                                  soilList[soilIndex].horizon[soilList[soilIndex].getHorizonIndex(layerDepth[i])].waterContentWP,
-                                                  currentCrop.roots.firstRootLayer,currentCrop.roots.lastRootLayer,currentCrop.roots.rootDensity[i],
-                                                  soilList[soilIndex].horizon[soilList[soilIndex].getHorizonIndex(layerDepth[i])].texture.clay,
-                                                  soilList[soilIndex].horizon[soilList[soilIndex].getHorizonIndex(layerDepth[i])].texture.sand,
-                                                  fabs(soilList[soilIndex].horizon[soilList[soilIndex].getHorizonIndex(layerDepth[i])].lowerDepth-soilList[soilIndex].horizon[soilList[soilIndex].getHorizonIndex(layerDepth[i])].upperDepth),
-                                                  soilList[soilIndex].horizon[soilList[soilIndex].getHorizonIndex(layerDepth[i])].bulkDensity,
-                                                  soilList[soilIndex].horizon[soilList[soilIndex].getHorizonIndex(layerDepth[i])].waterContentSAT);
-                }
-                //compute
-                hydrallModel.computeHydrallPoint(getCrit3DDate(getCurrentDate()), double(hourlyMeteoMaps->mapHourlyTair->value[row][col]), double(DEM.value[row][col]));
-
-
-
-
-                //check and save data TODO CHECK NODATA
-                hydrallModel.getStateVariables(hydrallMaps, row, col);
-
-            }
-            else
-            {
-                //snowMaps.flagMapRowCol(row, col);
-            }
-        }
-    }*/
-
-
-    return true;
+    return;
 }
 
 bool Crit3DProject::computeRothCModel()
@@ -1697,9 +1573,6 @@ bool Crit3DProject::updateLast30DaysTavg()
     {
         for (long col = 0; col < dailyTminMap.header->nrCols; col++)
         {
-            float testTemp;
-            testTemp = dailyTmaxMap.value[row][col];
-            testTemp = dailyTminMap.value[row][col];
             hydrallMaps.mapLast30DaysTavg->value[row][col] = (29./30.)*hydrallMaps.mapLast30DaysTavg->value[row][col] + (dailyTmaxMap.value[row][col] + dailyTminMap.value[row][col])/30;
         }
     }
@@ -2271,7 +2144,7 @@ bool Crit3DProject::loadWaterPotentialState(QString waterPath)
     }
 
     std::vector<int> depthList;
-    for (unsigned i = 0; i < fileList.size(); i++)
+    for (unsigned i = 0; i < (unsigned)fileList.size(); i++)
     {
         QString fileName = fileList.at(i).fileName();
         QString leftFileName = fileName.left(fileName.size() - 4);
@@ -2486,28 +2359,28 @@ bool Crit3DProject::writeOutputPointsTables()
             }
             if (processes.computeWater)
             {
-                for (int l = 0; l < waterContentDepth.size(); l++)
+                for (int l = 0; l < (int)waterContentDepth.size(); l++)
                 {
                     int depth_cm = waterContentDepth[l];
                     if (! outputPointsDbHandler->addCriteria3DColumn(tableName, volumetricWaterContent, depth_cm, errorString))
                         return false;
                 }
 
-                for (int l = 0; l < waterPotentialDepth.size(); l++)
+                for (int l = 0; l < (int)waterPotentialDepth.size(); l++)
                 {
                     int depth_cm = waterPotentialDepth[l];
                     if (! outputPointsDbHandler->addCriteria3DColumn(tableName, waterMatricPotential, depth_cm, errorString))
                         return false;
                 }
 
-                for (int l = 0; l < degreeOfSaturationDepth.size(); l++)
+                for (int l = 0; l < (int)degreeOfSaturationDepth.size(); l++)
                 {
                     int depth_cm = degreeOfSaturationDepth[l];
                     if (! outputPointsDbHandler->addCriteria3DColumn(tableName, degreeOfSaturation, depth_cm, errorString))
                         return false;
                 }
 
-                for (int l = 0; l < factorOfSafetyDepth.size(); l++)
+                for (int l = 0; l < (int)factorOfSafetyDepth.size(); l++)
                 {
                     int depth_cm = factorOfSafetyDepth[l];
                     if (! outputPointsDbHandler->addCriteria3DColumn(tableName, factorOfSafety, depth_cm, errorString))
@@ -2625,7 +2498,7 @@ bool Crit3DProject::writeOutputPointsData()
 void Crit3DProject::appendCriteria3DOutputValue(criteria3DVariable myVar, int row, int col,
                                                 const std::vector<int> &depthList, std::vector<float> &outputList)
 {
-    for (int l = 0; l < depthList.size(); l++)
+    for (int l = 0; l < (int)depthList.size(); l++)
     {
         float depth = depthList[l] * 0.01;                          // [cm] -> [m]
         int layerIndex = getSoilLayerIndex(depth);
@@ -2974,4 +2847,217 @@ bool Crit3DProject::update3DColors(gis::Crit3DRasterGrid *rasterPointer)
 
     return true;
 }
+
+
+// -------------------------  SHELL -------------------------
+
+int Crit3DProject::criteria3DShell()
+{
+    #ifdef _WIN32
+        openNewConsole();
+    #endif
+
+    printCriteria3DVersion();
+
+    while (! requestedExit)
+    {
+        QString commandLine = getCommandLine("CRITERIA3D");
+        if (commandLine != "")
+        {
+            QList<QString> argumentList = getArgumentList(commandLine);
+            if (argumentList.size() > 0)
+            {
+                int result = executeCommand(argumentList);
+                if (result != CRIT3D_OK)
+                {
+                    logError();
+                }
+            }
+        }
+    }
+
+    #ifdef _WIN32
+        closeConsole();
+    #endif
+
+    return CRIT3D_OK;
+}
+
+
+int Crit3DProject::criteria3DBatch(const QString &scriptFileName)
+{
+    #ifdef _WIN32
+        attachOutputToConsole();
+    #endif
+
+    printCriteria3DVersion();
+
+    int result = executeScript(scriptFileName);
+    if (result != CRIT3D_OK)
+    {
+        logError();
+    }
+
+    logInfo("Batch finished at: " + QDateTime::currentDateTime().toString("yyyy-MM-dd hh:mm:ss"));
+
+    #ifdef _WIN32
+        // Send "enter" to release application from the console
+        // This is a hack, but if not used the console doesn't know the application has
+        // returned. The "enter" key only sent if the console window is in focus.
+        if ( isConsoleForeground() )
+            sendEnterKey();
+    #endif
+
+    return result;
+}
+
+
+int Crit3DProject::executeScript(const QString &scriptFileName)
+{
+    if (scriptFileName.isEmpty())
+    {
+        errorString = "No script file provided.";
+        return CRIT3D_ERROR;
+    }
+    logInfo("Execute script: " + scriptFileName + "\n");
+
+    QFile scriptFile(scriptFileName);
+    if(! scriptFile.open (QIODevice::ReadOnly))
+    {
+        errorString = "Error in opening: " + scriptFileName + " " + scriptFile.errorString();
+        return CRIT3D_ERROR;
+    }
+
+    while (! scriptFile.atEnd())
+    {
+        QString cmdLine = scriptFile.readLine();
+        QList<QString> argumentList = getArgumentList(cmdLine);
+
+        int result = executeCommand(argumentList);
+        if (result != CRIT3D_OK)
+            return result;
+
+        logInfo("");
+    }
+    scriptFile.close();
+
+    return CRIT3D_OK;
+}
+
+
+int Crit3DProject::executeCommand(const QList<QString> &argumentList)
+{
+    if (argumentList.size() == 0)
+        return CRIT3D_OK;
+
+    logInfo(getTimeStamp(argumentList));
+
+    // comment
+    if (argumentList[0].at(0) == '#')
+        return CRIT3D_OK;
+
+    bool isCommandFound;
+
+    int result = executeSharedCommand(this, argumentList, &isCommandFound);
+    if (isCommandFound)
+        return result;
+
+    result = executeCriteria3DCommand(argumentList, isCommandFound);
+    if (isCommandFound)
+        return result;
+
+    errorString = "This is not a valid CRITERIA3D command: " + argumentList[0];
+    return CRIT3D_INVALID_COMMAND;
+}
+
+
+int Crit3DProject::executeCriteria3DCommand(const QList<QString> &argumentList, bool &isCommandFound)
+{
+    isCommandFound = false;
+    if (argumentList.empty())
+        return CRIT3D_INVALID_COMMAND;
+
+    QString command = argumentList[0].toUpper();
+
+    if (command == "?" || command == "LS" || command == "LIST" || command == "LISTCOMMANDS")
+    {
+        isCommandFound = true;
+        return printCriteria3DCommandList();
+    }
+    if (command == "VERSION" || command == "CRITERIA3DVERSION")
+    {
+        isCommandFound = true;
+        return printCriteria3DVersion();
+    }
+    else if (command == "PROJ" || command == "OPENPROJECT")
+    {
+        isCommandFound = true;
+        return cmdOpenCriteria3DProject(argumentList);
+    }
+
+    return CRIT3D_INVALID_COMMAND;
+}
+
+
+int Crit3DProject::printCriteria3DVersion()
+{
+    std::cout << "CRITERIA3D " << CRITERIA3D_VERSION << std::endl;
+    return CRIT3D_OK;
+}
+
+
+int Crit3DProject::printCriteria3DCommandList()
+{
+    QList<QString> list = getSharedCommandList();
+
+    // criteria3D commands
+    list.append("List            | ListCommands");
+    list.append("Version         | Criteria3DVersion");
+    list.append("Proj            | OpenProject");
+    //..
+
+    std::cout << "Available Console commands:" << std::endl;
+    std::cout << "(short          | long version)" << std::endl;
+    for (int i = 0; i < list.size(); i++)
+    {
+        std::cout << list[i].toStdString() << std::endl;
+    }
+
+    return CRIT3D_OK;
+}
+
+
+int Crit3DProject::cmdOpenCriteria3DProject(const QList<QString> &argumentList)
+{
+    if (argumentList.size() < 2)
+    {
+        errorString = "Missing project file name";
+        return CRIT3D_INVALID_COMMAND;
+    }
+
+    // set fileName and projectFolder
+    QString filename = argumentList.at(1);
+    QString filePath = getFilePath(filename);
+
+    QString projectFolder = "";
+    if (filePath.isEmpty())
+    {
+        if (filename.left(filename.length()-4) == ".ini")
+            projectFolder = filename.left(filename.length()-4) + "/";
+        else
+        {
+            projectFolder = filename + "/";
+            filename += ".ini";
+        }
+    }
+
+    projectFolder = PATH_PROJECT + projectFolder;
+    QString projectName = getCompleteFileName(filename, projectFolder);
+
+    if (! loadCriteria3DProject(projectName))
+        return CRIT3D_ERROR;
+
+    return CRIT3D_OK;
+}
+
 

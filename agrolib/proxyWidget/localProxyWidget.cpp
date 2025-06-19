@@ -11,8 +11,16 @@
 #include <QDate>
 
 
-Crit3DLocalProxyWidget::Crit3DLocalProxyWidget(double x, double y, double zDEM, double zGrid, gis::Crit3DGisSettings gisSettings, Crit3DInterpolationSettings* interpolationSettings, Crit3DMeteoPoint *meteoPoints, int nrMeteoPoints, meteoVariable currentVariable, frequencyType currentFrequency, QDate currentDate, int currentHour, Crit3DQuality *quality, Crit3DInterpolationSettings* SQinterpolationSettings, Crit3DMeteoSettings *meteoSettings, Crit3DClimateParameters *climateParam, bool checkSpatialQuality)
-    :x(x), y(y), zDEM(zDEM), zGrid(zGrid), gisSettings(gisSettings), interpolationSettings(interpolationSettings), meteoPoints(meteoPoints), nrMeteoPoints(nrMeteoPoints), currentVariable(currentVariable), currentFrequency(currentFrequency), currentDate(currentDate), currentHour(currentHour), quality(quality), SQinterpolationSettings(SQinterpolationSettings), meteoSettings(meteoSettings), climateParam(climateParam), checkSpatialQuality(checkSpatialQuality)
+Crit3DLocalProxyWidget::Crit3DLocalProxyWidget(double x, double y, double zDEM, double zGrid, gis::Crit3DGisSettings gisSettings,
+                                               Crit3DInterpolationSettings* interpolationSettings, Crit3DMeteoPoint *meteoPoints,
+                                               int nrMeteoPoints, meteoVariable currentVariable, frequencyType currentFrequency,
+                                               QDate currentDate, int currentHour, Crit3DQuality *quality,
+                                               Crit3DInterpolationSettings* SQinterpolationSettings, Crit3DMeteoSettings *meteoSettings,
+                                               Crit3DClimateParameters *climateParameters, bool checkSpatialQuality)
+    :_x(x), _y(y), _zDEM(zDEM), _zGrid(zGrid), _gisSettings(gisSettings), _interpolationSettings(interpolationSettings),
+    _meteoPoints(meteoPoints), _nrMeteoPoints(nrMeteoPoints), _currentVariable(currentVariable), _currentFrequency(currentFrequency),
+    _currentDate(currentDate), _currentHour(currentHour), _quality(quality), _SQinterpolationSettings(SQinterpolationSettings),
+    _meteoSettings(meteoSettings), _climateParameters(climateParameters), _checkSpatialQuality(checkSpatialQuality)
 {
     gis::Crit3DGeoPoint localGeoPoint;
     gis::Crit3DUtmPoint localUtmPoint;
@@ -22,8 +30,8 @@ Crit3DLocalProxyWidget::Crit3DLocalProxyWidget(double x, double y, double zDEM, 
 
     QString windowTitle = "Local proxy analysis for point of coordinates (" + QString::number(localGeoPoint.latitude) + ", " + QString::number(localGeoPoint.longitude) + ")." + " z value: " + QString::number(zDEM) + " (DEM)";
 
-    if (interpolationSettings->getUseGlocalDetrending())
-        windowTitle += ", macro area nr. " + QString::number(gis::getValueFromXY(*interpolationSettings->getMacroAreasMap(), x, y));
+    if (_interpolationSettings->getUseGlocalDetrending())
+        windowTitle += ", macro area nr. " + QString::number(gis::getValueFromXY(*_interpolationSettings->getMacroAreasMap(), x, y));
 
     this->setWindowTitle(windowTitle); // + QString::number(zGrid) + " (Grid)");
     this->resize(1024, 700);
@@ -96,7 +104,7 @@ Crit3DLocalProxyWidget::Crit3DLocalProxyWidget(double x, double y, double zDEM, 
     par5.setMaximumHeight(25);
     par5.setEnabled(false);
 
-    std::vector<Crit3DProxy> proxy = interpolationSettings->getCurrentProxy();
+    std::vector<Crit3DProxy> proxy = _interpolationSettings->getCurrentProxy();
 
     for(int i=0; i<int(proxy.size()); i++)
     {
@@ -106,7 +114,7 @@ Crit3DLocalProxyWidget::Crit3DLocalProxyWidget(double x, double y, double zDEM, 
     comboAxisX.setSizeAdjustPolicy(QComboBox::AdjustToContents);
 
     std::map<meteoVariable, std::string>::const_iterator it;
-    if (currentFrequency == daily)
+    if (_currentFrequency == daily)
     {
         for(it = MapDailyMeteoVarToString.begin(); it != MapDailyMeteoVarToString.end(); ++it)
         {
@@ -114,7 +122,7 @@ Crit3DLocalProxyWidget::Crit3DLocalProxyWidget(double x, double y, double zDEM, 
         }
         myVar = getKeyMeteoVarMeteoMap(MapDailyMeteoVarToString, comboVariable.currentText().toStdString());
     }
-    else if (currentFrequency == hourly)
+    else if (_currentFrequency == hourly)
     {
         for(it = MapHourlyMeteoVarToString.begin(); it != MapHourlyMeteoVarToString.end(); ++it)
         {
@@ -199,7 +207,7 @@ Crit3DLocalProxyWidget::Crit3DLocalProxyWidget(double x, double y, double zDEM, 
     connect(&stationWeights, &QCheckBox::toggled, [=] () {this->plot();});
     connect(updateStations, &QAction::triggered, this, [=](){ this->plot(); });
 
-    if (currentFrequency != noFrequency)
+    if (_currentFrequency != noFrequency)
     {
         plot();
     }
@@ -215,9 +223,9 @@ Crit3DLocalProxyWidget::~Crit3DLocalProxyWidget()
 
 void Crit3DLocalProxyWidget::changeProxyPos(const QString proxyName)
 {
-    for (int pos=0; pos < int(interpolationSettings->getProxyNr()); pos++)
+    for (int pos=0; pos < int(_interpolationSettings->getProxyNr()); pos++)
     {
-        QString myProxy = QString::fromStdString(interpolationSettings->getProxy(pos)->getName());
+        QString myProxy = QString::fromStdString(_interpolationSettings->getProxy(pos)->getName());
         if (myProxy == proxyName)
         {
             proxyPos = pos;
@@ -239,11 +247,11 @@ void Crit3DLocalProxyWidget::changeVar(const QString varName)
     }
     else
     {
-        if (currentFrequency == daily)
+        if (_currentFrequency == daily)
         {
             myVar = getKeyMeteoVarMeteoMap(MapDailyMeteoVarToString, varName.toStdString());
         }
-        else if (currentFrequency == hourly)
+        else if (_currentFrequency == hourly)
         {
             myVar = getKeyMeteoVarMeteoMap(MapHourlyMeteoVarToString, varName.toStdString());
         }
@@ -253,14 +261,14 @@ void Crit3DLocalProxyWidget::changeVar(const QString varName)
 
 void Crit3DLocalProxyWidget::updateDateTime(QDate newDate, int newHour)
 {
-    currentDate = newDate;
-    currentHour = newHour;
+    _currentDate = newDate;
+    _currentHour = newHour;
     plot();
 }
 
 void Crit3DLocalProxyWidget::updateFrequency(frequencyType newFrequency)
 {
-    currentFrequency = newFrequency;
+    _currentFrequency = newFrequency;
     meteoVariable newVar = updateMeteoVariable(myVar, newFrequency);
     int cmbIndex = -1;
     std::string newVarString ;
@@ -268,7 +276,7 @@ void Crit3DLocalProxyWidget::updateFrequency(frequencyType newFrequency)
     comboVariable.clear();
 
     std::map<meteoVariable, std::string>::const_iterator it;
-    if (currentFrequency == daily)
+    if (_currentFrequency == daily)
     {
         newVarString = getKeyStringMeteoMap(MapDailyMeteoVar, newVar);
 
@@ -280,7 +288,7 @@ void Crit3DLocalProxyWidget::updateFrequency(frequencyType newFrequency)
         if (cmbIndex != -1) comboVariable.setCurrentIndex(cmbIndex);
         myVar = getKeyMeteoVarMeteoMap(MapDailyMeteoVarToString, comboVariable.currentText().toStdString());
     }
-    else if (currentFrequency == hourly)
+    else if (_currentFrequency == hourly)
     {
         newVarString = getKeyStringMeteoMap(MapHourlyMeteoVar, newVar);
 
@@ -307,13 +315,13 @@ void Crit3DLocalProxyWidget::closeEvent(QCloseEvent *event)
 Crit3DTime Crit3DLocalProxyWidget::getCurrentTime()
 {
     Crit3DTime myTime;
-    if (currentFrequency == hourly)
+    if (_currentFrequency == hourly)
     {
-        myTime = getCrit3DTime(currentDate, currentHour);
+        myTime = getCrit3DTime(_currentDate, _currentHour);
     }
     else
     {
-        myTime = getCrit3DTime(currentDate, 0);
+        myTime = getCrit3DTime(_currentDate, 0);
     }
 
     return myTime;
@@ -335,64 +343,64 @@ void Crit3DLocalProxyWidget::plot()
     weightLabels.clear();
     int areaCode = NODATA;
 
-    if (interpolationSettings->getUseLocalDetrending())
+    if (_interpolationSettings->getUseLocalDetrending())
     {
     if (detrended.isChecked())
     {
         outInterpolationPoints.clear();
 
-        checkAndPassDataToInterpolation(quality, myVar, meteoPoints, nrMeteoPoints, getCurrentTime(), SQinterpolationSettings,
-                                        interpolationSettings, meteoSettings, climateParam,
-                                        outInterpolationPoints, checkSpatialQuality, errorStdStr);
+        checkAndPassDataToInterpolation(_quality, myVar, _meteoPoints, _nrMeteoPoints, getCurrentTime(), _SQinterpolationSettings,
+                                        _interpolationSettings, _meteoSettings, _climateParameters,
+                                        outInterpolationPoints, _checkSpatialQuality, errorStdStr);
 
-        localSelection(outInterpolationPoints, subsetInterpolationPoints, x, y, *interpolationSettings, false);
-        detrending(subsetInterpolationPoints, interpolationSettings->getSelectedCombination(), interpolationSettings, climateParam, myVar, getCurrentTime());
+        localSelection(outInterpolationPoints, subsetInterpolationPoints, _x, _y, *_interpolationSettings, false);
+        detrending(subsetInterpolationPoints, _interpolationSettings->getSelectedCombination(), _interpolationSettings, _climateParameters, myVar, getCurrentTime());
     }
     else
     {
-        checkAndPassDataToInterpolation(quality, myVar, meteoPoints, nrMeteoPoints, getCurrentTime(), SQinterpolationSettings,
-                                        interpolationSettings, meteoSettings, climateParam,
-                                        outInterpolationPoints, checkSpatialQuality, errorStdStr);
-        localSelection(outInterpolationPoints, subsetInterpolationPoints, x, y, *interpolationSettings, false);
+        checkAndPassDataToInterpolation(_quality, myVar, _meteoPoints, _nrMeteoPoints, getCurrentTime(), _SQinterpolationSettings,
+                                        _interpolationSettings, _meteoSettings, _climateParameters,
+                                        outInterpolationPoints, _checkSpatialQuality, errorStdStr);
+        localSelection(outInterpolationPoints, subsetInterpolationPoints, _x, _y, *_interpolationSettings, false);
     }
     }
-    else if (interpolationSettings->getUseGlocalDetrending())
+    else if (_interpolationSettings->getUseGlocalDetrending())
     {
 
-        areaCode = gis::getValueFromXY(*interpolationSettings->getMacroAreasMap(), x, y);
-        if (areaCode < interpolationSettings->getMacroAreas().size())
+        areaCode = gis::getValueFromXY(*_interpolationSettings->getMacroAreasMap(), _x, _y);
+        if (areaCode < (int)_interpolationSettings->getMacroAreas().size())
         {
-            Crit3DMacroArea myArea = interpolationSettings->getMacroAreas()[areaCode];
+            Crit3DMacroArea myArea = _interpolationSettings->getMacroAreas()[areaCode];
             std::vector<int> stations = myArea.getMeteoPoints();
             if (detrended.isChecked())
             {
                 outInterpolationPoints.clear();
 
-                checkAndPassDataToInterpolation(quality, myVar, meteoPoints, nrMeteoPoints, getCurrentTime(), SQinterpolationSettings,
-                                                interpolationSettings, meteoSettings, climateParam,
-                                                outInterpolationPoints, checkSpatialQuality, errorStdStr);
+                checkAndPassDataToInterpolation(_quality, myVar, _meteoPoints, _nrMeteoPoints, getCurrentTime(), _SQinterpolationSettings,
+                                                _interpolationSettings, _meteoSettings, _climateParameters,
+                                                outInterpolationPoints, _checkSpatialQuality, errorStdStr);
 
-                for (int k = 0; k < stations.size(); k++)
+                for (int k = 0; k < (int)stations.size(); k++)
                 {
-                    for (int j = 0; j < outInterpolationPoints.size(); j++)
+                    for (int j = 0; j < (int)outInterpolationPoints.size(); j++)
                         if (outInterpolationPoints[j].index == stations[k])
                         {
                             subsetInterpolationPoints.push_back(outInterpolationPoints[j]);
                         }
                 }
 
-                detrending(subsetInterpolationPoints, interpolationSettings->getSelectedCombination(), interpolationSettings, climateParam, myVar, getCurrentTime());
+                detrending(subsetInterpolationPoints, _interpolationSettings->getSelectedCombination(), _interpolationSettings, _climateParameters, myVar, getCurrentTime());
             }
             else
             {
                 outInterpolationPoints.clear();
-                checkAndPassDataToInterpolation(quality, myVar, meteoPoints, nrMeteoPoints, getCurrentTime(), SQinterpolationSettings,
-                                                interpolationSettings, meteoSettings, climateParam,
-                                                outInterpolationPoints, checkSpatialQuality, errorStdStr);
+                checkAndPassDataToInterpolation(_quality, myVar, _meteoPoints, _nrMeteoPoints, getCurrentTime(), _SQinterpolationSettings,
+                                                _interpolationSettings, _meteoSettings, _climateParameters,
+                                                outInterpolationPoints, _checkSpatialQuality, errorStdStr);
 
-                for (int k = 0; k < stations.size(); k++)
+                for (int k = 0; k < (int)stations.size(); k++)
                 {
-                    for (int j = 0; j < outInterpolationPoints.size(); j++)
+                    for (int j = 0; j < (int)outInterpolationPoints.size(); j++)
                         if (outInterpolationPoints[j].index == stations[k])
                         {
                             subsetInterpolationPoints.push_back(outInterpolationPoints[j]);
@@ -417,9 +425,9 @@ void Crit3DLocalProxyWidget::plot()
         {
             point.setX(proxyVal);
             point.setY(varValue);
-            QString text = "id: " + QString::fromStdString(meteoPoints[subsetInterpolationPoints[i].index].id) + "\n"
-                           + "name: " + QString::fromStdString(meteoPoints[subsetInterpolationPoints[i].index].name) + "\n"
-                           + "province: " + QString::fromStdString(meteoPoints[subsetInterpolationPoints[i].index].province) + "\n"
+            QString text = "id: " + QString::fromStdString(_meteoPoints[subsetInterpolationPoints[i].index].id) + "\n"
+                           + "name: " + QString::fromStdString(_meteoPoints[subsetInterpolationPoints[i].index].name) + "\n"
+                           + "province: " + QString::fromStdString(_meteoPoints[subsetInterpolationPoints[i].index].province) + "\n"
                            + "weight: " + QString::number(subsetInterpolationPoints[i].regressionWeight, 'f', 5);
             if (subsetInterpolationPoints[i].isMarked)
             {
@@ -539,8 +547,8 @@ void Crit3DLocalProxyWidget::climatologicalLRClicked(int toggled)
     {
         float zMax = getZmax(outInterpolationPoints);
         float zMin = getZmin(outInterpolationPoints);
-        float firstIntervalHeightValue = getFirstIntervalHeightValue(outInterpolationPoints, interpolationSettings->getUseLapseRateCode());
-        float lapseRate = climateParam->getClimateLapseRate(myVar, getCurrentTime());
+        float firstIntervalHeightValue = getFirstIntervalHeightValue(outInterpolationPoints, _interpolationSettings->getUseLapseRateCode());
+        float lapseRate = _climateParameters->getClimateLapseRate(myVar, getCurrentTime());
         if (lapseRate == NODATA)
         {
             return;
@@ -570,23 +578,23 @@ void Crit3DLocalProxyWidget::modelLRClicked(int toggled)
     if (toggled && subsetInterpolationPoints.size() != 0)
     {
         int elevationPos = NODATA;
-        for (unsigned int pos=0; pos < interpolationSettings->getSelectedCombination().getProxySize(); pos++)
+        for (unsigned int pos=0; pos < _interpolationSettings->getSelectedCombination().getProxySize(); pos++)
         {
-            if (getProxyPragaName(interpolationSettings->getProxy(pos)->getName()) == proxyHeight)
+            if (getProxyPragaName(_interpolationSettings->getProxy(pos)->getName()) == proxyHeight)
                 elevationPos = pos;
         }
             std::string errorStr;
-            setMultipleDetrendingHeightTemperatureRange(interpolationSettings);
-            interpolationSettings->setCurrentCombination(interpolationSettings->getSelectedCombination());
-            interpolationSettings->clearFitting();
-            if (interpolationSettings->getUseLocalDetrending())
+            setMultipleDetrendingHeightTemperatureRange(_interpolationSettings);
+            _interpolationSettings->setCurrentCombination(_interpolationSettings->getSelectedCombination());
+            _interpolationSettings->clearFitting();
+            if (_interpolationSettings->getUseLocalDetrending())
             {
-                if (! multipleDetrendingElevationFitting(elevationPos, subsetInterpolationPoints, interpolationSettings, myVar, errorStr, true)) return;
+                if (! multipleDetrendingElevationFitting(elevationPos, subsetInterpolationPoints, _interpolationSettings, myVar, errorStr, true)) return;
             }
-            else if (interpolationSettings->getUseGlocalDetrending())
-                if (! multipleDetrendingElevationFitting(elevationPos, subsetInterpolationPoints, interpolationSettings, myVar, errorStr, false)) return;
+            else if (_interpolationSettings->getUseGlocalDetrending())
+                if (! multipleDetrendingElevationFitting(elevationPos, subsetInterpolationPoints, _interpolationSettings, myVar, errorStr, false)) return;
 
-            std::vector<std::vector<double>> parameters = interpolationSettings->getFittingParameters();
+            std::vector<std::vector<double>> parameters = _interpolationSettings->getFittingParameters();
 
             if (comboAxisX.currentText() == "elevation")
             {
@@ -597,7 +605,7 @@ void Crit3DLocalProxyWidget::modelLRClicked(int toggled)
                         xMin = getZmin(subsetInterpolationPoints);
                         xMax = getZmax(subsetInterpolationPoints);
 
-                        if (interpolationSettings->getUseMultipleDetrending())
+                        if (_interpolationSettings->getUseMultipleDetrending())
                         {
                             std::vector <double> xVector;
                             for (int m = xMin; m < xMax; m += 5)
@@ -615,8 +623,8 @@ void Crit3DLocalProxyWidget::modelLRClicked(int toggled)
                                 point_vector.append(point);
                             }
 
-                            if (interpolationSettings->getProxy(elevationPos)->getRegressionR2() != NODATA)
-                                r2.setText(QString("%1").arg(interpolationSettings->getProxy(elevationPos)->getRegressionR2(), 0, 'f', 3));
+                            if (_interpolationSettings->getProxy(elevationPos)->getRegressionR2() != NODATA)
+                                r2.setText(QString("%1").arg(_interpolationSettings->getProxy(elevationPos)->getRegressionR2(), 0, 'f', 3));
 
                             if (parameters.front().size() > 3)
                             {
@@ -637,11 +645,11 @@ void Crit3DLocalProxyWidget::modelLRClicked(int toggled)
             {
                 //TODO: OTHER PROXIES
                 /*std::string errorStr;
-                //detrendingElevation(elevationPos, outInterpolationPoints, interpolationSettings);
-                if (! multipleDetrendingOtherProxiesFitting(elevationPos, subsetInterpolationPoints, interpolationSettings, myVar, errorStr)) return;
+                //detrendingElevation(elevationPos, outInterpolationPoints, _interpolationSettings);
+                if (! multipleDetrendingOtherProxiesFitting(elevationPos, subsetInterpolationPoints, _interpolationSettings, myVar, errorStr)) return;
 
-                parameters = interpolationSettings->getFittingParameters();
-                Crit3DProxyCombination myCombination = interpolationSettings->getCurrentCombination();
+                parameters = _interpolationSettings->getFittingParameters();
+                Crit3DProxyCombination myCombination = _interpolationSettings->getCurrentCombination();
 
                 int pos = 0;
                 for (int i = 0; i < proxyPos + 1; i++)
@@ -651,7 +659,7 @@ void Crit3DLocalProxyWidget::modelLRClicked(int toggled)
                 xMin = getZmin(subsetInterpolationPoints);
                 xMax = getZmax(subsetInterpolationPoints);
 
-                if (interpolationSettings->getUseMultipleDetrending() && pos < parameters.size())
+                if (_interpolationSettings->getUseMultipleDetrending() && pos < parameters.size())
                 {
                     std::vector <double> xVector;
                     for (int m = xMin; m < xMax; m += 5)
@@ -664,8 +672,8 @@ void Crit3DLocalProxyWidget::modelLRClicked(int toggled)
                         point_vector.append(point);
                     }
 
-                    if (interpolationSettings->getProxy(proxyPos)->getRegressionR2() != NODATA)
-                        r2.setText(QString("%1").arg(interpolationSettings->getProxy(proxyPos)->getRegressionR2(), 0, 'f', 3));
+                    if (_interpolationSettings->getProxy(proxyPos)->getRegressionR2() != NODATA)
+                        r2.setText(QString("%1").arg(_interpolationSettings->getProxy(proxyPos)->getRegressionR2(), 0, 'f', 3));
 
                     if (parameters[pos].size() == 2)
                     {

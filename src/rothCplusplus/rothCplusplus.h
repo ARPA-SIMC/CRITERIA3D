@@ -161,6 +161,9 @@ public:
     void setSWC(double mySWC) {SWC = mySWC;};
     double getSWC() {return SWC; };
 
+    void setPlantCover(double myPC) {plantCover = myPC; };
+    double getPlantCover() { return plantCover; };
+
     void resetInputVariables();
 
     void scrivi_csv(const std::string& nome_file, const std::vector<std::vector<double>>& dati) ;
@@ -198,7 +201,7 @@ private:
     double RMF_Tmp(double TEMP);
     void decomp(int timeFact,
                 double &modifyingRate);
-    void RothC(int timeFact, bool &PC);
+    void RothC(int timeFact, double &PC);
 
 
 };

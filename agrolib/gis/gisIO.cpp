@@ -116,12 +116,20 @@ namespace gis
         string myLine, myKey, upKey, valueStr;
         int nrKeys = 0;
 
-        string myFileName = fileName + ".hdr";
-        ifstream  myFile (myFileName.c_str());
+        // check suffix
+        string fn = fileName;
+        std::string key (".flt");
+        std::size_t found = fn.rfind(key);
+        if (found != std::string::npos)
+            fn.replace (found, key.length(), "");
+
+        // open file
+        fn += ".hdr";
+        ifstream  myFile (fn.c_str());
 
         if (! myFile.is_open())
         {
-            errorStr = "Missing file: " + myFileName;
+            errorStr = "Missing file: " + fn;
             return false;
         }
 
@@ -487,7 +495,18 @@ namespace gis
 
         if(gis::readEsriGridHeader(fileName, rasterGrid->header, errorStr))
         {
-            string fltFileName = fileName + ".flt";
+            // check suffix
+            std::size_t found = fileName.rfind(".flt");
+            string fltFileName;
+            if (found != std::string::npos)
+            {
+                fltFileName = fileName;
+            }
+            else
+            {
+                fltFileName = fileName + ".flt";
+            }
+
             if (gis::readRasterFloatData(fltFileName, rasterGrid, errorStr))
             {
                 gis::updateMinMaxRasterGrid(rasterGrid);
@@ -525,11 +544,11 @@ namespace gis
      * \brief Read a ESRI/ENVI float raster (header and data)
      * \return true on success, false otherwise
      */
-    bool openRaster(string fileName, Crit3DRasterGrid *rasterGrid, int currentUtmZone, string &error)
+    bool openRaster(string fileName, Crit3DRasterGrid *rasterGrid, int currentUtmZone, string &errorStr)
     {
         if (fileName.size() <= 4)
         {
-            error = "Wrong filename.";
+            errorStr = "Wrong filename.";
             return false;
         }
 
@@ -539,11 +558,11 @@ namespace gis
         bool isOk = false;
         if (fileExtension == ".flt")
         {
-            isOk = gis::readEsriGrid(fileNameWithoutExt, rasterGrid, error);
+            isOk = gis::readEsriGrid(fileNameWithoutExt, rasterGrid, errorStr);
         }
         else if (fileExtension == ".img")
         {
-            isOk = gis::readEnviGrid(fileNameWithoutExt, rasterGrid, currentUtmZone, error);
+            isOk = gis::readEnviGrid(fileNameWithoutExt, rasterGrid, currentUtmZone, errorStr);
         }
 
         return isOk;

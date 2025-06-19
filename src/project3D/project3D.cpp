@@ -482,14 +482,7 @@ bool Project3D::setAccuracy()
     // Mass Balance Ratio precision (digit at which error is accepted)
     int digitMBR = waterFluxesParameters.modelAccuracy;
 
-    int myResult = soilFluxes3D::setNumericalParameters(minimumDeltaT, 3600, 100, 10, 6, digitMBR);
-
-    // check result
-    if (isCrit3dError(myResult, errorString))
-    {
-        errorString = "setAccuracy: " + errorString;
-        return false;
-    }
+    soilFluxes3D::setNumericalParameters(minimumDeltaT, 3600, 100, 10, 8, digitMBR);
 
     // parallel computing
     waterFluxesParameters.numberOfThreads = soilFluxes3D::setThreads(waterFluxesParameters.numberOfThreads);
@@ -1047,7 +1040,6 @@ bool Project3D::setCrit3DNodeSoil()
 
 bool Project3D::initializeSoilMoisture(int month)
 {
-    int crit3dResult = CRIT3D_OK;
     long index, soilIndex, horizonIndex;
     double moistureIndex, waterPotential;
     double fieldCapacity;                    // [m]
@@ -1070,6 +1062,8 @@ bool Project3D::initializeSoilMoisture(int month)
                 index = long(indexMap.at(size_t(layer)).value[row][col]);
                 if (index != long(indexMap.at(size_t(layer)).header->flag))
                 {
+                    int crit3dResult = CRIT3D_OK;
+
                     if (layer == 0)
                     {
                         // surface
@@ -2375,7 +2369,8 @@ float Project3D::computeFactorOfSafety(int row, int col, unsigned int layerIndex
 
 bool isCrit3dError(int result, QString& error)
 {
-    if (result == CRIT3D_OK) return false;
+    if (result == CRIT3D_OK)
+        return false;
 
     switch (result)
     {
@@ -2504,7 +2499,7 @@ QString getOutputNameHourly(meteoVariable hourlyVar, QDateTime myTime)
 }
 
 
-bool readHourlyMap(meteoVariable myVar, QString hourlyPath, QDateTime myTime, QString myArea, gis::Crit3DRasterGrid* myGrid)
+bool readHourlyMap(meteoVariable myVar, QString hourlyPath, QDateTime myTime, gis::Crit3DRasterGrid* myGrid)
 {
     QString fileName = hourlyPath + getOutputNameHourly(myVar, myTime);
     std::string error;
@@ -2516,7 +2511,7 @@ bool readHourlyMap(meteoVariable myVar, QString hourlyPath, QDateTime myTime, QS
 }
 
 
-float readDataHourly(meteoVariable myVar, QString hourlyPath, QDateTime myTime, QString myArea, int row, int col)
+float readDataHourly(meteoVariable myVar, QString hourlyPath, QDateTime myTime, int row, int col)
 {
     gis::Crit3DRasterGrid* myGrid = new gis::Crit3DRasterGrid();
     QString fileName = hourlyPath + getOutputNameHourly(myVar, myTime);

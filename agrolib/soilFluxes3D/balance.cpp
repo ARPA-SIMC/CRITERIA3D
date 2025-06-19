@@ -144,21 +144,22 @@ double sumWaterFlow(double deltaT)
  */
 void computeMassBalance(double deltaT)
 {
-    balanceCurrentTimeStep.storageWater = computeTotalWaterContent();       // [m3]
+    balanceCurrentTimeStep.storageWater = computeTotalWaterContent();                               // [m3]
 
     double dStorage = balanceCurrentTimeStep.storageWater - balancePreviousTimeStep.storageWater;   // [m3]
 
-    balanceCurrentTimeStep.sinkSourceWater = sumWaterFlow(deltaT);          // [m3]
+    balanceCurrentTimeStep.sinkSourceWater = sumWaterFlow(deltaT);                                  // [m3]
 
     balanceCurrentTimeStep.waterMBE = dStorage - balanceCurrentTimeStep.sinkSourceWater;            // [m3]
 
     // minimum reference water storage [m3] as % of current storage
-    double minRefWaterStorage = balanceCurrentTimeStep.storageWater * std::min(0.0001, myParameters.MBRThreshold);
-    minRefWaterStorage = std::max(minRefWaterStorage, 0.001);        // [m3] minimum 1 liter
+    double timePercentage = 0.01 * std::max(deltaT, 1.) / HOUR_SECONDS;
+    double minRefWaterStorage = balanceCurrentTimeStep.storageWater * timePercentage;
+    minRefWaterStorage = std::max(minRefWaterStorage, 0.001);                                       // [m3] minimum 1 liter
 
-    // reference water for computation of mass balance ratio
-    // when the water sink/source is low, use the reference water storage
-    double referenceWater = std::max(fabs(balanceCurrentTimeStep.sinkSourceWater), minRefWaterStorage);   // [m3]
+    // reference water for computation of mass balance error ratio
+    // when the water sink/source is too low, use the reference water storage
+    double referenceWater = std::max(fabs(balanceCurrentTimeStep.sinkSourceWater), minRefWaterStorage);     // [m3]
 
     balanceCurrentTimeStep.waterMBR = balanceCurrentTimeStep.waterMBE / referenceWater;
 }
@@ -260,7 +261,7 @@ bool waterBalance(double deltaT, int approxNr)
         acceptStep(deltaT);
 
         // best case: system is stable, try to increase time step
-        if (CourantWater < 0.9 && approxNr <= 2 && MBRerror < (myParameters.MBRThreshold * 0.5))
+        if (CourantWater < 0.8 && approxNr <= 3 && MBRerror < (myParameters.MBRThreshold * 0.5))
         {
             if (CourantWater < 0.5)
             {
@@ -288,7 +289,7 @@ bool waterBalance(double deltaT, int approxNr)
 
     // system is unstable or last approximation
     int lastApproximation = myParameters.maxApproximationsNumber-1;
-    if (MBRerror > (_bestMBRerror * 2.0) || approxNr == lastApproximation)
+    if (MBRerror > (_bestMBRerror * 3.0) || approxNr == lastApproximation)
     {
         if (deltaT > myParameters.delta_t_min)
         {

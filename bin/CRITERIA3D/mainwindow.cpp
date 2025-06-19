@@ -2331,17 +2331,23 @@ void MainWindow::on_actionCriteria3D_waterFluxes_settings_triggered()
         threadNumber = soilFluxes3D::setThreads(threadNumber);
         myProject.waterFluxesParameters.numberOfThreads = threadNumber;
 
+        if (myProject.isCriteria3DInitialized)
+        {
+            myProject.setAccuracy();
+        }
+
         myProject.fittingOptions.useWaterRetentionData = dialogWaterFluxes.useWaterRetentionFitting->isChecked();
 
-        bool isSnow = false;
         bool isWater = true;
+        bool isSnow = false;
         bool isSoilCrack = false;
         if (! myProject.writeCriteria3DParameters(isSnow, isWater, isSoilCrack))
         {
             myProject.logError("Error writing soil fluxes parameters");
         }
 
-        // layer thickness
+        // TODO layer thickness
+        // TODO soil crack
     }
 }
 
