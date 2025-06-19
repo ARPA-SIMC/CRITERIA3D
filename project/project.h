@@ -232,7 +232,7 @@
 
         void closeOutputPointsDB();
 
-        bool loadDEM(QString myFileName);
+        bool loadDEM(const QString & fileName);
         void closeDEM();
         bool loadMeteoPointsData(const QDate &firstDate, const QDate &lastDate, bool loadHourly, bool loadDaily, bool showInfo);
         bool loadMeteoPointsData(const QDate &firstDate, const QDate &lastDate, bool loadHourly, bool loadDaily, const QString &dataset, bool showInfo);
