@@ -190,14 +190,6 @@ void Project::setProxyDEM()
         if (proxyHeight->getGridName() == "" && DEM.isLoaded)
         {
             proxyHeight->setGrid(&DEM);
-            std::string completeDem = getCompleteFileName(demFileName, PATH_DEM).toStdString();
-            auto pos = completeDem.find_last_of('.');
-            if (pos != std::string::npos) {
-                proxyHeight->setGridName(completeDem.substr (0,pos));
-            }
-            else {
-                proxyHeight->setGridName(completeDem);
-            }
         }
     }
 
