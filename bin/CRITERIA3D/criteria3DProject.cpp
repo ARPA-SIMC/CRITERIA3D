@@ -867,7 +867,7 @@ bool Crit3DProject::runModels(QDateTime firstTime, QDateTime lastTime, bool isRe
             // logData("LinSystInfo", linSystLog);
             // logInfo("LinSystInfo\n" + linSystLog);
 
-            logInfo(getLinSystLog());
+            logInfo(soilFluxes3D::getCUDArun());
 
 
             //rothC maps update must be done hourly, otherwise ETReal data is not stored

@@ -110,10 +110,10 @@ namespace soilFluxes3D
         return stringData;
     }
 
-    __EXTERN QString getLinSystLog()
+    __EXTERN QString getCUDArun()
     {
         QString stringData = "TestCUDA - R[1024] = ";
-        stringData.append(QString::number(testCUDAinProject());
+        stringData.append(QString::number(testCUDAinProject()));
         return stringData.append(" - correct if 2028");
     }
 }
