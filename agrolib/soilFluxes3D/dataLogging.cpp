@@ -2,6 +2,8 @@
 #include "soilFluxes3D.h"
 #include "types.h"
 
+extern double testCUDAinProject();
+
 namespace soilFluxes3D
 {
     __EXTERN QString getMatrixLog()
@@ -106,6 +108,13 @@ namespace soilFluxes3D
             stringData.append(QString::number(*it).append(" "));
 
         return stringData;
+    }
+
+    __EXTERN QString getLinSystLog()
+    {
+        QString stringData = "TestCUDA - R[1024] = ";
+        stringData.append(QString::number(testCUDAinProject());
+        return stringData.append(" - correct if 2028");
     }
 }
 

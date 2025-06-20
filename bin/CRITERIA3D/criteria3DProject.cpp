@@ -857,15 +857,17 @@ bool Crit3DProject::runModels(QDateTime firstTime, QDateTime lastTime, bool isRe
             logInfo("Tempo di calcolo [ms]: " + QString::number(startTime.msecsTo(endTime)));
 
             //Log temporaneo delle variabili
-            QString matrixLog = soilFluxes3D::getMatrixLog();
-            logData("MatrixFinal", matrixLog);
+            // QString matrixLog = soilFluxes3D::getMatrixLog();
+            // logData("MatrixFinal", matrixLog);
 
-            QString vectorLog = soilFluxes3D::getVectorLog();
-            logData("VectorFinal", vectorLog);
+            // QString vectorLog = soilFluxes3D::getVectorLog();
+            // logData("VectorFinal", vectorLog);
 
-            QString linSystLog = soilFluxes3D::getLinSystLog();
-            logData("LinSystInfo", linSystLog);
-            logInfo("LinSystInfo\n" + linSystLog);
+            // QString linSystLog = soilFluxes3D::getLinSystLog();
+            // logData("LinSystInfo", linSystLog);
+            // logInfo("LinSystInfo\n" + linSystLog);
+
+            logInfo(getLinSystLog());
 
 
             //rothC maps update must be done hourly, otherwise ETReal data is not stored

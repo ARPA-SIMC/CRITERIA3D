@@ -38,6 +38,7 @@ SOURCES +=  \
     boundary.cpp \
     balance.cpp \
     dataLogging.cpp \
+    testCUDAinProject.cpp \
     water.cpp \
     solver.cpp \
     memory.cpp \
@@ -60,3 +61,6 @@ HEADERS += \
     soilFluxes3D.h \
     extra.h \
     heat.h
+
+DISTFILES += \
+    kernelTest.cu
