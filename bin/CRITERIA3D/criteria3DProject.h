@@ -28,7 +28,7 @@
 
     #include <QString>
 
-    #define CRITERIA3D_VERSION "V1.0.6"
+    #define CRITERIA3D_VERSION "V1.0.7"
 
 
     class Crit3DProject : public Project3D
@@ -135,7 +135,7 @@
         bool loadModelState(QString statePath);
         bool loadWaterPotentialState(QString waterPath);
 
-        QList<QString> getAllSavedState();
+        bool getAllSavedState(QList<QString> &stateList);
 
         bool writeOutputPointsTables();
         bool writeOutputPointsData();
@@ -155,7 +155,11 @@
         int executeCommand(const QList<QString> &argumentList);
         int executeCriteria3DCommand(const QList<QString> &argumentList, bool &isCommandFound);
 
+        int cmdList(const QList<QString> &argumentList);
         int cmdOpenCriteria3DProject(const QList<QString> &argumentList);
+        int cmdLoadState(const QList<QString> &argumentList);
+        int cmdRunModels(const QList<QString> &argumentList);
+
         int printCriteria3DVersion();
         int printCriteria3DCommandList();
 

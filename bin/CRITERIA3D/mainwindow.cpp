@@ -3545,10 +3545,11 @@ void MainWindow::on_actionCriteria3D_load_state_triggered()
         return;
     }
 
-    QList<QString> stateList = myProject.getAllSavedState();
-    if (stateList.isEmpty())
+    QString statesPath = myProject.getProjectPath() + PATH_STATES;
+    QList<QString> stateList;
+    if (! myProject.getAllSavedState(stateList))
     {
-        myProject.logWarning("No states saved in the directory:\n" + myProject.getProjectPath() + PATH_STATES);
+        myProject.logError();
         return;
     }
 
@@ -3556,7 +3557,7 @@ void MainWindow::on_actionCriteria3D_load_state_triggered()
     if (dialogLoadState.result() != QDialog::Accepted)
         return;
 
-    QString stateDirectory = myProject.getProjectPath() + PATH_STATES + dialogLoadState.getSelectedState();
+    QString stateDirectory = statesPath + dialogLoadState.getSelectedState();
     if (! myProject.loadModelState(stateDirectory))
     {
         myProject.logError();
