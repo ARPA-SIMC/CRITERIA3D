@@ -132,6 +132,11 @@
 
         Crit3DHydrallWeatherDerivedVariable derived;
 
+        double getMonthlyETreal () { return monthlyETreal; };
+        void setMonthlyETreal (double myET) { monthlyETreal = myET; };
+        double getMonthlyPrec () { return monthlyPrec; };
+        void setMonthlyPrec (double myPrec) { monthlyPrec = myPrec; };
+
         double myInstantTemp;
         double prec;
         double irradiance;
@@ -143,6 +148,8 @@
         double last30DaysTAvg;
         double meanDailyTemp;
 
+
+    private:
         double monthlyETreal;
         double monthlyPrec;
 

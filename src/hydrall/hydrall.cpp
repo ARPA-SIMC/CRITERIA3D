@@ -1423,7 +1423,7 @@ bool Crit3DHydrall::simplifiedGrowthStand()
     double rootShootRatio;
     double alpha = 0.7;
 
-    rootShootRatio = MAXVALUE(MINVALUE(plant.rootShootRatioRef*(alpha*0.5 + 1), plant.rootShootRatioRef*(alpha*(1-weatherVariable.monthlyPrec/weatherVariable.monthlyETreal)+1)), plant.rootShootRatioRef);
+    rootShootRatio = MAXVALUE(MINVALUE(plant.rootShootRatioRef*(alpha*0.5 + 1), plant.rootShootRatioRef*(alpha*(1-weatherVariable.getMonthlyPrec()/weatherVariable.getMonthlyETreal())+1)), plant.rootShootRatioRef);
 
     allocationCoefficient.toFineRoots = rootShootRatio / (1 + rootShootRatio);
     allocationCoefficient.toFoliage = ( 1 - allocationCoefficient.toFineRoots ) * 0.05;
@@ -1432,7 +1432,8 @@ bool Crit3DHydrall::simplifiedGrowthStand()
 
     std::ofstream myFile;
     myFile.open("outputAlloc.csv", std::ios_base::app);
-    myFile << allocationCoefficient.toFoliage <<","<< allocationCoefficient.toFineRoots <<","<<allocationCoefficient.toSapwood <<","<< rootShootRatio <<"\n";
+    myFile << allocationCoefficient.toFoliage <<","<< allocationCoefficient.toFineRoots <<","<<allocationCoefficient.toSapwood <<","
+           << rootShootRatio <<"," << weatherVariable.getMonthlyETreal() << "," << weatherVariable.getMonthlyPrec() <<"\n";
     myFile.close();
 
     if (annualGrossStandGrowth * allocationCoefficient.toFoliage > statePlant.treeBiomassFoliage/(plant.foliageLongevity - 1))

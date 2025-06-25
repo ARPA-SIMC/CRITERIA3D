@@ -77,7 +77,7 @@
         bool initializeCropMaps();
         bool initializeHydrall();
         bool initializeRothC();
-        void updateRothCMonthlyMaps();
+        void updateETAndPrecMonthlyMaps();
         void dailyUpdateCropMaps(const QDate &myDate);
 
         bool initializeCropWithClimateData();
