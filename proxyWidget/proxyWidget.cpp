@@ -425,23 +425,24 @@ void Crit3DProxyWidget::climatologicalLRClicked(int toggled)
     }
 }
 
+
 void Crit3DProxyWidget::modelLRClicked(int toggled)
 {
     chartView->cleanModelLapseRate();
     r2.clear();
     lapseRate.clear();
+
     QList<QPointF> point_vector;
     QPointF point;
-    float xMin;
-    float xMax;
+
     if (toggled && _outInterpolationPoints.size() != 0)
     {
         float regressionSlope = NODATA;
 
         if (comboAxisX.currentText() == "elevation")
         {
-            xMin = getZmin(_outInterpolationPoints);
-            xMax = getZmax(_outInterpolationPoints);
+            float xMin = getZmin(_outInterpolationPoints);
+            float xMax = getZmax(_outInterpolationPoints);
 
             if (! _interpolationSettings->getUseMultipleDetrending())
             {
@@ -497,7 +498,7 @@ void Crit3DProxyWidget::modelLRClicked(int toggled)
                 }
                 lapseRate.setText(QString("%1").arg(regressionSlope*1000, 0, 'f', 2));
             }
-            else if (_interpolationSettings->getUseMultipleDetrending() && ! _interpolationSettings->getUseLocalDetrending() && ! _interpolationSettings->getUseGlocalDetrending())
+            else if (! _interpolationSettings->getUseLocalDetrending() && ! _interpolationSettings->getUseGlocalDetrending())
             {
                 std::string errorStr;
 
@@ -527,13 +528,17 @@ void Crit3DProxyWidget::modelLRClicked(int toggled)
                     }
                 }
             }
+            else
+            {
+                QMessageBox::warning(nullptr, "Multiple detrending", "Disable multiple detrendinding to show the model lapse rate.");
+            }
         }
         else
         {
             if (! _interpolationSettings->getUseMultipleDetrending())
             {
-                xMin = getProxyMinValue(_outInterpolationPoints, _proxyPos);
-                xMax = getProxyMaxValue(_outInterpolationPoints, _proxyPos);
+                float xMin = getProxyMinValue(_outInterpolationPoints, _proxyPos);
+                float xMax = getProxyMaxValue(_outInterpolationPoints, _proxyPos);
                 bool isZeroIntercept = false;
                 if (!regressionGeneric(_outInterpolationPoints, _interpolationSettings, _proxyPos, isZeroIntercept))
                 {
@@ -555,14 +560,19 @@ void Crit3DProxyWidget::modelLRClicked(int toggled)
                 }
                 lapseRate.setText(QString("%1").arg(regressionSlope, 0, 'f', 2));
             }
-            else if (_interpolationSettings->getUseMultipleDetrending() && !_interpolationSettings->getUseLocalDetrending())
+            else if (!_interpolationSettings->getUseLocalDetrending())
             {
                 //TODO
+            }
+            else
+            {
+                QMessageBox::warning(nullptr, "Multiple detrending", "Disable multiple detrendinding to show the model lapse rate.");
             }
         }
         chartView->drawModelLapseRate(point_vector);
     }
 }
+
 
 void Crit3DProxyWidget::on_actionChangeLeftAxis()
 {
