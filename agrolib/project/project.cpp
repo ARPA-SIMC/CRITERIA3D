@@ -4971,7 +4971,7 @@ bool Project::exportMeteoGridToRasterFlt(QString fileName, double cellSize)
     }
 
     gis::Crit3DRasterGrid myGrid;
-    if (!meteoGridDbHandler->MeteoGridToRasterFlt(cellSize, gisSettings, myGrid))
+    if (! meteoGridDbHandler->MeteoGridToRasterFlt(cellSize, gisSettings, myGrid))
     {
         errorString = "initializeGrid failed";
         return false;
