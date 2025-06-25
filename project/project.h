@@ -344,6 +344,8 @@
 
         bool readVmArkimetData(const QList<QString> &vmFileList, frequencyType frequency, bool isPrec0024);
 
+        bool getProjectList(QList<QString> &projectList);
+
     private slots:
         void deleteMeteoWidgetPoint(int id);
         void deleteMeteoWidgetGrid(int id);

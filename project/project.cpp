@@ -3971,6 +3971,7 @@ bool Project::createDefaultProject(QString fileName)
 
     defaultSettings->beginGroup("project");
         defaultSettings->setValue("path", path);
+        defaultSettings->setValue("name", "default");
     defaultSettings->endGroup();
 
     defaultSettings->beginGroup("location");
@@ -6078,6 +6079,31 @@ bool Project::showMeteoWidgetMultiplePoints()
     {
         showMeteoWidgetPoint(idMeteoPoint[i], namePoint[i], dataset[i], altitude[i], lapseRateCode[i], isAppend);
         isAppend = true;
+    }
+
+    return true;
+}
+
+bool Project::getProjectList(QList<QString> &projectList)
+{
+    QString myProjectsPath = getDefaultPath() + PATH_PROJECT;
+    QDir dir(myProjectsPath);
+    if (! dir.exists())
+    {
+        errorString = "PROJECT directory is missing: " + myProjectsPath;
+        return false;
+    }
+    QFileInfoList list = dir.entryInfoList(QDir::AllDirs | QDir::NoDot | QDir::NoDotDot | QDir::NoSymLinks);
+
+    if (list.size() == 0)
+    {
+        errorString = "PROJECT directory is empty: " + myProjectsPath;
+        return false;
+    }
+
+    for (int i=0; i < list.size(); i++)
+    {
+        projectList << list[i].baseName();
     }
 
     return true;
