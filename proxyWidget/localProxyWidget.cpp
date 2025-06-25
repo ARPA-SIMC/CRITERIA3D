@@ -354,8 +354,7 @@ void Crit3DLocalProxyWidget::plot()
                                         outInterpolationPoints, _checkSpatialQuality, errorStdStr);
 
         localSelection(outInterpolationPoints, subsetInterpolationPoints, _x, _y, *_interpolationSettings, false);
-        //detrending(subsetInterpolationPoints, _interpolationSettings->getSelectedCombination(), _interpolationSettings, _climateParameters, myVar, getCurrentTime());
-
+        detrending(subsetInterpolationPoints, _interpolationSettings->getSelectedCombination(), _interpolationSettings, _climateParameters, myVar, getCurrentTime());
     }
     else
     {

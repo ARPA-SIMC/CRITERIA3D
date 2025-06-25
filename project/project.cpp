@@ -6061,9 +6061,9 @@ bool Project::showMeteoWidgetMultiplePoints()
     std::vector<double> altitude;
     std::vector<std::string> lapseRateCode;
 
-    for (unsigned int i = 0; i < nrMeteoPoints; i++)
+    for (int i = 0; i < nrMeteoPoints; i++)
     {
-        if (meteoPoints[i].marked)
+        if (meteoPoints[i].selected)
         {
             idMeteoPoint.push_back(meteoPoints[i].id);
             namePoint.push_back(meteoPoints[i].name);
