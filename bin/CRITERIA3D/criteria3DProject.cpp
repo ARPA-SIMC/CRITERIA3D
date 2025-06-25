@@ -3054,20 +3054,22 @@ int Crit3DProject::printCriteria3DCommandList()
     QList<QString> list = getSharedCommandList();
 
     // criteria3D commands
+    list.append("");
     list.append("?               | ListCommands");
     list.append("Ls              | List");
     list.append("Version         | Criteria3DVersion");
     list.append("Proj            | OpenProject");
     list.append("State           | LoadState");
+    list.append("Thread          | SetThreadNr");
     list.append("Run             | RunModels");
-    //..
 
     std::cout << "Available Console commands:" << std::endl;
-    std::cout << "(short          | long version)" << std::endl;
+    std::cout << "(short          | long version)" << std::endl << std::endl;
     for (int i = 0; i < list.size(); i++)
     {
         std::cout << list[i].toStdString() << std::endl;
     }
+    std::cout << std::endl;
 
     return CRIT3D_OK;
 }
@@ -3111,6 +3113,11 @@ int Crit3DProject::executeCriteria3DCommand(const QList<QString> &argumentList, 
         isCommandFound = true;
         return cmdRunModels(argumentList);
     }
+    else if (command == "THREAD" || command == "SETTHREADNR")
+    {
+        isCommandFound = true;
+        return cmdSetThreadsNr();
+    }
 
     return CRIT3D_INVALID_COMMAND;
 }
@@ -3119,6 +3126,8 @@ int Crit3DProject::executeCriteria3DCommand(const QList<QString> &argumentList, 
 int Crit3DProject::printCriteria3DVersion()
 {
     std::cout << "CRITERIA3D " << CRITERIA3D_VERSION << std::endl;
+    std::cout << std::endl;
+
     return CRIT3D_OK;
 }
 
@@ -3169,8 +3178,9 @@ int Crit3DProject::cmdList(const QList<QString> &argumentList)
     {
         std::cout << "Usage: list [type]" << std::endl;
         std::cout << "type:" << std::endl;
-        std::cout << "projects          list projects\n";
-        std::cout << "states            list states\n";
+        std::cout << "projects" << std::endl;
+        std::cout << "states" << std::endl;
+        std::cout << std::endl;
         return CRIT3D_OK;
     }
 
@@ -3200,6 +3210,7 @@ int Crit3DProject::cmdList(const QList<QString> &argumentList)
     {
         std::cout << list[i].toStdString() << std::endl;
     }
+    std::cout << std::endl;
 
     return CRIT3D_OK;
 }
@@ -3263,6 +3274,17 @@ int Crit3DProject::cmdRunModels(const QList<QString> &argumentList)
 
     if (! startModels(firstTime, lastTime))
         return CRIT3D_ERROR;
+
+    return CRIT3D_OK;
+}
+
+
+int Crit3DProject::cmdSetThreadsNr()
+{
+    int threadNr = soilFluxes3D::setThreadsNumber(0);
+    waterFluxesParameters.numberOfThreads = threadNr;
+    std::cout << "Maximum number of threads: " << threadNr << std::endl;
+    std::cout << std::endl;
 
     return CRIT3D_OK;
 }

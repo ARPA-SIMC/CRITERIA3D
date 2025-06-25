@@ -111,7 +111,7 @@ namespace gis
      * \param error       string
      * \return true on success, false otherwise
      */
-    bool readEsriGridHeader(const string &fileName, gis::Crit3DRasterHeader *header, string &errorStr)
+    bool readEsriGridHeader(const std::string &fileName, gis::Crit3DRasterHeader *header, std::string &errorStr)
     {
         string myLine, myKey, upKey, valueStr;
         int nrKeys = 0;
@@ -125,9 +125,9 @@ namespace gis
 
         // open file
         fn += ".hdr";
-        ifstream  myFile (fn.c_str());
+        ifstream  myFile(fn.c_str());
 
-        if (! myFile.is_open())
+        if (myFile.fail())
         {
             errorStr = "Missing file: " + fn;
             return false;
@@ -491,10 +491,11 @@ namespace gis
      */
     bool readEsriGrid(const string &fileName, Crit3DRasterGrid* rasterGrid, string &errorStr)
     {
-        if (rasterGrid == nullptr) return false;
+        if (rasterGrid == nullptr)
+            return false;
         rasterGrid->clear();
 
-        if(gis::readEsriGridHeader(fileName, rasterGrid->header, errorStr))
+        if( gis::readEsriGridHeader(fileName, rasterGrid->header, errorStr) )
         {
             // check suffix
             std::size_t found = fileName.rfind(".flt");
@@ -564,6 +565,11 @@ namespace gis
         else if (fileExtension == ".img")
         {
             isOk = gis::readEnviGrid(fileNameWithoutExt, rasterGrid, currentUtmZone, errorStr);
+        }
+        else
+        {
+            errorStr = "Wrong suffix: .flt or .img are allowed.";
+            isOk = false;
         }
 
         return isOk;

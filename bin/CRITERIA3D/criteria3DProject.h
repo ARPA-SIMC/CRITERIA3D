@@ -163,6 +163,7 @@
 
         int printCriteria3DVersion();
         int printCriteria3DCommandList();
+        int cmdSetThreadsNr();
 
     };
 
