@@ -6051,3 +6051,34 @@ bool Project::computeResidualsAndStatisticsGlocalDetrending(meteoVariable myVar,
 
     return true;
 }
+
+bool Project::showMeteoWidgetMultiplePoints()
+{
+    std::vector<std::string> idMeteoPoint;
+    std::vector<std::string> namePoint;
+    std::vector<std::string> dataset;
+    std::vector<double> altitude;
+    std::vector<std::string> lapseRateCode;
+
+    for (unsigned int i = 0; i < nrMeteoPoints; i++)
+    {
+        if (meteoPoints[i].marked)
+        {
+            idMeteoPoint.push_back(meteoPoints[i].id);
+            namePoint.push_back(meteoPoints[i].name);
+            dataset.push_back(meteoPoints[i].dataset);
+            altitude.push_back(meteoPoints[i].point.z);
+            lapseRateCode.push_back(std::to_string(meteoPoints[i].lapseRateCode));
+        }
+    }
+
+    bool isAppend = false;
+
+    for (unsigned int i = 0; i < idMeteoPoint.size(); i++)
+    {
+        showMeteoWidgetPoint(idMeteoPoint[i], namePoint[i], dataset[i], altitude[i], lapseRateCode[i], isAppend);
+        isAppend = true;
+    }
+
+    return true;
+}
