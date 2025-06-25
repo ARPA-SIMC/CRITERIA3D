@@ -302,6 +302,7 @@
         void showMeteoWidgetGrid(const std::string &idCell, const std::string &dataset, bool isAppend);
         void showProxyGraph(int macroAreaNumber);
         void showLocalProxyGraph(gis::Crit3DGeoPoint myPoint);
+        bool showMeteoWidgetMultiplePoints();
 
         void clearSelectedPoints();
         void clearSelectedOutputPoints();

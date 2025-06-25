@@ -56,7 +56,7 @@ Crit3DLocalProxyWidget::Crit3DLocalProxyWidget(double x, double y, double zDEM, 
     stationWeights.setText("See weight of stations");
 
     //temporaneamente disattivati
-    detrended.setVisible(false);
+    detrended.setVisible(true);
     QLabel *r2Label = new QLabel(tr("R2"));
 
     r2.setMaximumWidth(60);
