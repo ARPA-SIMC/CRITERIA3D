@@ -1526,7 +1526,7 @@ bool Project::loadMeteoPointsData(const QDate& firstDate, const QDate& lastDate,
     //check
     if (firstDate == QDate(1800,1,1) || lastDate == QDate(1800,1,1)) return false;
 
-    bool isData = false;
+    bool isDataOk = false;
     int step = 0;
 
     QString infoStr = "Load meteo points data: " + firstDate.toString();
@@ -1548,19 +1548,26 @@ bool Project::loadMeteoPointsData(const QDate& firstDate, const QDate& lastDate,
         }
 
         if (loadHourly)
-            if (meteoPointsDbHandler->loadHourlyData(getCrit3DDate(firstDate), getCrit3DDate(lastDate), meteoPoints[i])) isData = true;
+        {
+            if (meteoPointsDbHandler->loadHourlyData(getCrit3DDate(firstDate), getCrit3DDate(lastDate), meteoPoints[i]))
+                isDataOk = true;
+        }
 
         if (loadDaily)
-            if (meteoPointsDbHandler->loadDailyData(getCrit3DDate(firstDate), getCrit3DDate(lastDate), meteoPoints[i]))  isData = true;
+        {
+            if (meteoPointsDbHandler->loadDailyData(getCrit3DDate(firstDate), getCrit3DDate(lastDate), meteoPoints[i]))
+                isDataOk = true;
+        }
     }
 
     if (showInfo) closeProgressBar();
 
-    return isData;
+    return isDataOk;
 }
 
 
-bool Project::loadMeteoPointsData(const QDate &firstDate, const QDate &lastDate, bool loadHourly, bool loadDaily, const QString &dataset, bool showInfo)
+bool Project::loadMeteoPointsData(const QDate &firstDate, const QDate &lastDate,
+                                  bool loadHourly, bool loadDaily, const QString &dataset, bool showInfo)
 {
     //check
     if (firstDate == QDate(1800,1,1) || lastDate == QDate(1800,1,1)) return false;

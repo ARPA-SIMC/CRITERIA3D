@@ -777,14 +777,64 @@ float Crit3DProject::checkSoilCracking(int row, int col, float precipitation)
 }
 
 
-bool Crit3DProject::runModels(QDateTime firstTime, QDateTime lastTime, bool isRestart)
+bool Crit3DProject::startModels(const QDateTime &firstTime, const QDateTime &lastTime)
 {
-    if (lastTime < firstTime)
+    if (! checkProcesses())
+        return false;
+
+    if (! DEM.isLoaded)
     {
-        errorString = "Wrong time: lastTime < firstTime";
+        errorString = ERROR_STR_MISSING_DEM;
         return false;
     }
 
+    if (processes.computeSnow && ! snowMaps.isInitialized)
+    {
+        errorString = "Initialize Snow model or load a state before.";
+        return false;
+    }
+
+    if (processes.computeWater && ! isCriteria3DInitialized)
+    {
+        errorString = "Initialize 3D water fluxes or load a state before.";
+        return false;
+    }
+
+    if (processes.computeCrop && landUnitList.size() == 0)
+    {
+        errorString = "load land units map before.";
+        return false;
+    }
+
+    std::cout << "First time: " << firstTime.date().toString("yyyy-MM-dd").toStdString() << " H" << firstTime.time().hour() << std::endl;
+    std::cout << "Last time: " << lastTime.date().toString("yyyy-MM-dd").toStdString() << " H" << lastTime.time().hour() << std::endl;
+
+    if (lastTime < firstTime)
+    {
+        errorString = "Wrong Time: lastTime < firstTime";
+        return false;
+    }
+
+    logInfoGUI("Loading meteo data...");
+    bool loadHourly = true;
+    if (! loadMeteoPointsData(firstTime.date().addDays(-1), lastTime.date().addDays(+1), loadHourly, false, false))
+    {
+        return false;
+    }
+    closeLogInfo();
+
+    // initialize
+    modelFirstTime = firstTime;
+    modelLastTime = lastTime;
+    isModelPaused = false;
+    isModelStopped = false;
+
+    return runModels(firstTime, lastTime);
+}
+
+
+bool Crit3DProject::runModels(const QDateTime &firstTime, const QDateTime &lastTime, bool isRestart)
+{
     if (! isRestart)
     {
         // create tables for output points
@@ -3182,25 +3232,24 @@ int Crit3DProject::cmdLoadState(const QList<QString> &argumentList)
 
 int Crit3DProject::cmdRunModels(const QList<QString> &argumentList)
 {
-    QString lastDateStr;
-    QString lastHourStr;
+    QString dateStr, hourStr;
     if (argumentList.size() >= 3)
     {
-        lastDateStr = argumentList.at(1);
-        lastHourStr = argumentList.at(2);
+        dateStr = argumentList.at(1);
+        hourStr = argumentList.at(2);
     }
 
-    int lastHour = lastHourStr.toInt();
+    int lastHour = hourStr.toInt();
     if ((lastHour < 0) || (lastHour > 23))
     {
-        std::cout << "Wrong hour! [00-23] are allowed." << std::endl;
+        std::cout << "Wrong hour! 00-23 are allowed." << std::endl;
         std::cout << "Usage: RunModels <YYYY-MM-DD HH>" << std::endl;
         return CRIT3D_OK;
     }
 
     QDateTime lastTime;
     lastTime.setTimeZone(QTimeZone::utc());
-    lastTime.setDate(QDate::fromString(lastDateStr, "yyyy-MM-dd"));
+    lastTime.setDate(QDate::fromString(dateStr, "yyyy-MM-dd"));
     lastTime.setTime(QTime(lastHour,0,0,0));
     if (! lastTime.isValid())
     {
@@ -3208,33 +3257,11 @@ int Crit3DProject::cmdRunModels(const QList<QString> &argumentList)
         return CRIT3D_OK;
     }
 
-    QDateTime firstTime;
-    firstTime.setTimeZone(QTimeZone::utc());
-    if (getCurrentHour() == 24)
-    {
-        firstTime.setDate(getCurrentDate().addDays(1));
-        firstTime.setTime(QTime(0,0,0,0));
-    }
-    else
-    {
-        firstTime.setDate(getCurrentDate());
-        firstTime.setTime(QTime(getCurrentHour(),0,0,0));
-    }
+    // first time: next hour
+    QDateTime firstTime = getCurrentTime();
+    firstTime = firstTime.addSecs(HOUR_SECONDS);
 
-    std::cout << "First time: " << firstTime.date().toString("yyyy-MM-dd").toStdString() << " H" << firstTime.time().hour() << std::endl;
-    std::cout << "Last time: " << lastTime.date().toString("yyyy-MM-dd").toStdString() << " H" << lastTime.time().hour() << std::endl;
-
-    std::cout << "Loading meteo data..." << std::endl;
-    if (! loadMeteoPointsData(firstTime.date().addDays(-1), lastTime.date().addDays(+1), true, false, false))
-        return CRIT3D_ERROR;
-
-    // initialize
-    modelFirstTime = firstTime;
-    modelLastTime = lastTime;
-    isModelPaused = false;
-    isModelStopped = false;
-
-    if (! runModels(firstTime, lastTime))
+    if (! startModels(firstTime, lastTime))
         return CRIT3D_ERROR;
 
     return CRIT3D_OK;

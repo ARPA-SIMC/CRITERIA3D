@@ -2013,7 +2013,8 @@ void MainWindow::on_actionComputePeriod_meteoVariables_triggered()
     myProject.processes.computeMeteo = true;
     myProject.processes.computeRadiation = true;
 
-    startModels(firstTime, lastTime);
+    initializeGroupBoxModel();
+    myProject.startModels(firstTime, lastTime);
 }
 
 
@@ -2062,57 +2063,12 @@ bool selectDates(QDateTime &firstTime, QDateTime &lastTime)
 }
 
 
-bool MainWindow::startModels(QDateTime firstTime, QDateTime lastTime)
+void MainWindow::initializeGroupBoxModel()
 {
-    if (! myProject.DEM.isLoaded)
-    {
-        myProject.logError(ERROR_STR_MISSING_DEM);
-        return false;
-    }
-
-    if (myProject.processes.computeSnow && (! myProject.snowMaps.isInitialized))
-    {
-        myProject.logError("Initialize Snow model or load a state before.");
-        return false;
-    }
-
-    if (myProject.processes.computeWater && (! myProject.isCriteria3DInitialized))
-    {
-        myProject.logError("Initialize 3D water fluxes or load a state before.");
-        return false;
-    }
-
-    if (myProject.processes.computeCrop)
-    {
-        if (myProject.landUnitList.size() == 0)
-        {
-            myProject.logError("load land units map before.");
-            return false;
-        }
-    }
-
-    // Load meteo data
-    myProject.logInfoGUI("Loading meteo data...");
-    if (! myProject.loadMeteoPointsData(firstTime.date().addDays(-1), lastTime.date().addDays(+1), true, false, false))
-    {
-        myProject.logError();
-        return false;
-    }
-    myProject.closeLogInfo();
-
-    // set model interface
-    myProject.modelFirstTime = firstTime;
-    myProject.modelLastTime = lastTime;
-
-    myProject.isModelPaused = false;
-    myProject.isModelStopped = false;
-
     ui->groupBoxModel->setEnabled(true);
     ui->buttonModelStart->setDisabled(true);
     ui->buttonModelPause->setEnabled(true);
     ui->buttonModelStop->setEnabled(true);
-
-    return myProject.runModels(firstTime, lastTime);
 }
 
 
@@ -2204,7 +2160,8 @@ void MainWindow::on_actionRadiation_run_model_triggered()
     myProject.processes.initialize();
     myProject.processes.computeRadiation = true;
 
-    startModels(firstTime, lastTime);
+    initializeGroupBoxModel();
+    myProject.startModels(firstTime, lastTime);
 }
 
 
@@ -2499,7 +2456,8 @@ void MainWindow::on_actionCriteria3D_compute_next_hour_triggered()
         currentTime = myProject.getCurrentTime().addSecs(HOUR_SECONDS);
     }
 
-    startModels(currentTime, currentTime);
+    initializeGroupBoxModel();
+    myProject.startModels(currentTime, currentTime);
 }
 
 
@@ -2521,7 +2479,8 @@ void MainWindow::on_actionCriteria3D_run_models_triggered()
     if (! selectDates(firstTime, lastTime))
         return;
 
-    startModels(firstTime, lastTime);
+    initializeGroupBoxModel();
+    myProject.startModels(firstTime, lastTime);
 }
 
 
