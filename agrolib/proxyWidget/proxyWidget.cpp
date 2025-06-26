@@ -592,7 +592,7 @@ void Crit3DProxyWidget::addMacroAreaLR()
     chartView->cleanModelLapseRate();
     r2.clear();
     lapseRate.clear();
-    if (_macroAreaNumber < (int)_interpolationSettings->getMacroAreas().size())
+    if (_macroAreaNumber >= 0 && _macroAreaNumber < (int)_interpolationSettings->getMacroAreas().size())
     {
         std::string errorStr;
         setMultipleDetrendingHeightTemperatureRange(_interpolationSettings);

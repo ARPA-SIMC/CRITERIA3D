@@ -3051,7 +3051,8 @@ int Crit3DProject::executeCommand(const QList<QString> &argumentList)
 
 int Crit3DProject::printCriteria3DCommandList()
 {
-    QList<QString> list = getSharedCommandList();
+    //QList<QString> list = getSharedCommandList();
+    QList<QString> list;
 
     // criteria3D commands
     list.append("");
