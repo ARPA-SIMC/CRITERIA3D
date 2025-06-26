@@ -27,7 +27,7 @@
 #include <algorithm>
 #include <sstream>
 #include <fstream>
-#include <string>
+#include <cstring>
 #include <math.h>
 
 #include "gis.h"
