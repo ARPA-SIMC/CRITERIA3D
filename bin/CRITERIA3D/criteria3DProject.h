@@ -131,7 +131,7 @@
 
         bool saveDailyOutput(QDate myDate, const QString& outputPathHourly);
 
-        bool saveModelsState();
+        bool saveModelsState(QString &dirName);
 
         bool loadModelState(QString statePath);
         bool loadWaterPotentialState(QString waterPath);
@@ -160,6 +160,7 @@
         int cmdOpenCriteria3DProject(const QList<QString> &argumentList);
         int cmdLoadState(const QList<QString> &argumentList);
         int cmdRunModels(const QList<QString> &argumentList);
+        int cmdSaveCurrentState();
 
         int printCriteria3DVersion();
         int printCriteria3DCommandList();

@@ -3562,17 +3562,14 @@ void MainWindow::on_actionCriteria3D_load_external_state_triggered()
 
 void MainWindow::on_actionCriteria3D_save_state_triggered()
 {
-    if (myProject.isProjectLoaded)
+    QString dirName;
+    if (myProject.saveModelsState(dirName))
     {
-        if (myProject.saveModelsState())
-        {
-            myProject.logInfoGUI("State model successfully saved: " + myProject.getCurrentDate().toString()
-                                 + " H:" + QString::number(myProject.getCurrentHour()));
-        }
+        myProject.logInfoGUI("State successfully saved: " + dirName);
     }
     else
     {
-        myProject.logError(ERROR_STR_MISSING_PROJECT);
+        myProject.logError();
     }
 }
 

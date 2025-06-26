@@ -957,7 +957,6 @@ bool Crit3DProject::runModels(const QDateTime &firstTime, const QDateTime &lastT
             }
         }
 
-        // TODO Antonio hydrall giornaliero
         if (processes.computeHydrall)
         {
             dailyUpdateHydrallMaps();
@@ -965,14 +964,16 @@ bool Crit3DProject::runModels(const QDateTime &firstTime, const QDateTime &lastT
 
         if (isSaveDailyState())
         {
-            saveModelsState();
+            QString dirName;
+            saveModelsState(dirName);
         }
 
     }
 
     if (isSaveEndOfRunState())
     {
-        saveModelsState();
+        QString dirName;
+        saveModelsState(dirName);
     }
 
     isModelRunning = false;
@@ -1856,8 +1857,11 @@ bool Crit3DProject::runModelHour(const QString& hourlyOutputPath, bool isRestart
 }
 
 
-bool Crit3DProject::saveModelsState()
+bool Crit3DProject::saveModelsState(QString &dirName)
 {
+    if (! checkProcesses())
+        return false;
+
     QString statePath = getProjectPath() + PATH_STATES;
     if (! QDir(statePath).exists())
     {
@@ -1866,8 +1870,8 @@ bool Crit3DProject::saveModelsState()
 
     char hourStr[3];
     sprintf(hourStr, "%02d", _currentHour);
-    QString dateFolder = _currentDate.toString("yyyyMMdd") + "_H" + hourStr;
-    QString currentStatePath = statePath + "/" + dateFolder;
+    dirName = _currentDate.toString("yyyyMMdd") + "_H" + hourStr;
+    QString currentStatePath = statePath + "/" + dirName;
     if (! QDir(currentStatePath).exists())
     {
         QDir().mkdir(currentStatePath);
@@ -3056,12 +3060,13 @@ int Crit3DProject::printCriteria3DCommandList()
 
     // criteria3D commands
     list.append("?               | ListCommands");
-    list.append("Ls              | List");
     list.append("Version         | Criteria3DVersion");
+    list.append("Ls              | List");
     list.append("Proj            | OpenProject");
     list.append("State           | LoadState");
     list.append("Thread          | SetThreadNr");
     list.append("Run             | RunModels");
+    list.append("Save            | SaveState");
     list.append("Quit            | Exit");
 
     std::cout << "Available Console commands:" << std::endl;
@@ -3108,6 +3113,11 @@ int Crit3DProject::executeCriteria3DCommand(const QList<QString> &argumentList, 
     {
         isCommandFound = true;
         return cmdLoadState(argumentList);
+    }
+    else if (command == "SAVE" || command == "SAVESTATE")
+    {
+        isCommandFound = true;
+        return cmdSaveCurrentState();
     }
     else if (command == "RUN" || command == "RUNMODELS")
     {
@@ -3237,6 +3247,18 @@ int Crit3DProject::cmdLoadState(const QList<QString> &argumentList)
     {
         return CRIT3D_ERROR;
     }
+
+    return CRIT3D_OK;
+}
+
+
+int Crit3DProject::cmdSaveCurrentState()
+{
+    QString dirName;
+    if (! saveModelsState(dirName))
+        return CRIT3D_ERROR;
+
+    std::cout << "State successfully saved: " << dirName.toStdString() << std::endl;
 
     return CRIT3D_OK;
 }
