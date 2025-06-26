@@ -28,7 +28,7 @@
 
     #include <QString>
 
-    #define CRITERIA3D_VERSION "V1.0.7"
+    #define CRITERIA3D_VERSION "V1.1.0"
 
 
     class Crit3DProject : public Project3D
