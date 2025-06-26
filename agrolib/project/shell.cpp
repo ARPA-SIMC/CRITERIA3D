@@ -175,7 +175,7 @@ QString getCommandLine(const QString &programName)
 {
     std::string commandLine;
 
-    std::cout << programName.toStdString() << ">";
+    std::cout.flush() << programName.toStdString() << ">";
     std::getline(std::cin, commandLine);
 
     return QString::fromStdString(commandLine);

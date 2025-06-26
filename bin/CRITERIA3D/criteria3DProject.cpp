@@ -3055,7 +3055,6 @@ int Crit3DProject::printCriteria3DCommandList()
     QList<QString> list;
 
     // criteria3D commands
-    list.append("");
     list.append("?               | ListCommands");
     list.append("Ls              | List");
     list.append("Version         | Criteria3DVersion");
@@ -3063,6 +3062,7 @@ int Crit3DProject::printCriteria3DCommandList()
     list.append("State           | LoadState");
     list.append("Thread          | SetThreadNr");
     list.append("Run             | RunModels");
+    list.append("Quit            | Exit");
 
     std::cout << "Available Console commands:" << std::endl;
     std::cout << "(short          | long version)" << std::endl << std::endl;
