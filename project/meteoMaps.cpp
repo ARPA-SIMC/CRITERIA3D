@@ -159,7 +159,6 @@ Crit3DHourlyMeteoMaps::Crit3DHourlyMeteoMaps(const gis::Crit3DRasterGrid& DEM)
     mapHourlyTdew = new gis::Crit3DRasterGrid;
     mapHourlyWindScalarInt = new gis::Crit3DRasterGrid;
     mapHourlyLeafW = new gis::Crit3DRasterGrid;
-    mapHourlyETReal = new gis::Crit3DRasterGrid;
 
     mapHourlyTair->initializeGrid(DEM);
     mapHourlyPrec->initializeGrid(DEM);
@@ -188,7 +187,6 @@ void Crit3DHourlyMeteoMaps::clear()
     mapHourlyTdew->clear();
     mapHourlyET0->clear();
     mapHourlyLeafW->clear();
-    mapHourlyETReal->clear();
 
     delete mapHourlyTair;
     delete mapHourlyPrec;
@@ -197,7 +195,6 @@ void Crit3DHourlyMeteoMaps::clear()
     delete mapHourlyTdew;
     delete mapHourlyET0;
     delete mapHourlyLeafW;
-    delete mapHourlyETReal;
 
     isComputed = false;
 }
@@ -212,7 +209,6 @@ void Crit3DHourlyMeteoMaps::initialize()
     mapHourlyTdew->emptyGrid();
     mapHourlyET0->emptyGrid();
     mapHourlyLeafW->emptyGrid();
-    mapHourlyETReal->emptyGrid();
 
     isComputed = false;
 }
