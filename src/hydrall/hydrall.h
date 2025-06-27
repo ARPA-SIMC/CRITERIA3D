@@ -132,8 +132,8 @@
 
         Crit3DHydrallWeatherDerivedVariable derived;
 
-        double getMonthlyETreal () { return monthlyETreal; };
-        void setMonthlyETreal (double myET) { monthlyETreal = myET; };
+        double getMonthlyET0 () { return monthlyET0; };
+        void setMonthlyET0 (double myET) { monthlyET0 = myET; };
         double getMonthlyPrec () { return monthlyPrec; };
         void setMonthlyPrec (double myPrec) { monthlyPrec = myPrec; };
 
@@ -150,7 +150,7 @@
 
 
     private:
-        double monthlyETreal;
+        double monthlyET0;
         double monthlyPrec;
 
 

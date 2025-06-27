@@ -71,7 +71,7 @@ Crit3DHydrallWeatherVariable::Crit3DHydrallWeatherVariable()
     last30DaysTAvg = NODATA;
     meanDailyTemp = NODATA;
 
-    monthlyETreal = NODATA;
+    monthlyET0 = NODATA;
     monthlyPrec = NODATA;
 }
 
@@ -1255,9 +1255,9 @@ double Crit3DHydrall::plantRespiration()
     nitrogenContent.stem = 0.0021;  //[kg kgDM-1]
 
     // Compute stand respiration rate at 10 oC (mol m-2 s-1)
-    leafRespiration = RESPIRATION_PARAMETER * (treeBiomass.leaf * nitrogenContent.leaf/0.014);
-    sapwoodRespiration = RESPIRATION_PARAMETER * (treeBiomass.sapwood * nitrogenContent.stem/0.014);
-    rootRespiration = RESPIRATION_PARAMETER * (treeBiomass.fineRoot * nitrogenContent.root/0.014);
+    leafRespiration = RESPIRATION_PARAMETER * (statePlant.treeBiomassFoliage * nitrogenContent.leaf/0.014);
+    sapwoodRespiration = RESPIRATION_PARAMETER * (statePlant.treeBiomassSapwood * nitrogenContent.stem/0.014);
+    rootRespiration = RESPIRATION_PARAMETER * (statePlant.treeBiomassRoot * nitrogenContent.root/0.014);
 
     //calcolo temperatureMoistureFactor che deve passare per media del moisture ?
     double temperatureFactor = Crit3DHydrall::temperatureFunction(weatherVariable.myInstantTemp + ZEROCELSIUS);
@@ -1397,7 +1397,7 @@ bool Crit3DHydrall::simplifiedGrowthStand()
     //outputC calculation for RothC model. necessario [t C/ha] ora in kgDM m-2
     //MANCA OUTPUT DA TAGLIO
     outputC = statePlant.treeBiomassFoliage/plant.foliageLongevity + statePlant.treeBiomassSapwood/plant.sapwoodLongevity +
-              statePlant.treeBiomassRoot/plant.fineRootLongevity /CARBONFACTOR * 1e5;
+              statePlant.treeBiomassRoot/plant.fineRootLongevity /CARBONFACTOR * 10;
 
     // canopy update
     statePlant.treeBiomassFoliage -= (statePlant.treeBiomassFoliage/plant.foliageLongevity);
@@ -1423,7 +1423,7 @@ bool Crit3DHydrall::simplifiedGrowthStand()
     double rootShootRatio;
     double alpha = 0.7;
 
-    rootShootRatio = MAXVALUE(MINVALUE(plant.rootShootRatioRef*(alpha*0.5 + 1), plant.rootShootRatioRef*(alpha*(1-weatherVariable.getMonthlyPrec()/weatherVariable.getMonthlyETreal())+1)), plant.rootShootRatioRef);
+    rootShootRatio = MAXVALUE(MINVALUE(plant.rootShootRatioRef*(alpha*0.5 + 1), plant.rootShootRatioRef*(alpha*(1-weatherVariable.getMonthlyPrec()/weatherVariable.getMonthlyET0())+1)), plant.rootShootRatioRef);
 
     allocationCoefficient.toFineRoots = rootShootRatio / (1 + rootShootRatio);
     allocationCoefficient.toFoliage = ( 1 - allocationCoefficient.toFineRoots ) * 0.05;
@@ -1433,14 +1433,14 @@ bool Crit3DHydrall::simplifiedGrowthStand()
     std::ofstream myFile;
     myFile.open("outputAlloc.csv", std::ios_base::app);
     myFile << allocationCoefficient.toFoliage <<","<< allocationCoefficient.toFineRoots <<","<<allocationCoefficient.toSapwood <<","
-           << rootShootRatio <<"," << weatherVariable.getMonthlyETreal() << "," << weatherVariable.getMonthlyPrec() <<"\n";
+           << rootShootRatio <<"," << weatherVariable.getMonthlyET0() << "," << weatherVariable.getMonthlyPrec() <<"\n";
     myFile.close();
 
     if (annualGrossStandGrowth * allocationCoefficient.toFoliage > statePlant.treeBiomassFoliage/(plant.foliageLongevity - 1))
     {
-        treeBiomass.leaf = MAXVALUE(treeBiomass.leaf + annualGrossStandGrowth * allocationCoefficient.toFoliage, EPSILON);
-        treeBiomass.fineRoot = MAXVALUE(treeBiomass.fineRoot + annualGrossStandGrowth * allocationCoefficient.toFineRoots, EPSILON);
-        treeBiomass.sapwood = MAXVALUE(treeBiomass.sapwood + annualGrossStandGrowth * allocationCoefficient.toSapwood, EPSILON);
+        statePlant.treeBiomassFoliage = MAXVALUE(statePlant.treeBiomassFoliage + annualGrossStandGrowth * allocationCoefficient.toFoliage, EPSILON);
+        statePlant.treeBiomassRoot = MAXVALUE(statePlant.treeBiomassRoot + annualGrossStandGrowth * allocationCoefficient.toFineRoots, EPSILON);
+        statePlant.treeBiomassSapwood = MAXVALUE(statePlant.treeBiomassSapwood + annualGrossStandGrowth * allocationCoefficient.toSapwood, EPSILON);
     }
     // TODO manca il computo del volume sia generale che incrementale vedi funzione grstand.for
 
@@ -1506,9 +1506,9 @@ bool Crit3DHydrall::growthStand()
 
     if (annualGrossStandGrowth * allocationCoefficient.toFoliage > statePlant.treeBiomassFoliage/(plant.foliageLongevity - 1))
     {
-        treeBiomass.leaf = MAXVALUE(treeBiomass.leaf + annualGrossStandGrowth * allocationCoefficient.toFoliage, EPSILON);
-        treeBiomass.fineRoot = MAXVALUE(treeBiomass.fineRoot + annualGrossStandGrowth * allocationCoefficient.toFineRoots, EPSILON);
-        treeBiomass.sapwood = MAXVALUE(treeBiomass.sapwood + annualGrossStandGrowth * allocationCoefficient.toSapwood, EPSILON);
+        statePlant.treeBiomassFoliage = MAXVALUE(statePlant.treeBiomassFoliage + annualGrossStandGrowth * allocationCoefficient.toFoliage, EPSILON);
+        statePlant.treeBiomassRoot = MAXVALUE(statePlant.treeBiomassRoot + annualGrossStandGrowth * allocationCoefficient.toFineRoots, EPSILON);
+        statePlant.treeBiomassSapwood = MAXVALUE(statePlant.treeBiomassSapwood + annualGrossStandGrowth * allocationCoefficient.toSapwood, EPSILON);
     }
     // TODO manca il computo del volume sia generale che incrementale vedi funzione grstand.for
 

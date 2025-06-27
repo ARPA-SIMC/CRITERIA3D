@@ -58,7 +58,7 @@
         gis::Crit3DRasterGrid dailyTminMap;
         gis::Crit3DRasterGrid dailyTmaxMap;
         gis::Crit3DRasterGrid monthlyPrec;
-        gis::Crit3DRasterGrid monthlyETReal;
+        gis::Crit3DRasterGrid monthlyET0;
 
         Crit3DHydrallMaps hydrallMaps;
 
