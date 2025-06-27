@@ -28,7 +28,7 @@
 
     #include <QString>
 
-    #define CRITERIA3D_VERSION "V1.0.7"
+    #define CRITERIA3D_VERSION "V1.1.0"
 
 
     class Crit3DProject : public Project3D
@@ -87,9 +87,6 @@
         void assignPrecipitation();
         float checkSoilCracking(int row, int col, float precipitation);
 
-        bool checkProcesses();
-        bool runModels(QDateTime firstTime, QDateTime lastTime, bool isRestart = false);
-
         void setSaveDailyState(bool isSave) { _saveDailyState = isSave; }
         bool isSaveDailyState() { return _saveDailyState; }
 
@@ -124,13 +121,17 @@
         bool computeSnowModel();
         void computeSnowPoint(int row, int col);
 
+        bool checkProcesses();
+
+        bool startModels(const QDateTime &firstTime, const QDateTime &lastTime);
+        bool runModels(const QDateTime &firstTime, const QDateTime &lastTime, bool isRestart = false);
         bool runModelHour(const QString& hourlyOutputPath, bool isRestart = false);
 
         void setAllHourlyMeteoMapsComputed(bool value);
 
         bool saveDailyOutput(QDate myDate, const QString& outputPathHourly);
 
-        bool saveModelsState();
+        bool saveModelsState(QString &dirName);
 
         bool loadModelState(QString statePath);
         bool loadWaterPotentialState(QString waterPath);
@@ -159,9 +160,11 @@
         int cmdOpenCriteria3DProject(const QList<QString> &argumentList);
         int cmdLoadState(const QList<QString> &argumentList);
         int cmdRunModels(const QList<QString> &argumentList);
+        int cmdSaveCurrentState();
 
         int printCriteria3DVersion();
         int printCriteria3DCommandList();
+        int cmdSetThreadsNr();
 
     };
 

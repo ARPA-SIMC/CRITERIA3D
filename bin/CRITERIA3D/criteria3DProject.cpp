@@ -774,14 +774,64 @@ float Crit3DProject::checkSoilCracking(int row, int col, float precipitation)
 }
 
 
-bool Crit3DProject::runModels(QDateTime firstTime, QDateTime lastTime, bool isRestart)
+bool Crit3DProject::startModels(const QDateTime &firstTime, const QDateTime &lastTime)
 {
-    if (lastTime < firstTime)
+    if (! checkProcesses())
+        return false;
+
+    if (! DEM.isLoaded)
     {
-        errorString = "Wrong time: lastTime < firstTime";
+        errorString = ERROR_STR_MISSING_DEM;
         return false;
     }
 
+    if (processes.computeSnow && ! snowMaps.isInitialized)
+    {
+        errorString = "Initialize Snow model or load a state before.";
+        return false;
+    }
+
+    if (processes.computeWater && ! isCriteria3DInitialized)
+    {
+        errorString = "Initialize 3D water fluxes or load a state before.";
+        return false;
+    }
+
+    if (processes.computeCrop && landUnitList.size() == 0)
+    {
+        errorString = "load land units map before.";
+        return false;
+    }
+
+    std::cout << "First time: " << firstTime.date().toString("yyyy-MM-dd").toStdString() << " H" << firstTime.time().hour() << std::endl;
+    std::cout << "Last time: " << lastTime.date().toString("yyyy-MM-dd").toStdString() << " H" << lastTime.time().hour() << std::endl;
+
+    if (lastTime < firstTime)
+    {
+        errorString = "Wrong Time: lastTime < firstTime";
+        return false;
+    }
+
+    logInfoGUI("Loading meteo data...");
+    bool loadHourly = true;
+    if (! loadMeteoPointsData(firstTime.date().addDays(-1), lastTime.date().addDays(+1), loadHourly, false, false))
+    {
+        return false;
+    }
+    closeLogInfo();
+
+    // initialize
+    modelFirstTime = firstTime;
+    modelLastTime = lastTime;
+    isModelPaused = false;
+    isModelStopped = false;
+
+    return runModels(firstTime, lastTime);
+}
+
+
+bool Crit3DProject::runModels(const QDateTime &firstTime, const QDateTime &lastTime, bool isRestart)
+{
     if (! isRestart)
     {
         // create tables for output points
@@ -904,7 +954,6 @@ bool Crit3DProject::runModels(QDateTime firstTime, QDateTime lastTime, bool isRe
             }
         }
 
-        // TODO Antonio hydrall giornaliero
         if (processes.computeHydrall)
         {
             dailyUpdateHydrallMaps();
@@ -912,14 +961,16 @@ bool Crit3DProject::runModels(QDateTime firstTime, QDateTime lastTime, bool isRe
 
         if (isSaveDailyState())
         {
-            saveModelsState();
+            QString dirName;
+            saveModelsState(dirName);
         }
 
     }
 
     if (isSaveEndOfRunState())
     {
-        saveModelsState();
+        QString dirName;
+        saveModelsState(dirName);
     }
 
     isModelRunning = false;
@@ -1803,8 +1854,11 @@ bool Crit3DProject::runModelHour(const QString& hourlyOutputPath, bool isRestart
 }
 
 
-bool Crit3DProject::saveModelsState()
+bool Crit3DProject::saveModelsState(QString &dirName)
 {
+    if (! checkProcesses())
+        return false;
+
     QString statePath = getProjectPath() + PATH_STATES;
     if (! QDir(statePath).exists())
     {
@@ -1813,8 +1867,8 @@ bool Crit3DProject::saveModelsState()
 
     char hourStr[3];
     sprintf(hourStr, "%02d", _currentHour);
-    QString dateFolder = _currentDate.toString("yyyyMMdd") + "_H" + hourStr;
-    QString currentStatePath = statePath + "/" + dateFolder;
+    dirName = _currentDate.toString("yyyyMMdd") + "_H" + hourStr;
+    QString currentStatePath = statePath + "/" + dirName;
     if (! QDir(currentStatePath).exists())
     {
         QDir().mkdir(currentStatePath);
@@ -2998,23 +3052,27 @@ int Crit3DProject::executeCommand(const QList<QString> &argumentList)
 
 int Crit3DProject::printCriteria3DCommandList()
 {
-    QList<QString> list = getSharedCommandList();
+    //QList<QString> list = getSharedCommandList();
+    QList<QString> list;
 
     // criteria3D commands
     list.append("?               | ListCommands");
-    list.append("Ls              | List");
     list.append("Version         | Criteria3DVersion");
+    list.append("Ls              | List");
     list.append("Proj            | OpenProject");
     list.append("State           | LoadState");
+    list.append("Thread          | SetThreadNr");
     list.append("Run             | RunModels");
-    //..
+    list.append("Save            | SaveState");
+    list.append("Quit            | Exit");
 
     std::cout << "Available Console commands:" << std::endl;
-    std::cout << "(short          | long version)" << std::endl;
+    std::cout << "(short          | long version)" << std::endl << std::endl;
     for (int i = 0; i < list.size(); i++)
     {
         std::cout << list[i].toStdString() << std::endl;
     }
+    std::cout << std::endl;
 
     return CRIT3D_OK;
 }
@@ -3053,10 +3111,20 @@ int Crit3DProject::executeCriteria3DCommand(const QList<QString> &argumentList, 
         isCommandFound = true;
         return cmdLoadState(argumentList);
     }
+    else if (command == "SAVE" || command == "SAVESTATE")
+    {
+        isCommandFound = true;
+        return cmdSaveCurrentState();
+    }
     else if (command == "RUN" || command == "RUNMODELS")
     {
         isCommandFound = true;
         return cmdRunModels(argumentList);
+    }
+    else if (command == "THREAD" || command == "SETTHREADNR")
+    {
+        isCommandFound = true;
+        return cmdSetThreadsNr();
     }
 
     return CRIT3D_INVALID_COMMAND;
@@ -3066,6 +3134,8 @@ int Crit3DProject::executeCriteria3DCommand(const QList<QString> &argumentList, 
 int Crit3DProject::printCriteria3DVersion()
 {
     std::cout << "CRITERIA3D " << CRITERIA3D_VERSION << std::endl;
+    std::cout << std::endl;
+
     return CRIT3D_OK;
 }
 
@@ -3116,8 +3186,9 @@ int Crit3DProject::cmdList(const QList<QString> &argumentList)
     {
         std::cout << "Usage: list [type]" << std::endl;
         std::cout << "type:" << std::endl;
-        std::cout << "projects          list projects\n";
-        std::cout << "states            list states\n";
+        std::cout << "projects" << std::endl;
+        std::cout << "states" << std::endl;
+        std::cout << std::endl;
         return CRIT3D_OK;
     }
 
@@ -3147,6 +3218,7 @@ int Crit3DProject::cmdList(const QList<QString> &argumentList)
     {
         std::cout << list[i].toStdString() << std::endl;
     }
+    std::cout << std::endl;
 
     return CRIT3D_OK;
 }
@@ -3177,27 +3249,38 @@ int Crit3DProject::cmdLoadState(const QList<QString> &argumentList)
 }
 
 
+int Crit3DProject::cmdSaveCurrentState()
+{
+    QString dirName;
+    if (! saveModelsState(dirName))
+        return CRIT3D_ERROR;
+
+    std::cout << "State successfully saved: " << dirName.toStdString() << std::endl;
+
+    return CRIT3D_OK;
+}
+
+
 int Crit3DProject::cmdRunModels(const QList<QString> &argumentList)
 {
-    QString lastDateStr;
-    QString lastHourStr;
+    QString dateStr, hourStr;
     if (argumentList.size() >= 3)
     {
-        lastDateStr = argumentList.at(1);
-        lastHourStr = argumentList.at(2);
+        dateStr = argumentList.at(1);
+        hourStr = argumentList.at(2);
     }
 
-    int lastHour = lastHourStr.toInt();
+    int lastHour = hourStr.toInt();
     if ((lastHour < 0) || (lastHour > 23))
     {
-        std::cout << "Wrong hour! [00-23] are allowed." << std::endl;
+        std::cout << "Wrong hour! 00-23 are allowed." << std::endl;
         std::cout << "Usage: RunModels <YYYY-MM-DD HH>" << std::endl;
         return CRIT3D_OK;
     }
 
     QDateTime lastTime;
     lastTime.setTimeZone(QTimeZone::utc());
-    lastTime.setDate(QDate::fromString(lastDateStr, "yyyy-MM-dd"));
+    lastTime.setDate(QDate::fromString(dateStr, "yyyy-MM-dd"));
     lastTime.setTime(QTime(lastHour,0,0,0));
     if (! lastTime.isValid())
     {
@@ -3205,34 +3288,23 @@ int Crit3DProject::cmdRunModels(const QList<QString> &argumentList)
         return CRIT3D_OK;
     }
 
-    QDateTime firstTime;
-    firstTime.setTimeZone(QTimeZone::utc());
-    if (getCurrentHour() == 24)
-    {
-        firstTime.setDate(getCurrentDate().addDays(1));
-        firstTime.setTime(QTime(0,0,0,0));
-    }
-    else
-    {
-        firstTime.setDate(getCurrentDate());
-        firstTime.setTime(QTime(getCurrentHour(),0,0,0));
-    }
+    // first time: next hour
+    QDateTime firstTime = getCurrentTime();
+    firstTime = firstTime.addSecs(HOUR_SECONDS);
 
-    std::cout << "First time: " << firstTime.date().toString("yyyy-MM-dd").toStdString() << " H" << firstTime.time().hour() << std::endl;
-    std::cout << "Last time: " << lastTime.date().toString("yyyy-MM-dd").toStdString() << " H" << lastTime.time().hour() << std::endl;
-
-    std::cout << "Loading meteo data..." << std::endl;
-    if (! loadMeteoPointsData(firstTime.date().addDays(-1), lastTime.date().addDays(+1), true, false, false))
+    if (! startModels(firstTime, lastTime))
         return CRIT3D_ERROR;
 
-    // initialize
-    modelFirstTime = firstTime;
-    modelLastTime = lastTime;
-    isModelPaused = false;
-    isModelStopped = false;
+    return CRIT3D_OK;
+}
 
-    if (! runModels(firstTime, lastTime))
-        return CRIT3D_ERROR;
+
+int Crit3DProject::cmdSetThreadsNr()
+{
+    int threadNr = soilFluxes3D::setThreadsNumber(0);
+    waterFluxesParameters.numberOfThreads = threadNr;
+    std::cout << "Maximum number of threads: " << threadNr << std::endl;
+    std::cout << std::endl;
 
     return CRIT3D_OK;
 }

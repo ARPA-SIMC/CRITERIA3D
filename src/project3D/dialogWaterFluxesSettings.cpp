@@ -116,7 +116,7 @@ DialogWaterFluxesSettings::DialogWaterFluxesSettings()
 void DialogWaterFluxesSettings::updateAccuracy()
 {
     int nrThread = getThreadsNumber();
-    nrThread = soilFluxes3D::setThreads(nrThread);
+    nrThread = soilFluxes3D::setThreadsNumber(nrThread);
     setThreadsNumber(nrThread);
     _isUpdateAccuracy = true;
 }

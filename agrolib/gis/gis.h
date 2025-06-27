@@ -303,6 +303,9 @@
         float getNeighboursMinimumValue(const Crit3DRasterGrid& raster, int row, int col);
         bool extractBasin(const Crit3DRasterGrid& inputRaster, Crit3DRasterGrid& outputRaster, double xClosure, double yClosure);
         void cleanRasterEmptyFrame(const Crit3DRasterGrid& inputRaster, Crit3DRasterGrid& outputRaster);
+
+        bool writeEsriGridHeader(const std::string &fileName, gis::Crit3DRasterHeader *header, std::string &errorStr);
+        bool writeEsriGridFlt(const std::string &fileName, Crit3DRasterGrid* myGrid, std::string &errorStr);
     }
 
 
