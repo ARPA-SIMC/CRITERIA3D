@@ -27,7 +27,7 @@
     __EXTERN int DLL_EXPORT __STDCALL setNumericalParameters(double minDeltaT, double maxDeltaT, int maxIterationNumber,
                                                              int maxApproximationsNumber, int ResidualTolerance, double MBRThreshold);
 
-    __EXTERN int DLL_EXPORT __STDCALL setThreads(int nrThreads);
+    __EXTERN int DLL_EXPORT __STDCALL setThreadsNumber(int nrThreads);
 
     // TOPOLOGY
     __EXTERN int DLL_EXPORT __STDCALL setNode(long myIndex, float x, float y, double z, double volume_or_area,

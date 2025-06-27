@@ -42,7 +42,7 @@
 
             bool _checkSpatialQuality;
             int _proxyPos;
-            unsigned int _macroAreaNumber;
+            int _macroAreaNumber;
 
             std::vector <Crit3DInterpolationDataPoint> _outInterpolationPoints;
             Crit3DClimateParameters* _climateParameters;
