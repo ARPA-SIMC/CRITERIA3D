@@ -98,7 +98,10 @@
     #define PARAMETER_ERROR -7777
 
     #define CRIT1D_OK 0
-    #define CRIT3D_OK 1
+
+    #define CRIT3D_OK 0
+    #define CRIT3D_ERROR 100
+    #define CRIT3D_INVALID_COMMAND 101
 
     #define VANGENUCHTEN 0
     #define MODIFIEDVANGENUCHTEN 1

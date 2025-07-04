@@ -1,6 +1,6 @@
 #include "formText.h"
 
-FormText::FormText(QString title)
+FormText::FormText(QString title, QString text)
 {
     this->setWindowTitle(title);
     this->resize(250, 100);
@@ -12,6 +12,7 @@ FormText::FormText(QString title)
 
     QVBoxLayout* mainLayout = new QVBoxLayout;
     mainLayout->addWidget(&textEdit);
+    textEdit.setText(text);
     mainLayout->addWidget(&buttonBox);
 
     setLayout(mainLayout);

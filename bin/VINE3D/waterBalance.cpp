@@ -163,7 +163,7 @@ bool getCriteria3DVarMap(Vine3DProject* myProject, criteria3DVariable myVar,
     long nodeIndex;
     double myValue;
 
-    criteria3DMap->initializeGrid(myProject->indexMap.at(layerIndex));
+    criteria3DMap->initializeGrid(*(myProject->indexMap.at(layerIndex).header));
 
     for (int row = 0; row < myProject->indexMap.at(layerIndex).header->nrRows; row++)
         for (int col = 0; col < myProject->indexMap.at(layerIndex).header->nrCols; col++)
@@ -374,7 +374,7 @@ bool saveWaterBalanceOutput(Vine3DProject* myProject, QDate myDate, criteria3DVa
                             double upperDepth, double lowerDepth)
 {
     gis::Crit3DRasterGrid* myMap = new gis::Crit3DRasterGrid();
-    myMap->initializeGrid(myProject->indexMap.at(0));
+    myMap->initializeGrid(*(myProject->indexMap.at(0).header));
 
     if (myVar == soilSurfaceMoisture)
     {
@@ -437,7 +437,7 @@ bool saveWaterBalanceState(Vine3DProject* myProject, QDate myDate, QString state
 {
     gis::Crit3DRasterGrid* myMap;
     myMap = new gis::Crit3DRasterGrid();
-    myMap->initializeGrid(myProject->indexMap.at(0));
+    myMap->initializeGrid(*(myProject->indexMap.at(0).header));
 
     QString myPrefix = getDailyPrefixFromVar(myDate, myVar);
 

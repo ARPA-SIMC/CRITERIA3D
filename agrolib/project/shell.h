@@ -14,8 +14,8 @@
     bool isConsoleForeground();
 
     QString getTimeStamp(const QList<QString> &argumentList);
-    QList<QString> getArgumentList(QString commandLine);
-    QString getCommandLine(QString programName);
+    QList<QString> getArgumentList(const QString &commandLine);
+    QString getCommandLine(const QString &programName);
     QList<QString> getSharedCommandList();
 
     int executeSharedCommand(Project* myProject, QList<QString> argumentList, bool *isCommandFound);

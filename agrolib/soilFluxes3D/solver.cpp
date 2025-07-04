@@ -56,6 +56,7 @@ __SF3DINLINE double arithmeticMean(double v1, double v2)
     return (v1 + v2) * 0.5;
 }
 
+// assumes that the two values ​​have the same sign
 __SF3DINLINE double logarithmicMean(double v1, double v2)
 {
     if (v1 == v2)
@@ -63,6 +64,7 @@ __SF3DINLINE double logarithmicMean(double v1, double v2)
 
     return (v1 - v2) / log(v1/v2);
 }
+
 
 //Assume that v1 and v2 are both negative (or both positive)
 __SF3DINLINE double geometricMean(double v1, double v2)

@@ -1,27 +1,39 @@
-#include <QApplication>
+#include <QCoreApplication>
 #include <QtNetwork/QNetworkProxy>
-#include <QMessageBox>
 
+#include "commonConstants.h"
 #include "mainwindow.h"
 #include "criteria3DProject.h"
+#include "shell.h"
+#include "mainGUI.h"
 
 
 Crit3DProject myProject;
 
 
-bool setProxy(QString hostName, unsigned short port)
+// check $CRITERIA3D_HOME
+bool checkEnvironmentConsole(QString criteria3dHome)
 {
-    QNetworkProxy myProxy;
+    #ifdef _WIN32
+        attachOutputToConsole();
+    #endif
 
-    myProxy.setType(QNetworkProxy::HttpProxy);
-    myProxy.setHostName(hostName);
-    myProxy.setPort(port);
+    if (criteria3dHome == "")
+    {
+        QString error = "\nSet CRITERIA3D_HOME in the environment variables:\n"
+                        "$CRITERIA3D_HOME = path of CRITERIA3D directory\n";
 
-    try {
-       QNetworkProxy::setApplicationProxy(myProxy);
+        myProject.logError(error);
+        return false;
     }
-    catch (...) {
-        QMessageBox::information(nullptr, "Error in proxy configuration!", "");
+
+    if (! QDir(criteria3dHome).exists())
+    {
+        QString error = "\nWrong environment!\n"
+                        "Set correct $CRITERIA3D_HOME variable:\n"
+                        "$CRITERIA3D_HOME = path of CRITERIA3D directory\n";
+
+        myProject.logError(error);
         return false;
     }
 
@@ -31,8 +43,6 @@ bool setProxy(QString hostName, unsigned short port)
 
 int main(int argc, char *argv[])
 {
-    QApplication myApp(argc, argv);
-
     // set modality (default: GUI)
     myProject.modality = MODE_GUI;
 
@@ -51,22 +61,64 @@ int main(int argc, char *argv[])
 
     QNetworkProxyFactory::setUseSystemConfiguration(true);
 
-    if (! myProject.start(myApp.applicationDirPath()))
+    // read environment
+    QProcessEnvironment myEnvironment = QProcessEnvironment::systemEnvironment();
+    QString criteria3dHome = myEnvironment.value("CRITERIA3D_HOME");
+    QString display = myEnvironment.value("DISPLAY");
+
+    // only for headless Linux
+    if (QSysInfo::productType() != "windows" && QSysInfo::productType() != "osx")
     {
-        myProject.logError();
-        return -1;
+        if (myProject.modality == MODE_GUI && display.isEmpty())
+        {
+            // server headless (computers without a local interface): switch modality
+            myProject.modality = MODE_CONSOLE;
+        }
     }
 
-    if (! myProject.loadCriteria3DProject(myProject.getApplicationPath() + "default.ini"))
+    if (myProject.modality == MODE_GUI)
     {
-        myProject.logWarning();
+        // go to GUI starting point
+        return mainGUI(argc, argv, criteria3dHome, myProject);
     }
+    else
+    {
+        // SHELL
+        QCoreApplication myApp(argc, argv);
 
-    QApplication::setOverrideCursor(Qt::ArrowCursor);
+        // only for Windows - without the right to set the environment
+        if (QSysInfo::productType() == "windows" && criteria3dHome == "")
+        {
+            // search default praga home
+            QString appPath = myApp.applicationDirPath();
+            criteria3dHome = searchDefaultPath(appPath);
+        }
 
-    MainWindow mainWindow;
-    mainWindow.show();
+        if (! checkEnvironmentConsole(criteria3dHome))
+            return -1;
 
-    return myApp.exec();
+        if (! myProject.start(criteria3dHome))
+        {
+            myProject.logError();
+            return -1;
+        }
+
+        if (! myProject.loadCriteria3DProject(myProject.getApplicationPath() + "default.ini"))
+            return -1;
+
+
+        // start modality
+        if (myProject.modality == MODE_CONSOLE)
+        {
+            return myProject.criteria3DShell();
+        }
+        else if (myProject.modality == MODE_BATCH)
+        {
+            return myProject.criteria3DBatch(argv[1]);
+        }
+
+
+        return 0;
+    }
 }
 

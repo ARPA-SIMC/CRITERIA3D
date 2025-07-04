@@ -232,6 +232,9 @@ namespace radiation
             linkeMonthly = radSettings->getLinkeMonthly();
 
             break;
+        case PARAM_MODE_FIXED:
+        case PARAM_MODE_MAP:
+            break;
         }
         return;
     }

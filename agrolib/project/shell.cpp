@@ -156,7 +156,7 @@ QString getTimeStamp(const QList<QString> &argumentList)
 }
 
 
-QList<QString> getArgumentList(QString commandLine)
+QList<QString> getArgumentList(const QString &commandLine)
 {
     std::string str;
     QList<QString> argumentList;
@@ -171,11 +171,11 @@ QList<QString> getArgumentList(QString commandLine)
 }
 
 
-QString getCommandLine(QString programName)
+QString getCommandLine(const QString &programName)
 {
     std::string commandLine;
 
-    std::cout << programName.toStdString() << ">";
+    std::cout.flush() << programName.toStdString() << ">";
     std::getline(std::cin, commandLine);
 
     return QString::fromStdString(commandLine);

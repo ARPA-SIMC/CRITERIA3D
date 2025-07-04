@@ -53,7 +53,7 @@ void initializeExtra(TCrit3DnodeExtra *myNodeExtra, bool computeHeat, bool compu
 
     if (computeSolutes)
     {
-        //TODO
+        // TODO
     }
 }
 

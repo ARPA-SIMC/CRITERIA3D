@@ -83,10 +83,10 @@
         bool verboseStdoutLogging;
 
     protected:
-        frequencyType currentFrequency;
-        meteoVariable currentVariable;
-        QDate currentDate;
-        int currentHour;
+        frequencyType _currentFrequency;
+        meteoVariable _currentVariable;
+        QDate _currentDate;
+        int _currentHour;
 
     public:
         QString projectName = "";
@@ -236,7 +236,7 @@
 
         void closeOutputPointsDB();
 
-        bool loadDEM(QString myFileName);
+        bool loadDEM(const QString & fileName);
         void closeDEM();
         bool loadMeteoPointsData(const QDate &firstDate, const QDate &lastDate, bool loadHourly, bool loadDaily, bool showInfo);
         bool loadMeteoPointsData(const QDate &firstDate, const QDate &lastDate, bool loadHourly, bool loadDaily, const QString &dataset, bool showInfo);
@@ -273,7 +273,7 @@
         bool loadGlocalStationsAndCells(bool isGrid, QString fileNameStations);
         bool loadGlocalWeightMaps(std::vector<Crit3DMacroArea> &myAreas, bool isGrid);
         bool loadGlocalStationsCsv(QString fileName, std::vector<std::vector<std::string> > &areaPoints);
-        bool groupCellsInArea(std::vector<int> &areaPoints, unsigned index, bool isGrid);
+        bool groupCellsInArea(std::vector<int> &areaPoints, int index, bool isGrid);
         bool writeGlocalWeightsMaps(float windowWidth);
 
 
@@ -287,7 +287,7 @@
         bool interpolateDemRadiation(const Crit3DTime& myTime, gis::Crit3DRasterGrid *myRaster);
         bool interpolationOutputPoints(std::vector <Crit3DInterpolationDataPoint> &interpolationPoints,
                                        gis::Crit3DRasterGrid *outputGrid, meteoVariable myVar);
-        bool interpolationCv(meteoVariable myVar, const Crit3DTime& myTime, QString glocalCVPointsName);
+        bool interpolationCv(meteoVariable myVar, const Crit3DTime& myTime);
         bool computeResidualsAndStatisticsGlocalDetrending(meteoVariable myVar, std::vector<Crit3DInterpolationDataPoint> &interpolationPoints);
 
         bool computeStatisticsCrossValidation();
@@ -306,6 +306,7 @@
         void showMeteoWidgetGrid(const std::string &idCell, const std::string &dataset, bool isAppend);
         void showProxyGraph(int macroAreaNumber);
         void showLocalProxyGraph(gis::Crit3DGeoPoint myPoint);
+        bool showMeteoWidgetMultiplePoints();
 
         void clearSelectedPoints();
         void clearSelectedOutputPoints();
@@ -346,6 +347,8 @@
         void getMeteoPointsCurrentValues(std::vector<float> &validValues);
 
         bool readVmArkimetData(const QList<QString> &vmFileList, frequencyType frequency, bool isPrec0024);
+
+        bool getProjectList(QList<QString> &projectList);
 
     private slots:
         void deleteMeteoWidgetPoint(int id);
