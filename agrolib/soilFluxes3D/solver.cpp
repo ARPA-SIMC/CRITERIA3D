@@ -267,6 +267,7 @@ double JacobiWater_openMP()
     for (long i = 0; i < myStructure.nrNodes; i++)
         X[i] = newX[i];
 
+    free(newX);
     return infinityNorm;
 }
 

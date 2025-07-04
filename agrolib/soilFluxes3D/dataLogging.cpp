@@ -2,7 +2,7 @@
 #include "soilFluxes3D.h"
 #include "types.h"
 
-extern double testCUDAinProject();
+#include "../SoilFluxes3D_CUDA/entryPointTest.h"
 
 namespace soilFluxes3D
 {
@@ -110,11 +110,11 @@ namespace soilFluxes3D
         return stringData;
     }
 
-    __EXTERN QString getCUDArun()
+    __EXTERN QString getCUDArun(int x)
     {
-        QString stringData = "TestCUDA - R[1024] = ";
-        stringData.append(QString::number(testCUDAinProject()));
-        return stringData.append(" - correct if 2028");
+        QString stringData = "TestCUDA NEW - ";
+        stringData.append(QString::fromStdString(CUDAsoilEntryPointProject()));
+        return stringData.append(" - correct if ");
     }
 }
 
