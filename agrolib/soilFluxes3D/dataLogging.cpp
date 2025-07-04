@@ -2,6 +2,8 @@
 #include "soilFluxes3D.h"
 #include "types.h"
 
+#include "../SoilFluxes3D_CUDA/entryPointTest.h"
+
 namespace soilFluxes3D
 {
     __EXTERN QString getMatrixLog()
@@ -106,6 +108,13 @@ namespace soilFluxes3D
             stringData.append(QString::number(*it).append(" "));
 
         return stringData;
+    }
+
+    __EXTERN QString getCUDArun(int x)
+    {
+        QString stringData = "TestCUDA NEW - ";
+        stringData.append(QString::fromStdString(CUDAsoilEntryPointProject()));
+        return stringData.append(" - correct if ");
     }
 }
 

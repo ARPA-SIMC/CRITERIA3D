@@ -1129,13 +1129,13 @@ void Project3D::runWaterFluxes3DModel(double totalTimeStep, bool isRestart)
     {
         currentSeconds += soilFluxes3D::computeStep(totalTimeStep - currentSeconds);
 
-        QString matrixLog = soilFluxes3D::getMatrixLog();
-        QString matrixLogHeader = "Matrix - " + getCurrentTime().toString() + " s=" + QString::number(currentSeconds);
-        logData(matrixLogHeader, matrixLog);
+        // QString matrixLog = soilFluxes3D::getMatrixLog();
+        // QString matrixLogHeader = "Matrix - " + getCurrentTime().toString() + " s=" + QString::number(currentSeconds);
+        // logData(matrixLogHeader, matrixLog);
 
-        QString vectorLog = soilFluxes3D::getVectorLog();
-        QString vectorLogHeader = "Vector - " + getCurrentTime().toString() + " s=" + QString::number(currentSeconds);
-        logData(vectorLogHeader, vectorLog);
+        // QString vectorLog = soilFluxes3D::getVectorLog();
+        // QString vectorLogHeader = "Vector - " + getCurrentTime().toString() + " s=" + QString::number(currentSeconds);
+        // logData(vectorLogHeader, vectorLog);
 
         if (isModelPaused && currentSeconds < totalTimeStep)
         {

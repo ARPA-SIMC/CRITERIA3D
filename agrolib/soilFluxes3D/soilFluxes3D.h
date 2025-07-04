@@ -122,7 +122,7 @@
     __EXTERN QString getMatrixLog();
     __EXTERN QString getVectorLog();
     __EXTERN QString getLinSystLog();
-
+    __EXTERN QString getCUDArun(int x);
 }
 
 #endif
