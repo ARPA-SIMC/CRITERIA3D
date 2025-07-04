@@ -434,11 +434,9 @@ void Crit3DMeteoGrid::setGisSettings(const gis::Crit3DGisSettings &gisSettings)
 
 bool Crit3DMeteoGrid::findMeteoPointFromId(unsigned* row, unsigned* col, const std::string& id)
 {
-    unsigned i,j;
-
-    for (i = 0; i < unsigned(_gridStructure.header().nrRows); i++)
+    for (int i = 0; i < _gridStructure.header().nrRows; i++)
     {
-        for (j = 0; j < unsigned(_gridStructure.header().nrCols); j++)
+        for (int j = 0; j < _gridStructure.header().nrCols; j++)
         {
             if (_meteoPoints[i][j]->id == id)
             {
@@ -450,6 +448,7 @@ bool Crit3DMeteoGrid::findMeteoPointFromId(unsigned* row, unsigned* col, const s
     }
     return false;
 }
+
 
 bool Crit3DMeteoGrid::existsMeteoPointFromId(const std::string& id)
 {

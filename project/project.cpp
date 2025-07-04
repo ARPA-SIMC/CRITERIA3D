@@ -19,7 +19,6 @@
 #include "dialogSummary.h"
 #include "waterTableWidget.h"
 #include "utilities.h"
-#include "furtherMathFunctions.h"
 
 
 #include <iostream>
@@ -63,6 +62,11 @@ void Project::initializeProject()
     errorType = ERROR_NONE;
     currentTileMap = "";
 
+    _currentVariable = noMeteoVar;
+    _currentFrequency = noFrequency;
+    _currentDate.setDate(1800,1,1);
+    _currentHour = 12;
+
     nrMeteoPoints = 0;
     meteoPoints = nullptr;
     meteoPointsDbHandler = nullptr;
@@ -77,12 +81,7 @@ void Project::initializeProject()
 
     meteoSettings->initialize();
     quality->initialize();
-
     checkSpatialQuality = true;
-    currentVariable = noMeteoVar;
-    currentFrequency = noFrequency;
-    currentDate.setDate(1800,1,1);
-    currentHour = 12;
 
     parametersSettings = nullptr;
     projectSettings = nullptr;
@@ -190,7 +189,9 @@ void Project::setProxyDEM()
 
         // if no alternative DEM defined and project DEM loaded, use it for elevation proxy
         if (proxyHeight->getGridName() == "" && DEM.isLoaded)
+        {
             proxyHeight->setGrid(&DEM);
+        }
     }
 
     if (indexQuality != NODATA)
@@ -918,54 +919,54 @@ QString Project::getProjectPath()
 
 void Project::setCurrentVariable(meteoVariable variable)
 {
-    this->currentVariable = variable;
+    _currentVariable = variable;
 }
 
 meteoVariable Project::getCurrentVariable() const
 {
-    return this->currentVariable;
+    return _currentVariable;
 }
 
 void Project::setCurrentDate(QDate myDate)
 {
-    if (myDate != this->currentDate)
+    if (myDate != _currentDate)
     {
-        this->currentDate = myDate;
+        _currentDate = myDate;
         if (proxyWidget != nullptr)
         {
-            proxyWidget->updateDateTime(currentDate, currentHour);
+            proxyWidget->updateDateTime(_currentDate, _currentHour);
         }
     }
 }
 
 QDate Project::getCurrentDate()
 {
-    return this->currentDate;
+    return _currentDate;
 }
 
 void Project::setCurrentHour(int myHour)
 {
-    this->currentHour = myHour;
+    _currentHour = myHour;
     if (proxyWidget != nullptr)
     {
-        proxyWidget->updateDateTime(currentDate, currentHour);
+        proxyWidget->updateDateTime(_currentDate, _currentHour);
     }
 }
 
 int Project::getCurrentHour()
 {
-    return this->currentHour;
+    return _currentHour;
 }
 
 Crit3DTime Project::getCrit3DCurrentTime()
 {
-    if (currentFrequency == hourly)
+    if (_currentFrequency == hourly)
     {
-        return getCrit3DTime(this->currentDate, this->currentHour);
+        return getCrit3DTime(_currentDate, _currentHour);
     }
     else
     {
-        return getCrit3DTime(this->currentDate, 0);
+        return getCrit3DTime(_currentDate, 0);
     }
 }
 
@@ -978,8 +979,8 @@ QDateTime Project::getCurrentTime()
         myDateTime.setTimeZone(QTimeZone::utc());
     }
 
-    myDateTime.setDate(currentDate);
-    return myDateTime.addSecs(currentHour * HOUR_SECONDS);
+    myDateTime.setDate(_currentDate);
+    return myDateTime.addSecs(_currentHour * HOUR_SECONDS);
 }
 
 
@@ -988,7 +989,7 @@ void Project::getMeteoPointsRange(float& minimum, float& maximum, bool useNotAct
     minimum = NODATA;
     maximum = NODATA;
 
-    if (currentFrequency == noFrequency || currentVariable == noMeteoVar)
+    if (_currentFrequency == noFrequency || _currentVariable == noMeteoVar)
         return;
 
     float v;
@@ -1087,31 +1088,32 @@ void Project::closeMeteoGridDB()
 
 /*!
  * \brief loadDEM
- * \param myFileName the name of the Digital Elevation Model file
+ * \param fileName the name of the Digital Elevation Model file
  * \return true if file is ok, false otherwise
  */
-bool Project::loadDEM(QString myFileName)
+bool Project::loadDEM(const QString &fileName)
 {
-    if (myFileName == "")
+    if (fileName == "")
     {
         logError("Missing DEM filename");
         return false;
     }
 
-    logInfoGUI("Load Digital Elevation Model = " + myFileName);
+    logInfoGUI("Load Digital Elevation Model = " + fileName);
+    demFileName = fileName;
+    QString completeFileName = getCompleteFileName(fileName, PATH_DEM);
 
-    demFileName = myFileName;
-    myFileName = getCompleteFileName(myFileName, PATH_DEM);
+    std::string errorStr;
+    bool isOk = gis::openRaster(completeFileName.toStdString(), &DEM, gisSettings.utmZone, errorStr);
+    closeLogInfo();
 
-    std::string error;
-    if (! gis::openRaster(myFileName.toStdString(), &DEM, gisSettings.utmZone, error))
+    if (! isOk)
     {
-        closeLogInfo();
-        logError("Wrong Digital Elevation Model:\n" + QString::fromStdString(error));
+        errorString = "Wrong Digital Elevation Model: " + completeFileName + "\n" + QString::fromStdString(errorStr);
         errorType = ERROR_DEM;
         return false;
     }
-    logInfo("Digital Elevation Model = " + myFileName);
+    logInfo("Digital Elevation Model = " + completeFileName);
 
     // check nodata
     if (! isEqual(DEM.header->flag, NODATA))
@@ -1526,7 +1528,7 @@ bool Project::loadMeteoPointsData(const QDate& firstDate, const QDate& lastDate,
     //check
     if (firstDate == QDate(1800,1,1) || lastDate == QDate(1800,1,1)) return false;
 
-    bool isData = false;
+    bool isDataOk = false;
     int step = 0;
 
     QString infoStr = "Load meteo points data: " + firstDate.toString();
@@ -1548,19 +1550,26 @@ bool Project::loadMeteoPointsData(const QDate& firstDate, const QDate& lastDate,
         }
 
         if (loadHourly)
-            if (meteoPointsDbHandler->loadHourlyData(getCrit3DDate(firstDate), getCrit3DDate(lastDate), meteoPoints[i])) isData = true;
+        {
+            if (meteoPointsDbHandler->loadHourlyData(getCrit3DDate(firstDate), getCrit3DDate(lastDate), meteoPoints[i]))
+                isDataOk = true;
+        }
 
         if (loadDaily)
-            if (meteoPointsDbHandler->loadDailyData(getCrit3DDate(firstDate), getCrit3DDate(lastDate), meteoPoints[i]))  isData = true;
+        {
+            if (meteoPointsDbHandler->loadDailyData(getCrit3DDate(firstDate), getCrit3DDate(lastDate), meteoPoints[i]))
+                isDataOk = true;
+        }
     }
 
     if (showInfo) closeProgressBar();
 
-    return isData;
+    return isDataOk;
 }
 
 
-bool Project::loadMeteoPointsData(const QDate &firstDate, const QDate &lastDate, bool loadHourly, bool loadDaily, const QString &dataset, bool showInfo)
+bool Project::loadMeteoPointsData(const QDate &firstDate, const QDate &lastDate,
+                                  bool loadHourly, bool loadDaily, const QString &dataset, bool showInfo)
 {
     //check
     if (firstDate == QDate(1800,1,1) || lastDate == QDate(1800,1,1)) return false;
@@ -1617,7 +1626,6 @@ bool Project::loadMeteoGridDailyData(QDate firstDate, QDate lastDate, bool showI
 
     std::string id;
     int count = 0;
-
     int infoStep = 1;
 
     if (showInfo)
@@ -1638,19 +1646,21 @@ bool Project::loadMeteoGridDailyData(QDate firstDate, QDate lastDate, bool showI
         {
             if (this->meteoGridDbHandler->meteoGrid()->getMeteoPointActiveId(row, col, id))
             {
-                if (!this->meteoGridDbHandler->gridStructure().isFixedFields())
+                if (! this->meteoGridDbHandler->gridStructure().isFixedFields())
                 {
                     if (this->meteoGridDbHandler->gridStructure().isEnsemble())
                     {
                         int memberNr = 1;
-                        if (this->meteoGridDbHandler->loadGridDailyDataEnsemble(errorString, QString::fromStdString(id), memberNr, firstDate, lastDate))
+                        if (this->meteoGridDbHandler->loadGridDailyDataEnsemble(errorString, QString::fromStdString(id),
+                                                                                memberNr, firstDate, lastDate))
                         {
                             count++;
                         }
                     }
                     else
                     {
-                        if (this->meteoGridDbHandler->loadGridDailyData(errorString, QString::fromStdString(id), firstDate, lastDate))
+                        if (this->meteoGridDbHandler->loadGridDailyDataRowCol(row, col, QString::fromStdString(id),
+                                                                              firstDate, lastDate, errorString))
                         {
                             count++;
                         }
@@ -1886,7 +1896,7 @@ bool Project::readPointProxyValues(Crit3DMeteoPoint* myPoint, QSqlDatabase* myDb
 
         if (proxyField != "" && proxyTable != "")
         {
-            statement = QString("SELECT %1 FROM %2 WHERE id_point = '%3'").arg(proxyField).arg(proxyTable).arg(QString::fromStdString((*myPoint).id));
+            statement = QString("SELECT %1 FROM %2 WHERE id_point = '%3'").arg(proxyField, proxyTable, QString::fromStdString((*myPoint).id));
             if(qry.exec(statement))
             {
                 qry.last();
@@ -1944,7 +1954,8 @@ bool Project::loadProxyGrids()
             }
             else
             {
-                errorString = "Error loading raster proxy:\n" + fileName + "\nHow to fix it: check the proxy section in the parameters.ini";
+                errorString = "Error loading raster proxy:\n" + fileName
+                        + "\nHow to fix it: check the proxy section in the parameters.ini";
                 return false;
             }
 
@@ -2400,10 +2411,10 @@ bool Project::loadGlocalWeightMaps(std::vector<Crit3DMacroArea> &myAreas, bool i
 
     unsigned nrAreasWithCells = 0;
 
-    for (int i = 0; i < myAreas.size(); i++)
+    for (int i = 0; i < (int)myAreas.size(); i++)
     {
         //se ci sono già celle caricate di DEM o grid, salvale
-        if (existingAreas.size() > i)
+        if (i < (int)existingAreas.size())
         {
             myAreas[i].setAreaCellsDEM(existingAreas[i].getAreaCellsDEM());
             myAreas[i].setAreaCellsGrid(existingAreas[i].getAreaCellsGrid());
@@ -2506,7 +2517,7 @@ bool Project::loadGlocalStationsCsv(QString fileName, std::vector<std::vector<st
                 temp.push_back(line[i].toStdString());
             }
 
-            if (areaPoints.empty() || areaNr > (areaPoints.size() - 1))
+            if (areaPoints.empty() || areaNr > ((int)areaPoints.size() - 1))
             {
                 areaPoints.resize(areaNr + 1);
             }
@@ -2520,9 +2531,10 @@ bool Project::loadGlocalStationsCsv(QString fileName, std::vector<std::vector<st
     return true;
 }
 
-bool Project::groupCellsInArea(std::vector<int> &areaPoints, unsigned int index, bool isGrid)
+
+bool Project::groupCellsInArea(std::vector<int> &areaPoints, int index, bool isGrid)
 {
-    int zoneNr;
+    unsigned int zoneNr;
     double myX, myY;
     gis::Crit3DRasterGrid* macroAreas = interpolationSettings.getMacroAreasMap();
     int nrCols;
@@ -2540,9 +2552,9 @@ bool Project::groupCellsInArea(std::vector<int> &areaPoints, unsigned int index,
                 {
                     gis::getUtmXYFromRowCol(DEM.header, i, j, &myX, &myY);
 
-                    zoneNr = int(macroAreas->getValueFromXY(myX, myY));
+                    zoneNr = macroAreas->getValueFromXY(myX, myY);
 
-                    if (zoneNr == index)
+                    if ((int)zoneNr == index)
                         areaPoints.push_back(i*nrCols+j);
                 }
             }
@@ -2561,9 +2573,9 @@ bool Project::groupCellsInArea(std::vector<int> &areaPoints, unsigned int index,
                     myX = meteoGridDbHandler->meteoGrid()->meteoPoints()[i][j]->point.utm.x;
                     myY = meteoGridDbHandler->meteoGrid()->meteoPoints()[i][j]->point.utm.y;
 
-                    zoneNr = int(macroAreas->getValueFromXY(myX, myY));
+                    zoneNr = macroAreas->getValueFromXY(myX, myY);
 
-                    if (zoneNr == index)
+                    if ((int)zoneNr == index)
                         areaPoints.push_back(i*nrCols+j);
                 }
             }
@@ -2729,7 +2741,7 @@ bool Project::computeStatisticsGlocalCrossValidation(Crit3DMacroArea myArea)
     std::vector <float> obs;
     std::vector <float> pre;
 
-    for (int i = 0; i < meteoPointsList.size(); i++)
+    for (int i = 0; i < (int)meteoPointsList.size(); i++)
     {
         if (meteoPoints[meteoPointsList[i]].active)
         {
@@ -2760,9 +2772,9 @@ bool Project::computeStatisticsGlocalCrossValidation(Crit3DMacroArea myArea)
     return true;
 }
 
-bool Project::interpolationCv(meteoVariable myVar, const Crit3DTime& myTime, QString glocalCVPointsName)
-{
 
+bool Project::interpolationCv(meteoVariable myVar, const Crit3DTime& myTime)
+{
     if (! checkInterpolation(myVar)) return false;
 
     // check variables
@@ -3069,6 +3081,7 @@ bool Project::interpolationDemGlocalDetrending(meteoVariable myVar, const Crit3D
                 elevationPos = pos;
         }
 
+
         for (unsigned areaIndex = 0; areaIndex < interpolationSettings.getMacroAreas().size(); areaIndex++)
         {
             // load macro area and its cells
@@ -3085,13 +3098,14 @@ bool Project::interpolationDemGlocalDetrending(meteoVariable myVar, const Crit3D
                 {
                     row = unsigned(areaCells[cellIndex]/DEM.header->nrCols);
                     col = int(areaCells[cellIndex])%DEM.header->nrCols;
+
                     z = DEM.value[row][col];
 
                     if (! isEqual(z, myHeader.flag))
                     {
                         gis::getUtmXYFromRowCol(myHeader, row, col, &x, &y);
 
-                        if (! getProxyValuesXY(x, y, &interpolationSettings, proxyValues))
+                        if (! getSignificantProxyValuesXY(x, y, &interpolationSettings, proxyValues))
                         {
                             myRaster->value[row][col] = NODATA;
                             continue;
@@ -3746,16 +3760,16 @@ void Project::setCrossValidationStatistics(const Crit3DCrossValidationStatistics
 
 frequencyType Project::getCurrentFrequency() const
 {
-    return currentFrequency;
+    return _currentFrequency;
 }
 
 
 void Project::setCurrentFrequency(const frequencyType &value)
 {
-    currentFrequency = value;
+    _currentFrequency = value;
     if (proxyWidget != nullptr)
     {
-        proxyWidget->updateFrequency(currentFrequency);
+        proxyWidget->updateFrequency(_currentFrequency);
     }
 }
 
@@ -3966,6 +3980,7 @@ bool Project::createDefaultProject(QString fileName)
 
     defaultSettings->beginGroup("project");
         defaultSettings->setValue("path", path);
+        defaultSettings->setValue("name", "default");
     defaultSettings->endGroup();
 
     defaultSettings->beginGroup("location");
@@ -4239,7 +4254,7 @@ void Project::showMeteoWidgetPoint(std::string idMeteoPoint, std::string namePoi
             meteoWidgetPoint->setHourlyRange(firstHourly.date(), lastHourly.date());
         }
 
-        meteoWidgetPoint->setCurrentDate(this->currentDate);
+        meteoWidgetPoint->setCurrentDate(_currentDate);
         meteoWidgetPoint->drawMeteoPoint(mp, isAppend);
     }
 
@@ -4358,7 +4373,7 @@ void Project::showMeteoWidgetGrid(const std::string &idCell, const std::string &
         }
 
         meteoWidgetGrid->setMeteoWidgetID(meteoWidgetId);
-        meteoWidgetGrid->setCurrentDate(currentDate);
+        meteoWidgetGrid->setCurrentDate(_currentDate);
         meteoWidgetGridList.append(meteoWidgetGrid);
 
         QObject::connect(meteoWidgetGrid, SIGNAL(closeWidgetGrid(int)), this, SLOT(deleteMeteoWidgetGrid(int)));
@@ -4495,7 +4510,8 @@ void Project::showProxyGraph(int macroAreaNumber)
     }
     if (nSelected == 0)
     {
-        proxyWidget = new Crit3DProxyWidget(&interpolationSettings, meteoPoints, nrMeteoPoints, currentFrequency, currentDate, currentHour, quality, &qualityInterpolationSettings, meteoSettings, &climateParameters, checkSpatialQuality, macroAreaNumber);
+        proxyWidget = new Crit3DProxyWidget(&interpolationSettings, meteoPoints, nrMeteoPoints, _currentFrequency,
+                                            _currentDate, _currentHour, quality, &qualityInterpolationSettings, meteoSettings, &climateParameters, checkSpatialQuality, macroAreaNumber);
     }
     else
     {
@@ -4509,7 +4525,8 @@ void Project::showProxyGraph(int macroAreaNumber)
                 posMpSelected = posMpSelected + 1;
             }
         }
-        proxyWidget = new Crit3DProxyWidget(&interpolationSettings, meteoPointsSelected, nSelected, currentFrequency, currentDate, currentHour, quality, &qualityInterpolationSettings, meteoSettings, &climateParameters, checkSpatialQuality, macroAreaNumber);
+        proxyWidget = new Crit3DProxyWidget(&interpolationSettings, meteoPointsSelected, nSelected, _currentFrequency,
+                                            _currentDate, _currentHour, quality, &qualityInterpolationSettings, meteoSettings, &climateParameters, checkSpatialQuality, macroAreaNumber);
     }
     QObject::connect(proxyWidget, SIGNAL(closeProxyWidget()), this, SLOT(deleteProxyWidget()));
     return;
@@ -4542,7 +4559,9 @@ void Project::showLocalProxyGraph(gis::Crit3DGeoPoint myPoint)
         }
     }
 
-    localProxyWidget = new Crit3DLocalProxyWidget(myUtm.x, myUtm.y, myZDEM, myZGrid, this->gisSettings, &interpolationSettings, meteoPoints, nrMeteoPoints, currentVariable, currentFrequency, currentDate, currentHour, quality, &qualityInterpolationSettings, meteoSettings, &climateParameters, checkSpatialQuality);
+    localProxyWidget = new Crit3DLocalProxyWidget(myUtm.x, myUtm.y, myZDEM, myZGrid, this->gisSettings, &interpolationSettings,
+                                                  meteoPoints, nrMeteoPoints, _currentVariable, _currentFrequency,
+                                                  _currentDate, _currentHour, quality, &qualityInterpolationSettings, meteoSettings, &climateParameters, checkSpatialQuality);
     return;
 }
 
@@ -4758,7 +4777,7 @@ bool Project::setMarkedPointsOfMacroArea(int areaNumber, bool viewNotActivePoint
     }
 
     std::vector <int> pointList;
-    if (areaNumber < 0 || areaNumber >= interpolationSettings.getMacroAreas().size())
+    if (areaNumber < 0 || areaNumber >= (int)interpolationSettings.getMacroAreas().size())
     {
         logError("Invalid macro area number.");
         return false;
@@ -4766,7 +4785,7 @@ bool Project::setMarkedPointsOfMacroArea(int areaNumber, bool viewNotActivePoint
 
     pointList = interpolationSettings.getMacroAreas()[areaNumber].getMeteoPoints();
 
-    for (int j = 0; j < pointList.size(); j++)
+    for (int j = 0; j < (int)pointList.size(); j++)
     {
         if (meteoPoints[pointList[j]].active || viewNotActivePoints)
             meteoPoints[pointList[j]].marked = true;
@@ -4809,7 +4828,7 @@ bool Project::deleteMeteoPointsData(const QList<QString>& pointList)
         return true;
     }
 
-    DialogPointDeleteData dialogPointDelete(currentDate);
+    DialogPointDeleteData dialogPointDelete(_currentDate);
     if (dialogPointDelete.result() != QDialog::Accepted)
         return true;
 
@@ -4961,7 +4980,7 @@ bool Project::exportMeteoGridToRasterFlt(QString fileName, double cellSize)
     }
 
     gis::Crit3DRasterGrid myGrid;
-    if (!meteoGridDbHandler->MeteoGridToRasterFlt(cellSize, gisSettings, myGrid))
+    if (! meteoGridDbHandler->MeteoGridToRasterFlt(cellSize, gisSettings, myGrid))
     {
         errorString = "initializeGrid failed";
         return false;
@@ -6037,7 +6056,7 @@ bool Project::computeResidualsAndStatisticsGlocalDetrending(meteoVariable myVar,
     }
 
     //ciclo sulle aree
-    for (int k = 0; k < macroAreas.size(); k++)
+    for (int k = 0; k < (int)macroAreas.size(); k++)
     {
         Crit3DMacroArea myArea = macroAreas[k];
         std::vector<int> meteoPointsList = myArea.getMeteoPoints();
@@ -6054,6 +6073,62 @@ bool Project::computeResidualsAndStatisticsGlocalDetrending(meteoVariable myVar,
             if (! computeStatisticsGlocalCrossValidation(myArea))
                 return false;
         }
+    }
+
+    return true;
+}
+
+bool Project::showMeteoWidgetMultiplePoints()
+{
+    std::vector<std::string> idMeteoPoint;
+    std::vector<std::string> namePoint;
+    std::vector<std::string> dataset;
+    std::vector<double> altitude;
+    std::vector<std::string> lapseRateCode;
+
+    for (int i = 0; i < nrMeteoPoints; i++)
+    {
+        if (meteoPoints[i].selected)
+        {
+            idMeteoPoint.push_back(meteoPoints[i].id);
+            namePoint.push_back(meteoPoints[i].name);
+            dataset.push_back(meteoPoints[i].dataset);
+            altitude.push_back(meteoPoints[i].point.z);
+            lapseRateCode.push_back(std::to_string(meteoPoints[i].lapseRateCode));
+        }
+    }
+
+    bool isAppend = false;
+
+    for (unsigned int i = 0; i < idMeteoPoint.size(); i++)
+    {
+        showMeteoWidgetPoint(idMeteoPoint[i], namePoint[i], dataset[i], altitude[i], lapseRateCode[i], isAppend);
+        isAppend = true;
+    }
+
+    return true;
+}
+
+bool Project::getProjectList(QList<QString> &projectList)
+{
+    QString myProjectsPath = getDefaultPath() + PATH_PROJECT;
+    QDir dir(myProjectsPath);
+    if (! dir.exists())
+    {
+        errorString = "PROJECT directory is missing: " + myProjectsPath;
+        return false;
+    }
+    QFileInfoList list = dir.entryInfoList(QDir::AllDirs | QDir::NoDot | QDir::NoDotDot | QDir::NoSymLinks);
+
+    if (list.size() == 0)
+    {
+        errorString = "PROJECT directory is empty: " + myProjectsPath;
+        return false;
+    }
+
+    for (int i=0; i < list.size(); i++)
+    {
+        projectList << list[i].baseName();
     }
 
     return true;

@@ -61,13 +61,12 @@ double getWaterExchange(long i, TlinkedNode *link, double deltaT)
  * \brief runoff
  * Manning equation
  * Qij=((Hi+Hj-zi-zj)/2)^(5/3) * Sij / roughness * sqrt(abs(Hi-Hj)/Lij) * sgn(Hi-Hj)
- * \param link  linkedNode pointer
+ * \param link      linked node pointer
  * \param deltaT    [s]
  */
 double runoff(long i, long j, TlinkedNode *link, double deltaT, unsigned approximationNr)
 {
     double Hi, Hj;
-
     if (approximationNr == 0)
     {
         double flux_i = (nodeList[i].Qw * deltaT) / nodeList[i].volume_area;
@@ -86,18 +85,20 @@ double runoff(long i, long j, TlinkedNode *link, double deltaT, unsigned approxi
     }
 
     double dH = fabs(Hi - Hj);
+	
     if (dH < DBL_EPSILON)
         return 0.;
 
     double zi = nodeList[i].z + nodeList[i].pond;
     double zj = nodeList[j].z + nodeList[j].pond;
+
     double Hmax = std::max(Hi, Hj);
     double zmax = std::max(zi, zj);
     double Hs = Hmax - zmax;
-    if (Hs < 1.e-4)
+    if (Hs < 0.0001)
         return 0.;
 
-    // Land depressionAdd commentMore actions
+    // Land depression Add comment More actions
     if ((Hi > Hj && zi < zj) || (Hj > Hi && zj < zi))
         Hs = std::min(Hs, dH);
 
@@ -128,7 +129,7 @@ double infiltration(long sup, long inf, TlinkedNode *link, double deltaT)
         double soilH = (nodeList[inf].H + nodeList[inf].oldH) * 0.5;
 
         // surface avg water content [m]
-        double surfaceWater = MAXVALUE(surfaceH - nodeList[sup].z, 0);              // [m]
+        double surfaceWater = std::max(surfaceH - nodeList[sup].z, 0.);              // [m]
 
         // precipitation: positive
         // evaporation: negative
@@ -158,7 +159,7 @@ double infiltration(long sup, long inf, TlinkedNode *link, double deltaT)
             }
         }
 
-        double k = MINVALUE(meanK, maxK);
+        double k = std::min(meanK, maxK);
         return (k * link->area) / cellDistance;
     }
     else
@@ -386,7 +387,7 @@ bool waterFlowComputation_stdTreads(double deltaT)
         threadVector.clear();
 
         // check Courant
-        if (CourantWater > 1.01 && deltaT > myParameters.delta_t_min)
+        if (CourantWater > 1. && deltaT > myParameters.delta_t_min)
         {
             myParameters.current_delta_t = std::max(myParameters.current_delta_t / CourantWater, myParameters.delta_t_min);
 
@@ -432,7 +433,7 @@ bool waterFlowComputation_stdTreads(double deltaT)
 
 
 /*!
-  * \brief computes water balance in the assigned period.
+  * \brief computes water fluxes in the assigned period.
   * We assume that, by means of maxTime, we are sure to not exit from meteorology of the assigned hour
   * \param maxTime [s] maximum period for computation (max 3600 s)
   * \param acceptedTime [s] current seconds for simulation step
@@ -442,9 +443,9 @@ bool computeWaterFluxes(double maxTime, double *acceptedTime)
 {
     bool isStepOK = false;
 
-    while (!isStepOK)
+    while (! isStepOK)
     {
-        *acceptedTime = MINVALUE(myParameters.current_delta_t, maxTime);
+        *acceptedTime = std::min(myParameters.current_delta_t, maxTime);
 
         /*! save the instantaneous H values - Prepare the solutions vector (X = H) */
         for (long n = 0; n < myStructure.nrNodes; n++)
