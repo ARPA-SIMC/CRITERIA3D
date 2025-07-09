@@ -1050,7 +1050,7 @@ void Crit3DHydrall::photosynthesisKernel(double COMP,double GAC,double GHR,doubl
         RH = 1 - VPDS / RHFactor;
         ASSOLD = NODATA;
         DUM1 = 1.6 * weatherVariable.derived.slopeSatVapPressureVSTemp/weatherVariable.derived.psychrometricConstant + GHR/GAC;
-        double dampingPar = 0.5;
+        double dampingPar = 0.01;
         for (I=0; (I<Imax) && (deltaAssimilation > myTolerance); I++)
         {
             //Assimilation
@@ -1058,7 +1058,7 @@ void Crit3DHydrall::photosynthesisKernel(double COMP,double GAC,double GHR,doubl
             WJ = J * myStromalCarbonDioxide / (4.5 * myStromalCarbonDioxide + 10.5 * COMP);  //electr transp-limited carboxyl (mol m-2 s-1)
             VC = MINVALUE(WC,WJ);  //carboxylation rate (mol m-2 s-1)
 
-            *ASS = MAXVALUE(0.0, VC * (1.0 - COMP / myStromalCarbonDioxide));  //gross assimilation (mol m-2 s-1)
+            *ASS = MAXVALUE(1e-8, VC * (1.0 - COMP / myStromalCarbonDioxide));  //gross assimilation (mol m-2 s-1)
             CS = environmentalVariable.CO2 - weatherVariable.atmosphericPressure * (*ASS - RD) / GAC;	//CO2 concentration at leaf surface (Pa)
             CSmolFraction = CS/weatherVariable.atmosphericPressure*1e6;
             COMPmolFraction= COMP/weatherVariable.atmosphericPressure*1e6;
@@ -1083,7 +1083,7 @@ void Crit3DHydrall::photosynthesisKernel(double COMP,double GAC,double GHR,doubl
 
             if (I>0)
             {
-                double ratioAssimilation = *ASS/ASSOLD; // RD(new):RD(old)=ASS(new):ASS(old)
+                double ratioAssimilation = BOUNDFUNCTION(0.1,10,*ASS/ASSOLD); // RD(new):RD(old)=ASS(new):ASS(old)
                 RD *= ratioAssimilation;
             }
             ASSOLD = *ASS;
