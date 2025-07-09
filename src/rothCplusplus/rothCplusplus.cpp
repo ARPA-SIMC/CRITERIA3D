@@ -546,16 +546,6 @@ void Crit3DRothCMeteoVariable::cumulateWaterLoss(double myWaterLoss)
         waterLoss = myWaterLoss;
 }
 
-void Crit3DRothCplusplus::setIsUpdate(bool value)
-{
-    isUpdate = value;
-}
-
-bool Crit3DRothCplusplus::getIsUpdate()
-{
-    return isUpdate;
-}
-
 std::vector<std::vector<double>> leggi_csv(const std::string& nome_file) {
     std::vector<std::vector<double>> dati;
     std::ifstream file(nome_file);

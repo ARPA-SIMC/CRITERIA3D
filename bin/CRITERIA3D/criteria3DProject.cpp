@@ -92,8 +92,10 @@ void Crit3DProject::clearCropMaps()
     dailyTminMap.clear();
     dailyTmaxMap.clear();
     hydrallMaps.mapLast30DaysTavg->clear();
-    monthlyET0.clear();
-    monthlyPrec.clear();
+    yearlyET0.clear();
+    yearlyPrec.clear();
+    hydrallMaps.yearlyPrec->clear();
+    hydrallMaps.yearlyET0->clear();
 
     isCropInitialized = false;
 }
@@ -114,6 +116,8 @@ bool Crit3DProject::initializeHydrall()
     hydrallMaps.mapLAI->initializeGrid(*(DEM.header));
     hydrallMaps.rootBiomassMap->initializeGrid(*(DEM.header));
     hydrallMaps.standBiomassMap->initializeGrid(*(DEM.header));
+    hydrallMaps.yearlyPrec->initializeGrid(*(DEM.header));
+    hydrallMaps.yearlyET0->initializeGrid(*(DEM.header));
 
 
     for (int row = 0; row < DEM.header->nrRows; row++)
@@ -191,8 +195,8 @@ bool Crit3DProject::initializeCropMaps()
     dailyTminMap.initializeGrid(*(DEM.header));
     dailyTmaxMap.initializeGrid(*(DEM.header));
 
-    monthlyET0.initializeGrid(*(DEM.header));
-    monthlyPrec.initializeGrid(*(DEM.header));
+    yearlyET0.initializeGrid(*(DEM.header));
+    yearlyPrec.initializeGrid(*(DEM.header));
 
     return true;
 }
@@ -382,10 +386,6 @@ void Crit3DProject::dailyUpdateCropMaps(const QDate &myDate)
                         }
                     }
                 }
-                if(processes.computeRothC)
-                {
-                    //update delle mappe mensili di prec ed ETreal
-                }
             }
         }
     }
@@ -406,7 +406,7 @@ bool Crit3DProject::dailyUpdateHydrall(const QDate &myDate)
 {
 
     //set daily variables like temp, co2
-    if (myDate.day() == 1)
+    if (myDate.dayOfYear() == 1)
     {
         for (int row = 0; row < indexMap.at(0).header->nrRows; row++)
         {
@@ -430,15 +430,15 @@ bool Crit3DProject::dailyUpdateHydrall(const QDate &myDate)
                     }
 
 
-                    hydrallModel.weatherVariable.setMonthlyET0(monthlyET0.getValueFromRowCol(row, col));
-                    hydrallModel.weatherVariable.setMonthlyPrec(monthlyPrec.getValueFromRowCol(row, col));
+                    hydrallModel.weatherVariable.setYearlyET0(yearlyET0.getValueFromRowCol(row, col));
+                    hydrallModel.weatherVariable.setYearlyPrec(yearlyPrec.getValueFromRowCol(row, col));
 
                     hydrallModel.simplifiedGrowthStand(); // TODO quit this line - temporary position to prompt check
 
                     hydrallModel.resetStandVariables();
 
-                    monthlyPrec.value[row][col] = 0;
-                    monthlyET0.value[row][col] = 0;
+                    yearlyPrec.value[row][col] = 0;
+                    yearlyET0.value[row][col] = 0;
 
                     if (myDate.month() == hydrallModel.firstMonthVegetativeSeason) //TODO
                     {
@@ -460,9 +460,9 @@ bool Crit3DProject::dailyUpdateHydrall(const QDate &myDate)
 }
 
 
-bool Crit3DProject::updateRothC()
+bool Crit3DProject::updateRothC(const QDate &myDate)
 {
-    if (rothCModel.getIsUpdate())
+    if (myDate.dayOfYear() == 1)
     {
         for (int row = 0; row < DEM.header->nrRows; row++)
         {
@@ -474,9 +474,9 @@ bool Crit3DProject::updateRothC()
                 {
                     rothCModel.setDepth(rothCModel.map.getDepth(row, col));
                     rothCModel.setClay(rothCModel.map.getClay(row, col));
-                    rothCModel.meteoVariable.setPrecipitation(monthlyPrec.getValueFromRowCol(row, col));
-                    rothCModel.meteoVariable.setWaterLoss(monthlyET0.getValueFromRowCol(row, col));
-                    rothCModel.meteoVariable.setBIC(monthlyPrec.getValueFromRowCol(row, col) - monthlyET0.getValueFromRowCol(row, col));
+                    rothCModel.meteoVariable.setPrecipitation(yearlyPrec.getValueFromRowCol(row, col));
+                    rothCModel.meteoVariable.setWaterLoss(yearlyET0.getValueFromRowCol(row, col));
+                    rothCModel.meteoVariable.setBIC(yearlyPrec.getValueFromRowCol(row, col) - yearlyET0.getValueFromRowCol(row, col));
                     rothCModel.meteoVariable.setTemperature(hydrallMaps.mapLast30DaysTavg->getValueFromRowCol(row, col));
                     rothCModel.setInputC(hydrallModel.getOutputC()); //read from hydrall (eventually from crop too?)  TODO CHECK
 
@@ -888,11 +888,9 @@ bool Crit3DProject::runModels(const QDateTime &firstTime, const QDateTime &lastT
             dailyUpdatePond();
         }
 
-        if (processes.computeRothC && myDate.day() == 1)
+        if (processes.computeRothC && myDate.dayOfYear() == 1)
         {
-            rothCModel.setIsUpdate(myDate.day() == 1);
-            //rothCModel.setIsUpdate(myDate.doy() == 1);
-            updateRothC();
+            updateRothC(myDate);
         }
 
         if (processes.computeHydrall)
@@ -919,11 +917,6 @@ bool Crit3DProject::runModels(const QDateTime &firstTime, const QDateTime &lastT
             if (currentSeconds == 0 || currentSeconds == 3600)
                 isRestart = false;
 
-            /*if (processes.computeRothC)
-            {
-                rothCModel.setIsUpdate(rothCModel.getIsUpdate() && hour == 0);
-            }*/
-
             if (! runModelHour(currentOutputPath, isRestart))
             {
                 isModelRunning = false;
@@ -934,7 +927,7 @@ bool Crit3DProject::runModels(const QDateTime &firstTime, const QDateTime &lastT
             if (processes.computeRothC || processes.computeHydrall)
             {
                 //rothC maps update must be done hourly, otherwise ETReal data is not stored
-                updateETAndPrecMonthlyMaps();
+                updateETAndPrecYearlyMaps();
             }
 
             // output points
@@ -979,7 +972,7 @@ bool Crit3DProject::runModels(const QDateTime &firstTime, const QDateTime &lastT
     return true;
 }
 
-void Crit3DProject::updateETAndPrecMonthlyMaps()
+void Crit3DProject::updateETAndPrecYearlyMaps()
 {
     for (int row = 0; row < indexMap.at(0).header->nrRows; row++)
     {
@@ -988,15 +981,15 @@ void Crit3DProject::updateETAndPrecMonthlyMaps()
             int surfaceIndex = indexMap.at(0).value[row][col];
             if (surfaceIndex != indexMap.at(0).header->flag)
             {
-                if (! isEqual(monthlyET0.value[row][col], NODATA))
-                    monthlyET0.value[row][col] += hourlyMeteoMaps->mapHourlyET0->value[row][col];
+                if (! isEqual(yearlyET0.value[row][col], NODATA))
+                    yearlyET0.value[row][col] += hourlyMeteoMaps->mapHourlyET0->value[row][col];
                 else
-                    monthlyET0.value[row][col] = hourlyMeteoMaps->mapHourlyET0->value[row][col];
+                    yearlyET0.value[row][col] = hourlyMeteoMaps->mapHourlyET0->value[row][col];
 
-                if (! isEqual(monthlyPrec.value[row][col], NODATA))
-                    monthlyPrec.value[row][col] += hourlyMeteoMaps->mapHourlyPrec->value[row][col];
+                if (! isEqual(yearlyPrec.value[row][col], NODATA))
+                    yearlyPrec.value[row][col] += hourlyMeteoMaps->mapHourlyPrec->value[row][col];
                 else
-                    monthlyPrec.value[row][col] = hourlyMeteoMaps->mapHourlyPrec->value[row][col];
+                    yearlyPrec.value[row][col] = hourlyMeteoMaps->mapHourlyPrec->value[row][col];
             }
         }
     }

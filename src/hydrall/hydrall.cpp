@@ -71,8 +71,8 @@ Crit3DHydrallWeatherVariable::Crit3DHydrallWeatherVariable()
     last30DaysTAvg = NODATA;
     meanDailyTemp = NODATA;
 
-    monthlyET0 = NODATA;
-    monthlyPrec = NODATA;
+    yearlyET0 = NODATA;
+    yearlyPrec = NODATA;
 }
 
 Crit3DHydrallEnvironmentalVariable::Crit3DHydrallEnvironmentalVariable()
@@ -206,6 +206,8 @@ Crit3DHydrallMaps::Crit3DHydrallMaps()
     standBiomassMap = new gis::Crit3DRasterGrid;
     rootBiomassMap = new gis::Crit3DRasterGrid;
     mapLast30DaysTavg = new gis::Crit3DRasterGrid;
+    yearlyET0 = new gis::Crit3DRasterGrid;
+    yearlyPrec = new gis::Crit3DRasterGrid;
 
     treeNetPrimaryProduction = new gis::Crit3DRasterGrid;
     understoreyNetPrimaryProduction = new gis::Crit3DRasterGrid;
@@ -230,6 +232,8 @@ void Crit3DHydrallMaps::initialize(const gis::Crit3DRasterGrid& DEM)
     criticalSoilWaterPotential->initializeGrid(DEM);
     criticalTranspiration->initializeGrid(DEM);
     minLeafWaterPotential->initializeGrid(DEM);
+    yearlyET0->initializeGrid(DEM);
+    yearlyPrec->initializeGrid(DEM);
 
 }
 
@@ -239,6 +243,9 @@ Crit3DHydrallMaps::~Crit3DHydrallMaps()
     standBiomassMap->clear();
     rootBiomassMap->clear();
     mapLast30DaysTavg->clear();
+
+    yearlyET0->clear();
+    yearlyPrec->clear();
 }
 
 bool Crit3DHydrall::computeHydrallPoint()
@@ -252,8 +259,8 @@ bool Crit3DHydrall::computeHydrallPoint()
     plant.setLAICanopy(plant.getLAICanopy() - plant.getLAICanopyMin());
     plant.setLAICanopy(MAXVALUE(0,plant.getLAICanopy()));
     understorey.leafAreaIndex = 1;
-    plant.setLAICanopy(5); //DEBUG
-    plant.setLAICanopyMax(6); //DEBUG
+    //plant.setLAICanopy(5); //DEBUG
+    //plant.setLAICanopyMax(6); //DEBUG
     plant.specificLeafArea = plant.getLAICanopyMax()/statePlant.treeBiomassFoliage;
 
     Crit3DHydrall::photosynthesisAndTranspiration();
@@ -1423,7 +1430,7 @@ bool Crit3DHydrall::simplifiedGrowthStand()
     double rootShootRatio;
     double alpha = 0.7;
 
-    rootShootRatio = MAXVALUE(MINVALUE(plant.rootShootRatioRef*(alpha*0.5 + 1), plant.rootShootRatioRef*(alpha*(1-weatherVariable.getMonthlyPrec()/weatherVariable.getMonthlyET0())+1)), plant.rootShootRatioRef);
+    rootShootRatio = MAXVALUE(MINVALUE(plant.rootShootRatioRef*(alpha*0.5 + 1), plant.rootShootRatioRef*(alpha*(1-weatherVariable.getYearlyPrec()/weatherVariable.getYearlyET0())+1)), plant.rootShootRatioRef);
 
     allocationCoefficient.toFineRoots = rootShootRatio / (1 + rootShootRatio);
     allocationCoefficient.toFoliage = ( 1 - allocationCoefficient.toFineRoots ) * 0.05;
@@ -1433,7 +1440,7 @@ bool Crit3DHydrall::simplifiedGrowthStand()
     std::ofstream myFile;
     myFile.open("outputAlloc.csv", std::ios_base::app);
     myFile << allocationCoefficient.toFoliage <<","<< allocationCoefficient.toFineRoots <<","<<allocationCoefficient.toSapwood <<","
-           << rootShootRatio <<"," << weatherVariable.getMonthlyET0() << "," << weatherVariable.getMonthlyPrec() <<"\n";
+           << rootShootRatio <<"," << weatherVariable.getYearlyET0() << "," << weatherVariable.getYearlyPrec() <<"\n";
     myFile.close();
 
     if (annualGrossStandGrowth * allocationCoefficient.toFoliage > statePlant.treeBiomassFoliage/(plant.foliageLongevity - 1))

@@ -132,10 +132,10 @@
 
         Crit3DHydrallWeatherDerivedVariable derived;
 
-        double getMonthlyET0 () { return monthlyET0; };
-        void setMonthlyET0 (double myET) { monthlyET0 = myET; };
-        double getMonthlyPrec () { return monthlyPrec; };
-        void setMonthlyPrec (double myPrec) { monthlyPrec = myPrec; };
+        double getYearlyET0 () { return yearlyET0; };
+        void setYearlyET0 (double myET) { yearlyET0 = myET; };
+        double getYearlyPrec () { return yearlyPrec; };
+        void setYearlyPrec (double myPrec) { yearlyPrec = myPrec; };
 
         double myInstantTemp;
         double prec;
@@ -150,8 +150,8 @@
 
 
     private:
-        double monthlyET0;
-        double monthlyPrec;
+        double yearlyET0;
+        double yearlyPrec;
 
 
     };
@@ -348,6 +348,8 @@
         gis::Crit3DRasterGrid* criticalTranspiration;
         gis::Crit3DRasterGrid* criticalSoilWaterPotential;
         gis::Crit3DRasterGrid* minLeafWaterPotential;
+        gis::Crit3DRasterGrid* yearlyET0;
+        gis::Crit3DRasterGrid* yearlyPrec;
 
         gis::Crit3DRasterGrid* treeNetPrimaryProduction;
         gis::Crit3DRasterGrid* understoreyNetPrimaryProduction;

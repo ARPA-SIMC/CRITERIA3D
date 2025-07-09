@@ -149,9 +149,6 @@ public:
     double getInputC();
     void setInputC(double myInputC);
 
-    void setIsUpdate(bool value);
-    bool getIsUpdate();
-
     void setClay(double myClay) {clay = myClay;};
     double getClay() {return clay;};
 
