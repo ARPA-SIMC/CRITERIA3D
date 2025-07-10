@@ -92,8 +92,10 @@ void Crit3DProject::clearCropMaps()
     dailyTminMap.clear();
     dailyTmaxMap.clear();
     hydrallMaps.mapLast30DaysTavg->clear();
-    monthlyETReal.clear();
-    monthlyPrec.clear();
+    yearlyET0.clear();
+    yearlyPrec.clear();
+    hydrallMaps.yearlyPrec->clear();
+    hydrallMaps.yearlyET0->clear();
 
     isCropInitialized = false;
 }
@@ -114,6 +116,9 @@ bool Crit3DProject::initializeHydrall()
     hydrallMaps.mapLAI->initializeGrid(*(DEM.header));
     hydrallMaps.rootBiomassMap->initializeGrid(*(DEM.header));
     hydrallMaps.standBiomassMap->initializeGrid(*(DEM.header));
+    hydrallMaps.yearlyPrec->initializeGrid(*(DEM.header));
+    hydrallMaps.yearlyET0->initializeGrid(*(DEM.header));
+
 
     for (int row = 0; row < DEM.header->nrRows; row++)
     {
@@ -134,7 +139,6 @@ bool Crit3DProject::initializeRothC()
 {
     rothCModel.initialize();
     rothCModel.map.initialize(DEM);
-    hourlyMeteoMaps->mapHourlyETReal->initializeGrid(DEM, 0);
 
     for (int row = 0; row < DEM.header->nrRows; row ++)
     {
@@ -191,8 +195,8 @@ bool Crit3DProject::initializeCropMaps()
     dailyTminMap.initializeGrid(*(DEM.header));
     dailyTmaxMap.initializeGrid(*(DEM.header));
 
-    monthlyETReal.initializeGrid(*(DEM.header));
-    monthlyPrec.initializeGrid(*(DEM.header));
+    yearlyET0.initializeGrid(*(DEM.header));
+    yearlyPrec.initializeGrid(*(DEM.header));
 
     return true;
 }
@@ -382,10 +386,6 @@ void Crit3DProject::dailyUpdateCropMaps(const QDate &myDate)
                         }
                     }
                 }
-                if(processes.computeRothC)
-                {
-                    //update delle mappe mensili di prec ed ETreal
-                }
             }
         }
     }
@@ -406,7 +406,7 @@ bool Crit3DProject::dailyUpdateHydrall(const QDate &myDate)
 {
 
     //set daily variables like temp, co2
-    if (myDate.day() == 1)
+    if (myDate.dayOfYear() == 1)
     {
         for (int row = 0; row < indexMap.at(0).header->nrRows; row++)
         {
@@ -430,12 +430,15 @@ bool Crit3DProject::dailyUpdateHydrall(const QDate &myDate)
                     }
 
 
-                    hydrallModel.weatherVariable.monthlyETreal = monthlyETReal.getValueFromRowCol(row, col);
-                    hydrallModel.weatherVariable.monthlyPrec = monthlyPrec.getValueFromRowCol(row, col);
+                    hydrallModel.weatherVariable.setYearlyET0(yearlyET0.getValueFromRowCol(row, col));
+                    hydrallModel.weatherVariable.setYearlyPrec(yearlyPrec.getValueFromRowCol(row, col));
 
                     hydrallModel.simplifiedGrowthStand(); // TODO quit this line - temporary position to prompt check
 
                     hydrallModel.resetStandVariables();
+
+                    yearlyPrec.value[row][col] = 0;
+                    yearlyET0.value[row][col] = 0;
 
                     if (myDate.month() == hydrallModel.firstMonthVegetativeSeason) //TODO
                     {
@@ -457,9 +460,9 @@ bool Crit3DProject::dailyUpdateHydrall(const QDate &myDate)
 }
 
 
-bool Crit3DProject::updateRothC()
+bool Crit3DProject::updateRothC(const QDate &myDate)
 {
-    if (rothCModel.getIsUpdate())
+    if (myDate.dayOfYear() == 1)
     {
         for (int row = 0; row < DEM.header->nrRows; row++)
         {
@@ -471,12 +474,11 @@ bool Crit3DProject::updateRothC()
                 {
                     rothCModel.setDepth(rothCModel.map.getDepth(row, col));
                     rothCModel.setClay(rothCModel.map.getClay(row, col));
-                    rothCModel.meteoVariable.setPrecipitation(monthlyPrec.getValueFromRowCol(row, col));
-                    rothCModel.meteoVariable.setWaterLoss(monthlyETReal.getValueFromRowCol(row, col));
-                    rothCModel.meteoVariable.setBIC(monthlyPrec.getValueFromRowCol(row, col) - monthlyETReal.getValueFromRowCol(row, col));
+                    rothCModel.meteoVariable.setPrecipitation(yearlyPrec.getValueFromRowCol(row, col));
+                    rothCModel.meteoVariable.setWaterLoss(yearlyET0.getValueFromRowCol(row, col));
+                    rothCModel.meteoVariable.setBIC(yearlyPrec.getValueFromRowCol(row, col) - yearlyET0.getValueFromRowCol(row, col));
                     rothCModel.meteoVariable.setTemperature(hydrallMaps.mapLast30DaysTavg->getValueFromRowCol(row, col));
-                    //rothCModel.setInputC(hydrallModel.getOutputC()); //read from hydrall (eventually from crop too?)
-                    rothCModel.setInputC(1);
+                    rothCModel.setInputC(hydrallModel.getOutputC()); //read from hydrall (eventually from crop too?)  TODO CHECK
 
                     double SWC = 0;
 
@@ -486,14 +488,20 @@ bool Crit3DProject::updateRothC()
                     }
 
                     rothCModel.setSWC(SWC);
+                    if (false)
+                    {
+                        std::ofstream myFile;
+                        myFile.open("outputRothC.csv", std::ios_base::app);
+                        myFile << rothCModel.meteoVariable.getWaterLoss() << "," << rothCModel.meteoVariable.getPrecipitation() <<"\n";
+                        myFile.close();
+                    }
 
                     //chiamata a rothC
                     computeRothCModel();
 
                     //reset meteo variables and C input for next month/year
                     rothCModel.resetInputVariables();
-                    monthlyPrec.value[row][col] = 0;
-                    monthlyETReal.value[row][col] = 0;
+
                 }
             }
         }
@@ -563,7 +571,7 @@ void Crit3DProject::assignETreal()
                             // compute root density
                             root::computeRootDensity3D(currentCrop, soilList[soilIndex], nrLayers, layerDepth, layerThickness);
                         }
-                        hydrallModel.soil.setRootDensity(currentCrop.roots.rootDensity); //TODO cate make hydrall classes private
+                        hydrallModel.soil.setRootDensity(currentCrop.roots.rootDensity);
                         hydrallModel.plant.setLAICanopy(MAXVALUE(0, currentLAI));
                         hydrallModel.plant.setLAICanopyMin(currentCrop.LAImin);
                         hydrallModel.plant.setLAICanopyMax(currentCrop.LAImax);
@@ -573,7 +581,6 @@ void Crit3DProject::assignETreal()
 
                     if (processes.computeRothC)
                     {
-                        hourlyMeteoMaps->mapHourlyETReal->value[row][col] = actualEvap + actualTransp;
                         rothCModel.setPlantCover(currentLAI/currentCrop.LAImax);
                     }
                 }
@@ -769,7 +776,63 @@ float Crit3DProject::checkSoilCracking(int row, int col, float precipitation)
 }
 
 
-bool Crit3DProject::runModels(QDateTime firstTime, QDateTime lastTime, bool isRestart)
+bool Crit3DProject::startModels(const QDateTime &firstTime, const QDateTime &lastTime)
+{
+    if (! checkProcesses())
+        return false;
+
+    if (! DEM.isLoaded)
+    {
+        errorString = ERROR_STR_MISSING_DEM;
+        return false;
+    }
+
+    if (processes.computeSnow && ! snowMaps.isInitialized)
+    {
+        errorString = "Initialize Snow model or load a state before.";
+        return false;
+    }
+
+    if (processes.computeWater && ! isCriteria3DInitialized)
+    {
+        errorString = "Initialize 3D water fluxes or load a state before.";
+        return false;
+    }
+
+    if (processes.computeCrop && landUnitList.size() == 0)
+    {
+        errorString = "load land units map before.";
+        return false;
+    }
+
+    std::cout << "First time: " << firstTime.date().toString("yyyy-MM-dd").toStdString() << " H" << firstTime.time().hour() << std::endl;
+    std::cout << "Last time: " << lastTime.date().toString("yyyy-MM-dd").toStdString() << " H" << lastTime.time().hour() << std::endl;
+
+    if (lastTime < firstTime)
+    {
+        errorString = "Wrong Time: lastTime < firstTime";
+        return false;
+    }
+
+    logInfoGUI("Loading meteo data...");
+    bool loadHourly = true;
+    if (! loadMeteoPointsData(firstTime.date().addDays(-1), lastTime.date().addDays(+1), loadHourly, false, false))
+    {
+        return false;
+    }
+    closeLogInfo();
+
+    // initialize
+    modelFirstTime = firstTime;
+    modelLastTime = lastTime;
+    isModelPaused = false;
+    isModelStopped = false;
+
+    return runModels(firstTime, lastTime);
+}
+
+
+bool Crit3DProject::runModels(const QDateTime &firstTime, const QDateTime &lastTime, bool isRestart)
 {
     if (! isRestart)
     {
@@ -827,14 +890,13 @@ bool Crit3DProject::runModels(QDateTime firstTime, QDateTime lastTime, bool isRe
             dailyUpdatePond();
         }
 
-
-        if (processes.computeRothC && myDate.day() == 1)
+        if (processes.computeRothC && myDate.dayOfYear() == 1)
         {
-            rothCModel.setIsUpdate(myDate.day() == 1);
-            //rothCModel.setIsUpdate(myDate.doy() == 1);
-            updateRothC();
-
+            updateRothC(myDate);
         }
+
+        if (processes.computeHydrall)
+            dailyUpdateHydrall(myDate);
 
         if (isSaveOutputRaster())
         {
@@ -857,11 +919,6 @@ bool Crit3DProject::runModels(QDateTime firstTime, QDateTime lastTime, bool isRe
             if (currentSeconds == 0 || currentSeconds == 3600)
                 isRestart = false;
 
-            /*if (processes.computeRothC)
-            {
-                rothCModel.setIsUpdate(rothCModel.getIsUpdate() && hour == 0);
-            }*/
-
             if (! runModelHour(currentOutputPath, isRestart))
             {
                 isModelRunning = false;
@@ -869,10 +926,11 @@ bool Crit3DProject::runModels(QDateTime firstTime, QDateTime lastTime, bool isRe
                 return false;
             }
 
-            if (processes.computeRothC)
+            if (processes.computeRothC || processes.computeHydrall)
             {
                 //rothC maps update must be done hourly
-                updateRothCMonthlyMaps();
+                updateETAndPrecYearlyMaps();
+
             }
 
             // output points
@@ -892,23 +950,23 @@ bool Crit3DProject::runModels(QDateTime firstTime, QDateTime lastTime, bool isRe
             }
         }
 
-        // TODO Antonio hydrall giornaliero
         if (processes.computeHydrall)
         {
             dailyUpdateHydrallMaps();
-            dailyUpdateHydrall(myDate); //CT è giusto qui? dailyUpdateHydrall c'è anche sopra
         }
 
         if (isSaveDailyState())
         {
-            saveModelsState();
+            QString dirName;
+            saveModelsState(dirName);
         }
 
     }
 
     if (isSaveEndOfRunState())
     {
-        saveModelsState();
+        QString dirName;
+        saveModelsState(dirName);
     }
 
     isModelRunning = false;
@@ -917,7 +975,7 @@ bool Crit3DProject::runModels(QDateTime firstTime, QDateTime lastTime, bool isRe
     return true;
 }
 
-void Crit3DProject::updateRothCMonthlyMaps()
+void Crit3DProject::updateETAndPrecYearlyMaps()
 {
     for (int row = 0; row < indexMap.at(0).header->nrRows; row++)
     {
@@ -926,15 +984,15 @@ void Crit3DProject::updateRothCMonthlyMaps()
             int surfaceIndex = indexMap.at(0).value[row][col];
             if (surfaceIndex != indexMap.at(0).header->flag)
             {
-                if (! isEqual(monthlyETReal.value[row][col], NODATA))
-                    monthlyETReal.value[row][col] += hourlyMeteoMaps->mapHourlyETReal->value[row][col];
+                if (! isEqual(yearlyET0.value[row][col], NODATA))
+                    yearlyET0.value[row][col] += hourlyMeteoMaps->mapHourlyET0->value[row][col];
                 else
-                    monthlyETReal.value[row][col] = hourlyMeteoMaps->mapHourlyETReal->value[row][col];
+                    yearlyET0.value[row][col] = hourlyMeteoMaps->mapHourlyET0->value[row][col];
 
-                if (! isEqual(monthlyPrec.value[row][col], NODATA))
-                    monthlyPrec.value[row][col] += hourlyMeteoMaps->mapHourlyPrec->value[row][col];
+                if (! isEqual(yearlyPrec.value[row][col], NODATA))
+                    yearlyPrec.value[row][col] += hourlyMeteoMaps->mapHourlyPrec->value[row][col];
                 else
-                    monthlyPrec.value[row][col] = hourlyMeteoMaps->mapHourlyPrec->value[row][col];
+                    yearlyPrec.value[row][col] = hourlyMeteoMaps->mapHourlyPrec->value[row][col];
             }
         }
     }
@@ -1793,8 +1851,11 @@ bool Crit3DProject::runModelHour(const QString& hourlyOutputPath, bool isRestart
 }
 
 
-bool Crit3DProject::saveModelsState()
+bool Crit3DProject::saveModelsState(QString &dirName)
 {
+    if (! checkProcesses())
+        return false;
+
     QString statePath = getProjectPath() + PATH_STATES;
     if (! QDir(statePath).exists())
     {
@@ -1803,8 +1864,8 @@ bool Crit3DProject::saveModelsState()
 
     char hourStr[3];
     sprintf(hourStr, "%02d", _currentHour);
-    QString dateFolder = _currentDate.toString("yyyyMMdd") + "_H" + hourStr;
-    QString currentStatePath = statePath + "/" + dateFolder;
+    dirName = _currentDate.toString("yyyyMMdd") + "_H" + hourStr;
+    QString currentStatePath = statePath + "/" + dirName;
     if (! QDir(currentStatePath).exists())
     {
         QDir().mkdir(currentStatePath);
@@ -1958,40 +2019,39 @@ bool Crit3DProject::saveSnowModelState(const QString &currentStatePath)
 }
 
 
-QList<QString> Crit3DProject::getAllSavedState()
+bool Crit3DProject::getAllSavedState(QList<QString> &stateList)
 {
-    QList<QString> states;
-    QString statePath = getProjectPath() + PATH_STATES;
-    QDir dir(statePath);
+    QString statesPath = getProjectPath() + PATH_STATES;
+    QDir dir(statesPath);
     if (! dir.exists())
     {
-        errorString = "STATES directory is missing.";
-        return states;
+        errorString = "STATES directory is missing: " + statesPath;
+        return false;
     }
     QFileInfoList list = dir.entryInfoList(QDir::AllDirs | QDir::NoDot | QDir::NoDotDot | QDir::NoSymLinks);
 
     if (list.size() == 0)
     {
-        errorString = "STATES directory is empty.";
-        return states;
+        errorString = "STATES directory is empty: " + statesPath;
+        return false;
     }
 
     for (int i=0; i < list.size(); i++)
     {
         if (list[i].baseName().size() == 12)
         {
-            states << list[i].baseName();
+            stateList << list[i].baseName();
         }
     }
 
-    return states;
+    return true;
 }
 
 
 bool Crit3DProject::loadModelState(QString statePath)
 {
     QDir stateDir(statePath);
-    if (!stateDir.exists())
+    if (! stateDir.exists())
     {
         errorString = "State directory is missing.";
         return false;
@@ -2130,6 +2190,8 @@ bool Crit3DProject::loadModelState(QString statePath)
 
         processes.setComputeWater(true);
     }
+
+    logInfo("Current date is: " + getCurrentDate().toString("yyyy-MM-dd") + " hour: " + QString::number(getCurrentHour()));
 
     return true;
 }
@@ -2985,6 +3047,34 @@ int Crit3DProject::executeCommand(const QList<QString> &argumentList)
 }
 
 
+int Crit3DProject::printCriteria3DCommandList()
+{
+    //QList<QString> list = getSharedCommandList();
+    QList<QString> list;
+
+    // criteria3D commands
+    list.append("?               | ListCommands");
+    list.append("Version         | Criteria3DVersion");
+    list.append("Ls              | List");
+    list.append("Proj            | OpenProject");
+    list.append("State           | LoadState");
+    list.append("Thread          | SetThreadNr");
+    list.append("Run             | RunModels");
+    list.append("Save            | SaveState");
+    list.append("Quit            | Exit");
+
+    std::cout << "Available Console commands:" << std::endl;
+    std::cout << "(short          | long version)" << std::endl << std::endl;
+    for (int i = 0; i < list.size(); i++)
+    {
+        std::cout << list[i].toStdString() << std::endl;
+    }
+    std::cout << std::endl;
+
+    return CRIT3D_OK;
+}
+
+
 int Crit3DProject::executeCriteria3DCommand(const QList<QString> &argumentList, bool &isCommandFound)
 {
     isCommandFound = false;
@@ -2993,7 +3083,7 @@ int Crit3DProject::executeCriteria3DCommand(const QList<QString> &argumentList, 
 
     QString command = argumentList[0].toUpper();
 
-    if (command == "?" || command == "LS" || command == "LIST" || command == "LISTCOMMANDS")
+    if (command == "?" || command == "LISTCOMMANDS")
     {
         isCommandFound = true;
         return printCriteria3DCommandList();
@@ -3008,6 +3098,31 @@ int Crit3DProject::executeCriteria3DCommand(const QList<QString> &argumentList, 
         isCommandFound = true;
         return cmdOpenCriteria3DProject(argumentList);
     }
+    else if (command == "LS" || command == "LIST")
+    {
+        isCommandFound = true;
+        return cmdList(argumentList);
+    }
+    else if (command == "STATE" || command == "LOADSTATE")
+    {
+        isCommandFound = true;
+        return cmdLoadState(argumentList);
+    }
+    else if (command == "SAVE" || command == "SAVESTATE")
+    {
+        isCommandFound = true;
+        return cmdSaveCurrentState();
+    }
+    else if (command == "RUN" || command == "RUNMODELS")
+    {
+        isCommandFound = true;
+        return cmdRunModels(argumentList);
+    }
+    else if (command == "THREAD" || command == "SETTHREADNR")
+    {
+        isCommandFound = true;
+        return cmdSetThreadsNr();
+    }
 
     return CRIT3D_INVALID_COMMAND;
 }
@@ -3016,26 +3131,7 @@ int Crit3DProject::executeCriteria3DCommand(const QList<QString> &argumentList, 
 int Crit3DProject::printCriteria3DVersion()
 {
     std::cout << "CRITERIA3D " << CRITERIA3D_VERSION << std::endl;
-    return CRIT3D_OK;
-}
-
-
-int Crit3DProject::printCriteria3DCommandList()
-{
-    QList<QString> list = getSharedCommandList();
-
-    // criteria3D commands
-    list.append("List            | ListCommands");
-    list.append("Version         | Criteria3DVersion");
-    list.append("Proj            | OpenProject");
-    //..
-
-    std::cout << "Available Console commands:" << std::endl;
-    std::cout << "(short          | long version)" << std::endl;
-    for (int i = 0; i < list.size(); i++)
-    {
-        std::cout << list[i].toStdString() << std::endl;
-    }
+    std::cout << std::endl;
 
     return CRIT3D_OK;
 }
@@ -3074,4 +3170,139 @@ int Crit3DProject::cmdOpenCriteria3DProject(const QList<QString> &argumentList)
     return CRIT3D_OK;
 }
 
+
+int Crit3DProject::cmdList(const QList<QString> &argumentList)
+{
+    QString typeStr;
+    if (argumentList.size() >= 2)
+    {
+        typeStr = argumentList.at(1);
+    }
+
+    if (typeStr != "proj" && typeStr != "projects" && typeStr != "states")
+    {
+        std::cout << "Usage: list [type]" << std::endl;
+        std::cout << "type:" << std::endl;
+        std::cout << "projects" << std::endl;
+        std::cout << "states" << std::endl;
+        std::cout << std::endl;
+        return CRIT3D_OK;
+    }
+
+    QList<QString> list;
+    if (typeStr == "proj" || typeStr == "projects")
+    {
+        if (! getProjectList(list))
+            return CRIT3D_ERROR;
+
+        std::cout << "Available projects:" << std::endl;
+    }
+    else if (typeStr == "states")
+    {
+        if (projectName == "default")
+        {
+            errorString = "Open a Project before.";
+            return CRIT3D_ERROR;
+        }
+
+        if (! getAllSavedState(list))
+            return CRIT3D_ERROR;
+
+        std::cout << "Available states:" << std::endl;
+    }
+
+    for (int i = 0; i < list.size(); i++)
+    {
+        std::cout << list[i].toStdString() << std::endl;
+    }
+    std::cout << std::endl;
+
+    return CRIT3D_OK;
+}
+
+
+int Crit3DProject::cmdLoadState(const QList<QString> &argumentList)
+{
+    QString stateName;
+    if (argumentList.size() >= 2)
+    {
+        stateName = argumentList.at(1);
+    }
+
+    QString statePath = getProjectPath() + PATH_STATES + stateName;
+    QDir stateDir(statePath);
+    if (! stateDir.exists())
+    {
+        std::cout << "Usage: LoadState <YYYYMMDD-Hhh>" << std::endl;
+        return CRIT3D_OK;
+    }
+
+    if (! loadModelState(statePath))
+    {
+        return CRIT3D_ERROR;
+    }
+
+    return CRIT3D_OK;
+}
+
+
+int Crit3DProject::cmdSaveCurrentState()
+{
+    QString dirName;
+    if (! saveModelsState(dirName))
+        return CRIT3D_ERROR;
+
+    std::cout << "State successfully saved: " << dirName.toStdString() << std::endl;
+
+    return CRIT3D_OK;
+}
+
+
+int Crit3DProject::cmdRunModels(const QList<QString> &argumentList)
+{
+    QString dateStr, hourStr;
+    if (argumentList.size() >= 3)
+    {
+        dateStr = argumentList.at(1);
+        hourStr = argumentList.at(2);
+    }
+
+    int lastHour = hourStr.toInt();
+    if ((lastHour < 0) || (lastHour > 23))
+    {
+        std::cout << "Wrong hour! 00-23 are allowed." << std::endl;
+        std::cout << "Usage: RunModels <YYYY-MM-DD HH>" << std::endl;
+        return CRIT3D_OK;
+    }
+
+    QDateTime lastTime;
+    lastTime.setTimeZone(QTimeZone::utc());
+    lastTime.setDate(QDate::fromString(dateStr, "yyyy-MM-dd"));
+    lastTime.setTime(QTime(lastHour,0,0,0));
+    if (! lastTime.isValid())
+    {
+        std::cout << "Usage: RunModels <YYYY-MM-DD HH>" << std::endl;
+        return CRIT3D_OK;
+    }
+
+    // first time: next hour
+    QDateTime firstTime = getCurrentTime();
+    firstTime = firstTime.addSecs(HOUR_SECONDS);
+
+    if (! startModels(firstTime, lastTime))
+        return CRIT3D_ERROR;
+
+    return CRIT3D_OK;
+}
+
+
+int Crit3DProject::cmdSetThreadsNr()
+{
+    int threadNr = soilFluxes3D::setThreadsNumber(0);
+    waterFluxesParameters.numberOfThreads = threadNr;
+    std::cout << "Maximum number of threads: " << threadNr << std::endl;
+    std::cout << std::endl;
+
+    return CRIT3D_OK;
+}
 

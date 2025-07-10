@@ -132,6 +132,11 @@
 
         Crit3DHydrallWeatherDerivedVariable derived;
 
+        double getYearlyET0 () { return yearlyET0; };
+        void setYearlyET0 (double myET) { yearlyET0 = myET; };
+        double getYearlyPrec () { return yearlyPrec; };
+        void setYearlyPrec (double myPrec) { yearlyPrec = myPrec; };
+
         double myInstantTemp;
         double prec;
         double irradiance;
@@ -143,8 +148,10 @@
         double last30DaysTAvg;
         double meanDailyTemp;
 
-        double monthlyETreal;
-        double monthlyPrec;
+
+    private:
+        double yearlyET0;
+        double yearlyPrec;
 
 
     };
@@ -164,6 +171,7 @@
         Crit3DHydrallPlant();
 
         // TODO Cate unità di misura
+
         double myChlorophyllContent;
         double height; // in cm
         double hydraulicResistancePerFoliageArea; //(MPa s m2 m-3)
@@ -341,6 +349,8 @@
         gis::Crit3DRasterGrid* criticalTranspiration;
         gis::Crit3DRasterGrid* criticalSoilWaterPotential;
         gis::Crit3DRasterGrid* minLeafWaterPotential;
+        gis::Crit3DRasterGrid* yearlyET0;
+        gis::Crit3DRasterGrid* yearlyPrec;
 
         gis::Crit3DRasterGrid* treeNetPrimaryProduction;
         gis::Crit3DRasterGrid* understoreyNetPrimaryProduction;
@@ -377,7 +387,7 @@
         Crit3DHydrallBiomass treeBiomass, understoreyBiomass;
         Crit3DHydrallStatePlant statePlant;
         Crit3DHydrallAllocationCoefficient allocationCoefficient;
-
+        bool printHourlyRecords = false;
         double maxIterationNumber;
         double understoreyLeafAreaIndexMax;
         double cover = 1; // TODO

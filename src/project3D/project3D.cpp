@@ -490,7 +490,7 @@ bool Project3D::setAccuracy()
     soilFluxes3D::setNumericalParameters(minimumDeltaT, 3600, 100, 10, 8, digitMBR);
 
     // parallel computing
-    waterFluxesParameters.numberOfThreads = soilFluxes3D::setThreads(waterFluxesParameters.numberOfThreads);
+    waterFluxesParameters.numberOfThreads = soilFluxes3D::setThreadsNumber(waterFluxesParameters.numberOfThreads);
 
     return true;
 }

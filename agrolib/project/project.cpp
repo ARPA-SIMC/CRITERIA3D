@@ -1099,15 +1099,16 @@ bool Project::loadDEM(const QString &fileName)
     }
 
     logInfoGUI("Load Digital Elevation Model = " + fileName);
-
     demFileName = fileName;
     QString completeFileName = getCompleteFileName(fileName, PATH_DEM);
 
     std::string errorStr;
-    if (! gis::openRaster(completeFileName.toStdString(), &DEM, gisSettings.utmZone, errorStr))
+    bool isOk = gis::openRaster(completeFileName.toStdString(), &DEM, gisSettings.utmZone, errorStr);
+    closeLogInfo();
+
+    if (! isOk)
     {
-        closeLogInfo();
-        logError("Wrong Digital Elevation Model: " + completeFileName + "\n" + QString::fromStdString(errorStr));
+        errorString = "Wrong Digital Elevation Model: " + completeFileName + "\n" + QString::fromStdString(errorStr);
         errorType = ERROR_DEM;
         return false;
     }
@@ -1526,7 +1527,7 @@ bool Project::loadMeteoPointsData(const QDate& firstDate, const QDate& lastDate,
     //check
     if (firstDate == QDate(1800,1,1) || lastDate == QDate(1800,1,1)) return false;
 
-    bool isData = false;
+    bool isDataOk = false;
     int step = 0;
 
     QString infoStr = "Load meteo points data: " + firstDate.toString();
@@ -1548,19 +1549,26 @@ bool Project::loadMeteoPointsData(const QDate& firstDate, const QDate& lastDate,
         }
 
         if (loadHourly)
-            if (meteoPointsDbHandler->loadHourlyData(getCrit3DDate(firstDate), getCrit3DDate(lastDate), meteoPoints[i])) isData = true;
+        {
+            if (meteoPointsDbHandler->loadHourlyData(getCrit3DDate(firstDate), getCrit3DDate(lastDate), meteoPoints[i]))
+                isDataOk = true;
+        }
 
         if (loadDaily)
-            if (meteoPointsDbHandler->loadDailyData(getCrit3DDate(firstDate), getCrit3DDate(lastDate), meteoPoints[i]))  isData = true;
+        {
+            if (meteoPointsDbHandler->loadDailyData(getCrit3DDate(firstDate), getCrit3DDate(lastDate), meteoPoints[i]))
+                isDataOk = true;
+        }
     }
 
     if (showInfo) closeProgressBar();
 
-    return isData;
+    return isDataOk;
 }
 
 
-bool Project::loadMeteoPointsData(const QDate &firstDate, const QDate &lastDate, bool loadHourly, bool loadDaily, const QString &dataset, bool showInfo)
+bool Project::loadMeteoPointsData(const QDate &firstDate, const QDate &lastDate,
+                                  bool loadHourly, bool loadDaily, const QString &dataset, bool showInfo)
 {
     //check
     if (firstDate == QDate(1800,1,1) || lastDate == QDate(1800,1,1)) return false;
@@ -3971,6 +3979,7 @@ bool Project::createDefaultProject(QString fileName)
 
     defaultSettings->beginGroup("project");
         defaultSettings->setValue("path", path);
+        defaultSettings->setValue("name", "default");
     defaultSettings->endGroup();
 
     defaultSettings->beginGroup("location");
@@ -4970,7 +4979,7 @@ bool Project::exportMeteoGridToRasterFlt(QString fileName, double cellSize)
     }
 
     gis::Crit3DRasterGrid myGrid;
-    if (!meteoGridDbHandler->MeteoGridToRasterFlt(cellSize, gisSettings, myGrid))
+    if (! meteoGridDbHandler->MeteoGridToRasterFlt(cellSize, gisSettings, myGrid))
     {
         errorString = "initializeGrid failed";
         return false;
@@ -6047,6 +6056,62 @@ bool Project::computeResidualsAndStatisticsGlocalDetrending(meteoVariable myVar,
             if (! computeStatisticsGlocalCrossValidation(myArea))
                 return false;
         }
+    }
+
+    return true;
+}
+
+bool Project::showMeteoWidgetMultiplePoints()
+{
+    std::vector<std::string> idMeteoPoint;
+    std::vector<std::string> namePoint;
+    std::vector<std::string> dataset;
+    std::vector<double> altitude;
+    std::vector<std::string> lapseRateCode;
+
+    for (int i = 0; i < nrMeteoPoints; i++)
+    {
+        if (meteoPoints[i].selected)
+        {
+            idMeteoPoint.push_back(meteoPoints[i].id);
+            namePoint.push_back(meteoPoints[i].name);
+            dataset.push_back(meteoPoints[i].dataset);
+            altitude.push_back(meteoPoints[i].point.z);
+            lapseRateCode.push_back(std::to_string(meteoPoints[i].lapseRateCode));
+        }
+    }
+
+    bool isAppend = false;
+
+    for (unsigned int i = 0; i < idMeteoPoint.size(); i++)
+    {
+        showMeteoWidgetPoint(idMeteoPoint[i], namePoint[i], dataset[i], altitude[i], lapseRateCode[i], isAppend);
+        isAppend = true;
+    }
+
+    return true;
+}
+
+bool Project::getProjectList(QList<QString> &projectList)
+{
+    QString myProjectsPath = getDefaultPath() + PATH_PROJECT;
+    QDir dir(myProjectsPath);
+    if (! dir.exists())
+    {
+        errorString = "PROJECT directory is missing: " + myProjectsPath;
+        return false;
+    }
+    QFileInfoList list = dir.entryInfoList(QDir::AllDirs | QDir::NoDot | QDir::NoDotDot | QDir::NoSymLinks);
+
+    if (list.size() == 0)
+    {
+        errorString = "PROJECT directory is empty: " + myProjectsPath;
+        return false;
+    }
+
+    for (int i=0; i < list.size(); i++)
+    {
+        projectList << list[i].baseName();
     }
 
     return true;

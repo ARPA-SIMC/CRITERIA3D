@@ -27,6 +27,7 @@
 #include <algorithm>
 #include <sstream>
 #include <fstream>
+#include <cstring>
 #include <math.h>
 
 #include "gis.h"
@@ -111,7 +112,7 @@ namespace gis
      * \param error       string
      * \return true on success, false otherwise
      */
-    bool readEsriGridHeader(const string &fileName, gis::Crit3DRasterHeader *header, string &errorStr)
+    bool readEsriGridHeader(const std::string &fileName, gis::Crit3DRasterHeader *header, std::string &errorStr)
     {
         string myLine, myKey, upKey, valueStr;
         int nrKeys = 0;
@@ -125,9 +126,9 @@ namespace gis
 
         // open file
         fn += ".hdr";
-        ifstream  myFile (fn.c_str());
+        ifstream  myFile(fn.c_str());
 
-        if (! myFile.is_open())
+        if (myFile.fail())
         {
             errorStr = "Missing file: " + fn;
             return false;
@@ -395,39 +396,39 @@ namespace gis
 
     /*!
      * \brief Write a ESRI grid header file (.hdr)
-     * \param myFileName    string name file
-     * \param myHeader      Crit3DRasterHeader pointer
-     * \param error       string pointer
+     * \param fileName      file name
+     * \param header        Crit3DRasterHeader pointer
+     * \param errorStr      error string
      * \return true on success, false otherwise
      */
-    bool writeEsriGridHeader(const string &fileName, gis::Crit3DRasterHeader *myHeader, string &error)
+    bool writeEsriGridHeader(const std::string &fileName, gis::Crit3DRasterHeader *header, std::string &errorStr)
     {
-        string myFileName = fileName + ".hdr";
-        ofstream myFile (myFileName.c_str());
+        std::string myFileName = fileName + ".hdr";
+        std::ofstream myFile (myFileName.c_str());
 
-        if (! myFile.is_open())
+        if (myFile.fail())
         {
-            error = "File .hdr error.";
+            errorStr = "Error writing file: " + myFileName + '\n' + strerror(errno);
             return false;
         }
 
-        myFile << "ncols         " << myHeader->nrCols << "\n";
-        myFile << "nrows         " << myHeader->nrRows << "\n";
+        myFile << "ncols         " << header->nrCols << "\n";
+        myFile << "nrows         " << header->nrRows << "\n";
 
         char* xllcorner = new char[20];
         char* yllcorner = new char[20];
-        sprintf(xllcorner, "%.03f", myHeader->llCorner.x);
-        sprintf(yllcorner, "%.03f", myHeader->llCorner.y);
+        sprintf(xllcorner, "%.03f", header->llCorner.x);
+        sprintf(yllcorner, "%.03f", header->llCorner.y);
 
         myFile << "xllcorner     " << xllcorner << "\n";
 
         myFile << "yllcorner     " << yllcorner << "\n";
 
-        myFile << "cellsize      " << myHeader->cellSize << "\n";
+        myFile << "cellsize      " << header->cellSize << "\n";
 
         // different version of NODATA
-        myFile << "NODATA_value  " << myHeader->flag << "\n";
-        myFile << "NODATA        " << myHeader->flag << "\n";
+        myFile << "NODATA_value  " << header->flag << "\n";
+        myFile << "NODATA        " << header->flag << "\n";
 
         // crucial information
         myFile << "byteorder     LSBFIRST" << "\n";
@@ -442,26 +443,27 @@ namespace gis
 
     /*!
      * \brief Write a ESRI grid data file (.flt)
-     * \param myFileName    string name file
-     * \param myHeader      Crit3DRasterHeader pointer
-     * \param error       string pointer
+     * \param fileName    file name
+     * \param myGrid      Crit3DRasterGrid pointer
+     * \param errorStr    error string
      * \return true on success, false otherwise
      */
-    bool writeEsriGridFlt(const string &fileName, gis::Crit3DRasterGrid* myGrid, string &error)
+    bool writeEsriGridFlt(const std::string &fileName, Crit3DRasterGrid *myGrid, std::string &errorStr)
     {
-        string myFileName = fileName + ".flt";
-
-        FILE* filePointer;
+        std::string myFileName = fileName + ".flt";
+        std::FILE* filePointer;
 
         filePointer = fopen(myFileName.c_str(), "wb" );
         if (filePointer == nullptr)
         {
-            error = "Error in writing flt file.";
+            errorStr = "Error writing file: " + myFileName + '\n' + strerror(errno);
             return false;
         }
 
-        for (int myRow = 0; myRow < myGrid->header->nrRows; myRow++)
-            fwrite(myGrid->value[myRow], sizeof(float), unsigned(myGrid->header->nrCols), filePointer);
+        for (int row = 0; row < myGrid->header->nrRows; row++)
+        {
+            fwrite(myGrid->value[row], sizeof(float), unsigned(myGrid->header->nrCols), filePointer);
+        }
 
         fclose (filePointer);
         return true;
@@ -472,7 +474,7 @@ namespace gis
      * \brief Write a ESRI float raster (.hdr and .flt)
      * \return true on success, false otherwise
      */
-    bool writeEsriGrid(const string &fileName, Crit3DRasterGrid* rasterGrid, string &errorStr)
+    bool writeEsriGrid(const std::string &fileName, Crit3DRasterGrid* rasterGrid, std::string &errorStr)
     {
         if (! gis::writeEsriGridHeader(fileName, rasterGrid->header, errorStr))
             return false;
@@ -490,10 +492,11 @@ namespace gis
      */
     bool readEsriGrid(const string &fileName, Crit3DRasterGrid* rasterGrid, string &errorStr)
     {
-        if (rasterGrid == nullptr) return false;
+        if (rasterGrid == nullptr)
+            return false;
         rasterGrid->clear();
 
-        if(gis::readEsriGridHeader(fileName, rasterGrid->header, errorStr))
+        if( gis::readEsriGridHeader(fileName, rasterGrid->header, errorStr) )
         {
             // check suffix
             std::size_t found = fileName.rfind(".flt");
@@ -563,6 +566,11 @@ namespace gis
         else if (fileExtension == ".img")
         {
             isOk = gis::readEnviGrid(fileNameWithoutExt, rasterGrid, currentUtmZone, errorStr);
+        }
+        else
+        {
+            errorStr = "Wrong suffix: .flt or .img are allowed.";
+            isOk = false;
         }
 
         return isOk;

@@ -2013,7 +2013,8 @@ void MainWindow::on_actionComputePeriod_meteoVariables_triggered()
     myProject.processes.computeMeteo = true;
     myProject.processes.computeRadiation = true;
 
-    startModels(firstTime, lastTime);
+    initializeGroupBoxModel();
+    myProject.startModels(firstTime, lastTime);
 }
 
 
@@ -2062,57 +2063,12 @@ bool selectDates(QDateTime &firstTime, QDateTime &lastTime)
 }
 
 
-bool MainWindow::startModels(QDateTime firstTime, QDateTime lastTime)
+void MainWindow::initializeGroupBoxModel()
 {
-    if (! myProject.DEM.isLoaded)
-    {
-        myProject.logError(ERROR_STR_MISSING_DEM);
-        return false;
-    }
-
-    if (myProject.processes.computeSnow && (! myProject.snowMaps.isInitialized))
-    {
-        myProject.logError("Initialize Snow model or load a state before.");
-        return false;
-    }
-
-    if (myProject.processes.computeWater && (! myProject.isCriteria3DInitialized))
-    {
-        myProject.logError("Initialize 3D water fluxes or load a state before.");
-        return false;
-    }
-
-    if (myProject.processes.computeCrop)
-    {
-        if (myProject.landUnitList.size() == 0)
-        {
-            myProject.logError("load land units map before.");
-            return false;
-        }
-    }
-
-    // Load meteo data
-    myProject.logInfoGUI("Loading meteo data...");
-    if (! myProject.loadMeteoPointsData(firstTime.date().addDays(-1), lastTime.date().addDays(+1), true, false, false))
-    {
-        myProject.logError();
-        return false;
-    }
-    myProject.closeLogInfo();
-
-    // set model interface
-    myProject.modelFirstTime = firstTime;
-    myProject.modelLastTime = lastTime;
-
-    myProject.isModelPaused = false;
-    myProject.isModelStopped = false;
-
     ui->groupBoxModel->setEnabled(true);
     ui->buttonModelStart->setDisabled(true);
     ui->buttonModelPause->setEnabled(true);
     ui->buttonModelStop->setEnabled(true);
-
-    return myProject.runModels(firstTime, lastTime);
 }
 
 
@@ -2204,7 +2160,8 @@ void MainWindow::on_actionRadiation_run_model_triggered()
     myProject.processes.initialize();
     myProject.processes.computeRadiation = true;
 
-    startModels(firstTime, lastTime);
+    initializeGroupBoxModel();
+    myProject.startModels(firstTime, lastTime);
 }
 
 
@@ -2303,7 +2260,7 @@ void MainWindow::on_actionCriteria3D_waterFluxes_settings_triggered()
     {
         myProject.waterFluxesParameters.modelAccuracy = dialogWaterFluxes.accuracySlider->value();
         int nrThread = dialogWaterFluxes.getThreadsNumber();
-        nrThread = soilFluxes3D::setThreads(nrThread);                  // check
+        nrThread = soilFluxes3D::setThreadsNumber(nrThread);                  // check
         myProject.waterFluxesParameters.numberOfThreads = nrThread;
 
         if (myProject.isCriteria3DInitialized)
@@ -2328,7 +2285,7 @@ void MainWindow::on_actionCriteria3D_waterFluxes_settings_triggered()
 
         // check nr of threads
         int threadNumber = dialogWaterFluxes.getThreadsNumber();
-        threadNumber = soilFluxes3D::setThreads(threadNumber);
+        threadNumber = soilFluxes3D::setThreadsNumber(threadNumber);
         myProject.waterFluxesParameters.numberOfThreads = threadNumber;
 
         if (myProject.isCriteria3DInitialized)
@@ -2499,7 +2456,8 @@ void MainWindow::on_actionCriteria3D_compute_next_hour_triggered()
         currentTime = myProject.getCurrentTime().addSecs(HOUR_SECONDS);
     }
 
-    startModels(currentTime, currentTime);
+    initializeGroupBoxModel();
+    myProject.startModels(currentTime, currentTime);
 }
 
 
@@ -2521,7 +2479,8 @@ void MainWindow::on_actionCriteria3D_run_models_triggered()
     if (! selectDates(firstTime, lastTime))
         return;
 
-    startModels(firstTime, lastTime);
+    initializeGroupBoxModel();
+    myProject.startModels(firstTime, lastTime);
 }
 
 
@@ -3545,10 +3504,11 @@ void MainWindow::on_actionCriteria3D_load_state_triggered()
         return;
     }
 
-    QList<QString> stateList = myProject.getAllSavedState();
-    if (stateList.isEmpty())
+    QString statesPath = myProject.getProjectPath() + PATH_STATES;
+    QList<QString> stateList;
+    if (! myProject.getAllSavedState(stateList))
     {
-        myProject.logWarning("No states saved in the directory:\n" + myProject.getProjectPath() + PATH_STATES);
+        myProject.logError();
         return;
     }
 
@@ -3556,7 +3516,7 @@ void MainWindow::on_actionCriteria3D_load_state_triggered()
     if (dialogLoadState.result() != QDialog::Accepted)
         return;
 
-    QString stateDirectory = myProject.getProjectPath() + PATH_STATES + dialogLoadState.getSelectedState();
+    QString stateDirectory = statesPath + dialogLoadState.getSelectedState();
     if (! myProject.loadModelState(stateDirectory))
     {
         myProject.logError();
@@ -3602,17 +3562,14 @@ void MainWindow::on_actionCriteria3D_load_external_state_triggered()
 
 void MainWindow::on_actionCriteria3D_save_state_triggered()
 {
-    if (myProject.isProjectLoaded)
+    QString dirName;
+    if (myProject.saveModelsState(dirName))
     {
-        if (myProject.saveModelsState())
-        {
-            myProject.logInfoGUI("State model successfully saved: " + myProject.getCurrentDate().toString()
-                                 + " H:" + QString::number(myProject.getCurrentHour()));
-        }
+        myProject.logInfoGUI("State successfully saved: " + dirName);
     }
     else
     {
-        myProject.logError(ERROR_STR_MISSING_PROJECT);
+        myProject.logError();
     }
 }
 

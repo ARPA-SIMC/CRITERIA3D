@@ -165,6 +165,7 @@
         void on_flagSave_state_daily_step_toggled(bool isChecked);
         void on_flagSave_state_endRun_triggered(bool isChecked);
 
+        void initializeGroupBoxModel();
         void on_buttonModelPause_clicked();
         void on_buttonModelStop_clicked();
         void on_buttonModelStart_clicked();
@@ -193,7 +194,6 @@
         void on_actionMapGoogle_hybrid_satellite_triggered();
         void on_actionMapGoogle_satellite_triggered();
         void on_actionProjectSettings_triggered();
-
 
         void on_actionLoad_land_use_map_triggered();
 
@@ -334,7 +334,6 @@
                                     bool isHideMinimum, double minimum, double maximum);
 
         bool setRadiationAsCurrentVariable();
-        bool startModels(QDateTime firstTime, QDateTime lastTime);
 
         void testOutputPoints();
         void addOutputPointsGUI();

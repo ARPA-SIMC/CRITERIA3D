@@ -28,7 +28,7 @@
 
     #include <QString>
 
-    #define CRITERIA3D_VERSION "V1.0.6"
+    #define CRITERIA3D_VERSION "V1.1.0"
 
 
     class Crit3DProject : public Project3D
@@ -57,8 +57,8 @@
         gis::Crit3DRasterGrid degreeDaysMap;
         gis::Crit3DRasterGrid dailyTminMap;
         gis::Crit3DRasterGrid dailyTmaxMap;
-        gis::Crit3DRasterGrid monthlyPrec;
-        gis::Crit3DRasterGrid monthlyETReal;
+        gis::Crit3DRasterGrid yearlyPrec;
+        gis::Crit3DRasterGrid yearlyET0;
 
         Crit3DHydrallMaps hydrallMaps;
 
@@ -77,7 +77,7 @@
         bool initializeCropMaps();
         bool initializeHydrall();
         bool initializeRothC();
-        void updateRothCMonthlyMaps();
+        void updateETAndPrecYearlyMaps();
         void dailyUpdateCropMaps(const QDate &myDate);
 
         bool initializeCropWithClimateData();
@@ -86,9 +86,6 @@
         void assignETreal();
         void assignPrecipitation();
         float checkSoilCracking(int row, int col, float precipitation);
-
-        bool checkProcesses();
-        bool runModels(QDateTime firstTime, QDateTime lastTime, bool isRestart = false);
 
         void setSaveDailyState(bool isSave) { _saveDailyState = isSave; }
         bool isSaveDailyState() { return _saveDailyState; }
@@ -119,23 +116,27 @@
         void setHydrallVariables(int row, int col);
 
         bool computeRothCModel();
-        bool updateRothC();
+        bool updateRothC(const QDate &myDate);
 
         bool computeSnowModel();
         void computeSnowPoint(int row, int col);
 
+        bool checkProcesses();
+
+        bool startModels(const QDateTime &firstTime, const QDateTime &lastTime);
+        bool runModels(const QDateTime &firstTime, const QDateTime &lastTime, bool isRestart = false);
         bool runModelHour(const QString& hourlyOutputPath, bool isRestart = false);
 
         void setAllHourlyMeteoMapsComputed(bool value);
 
         bool saveDailyOutput(QDate myDate, const QString& outputPathHourly);
 
-        bool saveModelsState();
+        bool saveModelsState(QString &dirName);
 
         bool loadModelState(QString statePath);
         bool loadWaterPotentialState(QString waterPath);
 
-        QList<QString> getAllSavedState();
+        bool getAllSavedState(QList<QString> &stateList);
 
         bool writeOutputPointsTables();
         bool writeOutputPointsData();
@@ -155,9 +156,15 @@
         int executeCommand(const QList<QString> &argumentList);
         int executeCriteria3DCommand(const QList<QString> &argumentList, bool &isCommandFound);
 
+        int cmdList(const QList<QString> &argumentList);
         int cmdOpenCriteria3DProject(const QList<QString> &argumentList);
+        int cmdLoadState(const QList<QString> &argumentList);
+        int cmdRunModels(const QList<QString> &argumentList);
+        int cmdSaveCurrentState();
+
         int printCriteria3DVersion();
         int printCriteria3DCommandList();
+        int cmdSetThreadsNr();
 
     };
 

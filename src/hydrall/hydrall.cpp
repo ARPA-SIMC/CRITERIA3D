@@ -71,8 +71,8 @@ Crit3DHydrallWeatherVariable::Crit3DHydrallWeatherVariable()
     last30DaysTAvg = NODATA;
     meanDailyTemp = NODATA;
 
-    monthlyETreal = NODATA;
-    monthlyPrec = NODATA;
+    yearlyET0 = NODATA;
+    yearlyPrec = NODATA;
 }
 
 Crit3DHydrallEnvironmentalVariable::Crit3DHydrallEnvironmentalVariable()
@@ -206,6 +206,8 @@ Crit3DHydrallMaps::Crit3DHydrallMaps()
     standBiomassMap = new gis::Crit3DRasterGrid;
     rootBiomassMap = new gis::Crit3DRasterGrid;
     mapLast30DaysTavg = new gis::Crit3DRasterGrid;
+    yearlyET0 = new gis::Crit3DRasterGrid;
+    yearlyPrec = new gis::Crit3DRasterGrid;
 
     treeNetPrimaryProduction = new gis::Crit3DRasterGrid;
     understoreyNetPrimaryProduction = new gis::Crit3DRasterGrid;
@@ -230,6 +232,8 @@ void Crit3DHydrallMaps::initialize(const gis::Crit3DRasterGrid& DEM)
     criticalSoilWaterPotential->initializeGrid(DEM);
     criticalTranspiration->initializeGrid(DEM);
     minLeafWaterPotential->initializeGrid(DEM);
+    yearlyET0->initializeGrid(DEM);
+    yearlyPrec->initializeGrid(DEM);
 
 }
 
@@ -239,6 +243,9 @@ Crit3DHydrallMaps::~Crit3DHydrallMaps()
     standBiomassMap->clear();
     rootBiomassMap->clear();
     mapLast30DaysTavg->clear();
+
+    yearlyET0->clear();
+    yearlyPrec->clear();
 }
 
 bool Crit3DHydrall::computeHydrallPoint()
@@ -252,8 +259,8 @@ bool Crit3DHydrall::computeHydrallPoint()
     plant.setLAICanopy(plant.getLAICanopy() - plant.getLAICanopyMin());
     plant.setLAICanopy(MAXVALUE(0,plant.getLAICanopy()));
     understorey.leafAreaIndex = 1;
-    plant.setLAICanopy(5); //DEBUG
-    plant.setLAICanopyMax(6); //DEBUG
+    //plant.setLAICanopy(5); //DEBUG
+    //plant.setLAICanopyMax(6); //DEBUG
     plant.specificLeafArea = plant.getLAICanopyMax()/statePlant.treeBiomassFoliage;
 
     Crit3DHydrall::photosynthesisAndTranspiration();
@@ -1043,7 +1050,7 @@ void Crit3DHydrall::photosynthesisKernel(double COMP,double GAC,double GHR,doubl
         RH = 1 - VPDS / RHFactor;
         ASSOLD = NODATA;
         DUM1 = 1.6 * weatherVariable.derived.slopeSatVapPressureVSTemp/weatherVariable.derived.psychrometricConstant + GHR/GAC;
-        double dampingPar = 0.5;
+        double dampingPar = 0.01;
         for (I=0; (I<Imax) && (deltaAssimilation > myTolerance); I++)
         {
             //Assimilation
@@ -1051,7 +1058,7 @@ void Crit3DHydrall::photosynthesisKernel(double COMP,double GAC,double GHR,doubl
             WJ = J * myStromalCarbonDioxide / (4.5 * myStromalCarbonDioxide + 10.5 * COMP);  //electr transp-limited carboxyl (mol m-2 s-1)
             VC = MINVALUE(WC,WJ);  //carboxylation rate (mol m-2 s-1)
 
-            *ASS = MAXVALUE(0.0, VC * (1.0 - COMP / myStromalCarbonDioxide));  //gross assimilation (mol m-2 s-1)
+            *ASS = MAXVALUE(1e-8, VC * (1.0 - COMP / myStromalCarbonDioxide));  //gross assimilation (mol m-2 s-1)
             CS = environmentalVariable.CO2 - weatherVariable.atmosphericPressure * (*ASS - RD) / GAC;	//CO2 concentration at leaf surface (Pa)
             CSmolFraction = CS/weatherVariable.atmosphericPressure*1e6;
             COMPmolFraction= COMP/weatherVariable.atmosphericPressure*1e6;
@@ -1076,7 +1083,7 @@ void Crit3DHydrall::photosynthesisKernel(double COMP,double GAC,double GHR,doubl
 
             if (I>0)
             {
-                double ratioAssimilation = *ASS/ASSOLD; // RD(new):RD(old)=ASS(new):ASS(old)
+                double ratioAssimilation = BOUNDFUNCTION(0.1,10,*ASS/ASSOLD); // RD(new):RD(old)=ASS(new):ASS(old)
                 RD *= ratioAssimilation;
             }
             ASSOLD = *ASS;
@@ -1107,15 +1114,16 @@ void Crit3DHydrall::cumulatedResults()
     deltaTime.grossAssimilation = HOUR_SECONDS * treeAssimilationRate ; // canopy gross assimilation (mol m-2)
     deltaTime.respiration = HOUR_SECONDS * Crit3DHydrall::plantRespiration() ;
     deltaTime.netAssimilation = deltaTime.grossAssimilation - deltaTime.respiration ;
-
-    //DEBUG
-    //std::cout << deltaTime.grossAssimilation * 10e6 << ", " << deltaTime.respiration * 10e6 << ", " << deltaTime.netAssimilation *10e6 << std::endl;
-    std::ofstream myFile;
-    double stressMean = statistics::weighedMean(soil.getRootDensity(),soil.stressCoefficient);
-    myFile.open("outputLAIetc.csv", std::ios_base::app);
-    myFile << deltaTime.grossAssimilation/HOUR_SECONDS*1e6 <<","<<deltaTime.respiration/HOUR_SECONDS*1e6<<","<<deltaTime.netAssimilation/HOUR_SECONDS*1e6<<","<< plant.getLAICanopy()<< "," << maxIterationNumber <<"\n";
-    myFile.close();
-
+    if (printHourlyRecords)
+    {
+        //DEBUG
+        //std::cout << deltaTime.grossAssimilation * 10e6 << ", " << deltaTime.respiration * 10e6 << ", " << deltaTime.netAssimilation *10e6 << std::endl;
+        std::ofstream myFile;
+        double stressMean = statistics::weighedMean(soil.getRootDensity(),soil.stressCoefficient);
+        myFile.open("outputLAIetc.csv", std::ios_base::app);
+        myFile << deltaTime.grossAssimilation/HOUR_SECONDS*1e6 <<","<<deltaTime.respiration/HOUR_SECONDS*1e6<<","<<deltaTime.netAssimilation/HOUR_SECONDS*1e6<<","<< plant.getLAICanopy()<< "," << maxIterationNumber <<"\n";
+        myFile.close();
+    }
     deltaTime.netAssimilation = deltaTime.netAssimilation*12/1000.0; // [KgC m-2] TODO da motiplicare dopo per CARBONFACTOR DA METTERE dopo convert to kg DM m-2
     deltaTime.understoreyNetAssimilation = HOUR_SECONDS * MH2O * understoreyAssimilationRate - MH2O*understoreyRespiration();
     statePlant.treeNetPrimaryProduction += deltaTime.netAssimilation; // state plant considers the biomass stored during the current year
@@ -1255,9 +1263,9 @@ double Crit3DHydrall::plantRespiration()
     nitrogenContent.stem = 0.0021;  //[kg kgDM-1]
 
     // Compute stand respiration rate at 10 oC (mol m-2 s-1)
-    leafRespiration = RESPIRATION_PARAMETER * (treeBiomass.leaf * nitrogenContent.leaf/0.014);
-    sapwoodRespiration = RESPIRATION_PARAMETER * (treeBiomass.sapwood * nitrogenContent.stem/0.014);
-    rootRespiration = RESPIRATION_PARAMETER * (treeBiomass.fineRoot * nitrogenContent.root/0.014);
+    leafRespiration = RESPIRATION_PARAMETER * (statePlant.treeBiomassFoliage * nitrogenContent.leaf/0.014);
+    sapwoodRespiration = RESPIRATION_PARAMETER * (statePlant.treeBiomassSapwood * nitrogenContent.stem/0.014);
+    rootRespiration = RESPIRATION_PARAMETER * (statePlant.treeBiomassRoot * nitrogenContent.root/0.014);
 
     //calcolo temperatureMoistureFactor che deve passare per media del moisture ?
     double temperatureFactor = Crit3DHydrall::temperatureFunction(weatherVariable.myInstantTemp + ZEROCELSIUS);
@@ -1397,7 +1405,7 @@ bool Crit3DHydrall::simplifiedGrowthStand()
     //outputC calculation for RothC model. necessario [t C/ha] ora in kgDM m-2
     //MANCA OUTPUT DA TAGLIO
     outputC = statePlant.treeBiomassFoliage/plant.foliageLongevity + statePlant.treeBiomassSapwood/plant.sapwoodLongevity +
-              statePlant.treeBiomassRoot/plant.fineRootLongevity /CARBONFACTOR * 1e5;
+              statePlant.treeBiomassRoot/plant.fineRootLongevity /CARBONFACTOR * 10;
 
     // canopy update
     statePlant.treeBiomassFoliage -= (statePlant.treeBiomassFoliage/plant.foliageLongevity);
@@ -1423,24 +1431,26 @@ bool Crit3DHydrall::simplifiedGrowthStand()
     double rootShootRatio;
     double alpha = 0.7;
 
-    rootShootRatio = MAXVALUE(MINVALUE(plant.rootShootRatioRef*(alpha*0.5 + 1), plant.rootShootRatioRef*(alpha*(1-weatherVariable.monthlyPrec/weatherVariable.monthlyETreal)+1)), plant.rootShootRatioRef);
+    rootShootRatio = MAXVALUE(MINVALUE(plant.rootShootRatioRef*(alpha*0.5 + 1), plant.rootShootRatioRef*(alpha*(1-weatherVariable.getYearlyPrec()/weatherVariable.getYearlyET0())+1)), plant.rootShootRatioRef);
 
     allocationCoefficient.toFineRoots = rootShootRatio / (1 + rootShootRatio);
     allocationCoefficient.toFoliage = ( 1 - allocationCoefficient.toFineRoots ) * 0.05;
     allocationCoefficient.toSapwood = 1 - allocationCoefficient.toFineRoots - allocationCoefficient.toFoliage;
 
-
-    std::ofstream myFile;
-    myFile.open("outputAlloc.csv", std::ios_base::app);
-    myFile << allocationCoefficient.toFoliage <<","<< allocationCoefficient.toFineRoots <<","<<allocationCoefficient.toSapwood <<","<<
-        weatherVariable.monthlyPrec <<","<< weatherVariable.monthlyETreal <<","<< rootShootRatio <<"\n";
-    myFile.close();
+    if (printHourlyRecords)
+    {
+        std::ofstream myFile;
+        myFile.open("outputAlloc.csv", std::ios_base::app);
+        myFile << allocationCoefficient.toFoliage <<","<< allocationCoefficient.toFineRoots <<","<<allocationCoefficient.toSapwood <<","
+               << rootShootRatio <<"," << weatherVariable.getYearlyET0() << "," << weatherVariable.getYearlyPrec() <<"\n";
+        myFile.close();
+    }
 
     if (annualGrossStandGrowth * allocationCoefficient.toFoliage > statePlant.treeBiomassFoliage/(plant.foliageLongevity - 1))
     {
-        treeBiomass.leaf = MAXVALUE(treeBiomass.leaf + annualGrossStandGrowth * allocationCoefficient.toFoliage, EPSILON);
-        treeBiomass.fineRoot = MAXVALUE(treeBiomass.fineRoot + annualGrossStandGrowth * allocationCoefficient.toFineRoots, EPSILON);
-        treeBiomass.sapwood = MAXVALUE(treeBiomass.sapwood + annualGrossStandGrowth * allocationCoefficient.toSapwood, EPSILON);
+        statePlant.treeBiomassFoliage = MAXVALUE(statePlant.treeBiomassFoliage + annualGrossStandGrowth * allocationCoefficient.toFoliage, EPSILON);
+        statePlant.treeBiomassRoot = MAXVALUE(statePlant.treeBiomassRoot + annualGrossStandGrowth * allocationCoefficient.toFineRoots, EPSILON);
+        statePlant.treeBiomassSapwood = MAXVALUE(statePlant.treeBiomassSapwood + annualGrossStandGrowth * allocationCoefficient.toSapwood, EPSILON);
     }
     // TODO manca il computo del volume sia generale che incrementale vedi funzione grstand.for
 
@@ -1506,9 +1516,9 @@ bool Crit3DHydrall::growthStand()
 
     if (annualGrossStandGrowth * allocationCoefficient.toFoliage > statePlant.treeBiomassFoliage/(plant.foliageLongevity - 1))
     {
-        treeBiomass.leaf = MAXVALUE(treeBiomass.leaf + annualGrossStandGrowth * allocationCoefficient.toFoliage, EPSILON);
-        treeBiomass.fineRoot = MAXVALUE(treeBiomass.fineRoot + annualGrossStandGrowth * allocationCoefficient.toFineRoots, EPSILON);
-        treeBiomass.sapwood = MAXVALUE(treeBiomass.sapwood + annualGrossStandGrowth * allocationCoefficient.toSapwood, EPSILON);
+        statePlant.treeBiomassFoliage = MAXVALUE(statePlant.treeBiomassFoliage + annualGrossStandGrowth * allocationCoefficient.toFoliage, EPSILON);
+        statePlant.treeBiomassRoot = MAXVALUE(statePlant.treeBiomassRoot + annualGrossStandGrowth * allocationCoefficient.toFineRoots, EPSILON);
+        statePlant.treeBiomassSapwood = MAXVALUE(statePlant.treeBiomassSapwood + annualGrossStandGrowth * allocationCoefficient.toSapwood, EPSILON);
     }
     // TODO manca il computo del volume sia generale che incrementale vedi funzione grstand.for
 

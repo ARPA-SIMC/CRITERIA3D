@@ -253,7 +253,9 @@ void MainWindow::drawMeteoPoints()
 
 void MainWindow::on_mnuFileOpenProject_triggered()
 {
-    QString myFileName = QFileDialog::getOpenFileName(this,tr("Open Project"), "", tr("Project files (*.ini)"));
+    QString projectPath = myProject.getDefaultPath() + PATH_PROJECT;
+
+    QString myFileName = QFileDialog::getOpenFileName(this,tr("Open Project"), projectPath, tr("Project files (*.ini)"));
     if (myFileName == "") return;
 
     myProject.loadVine3DProject(myFileName);
