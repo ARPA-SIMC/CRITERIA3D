@@ -149,9 +149,11 @@ void Crit3DRothCplusplus::initialize()
     depth = NODATA;    //[cm]
     SWC = NODATA; //[mm per depth]
     // .. TODO
-
-    std::ofstream myFile;
-    myFile.open("/autofs/nfshomes/ctoscano/Github/CRITERIA3D/DATA/PROJECT/VERA_test/RothC.csv");
+    if (false)
+    {
+        std::ofstream myFile;
+        myFile.open("RothC.csv");
+    }
 }
 
 bool Crit3DRothCplusplus::computeRothCPoint()
@@ -206,12 +208,14 @@ bool Crit3DRothCplusplus::computeRothCPoint()
 
     monthList.push_back({decomposablePlantMatter, resistantPlantMatter, microbialBiomass, humifiedOrganicMatter,
                          inorganicMatter, soilOrganicCarbon});
-    std::ofstream myFile;
-    myFile.open("/autofs/nfshomes/ctoscano/Github/CRITERIA3D/DATA/PROJECT/VERA_test/RothC.csv", std::ios_base::app);
-    myFile << decomposablePlantMatter<< ","<< resistantPlantMatter<<","<< microbialBiomass<<","<< humifiedOrganicMatter<<","<<
-        inorganicMatter<<","<< soilOrganicCarbon << "\n";
-    myFile.close();
-
+    if (false)
+    {
+        std::ofstream myFile;
+        myFile.open("RothC.csv", std::ios_base::app);
+        myFile << decomposablePlantMatter<< ","<< resistantPlantMatter<<","<< microbialBiomass<<","<< humifiedOrganicMatter<<","<<
+            inorganicMatter<<","<< soilOrganicCarbon << "\n";
+        myFile.close();
+    }
     return true;
 }
 

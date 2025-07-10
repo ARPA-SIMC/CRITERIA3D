@@ -171,6 +171,7 @@
         Crit3DHydrallPlant();
 
         // TODO Cate unità di misura
+
         double myChlorophyllContent;
         double height; // in cm
         double hydraulicResistancePerFoliageArea; //(MPa s m2 m-3)
@@ -386,7 +387,7 @@
         Crit3DHydrallBiomass treeBiomass, understoreyBiomass;
         Crit3DHydrallStatePlant statePlant;
         Crit3DHydrallAllocationCoefficient allocationCoefficient;
-
+        bool printHourlyRecords = false;
         double maxIterationNumber;
         double understoreyLeafAreaIndexMax;
         double cover = 1; // TODO

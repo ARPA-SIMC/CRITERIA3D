@@ -488,11 +488,13 @@ bool Crit3DProject::updateRothC(const QDate &myDate)
                     }
 
                     rothCModel.setSWC(SWC);
-
-                    std::ofstream myFile;
-                    myFile.open("outputRothC.csv", std::ios_base::app);
-                    myFile << rothCModel.meteoVariable.getWaterLoss() << "," << rothCModel.meteoVariable.getPrecipitation() <<"\n";
-                    myFile.close();
+                    if (false)
+                    {
+                        std::ofstream myFile;
+                        myFile.open("outputRothC.csv", std::ios_base::app);
+                        myFile << rothCModel.meteoVariable.getWaterLoss() << "," << rothCModel.meteoVariable.getPrecipitation() <<"\n";
+                        myFile.close();
+                    }
 
                     //chiamata a rothC
                     computeRothCModel();

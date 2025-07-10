@@ -1114,15 +1114,16 @@ void Crit3DHydrall::cumulatedResults()
     deltaTime.grossAssimilation = HOUR_SECONDS * treeAssimilationRate ; // canopy gross assimilation (mol m-2)
     deltaTime.respiration = HOUR_SECONDS * Crit3DHydrall::plantRespiration() ;
     deltaTime.netAssimilation = deltaTime.grossAssimilation - deltaTime.respiration ;
-
-    //DEBUG
-    //std::cout << deltaTime.grossAssimilation * 10e6 << ", " << deltaTime.respiration * 10e6 << ", " << deltaTime.netAssimilation *10e6 << std::endl;
-    std::ofstream myFile;
-    double stressMean = statistics::weighedMean(soil.getRootDensity(),soil.stressCoefficient);
-    myFile.open("outputLAIetc.csv", std::ios_base::app);
-    myFile << deltaTime.grossAssimilation/HOUR_SECONDS*1e6 <<","<<deltaTime.respiration/HOUR_SECONDS*1e6<<","<<deltaTime.netAssimilation/HOUR_SECONDS*1e6<<","<< plant.getLAICanopy()<< "," << maxIterationNumber <<"\n";
-    myFile.close();
-
+    if (printHourlyRecords)
+    {
+        //DEBUG
+        //std::cout << deltaTime.grossAssimilation * 10e6 << ", " << deltaTime.respiration * 10e6 << ", " << deltaTime.netAssimilation *10e6 << std::endl;
+        std::ofstream myFile;
+        double stressMean = statistics::weighedMean(soil.getRootDensity(),soil.stressCoefficient);
+        myFile.open("outputLAIetc.csv", std::ios_base::app);
+        myFile << deltaTime.grossAssimilation/HOUR_SECONDS*1e6 <<","<<deltaTime.respiration/HOUR_SECONDS*1e6<<","<<deltaTime.netAssimilation/HOUR_SECONDS*1e6<<","<< plant.getLAICanopy()<< "," << maxIterationNumber <<"\n";
+        myFile.close();
+    }
     deltaTime.netAssimilation = deltaTime.netAssimilation*12/1000.0; // [KgC m-2] TODO da motiplicare dopo per CARBONFACTOR DA METTERE dopo convert to kg DM m-2
     deltaTime.understoreyNetAssimilation = HOUR_SECONDS * MH2O * understoreyAssimilationRate - MH2O*understoreyRespiration();
     statePlant.treeNetPrimaryProduction += deltaTime.netAssimilation; // state plant considers the biomass stored during the current year
@@ -1436,12 +1437,14 @@ bool Crit3DHydrall::simplifiedGrowthStand()
     allocationCoefficient.toFoliage = ( 1 - allocationCoefficient.toFineRoots ) * 0.05;
     allocationCoefficient.toSapwood = 1 - allocationCoefficient.toFineRoots - allocationCoefficient.toFoliage;
 
-
-    std::ofstream myFile;
-    myFile.open("outputAlloc.csv", std::ios_base::app);
-    myFile << allocationCoefficient.toFoliage <<","<< allocationCoefficient.toFineRoots <<","<<allocationCoefficient.toSapwood <<","
-           << rootShootRatio <<"," << weatherVariable.getYearlyET0() << "," << weatherVariable.getYearlyPrec() <<"\n";
-    myFile.close();
+    if (printHourlyRecords)
+    {
+        std::ofstream myFile;
+        myFile.open("outputAlloc.csv", std::ios_base::app);
+        myFile << allocationCoefficient.toFoliage <<","<< allocationCoefficient.toFineRoots <<","<<allocationCoefficient.toSapwood <<","
+               << rootShootRatio <<"," << weatherVariable.getYearlyET0() << "," << weatherVariable.getYearlyPrec() <<"\n";
+        myFile.close();
+    }
 
     if (annualGrossStandGrowth * allocationCoefficient.toFoliage > statePlant.treeBiomassFoliage/(plant.foliageLongevity - 1))
     {
