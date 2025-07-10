@@ -871,7 +871,7 @@ bool Crit3DProject::runModels(QDateTime firstTime, QDateTime lastTime, bool isRe
 
             if (processes.computeRothC)
             {
-                //rothC maps update must be done hourly, otherwise ETReal data is not stored
+                //rothC maps update must be done hourly
                 updateRothCMonthlyMaps();
             }
 
@@ -1009,9 +1009,10 @@ bool Crit3DProject::loadCriteria3DProject(const QString &fileName)
     if (soilDbFileName != "")
         loadSoilDatabase(soilDbFileName);
 
-    // land use map and crop data
+    // land use map, crop data and tree cover map
     if (landUseMapFileName != "") loadLandUseMap(landUseMapFileName);
     if (cropDbFileName != "") loadCropDatabase(cropDbFileName);
+    if (treeCoverMapFileName != "") loadTreeCoverMap(treeCoverMapFileName);
 
     if (projectName != "")
     {
@@ -1539,7 +1540,7 @@ void Crit3DProject::setHydrallVariables(int row, int col)
     //TODO: plant height map
     hydrallMaps.plantHeight.value[row][col] = 10;
     double chlorophyllContent = 500; //da tabella
-    hydrallMaps.treeSpeciesMap.value[row][col] = 0; //TODO treeSpeciesMap. valutare tabelle tra crop e tabella hydrall
+    treeCoverMap.value[row][col] = 0; //TODO treeSpeciesMap. valutare tabelle tra crop e tabella hydrall
 
     hydrallModel.setPlantVariables(chlorophyllContent, hydrallMaps.plantHeight.value[row][col],
                                    hydrallMaps.minLeafWaterPotential->value[row][col], hydrallMaps.criticalSoilWaterPotential->value[row][col]);

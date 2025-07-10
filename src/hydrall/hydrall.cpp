@@ -1432,7 +1432,8 @@ bool Crit3DHydrall::simplifiedGrowthStand()
 
     std::ofstream myFile;
     myFile.open("outputAlloc.csv", std::ios_base::app);
-    myFile << allocationCoefficient.toFoliage <<","<< allocationCoefficient.toFineRoots <<","<<allocationCoefficient.toSapwood <<","<< rootShootRatio <<"\n";
+    myFile << allocationCoefficient.toFoliage <<","<< allocationCoefficient.toFineRoots <<","<<allocationCoefficient.toSapwood <<","<<
+        weatherVariable.monthlyPrec <<","<< weatherVariable.monthlyETreal <<","<< rootShootRatio <<"\n";
     myFile.close();
 
     if (annualGrossStandGrowth * allocationCoefficient.toFoliage > statePlant.treeBiomassFoliage/(plant.foliageLongevity - 1))

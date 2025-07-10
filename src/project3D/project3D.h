@@ -105,6 +105,7 @@
         QString cropDbFileName;
         QString soilMapFileName;
         QString landUseMapFileName;
+        QString treeCoverMapFileName;
 
         unsigned long nrNodes;
         unsigned int nrLayers;
@@ -115,6 +116,7 @@
         gis::Crit3DRasterGrid soilMap;
         gis::Crit3DRasterGrid landUseMap;
         gis::Crit3DRasterGrid laiMap;
+        gis::Crit3DRasterGrid treeCoverMap;
 
         // same indexes
         std::vector <Crit3DLandUnit> landUnitList;
@@ -172,6 +174,7 @@
         bool loadSoilDatabase(const QString &dbName);
         bool loadCropDatabase(const QString &dbName);
         bool loadSoilMap(const QString &fileName);
+        bool loadTreeCoverMap(const QString &fileName);
 
         double getSoilLayerTop(unsigned int i);
         double getSoilLayerBottom(unsigned int i);

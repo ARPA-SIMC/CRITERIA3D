@@ -196,6 +196,8 @@ void Project3D::initializeProject3D()
     cropDbFileName = "";
     soilMapFileName = "";
     landUseMapFileName = "";
+    treeCoverMapFileName = "";
+
 
     waterFluxesParameters.initialize();
 
@@ -237,6 +239,7 @@ void Project3D::clearProject3D()
     soilMap.clear();
     landUseMap.clear();
     laiMap.clear();
+    treeCoverMap.clear();
 
     landUnitList.clear();
     cropList.clear();
@@ -300,6 +303,8 @@ bool Project3D::loadProject3DSettings()
         // old vine3D version
         landUseMapFileName = projectSettings->value("modelCaseMap").toString();
     }
+
+    treeCoverMapFileName = projectSettings->value("treecover_map").toString();
 
     projectSettings->endGroup();
 
@@ -645,6 +650,30 @@ void Project3D::setIndexMaps()
     }
 
     nrNodes = currentIndex;
+}
+
+bool Project3D::loadTreeCoverMap(const QString &fileName)
+{
+    if (fileName == "")
+    {
+        logError("Missing tree cover map filename");
+        return false;
+    }
+
+    treeCoverMapFileName = getCompleteFileName(fileName, PATH_GEO);
+
+    std::string errorStr;
+    gis::Crit3DRasterGrid raster;
+    if (! gis::openRaster(treeCoverMapFileName.toStdString(), &raster, gisSettings.utmZone, errorStr))
+    {
+        logError("Load tree cover map failed: " + treeCoverMapFileName + "\n" + QString::fromStdString(errorStr));
+        return false;
+    }
+
+    gis::resampleGrid(raster, &treeCoverMap, DEM.header, aggrPrevailing, 0);
+
+    logInfo("Land use map = " + treeCoverMapFileName);
+    return true;
 }
 
 
