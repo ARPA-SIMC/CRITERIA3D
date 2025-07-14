@@ -1360,6 +1360,7 @@ QString Crit3DMeteoPointsDbHandler::getNewDataEntry(int pos, const QList<QString
     \brief import hourly meteo data from .csv files
     \details fixed format:
     DATE(yyyy-mm-dd), HOUR, TAVG, PREC, RHAVG, RAD, W_SCAL_INT
+    the filename must be equal to pointcode
 */
 bool Crit3DMeteoPointsDbHandler::importHourlyMeteoData(const QString &csvFileName, bool deletePreviousData, QString &log)
 {

@@ -1838,6 +1838,7 @@ void MainWindow::on_actionLoad_MeteoPoints_triggered()
     if (dbName != "") this->loadMeteoPointsDB_GUI(dbName);
 }
 
+
 void MainWindow::on_actionMeteoPointsImport_data_triggered()
 {
     if (! myProject.meteoPointsLoaded)
