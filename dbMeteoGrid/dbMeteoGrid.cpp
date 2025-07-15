@@ -1031,20 +1031,23 @@ std::string Crit3DMeteoGridDbHandler::getMonthlyPragaName(meteoVariable meteoVar
 
 bool Crit3DMeteoGridDbHandler::openDatabase(QString &errorStr)
 {
-    if (_connection.provider.toUpper() == "MYSQL")
+    if (! _db.isOpen())
     {
-        _db = QSqlDatabase::addDatabase("QMYSQL", "grid");
-    }
+        if (_connection.provider.toUpper() == "MYSQL")
+        {
+            _db = QSqlDatabase::addDatabase("QMYSQL", "grid");
+        }
 
-    _db.setHostName(_connection.server);
-    _db.setDatabaseName(_connection.name);
-    _db.setUserName(_connection.user);
-    _db.setPassword(_connection.password);
+        _db.setHostName(_connection.server);
+        _db.setDatabaseName(_connection.name);
+        _db.setUserName(_connection.user);
+        _db.setPassword(_connection.password);
 
-    if (!_db.open())
-    {
-       errorStr = "Connection with database fail!\n" + _db.lastError().text();
-       return false;
+        if (!_db.open())
+        {
+           errorStr = "Connection with database fail!\n" + _db.lastError().text();
+           return false;
+        }
     }
 
     return true;
@@ -3129,27 +3132,28 @@ bool Crit3DMeteoGridDbHandler::importDailyDataCsv(QString &errorStr, const QStri
     // read data
     QTextStream myStream (&myFile);
     QList<QString> valueStrList;
-    int nrLine = 0;
-    bool isFirst = true;
     QString firstDateStr = "";
     QString lastDateStr = "";
+    int nrRow = 0;
+    bool isFirst = true;
 
     while(! myStream.atEnd())
     {
         valueStrList = myStream.readLine().split(',');
         // skip header
-        if ( nrLine > 0)
+        if (nrRow > 0)
         {
             // check date
             QString dateStr = valueStrList.at(0);
             QDate myDate = QVariant(dateStr).toDate();
 
             // skip void lines and invalid dates
-            if (valueStrList.size() >= nrVariables && myDate.isValid())
+            if (valueStrList.size() > nrVariables && myDate.isValid())
             {
                 for(int i = 0; i < nrVariables; ++i)
                 {
-                    QString valueStr = valueStrList.at(i);
+                    // first value is date
+                    QString valueStr = valueStrList.at(i+1);
                     if (! valueStr.isEmpty())
                     {
                         if (valueStr == "-9999" || valueStr == "-999.9" || valueStr == " ")
@@ -3177,8 +3181,9 @@ bool Crit3DMeteoGridDbHandler::importDailyDataCsv(QString &errorStr, const QStri
                 }
             }
         }
-        nrLine++;
+        nrRow++;
     }
+
     // remove last comma
     insertStatement.chop(1);
     myFile.close ();
