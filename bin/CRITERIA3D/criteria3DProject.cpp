@@ -1065,15 +1065,22 @@ bool Crit3DProject::loadCriteria3DProject(const QString &fileName)
     }
 
     // soil map and data
-    logInfoGUI("Load soil map and landuse...");
     if (soilMapFileName != "")
+    {
+        logInfoGUI("Load soil map...");
         loadSoilMap(soilMapFileName);
+    }
 
     if (soilDbFileName != "")
         loadSoilDatabase(soilDbFileName);
 
     // land use map, crop data and tree cover map
-    if (landUseMapFileName != "") loadLandUseMap(landUseMapFileName);
+    if (landUseMapFileName != "")
+    {
+        logInfoGUI("Load landuse map...");
+        loadLandUseMap(landUseMapFileName);
+    }
+
     if (cropDbFileName != "") loadCropDatabase(cropDbFileName);
     if (treeCoverMapFileName != "") loadTreeCoverMap(treeCoverMapFileName);
 
@@ -1081,6 +1088,8 @@ bool Crit3DProject::loadCriteria3DProject(const QString &fileName)
     {
         logInfo("Project " + projectName + " loaded");
     }
+
+    closeLogInfo();
 
     isProjectLoaded = true;
     return isProjectLoaded;
