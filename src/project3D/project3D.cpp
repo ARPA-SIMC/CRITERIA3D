@@ -1535,7 +1535,7 @@ double Project3D::getSoilLayerBottom(unsigned int i)
     return layerDepth[i] + layerThickness[i] / 2.0;
 }
 
-// soil layer index from soil depth [m]
+// soil layer index from soildepth [m]
 int Project3D::getSoilLayerIndex(double depth)
 {
     unsigned int i= 0;
