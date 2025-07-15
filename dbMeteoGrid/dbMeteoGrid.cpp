@@ -3094,6 +3094,145 @@ bool Crit3DMeteoGridDbHandler::saveListDailyData(QString &errorStr, const QStrin
 }
 
 
+// format: date (yyyy-mm-dd), variables
+// filename: meteo point ID
+bool Crit3DMeteoGridDbHandler::importDailyDataCsv(QString &errorStr, const QString &csvFileName, QList<QString> &meteoVarList)
+{
+    // check variables list
+    std::vector<int> varCodeList;
+    for (int i = 0; i < meteoVarList.size(); i++)
+    {
+        meteoVariable meteoVar = getKeyMeteoVarMeteoMap(MapDailyMeteoVarToString, meteoVarList[i].toStdString());
+        int varCode = getDailyVarCode(meteoVar);
+        if (varCode == NODATA)
+        {
+            errorStr = "Wrong variable: " + meteoVarList[i];
+            return false;
+        }
+        varCodeList.push_back(varCode);
+    }
+    int nrVariables = (int)varCodeList.size();
+
+    // open csv file
+    QFile myFile(csvFileName);
+    if(! myFile.open (QIODevice::ReadOnly))
+    {
+        errorStr = myFile.errorString();
+        return false;
+    }
+
+    // initialize insert query
+    QString meteoPointID = QFileInfo(csvFileName).baseName();
+    QString tableD = _tableDaily.prefix + meteoPointID + _tableDaily.postFix;
+    QString insertStatement = QString(("INSERT INTO `%1` (%2, VariableCode, Value) VALUES ")).arg(tableD, _tableDaily.fieldTime);
+
+    // read data
+    QTextStream myStream (&myFile);
+    QList<QString> valueStrList;
+    int nrLine = 0;
+    bool isFirst = true;
+    QString firstDateStr = "";
+    QString lastDateStr = "";
+
+    while(! myStream.atEnd())
+    {
+        valueStrList = myStream.readLine().split(',');
+        // skip header
+        if ( nrLine > 0)
+        {
+            // check date
+            QString dateStr = valueStrList.at(0);
+            QDate myDate = QVariant(dateStr).toDate();
+
+            // skip void lines and invalid dates
+            if (valueStrList.size() >= nrVariables && myDate.isValid())
+            {
+                for(int i = 0; i < nrVariables; ++i)
+                {
+                    QString valueStr = valueStrList.at(i);
+                    if (! valueStr.isEmpty())
+                    {
+                        if (valueStr == "-9999" || valueStr == "-999.9" || valueStr == " ")
+                            valueStr = "";
+                    }
+                    if (! valueStr.isEmpty())
+                    {
+                        // check value
+                        bool isOk;
+                        valueStr.toFloat(&isOk);
+                        if (isOk)
+                        {
+                            if (isFirst)
+                            {
+                                firstDateStr = dateStr;
+                                isFirst = false;
+                            }
+                            else
+                            {
+                                lastDateStr = dateStr;
+                            }
+                            insertStatement += QString(" ('%1','%2',%3),").arg(dateStr).arg(varCodeList[i]).arg(valueStr);
+                        }
+                    }
+                }
+            }
+        }
+        nrLine++;
+    }
+    // remove last comma
+    insertStatement.chop(1);
+    myFile.close ();
+
+    // at least two valid data
+    if (firstDateStr.isEmpty() || lastDateStr.isEmpty())
+    {
+        errorStr = "Missing data";
+        return false;
+    }
+
+    // create table
+    QSqlQuery qry(_db);
+    QString createStatement = QString("CREATE TABLE IF NOT EXISTS `%1`"
+                                "(%2 date, VariableCode tinyint(3) UNSIGNED, Value float(6,1), PRIMARY KEY(%2, VariableCode))")
+                                  .arg(tableD, _tableDaily.fieldTime);
+
+    if(! qry.exec(createStatement))
+    {
+        errorStr = qry.lastError().text();
+        return false;
+    }
+
+    // delete old data
+    QString varCodeStr;
+    for (int i = 0; i < varCodeList.size(); i++)
+    {
+        varCodeStr += QString::number(varCodeList[i]);
+        if (i < (varCodeList.size() -1))
+        {
+            varCodeStr += ",";
+        }
+    }
+
+    QString deleteStatement = QString("DELETE FROM `%1` WHERE %2 BETWEEN CAST('%3' AS DATE) AND CAST('%4' AS DATE) "
+                                      "AND VariableCode in (%5)") .arg(tableD, _tableDaily.fieldTime, firstDateStr, lastDateStr, varCodeStr);
+
+    if(! qry.exec(deleteStatement))
+    {
+        errorStr = qry.lastError().text();
+        return false;
+    }
+
+    // insert data
+    if(! qry.exec(insertStatement))
+    {
+        errorStr = qry.lastError().text();
+        return false;
+    }
+
+    return true;
+}
+
+
 bool Crit3DMeteoGridDbHandler::saveListDailyDataEnsemble(QString &errorStr, const QString &meteoPointID,
                                                          const QDate &date, meteoVariable meteoVar,
                                                          const QList<float> &values)
