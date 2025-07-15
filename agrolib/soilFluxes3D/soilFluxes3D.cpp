@@ -189,12 +189,12 @@ namespace soilFluxes3D
 
 
     /*!
-       \brief setThreads
+       \brief setThreadsNumber
         sets number of threads for parallel computing
         if nrThreads < 1, hardware_concurrency get the number of logical processors
         returns the current number of threads
     */
-    int DLL_EXPORT __STDCALL setThreads(int nrThreads)
+    int DLL_EXPORT __STDCALL setThreadsNumber(int nrThreads)
     {
         int nrProcessors = std::thread::hardware_concurrency();
         if (nrThreads < 1 || nrThreads > nrProcessors)

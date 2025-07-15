@@ -4,7 +4,7 @@
     struct Tsoil;
 
     #ifndef MACRO_H
-        #include "macro.h"
+        #include "soilFluxes3D_new/macro.h"
     #endif
 
     double computeWaterConductivity(double Se, Tsoil *mySoil);

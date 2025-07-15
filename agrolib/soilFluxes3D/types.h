@@ -154,7 +154,7 @@
     extern Tbalance balanceCurrentTimeStep, balancePreviousTimeStep, balanceCurrentPeriod, balanceWholePeriod;
 
     //logData types
-    enum typeSolver {Jacobi_thread, GaussSeidel_thread, Jacobi_openMP, GaussSeidel_openMP};
+    enum typeSolver {Jacobi_thread, GaussSeidel_thread, Jacobi_openMP, GaussSeidel_openMP, Jacobi_cusparse};
 
     struct linSystData
     {

@@ -925,7 +925,7 @@ bool Crit3DProject::runModels(const QDateTime &firstTime, const QDateTime &lastT
                 rothCModel.setIsUpdate(rothCModel.getIsUpdate() && hour == 0);
             }*/
 
-            if (! runModelHour(currentOutputPath, isRestart))
+            if (!runModelHour(currentOutputPath, isRestart))
             {
                 isModelRunning = false;
                 logError();
@@ -942,13 +942,15 @@ bool Crit3DProject::runModels(const QDateTime &firstTime, const QDateTime &lastT
             // QString vectorLog = soilFluxes3D::getVectorLog();
             // logData("VectorFinal", vectorLog);
 
-            // QString linSystLog = soilFluxes3D::getLinSystLog();
-            // logData("LinSystInfo", linSystLog);
-            // logInfo("LinSystInfo\n" + linSystLog);
-            QDateTime startTimeGPU = QDateTime::currentDateTime();
-            logInfo(soilFluxes3D::getCUDArun(3));
-            QDateTime endTimeGPU = QDateTime::currentDateTime();
-            logInfo("Tempo di calcolo GPU (wip) [ms]: " + QString::number(startTimeGPU.msecsTo(endTimeGPU)));
+            QString linSystLog = soilFluxes3D::getLinSystLog();
+            //logData("LinSystInfo", linSystLog);
+            logInfo("LinSystInfo 0 \n" + linSystLog);
+
+            //Log GPU test
+            // QDateTime startTimeGPU = QDateTime::currentDateTime();
+            // logInfo(soilFluxes3D::getCUDArun(10));
+            // QDateTime endTimeGPU = QDateTime::currentDateTime();
+            // logInfo("Tempo di calcolo GPU (wip) [ms]: " + QString::number(startTimeGPU.msecsTo(endTimeGPU)));
 
 			//rothC maps update must be done hourly, otherwise ETReal data is not stored
             if (processes.computeRothC || processes.computeHydrall)
@@ -2999,7 +3001,7 @@ int Crit3DProject::criteria3DBatch(const QString &scriptFileName)
         // Send "enter" to release application from the console
         // This is a hack, but if not used the console doesn't know the application has
         // returned. The "enter" key only sent if the console window is in focus.
-        if ( isConsoleForeground() )
+        if (isConsoleForeground())
             sendEnterKey();
     #endif
 
@@ -3017,13 +3019,13 @@ int Crit3DProject::executeScript(const QString &scriptFileName)
     logInfo("Execute script: " + scriptFileName + "\n");
 
     QFile scriptFile(scriptFileName);
-    if(! scriptFile.open (QIODevice::ReadOnly))
+    if(!scriptFile.open(QIODevice::ReadOnly))
     {
         errorString = "Error in opening: " + scriptFileName + " " + scriptFile.errorString();
         return CRIT3D_ERROR;
     }
 
-    while (! scriptFile.atEnd())
+    while (!scriptFile.atEnd())
     {
         QString cmdLine = scriptFile.readLine();
         QList<QString> argumentList = getArgumentList(cmdLine);

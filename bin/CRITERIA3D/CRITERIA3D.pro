@@ -15,15 +15,15 @@ CUDA_DIR = $$(CUDA_PATH) #"D:\App e giochi\NVIDIA GPU Computing Toolkit\CUDA\v12
 INCLUDEPATH  += $$CUDA_DIR/include
 QMAKE_LIBDIR += $$CUDA_DIR/lib/x64
 
-LIBS += -lcudart -lcuda -lcudadevrt
+LIBS += -lcudart -lcuda  -lcusparse
 
 TEMPLATE = app
 TARGET = CRITERIA3D
 
-VERSION = 1.0.6
+VERSION = 1.1.0
 
 CONFIG += debug_and_release
-CONFIG += c++11 c++14 c++17 c++20 c++23
+CONFIG += c++11 c++14 c++17 c++20
 
 INCLUDEPATH +=  ./shared  \
                 ../../agrolib/soilFluxes3D  \
@@ -129,6 +129,9 @@ FORMS += mainwindow.ui
 
 DISTFILES += \
     Criteria3D.ico
+
+OTHER_FILES += \
+    ../../batchFiles/batchTest.txt
 
 RESOURCES += Criteria3D.ico
 
