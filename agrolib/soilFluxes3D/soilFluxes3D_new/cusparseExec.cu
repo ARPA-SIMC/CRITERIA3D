@@ -147,6 +147,12 @@ void run_k(cusparseHandle_t libHandle, MatrixGPU &iterationMatrix, VectorGPU &co
     cudaDeviceSynchronize();
     cudaMalloc(&externalBuffer, bufSize);
 
+    //x2 = b
+    //x1 = x(0)
+    //x2 = alpha * A * x1 + beta * x2
+    //x1 = b
+    //x1 = alpha * A * x2 + beta * x1
+
     size_t numIterTemp = 200; //Real: setted in _parameters
     for (size_t i = 0; i < numIterTemp; ++i)
     {

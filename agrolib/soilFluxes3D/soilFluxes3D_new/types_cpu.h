@@ -88,6 +88,7 @@ namespace soilFluxes3D::New
     };
 
     //Simulation
+    enum balanceResult_t {stepAccepted, stepRefused, stepHalved};
     struct balanceData_t
     {
         double waterStorage;
@@ -152,7 +153,7 @@ namespace soilFluxes3D::New
         boundaryData_t boundaryData;
 
         //Link data
-        uint8_t *numLateralLink = nullptr;
+        uint8_t *numLateralLink = nullptr;      //TO CONSIDER: needed?
         linkData_t linkData[maxTotalLink];
 
         //Soil quantities

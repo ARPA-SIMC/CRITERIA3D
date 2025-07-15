@@ -102,10 +102,15 @@ double computeWaterSinkSourceFlowsSum(double deltaT)
     return sum;
 }
 
-
-bool evaluateWaterBalance(uint8_t approxNr, double& bestMBRerror, SolverParameters& parameters)
+/*!
+ * \brief evalutate the current water balance
+ * \param approxNr number of iteration performed
+ * \param bestMBRerror best mass balance ratio error achieved in the previous iterations
+ * \param parameters solver parameters
+ * \return evaluations of water balance
+ */
+balanceResult_t evaluateWaterBalance(uint8_t approxNr, double& bestMBRerror, SolverParameters& parameters)
 {
-    //setForcedHalvedTime(false)            //TO DO: needed?
     computeCurrentMassBalance(parameters.deltaTcurr);
 
     double currMBRerror = fabs(balanceCurrentTimeStep.waterMBR);
@@ -115,17 +120,17 @@ bool evaluateWaterBalance(uint8_t approxNr, double& bestMBRerror, SolverParamete
     {
         //acceptStep()                      //TO DO
 
-        double currCWL = nodesData.waterData.CourantWaterLevel;
         //Check Stability (Courant)
+        double currCWL = nodesData.waterData.CourantWaterLevel;
         if(currCWL < parameters.CourantWaterThreshold)
         {
             //increase deltaT
-            parameters.deltaTcurr = (currCWL > 0.5) ? parameters.deltaTcurr * 2 : parameters.deltaTcurr / currCWL;
+            parameters.deltaTcurr = (currCWL > 0.5) ? (2 * parameters.deltaTcurr) : (parameters.deltaTcurr / currCWL);
             parameters.deltaTcurr = std::min(parameters.deltaTcurr, parameters.deltaTmax);
             if(parameters.deltaTcurr > 1.0)
                 parameters.deltaTcurr = floor(parameters.deltaTcurr);
         }
-        return true;
+        return stepAccepted;
     }
 
     //Good error or first approximation
@@ -138,19 +143,62 @@ bool evaluateWaterBalance(uint8_t approxNr, double& bestMBRerror, SolverParamete
     //Critical error (unstable system) or last approximation
     if (approxNr == (parameters.maxApproximationsNumber - 1) || currMBRerror > (bestMBRerror*parameters.instabilityFactor))
     {
-        if(parameters.deltaTcurr <= parameters.deltaTmin)
+        if(parameters.deltaTcurr > parameters.deltaTmin)
         {
-            //restoreBestStep(deltaT);      //TO DO
-            //acceptStep(deltaT);           //TO DO
-            return true;
+            parameters.deltaTcurr = std::max(parameters.deltaTcurr / 2, parameters.deltaTmin);
+            return stepHalved;
         }
 
-        parameters.deltaTcurr = std::max(parameters.deltaTcurr / 2, parameters.deltaTmax);
-        //setForcedHalvedTime(true)        //TO DO: needed?
+        //restoreBestStep(deltaT);      //TO DO
+        //acceptStep(deltaT);           //TO DO
+        return stepAccepted;
     }
 
-    return false;
+    return stepRefused;
 }
+
+
+void acceptStep(double deltaT)
+{
+    /*! set current time step balance data as the previous one */
+    balanceDataPreviousTimeStep.waterStorage = balanceDataCurrentTimeStep.waterStorage;
+    balanceDataPreviousTimeStep.waterSinkSource = balanceDataCurrentTimeStep.waterSinkSource;
+
+    /*! update balance data of current period */
+    balanceDataCurrentPeriod.waterSinkSource += balanceDataCurrentTimeStep.waterSinkSource;
+
+    /*! update sum of flow */
+    #pragma omp parallel for if(enableOMP)
+    for (uint64_t nodeIndex = 0; nodeIndex < nodesData.numNodes; ++nodeIndex)
+    {
+        //Update link flows
+        for(uint8_t linkIndex = 0; linkIndex < maxTotalLink; ++linkIndex)
+            updateLinkFlux(nodeIndex, linkIndex, deltaT);
+
+        //Update boundary flow
+        if (nodesData.boundaryData.boundaryType[nodeIndex] != None)
+            nodesData.boundaryData.waterFlowSum[nodeIndex] += nodesData.boundaryData.waterFlowRate[nodeIndex] * deltaT;
+    }
+}
+
+void updateLinkFlux(uint64_t nodeIndex, uint8_t linkIndex, double deltaT)
+{
+    if(nodesData.linkData[linkIndex].linktype[nodeIndex] == NoLink)
+        return;
+
+    uint64_t linkedNodeIndex = nodesData.linkData[linkIndex].linkIndex[nodeIndex];
+    double matrixValue = getMatrixValue(nodeIndex, linkedNodeIndex);
+    nodesData.linkData[linkIndex].waterFlow[nodeIndex] += matrixValue * (nodesData.waterData.pressureHead[nodeIndex] - nodesData.waterData.pressureHead[linkedNodeIndex]) * deltaT;
+}
+
+double getMatrixValue(uint64_t rowIndex, uint64_t columnIndex)
+{
+    return 0;     //TO DO
+}
+
+
+
+
 
 
 
