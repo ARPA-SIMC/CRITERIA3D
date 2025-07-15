@@ -170,68 +170,74 @@ QList<QString> Crit3DMeteoPointsDbHandler::getAllDatasetsList()
 
 QDateTime Crit3DMeteoPointsDbHandler::getFirstDate(frequencyType frequency)
 {
-    QSqlQuery qry(_db);
-    QList<QString> tables;
-    QDateTime firstDate;
-    QDate myDate;
-    QTime myTime;
-
     QString dayHour;
     if (frequency == daily)
         dayHour = "D";
     else if (frequency == hourly)
         dayHour = "H";
 
+    QSqlQuery qry(_db);
+    QList<QString> tableList;
+
     qry.prepare( "SELECT name FROM sqlite_master WHERE type='table' AND name like :dayHour ESCAPE '^'");
     qry.bindValue(":dayHour",  "%^" + dayHour  + "%");
+    QDateTime firstDateTime;
 
     if(! qry.exec() )
     {
         _errorStr = qry.lastError().text();
-        return firstDate;
+        return firstDateTime;
     }
     else
     {
         while (qry.next())
         {
             QString table = qry.value(0).toString();
-            tables << table;
+            tableList << table;
         }
     }
 
-    QDateTime date;
-    QString dateStr, statement;
-    foreach (QString table, tables)
+    QDateTime dateTime;
+    QDate myDate;
+    QTime myTime;
+    int maxTableNr = 300;
+    int step = std::max(1, int(tableList.size() / maxTableNr));
+    int count = 0;
+
+    foreach (QString table, tableList)
     {
-        statement = QString( "SELECT MIN(date_time) FROM `%1` AS dateTime").arg(table);
+        count++;
+        if ((count % step) != 0) continue;
+
+        QString statement = QString( "SELECT MIN(date_time) FROM `%1` AS dateTime").arg(table);
         if(qry.exec(statement) )
         {
             if (qry.next())
             {
-                dateStr = qry.value(0).toString();
-                if (!dateStr.isEmpty())
+                QString dateStr = qry.value(0).toString();
+                if (! dateStr.isEmpty())
                 {
                     if (frequency == daily)
                     {
-                        date = QDateTime::fromString(dateStr,"yyyy-MM-dd");
+                        dateTime = QDateTime::fromString(dateStr,"yyyy-MM-dd");
                     }
                     else if (frequency == hourly)
                     {
                         myDate = QDate::fromString(dateStr.mid(0,10), "yyyy-MM-dd");
                         myTime = QTime::fromString(dateStr.mid(11,8), "HH:mm:ss");
-                        date = QDateTime(myDate, myTime, Qt::UTC);
+                        dateTime = QDateTime(myDate, myTime, Qt::UTC);
                     }
 
-                    if (firstDate.isNull() || date < firstDate)
+                    if (firstDateTime.isNull() || dateTime < firstDateTime)
                     {
-                        firstDate = date;
+                        firstDateTime = dateTime;
                     }
                 }
             }
         }
     }
 
-    return firstDate;
+    return firstDateTime;
 }
 
 
@@ -249,11 +255,11 @@ QDateTime Crit3DMeteoPointsDbHandler::getLastDate(frequencyType frequency)
     qry.prepare( "SELECT name FROM sqlite_master WHERE type='table' AND name like :dayHour ESCAPE '^'");
     qry.bindValue(":dayHour",  "%^_" + dayHour  + "%");
 
-    QDateTime lastDate;
+    QDateTime lastDateTime;
     if(! qry.exec() )
     {
         _errorStr = qry.lastError().text();
-        return lastDate;
+        return lastDateTime;
     }
     else
     {
@@ -264,11 +270,10 @@ QDateTime Crit3DMeteoPointsDbHandler::getLastDate(frequencyType frequency)
         }
     }
 
-    QDateTime currentLastDate;
+    QDateTime dateTime;
     QDate myDate;
     QTime myTime;
-    QString dateStr, statement;
-    int maxTableNr = 500;
+    int maxTableNr = 300;
     int step = std::max(1, int(tableList.size() / maxTableNr));
     int count = 0;
     foreach (QString table, tableList)
@@ -276,37 +281,37 @@ QDateTime Crit3DMeteoPointsDbHandler::getLastDate(frequencyType frequency)
         count++;
         if ((count % step) != 0) continue;
 
-        statement = QString( "SELECT MAX(date_time) FROM `%1` AS dateTime").arg(table);
+        QString statement = QString( "SELECT MAX(date_time) FROM `%1` AS dateTime").arg(table);
         if(qry.exec(statement))
         {
             if (qry.next())
             {
-                dateStr = qry.value(0).toString();
+                QString dateStr = qry.value(0).toString();
                 if (! dateStr.isEmpty())
                 {
                     if (frequency == daily)
                     {
                         myDate = QDate::fromString(dateStr, "yyyy-MM-dd");
                         myTime = QTime(12, 0, 0, 0);
-                        currentLastDate = QDateTime(myDate, myTime, Qt::UTC);
+                        dateTime = QDateTime(myDate, myTime, Qt::UTC);
                     }
                     else if (frequency == hourly)
                     {
                         myDate = QDate::fromString(dateStr.mid(0,10), "yyyy-MM-dd");
                         myTime = QTime::fromString(dateStr.mid(11,8), "HH:mm:ss");
-                        currentLastDate = QDateTime(myDate, myTime, Qt::UTC);
+                        dateTime = QDateTime(myDate, myTime, Qt::UTC);
                     }
 
-                    if (lastDate.isNull() || currentLastDate > lastDate)
+                    if (lastDateTime.isNull() || dateTime > lastDateTime)
                     {
-                        lastDate = currentLastDate;
+                        lastDateTime = dateTime;
                     }
                 }
             }
         }
     }
 
-    return lastDate;
+    return lastDateTime;
 }
 
 
