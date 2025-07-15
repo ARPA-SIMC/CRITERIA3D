@@ -747,6 +747,7 @@ void Crit3DLocalProxyWidget::showParametersDetails()
                         elevationPos = pos;
                 }
 
+                QString heightParameters;
                 if (elevationPos == NODATA || ! myCombination.isProxyActive(elevationPos))
                 {
                     textBrowser.append(QString("\nNo height proxy present or height proxy not active."));
@@ -755,50 +756,62 @@ void Crit3DLocalProxyWidget::showParametersDetails()
                 {
                     if (! myCombination.isProxySignificant(elevationPos))
                     {
-                        textBrowser.setText(QString("\nHeight proxy is not significant."));
+                        textBrowser.append(QString("\nHeight proxy is not significant."));
                     }
                     else
                     {
                         significantProxyCounter++;
-                        textBrowser.setText(QString("\nHeight proxy:"));
+                        textBrowser.append(QString("\nHeight proxy:"));
 
-                        if (parameters.front().size() == 4)
-                            textBrowser.append("\nPar 1: " + QString::number(parameters.front()[0], 'f', 4) +
+                        if (parameters.front().size() >= 4)
+                            heightParameters = "\nPar 1: " + QString::number(parameters.front()[0], 'f', 4) +
                                                ", par 2: " + QString::number(parameters.front()[1], 'f', 4) +
                                                ", par 3: " + QString::number(parameters.front()[2], 'f', 4) +
-                                               ", par 4: " + QString::number(parameters.front()[3], 'f', 4));
+                                               ", par 4: " + QString::number(parameters.front()[3], 'f', 4);
 
-                        if (parameters.front().size() == 5)
-                            textBrowser.append(", par 5: " + QString::number(parameters.front()[4], 'f', 4));
+                        if (parameters.front().size() >= 5)
+                            heightParameters += ", par 5: " + QString::number(parameters.front()[4], 'f', 4);
 
                         if (parameters.front().size() == 6)
-                            textBrowser.append(", par 6: " + QString::number(parameters.front()[5], 'f', 4));
+                            heightParameters += ", par 6: " + QString::number(parameters.front()[5], 'f', 4);
                     }
+                    heightParameters += "\n";
+                    textBrowser.append(heightParameters);
                 }
 
-
+                std::vector<double> slopes;
+                double intercept = NODATA;
                 for (unsigned int pos=0; pos < _interpolationSettings->getSelectedCombination().getProxySize(); pos++)
                 {
                     QString temp;
+
                     if (! myCombination.isProxyActive(pos))
-                        textBrowser.append("\nProxy "+ QString::fromStdString(_interpolationSettings->getProxy(pos)->getName()) + " not active.");
+                        textBrowser.append("Proxy "+ QString::fromStdString(_interpolationSettings->getProxy(pos)->getName()) + " not active.");
                     else if (! myCombination.isProxySignificant(pos))
-                        textBrowser.append("\nProxy "+ QString::fromStdString(_interpolationSettings->getProxy(pos)->getName()) + " not significant.");
+                        textBrowser.append("Proxy "+ QString::fromStdString(_interpolationSettings->getProxy(pos)->getName()) + " not significant.");
                     else if (myCombination.isProxyActive(pos) && myCombination.isProxySignificant(pos) &&
                              getProxyPragaName(_interpolationSettings->getProxy(pos)->getName()) != proxyHeight &&
-                             parameters.size() >= pos)
+                             parameters.size() > significantProxyCounter)
                     {
-                        if (parameters[significantProxyCounter][1] >= 0)
-                            temp = " * x +";
-                        else
-                            temp = " * x ";
-
-                        textBrowser.append("\nProxy " + QString::fromStdString(_interpolationSettings->getProxy(pos)->getName()) + ":\n");
-                        textBrowser.append("y = " + QString::number(parameters[significantProxyCounter][0], 'f', 4) +
-                                           temp + QString::number(parameters[significantProxyCounter][1], 'f', 4));
+                        textBrowser.append("Proxy " + QString::fromStdString(_interpolationSettings->getProxy(pos)->getName()) + " significant.");
+                        slopes.push_back(parameters[significantProxyCounter][0]);
+                        intercept = parameters[significantProxyCounter][1];
                         significantProxyCounter++;
                     }
+
+
                 }
+                QString equation;
+                if (! slopes.empty())
+                {
+                    equation = "\ny = ";
+                    for (unsigned int i = 0; i < slopes.size(); i++)
+                    {
+                        equation += ("(" + QString::number(slopes[i]) + ") * x" + QString::number(i) + " + ");
+                    }
+                    equation += ("(" + QString::number(intercept) + ")");
+                }
+                textBrowser.append(equation);
             }
         }
     }
