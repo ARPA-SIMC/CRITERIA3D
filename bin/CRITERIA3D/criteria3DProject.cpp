@@ -701,6 +701,7 @@ float Crit3DProject::checkSoilCracking(int row, int col, float precipitation)
         return precipitation;
 
     maxDepth = std::min(soilList[soilIndex].horizon[lastFineHorizon].lowerDepth, MAX_CRACKING_DEPTH);
+    maxDepth = std::min(maxDepth, computationSoilDepth);
 
     // clay horizon is too thin
     if (maxDepth < MIN_CRACKING_DEPTH)
@@ -714,16 +715,19 @@ float Crit3DProject::checkSoilCracking(int row, int col, float precipitation)
     while (currentDepth <= maxDepth )
     {
         int layerIndex = getSoilLayerIndex(currentDepth);
-        long nodeIndex = indexMap.at(layerIndex).value[row][col];
+        if (layerIndex != INDEX_ERROR)
+        {
+            long nodeIndex = indexMap.at(layerIndex).value[row][col];
 
-        double VWC = getCriteria3DVar(volumetricWaterContent, nodeIndex);               // [m3 m-3]
-        double maxVWC = getCriteria3DVar(maximumVolumetricWaterContent, nodeIndex);     // [m3 m-3]
+            double VWC = getCriteria3DVar(volumetricWaterContent, nodeIndex);               // [m3 m-3]
+            double maxVWC = getCriteria3DVar(maximumVolumetricWaterContent, nodeIndex);     // [m3 m-3]
 
-        // TODO: coarse fragment
-        voidVolumeSum += (maxVWC - VWC);
+            // TODO: coarse fragment
+            voidVolumeSum += (maxVWC - VWC);
 
-        currentDepth += stepDepth;
-        nrData++;
+            currentDepth += stepDepth;
+            nrData++;
+        }
     }
 
     double avgVoidVolume = voidVolumeSum / nrData;              // [m3 m-3]
@@ -1061,6 +1065,7 @@ bool Crit3DProject::loadCriteria3DProject(const QString &fileName)
     }
 
     // soil map and data
+    logInfoGUI("Load soil map and landuse...");
     if (soilMapFileName != "")
         loadSoilMap(soilMapFileName);
 
