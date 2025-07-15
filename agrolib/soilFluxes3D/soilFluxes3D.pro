@@ -28,6 +28,7 @@ SOURCES += \
     dataLogging.cpp \
     # soilFluxes3D_new/soilFluxes3D.cpp \
     soilFluxes3D_new/otherFunctions.cpp \
+    soilFluxes3D_new/soilFluxes3D_new.cpp \
     soilFluxes3D_new/water_new.cpp \
     water.cpp \
     solver.cpp \
@@ -46,7 +47,7 @@ HEADERS += \
     soilFluxes3D_new/logFunctions.h \
     soilFluxes3D_new/macro.h \
     soilFluxes3D_new/otherFunctions.h \
-    # soilFluxes3D_new/soilFluxes3D.h \
+    soilFluxes3D_new/soilFluxes3D_new.h \
     soilFluxes3D_new/soil_new.h \
     soilFluxes3D_new/solver_new.h \
     soilFluxes3D_new/types_cpu.h \
