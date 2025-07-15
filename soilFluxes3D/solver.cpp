@@ -28,10 +28,12 @@
 #include <math.h>
 #include <stdlib.h>
 #include <thread>
+
 #include <omp.h>
 
 #include "types.h"
 #include "solver.h"
+#include "soilFluxes3D_new/gpuEntryPoints.h"
 
 __SF3DINLINE double square(double x)
 {
@@ -56,7 +58,7 @@ __SF3DINLINE double arithmeticMean(double v1, double v2)
     return (v1 + v2) * 0.5;
 }
 
-// assumes that the two values ​​have the same sign
+//Assume v1 and v2 ​​have the same sign
 __SF3DINLINE double logarithmicMean(double v1, double v2)
 {
     if (v1 == v2)
@@ -66,7 +68,7 @@ __SF3DINLINE double logarithmicMean(double v1, double v2)
 }
 
 
-//Assume that v1 and v2 are both negative (or both positive)
+//Assume v1 and v2 ​​have the same sign
 __SF3DINLINE double geometricMean(double v1, double v2)
 {
     double sign = v1 / fabs(v1);
@@ -191,9 +193,6 @@ double GaussSeidelWater_openMP()
     #pragma omp parallel for firstprivate(currentNorm) reduction(max: infinityNorm)
     for (long i = 0; i < myStructure.nrNodes; i++)
     {
-        if (i==0) //inizializzazione stupida, da sistemare
-            infinityNorm = 0.;
-
         double newX = b[i];
         short j = 1;
         while ((A[i][j].index != NOLINK) && (j < myStructure.maxNrColumns))
@@ -273,7 +272,6 @@ double JacobiWater_openMP()
     return infinityNorm;
 }
 
-
 //-------------  THREADS -------------
 void GaussSeidelThread(long start, long end, double *infinityNorm)
 {
@@ -344,6 +342,38 @@ double iterationThreads()
 }
 
 
+double tempCUSPARSErun()
+{
+    logLinSyst.solver = typeSolver(Jacobi_cusparse);
+
+    double infinityNorm = 0, currentNorm = 0;
+    double psi = 0;
+
+    double *newX = nullptr;
+    runCUSPARSEiteration(A, b, X, newX, myStructure.nrNodes);
+
+    #pragma omp parallel for firstprivate(currentNorm) shared(newX) reduction(max: infinityNorm)
+    for (long i = 0; i < myStructure.nrNodes; i++)
+    {
+        // surface check (H cannot go below z)
+        if (nodeList[i].isSurface && newX[i] < nodeList[i].z)
+            newX[i] = nodeList[i].z;
+
+        currentNorm = fabs(newX[i] - X[i]);
+
+        psi = fabs(newX[i] - nodeList[i].z);
+        if (psi > 1)
+            currentNorm /= psi;
+
+        if (currentNorm > infinityNorm)
+            infinityNorm = currentNorm;
+
+        X[i] = newX[i];
+    }
+
+    return infinityNorm;
+}
+
 //-------------  SOLVER -------------
 
 bool solveLinearSystem(int approximation, double residualTolerance, int computationType)
@@ -361,9 +391,11 @@ bool solveLinearSystem(int approximation, double residualTolerance, int computat
                 currentNorm = GaussSeidelHeat();
                 break;
             case PROCESS_WATER:
-                currentNorm = iterationThreads();
-                // currentNorm = GaussSeidelWater_openMP();
+                currentNorm = tempCUSPARSErun();
+
                 // currentNorm = JacobiWater_openMP();
+                // currentNorm = iterationThreads();
+                // currentNorm = GaussSeidelWater_openMP();
 
                 /*
                     //check number of threads available
@@ -388,9 +420,6 @@ bool solveLinearSystem(int approximation, double residualTolerance, int computat
         if (currentNorm <= residualTolerance)
             break;
 
-        //test condition
-        //if (iteration <= 7)
-        //    break;
 	}
     //extern linSystData logLinSyst;
     logLinSyst.numberIterations.push_back(iteration);

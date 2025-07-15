@@ -235,7 +235,7 @@ bool computeFlux(long i, int matrixIndex, TlinkedNode *link, double deltaT, unsi
     if (!myStructure.computeHeat)
         return true;
 
-    if (nodeList[i].isSurface || nodeList[i].isSurface)
+    if (nodeList[i].isSurface || nodeList[j].isSurface)
         return true;
 
     double liquidThermal;
@@ -332,6 +332,7 @@ void computeMatrixElements_thread(unsigned long start, unsigned long end, unsign
 bool waterFlowComputation_stdTreads(double deltaT)
 {
     // initialize the indices on the diagonal
+    #pragma omp parallel for
     for (int i = 0; i < myStructure.nrNodes; i++)
         A[i][0].index = i;
 

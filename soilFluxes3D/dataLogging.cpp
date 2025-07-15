@@ -2,7 +2,7 @@
 #include "soilFluxes3D.h"
 #include "types.h"
 
-#include "../SoilFluxes3D_CUDA/entryPointTest.h"
+void runCUSPARSEtest(double* &vecSol);
 
 namespace soilFluxes3D
 {
@@ -95,6 +95,9 @@ namespace soilFluxes3D
             case GaussSeidel_openMP:
                 stringData.append("GaussSeidel_openMP");
                 break;
+            case Jacobi_cusparse:
+                stringData.append("Jacobi_cusparse");
+                break;
             default:
                 stringData.append("Unknown method");
         }
@@ -112,9 +115,16 @@ namespace soilFluxes3D
 
     __EXTERN QString getCUDArun(int x)
     {
+        double* vecSol = nullptr;
+        runCUSPARSEtest(vecSol);
+
         QString stringData = "TestCUDA NEW - ";
-        stringData.append(QString::fromStdString(CUDAsoilEntryPointProject()));
-        return stringData.append(" - correct if ");
+        for (int i = 0; i < 5; ++i)
+        {
+            stringData.append(QString::number(vecSol[i]));
+            stringData.append(" ");
+        }
+        return stringData.append(" - correct if ").append(QString::number(x));
     }
 }
 

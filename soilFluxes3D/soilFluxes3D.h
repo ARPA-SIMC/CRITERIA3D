@@ -1,21 +1,8 @@
 #ifndef SOILFLUXES3D
 #define SOILFLUXES3D
 
-    // Uncomment to compile as win32 dll
-    // #define BUILD_DLL 1
-
-    #ifdef BUILD_DLL
-        #define DLL_EXPORT __declspec(dllexport)
-        #define __EXTERN extern "C"
-	    #define __STDCALL __stdcall
-    #else
-        #define DLL_EXPORT
-        #define __EXTERN
-        #define __STDCALL
-    #endif
-
     #ifndef MACRO_H
-        #include "macro.h"
+        #include "soilFluxes3D_new/macro.h"
     #endif
 
     #include <QString>

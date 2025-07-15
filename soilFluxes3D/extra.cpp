@@ -31,7 +31,7 @@
 #include "commonConstants.h"
 #include "extra.h"
 #include "types.h"
-#include "macro.h"
+#include "soilFluxes3D_new/macro.h"
 
 
 __SF3DINLINE void initializeExtraHeat(TCrit3DNodeHeat* myNodeExtraHeat)
