@@ -254,7 +254,7 @@ bool waterBalance(double deltaT, int approxNr)
         return true;
     }
 
-    // first approximation or error is better than previuos one
+    // first approximation or error is better than previuos ones
     if (approxNr == 0 || MBRerror < _bestMBRerror)
 	{
 		saveBestStep();
@@ -281,8 +281,6 @@ bool waterBalance(double deltaT, int approxNr)
     // move to the next approximation
     return false;
 }
-
-
 
 void updateBalanceWaterWholePeriod()
 {

@@ -29,5 +29,7 @@ SUBDIRS =       ../../agrolib/mathFunctions \
 
 CONFIG += ordered
 
-HEADERS += \
-    ../../agrolib/soilFluxes3D_CUDA/entryPointTest.h
+DISTFILES += \
+    ../../batchFiles/batchMonteleoneTest.txt \
+    ../../batchFiles/batchTest.txt \
+    ../../batchFiles/batchTestList.txt

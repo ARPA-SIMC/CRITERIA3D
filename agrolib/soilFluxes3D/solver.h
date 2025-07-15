@@ -2,7 +2,7 @@
 #define SOLVER_H
 
     #ifndef MACRO_H
-        #include "macro.h"
+        #include "soilFluxes3D_new/macro.h"
     #endif
 
     __SF3DINLINE double distance(unsigned long index1, unsigned long index2);

@@ -17,7 +17,7 @@ QMAKE_LFLAGS += -openmp:llvm -NODEFAULTLIB:msvcrt.lib -NODEFAULTLIB:cmt.lib -IGN
 
 TEMPLATE = lib
 CONFIG += staticlib
-
+CONFIG += c++20
 CONFIG += debug_and_release
 
 INCLUDEPATH += ../mathFunctions
@@ -26,6 +26,10 @@ SOURCES += \
     boundary.cpp \
     balance.cpp \
     dataLogging.cpp \
+    # soilFluxes3D_new/soilFluxes3D.cpp \
+    soilFluxes3D_new/otherFunctions.cpp \
+    soilFluxes3D_new/soilFluxes3D_new.cpp \
+    soilFluxes3D_new/water_new.cpp \
     water.cpp \
     solver.cpp \
     memory.cpp \
@@ -33,12 +37,23 @@ SOURCES += \
     soilFluxes3D.cpp \
     heat.cpp \
     extra.cpp \
-    ../soilFluxes3D_CUDA/entryPoint.cpp \
-    ../soilFluxes3D_CUDA/iterationkernel.cpp
 
 
 HEADERS += \
-    macro.h \
+    soilFluxes3D_new/cudaFunctions.h \
+    soilFluxes3D_new/gpuEntryPoints.h \
+    soilFluxes3D_new/gpusolver.h \
+    soilFluxes3D_new/heat_new.h \
+    soilFluxes3D_new/logFunctions.h \
+    soilFluxes3D_new/macro.h \
+    soilFluxes3D_new/otherFunctions.h \
+    soilFluxes3D_new/soilFluxes3D_new.h \
+    soilFluxes3D_new/soil_new.h \
+    soilFluxes3D_new/solver_new.h \
+    soilFluxes3D_new/types_cpu.h \
+    soilFluxes3D_new/types_gpu.h \
+    #
+    soilFluxes3D_new/water_new.h \
     types.h \
     parameters.h \
     boundary.h \
@@ -49,12 +64,10 @@ HEADERS += \
     soilPhysics.h \
     soilFluxes3D.h \
     extra.h \
-    heat.h \
-    ../soilFluxes3D_CUDA/dataTypes.h \
-    ../soilFluxes3D_CUDA/iterationkernel.h \
-    ../soilFluxes3D_CUDA/iterationkernel_inl.h \
-    ../soilFluxes3D_CUDA/kernels.h \
-    ../soilFluxes3D_CUDA/entryPointTest.h
+    heat.h
+
+DISTFILES += \
+    #
 
 unix:{
     CONFIG(debug, debug|release) {
@@ -68,17 +81,17 @@ win32:{
 }
 
 # CUDA settings
-CUDA_SOURCES += ../soilFluxes3D_CUDA/kernels.cu
+CUDA_SOURCES += soilFluxes3D_new/cusparseExec.cu soilFluxes3D_new/gpusolver.cpp
 CUDA_DIR = $$(CUDA_PATH) #"D:\App e giochi\NVIDIA GPU Computing Toolkit\CUDA\v12.9"
 CUDA_ARCH = sm_61
 
 INCLUDEPATH  += $$CUDA_DIR/include
 QMAKE_LIBDIR += $$CUDA_DIR/lib/x64
 
-LIBS += -lcudart -lcuda -lcudadevrt
+LIBS += -lcudart -lcuda -lcusparse
 
-cudaC_FLAGS = #-rdc=true -prec-div=true -ftz=false -prec-sqrt=true -fmad=true
-cudaL_FLAGS = -m64 -arch=sm_61 -Wno-deprecated-gpu-targets
+cudaC_FLAGS = -std=c++20
+cudaL_FLAGS = -m64 -arch=sm_61 -Wno-deprecated-gpu-targets -std=c++20
 
 MSVCRT_LINK_FLAG_DEBUG = "/MDd"
 MSVCRT_LINK_FLAG_RELEASE = "/MD"
@@ -102,5 +115,3 @@ cudaL.CONFIG += combine
 cudaL.commands = $$CUDA_DIR\bin\nvcc -Xcompiler $$MSVCRT_LINK_FLAG_RELEASE $$cudaL_FLAGS -dlink -o cudaLinked.o ${QMAKE_FILE_NAME}
 cudaL.depend_command = $$CUDA_DIR/bin/nvcc -g -G -MD $CUDA_INC $NVCC_FLAGS ${QMAKE_FILE_NAME}         #seems not necessary
 QMAKE_EXTRA_COMPILERS += cudaL
-
-DISTFILES +=
