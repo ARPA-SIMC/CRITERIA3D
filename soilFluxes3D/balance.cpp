@@ -282,8 +282,6 @@ bool waterBalance(double deltaT, int approxNr)
     return false;
 }
 
-
-
 void updateBalanceWaterWholePeriod()
 {
     /*! update the flows in the balance (balanceWholePeriod) */

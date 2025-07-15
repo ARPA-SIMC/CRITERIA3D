@@ -16,7 +16,6 @@ namespace soilFluxes3D::New
             SolverParameters _parameters;
 
             double bestMBRerror;
-            bool isHalfTimeStepForced = false;
 
         public:
             Solver() {}

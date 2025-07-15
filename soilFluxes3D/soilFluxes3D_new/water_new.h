@@ -16,15 +16,19 @@ namespace soilFluxes3D::Water
     double computeWaterSinkSourceFlowsSum(double deltaT);
 
 
-    bool evaluateWaterBalance(double deltaT, uint8_t approxNr);
+    double getMatrixValue(uint64_t rowIndex, uint64_t columnIndex);
+    void updateLinkFlux(uint64_t nodeIndex, uint8_t linkIndex, double deltaT);
+
+    void acceptStep(double deltaT);
+    balanceResult_t evaluateWaterBalance(uint8_t approxNr, double& bestMBRerror, SolverParameters& parameters);
+
+
+
+
     void updateBoundaryWater(double deltaT);
 
     bool computeWaterFluxes(double maxTime, double& acceptedTime);
     bool waterFlowComputation_stdTreads(double deltaT);     //TO DO: refactor
-
-    //Node property
-    __SF3DINLINE double getWaterExchange(uint64_t index, TlinkedNode* link, double deltaT);
-    double getMatrixValue(uint64_t index, TlinkedNode *link);
 
     //IO functions
     __SF3DINLINE void restoreWater();
