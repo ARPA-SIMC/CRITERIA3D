@@ -1051,7 +1051,7 @@ bool Crit3DProject::loadCriteria3DProject(const QString &fileName)
 
     if (meteoPointsLoaded)
     {
-        logInfoGUI("Check meteopoints dates...");
+        logInfoGUI("Check meteopoints first date...");
         meteoPointsDbFirstTime = findDbPointFirstTime();
     }
 

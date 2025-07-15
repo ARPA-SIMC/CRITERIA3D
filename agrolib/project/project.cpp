@@ -1220,7 +1220,7 @@ bool Project::loadMeteoPointsDB(QString fileName)
     listMeteoPoints.clear();
 
     // find dates
-    logInfoGUI("Check meteopoints dates...");
+    logInfoGUI("Check meteopoints last date...");
     meteoPointsDbLastTime = findDbPointLastTime();
     meteoPointsDbFirstTime.setSecsSinceEpoch(0);
 
