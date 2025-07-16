@@ -202,7 +202,7 @@ bool Crit3DProject::initializeCropMaps()
     yearlyET0.initializeGrid(*(DEM.header));
     yearlyPrec.initializeGrid(*(DEM.header));
 
-    //treeCoverMap.initializeGrid(*(DEM.header)); //DEBUG TODO CT
+    treeCoverMap.initializeGrid(*(DEM.header)); //DEBUG TODO CT
 
     return true;
 }
