@@ -720,6 +720,7 @@ float Crit3DProject::checkSoilCracking(int row, int col, float precipitation)
         return precipitation;
 
     maxDepth = std::min(soilList[soilIndex].horizon[lastFineHorizon].lowerDepth, MAX_CRACKING_DEPTH);
+    maxDepth = std::min(maxDepth, computationSoilDepth);
 
     // clay horizon is too thin
     if (maxDepth < MIN_CRACKING_DEPTH)
@@ -733,16 +734,19 @@ float Crit3DProject::checkSoilCracking(int row, int col, float precipitation)
     while (currentDepth <= maxDepth )
     {
         int layerIndex = getSoilLayerIndex(currentDepth);
-        long nodeIndex = indexMap.at(layerIndex).value[row][col];
+        if (layerIndex != INDEX_ERROR)
+        {
+            long nodeIndex = indexMap.at(layerIndex).value[row][col];
 
-        double VWC = getCriteria3DVar(volumetricWaterContent, nodeIndex);               // [m3 m-3]
-        double maxVWC = getCriteria3DVar(maximumVolumetricWaterContent, nodeIndex);     // [m3 m-3]
+            double VWC = getCriteria3DVar(volumetricWaterContent, nodeIndex);               // [m3 m-3]
+            double maxVWC = getCriteria3DVar(maximumVolumetricWaterContent, nodeIndex);     // [m3 m-3]
 
-        // TODO: coarse fragment
-        voidVolumeSum += (maxVWC - VWC);
+            // TODO: coarse fragment
+            voidVolumeSum += (maxVWC - VWC);
 
-        currentDepth += stepDepth;
-        nrData++;
+            currentDepth += stepDepth;
+            nrData++;
+        }
     }
 
     double avgVoidVolume = voidVolumeSum / nrData;              // [m3 m-3]
@@ -1070,7 +1074,7 @@ bool Crit3DProject::loadCriteria3DProject(const QString &fileName)
 
     if (meteoPointsLoaded)
     {
-        logInfoGUI("Check meteopoints dates...");
+        logInfoGUI("Check meteopoints first date...");
         meteoPointsDbFirstTime = findDbPointFirstTime();
     }
 
@@ -1081,13 +1085,21 @@ bool Crit3DProject::loadCriteria3DProject(const QString &fileName)
 
     // soil map and data
     if (soilMapFileName != "")
+    {
+        logInfoGUI("Load soil map...");
         loadSoilMap(soilMapFileName);
+    }
 
     if (soilDbFileName != "")
         loadSoilDatabase(soilDbFileName);
 
     // land use map, crop data and tree cover map
-    if (landUseMapFileName != "") loadLandUseMap(landUseMapFileName);
+    if (landUseMapFileName != "")
+    {
+        logInfoGUI("Load landuse map...");
+        loadLandUseMap(landUseMapFileName);
+    }
+
     if (cropDbFileName != "") loadCropDatabase(cropDbFileName);
     if (treeCoverMapFileName != "") loadTreeCoverMap(treeCoverMapFileName);
 
@@ -1095,6 +1107,8 @@ bool Crit3DProject::loadCriteria3DProject(const QString &fileName)
     {
         logInfo("Project " + projectName + " loaded");
     }
+
+    closeLogInfo();
 
     isProjectLoaded = true;
     return isProjectLoaded;

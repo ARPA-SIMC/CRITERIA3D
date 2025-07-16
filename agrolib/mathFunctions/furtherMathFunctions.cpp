@@ -1553,12 +1553,10 @@ namespace interpolation
                                         int maxIterationsNr, double myEpsilon,
                                         std::vector <std::vector <double>>& x ,std::vector<double>& y)
     {
-        unsigned int i;
-        int j;
         //int nrData = int(y.size());
         std::vector <int> nrParameters(parameters.size());
         int nrParametersTotal = 0;
-        for (i=0; i < (int)parameters.size();i++)
+        for (int i=0; i < (int)parameters.size(); i++)
         {
             nrParameters[i]= int(parameters[i].size());
             nrParametersTotal += nrParameters[i];
@@ -1567,9 +1565,9 @@ namespace interpolation
         std::vector <std::vector <double>> bestParameters(parameters.size());
         std::vector <std::vector <int>> correspondenceTag(2,std::vector<int>(nrParametersTotal));
         int counterTag = 0;
-        for (i=0; i < (int)parameters.size();i++)
+        for (int i=0; i < (int)parameters.size(); i++)
         {
-            for (j=0; j < nrParameters[i];j++)
+            for (int j=0; j < nrParameters[i]; j++)
             {
                 correspondenceTag[0][counterTag] = i;
                 correspondenceTag[1][counterTag] = j;
@@ -1593,6 +1591,7 @@ namespace interpolation
         //R2 = computeR2(y,ySim);
         return 1;
     }
+
 
     /*!
      *
