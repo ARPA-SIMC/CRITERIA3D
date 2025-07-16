@@ -108,6 +108,12 @@ bool Crit3DProject::initializeHydrall()
         errorString = ERROR_STR_MISSING_DEM;
         return false;
     }
+
+    if (! treeCoverMap.isLoaded)
+    {
+        errorString = "Load a tree cover map in order to compute Hydrall model.";
+        return false;
+    }
     logInfo("Initialize hydrall model...");
 
 
@@ -147,23 +153,21 @@ bool Crit3DProject::initializeRothC()
             if (! isEqual(DEM.value[row][col], DEM.header->flag))
             {
             int soilIndex = int(soilIndexMap.value[row][col]);
-            if (soilIndex == NODATA)
+            if (soilIndex != NODATA)
             {
-                //TODO
+                rothCModel.map.setDepth(soilList[soilIndex].totalDepth, row, col);
+
+                double clayContent = 0;
+                unsigned int i;
+                for (i = 0; ((i < nrLayers) && (soilList[soilIndex].getHorizonIndex(layerDepth[i]))!= NODATA); i++)
+                {
+                    clayContent += soilList[soilIndex].horizon[soilList[soilIndex].getHorizonIndex(layerDepth[i])].texture.clay;
+                }
+
+                if (i > 0)
+                    rothCModel.map.setClay(clayContent/i, row, col);
+
             }
-
-            rothCModel.map.setDepth(soilList[soilIndex].totalDepth, row, col);
-
-            double clayContent = 0;
-            unsigned int i;
-            for (i = 0; ((i < nrLayers) && (soilList[soilIndex].getHorizonIndex(layerDepth[i]))!= NODATA); i++)
-            {
-                clayContent += soilList[soilIndex].horizon[soilList[soilIndex].getHorizonIndex(layerDepth[i])].texture.clay;
-            }
-
-            if (i > 0)
-                rothCModel.map.setClay(clayContent/i, row, col);
-
             }
         }
 
@@ -197,6 +201,8 @@ bool Crit3DProject::initializeCropMaps()
 
     yearlyET0.initializeGrid(*(DEM.header));
     yearlyPrec.initializeGrid(*(DEM.header));
+
+    //treeCoverMap.initializeGrid(*(DEM.header)); //DEBUG TODO CT
 
     return true;
 }
@@ -545,6 +551,17 @@ void Crit3DProject::assignETreal()
                 double evapFlow = area * (actualEvap / 1000.);                              // [m3 h-1]
                 totalEvaporation += evapFlow;                                               // [m3 h-1]
 
+                //hydrall only
+                if (processes.computeHydrall)
+                {
+                    /*int treeCoverIndex = getTreeCoverIndexRowCol(row,col);
+                    std::string indexString = std::to_string(treeCoverIndex);
+                    int managementIndex = std::stoi(indexString.substr(indexString.size()-3, indexString.size()-1));
+                    int forestIndex = (treeCoverIndex - managementIndex) / 1000;*/
+                    //conversione da numero a nome forest
+                }
+
+
                 int cropIndex = getLandUnitIndexRowCol(row, col);
                 if (cropIndex != NODATA && (int)cropList.size() > cropIndex)
                 {
@@ -576,7 +593,9 @@ void Crit3DProject::assignETreal()
                         hydrallModel.plant.setLAICanopyMin(currentCrop.LAImin);
                         hydrallModel.plant.setLAICanopyMax(currentCrop.LAImax);
 
-                        computeHydrallModel(row, col);
+                        int soilIndex = int(soilIndexMap.value[row][col]);
+                        if (soilIndex != NODATA)
+                            computeHydrallModel(row, col);
                     }
 
                     if (processes.computeRothC)
@@ -1605,25 +1624,26 @@ void Crit3DProject::setHydrallVariables(int row, int col)
 
     // check soil
     int soilIndex = int(soilIndexMap.value[row][col]);
-    if (soilIndex == NODATA)
+    if (soilIndex != NODATA)
     {
         //TODO
-    }
 
-    // the condition on this for cycle includes the check of existance of the layers
-    for (unsigned int i = 0; ((i < nrLayers) && (soilList[soilIndex].getHorizonIndex(layerDepth[i]))!= NODATA); i++)
-    {
-        hydrallModel.setSoilVariables(i,indexMap.at(i).value[row][col],indexMap.at(i).header->flag,
-                                      soilFluxes3D::getWaterContent(indexMap.at(i).value[row][col]),
-                                      soilList[soilIndex].horizon[soilList[soilIndex].getHorizonIndex(layerDepth[i])].waterContentFC,
-                                      soilList[soilIndex].horizon[soilList[soilIndex].getHorizonIndex(layerDepth[i])].waterContentWP,
-                                      soilList[soilIndex].horizon[soilList[soilIndex].getHorizonIndex(layerDepth[i])].texture.clay,
-                                      soilList[soilIndex].horizon[soilList[soilIndex].getHorizonIndex(layerDepth[i])].texture.sand,
-                                      fabs(soilList[soilIndex].horizon[soilList[soilIndex].getHorizonIndex(layerDepth[i])].lowerDepth-soilList[soilIndex].horizon[soilList[soilIndex].getHorizonIndex(layerDepth[i])].upperDepth),
-                                      soilList[soilIndex].horizon[soilList[soilIndex].getHorizonIndex(layerDepth[i])].bulkDensity,
-                                      soilList[soilIndex].horizon[soilList[soilIndex].getHorizonIndex(layerDepth[i])].waterContentSAT,
-                                      soilList[soilIndex].horizon[soilList[soilIndex].getHorizonIndex(layerDepth[i])].waterConductivity.kSat,
-                                      soilFluxes3D::getMatricPotential(indexMap.at(i).value[row][col]));
+
+        // the condition on this for cycle includes the check of existance of the layers
+        for (unsigned int i = 0; ((i < nrLayers) && (soilList[soilIndex].getHorizonIndex(layerDepth[i]))!= NODATA); i++)
+        {
+            hydrallModel.setSoilVariables(i,indexMap.at(i).value[row][col],indexMap.at(i).header->flag,
+                                          soilFluxes3D::getWaterContent(indexMap.at(i).value[row][col]),
+                                          soilList[soilIndex].horizon[soilList[soilIndex].getHorizonIndex(layerDepth[i])].waterContentFC,
+                                          soilList[soilIndex].horizon[soilList[soilIndex].getHorizonIndex(layerDepth[i])].waterContentWP,
+                                          soilList[soilIndex].horizon[soilList[soilIndex].getHorizonIndex(layerDepth[i])].texture.clay,
+                                          soilList[soilIndex].horizon[soilList[soilIndex].getHorizonIndex(layerDepth[i])].texture.sand,
+                                          fabs(soilList[soilIndex].horizon[soilList[soilIndex].getHorizonIndex(layerDepth[i])].lowerDepth-soilList[soilIndex].horizon[soilList[soilIndex].getHorizonIndex(layerDepth[i])].upperDepth),
+                                          soilList[soilIndex].horizon[soilList[soilIndex].getHorizonIndex(layerDepth[i])].bulkDensity,
+                                          soilList[soilIndex].horizon[soilList[soilIndex].getHorizonIndex(layerDepth[i])].waterContentSAT,
+                                          soilList[soilIndex].horizon[soilList[soilIndex].getHorizonIndex(layerDepth[i])].waterConductivity.kSat,
+                                          soilFluxes3D::getMatricPotential(indexMap.at(i).value[row][col]));
+        }
     }
 
     return;

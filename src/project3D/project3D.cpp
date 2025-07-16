@@ -591,6 +591,7 @@ bool Project3D::setSoilIndexMap()
         }
     }
 
+    gis::updateMinMaxRasterGrid(&soilIndexMap);
     soilIndexMap.isLoaded = true;
     return true;
 }
@@ -672,7 +673,7 @@ bool Project3D::loadTreeCoverMap(const QString &fileName)
 
     gis::resampleGrid(raster, &treeCoverMap, DEM.header, aggrPrevailing, 0);
 
-    logInfo("Land use map = " + treeCoverMapFileName);
+    logInfo("Tree cover map = " + treeCoverMapFileName);
     return true;
 }
 
@@ -1285,6 +1286,24 @@ int Project3D::getLandUnitIndexRowCol(int row, int col)
     }
 
     return getLandUnitListIndex(id);
+}
+
+int Project3D::getTreeCoverIndexRowCol(int row, int col)
+{
+    if (! treeCoverMap.isLoaded)
+    {
+        // default
+        return 0;
+    }
+
+    // treeCover map has same header of DEM
+    int id = treeCoverMap.value[row][col];
+    if (id == treeCoverMap.header->flag)
+    {
+        return NODATA;
+    }
+
+    return id;
 }
 
 
@@ -2149,7 +2168,7 @@ double Project3D::assignTranspiration(int row, int col, Crit3DCrop &currentCrop,
         return 0;       // [mm]
     }
 
-    // check soil
+    // check soil TODO FT improve
     int soilIndex = int(soilIndexMap.value[row][col]);
     if (soilIndex == NODATA)
     {

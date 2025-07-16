@@ -182,6 +182,8 @@
         int getLandUnitFromUtm(double x, double y);
         int getLandUnitIdGeo(double lat, double lon);
         int getLandUnitIndexRowCol(int row, int col);
+        int getTreeCoverIndexRowCol(int row, int col);
+
 
         bool initializeSoilMoisture(int month);
 
