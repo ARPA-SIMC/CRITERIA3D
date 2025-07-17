@@ -32,6 +32,7 @@
 #include "meteo.h"
 #include "color.h"
 #include "statistics.h"
+#include "project.h"
 #include "project3D.h"
 #include "soilFluxes3D.h"
 #include "soil.h"
