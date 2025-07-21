@@ -1103,7 +1103,7 @@ bool Crit3DProject::loadCriteria3DProject(const QString &fileName)
     if (cropDbFileName != "") loadCropDatabase(cropDbFileName);
     if (treeCoverMapFileName != "") loadTreeCoverMap(treeCoverMapFileName);
 
-    if (projectName != "")
+    if (projectName != "" && projectName != "default")
     {
         logInfo("Project " + projectName + " loaded");
     }
