@@ -44,6 +44,7 @@
 #include <QVector3D>
 #include <float.h>
 
+
 Crit3DProject::Crit3DProject() : Project3D()
 {
     _saveOutputRaster = false;
