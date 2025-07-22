@@ -805,12 +805,6 @@ bool Crit3DProject::startModels(const QDateTime &firstTime, const QDateTime &las
     if (! checkProcesses())
         return false;
 
-    if (! DEM.isLoaded)
-    {
-        errorString = ERROR_STR_MISSING_DEM;
-        return false;
-    }
-
     if (processes.computeSnow && ! snowMaps.isInitialized)
     {
         errorString = "Initialize Snow model or load a state before.";
@@ -837,6 +831,8 @@ bool Crit3DProject::startModels(const QDateTime &firstTime, const QDateTime &las
         errorString = "Wrong Time: lastTime < firstTime";
         return false;
     }
+
+    // todo: struttura dati per memorizzare i tempi
 
     logInfoGUI("Loading meteo data...");
     bool loadHourly = true;
@@ -1739,9 +1735,15 @@ bool Crit3DProject::checkProcesses()
         return false;
     }
 
+    if (! DEM.isLoaded)
+    {
+        errorString = ERROR_STR_MISSING_DEM;
+        return false;
+    }
+
     if (! (processes.computeCrop || processes.computeWater || processes.computeSnow))
     {
-        errorString = "Set active processes before.";
+        errorString = ERROR_STR_MISSING_PROCESSES;
         return false;
     }
 
