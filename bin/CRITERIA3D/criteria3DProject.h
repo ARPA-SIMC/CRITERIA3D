@@ -164,7 +164,7 @@
 
         int printCriteria3DVersion();
         int printCriteria3DCommandList();
-        int cmdSetThreadsNr();
+        int cmdSetThreadsNr(const QList<QString> &argumentList);
 
     };
 

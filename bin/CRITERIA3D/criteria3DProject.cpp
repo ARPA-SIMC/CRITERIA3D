@@ -3156,7 +3156,7 @@ int Crit3DProject::executeCriteria3DCommand(const QList<QString> &argumentList, 
     else if (command == "THREAD" || command == "SETTHREADNR")
     {
         isCommandFound = true;
-        return cmdSetThreadsNr();
+        return cmdSetThreadsNr(argumentList);
     }
 
     return CRIT3D_INVALID_COMMAND;
@@ -3331,11 +3331,17 @@ int Crit3DProject::cmdRunModels(const QList<QString> &argumentList)
 }
 
 
-int Crit3DProject::cmdSetThreadsNr()
+// zero or negative number to set maximum available
+int Crit3DProject::cmdSetThreadsNr(const QList<QString> &argumentList)
 {
-    int threadNr = soilFluxes3D::setThreadsNumber(0);
+    int nr = 0;
+    if (argumentList.size() >= 2)
+    {
+        nr = argumentList.at(1).toInt();
+    }
+    int threadNr = soilFluxes3D::setThreadsNumber(nr);
     waterFluxesParameters.numberOfThreads = threadNr;
-    std::cout << "Maximum number of threads: " << threadNr << std::endl;
+    std::cout << "Number of threads: " << threadNr << std::endl;
     std::cout << std::endl;
 
     return CRIT3D_OK;
