@@ -741,26 +741,29 @@ float Crit3DProject::computeSoilCracking(int row, int col, float precipitation)
     while (currentDepth <= maxDepth)
     {
         int layerIndex = getSoilLayerIndex(currentDepth);
-        if (layerIndex != NODATA)
-        {
-            long nodeIndex = indexMap.at(layerIndex).value[row][col];
-            if (nodeIndex != NODATA)
-            {
-                int horizonIndex = soilList[soilIndex].getHorizonIndex(currentDepth);
-                if (horizonIndex != NODATA)
-                {
-                    double soilFraction = 1.0 - soilList[soilIndex].horizon[horizonIndex].coarseFragments;
-                    double VWC = getCriteria3DVar(volumetricWaterContent, nodeIndex);               // [m3 m-3]
-                    double maxVWC = getCriteria3DVar(maximumVolumetricWaterContent, nodeIndex);     // [m3 m-3]
+        if (layerIndex == NODATA)
+            break;
 
-                    voidsVolumeSum += (maxVWC - VWC) * soilFraction;
+        long nodeIndex = indexMap.at(layerIndex).value[row][col];
+        if (nodeIndex == NODATA)
+            break;
 
-                    currentDepth += stepDepth;
-                    nrData++;
-                }
-            }
-        }
+        int horizonIndex = soilList[soilIndex].getHorizonIndex(currentDepth);
+        if (horizonIndex == NODATA)
+            break;
+
+        double soilFraction = 1.0 - soilList[soilIndex].horizon[horizonIndex].coarseFragments;
+        double VWC = getCriteria3DVar(volumetricWaterContent, nodeIndex);               // [m3 m-3]
+        double maxVWC = getCriteria3DVar(maximumVolumetricWaterContent, nodeIndex);     // [m3 m-3]
+
+        voidsVolumeSum += (maxVWC - VWC) * soilFraction;
+        nrData++;
+
+        currentDepth += stepDepth;
     }
+
+    if (nrData == 0)
+        return precipitation;
 
     double avgVoidVolume = voidsVolumeSum / nrData;              // [m3 m-3]
     if (avgVoidVolume <= MIN_VOID_VOLUME)
