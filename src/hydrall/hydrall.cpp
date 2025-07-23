@@ -103,6 +103,96 @@ Crit3DHydrallPlant::Crit3DHydrallPlant()
     currentIncrementalVolume = EPSILON;
     transpirationCritical = NODATA; //(mol m-2 s-1)
     rootShootRatioRef = 0.33; //TODO
+    tableEcophysiologicalParameters = {
+        {"Boschi di larice",                            35.0, 6.0, false},
+        {"Boschi di abete rosso",                       35.0, 6.0, false},
+        {"Boschi di abete bianco",                      30.0, 6.0, false},
+        {"Pinete di pino silvestre e montano",          30.0, 6.0, false},
+        {"Pinete di pino nero",                         30.0, 6.0, false},
+        {"Pinete di pini mediterranei",                 40.0, 7.0, true},
+        {"Altri boschi di conifere, pure o miste",      30.0, 6.0, false},
+        {"Faggete",                                     50.0, 8.0, false},
+        {"Querceti a rovere, roverella e farnia",       50.0, 8.0, false},
+        {"Cerrete, boschi di farnetto, fragno, vallonea", 50.0, 8.0, false},
+        {"Castagneti",                                  50.0, 8.0, false},
+        {"Ostrieti, carpineti",                         50.0, 8.0, false},
+        {"Boschi igrofili",                             60.0, 9.0, false},
+        {"Altri boschi caducifogli",                    50.0, 8.0, false},
+        {"Leccete",                                     40.0, 7.0, true},
+        {"Sugherete",                                   40.0, 7.0, true},
+        {"Altri boschi di latifoglie sempreverdi",      40.0, 7.0, true},
+        {"Pioppeti artificiali",                        70.0, 9.0, false},
+        {"Piantagioni di altre latifoglie",             60.0, 8.0, false},
+        {"Piantagioni di conifere",                     40.0, 6.0, false},
+        {"Arbusteti subalpini",                         40.0, 7.0, false},
+        {"Arbusteti di clima temperato",                40.0, 7.0, false},
+        {"Macchia, arbusteti mediterranei",             40.0, 8.0, true}
+    };
+
+
+    rangeLAI = {
+        {"Boschi di larice", 0.1, 4.0},
+        {"Boschi di abete rosso", 1.5, 6.0},
+        {"Boschi di abete bianco", 1.5, 6.0},
+        {"Pinete di pino silvestre e montano", 1.0, 4.0},
+        {"Pinete di pino nero", 1.0, 4.0},
+        {"Pinete di pini mediterranei", 1.0, 4.0},
+        {"Altri boschi di conifere, pure o miste", 1.0, 5.0},
+        {"Faggete", 0.1, 6.0},
+        {"Querceti a rovere, roverella e farnia", 0.1, 5.0},
+        {"Cerrete, boschi di farnetto, fragno, vallonea", 0.1, 5},
+        {"Castagneti", 0.1, 5.0},
+        {"Ostrieti, carpineti", 0.1, 5.0},
+        {"Boschi igrofili", 0.1, 6.0},
+        {"Altri boschi caducifogli", 0.1, 5.0},
+        {"Leccete", 1.5, 4.0},
+        {"Sugherete", 1.5, 4.0},
+        {"Altri boschi di latifoglie sempreverdi", 1.5, 4.0},
+        {"Pioppeti artificiali", 0.1, 6.0},
+        {"Piantagioni di altre latifoglie", 0.1, 6.0},
+        {"Piantagioni di conifere", 1.0, 5.0},
+        {"Arbusteti subalpini", 0.1, 2.0},
+        {"Arbusteti di clima temperato", 0.1, 3.0},
+        {"Macchia, arbusteti mediterranei", 1.0, 3.0}
+    }; // da aggiungere il sottobosco
+
+#include <string>
+#include <vector>
+
+    struct GDDparams {
+        std::string name;
+        double gdd_start;
+        double gdd_peak;
+        double gdd_end;
+    };
+
+    phenologyLAI = {
+        {"Boschi di larice", 250, 1000, 2250},              // Intermedia
+        {"Boschi di abete rosso", 300, 1100, 2500},         // Tardiva
+        {"Boschi di abete bianco", 300, 1100, 2500},        // Tardiva
+        {"Pinete di pino silvestre e montano", 250, 1000, 2250}, // Intermedia
+        {"Pinete di pino nero", 250, 1000, 2250},           // Intermedia
+        {"Pinete di pini mediterranei", 200, 900, 2000},    // Precoce
+        {"Altri boschi di conifere, pure o miste", 250, 1000, 2250}, // Intermedia
+        {"Faggete", 300, 1100, 2500},                       // Tardiva
+        {"Querceti a rovere, roverella e farnia", 250, 1000, 2250}, // Intermedia
+        {"Cerrete, boschi di farnetto, fragno, vallonea", 300, 1100, 2500}, // Tardiva
+        {"Castagneti", 250, 1000, 2250},                    // Intermedia
+        {"Ostrieti, carpineti", 250, 1000, 2250},           // Intermedia
+        {"Boschi igrofili", 250, 1000, 2250},               // Intermedia
+        {"Altri boschi caducifogli", 250, 1000, 2250},      // Intermedia
+        {"Leccete", 200, 900, 2000},                        // Precoce
+        {"Sugherete", 200, 900, 2000},                      // Precoce
+        {"Altri boschi di latifoglie sempreverdi", 200, 900, 2000}, // Precoce
+        {"Pioppeti artificiali", 200, 900, 2000},           // Precoce
+        {"Piantagioni di altre latifoglie", 250, 1000, 2250}, // Intermedia
+        {"Piantagioni di conifere", 250, 1000, 2250},       // Intermedia
+        {"Arbusteti subalpini", 250, 1000, 2250},           // Intermedia
+        {"Arbusteti di clima temperato", 250, 1000, 2250},  // Intermedia
+        {"Macchia, arbusteti mediterranei", 200, 900, 2000} // Precoce
+    };
+
+
 }
 
 Crit3DHydrallSoil::Crit3DHydrallSoil()
@@ -157,7 +247,7 @@ Crit3DHydrallParameterWangLeuning::Crit3DHydrallParameterWangLeuning()
     alpha = 340000; //1100000; // this parameter must be multiplied by 10^-6 in order to be compliant with literature
     psiLeaf = 1800;                 // kPa
     waterStressThreshold = NODATA;
-    maxCarboxRate = 150;           // Vcmo at optimal temperature  umol m-2 s-1
+    maxCarboxRate = 150;           // Vcmo at optimal temperature (25°C) umol m-2 s-1
 }
 
 Crit3DHydrallDeltaTimeOutputs::Crit3DHydrallDeltaTimeOutputs()

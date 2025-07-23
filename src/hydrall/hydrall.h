@@ -83,6 +83,26 @@
 
     #define NOT_INITIALIZED_VINE -1
 
+    struct ecophysiologicalParameter {
+        std::string name;
+        double Vcmo;
+        double mBallBerry;
+        bool isAmphystomatic;
+    };
+
+    struct LAIparam {
+        std::string name;
+        double lai_min;
+        double lai_max;
+    };
+
+    struct LAIphenology{
+        std::string name;
+        double emergence;
+        double increase;
+        double decrease;
+    };
+
     class Crit3DHydrallState
     { 
     public:
@@ -172,6 +192,9 @@
 
         // TODO Cate unità di misura
 
+        std::vector<ecophysiologicalParameter> tableEcophysiologicalParameters;
+        std::vector<LAIparam> rangeLAI;
+        std::vector<LAIphenology> phenologyLAI;
         double myChlorophyllContent;
         double height; // in cm
         double hydraulicResistancePerFoliageArea; //(MPa s m2 m-3)
