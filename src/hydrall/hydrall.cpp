@@ -156,16 +156,6 @@ Crit3DHydrallPlant::Crit3DHydrallPlant()
         {"Macchia, arbusteti mediterranei", 1.0, 3.0}
     }; // da aggiungere il sottobosco
 
-#include <string>
-#include <vector>
-
-    struct GDDparams {
-        std::string name;
-        double gdd_start;
-        double gdd_peak;
-        double gdd_end;
-    };
-
     phenologyLAI = {
         {"Boschi di larice", 250, 1000, 2250},              // Intermedia
         {"Boschi di abete rosso", 300, 1100, 2500},         // Tardiva
