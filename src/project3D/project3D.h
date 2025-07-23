@@ -14,10 +14,11 @@
         #include "crop.h"
     #endif
 
+    #define ERROR_STR_MISSING_PROCESSES "Set active processes before."
+    #define ERROR_STR_INITIALIZE_3D "Initialize 3D model before."
+
     class QString;
     #include <QList>
-
-    #define ERROR_STR_INITIALIZE_3D "Initialize 3D model before."
 
     class WaterFluxesParameters
     {
