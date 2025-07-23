@@ -1563,7 +1563,7 @@ int Project3D::getSoilLayerIndex(double depth)
         if (i == nrLayers-1)
         {
             logError("getSoilLayerIndex: wrong soil depth.");
-            return INDEX_ERROR;
+            return NODATA;
         }
         i++;
     }
