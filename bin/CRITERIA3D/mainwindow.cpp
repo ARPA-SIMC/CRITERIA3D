@@ -2413,6 +2413,7 @@ void MainWindow::on_actionCriteria3D_Initialize_triggered()
 
         if (! myProject.initializeHydrall())
         {
+            myProject.isHydrallInitialized = false;
             myProject.logError("Couldn't initialize Hydrall model.");
             return;
         }
@@ -2422,6 +2423,7 @@ void MainWindow::on_actionCriteria3D_Initialize_triggered()
     {
         if (! myProject.initializeRothC())
         {
+            myProject.isRothCInitialized = false;
             myProject.logError("Couldn't initialize RothC model.");
             return;
         }

@@ -139,6 +139,8 @@ bool Crit3DProject::initializeHydrall()
         }
     }
 
+    isHydrallInitialized = true;
+
     return true;
 }
 
@@ -174,9 +176,7 @@ bool Crit3DProject::initializeRothC()
 
     }
 
-
-
-
+    isRothCInitialized = true;
     //todo
 
     return true;
@@ -1954,6 +1954,18 @@ bool Crit3DProject::saveModelsState(QString &dirName)
             return false;
     }
 
+    if (processes.computeRothC)
+    {
+        if (! saveRothCState(currentStatePath))
+            return false;
+    }
+
+    if (processes.computeHydrall)
+    {
+        if (! saveHydrallState(currentStatePath))
+            return false;
+    }
+
     return true;
 }
 
@@ -2070,6 +2082,78 @@ bool Crit3DProject::saveSnowModelState(const QString &currentStatePath)
     return true;
 }
 
+bool Crit3DProject::saveRothCState(const QString &currentStatePath)
+{
+    /*if (! rothCModel.isInitialized)
+    {
+        logError("Initialize rothC model before.");
+        return false;
+    }*/
+
+    // create rothC path
+    QString rothCPath = currentStatePath + "/rothC";
+    QDir().mkdir(rothCPath);
+
+    logInfo("Saving rothC state: " + currentStatePath);
+    std::string errorStr;
+    if (!gis::writeEsriGrid((rothCPath+"/DPM").toStdString(), rothCModel.map.getDPM(), errorStr))
+    {
+        logError("Error saving decomposable plant material map: " + QString::fromStdString(errorStr));
+        return false;
+    }
+
+    if (!gis::writeEsriGrid((rothCPath+"/RPM").toStdString(), rothCModel.map.getRPM(), errorStr))
+    {
+        logError("Error saving resistant plant material map: " + QString::fromStdString(errorStr));
+        return false;
+    }
+
+    if (!gis::writeEsriGrid((rothCPath+"/BIO").toStdString(), rothCModel.map.getBIO(), errorStr))
+    {
+        logError("Error saving microbial biomass map: " + QString::fromStdString(errorStr));
+        return false;
+    }
+
+    if (!gis::writeEsriGrid((rothCPath+"/HUM").toStdString(), rothCModel.map.getHUM(), errorStr))
+    {
+        logError("Error saving humified organic matter map: " + QString::fromStdString(errorStr));
+        return false;
+    }
+
+    if (!gis::writeEsriGrid((rothCPath+"/SOC").toStdString(), rothCModel.map.getSOC(), errorStr))
+    {
+        logError("Error saving soil organic carbon map: " + QString::fromStdString(errorStr));
+        return false;
+    }
+
+    return true;
+}
+
+bool Crit3DProject::saveHydrallState(const QString &currentStatePath)
+{
+    /*if (! hydrallModel.isInitialized)
+    {
+        logError("Initialize hydrall model before.");
+        return false;
+    }*/
+
+    // create hydrall path
+    QString hydrallPath = currentStatePath + "/hydrall";
+    QDir().mkdir(hydrallPath);
+
+    logInfo("Saving snow state: " + currentStatePath);
+    std::string errorStr;
+    if (!gis::writeEsriGrid((hydrallPath+"/treeNPP").toStdString(), hydrallMaps.treeNetPrimaryProduction, errorStr))
+    {
+        logError("Error saving tree net primary production map: " + QString::fromStdString(errorStr));
+        return false;
+    }
+
+    //other maps tbd
+
+    return true;
+}
+
 
 bool Crit3DProject::getAllSavedState(QList<QString> &stateList)
 {
@@ -2129,7 +2213,9 @@ bool Crit3DProject::loadModelState(QString statePath)
 
     std::string errorStr, fileName;
 
-    bool isProcessesDefined = (isSnowInitialized || isCropInitialized || isCriteria3DInitialized);
+    //TODO cambiare questo per rothC e hydrall
+    bool isProcessesDefined = (isSnowInitialized || isCropInitialized || isCriteria3DInitialized
+                               || isHydrallInitialized || isRothCInitialized);
 
     // snow model
     QString snowPath = statePath + "/snow";
@@ -2243,6 +2329,60 @@ bool Crit3DProject::loadModelState(QString statePath)
 
         processes.setComputeWater(true);
     }
+
+    //rothC model
+    QString rothCPath = statePath + "/rothC";
+    QDir rothCDir(rothCPath);
+    gis::Crit3DRasterGrid *tmpRaster = new gis::Crit3DRasterGrid();
+    if (rothCDir.exists() && (! isProcessesDefined || isRothCInitialized))
+    {
+        fileName = rothCPath.toStdString() + "/DPM";
+        if (! gis::readEsriGrid(fileName, tmpRaster, errorStr))
+        {
+            errorString = "Wrong RothC decomposable plant matter map:\n" + QString::fromStdString(errorStr);
+            rothCModel.map.isInitialized = false;
+            return false;
+        }
+        gis::resampleGrid(*tmpRaster, rothCModel.map.getDPM(), DEM.header, aggrAverage, 0.1f);
+
+        fileName = rothCPath.toStdString() + "/RPM";
+        if (! gis::readEsriGrid(fileName, tmpRaster, errorStr))
+        {
+            errorString = "Wrong RothC resistant plant matter map:\n" + QString::fromStdString(errorStr);
+            rothCModel.map.isInitialized = false;
+            return false;
+        }
+        gis::resampleGrid(*tmpRaster, rothCModel.map.getRPM(), DEM.header, aggrAverage, 0.1f);
+
+        fileName = rothCPath.toStdString() + "/BIO";
+        if (! gis::readEsriGrid(fileName, tmpRaster, errorStr))
+        {
+            errorString = "Wrong RothC microbial biomass map:\n" + QString::fromStdString(errorStr);
+            rothCModel.map.isInitialized = false;
+            return false;
+        }
+        gis::resampleGrid(*tmpRaster, rothCModel.map.getBIO(), DEM.header, aggrAverage, 0.1f);
+
+        fileName = rothCPath.toStdString() + "/HUM";
+        if (! gis::readEsriGrid(fileName, tmpRaster, errorStr))
+        {
+            errorString = "Wrong RothC humified organic matter map:\n" + QString::fromStdString(errorStr);
+            rothCModel.map.isInitialized = false;
+            return false;
+        }
+        gis::resampleGrid(*tmpRaster, rothCModel.map.getHUM(), DEM.header, aggrAverage, 0.1f);
+
+        fileName = rothCPath.toStdString() + "/SOC";
+        if (! gis::readEsriGrid(fileName, tmpRaster, errorStr))
+        {
+            errorString = "Wrong RothC soil organic carbon map:\n" + QString::fromStdString(errorStr);
+            rothCModel.map.isInitialized = false;
+            return false;
+        }
+        gis::resampleGrid(*tmpRaster, rothCModel.map.getSOC(), DEM.header, aggrAverage, 0.1f);
+    }
+
+    //hydrall model
 
     logInfo("Current date is: " + getCurrentDate().toString("yyyy-MM-dd") + " hour: " + QString::number(getCurrentHour()));
 

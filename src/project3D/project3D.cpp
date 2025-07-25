@@ -181,6 +181,8 @@ void Project3D::initializeProject3D()
     isCriteria3DInitialized = false;
     isCropInitialized = false;
     isSnowInitialized = false;
+    isRothCInitialized = false;
+    isHydrallInitialized = false;
 
     showEachTimeStep = false;
     increaseSlope = false;

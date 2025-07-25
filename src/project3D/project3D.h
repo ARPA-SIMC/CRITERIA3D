@@ -93,6 +93,8 @@
         bool isCriteria3DInitialized;
         bool isCropInitialized;
         bool isSnowInitialized;
+        bool isRothCInitialized;
+        bool isHydrallInitialized;
 
         bool showEachTimeStep;
         bool increaseSlope;

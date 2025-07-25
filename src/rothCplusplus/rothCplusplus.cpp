@@ -67,45 +67,45 @@ using namespace std;
 
 void Crit3DRothCplusplusMaps::initialize(const gis::Crit3DRasterGrid& DEM)
 {
-    decomposablePlantMaterial = new gis::Crit3DRasterGrid;
-    resistantPlantMaterial  = new gis::Crit3DRasterGrid;
-    microbialBiomass = new gis::Crit3DRasterGrid;
-    humifiedOrganicMatter = new gis::Crit3DRasterGrid;
-    inertOrganicMatter = new gis::Crit3DRasterGrid;
-    soilOrganicMatter = new gis::Crit3DRasterGrid;
+    _decomposablePlantMaterial = new gis::Crit3DRasterGrid;
+    _resistantPlantMaterial  = new gis::Crit3DRasterGrid;
+    _microbialBiomass = new gis::Crit3DRasterGrid;
+    _humifiedOrganicMatter = new gis::Crit3DRasterGrid;
+    _inertOrganicMatter = new gis::Crit3DRasterGrid;
+    _soilOrganicMatter = new gis::Crit3DRasterGrid;
 
-    depthMap = new gis::Crit3DRasterGrid;
-    clayMap = new gis::Crit3DRasterGrid;
+    _depthMap = new gis::Crit3DRasterGrid;
+    _clayMap = new gis::Crit3DRasterGrid;
 
-    decomposablePlantMaterial->initializeGrid(DEM);
-    resistantPlantMaterial->initializeGrid(DEM);
-    microbialBiomass->initializeGrid(DEM);
-    humifiedOrganicMatter->initializeGrid(DEM);
-    inertOrganicMatter->initializeGrid(DEM);
-    soilOrganicMatter->initializeGrid(DEM);
+    _decomposablePlantMaterial->initializeGrid(DEM);
+    _resistantPlantMaterial->initializeGrid(DEM);
+    _microbialBiomass->initializeGrid(DEM);
+    _humifiedOrganicMatter->initializeGrid(DEM);
+    _inertOrganicMatter->initializeGrid(DEM);
+    _soilOrganicMatter->initializeGrid(DEM);
 
-    depthMap->initializeGrid(DEM);
-    clayMap->initializeGrid(DEM);
+    _depthMap->initializeGrid(DEM);
+    _clayMap->initializeGrid(DEM);
 }
 
 
 void Crit3DRothCplusplusMaps::setClay(double myClay, int row, int col)
 {
-    clayMap->value[row][col] = myClay;
+    _clayMap->value[row][col] = myClay;
 }
 
 double Crit3DRothCplusplusMaps::getClay(int row, int col)
 {
-    return clayMap->value[row][col];
+    return _clayMap->value[row][col];
 }
 void Crit3DRothCplusplusMaps::setDepth(double myDepth, int row, int col)
 {
-    depthMap->value[row][col] = myDepth;
+    _depthMap->value[row][col] = myDepth;
 }
 
 double Crit3DRothCplusplusMaps::getDepth(int row, int col)
 {
-    return depthMap->value[row][col];
+    return _depthMap->value[row][col];
 }
 
 

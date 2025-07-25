@@ -97,17 +97,25 @@ class Crit3DRothCplusplusMaps
 {
 private:
     //
-    gis::Crit3DRasterGrid* decomposablePlantMaterial; //[tC/ha]
-    gis::Crit3DRasterGrid* resistantPlantMaterial; //[tC/ha]
-    gis::Crit3DRasterGrid* microbialBiomass; //[tC/ha]
-    gis::Crit3DRasterGrid* humifiedOrganicMatter; //[tC/ha]
-    gis::Crit3DRasterGrid* inertOrganicMatter; //[tC/ha]
-    gis::Crit3DRasterGrid* soilOrganicMatter; //[tC/ha]
+    gis::Crit3DRasterGrid* _decomposablePlantMaterial; //[tC/ha]
+    gis::Crit3DRasterGrid* _resistantPlantMaterial; //[tC/ha]
+    gis::Crit3DRasterGrid* _microbialBiomass; //[tC/ha]
+    gis::Crit3DRasterGrid* _humifiedOrganicMatter; //[tC/ha]
+    gis::Crit3DRasterGrid* _inertOrganicMatter; //[tC/ha]
+    gis::Crit3DRasterGrid* _soilOrganicMatter; //[tC/ha]
 
-    gis::Crit3DRasterGrid* depthMap; //[?]
-    gis::Crit3DRasterGrid* clayMap; // [-]
+    gis::Crit3DRasterGrid* _depthMap; //[?]
+    gis::Crit3DRasterGrid* _clayMap; // [-]
 
 public:
+    bool isInitialized;
+
+    gis::Crit3DRasterGrid* getDPM() { return _decomposablePlantMaterial; };
+    gis::Crit3DRasterGrid* getRPM() { return _resistantPlantMaterial; };
+    gis::Crit3DRasterGrid* getBIO() { return _microbialBiomass; };
+    gis::Crit3DRasterGrid* getHUM() { return _humifiedOrganicMatter; };
+    gis::Crit3DRasterGrid* getSOC() { return _soilOrganicMatter; };
+
 
 
 

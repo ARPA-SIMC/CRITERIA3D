@@ -363,6 +363,7 @@
 
     public:
         //sapwood, foliage, fine root
+        bool isInitialized;
         gis::Crit3DRasterGrid* standBiomassMap;
         gis::Crit3DRasterGrid* rootBiomassMap;
         gis::Crit3DRasterGrid* mapLAI;
