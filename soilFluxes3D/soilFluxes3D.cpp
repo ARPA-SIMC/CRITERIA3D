@@ -1080,6 +1080,7 @@ namespace soilFluxes3D
         double dtWater, dtHeat;
         if (myStructure.computeWater)
         {
+            std::cout << "AAAAAA" << std::endl;
             computeWaterFluxes(maxTimeStep, &dtWater);
             dtHeat = dtWater;
         }

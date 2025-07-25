@@ -33,7 +33,7 @@
 
 #include "types.h"
 #include "solver.h"
-#include "soilFluxes3D_new/gpuEntryPoints.h"
+#include "../soilFluxes3DNew/gpuEntryPoints.h"
 
  double square(double x)
 {
@@ -391,9 +391,9 @@ bool solveLinearSystem(int approximation, double residualTolerance, int computat
                 currentNorm = GaussSeidelHeat();
                 break;
             case PROCESS_WATER:
-                currentNorm = tempCUSPARSErun();
-
-                // currentNorm = JacobiWater_openMP();
+                //currentNorm = tempCUSPARSErun();
+                std::cout << "AAAAAA" << std::endl;
+                currentNorm = JacobiWater_openMP();
                 // currentNorm = iterationThreads();
                 // currentNorm = GaussSeidelWater_openMP();
 

@@ -61,6 +61,7 @@ namespace soilFluxes3D::New
             default:
                 break;
         }
+        _status = Terminated;
         return SF3Dok;
     }
 
@@ -84,7 +85,7 @@ namespace soilFluxes3D::New
             for (uint64_t nodeIdx = 0; nodeIdx < nodeGrid.numNodes; ++nodeIdx)
             {
                 if(nodeGrid.surfaceFlag[nodeIdx])
-                    C[nodeIdx] = nodeGrid.size[nodeIdx];
+                    vectorC.values[nodeIdx] = nodeGrid.size[nodeIdx];
                 else
                     nodeGrid.waterData.saturationDegree[nodeIdx] = computeNodeSe(nodeIdx);
             }

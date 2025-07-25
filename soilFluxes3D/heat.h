@@ -2,7 +2,7 @@
 #define HEAT_H
 
     #ifndef MACRO_H
-        #include "soilFluxes3D_new/macro.h"
+        #include "macro.h"
     #endif
 
     struct TlinkedNode;
