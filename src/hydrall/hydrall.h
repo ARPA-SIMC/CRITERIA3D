@@ -84,9 +84,9 @@
     #define NOT_INITIALIZED_VINE -1
 
     struct ecophysiologicalParameter {
-        std::string name;
-        double Vcmo;
-        double mBallBerry;
+        std::string name; // name of the species
+        double Vcmo; // Max carboxylation rate at 25°C rate of RuBiSCO activity (PSII photosynthesis))
+        double mBallBerry; // empirical parameter of sensitivity to water stress to obtain stomatal closure
         bool isAmphystomatic;
     };
 
@@ -98,9 +98,9 @@
 
     struct LAIphenology{
         std::string name;
-        double emergence;
-        double increase;
-        double decrease;
+        double emergence; // GDD with threshold 5°C
+        double increase;  // GDD with threshold 5°C
+        double decrease;  // GDD with threshold 5°C
     };
 
     class Crit3DHydrallState
@@ -118,13 +118,13 @@
     public:
         Crit3DHydrallStatePlant();
 
-        double treeNetPrimaryProduction;
-        double treeBiomassFoliage;
-        double treeBiomassRoot;
-        double treeBiomassSapwood;
-        double understoreyNetPrimaryProduction;
-        double understoreyBiomassFoliage;
-        double understoreyBiomassRoot;
+        double treeNetPrimaryProduction; //SAVE
+        double treeBiomassFoliage; //SAVE
+        double treeBiomassRoot; //SAVE
+        double treeBiomassSapwood; //SAVE
+        double understoreyNetPrimaryProduction; //SAVE
+        double understoreyBiomassFoliage; //SAVE
+        double understoreyBiomassRoot; //SAVE
     };
 
     class Crit3DHydrallWeatherDerivedVariable {
