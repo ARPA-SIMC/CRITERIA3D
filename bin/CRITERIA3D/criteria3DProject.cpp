@@ -155,22 +155,29 @@ bool Crit3DProject::initializeRothC()
         {
             if (! isEqual(DEM.value[row][col], DEM.header->flag))
             {
-            int soilIndex = int(soilIndexMap.value[row][col]);
-            if (soilIndex != NODATA)
-            {
-                rothCModel.map.setDepth(soilList[soilIndex].totalDepth, row, col);
-
-                double clayContent = 0;
-                unsigned int i;
-                for (i = 0; ((i < nrLayers) && (soilList[soilIndex].getHorizonIndex(layerDepth[i]))!= NODATA); i++)
+                int soilIndex = int(soilIndexMap.value[row][col]);
+                if (soilIndex != NODATA)
                 {
-                    clayContent += soilList[soilIndex].horizon[soilList[soilIndex].getHorizonIndex(layerDepth[i])].texture.clay;
+                    rothCModel.map.setDepth(soilList[soilIndex].totalDepth, row, col);
+
+                    double clayContent = 0;
+                    unsigned int i;
+                    for (i = 0; ((i < nrLayers) && (soilList[soilIndex].getHorizonIndex(layerDepth[i]))!= NODATA); i++)
+                    {
+                        clayContent += soilList[soilIndex].horizon[soilList[soilIndex].getHorizonIndex(layerDepth[i])].texture.clay;
+                    }
+
+                    if (i > 0)
+                        rothCModel.map.setClay(clayContent/i, row, col);
+
+                    rothCModel.map.setDPMRowCol(rothCModel.getDPM(), row, col);
+                    rothCModel.map.setRPMRowCol(rothCModel.getRPM(), row, col);
+                    rothCModel.map.setBIORowCol(rothCModel.getBIO(), row, col);
+                    rothCModel.map.setHUMRowCol(rothCModel.getHUM(), row, col);
+                    rothCModel.map.setIOMRowCol(rothCModel.getIOM(), row, col);
+                    rothCModel.map.setSOCRowCol(rothCModel.getSOC(), row, col);
+
                 }
-
-                if (i > 0)
-                    rothCModel.map.setClay(clayContent/i, row, col);
-
-            }
             }
         }
 

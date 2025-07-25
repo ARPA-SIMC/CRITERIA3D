@@ -116,9 +116,12 @@ public:
     gis::Crit3DRasterGrid* getHUM() { return _humifiedOrganicMatter; };
     gis::Crit3DRasterGrid* getSOC() { return _soilOrganicMatter; };
 
-
-
-
+    void setDPMRowCol(double myDPM, int row, int col) { _decomposablePlantMaterial->value[row][col] = myDPM; };
+    void setRPMRowCol(double myRPM, int row, int col) { _resistantPlantMaterial->value[row][col] = myRPM; };
+    void setBIORowCol(double myBIO, int row, int col) { _microbialBiomass->value[row][col] = myBIO; };
+    void setHUMRowCol(double myHUM, int row, int col) { _humifiedOrganicMatter->value[row][col] = myHUM; };
+    void setIOMRowCol(double myIOM, int row, int col) { _inertOrganicMatter->value[row][col] = myIOM; };
+    void setSOCRowCol(double mySOC, int row, int col) { _soilOrganicMatter->value[row][col] = mySOC; };
 
     Crit3DRothCplusplusMaps() {};
     //~Crit3DRothCplusplusMaps();
@@ -168,6 +171,13 @@ public:
 
     void setPlantCover(double myPC) {plantCover = myPC; };
     double getPlantCover() { return plantCover; };
+
+    double getDPM() {return decomposablePlantMatter;};
+    double getRPM() {return resistantPlantMatter;};
+    double getBIO() {return microbialBiomass;};
+    double getHUM() {return humifiedOrganicMatter;};
+    double getIOM() {return inorganicMatter;};
+    double getSOC() {return soilOrganicCarbon;};
 
     void resetInputVariables();
 

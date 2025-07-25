@@ -2223,9 +2223,9 @@ void MainWindow::on_actionCriteria3D_set_processes_triggered()
             myProject.logWarning("Crop and water processes will be activated in order to compute Hydrall model.");
         myProject.processes.setComputeHydrall(dialogProcesses.hydrallProcess->isChecked());
 
-        if (dialogProcesses.rothCProcess->isChecked() && (! dialogProcesses.hydrallProcess->isChecked() || ! dialogProcesses.cropProcess->isChecked()
+        /*if (dialogProcesses.rothCProcess->isChecked() && (! dialogProcesses.hydrallProcess->isChecked() || ! dialogProcesses.cropProcess->isChecked()
                                                           || ! dialogProcesses.waterFluxesProcess->isChecked()))
-            myProject.logWarning("Hydrall, crop and water processes will be activated in order to compute RothC model.");
+            myProject.logWarning("Hydrall, crop and water processes will be activated in order to compute RothC model.");*/
         myProject.processes.setComputeRothC(dialogProcesses.rothCProcess->isChecked());
     }
 }
