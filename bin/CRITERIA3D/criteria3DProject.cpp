@@ -2084,11 +2084,11 @@ bool Crit3DProject::saveSnowModelState(const QString &currentStatePath)
 
 bool Crit3DProject::saveRothCState(const QString &currentStatePath)
 {
-    /*if (! rothCModel.isInitialized)
+    if (! isRothCInitialized)
     {
         logError("Initialize rothC model before.");
         return false;
-    }*/
+    }
 
     // create rothC path
     QString rothCPath = currentStatePath + "/rothC";
@@ -2131,17 +2131,17 @@ bool Crit3DProject::saveRothCState(const QString &currentStatePath)
 
 bool Crit3DProject::saveHydrallState(const QString &currentStatePath)
 {
-    /*if (! hydrallModel.isInitialized)
+    if (! isHydrallInitialized)
     {
         logError("Initialize hydrall model before.");
         return false;
-    }*/
+    }
 
     // create hydrall path
     QString hydrallPath = currentStatePath + "/hydrall";
     QDir().mkdir(hydrallPath);
 
-    logInfo("Saving snow state: " + currentStatePath);
+    logInfo("Saving hydrall state: " + currentStatePath);
     std::string errorStr;
     if (!gis::writeEsriGrid((hydrallPath+"/treeNPP").toStdString(), hydrallMaps.treeNetPrimaryProduction, errorStr))
     {
