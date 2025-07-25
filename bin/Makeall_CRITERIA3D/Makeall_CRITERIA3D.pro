@@ -3,6 +3,7 @@ TEMPLATE = subdirs
 SUBDIRS =       ../../agrolib/mathFunctions \
                 ../../agrolib/crit3dDate \
                 ../../agrolib/soilFluxes3D \
+                ../../agrolib/soilFluxes3DNew \
                 ../../agrolib/gis \
                 ../../agrolib/meteo \
                 ../../agrolib/soil \

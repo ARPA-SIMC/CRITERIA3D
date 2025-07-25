@@ -81,14 +81,14 @@ void computeCurrentMassBalance(double deltaT)
 
     // minimum reference water storage [m3] as % of current storage
     double timePercentage = 0.01 * std::max(deltaT, 1.) / HOUR_SECONDS;
-    double minRefWaterStorage = balanceCurrentTimeStep.storageWater * timePercentage;
+    double minRefWaterStorage = balanceDataCurrentTimeStep.waterStorage * timePercentage;
     minRefWaterStorage = std::max(minRefWaterStorage, 0.001);
 
     // Reference water for computation of mass balance error ratio
     // when the water sink/source is too low, use the reference water storage
-    double referenceWater = std::max(fabs(balanceCurrentTimeStep.sinkSourceWater), minRefWaterStorage);     // [m3]
+    double referenceWater = std::max(fabs(balanceDataCurrentTimeStep.waterSinkSource), minRefWaterStorage);     // [m3]
 
-    balanceCurrentTimeStep.waterMBR = balanceCurrentTimeStep.waterMBE / referenceWater;
+    balanceDataCurrentTimeStep.waterMBR = balanceDataCurrentTimeStep.waterMBE / referenceWater;
 }
 
 /*!
@@ -119,7 +119,7 @@ balanceResult_t evaluateWaterBalance(uint8_t approxNr, double& bestMBRerror, Sol
 {
     computeCurrentMassBalance(parameters.deltaTcurr);
 
-    double currMBRerror = fabs(balanceCurrentTimeStep.waterMBR);
+    double currMBRerror = fabs(balanceDataCurrentTimeStep.waterMBR);
 
     //Optimal error
     if(currMBRerror < parameters.MBRThreshold)

@@ -1122,7 +1122,6 @@ void Project3D::runWaterFluxes3DModel(double totalTimeStep, bool isRestart)
     while (currentSeconds < totalTimeStep)
     {
         currentSeconds += soilFluxes3D::computeStep(totalTimeStep - currentSeconds);
-
         if (isModelPaused && currentSeconds < totalTimeStep)
         {
             emit updateOutputSignal();

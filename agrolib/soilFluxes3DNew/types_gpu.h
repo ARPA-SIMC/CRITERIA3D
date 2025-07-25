@@ -4,7 +4,7 @@
 #include <cuda.h>
 #include <cusparse_v2.h>
 
-#include "../types.h"
+#include "../soilFluxes3D/types.h"
 
 namespace soilFluxes3D::New
 {

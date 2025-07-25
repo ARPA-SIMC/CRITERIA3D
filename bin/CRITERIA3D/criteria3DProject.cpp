@@ -944,7 +944,7 @@ bool Crit3DProject::runModels(const QDateTime &firstTime, const QDateTime &lastT
 
             QString linSystLog = soilFluxes3D::getLinSystLog();
             //logData("LinSystInfo", linSystLog);
-            logInfo("LinSystInfo 1 \n" + linSystLog);
+            logInfo("LinSystInfo 3 \n" + linSystLog);
 
             //Log GPU test
             // QDateTime startTimeGPU = QDateTime::currentDateTime();
@@ -1857,7 +1857,6 @@ bool Crit3DProject::runModelHour(const QString& hourlyOutputPath, bool isRestart
         {
             logInfo("\nCompute soil fluxes: " + getCurrentTime().toString());
         }
-
         runWaterFluxes3DModel(3600, isRestart);
 
         qApp->processEvents();
