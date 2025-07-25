@@ -373,7 +373,8 @@ bool RasterUtmObject::drawRaster(QPainter* painter)
             // check minimum (transparent)
             if (_rasterPointer->colorScale->isHideMinimum())
             {
-                if (isEqual(value, 0) || value <= _rasterPointer->colorScale->minimum())
+                // prec or surface water content
+                if (value < 0.1 || value <= _rasterPointer->colorScale->minimum())
                     continue;
             }
 

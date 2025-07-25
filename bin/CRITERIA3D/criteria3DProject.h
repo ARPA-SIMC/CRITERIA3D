@@ -85,7 +85,7 @@
 
         void assignETreal();
         void assignPrecipitation();
-        float checkSoilCracking(int row, int col, float precipitation);
+        float computeSoilCracking(int row, int col, float precipitation);
 
         void setSaveDailyState(bool isSave) { _saveDailyState = isSave; }
         bool isSaveDailyState() { return _saveDailyState; }

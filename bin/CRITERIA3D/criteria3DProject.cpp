@@ -118,7 +118,7 @@ bool Crit3DProject::initializeHydrall()
     logInfo("Initialize hydrall model...");
 
 
-    //funzione TODO e anche clear hydrall maps
+    //TODO fare anche clear hydrall maps
     hydrallMaps.mapLast30DaysTavg->initializeGrid(*(DEM.header));
     hydrallMaps.mapLAI->initializeGrid(*(DEM.header));
     hydrallMaps.rootBiomassMap->initializeGrid(*(DEM.header));
@@ -651,7 +651,7 @@ void Crit3DProject::assignPrecipitation()
                     }
                     if (liquidWater > 0)
                     {
-                        float precSurfaceWater = checkSoilCracking(row, col, liquidWater);
+                        float precSurfaceWater = computeSoilCracking(row, col, liquidWater);
 
                         double flow = area * (precSurfaceWater / 1000.);            // [m3 h-1]
                         if ((flow / 3600.) > DBL_EPSILON)
@@ -668,23 +668,29 @@ void Crit3DProject::assignPrecipitation()
 
 
 // Water infiltration into soil cracks
-// input: rainfall [mm]
+// input: precipitation [mm]
 // output: water remaining on the surface [mm]
 // after infiltration into soil cracks
-float Crit3DProject::checkSoilCracking(int row, int col, float precipitation)
+// use waterSinkSource to set the infiltration
+float Crit3DProject::computeSoilCracking(int row, int col, float precipitation)
 {
-    const double MIN_CRACKING_DEPTH = 0.2;              // [m]
     const double MAX_CRACKING_DEPTH = 0.6;              // [m]
     const double MIN_VOID_VOLUME = 0.15;                // [m3 m-3]
     const double MAX_VOID_VOLUME = 0.20;                // [m3 m-3]
+    const double MIN_FINE_FRACTION = 0.5;               // [m3 m-3]
+    const double MIN_FINE_LAYER_DEPTH = 0.2;            // [m]
 
     // check soil
     int soilIndex = getSoilIndex(row, col);
     if (soilIndex == NODATA)
         return precipitation;
 
-    // check pond
+    // check surface
     long surfaceNodeIndex = indexMap.at(0).value[row][col];
+    if (surfaceNodeIndex == NODATA)
+        return precipitation;
+
+    // check pond
     double currentPond = getCriteria3DVar(surfacePond, surfaceNodeIndex);       // [mm]
     double minimumPond = currentPond;                                           // [mm]
     if (precipitation <= minimumPond)
@@ -692,10 +698,10 @@ float Crit3DProject::checkSoilCracking(int row, int col, float precipitation)
 
     // check soil depth
     double soilDepth = std::min(computationSoilDepth, soilList[soilIndex].totalDepth);
-    if (soilDepth <= MIN_CRACKING_DEPTH)
+    if (soilDepth <= MIN_FINE_LAYER_DEPTH)
         return precipitation;
 
-    // check clay
+    // check fine fraction (clay)
     bool isFineFraction = true;
     int lastFineHorizon = NODATA;
     unsigned int h = 0;
@@ -706,7 +712,7 @@ float Crit3DProject::checkSoilCracking(int row, int col, float precipitation)
 
         double fineFraction = (horizon.texture.clay + horizon.texture.silt * 0.5) / 100
                               * (1 - horizon.coarseFragments) * (1 - horizon.organicMatter);
-        if (fineFraction < 0.5)
+        if (fineFraction < MIN_FINE_FRACTION)
         {
             isFineFraction = false;
         }
@@ -724,33 +730,42 @@ float Crit3DProject::checkSoilCracking(int row, int col, float precipitation)
     maxDepth = std::min(maxDepth, computationSoilDepth);
 
     // clay horizon is too thin
-    if (maxDepth < MIN_CRACKING_DEPTH)
+    if (maxDepth < MIN_FINE_LAYER_DEPTH)
         return precipitation;
 
-    // compute void volume
+    // compute the volume of voids
     double stepDepth = 0.05;                // [m]
     double currentDepth = stepDepth;        // [m]
-    double voidVolumeSum = 0;
+    double voidsVolumeSum = 0;              // [m3 m-3]
     int nrData = 0;
-    while (currentDepth <= maxDepth )
+    while (currentDepth <= maxDepth)
     {
         int layerIndex = getSoilLayerIndex(currentDepth);
-        if (layerIndex != INDEX_ERROR)
-        {
-            long nodeIndex = indexMap.at(layerIndex).value[row][col];
+        if (layerIndex == NODATA)
+            break;
 
-            double VWC = getCriteria3DVar(volumetricWaterContent, nodeIndex);               // [m3 m-3]
-            double maxVWC = getCriteria3DVar(maximumVolumetricWaterContent, nodeIndex);     // [m3 m-3]
+        long nodeIndex = indexMap.at(layerIndex).value[row][col];
+        if (nodeIndex == NODATA)
+            break;
 
-            // TODO: coarse fragment
-            voidVolumeSum += (maxVWC - VWC);
+        int horizonIndex = soilList[soilIndex].getHorizonIndex(currentDepth);
+        if (horizonIndex == NODATA)
+            break;
 
-            currentDepth += stepDepth;
-            nrData++;
-        }
+        double soilFraction = 1.0 - soilList[soilIndex].horizon[horizonIndex].coarseFragments;
+        double VWC = getCriteria3DVar(volumetricWaterContent, nodeIndex);               // [m3 m-3]
+        double maxVWC = getCriteria3DVar(maximumVolumetricWaterContent, nodeIndex);     // [m3 m-3]
+
+        voidsVolumeSum += (maxVWC - VWC) * soilFraction;
+        nrData++;
+
+        currentDepth += stepDepth;
     }
 
-    double avgVoidVolume = voidVolumeSum / nrData;              // [m3 m-3]
+    if (nrData == 0)
+        return precipitation;
+
+    double avgVoidVolume = voidsVolumeSum / nrData;              // [m3 m-3]
     if (avgVoidVolume <= MIN_VOID_VOLUME)
         return precipitation;
 
@@ -1232,7 +1247,7 @@ bool Crit3DProject::loadCriteria3DParameters()
         {
             parametersSettings->beginGroup(group);
 
-            // TODO
+            // TODO parametri soil crack
 
             parametersSettings->endGroup();
 
@@ -1289,7 +1304,7 @@ bool Crit3DProject::writeCriteria3DParameters(bool isSnow, bool isWater, bool is
 
     if (isSoilCrack)
     {
-        // todo
+        // TODO parametri soil crack
         // parametersSettings->setValue("soilCracking/ ", );
 
     }
@@ -2065,7 +2080,8 @@ bool Crit3DProject::getAllSavedState(QList<QString> &stateList)
         errorString = "STATES directory is missing: " + statesPath;
         return false;
     }
-    QFileInfoList list = dir.entryInfoList(QDir::AllDirs | QDir::NoDot | QDir::NoDotDot | QDir::NoSymLinks);
+    // only directories, filter by name
+    QFileInfoList list = dir.entryInfoList(QDir::AllDirs | QDir::NoDot | QDir::NoDotDot | QDir::NoSymLinks, QDir::Name);
 
     if (list.size() == 0)
     {
@@ -3260,17 +3276,31 @@ int Crit3DProject::cmdList(const QList<QString> &argumentList)
 
 int Crit3DProject::cmdLoadState(const QList<QString> &argumentList)
 {
-    QString stateName;
-    if (argumentList.size() >= 2)
+    if (argumentList.size() < 2)
     {
-        stateName = argumentList.at(1);
+        std::cout << "Usage: LoadState <YYYYMMDD-Hhh> | [LAST]" << std::endl;
+        return CRIT3D_OK;
     }
 
-    QString statePath = getProjectPath() + PATH_STATES + stateName;
+    QString stateStr;
+    if (argumentList.at(1).toUpper() == "LAST")
+    {
+        QList<QString> list;
+        if (! getAllSavedState(list))
+            return CRIT3D_ERROR;
+
+        stateStr = list.last();
+    }
+    else
+    {
+        stateStr = argumentList.at(1);
+    }
+
+    QString statePath = getProjectPath() + PATH_STATES + stateStr;
     QDir stateDir(statePath);
     if (! stateDir.exists())
     {
-        std::cout << "Usage: LoadState <YYYYMMDD-Hhh>" << std::endl;
+        std::cout << "Usage: LoadState <YYYYMMDD-Hhh> | [LAST]" << std::endl;
         return CRIT3D_OK;
     }
 
@@ -3295,36 +3325,63 @@ int Crit3DProject::cmdSaveCurrentState()
 }
 
 
+
+void usage_cmdRunModels()
+{
+    std::cout << "Usage: RunModels <YYYY-MM-DD> <HH> | [ONE_DAY] | [ONE_WEEK] | [ONE_MONTH]" << std::endl;
+}
+
 int Crit3DProject::cmdRunModels(const QList<QString> &argumentList)
 {
-    QString dateStr, hourStr;
-    if (argumentList.size() >= 3)
+    if (argumentList.size() < 2)
     {
-        dateStr = argumentList.at(1);
-        hourStr = argumentList.at(2);
-    }
-
-    int lastHour = hourStr.toInt();
-    if ((lastHour < 0) || (lastHour > 23))
-    {
-        std::cout << "Wrong hour! 00-23 are allowed." << std::endl;
-        std::cout << "Usage: RunModels <YYYY-MM-DD HH>" << std::endl;
-        return CRIT3D_OK;
-    }
-
-    QDateTime lastTime;
-    lastTime.setTimeZone(QTimeZone::utc());
-    lastTime.setDate(QDate::fromString(dateStr, "yyyy-MM-dd"));
-    lastTime.setTime(QTime(lastHour,0,0,0));
-    if (! lastTime.isValid())
-    {
-        std::cout << "Usage: RunModels <YYYY-MM-DD HH>" << std::endl;
+        usage_cmdRunModels();
         return CRIT3D_OK;
     }
 
     // first time: next hour
     QDateTime firstTime = getCurrentTime();
+    QDateTime lastTime = getCurrentTime();;
     firstTime = firstTime.addSecs(HOUR_SECONDS);
+
+    if (argumentList.at(1).toUpper() == "ONE_DAY")
+    {
+        lastTime = lastTime.addDays(1);
+    }
+    else if (argumentList.at(1).toUpper() == "ONE_WEEK")
+    {
+        lastTime = lastTime.addDays(7);
+    }
+    else if (argumentList.at(1).toUpper() == "ONE_MONTH")
+    {
+        lastTime = lastTime.addMonths(1);
+    }
+    else
+    {
+        QString dateStr, hourStr;
+        if (argumentList.size() >= 3)
+        {
+            dateStr = argumentList.at(1);
+            hourStr = argumentList.at(2);
+        }
+
+        int lastHour = hourStr.toInt();
+        if ((lastHour < 0) || (lastHour > 23))
+        {
+            std::cout << "Wrong hour! 00-23 are allowed." << std::endl;
+            usage_cmdRunModels();
+            return CRIT3D_OK;
+        }
+
+        lastTime.setDate(QDate::fromString(dateStr, "yyyy-MM-dd"));
+        lastTime.setTime(QTime(lastHour, 0, 0, 0));
+        if (! lastTime.isValid())
+        {
+            std::cout << "Wrong time parameters!" << std::endl;
+            usage_cmdRunModels();
+            return CRIT3D_OK;
+        }
+    }
 
     if (! startModels(firstTime, lastTime))
         return CRIT3D_ERROR;
