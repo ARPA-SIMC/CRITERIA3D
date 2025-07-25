@@ -1812,7 +1812,9 @@ void MainWindow::openSoilWidget(QPoint mapPos)
             myProject.logError();
             return;
         }
-        soilWidget = new Crit3DSoilWidget();
+
+        QString imgPath = myProject.getApplicationPath() + "/DOC/img/";
+        soilWidget = new Crit3DSoilWidget(imgPath);
         soilWidget->show();
         soilWidget->setDbSoil(dbSoil, soilCode);
     }
