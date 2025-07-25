@@ -39,7 +39,7 @@ gantolini@arpae.it
  * \brief Computes volumetric water content from current degree of saturation
  * \return result
  */
-__SF3DINLINE double theta_from_Se (unsigned long index)
+ double theta_from_Se (unsigned long index)
 {
     return ((nodeList[index].Se * (nodeList[index].Soil->Theta_s - nodeList[index].Soil->Theta_r)) + nodeList[index].Soil->Theta_r);
 }
@@ -49,7 +49,7 @@ __SF3DINLINE double theta_from_Se (unsigned long index)
  * \param Se degree of saturation [-]
  * \return result
  */
-__SF3DINLINE double theta_from_Se (double Se, unsigned long index)
+ double theta_from_Se (double Se, unsigned long index)
 {
     return ((Se * (nodeList[index].Soil->Theta_s - nodeList[index].Soil->Theta_r)) + nodeList[index].Soil->Theta_r);
 }
@@ -315,7 +315,7 @@ double getThetaMean(long i)
         return (getTheta(i, myHMean));
 }
 
-__SF3DINLINE double getTheta(long i, double H)
+ double getTheta(long i, double H)
 {
     double psi = H - nodeList[i].z;
     return (theta_from_sign_Psi(psi, i));
@@ -329,7 +329,7 @@ double getTMean(long i)
         return NODATA;
 }
 
-__SF3DINLINE double getHMean(long i)
+ double getHMean(long i)
 {
     // is there any efficient way to compute a geometric mean of H?
     return arithmeticMean(nodeList[i].oldH, nodeList[i].H);

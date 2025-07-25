@@ -1,13 +1,21 @@
+#include <cassert>
+
+#include "solver_new.h"
 #include "water_new.h"
 #include "soil_new.h"
+#include "heat_new.h"
+#include "otherFunctions.h"
 
 using namespace soilFluxes3D::New;
 using namespace soilFluxes3D::Soil;
+using namespace soilFluxes3D::Math;
+using namespace soilFluxes3D::Heat;
 
 
-/*extern*/ bool enableOMP = true;
-/*extern*/ nodesData_t nodesData;
-balanceData_t balanceDataCurrentPeriod, balanceDataWholePeriod, balanceDataCurrentTimeStep, balanceDataPreviousTimeStep;
+extern Solver& solver;
+extern nodesData_t nodeGrid;
+extern balanceData_t balanceDataCurrentPeriod, balanceDataWholePeriod, balanceDataCurrentTimeStep, balanceDataPreviousTimeStep;
+extern simulationFlags_t simulationFlags;
 
 //TEMP, problemi di conflitti
 namespace soilFluxes3D::Water
@@ -19,21 +27,21 @@ namespace soilFluxes3D::Water
  */
 SF3Derror_t initializeWaterBalance()
 {
-    double twc = computeTotalWaterContent_new();
+    double twc = computeTotalWaterContent();
     balanceDataWholePeriod.waterStorage = twc;
     balanceDataCurrentPeriod.waterStorage = twc;
     balanceDataCurrentTimeStep.waterStorage = twc;
     balanceDataPreviousTimeStep.waterStorage = twc;
 
-    if(!nodesData.isInizialized)
+    if(!nodeGrid.isInizialized)
         return MemoryError;
 
     //link flow
     for (uint8_t linkIndex = 0; linkIndex < maxTotalLink; ++linkIndex)
-        nodesData.linkData[linkIndex].waterFlow = (double*) calloc(nodesData.numNodes, sizeof(double));
+        nodeGrid.linkData[linkIndex].waterFlowSum = (double*) calloc(nodeGrid.numNodes, sizeof(double));
 
     //boundary flow sum
-    nodesData.boundaryData.waterFlowSum = (double*) calloc(nodesData.numNodes, sizeof(double));
+    nodeGrid.boundaryData.waterFlowSum = (double*) calloc(nodeGrid.numNodes, sizeof(double));
 
     return SF3Dok;
 }
@@ -42,23 +50,21 @@ SF3Derror_t initializeWaterBalance()
  * \brief computes the total water content
  * \return total water content [m3]
  */
-double computeTotalWaterContent_new()
+double computeTotalWaterContent()
 {
+    if(!nodeGrid.isInizialized)
+        return -1;
+
+    double sum = 0.0;
+
+    #pragma omp parallel for reduction(+:sum) if(solver.getOMPstatus())
+    for (uint64_t idx = 0; idx < nodeGrid.numNodes; ++idx)
     {
-        if(!nodesData.isInizialized)
-            return -1;
-
-        double sum = 0.0;
-
-        #pragma omp parallel for reduction(+:sum) if(enableOMP)
-        for (uint64_t idx = 0; idx < nodesData.numNodes; ++idx)
-        {
-            double theta = nodesData.surfaceFlag[idx] ? (nodesData.waterData.pressureHead[idx] - nodesData.z[idx]) : thetaFromSe(idx);
-            sum += theta * nodesData.size[idx];
-        }
-
-        return sum;
+        double theta = nodeGrid.surfaceFlag[idx] ? (nodeGrid.waterData.pressureHead[idx] - nodeGrid.z[idx]) : computeNodeTheta(idx);     //TO DO
+        sum += theta * nodeGrid.size[idx];
     }
+
+    return sum;
 }
 
 /*!
@@ -67,7 +73,7 @@ double computeTotalWaterContent_new()
  */
 void computeCurrentMassBalance(double deltaT)
 {
-    balanceDataCurrentTimeStep.waterStorage = computeTotalWaterContent_new();
+    balanceDataCurrentTimeStep.waterStorage = computeTotalWaterContent();
     double deltaStorage = balanceDataCurrentTimeStep.waterStorage - balanceDataPreviousTimeStep.waterStorage;
 
     balanceDataCurrentTimeStep.waterSinkSource = computeWaterSinkSourceFlowsSum(deltaT);
@@ -94,10 +100,10 @@ double computeWaterSinkSourceFlowsSum(double deltaT)
 {
     double sum = 0;
 
-    #pragma omp parallel for reduction(+:sum) if(enableOMP)
-    for (uint64_t idx = 0; idx < nodesData.numNodes; ++idx)
-        if(nodesData.waterData.waterFlow[idx] != 0)     //TO DO: evaluate remove check
-            sum += nodesData.waterData.waterFlow[idx] * deltaT;
+    #pragma omp parallel for reduction(+:sum) if(solver.getOMPstatus())
+    for (uint64_t idx = 0; idx < nodeGrid.numNodes; ++idx)
+        if(nodeGrid.waterData.waterFlow[idx] != 0)     //TO DO: evaluate remove check
+            sum += nodeGrid.waterData.waterFlow[idx] * deltaT;
 
     return sum;
 }
@@ -121,7 +127,7 @@ balanceResult_t evaluateWaterBalance(uint8_t approxNr, double& bestMBRerror, Sol
         //acceptStep()                      //TO DO
 
         //Check Stability (Courant)
-        double currCWL = nodesData.waterData.CourantWaterLevel;
+        double currCWL = nodeGrid.waterData.CourantWaterLevel;
         if(currCWL < parameters.CourantWaterThreshold)
         {
             //increase deltaT
@@ -168,37 +174,388 @@ void acceptStep(double deltaT)
     balanceDataCurrentPeriod.waterSinkSource += balanceDataCurrentTimeStep.waterSinkSource;
 
     /*! update sum of flow */
-    #pragma omp parallel for if(enableOMP)
-    for (uint64_t nodeIndex = 0; nodeIndex < nodesData.numNodes; ++nodeIndex)
+    #pragma omp parallel for if(solver.getOMPstatus())
+    for (uint64_t nodeIndex = 0; nodeIndex < nodeGrid.numNodes; ++nodeIndex)
     {
         //Update link flows
         for(uint8_t linkIndex = 0; linkIndex < maxTotalLink; ++linkIndex)
             updateLinkFlux(nodeIndex, linkIndex, deltaT);
 
         //Update boundary flow
-        if (nodesData.boundaryData.boundaryType[nodeIndex] != None)
-            nodesData.boundaryData.waterFlowSum[nodeIndex] += nodesData.boundaryData.waterFlowRate[nodeIndex] * deltaT;
+        if (nodeGrid.boundaryData.boundaryType[nodeIndex] != NoBoundary)
+            nodeGrid.boundaryData.waterFlowSum[nodeIndex] += nodeGrid.boundaryData.waterFlowRate[nodeIndex] * deltaT;
     }
 }
 
 void updateLinkFlux(uint64_t nodeIndex, uint8_t linkIndex, double deltaT)
 {
-    if(nodesData.linkData[linkIndex].linktype[nodeIndex] == NoLink)
+    if(nodeGrid.linkData[linkIndex].linktype[nodeIndex] == NoLink)
         return;
 
-    uint64_t linkedNodeIndex = nodesData.linkData[linkIndex].linkIndex[nodeIndex];
-    double matrixValue = getMatrixValue(nodeIndex, linkedNodeIndex);
-    nodesData.linkData[linkIndex].waterFlow[nodeIndex] += matrixValue * (nodesData.waterData.pressureHead[nodeIndex] - nodesData.waterData.pressureHead[linkedNodeIndex]) * deltaT;
+    uint64_t linkedNodeIndex = nodeGrid.linkData[linkIndex].linkIndex[nodeIndex];
+    double matrixValue = getMatrixElement(nodeIndex, linkedNodeIndex);
+    nodeGrid.linkData[linkIndex].waterFlowSum[nodeIndex] += matrixValue * (nodeGrid.waterData.pressureHead[nodeIndex] - nodeGrid.waterData.pressureHead[linkedNodeIndex]) * deltaT;
 }
 
-double getMatrixValue(uint64_t rowIndex, uint64_t columnIndex)
+void restorePressureHead()
 {
-    return 0;     //TO DO
+    std::memcpy(nodeGrid.waterData.pressureHead, nodeGrid.waterData.oldPressureHeads, nodeGrid.numNodes * sizeof(double));
+}
+
+void computeCapacity(VectorCPU& vectorC)
+{
+    #pragma omp parallel for if(solver.getOMPstatus())
+    for (uint64_t nodeIndex = 0; nodeIndex < nodeGrid.numNodes; ++nodeIndex)
+    {
+        nodeGrid.waterData.invariantFluxes[nodeIndex] = 0.;
+        if(nodeGrid.surfaceFlag[nodeIndex])
+            continue;
+
+        //Compute hydraulic conductivity
+        nodeGrid.waterData.waterConductivity[nodeIndex] = computeNodeK(nodeIndex);
+
+        double dThetadH = computeNodedThetadH(nodeIndex);
+        vectorC.values[nodeIndex] = nodeGrid.size[nodeIndex] * dThetadH;
+
+        if(simulationFlags.computeHeat && simulationFlags.computeHeatVapor)
+            vectorC.values[nodeIndex] += nodeGrid.size[nodeIndex] * computeNodedThetaVdH(nodeIndex, getNodeMeanTemperature(nodeIndex), dThetadH);
+    }
+}
+
+void computeLinearSystemElement(MatrixCPU &matrixA, VectorCPU& vectorB, const VectorCPU& vectorC, uint8_t approxNum, double deltaT, double lateralVerticalRatio, meanType_t meanType)
+{
+    #pragma omp parallel for if(solver.getOMPstatus())
+    for (uint64_t rowIdx = 0; rowIdx < matrixA.numRows; ++rowIdx)
+    {
+        uint8_t linkIdx = 1;
+        bool isLinked;
+
+        //compute flux up
+        isLinked = computeLinkFluxes(matrixA.values[rowIdx][linkIdx], matrixA.colIndeces[rowIdx][linkIdx], rowIdx, 0, approxNum, deltaT, lateralVerticalRatio, Up, meanType);
+        if(isLinked)
+            linkIdx++;
+
+        //compute flox down
+        isLinked = computeLinkFluxes(matrixA.values[rowIdx][linkIdx], matrixA.colIndeces[rowIdx][linkIdx], rowIdx, 1, approxNum, deltaT, lateralVerticalRatio, Down, meanType);
+        if(isLinked)
+            linkIdx++;
+
+        //compute flux lateral
+        for(uint8_t latIdx = 0; latIdx < maxLateralLink; ++latIdx)
+        {
+            isLinked = computeLinkFluxes(matrixA.values[rowIdx][linkIdx], matrixA.colIndeces[rowIdx][linkIdx], rowIdx, 2 + latIdx, approxNum, deltaT, lateralVerticalRatio, Lateral, meanType);
+            if(isLinked)
+                linkIdx++;
+        }
+
+        matrixA.numColumns[rowIdx] = linkIdx;
+
+        //TO DO: need to fill the not used columns of the row?
+
+        //Compute diagonal element
+        double sum = 0.;
+        for(uint8_t colIdx = 1; colIdx < matrixA.numColumns[rowIdx]; ++colIdx)
+        {
+            sum += matrixA.values[rowIdx][colIdx];
+            matrixA.values[rowIdx][colIdx] *= -1.;
+        }
+        matrixA.colIndeces[rowIdx][0] = rowIdx;
+        matrixA.values[rowIdx][0] = (vectorC.values[rowIdx] / deltaT) + sum;
+
+        //Compute b element
+        vectorB.values[rowIdx] = ((vectorC.values[rowIdx] / deltaT) * nodeGrid.waterData.pressureHead[rowIdx]) + nodeGrid.waterData.waterFlow[rowIdx] + nodeGrid.waterData.invariantFluxes[rowIdx];
+
+        //Preconditioning
+        for(uint8_t colIdx = 1; colIdx < matrixA.numColumns[rowIdx]; ++colIdx)
+            matrixA.values[rowIdx][colIdx] /= matrixA.values[rowIdx][0];
+
+        vectorB.values[rowIdx] /= matrixA.values[rowIdx][0];
+    }
+}
+
+bool computeLinkFluxes(double& matrixElement, uint64_t& matrixIndex, uint64_t nodeIndex, uint8_t linkIndex, uint8_t approxNum, double deltaT, double lateralVerticalRatio, linkType_t linkType, meanType_t meanType)
+{
+    if(nodeGrid.linkData[linkIndex].linktype[nodeIndex] == NoLink)
+        return false;
+
+    uint64_t linkedNodeIndex = nodeGrid.linkData[linkIndex].linkIndex[nodeIndex];
+    double flowArea = nodeGrid.linkData[linkIndex].interfaceArea[nodeIndex];
+    matrixIndex = linkedNodeIndex;
+
+    if(nodeGrid.surfaceFlag[nodeIndex] && nodeGrid.surfaceFlag[linkedNodeIndex])
+        matrixElement = runoff(nodeIndex, linkedNodeIndex, approxNum, deltaT, flowArea);
+    else if (nodeGrid.surfaceFlag[nodeIndex] && !nodeGrid.surfaceFlag[linkedNodeIndex])
+        matrixElement = infiltration(nodeIndex, linkedNodeIndex, deltaT, flowArea, meanType);
+    else if (!nodeGrid.surfaceFlag[nodeIndex] && nodeGrid.surfaceFlag[linkedNodeIndex])
+        matrixElement = infiltration(linkedNodeIndex, nodeIndex, deltaT, flowArea, meanType);
+    else if (!nodeGrid.surfaceFlag[nodeIndex] && !nodeGrid.surfaceFlag[linkedNodeIndex])
+        matrixElement = redistribution(nodeIndex, linkedNodeIndex, lateralVerticalRatio, flowArea, linkType, meanType);
+    else
+        return false;
+
+    if(nodeGrid.surfaceFlag[nodeIndex] || nodeGrid.surfaceFlag[linkedNodeIndex])
+        return true;
+
+    if(!simulationFlags.computeHeat)
+        return true;
+
+    double thermalLiquidFlux = computeThermalLiquidFlux();
+    nodeGrid.waterData.invariantFluxes[nodeIndex] += thermalLiquidFlux;
+
+    if(!simulationFlags.computeHeatVapor)
+        return true;
+
+    double thermalVaporFlux = computeThermalVaporFlux();
+    nodeGrid.waterData.invariantFluxes[nodeIndex] += thermalVaporFlux;
+
+    return true;
+}
+
+double runoff(uint64_t rowIdx, uint64_t colIdx, uint8_t approxNum, double deltaT, double flowArea)
+{
+    double flux_i = (nodeGrid.waterData.waterFlow[rowIdx] * deltaT) / nodeGrid.size[rowIdx];
+    double flux_j = (nodeGrid.waterData.waterFlow[colIdx] * deltaT) / nodeGrid.size[colIdx];
+
+    double H_i = (approxNum != 0) ? nodeGrid.waterData.pressureHead[rowIdx] : nodeGrid.waterData.oldPressureHeads[rowIdx] + 0.5 * flux_i;
+    double H_j = (approxNum != 0) ? nodeGrid.waterData.pressureHead[colIdx] : nodeGrid.waterData.oldPressureHeads[colIdx] + 0.5 * flux_j;
+
+    double dH = fabs(H_i - H_j);
+
+    if(dH < DBL_EPSILON)
+        return 0.;
+
+    double z_i = nodeGrid.z[rowIdx] + nodeGrid.waterData.pond[rowIdx];
+    double z_j = nodeGrid.z[colIdx] + nodeGrid.waterData.pond[colIdx];
+
+    double H_max = std::max(H_i, H_j);
+    double z_max = std::max(z_i, z_j);
+
+    double H_s = H_max - z_max;
+
+    if(H_s < 0.0001)
+        return 0.;
+
+    if((H_i > H_j && z_i < z_j) || ((H_i < H_j && z_i > z_j)))
+        H_s = std::min(H_s, dH);
+
+    double cellDistance = nodeDistance2D(rowIdx, colIdx);
+    double slope = dH / cellDistance;
+
+    if(slope < DBL_EPSILON)
+        return 0.;
+
+    double roughness = 0.5 * (nodeGrid.soilSurfacePointers[rowIdx].surfacePtr->roughness + nodeGrid.soilSurfacePointers[colIdx].surfacePtr->roughness);
+
+    double v = pow(H_s, 2./3.) * sqrt(slope) / roughness;
+    nodeGrid.waterData.CourantWaterLevel = std::max(nodeGrid.waterData.CourantWaterLevel, v * deltaT / cellDistance);
+
+    return v * flowArea / dH;
+}
+
+double infiltration(uint64_t surfNodeIdx, uint64_t soilNodeIdx, double deltaT, double flowArea, meanType_t meanType)
+{
+    double cellDistance = nodeGrid.z[surfNodeIdx] - nodeGrid.z[soilNodeIdx];
+    soilData_t& soilData = *(nodeGrid.soilSurfacePointers[soilNodeIdx].soilPtr);
+
+    double boundaryFactor = 1.;
+    switch(nodeGrid.boundaryData.boundaryType[soilNodeIdx])
+    {
+        case Urban:
+            boundaryFactor = 0.1;
+            break;
+        case Road:
+            boundaryFactor = 0.;        //TO DO: maybe can transformed in return 0.;
+            break;
+        default:
+            break;
+    }
+
+    //Soil node saturated
+    if(nodeGrid.waterData.pressureHead[soilNodeIdx] > nodeGrid.z[surfNodeIdx])
+            return (soilData.K_sat * boundaryFactor * flowArea) / cellDistance;
+
+    double surfH = 0.5 * (nodeGrid.waterData.pressureHead[surfNodeIdx] + nodeGrid.waterData.oldPressureHeads[surfNodeIdx]);
+    double soilH = 0.5 * (nodeGrid.waterData.pressureHead[soilNodeIdx] + nodeGrid.waterData.oldPressureHeads[soilNodeIdx]);
+
+    double surfaceWater = std::max(surfH - nodeGrid.z[surfNodeIdx], 0.);                            // [m]
+    double prec_evapRate = nodeGrid.waterData.waterFlow[surfNodeIdx] / nodeGrid.size[surfNodeIdx];  // [m s-1]
+
+    double maxInfRate = (surfaceWater / deltaT) + prec_evapRate;
+    if(maxInfRate < DBL_EPSILON)
+        return 0.;
+
+    double dH = surfH - soilH;
+    double maxK = maxInfRate * (cellDistance / dH);
+    double meanK = computeMean(soilData.K_sat, nodeGrid.waterData.waterConductivity[soilNodeIdx], meanType);
+
+    return (std::min(boundaryFactor * meanK, maxK) * flowArea) / cellDistance;
+}
+
+double redistribution(uint64_t rowIdx, uint64_t colIdx, double lateralVerticalRatio, double flowArea, linkType_t linkType, meanType_t meanType)
+{
+    double cellDistance;
+    double rowK = nodeGrid.waterData.waterConductivity[rowIdx];
+    double colK = nodeGrid.waterData.waterConductivity[colIdx];
+    if(linkType == Lateral)
+    {
+        cellDistance = nodeDistance3D(rowIdx, colIdx);
+        rowK *= lateralVerticalRatio;
+        colK *= lateralVerticalRatio;
+    }
+    else
+    {
+        cellDistance = fabs(nodeGrid.z[rowIdx] - nodeGrid.z[colIdx]);
+    }
+
+    return (computeMean(rowK, colK, meanType) * flowArea) / cellDistance;
 }
 
 
+double JacobiWaterCPU(VectorCPU& vectorX, const MatrixCPU &matrixA, const VectorCPU& vectorB)
+{
+    double currentNorm = -1, infinityNorm = -1;
+
+    double* tempX = (double*) calloc(vectorX.numElements, sizeof(double));
+    std::memcpy(tempX, vectorB.values, vectorX.numElements * sizeof(double));
+
+    #pragma omp parallel for private(currentNorm) reduction(max:infinityNorm) if(solver.getOMPstatus())
+    for (uint64_t rowIdx = 0; rowIdx < matrixA.numRows; ++rowIdx)
+    {
+        for (uint8_t colIdx = 1; colIdx < matrixA.numColumns[rowIdx]; ++colIdx)
+            tempX[rowIdx] -= matrixA.values[rowIdx][colIdx] * vectorX.values[matrixA.colIndeces[rowIdx][colIdx]];
+
+        if(nodeGrid.surfaceFlag[rowIdx] && tempX[rowIdx] < nodeGrid.z[rowIdx])
+            tempX[rowIdx] = nodeGrid.z[rowIdx];
+
+        currentNorm = fabs(tempX[rowIdx] - vectorX.values[rowIdx]);
+
+        double psi = tempX[rowIdx] - nodeGrid.z[rowIdx];
+        if(psi > 1.)
+            currentNorm /= psi;
+
+        if(currentNorm > infinityNorm)
+            infinityNorm = currentNorm;
+    }
+
+    std::memcpy(vectorX.values, tempX, vectorX.numElements * sizeof(double));
+    free(tempX);
+    return infinityNorm;
+}
+
+double GaussSeidelWaterCPU(VectorCPU& vectorX, const MatrixCPU &matrixA, const VectorCPU& vectorB)
+{
+    double currentNorm = -1, infinityNorm = -1;
+
+    for (uint64_t rowIdx = 0; rowIdx < matrixA.numRows; ++rowIdx)
+    {
+        double newCurrValue = vectorB.values[rowIdx];
+        for (uint8_t colIdx = 1; colIdx < matrixA.numColumns[rowIdx]; ++colIdx)
+            newCurrValue -= matrixA.values[rowIdx][colIdx] * vectorX.values[matrixA.colIndeces[rowIdx][colIdx]];
+
+        if(nodeGrid.surfaceFlag[rowIdx] && newCurrValue < nodeGrid.z[rowIdx])
+            newCurrValue = nodeGrid.z[rowIdx];
+
+        currentNorm = fabs(newCurrValue - vectorX.values[rowIdx]);
+        vectorX.values[rowIdx] = newCurrValue;
+
+        double psi = newCurrValue - nodeGrid.z[rowIdx];
+        if(psi > 1.)
+            currentNorm /= psi;
+
+        if(currentNorm > infinityNorm)
+            infinityNorm = currentNorm;
+    }
+
+    return infinityNorm;
+}
 
 
+void updateBoundaryWaterData(double deltaT)
+{
+    #pragma omp parallel for if(solver.getOMPstatus())
+    for (uint64_t nodeIdx = 0; nodeIdx < nodeGrid.numNodes; ++nodeIdx)
+    {
+        //Inizialize: water sink.source
+        nodeGrid.waterData.waterFlow[nodeIdx] = nodeGrid.waterData.waterSinkSource[nodeIdx];
+
+        if(nodeGrid.boundaryData.boundaryType[nodeIdx] == NoBoundary)
+            continue;
+
+        switch(nodeGrid.boundaryData.boundaryType[nodeIdx])
+        {
+            case Runoff:
+                double avgH, hs, maxFlow, v, flow;
+                avgH = 0.5 * (nodeGrid.waterData.pressureHead[nodeIdx] + nodeGrid.waterData.oldPressureHeads[nodeIdx]);
+
+                hs = std::max(0., avgH - (nodeGrid.z[nodeIdx] + nodeGrid.waterData.pond[nodeIdx]));
+                if(hs < EPSILON_RUNOFF)
+                    break;
+
+                // Maximum flow available during the time step [m3 s-1]
+                maxFlow = (hs * nodeGrid.size[nodeIdx]) / deltaT;
+
+                //Manning equation
+                assert(nodeGrid.surfaceFlag[nodeIdx]);
+                v = pow(hs, 2./3.) * sqrt(nodeGrid.boundaryData.boundarySlope[nodeIdx]) / nodeGrid.soilSurfacePointers[nodeIdx].surfacePtr->roughness;
+
+                flow = hs * v * nodeGrid.boundaryData.boundarySize[nodeIdx];
+                nodeGrid.boundaryData.waterFlowRate[nodeIdx] = - std::min(flow, maxFlow);
+                break;
+
+            case FreeDrainage:
+                //Darcy unit gradient (use link node up)
+                assert(nodeGrid.linkData[0].linktype[nodeIdx] != NoLink);
+                nodeGrid.boundaryData.waterFlowRate[nodeIdx] = -nodeGrid.waterData.waterConductivity[nodeIdx] * nodeGrid.linkData[0].interfaceArea[nodeIdx];
+                break;
+
+            case FreeLateraleDrainage:
+                //Darcy gradient = slope
+                nodeGrid.boundaryData.waterFlowRate[nodeIdx] = -nodeGrid.waterData.waterConductivity[nodeIdx] * nodeGrid.boundaryData.boundarySize[nodeIdx]
+                                                                        * nodeGrid.boundaryData.boundarySlope[nodeIdx] * solver.getLVRatio();
+                break;
+
+            case PrescribedTotalWaterPotential:
+                double L, boundaryPsi, boundaryZ, boundaryK, meanK, dH;
+                L = 1.;     // [m]
+                boundaryZ = nodeGrid.z[nodeIdx];
+
+                boundaryPsi = nodeGrid.boundaryData.prescribedWaterPotential[nodeIdx] - boundaryZ;
+
+                boundaryK = (boundaryPsi >= 0) ? nodeGrid.soilSurfacePointers[nodeIdx].soilPtr->K_sat
+                                                        : computeNodeK_Mualem(*(nodeGrid.soilSurfacePointers[nodeIdx].soilPtr), computeNodeSe_fromPsi(nodeIdx, boundaryPsi));
+
+                meanK = computeMean(boundaryK, nodeGrid.waterData.waterConductivity[nodeIdx], solver.getMeanType());
+                dH = nodeGrid.boundaryData.prescribedWaterPotential[nodeIdx] - nodeGrid.waterData.pressureHead[nodeIdx];
+
+                nodeGrid.boundaryData.waterFlowRate[nodeIdx] = meanK * nodeGrid.boundaryData.boundarySize[nodeIdx] * (dH / L);
+                break;
+
+            case HeatSurface:
+                if(!simulationFlags.computeHeat && !simulationFlags.computeHeatVapor)
+                    break;
+                //TO DO: complete
+
+                break;
+
+            default:
+                nodeGrid.boundaryData.waterFlowRate[nodeIdx] = 0.;
+                break;
+        }
+
+        if(abs(nodeGrid.boundaryData.waterFlowRate[nodeIdx]) < DBL_EPSILON)
+            nodeGrid.boundaryData.waterFlowRate[nodeIdx] = 0.;
+
+        nodeGrid.waterData.waterFlow[nodeIdx] += nodeGrid.boundaryData.waterFlowRate[nodeIdx];
+    }
+
+    //TO DO: implement Culvert
+    return;
+}
+
+double getMatrixElement(uint64_t rowIndex, uint64_t columnIndex)
+{
+    return 0;   //TO DO
+}
 
 
 

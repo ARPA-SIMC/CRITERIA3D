@@ -40,19 +40,19 @@
 
 //static double CourantHeatAdvective;
 
-__SF3DINLINE bool isHeatNode(long nodeIndex)
+ bool isHeatNode(long nodeIndex)
 {
     return (myStructure.computeHeat && nodeList != nullptr && !nodeList[nodeIndex].isSurface &&
                 nodeList[nodeIndex].extra != nullptr && nodeList[nodeIndex].extra->Heat != nullptr);
 }
 
-__SF3DINLINE bool isHeatLinkedNode(TlinkedNode* myLink)
+ bool isHeatLinkedNode(TlinkedNode* myLink)
 {
     return (myStructure.computeHeat && myLink != nullptr &&
             myLink->linkedExtra != nullptr && myLink->linkedExtra->heatFlux != nullptr);
 }
 
-__SF3DINLINE double getH_timeStep(long nodeIndex, double timeStep, double timeStepWater)
+ double getH_timeStep(long nodeIndex, double timeStep, double timeStepWater)
 {
     return (nodeList[nodeIndex].H - nodeList[nodeIndex].oldH) / timeStepWater * timeStep + nodeList[nodeIndex].oldH;
 }
@@ -190,7 +190,7 @@ void saveHeatFlux(TlinkedNode* myLink, int fluxType, double myValue)
  * \param i
  * \return [m3 m-3] vapor volumetric water equivalent
  */
-__SF3DINLINE double VaporThetaV(double h, double T, long i)
+ double VaporThetaV(double h, double T, long i)
 {
     double theta = theta_from_sign_Psi(h, i);
     double vaporConc = VaporFromPsiTemp(h, T);
@@ -204,7 +204,7 @@ __SF3DINLINE double VaporThetaV(double h, double T, long i)
  * \param myTemperature
  * \return binary vapor diffusivity [m2 s-1]
  */
-__SF3DINLINE double VaporBinaryDiffusivity(double myTemperature)
+ double VaporBinaryDiffusivity(double myTemperature)
 {
     return VAPOR_DIFFUSIVITY0 * pow(myTemperature / ZEROCELSIUS, 2.);
 }
@@ -216,7 +216,7 @@ __SF3DINLINE double VaporBinaryDiffusivity(double myTemperature)
  * \param myT
  * \return vapor diffusivity [m2 s-1]
  */
-__SF3DINLINE double SoilVaporDiffusivity(double ThetaS, double Theta, double myT)
+ double SoilVaporDiffusivity(double ThetaS, double Theta, double myT)
 {
     double const beta = 0.66;   // [] Penman 1940
     double const emme = 1.;     // [] idem
@@ -234,7 +234,7 @@ __SF3DINLINE double SoilVaporDiffusivity(double ThetaS, double Theta, double myT
  * \param [K] myT
  * \return soil relative humidity [-]
  */
-__SF3DINLINE double SoilRelativeHumidity(double h, double myT)
+ double SoilRelativeHumidity(double h, double myT)
 {
     return exp(MH2O * h * GRAVITY / (R_GAS * myT));
 }
@@ -247,7 +247,7 @@ __SF3DINLINE double SoilRelativeHumidity(double h, double myT)
  * \param myT
  * \return isothermal vapor conductivity [kg s m-3]
  */
-__SF3DINLINE double IsothermalVaporConductivity(long i, double h, double myT)
+ double IsothermalVaporConductivity(long i, double h, double myT)
 {
     double theta = theta_from_sign_Psi(h, i);
     double Dv = SoilVaporDiffusivity(nodeList[i].Soil->Theta_s, theta, myT);
@@ -325,7 +325,7 @@ double VaporFromPsiTemp(double h, double T)
  * \param Klh (m s-1) isotherma liquid conductivity
  * \return result
  */
-__SF3DINLINE double ThermalLiquidConductivity(double temp_celsius, double h, double Klh)
+ double ThermalLiquidConductivity(double temp_celsius, double h, double Klh)
 {
     double Gwt = 4.;        // [] gain factor (temperature dependence of soil water retention curve)
     double dGammadT;        // [g s-2 K-1] derivative of surface tension with respect to temperature
@@ -853,7 +853,7 @@ void updateHeatFluxes(double timeStep, double timeStepWater)
 }
 
 
-__SF3DINLINE void updateBalanceHeat()
+ void updateBalanceHeat()
 {
     balancePreviousTimeStep.storageHeat = balanceCurrentTimeStep.storageHeat;
     balancePreviousTimeStep.sinkSourceHeat = balanceCurrentTimeStep.sinkSourceHeat;

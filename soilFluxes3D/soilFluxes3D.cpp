@@ -64,19 +64,19 @@ std::vector<Tsoil> Surface_List;
 namespace soilFluxes3D
 {
 
-    __SF3DINLINE int DLL_EXPORT __STDCALL test()
+     int DLL_EXPORT __STDCALL test()
     {
         return CRIT3D_OK;
     }
 
-    __SF3DINLINE void DLL_EXPORT __STDCALL cleanMemory()
+     void DLL_EXPORT __STDCALL cleanMemory()
     {
         cleanNodes();
         cleanArrays();
         // TODO clean balance
     }
 
-    __SF3DINLINE void DLL_EXPORT __STDCALL initializeHeat(short myType, bool computeAdvectiveHeat, bool computeLatentHeat)
+     void DLL_EXPORT __STDCALL initializeHeat(short myType, bool computeAdvectiveHeat, bool computeLatentHeat)
     {
         myStructure.saveHeatFluxesType = myType;
         myStructure.computeHeatAdvection = computeAdvectiveHeat;
@@ -977,22 +977,22 @@ namespace soilFluxes3D
     }
 
 
-    __SF3DINLINE double DLL_EXPORT __STDCALL getWaterMBR()
+     double DLL_EXPORT __STDCALL getWaterMBR()
     {
         return (balanceWholePeriod.waterMBR);
     }
 
-    __SF3DINLINE double DLL_EXPORT __STDCALL getHeatMBR()
+     double DLL_EXPORT __STDCALL getHeatMBR()
     {
         return (balanceWholePeriod.heatMBR);
     }
 
-    __SF3DINLINE  double DLL_EXPORT __STDCALL getHeatMBE()
+      double DLL_EXPORT __STDCALL getHeatMBE()
     {
         return (balanceWholePeriod.heatMBE);
     }
 
-    __SF3DINLINE  double DLL_EXPORT __STDCALL getWaterStorage()
+      double DLL_EXPORT __STDCALL getWaterStorage()
     {
         return (balanceCurrentTimeStep.storageWater);
     }

@@ -3,7 +3,6 @@
 
 #include "solver_new.h"
 #include "types_gpu.h"
-#include "types_gpu.h"
 
 namespace soilFluxes3D::New
 {
@@ -19,20 +18,22 @@ namespace soilFluxes3D::New
             void computeMatrix();
             void computeVector();
 
+            bool solveLinearSystem(uint8_t approximationNumber, processType computationType) override;
+
         public:
             GPUSolver(numericalMethod method = Jacobi);
             ~GPUSolver();
 
-            void inizialize() override;
-            void run() override;
-            void gatherOutput(double *&vecX) override;
+            SF3Derror_t inizialize() override;
+            SF3Derror_t run(double maxTimeStep, double &acceptedTimeStep, processType process) override;
+            SF3Derror_t gatherOutput(double *&vecX);
 
             //Temp function
             void copyMatrixVectorFromOld(TmatrixElement **matA, double *vecB, double *vecX, uint64_t numNodes);
     };
 
-#define destructDevicePointer(ptr) {if(ptr != nullptr) {cudaFree(ptr); ptr = nullptr;}}
-#define destructHostPointer(ptr) {if(ptr != nullptr) {free(ptr); ptr = nullptr;}}
-} // namespace soilFluxes3D_New
+    #define destructDevicePointer(ptr) {if(ptr != nullptr) {cudaFree(ptr); ptr = nullptr;}}
+    #define destructHostPointer(ptr) {if(ptr != nullptr) {free(ptr); ptr = nullptr;}}
+} // namespace soilFluxes3D::New
 
 #endif // SOILFLUXES3D_GPUSOLVER_H

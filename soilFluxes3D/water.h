@@ -10,6 +10,6 @@
     bool waterFlowComputation_stdTreads(double deltaT);
     double getWaterExchange(long index, TlinkedNode *link, double deltaT);
     bool computeWaterFluxes(double maxTime, double *acceptedTime);
-    __SF3DINLINE void restoreWater();
+     void restoreWater();
 
 #endif  // WATER_H
