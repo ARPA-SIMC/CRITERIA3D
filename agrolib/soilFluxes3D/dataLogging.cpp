@@ -2,7 +2,7 @@
 #include "soilFluxes3D.h"
 #include "types.h"
 
-void runCUSPARSEtest(double* &vecSol);
+//void runCUSPARSEtest(double* &vecSol);
 
 namespace soilFluxes3D
 {
@@ -116,7 +116,7 @@ namespace soilFluxes3D
     __EXTERN QString getCUDArun(int x)
     {
         double* vecSol = nullptr;
-        runCUSPARSEtest(vecSol);
+        //runCUSPARSEtest(vecSol);
 
         QString stringData = "TestCUDA NEW - ";
         for (int i = 0; i < 5; ++i)

@@ -2,11 +2,11 @@
 #define COMMONCONSTANTS_H
 
     #ifndef MINVALUE
-        #define MINVALUE(a, b) (((a) < (b))? (a) : (b))
+        #define MINVALUE(a, b) (((a) < (b)) ? (a) : (b))
     #endif
 
     #ifndef MAXVALUE
-        #define MAXVALUE(a, b) (((a) > (b))? (a) : (b))
+        #define MAXVALUE(a, b) (((a) > (b)) ? (a) : (b))
     #endif
 
     #ifndef BOUNDFUNCTION
@@ -22,7 +22,7 @@
     #endif
 
     #ifndef sgnVariable
-        #define sgnVariable(a) (((a) < 0 )? -1 : 1)
+        #define sgnVariable(a) (((a) < 0) ? -1 : 1)
     #endif
 
     #ifndef NODATA

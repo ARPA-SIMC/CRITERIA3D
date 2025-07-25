@@ -34,7 +34,7 @@
 #include "soilFluxes3D_new/macro.h"
 
 
-__SF3DINLINE void initializeExtraHeat(TCrit3DNodeHeat* myNodeExtraHeat)
+ void initializeExtraHeat(TCrit3DNodeHeat* myNodeExtraHeat)
 {
     (*myNodeExtraHeat).T = ZEROCELSIUS + 20;
     (*myNodeExtraHeat).oldT = ZEROCELSIUS + 20;

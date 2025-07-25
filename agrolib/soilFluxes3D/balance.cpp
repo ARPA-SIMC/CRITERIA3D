@@ -45,14 +45,14 @@ static double _bestMBRerror;
 static bool _isHalfTimeStepForced = false;
 
 
-__SF3DINLINE void doubleTimeStep()
+ void doubleTimeStep()
 {
     myParameters.current_delta_t *= 2.0;
     myParameters.current_delta_t = std::min(myParameters.current_delta_t, myParameters.delta_t_max);
 }
 
 
-__SF3DINLINE void halveTimeStep()
+ void halveTimeStep()
 {
     myParameters.current_delta_t /= 2.0;
     myParameters.current_delta_t = std::max(myParameters.current_delta_t, myParameters.delta_t_min);
@@ -174,14 +174,14 @@ double getMatrixValue(long i, TlinkedNode *link)
  * \param link      TlinkedNode pointer
  * \param delta_t   [s]
  */
-__SF3DINLINE void updateFlux(long index, TlinkedNode *link, double delta_t)
+ void updateFlux(long index, TlinkedNode *link, double delta_t)
 {
     if (link->index != NOLINK)
         (*link).sumFlow += float(getWaterExchange(index, link, delta_t));       // [m3]
 }
 
 
-__SF3DINLINE void saveBestStep()
+ void saveBestStep()
 {
     for (unsigned long n = 0; n < unsigned(myStructure.nrNodes); n++)
         nodeList[n].bestH = nodeList[n].H;
@@ -303,12 +303,12 @@ void updateBalanceWaterWholePeriod()
 }
 
 
-__SF3DINLINE bool getForcedHalvedTime()
+ bool getForcedHalvedTime()
 {
     return (_isHalfTimeStepForced);
 }
 
-__SF3DINLINE void setForcedHalvedTime(bool isForced)
+ void setForcedHalvedTime(bool isForced)
 {
     _isHalfTimeStepForced = isForced;
 }

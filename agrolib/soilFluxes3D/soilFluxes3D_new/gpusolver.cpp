@@ -3,8 +3,8 @@
 #include "cudaFunctions.h"
 #include "gpusolver.h"
 
-using namespace soilFluxes3D::New;
-
+namespace soilFluxes3D::New
+{
 void GPUSolver::copyMatrixVectorFromOld(TmatrixElement **matA, double *vecB, double *vecX, uint64_t numNodes)
 {
     if(_status != Created)
@@ -28,25 +28,28 @@ GPUSolver::~GPUSolver()
     destructCUSPARSEobjects(libHandle, iterationMatrix, constantTerm, tempSolution1, tempSolution2);
 }
 
-void GPUSolver::inizialize()
+SF3Derror_t GPUSolver::inizialize()
 {
-
+    return SF3Dok;
 }
 
-void GPUSolver::run()
+SF3Derror_t GPUSolver::run(double maxTimeStep, double &acceptedTimeStep, processType process)
 {
     if(_status != Inizialized)
-        return;
+        return SolverError;
 
     run_k(libHandle, iterationMatrix, constantTerm, tempSolution1, tempSolution2);
 
     _status = Terminated;
+    return SF3Dok;
 }
 
-void GPUSolver::gatherOutput(double*& vecX)
+SF3Derror_t GPUSolver::gatherOutput(double*& vecX)
 {
     if(_status != Terminated)
-        return;
+        return SolverError;
 
     gatherOutput_k(tempSolution1, vecX);
+    return SF3Dok;
+}
 }

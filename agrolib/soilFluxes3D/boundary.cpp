@@ -88,7 +88,7 @@ void initializeBoundary(Tboundary *myBoundary, int myType, float slope, float bo
  * \param thetaTop
  * \return soil surface resistance (s m-1)
  */
-__SF3DINLINE double computeSoilSurfaceResistance(double thetaTop)
+ double computeSoilSurfaceResistance(double thetaTop)
 {
     return 10 * exp(0.3563 * (THETAMIN - thetaTop) * 100);
 }
@@ -99,7 +99,7 @@ __SF3DINLINE double computeSoilSurfaceResistance(double thetaTop)
  * \param thetaSat
  * \return soil surface resistance (s m-1)
  */
-__SF3DINLINE double computeSoilSurfaceResistanceCG(double theta, double thetaSat)
+ double computeSoilSurfaceResistanceCG(double theta, double thetaSat)
 {
     return (-805 + 4140 * (thetaSat - theta));
 }

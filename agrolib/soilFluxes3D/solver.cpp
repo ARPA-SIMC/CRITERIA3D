@@ -35,31 +35,31 @@
 #include "solver.h"
 #include "soilFluxes3D_new/gpuEntryPoints.h"
 
-__SF3DINLINE double square(double x)
+ double square(double x)
 {
     return ((x)*(x));
 }
 
-__SF3DINLINE double distance(unsigned long i, unsigned long j)
+ double distance(unsigned long i, unsigned long j)
 {
     return sqrt(square(fabs(double(nodeList[i].x - nodeList[j].x)))
                 + square(fabs(double(nodeList[i].y - nodeList[j].y)))
                 + square(fabs(double(nodeList[i].z - nodeList[j].z))));
 }
 
-__SF3DINLINE double distance2D(unsigned long i, unsigned long j)
+ double distance2D(unsigned long i, unsigned long j)
 {
     return sqrt(square(fabs(double(nodeList[i].x - nodeList[j].x)))
                 + square(fabs(double(nodeList[i].y - nodeList[j].y))));
 }
 
-__SF3DINLINE double arithmeticMean(double v1, double v2)
+ double arithmeticMean(double v1, double v2)
 {
     return (v1 + v2) * 0.5;
 }
 
 //Assume v1 and v2 ​​have the same sign
-__SF3DINLINE double logarithmicMean(double v1, double v2)
+ double logarithmicMean(double v1, double v2)
 {
     if (v1 == v2)
         return v1;
@@ -69,7 +69,7 @@ __SF3DINLINE double logarithmicMean(double v1, double v2)
 
 
 //Assume v1 and v2 ​​have the same sign
-__SF3DINLINE double geometricMean(double v1, double v2)
+ double geometricMean(double v1, double v2)
 {
     double sign = v1 / fabs(v1);
     return sign * sqrt(v1 * v2);
@@ -104,7 +104,7 @@ TlinkedNode* getLink(long i, long j)
 }
 
 
-__SF3DINLINE int getMaxIterationsNr(int approximationNr)
+ int getMaxIterationsNr(int approximationNr)
 {
     int maxIterationsNr = int((approximationNr + 1) * (float(myParameters.maxIterationsNumber)
                                                       / float(myParameters.maxApproximationsNumber)));
@@ -350,7 +350,7 @@ double tempCUSPARSErun()
     double psi = 0;
 
     double *newX = nullptr;
-    runCUSPARSEiteration(A, b, X, newX, myStructure.nrNodes);
+    //runCUSPARSEiteration(A, b, X, newX, myStructure.nrNodes);
 
     #pragma omp parallel for firstprivate(currentNorm) shared(newX) reduction(max: infinityNorm)
     for (long i = 0; i < myStructure.nrNodes; i++)

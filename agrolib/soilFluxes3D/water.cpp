@@ -444,7 +444,7 @@ bool computeWaterFluxes(double maxTime, double *acceptedTime)
 {
     bool isStepOK = false;
 
-    while (! isStepOK)
+    while (!isStepOK)
     {
         *acceptedTime = std::min(myParameters.current_delta_t, maxTime);
 
@@ -477,7 +477,7 @@ bool computeWaterFluxes(double maxTime, double *acceptedTime)
 }
 
 
-__SF3DINLINE void restoreWater()
+ void restoreWater()
 {
     for (long n = 0; n < myStructure.nrNodes; n++)
         nodeList[n].H = nodeList[n].oldH;
