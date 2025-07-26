@@ -26,6 +26,7 @@
 
 
 #include <stdio.h>
+#include <iostream>
 #include <math.h>
 #include <stdlib.h>
 #include <thread>
@@ -398,8 +399,6 @@ bool waterFlowComputation_stdTreads(double deltaT)
             setForcedHalvedTime(true);
             return false;
         }
-        #include <iostream>
-        std::cout << "AAAAAAC" << std::endl;
         if (!solveLinearSystem(approximationNr, myParameters.ResidualTolerance, PROCESS_WATER))
         {
             if (deltaT > myParameters.delta_t_min)
@@ -431,8 +430,6 @@ bool waterFlowComputation_stdTreads(double deltaT)
 
     return isValidStep;
 }
-
-
 
 /*!
   * \brief computes water fluxes in the assigned period.
@@ -468,7 +465,6 @@ bool computeWaterFluxes(double maxTime, double *acceptedTime)
         /*! update boundary conditions */
         updateConductance();
         updateBoundaryWater(*acceptedTime);
-        std::cout << "AAAAAA" << std::endl;
         isStepOK = waterFlowComputation_stdTreads(*acceptedTime);
 
         if (!isStepOK)

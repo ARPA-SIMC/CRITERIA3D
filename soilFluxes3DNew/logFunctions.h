@@ -17,5 +17,5 @@ namespace soilFluxes3D::Log
     //Log dei parametri
     __EXTERN QString getLinSystLog();
 
-    }
+}
 #endif // SOILFLUXES3D_LOGFUNCTIONS_H

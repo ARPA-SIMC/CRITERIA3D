@@ -270,7 +270,6 @@ double dTheta_dH(unsigned long index)
     double currentPsi = fabs(MINVALUE(nodeList[index].H - nodeList[index].z, 0.));
     double previousPsi = fabs(MINVALUE(nodeList[index].oldH - nodeList[index].z, 0.));
 
-
     switch (myParameters.waterRetentionCurve)
     {
         case VANGENUCHTEN:

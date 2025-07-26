@@ -48,13 +48,13 @@ DISTFILES += \
 
 unix:{
     CONFIG(debug, debug|release) {
-        TARGET = debug/soilFluxes3D
+        TARGET = debug/soilFluxes3DNew
     } else {
-        TARGET = release/soilFluxes3D
+        TARGET = release/soilFluxes3DNew
     }
 }
 win32:{
-    TARGET = soilFluxes3D
+    TARGET = soilFluxes3DNew
 }
 
 #CONFIG += CUDA_CONFIG

@@ -25,6 +25,7 @@
 */
 
 #include <stdio.h>
+#include <iostream>
 #include <math.h>
 #include <stdlib.h>
 #include <thread>
@@ -1059,7 +1060,7 @@ namespace soilFluxes3D
 
 
     /*!
-     * \brief computeStepAdd commentMore actions
+     * \brief computeStep
      * compute a single step of water and heat fluxes
      * assume that meteo conditions are constant during the time step
      * \param maxTimeStep           [s]
@@ -1067,7 +1068,7 @@ namespace soilFluxes3D
     */
     double DLL_EXPORT __STDCALL computeStep(double maxTimeStep)
     {
-        // initialize current dtAdd commentMore actions
+        // initialize current dt
         if (myParameters.current_delta_t == NODATA)
             myParameters.current_delta_t = myParameters.delta_t_max;
 
@@ -1080,7 +1081,6 @@ namespace soilFluxes3D
         double dtWater, dtHeat;
         if (myStructure.computeWater)
         {
-            std::cout << "AAAAAA" << std::endl;
             computeWaterFluxes(maxTimeStep, &dtWater);
             dtHeat = dtWater;
         }

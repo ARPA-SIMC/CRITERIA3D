@@ -1,5 +1,7 @@
 #include <cstring>
 #include <cassert>
+#include <iostream>
+
 #include "cpusolver.h"
 #include "soil_new.h"
 #include "water_new.h"
@@ -21,6 +23,7 @@ namespace soilFluxes3D::New
 
         //Inizialize matrix structure
         matrixA.numRows = nodeGrid.numNodes;
+        hostAlloc(matrixA.numColumns, uint8_t, matrixA.numRows);
         hostAlloc(matrixA.colIndeces, uint64_t*, matrixA.numRows);
         hostAlloc(matrixA.values, double*, matrixA.numRows);
 
@@ -68,7 +71,6 @@ namespace soilFluxes3D::New
     void CPUSolver::waterMainLoop(double maxTimeStep, double &acceptedTimeStep)
     {
         balanceResult_t stepStatus = stepRefused;
-
         while(stepStatus != stepAccepted)
         {
             acceptedTimeStep = std::min(_parameters.deltaTcurr, maxTimeStep);
@@ -91,7 +93,7 @@ namespace soilFluxes3D::New
             }
 
             //Update aereodynamic and soil conductance
-            //updateConductance();      //TO DO
+            //updateConductance();      //TO DO (Heat)
 
             //Update boundary
             updateBoundaryWaterData(acceptedTimeStep);
@@ -121,7 +123,6 @@ namespace soilFluxes3D::New
 
             //Compute linear system elements
             computeLinearSystemElement(matrixA, vectorB, vectorC, approxIdx, deltaT, _parameters.lateralVerticalRatio, _parameters.meantype);
-
             //Check Courant
             if((nodeGrid.waterData.CourantWaterLevel > 1.) && (deltaT > _parameters.deltaTmin))
             {
@@ -154,10 +155,10 @@ namespace soilFluxes3D::New
 
             //Check water balance
             balanceResult = evaluateWaterBalance(approxIdx, bestMBRerror, _parameters);
+
             if((balanceResult == stepAccepted) || (balanceResult == stepHalved))
                 return balanceResult;
         }
-
         //TO DO: log functions
 
         return balanceResult;
@@ -186,10 +187,9 @@ namespace soilFluxes3D::New
 
             if(currErrorNorm < bestErrorNorm)
                 bestErrorNorm = currErrorNorm;
-
         }
 
-        //Log fuction
+        //TO DO: Log fuction
         return true;
     }
 

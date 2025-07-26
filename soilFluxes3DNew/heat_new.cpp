@@ -6,8 +6,11 @@ using namespace soilFluxes3D::New;
 using namespace soilFluxes3D::Soil;
 using namespace soilFluxes3D::Math;
 
-extern nodesData_t nodeGrid;
-extern simulationFlags_t simulationFlags;
+namespace soilFluxes3D::New
+{
+    extern soilFluxes3D::New::nodesData_t nodeGrid;
+    extern soilFluxes3D::New::simulationFlags_t simulationFlags;
+}
 
 namespace soilFluxes3D::Heat
 {
@@ -46,7 +49,7 @@ double computeThermalLiquidFlux(uint64_t srcIndex, uint64_t dstIndex, double tim
 
 }
 
-double computeThermalVaporFlux()
+double computeThermalVaporFlux(uint64_t srcIndex, uint64_t dstIndex, double timeStep, double timeStepWater, processType process)
 {
     //TO COMPLETE
     return 0;

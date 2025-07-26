@@ -32,6 +32,7 @@ namespace soilFluxes3D::New
             double getMaxTimeStep() const noexcept;
             double getLVRatio() const noexcept;
             meanType_t getMeanType() const noexcept;
+            virtual double getMatrixElementValue(uint64_t rowIndex, uint64_t colIndex) = 0;
 
             virtual SF3Derror_t inizialize() = 0;
             virtual SF3Derror_t run(double maxTimeStep, double &acceptedTimeStep, processType process) = 0;
@@ -39,8 +40,9 @@ namespace soilFluxes3D::New
 
     inline uint32_t Solver::calcCurrentMaxIterationNumber(uint8_t approxNumber)
     {
-        uint32_t maxCurrIterNum = uint32_t((approxNumber + 1) * (double(_parameters.maxIterationsNumber) / double(_parameters.maxApproximationsNumber)));
-        return std::max(maxCurrIterNum, static_cast<uint32_t>(_parameters.maxIterationsNumber));
+        uint32_t maxCurrIterNum = uint32_t((approxNumber + 1) * (float(_parameters.maxIterationsNumber) / float(_parameters.maxApproximationsNumber)));
+        return std::max(maxCurrIterNum, uint32_t(20));
+        //return std::max(maxCurrIterNum, static_cast<uint32_t>(_parameters.maxIterationsNumber));
     }
 
     inline void Solver::updateParameters(const SolverParametersPartial &newParameters) noexcept
