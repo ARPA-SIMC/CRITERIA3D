@@ -227,9 +227,8 @@ void acceptStep(double deltaT)
 bool waterBalance(double deltaT, int approxNr)
 {
     setForcedHalvedTime(false);
-
     computeMassBalance(deltaT);
-	double MBRerror = fabs(balanceCurrentTimeStep.waterMBR);
+    double MBRerror = fabs(balanceCurrentTimeStep.waterMBR);
 
     // good error: step is accepted
     if (MBRerror < myParameters.MBRThreshold)

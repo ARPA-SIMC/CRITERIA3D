@@ -4,11 +4,9 @@
 #include "macro.h"
 #include "types_cpu.h"
 
-using namespace soilFluxes3D::New;
-
 namespace soilFluxes3D::Math    //move to mathFunctions
 {
-    double computeMean(double v1, double v2, meanType_t type = Logarithmic);
+    double computeMean(double v1, double v2, soilFluxes3D::New::meanType_t type = soilFluxes3D::New::Logarithmic);
     double arithmeticMean(double v1, double v2);
     double geometricMean(double v1, double v2);
     double logaritmicMean(double v1, double v2);

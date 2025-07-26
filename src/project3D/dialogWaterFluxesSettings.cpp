@@ -1,4 +1,5 @@
 #include "soilFluxes3D.h"
+#include "soilFluxes3D_new.h"
 #include "dialogWaterFluxesSettings.h"
 
 #include <QtWidgets>
@@ -117,6 +118,7 @@ void DialogWaterFluxesSettings::updateAccuracy()
 {
     int nrThread = getThreadsNumber();
     nrThread = soilFluxes3D::setThreadsNumber(nrThread);
+    nrThread = soilFluxes3D::New::setThreadsNumber(nrThread);
     setThreadsNumber(nrThread);
     _isUpdateAccuracy = true;
 }

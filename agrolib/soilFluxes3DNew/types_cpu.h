@@ -10,9 +10,12 @@
 
 namespace soilFluxes3D::New
 {
+    // constexpr uint8_t maxLateralLink = 8;
+    // constexpr uint8_t maxTotalLink = maxLateralLink + 2;
+    // constexpr uint8_t maxMatrixColumns = maxTotalLink + 1;
     #define maxLateralLink 8
-    #define maxTotalLink maxLateralLink + 2
-    #define maxMatrixColumns maxTotalLink + 1
+    #define maxTotalLink (maxLateralLink + 2)
+    #define maxMatrixColumns (maxTotalLink + 1)
     #define noData 0
 
     //Math

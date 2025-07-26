@@ -1,10 +1,18 @@
 #include <algorithm>
+#include <iostream>
 
 #include "commonConstants.h"
 #include "soilFluxes3D_new.h"
 #include "solver_new.h"
 #include "soil_new.h"
 #include "water_new.h"
+
+#ifdef CUDA_ENABLED
+    #include "gpusolver.h"
+#else
+    #include "cpusolver.h"
+#endif
+
 
 using namespace soilFluxes3D::Soil;
 using namespace soilFluxes3D::Water;
@@ -13,11 +21,9 @@ namespace soilFluxes3D::New
 {
 
     #ifdef CUDA_ENABLED
-        #include "gpusolver.h"
         soilFluxes3D::New::GPUSolver tempSolver;
     #else
-        #include "cpusolver.h"
-        soilFluxes3D::New::CPUSolver tempSolver;
+        CPUSolver tempSolver;
     #endif
 
     //global variables
@@ -98,7 +104,7 @@ namespace soilFluxes3D::New
 
         //Link data
         hostAlloc(nodeGrid.numLateralLink, uint8_t, nrNodes);
-        for(uint8_t idx = 0; idx < maxLateralLink; ++idx)
+        for(uint8_t idx = 0; idx < maxTotalLink; ++idx)
         {
             hostAlloc(nodeGrid.linkData[idx].linktype, linkType_t, nrNodes);    //NoLink is equal 0, automatic set with calloc
             hostAlloc(nodeGrid.linkData[idx].linkIndex, uint64_t, nrNodes);;
@@ -197,7 +203,7 @@ namespace soilFluxes3D::New
 
         //Link data
         hostFree(nodeGrid.numLateralLink);
-        for(uint8_t idx = 0; idx < maxLateralLink; ++idx)
+        for(uint8_t idx = 0; idx < maxTotalLink; ++idx)
         {
             hostFree(nodeGrid.linkData[idx].linktype);
             hostFree(nodeGrid.linkData[idx].linkIndex);
@@ -294,7 +300,7 @@ namespace soilFluxes3D::New
         if(roughness < 0)
             return ParameterError;
 
-        if(surfaceIndex > surfaceList.size())
+        if(surfaceIndex >= surfaceList.size())
             surfaceList.resize(surfaceIndex + 1);
 
         surfaceList[surfaceIndex].roughness = roughness;
@@ -440,7 +446,6 @@ namespace soilFluxes3D::New
             default:
                 return ParameterError;
         }
-
         nodeGrid.linkData[idx].linktype[nodeIndex] = direction;
         nodeGrid.linkData[idx].linkIndex[nodeIndex] = linkIndex;
         nodeGrid.linkData[idx].interfaceArea[nodeIndex] = interfaceArea;
@@ -992,7 +997,6 @@ namespace soilFluxes3D::New
     double computeStep(double maxTimeStep = HOUR_SECONDS)
     {
         solver.inizialize();
-
         if(simulationFlags.computeHeat)
         {
             //TO DO: heat
@@ -1007,8 +1011,8 @@ namespace soilFluxes3D::New
 
         if(simulationFlags.computeHeat)
         {
-            dtHeat = dtWater;
             //TO DO: heat;
+            dtHeat = dtWater;
         }
 
         return dtWater;

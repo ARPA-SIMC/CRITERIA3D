@@ -27,7 +27,7 @@ win32:{
     TARGET = project3D
 }
 
-INCLUDEPATH +=  ../../agrolib/soilFluxes3D  \
+INCLUDEPATH +=  ../../agrolib/soilFluxes3D ../../agrolib/soilFluxes3DNew \
                 ../../agrolib/mathFunctions ../../agrolib/crit3dDate ../../agrolib/soil ../../agrolib/crop \
                 ../../agrolib/gis ../../agrolib/meteo ../../agrolib/utilities  \
                 ../../agrolib/solarRadiation ../../agrolib/interpolation  ../../agrolib/proxyWidget \

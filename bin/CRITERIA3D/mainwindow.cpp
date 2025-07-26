@@ -46,6 +46,7 @@
 #include "utilities.h"
 #include "formText.h"
 #include "soilFluxes3D.h"
+#include "soilFluxes3D_new.h"
 
 #include <QTime>
 
@@ -2261,6 +2262,7 @@ void MainWindow::on_actionCriteria3D_waterFluxes_settings_triggered()
         myProject.waterFluxesParameters.modelAccuracy = dialogWaterFluxes.accuracySlider->value();
         int nrThread = dialogWaterFluxes.getThreadsNumber();
         nrThread = soilFluxes3D::setThreadsNumber(nrThread);                  // check
+        nrThread = soilFluxes3D::New::setThreadsNumber(nrThread);             // check
         myProject.waterFluxesParameters.numberOfThreads = nrThread;
 
         if (myProject.isCriteria3DInitialized)
@@ -2286,6 +2288,7 @@ void MainWindow::on_actionCriteria3D_waterFluxes_settings_triggered()
         // check nr of threads
         int threadNumber = dialogWaterFluxes.getThreadsNumber();
         threadNumber = soilFluxes3D::setThreadsNumber(threadNumber);
+        threadNumber = soilFluxes3D::New::setThreadsNumber(threadNumber);
         myProject.waterFluxesParameters.numberOfThreads = threadNumber;
 
         if (myProject.isCriteria3DInitialized)
@@ -2511,6 +2514,10 @@ void MainWindow::on_actionCriteria3D_Water_content_summary_triggered()
     double soilAvgWC = soilWaterContent / soilArea * 1000;                                  // [mm]
 
     double totalWaterContent = soilFluxes3D::getTotalWaterContent();                        // [m3]
+    double totalWaterContentNew = soilFluxes3D::New::getTotalWaterContent();                          // [m3]
+
+    if(totalWaterContent != totalWaterContentNew)
+        myProject.logError("ERROR: getTotalWaterContent\n");
 
     QString summaryStr = "WATER CONTENT SUMMARY\n\n";
 

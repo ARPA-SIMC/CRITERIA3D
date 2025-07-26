@@ -4,12 +4,10 @@
 #include "macro.h"
 #include "types_cpu.h"
 
-using namespace soilFluxes3D::New;
-
 namespace soilFluxes3D::Soil
 {
     double computeNodeTheta(uint64_t nodeIndex);
-    /*not used*/ double computeNodeTheta_fromSe(uint64_t nodeIndex, double Se);
+    double computeNodeTheta_fromSe(uint64_t nodeIndex, double Se);
     double computeNodeTheta_fromSignedPsi(uint64_t nodeIndex, double signedPsi);
 
     double computeNodeSe(uint64_t nodeIndex);
@@ -21,10 +19,10 @@ namespace soilFluxes3D::Soil
     /*not used*/ double computeNodePsi_fromSe(uint64_t nodeIndex, double Se);
 
     double computeNodeK(uint64_t nodeIndex);
-    double computeNodeK_Mualem(soilData_t& soilData, double Se);
+    double computeNodeK_Mualem(soilFluxes3D::New::soilData_t& soilData, double Se);
 
     double computeNodedThetadH(uint64_t nodeIndex);
-    double computeNodedThetaVdH(uint64_t nodeIndex, double temperature, double dThetadH);
+    /*TO DO*/ double computeNodedThetaVdH(uint64_t nodeIndex, double temperature, double dThetadH);
 
     double getNodeMeanTemperature(uint64_t nodeIndex);
 

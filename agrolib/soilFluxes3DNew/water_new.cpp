@@ -1,4 +1,5 @@
 #include <cassert>
+#include <iostream>
 
 #include "solver_new.h"
 #include "water_new.h"
@@ -11,13 +12,14 @@ using namespace soilFluxes3D::Soil;
 using namespace soilFluxes3D::Math;
 using namespace soilFluxes3D::Heat;
 
+namespace soilFluxes3D::New
+{
+    extern Solver& solver;
+    extern nodesData_t nodeGrid;
+    extern balanceData_t balanceDataCurrentPeriod, balanceDataWholePeriod, balanceDataCurrentTimeStep, balanceDataPreviousTimeStep;
+    extern simulationFlags_t simulationFlags;
+}
 
-extern Solver& solver;
-extern nodesData_t nodeGrid;
-extern balanceData_t balanceDataCurrentPeriod, balanceDataWholePeriod, balanceDataCurrentTimeStep, balanceDataPreviousTimeStep;
-extern simulationFlags_t simulationFlags;
-
-//TEMP, problemi di conflitti
 namespace soilFluxes3D::Water
 {
 
@@ -57,7 +59,7 @@ double computeTotalWaterContent()
 
     double sum = 0.0;
 
-    #pragma omp parallel for reduction(+:sum) if(solver.getOMPstatus())
+    //#pragma omp parallel for reduction(+:sum) if(solver.getOMPstatus())
     for (uint64_t idx = 0; idx < nodeGrid.numNodes; ++idx)
     {
         double theta = nodeGrid.surfaceFlag[idx] ? (nodeGrid.waterData.pressureHead[idx] - nodeGrid.z[idx]) : computeNodeTheta(idx);     //TO DO
@@ -124,16 +126,16 @@ balanceResult_t evaluateWaterBalance(uint8_t approxNr, double& bestMBRerror, Sol
     //Optimal error
     if(currMBRerror < parameters.MBRThreshold)
     {
-        //acceptStep()                      //TO DO
+        acceptStep(parameters.deltaTcurr);
 
         //Check Stability (Courant)
         double currCWL = nodeGrid.waterData.CourantWaterLevel;
         if(currCWL < parameters.CourantWaterThreshold)
         {
             //increase deltaT
-            parameters.deltaTcurr = (currCWL > 0.5) ? (2 * parameters.deltaTcurr) : (parameters.deltaTcurr / currCWL);
+            parameters.deltaTcurr = (currCWL < 0.5) ? (2 * parameters.deltaTcurr) : (parameters.deltaTcurr / currCWL);
             parameters.deltaTcurr = std::min(parameters.deltaTcurr, parameters.deltaTmax);
-            if(parameters.deltaTcurr > 1.0)
+            if(parameters.deltaTcurr > 1.)
                 parameters.deltaTcurr = floor(parameters.deltaTcurr);
         }
         return stepAccepted;
@@ -142,12 +144,12 @@ balanceResult_t evaluateWaterBalance(uint8_t approxNr, double& bestMBRerror, Sol
     //Good error or first approximation
     if (approxNr == 0 || currMBRerror < bestMBRerror)
     {
-        //saveBestStep()                    //TO DO
+        saveBestStep();
         bestMBRerror = currMBRerror;
     }
 
     //Critical error (unstable system) or last approximation
-    if (approxNr == (parameters.maxApproximationsNumber - 1) || currMBRerror > (bestMBRerror*parameters.instabilityFactor))
+    if (approxNr == (parameters.maxApproximationsNumber - 1) || currMBRerror > (bestMBRerror * parameters.instabilityFactor))
     {
         if(parameters.deltaTcurr > parameters.deltaTmin)
         {
@@ -155,8 +157,8 @@ balanceResult_t evaluateWaterBalance(uint8_t approxNr, double& bestMBRerror, Sol
             return stepHalved;
         }
 
-        //restoreBestStep(deltaT);      //TO DO
-        //acceptStep(deltaT);           //TO DO
+        restoreBestStep(parameters.deltaTcurr);
+        acceptStep(parameters.deltaTcurr);
         return stepAccepted;
     }
 
@@ -185,6 +187,23 @@ void acceptStep(double deltaT)
         if (nodeGrid.boundaryData.boundaryType[nodeIndex] != NoBoundary)
             nodeGrid.boundaryData.waterFlowSum[nodeIndex] += nodeGrid.boundaryData.waterFlowRate[nodeIndex] * deltaT;
     }
+}
+
+void saveBestStep()
+{
+    std::memcpy(nodeGrid.waterData.bestPressureHeads, nodeGrid.waterData.pressureHead, nodeGrid.numNodes * sizeof(double));
+}
+
+void restoreBestStep(double deltaT)
+{
+    std::memcpy(nodeGrid.waterData.pressureHead, nodeGrid.waterData.bestPressureHeads, nodeGrid.numNodes * sizeof(double));
+
+    #pragma omp parallel for if(solver.getOMPstatus())
+    for (uint64_t nodeIndex = 0; nodeIndex < nodeGrid.numNodes; ++nodeIndex)
+        if(!nodeGrid.surfaceFlag[nodeIndex])
+            nodeGrid.waterData.saturationDegree[nodeIndex] = computeNodeSe(nodeIndex);
+
+    computeCurrentMassBalance(deltaT);
 }
 
 void updateLinkFlux(uint64_t nodeIndex, uint8_t linkIndex, double deltaT)
@@ -263,7 +282,7 @@ void computeLinearSystemElement(MatrixCPU &matrixA, VectorCPU& vectorB, const Ve
         matrixA.values[rowIdx][0] = (vectorC.values[rowIdx] / deltaT) + sum;
 
         //Compute b element
-        vectorB.values[rowIdx] = ((vectorC.values[rowIdx] / deltaT) * nodeGrid.waterData.pressureHead[rowIdx]) + nodeGrid.waterData.waterFlow[rowIdx] + nodeGrid.waterData.invariantFluxes[rowIdx];
+        vectorB.values[rowIdx] = ((vectorC.values[rowIdx] / deltaT) * nodeGrid.waterData.oldPressureHeads[rowIdx]) + nodeGrid.waterData.waterFlow[rowIdx] + nodeGrid.waterData.invariantFluxes[rowIdx];
 
         //Preconditioning
         for(uint8_t colIdx = 1; colIdx < matrixA.numColumns[rowIdx]; ++colIdx)
@@ -299,14 +318,14 @@ bool computeLinkFluxes(double& matrixElement, uint64_t& matrixIndex, uint64_t no
     if(!simulationFlags.computeHeat)
         return true;
 
-    double thermalLiquidFlux = computeThermalLiquidFlux();
-    nodeGrid.waterData.invariantFluxes[nodeIndex] += thermalLiquidFlux;
+    // double thermalLiquidFlux = computeThermalLiquidFlux();
+    // nodeGrid.waterData.invariantFluxes[nodeIndex] += thermalLiquidFlux;
 
     if(!simulationFlags.computeHeatVapor)
         return true;
 
-    double thermalVaporFlux = computeThermalVaporFlux();
-    nodeGrid.waterData.invariantFluxes[nodeIndex] += thermalVaporFlux;
+    // double thermalVaporFlux = computeThermalVaporFlux();
+    // nodeGrid.waterData.invariantFluxes[nodeIndex] += thermalVaporFlux;
 
     return true;
 }
@@ -416,7 +435,7 @@ double JacobiWaterCPU(VectorCPU& vectorX, const MatrixCPU &matrixA, const Vector
     double currentNorm = -1, infinityNorm = -1;
 
     double* tempX = (double*) calloc(vectorX.numElements, sizeof(double));
-    std::memcpy(tempX, vectorB.values, vectorX.numElements * sizeof(double));
+    std::memcpy(tempX, vectorB.values, vectorB.numElements * sizeof(double));
 
     #pragma omp parallel for private(currentNorm) reduction(max:infinityNorm) if(solver.getOMPstatus())
     for (uint64_t rowIdx = 0; rowIdx < matrixA.numRows; ++rowIdx)
@@ -429,7 +448,7 @@ double JacobiWaterCPU(VectorCPU& vectorX, const MatrixCPU &matrixA, const Vector
 
         currentNorm = fabs(tempX[rowIdx] - vectorX.values[rowIdx]);
 
-        double psi = tempX[rowIdx] - nodeGrid.z[rowIdx];
+        double psi = fabs(tempX[rowIdx] - nodeGrid.z[rowIdx]);
         if(psi > 1.)
             currentNorm /= psi;
 
@@ -499,7 +518,7 @@ void updateBoundaryWaterData(double deltaT)
                 v = pow(hs, 2./3.) * sqrt(nodeGrid.boundaryData.boundarySlope[nodeIdx]) / nodeGrid.soilSurfacePointers[nodeIdx].surfacePtr->roughness;
 
                 flow = hs * v * nodeGrid.boundaryData.boundarySize[nodeIdx];
-                nodeGrid.boundaryData.waterFlowRate[nodeIdx] = - std::min(flow, maxFlow);
+                nodeGrid.boundaryData.waterFlowRate[nodeIdx] = -std::min(flow, maxFlow);
                 break;
 
             case FreeDrainage:
@@ -517,12 +536,12 @@ void updateBoundaryWaterData(double deltaT)
             case PrescribedTotalWaterPotential:
                 double L, boundaryPsi, boundaryZ, boundaryK, meanK, dH;
                 L = 1.;     // [m]
-                boundaryZ = nodeGrid.z[nodeIdx];
+                boundaryZ = nodeGrid.z[nodeIdx] - L;
 
                 boundaryPsi = nodeGrid.boundaryData.prescribedWaterPotential[nodeIdx] - boundaryZ;
 
-                boundaryK = (boundaryPsi >= 0) ? nodeGrid.soilSurfacePointers[nodeIdx].soilPtr->K_sat
-                                                        : computeNodeK_Mualem(*(nodeGrid.soilSurfacePointers[nodeIdx].soilPtr), computeNodeSe_fromPsi(nodeIdx, boundaryPsi));
+                boundaryK = (boundaryPsi >= 0)  ? nodeGrid.soilSurfacePointers[nodeIdx].soilPtr->K_sat
+                                                : computeNodeK_Mualem(*(nodeGrid.soilSurfacePointers[nodeIdx].soilPtr), computeNodeSe_fromPsi(nodeIdx, fabs(boundaryPsi)));
 
                 meanK = computeMean(boundaryK, nodeGrid.waterData.waterConductivity[nodeIdx], solver.getMeanType());
                 dH = nodeGrid.boundaryData.prescribedWaterPotential[nodeIdx] - nodeGrid.waterData.pressureHead[nodeIdx];
@@ -544,8 +563,8 @@ void updateBoundaryWaterData(double deltaT)
 
         if(abs(nodeGrid.boundaryData.waterFlowRate[nodeIdx]) < DBL_EPSILON)
             nodeGrid.boundaryData.waterFlowRate[nodeIdx] = 0.;
-
-        nodeGrid.waterData.waterFlow[nodeIdx] += nodeGrid.boundaryData.waterFlowRate[nodeIdx];
+        else
+            nodeGrid.waterData.waterFlow[nodeIdx] += nodeGrid.boundaryData.waterFlowRate[nodeIdx];
     }
 
     //TO DO: implement Culvert
@@ -554,7 +573,7 @@ void updateBoundaryWaterData(double deltaT)
 
 double getMatrixElement(uint64_t rowIndex, uint64_t columnIndex)
 {
-    return 0;   //TO DO
+    return solver.getMatrixElementValue(rowIndex, columnIndex);
 }
 
 

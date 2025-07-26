@@ -26,7 +26,7 @@ CONFIG += debug_and_release
 CONFIG += c++11 c++14 c++17 c++20
 
 INCLUDEPATH +=  ./shared  \
-                ../../agrolib/soilFluxes3D  \
+                ../../agrolib/soilFluxes3D  ../../agrolib/soilFluxes3DNew \
                 ../../agrolib/crit3dDate ../../agrolib/mathFunctions \
                 ../../agrolib/crop ../../agrolib/soil ../../agrolib/meteo ../../agrolib/gis \
                 ../../agrolib/interpolation ../../agrolib/solarRadiation \
@@ -68,6 +68,7 @@ CONFIG(debug, debug|release) {
     LIBS += -L../../agrolib/meteo/debug -lmeteo
     LIBS += -L../../agrolib/gis/debug -lgis
     LIBS += -L../../agrolib/soilFluxes3D/debug -lsoilFluxes3D
+    LIBS += -L../../agrolib/soilFluxes3DNew/debug -lsoilFluxes3DNew
     LIBS += -L../../agrolib/mathFunctions/debug -lmathFunctions
     LIBS += -L../../agrolib/crit3dDate/debug -lcrit3dDate
 
@@ -96,6 +97,7 @@ CONFIG(debug, debug|release) {
     LIBS += -L../../agrolib/meteo/release -lmeteo
     LIBS += -L../../agrolib/gis/release -lgis
     LIBS += -L../../agrolib/soilFluxes3D/release -lsoilFluxes3D
+    LIBS += -L../../agrolib/soilFluxes3DNew/release -lsoilFluxes3DNew
     LIBS += -L../../agrolib/mathFunctions/release -lmathFunctions
     LIBS += -L../../agrolib/crit3dDate/release -lcrit3dDate
 }

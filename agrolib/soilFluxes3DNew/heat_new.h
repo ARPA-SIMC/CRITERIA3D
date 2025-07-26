@@ -7,8 +7,8 @@
 namespace soilFluxes3D::Heat
 {
 
-    double computeThermalLiquidFlux();
-    double computeThermalVaporFlux();
+    double computeThermalLiquidFlux(uint64_t srcIndex, uint64_t dstIndex, double timeStep, double timeStepWater, soilFluxes3D::New::processType process);
+    double computeThermalVaporFlux(uint64_t srcIndex, uint64_t dstIndex, double timeStep, double timeStepWater, soilFluxes3D::New::processType process);
 
     // //Heat simulation functions
     // void initializeBalanceHeat();

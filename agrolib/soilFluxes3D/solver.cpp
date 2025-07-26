@@ -383,6 +383,7 @@ bool solveLinearSystem(int approximation, double residualTolerance, int computat
 
     int maxIterationsNr = getMaxIterationsNr(approximation);
     int iteration = 0;
+
     for(iteration = 0; iteration < maxIterationsNr; iteration++)
     {
         switch (computationType)
@@ -392,7 +393,6 @@ bool solveLinearSystem(int approximation, double residualTolerance, int computat
                 break;
             case PROCESS_WATER:
                 //currentNorm = tempCUSPARSErun();
-                std::cout << "AAAAAA" << std::endl;
                 currentNorm = JacobiWater_openMP();
                 // currentNorm = iterationThreads();
                 // currentNorm = GaussSeidelWater_openMP();

@@ -1,8 +1,8 @@
 #include "otherFunctions.h"
 
+//TEMP
 using namespace soilFluxes3D::New;
 
-//TEMP
 namespace soilFluxes3D::Math
 {
 

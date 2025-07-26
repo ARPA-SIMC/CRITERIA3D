@@ -2,13 +2,17 @@
 #include "solver_new.h"
 #include "otherFunctions.h"
 #include <cassert>
+#include <iostream>
 
 using namespace soilFluxes3D::New;
 using namespace soilFluxes3D::Math;
 
-extern nodesData_t nodeGrid;
-extern Solver& solver;
-extern simulationFlags_t simulationFlags;
+namespace soilFluxes3D::New
+{
+    extern soilFluxes3D::New::nodesData_t nodeGrid;
+    extern soilFluxes3D::New::Solver& solver;
+    extern soilFluxes3D::New::simulationFlags_t simulationFlags;
+}
 
 namespace soilFluxes3D::Soil
 {
@@ -19,12 +23,22 @@ namespace soilFluxes3D::Soil
      */
     double computeNodeTheta(uint64_t nodeIndex)
     {
-        assert(!nodeGrid.surfaceFlag[nodeIndex]);   //TO DO: is needed?
-        return (nodeGrid.waterData.saturationDegree[nodeIndex] * (nodeGrid.soilSurfacePointers->soilPtr->Theta_s - nodeGrid.soilSurfacePointers->soilPtr->Theta_r)) + nodeGrid.soilSurfacePointers->soilPtr->Theta_r;
+        return computeNodeTheta_fromSe(nodeIndex, nodeGrid.waterData.saturationDegree[nodeIndex]);
     }
 
     /*!
-     * \brief Computes nodeIndex node volumetric water content as function of the node signed water potential
+     * \brief Computes nodeIndex node volumetric water content as function of degree of saturation
+     * \return theta (volumetric water content)     [m3 m-3]
+     */
+    double computeNodeTheta_fromSe(uint64_t nodeIndex, double Se)
+    {
+        assert(!nodeGrid.surfaceFlag[nodeIndex]);   //TO DO: is needed?
+        return (Se * (nodeGrid.soilSurfacePointers[nodeIndex].soilPtr->Theta_s - nodeGrid.soilSurfacePointers[nodeIndex].soilPtr->Theta_r)) + nodeGrid.soilSurfacePointers[nodeIndex].soilPtr->Theta_r;
+    }
+
+
+    /*!
+     * \brief Computes nodeIndex node volumetric water content as function of signed water potential
      * \param signedPsi (signed water potential)    [m]
      * \return theta (volumetric water content)     [m3 m-3]
      */
@@ -144,7 +158,7 @@ namespace soilFluxes3D::Soil
      * \brief Computes hydraulic conductivity as function of soil parameters and degree of saturation
      * \details K(Se) = Ksat * Se^L * {1 - [1 - Se^(1/m)]^m}^2
      * \warning very low values are possible (as e-12)
-     * \return K (water conductivity)   [m s-1]
+     * \return K (hydraulic conductivity)   [m s-1]
      */
     double computeNodeK_Mualem(soilData_t &soilData, double Se)
     {
@@ -155,11 +169,11 @@ namespace soilFluxes3D::Soil
         switch(solver.getWRCModel())
         {
             case VanGenuchten:
-                temp = 1. - pow(1. - pow(Se, 1 / soilData.VG_m), soilData.VG_m);
+                temp = 1. - pow(1. - pow(Se, 1. / soilData.VG_m), soilData.VG_m);
                 break;
             case ModifiedVanGenuchten:
-                tNum = 1. - pow(1. - pow(Se * soilData.VG_Sc, 1 / soilData.VG_m), soilData.VG_m);
-                tDen = 1. - pow(1. - pow(soilData.VG_Sc, 1 / soilData.VG_m), soilData.VG_m);
+                tNum = 1. - pow(1. - pow(Se * soilData.VG_Sc, 1. / soilData.VG_m), soilData.VG_m);
+                tDen = 1. - pow(1. - pow(soilData.VG_Sc, 1. / soilData.VG_m), soilData.VG_m);
                 temp = tNum / tDen;
                 break;
             default:
@@ -167,6 +181,63 @@ namespace soilFluxes3D::Soil
         }
 
         return soilData.K_sat * pow(Se, soilData.Mualem_L) * pow(temp, 2.);
+    }
+
+    /*!
+     * \brief Compute the derivative of the degree of saturation respect to the water potential
+     * \details dTheta/dH = dSe/dH * (Theta_S - Theta_R) where
+     *                      dSe/dH = -sgn(H-z) * alpha * n * m * [1 + (alpha * |H - z|)^n]^(-m-1) * (alpha * |H-z|)^(n-1)               if VanGenuchten
+     *                  and dSe/dH = -sgn(H-z) * alpha * n * m * (1 / Sc) * [1 + (alpha * |H - z|)^n]^(-m-1) * (alpha * |H-z|)^(n-1)    if Modified VanGenuchten
+     * \return dTheta/dH    [m-1]
+     */
+    double computeNodedThetadH(uint64_t nodeIndex)
+    {
+        soilData_t& nodeSoil = *(nodeGrid.soilSurfacePointers[nodeIndex].soilPtr);
+
+        double psiCurr = fabs(std::min(0., nodeGrid.waterData.pressureHead[nodeIndex] - nodeGrid.z[nodeIndex]));
+        double psiPrev = fabs(std::min(0., nodeGrid.waterData.oldPressureHeads[nodeIndex] - nodeGrid.z[nodeIndex]));
+
+        WRCModel model = solver.getWRCModel();
+        switch(model)
+        {
+            case VanGenuchten:
+                if((psiCurr == 0.) && (psiPrev == 0.))
+                    return 0.;
+                break;
+            case ModifiedVanGenuchten:
+                if((psiCurr <= nodeSoil.VG_he) && (psiPrev <= nodeSoil.VG_he))
+                    return 0.;
+                break;
+            default:
+                break;
+        }
+
+        double dSedH;
+        if(psiCurr == psiPrev)
+        {
+            dSedH = nodeSoil.VG_alpha * nodeSoil.VG_n * nodeSoil.VG_m * pow(1. + pow(nodeSoil.VG_alpha * psiCurr, nodeSoil.VG_n), -(nodeSoil.VG_m + 1.)) * pow(nodeSoil.VG_alpha * psiCurr, nodeSoil.VG_n - 1.);
+            if(model == ModifiedVanGenuchten)
+                dSedH *= (1. / nodeSoil.VG_Sc);
+        }
+        else
+        {
+            double thetaCurr = computeNodeSe_fromPsi(nodeIndex, psiCurr);
+            double thetaPrev = computeNodeSe_fromPsi(nodeIndex, psiPrev);
+            dSedH = fabs((thetaCurr - thetaPrev) / (nodeGrid.waterData.pressureHead[nodeIndex] - nodeGrid.waterData.oldPressureHeads[nodeIndex]));
+        }
+
+        return dSedH * (nodeSoil.Theta_s - nodeSoil.Theta_r);
+    }
+
+    /*!
+     * \brief
+     * \details
+     * \return
+     */
+    double computeNodedThetaVdH(uint64_t nodeIndex, double temperature, double dThetadH)
+    {
+        //double H = nodeGrid.waterData.pressureHead[nodeIndex] - nodeGrid.z[nodeIndex];
+        return 0;
     }
 
     double getNodeMeanTemperature(uint64_t nodeIndex)
