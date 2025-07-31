@@ -2341,7 +2341,8 @@ void MainWindow::initializeCriteria3DInterface()
 
 void MainWindow::on_actionCriteria3D_Initialize_triggered()
 {
-    if (! (myProject.processes.computeSnow || myProject.processes.computeCrop || myProject.processes.computeWater || myProject.processes.computeHydrall))
+    if (! (myProject.processes.computeSnow || myProject.processes.computeCrop || myProject.processes.computeWater ||
+           myProject.processes.computeHydrall || myProject.processes.computeRothC))
     {
         myProject.logWarning("Set active processes before.");
         return;
@@ -2418,6 +2419,10 @@ void MainWindow::on_actionCriteria3D_Initialize_triggered()
             return;
         }
     }
+    else
+    {
+        myProject.clearHydrallMaps();
+    }
 
     if (myProject.processes.computeRothC)
     {
@@ -2427,6 +2432,10 @@ void MainWindow::on_actionCriteria3D_Initialize_triggered()
             myProject.logError("Couldn't initialize RothC model.");
             return;
         }
+    }
+    else
+    {
+        myProject.clearRothCMaps();
     }
 
     initializeCriteria3DInterface();

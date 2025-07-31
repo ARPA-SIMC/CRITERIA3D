@@ -92,15 +92,28 @@ void Crit3DProject::clearCropMaps()
     degreeDaysMap.clear();
     dailyTminMap.clear();
     dailyTmaxMap.clear();
-    hydrallMaps.mapLast30DaysTavg->clear();
-    yearlyET0.clear();
-    yearlyPrec.clear();
-    hydrallMaps.yearlyPrec->clear();
-    hydrallMaps.yearlyET0->clear();
 
     isCropInitialized = false;
 }
 
+void Crit3DProject::clearHydrallMaps()
+{
+    hydrallMaps.mapLast30DaysTavg->clear();
+    hydrallMaps.yearlyPrec->clear();
+    hydrallMaps.yearlyET0->clear();
+
+    isHydrallInitialized = false;
+}
+
+void Crit3DProject::clearRothCMaps()
+{
+    yearlyET0.clear();
+    yearlyPrec.clear();
+
+    rothCModel.map.clear();
+
+    isRothCInitialized = false;
+}
 
 bool Crit3DProject::initializeHydrall()
 {
@@ -148,6 +161,12 @@ bool Crit3DProject::initializeRothC()
 {
     rothCModel.initialize();
     rothCModel.map.initialize(DEM);
+
+    yearlyET0.initializeGrid(*(DEM.header));
+    yearlyPrec.initializeGrid(*(DEM.header));
+
+    if (! soilIndexMap.isLoaded)
+        setSoilIndexMap();
 
     for (int row = 0; row < DEM.header->nrRows; row ++)
     {
@@ -207,10 +226,7 @@ bool Crit3DProject::initializeCropMaps()
     dailyTminMap.initializeGrid(*(DEM.header));
     dailyTmaxMap.initializeGrid(*(DEM.header));
 
-    yearlyET0.initializeGrid(*(DEM.header));
-    yearlyPrec.initializeGrid(*(DEM.header));
-
-    treeCoverMap.initializeGrid(*(DEM.header)); //DEBUG TODO CT
+    //treeCoverMap.initializeGrid(*(DEM.header)); //DEBUG TODO CT
 
     return true;
 }
@@ -429,7 +445,7 @@ bool Crit3DProject::dailyUpdateHydrall(const QDate &myDate)
                 int surfaceIndex = indexMap.at(0).value[row][col];
                 if (surfaceIndex != indexMap.at(0).header->flag)
                 {
-                    //se firstDayOfMonth, scrivi le mappe (mensili?) di LAI, biomassa, etc
+                    //se firstDayOfYear, scrivi le mappe (mensili?) di LAI, biomassa, etc
                     std::string myError;
                     if (! gis::writeEsriGrid(getCompleteFileName("treeNPP_"+myDate.toString("yyyyMMdd"), PATH_OUTPUT).toStdString(), hydrallMaps.treeNetPrimaryProduction, myError))
                     {
@@ -492,14 +508,17 @@ bool Crit3DProject::updateRothC(const QDate &myDate)
                     rothCModel.meteoVariable.setWaterLoss(yearlyET0.getValueFromRowCol(row, col));
                     rothCModel.meteoVariable.setBIC(yearlyPrec.getValueFromRowCol(row, col) - yearlyET0.getValueFromRowCol(row, col));
                     rothCModel.meteoVariable.setTemperature(hydrallMaps.mapLast30DaysTavg->getValueFromRowCol(row, col));
-                    rothCModel.setInputC(hydrallModel.getOutputC()); //read from hydrall (eventually from crop too?)  TODO CHECK
+                    if (! isEqual(hydrallModel.getOutputC(),NODATA))
+                        rothCModel.setInputC(hydrallModel.getOutputC()); //read from hydrall (eventually from crop too?)  TODO CHECK
+                    else
+                        rothCModel.setInputC(0.1);
 
                     double SWC = 0;
 
-                    for (int i = 0; i < (int)hydrallModel.soil.waterContent.size(); i++)
+                    /*for (int i = 0; i < (int)hydrallModel.soil.waterContent.size(); i++)
                     {
                         SWC += hydrallModel.soil.waterContent[i]*hydrallModel.soil.nodeThickness[i]*1000;
-                    }
+                    }*/
 
                     rothCModel.setSWC(SWC);
                     if (false)
@@ -559,21 +578,35 @@ void Crit3DProject::assignETreal()
                 double evapFlow = area * (actualEvap / 1000.);                              // [m3 h-1]
                 totalEvaporation += evapFlow;                                               // [m3 h-1]
 
+
+                int forestIndex = NODATA;
+                int managementIndex = NODATA;
                 //hydrall only
                 if (processes.computeHydrall)
                 {
-                    /*int treeCoverIndex = getTreeCoverIndexRowCol(row,col);
-                    std::string indexString = std::to_string(treeCoverIndex);
-                    int managementIndex = std::stoi(indexString.substr(indexString.size()-3, indexString.size()-1));
-                    int forestIndex = (treeCoverIndex - managementIndex) / 1000;*/
-                    //conversione da numero a nome forest
+                    int treeCoverIndex = getTreeCoverIndexRowCol(row,col);
+
+                    if (treeCoverIndex != -9999 && treeCoverIndex > 9)
+                    {
+                        std::string indexString = std::to_string(treeCoverIndex);
+                        if (indexString.size() >= 2)
+                        {
+                            managementIndex = std::stoi(indexString.substr(indexString.size()-1, indexString.size()-1));
+                            forestIndex = (treeCoverIndex - managementIndex) / 10 - 1;
+                        }
+                    }
                 }
 
-
                 int cropIndex = getLandUnitIndexRowCol(row, col);
-                if (cropIndex != NODATA && (int)cropList.size() > cropIndex)
+                if ((cropIndex != NODATA && (int)cropList.size() > cropIndex) || forestIndex != NODATA)
                 {
-                    Crit3DCrop currentCrop = cropList[cropIndex];
+                    Crit3DCrop currentCrop;
+                    if (forestIndex != NODATA)
+                        currentCrop = cropList[forestIndex];
+                    else if (cropIndex != NODATA && (int)cropList.size() > cropIndex)
+                        currentCrop = cropList[cropIndex];
+
+
                     double actualTransp = 0;
 
                     // assigns actual transpiration
@@ -1019,23 +1052,23 @@ bool Crit3DProject::runModels(const QDateTime &firstTime, const QDateTime &lastT
 
 void Crit3DProject::updateETAndPrecYearlyMaps()
 {
-    for (int row = 0; row < indexMap.at(0).header->nrRows; row++)
-    {
-        for (int col = 0; col < indexMap.at(0).header->nrCols; col++)
-        {
-            int surfaceIndex = indexMap.at(0).value[row][col];
-            if (surfaceIndex != indexMap.at(0).header->flag)
-            {
-                if (! isEqual(yearlyET0.value[row][col], NODATA))
-                    yearlyET0.value[row][col] += hourlyMeteoMaps->mapHourlyET0->value[row][col];
-                else
-                    yearlyET0.value[row][col] = hourlyMeteoMaps->mapHourlyET0->value[row][col];
+    int nrRows = yearlyET0.header->nrRows;
+    int nrCols = yearlyET0.header->nrCols;
 
-                if (! isEqual(yearlyPrec.value[row][col], NODATA))
-                    yearlyPrec.value[row][col] += hourlyMeteoMaps->mapHourlyPrec->value[row][col];
-                else
-                    yearlyPrec.value[row][col] = hourlyMeteoMaps->mapHourlyPrec->value[row][col];
-            }
+    for (int row = 0; row < nrRows; row++) //valuta se usare surfaceIndex o cosa
+    {
+        for (int col = 0; col < nrCols; col++)
+        {
+            if (! isEqual(yearlyET0.value[row][col], NODATA))
+                yearlyET0.value[row][col] += hourlyMeteoMaps->mapHourlyET0->value[row][col];
+            else
+                yearlyET0.value[row][col] = hourlyMeteoMaps->mapHourlyET0->value[row][col];
+
+            if (! isEqual(yearlyPrec.value[row][col], NODATA))
+                yearlyPrec.value[row][col] += hourlyMeteoMaps->mapHourlyPrec->value[row][col];
+            else
+                yearlyPrec.value[row][col] = hourlyMeteoMaps->mapHourlyPrec->value[row][col];
+
         }
     }
 }
@@ -1650,7 +1683,7 @@ void Crit3DProject::setHydrallVariables(int row, int col)
     //TODO: plant height map
     hydrallMaps.plantHeight.value[row][col] = 10;
     double chlorophyllContent = 500; //da tabella
-    treeCoverMap.value[row][col] = 0; //TODO treeSpeciesMap. valutare tabelle tra crop e tabella hydrall
+    //treeCoverMap.value[row][col] = 0; //TODO treeSpeciesMap. valutare tabelle tra crop e tabella hydrall
 
     hydrallModel.setPlantVariables(chlorophyllContent, hydrallMaps.plantHeight.value[row][col],
                                    hydrallMaps.minLeafWaterPotential->value[row][col], hydrallMaps.criticalSoilWaterPotential->value[row][col]);
@@ -1763,7 +1796,7 @@ bool Crit3DProject::checkProcesses()
         return false;
     }
 
-    if (! (processes.computeCrop || processes.computeWater || processes.computeSnow))
+    if (! (processes.computeCrop || processes.computeWater || processes.computeSnow || processes.computeHydrall || processes.computeRothC))
     {
         errorString = ERROR_STR_MISSING_PROCESSES;
         return false;
@@ -1784,6 +1817,22 @@ bool Crit3DProject::checkProcesses()
         {
             if (! initializeSnowModel())
                 return false;
+        }
+    }
+
+    if (processes.computeHydrall)
+    {
+        if (! isHydrallInitialized)
+        {
+            hydrallModel.initialize();
+        }
+    }
+
+    if (processes.computeRothC)
+    {
+        if (! isRothCInitialized)
+        {
+            initializeRothC();
         }
     }
 
@@ -1850,7 +1899,7 @@ bool Crit3DProject::runModelHour(const QString& hourlyOutputPath, bool isRestart
             }
         }
 
-        if (processes.computeCrop || processes.computeWater)
+        if (processes.computeCrop || processes.computeWater || processes.computeRothC)
         {
             if (! hourlyMeteoMaps->computeET0PMMap(DEM, radiationMaps))
             {

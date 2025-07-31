@@ -105,81 +105,81 @@ Crit3DHydrallPlant::Crit3DHydrallPlant()
     rootShootRatioRef = 0.33; //TODO
     tableEcophysiologicalParameters = {
         {"LARCH",                            35.0, 6.0, false},
-        {"Boschi di abete rosso",                       35.0, 6.0, false},
-        {"Boschi di abete bianco",                      30.0, 6.0, false},
-        {"SCOTCH_PINE",          30.0, 6.0, false},
-        {"Pinete di pino nero",                         30.0, 6.0, false},
-        {"Pinete di pini mediterranei",                 40.0, 7.0, true},
-        {"Altri boschi di conifere, pure o miste",      30.0, 6.0, false},
+        {"PICEA_ABIES",                       35.0, 6.0, false},
+        {"ABIES_ALBA",                      30.0, 6.0, false},
+        {"PINUS_SYLVESTRIS_SCOTCH_PINE",          30.0, 6.0, false},
+        {"PINUS_NIGRA",                         30.0, 6.0, false},
+        {"PINUS_PINEA",                 40.0, 7.0, true},
+        {"CONIFER_FOREST_OTHERS",      30.0, 6.0, false},
         {"BEECH",                                     50.0, 8.0, false},
-        {"QUERCUS_PETREA_ROBUR_Querceti a rovere, roverella e farnia",       50.0, 8.0, false},
-        {"QUERCUS_CERRIS_FRAINETTO_VALLONEACerrete, boschi di farnetto, fragno, vallonea", 50.0, 8.0, false},
+        {"QUERCUS_PETREA_ROBUR_PUBESCENS",       50.0, 8.0, false},
+        {"QUERCUS_CERRIS_FRAINETTO_VALLONEA", 50.0, 8.0, false},
         {"CASTINEA_SATIVA",                                  50.0, 8.0, false},
         {"CARPINUS_BETULUS_OTRYA_OXYCARPA",                         50.0, 8.0, false},
-        {"Boschi igrofili",                             60.0, 9.0, false},
-        {"BROADLEAF_TREE_OTHERS",                    50.0, 8.0, false},
+        {"HYGROPHILOUS_FOREST",                             60.0, 9.0, false},
+        {"BROADLEAF_FOREST_OTHERS",                    50.0, 8.0, false},
         {"QUERCUS_ILEX",                                     40.0, 7.0, true},
         {"QUERCUS_SUBER",                                   40.0, 7.0, true},
         {"MEDITERRANEAN_EVERGREEN_TREE",      40.0, 7.0, true},
-        {"Pioppeti artificiali",                        70.0, 9.0, false},
-        {"Piantagioni di altre latifoglie",             60.0, 8.0, false},
-        {"Piantagioni di conifere",                     40.0, 6.0, false},
-        {"Arbusteti subalpini",                         40.0, 7.0, false},
-        {"Arbusteti di clima temperato",                40.0, 7.0, false},
-        {"Macchia, arbusteti mediterranei",             40.0, 8.0, true}
+        {"POPULUS_ARTIFICIAL",                        70.0, 9.0, false},
+        {"BROADLEAF_ARTIFICIAL",             60.0, 8.0, false},
+        {"CONIFERS_ARTIFICIAL",                     40.0, 6.0, false},
+        {"SHRUB_SUBALPINE",                         40.0, 7.0, false},
+        {"SHRUB_TEMPERATE",                40.0, 7.0, false},
+        {"SHRUB_MEDITERRANEAN",             40.0, 8.0, true}
     };
 
 
     rangeLAI = {
-        {"Boschi di larice", 0.1, 4.0},
-        {"Boschi di abete rosso", 1.5, 6.0},
-        {"Boschi di abete bianco", 1.5, 6.0},
-        {"Pinete di pino silvestre e montano", 1.0, 4.0},
-        {"Pinete di pino nero", 1.0, 4.0},
-        {"Pinete di pini mediterranei", 1.0, 4.0},
-        {"Altri boschi di conifere, pure o miste", 1.0, 5.0},
-        {"Faggete", 0.1, 6.0},
-        {"Querceti a rovere, roverella e farnia", 0.1, 5.0},
-        {"Cerrete, boschi di farnetto, fragno, vallonea", 0.1, 5},
-        {"Castagneti", 0.1, 5.0},
-        {"Ostrieti, carpineti", 0.1, 5.0},
-        {"Boschi igrofili", 0.1, 6.0},
-        {"Altri boschi caducifogli", 0.1, 5.0},
-        {"Leccete", 1.5, 4.0},
-        {"Sugherete", 1.5, 4.0},
-        {"Altri boschi di latifoglie sempreverdi", 1.5, 4.0},
-        {"Pioppeti artificiali", 0.1, 6.0},
-        {"Piantagioni di altre latifoglie", 0.1, 6.0},
-        {"Piantagioni di conifere", 1.0, 5.0},
-        {"Arbusteti subalpini", 0.1, 2.0},
-        {"Arbusteti di clima temperato", 0.1, 3.0},
-        {"Macchia, arbusteti mediterranei", 1.0, 3.0}
+        {"LARCH", 0.1, 4.0},
+        {"PICEA_ABIES", 1.5, 6.0},
+        {"ABIES_ALBA", 1.5, 6.0},
+        {"PINUS_SYLVESTRIS_SCOTCH_PINE", 1.0, 4.0},
+        {"PINUS_NIGRA", 1.0, 4.0},
+        {"PINUS_PINEA", 1.0, 4.0},
+        {"CONIFER_FOREST_OTHERS", 1.0, 5.0},
+        {"BEECH", 0.1, 6.0},
+        {"QUERCUS_PETREA_ROBUR_PUBESCENS", 0.1, 5.0},
+        {"QUERCUS_CERRIS_FRAINETTO_VALLONEA", 0.1, 5},
+        {"CASTINEA_SATIVA", 0.1, 5.0},
+        {"CARPINUS_BETULUS_OTRYA_OXYCARPA", 0.1, 5.0},
+        {"HYGROPHILOUS_FOREST", 0.1, 6.0},
+        {"BROADLEAF_FOREST_OTHERS", 0.1, 5.0},
+        {"QUERCUS_ILEX", 1.5, 4.0},
+        {"QUERCUS_SUBER", 1.5, 4.0},
+        {"MEDITERRANEAN_EVERGREEN_TREE", 1.5, 4.0},
+        {"POPULUS_ARTIFICIAL", 0.1, 6.0},
+        {"BROADLEAF_ARTIFICIAL", 0.1, 6.0},
+        {"CONIFERS_ARTIFICIAL", 1.0, 5.0},
+        {"SHRUB_SUBALPINE", 0.1, 2.0},
+        {"SHRUB_TEMPERATE", 0.1, 3.0},
+        {"SHRUB_MEDITERRANEAN", 1.0, 3.0}
     }; // da aggiungere il sottobosco
 
     phenologyLAI = {
-        {"Boschi di larice", 250, 1000, 2250},              // Intermedia
-        {"Boschi di abete rosso", 300, 1100, 2500},         // Tardiva
-        {"Boschi di abete bianco", 300, 1100, 2500},        // Tardiva
-        {"Pinete di pino silvestre e montano", 250, 1000, 2250}, // Intermedia
-        {"Pinete di pino nero", 250, 1000, 2250},           // Intermedia
-        {"Pinete di pini mediterranei", 200, 900, 2000},    // Precoce
-        {"Altri boschi di conifere, pure o miste", 250, 1000, 2250}, // Intermedia
-        {"Faggete", 300, 1100, 2500},                       // Tardiva
-        {"Querceti a rovere, roverella e farnia", 250, 1000, 2250}, // Intermedia
-        {"Cerrete, boschi di farnetto, fragno, vallonea", 300, 1100, 2500}, // Tardiva
-        {"Castagneti", 250, 1000, 2250},                    // Intermedia
-        {"Ostrieti, carpineti", 250, 1000, 2250},           // Intermedia
-        {"Boschi igrofili", 250, 1000, 2250},               // Intermedia
-        {"Altri boschi caducifogli", 250, 1000, 2250},      // Intermedia
-        {"Leccete", 200, 900, 2000},                        // Precoce
-        {"Sugherete", 200, 900, 2000},                      // Precoce
-        {"Altri boschi di latifoglie sempreverdi", 200, 900, 2000}, // Precoce
-        {"Pioppeti artificiali", 200, 900, 2000},           // Precoce
-        {"Piantagioni di altre latifoglie", 250, 1000, 2250}, // Intermedia
-        {"Piantagioni di conifere", 250, 1000, 2250},       // Intermedia
-        {"Arbusteti subalpini", 250, 1000, 2250},           // Intermedia
-        {"Arbusteti di clima temperato", 250, 1000, 2250},  // Intermedia
-        {"Macchia, arbusteti mediterranei", 200, 900, 2000} // Precoce
+        {"LARCH", 250, 1000, 2250},              // Intermedia
+        {"PICEA_ABIES", 300, 1100, 2500},         // Tardiva
+        {"ABIES_ALBA", 300, 1100, 2500},        // Tardiva
+        {"PINUS_SYLVESTRIS_SCOTCH_PINE", 250, 1000, 2250}, // Intermedia
+        {"PINUS_NIGRA", 250, 1000, 2250},           // Intermedia
+        {"PINUS_PINEA", 200, 900, 2000},    // Precoce
+        {"CONIFER_FOREST_OTHERS", 250, 1000, 2250}, // Intermedia
+        {"BEECH", 300, 1100, 2500},                       // Tardiva
+        {"QUERCUS_PETREA_ROBUR_PUBESCENS", 250, 1000, 2250}, // Intermedia
+        {"QUERCUS_CERRIS_FRAINETTO_VALLONEAa", 300, 1100, 2500}, // Tardiva
+        {"CASTINEA_SATIVA", 250, 1000, 2250},                    // Intermedia
+        {"CARPINUS_BETULUS_OTRYA_OXYCARPA", 250, 1000, 2250},           // Intermedia
+        {"HYGROPHILOUS_FOREST", 250, 1000, 2250},               // Intermedia
+        {"BROADLEAF_FOREST_OTHERS", 250, 1000, 2250},      // Intermedia
+        {"QUERCUS_ILEX", 200, 900, 2000},                        // Precoce
+        {"QUERCUS_SUBER", 200, 900, 2000},                      // Precoce
+        {"MEDITERRANEAN_EVERGREEN_TREE", 200, 900, 2000}, // Precoce
+        {"POPULUS_ARTIFICIAL", 200, 900, 2000},           // Precoce
+        {"BROADLEAF_ARTIFICIAL", 250, 1000, 2250}, // Intermedia
+        {"CONIFERS_ARTIFICIAL", 250, 1000, 2250},       // Intermedia
+        {"SHRUB_SUBALPINE", 250, 1000, 2250},           // Intermedia
+        {"SHRUB_TEMPERATE", 250, 1000, 2250},  // Intermedia
+        {"SHRUB_MEDITERRANEAN", 200, 900, 2000} // Precoce
     };
 
 

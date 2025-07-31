@@ -88,6 +88,19 @@ void Crit3DRothCplusplusMaps::initialize(const gis::Crit3DRasterGrid& DEM)
     _clayMap->initializeGrid(DEM);
 }
 
+void Crit3DRothCplusplusMaps::clear()
+{
+    _decomposablePlantMaterial = new gis::Crit3DRasterGrid;
+    _resistantPlantMaterial = new gis::Crit3DRasterGrid;
+    _microbialBiomass = new gis::Crit3DRasterGrid;
+    _humifiedOrganicMatter = new gis::Crit3DRasterGrid;
+    _inertOrganicMatter = new gis::Crit3DRasterGrid;
+    _soilOrganicMatter = new gis::Crit3DRasterGrid;
+
+    _depthMap = new gis::Crit3DRasterGrid;
+    _clayMap = new gis::Crit3DRasterGrid;
+}
+
 
 void Crit3DRothCplusplusMaps::setClay(double myClay, int row, int col)
 {
@@ -165,7 +178,7 @@ bool Crit3DRothCplusplus::computeRothCPoint()
     /*std::cout << j << "," << decomposablePlantMatter << ","<< resistantPlantMatter << ","<< microbialBiomass << ","
               << humifiedOrganicMatter << ","<< inorganicMatter << ","<< soilOrganicCarbon << "\n";*/
 
-    int timeFact = 12;
+    int timeFact = 1; //TODO check
 
     double modernC = 100;
 
@@ -448,15 +461,16 @@ void Crit3DRothCplusplus::RothC(int timeFact, double &PC)
 {
     // Calculate RMFs
     double RM_TMP = RMF_Tmp(meteoVariable.getTemperature());
-    double RM_Moist;
-    if (isEqual (meteoVariable.getBIC(), NODATA)) //todo: check next time
+    double RM_Moist = 0.7;
+    //TODO: modified RM_Moist factor based on BIC
+    /*if (isEqual (meteoVariable.getBIC(), NODATA)) //todo: check next time
     {
         RM_Moist = RMF_Moist(meteoVariable.getPrecipitation(), meteoVariable.getWaterLoss(), bool(PC > 0));
     }
     else
     {
         RM_Moist = RMF_Moist(meteoVariable.getBIC(), bool(PC > 0));
-    }
+    }*/
 
     double RM_PC = RMF_plantCover(PC);
 

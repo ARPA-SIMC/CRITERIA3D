@@ -110,6 +110,7 @@ private:
 public:
     bool isInitialized;
 
+
     gis::Crit3DRasterGrid* getDPM() { return _decomposablePlantMaterial; };
     gis::Crit3DRasterGrid* getRPM() { return _resistantPlantMaterial; };
     gis::Crit3DRasterGrid* getBIO() { return _microbialBiomass; };
@@ -127,6 +128,8 @@ public:
     //~Crit3DRothCplusplusMaps();
 
     void initialize(const gis::Crit3DRasterGrid& DEM);
+    void clear();
+
     void setClay(double myClay, int row, int col);
     double getClay(int row, int col);
     void setDepth(double myDepth, int row, int col);

@@ -82,6 +82,9 @@
         void updateETAndPrecYearlyMaps();
         void dailyUpdateCropMaps(const QDate &myDate);
 
+        void clearHydrallMaps();
+        void clearRothCMaps();
+
         bool initializeCropWithClimateData();
         bool initializeCropFromDegreeDays(gis::Crit3DRasterGrid &myDegreeMap);
 
