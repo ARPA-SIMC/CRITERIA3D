@@ -2246,7 +2246,7 @@ bool Crit3DProject::loadModelState(QString statePath)
     QDir stateDir(statePath);
     if (! stateDir.exists())
     {
-        errorString = "State directory is missing.";
+        errorString = "This state does not exist: " + statePath;
         return false;
     }
 
@@ -3474,7 +3474,8 @@ int Crit3DProject::cmdLoadState(const QList<QString> &argumentList)
 {
     if (argumentList.size() < 2)
     {
-        std::cout << "Usage: LoadState <YYYYMMDD-Hhh> | [LAST]" << std::endl;
+        std::cout << "Usage: LoadState <YYYYMMDD_Hhh> | [LAST]" << std::endl;
+        std::cout << "Example: LoadState 20230516_H23" << std::endl;
         return CRIT3D_OK;
     }
 
@@ -3493,15 +3494,9 @@ int Crit3DProject::cmdLoadState(const QList<QString> &argumentList)
     }
 
     QString statePath = getProjectPath() + PATH_STATES + stateStr;
-    QDir stateDir(statePath);
-    if (! stateDir.exists())
-    {
-        std::cout << "Usage: LoadState <YYYYMMDD-Hhh> | [LAST]" << std::endl;
-        return CRIT3D_OK;
-    }
-
     if (! loadModelState(statePath))
     {
+        std::cout << "Usage: LoadState <YYYYMMDD-Hhh> | [LAST]" << std::endl;
         return CRIT3D_ERROR;
     }
 
