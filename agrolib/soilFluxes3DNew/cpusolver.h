@@ -18,11 +18,12 @@ namespace soilFluxes3D::New
             bool solveLinearSystem(uint8_t approximationNumber, processType computationType) override;
 
         public:
-            CPUSolver() {}
-            double getMatrixElementValue(uint64_t rowIndex, uint64_t colIndex) override;
+            CPUSolver() : Solver(CPU, Jacobi) {}
+            __cudaSpec double getMatrixElementValue(uint64_t rowIndex, uint64_t colIndex) override;
 
             SF3Derror_t inizialize() override;
             SF3Derror_t run(double maxTimeStep, double &acceptedTimeStep, processType process) override;
+            SF3Derror_t clean() override;
     };
 
     inline double CPUSolver::getMatrixElementValue(uint64_t rowIndex, uint64_t colIndex)
@@ -34,7 +35,7 @@ namespace soilFluxes3D::New
                 break;
 
         //assert(cpuColIdx < matrixA.numColumns[rowIndex]);
-        return matrixA.values[rowIndex][cpuColIdx];
+        return matrixA.values[rowIndex][cpuColIdx] * matrixA.values[rowIndex][0];
     }
 
 } // namespace soilFluxes3D::New

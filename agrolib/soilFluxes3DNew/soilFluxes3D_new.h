@@ -61,7 +61,6 @@ namespace soilFluxes3D::New
     double getWaterStorage();
     /*not used*/ double getWaterMBR();
 
-
     //Computations
     /*not used*/ void computePeriod();
     double computeStep(double maxTimeStep);

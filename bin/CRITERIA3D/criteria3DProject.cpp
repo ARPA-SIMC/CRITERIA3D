@@ -77,7 +77,7 @@ bool Crit3DProject::initializeCriteria3DModel()
     if (! initialize3DModel())
     {
         clearWaterBalance3D();
-        errorString += "\nCriteria3D model is not initialized.";
+        errorString += "\nCriteria3D model is not initialized!";
         return false;
     }
 
@@ -945,7 +945,7 @@ bool Crit3DProject::runModels(const QDateTime &firstTime, const QDateTime &lastT
 
             QString linSystLog = soilFluxes3D::getLinSystLog();
             //logData("LinSystInfo", linSystLog);
-            logInfo("LinSystInfo 68\n" + linSystLog);
+            logInfo("LinSystInfo 01\n" + linSystLog);
 
             //Log GPU test
             // QDateTime startTimeGPU = QDateTime::currentDateTime();

@@ -1198,10 +1198,8 @@ void Project3D::runWaterFluxes3DModel(double totalTimeStep, bool isRestart)
 
         previousTotalWaterContent = soilFluxes3D::getTotalWaterContent();       // [m3]
         double previousTotalWaterContentNew = soilFluxes3D::New::getTotalWaterContent();
-        if(previousTotalWaterContent != previousTotalWaterContentNew)
-            logError("ERROR getTotalWaterContent");
 
-        logInfo("total water [m3]: " + QString::number(previousTotalWaterContent));
+        logInfo("total water [m3]: " + QString::number(previousTotalWaterContent) + " ------- Error: " + QString::number(previousTotalWaterContent - previousTotalWaterContentNew));
         logInfo("precipitation [m3]: " + QString::number(totalPrecipitation));
         logInfo("evaporation [m3]: " + QString::number(-totalEvaporation));
         logInfo("transpiration [m3]: " + QString::number(-totalTranspiration));
@@ -1236,24 +1234,26 @@ void Project3D::runWaterFluxes3DModel(double totalTimeStep, bool isRestart)
     emit updateOutputSignal();
 
     double runoff = soilFluxes3D::getBoundaryWaterSumFlow(BOUNDARY_RUNOFF);
-    logInfo("runoff [m3]: " + QString::number(runoff));
     double runoffNew = soilFluxes3D::New::getTotalBoundaryWaterFlow(soilFluxes3D::New::Runoff);
+    logInfo("runoff [m3]: " + QString::number(runoff) + " ------- Error: " + QString::number(runoff - runoffNew));
 
     double freeDrainage = soilFluxes3D::getBoundaryWaterSumFlow(BOUNDARY_FREEDRAINAGE);
-    logInfo("free drainage [m3]: " + QString::number(freeDrainage));
     double freeDrainageNew = soilFluxes3D::New::getTotalBoundaryWaterFlow(soilFluxes3D::New::FreeDrainage);
+    logInfo("free drainage [m3]: " + QString::number(freeDrainage) + " ------- Error: " + QString::number(freeDrainage - freeDrainageNew));
 
     double lateralDrainage = soilFluxes3D::getBoundaryWaterSumFlow(BOUNDARY_FREELATERALDRAINAGE);
-    logInfo("lateral drainage [m3]: " + QString::number(lateralDrainage));
     double lateralDrainageNew = soilFluxes3D::New::getTotalBoundaryWaterFlow(soilFluxes3D::New::FreeLateraleDrainage);
+    logInfo("lateral drainage [m3]: " + QString::number(lateralDrainage) + " ------- Error: " + QString::number(lateralDrainage - lateralDrainageNew));
 
-    double currentWaterContent = soilFluxes3D::getTotalWaterContent();
     double forecastWaterContent = previousTotalWaterContent + runoff + freeDrainage + lateralDrainage
                                   + totalPrecipitation - totalEvaporation - totalTranspiration;
+    double currentWaterContent = soilFluxes3D::getTotalWaterContent();
     double massBalanceError = currentWaterContent - forecastWaterContent;
-    logInfo("Mass balance error [m3]: " + QString::number(massBalanceError));
-
+    double forecastWaterContentNew = previousTotalWaterContent + runoffNew + freeDrainageNew + lateralDrainageNew
+                                     + totalPrecipitation - totalEvaporation - totalTranspiration;
     double currentWaterContentNew = soilFluxes3D::New::getTotalWaterContent();
+    double massBalanceErrorNew = currentWaterContentNew - forecastWaterContentNew;
+    logInfo("Mass balance error [m3]: " + QString::number(massBalanceError) + " ------- Error: " + QString::number(massBalanceError - massBalanceErrorNew));
 
     // //Log temporaneo delle variabili
     // QString matrixLog = soilFluxes3D::getMatrixLog();

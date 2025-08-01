@@ -3,7 +3,6 @@
 
 #include "types_cpu.h"
 #include "macro.h"
-#include <algorithm>
 
 namespace soilFluxes3D::New
 {
@@ -11,38 +10,38 @@ namespace soilFluxes3D::New
     {
         protected:
             numericalMethod _method;
-            solverStatus _status;
+            solverStatus _status = Created;
             solverType _type;
 
             SolverParameters _parameters;
+            double _bestMBRerror;
 
-            double bestMBRerror;
-
-            uint32_t calcCurrentMaxIterationNumber(uint8_t approxNumber);
+            __cudaSpec uint32_t calcCurrentMaxIterationNumber(uint8_t approxNumber);
             virtual bool solveLinearSystem(uint8_t approximationNumber, processType computationType) = 0;
 
         public:
-            Solver() {}
+            Solver(solverType type, numericalMethod method) : _type(type), _method(method) {}
 
             void updateParameters(const SolverParametersPartial &newParameters) noexcept;
-            void setTimeStep(const double timeStep) noexcept;
+            void setTimeStep(double timeStep) noexcept;
 
-            WRCModel getWRCModel() const noexcept;
-            bool getOMPstatus() const noexcept;
-            double getMaxTimeStep() const noexcept;
-            double getLVRatio() const noexcept;
-            meanType_t getMeanType() const noexcept;
-            virtual double getMatrixElementValue(uint64_t rowIndex, uint64_t colIndex) = 0;
+            __cudaSpec WRCModel getWRCModel() const noexcept;
+            __cudaSpec bool getOMPstatus() const noexcept;
+            __cudaSpec double getMaxTimeStep() const noexcept;
+            __cudaSpec double getLVRatio() const noexcept;
+            __cudaSpec meanType_t getMeanType() const noexcept;
+            virtual __cudaSpec double getMatrixElementValue(uint64_t rowIndex, uint64_t colIndex) = 0;
 
             virtual SF3Derror_t inizialize() = 0;
             virtual SF3Derror_t run(double maxTimeStep, double &acceptedTimeStep, processType process) = 0;
+            virtual SF3Derror_t clean() = 0;
     };
 
-    inline uint32_t Solver::calcCurrentMaxIterationNumber(uint8_t approxNumber)
+    inline __cudaSpec uint32_t Solver::calcCurrentMaxIterationNumber(uint8_t approxNumber)
     {
         uint32_t maxCurrIterNum = uint32_t((approxNumber + 1) * (float(_parameters.maxIterationsNumber) / float(_parameters.maxApproximationsNumber)));
-        return std::max(maxCurrIterNum, uint32_t(20));
-        //return std::max(maxCurrIterNum, static_cast<uint32_t>(_parameters.maxIterationsNumber));
+        return SF3Dmax(maxCurrIterNum, uint32_t(20));
+        //return SF3Dmax(maxCurrIterNum, static_cast<uint32_t>(_parameters.maxIterationsNumber));
     }
 
     inline void Solver::updateParameters(const SolverParametersPartial &newParameters) noexcept
@@ -63,7 +62,7 @@ namespace soilFluxes3D::New
         updateFromPartial(_parameters, newParameters, enableOMP);
         updateFromPartial(_parameters, newParameters, numThreads);
     }
-    inline void Solver::setTimeStep(const double timeStep) noexcept
+    inline void Solver::setTimeStep(double timeStep) noexcept
     {
         if(timeStep < _parameters.deltaTmin)
             _parameters.deltaTcurr = _parameters.deltaTmin;
@@ -74,23 +73,23 @@ namespace soilFluxes3D::New
         _parameters.deltaTcurr = timeStep;
     }
 
-    inline WRCModel Solver::getWRCModel() const noexcept
+    inline __cudaSpec WRCModel Solver::getWRCModel() const noexcept
     {
         return _parameters.waterRetentionCurveModel;
     }
-    inline bool Solver::getOMPstatus() const noexcept
+    inline __cudaSpec bool Solver::getOMPstatus() const noexcept
     {
         return _parameters.enableOMP;
     }
-    inline double Solver::getMaxTimeStep() const noexcept
+    inline __cudaSpec double Solver::getMaxTimeStep() const noexcept
     {
         return _parameters.deltaTmax;
     }
-    inline double Solver::getLVRatio() const noexcept
+    inline __cudaSpec double Solver::getLVRatio() const noexcept
     {
         return _parameters.lateralVerticalRatio;
     }
-    inline meanType_t Solver::getMeanType() const noexcept
+    inline __cudaSpec meanType_t Solver::getMeanType() const noexcept
     {
         return _parameters.meantype;
     }

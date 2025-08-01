@@ -9,28 +9,29 @@
 
 #ifdef CUDA_ENABLED
     #include "gpusolver.h"
-#else
-    #include "cpusolver.h"
 #endif
-
+#include "cpusolver.h"
 
 using namespace soilFluxes3D::Soil;
 using namespace soilFluxes3D::Water;
 
 namespace soilFluxes3D::New
 {
-
     #ifdef CUDA_ENABLED
-        soilFluxes3D::New::GPUSolver tempSolver;
+        GPUSolver GPUSolverObject;
+        bool CUDAactive = true;
     #else
-        CPUSolver tempSolver;
+        bool CUDAactive = false;
     #endif
 
+    CPUSolver CPUSolverObject;
+
     //global variables
-    Solver& solver = tempSolver;
-    nodesData_t nodeGrid;
-    simulationFlags_t simulationFlags;
-    balanceData_t balanceDataCurrentPeriod, balanceDataWholePeriod, balanceDataCurrentTimeStep, balanceDataPreviousTimeStep;
+    __cudaMngd Solver* solver = nullptr;
+    __cudaMngd nodesData_t nodeGrid;
+    __cudaMngd simulationFlags_t simulationFlags;
+    __cudaMngd balanceData_t balanceDataCurrentPeriod, balanceDataWholePeriod, balanceDataCurrentTimeStep, balanceDataPreviousTimeStep;
+
     std::vector<std::vector<soilData_t>> soilList;
     std::vector<surfaceData_t> surfaceList;
 
@@ -71,6 +72,7 @@ namespace soilFluxes3D::New
         hostAlloc(nodeGrid.surfaceFlag, bool, nrNodes);
 
         //Soil/Surface data
+        hostAlloc(nodeGrid.soilRowIndeces, uint16_t, nrNodes);
         hostAlloc(nodeGrid.soilSurfacePointers, soil_surface_ptr, nrNodes);
 
         //Boundary data
@@ -138,6 +140,20 @@ namespace soilFluxes3D::New
         }
         nodeGrid.isInizialized = true;
 
+        //Inizialize the solver pointer
+        #ifdef CUDA_ENABLED
+            if(CUDAactive)
+                solver = &(GPUSolverObject);
+            else
+                solver = &(CPUSolverObject);
+        #else
+            solver = &(CPUSolverObject);
+        #endif
+
+        SF3Derror_t solverResult = solver->inizialize();
+        if(solverResult != SF3Dok)
+            return solverResult;
+
         return SF3Dok;
     }
 
@@ -176,6 +192,7 @@ namespace soilFluxes3D::New
         hostFree(nodeGrid.surfaceFlag);
 
         //Soil/Surface data
+        hostFree(nodeGrid.soilRowIndeces);
         hostFree(nodeGrid.soilSurfacePointers);
 
         //Boundary data
@@ -231,6 +248,11 @@ namespace soilFluxes3D::New
 
         nodeGrid.isInizialized = false;
 
+        //Clean the solver
+        SF3Derror_t solverResult = solver->clean();
+        if(solverResult != SF3Dok)
+            return solverResult;
+
         return SF3Dok;
     }
 
@@ -245,7 +267,7 @@ namespace soilFluxes3D::New
         if (nrThreads < 1 || nrThreads > nrHWthreads)
             nrThreads = nrHWthreads;
 
-        solver.updateParameters(SolverParametersPartial{.numThreads = nrThreads});
+        solver->updateParameters(SolverParametersPartial{.numThreads = nrThreads});
         return nrThreads;
     }
 
@@ -345,7 +367,7 @@ namespace soilFluxes3D::New
         if (MBRThresholdExponent > 6)
             MBRThresholdExponent = 6;
 
-        solver.updateParameters(SolverParametersPartial{.MBRThreshold = pow(10.0, -MBRThresholdExponent),
+        solver->updateParameters(SolverParametersPartial{.MBRThreshold = pow(10.0, -MBRThresholdExponent),
                                                      .residualTolerance = pow(10.0, -ResidualToleranceExponent),
                                                      .deltaTmin = minDeltaT, .deltaTmax = maxDeltaT, .deltaTcurr = maxDeltaT,
                                                      .maxApproximationsNumber = maxApproximationsNumber, .maxIterationsNumber = maxIterationNumber});
@@ -366,7 +388,7 @@ namespace soilFluxes3D::New
         if((conductivityHorizVertRatio < 0.1) || (conductivityHorizVertRatio > 100))
             return ParameterError;
 
-        solver.updateParameters(SolverParametersPartial{.waterRetentionCurveModel = waterRetentionCurve,
+        solver->updateParameters(SolverParametersPartial{.waterRetentionCurveModel = waterRetentionCurve,
                                                      .meantype = conductivityMeanType,
                                                      .lateralVerticalRatio = conductivityHorizVertRatio});
         return SF3Dok;
@@ -479,6 +501,7 @@ namespace soilFluxes3D::New
         if(nodeGrid.surfaceFlag[nodeIndex])
             return IndexError;      //surfaceFlags must be inizialized before soil data
 
+        nodeGrid.soilRowIndeces[nodeIndex] = soilIndex;
         nodeGrid.soilSurfacePointers[nodeIndex].soilPtr = &(soilList[soilIndex][horizonIndex]);
         return SF3Dok;
     }
@@ -722,7 +745,7 @@ namespace soilFluxes3D::New
             return IndexError;
 
         return nodeGrid.surfaceFlag[nodeIndex] ? (nodeGrid.waterData.pressureHead[nodeIndex] - nodeGrid.z[nodeIndex])
-                                               : std::max(0., computeNodeTheta(nodeIndex) - computeNodeTheta_fromSignedPsi(nodeIndex, -160));
+                                               : SF3Dmax(0., computeNodeTheta(nodeIndex) - computeNodeTheta_fromSignedPsi(nodeIndex, -160));
     }
 
     /*!
@@ -858,7 +881,7 @@ namespace soilFluxes3D::New
             case Lateral:
                 for(uint8_t linkIdx = 0; linkIdx < maxLateralLink; ++linkIdx)   //TO DO: change limit to nodeGrid.numLateralLink[nodeIndex];
                     if(nodeGrid.linkData[2 + linkIdx].linkIndex[nodeIndex] != NoLink)
-                        maxFlow = std::max(maxFlow, nodeGrid.linkData[2 + linkIdx].waterFlowSum[nodeIndex]);
+                        maxFlow = SF3Dmax(maxFlow, nodeGrid.linkData[2 + linkIdx].waterFlowSum[nodeIndex]);
 
                 return maxFlow;
             default:
@@ -952,7 +975,7 @@ namespace soilFluxes3D::New
     {
         double totalBoundaryWaterFlow = 0.0;
 
-        #pragma omp parallel for reduction(+:totalBoundaryWaterFlow) if(solver.getOMPstatus())
+        #pragma omp parallel for reduction(+:totalBoundaryWaterFlow) if(solver->getOMPstatus())
         for (uint64_t nodeIdx = 0; nodeIdx < nodeGrid.numNodes; ++nodeIdx)
             if (nodeGrid.boundaryData.boundaryType[nodeIdx] == boundaryType)
                 totalBoundaryWaterFlow += nodeGrid.boundaryData.waterFlowSum[nodeIdx];
@@ -996,7 +1019,6 @@ namespace soilFluxes3D::New
      */
     double computeStep(double maxTimeStep = HOUR_SECONDS)
     {
-        solver.inizialize();
         if(simulationFlags.computeHeat)
         {
             //TO DO: heat
@@ -1005,9 +1027,9 @@ namespace soilFluxes3D::New
         double dtWater, dtHeat;
 
         if(simulationFlags.computeWater)
-            solver.run(maxTimeStep, dtWater, Water);
+            solver->run(maxTimeStep, dtWater, Water);
         else
-            dtWater = std::min(maxTimeStep, solver.getMaxTimeStep());
+            dtWater = SF3Dmin(maxTimeStep, solver->getMaxTimeStep());
 
         if(simulationFlags.computeHeat)
         {

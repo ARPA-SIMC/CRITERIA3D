@@ -8,8 +8,8 @@ using namespace soilFluxes3D::Math;
 
 namespace soilFluxes3D::New
 {
-    extern soilFluxes3D::New::nodesData_t nodeGrid;
-    extern soilFluxes3D::New::simulationFlags_t simulationFlags;
+    extern __cudaMngd nodesData_t nodeGrid;
+    extern __cudaMngd simulationFlags_t simulationFlags;
 }
 
 namespace soilFluxes3D::Heat

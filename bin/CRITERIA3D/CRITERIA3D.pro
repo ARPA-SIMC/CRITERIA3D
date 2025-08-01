@@ -15,7 +15,7 @@ CUDA_DIR = $$(CUDA_PATH) #"D:\App e giochi\NVIDIA GPU Computing Toolkit\CUDA\v12
 INCLUDEPATH  += $$CUDA_DIR/include
 QMAKE_LIBDIR += $$CUDA_DIR/lib/x64
 
-LIBS += -lcudart -lcuda  -lcusparse
+LIBS += -lcudart -lcuda -lcusparse
 
 TEMPLATE = app
 TARGET = CRITERIA3D
@@ -26,7 +26,7 @@ CONFIG += debug_and_release
 CONFIG += c++11 c++14 c++17 c++20
 
 INCLUDEPATH +=  ./shared  \
-                ../../agrolib/soilFluxes3D  ../../agrolib/soilFluxes3DNew \
+                ../../agrolib/soilFluxes3D ../../agrolib/soilFluxes3DNew \
                 ../../agrolib/crit3dDate ../../agrolib/mathFunctions \
                 ../../agrolib/crop ../../agrolib/soil ../../agrolib/meteo ../../agrolib/gis \
                 ../../agrolib/interpolation ../../agrolib/solarRadiation \

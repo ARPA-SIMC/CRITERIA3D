@@ -20,7 +20,7 @@ CONFIG += staticlib
 CONFIG += c++20
 CONFIG += debug_and_release
 
-INCLUDEPATH += ../mathFunctions
+INCLUDEPATH += $$absolute_path(..\mathFunctions)
 
 SOURCES += \
     cpusolver.cpp \
@@ -28,7 +28,7 @@ SOURCES += \
     otherFunctions.cpp \
     soilFluxes3D_new.cpp \
     soil_new.cpp \
-    water_new.cpp \
+    water_new.cpp
 
 HEADERS += \
     cpusolver.h \
@@ -61,23 +61,26 @@ win32:{
 
 CONFIG(CUDA_CONFIG) {
     DEFINES += CUDA_ENABLED
+
     HEADERS += \
-        cudaFunctions.h \
-        gpuEntryPoints.h \
         gpusolver.h \
         types_gpu.h \
 
+    SOURCES += \
+    gpusolver.cpp
+
     # CUDA settings
-    CUDA_SOURCES += cusparseExec.cu gpusolver.cpp
     CUDA_DIR = $$(CUDA_PATH) #"D:\App e giochi\NVIDIA GPU Computing Toolkit\CUDA\v12.9"
     CUDA_ARCH = sm_61
+    CUDA_SOURCES += $$SOURCES
+    SOURCES -= $$CUDA_SOURCES
 
     INCLUDEPATH  += $$CUDA_DIR/include
     QMAKE_LIBDIR += $$CUDA_DIR/lib/x64
 
     LIBS += -lcudart -lcuda -lcusparse
 
-    cudaC_FLAGS = -std=c++20
+    cudaC_FLAGS = -std=c++20 --expt-relaxed-constexpr -DCUDA_ENABLED
     cudaL_FLAGS = -m64 -arch=sm_61 -Wno-deprecated-gpu-targets -std=c++20
 
     MSVCRT_LINK_FLAG_DEBUG = "/MDd"
@@ -89,7 +92,7 @@ CONFIG(CUDA_CONFIG) {
     # Compile CUDA source files using NVCC
     cudaC.input = CUDA_SOURCES
     cudaC.output = ${QMAKE_FILE_BASE}_cuda.o
-    cudaC.commands = $$CUDA_DIR\bin\nvcc -Xcompiler $$MSVCRT_LINK_FLAG_RELEASE $$cudaL_FLAGS -dc $$cudaC_FLAGS $$CUDA_INC $$LIBS -o ${QMAKE_FILE_BASE}_cuda.o ${QMAKE_FILE_NAME}
+    cudaC.commands = $$CUDA_DIR\bin\nvcc -Xcompiler $$MSVCRT_LINK_FLAG_RELEASE $$cudaL_FLAGS -dc $$cudaC_FLAGS $$CUDA_INC $$LIBS -o ${QMAKE_FILE_BASE}_cuda.o -x cu ${QMAKE_FILE_NAME}
     cudaC.dependency_type = TYPE_C
     cudaC.variable_out = CUDA_OBJ
     cudaC.variable_out += OBJECTS

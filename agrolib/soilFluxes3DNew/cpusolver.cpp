@@ -11,37 +11,40 @@ using namespace soilFluxes3D::Water;
 
 namespace soilFluxes3D::New
 {
-    extern nodesData_t nodeGrid;
-    extern simulationFlags_t simulationFlags;
+    extern __cudaMngd nodesData_t nodeGrid;
+    extern __cudaMngd simulationFlags_t simulationFlags;
 
     SF3Derror_t CPUSolver::inizialize()
     {
+        if(_status != Created)
+            return SolverError;
+
         if(_parameters.deltaTcurr == noData)
             _parameters.deltaTcurr = _parameters.deltaTmax;
 
-        _parameters.enableOMP = true;       //TO DO: (nodeGrid.numNodes > ...);
+        _parameters.enableOMP = false;       //TO DO: (nodeGrid.numNodes > ...);
 
         //Inizialize matrix structure
         matrixA.numRows = nodeGrid.numNodes;
-        hostAlloc(matrixA.numColumns, uint8_t, matrixA.numRows);
-        hostAlloc(matrixA.colIndeces, uint64_t*, matrixA.numRows);
-        hostAlloc(matrixA.values, double*, matrixA.numRows);
+        hostSolverAlloc(matrixA.numColumns, uint8_t, matrixA.numRows);
+        hostSolverAlloc(matrixA.colIndeces, uint64_t*, matrixA.numRows);
+        hostSolverAlloc(matrixA.values, double*, matrixA.numRows);
 
-        #pragma omp parallel for if(_parameters.enableOMP)
         for (uint64_t rowIdx = 0; rowIdx < matrixA.numRows; ++rowIdx)
         {
-            matrixA.colIndeces[rowIdx] = static_cast<uint64_t*>(calloc(matrixA.maxColumns, sizeof(uint64_t)));
-            matrixA.values[rowIdx] = static_cast<double*>(calloc(matrixA.maxColumns, sizeof(double)));
+            hostSolverAlloc(matrixA.colIndeces[rowIdx], uint64_t, matrixA.maxColumns);
+            hostSolverAlloc(matrixA.values[rowIdx], double, matrixA.maxColumns);
         }
 
+        //Inizialize vector data
         vectorX.numElements = nodeGrid.numNodes;
-        hostAlloc(vectorX.values, double, vectorX.numElements);
+        hostSolverAlloc(vectorX.values, double, vectorX.numElements);
 
         vectorB.numElements = nodeGrid.numNodes;
-        hostAlloc(vectorB.values, double, vectorB.numElements);
+        hostSolverAlloc(vectorB.values, double, vectorB.numElements);
 
         vectorC.numElements = nodeGrid.numNodes;
-        hostAlloc(vectorC.values, double, vectorC.numElements);
+        hostSolverAlloc(vectorC.values, double, vectorC.numElements);
 
         _status = Inizialized;
         return SF3Dok;
@@ -65,6 +68,37 @@ namespace soilFluxes3D::New
                 break;
         }
         _status = Terminated;
+        _status = Inizialized;
+        return SF3Dok;
+    }
+
+    SF3Derror_t CPUSolver::clean()
+    {
+        if(_status == Created)
+            return SF3Dok;
+
+        if((_status != Terminated) && (_status != Error))
+            return SolverError;
+
+        //Destruct matrix variable
+        #pragma omp parallel for if(_parameters.enableOMP)
+        for (uint64_t rowIdx = 0; rowIdx < matrixA.numRows; ++rowIdx)
+        {
+            hostSolverFree(matrixA.colIndeces[rowIdx]);
+            hostSolverFree(matrixA.values[rowIdx]);
+        }
+        hostSolverFree(matrixA.numColumns);
+        hostSolverFree(matrixA.colIndeces);
+        hostSolverFree(matrixA.values);
+
+        //Destruct matrix variable
+        hostSolverFree(vectorX.values);
+
+        hostSolverFree(vectorB.values);
+
+        hostSolverFree(vectorC.values);
+
+        _status = Created;
         return SF3Dok;
     }
 
@@ -73,7 +107,7 @@ namespace soilFluxes3D::New
         balanceResult_t stepStatus = stepRefused;
         while(stepStatus != stepAccepted)
         {
-            acceptedTimeStep = std::min(_parameters.deltaTcurr, maxTimeStep);
+            acceptedTimeStep = SF3Dmin(_parameters.deltaTcurr, maxTimeStep);
 
             //Save instantaneus H values
             std::memcpy(nodeGrid.waterData.oldPressureHeads, nodeGrid.waterData.pressureHead, nodeGrid.numNodes * sizeof(double));
@@ -126,7 +160,7 @@ namespace soilFluxes3D::New
             //Check Courant
             if((nodeGrid.waterData.CourantWaterLevel > 1.) && (deltaT > _parameters.deltaTmin))
             {
-                _parameters.deltaTcurr = std::max(_parameters.deltaTmin, _parameters.deltaTcurr / nodeGrid.waterData.CourantWaterLevel);
+                _parameters.deltaTcurr = SF3Dmax(_parameters.deltaTmin, _parameters.deltaTcurr / nodeGrid.waterData.CourantWaterLevel);
                 if(_parameters.deltaTcurr > 1.)
                     _parameters.deltaTcurr = floor(_parameters.deltaTcurr);
 
@@ -139,7 +173,7 @@ namespace soilFluxes3D::New
             //Reduce step tipe if system resolution failed
             if((!isStepValid) && (deltaT > _parameters.deltaTmin))
             {
-                _parameters.deltaTcurr = std::max(_parameters.deltaTmin, _parameters.deltaTcurr / 2.);
+                _parameters.deltaTcurr = SF3Dmax(_parameters.deltaTmin, _parameters.deltaTcurr / 2.);
                 return stepHalved;
             }
 
@@ -154,7 +188,7 @@ namespace soilFluxes3D::New
                     nodeGrid.waterData.saturationDegree[nodeIdx] = computeNodeSe(nodeIdx);
 
             //Check water balance
-            balanceResult = evaluateWaterBalance(approxIdx, bestMBRerror, _parameters);
+            balanceResult = evaluateWaterBalance(approxIdx, _bestMBRerror, _parameters);
 
             if((balanceResult == stepAccepted) || (balanceResult == stepHalved))
                 return balanceResult;
