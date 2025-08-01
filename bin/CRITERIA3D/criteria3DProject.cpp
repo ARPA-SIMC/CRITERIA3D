@@ -1042,7 +1042,7 @@ bool Crit3DProject::runModels(const QDateTime &firstTime, const QDateTime &lastT
 
 			//rothC maps update must be done hourly, otherwise ETReal data is not stored
             if (processes.computeRothC || processes.computeHydrall)
-				updateETAndPrecMonthlyMaps();
+				updateETAndPrecYearlyMaps();
 			
             // output points
             if (isSaveOutputPoints() && currentSeconds == 3600)
