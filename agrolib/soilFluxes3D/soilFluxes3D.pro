@@ -16,6 +16,7 @@ TEMPLATE = lib
 CONFIG += staticlib
 
 CONFIG += debug_and_release
+CONFIG += c++17
 
 unix:{
     CONFIG(debug, debug|release) {
