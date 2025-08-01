@@ -139,6 +139,23 @@ bool Crit3DProject::initializeHydrall()
     hydrallMaps.yearlyPrec->initializeGrid(*(DEM.header));
     hydrallMaps.yearlyET0->initializeGrid(*(DEM.header));
 
+    //inizializzare un vettore che rimandi ai valori dei parametri ecofisiologici per hydrall che attraverso gli indici della croplist
+    //ovvero se nella tabella dei parametri   hydrallModel.plant.tableEcophysiologicalParameters il valore per il faggio è alla riga 3 e nella croplist il faggio è alla riga 25
+    //ovvero nella treecovermap il valore che si ottiene è 25
+    //allora la tabella creata dovrà avere al 25esimo elemento il valore 3, così
+
+    hydrallModel.conversionTableVector.resize(cropList.size(), NODATA);
+
+    for (unsigned int i = 0; i < cropList.size(); i++)
+    {
+        for (unsigned int j = 0; j < hydrallModel.plant.tableEcophysiologicalParameters.size(); j++)
+        {
+            if (cropList[i].idCrop == hydrallModel.plant.tableEcophysiologicalParameters[j].name)
+            {
+                hydrallModel.conversionTableVector[i] = j;
+            }
+        }
+    }
 
     for (int row = 0; row < DEM.header->nrRows; row++)
     {
@@ -636,7 +653,7 @@ void Crit3DProject::assignETreal()
 
                         int soilIndex = int(soilIndexMap.value[row][col]);
                         if (soilIndex != NODATA)
-                            computeHydrallModel(row, col);
+                            computeHydrallModel(row, col, forestIndex);
                     }
 
                     if (processes.computeRothC)
@@ -1628,7 +1645,7 @@ bool Crit3DProject::computeSnowModel()
 }
 
 
-bool Crit3DProject::computeHydrallModel(int row, int col)
+bool Crit3DProject::computeHydrallModel(int row, int col, int forestIndex)
 {
     // check
     if (! hourlyMeteoMaps->getComputed())
@@ -1649,7 +1666,7 @@ bool Crit3DProject::computeHydrallModel(int row, int col)
     }
 
     //set all necessary input variables
-    setHydrallVariables(row, col);
+    setHydrallVariables(row, col, forestIndex);
 
     //read state variables from corresponding state maps
     hydrallModel.setStateVariables(hydrallMaps, row, col);
@@ -1665,10 +1682,8 @@ bool Crit3DProject::computeHydrallModel(int row, int col)
     return true;
 }
 
-void Crit3DProject::setHydrallVariables(int row, int col)
+void Crit3DProject::setHydrallVariables(int row, int col, int forestIndex)
 {
-
-    Crit3DCrop currentCrop = cropList[getLandUnitIndexRowCol(row, col)];
 
     //hourly variables
     hydrallModel.setHourlyVariables(double(hourlyMeteoMaps->mapHourlyTair->value[row][col]), double(radiationMaps->globalRadiationMap->value[row][col]),
@@ -1685,7 +1700,7 @@ void Crit3DProject::setHydrallVariables(int row, int col)
     double chlorophyllContent = 500; //da tabella
     //treeCoverMap.value[row][col] = 0; //TODO treeSpeciesMap. valutare tabelle tra crop e tabella hydrall
 
-    hydrallModel.setPlantVariables(chlorophyllContent, hydrallMaps.plantHeight.value[row][col],
+    hydrallModel.setPlantVariables(forestIndex, chlorophyllContent, hydrallMaps.plantHeight.value[row][col],
                                    hydrallMaps.minLeafWaterPotential->value[row][col], hydrallMaps.criticalSoilWaterPotential->value[row][col]);
 
     // check soil
