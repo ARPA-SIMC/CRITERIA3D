@@ -10,9 +10,6 @@
 
 namespace soilFluxes3D::New
 {
-    // constexpr uint8_t maxLateralLink = 8;
-    // constexpr uint8_t maxTotalLink = maxLateralLink + 2;
-    // constexpr uint8_t maxMatrixColumns = maxTotalLink + 1;
     #define maxLateralLink 8
     #define maxTotalLink (maxLateralLink + 2)
     #define maxMatrixColumns (maxTotalLink + 1)
@@ -77,7 +74,7 @@ namespace soilFluxes3D::New
         double *bestPressureHeads = nullptr;   //bestH
 
         //Courant data
-        double CourantWaterLevel = 0;
+        double CourantWaterLevel = 0.;
     };
 
     //Heat and Solutes
@@ -93,11 +90,11 @@ namespace soilFluxes3D::New
     enum balanceResult_t {stepAccepted, stepRefused, stepHalved};
     struct balanceData_t
     {
-        double waterStorage;
+        double waterStorage = 0.;
         double waterSinkSource = 0.;
         double waterMBE = 0., waterMBR = 0.;
 
-        double heatStorage;
+        double heatStorage = 0.;
         double heatSinkSource = 0.;
         double heatMBE = 0., heatMBR = 0.;
     };
@@ -162,8 +159,8 @@ namespace soilFluxes3D::New
     {
         bool isInizialized = false;
 
-        uint64_t numNodes;
-        uint64_t numLayers;
+        uint64_t numNodes = 0;
+        uint64_t numLayers = 0;
 
         //Topology data
         double *size = nullptr;                             //volume_area
@@ -171,6 +168,7 @@ namespace soilFluxes3D::New
         bool *surfaceFlag = nullptr;                        //isSurface
 
         //Soil/surface properties pointers
+        uint16_t *soilRowIndeces = nullptr;                 //used for offsets in gpuCode
         soil_surface_ptr *soilSurfacePointers = nullptr;
 
         //Boundary data
@@ -247,5 +245,8 @@ namespace soilFluxes3D::New
 }
 
 #include "types_opt.h"
+#ifdef CUDA_ENABLED
+    #include "types_gpu.h"
+#endif
 
 #endif // SOILFLUXES3D_TYPES_CPU_H

@@ -9,9 +9,9 @@ using namespace soilFluxes3D::Math;
 
 namespace soilFluxes3D::New
 {
-    extern soilFluxes3D::New::nodesData_t nodeGrid;
-    extern soilFluxes3D::New::Solver& solver;
-    extern soilFluxes3D::New::simulationFlags_t simulationFlags;
+    extern __cudaMngd nodesData_t nodeGrid;
+    extern __cudaMngd Solver* solver;
+    extern __cudaMngd simulationFlags_t simulationFlags;
 }
 
 namespace soilFluxes3D::Soil
@@ -21,7 +21,7 @@ namespace soilFluxes3D::Soil
      * \brief Computes nodeIndex node volumetric water content as function of the node degree of saturation
      * \return theta (volumetric water content)     [m3 m-3]
      */
-    double computeNodeTheta(uint64_t nodeIndex)
+    __cudaSpec double computeNodeTheta(uint64_t nodeIndex)
     {
         return computeNodeTheta_fromSe(nodeIndex, nodeGrid.waterData.saturationDegree[nodeIndex]);
     }
@@ -30,10 +30,11 @@ namespace soilFluxes3D::Soil
      * \brief Computes nodeIndex node volumetric water content as function of degree of saturation
      * \return theta (volumetric water content)     [m3 m-3]
      */
-    double computeNodeTheta_fromSe(uint64_t nodeIndex, double Se)
+    __cudaSpec double computeNodeTheta_fromSe(uint64_t nodeIndex, double Se)
     {
         assert(!nodeGrid.surfaceFlag[nodeIndex]);   //TO DO: is needed?
-        return (Se * (nodeGrid.soilSurfacePointers[nodeIndex].soilPtr->Theta_s - nodeGrid.soilSurfacePointers[nodeIndex].soilPtr->Theta_r)) + nodeGrid.soilSurfacePointers[nodeIndex].soilPtr->Theta_r;
+        soilData_t& nodeSoil = *(nodeGrid.soilSurfacePointers[nodeIndex].soilPtr);
+        return (Se * (nodeSoil.Theta_s - nodeSoil.Theta_r)) + nodeSoil.Theta_r;
     }
 
 
@@ -42,7 +43,7 @@ namespace soilFluxes3D::Soil
      * \param signedPsi (signed water potential)    [m]
      * \return theta (volumetric water content)     [m3 m-3]
      */
-    double computeNodeTheta_fromSignedPsi(uint64_t nodeIndex, double signedPsi)
+    __cudaSpec double computeNodeTheta_fromSignedPsi(uint64_t nodeIndex, double signedPsi)
     {
         if(nodeGrid.surfaceFlag[nodeIndex])
             return 1.;
@@ -59,7 +60,7 @@ namespace soilFluxes3D::Soil
      * \brief Computes nodeIndex node degree of saturation as function of the node matric potential
      * \return Se (degree of saturation)     [-]
      */
-    double computeNodeSe(uint64_t nodeIndex)
+    __cudaSpec double computeNodeSe(uint64_t nodeIndex)
     {
         bool isSaturated = nodeGrid.waterData.pressureHead[nodeIndex] >= nodeGrid.z[nodeIndex];
         return isSaturated ? 1. : computeNodeSe_unsat(nodeIndex);
@@ -69,7 +70,7 @@ namespace soilFluxes3D::Soil
      * \brief Computes unsaturated nodeIndex node degree of saturation as function of the node matric potential
      * \return Se (degree of saturation)     [-]
      */
-    double computeNodeSe_unsat(uint64_t nodeIndex)
+    __cudaSpec double computeNodeSe_unsat(uint64_t nodeIndex)
     {
         double nodePsi = fabs(nodeGrid.waterData.pressureHead[nodeIndex] - nodeGrid.z[nodeIndex]);
         return computeNodeSe_fromPsi(nodeIndex, nodePsi);
@@ -80,11 +81,11 @@ namespace soilFluxes3D::Soil
      * \param psi (matric potential)        [m]
      * \return Se (degree of saturation)    [-]
      */
-    double computeNodeSe_fromPsi(uint64_t nodeIndex, double psi)
+    __cudaSpec double computeNodeSe_fromPsi(uint64_t nodeIndex, double psi)
     {
         soilData_t& nodeSoil = *(nodeGrid.soilSurfacePointers[nodeIndex].soilPtr);
-
-        switch(solver.getWRCModel())
+        WRCModel model = solver->getWRCModel();
+        switch(model)
         {
             case VanGenuchten:
                 return pow(1. + pow(nodeSoil.VG_alpha * psi, nodeSoil.VG_n), -nodeSoil.VG_m);
@@ -102,7 +103,7 @@ namespace soilFluxes3D::Soil
      * \param theta (volumetric water content)      [m3 m-3]
      * \return Se (degree of saturation)     [-]
      */
-    double computeNodeSe_fromTheta(uint64_t nodeIndex, double theta)
+    __cudaSpec double computeNodeSe_fromTheta(uint64_t nodeIndex, double theta)
     {
         soilData_t& nodeSoil = *(nodeGrid.soilSurfacePointers[nodeIndex].soilPtr);
 
@@ -119,12 +120,13 @@ namespace soilFluxes3D::Soil
      * \brief Computes nodeIndex node water potential as a function of node degree of saturation
      * \return psi (water potential)     [m]
      */
-    double computeNodePsi(uint64_t nodeIndex)
+    __cudaSpec double computeNodePsi(uint64_t nodeIndex)
     {
         soilData_t& nodeSoil = *(nodeGrid.soilSurfacePointers[nodeIndex].soilPtr);
 
         double temp;
-        switch(solver.getWRCModel())
+        WRCModel model = solver->getWRCModel();
+        switch(model)
         {
             case VanGenuchten:
                 temp = pow(1. / nodeGrid.waterData.saturationDegree[nodeIndex], 1. / nodeSoil.VG_m) - 1.;
@@ -142,7 +144,7 @@ namespace soilFluxes3D::Soil
      * \brief Computes nodeIndex node soil water total (liquid + vapor) conductivity
      * \return K (water conductivity)   [m s-1]
      */
-    double computeNodeK(uint64_t nodeIndex)
+    __cudaSpec double computeNodeK(uint64_t nodeIndex)
     {
         double k = computeNodeK_Mualem(*(nodeGrid.soilSurfacePointers[nodeIndex].soilPtr), nodeGrid.waterData.saturationDegree[nodeIndex]);
 
@@ -160,13 +162,14 @@ namespace soilFluxes3D::Soil
      * \warning very low values are possible (as e-12)
      * \return K (hydraulic conductivity)   [m s-1]
      */
-    double computeNodeK_Mualem(soilData_t &soilData, double Se)
+    __cudaSpec double computeNodeK_Mualem(soilData_t &soilData, double Se)
     {
         if(Se >= 1.)
             return soilData.K_sat;
 
         double temp, tNum, tDen;
-        switch(solver.getWRCModel())
+        WRCModel model = solver->getWRCModel();
+        switch(model)
         {
             case VanGenuchten:
                 temp = 1. - pow(1. - pow(Se, 1. / soilData.VG_m), soilData.VG_m);
@@ -190,14 +193,14 @@ namespace soilFluxes3D::Soil
      *                  and dSe/dH = -sgn(H-z) * alpha * n * m * (1 / Sc) * [1 + (alpha * |H - z|)^n]^(-m-1) * (alpha * |H-z|)^(n-1)    if Modified VanGenuchten
      * \return dTheta/dH    [m-1]
      */
-    double computeNodedThetadH(uint64_t nodeIndex)
+    __cudaSpec double computeNodedThetadH(uint64_t nodeIndex)
     {
         soilData_t& nodeSoil = *(nodeGrid.soilSurfacePointers[nodeIndex].soilPtr);
 
-        double psiCurr = fabs(std::min(0., nodeGrid.waterData.pressureHead[nodeIndex] - nodeGrid.z[nodeIndex]));
-        double psiPrev = fabs(std::min(0., nodeGrid.waterData.oldPressureHeads[nodeIndex] - nodeGrid.z[nodeIndex]));
+        double psiCurr = fabs(SF3Dmin(0., nodeGrid.waterData.pressureHead[nodeIndex] - nodeGrid.z[nodeIndex]));
+        double psiPrev = fabs(SF3Dmin(0., nodeGrid.waterData.oldPressureHeads[nodeIndex] - nodeGrid.z[nodeIndex]));
 
-        WRCModel model = solver.getWRCModel();
+        WRCModel model = solver->getWRCModel();
         switch(model)
         {
             case VanGenuchten:
@@ -234,13 +237,14 @@ namespace soilFluxes3D::Soil
      * \details
      * \return
      */
-    double computeNodedThetaVdH(uint64_t nodeIndex, double temperature, double dThetadH)
+    __cudaSpec double computeNodedThetaVdH(uint64_t nodeIndex, double temperature, double dThetadH)
     {
+        //TO DO: Heat
         //double H = nodeGrid.waterData.pressureHead[nodeIndex] - nodeGrid.z[nodeIndex];
         return 0;
     }
 
-    double getNodeMeanTemperature(uint64_t nodeIndex)
+    __cudaSpec double getNodeMeanTemperature(uint64_t nodeIndex)
     {
         if(!simulationFlags.computeHeat)   //Add control over heat data
             return noData;
@@ -248,18 +252,16 @@ namespace soilFluxes3D::Soil
         return computeMean(nodeGrid.heatData.temperature[nodeIndex], nodeGrid.heatData.oldTemperature[nodeIndex], Arithmetic);
     }
 
-
-    double nodeDistance2D(uint64_t idx1, uint64_t idx2)
+    __cudaSpec double nodeDistance2D(uint64_t idx1, uint64_t idx2)
     {
         double vec[] = {nodeGrid.x[idx1] - nodeGrid.x[idx2], nodeGrid.y[idx1] - nodeGrid.y[idx2]};
         return vectorNorm(vec, 2);
     }
 
-    double nodeDistance3D(uint64_t idx1, uint64_t idx2)
+    __cudaSpec double nodeDistance3D(uint64_t idx1, uint64_t idx2)
     {
         double vec[] = {nodeGrid.x[idx1] - nodeGrid.x[idx2], nodeGrid.y[idx1] - nodeGrid.y[idx2], nodeGrid.z[idx1] - nodeGrid.z[idx2]};
         return vectorNorm(vec, 3);
     }
-
 
 } //namespace
