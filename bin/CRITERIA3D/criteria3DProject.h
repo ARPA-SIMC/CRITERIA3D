@@ -115,10 +115,10 @@
 
         bool initializeSnowModel();
 
-        bool computeHydrallModel(int row, int col);
+        bool computeHydrallModel(int row, int col, int forestIndex);
         void dailyUpdateHydrallMaps();
         bool dailyUpdateHydrall(const QDate &myDate);
-        void setHydrallVariables(int row, int col);
+        void setHydrallVariables(int row, int col, int forestIndex);
 
         bool computeRothCModel();
         bool updateRothC(const QDate &myDate);

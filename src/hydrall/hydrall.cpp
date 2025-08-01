@@ -102,31 +102,32 @@ Crit3DHydrallPlant::Crit3DHydrallPlant()
     standVolume = NODATA; // maps referred to stand volume MUST be initialized
     currentIncrementalVolume = EPSILON;
     transpirationCritical = NODATA; //(mol m-2 s-1)
-    rootShootRatioRef = 0.33; //TODO
+    rootShootRatioRef = 0.33;
+    mBallBerry = NODATA;
     tableEcophysiologicalParameters = {
-        {"LARCH",                            35.0, 6.0, false},
-        {"PICEA_ABIES",                       35.0, 6.0, false},
-        {"ABIES_ALBA",                      30.0, 6.0, false},
-        {"PINUS_SYLVESTRIS_SCOTCH_PINE",          30.0, 6.0, false},
-        {"PINUS_NIGRA",                         30.0, 6.0, false},
-        {"PINUS_PINEA",                 40.0, 7.0, true},
-        {"CONIFER_FOREST_OTHERS",      30.0, 6.0, false},
-        {"BEECH",                                     50.0, 8.0, false},
-        {"QUERCUS_PETREA_ROBUR_PUBESCENS",       50.0, 8.0, false},
-        {"QUERCUS_CERRIS_FRAINETTO_VALLONEA", 50.0, 8.0, false},
-        {"CASTINEA_SATIVA",                                  50.0, 8.0, false},
-        {"CARPINUS_BETULUS_OTRYA_OXYCARPA",                         50.0, 8.0, false},
-        {"HYGROPHILOUS_FOREST",                             60.0, 9.0, false},
-        {"BROADLEAF_FOREST_OTHERS",                    50.0, 8.0, false},
-        {"QUERCUS_ILEX",                                     40.0, 7.0, true},
-        {"QUERCUS_SUBER",                                   40.0, 7.0, true},
-        {"MEDITERRANEAN_EVERGREEN_TREE",      40.0, 7.0, true},
-        {"POPULUS_ARTIFICIAL",                        70.0, 9.0, false},
-        {"BROADLEAF_ARTIFICIAL",             60.0, 8.0, false},
-        {"CONIFERS_ARTIFICIAL",                     40.0, 6.0, false},
-        {"SHRUB_SUBALPINE",                         40.0, 7.0, false},
-        {"SHRUB_TEMPERATE",                40.0, 7.0, false},
-        {"SHRUB_MEDITERRANEAN",             40.0, 8.0, true}
+        {"LARCH",                            35.0, 6.0, false, 0.29},
+        {"PICEA_ABIES",                       35.0, 6.0, false, 0.29},
+        {"ABIES_ALBA",                      30.0, 6.0, false, 0.28},
+        {"PINUS_SYLVESTRIS_SCOTCH_PINE",          30.0, 6.0, false, 0.29},
+        {"PINUS_NIGRA",                         30.0, 6.0, false, 0.29},
+        {"PINUS_PINEA",                 40.0, 7.0, true, 0.29},
+        {"CONIFER",      30.0, 6.0, false, 0.29},
+        {"BEECH",                                     50.0, 8.0, false, 0.2},
+        {"QUERCUS_PETREA_ROBUR_PUBESCENS",       50.0, 8.0, false, 0.2},
+        {"QUERCUS_CERRIS_FRAINETTO_VALLONEA", 50.0, 8.0, false, 0.2},
+        {"CASTINEA_SATIVA",                                  50.0, 8.0, false, 0.28},
+        {"CARPINUS_BETULUS_OTRYA_OXYCARPA",                         50.0, 8.0, false, 0.26},
+        {"HYGROPHILOUS_FOREST",                             60.0, 9.0, false, 0.22},
+        {"BROADLEAF",                    50.0, 8.0, false, 0.22},
+        {"QUERCUS_ILEX",                                     40.0, 7.0, true, 0.2},
+        {"QUERCUS_SUBER",                                   40.0, 7.0, true, 0.2},
+        {"MEDITERRANEAN_EVERGREEN_TREE",      40.0, 7.0, true, 0.22},
+        {"POPULUS_ARTIFICIAL",                        70.0, 9.0, false, 0.21},
+        {"BROADLEAF_ARTIFICIAL",             60.0, 8.0, false, 0.24},
+        {"CONIFERS_ARTIFICIAL",                     40.0, 6.0, false, 0.29},
+        {"SHRUB_SUBALPINE",                         40.0, 7.0, false, 0.33},
+        {"SHRUB_TEMPERATE",                40.0, 7.0, false, 0.33},
+        {"SHRUB_MEDITERRANEAN",             40.0, 8.0, true, 0.33} //TODO: check some of these values
     };
 
 
@@ -541,12 +542,19 @@ void Crit3DHydrall::setDerivedWeatherVariables(double directIrradiance, double d
     return;
 }
 
-void Crit3DHydrall::setPlantVariables(double chlorophyllContent, double height, double psiMinimum, double psiCritical)
+void Crit3DHydrall::setPlantVariables(int forestIndex, double chlorophyllContent, double height, double psiMinimum, double psiCritical)
 {
     plant.myChlorophyllContent = chlorophyllContent;
     plant.height = height;
     plant.psiLeafMinimum = psiMinimum;
     plant.psiSoilCritical = psiCritical;
+
+    parameterWangLeuning.maxCarboxRate = plant.tableEcophysiologicalParameters[conversionTableVector[forestIndex]].Vcmo;
+    plant.isAmphystomatic = plant.tableEcophysiologicalParameters[conversionTableVector[forestIndex]].isAmphystomatic;
+    plant.rootShootRatioRef = plant.tableEcophysiologicalParameters[conversionTableVector[forestIndex]].rootShootRatio;
+    plant.mBallBerry = plant.tableEcophysiologicalParameters[conversionTableVector[forestIndex]].mBallBerry;
+
+
 }
 
 void Crit3DHydrall::setStateVariables(Crit3DHydrallMaps &stateMap, int row, int col)

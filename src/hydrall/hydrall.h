@@ -88,6 +88,7 @@
         double Vcmo; // Max carboxylation rate at 25°C rate of RuBiSCO activity (PSII photosynthesis))
         double mBallBerry; // empirical parameter of sensitivity to water stress to obtain stomatal closure
         bool isAmphystomatic;
+        double rootShootRatio; //ratio of C allocated to roots and C allocated to aboveground biomass
     };
 
     struct TLAIparam {
@@ -214,6 +215,7 @@
         double standVolume; // maps referred to stand volume MUST be initialized
         double currentIncrementalVolume;
         double rootShootRatioRef;
+        double mBallBerry;
 
         void setLAICanopy(double myLAI) { leafAreaIndexCanopy = myLAI; };
         double getLAICanopy() { return leafAreaIndexCanopy; };
@@ -416,6 +418,8 @@
         double understoreyLeafAreaIndexMax;
         double cover = 1; // TODO
 
+        std::vector<int> conversionTableVector;
+
         double annualGrossStandGrowth;
         double internalCarbonStorage ; // [kgC m-2]
 
@@ -437,7 +441,7 @@
         void setHourlyVariables(double temp, double irradiance , double prec , double relativeHumidity , double windSpeed, double directIrradiance, double diffuseIrradiance, double cloudIndex, double atmosphericPressure, Crit3DDate currentDate, double sunElevation,double meanTemp30Days,double et0);
         bool setWeatherVariables(double temp, double irradiance , double prec , double relativeHumidity , double windSpeed, double directIrradiance, double diffuseIrradiance, double cloudIndex, double atmosphericPressure, double meanTemp30Days,double et0);
         void setDerivedWeatherVariables(double directIrradiance, double diffuseIrradiance, double cloudIndex, double et0);
-        void setPlantVariables(double chlorophyllContent, double height, double psiMinimum, double psiCritical);
+        void setPlantVariables(int forestIndex, double chlorophyllContent, double height, double psiMinimum, double psiCritical);
         bool computeHydrallPoint();
         double getCO2(Crit3DDate myDate);
         //double getPressureFromElevation(double myTemperature, double myElevation);
