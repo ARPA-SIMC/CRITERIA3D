@@ -1813,7 +1813,9 @@ void MainWindow::openSoilWidget(QPoint mapPos)
             myProject.logError();
             return;
         }
-        soilWidget = new Crit3DSoilWidget();
+
+        QString imgPath = myProject.getApplicationPath() + "/DOC/img/";
+        soilWidget = new Crit3DSoilWidget(imgPath);
         soilWidget->show();
         soilWidget->setDbSoil(dbSoil, soilCode);
     }
@@ -1838,6 +1840,7 @@ void MainWindow::on_actionLoad_MeteoPoints_triggered()
     QString dbName = QFileDialog::getOpenFileName(this, tr("Open meteo points DB"), meteoPointsPath, tr("DB files (*.db)"));
     if (dbName != "") this->loadMeteoPointsDB_GUI(dbName);
 }
+
 
 void MainWindow::on_actionMeteoPointsImport_data_triggered()
 {
@@ -2223,9 +2226,9 @@ void MainWindow::on_actionCriteria3D_set_processes_triggered()
             myProject.logWarning("Crop and water processes will be activated in order to compute Hydrall model.");
         myProject.processes.setComputeHydrall(dialogProcesses.hydrallProcess->isChecked());
 
-        if (dialogProcesses.rothCProcess->isChecked() && (! dialogProcesses.hydrallProcess->isChecked() || ! dialogProcesses.cropProcess->isChecked()
+        /*if (dialogProcesses.rothCProcess->isChecked() && (! dialogProcesses.hydrallProcess->isChecked() || ! dialogProcesses.cropProcess->isChecked()
                                                           || ! dialogProcesses.waterFluxesProcess->isChecked()))
-            myProject.logWarning("Hydrall, crop and water processes will be activated in order to compute RothC model.");
+            myProject.logWarning("Hydrall, crop and water processes will be activated in order to compute RothC model.");*/
         myProject.processes.setComputeRothC(dialogProcesses.rothCProcess->isChecked());
     }
 }
@@ -2343,7 +2346,8 @@ void MainWindow::initializeCriteria3DInterface()
 
 void MainWindow::on_actionCriteria3D_Initialize_triggered()
 {
-    if (! (myProject.processes.computeSnow || myProject.processes.computeCrop || myProject.processes.computeWater || myProject.processes.computeHydrall))
+    if (! (myProject.processes.computeSnow || myProject.processes.computeCrop || myProject.processes.computeWater ||
+           myProject.processes.computeHydrall || myProject.processes.computeRothC))
     {
         myProject.logWarning("Set active processes before.");
         return;
@@ -2415,18 +2419,28 @@ void MainWindow::on_actionCriteria3D_Initialize_triggered()
 
         if (! myProject.initializeHydrall())
         {
+            myProject.isHydrallInitialized = false;
             myProject.logError("Couldn't initialize Hydrall model.");
             return;
         }
+    }
+    else
+    {
+        myProject.clearHydrallMaps();
     }
 
     if (myProject.processes.computeRothC)
     {
         if (! myProject.initializeRothC())
         {
+            myProject.isRothCInitialized = false;
             myProject.logError("Couldn't initialize RothC model.");
             return;
         }
+    }
+    else
+    {
+        myProject.clearRothCMaps();
     }
 
     initializeCriteria3DInterface();

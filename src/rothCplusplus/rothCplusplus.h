@@ -97,25 +97,39 @@ class Crit3DRothCplusplusMaps
 {
 private:
     //
-    gis::Crit3DRasterGrid* decomposablePlantMaterial; //[tC/ha]
-    gis::Crit3DRasterGrid* resistantPlantMaterial; //[tC/ha]
-    gis::Crit3DRasterGrid* microbialBiomass; //[tC/ha]
-    gis::Crit3DRasterGrid* humifiedOrganicMatter; //[tC/ha]
-    gis::Crit3DRasterGrid* inertOrganicMatter; //[tC/ha]
-    gis::Crit3DRasterGrid* soilOrganicMatter; //[tC/ha]
+    gis::Crit3DRasterGrid* _decomposablePlantMaterial; //[tC/ha]
+    gis::Crit3DRasterGrid* _resistantPlantMaterial; //[tC/ha]
+    gis::Crit3DRasterGrid* _microbialBiomass; //[tC/ha]
+    gis::Crit3DRasterGrid* _humifiedOrganicMatter; //[tC/ha]
+    gis::Crit3DRasterGrid* _inertOrganicMatter; //[tC/ha]
+    gis::Crit3DRasterGrid* _soilOrganicMatter; //[tC/ha]
 
-    gis::Crit3DRasterGrid* depthMap; //[?]
-    gis::Crit3DRasterGrid* clayMap; // [-]
+    gis::Crit3DRasterGrid* _depthMap; //[?]
+    gis::Crit3DRasterGrid* _clayMap; // [-]
 
 public:
+    bool isInitialized;
 
 
+    gis::Crit3DRasterGrid* getDPM() { return _decomposablePlantMaterial; };
+    gis::Crit3DRasterGrid* getRPM() { return _resistantPlantMaterial; };
+    gis::Crit3DRasterGrid* getBIO() { return _microbialBiomass; };
+    gis::Crit3DRasterGrid* getHUM() { return _humifiedOrganicMatter; };
+    gis::Crit3DRasterGrid* getSOC() { return _soilOrganicMatter; };
 
+    void setDPMRowCol(double myDPM, int row, int col) { _decomposablePlantMaterial->value[row][col] = myDPM; };
+    void setRPMRowCol(double myRPM, int row, int col) { _resistantPlantMaterial->value[row][col] = myRPM; };
+    void setBIORowCol(double myBIO, int row, int col) { _microbialBiomass->value[row][col] = myBIO; };
+    void setHUMRowCol(double myHUM, int row, int col) { _humifiedOrganicMatter->value[row][col] = myHUM; };
+    void setIOMRowCol(double myIOM, int row, int col) { _inertOrganicMatter->value[row][col] = myIOM; };
+    void setSOCRowCol(double mySOC, int row, int col) { _soilOrganicMatter->value[row][col] = mySOC; };
 
     Crit3DRothCplusplusMaps() {};
     //~Crit3DRothCplusplusMaps();
 
     void initialize(const gis::Crit3DRasterGrid& DEM);
+    void clear();
+
     void setClay(double myClay, int row, int col);
     double getClay(int row, int col);
     void setDepth(double myDepth, int row, int col);
@@ -149,9 +163,6 @@ public:
     double getInputC();
     void setInputC(double myInputC);
 
-    void setIsUpdate(bool value);
-    bool getIsUpdate();
-
     void setClay(double myClay) {clay = myClay;};
     double getClay() {return clay;};
 
@@ -163,6 +174,13 @@ public:
 
     void setPlantCover(double myPC) {plantCover = myPC; };
     double getPlantCover() { return plantCover; };
+
+    double getDPM() {return decomposablePlantMatter;};
+    double getRPM() {return resistantPlantMatter;};
+    double getBIO() {return microbialBiomass;};
+    double getHUM() {return humifiedOrganicMatter;};
+    double getIOM() {return inorganicMatter;};
+    double getSOC() {return soilOrganicCarbon;};
 
     void resetInputVariables();
 

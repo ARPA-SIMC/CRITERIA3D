@@ -1,6 +1,7 @@
 #include <QtWidgets>
 #include <QList>
 
+#include "commonConstants.h"
 #include "project.h"
 #include "utilities.h"
 #include "aggregation.h"
@@ -587,6 +588,7 @@ void ProxyDialog::saveProxy(Crit3DProxy* myProxy)
     myProxy->setForQualityControl(_forQuality.isChecked());
 }
 
+
 ProxyDialog::ProxyDialog(Project *myProject)
 {
     QVBoxLayout *layoutLeft = new QVBoxLayout();
@@ -660,10 +662,11 @@ ProxyDialog::ProxyDialog(Project *myProject)
     proxyIndex = NODATA;
 
     if (_proxyCombo.count() > 0)
+    {
         proxyIndex = 0;
+    }
 
     //parameters
-
     const double H0_MIN = -350; //height of single inversion point (double piecewise) or first inversion point (triple piecewise)
     const double H0_MAX = 2500;
     const double DELTA_MIN = 300; //height difference between inversion points (for triple piecewise only)
@@ -680,47 +683,51 @@ ProxyDialog::ProxyDialog(Project *myProject)
     QLabel *par4Label = new QLabel(tr("par4\n(min, max)"));
     QLabel *par5Label = new QLabel(tr("par5\n(min, max)"));
 
-    std::vector<double> parametersMin = _proxy[proxyIndex].getFittingParametersMin();
-    std::vector<double> parametersMax = _proxy[proxyIndex].getFittingParametersMax();
-
-    if ((parametersMin.empty() || parametersMax.empty()) && _project->interpolationSettings.getSelectedCombination().isProxyActive(proxyIndex))
+    std::vector<double> parametersMin, parametersMax;
+    if (proxyIndex != NODATA)
     {
-        //se il proxy è stato attivato e non ci sono parametri caricati in precedenza, carica i default
-        if (_proxy[proxyIndex].getFittingFunctionName() == piecewiseTwo)
-        {
-            _proxy[proxyIndex].setFittingParametersRange({0, -20, SLOPE_MIN, INVSLOPE_MIN,
-                                                          H0_MAX, 40, SLOPE_MAX, INVSLOPE_MAX});
-            _proxy[proxyIndex].setFittingFirstGuess({0,1,1,1});
-        }
-        else if (_proxy[proxyIndex].getFittingFunctionName() == piecewiseThree)
-        {
-            _proxy[proxyIndex].setFittingParametersRange({H0_MIN, -20, DELTA_MIN, SLOPE_MIN, INVSLOPE_MIN,
-                                                          H0_MAX, 40, DELTA_MAX, SLOPE_MAX, INVSLOPE_MAX});
-            _proxy[proxyIndex].setFittingFirstGuess({0,1,1,1,1});
-        }
-        else if (_proxy[proxyIndex].getFittingFunctionName() == piecewiseThreeFree)
-        {
-            _proxy[proxyIndex].setFittingParametersRange({H0_MIN, -20, DELTA_MIN, SLOPE_MIN, INVSLOPE_MIN, INVSLOPE_MIN,
-                                                          H0_MAX, 40, DELTA_MAX, SLOPE_MAX, INVSLOPE_MAX, INVSLOPE_MAX});
-            _proxy[proxyIndex].setFittingFirstGuess({0,1,1,1,1,1});
-        }
-        else
-            _proxy[proxyIndex].setFittingParametersRange({-1, 50, 1, -40});
-
         parametersMin = _proxy[proxyIndex].getFittingParametersMin();
         parametersMax = _proxy[proxyIndex].getFittingParametersMax();
-    }
 
-    _param0.setText(QString("%1").arg(parametersMin[0], 0, 'f', 4) + ", " + QString("%1").arg(parametersMax[0], 0, 'f', 4));
-    _param1.setText(QString("%1").arg(parametersMin[1], 0, 'f', 4) + ", " + QString("%1").arg(parametersMax[1], 0, 'f', 4));
-    if (parametersMin.size() > 2 && parametersMax.size() > 2) {
-        _param2.setText(QString("%1").arg(parametersMin[2], 0, 'f', 4) + ", " + QString("%1").arg(parametersMax[2], 0, 'f', 4));
-        _param3.setText(QString("%1").arg(parametersMin[3], 0, 'f', 4) + ", " + QString("%1").arg(parametersMax[3], 0, 'f', 4));
+        if ((parametersMin.empty() || parametersMax.empty()) && _project->interpolationSettings.getSelectedCombination().isProxyActive(proxyIndex))
+        {
+            //se il proxy è stato attivato e non ci sono parametri caricati in precedenza, carica i default
+            if (_proxy[proxyIndex].getFittingFunctionName() == piecewiseTwo)
+            {
+                _proxy[proxyIndex].setFittingParametersRange({0, -20, SLOPE_MIN, INVSLOPE_MIN,
+                                                              H0_MAX, 40, SLOPE_MAX, INVSLOPE_MAX});
+                _proxy[proxyIndex].setFittingFirstGuess({0,1,1,1});
+            }
+            else if (_proxy[proxyIndex].getFittingFunctionName() == piecewiseThree)
+            {
+                _proxy[proxyIndex].setFittingParametersRange({H0_MIN, -20, DELTA_MIN, SLOPE_MIN, INVSLOPE_MIN,
+                                                              H0_MAX, 40, DELTA_MAX, SLOPE_MAX, INVSLOPE_MAX});
+                _proxy[proxyIndex].setFittingFirstGuess({0,1,1,1,1});
+            }
+            else if (_proxy[proxyIndex].getFittingFunctionName() == piecewiseThreeFree)
+            {
+                _proxy[proxyIndex].setFittingParametersRange({H0_MIN, -20, DELTA_MIN, SLOPE_MIN, INVSLOPE_MIN, INVSLOPE_MIN,
+                                                              H0_MAX, 40, DELTA_MAX, SLOPE_MAX, INVSLOPE_MAX, INVSLOPE_MAX});
+                _proxy[proxyIndex].setFittingFirstGuess({0,1,1,1,1,1});
+            }
+            else
+                _proxy[proxyIndex].setFittingParametersRange({-1, 50, 1, -40});
+
+            parametersMin = _proxy[proxyIndex].getFittingParametersMin();
+            parametersMax = _proxy[proxyIndex].getFittingParametersMax();
+        }
+
+        _param0.setText(QString("%1").arg(parametersMin[0], 0, 'f', 4) + ", " + QString("%1").arg(parametersMax[0], 0, 'f', 4));
+        _param1.setText(QString("%1").arg(parametersMin[1], 0, 'f', 4) + ", " + QString("%1").arg(parametersMax[1], 0, 'f', 4));
+        if (parametersMin.size() > 2 && parametersMax.size() > 2) {
+            _param2.setText(QString("%1").arg(parametersMin[2], 0, 'f', 4) + ", " + QString("%1").arg(parametersMax[2], 0, 'f', 4));
+            _param3.setText(QString("%1").arg(parametersMin[3], 0, 'f', 4) + ", " + QString("%1").arg(parametersMax[3], 0, 'f', 4));
+        }
+        if (parametersMin.size() > 4 && parametersMax.size() > 4)
+            _param4.setText(QString("%1").arg(parametersMin[4], 0, 'f', 4) + ", " + QString("%1").arg(parametersMax[4], 0, 'f', 4));
+        if (parametersMin.size() > 5 && parametersMax.size() > 5)
+            _param5.setText(QString("%1").arg(parametersMin[5], 0, 'f', 4) + ", " + QString("%1").arg(parametersMax[5], 0, 'f', 4));
     }
-    if (parametersMin.size() > 4 && parametersMax.size() > 4)
-        _param4.setText(QString("%1").arg(parametersMin[4], 0, 'f', 4) + ", " + QString("%1").arg(parametersMax[4], 0, 'f', 4));
-    if (parametersMin.size() > 5 && parametersMax.size() > 5)
-        _param5.setText(QString("%1").arg(parametersMin[5], 0, 'f', 4) + ", " + QString("%1").arg(parametersMax[5], 0, 'f', 4));
 
     layoutParametersUp->addWidget(par0Label);
     _param0.setFixedHeight(45);
@@ -770,6 +777,7 @@ ProxyDialog::ProxyDialog(Project *myProject)
 
     exec();
 }
+
 
 bool ProxyDialog::checkProxies(QString *error)
 {

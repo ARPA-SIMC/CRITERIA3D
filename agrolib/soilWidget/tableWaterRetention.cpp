@@ -42,7 +42,7 @@ void TableWaterRetention::keyPressEvent(QKeyEvent *event){
         else if(event->matches(QKeySequence::Paste))
         {
             QString text = QApplication::clipboard()->text();
-            #if (QT_VERSION >= QT_VERSION_CHECK(6, 0, 0))
+            #if (QT_VERSION >= QT_VERSION_CHECK(5, 15, 0))
                 QList<QString> rowContents = text.split("\n", Qt::SkipEmptyParts);
             #else
                 QList<QString> rowContents = text.split("\n", QString::SkipEmptyParts);

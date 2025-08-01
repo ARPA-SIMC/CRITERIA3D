@@ -30,6 +30,7 @@ public:
     void plot();
     void climatologicalLRClicked(int toggled);
     void modelLRClicked(int toggled);
+    void showParametersDetails();
 
 private:
     double _x;

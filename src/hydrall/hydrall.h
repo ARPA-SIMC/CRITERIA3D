@@ -83,6 +83,26 @@
 
     #define NOT_INITIALIZED_VINE -1
 
+    struct TecophysiologicalParameter {
+        std::string name; // name of the species
+        double Vcmo; // Max carboxylation rate at 25°C rate of RuBiSCO activity (PSII photosynthesis))
+        double mBallBerry; // empirical parameter of sensitivity to water stress to obtain stomatal closure
+        bool isAmphystomatic;
+    };
+
+    struct TLAIparam {
+        std::string name;
+        double lai_min;
+        double lai_max;
+    };
+
+    struct TLAIphenology{
+        std::string name;
+        double emergence; // GDD with threshold 5°C
+        double increase;  // GDD with threshold 5°C
+        double decrease;  // GDD with threshold 5°C
+    };
+
     class Crit3DHydrallState
     { 
     public:
@@ -98,13 +118,13 @@
     public:
         Crit3DHydrallStatePlant();
 
-        double treeNetPrimaryProduction;
-        double treeBiomassFoliage;
-        double treeBiomassRoot;
-        double treeBiomassSapwood;
-        double understoreyNetPrimaryProduction;
-        double understoreyBiomassFoliage;
-        double understoreyBiomassRoot;
+        double treeNetPrimaryProduction; //SAVE
+        double treeBiomassFoliage; //SAVE
+        double treeBiomassRoot; //SAVE
+        double treeBiomassSapwood; //SAVE
+        double understoreyNetPrimaryProduction; //SAVE
+        double understoreyBiomassFoliage; //SAVE
+        double understoreyBiomassRoot; //SAVE
     };
 
     class Crit3DHydrallWeatherDerivedVariable {
@@ -132,10 +152,10 @@
 
         Crit3DHydrallWeatherDerivedVariable derived;
 
-        double getMonthlyET0 () { return monthlyET0; };
-        void setMonthlyET0 (double myET) { monthlyET0 = myET; };
-        double getMonthlyPrec () { return monthlyPrec; };
-        void setMonthlyPrec (double myPrec) { monthlyPrec = myPrec; };
+        double getYearlyET0 () { return yearlyET0; };
+        void setYearlyET0 (double myET) { yearlyET0 = myET; };
+        double getYearlyPrec () { return yearlyPrec; };
+        void setYearlyPrec (double myPrec) { yearlyPrec = myPrec; };
 
         double myInstantTemp;
         double prec;
@@ -150,8 +170,8 @@
 
 
     private:
-        double monthlyET0;
-        double monthlyPrec;
+        double yearlyET0;
+        double yearlyPrec;
 
 
     };
@@ -171,6 +191,10 @@
         Crit3DHydrallPlant();
 
         // TODO Cate unità di misura
+
+        std::vector<TecophysiologicalParameter> tableEcophysiologicalParameters;
+        std::vector<TLAIparam> rangeLAI;
+        std::vector<TLAIphenology> phenologyLAI;
         double myChlorophyllContent;
         double height; // in cm
         double hydraulicResistancePerFoliageArea; //(MPa s m2 m-3)
@@ -339,6 +363,7 @@
 
     public:
         //sapwood, foliage, fine root
+        bool isInitialized;
         gis::Crit3DRasterGrid* standBiomassMap;
         gis::Crit3DRasterGrid* rootBiomassMap;
         gis::Crit3DRasterGrid* mapLAI;
@@ -348,6 +373,8 @@
         gis::Crit3DRasterGrid* criticalTranspiration;
         gis::Crit3DRasterGrid* criticalSoilWaterPotential;
         gis::Crit3DRasterGrid* minLeafWaterPotential;
+        gis::Crit3DRasterGrid* yearlyET0;
+        gis::Crit3DRasterGrid* yearlyPrec;
 
         gis::Crit3DRasterGrid* treeNetPrimaryProduction;
         gis::Crit3DRasterGrid* understoreyNetPrimaryProduction;
@@ -384,7 +411,7 @@
         Crit3DHydrallBiomass treeBiomass, understoreyBiomass;
         Crit3DHydrallStatePlant statePlant;
         Crit3DHydrallAllocationCoefficient allocationCoefficient;
-
+        bool printHourlyRecords = false;
         double maxIterationNumber;
         double understoreyLeafAreaIndexMax;
         double cover = 1; // TODO

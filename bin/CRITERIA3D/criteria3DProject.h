@@ -45,6 +45,8 @@
 
         bool saveSnowModelState(const QString &currentStatePath);
         bool saveSoilWaterState(const QString &currentStatePath);
+        bool saveRothCState(const QString &currentStatePath);
+        bool saveHydrallState(const QString &currentStatePath);
 
         void appendCriteria3DOutputValue(criteria3DVariable myVar, int row, int col,
                                          const std::vector<int> &depthList, std::vector<float> &outputList);
@@ -57,8 +59,8 @@
         gis::Crit3DRasterGrid degreeDaysMap;
         gis::Crit3DRasterGrid dailyTminMap;
         gis::Crit3DRasterGrid dailyTmaxMap;
-        gis::Crit3DRasterGrid monthlyPrec;
-        gis::Crit3DRasterGrid monthlyET0;
+        gis::Crit3DRasterGrid yearlyPrec;
+        gis::Crit3DRasterGrid yearlyET0;
 
         Crit3DHydrallMaps hydrallMaps;
 
@@ -77,15 +79,18 @@
         bool initializeCropMaps();
         bool initializeHydrall();
         bool initializeRothC();
-        void updateETAndPrecMonthlyMaps();
+        void updateETAndPrecYearlyMaps();
         void dailyUpdateCropMaps(const QDate &myDate);
+
+        void clearHydrallMaps();
+        void clearRothCMaps();
 
         bool initializeCropWithClimateData();
         bool initializeCropFromDegreeDays(gis::Crit3DRasterGrid &myDegreeMap);
 
         void assignETreal();
         void assignPrecipitation();
-        float checkSoilCracking(int row, int col, float precipitation);
+        float computeSoilCracking(int row, int col, float precipitation);
 
         void setSaveDailyState(bool isSave) { _saveDailyState = isSave; }
         bool isSaveDailyState() { return _saveDailyState; }
@@ -116,7 +121,7 @@
         void setHydrallVariables(int row, int col);
 
         bool computeRothCModel();
-        bool updateRothC();
+        bool updateRothC(const QDate &myDate);
 
         bool computeSnowModel();
         void computeSnowPoint(int row, int col);
@@ -164,7 +169,7 @@
 
         int printCriteria3DVersion();
         int printCriteria3DCommandList();
-        int cmdSetThreadsNr();
+        int cmdSetThreadsNr(const QList<QString> &argumentList);
 
     };
 

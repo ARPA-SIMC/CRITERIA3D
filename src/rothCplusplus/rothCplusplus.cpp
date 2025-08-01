@@ -67,45 +67,58 @@ using namespace std;
 
 void Crit3DRothCplusplusMaps::initialize(const gis::Crit3DRasterGrid& DEM)
 {
-    decomposablePlantMaterial = new gis::Crit3DRasterGrid;
-    resistantPlantMaterial  = new gis::Crit3DRasterGrid;
-    microbialBiomass = new gis::Crit3DRasterGrid;
-    humifiedOrganicMatter = new gis::Crit3DRasterGrid;
-    inertOrganicMatter = new gis::Crit3DRasterGrid;
-    soilOrganicMatter = new gis::Crit3DRasterGrid;
+    _decomposablePlantMaterial = new gis::Crit3DRasterGrid;
+    _resistantPlantMaterial  = new gis::Crit3DRasterGrid;
+    _microbialBiomass = new gis::Crit3DRasterGrid;
+    _humifiedOrganicMatter = new gis::Crit3DRasterGrid;
+    _inertOrganicMatter = new gis::Crit3DRasterGrid;
+    _soilOrganicMatter = new gis::Crit3DRasterGrid;
 
-    depthMap = new gis::Crit3DRasterGrid;
-    clayMap = new gis::Crit3DRasterGrid;
+    _depthMap = new gis::Crit3DRasterGrid;
+    _clayMap = new gis::Crit3DRasterGrid;
 
-    decomposablePlantMaterial->initializeGrid(DEM);
-    resistantPlantMaterial->initializeGrid(DEM);
-    microbialBiomass->initializeGrid(DEM);
-    humifiedOrganicMatter->initializeGrid(DEM);
-    inertOrganicMatter->initializeGrid(DEM);
-    soilOrganicMatter->initializeGrid(DEM);
+    _decomposablePlantMaterial->initializeGrid(DEM);
+    _resistantPlantMaterial->initializeGrid(DEM);
+    _microbialBiomass->initializeGrid(DEM);
+    _humifiedOrganicMatter->initializeGrid(DEM);
+    _inertOrganicMatter->initializeGrid(DEM);
+    _soilOrganicMatter->initializeGrid(DEM);
 
-    depthMap->initializeGrid(DEM);
-    clayMap->initializeGrid(DEM);
+    _depthMap->initializeGrid(DEM);
+    _clayMap->initializeGrid(DEM);
+}
+
+void Crit3DRothCplusplusMaps::clear()
+{
+    _decomposablePlantMaterial = new gis::Crit3DRasterGrid;
+    _resistantPlantMaterial = new gis::Crit3DRasterGrid;
+    _microbialBiomass = new gis::Crit3DRasterGrid;
+    _humifiedOrganicMatter = new gis::Crit3DRasterGrid;
+    _inertOrganicMatter = new gis::Crit3DRasterGrid;
+    _soilOrganicMatter = new gis::Crit3DRasterGrid;
+
+    _depthMap = new gis::Crit3DRasterGrid;
+    _clayMap = new gis::Crit3DRasterGrid;
 }
 
 
 void Crit3DRothCplusplusMaps::setClay(double myClay, int row, int col)
 {
-    clayMap->value[row][col] = myClay;
+    _clayMap->value[row][col] = myClay;
 }
 
 double Crit3DRothCplusplusMaps::getClay(int row, int col)
 {
-    return clayMap->value[row][col];
+    return _clayMap->value[row][col];
 }
 void Crit3DRothCplusplusMaps::setDepth(double myDepth, int row, int col)
 {
-    depthMap->value[row][col] = myDepth;
+    _depthMap->value[row][col] = myDepth;
 }
 
 double Crit3DRothCplusplusMaps::getDepth(int row, int col)
 {
-    return depthMap->value[row][col];
+    return _depthMap->value[row][col];
 }
 
 
@@ -149,9 +162,11 @@ void Crit3DRothCplusplus::initialize()
     depth = NODATA;    //[cm]
     SWC = NODATA; //[mm per depth]
     // .. TODO
-
-    std::ofstream myFile;
-    myFile.open("/autofs/nfshomes/ctoscano/Github/CRITERIA3D/DATA/PROJECT/VERA_test/RothC.csv");
+    if (false)
+    {
+        std::ofstream myFile;
+        myFile.open("RothC.csv");
+    }
 }
 
 bool Crit3DRothCplusplus::computeRothCPoint()
@@ -163,7 +178,7 @@ bool Crit3DRothCplusplus::computeRothCPoint()
     /*std::cout << j << "," << decomposablePlantMatter << ","<< resistantPlantMatter << ","<< microbialBiomass << ","
               << humifiedOrganicMatter << ","<< inorganicMatter << ","<< soilOrganicCarbon << "\n";*/
 
-    int timeFact = 12;
+    int timeFact = 1; //TODO check
 
     double modernC = 100;
 
@@ -206,12 +221,14 @@ bool Crit3DRothCplusplus::computeRothCPoint()
 
     monthList.push_back({decomposablePlantMatter, resistantPlantMatter, microbialBiomass, humifiedOrganicMatter,
                          inorganicMatter, soilOrganicCarbon});
-    std::ofstream myFile;
-    myFile.open("/autofs/nfshomes/ctoscano/Github/CRITERIA3D/DATA/PROJECT/VERA_test/RothC.csv", std::ios_base::app);
-    myFile << decomposablePlantMatter<< ","<< resistantPlantMatter<<","<< microbialBiomass<<","<< humifiedOrganicMatter<<","<<
-        inorganicMatter<<","<< soilOrganicCarbon << "\n";
-    myFile.close();
-
+    if (false)
+    {
+        std::ofstream myFile;
+        myFile.open("RothC.csv", std::ios_base::app);
+        myFile << decomposablePlantMatter<< ","<< resistantPlantMatter<<","<< microbialBiomass<<","<< humifiedOrganicMatter<<","<<
+            inorganicMatter<<","<< soilOrganicCarbon << "\n";
+        myFile.close();
+    }
     return true;
 }
 
@@ -444,15 +461,16 @@ void Crit3DRothCplusplus::RothC(int timeFact, double &PC)
 {
     // Calculate RMFs
     double RM_TMP = RMF_Tmp(meteoVariable.getTemperature());
-    double RM_Moist;
-    if (isEqual (meteoVariable.getBIC(), NODATA)) //todo: check next time
+    double RM_Moist = 0.7;
+    //TODO: modified RM_Moist factor based on BIC
+    /*if (isEqual (meteoVariable.getBIC(), NODATA)) //todo: check next time
     {
         RM_Moist = RMF_Moist(meteoVariable.getPrecipitation(), meteoVariable.getWaterLoss(), bool(PC > 0));
     }
     else
     {
         RM_Moist = RMF_Moist(meteoVariable.getBIC(), bool(PC > 0));
-    }
+    }*/
 
     double RM_PC = RMF_plantCover(PC);
 
@@ -544,16 +562,6 @@ void Crit3DRothCMeteoVariable::cumulateWaterLoss(double myWaterLoss)
         waterLoss += myWaterLoss;
     else
         waterLoss = myWaterLoss;
-}
-
-void Crit3DRothCplusplus::setIsUpdate(bool value)
-{
-    isUpdate = value;
-}
-
-bool Crit3DRothCplusplus::getIsUpdate()
-{
-    return isUpdate;
 }
 
 std::vector<std::vector<double>> leggi_csv(const std::string& nome_file) {

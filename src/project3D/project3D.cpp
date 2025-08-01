@@ -123,11 +123,11 @@ void Crit3DProcesses::setComputeRothC(bool value)
     //prerequisites
     if (computeRothC)
     {
-        computeCrop = true;
-        computeWater = true;
+        //computeCrop = true;
+        //computeWater = true;
         computeMeteo = true;
         computeRadiation = true;
-        computeHydrall = true;
+        //computeHydrall = true;
     }
 }
 
@@ -183,6 +183,8 @@ void Project3D::initializeProject3D()
     isCriteria3DInitialized = false;
     isCropInitialized = false;
     isSnowInitialized = false;
+    isRothCInitialized = false;
+    isHydrallInitialized = false;
 
     showEachTimeStep = false;
     increaseSlope = false;
@@ -198,6 +200,8 @@ void Project3D::initializeProject3D()
     cropDbFileName = "";
     soilMapFileName = "";
     landUseMapFileName = "";
+    treeCoverMapFileName = "";
+
 
     waterFluxesParameters.initialize();
 
@@ -239,6 +243,7 @@ void Project3D::clearProject3D()
     soilMap.clear();
     landUseMap.clear();
     laiMap.clear();
+    treeCoverMap.clear();
 
     landUnitList.clear();
     cropList.clear();
@@ -303,6 +308,8 @@ bool Project3D::loadProject3DSettings()
         // old vine3D version
         landUseMapFileName = projectSettings->value("modelCaseMap").toString();
     }
+
+    treeCoverMapFileName = projectSettings->value("treecover_map").toString();
 
     projectSettings->endGroup();
 
@@ -598,6 +605,7 @@ bool Project3D::setSoilIndexMap()
         }
     }
 
+    gis::updateMinMaxRasterGrid(&soilIndexMap);
     soilIndexMap.isLoaded = true;
     return true;
 }
@@ -657,6 +665,30 @@ void Project3D::setIndexMaps()
     }
 
     nrNodes = currentIndex;
+}
+
+bool Project3D::loadTreeCoverMap(const QString &fileName)
+{
+    if (fileName == "")
+    {
+        logError("Missing tree cover map filename");
+        return false;
+    }
+
+    treeCoverMapFileName = getCompleteFileName(fileName, PATH_GEO);
+
+    std::string errorStr;
+    gis::Crit3DRasterGrid raster;
+    if (! gis::openRaster(treeCoverMapFileName.toStdString(), &raster, gisSettings.utmZone, errorStr))
+    {
+        logError("Load tree cover map failed: " + treeCoverMapFileName + "\n" + QString::fromStdString(errorStr));
+        return false;
+    }
+
+    gis::resampleGrid(raster, &treeCoverMap, DEM.header, aggrPrevailing, 0);
+
+    logInfo("Tree cover map = " + treeCoverMapFileName);
+    return true;
 }
 
 
@@ -1363,6 +1395,24 @@ int Project3D::getLandUnitIndexRowCol(int row, int col)
     return getLandUnitListIndex(id);
 }
 
+int Project3D::getTreeCoverIndexRowCol(int row, int col)
+{
+    if (! treeCoverMap.isLoaded)
+    {
+        // default
+        return 0;
+    }
+
+    // treeCover map has same header of DEM
+    int id = treeCoverMap.value[row][col];
+    if (id == treeCoverMap.header->flag)
+    {
+        return NODATA;
+    }
+
+    return id;
+}
+
 
 int Project3D::getLandUnitListIndex(int id)
 {
@@ -1611,7 +1661,7 @@ double Project3D::getSoilLayerBottom(unsigned int i)
     return layerDepth[i] + layerThickness[i] / 2.0;
 }
 
-// soil layer index from soil depth [m]
+// soil layer index from soildepth [m]
 int Project3D::getSoilLayerIndex(double depth)
 {
     unsigned int i= 0;
@@ -1620,7 +1670,7 @@ int Project3D::getSoilLayerIndex(double depth)
         if (i == nrLayers-1)
         {
             logError("getSoilLayerIndex: wrong soil depth.");
-            return INDEX_ERROR;
+            return NODATA;
         }
         i++;
     }
@@ -2231,7 +2281,7 @@ double Project3D::assignTranspiration(int row, int col, Crit3DCrop &currentCrop,
         return 0;       // [mm]
     }
 
-    // check soil
+    // check soil TODO FT improve
     int soilIndex = int(soilIndexMap.value[row][col]);
     if (soilIndex == NODATA)
     {

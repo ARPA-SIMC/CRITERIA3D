@@ -14,10 +14,11 @@
         #include "crop.h"
     #endif
 
+    #define ERROR_STR_MISSING_PROCESSES "Set active processes before."
+    #define ERROR_STR_INITIALIZE_3D "Initialize 3D model before."
+
     class QString;
     #include <QList>
-
-    #define ERROR_STR_INITIALIZE_3D "Initialize 3D model before."
 
     class WaterFluxesParameters
     {
@@ -92,6 +93,8 @@
         bool isCriteria3DInitialized;
         bool isCropInitialized;
         bool isSnowInitialized;
+        bool isRothCInitialized;
+        bool isHydrallInitialized;
 
         bool showEachTimeStep;
         bool increaseSlope;
@@ -105,6 +108,7 @@
         QString cropDbFileName;
         QString soilMapFileName;
         QString landUseMapFileName;
+        QString treeCoverMapFileName;
 
         unsigned long nrNodes;
         unsigned int nrLayers;
@@ -115,6 +119,7 @@
         gis::Crit3DRasterGrid soilMap;
         gis::Crit3DRasterGrid landUseMap;
         gis::Crit3DRasterGrid laiMap;
+        gis::Crit3DRasterGrid treeCoverMap;
 
         // same indexes
         std::vector <Crit3DLandUnit> landUnitList;
@@ -172,6 +177,7 @@
         bool loadSoilDatabase(const QString &dbName);
         bool loadCropDatabase(const QString &dbName);
         bool loadSoilMap(const QString &fileName);
+        bool loadTreeCoverMap(const QString &fileName);
 
         double getSoilLayerTop(unsigned int i);
         double getSoilLayerBottom(unsigned int i);
@@ -179,6 +185,8 @@
         int getLandUnitFromUtm(double x, double y);
         int getLandUnitIdGeo(double lat, double lon);
         int getLandUnitIndexRowCol(int row, int col);
+        int getTreeCoverIndexRowCol(int row, int col);
+
 
         bool initializeSoilMoisture(int month);
 

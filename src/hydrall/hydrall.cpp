@@ -71,8 +71,8 @@ Crit3DHydrallWeatherVariable::Crit3DHydrallWeatherVariable()
     last30DaysTAvg = NODATA;
     meanDailyTemp = NODATA;
 
-    monthlyET0 = NODATA;
-    monthlyPrec = NODATA;
+    yearlyET0 = NODATA;
+    yearlyPrec = NODATA;
 }
 
 Crit3DHydrallEnvironmentalVariable::Crit3DHydrallEnvironmentalVariable()
@@ -103,6 +103,86 @@ Crit3DHydrallPlant::Crit3DHydrallPlant()
     currentIncrementalVolume = EPSILON;
     transpirationCritical = NODATA; //(mol m-2 s-1)
     rootShootRatioRef = 0.33; //TODO
+    tableEcophysiologicalParameters = {
+        {"LARCH",                            35.0, 6.0, false},
+        {"PICEA_ABIES",                       35.0, 6.0, false},
+        {"ABIES_ALBA",                      30.0, 6.0, false},
+        {"PINUS_SYLVESTRIS_SCOTCH_PINE",          30.0, 6.0, false},
+        {"PINUS_NIGRA",                         30.0, 6.0, false},
+        {"PINUS_PINEA",                 40.0, 7.0, true},
+        {"CONIFER_FOREST_OTHERS",      30.0, 6.0, false},
+        {"BEECH",                                     50.0, 8.0, false},
+        {"QUERCUS_PETREA_ROBUR_PUBESCENS",       50.0, 8.0, false},
+        {"QUERCUS_CERRIS_FRAINETTO_VALLONEA", 50.0, 8.0, false},
+        {"CASTINEA_SATIVA",                                  50.0, 8.0, false},
+        {"CARPINUS_BETULUS_OTRYA_OXYCARPA",                         50.0, 8.0, false},
+        {"HYGROPHILOUS_FOREST",                             60.0, 9.0, false},
+        {"BROADLEAF_FOREST_OTHERS",                    50.0, 8.0, false},
+        {"QUERCUS_ILEX",                                     40.0, 7.0, true},
+        {"QUERCUS_SUBER",                                   40.0, 7.0, true},
+        {"MEDITERRANEAN_EVERGREEN_TREE",      40.0, 7.0, true},
+        {"POPULUS_ARTIFICIAL",                        70.0, 9.0, false},
+        {"BROADLEAF_ARTIFICIAL",             60.0, 8.0, false},
+        {"CONIFERS_ARTIFICIAL",                     40.0, 6.0, false},
+        {"SHRUB_SUBALPINE",                         40.0, 7.0, false},
+        {"SHRUB_TEMPERATE",                40.0, 7.0, false},
+        {"SHRUB_MEDITERRANEAN",             40.0, 8.0, true}
+    };
+
+
+    rangeLAI = {
+        {"LARCH", 0.1, 4.0},
+        {"PICEA_ABIES", 1.5, 6.0},
+        {"ABIES_ALBA", 1.5, 6.0},
+        {"PINUS_SYLVESTRIS_SCOTCH_PINE", 1.0, 4.0},
+        {"PINUS_NIGRA", 1.0, 4.0},
+        {"PINUS_PINEA", 1.0, 4.0},
+        {"CONIFER_FOREST_OTHERS", 1.0, 5.0},
+        {"BEECH", 0.1, 6.0},
+        {"QUERCUS_PETREA_ROBUR_PUBESCENS", 0.1, 5.0},
+        {"QUERCUS_CERRIS_FRAINETTO_VALLONEA", 0.1, 5},
+        {"CASTINEA_SATIVA", 0.1, 5.0},
+        {"CARPINUS_BETULUS_OTRYA_OXYCARPA", 0.1, 5.0},
+        {"HYGROPHILOUS_FOREST", 0.1, 6.0},
+        {"BROADLEAF_FOREST_OTHERS", 0.1, 5.0},
+        {"QUERCUS_ILEX", 1.5, 4.0},
+        {"QUERCUS_SUBER", 1.5, 4.0},
+        {"MEDITERRANEAN_EVERGREEN_TREE", 1.5, 4.0},
+        {"POPULUS_ARTIFICIAL", 0.1, 6.0},
+        {"BROADLEAF_ARTIFICIAL", 0.1, 6.0},
+        {"CONIFERS_ARTIFICIAL", 1.0, 5.0},
+        {"SHRUB_SUBALPINE", 0.1, 2.0},
+        {"SHRUB_TEMPERATE", 0.1, 3.0},
+        {"SHRUB_MEDITERRANEAN", 1.0, 3.0}
+    }; // da aggiungere il sottobosco
+
+    phenologyLAI = {
+        {"LARCH", 250, 1000, 2250},              // Intermedia
+        {"PICEA_ABIES", 300, 1100, 2500},         // Tardiva
+        {"ABIES_ALBA", 300, 1100, 2500},        // Tardiva
+        {"PINUS_SYLVESTRIS_SCOTCH_PINE", 250, 1000, 2250}, // Intermedia
+        {"PINUS_NIGRA", 250, 1000, 2250},           // Intermedia
+        {"PINUS_PINEA", 200, 900, 2000},    // Precoce
+        {"CONIFER_FOREST_OTHERS", 250, 1000, 2250}, // Intermedia
+        {"BEECH", 300, 1100, 2500},                       // Tardiva
+        {"QUERCUS_PETREA_ROBUR_PUBESCENS", 250, 1000, 2250}, // Intermedia
+        {"QUERCUS_CERRIS_FRAINETTO_VALLONEAa", 300, 1100, 2500}, // Tardiva
+        {"CASTINEA_SATIVA", 250, 1000, 2250},                    // Intermedia
+        {"CARPINUS_BETULUS_OTRYA_OXYCARPA", 250, 1000, 2250},           // Intermedia
+        {"HYGROPHILOUS_FOREST", 250, 1000, 2250},               // Intermedia
+        {"BROADLEAF_FOREST_OTHERS", 250, 1000, 2250},      // Intermedia
+        {"QUERCUS_ILEX", 200, 900, 2000},                        // Precoce
+        {"QUERCUS_SUBER", 200, 900, 2000},                      // Precoce
+        {"MEDITERRANEAN_EVERGREEN_TREE", 200, 900, 2000}, // Precoce
+        {"POPULUS_ARTIFICIAL", 200, 900, 2000},           // Precoce
+        {"BROADLEAF_ARTIFICIAL", 250, 1000, 2250}, // Intermedia
+        {"CONIFERS_ARTIFICIAL", 250, 1000, 2250},       // Intermedia
+        {"SHRUB_SUBALPINE", 250, 1000, 2250},           // Intermedia
+        {"SHRUB_TEMPERATE", 250, 1000, 2250},  // Intermedia
+        {"SHRUB_MEDITERRANEAN", 200, 900, 2000} // Precoce
+    };
+
+
 }
 
 Crit3DHydrallSoil::Crit3DHydrallSoil()
@@ -157,7 +237,7 @@ Crit3DHydrallParameterWangLeuning::Crit3DHydrallParameterWangLeuning()
     alpha = 340000; //1100000; // this parameter must be multiplied by 10^-6 in order to be compliant with literature
     psiLeaf = 1800;                 // kPa
     waterStressThreshold = NODATA;
-    maxCarboxRate = 150;           // Vcmo at optimal temperature  umol m-2 s-1
+    maxCarboxRate = 150;           // Vcmo at optimal temperature (25°C) umol m-2 s-1
 }
 
 Crit3DHydrallDeltaTimeOutputs::Crit3DHydrallDeltaTimeOutputs()
@@ -206,6 +286,8 @@ Crit3DHydrallMaps::Crit3DHydrallMaps()
     standBiomassMap = new gis::Crit3DRasterGrid;
     rootBiomassMap = new gis::Crit3DRasterGrid;
     mapLast30DaysTavg = new gis::Crit3DRasterGrid;
+    yearlyET0 = new gis::Crit3DRasterGrid;
+    yearlyPrec = new gis::Crit3DRasterGrid;
 
     treeNetPrimaryProduction = new gis::Crit3DRasterGrid;
     understoreyNetPrimaryProduction = new gis::Crit3DRasterGrid;
@@ -230,6 +312,8 @@ void Crit3DHydrallMaps::initialize(const gis::Crit3DRasterGrid& DEM)
     criticalSoilWaterPotential->initializeGrid(DEM);
     criticalTranspiration->initializeGrid(DEM);
     minLeafWaterPotential->initializeGrid(DEM);
+    yearlyET0->initializeGrid(DEM);
+    yearlyPrec->initializeGrid(DEM);
 
 }
 
@@ -239,6 +323,9 @@ Crit3DHydrallMaps::~Crit3DHydrallMaps()
     standBiomassMap->clear();
     rootBiomassMap->clear();
     mapLast30DaysTavg->clear();
+
+    yearlyET0->clear();
+    yearlyPrec->clear();
 }
 
 bool Crit3DHydrall::computeHydrallPoint()
@@ -252,8 +339,8 @@ bool Crit3DHydrall::computeHydrallPoint()
     plant.setLAICanopy(plant.getLAICanopy() - plant.getLAICanopyMin());
     plant.setLAICanopy(MAXVALUE(0,plant.getLAICanopy()));
     understorey.leafAreaIndex = 1;
-    plant.setLAICanopy(5); //DEBUG
-    plant.setLAICanopyMax(6); //DEBUG
+    //plant.setLAICanopy(5); //DEBUG
+    //plant.setLAICanopyMax(6); //DEBUG
     plant.specificLeafArea = plant.getLAICanopyMax()/statePlant.treeBiomassFoliage;
 
     Crit3DHydrall::photosynthesisAndTranspiration();
@@ -1043,7 +1130,7 @@ void Crit3DHydrall::photosynthesisKernel(double COMP,double GAC,double GHR,doubl
         RH = 1 - VPDS / RHFactor;
         ASSOLD = NODATA;
         DUM1 = 1.6 * weatherVariable.derived.slopeSatVapPressureVSTemp/weatherVariable.derived.psychrometricConstant + GHR/GAC;
-        double dampingPar = 0.5;
+        double dampingPar = 0.01;
         for (I=0; (I<Imax) && (deltaAssimilation > myTolerance); I++)
         {
             //Assimilation
@@ -1051,7 +1138,7 @@ void Crit3DHydrall::photosynthesisKernel(double COMP,double GAC,double GHR,doubl
             WJ = J * myStromalCarbonDioxide / (4.5 * myStromalCarbonDioxide + 10.5 * COMP);  //electr transp-limited carboxyl (mol m-2 s-1)
             VC = MINVALUE(WC,WJ);  //carboxylation rate (mol m-2 s-1)
 
-            *ASS = MAXVALUE(0.0, VC * (1.0 - COMP / myStromalCarbonDioxide));  //gross assimilation (mol m-2 s-1)
+            *ASS = MAXVALUE(1e-8, VC * (1.0 - COMP / myStromalCarbonDioxide));  //gross assimilation (mol m-2 s-1)
             CS = environmentalVariable.CO2 - weatherVariable.atmosphericPressure * (*ASS - RD) / GAC;	//CO2 concentration at leaf surface (Pa)
             CSmolFraction = CS/weatherVariable.atmosphericPressure*1e6;
             COMPmolFraction= COMP/weatherVariable.atmosphericPressure*1e6;
@@ -1076,7 +1163,7 @@ void Crit3DHydrall::photosynthesisKernel(double COMP,double GAC,double GHR,doubl
 
             if (I>0)
             {
-                double ratioAssimilation = *ASS/ASSOLD; // RD(new):RD(old)=ASS(new):ASS(old)
+                double ratioAssimilation = BOUNDFUNCTION(0.1,10,*ASS/ASSOLD); // RD(new):RD(old)=ASS(new):ASS(old)
                 RD *= ratioAssimilation;
             }
             ASSOLD = *ASS;
@@ -1107,15 +1194,16 @@ void Crit3DHydrall::cumulatedResults()
     deltaTime.grossAssimilation = HOUR_SECONDS * treeAssimilationRate ; // canopy gross assimilation (mol m-2)
     deltaTime.respiration = HOUR_SECONDS * Crit3DHydrall::plantRespiration() ;
     deltaTime.netAssimilation = deltaTime.grossAssimilation - deltaTime.respiration ;
-
-    //DEBUG
-    //std::cout << deltaTime.grossAssimilation * 10e6 << ", " << deltaTime.respiration * 10e6 << ", " << deltaTime.netAssimilation *10e6 << std::endl;
-    std::ofstream myFile;
-    double stressMean = statistics::weighedMean(soil.getRootDensity(),soil.stressCoefficient);
-    myFile.open("outputLAIetc.csv", std::ios_base::app);
-    myFile << deltaTime.grossAssimilation/HOUR_SECONDS*1e6 <<","<<deltaTime.respiration/HOUR_SECONDS*1e6<<","<<deltaTime.netAssimilation/HOUR_SECONDS*1e6<<","<< plant.getLAICanopy()<< "," << maxIterationNumber <<"\n";
-    myFile.close();
-
+    if (printHourlyRecords)
+    {
+        //DEBUG
+        //std::cout << deltaTime.grossAssimilation * 10e6 << ", " << deltaTime.respiration * 10e6 << ", " << deltaTime.netAssimilation *10e6 << std::endl;
+        std::ofstream myFile;
+        double stressMean = statistics::weighedMean(soil.getRootDensity(),soil.stressCoefficient);
+        myFile.open("outputLAIetc.csv", std::ios_base::app);
+        myFile << deltaTime.grossAssimilation/HOUR_SECONDS*1e6 <<","<<deltaTime.respiration/HOUR_SECONDS*1e6<<","<<deltaTime.netAssimilation/HOUR_SECONDS*1e6<<","<< plant.getLAICanopy()<< "," << maxIterationNumber <<"\n";
+        myFile.close();
+    }
     deltaTime.netAssimilation = deltaTime.netAssimilation*12/1000.0; // [KgC m-2] TODO da motiplicare dopo per CARBONFACTOR DA METTERE dopo convert to kg DM m-2
     deltaTime.understoreyNetAssimilation = HOUR_SECONDS * MH2O * understoreyAssimilationRate - MH2O*understoreyRespiration();
     statePlant.treeNetPrimaryProduction += deltaTime.netAssimilation; // state plant considers the biomass stored during the current year
@@ -1423,18 +1511,20 @@ bool Crit3DHydrall::simplifiedGrowthStand()
     double rootShootRatio;
     double alpha = 0.7;
 
-    rootShootRatio = MAXVALUE(MINVALUE(plant.rootShootRatioRef*(alpha*0.5 + 1), plant.rootShootRatioRef*(alpha*(1-weatherVariable.getMonthlyPrec()/weatherVariable.getMonthlyET0())+1)), plant.rootShootRatioRef);
+    rootShootRatio = MAXVALUE(MINVALUE(plant.rootShootRatioRef*(alpha*0.5 + 1), plant.rootShootRatioRef*(alpha*(1-weatherVariable.getYearlyPrec()/weatherVariable.getYearlyET0())+1)), plant.rootShootRatioRef);
 
     allocationCoefficient.toFineRoots = rootShootRatio / (1 + rootShootRatio);
     allocationCoefficient.toFoliage = ( 1 - allocationCoefficient.toFineRoots ) * 0.05;
     allocationCoefficient.toSapwood = 1 - allocationCoefficient.toFineRoots - allocationCoefficient.toFoliage;
 
-
-    std::ofstream myFile;
-    myFile.open("outputAlloc.csv", std::ios_base::app);
-    myFile << allocationCoefficient.toFoliage <<","<< allocationCoefficient.toFineRoots <<","<<allocationCoefficient.toSapwood <<","
-           << rootShootRatio <<"," << weatherVariable.getMonthlyET0() << "," << weatherVariable.getMonthlyPrec() <<"\n";
-    myFile.close();
+    if (printHourlyRecords)
+    {
+        std::ofstream myFile;
+        myFile.open("outputAlloc.csv", std::ios_base::app);
+        myFile << allocationCoefficient.toFoliage <<","<< allocationCoefficient.toFineRoots <<","<<allocationCoefficient.toSapwood <<","
+               << rootShootRatio <<"," << weatherVariable.getYearlyET0() << "," << weatherVariable.getYearlyPrec() <<"\n";
+        myFile.close();
+    }
 
     if (annualGrossStandGrowth * allocationCoefficient.toFoliage > statePlant.treeBiomassFoliage/(plant.foliageLongevity - 1))
     {

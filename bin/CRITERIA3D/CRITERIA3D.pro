@@ -23,7 +23,7 @@ TARGET = CRITERIA3D
 VERSION = 1.1.0
 
 CONFIG += debug_and_release
-CONFIG += c++11 c++14 c++17 c++20
+CONFIG += c++17 c++20
 
 INCLUDEPATH +=  ./shared  \
                 ../../agrolib/soilFluxes3D ../../agrolib/soilFluxes3DNew \

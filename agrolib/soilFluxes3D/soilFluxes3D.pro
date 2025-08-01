@@ -19,6 +19,7 @@ TEMPLATE = lib
 CONFIG += staticlib
 CONFIG += c++20
 CONFIG += debug_and_release
+CONFIG += c++17
 
 INCLUDEPATH += ../mathFunctions
 
