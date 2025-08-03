@@ -346,7 +346,7 @@ namespace soilFluxes3D::New
 
             //Check water balance
             downCopyData();
-            balanceResult = evaluateWaterBalance(approxIdx, _bestMBRerror, _parameters);
+            balanceResult = evaluateWaterBalance(approxIdx, _bestMBRerror, deltaT,  _parameters);
             upCopyData();
 
             if((balanceResult == stepAccepted) || (balanceResult == stepHalved))

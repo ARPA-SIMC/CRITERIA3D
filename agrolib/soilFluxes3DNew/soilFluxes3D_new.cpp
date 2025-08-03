@@ -998,7 +998,7 @@ namespace soilFluxes3D::New
     {
         double totalBoundaryWaterFlow = 0.0;
 
-        #pragma omp parallel for if(solver->getOMPstatus()) reduction(+:totalBoundaryWaterFlow)
+        #pragma omp parallel for if(__ompStatus) reduction(+:totalBoundaryWaterFlow)
         for (uint64_t nodeIdx = 0; nodeIdx < nodeGrid.numNodes; ++nodeIdx)
             if (nodeGrid.boundaryData.boundaryType[nodeIdx] == boundaryType)
                 totalBoundaryWaterFlow += nodeGrid.boundaryData.waterFlowSum[nodeIdx];
