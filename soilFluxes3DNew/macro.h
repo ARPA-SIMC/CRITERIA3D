@@ -19,11 +19,15 @@
     #define __cudaMngd __managed__
     #define __cudaSpec __host__ __device__
 
+    #define __ompStatus (*solver)->getOMPstatus()
+
     #define SF3Dmax(v1, v2) ((v1 > v2) ? v1 : v2)
     #define SF3Dmin(v1, v2) ((v1 < v2) ? v1 : v2)
 #else
     #define __cudaMngd
     #define __cudaSpec
+
+    #define __ompStatus (solver)->getOMPstatus()
 
     #define SF3Dmax(v1, v2) std::max(v1, v2)
     #define SF3Dmin(v1, v2) std::min(v1, v2)

@@ -59,7 +59,7 @@ namespace soilFluxes3D::Water
 
         double sum = 0.0;
 
-        #pragma omp parallel for if(solver->getOMPstatus()) reduction(+:sum)
+        #pragma omp parallel for if(__ompStatus) reduction(+:sum)
         for (uint64_t idx = 0; idx < nodeGrid.numNodes; ++idx)
         {
             double theta = nodeGrid.surfaceFlag[idx] ? (nodeGrid.waterData.pressureHead[idx] - nodeGrid.z[idx]) : computeNodeTheta(idx);     //TO DO
@@ -102,7 +102,7 @@ namespace soilFluxes3D::Water
     {
         double sum = 0;
 
-        #pragma omp parallel for if(solver->getOMPstatus()) reduction(+:sum)
+        #pragma omp parallel for if(__ompStatus) reduction(+:sum)
         for (uint64_t idx = 0; idx < nodeGrid.numNodes; ++idx)
             if(nodeGrid.waterData.waterFlow[idx] != 0)     //TO DO: evaluate remove check
                 sum += nodeGrid.waterData.waterFlow[idx] * deltaT;
@@ -176,7 +176,7 @@ namespace soilFluxes3D::Water
         balanceDataCurrentPeriod.waterSinkSource += balanceDataCurrentTimeStep.waterSinkSource;
 
         /*! update sum of flow */
-        #pragma omp parallel for if(solver->getOMPstatus())
+        #pragma omp parallel for if(__ompStatus)
         for (uint64_t nodeIndex = 0; nodeIndex < nodeGrid.numNodes; ++nodeIndex)
         {
             //Update link flows
@@ -198,7 +198,7 @@ namespace soilFluxes3D::Water
     {
         std::memcpy(nodeGrid.waterData.pressureHead, nodeGrid.waterData.bestPressureHeads, nodeGrid.numNodes * sizeof(double));
 
-        #pragma omp parallel for if(solver->getOMPstatus())
+        #pragma omp parallel for if(__ompStatus)
         for (uint64_t nodeIndex = 0; nodeIndex < nodeGrid.numNodes; ++nodeIndex)
             if(!nodeGrid.surfaceFlag[nodeIndex])
                 nodeGrid.waterData.saturationDegree[nodeIndex] = computeNodeSe(nodeIndex);
@@ -223,7 +223,7 @@ namespace soilFluxes3D::Water
 
     void computeCapacity(VectorCPU& vectorC)
     {
-        #pragma omp parallel for if(solver->getOMPstatus())
+        #pragma omp parallel for if(__ompStatus)
         for (uint64_t nodeIndex = 0; nodeIndex < nodeGrid.numNodes; ++nodeIndex)
         {
             nodeGrid.waterData.invariantFluxes[nodeIndex] = 0.;
@@ -243,7 +243,7 @@ namespace soilFluxes3D::Water
 
     void computeLinearSystemElement(MatrixCPU &matrixA, VectorCPU& vectorB, const VectorCPU& vectorC, uint8_t approxNum, double deltaT, double lateralVerticalRatio, meanType_t meanType)
     {
-        #pragma omp parallel for if(solver->getOMPstatus())
+        #pragma omp parallel for if(__ompStatus)
         for (uint64_t rowIdx = 0; rowIdx < matrixA.numRows; ++rowIdx)
         {
             uint8_t linkIdx = 1;
@@ -440,7 +440,7 @@ namespace soilFluxes3D::Water
         double* tempX = (double*) calloc(vectorX.numElements, sizeof(double));
         std::memcpy(tempX, vectorB.values, vectorB.numElements * sizeof(double));
 
-        #pragma omp parallel for if(solver->getOMPstatus()) reduction(max:infinityNorm)
+        #pragma omp parallel for if(__ompStatus) reduction(max:infinityNorm)
         for (uint64_t rowIdx = 0; rowIdx < matrixA.numRows; ++rowIdx)
         {
             for (uint8_t colIdx = 1; colIdx < matrixA.numColumns[rowIdx]; ++colIdx)
@@ -494,7 +494,7 @@ namespace soilFluxes3D::Water
 
     void updateBoundaryWaterData(double deltaT)
     {
-        #pragma omp parallel for if(solver->getOMPstatus())
+        #pragma omp parallel for if(__ompStatus)
         for (uint64_t nodeIdx = 0; nodeIdx < nodeGrid.numNodes; ++nodeIdx)
         {
             //Inizialize: water sink.source

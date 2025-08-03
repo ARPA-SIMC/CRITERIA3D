@@ -80,11 +80,13 @@ CONFIG(CUDA_CONFIG) {
 
     LIBS += -lcudart -lcuda -lcusparse
 
-    cudaC_FLAGS = -std=c++20 --expt-relaxed-constexpr -DCUDA_ENABLED
-    cudaL_FLAGS = -m64 -arch=sm_61 -Wno-deprecated-gpu-targets -std=c++20
+    cudaC_FLAGS = -DCUDA_ENABLED -m64 -arch=sm_61  -std=c++17
+    cudaL_FLAGS = -Wno-deprecated-gpu-targets
 
-    MSVCRT_LINK_FLAG_DEBUG = "/MDd,/openmp:llvm,/openmp:experimental"
-    MSVCRT_LINK_FLAG_RELEASE = "/MD,/openmp:llvm,/openmp:experimental"
+    HOST_FLAGS = $$join(QMAKE_CXXFLAGS,',','"','"')
+
+    MSVCRT_LINK_FLAG_DEBUG = "/MDd"
+    MSVCRT_LINK_FLAG_RELEASE = "/MD"
 
     # Prepare the extra compiler configuration (taken from the nvidia forum - i'm not an expert in this part)
     CUDA_INC = $$join(INCLUDEPATH,'" -I"','-I"','"')
@@ -92,7 +94,7 @@ CONFIG(CUDA_CONFIG) {
     # Compile CUDA source files using NVCC
     cudaC.input = CUDA_SOURCES
     cudaC.output = ${QMAKE_FILE_BASE}_cuda.o
-    cudaC.commands = $$CUDA_DIR\bin\nvcc -Xcompiler $$MSVCRT_LINK_FLAG_RELEASE $$cudaL_FLAGS -dc $$cudaC_FLAGS $$CUDA_INC $$LIBS -o ${QMAKE_FILE_BASE}_cuda.o -x cu ${QMAKE_FILE_NAME}
+    cudaC.commands = $$CUDA_DIR\bin\nvcc -Xcompiler $$MSVCRT_LINK_FLAG_RELEASE -Xcompiler $$HOST_FLAGS $$cudaL_FLAGS -dc $$cudaC_FLAGS $$CUDA_INC $$LIBS -o ${QMAKE_FILE_BASE}_cuda.o -x cu ${QMAKE_FILE_NAME}
     cudaC.dependency_type = TYPE_C
     cudaC.variable_out = CUDA_OBJ
     cudaC.variable_out += OBJECTS
