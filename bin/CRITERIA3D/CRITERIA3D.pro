@@ -9,8 +9,14 @@
 QT  += network widgets sql xml charts
 greaterThan(QT_MAJOR_VERSION, 5): QT += core5compat openglwidgets
 
-QMAKE_CXXFLAGS += -openmp:llvm -openmp:experimental -GL
-QMAKE_LFLAGS += -LTCG
+win32:{
+    QMAKE_CXXFLAGS += -openmp:llvm -GL
+    QMAKE_LFLAGS += -openmp:llvm -LTCG
+}
+unix:{
+    QMAKE_CXXFLAGS += -fopenmp -flto
+    QMAKE_LFLAGS += -fopenmp -flto
+}
 
 CUDA_DIR = $$(CUDA_PATH) #"D:\App e giochi\NVIDIA GPU Computing Toolkit\CUDA\v12.9"
 

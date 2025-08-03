@@ -12,8 +12,14 @@
 
 QT -= gui
 
-QMAKE_CXXFLAGS += -openmp:llvm -openmp:experimental -GL
-QMAKE_LFLAGS += -openmp:llvm -IGNORE:4217 -LTCG
+win32:{
+    QMAKE_CXXFLAGS += -openmp:llvm -GL
+    QMAKE_LFLAGS += -openmp:llvm -LTCG
+}
+unix:{
+    QMAKE_CXXFLAGS += -fopenmp -flto
+    QMAKE_LFLAGS += -fopenmp -flto
+}
 
 TEMPLATE = lib
 CONFIG += staticlib
