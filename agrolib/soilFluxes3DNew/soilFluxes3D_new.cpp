@@ -19,8 +19,6 @@ namespace soilFluxes3D::New
 {
     #ifdef CUDA_ENABLED
         GPUSolver GPUSolverObject;
-        bool CUDAactive = true;
-    #else
         bool CUDAactive = false;
     #endif
 
@@ -267,7 +265,13 @@ namespace soilFluxes3D::New
         if (nrThreads < 1 || nrThreads > nrHWthreads)
             nrThreads = nrHWthreads;
 
-        solver->updateParameters(SolverParametersPartial{.numThreads = nrThreads});
+
+        SolverParametersPartial paramTemp;
+        paramTemp.numThreads = nrThreads;
+        solver->updateParameters(paramTemp);
+
+        //Versione c++20
+        //solver->updateParameters(SolverParametersPartial{.numThreads = nrThreads});
         return nrThreads;
     }
 
@@ -367,10 +371,21 @@ namespace soilFluxes3D::New
         if (MBRThresholdExponent > 6)
             MBRThresholdExponent = 6;
 
-        solver->updateParameters(SolverParametersPartial{.MBRThreshold = pow(10.0, -MBRThresholdExponent),
-                                                     .residualTolerance = pow(10.0, -ResidualToleranceExponent),
-                                                     .deltaTmin = minDeltaT, .deltaTmax = maxDeltaT, .deltaTcurr = maxDeltaT,
-                                                     .maxApproximationsNumber = maxApproximationsNumber, .maxIterationsNumber = maxIterationNumber});
+        SolverParametersPartial paramTemp;
+        paramTemp.MBRThreshold = pow(10.0, -MBRThresholdExponent);
+        paramTemp.residualTolerance = pow(10.0, -ResidualToleranceExponent);
+        paramTemp.deltaTmin = minDeltaT;
+        paramTemp.deltaTmax = maxDeltaT;
+        paramTemp.deltaTcurr = maxDeltaT;
+        paramTemp.maxApproximationsNumber = maxApproximationsNumber;
+        paramTemp.maxIterationsNumber = maxIterationNumber;
+        solver->updateParameters(paramTemp);
+
+        //Versione c++20
+        //solver->updateParameters(SolverParametersPartial{.MBRThreshold = pow(10.0, -MBRThresholdExponent),
+        //                                             .residualTolerance = pow(10.0, -ResidualToleranceExponent),
+        //                                             .deltaTmin = minDeltaT, .deltaTmax = maxDeltaT, .deltaTcurr = maxDeltaT,
+        //                                             .maxApproximationsNumber = maxApproximationsNumber, .maxIterationsNumber = maxIterationNumber});
 
         return SF3Dok;
     }
@@ -388,9 +403,17 @@ namespace soilFluxes3D::New
         if((conductivityHorizVertRatio < 0.1) || (conductivityHorizVertRatio > 100))
             return ParameterError;
 
-        solver->updateParameters(SolverParametersPartial{.waterRetentionCurveModel = waterRetentionCurve,
-                                                     .meantype = conductivityMeanType,
-                                                     .lateralVerticalRatio = conductivityHorizVertRatio});
+        SolverParametersPartial paramTemp;
+        paramTemp.waterRetentionCurveModel = waterRetentionCurve;
+        paramTemp.meantype = conductivityMeanType;
+        paramTemp.lateralVerticalRatio = conductivityHorizVertRatio;
+        solver->updateParameters(paramTemp);
+
+        //Versione c++20
+        //solver->updateParameters(SolverParametersPartial{.waterRetentionCurveModel = waterRetentionCurve,
+        //                                             .meantype = conductivityMeanType,
+        //                                             .lateralVerticalRatio = conductivityHorizVertRatio});
+
         return SF3Dok;
     }
 
@@ -975,7 +998,7 @@ namespace soilFluxes3D::New
     {
         double totalBoundaryWaterFlow = 0.0;
 
-        #pragma omp parallel for reduction(+:totalBoundaryWaterFlow) if(solver->getOMPstatus())
+        #pragma omp parallel for if(solver->getOMPstatus()) reduction(+:totalBoundaryWaterFlow)
         for (uint64_t nodeIdx = 0; nodeIdx < nodeGrid.numNodes; ++nodeIdx)
             if (nodeGrid.boundaryData.boundaryType[nodeIdx] == boundaryType)
                 totalBoundaryWaterFlow += nodeGrid.boundaryData.waterFlowSum[nodeIdx];
@@ -1017,7 +1040,7 @@ namespace soilFluxes3D::New
      * \param maxTimeStep       [s] (default HOUR_SECONDS = 3600)
      * \return computedTimeStep [s]
      */
-    double computeStep(double maxTimeStep = HOUR_SECONDS)
+    double computeStep(double maxTimeStep)
     {
         if(simulationFlags.computeHeat)
         {

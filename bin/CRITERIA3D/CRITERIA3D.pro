@@ -9,13 +9,18 @@
 QT  += network widgets sql xml charts
 greaterThan(QT_MAJOR_VERSION, 5): QT += core5compat openglwidgets
 
-QMAKE_CXXFLAGS += -openmp:llvm -openmp:experimental
+QMAKE_CXXFLAGS += -openmp:llvm -openmp:experimental -GL
+QMAKE_LFLAGS += -LTCG
 
 CUDA_DIR = $$(CUDA_PATH) #"D:\App e giochi\NVIDIA GPU Computing Toolkit\CUDA\v12.9"
-INCLUDEPATH  += $$CUDA_DIR/include
-QMAKE_LIBDIR += $$CUDA_DIR/lib/x64
 
-LIBS += -lcudart -lcuda -lcusparse
+isEmpty(CUDA_DIR) {
+    message("CUDA_PATH non definita, salto configurazione CUDA")
+} else {
+    INCLUDEPATH  += $$CUDA_DIR/include
+    QMAKE_LIBDIR += $$CUDA_DIR/lib/x64
+    LIBS += -lcudart -lcuda -lcusparse
+}
 
 TEMPLATE = app
 TARGET = CRITERIA3D
@@ -23,7 +28,7 @@ TARGET = CRITERIA3D
 VERSION = 1.1.0
 
 CONFIG += debug_and_release
-CONFIG += c++17 c++20
+CONFIG += c++17
 
 INCLUDEPATH +=  ./shared  \
                 ../../agrolib/soilFluxes3D ../../agrolib/soilFluxes3DNew \

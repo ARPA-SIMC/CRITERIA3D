@@ -12,12 +12,12 @@
 
 QT -= gui
 
-QMAKE_CXXFLAGS += -openmp:llvm -openmp:experimental
-QMAKE_LFLAGS += -openmp:llvm -NODEFAULTLIB:msvcrt.lib -NODEFAULTLIB:cmt.lib -IGNORE:4217
+QMAKE_CXXFLAGS += -openmp:llvm -openmp:experimental -GL
+QMAKE_LFLAGS += -openmp:llvm -LTCG
 
 TEMPLATE = lib
 CONFIG += staticlib
-CONFIG += c++20
+CONFIG += c++17
 CONFIG += debug_and_release
 
 INCLUDEPATH += $$absolute_path(..\mathFunctions)
@@ -83,8 +83,8 @@ CONFIG(CUDA_CONFIG) {
     cudaC_FLAGS = -std=c++20 --expt-relaxed-constexpr -DCUDA_ENABLED
     cudaL_FLAGS = -m64 -arch=sm_61 -Wno-deprecated-gpu-targets -std=c++20
 
-    MSVCRT_LINK_FLAG_DEBUG = "/MDd"
-    MSVCRT_LINK_FLAG_RELEASE = "/MD"
+    MSVCRT_LINK_FLAG_DEBUG = "/MDd,/openmp:llvm,/openmp:experimental"
+    MSVCRT_LINK_FLAG_RELEASE = "/MD,/openmp:llvm,/openmp:experimental"
 
     # Prepare the extra compiler configuration (taken from the nvidia forum - i'm not an expert in this part)
     CUDA_INC = $$join(INCLUDEPATH,'" -I"','-I"','"')

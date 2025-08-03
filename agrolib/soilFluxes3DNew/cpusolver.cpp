@@ -22,7 +22,9 @@ namespace soilFluxes3D::New
         if(_parameters.deltaTcurr == noData)
             _parameters.deltaTcurr = _parameters.deltaTmax;
 
-        _parameters.enableOMP = false;       //TO DO: (nodeGrid.numNodes > ...);
+        _parameters.enableOMP = true;       //TO DO: (nodeGrid.numNodes > ...);
+        if(_parameters.enableOMP)
+            omp_set_num_threads(static_cast<int>(_parameters.numThreads));
 
         //Inizialize matrix structure
         matrixA.numRows = nodeGrid.numNodes;
@@ -157,6 +159,7 @@ namespace soilFluxes3D::New
 
             //Compute linear system elements
             computeLinearSystemElement(matrixA, vectorB, vectorC, approxIdx, deltaT, _parameters.lateralVerticalRatio, _parameters.meantype);
+
             //Check Courant
             if((nodeGrid.waterData.CourantWaterLevel > 1.) && (deltaT > _parameters.deltaTmin))
             {
@@ -188,7 +191,7 @@ namespace soilFluxes3D::New
                     nodeGrid.waterData.saturationDegree[nodeIdx] = computeNodeSe(nodeIdx);
 
             //Check water balance
-            balanceResult = evaluateWaterBalance(approxIdx, _bestMBRerror, _parameters);
+            balanceResult = evaluateWaterBalance(approxIdx, _bestMBRerror, deltaT, _parameters);
 
             if((balanceResult == stepAccepted) || (balanceResult == stepHalved))
                 return balanceResult;

@@ -995,7 +995,7 @@ bool Crit3DProject::runModels(const QDateTime &firstTime, const QDateTime &lastT
         {
             // create directory for hourly raster output
             currentOutputPath = getProjectPath() + PATH_OUTPUT + myDate.toString("yyyy/MM/dd/");
-            if (! QDir().mkpath(currentOutputPath))
+            if (!QDir().mkpath(currentOutputPath))
             {
                 logError("Creation of directory for hourly raster output failed:" + currentOutputPath);
                 setSaveOutputRaster(false);
@@ -1008,7 +1008,7 @@ bool Crit3DProject::runModels(const QDateTime &firstTime, const QDateTime &lastT
 
         for (int hour = firstHour; hour <= lastHour; hour++)
         {
-            QDateTime startTime = QDateTime::currentDateTime();
+            //QDateTime startTime = QDateTime::currentDateTime();
             setCurrentHour(hour);
             if (currentSeconds == 0 || currentSeconds == 3600)
                 isRestart = false;
@@ -1020,8 +1020,8 @@ bool Crit3DProject::runModels(const QDateTime &firstTime, const QDateTime &lastT
                 return false;
             }
 
-            QDateTime endTime = QDateTime::currentDateTime();
-            logInfo("Tempo di calcolo [ms]: " + QString::number(startTime.msecsTo(endTime)));
+            //QDateTime endTime = QDateTime::currentDateTime();
+            //logInfo("Tempo di calcolo [ms]: " + QString::number(startTime.msecsTo(endTime)));
 
             //Log temporaneo delle variabili
             // QString matrixLog = soilFluxes3D::getMatrixLog();
@@ -1030,17 +1030,11 @@ bool Crit3DProject::runModels(const QDateTime &firstTime, const QDateTime &lastT
             // QString vectorLog = soilFluxes3D::getVectorLog();
             // logData("VectorFinal", vectorLog);
 
-            QString linSystLog = soilFluxes3D::getLinSystLog();
-            //logData("LinSystInfo", linSystLog);
-            logInfo("LinSystInfo 01\n" + linSystLog);
+            QString linSystLog = ""; // soilFluxes3D::getLinSystLog();
+            // logData("LinSystInfo", linSystLog);
+            logInfo("LinSystInfo 00\n" + linSystLog);
 
-            //Log GPU test
-            // QDateTime startTimeGPU = QDateTime::currentDateTime();
-            // logInfo(soilFluxes3D::getCUDArun(10));
-            // QDateTime endTimeGPU = QDateTime::currentDateTime();
-            // logInfo("Tempo di calcolo GPU (wip) [ms]: " + QString::number(startTimeGPU.msecsTo(endTimeGPU)));
-
-			//rothC maps update must be done hourly, otherwise ETReal data is not stored
+            //rothC maps update must be done hourly, otherwise ETReal data are not stored
             if (processes.computeRothC || processes.computeHydrall)
 				updateETAndPrecYearlyMaps();
 			

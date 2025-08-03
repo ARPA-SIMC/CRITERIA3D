@@ -847,14 +847,14 @@ bool Project3D::setCrit3DTopography()
                             myResult = soilFluxes3D::setNode(index, float(x), float(y), z, area, true, true, BOUNDARY_RUNOFF, boundarySlope, boundaryArea);
                             int myResultNew = soilFluxes3D::New::setNode(index, x, y, z, area, true, soilFluxes3D::New::Runoff, boundarySlope, boundaryArea);
                             if(myResultNew != myResult)
-                                logError("ERRO: setNode");
+                                logError("ERRO: setNode runoff" + QString::number(myResult) + " new " + QString::number(myResultNew));
                         }
                         else
                         {
                             myResult = soilFluxes3D::setNode(index, float(x), float(y), z, area, true, false, BOUNDARY_NONE, 0, 0);
                             int myResultNew = soilFluxes3D::New::setNode(index, x, y, z, area, true, soilFluxes3D::New::NoBoundary);
                             if(myResultNew != myResult)
-                                logError("ERRO: setNode");
+                                logError("ERRO: setNode nob0" + QString::number(myResult) + " new " + QString::number(myResultNew));
                         }
                     }
                     else
@@ -868,14 +868,14 @@ bool Project3D::setCrit3DTopography()
                                 myResult = soilFluxes3D::setNode(index, float(x), float(y), z, volume, false, true, BOUNDARY_FREEDRAINAGE, 0, boundaryArea);
                                 int myResultNew = soilFluxes3D::New::setNode(index, x, y, z, volume, false, soilFluxes3D::New::FreeDrainage, 0, boundaryArea);
                                 if(myResultNew != myResult)
-                                    logError("ERRO: setNode");
+                                    logError("ERRO: setNode freeLateralDrainage" + QString::number(myResult) + " new " + QString::number(myResultNew));
                             }
                             else
                             {
                                 myResult = soilFluxes3D::setNode(index, float(x), float(y), z, volume, false, false, BOUNDARY_NONE, 0, 0);
                                 int myResultNew = soilFluxes3D::New::setNode(index, x, y, z, volume, false, soilFluxes3D::New::NoBoundary);
                                 if(myResultNew != myResult)
-                                    logError("ERRO: setNode");
+                                    logError("ERRO: setNode nobmid" + QString::number(myResult) + " new " + QString::number(myResultNew));
                             }
                         }
                         else
@@ -888,7 +888,7 @@ bool Project3D::setCrit3DTopography()
                                 myResult = soilFluxes3D::setNode(index, float(x), float(y), z, volume, false, true, BOUNDARY_FREELATERALDRAINAGE, boundarySlope, boundaryArea);
                                 int myResultNew = soilFluxes3D::New::setNode(index, x, y, z, volume, false, soilFluxes3D::New::FreeLateraleDrainage, boundarySlope, boundaryArea);
                                 if(myResultNew != myResult)
-                                    logError("ERRO: setNode");
+                                    logError("ERRO: setNode runoffsub" + QString::number(myResult) + " new " + QString::number(myResultNew));
                             }
                             else
                             {
@@ -1231,7 +1231,7 @@ void Project3D::runWaterFluxes3DModel(double totalTimeStep, bool isRestart)
         previousTotalWaterContent = soilFluxes3D::getTotalWaterContent();       // [m3]
         double previousTotalWaterContentNew = soilFluxes3D::New::getTotalWaterContent();
 
-        logInfo("total water [m3]: " + QString::number(previousTotalWaterContent) + " ------- Error: " + QString::number(previousTotalWaterContent - previousTotalWaterContentNew));
+        logInfo("total water [m3]: " + QString::number(previousTotalWaterContent) + "\t\t\t ------- Error: " + QString::number(previousTotalWaterContent - previousTotalWaterContentNew));
         logInfo("precipitation [m3]: " + QString::number(totalPrecipitation));
         logInfo("evaporation [m3]: " + QString::number(-totalEvaporation));
         logInfo("transpiration [m3]: " + QString::number(-totalTranspiration));
@@ -1243,8 +1243,15 @@ void Project3D::runWaterFluxes3DModel(double totalTimeStep, bool isRestart)
     while (currentSeconds < totalTimeStep)
     {
         double currentSecondsNew = currentSeconds;
+        QDateTime startTime, endTime;
+        startTime = QDateTime::currentDateTime();
         currentSeconds += soilFluxes3D::computeStep(totalTimeStep - currentSeconds);
+        endTime = QDateTime::currentDateTime();
+        logInfo("Tempo di calcolo old [ms]: " + QString::number(startTime.msecsTo(endTime)));
+        startTime = QDateTime::currentDateTime();
         currentSecondsNew += soilFluxes3D::New::computeStep(totalTimeStep - currentSecondsNew);
+        endTime = QDateTime::currentDateTime();
+        logInfo("Tempo di calcolo new [ms]: " + QString::number(startTime.msecsTo(endTime)));
 
         if (isModelPaused && currentSeconds < totalTimeStep)
         {
@@ -1267,15 +1274,15 @@ void Project3D::runWaterFluxes3DModel(double totalTimeStep, bool isRestart)
 
     double runoff = soilFluxes3D::getBoundaryWaterSumFlow(BOUNDARY_RUNOFF);
     double runoffNew = soilFluxes3D::New::getTotalBoundaryWaterFlow(soilFluxes3D::New::Runoff);
-    logInfo("runoff [m3]: " + QString::number(runoff) + " ------- Error: " + QString::number(runoff - runoffNew));
+    logInfo("runoff [m3]: " + QString::number(runoff) + " \t\t\t\t ------- Error: " + QString::number(runoff - runoffNew));
 
     double freeDrainage = soilFluxes3D::getBoundaryWaterSumFlow(BOUNDARY_FREEDRAINAGE);
     double freeDrainageNew = soilFluxes3D::New::getTotalBoundaryWaterFlow(soilFluxes3D::New::FreeDrainage);
-    logInfo("free drainage [m3]: " + QString::number(freeDrainage) + " ------- Error: " + QString::number(freeDrainage - freeDrainageNew));
+    logInfo("free drainage [m3]: " + QString::number(freeDrainage) + "\t\t ------- Error: " + QString::number(freeDrainage - freeDrainageNew));
 
     double lateralDrainage = soilFluxes3D::getBoundaryWaterSumFlow(BOUNDARY_FREELATERALDRAINAGE);
     double lateralDrainageNew = soilFluxes3D::New::getTotalBoundaryWaterFlow(soilFluxes3D::New::FreeLateraleDrainage);
-    logInfo("lateral drainage [m3]: " + QString::number(lateralDrainage) + " ------- Error: " + QString::number(lateralDrainage - lateralDrainageNew));
+    logInfo("lateral drainage [m3]: " + QString::number(lateralDrainage) + "\t\t ------- Error: " + QString::number(lateralDrainage - lateralDrainageNew));
 
     double forecastWaterContent = previousTotalWaterContent + runoff + freeDrainage + lateralDrainage
                                   + totalPrecipitation - totalEvaporation - totalTranspiration;
@@ -1285,7 +1292,7 @@ void Project3D::runWaterFluxes3DModel(double totalTimeStep, bool isRestart)
                                      + totalPrecipitation - totalEvaporation - totalTranspiration;
     double currentWaterContentNew = soilFluxes3D::New::getTotalWaterContent();
     double massBalanceErrorNew = currentWaterContentNew - forecastWaterContentNew;
-    logInfo("Mass balance error [m3]: " + QString::number(massBalanceError) + " ------- Error: " + QString::number(massBalanceError - massBalanceErrorNew));
+    logInfo("Mass balance error [m3]: " + QString::number(massBalanceError) + "\t\t ------- Error: " + QString::number(massBalanceError - massBalanceErrorNew));
 
     // //Log temporaneo delle variabili
     // QString matrixLog = soilFluxes3D::getMatrixLog();

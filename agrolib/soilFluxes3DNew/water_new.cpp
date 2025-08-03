@@ -59,7 +59,7 @@ namespace soilFluxes3D::Water
 
         double sum = 0.0;
 
-        #pragma omp parallel for reduction(+:sum) if(solver->getOMPstatus())
+        #pragma omp parallel for if(solver->getOMPstatus()) reduction(+:sum)
         for (uint64_t idx = 0; idx < nodeGrid.numNodes; ++idx)
         {
             double theta = nodeGrid.surfaceFlag[idx] ? (nodeGrid.waterData.pressureHead[idx] - nodeGrid.z[idx]) : computeNodeTheta(idx);     //TO DO
@@ -102,7 +102,7 @@ namespace soilFluxes3D::Water
     {
         double sum = 0;
 
-        #pragma omp parallel for reduction(+:sum) if(solver->getOMPstatus())
+        #pragma omp parallel for if(solver->getOMPstatus()) reduction(+:sum)
         for (uint64_t idx = 0; idx < nodeGrid.numNodes; ++idx)
             if(nodeGrid.waterData.waterFlow[idx] != 0)     //TO DO: evaluate remove check
                 sum += nodeGrid.waterData.waterFlow[idx] * deltaT;
@@ -117,20 +117,20 @@ namespace soilFluxes3D::Water
      * \param parameters solver parameters
      * \return evaluations of water balance
      */
-    balanceResult_t evaluateWaterBalance(uint8_t approxNr, double& bestMBRerror, SolverParameters& parameters)
+    balanceResult_t evaluateWaterBalance(uint8_t approxNr, double& bestMBRerror, double deltaT, SolverParameters& parameters)
     {
-        computeCurrentMassBalance(parameters.deltaTcurr);
+        computeCurrentMassBalance(deltaT);
 
         double currMBRerror = fabs(balanceDataCurrentTimeStep.waterMBR);
 
         //Optimal error
         if(currMBRerror < parameters.MBRThreshold)
         {
-            acceptStep(parameters.deltaTcurr);
+            acceptStep(deltaT);
 
             //Check Stability (Courant)
             double currCWL = nodeGrid.waterData.CourantWaterLevel;
-            if(currCWL < parameters.CourantWaterThreshold)
+            if((currCWL < parameters.CourantWaterThreshold) && (approxNr <= 3) && (currMBRerror < (0.5 * parameters.MBRThreshold)))     //TO DO: change constant with _parameters
             {
                 //increase deltaT
                 parameters.deltaTcurr = (currCWL < 0.5) ? (2 * parameters.deltaTcurr) : (parameters.deltaTcurr / currCWL);
@@ -151,14 +151,14 @@ namespace soilFluxes3D::Water
         //Critical error (unstable system) or last approximation
         if (approxNr == (parameters.maxApproximationsNumber - 1) || currMBRerror > (bestMBRerror * parameters.instabilityFactor))
         {
-            if(parameters.deltaTcurr > parameters.deltaTmin)
+            if(deltaT > parameters.deltaTmin)
             {
                 parameters.deltaTcurr = SF3Dmax(parameters.deltaTcurr / 2, parameters.deltaTmin);
                 return stepHalved;
             }
 
-            restoreBestStep(parameters.deltaTcurr);
-            acceptStep(parameters.deltaTcurr);
+            restoreBestStep(deltaT);
+            acceptStep(deltaT);
             return stepAccepted;
         }
 
@@ -354,21 +354,24 @@ namespace soilFluxes3D::Water
         if(H_s < 0.0001)
             return 0.;
 
+        // Land depression
         if((H_i > H_j && z_i < z_j) || ((H_i < H_j && z_i > z_j)))
             H_s = SF3Dmin(H_s, dH);
 
         double cellDistance = nodeDistance2D(rowIdx, colIdx);
         double slope = dH / cellDistance;
 
-        if(slope < DBL_EPSILON)
+        if(slope < EPSILON)
             return 0.;
 
         double roughness = 0.5 * (nodeGrid.soilSurfacePointers[rowIdx].surfacePtr->roughness + nodeGrid.soilSurfacePointers[colIdx].surfacePtr->roughness);
 
         double v = pow(H_s, 2./3.) * sqrt(slope) / roughness;
+
+        #pragma omp critical
         nodeGrid.waterData.CourantWaterLevel = SF3Dmax(nodeGrid.waterData.CourantWaterLevel, v * deltaT / cellDistance);
 
-        return v * flowArea / dH;
+        return v * flowArea * H_s / dH;
     }
 
     __cudaSpec double infiltration(uint64_t surfNodeIdx, uint64_t soilNodeIdx, double deltaT, double flowArea, meanType_t meanType)
@@ -430,14 +433,14 @@ namespace soilFluxes3D::Water
     }
 
 
-    double JacobiWaterCPU(VectorCPU& vectorX, const MatrixCPU &matrixA, const VectorCPU& vectorB)
+    double JacobiWaterCPU(VectorCPU& vectorX, const MatrixCPU& matrixA, const VectorCPU& vectorB)
     {
-        double currentNorm = -1, infinityNorm = -1;
+        double infinityNorm = -1;
 
         double* tempX = (double*) calloc(vectorX.numElements, sizeof(double));
         std::memcpy(tempX, vectorB.values, vectorB.numElements * sizeof(double));
 
-        #pragma omp parallel for private(currentNorm) reduction(max:infinityNorm) if(solver->getOMPstatus())
+        #pragma omp parallel for if(solver->getOMPstatus()) reduction(max:infinityNorm)
         for (uint64_t rowIdx = 0; rowIdx < matrixA.numRows; ++rowIdx)
         {
             for (uint8_t colIdx = 1; colIdx < matrixA.numColumns[rowIdx]; ++colIdx)
@@ -446,7 +449,7 @@ namespace soilFluxes3D::Water
             if(nodeGrid.surfaceFlag[rowIdx] && tempX[rowIdx] < nodeGrid.z[rowIdx])
                 tempX[rowIdx] = nodeGrid.z[rowIdx];
 
-            currentNorm = fabs(tempX[rowIdx] - vectorX.values[rowIdx]);
+            double currentNorm = fabs(tempX[rowIdx] - vectorX.values[rowIdx]);
 
             double psi = fabs(tempX[rowIdx] - nodeGrid.z[rowIdx]);
             if(psi > 1.)

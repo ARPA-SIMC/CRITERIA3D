@@ -12,14 +12,13 @@
 
 QT -= gui
 
-QMAKE_CXXFLAGS += -openmp:llvm -openmp:experimental
-QMAKE_LFLAGS += -openmp:llvm -NODEFAULTLIB:msvcrt.lib -NODEFAULTLIB:cmt.lib -IGNORE:4217
+QMAKE_CXXFLAGS += -openmp:llvm -openmp:experimental -GL
+QMAKE_LFLAGS += -openmp:llvm -IGNORE:4217 -LTCG
 
 TEMPLATE = lib
 CONFIG += staticlib
-CONFIG += c++20
-CONFIG += debug_and_release
 CONFIG += c++17
+CONFIG += debug_and_release
 
 INCLUDEPATH += ../mathFunctions
 
