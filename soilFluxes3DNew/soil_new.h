@@ -26,7 +26,6 @@ namespace soilFluxes3D::Soil
 
     __cudaSpec double getNodeMeanTemperature(uint64_t nodeIndex);
 
-
     __cudaSpec double nodeDistance2D(uint64_t idx1, uint64_t idx2);
     __cudaSpec double nodeDistance3D(uint64_t idx1, uint64_t idx2);
 }

@@ -8,6 +8,7 @@ namespace soilFluxes3D::New
 {
     #define updateFromPartial(total, partial, field) {if (partial.field) {total.field = *partial.field;}}
 
+    //TO DO: remove not used fields
     struct SolverParametersPartial
     {
         std::optional<double> MBRThreshold;

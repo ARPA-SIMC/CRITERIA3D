@@ -99,7 +99,7 @@ double runoff(long i, long j, TlinkedNode *link, double deltaT, unsigned approxi
     if (Hs < 0.0001)
         return 0.;
 
-    // Land depression Add comment More actions
+    // Land depression
     if ((Hi > Hj && zi < zj) || (Hj > Hi && zj < zi))
         Hs = std::min(Hs, dH);
 

@@ -20,7 +20,7 @@ namespace soilFluxes3D::Water
     void acceptStep(double deltaT);
     void saveBestStep();
     void restoreBestStep(double deltaT);
-    soilFluxes3D::New::balanceResult_t evaluateWaterBalance(uint8_t approxNr, double& bestMBRerror, soilFluxes3D::New::SolverParameters& parameters);
+    soilFluxes3D::New::balanceResult_t evaluateWaterBalance(uint8_t approxNr, double& bestMBRerror, double deltaT, soilFluxes3D::New::SolverParameters& parameters);
 
     void restorePressureHead();
 

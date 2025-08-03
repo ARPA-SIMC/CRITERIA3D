@@ -29,8 +29,6 @@
     #define SF3Dmin(v1, v2) std::min(v1, v2)
 #endif
 
-
-
 #define hostAlloc(ptr, type, size) {if(ptr != nullptr) {return MemoryError;} ptr = static_cast<type*>(calloc(size, sizeof(type))); if(ptr==nullptr) {return MemoryError;}}
 #define hostFill(ptr, size, value) {std::fill(ptr, ptr + size, value);}
 #define hostReset(ptr, size) {std::memset(ptr, 0, size);}
