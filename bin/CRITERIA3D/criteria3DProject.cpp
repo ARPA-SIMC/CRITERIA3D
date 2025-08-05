@@ -1032,7 +1032,7 @@ bool Crit3DProject::runModels(const QDateTime &firstTime, const QDateTime &lastT
 
             QString linSystLog = ""; // soilFluxes3D::getLinSystLog();
             // logData("LinSystInfo", linSystLog);
-            logInfo("LinSystInfo 00\n" + linSystLog);
+            logInfo("LinSystInfo 01\n" + linSystLog);
 
             //rothC maps update must be done hourly, otherwise ETReal data are not stored
             if (processes.computeRothC || processes.computeHydrall)

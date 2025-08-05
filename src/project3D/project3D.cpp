@@ -423,7 +423,7 @@ bool Project3D::initialize3DModel()
 
     // initialize soil fluxes
     int myResult = soilFluxes3D::initializeFluxes(long(nrNodes), int(nrLayers), nrLateralLink, true, false, false);
-    int myResultNew = soilFluxes3D::New::initializeSF3D(long(nrNodes), int(nrLayers), nrLateralLink, true, false, false);
+    int myResultNew = soilFluxes3D::New::initializeSF3D(uint64_t(nrNodes), uint16_t(nrLayers), nrLateralLink, true, false, false);
 
     if(myResult != myResultNew)
         logError("ERROR - initializeFluxes");
