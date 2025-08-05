@@ -16,12 +16,12 @@ SUBDIRS =       ../../agrolib/mathFunctions \
                 ../../agrolib/outputPoints \
                 ../../agrolib/dbMeteoGrid \
                 ../../agrolib/proxyWidget \
-                ../../agrolib/project \
-                ../../agrolib/meteoWidget \
-                ../../agrolib/soilWidget \
-                ../../agrolib/commonDialogs \
                 ../../agrolib/commonChartElements \
+                ../../agrolib/commonDialogs \
+                ../../agrolib/meteoWidget \
+                ../../agrolib/project \
                 ../../agrolib/graphics \
+                ../../agrolib/soilWidget \
                 ../../src/hydrall \
                 ../../src/rothCplusplus \
                 ../../src/snow \

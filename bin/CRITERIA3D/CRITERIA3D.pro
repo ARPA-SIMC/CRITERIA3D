@@ -32,6 +32,7 @@ TEMPLATE = app
 TARGET = CRITERIA3D
 
 VERSION = 1.1.0
+QMAKE_TARGET_COPYRIGHT = "\\251 2025 ARPAE ER - Climate Observatory"
 
 CONFIG += debug_and_release
 CONFIG += c++17
