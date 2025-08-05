@@ -11,7 +11,7 @@ greaterThan(QT_MAJOR_VERSION, 5): QT += core5compat openglwidgets
 
 win32:{
     QMAKE_CXXFLAGS += -openmp:llvm -GL
-    QMAKE_LFLAGS += -openmp:llvm -LTCG
+    QMAKE_LFLAGS += -LTCG
 }
 unix:{
     QMAKE_CXXFLAGS += -fopenmp -flto
