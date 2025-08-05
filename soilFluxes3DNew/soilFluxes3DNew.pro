@@ -14,7 +14,7 @@ QT -= gui
 
 win32:{
     QMAKE_CXXFLAGS += -openmp:llvm -GL
-    QMAKE_LFLAGS += -openmp:llvm -LTCG
+    QMAKE_LFLAGS += -LTCG
 }
 unix:{
     QMAKE_CXXFLAGS += -fopenmp -flto
@@ -63,7 +63,7 @@ win32:{
     TARGET = soilFluxes3DNew
 }
 
-#CONFIG += CUDA_CONFIG
+CONFIG += CUDA_CONFIG
 
 CONFIG(CUDA_CONFIG) {
     DEFINES += CUDA_ENABLED
@@ -83,24 +83,31 @@ CONFIG(CUDA_CONFIG) {
 
     INCLUDEPATH  += $$CUDA_DIR/include
     QMAKE_LIBDIR += $$CUDA_DIR/lib/x64
-
     LIBS += -lcudart -lcuda -lcusparse
 
-    cudaC_FLAGS = -DCUDA_ENABLED -m64 -arch=sm_61  -std=c++17
-    cudaL_FLAGS = -Wno-deprecated-gpu-targets
+    QMAKE_CXXFLAGS -= -GL -flto
+    QMAKE_LFLAGS -= -LTCG -flto
+    HOST_C_FLAGS = $$join(QMAKE_CXXFLAGS,',','"','"')
+    HOST_L_FLAGS = $$join(QMAKE_LFLAGS,',','"','"')
 
-    HOST_FLAGS = $$join(QMAKE_CXXFLAGS,',','"','"')
+    cudaC_FLAGS = -DCUDA_ENABLED -m64  -std=c++17
+    cudaL_FLAGS = -Wno-deprecated-gpu-targets -arch=sm_61
 
-    MSVCRT_LINK_FLAG_DEBUG = "/MDd"
-    MSVCRT_LINK_FLAG_RELEASE = "/MD"
+    CONFIG(debug, debug|release) {
+        MSVCRT_LINK_FLAG = "/MDd"
+        SUBPATH = debug
+    } else {
+        MSVCRT_LINK_FLAG = "/MD"
+        SUBPATH = release
+    }
 
     # Prepare the extra compiler configuration (taken from the nvidia forum - i'm not an expert in this part)
     CUDA_INC = $$join(INCLUDEPATH,'" -I"','-I"','"')
 
     # Compile CUDA source files using NVCC
     cudaC.input = CUDA_SOURCES
-    cudaC.output = ${QMAKE_FILE_BASE}_cuda.o
-    cudaC.commands = $$CUDA_DIR\bin\nvcc -Xcompiler $$MSVCRT_LINK_FLAG_RELEASE -Xcompiler $$HOST_FLAGS $$cudaL_FLAGS -dc $$cudaC_FLAGS $$CUDA_INC $$LIBS -o ${QMAKE_FILE_BASE}_cuda.o -x cu ${QMAKE_FILE_NAME}
+    cudaC.output = $$SUBPATH/${QMAKE_FILE_BASE}_cuda.o
+    cudaC.commands = $$CUDA_DIR\bin\nvcc -Xcompiler $$MSVCRT_LINK_FLAG -Xcompiler $$HOST_C_FLAGS $$cudaL_FLAGS -dc $$cudaC_FLAGS $$CUDA_INC $$LIBS -o $$SUBPATH/${QMAKE_FILE_BASE}_cuda.o -x cu ${QMAKE_FILE_NAME}
     cudaC.dependency_type = TYPE_C
     cudaC.variable_out = CUDA_OBJ
     cudaC.variable_out += OBJECTS
@@ -108,9 +115,9 @@ CONFIG(CUDA_CONFIG) {
 
     # Linking CUDA source files using NVCC - needed for dynamic parallelism
     cudaL.input = CUDA_OBJ
-    cudaL.output = cudaLinked.o
+    cudaL.output = $$SUBPATH/cudaLinked.o
     cudaL.CONFIG += combine
-    cudaL.commands = $$CUDA_DIR\bin\nvcc -Xcompiler $$MSVCRT_LINK_FLAG_RELEASE $$cudaL_FLAGS -dlink -o cudaLinked.o ${QMAKE_FILE_NAME}
+    cudaL.commands = $$CUDA_DIR\bin\nvcc -Xcompiler $$MSVCRT_LINK_FLAG -Xlinker $$HOST_L_FLAGS $$cudaL_FLAGS -dlink -o $$SUBPATH/cudaLinked.o ${QMAKE_FILE_NAME}
     cudaL.depend_command = $$CUDA_DIR/bin/nvcc -g -G -MD $CUDA_INC $NVCC_FLAGS ${QMAKE_FILE_NAME}         #seems not necessary
     QMAKE_EXTRA_COMPILERS += cudaL
 }
