@@ -79,7 +79,7 @@ namespace soilFluxes3D::New
         if(_status == Created)
             return SF3Dok;
 
-        if((_status != Terminated) && (_status != Error))
+        if((_status != Terminated) && (_status != Inizialized))
             return SolverError;
 
         //Destruct matrix variable

@@ -19,7 +19,7 @@ namespace soilFluxes3D::New
 {
     #ifdef CUDA_ENABLED
         GPUSolver GPUSolverObject;
-        bool CUDAactive = false;
+        bool CUDAactive = true;
     #endif
 
     CPUSolver CPUSolverObject;
@@ -222,7 +222,7 @@ namespace soilFluxes3D::New
         {
             hostFree(nodeGrid.linkData[idx].linktype);
             hostFree(nodeGrid.linkData[idx].linkIndex);
-            hostFree(nodeGrid.linkData[idx].linktype);
+            hostFree(nodeGrid.linkData[idx].interfaceArea);
             hostFree(nodeGrid.linkData[idx].waterFlowSum);
             //TO DO -- Heat and Solutes
         }
