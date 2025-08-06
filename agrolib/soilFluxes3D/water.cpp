@@ -71,6 +71,7 @@ double getWaterExchange(long i, TlinkedNode *link, double deltaT)
 double runoff(long i, long j, TlinkedNode *link, double deltaT, unsigned approximationNr)
 {
     double Hi, Hj;
+
     if (approximationNr == 0)
     {
         double flux_i = (nodeList[i].Qw * deltaT) / nodeList[i].volume_area;
@@ -117,6 +118,7 @@ double runoff(long i, long j, TlinkedNode *link, double deltaT, unsigned approxi
 
     // Manning equation
     double v = pow(Hs, 2./3.) * sqrt(slope) / roughness;                // [m s-1]
+
     CourantWater = std::max(CourantWater, v * deltaT / cellDistance);
 
     double flowArea = link->area * Hs;                                  // [m2]
