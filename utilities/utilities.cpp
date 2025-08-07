@@ -505,12 +505,13 @@ bool removeDirectory(QString myPath)
 }
 
 
-bool searchDocPath(QString* docPath)
+bool searchDocPath(QString& docPath)
 {
-    *docPath = "";
+    docPath = "";
 
     QString myPath = QDir::currentPath();
     QString myRoot = QDir::rootPath();
+
     // only for win: application can run on a different drive (i.e. D:\)
     QString winRoot = myPath.left(3);
 
@@ -528,9 +529,10 @@ bool searchDocPath(QString* docPath)
 
         myPath = QFileInfo(myPath).dir().absolutePath();
     }
-    if (! isFound) return false;
+    if (! isFound)
+        return false;
 
-    *docPath = QDir::cleanPath(myPath) + "/DOC/";
+    docPath = QDir::cleanPath(myPath) + "/DOC/";
     return true;
 }
 
