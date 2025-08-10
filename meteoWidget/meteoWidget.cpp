@@ -79,31 +79,43 @@ Crit3DMeteoWidget::Crit3DMeteoWidget(bool isGrid, QString projectPath, Crit3DMet
     QVector<QLineSeries*> vectorLine;
     QVector<QBarSet*> vectorBarSet;
 
-    QString csvPath, defaultPath, stylesPath;
+    QString defaultPath, stylesPath;
     if (! projectPath.isEmpty())
     {
         defaultPath = projectPath + "SETTINGS/Crit3DPlotDefault.csv";
         stylesPath = projectPath + "SETTINGS/Crit3DPlotStyles.csv";
-        if (QFileInfo::exists(defaultPath) == false)
+        if (! QFileInfo::exists(defaultPath))
         {
             defaultPath = "";
         }
-        if (QFileInfo::exists(stylesPath) == false)
+        if (! QFileInfo::exists(stylesPath))
         {
             stylesPath = "";
         }
     }
+
     if (defaultPath.isEmpty() || stylesPath.isEmpty())
     {
-        if (searchDataPath(&csvPath))
+        QString dataPath;
+        if (projectPath.isEmpty())
+        {
+            searchDataPath(&dataPath);
+        }
+        else
+        {
+            // DATA path: two directories up
+            dataPath = QDir::cleanPath(projectPath) + "/../../";
+        }
+
+        if (! dataPath.isEmpty())
         {
             if (defaultPath.isEmpty())
             {
-                defaultPath = csvPath + "SETTINGS/Crit3DPlotDefault.csv";
+                defaultPath = dataPath + "SETTINGS/Crit3DPlotDefault.csv";
             }
             if (stylesPath.isEmpty())
             {
-                stylesPath = csvPath + "SETTINGS/Crit3DPlotStyles.csv";
+                stylesPath = dataPath + "SETTINGS/Crit3DPlotStyles.csv";
             }
         }
     }
