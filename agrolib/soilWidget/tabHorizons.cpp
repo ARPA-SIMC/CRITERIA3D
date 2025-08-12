@@ -749,7 +749,7 @@ void TabHorizons::cellChanged(int row, int column)
             else
             {
                 mySoil->horizon[unsigned(row)].dbData.effectiveCohesion = data.toDouble();
-                tableDb->item(row, column)->setText(QString::number(data.toDouble(), 'f', 0));
+                tableDb->item(row, column)->setText(QString::number(data.toDouble(), 'f', 1));
             }
             break;
         }

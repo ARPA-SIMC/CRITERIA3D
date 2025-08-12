@@ -2381,7 +2381,22 @@ float Project3D::computeFactorOfSafety(int row, int col, unsigned int layerIndex
     double effectiveCohesion = soilList[unsigned(soilIndex)].horizon[horizonIndex].effectiveCohesion;
 
     // unit weight - integration from zero to layerDepth
-    double weightSum = 0;                                       // [kPa]
+    // [kPa]
+    double weightSum = 0;
+
+    // surface
+    long currentNode = indexMap.at(0).value[row][col];
+    if (currentNode != indexMap.at(0).header->flag)
+    {
+        // [m]
+        double surfaceWater = soilFluxes3D::getWaterContent(currentNode);
+        if (surfaceWater > 0)
+        {
+            weightSum += (surfaceWater * GRAVITY);
+        }
+    }
+
+    // sub-surface
     for (unsigned int layer = 1; layer <= layerIndex; layer++)
     {
         long currentNode = indexMap.at(layer).value[row][col];
