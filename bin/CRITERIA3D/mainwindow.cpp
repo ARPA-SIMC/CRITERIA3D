@@ -2428,6 +2428,14 @@ void MainWindow::on_actionCriteria3D_Initialize_triggered()
 
     if (myProject.processes.computeRothC)
     {
+        if (! myProject.processes.computeWater)
+        {
+            QString defaultPath = myProject.getDefaultPath() + PATH_GEO;
+            myProject.rothCModel.BICMapFileName = QFileDialog::getOpenFileName(this, tr("Open average BIC file"), defaultPath,
+                                                          tr("flt files (*.flt)")).toStdString();
+            if (myProject.rothCModel.BICMapFileName.empty())
+                return;
+        }
         if (! myProject.initializeRothC())
         {
             myProject.isRothCInitialized = false;

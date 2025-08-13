@@ -79,6 +79,7 @@
         bool initializeCropMaps();
         bool initializeHydrall();
         bool initializeRothC();
+        double getRothCClayContent(int soilIndex);
         void updateETAndPrecYearlyMaps();
         void dailyUpdateCropMaps(const QDate &myDate);
 
@@ -122,6 +123,7 @@
 
         bool computeRothCModel();
         bool updateRothC(const QDate &myDate);
+        bool dailyUpdateRothC();
 
         bool computeSnowModel();
         void computeSnowPoint(int row, int col);

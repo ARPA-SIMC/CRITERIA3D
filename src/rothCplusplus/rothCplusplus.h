@@ -82,6 +82,8 @@ public:
     void setBIC(double myBIC);
     void cumulateBIC(double myBIC);
     double getBIC();
+    void setAvgBIC(double myAvgBIC);
+    double getAvgBIC();
     void setWaterLoss(double myWaterLoss);
     void cumulateWaterLoss(double myWaterLoss);
     double getWaterLoss();
@@ -90,6 +92,7 @@ private:
     double temp;
     double prec;
     double BIC;
+    double avgBIC;
     double waterLoss; //hourly water loss is temporarily stored here, then cumulated BIC is calculated
 };
 
@@ -107,7 +110,11 @@ private:
     gis::Crit3DRasterGrid* _depthMap; //[?]
     gis::Crit3DRasterGrid* _clayMap; // [-]
 
+
 public:
+
+    gis::Crit3DRasterGrid* _avgYearlyTemp; //[°C]
+    gis::Crit3DRasterGrid* _avgBIC; //[mm?]
     bool isInitialized;
 
 
@@ -134,6 +141,8 @@ public:
     double getClay(int row, int col);
     void setDepth(double myDepth, int row, int col);
     double getDepth(int row, int col);
+
+    double getAvgBIC(int row, int col);
 };
 
 struct Crit3DRothCRadioCarbon {
@@ -159,6 +168,7 @@ public:
     void initialize();
     bool computeRothCPoint();
     int main();
+    bool loadAvgBIC(std::string errorStr);
 
     double getInputC();
     void setInputC(double myInputC);
@@ -190,6 +200,10 @@ public:
     Crit3DRothCRadioCarbon radioCarbon;
     Crit3DRothCplusplusMaps map;
 
+    bool isInitializing;
+
+    std::string BICMapFileName;
+
 
 private:
     double decomposablePlantMatter; //[t C /ha]
@@ -216,6 +230,7 @@ private:
     double RMF_plantCover(double plantCover);
     double RMF_Moist(double RAIN, double PEVAP, bool PC);
     double RMF_Moist(double monthlyBIC, bool PC);
+    double RMF_Moist_Simplified(double monthlyBIC, double avgBIC);
     double RMF_Tmp(double TEMP);
     void decomp(int timeFact,
                 double &modifyingRate);
