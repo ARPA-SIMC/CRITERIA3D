@@ -3105,6 +3105,9 @@ void Crit3DProject::shadowColor(const Crit3DColor &colorIn, Crit3DColor &colorOu
 
 bool Crit3DProject::update3DColors(gis::Crit3DRasterGrid *rasterPointer)
 {
+    const double DEFAULT_ALPHA = 0.7;
+    const double ALPHA_POW = 0.25;
+
     if (openGlGeometry == nullptr)
     {
         errorString = "Initialize 3D openGlGeometry before.";
@@ -3155,7 +3158,7 @@ bool Crit3DProject::update3DColors(gis::Crit3DRasterGrid *rasterPointer)
                         if (! isEqual(value, rasterPointer->header->flag))
                         {
                             Crit3DColor* variableColor = rasterPointer->colorScale->getColor(value);
-                            double alpha = 0.66;
+                            double alpha = DEFAULT_ALPHA;
 
                             // check outliers
                             if (rasterPointer->colorScale->isHideMinimum())
@@ -3166,7 +3169,8 @@ bool Crit3DProject::update3DColors(gis::Crit3DRasterGrid *rasterPointer)
                             if (rasterPointer->colorScale->isTransparent())
                             {
                                 double step = std::max(0., value - rasterPointer->colorScale->minimum());
-                                alpha = sqrt(std::min(1., step/variableRange));
+                                alpha = std::min(1., step/variableRange);
+                                alpha = pow(alpha, ALPHA_POW);
                             }
                             mixColor(dtmColor1, *variableColor, color1, alpha);
                         }
@@ -3175,7 +3179,7 @@ bool Crit3DProject::update3DColors(gis::Crit3DRasterGrid *rasterPointer)
                         if (! isEqual(value, rasterPointer->header->flag))
                         {
                             Crit3DColor* variableColor = rasterPointer->colorScale->getColor(value);
-                            double alpha = 0.66;
+                            double alpha = DEFAULT_ALPHA;
 
                             // check minimum (transparent)
                             if (rasterPointer->colorScale->isHideMinimum())
@@ -3186,7 +3190,8 @@ bool Crit3DProject::update3DColors(gis::Crit3DRasterGrid *rasterPointer)
                             if (rasterPointer->colorScale->isTransparent())
                             {
                                 double step = std::max(0., value - rasterPointer->colorScale->minimum());
-                                alpha = sqrt(std::min(1., step/variableRange));
+                                alpha = std::min(1., step/variableRange);
+                                alpha = pow(alpha, ALPHA_POW);
                             }
                             mixColor(dtmColor3, *variableColor, color3, alpha);
                         }
@@ -3205,7 +3210,7 @@ bool Crit3DProject::update3DColors(gis::Crit3DRasterGrid *rasterPointer)
                             if (! isEqual(value, rasterPointer->header->flag))
                             {
                                 Crit3DColor* variableColor = rasterPointer->colorScale->getColor(value);
-                                double alpha = 0.66;
+                                double alpha = DEFAULT_ALPHA;
 
                                 // check minimum
                                 if (rasterPointer->colorScale->isHideMinimum())
@@ -3216,7 +3221,8 @@ bool Crit3DProject::update3DColors(gis::Crit3DRasterGrid *rasterPointer)
                                 if (rasterPointer->colorScale->isTransparent())
                                 {
                                     double step = std::max(0., value - rasterPointer->colorScale->minimum());
-                                    alpha = sqrt(std::min(1., step/variableRange));
+                                    alpha = std::min(1., step/variableRange);
+                                    alpha = pow(alpha, ALPHA_POW);
                                 }
                                 mixColor(dtmColor2, *variableColor, color2, alpha);
                             }
@@ -3240,7 +3246,7 @@ bool Crit3DProject::update3DColors(gis::Crit3DRasterGrid *rasterPointer)
                             if (! isEqual(value, rasterPointer->header->flag))
                             {
                                 Crit3DColor* variableColor = rasterPointer->colorScale->getColor(value);
-                                double alpha = 0.66;
+                                double alpha = DEFAULT_ALPHA;
 
                                 if (rasterPointer->colorScale->isHideMinimum())
                                 {
@@ -3251,7 +3257,8 @@ bool Crit3DProject::update3DColors(gis::Crit3DRasterGrid *rasterPointer)
                                 if (rasterPointer->colorScale->isTransparent())
                                 {
                                     double step = std::max(0., value - rasterPointer->colorScale->minimum());
-                                    alpha = sqrt(std::min(1., step/variableRange));
+                                    alpha = std::min(1., step/variableRange);
+                                    alpha = pow(alpha, ALPHA_POW);
                                 }
                                 mixColor(dtmColor2, *variableColor, color2, alpha);
                             }

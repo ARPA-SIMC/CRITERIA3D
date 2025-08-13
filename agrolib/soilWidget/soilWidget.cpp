@@ -68,8 +68,8 @@ Crit3DSoilWidget::Crit3DSoilWidget(const QString &imgPath)
     QString saveButtonPath;
     if (! imgPath.isEmpty())
     {
-        picPath = imgPath + "textural_soil.png";
-        saveButtonPath = imgPath + "saveButton.png";
+        picPath = imgPath + "/textural_soil.png";
+        saveButtonPath = imgPath + "/saveButton.png";
     }
     else
     {
@@ -82,6 +82,10 @@ Crit3DSoilWidget::Crit3DSoilWidget(const QString &imgPath)
     {
         labelPic = new QLabel();
         labelPic->setPixmap(pic);
+    }
+    else
+    {
+        QMessageBox::critical(nullptr, "", picPath + " is missing.");
     }
 
     QPixmap pixmap(saveButtonPath);

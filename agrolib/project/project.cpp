@@ -4120,9 +4120,10 @@ gis::Crit3DRasterGrid* Project::getHourlyMeteoRaster(meteoVariable myVar)
 /*!
     \name importHourlyMeteoData
     \brief import hourly meteo data from .csv files
-    \details format:
+    \details default format:
     DATE(yyyy-mm-dd), HOUR, TAVG, PREC, RHAVG, RAD, W_SCAL_INT
-    the filename must be equal to the pointcode
+    - the filename must be equal to the pointcode
+    - header is mandatory
 */
 void Project::importHourlyMeteoData(const QString& csvFileName, bool importAllFiles, bool deletePreviousData)
 {
@@ -4142,15 +4143,32 @@ void Project::importHourlyMeteoData(const QString& csvFileName, bool importAllFi
     }
 
     // cycle on files
+    setProgressBar("Load hourly data..", fileList.count());
+    int nrLoaded = 0;
     for (int i=0; i < fileList.count(); i++)
     {
         QString logStr = "";
         QString fileNameComplete = filePath + fileList[i];
 
         if (meteoPointsDbHandler->importHourlyMeteoData(fileNameComplete, deletePreviousData, logStr))
-            logInfo(logStr);
+        {
+            nrLoaded++;
+            if (! logStr.isEmpty())
+            {
+                logInfoGUI(logStr);
+            }
+        }
         else
             logError(logStr);
+
+        updateProgressBar(i+1);
+    }
+    closeProgressBar();
+
+    if (nrLoaded > 0)
+    {
+        // reload meteoPoint data are changed
+        loadMeteoPointsDB(dbPointsFileName);
     }
 }
 
@@ -4812,10 +4830,7 @@ bool Project::deleteMeteoPoints(const QList<QString>& pointList)
     }
 
     // reload meteoPoint, point properties table is changed
-    QString dbName = dbPointsFileName;
-    closeMeteoPointsDB();
-
-    return loadMeteoPointsDB(dbName);
+    return loadMeteoPointsDB(dbPointsFileName);
 }
 
 
