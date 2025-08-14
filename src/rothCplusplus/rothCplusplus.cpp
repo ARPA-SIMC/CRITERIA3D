@@ -517,6 +517,16 @@ void Crit3DRothCplusplus::getStateVariables(int row, int col)
     map.soilOrganicMatter->value[row][col] = soilOrganicCarbon;
 }
 
+bool Crit3DRothCplusplus::checkCell()
+{
+    return (isEqual(decomposablePlantMatter, NODATA) ||
+            isEqual(resistantPlantMatter, NODATA) ||
+            isEqual(microbialBiomass, NODATA) ||
+            isEqual(humifiedOrganicMatter, NODATA) ||
+            isEqual(inorganicMatter, NODATA) ||
+            isEqual(soilOrganicCarbon, NODATA));
+}
+
 void Crit3DRothCplusplus::setInputC(double myInputC)
 {
     inputC = myInputC;

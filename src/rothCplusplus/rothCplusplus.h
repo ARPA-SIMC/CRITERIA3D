@@ -201,6 +201,7 @@ public:
     void resetInputVariables();
     void setStateVariables(int row, int col);
     void getStateVariables(int row, int col);
+    bool checkCell();
 
     void scrivi_csv(const std::string& nome_file, const std::vector<std::vector<double>>& dati) ;
 
@@ -222,7 +223,7 @@ private:
     double soilOrganicCarbon; //[t C /ha]
     double inputC; //[t C /ha]
     double inputFYM; //[t C /ha]
-    double plantCover; // formerly bool
+    double plantCover; // formerly bool [-]
 
     double decomposablePMResistantPMRatio; //[-]
     double totalRage;

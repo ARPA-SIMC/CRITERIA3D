@@ -600,18 +600,16 @@ bool Crit3DProject::updateRothC(const QDate &myDate)
 
                     rothCModel.setStateVariables(row, col);
 
+                    if (! rothCModel.checkCell())
+                    {
+                        //chiamata a rothC
+                        computeRothCModel();
 
+                        rothCModel.getStateVariables(row, col);
 
-                    //chiamata a rothC
-                    computeRothCModel();
-
-                    rothCModel.getStateVariables(row, col);
-
-
-
-                    //reset meteo variables and C input for next month/year
-                    rothCModel.resetInputVariables();
-
+                        //reset meteo variables and C input
+                        rothCModel.resetInputVariables();
+                    }
                 }
             }
         }
@@ -622,29 +620,39 @@ bool Crit3DProject::updateRothC(const QDate &myDate)
 
 void Crit3DProject::setRothCVariables(int row, int col)
 {
+    //soil variables
     rothCModel.setDepth(rothCModel.map.getDepth(row, col));
     rothCModel.setClay(rothCModel.map.getClay(row, col));
+    if (rothCModel.isInitializing)
+    {
+        rothCModel.setPlantCover(0.7); //TODO
+    }
+
+    //meteo variables
     rothCModel.meteoVariable.setPrecipitation(yearlyPrec.getValueFromRowCol(row, col));
     rothCModel.meteoVariable.setWaterLoss(yearlyET0.getValueFromRowCol(row, col));
     rothCModel.meteoVariable.setBIC(yearlyPrec.getValueFromRowCol(row, col) - yearlyET0.getValueFromRowCol(row, col));
     rothCModel.meteoVariable.setTemperature(rothCModel.map.avgYearlyTemp->getValueFromRowCol(row, col));
     rothCModel.meteoVariable.setAvgBIC(rothCModel.map.getAvgBIC(row, col));
+
+    //carbon input is taken from hydrall, otherwise TODO
     if (processes.computeHydrall && ! isEqual(hydrallModel.getOutputC(),NODATA))
         rothCModel.setInputC(hydrallModel.getOutputC()); //read from hydrall (eventually from crop too?)  TODO CHECK
     else
         rothCModel.setInputC(8);
 
-    double SWC = 0;
-
+    //swc comes from water model. during initialization phase, it is not used
+    double SWC = NODATA;
     if (! rothCModel.isInitializing)
     {
+        SWC = 0;
         for (int i = 0; i < (int)hydrallModel.soil.waterContent.size(); i++)
         {
             SWC += hydrallModel.soil.waterContent[i]*hydrallModel.soil.nodeThickness[i]*1000;
         }
     }
-
     rothCModel.setSWC(SWC);
+
 
     return;
 }
