@@ -67,48 +67,48 @@ using namespace std;
 
 void Crit3DRothCplusplusMaps::initialize(const gis::Crit3DRasterGrid& DEM)
 {
-    _decomposablePlantMaterial = new gis::Crit3DRasterGrid;
-    _resistantPlantMaterial  = new gis::Crit3DRasterGrid;
-    _microbialBiomass = new gis::Crit3DRasterGrid;
-    _humifiedOrganicMatter = new gis::Crit3DRasterGrid;
-    _inertOrganicMatter = new gis::Crit3DRasterGrid;
-    _soilOrganicMatter = new gis::Crit3DRasterGrid;
+    decomposablePlantMaterial = new gis::Crit3DRasterGrid;
+    resistantPlantMaterial  = new gis::Crit3DRasterGrid;
+    microbialBiomass = new gis::Crit3DRasterGrid;
+    humifiedOrganicMatter = new gis::Crit3DRasterGrid;
+    inertOrganicMatter = new gis::Crit3DRasterGrid;
+    soilOrganicMatter = new gis::Crit3DRasterGrid;
 
     _depthMap = new gis::Crit3DRasterGrid;
     _clayMap = new gis::Crit3DRasterGrid;
 
-    _avgBIC = new gis::Crit3DRasterGrid;
-    _avgYearlyTemp = new gis::Crit3DRasterGrid;
+    avgBIC = new gis::Crit3DRasterGrid;
+    avgYearlyTemp = new gis::Crit3DRasterGrid;
 
 
-    _decomposablePlantMaterial->initializeGrid(DEM);
-    _resistantPlantMaterial->initializeGrid(DEM);
-    _microbialBiomass->initializeGrid(DEM);
-    _humifiedOrganicMatter->initializeGrid(DEM);
-    _inertOrganicMatter->initializeGrid(DEM);
-    _soilOrganicMatter->initializeGrid(DEM);
+    decomposablePlantMaterial->initializeGrid(DEM);
+    resistantPlantMaterial->initializeGrid(DEM);
+    microbialBiomass->initializeGrid(DEM);
+    humifiedOrganicMatter->initializeGrid(DEM);
+    inertOrganicMatter->initializeGrid(DEM);
+    soilOrganicMatter->initializeGrid(DEM);
 
     _depthMap->initializeGrid(DEM);
     _clayMap->initializeGrid(DEM);
 
-    _avgBIC->initializeGrid(DEM);
-    _avgYearlyTemp->initializeGrid(DEM);
+    avgBIC->initializeGrid(DEM);
+    avgYearlyTemp->initializeGrid(DEM);
 }
 
 void Crit3DRothCplusplusMaps::clear()
 {
-    _decomposablePlantMaterial = new gis::Crit3DRasterGrid;
-    _resistantPlantMaterial = new gis::Crit3DRasterGrid;
-    _microbialBiomass = new gis::Crit3DRasterGrid;
-    _humifiedOrganicMatter = new gis::Crit3DRasterGrid;
-    _inertOrganicMatter = new gis::Crit3DRasterGrid;
-    _soilOrganicMatter = new gis::Crit3DRasterGrid;
+    decomposablePlantMaterial = new gis::Crit3DRasterGrid;
+    resistantPlantMaterial = new gis::Crit3DRasterGrid;
+    microbialBiomass = new gis::Crit3DRasterGrid;
+    humifiedOrganicMatter = new gis::Crit3DRasterGrid;
+    inertOrganicMatter = new gis::Crit3DRasterGrid;
+    soilOrganicMatter = new gis::Crit3DRasterGrid;
 
     _depthMap = new gis::Crit3DRasterGrid;
     _clayMap = new gis::Crit3DRasterGrid;
 
-    _avgBIC = new gis::Crit3DRasterGrid;
-    _avgYearlyTemp = new gis::Crit3DRasterGrid;
+    avgBIC = new gis::Crit3DRasterGrid;
+    avgYearlyTemp = new gis::Crit3DRasterGrid;
 }
 
 
@@ -133,7 +133,7 @@ double Crit3DRothCplusplusMaps::getDepth(int row, int col)
 
 double Crit3DRothCplusplusMaps::getAvgBIC(int row, int col)
 {
-    return _avgBIC->value[row][col];
+    return avgBIC->value[row][col];
 }
 
 Crit3DRothCMeteoVariable::Crit3DRothCMeteoVariable()
@@ -495,6 +495,26 @@ void Crit3DRothCplusplus::resetInputVariables()
     meteoVariable.setBIC(0);
     meteoVariable.setPrecipitation(0);
     meteoVariable.setWaterLoss(0);
+}
+
+void Crit3DRothCplusplus::setStateVariables(int row, int col)
+{
+    decomposablePlantMatter = map.decomposablePlantMaterial->value[row][col];
+    resistantPlantMatter = map.resistantPlantMaterial->value[row][col];
+    microbialBiomass = map.microbialBiomass->value[row][col];
+    humifiedOrganicMatter = map.humifiedOrganicMatter->value[row][col];
+    inorganicMatter =  map.inertOrganicMatter->value[row][col];
+    soilOrganicCarbon = map.soilOrganicMatter->value[row][col];
+}
+
+void Crit3DRothCplusplus::getStateVariables(int row, int col)
+{
+    map.decomposablePlantMaterial->value[row][col] = decomposablePlantMatter;
+    map.resistantPlantMaterial->value[row][col] = resistantPlantMatter;
+    map.microbialBiomass->value[row][col] = microbialBiomass;
+    map.humifiedOrganicMatter->value[row][col] = humifiedOrganicMatter;
+    map.inertOrganicMatter->value[row][col] = inorganicMatter;
+    map.soilOrganicMatter->value[row][col] = soilOrganicCarbon;
 }
 
 void Crit3DRothCplusplus::setInputC(double myInputC)

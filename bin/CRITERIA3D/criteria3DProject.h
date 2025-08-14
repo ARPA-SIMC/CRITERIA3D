@@ -124,6 +124,7 @@
         bool computeRothCModel();
         bool updateRothC(const QDate &myDate);
         bool dailyUpdateRothC();
+        void setRothCVariables(int row, int col);
 
         bool computeSnowModel();
         void computeSnowPoint(int row, int col);

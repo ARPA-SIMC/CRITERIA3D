@@ -94,7 +94,7 @@ Crit3DHydrallPlant::Crit3DHydrallPlant()
     woodDensity = RHOS;
     specificLeafArea = NODATA; //[m2 kg-1]
     psiLeaf = NODATA;
-    psiSoilCritical = NODATA;
+    psiSoilCritical = NODATA; //could be removed
     psiLeafMinimum = NODATA; //[MPa]
     transpirationPerUnitFoliageAreaCritical = NODATA;
     leafAreaIndexCanopy = NODATA;
@@ -542,12 +542,12 @@ void Crit3DHydrall::setDerivedWeatherVariables(double directIrradiance, double d
     return;
 }
 
-void Crit3DHydrall::setPlantVariables(int forestIndex, double chlorophyllContent, double height, double psiMinimum, double psiCritical)
+void Crit3DHydrall::setPlantVariables(int forestIndex, double chlorophyllContent, double height, double psiMinimum)
 {
     plant.myChlorophyllContent = chlorophyllContent;
     plant.height = height;
     plant.psiLeafMinimum = psiMinimum;
-    plant.psiSoilCritical = psiCritical;
+    //plant.psiSoilCritical = psiCritical;
 
     parameterWangLeuning.maxCarboxRate = plant.tableEcophysiologicalParameters[conversionTableVector[forestIndex]].Vcmo;
     plant.isAmphystomatic = plant.tableEcophysiologicalParameters[conversionTableVector[forestIndex]].isAmphystomatic;
