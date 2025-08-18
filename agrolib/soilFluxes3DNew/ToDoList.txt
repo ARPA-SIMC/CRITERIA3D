@@ -1,8 +1,5 @@
 Minor
- - Fix headers (cstring, cmath, stdlib.h)
- - Fix constant (include cfloat)
 
- - Rename files
  - Move from enum to enum class
  - Remove using namespace
  - use #pragma once instead of #ifndef-#define
@@ -12,3 +9,7 @@ Minor
 Major 
  - Heat CPU
  - Logging	-> Minor: define CONFIG to toggle it
+ 
+ - GPU implementation
+
+ - Check solutions (MATLAB)
