@@ -28,7 +28,7 @@
         Q_OBJECT
 
         public:
-            Crit3DSoilWidget();
+            Crit3DSoilWidget(const QString &imgPath);
 
             void setDbSoil(QSqlDatabase dbOpened, QString soilCode);
 

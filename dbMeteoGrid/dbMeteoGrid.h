@@ -121,6 +121,8 @@
         bool loadGridAllMonthlyData(QString &errorStr, QDate firstDate, QDate lastDate);
         bool loadGridMonthlySingleDate(QString &errorStr, const QString &meteoPoint, const QDate &myDate);
 
+        bool importDailyDataCsv(QString &errorStr, const QString &csvFileName, QList<QString> &meteoVarList);
+
         std::vector<float> loadGridDailyVar(const QString &meteoPointId, meteoVariable variable,
                                             const QDate &first, const QDate &last, QDate &firstDateDB, QString &errorStr);
 

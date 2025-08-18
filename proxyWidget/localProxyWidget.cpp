@@ -56,7 +56,7 @@ Crit3DLocalProxyWidget::Crit3DLocalProxyWidget(double x, double y, double zDEM, 
     stationWeights.setText("See weight of stations");
 
     //temporaneamente disattivati
-    detrended.setVisible(true);
+    detrended.setVisible(false);
     QLabel *r2Label = new QLabel(tr("R2"));
 
     r2.setMaximumWidth(60);
@@ -195,7 +195,12 @@ Crit3DLocalProxyWidget::Crit3DLocalProxyWidget(double x, double y, double zDEM, 
     QAction* updateStations = new QAction(tr("&Update"), this);
     editMenu->addAction(updateStations);
 
+    QMenu *detailsMenu = new QMenu("Detrending details");
+    QAction* parametersDetails = new QAction(tr("&Parameters"));
+    detailsMenu->addAction(parametersDetails);
+
     menuBar->addMenu(editMenu);
+    menuBar->addMenu(detailsMenu);
     mainLayout->setMenuBar(menuBar);
 
     setLayout(mainLayout);
@@ -206,6 +211,7 @@ Crit3DLocalProxyWidget::Crit3DLocalProxyWidget(double x, double y, double zDEM, 
     connect(&detrended, &QCheckBox::toggled, [=](){ this->plot(); });
     connect(&stationWeights, &QCheckBox::toggled, [=] () {this->plot();});
     connect(updateStations, &QAction::triggered, this, [=](){ this->plot(); });
+    connect(parametersDetails, &QAction::triggered, this, [=](){ this->showParametersDetails(); });
 
     if (_currentFrequency != noFrequency)
     {
@@ -686,4 +692,136 @@ void Crit3DLocalProxyWidget::modelLRClicked(int toggled)
 
         chartView->drawModelLapseRate(point_vector);
     }
+}
+
+void Crit3DLocalProxyWidget::showParametersDetails()
+{
+    QDialog myDialog;
+    QTextBrowser textBrowser;
+    if (! _interpolationSettings->getUseGlocalDetrending())
+    {
+        textBrowser.setText("Details available for glocal detrending only.");
+    }
+    else
+    {
+        myDialog.setWindowTitle("Glocal detrending details");
+
+        int areaCode = gis::getValueFromXY(*_interpolationSettings->getMacroAreasMap(), _x, _y);
+        std::string errorStdStr;
+        if (areaCode < (int)_interpolationSettings->getMacroAreas().size())
+        {
+            Crit3DMacroArea myArea = _interpolationSettings->getMacroAreas()[areaCode];
+            std::vector<int> stations = myArea.getMeteoPoints();
+
+            outInterpolationPoints.clear();
+            checkAndPassDataToInterpolation(_quality, myVar, _meteoPoints, _nrMeteoPoints, getCurrentTime(), _SQinterpolationSettings,
+                                            _interpolationSettings, _meteoSettings, _climateParameters,
+                                            outInterpolationPoints, _checkSpatialQuality, errorStdStr);
+
+            for (int k = 0; k < (int)stations.size(); k++)
+            {
+                for (int j = 0; j < (int)outInterpolationPoints.size(); j++)
+                    if (outInterpolationPoints[j].index == stations[k])
+                    {
+                        subsetInterpolationPoints.push_back(outInterpolationPoints[j]);
+                    }
+            }
+
+            setMultipleDetrendingHeightTemperatureRange(_interpolationSettings);
+            _interpolationSettings->setCurrentCombination(_interpolationSettings->getSelectedCombination());
+            _interpolationSettings->clearFitting();
+
+            multipleDetrendingMain(subsetInterpolationPoints, _interpolationSettings, myVar, errorStdStr);
+
+            std::vector<std::vector<double>> parameters = _interpolationSettings->getFittingParameters();
+            Crit3DProxyCombination myCombination = _interpolationSettings->getCurrentCombination();
+            unsigned int significantProxyCounter = 0;
+
+            if (! parameters.empty())
+            {
+                textBrowser.append(QString("Parameters relative to macro area nr. " + QString::number(areaCode)));
+                int elevationPos = NODATA;
+                for (unsigned int pos=0; pos < _interpolationSettings->getSelectedCombination().getProxySize(); pos++)
+                {
+                    if (getProxyPragaName(_interpolationSettings->getProxy(pos)->getName()) == proxyHeight)
+                        elevationPos = pos;
+                }
+
+                QString heightParameters;
+                if (elevationPos == NODATA || ! myCombination.isProxyActive(elevationPos))
+                {
+                    textBrowser.append(QString("\nNo height proxy present or height proxy not active."));
+                }
+                else
+                {
+                    if (! myCombination.isProxySignificant(elevationPos))
+                    {
+                        textBrowser.append(QString("\nHeight proxy is not significant."));
+                    }
+                    else
+                    {
+                        significantProxyCounter++;
+                        textBrowser.append(QString("\nHeight proxy:"));
+
+                        if (parameters.front().size() >= 4)
+                            heightParameters = "\nPar 1: " + QString::number(parameters.front()[0], 'f', 4) +
+                                               ", par 2: " + QString::number(parameters.front()[1], 'f', 4) +
+                                               ", par 3: " + QString::number(parameters.front()[2], 'f', 4) +
+                                               ", par 4: " + QString::number(parameters.front()[3], 'f', 4);
+
+                        if (parameters.front().size() >= 5)
+                            heightParameters += ", par 5: " + QString::number(parameters.front()[4], 'f', 4);
+
+                        if (parameters.front().size() == 6)
+                            heightParameters += ", par 6: " + QString::number(parameters.front()[5], 'f', 4);
+                    }
+                    heightParameters += "\n";
+                    textBrowser.append(heightParameters);
+                }
+
+                std::vector<double> slopes;
+                double intercept = NODATA;
+                for (unsigned int pos=0; pos < _interpolationSettings->getSelectedCombination().getProxySize(); pos++)
+                {
+                    QString temp;
+
+                    if (! myCombination.isProxyActive(pos))
+                        textBrowser.append("Proxy "+ QString::fromStdString(_interpolationSettings->getProxy(pos)->getName()) + " not active.");
+                    else if (! myCombination.isProxySignificant(pos))
+                        textBrowser.append("Proxy "+ QString::fromStdString(_interpolationSettings->getProxy(pos)->getName()) + " not significant.");
+                    else if (myCombination.isProxyActive(pos) && myCombination.isProxySignificant(pos) &&
+                             getProxyPragaName(_interpolationSettings->getProxy(pos)->getName()) != proxyHeight &&
+                             parameters.size() > significantProxyCounter)
+                    {
+                        textBrowser.append("Proxy " + QString::fromStdString(_interpolationSettings->getProxy(pos)->getName()) + " significant.");
+                        slopes.push_back(parameters[significantProxyCounter][0]);
+                        intercept = parameters[significantProxyCounter][1];
+                        significantProxyCounter++;
+                    }
+
+
+                }
+                QString equation;
+                if (! slopes.empty())
+                {
+                    equation = "\ny = ";
+                    for (unsigned int i = 0; i < slopes.size(); i++)
+                    {
+                        equation += ("(" + QString::number(slopes[i]) + ") * x" + QString::number(i) + " + ");
+                    }
+                    equation += ("(" + QString::number(intercept) + ")");
+                }
+                textBrowser.append(equation);
+            }
+        }
+    }
+
+
+    QVBoxLayout mainLayout;
+    mainLayout.addWidget(&textBrowser);
+
+    myDialog.setLayout(&mainLayout);
+    myDialog.setFixedSize(700,300);
+    myDialog.exec();
+
 }
