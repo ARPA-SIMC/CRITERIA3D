@@ -1,5 +1,5 @@
-#include "soil_new.h"
-#include "solver_new.h"
+#include "soilPhysics.h"
+#include "solver.h"
 #include "otherFunctions.h"
 #include <cassert>
 #include <iostream>
