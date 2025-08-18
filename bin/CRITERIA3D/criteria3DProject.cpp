@@ -1131,7 +1131,7 @@ bool Crit3DProject::runModels(const QDateTime &firstTime, const QDateTime &lastT
             // QString vectorLog = soilFluxes3D::getVectorLog();
             // logData("VectorFinal", vectorLog);
 
-            QString linSystLog = "  "; // soilFluxes3D::getLinSystLog();
+            QString linSystLog = ""; // soilFluxes3D::getLinSystLog();
             // logData("LinSystInfo", linSystLog);
             logInfo("LinSystInfo 00\n" + linSystLog);
 
