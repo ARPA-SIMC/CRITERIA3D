@@ -565,7 +565,7 @@ namespace soilFluxes3D::Water
                     break;
             }
 
-            if(abs(nodeGrid.boundaryData.waterFlowRate[nodeIdx]) < DBL_EPSILON)
+            if(std::fabs(nodeGrid.boundaryData.waterFlowRate[nodeIdx]) < DBL_EPSILON)
                 nodeGrid.boundaryData.waterFlowRate[nodeIdx] = 0.;
             else
                 nodeGrid.waterData.waterFlow[nodeIdx] += nodeGrid.boundaryData.waterFlowRate[nodeIdx];
