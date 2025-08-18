@@ -2431,6 +2431,14 @@ void MainWindow::on_actionCriteria3D_Initialize_triggered()
 
     if (myProject.processes.computeRothC)
     {
+        if (! myProject.processes.computeWater)
+        {
+            QString defaultPath = myProject.getDefaultPath() + PATH_GEO;
+            myProject.rothCModel.BICMapFileName = QFileDialog::getOpenFileName(this, tr("Open average BIC file"), defaultPath,
+                                                          tr("flt files (*.flt)")).toStdString();
+            if (myProject.rothCModel.BICMapFileName.empty())
+                return;
+        }
         if (! myProject.initializeRothC())
         {
             myProject.isRothCInitialized = false;
@@ -3672,6 +3680,97 @@ void MainWindow::on_actionSave_outputRaster_triggered()
     if (! gis::writeEsriGrid(fileName, rasterOutput->getRasterPointer(), errorStr))
     {
         myProject.logError(QString::fromStdString(errorStr));
+    }
+}
+
+
+void MainWindow::on_actionTree_cover_map_triggered()
+{
+
+    if (myProject.treeCoverMap.isLoaded)
+    {
+        setColorScale(noMeteoTerrain, myProject.treeCoverMap.colorScale);
+        setCurrentRasterOutput(&(myProject.treeCoverMap));
+        ui->labelOutputRaster->setText("Tree cover");
+    }
+    else
+    {
+        myProject.logError("Load a tree cover map before.");
+    }
+}
+
+
+void MainWindow::on_actionDecomposable_plant_matter_triggered()
+{
+    if (myProject.rothCModel.map.decomposablePlantMaterial->isLoaded)
+    {
+        setColorScale(noMeteoTerrain, myProject.rothCModel.map.decomposablePlantMaterial->colorScale);
+        setCurrentRasterOutput((myProject.rothCModel.map.decomposablePlantMaterial));
+        ui->labelOutputRaster->setText("Decomposable plant matter");
+    }
+    else
+    {
+        myProject.logError("Error while loading decomposable plant matter.");
+    }
+}
+
+
+void MainWindow::on_actionResistant_plant_matter_triggered()
+{
+    if (myProject.rothCModel.map.resistantPlantMaterial->isLoaded)
+    {
+        setColorScale(noMeteoTerrain, myProject.rothCModel.map.resistantPlantMaterial->colorScale);
+        setCurrentRasterOutput((myProject.rothCModel.map.resistantPlantMaterial));
+        ui->labelOutputRaster->setText("Resistant plant matter");
+    }
+    else
+    {
+        myProject.logError("Error while loading resistant plant matter.");
+    }
+}
+
+
+void MainWindow::on_actionMicrobial_biomass_triggered()
+{
+    if (myProject.rothCModel.map.microbialBiomass->isLoaded)
+    {
+        setColorScale(noMeteoTerrain, myProject.rothCModel.map.microbialBiomass->colorScale);
+        setCurrentRasterOutput((myProject.rothCModel.map.microbialBiomass));
+        ui->labelOutputRaster->setText("Microbial biomass");
+    }
+    else
+    {
+        myProject.logError("Error while loading microbial biomass.");
+    }
+}
+
+
+void MainWindow::on_actionHumified_organic_matter_triggered()
+{
+    if (myProject.rothCModel.map.humifiedOrganicMatter->isLoaded)
+    {
+        setColorScale(noMeteoTerrain, myProject.rothCModel.map.humifiedOrganicMatter->colorScale);
+        setCurrentRasterOutput((myProject.rothCModel.map.humifiedOrganicMatter));
+        ui->labelOutputRaster->setText("Humified organic matter");
+    }
+    else
+    {
+        myProject.logError("Error while loading humified organic matter.");
+    }
+}
+
+
+void MainWindow::on_actionSoil_organic_matter_triggered()
+{
+    if (myProject.rothCModel.map.soilOrganicMatter->isLoaded)
+    {
+        setColorScale(noMeteoTerrain, myProject.rothCModel.map.soilOrganicMatter->colorScale);
+        setCurrentRasterOutput((myProject.rothCModel.map.soilOrganicMatter));
+        ui->labelOutputRaster->setText("Soil organic matter");
+    }
+    else
+    {
+        myProject.logError("Error while loading soil organic matter.");
     }
 }
 

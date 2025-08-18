@@ -67,38 +67,48 @@ using namespace std;
 
 void Crit3DRothCplusplusMaps::initialize(const gis::Crit3DRasterGrid& DEM)
 {
-    _decomposablePlantMaterial = new gis::Crit3DRasterGrid;
-    _resistantPlantMaterial  = new gis::Crit3DRasterGrid;
-    _microbialBiomass = new gis::Crit3DRasterGrid;
-    _humifiedOrganicMatter = new gis::Crit3DRasterGrid;
-    _inertOrganicMatter = new gis::Crit3DRasterGrid;
-    _soilOrganicMatter = new gis::Crit3DRasterGrid;
+    decomposablePlantMaterial = new gis::Crit3DRasterGrid;
+    resistantPlantMaterial  = new gis::Crit3DRasterGrid;
+    microbialBiomass = new gis::Crit3DRasterGrid;
+    humifiedOrganicMatter = new gis::Crit3DRasterGrid;
+    inertOrganicMatter = new gis::Crit3DRasterGrid;
+    soilOrganicMatter = new gis::Crit3DRasterGrid;
 
     _depthMap = new gis::Crit3DRasterGrid;
     _clayMap = new gis::Crit3DRasterGrid;
 
-    _decomposablePlantMaterial->initializeGrid(DEM);
-    _resistantPlantMaterial->initializeGrid(DEM);
-    _microbialBiomass->initializeGrid(DEM);
-    _humifiedOrganicMatter->initializeGrid(DEM);
-    _inertOrganicMatter->initializeGrid(DEM);
-    _soilOrganicMatter->initializeGrid(DEM);
+    avgBIC = new gis::Crit3DRasterGrid;
+    avgYearlyTemp = new gis::Crit3DRasterGrid;
+
+
+    decomposablePlantMaterial->initializeGrid(DEM);
+    resistantPlantMaterial->initializeGrid(DEM);
+    microbialBiomass->initializeGrid(DEM);
+    humifiedOrganicMatter->initializeGrid(DEM);
+    inertOrganicMatter->initializeGrid(DEM);
+    soilOrganicMatter->initializeGrid(DEM);
 
     _depthMap->initializeGrid(DEM);
     _clayMap->initializeGrid(DEM);
+
+    avgBIC->initializeGrid(DEM);
+    avgYearlyTemp->initializeGrid(DEM);
 }
 
 void Crit3DRothCplusplusMaps::clear()
 {
-    _decomposablePlantMaterial = new gis::Crit3DRasterGrid;
-    _resistantPlantMaterial = new gis::Crit3DRasterGrid;
-    _microbialBiomass = new gis::Crit3DRasterGrid;
-    _humifiedOrganicMatter = new gis::Crit3DRasterGrid;
-    _inertOrganicMatter = new gis::Crit3DRasterGrid;
-    _soilOrganicMatter = new gis::Crit3DRasterGrid;
+    decomposablePlantMaterial = new gis::Crit3DRasterGrid;
+    resistantPlantMaterial = new gis::Crit3DRasterGrid;
+    microbialBiomass = new gis::Crit3DRasterGrid;
+    humifiedOrganicMatter = new gis::Crit3DRasterGrid;
+    inertOrganicMatter = new gis::Crit3DRasterGrid;
+    soilOrganicMatter = new gis::Crit3DRasterGrid;
 
     _depthMap = new gis::Crit3DRasterGrid;
     _clayMap = new gis::Crit3DRasterGrid;
+
+    avgBIC = new gis::Crit3DRasterGrid;
+    avgYearlyTemp = new gis::Crit3DRasterGrid;
 }
 
 
@@ -121,6 +131,10 @@ double Crit3DRothCplusplusMaps::getDepth(int row, int col)
     return _depthMap->value[row][col];
 }
 
+double Crit3DRothCplusplusMaps::getAvgBIC(int row, int col)
+{
+    return avgBIC->value[row][col];
+}
 
 Crit3DRothCMeteoVariable::Crit3DRothCMeteoVariable()
 {
@@ -131,6 +145,7 @@ void Crit3DRothCMeteoVariable::initialize()
 {
     temp = NODATA;
     BIC = NODATA;
+    avgBIC = NODATA;
     prec = NODATA;
     waterLoss = NODATA;
 }
@@ -182,34 +197,9 @@ bool Crit3DRothCplusplus::computeRothCPoint()
 
     double modernC = 100;
 
-    //INIZIALIZZAZIONE
-    /*double test = 100;
-    while (test > 0.000001)
-    {
-        k = k+1;
-        j = j+1;
-
-        if (k == timeFact) k = 0;
-
-        inputFYM = 0; //todo
-        //modernC = data[k][2]/100;
-
-        Total_Rage = 0;
-
-        RothC(timeFact, DPM_Rage, RPM_Rage, BIO_Rage, HUM_Rage, IOM_Rage, Total_Rage,
-              modernC, isET0, PC, SWC);
-
-        if (((k+1)%timeFact) == 0)
-        {
-            double TOC0 = TOC1;
-            TOC1 = decomposablePlantMatter + resistantPlantMatter + microbialBiomass + humifiedOrganicMatter;
-            test = fabs(TOC1-TOC0);
-        }
-    }*/
     if (radioCarbon.isActive)
         double totalDelta = (std::exp(-totalRage/8035.0) - 1) * 1000;
 
-    std::vector<std::vector<double>> monthList;
 
     inputFYM = 0.4; //kg C day-1 ha-1
     inputFYM *= 0.03; //t C month-1 ha-1
@@ -219,8 +209,8 @@ bool Crit3DRothCplusplus::computeRothCPoint()
     if (radioCarbon.isActive)
         double totalDelta = (std::exp(-totalRage/8035.0) - 1.0) * 1000;
 
-    monthList.push_back({decomposablePlantMatter, resistantPlantMatter, microbialBiomass, humifiedOrganicMatter,
-                         inorganicMatter, soilOrganicCarbon});
+
+    //todo: remove
     if (false)
     {
         std::ofstream myFile;
@@ -306,6 +296,17 @@ double Crit3DRothCplusplus::RMF_Moist(double monthlyBIC, bool PC) {
     return RM_Moist;
 }
 
+
+double Crit3DRothCplusplus::RMF_Moist_Simplified(double monthlyBIC, double avgBIC) {
+    double RM_Moist = NODATA;
+
+    if (isEqual(NODATA,monthlyBIC) || isEqual(NODATA, avgBIC))
+        return NODATA;
+
+    RM_Moist = 0.2 + (1 - 0.2) * (monthlyBIC - avgBIC + 1000) / 2000;
+
+    return RM_Moist;
+}
 // Calculates the rate modifying factor for temperature (RMF_Tmp)
 double Crit3DRothCplusplus::RMF_Tmp(double TEMP) {
     double RM_TMP;
@@ -462,15 +463,21 @@ void Crit3DRothCplusplus::RothC(int timeFact, double &PC)
     // Calculate RMFs
     double RM_TMP = RMF_Tmp(meteoVariable.getTemperature());
     double RM_Moist = 0.7;
-    //TODO: modified RM_Moist factor based on BIC
-    /*if (isEqual (meteoVariable.getBIC(), NODATA)) //todo: check next time
-    {
-        RM_Moist = RMF_Moist(meteoVariable.getPrecipitation(), meteoVariable.getWaterLoss(), bool(PC > 0));
-    }
+
+    //modified RM_Moist factor based on BIC
+    if (isInitializing)
+        RM_Moist = RMF_Moist_Simplified(meteoVariable.getBIC(), meteoVariable.getAvgBIC());
     else
     {
-        RM_Moist = RMF_Moist(meteoVariable.getBIC(), bool(PC > 0));
-    }*/
+        if (isEqual (meteoVariable.getBIC(), NODATA)) //todo: check next time
+        {
+            RM_Moist = RMF_Moist(meteoVariable.getPrecipitation(), meteoVariable.getWaterLoss(), bool(PC > 0));
+        }
+        else
+        {
+            RM_Moist = RMF_Moist(meteoVariable.getBIC(), bool(PC > 0));
+        }
+    }
 
     double RM_PC = RMF_plantCover(PC);
 
@@ -488,6 +495,36 @@ void Crit3DRothCplusplus::resetInputVariables()
     meteoVariable.setBIC(0);
     meteoVariable.setPrecipitation(0);
     meteoVariable.setWaterLoss(0);
+}
+
+void Crit3DRothCplusplus::setStateVariables(int row, int col)
+{
+    decomposablePlantMatter = map.decomposablePlantMaterial->value[row][col];
+    resistantPlantMatter = map.resistantPlantMaterial->value[row][col];
+    microbialBiomass = map.microbialBiomass->value[row][col];
+    humifiedOrganicMatter = map.humifiedOrganicMatter->value[row][col];
+    inorganicMatter =  map.inertOrganicMatter->value[row][col];
+    soilOrganicCarbon = map.soilOrganicMatter->value[row][col];
+}
+
+void Crit3DRothCplusplus::getStateVariables(int row, int col)
+{
+    map.decomposablePlantMaterial->value[row][col] = decomposablePlantMatter;
+    map.resistantPlantMaterial->value[row][col] = resistantPlantMatter;
+    map.microbialBiomass->value[row][col] = microbialBiomass;
+    map.humifiedOrganicMatter->value[row][col] = humifiedOrganicMatter;
+    map.inertOrganicMatter->value[row][col] = inorganicMatter;
+    map.soilOrganicMatter->value[row][col] = soilOrganicCarbon;
+}
+
+bool Crit3DRothCplusplus::checkCell()
+{
+    return (isEqual(decomposablePlantMatter, NODATA) ||
+            isEqual(resistantPlantMatter, NODATA) ||
+            isEqual(microbialBiomass, NODATA) ||
+            isEqual(humifiedOrganicMatter, NODATA) ||
+            isEqual(inorganicMatter, NODATA) ||
+            isEqual(soilOrganicCarbon, NODATA));
 }
 
 void Crit3DRothCplusplus::setInputC(double myInputC)
@@ -536,6 +573,16 @@ void Crit3DRothCMeteoVariable::setBIC(double myBIC)
 double Crit3DRothCMeteoVariable::getBIC()
 {
     return BIC;
+}
+
+void Crit3DRothCMeteoVariable::setAvgBIC(double myAvgBIC)
+{
+    avgBIC = myAvgBIC;
+}
+
+double Crit3DRothCMeteoVariable::getAvgBIC()
+{
+    return avgBIC;
 }
 
 void Crit3DRothCMeteoVariable::cumulateBIC(double myBIC)

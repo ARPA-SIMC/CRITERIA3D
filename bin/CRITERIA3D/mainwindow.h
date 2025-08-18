@@ -227,6 +227,18 @@
 
         void on_actionDEM_summary_triggered();
 
+        void on_actionTree_cover_map_triggered();
+
+        void on_actionDecomposable_plant_matter_triggered();
+
+        void on_actionResistant_plant_matter_triggered();
+
+        void on_actionMicrobial_biomass_triggered();
+
+        void on_actionHumified_organic_matter_triggered();
+
+        void on_actionSoil_organic_matter_triggered();
+
     protected:
         /*!
          * \brief mouseReleaseEvent call moveCenter

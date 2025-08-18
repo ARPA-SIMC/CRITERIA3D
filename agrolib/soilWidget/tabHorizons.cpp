@@ -111,7 +111,7 @@ void TabHorizons::insertSoilHorizons(soil::Crit3DSoil *soil, std::vector<soil::C
         tableDb->item(i,8)->setTextAlignment(Qt::AlignRight);
         tableDb->setItem(i, 9, new QTableWidgetItem( QString::number(mySoil->horizon[i].dbData.thetaSat, 'f', 3)));
         tableDb->item(i,9)->setTextAlignment(Qt::AlignRight);
-        tableDb->setItem(i, 10, new QTableWidgetItem( QString::number(mySoil->horizon[i].dbData.effectiveCohesion, 'f', 0)));
+        tableDb->setItem(i, 10, new QTableWidgetItem( QString::number(mySoil->horizon[i].dbData.effectiveCohesion, 'f', 1)));
         tableDb->item(i,10)->setTextAlignment(Qt::AlignRight);
         tableDb->setItem(i, 11, new QTableWidgetItem( QString::number(mySoil->horizon[i].dbData.frictionAngle, 'f', 0)));
         tableDb->item(i,11)->setTextAlignment(Qt::AlignRight);
@@ -153,7 +153,7 @@ void TabHorizons::insertSoilHorizons(soil::Crit3DSoil *soil, std::vector<soil::C
         tableModel->item(i,9)->setTextAlignment(Qt::AlignRight);
         tableModel->setItem(i, 10, new QTableWidgetItem( QString::number(mySoil->horizon[i].vanGenuchten.m, 'f', 3 )));   
         tableModel->item(i,10)->setTextAlignment(Qt::AlignRight);
-        tableModel->setItem(i, 11, new QTableWidgetItem( QString::number(mySoil->horizon[i].effectiveCohesion, 'f', 0 )));
+        tableModel->setItem(i, 11, new QTableWidgetItem( QString::number(mySoil->horizon[i].effectiveCohesion, 'f', 1 )));
         tableModel->item(i,11)->setTextAlignment(Qt::AlignRight);
         tableModel->setItem(i, 12, new QTableWidgetItem( QString::number(mySoil->horizon[i].frictionAngle, 'f', 0 )));
         tableModel->item(i,12)->setTextAlignment(Qt::AlignRight);
@@ -245,7 +245,7 @@ void TabHorizons::updateTableModel(soil::Crit3DSoil *soil)
         tableModel->item(i,9)->setTextAlignment(Qt::AlignRight);
         tableModel->setItem(i, 10, new QTableWidgetItem( QString::number(mySoil->horizon[i].vanGenuchten.m, 'f', 3 )));
         tableModel->item(i,10)->setTextAlignment(Qt::AlignRight);
-        tableModel->setItem(i, 11, new QTableWidgetItem( QString::number(mySoil->horizon[i].effectiveCohesion, 'f', 0 )));
+        tableModel->setItem(i, 11, new QTableWidgetItem( QString::number(mySoil->horizon[i].effectiveCohesion, 'f', 1 )));
         tableModel->item(i,11)->setTextAlignment(Qt::AlignRight);
         tableModel->setItem(i, 12, new QTableWidgetItem( QString::number(mySoil->horizon[i].frictionAngle, 'f', 0 )));
         tableModel->item(i,12)->setTextAlignment(Qt::AlignRight);
@@ -366,12 +366,12 @@ bool TabHorizons::checkHorizonData(int horizonNum)
         tableDb->item(horizonNum,9)->setBackground(Qt::red);
     }
 
-    if (dbData->effectiveCohesion != NODATA && (dbData->effectiveCohesion < 0 || dbData->effectiveCohesion > 110))
+    if (dbData->effectiveCohesion != NODATA && ((dbData->effectiveCohesion < 0) || (dbData->effectiveCohesion > 100)))
     {
         tableDb->item(horizonNum,10)->setBackground(Qt::red);
     }
 
-    if (dbData->frictionAngle != NODATA && (dbData->frictionAngle < 0 || dbData->frictionAngle > 50))
+    if (dbData->frictionAngle != NODATA && ((dbData->frictionAngle < 0) || (dbData->frictionAngle > 50)))
     {
         tableDb->item(horizonNum,11)->setBackground(Qt::red);
     }
@@ -749,7 +749,7 @@ void TabHorizons::cellChanged(int row, int column)
             else
             {
                 mySoil->horizon[unsigned(row)].dbData.effectiveCohesion = data.toDouble();
-                tableDb->item(row, column)->setText(QString::number(data.toDouble(), 'f', 0));
+                tableDb->item(row, column)->setText(QString::number(data.toDouble(), 'f', 1));
             }
             break;
         }
@@ -801,7 +801,7 @@ void TabHorizons::cellChanged(int row, int column)
     tableModel->item(row,8)->setText(QString::number(mySoil->horizon[unsigned(row)].vanGenuchten.alpha, 'f', 3));
     tableModel->item(row,9)->setText(QString::number(mySoil->horizon[unsigned(row)].vanGenuchten.n, 'f', 3));
     tableModel->item(row,10)->setText(QString::number(mySoil->horizon[unsigned(row)].vanGenuchten.m, 'f', 3));
-    tableModel->item(row,11)->setText(QString::number(mySoil->horizon[unsigned(row)].effectiveCohesion, 'f', 0));
+    tableModel->item(row,11)->setText(QString::number(mySoil->horizon[unsigned(row)].effectiveCohesion, 'f', 1));
     tableModel->item(row,12)->setText(QString::number(mySoil->horizon[unsigned(row)].frictionAngle, 'f', 0));
 
 

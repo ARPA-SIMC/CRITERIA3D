@@ -141,9 +141,11 @@ bool Crit3DProject::initializeHydrall()
     hydrallMaps.yearlyET0->initializeGrid(*(DEM.header));
 
     //inizializzare un vettore che rimandi ai valori dei parametri ecofisiologici per hydrall che attraverso gli indici della croplist
-    //ovvero se nella tabella dei parametri   hydrallModel.plant.tableEcophysiologicalParameters il valore per il faggio è alla riga 3 e nella croplist il faggio è alla riga 25
-    //ovvero nella treecovermap il valore che si ottiene è 25
-    //allora la tabella creata dovrà avere al 25esimo elemento il valore 3, così
+
+    //approccio alternativo sarebbe avere nelle tabelle tipo tableEcophysiologicalParameters un id che corrisponde all'indice letto da .flt di copertura forestaoe
+    //si inizializza conversionTablVector in modo che all'indice letto da .flt corrisponda l'indice da utilizzare invece nella tabella tableEcophysiologicalParameters (e le altre)
+    //a quel punto, quando viene letta la currentCrop dentro assignETreal, viene letta come foresta secondo la mappa di landUse, poi viene letto il valore della specifica foresta
+    //e infine si aggiorna la crop in base all'indice letto grazie al conversiontablevector. TODO parlarne con Anto
 
     hydrallModel.conversionTableVector.resize(cropList.size(), NODATA);
 
@@ -183,8 +185,16 @@ bool Crit3DProject::initializeRothC()
     yearlyET0.initializeGrid(*(DEM.header));
     yearlyPrec.initializeGrid(*(DEM.header));
 
+    if (! processes.computeCrop)
+    {
+        dailyTminMap.initializeGrid(*(DEM.header));
+        dailyTmaxMap.initializeGrid(*(DEM.header));
+    }
+
     if (! soilIndexMap.isLoaded)
         setSoilIndexMap();
+
+    logInfo("Initializing RothC maps...");
 
     for (int row = 0; row < DEM.header->nrRows; row ++)
     {
@@ -199,20 +209,31 @@ bool Crit3DProject::initializeRothC()
 
                     double clayContent = 0;
                     unsigned int i;
-                    for (i = 0; ((i < nrLayers) && (soilList[soilIndex].getHorizonIndex(layerDepth[i]))!= NODATA); i++)
+
+                    if (! processes.computeWater)
                     {
-                        clayContent += soilList[soilIndex].horizon[soilList[soilIndex].getHorizonIndex(layerDepth[i])].texture.clay;
+                        double clay = getRothCClayContent(soilIndex);
+                        rothCModel.map.setClay(getRothCClayContent(soilIndex), row, col);
+                    }
+                    else
+                    {
+                        for (i = 0; ((i < nrLayers) && (soilList[soilIndex].getHorizonIndex(layerDepth[i]))!= NODATA); i++)
+                        {
+                            clayContent += soilList[soilIndex].horizon[soilList[soilIndex].getHorizonIndex(layerDepth[i])].texture.clay;
+                        }
+
+                        if (i > 0)
+                            rothCModel.map.setClay(clayContent/i, row, col);
                     }
 
-                    if (i > 0)
-                        rothCModel.map.setClay(clayContent/i, row, col);
+                    rothCModel.map.decomposablePlantMaterial->value[row][col] = rothCModel.getDPM();
+                    rothCModel.map.resistantPlantMaterial->value[row][col] = rothCModel.getRPM();
+                    rothCModel.map.humifiedOrganicMatter->value[row][col] = rothCModel.getHUM();
+                    rothCModel.map.microbialBiomass->value[row][col] = rothCModel.getBIO();
+                    rothCModel.map.inertOrganicMatter->value[row][col] = rothCModel.getIOM();
+                    rothCModel.map.soilOrganicMatter->value[row][col] = rothCModel.getSOC();
 
-                    rothCModel.map.setDPMRowCol(rothCModel.getDPM(), row, col);
-                    rothCModel.map.setRPMRowCol(rothCModel.getRPM(), row, col);
-                    rothCModel.map.setBIORowCol(rothCModel.getBIO(), row, col);
-                    rothCModel.map.setHUMRowCol(rothCModel.getHUM(), row, col);
-                    rothCModel.map.setIOMRowCol(rothCModel.getIOM(), row, col);
-                    rothCModel.map.setSOCRowCol(rothCModel.getSOC(), row, col);
+                    rothCModel.map.avgYearlyTemp->value[row][col] = 15.f; // initialize to 15°C
 
                 }
             }
@@ -220,12 +241,50 @@ bool Crit3DProject::initializeRothC()
 
     }
 
+    if (! processes.computeWater)
+    {
+        rothCModel.isInitializing = true;
+
+        std::string errorStr;
+        gis::Crit3DRasterGrid raster;
+        if (! gis::openRaster(rothCModel.BICMapFileName, &raster, gisSettings.utmZone, errorStr))
+        {
+            logError("Average BIC map load failed: " + QString::fromStdString(rothCModel.BICMapFileName) + "\n" + QString::fromStdString(errorStr));
+            return false;
+        }
+        else
+            logInfo("Average BIC map loaded: " + QString::fromStdString(rothCModel.BICMapFileName));
+
+        gis::resampleGrid(raster, rothCModel.map.avgBIC, DEM.header, aggrPrevailing, 0);
+    }
     isRothCInitialized = true;
     //todo
 
     return true;
 }
 
+double Crit3DProject::getRothCClayContent(int soilIndex)
+{
+    std::vector<soil::Crit3DHorizon> horizonVector = soilList[soilIndex].horizon;
+    double weightSum = 0;
+    double clayContent = 0;
+    double upperDepth = 0;
+    double lowerDepth = 0;
+
+    if (! horizonVector.empty())
+        lowerDepth = horizonVector.front().lowerDepth;
+    else
+        return NODATA;
+
+
+    for (unsigned int i = 0; i < horizonVector.size(); i++)
+    {
+        clayContent += horizonVector[i].texture.clay * (lowerDepth - upperDepth);
+        weightSum += lowerDepth - upperDepth;
+    }
+
+    return clayContent/weightSum;
+}
 
 bool Crit3DProject::initializeCropMaps()
 {
@@ -243,8 +302,6 @@ bool Crit3DProject::initializeCropMaps()
 
     dailyTminMap.initializeGrid(*(DEM.header));
     dailyTmaxMap.initializeGrid(*(DEM.header));
-
-    //treeCoverMap.initializeGrid(*(DEM.header)); //DEBUG TODO CT
 
     return true;
 }
@@ -507,9 +564,29 @@ bool Crit3DProject::dailyUpdateHydrall(const QDate &myDate)
     return true;
 }
 
+bool Crit3DProject::dailyUpdateRothC()
+{
+    if (! dailyTminMap.isLoaded || ! dailyTmaxMap.isLoaded || ! hourlyMeteoMaps->mapHourlyTair->isLoaded)
+        return false;
+
+    for (long row = 0; row < dailyTminMap.header->nrRows; row++)
+    {
+        for (long col = 0; col < dailyTminMap.header->nrCols; col++)
+        {
+            if (! (isEqual(dailyTmaxMap.value[row][col], NODATA) ||  isEqual(dailyTminMap.value[row][col], NODATA)))
+                rothCModel.map.avgYearlyTemp->value[row][col] = (364./365.)*rothCModel.map.avgYearlyTemp->value[row][col] + (dailyTmaxMap.value[row][col] + dailyTminMap.value[row][col])/365;
+        }
+    }
+    return true;
+}
+
 
 bool Crit3DProject::updateRothC(const QDate &myDate)
 {
+    rothCModel.isInitializing = false;
+    if (!processes.computeWater)
+        rothCModel.isInitializing = true;
+
     if (myDate.dayOfYear() == 1)
     {
         for (int row = 0; row < DEM.header->nrRows; row++)
@@ -520,45 +597,65 @@ bool Crit3DProject::updateRothC(const QDate &myDate)
                 float height = DEM.value[row][col];
                 if (! isEqual(height, DEM.header->flag))
                 {
-                    rothCModel.setDepth(rothCModel.map.getDepth(row, col));
-                    rothCModel.setClay(rothCModel.map.getClay(row, col));
-                    rothCModel.meteoVariable.setPrecipitation(yearlyPrec.getValueFromRowCol(row, col));
-                    rothCModel.meteoVariable.setWaterLoss(yearlyET0.getValueFromRowCol(row, col));
-                    rothCModel.meteoVariable.setBIC(yearlyPrec.getValueFromRowCol(row, col) - yearlyET0.getValueFromRowCol(row, col));
-                    rothCModel.meteoVariable.setTemperature(hydrallMaps.mapLast30DaysTavg->getValueFromRowCol(row, col));
-                    if (! isEqual(hydrallModel.getOutputC(),NODATA))
-                        rothCModel.setInputC(hydrallModel.getOutputC()); //read from hydrall (eventually from crop too?)  TODO CHECK
-                    else
-                        rothCModel.setInputC(0.1);
+                    setRothCVariables(row, col);
 
-                    double SWC = 0;
+                    rothCModel.setStateVariables(row, col);
 
-                    /*for (int i = 0; i < (int)hydrallModel.soil.waterContent.size(); i++)
+                    if (! rothCModel.checkCell())
                     {
-                        SWC += hydrallModel.soil.waterContent[i]*hydrallModel.soil.nodeThickness[i]*1000;
-                    }*/
+                        //chiamata a rothC
+                        computeRothCModel();
 
-                    rothCModel.setSWC(SWC);
-                    if (false)
-                    {
-                        std::ofstream myFile;
-                        myFile.open("outputRothC.csv", std::ios_base::app);
-                        myFile << rothCModel.meteoVariable.getWaterLoss() << "," << rothCModel.meteoVariable.getPrecipitation() <<"\n";
-                        myFile.close();
+                        rothCModel.getStateVariables(row, col);
+
+                        //reset meteo variables and C input
+                        rothCModel.resetInputVariables();
                     }
-
-                    //chiamata a rothC
-                    computeRothCModel();
-
-                    //reset meteo variables and C input for next month/year
-                    rothCModel.resetInputVariables();
-
                 }
             }
         }
     }
 
     return true;
+}
+
+void Crit3DProject::setRothCVariables(int row, int col)
+{
+    //soil variables
+    rothCModel.setDepth(rothCModel.map.getDepth(row, col));
+    rothCModel.setClay(rothCModel.map.getClay(row, col));
+    if (rothCModel.isInitializing)
+    {
+        rothCModel.setPlantCover(0.7); //TODO
+    }
+
+    //meteo variables
+    rothCModel.meteoVariable.setPrecipitation(yearlyPrec.getValueFromRowCol(row, col));
+    rothCModel.meteoVariable.setWaterLoss(yearlyET0.getValueFromRowCol(row, col));
+    rothCModel.meteoVariable.setBIC(yearlyPrec.getValueFromRowCol(row, col) - yearlyET0.getValueFromRowCol(row, col));
+    rothCModel.meteoVariable.setTemperature(rothCModel.map.avgYearlyTemp->getValueFromRowCol(row, col));
+    rothCModel.meteoVariable.setAvgBIC(rothCModel.map.getAvgBIC(row, col));
+
+    //carbon input is taken from hydrall, otherwise TODO
+    if (processes.computeHydrall && ! isEqual(hydrallModel.getOutputC(),NODATA))
+        rothCModel.setInputC(hydrallModel.getOutputC()); //read from hydrall (eventually from crop too?)  TODO CHECK
+    else
+        rothCModel.setInputC(8);
+
+    //swc comes from water model. during initialization phase, it is not used
+    double SWC = NODATA;
+    if (! rothCModel.isInitializing)
+    {
+        SWC = 0;
+        for (int i = 0; i < (int)hydrallModel.soil.waterContent.size(); i++)
+        {
+            SWC += hydrallModel.soil.waterContent[i]*hydrallModel.soil.nodeThickness[i]*1000;
+        }
+    }
+    rothCModel.setSWC(SWC);
+
+
+    return;
 }
 
 /*!
@@ -983,9 +1080,13 @@ bool Crit3DProject::runModels(const QDateTime &firstTime, const QDateTime &lastT
             dailyUpdatePond();
         }
 
-        if (processes.computeRothC && myDate.dayOfYear() == 1)
+        if (processes.computeRothC)
         {
-            updateRothC(myDate);
+            dailyUpdateRothC();
+            if (myDate.dayOfYear() == 1)
+            {
+                updateRothC(myDate);
+            }
         }
 
         if (processes.computeHydrall)
@@ -1714,7 +1815,7 @@ void Crit3DProject::setHydrallVariables(int row, int col, int forestIndex)
     //treeCoverMap.value[row][col] = 0; //TODO treeSpeciesMap. valutare tabelle tra crop e tabella hydrall
 
     hydrallModel.setPlantVariables(forestIndex, chlorophyllContent, hydrallMaps.plantHeight.value[row][col],
-                                   hydrallMaps.minLeafWaterPotential->value[row][col], hydrallMaps.criticalSoilWaterPotential->value[row][col]);
+                                   hydrallMaps.minLeafWaterPotential->value[row][col]);
 
     // check soil
     int soilIndex = int(soilIndexMap.value[row][col]);
@@ -1946,7 +2047,7 @@ bool Crit3DProject::runModelHour(const QString& hourlyOutputPath, bool isRestart
                 saveHourlyMeteoOutput(referenceEvapotranspiration, hourlyOutputPath, myDateTime);
             }
 
-            if (processes.computeCrop)
+            if (processes.computeCrop || (! processes.computeCrop && ! processes.computeWater && processes.computeRothC))
             {
                 updateDailyTemperatures();
             }
@@ -2238,6 +2339,12 @@ bool Crit3DProject::saveHydrallState(const QString &currentStatePath)
         return false;
     }
 
+    if (!gis::writeEsriGrid((hydrallPath+"/understoreyNPP").toStdString(), hydrallMaps.understoreyNetPrimaryProduction, errorStr))
+    {
+        logError("Error saving understorey net primary production map: " + QString::fromStdString(errorStr));
+        return false;
+    }
+
     //other maps tbd
 
     return true;
@@ -2432,7 +2539,7 @@ bool Crit3DProject::loadModelState(QString statePath)
             rothCModel.map.isInitialized = false;
             return false;
         }
-        gis::resampleGrid(*tmpRaster, rothCModel.map.getDPM(), DEM.header, aggrAverage, 0.1f);
+        gis::resampleGrid(*tmpRaster, rothCModel.map.decomposablePlantMaterial, DEM.header, aggrAverage, 0.1f);
 
         fileName = rothCPath.toStdString() + "/RPM";
         if (! gis::readEsriGrid(fileName, tmpRaster, errorStr))
@@ -2441,7 +2548,7 @@ bool Crit3DProject::loadModelState(QString statePath)
             rothCModel.map.isInitialized = false;
             return false;
         }
-        gis::resampleGrid(*tmpRaster, rothCModel.map.getRPM(), DEM.header, aggrAverage, 0.1f);
+        gis::resampleGrid(*tmpRaster, rothCModel.map.resistantPlantMaterial, DEM.header, aggrAverage, 0.1f);
 
         fileName = rothCPath.toStdString() + "/BIO";
         if (! gis::readEsriGrid(fileName, tmpRaster, errorStr))
@@ -2450,7 +2557,7 @@ bool Crit3DProject::loadModelState(QString statePath)
             rothCModel.map.isInitialized = false;
             return false;
         }
-        gis::resampleGrid(*tmpRaster, rothCModel.map.getBIO(), DEM.header, aggrAverage, 0.1f);
+        gis::resampleGrid(*tmpRaster, rothCModel.map.microbialBiomass, DEM.header, aggrAverage, 0.1f);
 
         fileName = rothCPath.toStdString() + "/HUM";
         if (! gis::readEsriGrid(fileName, tmpRaster, errorStr))
@@ -2459,7 +2566,7 @@ bool Crit3DProject::loadModelState(QString statePath)
             rothCModel.map.isInitialized = false;
             return false;
         }
-        gis::resampleGrid(*tmpRaster, rothCModel.map.getHUM(), DEM.header, aggrAverage, 0.1f);
+        gis::resampleGrid(*tmpRaster, rothCModel.map.humifiedOrganicMatter, DEM.header, aggrAverage, 0.1f);
 
         fileName = rothCPath.toStdString() + "/SOC";
         if (! gis::readEsriGrid(fileName, tmpRaster, errorStr))
@@ -2468,11 +2575,36 @@ bool Crit3DProject::loadModelState(QString statePath)
             rothCModel.map.isInitialized = false;
             return false;
         }
-        gis::resampleGrid(*tmpRaster, rothCModel.map.getSOC(), DEM.header, aggrAverage, 0.1f);
+        gis::resampleGrid(*tmpRaster, rothCModel.map.soilOrganicMatter, DEM.header, aggrAverage, 0.1f);
     }
 
     //hydrall model
+    QString hydrallPath = statePath + "/hydrall";
+    QDir hydrallDir(hydrallPath);
+    tmpRaster = new gis::Crit3DRasterGrid();
+    if (hydrallDir.exists() && (! isProcessesDefined || isHydrallInitialized))
+    {
+        fileName = hydrallPath.toStdString() + "/treeNPP";
+        if (! gis::readEsriGrid(fileName, tmpRaster, errorStr))
+        {
+            errorString = "Wrong hydrall tree net primary production map:\n" + QString::fromStdString(errorStr);
+            hydrallMaps.isInitialized = false;
+            return false;
+        }
+        gis::resampleGrid(*tmpRaster, hydrallMaps.treeNetPrimaryProduction, DEM.header, aggrAverage, 0.1f);
 
+        fileName = hydrallPath.toStdString() + "/understoreyNPP";
+        if (! gis::readEsriGrid(fileName, tmpRaster, errorStr))
+        {
+            errorString = "Wrong hydrall understorey net primary production map:\n" + QString::fromStdString(errorStr);
+            hydrallMaps.isInitialized = false;
+            return false;
+        }
+        gis::resampleGrid(*tmpRaster, hydrallMaps.understoreyNetPrimaryProduction, DEM.header, aggrAverage, 0.1f);
+
+
+        //other maps tbd
+    }
     logInfo("Current date is: " + getCurrentDate().toString("yyyy-MM-dd") + " hour: " + QString::number(getCurrentHour()));
 
     return true;
@@ -3042,6 +3174,9 @@ void Crit3DProject::shadowColor(const Crit3DColor &colorIn, Crit3DColor &colorOu
 
 bool Crit3DProject::update3DColors(gis::Crit3DRasterGrid *rasterPointer)
 {
+    const double DEFAULT_ALPHA = 0.7;
+    const double ALPHA_POW = 0.25;
+
     if (openGlGeometry == nullptr)
     {
         errorString = "Initialize 3D openGlGeometry before.";
@@ -3092,7 +3227,7 @@ bool Crit3DProject::update3DColors(gis::Crit3DRasterGrid *rasterPointer)
                         if (! isEqual(value, rasterPointer->header->flag))
                         {
                             Crit3DColor* variableColor = rasterPointer->colorScale->getColor(value);
-                            double alpha = 0.66;
+                            double alpha = DEFAULT_ALPHA;
 
                             // check outliers
                             if (rasterPointer->colorScale->isHideMinimum())
@@ -3103,7 +3238,8 @@ bool Crit3DProject::update3DColors(gis::Crit3DRasterGrid *rasterPointer)
                             if (rasterPointer->colorScale->isTransparent())
                             {
                                 double step = std::max(0., value - rasterPointer->colorScale->minimum());
-                                alpha = sqrt(std::min(1., step/variableRange));
+                                alpha = std::min(1., step/variableRange);
+                                alpha = pow(alpha, ALPHA_POW);
                             }
                             mixColor(dtmColor1, *variableColor, color1, alpha);
                         }
@@ -3112,7 +3248,7 @@ bool Crit3DProject::update3DColors(gis::Crit3DRasterGrid *rasterPointer)
                         if (! isEqual(value, rasterPointer->header->flag))
                         {
                             Crit3DColor* variableColor = rasterPointer->colorScale->getColor(value);
-                            double alpha = 0.66;
+                            double alpha = DEFAULT_ALPHA;
 
                             // check minimum (transparent)
                             if (rasterPointer->colorScale->isHideMinimum())
@@ -3123,7 +3259,8 @@ bool Crit3DProject::update3DColors(gis::Crit3DRasterGrid *rasterPointer)
                             if (rasterPointer->colorScale->isTransparent())
                             {
                                 double step = std::max(0., value - rasterPointer->colorScale->minimum());
-                                alpha = sqrt(std::min(1., step/variableRange));
+                                alpha = std::min(1., step/variableRange);
+                                alpha = pow(alpha, ALPHA_POW);
                             }
                             mixColor(dtmColor3, *variableColor, color3, alpha);
                         }
@@ -3142,7 +3279,7 @@ bool Crit3DProject::update3DColors(gis::Crit3DRasterGrid *rasterPointer)
                             if (! isEqual(value, rasterPointer->header->flag))
                             {
                                 Crit3DColor* variableColor = rasterPointer->colorScale->getColor(value);
-                                double alpha = 0.66;
+                                double alpha = DEFAULT_ALPHA;
 
                                 // check minimum
                                 if (rasterPointer->colorScale->isHideMinimum())
@@ -3153,7 +3290,8 @@ bool Crit3DProject::update3DColors(gis::Crit3DRasterGrid *rasterPointer)
                                 if (rasterPointer->colorScale->isTransparent())
                                 {
                                     double step = std::max(0., value - rasterPointer->colorScale->minimum());
-                                    alpha = sqrt(std::min(1., step/variableRange));
+                                    alpha = std::min(1., step/variableRange);
+                                    alpha = pow(alpha, ALPHA_POW);
                                 }
                                 mixColor(dtmColor2, *variableColor, color2, alpha);
                             }
@@ -3177,7 +3315,7 @@ bool Crit3DProject::update3DColors(gis::Crit3DRasterGrid *rasterPointer)
                             if (! isEqual(value, rasterPointer->header->flag))
                             {
                                 Crit3DColor* variableColor = rasterPointer->colorScale->getColor(value);
-                                double alpha = 0.66;
+                                double alpha = DEFAULT_ALPHA;
 
                                 if (rasterPointer->colorScale->isHideMinimum())
                                 {
@@ -3188,7 +3326,8 @@ bool Crit3DProject::update3DColors(gis::Crit3DRasterGrid *rasterPointer)
                                 if (rasterPointer->colorScale->isTransparent())
                                 {
                                     double step = std::max(0., value - rasterPointer->colorScale->minimum());
-                                    alpha = sqrt(std::min(1., step/variableRange));
+                                    alpha = std::min(1., step/variableRange);
+                                    alpha = pow(alpha, ALPHA_POW);
                                 }
                                 mixColor(dtmColor2, *variableColor, color2, alpha);
                             }

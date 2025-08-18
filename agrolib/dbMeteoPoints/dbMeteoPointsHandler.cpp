@@ -1365,12 +1365,13 @@ QString Crit3DMeteoPointsDbHandler::getNewDataEntry(int pos, const QList<QString
     \brief import hourly meteo data from .csv files
     \details fixed format:
     DATE(yyyy-mm-dd), HOUR, TAVG, PREC, RHAVG, RAD, W_SCAL_INT
-    the filename must be equal to pointcode
+    - the filename must be equal to pointcode
+    - header is mandatory
 */
 bool Crit3DMeteoPointsDbHandler::importHourlyMeteoData(const QString &csvFileName, bool deletePreviousData, QString &log)
 {
     QString fileName = getFileName(csvFileName);
-    log = "\nInput file: " + fileName;
+    log = "";
 
     // check point code
     QString pointCode = fileName.left(fileName.length()-4);
@@ -1493,10 +1494,12 @@ bool Crit3DMeteoPointsDbHandler::importHourlyMeteoData(const QString &csvFileNam
         }
     }
 
-    log += "\nData imported successfully.";
-    log += "\nWrong date/time: " + QString::number(nrWrongDateTime);
-    log += "\nMissing data: " + QString::number(nrMissingData);
-    log += "\nWrong values: " + QString::number(nrWrongData);
+    if (nrWrongDateTime > 0 || nrWrongDateTime > 0 || nrWrongData > 0)
+    {
+        log += "\nWrong date/time: " + QString::number(nrWrongDateTime);
+        log += "\nMissing data: " + QString::number(nrMissingData);
+        log += "\nWrong values: " + QString::number(nrWrongData);
+    }
 
     return true;
 }

@@ -1663,7 +1663,7 @@
        <second>0</second>
        <year>1752</year>
        <month>9</month>
-       <day>8</day>
+       <day>3</day>
       </datetime>
      </property>
      <property name="maximumDate">
@@ -2525,8 +2525,9 @@
       <string>Land use</string>
      </property>
      <addaction name="actionView_LandUseMap"/>
-     <addaction name="separator"/>
      <addaction name="actionHide_LandUseMap"/>
+     <addaction name="separator"/>
+     <addaction name="actionTree_cover_map"/>
     </widget>
     <widget class="QMenu" name="actionView_Crop">
      <property name="title">
@@ -2542,6 +2543,16 @@
      <addaction name="actionView_Factor_of_safety"/>
      <addaction name="actionView_Factor_of_safety_minimum"/>
      <addaction name="flag_increase_slope"/>
+    </widget>
+    <widget class="QMenu" name="menuRothC_model">
+     <property name="title">
+      <string>RothC model</string>
+     </property>
+     <addaction name="actionDecomposable_plant_matter"/>
+     <addaction name="actionResistant_plant_matter"/>
+     <addaction name="actionMicrobial_biomass"/>
+     <addaction name="actionHumified_organic_matter"/>
+     <addaction name="actionSoil_organic_matter"/>
     </widget>
     <addaction name="actionShow_3D_viewer"/>
     <addaction name="separator"/>
@@ -2563,6 +2574,7 @@
     <addaction name="menuWater_fluxes"/>
     <addaction name="menuSlope_stability"/>
     <addaction name="separator"/>
+    <addaction name="menuRothC_model"/>
    </widget>
    <widget class="QMenu" name="menuSolar_radiation_model_2">
     <property name="title">
@@ -3341,6 +3353,56 @@
   <action name="actionSave_outputRaster">
    <property name="text">
     <string>Save current output (raster)...</string>
+   </property>
+  </action>
+  <action name="actionLoad_DEM_">
+   <property name="text">
+    <string>Load DEM...</string>
+   </property>
+  </action>
+  <action name="actionExtract_sub_basin">
+   <property name="text">
+    <string>Extract sub-basin...</string>
+   </property>
+  </action>
+  <action name="actionCriteria3D_Water_content_summary">
+   <property name="text">
+    <string>Water Content summary...</string>
+   </property>
+  </action>
+  <action name="actionDEM_summary">
+   <property name="text">
+    <string>Digital Elevation Model summary...</string>
+   </property>
+  </action>
+  <action name="actionTree_cover_map">
+   <property name="text">
+    <string>Tree cover map</string>
+   </property>
+  </action>
+  <action name="actionDecomposable_plant_matter">
+   <property name="text">
+    <string>Decomposable plant matter</string>
+   </property>
+  </action>
+  <action name="actionResistant_plant_matter">
+   <property name="text">
+    <string>Resistant plant matter</string>
+   </property>
+  </action>
+  <action name="actionMicrobial_biomass">
+   <property name="text">
+    <string>Microbial biomass</string>
+   </property>
+  </action>
+  <action name="actionHumified_organic_matter">
+   <property name="text">
+    <string>Humified organic matter</string>
+   </property>
+  </action>
+  <action name="actionSoil_organic_matter">
+   <property name="text">
+    <string>Soil organic matter</string>
    </property>
   </action>
  </widget>
