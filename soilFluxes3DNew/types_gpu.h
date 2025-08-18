@@ -34,7 +34,7 @@ namespace soilFluxes3D::New
     {
         cusparseDnVecDescr_t cusparseDescriptor;
         int64_t numElements;
-        double *d_values;
+        double *d_values = nullptr;
         const cudaDataType valueType = CUDA_R_64F;
     };
 }

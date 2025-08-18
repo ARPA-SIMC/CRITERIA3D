@@ -403,7 +403,6 @@ bool solveLinearSystem(int approximation, double residualTolerance, int computat
                     else
                         currentNorm = iterationThreads();
                 */
-
                 //non-convergent system
                 if (currentNorm > (bestNorm * 10.))
                     return false;

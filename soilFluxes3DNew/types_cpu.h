@@ -2,6 +2,7 @@
 #define SOILFLUXES3D_TYPES_CPU_H
 
 #include <cstdint>
+#include <cstring>
 #include <vector>
 #include <string>
 #include <thread>

@@ -1,7 +1,7 @@
 #ifndef SOILFLUXES3D_CPUSOLVER_H
 #define SOILFLUXES3D_CPUSOLVER_H
 
-#include "solver_new.h"
+#include "solver.h"
 
 namespace soilFluxes3D::New
 {

@@ -2,15 +2,18 @@
 #include <cassert>
 
 #include "gpusolver.h"
-#include "soil_new.h"
-#include "water_new.h"
-#include "heat_new.h"
+#include "soilPhysics.h"
+#include "water.h"
+#include "heat.h"
 #include "otherFunctions.h"
 
 using namespace soilFluxes3D::Soil;
 using namespace soilFluxes3D::Math;
 using namespace soilFluxes3D::Heat;
 using namespace soilFluxes3D::Water;
+
+
+std::vector<double> tempData;
 
 namespace soilFluxes3D::New
 {
@@ -22,6 +25,7 @@ namespace soilFluxes3D::New
 
     SF3Derror_t GPUSolver::inizialize()
     {
+        tempData.resize(nodeGrid.numNodes);
         if(_status != Created)
             return SolverError;
 
@@ -29,6 +33,32 @@ namespace soilFluxes3D::New
             _parameters.deltaTcurr = _parameters.deltaTmax;
 
         _parameters.enableOMP = true;                   //TO DO: (nodeGrid.numNodes > ...);
+        if(_parameters.enableOMP)
+            omp_set_num_threads(static_cast<int>(_parameters.numThreads));
+
+        /*temp*/ //Inizialize matrix structure
+        /*temp*/ matrixA.numRows = nodeGrid.numNodes;
+        /*temp*/ hostSolverAlloc(matrixA.numColumns, uint8_t, matrixA.numRows);
+        /*temp*/ hostSolverAlloc(matrixA.colIndeces, uint64_t*, matrixA.numRows);
+        /*temp*/ hostSolverAlloc(matrixA.values, double*, matrixA.numRows);
+
+        /*temp*/ for (uint64_t rowIdx = 0; rowIdx < matrixA.numRows; ++rowIdx)
+        /*temp*/ {
+        /*temp*/     hostSolverAlloc(matrixA.colIndeces[rowIdx], uint64_t, matrixA.maxColumns);
+        /*temp*/     hostSolverAlloc(matrixA.values[rowIdx], double, matrixA.maxColumns);
+        /*temp*/ }
+
+        /*temp*/ //Inizialize vector data
+        /*temp*/ vectorX.numElements = nodeGrid.numNodes;
+        /*temp*/ hostSolverAlloc(vectorX.values, double, vectorX.numElements);
+
+        /*temp*/ vectorB.numElements = nodeGrid.numNodes;
+        /*temp*/ hostSolverAlloc(vectorB.values, double, vectorB.numElements);
+
+        /*temp*/ vectorC.numElements = nodeGrid.numNodes;
+        /*temp*/ hostSolverAlloc(vectorC.values, double, vectorC.numElements);
+
+
 
         numThreadsPerBlock = 64;                        //Must be multiple of warp-size(32)
         numBlocks = (uint64_t) ceil((double) nodeGrid.numNodes / numThreadsPerBlock);
@@ -40,10 +70,10 @@ namespace soilFluxes3D::New
         iterationMatrix.numCols = static_cast<int64_t>(nodeGrid.numNodes);
         iterationMatrix.sliceSize = static_cast<int64_t>(numThreadsPerBlock);
         uint64_t numSlice = numBlocks;
-        uint64_t tnv = numSlice * iterationMatrix.sliceSize * (maxTotalLink + 1);
+        uint64_t tnv = numSlice * iterationMatrix.sliceSize * maxTotalLink;
         iterationMatrix.totValuesSize = static_cast<int64_t>(tnv);
 
-        deviceSolverAlloc(iterationMatrix.d_numColsInRow, uint64_t, iterationMatrix.numRows);
+        deviceSolverAlloc(iterationMatrix.d_numColsInRow, uint16_t, iterationMatrix.numRows);
 
         deviceSolverAlloc(iterationMatrix.d_offsets, int64_t, (numSlice + 1));
         deviceSolverAlloc(iterationMatrix.d_columnIndeces, int64_t, tnv);
@@ -64,6 +94,8 @@ namespace soilFluxes3D::New
         //Inizialize raw capacity vector
         deviceSolverAlloc(d_Cvalues, double, nodeGrid.numNodes);
 
+        ptr = &(nodeGrid);
+        _status = Inizialized;
         return SF3Dok;
     }
 
@@ -84,6 +116,7 @@ namespace soilFluxes3D::New
         //Boundary data
         moveToDevice(nodeGrid.boundaryData.boundaryType, boundaryType_t, nodeGrid.numNodes);
         moveToDevice(nodeGrid.boundaryData.boundarySlope, double, nodeGrid.numNodes);
+        moveToDevice(nodeGrid.boundaryData.boundarySize, double, nodeGrid.numNodes);
         if(simulationFlags.computeWater)
         {
             moveToDevice(nodeGrid.boundaryData.waterFlowRate, double, nodeGrid.numNodes);
@@ -127,7 +160,7 @@ namespace soilFluxes3D::New
         }
 
         //Move the solver object data
-        moveToDevice(solver, Solver, 1);
+        //moveToDevice(solver, Solver, 1);
 
         return SF3Dok;
     }
@@ -135,6 +168,8 @@ namespace soilFluxes3D::New
     SF3Derror_t GPUSolver::downCopyData()
     {
         //Topology Data
+        uint64_t temp = nodeGrid.numNodes;
+
         moveToHost(nodeGrid.size, double, nodeGrid.numNodes);
         moveToHost(nodeGrid.x, double, nodeGrid.numNodes);
         moveToHost(nodeGrid.y, double, nodeGrid.numNodes);
@@ -147,6 +182,7 @@ namespace soilFluxes3D::New
         //Boundary data
         moveToHost(nodeGrid.boundaryData.boundaryType, boundaryType_t, nodeGrid.numNodes);
         moveToHost(nodeGrid.boundaryData.boundarySlope, double, nodeGrid.numNodes);
+        moveToHost(nodeGrid.boundaryData.boundarySize, double, nodeGrid.numNodes);
         if(simulationFlags.computeWater)
         {
             moveToHost(nodeGrid.boundaryData.waterFlowRate, double, nodeGrid.numNodes);
@@ -192,21 +228,21 @@ namespace soilFluxes3D::New
         solverCheck(downMoveSoilSurfacePtr());      //Need to be done after moving nodeGrid.surfaceFlag
 
         //Move the solver object data
-        moveToHost(solver, Solver, 1);
+        //moveToHost(solver, Solver, 1);
         return SF3Dok;
     }
 
     SF3Derror_t GPUSolver::createCUsparseDescriptors()
     {
-        double *d_nnz = nullptr;
-        cudaMalloc((void**) &d_nnz, sizeof(double));
+        int64_t *d_nnz = nullptr;
+        cudaMalloc((void**) &d_nnz, sizeof(int64_t));
 
         void* d_tempStorage = nullptr;
         size_t tempStorageSize = 0;
         cub::DeviceReduce::Sum(d_tempStorage, tempStorageSize, iterationMatrix.d_numColsInRow, d_nnz, iterationMatrix.numRows);
         cudaMalloc(&d_tempStorage, tempStorageSize);
         cub::DeviceReduce::Sum(d_tempStorage, tempStorageSize, iterationMatrix.d_numColsInRow, d_nnz, iterationMatrix.numRows);
-        cudaMemcpy(&(iterationMatrix.numNonZeroElement), d_nnz, sizeof(double), cudaMemcpyDeviceToHost);
+        cudaMemcpy(&(iterationMatrix.numNonZeroElement), d_nnz, sizeof(int64_t), cudaMemcpyDeviceToHost);
 
         //Create matrix descriptor
         cuspCheck(cusparseCreateSlicedEll(&(iterationMatrix.cusparseDescriptor),
@@ -227,8 +263,6 @@ namespace soilFluxes3D::New
         if(_status != Inizialized)
             return SolverError;
 
-        solverCheck(upCopyData());
-
         switch (process)
         {
             case Water:
@@ -242,9 +276,8 @@ namespace soilFluxes3D::New
                 break;
         }
 
-        solverCheck(downCopyData());
-
         _status = Terminated;
+        _status = Inizialized;
         return SF3Dok;
     }
 
@@ -253,7 +286,7 @@ namespace soilFluxes3D::New
         if(_status == Created)
             return SF3Dok;
 
-        if((_status != Terminated) && (_status != Error))
+        if((_status != Terminated) && (_status != Inizialized))
             return SolverError;
 
         _status = Created;
@@ -269,30 +302,33 @@ namespace soilFluxes3D::New
             acceptedTimeStep = SF3Dmin(_parameters.deltaTcurr, maxTimeStep);
 
             //Save instantaneus H values
-            cudaCheckSolver(cudaMemcpy(nodeGrid.waterData.oldPressureHeads, nodeGrid.waterData.pressureHead, nodeGrid.numNodes * sizeof(double), cudaMemcpyDeviceToDevice));
+            std::memcpy(nodeGrid.waterData.oldPressureHeads, nodeGrid.waterData.pressureHead, nodeGrid.numNodes * sizeof(double));
 
             //Inizialize the solution vector with the current pressure head
-            cudaCheckSolver(cudaMemcpy(unknownTerm.d_values, nodeGrid.waterData.pressureHead, unknownTerm.numElements * sizeof(double), cudaMemcpyDeviceToDevice));
+            assert(vectorX.numElements == nodeGrid.numNodes);
+            std::memcpy(vectorX.values, nodeGrid.waterData.pressureHead, vectorX.numElements * sizeof(double));
 
             //Assign vectorC surface values and compute subsurface saturation degree
-            launchKernel(init_SurfaceC_SubSurfaceSe, d_Cvalues);
-
-            cudaCheckSolver(cudaDeviceSynchronize());
+            #pragma omp parallel for if(_parameters.enableOMP)
+            for (uint64_t nodeIdx = 0; nodeIdx < nodeGrid.numNodes; ++nodeIdx)
+            {
+                if(nodeGrid.surfaceFlag[nodeIdx])
+                    vectorC.values[nodeIdx] = nodeGrid.size[nodeIdx];
+                else
+                    nodeGrid.waterData.saturationDegree[nodeIdx] = computeNodeSe(nodeIdx);
+            }
 
             //Update aereodynamic and soil conductance
             //updateConductance();      //TO DO (Heat)
 
             //Update boundary
-            launchKernel(updateBoundaryWaterData_k, acceptedTimeStep);
-
-            cudaCheckSolver(cudaDeviceSynchronize());
+            updateBoundaryWaterData(acceptedTimeStep);
 
             //Effective computation step
             stepStatus = waterApproximationLoop(acceptedTimeStep);
 
-            //Restore pressure head if step non successuful
             if(stepStatus != stepAccepted)
-                cudaCheckSolver(cudaMemcpy(nodeGrid.waterData.pressureHead, nodeGrid.waterData.oldPressureHeads, nodeGrid.numNodes * sizeof(double), cudaMemcpyDeviceToDevice));
+                restorePressureHead();
         }
     }
 
@@ -303,19 +339,16 @@ namespace soilFluxes3D::New
         for(uint8_t approxIdx = 0; approxIdx < _parameters.maxApproximationsNumber; ++approxIdx)
         {
             //Compute capacity vector elements
-            launchKernel(computeCapacity_k, d_Cvalues);
+            computeCapacity(vectorC);
 
             //Update boundary water
-            launchKernel(updateBoundaryWaterData_k, deltaT);
+            updateBoundaryWaterData(deltaT);
 
             //Update Courant data
             nodeGrid.waterData.CourantWaterLevel = 0.;
 
             //Compute linear system elements
-            launchKernel(computeLinearSystemElement_k, iterationMatrix, constantTerm, d_Cvalues, approxIdx, deltaT, _parameters.lateralVerticalRatio, _parameters.meantype);
-
-            //Inizialize cusparse descriptors
-            createCUsparseDescriptors();
+            computeLinearSystemElement(matrixA, vectorB, vectorC, approxIdx, deltaT, _parameters.lateralVerticalRatio, _parameters.meantype);
 
             //Check Courant
             if((nodeGrid.waterData.CourantWaterLevel > 1.) && (deltaT > _parameters.deltaTmin))
@@ -338,16 +371,17 @@ namespace soilFluxes3D::New
             }
 
             //Update potential
-            assert(unknownTerm.numElements == nodeGrid.numNodes);
-            cudaMemcpy(nodeGrid.waterData.pressureHead, unknownTerm.d_values, nodeGrid.numNodes * sizeof(double), cudaMemcpyDeviceToDevice);
+            assert(vectorX.numElements == nodeGrid.numNodes);
+            std::memcpy(nodeGrid.waterData.pressureHead, vectorX.values, vectorX.numElements * sizeof(double));
 
             //Update degree of saturation
-            launchKernel(updateSaturationDegree_k);
+            #pragma omp parallel for if(_parameters.enableOMP)
+            for (uint64_t nodeIdx = 0; nodeIdx < nodeGrid.numNodes; ++nodeIdx)
+                if(!nodeGrid.surfaceFlag[nodeIdx])
+                    nodeGrid.waterData.saturationDegree[nodeIdx] = computeNodeSe(nodeIdx);
 
             //Check water balance
-            downCopyData();
-            balanceResult = evaluateWaterBalance(approxIdx, _bestMBRerror, deltaT,  _parameters);
-            upCopyData();
+            balanceResult = evaluateWaterBalance(approxIdx, _bestMBRerror, deltaT, _parameters);
 
             if((balanceResult == stepAccepted) || (balanceResult == stepHalved))
                 return balanceResult;
@@ -359,6 +393,52 @@ namespace soilFluxes3D::New
 
     bool GPUSolver::solveLinearSystem(uint8_t approximationNumber, processType computationType) //Implemented only Jacobi Water
     {
+        /*temp*/ uint64_t numTotalElement = iterationMatrix.totValuesSize;
+        /*temp*/ double* h_values = static_cast<double*>(calloc(numTotalElement, sizeof(double)));
+        /*temp*/ int64_t* h_colIdx = static_cast<int64_t*>(calloc(numTotalElement, sizeof(int64_t)));
+        /*temp*/ double* h_diagonalValues = static_cast<double*>(calloc(matrixA.numRows, sizeof(double)));;
+        /*temp*/ uint16_t* h_nCinR = static_cast<uint16_t*>(calloc(matrixA.numRows, sizeof(uint16_t)));;
+        /*temp*/ int64_t* h_offsets = static_cast<int64_t*>(calloc((numBlocks + 1), sizeof(int64_t)));
+        /*temp*/ for (int64_t idx = 0; idx < (numBlocks + 1); ++idx)
+        /*temp*/     h_offsets[idx] = idx * numThreadsPerBlock * maxTotalLink;
+
+        /*temp*/ //Move matrix and vector
+        /*temp*/ for(uint64_t indRow = 0; indRow < matrixA.numRows; ++indRow)
+        /*temp*/ {
+        /*temp*/     h_diagonalValues[indRow] = matrixA.values[indRow][0];
+        /*temp*/     uint64_t numBlocksDone = floor(double(indRow / numThreadsPerBlock));
+        /*temp*/     uint64_t numRowInCurrBlock = indRow % numThreadsPerBlock;
+        /*temp*/     uint64_t baseBlockIndex = numRowInCurrBlock + (numBlocksDone * numThreadsPerBlock * maxTotalLink);
+
+        /*temp*/     for(uint8_t indC = 1; indC < matrixA.numColumns[indRow]; ++indC)
+        /*temp*/     {
+        /*temp*/         uint64_t offset = (indC - 1) * numThreadsPerBlock;
+        /*temp*/         h_values[baseBlockIndex + offset] = matrixA.values[indRow][indC];
+        /*temp*/         h_colIdx[baseBlockIndex + offset] = matrixA.colIndeces[indRow][indC];
+        /*temp*/     }
+        /*temp*/     for(uint8_t indC = matrixA.numColumns[indRow]; indC < maxMatrixColumns; ++indC)
+        /*temp*/     {
+        /*temp*/         uint64_t offset = (indC - 1) * numThreadsPerBlock;
+        /*temp*/         h_values[baseBlockIndex + offset] = 0;
+        /*temp*/         h_colIdx[baseBlockIndex + offset] = -1;
+        /*temp*/     }
+        /*temp*/     h_nCinR[indRow] = matrixA.numColumns[indRow] - 1;
+        /*temp*/ }
+        /*temp*/ cudaMemcpy(iterationMatrix.d_values, h_values, numTotalElement * sizeof(double), cudaMemcpyHostToDevice);
+        /*temp*/ cudaMemcpy(iterationMatrix.d_columnIndeces, h_colIdx, numTotalElement * sizeof(int64_t), cudaMemcpyHostToDevice);
+        /*temp*/ cudaMemcpy(iterationMatrix.d_diagonalValues, h_diagonalValues, matrixA.numRows * sizeof(double), cudaMemcpyHostToDevice);
+        /*temp*/ cudaMemcpy(iterationMatrix.d_numColsInRow, h_nCinR, matrixA.numRows * sizeof(uint16_t), cudaMemcpyHostToDevice);
+        /*temp*/ cudaMemcpy(iterationMatrix.d_offsets, h_offsets, (numBlocks + 1) * sizeof(int64_t), cudaMemcpyHostToDevice);
+
+        /*temp*/ cudaMemcpy(constantTerm.d_values, vectorB.values, matrixA.numRows * sizeof(double), cudaMemcpyHostToDevice);
+        /*temp*/ cudaMemcpy(unknownTerm.d_values, vectorX.values, matrixA.numRows * sizeof(double), cudaMemcpyHostToDevice);
+        /*temp*/ free(h_values);
+        /*temp*/ free(h_colIdx);
+        /*temp*/ free(h_diagonalValues);
+        /*temp*/ free(h_nCinR);
+
+        /*temp*/ createCUsparseDescriptors();
+
         size_t bufSize;
         const double alpha = -1, beta = 1;
         void *externalBuffer;
@@ -370,6 +450,14 @@ namespace soilFluxes3D::New
         bool status = true;
         double bestErrorNorm = (double) std::numeric_limits<float>::max();
 
+        double *d_tempVector = nullptr;
+        cudaMalloc((void**) &d_tempVector, unknownTerm.numElements * sizeof(double));
+
+        //TO DO: implement cusparseSpMV_preprocess
+
+        /*temp*/ moveToDevice(nodeGrid.z, double, nodeGrid.numNodes);
+        /*temp*/ moveToDevice(nodeGrid.surfaceFlag, bool, nodeGrid.numNodes);
+
         uint32_t currMaxIterationNum = calcCurrentMaxIterationNumber(approximationNumber);
         uint32_t GPUfactor = 100;           //TO DO: test and optimize
         for (size_t iterationNumber = 0; iterationNumber < currMaxIterationNum; ++iterationNumber)
@@ -377,9 +465,23 @@ namespace soilFluxes3D::New
             for(size_t internalCounter = 0; internalCounter < GPUfactor; ++internalCounter)
             {
                 cudaMemcpy(tempSolution.d_values, constantTerm.d_values, constantTerm.numElements * sizeof(double), cudaMemcpyDeviceToDevice);
+                cudaDeviceSynchronize();
+
                 cusparseSpMV(libHandle, CUSPARSE_OPERATION_NON_TRANSPOSE, &alpha, iterationMatrix.cusparseDescriptor, unknownTerm.cusparseDescriptor, &beta, tempSolution.cusparseDescriptor, CUDA_R_64F, CUSPARSE_SPMV_ALG_DEFAULT, externalBuffer);
-                cudaMemcpy(unknownTerm.d_values, constantTerm.d_values, constantTerm.numElements * sizeof(double), cudaMemcpyDeviceToDevice);
-                cusparseSpMV(libHandle, CUSPARSE_OPERATION_NON_TRANSPOSE, &alpha, iterationMatrix.cusparseDescriptor, tempSolution.cusparseDescriptor, &beta, unknownTerm.cusparseDescriptor, CUDA_R_64F, CUSPARSE_SPMV_ALG_DEFAULT, externalBuffer);
+                cudaDeviceSynchronize();
+
+                //TEMP: single iteration to mimic CPU behaviour
+
+                cudaMemcpy(d_tempVector, unknownTerm.d_values, constantTerm.numElements * sizeof(double), cudaMemcpyDeviceToDevice);
+                cudaMemcpy(unknownTerm.d_values, tempSolution.d_values, constantTerm.numElements * sizeof(double), cudaMemcpyDeviceToDevice);
+                cudaMemcpy(tempSolution.d_values, d_tempVector, constantTerm.numElements * sizeof(double), cudaMemcpyDeviceToDevice);
+
+                //cudaMemcpy(unknownTerm.d_values, constantTerm.d_values, constantTerm.numElements * sizeof(double), cudaMemcpyDeviceToDevice);
+                //cudaDeviceSynchronize();
+
+                //cusparseSpMV(libHandle, CUSPARSE_OPERATION_NON_TRANSPOSE, &alpha, iterationMatrix.cusparseDescriptor, tempSolution.cusparseDescriptor, &beta, unknownTerm.cusparseDescriptor, CUDA_R_64F, CUSPARSE_SPMV_ALG_DEFAULT, externalBuffer);
+                //cudaDeviceSynchronize();
+
             }
 
             //Calcolo della norma dell'errore
@@ -400,13 +502,26 @@ namespace soilFluxes3D::New
                 break;
 
             if(currErrorNorm > (bestErrorNorm * 10))
+            {
                 status = false;
+                break;
+            }
 
             if(currErrorNorm < bestErrorNorm)
                 bestErrorNorm = currErrorNorm;
         }
 
-        cudaFree(externalBuffer);
+        /*temp*/ moveToHost(nodeGrid.z, double, nodeGrid.numNodes);
+        /*temp*/ moveToHost(nodeGrid.surfaceFlag, bool, nodeGrid.numNodes);
+
+        cudaFree(externalBuffer); externalBuffer = nullptr;
+        cudaFree(d_tempVector); d_tempVector = nullptr;
+
+
+        /*temp*/ cudaMemcpy(vectorB.values, constantTerm.d_values, matrixA.numRows * sizeof(double), cudaMemcpyDeviceToHost);
+        /*temp*/ cudaMemcpy(vectorX.values, unknownTerm.d_values, matrixA.numRows * sizeof(double), cudaMemcpyDeviceToHost);
+
+
         return status;
     }
 
@@ -432,7 +547,7 @@ namespace soilFluxes3D::New
 
         //Move soil data
         soilSize *= sizeof(soilData_t);
-        cudaCheck(cudaMalloc((void**) &d_surfaceList, soilSize));
+        cudaCheck(cudaMalloc((void**) &d_soilList, soilSize));
         cudaCheck(cudaMemcpy(d_soilList, soilList1D.data(), soilSize, cudaMemcpyHostToDevice));
 
         #pragma omp parallel for if(_parameters.enableOMP)
@@ -493,7 +608,7 @@ namespace soilFluxes3D::New
 
     extern __cudaMngd Solver* solver;
 
-    __global__ void init_SurfaceC_SubSurfaceSe(double* vectorC)
+    __global__ void init_SurfaceC_SubSurfaceSe(double* vectorC)         //TO DO: merge with host code in single __host__ __device__ function
     {
         uint64_t nodeIdx = (blockIdx.x * blockDim.x) + threadIdx.x;
         if(nodeIdx >= nodeGrid.numNodes)
@@ -505,7 +620,7 @@ namespace soilFluxes3D::New
             nodeGrid.waterData.saturationDegree[nodeIdx] = computeNodeSe(nodeIdx);
     }
 
-    __global__ void updateBoundaryWaterData_k(double deltaT)
+    __global__ void updateBoundaryWaterData_k(double deltaT)            //TO DO: merge with host code in single __host__ __device__ function
     {
         uint64_t nodeIdx = (blockIdx.x * blockDim.x) + threadIdx.x;
         if(nodeIdx >= nodeGrid.numNodes)
@@ -597,7 +712,6 @@ namespace soilFluxes3D::New
             nodeGrid.waterData.saturationDegree[nodeIdx] = computeNodeSe(nodeIdx);
     }
 
-
     __global__ void computeCapacity_k(double *vectorC)
     {
         uint64_t nodeIdx = (blockIdx.x * blockDim.x) + threadIdx.x;
@@ -673,7 +787,7 @@ namespace soilFluxes3D::New
         vectorB.d_values[rowIdx] = ((Cvalues[rowIdx] / deltaT) * nodeGrid.waterData.oldPressureHeads[rowIdx]) + nodeGrid.waterData.waterFlow[rowIdx] + nodeGrid.waterData.invariantFluxes[rowIdx];
 
         //Preconditioning
-        for(uint8_t colIdx = 1; colIdx < matrixA.d_numColsInRow[rowIdx]; ++colIdx)
+        for(uint8_t colIdx = 0; colIdx < matrixA.d_numColsInRow[rowIdx]; ++colIdx)
             matrixA.d_values[linearBaseIndex + (colIdx * blockDim.x)] /= matrixA.d_diagonalValues[rowIdx];
 
         vectorB.d_values[rowIdx] /= matrixA.d_diagonalValues[rowIdx];

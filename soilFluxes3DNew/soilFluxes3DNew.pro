@@ -30,27 +30,28 @@ INCLUDEPATH += $$absolute_path(..\mathFunctions)
 
 SOURCES += \
     cpusolver.cpp \
-    heat_new.cpp \
+    heat.cpp \
     otherFunctions.cpp \
-    soilFluxes3D_new.cpp \
-    soil_new.cpp \
-    water_new.cpp
+    soilFluxes3DNew.cpp \
+    soilPhysics.cpp \
+    water.cpp
 
 HEADERS += \
     cpusolver.h \
-    heat_new.h \
+    heat.h \
     logFunctions.h \
     macro.h \
     otherFunctions.h \
-    soilFluxes3D_new.h \
-    soil_new.h \
-    solver_new.h \
+    soilFluxes3DNew.h \
+    soilPhysics.h \
+    solver.h \
     types_cpu.h \
     types_opt.h \
-    water_new.h \
+    water.h
 
 DISTFILES += \
-    #
+    ToDoList.txt \
+    temp_gpuSolver_cpp.txt
 
 unix:{
     CONFIG(debug, debug|release) {
@@ -63,7 +64,7 @@ win32:{
     TARGET = soilFluxes3DNew
 }
 
-CONFIG += CUDA_CONFIG
+#CONFIG += CUDA_CONFIG
 
 CONFIG(CUDA_CONFIG) {
     DEFINES += CUDA_ENABLED
@@ -73,7 +74,7 @@ CONFIG(CUDA_CONFIG) {
         types_gpu.h \
 
     SOURCES += \
-    gpusolver.cpp
+        gpusolver.cpp \
 
     # CUDA settings
     CUDA_DIR = $$(CUDA_PATH) #"D:\App e giochi\NVIDIA GPU Computing Toolkit\CUDA\v12.9"
@@ -96,6 +97,7 @@ CONFIG(CUDA_CONFIG) {
     CONFIG(debug, debug|release) {
         MSVCRT_LINK_FLAG = "/MDd"
         SUBPATH = debug
+        cudaC_FLAGS += -g -G
     } else {
         MSVCRT_LINK_FLAG = "/MD"
         SUBPATH = release

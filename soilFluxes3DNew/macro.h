@@ -33,13 +33,16 @@
     #define SF3Dmin(v1, v2) std::min(v1, v2)
 #endif
 
-#define hostAlloc(ptr, type, size) {if(ptr != nullptr) {return MemoryError;} ptr = static_cast<type*>(calloc(size, sizeof(type))); if(ptr==nullptr) {return MemoryError;}}
+//TO DO: move all macro into inline funtions
+//TO DO: move all type from c-style names to c++ names (std:: + c++ header)
+
+#define hostAlloc(ptr, type, size) {if(ptr != nullptr) {return MemoryError;} ptr = static_cast<type*>(std::calloc(size, sizeof(type))); if(ptr==nullptr) {return MemoryError;}}
 #define hostFill(ptr, size, value) {std::fill(ptr, ptr + size, value);}
 #define hostReset(ptr, size) {std::memset(ptr, 0, size);}
-#define hostFree(ptr) {if(ptr != nullptr){free(ptr); ptr = nullptr;}}
+#define hostFree(ptr) {if(ptr != nullptr){std::free(ptr); ptr = nullptr;}}
 
-#define hostSolverAlloc(ptr, type, size) {if(ptr != nullptr) {_status = Error; return SolverError;} ptr = static_cast<type*>(calloc(size, sizeof(type))); if(ptr==nullptr) {_status = Error; return SolverError;}}
-#define hostSolverFree(ptr) {if(ptr != nullptr){free(ptr); ptr = nullptr;}}
+#define hostSolverAlloc(ptr, type, size) {if(ptr != nullptr) {_status = Error; return SolverError;} ptr = static_cast<type*>(std::calloc(size, sizeof(type))); if(ptr==nullptr) {_status = Error; return SolverError;}}
+#define hostSolverFree(ptr) {if(ptr != nullptr){std::free(ptr); ptr = nullptr;}}
 
 
 #define destructDevicePointer(ptr) {if(ptr != nullptr) {cudaFree(ptr); ptr = nullptr;}}
@@ -57,21 +60,24 @@
 #define moveToDevice(ptr, type, count) { type *tmp;                                                                     \
                                          cudaCheck(cudaMalloc((void**) &(tmp), count * sizeof(type)));                  \
                                          cudaCheck(cudaMemcpy(tmp, ptr, count * sizeof(type), cudaMemcpyHostToDevice)); \
-                                         free(ptr); ptr = tmp; }
+                                         std::free(ptr); ptr = tmp; }
 
-#define moveToHost(ptr, type, count) { type *tmp = static_cast<type*>(calloc(count, sizeof(type)));                                         \
+#define moveToHost(ptr, type, count) { type *tmp = static_cast<type*>(std::calloc(count, sizeof(type)));                     \
                                        cudaCheck(cudaMemcpy(tmp, ptr, count * sizeof(type), cudaMemcpyDeviceToHost));   \
                                        cudaCheck(cudaFree(ptr)); ptr = tmp; }
 
 
-#define launchKernel(kernel, ...) {kernel<<<numBlocks, numThreadsPerBlock>>>(__VA_ARGS__);}
+#define launchKernel(kernel, ...) {kernel<<<numBlocks, numThreadsPerBlock>>>(__VA_ARGS__);  \
+                                    cudaDeviceSynchronize();}
 
 
 #define solverCheck(retValue) {if(retValue != SF3Dok) {_status = Error; return SolverError;}}
 
 
+#define cudaCheckCritical(retValue) {if(retValue != cudaSuccess) {_status = Error; exit(1);}}
 #define cudaCheckSolver(retValue) {if(retValue != cudaSuccess) {_status = Error; return;}}
 #define cudaCheck(retValue) {if(retValue != cudaSuccess) {return MemoryError;}}
 #define cuspCheck(retValue) {if(retValue != CUSPARSE_STATUS_SUCCESS) {_status = Error; return SolverError;}}
+
 
 #endif // SOILFLUXES3D_MACRO_H

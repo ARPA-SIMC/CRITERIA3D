@@ -1,8 +1,8 @@
 #ifndef SOILFLUXES3D_TYPES_OPT_H
 #define SOILFLUXES3D_TYPES_OPT_H
 
-#include "types_cpu.h"
 #include <optional>
+#include "types_cpu.h"
 
 namespace soilFluxes3D::New
 {

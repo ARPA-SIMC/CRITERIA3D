@@ -1,6 +1,8 @@
 #ifndef COMMONCONSTANTS_H
 #define COMMONCONSTANTS_H
 
+    #include <cfloat>
+
     #ifndef MINVALUE
         #define MINVALUE(a, b) (((a) < (b)) ? (a) : (b))
     #endif

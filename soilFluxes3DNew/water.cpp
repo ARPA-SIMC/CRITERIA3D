@@ -1,10 +1,10 @@
 #include <cassert>
 #include <iostream>
 
-#include "solver_new.h"
-#include "water_new.h"
-#include "soil_new.h"
-#include "heat_new.h"
+#include "solver.h"
+#include "water.h"
+#include "soilPhysics.h"
+#include "heat.h"
 #include "otherFunctions.h"
 
 using namespace soilFluxes3D::New;

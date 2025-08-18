@@ -1,5 +1,5 @@
-#include "heat_new.h"
-#include "soil_new.h"
+#include "heat.h"
+#include "soilPhysics.h"
 #include "otherFunctions.h"
 
 using namespace soilFluxes3D::New;
