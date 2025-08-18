@@ -243,11 +243,12 @@ bool computeResidualsGlocalDetrending(meteoVariable myVar, const Crit3DMacroArea
             gis::getRowColFromXY(*settings->getCurrentDEM()->header, meteoPoints[meteoPointsList[i]].point.utm, &row, &col);
             temp = settings->getCurrentDEM()->header->nrCols*row + col;
 
-            for (int k = 0; k < (int)areaCells.size(); k = k + 2)
+            /*for (int k = 0; k < (int)areaCells.size(); k = k + 2)
             {
                 if (areaCells[k] == temp)
                     weight = areaCells[k+1];
-            }
+            }*/
+            weight = 1;
 
             isValid = (! excludeSupplemental || checkLapseRateCode(meteoPoints[meteoPointsList[i]].lapseRateCode, settings->getUseLapseRateCode(), false));
             isValid = (isValid && (! excludeOutsideDem || meteoPoints[meteoPointsList[i]].isInsideDem));
