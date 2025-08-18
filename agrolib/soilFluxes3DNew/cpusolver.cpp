@@ -3,8 +3,8 @@
 #include <iostream>
 
 #include "cpusolver.h"
-#include "soil_new.h"
-#include "water_new.h"
+#include "soilPhysics.h"
+#include "water.h"
 
 using namespace soilFluxes3D::Soil;
 using namespace soilFluxes3D::Water;

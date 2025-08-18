@@ -1,6 +1,8 @@
 #ifndef SOILFLUXES3D_SOLVER_H
 #define SOILFLUXES3D_SOLVER_H
 
+#include <cstdlib>
+
 #include "types_cpu.h"
 #include "macro.h"
 

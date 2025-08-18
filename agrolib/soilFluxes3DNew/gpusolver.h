@@ -1,7 +1,7 @@
 #ifndef SOILFLUXES3D_GPUSOLVER_H
 #define SOILFLUXES3D_GPUSOLVER_H
 
-#include "solver_new.h"
+#include "solver.h"
 #include "types_gpu.h"
 
 namespace soilFluxes3D::New
@@ -35,6 +35,12 @@ namespace soilFluxes3D::New
             SF3Derror_t downMoveSoilSurfacePtr();
             SF3Derror_t createCUsparseDescriptors();
 
+            /*temp*/ nodesData_t* ptr = nullptr;
+            /*temp*/ MatrixCPU matrixA;
+            /*temp*/ VectorCPU vectorB, vectorX;
+
+            /*temp*/ VectorCPU vectorC;
+
         public:
             GPUSolver() : Solver(GPU, Jacobi) {}
 
@@ -49,6 +55,15 @@ namespace soilFluxes3D::New
 
     inline __cudaSpec double GPUSolver::getMatrixElementValue(uint64_t rowIndex, uint64_t colIndex)
     {
+        /*temp*/ uint8_t cpuColIdx;
+        /*temp*/ for(cpuColIdx = 0; cpuColIdx < matrixA.numColumns[rowIndex]; ++cpuColIdx)
+        /*temp*/     if(matrixA.colIndeces[rowIndex][cpuColIdx] == colIndex)
+        /*temp*/         break;
+
+        /*temp*/ //assert(cpuColIdx < matrixA.numColumns[rowIndex]);
+        /*temp*/ return matrixA.values[rowIndex][cpuColIdx] * matrixA.values[rowIndex][0];
+
+
         uint64_t sliceIndex = (uint64_t)(floor((double) rowIndex / iterationMatrix.sliceSize));
         uint64_t baseIndex = (uint64_t)(iterationMatrix.d_offsets[sliceIndex]);
         uint64_t pOffIndex = rowIndex % iterationMatrix.sliceSize;

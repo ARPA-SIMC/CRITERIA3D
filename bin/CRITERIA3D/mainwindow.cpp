@@ -46,7 +46,7 @@
 #include "utilities.h"
 #include "formText.h"
 #include "soilFluxes3D.h"
-#include "soilFluxes3D_new.h"
+#include "soilFluxes3DNew.h"
 
 #include <QTime>
 

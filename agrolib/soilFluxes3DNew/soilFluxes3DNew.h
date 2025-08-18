@@ -1,5 +1,5 @@
-#ifndef SOILFLUXES3D_NEW_H
-#define SOILFLUXES3D_NEW_H
+#ifndef SOILFLUXES3DNEW_H
+#define SOILFLUXES3DNEW_H
 
 #include "macro.h"
 #include "types_cpu.h"
@@ -66,4 +66,4 @@ namespace soilFluxes3D::New
     double computeStep(double maxTimeStep);
 
 }
-#endif // SOILFLUXES3D_NEW_H
+#endif // SOILFLUXES3DNEW_H

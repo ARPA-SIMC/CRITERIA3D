@@ -2,10 +2,10 @@
 #include <iostream>
 
 #include "commonConstants.h"
-#include "soilFluxes3D_new.h"
-#include "solver_new.h"
-#include "soil_new.h"
-#include "water_new.h"
+#include "soilFluxes3DNew.h"
+#include "solver.h"
+#include "soilPhysics.h"
+#include "water.h"
 
 #ifdef CUDA_ENABLED
     #include "gpusolver.h"
@@ -141,7 +141,12 @@ namespace soilFluxes3D::New
         //Inizialize the solver pointer
         #ifdef CUDA_ENABLED
             if(CUDAactive)
-                solver = &(GPUSolverObject);
+            {
+                GPUSolver* tmpPtr = nullptr;
+                cudaMallocManaged(&tmpPtr, sizeof(GPUSolver));
+                new (tmpPtr) GPUSolver(GPUSolverObject);
+                solver = tmpPtr;
+            }
             else
                 solver = &(CPUSolverObject);
         #else

@@ -35,8 +35,8 @@
 #include "project.h"
 #include "project3D.h"
 #include "soilFluxes3D.h"
-#include "soilFluxes3D_new.h"
-#include "soil.h"
+#include "soilFluxes3DNew.h"
+#include "soilPhysics.h"
 #include "hydrall.h"
 #include "physics.h"
 #include "shell.h"
@@ -1030,9 +1030,9 @@ bool Crit3DProject::runModels(const QDateTime &firstTime, const QDateTime &lastT
             // QString vectorLog = soilFluxes3D::getVectorLog();
             // logData("VectorFinal", vectorLog);
 
-            QString linSystLog = ""; // soilFluxes3D::getLinSystLog();
+            QString linSystLog = "  "; // soilFluxes3D::getLinSystLog();
             // logData("LinSystInfo", linSystLog);
-            logInfo("LinSystInfo 01\n" + linSystLog);
+            logInfo("LinSystInfo 00\n" + linSystLog);
 
             //rothC maps update must be done hourly, otherwise ETReal data are not stored
             if (processes.computeRothC || processes.computeHydrall)
