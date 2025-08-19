@@ -6,6 +6,8 @@ Minor
 
  - move from macro to inline constexpr + (macro error check)
 
+ - refactor code not in soilFluxes3D
+
 Major 
  - Heat CPU
  - Logging	-> Minor: define CONFIG to toggle it

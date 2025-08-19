@@ -17,8 +17,8 @@ win32:{
     QMAKE_LFLAGS += -openmp:llvm -LTCG
 }
 unix:{
-    QMAKE_CXXFLAGS += -fopenmp -flto
-    QMAKE_LFLAGS += -fopenmp -flto
+    QMAKE_CXXFLAGS += -fopenmp #-flto
+    QMAKE_LFLAGS += -fopenmp #-flto
 }
 
 TEMPLATE = lib

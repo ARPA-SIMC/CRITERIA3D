@@ -1,4 +1,3 @@
-#include <cmath>
 #include <cassert>
 
 #include "gpusolver.h"

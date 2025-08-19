@@ -15,4 +15,5 @@ CONFIG += ordered
 DISTFILES += \
     ../../batchFiles/batchMonteleoneTest.txt \
     ../../batchFiles/batchTest.txt \
+    ../../batchFiles/batchTestLinux.txt \
     ../../batchFiles/batchTestList.txt
