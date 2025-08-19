@@ -165,7 +165,7 @@ namespace soilFluxes3D::New
             {
                 _parameters.deltaTcurr = SF3Dmax(_parameters.deltaTmin, _parameters.deltaTcurr / nodeGrid.waterData.CourantWaterLevel);
                 if(_parameters.deltaTcurr > 1.)
-                    _parameters.deltaTcurr = floor(_parameters.deltaTcurr);
+                    _parameters.deltaTcurr = std::floor(_parameters.deltaTcurr);
 
                 return stepHalved;
             }

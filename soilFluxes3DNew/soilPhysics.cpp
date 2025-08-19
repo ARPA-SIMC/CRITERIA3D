@@ -88,10 +88,10 @@ namespace soilFluxes3D::Soil
         switch(model)
         {
             case VanGenuchten:
-                return pow(1. + pow(nodeSoil.VG_alpha * psi, nodeSoil.VG_n), -nodeSoil.VG_m);
+                return std::pow(1. + std::pow(nodeSoil.VG_alpha * psi, nodeSoil.VG_n), -nodeSoil.VG_m);
                 break;
             case ModifiedVanGenuchten:
-                return (psi <= nodeSoil.VG_he) ? 1. : pow(1. + pow(nodeSoil.VG_alpha * psi, nodeSoil.VG_n), -nodeSoil.VG_m) * (1. / nodeSoil.VG_Sc);
+                return (psi <= nodeSoil.VG_he) ? 1. : std::pow(1. + std::pow(nodeSoil.VG_alpha * psi, nodeSoil.VG_n), -nodeSoil.VG_m) * (1. / nodeSoil.VG_Sc);
                 break;
             default:
                 return noData;
@@ -129,15 +129,15 @@ namespace soilFluxes3D::Soil
         switch(model)
         {
             case VanGenuchten:
-                temp = pow(1. / nodeGrid.waterData.saturationDegree[nodeIndex], 1. / nodeSoil.VG_m) - 1.;
+                temp = std::pow(1. / nodeGrid.waterData.saturationDegree[nodeIndex], 1. / nodeSoil.VG_m) - 1.;
                 break;
             case ModifiedVanGenuchten:
-                temp = pow(1. / (nodeGrid.waterData.saturationDegree[nodeIndex] * nodeSoil.VG_Sc), 1. / nodeSoil.VG_m) - 1;
+                temp = std::pow(1. / (nodeGrid.waterData.saturationDegree[nodeIndex] * nodeSoil.VG_Sc), 1. / nodeSoil.VG_m) - 1;
                 break;
             default:
                 return noData;
         }
-        return (1. / nodeSoil.VG_alpha) * pow(temp, 1. / nodeSoil.VG_n);
+        return (1. / nodeSoil.VG_alpha) * std::pow(temp, 1. / nodeSoil.VG_n);
     }
 
     /*!
@@ -172,18 +172,18 @@ namespace soilFluxes3D::Soil
         switch(model)
         {
             case VanGenuchten:
-                temp = 1. - pow(1. - pow(Se, 1. / soilData.VG_m), soilData.VG_m);
+                temp = 1. - std::pow(1. - std::pow(Se, 1. / soilData.VG_m), soilData.VG_m);
                 break;
             case ModifiedVanGenuchten:
-                tNum = 1. - pow(1. - pow(Se * soilData.VG_Sc, 1. / soilData.VG_m), soilData.VG_m);
-                tDen = 1. - pow(1. - pow(soilData.VG_Sc, 1. / soilData.VG_m), soilData.VG_m);
+                tNum = 1. - std::pow(1. - std::pow(Se * soilData.VG_Sc, 1. / soilData.VG_m), soilData.VG_m);
+                tDen = 1. - std::pow(1. - std::pow(soilData.VG_Sc, 1. / soilData.VG_m), soilData.VG_m);
                 temp = tNum / tDen;
                 break;
             default:
                 return noData;
         }
 
-        return soilData.K_sat * pow(Se, soilData.Mualem_L) * pow(temp, 2.);
+        return soilData.K_sat * std::pow(Se, soilData.Mualem_L) * std::pow(temp, 2.);
     }
 
     /*!
@@ -218,7 +218,7 @@ namespace soilFluxes3D::Soil
         double dSedH;
         if(psiCurr == psiPrev)
         {
-            dSedH = nodeSoil.VG_alpha * nodeSoil.VG_n * nodeSoil.VG_m * pow(1. + pow(nodeSoil.VG_alpha * psiCurr, nodeSoil.VG_n), -(nodeSoil.VG_m + 1.)) * pow(nodeSoil.VG_alpha * psiCurr, nodeSoil.VG_n - 1.);
+            dSedH = nodeSoil.VG_alpha * nodeSoil.VG_n * nodeSoil.VG_m * std::pow(1. + std::pow(nodeSoil.VG_alpha * psiCurr, nodeSoil.VG_n), -(nodeSoil.VG_m + 1.)) * std::pow(nodeSoil.VG_alpha * psiCurr, nodeSoil.VG_n - 1.);
             if(model == ModifiedVanGenuchten)
                 dSedH *= (1. / nodeSoil.VG_Sc);
         }

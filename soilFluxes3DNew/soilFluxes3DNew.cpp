@@ -308,7 +308,7 @@ namespace soilFluxes3D::New
         soilList[nrSoil][nrHorizon].VG_m = VG_m;
 
         soilList[nrSoil][nrHorizon].VG_he = VG_he;
-        soilList[nrSoil][nrHorizon].VG_Sc = pow(1. + pow(VG_alpha * VG_he, VG_n), -VG_m);
+        soilList[nrSoil][nrHorizon].VG_Sc = std::pow(1. + std::pow(VG_alpha * VG_he, VG_n), -VG_m);
 
         soilList[nrSoil][nrHorizon].Theta_r = ThetaR;
         soilList[nrSoil][nrHorizon].Theta_s = ThetaS;
@@ -377,8 +377,8 @@ namespace soilFluxes3D::New
             MBRThresholdExponent = 6;
 
         SolverParametersPartial paramTemp;
-        paramTemp.MBRThreshold = pow(10.0, -MBRThresholdExponent);
-        paramTemp.residualTolerance = pow(10.0, -ResidualToleranceExponent);
+        paramTemp.MBRThreshold = std::pow(10.0, -MBRThresholdExponent);
+        paramTemp.residualTolerance = std::pow(10.0, -ResidualToleranceExponent);
         paramTemp.deltaTmin = minDeltaT;
         paramTemp.deltaTmax = maxDeltaT;
         paramTemp.deltaTcurr = maxDeltaT;
@@ -387,8 +387,8 @@ namespace soilFluxes3D::New
         solver->updateParameters(paramTemp);
 
         //Versione c++20
-        //solver->updateParameters(SolverParametersPartial{.MBRThreshold = pow(10.0, -MBRThresholdExponent),
-        //                                             .residualTolerance = pow(10.0, -ResidualToleranceExponent),
+        //solver->updateParameters(SolverParametersPartial{.MBRThreshold = std::pow(10.0, -MBRThresholdExponent),
+        //                                             .residualTolerance = std::pow(10.0, -ResidualToleranceExponent),
         //                                             .deltaTmin = minDeltaT, .deltaTmax = maxDeltaT, .deltaTcurr = maxDeltaT,
         //                                             .maxApproximationsNumber = maxApproximationsNumber, .maxIterationsNumber = maxIterationNumber});
 

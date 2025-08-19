@@ -28,20 +28,20 @@ namespace soilFluxes3D::Math
     __cudaSpec double geometricMean(double v1, double v2)
     {
         int8_t sign = (v1 > 0) - (v1 < 0);
-        return sign * sqrt(v1 * v2);
+        return sign * std::sqrt(v1 * v2);
     }
 
     __cudaSpec double logaritmicMean(double v1, double v2)
     {
-        return (v1 == v2) ? v1 : (v1 - v2) / log(v1/v2);
+        return (v1 == v2) ? v1 : (v1 - v2) / std::log(v1/v2);
     }
 
     __cudaSpec double vectorNorm(double vector[], size_t size)
     {
         double norm = 0;
         for (size_t idx = 0; idx < size; ++idx)
-            norm += pow(vector[idx], 2);
+            norm += std::pow(vector[idx], 2);
 
-        return sqrt(norm);
+        return std::sqrt(norm);
     }
 } //namespace

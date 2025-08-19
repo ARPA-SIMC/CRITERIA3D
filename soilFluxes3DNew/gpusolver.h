@@ -64,7 +64,7 @@ namespace soilFluxes3D::New
         /*temp*/ return matrixA.values[rowIndex][cpuColIdx] * matrixA.values[rowIndex][0];
 
 
-        uint64_t sliceIndex = (uint64_t)(floor((double) rowIndex / iterationMatrix.sliceSize));
+        uint64_t sliceIndex = (uint64_t)(std::floor((double) rowIndex / iterationMatrix.sliceSize));
         uint64_t baseIndex = (uint64_t)(iterationMatrix.d_offsets[sliceIndex]);
         uint64_t pOffIndex = rowIndex % iterationMatrix.sliceSize;
 

@@ -82,7 +82,7 @@ namespace soilFluxes3D::Water
         balanceDataCurrentTimeStep.waterMBE = deltaStorage - balanceDataCurrentTimeStep.waterSinkSource;
 
         // minimum reference water storage [m3] as % of current storage
-        double timePercentage = 0.01 * SF3Dmax(deltaT, 1.) / HOUR_SECONDS;
+        double timePercentage = 0.01 * SF3Dmax(deltaT, 60.) / HOUR_SECONDS;
         double minRefWaterStorage = balanceDataCurrentTimeStep.waterStorage * timePercentage;
         minRefWaterStorage = SF3Dmax(minRefWaterStorage, 0.001);
 
@@ -121,7 +121,7 @@ namespace soilFluxes3D::Water
     {
         computeCurrentMassBalance(deltaT);
 
-        double currMBRerror = fabs(balanceDataCurrentTimeStep.waterMBR);
+        double currMBRerror = std::fabs(balanceDataCurrentTimeStep.waterMBR);
 
         //Optimal error
         if(currMBRerror < parameters.MBRThreshold)
@@ -136,7 +136,7 @@ namespace soilFluxes3D::Water
                 parameters.deltaTcurr = (currCWL < 0.5) ? (2 * parameters.deltaTcurr) : (parameters.deltaTcurr / currCWL);
                 parameters.deltaTcurr = SF3Dmin(parameters.deltaTcurr, parameters.deltaTmax);
                 if(parameters.deltaTcurr > 1.)
-                    parameters.deltaTcurr = floor(parameters.deltaTcurr);
+                    parameters.deltaTcurr = std::floor(parameters.deltaTcurr);
             }
             return stepAccepted;
         }
@@ -366,7 +366,7 @@ namespace soilFluxes3D::Water
 
         double roughness = 0.5 * (nodeGrid.soilSurfacePointers[rowIdx].surfacePtr->roughness + nodeGrid.soilSurfacePointers[colIdx].surfacePtr->roughness);
 
-        double v = pow(H_s, 2./3.) * sqrt(slope) / roughness;
+        double v = std::pow(H_s, 2./3.) * std::sqrt(slope) / roughness;
 
         #pragma omp critical
         nodeGrid.waterData.CourantWaterLevel = SF3Dmax(nodeGrid.waterData.CourantWaterLevel, v * deltaT / cellDistance);
@@ -518,7 +518,7 @@ namespace soilFluxes3D::Water
 
                     //Manning equation
                     assert(nodeGrid.surfaceFlag[nodeIdx]);
-                    v = pow(hs, 2./3.) * sqrt(nodeGrid.boundaryData.boundarySlope[nodeIdx]) / nodeGrid.soilSurfacePointers[nodeIdx].surfacePtr->roughness;
+                    v = std::pow(hs, 2./3.) * std::sqrt(nodeGrid.boundaryData.boundarySlope[nodeIdx]) / nodeGrid.soilSurfacePointers[nodeIdx].surfacePtr->roughness;
 
                     flow = hs * v * nodeGrid.boundaryData.boundarySize[nodeIdx];
                     nodeGrid.boundaryData.waterFlowRate[nodeIdx] = -SF3Dmin(flow, maxFlow);
