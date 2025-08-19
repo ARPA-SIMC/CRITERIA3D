@@ -1375,6 +1375,12 @@ bool Crit3DMeteoPointsDbHandler::importHourlyMeteoData(const QString &csvFileNam
 
     // check point code
     QString pointCode = fileName.left(fileName.length()-4);
+    // check suffix
+    if (pointCode.right(2) == "_H")
+    {
+        pointCode = pointCode.left(pointCode.length() - 2);
+    }
+
     if (! existIdPoint(pointCode))
     {
         log += "\nID " + pointCode + " is not present in the point properties table.";
