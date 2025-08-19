@@ -89,6 +89,7 @@
         double mBallBerry; // empirical parameter of sensitivity to water stress to obtain stomatal closure
         bool isAmphystomatic;
         double rootShootRatio; //ratio of C allocated to roots and C allocated to aboveground biomass
+        double wildfireDamage; //ratio of biomass lost in wildfire event
     };
 
     struct TLAIparam {
@@ -216,6 +217,8 @@
         double currentIncrementalVolume;
         double rootShootRatioRef;
         double mBallBerry;
+        double wildfireDamage;
+        int management;
 
         void setLAICanopy(double myLAI) { leafAreaIndexCanopy = myLAI; };
         double getLAICanopy() { return leafAreaIndexCanopy; };
@@ -378,8 +381,15 @@
         gis::Crit3DRasterGrid* yearlyET0;
         gis::Crit3DRasterGrid* yearlyPrec;
 
-        gis::Crit3DRasterGrid* treeNetPrimaryProduction;
-        gis::Crit3DRasterGrid* understoreyNetPrimaryProduction;
+        gis::Crit3DRasterGrid* treeNetPrimaryProduction; //SAVE
+        gis::Crit3DRasterGrid* treeBiomassFoliage; //SAVE
+        gis::Crit3DRasterGrid* treeBiomassRoot; //SAVE
+        gis::Crit3DRasterGrid* treeBiomassSapwood; //SAVE
+        gis::Crit3DRasterGrid* understoreyNetPrimaryProduction; //SAVE
+        gis::Crit3DRasterGrid* understoreyBiomassFoliage; //SAVE
+        gis::Crit3DRasterGrid* understoreyBiomassRoot; //SAVE
+
+        gis::Crit3DRasterGrid* outputC;
 
         Crit3DHydrallMaps();
         ~Crit3DHydrallMaps();
@@ -422,6 +432,7 @@
 
         double annualGrossStandGrowth;
         double internalCarbonStorage ; // [kgC m-2]
+        double carbonStock;
 
         //gasflux results
         std::vector<double> treeTranspirationRate;          //molH2O m^-2 s^-1

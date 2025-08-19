@@ -623,10 +623,7 @@ void Crit3DProject::setRothCVariables(int row, int col)
     //soil variables
     rothCModel.setDepth(rothCModel.map.getDepth(row, col));
     rothCModel.setClay(rothCModel.map.getClay(row, col));
-    if (rothCModel.isInitializing)
-    {
-        rothCModel.setPlantCover(0.7); //TODO
-    }
+    rothCModel.setPlantCover(1); //understorey
 
     //meteo variables
     rothCModel.meteoVariable.setPrecipitation(yearlyPrec.getValueFromRowCol(row, col));
@@ -639,7 +636,7 @@ void Crit3DProject::setRothCVariables(int row, int col)
     if (processes.computeHydrall && ! isEqual(hydrallModel.getOutputC(),NODATA))
         rothCModel.setInputC(hydrallModel.getOutputC()); //read from hydrall (eventually from crop too?)  TODO CHECK
     else
-        rothCModel.setInputC(8);
+        rothCModel.setInputC(8); //TODO different species
 
     //swc comes from water model. during initialization phase, it is not used
     double SWC = NODATA;
@@ -709,16 +706,19 @@ void Crit3DProject::assignETreal()
                             forestIndex = (treeCoverIndex - managementIndex) / 10 - 1;
                         }
                     }
+                    hydrallModel.plant.management = managementIndex;
                 }
 
                 int cropIndex = getLandUnitIndexRowCol(row, col);
-                if ((cropIndex != NODATA && (int)cropList.size() > cropIndex) || forestIndex != NODATA)
+                if ((cropIndex != NODATA && (int)cropList.size() > cropIndex) || (forestIndex != NODATA && forestIndex >= 0))
                 {
                     Crit3DCrop currentCrop;
-                    if (forestIndex != NODATA)
+                    if (forestIndex != NODATA  && forestIndex >= 0)
                         currentCrop = cropList[forestIndex];
                     else if (cropIndex != NODATA && (int)cropList.size() > cropIndex)
                         currentCrop = cropList[cropIndex];
+                    else
+                        return; //todo check if ok
 
 
                     double actualTransp = 0;
@@ -2324,6 +2324,36 @@ bool Crit3DProject::saveHydrallState(const QString &currentStatePath)
     if (!gis::writeEsriGrid((hydrallPath+"/understoreyNPP").toStdString(), hydrallMaps.understoreyNetPrimaryProduction, errorStr))
     {
         logError("Error saving understorey net primary production map: " + QString::fromStdString(errorStr));
+        return false;
+    }
+
+    if (!gis::writeEsriGrid((hydrallPath+"/treeFoliage").toStdString(), hydrallMaps.treeBiomassFoliage, errorStr))
+    {
+        logError("Error saving tree foliage biomass map: " + QString::fromStdString(errorStr));
+        return false;
+    }
+
+    if (!gis::writeEsriGrid((hydrallPath+"/treeRoot").toStdString(), hydrallMaps.treeBiomassRoot, errorStr))
+    {
+        logError("Error saving tree root biomass map: " + QString::fromStdString(errorStr));
+        return false;
+    }
+
+    if (!gis::writeEsriGrid((hydrallPath+"/treeStand").toStdString(), hydrallMaps.treeBiomassSapwood, errorStr))
+    {
+        logError("Error saving tree sapwood biomass map: " + QString::fromStdString(errorStr));
+        return false;
+    }
+
+    if (!gis::writeEsriGrid((hydrallPath+"/understoreyFoliage").toStdString(), hydrallMaps.understoreyBiomassFoliage, errorStr))
+    {
+        logError("Error saving understorey foliage biomass map: " + QString::fromStdString(errorStr));
+        return false;
+    }
+
+    if (!gis::writeEsriGrid((hydrallPath+"/understoreyRoot").toStdString(), hydrallMaps.understoreyBiomassRoot, errorStr))
+    {
+        logError("Error saving understorey root biomass map: " + QString::fromStdString(errorStr));
         return false;
     }
 
