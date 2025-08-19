@@ -1241,8 +1241,6 @@ namespace gis
 
 
 
-
-
     /*!
      * \brief return true if value(row, col) > values of all neighbours
      */
@@ -1276,7 +1274,7 @@ namespace gis
     /*!
      * \brief return true if value(row, col) <= all values of neighbours
      */
-    bool isMinimum(const Crit3DRasterGrid& myGrid, int row, int col)
+    bool isMinimum(const Crit3DRasterGrid& myGrid, bool isStrictMinumum, int row, int col)
     {
         float z, adjZ;
         z = myGrid.getValueFromRowCol(row, col);
@@ -1291,11 +1289,22 @@ namespace gis
                 {
                     adjZ = myGrid.getValueFromRowCol(row+r, col+c);
                     if (! isEqual(adjZ, myGrid.header->flag))
-                        if (z > adjZ)
-                            return false;
+                    {
+                        if (isStrictMinumum)
+                        {
+                            if (z >= adjZ)
+                                return false;
+                        }
+                        else
+                        {
+                            if (z > adjZ)
+                                return false;
+                        }
+                    }
                 }
             }
         }
+
         return true;
     }
 
@@ -1308,11 +1317,11 @@ namespace gis
         float z = myGrid.getValueFromRowCol(row, col);
         if (! isEqual(z, myGrid.header->flag))
         {
-            for (int r=-1; r<=1; r++)
+            for (int r=-1; r <= 1; r++)
             {
-                for (int c=-1; c<=1; c++)
+                for (int c=-1; c <= 1; c++)
                 {
-                    if (isMinimum(myGrid, row + r, col + c))
+                    if (isMinimum(myGrid, false, row + r, col + c))
                         return true;
                 }
             }
@@ -1322,13 +1331,25 @@ namespace gis
     }
 
 
-    bool isBoundaryRunoff(const Crit3DIndexGrid& indexMap, const Crit3DRasterGrid& aspectMap, int row, int col)
+    bool isBoundaryRunoff(const Crit3DIndexGrid& indexMap, const Crit3DRasterGrid& dtm, const Crit3DRasterGrid& aspectMap, int row, int col)
     {
-        long index = indexMap.getValueFromRowCol(row,col);
-        long nullIndex = long(indexMap.header->flag);
-        float aspect = aspectMap.getValueFromRowCol(row,col);
+        // is boundary?
+        if (! isBoundary(dtm, row, col))
+            return false;
 
-        if ((index == nullIndex) || isEqual(aspect, aspectMap.header->flag))
+        // check index map
+        long index = indexMap.getValueFromRowCol(row, col);
+        long nullIndex = long(indexMap.header->flag);
+        if (index == nullIndex)
+            return false;
+
+        // is strict minimum: is boundary runoff
+        if (isMinimum(dtm, true, row, col))
+            return true;
+
+        // check aspect
+        float aspect = aspectMap.getValueFromRowCol(row, col);
+        if (isEqual(aspect, aspectMap.header->flag))
             return false;
 
         int r = 0;

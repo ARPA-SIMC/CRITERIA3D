@@ -414,7 +414,7 @@ bool Project3D::initialize3DModel()
 
     waterSinkSource.resize(nrNodes);
 
-    // set boundary
+    // set runoff boundary
     if (! setLateralBoundary()) return false;
     logInfo("Lateral boundary computed");
 
@@ -693,7 +693,7 @@ bool Project3D::setLateralBoundary()
     {
         for (int col = 0; col < boundaryMap.header->nrCols; col++)
         {
-            if (gis::isBoundaryRunoff(indexMap[0], *(radiationMaps->aspectMap), row, col))
+            if (gis::isBoundaryRunoff(indexMap[0], DEM, *(radiationMaps->aspectMap), row, col))
             {
                 boundaryMap.value[row][col] = BOUNDARY_RUNOFF;
             }

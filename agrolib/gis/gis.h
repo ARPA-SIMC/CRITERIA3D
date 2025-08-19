@@ -239,11 +239,11 @@
         bool isOutOfGridXY(double x, double y, Crit3DRasterHeader* header);
         bool isOutOfGridRowCol(int myRow, int myCol, const Crit3DLatLonHeader& header);
 
-        bool isMinimum(const Crit3DRasterGrid& rasterGrid, int row, int col);
+        bool isMinimum(const Crit3DRasterGrid& rasterGrid, bool isStrictMinumum, int row, int col);
         bool isMinimumOrNearMinimum(const Crit3DRasterGrid& rasterGrid, int row, int col);
 
         bool isBoundary(const Crit3DRasterGrid& rasterGrid, int row, int col);
-        bool isBoundaryRunoff(const Crit3DIndexGrid& rasterRef, const Crit3DRasterGrid &aspectMap, int row, int col);
+        bool isBoundaryRunoff(const Crit3DIndexGrid& rasterRef, const Crit3DRasterGrid& dtm, const Crit3DRasterGrid &aspectMap, int row, int col);
 
         bool isStrictMaximum(const Crit3DRasterGrid& rasterGrid, int row, int col);
 
