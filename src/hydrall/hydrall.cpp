@@ -287,8 +287,6 @@ Crit3DHydrallMaps::Crit3DHydrallMaps()
     standBiomassMap = new gis::Crit3DRasterGrid;
     rootBiomassMap = new gis::Crit3DRasterGrid;
     mapLast30DaysTavg = new gis::Crit3DRasterGrid;
-    yearlyET0 = new gis::Crit3DRasterGrid;
-    yearlyPrec = new gis::Crit3DRasterGrid;
 
     treeNetPrimaryProduction = new gis::Crit3DRasterGrid; //SAVE
     treeBiomassFoliage = new gis::Crit3DRasterGrid; //SAVE
@@ -318,8 +316,6 @@ void Crit3DHydrallMaps::initialize(const gis::Crit3DRasterGrid& DEM)
     criticalSoilWaterPotential->initializeGrid(DEM);
     criticalTranspiration->initializeGrid(DEM);
     minLeafWaterPotential->initializeGrid(DEM);
-    yearlyET0->initializeGrid(DEM);
-    yearlyPrec->initializeGrid(DEM);
 
     treeNetPrimaryProduction->initializeGrid(DEM, 0); //TODO: initial maps must be loaded
     treeBiomassFoliage->initializeGrid(DEM, 0); //SAVE
@@ -339,9 +335,6 @@ Crit3DHydrallMaps::~Crit3DHydrallMaps()
     standBiomassMap->clear();
     rootBiomassMap->clear();
     mapLast30DaysTavg->clear();
-
-    yearlyET0->clear();
-    yearlyPrec->clear();
 }
 
 bool Crit3DHydrall::computeHydrallPoint()
@@ -1589,14 +1582,14 @@ bool Crit3DHydrall::simplifiedGrowthStand()
     allocationCoefficient.toFoliage = ( 1 - allocationCoefficient.toFineRoots ) * 0.05;
     allocationCoefficient.toSapwood = 1 - allocationCoefficient.toFineRoots - allocationCoefficient.toFoliage;
 
-    if (printHourlyRecords)
+    /*if (printHourlyRecords)
     {
         std::ofstream myFile;
         myFile.open("outputAlloc.csv", std::ios_base::app);
         myFile << allocationCoefficient.toFoliage <<","<< allocationCoefficient.toFineRoots <<","<<allocationCoefficient.toSapwood <<","
                << rootShootRatio <<"," << weatherVariable.getYearlyET0() << "," << weatherVariable.getYearlyPrec() <<"\n";
         myFile.close();
-    }
+    }*/
 
     if (annualGrossStandGrowth * allocationCoefficient.toFoliage > statePlant.treeBiomassFoliage/(plant.foliageLongevity - 1))
     {

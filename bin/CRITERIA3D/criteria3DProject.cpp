@@ -99,8 +99,6 @@ void Crit3DProject::clearCropMaps()
 void Crit3DProject::clearHydrallMaps()
 {
     hydrallMaps.mapLast30DaysTavg->clear();
-    hydrallMaps.yearlyPrec->clear();
-    hydrallMaps.yearlyET0->clear();
 
     isHydrallInitialized = false;
 }
@@ -136,8 +134,6 @@ bool Crit3DProject::initializeHydrall()
     hydrallMaps.mapLAI->initializeGrid(*(DEM.header));
     hydrallMaps.rootBiomassMap->initializeGrid(*(DEM.header));
     hydrallMaps.standBiomassMap->initializeGrid(*(DEM.header));
-    hydrallMaps.yearlyPrec->initializeGrid(*(DEM.header));
-    hydrallMaps.yearlyET0->initializeGrid(*(DEM.header));
 
     //inizializzare un vettore che rimandi ai valori dei parametri ecofisiologici per hydrall che attraverso gli indici della croplist
 
