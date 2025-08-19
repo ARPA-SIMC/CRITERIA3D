@@ -112,7 +112,7 @@ double runoff(long i, long j, TlinkedNode *link, double deltaT, unsigned approxi
     double roughness = (nodeList[i].Soil->roughness + nodeList[j].Soil->roughness) * 0.5;
 
     // Manning equation
-    double v = pow(Hs, 2./3.) * sqrt(slope) / roughness;                // [m s-1]
+    double v = std::pow(Hs, 2./3.) * sqrt(slope) / roughness;                // [m s-1]
 
     CourantWater = std::max(CourantWater, v * deltaT / cellDistance);
 

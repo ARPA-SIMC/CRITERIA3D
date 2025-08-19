@@ -144,7 +144,8 @@ DISTFILES += \
     Criteria3D.ico
 
 OTHER_FILES += \
-    ../../batchFiles/batchTest.txt
+    ../../batchFiles/batchTest.txt \
+    ../../batchFiles/batchTestLinux.txt
 
 RESOURCES += Criteria3D.ico
 

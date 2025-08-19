@@ -60,7 +60,7 @@ namespace soilFluxes3D::New
 
 
         numThreadsPerBlock = 64;                        //Must be multiple of warp-size(32)
-        numBlocks = (uint64_t) ceil((double) nodeGrid.numNodes / numThreadsPerBlock);
+        numBlocks = (uint64_t) std::ceil((double) nodeGrid.numNodes / numThreadsPerBlock);
 
         cuspCheck(cusparseCreate(&libHandle));
 
@@ -354,7 +354,7 @@ namespace soilFluxes3D::New
             {
                 _parameters.deltaTcurr = SF3Dmax(_parameters.deltaTmin, _parameters.deltaTcurr / nodeGrid.waterData.CourantWaterLevel);
                 if(_parameters.deltaTcurr > 1.)
-                    _parameters.deltaTcurr = floor(_parameters.deltaTcurr);
+                    _parameters.deltaTcurr = std::floor(_parameters.deltaTcurr);
 
                 return stepHalved;
             }
@@ -405,7 +405,7 @@ namespace soilFluxes3D::New
         /*temp*/ for(uint64_t indRow = 0; indRow < matrixA.numRows; ++indRow)
         /*temp*/ {
         /*temp*/     h_diagonalValues[indRow] = matrixA.values[indRow][0];
-        /*temp*/     uint64_t numBlocksDone = floor(double(indRow / numThreadsPerBlock));
+        /*temp*/     uint64_t numBlocksDone = std::floor(double(indRow / numThreadsPerBlock));
         /*temp*/     uint64_t numRowInCurrBlock = indRow % numThreadsPerBlock;
         /*temp*/     uint64_t baseBlockIndex = numRowInCurrBlock + (numBlocksDone * numThreadsPerBlock * maxTotalLink);
 
@@ -645,7 +645,7 @@ namespace soilFluxes3D::New
 
                 //Manning equation
                 assert(nodeGrid.surfaceFlag[nodeIdx]);
-                v = pow(hs, 2./3.) * sqrt(nodeGrid.boundaryData.boundarySlope[nodeIdx]) / nodeGrid.soilSurfacePointers[nodeIdx].surfacePtr->roughness;
+                v = std::pow(hs, 2./3.) * std::sqrt(nodeGrid.boundaryData.boundarySlope[nodeIdx]) / nodeGrid.soilSurfacePointers[nodeIdx].surfacePtr->roughness;
 
                 flow = hs * v * nodeGrid.boundaryData.boundarySize[nodeIdx];
                 nodeGrid.boundaryData.waterFlowRate[nodeIdx] = -SF3Dmin(flow, maxFlow);

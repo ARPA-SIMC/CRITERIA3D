@@ -1253,6 +1253,9 @@ void Project3D::runWaterFluxes3DModel(double totalTimeStep, bool isRestart)
         endTime = QDateTime::currentDateTime();
         logInfo("Tempo di calcolo new [ms]: " + QString::number(startTime.msecsTo(endTime)));
 
+        if(currentSecondsNew != currentSeconds)
+            logError("ERROR ------> CurrSec: old = " + QString::number(currentSeconds) + " \t new: " + QString::number(currentSecondsNew));
+
         if (isModelPaused && currentSeconds < totalTimeStep)
         {
             emit updateOutputSignal();
