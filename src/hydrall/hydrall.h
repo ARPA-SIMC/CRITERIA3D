@@ -89,6 +89,7 @@
         double mBallBerry; // empirical parameter of sensitivity to water stress to obtain stomatal closure
         bool isAmphystomatic;
         double rootShootRatio; //ratio of C allocated to roots and C allocated to aboveground biomass
+        double wildfireDamage; //ratio of biomass lost in wildfire event
     };
 
     struct TLAIparam {
@@ -216,6 +217,7 @@
         double currentIncrementalVolume;
         double rootShootRatioRef;
         double mBallBerry;
+        double wildfireDamage;
 
         void setLAICanopy(double myLAI) { leafAreaIndexCanopy = myLAI; };
         double getLAICanopy() { return leafAreaIndexCanopy; };

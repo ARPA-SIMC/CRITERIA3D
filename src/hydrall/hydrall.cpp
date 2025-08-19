@@ -105,29 +105,29 @@ Crit3DHydrallPlant::Crit3DHydrallPlant()
     rootShootRatioRef = 0.33;
     mBallBerry = NODATA;
     tableEcophysiologicalParameters = {
-        {"LARCH",                            35.0, 6.0, false, 0.29},
-        {"PICEA_ABIES",                       35.0, 6.0, false, 0.29},
-        {"ABIES_ALBA",                      30.0, 6.0, false, 0.28},
-        {"PINUS_SYLVESTRIS_SCOTCH_PINE",          30.0, 6.0, false, 0.29},
-        {"PINUS_NIGRA",                         30.0, 6.0, false, 0.29},
-        {"PINUS_PINEA",                 40.0, 7.0, true, 0.29},
-        {"CONIFER",      30.0, 6.0, false, 0.29},
-        {"BEECH",                                     50.0, 8.0, false, 0.2},
-        {"QUERCUS_PETREA_ROBUR_PUBESCENS",       50.0, 8.0, false, 0.2},
-        {"QUERCUS_CERRIS_FRAINETTO_VALLONEA", 50.0, 8.0, false, 0.2},
-        {"CASTINEA_SATIVA",                                  50.0, 8.0, false, 0.28},
-        {"CARPINUS_BETULUS_OTRYA_OXYCARPA",                         50.0, 8.0, false, 0.26},
-        {"HYGROPHILOUS_FOREST",                             60.0, 9.0, false, 0.22},
-        {"BROADLEAF",                    50.0, 8.0, false, 0.22},
-        {"QUERCUS_ILEX",                                     40.0, 7.0, true, 0.2},
-        {"QUERCUS_SUBER",                                   40.0, 7.0, true, 0.2},
-        {"MEDITERRANEAN_EVERGREEN_TREE",      40.0, 7.0, true, 0.22},
-        {"POPULUS_ARTIFICIAL",                        70.0, 9.0, false, 0.21},
-        {"BROADLEAF_ARTIFICIAL",             60.0, 8.0, false, 0.24},
-        {"CONIFERS_ARTIFICIAL",                     40.0, 6.0, false, 0.29},
-        {"SHRUB_SUBALPINE",                         40.0, 7.0, false, 0.33},
-        {"SHRUB_TEMPERATE",                40.0, 7.0, false, 0.33},
-        {"SHRUB_MEDITERRANEAN",             40.0, 8.0, true, 0.33} //TODO: check some of these values
+        {"LARCH",                            35.0, 6.0, false, 0.29, 1},
+        {"PICEA_ABIES",                       35.0, 6.0, false, 0.29, 1},
+        {"ABIES_ALBA",                      30.0, 6.0, false, 0.28, 1},
+        {"PINUS_SYLVESTRIS_SCOTCH_PINE",          30.0, 6.0, false, 0.29, 1},
+        {"PINUS_NIGRA",                         30.0, 6.0, false, 0.29, 1},
+        {"PINUS_PINEA",                 40.0, 7.0, true, 0.29, 1},
+        {"CONIFER",      30.0, 6.0, false, 0.29, 1},
+        {"BEECH",                                     50.0, 8.0, false, 0.2, 0.4},
+        {"QUERCUS_PETREA_ROBUR_PUBESCENS",       50.0, 8.0, false, 0.2, 0.4},
+        {"QUERCUS_CERRIS_FRAINETTO_VALLONEA", 50.0, 8.0, false, 0.2, 0.4},
+        {"CASTINEA_SATIVA",                                  50.0, 8.0, false, 0.28, 0.4},
+        {"CARPINUS_BETULUS_OTRYA_OXYCARPA",                         50.0, 8.0, false, 0.26, 0.4},
+        {"HYGROPHILOUS_FOREST",                             60.0, 9.0, false, 0.22, 0.4},
+        {"BROADLEAF",                    50.0, 8.0, false, 0.22, 0.4},
+        {"QUERCUS_ILEX",                                     40.0, 7.0, true, 0.2, 0.4},
+        {"QUERCUS_SUBER",                                   40.0, 7.0, true, 0.2, 0.4},
+        {"MEDITERRANEAN_EVERGREEN_TREE",      40.0, 7.0, true, 0.22, 1},
+        {"POPULUS_ARTIFICIAL",                        70.0, 9.0, false, 0.21, 0.4},
+        {"BROADLEAF_ARTIFICIAL",             60.0, 8.0, false, 0.24, 0.4},
+        {"CONIFERS_ARTIFICIAL",                     40.0, 6.0, false, 0.29, 0.4},
+        {"SHRUB_SUBALPINE",                         40.0, 7.0, false, 0.33, 1},
+        {"SHRUB_TEMPERATE",                40.0, 7.0, false, 0.33, 1},
+        {"SHRUB_MEDITERRANEAN",             40.0, 8.0, true, 0.33, 1} //TODO: check some of these values
     };
 
 
@@ -553,6 +553,7 @@ void Crit3DHydrall::setPlantVariables(int forestIndex, double chlorophyllContent
     plant.isAmphystomatic = plant.tableEcophysiologicalParameters[conversionTableVector[forestIndex]].isAmphystomatic;
     plant.rootShootRatioRef = plant.tableEcophysiologicalParameters[conversionTableVector[forestIndex]].rootShootRatio;
     plant.mBallBerry = plant.tableEcophysiologicalParameters[conversionTableVector[forestIndex]].mBallBerry;
+    plant.wildfireDamage = plant.tableEcophysiologicalParameters[conversionTableVector[forestIndex]].wildfireDamage;
 
 
 }
