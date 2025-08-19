@@ -17,8 +17,8 @@ win32:{
     QMAKE_LFLAGS += -LTCG
 }
 unix:{
-    QMAKE_CXXFLAGS += -fopenmp -flto
-    QMAKE_LFLAGS += -fopenmp -flto
+    QMAKE_CXXFLAGS += -fopenmp #-flto
+    QMAKE_LFLAGS += -fopenmp #-flto
 }
 
 TEMPLATE = lib
@@ -26,7 +26,7 @@ CONFIG += staticlib
 CONFIG += c++17
 CONFIG += debug_and_release
 
-INCLUDEPATH += $$absolute_path(..\mathFunctions)
+INCLUDEPATH += $$absolute_path(../mathFunctions)
 
 SOURCES += \
     cpusolver.cpp \
