@@ -290,8 +290,15 @@ Crit3DHydrallMaps::Crit3DHydrallMaps()
     yearlyET0 = new gis::Crit3DRasterGrid;
     yearlyPrec = new gis::Crit3DRasterGrid;
 
-    treeNetPrimaryProduction = new gis::Crit3DRasterGrid;
-    understoreyNetPrimaryProduction = new gis::Crit3DRasterGrid;
+    treeNetPrimaryProduction = new gis::Crit3DRasterGrid; //SAVE
+    treeBiomassFoliage = new gis::Crit3DRasterGrid; //SAVE
+    treeBiomassRoot = new gis::Crit3DRasterGrid; //SAVE
+    treeBiomassSapwood = new gis::Crit3DRasterGrid; //SAVE
+    understoreyNetPrimaryProduction = new gis::Crit3DRasterGrid; //SAVE
+    understoreyBiomassFoliage = new gis::Crit3DRasterGrid; //SAVE
+    understoreyBiomassRoot = new gis::Crit3DRasterGrid; //SAVE
+
+    outputC = new gis::Crit3DRasterGrid;
 
     criticalSoilWaterPotential = new gis::Crit3DRasterGrid;
     criticalTranspiration = new gis::Crit3DRasterGrid;
@@ -306,8 +313,6 @@ void Crit3DHydrallMaps::initialize(const gis::Crit3DRasterGrid& DEM)
     standBiomassMap->initializeGrid(DEM);
     rootBiomassMap->initializeGrid(DEM);
     mapLast30DaysTavg->initializeGrid(DEM);
-    treeNetPrimaryProduction->initializeGrid(DEM, 0); //TODO: initial maps must be loaded
-    understoreyNetPrimaryProduction->initializeGrid(DEM, 0);
     treeSpeciesMap.initializeGrid(DEM);
     plantHeight.initializeGrid(DEM); //TODO
     criticalSoilWaterPotential->initializeGrid(DEM);
@@ -315,6 +320,16 @@ void Crit3DHydrallMaps::initialize(const gis::Crit3DRasterGrid& DEM)
     minLeafWaterPotential->initializeGrid(DEM);
     yearlyET0->initializeGrid(DEM);
     yearlyPrec->initializeGrid(DEM);
+
+    treeNetPrimaryProduction->initializeGrid(DEM, 0); //TODO: initial maps must be loaded
+    treeBiomassFoliage->initializeGrid(DEM, 0); //SAVE
+    treeBiomassRoot->initializeGrid(DEM, 0); //SAVE
+    treeBiomassSapwood->initializeGrid(DEM, 0); //SAVE
+    understoreyNetPrimaryProduction->initializeGrid(DEM, 0); //SAVE
+    understoreyBiomassFoliage->initializeGrid(DEM, 0); //SAVE
+    understoreyBiomassRoot->initializeGrid(DEM, 0);
+
+    outputC->initializeGrid(DEM, 0);
 
 }
 
@@ -493,6 +508,8 @@ void Crit3DHydrall::initialize()
     isFirstYearSimulation = true;
     totalTranspirationRate = 0;
 
+    carbonStock = 0;
+
     // .. TODO
 }
 
@@ -562,6 +579,16 @@ void Crit3DHydrall::setStateVariables(Crit3DHydrallMaps &stateMap, int row, int 
 {
     statePlant.treeNetPrimaryProduction = stateMap.treeNetPrimaryProduction->value[row][col];
     statePlant.understoreyNetPrimaryProduction = stateMap.understoreyNetPrimaryProduction->value[row][col];
+
+    statePlant.treeBiomassFoliage = stateMap.treeBiomassFoliage->value[row][col];
+    statePlant.understoreyBiomassFoliage = stateMap.understoreyBiomassFoliage->value[row][col];
+
+    statePlant.treeBiomassRoot = stateMap.treeBiomassRoot->value[row][col];
+    statePlant.understoreyBiomassRoot = stateMap.understoreyBiomassRoot->value[row][col];
+
+    statePlant.treeBiomassSapwood = stateMap.treeBiomassSapwood->value[row][col];
+
+    outputC = stateMap.outputC->value[row][col];
 }
 
 void Crit3DHydrall::setSoilVariables(int iLayer, int currentNode,float checkFlag, double waterContent, double waterContentFC, double waterContentWP,double clay, double sand,double thickness,double bulkDensity,double waterContentSat, double kSat, double waterPotential)
@@ -613,6 +640,16 @@ void Crit3DHydrall::getStateVariables(Crit3DHydrallMaps &stateMap, int row, int 
 {
     stateMap.treeNetPrimaryProduction->value[row][col] = statePlant.treeNetPrimaryProduction;
     stateMap.understoreyNetPrimaryProduction->value[row][col] = statePlant.understoreyNetPrimaryProduction;
+
+    stateMap.treeBiomassFoliage->value[row][col] = statePlant.treeBiomassFoliage;
+    stateMap.understoreyBiomassFoliage->value[row][col] = statePlant.understoreyBiomassFoliage;
+
+    stateMap.treeBiomassRoot->value[row][col] = statePlant.treeBiomassRoot;
+    stateMap.understoreyBiomassRoot->value[row][col] = statePlant.understoreyBiomassRoot;
+
+    stateMap.treeBiomassSapwood->value[row][col] = statePlant.treeBiomassSapwood;
+
+    stateMap.outputC->value[row][col] = outputC;
 }
 
 void Crit3DHydrall::getPlantAndSoilVariables(Crit3DHydrallMaps &map, int row, int col)
@@ -1492,14 +1529,40 @@ bool Crit3DHydrall::simplifiedGrowthStand()
     statePlant.understoreyBiomassRoot = statePlant.understoreyNetPrimaryProduction * understoreyAllocationCoefficientToRoot;         //...and roots
 
     //outputC calculation for RothC model. necessario [t C/ha] ora in kgDM m-2
-    //MANCA OUTPUT DA TAGLIO
+    //natural death
     outputC = statePlant.treeBiomassFoliage/plant.foliageLongevity + statePlant.treeBiomassSapwood/plant.sapwoodLongevity +
               statePlant.treeBiomassRoot/plant.fineRootLongevity /CARBONFACTOR * 10;
 
-    // canopy update
     statePlant.treeBiomassFoliage -= (statePlant.treeBiomassFoliage/plant.foliageLongevity);
     statePlant.treeBiomassSapwood -= (statePlant.treeBiomassSapwood/plant.sapwoodLongevity);
     statePlant.treeBiomassRoot -= (statePlant.treeBiomassRoot/plant.fineRootLongevity);
+
+    //distributed wildfire loss
+    double distributedWildfireLoss = 0.02; //TODO: this parameter must be able to vary based on what if scenario
+    statePlant.treeBiomassFoliage -= statePlant.treeBiomassFoliage * distributedWildfireLoss * 1; //foliage is completely lost in the event of a wildfire
+    outputC += statePlant.treeBiomassRoot * distributedWildfireLoss * 1; //roots are preserved but dead and become input for carbon model
+    statePlant.treeBiomassRoot -= statePlant.treeBiomassRoot * distributedWildfireLoss * 1;
+    outputC += statePlant.treeBiomassSapwood * distributedWildfireLoss * plant.wildfireDamage; //40% or 100% of sapwood is lost based on species
+    statePlant.treeBiomassSapwood -= statePlant.treeBiomassSapwood * distributedWildfireLoss * plant.wildfireDamage;
+
+    //woodland management
+    plant.management = 1; //DEBUG //0 is non managed, 1 is coppice, 2 is high forest
+    double woodExtraction = 0;
+
+    if (plant.management == 1) //coppice management produces mostly burning wood
+        woodExtraction = 1./30;
+    else if (plant.management == 2) //high forest management produces wood that stocks carbon for 35 years (IPCC) and is saved as a regional value
+    {
+        woodExtraction = 1./100;
+        carbonStock += statePlant.treeBiomassSapwood * woodExtraction * 1./35;
+    }
+
+    statePlant.treeBiomassSapwood -= statePlant.treeBiomassSapwood * woodExtraction;
+    outputC += statePlant.treeBiomassFoliage * woodExtraction; //foliage is left in the forest?
+    statePlant.treeBiomassFoliage -= statePlant.treeBiomassFoliage * woodExtraction;
+    outputC += statePlant.treeBiomassRoot * woodExtraction; //dead roots become input for carbon model
+    statePlant.treeBiomassRoot -= statePlant.treeBiomassRoot * woodExtraction;
+
 
     // TODO to understand what's internalCarbonStorage (STORE), afterwards the uninitialized value is used
     //annual stand growth
