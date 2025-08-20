@@ -164,7 +164,7 @@ int DLL_EXPORT __STDCALL setNumericalParameters(double minDeltaT, double maxDelt
     myParameters.maxApproximationsNumber = maxApproximationsNumber;
 
     if (ResidualTolerance < 5) ResidualTolerance = 5;
-    if (ResidualTolerance > 16) ResidualTolerance = 16;
+    if (ResidualTolerance > 12) ResidualTolerance = 12;
     myParameters.ResidualTolerance = pow(10.0, -ResidualTolerance);
 
     if (MBRThreshold < 1) MBRThreshold = 1;
