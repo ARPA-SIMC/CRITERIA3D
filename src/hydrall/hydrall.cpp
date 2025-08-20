@@ -1795,3 +1795,21 @@ void Crit3DHydrall::rootfind(double &allf, double &allr, double &alls, bool &sol
     }
 
 }
+
+double Crit3DHydrall::getFirewoodLostSurfacePercentage(double percentageSurfaceLostByFirewoodAtReferenceYear, int simulationYear)
+{
+    // for Emilia-Romagna region set percentageSurfaceLostByFirewoodAtReferenceYear=0.002
+    // the function is based on the ISPRA projection
+    double hazard;
+    int dimTable=3;
+    double *firstColumn = (double *) calloc(dimTable, sizeof(double));
+    double *secondColumn = (double *) calloc(dimTable, sizeof(double));
+    firstColumn[0] = 2020.;
+    firstColumn[1] = 2040.;
+    firstColumn[2] = 2050.;
+    secondColumn[0] = 1.;
+    secondColumn[1] = 22./19.;
+    secondColumn[2] = 28./19.;
+    hazard = interpolation::linearInterpolation(double(simulationYear),firstColumn,secondColumn,dimTable);
+    return hazard*percentageSurfaceLostByFirewoodAtReferenceYear;
+}
