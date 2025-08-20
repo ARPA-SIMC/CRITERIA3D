@@ -153,7 +153,7 @@ void computeMassBalance(double deltaT)
     balanceCurrentTimeStep.waterMBE = dStorage - balanceCurrentTimeStep.sinkSourceWater;            // [m3]
 
     // minimum reference water storage [m3] as % of current storage
-    double timePercentage = 0.01 * std::max(deltaT, 60.) / HOUR_SECONDS;
+    double timePercentage = 0.01 * std::max(deltaT, 30.) / HOUR_SECONDS;
     double minRefWaterStorage = balanceCurrentTimeStep.storageWater * timePercentage;
     minRefWaterStorage = std::max(minRefWaterStorage, 0.001);                                       // [m3] minimum 1 liter
 
@@ -261,20 +261,9 @@ bool waterBalance(double deltaT, int approxNr)
         acceptStep(deltaT);
 
         // best case: system is stable, try to increase time step
-        if (CourantWater < 0.8 && approxNr <= 3 && MBRerror < (myParameters.MBRThreshold * 0.5))
+        if (CourantWater < 0.5 && approxNr < 3 && MBRerror < (myParameters.MBRThreshold * 0.2))
         {
-            if (CourantWater < 0.5)
-            {
-                doubleTimeStep();
-            }
-            else
-            {
-                myParameters.current_delta_t = std::min(myParameters.current_delta_t / CourantWater, myParameters.delta_t_max);
-                if (myParameters.current_delta_t > 1.)
-                {
-                    myParameters.current_delta_t = floor(myParameters.current_delta_t);
-                }
-            }
+            doubleTimeStep();
         }
 
         return true;
@@ -289,7 +278,7 @@ bool waterBalance(double deltaT, int approxNr)
 
     // system is unstable or last approximation
     int lastApproximation = myParameters.maxApproximationsNumber-1;
-    if (MBRerror > (_bestMBRerror * 3.0) || approxNr == lastApproximation)
+    if (MBRerror > (_bestMBRerror * 5.0) || approxNr == lastApproximation)
     {
         if (deltaT > myParameters.delta_t_min)
         {
