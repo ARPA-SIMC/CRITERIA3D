@@ -270,7 +270,7 @@ void computeCapacity_thread(unsigned long start, unsigned long end)
 
         // theta derivative
         double dThetadH = dTheta_dH(i);
-        C[i] = nodeList[i].volume_area  * dThetadH;
+        C[i] = nodeList[i].volume_area * dThetadH;
 
         // vapor capacity term
         if (myStructure.computeHeat && myStructure.computeHeatVapor)

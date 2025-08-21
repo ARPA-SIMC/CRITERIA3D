@@ -45,7 +45,6 @@
 #include <QApplication>
 #include <algorithm>
 
-
 WaterFluxesParameters::WaterFluxesParameters()
 {
     initialize();
@@ -1240,6 +1239,7 @@ void Project3D::runWaterFluxes3DModel(double totalTimeStep, bool isRestart)
 
     double minimumShowTime = 1;         // [s]
     int currentStep = 0;
+
     while (currentSeconds < totalTimeStep)
     {
         double currentSecondsNew = currentSeconds;

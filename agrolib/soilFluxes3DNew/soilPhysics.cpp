@@ -53,7 +53,7 @@ namespace soilFluxes3D::Soil
         if(signedPsi >= 0.)
             return nodeSoil.Theta_s;
 
-        return computeNodeTheta_fromSe(nodeIndex, computeNodeSe_fromPsi(nodeIndex, fabs(signedPsi)));
+        return computeNodeTheta_fromSe(nodeIndex, computeNodeSe_fromPsi(nodeIndex, std::fabs(signedPsi)));
     }
 
     /*!
@@ -72,7 +72,7 @@ namespace soilFluxes3D::Soil
      */
     __cudaSpec double computeNodeSe_unsat(uint64_t nodeIndex)
     {
-        double nodePsi = fabs(nodeGrid.waterData.pressureHead[nodeIndex] - nodeGrid.z[nodeIndex]);
+        double nodePsi = std::fabs(nodeGrid.waterData.pressureHead[nodeIndex] - nodeGrid.z[nodeIndex]);
         return computeNodeSe_fromPsi(nodeIndex, nodePsi);
     }
 
@@ -197,8 +197,8 @@ namespace soilFluxes3D::Soil
     {
         soilData_t& nodeSoil = *(nodeGrid.soilSurfacePointers[nodeIndex].soilPtr);
 
-        double psiCurr = fabs(SF3Dmin(0., nodeGrid.waterData.pressureHead[nodeIndex] - nodeGrid.z[nodeIndex]));
-        double psiPrev = fabs(SF3Dmin(0., nodeGrid.waterData.oldPressureHeads[nodeIndex] - nodeGrid.z[nodeIndex]));
+        double psiCurr = std::fabs(SF3Dmin(0., nodeGrid.waterData.pressureHead[nodeIndex] - nodeGrid.z[nodeIndex]));
+        double psiPrev = std::fabs(SF3Dmin(0., nodeGrid.waterData.oldPressureHeads[nodeIndex] - nodeGrid.z[nodeIndex]));
 
         WRCModel model = solver->getWRCModel();
         switch(model)
@@ -226,7 +226,7 @@ namespace soilFluxes3D::Soil
         {
             double thetaCurr = computeNodeSe_fromPsi(nodeIndex, psiCurr);
             double thetaPrev = computeNodeSe_fromPsi(nodeIndex, psiPrev);
-            dSedH = fabs((thetaCurr - thetaPrev) / (nodeGrid.waterData.pressureHead[nodeIndex] - nodeGrid.waterData.oldPressureHeads[nodeIndex]));
+            dSedH = std::fabs((thetaCurr - thetaPrev) / (nodeGrid.waterData.pressureHead[nodeIndex] - nodeGrid.waterData.oldPressureHeads[nodeIndex]));
         }
 
         return dSedH * (nodeSoil.Theta_s - nodeSoil.Theta_r);

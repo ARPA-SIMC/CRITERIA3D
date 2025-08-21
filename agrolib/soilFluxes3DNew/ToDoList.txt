@@ -1,6 +1,7 @@
 Minor
-
  - Move from enum to enum class
+ - Finalize name variables
+
  - Remove using namespace
  - use #pragma once instead of #ifndef-#define
 
