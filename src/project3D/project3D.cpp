@@ -1188,7 +1188,17 @@ void Project3D::runWaterFluxes3DModel(double totalTimeStep, bool isRestart)
     double forecastWaterContent = previousTotalWaterContent + runoff + freeDrainage + lateralDrainage
                                   + totalPrecipitation - totalEvaporation - totalTranspiration;
     double massBalanceError = currentWaterContent - forecastWaterContent;
-    logInfo("Mass balance error [m3]: " + QString::number(massBalanceError));
+    logInfo("Mass balance error [m3]: " + QString::number(massBalanceError));               // [m3]
+
+    double surfaceWaterContent = 0;                                                         // [m3]
+    long nrSurfaceVoxels = 0;
+    if (getTotalSurfaceWaterContent(surfaceWaterContent, nrSurfaceVoxels))
+    {
+        double area_m2 = DEM.header->cellSize * DEM.header->cellSize * nrSurfaceVoxels;
+        double error_mm = massBalanceError / area_m2 * 1000;                                // [mm]
+        logInfo("Mass balance error [mm]: " + QString::number(error_mm));
+    }
+
 }
 
 
