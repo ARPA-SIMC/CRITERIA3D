@@ -1,18 +1,21 @@
 Minor
- - Move from enum to enum class
- - Finalize name variables
+ - Convert enum to enum class
+ - Finalize variable names
 
  - Remove using namespace
- - use #pragma once instead of #ifndef-#define
+ - Use #pragma once instead of #ifndef / #define
 
- - move from macro to inline constexpr + (macro error check)
+ - Replace macros with inline constexpr + error checking macro 
 
- - refactor code not in soilFluxes3D
+ - Refactor loops outside of soilFluxes3D
+
+ - Remove debug checks
 
 Major 
- - Heat CPU
- - Logging	-> Minor: define CONFIG to toggle it
+ - Implement heat part
+ - Implement logging + define CONFIG to toggle it
  
- - GPU implementation
+ - Finalize and debug GPU implementation
 
- - Check solutions (MATLAB)
+Extra
+ - Validate solutions (MATLAB)
