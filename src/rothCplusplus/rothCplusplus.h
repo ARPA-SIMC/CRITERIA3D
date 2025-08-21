@@ -112,7 +112,6 @@ public:
     gis::Crit3DRasterGrid* inertOrganicMatter; //[tC/ha]
     gis::Crit3DRasterGrid* soilOrganicMatter; //[tC/ha]
 
-    gis::Crit3DRasterGrid* avgYearlyTemp; //[°C]
     gis::Crit3DRasterGrid* avgBIC; //[mm?]
     bool isInitialized;
 

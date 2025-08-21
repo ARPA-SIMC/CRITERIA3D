@@ -286,7 +286,6 @@ Crit3DHydrallMaps::Crit3DHydrallMaps()
     mapLAI = new gis::Crit3DRasterGrid;
     standBiomassMap = new gis::Crit3DRasterGrid;
     rootBiomassMap = new gis::Crit3DRasterGrid;
-    mapLast30DaysTavg = new gis::Crit3DRasterGrid;
 
     treeNetPrimaryProduction = new gis::Crit3DRasterGrid; //SAVE
     treeBiomassFoliage = new gis::Crit3DRasterGrid; //SAVE
@@ -310,7 +309,6 @@ void Crit3DHydrallMaps::initialize(const gis::Crit3DRasterGrid& DEM)
     mapLAI->initializeGrid(DEM);
     standBiomassMap->initializeGrid(DEM);
     rootBiomassMap->initializeGrid(DEM);
-    mapLast30DaysTavg->initializeGrid(DEM);
     treeSpeciesMap.initializeGrid(DEM);
     plantHeight.initializeGrid(DEM); //TODO
     criticalSoilWaterPotential->initializeGrid(DEM);
@@ -334,7 +332,6 @@ Crit3DHydrallMaps::~Crit3DHydrallMaps()
     mapLAI->clear();
     standBiomassMap->clear();
     rootBiomassMap->clear();
-    mapLast30DaysTavg->clear();
 }
 
 bool Crit3DHydrall::computeHydrallPoint()
