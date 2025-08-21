@@ -488,6 +488,7 @@
         void getPlantAndSoilVariables(Crit3DHydrallMaps &map, int row, int col);
         void updateCriticalPsi();
         double cavitationConditions();
+        double getFirewoodLostSurfacePercentage(double percentageSurfaceLostByFirewoodAtReferenceYear, int simulationYear);
 
     private:
         double outputC;
