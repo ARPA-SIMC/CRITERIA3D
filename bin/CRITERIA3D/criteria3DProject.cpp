@@ -98,15 +98,15 @@ void Crit3DProject::clearCropMaps()
 
 void Crit3DProject::clearHydrallMaps()
 {
-    hydrallMaps.mapLast30DaysTavg->clear();
+    mapLast30DaysTAvg.clear();
 
     isHydrallInitialized = false;
 }
 
 void Crit3DProject::clearRothCMaps()
 {
-    yearlyET0.clear();
-    yearlyPrec.clear();
+    monthlyET0.clear();
+    monthlyPrec.clear();
 
     rothCModel.map.clear();
 
@@ -130,7 +130,7 @@ bool Crit3DProject::initializeHydrall()
 
 
     //TODO fare anche clear hydrall maps
-    hydrallMaps.mapLast30DaysTavg->initializeGrid(*(DEM.header));
+    mapLast30DaysTAvg.initializeGrid(*(DEM.header));
     hydrallMaps.mapLAI->initializeGrid(*(DEM.header));
     hydrallMaps.rootBiomassMap->initializeGrid(*(DEM.header));
     hydrallMaps.standBiomassMap->initializeGrid(*(DEM.header));
@@ -162,7 +162,7 @@ bool Crit3DProject::initializeHydrall()
             float height = DEM.value[row][col];
             if (! isEqual(height, DEM.header->flag))
             {
-                hydrallMaps.mapLast30DaysTavg->value[row][col] = 15.f; // initialize to 15°C
+                mapLast30DaysTAvg.value[row][col] = 15.f; // initialize to 15°C
             }
         }
     }
@@ -177,8 +177,8 @@ bool Crit3DProject::initializeRothC()
     rothCModel.initialize();
     rothCModel.map.initialize(DEM);
 
-    yearlyET0.initializeGrid(*(DEM.header));
-    yearlyPrec.initializeGrid(*(DEM.header));
+    monthlyET0.initializeGrid(*(DEM.header));
+    monthlyPrec.initializeGrid(*(DEM.header));
 
     if (! processes.computeCrop)
     {
@@ -228,15 +228,13 @@ bool Crit3DProject::initializeRothC()
                     rothCModel.map.inertOrganicMatter->value[row][col] = rothCModel.getIOM();
                     rothCModel.map.soilOrganicMatter->value[row][col] = rothCModel.getSOC();
 
-                    rothCModel.map.avgYearlyTemp->value[row][col] = 15.f; // initialize to 15°C
-
                 }
             }
         }
 
     }
 
-    if (! processes.computeWater)
+    if (! processes.computeWater) //TODO
     {
         rothCModel.isInitializing = true;
 
@@ -497,7 +495,7 @@ void Crit3DProject::dailyUpdateCropMaps(const QDate &myDate)
 
 void Crit3DProject::dailyUpdateHydrallMaps()
 {
-    updateLast30DaysTavg();
+
     updateHydrallLAI(); //todo non serve?
     return;
 }
@@ -530,15 +528,15 @@ bool Crit3DProject::dailyUpdateHydrall(const QDate &myDate)
                     }
 
 
-                    hydrallModel.weatherVariable.setYearlyET0(yearlyET0.getValueFromRowCol(row, col));
-                    hydrallModel.weatherVariable.setYearlyPrec(yearlyPrec.getValueFromRowCol(row, col));
+                    hydrallModel.weatherVariable.setYearlyET0(hydrallMaps.yearlyET0.getValueFromRowCol(row, col));
+                    hydrallModel.weatherVariable.setYearlyPrec(hydrallMaps.yearlyPrec.getValueFromRowCol(row, col));
 
                     hydrallModel.simplifiedGrowthStand(); // TODO quit this line - temporary position to prompt check
 
                     hydrallModel.resetStandVariables();
 
-                    yearlyPrec.value[row][col] = 0;
-                    yearlyET0.value[row][col] = 0;
+                    hydrallMaps.yearlyPrec.value[row][col] = 0;
+                    hydrallMaps.yearlyET0.value[row][col] = 0;
 
                     if (myDate.month() == hydrallModel.firstMonthVegetativeSeason) //TODO
                     {
@@ -558,23 +556,6 @@ bool Crit3DProject::dailyUpdateHydrall(const QDate &myDate)
 
     return true;
 }
-
-bool Crit3DProject::dailyUpdateRothC()
-{
-    if (! dailyTminMap.isLoaded || ! dailyTmaxMap.isLoaded || ! hourlyMeteoMaps->mapHourlyTair->isLoaded)
-        return false;
-
-    for (long row = 0; row < dailyTminMap.header->nrRows; row++)
-    {
-        for (long col = 0; col < dailyTminMap.header->nrCols; col++)
-        {
-            if (! (isEqual(dailyTmaxMap.value[row][col], NODATA) ||  isEqual(dailyTminMap.value[row][col], NODATA)))
-                rothCModel.map.avgYearlyTemp->value[row][col] = (364./365.)*rothCModel.map.avgYearlyTemp->value[row][col] + (dailyTmaxMap.value[row][col] + dailyTminMap.value[row][col])/365;
-        }
-    }
-    return true;
-}
-
 
 bool Crit3DProject::updateRothC(const QDate &myDate)
 {
@@ -603,6 +584,10 @@ bool Crit3DProject::updateRothC(const QDate &myDate)
 
                         rothCModel.getStateVariables(row, col);
 
+                        //reset meteo maps
+                        monthlyPrec.value[row][col] = 0;
+                        monthlyET0.value[row][col] = 0;
+
                         //reset meteo variables and C input
                         rothCModel.resetInputVariables();
                     }
@@ -622,10 +607,10 @@ void Crit3DProject::setRothCVariables(int row, int col)
     rothCModel.setPlantCover(1); //understorey
 
     //meteo variables
-    rothCModel.meteoVariable.setPrecipitation(yearlyPrec.getValueFromRowCol(row, col));
-    rothCModel.meteoVariable.setWaterLoss(yearlyET0.getValueFromRowCol(row, col));
-    rothCModel.meteoVariable.setBIC(yearlyPrec.getValueFromRowCol(row, col) - yearlyET0.getValueFromRowCol(row, col));
-    rothCModel.meteoVariable.setTemperature(rothCModel.map.avgYearlyTemp->getValueFromRowCol(row, col));
+    rothCModel.meteoVariable.setPrecipitation(monthlyPrec.getValueFromRowCol(row, col));
+    rothCModel.meteoVariable.setWaterLoss(monthlyET0.getValueFromRowCol(row, col));
+    rothCModel.meteoVariable.setBIC(monthlyPrec.getValueFromRowCol(row, col) - monthlyET0.getValueFromRowCol(row, col));
+    rothCModel.meteoVariable.setTemperature(mapLast30DaysTAvg.value[row][col]);
     rothCModel.meteoVariable.setAvgBIC(rothCModel.map.getAvgBIC(row, col));
 
     //carbon input is taken from hydrall, otherwise TODO
@@ -1077,7 +1062,6 @@ bool Crit3DProject::runModels(const QDateTime &firstTime, const QDateTime &lastT
 
         if (processes.computeRothC)
         {
-            dailyUpdateRothC();
             if (myDate.dayOfYear() == 1)
             {
                 updateRothC(myDate);
@@ -1118,7 +1102,7 @@ bool Crit3DProject::runModels(const QDateTime &firstTime, const QDateTime &lastT
             if (processes.computeRothC || processes.computeHydrall)
             {
                 //rothC maps update must be done hourly
-                updateETAndPrecYearlyMaps();
+                updateETAndPrecMaps();
 
             }
 
@@ -1139,8 +1123,9 @@ bool Crit3DProject::runModels(const QDateTime &firstTime, const QDateTime &lastT
             }
         }
 
-        if (processes.computeHydrall)
+        if (processes.computeHydrall || processes.computeRothC)
         {
+            updateLast30DaysTavg();
             dailyUpdateHydrallMaps();
         }
 
@@ -1164,24 +1149,40 @@ bool Crit3DProject::runModels(const QDateTime &firstTime, const QDateTime &lastT
     return true;
 }
 
-void Crit3DProject::updateETAndPrecYearlyMaps()
+void Crit3DProject::updateETAndPrecMaps()
 {
-    int nrRows = yearlyET0.header->nrRows;
-    int nrCols = yearlyET0.header->nrCols;
+    int nrRows = hydrallMaps.yearlyET0.header->nrRows;
+    int nrCols = hydrallMaps.yearlyET0.header->nrCols;
 
     for (int row = 0; row < nrRows; row++) //valuta se usare surfaceIndex o cosa
     {
         for (int col = 0; col < nrCols; col++)
         {
-            if (! isEqual(yearlyET0.value[row][col], NODATA))
-                yearlyET0.value[row][col] += hourlyMeteoMaps->mapHourlyET0->value[row][col];
-            else
-                yearlyET0.value[row][col] = hourlyMeteoMaps->mapHourlyET0->value[row][col];
+            if (processes.computeHydrall)
+            {
+                if (! isEqual(hydrallMaps.yearlyET0.value[row][col], NODATA))
+                    hydrallMaps.yearlyET0.value[row][col] += hourlyMeteoMaps->mapHourlyET0->value[row][col];
+                else
+                    hydrallMaps.yearlyET0.value[row][col] = hourlyMeteoMaps->mapHourlyET0->value[row][col];
 
-            if (! isEqual(yearlyPrec.value[row][col], NODATA))
-                yearlyPrec.value[row][col] += hourlyMeteoMaps->mapHourlyPrec->value[row][col];
-            else
-                yearlyPrec.value[row][col] = hourlyMeteoMaps->mapHourlyPrec->value[row][col];
+                if (! isEqual(hydrallMaps.yearlyPrec.value[row][col], NODATA))
+                    hydrallMaps.yearlyPrec.value[row][col] += hourlyMeteoMaps->mapHourlyPrec->value[row][col];
+                else
+                    hydrallMaps.yearlyPrec.value[row][col] = hourlyMeteoMaps->mapHourlyPrec->value[row][col];
+            }
+
+            if (processes.computeRothC)
+            {
+                if (! isEqual(monthlyET0.value[row][col], NODATA))
+                    monthlyET0.value[row][col] += hourlyMeteoMaps->mapHourlyET0->value[row][col];
+                else
+                    monthlyET0.value[row][col] = hourlyMeteoMaps->mapHourlyET0->value[row][col];
+
+                if (! isEqual(monthlyPrec.value[row][col], NODATA))
+                    monthlyPrec.value[row][col] += hourlyMeteoMaps->mapHourlyPrec->value[row][col];
+                else
+                    monthlyPrec.value[row][col] = hourlyMeteoMaps->mapHourlyPrec->value[row][col];
+            }
 
         }
     }
@@ -1790,7 +1791,7 @@ void Crit3DProject::setHydrallVariables(int row, int col, int forestIndex)
                                     double(radiationMaps->transmissivityMap->value[row][col] / CLEAR_SKY_TRANSMISSIVITY_DEFAULT),
                                     pressureFromAltitude(double(hourlyMeteoMaps->mapHourlyTair->value[row][col]), DEM.value[row][col]),
                                     getCrit3DDate(getCurrentDate()),double(radiationMaps->sunElevationMap->value[row][col]),
-                                    hydrallMaps.mapLast30DaysTavg->value[row][col],double(hourlyMeteoMaps->mapHourlyET0->value[row][col]));
+                                    mapLast30DaysTAvg.value[row][col],double(hourlyMeteoMaps->mapHourlyET0->value[row][col]));
 
     //TODO: plant height map
     hydrallMaps.plantHeight.value[row][col] = 10;
@@ -1843,7 +1844,7 @@ bool Crit3DProject::updateLast30DaysTavg()
     {
         for (long col = 0; col < dailyTminMap.header->nrCols; col++)
         {
-            hydrallMaps.mapLast30DaysTavg->value[row][col] = (29./30.)*hydrallMaps.mapLast30DaysTavg->value[row][col] + (dailyTmaxMap.value[row][col] + dailyTminMap.value[row][col])/30;
+            mapLast30DaysTAvg.value[row][col] = (29./30.)*mapLast30DaysTAvg.value[row][col] + (dailyTmaxMap.value[row][col] + dailyTminMap.value[row][col])/30;
         }
     }
     return true;
@@ -2024,7 +2025,7 @@ bool Crit3DProject::runModelHour(const QString& hourlyOutputPath, bool isRestart
                 saveHourlyMeteoOutput(referenceEvapotranspiration, hourlyOutputPath, myDateTime);
             }
 
-            if (processes.computeCrop || (! processes.computeCrop && ! processes.computeWater && processes.computeRothC))
+            if (processes.computeCrop || processes.computeRothC)
             {
                 updateDailyTemperatures();
             }
@@ -2610,8 +2611,53 @@ bool Crit3DProject::loadModelState(QString statePath)
         }
         gis::resampleGrid(*tmpRaster, hydrallMaps.understoreyNetPrimaryProduction, DEM.header, aggrAverage, 0.1f);
 
+        fileName = hydrallPath.toStdString() + "/treeFoliage";
+        if (! gis::readEsriGrid(fileName, tmpRaster, errorStr))
+        {
+            errorString = "Wrong hydrall tree foliage biomass map:\n" + QString::fromStdString(errorStr);
+            hydrallMaps.isInitialized = false;
+            return false;
+        }
+        gis::resampleGrid(*tmpRaster, hydrallMaps.treeBiomassFoliage, DEM.header, aggrAverage, 0.1f);
+
+        fileName = hydrallPath.toStdString() + "/treeRoot";
+        if (! gis::readEsriGrid(fileName, tmpRaster, errorStr))
+        {
+            errorString = "Wrong hydrall tree root biomass map:\n" + QString::fromStdString(errorStr);
+            hydrallMaps.isInitialized = false;
+            return false;
+        }
+        gis::resampleGrid(*tmpRaster, hydrallMaps.treeBiomassRoot, DEM.header, aggrAverage, 0.1f);
+
+        fileName = hydrallPath.toStdString() + "/treeStand";
+        if (! gis::readEsriGrid(fileName, tmpRaster, errorStr))
+        {
+            errorString = "Wrong hydrall tree sapwood biomass map:\n" + QString::fromStdString(errorStr);
+            hydrallMaps.isInitialized = false;
+            return false;
+        }
+        gis::resampleGrid(*tmpRaster, hydrallMaps.treeBiomassSapwood, DEM.header, aggrAverage, 0.1f);
+
+        fileName = hydrallPath.toStdString() + "/understoreyFoliage";
+        if (! gis::readEsriGrid(fileName, tmpRaster, errorStr))
+        {
+            errorString = "Wrong hydrall understorey foliage biomass map:\n" + QString::fromStdString(errorStr);
+            hydrallMaps.isInitialized = false;
+            return false;
+        }
+        gis::resampleGrid(*tmpRaster, hydrallMaps.understoreyBiomassFoliage, DEM.header, aggrAverage, 0.1f);
+
+        fileName = hydrallPath.toStdString() + "/understoreyRoot";
+        if (! gis::readEsriGrid(fileName, tmpRaster, errorStr))
+        {
+            errorString = "Wrong hydrall understorey root biomass map:\n" + QString::fromStdString(errorStr);
+            hydrallMaps.isInitialized = false;
+            return false;
+        }
+        gis::resampleGrid(*tmpRaster, hydrallMaps.understoreyBiomassRoot, DEM.header, aggrAverage, 0.1f);
 
         //other maps tbd
+
     }
     logInfo("Current date is: " + getCurrentDate().toString("yyyy-MM-dd") + " hour: " + QString::number(getCurrentHour()));
 

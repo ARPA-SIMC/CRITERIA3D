@@ -78,8 +78,6 @@ void Crit3DRothCplusplusMaps::initialize(const gis::Crit3DRasterGrid& DEM)
     _clayMap = new gis::Crit3DRasterGrid;
 
     avgBIC = new gis::Crit3DRasterGrid;
-    avgYearlyTemp = new gis::Crit3DRasterGrid;
-
 
     decomposablePlantMaterial->initializeGrid(DEM);
     resistantPlantMaterial->initializeGrid(DEM);
@@ -92,7 +90,6 @@ void Crit3DRothCplusplusMaps::initialize(const gis::Crit3DRasterGrid& DEM)
     _clayMap->initializeGrid(DEM);
 
     avgBIC->initializeGrid(DEM);
-    avgYearlyTemp->initializeGrid(DEM);
 }
 
 void Crit3DRothCplusplusMaps::clear()
@@ -108,7 +105,6 @@ void Crit3DRothCplusplusMaps::clear()
     _clayMap = new gis::Crit3DRasterGrid;
 
     avgBIC = new gis::Crit3DRasterGrid;
-    avgYearlyTemp = new gis::Crit3DRasterGrid;
 }
 
 
@@ -495,6 +491,7 @@ void Crit3DRothCplusplus::resetInputVariables()
     meteoVariable.setBIC(0);
     meteoVariable.setPrecipitation(0);
     meteoVariable.setWaterLoss(0);
+
 }
 
 void Crit3DRothCplusplus::setStateVariables(int row, int col)

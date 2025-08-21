@@ -1544,7 +1544,8 @@ bool Project::loadMeteoPointsData(const QDate& firstDate, const QDate& lastDate,
     {
         if (showInfo)
         {
-            if ((i % step) == 0) updateProgressBar(i);
+            if ((i % step) == 0)
+                updateProgressBar(i);
         }
 
         if (loadHourly)
@@ -4143,10 +4144,13 @@ void Project::importHourlyMeteoData(const QString& csvFileName, bool importAllFi
     }
 
     // cycle on files
-    setProgressBar("Load hourly data..", fileList.count());
+    int step = setProgressBar("Load hourly data..", fileList.count());
     int nrLoaded = 0;
     for (int i=0; i < fileList.count(); i++)
     {
+        if (i % step == 0)
+            updateProgressBar(i);
+
         QString logStr = "";
         QString fileNameComplete = filePath + fileList[i];
 
@@ -4155,14 +4159,15 @@ void Project::importHourlyMeteoData(const QString& csvFileName, bool importAllFi
             nrLoaded++;
             if (! logStr.isEmpty())
             {
-                logInfoGUI(logStr);
+                updateProgressBarText(logStr);
             }
         }
         else
+        {
             logError(logStr);
-
-        updateProgressBar(i+1);
+        }
     }
+
     closeProgressBar();
 
     if (nrLoaded > 0)

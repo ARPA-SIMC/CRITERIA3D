@@ -59,8 +59,9 @@
         gis::Crit3DRasterGrid degreeDaysMap;
         gis::Crit3DRasterGrid dailyTminMap;
         gis::Crit3DRasterGrid dailyTmaxMap;
-        gis::Crit3DRasterGrid yearlyPrec;
-        gis::Crit3DRasterGrid yearlyET0;
+        gis::Crit3DRasterGrid monthlyPrec;
+        gis::Crit3DRasterGrid monthlyET0;
+        gis::Crit3DRasterGrid mapLast30DaysTAvg;
 
         Crit3DHydrallMaps hydrallMaps;
 
@@ -80,7 +81,7 @@
         bool initializeHydrall();
         bool initializeRothC();
         double getRothCClayContent(int soilIndex);
-        void updateETAndPrecYearlyMaps();
+        void updateETAndPrecMaps();
         void dailyUpdateCropMaps(const QDate &myDate);
 
         void clearHydrallMaps();
@@ -123,7 +124,6 @@
 
         bool computeRothCModel();
         bool updateRothC(const QDate &myDate);
-        bool dailyUpdateRothC();
         void setRothCVariables(int row, int col);
 
         bool computeSnowModel();
