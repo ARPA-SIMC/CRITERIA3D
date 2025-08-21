@@ -673,7 +673,7 @@ namespace soilFluxes3D::New
                 boundaryPsi = nodeGrid.boundaryData.prescribedWaterPotential[nodeIdx] - boundaryZ;
 
                 boundaryK = (boundaryPsi >= 0)  ? nodeGrid.soilSurfacePointers[nodeIdx].soilPtr->K_sat
-                                               : computeNodeK_Mualem(*(nodeGrid.soilSurfacePointers[nodeIdx].soilPtr), computeNodeSe_fromPsi(nodeIdx, fabs(boundaryPsi)));
+                                               : computeNodeK_Mualem(*(nodeGrid.soilSurfacePointers[nodeIdx].soilPtr), computeNodeSe_fromPsi(nodeIdx, std::fabs(boundaryPsi)));
 
                 meanType_t meanType;
                 meanType = Logarithmic; //TO DO: solver.getMeanType()
@@ -801,8 +801,8 @@ namespace soilFluxes3D::New
         if(nodeGrid.surfaceFlag[nodeIdx] && vectorX[nodeIdx] < nodeGrid.z[nodeIdx])
             vectorX[nodeIdx] = nodeGrid.z[nodeIdx];
 
-        double currentNorm = fabs(vectorX[nodeIdx] - previousX[nodeIdx]);
-        double psi = fabs(vectorX[nodeIdx] - nodeGrid.z[nodeIdx]);
+        double currentNorm = std::fabs(vectorX[nodeIdx] - previousX[nodeIdx]);
+        double psi = std::fabs(vectorX[nodeIdx] - nodeGrid.z[nodeIdx]);
         if(psi > 1.)
             currentNorm /= psi;
 

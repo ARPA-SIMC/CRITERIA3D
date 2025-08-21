@@ -62,7 +62,7 @@ namespace soilFluxes3D::Water
         #pragma omp parallel for if(__ompStatus) reduction(+:sum)
         for (uint64_t idx = 0; idx < nodeGrid.numNodes; ++idx)
         {
-            double theta = nodeGrid.surfaceFlag[idx] ? (nodeGrid.waterData.pressureHead[idx] - nodeGrid.z[idx]) : computeNodeTheta(idx);     //TO DO
+            double theta = nodeGrid.surfaceFlag[idx] ? (nodeGrid.waterData.pressureHead[idx] - nodeGrid.z[idx]) : computeNodeTheta(idx);
             sum += theta * nodeGrid.size[idx];
         }
 
@@ -88,7 +88,7 @@ namespace soilFluxes3D::Water
 
         // Reference water for computation of mass balance error ratio
         // when the water sink/source is too low, use the reference water storage
-        double referenceWater = SF3Dmax(fabs(balanceDataCurrentTimeStep.waterSinkSource), minRefWaterStorage);     // [m3]
+        double referenceWater = SF3Dmax(std::fabs(balanceDataCurrentTimeStep.waterSinkSource), minRefWaterStorage);     // [m3]
 
         balanceDataCurrentTimeStep.waterMBR = balanceDataCurrentTimeStep.waterMBE / referenceWater;
     }
@@ -338,7 +338,7 @@ namespace soilFluxes3D::Water
         double H_i = (approxNum != 0) ? nodeGrid.waterData.pressureHead[rowIdx] : nodeGrid.waterData.oldPressureHeads[rowIdx] + 0.5 * flux_i;
         double H_j = (approxNum != 0) ? nodeGrid.waterData.pressureHead[colIdx] : nodeGrid.waterData.oldPressureHeads[colIdx] + 0.5 * flux_j;
 
-        double dH = fabs(H_i - H_j);
+        double dH = std::fabs(H_i - H_j);
 
         if(dH < DBL_EPSILON)
             return 0.;
@@ -410,6 +410,19 @@ namespace soilFluxes3D::Water
         double maxK = maxInfRate * (cellDistance / dH);
         double meanK = computeMean(soilData.K_sat, nodeGrid.waterData.waterConductivity[soilNodeIdx], meanType);
 
+        //TO DO: check if needed
+        switch(nodeGrid.boundaryData.boundaryType[soilNodeIdx])
+        {
+            case Urban:
+                meanK *= 0.1;
+                break;
+            case Road:
+                meanK = 0.;
+                break;
+            default:
+                break;
+        }
+
         return (SF3Dmin(boundaryFactor * meanK, maxK) * flowArea) / cellDistance;
     }
 
@@ -426,7 +439,7 @@ namespace soilFluxes3D::Water
         }
         else
         {
-            cellDistance = fabs(nodeGrid.z[rowIdx] - nodeGrid.z[colIdx]);
+            cellDistance = std::fabs(nodeGrid.z[rowIdx] - nodeGrid.z[colIdx]);
         }
 
         return (computeMean(rowK, colK, meanType) * flowArea) / cellDistance;
@@ -449,9 +462,9 @@ namespace soilFluxes3D::Water
             if(nodeGrid.surfaceFlag[rowIdx] && tempX[rowIdx] < nodeGrid.z[rowIdx])
                 tempX[rowIdx] = nodeGrid.z[rowIdx];
 
-            double currentNorm = fabs(tempX[rowIdx] - vectorX.values[rowIdx]);
+            double currentNorm = std::fabs(tempX[rowIdx] - vectorX.values[rowIdx]);
 
-            double psi = fabs(tempX[rowIdx] - nodeGrid.z[rowIdx]);
+            double psi = std::fabs(tempX[rowIdx] - nodeGrid.z[rowIdx]);
             if(psi > 1.)
                 currentNorm /= psi;
 
@@ -477,7 +490,7 @@ namespace soilFluxes3D::Water
             if(nodeGrid.surfaceFlag[rowIdx] && newCurrValue < nodeGrid.z[rowIdx])
                 newCurrValue = nodeGrid.z[rowIdx];
 
-            currentNorm = fabs(newCurrValue - vectorX.values[rowIdx]);
+            currentNorm = std::fabs(newCurrValue - vectorX.values[rowIdx]);
             vectorX.values[rowIdx] = newCurrValue;
 
             double psi = newCurrValue - nodeGrid.z[rowIdx];
@@ -498,10 +511,12 @@ namespace soilFluxes3D::Water
         for (uint64_t nodeIdx = 0; nodeIdx < nodeGrid.numNodes; ++nodeIdx)
         {
             //Inizialize: water sink.source
-            nodeGrid.waterData.waterFlow[nodeIdx] = nodeGrid.waterData.waterSinkSource[nodeIdx];
+            nodeGrid.waterData.waterFlow[nodeIdx] = nodeGrid.waterData.waterSinkSource[nodeIdx];   //TO DO: evaluate move to a memcpy
 
             if(nodeGrid.boundaryData.boundaryType[nodeIdx] == NoBoundary)
                 continue;
+
+            nodeGrid.boundaryData.waterFlowRate[nodeIdx] = 0;   //TO DO: evaluate move to a memset
 
             switch(nodeGrid.boundaryData.boundaryType[nodeIdx])
             {
@@ -544,7 +559,7 @@ namespace soilFluxes3D::Water
                     boundaryPsi = nodeGrid.boundaryData.prescribedWaterPotential[nodeIdx] - boundaryZ;
 
                     boundaryK = (boundaryPsi >= 0)  ? nodeGrid.soilSurfacePointers[nodeIdx].soilPtr->K_sat
-                                                    : computeNodeK_Mualem(*(nodeGrid.soilSurfacePointers[nodeIdx].soilPtr), computeNodeSe_fromPsi(nodeIdx, fabs(boundaryPsi)));
+                                                    : computeNodeK_Mualem(*(nodeGrid.soilSurfacePointers[nodeIdx].soilPtr), computeNodeSe_fromPsi(nodeIdx, std::fabs(boundaryPsi)));
 
                     meanK = computeMean(boundaryK, nodeGrid.waterData.waterConductivity[nodeIdx], solver->getMeanType());
                     dH = nodeGrid.boundaryData.prescribedWaterPotential[nodeIdx] - nodeGrid.waterData.pressureHead[nodeIdx];

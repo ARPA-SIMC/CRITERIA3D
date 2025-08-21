@@ -555,6 +555,7 @@ namespace soilFluxes3D::New
             return IndexError;      //surfaceFlags must be inizialized before soil data
 
         nodeGrid.soilSurfacePointers[nodeIndex].surfacePtr = &(surfaceList[surfaceIndex]);
+
         return SF3Dok;
     }
 

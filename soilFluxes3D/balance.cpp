@@ -117,9 +117,11 @@ double computeTotalWaterContent()
 double sumWaterFlow(double deltaT)
 {
     double sum = 0.0;
+
     for (long n = 0; n < myStructure.nrNodes; n++)
         if (nodeList[n].Qw != 0.)
             sum += nodeList[n].Qw * deltaT;
+
     return sum;
 }
 
