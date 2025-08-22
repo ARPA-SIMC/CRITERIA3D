@@ -112,8 +112,7 @@ public:
     gis::Crit3DRasterGrid* inertOrganicMatter; //[tC/ha]
     gis::Crit3DRasterGrid* soilOrganicMatter; //[tC/ha]
 
-    gis::Crit3DRasterGrid* avgYearlyTemp; //[°C]
-    gis::Crit3DRasterGrid* avgBIC; //[mm?]
+    std::vector<gis::Crit3DRasterGrid*> avgBIC; //[mm?]
     bool isInitialized;
 
 
@@ -141,7 +140,7 @@ public:
     void setDepth(double myDepth, int row, int col);
     double getDepth(int row, int col);
 
-    double getAvgBIC(int row, int col);
+    double getAvgBIC(int row, int col, int month);
 };
 
 struct Crit3DRothCRadioCarbon {
@@ -211,7 +210,7 @@ public:
 
     bool isInitializing;
 
-    std::string BICMapFileName;
+    std::string BICMapFolderName;
 
 
 private:

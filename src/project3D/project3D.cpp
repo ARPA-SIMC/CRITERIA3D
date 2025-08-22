@@ -481,15 +481,16 @@ bool Project3D::initialize3DModel()
 bool Project3D::setAccuracy()
 {
     // maximum water velocity
-    double vMax = 5.0 * waterFluxesParameters.modelAccuracy;                        // [m s-1]
+    double vMax = 5 + 5 * waterFluxesParameters.modelAccuracy;                      // [m s-1]
 
     // minimum dT
     double minimumDeltaT = std::min(30.0, DEM.header->cellSize / vMax);             // [s]
 
     // Mass Balance Ratio precision (digit at which error is accepted)
-    int digitMBR = waterFluxesParameters.modelAccuracy;
+    int massBalanceRatioDigit = waterFluxesParameters.modelAccuracy;
+    int toleranceDigit = 6 + waterFluxesParameters.modelAccuracy;
 
-    soilFluxes3D::setNumericalParameters(minimumDeltaT, 3600, 100, 10, 8, digitMBR);
+    soilFluxes3D::setNumericalParameters(minimumDeltaT, 3600, 100, 10, toleranceDigit, massBalanceRatioDigit);
 
     // parallel computing
     waterFluxesParameters.numberOfThreads = soilFluxes3D::setThreadsNumber(waterFluxesParameters.numberOfThreads);
@@ -1143,7 +1144,7 @@ void Project3D::runWaterFluxes3DModel(double totalTimeStep, bool isRestart)
         previousTotalWaterContent = soilFluxes3D::getTotalWaterContent();       // [m3]
 
         logInfo("total water [m3]: " + QString::number(previousTotalWaterContent));
-        logInfo("precipitation [m3]: " + QString::number(totalPrecipitation));
+        logInfo("precipitation/snowmelt [m3]: " + QString::number(totalPrecipitation));
         logInfo("evaporation [m3]: " + QString::number(-totalEvaporation));
         logInfo("transpiration [m3]: " + QString::number(-totalTranspiration));
         logInfo("Compute water flow...");
@@ -1187,7 +1188,17 @@ void Project3D::runWaterFluxes3DModel(double totalTimeStep, bool isRestart)
     double forecastWaterContent = previousTotalWaterContent + runoff + freeDrainage + lateralDrainage
                                   + totalPrecipitation - totalEvaporation - totalTranspiration;
     double massBalanceError = currentWaterContent - forecastWaterContent;
-    logInfo("Mass balance error [m3]: " + QString::number(massBalanceError));
+    logInfo("Mass balance error [m3]: " + QString::number(massBalanceError));               // [m3]
+
+    double surfaceWaterContent = 0;                                                         // [m3]
+    long nrSurfaceVoxels = 0;
+    if (getTotalSurfaceWaterContent(surfaceWaterContent, nrSurfaceVoxels))
+    {
+        double area_m2 = DEM.header->cellSize * DEM.header->cellSize * nrSurfaceVoxels;
+        double error_mm = massBalanceError / area_m2 * 1000;                                // [mm]
+        logInfo("Mass balance error [mm]: " + QString::number(error_mm));
+    }
+
 }
 
 

@@ -77,9 +77,10 @@ void Crit3DRothCplusplusMaps::initialize(const gis::Crit3DRasterGrid& DEM)
     _depthMap = new gis::Crit3DRasterGrid;
     _clayMap = new gis::Crit3DRasterGrid;
 
-    avgBIC = new gis::Crit3DRasterGrid;
-    avgYearlyTemp = new gis::Crit3DRasterGrid;
+    avgBIC.resize(12);
 
+    for (unsigned int i = 0; i < 12; i++)
+        avgBIC[i] = new gis::Crit3DRasterGrid;
 
     decomposablePlantMaterial->initializeGrid(DEM);
     resistantPlantMaterial->initializeGrid(DEM);
@@ -91,8 +92,8 @@ void Crit3DRothCplusplusMaps::initialize(const gis::Crit3DRasterGrid& DEM)
     _depthMap->initializeGrid(DEM);
     _clayMap->initializeGrid(DEM);
 
-    avgBIC->initializeGrid(DEM);
-    avgYearlyTemp->initializeGrid(DEM);
+    for (unsigned int i = 0; i < 12; i++)
+        avgBIC[i]->initializeGrid(DEM);
 }
 
 void Crit3DRothCplusplusMaps::clear()
@@ -107,8 +108,8 @@ void Crit3DRothCplusplusMaps::clear()
     _depthMap = new gis::Crit3DRasterGrid;
     _clayMap = new gis::Crit3DRasterGrid;
 
-    avgBIC = new gis::Crit3DRasterGrid;
-    avgYearlyTemp = new gis::Crit3DRasterGrid;
+    for (unsigned int i = 0; i < 12; i++)
+        avgBIC[i] = new gis::Crit3DRasterGrid;
 }
 
 
@@ -131,9 +132,12 @@ double Crit3DRothCplusplusMaps::getDepth(int row, int col)
     return _depthMap->value[row][col];
 }
 
-double Crit3DRothCplusplusMaps::getAvgBIC(int row, int col)
+double Crit3DRothCplusplusMaps::getAvgBIC(int row, int col, int month)
 {
-    return avgBIC->value[row][col];
+    if (month < int(avgBIC.size()))
+        return avgBIC[month]->value[row][col];
+    else
+        return NODATA;
 }
 
 Crit3DRothCMeteoVariable::Crit3DRothCMeteoVariable()
@@ -303,7 +307,7 @@ double Crit3DRothCplusplus::RMF_Moist_Simplified(double monthlyBIC, double avgBI
     if (isEqual(NODATA,monthlyBIC) || isEqual(NODATA, avgBIC))
         return NODATA;
 
-    RM_Moist = 0.2 + (1 - 0.2) * (monthlyBIC - avgBIC + 1000) / 2000;
+    RM_Moist = 0.2 + (1 - 0.2) * (monthlyBIC - avgBIC + 100) / 200;
 
     return RM_Moist;
 }
@@ -495,6 +499,7 @@ void Crit3DRothCplusplus::resetInputVariables()
     meteoVariable.setBIC(0);
     meteoVariable.setPrecipitation(0);
     meteoVariable.setWaterLoss(0);
+
 }
 
 void Crit3DRothCplusplus::setStateVariables(int row, int col)

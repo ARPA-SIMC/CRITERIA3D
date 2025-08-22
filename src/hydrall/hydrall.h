@@ -372,12 +372,14 @@
         gis::Crit3DRasterGrid* standBiomassMap;
         gis::Crit3DRasterGrid* rootBiomassMap;
         gis::Crit3DRasterGrid* mapLAI;
-        gis::Crit3DRasterGrid* mapLast30DaysTavg;
         gis::Crit3DRasterGrid treeSpeciesMap;
         gis::Crit3DRasterGrid plantHeight;
         gis::Crit3DRasterGrid* criticalTranspiration;
         gis::Crit3DRasterGrid* criticalSoilWaterPotential;
         gis::Crit3DRasterGrid* minLeafWaterPotential;
+
+        gis::Crit3DRasterGrid yearlyPrec;
+        gis::Crit3DRasterGrid yearlyET0;
 
         gis::Crit3DRasterGrid* treeNetPrimaryProduction; //SAVE
         gis::Crit3DRasterGrid* treeBiomassFoliage; //SAVE

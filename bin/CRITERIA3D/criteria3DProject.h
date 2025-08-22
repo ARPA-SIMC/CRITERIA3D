@@ -35,7 +35,7 @@
     {
 
     private:
-        bool _saveOutputRaster, _saveOutputPoints, _saveDailyState, _saveEndOfRunState;
+        bool _saveOutputRaster, _saveOutputPoints, _saveDailyState, _saveEndOfRunState, _saveYearlyState;
 
         void clear3DProject();
         bool check3DProject();
@@ -59,8 +59,9 @@
         gis::Crit3DRasterGrid degreeDaysMap;
         gis::Crit3DRasterGrid dailyTminMap;
         gis::Crit3DRasterGrid dailyTmaxMap;
-        gis::Crit3DRasterGrid yearlyPrec;
-        gis::Crit3DRasterGrid yearlyET0;
+        gis::Crit3DRasterGrid monthlyPrec;
+        gis::Crit3DRasterGrid monthlyET0;
+        gis::Crit3DRasterGrid mapLast30DaysTAvg;
 
         Crit3DHydrallMaps hydrallMaps;
 
@@ -80,7 +81,7 @@
         bool initializeHydrall();
         bool initializeRothC();
         double getRothCClayContent(int soilIndex);
-        void updateETAndPrecYearlyMaps();
+        void updateETAndPrecMaps();
         void dailyUpdateCropMaps(const QDate &myDate);
 
         void clearHydrallMaps();
@@ -95,6 +96,9 @@
 
         void setSaveDailyState(bool isSave) { _saveDailyState = isSave; }
         bool isSaveDailyState() { return _saveDailyState; }
+
+        void setSaveYearlyState(bool isSave) { _saveYearlyState = isSave; }
+        bool isSaveYearlyState() { return _saveYearlyState; }
 
         void setSaveEndOfRunState(bool isSave) { _saveEndOfRunState = isSave; }
         bool isSaveEndOfRunState() { return _saveEndOfRunState; }
@@ -123,8 +127,7 @@
 
         bool computeRothCModel();
         bool updateRothC(const QDate &myDate);
-        bool dailyUpdateRothC();
-        void setRothCVariables(int row, int col);
+        void setRothCVariables(int row, int col, int month);
 
         bool computeSnowModel();
         void computeSnowPoint(int row, int col);
