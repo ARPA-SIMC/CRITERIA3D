@@ -74,8 +74,9 @@ double runoff(long i, long j, TlinkedNode *link, double deltaT, unsigned approxi
 
     if (approximationNr == 0)
     {
-        double flux_i = (nodeList[i].Qw * deltaT) / nodeList[i].volume_area;
-        double flux_j = (nodeList[j].Qw * deltaT) / nodeList[j].volume_area;
+        // water in/out
+        double flux_i = (nodeList[i].Qw * deltaT) / nodeList[i].volume_area;    // [m]
+        double flux_j = (nodeList[j].Qw * deltaT) / nodeList[j].volume_area;    // [m]
         Hi = nodeList[i].oldH + flux_i * 0.5;
         Hj = nodeList[j].oldH + flux_j * 0.5;
     }
@@ -106,6 +107,7 @@ double runoff(long i, long j, TlinkedNode *link, double deltaT, unsigned approxi
     // Land depression
     if ((Hi > Hj && zi < zj) || (Hj > Hi && zj < zi))
     {
+        // TODO laghi (land use?)
         Hs = std::min(Hs, dH);
     }
 
@@ -472,7 +474,7 @@ bool computeWaterFluxes(double maxTime, double *acceptedTime)
 
         /*! update boundary conditions */
         updateConductance();
-        updateBoundaryWater(*acceptedTime);
+        //updateBoundaryWater(*acceptedTime);
 
         isStepOK = waterFlowComputation(*acceptedTime);
 

@@ -1318,12 +1318,12 @@ bool Crit3DMeteoPointsDbHandler::createTable(const QString& tableName, bool dele
     QString queryStr;
     if (deletePrevious)
     {
-        queryStr = "DROP TABLE IF EXISTS " + tableName;
+        queryStr = "DROP TABLE IF EXISTS '" + tableName + "'";
         _db.exec(queryStr);
     }
 
     queryStr = QString("CREATE TABLE IF NOT EXISTS `%1`"
-                                "(date_time TEXT(20), id_variable INTEGER, value REAL, PRIMARY KEY(date_time, id_variable))").arg(tableName);
+                                "(date_time TEXT(19), id_variable INTEGER, value REAL, PRIMARY KEY(date_time, id_variable))").arg(tableName);
     QSqlQuery qry(_db);
     qry.prepare(queryStr);
 
@@ -1375,6 +1375,12 @@ bool Crit3DMeteoPointsDbHandler::importHourlyMeteoData(const QString &csvFileNam
 
     // check point code
     QString pointCode = fileName.left(fileName.length()-4);
+    // check suffix
+    if (pointCode.right(2) == "_H")
+    {
+        pointCode = pointCode.left(pointCode.length() - 2);
+    }
+
     if (! existIdPoint(pointCode))
     {
         log += "\nID " + pointCode + " is not present in the point properties table.";
@@ -1496,6 +1502,7 @@ bool Crit3DMeteoPointsDbHandler::importHourlyMeteoData(const QString &csvFileNam
 
     if (nrWrongDateTime > 0 || nrWrongDateTime > 0 || nrWrongData > 0)
     {
+        log += "Pointcode: " + pointCode;
         log += "\nWrong date/time: " + QString::number(nrWrongDateTime);
         log += "\nMissing data: " + QString::number(nrMissingData);
         log += "\nWrong values: " + QString::number(nrWrongData);

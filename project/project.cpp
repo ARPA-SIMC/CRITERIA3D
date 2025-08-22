@@ -1544,7 +1544,8 @@ bool Project::loadMeteoPointsData(const QDate& firstDate, const QDate& lastDate,
     {
         if (showInfo)
         {
-            if ((i % step) == 0) updateProgressBar(i);
+            if ((i % step) == 0)
+                updateProgressBar(i);
         }
 
         if (loadHourly)
@@ -4143,10 +4144,13 @@ void Project::importHourlyMeteoData(const QString& csvFileName, bool importAllFi
     }
 
     // cycle on files
-    setProgressBar("Load hourly data..", fileList.count());
+    int step = setProgressBar("Load hourly data..", fileList.count());
     int nrLoaded = 0;
     for (int i=0; i < fileList.count(); i++)
     {
+        if (i % step == 0)
+            updateProgressBar(i);
+
         QString logStr = "";
         QString fileNameComplete = filePath + fileList[i];
 
@@ -4155,14 +4159,15 @@ void Project::importHourlyMeteoData(const QString& csvFileName, bool importAllFi
             nrLoaded++;
             if (! logStr.isEmpty())
             {
-                logInfoGUI(logStr);
+                updateProgressBarText(logStr);
             }
         }
         else
+        {
             logError(logStr);
-
-        updateProgressBar(i+1);
+        }
     }
+
     closeProgressBar();
 
     if (nrLoaded > 0)
@@ -5821,6 +5826,58 @@ bool Project::assignAltitudeToAggregationPoints()
     }
 
     closeMeteoPointsDB();
+    return true;
+}
+
+
+bool Project::assignAltitudeToMeteoPoints(double boundarySize)
+{
+    if (! DEM.isLoaded)
+    {
+        errorString = ERROR_STR_MISSING_DEM;
+        return false;
+    }
+
+    if (! meteoPointsLoaded)
+    {
+        errorString = ERROR_STR_MISSING_DB;
+        return false;
+    }
+
+    int stepCells = floor(boundarySize / DEM.header->cellSize * 0.5);
+    int row, col;
+    std::vector<float> values;
+    QSqlDatabase meteoPointsDb = meteoPointsDbHandler->getDb();
+
+    // compute average altitude from DEM
+    setProgressBar("Compute altitude..", nrMeteoPoints);
+
+    for (int i = 0; i < nrMeteoPoints; i++)
+    {
+        QString idStr = QString::fromStdString(meteoPoints[i].id);
+        DEM.getRowCol(meteoPoints[i].point.utm.x, meteoPoints[i].point.utm.y, row, col);
+        values.clear();
+
+        for (int r = row - stepCells; r <= row + stepCells; r++)
+        {
+            for (int c = col - stepCells; c <= col + stepCells; c++)
+            {
+                float z = DEM.getValueFromRowCol(r, c);
+                if (! isEqual(z, DEM.header->flag))
+                {
+                    values.push_back(z);
+                }
+            }
+        }
+
+        // update point properties (NODATA if no value)
+        float altitude = statistics::mean(values);
+        QString query = QString("UPDATE point_properties SET altitude = %1 WHERE id_point = '%2'").arg(altitude).arg(idStr);
+        meteoPointsDb.exec(query);
+
+        updateProgressBar(i);
+    }
+
     return true;
 }
 
