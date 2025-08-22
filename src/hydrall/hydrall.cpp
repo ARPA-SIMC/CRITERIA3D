@@ -1808,5 +1808,7 @@ double Crit3DHydrall::getFirewoodLostSurfacePercentage(double percentageSurfaceL
     secondColumn[1] = 22./19.;
     secondColumn[2] = 28./19.;
     hazard = interpolation::linearInterpolation(double(simulationYear),firstColumn,secondColumn,dimTable);
+    free(firstColumn);
+    free(secondColumn);
     return hazard*percentageSurfaceLostByFirewoodAtReferenceYear;
 }

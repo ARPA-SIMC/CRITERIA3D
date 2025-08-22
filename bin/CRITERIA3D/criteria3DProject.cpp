@@ -51,6 +51,7 @@ Crit3DProject::Crit3DProject() : Project3D()
     _saveOutputPoints = false;
     _saveDailyState = false;
     _saveEndOfRunState = false;
+    _saveYearlyState = false;
 
     modelFirstTime.setTimeSpec(Qt::UTC);
     modelLastTime.setTimeSpec(Qt::UTC);
@@ -180,6 +181,9 @@ bool Crit3DProject::initializeRothC()
     monthlyET0.initializeGrid(*(DEM.header));
     monthlyPrec.initializeGrid(*(DEM.header));
 
+    if (! mapLast30DaysTAvg.isLoaded)
+        mapLast30DaysTAvg.initializeGrid(*DEM.header);
+
     if (! processes.computeCrop)
     {
         dailyTminMap.initializeGrid(*(DEM.header));
@@ -207,7 +211,6 @@ bool Crit3DProject::initializeRothC()
 
                     if (! processes.computeWater)
                     {
-                        double clay = getRothCClayContent(soilIndex);
                         rothCModel.map.setClay(getRothCClayContent(soilIndex), row, col);
                     }
                     else
@@ -219,6 +222,15 @@ bool Crit3DProject::initializeRothC()
 
                         if (i > 0)
                             rothCModel.map.setClay(clayContent/i, row, col);
+                    }
+
+                    if (! processes.computeHydrall)
+                    {
+                        float height = DEM.value[row][col];
+                        if (! isEqual(height, DEM.header->flag))
+                        {
+                            mapLast30DaysTAvg.value[row][col] = 15.f; // initialize to 15°C
+                        }
                     }
 
                     rothCModel.map.decomposablePlantMaterial->value[row][col] = rothCModel.getDPM();
@@ -240,15 +252,32 @@ bool Crit3DProject::initializeRothC()
 
         std::string errorStr;
         gis::Crit3DRasterGrid raster;
-        if (! gis::openRaster(rothCModel.BICMapFileName, &raster, gisSettings.utmZone, errorStr))
+
+        QDir myDir = QDir(QString::fromStdString(rothCModel.BICMapFolderName));
+        myDir.setNameFilters(QStringList("*.flt"));
+        QList<QString> fileList = myDir.entryList();
+        std::string fileNamePath;
+
+        if (fileList.size() != 12)
         {
-            logError("Average BIC map load failed: " + QString::fromStdString(rothCModel.BICMapFileName) + "\n" + QString::fromStdString(errorStr));
+            errorStr = "Insufficient number of files.";
+            logError("Average BIC maps load from directory " + QString::fromStdString(rothCModel.BICMapFolderName) + " failed.\n" + QString::fromStdString(errorStr));
             return false;
         }
-        else
-            logInfo("Average BIC map loaded: " + QString::fromStdString(rothCModel.BICMapFileName));
 
-        gis::resampleGrid(raster, rothCModel.map.avgBIC, DEM.header, aggrPrevailing, 0);
+        for (unsigned int i = 0; i < 12; i++)
+        {
+            fileNamePath = rothCModel.BICMapFolderName + "/" + fileList[i].toStdString();
+            if (! gis::openRaster(fileNamePath, &raster, gisSettings.utmZone, errorStr))
+            {
+                logError("Average BIC map load failed: " + fileList[i] + "\n" + QString::fromStdString(errorStr));
+                return false;
+            }
+
+            gis::resampleGrid(raster, rothCModel.map.avgBIC[i], DEM.header, aggrPrevailing, 0);
+        }
+        logInfo("Average BIC maps loaded from directory " + QString::fromStdString(rothCModel.BICMapFolderName));
+
     }
     isRothCInitialized = true;
     //todo
@@ -563,7 +592,7 @@ bool Crit3DProject::updateRothC(const QDate &myDate)
     if (!processes.computeWater)
         rothCModel.isInitializing = true;
 
-    if (myDate.dayOfYear() == 1)
+    if (myDate.day() == 1)
     {
         for (int row = 0; row < DEM.header->nrRows; row++)
         {
@@ -573,7 +602,7 @@ bool Crit3DProject::updateRothC(const QDate &myDate)
                 float height = DEM.value[row][col];
                 if (! isEqual(height, DEM.header->flag))
                 {
-                    setRothCVariables(row, col);
+                    setRothCVariables(row, col, myDate.month());
 
                     rothCModel.setStateVariables(row, col);
 
@@ -599,7 +628,7 @@ bool Crit3DProject::updateRothC(const QDate &myDate)
     return true;
 }
 
-void Crit3DProject::setRothCVariables(int row, int col)
+void Crit3DProject::setRothCVariables(int row, int col, int month)
 {
     //soil variables
     rothCModel.setDepth(rothCModel.map.getDepth(row, col));
@@ -611,7 +640,8 @@ void Crit3DProject::setRothCVariables(int row, int col)
     rothCModel.meteoVariable.setWaterLoss(monthlyET0.getValueFromRowCol(row, col));
     rothCModel.meteoVariable.setBIC(monthlyPrec.getValueFromRowCol(row, col) - monthlyET0.getValueFromRowCol(row, col));
     rothCModel.meteoVariable.setTemperature(mapLast30DaysTAvg.value[row][col]);
-    rothCModel.meteoVariable.setAvgBIC(rothCModel.map.getAvgBIC(row, col));
+
+    rothCModel.meteoVariable.setAvgBIC(rothCModel.map.getAvgBIC(row, col, month));
 
     //carbon input is taken from hydrall, otherwise TODO
     if (processes.computeHydrall && ! isEqual(hydrallModel.getOutputC(),NODATA))
@@ -1062,7 +1092,7 @@ bool Crit3DProject::runModels(const QDateTime &firstTime, const QDateTime &lastT
 
         if (processes.computeRothC)
         {
-            if (myDate.dayOfYear() == 1)
+            if (myDate.day() == 1)
             {
                 updateRothC(myDate);
             }
@@ -1135,6 +1165,12 @@ bool Crit3DProject::runModels(const QDateTime &firstTime, const QDateTime &lastT
             saveModelsState(dirName);
         }
 
+        if (isSaveYearlyState() && myDate.dayOfYear() == 1)
+        {
+            QString dirName;
+            saveModelsState(dirName);
+        }
+
     }
 
     if (isSaveEndOfRunState())
@@ -1151,8 +1187,8 @@ bool Crit3DProject::runModels(const QDateTime &firstTime, const QDateTime &lastT
 
 void Crit3DProject::updateETAndPrecMaps()
 {
-    int nrRows = hydrallMaps.yearlyET0.header->nrRows;
-    int nrCols = hydrallMaps.yearlyET0.header->nrCols;
+    int nrRows = DEM.header->nrRows;
+    int nrCols = DEM.header->nrCols;
 
     for (int row = 0; row < nrRows; row++) //valuta se usare surfaceIndex o cosa
     {

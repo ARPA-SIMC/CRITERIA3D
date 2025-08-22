@@ -239,6 +239,8 @@
 
         void on_actionSoil_organic_matter_triggered();
 
+        void on_actionAutomatic_state_saving_end_of_year_triggered(bool isChecked);
+
     protected:
         /*!
          * \brief mouseReleaseEvent call moveCenter

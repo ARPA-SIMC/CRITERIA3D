@@ -35,7 +35,7 @@
     {
 
     private:
-        bool _saveOutputRaster, _saveOutputPoints, _saveDailyState, _saveEndOfRunState;
+        bool _saveOutputRaster, _saveOutputPoints, _saveDailyState, _saveEndOfRunState, _saveYearlyState;
 
         void clear3DProject();
         bool check3DProject();
@@ -97,6 +97,9 @@
         void setSaveDailyState(bool isSave) { _saveDailyState = isSave; }
         bool isSaveDailyState() { return _saveDailyState; }
 
+        void setSaveYearlyState(bool isSave) { _saveYearlyState = isSave; }
+        bool isSaveYearlyState() { return _saveYearlyState; }
+
         void setSaveEndOfRunState(bool isSave) { _saveEndOfRunState = isSave; }
         bool isSaveEndOfRunState() { return _saveEndOfRunState; }
 
@@ -124,7 +127,7 @@
 
         bool computeRothCModel();
         bool updateRothC(const QDate &myDate);
-        void setRothCVariables(int row, int col);
+        void setRothCVariables(int row, int col, int month);
 
         bool computeSnowModel();
         void computeSnowPoint(int row, int col);
