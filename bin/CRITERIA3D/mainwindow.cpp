@@ -136,6 +136,8 @@ MainWindow::MainWindow(QWidget *parent) :
     myProject.setSaveEndOfRunState(false);
     ui->flagSave_state_endRun->setChecked(myProject.isSaveEndOfRunState());
 
+    myProject.setSaveYearlyState(false);
+
     myProject.setSaveOutputPoints(false);
     myProject.setComputeOnlyPoints(false);
     ui->flagOutputPoints_save_output->setChecked(myProject.isSaveOutputPoints());
@@ -2431,11 +2433,13 @@ void MainWindow::on_actionCriteria3D_Initialize_triggered()
         if (! myProject.processes.computeWater)
         {
             QString defaultPath = myProject.getDefaultPath() + PATH_GEO;
-            myProject.rothCModel.BICMapFileName = QFileDialog::getOpenFileName(this, tr("Open average BIC file"), defaultPath,
-                                                          tr("flt files (*.flt)")).toStdString();
-            if (myProject.rothCModel.BICMapFileName.empty())
+            myProject.rothCModel.BICMapFolderName = QFileDialog::getExistingDirectory(this, tr("Open folder with monthly average BIC files"), defaultPath).toStdString();
+
+            if (myProject.rothCModel.BICMapFolderName.empty())
                 return;
         }
+
+
         if (! myProject.initializeRothC())
         {
             myProject.isRothCInitialized = false;
@@ -3765,5 +3769,11 @@ void MainWindow::on_actionSoil_organic_matter_triggered()
     {
         myProject.logError("Error while loading soil organic matter.");
     }
+}
+
+
+void MainWindow::on_actionAutomatic_state_saving_end_of_year_triggered(bool isChecked)
+{
+    myProject.setSaveYearlyState(isChecked);
 }
 
