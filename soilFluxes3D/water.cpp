@@ -474,7 +474,7 @@ bool computeWaterFluxes(double maxTime, double *acceptedTime)
 
         /*! update boundary conditions */
         updateConductance();
-        updateBoundaryWater(*acceptedTime);
+        //updateBoundaryWater(*acceptedTime);
 
         isStepOK = waterFlowComputation(*acceptedTime);
 
