@@ -209,6 +209,7 @@ void Project3D::initializeProject3D()
     nrSoils = 0;
     nrLayers = 0;
     nrNodes = 0;
+    nrSurfaceNodes = 0;
     nrLateralLink = 8;                  // lateral neighbours
 
     currentSeconds = 0;                 // [s]
@@ -604,6 +605,8 @@ void Project3D::setIndexMaps()
 {
     indexMap.resize(nrLayers);
 
+    nrSurfaceNodes = 0;
+
     unsigned long currentIndex = 0;
     for (unsigned int layer = 0; layer < nrLayers; layer++)
     {
@@ -620,7 +623,10 @@ void Project3D::setIndexMaps()
                     {
                         // surface (check only land use)
                         if (getLandUnitIndexRowCol(row, col) != NODATA)
+                        {
                             checkIndex = true;
+                            nrSurfaceNodes++;
+                        }
                     }
                     else
                     {
@@ -1144,7 +1150,14 @@ void Project3D::runWaterFluxes3DModel(double totalTimeStep, bool isRestart)
         previousTotalWaterContent = soilFluxes3D::getTotalWaterContent();       // [m3]
 
         logInfo("total water [m3]: " + QString::number(previousTotalWaterContent));
-        logInfo("precipitation/snowmelt [m3]: " + QString::number(totalPrecipitation));
+        if (processes.computeSnow)
+        {
+            logInfo("precipitation/snowmelt [m3]: " + QString::number(totalPrecipitation));
+        }
+        else
+        {
+            logInfo("precipitation [m3]: " + QString::number(totalPrecipitation));
+        }
         logInfo("evaporation [m3]: " + QString::number(-totalEvaporation));
         logInfo("transpiration [m3]: " + QString::number(-totalTranspiration));
         logInfo("Compute water flow...");
@@ -1190,14 +1203,9 @@ void Project3D::runWaterFluxes3DModel(double totalTimeStep, bool isRestart)
     double massBalanceError = currentWaterContent - forecastWaterContent;
     logInfo("Mass balance error [m3]: " + QString::number(massBalanceError));               // [m3]
 
-    double surfaceWaterContent = 0;                                                         // [m3]
-    long nrSurfaceVoxels = 0;
-    if (getTotalSurfaceWaterContent(surfaceWaterContent, nrSurfaceVoxels))
-    {
-        double area_m2 = DEM.header->cellSize * DEM.header->cellSize * nrSurfaceVoxels;
-        double error_mm = massBalanceError / area_m2 * 1000;                                // [mm]
-        logInfo("Mass balance error [mm]: " + QString::number(error_mm));
-    }
+    double surfaceArea = DEM.header->cellSize * DEM.header->cellSize * nrSurfaceNodes;      // [m2]
+    double error_mm = massBalanceError / surfaceArea * 1000;                                // [mm]
+    logInfo("Mass balance error [mm]: " + QString::number(error_mm));
 
 }
 
