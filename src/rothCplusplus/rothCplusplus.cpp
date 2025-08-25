@@ -194,10 +194,10 @@ bool Crit3DRothCplusplus::computeRothCPoint()
 
     soilOrganicCarbon = decomposablePlantMatter + resistantPlantMatter + microbialBiomass + humifiedOrganicMatter + inorganicMatter;
 
-    /*std::cout << j << "," << decomposablePlantMatter << ","<< resistantPlantMatter << ","<< microbialBiomass << ","
+    /*std::cout << "," << decomposablePlantMatter << ","<< resistantPlantMatter << ","<< microbialBiomass << ","
               << humifiedOrganicMatter << ","<< inorganicMatter << ","<< soilOrganicCarbon << "\n";*/
 
-    int timeFact = 1; //TODO check
+    int timeFact = 12; //TODO check
 
     double modernC = 100;
 
@@ -213,6 +213,8 @@ bool Crit3DRothCplusplus::computeRothCPoint()
     if (radioCarbon.isActive)
         double totalDelta = (std::exp(-totalRage/8035.0) - 1.0) * 1000;
 
+    /*std::cout << "," << decomposablePlantMatter << ","<< resistantPlantMatter << ","<< microbialBiomass << ","
+              << humifiedOrganicMatter << ","<< inorganicMatter << ","<< soilOrganicCarbon << "\n";*/
 
     //todo: remove
     if (false)
@@ -470,7 +472,12 @@ void Crit3DRothCplusplus::RothC(int timeFact, double &PC)
 
     //modified RM_Moist factor based on BIC
     if (isInitializing)
+    {
         RM_Moist = RMF_Moist_Simplified(meteoVariable.getBIC(), meteoVariable.getAvgBIC());
+
+        if (isEqual(RM_Moist, NODATA))
+            RM_Moist = 0.7;
+    }
     else
     {
         if (isEqual (meteoVariable.getBIC(), NODATA)) //todo: check next time
