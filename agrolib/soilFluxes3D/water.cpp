@@ -107,7 +107,7 @@ double runoff(long i, long j, TlinkedNode *link, double deltaT, unsigned approxi
     // Land depression
     if ((Hi > Hj && zi < zj) || (Hj > Hi && zj < zi))
     {
-        // TODO laghi (land use?)
+        // TODO lakes (land use?)
         Hs = std::min(Hs, dH);
     }
 
