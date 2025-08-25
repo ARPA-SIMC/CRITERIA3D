@@ -110,6 +110,7 @@
         QString landUseMapFileName;
         QString treeCoverMapFileName;
 
+        unsigned long nrSurfaceNodes;
         unsigned long nrNodes;
         unsigned int nrLayers;
         int nrLateralLink;

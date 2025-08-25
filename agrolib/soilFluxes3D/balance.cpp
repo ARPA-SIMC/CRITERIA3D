@@ -153,7 +153,7 @@ void computeMassBalance(double deltaT)
     balanceCurrentTimeStep.waterMBE = dStorage - balanceCurrentTimeStep.sinkSourceWater;            // [m3]
 
     // minimum reference water storage [m3] as % of current storage
-    double timePercentage = 0.01 * std::max(deltaT, 30.) / HOUR_SECONDS;
+    double timePercentage = 0.01 * std::max(deltaT, 60.) / HOUR_SECONDS;
     double minRefWaterStorage = balanceCurrentTimeStep.storageWater * timePercentage;
     minRefWaterStorage = std::max(minRefWaterStorage, 0.001);                                       // [m3] minimum 1 liter
 
@@ -208,20 +208,21 @@ void saveBestStep()
 }
 
 
-void restoreBestStep(double deltaT)
+void restoreBestApproximation(double deltaT)
 {
     for (unsigned long n = 0; n < unsigned(myStructure.nrNodes); n++)
     {
         nodeList[n].H = nodeList[n].bestH;
 
-        /*! compute new soil moisture (only sub-surface nodes) */
+        /*! compute new soil moisture and conductivity (only sub-surface nodes) */
         if (! nodeList[n].isSurface)
         {
             nodeList[n].Se = computeSe(n);
+            nodeList[n].k = computeK(n);
         }
     }
-
-     computeMassBalance(deltaT);
+    updateBoundaryWater(deltaT);
+    computeMassBalance(deltaT);
 }
 
 
@@ -261,7 +262,7 @@ bool waterBalance(double deltaT, int approxNr)
         acceptStep(deltaT);
 
         // best case: system is stable, try to increase time step
-        if (CourantWater < 0.5 && approxNr < 3 && MBRerror < (myParameters.MBRThreshold * 0.2))
+        if (CourantWater < 0.5 && approxNr <= 3)
         {
             doubleTimeStep();
         }
@@ -278,7 +279,7 @@ bool waterBalance(double deltaT, int approxNr)
 
     // system is unstable or last approximation
     int lastApproximation = myParameters.maxApproximationsNumber-1;
-    if (MBRerror > (_bestMBRerror * 5.0) || approxNr == lastApproximation)
+    if (MBRerror > (_bestMBRerror * 10.) || approxNr == lastApproximation)
     {
         if (deltaT > myParameters.delta_t_min)
         {
@@ -288,8 +289,8 @@ bool waterBalance(double deltaT, int approxNr)
         }
         else
         {
-            // worst case: forced to accept the time step, restore best error
-            restoreBestStep(deltaT);
+            // worst case: forced to accept the time step, restore best approximation
+            restoreBestApproximation(deltaT);
             acceptStep(deltaT);
             return true;
         }

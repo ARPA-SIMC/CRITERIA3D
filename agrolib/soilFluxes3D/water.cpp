@@ -107,7 +107,7 @@ double runoff(long i, long j, TlinkedNode *link, double deltaT, unsigned approxi
     // Land depression
     if ((Hi > Hj && zi < zj) || (Hj > Hi && zj < zi))
     {
-        // TODO
+        // TODO laghi (land use?)
         Hs = std::min(Hs, dH);
     }
 
@@ -474,7 +474,7 @@ bool computeWaterFluxes(double maxTime, double *acceptedTime)
 
         /*! update boundary conditions */
         updateConductance();
-        updateBoundaryWater(*acceptedTime);
+        //updateBoundaryWater(*acceptedTime);
 
         isStepOK = waterFlowComputation(*acceptedTime);
 
