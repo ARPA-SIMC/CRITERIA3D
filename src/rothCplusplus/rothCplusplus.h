@@ -115,7 +115,6 @@ public:
     std::vector<gis::Crit3DRasterGrid*> avgBIC; //[mm?]
     bool isInitialized;
 
-
     gis::Crit3DRasterGrid* getDPM() { return decomposablePlantMaterial; };
     gis::Crit3DRasterGrid* getRPM() { return resistantPlantMaterial; };
     gis::Crit3DRasterGrid* getBIO() { return microbialBiomass; };

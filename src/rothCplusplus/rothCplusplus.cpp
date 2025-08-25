@@ -96,20 +96,38 @@ void Crit3DRothCplusplusMaps::initialize(const gis::Crit3DRasterGrid& DEM)
         avgBIC[i]->initializeGrid(DEM);
 }
 
+
 void Crit3DRothCplusplusMaps::clear()
 {
-    decomposablePlantMaterial = new gis::Crit3DRasterGrid;
-    resistantPlantMaterial = new gis::Crit3DRasterGrid;
-    microbialBiomass = new gis::Crit3DRasterGrid;
-    humifiedOrganicMatter = new gis::Crit3DRasterGrid;
-    inertOrganicMatter = new gis::Crit3DRasterGrid;
-    soilOrganicMatter = new gis::Crit3DRasterGrid;
+    if (decomposablePlantMaterial != nullptr)
+        decomposablePlantMaterial->clear();
 
-    _depthMap = new gis::Crit3DRasterGrid;
-    _clayMap = new gis::Crit3DRasterGrid;
+    if (resistantPlantMaterial != nullptr)
+        resistantPlantMaterial->clear();
 
-    for (unsigned int i = 0; i < 12; i++)
-        avgBIC[i] = new gis::Crit3DRasterGrid;
+    if (microbialBiomass != nullptr)
+        microbialBiomass->clear();
+
+    if (humifiedOrganicMatter != nullptr)
+        humifiedOrganicMatter->clear();
+
+    if (inertOrganicMatter != nullptr)
+        inertOrganicMatter->clear();
+
+    if (soilOrganicMatter != nullptr)
+        soilOrganicMatter->clear();
+
+    if (_depthMap != nullptr)
+        _depthMap->clear();
+
+    if (_clayMap != nullptr)
+        _clayMap->clear();
+
+    for (unsigned int i = 0; i < avgBIC.size(); i++)
+        if (avgBIC[i]!= nullptr)
+            avgBIC[i]->clear();
+
+    avgBIC.clear();
 }
 
 
