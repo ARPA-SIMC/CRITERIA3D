@@ -557,15 +557,16 @@ bool Crit3DProject::dailyUpdateHydrall(const QDate &myDate)
                     }
 
 
-                    hydrallModel.weatherVariable.setYearlyET0(hydrallMaps.yearlyET0.getValueFromRowCol(row, col));
-                    hydrallModel.weatherVariable.setYearlyPrec(hydrallMaps.yearlyPrec.getValueFromRowCol(row, col));
+                    hydrallModel.setYear(myDate.year());
+                    hydrallModel.weatherVariable.setYearlyET0(hydrallMaps.yearlyET0->getValueFromRowCol(row, col));
+                    hydrallModel.weatherVariable.setYearlyPrec(hydrallMaps.yearlyPrec->getValueFromRowCol(row, col));
 
                     hydrallModel.simplifiedGrowthStand(); // TODO quit this line - temporary position to prompt check
 
                     hydrallModel.resetStandVariables();
 
-                    hydrallMaps.yearlyPrec.value[row][col] = 0;
-                    hydrallMaps.yearlyET0.value[row][col] = 0;
+                    hydrallMaps.yearlyPrec->value[row][col] = 0;
+                    hydrallMaps.yearlyET0->value[row][col] = 0;
 
                     if (myDate.month() == hydrallModel.firstMonthVegetativeSeason) //TODO
                     {
@@ -760,7 +761,7 @@ void Crit3DProject::assignETreal()
                         hydrallModel.plant.setLAICanopyMax(currentCrop.LAImax);
 
                         int soilIndex = int(soilIndexMap.value[row][col]);
-                        if (soilIndex != NODATA)
+                        if (soilIndex != NODATA && forestIndex != NODATA)
                             computeHydrallModel(row, col, forestIndex);
                     }
 
@@ -1196,15 +1197,15 @@ void Crit3DProject::updateETAndPrecMaps()
         {
             if (processes.computeHydrall)
             {
-                if (! isEqual(hydrallMaps.yearlyET0.value[row][col], NODATA))
-                    hydrallMaps.yearlyET0.value[row][col] += hourlyMeteoMaps->mapHourlyET0->value[row][col];
+                if (! isEqual(hydrallMaps.yearlyET0->value[row][col], NODATA))
+                    hydrallMaps.yearlyET0->value[row][col] += hourlyMeteoMaps->mapHourlyET0->value[row][col];
                 else
-                    hydrallMaps.yearlyET0.value[row][col] = hourlyMeteoMaps->mapHourlyET0->value[row][col];
+                    hydrallMaps.yearlyET0->value[row][col] = hourlyMeteoMaps->mapHourlyET0->value[row][col];
 
-                if (! isEqual(hydrallMaps.yearlyPrec.value[row][col], NODATA))
-                    hydrallMaps.yearlyPrec.value[row][col] += hourlyMeteoMaps->mapHourlyPrec->value[row][col];
+                if (! isEqual(hydrallMaps.yearlyPrec->value[row][col], NODATA))
+                    hydrallMaps.yearlyPrec->value[row][col] += hourlyMeteoMaps->mapHourlyPrec->value[row][col];
                 else
-                    hydrallMaps.yearlyPrec.value[row][col] = hourlyMeteoMaps->mapHourlyPrec->value[row][col];
+                    hydrallMaps.yearlyPrec->value[row][col] = hourlyMeteoMaps->mapHourlyPrec->value[row][col];
             }
 
             if (processes.computeRothC)

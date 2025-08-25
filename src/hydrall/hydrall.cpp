@@ -301,6 +301,9 @@ Crit3DHydrallMaps::Crit3DHydrallMaps()
     criticalTranspiration = new gis::Crit3DRasterGrid;
     minLeafWaterPotential = new gis::Crit3DRasterGrid;
 
+    yearlyET0 = new gis::Crit3DRasterGrid;
+    yearlyPrec = new gis::Crit3DRasterGrid;
+
 
 }
 
@@ -324,6 +327,9 @@ void Crit3DHydrallMaps::initialize(const gis::Crit3DRasterGrid& DEM)
     understoreyBiomassRoot->initializeGrid(DEM, 0);
 
     outputC->initializeGrid(DEM, 0);
+
+    yearlyPrec->initializeGrid(DEM, 0);
+    yearlyET0->initializeGrid(DEM, 0);
 
 }
 
@@ -1528,7 +1534,7 @@ bool Crit3DHydrall::simplifiedGrowthStand()
     statePlant.treeBiomassRoot -= (statePlant.treeBiomassRoot/plant.fineRootLongevity);
 
     //distributed wildfire loss
-    double distributedWildfireLoss = 0.02; //TODO: this parameter must be able to vary based on what if scenario
+    double distributedWildfireLoss = getFirewoodLostSurfacePercentage(0.002, year); //TODO: this parameter must be able to vary based on what if scenario
     statePlant.treeBiomassFoliage -= statePlant.treeBiomassFoliage * distributedWildfireLoss * 1; //foliage is completely lost in the event of a wildfire
     outputC += statePlant.treeBiomassRoot * distributedWildfireLoss * 1; //roots are preserved but dead and become input for carbon model
     statePlant.treeBiomassRoot -= statePlant.treeBiomassRoot * distributedWildfireLoss * 1;

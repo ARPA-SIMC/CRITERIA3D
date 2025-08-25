@@ -378,8 +378,8 @@
         gis::Crit3DRasterGrid* criticalSoilWaterPotential;
         gis::Crit3DRasterGrid* minLeafWaterPotential;
 
-        gis::Crit3DRasterGrid yearlyPrec;
-        gis::Crit3DRasterGrid yearlyET0;
+        gis::Crit3DRasterGrid* yearlyPrec;
+        gis::Crit3DRasterGrid* yearlyET0;
 
         gis::Crit3DRasterGrid* treeNetPrimaryProduction; //SAVE
         gis::Crit3DRasterGrid* treeBiomassFoliage; //SAVE
@@ -443,6 +443,7 @@
 
         double getOutputC() { return outputC; };
         void setElevation(double myElevation) {elevation = myElevation;};
+        void setYear(int myYear) { year = myYear;};
 
         double moistureCorrectionFactorOld(int index);
         double moistureCorrectionFactor(int index);
@@ -493,6 +494,7 @@
     private:
         double outputC;
         double elevation;
+        int year;
         void nullPhotosynthesis();
 
     };
