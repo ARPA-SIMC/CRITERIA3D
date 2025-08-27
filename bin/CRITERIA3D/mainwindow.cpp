@@ -2440,7 +2440,6 @@ void MainWindow::on_actionCriteria3D_Initialize_triggered()
                 return;
         }
 
-
         if (! myProject.initializeRothC())
         {
             myProject.isRothCInitialized = false;

@@ -105,6 +105,11 @@
         double decrease;  // GDD with threshold 5°C
     };
 
+    struct TAnnualYield{
+       std::string name;
+       double carbon; // annual carbon biomass
+    };
+
     class Crit3DHydrallState
     { 
     public:
@@ -193,7 +198,7 @@
         Crit3DHydrallPlant();
 
         // TODO Cate unità di misura
-
+        std::vector<TAnnualYield> tableYield;
         std::vector<TecophysiologicalParameter> tableEcophysiologicalParameters;
         std::vector<TLAIparam> rangeLAI;
         std::vector<TLAIphenology> phenologyLAI;
