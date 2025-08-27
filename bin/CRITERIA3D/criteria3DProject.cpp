@@ -52,6 +52,7 @@ Crit3DProject::Crit3DProject() : Project3D()
     _saveDailyState = false;
     _saveEndOfRunState = false;
     _saveYearlyState = false;
+    _saveMonthlyState = false;
 
     modelFirstTime.setTimeSpec(Qt::UTC);
     modelLastTime.setTimeSpec(Qt::UTC);
@@ -131,10 +132,7 @@ bool Crit3DProject::initializeHydrall()
 
 
     //TODO fare anche clear hydrall maps
-    mapLast30DaysTAvg.initializeGrid(*(DEM.header));
-    hydrallMaps.mapLAI->initializeGrid(*(DEM.header));
-    hydrallMaps.rootBiomassMap->initializeGrid(*(DEM.header));
-    hydrallMaps.standBiomassMap->initializeGrid(*(DEM.header));
+    mapLast30DaysTAvg.initializeGrid(DEM);
 
     //inizializzare un vettore che rimandi ai valori dei parametri ecofisiologici per hydrall che attraverso gli indici della croplist
 
@@ -522,13 +520,6 @@ void Crit3DProject::dailyUpdateCropMaps(const QDate &myDate)
     dailyTmaxMap.emptyGrid();
 }
 
-void Crit3DProject::dailyUpdateHydrallMaps()
-{
-
-    updateHydrallLAI(); //todo non serve?
-    return;
-}
-
 bool Crit3DProject::dailyUpdateHydrall(const QDate &myDate)
 {
 
@@ -745,7 +736,7 @@ void Crit3DProject::assignETreal()
                         totalTranspiration += traspFlow;                                                            // [m3 h-1] flux
                     }
 
-                    if (processes.computeHydrall)
+                    if (processes.computeHydrall && forestIndex != NODATA)
                     {
                         if (currentCrop.roots.rootDensity.empty())
                         {
@@ -761,7 +752,7 @@ void Crit3DProject::assignETreal()
                         hydrallModel.plant.setLAICanopyMax(currentCrop.LAImax);
 
                         int soilIndex = int(soilIndexMap.value[row][col]);
-                        if (soilIndex != NODATA && forestIndex != NODATA)
+                        if (soilIndex != NODATA)
                             computeHydrallModel(row, col, forestIndex);
                     }
 
@@ -1157,21 +1148,14 @@ bool Crit3DProject::runModels(const QDateTime &firstTime, const QDateTime &lastT
         if (processes.computeHydrall || processes.computeRothC)
         {
             updateLast30DaysTavg();
-            dailyUpdateHydrallMaps();
+
         }
 
-        if (isSaveDailyState())
+        if (isSaveDailyState() || (isSaveYearlyState() && myDate.dayOfYear() == 1) || (isSaveMonthlyState() && myDate.day() == 1))
         {
             QString dirName;
             saveModelsState(dirName);
         }
-
-        if (isSaveYearlyState() && myDate.dayOfYear() == 1)
-        {
-            QString dirName;
-            saveModelsState(dirName);
-        }
-
     }
 
     if (isSaveEndOfRunState())
@@ -1887,12 +1871,6 @@ bool Crit3DProject::updateLast30DaysTavg()
     return true;
 }
 
-void Crit3DProject::updateHydrallLAI()
-{
-    hydrallMaps.mapLAI = &laiMap;
-}
-
-
 bool Crit3DProject::updateDailyTemperatures()
 {
     if (! dailyTminMap.isLoaded || ! dailyTmaxMap.isLoaded || ! hourlyMeteoMaps->mapHourlyTair->isLoaded)
@@ -2391,6 +2369,24 @@ bool Crit3DProject::saveHydrallState(const QString &currentStatePath)
         return false;
     }
 
+    if (!gis::writeEsriGrid((hydrallPath+"/yearlyET0").toStdString(), hydrallMaps.yearlyET0, errorStr))
+    {
+        logError("Error saving yearly ET0 map: " + QString::fromStdString(errorStr));
+        return false;
+    }
+
+    if (!gis::writeEsriGrid((hydrallPath+"/yearlyPrec").toStdString(), hydrallMaps.yearlyPrec, errorStr))
+    {
+        logError("Error saving yearly prec map: " + QString::fromStdString(errorStr));
+        return false;
+    }
+
+    if (!gis::writeEsriGrid((hydrallPath+"/last30daysT").toStdString(), &mapLast30DaysTAvg, errorStr))
+    {
+        logError("Error saving average last 30 days temperature map: " + QString::fromStdString(errorStr));
+        return false;
+    }
+
     //other maps tbd
 
     return true;
@@ -2578,6 +2574,9 @@ bool Crit3DProject::loadModelState(QString statePath)
     gis::Crit3DRasterGrid *tmpRaster = new gis::Crit3DRasterGrid();
     if (rothCDir.exists() && (! isProcessesDefined || isRothCInitialized))
     {
+        rothCModel.initialize();
+        rothCModel.map.initialize(DEM);
+
         fileName = rothCPath.toStdString() + "/DPM";
         if (! gis::readEsriGrid(fileName, tmpRaster, errorStr))
         {
@@ -2692,6 +2691,34 @@ bool Crit3DProject::loadModelState(QString statePath)
             return false;
         }
         gis::resampleGrid(*tmpRaster, hydrallMaps.understoreyBiomassRoot, DEM.header, aggrAverage, 0.1f);
+
+        fileName = hydrallPath.toStdString() + "/yearlyET0";
+        if (! gis::readEsriGrid(fileName, tmpRaster, errorStr))
+        {
+            errorString = "Wrong hydrall yearly ET0 map:\n" + QString::fromStdString(errorStr);
+            hydrallMaps.isInitialized = false;
+            return false;
+        }
+        gis::resampleGrid(*tmpRaster, hydrallMaps.yearlyET0, DEM.header, aggrAverage, 0.1f);
+
+        fileName = hydrallPath.toStdString() + "/yearlyPrec";
+        if (! gis::readEsriGrid(fileName, tmpRaster, errorStr))
+        {
+            errorString = "Wrong hydrall yearly prec map:\n" + QString::fromStdString(errorStr);
+            hydrallMaps.isInitialized = false;
+            return false;
+        }
+        gis::resampleGrid(*tmpRaster, hydrallMaps.yearlyPrec, DEM.header, aggrAverage, 0.1f);
+
+        fileName = hydrallPath.toStdString() + "/last30daysT";
+        if (! gis::readEsriGrid(fileName, tmpRaster, errorStr))
+        {
+            errorString = "Wrong hydrall last 30 days average temperature map:\n" + QString::fromStdString(errorStr);
+            hydrallMaps.isInitialized = false;
+            return false;
+        }
+        gis::resampleGrid(*tmpRaster, &mapLast30DaysTAvg, DEM.header, aggrAverage, 0.1f);
+
 
         //other maps tbd
 

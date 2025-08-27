@@ -369,9 +369,6 @@
     public:
         //sapwood, foliage, fine root
         bool isInitialized;
-        gis::Crit3DRasterGrid* standBiomassMap;
-        gis::Crit3DRasterGrid* rootBiomassMap;
-        gis::Crit3DRasterGrid* mapLAI;
         gis::Crit3DRasterGrid treeSpeciesMap;
         gis::Crit3DRasterGrid plantHeight;
         gis::Crit3DRasterGrid* criticalTranspiration;

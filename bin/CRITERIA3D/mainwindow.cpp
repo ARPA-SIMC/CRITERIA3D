@@ -137,6 +137,7 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->flagSave_state_endRun->setChecked(myProject.isSaveEndOfRunState());
 
     myProject.setSaveYearlyState(false);
+    myProject.setSaveMonthlyState(false);
 
     myProject.setSaveOutputPoints(false);
     myProject.setComputeOnlyPoints(false);
@@ -3775,5 +3776,11 @@ void MainWindow::on_actionSoil_organic_matter_triggered()
 void MainWindow::on_actionAutomatic_state_saving_end_of_year_triggered(bool isChecked)
 {
     myProject.setSaveYearlyState(isChecked);
+}
+
+
+void MainWindow::on_actionAutomatic_state_saving_end_of_month_toggled(bool isChecked)
+{
+    myProject.setSaveMonthlyState(isChecked);
 }
 

@@ -1293,7 +1293,7 @@
        <second>0</second>
        <year>1752</year>
        <month>9</month>
-       <day>2</day>
+       <day>1</day>
       </datetime>
      </property>
      <property name="maximumDate">
@@ -2002,6 +2002,7 @@
     <addaction name="flagSave_state_endRun"/>
     <addaction name="flagSave_state_daily_step"/>
     <addaction name="actionAutomatic_state_saving_end_of_year"/>
+    <addaction name="actionAutomatic_state_saving_end_of_month"/>
     <addaction name="separator"/>
     <addaction name="actionCriteria3D_Water_content_summary"/>
     <addaction name="actionDEM_summary"/>
@@ -3002,6 +3003,14 @@
    </property>
    <property name="text">
     <string>Automatic state saving (end of year)</string>
+   </property>
+  </action>
+  <action name="actionAutomatic_state_saving_end_of_month">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Automatic state saving (end of month)</string>
    </property>
   </action>
  </widget>

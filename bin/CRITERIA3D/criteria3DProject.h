@@ -35,13 +35,14 @@
     {
 
     private:
-        bool _saveOutputRaster, _saveOutputPoints, _saveDailyState, _saveEndOfRunState, _saveYearlyState;
+        bool _saveOutputRaster, _saveOutputPoints, _saveDailyState, _saveEndOfRunState,
+             _saveYearlyState, _saveMonthlyState;
 
         void clear3DProject();
         bool check3DProject();
         bool updateDailyTemperatures();
         bool updateLast30DaysTavg();
-        void updateHydrallLAI();
+
 
         bool saveSnowModelState(const QString &currentStatePath);
         bool saveSoilWaterState(const QString &currentStatePath);
@@ -103,6 +104,9 @@
         void setSaveEndOfRunState(bool isSave) { _saveEndOfRunState = isSave; }
         bool isSaveEndOfRunState() { return _saveEndOfRunState; }
 
+        void setSaveMonthlyState(bool isSave) {_saveMonthlyState = isSave;}
+        bool isSaveMonthlyState() {return _saveMonthlyState;}
+
         void setSaveOutputRaster(bool isSave);
         bool isSaveOutputRaster();
 
@@ -121,7 +125,6 @@
         bool initializeSnowModel();
 
         bool computeHydrallModel(int row, int col, int forestIndex);
-        void dailyUpdateHydrallMaps();
         bool dailyUpdateHydrall(const QDate &myDate);
         void setHydrallVariables(int row, int col, int forestIndex);
 

@@ -283,10 +283,6 @@ Crit3DHydrallAllocationCoefficient::Crit3DHydrallAllocationCoefficient()
 
 Crit3DHydrallMaps::Crit3DHydrallMaps()
 {
-    mapLAI = new gis::Crit3DRasterGrid;
-    standBiomassMap = new gis::Crit3DRasterGrid;
-    rootBiomassMap = new gis::Crit3DRasterGrid;
-
     treeNetPrimaryProduction = new gis::Crit3DRasterGrid; //SAVE
     treeBiomassFoliage = new gis::Crit3DRasterGrid; //SAVE
     treeBiomassRoot = new gis::Crit3DRasterGrid; //SAVE
@@ -309,35 +305,49 @@ Crit3DHydrallMaps::Crit3DHydrallMaps()
 
 void Crit3DHydrallMaps::initialize(const gis::Crit3DRasterGrid& DEM)
 {
-    mapLAI->initializeGrid(DEM);
-    standBiomassMap->initializeGrid(DEM);
-    rootBiomassMap->initializeGrid(DEM);
     treeSpeciesMap.initializeGrid(DEM);
     plantHeight.initializeGrid(DEM); //TODO
     criticalSoilWaterPotential->initializeGrid(DEM);
     criticalTranspiration->initializeGrid(DEM);
     minLeafWaterPotential->initializeGrid(DEM);
 
-    treeNetPrimaryProduction->initializeGrid(DEM, 0); //TODO: initial maps must be loaded
-    treeBiomassFoliage->initializeGrid(DEM, 0); //SAVE
-    treeBiomassRoot->initializeGrid(DEM, 0); //SAVE
-    treeBiomassSapwood->initializeGrid(DEM, 0); //SAVE
-    understoreyNetPrimaryProduction->initializeGrid(DEM, 0); //SAVE
-    understoreyBiomassFoliage->initializeGrid(DEM, 0); //SAVE
-    understoreyBiomassRoot->initializeGrid(DEM, 0);
+    treeNetPrimaryProduction->initializeGrid(DEM); //TODO: initial maps must be loaded
+    treeBiomassFoliage->initializeGrid(DEM); //SAVE
+    treeBiomassRoot->initializeGrid(DEM); //SAVE
+    treeBiomassSapwood->initializeGrid(DEM); //SAVE
+    understoreyNetPrimaryProduction->initializeGrid(DEM); //SAVE
+    understoreyBiomassFoliage->initializeGrid(DEM); //SAVE
+    understoreyBiomassRoot->initializeGrid(DEM);
 
-    outputC->initializeGrid(DEM, 0);
+    outputC->initializeGrid(DEM);
+    yearlyPrec->initializeGrid(DEM);
+    yearlyET0->initializeGrid(DEM);
 
-    yearlyPrec->initializeGrid(DEM, 0);
-    yearlyET0->initializeGrid(DEM, 0);
+    for (int i = 0; i < DEM.header->nrRows; i++)
+    {
+        for (int j = 0; j < DEM.header->nrCols; j++)
+        {
+            if (! isEqual(DEM.value[i][j], DEM.header->flag))
+            {
+                treeNetPrimaryProduction->value[i][j] = 0;
+                treeBiomassFoliage->value[i][j] = 0;
+                treeBiomassRoot->value[i][j] = 0;
+                treeBiomassSapwood->value[i][j] = 0;
+                understoreyNetPrimaryProduction->value[i][j] = 0;
+                understoreyBiomassFoliage->value[i][j] = 0;
+                understoreyBiomassRoot->value[i][j] = 0;
+                outputC->value[i][j] = 0;
+                yearlyPrec->value[i][j] = 0;
+                yearlyET0->value[i][j] = 0;
 
+            }
+        }
+    }
 }
 
 Crit3DHydrallMaps::~Crit3DHydrallMaps()
 {
-    mapLAI->clear();
-    standBiomassMap->clear();
-    rootBiomassMap->clear();
+
 }
 
 bool Crit3DHydrall::computeHydrallPoint()
@@ -1263,7 +1273,7 @@ void Crit3DHydrall::cumulatedResults()
         deltaTime.transpiration += (treeTranspirationRate[i] + understoreyTranspirationRate[i]);
     }
 
-    updateCriticalPsi();
+    //updateCriticalPsi();
 
     return;
 
