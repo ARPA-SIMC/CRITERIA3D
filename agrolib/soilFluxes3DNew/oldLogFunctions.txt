@@ -1,0 +1,172 @@
+-----header-----
+namespace soilFluxes3D::Log
+{
+    struct logData
+    {
+        std::string solverInfo;
+        std::vector<uint32_t> numberApprox;
+        std::vector<uint32_t> totIterationsNumbers;
+        std::vector<uint32_t> maxIterationsNumbers;
+        std::vector<std::string> matrixAlist;
+        std::vector<std::string> vectorBlist;
+        std::vector<std::string> vectorXlist;
+    };
+
+    //Create log data
+    void createMatrixALogElement(const MatrixCPU& matrix);
+    void createVectorBLogElement(const VectorCPU& vector);
+    void createVectorXLogElement(const VectorCPU& vector);
+
+    void createCurrStepLog(const MatrixCPU& matrix, const VectorCPU& vectorB, const VectorCPU& vectorX);
+
+    //Log di matrici e vettori
+    std::string getMatrixALog();
+    std::string getVectorBLog();
+    std::string getVectorXLog();
+
+    //Log dei parametri
+    std::string getLinSystLog();
+
+    //Log complessivo
+    std::string getFullLog(std::string logPath);
+
+    //Clean
+    void cleanLogs();
+}
+
+-----source-----
+namespace soilFluxes3D::Log
+{
+    logData currLinSistData;
+
+    std::string customPrintDouble(double value, std::chars_format format = std::chars_format::general, int precision = 17)
+    {
+        char buffer[64];
+        auto [ptr, ec] = std::to_chars(buffer, buffer + sizeof(buffer), value, format, precision);
+
+        if(ec != std::errc())
+            throw std::runtime_error("Failed to convert floating point to string");
+
+        return std::string(buffer, ptr);
+    }
+
+    std::string customPrintInteger(uint64_t value)
+    {
+        char buffer[64];
+        auto [ptr, ec] = std::to_chars(buffer, buffer + sizeof(buffer), value);
+
+        if(ec != std::errc())
+            throw std::runtime_error("Failed to convert integer to string");
+
+        return std::string(buffer, ptr);
+    }
+
+    void createMatrixALogElement(const MatrixCPU &matrix)
+    {
+        std::string matrixString = "";
+
+        for(uint64_t rowIdx = 0; rowIdx < matrix.numRows; ++rowIdx)
+        {
+            if(rowIdx > 0)
+                matrixString.append(";");
+
+            for(uint8_t colIdx = 0; colIdx < matrix.numColumns[rowIdx]; ++colIdx)
+            {
+                if(colIdx > 0)
+                    matrixString.append(",");
+
+                matrixString.append(customPrintInteger(matrix.colIndeces[rowIdx][colIdx])).append(":").append(customPrintDouble(matrix.values[rowIdx][colIdx]));
+            }
+        }
+        currLinSistData.matrixAlist.push_back(std::move(matrixString));
+    }
+
+    void createVectorBLogElement(const VectorCPU &vector)
+    {
+        std::string vectorString = "";
+        for(uint64_t idx = 0; idx < vector.numElements; ++idx)
+        {
+            if(idx > 0)
+                vectorString.append(";");
+
+            vectorString.append(customPrintDouble(vector.values[idx]));
+        }
+        currLinSistData.vectorBlist.push_back(std::move(vectorString));
+    }
+
+    void createVectorXLogElement(const VectorCPU &vector)
+    {
+        std::string vectorString = "";
+        for(uint64_t idx = 0; idx < vector.numElements; ++idx)
+        {
+            if(idx > 0)
+                vectorString.append(";");
+
+            vectorString.append(customPrintDouble(vector.values[idx]));
+        }
+        currLinSistData.vectorXlist.push_back(std::move(vectorString));
+    }
+
+    static int numIter = 0;
+    void createCurrStepLog(const MatrixCPU &matrix, const VectorCPU &vectorB, const VectorCPU &vectorX)
+    {
+        insertBinData(numIter, matrix, vectorB, vectorX);
+        numIter++;
+        //createMatrixALogElement(matrix);
+        //createVectorBLogElement(vectorB);
+        //createVectorXLogElement(vectorX);
+    }
+
+    std::string getMatrixALog()
+    {
+        std::string returnString = "MatrixA\n";
+        for (const auto& element : currLinSistData.matrixAlist)
+            returnString.append(element).append("\n");
+
+        return returnString;
+    }
+
+    std::string getVectorBLog()
+    {
+        std::string returnString = "VectorB\n";
+        for (const auto& element : currLinSistData.vectorBlist)
+            returnString.append(element).append("\n");
+
+        return returnString;
+    }
+
+    std::string getVectorXLog()
+    {
+        std::string returnString = "VectorX\n";
+        for (const auto& element : currLinSistData.vectorXlist)
+            returnString.append(element).append("\n");
+
+        return returnString;
+    }
+
+    std::string getLinSystLog()
+    {
+        return "";
+    }
+
+    std::string getFullLog(std::string logPath)
+    {
+        std::string returnString = "";
+        // returnString.append(getLinSystLog()).append((getMatrixALog())).append((getVectorBLog())).append(getVectorXLog());
+        // cleanLogs();    //move to different location?
+        outputBinData(logPath);
+        return returnString;
+    }
+
+    void cleanLogs()
+    {
+        currLinSistData.numberApprox.clear();
+        currLinSistData.totIterationsNumbers.clear();
+        currLinSistData.maxIterationsNumbers.clear();
+
+        currLinSistData.matrixAlist.clear();
+        currLinSistData.vectorBlist.clear();
+        currLinSistData.vectorXlist.clear();
+    }
+
+} //namespace

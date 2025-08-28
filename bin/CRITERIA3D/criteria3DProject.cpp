@@ -43,7 +43,7 @@
 
 #include <iostream>
 #include <QVector3D>
-#include <float.h>
+#include <cfloat>
 
 
 Crit3DProject::Crit3DProject() : Project3D()
@@ -1121,19 +1121,9 @@ bool Crit3DProject::runModels(const QDateTime &firstTime, const QDateTime &lastT
                 return false;
             }
 
-            //QDateTime endTime = QDateTime::currentDateTime();
-            //logInfo("Tempo di calcolo [ms]: " + QString::number(startTime.msecsTo(endTime)));
-
-            //Log temporaneo delle variabili
-            // QString matrixLog = soilFluxes3D::getMatrixLog();
-            // logData("MatrixFinal", matrixLog);
-
-            // QString vectorLog = soilFluxes3D::getVectorLog();
-            // logData("VectorFinal", vectorLog);
-
-            QString linSystLog = ""; // soilFluxes3D::getLinSystLog();
-            // logData("LinSystInfo", linSystLog);
-            logInfo("LinSystInfo 00\n" + linSystLog);
+            //Log SF3D data
+            soilFluxes3D::New::closeLog();
+            logInfo("Log done 00\n");       //TO DO: implement log feedback
 
             //rothC maps update must be done hourly, otherwise ETReal data are not stored
             if (processes.computeRothC || processes.computeHydrall)
@@ -1254,6 +1244,9 @@ bool Crit3DProject::loadCriteria3DProject(const QString &fileName)
         if (errorType != ERROR_DBGRID && errorType != ERROR_OUTPUTPOINTLIST)
             return false;
     }
+
+    //TO DO: integrate with a specific flag in the UI and/or a specific shell command
+    soilFluxes3D::New::inizializeLog(getFilePath(getCompleteFileName(logFileName, PATH_LOG)).toStdString(), projectName.toStdString());
 
     if (meteoPointsLoaded)
     {

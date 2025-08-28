@@ -39,7 +39,6 @@ SOURCES += \
 HEADERS += \
     cpusolver.h \
     heat.h \
-    logFunctions.h \
     macro.h \
     otherFunctions.h \
     soilFluxes3DNew.h \
@@ -51,6 +50,7 @@ HEADERS += \
 
 DISTFILES += \
     ToDoList.txt \
+    oldLogFunctions.txt \
     temp_gpuSolver_cpp.txt
 
 unix:{
@@ -62,6 +62,23 @@ unix:{
 }
 win32:{
     TARGET = soilFluxes3DNew
+}
+
+
+#CONFIG += MCR_CONFIG
+
+CONFIG(MCR_CONFIG) {
+    DEFINES += MCR_ENABLED
+
+    SOURCES += \
+        logFunctions.cpp
+    HEADERS += \
+        logFunctions.h
+
+    LIBS += -L"D:/App e giochi/MATLAB/R2024b/extern/lib/win64/microsoft" libmx.lib libmat.lib
+    LIBS += -L"D:/App e giochi/MATLAB/R2024b/bin/win64"
+
+    INCLUDEPATH += "D:/App e giochi/MATLAB/R2024b/extern/include"
 }
 
 #CONFIG += CUDA_CONFIG

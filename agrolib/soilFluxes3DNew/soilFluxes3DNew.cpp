@@ -7,6 +7,11 @@
 #include "soilPhysics.h"
 #include "water.h"
 
+#ifdef MCR_ENABLED
+    #include "logFunctions.h"
+    using namespace soilFluxes3D::Log;
+#endif
+
 #ifdef CUDA_ENABLED
     #include "gpusolver.h"
 #endif
@@ -179,6 +184,22 @@ namespace soilFluxes3D::New
     }
 
     /*!
+     *  \brief inizializes the log data structures if enabled
+     *  \return Ok/Error
+    */
+    SF3Derror_t inizializeLog([[maybe_unused]] const std::string& logPath, [[maybe_unused]] const std::string& projectName)
+    {
+        #ifdef MCR_ENABLED
+            SF3Derror_t logResult = inizializeLogData(logPath, projectName);
+            if(logResult != SF3Dok)
+                return logResult;
+        #endif
+
+        return SF3Dok;
+    }
+
+
+    /*!
      *  \brief cleans all the data structures
         \return Ok/Error
     */
@@ -255,6 +276,21 @@ namespace soilFluxes3D::New
         SF3Derror_t solverResult = solver->clean();
         if(solverResult != SF3Dok)
             return solverResult;
+
+        return SF3Dok;
+    }
+
+    /*!
+     *  \brief inizializes the log data structures if enabled
+     *  \return Ok/Error
+    */
+    SF3Derror_t closeLog()
+    {
+        #ifdef MCR_ENABLED
+                SF3Derror_t logResult = writeLogFile();
+                if(logResult != SF3Dok)
+                    return logResult;
+        #endif
 
         return SF3Dok;
     }

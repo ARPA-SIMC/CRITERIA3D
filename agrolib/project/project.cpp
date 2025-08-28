@@ -5331,8 +5331,8 @@ bool Project::setLogFile(QString myFileName)
         return false;
     }
     logInfo("DataFile = " + logFileName);
-    return true;
 
+    return true;
 }
 
 

@@ -9,8 +9,10 @@ namespace soilFluxes3D::New
     //Inizializazion and memory management
     SF3Derror_t initializeSF3D(uint64_t nrNodes, uint16_t nrLayers, uint8_t nrLateralLinks, bool isComputeWater, bool isComputeHeat, bool isComputeSolutes);
     SF3Derror_t inizializeBalance();
+    SF3Derror_t inizializeLog(const std::string &logPath, const std::string &projectName);
 
     SF3Derror_t cleanSF3D();
+    SF3Derror_t closeLog();
 
     uint32_t setThreadsNumber(uint32_t nrThreads);
 

@@ -1,21 +1,27 @@
 Minor
  - Convert enum to enum class
  - Finalize variable names
+ - Finalize Log structure and API
 
  - Remove using namespace
  - Use #pragma once instead of #ifndef / #define
+ - Gestione complessiva delle include tramite .pri
 
- - Replace macros with inline constexpr + error checking macro 
+ - Replace macros with inline constexpr + error checking macro
+ - Replace #pragma with _Pragma macro + introduce and test simd directive
 
  - Refactor loops outside of soilFluxes3D
 
  - Remove debug checks
+ - Rename SF3D to SF3Dold
+
+ - Add print of time computed each call
 
 Major 
  - Implement heat part
- - Implement logging + define CONFIG to toggle it
- 
  - Finalize and debug GPU implementation
+
+ - Discuss branch structure
 
 Extra
  - Validate solutions (MATLAB)

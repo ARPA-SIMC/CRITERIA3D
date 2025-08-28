@@ -18,6 +18,10 @@ unix:{
     QMAKE_LFLAGS += -fopenmp -flto
 }
 
+#temp log
+LIBS += -L"D:/App e giochi/MATLAB/R2024b/extern/lib/win64/microsoft" libmx.lib libmat.lib
+LIBS += -L"D:\App e giochi\MATLAB\R2024b\bin\win64"
+
 CUDA_DIR = $$(CUDA_PATH) #"D:\App e giochi\NVIDIA GPU Computing Toolkit\CUDA\v12.9"
 
 isEmpty(CUDA_DIR) {

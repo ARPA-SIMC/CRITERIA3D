@@ -480,7 +480,6 @@ namespace soilFluxes3D::New
 
                 //cusparseSpMV(libHandle, CUSPARSE_OPERATION_NON_TRANSPOSE, &alpha, iterationMatrix.cusparseDescriptor, tempSolution.cusparseDescriptor, &beta, unknownTerm.cusparseDescriptor, CUDA_R_64F, CUSPARSE_SPMV_ALG_DEFAULT, externalBuffer);
                 //cudaDeviceSynchronize();
-
             }
 
             //Calcolo della norma dell'errore
