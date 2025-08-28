@@ -22,7 +22,7 @@ namespace soilFluxes3D::New
     enum meanType_t : uint8_t {Arithmetic, Geometric, Logarithmic};
 
     //Error Status
-    enum SF3Derror_t : uint8_t {SF3Dok, IndexError, MemoryError, TopographyError, BoundaryError, MissingDataError, ParameterError, SolverError};
+    enum SF3Derror_t : uint8_t {SF3Dok, IndexError, MemoryError, TopographyError, BoundaryError, MissingDataError, ParameterError, SolverError, FileError};
 
     //Process implemented
     enum processType : uint8_t {Water, Heat, Solutes};
@@ -189,8 +189,6 @@ namespace soilFluxes3D::New
 
     };
 
-
-
     //Solver
     enum numericalMethod : uint8_t {Jacobi, GaussSeidel};
     enum solverType : uint8_t  {CPU, GPU};
@@ -235,15 +233,6 @@ namespace soilFluxes3D::New
     {
         uint64_t numElements;
         double* values;
-    };
-
-    // Log
-    struct logData
-    {
-        std::string solverInfo;
-        std::vector<uint32_t> numberApprox;
-        std::vector<uint32_t> totIterationsNumbers;
-        std::vector<uint32_t> maxIterationsNumbers;
     };
 }
 

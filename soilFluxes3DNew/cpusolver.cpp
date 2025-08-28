@@ -5,6 +5,10 @@
 #include "cpusolver.h"
 #include "soilPhysics.h"
 #include "water.h"
+#ifdef MCR_ENABLED
+    #include "logFunctions.h"
+    using namespace soilFluxes3D::Log;
+#endif
 
 using namespace soilFluxes3D::Soil;
 using namespace soilFluxes3D::Water;
@@ -172,6 +176,11 @@ namespace soilFluxes3D::New
 
             //Try solve linear system
             bool isStepValid = solveLinearSystem(approxIdx, Water);
+
+            //Log Data
+            #ifdef MCR_ENABLED
+                createCurrStepLog(matrixA, vectorB, vectorX, isStepValid);
+            #endif
 
             //Reduce step tipe if system resolution failed
             if((!isStepValid) && (deltaT > _parameters.deltaTmin))
