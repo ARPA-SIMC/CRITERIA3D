@@ -1247,11 +1247,11 @@ void Project3D::runWaterFluxes3DModel(double totalTimeStep, bool isRestart)
         startTime = QDateTime::currentDateTime();
         currentSeconds += soilFluxes3D::computeStep(totalTimeStep - currentSeconds);
         endTime = QDateTime::currentDateTime();
-        logInfo("Tempo di calcolo old [ms]: " + QString::number(startTime.msecsTo(endTime)));
+        logInfo("Tempo di calcolo old [ms]: " + QString::number(startTime.msecsTo(endTime)) + "\tSeconds computed: " + QString::number(currentSeconds));
         startTime = QDateTime::currentDateTime();
         currentSecondsNew += soilFluxes3D::New::computeStep(totalTimeStep - currentSecondsNew);
         endTime = QDateTime::currentDateTime();
-        logInfo("Tempo di calcolo new [ms]: " + QString::number(startTime.msecsTo(endTime)));
+        logInfo("Tempo di calcolo new [ms]: " + QString::number(startTime.msecsTo(endTime)) + "\tSeconds computed: " + QString::number(currentSecondsNew));
 
         if(currentSecondsNew != currentSeconds)
             logError("ERROR ------> CurrSec: old = " + QString::number(currentSeconds) + " \t new: " + QString::number(currentSecondsNew));
@@ -1296,13 +1296,6 @@ void Project3D::runWaterFluxes3DModel(double totalTimeStep, bool isRestart)
     double currentWaterContentNew = soilFluxes3D::New::getTotalWaterContent();
     double massBalanceErrorNew = currentWaterContentNew - forecastWaterContentNew;
     logInfo("Mass balance error [m3]: " + QString::number(massBalanceError, 'f', 7) + "\t new: " + QString::number(massBalanceErrorNew, 'f', 7) + "\t ------- Error: " + QString::number(massBalanceError - massBalanceErrorNew));
-
-    // //Log temporaneo delle variabili
-    // QString matrixLog = soilFluxes3D::getMatrixLog();
-    // logData("Matrix", matrixLog);
-
-    // QString vectorLog = soilFluxes3D::getVectorLog();
-    // logData("Vector", vectorLog);
 }
 
 
