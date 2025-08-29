@@ -81,9 +81,9 @@ void ColorLegend::paintEvent(QPaintEvent *event)
             {
                 if ((decimal / range) > 0.01)
                 {
-                    // one decimal
-                    valueStr = QString::number(value, 'f', 1);
-                    nrDigits += 1;
+                    // two decimal
+                    valueStr = QString::number(value, 'f', 2);
+                    nrDigits += 2;
                 }
                 else
                 {
