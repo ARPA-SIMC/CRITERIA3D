@@ -30,6 +30,7 @@
 #include "mapGraphicsRasterUtm.h"
 #include "basicMath.h"
 #include "color.h"
+#include "geoMap.h"
 
 #include <math.h>
 #include <QMenu>
@@ -82,6 +83,8 @@ bool RasterUtmObject::initialize(gis::Crit3DRasterGrid* rasterPtr, const gis::Cr
         return false;
     if (! rasterPtr->isLoaded)
         return false;
+
+    setDrawing(false);
 
     _utmZone = gisSettings.utmZone;
     _rasterPointer = rasterPtr;
@@ -370,7 +373,8 @@ bool RasterUtmObject::drawRaster(QPainter* painter)
             // check minimum (transparent)
             if (_rasterPointer->colorScale->isHideMinimum())
             {
-                if (isEqual(value, 0) || value <= _rasterPointer->colorScale->minimum())
+                // prec or surface water content
+                if (value < 0.1 || value <= _rasterPointer->colorScale->minimum())
                     continue;
             }
 

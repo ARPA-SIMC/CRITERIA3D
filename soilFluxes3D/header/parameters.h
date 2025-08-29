@@ -27,7 +27,7 @@
             threadsNumber = 1;
             delta_t_min = 1;
             delta_t_max = 600;
-            current_delta_t = delta_t_max;
+            current_delta_t = NODATA;
             maxIterationsNumber = 200;
             maxApproximationsNumber = 10;
             MBRThreshold = 1E-6;

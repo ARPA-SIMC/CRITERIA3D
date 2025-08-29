@@ -129,8 +129,7 @@
             void emptyObsDataM(const Crit3DDate& date1, const Crit3DDate& date2);
 
             void cleanObsDataH();
-            void cleanObsDataD();
-            void cleanObsDataM();
+            void cleanAllData();
 
             bool isDateLoadedH(const Crit3DDate& myDate);
             bool isDateTimeLoadedH(const Crit3DTime& myDateTime);
@@ -148,8 +147,11 @@
             void initializeObsDataM(unsigned int numberOfMonths, unsigned int month, int year);
 
             bool existDailyData(const Crit3DDate& myDate);
-            Crit3DDate getFirstDailyData();
-            Crit3DDate getLastDailyData();
+            Crit3DDate getFirstDailyData() const;
+            Crit3DDate getLastDailyData() const;
+
+            bool existDailyData() { return ! obsDataD.empty(); }
+            bool existHourlyData() { return (nrObsDataDaysH > 0); }
 
             float getMeteoPointValueH(const Crit3DDate& myDate, int myHour, int myMinutes, meteoVariable myVar);
             bool setMeteoPointValueH(const Crit3DDate& myDate, int myHour, int myMinutes, meteoVariable myVar, float myValue);
@@ -157,7 +159,7 @@
             float getMeteoPointValueD(const Crit3DDate& myDate, meteoVariable myVar) const;
             bool setMeteoPointValueD(const Crit3DDate& myDate, meteoVariable myVar, float myValue);
             bool getMeteoPointValueDayH(const Crit3DDate& myDate, TObsDataH *&hourlyValues);
-            Crit3DDate getMeteoPointHourlyValuesDate(int index);
+            Crit3DDate getMeteoPointHourlyValuesDate(int index) const;
             float getMeteoPointValue(const Crit3DTime& myTime, meteoVariable myVar, Crit3DMeteoSettings *meteoSettings);
             float getMeteoPointValueM(const Crit3DDate &myDate, meteoVariable myVar);
             bool setMeteoPointValueM(const Crit3DDate &myDate, meteoVariable myVar, float myValue);

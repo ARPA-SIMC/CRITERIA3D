@@ -136,11 +136,8 @@ void computeHeatBalance(double timeStepHeat, double timeStepWater)
     double deltaHeatStorage = balanceCurrentTimeStep.storageHeat - balancePreviousTimeStep.storageHeat;
     balanceCurrentTimeStep.heatMBE = deltaHeatStorage - balanceCurrentTimeStep.sinkSourceHeat;
 
-    // minimum reference heat storage: minimum 1 Joule
-    double minRefHeatStorage = std::max(balanceCurrentTimeStep.storageHeat * 1e-6, 1.0);        // [J]
-
-    // reference heat for computation of mass balance ratio
-    double referenceHeat = std::max(fabs(balanceCurrentTimeStep.sinkSourceHeat), minRefHeatStorage);   // [J]
+    // reference heat for computation of mass balance ratio: minimum 1 Joule
+    double referenceHeat = std::max(fabs(balanceCurrentTimeStep.sinkSourceHeat), 1.0);   // [J]
 
     balanceCurrentTimeStep.heatMBR = balanceCurrentTimeStep.heatMBE / referenceHeat;
 }
@@ -335,7 +332,7 @@ double ThermalLiquidConductivity(double temp_celsius, double h, double Klh)
     double dGammadT;        // [g s-2 K-1] derivative of surface tension with respect to temperature
 
     dGammadT = -0.1425 - 0.000576 * temp_celsius;
-    return (MAXVALUE(0., Klh * h * Gwt * dGammadT / GAMMA0));
+    return (std::max(0., Klh * h * Gwt * dGammadT / GAMMA0));
 }
 
 /*!
@@ -483,7 +480,7 @@ double SoilHeatConductivity(long i, double T, double h)
  */
 double ThermalLiquidFlux(long i, TlinkedNode *myLink, int myProcess, double timeStep, double timeStepWater)
 {
-    //TODO: inserire time step water per calcolo più preciso
+    // TODO inserire time step water per calcolo più preciso
 
     long j = (*myLink).index;
 
@@ -881,9 +878,9 @@ void initializeBalanceHeat()
      balanceCurrentPeriod.heatMBE = 0.;
      balanceWholePeriod.waterMBE = 0.;
 
-     balanceCurrentTimeStep.heatMBR = 1.;
-     balanceCurrentPeriod.heatMBR = 1.;
-     balanceWholePeriod.heatMBR = 1.;
+     balanceCurrentTimeStep.heatMBR = 0.;
+     balanceCurrentPeriod.heatMBR = 0.;
+     balanceWholePeriod.heatMBR = 0.;
 
      balanceWholePeriod.storageHeat = computeHeatStorage(NODATA, NODATA);
      balanceCurrentTimeStep.storageHeat = balanceWholePeriod.storageHeat;
@@ -902,11 +899,10 @@ void updateBalanceHeatWholePeriod()
     /*! compute MBE and MBR */
     balanceCurrentPeriod.heatMBE = deltaStoragePeriod - balanceCurrentPeriod.sinkSourceHeat;
     balanceWholePeriod.heatMBE = deltaStorageHistorical - balanceWholePeriod.sinkSourceHeat;
-    if ((balanceWholePeriod.storageHeat == 0.) && (balanceWholePeriod.sinkSourceHeat == 0.)) balanceWholePeriod.heatMBR = 1.;
-    else if (balanceCurrentTimeStep.storageHeat > fabs(balanceWholePeriod.sinkSourceHeat))
-        balanceWholePeriod.heatMBR = balanceCurrentTimeStep.storageHeat / (balanceWholePeriod.storageHeat + balanceWholePeriod.sinkSourceHeat);
-    else
-        balanceWholePeriod.heatMBR = deltaStorageHistorical / balanceWholePeriod.sinkSourceHeat;
+
+    // reference heat for computation of mass balance ratio: minimum 1 Joule
+    double referenceHeat = std::max(fabs(balanceWholePeriod.sinkSourceHeat), 1.0);
+    balanceWholePeriod.heatMBR = balanceWholePeriod.heatMBE / referenceHeat;
 
     /*! update storageWater in balanceCurrentPeriod */
     balanceCurrentPeriod.storageHeat = balanceCurrentTimeStep.storageHeat;
@@ -933,7 +929,7 @@ double computeMaximumDeltaT()
 {
     double maxDeltaT = 0.;
     for (long i = 1; i < myStructure.nrNodes; i++)
-        maxDeltaT = MAXVALUE(maxDeltaT, fabs(nodeList[i].extra->Heat->T - nodeList[i].extra->Heat->oldT));
+        maxDeltaT = std::max(maxDeltaT, fabs(nodeList[i].extra->Heat->T - nodeList[i].extra->Heat->oldT));
 
     return maxDeltaT;
 }

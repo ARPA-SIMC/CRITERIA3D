@@ -1,5 +1,3 @@
-#include <iostream>
-#include <stdio.h>
 #include <math.h>
 
 #include "commonConstants.h"
@@ -7,7 +5,6 @@
 #include "spatialControl.h"
 #include "interpolation.h"
 #include "statistics.h"
-
 
 float findThreshold(meteoVariable myVar, Crit3DMeteoSettings* meteoSettings,
                     float value, float stdDev, float nrStdDev, float avgDeltaZ, float minDistance)
@@ -227,7 +224,7 @@ bool computeResidualsGlocalDetrending(meteoVariable myVar, const Crit3DMacroArea
     macroAreaDetrending(myArea, myVar, *settings, meteoSettings, meteoPoints, interpolationPoints, areaInterpolationPoints, elevationPos);
 
     //ciclo sui meteopoint dell'area
-    for (int i = 0; i < meteoPointsList.size(); i++)
+    for (int i = 0; i < (int)meteoPointsList.size(); i++)
     {
         myProxyValues = meteoPoints[meteoPointsList[i]].getProxyValues();
 
@@ -246,11 +243,12 @@ bool computeResidualsGlocalDetrending(meteoVariable myVar, const Crit3DMacroArea
             gis::getRowColFromXY(*settings->getCurrentDEM()->header, meteoPoints[meteoPointsList[i]].point.utm, &row, &col);
             temp = settings->getCurrentDEM()->header->nrCols*row + col;
 
-            for (int k = 0; k < areaCells.size(); k = k + 2)
+            /*for (int k = 0; k < (int)areaCells.size(); k = k + 2)
             {
                 if (areaCells[k] == temp)
                     weight = areaCells[k+1];
-            }
+            }*/
+            weight = 1;
 
             isValid = (! excludeSupplemental || checkLapseRateCode(meteoPoints[meteoPointsList[i]].lapseRateCode, settings->getUseLapseRateCode(), false));
             isValid = (isValid && (! excludeOutsideDem || meteoPoints[meteoPointsList[i]].isInsideDem));
@@ -265,22 +263,6 @@ bool computeResidualsGlocalDetrending(meteoVariable myVar, const Crit3DMacroArea
                                                       float(meteoPoints[meteoPointsList[i]].point.z),
                                                       myProxyValues, false);
 
-                if (  myVar == precipitation || myVar == dailyPrecipitation)
-                {
-                    if (myValue != NODATA)
-                    {
-                        if (myValue < meteoSettings->getRainfallThreshold())
-                            myValue=0.;
-                    }
-
-                    if (interpolatedValue != NODATA)
-                    {
-                        if (interpolatedValue < meteoSettings->getRainfallThreshold())
-                            interpolatedValue=0.;
-                    }
-                }
-
-                // TODO derived var
 
                 if (!isEqual(interpolatedValue, NODATA) && !isEqual(myValue, NODATA) && !isEqual(weight, NODATA))
                 {
@@ -290,6 +272,7 @@ bool computeResidualsGlocalDetrending(meteoVariable myVar, const Crit3DMacroArea
                     {
                         meteoPoints[meteoPointsList[i]].residual += (myValue - interpolatedValue)*weight;
                     }
+
                 }
             }
         }

@@ -11,7 +11,7 @@
         QLineEdit textEdit;
 
     public:
-        FormText(QString title);
+        FormText(QString title, QString text);
 
         QString getText() const;
     };

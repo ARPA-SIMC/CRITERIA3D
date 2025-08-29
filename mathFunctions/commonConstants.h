@@ -8,8 +8,17 @@
     #ifndef MAXVALUE
         #define MAXVALUE(a, b) (((a) > (b))? (a) : (b))
     #endif
+
     #ifndef BOUNDFUNCTION
         #define BOUNDFUNCTION(lowerValue, upperValue, x) (MAXVALUE((lowerValue), MINVALUE((upperValue), (x))) )
+    #endif
+
+    #ifndef MAXVALUE3
+        #define MAXVALUE3(a, b, c) ((MAXVALUE((a), (b))),(c))
+    #endif
+
+    #ifndef MINVALUE3
+        #define MINVALUE3(a, b, c) ((MINVALUE((a), (b))),(c))
     #endif
 
     #ifndef sgnVariable
@@ -89,7 +98,10 @@
     #define PARAMETER_ERROR -7777
 
     #define CRIT1D_OK 0
-    #define CRIT3D_OK 1
+
+    #define CRIT3D_OK 0
+    #define CRIT3D_ERROR 100
+    #define CRIT3D_INVALID_COMMAND 101
 
     #define VANGENUCHTEN 0
     #define MODIFIEDVANGENUCHTEN 1
@@ -240,6 +252,7 @@
     #define RAD_TO_DEG 57.2957795
     #define SQRT_2 1.41421356237
     #define GOLDEN_SECTION 1.6180339887499
+
 
     #define MINIMUM_PERCENTILE_DATA 3
 

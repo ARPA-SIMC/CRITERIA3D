@@ -10,6 +10,8 @@
     double computeMean(double v1, double v2);
 
     double arithmeticMean(double v1, double v2);
+    double geometricMean(double v1, double v2);
+    double logarithmicMean(double v1, double v2);
 
     bool solveLinearSystem(int approximation, double residualTolerance, int computationType);
 

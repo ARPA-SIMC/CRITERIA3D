@@ -269,8 +269,8 @@
         double n    = nodeList[index].Soil->VG_n;
         double m    = nodeList[index].Soil->VG_m;
 
-        double currentPsi = fabs(MINVALUE(nodeList[index].H - nodeList[index].z, 0.));
-        double previousPsi = fabs(MINVALUE(nodeList[index].oldH - nodeList[index].z, 0.));
+        double currentPsi = fabs(std::min(nodeList[index].H - nodeList[index].z, 0.));
+        double previousPsi = fabs(std::min(nodeList[index].oldH - nodeList[index].z, 0.));
 
         if (myParameters.waterRetentionCurve == VANGENUCHTEN)
         {
@@ -313,8 +313,8 @@
 
         if (nodeList[i].isSurface)
 		{
-            double mySurfaceWater = MAXVALUE(myHMean - nodeList[i].z, 0.);		//[m]
-            return (MINVALUE(mySurfaceWater / 0.01, 1.));
+            double mySurfaceWater = std::max(myHMean - nodeList[i].z, 0.);		// [m]
+            return (std::min(mySurfaceWater / 0.01, 1.));
 		}
 		else
 		{
@@ -339,15 +339,23 @@
 
     double getHMean(long i)
     {
-        // is there any efficient way to compute a geometric mean of H?
-        return arithmeticMean(nodeList[i].oldH, nodeList[i].H);
+        if ( (nodeList[i].oldH > 0. && nodeList[i].H > 0.)
+            || (nodeList[i].oldH < 0. && nodeList[i].H < 0.))
+        {
+            return logarithmicMean(nodeList[i].oldH, nodeList[i].H);
+        }
+        else
+        {
+            return (nodeList[i].oldH + nodeList[i].H) * 0.5;
+        }
     }
+
 
     double getPsiMean(long i)
 	{
         double Psi;
         double meanH = getHMean(i);
-        Psi = MINVALUE(0., (meanH - nodeList[i].z));
+        Psi = std::min(0., (meanH - nodeList[i].z));
         return Psi;
 	}
 
