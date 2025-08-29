@@ -3,16 +3,17 @@
 #include "meteoWidget.h"
 #include "meteoPoint.h"
 #include "utilities.h"
-
 #include "dbMeteoPointsHandler.h"
+
 #include <iostream>
+
 
 int main(int argc, char *argv[])
 {
     QApplication a(argc, argv);
     QFileDialog openDBDialog;
 
-    QString dbFileName = openDBDialog.getOpenFileName(nullptr, ("Open mp database"), "", ("SQLite files (*.db)"));
+    QString dbFileName = openDBDialog.getOpenFileName(nullptr, ("Open meteopoint db"), "", ("SQLite files (*.db)"));
     if (dbFileName.isEmpty())
     {
         return 0;
@@ -41,10 +42,10 @@ int main(int argc, char *argv[])
     QDateTime lastDaily = mpHandler.getLastDate(daily);
     if (! firstDaily.isNull() && ! lastDaily.isNull())
     {
-        mpHandler.loadDailyData(getCrit3DDate(firstDaily.date()), getCrit3DDate(lastDaily.date()), &meteoPointList[0]);
+        mpHandler.loadDailyData(getCrit3DDate(firstDaily.date()), getCrit3DDate(lastDaily.date()), meteoPointList[0]);
         if (meteoPointList.size() > 1)
         {
-            mpHandler.loadDailyData(getCrit3DDate(firstDaily.date()), getCrit3DDate(lastDaily.date()), &meteoPointList[1]);
+            mpHandler.loadDailyData(getCrit3DDate(firstDaily.date()), getCrit3DDate(lastDaily.date()), meteoPointList[1]);
         }
     }
 
@@ -53,10 +54,10 @@ int main(int argc, char *argv[])
     QDateTime lastHourly = mpHandler.getLastDate(hourly);
     if (! firstHourly.isNull() && ! lastHourly.isNull())
     {
-        mpHandler.loadHourlyData(getCrit3DDate(firstHourly.date()), getCrit3DDate(lastHourly.date()), &meteoPointList[0]);
+        mpHandler.loadHourlyData(getCrit3DDate(firstHourly.date()), getCrit3DDate(lastHourly.date()), meteoPointList[0]);
         if (meteoPointList.size() > 1)
         {
-            mpHandler.loadHourlyData(getCrit3DDate(firstHourly.date()), getCrit3DDate(lastHourly.date()), &meteoPointList[1]);
+            mpHandler.loadHourlyData(getCrit3DDate(firstHourly.date()), getCrit3DDate(lastHourly.date()), meteoPointList[1]);
         }
     }
 
@@ -94,6 +95,8 @@ int main(int argc, char *argv[])
     {
         widget.drawMeteoPoint(meteoPointList[1], true);
     }
+
+    meteoPointList.clear();
 
     return a.exec();
 }

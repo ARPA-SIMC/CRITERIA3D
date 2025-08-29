@@ -68,12 +68,43 @@
 #define EXP_DECAY(FACTOR, EXT_COEF,RAGE) ((FACTOR) * std::exp(-(EXT_COEF) * (RAGE)))
 #define LOG_RAGE(PLANT_MATERIAL, PLAT_MATERIAL_ACT) (std::log((PLANT_MATERIAL)/(PLAT_MATERIAL_ACT)) ) / CONR
 
-class Crit3D_RothCplusplusMaps
-{
-private:
+class Crit3DRothCMeteoVariable {
 
 public:
+    Crit3DRothCMeteoVariable();
+    void initialize();
+
+    void setTemperature (double myTemperature);
+    double getTemperature();
+    void setPrecipitation(double myPrecipitation);
+    void cumulatePrec(double myPrec);
+    double getPrecipitation();
+    void setBIC(double myBIC);
+    void cumulateBIC(double myBIC);
+    double getBIC();
+    void setAvgBIC(double myAvgBIC);
+    double getAvgBIC();
+    void setWaterLoss(double myWaterLoss);
+    void cumulateWaterLoss(double myWaterLoss);
+    double getWaterLoss();
+
+private:
+    double temp;
+    double prec;
+    double BIC;
+    double avgBIC;
+    double waterLoss; //hourly water loss is temporarily stored here, then cumulated BIC is calculated
+};
+
+class Crit3DRothCplusplusMaps
+{
+private:
     //
+    gis::Crit3DRasterGrid* _depthMap; //[?]
+    gis::Crit3DRasterGrid* _clayMap; // [-]
+
+
+public:
     gis::Crit3DRasterGrid* decomposablePlantMaterial; //[tC/ha]
     gis::Crit3DRasterGrid* resistantPlantMaterial; //[tC/ha]
     gis::Crit3DRasterGrid* microbialBiomass; //[tC/ha]
@@ -81,42 +112,139 @@ public:
     gis::Crit3DRasterGrid* inertOrganicMatter; //[tC/ha]
     gis::Crit3DRasterGrid* soilOrganicMatter; //[tC/ha]
 
+    std::vector<gis::Crit3DRasterGrid*> avgBIC; //[mm?]
+    bool isInitialized;
 
+    gis::Crit3DRasterGrid* getDPM() { return decomposablePlantMaterial; };
+    gis::Crit3DRasterGrid* getRPM() { return resistantPlantMaterial; };
+    gis::Crit3DRasterGrid* getBIO() { return microbialBiomass; };
+    gis::Crit3DRasterGrid* getHUM() { return humifiedOrganicMatter; };
+    gis::Crit3DRasterGrid* getSOC() { return soilOrganicMatter; };
 
-    Crit3D_RothCplusplusMaps();
-    ~Crit3D_RothCplusplusMaps();
+    void setDPMRowCol(double myDPM, int row, int col) { decomposablePlantMaterial->value[row][col] = myDPM; };
+    void setRPMRowCol(double myRPM, int row, int col) { resistantPlantMaterial->value[row][col] = myRPM; };
+    void setBIORowCol(double myBIO, int row, int col) { microbialBiomass->value[row][col] = myBIO; };
+    void setHUMRowCol(double myHUM, int row, int col) { humifiedOrganicMatter->value[row][col] = myHUM; };
+    void setIOMRowCol(double myIOM, int row, int col) { inertOrganicMatter->value[row][col] = myIOM; };
+    void setSOCRowCol(double mySOC, int row, int col) { soilOrganicMatter->value[row][col] = mySOC; };
+
+    Crit3DRothCplusplusMaps() {};
+    //~Crit3DRothCplusplusMaps();
 
     void initialize(const gis::Crit3DRasterGrid& DEM);
+    void clear();
+
+    void setClay(double myClay, int row, int col);
+    double getClay(int row, int col);
+    void setDepth(double myDepth, int row, int col);
+    double getDepth(int row, int col);
+
+    double getAvgBIC(int row, int col, int month);
 };
-class Crit3D_RothCplusplus{
+
+struct Crit3DRothCRadioCarbon {
+public:
+    double decomposablePlantMatter_age;
+    double resistantPlantMatter_age;
+    double microbialBiomass_age;
+    double humifiedOrganicMatter_age;
+    double IOM_age;
+    double modernC;
+
+    bool isActive = false;
+
+};
+
+class Crit3DRothCplusplus{
+
 public:
 
-    //Crit3D_RothCplusplus();
-    //~Crit3D_RothCplusplus();
+    Crit3DRothCplusplus();
+    //~Crit3DRothCplusplus();
+
+    void initialize();
+    bool computeRothCPoint();
+    int main();
+    bool loadAvgBIC(std::string errorStr);
+
+    double getInputC();
+    void setInputC(double myInputC);
+
+    void setClay(double myClay) {clay = myClay;};
+    double getClay() {return clay;};
+
+    void setDepth(double myDepth) {depth=myDepth;};
+    double getDepth() {return depth;};
+
+    void setSWC(double mySWC) {SWC = mySWC;};
+    double getSWC() {return SWC; };
+
+    void setPlantCover(double myPC) {plantCover = myPC; };
+    double getPlantCover() { return plantCover; };
+
+    double getDPM() {return decomposablePlantMatter;};
+    double getRPM() {return resistantPlantMatter;};
+    double getBIO() {return microbialBiomass;};
+    double getHUM() {return humifiedOrganicMatter;};
+    double getIOM() {return inorganicMatter;};
+    double getSOC() {return soilOrganicCarbon;};
+
+    void setDPM(double myDPM) {decomposablePlantMatter = myDPM;};
+    void setRPM(double myRPM) {resistantPlantMatter = myRPM;};
+    void setBIO(double myBIO) {microbialBiomass = myBIO;};
+    void setHUM(double myHUM) {humifiedOrganicMatter = myHUM;};
+    void setIOM(double myIOM) {inorganicMatter = myIOM;};
+    void setSOC(double mySOC) {soilOrganicCarbon = mySOC;};
+
+    void resetInputVariables();
+    void setStateVariables(int row, int col);
+    void getStateVariables(int row, int col);
+    bool checkCell();
+
+    void scrivi_csv(const std::string& nome_file, const std::vector<std::vector<double>>& dati) ;
+
+    Crit3DRothCMeteoVariable meteoVariable;
+    Crit3DRothCRadioCarbon radioCarbon;
+    Crit3DRothCplusplusMaps map;
+
+    bool isInitializing;
+
+    std::string BICMapFolderName;
+
+
+private:
+    double decomposablePlantMatter; //[t C /ha]
+    double resistantPlantMatter; //[t C /ha]
+    double microbialBiomass; //[t C /ha]
+    double humifiedOrganicMatter; //[t C /ha]
+    double inorganicMatter; //[t C /ha]
+    double soilOrganicCarbon; //[t C /ha]
+    double inputC; //[t C /ha]
+    double inputFYM; //[t C /ha]
+    double plantCover; // formerly bool [-]
+
+    double decomposablePMResistantPMRatio; //[-]
+    double totalRage;
+
+    bool isUpdate;
+
+
+    double SWC;
+    double clay;
+    double depth;
+
+    double RMF_plantCover(bool plantCover);
+    double RMF_plantCover(double plantCover);
+    double RMF_Moist(double RAIN, double PEVAP, bool PC);
+    double RMF_Moist(double monthlyBIC, bool PC);
+    double RMF_Moist_Simplified(double monthlyBIC, double avgBIC);
+    double RMF_Tmp(double TEMP);
+    void decomp(int timeFact,
+                double &modifyingRate);
+    void RothC(int timeFact, double &PC);
 
 
 };
-
-
-double RMF_PC(bool PC);
-double RMF_Moist(double RAIN, double PEVAP, double clay, double depth, bool PC, double &SWC);
-double RMF_Moist(double monthlyBIC, double clay, double depth, bool PC, double &SWC);
-double RMF_Tmp(double TEMP);
-void decomp(int timeFact, double &DPM, double &RPM, double &BIO, double &HUM, double &IOM,
-            double &SOC, double &DPM_Rage, double &RPM_Rage, double &BIO_Rage, double &HUM_Rage,
-            double &IOM_Rage, double &Total_Rage, double &modernC, double &RateM, double &clay,
-            double &C_Inp, double &FYM_Inp, double &DPM_RPM);
-void RothC(int timeFact, double &DPM, double &RPM, double &BIO, double &HUM, double &IOM, double &SOC,
-           double &DPM_Rage, double &RPM_Rage, double &BIO_Rage, double &HUM_Rage, double &IOM_Rage,
-           double &Total_Rage, double &modernC, double &clay, double &depth, double &TEMP, double &RAIN,
-           double &WATERLOSS, bool isET0, bool &PC, double &DPM_RPM, double C_Inp, double FYM_Inp, double &SWC);
-
-
-
-
-
-
-
 
 
 

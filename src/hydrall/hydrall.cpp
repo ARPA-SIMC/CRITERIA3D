@@ -36,12 +36,12 @@ Crit3DHydrallState::Crit3DHydrallState()
 Crit3DHydrallStatePlant::Crit3DHydrallStatePlant()
 {
     treeNetPrimaryProduction = 0;
-    treecumulatedBiomassFoliage = 0;
-    treecumulatedBiomassRoot = 0;
-    treecumulatedBiomassSapwood = 0;
+    treeBiomassFoliage = 0.1; //[kgDM m-2]
+    treeBiomassRoot = 0.05; //[kgDM m-2]
+    treeBiomassSapwood = 0.2; //[kgDM m-2]
     understoreyNetPrimaryProduction = 0;
-    understoreycumulatedBiomassFoliage = 0;
-    understoreycumulatedBiomassRoot = 0;
+    understoreyBiomassFoliage = 0.08; //[kgDM m-2]
+    understoreyBiomassRoot = 0.02; //[kgDM m-2]
 }
 
 Crit3DHydrallWeatherDerivedVariable::Crit3DHydrallWeatherDerivedVariable()
@@ -70,6 +70,9 @@ Crit3DHydrallWeatherVariable::Crit3DHydrallWeatherVariable()
     vaporPressureDeficit = NODATA;
     last30DaysTAvg = NODATA;
     meanDailyTemp = NODATA;
+
+    yearlyET0 = NODATA;
+    yearlyPrec = NODATA;
 }
 
 Crit3DHydrallEnvironmentalVariable::Crit3DHydrallEnvironmentalVariable()
@@ -84,20 +87,131 @@ Crit3DHydrallPlant::Crit3DHydrallPlant()
     height = NODATA; // in cm
     myLeafWidth = NODATA;
     isAmphystomatic = false;
-    foliageLongevity = 1;
-    sapwoodLongevity = 35;
-    fineRootLongevity = 1;
-    foliageDensity = NODATA;
+    foliageLongevity = 1; //[yr]
+    sapwoodLongevity = 35; //[yr]
+    fineRootLongevity = 1; //[yr]
+    foliageDensity = 0.1; //[kgDM m-3]
     woodDensity = RHOS;
-    specificLeafArea = NODATA;
+    specificLeafArea = NODATA; //[m2 kg-1]
     psiLeaf = NODATA;
-    psiLeafCritical = NODATA;
-    psiLeafMinimum = NODATA;
+    psiSoilCritical = NODATA; //could be removed
+    psiLeafMinimum = NODATA; //[MPa]
     transpirationPerUnitFoliageAreaCritical = NODATA;
     leafAreaIndexCanopy = NODATA;
     leafAreaIndexCanopyMax = NODATA;
     standVolume = NODATA; // maps referred to stand volume MUST be initialized
     currentIncrementalVolume = EPSILON;
+    transpirationCritical = NODATA; //(mol m-2 s-1)
+    rootShootRatioRef = 0.33;
+    mBallBerry = NODATA;
+    tableYield = {
+        {"LARCH", 1.0},
+        {"PICEA_ABIES", 4.2},
+        {"ABIES_ALBA",2.9},
+        {"PINUS_SYLVESTRIS_SCOTCH_PINE",1.6},
+        {"PINUS_NIGRA", 2.1},
+        {"PINUS_PINEA", 0.9},
+        {"CONIFER", 2.1},
+        {"BEECH",   2.2},
+        {"QUERCUS_PETREA_ROBUR_PUBESCENS", 1.1},
+        {"QUERCUS_CERRIS_FRAINETTO_VALLONEA", 1.3},
+        {"CASTINEA_SATIVA", 1.5},
+        {"CARPINUS_BETULUS_OTRYA_OXYCARPA", 1.4},
+        {"HYGROPHILOUS_FOREST", 1.5},
+        {"BROADLEAF", 1.5},
+        {"QUERCUS_ILEX", 2.7},
+        {"QUERCUS_SUBER", 0.6},
+        {"MEDITERRANEAN_EVERGREEN_TREE",0.7},
+        {"POPULUS_ARTIFICIAL", 1.5},
+        {"BROADLEAF_ARTIFICIAL", 1},
+        {"CONIFERS_ARTIFICIAL", 2.9},
+        {"SHRUB_SUBALPINE", 1},
+        {"SHRUB_TEMPERATE", 1},
+        {"SHRUB_MEDITERRANEAN", 0.6}
+        //These values are expressed as MgC ha-1. It indicates the carbon stock annual increment in aboveground tree biomass
+        // we consider that the same quantity is stocked in roots, foliage and shoots
+    };
+
+    tableEcophysiologicalParameters = {
+        {"LARCH",                            35.0, 6.0, false, 0.29, 1},
+        {"PICEA_ABIES",                       35.0, 6.0, false, 0.29, 1},
+        {"ABIES_ALBA",                      30.0, 6.0, false, 0.28, 1},
+        {"PINUS_SYLVESTRIS_SCOTCH_PINE",          30.0, 6.0, false, 0.29, 1},
+        {"PINUS_NIGRA",                         30.0, 6.0, false, 0.29, 1},
+        {"PINUS_PINEA",                 40.0, 7.0, true, 0.29, 1},
+        {"CONIFER",      30.0, 6.0, false, 0.29, 1},
+        {"BEECH",                                     50.0, 8.0, false, 0.2, 0.4},
+        {"QUERCUS_PETREA_ROBUR_PUBESCENS",       50.0, 8.0, false, 0.2, 0.4},
+        {"QUERCUS_CERRIS_FRAINETTO_VALLONEA", 50.0, 8.0, false, 0.2, 0.4},
+        {"CASTINEA_SATIVA",                                  50.0, 8.0, false, 0.28, 0.4},
+        {"CARPINUS_BETULUS_OTRYA_OXYCARPA",                         50.0, 8.0, false, 0.26, 0.4},
+        {"HYGROPHILOUS_FOREST",                             60.0, 9.0, false, 0.22, 0.4},
+        {"BROADLEAF",                    50.0, 8.0, false, 0.22, 0.4},
+        {"QUERCUS_ILEX",                                     40.0, 7.0, true, 0.2, 0.4},
+        {"QUERCUS_SUBER",                                   40.0, 7.0, true, 0.2, 0.4},
+        {"MEDITERRANEAN_EVERGREEN_TREE",      40.0, 7.0, true, 0.22, 1},
+        {"POPULUS_ARTIFICIAL",                        70.0, 9.0, false, 0.21, 0.4},
+        {"BROADLEAF_ARTIFICIAL",             60.0, 8.0, false, 0.24, 0.4},
+        {"CONIFERS_ARTIFICIAL",                     40.0, 6.0, false, 0.29, 0.4},
+        {"SHRUB_SUBALPINE",                         40.0, 7.0, false, 0.33, 1},
+        {"SHRUB_TEMPERATE",                40.0, 7.0, false, 0.33, 1},
+        {"SHRUB_MEDITERRANEAN",             40.0, 8.0, true, 0.33, 1} //TODO: check some of these values
+    };
+
+
+    rangeLAI = {
+        {"LARCH", 0.1, 4.0},
+        {"PICEA_ABIES", 1.5, 6.0},
+        {"ABIES_ALBA", 1.5, 6.0},
+        {"PINUS_SYLVESTRIS_SCOTCH_PINE", 1.0, 4.0},
+        {"PINUS_NIGRA", 1.0, 4.0},
+        {"PINUS_PINEA", 1.0, 4.0},
+        {"CONIFER_FOREST_OTHERS", 1.0, 5.0},
+        {"BEECH", 0.1, 6.0},
+        {"QUERCUS_PETREA_ROBUR_PUBESCENS", 0.1, 5.0},
+        {"QUERCUS_CERRIS_FRAINETTO_VALLONEA", 0.1, 5},
+        {"CASTINEA_SATIVA", 0.1, 5.0},
+        {"CARPINUS_BETULUS_OTRYA_OXYCARPA", 0.1, 5.0},
+        {"HYGROPHILOUS_FOREST", 0.1, 6.0},
+        {"BROADLEAF_FOREST_OTHERS", 0.1, 5.0},
+        {"QUERCUS_ILEX", 1.5, 4.0},
+        {"QUERCUS_SUBER", 1.5, 4.0},
+        {"MEDITERRANEAN_EVERGREEN_TREE", 1.5, 4.0},
+        {"POPULUS_ARTIFICIAL", 0.1, 6.0},
+        {"BROADLEAF_ARTIFICIAL", 0.1, 6.0},
+        {"CONIFERS_ARTIFICIAL", 1.0, 5.0},
+        {"SHRUB_SUBALPINE", 0.1, 2.0},
+        {"SHRUB_TEMPERATE", 0.1, 3.0},
+        {"SHRUB_MEDITERRANEAN", 1.0, 3.0}
+    }; // da aggiungere il sottobosco
+
+    phenologyLAI = {
+        {"LARCH", 250, 1000, 2250},              // Intermedia
+        {"PICEA_ABIES", 300, 1100, 2500},         // Tardiva
+        {"ABIES_ALBA", 300, 1100, 2500},        // Tardiva
+        {"PINUS_SYLVESTRIS_SCOTCH_PINE", 250, 1000, 2250}, // Intermedia
+        {"PINUS_NIGRA", 250, 1000, 2250},           // Intermedia
+        {"PINUS_PINEA", 200, 900, 2000},    // Precoce
+        {"CONIFER_FOREST_OTHERS", 250, 1000, 2250}, // Intermedia
+        {"BEECH", 300, 1100, 2500},                       // Tardiva
+        {"QUERCUS_PETREA_ROBUR_PUBESCENS", 250, 1000, 2250}, // Intermedia
+        {"QUERCUS_CERRIS_FRAINETTO_VALLONEAa", 300, 1100, 2500}, // Tardiva
+        {"CASTINEA_SATIVA", 250, 1000, 2250},                    // Intermedia
+        {"CARPINUS_BETULUS_OTRYA_OXYCARPA", 250, 1000, 2250},           // Intermedia
+        {"HYGROPHILOUS_FOREST", 250, 1000, 2250},               // Intermedia
+        {"BROADLEAF_FOREST_OTHERS", 250, 1000, 2250},      // Intermedia
+        {"QUERCUS_ILEX", 200, 900, 2000},                        // Precoce
+        {"QUERCUS_SUBER", 200, 900, 2000},                      // Precoce
+        {"MEDITERRANEAN_EVERGREEN_TREE", 200, 900, 2000}, // Precoce
+        {"POPULUS_ARTIFICIAL", 200, 900, 2000},           // Precoce
+        {"BROADLEAF_ARTIFICIAL", 250, 1000, 2250}, // Intermedia
+        {"CONIFERS_ARTIFICIAL", 250, 1000, 2250},       // Intermedia
+        {"SHRUB_SUBALPINE", 250, 1000, 2250},           // Intermedia
+        {"SHRUB_TEMPERATE", 250, 1000, 2250},  // Intermedia
+        {"SHRUB_MEDITERRANEAN", 200, 900, 2000} // Precoce
+    };
+
+
 }
 
 Crit3DHydrallSoil::Crit3DHydrallSoil()
@@ -118,6 +232,7 @@ Crit3DHydrallSoil::Crit3DHydrallSoil()
     sand.clear();
     silt.clear();
     bulkDensity.clear();
+    waterPotential.clear();
 }
 
 Crit3DHydrallBigLeaf::Crit3DHydrallBigLeaf()
@@ -151,7 +266,7 @@ Crit3DHydrallParameterWangLeuning::Crit3DHydrallParameterWangLeuning()
     alpha = 340000; //1100000; // this parameter must be multiplied by 10^-6 in order to be compliant with literature
     psiLeaf = 1800;                 // kPa
     waterStressThreshold = NODATA;
-    maxCarboxRate = 150;           // Vcmo at optimal temperature  umol m-2 s-1
+    maxCarboxRate = 150;           // Vcmo at optimal temperature (25°C) umol m-2 s-1
 }
 
 Crit3DHydrallDeltaTimeOutputs::Crit3DHydrallDeltaTimeOutputs()
@@ -196,49 +311,90 @@ Crit3DHydrallAllocationCoefficient::Crit3DHydrallAllocationCoefficient()
 
 Crit3DHydrallMaps::Crit3DHydrallMaps()
 {
-    mapLAI = new gis::Crit3DRasterGrid;
-    standBiomassMap = new gis::Crit3DRasterGrid;
-    rootBiomassMap = new gis::Crit3DRasterGrid;
-    mapLast30DaysTavg = new gis::Crit3DRasterGrid;
-    treeNetPrimaryProduction = new gis::Crit3DRasterGrid;
-    understoreyNetPrimaryProduction = new gis::Crit3DRasterGrid;
+    treeNetPrimaryProduction = new gis::Crit3DRasterGrid; //SAVE
+    treeBiomassFoliage = new gis::Crit3DRasterGrid; //SAVE
+    treeBiomassRoot = new gis::Crit3DRasterGrid; //SAVE
+    treeBiomassSapwood = new gis::Crit3DRasterGrid; //SAVE
+    understoreyNetPrimaryProduction = new gis::Crit3DRasterGrid; //SAVE
+    understoreyBiomassFoliage = new gis::Crit3DRasterGrid; //SAVE
+    understoreyBiomassRoot = new gis::Crit3DRasterGrid; //SAVE
+
+    outputC = new gis::Crit3DRasterGrid;
+
+    criticalSoilWaterPotential = new gis::Crit3DRasterGrid;
+    criticalTranspiration = new gis::Crit3DRasterGrid;
+    minLeafWaterPotential = new gis::Crit3DRasterGrid;
+
+    yearlyET0 = new gis::Crit3DRasterGrid;
+    yearlyPrec = new gis::Crit3DRasterGrid;
+
+
 }
 
 void Crit3DHydrallMaps::initialize(const gis::Crit3DRasterGrid& DEM)
 {
-    mapLAI->initializeGrid(DEM);
-    standBiomassMap->initializeGrid(DEM);
-    rootBiomassMap->initializeGrid(DEM);
-    mapLast30DaysTavg->initializeGrid(DEM);
-    treeNetPrimaryProduction->initializeGrid(DEM, 0); //TODO: initial maps must be loaded
-    understoreyNetPrimaryProduction->initializeGrid(DEM, 0);
     treeSpeciesMap.initializeGrid(DEM);
-    plantHeight.initializeGrid(DEM);
+    plantHeight.initializeGrid(DEM); //TODO
+    criticalSoilWaterPotential->initializeGrid(DEM);
+    criticalTranspiration->initializeGrid(DEM);
+    minLeafWaterPotential->initializeGrid(DEM);
+
+    treeNetPrimaryProduction->initializeGrid(DEM); //TODO: initial maps must be loaded
+    treeBiomassFoliage->initializeGrid(DEM); //SAVE
+    treeBiomassRoot->initializeGrid(DEM); //SAVE
+    treeBiomassSapwood->initializeGrid(DEM); //SAVE
+    understoreyNetPrimaryProduction->initializeGrid(DEM); //SAVE
+    understoreyBiomassFoliage->initializeGrid(DEM); //SAVE
+    understoreyBiomassRoot->initializeGrid(DEM);
+
+    outputC->initializeGrid(DEM);
+    yearlyPrec->initializeGrid(DEM);
+    yearlyET0->initializeGrid(DEM);
+
+    for (int i = 0; i < DEM.header->nrRows; i++)
+    {
+        for (int j = 0; j < DEM.header->nrCols; j++)
+        {
+            if (! isEqual(DEM.value[i][j], DEM.header->flag))
+            {
+                treeNetPrimaryProduction->value[i][j] = 0;
+                treeBiomassFoliage->value[i][j] = 0;
+                treeBiomassRoot->value[i][j] = 0;
+                treeBiomassSapwood->value[i][j] = 0;
+                understoreyNetPrimaryProduction->value[i][j] = 0;
+                understoreyBiomassFoliage->value[i][j] = 0;
+                understoreyBiomassRoot->value[i][j] = 0;
+                outputC->value[i][j] = 0;
+                yearlyPrec->value[i][j] = 0;
+                yearlyET0->value[i][j] = 0;
+
+            }
+        }
+    }
 }
 
 Crit3DHydrallMaps::~Crit3DHydrallMaps()
 {
-    mapLAI->clear();
-    standBiomassMap->clear();
-    rootBiomassMap->clear();
-    mapLast30DaysTavg->clear();
+
 }
 
-bool Crit3D_Hydrall::computeHydrallPoint(Crit3DDate myDate, double myTemperature, double myElevation)
+bool Crit3DHydrall::computeHydrallPoint()
 {
-    //getCO2(myDate, myTemperature, myElevation);
-
-
 
     //plant.leafAreaIndexCanopyMax = statePlant.treecumulatedBiomassFoliage *  plant.specificLeafArea / cover;
-    //plant.leafAreaIndexCanopy = MAXVALUE(4,plant.leafAreaIndexCanopyMax * computeLAI(myDate));
+    //plant.getLAICanopy() = MAXVALUE(4,plant.leafAreaIndexCanopyMax * computeLAI(myDate));
     //understoreyLeafAreaIndexMax = statePlant.understoreycumulatedBiomassFoliage * plant.specificLeafArea;
     //understorey.leafAreaIndex = MAXVALUE(LAIMIN,understoreyLeafAreaIndexMax* computeLAI(myDate));
-    plant.leafAreaIndexCanopy -= plant.leafAreaIndexCanopyMin;
-    plant.leafAreaIndexCanopy = MAXVALUE(0,plant.leafAreaIndexCanopy);
+
+    plant.setLAICanopy(plant.getLAICanopy() - plant.getLAICanopyMin());
+    plant.setLAICanopy(MAXVALUE(0,plant.getLAICanopy()));
     understorey.leafAreaIndex = 1;
-    plant.leafAreaIndexCanopy = 5;
-    Crit3D_Hydrall::photosynthesisAndTranspiration();
+    //plant.setLAICanopy(5); //DEBUG
+    //plant.setLAICanopyMax(6); //DEBUG
+    plant.specificLeafArea = plant.getLAICanopyMax()/statePlant.treeBiomassFoliage;
+
+    Crit3DHydrall::photosynthesisAndTranspiration();
+
 
     /* necessaria per ogni specie:
      *  il contenuto di clorofilla (g cm-2) il default è 500
@@ -252,7 +408,7 @@ bool Crit3D_Hydrall::computeHydrallPoint(Crit3DDate myDate, double myTemperature
     return true;
 }
 
-double Crit3D_Hydrall::getCO2(Crit3DDate myDate)
+double Crit3DHydrall::getCO2(Crit3DDate myDate)
 {
     double atmCO2 = 400 ; //https://www.eea.europa.eu/data-and-maps/daviz/atmospheric-concentration-of-carbon-dioxide-5/download.table
     double year[24] = {1750,1800,1850,1900,1910,1920,1930,1940,1950,1960,1970,1980,1990,2000,2010,2020,2030,2040,2050,2060,2070,2080,2090,2100};
@@ -265,12 +421,12 @@ double Crit3D_Hydrall::getCO2(Crit3DDate myDate)
     return atmCO2 * weatherVariable.atmosphericPressure/1000000;   // [Pa] in +- ppm/10 formula changed from the original Hydrall
 }
 /*
-double Crit3D_Hydrall::getPressureFromElevation(double myTemperature, double myElevation)
+double Crit3DHydrall::getPressureFromElevation(double myTemperature, double myElevation)
 {
     return P0 * exp((- GRAVITY * M_AIR * myElevation) / (R_GAS * myTemperature));
 }
 */
-double Crit3D_Hydrall::computeLAI(Crit3DDate myDate)
+double Crit3DHydrall::computeLAI(Crit3DDate myDate)
 {
     // TODO
 
@@ -283,42 +439,47 @@ double Crit3D_Hydrall::computeLAI(Crit3DDate myDate)
     else
         return LAIMAX;
 }
-void Crit3D_Hydrall::nullPhotosynthesis()
+
+void Crit3DHydrall::nullPhotosynthesis()
 {
     treeAssimilationRate = 0 ;
     treeTranspirationRate.resize(soil.layersNr);
     for (int i=0; i < soil.layersNr; i++)
         treeTranspirationRate[i] = 0;
 }
-double Crit3D_Hydrall::photosynthesisAndTranspiration()
+
+double Crit3DHydrall::photosynthesisAndTranspiration()
 {
-    //Crit3DHydrallWeatherDerivedVariable weatherDerivedVariable;
+    //if LAI is too small or if it's nighttime, canopy photosynthesis is null and only understorey is computed
+
     const double minLaiToComputePhotosynthesis = 0.1;
-    if (plant.leafAreaIndexCanopy > minLaiToComputePhotosynthesis && environmentalVariable.sineSolarElevation > 0.001)
+    if (plant.getLAICanopy() > minLaiToComputePhotosynthesis && environmentalVariable.sineSolarElevation > 0.001)
     {
-        Crit3D_Hydrall::radiationAbsorption();
-        Crit3D_Hydrall::photosynthesisAndTranspirationUnderstorey();
-        Crit3D_Hydrall::aerodynamicalCoupling();
-        Crit3D_Hydrall::upscale();
-        Crit3D_Hydrall::carbonWaterFluxesProfile();
+        Crit3DHydrall::radiationAbsorption();
+        Crit3DHydrall::photosynthesisAndTranspirationUnderstorey();
+        Crit3DHydrall::aerodynamicalCoupling();
+        Crit3DHydrall::upscale();
+        Crit3DHydrall::carbonWaterFluxesProfile();
     }
     else
     {
-        Crit3D_Hydrall::nullPhotosynthesis();
-        Crit3D_Hydrall::photosynthesisAndTranspirationUnderstorey();
+        Crit3DHydrall::nullPhotosynthesis();
+        Crit3DHydrall::photosynthesisAndTranspirationUnderstorey();
     }
 
-    Crit3D_Hydrall::cumulatedResults();
+
+    Crit3DHydrall::cumulatedResults();
+
 
     return 0;
 }
 
-double Crit3D_Hydrall::photosynthesisAndTranspirationUnderstorey()
+double Crit3DHydrall::photosynthesisAndTranspirationUnderstorey()
 {
     understoreyTranspirationRate.resize(1);
     understoreyTranspirationRate[0] = 0;
 
-    if (understorey.absorbedPAR > EPSILON)
+    if (understorey.absorbedPAR > EPSILON && environmentalVariable.sineSolarElevation > 0.001)
     {
         const double rootEfficiencyInWaterExtraction = 1.25e-3;  //[kgH2O kgDM-1 s-1]
         const double understoreyLightUtilization = 1.77e-9;      //[kgC J-1]
@@ -368,29 +529,32 @@ double Crit3D_Hydrall::photosynthesisAndTranspirationUnderstorey()
 }
 
 
-Crit3D_Hydrall::Crit3D_Hydrall()
+Crit3DHydrall::Crit3DHydrall()
 {
     initialize();
 }
 
 
-void Crit3D_Hydrall::initialize()
+void Crit3DHydrall::initialize()
 {
     plant.myChlorophyllContent = NODATA;
     elevation = NODATA;
     isFirstYearSimulation = true;
+    totalTranspirationRate = 0;
+
+    carbonStock = 0;
 
     // .. TODO
 }
 
-void Crit3D_Hydrall::setHourlyVariables(double temp, double irradiance , double prec , double relativeHumidity , double windSpeed, double directIrradiance, double diffuseIrradiance, double cloudIndex, double atmosphericPressure, Crit3DDate currentDate, double sunElevation,double meanTemp30Days,double et0)
+void Crit3DHydrall::setHourlyVariables(double temp, double irradiance , double prec , double relativeHumidity , double windSpeed, double directIrradiance, double diffuseIrradiance, double cloudIndex, double atmosphericPressure, Crit3DDate currentDate, double sunElevation,double meanTemp30Days,double et0)
 {
     setWeatherVariables(temp, irradiance, prec, relativeHumidity, windSpeed, directIrradiance, diffuseIrradiance, cloudIndex, atmosphericPressure,meanTemp30Days,et0);
     environmentalVariable.CO2 = getCO2(currentDate);
     environmentalVariable.sineSolarElevation = MAXVALUE(0.0001,sin(sunElevation*DEG_TO_RAD));
 }
 
-bool Crit3D_Hydrall::setWeatherVariables(double temp, double irradiance , double prec , double relativeHumidity , double windSpeed, double directIrradiance, double diffuseIrradiance, double cloudIndex, double atmosphericPressure, double meanTemp30Days, double et0)
+bool Crit3DHydrall::setWeatherVariables(double temp, double irradiance , double prec , double relativeHumidity , double windSpeed, double directIrradiance, double diffuseIrradiance, double cloudIndex, double atmosphericPressure, double meanTemp30Days, double et0)
 {
 
     bool isReadingOK = false ;
@@ -415,7 +579,7 @@ bool Crit3D_Hydrall::setWeatherVariables(double temp, double irradiance , double
     return isReadingOK;
 }
 
-void Crit3D_Hydrall::setDerivedWeatherVariables(double directIrradiance, double diffuseIrradiance, double cloudIndex,double et0)
+void Crit3DHydrall::setDerivedWeatherVariables(double directIrradiance, double diffuseIrradiance, double cloudIndex,double et0)
 {
     weatherVariable.derived.airVapourPressure = saturationVaporPressure(weatherVariable.myInstantTemp)*weatherVariable.relativeHumidity/100.;
     weatherVariable.derived.slopeSatVapPressureVSTemp = 2588464.2 / POWER2(240.97 + weatherVariable.myInstantTemp) * exp(17.502 * weatherVariable.myInstantTemp / (240.97 + weatherVariable.myInstantTemp)) ;
@@ -429,19 +593,39 @@ void Crit3D_Hydrall::setDerivedWeatherVariables(double directIrradiance, double 
     return;
 }
 
-void Crit3D_Hydrall::setPlantVariables(double chlorophyllContent, double height)
+void Crit3DHydrall::setPlantVariables(int forestIndex, double chlorophyllContent, double height, double psiMinimum)
 {
     plant.myChlorophyllContent = chlorophyllContent;
     plant.height = height;
+    plant.psiLeafMinimum = psiMinimum;
+    //plant.psiSoilCritical = psiCritical;
+
+    parameterWangLeuning.maxCarboxRate = plant.tableEcophysiologicalParameters[conversionTableVector[forestIndex]].Vcmo;
+    plant.isAmphystomatic = plant.tableEcophysiologicalParameters[conversionTableVector[forestIndex]].isAmphystomatic;
+    plant.rootShootRatioRef = plant.tableEcophysiologicalParameters[conversionTableVector[forestIndex]].rootShootRatio;
+    plant.mBallBerry = plant.tableEcophysiologicalParameters[conversionTableVector[forestIndex]].mBallBerry;
+    plant.wildfireDamage = plant.tableEcophysiologicalParameters[conversionTableVector[forestIndex]].wildfireDamage;
+
+
 }
 
-void Crit3D_Hydrall::setStateVariables(Crit3DHydrallMaps &stateMap, int row, int col)
+void Crit3DHydrall::setStateVariables(Crit3DHydrallMaps &stateMap, int row, int col)
 {
     statePlant.treeNetPrimaryProduction = stateMap.treeNetPrimaryProduction->value[row][col];
     statePlant.understoreyNetPrimaryProduction = stateMap.understoreyNetPrimaryProduction->value[row][col];
+
+    statePlant.treeBiomassFoliage = stateMap.treeBiomassFoliage->value[row][col];
+    statePlant.understoreyBiomassFoliage = stateMap.understoreyBiomassFoliage->value[row][col];
+
+    statePlant.treeBiomassRoot = stateMap.treeBiomassRoot->value[row][col];
+    statePlant.understoreyBiomassRoot = stateMap.understoreyBiomassRoot->value[row][col];
+
+    statePlant.treeBiomassSapwood = stateMap.treeBiomassSapwood->value[row][col];
+
+    outputC = stateMap.outputC->value[row][col];
 }
 
-void Crit3D_Hydrall::setSoilVariables(int iLayer, int currentNode,float checkFlag, int horizonIndex, double waterContent, double waterContentFC, double waterContentWP,double clay, double sand,double thickness,double bulkDensity,double waterContentSat, double rootDensity)
+void Crit3DHydrall::setSoilVariables(int iLayer, int currentNode,float checkFlag, double waterContent, double waterContentFC, double waterContentWP,double clay, double sand,double thickness,double bulkDensity,double waterContentSat, double kSat, double waterPotential)
 {
     if (iLayer == 0)
     {
@@ -450,7 +634,6 @@ void Crit3D_Hydrall::setSoilVariables(int iLayer, int currentNode,float checkFla
     (soil.layersNr)++;
     soil.waterContent.resize(soil.layersNr);
     soil.stressCoefficient.resize(soil.layersNr);
-    //soil.rootDensity.resize(soil.layersNr);
     soil.clay.resize(soil.layersNr);
     soil.sand.resize(soil.layersNr);
     soil.silt.resize(soil.layersNr);
@@ -459,14 +642,16 @@ void Crit3D_Hydrall::setSoilVariables(int iLayer, int currentNode,float checkFla
     soil.saturation.resize(soil.layersNr);
     soil.fieldCapacity.resize(soil.layersNr);
     soil.wiltingPoint.resize(soil.layersNr);
-    soil.rootDensity.resize(soil.layersNr);
+    soil.satHydraulicConductivity.resize(soil.layersNr);
+    soil.waterPotential.resize(soil.layersNr);
 
 
     if (currentNode != checkFlag)
     {
         soil.waterContent[iLayer] = waterContent;
-        soil.stressCoefficient[iLayer] = MINVALUE(1.0, (10*(soil.waterContent[iLayer]-waterContentWP))/(3*(waterContentFC-waterContentWP)));
-        soil.stressCoefficient[iLayer] = 0.01;
+        soil.stressCoefficient[iLayer] = BOUNDFUNCTION(0.01,1, MINVALUE((10*(waterContent-waterContentWP))/(3*(waterContentFC-waterContentWP)),  log(waterContentSat/waterContent)/log(2*waterContentSat/(waterContentFC+waterContentSat))));
+        //soil.stressCoefficient[iLayer] = BOUNDFUNCTION(0,MINVALUE(1.0,(waterContent - 2* waterContentFC)/(waterContentSat-2 * waterContentFC)), (10*(soil.waterContent[iLayer]-waterContentWP))/(3*(waterContentFC-waterContentWP)));
+        //soil.stressCoefficient[iLayer] = 0.01;
         soil.clay[iLayer] = clay/100.;
         soil.sand[iLayer] = sand/100.;
         soil.silt[iLayer] = 1 - soil.sand[iLayer] - soil.clay[iLayer];
@@ -475,7 +660,8 @@ void Crit3D_Hydrall::setSoilVariables(int iLayer, int currentNode,float checkFla
         soil.fieldCapacity[iLayer] = waterContentFC;
         soil.wiltingPoint[iLayer] = waterContentWP;
         soil.saturation[iLayer] = waterContentSat;
-        soil.rootDensity[iLayer] = rootDensity;
+        soil.satHydraulicConductivity[iLayer] = kSat;
+        soil.waterPotential[iLayer] = waterPotential;
     }
 
     //soil.clayAverage = statistics::weighedMean(soil.nodeThickness,soil.clay);
@@ -484,13 +670,30 @@ void Crit3D_Hydrall::setSoilVariables(int iLayer, int currentNode,float checkFla
     //soil.bulkDensityAverage = statistics::weighedMean(soil.nodeThickness,soil.bulkDensity);
 }
 
-void Crit3D_Hydrall::getStateVariables(Crit3DHydrallMaps &stateMap, int row, int col)
+void Crit3DHydrall::getStateVariables(Crit3DHydrallMaps &stateMap, int row, int col)
 {
     stateMap.treeNetPrimaryProduction->value[row][col] = statePlant.treeNetPrimaryProduction;
     stateMap.understoreyNetPrimaryProduction->value[row][col] = statePlant.understoreyNetPrimaryProduction;
+
+    stateMap.treeBiomassFoliage->value[row][col] = statePlant.treeBiomassFoliage;
+    stateMap.understoreyBiomassFoliage->value[row][col] = statePlant.understoreyBiomassFoliage;
+
+    stateMap.treeBiomassRoot->value[row][col] = statePlant.treeBiomassRoot;
+    stateMap.understoreyBiomassRoot->value[row][col] = statePlant.understoreyBiomassRoot;
+
+    stateMap.treeBiomassSapwood->value[row][col] = statePlant.treeBiomassSapwood;
+
+    stateMap.outputC->value[row][col] = outputC;
 }
 
-void Crit3D_Hydrall::radiationAbsorption()
+void Crit3DHydrall::getPlantAndSoilVariables(Crit3DHydrallMaps &map, int row, int col)
+{
+    map.criticalSoilWaterPotential->value[row][col] = plant.psiSoilCritical;
+    map.minLeafWaterPotential->value[row][col] = plant.psiLeafMinimum;
+    map.criticalTranspiration->value[row][col] = plant.transpirationCritical;
+}
+
+void Crit3DHydrall::radiationAbsorption()
 {
     // taken from Hydrall Model, Magnani UNIBO
 
@@ -505,6 +708,7 @@ void Crit3D_Hydrall::radiationAbsorption()
     double  sunlitAbsorbedNIR ,  shadedAbsorbedNIR, sunlitAbsorbedLW , shadedAbsorbedLW;
     double directIncomingPAR, directIncomingNIR , diffuseIncomingPAR , diffuseIncomingNIR,leafAbsorbancePAR;
     double directReflectionCoefficientPAR , directReflectionCoefficientNIR , diffuseReflectionCoefficientPAR , diffuseReflectionCoefficientNIR;
+    double canopyLAI = plant.getLAICanopy();
     //projection of the unit leaf area in the direction of the sun's beam, following Sellers 1985 (in Wang & Leuning 1998)
 
     //directLightExtinctionCoefficient.global = MINVALUE(50,(0.5 - hemisphericalIsotropyParameter*(0.633-1.11*environmentalVariable.sineSolarElevation) - POWER2(hemisphericalIsotropyParameter)*(0.33-0.579*environmentalVariable.sineSolarElevation))/ environmentalVariable.sineSolarElevation);
@@ -517,10 +721,10 @@ void Crit3D_Hydrall::radiationAbsorption()
     //diffuseLightSector2K = (0.5 - hemisphericalIsotropyParameter*(0.633-1.11*0.707) - hemisphericalIsotropyParameter*hemisphericalIsotropyParameter*(0.33-0.579*0.707))/0.707 ; //second sky sector (30-60 elevation)
     //diffuseLightSector3K = (0.5 - hemisphericalIsotropyParameter*(0.633-1.11*0.966) - hemisphericalIsotropyParameter*hemisphericalIsotropyParameter*(0.33-0.579*0.966))/ 0.966 ; // third sky sector (60-90 elevation)
 
-    //if (plant.leafAreaIndexCanopy > EPSILON)
+    //if (plant.getLAICanopy() > EPSILON)
     //{
-        diffuseLightExtinctionCoefficient.global =- 1.0/plant.leafAreaIndexCanopy * log(0.178 * exp(-diffuseLightSector1K*plant.leafAreaIndexCanopy) + 0.514 * exp(-diffuseLightSector2K*plant.leafAreaIndexCanopy)
-                                                                                          + 0.308 * exp(-diffuseLightSector3K*plant.leafAreaIndexCanopy));  //approximation based on relative radiance from 3 sky sectors
+        diffuseLightExtinctionCoefficient.global =- 1.0/canopyLAI * log(0.178 * exp(-diffuseLightSector1K*canopyLAI) + 0.514 * exp(-diffuseLightSector2K*canopyLAI)
+                                                                                          + 0.308 * exp(-diffuseLightSector3K*canopyLAI));  //approximation based on relative radiance from 3 sky sectors
     //}
     //else
     //{
@@ -542,8 +746,8 @@ void Crit3D_Hydrall::radiationAbsorption()
     if (environmentalVariable.sineSolarElevation > 0.001)
     {
         //Leaf area index of sunlit (1) and shaded (2) big-leaf
-        sunlit.leafAreaIndex = UPSCALINGFUNC(directLightExtinctionCoefficient.global,plant.leafAreaIndexCanopy);
-        shaded.leafAreaIndex = plant.leafAreaIndexCanopy - sunlit.leafAreaIndex ;
+        sunlit.leafAreaIndex = UPSCALINGFUNC(directLightExtinctionCoefficient.global,canopyLAI);
+        shaded.leafAreaIndex = canopyLAI - sunlit.leafAreaIndex ;
         //understorey.leafAreaIndex = 0.2;
         //Extinction coefficients for direct and diffuse PAR and NIR radiation, scattering leaves
         //Based on approximation by Goudriaan 1977 (in Goudriaan & van Laar 1994)
@@ -573,17 +777,17 @@ void Crit3D_Hydrall::radiationAbsorption()
 
         // PAR absorbed by sunlit (1) and shaded (2) big-leaf (W m-2) from Wang & Leuning 1998
         sunlit.absorbedPAR = dum[5] * dum[11] + dum[6] * dum[12] + dum[7] * dum[15] ;
-        shaded.absorbedPAR = dum[5]*(UPSCALINGFUNC(diffuseLightExtinctionCoefficient.par,plant.leafAreaIndexCanopy)- dum[11])
-                             + dum[6]*(UPSCALINGFUNC(directLightExtinctionCoefficient.par,plant.leafAreaIndexCanopy)- dum[12])
+        shaded.absorbedPAR = dum[5]*(UPSCALINGFUNC(diffuseLightExtinctionCoefficient.par,canopyLAI)- dum[11])
+                             + dum[6]*(UPSCALINGFUNC(directLightExtinctionCoefficient.par,canopyLAI)- dum[12])
                              - dum[7] * dum[15];
         // NIR absorbed by sunlit (1) and shaded (2) big-leaf (W m-2) fromWang & Leuning 1998
         sunlitAbsorbedNIR = dum[8]*dum[13]+dum[9]*dum[14]+dum[10]*dum[15];
-        shadedAbsorbedNIR = dum[8]*(UPSCALINGFUNC(diffuseLightExtinctionCoefficient.nir,plant.leafAreaIndexCanopy)-dum[13])+dum[9]*(UPSCALINGFUNC(directLightExtinctionCoefficient.nir,plant.leafAreaIndexCanopy)- dum[14]) - dum[10] * dum[15];
+        shadedAbsorbedNIR = dum[8]*(UPSCALINGFUNC(diffuseLightExtinctionCoefficient.nir,canopyLAI)-dum[13])+dum[9]*(UPSCALINGFUNC(directLightExtinctionCoefficient.nir,canopyLAI)- dum[14]) - dum[10] * dum[15];
 
         double emissivityLeaf = 0.96 ; // supposed constant because variation is very small
         double emissivitySoil= 0.94 ;   // supposed constant because variation is very small
-        sunlitAbsorbedLW = (dum[16] * UPSCALINGFUNC((directLightExtinctionCoefficient.global+diffuseLightExtinctionCoefficient.global),plant.leafAreaIndexCanopy))*emissivityLeaf+(1.0-emissivitySoil)*(emissivityLeaf-weatherVariable.derived.myEmissivitySky)* UPSCALINGFUNC((2*diffuseLightExtinctionCoefficient.global),plant.leafAreaIndexCanopy)* UPSCALINGFUNC((directLightExtinctionCoefficient.global-diffuseLightExtinctionCoefficient.global),plant.leafAreaIndexCanopy);
-        shadedAbsorbedLW = dum[16] * UPSCALINGFUNC(diffuseLightExtinctionCoefficient.global,plant.leafAreaIndexCanopy) - sunlitAbsorbedLW ;
+        sunlitAbsorbedLW = (dum[16] * UPSCALINGFUNC((directLightExtinctionCoefficient.global+diffuseLightExtinctionCoefficient.global),canopyLAI))*emissivityLeaf+(1.0-emissivitySoil)*(emissivityLeaf-weatherVariable.derived.myEmissivitySky)* UPSCALINGFUNC((2*diffuseLightExtinctionCoefficient.global),canopyLAI)* UPSCALINGFUNC((directLightExtinctionCoefficient.global-diffuseLightExtinctionCoefficient.global),canopyLAI);
+        shadedAbsorbedLW = dum[16] * UPSCALINGFUNC(diffuseLightExtinctionCoefficient.global,canopyLAI) - sunlitAbsorbedLW ;
         // Isothermal net radiation for sunlit (1) and shaded (2) big-leaf
         sunlit.isothermalNetRadiation= sunlit.absorbedPAR + sunlitAbsorbedNIR + sunlitAbsorbedLW ;
         shaded.isothermalNetRadiation = shaded.absorbedPAR + shadedAbsorbedNIR + shadedAbsorbedLW ;
@@ -605,12 +809,12 @@ void Crit3D_Hydrall::radiationAbsorption()
         understorey.absorbedPAR = 0.0;
         understorey.leafAreaIndex = 0.0;
 
-        shaded.leafAreaIndex = plant.leafAreaIndexCanopy;
+        shaded.leafAreaIndex = canopyLAI;
         shaded.absorbedPAR = 0.0 ;
         shadedAbsorbedNIR = 0.0 ;
         dum[16]= weatherVariable.derived.myLongWaveIrradiance -STEFAN_BOLTZMANN*pow(weatherVariable.myInstantTemp + ZEROCELSIUS,4) ;
         dum[16] *= diffuseLightExtinctionCoefficient.global ;
-        shadedAbsorbedLW= dum[16] * (UPSCALINGFUNC(diffuseLightExtinctionCoefficient.global,plant.leafAreaIndexCanopy) - UPSCALINGFUNC(directLightExtinctionCoefficient.global+diffuseLightExtinctionCoefficient.global,plant.leafAreaIndexCanopy)) ;
+        shadedAbsorbedLW= dum[16] * (UPSCALINGFUNC(diffuseLightExtinctionCoefficient.global,canopyLAI) - UPSCALINGFUNC(directLightExtinctionCoefficient.global+diffuseLightExtinctionCoefficient.global,canopyLAI)) ;
         shaded.isothermalNetRadiation = shaded.absorbedPAR + shadedAbsorbedNIR + shadedAbsorbedLW ;
     }
 
@@ -619,7 +823,7 @@ void Crit3D_Hydrall::radiationAbsorption()
     shaded.absorbedPAR *= 4.57E-6 ;
 }
 
-void Crit3D_Hydrall::preliminaryComputations(double diffuseIncomingPAR, double diffuseReflectionCoefficientPAR, double directIncomingPAR, double directReflectionCoefficientPAR,
+void Crit3DHydrall::preliminaryComputations(double diffuseIncomingPAR, double diffuseReflectionCoefficientPAR, double directIncomingPAR, double directReflectionCoefficientPAR,
                                              double diffuseIncomingNIR, double diffuseReflectionCoefficientNIR, double directIncomingNIR, double directReflectionCoefficientNIR,
                                              double scatteringCoefPAR, double scatteringCoefNIR, std::vector<double> &dum)
 {
@@ -629,18 +833,18 @@ void Crit3D_Hydrall::preliminaryComputations(double diffuseIncomingPAR, double d
     dum[8]=  diffuseIncomingNIR * (1.0-diffuseReflectionCoefficientNIR) * diffuseLightExtinctionCoefficient.nir;
     dum[9]= directIncomingNIR * (1.0-directReflectionCoefficientNIR) * directLightExtinctionCoefficient.nir;
     dum[10]= directIncomingNIR * (1.0-scatteringCoefNIR) * directLightExtinctionCoefficient.global ;
-    dum[11]= UPSCALINGFUNC((diffuseLightExtinctionCoefficient.par+directLightExtinctionCoefficient.global),plant.leafAreaIndexCanopy);
-    dum[12]= UPSCALINGFUNC((directLightExtinctionCoefficient.par+directLightExtinctionCoefficient.global),plant.leafAreaIndexCanopy);
-    dum[13]= UPSCALINGFUNC((diffuseLightExtinctionCoefficient.par+directLightExtinctionCoefficient.global),plant.leafAreaIndexCanopy);
-    dum[14]= UPSCALINGFUNC((directLightExtinctionCoefficient.nir+directLightExtinctionCoefficient.global),plant.leafAreaIndexCanopy);
-    dum[15]= UPSCALINGFUNC(directLightExtinctionCoefficient.global,plant.leafAreaIndexCanopy) - UPSCALINGFUNC((2.0*directLightExtinctionCoefficient.global),plant.leafAreaIndexCanopy) ;
+    dum[11]= UPSCALINGFUNC((diffuseLightExtinctionCoefficient.par+directLightExtinctionCoefficient.global),plant.getLAICanopy());
+    dum[12]= UPSCALINGFUNC((directLightExtinctionCoefficient.par+directLightExtinctionCoefficient.global),plant.getLAICanopy());
+    dum[13]= UPSCALINGFUNC((diffuseLightExtinctionCoefficient.par+directLightExtinctionCoefficient.global),plant.getLAICanopy());
+    dum[14]= UPSCALINGFUNC((directLightExtinctionCoefficient.nir+directLightExtinctionCoefficient.global),plant.getLAICanopy());
+    dum[15]= UPSCALINGFUNC(directLightExtinctionCoefficient.global,plant.getLAICanopy()) - UPSCALINGFUNC((2.0*directLightExtinctionCoefficient.global),plant.getLAICanopy()) ;
 
     // Long-wave radiation balance by sunlit (1) and shaded (2) big-leaf (W m-2) from Wang & Leuning 1998
     dum[16]= weatherVariable.derived.myLongWaveIrradiance -STEFAN_BOLTZMANN*POWER4(weatherVariable.myInstantTemp+ZEROCELSIUS); //negativo
     dum[16] *= diffuseLightExtinctionCoefficient.global ;
 }
 
-void Crit3D_Hydrall::leafTemperature()
+void Crit3DHydrall::leafTemperature()
 {
     if (environmentalVariable.sineSolarElevation > 0.001)
     {
@@ -663,10 +867,10 @@ void Crit3D_Hydrall::leafTemperature()
     shaded.leafTemperature += ZEROCELSIUS;
 }
 
-void Crit3D_Hydrall::aerodynamicalCoupling()
+void Crit3DHydrall::aerodynamicalCoupling()
 {
     double laiMinToComputeAerodynamicalCoupling = 0.05;
-    if (plant.leafAreaIndexCanopy > laiMinToComputeAerodynamicalCoupling)
+    if (plant.getLAICanopy() > laiMinToComputeAerodynamicalCoupling)
     {
         // taken from Hydrall Model, Magnani UNIBO
         static double A = 0.0067;
@@ -681,7 +885,7 @@ void Crit3D_Hydrall::aerodynamicalCoupling()
         heightReference = plant.height + 5 ; // [m]
         windSpeed = weatherVariable.windSpeed * pow((heightReference/10.),0.14);
         windSpeed = MAXVALUE(3,weatherVariable.windSpeed);
-        dummy = 0.2 * plant.leafAreaIndexCanopy ;
+        dummy = 0.2 * plant.getLAICanopy() ;
         zeroPlaneDisplacement = MINVALUE(plant.height * (log(1+pow(dummy,0.166)) + 0.03*log(1+powerIntegerExponent(dummy,6))), 0.99*plant.height) ;
         if (dummy < 0.2) roughnessLength = 0.01 + 0.28*sqrt(dummy) * plant.height ;
         else roughnessLength = 0.3 * plant.height * (1.0 - zeroPlaneDisplacement/plant.height);
@@ -704,8 +908,8 @@ void Crit3D_Hydrall::aerodynamicalCoupling()
             //first occurence of the loop
             if (isEqual(sunlit.aerodynamicConductanceCO2Exchange, 0))
             {
-                sunlit.aerodynamicConductanceCO2Exchange = 1.05 * sunlit.leafAreaIndex/plant.leafAreaIndexCanopy;
-                shaded.aerodynamicConductanceCO2Exchange = 1.05 * shaded.leafAreaIndex/plant.leafAreaIndexCanopy;
+                sunlit.aerodynamicConductanceCO2Exchange = 1.05 * sunlit.leafAreaIndex/plant.getLAICanopy();
+                shaded.aerodynamicConductanceCO2Exchange = 1.05 * shaded.leafAreaIndex/plant.getLAICanopy();
             }
 
             // Monin-Obukhov length (m) and nondimensional height
@@ -747,19 +951,19 @@ void Crit3D_Hydrall::aerodynamicalCoupling()
             windSpeedTopCanopy = MAXVALUE(windSpeedTopCanopy,1.0e-4);
 
             // Average leaf boundary-layer conductance cumulated over the canopy (m s-1)
-            leafBoundaryLayerConductance = A*sqrt(windSpeedTopCanopy/(leafWidth()))* coefficientFromBeta * plant.leafAreaIndexCanopy;
+            leafBoundaryLayerConductance = A*sqrt(windSpeedTopCanopy/(leafWidth()))* coefficientFromBeta * plant.getLAICanopy();
             //       Total canopy aerodynamic conductance for momentum exchange (s m-1)
             canopyAerodynamicConductanceToMomentum= frictionVelocity / (windSpeed/frictionVelocity + (deviationFunctionForMomentum-deviationFunctionForHeat)/KARM);
             // Aerodynamic conductance for heat exchange (mol m-2 s-1)
             dummy =	(weatherVariable.atmosphericPressure/R_GAS)/(weatherVariable.myInstantTemp + ZEROCELSIUS);// conversion factor m s-1 into mol m-2 s-1
             aerodynamicConductanceForHeat =  ((canopyAerodynamicConductanceToMomentum*leafBoundaryLayerConductance)/(canopyAerodynamicConductanceToMomentum + leafBoundaryLayerConductance)) * dummy ; //whole canopy
-            sunlit.aerodynamicConductanceHeatExchange = aerodynamicConductanceForHeat * sunlit.leafAreaIndex/plant.leafAreaIndexCanopy ;//sunlit big-leaf
+            sunlit.aerodynamicConductanceHeatExchange = aerodynamicConductanceForHeat * sunlit.leafAreaIndex/plant.getLAICanopy() ;//sunlit big-leaf
             shaded.aerodynamicConductanceHeatExchange = aerodynamicConductanceForHeat - sunlit.aerodynamicConductanceHeatExchange ; //  shaded big-leaf
             // Canopy radiative conductance (mol m-2 s-1)
             radiativeConductance= 4*(weatherVariable.derived.slopeSatVapPressureVSTemp/weatherVariable.derived.psychrometricConstant)*(STEFAN_BOLTZMANN/HEAT_CAPACITY_AIR_MOLAR)*POWER3((weatherVariable.myInstantTemp + ZEROCELSIUS));
             // Total conductance to heat exchange (mol m-2 s-1)
             totalConductanceToHeatExchange =  aerodynamicConductanceForHeat + radiativeConductance; //whole canopy
-            sunlit.totalConductanceHeatExchange = totalConductanceToHeatExchange * sunlit.leafAreaIndex/plant.leafAreaIndexCanopy;	//sunlit big-leaf
+            sunlit.totalConductanceHeatExchange = totalConductanceToHeatExchange * sunlit.leafAreaIndex/plant.getLAICanopy();	//sunlit big-leaf
             shaded.totalConductanceHeatExchange = totalConductanceToHeatExchange - sunlit.totalConductanceHeatExchange;  //shaded big-leaf
 
             // Temperature of big-leaf (approx. expression)
@@ -799,8 +1003,8 @@ void Crit3D_Hydrall::aerodynamicalCoupling()
         if (plant.isAmphystomatic) aerodynamicConductanceToCO2 = 0.78 * aerodynamicConductanceForHeat; //amphystomatous species. Ratio of diffusivities from Wang & Leuning 1998
         else aerodynamicConductanceToCO2 = 0.78 * (canopyAerodynamicConductanceToMomentum * leafBoundaryLayerConductance)/(leafBoundaryLayerConductance + 2.0*canopyAerodynamicConductanceToMomentum) * dummy; //hypostomatous species
 
-        sunlit.aerodynamicConductanceCO2Exchange = aerodynamicConductanceToCO2 * sunlit.leafAreaIndex/plant.leafAreaIndexCanopy ; //sunlit big-leaf
-        shaded.aerodynamicConductanceCO2Exchange = aerodynamicConductanceToCO2 * shaded.leafAreaIndex/plant.leafAreaIndexCanopy ;  //shaded big-leaf
+        sunlit.aerodynamicConductanceCO2Exchange = aerodynamicConductanceToCO2 * sunlit.leafAreaIndex/plant.getLAICanopy() ; //sunlit big-leaf
+        shaded.aerodynamicConductanceCO2Exchange = aerodynamicConductanceToCO2 * shaded.leafAreaIndex/plant.getLAICanopy() ;  //shaded big-leaf
 
     }
     else
@@ -811,7 +1015,7 @@ void Crit3D_Hydrall::aerodynamicalCoupling()
     }
 }
 
-double  Crit3D_Hydrall::leafWidth()
+double  Crit3DHydrall::leafWidth()
 {
     // la funzione deve essere scritta secondo regole che possono fr variare lo spessore in base alla fenologia
     // come per la vite?
@@ -820,9 +1024,9 @@ double  Crit3D_Hydrall::leafWidth()
     return plant.myLeafWidth;
 }
 
-void Crit3D_Hydrall::upscale()
+void Crit3DHydrall::upscale()
 {
-    //cultivar->parameterWangLeuning.maxCarbonRate era input, ora da prendere da classe e leggere da tipo di pianta
+    //cultivar->parameterWangLeuning.maxCarbonRate era input, ora da prendere da classe e leggere da tipo di pianta. TODO
     double maxCarboxRate = 150; // umol CO2 m-2 s-1
 
     // taken from Hydrall Model, Magnani UNIBO
@@ -843,24 +1047,24 @@ void Crit3D_Hydrall::upscale()
     optimalCarboxylationRate = maxCarboxRate * 1.0e-6; // [mol m-2 s-1] from Greer et al. 2011
     darkRespirationT0 = 0.0089 * optimalCarboxylationRate ;
     //   Adjust unit dark respiration rate for temperature (mol m-2 s-1)
-    sunlit.darkRespiration = darkRespirationT0 * exp(CRD - HARD/dum[0])* UPSCALINGFUNC((directLightExtinctionCoefficient.global + diffuseLightExtinctionCoefficient.par),plant.leafAreaIndexCanopy); //sunlit big-leaf
+    sunlit.darkRespiration = darkRespirationT0 * exp(CRD - HARD/dum[0])* UPSCALINGFUNC((directLightExtinctionCoefficient.global + diffuseLightExtinctionCoefficient.par),plant.getLAICanopy()); //sunlit big-leaf
     shaded.darkRespiration = darkRespirationT0 * exp(CRD - HARD/dum[1]); //shaded big-leaf
-    shaded.darkRespiration *= (UPSCALINGFUNC(diffuseLightExtinctionCoefficient.par,plant.leafAreaIndexCanopy) - UPSCALINGFUNC((directLightExtinctionCoefficient.global + diffuseLightExtinctionCoefficient.par),plant.leafAreaIndexCanopy));
+    shaded.darkRespiration *= (UPSCALINGFUNC(diffuseLightExtinctionCoefficient.par,plant.getLAICanopy()) - UPSCALINGFUNC((directLightExtinctionCoefficient.global + diffuseLightExtinctionCoefficient.par),plant.getLAICanopy()));
     double entropicFactorElectronTransporRate = (-0.75*(weatherVariable.last30DaysTAvg)+660);  // entropy term for J (kJ mol-1 oC-1)
     double entropicFactorCarboxyliation = (-1.07*(weatherVariable.last30DaysTAvg)+668); // entropy term for VCmax (kJ mol-1 oC-1)
     if (environmentalVariable.sineSolarElevation > 1.0e-3)
     {
         //Stomatal conductance to CO2 in darkness (molCO2 m-2 s-1)
-        sunlit.minimalStomatalConductance = parameterWangLeuning.stomatalConductanceMin  * UPSCALINGFUNC((directLightExtinctionCoefficient.global+diffuseLightExtinctionCoefficient.par),plant.leafAreaIndexCanopy)	;
-        shaded.minimalStomatalConductance = parameterWangLeuning.stomatalConductanceMin  * (UPSCALINGFUNC(diffuseLightExtinctionCoefficient.par,plant.leafAreaIndexCanopy) - UPSCALINGFUNC((directLightExtinctionCoefficient.global+diffuseLightExtinctionCoefficient.par),plant.leafAreaIndexCanopy));
+        sunlit.minimalStomatalConductance = parameterWangLeuning.stomatalConductanceMin  * UPSCALINGFUNC((directLightExtinctionCoefficient.global+diffuseLightExtinctionCoefficient.par),plant.getLAICanopy())	;
+        shaded.minimalStomatalConductance = parameterWangLeuning.stomatalConductanceMin  * (UPSCALINGFUNC(diffuseLightExtinctionCoefficient.par,plant.getLAICanopy()) - UPSCALINGFUNC((directLightExtinctionCoefficient.global+diffuseLightExtinctionCoefficient.par),plant.getLAICanopy()));
         // Carboxylation rate
         //sunlit.maximalCarboxylationRate = optimalCarboxylationRate * exp(CVCM - HAVCM/dum[0]); //sunlit big leaf
         //shaded.maximalCarboxylationRate = optimalCarboxylationRate * exp(CVCM - HAVCM/dum[1]); //shaded big leaf
         sunlit.maximalCarboxylationRate = optimalCarboxylationRate * acclimationFunction(HAVCM*1000,HDEACTIVATION*1000,sunlit.leafTemperature,entropicFactorCarboxyliation,parameterWangLeuning.optimalTemperatureForPhotosynthesis); //sunlit big leaf
         shaded.maximalCarboxylationRate = optimalCarboxylationRate * acclimationFunction(HAVCM*1000,HDEACTIVATION*1000,shaded.leafTemperature,entropicFactorCarboxyliation,parameterWangLeuning.optimalTemperatureForPhotosynthesis); //shaded big leaf
         // Scale-up maximum carboxylation rate (mol m-2 s-1)
-        sunlit.maximalCarboxylationRate *= UPSCALINGFUNC((directLightExtinctionCoefficient.global+diffuseLightExtinctionCoefficient.par),plant.leafAreaIndexCanopy);
-        shaded.maximalCarboxylationRate *= (UPSCALINGFUNC(diffuseLightExtinctionCoefficient.par,plant.leafAreaIndexCanopy) - UPSCALINGFUNC((directLightExtinctionCoefficient.global+diffuseLightExtinctionCoefficient.par),plant.leafAreaIndexCanopy));
+        sunlit.maximalCarboxylationRate *= UPSCALINGFUNC((directLightExtinctionCoefficient.global+diffuseLightExtinctionCoefficient.par),plant.getLAICanopy());
+        shaded.maximalCarboxylationRate *= (UPSCALINGFUNC(diffuseLightExtinctionCoefficient.par,plant.getLAICanopy()) - UPSCALINGFUNC((directLightExtinctionCoefficient.global+diffuseLightExtinctionCoefficient.par),plant.getLAICanopy()));
         //CO2 compensation point in dark
         sunlit.carbonMichaelisMentenConstant = exp(CKC - HAKC/dum[0]) * 1.0e-6 * weatherVariable.atmosphericPressure ;
         shaded.carbonMichaelisMentenConstant = exp(CKC - HAKC/dum[1]) * 1.0E-6 * weatherVariable.atmosphericPressure ;
@@ -889,7 +1093,7 @@ void Crit3D_Hydrall::upscale()
         sunlit.convexityFactorNonRectangularHyperbola = leafConvexityFactor/0.98 * (0.76 + 0.018*dum[2] - 3.7E-4*POWER2((dum[2])));  //sunlit big-leaf
         shaded.convexityFactorNonRectangularHyperbola = leafConvexityFactor/0.98 * (0.76 + 0.018*dum[3] - 3.7E-4*POWER2((dum[3])));  //shaded big-leaf
         // Scale-up potential electron transport of sunlit big-leaf (mol m-2 s-1)
-        sunlit.maximalElectronTrasportRate *= UPSCALINGFUNC((directLightExtinctionCoefficient.global+diffuseLightExtinctionCoefficient.par),plant.leafAreaIndexCanopy);
+        sunlit.maximalElectronTrasportRate *= UPSCALINGFUNC((directLightExtinctionCoefficient.global+diffuseLightExtinctionCoefficient.par),plant.getLAICanopy());
         // Adjust electr transp of sunlit big-leaf for PAR effects (mol e- m-2 s-1)
         dum[4]= sunlit.absorbedPAR * sunlit.quantumYieldPS2 * BETA ; //  potential PSII e- transport of sunlit big-leaf (mol m-2 s-1)
         dum[5]= dum[4] + sunlit.maximalElectronTrasportRate ;
@@ -897,7 +1101,7 @@ void Crit3D_Hydrall::upscale()
         sunlit.maximalElectronTrasportRate = (dum[5] - sqrt(POWER2((dum[5])) - 4.0*sunlit.convexityFactorNonRectangularHyperbola*dum[6])) / (2.0*sunlit.convexityFactorNonRectangularHyperbola);
         // Scale-up potential electron transport of shaded big-leaf (mol m-2 s-1)
         // The simplified formulation proposed by de Pury & Farquhar (1999) is applied
-        shaded.maximalElectronTrasportRate *= (UPSCALINGFUNC(diffuseLightExtinctionCoefficient.par,plant.leafAreaIndexCanopy) - UPSCALINGFUNC((directLightExtinctionCoefficient.global+diffuseLightExtinctionCoefficient.par),plant.leafAreaIndexCanopy));
+        shaded.maximalElectronTrasportRate *= (UPSCALINGFUNC(diffuseLightExtinctionCoefficient.par,plant.getLAICanopy()) - UPSCALINGFUNC((directLightExtinctionCoefficient.global+diffuseLightExtinctionCoefficient.par),plant.getLAICanopy()));
         // Adjust electr transp of shaded big-leaf for PAR effects (mol e- m-2 s-1)
         dum[4]= shaded.absorbedPAR * shaded.quantumYieldPS2 * BETA ; // potential PSII e- transport of sunlit big-leaf (mol m-2 s-1)
         dum[5]= dum[4] + shaded.maximalElectronTrasportRate ;
@@ -913,7 +1117,7 @@ void Crit3D_Hydrall::upscale()
     }
 }
 
-inline double Crit3D_Hydrall::acclimationFunction(double Ha , double Hd, double leafTemp,
+inline double Crit3DHydrall::acclimationFunction(double Ha , double Hd, double leafTemp,
                                              double entropicTerm,double optimumTemp)
 {
     // taken from Hydrall Model, Magnani UNIBO
@@ -923,14 +1127,18 @@ inline double Crit3D_Hydrall::acclimationFunction(double Ha , double Hd, double 
 }
 
 
-void Crit3D_Hydrall::carbonWaterFluxesProfile()
+void Crit3DHydrall::carbonWaterFluxesProfile()
 {
     // taken from Hydrall Model, Magnani UNIBO
     treeAssimilationRate = 0 ;
 
+    //ball-berry constants. TODO
+    double mi = 9.31;
+
     treeTranspirationRate.resize(soil.layersNr);
 
     //double totalStomatalConductance = 0;
+    maxIterationNumber = 0;
     for (int i=0; i < soil.layersNr; i++)
     {
         treeTranspirationRate[i] = 0;
@@ -943,10 +1151,10 @@ void Crit3D_Hydrall::carbonWaterFluxesProfile()
         {
             if(sunlit.leafAreaIndex > 0)
             {
-                Crit3D_Hydrall::photosynthesisKernel(sunlit.compensationPoint, sunlit.aerodynamicConductanceCO2Exchange, sunlit.aerodynamicConductanceHeatExchange, sunlit.minimalStomatalConductance,
+                Crit3DHydrall::photosynthesisKernel(sunlit.compensationPoint, sunlit.aerodynamicConductanceCO2Exchange, sunlit.aerodynamicConductanceHeatExchange, sunlit.minimalStomatalConductance,
                                                                  sunlit.maximalElectronTrasportRate, sunlit.carbonMichaelisMentenConstant,
                                                                  sunlit.oxygenMichaelisMentenConstant,sunlit.darkRespiration, sunlit.isothermalNetRadiation,
-                                                                 parameterWangLeuning.alpha * soil.stressCoefficient[i], sunlit.maximalCarboxylationRate,
+                                                                 mi * soil.stressCoefficient[i], sunlit.maximalCarboxylationRate,
                                                                  &(sunlit.assimilation), &(sunlit.stomatalConductance),
                                                                  &(sunlit.transpiration));
             }
@@ -954,20 +1162,22 @@ void Crit3D_Hydrall::carbonWaterFluxesProfile()
             //treeAssimilationRate += sunlit.assimilation * soil.rootDensity[i] ;
 
             // shaded big leaf
-            Crit3D_Hydrall::photosynthesisKernel(shaded.compensationPoint, shaded.aerodynamicConductanceCO2Exchange,shaded.aerodynamicConductanceHeatExchange, shaded.minimalStomatalConductance,
+            Crit3DHydrall::photosynthesisKernel(shaded.compensationPoint, shaded.aerodynamicConductanceCO2Exchange,shaded.aerodynamicConductanceHeatExchange, shaded.minimalStomatalConductance,
                                                              shaded.maximalElectronTrasportRate, shaded.carbonMichaelisMentenConstant,
                                                              shaded.oxygenMichaelisMentenConstant,shaded.darkRespiration, shaded.isothermalNetRadiation,
-                                                             parameterWangLeuning.alpha * soil.stressCoefficient[i], shaded.maximalCarboxylationRate,
+                                                             mi * soil.stressCoefficient[i], shaded.maximalCarboxylationRate,
                                                              &(shaded.assimilation), &(shaded.stomatalConductance),
                                                              &(shaded.transpiration));
-            treeAssimilationRate += ( shaded.assimilation + sunlit.assimilation) * soil.rootDensity[i] ; //canopy gross assimilation (mol m-2 s-1)
+            treeAssimilationRate += ( shaded.assimilation + sunlit.assimilation) * soil.getRootDensity()[i] ; //canopy gross assimilation (mol m-2 s-1)
         }
-        treeTranspirationRate[i] += (shaded.transpiration + sunlit.transpiration) * soil.rootDensity[i] ;
+
+        treeTranspirationRate[i] += (shaded.transpiration + sunlit.transpiration) * soil.getRootDensity()[i] ;
     }
+    maxIterationNumber /= soil.layersNr;
 }
 
 
-void Crit3D_Hydrall::photosynthesisKernel(double COMP,double GAC,double GHR,double GSCD,double J,double KC,double KO
+void Crit3DHydrall::photosynthesisKernel(double COMP,double GAC,double GHR,double GSCD,double J,double KC,double KO
                                             ,double RD,double RNI,double STOMWL,double VCmax,double *ASS,double *GSC,double *TR)
 {
 // taken from Hydrall Model, Magnani UNIBO
@@ -981,10 +1191,15 @@ void Crit3D_Hydrall::photosynthesisKernel(double COMP,double GAC,double GHR,doub
     int I,Imax ;
     double myStromalCarbonDioxideOld;
 
+    //leaf surface relative humidity conversion factor from VPD
+    double RHFactor = (613.75 * exp(17.502 * weatherVariable.myInstantTemp / (240.97 + weatherVariable.myInstantTemp)));
+    double RH;
 
     Imax = 10000 ;
     myTolerance = 1e-7;
     deltaAssimilation = NODATA_TOLERANCE;
+    double CSmolFraction = NODATA;
+    double COMPmolFraction = NODATA;
     //myPreviousDelta = deltaAssimilation;
     if (J >= 1.0e-7)
     {
@@ -992,6 +1207,7 @@ void Crit3D_Hydrall::photosynthesisKernel(double COMP,double GAC,double GHR,doub
         myStromalCarbonDioxide = 0.7 * environmentalVariable.CO2 ;
         VPDS = weatherVariable.vaporPressureDeficit;
         //myPreviousVPDS = VPDS;
+        RH = 1 - VPDS / RHFactor;
         ASSOLD = NODATA;
         DUM1 = 1.6 * weatherVariable.derived.slopeSatVapPressureVSTemp/weatherVariable.derived.psychrometricConstant + GHR/GAC;
         double dampingPar = 0.01;
@@ -1002,11 +1218,17 @@ void Crit3D_Hydrall::photosynthesisKernel(double COMP,double GAC,double GHR,doub
             WJ = J * myStromalCarbonDioxide / (4.5 * myStromalCarbonDioxide + 10.5 * COMP);  //electr transp-limited carboxyl (mol m-2 s-1)
             VC = MINVALUE(WC,WJ);  //carboxylation rate (mol m-2 s-1)
 
-            *ASS = MAXVALUE(0.0, VC * (1.0 - COMP / myStromalCarbonDioxide));  //gross assimilation (mol m-2 s-1)
+            *ASS = MAXVALUE(1e-8, VC * (1.0 - COMP / myStromalCarbonDioxide));  //gross assimilation (mol m-2 s-1)
             CS = environmentalVariable.CO2 - weatherVariable.atmosphericPressure * (*ASS - RD) / GAC;	//CO2 concentration at leaf surface (Pa)
+            CSmolFraction = CS/weatherVariable.atmosphericPressure*1e6;
+            COMPmolFraction= COMP/weatherVariable.atmosphericPressure*1e6;
             CS = MAXVALUE(1e-4,CS);
+            CSmolFraction = MAXVALUE(1e-3, CSmolFraction);
             //Stomatal conductance
-            *GSC = GSCD + STOMWL * (*ASS-RD) / (CS-COMP) * parameterWangLeuning.sensitivityToVapourPressureDeficit / (parameterWangLeuning.sensitivityToVapourPressureDeficit +VPDS); //stom conduct to CO2 (mol m-2 s-1)
+            double temp = (CS-COMP)*weatherVariable.atmosphericPressure/1e6;
+            double temp2 = (*ASS-RD) / ((CSmolFraction-COMP)*weatherVariable.atmosphericPressure) * RH;
+            //*GSC = GSCD + STOMWL * (*ASS-RD) / (CS-COMP) * RH; //stom conduct to CO2 (mol m-2 s-1)
+            *GSC = GSCD + STOMWL * (*ASS-RD)*1e6/ (CSmolFraction-COMPmolFraction) * RH; //stom conduct to CO2 (mol m-2 s-1)
             *GSC = MAXVALUE(*GSC,1.0e-5);
             // Stromal CO2 concentration
             myStromalCarbonDioxideOld = myStromalCarbonDioxide;
@@ -1016,14 +1238,16 @@ void Crit3D_Hydrall::photosynthesisKernel(double COMP,double GAC,double GHR,doub
             myStromalCarbonDioxide = BOUNDFUNCTION(0.01,environmentalVariable.CO2,myStromalCarbonDioxide);
             //Vapour pressure deficit at leaf surface
             VPDS = (weatherVariable.derived.slopeSatVapPressureVSTemp / HEAT_CAPACITY_AIR_MOLAR*RNI + weatherVariable.vaporPressureDeficit * GHR) / (GHR+(*GSC)*DUM1);  //VPD at the leaf surface (Pa)
+            RH = 1 - VPDS / RHFactor;
             deltaAssimilation = fabs((*ASS) - ASSOLD);
 
             if (I>0)
             {
-                double ratioAssimilation = *ASS/ASSOLD; // RD(new):RD(old)=ASS(new):ASS(old)
+                double ratioAssimilation = BOUNDFUNCTION(0.1,10,*ASS/ASSOLD); // RD(new):RD(old)=ASS(new):ASS(old)
                 RD *= ratioAssimilation;
             }
             ASSOLD = *ASS;
+            maxIterationNumber++;
         }
     }
     else //night time computation
@@ -1041,21 +1265,25 @@ void Crit3D_Hydrall::photosynthesisKernel(double COMP,double GAC,double GHR,doub
 }
 
 
-void Crit3D_Hydrall::cumulatedResults()
+void Crit3DHydrall::cumulatedResults()
 {
     // taken from Hydrall Model, Magnani UNIBO
     // Cumulate hourly values of gas exchange
+
     //deltaTime.absorbedPAR = HOUR_SECONDS*(sunlit.absorbedPAR+shaded.absorbedPAR);  //absorbed PAR (mol m-2)
     deltaTime.grossAssimilation = HOUR_SECONDS * treeAssimilationRate ; // canopy gross assimilation (mol m-2)
-    deltaTime.respiration = HOUR_SECONDS * Crit3D_Hydrall::plantRespiration() ;
+    deltaTime.respiration = HOUR_SECONDS * Crit3DHydrall::plantRespiration() ;
     deltaTime.netAssimilation = deltaTime.grossAssimilation - deltaTime.respiration ;
-    //std::cout << deltaTime.grossAssimilation * 10e6 << ", " << deltaTime.respiration * 10e6 << ", " << deltaTime.netAssimilation *10e6 << std::endl;
-    std::ofstream myFile;
-    double stressMean = statistics::weighedMean(soil.rootDensity,soil.stressCoefficient);
-    myFile.open("outputLAIetc.csv", std::ios_base::app);
-    myFile << deltaTime.grossAssimilation/HOUR_SECONDS*1e6 <<","<<deltaTime.respiration/HOUR_SECONDS*1e6<<","<<deltaTime.netAssimilation/HOUR_SECONDS*1e6<<","<< stressMean <<"\n";
-    myFile.close();
-
+    if (printHourlyRecords)
+    {
+        //DEBUG
+        //std::cout << deltaTime.grossAssimilation * 10e6 << ", " << deltaTime.respiration * 10e6 << ", " << deltaTime.netAssimilation *10e6 << std::endl;
+        std::ofstream myFile;
+        double stressMean = statistics::weighedMean(soil.getRootDensity(),soil.stressCoefficient);
+        myFile.open("outputLAIetc.csv", std::ios_base::app);
+        myFile << deltaTime.grossAssimilation/HOUR_SECONDS*1e6 <<","<<deltaTime.respiration/HOUR_SECONDS*1e6<<","<<deltaTime.netAssimilation/HOUR_SECONDS*1e6<<","<< plant.getLAICanopy()<< "," << maxIterationNumber <<"\n";
+        myFile.close();
+    }
     deltaTime.netAssimilation = deltaTime.netAssimilation*12/1000.0; // [KgC m-2] TODO da motiplicare dopo per CARBONFACTOR DA METTERE dopo convert to kg DM m-2
     deltaTime.understoreyNetAssimilation = HOUR_SECONDS * MH2O * understoreyAssimilationRate - MH2O*understoreyRespiration();
     statePlant.treeNetPrimaryProduction += deltaTime.netAssimilation; // state plant considers the biomass stored during the current year
@@ -1064,26 +1292,77 @@ void Crit3D_Hydrall::cumulatedResults()
 
 
     deltaTime.transpiration = 0.;
-
+    totalTranspirationRate = 0;
     for (int i=1; i < soil.layersNr; i++)
     {
+        totalTranspirationRate += treeTranspirationRate[i];
         treeTranspirationRate[i] *= (HOUR_SECONDS * MH2O); // [mm]
         understoreyTranspirationRate[i] *= (HOUR_SECONDS * MH2O); // [mm]
         deltaTime.transpiration += (treeTranspirationRate[i] + understoreyTranspirationRate[i]);
     }
 
+    //updateCriticalPsi();
+
+    return;
+
     //evaporation
     //deltaTime.evaporation = computeEvaporation(); // TODO chiedere a Fausto come gestire l'evaporazione sui layer.
 
-
 }
 
-double Crit3D_Hydrall::computeEvaporation()
+void Crit3DHydrall::updateCriticalPsi()
 {
-    return weatherVariable.derived.et0 * MAXVALUE(0.2, 1 - 0.8*((understorey.leafAreaIndex + plant.leafAreaIndexCanopy)/4)); //-0.8 / LAIMAX *ETP;
+    double averageSoilWaterPotential = statistics::weighedMean(soil.nodeThickness,soil.waterPotential) * 0.009804139432; // Converted to MPa
+    cavitationConditions();
+    //double lastTerm = (totalTranspirationRate/plant.getLAICanopy() * MH2O/1000. * plant.hydraulicResistancePerFoliageArea);
+    plant.psiLeaf = averageSoilWaterPotential - (plant.height * 0.009804139432 ) - (totalTranspirationRate/plant.getLAICanopy() * MH2O/1000. * plant.hydraulicResistancePerFoliageArea);
+
+    if (plant.psiLeaf < plant.psiLeafMinimum || isEqual(plant.psiLeafMinimum,NODATA))
+    {
+        plant.psiLeafMinimum = plant.psiLeaf;
+        plant.psiSoilCritical = averageSoilWaterPotential;
+        plant.transpirationCritical = totalTranspirationRate / plant.getLAICanopy();
+    }
+
 }
 
-double Crit3D_Hydrall::understoreyRespiration()
+double Crit3DHydrall::cavitationConditions()
+{
+    std::vector <std::vector <double>> conductivityWeights(2, std::vector<double>(soil.layersNr, NODATA));
+    for (int i=0; i<soil.layersNr; i++)
+    {
+        // it is ok to start with 0 because the weights of the first layer will be anyhow 0
+        conductivityWeights[0][i] = soil.getRootDensity()[i];
+        conductivityWeights[1][i] = soil.nodeThickness[i];
+    }
+
+
+    double ksl = statistics::weighedMeanMultifactor(logarithmic10Values,conductivityWeights,soil.satHydraulicConductivity);
+    ksl /= (1.625*RHOS*RADRT*RADRT);
+    double soilRootsSpecificConductivity = 1/(1/KR + 1/ksl);
+    soilRootsSpecificConductivity *= 0.5151 + MAXVALUE(0,0.0242*soil.temperature);
+    //new sapwood specific conductivity
+    double sapwoodSpecificConductivity = KSMAX * (1-std::exp(-0.69315*plant.height/H50)); //adjust for height effects
+    sapwoodSpecificConductivity *= 0.5151 + MAXVALUE(0,0.0242*weatherVariable.meanDailyTemp);
+
+    /*double a = 1./(statePlant.treeBiomassRoot*soilRootsSpecificConductivity);
+    double b = (plant.height*plant.height*plant.woodDensity)/(statePlant.treeBiomassSapwood*sapwoodSpecificConductivity);
+    double c = statePlant.treeBiomassFoliage*plant.specificLeafArea;*/
+    //resulting leaf specific resistance (MPa s m2 m-3)
+    plant.hydraulicResistancePerFoliageArea = (1./(statePlant.treeBiomassRoot*soilRootsSpecificConductivity)
+                                               + (plant.height*plant.height*plant.woodDensity)/(statePlant.treeBiomassSapwood*sapwoodSpecificConductivity))
+                                              * (statePlant.treeBiomassFoliage*plant.specificLeafArea);
+
+    //return coefficient only when called in rootfind
+    return std::sqrt(soilRootsSpecificConductivity/sapwoodSpecificConductivity*plant.sapwoodLongevity/plant.fineRootLongevity*plant.woodDensity);
+}
+
+double Crit3DHydrall::computeEvaporation()
+{
+    return weatherVariable.derived.et0 * MAXVALUE(0.2, 1 - 0.8*((understorey.leafAreaIndex + plant.getLAICanopy())/4)); //-0.8 / LAIMAX *ETP;
+}
+
+double Crit3DHydrall::understoreyRespiration()
 {
     double understorey10DegRespirationFoliage;
     double understorey10DegRespirationFineroot;
@@ -1134,7 +1413,7 @@ double Crit3D_Hydrall::understoreyRespiration()
     return (understorey10DegRespirationFoliage * correctionFactorFoliage + understorey10DegRespirationFineroot * correctionFactorFineroot);
 }
 
-double Crit3D_Hydrall::plantRespiration()
+double Crit3DHydrall::plantRespiration()
 {
     // taken from Hydrall Model, Magnani UNIBO
     double leafRespiration,rootRespiration,sapwoodRespiration;
@@ -1144,12 +1423,12 @@ double Crit3D_Hydrall::plantRespiration()
     nitrogenContent.stem = 0.0021;  //[kg kgDM-1]
 
     // Compute stand respiration rate at 10 oC (mol m-2 s-1)
-    leafRespiration = RESPIRATION_PARAMETER * (treeBiomass.leaf * nitrogenContent.leaf/0.014);
-    sapwoodRespiration = RESPIRATION_PARAMETER * (treeBiomass.sapwood * nitrogenContent.stem/0.014);
-    rootRespiration = RESPIRATION_PARAMETER * (treeBiomass.fineRoot * nitrogenContent.root/0.014);
+    leafRespiration = RESPIRATION_PARAMETER * (statePlant.treeBiomassFoliage * nitrogenContent.leaf/0.014);
+    sapwoodRespiration = RESPIRATION_PARAMETER * (statePlant.treeBiomassSapwood * nitrogenContent.stem/0.014);
+    rootRespiration = RESPIRATION_PARAMETER * (statePlant.treeBiomassRoot * nitrogenContent.root/0.014);
 
     //calcolo temperatureMoistureFactor che deve passare per media del moisture ?
-    double temperatureFactor = Crit3D_Hydrall::temperatureFunction(weatherVariable.myInstantTemp + ZEROCELSIUS);
+    double temperatureFactor = Crit3DHydrall::temperatureFunction(weatherVariable.myInstantTemp + ZEROCELSIUS);
 
     std::vector<double> moistureFactorVector(soil.layersNr-1);
     std::vector<double> nodeThicknessRealSoil(soil.layersNr-1);
@@ -1167,11 +1446,11 @@ double Crit3D_Hydrall::plantRespiration()
     //shootRespiration *= MAXVALUE(0,MINVALUE(1,Vine3D_Grapevine::temperatureMoistureFunction(myInstantTemp + ZEROCELSIUS))) ;
     std::vector<std::vector<double>> weights;
     weights.push_back(soil.nodeThickness);
-    weights.push_back(soil.rootDensity);
+    weights.push_back(soil.getRootDensity());
 
-    soil.temperature = Crit3D_Hydrall::soilTemperatureModel();
+    soil.temperature = Crit3DHydrall::soilTemperatureModel();
     moistureFactor = statistics::weighedMeanMultifactor(linearValues, weights, moistureFactorVector);
-    //rootRespiration *= MAXVALUE(0,MINVALUE(1,Crit3D_Hydrall::temperatureMoistureFunction(soil.temperature + ZEROCELSIUS))) ;
+    //rootRespiration *= MAXVALUE(0,MINVALUE(1,Crit3DHydrall::temperatureMoistureFunction(soil.temperature + ZEROCELSIUS))) ;
     rootRespiration *= BOUNDFUNCTION(0,1,temperatureFactor*moistureFactor);
     // canopy respiration (sapwood+fine roots)
     totalRespiration =(leafRespiration + sapwoodRespiration + rootRespiration);
@@ -1182,13 +1461,13 @@ double Crit3D_Hydrall::plantRespiration()
     return totalRespiration;
 }
 
-inline double Crit3D_Hydrall::soilTemperatureModel()
+inline double Crit3DHydrall::soilTemperatureModel()
 {
     // taken from Hydrall Model, Magnani UNIBO
     return 0.8 * weatherVariable.last30DaysTAvg + 0.2 * weatherVariable.myInstantTemp;
 }
 
-double Crit3D_Hydrall::moistureCorrectionFactorOld(int index)
+double Crit3DHydrall::moistureCorrectionFactorOld(int index)
 {
     double correctionSoilMoisture = 1;
     double stressThreshold = 0.5*(soil.saturation[index]+soil.fieldCapacity[index]);
@@ -1203,19 +1482,22 @@ double Crit3D_Hydrall::moistureCorrectionFactorOld(int index)
     return correctionSoilMoisture;
 }
 
-double Crit3D_Hydrall::moistureCorrectionFactor(int index)
+double Crit3DHydrall::moistureCorrectionFactor(int index)
 {
-    if (soil.waterContent[index] < soil.fieldCapacity[index])
+    /*if (soil.waterContent[index] < soil.fieldCapacity[index])
     {
         return MINVALUE(1, 10./3. * (soil.waterContent[index]-soil.wiltingPoint[index])/(soil.fieldCapacity[index]- soil.wiltingPoint[index]));
     }
     else
     {
         return MINVALUE(1, (soil.waterContent[index] - 2* soil.fieldCapacity[index])/(soil.saturation[index]-2 * soil.fieldCapacity[index]));
-    }
+    }*/
+
+    return BOUNDFUNCTION(0.01,1, MINVALUE((10*(soil.waterContent[index]-soil.wiltingPoint[index]))/(3*(soil.fieldCapacity[index]-soil.wiltingPoint[index])),
+                                           log(soil.saturation[index]/soil.waterContent[index])/log(2*soil.saturation[index]/(soil.fieldCapacity[index]+soil.saturation[index]))));;
 }
 
-double Crit3D_Hydrall::temperatureFunction(double temperature)
+double Crit3DHydrall::temperatureFunction(double temperature)
 {
     // taken from Hydrall Model, Magnani UNIBO
     double temperatureMoistureFactor = 1;
@@ -1273,17 +1555,114 @@ double Crit3D_Hydrall::temperatureFunction(double temperature)
     return temperatureMoistureFactor;
 }
 
-bool Crit3D_Hydrall::growthStand()
+bool Crit3DHydrall::simplifiedGrowthStand()
 {
     const double understoreyAllocationCoefficientToRoot = 0.5;
     // understorey update TODO IMPORTANTE: SERVE CARBONFACTOR ANCHE QUI?
-    statePlant.understoreycumulatedBiomassFoliage = statePlant.understoreyNetPrimaryProduction * (1.-understoreyAllocationCoefficientToRoot);    //understorey growth: foliage...
-    statePlant.understoreycumulatedBiomassRoot = statePlant.understoreyNetPrimaryProduction * understoreyAllocationCoefficientToRoot;         //...and roots
+    statePlant.understoreyBiomassFoliage = statePlant.understoreyNetPrimaryProduction * (1.-understoreyAllocationCoefficientToRoot);    //understorey growth: foliage...
+    statePlant.understoreyBiomassRoot = statePlant.understoreyNetPrimaryProduction * understoreyAllocationCoefficientToRoot;         //...and roots
+
+    //outputC calculation for RothC model. necessario [t C/ha] ora in kgDM m-2
+    //natural death
+    outputC = statePlant.treeBiomassFoliage/plant.foliageLongevity + statePlant.treeBiomassSapwood/plant.sapwoodLongevity +
+              statePlant.treeBiomassRoot/plant.fineRootLongevity /CARBONFACTOR * 10;
+
+    statePlant.treeBiomassFoliage -= (statePlant.treeBiomassFoliage/plant.foliageLongevity);
+    statePlant.treeBiomassSapwood -= (statePlant.treeBiomassSapwood/plant.sapwoodLongevity);
+    statePlant.treeBiomassRoot -= (statePlant.treeBiomassRoot/plant.fineRootLongevity);
+
+    //distributed wildfire loss
+    double distributedWildfireLoss = getFirewoodLostSurfacePercentage(0.002, year); //TODO: this parameter must be able to vary based on what if scenario
+    statePlant.treeBiomassFoliage -= statePlant.treeBiomassFoliage * distributedWildfireLoss * 1; //foliage is completely lost in the event of a wildfire
+    outputC += statePlant.treeBiomassRoot * distributedWildfireLoss * 1; //roots are preserved but dead and become input for carbon model
+    statePlant.treeBiomassRoot -= statePlant.treeBiomassRoot * distributedWildfireLoss * 1;
+    outputC += statePlant.treeBiomassSapwood * distributedWildfireLoss * plant.wildfireDamage; //40% or 100% of sapwood is lost based on species
+    statePlant.treeBiomassSapwood -= statePlant.treeBiomassSapwood * distributedWildfireLoss * plant.wildfireDamage;
+
+    //woodland management
+    plant.management = 1; //DEBUG //0 is non managed, 1 is coppice, 2 is high forest
+    double woodExtraction = 0;
+
+    if (plant.management == 1) //coppice management produces mostly burning wood
+        woodExtraction = 1./30;
+    else if (plant.management == 2) //high forest management produces wood that stocks carbon for 35 years (IPCC) and is saved as a regional value
+    {
+        woodExtraction = 1./100;
+        carbonStock += statePlant.treeBiomassSapwood * woodExtraction * 1./35;
+    }
+
+    statePlant.treeBiomassSapwood -= statePlant.treeBiomassSapwood * woodExtraction;
+    outputC += statePlant.treeBiomassFoliage * woodExtraction; //foliage is left in the forest?
+    statePlant.treeBiomassFoliage -= statePlant.treeBiomassFoliage * woodExtraction;
+    outputC += statePlant.treeBiomassRoot * woodExtraction; //dead roots become input for carbon model
+    statePlant.treeBiomassRoot -= statePlant.treeBiomassRoot * woodExtraction;
+
+
+    // TODO to understand what's internalCarbonStorage (STORE), afterwards the uninitialized value is used
+    //annual stand growth
+    if (isFirstYearSimulation)
+    {
+        annualGrossStandGrowth = statePlant.treeNetPrimaryProduction / CARBONFACTOR; //conversion to kg DM m-2
+        internalCarbonStorage = 0;
+    }
+    else
+    {
+        annualGrossStandGrowth = (internalCarbonStorage + statePlant.treeNetPrimaryProduction) / 2 / CARBONFACTOR;
+        internalCarbonStorage = (internalCarbonStorage + statePlant.treeNetPrimaryProduction) / 2;
+    }
+
+    //if (isFirstYearSimulation) è necessario?
+
+    //computing root/shoot ratio based on values found in [Vitullo et al. 2007] and modified to account for water scarcity
+    double rootShootRatio;
+    double alpha = 0.7;
+
+    rootShootRatio = MAXVALUE(MINVALUE(plant.rootShootRatioRef*(alpha*0.5 + 1), plant.rootShootRatioRef*(alpha*(1-weatherVariable.getYearlyPrec()/weatherVariable.getYearlyET0())+1)), plant.rootShootRatioRef);
+
+    allocationCoefficient.toFineRoots = rootShootRatio / (1 + rootShootRatio);
+    allocationCoefficient.toFoliage = ( 1 - allocationCoefficient.toFineRoots ) * 0.05;
+    allocationCoefficient.toSapwood = 1 - allocationCoefficient.toFineRoots - allocationCoefficient.toFoliage;
+
+    /*if (printHourlyRecords)
+    {
+        std::ofstream myFile;
+        myFile.open("outputAlloc.csv", std::ios_base::app);
+        myFile << allocationCoefficient.toFoliage <<","<< allocationCoefficient.toFineRoots <<","<<allocationCoefficient.toSapwood <<","
+               << rootShootRatio <<"," << weatherVariable.getYearlyET0() << "," << weatherVariable.getYearlyPrec() <<"\n";
+        myFile.close();
+    }*/
+
+    if (annualGrossStandGrowth * allocationCoefficient.toFoliage > statePlant.treeBiomassFoliage/(plant.foliageLongevity - 1))
+    {
+        statePlant.treeBiomassFoliage = MAXVALUE(statePlant.treeBiomassFoliage + annualGrossStandGrowth * allocationCoefficient.toFoliage, EPSILON);
+        statePlant.treeBiomassRoot = MAXVALUE(statePlant.treeBiomassRoot + annualGrossStandGrowth * allocationCoefficient.toFineRoots, EPSILON);
+        statePlant.treeBiomassSapwood = MAXVALUE(statePlant.treeBiomassSapwood + annualGrossStandGrowth * allocationCoefficient.toSapwood, EPSILON);
+    }
+    // TODO manca il computo del volume sia generale che incrementale vedi funzione grstand.for
+
+
+    isFirstYearSimulation = false;
+    return true;
+
+    return true;
+}
+
+bool Crit3DHydrall::growthStand()
+{
+    const double understoreyAllocationCoefficientToRoot = 0.5;
+    // understorey update TODO IMPORTANTE: SERVE CARBONFACTOR ANCHE QUI?
+    statePlant.understoreyBiomassFoliage = statePlant.understoreyNetPrimaryProduction * (1.-understoreyAllocationCoefficientToRoot);    //understorey growth: foliage...
+    statePlant.understoreyBiomassRoot = statePlant.understoreyNetPrimaryProduction * understoreyAllocationCoefficientToRoot;         //...and roots
+
+    //outputC calculation for RothC model. necessario [t C/ha] ora in kgDM m-2
+    //MANCA OUTPUT DA TAGLIO
+    outputC = statePlant.treeBiomassFoliage/plant.foliageLongevity + statePlant.treeBiomassSapwood/plant.sapwoodLongevity +
+              statePlant.treeBiomassRoot/plant.fineRootLongevity /CARBONFACTOR * 1e5;
 
     // canopy update
-    statePlant.treecumulatedBiomassFoliage -= (statePlant.treecumulatedBiomassFoliage/plant.foliageLongevity);
-    statePlant.treecumulatedBiomassSapwood -= (statePlant.treecumulatedBiomassSapwood/plant.sapwoodLongevity);
-    statePlant.treecumulatedBiomassRoot -= (statePlant.treecumulatedBiomassRoot/plant.fineRootLongevity);
+    statePlant.treeBiomassFoliage -= (statePlant.treeBiomassFoliage/plant.foliageLongevity);
+    statePlant.treeBiomassSapwood -= (statePlant.treeBiomassSapwood/plant.sapwoodLongevity);
+    statePlant.treeBiomassRoot -= (statePlant.treeBiomassRoot/plant.fineRootLongevity);
 
 
     // TODO to understand what's internalCarbonStorage (STORE), afterwards the uninitialized value is used
@@ -1316,11 +1695,16 @@ bool Crit3D_Hydrall::growthStand()
         allocationCoefficient.toSapwood = (allocationCoeffientSapwoodOld + allocationCoefficient.toSapwood) / 2;
     }
 
-    if (annualGrossStandGrowth * allocationCoefficient.toFoliage > statePlant.treecumulatedBiomassFoliage/(plant.foliageLongevity - 1))
+    std::ofstream myFile;
+    myFile.open("outputAlloc.csv", std::ios_base::app);
+    myFile << allocationCoefficient.toFoliage <<","<< allocationCoefficient.toFineRoots <<","<<allocationCoefficient.toSapwood <<"\n";
+    myFile.close();
+
+    if (annualGrossStandGrowth * allocationCoefficient.toFoliage > statePlant.treeBiomassFoliage/(plant.foliageLongevity - 1))
     {
-        treeBiomass.leaf = MAXVALUE(treeBiomass.leaf + annualGrossStandGrowth * allocationCoefficient.toFoliage, EPSILON);
-        treeBiomass.fineRoot = MAXVALUE(treeBiomass.fineRoot + annualGrossStandGrowth * allocationCoefficient.toFineRoots, EPSILON);
-        treeBiomass.sapwood = MAXVALUE(treeBiomass.sapwood + annualGrossStandGrowth * allocationCoefficient.toSapwood, EPSILON);
+        statePlant.treeBiomassFoliage = MAXVALUE(statePlant.treeBiomassFoliage + annualGrossStandGrowth * allocationCoefficient.toFoliage, EPSILON);
+        statePlant.treeBiomassRoot = MAXVALUE(statePlant.treeBiomassRoot + annualGrossStandGrowth * allocationCoefficient.toFineRoots, EPSILON);
+        statePlant.treeBiomassSapwood = MAXVALUE(statePlant.treeBiomassSapwood + annualGrossStandGrowth * allocationCoefficient.toSapwood, EPSILON);
     }
     // TODO manca il computo del volume sia generale che incrementale vedi funzione grstand.for
 
@@ -1330,17 +1714,17 @@ bool Crit3D_Hydrall::growthStand()
 }
 
 
-void Crit3D_Hydrall::resetStandVariables()
+void Crit3DHydrall::resetStandVariables()
 {
     statePlant.treeNetPrimaryProduction = 0;
 }
 
-void Crit3D_Hydrall::optimal()
+void Crit3DHydrall::optimal()
 {
     double allocationCoefficientFoliageOld;
     double increment;
     double incrementStart = 5e-2;
-    bool sol = 0;
+    bool sol = false;
     double allocationCoefficientFoliage0;
     double bisectionMethodIntervalALLF;
     int jmax = 40;
@@ -1350,9 +1734,8 @@ void Crit3D_Hydrall::optimal()
     {
         allocationCoefficientFoliageOld = 1;
         increment = incrementStart / std::pow(10, j);
-        allocationCoefficient.toFoliage = 1;
 
-        while(! sol && allocationCoefficient.toFoliage > -EPSILON)
+        for (allocationCoefficient.toFoliage = 1; allocationCoefficient.toFoliage > 0; allocationCoefficient.toFoliage -= increment)
         {
             rootfind(allocationCoefficient.toFoliage, allocationCoefficient.toFineRoots, allocationCoefficient.toSapwood, sol);
 
@@ -1360,8 +1743,6 @@ void Crit3D_Hydrall::optimal()
                 break;
 
             allocationCoefficientFoliageOld = allocationCoefficient.toFoliage;
-            allocationCoefficient.toFoliage -= increment;
-
         }
         if (sol)
             break;
@@ -1400,7 +1781,7 @@ void Crit3D_Hydrall::optimal()
     }
 }
 
-void Crit3D_Hydrall::rootfind(double &allf, double &allr, double &alls, bool &sol)
+void Crit3DHydrall::rootfind(double &allf, double &allr, double &alls, bool &sol)
 {
     //search for a solution to hydraulic constraint
 
@@ -1408,33 +1789,18 @@ void Crit3D_Hydrall::rootfind(double &allf, double &allr, double &alls, bool &so
     allf = MAXVALUE(0,allf);
     //if (allf < 0) allf = 0;
     // TODO verificare le unità di misura di rootfind con la routine originale di hydrall c'è un fattore 1000
-    statePlant.treecumulatedBiomassFoliage += (allf*annualGrossStandGrowth);
+    statePlant.treeBiomassFoliage += (allf*annualGrossStandGrowth);
 
-    //new tree height after growth
-    if (allf*annualGrossStandGrowth > statePlant.treecumulatedBiomassFoliage/(plant.foliageLongevity-1)) {
-        plant.height += (allf*annualGrossStandGrowth-statePlant.treecumulatedBiomassFoliage/(plant.foliageLongevity-1)/plant.foliageDensity);
+    //new tree-height after growth
+    if (allf*annualGrossStandGrowth > statePlant.treeBiomassFoliage/(plant.foliageLongevity-1)) {
+        plant.height += (allf*annualGrossStandGrowth-statePlant.treeBiomassFoliage/(plant.foliageLongevity-1))/plant.foliageDensity;
     }
 
     //soil hydraulic conductivity
-    double ksl;
-    std::vector <std::vector <double>> conductivityWeights(2, std::vector<double>(soil.layersNr, NODATA));
-    for (int i=0; i<soil.layersNr; i++)
-    {
-        // it is ok to start with 0 because the weights of the first layer will be anyhow 0
-        conductivityWeights[0][i] = soil.rootDensity[i];
-        conductivityWeights[1][i] = soil.nodeThickness[i];
-    }
-    ksl = statistics::weighedMeanMultifactor(logarithmic10Values,conductivityWeights,soil.satHydraulicConductivity);
-    //specific hydraulic conductivity of soil+roots
-    double soilRootsSpecificConductivity = 1/(1/KR + 1/ksl);
-    soilRootsSpecificConductivity *= 0.5151 + MAXVALUE(0,0.0242*soil.temperature);
-    //new sapwood specific conductivity
-    double sapwoodSpecificConductivity = KSMAX * (1-std::exp(-0.69315*plant.height/H50)); //adjust for height effects
-    sapwoodSpecificConductivity *= 0.5151 + MAXVALUE(0,0.0242*weatherVariable.meanDailyTemp);
-
     //optimal coefficient of allocation to fine roots and sapwood for set allocation to foliage
-    double quadraticEqCoefficient = std::sqrt(soilRootsSpecificConductivity/sapwoodSpecificConductivity*plant.sapwoodLongevity/plant.fineRootLongevity*plant.woodDensity);
-    allr = (statePlant.treecumulatedBiomassSapwood - quadraticEqCoefficient*plant.height*statePlant.treecumulatedBiomassRoot +
+    //cavitationConditions does other calculations and returns quadraticEqCoefficient
+    double quadraticEqCoefficient = cavitationConditions();
+    allr = (statePlant.treeBiomassSapwood - quadraticEqCoefficient*plant.height*statePlant.treeBiomassRoot +
             annualGrossStandGrowth*(1-allf))/annualGrossStandGrowth/(1+quadraticEqCoefficient*plant.height);
 
     //allr = MAXVALUE(EPSILON,allr); //bracket ALLR between (1-ALLF) and a small value
@@ -1445,31 +1811,48 @@ void Crit3D_Hydrall::rootfind(double &allf, double &allr, double &alls, bool &so
     //alls = MINVALUE(1,MAXVALUE(alls,EPSILON));
     alls = BOUNDFUNCTION(EPSILON,1,1-allf-allr); // TODO to be checked
     //resulting fine root and sapwood biomass
-    statePlant.treecumulatedBiomassRoot += allr * annualGrossStandGrowth;
-    statePlant.treecumulatedBiomassRoot = MAXVALUE(EPSILON,statePlant.treecumulatedBiomassRoot);
-    statePlant.treecumulatedBiomassSapwood += alls * annualGrossStandGrowth;
-    statePlant.treecumulatedBiomassSapwood = MAXVALUE(EPSILON,statePlant.treecumulatedBiomassSapwood);
+    statePlant.treeBiomassRoot += allr * annualGrossStandGrowth;
+    statePlant.treeBiomassRoot = MAXVALUE(EPSILON,statePlant.treeBiomassRoot);
+    statePlant.treeBiomassSapwood += alls * annualGrossStandGrowth;
+    statePlant.treeBiomassSapwood = MAXVALUE(EPSILON,statePlant.treeBiomassSapwood);
 
-    //resulting leaf specific resistance (MPa s m2 m-3)
-    double hydraulicResistancePerFoliageArea;
-    hydraulicResistancePerFoliageArea = (1./(statePlant.treecumulatedBiomassRoot*soilRootsSpecificConductivity)
-        + (plant.height*plant.height*plant.woodDensity)/(statePlant.treecumulatedBiomassSapwood*sapwoodSpecificConductivity))
-        * (statePlant.treecumulatedBiomassFoliage*plant.specificLeafArea);
     //resulting minimum leaf water potential
 
-    plant.psiLeafMinimum = plant.psiLeafCritical - (0.01 * plant.height)-(plant.transpirationPerUnitFoliageAreaCritical * 0.018/1000. * hydraulicResistancePerFoliageArea);
+    //plant.psiSoilCritical = PSITHR - 0.5;
+    plant.psiLeafMinimum = plant.psiSoilCritical - (plant.height)* 0.009804139432 -(plant.transpirationCritical * MH2O/1000. * plant.hydraulicResistancePerFoliageArea);
+    //plant.psiLeafMinimum = plant.psiSoilCritical - (0.01 * plant.height * 9.806650e-5)-(plant.transpirationCritical * MH2O/1000. * plant.hydraulicResistancePerFoliageArea);
     //check if given value of ALLF satisfies optimality constraint
     if(plant.psiLeafMinimum >= PSITHR)
         sol = true;
     else
     {
         sol = false;
-        allr = statePlant.treecumulatedBiomassSapwood
-                +  annualGrossStandGrowth -statePlant.treecumulatedBiomassRoot*quadraticEqCoefficient*plant.height;
+        allr = statePlant.treeBiomassSapwood
+                +  annualGrossStandGrowth -statePlant.treeBiomassRoot*quadraticEqCoefficient*plant.height;
         allr /= (annualGrossStandGrowth * (1.+quadraticEqCoefficient*plant.height));
         allr = BOUNDFUNCTION(EPSILON,1,allr); // TODO to be checked
         alls = 1.-allr;
-        allf = 0; // TODO verify its value
+        //allf = 0; // TODO verify its value
     }
 
+}
+
+double Crit3DHydrall::getFirewoodLostSurfacePercentage(double percentageSurfaceLostByFirewoodAtReferenceYear, int simulationYear)
+{
+    // for Emilia-Romagna region set percentageSurfaceLostByFirewoodAtReferenceYear=0.002
+    // the function is based on the ISPRA projection
+    double hazard;
+    int dimTable=3;
+    double *firstColumn = (double *) calloc(dimTable, sizeof(double));
+    double *secondColumn = (double *) calloc(dimTable, sizeof(double));
+    firstColumn[0] = 2020.;
+    firstColumn[1] = 2040.;
+    firstColumn[2] = 2050.;
+    secondColumn[0] = 1.;
+    secondColumn[1] = 22./19.;
+    secondColumn[2] = 28./19.;
+    hazard = interpolation::linearInterpolation(double(simulationYear),firstColumn,secondColumn,dimTable);
+    free(firstColumn);
+    free(secondColumn);
+    return hazard*percentageSurfaceLostByFirewoodAtReferenceYear;
 }

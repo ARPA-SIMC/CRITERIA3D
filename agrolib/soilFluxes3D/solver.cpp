@@ -53,6 +53,7 @@ double arithmeticMean(double v1, double v2)
     return (v1 + v2) * 0.5;
 }
 
+// assumes that the two values ​​have the same sign
 double logarithmicMean(double v1, double v2)
 {
     if (v1 == v2)
@@ -65,6 +66,7 @@ double logarithmicMean(double v1, double v2)
     }
 }
 
+// assumes that the two values ​​have the same sign
 double geometricMean(double v1, double v2)
 {
     double sign = v1 / fabs(v1);
@@ -105,7 +107,7 @@ int getMaxIterationsNr(int approximationNr)
 {
     int maxIterationsNr = int((approximationNr + 1) * (float(myParameters.maxIterationsNumber)
                                                       / float(myParameters.maxApproximationsNumber)));
-    return MAXVALUE(20, maxIterationsNr);
+    return std::max(20, maxIterationsNr);
 }
 
 
@@ -282,7 +284,7 @@ bool solveLinearSystem(int approximation, double residualTolerance, int computat
                 currentNorm = iterationThreads();
             }
 
-            if (currentNorm > (bestNorm * 10.0))
+            if (currentNorm > (bestNorm * 10.))
             {
                 // non-convergent system
                 return false;

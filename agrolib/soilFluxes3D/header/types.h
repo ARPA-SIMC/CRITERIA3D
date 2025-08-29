@@ -56,7 +56,7 @@
     struct TlinkedNode
     {
         long index;                             /*!< index of linked elements */
-        float area;                             /*!< interface area [m2] */
+        float area;                             /*!< interface area in soil nodes [m2] - interface side on surface [m] */
         float sumFlow;                          /*!< [m3] sum of flow(i,j) */
 
         TCrit3DLinkedNodeExtra* linkedExtra;    /*!< extra variables for heat flux */
@@ -128,7 +128,7 @@
         double storageHeat;
         double sinkSourceHeat;
         double heatMBE = 0.0;
-        double heatMBR = 1.0;
+        double heatMBR = 0.0;
     };
 
     struct Tculvert

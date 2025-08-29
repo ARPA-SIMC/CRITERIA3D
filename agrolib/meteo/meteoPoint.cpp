@@ -674,18 +674,14 @@ void Crit3DMeteoPoint::cleanObsDataH()
 }
 
 
-void Crit3DMeteoPoint::cleanObsDataD()
+void Crit3DMeteoPoint::cleanAllData()
 {
-    quality = quality::missing_data;
+    cleanObsDataH();
 
     obsDataD.clear();
-}
-
-void Crit3DMeteoPoint::cleanObsDataM()
-{
-    quality = quality::missing_data;
-
     obsDataM.clear();
+
+    quality = quality::missing_data;
 }
 
 
@@ -961,7 +957,7 @@ float Crit3DMeteoPoint::getMeteoPointValueH(const Crit3DDate& myDate, int myHour
 }
 
 
-Crit3DDate Crit3DMeteoPoint::getMeteoPointHourlyValuesDate(int index)
+Crit3DDate Crit3DMeteoPoint::getMeteoPointHourlyValuesDate(int index) const
 {
     if (index < 0 || index >= nrObsDataDaysH)
         return NO_DATE;
@@ -996,7 +992,7 @@ bool Crit3DMeteoPoint::existDailyData(const Crit3DDate& myDate)
 }
 
 
-Crit3DDate Crit3DMeteoPoint::getLastDailyData()
+Crit3DDate Crit3DMeteoPoint::getLastDailyData() const
 {
     if (obsDataD.size() == 0)
         return NO_DATE;
@@ -1005,7 +1001,7 @@ Crit3DDate Crit3DMeteoPoint::getLastDailyData()
 }
 
 
-Crit3DDate Crit3DMeteoPoint::getFirstDailyData()
+Crit3DDate Crit3DMeteoPoint::getFirstDailyData() const
 {
     if (obsDataD.size() == 0)
         return NO_DATE;

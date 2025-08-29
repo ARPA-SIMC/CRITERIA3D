@@ -73,7 +73,6 @@ void DLL_EXPORT __STDCALL cleanMemory()
 {
     cleanNodes();
     cleanArrays();
-    // TODO clean balance
 }
 
 void DLL_EXPORT __STDCALL initializeHeat(short myType, bool computeAdvectiveHeat, bool computeLatentHeat)
@@ -142,16 +141,16 @@ int DLL_EXPORT __STDCALL initializeFluxes(long nrNodes, int nrLayers, int nrLate
 int DLL_EXPORT __STDCALL setNumericalParameters(double minDeltaT, double maxDeltaT, int maxIterationNumber,
                         int maxApproximationsNumber, int ResidualTolerance, double MBRThreshold)
 {
-    if (minDeltaT < 0.01) minDeltaT = 0.01;
+    // check minimum dt
+    if (minDeltaT < 0.01) minDeltaT = 0.01;                     // [s]
     if (minDeltaT > HOUR_SECONDS) minDeltaT = HOUR_SECONDS;
     myParameters.delta_t_min = minDeltaT;
 
-    if (maxDeltaT < 60) maxDeltaT = 60;
+    // check maximum dt
+    if (maxDeltaT < 60) maxDeltaT = 60;                         // [s]
     if (maxDeltaT > HOUR_SECONDS) maxDeltaT = HOUR_SECONDS;
     if (maxDeltaT < minDeltaT) maxDeltaT = minDeltaT;
     myParameters.delta_t_max = maxDeltaT;
-
-    myParameters.current_delta_t = myParameters.delta_t_max;
 
     if (maxIterationNumber < 10) maxIterationNumber = 10;
     if (maxIterationNumber > MAX_NUMBER_ITERATIONS) maxIterationNumber = MAX_NUMBER_ITERATIONS;
@@ -165,7 +164,7 @@ int DLL_EXPORT __STDCALL setNumericalParameters(double minDeltaT, double maxDelt
     myParameters.maxApproximationsNumber = maxApproximationsNumber;
 
     if (ResidualTolerance < 5) ResidualTolerance = 5;
-    if (ResidualTolerance > 16) ResidualTolerance = 16;
+    if (ResidualTolerance > 12) ResidualTolerance = 12;
     myParameters.ResidualTolerance = pow(10.0, -ResidualTolerance);
 
     if (MBRThreshold < 1) MBRThreshold = 1;
@@ -177,12 +176,12 @@ int DLL_EXPORT __STDCALL setNumericalParameters(double minDeltaT, double maxDelt
 
 
 /*!
-   \brief setThreads
+   \brief setThreadsNumber
     sets number of threads for parallel computing
     if nrThreads < 1, hardware_concurrency get the number of logical processors
     returns the current number of threads
 */
-int DLL_EXPORT __STDCALL setThreads(int nrThreads)
+int DLL_EXPORT __STDCALL setThreadsNumber(int nrThreads)
 {
     int nrProcessors = std::thread::hardware_concurrency();
     if (nrThreads < 1 || nrThreads > nrProcessors)
@@ -289,47 +288,50 @@ int DLL_EXPORT __STDCALL setHydraulicProperties(int waterRetentionCurve,
     switch (direction)
     {
         case UP :
-                    nodeList[n].up.index = linkIndex;
-                    nodeList[n].up.area = interfaceArea;
-                    nodeList[n].up.sumFlow = 0;
+                nodeList[n].up.index = linkIndex;
+                nodeList[n].up.area = interfaceArea;
+                nodeList[n].up.sumFlow = 0;
 
-                    if (myStructure.computeHeat || myStructure.computeSolutes)
-                    {
-                        nodeList[n].up.linkedExtra = new(TCrit3DLinkedNodeExtra);
-                        initializeLinkExtra(nodeList[n].up.linkedExtra, myStructure.computeHeat, myStructure.computeSolutes);
-                    }
+                if (myStructure.computeHeat || myStructure.computeSolutes)
+                {
+                    nodeList[n].up.linkedExtra = new(TCrit3DLinkedNodeExtra);
+                    initializeLinkExtra(nodeList[n].up.linkedExtra, myStructure.computeHeat, myStructure.computeSolutes);
+                }
 
-                    break;
+                break;
         case DOWN :
-                    nodeList[n].down.index = linkIndex;
-                    nodeList[n].down.area = interfaceArea;
-                    nodeList[n].down.sumFlow = 0;
+                nodeList[n].down.index = linkIndex;
+                nodeList[n].down.area = interfaceArea;
+                nodeList[n].down.sumFlow = 0;
 
-                    if (myStructure.computeHeat || myStructure.computeSolutes)
-                    {
-                        nodeList[n].down.linkedExtra = new(TCrit3DLinkedNodeExtra);
-                        initializeLinkExtra(nodeList[n].down.linkedExtra, myStructure.computeHeat, myStructure.computeSolutes);
-                    }
+                if (myStructure.computeHeat || myStructure.computeSolutes)
+                {
+                    nodeList[n].down.linkedExtra = new(TCrit3DLinkedNodeExtra);
+                    initializeLinkExtra(nodeList[n].down.linkedExtra, myStructure.computeHeat, myStructure.computeSolutes);
+                }
 
-                    break;
+                break;
         case LATERAL :
-                    j = 0;
-                    while ((j < myStructure.nrLateralLinks) && (nodeList[n].lateral[j].index != NOLINK)) j++;
-                    if (j == myStructure.nrLateralLinks) return (TOPOGRAPHY_ERROR);
-                    nodeList[n].lateral[j].index = linkIndex;
-                    nodeList[n].lateral[j].area = interfaceArea;
-                    nodeList[n].lateral[j].sumFlow = 0;
+                j = 0;
+                while ((j < myStructure.nrLateralLinks) && (nodeList[n].lateral[j].index != NOLINK)) j++;
+                if (j == myStructure.nrLateralLinks)
+                    return (TOPOGRAPHY_ERROR);
 
-                    if (myStructure.computeHeat || myStructure.computeSolutes)
-                    {
-                        nodeList[n].lateral[j].linkedExtra = new(TCrit3DLinkedNodeExtra);
-                        initializeLinkExtra(nodeList[n].lateral[j].linkedExtra, myStructure.computeHeat, myStructure.computeSolutes);
-                    }
+                nodeList[n].lateral[j].index = linkIndex;
+                nodeList[n].lateral[j].area = interfaceArea;
+                nodeList[n].lateral[j].sumFlow = 0;
 
-                    break;
+                if (myStructure.computeHeat || myStructure.computeSolutes)
+                {
+                    nodeList[n].lateral[j].linkedExtra = new(TCrit3DLinkedNodeExtra);
+                    initializeLinkExtra(nodeList[n].lateral[j].linkedExtra, myStructure.computeHeat, myStructure.computeSolutes);
+                }
+
+                break;
         default :
-                    return PARAMETER_ERROR;
+                return PARAMETER_ERROR;
     }
+
     return CRIT3D_OK;
  }
 
@@ -609,12 +611,12 @@ int DLL_EXPORT __STDCALL setHydraulicProperties(int waterRetentionCurve,
  * \param waterSinkSource [m3 sec-1]
  * \return OK/ERROR
  */
- int DLL_EXPORT __STDCALL setWaterSinkSource(long nodeIndex, double waterSinkSource)
+ int DLL_EXPORT __STDCALL setWaterSinkSource(long nodeIndex, double sinkSource)
  {
     if (nodeList == nullptr) return MEMORY_ERROR;
     if ((nodeIndex < 0) || (nodeIndex >= myStructure.nrNodes)) return INDEX_ERROR;
 
-    nodeList[nodeIndex].waterSinkSource = waterSinkSource;
+    nodeList[nodeIndex].waterSinkSource = sinkSource;
 
     return CRIT3D_OK;
  }
@@ -723,7 +725,7 @@ int DLL_EXPORT __STDCALL setHydraulicProperties(int waterRetentionCurve,
     else
     {
         // sub-surface
-        return MAXVALUE(0.0, theta_from_Se(index) - theta_from_sign_Psi(-160, index));
+        return std::max(0., theta_from_Se(index) - theta_from_sign_Psi(-160, index));
     }
  }
 
@@ -962,7 +964,7 @@ int DLL_EXPORT __STDCALL setHydraulicProperties(int waterRetentionCurve,
     }
     else
     {
-        balanceWholePeriod.heatMBR = 1.;
+        balanceWholePeriod.heatMBR = 0.;
     }
 }
 
@@ -1026,50 +1028,60 @@ int DLL_EXPORT __STDCALL setHydraulicProperties(int waterRetentionCurve,
 
  /*!
   * \brief computePeriod
+  * compute water and heat fluxes for a time period (maximum 1 hour)
+  * assume that meteo conditions are constant during the time period
   * \param timePeriod     [s]
   */
  void DLL_EXPORT __STDCALL computePeriod(double timePeriod)
+{
+    double sumCurrentTime = 0.0;
+
+    balanceCurrentPeriod.sinkSourceWater = 0.;
+    balanceCurrentPeriod.sinkSourceHeat = 0.;
+
+    while (sumCurrentTime < timePeriod)
     {
-        double sumCurrentTime = 0.0;
-
-        balanceCurrentPeriod.sinkSourceWater = 0.;
-        balanceCurrentPeriod.sinkSourceHeat = 0.;
-
-        while (sumCurrentTime < timePeriod)
-        {
-            double ResidualTime = timePeriod - sumCurrentTime;
-            sumCurrentTime += computeStep(ResidualTime);
-        }
-
-        if (myStructure.computeWater) updateBalanceWaterWholePeriod();
-        if (myStructure.computeHeat) updateBalanceHeatWholePeriod();
+        double ResidualTime = timePeriod - sumCurrentTime;
+        sumCurrentTime += computeStep(ResidualTime);
     }
+
+    if (myStructure.computeWater) updateBalanceWaterWholePeriod();
+    if (myStructure.computeHeat) updateBalanceHeatWholePeriod();
+}
 
 
  /*!
  * \brief computeStep
+ * compute a single step of water and heat fluxes
+ * assume that meteo conditions are constant during the time step
  * \param maxTimeStep           [s]
  * \return computed time step   [s]
  */
 double DLL_EXPORT __STDCALL computeStep(double maxTimeStep)
 {
+    // initialize current dt
+    if (myParameters.current_delta_t == NODATA)
+    {
+        myParameters.current_delta_t = myParameters.delta_t_max;
+    }
+
     if (myStructure.computeHeat)
     {
         initializeHeatFluxes(false, true);
         updateConductance();
     }
 
-    double dtWater;
+    double dtWater, dtHeat;
     if (myStructure.computeWater)
     {
-        computeWater(maxTimeStep, &dtWater);
+        computeWaterFluxes(maxTimeStep, &dtWater);
+        dtHeat = dtWater;
     }
     else
     {
-        dtWater = MINVALUE(maxTimeStep, myParameters.delta_t_max);
+        dtHeat = std::min(maxTimeStep, myParameters.delta_t_max);
+        dtWater = dtHeat;
     }
-
-    double dtHeat = dtWater;
 
     if (myStructure.computeHeat)
     {
@@ -1094,6 +1106,7 @@ double DLL_EXPORT __STDCALL computeStep(double maxTimeStep)
 
     return dtWater;
 }
+
 
 /*!
  * \brief setTemperature

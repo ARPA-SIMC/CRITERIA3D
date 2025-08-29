@@ -119,7 +119,7 @@
         int precomputeDtx();
         int createCsvFile();
         int createShapeFile();
-        int createAggregationFile();
+        int createAggregationFile(bool isReorder);
         int createNetcdf();
         int createMaps();
 

@@ -48,7 +48,7 @@
 #include <QFileInfo>
 
 
-Crit3DSoilWidget::Crit3DSoilWidget()
+Crit3DSoilWidget::Crit3DSoilWidget(const QString &imgPath)
 {
     dbSoilType = DB_SQLITE;
     textureClassList.resize(13);
@@ -64,12 +64,12 @@ Crit3DSoilWidget::Crit3DSoilWidget()
     QVBoxLayout *texturalLayout = new QVBoxLayout();
     QGridLayout *infoLayout = new QGridLayout();
 
-    // check triangle pic and save button pic
-    QString docPath, saveButtonPath;
-    if (searchDocPath(&docPath))
+    // check textural triangle and save button img
+    QString saveButtonPath;
+    if (! imgPath.isEmpty())
     {
-        picPath = docPath + "img/textural_soil.png";
-        saveButtonPath = docPath + "img/saveButton.png";
+        picPath = imgPath + "/textural_soil.png";
+        saveButtonPath = imgPath + "/saveButton.png";
     }
     else
     {
@@ -77,9 +77,16 @@ Crit3DSoilWidget::Crit3DSoilWidget()
         picPath = QCoreApplication::applicationDirPath() + "/../share/CRITERIA1D/images/textural_soil.png";
         saveButtonPath = QCoreApplication::applicationDirPath() + "/../share/CRITERIA1D/images/saveButton.png";
     }
-    pic.load(picPath);
-    labelPic = new QLabel();
-    labelPic->setPixmap(pic);
+
+    if (pic.load(picPath))
+    {
+        labelPic = new QLabel();
+        labelPic->setPixmap(pic);
+    }
+    else
+    {
+        QMessageBox::critical(nullptr, "", picPath + " is missing.");
+    }
 
     QPixmap pixmap(saveButtonPath);
     QPushButton *saveButton = new QPushButton();

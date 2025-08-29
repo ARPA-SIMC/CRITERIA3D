@@ -1293,7 +1293,7 @@
        <second>0</second>
        <year>1752</year>
        <month>9</month>
-       <day>6</day>
+       <day>1</day>
       </datetime>
      </property>
      <property name="maximumDate">
@@ -1708,6 +1708,9 @@
        <bold>false</bold>
       </font>
      </property>
+     <property name="autoFillBackground">
+      <bool>true</bool>
+     </property>
      <property name="text">
       <string>Pause</string>
      </property>
@@ -1848,7 +1851,7 @@
      <x>0</x>
      <y>0</y>
      <width>1280</width>
-     <height>28</height>
+     <height>21</height>
     </rect>
    </property>
    <property name="palette">
@@ -1998,8 +2001,11 @@
     <addaction name="actionCriteria3D_update_subHourly"/>
     <addaction name="flagSave_state_endRun"/>
     <addaction name="flagSave_state_daily_step"/>
+    <addaction name="actionAutomatic_state_saving_end_of_year"/>
+    <addaction name="actionAutomatic_state_saving_end_of_month"/>
     <addaction name="separator"/>
     <addaction name="actionCriteria3D_Water_content_summary"/>
+    <addaction name="actionDEM_summary"/>
    </widget>
    <widget class="QMenu" name="menuShow">
     <property name="title">
@@ -2116,8 +2122,9 @@
       <string>Land use</string>
      </property>
      <addaction name="actionView_LandUseMap"/>
-     <addaction name="separator"/>
      <addaction name="actionHide_LandUseMap"/>
+     <addaction name="separator"/>
+     <addaction name="actionTree_cover_map"/>
     </widget>
     <widget class="QMenu" name="actionView_Crop">
      <property name="title">
@@ -2133,6 +2140,16 @@
      <addaction name="actionView_Factor_of_safety"/>
      <addaction name="actionView_Factor_of_safety_minimum"/>
      <addaction name="flag_increase_slope"/>
+    </widget>
+    <widget class="QMenu" name="menuRothC_model">
+     <property name="title">
+      <string>RothC model</string>
+     </property>
+     <addaction name="actionDecomposable_plant_matter"/>
+     <addaction name="actionResistant_plant_matter"/>
+     <addaction name="actionMicrobial_biomass"/>
+     <addaction name="actionHumified_organic_matter"/>
+     <addaction name="actionSoil_organic_matter"/>
     </widget>
     <addaction name="actionShow_3D_viewer"/>
     <addaction name="separator"/>
@@ -2154,6 +2171,7 @@
     <addaction name="menuWater_fluxes"/>
     <addaction name="menuSlope_stability"/>
     <addaction name="separator"/>
+    <addaction name="menuRothC_model"/>
    </widget>
    <widget class="QMenu" name="menuSolar_radiation_model_2">
     <property name="title">
@@ -2942,6 +2960,57 @@
   <action name="actionCriteria3D_Water_content_summary">
    <property name="text">
     <string>Water Content summary...</string>
+   </property>
+  </action>
+  <action name="actionDEM_summary">
+   <property name="text">
+    <string>Digital Elevation Model summary...</string>
+   </property>
+  </action>
+  <action name="actionTree_cover_map">
+   <property name="text">
+    <string>Tree cover map</string>
+   </property>
+  </action>
+  <action name="actionDecomposable_plant_matter">
+   <property name="text">
+    <string>Decomposable plant matter</string>
+   </property>
+  </action>
+  <action name="actionResistant_plant_matter">
+   <property name="text">
+    <string>Resistant plant matter</string>
+   </property>
+  </action>
+  <action name="actionMicrobial_biomass">
+   <property name="text">
+    <string>Microbial biomass</string>
+   </property>
+  </action>
+  <action name="actionHumified_organic_matter">
+   <property name="text">
+    <string>Humified organic matter</string>
+   </property>
+  </action>
+  <action name="actionSoil_organic_matter">
+   <property name="text">
+    <string>Soil organic matter</string>
+   </property>
+  </action>
+  <action name="actionAutomatic_state_saving_end_of_year">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Automatic state saving (end of year)</string>
+   </property>
+  </action>
+  <action name="actionAutomatic_state_saving_end_of_month">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Automatic state saving (end of month)</string>
    </property>
   </action>
  </widget>

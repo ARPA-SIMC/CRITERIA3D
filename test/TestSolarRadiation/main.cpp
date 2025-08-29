@@ -22,7 +22,8 @@
     ftomei@arpae.it
 */
 
-/*! TestSolarRadiation
+/*!
+ *  \brief TestSolarRadiation
  * compute a map of global solar irradiance (clear sky)
  * for a specified date/time,
  * input: a Digital Elevation Model (ESRI .flt)
@@ -30,42 +31,15 @@
 
 #include <QCoreApplication>
 #include <QDir>
-#include "iostream"
+#include <iostream>
+
 #include "commonConstants.h"
 #include "gis.h"
 #include "radiationSettings.h"
 #include "solarRadiation.h"
 
 
-bool searchDefaultPath(QString inputPath, QString* outputPath)
-{
-    QString myPath = inputPath;
-    QString myVolumeDOS = inputPath.left(3);
-
-    bool isFound = false;
-    while (! isFound)
-    {
-        if (QDir(myPath + "DATA").exists())
-        {
-            isFound = true;
-            break;
-        }
-
-        if (QDir::cleanPath(myPath) == "/" || QDir::cleanPath(myPath) == myVolumeDOS)
-            break;
-
-        myPath += "../";
-    }
-
-    if (! isFound)
-    {
-        std::cout << "\nDATA directory is missing";
-        return false;
-    }
-
-    *outputPath = QDir::cleanPath(myPath) + "/DATA/";
-    return true;
-}
+bool searchDefaultPath(QString inputPath, QString* outputPath);
 
 
 int main(int argc, char *argv[])
@@ -85,7 +59,7 @@ int main(int argc, char *argv[])
     int myHour = 12;
 
     std::cout << "UTM zone: " << gisSettings.utmZone << std::endl;
-    std::cout << "Date: " << myDate.toStdString() << " hour: " << myHour << " UTC" << std::endl;
+    std::cout << "Date: " << myDate.toISOString() << " hour: " << myHour << " UTC" << std::endl;
 
     // Digital Elevation Model
     QString path;
@@ -130,5 +104,36 @@ int main(int argc, char *argv[])
         std::cout << "errorStr in writing:" << otputFileName << std::endl << errorStr << std::endl;
 
     return a.exec();
+}
+
+
+bool searchDefaultPath(QString inputPath, QString* outputPath)
+{
+    QString myPath = inputPath;
+    QString myVolumeDOS = inputPath.left(3);
+
+    bool isFound = false;
+    while (! isFound)
+    {
+        if (QDir(myPath + "DATA").exists())
+        {
+            isFound = true;
+            break;
+        }
+
+        if (QDir::cleanPath(myPath) == "/" || QDir::cleanPath(myPath) == myVolumeDOS)
+            break;
+
+        myPath += "../";
+    }
+
+    if (! isFound)
+    {
+        std::cout << "\nDATA directory is missing";
+        return false;
+    }
+
+    *outputPath = QDir::cleanPath(myPath) + "/DATA/";
+    return true;
 }
 

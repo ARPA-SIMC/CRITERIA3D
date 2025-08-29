@@ -186,12 +186,13 @@ namespace soil
         nrHorizons = nrHorizons - 1;
     }
 
+    // depth [m]
     int Crit3DSoil::getHorizonIndex(double depth) const
     {
        for (unsigned int index = 0; index < nrHorizons; index++)
        {
            if (depth >= horizon[index].upperDepth && depth <= (horizon[index].lowerDepth + EPSILON))
-               return int(index);
+               return (int)index;
        }
 
        return NODATA;

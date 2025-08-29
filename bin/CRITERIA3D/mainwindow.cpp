@@ -136,6 +136,9 @@ MainWindow::MainWindow(QWidget *parent) :
     myProject.setSaveEndOfRunState(false);
     ui->flagSave_state_endRun->setChecked(myProject.isSaveEndOfRunState());
 
+    myProject.setSaveYearlyState(false);
+    myProject.setSaveMonthlyState(false);
+
     myProject.setSaveOutputPoints(false);
     myProject.setComputeOnlyPoints(false);
     ui->flagOutputPoints_save_output->setChecked(myProject.isSaveOutputPoints());
@@ -1812,7 +1815,9 @@ void MainWindow::openSoilWidget(QPoint mapPos)
             myProject.logError();
             return;
         }
-        soilWidget = new Crit3DSoilWidget();
+
+        QString imgPath = myProject.getApplicationPath() + "/DOC/img/";
+        soilWidget = new Crit3DSoilWidget(imgPath);
         soilWidget->show();
         soilWidget->setDbSoil(dbSoil, soilCode);
     }
@@ -1837,6 +1842,7 @@ void MainWindow::on_actionLoad_MeteoPoints_triggered()
     QString dbName = QFileDialog::getOpenFileName(this, tr("Open meteo points DB"), meteoPointsPath, tr("DB files (*.db)"));
     if (dbName != "") this->loadMeteoPointsDB_GUI(dbName);
 }
+
 
 void MainWindow::on_actionMeteoPointsImport_data_triggered()
 {
@@ -2013,7 +2019,8 @@ void MainWindow::on_actionComputePeriod_meteoVariables_triggered()
     myProject.processes.computeMeteo = true;
     myProject.processes.computeRadiation = true;
 
-    startModels(firstTime, lastTime);
+    initializeGroupBoxModel();
+    myProject.startModels(firstTime, lastTime);
 }
 
 
@@ -2062,57 +2069,12 @@ bool selectDates(QDateTime &firstTime, QDateTime &lastTime)
 }
 
 
-bool MainWindow::startModels(QDateTime firstTime, QDateTime lastTime)
+void MainWindow::initializeGroupBoxModel()
 {
-    if (! myProject.DEM.isLoaded)
-    {
-        myProject.logError(ERROR_STR_MISSING_DEM);
-        return false;
-    }
-
-    if (myProject.processes.computeSnow && (! myProject.snowMaps.isInitialized))
-    {
-        myProject.logError("Initialize Snow model or load a state before.");
-        return false;
-    }
-
-    if (myProject.processes.computeWater && (! myProject.isCriteria3DInitialized))
-    {
-        myProject.logError("Initialize 3D water fluxes or load a state before.");
-        return false;
-    }
-
-    if (myProject.processes.computeCrop)
-    {
-        if (myProject.landUnitList.size() == 0)
-        {
-            myProject.logError("load land units map before.");
-            return false;
-        }
-    }
-
-    // Load meteo data
-    myProject.logInfoGUI("Loading meteo data...");
-    if (! myProject.loadMeteoPointsData(firstTime.date().addDays(-1), lastTime.date().addDays(+1), true, false, false))
-    {
-        myProject.logError();
-        return false;
-    }
-    myProject.closeLogInfo();
-
-    // set model interface
-    myProject.modelFirstTime = firstTime;
-    myProject.modelLastTime = lastTime;
-
-    myProject.isModelPaused = false;
-    myProject.isModelStopped = false;
-
     ui->groupBoxModel->setEnabled(true);
     ui->buttonModelStart->setDisabled(true);
     ui->buttonModelPause->setEnabled(true);
     ui->buttonModelStop->setEnabled(true);
-
-    return myProject.runModels(firstTime, lastTime);
 }
 
 
@@ -2204,7 +2166,8 @@ void MainWindow::on_actionRadiation_run_model_triggered()
     myProject.processes.initialize();
     myProject.processes.computeRadiation = true;
 
-    startModels(firstTime, lastTime);
+    initializeGroupBoxModel();
+    myProject.startModels(firstTime, lastTime);
 }
 
 
@@ -2251,6 +2214,7 @@ void MainWindow::on_actionCriteria3D_set_processes_triggered()
     dialogProcesses.cropProcess->setChecked(myProject.processes.computeCrop);
     dialogProcesses.waterFluxesProcess->setChecked(myProject.processes.computeWater);
     dialogProcesses.hydrallProcess->setChecked(myProject.processes.computeHydrall);
+    dialogProcesses.rothCProcess->setChecked(myProject.processes.computeRothC);
 
     dialogProcesses.exec();
 
@@ -2263,6 +2227,11 @@ void MainWindow::on_actionCriteria3D_set_processes_triggered()
         if (dialogProcesses.hydrallProcess->isChecked() && (! dialogProcesses.cropProcess->isChecked() || ! dialogProcesses.waterFluxesProcess->isChecked()))
             myProject.logWarning("Crop and water processes will be activated in order to compute Hydrall model.");
         myProject.processes.setComputeHydrall(dialogProcesses.hydrallProcess->isChecked());
+
+        /*if (dialogProcesses.rothCProcess->isChecked() && (! dialogProcesses.hydrallProcess->isChecked() || ! dialogProcesses.cropProcess->isChecked()
+                                                          || ! dialogProcesses.waterFluxesProcess->isChecked()))
+            myProject.logWarning("Hydrall, crop and water processes will be activated in order to compute RothC model.");*/
+        myProject.processes.setComputeRothC(dialogProcesses.rothCProcess->isChecked());
     }
 }
 
@@ -2297,7 +2266,7 @@ void MainWindow::on_actionCriteria3D_waterFluxes_settings_triggered()
     {
         myProject.waterFluxesParameters.modelAccuracy = dialogWaterFluxes.accuracySlider->value();
         int nrThread = dialogWaterFluxes.getThreadsNumber();
-        nrThread = soilFluxes3D::setThreads(nrThread);                  // check
+        nrThread = soilFluxes3D::setThreadsNumber(nrThread);                  // check
         myProject.waterFluxesParameters.numberOfThreads = nrThread;
 
         if (myProject.isCriteria3DInitialized)
@@ -2322,20 +2291,26 @@ void MainWindow::on_actionCriteria3D_waterFluxes_settings_triggered()
 
         // check nr of threads
         int threadNumber = dialogWaterFluxes.getThreadsNumber();
-        threadNumber = soilFluxes3D::setThreads(threadNumber);
+        threadNumber = soilFluxes3D::setThreadsNumber(threadNumber);
         myProject.waterFluxesParameters.numberOfThreads = threadNumber;
+
+        if (myProject.isCriteria3DInitialized)
+        {
+            myProject.setAccuracy();
+        }
 
         myProject.fittingOptions.useWaterRetentionData = dialogWaterFluxes.useWaterRetentionFitting->isChecked();
 
-        bool isSnow = false;
         bool isWater = true;
+        bool isSnow = false;
         bool isSoilCrack = false;
         if (! myProject.writeCriteria3DParameters(isSnow, isWater, isSoilCrack))
         {
             myProject.logError("Error writing soil fluxes parameters");
         }
 
-        // layer thickness
+        // TODO layer thickness
+        // TODO soil crack
     }
 }
 
@@ -2371,7 +2346,8 @@ void MainWindow::initializeCriteria3DInterface()
 
 void MainWindow::on_actionCriteria3D_Initialize_triggered()
 {
-    if (! (myProject.processes.computeSnow || myProject.processes.computeCrop || myProject.processes.computeWater || myProject.processes.computeHydrall))
+    if (! (myProject.processes.computeSnow || myProject.processes.computeCrop || myProject.processes.computeWater ||
+           myProject.processes.computeHydrall || myProject.processes.computeRothC))
     {
         myProject.logWarning("Set active processes before.");
         return;
@@ -2443,9 +2419,37 @@ void MainWindow::on_actionCriteria3D_Initialize_triggered()
 
         if (! myProject.initializeHydrall())
         {
-            myProject.logError();
+            myProject.isHydrallInitialized = false;
+            myProject.logError("Couldn't initialize Hydrall model.");
             return;
         }
+    }
+    else
+    {
+        myProject.clearHydrallMaps();
+    }
+
+    if (myProject.processes.computeRothC)
+    {
+        if (! myProject.processes.computeWater)
+        {
+            QString defaultPath = myProject.getDefaultPath() + PATH_GEO;
+            myProject.rothCModel.BICMapFolderName = QFileDialog::getExistingDirectory(this, tr("Open folder with monthly average BIC files"), defaultPath).toStdString();
+
+            if (myProject.rothCModel.BICMapFolderName.empty())
+                return;
+        }
+
+        if (! myProject.initializeRothC())
+        {
+            myProject.isRothCInitialized = false;
+            myProject.logError("Couldn't initialize RothC model.");
+            return;
+        }
+    }
+    else
+    {
+        myProject.clearRothCMaps();
     }
 
     initializeCriteria3DInterface();
@@ -2478,7 +2482,8 @@ void MainWindow::on_actionCriteria3D_compute_next_hour_triggered()
         currentTime = myProject.getCurrentTime().addSecs(HOUR_SECONDS);
     }
 
-    startModels(currentTime, currentTime);
+    initializeGroupBoxModel();
+    myProject.startModels(currentTime, currentTime);
 }
 
 
@@ -2500,7 +2505,8 @@ void MainWindow::on_actionCriteria3D_run_models_triggered()
     if (! selectDates(firstTime, lastTime))
         return;
 
-    startModels(firstTime, lastTime);
+    initializeGroupBoxModel();
+    myProject.startModels(firstTime, lastTime);
 }
 
 
@@ -2543,6 +2549,61 @@ void MainWindow::on_actionCriteria3D_Water_content_summary_triggered()
     summaryStr += "Soil area: " + QString::number(soilArea / 10000, 'f', 1) + " [hectares]\n";
     summaryStr += "Soil water content: " + QString::number(soilWaterContent, 'f', 1) + " [m3]\n";
     summaryStr += "Soil average water content: " + QString::number(soilAvgWC, 'f', 1) + " [mm]\n";
+
+    myProject.logInfoGUI(summaryStr);
+}
+
+
+void MainWindow::on_actionDEM_summary_triggered()
+{
+    if (! myProject.DEM.isLoaded)
+    {
+        myProject.logWarning(ERROR_STR_MISSING_DEM);
+        return;
+    }
+
+    long nrVoxels = 0;
+    double elevationSum = 0;
+    float maxElevation = NODATA;
+    float minElevation = NODATA;
+    bool isFirst = true;
+    for (int row = 0; row < myProject.DEM.header->nrRows; row++)
+    {
+        for (int col = 0; col < myProject.DEM.header->nrCols; col++)
+        {
+            float elevation = myProject.DEM.value[row][col];
+            if (! isEqual(elevation, myProject.DEM.header->flag))
+            {
+                if (isFirst)
+                {
+                    maxElevation = elevation;
+                    minElevation = elevation;
+                    isFirst = false;
+                }
+                else
+                {
+                    maxElevation = std::max(maxElevation, elevation);
+                    minElevation = std::min(minElevation, elevation);
+                }
+
+                elevationSum += elevation;
+                nrVoxels++;
+            }
+        }
+    }
+
+    double voxelArea = myProject.DEM.header->cellSize * myProject.DEM.header->cellSize;     // [m2]
+    double area = voxelArea * nrVoxels;                                                     // [m2]
+
+    QString summaryStr = "DIGITAL ELEVATION MODEL SUMMARY\n\n";
+
+    summaryStr += "Number of pixels:  " + QString::number(nrVoxels) + "\n";
+    summaryStr += "Area:  " + QString::number(area, 'f', 0) + " [m2]\n";
+    summaryStr += "Hectares:  " + QString::number(area / 10000., 'f', 2) + " [ha]\n";
+    summaryStr += "Area (km2):  " + QString::number(area / 1000000, 'f', 3) + " [km2]\n";
+    summaryStr += "Max. elevation:  " + QString::number(maxElevation, 'f', 1) + " [m]\n";
+    summaryStr += "Min. elevation:  " + QString::number(minElevation, 'f', 1) + " [m]\n";
+    summaryStr += "Avg. elevation:  " + QString::number(elevationSum / nrVoxels, 'f', 1) + " [m]\n";
 
     myProject.logInfoGUI(summaryStr);
 }
@@ -3469,10 +3530,11 @@ void MainWindow::on_actionCriteria3D_load_state_triggered()
         return;
     }
 
-    QList<QString> stateList = myProject.getAllSavedState();
-    if (stateList.isEmpty())
+    QString statesPath = myProject.getProjectPath() + PATH_STATES;
+    QList<QString> stateList;
+    if (! myProject.getAllSavedState(stateList))
     {
-        myProject.logWarning("No states saved in the directory:\n" + myProject.getProjectPath() + PATH_STATES);
+        myProject.logError();
         return;
     }
 
@@ -3480,7 +3542,7 @@ void MainWindow::on_actionCriteria3D_load_state_triggered()
     if (dialogLoadState.result() != QDialog::Accepted)
         return;
 
-    QString stateDirectory = myProject.getProjectPath() + PATH_STATES + dialogLoadState.getSelectedState();
+    QString stateDirectory = statesPath + dialogLoadState.getSelectedState();
     if (! myProject.loadModelState(stateDirectory))
     {
         myProject.logError();
@@ -3526,17 +3588,14 @@ void MainWindow::on_actionCriteria3D_load_external_state_triggered()
 
 void MainWindow::on_actionCriteria3D_save_state_triggered()
 {
-    if (myProject.isProjectLoaded)
+    QString dirName;
+    if (myProject.saveModelsState(dirName))
     {
-        if (myProject.saveModelsState())
-        {
-            myProject.logInfoGUI("State model successfully saved: " + myProject.getCurrentDate().toString()
-                                 + " H:" + QString::number(myProject.getCurrentHour()));
-        }
+        myProject.logInfoGUI("State successfully saved: " + dirName);
     }
     else
     {
-        myProject.logError(ERROR_STR_MISSING_PROJECT);
+        myProject.logError();
     }
 }
 
@@ -3620,3 +3679,106 @@ void MainWindow::on_actionSave_outputRaster_triggered()
         myProject.logError(QString::fromStdString(errorStr));
     }
 }
+
+void MainWindow::on_actionTree_cover_map_triggered()
+{
+
+    if (myProject.treeCoverMap.isLoaded)
+    {
+        setColorScale(noMeteoTerrain, myProject.treeCoverMap.colorScale);
+        setCurrentRasterOutput(&(myProject.treeCoverMap));
+        ui->labelOutputRaster->setText("Tree cover");
+    }
+    else
+    {
+        myProject.logError("Load a tree cover map before.");
+    }
+}
+
+
+void MainWindow::on_actionDecomposable_plant_matter_triggered()
+{
+    if (myProject.rothCModel.map.decomposablePlantMaterial->isLoaded)
+    {
+        setColorScale(noMeteoTerrain, myProject.rothCModel.map.decomposablePlantMaterial->colorScale);
+        setCurrentRasterOutput((myProject.rothCModel.map.decomposablePlantMaterial));
+        ui->labelOutputRaster->setText("Decomposable plant matter");
+    }
+    else
+    {
+        myProject.logError("Error while loading decomposable plant matter.");
+    }
+}
+
+
+void MainWindow::on_actionResistant_plant_matter_triggered()
+{
+    if (myProject.rothCModel.map.resistantPlantMaterial->isLoaded)
+    {
+        setColorScale(noMeteoTerrain, myProject.rothCModel.map.resistantPlantMaterial->colorScale);
+        setCurrentRasterOutput((myProject.rothCModel.map.resistantPlantMaterial));
+        ui->labelOutputRaster->setText("Resistant plant matter");
+    }
+    else
+    {
+        myProject.logError("Error while loading resistant plant matter.");
+    }
+}
+
+
+void MainWindow::on_actionMicrobial_biomass_triggered()
+{
+    if (myProject.rothCModel.map.microbialBiomass->isLoaded)
+    {
+        setColorScale(noMeteoTerrain, myProject.rothCModel.map.microbialBiomass->colorScale);
+        setCurrentRasterOutput((myProject.rothCModel.map.microbialBiomass));
+        ui->labelOutputRaster->setText("Microbial biomass");
+    }
+    else
+    {
+        myProject.logError("Error while loading microbial biomass.");
+    }
+}
+
+
+void MainWindow::on_actionHumified_organic_matter_triggered()
+{
+    if (myProject.rothCModel.map.humifiedOrganicMatter->isLoaded)
+    {
+        setColorScale(noMeteoTerrain, myProject.rothCModel.map.humifiedOrganicMatter->colorScale);
+        setCurrentRasterOutput((myProject.rothCModel.map.humifiedOrganicMatter));
+        ui->labelOutputRaster->setText("Humified organic matter");
+    }
+    else
+    {
+        myProject.logError("Error while loading humified organic matter.");
+    }
+}
+
+
+void MainWindow::on_actionSoil_organic_matter_triggered()
+{
+    if (myProject.rothCModel.map.soilOrganicMatter->isLoaded)
+    {
+        setColorScale(noMeteoTerrain, myProject.rothCModel.map.soilOrganicMatter->colorScale);
+        setCurrentRasterOutput((myProject.rothCModel.map.soilOrganicMatter));
+        ui->labelOutputRaster->setText("Soil organic matter");
+    }
+    else
+    {
+        myProject.logError("Error while loading soil organic matter.");
+    }
+}
+
+
+void MainWindow::on_actionAutomatic_state_saving_end_of_year_triggered(bool isChecked)
+{
+    myProject.setSaveYearlyState(isChecked);
+}
+
+
+void MainWindow::on_actionAutomatic_state_saving_end_of_month_toggled(bool isChecked)
+{
+    myProject.setSaveMonthlyState(isChecked);
+}
+

@@ -23,10 +23,10 @@
 */
 
 /*!
-   \name TestSunPosition
-   \brief show current sun rise and sun set at Bologna and Madrid
-   \brief using solarRadiation library (sunPostion module)
- */
+ * \name TestSunPosition
+ * \brief show current sun rise and sun set at Bologna and Madrid
+ * using solarRadiation library (sunPostion module)
+*/
 
 
 #include <QCoreApplication>

@@ -136,6 +136,23 @@
             Crit3DRasterCell();
         };
 
+
+        class Crit3DIndexGrid
+        {
+        public:
+            Crit3DRasterHeader* header;
+            std::vector<std::vector<long>> value;
+
+            Crit3DIndexGrid();
+            ~Crit3DIndexGrid();
+
+            void initializeGrid();
+            void initializeGrid(const Crit3DRasterHeader& initHeader);
+            long getValueFromRowCol(int row, int col) const;
+            bool isOutOfGrid(int row, int col) const;
+        };
+
+
         class Crit3DRasterGrid
         {
         public:
@@ -222,10 +239,12 @@
         bool isOutOfGridXY(double x, double y, Crit3DRasterHeader* header);
         bool isOutOfGridRowCol(int myRow, int myCol, const Crit3DLatLonHeader& header);
 
-        bool isMinimum(const Crit3DRasterGrid& rasterGrid, int row, int col);
+        bool isMinimum(const Crit3DRasterGrid& rasterGrid, bool isStrictMinumum, int row, int col);
         bool isMinimumOrNearMinimum(const Crit3DRasterGrid& rasterGrid, int row, int col);
+
         bool isBoundary(const Crit3DRasterGrid& rasterGrid, int row, int col);
-        bool isBoundaryRunoff(const Crit3DRasterGrid& rasterRef, const Crit3DRasterGrid &aspectMap, int row, int col);
+        bool isBoundaryRunoff(const Crit3DIndexGrid& rasterRef, const Crit3DRasterGrid& dtm, const Crit3DRasterGrid &aspectMap, int row, int col);
+
         bool isStrictMaximum(const Crit3DRasterGrid& rasterGrid, int row, int col);
 
         bool getNorthernEmisphere();
@@ -284,6 +303,9 @@
         float getNeighboursMinimumValue(const Crit3DRasterGrid& raster, int row, int col);
         bool extractBasin(const Crit3DRasterGrid& inputRaster, Crit3DRasterGrid& outputRaster, double xClosure, double yClosure);
         void cleanRasterEmptyFrame(const Crit3DRasterGrid& inputRaster, Crit3DRasterGrid& outputRaster);
+
+        bool writeEsriGridHeader(const std::string &fileName, gis::Crit3DRasterHeader *header, std::string &errorStr);
+        bool writeEsriGridFlt(const std::string &fileName, Crit3DRasterGrid* myGrid, std::string &errorStr);
     }
 
 

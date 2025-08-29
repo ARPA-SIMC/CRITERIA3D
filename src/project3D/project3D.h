@@ -14,10 +14,11 @@
         #include "crop.h"
     #endif
 
+    #define ERROR_STR_MISSING_PROCESSES "Set active processes before."
+    #define ERROR_STR_INITIALIZE_3D "Initialize 3D model before."
+
     class QString;
     #include <QList>
-
-    #define ERROR_STR_INITIALIZE_3D "Initialize 3D model before."
 
     class WaterFluxesParameters
     {
@@ -54,7 +55,8 @@
     public:
 
         bool computeMeteo, computeRadiation, computeWater;
-        bool computeCrop, computeSnow, computeSolutes, computeHydrall;
+        bool computeCrop, computeSnow, computeSolutes;
+        bool computeHydrall, computeRothC;
         bool computeHeat, computeAdvectiveHeat, computeLatentHeat;
 
         Crit3DProcesses();
@@ -64,6 +66,7 @@
         void setComputeCrop(bool value);
         void setComputeSnow(bool value);
         void setComputeWater(bool value);
+        void setComputeRothC(bool value);
 
     };
 
@@ -90,6 +93,8 @@
         bool isCriteria3DInitialized;
         bool isCropInitialized;
         bool isSnowInitialized;
+        bool isRothCInitialized;
+        bool isHydrallInitialized;
 
         bool showEachTimeStep;
         bool increaseSlope;
@@ -103,7 +108,9 @@
         QString cropDbFileName;
         QString soilMapFileName;
         QString landUseMapFileName;
+        QString treeCoverMapFileName;
 
+        unsigned long nrSurfaceNodes;
         unsigned long nrNodes;
         unsigned int nrLayers;
         int nrLateralLink;
@@ -113,6 +120,7 @@
         gis::Crit3DRasterGrid soilMap;
         gis::Crit3DRasterGrid landUseMap;
         gis::Crit3DRasterGrid laiMap;
+        gis::Crit3DRasterGrid treeCoverMap;
 
         // same indexes
         std::vector <Crit3DLandUnit> landUnitList;
@@ -124,7 +132,7 @@
 
         gis::Crit3DRasterGrid boundaryMap;
         gis::Crit3DRasterGrid criteria3DMap;
-        std::vector <gis::Crit3DRasterGrid> indexMap;
+        std::vector<gis::Crit3DIndexGrid> indexMap;
 
         // soil properties
         unsigned int nrSoils;
@@ -170,6 +178,7 @@
         bool loadSoilDatabase(const QString &dbName);
         bool loadCropDatabase(const QString &dbName);
         bool loadSoilMap(const QString &fileName);
+        bool loadTreeCoverMap(const QString &fileName);
 
         double getSoilLayerTop(unsigned int i);
         double getSoilLayerBottom(unsigned int i);
@@ -177,6 +186,8 @@
         int getLandUnitFromUtm(double x, double y);
         int getLandUnitIdGeo(double lat, double lon);
         int getLandUnitIndexRowCol(int row, int col);
+        int getTreeCoverIndexRowCol(int row, int col);
+
 
         bool initializeSoilMoisture(int month);
 
@@ -228,8 +239,8 @@
     QString getOutputNameHourly(meteoVariable myVar, QDateTime myTime);
     QString getDailyPrefixFromVar(QDate myDate, criteria3DVariable myVar);
 
-    float readDataHourly(meteoVariable myVar, QString hourlyPath, QDateTime myTime, QString myArea, int row, int col);
-    bool readHourlyMap(meteoVariable myVar, QString hourlyPath, QDateTime myTime, QString myArea, gis::Crit3DRasterGrid* myGrid);
+    float readDataHourly(meteoVariable myVar, QString hourlyPath, QDateTime myTime, int row, int col);
+    bool readHourlyMap(meteoVariable myVar, QString hourlyPath, QDateTime myTime, gis::Crit3DRasterGrid* myGrid);
 
     bool setVariableDepth(const QList<QString> &depthList, std::vector<int> &variableDepth);
 

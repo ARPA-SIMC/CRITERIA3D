@@ -79,31 +79,43 @@ Crit3DMeteoWidget::Crit3DMeteoWidget(bool isGrid, QString projectPath, Crit3DMet
     QVector<QLineSeries*> vectorLine;
     QVector<QBarSet*> vectorBarSet;
 
-    QString csvPath, defaultPath, stylesPath;
+    QString defaultPath, stylesPath;
     if (! projectPath.isEmpty())
     {
         defaultPath = projectPath + "SETTINGS/Crit3DPlotDefault.csv";
         stylesPath = projectPath + "SETTINGS/Crit3DPlotStyles.csv";
-        if (QFileInfo::exists(defaultPath) == false)
+        if (! QFileInfo::exists(defaultPath))
         {
             defaultPath = "";
         }
-        if (QFileInfo::exists(stylesPath) == false)
+        if (! QFileInfo::exists(stylesPath))
         {
             stylesPath = "";
         }
     }
+
     if (defaultPath.isEmpty() || stylesPath.isEmpty())
     {
-        if (searchDataPath(&csvPath))
+        QString dataPath;
+        if (projectPath.isEmpty())
+        {
+            searchDataPath(&dataPath);
+        }
+        else
+        {
+            // DATA path: two directories up
+            dataPath = QDir::cleanPath(projectPath) + "/../../";
+        }
+
+        if (! dataPath.isEmpty())
         {
             if (defaultPath.isEmpty())
             {
-                defaultPath = csvPath + "SETTINGS/Crit3DPlotDefault.csv";
+                defaultPath = dataPath + "SETTINGS/Crit3DPlotDefault.csv";
             }
             if (stylesPath.isEmpty())
             {
-                stylesPath = csvPath + "SETTINGS/Crit3DPlotStyles.csv";
+                stylesPath = dataPath + "SETTINGS/Crit3DPlotStyles.csv";
             }
         }
     }
@@ -420,7 +432,11 @@ Crit3DMeteoWidget::Crit3DMeteoWidget(bool isGrid, QString projectPath, Crit3DMet
 
 Crit3DMeteoWidget::~Crit3DMeteoWidget()
 {
-
+    for (int i = 0; i < _meteoPoints.size(); i++)
+    {
+        _meteoPoints[i].cleanAllData();
+    }
+    _meteoPoints.clear();
 }
 
 
@@ -3203,33 +3219,41 @@ void Crit3DMeteoWidget::on_actionDataAvailability()
             QGroupBox *groupBox = new QGroupBox(stationString);
             QVBoxLayout *vbox = new QVBoxLayout;
 
-            QString infoDaily = QString("Daily Data:");
-            QLabel* labelDaily = new QLabel(infoDaily);
-            vbox->addWidget(labelDaily);
-            myFirstDailyDate.setDate(_meteoPoints[mp].obsDataD[0].date.year, _meteoPoints[mp].obsDataD[0].date.month, _meteoPoints[mp].obsDataD[0].date.day);
-            myLastDailyDate = myFirstDailyDate.addDays(_meteoPoints[mp].nrObsDataDaysD-1);
-            QString dailyInfo = QString("%1 - %2")
-                                    .arg(myFirstDailyDate.toString("yyyy/MM/dd"), myLastDailyDate.toString("yyyy/MM/dd"));
-            QTextEdit* dailyTextEdit = new QTextEdit(dailyInfo);
-            QFont font = dailyTextEdit->font();
-            QFontMetrics fontMetrics = QFontMetrics(font);
-            dailyTextEdit->setMaximumHeight(fontMetrics.height()+10);
-            dailyTextEdit->setReadOnly(true);
-            vbox->addWidget(dailyTextEdit);
+            if (_meteoPoints[mp].existDailyData())
+            {
+                QString infoDaily = QString("Daily Data:");
+                QLabel* labelDaily = new QLabel(infoDaily);
+                vbox->addWidget(labelDaily);
+                myFirstDailyDate = getQDate(_meteoPoints[mp].getFirstDailyData());
+                myLastDailyDate = myFirstDailyDate.addDays(_meteoPoints[mp].nrObsDataDaysD-1);
+                QString dailyInfo = QString("%1 - %2")
+                                        .arg(myFirstDailyDate.toString("yyyy/MM/dd"), myLastDailyDate.toString("yyyy/MM/dd"));
+                QTextEdit* dailyTextEdit = new QTextEdit(dailyInfo);
+                QFont font = dailyTextEdit->font();
+                QFontMetrics fontMetrics = QFontMetrics(font);
+                dailyTextEdit->setMaximumHeight(fontMetrics.height()+10);
+                dailyTextEdit->setReadOnly(true);
+                vbox->addWidget(dailyTextEdit);
+            }
 
-            QString infoHourly = QString("Hourly Data:");
-            QLabel* labelHourly = new QLabel(infoHourly);
-            vbox->addWidget(labelHourly);
-            myFirstHourlyDate.setDate(_meteoPoints[mp].getMeteoPointHourlyValuesDate(0).year, _meteoPoints[mp].getMeteoPointHourlyValuesDate(0).month,
-                                      _meteoPoints[mp].getMeteoPointHourlyValuesDate(0).day);
-            myLastHourlyDate = myFirstHourlyDate.addDays(_meteoPoints[mp].nrObsDataDaysH-1);
+            if (_meteoPoints[mp].existHourlyData())
+            {
+                QString infoHourly = QString("Hourly Data:");
+                QLabel* labelHourly = new QLabel(infoHourly);
+                vbox->addWidget(labelHourly);
+                myFirstHourlyDate = getQDate(_meteoPoints[mp].getMeteoPointHourlyValuesDate(0));
+                myLastHourlyDate = myFirstHourlyDate.addDays(_meteoPoints[mp].nrObsDataDaysH-1);
 
-            QString hourlyInfo = QString("%1 - %2")
-                                     .arg(myFirstHourlyDate.toString("yyyy/MM/dd"), myLastHourlyDate.toString("yyyy/MM/dd"));
-            QTextEdit* hourlyTextEdit = new QTextEdit(hourlyInfo);
-            hourlyTextEdit->setMaximumHeight(fontMetrics.height()+10);
-            hourlyTextEdit->setReadOnly(true);
-            vbox->addWidget(hourlyTextEdit);
+                QString hourlyInfo = QString("%1 - %2")
+                                         .arg(myFirstHourlyDate.toString("yyyy/MM/dd"), myLastHourlyDate.toString("yyyy/MM/dd"));
+                QTextEdit* hourlyTextEdit = new QTextEdit(hourlyInfo);
+                QFont font = hourlyTextEdit->font();
+                QFontMetrics fontMetrics = QFontMetrics(font);
+                hourlyTextEdit->setMaximumHeight(fontMetrics.height()+10);
+                hourlyTextEdit->setReadOnly(true);
+                vbox->addWidget(hourlyTextEdit);
+            }
+
             groupBox->setLayout(vbox);
             layout->addWidget(groupBox);
         }
@@ -3238,6 +3262,7 @@ void Crit3DMeteoWidget::on_actionDataAvailability()
     infoWindow.setLayout(layout);
     infoWindow.exec();
 }
+
 
 void Crit3DMeteoWidget::on_actionDataSum()
 {

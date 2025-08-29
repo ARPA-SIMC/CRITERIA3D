@@ -108,6 +108,8 @@
         bool loadIdMeteoProperties(QString &errorStr, const QString &idMeteo);
         bool updateMeteoGridDate(QString &errorStr);
 
+        bool loadGridDailyDataRowCol(int row, int col, const QString &meteoPointId, const QDate &firstDate,
+                                     const QDate &lastDate, QString &errorStr);
         bool loadGridDailyData(QString &errorStr, const QString &meteoPointId, const QDate &firstDate, const QDate &lastDate);
         bool loadGridDailyDataFixedFields(QString &errorStr, QString meteoPoint, QDate first, QDate last);
         bool loadGridDailyDataEnsemble(QString &errorStr, QString meteoPoint, int memberNr, QDate first, QDate last);
@@ -118,6 +120,8 @@
         bool loadGridMonthlyData(QString &errorStr, QString meteoPoint, QDate firstDate, QDate lastDate);
         bool loadGridAllMonthlyData(QString &errorStr, QDate firstDate, QDate lastDate);
         bool loadGridMonthlySingleDate(QString &errorStr, const QString &meteoPoint, const QDate &myDate);
+
+        bool importDailyDataCsv(QString &errorStr, const QString &csvFileName, QList<QString> &meteoVarList);
 
         std::vector<float> loadGridDailyVar(const QString &meteoPointId, meteoVariable variable,
                                             const QDate &first, const QDate &last, QDate &firstDateDB, QString &errorStr);

@@ -13,6 +13,7 @@
         QCheckBox *snowProcess;
         QCheckBox *cropProcess;
         QCheckBox *waterFluxesProcess;
+        QCheckBox *rothCProcess;
 
         DialogModelProcesses();
     };

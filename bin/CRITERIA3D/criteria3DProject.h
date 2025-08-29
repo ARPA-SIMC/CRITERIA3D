@@ -22,26 +22,32 @@
     #ifndef HYDRALL_H
         #include "hydrall.h"
     #endif
+    #ifndef ROTHCPLUSPLUS_H
+        #include "rothCplusplus.h"
+    #endif
 
     #include <QString>
 
-    #define CRITERIA3D_VERSION "V1.0.6"
+    #define CRITERIA3D_VERSION "v1.1.0"
 
 
     class Crit3DProject : public Project3D
     {
 
     private:
-        bool _saveOutputRaster, _saveOutputPoints, _saveDailyState, _saveEndOfRunState;
+        bool _saveOutputRaster, _saveOutputPoints, _saveDailyState, _saveEndOfRunState,
+             _saveYearlyState, _saveMonthlyState;
 
         void clear3DProject();
         bool check3DProject();
         bool updateDailyTemperatures();
         bool updateLast30DaysTavg();
-        void updateHydrallLAI();
+
 
         bool saveSnowModelState(const QString &currentStatePath);
         bool saveSoilWaterState(const QString &currentStatePath);
+        bool saveRothCState(const QString &currentStatePath);
+        bool saveHydrallState(const QString &currentStatePath);
 
         void appendCriteria3DOutputValue(criteria3DVariable myVar, int row, int col,
                                          const std::vector<int> &depthList, std::vector<float> &outputList);
@@ -54,11 +60,15 @@
         gis::Crit3DRasterGrid degreeDaysMap;
         gis::Crit3DRasterGrid dailyTminMap;
         gis::Crit3DRasterGrid dailyTmaxMap;
+        gis::Crit3DRasterGrid monthlyPrec;
+        gis::Crit3DRasterGrid monthlyET0;
+        gis::Crit3DRasterGrid mapLast30DaysTAvg;
 
         Crit3DHydrallMaps hydrallMaps;
 
         Crit3DSnow snowModel;
-        Crit3D_Hydrall hydrallModel;
+        Crit3DHydrall hydrallModel;
+        Crit3DRothCplusplus rothCModel;
 
         QDateTime modelFirstTime, modelLastTime;
         QDateTime meteoPointsDbFirstTime;
@@ -70,23 +80,32 @@
         void clearCropMaps();
         bool initializeCropMaps();
         bool initializeHydrall();
+        bool initializeRothC();
+        double getRothCClayContent(int soilIndex);
+        void updateETAndPrecMaps();
         void dailyUpdateCropMaps(const QDate &myDate);
+
+        void clearHydrallMaps();
+        void clearRothCMaps();
 
         bool initializeCropWithClimateData();
         bool initializeCropFromDegreeDays(gis::Crit3DRasterGrid &myDegreeMap);
 
         void assignETreal();
         void assignPrecipitation();
-        float checkSoilCracking(int row, int col, float precipitation);
-
-        bool checkProcesses();
-        bool runModels(QDateTime firstTime, QDateTime lastTime, bool isRestart = false);
+        float computeSoilCracking(int row, int col, float precipitation);
 
         void setSaveDailyState(bool isSave) { _saveDailyState = isSave; }
         bool isSaveDailyState() { return _saveDailyState; }
 
+        void setSaveYearlyState(bool isSave) { _saveYearlyState = isSave; }
+        bool isSaveYearlyState() { return _saveYearlyState; }
+
         void setSaveEndOfRunState(bool isSave) { _saveEndOfRunState = isSave; }
         bool isSaveEndOfRunState() { return _saveEndOfRunState; }
+
+        void setSaveMonthlyState(bool isSave) {_saveMonthlyState = isSave;}
+        bool isSaveMonthlyState() {return _saveMonthlyState;}
 
         void setSaveOutputRaster(bool isSave);
         bool isSaveOutputRaster();
@@ -94,7 +113,7 @@
         void setSaveOutputPoints(bool isSave);
         bool isSaveOutputPoints();
 
-        bool loadCriteria3DProject(QString myFileName);
+        bool loadCriteria3DProject(const QString &fileName);
         bool loadCriteria3DParameters();
         bool writeCriteria3DParameters(bool isSnow, bool isWater, bool isSoilCrack);
 
@@ -105,25 +124,33 @@
 
         bool initializeSnowModel();
 
-        bool computeHydrallModel(int row, int col);
-        void dailyUpdateHydrallMaps();
+        bool computeHydrallModel(int row, int col, int forestIndex);
         bool dailyUpdateHydrall(const QDate &myDate);
+        void setHydrallVariables(int row, int col, int forestIndex);
+
+        bool computeRothCModel();
+        bool updateRothC(const QDate &myDate);
+        void setRothCVariables(int row, int col, int month);
 
         bool computeSnowModel();
         void computeSnowPoint(int row, int col);
 
+        bool checkProcesses();
+
+        bool startModels(const QDateTime &firstTime, const QDateTime &lastTime);
+        bool runModels(const QDateTime &firstTime, const QDateTime &lastTime, bool isRestart = false);
         bool runModelHour(const QString& hourlyOutputPath, bool isRestart = false);
 
         void setAllHourlyMeteoMapsComputed(bool value);
 
         bool saveDailyOutput(QDate myDate, const QString& outputPathHourly);
 
-        bool saveModelsState();
+        bool saveModelsState(QString &dirName);
 
         bool loadModelState(QString statePath);
         bool loadWaterPotentialState(QString waterPath);
 
-        QList<QString> getAllSavedState();
+        bool getAllSavedState(QList<QString> &stateList);
 
         bool writeOutputPointsTables();
         bool writeOutputPointsData();
@@ -134,6 +161,24 @@
         bool initializeGeometry();
         void shadowColor(const Crit3DColor &colorIn, Crit3DColor &colorOut, int row, int col);
         bool update3DColors(gis::Crit3DRasterGrid *rasterPointer = nullptr);
+
+        // SHELL
+        int criteria3DShell();
+        int criteria3DBatch(const QString &scriptFileName);
+
+        int executeScript(const QString &scriptFileName);
+        int executeCommand(const QList<QString> &argumentList);
+        int executeCriteria3DCommand(const QList<QString> &argumentList, bool &isCommandFound);
+
+        int cmdList(const QList<QString> &argumentList);
+        int cmdOpenCriteria3DProject(const QList<QString> &argumentList);
+        int cmdLoadState(const QList<QString> &argumentList);
+        int cmdRunModels(const QList<QString> &argumentList);
+        int cmdSaveCurrentState();
+
+        int printCriteria3DVersion();
+        int printCriteria3DCommandList();
+        int cmdSetThreadsNr(const QList<QString> &argumentList);
 
     };
 

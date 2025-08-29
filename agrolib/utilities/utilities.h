@@ -53,7 +53,7 @@
     QList<QString> readListSingleColumn(QString fileName, QString& error);
 
     bool removeDirectory(QString myPath);
-    bool searchDocPath(QString* docPath);
+    bool searchDocPath(QString &docPath);
     bool searchDataPath(QString* dataPath);
 
     void removeOldFiles(const QString &targetPath, const QString &targetStr, int nrDays);
