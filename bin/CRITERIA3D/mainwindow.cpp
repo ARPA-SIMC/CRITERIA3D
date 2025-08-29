@@ -3620,5 +3620,3 @@ void MainWindow::on_actionSave_outputRaster_triggered()
         myProject.logError(QString::fromStdString(errorStr));
     }
 }
-
-
