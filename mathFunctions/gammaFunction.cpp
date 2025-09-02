@@ -717,11 +717,42 @@
 
     // Gives the cumulative distribution function of input "myValue",
     // following a LogLogistic distribution
-    float logLogisticCDF(float myValue, double alpha, double beta, double gamma)
+    double logLogisticCDF(float myValue, double alpha, double beta, double gamma)
     {
         double logLogisticCDF = 1. / (1. + (pow((alpha / (double(myValue) - beta)), gamma)));
 
-        return float(logLogisticCDF);
+        return logLogisticCDF;
+    }
+
+    double logLogisticCDFRobust(float myValue, double alpha, double beta, double gamma)
+    {
+        double logLogisticCDF;
+        double s;
+        if (alpha > 0 && (myValue - beta)> 0)
+            s = gamma * (log(myValue - beta) - log(alpha));
+        else if (alpha < 0 && (myValue - beta)< 0)
+            s = gamma * (log(-myValue + beta) - log(-alpha));
+        else if (alpha < 0 && (myValue - beta) >= 0)
+        {
+            s = gamma * (log(0.5) - log(-alpha));
+        }
+        else if (alpha > 0 && (myValue - beta) <= 0)
+        {
+            s = gamma * (log(0.5) - log(alpha));
+        }
+        else
+            return PARAMETER_ERROR;
+
+        if (s >= 0)
+        {
+            logLogisticCDF = 1. / (1. + std::exp(-s));
+        }
+        else
+        {
+            logLogisticCDF = std::exp(s) / (1. + std::exp(s));
+        }
+
+        return (MAXVALUE(logLogisticCDF-0.0000001,0));
     }
 
     double weibullCDF(double x, double lambda, double kappa)

@@ -19,8 +19,8 @@
     float probabilityGamma(float x, double alpha, double beta);
     void probabilityWeightedMoments(std::vector<float> series, int n, std::vector<float> &probWeightedMoments, float a, float b, bool isBeta);
     void logLogisticFitting(std::vector<float> probWeightedMoments, double *alpha, double *beta, double *gamma);
-    float logLogisticCDF(float myValue, double alpha, double beta, double gamma);
-
+    double logLogisticCDF(float myValue, double alpha, double beta, double gamma);
+    double logLogisticCDFRobust(float myValue, double alpha, double beta, double gamma);
     bool getGammaParameters(double mean, double variance, double* alpha, double* beta);
     double gammaFunction(double value);
     double gammaNaturalLogarithm(double value);
