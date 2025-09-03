@@ -34,6 +34,8 @@
 #include "basicMath.h"
 #include "furtherMathFunctions.h"
 
+using namespace std;
+
 
     double factorial(int n) {
         static long double const factorials[] = {
