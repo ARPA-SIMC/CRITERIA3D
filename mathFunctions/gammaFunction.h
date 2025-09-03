@@ -5,6 +5,8 @@
     #include <vector>
 #endif
 
+    #include <math.h>
+
     #define ITERATIONSMAX 100
     #define EPSTHRESHOLD 3.0e-7
     #define FPMINIMUM 1.0e-30
