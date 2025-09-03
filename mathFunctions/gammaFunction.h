@@ -5,7 +5,7 @@
     #include <vector>
 #endif
 
-    #include <math.h>
+    #include <cmath>
 
     #define ITERATIONSMAX 100
     #define EPSTHRESHOLD 3.0e-7
