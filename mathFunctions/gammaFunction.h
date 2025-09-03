@@ -9,6 +9,8 @@
     #define EPSTHRESHOLD 3.0e-7
     #define FPMINIMUM 1.0e-30
 
+    using namespace std;
+
 // functions
     double factorial(int n);
     double standardGaussianInvCDF(double prob);
