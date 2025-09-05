@@ -49,9 +49,7 @@ HEADERS += \
     water.h
 
 DISTFILES += \
-    ToDoList.txt \
-    oldLogFunctions.txt \
-    temp_gpuSolver_cpp.txt
+    ToDoList.txt
 
 unix:{
     CONFIG(debug, debug|release) {
@@ -65,18 +63,18 @@ win32:{
 }
 
 
-#CONFIG += MCR_CONFIG
+CONFIG += MCR_CONFIG
 
 CONFIG(MCR_CONFIG) {
-    DEFINES += MCR_ENABLED
+    #DEFINES += MCR_ENABLED
 
     SOURCES += \
         logFunctions.cpp
     HEADERS += \
         logFunctions.h
 
-    LIBS += -L"D:/App e giochi/MATLAB/R2024b/extern/lib/win64/microsoft" libmx.lib libmat.lib
-    LIBS += -L"D:/App e giochi/MATLAB/R2024b/bin/win64"
+    #LIBS += -L"D:/App e giochi/MATLAB/R2024b/extern/lib/win64/microsoft" libmx.lib libmat.lib
+    #LIBS += -L"D:/App e giochi/MATLAB/R2024b/bin/win64"
 
     INCLUDEPATH += "D:/App e giochi/MATLAB/R2024b/extern/include"
 }

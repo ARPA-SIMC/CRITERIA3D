@@ -1109,7 +1109,6 @@ bool Crit3DProject::runModels(const QDateTime &firstTime, const QDateTime &lastT
 
         for (int hour = firstHour; hour <= lastHour; hour++)
         {
-            //QDateTime startTime = QDateTime::currentDateTime();
             setCurrentHour(hour);
             if (currentSeconds == 0 || currentSeconds == 3600)
                 isRestart = false;
@@ -1123,7 +1122,7 @@ bool Crit3DProject::runModels(const QDateTime &firstTime, const QDateTime &lastT
 
             //Log SF3D data
             soilFluxes3D::New::closeLog();
-            logInfo("Log done 00\n");       //TO DO: implement log feedback
+            logInfo("Sub version counter: 00\n");
 
             //rothC maps update must be done hourly, otherwise ETReal data are not stored
             if (processes.computeRothC || processes.computeHydrall)

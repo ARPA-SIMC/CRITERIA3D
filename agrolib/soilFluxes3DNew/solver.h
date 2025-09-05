@@ -27,12 +27,15 @@ namespace soilFluxes3D::New
             void updateParameters(const SolverParametersPartial &newParameters) noexcept;
             void setTimeStep(double timeStep) noexcept;
 
+            __cudaSpec solverType getSolverType() const noexcept;
             __cudaSpec WRCModel getWRCModel() const noexcept;
             __cudaSpec bool getOMPstatus() const noexcept;
             __cudaSpec double getMaxTimeStep() const noexcept;
             __cudaSpec double getLVRatio() const noexcept;
             __cudaSpec meanType_t getMeanType() const noexcept;
-            virtual __cudaSpec double getMatrixElementValue(uint64_t rowIndex, uint64_t colIndex) = 0;
+
+            template<class Derived>
+            __cudaSpec double getMatrixElementValue(uint64_t rowIndex, uint64_t colIndex) const noexcept;
 
             virtual SF3Derror_t inizialize() = 0;
             virtual SF3Derror_t run(double maxTimeStep, double &acceptedTimeStep, processType process) = 0;
@@ -75,6 +78,10 @@ namespace soilFluxes3D::New
         _parameters.deltaTcurr = timeStep;
     }
 
+    inline __cudaSpec solverType Solver::getSolverType() const noexcept
+    {
+        return _type;
+    }
     inline __cudaSpec WRCModel Solver::getWRCModel() const noexcept
     {
         return _parameters.waterRetentionCurveModel;
@@ -94,6 +101,12 @@ namespace soilFluxes3D::New
     inline __cudaSpec meanType_t Solver::getMeanType() const noexcept
     {
         return _parameters.meantype;
+    }
+
+    template<class Derived>
+    __cudaSpec double Solver::getMatrixElementValue(uint64_t rowIndex, uint64_t colIndex) const noexcept
+    {
+        return static_cast<const Derived*>(this)->getMatrixElementValue(rowIndex, colIndex);
     }
 } // namespace soilFluxes3D
 

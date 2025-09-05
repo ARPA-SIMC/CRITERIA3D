@@ -22,50 +22,38 @@ namespace soilFluxes3D::New
             uint64_t numThreadsPerBlock;
             uint64_t numBlocks;
 
-            void computeMatrix();
-            void computeVector();
-
             void waterMainLoop(double maxTimeStep, double& acceptedTimeStep);
             balanceResult_t waterApproximationLoop(double deltaT);
-
             bool solveLinearSystem(uint8_t approximationNumber, processType computationType) override;
+
+            //TEMP: maybe can be unified with CPU code in single __host__ __device__ function
+            balanceResult_t evaluateWaterBalance_m(uint8_t approxNr, double& bestMBRerror, double deltaT);
+            void computeCurrentMassBalance_m(double deltaT);
+            double computeTotalWaterContent_m();
+            double computeWaterSinkSourceFlowsSum_m(double deltaT);
+            void acceptStep_m(double deltaT);
+            void restoreBestStep_m(double deltaT);
+
             SF3Derror_t upCopyData();
             SF3Derror_t upMoveSoilSurfacePtr();
             SF3Derror_t downCopyData();
             SF3Derror_t downMoveSoilSurfacePtr();
             SF3Derror_t createCUsparseDescriptors();
 
-            /*temp*/ nodesData_t* ptr = nullptr;
-            /*temp*/ MatrixCPU matrixA;
-            /*temp*/ VectorCPU vectorB, vectorX;
-
-            /*temp*/ VectorCPU vectorC;
-
         public:
             GPUSolver() : Solver(GPU, Jacobi) {}
 
-            __cudaSpec double getMatrixElementValue(uint64_t rowIndex, uint64_t colIndex) override;
+            __cudaSpec double getMatrixElementValue(uint64_t rowIndex, uint64_t colIndex) const noexcept;
 
             SF3Derror_t inizialize() override;
             SF3Derror_t run(double maxTimeStep, double &acceptedTimeStep, processType process) override;
             SF3Derror_t clean() override;
-
-            SF3Derror_t gatherOutput(double *&vecX);
     };
 
-    inline __cudaSpec double GPUSolver::getMatrixElementValue(uint64_t rowIndex, uint64_t colIndex)
+    inline __cudaSpec double GPUSolver::getMatrixElementValue(uint64_t rowIndex, uint64_t colIndex) const noexcept
     {
-        /*temp*/ uint8_t cpuColIdx;
-        /*temp*/ for(cpuColIdx = 0; cpuColIdx < matrixA.numColumns[rowIndex]; ++cpuColIdx)
-        /*temp*/     if(matrixA.colIndeces[rowIndex][cpuColIdx] == colIndex)
-        /*temp*/         break;
-
-        /*temp*/ //assert(cpuColIdx < matrixA.numColumns[rowIndex]);
-        /*temp*/ return matrixA.values[rowIndex][cpuColIdx] * matrixA.values[rowIndex][0];
-
-
-        uint64_t sliceIndex = (uint64_t)(std::floor((double) rowIndex / iterationMatrix.sliceSize));
-        uint64_t baseIndex = (uint64_t)(iterationMatrix.d_offsets[sliceIndex]);
+        uint64_t sliceIndex = static_cast<uint64_t>(floor((double) rowIndex / iterationMatrix.sliceSize));
+        uint64_t baseIndex = static_cast<uint64_t>(iterationMatrix.d_offsets[sliceIndex]);
         uint64_t pOffIndex = rowIndex % iterationMatrix.sliceSize;
 
         for(uint16_t colSELLIdx = 0; colSELLIdx < iterationMatrix.d_numColsInRow[rowIndex]; ++colSELLIdx)
@@ -78,14 +66,16 @@ namespace soilFluxes3D::New
         return 0.;
     }
 
-    __global__ void init_SurfaceC_SubSurfaceSe(double *vectorC);
-    __global__ void updateBoundaryWaterData_k(double deltaT);
-    __global__ void updateSaturationDegree_k();
-
+    __global__ void inizializeCapacityAndSaturationDegree_k(double *vectorC);
     __global__ void computeCapacity_k(double *vectorC);
-    __global__ void computeLinearSystemElement_k(MatrixGPU matrixA, VectorGPU vectorB, const double* Cvalues, uint8_t approxNum, double deltaT, double lateralVerticalRatio, meanType_t meanType);
+    __global__ void updateBoundaryWaterData_k(double deltaT);
 
+    __global__ void computeLinearSystemElement_k(MatrixGPU matrixA, VectorGPU vectorB, const double* Cvalues, uint8_t approxNum, double deltaT, double lateralVerticalRatio, meanType_t meanType);
     __global__ void computeNormalizedError(double *vectorNorm, double *vectorX, const double *previousX);
+
+    __global__ void updateSaturationDegree_k();
+    __global__ void updateWaterFlows_k(double deltaT);
+    __global__ void computeWaterContent_k(double* outVector);
 
 } // namespace soilFluxes3D::New
 

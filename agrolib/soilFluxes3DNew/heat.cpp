@@ -15,11 +15,11 @@ namespace soilFluxes3D::New
 namespace soilFluxes3D::Heat
 {
 
-double computeThermalLiquidFlux(uint64_t srcIndex, uint64_t dstIndex, double timeStep, double timeStepWater, processType process)
+double computeThermalLiquidFlux(uint64_t srcIndex, uint64_t dstIndex, [[maybe_unused]] double timeStep, [[maybe_unused]] double timeStepWater, processType process)
 {
     // TO DO: inserire time step water per calcolo più preciso
 
-    double tavg, tavglink, havg, havglink;
+    double [[maybe_unused]] tavg, tavglink, havg, havglink;
     switch(process)
     {
         case processType::Water:
@@ -49,7 +49,7 @@ double computeThermalLiquidFlux(uint64_t srcIndex, uint64_t dstIndex, double tim
 
 }
 
-double computeThermalVaporFlux(uint64_t srcIndex, uint64_t dstIndex, double timeStep, double timeStepWater, processType process)
+double computeThermalVaporFlux([[maybe_unused]] uint64_t srcIndex, [[maybe_unused]] uint64_t dstIndex, [[maybe_unused]] double timeStep, [[maybe_unused]] double timeStepWater, [[maybe_unused]] processType process)
 {
     //TO COMPLETE
     return 0;
