@@ -1,27 +1,32 @@
 Minor
  - Convert enum to enum class
  - Finalize variable names
- - Finalize Log structure and API
-
- - Remove using namespace
+ - Remove "using namespace" directive
  - Use #pragma once instead of #ifndef / #define
- - Gestione complessiva delle include tramite .pri
 
  - Replace macros with inline constexpr + error checking macro
- - Replace #pragma with _Pragma macro + introduce and test simd directive
+ - Replace #pragma with _Pragma macro + introduce and test "omp simd" and "omp atomic update" directives (if !MSVC)
+ - Rework all cast operation to static/reinterpret cast
+
+ - Implement 1D soil/surface vector/array structure
+ - Combine temp "_m" - methods with the free functions -> #ifdef structure e/o CRTP
+
+ - Finalize log enabilng in .pro/.pri file
+ - Move all feature enabling with .pri file
+ - Remove ui_mainwindows.h from the repo
 
  - Refactor loops outside of soilFluxes3D
+ - Implement openMP parallelization
 
- - Remove debug checks
- - Rename SF3D to SF3Dold
+ - Try to optimize log array save
 
- - Add print of time computed each call
+ - MAYBE: move to 32 bit integer values
+ - MAYBE: move to new[] allocation
 
-Major 
+Major
  - Implement heat part
- - Finalize and debug GPU implementation
+ - Implement Culvert
 
  - Discuss branch structure
-
-Extra
- - Validate solutions (MATLAB)
+ 	- Rename SF3D to SF3Dv1 and SF3Dnew to v2 (inline namespace?) or remove old version?
+	- Complete debug checks -> Remove debug checks

@@ -15,6 +15,7 @@
 #endif
 
 #ifdef CUDA_ENABLED
+    #include <cuda.h>
     #include <cuda_runtime.h>
     #define __cudaMngd __managed__
     #define __cudaSpec __host__ __device__
@@ -31,10 +32,38 @@
 
     #define SF3Dmax(v1, v2) std::max(v1, v2)
     #define SF3Dmin(v1, v2) std::min(v1, v2)
+
 #endif
 
-//TO DO: move all macro into inline funtions
-//TO DO: move all type from c-style names to c++ names (std:: + c++ header)
+
+#define SF3DatomicMax(ptr, value) atomicMaxDouble(ptr, value)
+
+inline __cudaSpec void atomicMaxDouble(double *ptr, double value)
+{
+    #ifdef __CUDA_ARCH__
+        using ull = unsigned long long int;
+        ull* addrAsULL = reinterpret_cast<ull*>(ptr);
+        ull newValue = __double_as_longlong(value);
+        ull oldValue = *addrAsULL, assumed;
+        do
+        {
+            assumed = oldValue;
+            if(newValue <= assumed)
+                break;
+            oldValue = atomicCAS(addrAsULL, assumed, newValue);
+        }
+        while(assumed != oldValue);
+
+    #else
+        #pragma omp critical
+        *ptr = (*ptr > value) ? *ptr : value;
+    #endif
+}
+
+
+
+
+//TO DO: move all macro into inline funtions + errorCheck
 
 #define hostAlloc(ptr, type, size) {if(ptr != nullptr) {return MemoryError;} ptr = static_cast<type*>(std::calloc(size, sizeof(type))); if(ptr==nullptr) {return MemoryError;}}
 #define hostFill(ptr, size, value) {std::fill(ptr, ptr + size, value);}
@@ -57,18 +86,19 @@
  * - use a pinned buffer
  * - use async copy
  */
+
 #define moveToDevice(ptr, type, count) { type *tmp;                                                                     \
-                                         cudaCheck(cudaMalloc((void**) &(tmp), count * sizeof(type)));                  \
-                                         cudaCheck(cudaMemcpy(tmp, ptr, count * sizeof(type), cudaMemcpyHostToDevice)); \
+                                         cudaMalloc((void**) &(tmp), count * sizeof(type));                  \
+                                         cudaMemcpy(tmp, ptr, count * sizeof(type), cudaMemcpyHostToDevice); \
                                          std::free(ptr); ptr = tmp; }
 
 #define moveToHost(ptr, type, count) { type *tmp = static_cast<type*>(std::calloc(count, sizeof(type)));                     \
-                                       cudaCheck(cudaMemcpy(tmp, ptr, count * sizeof(type), cudaMemcpyDeviceToHost));   \
-                                       cudaCheck(cudaFree(ptr)); ptr = tmp; }
+                                       cudaMemcpy(tmp, ptr, count * sizeof(type), cudaMemcpyDeviceToHost);   \
+                                       cudaFree(ptr); ptr = tmp; }
 
 
-#define launchKernel(kernel, ...) {kernel<<<numBlocks, numThreadsPerBlock>>>(__VA_ARGS__);  \
-                                    cudaDeviceSynchronize();}
+#define launchKernel(kernel, ...) { kernel<<<numBlocks, numThreadsPerBlock>>>(__VA_ARGS__);  \
+                                    cudaDeviceSynchronize(); }
 
 
 #define solverCheck(retValue) {if(retValue != SF3Dok) {_status = Error; return SolverError;}}

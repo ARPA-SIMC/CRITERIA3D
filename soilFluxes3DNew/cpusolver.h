@@ -19,14 +19,14 @@ namespace soilFluxes3D::New
 
         public:
             CPUSolver() : Solver(CPU, Jacobi) {}
-            __cudaSpec double getMatrixElementValue(uint64_t rowIndex, uint64_t colIndex) override;
+            __cudaSpec double getMatrixElementValue(uint64_t rowIndex, uint64_t colIndex) const noexcept;
 
             SF3Derror_t inizialize() override;
             SF3Derror_t run(double maxTimeStep, double &acceptedTimeStep, processType process) override;
             SF3Derror_t clean() override;
     };
 
-    inline double CPUSolver::getMatrixElementValue(uint64_t rowIndex, uint64_t colIndex)
+    inline __cudaSpec double CPUSolver::getMatrixElementValue(uint64_t rowIndex, uint64_t colIndex) const noexcept
     {
         //assert(matrixA.values != nullptr);
         uint8_t cpuColIdx;

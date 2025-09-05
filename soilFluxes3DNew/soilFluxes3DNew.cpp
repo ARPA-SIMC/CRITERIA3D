@@ -1,5 +1,6 @@
 #include <algorithm>
 #include <iostream>
+#include <new>
 
 #include "commonConstants.h"
 #include "soilFluxes3DNew.h"
@@ -942,7 +943,7 @@ namespace soilFluxes3D::New
                 if(nodeGrid.linkData[1].linkIndex[nodeIndex] == NoLink)
                     return IndexError;
 
-                return nodeGrid.linkData[0].waterFlowSum[nodeIndex];
+                return nodeGrid.linkData[1].waterFlowSum[nodeIndex];
             case Lateral:
                 for(uint8_t linkIdx = 0; linkIdx < maxLateralLink; ++linkIdx)   //TO DO: change limit to nodeGrid.numLateralLink[nodeIndex];
                     if(nodeGrid.linkData[2 + linkIdx].linkIndex[nodeIndex] != NoLink)

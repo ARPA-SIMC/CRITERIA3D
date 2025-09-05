@@ -193,7 +193,7 @@ namespace soilFluxes3D::New
             assert(vectorX.numElements == nodeGrid.numNodes);
             std::memcpy(nodeGrid.waterData.pressureHead, vectorX.values, vectorX.numElements * sizeof(double));
 
-            //Update degree of saturation
+            //Update degree of saturation   //TO DO: make a function
             #pragma omp parallel for if(_parameters.enableOMP)
             for (uint64_t nodeIdx = 0; nodeIdx < nodeGrid.numNodes; ++nodeIdx)
                 if(!nodeGrid.surfaceFlag[nodeIdx])

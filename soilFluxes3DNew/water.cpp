@@ -1,7 +1,11 @@
 #include <cassert>
 #include <iostream>
 
-#include "solver.h"
+#ifdef CUDA_ENABLED
+    #include "gpusolver.h"
+#endif
+#include "cpusolver.h"
+
 #include "water.h"
 #include "soilPhysics.h"
 #include "heat.h"
@@ -22,7 +26,6 @@ namespace soilFluxes3D::New
 
 namespace soilFluxes3D::Water
 {
-
     /*!
      * \brief inizializes the water balance variables
      * \return Ok/Error
@@ -104,7 +107,7 @@ namespace soilFluxes3D::Water
 
         #pragma omp parallel for if(__ompStatus) reduction(+:sum)
         for (uint64_t idx = 0; idx < nodeGrid.numNodes; ++idx)
-            if(nodeGrid.waterData.waterFlow[idx] != 0)     //TO DO: evaluate remove check
+            if(nodeGrid.waterData.waterFlow[idx] != 0)     //TO DO: move to a ternary operator
                 sum += nodeGrid.waterData.waterFlow[idx] * deltaT;
 
         return sum;
@@ -189,7 +192,7 @@ namespace soilFluxes3D::Water
         }
     }
 
-    void saveBestStep()
+    void saveBestStep() //TO DO: remove
     {
         std::memcpy(nodeGrid.waterData.bestPressureHeads, nodeGrid.waterData.pressureHead, nodeGrid.numNodes * sizeof(double));
     }
@@ -216,7 +219,7 @@ namespace soilFluxes3D::Water
         nodeGrid.linkData[linkIndex].waterFlowSum[nodeIndex] += matrixValue * (nodeGrid.waterData.pressureHead[nodeIndex] - nodeGrid.waterData.pressureHead[linkedNodeIndex]) * deltaT;
     }
 
-    void restorePressureHead()
+    void restorePressureHead() //TO DO: remove
     {
         std::memcpy(nodeGrid.waterData.pressureHead, nodeGrid.waterData.oldPressureHeads, nodeGrid.numNodes * sizeof(double));
     }
@@ -241,7 +244,8 @@ namespace soilFluxes3D::Water
         }
     }
 
-    void computeLinearSystemElement(MatrixCPU &matrixA, VectorCPU& vectorB, const VectorCPU& vectorC, uint8_t approxNum, double deltaT, double lateralVerticalRatio, meanType_t meanType)
+    //TO DO: move to a CPUSolver method
+    void computeLinearSystemElement(MatrixCPU& matrixA, VectorCPU& vectorB, const VectorCPU& vectorC, uint8_t approxNum, double deltaT, double lateralVerticalRatio, meanType_t meanType)
     {
         #pragma omp parallel for if(__ompStatus)
         for (uint64_t rowIdx = 0; rowIdx < matrixA.numRows; ++rowIdx)
@@ -249,17 +253,17 @@ namespace soilFluxes3D::Water
             uint8_t linkIdx = 1;
             bool isLinked;
 
-            //compute flux up
+            //Compute flux up
             isLinked = computeLinkFluxes(matrixA.values[rowIdx][linkIdx], matrixA.colIndeces[rowIdx][linkIdx], rowIdx, 0, approxNum, deltaT, lateralVerticalRatio, Up, meanType);
             if(isLinked)
                 linkIdx++;
 
-            //compute flox down
+            //Compute flox down
             isLinked = computeLinkFluxes(matrixA.values[rowIdx][linkIdx], matrixA.colIndeces[rowIdx][linkIdx], rowIdx, 1, approxNum, deltaT, lateralVerticalRatio, Down, meanType);
             if(isLinked)
                 linkIdx++;
 
-            //compute flux lateral
+            //Compute flux lateral
             for(uint8_t latIdx = 0; latIdx < maxLateralLink; ++latIdx)
             {
                 isLinked = computeLinkFluxes(matrixA.values[rowIdx][linkIdx], matrixA.colIndeces[rowIdx][linkIdx], rowIdx, 2 + latIdx, approxNum, deltaT, lateralVerticalRatio, Lateral, meanType);
@@ -369,8 +373,8 @@ namespace soilFluxes3D::Water
         double v = std::pow(H_s, 2./3.) * std::sqrt(slope) / roughness;
 
         #pragma omp critical
-        nodeGrid.waterData.CourantWaterLevel = SF3Dmax(nodeGrid.waterData.CourantWaterLevel, v * deltaT / cellDistance);
 
+            nodeGrid.waterData.CourantWaterLevel = SF3Dmax(nodeGrid.waterData.CourantWaterLevel, v * deltaT / cellDistance);
         return v * flowArea * H_s / dH;
     }
 
@@ -450,7 +454,7 @@ namespace soilFluxes3D::Water
     {
         double infinityNorm = -1;
 
-        double* tempX = (double*) calloc(vectorX.numElements, sizeof(double));
+        double* tempX = (double*) std::calloc(vectorX.numElements, sizeof(double));
         std::memcpy(tempX, vectorB.values, vectorB.numElements * sizeof(double));
 
         #pragma omp parallel for if(__ompStatus) reduction(max:infinityNorm)
@@ -592,7 +596,22 @@ namespace soilFluxes3D::Water
 
     __cudaSpec double getMatrixElement(uint64_t rowIndex, uint64_t columnIndex)
     {
-        return solver->getMatrixElementValue(rowIndex, columnIndex);
+        #ifdef CUDA_ENABLED
+            switch(solver->getSolverType())
+            {
+                case GPU:
+                    return solver->getMatrixElementValue<GPUSolver>(rowIndex, columnIndex);
+                    break;
+                case CPU:
+                    return solver->getMatrixElementValue<CPUSolver>(rowIndex, columnIndex);
+                    break;
+                default:
+                    return 0.;
+            }
+        #else
+            return solver->getMatrixElementValue<CPUSolver>(rowIndex, columnIndex);
+        #endif
+
     }
 
 }//namespace
