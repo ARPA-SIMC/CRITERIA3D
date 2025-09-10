@@ -105,11 +105,12 @@ double runoff(long i, long j, TlinkedNode *link, double deltaT, unsigned approxi
         return 0.;
 
     // Land depression
+    /*
     if ((Hi > Hj && zi < zj) || (Hj > Hi && zj < zi))
     {
-        // TODO laghi (land use?)
+        // TODO lakes (land use?)
         Hs = std::min(Hs, dH);
-    }
+    }*/
 
     double cellDistance = distance2D(i, j);
     double slope = dH / cellDistance;

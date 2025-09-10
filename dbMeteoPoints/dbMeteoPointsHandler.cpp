@@ -1384,7 +1384,7 @@ bool Crit3DMeteoPointsDbHandler::importHourlyMeteoData(const QString &csvFileNam
     if (! existIdPoint(pointCode))
     {
         log += "\nID " + pointCode + " is not present in the point properties table.";
-        return false;
+        return true;
     }
 
     // check input file
