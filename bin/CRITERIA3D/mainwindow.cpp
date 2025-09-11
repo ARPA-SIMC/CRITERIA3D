@@ -229,7 +229,7 @@ void MainWindow::mouseMove(QPoint eventPos)
 
     Position pos = this->mapView->mapToScene(eventPos);
 
-    QString infoStr = "Lat:" + QString::number(pos.latitude()) + " Lon:" + QString::number(pos.longitude());
+    QString infoStr = "Lat:" + QString::number(pos.latitude(), 'g', 7) + " Lon:" + QString::number(pos.longitude(), 'g', 7);
 
     if (rasterOutput->visible())
     {

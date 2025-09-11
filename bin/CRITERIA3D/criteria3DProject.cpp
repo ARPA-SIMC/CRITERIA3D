@@ -1924,7 +1924,9 @@ bool Crit3DProject::checkProcesses()
         return false;
     }
 
-    if (! (processes.computeCrop || processes.computeWater || processes.computeSnow || processes.computeHydrall || processes.computeRothC))
+    if (! (processes.computeRadiation || processes.computeMeteo ||
+          processes.computeCrop || processes.computeWater || processes.computeSnow
+          || processes.computeHydrall || processes.computeRothC))
     {
         errorString = ERROR_STR_MISSING_PROCESSES;
         return false;
@@ -2060,7 +2062,6 @@ bool Crit3DProject::runModelHour(const QString& hourlyOutputPath, bool isRestart
                 return false;
         }
 
-
         emit updateOutputSignal();
     }
 
@@ -2075,6 +2076,10 @@ bool Crit3DProject::runModelHour(const QString& hourlyOutputPath, bool isRestart
         runWaterFluxes3DModel(3600, isRestart);
 
         qApp->processEvents();
+    }
+    else
+    {
+        currentSeconds = 3600;
     }
 
     // soil heat
