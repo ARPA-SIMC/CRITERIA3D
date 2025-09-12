@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # specify your Qt directory
-QT_DIR=/Users/xxxxxx/Qt/5.x.x/clang_64/bin
+QT_DIR=/Users/xxxxxxx/Qt/5.x.x/clang_64/bin
 QMAKE=$QT_DIR/qmake
 QDEPLOY=$QT_DIR/macdeployqt
 
@@ -28,7 +28,7 @@ cd -
 mkdir CRITERIA3D
 mkdir CRITERIA3D/bin
 
-cp -r ../bin/CRITERIA3D/release/CRITERIA3D CRITERIA3D/bin/CRITERIA3D
+cp -r ../bin/CRITERIA3D/CRITERIA3D.app CRITERIA3D/bin/CRITERIA3D.app
 
 # deploy app
 cd CRITERIA3D/bin
@@ -40,11 +40,12 @@ cd -
 mkdir CRITERIA3D/DOC
 mkdir CRITERIA3D/DOC/img
 cp ../DOC/CRITERIA3D.pdf CRITERIA3D/DOC/CRITERIA3D.pdf
+cp ../DOC/CRITERIA3D_user_manual.pdf CRITERIA3D/DOC/CRITERIA3D_user_manual.pdf
 cp ../DOC/img/saveButton.png CRITERIA3D/DOC/img
 cp ../DOC/img/updateButton.png CRITERIA3D/DOC/img
 cp ../DOC/img/textural_soil.png CRITERIA3D/DOC/img
 
 # copy ALL data directory
-mkdir CRITERIA1D/DATA
-cp -R ../DATA/* CRITERIA1D/DATA/
+mkdir CRITERIA3D/DATA
+cp -R ../DATA/* CRITERIA3D/DATA/
 
