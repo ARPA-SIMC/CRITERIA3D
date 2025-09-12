@@ -33,13 +33,15 @@ Water fluxes equations may be coupled with the heat flux equations, which includ
 - Laura Costantini
 - Giada Sannino
 - Alberto Pistocchi  
-- Marco Bittelli  
+- Marco Bittelli
+- Caterina Toscano  
 
 ## Contacts
 - ftomei@arpae.it   (CRITERIA3D)
 - gantolini@arpae.it  (VINE3D)
 - gsannino@arpae.it (slope stability)
-- avolta@arpae.it  (grapevine library)
+- avolta@arpae.it  (grapevine)
+- ctoscano@arpae.it (hydrall model)
 
 ## License
 CRITERIA-3D has been developed under contract issued by [ARPAE Hydro-Meteo-Climate Service](https://github.com/ARPA-SIMC), Emilia-Romagna, Italy.  
