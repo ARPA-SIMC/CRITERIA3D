@@ -3464,13 +3464,13 @@ void MainWindow::on_actionView_DegreeOfSaturation_fixed_range_triggered()
 void MainWindow::on_actionView_Factor_of_safety_triggered()
 {
     int layerIndex = std::max(1, ui->layerNrEdit->value());
-    showCriteria3DVariable(factorOfSafety, layerIndex, true, true, 0, 2);
+    showCriteria3DVariable(factorOfSafety, layerIndex, true, false, 0, 2);
 }
 
 
 void MainWindow::on_actionView_Factor_of_safety_minimum_triggered()
 {
-    showCriteria3DVariable(minimumFactorOfSafety, NODATA, true, true, 0, 2);
+    showCriteria3DVariable(minimumFactorOfSafety, NODATA, true, false, 0, 2);
 }
 
 
