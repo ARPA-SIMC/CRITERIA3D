@@ -2,6 +2,7 @@
 #define SOILFLUXES3D_SOLVER_H
 
 #include <cstdlib>
+#include <cassert>
 
 #include "types_cpu.h"
 #include "macro.h"

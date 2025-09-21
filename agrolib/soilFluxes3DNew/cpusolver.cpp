@@ -5,10 +5,6 @@
 #include "cpusolver.h"
 #include "soilPhysics.h"
 #include "water.h"
-#ifdef MCR_ENABLED
-    #include "logFunctions.h"
-    using namespace soilFluxes3D::Log;
-#endif
 
 using namespace soilFluxes3D::Soil;
 using namespace soilFluxes3D::Water;
@@ -73,6 +69,7 @@ namespace soilFluxes3D::New
             default:
                 break;
         }
+
         _status = Terminated;
         _status = Inizialized;
         return SF3Dok;
@@ -154,15 +151,27 @@ namespace soilFluxes3D::New
         {
             //Compute capacity vector elements
             computeCapacity(vectorC);
+            logStruct;
 
             //Update boundary water
             updateBoundaryWaterData(deltaT);
+            logStruct;
 
-            //Update Courant data
+            //Reset Courant data
             nodeGrid.waterData.CourantWaterLevel = 0.;
+            std::memset(nodeGrid.waterData.partialCourantWaterLevels, 0, nodeGrid.numNodes * sizeof(double));
 
             //Compute linear system elements
             computeLinearSystemElement(matrixA, vectorB, vectorC, approxIdx, deltaT, _parameters.lateralVerticalRatio, _parameters.meantype);
+
+            //Courant data reduction
+            double tempMax = 0;
+            #pragma omp parallel for reduction(max:tempMax)
+            for(uint64_t idx = 0; idx < nodeGrid.numNodes; ++idx)
+                tempMax = SF3Dmax(tempMax, nodeGrid.waterData.partialCourantWaterLevels[idx]);
+
+            nodeGrid.waterData.CourantWaterLevel = tempMax;
+            logStruct;
 
             //Check Courant
             if((nodeGrid.waterData.CourantWaterLevel > 1.) && (deltaT > _parameters.deltaTmin))
@@ -174,13 +183,13 @@ namespace soilFluxes3D::New
                 return stepHalved;
             }
 
+
             //Try solve linear system
             bool isStepValid = solveLinearSystem(approxIdx, Water);
+            logStruct;
 
-            //Log Data
-            #ifdef MCR_ENABLED
-                createCurrStepLog(matrixA, vectorB, vectorX, isStepValid);
-            #endif
+            //Log system data
+            logSystem;
 
             //Reduce step tipe if system resolution failed
             if((!isStepValid) && (deltaT > _parameters.deltaTmin))
@@ -201,11 +210,12 @@ namespace soilFluxes3D::New
 
             //Check water balance
             balanceResult = evaluateWaterBalance(approxIdx, _bestMBRerror, deltaT, _parameters);
+            logStruct;
 
             if((balanceResult == stepAccepted) || (balanceResult == stepHalved))
                 return balanceResult;
+
         }
-        //TO DO: log functions
 
         return balanceResult;
     }
@@ -235,7 +245,6 @@ namespace soilFluxes3D::New
                 bestErrorNorm = currErrorNorm;
         }
 
-        //TO DO: Log fuction
         return true;
     }
 

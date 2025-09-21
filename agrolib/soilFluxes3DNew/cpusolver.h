@@ -28,15 +28,24 @@ namespace soilFluxes3D::New
 
     inline __cudaSpec double CPUSolver::getMatrixElementValue(uint64_t rowIndex, uint64_t colIndex) const noexcept
     {
+        assert(rowIndex != colIndex);
         //assert(matrixA.values != nullptr);
         uint8_t cpuColIdx;
-        for(cpuColIdx = 0; cpuColIdx < matrixA.numColumns[rowIndex]; ++cpuColIdx)
+        for(cpuColIdx = 1; cpuColIdx < matrixA.numColumns[rowIndex]; ++cpuColIdx)
             if(matrixA.colIndeces[rowIndex][cpuColIdx] == colIndex)
                 break;
 
-        //assert(cpuColIdx < matrixA.numColumns[rowIndex]);
         return matrixA.values[rowIndex][cpuColIdx] * matrixA.values[rowIndex][0];
     }
+
+    inline SF3Derror_t solverHostCheckError(SF3Derror_t retError, solverStatus& status)
+    {
+        if(retError != SF3Dok)
+            status = Error;
+
+        return retError;
+    }
+
 
 } // namespace soilFluxes3D::New
 

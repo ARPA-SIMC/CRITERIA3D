@@ -52,6 +52,10 @@ namespace soilFluxes3D::New
 
     inline __cudaSpec double GPUSolver::getMatrixElementValue(uint64_t rowIndex, uint64_t colIndex) const noexcept
     {
+        //Valori diagonali
+        if(rowIndex == colIndex)
+            return iterationMatrix.d_diagonalValues[rowIndex];
+
         uint64_t sliceIndex = static_cast<uint64_t>(floor((double) rowIndex / iterationMatrix.sliceSize));
         uint64_t baseIndex = static_cast<uint64_t>(iterationMatrix.d_offsets[sliceIndex]);
         uint64_t pOffIndex = rowIndex % iterationMatrix.sliceSize;
@@ -60,7 +64,7 @@ namespace soilFluxes3D::New
         {
             uint64_t finalIndex = baseIndex + pOffIndex + (colSELLIdx * iterationMatrix.sliceSize);
             if(iterationMatrix.d_columnIndeces[finalIndex] == colIndex)
-                return iterationMatrix.d_values[finalIndex];
+                return iterationMatrix.d_values[finalIndex] * iterationMatrix.d_diagonalValues[rowIndex];
         }
 
         return 0.;
@@ -76,6 +80,17 @@ namespace soilFluxes3D::New
     __global__ void updateSaturationDegree_k();
     __global__ void updateWaterFlows_k(double deltaT);
     __global__ void computeWaterContent_k(double* outVector);
+
+
+    template<typename deviceError_t>
+    inline SF3Derror_t solverDeviceCheckError(deviceError_t retError, solverStatus& status, const SF3Derror_t contextErrorType)
+    {
+        if(retError == static_cast<deviceError_t>(0))
+            return SF3Dok;
+
+        status = Error;
+        return contextErrorType;
+    }
 
 } // namespace soilFluxes3D::New
 
