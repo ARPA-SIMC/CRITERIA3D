@@ -11,6 +11,9 @@
 #include "heat.h"
 #include "otherFunctions.h"
 
+#define EPSILON_CUSTOM 0.00001
+#define DBL_EPSILON_CUSTOM 2.2204460492503131e-016
+
 using namespace soilFluxes3D::New;
 using namespace soilFluxes3D::Soil;
 using namespace soilFluxes3D::Math;
@@ -43,10 +46,10 @@ namespace soilFluxes3D::Water
 
         //Reset link water flows
         for (uint8_t linkIndex = 0; linkIndex < maxTotalLink; ++linkIndex)
-            hostReset(nodeGrid.linkData[linkIndex].waterFlowSum, nodeGrid.numNodes * sizeof(double));
+            hostReset(nodeGrid.linkData[linkIndex].waterFlowSum, nodeGrid.numNodes);
 
         //Reset boundary water flows
-        hostReset(nodeGrid.boundaryData.waterFlowSum, nodeGrid.numNodes * sizeof(double));
+        hostReset(nodeGrid.boundaryData.waterFlowSum, nodeGrid.numNodes);
 
         return SF3Dok;
     }
@@ -247,7 +250,7 @@ namespace soilFluxes3D::Water
     //TO DO: move to a CPUSolver method
     void computeLinearSystemElement(MatrixCPU& matrixA, VectorCPU& vectorB, const VectorCPU& vectorC, uint8_t approxNum, double deltaT, double lateralVerticalRatio, meanType_t meanType)
     {
-        #pragma omp parallel for if(__ompStatus)
+        //#pragma omp parallel for if(__ompStatus)
         for (uint64_t rowIdx = 0; rowIdx < matrixA.numRows; ++rowIdx)
         {
             uint8_t linkIdx = 1;
@@ -344,7 +347,7 @@ namespace soilFluxes3D::Water
 
         double dH = std::fabs(H_i - H_j);
 
-        if(dH < DBL_EPSILON)
+        if(dH < DBL_EPSILON_CUSTOM)
             return 0.;
 
         double z_i = nodeGrid.z[rowIdx] + nodeGrid.waterData.pond[rowIdx];
@@ -365,16 +368,16 @@ namespace soilFluxes3D::Water
         double cellDistance = nodeDistance2D(rowIdx, colIdx);
         double slope = dH / cellDistance;
 
-        if(slope < EPSILON)
+        if(slope < EPSILON_CUSTOM)
             return 0.;
 
         double roughness = 0.5 * (nodeGrid.soilSurfacePointers[rowIdx].surfacePtr->roughness + nodeGrid.soilSurfacePointers[colIdx].surfacePtr->roughness);
 
         double v = std::pow(H_s, 2./3.) * std::sqrt(slope) / roughness;
 
-        #pragma omp critical
+        nodeGrid.waterData.partialCourantWaterLevels[rowIdx] = SF3Dmax(nodeGrid.waterData.partialCourantWaterLevels[rowIdx], v * deltaT / cellDistance);
+        //atomicMaxDouble(&(nodeGrid.waterData.CourantWaterLevel), nodeGrid.waterData.tempCourantVector[maxTotalLink*rowIdx + colIdx]);
 
-            nodeGrid.waterData.CourantWaterLevel = SF3Dmax(nodeGrid.waterData.CourantWaterLevel, v * deltaT / cellDistance);
         return v * flowArea * H_s / dH;
     }
 

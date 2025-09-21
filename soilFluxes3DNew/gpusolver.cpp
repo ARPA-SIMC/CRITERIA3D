@@ -7,9 +7,6 @@
 #include "heat.h"
 #include "otherFunctions.h"
 
-#include "mat.h"
-#include "matrix.h"
-
 using namespace soilFluxes3D::Soil;
 using namespace soilFluxes3D::Math;
 using namespace soilFluxes3D::Heat;
@@ -187,12 +184,10 @@ namespace soilFluxes3D::New
             acceptedTimeStep = SF3Dmin(_parameters.deltaTcurr, maxTimeStep);
 
             //Save instantaneus H values
-            //std::memcpy(nodeGrid.waterData.oldPressureHeads, nodeGrid.waterData.pressureHead, nodeGrid.numNodes * sizeof(double));
             cudaMemcpy(nodeGrid.waterData.oldPressureHeads, nodeGrid.waterData.pressureHead, nodeGrid.numNodes * sizeof(double), cudaMemcpyDeviceToDevice);
 
             //Inizialize the solution vector with the current pressure head
             assert(unknownTerm.numElements == nodeGrid.numNodes);
-            //cudaMemcpy(vectorX.values, nodeGrid.waterData.pressureHead, nodeGrid.numNodes * sizeof(double), cudaMemcpyDeviceToHost);
             cudaMemcpy(unknownTerm.d_values, nodeGrid.waterData.pressureHead, nodeGrid.numNodes * sizeof(double), cudaMemcpyDeviceToDevice);
 
             launchKernel(inizializeCapacityAndSaturationDegree_k, d_Cvalues);
@@ -220,14 +215,30 @@ namespace soilFluxes3D::New
             //Compute capacity vector elements
             launchKernel(computeCapacity_k, d_Cvalues);
 
+            logStruct;
+
             //Update boundary water
             launchKernel(updateBoundaryWaterData_k, deltaT);
 
-            //Update Courant data
+            logStruct;
+
+            //Reset Courant data
             nodeGrid.waterData.CourantWaterLevel = 0.;
+            cudaMemset(nodeGrid.waterData.partialCourantWaterLevels, 0, nodeGrid.numNodes * sizeof(double));
 
             //Compute linear system elements
             launchKernel(computeLinearSystemElement_k, iterationMatrix, constantTerm, d_Cvalues, approxIdx, deltaT, _parameters.lateralVerticalRatio, _parameters.meantype);
+
+            //Courant data reduction
+            void* d_tempStorage = nullptr;
+            size_t tempStorageSize = 0;
+            cub::DeviceReduce::Max(d_tempStorage, tempStorageSize, nodeGrid.waterData.partialCourantWaterLevels, &(nodeGrid.waterData.CourantWaterLevel), nodeGrid.numNodes);
+            cudaMalloc(&d_tempStorage, tempStorageSize);
+            cub::DeviceReduce::Max(d_tempStorage, tempStorageSize, nodeGrid.waterData.partialCourantWaterLevels, &(nodeGrid.waterData.CourantWaterLevel), nodeGrid.numNodes);
+            cudaDeviceSynchronize();
+            cudaFree(d_tempStorage);
+
+            logStruct;
 
             //Check Courant
             if((nodeGrid.waterData.CourantWaterLevel > 1.) && (deltaT > _parameters.deltaTmin))
@@ -242,6 +253,8 @@ namespace soilFluxes3D::New
             //Try solve linear system
             bool isStepValid = solveLinearSystem(approxIdx, Water);
 
+            logStruct;
+
             //Reduce step tipe if system resolution failed
             if((!isStepValid) && (deltaT > _parameters.deltaTmin))
             {
@@ -251,12 +264,13 @@ namespace soilFluxes3D::New
 
             //Update potential
             cudaMemcpy(nodeGrid.waterData.pressureHead, unknownTerm.d_values, nodeGrid.numNodes * sizeof(double), cudaMemcpyDeviceToDevice);
-
             //Update degree of saturation
             launchKernel(updateSaturationDegree_k);
 
             //Check water balance
             balanceResult = evaluateWaterBalance_m(approxIdx, _bestMBRerror, deltaT);
+
+            logStruct;
 
             if((balanceResult == stepAccepted) || (balanceResult == stepHalved))
                 return balanceResult;
@@ -422,7 +436,7 @@ namespace soilFluxes3D::New
             return -1;
 
         double* d_waterContentVector = nullptr;
-        cudaMalloc((void**) &d_waterContentVector, sizeof(double));
+        cudaMalloc((void**) &d_waterContentVector, nodeGrid.numNodes * sizeof(double));
 
         launchKernel(computeWaterContent_k, d_waterContentVector);
 
@@ -485,7 +499,14 @@ namespace soilFluxes3D::New
 
     SF3Derror_t GPUSolver::upCopyData()
     {
-        solverCheck(upMoveSoilSurfacePtr());      //Need to be done before moving nodeGrid.surfaceFlag
+        //Streams creations
+        cudaStream_t moveStreams[32];
+        for(auto& stream : moveStreams)
+            cudaStreamCreate(&(stream));
+
+        std::size_t currStreamIdx = 0;
+
+        upMoveSoilSurfacePtr();      //Need to be done before moving nodeGrid.surfaceFlag
 
         //Topology Data
         moveToDevice(nodeGrid.size, double, nodeGrid.numNodes);
@@ -531,7 +552,12 @@ namespace soilFluxes3D::New
             moveToDevice(nodeGrid.waterData.invariantFluxes, double, nodeGrid.numNodes);
             moveToDevice(nodeGrid.waterData.oldPressureHeads, double, nodeGrid.numNodes);
             moveToDevice(nodeGrid.waterData.bestPressureHeads, double, nodeGrid.numNodes);
+            moveToDevice(nodeGrid.waterData.partialCourantWaterLevels, double, nodeGrid.numNodes);
         }
+
+        cudaDeviceSynchronize();
+        for(auto& stream : moveStreams)
+            cudaStreamDestroy(stream);
 
         return SF3Dok;
     }
@@ -543,8 +569,8 @@ namespace soilFluxes3D::New
 
         //Move surface data
         size_t surfaceSize = surfaceList.size() * sizeof(surfaceData_t);
-        cudaCheck(cudaMalloc((void**) &d_surfaceList, surfaceSize));
-        cudaCheck(cudaMemcpy(d_surfaceList, surfaceList.data(), surfaceSize, cudaMemcpyHostToDevice));
+        cudaMalloc((void**) &d_surfaceList, surfaceSize);
+        cudaMemcpy(d_surfaceList, surfaceList.data(), surfaceSize, cudaMemcpyHostToDevice);
 
         //Flat soil data
         size_t soilSize = 0;
@@ -560,8 +586,8 @@ namespace soilFluxes3D::New
 
         //Move soil data
         soilSize *= sizeof(soilData_t);
-        cudaCheck(cudaMalloc((void**) &d_soilList, soilSize));
-        cudaCheck(cudaMemcpy(d_soilList, soilList1D.data(), soilSize, cudaMemcpyHostToDevice));
+        cudaMalloc((void**) &d_soilList, soilSize);
+        cudaMemcpy(d_soilList, soilList1D.data(), soilSize, cudaMemcpyHostToDevice);
 
         #pragma omp parallel for if(_parameters.enableOMP)
         for(uint64_t nodeIndex = 0; nodeIndex < nodeGrid.numNodes; ++nodeIndex)
@@ -586,6 +612,13 @@ namespace soilFluxes3D::New
 
     SF3Derror_t GPUSolver::downCopyData()
     {
+        //Streams creations
+        cudaStream_t moveStreams[32];
+        for(auto& stream : moveStreams)
+            cudaStreamCreate(&(stream));
+
+        std::size_t currStreamIdx = 0;
+
         moveToHost(nodeGrid.size, double, nodeGrid.numNodes);
         moveToHost(nodeGrid.x, double, nodeGrid.numNodes);
         moveToHost(nodeGrid.y, double, nodeGrid.numNodes);
@@ -594,7 +627,7 @@ namespace soilFluxes3D::New
 
         //Soil/surface properties pointers
         moveToHost(nodeGrid.soilSurfacePointers, soil_surface_ptr, nodeGrid.numNodes);
-        solverCheck(downMoveSoilSurfacePtr());      //Need to be done after moving nodeGrid.surfaceFlag
+        downMoveSoilSurfacePtr();      //Need to be done after moving nodeGrid.surfaceFlag
 
         //Boundary data
         moveToHost(nodeGrid.boundaryData.boundaryType, boundaryType_t, nodeGrid.numNodes);
@@ -630,7 +663,12 @@ namespace soilFluxes3D::New
             moveToHost(nodeGrid.waterData.invariantFluxes, double, nodeGrid.numNodes);
             moveToHost(nodeGrid.waterData.oldPressureHeads, double, nodeGrid.numNodes);
             moveToHost(nodeGrid.waterData.bestPressureHeads, double, nodeGrid.numNodes);
+            moveToHost(nodeGrid.waterData.partialCourantWaterLevels, double, nodeGrid.numNodes);
         }
+
+        cudaDeviceSynchronize();
+        for(auto& stream : moveStreams)
+            cudaStreamDestroy(stream);
 
         return SF3Dok;
     }

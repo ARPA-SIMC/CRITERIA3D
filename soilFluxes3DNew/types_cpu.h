@@ -77,6 +77,7 @@ namespace soilFluxes3D::New
         double *bestPressureHeads = nullptr;   //bestH
 
         //Courant data
+        double *partialCourantWaterLevels = nullptr;
         double CourantWaterLevel = 0.;
     };
 
@@ -234,6 +235,42 @@ namespace soilFluxes3D::New
         uint64_t numElements;
         double* values;
     };
+
+
+    template<typename T>
+    inline SF3Derror_t allocHostPointer(T*& ptr, const std::size_t count)
+    {
+        if(ptr != nullptr)
+            return MemoryError;
+
+        ptr = reinterpret_cast<T*>(std::calloc(count, sizeof(T)));
+
+        if(ptr == nullptr)
+            return MemoryError;
+
+        return SF3Dok;
+    }
+
+    template<typename T>
+    inline void freeHostPointer(T*& ptr)
+    {
+        if(ptr == nullptr)
+            return;
+
+        std::free(ptr);
+        ptr = nullptr;
+    }
+
+    template<typename T>
+    inline SF3Derror_t resetHostPointer(T*& ptr, const std::size_t count)
+    {
+        if(ptr == nullptr)
+            return MemoryError;
+
+        std::memset(ptr, 0, count * sizeof(T));
+        return SF3Dok;
+    }
+
 }
 
 #include "types_opt.h"

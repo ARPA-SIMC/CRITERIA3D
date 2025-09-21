@@ -63,10 +63,10 @@ win32:{
 }
 
 
-CONFIG += MCR_CONFIG
+#CONFIG += MCR_CONFIG
 
 CONFIG(MCR_CONFIG) {
-    #DEFINES += MCR_ENABLED
+    DEFINES += MCR_ENABLED
 
     SOURCES += \
         logFunctions.cpp
@@ -106,7 +106,9 @@ CONFIG(CUDA_CONFIG) {
     HOST_C_FLAGS = $$join(QMAKE_CXXFLAGS,',','"','"')
     HOST_L_FLAGS = $$join(QMAKE_LFLAGS,',','"','"')
 
-    cudaC_FLAGS = -DCUDA_ENABLED -m64  -std=c++17
+    HOST_DEFINES = $$join(DEFINES,' -D','-D')
+
+    cudaC_FLAGS = $$HOST_DEFINES -m64 -std=c++17
     cudaL_FLAGS = -Wno-deprecated-gpu-targets -arch=sm_61
 
     CONFIG(debug, debug|release) {
@@ -124,7 +126,7 @@ CONFIG(CUDA_CONFIG) {
     # Compile CUDA source files using NVCC
     cudaC.input = CUDA_SOURCES
     cudaC.output = $$SUBPATH/${QMAKE_FILE_BASE}_cuda.o
-    cudaC.commands = $$CUDA_DIR\bin\nvcc -Xcompiler $$MSVCRT_LINK_FLAG -Xcompiler $$HOST_C_FLAGS $$cudaL_FLAGS -dc $$cudaC_FLAGS $$CUDA_INC $$LIBS -o $$SUBPATH/${QMAKE_FILE_BASE}_cuda.o -x cu ${QMAKE_FILE_NAME}
+    cudaC.commands = $$CUDA_DIR\bin\nvcc -Xcompiler $$MSVCRT_LINK_FLAG -Xcompiler $$HOST_C_FLAGS -Xcompiler $$HOST_DEFINES $$cudaL_FLAGS -dc $$cudaC_FLAGS $$CUDA_INC $$LIBS -o $$SUBPATH/${QMAKE_FILE_BASE}_cuda.o -x cu ${QMAKE_FILE_NAME}
     cudaC.dependency_type = TYPE_C
     cudaC.variable_out = CUDA_OBJ
     cudaC.variable_out += OBJECTS
@@ -134,7 +136,7 @@ CONFIG(CUDA_CONFIG) {
     cudaL.input = CUDA_OBJ
     cudaL.output = $$SUBPATH/cudaLinked.o
     cudaL.CONFIG += combine
-    cudaL.commands = $$CUDA_DIR\bin\nvcc -Xcompiler $$MSVCRT_LINK_FLAG -Xlinker $$HOST_L_FLAGS $$cudaL_FLAGS -dlink -o $$SUBPATH/cudaLinked.o ${QMAKE_FILE_NAME}
+    cudaL.commands = $$CUDA_DIR\bin\nvcc -Xcompiler $$MSVCRT_LINK_FLAG -Xlinker $$HOST_L_FLAGS -Xcompiler $$HOST_DEFINES $$cudaL_FLAGS -dlink -o $$SUBPATH/cudaLinked.o ${QMAKE_FILE_NAME}
     cudaL.depend_command = $$CUDA_DIR/bin/nvcc -g -G -MD $CUDA_INC $NVCC_FLAGS ${QMAKE_FILE_NAME}         #seems not necessary
     QMAKE_EXTRA_COMPILERS += cudaL
 }

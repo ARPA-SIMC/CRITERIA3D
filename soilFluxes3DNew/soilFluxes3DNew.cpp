@@ -50,6 +50,7 @@ namespace soilFluxes3D::New
         if(cleanResult != SF3Dok)
             return cleanResult;
 
+        //Set flags data
         simulationFlags.computeWater = isComputeWater;
         simulationFlags.computeHeat = isComputeHeat;
         if(isComputeHeat)
@@ -59,6 +60,7 @@ namespace soilFluxes3D::New
         }
         simulationFlags.computeSolutes = isComputeSolutes;
 
+        //Inizialize data structures
         nodeGrid.numNodes = nrNodes;
         nodeGrid.numLayers = nrLayers;
 
@@ -66,8 +68,6 @@ namespace soilFluxes3D::New
         if(nrLateralLinks > maxLateralLink)
             return ParameterError;
 
-
-        //Inizialize data
         //Topology data
         hostAlloc(nodeGrid.size, double, nrNodes);
         hostAlloc(nodeGrid.x, double, nrNodes);
@@ -131,6 +131,7 @@ namespace soilFluxes3D::New
         hostAlloc(nodeGrid.waterData.oldPressureHeads, double, nrNodes);
         hostAlloc(nodeGrid.waterData.bestPressureHeads, double, nrNodes);
         hostAlloc(nodeGrid.waterData.invariantFluxes, double, nrNodes);
+        hostAlloc(nodeGrid.waterData.partialCourantWaterLevels, double, nrNodes);
 
         //Heat data
         if(isComputeHeat)
@@ -177,7 +178,7 @@ namespace soilFluxes3D::New
             return status;
 
         if(simulationFlags.computeHeat)
-            status; //= inizializeHeatBalance();    //TO DO
+            (void) status; //= inizializeHeatBalance();    //TO DO
         else
             balanceDataWholePeriod.heatMBR = 1.;    //Why?
 
@@ -264,6 +265,7 @@ namespace soilFluxes3D::New
         hostFree(nodeGrid.waterData.oldPressureHeads);
         hostFree(nodeGrid.waterData.bestPressureHeads);
         hostFree(nodeGrid.waterData.invariantFluxes);
+        hostFree(nodeGrid.waterData.partialCourantWaterLevels);
 
         //Heat data
         hostFree(nodeGrid.heatData.temperature);
@@ -272,6 +274,10 @@ namespace soilFluxes3D::New
         hostFree(nodeGrid.heatData.heatSinkSource);
 
         nodeGrid.isInizialized = false;
+
+        //Clear the soil/surface data
+        soilList.clear();
+        surfaceList.clear();
 
         //Clean the solver
         SF3Derror_t solverResult = solver->clean();
@@ -1090,7 +1096,7 @@ namespace soilFluxes3D::New
             //TO DO: heat
         }
 
-        double dtWater, dtHeat;
+        double [[maybe_unused]] dtWater, dtHeat;
 
         if(simulationFlags.computeWater)
             solver->run(maxTimeStep, dtWater, Water);
