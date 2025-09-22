@@ -136,14 +136,18 @@ namespace soilFluxes3D::Water
 
             //Check Stability (Courant)
             double currCWL = nodeGrid.waterData.CourantWaterLevel;
-            if((currCWL < parameters.CourantWaterThreshold) && (approxNr <= 3) && (currMBRerror < (0.5 * parameters.MBRThreshold)))     //TO DO: change constant with _parameters
-            {
-                //increase deltaT
-                parameters.deltaTcurr = (currCWL < 0.5) ? (2 * parameters.deltaTcurr) : (parameters.deltaTcurr / currCWL);
-                parameters.deltaTcurr = SF3Dmin(parameters.deltaTcurr, parameters.deltaTmax);
-                if(parameters.deltaTcurr > 1.)
-                    parameters.deltaTcurr = std::floor(parameters.deltaTcurr);
-            }
+            // if((currCWL < parameters.CourantWaterThreshold) && (approxNr <= 3) && (currMBRerror < (0.5 * parameters.MBRThreshold)))     //TO DO: change constant with _parameters
+            // {
+            //     //increase deltaT
+            //     parameters.deltaTcurr = (currCWL < 0.5) ? (2 * parameters.deltaTcurr) : (parameters.deltaTcurr / currCWL);
+            //     parameters.deltaTcurr = SF3Dmin(parameters.deltaTcurr, parameters.deltaTmax);
+            //     if(parameters.deltaTcurr > 1.)
+            //         parameters.deltaTcurr = std::floor(parameters.deltaTcurr);
+            // }
+
+            if((currCWL < parameters.CourantWaterThreshold) && (approxNr <= 3))
+                parameters.deltaTcurr = 2 * parameters.deltaTcurr;
+
             return stepAccepted;
         }
 
@@ -207,8 +211,12 @@ namespace soilFluxes3D::Water
         #pragma omp parallel for if(__ompStatus)
         for (uint64_t nodeIndex = 0; nodeIndex < nodeGrid.numNodes; ++nodeIndex)
             if(!nodeGrid.surfaceFlag[nodeIndex])
+            {
                 nodeGrid.waterData.saturationDegree[nodeIndex] = computeNodeSe(nodeIndex);
+                nodeGrid.waterData.waterConductivity[nodeIndex] = computeNodeK(nodeIndex);
+            }
 
+        updateBoundaryWaterData(deltaT);
         computeCurrentMassBalance(deltaT);
     }
 

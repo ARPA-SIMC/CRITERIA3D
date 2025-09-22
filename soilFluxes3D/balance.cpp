@@ -196,13 +196,14 @@ void restoreBestApproximation(double deltaT)
     {
         nodeList[n].H = nodeList[n].bestH;
 
-		//URGENT: add computeK and updateBoundaryWater
-
         /*! compute new soil moisture (only sub-surface nodes) */
         if (!nodeList[n].isSurface)
+        {
             nodeList[n].Se = computeSe(n);
+            nodeList[n].k = computeK(n);
+        }
     }
-
+    updateBoundaryWater(deltaT);
     computeMassBalance(deltaT);
 }
 
@@ -239,8 +240,6 @@ bool waterBalance(double deltaT, int approxNr)
     {
         acceptStep(deltaT);
 
-
-		//URGENT: remove old logic
         // best case: system is stable, try to increase time step
         if (CourantWater < 0.5 && approxNr <= 3)
 			doubleTimeStep();

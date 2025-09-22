@@ -374,14 +374,18 @@ namespace soilFluxes3D::New
 
             //Check Stability (Courant)
             double currCWL = nodeGrid.waterData.CourantWaterLevel;
-            if((currCWL < _parameters.CourantWaterThreshold) && (approxNr <= 3) && (currMBRerror < (0.5 * _parameters.MBRThreshold)))     //TO DO: change constant with _parameters
-            {
-                //increase deltaT
-                _parameters.deltaTcurr = (currCWL < 0.5) ? (2 * _parameters.deltaTcurr) : (_parameters.deltaTcurr / currCWL);
-                _parameters.deltaTcurr = SF3Dmin(_parameters.deltaTcurr, _parameters.deltaTmax);
-                if(_parameters.deltaTcurr > 1.)
-                    _parameters.deltaTcurr = std::floor(_parameters.deltaTcurr);
-            }
+            // if((currCWL < parameters.CourantWaterThreshold) && (approxNr <= 3) && (currMBRerror < (0.5 * parameters.MBRThreshold)))     //TO DO: change constant with _parameters
+            // {
+            //     //increase deltaT
+            //     parameters.deltaTcurr = (currCWL < 0.5) ? (2 * parameters.deltaTcurr) : (parameters.deltaTcurr / currCWL);
+            //     parameters.deltaTcurr = SF3Dmin(parameters.deltaTcurr, parameters.deltaTmax);
+            //     if(parameters.deltaTcurr > 1.)
+            //         parameters.deltaTcurr = std::floor(parameters.deltaTcurr);
+            // }
+
+            if((currCWL < parameters.CourantWaterThreshold) && (approxNr <= 3))
+                parameters.deltaTcurr = 2 * parameters.deltaTcurr;
+
             return stepAccepted;
         }
 
@@ -490,7 +494,9 @@ namespace soilFluxes3D::New
         cudaMemcpy(nodeGrid.waterData.pressureHead, nodeGrid.waterData.bestPressureHeads, nodeGrid.numNodes * sizeof(double), cudaMemcpyDeviceToDevice);
 
         launchKernel(updateSaturationDegree_k);
+        launchKernel(updateWaterConductivity_k);
 
+        launchKernel(updateBoundaryWaterData_k, deltaT);
         computeCurrentMassBalance_m(deltaT);
     }
 
@@ -927,6 +933,16 @@ namespace soilFluxes3D::New
 
         if(!nodeGrid.surfaceFlag[nodeIdx])
             nodeGrid.waterData.saturationDegree[nodeIdx] = computeNodeSe(nodeIdx);
+    }
+
+    __global__ void updateWaterConductivity_k()
+    {
+        uint64_t nodeIdx = (blockIdx.x * blockDim.x) + threadIdx.x;
+        if(nodeIdx >= nodeGrid.numNodes)
+            return;
+
+        if(!nodeGrid.surfaceFlag[nodeIdx])
+            nodeGrid.waterData.waterConductivity[nodeIndex] = computeNodeK(nodeIndex);
     }
 
     __global__ void updateWaterFlows_k(double deltaT)
