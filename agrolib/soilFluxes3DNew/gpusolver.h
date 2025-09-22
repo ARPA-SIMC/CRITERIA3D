@@ -41,7 +41,7 @@ namespace soilFluxes3D::New
             SF3Derror_t createCUsparseDescriptors();
 
         public:
-            GPUSolver() : Solver(GPU, Jacobi) {}
+            GPUSolver() : Solver(solverType::GPU, numericalMethod::Jacobi) {}
 
             __cudaSpec double getMatrixElementValue(uint64_t rowIndex, uint64_t colIndex) const noexcept;
 
@@ -78,6 +78,7 @@ namespace soilFluxes3D::New
     __global__ void computeNormalizedError(double *vectorNorm, double *vectorX, const double *previousX);
 
     __global__ void updateSaturationDegree_k();
+    __global__ void updateWaterConductivity_k();
     __global__ void updateWaterFlows_k(double deltaT);
     __global__ void computeWaterContent_k(double* outVector);
 
@@ -86,9 +87,9 @@ namespace soilFluxes3D::New
     inline SF3Derror_t solverDeviceCheckError(deviceError_t retError, solverStatus& status, const SF3Derror_t contextErrorType)
     {
         if(retError == static_cast<deviceError_t>(0))
-            return SF3Dok;
+            return SF3Derror_t::SF3Dok;
 
-        status = Error;
+        status = solverStatus::Error;
         return contextErrorType;
     }
 

@@ -16,8 +16,8 @@ namespace soilFluxes3D::New
 
     SF3Derror_t CPUSolver::inizialize()
     {
-        if(_status != Created)
-            return SolverError;
+        if(_status != solverStatus::Created)
+            return SF3Derror_t::SolverError;
 
         if(_parameters.deltaTcurr == noData)
             _parameters.deltaTcurr = _parameters.deltaTmax;
@@ -48,40 +48,40 @@ namespace soilFluxes3D::New
         vectorC.numElements = nodeGrid.numNodes;
         hostSolverAlloc(vectorC.values, double, vectorC.numElements);
 
-        _status = Inizialized;
-        return SF3Dok;
+        _status = solverStatus::Inizialized;
+        return SF3Derror_t::SF3Dok;
     }
 
     SF3Derror_t CPUSolver::run(double maxTimeStep, double& acceptedTimeStep, processType process)
     {
-        if(_status != Inizialized)
-            return SolverError;
+        if(_status != solverStatus::Inizialized)
+            return SF3Derror_t::SolverError;
 
         switch (process)
         {
-            case Water:
+            case processType::Water:
                 waterMainLoop(maxTimeStep, acceptedTimeStep);
                 break;
-            case Heat:
+            case processType::Heat:
                 break;
-            case Solutes:
+            case processType::Solutes:
                 break;
             default:
                 break;
         }
 
-        _status = Terminated;
-        _status = Inizialized;
-        return SF3Dok;
+        _status = solverStatus::Terminated;
+        _status = solverStatus::Inizialized;
+        return SF3Derror_t::SF3Dok;
     }
 
     SF3Derror_t CPUSolver::clean()
     {
-        if(_status == Created)
-            return SF3Dok;
+        if(_status == solverStatus::Created)
+            return SF3Derror_t::SF3Dok;
 
-        if((_status != Terminated) && (_status != Inizialized))
-            return SolverError;
+        if((_status != solverStatus::Terminated) && (_status != solverStatus::Inizialized))
+            return SF3Derror_t::SolverError;
 
         //Destruct matrix variable
         #pragma omp parallel for if(_parameters.enableOMP)
@@ -101,14 +101,14 @@ namespace soilFluxes3D::New
 
         hostSolverFree(vectorC.values);
 
-        _status = Created;
-        return SF3Dok;
+        _status = solverStatus::Created;
+        return SF3Derror_t::SF3Dok;
     }
 
     void CPUSolver::waterMainLoop(double maxTimeStep, double &acceptedTimeStep)
     {
-        balanceResult_t stepStatus = stepRefused;
-        while(stepStatus != stepAccepted)
+        balanceResult_t stepStatus = balanceResult_t::stepRefused;
+        while(stepStatus != balanceResult_t::stepAccepted)
         {
             acceptedTimeStep = SF3Dmin(_parameters.deltaTcurr, maxTimeStep);
 
@@ -138,7 +138,7 @@ namespace soilFluxes3D::New
             //Effective computation step
             stepStatus = waterApproximationLoop(acceptedTimeStep);
 
-            if(stepStatus != stepAccepted)
+            if(stepStatus != balanceResult_t::stepAccepted)
                 restorePressureHead();
         }
     }
@@ -162,7 +162,7 @@ namespace soilFluxes3D::New
             std::memset(nodeGrid.waterData.partialCourantWaterLevels, 0, nodeGrid.numNodes * sizeof(double));
 
             //Compute linear system elements
-            computeLinearSystemElement(matrixA, vectorB, vectorC, approxIdx, deltaT, _parameters.lateralVerticalRatio, _parameters.meantype);
+            computeLinearSystemElement(matrixA, vectorB, vectorC, approxIdx, deltaT, _parameters.lateralVerticalRatio, _parameters.meanType);
 
             //Courant data reduction
             double tempMax = 0;
@@ -180,12 +180,12 @@ namespace soilFluxes3D::New
                 if(_parameters.deltaTcurr > 1.)
                     _parameters.deltaTcurr = std::floor(_parameters.deltaTcurr);
 
-                return stepHalved;
+                return balanceResult_t::stepHalved;
             }
 
 
             //Try solve linear system
-            bool isStepValid = solveLinearSystem(approxIdx, Water);
+            bool isStepValid = solveLinearSystem(approxIdx, processType::Water);
             logStruct;
 
             //Log system data
@@ -195,7 +195,7 @@ namespace soilFluxes3D::New
             if((!isStepValid) && (deltaT > _parameters.deltaTmin))
             {
                 _parameters.deltaTcurr = SF3Dmax(_parameters.deltaTmin, _parameters.deltaTcurr / 2.);
-                return stepHalved;
+                return balanceResult_t::stepHalved;
             }
 
             //Update potential
@@ -212,7 +212,7 @@ namespace soilFluxes3D::New
             balanceResult = evaluateWaterBalance(approxIdx, _bestMBRerror, deltaT, _parameters);
             logStruct;
 
-            if((balanceResult == stepAccepted) || (balanceResult == stepHalved))
+            if((balanceResult == balanceResult_t::stepAccepted) || (balanceResult == balanceResult_t::stepHalved))
                 return balanceResult;
 
         }
@@ -228,9 +228,9 @@ namespace soilFluxes3D::New
 
         for(uint32_t iterationNumber = 0; iterationNumber < currMaxIterationNum; ++iterationNumber)
         {
-            if(computationType == Water && _method == Jacobi)
+            if(computationType == processType::Water && _method == numericalMethod::Jacobi)
                 currErrorNorm = JacobiWaterCPU(vectorX, matrixA, vectorB);
-            else if(computationType == Water && _method == GaussSeidel)
+            else if(computationType == processType::Water && _method == numericalMethod::GaussSeidel)
                 currErrorNorm = 0.; //GaussSeidelWaterCPU();
             else
                 std::exit(EXIT_FAILURE);

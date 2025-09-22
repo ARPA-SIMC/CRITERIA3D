@@ -423,9 +423,9 @@ bool Project3D::initialize3DModel()
 
     // initialize soil fluxes
     int myResult = soilFluxes3D::initializeFluxes(long(nrNodes), int(nrLayers), nrLateralLink, true, false, false);
-    int myResultNew = soilFluxes3D::New::initializeSF3D(uint64_t(nrNodes), uint16_t(nrLayers), nrLateralLink, true, false, false);
+    auto myResultNew = soilFluxes3D::New::initializeSF3D(uint64_t(nrNodes), uint16_t(nrLayers), nrLateralLink, true, false, false);
 
-    if(myResult != myResultNew)
+    if(myResult != static_cast<int>(myResultNew))
         logError("ERROR - initializeFluxes");
 
     if (isCrit3dError(myResult, errorString))
@@ -468,7 +468,7 @@ bool Project3D::initialize3DModel()
     logInfo("Node properties initialized");
 
     soilFluxes3D::setHydraulicProperties(MODIFIEDVANGENUCHTEN, MEAN_LOGARITHMIC, waterFluxesParameters.conductivityHorizVertRatio);
-    soilFluxes3D::New::setHydraulicProperties(soilFluxes3D::New::ModifiedVanGenuchten, soilFluxes3D::New::Logarithmic, waterFluxesParameters.conductivityHorizVertRatio);
+    soilFluxes3D::New::setHydraulicProperties(soilFluxes3D::New::WRCModel::ModifiedVanGenuchten, soilFluxes3D::New::meanType_t::Logarithmic, waterFluxesParameters.conductivityHorizVertRatio);
 
     if (! setAccuracy())
     {
@@ -734,8 +734,8 @@ bool Project3D::setCrit3DSurfaces()
     for (int i = 0; i < int(landUnitList.size()); i++)
     {
         int result = soilFluxes3D::setSurfaceProperties(i, landUnitList[i].roughness);
-        int resultNew = soilFluxes3D::New::setSurfaceProperties(i, landUnitList[i].roughness);
-        if(result != resultNew)
+        auto resultNew = soilFluxes3D::New::setSurfaceProperties(i, landUnitList[i].roughness);
+        if(result != static_cast<int>(resultNew))
             logError("ERROR: setSurfaceProperties");
 
         if (isCrit3dError(result, errorString))
@@ -777,7 +777,7 @@ bool Project3D::setCrit3DSoils()
                      myHorizon->organicMatter,
                      double(myHorizon->texture.clay));
 
-                int resultNew = soilFluxes3D::New::setSoilProperties(soilIndex, horizIndex,
+                auto resultNew = soilFluxes3D::New::setSoilProperties(soilIndex, horizIndex,
                                                                      myHorizon->vanGenuchten.alpha * GRAVITY,                           // [kPa-1] -> [m-1]
                                                                      myHorizon->vanGenuchten.n,
                                                                      myHorizon->vanGenuchten.m,
@@ -788,7 +788,7 @@ bool Project3D::setCrit3DSoils()
                                                                      myHorizon->waterConductivity.l,
                                                                      myHorizon->organicMatter,
                                                                      double(myHorizon->texture.clay));
-                if(result != resultNew)
+                if(result != static_cast<int>(resultNew))
                     logError("ERROR: setSoilProperties");
 
 
@@ -851,16 +851,16 @@ bool Project3D::setCrit3DTopography()
                         {
                             float boundaryArea = DEM.header->cellSize;
                             myResult = soilFluxes3D::setNode(index, float(x), float(y), z, area, true, true, BOUNDARY_RUNOFF, boundarySlope, boundaryArea);
-                            int myResultNew = soilFluxes3D::New::setNode(index, x, y, z, area, true, soilFluxes3D::New::Runoff, boundarySlope, boundaryArea);
-                            if(myResultNew != myResult)
-                                logError("ERRO: setNode runoff" + QString::number(myResult) + " new " + QString::number(myResultNew));
+                            auto myResultNew = soilFluxes3D::New::setNode(index, x, y, z, area, true, soilFluxes3D::New::boundaryType_t::Runoff, boundarySlope, boundaryArea);
+                            if(static_cast<int>(myResultNew) != myResult)
+                                logError("ERRO: setNode runoff" + QString::number(myResult) + " new " + QString::number(static_cast<int>(myResultNew)));
                         }
                         else
                         {
                             myResult = soilFluxes3D::setNode(index, float(x), float(y), z, area, true, false, BOUNDARY_NONE, 0, 0);
-                            int myResultNew = soilFluxes3D::New::setNode(index, x, y, z, area, true, soilFluxes3D::New::NoBoundary);
-                            if(myResultNew != myResult)
-                                logError("ERRO: setNode nob0" + QString::number(myResult) + " new " + QString::number(myResultNew));
+                            auto myResultNew = soilFluxes3D::New::setNode(index, x, y, z, area, true, soilFluxes3D::New::boundaryType_t::NoBoundary);
+                            if(static_cast<int>(myResultNew) != myResult)
+                                logError("ERRO: setNode nob0" + QString::number(myResult) + " new " + QString::number(static_cast<int>(myResultNew)));
                         }
                     }
                     else
@@ -872,16 +872,16 @@ bool Project3D::setCrit3DTopography()
                             {
                                 float boundaryArea = area;
                                 myResult = soilFluxes3D::setNode(index, float(x), float(y), z, volume, false, true, BOUNDARY_FREEDRAINAGE, 0, boundaryArea);
-                                int myResultNew = soilFluxes3D::New::setNode(index, x, y, z, volume, false, soilFluxes3D::New::FreeDrainage, 0, boundaryArea);
-                                if(myResultNew != myResult)
-                                    logError("ERRO: setNode freeLateralDrainage" + QString::number(myResult) + " new " + QString::number(myResultNew));
+                                auto myResultNew = soilFluxes3D::New::setNode(index, x, y, z, volume, false, soilFluxes3D::New::boundaryType_t::FreeDrainage, 0, boundaryArea);
+                                if(static_cast<int>(myResultNew) != myResult)
+                                    logError("ERRO: setNode freeLateralDrainage" + QString::number(myResult) + " new " + QString::number(static_cast<int>(myResultNew)));
                             }
                             else
                             {
                                 myResult = soilFluxes3D::setNode(index, float(x), float(y), z, volume, false, false, BOUNDARY_NONE, 0, 0);
-                                int myResultNew = soilFluxes3D::New::setNode(index, x, y, z, volume, false, soilFluxes3D::New::NoBoundary);
-                                if(myResultNew != myResult)
-                                    logError("ERRO: setNode nobmid" + QString::number(myResult) + " new " + QString::number(myResultNew));
+                                auto myResultNew = soilFluxes3D::New::setNode(index, x, y, z, volume, false, soilFluxes3D::New::boundaryType_t::NoBoundary);
+                                if(static_cast<int>(myResultNew) != myResult)
+                                    logError("ERRO: setNode nobmid" + QString::number(myResult) + " new " + QString::number(static_cast<int>(myResultNew)));
                             }
                         }
                         else
@@ -892,15 +892,15 @@ bool Project3D::setCrit3DTopography()
                                 // TODO problema se è urban o road
                                 float boundaryArea = lateralArea;
                                 myResult = soilFluxes3D::setNode(index, float(x), float(y), z, volume, false, true, BOUNDARY_FREELATERALDRAINAGE, boundarySlope, boundaryArea);
-                                int myResultNew = soilFluxes3D::New::setNode(index, x, y, z, volume, false, soilFluxes3D::New::FreeLateraleDrainage, boundarySlope, boundaryArea);
-                                if(myResultNew != myResult)
-                                    logError("ERRO: setNode runoffsub" + QString::number(myResult) + " new " + QString::number(myResultNew));
+                                auto myResultNew = soilFluxes3D::New::setNode(index, x, y, z, volume, false, soilFluxes3D::New::boundaryType_t::FreeLateraleDrainage, boundarySlope, boundaryArea);
+                                if(static_cast<int>(myResultNew) != myResult)
+                                    logError("ERRO: setNode runoffsub" + QString::number(myResult) + " new " + QString::number(static_cast<int>(myResultNew)));
                             }
                             else
                             {
                                 int boundaryType = BOUNDARY_NONE;
                                 bool isBoundary = false;
-                                soilFluxes3D::New::boundaryType_t boundaryTypeNew = soilFluxes3D::New::NoBoundary;
+                                soilFluxes3D::New::boundaryType_t boundaryTypeNew = soilFluxes3D::New::boundaryType_t::NoBoundary;
 
                                 // check on urban or road land use
                                 if (layer == 1)
@@ -909,20 +909,20 @@ bool Project3D::setCrit3DTopography()
                                     if (landUnitList[luIndex].landUseType == LANDUSE_ROAD)
                                     {
                                         boundaryType = BOUNDARY_ROAD;
-                                        boundaryTypeNew = soilFluxes3D::New::Road;
+                                        boundaryTypeNew = soilFluxes3D::New::boundaryType_t::Road;
                                         isBoundary = true;
                                     }
                                     if (landUnitList[luIndex].landUseType == LANDUSE_URBAN)
                                     {
                                         boundaryType = BOUNDARY_URBAN;
-                                        boundaryTypeNew = soilFluxes3D::New::Urban;
+                                        boundaryTypeNew = soilFluxes3D::New::boundaryType_t::Urban;
                                         isBoundary = true;
                                     }
                                 }
 
                                 myResult = soilFluxes3D::setNode(index, float(x), float(y), z, volume, false, isBoundary, boundaryType, 0, 0);
-                                int myResultNew = soilFluxes3D::New::setNode(index, x, y, z, volume, false, boundaryTypeNew);
-                                if(myResultNew != myResult)
+                                auto myResultNew = soilFluxes3D::New::setNode(index, x, y, z, volume, false, boundaryTypeNew);
+                                if(static_cast<int>(myResultNew) != myResult)
                                     logError("ERRO: setNode");
                             }
                         }
@@ -943,8 +943,8 @@ bool Project3D::setCrit3DTopography()
                         if (linkIndex != long(indexMap.at(layer - 1).header->flag))
                         {
                             myResult = soilFluxes3D::setNodeLink(index, linkIndex, UP, float(area));
-                            int myResultNew = soilFluxes3D::New::setNodeLink(index, linkIndex, soilFluxes3D::New::Up, area);
-                            if(myResultNew != myResult)
+                            auto myResultNew = soilFluxes3D::New::setNodeLink(index, linkIndex, soilFluxes3D::New::linkType_t::Up, area);
+                            if(static_cast<int>(myResultNew) != myResult)
                                 logError("ERRO: setNodeLink");
 
                             if (isCrit3dError(myResult, errorString))
@@ -963,8 +963,8 @@ bool Project3D::setCrit3DTopography()
                         if (linkIndex != long(indexMap.at(layer + 1).header->flag))
                         {
                             myResult = soilFluxes3D::setNodeLink(index, linkIndex, DOWN, float(area));
-                            int myResultNew = soilFluxes3D::New::setNodeLink(index, linkIndex, soilFluxes3D::New::Down, area);
-                            if(myResultNew != myResult)
+                            auto myResultNew = soilFluxes3D::New::setNodeLink(index, linkIndex, soilFluxes3D::New::linkType_t::Down, area);
+                            if(static_cast<int>(myResultNew) != myResult)
                                 logError("ERRO: setNodeLink");
 
                             if (isCrit3dError(myResult, errorString))
@@ -989,8 +989,8 @@ bool Project3D::setCrit3DTopography()
                                     {
                                         // eight lateral nodes: each is assigned half a side (conceptual octagon)
                                         myResult = soilFluxes3D::setNodeLink(index, linkIndex, LATERAL, lateralArea * 0.5);
-                                        int myResultNew = soilFluxes3D::New::setNodeLink(index, linkIndex, soilFluxes3D::New::Lateral, lateralArea * 0.5);
-                                        if(myResultNew != myResult)
+                                        auto myResultNew = soilFluxes3D::New::setNodeLink(index, linkIndex, soilFluxes3D::New::linkType_t::Lateral, lateralArea * 0.5);
+                                        if(static_cast<int>(myResultNew) != myResult)
                                             logError("ERRO: setNodeLink");
 
                                         if (isCrit3dError(myResult, errorString))
@@ -1033,15 +1033,15 @@ bool Project3D::initializeWaterContent()
                         if (waterFluxesParameters.isInitialWaterPotential &&  waterFluxesParameters.initialWaterPotential > 0)
                         {
                             myResult = soilFluxes3D::setMatricPotential(index, waterFluxesParameters.initialWaterPotential);
-                            int myResultNew = soilFluxes3D::New::setNodeMatricPotential(index, waterFluxesParameters.initialWaterPotential);
-                            if(myResultNew != myResult)
+                            auto myResultNew = soilFluxes3D::New::setNodeMatricPotential(index, waterFluxesParameters.initialWaterPotential);
+                            if(static_cast<int>(myResultNew) != myResult)
                                 logError("ERRO: setMatricPotential");
                         }
                         else
                         {
                             myResult = soilFluxes3D::setMatricPotential(index, 0);
-                            int myResultNew = soilFluxes3D::New::setNodeMatricPotential(index, 0);
-                            if(myResultNew != myResult)
+                            auto myResultNew = soilFluxes3D::New::setNodeMatricPotential(index, 0);
+                            if(static_cast<int>(myResultNew) != myResult)
                                 logError("ERRO: setMatricPotential");
                         }
                     }
@@ -1051,15 +1051,15 @@ bool Project3D::initializeWaterContent()
                         if (waterFluxesParameters.isInitialWaterPotential)
                         {
                             myResult = soilFluxes3D::setMatricPotential(index, waterFluxesParameters.initialWaterPotential);
-                            int myResultNew = soilFluxes3D::New::setNodeMatricPotential(index, waterFluxesParameters.initialWaterPotential);
-                            if(myResultNew != myResult)
+                            auto myResultNew = soilFluxes3D::New::setNodeMatricPotential(index, waterFluxesParameters.initialWaterPotential);
+                            if(static_cast<int>(myResultNew) != myResult)
                                 logError("ERRO: setMatricPotential");
                         }
                         else
                         {
                             myResult = soilFluxes3D::setDegreeOfSaturation(index, waterFluxesParameters.initialDegreeOfSaturation);
-                            int myResultNew = soilFluxes3D::New::setNodeDegreeOfSaturation(index, waterFluxesParameters.initialDegreeOfSaturation);
-                            if(myResultNew != myResult)
+                            auto myResultNew = soilFluxes3D::New::setNodeDegreeOfSaturation(index, waterFluxesParameters.initialDegreeOfSaturation);
+                            if(static_cast<int>(myResultNew) != myResult)
                                 logError("ERRO: setDegreeOfSaturation");
                         }
                     }
@@ -1138,8 +1138,8 @@ bool Project3D::setCrit3DNodeSoil()
                         }
 
                         myResult = soilFluxes3D::setNodeSoil(index, soilIndex, horizonIndex);
-                        int myResultNew = soilFluxes3D::New::setNodeSoil(index, soilIndex, horizonIndex);
-                        if(myResult != myResultNew)
+                        auto myResultNew = soilFluxes3D::New::setNodeSoil(index, soilIndex, horizonIndex);
+                        if(myResult != static_cast<int>(myResultNew))
                             logError("ERROR: setNodeSoil");
 
                         // check error
@@ -1202,8 +1202,8 @@ bool Project3D::initializeSoilMoisture(int month)
                                 fieldCapacity = soilList[unsigned(soilIndex)].horizon[unsigned(horizonIndex)].fieldCapacity;
                                 waterPotential = fieldCapacity - moistureIndex * (fieldCapacity-dry);
                                 crit3dResult = soilFluxes3D::setMatricPotential(index, waterPotential);
-                                int crit3dResultNew = soilFluxes3D::New::setNodeMatricPotential(index, waterPotential);
-                                if(crit3dResult != crit3dResultNew)
+                                auto crit3dResultNew = soilFluxes3D::New::setNodeMatricPotential(index, waterPotential);
+                                if(crit3dResult != static_cast<int>(crit3dResultNew))
                                     logError("ERROR setMatricPotential");
                             }
                         }
@@ -1286,15 +1286,15 @@ void Project3D::runWaterFluxes3DModel(double totalTimeStep, bool isRestart)
     emit updateOutputSignal();
 
     double runoff = soilFluxes3D::getBoundaryWaterSumFlow(BOUNDARY_RUNOFF);
-    double runoffNew = soilFluxes3D::New::getTotalBoundaryWaterFlow(soilFluxes3D::New::Runoff);
+    double runoffNew = soilFluxes3D::New::getTotalBoundaryWaterFlow(soilFluxes3D::New::boundaryType_t::Runoff);
     logInfo("runoff [m3]: " + QString::number(runoff, 'f', 7) + " \t\t new: " + QString::number(runoffNew, 'f', 7) + "\t------- Error: " + QString::number(runoff - runoffNew));
 
     double freeDrainage = soilFluxes3D::getBoundaryWaterSumFlow(BOUNDARY_FREEDRAINAGE);
-    double freeDrainageNew = soilFluxes3D::New::getTotalBoundaryWaterFlow(soilFluxes3D::New::FreeDrainage);
+    double freeDrainageNew = soilFluxes3D::New::getTotalBoundaryWaterFlow(soilFluxes3D::New::boundaryType_t::FreeDrainage);
     logInfo("free drainage [m3]: " + QString::number(freeDrainage, 'f', 7) + "\t new: " + QString::number(freeDrainageNew, 'f', 7) + "\t------- Error: " + QString::number(freeDrainage - freeDrainageNew));
 
     double lateralDrainage = soilFluxes3D::getBoundaryWaterSumFlow(BOUNDARY_FREELATERALDRAINAGE);
-    double lateralDrainageNew = soilFluxes3D::New::getTotalBoundaryWaterFlow(soilFluxes3D::New::FreeLateraleDrainage);
+    double lateralDrainageNew = soilFluxes3D::New::getTotalBoundaryWaterFlow(soilFluxes3D::New::boundaryType_t::FreeLateraleDrainage);
     logInfo("lateral drainage [m3]: " + QString::number(lateralDrainage, 'f', 7) + "\t new: " + QString::number(lateralDrainageNew, 'f', 7) + "\t------- Error: " + QString::number(lateralDrainage - lateralDrainageNew));
 
     double forecastWaterContent = previousTotalWaterContent + runoff + freeDrainage + lateralDrainage
@@ -2097,8 +2097,8 @@ bool Project3D::setSinkSource()
     for (unsigned long i = 0; i < nrNodes; i++)
     {
         int myResult = soilFluxes3D::setWaterSinkSource(signed(i), waterSinkSource[i]);
-        int myResultNew = soilFluxes3D::New::setNodeWaterSinkSource(i, waterSinkSource[i]);
-        if(myResult != myResultNew)
+        auto myResultNew = soilFluxes3D::New::setNodeWaterSinkSource(i, waterSinkSource[i]);
+        if(myResult != static_cast<int>(myResultNew))
             logError("ERROR setWaterSinkSource");
 
 
@@ -2667,14 +2667,14 @@ bool setCriteria3DVar(criteria3DVariable myVar, long nodeIndex, double myValue)
     {
         // TODO check: skeleton
         myResult = soilFluxes3D::setWaterContent(nodeIndex, myValue);
-        int myResultNew = soilFluxes3D::New::setNodeWaterContent(nodeIndex, myValue);
+        auto myResultNew = soilFluxes3D::New::setNodeWaterContent(nodeIndex, myValue);
         // if(myResult != myResultNew)
         //     project logError("ERROR setWC");
     }
     else if (myVar == waterMatricPotential)
     {
         myResult = soilFluxes3D::setMatricPotential(nodeIndex, myValue);
-        int myResultNew = soilFluxes3D::New::setNodeMatricPotential(nodeIndex, myValue);
+        auto myResultNew = soilFluxes3D::New::setNodeMatricPotential(nodeIndex, myValue);
         // if(myResult != myResultNew)
         //     logError("ERROR setMP");
     }

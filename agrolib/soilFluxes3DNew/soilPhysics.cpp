@@ -87,10 +87,10 @@ namespace soilFluxes3D::Soil
         WRCModel model = solver->getWRCModel();
         switch(model)
         {
-            case VanGenuchten:
+            case WRCModel::VanGenuchten:
                 return std::pow(1. + std::pow(nodeSoil.VG_alpha * psi, nodeSoil.VG_n), -nodeSoil.VG_m);
                 break;
-            case ModifiedVanGenuchten:
+            case WRCModel::ModifiedVanGenuchten:
                 return (psi <= nodeSoil.VG_he) ? 1. : std::pow(1. + std::pow(nodeSoil.VG_alpha * psi, nodeSoil.VG_n), -nodeSoil.VG_m) * (1. / nodeSoil.VG_Sc);
                 break;
             default:
@@ -128,10 +128,10 @@ namespace soilFluxes3D::Soil
         WRCModel model = solver->getWRCModel();
         switch(model)
         {
-            case VanGenuchten:
+            case WRCModel::VanGenuchten:
                 temp = std::pow(1. / nodeGrid.waterData.saturationDegree[nodeIndex], 1. / nodeSoil.VG_m) - 1.;
                 break;
-            case ModifiedVanGenuchten:
+            case WRCModel::ModifiedVanGenuchten:
                 temp = std::pow(1. / (nodeGrid.waterData.saturationDegree[nodeIndex] * nodeSoil.VG_Sc), 1. / nodeSoil.VG_m) - 1;
                 break;
             default:
@@ -171,10 +171,10 @@ namespace soilFluxes3D::Soil
         WRCModel model = solver->getWRCModel();
         switch(model)
         {
-            case VanGenuchten:
+            case WRCModel::VanGenuchten:
                 temp = 1. - std::pow(1. - std::pow(Se, 1. / soilData.VG_m), soilData.VG_m);
                 break;
-            case ModifiedVanGenuchten:
+            case WRCModel::ModifiedVanGenuchten:
                 tNum = 1. - std::pow(1. - std::pow(Se * soilData.VG_Sc, 1. / soilData.VG_m), soilData.VG_m);
                 tDen = 1. - std::pow(1. - std::pow(soilData.VG_Sc, 1. / soilData.VG_m), soilData.VG_m);
                 temp = tNum / tDen;
@@ -203,11 +203,11 @@ namespace soilFluxes3D::Soil
         WRCModel model = solver->getWRCModel();
         switch(model)
         {
-            case VanGenuchten:
+            case WRCModel::VanGenuchten:
                 if((psiCurr == 0.) && (psiPrev == 0.))
                     return 0.;
                 break;
-            case ModifiedVanGenuchten:
+            case WRCModel::ModifiedVanGenuchten:
                 if((psiCurr <= nodeSoil.VG_he) && (psiPrev <= nodeSoil.VG_he))
                     return 0.;
                 break;
@@ -219,7 +219,7 @@ namespace soilFluxes3D::Soil
         if(psiCurr == psiPrev)
         {
             dSedH = nodeSoil.VG_alpha * nodeSoil.VG_n * nodeSoil.VG_m * std::pow(1. + std::pow(nodeSoil.VG_alpha * psiCurr, nodeSoil.VG_n), -(nodeSoil.VG_m + 1.)) * std::pow(nodeSoil.VG_alpha * psiCurr, nodeSoil.VG_n - 1.);
-            if(model == ModifiedVanGenuchten)
+            if(model == WRCModel::ModifiedVanGenuchten)
                 dSedH *= (1. / nodeSoil.VG_Sc);
         }
         else
@@ -237,7 +237,7 @@ namespace soilFluxes3D::Soil
      * \details
      * \return
      */
-    __cudaSpec double computeNodedThetaVdH(uint64_t nodeIndex, double temperature, double dThetadH)
+    __cudaSpec double computeNodedThetaVdH([[maybe_unused]] uint64_t nodeIndex, [[maybe_unused]] double temperature, [[maybe_unused]] double dThetadH)
     {
         //TO DO: Heat
         //double H = nodeGrid.waterData.pressureHead[nodeIndex] - nodeGrid.z[nodeIndex];
@@ -249,7 +249,7 @@ namespace soilFluxes3D::Soil
         if(!simulationFlags.computeHeat)   //Add control over heat data
             return noData;
 
-        return computeMean(nodeGrid.heatData.temperature[nodeIndex], nodeGrid.heatData.oldTemperature[nodeIndex], Arithmetic);
+        return computeMean(nodeGrid.heatData.temperature[nodeIndex], nodeGrid.heatData.oldTemperature[nodeIndex], meanType_t::Arithmetic);
     }
 
     __cudaSpec double nodeDistance2D(uint64_t idx1, uint64_t idx2)

@@ -182,7 +182,7 @@ namespace soilFluxes3D::Log
         logVector(nodeGrid.z, nodeGrid.numNodes, formatName("z"));
 
         //Soil/surface properties pointers
-        // logVectDoubleGPU(nodeGrid.soilSurfacePointers, soil_surface_ptr, nodeGrid.numNodes);
+        // logVectDoubleGPU(nodeGrid.soilSurfacePointers, soilSurface_ptr, nodeGrid.numNodes);
 
         //Boundary data
         // logVectDoubleGPU(nodeGrid.boundaryData.boundaryType, boundaryType_t, nodeGrid.numNodes);

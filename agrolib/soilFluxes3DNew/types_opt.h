@@ -22,7 +22,7 @@ namespace soilFluxes3D::New
         std::optional<uint16_t> maxIterationsNumber;
 
         std::optional<WRCModel> waterRetentionCurveModel;
-        std::optional<meanType_t> meantype;
+        std::optional<meanType_t> meanType;
 
         std::optional<float> lateralVerticalRatio;
         std::optional<double> heatWeightFactor;

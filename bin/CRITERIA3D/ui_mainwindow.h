@@ -158,6 +158,8 @@ public:
     QAction *actionMicrobial_biomass;
     QAction *actionHumified_organic_matter;
     QAction *actionSoil_organic_matter;
+    QAction *actionAutomatic_state_saving_end_of_year;
+    QAction *actionAutomatic_state_saving_end_of_month;
     QWidget *centralWidget;
     QWidget *widgetMap;
     QGroupBox *groupBoxDEM;
@@ -568,6 +570,12 @@ public:
         actionHumified_organic_matter->setObjectName("actionHumified_organic_matter");
         actionSoil_organic_matter = new QAction(MainWindow);
         actionSoil_organic_matter->setObjectName("actionSoil_organic_matter");
+        actionAutomatic_state_saving_end_of_year = new QAction(MainWindow);
+        actionAutomatic_state_saving_end_of_year->setObjectName("actionAutomatic_state_saving_end_of_year");
+        actionAutomatic_state_saving_end_of_year->setCheckable(true);
+        actionAutomatic_state_saving_end_of_month = new QAction(MainWindow);
+        actionAutomatic_state_saving_end_of_month->setObjectName("actionAutomatic_state_saving_end_of_month");
+        actionAutomatic_state_saving_end_of_month->setCheckable(true);
         centralWidget = new QWidget(MainWindow);
         centralWidget->setObjectName("centralWidget");
         centralWidget->setMinimumSize(QSize(0, 0));
@@ -842,7 +850,7 @@ public:
         dateEdit->setFont(font1);
         dateEdit->setDateTime(QDateTime(QDate(2090, 1, 1), QTime(0, 0, 0)));
         dateEdit->setMaximumDateTime(QDateTime(QDate(7999, 12, 31), QTime(23, 59, 59)));
-        dateEdit->setMinimumDateTime(QDateTime(QDate(1752, 9, 3), QTime(0, 0, 0)));
+        dateEdit->setMinimumDateTime(QDateTime(QDate(1752, 9, 1), QTime(0, 0, 0)));
         dateEdit->setMaximumDate(QDate(7999, 12, 31));
         dateEdit->setCurrentSection(QDateTimeEdit::Section::YearSection);
         dateEdit->setCalendarPopup(true);
@@ -1124,6 +1132,11 @@ public:
         menu3DModel->addSeparator();
         menu3DModel->addAction(flagSave_state_endRun);
         menu3DModel->addAction(flagSave_state_daily_step);
+        menu3DModel->addAction(actionAutomatic_state_saving_end_of_year);
+        menu3DModel->addAction(actionAutomatic_state_saving_end_of_month);
+        menu3DModel->addSeparator();
+        menu3DModel->addAction(actionCriteria3D_Water_content_summary);
+        menu3DModel->addAction(actionDEM_summary);
         menuShow->addAction(actionShow_3D_viewer);
         menuShow->addSeparator();
         menuShow->addAction(menuPoints->menuAction());
@@ -1393,6 +1406,8 @@ public:
         actionMicrobial_biomass->setText(QCoreApplication::translate("MainWindow", "Microbial biomass", nullptr));
         actionHumified_organic_matter->setText(QCoreApplication::translate("MainWindow", "Humified organic matter", nullptr));
         actionSoil_organic_matter->setText(QCoreApplication::translate("MainWindow", "Soil organic matter", nullptr));
+        actionAutomatic_state_saving_end_of_year->setText(QCoreApplication::translate("MainWindow", "Automatic state saving (end of year)", nullptr));
+        actionAutomatic_state_saving_end_of_month->setText(QCoreApplication::translate("MainWindow", "Automatic state saving (end of month)", nullptr));
 #if QT_CONFIG(tooltip)
         opacitySliderRasterInput->setToolTip(QCoreApplication::translate("MainWindow", "Raster opacity", nullptr));
 #endif // QT_CONFIG(tooltip)

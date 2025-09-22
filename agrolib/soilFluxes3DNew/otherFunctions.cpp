@@ -9,11 +9,11 @@ namespace soilFluxes3D::Math
     {
         switch(type)
         {
-            case Arithmetic:
+            case meanType_t::Arithmetic:
                 return arithmeticMean(v1, v2);
-            case Geometric:
+            case meanType_t::Geometric:
                 return geometricMean(v1, v2);
-            case Logarithmic:
+            case meanType_t::Logarithmic:
                 return logaritmicMean(v1, v2);
             default:
                 return logaritmicMean(v1, v2);  //

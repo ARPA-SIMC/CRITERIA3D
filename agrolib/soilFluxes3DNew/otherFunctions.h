@@ -6,7 +6,7 @@
 
 namespace soilFluxes3D::Math    //move to mathFunctions
 {
-    __cudaSpec double computeMean(double v1, double v2, soilFluxes3D::New::meanType_t type = soilFluxes3D::New::Logarithmic);
+    __cudaSpec double computeMean(double v1, double v2, soilFluxes3D::New::meanType_t type = soilFluxes3D::New::meanType_t::Logarithmic);
     __cudaSpec double arithmeticMean(double v1, double v2);
     __cudaSpec double geometricMean(double v1, double v2);
     __cudaSpec double logaritmicMean(double v1, double v2);
