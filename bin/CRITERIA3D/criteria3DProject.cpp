@@ -1124,7 +1124,7 @@ bool Crit3DProject::runModels(const QDateTime &firstTime, const QDateTime &lastT
 
             //Log SF3D data
             soilFluxes3D::New::closeLog();
-            logInfo("Daily sub version: 00\n");
+            logInfo("Daily sub version: 01\n");
 
             //rothC maps update must be done hourly, otherwise ETReal data are not stored
             if (processes.computeRothC || processes.computeHydrall)

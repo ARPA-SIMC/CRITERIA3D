@@ -213,8 +213,8 @@ namespace soilFluxes3D::New
         float lateralVerticalRatio = 10;    //why float?
         double heatWeightFactor = 0.5;      //???
 
-        double CourantWaterThreshold = 0.8; //used for evaluate stability
-        double instabilityFactor = 3.0;     //used for evaluate stability
+        double CourantWaterThreshold = 0.5; //used for evaluate stability
+        double instabilityFactor = 10.;     //used for evaluate stability
 
         bool enableOMP = true;
         uint32_t numThreads = std::thread::hardware_concurrency();
