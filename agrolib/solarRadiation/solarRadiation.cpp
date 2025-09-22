@@ -30,6 +30,7 @@
 #include "meteoPoint.h"
 #include "sunPosition.h"
 #include "solarRadiation.h"
+
 #include <math.h>
 
 
@@ -907,15 +908,13 @@ bool computeRadiationRsun(Crit3DRadiationSettings* radSettings, float temperatur
         if (radSettings->getAlgorithm() != RADIATION_ALGORITHM_RSUN)
             return false;
 
-        int row, col;
-        TradPoint radPoint;
-
-        for (row = 0; row < myDem.header->nrRows; row++ )
+        for (int row = 0; row < myDem.header->nrRows; row++ )
         {
-            for (col = 0; col < myDem.header->nrCols; col++)
+            for (int col = 0; col < myDem.header->nrCols; col++)
             {
                 if(isGridPointComputable(radSettings, row, col, myDem, radiationMaps))
                 {
+                    TradPoint radPoint;
                     myDem.getXY(row, col, radPoint.x, radPoint.y);
                     radPoint.height = myDem.value[row][col];
 

@@ -29,6 +29,7 @@
 #include <vector>
 #include <algorithm>
 #include <functional>
+#include <omp.h>
 
 #include "commonConstants.h"
 #include "basicMath.h"
@@ -117,146 +118,51 @@ float getProxyMinValue(std::vector<Crit3DInterpolationDataPoint> &myPoints, unsi
 
 
 // return number of sorted valid points
-unsigned sortPointsByDistance(unsigned maxNrPoints, std::vector<Crit3DInterpolationDataPoint> &pointList,
-                              std::vector<Crit3DInterpolationDataPoint> &validPointList)
+unsigned sortPointsByDistance(unsigned maxNrPoints, const std::vector<Crit3DInterpolationDataPoint> &pointList,
+                              const std::vector<float> &distances,
+                              std::vector<Crit3DInterpolationDataPoint> &outputPointList,
+                              std::vector<float> &outputDistances)
 {
+    outputPointList.clear();
+    outputDistances.clear();
     if (pointList.empty())
         return 0;
 
-    // initializes the distance list
-    std::vector<float> distanceList;
-    for (unsigned i = 0; i < pointList.size(); i++)
+    // initializes the indices list
+    std::vector<int> indices;
+    indices.reserve(pointList.size());
+    for (int i = 0; i < pointList.size(); ++i)
     {
-        if (! isEqual(pointList[i].distance, 0) && ! isEqual(pointList[i].distance, NODATA))
-        {
-            distanceList.push_back(pointList[i].distance);
-        }
+        if (! isEqual(distances[i], 0) && ! isEqual(distances[i], NODATA))
+            indices.push_back(i);
     }
-    // check
-    if (distanceList.empty())
+
+    if (indices.empty())
         return 0;
 
-    // sorts the distances
-    std::sort(distanceList.begin(), distanceList.end());
-
-    // initializes the list of points used
-    std::vector<bool> isUsedPoint;
-    isUsedPoint.resize(pointList.size());
-    for (unsigned i = 0; i < isUsedPoint.size(); i++)
-    {
-        isUsedPoint[i] = false;
-    }
+    // sort the indices based on distances
+    std::sort(indices.begin(), indices.end(), [&distances](int i1, int i2)
+            { return distances[i1] < distances[i2]; });
 
     // saves the sorted points
-    validPointList.clear();
-    for (unsigned i = 0; i < distanceList.size(); i++)
+    int nrOut = std::min(maxNrPoints, unsigned(indices.size()));
+    outputPointList.reserve(nrOut);
+    outputDistances.reserve(nrOut);
+
+    for (int i = 0; i < nrOut; ++i)
     {
-        float currentDistance = distanceList[i];
-        for (unsigned i = 0; i < pointList.size(); i++)
-        {
-            if (! isUsedPoint[i])
-            {
-                if (isEqual(pointList[i].distance, currentDistance))
-                {
-                    validPointList.push_back(pointList[i]);
-                    isUsedPoint[i] = true;
-                    break;
-                }
-            }
-        }
-        if (validPointList.size() == maxNrPoints)
-            break;
+        outputPointList.push_back(pointList[indices[i]]);
+        outputDistances.push_back(distances[indices[i]]);
     }
 
-    return unsigned(validPointList.size());
+    return unsigned(outputPointList.size());
 }
 
-/*
- * old code
-unsigned sortPointsByDistance(unsigned maxIndex, std::vector<Crit3DInterpolationDataPoint> &points, std::vector<Crit3DInterpolationDataPoint> &myValidPoints)
-{
-    if (points.size() == 0) return 0;
 
-    unsigned i, first, index, outIndex;
-    float min_value = NODATA;
-    std::vector<unsigned> indici_ordinati;
-    std::vector<unsigned> indice_minimo;
-
-    indici_ordinati.resize(maxIndex);
-    indice_minimo.resize(points.size());
-
-    first = 0;
-    index = 0;
-
-    bool isExit = false;
-
-    while (index < maxIndex && !isExit)
-    {
-        if (first == 0)
-        {
-            i = 0;
-            while ((! points[i].isActive || (isEqual(points[i].distance, 0))) && (i < points.size()-1))
-                i++;
-
-            if (i == (points.size()-1) && ! points[i].isActive)
-                isExit = true;
-            else
-            {
-                first = 1;
-                indice_minimo[first-1] = i;
-                min_value = points[i].distance;
-            }
-        }
-        else
-        {
-            min_value = points[unsigned(indice_minimo[first-1])].distance;
-        }
-
-        if (! isExit)
-        {
-            for (i = unsigned(indice_minimo[first-1]) + 1; i < points.size(); i++)
-                if (isEqual(min_value, NODATA) || points[i].distance < min_value)
-                    if (points[i].isActive)
-                        if (points[i].distance > 0)
-                        {
-                            first++;
-                            min_value = points[i].distance;
-                            indice_minimo[first-1] = i;
-                        }
-
-            int currentIndex = indice_minimo[first-1];
-            if (! isEqual(points[currentIndex].distance, 0))
-            {
-                indici_ordinati[index] = currentIndex;
-                points[currentIndex].isActive = false;
-                index++;
-                first--;
-            }
-        }
-    }
-
-    outIndex = MINVALUE(index, maxIndex);
-    myValidPoints.clear();
-
-    for (i=0; i < outIndex; i++)
-    {
-        points[indici_ordinati[i]].isActive = true;
-        myValidPoints.push_back(points[indici_ordinati[i]]);
-    }
-
-    indici_ordinati.clear();
-    indice_minimo.clear();
-    return outIndex;
-}
-*/
-
-
-void computeDistances(meteoVariable myVar, vector <Crit3DInterpolationDataPoint> &myPoints,  Crit3DInterpolationSettings* mySettings,
+void computeDistances(meteoVariable myVar, std::vector <Crit3DInterpolationDataPoint> &myPoints,  Crit3DInterpolationSettings* mySettings,
                       float x, float y, float z, bool excludeSupplemental)
 {
-    int row, col;
-
-    for (unsigned long i = 0; i < myPoints.size() ; i++)
+    for (long i = 0; i < myPoints.size() ; i++)
     {
         if (excludeSupplemental && ! checkLapseRateCode(myPoints[i].lapseRateCode, mySettings->getUseLapseRateCode(), false))
         {
@@ -277,6 +183,7 @@ void computeDistances(meteoVariable myVar, vector <Crit3DInterpolationDataPoint>
                     {
                         if (! gis::isOutOfGridXY(x, y, myPoints[i].topographicDistance->header))
                         {
+                            int row, col;
                             gis::getRowColFromXY(*(myPoints[i].topographicDistance->header), x, y, &row, &col);
                             topoDistance = myPoints[i].topographicDistance->value[row][col];
                         }
@@ -296,52 +203,99 @@ void computeDistances(meteoVariable myVar, vector <Crit3DInterpolationDataPoint>
 }
 
 
-bool neighbourhoodVariability(meteoVariable myVar, std::vector <Crit3DInterpolationDataPoint> &myInterpolationPoints,
+std::vector<float> computeDistances_vector(meteoVariable myVar, const std::vector <Crit3DInterpolationDataPoint> &myPoints,
+                             Crit3DInterpolationSettings* mySettings, float x, float y, float z, bool excludeSupplemental)
+{
+    std::vector<float> distance;
+    distance.resize(myPoints.size());
+
+    for (long i = 0; i < myPoints.size() ; i++)
+    {
+        if (excludeSupplemental && ! checkLapseRateCode(myPoints[i].lapseRateCode, mySettings->getUseLapseRateCode(), false))
+        {
+            distance[i] = 0;
+        }
+        else
+        {
+            distance[i] = gis::computeDistance(x, y, float(myPoints[i].point->utm.x), float(myPoints[i].point->utm.y));
+
+            // topographic distance
+            if (mySettings->getUseTD() && getUseTdVar(myVar))
+            {
+                float topoDistance = 0.;
+                int kh = mySettings->getTopoDist_Kh();
+                if (kh != 0)
+                {
+                    topoDistance = NODATA;
+                    if (myPoints[i].topographicDistance != nullptr)
+                    {
+                        if (! gis::isOutOfGridXY(x, y, myPoints[i].topographicDistance->header))
+                        {
+                            int row, col;
+                            gis::getRowColFromXY(*(myPoints[i].topographicDistance->header), x, y, &row, &col);
+                            topoDistance = myPoints[i].topographicDistance->value[row][col];
+                        }
+                    }
+
+                    if (isEqual(topoDistance, NODATA))
+                        topoDistance = topographicDistance(x, y, z, float(myPoints[i].point->utm.x),
+                                                           float(myPoints[i].point->utm.y),
+                                                           float(myPoints[i].point->z), distance[i],
+                                                           *(mySettings->getCurrentDEM()));
+                }
+
+                distance[i] += (kh * topoDistance);
+            }
+        }
+    }
+
+    return distance;
+}
+
+
+bool neighbourhoodVariability(meteoVariable myVar, std::vector <Crit3DInterpolationDataPoint> &interpolationPoints,
                               Crit3DInterpolationSettings* mySettings,
                               float x, float y, float z, int maxNrPoints,
-                              float* devSt, float* avgDeltaZ, float* minDistance)
+                              float &devSt, float &avgDeltaZ, float &minDistance)
 {
-    int i, nrValid;
-    float* dataNeighborhood;
-    float myValue;
-    vector <float> deltaZ;
     vector <Crit3DInterpolationDataPoint> validPoints;
+    vector <float> validDistances;
 
-    computeDistances(myVar, myInterpolationPoints, mySettings, x, y, z, true);
-    nrValid = sortPointsByDistance(maxNrPoints, myInterpolationPoints, validPoints);
+    vector <float> distances = computeDistances_vector(myVar, interpolationPoints, mySettings, x, y, z, true);
+    int nrValidPoints = sortPointsByDistance(maxNrPoints, interpolationPoints, distances, validPoints, validDistances);
 
-    if (nrValid > 1)
+    if (nrValidPoints <= 1)
+        return false;
+
+    std::vector<float> dataNeighborhood(nrValidPoints);
+    for (int i=0; i < nrValidPoints; i++)
     {
-        dataNeighborhood = (float *) calloc (nrValid, sizeof(float));
+        dataNeighborhood[i] = validPoints[i].value;
+    }
 
-        for (i=0; i<nrValid; i++)
+    minDistance = validDistances[0];
+    devSt = statistics::standardDeviation(dataNeighborhood, nrValidPoints);
+
+    if (z != NODATA)
+    {
+        vector <float> deltaZ;
+
+        for (int i=0; i < nrValidPoints; i++)
         {
-            myValue = validPoints[i].value;
-            dataNeighborhood[i] = myValue;
-        }
-
-        *devSt = statistics::standardDeviation(dataNeighborhood, nrValid);
-
-        *minDistance = validPoints[0].distance;
-
-        deltaZ.clear();
-        if (z != NODATA)
-            deltaZ.push_back(1);
-
-        for (i=0; i<nrValid;i++)
-        {
-            if ((validPoints[i]).point->z != NODATA)
+            if (! isEqual(validPoints[i].point->z, NODATA))
             {
                 deltaZ.push_back(float(fabs(validPoints[i].point->z - z)));
             }
         }
 
-        *avgDeltaZ = statistics::mean(deltaZ.data(), int(deltaZ.size()));
-
-        return true;
+        avgDeltaZ = statistics::mean(deltaZ);
     }
     else
-        return false;
+    {
+        avgDeltaZ = NODATA;
+    }
+
+    return true;
 }
 
 
@@ -847,36 +801,40 @@ float computeShepardInitialRadius(float area, unsigned int allPointsNr, unsigned
 }
 
 
-float shepardSearchNeighbour(vector <Crit3DInterpolationDataPoint> &inputPoints,
+float shepardSearchNeighbour(const vector <Crit3DInterpolationDataPoint>& inputPoints,
+                             const vector <float>& inputDistances,
                              Crit3DInterpolationSettings* settings,
-                             vector <Crit3DInterpolationDataPoint> &outputPoints)
+                             vector <Crit3DInterpolationDataPoint>& outputPoints,
+                             vector <float>& outputDistances)
 {
-    float shepardInitialRadius = computeShepardInitialRadius(settings->getPointsBoundingBoxArea(),
-                                                             unsigned(inputPoints.size()), SHEPARD_AVG_NRPOINTS);
+    unsigned nrPoints = unsigned(inputPoints.size());
+    float shepardInitialRadius = computeShepardInitialRadius(settings->getPointsBoundingBoxArea(), nrPoints, SHEPARD_AVG_NRPOINTS);
+
+    std::vector <Crit3DInterpolationDataPoint> firstNeighbourPoints;
+    std::vector <float> firstDistances;
 
     // define a first neighborhood inside initial radius
-    std::vector <Crit3DInterpolationDataPoint> shepardNeighbourPoints;
     for (unsigned int i=0; i < inputPoints.size(); i++)
     {
-        if (inputPoints[i].distance <= shepardInitialRadius &&
-            inputPoints[i].distance > 0 &&
-            inputPoints[i].index != settings->getIndexPointCV())
+        if (inputDistances[i] <= shepardInitialRadius && inputDistances[i] > 0
+            && inputPoints[i].index != settings->getIndexPointCV())
         {
-            shepardNeighbourPoints.push_back(inputPoints[i]);
+            firstNeighbourPoints.push_back(inputPoints[i]);
+            firstDistances.push_back(inputDistances[i]);
         }
     }
 
     // If the points are too few, double the check radius
-    if (shepardNeighbourPoints.size() < SHEPARD_MIN_NRPOINTS)
+    if (firstNeighbourPoints.size() < SHEPARD_MIN_NRPOINTS)
     {
         float doubleRadius = shepardInitialRadius * 2;
         for (unsigned int i=0; i < inputPoints.size(); i++)
         {
-            if (inputPoints[i].distance <= doubleRadius &&
-                inputPoints[i].distance > shepardInitialRadius &&
-                inputPoints[i].index != settings->getIndexPointCV())
+            if (inputDistances[i] <= doubleRadius && inputDistances[i] > shepardInitialRadius
+                && inputPoints[i].index != settings->getIndexPointCV())
             {
-                shepardNeighbourPoints.push_back(inputPoints[i]);
+                firstNeighbourPoints.push_back(inputPoints[i]);
+                firstDistances.push_back(inputDistances[i]);
             }
         }
         shepardInitialRadius = doubleRadius;
@@ -884,20 +842,22 @@ float shepardSearchNeighbour(vector <Crit3DInterpolationDataPoint> &inputPoints,
 
     float radius;
 
-    if (shepardNeighbourPoints.size() < SHEPARD_MIN_NRPOINTS)
+    if (firstNeighbourPoints.size() < SHEPARD_MIN_NRPOINTS)
     {
-        int nrPoints = sortPointsByDistance(SHEPARD_MIN_NRPOINTS, inputPoints, outputPoints);
-        if (outputPoints.empty()) return NODATA;
-        radius = outputPoints[nrPoints-1].distance + float(EPSILON);
+        int nrPoints = sortPointsByDistance(SHEPARD_MIN_NRPOINTS, inputPoints, inputDistances, outputPoints, outputDistances);
+        if (outputPoints.empty())
+            return NODATA;
+        radius = outputDistances[nrPoints-1] + float(EPSILON);
     }
-    else if (shepardNeighbourPoints.size() > SHEPARD_MAX_NRPOINTS)
+    else if (firstNeighbourPoints.size() > SHEPARD_MAX_NRPOINTS)
     {
-        int nrPoints = sortPointsByDistance(SHEPARD_MAX_NRPOINTS, shepardNeighbourPoints, outputPoints);
-        radius = outputPoints[nrPoints-1].distance + float(EPSILON);
+        int nrPoints = sortPointsByDistance(SHEPARD_MAX_NRPOINTS, firstNeighbourPoints, firstDistances, outputPoints, outputDistances);
+        radius = outputDistances[nrPoints-1] + float(EPSILON);
     }
     else
     {
-        outputPoints = shepardNeighbourPoints;
+        outputPoints = firstNeighbourPoints;
+        outputDistances = firstDistances;
         radius = shepardInitialRadius;
     }
 
@@ -905,17 +865,19 @@ float shepardSearchNeighbour(vector <Crit3DInterpolationDataPoint> &inputPoints,
 }
 
 
-float shepardIdw(vector <Crit3DInterpolationDataPoint> &myPoints, Crit3DInterpolationSettings* settings, float X, float Y)
+float shepardIdw(const std::vector <Crit3DInterpolationDataPoint>& myPoints, std::vector <float> &distances,
+                 Crit3DInterpolationSettings* settings, float x, float y)
 {
-    std::vector <Crit3DInterpolationDataPoint> shepardValidPoints;
+    std::vector <Crit3DInterpolationDataPoint> shepardPoints;
+    std::vector <float> shepardDistances;
 
-    float radius = shepardSearchNeighbour(myPoints, settings, shepardValidPoints);
+    float radius = shepardSearchNeighbour(myPoints, distances, settings, shepardPoints, shepardDistances);
 
     unsigned int i, j;
     float weightSum, radius_27_4, radius_3, tmp, cosine, result;
     std::vector <float> weight, t, S;
 
-    unsigned int nrValid = unsigned(shepardValidPoints.size());
+    unsigned int nrValid = unsigned(shepardPoints.size());
 
     weight.resize(nrValid);
     t.resize(nrValid);
@@ -925,13 +887,15 @@ float shepardIdw(vector <Crit3DInterpolationDataPoint> &myPoints, Crit3DInterpol
     radius_3 = radius / 3;
     radius_27_4 = (27 / 4) / radius;
     for (i=0; i < nrValid; i++)
-        if (shepardValidPoints[i].distance > 0)
+        if (shepardDistances[i] > 0)
         {
-            if (shepardValidPoints[i].distance <= radius_3)
-                S[i] = 1 / (shepardValidPoints[i].distance);
-            else if (shepardValidPoints[i].distance <= radius)
+            if (shepardDistances[i] <= radius_3)
             {
-                tmp = (shepardValidPoints[i].distance / radius) - 1;
+                S[i] = 1 / (shepardDistances[i]);
+            }
+            else if (shepardDistances[i] <= radius)
+            {
+                tmp = (shepardDistances[i] / radius) - 1;
                 S[i] = radius_27_4 * tmp * tmp;
             }
             else
@@ -950,7 +914,9 @@ float shepardIdw(vector <Crit3DInterpolationDataPoint> &myPoints, Crit3DInterpol
         for (j=0; j < nrValid; j++)
             if (i != j)
             {
-                cosine = ((X - (float)shepardValidPoints[i].point->utm.x) * (X - (float)shepardValidPoints[j].point->utm.x) + (Y - (float)shepardValidPoints[i].point->utm.y) * (Y - (float)shepardValidPoints[j].point->utm.y)) / (shepardValidPoints[i].distance * shepardValidPoints[j].distance);
+                cosine = ( (x - (float)shepardPoints[i].point->utm.x) * (x - (float)shepardPoints[j].point->utm.x)
+                          + (y - (float)shepardPoints[i].point->utm.y) * (y - (float)shepardPoints[j].point->utm.y))
+                         / (shepardDistances[i] * shepardDistances[j]);
                 t[i] = t[i] + S[j] * (1 - cosine);
             }
 
@@ -970,114 +936,117 @@ float shepardIdw(vector <Crit3DInterpolationDataPoint> &myPoints, Crit3DInterpol
 
     result = 0;
     for (i=0; i < nrValid; i++)
-        result += weight[i] * shepardValidPoints[i].value;
+        result += weight[i] * shepardPoints[i].value;
 
     return result;
 }
 
 
-float modifiedShepardIdw(vector <Crit3DInterpolationDataPoint> &myPoints,
-                         Crit3DInterpolationSettings* settings, float radius, float X, float Y)
+float modifiedShepardIdw(const std::vector <Crit3DInterpolationDataPoint> &myPoints, std::vector <float> &myDistances,
+                         Crit3DInterpolationSettings* settings, float radius, float y, float x)
 {
-    float weightSum, cosine, result;
-    std::vector <float> weight, t, S;
-    std::vector <Crit3DInterpolationDataPoint> validPoints;
+    std::vector <Crit3DInterpolationDataPoint> shepardPoints;
+    std::vector <float> shepardDistances;
 
-    if (radius == NODATA)
+    if (isEqual(radius, NODATA))
     {
-        radius = shepardSearchNeighbour(myPoints, settings, validPoints);
+        radius = shepardSearchNeighbour(myPoints, myDistances, settings, shepardPoints, shepardDistances);
         /*settings->setMinPointsLocalDetrending(8);
         localSelection(myPoints, validPoints, X, Y, *settings, true);
         radius = settings->getLocalRadius() + EPSILON;*/
     }
     else
-        validPoints = myPoints;
+    {
+        shepardPoints = myPoints;
+        shepardDistances = myDistances;
+    }
 
-    if (myPoints.empty())
+    if (shepardPoints.empty())
         return NODATA;
 
-    weight.resize(validPoints.size());
-    t.resize(validPoints.size());
-    S.resize(validPoints.size());
+    std::size_t nrPoints = shepardPoints.size();
+    std::vector<double> weight(nrPoints), t(nrPoints, 0.0), s(nrPoints, 0.0);
 
-    weightSum = 0;
-    for (unsigned int i=0; i < validPoints.size(); i++)
+    double weightSum = 0.0;
+    for (std::size_t i=0; i < nrPoints; ++i)
     {
-        if (validPoints[i].distance > 0)
+        if (shepardDistances[i] > 0.0 && shepardDistances[i] <= radius)
         {
-            if (validPoints[i].distance <= radius)
-                S[i] = (radius - validPoints[i].distance) / (radius * validPoints[i].distance);
-            else
-                S[i] = 0;
-
-            weightSum += S[i];
+            s[i] = (radius - shepardDistances[i]) / (radius * shepardDistances[i]);
+            weightSum += s[i];
         }
     }
 
-    if (weightSum == 0)
-    {
+    if (weightSum == 0.0)
         return NODATA;
-    }
 
-    // including direction
-    for (unsigned int i=0; i < validPoints.size(); i++)
+    // direction
+    double invWeightSum = 1.0 / weightSum;
+    for (std::size_t i=0; i < nrPoints; ++i)
     {
-        t[i] = 0;
-        for (unsigned int j=0; j < validPoints.size(); j++)
-        {
-            if (i != j && S[i] > 0 && validPoints[i].distance > 0 && validPoints[j].distance > 0)
-            {
-                cosine = ((X - (float)validPoints[i].point->utm.x) * (X - (float)validPoints[j].point->utm.x)
-                          + (Y - (float)validPoints[i].point->utm.y) * (Y - (float)validPoints[j].point->utm.y))
-                         / (validPoints[i].distance * validPoints[j].distance);
-                t[i] = t[i] + S[j] * (1 - cosine);
-            }
-        }
+        if (s[i] == 0.0 || shepardDistances[i] <= 0.0)
+            continue;
 
-        if (weightSum != 0)
-            t[i] /= weightSum;
+        double xi = shepardPoints[i].point->utm.x;
+        double yi = shepardPoints[i].point->utm.y;
+
+        for (std::size_t j=0; j < nrPoints; ++j)
+        {
+            if (i==j || s[j]==0.0 || shepardDistances[j]<=0.0)
+                continue;
+
+            double xj = shepardPoints[j].point->utm.x;
+            double yj = shepardPoints[j].point->utm.y;
+            double cosine = ((x - xi)*(x - xj) + (y - yi)*(y - yj))
+                            / (shepardDistances[i]*shepardDistances[j]);
+
+            t[i] += s[j] * (1.0 - cosine);
+        }
+        t[i] *= invWeightSum;
     }
 
     // weights
-    weightSum = 0;
-    for (unsigned int i=0; i < validPoints.size(); i++)
+    weightSum = 0.0;
+    for (std::size_t i=0; i < nrPoints; ++i)
     {
-        weight[i] = S[i] * S[i] * (1 + t[i]);
+        weight[i] = s[i] * s[i] * (1.0 + t[i]);
         weightSum += weight[i];
     }
-    for (unsigned int i=0; i < validPoints.size(); i++)
-        weight[i] /= weightSum;
 
-    result = 0;
-    for (unsigned int i=0; i < validPoints.size(); i++)
-        result += weight[i] * validPoints[i].value;
+    double invWeightSumFinal = 1.0 / weightSum;
+    for (std::size_t i=0; i < nrPoints; ++i)
+        weight[i] *= invWeightSumFinal;
 
-    return result;
+    double result = 0.0;
+    for (std::size_t i=0; i < nrPoints; ++i)
+        result += weight[i]*shepardPoints[i].value;
+
+    return float(result);
 }
 
 
-float inverseDistanceWeighted(vector <Crit3DInterpolationDataPoint> &myPointList)
+float inverseDistanceWeighted(const std::vector<Crit3DInterpolationDataPoint> &pointList, const std::vector<float>& distances)
 {
-    double sum, sumWeights, weight;
+    double sum = 0;
+    double sumWeights = 0;
+    const std::size_t nrPoints = pointList.size();
 
-    sum = 0 ;
-    sumWeights = 0 ;
-    for (unsigned int i = 0 ; i < myPointList.size(); i++)
+    for (std::size_t i = 0; i < nrPoints; ++i)
     {
-        if (myPointList[i].distance > 0.f)
+        if (distances[i] > 0.f)
         {
-            weight = double(myPointList[i].distance) / 10000.;
-            weight = fabs(1 / (weight * weight * weight));
+            // weight inversely proportional to the cube of the distance
+            double dist_km = static_cast<double>(distances[i]) / 10000.;
+            double weight = 1.0 / (dist_km * dist_km * dist_km);
+
             sumWeights += weight;
-            sum += double(myPointList[i].value) * weight;
+            sum += static_cast<double>(pointList[i].value) * weight;
         }
     }
 
-    if (sumWeights > 0.0)
-        return float(sum / sumWeights);
-    else
-        return NODATA;
+    return (sumWeights > 0.0) ? static_cast<float>(sum / sumWeights) : NODATA;
 }
+
 
 /*
  * wind?
@@ -1298,7 +1267,7 @@ void detrendPoints(std::vector <Crit3DInterpolationDataPoint> &myPoints, Crit3DI
     }
 }
 
-float retrend(meteoVariable myVar, vector<double> myProxyValues, Crit3DInterpolationSettings* mySettings)
+float retrend(meteoVariable myVar, const std::vector<double>& proxyValues, Crit3DInterpolationSettings* mySettings)
 {
     if (! getUseDetrendingVar(myVar)) return 0.;
 
@@ -1318,7 +1287,7 @@ float retrend(meteoVariable myVar, vector<double> myProxyValues, Crit3DInterpola
         // and multipleDetrending (height proxy first)
         std::vector <std::vector <double>> fittingParameters = mySettings->getFittingParameters();
 
-        if (getMultipleDetrendingValues(*mySettings, myProxyValues, activeProxyValues, myFunc, fittingParameters))
+        if (getMultipleDetrendingValues(*mySettings, proxyValues, activeProxyValues, myFunc, fittingParameters))
         {
             if (myFunc.size() > 0 && fittingParameters.size() > 0)
                 retrendValue = float(functionSum(myFunc, activeProxyValues, fittingParameters));
@@ -1332,7 +1301,7 @@ float retrend(meteoVariable myVar, vector<double> myProxyValues, Crit3DInterpola
 
             if (myCombination.isProxyActive(pos) && myCombination.isProxySignificant(pos))
             {
-                myProxyValue = mySettings->getProxyValue(pos, myProxyValues);
+                myProxyValue = mySettings->getProxyValue(pos, proxyValues);
 
                 if (myProxyValue != NODATA)
                 {
@@ -2448,61 +2417,64 @@ bool preInterpolation(std::vector <Crit3DInterpolationDataPoint> &myPoints, Crit
 }
 
 
-float interpolate(vector <Crit3DInterpolationDataPoint> &myPoints, Crit3DInterpolationSettings* mySettings, Crit3DMeteoSettings* meteoSettings,
-                  meteoVariable myVar, float myX, float myY, float myZ, std::vector <double> myProxyValues,
-                  bool excludeSupplemental)
-
+float interpolate(const std::vector<Crit3DInterpolationDataPoint>& myPoints, Crit3DInterpolationSettings* interpolationSettings,
+                  Crit3DMeteoSettings* meteoSettings, meteoVariable variable, float x, float y, float z,
+                  const std::vector<double> &proxyValues, bool excludeSupplemental)
 {
-    if ((myVar == precipitation || myVar == dailyPrecipitation) && mySettings->getPrecipitationAllZero())
+    if ((variable == precipitation || variable == dailyPrecipitation) && interpolationSettings->getPrecipitationAllZero())
         return 0.;
 
-    float myResult = NODATA;
+    float result = NODATA;
 
-    computeDistances(myVar, myPoints, mySettings, myX, myY, myZ, excludeSupplemental);
+    std::vector<float> distances = computeDistances_vector(variable, myPoints, interpolationSettings, x, y, z, excludeSupplemental);
 
-    if (! mySettings->getUseRetrendOnly())
+    if (! interpolationSettings->getUseRetrendOnly())
     {
-        if (mySettings->getInterpolationMethod() == idw)
+        if (interpolationSettings->getInterpolationMethod() == idw)
         {
-            myResult = inverseDistanceWeighted(myPoints);
+            result = inverseDistanceWeighted(myPoints, distances);
         }
-        else if (mySettings->getInterpolationMethod() == shepard)
+        else if (interpolationSettings->getInterpolationMethod() == shepard)
         {
-            myResult = shepardIdw(myPoints, mySettings, myX, myY);
+            result = shepardIdw(myPoints, distances, interpolationSettings, x, y);
         }
-        else if (mySettings->getInterpolationMethod() == shepard_modified)
+        else if (interpolationSettings->getInterpolationMethod() == shepard_modified)
         {
             float radius = NODATA;
-            if (mySettings->getUseLocalDetrending()) radius = mySettings->getLocalRadius();
-            myResult = modifiedShepardIdw(myPoints, mySettings, radius, myX, myY);
+            if (interpolationSettings->getUseLocalDetrending()) radius = interpolationSettings->getLocalRadius();
+            result = modifiedShepardIdw(myPoints, distances, interpolationSettings, radius, x, y);
         }
-        //else if (mySettings->getInterpolationMethod() == kriging)
-        //    myResult = NODATA;  //TODO
     }
-    else myResult = 0;
+    else result = 0;
 
-    if (isEqual(myResult, NODATA))
-    {
+    if (isEqual(result, NODATA))
         return NODATA;
-    }
-    else if (!mySettings->getUseDoNotRetrend())
-        myResult += retrend(myVar, myProxyValues, mySettings);
 
-    if (myVar == precipitation || myVar == dailyPrecipitation)
+    if (! interpolationSettings->getUseDoNotRetrend())
     {
-        if (myResult < meteoSettings->getRainfallThreshold())
-            return 0.;
+        result += retrend(variable, proxyValues, interpolationSettings);
     }
-    else if (myVar == airRelHumidity || myVar == dailyAirRelHumidityAvg
-             || myVar == dailyAirRelHumidityMax || myVar == dailyAirRelHumidityMin)
-        myResult = MAXVALUE(MINVALUE(myResult, 100), 0);
-    else if (myVar == dailyAirTemperatureRange || myVar == leafWetness || myVar == dailyLeafWetness
-             || myVar == globalIrradiance || myVar == dailyGlobalRadiation || myVar == atmTransmissivity
-             || myVar == windScalarIntensity || myVar == windVectorIntensity || myVar == dailyWindScalarIntensityAvg || myVar == dailyWindScalarIntensityMax || myVar == dailyWindVectorIntensityAvg || myVar == dailyWindVectorIntensityMax
-             || myVar == atmPressure)
-        myResult = MAXVALUE(myResult, 0);
 
-    return myResult;
+    switch (variable)
+    {
+    case precipitation: case dailyPrecipitation:
+        return (result < meteoSettings->getRainfallThreshold()) ? 0.f : result;
+
+    case airRelHumidity: case dailyAirRelHumidityAvg:
+    case dailyAirRelHumidityMin: case dailyAirRelHumidityMax:
+        return std::clamp(result, 0.f, 100.f);
+
+    case dailyAirTemperatureRange: case leafWetness: case dailyLeafWetness:
+    case globalIrradiance: case dailyGlobalRadiation: case atmTransmissivity:
+    case windScalarIntensity: case windVectorIntensity: case dailyWindScalarIntensityAvg:
+    case dailyWindScalarIntensityMax: case dailyWindVectorIntensityAvg:
+    case dailyWindVectorIntensityMax: case atmPressure:
+        return std::max(result, 0.f);
+
+    default:
+        return result;
+    }
+
 }
 
 

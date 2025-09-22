@@ -65,10 +65,22 @@
     void clearInterpolationPoints();
     bool checkPrecipitationZero(const std::vector<Crit3DInterpolationDataPoint> &myPoints, float precThreshold, int &nrNotNull);
 
-    bool neighbourhoodVariability(meteoVariable myVar, std::vector<Crit3DInterpolationDataPoint> &myInterpolationPoints, Crit3DInterpolationSettings *mySettings, float x, float y, float z, int maxNrPoints,
-                                  float* devSt, float* avgDeltaZ, float* minDistance);
+    bool neighbourhoodVariability(meteoVariable myVar, std::vector<Crit3DInterpolationDataPoint> &interpolationPoints,
+                                  Crit3DInterpolationSettings *mySettings, float x, float y, float z, int maxNrPoints,
+                                  float &devSt, float &avgDeltaZ, float &minDistance);
 
-    float interpolate(std::vector<Crit3DInterpolationDataPoint> &myPoints, Crit3DInterpolationSettings *mySettings, Crit3DMeteoSettings *meteoSettings, meteoVariable myVar, float myX, float myY, float myZ, std::vector<double> myProxyValues, bool excludeSupplemental);
+    float interpolate(const std::vector<Crit3DInterpolationDataPoint>& myPoints, Crit3DInterpolationSettings *interpolationSettings,
+                      Crit3DMeteoSettings *meteoSettings, meteoVariable variable, float x, float y, float z,
+                      const std::vector<double> &proxyValues, bool excludeSupplemental);
+
+    float inverseDistanceWeighted(const std::vector<Crit3DInterpolationDataPoint> &pointList, const std::vector<float>& distances);
+
+    float shepardIdw(const std::vector <Crit3DInterpolationDataPoint>& myPoints, std::vector <float> &distances,
+                     Crit3DInterpolationSettings* settings, float x, float y);
+
+    float modifiedShepardIdw(const std::vector <Crit3DInterpolationDataPoint> &myPoints, std::vector<float> &myDistances,
+                             Crit3DInterpolationSettings* settings, float radius, float x, float y);
+
     bool getProxyValuesXY(float x, float y, Crit3DInterpolationSettings* mySettings, std::vector<double> &myValues);
     bool getSignificantProxyValuesXY(float x, float y, Crit3DInterpolationSettings* mySettings, std::vector<double> &myValues);
 
@@ -100,8 +112,9 @@
     bool isThermal(meteoVariable myVar);
     bool getUseTdVar(meteoVariable myVar);
 
-    unsigned sortPointsByDistance(unsigned maxNrPoints, std::vector<Crit3DInterpolationDataPoint> &pointList,
-                                  std::vector<Crit3DInterpolationDataPoint> &validPointList);
+    unsigned sortPointsByDistance(unsigned maxNrPoints,
+                                  const std::vector<Crit3DInterpolationDataPoint> &pointList, const std::vector<float> &distances,
+                                  std::vector<Crit3DInterpolationDataPoint> &outputPointList, std::vector<float> &outputDistances);
 
     float getFirstIntervalHeightValue(std::vector <Crit3DInterpolationDataPoint> &myPoints, bool useLapseRateCode);
 
