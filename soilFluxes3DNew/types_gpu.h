@@ -82,7 +82,6 @@ namespace soilFluxes3D::New
     }
 
 
-
     template <typename T>
     inline void movePointerToDevice(T*& ptr, const std::size_t count, const cudaStream_t& stream)
     {
@@ -103,7 +102,8 @@ namespace soilFluxes3D::New
     }
 
     template <typename KernelFunc, typename... Args>
-    inline cudaError_t launchGPUKernel(KernelFunc kernel, dim3 numBlocks, dim3 numThreadsPerBlock, Args&&... args) {
+    inline cudaError_t launchGPUKernel(KernelFunc kernel, dim3 numBlocks, dim3 numThreadsPerBlock, Args&&... args)
+    {
         kernel<<<numBlocks, numThreadsPerBlock>>>(std::forward<Args>(args)...);
 
         cudaError_t err = cudaDeviceSynchronize();

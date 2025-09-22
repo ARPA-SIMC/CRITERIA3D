@@ -18,7 +18,7 @@ namespace soilFluxes3D::New
             bool solveLinearSystem(uint8_t approximationNumber, processType computationType) override;
 
         public:
-            CPUSolver() : Solver(CPU, Jacobi) {}
+            CPUSolver() : Solver(solverType::CPU, numericalMethod::Jacobi) {}
             __cudaSpec double getMatrixElementValue(uint64_t rowIndex, uint64_t colIndex) const noexcept;
 
             SF3Derror_t inizialize() override;
@@ -40,8 +40,8 @@ namespace soilFluxes3D::New
 
     inline SF3Derror_t solverHostCheckError(SF3Derror_t retError, solverStatus& status)
     {
-        if(retError != SF3Dok)
-            status = Error;
+        if(retError != SF3Derror_t::SF3Dok)
+            status = solverStatus::Error;
 
         return retError;
     }

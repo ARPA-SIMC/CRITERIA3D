@@ -13,7 +13,7 @@ namespace soilFluxes3D::New
     {
         protected:
             numericalMethod _method;
-            solverStatus _status = Created;
+            solverStatus _status = solverStatus::Created;
             solverType _type;
 
             SolverParameters _parameters;
@@ -60,7 +60,7 @@ namespace soilFluxes3D::New
         updateFromPartial(_parameters, newParameters, maxApproximationsNumber);
         updateFromPartial(_parameters, newParameters, maxIterationsNumber);
         updateFromPartial(_parameters, newParameters, waterRetentionCurveModel);
-        updateFromPartial(_parameters, newParameters, meantype);
+        updateFromPartial(_parameters, newParameters, meanType);
         updateFromPartial(_parameters, newParameters, lateralVerticalRatio);
         updateFromPartial(_parameters, newParameters, heatWeightFactor);
         updateFromPartial(_parameters, newParameters, CourantWaterThreshold);
@@ -101,7 +101,7 @@ namespace soilFluxes3D::New
     }
     inline __cudaSpec meanType_t Solver::getMeanType() const noexcept
     {
-        return _parameters.meantype;
+        return _parameters.meanType;
     }
 
     template<class Derived>

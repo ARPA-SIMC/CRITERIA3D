@@ -7,7 +7,7 @@ namespace soilFluxes3D::Log
     SF3Derror_t inizializeLogData(const std::string& logPath, const std::string& projectName)
     {
         if((logPath == "") || (projectName == "default"))
-            return SF3Dok;
+            return SF3Derror_t::SF3Dok;
 
         logData.basePath = logPath;
         logData.projectName = projectName;
@@ -15,7 +15,7 @@ namespace soilFluxes3D::Log
         logData.numStepDone = 0;
 
         inizializeLogStructure();
-        return SF3Dok;
+        return SF3Derror_t::SF3Dok;
     }
 
     void inizializeLogStructure()
@@ -85,12 +85,12 @@ namespace soilFluxes3D::Log
     SF3Derror_t writeLogFile()
     {
         if(logData.mainStruct == nullptr)
-            return SF3Dok;
+            return SF3Derror_t::SF3Dok;
 
         std::string fileName = logData.basePath + "binLogData_" + logData.projectName + customPadInteger(++logData.fileCounter) + ".mat";    //TO DO: implement date in fileName
         MATFile *binFile = matOpen(fileName.c_str(), "w");
         if(binFile == nullptr)
-            return FileError;
+            return SF3Derror_t::FileError;
 
         matPutVariable(binFile, "mainStruct", logData.mainStruct);  //TO DO: decouple the struct? + Add check
         matClose(binFile);
@@ -98,6 +98,6 @@ namespace soilFluxes3D::Log
         mxDestroyArray(logData.mainStruct);
         logData.mainStruct = nullptr;
         logData.numStepDone = 0;
-        return SF3Dok;
+        return SF3Derror_t::SF3Dok;
     }
 }

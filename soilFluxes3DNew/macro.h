@@ -33,11 +33,11 @@
 #define moveToHost(ptr, type, count) movePointerToHost(ptr, count, moveStreams[(currStreamIdx++) % 32])
 
 //GPU Solver
-#define deviceSolverAlloc(ptr, type, count) solverDeviceCheckError(deviceAlloc(ptr, count), _status, MemoryError)
-#define deviceSolverFree(ptr) solverDeviceCheckError(deviceFree(ptr), _status, MemoryError)
+#define deviceSolverAlloc(ptr, type, count) solverDeviceCheckError(deviceAlloc(ptr, count), _status, SF3Derror_t::MemoryError)
+#define deviceSolverFree(ptr) solverDeviceCheckError(deviceFree(ptr), _status, SF3Derror_t::MemoryError)
 
 #define launchKernel(kernel, ...) launchGPUKernel(kernel, dim3(numBlocks), dim3(numThreadsPerBlock), __VA_ARGS__)
-#define cuspCheck(retValue) solverDeviceCheckError(retValue, _status, SolverError)
+#define cuspCheck(retValue) solverDeviceCheckError(retValue, _status, SF3Derror_t::SolverError)
 
 
 

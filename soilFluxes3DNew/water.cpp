@@ -42,7 +42,7 @@ namespace soilFluxes3D::Water
         balanceDataPreviousTimeStep.waterStorage = twc;
 
         if(!nodeGrid.isInizialized)
-            return MemoryError;
+            return SF3Derror_t::MemoryError;
 
         //Reset link water flows
         for (uint8_t linkIndex = 0; linkIndex < maxTotalLink; ++linkIndex)
@@ -51,7 +51,7 @@ namespace soilFluxes3D::Water
         //Reset boundary water flows
         hostReset(nodeGrid.boundaryData.waterFlowSum, nodeGrid.numNodes);
 
-        return SF3Dok;
+        return SF3Derror_t::SF3Dok;
     }
 
     /*!
@@ -136,7 +136,7 @@ namespace soilFluxes3D::Water
 
             //Check Stability (Courant)
             double currCWL = nodeGrid.waterData.CourantWaterLevel;
-            // if((currCWL < parameters.CourantWaterThreshold) && (approxNr <= 3) && (currMBRerror < (0.5 * parameters.MBRThreshold)))     //TO DO: change constant with _parameters
+            // if((currCWL < parameters.CourantWaterThreshold) && (approxNr <= 3) && (currMBRerror < (0.5 * parameters.MBRThreshold)))
             // {
             //     //increase deltaT
             //     parameters.deltaTcurr = (currCWL < 0.5) ? (2 * parameters.deltaTcurr) : (parameters.deltaTcurr / currCWL);
@@ -148,7 +148,7 @@ namespace soilFluxes3D::Water
             if((currCWL < parameters.CourantWaterThreshold) && (approxNr <= 3))
                 parameters.deltaTcurr = 2 * parameters.deltaTcurr;
 
-            return stepAccepted;
+            return balanceResult_t::stepAccepted;
         }
 
         //Good error or first approximation
@@ -164,15 +164,15 @@ namespace soilFluxes3D::Water
             if(deltaT > parameters.deltaTmin)
             {
                 parameters.deltaTcurr = SF3Dmax(parameters.deltaTcurr / 2, parameters.deltaTmin);
-                return stepHalved;
+                return balanceResult_t::stepHalved;
             }
 
             restoreBestStep(deltaT);
             acceptStep(deltaT);
-            return stepAccepted;
+            return balanceResult_t::stepAccepted;
         }
 
-        return stepRefused;
+        return balanceResult_t::stepRefused;
     }
 
 
@@ -194,7 +194,7 @@ namespace soilFluxes3D::Water
                 updateLinkFlux(nodeIndex, linkIndex, deltaT);
 
             //Update boundary flow
-            if (nodeGrid.boundaryData.boundaryType[nodeIndex] != NoBoundary)
+            if (nodeGrid.boundaryData.boundaryType[nodeIndex] != boundaryType_t::NoBoundary)
                 nodeGrid.boundaryData.waterFlowSum[nodeIndex] += nodeGrid.boundaryData.waterFlowRate[nodeIndex] * deltaT;
         }
     }
@@ -222,7 +222,7 @@ namespace soilFluxes3D::Water
 
     __cudaSpec void updateLinkFlux(uint64_t nodeIndex, uint8_t linkIndex, double deltaT)
     {
-        if(nodeGrid.linkData[linkIndex].linktype[nodeIndex] == NoLink)
+        if(nodeGrid.linkData[linkIndex].linkType[nodeIndex] == linkType_t::NoLink)
             return;
 
         uint64_t linkedNodeIndex = nodeGrid.linkData[linkIndex].linkIndex[nodeIndex];
@@ -265,19 +265,19 @@ namespace soilFluxes3D::Water
             bool isLinked;
 
             //Compute flux up
-            isLinked = computeLinkFluxes(matrixA.values[rowIdx][linkIdx], matrixA.colIndeces[rowIdx][linkIdx], rowIdx, 0, approxNum, deltaT, lateralVerticalRatio, Up, meanType);
+            isLinked = computeLinkFluxes(matrixA.values[rowIdx][linkIdx], matrixA.colIndeces[rowIdx][linkIdx], rowIdx, 0, approxNum, deltaT, lateralVerticalRatio, linkType_t::Up, meanType);
             if(isLinked)
                 linkIdx++;
 
             //Compute flox down
-            isLinked = computeLinkFluxes(matrixA.values[rowIdx][linkIdx], matrixA.colIndeces[rowIdx][linkIdx], rowIdx, 1, approxNum, deltaT, lateralVerticalRatio, Down, meanType);
+            isLinked = computeLinkFluxes(matrixA.values[rowIdx][linkIdx], matrixA.colIndeces[rowIdx][linkIdx], rowIdx, 1, approxNum, deltaT, lateralVerticalRatio, linkType_t::Down, meanType);
             if(isLinked)
                 linkIdx++;
 
             //Compute flux lateral
             for(uint8_t latIdx = 0; latIdx < maxLateralLink; ++latIdx)
             {
-                isLinked = computeLinkFluxes(matrixA.values[rowIdx][linkIdx], matrixA.colIndeces[rowIdx][linkIdx], rowIdx, 2 + latIdx, approxNum, deltaT, lateralVerticalRatio, Lateral, meanType);
+                isLinked = computeLinkFluxes(matrixA.values[rowIdx][linkIdx], matrixA.colIndeces[rowIdx][linkIdx], rowIdx, 2 + latIdx, approxNum, deltaT, lateralVerticalRatio, linkType_t::Lateral, meanType);
                 if(isLinked)
                     linkIdx++;
             }
@@ -309,7 +309,7 @@ namespace soilFluxes3D::Water
 
     __cudaSpec bool computeLinkFluxes(double& matrixElement, uint64_t& matrixIndex, uint64_t nodeIndex, uint8_t linkIndex, uint8_t approxNum, double deltaT, double lateralVerticalRatio, linkType_t linkType, meanType_t meanType)
     {
-        if(nodeGrid.linkData[linkIndex].linktype[nodeIndex] == NoLink)
+        if(nodeGrid.linkData[linkIndex].linkType[nodeIndex] == linkType_t::NoLink)
             return false;
 
         uint64_t linkedNodeIndex = nodeGrid.linkData[linkIndex].linkIndex[nodeIndex];
@@ -397,10 +397,10 @@ namespace soilFluxes3D::Water
         double boundaryFactor = 1.;
         switch(nodeGrid.boundaryData.boundaryType[soilNodeIdx])
         {
-            case Urban:
+            case boundaryType_t::Urban:
                 boundaryFactor = 0.1;
                 break;
-            case Road:
+            case boundaryType_t::Road:
                 boundaryFactor = 0.;        //TO DO: maybe can transformed in return 0.;
                 break;
             default:
@@ -428,10 +428,10 @@ namespace soilFluxes3D::Water
         //TO DO: check if needed
         switch(nodeGrid.boundaryData.boundaryType[soilNodeIdx])
         {
-            case Urban:
+            case boundaryType_t::Urban:
                 meanK *= 0.1;
                 break;
-            case Road:
+            case boundaryType_t::Road:
                 meanK = 0.;
                 break;
             default:
@@ -446,7 +446,7 @@ namespace soilFluxes3D::Water
         double cellDistance;
         double rowK = nodeGrid.waterData.waterConductivity[rowIdx];
         double colK = nodeGrid.waterData.waterConductivity[colIdx];
-        if(linkType == Lateral)
+        if(linkType == linkType_t::Lateral)
         {
             cellDistance = nodeDistance3D(rowIdx, colIdx);
             rowK *= lateralVerticalRatio;
@@ -528,14 +528,14 @@ namespace soilFluxes3D::Water
             //Inizialize: water sink.source
             nodeGrid.waterData.waterFlow[nodeIdx] = nodeGrid.waterData.waterSinkSource[nodeIdx];   //TO DO: evaluate move to a memcpy
 
-            if(nodeGrid.boundaryData.boundaryType[nodeIdx] == NoBoundary)
+            if(nodeGrid.boundaryData.boundaryType[nodeIdx] == boundaryType_t::NoBoundary)
                 continue;
 
             nodeGrid.boundaryData.waterFlowRate[nodeIdx] = 0;   //TO DO: evaluate move to a memset
 
             switch(nodeGrid.boundaryData.boundaryType[nodeIdx])
             {
-                case Runoff:
+                case boundaryType_t::Runoff:
                     double avgH, hs, maxFlow, v, flow;
                     avgH = 0.5 * (nodeGrid.waterData.pressureHead[nodeIdx] + nodeGrid.waterData.oldPressureHeads[nodeIdx]);
 
@@ -554,19 +554,19 @@ namespace soilFluxes3D::Water
                     nodeGrid.boundaryData.waterFlowRate[nodeIdx] = -SF3Dmin(flow, maxFlow);
                     break;
 
-                case FreeDrainage:
+                case boundaryType_t::FreeDrainage:
                     //Darcy unit gradient (use link node up)
-                    assert(nodeGrid.linkData[0].linktype[nodeIdx] != NoLink);
+                    assert(nodeGrid.linkData[0].linkType[nodeIdx] != linkType_t::NoLink);
                     nodeGrid.boundaryData.waterFlowRate[nodeIdx] = - nodeGrid.waterData.waterConductivity[nodeIdx] * nodeGrid.linkData[0].interfaceArea[nodeIdx];
                     break;
 
-                case FreeLateraleDrainage:
+                case boundaryType_t::FreeLateraleDrainage:
                     //Darcy gradient = slope
                     nodeGrid.boundaryData.waterFlowRate[nodeIdx] = - nodeGrid.waterData.waterConductivity[nodeIdx] * nodeGrid.boundaryData.boundarySize[nodeIdx]
                                                                             * nodeGrid.boundaryData.boundarySlope[nodeIdx] * solver->getLVRatio();
                     break;
 
-                case PrescribedTotalWaterPotential:
+                case boundaryType_t::PrescribedTotalWaterPotential:
                     double L, boundaryPsi, boundaryZ, boundaryK, meanK, dH;
                     L = 1.;     // [m]
                     boundaryZ = nodeGrid.z[nodeIdx] - L;
@@ -582,7 +582,7 @@ namespace soilFluxes3D::Water
                     nodeGrid.boundaryData.waterFlowRate[nodeIdx] = meanK * nodeGrid.boundaryData.boundarySize[nodeIdx] * (dH / L);
                     break;
 
-                case HeatSurface:
+                case boundaryType_t::HeatSurface:
                     if(!simulationFlags.computeHeat && !simulationFlags.computeHeatVapor)
                         break;
                     //TO DO: complete
@@ -610,11 +610,11 @@ namespace soilFluxes3D::Water
         #ifdef CUDA_ENABLED
             switch(solver->getSolverType())
             {
-                case GPU:
-                    return solver->getMatrixElementValue<GPUSolver>(rowIndex, columnIndex);
-                    break;
-                case CPU:
+                case solverType::CPU:
                     return solver->getMatrixElementValue<CPUSolver>(rowIndex, columnIndex);
+                    break;
+                case solverType::GPU:
+                    return solver->getMatrixElementValue<GPUSolver>(rowIndex, columnIndex);
                     break;
                 default:
                     return 0.;

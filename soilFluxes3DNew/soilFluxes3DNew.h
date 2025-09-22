@@ -2,12 +2,12 @@
 #define SOILFLUXES3DNEW_H
 
 #include "macro.h"
-#include "types_cpu.h"
+#include "types.h"
 
 namespace soilFluxes3D::New
 {
     //Inizializazion and memory management
-    SF3Derror_t initializeSF3D(uint64_t nrNodes, uint16_t nrLayers, uint8_t nrLateralLinks, bool isComputeWater, bool isComputeHeat, bool isComputeSolutes);
+    SF3Derror_t initializeSF3D(uint64_t nrNodes, uint16_t nrLayers, uint8_t nrLateralLinks, bool isComputeWater, bool isComputeHeat, bool isComputeSolutes, heatFluxSaveMode_t HFsm = heatFluxSaveMode_t::None);
     SF3Derror_t inizializeBalance();
     SF3Derror_t inizializeLog(const std::string &logPath, const std::string &projectName);
 
