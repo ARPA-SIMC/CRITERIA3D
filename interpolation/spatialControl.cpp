@@ -340,9 +340,10 @@ bool spatialQualityControl(meteoVariable myVar, Crit3DMeteoPoint* meteoPoints, i
         {
             if (meteoPoints[i].quality == quality::accepted)
             {
+                int nrPointsMax = 10;
                 if (neighbourhoodVariability(myVar, myInterpolationPoints, settings, float(meteoPoints[i].point.utm.x),
                          float(meteoPoints[i].point.utm.y),float(meteoPoints[i].point.z),
-                         10, &stdDev, &avgDeltaZ, &minDist))
+                         nrPointsMax, stdDev, avgDeltaZ, minDist))
                 {
                     myValue = meteoPoints[i].currentValue;
                     myResidual = meteoPoints[i].residual;
@@ -383,10 +384,11 @@ bool spatialQualityControl(meteoVariable myVar, Crit3DMeteoPoint* meteoPoints, i
 
                 for (i=0; i < int(listIndex.size()); i++)
                 {
+                    int nrPointsMax = 10;
                     if (neighbourhoodVariability(myVar, myInterpolationPoints, settings, float(meteoPoints[listIndex[i]].point.utm.x),
                              float(meteoPoints[listIndex[i]].point.utm.y),
                              float(meteoPoints[listIndex[i]].point.z),
-                             10, &stdDev, &avgDeltaZ, &minDist))
+                             nrPointsMax, stdDev, avgDeltaZ, minDist))
                     {
                         myResidual = listResiduals[i];
 

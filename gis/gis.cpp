@@ -625,12 +625,10 @@ namespace gis
 
     double computeDistancePoint(Crit3DUtmPoint* p0, Crit3DUtmPoint *p1)
     {
-            double dx, dy;
+        double dx = p1->x - p0->x;
+        double dy = p1->y - p0->y;
 
-            dx = p1->x - p0->x;
-            dy = p1->y - p0->y;
-
-            return sqrt((dx * dx) + (dy * dy));
+        return sqrt(dx * dx + dy * dy);
     }
 
 
@@ -639,15 +637,15 @@ namespace gis
         float dx = float(x2 - x1);
         float dy = float(y2 - y1);
 
-        return sqrtf((dx * dx) + (dy * dy));
+        return sqrtf(dx * dx + dy * dy);
     }
 
     float computeDistance(float x1, float y1, float x2, float y2)
     {
-            float dx = x2 - x1;
-            float dy = y2 - y1;
+        float dx = x2 - x1;
+        float dy = y2 - y1;
 
-            return sqrtf((dx * dx) + (dy * dy));
+        return sqrtf(dx * dx + dy * dy);
     }
 
     double computeDistance(double x1, double y1, double x2, double y2)
@@ -655,7 +653,7 @@ namespace gis
         double dx = x2 - x1;
         double dy = y2 - y1;
 
-        return sqrt((dx * dx) + (dy * dy));
+        return sqrt(dx * dx + dy * dy);
     }
 
 
