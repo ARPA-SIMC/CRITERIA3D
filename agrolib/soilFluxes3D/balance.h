@@ -15,5 +15,6 @@
     void InitializeBalanceWater();
     bool waterBalance(double deltaT, int approxNr);
     void updateBalanceWaterWholePeriod();
+    void restoreBestApproximation(double deltaT);
 
 #endif  // BALANCE_H

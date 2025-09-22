@@ -28,20 +28,21 @@
 
     #include <QString>
 
-    #define CRITERIA3D_VERSION "v1.1.0"
+    #define CRITERIA3D_VERSION "v1.2.0"
 
 
     class Crit3DProject : public Project3D
     {
 
     private:
-        bool _saveOutputRaster, _saveOutputPoints, _saveDailyState, _saveEndOfRunState;
+        bool _saveOutputRaster, _saveOutputPoints, _saveDailyState, _saveEndOfRunState,
+             _saveYearlyState, _saveMonthlyState;
 
         void clear3DProject();
         bool check3DProject();
         bool updateDailyTemperatures();
         bool updateLast30DaysTavg();
-        void updateHydrallLAI();
+
 
         bool saveSnowModelState(const QString &currentStatePath);
         bool saveSoilWaterState(const QString &currentStatePath);
@@ -59,8 +60,9 @@
         gis::Crit3DRasterGrid degreeDaysMap;
         gis::Crit3DRasterGrid dailyTminMap;
         gis::Crit3DRasterGrid dailyTmaxMap;
-        gis::Crit3DRasterGrid yearlyPrec;
-        gis::Crit3DRasterGrid yearlyET0;
+        gis::Crit3DRasterGrid monthlyPrec;
+        gis::Crit3DRasterGrid monthlyET0;
+        gis::Crit3DRasterGrid mapLast30DaysTAvg;
 
         Crit3DHydrallMaps hydrallMaps;
 
@@ -80,7 +82,7 @@
         bool initializeHydrall();
         bool initializeRothC();
         double getRothCClayContent(int soilIndex);
-        void updateETAndPrecYearlyMaps();
+        void updateETAndPrecMaps();
         void dailyUpdateCropMaps(const QDate &myDate);
 
         void clearHydrallMaps();
@@ -96,8 +98,14 @@
         void setSaveDailyState(bool isSave) { _saveDailyState = isSave; }
         bool isSaveDailyState() { return _saveDailyState; }
 
+        void setSaveYearlyState(bool isSave) { _saveYearlyState = isSave; }
+        bool isSaveYearlyState() { return _saveYearlyState; }
+
         void setSaveEndOfRunState(bool isSave) { _saveEndOfRunState = isSave; }
         bool isSaveEndOfRunState() { return _saveEndOfRunState; }
+
+        void setSaveMonthlyState(bool isSave) {_saveMonthlyState = isSave;}
+        bool isSaveMonthlyState() {return _saveMonthlyState;}
 
         void setSaveOutputRaster(bool isSave);
         bool isSaveOutputRaster();
@@ -117,14 +125,12 @@
         bool initializeSnowModel();
 
         bool computeHydrallModel(int row, int col, int forestIndex);
-        void dailyUpdateHydrallMaps();
         bool dailyUpdateHydrall(const QDate &myDate);
         void setHydrallVariables(int row, int col, int forestIndex);
 
         bool computeRothCModel();
         bool updateRothC(const QDate &myDate);
-        bool dailyUpdateRothC();
-        void setRothCVariables(int row, int col);
+        void setRothCVariables(int row, int col, int month);
 
         bool computeSnowModel();
         void computeSnowPoint(int row, int col);

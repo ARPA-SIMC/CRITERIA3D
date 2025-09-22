@@ -341,6 +341,7 @@
         bool waterTableAssignMeteoData(Crit3DMeteoPoint* linkedMeteoPoint, QDate firstMeteoDate);
 
         bool assignAltitudeToAggregationPoints();
+        bool assignAltitudeToMeteoPoints(double boundarySize);
 
         Crit3DCrossValidationStatistics getCrossValidationStatistics() const;
         void setCrossValidationStatistics(const Crit3DCrossValidationStatistics &newCrossValidationStatistics);

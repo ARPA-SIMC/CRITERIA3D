@@ -137,6 +137,9 @@ MainWindow::MainWindow(QWidget *parent) :
     myProject.setSaveEndOfRunState(false);
     ui->flagSave_state_endRun->setChecked(myProject.isSaveEndOfRunState());
 
+    myProject.setSaveYearlyState(false);
+    myProject.setSaveMonthlyState(false);
+
     myProject.setSaveOutputPoints(false);
     myProject.setComputeOnlyPoints(false);
     ui->flagOutputPoints_save_output->setChecked(myProject.isSaveOutputPoints());
@@ -227,7 +230,7 @@ void MainWindow::mouseMove(QPoint eventPos)
 
     Position pos = this->mapView->mapToScene(eventPos);
 
-    QString infoStr = "Lat:" + QString::number(pos.latitude()) + " Lon:" + QString::number(pos.longitude());
+    QString infoStr = "Lat:" + QString::number(pos.latitude(), 'g', 7) + " Lon:" + QString::number(pos.longitude(), 'g', 7);
 
     if (rasterOutput->visible())
     {
@@ -2434,11 +2437,12 @@ void MainWindow::on_actionCriteria3D_Initialize_triggered()
         if (! myProject.processes.computeWater)
         {
             QString defaultPath = myProject.getDefaultPath() + PATH_GEO;
-            myProject.rothCModel.BICMapFileName = QFileDialog::getOpenFileName(this, tr("Open average BIC file"), defaultPath,
-                                                          tr("flt files (*.flt)")).toStdString();
-            if (myProject.rothCModel.BICMapFileName.empty())
+            myProject.rothCModel.BICMapFolderName = QFileDialog::getExistingDirectory(this, tr("Open folder with monthly average BIC files"), defaultPath).toStdString();
+
+            if (myProject.rothCModel.BICMapFolderName.empty())
                 return;
         }
+
         if (! myProject.initializeRothC())
         {
             myProject.isRothCInitialized = false;
@@ -3467,13 +3471,13 @@ void MainWindow::on_actionView_DegreeOfSaturation_fixed_range_triggered()
 void MainWindow::on_actionView_Factor_of_safety_triggered()
 {
     int layerIndex = std::max(1, ui->layerNrEdit->value());
-    showCriteria3DVariable(factorOfSafety, layerIndex, true, true, 0, 2);
+    showCriteria3DVariable(factorOfSafety, layerIndex, true, false, 0, 2);
 }
 
 
 void MainWindow::on_actionView_Factor_of_safety_minimum_triggered()
 {
-    showCriteria3DVariable(minimumFactorOfSafety, NODATA, true, true, 0, 2);
+    showCriteria3DVariable(minimumFactorOfSafety, NODATA, true, false, 0, 2);
 }
 
 
@@ -3683,7 +3687,6 @@ void MainWindow::on_actionSave_outputRaster_triggered()
     }
 }
 
-
 void MainWindow::on_actionTree_cover_map_triggered()
 {
 
@@ -3772,5 +3775,17 @@ void MainWindow::on_actionSoil_organic_matter_triggered()
     {
         myProject.logError("Error while loading soil organic matter.");
     }
+}
+
+
+void MainWindow::on_actionAutomatic_state_saving_end_of_year_triggered(bool isChecked)
+{
+    myProject.setSaveYearlyState(isChecked);
+}
+
+
+void MainWindow::on_actionAutomatic_state_saving_end_of_month_toggled(bool isChecked)
+{
+    myProject.setSaveMonthlyState(isChecked);
 }
 

@@ -1099,10 +1099,9 @@ bool computeRadiationRsun(Crit3DRadiationSettings* radSettings, float temperatur
         {
             if (outputPoints[i].active)
             {
-                radPoint.x = outputPoints[i].utm.x;
-                radPoint.y = outputPoints[i].utm.y;
+                dem.getRowCol(outputPoints[i].utm.x, outputPoints[i].utm.y, row, col);
+                dem.getXY(row, col, radPoint.x, radPoint.y);
                 radPoint.height = outputPoints[i].z;
-                dem.getRowCol(radPoint.x, radPoint.y, row, col);
 
                 if(isGridPointComputable(radSettings, row, col, dem, radiationMaps))
                 {

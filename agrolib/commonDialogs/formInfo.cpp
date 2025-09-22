@@ -41,7 +41,7 @@ int FormInfo::start(QString info, int nrValues)
     this->update();
     qApp->processEvents();
 
-    return std::max(1, int(nrValues / 50));
+    return std::max(1, int(nrValues / 100));
 }
 
 void FormInfo::setValue(int myValue)

@@ -210,6 +210,7 @@ void Project3D::initializeProject3D()
     nrSoils = 0;
     nrLayers = 0;
     nrNodes = 0;
+    nrSurfaceNodes = 0;
     nrLateralLink = 8;                  // lateral neighbours
 
     currentSeconds = 0;                 // [s]
@@ -416,7 +417,7 @@ bool Project3D::initialize3DModel()
 
     waterSinkSource.resize(nrNodes);
 
-    // set boundary
+    // set runoff boundary
     if (! setLateralBoundary()) return false;
     logInfo("Lateral boundary computed");
 
@@ -489,16 +490,17 @@ bool Project3D::initialize3DModel()
 bool Project3D::setAccuracy()
 {
     // maximum water velocity
-    double vMax = 5.0 * waterFluxesParameters.modelAccuracy;                        // [m s-1]
+    double vMax = 5 + 5 * waterFluxesParameters.modelAccuracy;                      // [m s-1]
 
     // minimum dT
     double minimumDeltaT = std::min(30.0, DEM.header->cellSize / vMax);             // [s]
 
     // Mass Balance Ratio precision (digit at which error is accepted)
-    int digitMBR = waterFluxesParameters.modelAccuracy;
+    int massBalanceRatioDigit = waterFluxesParameters.modelAccuracy;
+    int toleranceDigit = 6 + waterFluxesParameters.modelAccuracy;
 
-    soilFluxes3D::setNumericalParameters(minimumDeltaT, 3600, 100, 10, 8, digitMBR);
-    soilFluxes3D::New::setNumericalParameters(minimumDeltaT, 3600, 100, 10, 8, digitMBR);
+    soilFluxes3D::setNumericalParameters(minimumDeltaT, 3600, 100, 10, toleranceDigit, massBalanceRatioDigit);
+    soilFluxes3D::New::setNumericalParameters(minimumDeltaT, 3600, 100, 10, toleranceDigit, massBalanceRatioDigit);
 
     // parallel computing
     waterFluxesParameters.numberOfThreads = soilFluxes3D::setThreadsNumber(waterFluxesParameters.numberOfThreads);
@@ -614,6 +616,8 @@ void Project3D::setIndexMaps()
 {
     indexMap.resize(nrLayers);
 
+    nrSurfaceNodes = 0;
+
     unsigned long currentIndex = 0;
     for (unsigned int layer = 0; layer < nrLayers; layer++)
     {
@@ -630,7 +634,10 @@ void Project3D::setIndexMaps()
                     {
                         // surface (check only land use)
                         if (getLandUnitIndexRowCol(row, col) != NODATA)
+                        {
                             checkIndex = true;
+                            nrSurfaceNodes++;
+                        }
                     }
                     else
                     {
@@ -704,7 +711,7 @@ bool Project3D::setLateralBoundary()
     {
         for (int col = 0; col < boundaryMap.header->nrCols; col++)
         {
-            if (gis::isBoundaryRunoff(indexMap[0], *(radiationMaps->aspectMap), row, col))
+            if (gis::isBoundaryRunoff(indexMap[0], DEM, *(radiationMaps->aspectMap), row, col))
             {
                 boundaryMap.value[row][col] = BOUNDARY_RUNOFF;
             }
@@ -1230,8 +1237,11 @@ void Project3D::runWaterFluxes3DModel(double totalTimeStep, bool isRestart)
         previousTotalWaterContent = soilFluxes3D::getTotalWaterContent();       // [m3]
         double previousTotalWaterContentNew = soilFluxes3D::New::getTotalWaterContent();
 
-        logInfo("total water [m3]: " + QString::number(previousTotalWaterContent) + "\t\t\t ------- Error: " + QString::number(previousTotalWaterContent - previousTotalWaterContentNew));
-        logInfo("precipitation [m3]: " + QString::number(totalPrecipitation));
+		logInfo("total water [m3]: " + QString::number(previousTotalWaterContent) + "\t\t\t ------- Error: " + QString::number(previousTotalWaterContent - previousTotalWaterContentNew));
+        if (processes.computeSnow)
+			logInfo("precipitation/snowmelt [m3]: " + QString::number(totalPrecipitation));
+        else
+			logInfo("precipitation [m3]: " + QString::number(totalPrecipitation));
         logInfo("evaporation [m3]: " + QString::number(-totalEvaporation));
         logInfo("transpiration [m3]: " + QString::number(-totalTranspiration));
         logInfo("Compute water flow...");
@@ -1291,11 +1301,15 @@ void Project3D::runWaterFluxes3DModel(double totalTimeStep, bool isRestart)
                                   + totalPrecipitation - totalEvaporation - totalTranspiration;
     double currentWaterContent = soilFluxes3D::getTotalWaterContent();
     double massBalanceError = currentWaterContent - forecastWaterContent;
+	
     double forecastWaterContentNew = previousTotalWaterContent + runoffNew + freeDrainageNew + lateralDrainageNew
                                      + totalPrecipitation - totalEvaporation - totalTranspiration;
     double currentWaterContentNew = soilFluxes3D::New::getTotalWaterContent();
     double massBalanceErrorNew = currentWaterContentNew - forecastWaterContentNew;
     logInfo("Mass balance error [m3]: " + QString::number(massBalanceError, 'f', 7) + "\t new: " + QString::number(massBalanceErrorNew, 'f', 7) + "\t------- Error: " + QString::number(massBalanceError - massBalanceErrorNew));
+	double surfaceArea = DEM.header->cellSize * DEM.header->cellSize * nrSurfaceNodes;      // [m2]
+    double error_mm = massBalanceError / surfaceArea * 1000;                                // [mm]
+    logInfo("Mass balance error [mm]: " + QString::number(error_mm));
 }
 
 

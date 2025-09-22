@@ -89,6 +89,7 @@
         double mBallBerry; // empirical parameter of sensitivity to water stress to obtain stomatal closure
         bool isAmphystomatic;
         double rootShootRatio; //ratio of C allocated to roots and C allocated to aboveground biomass
+        double wildfireDamage; //ratio of biomass lost in wildfire event
     };
 
     struct TLAIparam {
@@ -102,6 +103,11 @@
         double emergence; // GDD with threshold 5°C
         double increase;  // GDD with threshold 5°C
         double decrease;  // GDD with threshold 5°C
+    };
+
+    struct TAnnualYield{
+       std::string name;
+       double carbon; // annual carbon biomass
     };
 
     class Crit3DHydrallState
@@ -192,7 +198,7 @@
         Crit3DHydrallPlant();
 
         // TODO Cate unità di misura
-
+        std::vector<TAnnualYield> tableYield;
         std::vector<TecophysiologicalParameter> tableEcophysiologicalParameters;
         std::vector<TLAIparam> rangeLAI;
         std::vector<TLAIphenology> phenologyLAI;
@@ -216,6 +222,8 @@
         double currentIncrementalVolume;
         double rootShootRatioRef;
         double mBallBerry;
+        double wildfireDamage;
+        int management;
 
         void setLAICanopy(double myLAI) { leafAreaIndexCanopy = myLAI; };
         double getLAICanopy() { return leafAreaIndexCanopy; };
@@ -366,20 +374,24 @@
     public:
         //sapwood, foliage, fine root
         bool isInitialized;
-        gis::Crit3DRasterGrid* standBiomassMap;
-        gis::Crit3DRasterGrid* rootBiomassMap;
-        gis::Crit3DRasterGrid* mapLAI;
-        gis::Crit3DRasterGrid* mapLast30DaysTavg;
         gis::Crit3DRasterGrid treeSpeciesMap;
         gis::Crit3DRasterGrid plantHeight;
         gis::Crit3DRasterGrid* criticalTranspiration;
         gis::Crit3DRasterGrid* criticalSoilWaterPotential;
         gis::Crit3DRasterGrid* minLeafWaterPotential;
-        gis::Crit3DRasterGrid* yearlyET0;
-        gis::Crit3DRasterGrid* yearlyPrec;
 
-        gis::Crit3DRasterGrid* treeNetPrimaryProduction;
-        gis::Crit3DRasterGrid* understoreyNetPrimaryProduction;
+        gis::Crit3DRasterGrid* yearlyPrec;
+        gis::Crit3DRasterGrid* yearlyET0;
+
+        gis::Crit3DRasterGrid* treeNetPrimaryProduction; //SAVE
+        gis::Crit3DRasterGrid* treeBiomassFoliage; //SAVE
+        gis::Crit3DRasterGrid* treeBiomassRoot; //SAVE
+        gis::Crit3DRasterGrid* treeBiomassSapwood; //SAVE
+        gis::Crit3DRasterGrid* understoreyNetPrimaryProduction; //SAVE
+        gis::Crit3DRasterGrid* understoreyBiomassFoliage; //SAVE
+        gis::Crit3DRasterGrid* understoreyBiomassRoot; //SAVE
+
+        gis::Crit3DRasterGrid* outputC;
 
         Crit3DHydrallMaps();
         ~Crit3DHydrallMaps();
@@ -422,6 +434,7 @@
 
         double annualGrossStandGrowth;
         double internalCarbonStorage ; // [kgC m-2]
+        double carbonStock;
 
         //gasflux results
         std::vector<double> treeTranspirationRate;          //molH2O m^-2 s^-1
@@ -432,6 +445,7 @@
 
         double getOutputC() { return outputC; };
         void setElevation(double myElevation) {elevation = myElevation;};
+        void setYear(int myYear) { year = myYear;};
 
         double moistureCorrectionFactorOld(int index);
         double moistureCorrectionFactor(int index);
@@ -477,10 +491,12 @@
         void getPlantAndSoilVariables(Crit3DHydrallMaps &map, int row, int col);
         void updateCriticalPsi();
         double cavitationConditions();
+        double getFirewoodLostSurfacePercentage(double percentageSurfaceLostByFirewoodAtReferenceYear, int simulationYear);
 
     private:
         double outputC;
         double elevation;
+        int year;
         void nullPhotosynthesis();
 
     };
