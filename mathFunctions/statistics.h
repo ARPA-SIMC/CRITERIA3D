@@ -1,6 +1,8 @@
 #ifndef STATISTICS_H
 #define STATISTICS_H
 
+    #include <cmath>
+
     #ifndef _VECTOR_
         #include <vector>
     #endif

@@ -190,11 +190,13 @@ double getMatrixValue(long i, TlinkedNode *link)
 }
 
 
-void restoreBestStep(double deltaT)
+void restoreBestApproximation(double deltaT)
 {
     for (unsigned long n = 0; n < unsigned(myStructure.nrNodes); n++)
     {
         nodeList[n].H = nodeList[n].bestH;
+
+		//URGENT: add computeK and updateBoundaryWater
 
         /*! compute new soil moisture (only sub-surface nodes) */
         if (!nodeList[n].isSurface)
@@ -237,20 +239,11 @@ bool waterBalance(double deltaT, int approxNr)
     {
         acceptStep(deltaT);
 
+
+		//URGENT: remove old logic
         // best case: system is stable, try to increase time step
-        if (CourantWater < 0.8 && approxNr <= 3 && MBRerror < (myParameters.MBRThreshold * 0.5))
-        {
-            if (CourantWater < 0.5)
-            {
-                doubleTimeStep();
-            }
-            else
-            {
-                myParameters.current_delta_t = std::min(myParameters.current_delta_t / CourantWater, myParameters.delta_t_max);
-                if (myParameters.current_delta_t > 1.)
-                    myParameters.current_delta_t = floor(myParameters.current_delta_t);
-            }
-        }
+        if (CourantWater < 0.5 && approxNr <= 3)
+			doubleTimeStep();
 
         return true;
     }
@@ -264,7 +257,7 @@ bool waterBalance(double deltaT, int approxNr)
 
     // system is unstable or last approximation
     int lastApproximation = myParameters.maxApproximationsNumber-1;
-    if (MBRerror > (_bestMBRerror * 3.0) || approxNr == lastApproximation)
+    if (MBRerror > (_bestMBRerror * 10.) || approxNr == lastApproximation)
     {
         if (deltaT > myParameters.delta_t_min)
         {
@@ -274,7 +267,7 @@ bool waterBalance(double deltaT, int approxNr)
         }
 
         // worst case: forced to accept the time step, restore best error
-        restoreBestStep(deltaT);
+        restoreBestApproximation(deltaT);
         acceptStep(deltaT);
         return true;
     }
