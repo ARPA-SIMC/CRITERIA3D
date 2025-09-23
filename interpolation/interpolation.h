@@ -87,7 +87,7 @@
                              Crit3DInterpolationSettings* settings, float radius, float x, float y);
 
     bool getProxyValuesXY(float x, float y, Crit3DInterpolationSettings* mySettings, std::vector<double> &myValues);
-    bool getSignificantProxyValuesXY(float x, float y, Crit3DInterpolationSettings* mySettings, std::vector<double> &myValues);
+    bool getSignificantProxyValuesXY(float x, float y, Crit3DInterpolationSettings &interpolationSettings, std::vector<double> &myValues);
 
     bool getMultipleDetrendingValues(Crit3DInterpolationSettings &mySettings, const std::vector<double> &allProxyValues, std::vector<double> &activeProxyValues, std::vector<std::function<double (double, std::vector<double> &)> > &myFunc, std::vector<std::vector<double> > &myParameters);
 

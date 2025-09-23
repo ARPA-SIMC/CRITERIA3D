@@ -3122,7 +3122,7 @@ bool Project::interpolationDemGlocalDetrending(meteoVariable myVar, const Crit3D
                             double x, y;
                             gis::getUtmXYFromRowCol(myHeader, row, col, &x, &y);
 
-                            if (! getSignificantProxyValuesXY(x, y, &interpolationSettings, proxyValues))
+                            if (! getSignificantProxyValuesXY(x, y, interpolationSettings, proxyValues))
                             {
                                 myRaster->value[row][col] = NODATA;
                                 continue;

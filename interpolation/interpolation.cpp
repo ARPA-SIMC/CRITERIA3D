@@ -1502,7 +1502,7 @@ bool proxyValidityWeighted(std::vector <Crit3DInterpolationDataPoint> &myPoints,
 bool setMultipleDetrendingHeightTemperatureRange(Crit3DInterpolationSettings* mySettings)
 {
     if (mySettings->getPointsRange().empty() || !mySettings->getUseMultipleDetrending())
-        return 0;
+        return false;
 
     Crit3DProxyCombination myCombination = mySettings->getSelectedCombination();
 
@@ -2592,21 +2592,22 @@ bool getProxyValuesXY(float x, float y, Crit3DInterpolationSettings* mySettings,
     return proxyComplete;
 }
 
-bool getSignificantProxyValuesXY(float x, float y, Crit3DInterpolationSettings* mySettings, std::vector<double> &myValues)
+
+bool getSignificantProxyValuesXY(float x, float y, Crit3DInterpolationSettings& interpolationSettings, std::vector<double> &myValues)
 {
     float myValue;
     gis::Crit3DRasterGrid* proxyGrid;
     bool proxyComplete = true;
 
-    Crit3DProxyCombination myCombination = mySettings->getCurrentCombination();
+    Crit3DProxyCombination myCombination = interpolationSettings.getCurrentCombination();
 
-    for (unsigned int i=0; i < mySettings->getProxyNr(); i++)
+    for (unsigned int i=0; i < interpolationSettings.getProxyNr(); i++)
     {
         myValues[i] = NODATA;
 
         if (myCombination.isProxyActive(i) && myCombination.isProxySignificant(i))
         {
-            proxyGrid = mySettings->getProxy(i)->getGrid();
+            proxyGrid = interpolationSettings.getProxy(i)->getGrid();
             if (proxyGrid != nullptr && proxyGrid->isLoaded)
             {
                 myValue = gis::getValueFromXY(*proxyGrid, x, y);
