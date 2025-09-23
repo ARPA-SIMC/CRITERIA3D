@@ -4,6 +4,8 @@
 #include "basicMath.h"
 #include "spatialControl.h"
 #include "interpolation.h"
+#include "interpolationPoint.h"
+#include "interpolationSettings.h"
 #include "statistics.h"
 
 float findThreshold(meteoVariable myVar, Crit3DMeteoSettings* meteoSettings,
@@ -76,7 +78,7 @@ float findThreshold(meteoVariable myVar, Crit3DMeteoSettings* meteoSettings,
 
 
 bool computeResiduals(meteoVariable myVar, Crit3DMeteoPoint* meteoPoints, int nrMeteoPoints,
-                      std::vector <Crit3DInterpolationDataPoint> &interpolationPoints, Crit3DInterpolationSettings* settings,
+                      const std::vector<Crit3DInterpolationDataPoint> &interpolationPoints, Crit3DInterpolationSettings* settings,
                       Crit3DMeteoSettings* meteoSettings, bool excludeOutsideDem, bool excludeSupplemental)
 {
 
@@ -141,7 +143,6 @@ bool computeResidualsLocalDetrending(meteoVariable myVar, const Crit3DTime &myTi
                                      Crit3DMeteoSettings* meteoSettings, Crit3DClimateParameters* climateParameters,
                                      bool excludeOutsideDem, bool excludeSupplemental)
 {
-
     if (myVar == noMeteoVar) return false;
 
     std::vector <double> myProxyValues;
@@ -164,14 +165,15 @@ bool computeResidualsLocalDetrending(meteoVariable myVar, const Crit3DTime &myTi
             {
                 float myValue = meteoPoints[i].currentValue;
 
+                bool excludeSupplemental = false;
                 std::vector <Crit3DInterpolationDataPoint> subsetInterpolationPoints;
-                localSelection(interpolationPoints, subsetInterpolationPoints, float(meteoPoints[i].point.utm.x),
-                               float(meteoPoints[i].point.utm.y), *settings, false);
+                if (! localSelection(interpolationPoints, subsetInterpolationPoints, float(meteoPoints[i].point.utm.x),
+                                    float(meteoPoints[i].point.utm.y), *settings, excludeSupplemental))
+                    return false;
+
                 if (! preInterpolation(subsetInterpolationPoints, settings, meteoSettings,
                                       climateParameters, meteoPoints, nrMeteoPoints, myVar, myTime, errorStdString))
-                {
                     return false;
-                }
 
                 float interpolatedValue = interpolate(subsetInterpolationPoints, settings, meteoSettings, myVar,
                                                       float(meteoPoints[i].point.utm.x),

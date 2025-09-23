@@ -32,7 +32,7 @@
                                  Crit3DInterpolationSettings* mySettings);
 
     bool computeResiduals(meteoVariable myVar, Crit3DMeteoPoint* meteoPoints, int nrMeteoPoints,
-                          std::vector <Crit3DInterpolationDataPoint> &interpolationPoints,
+                          const std::vector <Crit3DInterpolationDataPoint> &interpolationPoints,
                           Crit3DInterpolationSettings* settings, Crit3DMeteoSettings* meteoSettings,
                           bool excludeOutsideDem, bool excludeSupplemental);
 

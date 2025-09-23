@@ -626,6 +626,7 @@ int Crit3DInterpolationSettings::getProxyPosFromName(TProxyVar name)
     return NODATA;
 }
 
+
 bool Crit3DInterpolationSettings::isGlocalReady(bool isGrid)
 {
     if (getMacroAreasMap() != nullptr && getMacroAreas().size() > 0)
@@ -640,6 +641,7 @@ bool Crit3DInterpolationSettings::isGlocalReady(bool isGrid)
 
     return false;
 }
+
 
 std::string Crit3DProxy::getName() const
 {

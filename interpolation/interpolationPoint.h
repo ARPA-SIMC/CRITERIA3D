@@ -19,7 +19,6 @@
         int index;
         bool isActive;
         bool isMarked;
-        float distance;
         float value;
         float regressionWeight;
         lapseRateCodeType lapseRateCode;

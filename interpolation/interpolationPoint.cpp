@@ -35,7 +35,6 @@ Crit3DInterpolationDataPoint::Crit3DInterpolationDataPoint()
     isActive = false;
     isMarked = false;
 
-    distance = NODATA;
     value = NODATA;
     regressionWeight = NODATA;
 

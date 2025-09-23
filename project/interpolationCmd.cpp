@@ -242,6 +242,7 @@ bool checkProxyGridSeries(Crit3DInterpolationSettings* mySettings, const gis::Cr
                     if (! interpolateProxyGridSeries(myProxySeries[j], myDate, gridBase, gridOut, errorStr))
                     {
                         errorStr = "Error in interpolate proxy gris series: " + errorStr;
+                        gridOut->clear();
                         return false;
                     }
 
@@ -266,6 +267,7 @@ bool interpolationRaster(std::vector <Crit3DInterpolationDataPoint> &dataPoints,
         return false;
     }
 
+    /******* parallel computing *******/
     unsigned int maxThreads = omp_get_max_threads();
     omp_set_num_threads(static_cast<int>(maxThreads));
 
@@ -295,11 +297,9 @@ bool interpolationRaster(std::vector <Crit3DInterpolationDataPoint> &dataPoints,
         }
     }
 
-    if (! gis::updateMinMaxRasterGrid(outputGrid))
-        return false;
-
-    return true;
+    return gis::updateMinMaxRasterGrid(outputGrid);
 }
+
 
 bool topographicIndex(const gis::Crit3DRasterGrid& DEM, std::vector <float> windowWidths, gis::Crit3DRasterGrid& outGrid)
 {

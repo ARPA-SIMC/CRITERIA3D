@@ -27,6 +27,7 @@
 #include <QSqlQuery>
 #include <QMessageBox>
 #include <string>
+#include <omp.h>
 
 
 Project::Project()
@@ -2913,14 +2914,14 @@ bool Project::interpolationDem(meteoVariable myVar, const Crit3DTime& myTime, gi
 
 bool Project::interpolationDemLocalDetrending(meteoVariable myVar, const Crit3DTime& myTime, gis::Crit3DRasterGrid *myRaster)
 {
-    if (!getUseDetrendingVar(myVar) || !interpolationSettings.getUseLocalDetrending())
+    if (! getUseDetrendingVar(myVar) || ! interpolationSettings.getUseLocalDetrending())
         return false;
 
     // pass data to interpolation
     std::vector <Crit3DInterpolationDataPoint> interpolationPoints;
     std::string errorStdStr;
 
-    if (!checkAndPassDataToInterpolation(quality, myVar, meteoPoints, nrMeteoPoints, myTime,
+    if (! checkAndPassDataToInterpolation(quality, myVar, meteoPoints, nrMeteoPoints, myTime,
                                          &qualityInterpolationSettings, &interpolationSettings, meteoSettings, &climateParameters, interpolationPoints,
                                          checkSpatialQuality, errorStdStr))
     {
@@ -2929,21 +2930,18 @@ bool Project::interpolationDemLocalDetrending(meteoVariable myVar, const Crit3DT
         return false;
     }
 
-    std::vector <double> proxyValues;
-    proxyValues.resize(unsigned(interpolationSettings.getProxyNr()));
-    double x, y;
-
     Crit3DProxyCombination myCombination = interpolationSettings.getSelectedCombination();
     interpolationSettings.setCurrentCombination(myCombination);
 
     if (getComputeOnlyPoints())
     {
+        std::vector <double> proxyValues(interpolationSettings.getProxyNr());
         for (unsigned int i = 0; i < outputPoints.size(); i++)
         {
             if (outputPoints[i].active)
             {
-                x = outputPoints[i].utm.x;
-                y = outputPoints[i].utm.y;
+                double x = outputPoints[i].utm.x;
+                double y = outputPoints[i].utm.y;
                 int row, col;
                 myRaster->getRowCol(x, y, row, col);
                 if (! myRaster->isOutOfGrid(row, col))
@@ -2974,38 +2972,50 @@ bool Project::interpolationDemLocalDetrending(meteoVariable myVar, const Crit3DT
         gis::Crit3DRasterHeader myHeader = *(DEM.header);
         myRaster->initializeGrid(myHeader);
 
-        if(!setMultipleDetrendingHeightTemperatureRange(&interpolationSettings))
+        if(! setMultipleDetrendingHeightTemperatureRange(&interpolationSettings))
         {
             errorString = "Error in function preInterpolation: \n couldn't set temperature ranges for height proxy.";
             return false;
         }
 
-        for (long row = 0; row < myHeader.nrRows ; row++)
+        /******* parallel computing *******/
+        unsigned int maxThreads = omp_get_max_threads();
+        omp_set_num_threads(static_cast<int>(maxThreads));
+
+        #pragma omp parallel
         {
-            for (long col = 0; col < myHeader.nrCols; col++)
+            Crit3DInterpolationSettings myInterpolationSettings = interpolationSettings;
+            std::vector<double> proxyValues(myInterpolationSettings.getProxyNr());
+
+            #pragma omp for
+            for (long row = 0; row < myHeader.nrRows ; row++)
             {
-                float z = DEM.value[row][col];
-                if (! isEqual(z, myHeader.flag))
+                for (long col = 0; col < myHeader.nrCols; col++)
                 {
-                    gis::getUtmXYFromRowCol(myHeader, row, col, &x, &y);
-
-                    getProxyValuesXY(x, y, &interpolationSettings, proxyValues);
-
-                    std::vector <Crit3DInterpolationDataPoint> subsetInterpolationPoints;
-                    localSelection(interpolationPoints, subsetInterpolationPoints, x, y, interpolationSettings, false); //CT vedi sopra
-                    if (! preInterpolation(subsetInterpolationPoints, &interpolationSettings, meteoSettings, &climateParameters,
-                                          meteoPoints, nrMeteoPoints, myVar, myTime, errorStdStr))
+                    float z = DEM.value[row][col];
+                    if (! isEqual(z, myHeader.flag))
                     {
-                        errorString = "Error in function preInterpolation:\n" + QString::fromStdString(errorStdStr);
-                        return false;
+                        double x, y;
+                        gis::getUtmXYFromRowCol(myHeader, row, col, &x, &y);
+
+                        if (getUseDetrendingVar(myVar))
+                        {
+                            getProxyValuesXY(x, y, &myInterpolationSettings, proxyValues);
+                        }
+
+                        std::vector <Crit3DInterpolationDataPoint> subsetInterpolationPoints;
+                        localSelection(interpolationPoints, subsetInterpolationPoints, x, y, myInterpolationSettings, false);
+
+                        preInterpolation(subsetInterpolationPoints, &myInterpolationSettings, meteoSettings, &climateParameters,
+                                         meteoPoints, nrMeteoPoints, myVar, myTime, errorStdStr);
+
+                        myRaster->value[row][col] = interpolate(subsetInterpolationPoints, &myInterpolationSettings, meteoSettings,
+                                                                myVar, x, y, z, proxyValues, true);
+                        myInterpolationSettings.clearFitting();
+                        myInterpolationSettings.setCurrentCombination(myInterpolationSettings.getSelectedCombination());
+
+                        subsetInterpolationPoints.clear();
                     }
-
-                    myRaster->value[row][col] = interpolate(subsetInterpolationPoints, &interpolationSettings, meteoSettings,
-                                                            myVar, x, y, z, proxyValues, true);
-                    interpolationSettings.clearFitting();
-                    interpolationSettings.setCurrentCombination(interpolationSettings.getSelectedCombination());
-
-                    subsetInterpolationPoints.clear();
                 }
             }
         }
@@ -3029,7 +3039,7 @@ bool Project::interpolationDemGlocalDetrending(meteoVariable myVar, const Crit3D
     std::vector <Crit3DInterpolationDataPoint> interpolationPoints;
     std::string errorStdStr;
 
-    if (!checkAndPassDataToInterpolation(quality, myVar, meteoPoints, nrMeteoPoints, myTime,
+    if (! checkAndPassDataToInterpolation(quality, myVar, meteoPoints, nrMeteoPoints, myTime,
                                          &qualityInterpolationSettings, &interpolationSettings, meteoSettings, &climateParameters, interpolationPoints,
                                          checkSpatialQuality, errorStdStr))
     {
@@ -3038,20 +3048,18 @@ bool Project::interpolationDemGlocalDetrending(meteoVariable myVar, const Crit3D
         return false;
     }
 
-    std::vector <double> proxyValues;
-    proxyValues.resize(unsigned(interpolationSettings.getProxyNr()));
-    double x, y;
-
     Crit3DProxyCombination myCombination = interpolationSettings.getSelectedCombination();
     interpolationSettings.setCurrentCombination(myCombination);
 
-    //obtain fitting parameters and combination for every macro area
+    // obtain fitting parameters and combination for every macro area
     if (! preInterpolation(interpolationPoints, &interpolationSettings, meteoSettings, &climateParameters,
                           meteoPoints, nrMeteoPoints, myVar, myTime, errorStdStr))
     {
         errorString = "Error in function preInterpolation:\n" + QString::fromStdString(errorStdStr);
         return false;
     }
+
+    bool isOk = true;
 
     if (getComputeOnlyPoints())
     {
@@ -3062,17 +3070,13 @@ bool Project::interpolationDemGlocalDetrending(meteoVariable myVar, const Crit3D
         gis::Crit3DRasterHeader myHeader = *(DEM.header);
         myRaster->initializeGrid(myHeader);
 
-        if(!setMultipleDetrendingHeightTemperatureRange(&interpolationSettings))
+        if(! setMultipleDetrendingHeightTemperatureRange(&interpolationSettings))
         {
             errorString = "Error in function preInterpolation: \n couldn't set temperature ranges for height proxy.";
             return false;
         }
 
         //preparing to start a "global" interpolation for every single macro area
-        unsigned row, col;
-        float z;
-        std::vector<float> areaCells;
-
         int elevationPos = NODATA;
         for (unsigned int pos=0; pos < interpolationSettings.getCurrentCombination().getProxySize(); pos++)
         {
@@ -3080,55 +3084,77 @@ bool Project::interpolationDemGlocalDetrending(meteoVariable myVar, const Crit3D
                 elevationPos = pos;
         }
 
+        /******* parallel computing *******/
+        unsigned int maxThreads = omp_get_max_threads();
+        omp_set_num_threads(static_cast<int>(1));
 
-        for (unsigned areaIndex = 0; areaIndex < interpolationSettings.getMacroAreas().size(); areaIndex++)
+        #pragma omp parallel
         {
-            // load macro area and its cells
-            Crit3DMacroArea myArea = interpolationSettings.getMacroAreas()[areaIndex];
-            areaCells = myArea.getAreaCellsDEM();
-			std::vector<Crit3DInterpolationDataPoint> subsetInterpolationPoints;
-            double interpolatedValue = NODATA;
+            std::vector<double> proxyValues(interpolationSettings.getProxyNr());
 
-            if (! areaCells.empty())
+            #pragma omp for
+            for (int areaIndex = 0; areaIndex < interpolationSettings.getMacroAreas().size(); areaIndex++)
             {
-                macroAreaDetrending(myArea, myVar, interpolationSettings, meteoSettings, meteoPoints, interpolationPoints, subsetInterpolationPoints, elevationPos);
-                // calculate value for every cell
-                for (unsigned cellIndex = 0; cellIndex < areaCells.size(); cellIndex = cellIndex + 2)
+                if (! isOk) continue;   // early skip if already failed
+
+                // load macro area and its cells
+                Crit3DMacroArea myArea = interpolationSettings.getMacroAreas()[areaIndex];
+                std::vector<float> areaCells = myArea.getAreaCellsDEM();
+                std::vector<Crit3DInterpolationDataPoint> subsetInterpolationPoints;
+                double interpolatedValue = NODATA;
+
+                if (! areaCells.empty())
                 {
-                    row = unsigned(areaCells[cellIndex]/DEM.header->nrCols);
-                    col = int(areaCells[cellIndex])%DEM.header->nrCols;
+                    macroAreaDetrending(myArea, myVar, interpolationSettings, meteoSettings, meteoPoints, interpolationPoints, subsetInterpolationPoints, elevationPos);
 
-                    z = DEM.value[row][col];
-
-                    if (! isEqual(z, myHeader.flag))
+                    // calculate value for every cell
+                    for (unsigned cellIndex = 0; cellIndex < areaCells.size(); cellIndex = cellIndex + 2)
                     {
-                        gis::getUtmXYFromRowCol(myHeader, row, col, &x, &y);
+                        if (! isOk) continue;   // early skip if already failed
 
-                        if (! getSignificantProxyValuesXY(x, y, &interpolationSettings, proxyValues))
+                        int row = int(areaCells[cellIndex] / DEM.header->nrCols);
+                        int col = int(areaCells[cellIndex]) % DEM.header->nrCols;
+
+                        float z = DEM.value[row][col];
+
+                        if (! isEqual(z, myHeader.flag))
                         {
-                            myRaster->value[row][col] = NODATA;
-                            continue;
-                        }
+                            double x, y;
+                            gis::getUtmXYFromRowCol(myHeader, row, col, &x, &y);
 
-                        interpolatedValue = interpolate(subsetInterpolationPoints, &interpolationSettings, meteoSettings,
-                                                        myVar, x, y, z, proxyValues, true);
+                            if (! getSignificantProxyValuesXY(x, y, &interpolationSettings, proxyValues))
+                            {
+                                myRaster->value[row][col] = NODATA;
+                                continue;
+                            }
 
-                        if (!isEqual(interpolatedValue, NODATA))
-                        {
-                            if (isEqual(myRaster->value[row][col], NODATA))
-                                myRaster->value[row][col] = interpolatedValue*areaCells[cellIndex+1];
+                            interpolatedValue = interpolate(subsetInterpolationPoints, &interpolationSettings, meteoSettings,
+                                                            myVar, x, y, z, proxyValues, true);
+
+                            if (! isEqual(interpolatedValue, NODATA))
+                            {
+                                // protect writes if same cell could be touched by multiple threads
+                                #pragma omp critical
+                                {
+                                    if (isEqual(myRaster->value[row][col], NODATA))
+                                        myRaster->value[row][col] = interpolatedValue * areaCells[cellIndex + 1];
+                                    else
+                                        myRaster->value[row][col] += interpolatedValue * areaCells[cellIndex + 1];
+                                }
+                            }
                             else
-                                myRaster->value[row][col] += interpolatedValue*areaCells[cellIndex+1];
+                            {
+                                // cannot return directly; set flag instead
+                                isOk = false;
+                            }
                         }
-                        else
-                            return false;
                     }
                 }
             }
         }
     }
 
-    return true;
+    return isOk;
 }
 
 
@@ -3267,18 +3293,19 @@ bool Project::interpolationDemMain(meteoVariable myVar, const Crit3DTime& myTime
     if (! checkInterpolation(myVar))
         return false;
 
-    // check glocal
-    if (interpolationSettings.getUseGlocalDetrending() && ! interpolationSettings.isGlocalReady(false))
-    {
-        if (! loadGlocalAreasMap()) return false;
-        if (! loadGlocalStationsAndCells(false, getCompleteFileName(glocalPointsName, PATH_GEO))) return false;
-    }
-
     // solar radiation model
     if (myVar == globalIrradiance)
     {
         Crit3DTime halfHour = myTime.addSeconds(-1800);
         return interpolateDemRadiation(halfHour, myRaster);
+    }
+
+    // check glocal
+    bool isGrid = false;
+    if (interpolationSettings.getUseGlocalDetrending() && ! interpolationSettings.isGlocalReady(isGrid))
+    {
+        if (! loadGlocalAreasMap()) return false;
+        if (! loadGlocalStationsAndCells(false, getCompleteFileName(glocalPointsName, PATH_GEO))) return false;
     }
 
     if (interpolationSettings.getUseMultipleDetrending())
