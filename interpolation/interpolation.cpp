@@ -874,8 +874,8 @@ float shepardIdw(const std::vector <Crit3DInterpolationDataPoint>& myPoints, std
     float radius = shepardSearchNeighbour(myPoints, distances, settings, shepardPoints, shepardDistances);
 
     unsigned int i, j;
-    float weightSum, radius_27_4, radius_3, tmp, cosine, result;
-    std::vector <float> weight, t, S;
+    double weightSum, radius_27_4, radius_3, tmp, cosine, result;
+    std::vector <double> weight, t, S;
 
     unsigned int nrValid = unsigned(shepardPoints.size());
 
@@ -884,8 +884,8 @@ float shepardIdw(const std::vector <Crit3DInterpolationDataPoint>& myPoints, std
     S.resize(nrValid);
 
     weightSum = 0;
-    radius_3 = radius / 3;
-    radius_27_4 = (27 / 4) / radius;
+    radius_3 = radius / 3.;
+    radius_27_4 = 6.75 / radius;
     for (i=0; i < nrValid; i++)
         if (shepardDistances[i] > 0)
         {
@@ -901,7 +901,7 @@ float shepardIdw(const std::vector <Crit3DInterpolationDataPoint>& myPoints, std
             else
                 S[i] = 0;
 
-            weightSum = weightSum + S[i];
+            weightSum += S[i];
         }
 
     if (weightSum == 0)
@@ -914,10 +914,10 @@ float shepardIdw(const std::vector <Crit3DInterpolationDataPoint>& myPoints, std
         for (j=0; j < nrValid; j++)
             if (i != j)
             {
-                cosine = ( (x - (float)shepardPoints[i].point->utm.x) * (x - (float)shepardPoints[j].point->utm.x)
-                          + (y - (float)shepardPoints[i].point->utm.y) * (y - (float)shepardPoints[j].point->utm.y))
+                cosine = ( (x - shepardPoints[i].point->utm.x) * (x - shepardPoints[j].point->utm.x)
+                          + (y - shepardPoints[i].point->utm.y) * (y - shepardPoints[j].point->utm.y))
                          / (shepardDistances[i] * shepardDistances[j]);
-                t[i] = t[i] + S[j] * (1 - cosine);
+                t[i] += S[j] * (1 - cosine);
             }
 
         if (weightSum != 0)
@@ -938,7 +938,7 @@ float shepardIdw(const std::vector <Crit3DInterpolationDataPoint>& myPoints, std
     for (i=0; i < nrValid; i++)
         result += weight[i] * shepardPoints[i].value;
 
-    return result;
+    return (float)result;
 }
 
 
