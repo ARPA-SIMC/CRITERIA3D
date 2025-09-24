@@ -1752,16 +1752,16 @@ std::vector <double> getfittingParameters(Crit3DProxyCombination myCombination, 
 }
 
 
-void macroAreaDetrending(const Crit3DMacroArea &myArea, meteoVariable myVar,
+bool macroAreaDetrending(const Crit3DMacroArea &myArea, meteoVariable myVar,
                          Crit3DInterpolationSettings &interpolationSettings, Crit3DMeteoSettings* meteoSettings,
                          Crit3DMeteoPoint *meteoPoints, const std::vector <Crit3DInterpolationDataPoint> &interpolationPoints,
                          std::vector <Crit3DInterpolationDataPoint> &subsetInterpolationPoints, int elevationPos)
 {
-    //take the parameters+combination for that area
+    // take the parameters+combination for that area
     interpolationSettings.setFittingParameters(myArea.getParameters());
     interpolationSettings.setCurrentCombination(myArea.getCombination());
 
-    //find the fitting functions vector based on the length of the parameters vector for every proxy
+    // find the fitting functions vector based on the length of the parameters vector for every proxy
     std::vector<std::function<double (double, std::vector<double> &)> > fittingFunction;
 
     for (int l = 0; l < (int)myArea.getParameters().size(); l++)
@@ -1779,13 +1779,16 @@ void macroAreaDetrending(const Crit3DMacroArea &myArea, meteoVariable myVar,
     interpolationSettings.setFittingFunction(fittingFunction);
 
     // create vector of macro area interpolation points
-    std::vector<int> areaMeteoPoints = myArea.getMeteoPoints();
+    std::vector<int> areaMeteoPointsIndex = myArea.getMeteoPoints();
+    std::size_t areaMeteoPointsNr = areaMeteoPointsIndex.size();
+    subsetInterpolationPoints.clear();
+    subsetInterpolationPoints.reserve(areaMeteoPointsNr);
 
-    for (std::size_t l = 0; l < areaMeteoPoints.size(); ++l)
+    for (std::size_t l = 0; l < areaMeteoPointsNr; ++l)
     {
         for (std::size_t k = 0; k < interpolationPoints.size(); ++k)
         {
-            if (interpolationPoints[k].index == areaMeteoPoints[l])
+            if (interpolationPoints[k].index == areaMeteoPointsIndex[l])
             {
                 subsetInterpolationPoints.push_back(interpolationPoints[k]);
             }
@@ -1800,25 +1803,25 @@ void macroAreaDetrending(const Crit3DMacroArea &myArea, meteoVariable myVar,
 
     detrendingOtherProxies(elevationPos, subsetInterpolationPoints, interpolationSettings);
 
-    Crit3DMeteoPoint* myMeteoPoints = new Crit3DMeteoPoint[unsigned(myArea.getMeteoPointsNr())];
-    std::vector<int> meteoPointsList = myArea.getMeteoPoints();
-
-    for (std::size_t i = 0; i < meteoPointsList.size(); i++)
-    {
-        myMeteoPoints[i] = meteoPoints[meteoPointsList[i]];
-    }
-
     if (interpolationSettings.getUseTD() && getUseTdVar(myVar))
     {
-        topographicDistanceOptimize(myVar, myMeteoPoints, myArea.getMeteoPointsNr(),
+        Crit3DMeteoPoint* myMeteoPoints = new Crit3DMeteoPoint[areaMeteoPointsNr];
+        for (std::size_t i = 0; i < areaMeteoPointsNr; i++)
+        {
+            myMeteoPoints[i] = meteoPoints[areaMeteoPointsIndex[i]];
+        }
+
+        topographicDistanceOptimize(myVar, myMeteoPoints, int(areaMeteoPointsNr),
                                     subsetInterpolationPoints, interpolationSettings, meteoSettings);
+
+        for (std::size_t i = 0; i < areaMeteoPointsNr; i++)
+        {
+            myMeteoPoints[i].clear();
+        }
+        delete[] myMeteoPoints;
     }
 
-    for (std::size_t i = 0; i < meteoPointsList.size(); i++)
-    {
-        myMeteoPoints[i].clear();
-    }
-    delete[] myMeteoPoints;
+    return true;
 }
 
 

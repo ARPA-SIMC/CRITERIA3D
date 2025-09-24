@@ -106,7 +106,7 @@
                     Crit3DInterpolationSettings &interpolationSettings, Crit3DClimateParameters* climateParameters,
                     meteoVariable myVar, Crit3DTime myTime);
 
-    void macroAreaDetrending(const Crit3DMacroArea &myArea, meteoVariable myVar,
+    bool macroAreaDetrending(const Crit3DMacroArea &myArea, meteoVariable myVar,
                              Crit3DInterpolationSettings &interpolationSettings, Crit3DMeteoSettings* meteoSettings,
                              Crit3DMeteoPoint *meteoPoints, const std::vector<Crit3DInterpolationDataPoint> &interpolationPoints,
                              std::vector <Crit3DInterpolationDataPoint> &subsetInterpolationPoints, int elevationPos);

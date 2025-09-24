@@ -2372,6 +2372,7 @@ bool Project::loadGlocalStationsAndCells(bool isGrid, QString fileNameStations)
     return (areaPoints.size() > 0);
 }
 
+
 bool Project::loadGlocalWeightMaps(std::vector<Crit3DMacroArea> &myAreas, bool isGrid)
 {
     QString mapsFolder = projectPath + PATH_GLOCAL;
@@ -2391,8 +2392,6 @@ bool Project::loadGlocalWeightMaps(std::vector<Crit3DMacroArea> &myAreas, bool i
     gis::Crit3DRasterGrid* macroAreasGrid = new gis::Crit3DRasterGrid();
     std::string fileName = mapsFolder.toStdString() + "glocalWeight_";
 
-    std::vector<Crit3DMacroArea> existingAreas = interpolationSettings.getMacroAreas();
-
     std::vector<float> areaCells;
     int nrCols, nrRows;
     double myX, myY;
@@ -2411,16 +2410,18 @@ bool Project::loadGlocalWeightMaps(std::vector<Crit3DMacroArea> &myAreas, bool i
 
     if (nrCols == 0 || nrRows == 0)
     {
+        macroAreasGrid->clear();
         errorString = "DEM file missing. You can open it manually or add it in the .ini file.";
         return false;
     }
 
     unsigned nrAreasWithCells = 0;
+    std::vector<Crit3DMacroArea> existingAreas = interpolationSettings.getMacroAreas();
 
-    for (int i = 0; i < (int)myAreas.size(); i++)
+    for (std::size_t i = 0; i < myAreas.size(); i++)
     {
         //se ci sono già celle caricate di DEM o grid, salvale
-        if (i < (int)existingAreas.size())
+        if (i < existingAreas.size())
         {
             myAreas[i].setAreaCellsDEM(existingAreas[i].getAreaCellsDEM());
             myAreas[i].setAreaCellsGrid(existingAreas[i].getAreaCellsGrid());
@@ -3406,7 +3407,7 @@ bool Project::interpolationGrid(meteoVariable myVar, const Crit3DTime& myTime)
     {
         myCombination = interpolationSettings.getSelectedCombination();
         interpolationSettings.setCurrentCombination(myCombination);
-        if(!setMultipleDetrendingHeightTemperatureRange(interpolationSettings))
+        if(! setMultipleDetrendingHeightTemperatureRange(interpolationSettings))
         {
             errorString = "Error in function preInterpolation: \n couldn't set temperature ranges for height proxy.";
             return false;
@@ -3427,7 +3428,7 @@ bool Project::interpolationGrid(meteoVariable myVar, const Crit3DTime& myTime)
     float interpolatedValue = NODATA;
     unsigned int i, proxyIndex;
 
-    if (!interpolationSettings.getUseGlocalDetrending())
+    if (! interpolationSettings.getUseGlocalDetrending())
     {
     for (unsigned col = 0; col < unsigned(meteoGridDbHandler->meteoGrid()->gridStructure().header().nrCols); col++)
     {
@@ -3529,7 +3530,7 @@ bool Project::interpolationGrid(meteoVariable myVar, const Crit3DTime& myTime)
                 elevationPos = pos;
         }
 
-        for (unsigned areaIndex = 0; areaIndex < interpolationSettings.getMacroAreasSize(); areaIndex++)
+        for (int areaIndex = 0; areaIndex < interpolationSettings.getMacroAreasSize(); areaIndex++)
         {
             //load macro area and its cells
             Crit3DMacroArea macroArea = interpolationSettings.getMacroArea(areaIndex);
