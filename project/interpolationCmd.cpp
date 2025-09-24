@@ -223,18 +223,18 @@ bool interpolateProxyGridSeries(const Crit3DProxyGridSeries& mySeries, QDate myD
 }
 
 
-bool checkProxyGridSeries(Crit3DInterpolationSettings* mySettings, const gis::Crit3DRasterGrid& gridBase,
+bool checkProxyGridSeries(Crit3DInterpolationSettings &interpolationSettings, const gis::Crit3DRasterGrid& gridBase,
                           std::vector <Crit3DProxyGridSeries> myProxySeries, QDate myDate, QString &errorStr)
 {
     unsigned i,j;
     gis::Crit3DRasterGrid* gridOut;
     errorStr = "";
 
-    for (i=0; i < mySettings->getProxyNr(); i++)
+    for (i=0; i < interpolationSettings.getProxyNr(); i++)
     {
         for (j=0; j < myProxySeries.size(); j++)
         {
-            if (myProxySeries[j].getProxyName() == QString::fromStdString(mySettings->getProxyName(i)))
+            if (myProxySeries[j].getProxyName() == QString::fromStdString(interpolationSettings.getProxyName(i)))
             {
                 if (myProxySeries[j].getGridName().size() > 0)
                 {
@@ -246,7 +246,7 @@ bool checkProxyGridSeries(Crit3DInterpolationSettings* mySettings, const gis::Cr
                         return false;
                     }
 
-                    mySettings->getProxy(i)->setGrid(gridOut);
+                    interpolationSettings.getProxy(i)->setGrid(gridOut);
                     return true;
                 }
 
@@ -258,7 +258,7 @@ bool checkProxyGridSeries(Crit3DInterpolationSettings* mySettings, const gis::Cr
 }
 
 
-bool interpolationRaster(std::vector <Crit3DInterpolationDataPoint> &dataPoints, Crit3DInterpolationSettings* interpolationSettings,
+bool interpolationRaster(std::vector <Crit3DInterpolationDataPoint> &dataPoints, Crit3DInterpolationSettings &interpolationSettings,
                          Crit3DMeteoSettings* meteoSettings, gis::Crit3DRasterGrid* outputGrid,
                          gis::Crit3DRasterGrid& raster, meteoVariable variable)
 {
@@ -273,7 +273,7 @@ bool interpolationRaster(std::vector <Crit3DInterpolationDataPoint> &dataPoints,
 
     #pragma omp parallel
     {
-        std::vector<double> proxyValues(interpolationSettings->getProxyNr());
+        std::vector<double> proxyValues(interpolationSettings.getProxyNr());
         #pragma omp for
         for (long row = 0; row < outputGrid->header->nrRows ; row++)
         {

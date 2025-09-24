@@ -27,7 +27,7 @@
 
         Crit3DInterpolationDataPoint();
 
-        float getProxyValue(unsigned int pos);
+        float getProxyValue(unsigned int pos) const;
     };
 
 #endif // INTERPOLATIONPOINT_H
