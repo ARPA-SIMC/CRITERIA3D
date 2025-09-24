@@ -3288,6 +3288,20 @@ bool Project::checkInterpolationGrid(meteoVariable myVar)
 }
 
 
+bool Project::checkGlocal(bool isGrid)
+{
+    if (interpolationSettings.getUseGlocalDetrending() && ! interpolationSettings.isGlocalReady(isGrid))
+    {
+        if (! loadGlocalAreasMap())
+            return false;
+        if (! loadGlocalStationsAndCells(isGrid, getCompleteFileName(glocalPointsName, PATH_GEO)))
+            return false;
+    }
+
+    return true;
+}
+
+
 bool Project::interpolationDemMain(meteoVariable myVar, const Crit3DTime& myTime, gis::Crit3DRasterGrid *myRaster)
 {
     if (! checkInterpolation(myVar))
@@ -3300,13 +3314,7 @@ bool Project::interpolationDemMain(meteoVariable myVar, const Crit3DTime& myTime
         return interpolateDemRadiation(halfHour, myRaster);
     }
 
-    // check glocal
-    bool isGrid = false;
-    if (interpolationSettings.getUseGlocalDetrending() && ! interpolationSettings.isGlocalReady(isGrid))
-    {
-        if (! loadGlocalAreasMap()) return false;
-        if (! loadGlocalStationsAndCells(false, getCompleteFileName(glocalPointsName, PATH_GEO))) return false;
-    }
+    if (! checkGlocal(false)) return false;
 
     if (interpolationSettings.getUseMultipleDetrending())
         interpolationSettings.clearFitting();
@@ -4581,6 +4589,7 @@ void Project::showProxyGraph(int macroAreaNumber)
     return;
 }
 
+
 void Project::showLocalProxyGraph(gis::Crit3DGeoPoint myPoint)
 {
     gis::Crit3DUtmPoint myUtm;
@@ -4599,19 +4608,12 @@ void Project::showLocalProxyGraph(gis::Crit3DGeoPoint myPoint)
         myZDEM = DEM.value[row][col];
     }
 
-    if (interpolationSettings.getUseGlocalDetrending() && ! interpolationSettings.isGlocalReady(false))
-    {
-        if (! loadGlocalAreasMap() || ! loadGlocalStationsAndCells(false, getCompleteFileName(glocalPointsName, PATH_GEO)))
-        {
-            logError();
-            return;
-        }
-    }
+    if (! checkGlocal(false))
+        return;
 
     localProxyWidget = new Crit3DLocalProxyWidget(myUtm.x, myUtm.y, myZDEM, myZGrid, this->gisSettings, &interpolationSettings,
                                                   meteoPoints, nrMeteoPoints, _currentVariable, _currentFrequency,
                                                   _currentDate, _currentHour, quality, &qualityInterpolationSettings, meteoSettings, &climateParameters, checkSpatialQuality);
-    return;
 }
 
 

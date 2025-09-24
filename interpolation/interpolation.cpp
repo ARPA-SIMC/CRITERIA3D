@@ -2490,7 +2490,7 @@ float interpolate(const std::vector<Crit3DInterpolationDataPoint>& myPoints, Cri
 
     case airRelHumidity: case dailyAirRelHumidityAvg:
     case dailyAirRelHumidityMin: case dailyAirRelHumidityMax:
-        return std::clamp(result, 0.f, 100.f);
+        return std::max(0.f, std::min(result, 100.f));
 
     case dailyAirTemperatureRange: case leafWetness: case dailyLeafWetness:
     case globalIrradiance: case dailyGlobalRadiation: case atmTransmissivity:

@@ -272,7 +272,7 @@
         bool groupCellsInArea(std::vector<int> &areaPoints, int index, bool isGrid);
         bool writeGlocalWeightsMaps(float windowWidth);
 
-
+        bool checkGlocal(bool isGrid);
         bool checkInterpolation(meteoVariable myVar);
         bool checkInterpolationGrid(meteoVariable myVar);
         bool interpolationGrid(meteoVariable myVar, const Crit3DTime& myTime);
