@@ -2299,6 +2299,7 @@ bool Project::writeGlocalWeightsMaps(float windowWidth)
     return true;
 }
 
+
 bool Project::loadGlocalAreasMap()
 {
     //TODO: add a check for the code values?
@@ -2306,7 +2307,7 @@ bool Project::loadGlocalAreasMap()
     std::string myError;
     QString fileNameMap = getCompleteFileName(glocalMapName, PATH_GEO);
 
-    if (!QFile::exists(fileNameMap + ".flt"))
+    if (! QFile::exists(fileNameMap + ".flt"))
     {
         errorString = "Could not find file:\n" + fileNameMap;
         return false;
@@ -2324,6 +2325,7 @@ bool Project::loadGlocalAreasMap()
 
     return true;
 }
+
 
 bool Project::loadGlocalStationsAndCells(bool isGrid, QString fileNameStations)
 {
