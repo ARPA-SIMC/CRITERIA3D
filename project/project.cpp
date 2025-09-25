@@ -1622,59 +1622,80 @@ void Project::loadMeteoGridData(QDate firstDate, QDate lastDate, bool showInfo)
 
 bool Project::loadMeteoGridDailyData(QDate firstDate, QDate lastDate, bool showInfo)
 {
-    if (! meteoGridDbHandler->tableDaily().exists) return false;
+    if (! meteoGridDbHandler->tableDaily().exists)
+        return false;
 
-    std::string id;
-    int count = 0;
-    int infoStep = 1;
+    int nrCells = meteoGridDbHandler->getActiveCellsNr();
+    if (nrCells == 0)
+        return false;
 
     if (showInfo)
     {
         QString infoStr = "Load meteo grid daily data: " + firstDate.toString();
         if (firstDate != lastDate) infoStr += " - " + lastDate.toString();
-        infoStep = setProgressBar(infoStr, this->meteoGridDbHandler->gridStructure().header().nrRows);
+        setProgressBar(infoStr, nrCells);
     }
 
-    for (int row = 0; row < this->meteoGridDbHandler->gridStructure().header().nrRows; row++)
-    {
-        if (showInfo && (row % infoStep) == 0)
-        {
-            updateProgressBar(row);
-        }
+    const auto &gridStructure = meteoGridDbHandler->gridStructure();
+    const int nrRows = gridStructure.header().nrRows;
+    const int nrCols = gridStructure.header().nrCols;
 
-        for (int col = 0; col < this->meteoGridDbHandler->gridStructure().header().nrCols; col++)
+    unsigned int maxThreads = omp_get_max_threads();
+    omp_set_num_threads(static_cast<int>(maxThreads));
+
+    int count = 0;
+    #pragma omp parallel
+    {
+        QString errorStr;
+        std::string id;
+        QSqlDatabase myDb;
+        meteoGridDbHandler->openNewConnection(myDb, QString::number(omp_get_thread_num()), errorStr);
+
+        #pragma omp for schedule(dynamic) reduction(+:count)
+        for (int row = 0; row < nrRows; row++)
         {
-            if (this->meteoGridDbHandler->meteoGrid()->getMeteoPointActiveId(row, col, id))
+            if (omp_get_thread_num() == 0)
             {
-                if (! this->meteoGridDbHandler->gridStructure().isFixedFields())
+                updateProgressBar(count * maxThreads);
+            }
+
+            for (int col = 0; col < nrCols; col++)
+            {
+                if (meteoGridDbHandler->meteoGrid()->getMeteoPointActiveId(row, col, id))
                 {
-                    if (this->meteoGridDbHandler->gridStructure().isEnsemble())
+                    if (! gridStructure.isFixedFields())
                     {
-                        int memberNr = 1;
-                        if (this->meteoGridDbHandler->loadGridDailyDataEnsemble(errorString, QString::fromStdString(id),
-                                                                                memberNr, firstDate, lastDate))
+                        if (gridStructure.isEnsemble())
                         {
-                            count++;
+                            int memberNr = 1;
+                            if (meteoGridDbHandler->loadGridDailyDataEnsemble(errorStr, QString::fromStdString(id),
+                                                                                    memberNr, firstDate, lastDate))
+                            {
+                                count++;
+                            }
+                        }
+                        else
+                        {
+                            if (meteoGridDbHandler->loadGridDailyDataRowCol(row, col, myDb, QString::fromStdString(id),
+                                                                                  firstDate, lastDate, errorStr))
+                            {
+                                count++;
+                            }
                         }
                     }
                     else
                     {
-                        if (this->meteoGridDbHandler->loadGridDailyDataRowCol(row, col, QString::fromStdString(id),
-                                                                              firstDate, lastDate, errorString))
+                        if (meteoGridDbHandler->loadGridDailyDataFixedFields(errorStr, QString::fromStdString(id),
+                                                                                   firstDate, lastDate))
                         {
                             count++;
                         }
                     }
                 }
-                else
-                {
-                    if (this->meteoGridDbHandler->loadGridDailyDataFixedFields(errorString, QString::fromStdString(id), firstDate, lastDate))
-                    {
-                        count++;
-                    }
-                }
             }
         }
+
+        myDb.close();
     }
 
     if (showInfo) closeProgressBar();
