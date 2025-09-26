@@ -687,94 +687,126 @@ void Crit3DMeteoPoint::cleanAllData()
 
 bool Crit3DMeteoPoint::setMeteoPointValueH(const Crit3DDate& myDate, int myHour, int myMinutes, meteoVariable myVar, float myValue)
 {
-    // check
     if (myVar == noMeteoVar || _obsDataH == nullptr)
-    {
         return false;
-    }
 
     // day index
-    int i = _obsDataH[0].date.daysTo(myDate);
+    int iDay = _obsDataH[0].date.daysTo(myDate);
 
     // check if out of range (accept +1 date exceed)
-    if (i < 0 || i > nrObsDataDaysH) return false;
+    if (iDay < 0 || iDay > nrObsDataDaysH)
+        return false;
 
-    // sub hourly index
+    // compute the sub-hour index
     int subH = int(ceil(float(myMinutes) / float(60 / hourlyFraction)));
 
     // if +1 date exceed accept only hour 00:00
-    if (i == nrObsDataDaysH && (myHour != 0 || subH != 0)) return false;
+    if (iDay == nrObsDataDaysH && (myHour != 0 || subH != 0))
+        return false;
 
     // hour 0 becomes hour 24 of the previous day
     if (myHour == 0 && subH == 0)
     {
         myHour = 24;
-        i--;
-        if (i < 0) return false;
+        iDay--;
+        if (iDay < 0) return false;
     }
 
-    // (sub)hour index
+    // sub-hour index
     int j = hourlyFraction * myHour + subH - 1;
-
-    if (j < 0 || j >= hourlyFraction * 24) return false;
-
-    if (myVar == airTemperature)
-        _obsDataH[i].tAir[j] = myValue;
-    else if (myVar == precipitation)
-        _obsDataH[i].prec[j] = myValue;
-    else if (myVar == airRelHumidity)
-        _obsDataH[i].rhAir[j] = myValue;
-    else if (myVar == airDewTemperature)
-        _obsDataH[i].tDew[j] = myValue;
-    else if (myVar == globalIrradiance)
-        _obsDataH[i].irradiance[j] = myValue;
-    else if (myVar == netIrradiance)
-        _obsDataH[i].netIrradiance[j] = myValue;
-    else if (myVar == referenceEvapotranspiration)
-        _obsDataH[i].et0[j] = myValue;
-    else if (myVar == windScalarIntensity)
-        _obsDataH[i].windScalInt[j] = myValue;
-    else if (myVar == windVectorX)
-    {
-        _obsDataH[i].windVecX[j] = myValue;
-        float intensity = NODATA, direction = NODATA;
-        computeWindPolar(_obsDataH[i].windVecX[j], _obsDataH[i].windVecY[j], &intensity, &direction);
-        _obsDataH[i].windVecInt[j] = intensity;
-        _obsDataH[i].windVecDir[j] = direction;
-    }
-    else if (myVar == windVectorY)
-    {
-        _obsDataH[i].windVecY[j] = myValue;
-        float intensity = NODATA, direction = NODATA;
-        computeWindPolar(_obsDataH[i].windVecX[j], _obsDataH[i].windVecY[j], &intensity, &direction);
-        _obsDataH[i].windVecInt[j] = intensity;
-        _obsDataH[i].windVecDir[j] = direction;
-    }
-    else if (myVar == windVectorIntensity)
-    {
-        _obsDataH[i].windVecInt[j] = myValue;
-        float u = NODATA, v = NODATA;
-        computeWindCartesian(_obsDataH[i].windVecInt[j], _obsDataH[i].windVecDir[j], &u, &v);
-        _obsDataH[i].windVecX[j] = u;
-        _obsDataH[i].windVecY[j] = v;
-    }
-    else if (myVar == windVectorDirection)
-    {
-        _obsDataH[i].windVecDir[j] = myValue;
-        float u = NODATA, v = NODATA;
-        computeWindCartesian(_obsDataH[i].windVecInt[j], _obsDataH[i].windVecDir[j], &u, &v);
-        _obsDataH[i].windVecX[j] = u;
-        _obsDataH[i].windVecY[j] = v;
-    }
-    else if (myVar == leafWetness)
-        _obsDataH[i].leafW[j] = int(myValue);
-    else if (myVar == atmTransmissivity)
-        _obsDataH[i].transmissivity[j] = myValue;
-    else
+    int maxIndex = hourlyFraction * 24;
+    if (j < 0 || j >= maxIndex)
         return false;
+
+    switch (myVar)
+    {
+    case airTemperature:
+        _obsDataH[iDay].tAir[j] = myValue;
+        break;
+
+    case precipitation:
+        _obsDataH[iDay].prec[j] = myValue;
+        break;
+
+    case airRelHumidity:
+        _obsDataH[iDay].rhAir[j] = myValue;
+        break;
+
+    case airDewTemperature:
+        _obsDataH[iDay].tDew[j] = myValue;
+        break;
+
+    case globalIrradiance:
+        _obsDataH[iDay].irradiance[j] = myValue;
+        break;
+
+    case netIrradiance:
+        _obsDataH[iDay].netIrradiance[j] = myValue;
+        break;
+
+    case referenceEvapotranspiration:
+        _obsDataH[iDay].et0[j] = myValue;
+        break;
+
+    case windScalarIntensity:
+        _obsDataH[iDay].windScalInt[j] = myValue;
+        break;
+
+    case windVectorX:
+    {
+        float intensity = NODATA, direction = NODATA;
+        computeWindPolar(_obsDataH[iDay].windVecX[j], _obsDataH[iDay].windVecY[j], &intensity, &direction);
+        _obsDataH[iDay].windVecX[j] = myValue;
+        _obsDataH[iDay].windVecInt[j] = intensity;
+        _obsDataH[iDay].windVecDir[j] = direction;
+        break;
+    }
+
+    case windVectorY:
+    {
+        float intensity = NODATA, direction = NODATA;
+        computeWindPolar(_obsDataH[iDay].windVecX[j], _obsDataH[iDay].windVecY[j], &intensity, &direction);
+        _obsDataH[iDay].windVecY[j] = myValue;
+        _obsDataH[iDay].windVecInt[j] = intensity;
+        _obsDataH[iDay].windVecDir[j] = direction;
+        break;
+    }
+
+    case windVectorIntensity:
+    {
+        float u = NODATA, v = NODATA;
+        computeWindCartesian(_obsDataH[iDay].windVecInt[j], _obsDataH[iDay].windVecDir[j], &u, &v);
+        _obsDataH[iDay].windVecInt[j] = myValue;
+        _obsDataH[iDay].windVecX[j] = u;
+        _obsDataH[iDay].windVecY[j] = v;
+        break;
+    }
+
+    case windVectorDirection:
+    {
+        float u = NODATA, v = NODATA;
+        computeWindCartesian(_obsDataH[iDay].windVecInt[j], _obsDataH[iDay].windVecDir[j], &u, &v);
+        _obsDataH[iDay].windVecDir[j] = myValue;
+        _obsDataH[iDay].windVecX[j] = u;
+        _obsDataH[iDay].windVecY[j] = v;
+        break;
+    }
+
+    case leafWetness:
+        _obsDataH[iDay].leafW[j] = int(myValue);
+        break;
+
+    case atmTransmissivity:
+        _obsDataH[iDay].transmissivity[j] = myValue;
+        break;
+
+    default:
+        return false;
+    }
 
     return true;
 }
+
 
 bool Crit3DMeteoPoint::setMeteoPointValueD(const Crit3DDate& myDate, meteoVariable myVar, float myValue)
 {

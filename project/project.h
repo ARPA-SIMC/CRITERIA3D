@@ -244,10 +244,10 @@
         bool loadAggregationDBAsMeteoPoints(QString fileName);
         bool loadOutputPointsDB(QString dbName);
         bool newOutputPointsDB(QString dbName);
-        bool loadMeteoGridDailyData(QDate firstDate, QDate lastDate, bool showInfo);
-        bool loadMeteoGridHourlyData(QDateTime firstDate, QDateTime lastDate, bool showInfo);
-        bool loadMeteoGridMonthlyData(QDate firstDate, QDate lastDate, bool showInfo);
-        void loadMeteoGridData(QDate firstDate, QDate lastDate, bool showInfo);
+        bool loadMeteoGridDailyData(const QDate &firstDate, const QDate &lastDate, bool showInfo);
+        bool loadMeteoGridHourlyData(QDateTime firstDateTime, QDateTime lastDateTime, bool showInfo);
+        bool loadMeteoGridMonthlyData(const QDate &firstDate, const QDate &lastDate, bool showInfo);
+        void loadMeteoGridData(const QDate &firstDate, const QDate &lastDate, bool showInfo);
 
         QDateTime findDbPointLastTime();
         QDateTime findDbPointFirstTime();

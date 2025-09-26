@@ -1609,7 +1609,7 @@ bool Project::loadMeteoPointsData(const QDate &firstDate, const QDate &lastDate,
 }
 
 
-void Project::loadMeteoGridData(QDate firstDate, QDate lastDate, bool showInfo)
+void Project::loadMeteoGridData(const QDate &firstDate, const QDate &lastDate, bool showInfo)
 {
     if (this->meteoGridDbHandler != nullptr)
     {
@@ -1620,25 +1620,21 @@ void Project::loadMeteoGridData(QDate firstDate, QDate lastDate, bool showInfo)
 }
 
 
-bool Project::loadMeteoGridDailyData(QDate firstDate, QDate lastDate, bool showInfo)
+bool Project::loadMeteoGridDailyData(const QDate &firstDate, const QDate &lastDate, bool showInfo)
 {
     if (! meteoGridDbHandler->tableDaily().exists)
         return false;
 
-    int nrCells = meteoGridDbHandler->getActiveCellsNr();
-    if (nrCells == 0)
-        return false;
-
+    int nrActiveCells = 0;
     if (showInfo)
     {
         QString infoStr = "Load meteo grid daily data: " + firstDate.toString();
         if (firstDate != lastDate) infoStr += " - " + lastDate.toString();
-        setProgressBar(infoStr, nrCells);
+        nrActiveCells = meteoGridDbHandler->getActiveCellsNr();
+        setProgressBar(infoStr, nrActiveCells);
     }
 
     const auto &gridStructure = meteoGridDbHandler->gridStructure();
-    const int nrRows = gridStructure.header().nrRows;
-    const int nrCols = gridStructure.header().nrCols;
 
     unsigned int maxThreads = omp_get_max_threads();
     omp_set_num_threads(static_cast<int>(maxThreads));
@@ -1646,20 +1642,20 @@ bool Project::loadMeteoGridDailyData(QDate firstDate, QDate lastDate, bool showI
     int count = 0;
     #pragma omp parallel
     {
-        QString errorStr;
         std::string id;
+        QString errorStr;
         QSqlDatabase myDb;
         meteoGridDbHandler->openNewConnection(myDb, QString::number(omp_get_thread_num()), errorStr);
 
         #pragma omp for schedule(dynamic) reduction(+:count)
-        for (int row = 0; row < nrRows; row++)
+        for (int row = 0; row < gridStructure.header().nrRows; row++)
         {
-            if (omp_get_thread_num() == 0)
+            if (showInfo && omp_get_thread_num() == 0)
             {
                 updateProgressBar(count * maxThreads);
             }
 
-            for (int col = 0; col < nrCols; col++)
+            for (int col = 0; col < gridStructure.header().nrCols; col++)
             {
                 if (meteoGridDbHandler->meteoGrid()->getMeteoPointActiveId(row, col, id))
                 {
@@ -1670,26 +1666,20 @@ bool Project::loadMeteoGridDailyData(QDate firstDate, QDate lastDate, bool showI
                             int memberNr = 1;
                             if (meteoGridDbHandler->loadGridDailyDataEnsemble(errorStr, QString::fromStdString(id),
                                                                                     memberNr, firstDate, lastDate))
-                            {
-                                count++;
-                            }
+                                ++count;
                         }
                         else
                         {
                             if (meteoGridDbHandler->loadGridDailyDataRowCol(row, col, myDb, QString::fromStdString(id),
                                                                                   firstDate, lastDate, errorStr))
-                            {
-                                count++;
-                            }
+                                ++count;
                         }
                     }
                     else
                     {
                         if (meteoGridDbHandler->loadGridDailyDataFixedFields(errorStr, QString::fromStdString(id),
                                                                                    firstDate, lastDate))
-                        {
-                            count++;
-                        }
+                            ++count;
                     }
                 }
             }
@@ -1710,46 +1700,61 @@ bool Project::loadMeteoGridDailyData(QDate firstDate, QDate lastDate, bool showI
 }
 
 
-bool Project::loadMeteoGridHourlyData(QDateTime firstDate, QDateTime lastDate, bool showInfo)
+bool Project::loadMeteoGridHourlyData(QDateTime firstDateTime, QDateTime lastDateTime, bool showInfo)
 {
-    if (! meteoGridDbHandler->tableHourly().exists) return false;
+    if (! meteoGridDbHandler->tableHourly().exists)
+        return false;
 
-    int infoStep = 1;
+    int nrActiveCells = 0;
     if (showInfo)
     {
-        QString infoStr = "Load meteo grid hourly data: " + firstDate.toString("yyyy-MM-dd") + " 01:00 - " + lastDate.toString("yyyy-MM-dd") + " 00:00";
-        infoStep = setProgressBar(infoStr, this->meteoGridDbHandler->gridStructure().header().nrRows);
+        QString infoStr = "Load meteo grid hourly data: "
+                + firstDateTime.toString("yyyy-MM-dd") + " 01:00 - "
+                + lastDateTime.toString("yyyy-MM-dd") + " 00:00";
+        nrActiveCells = meteoGridDbHandler->getActiveCellsNr();
+        setProgressBar(infoStr, nrActiveCells);
     }
 
-    int count = 0;
-    for (int row = 0; row < this->meteoGridDbHandler->gridStructure().header().nrRows; row++)
-    {
-        if (showInfo && (row % infoStep) == 0)
-        {
-            updateProgressBar(row);
-        }
+    const auto &gridStructure = meteoGridDbHandler->gridStructure();
 
-        for (int col = 0; col < this->meteoGridDbHandler->gridStructure().header().nrCols; col++)
+    unsigned int maxThreads = omp_get_max_threads();
+    omp_set_num_threads(static_cast<int>(maxThreads));
+
+    int count = 0;
+    #pragma omp parallel
+    {
+        std::string id;
+        QString myErrorStr;
+        QSqlDatabase myDb;
+        meteoGridDbHandler->openNewConnection(myDb, QString::number(omp_get_thread_num()), myErrorStr);
+
+        #pragma omp for schedule(dynamic) reduction(+:count)
+        for (int row = 0; row < gridStructure.header().nrRows; row++)
         {
-            std::string id;
-            if (this->meteoGridDbHandler->meteoGrid()->getMeteoPointActiveId(row, col, id))
+            if (showInfo && omp_get_thread_num() == 0)
             {
-                if (!this->meteoGridDbHandler->gridStructure().isFixedFields())
+                updateProgressBar(count * maxThreads);
+            }
+
+            for (int col = 0; col < gridStructure.header().nrCols; col++)
+            {
+                if (meteoGridDbHandler->meteoGrid()->getMeteoPointActiveId(row, col, id))
                 {
-                    if (this->meteoGridDbHandler->loadGridHourlyData(errorString, QString::fromStdString(id), firstDate, lastDate))
+                    if (! gridStructure.isFixedFields())
                     {
-                        count = count + 1;
+                        if (meteoGridDbHandler->loadGridHourlyData(myDb, QString::fromStdString(id), firstDateTime, lastDateTime, myErrorStr))
+                            ++count;
                     }
-                }
-                else
-                {
-                    if (this->meteoGridDbHandler->loadGridHourlyDataFixedFields(errorString, QString::fromStdString(id), firstDate, lastDate))
+                    else
                     {
-                        count = count + 1;
+                        if (meteoGridDbHandler->loadGridHourlyDataFixedFields(myErrorStr, QString::fromStdString(id), firstDateTime, lastDateTime))
+                            ++count;
                     }
                 }
             }
         }
+
+        myDb.close();
     }
 
     if (showInfo) closeProgressBar();
@@ -1759,50 +1764,68 @@ bool Project::loadMeteoGridHourlyData(QDateTime firstDate, QDateTime lastDate, b
         errorString = "No Data Available";
         return false;
     }
-    else
-        return true;
+
+    return true;
 }
 
-bool Project::loadMeteoGridMonthlyData(QDate firstDate, QDate lastDate, bool showInfo)
+
+bool Project::loadMeteoGridMonthlyData(const QDate &firstDate, const QDate &lastDate, bool showInfo)
 {
-    if (! meteoGridDbHandler->tableMonthly().exists) return false;
+    if (! meteoGridDbHandler->tableMonthly().exists)
+        return false;
 
-    std::string id;
-    int count = 0;
-
-    int infoStep = 1;
-
+    int nrActiveCells = 0;
     if (showInfo)
     {
         QString infoStr = "Load meteo grid monthly data: " + firstDate.toString();
-        if (firstDate != lastDate) infoStr += " - " + lastDate.toString();
-        infoStep = setProgressBar(infoStr, this->meteoGridDbHandler->gridStructure().header().nrRows);
+        if (firstDate != lastDate)
+            infoStr += " - " + lastDate.toString();
+        nrActiveCells = meteoGridDbHandler->getActiveCellsNr();
+        setProgressBar(infoStr, nrActiveCells);
     }
 
-    for (int row = 0; row < this->meteoGridDbHandler->gridStructure().header().nrRows; row++)
+    const auto &gridStructure = meteoGridDbHandler->gridStructure();
+
+    unsigned int maxThreads = omp_get_max_threads();
+    omp_set_num_threads(static_cast<int>(maxThreads));
+
+    int count = 0;
+    #pragma omp parallel
     {
-        if (showInfo && (row % infoStep) == 0)
-        {
-            updateProgressBar(row);
-        }
+        std::string id;
+        QString myErrorStr;
+        QSqlDatabase myDb;
+        meteoGridDbHandler->openNewConnection(myDb, QString::number(omp_get_thread_num()), myErrorStr);
 
-        for (int col = 0; col < this->meteoGridDbHandler->gridStructure().header().nrCols; col++)
+        #pragma omp for schedule(dynamic) reduction(+:count)
+        for (int row = 0; row < gridStructure.header().nrRows; row++)
         {
-            if (this->meteoGridDbHandler->meteoGrid()->getMeteoPointActiveId(row, col, id))
+            if (showInfo && omp_get_thread_num() == 0)
             {
-                bool isOk;
-                if (firstDate == lastDate)
-                {
-                   isOk = meteoGridDbHandler->loadGridMonthlySingleDate(errorString, QString::fromStdString(id), firstDate);
-                }
-                else
-                {
-                    isOk = meteoGridDbHandler->loadGridMonthlyData(errorString, QString::fromStdString(id), firstDate, lastDate);
-                }
+                updateProgressBar(count * maxThreads);
+            }
 
-                if (isOk) count = count + 1;
+            for (int col = 0; col < this->meteoGridDbHandler->gridStructure().header().nrCols; col++)
+            {
+                if (this->meteoGridDbHandler->meteoGrid()->getMeteoPointActiveId(row, col, id))
+                {
+                    bool isOk;
+                    if (firstDate == lastDate)
+                    {
+                       isOk = meteoGridDbHandler->loadGridMonthlySingleDate(myDb, QString::fromStdString(id), firstDate, myErrorStr);
+                    }
+                    else
+                    {
+                        isOk = meteoGridDbHandler->loadGridMonthlyData(myDb, QString::fromStdString(id), firstDate, lastDate, myErrorStr);
+                    }
+
+                    if (isOk)
+                        ++count;
+                }
             }
         }
+
+        myDb.close();
     }
 
     if (showInfo) closeProgressBar();
@@ -1812,8 +1835,8 @@ bool Project::loadMeteoGridMonthlyData(QDate firstDate, QDate lastDate, bool sho
         logError("No Data Available: " + errorString);
         return false;
     }
-    else
-        return true;
+
+    return true;
 }
 
 
@@ -4407,11 +4430,12 @@ void Project::showMeteoWidgetGrid(const std::string &idCell, const std::string &
             if (meteoGridDbHandler->isHourly())
             {
                 logInfoGUI("Loading hourly data...\n");
-                meteoGridDbHandler->loadGridHourlyData(errorString, QString::fromStdString(idCell), firstDateTime, lastDateTime);
+                meteoGridDbHandler->loadGridHourlyData(meteoGridDbHandler->db(), QString::fromStdString(idCell),
+                                                       firstDateTime, lastDateTime, errorString);
             }
             if (meteoGridDbHandler->isMonthly())
             {
-                meteoGridDbHandler->loadGridMonthlyData(errorString, QString::fromStdString(idCell), firstMonthlyDate, lastMonthlyDate);
+                meteoGridDbHandler->loadGridMonthlyData(meteoGridDbHandler->db(), QString::fromStdString(idCell), firstMonthlyDate, lastMonthlyDate, errorString);
             }
         }
         else
@@ -4427,7 +4451,7 @@ void Project::showMeteoWidgetGrid(const std::string &idCell, const std::string &
             }
             if (meteoGridDbHandler->isMonthly())
             {
-                meteoGridDbHandler->loadGridMonthlyData(errorString, QString::fromStdString(idCell), firstMonthlyDate, lastMonthlyDate);
+                meteoGridDbHandler->loadGridMonthlyData(meteoGridDbHandler->db(), QString::fromStdString(idCell), firstMonthlyDate, lastMonthlyDate, errorString);
             }
         }
         closeLogInfo();
@@ -4509,11 +4533,12 @@ void Project::showMeteoWidgetGrid(const std::string &idCell, const std::string &
                 if (meteoGridDbHandler->isHourly())
                 {
                     logInfoGUI("Loading hourly data...\n");
-                    meteoGridDbHandler->loadGridHourlyData(errorString, QString::fromStdString(idCell), firstDateTime, lastDateTime);
+                    meteoGridDbHandler->loadGridHourlyData(meteoGridDbHandler->db(), QString::fromStdString(idCell),
+                                                           firstDateTime, lastDateTime, errorString);
                 }
                 if (meteoGridDbHandler->isMonthly())
                 {
-                    meteoGridDbHandler->loadGridMonthlyData(errorString, QString::fromStdString(idCell), firstMonthlyDate, lastMonthlyDate);
+                    meteoGridDbHandler->loadGridMonthlyData(meteoGridDbHandler->db(), QString::fromStdString(idCell), firstMonthlyDate, lastMonthlyDate, errorString);
                 }
             }
             else
@@ -4529,7 +4554,7 @@ void Project::showMeteoWidgetGrid(const std::string &idCell, const std::string &
                 }
                 if (meteoGridDbHandler->isMonthly())
                 {
-                    meteoGridDbHandler->loadGridMonthlyData(errorString, QString::fromStdString(idCell), firstMonthlyDate, lastMonthlyDate);
+                    meteoGridDbHandler->loadGridMonthlyData(meteoGridDbHandler->db(), QString::fromStdString(idCell), firstMonthlyDate, lastMonthlyDate, errorString);
                 }
             }
             closeLogInfo();
