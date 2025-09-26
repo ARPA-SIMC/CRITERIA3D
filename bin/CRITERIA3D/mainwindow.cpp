@@ -1117,7 +1117,7 @@ void MainWindow::redrawMeteoPoints(visualizationType myType, bool updateColorSCa
             std::string errorStdStr;
             checkData(myProject.quality, currentVar,
                       myProject.meteoPoints, myProject.nrMeteoPoints, myProject.getCrit3DCurrentTime(),
-                      &(myProject.qualityInterpolationSettings), myProject.meteoSettings,
+                      myProject.qualityInterpolationSettings, myProject.meteoSettings,
                       &(myProject.climateParameters), myProject.checkSpatialQuality, errorStdStr);
 
             if (updateColorSCale)
