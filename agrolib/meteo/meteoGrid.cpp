@@ -231,12 +231,12 @@ std::vector<std::vector<Crit3DMeteoPoint *> > Crit3DMeteoGrid::meteoPoints() con
     return _meteoPoints;
 }
 
-Crit3DMeteoPoint Crit3DMeteoGrid::meteoPoint(unsigned row, unsigned col)
+Crit3DMeteoPoint& Crit3DMeteoGrid::meteoPoint(unsigned row, unsigned col) const
 {
     return *(_meteoPoints[row][col]);
 }
 
-Crit3DMeteoPoint* Crit3DMeteoGrid::meteoPointPointer(unsigned row, unsigned col)
+Crit3DMeteoPoint* Crit3DMeteoGrid::meteoPointPointer(unsigned row, unsigned col) const
 {
     return _meteoPoints[row][col];
 }

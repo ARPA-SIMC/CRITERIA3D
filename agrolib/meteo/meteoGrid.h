@@ -83,11 +83,11 @@
             Crit3DMeteoGridStructure gridStructure() const;
             void setGridStructure(const Crit3DMeteoGridStructure &gridStructure);
 
-            std::vector<std::vector<Crit3DMeteoPoint *> > meteoPoints() const;
+            std::vector<std::vector<Crit3DMeteoPoint *>> meteoPoints() const;
             void setMeteoPoints(const std::vector<std::vector<Crit3DMeteoPoint *> > &meteoPoints);
 
-            Crit3DMeteoPoint meteoPoint(unsigned row, unsigned col);
-            Crit3DMeteoPoint* meteoPointPointer(unsigned row, unsigned col);
+            Crit3DMeteoPoint& meteoPoint(unsigned row, unsigned col) const;
+            Crit3DMeteoPoint* meteoPointPointer(unsigned row, unsigned col) const;
 
             void setActive(unsigned int row, unsigned int col, bool active);
 
