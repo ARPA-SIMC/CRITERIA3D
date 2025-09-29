@@ -812,7 +812,7 @@ void Crit3DProject::assignPrecipitation()
 
                         float precSurfaceWater = computeSoilCracking(row, col, liquidWater);
                         double surfaceFlow = area * (precSurfaceWater / 1000.);             // [m3 h-1]
-                        if ((surfaceFlow / 3600.) > DBL_EPSILON)
+                        if ((surfaceFlow / 3600.) > 0.)
                         {
                             waterSinkSource[surfaceIndex] += surfaceFlow / 3600.;           // [m3 s-1]
                         }
@@ -951,7 +951,7 @@ float Crit3DProject::computeSoilCracking(int row, int col, float precipitation)
             layerWater = std::min(layerWater, downWater);
 
             double flow = area * (layerWater / 1000.);              // [m3 h-1]
-            if ((flow / 3600.) > DBL_EPSILON)
+            if ((flow / 3600.) > 0.)
             {
                 waterSinkSource[nodeIndex] += flow / 3600.;         // [m3 s-1]
                 downWater -= layerWater;                            // [mm]
