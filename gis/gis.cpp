@@ -727,6 +727,13 @@ namespace gis
         else return false;
     }
 
+    bool isOutOfGridRowCol(int row, int col, Crit3DRasterHeader* header)
+    {
+        if (  row < 0 || row >= header->nrRows
+            || col < 0 || col >= header->nrCols) return true;
+        else return false;
+    }
+
     bool isOutOfGridRowCol(int row, int col, const Crit3DLatLonHeader& header)
     {
         if (  row < 0 || row >= header.nrRows

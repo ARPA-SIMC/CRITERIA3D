@@ -41,6 +41,9 @@
     char* decimal_to_binary(unsigned int n, int nrBits);
     float getSinDecimalDegree(float angle);
     float getCosDecimalDegree(float angle);
+    double getSinDecimalDegree(double angle);
+    double getCosDecimalDegree(double angle);
+
     double powerIntegerExponent(double base, int exponent);
 
     namespace sorting

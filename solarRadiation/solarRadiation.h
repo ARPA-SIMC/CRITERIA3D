@@ -48,23 +48,23 @@
         float readLinke(Crit3DRadiationSettings* mySettings, const gis::Crit3DPoint& myPoint);
 
         bool computeSunPosition(float lon, float lat, int myTimezone,
-                                int myYear,int myMonth, int myDay,
+                                int myYear, int myMonth, int myDay,
                                 int myHour, int myMinute, int mySecond,
-                                float temp, float pressure, float aspect, float slope, TsunPosition *mySunPosition);
+                                float temp, float pressure, float aspect, float slope,
+                                TsunPosition &mySunPosition);
 
         int estimateTransmissivityWindow(Crit3DRadiationSettings* mySettings, const gis::Crit3DRasterGrid& myDEM,
                                          const gis::Crit3DPoint &myPoint, Crit3DTime myTime, int timeStepSecond);
 
-        bool computeRadiationRsun(Crit3DRadiationSettings* mySettings, float myTemperature, float myPressure, Crit3DTime myTime,
-                                       float myLinke, float myAlbedo, float myClearSkyTransmissivity, float transmissivity,
-                                       TsunPosition* mySunPosition, TradPoint* myPoint, const gis::Crit3DRasterGrid& myDEM);
+        bool computeRadiationRsun(Crit3DRadiationSettings* radSettings, float temperature, float myPressure, const Crit3DTime& myTime,
+                                  float linke,float albedo, float clearSkyTransmissivity, float transmissivity,
+                                  TsunPosition& sunPosition, TradPoint& radPoint, const gis::Crit3DRasterGrid& dem);
 
-        bool computeRadiationDEM(Crit3DRadiationSettings *radSettings, const gis::Crit3DRasterGrid& myDem,
+        bool computeRadiationDEM(Crit3DRadiationSettings *radSettings, const gis::Crit3DRasterGrid& dem,
                                  Crit3DRadiationMaps* radiationMaps, const Crit3DTime& myTime);
 
-        bool computeRadiationDemPoint(Crit3DRadiationSettings* mySettings, const gis::Crit3DRasterGrid& myDem,
-                                  Crit3DRadiationMaps* radiationMaps, TradPoint radPoint,
-                                  int row, int col, const Crit3DTime& myTime);
+        bool computeRadiationDemPoint(Crit3DRadiationSettings* mySettings, Crit3DRadiationMaps* radiationMaps,
+                                      const gis::Crit3DRasterGrid& dem, const Crit3DTime& myTime, int row, int col, double height);
 
         bool computeRadiationOutputPoints(Crit3DRadiationSettings *radSettings, const gis::Crit3DRasterGrid& myDEM,
                                              Crit3DRadiationMaps *radiationMaps, std::vector<gis::Crit3DOutputPoint> &outputPoints,
