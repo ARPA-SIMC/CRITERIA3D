@@ -3,6 +3,7 @@
 
 #include <cstdlib>
 #include <cassert>
+#include <stdexcept>
 
 #include "types_cpu.h"
 #include "macro.h"
@@ -32,13 +33,15 @@ namespace soilFluxes3D::New
             __cudaSpec WRCModel getWRCModel() const noexcept;
             __cudaSpec bool getOMPstatus() const noexcept;
             __cudaSpec double getMaxTimeStep() const noexcept;
+            __cudaSpec double getMinTimeStep() const noexcept;
             __cudaSpec double getLVRatio() const noexcept;
+            __cudaSpec double getHeatWF() const noexcept;
             __cudaSpec meanType_t getMeanType() const noexcept;
 
             template<class Derived>
             __cudaSpec double getMatrixElementValue(uint64_t rowIndex, uint64_t colIndex) const noexcept;
 
-            virtual SF3Derror_t inizialize() = 0;
+            virtual SF3Derror_t initialize() = 0;
             virtual SF3Derror_t run(double maxTimeStep, double &acceptedTimeStep, processType process) = 0;
             virtual SF3Derror_t clean() = 0;
     };
@@ -95,9 +98,17 @@ namespace soilFluxes3D::New
     {
         return _parameters.deltaTmax;
     }
+    inline __cudaSpec double Solver::getMinTimeStep() const noexcept
+    {
+        return _parameters.deltaTmin;
+    }
     inline __cudaSpec double Solver::getLVRatio() const noexcept
     {
         return _parameters.lateralVerticalRatio;
+    }
+    inline __cudaSpec double Solver::getHeatWF() const noexcept
+    {
+        return _parameters.heatWeightFactor;
     }
     inline __cudaSpec meanType_t Solver::getMeanType() const noexcept
     {

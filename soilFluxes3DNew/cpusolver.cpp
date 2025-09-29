@@ -5,16 +5,20 @@
 #include "cpusolver.h"
 #include "soilPhysics.h"
 #include "water.h"
+#include "heat.h"
+#include "otherFunctions.h"
 
 using namespace soilFluxes3D::Soil;
 using namespace soilFluxes3D::Water;
+using namespace soilFluxes3D::Heat;
+using namespace soilFluxes3D::Math;
 
 namespace soilFluxes3D::New
 {
     extern __cudaMngd nodesData_t nodeGrid;
     extern __cudaMngd simulationFlags_t simulationFlags;
 
-    SF3Derror_t CPUSolver::inizialize()
+    SF3Derror_t CPUSolver::initialize()
     {
         if(_status != solverStatus::Created)
             return SF3Derror_t::SolverError;
@@ -26,7 +30,7 @@ namespace soilFluxes3D::New
         if(_parameters.enableOMP)
             omp_set_num_threads(static_cast<int>(_parameters.numThreads));
 
-        //Inizialize matrix structure
+        //initialize matrix structure
         matrixA.numRows = nodeGrid.numNodes;
         hostSolverAlloc(matrixA.numColumns, uint8_t, matrixA.numRows);
         hostSolverAlloc(matrixA.colIndeces, uint64_t*, matrixA.numRows);
@@ -38,7 +42,7 @@ namespace soilFluxes3D::New
             hostSolverAlloc(matrixA.values[rowIdx], double, matrixA.maxColumns);
         }
 
-        //Inizialize vector data
+        //initialize vector data
         vectorX.numElements = nodeGrid.numNodes;
         hostSolverAlloc(vectorX.values, double, vectorX.numElements);
 
@@ -48,13 +52,13 @@ namespace soilFluxes3D::New
         vectorC.numElements = nodeGrid.numNodes;
         hostSolverAlloc(vectorC.values, double, vectorC.numElements);
 
-        _status = solverStatus::Inizialized;
+        _status = solverStatus::initialized;
         return SF3Derror_t::SF3Dok;
     }
 
     SF3Derror_t CPUSolver::run(double maxTimeStep, double& acceptedTimeStep, processType process)
     {
-        if(_status != solverStatus::Inizialized)
+        if(_status != solverStatus::initialized)
             return SF3Derror_t::SolverError;
 
         switch (process)
@@ -65,13 +69,14 @@ namespace soilFluxes3D::New
             case processType::Heat:
                 break;
             case processType::Solutes:
+                throw std::runtime_error("Solutes not available with GPUSolver");
                 break;
             default:
                 break;
         }
 
         _status = solverStatus::Terminated;
-        _status = solverStatus::Inizialized;
+        _status = solverStatus::initialized;
         return SF3Derror_t::SF3Dok;
     }
 
@@ -80,7 +85,7 @@ namespace soilFluxes3D::New
         if(_status == solverStatus::Created)
             return SF3Derror_t::SF3Dok;
 
-        if((_status != solverStatus::Terminated) && (_status != solverStatus::Inizialized))
+        if((_status != solverStatus::Terminated) && (_status != solverStatus::initialized))
             return SF3Derror_t::SolverError;
 
         //Destruct matrix variable
@@ -115,7 +120,7 @@ namespace soilFluxes3D::New
             //Save instantaneus H values
             std::memcpy(nodeGrid.waterData.oldPressureHeads, nodeGrid.waterData.pressureHead, nodeGrid.numNodes * sizeof(double));
 
-            //Inizialize the solution vector with the current pressure head
+            //initialize the solution vector with the current pressure head
             assert(vectorX.numElements == nodeGrid.numNodes);
             std::memcpy(vectorX.values, nodeGrid.waterData.pressureHead, vectorX.numElements * sizeof(double));
 
@@ -130,7 +135,7 @@ namespace soilFluxes3D::New
             }
 
             //Update aereodynamic and soil conductance
-            //updateConductance();      //TO DO (Heat)
+            updateConductance();
 
             //Update boundary
             updateBoundaryWaterData(acceptedTimeStep);
@@ -220,20 +225,139 @@ namespace soilFluxes3D::New
         return balanceResult;
     }
 
+    void CPUSolver::heatLoop(double timeStepHeat, double timeStepWater)
+    {
+        resetFluxValues(true, false);
+
+        //initialize vector X
+        std::memcpy(vectorX.values, nodeGrid.heatData.temperature, nodeGrid.numNodes * sizeof(double));
+        //Save current temperatures
+        std::memcpy(nodeGrid.heatData.oldTemperature, nodeGrid.heatData.temperature, nodeGrid.numNodes * sizeof(double));
+
+        //initialize vector C
+        #pragma omp parallel for if(_parameters.enableOMP)
+        for (uint64_t nodeIdx = 0; nodeIdx < nodeGrid.numNodes; ++nodeIdx)
+        {
+            double nodeH = getNodeH_fromTimeSteps(nodeIdx, timeStepHeat, timeStepWater);
+            double avgH = computeMean(nodeGrid.waterData.oldPressureHeads[nodeIdx], nodeH, meanType_t::Arithmetic);
+            vectorC.values[nodeIdx] = computeNodeHeatCapacity(nodeIdx, avgH, nodeGrid.heatData.temperature[nodeIdx]) * nodeGrid.size[nodeIdx];
+        }
+
+        //Compute linear system elements
+        hostReset(nodeGrid.waterData.invariantFluxes, nodeGrid.numNodes);
+
+        #pragma omp parallel for if(_parameters.enableOMP)
+        for (uint64_t rowIdx = 0; rowIdx < nodeGrid.numNodes; ++rowIdx)
+        {
+            double nodeT = nodeGrid.heatData.temperature[rowIdx];
+            double nodeH = getNodeH_fromTimeSteps(rowIdx, timeStepHeat, timeStepWater);
+
+            double dTheta = computeNodeTheta_fromSignedPsi(rowIdx, nodeH - nodeGrid.z[rowIdx]) -
+                            computeNodeTheta_fromSignedPsi(rowIdx, nodeGrid.waterData.oldPressureHeads[rowIdx] - nodeGrid.z[rowIdx]);
+
+            double heatCapacity = dTheta * HEAT_CAPACITY_WATER * nodeT;
+
+            if(simulationFlags.computeHeatVapor)
+            {
+                double dThetaV = computeNodeVaporThetaV(rowIdx, nodeH - nodeGrid.z[rowIdx], nodeT) -
+                                 computeNodeVaporThetaV(rowIdx, nodeH - nodeGrid.z[rowIdx], nodeGrid.heatData.oldTemperature[rowIdx]);
+
+                heatCapacity += dThetaV * HEAT_CAPACITY_AIR * nodeT;
+                heatCapacity += dThetaV * computeLatentVaporizationHeat(nodeT - ZEROCELSIUS) * WATER_DENSITY;
+            }
+
+            heatCapacity *= nodeGrid.size[rowIdx];
+
+            //Create matrix elements
+            uint8_t linkIdx = 1;
+            bool isLinked = false;
+
+            isLinked = computeHeatLinkFluxes(matrixA.values[rowIdx][linkIdx], matrixA.colIndeces[rowIdx][linkIdx], rowIdx, 0, timeStepHeat, timeStepWater);
+            if(isLinked)
+                linkIdx++;
+
+            //Compute flox down
+            isLinked = computeHeatLinkFluxes(matrixA.values[rowIdx][linkIdx], matrixA.colIndeces[rowIdx][linkIdx], rowIdx, 1, timeStepHeat, timeStepWater);
+            if(isLinked)
+                linkIdx++;
+
+            //Compute flux lateral
+            for(uint8_t latIdx = 0; latIdx < maxLateralLink; ++latIdx)
+            {
+                isLinked = computeHeatLinkFluxes(matrixA.values[rowIdx][linkIdx], matrixA.colIndeces[rowIdx][linkIdx], rowIdx, 2 + latIdx, timeStepHeat, timeStepWater);
+                if(isLinked)
+                    linkIdx++;
+            }
+
+            matrixA.numColumns[rowIdx] = linkIdx; //TO DO: need to fill the not used columns of the row?
+
+            //Compute diagonal element
+            double sumDP = 0., sumF0 = 0.;
+            for(uint8_t colIdx = 1; colIdx < matrixA.numColumns[rowIdx]; ++colIdx)
+            {
+                sumDP += matrixA.values[rowIdx][colIdx] * _parameters.heatWeightFactor;
+                double dT0 = nodeGrid.heatData.oldTemperature[matrixA.colIndeces[rowIdx][colIdx]] - nodeGrid.heatData.oldTemperature[rowIdx];
+                sumF0 += matrixA.values[rowIdx][colIdx] * (1. - _parameters.heatWeightFactor) * dT0;
+                matrixA.values[rowIdx][colIdx] *= -(_parameters.heatWeightFactor);
+            }
+            matrixA.colIndeces[rowIdx][0] = rowIdx;
+            matrixA.values[rowIdx][0] = sumDP + (vectorC.values[rowIdx] / timeStepHeat);  //Check if C values is correct
+
+            //Computeb element
+            vectorB.values[rowIdx] = (vectorC.values[rowIdx] / timeStepHeat) * nodeGrid.heatData.oldTemperature[rowIdx] - heatCapacity / timeStepHeat +
+                                        nodeGrid.heatData.heatFlux[rowIdx] + nodeGrid.waterData.invariantFluxes[rowIdx] + sumF0;
+
+            //Preconditioning
+            if(matrixA.values[rowIdx][0] > 0)
+            {
+                vectorB.values[rowIdx] /= matrixA.values[rowIdx][0];
+
+                for(uint8_t colIdx = 1; colIdx < matrixA.numColumns[rowIdx]; ++colIdx)
+                    matrixA.values[rowIdx][colIdx] /= matrixA.values[rowIdx][0];
+            }
+        }
+
+        //Solve linear system
+        solveLinearSystem(_parameters.maxApproximationsNumber - 1, processType::Heat);
+
+        //Retrive new temperatures
+        std::memcpy(nodeGrid.heatData.temperature, vectorX.values, nodeGrid.numNodes * sizeof(double));
+
+        //Compute balance
+        evaluateHeatBalance(timeStepHeat, timeStepWater);
+
+        //Update balance
+        updateHeatBalanceData();
+
+        //Update heat fluxes
+        saveHeatFluxValues(timeStepHeat, timeStepWater);
+
+        //Save new temperatures
+        std::memcpy(nodeGrid.heatData.oldTemperature, nodeGrid.heatData.temperature, nodeGrid.numNodes * sizeof(double));
+
+        return;
+    }
+
+
     bool CPUSolver::solveLinearSystem(uint8_t approximationNumber, processType computationType)
     {
-        double currErrorNorm = 0., bestErrorNorm = (double) std::numeric_limits<float>::max();
+        double currErrorNorm = 0., bestErrorNorm = static_cast<double>(std::numeric_limits<float>::max());
 
         uint32_t currMaxIterationNum = calcCurrentMaxIterationNumber(approximationNumber);
 
         for(uint32_t iterationNumber = 0; iterationNumber < currMaxIterationNum; ++iterationNumber)
         {
-            if(computationType == processType::Water && _method == numericalMethod::Jacobi)
-                currErrorNorm = JacobiWaterCPU(vectorX, matrixA, vectorB);
-            else if(computationType == processType::Water && _method == numericalMethod::GaussSeidel)
-                currErrorNorm = 0.; //GaussSeidelWaterCPU();
-            else
-                std::exit(EXIT_FAILURE);
+            switch(computationType)
+            {
+                case processType::Water:
+                    currErrorNorm = JacobiWaterCPU(vectorX, matrixA, vectorB);
+                    break;
+                case processType::Heat:
+                    currErrorNorm = GaussSeidelHeatCPU(vectorX, matrixA, vectorB);
+                    break;
+                default:
+                    throw std::runtime_error("Process not available");
+            }
 
             if(currErrorNorm < _parameters.residualTolerance)
                 break;

@@ -204,7 +204,7 @@
     // [W m-1 K-1] thermal conductivity of water
     #define KH_H2O 0.57
     // [W m-1 K-1] average thermal conductivity of soil minerals (no quartz)
-    #define KH_mineral 2.5
+    #define mineralHK 2.5
 
     // [W m-2 K-4] Stefan-Boltzmann constant
     #define STEFAN_BOLTZMANN 5.670373E-8

@@ -30,7 +30,7 @@ namespace soilFluxes3D::New
 namespace soilFluxes3D::Water
 {
     /*!
-     * \brief inizializes the water balance variables
+     * \brief initializes the water balance variables
      * \return Ok/Error
      */
     SF3Derror_t initializeWaterBalance()
@@ -41,7 +41,7 @@ namespace soilFluxes3D::Water
         balanceDataCurrentTimeStep.waterStorage = twc;
         balanceDataPreviousTimeStep.waterStorage = twc;
 
-        if(!nodeGrid.isInizialized)
+        if(!nodeGrid.isinitialized)
             return SF3Derror_t::MemoryError;
 
         //Reset link water flows
@@ -60,7 +60,7 @@ namespace soilFluxes3D::Water
      */
     double computeTotalWaterContent()
     {
-        if(!nodeGrid.isInizialized)
+        if(!nodeGrid.isinitialized)
             return -1;
 
         double sum = 0.0;
@@ -110,10 +110,26 @@ namespace soilFluxes3D::Water
 
         #pragma omp parallel for if(__ompStatus) reduction(+:sum)
         for (uint64_t idx = 0; idx < nodeGrid.numNodes; ++idx)
-            if(nodeGrid.waterData.waterFlow[idx] != 0)     //TO DO: move to a ternary operator
+            if(nodeGrid.waterData.waterFlow[idx] != 0)
                 sum += nodeGrid.waterData.waterFlow[idx] * deltaT;
 
         return sum;
+    }
+
+
+    void updateWaterBalanceDataWholePeriod()
+    {
+        balanceDataWholePeriod.waterSinkSource += balanceDataCurrentPeriod.waterSinkSource;
+        double deltaStoragePeriod = balanceDataCurrentTimeStep.waterStorage - balanceDataCurrentPeriod.waterStorage;
+        double deltaStorageHistorical = balanceDataCurrentTimeStep.waterStorage - balanceDataWholePeriod.waterStorage;
+
+        balanceDataCurrentPeriod.waterMBE = deltaStoragePeriod - balanceDataCurrentPeriod.waterSinkSource;
+        balanceDataWholePeriod.waterMBE = deltaStorageHistorical - balanceDataWholePeriod.waterSinkSource;
+
+        double referenceWater = SF3Dmax(0.001, std::fabs(balanceDataWholePeriod.waterSinkSource));
+        balanceDataCurrentTimeStep.waterMBR = balanceDataWholePeriod.waterMBE / referenceWater;
+
+        balanceDataCurrentPeriod.waterStorage = balanceDataCurrentTimeStep.waterStorage;
     }
 
     /*!
@@ -258,7 +274,7 @@ namespace soilFluxes3D::Water
     //TO DO: move to a CPUSolver method
     void computeLinearSystemElement(MatrixCPU& matrixA, VectorCPU& vectorB, const VectorCPU& vectorC, uint8_t approxNum, double deltaT, double lateralVerticalRatio, meanType_t meanType)
     {
-        //#pragma omp parallel for if(__ompStatus)
+        #pragma omp parallel for if(__ompStatus)
         for (uint64_t rowIdx = 0; rowIdx < matrixA.numRows; ++rowIdx)
         {
             uint8_t linkIdx = 1;
@@ -333,14 +349,14 @@ namespace soilFluxes3D::Water
         if(!simulationFlags.computeHeat)
             return true;
 
-        // double thermalLiquidFlux = computeThermalLiquidFlux();
-        // nodeGrid.waterData.invariantFluxes[nodeIndex] += thermalLiquidFlux;
+        double thermalLiquidFlux = computeThermalLiquidFlux(nodeIndex, linkIndex, processType::Water);
+        nodeGrid.waterData.invariantFluxes[nodeIndex] += thermalLiquidFlux;
 
         if(!simulationFlags.computeHeatVapor)
             return true;
 
-        // double thermalVaporFlux = computeThermalVaporFlux();
-        // nodeGrid.waterData.invariantFluxes[nodeIndex] += thermalVaporFlux;
+        double thermalVaporFlux = computeThermalVaporFlux(nodeIndex, linkIndex, processType::Water);
+        nodeGrid.waterData.invariantFluxes[nodeIndex] += thermalVaporFlux;
 
         return true;
     }
@@ -465,13 +481,14 @@ namespace soilFluxes3D::Water
     {
         double infinityNorm = -1;
 
-        double* tempX = (double*) std::calloc(vectorX.numElements, sizeof(double));
+        double* tempX = nullptr;
+        hostAlloc(tempX, double, vectorX.numElements);
         std::memcpy(tempX, vectorB.values, vectorB.numElements * sizeof(double));
 
         #pragma omp parallel for if(__ompStatus) reduction(max:infinityNorm)
-        for (uint64_t rowIdx = 0; rowIdx < matrixA.numRows; ++rowIdx)
+        for(uint64_t rowIdx = 0; rowIdx < matrixA.numRows; ++rowIdx)
         {
-            for (uint8_t colIdx = 1; colIdx < matrixA.numColumns[rowIdx]; ++colIdx)
+            for(uint8_t colIdx = 1; colIdx < matrixA.numColumns[rowIdx]; ++colIdx)
                 tempX[rowIdx] -= matrixA.values[rowIdx][colIdx] * vectorX.values[matrixA.colIndeces[rowIdx][colIdx]];
 
             if(nodeGrid.surfaceFlag[rowIdx] && tempX[rowIdx] < nodeGrid.z[rowIdx])
@@ -488,7 +505,7 @@ namespace soilFluxes3D::Water
         }
 
         std::memcpy(vectorX.values, tempX, vectorX.numElements * sizeof(double));
-        free(tempX);
+        hostFree(tempX);
         return infinityNorm;
     }
 
@@ -525,7 +542,7 @@ namespace soilFluxes3D::Water
         #pragma omp parallel for if(__ompStatus)
         for (uint64_t nodeIdx = 0; nodeIdx < nodeGrid.numNodes; ++nodeIdx)
         {
-            //Inizialize: water sink.source
+            //initialize: water sink.source
             nodeGrid.waterData.waterFlow[nodeIdx] = nodeGrid.waterData.waterSinkSource[nodeIdx];   //TO DO: evaluate move to a memcpy
 
             if(nodeGrid.boundaryData.boundaryType[nodeIdx] == boundaryType_t::NoBoundary)
@@ -574,7 +591,7 @@ namespace soilFluxes3D::Water
                     boundaryPsi = nodeGrid.boundaryData.prescribedWaterPotential[nodeIdx] - boundaryZ;
 
                     boundaryK = (boundaryPsi >= 0)  ? nodeGrid.soilSurfacePointers[nodeIdx].soilPtr->K_sat
-                                                    : computeNodeK_Mualem(*(nodeGrid.soilSurfacePointers[nodeIdx].soilPtr), computeNodeSe_fromPsi(nodeIdx, std::fabs(boundaryPsi)));
+                                                    : computeMualemSoilConductivity(*(nodeGrid.soilSurfacePointers[nodeIdx].soilPtr), computeNodeSe_fromPsi(nodeIdx, std::fabs(boundaryPsi)));
 
                     meanK = computeMean(boundaryK, nodeGrid.waterData.waterConductivity[nodeIdx], solver->getMeanType());
                     dH = nodeGrid.boundaryData.prescribedWaterPotential[nodeIdx] - nodeGrid.waterData.pressureHead[nodeIdx];
@@ -585,8 +602,43 @@ namespace soilFluxes3D::Water
                 case boundaryType_t::HeatSurface:
                     if(!simulationFlags.computeHeat && !simulationFlags.computeHeatVapor)
                         break;
-                    //TO DO: complete
 
+                    uint64_t upIndex;
+                    upIndex = nodeGrid.linkData[toUnderlyingT(linkType_t::Up)].linkIndex[nodeIdx];
+                    double surfaceWaterFraction;
+                    surfaceWaterFraction = 0.;
+
+                    if(upIndex != toUnderlyingT(linkType_t::NoLink))
+                        surfaceWaterFraction = getNodeSurfaceWaterFraction(upIndex);
+
+                    double soilEvaporation;
+                    soilEvaporation = computeNodeAtmosphericLatentHeatFlux(nodeIdx) / WATER_DENSITY * nodeGrid.size[nodeIdx];
+
+                    if(surfaceWaterFraction > 0.) //check upIndex != toUnderlyingT(linkType_t::NoLink) superfluo.
+                    {
+                        double surfEvaporation = computeNodeAtmosphericLatentSurfaceWaterFlux(nodeIdx) / WATER_DENSITY * nodeGrid.size[nodeIdx];
+
+                        soilEvaporation *= (1. - surfaceWaterFraction);
+                        surfEvaporation *= surfaceWaterFraction;
+
+                        double waterVolume = (nodeGrid.waterData.pressureHead[nodeIdx] - nodeGrid.z[nodeIdx]) * nodeGrid.size[nodeIdx];
+                        surfEvaporation = SF3Dmax(surfEvaporation, -waterVolume / deltaT);
+
+                        if(nodeGrid.boundaryData.boundaryType[upIndex] != boundaryType_t::NoBoundary)
+                            nodeGrid.boundaryData.waterFlowRate[upIndex] = surfEvaporation;
+                        else
+                            nodeGrid.waterData.waterFlow[upIndex] += surfEvaporation;
+                    }
+
+                    double thetaR, thetaS, thetaV;
+                    thetaR = nodeGrid.soilSurfacePointers[nodeIdx].soilPtr->Theta_r;
+                    thetaS = nodeGrid.soilSurfacePointers[nodeIdx].soilPtr->Theta_s;
+                    thetaV = computeNodeTheta(nodeIdx);
+
+                    soilEvaporation = (soilEvaporation < 0.) ? SF3Dmax(soilEvaporation, -(thetaV - thetaR) * nodeGrid.size[nodeIdx] / deltaT)
+                                                             : SF3Dmin(soilEvaporation, (thetaS - thetaR) * nodeGrid.size[nodeIdx] / deltaT);
+
+                    nodeGrid.boundaryData.waterFlowRate[nodeIdx] = soilEvaporation;
                     break;
 
                 default:

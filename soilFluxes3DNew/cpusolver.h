@@ -15,13 +15,17 @@ namespace soilFluxes3D::New
 
             void waterMainLoop(double maxTimeStep, double& acceptedTimeStep);
             balanceResult_t waterApproximationLoop(double deltaT);
+
+            void heatLoop(double timeStepHeat, double timeStepWater);
+
+
             bool solveLinearSystem(uint8_t approximationNumber, processType computationType) override;
 
         public:
             CPUSolver() : Solver(solverType::CPU, numericalMethod::Jacobi) {}
             __cudaSpec double getMatrixElementValue(uint64_t rowIndex, uint64_t colIndex) const noexcept;
 
-            SF3Derror_t inizialize() override;
+            SF3Derror_t initialize() override;
             SF3Derror_t run(double maxTimeStep, double &acceptedTimeStep, processType process) override;
             SF3Derror_t clean() override;
     };
