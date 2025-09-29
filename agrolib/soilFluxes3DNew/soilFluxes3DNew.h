@@ -8,11 +8,13 @@ namespace soilFluxes3D::New
 {
     //Inizializazion and memory management
     SF3Derror_t initializeSF3D(uint64_t nrNodes, uint16_t nrLayers, uint8_t nrLateralLinks, bool isComputeWater, bool isComputeHeat, bool isComputeSolutes, heatFluxSaveMode_t HFsm = heatFluxSaveMode_t::None);
-    SF3Derror_t inizializeBalance();
-    SF3Derror_t inizializeLog(const std::string &logPath, const std::string &projectName);
+    SF3Derror_t initializeBalance();
+    SF3Derror_t initializeLog(const std::string& logPath, const std::string& projectName);
 
     SF3Derror_t cleanSF3D();
     SF3Derror_t closeLog();
+
+    SF3Derror_t initializeHeatFlag(heatFluxSaveMode_t saveModeHeat, bool isComputeAdvectiveFlux, bool isComputeLatentHeat);
 
     uint32_t setThreadsNumber(uint32_t nrThreads);
 
@@ -27,7 +29,7 @@ namespace soilFluxes3D::New
     //Set topology
     SF3Derror_t setNode(uint64_t index, double x, double y, double z, double volume_or_area, bool isSurface, boundaryType_t boundaryType, double slope = 0, double boundaryArea = 0);
     SF3Derror_t setNodeLink(uint64_t nodeIndex, uint64_t linkIndex, linkType_t direction, double interfaceArea);
-    /* not used */ SF3Derror_t setCulvert(uint64_t nodeIndex, double roughness, double slope, double width, double height);
+    /*TO DO*/ SF3Derror_t setCulvert(uint64_t nodeIndex, double roughness, double slope, double width, double height);
 
     //Set soil data
     SF3Derror_t setNodeSoil(uint64_t nodeIndex, uint16_t soilIndex, uint16_t horizonIndex);
@@ -61,10 +63,37 @@ namespace soilFluxes3D::New
     double getTotalBoundaryWaterFlow(boundaryType_t boundaryType);
     double getTotalWaterContent();
     double getWaterStorage();
-    /*not used*/ double getWaterMBR();
+    double getWaterMBR();
+
+    //Set heat data
+    SF3Derror_t setNodeHeatSinkSource(uint64_t nodeIndex, double heatSinkSource);
+    SF3Derror_t setNodeTemperature(uint64_t nodeIndex, double temperature);
+    SF3Derror_t setNodeBoundaryFixedTemperature(uint64_t nodeIndex, double fixedTemperature, double depth);
+    SF3Derror_t setNodeBoundaryHeightWind(uint64_t nodeIndex, double heightWind);
+    SF3Derror_t setNodeBoundaryHeightTemperature(uint64_t nodeIndex, double heightTemperature);
+    SF3Derror_t setNodeBoundaryNetIrradiance(uint64_t nodeIndex, double netIrradiance);
+    SF3Derror_t setNodeBoundaryTemperature(uint64_t nodeIndex, double temperature);
+    SF3Derror_t setNodeBoundaryRelativeHumidity(uint64_t nodeIndex, double relativeHumidity);
+    SF3Derror_t setNodeBoundaryRoughness(uint64_t nodeIndex, double roughness);
+    SF3Derror_t setNodeBoundaryWindSpeed(uint64_t nodeIndex, double windSpeed);
+
+    //Get heat data
+    double getNodeTemperature(uint64_t nodeIndex);
+    double getNodeHeatConductivity(uint64_t nodeIndex);
+    double getNodeVapor(uint64_t nodeIndex);
+    /*Rename?*/ double getNodeHeat(uint64_t nodeIndex, double h);                                           //nodeHeatStorage
+    /*Rename?*/ double getNodeHeatFlux(uint64_t nodeIndex, linkType_t linkDirection, fluxTypes_t fluxType); //nodeMaxHeatFlux
+    double getNodeBoundaryAdvectiveFlux(uint64_t nodeIndex);
+    double getNodeBoundaryLatentFlux(uint64_t nodeIndex);
+    double getNodeBoundaryRadiativeFlux(uint64_t nodeIndex);
+    double getNodeBoundarySensibleFlux(uint64_t nodeIndex);
+    double getNodeBoundaryAerodynamicConductance(uint64_t nodeIndex);
+    double getNodeBoundarySoilConductance(uint64_t nodeIndex);
+    double getHeatMBR();
+    double getHeatMBE();
 
     //Computations
-    /*not used*/ void computePeriod();
+    void computePeriod(double timePeriod);      //move to a SF3Derror_t return
     double computeStep(double maxTimeStep);
 
 }

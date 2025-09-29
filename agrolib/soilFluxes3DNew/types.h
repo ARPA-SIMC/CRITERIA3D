@@ -6,8 +6,11 @@
 #include <cmath>
 #include <vector>
 #include <string>
+#include <type_traits>
 #include <thread>
 #include <omp.h>
+
+#include <macro.h>
 
 #include "commonConstants.h"
 
@@ -17,7 +20,7 @@ namespace soilFluxes3D::New
     #define maxTotalLink (maxLateralLink + 2)
     #define maxMatrixColumns (maxTotalLink + 1)
 
-    #define numHeatFluxTypes 9
+    #define numTotalFluxTypes 9
 
     #define noData 0
     #define UINTFLAG UINT64_MAX
@@ -134,6 +137,9 @@ namespace soilFluxes3D::New
     };
 
     enum class fluxTypes_t : uint8_t {HeatTotal, HeatDiffusive, HeatLatentIsothermal, HeatLatentThermal, HeatAdvective, WaterLiquidIsothermal, WaterLiquidThermal, WaterVaporIsothermal, WaterVaporThermal};
+    constexpr fluxTypes_t heatFluxIndeces[] = {fluxTypes_t::HeatTotal, fluxTypes_t::HeatDiffusive, fluxTypes_t::HeatLatentIsothermal, fluxTypes_t::HeatLatentThermal, fluxTypes_t::HeatAdvective};
+    constexpr fluxTypes_t waterFluxIndeces[] = {fluxTypes_t::WaterLiquidIsothermal, fluxTypes_t::WaterLiquidThermal, fluxTypes_t::WaterVaporIsothermal, fluxTypes_t::WaterVaporThermal};
+
     struct linkData_t
     {
         linkType_t *linkType = nullptr;
@@ -146,7 +152,7 @@ namespace soilFluxes3D::New
         //heat data
         double *waterFlux = nullptr;                    /*!< [m3 s-1] water volume flux*/
         double *vaporFlux = nullptr;                    /*!< [kg s-1] vapor mass flux*/
-        double *fluxes[numHeatFluxTypes] = {nullptr};   /*!< [W] for heat fluxes; [m3 s-1] for water fluxes */
+        double *fluxes[numTotalFluxTypes] = {nullptr};   /*!< [W] for heat fluxes; [m3 s-1] for water fluxes */
     };
 
     //Boundary
@@ -178,13 +184,13 @@ namespace soilFluxes3D::New
         double *radiativeFlux = nullptr;            /*!< [W m-2] boundary net radiative flux density */
         double *advectiveHeatFlux = nullptr;        /*!< [W m-2] boundary advective heat flux density  */
 
-        double *fixedTemperature = nullptr;         /*!< [K] fixed temperature */
+        double *fixedTemperatureValue = nullptr;         /*!< [K] fixed temperature */
         double *fixedTemperatureDepth = nullptr;    /*!< [m] depth of fixed temperature layer */
     };
 
     struct nodesData_t
     {
-        bool isInizialized = false;
+        bool isinitialized = false;
 
         uint64_t numNodes = 0;
         uint64_t numLayers = 0;
@@ -210,13 +216,12 @@ namespace soilFluxes3D::New
 
         //Heat and solutes quantities
         heatData_t heatData;
-
     };
 
     //Solver
     enum class numericalMethod : uint8_t {Jacobi, GaussSeidel};
     enum class solverType : uint8_t  {CPU, GPU};
-    enum class solverStatus : uint8_t {Error, Created, Inizialized, Launched, Terminated};
+    enum class solverStatus : uint8_t {Error, Created, initialized, Launched, Terminated};
 
     struct SolverParameters
     {
@@ -242,6 +247,14 @@ namespace soilFluxes3D::New
         bool enableOMP = true;
         uint32_t numThreads = std::thread::hardware_concurrency();
     };
+
+    //Move to a different location?
+    template<typename E>
+    /*__cudaSpec*/ constexpr auto castToUnderlyingType(E value)
+    {
+        static_assert(std::is_enum_v<E>, "type required to be enum to be casted");
+        return static_cast<std::underlying_type_t<E>>(value);
+    }
 }
 
 #include "types_opt.h"

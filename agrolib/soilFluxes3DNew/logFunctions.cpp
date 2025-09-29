@@ -4,7 +4,7 @@ namespace soilFluxes3D::Log
 {
     logData_t logData;
 
-    SF3Derror_t inizializeLogData(const std::string& logPath, const std::string& projectName)
+    SF3Derror_t initializeLogData(const std::string& logPath, const std::string& projectName)
     {
         if((logPath == "") || (projectName == "default"))
             return SF3Derror_t::SF3Dok;
@@ -14,11 +14,11 @@ namespace soilFluxes3D::Log
         logData.fileCounter = 0;
         logData.numStepDone = 0;
 
-        inizializeLogStructure();
+        initializeLogStructure();
         return SF3Derror_t::SF3Dok;
     }
 
-    void inizializeLogStructure()
+    void initializeLogStructure()
     {
         if(logData.mainStruct != nullptr)
             mxDestroyArray(logData.mainStruct);
@@ -34,7 +34,7 @@ namespace soilFluxes3D::Log
             writeLogFile();
 
         if(logData.mainStruct == nullptr)
-            inizializeLogStructure();
+            initializeLogStructure();
 
         mxSetField(mxGetField(logData.mainStruct, 0, logData.masterFieldsNames[1]), logData.numStepDone, getFieldName(approxFieldsMap, approxFieldsKeys::stepRes), mxCreateLogicalScalar(stepResult));
         createBinData(logData.numStepDone, matrix, vectorB, vectorX);

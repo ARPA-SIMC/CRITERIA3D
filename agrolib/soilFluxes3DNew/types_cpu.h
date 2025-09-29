@@ -54,6 +54,16 @@ namespace soilFluxes3D::New
         return SF3Derror_t::SF3Dok;
     }
 
+    template<typename T>
+    inline SF3Derror_t fillHostPointer(T*& ptr, const std::size_t count, const T value)
+    {
+        if(ptr == nullptr)
+            return SF3Derror_t::MemoryError;
+
+        std::fill(ptr, ptr + count, value);
+        return SF3Derror_t::SF3Dok;
+    }
+
 }
 
 

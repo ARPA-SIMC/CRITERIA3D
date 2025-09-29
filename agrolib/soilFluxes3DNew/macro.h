@@ -14,8 +14,12 @@
     #define __STDCALL
 #endif
 
+//Generic functions
+#define toUnderlyingT(enumValue) castToUnderlyingType(enumValue)
+
 //CPU base
 #define hostAlloc(ptr, type, count) allocHostPointer(ptr, count)
+#define hostFill(ptr, count, value) fillHostPointer(ptr, count, value)
 #define hostReset(ptr, count) resetHostPointer(ptr, count)
 #define hostFree(ptr) freeHostPointer(ptr)
 

@@ -278,7 +278,7 @@ namespace soilFluxes3D
 
         nodeList[myIndex].isSurface = isSurface;
 
-        //pond inizialized at 0.0001 if isSurface
+        //pond initialized at 0.0001 if isSurface
         nodeList[myIndex].pond = isSurface ? 0.0001f : NODATA;         // [m]
 
         nodeList[myIndex].waterSinkSource = 0.;
@@ -1036,7 +1036,7 @@ namespace soilFluxes3D
 
 
     /*!
-     * \brief computePeriodAdd commentMore actions
+     * \brief computePeriod
      * compute water and heat fluxes for a time period (maximum 1 hour)
      * assume that meteo conditions are constant during the time period
      * \param timePeriod     [s]

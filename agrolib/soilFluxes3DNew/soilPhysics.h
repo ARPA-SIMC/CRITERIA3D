@@ -4,6 +4,7 @@
 #include "macro.h"
 #include "types_cpu.h"
 
+using namespace soilFluxes3D::New;
 namespace soilFluxes3D::Soil
 {
     __cudaSpec double computeNodeTheta(uint64_t nodeIndex);
@@ -19,12 +20,14 @@ namespace soilFluxes3D::Soil
     /*not used*/ double computeNodePsi_fromSe(uint64_t nodeIndex, double Se);
 
     __cudaSpec double computeNodeK(uint64_t nodeIndex);
-    __cudaSpec double computeNodeK_Mualem(soilFluxes3D::New::soilData_t& soilData, double Se);
+    __cudaSpec double computeMualemSoilConductivity(soilData_t& soilData, double Se);
 
     __cudaSpec double computeNodedThetadH(uint64_t nodeIndex);
-    /*TO DO*/ __cudaSpec double computeNodedThetaVdH(uint64_t nodeIndex, double temperature, double dThetadH);
+    __cudaSpec double computeNodedThetaVdH(uint64_t nodeIndex, double temperature, double dThetadH);
 
     __cudaSpec double getNodeMeanTemperature(uint64_t nodeIndex);
+
+    __cudaSpec double getNodeSurfaceWaterFraction(uint64_t nodeIndex);
 
     __cudaSpec double nodeDistance2D(uint64_t idx1, uint64_t idx2);
     __cudaSpec double nodeDistance3D(uint64_t idx1, uint64_t idx2);

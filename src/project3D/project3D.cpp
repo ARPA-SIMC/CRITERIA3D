@@ -1232,7 +1232,7 @@ void Project3D::runWaterFluxes3DModel(double totalTimeStep, bool isRestart)
     {
         currentSeconds = 0;                                 // [s]
         soilFluxes3D::initializeBalance();
-        soilFluxes3D::New::inizializeBalance();
+        soilFluxes3D::New::initializeBalance();
 
         previousTotalWaterContent = soilFluxes3D::getTotalWaterContent();       // [m3]
         double previousTotalWaterContentNew = soilFluxes3D::New::getTotalWaterContent();

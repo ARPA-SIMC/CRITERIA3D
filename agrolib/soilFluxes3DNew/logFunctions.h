@@ -79,8 +79,8 @@ namespace soilFluxes3D::Log
     };
 
 
-    SF3Derror_t inizializeLogData(const std::string &logPath, const std::string &projectName);
-    void inizializeLogStructure();
+    SF3Derror_t initializeLogData(const std::string &logPath, const std::string &projectName);
+    void initializeLogStructure();
     void createCurrStepLog(const MatrixCPU& matrix, const VectorCPU& vectorB, const VectorCPU& vectorX, bool stepResult);
     void createBinData(uint16_t stepNum, const MatrixCPU& matrix, const VectorCPU& vectorB, const VectorCPU& vectorX);
     SF3Derror_t writeLogFile();

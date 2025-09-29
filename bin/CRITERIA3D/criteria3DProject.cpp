@@ -1263,7 +1263,7 @@ bool Crit3DProject::loadCriteria3DProject(const QString &fileName)
     }
 
     //TO DO: integrate with a specific flag in the UI and/or a specific shell command
-    soilFluxes3D::New::inizializeLog(getFilePath(getCompleteFileName(logFileName, PATH_LOG)).toStdString(), projectName.toStdString());
+    soilFluxes3D::New::initializeLog(getFilePath(getCompleteFileName(logFileName, PATH_LOG)).toStdString(), projectName.toStdString());
 
     if (meteoPointsLoaded)
     {

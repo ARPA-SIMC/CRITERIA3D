@@ -45,7 +45,7 @@ namespace soilFluxes3D::New
 
             __cudaSpec double getMatrixElementValue(uint64_t rowIndex, uint64_t colIndex) const noexcept;
 
-            SF3Derror_t inizialize() override;
+            SF3Derror_t initialize() override;
             SF3Derror_t run(double maxTimeStep, double &acceptedTimeStep, processType process) override;
             SF3Derror_t clean() override;
     };
@@ -70,7 +70,7 @@ namespace soilFluxes3D::New
         return 0.;
     }
 
-    __global__ void inizializeCapacityAndSaturationDegree_k(double *vectorC);
+    __global__ void initializeCapacityAndSaturationDegree_k(double *vectorC);
     __global__ void computeCapacity_k(double *vectorC);
     __global__ void updateBoundaryWaterData_k(double deltaT);
 

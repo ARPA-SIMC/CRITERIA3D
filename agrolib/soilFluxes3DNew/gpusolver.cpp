@@ -21,7 +21,7 @@ namespace soilFluxes3D::New
     extern std::vector<std::vector<soilData_t>> soilList;
     extern std::vector<surfaceData_t> surfaceList;
 
-    SF3Derror_t GPUSolver::inizialize()
+    SF3Derror_t GPUSolver::initialize()
     {
         if(_status != solverStatus::Created)
             return SF3Derror_t::SolverError;
@@ -38,7 +38,7 @@ namespace soilFluxes3D::New
 
         cuspCheck(cusparseCreate(&libHandle));
 
-        //Inizialize matrix data
+        //initialize matrix data
         iterationMatrix.numRows = static_cast<int64_t>(nodeGrid.numNodes);
         iterationMatrix.numCols = static_cast<int64_t>(nodeGrid.numNodes);
         iterationMatrix.sliceSize = static_cast<int64_t>(numThreadsPerBlock);
@@ -54,7 +54,7 @@ namespace soilFluxes3D::New
 
         deviceSolverAlloc(iterationMatrix.d_diagonalValues, double, iterationMatrix.numRows);
 
-        //Inizialize vectors data
+        //initialize vectors data
         constantTerm.numElements = nodeGrid.numNodes;
         deviceSolverAlloc(constantTerm.d_values, double, constantTerm.numElements);
 
@@ -64,13 +64,13 @@ namespace soilFluxes3D::New
         tempSolution.numElements = nodeGrid.numNodes;
         deviceSolverAlloc(tempSolution.d_values, double, tempSolution.numElements);
 
-        //Inizialize cuSPARSE descriptor
+        //initialize cuSPARSE descriptor
         createCUsparseDescriptors();
 
-        //Inizialize raw capacity vector
+        //initialize raw capacity vector
         deviceSolverAlloc(d_Cvalues, double, nodeGrid.numNodes);
 
-        _status = solverStatus::Inizialized;
+        _status = solverStatus::initialized;
         return SF3Derror_t::SF3Dok;
     }
 
@@ -113,7 +113,7 @@ namespace soilFluxes3D::New
 
     SF3Derror_t GPUSolver::run(double maxTimeStep, double &acceptedTimeStep, processType process)
     {
-        if(_status != solverStatus::Inizialized)
+        if(_status != solverStatus::initialized)
             return SF3Derror_t::SolverError;
 
         if(maxTimeStep == HOUR_SECONDS)
@@ -125,8 +125,10 @@ namespace soilFluxes3D::New
                 waterMainLoop(maxTimeStep, acceptedTimeStep);
                 break;
             case processType::Heat:
+                throw std::runtime_error("Heat not available with GPUSolver");
                 break;
             case processType::Solutes:
+                throw std::runtime_error("Solutes not available with GPUSolver");
                 break;
             default:
                 break;
@@ -136,7 +138,7 @@ namespace soilFluxes3D::New
         if(acceptedTimeStep == maxTimeStep)
             downCopyData();
 
-        _status = solverStatus::Inizialized;
+        _status = solverStatus::initialized;
         return SF3Derror_t::SF3Dok;
     }
 
@@ -145,7 +147,7 @@ namespace soilFluxes3D::New
         if(_status == solverStatus::Created)
             return SF3Derror_t::SF3Dok;
 
-        if((_status != solverStatus::Terminated) && (_status != solverStatus::Inizialized))
+        if((_status != solverStatus::Terminated) && (_status != solverStatus::initialized))
             return SF3Derror_t::SolverError;
 
         deviceSolverFree(iterationMatrix.d_numColsInRow);
@@ -186,14 +188,14 @@ namespace soilFluxes3D::New
             //Save instantaneus H values
             cudaMemcpy(nodeGrid.waterData.oldPressureHeads, nodeGrid.waterData.pressureHead, nodeGrid.numNodes * sizeof(double), cudaMemcpyDeviceToDevice);
 
-            //Inizialize the solution vector with the current pressure head
+            //initialize the solution vector with the current pressure head
             assert(unknownTerm.numElements == nodeGrid.numNodes);
             cudaMemcpy(unknownTerm.d_values, nodeGrid.waterData.pressureHead, nodeGrid.numNodes * sizeof(double), cudaMemcpyDeviceToDevice);
 
-            launchKernel(inizializeCapacityAndSaturationDegree_k, d_Cvalues);
+            launchKernel(initializeCapacityAndSaturationDegree_k, d_Cvalues);
 
             //Update aereodynamic and soil conductance
-            //updateConductance();      //TO DO (Heat)
+            updateConductance();
 
             //Update boundary
             launchKernel(updateBoundaryWaterData_k, acceptedTimeStep);
@@ -436,7 +438,7 @@ namespace soilFluxes3D::New
 
     double GPUSolver::computeTotalWaterContent_m()
     {
-        if(!nodeGrid.isInizialized)
+        if(!nodeGrid.isinitialized)
             return -1;
 
         double* d_waterContentVector = nullptr;
@@ -718,7 +720,7 @@ namespace soilFluxes3D::New
 
     extern __cudaMngd Solver* solver;
 
-    __global__ void inizializeCapacityAndSaturationDegree_k(double* vectorC)    //TO DO: refactor with host code in single __host__ __device__ function
+    __global__ void initializeCapacityAndSaturationDegree_k(double* vectorC)    //TO DO: refactor with host code in single __host__ __device__ function
     {
         uint64_t nodeIdx = (blockIdx.x * blockDim.x) + threadIdx.x;
         if(nodeIdx >= nodeGrid.numNodes)
@@ -804,7 +806,7 @@ namespace soilFluxes3D::New
                 boundaryPsi = nodeGrid.boundaryData.prescribedWaterPotential[nodeIdx] - boundaryZ;
 
                 boundaryK = (boundaryPsi >= 0)  ? nodeGrid.soilSurfacePointers[nodeIdx].soilPtr->K_sat
-                                               : computeNodeK_Mualem(*(nodeGrid.soilSurfacePointers[nodeIdx].soilPtr), computeNodeSe_fromPsi(nodeIdx, fabs(boundaryPsi)));
+                                               : computeMualemSoilConductivity(*(nodeGrid.soilSurfacePointers[nodeIdx].soilPtr), computeNodeSe_fromPsi(nodeIdx, fabs(boundaryPsi)));
 
                 meanK = computeMean(boundaryK, nodeGrid.waterData.waterConductivity[nodeIdx], (*solver).getMeanType());
                 dH = nodeGrid.boundaryData.prescribedWaterPotential[nodeIdx] - nodeGrid.waterData.pressureHead[nodeIdx];

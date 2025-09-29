@@ -461,12 +461,12 @@ double SoilHeatConductivity(long i, double T, double h)
 
     ea = (2. / (1 + (Ka / Kf - 1) * ga) + 1 / (1 + (Ka / Kf - 1) * gc)) / 3.;
 	ew = (2. / (1 + (Kw / Kf - 1) * ga) + 1 / (1 + (Kw / Kf - 1) * gc)) / 3.;
-    es = (2. / (1 + (KH_mineral / Kf - 1) * ga) + 1 / (1 + (KH_mineral / Kf - 1) * gc)) / 3.;
+    es = (2. / (1 + (mineralHK / Kf - 1) * ga) + 1 / (1 + (mineralHK / Kf - 1) * gc)) / 3.;
 
 	xs = 1. - nodeList[i].Soil->Theta_s;
 	xa = nodeList[i].Soil->Theta_s - xw;
 
-    myConductivity = (xw * ew * Kw + xa * ea * Ka + xs * es * KH_mineral) / (ew * xw + ea * xa + es * xs);
+    myConductivity = (xw * ew * Kw + xa * ea * Ka + xs * es * mineralHK) / (ew * xw + ea * xa + es * xs);
     return myConductivity;
 }
 
