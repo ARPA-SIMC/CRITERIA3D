@@ -41,8 +41,7 @@
 #include "shell.h"
 
 #include <iostream>
-#include <QVector3D>
-#include <float.h>
+#include <omp.h>
 
 
 Crit3DProject::Crit3DProject() : Project3D()
@@ -1678,9 +1677,9 @@ bool Crit3DProject::initializeSnowModel()
 }
 
 
-void Crit3DProject::computeSnowPoint(int row, int col)
+void Crit3DProject::computeSnowPoint(Crit3DSnow &snowPoint, int row, int col)
 {
-    snowMaps.setPoint(snowModel, row, col);
+    snowMaps.setPoint(snowPoint, row, col);
 
     double airT = hourlyMeteoMaps->mapHourlyTair->value[row][col];
     double prec = hourlyMeteoMaps->mapHourlyPrec->value[row][col];
@@ -1692,11 +1691,11 @@ void Crit3DProject::computeSnowPoint(int row, int col)
     double clearSkyTrans = radSettings.getClearSky();
     double myWaterContent = 0;                              // [mm]
 
-    snowModel.setSnowInputData(airT, prec, relHum, windInt, globalRad, beamRad, transmissivity, clearSkyTrans, myWaterContent);
+    snowPoint.setSnowInputData(airT, prec, relHum, windInt, globalRad, beamRad, transmissivity, clearSkyTrans, myWaterContent);
 
-    snowModel.computeSnowBrooksModel();
+    snowPoint.computeSnowBrooksModel();
 
-    snowMaps.updateMapRowCol(snowModel, row, col);
+    snowMaps.updateMapRowCol(snowPoint, row, col);
 }
 
 
@@ -1735,24 +1734,33 @@ bool Crit3DProject::computeSnowModel()
                 DEM.getRowCol(x, y, row, col);
                 if (! gis::isOutOfGridRowCol(row, col, DEM))
                 {
-                    computeSnowPoint(row, col);
+                    computeSnowPoint(snowModel, row, col);
                 }
             }
         }
     }
     else
     {
-        for (int row = 0; row < DEM.header->nrRows; row++)
+        /*+++++++++++ parallel computing ++++++++++++*/
+        unsigned int maxThreads = omp_get_max_threads();
+        omp_set_num_threads(static_cast<int>(maxThreads));
+
+        #pragma omp parallel
         {
-            for (int col = 0; col < DEM.header->nrCols; col++)
+            Crit3DSnow snowPoint = snowModel;
+            #pragma omp for
+            for (int row = 0; row < DEM.header->nrRows; row++)
             {
-                if (! isEqual(DEM.value[row][col], DEM.header->flag))
+                for (int col = 0; col < DEM.header->nrCols; col++)
                 {
-                    computeSnowPoint(row, col);
-                }
-                else
-                {
-                    snowMaps.flagMapRowCol(row, col);
+                    if (! isEqual(DEM.value[row][col], DEM.header->flag))
+                    {
+                        computeSnowPoint(snowPoint, row, col);
+                    }
+                    else
+                    {
+                        snowMaps.flagMapRowCol(row, col);
+                    }
                 }
             }
         }

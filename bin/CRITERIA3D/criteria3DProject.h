@@ -133,7 +133,7 @@
         void setRothCVariables(int row, int col, int month);
 
         bool computeSnowModel();
-        void computeSnowPoint(int row, int col);
+        void computeSnowPoint(Crit3DSnow &snowPoint, int row, int col);
 
         bool checkProcesses();
 
