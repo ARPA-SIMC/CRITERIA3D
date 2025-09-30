@@ -73,6 +73,8 @@
         QString _appPath;
         QString _defaultPath;
         QString _projectPath;
+        QString _projectName;
+        QString _currentTileMap;
 
         frequencyType _currentFrequency;
         meteoVariable _currentVariable;
@@ -90,10 +92,6 @@
         void clearMeteoPoints();
         bool createDefaultProject(const QString &fileName);
         bool searchDefaultPath(QString &defaultPath);
-
-    protected:
-        QString _projectName;
-        QString _currentTileMap;
 
     public:
         int modality;
@@ -228,6 +226,8 @@
 
         QString getRelativePath(QString fileName) const;
         QString getCompleteFileName(QString fileName, QString secondaryPath);
+
+        QString getCurrentTileMap() const { return _currentTileMap; }
 
         bool setLogFile(QString myFileName);
 
