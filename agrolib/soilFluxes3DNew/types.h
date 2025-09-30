@@ -91,11 +91,12 @@ namespace soilFluxes3D::New
 
     struct culvertData_t
     {
-        uint64_t index;
-        double width;				/*!< [m] */
-        double height;				/*!< [m] */
-        double roughness;			/*!< [s m-1/3] Manning roughness */
-        double slope;				/*!< [-] */
+        bool isActive = false;
+        uint64_t index = noData;
+        double width = noData;				/*!< [m] */
+        double height = noData;				/*!< [m] */
+        double roughness = noData;			/*!< [s m-1/3] Manning roughness */
+        double slope = noData;				/*!< [-] */
     };
 
     //Heat
@@ -190,7 +191,7 @@ namespace soilFluxes3D::New
 
     struct nodesData_t
     {
-        bool isinitialized = false;
+        bool isInitialized = false;
 
         uint64_t numNodes = 0;
         uint64_t numLayers = 0;
@@ -213,6 +214,9 @@ namespace soilFluxes3D::New
 
         //Water quantities
         waterData_t waterData;
+
+        //Culvert data
+        culvertData_t culvertData;
 
         //Heat and solutes quantities
         heatData_t heatData;

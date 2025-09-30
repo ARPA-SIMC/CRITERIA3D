@@ -41,7 +41,7 @@ namespace soilFluxes3D::Water
         balanceDataCurrentTimeStep.waterStorage = twc;
         balanceDataPreviousTimeStep.waterStorage = twc;
 
-        if(!nodeGrid.isinitialized)
+        if(!nodeGrid.isInitialized)
             return SF3Derror_t::MemoryError;
 
         //Reset link water flows
@@ -60,7 +60,7 @@ namespace soilFluxes3D::Water
      */
     double computeTotalWaterContent()
     {
-        if(!nodeGrid.isinitialized)
+        if(!nodeGrid.isInitialized)
             return -1;
 
         double sum = 0.0;
@@ -653,7 +653,53 @@ namespace soilFluxes3D::Water
                 nodeGrid.waterData.waterFlow[nodeIdx] += nodeGrid.boundaryData.waterFlowRate[nodeIdx];
         }
 
-        //TO DO: implement Culvert
+        //Culvert -> need to be moved in the switch block?
+        if(!nodeGrid.culvertData.isActive)
+            return;
+
+        uint64_t culvertIndex = nodeGrid.culvertData.index;
+
+        double culvertHeight = nodeGrid.culvertData.height;
+        double culvertWidth = nodeGrid.culvertData.width;
+        double culvertRoughness = nodeGrid.culvertData.roughness;
+        double culvertSlope = nodeGrid.culvertData.slope;
+        double waterLevel = 0.5 * (nodeGrid.waterData.pressureHead[culvertIndex] - nodeGrid.waterData.oldPressureHeads[culvertIndex]) - nodeGrid.z[culvertIndex];
+        double flow = 0.;
+
+        if(waterLevel >= 1.5 * culvertHeight)
+        {
+            //Pressure flow (Hazen-Williams equation) (roughness = 70. - rough concrete)
+            double equivalentDiameter = std::sqrt(4. * culvertWidth * culvertHeight / PI);
+            flow = (70. * std::pow(culvertSlope, 0.54)) * std::pow(equivalentDiameter, 2.63) / 3.591;
+        }
+        else if(waterLevel >= culvertHeight)
+        {
+            //Mixed flow: open channel and pressure
+            double wettedPerimeter = culvertWidth + 2. * culvertHeight;
+            double hydraulicRadius = nodeGrid.boundaryData.boundarySize[culvertIndex] / wettedPerimeter;
+
+            //Maximum Mannig flow [m3 s-1]
+            double ManningFlow = (nodeGrid.boundaryData.boundarySize[culvertIndex] / culvertRoughness) * std::sqrt(culvertSlope) * std::pow(hydraulicRadius, 2./3.);
+            //Pressure flow (Hazen-Williams equation) (roughness = 70. - rough concrete)
+            double equivalentDiameter = std::sqrt(4. * culvertWidth * culvertHeight / PI);
+            double pressureFlow = (70. * std::pow(culvertSlope, 0.54)) * std::pow(equivalentDiameter, 2.63) / 3.591;
+
+            double weight = (waterLevel - culvertHeight) / (0.5 * culvertHeight);
+            flow = weight * pressureFlow + (1. - weight) * ManningFlow;
+        }
+        else if(waterLevel > nodeGrid.waterData.pond[culvertIndex])
+        {
+            //Open channel flow
+            double boundaryArea = culvertWidth * waterLevel;
+            double wettedPerimeter = culvertWidth + 2. * waterLevel;
+            double hydraulicRadius = boundaryArea / wettedPerimeter;
+
+            flow = (boundaryArea / culvertRoughness) * std::sqrt(culvertSlope) * std::pow(hydraulicRadius, 2./3.);
+        }
+
+        nodeGrid.boundaryData.waterFlowRate[culvertIndex] = - flow;
+        nodeGrid.waterData.waterFlow[culvertIndex] -= flow;
+
         return;
     }
 
