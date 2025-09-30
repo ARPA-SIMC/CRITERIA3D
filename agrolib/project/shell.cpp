@@ -199,7 +199,7 @@ QList<QString> getSharedCommandList()
 
 int cmdExit(Project* myProject)
 {
-    myProject->requestedExit = true;
+    myProject->setRequestedExit(true);
     return PRAGA_OK;
 }
 

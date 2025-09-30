@@ -72,7 +72,7 @@
 
     bool interpolationRaster(std::vector <Crit3DInterpolationDataPoint> &dataPoints, Crit3DInterpolationSettings &interpolationSettings,
                              Crit3DMeteoSettings *meteoSettings, gis::Crit3DRasterGrid* outputGrid,
-                             gis::Crit3DRasterGrid &raster, meteoVariable variable);
+                             gis::Crit3DRasterGrid &raster, meteoVariable variable, bool isParallelComputing);
 
     bool interpolateProxyGridSeries(const Crit3DProxyGridSeries& mySeries, QDate myDate, const gis::Crit3DRasterGrid& gridBase,
                                     gis::Crit3DRasterGrid *gridOut, QString &errorStr);

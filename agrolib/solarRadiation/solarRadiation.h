@@ -61,7 +61,7 @@
                                   TsunPosition& sunPosition, TradPoint& radPoint, const gis::Crit3DRasterGrid& dem);
 
         bool computeRadiationDEM(Crit3DRadiationSettings *radSettings, const gis::Crit3DRasterGrid& dem,
-                                 Crit3DRadiationMaps* radiationMaps, const Crit3DTime& myTime);
+                                 Crit3DRadiationMaps* radiationMaps, const Crit3DTime& myTime, bool isParallelComputing);
 
         bool computeRadiationDemPoint(Crit3DRadiationSettings* mySettings, Crit3DRadiationMaps* radiationMaps,
                                       const gis::Crit3DRasterGrid& dem, const Crit3DTime& myTime, int row, int col, double height);
