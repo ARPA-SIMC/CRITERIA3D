@@ -340,6 +340,8 @@ bool Crit3DProject::initializeCropWithClimateData()
         return false;
     }
 
+    QDate currentDate = getCurrentDate();
+
     for (int row = 0; row < DEM.header->nrRows; row++)
     {
         for (int col = 0; col < DEM.header->nrCols; col++)
@@ -352,7 +354,7 @@ bool Crit3DProject::initializeCropWithClimateData()
                 {
                     double degreeDays = 0;
                     int firstDoy = 1;
-                    int lastDoy = _currentDate.dayOfYear();
+                    int lastDoy = currentDate.dayOfYear();
 
                     if (gisSettings.startLocation.latitude >= 0)
                     {
@@ -362,7 +364,7 @@ bool Crit3DProject::initializeCropWithClimateData()
                     else
                     {
                         // Southern hemisphere
-                        if (_currentDate.dayOfYear() >= 182)
+                        if (currentDate.dayOfYear() >= 182)
                         {
                             firstDoy = 182;
                         }
@@ -376,7 +378,7 @@ bool Crit3DProject::initializeCropWithClimateData()
                     for (int doy = firstDoy; doy <= lastDoy; doy++)
                     {
                         int currentDoy = doy;
-                        int currentYear = _currentDate.year();
+                        int currentYear = currentDate.year();
                         if (currentDoy <= 0)
                         {
                             currentYear--;
@@ -397,13 +399,14 @@ bool Crit3DProject::initializeCropWithClimateData()
                     }
 
                     degreeDaysMap.value[row][col] = float(degreeDays);
-                    laiMap.value[row][col] = cropList[index].computeSimpleLAI(degreeDays, gisSettings.startLocation.latitude, _currentDate.dayOfYear());
+                    laiMap.value[row][col] = cropList[index].computeSimpleLAI(degreeDays, gisSettings.startLocation.latitude,
+                                                                              currentDate.dayOfYear());
                 }
             }
         }
     }
 
-    logInfo("LAI initialized with climate data - doy: " + QString::number(_currentDate.dayOfYear()));
+    logInfo("LAI initialized with climate data - doy: " + QString::number(currentDate.dayOfYear()));
     isCropInitialized = true;
 
     return true;
@@ -428,6 +431,7 @@ bool Crit3DProject::initializeCropFromDegreeDays(gis::Crit3DRasterGrid &myDegree
         return false;
     }
 
+    int currentDoy = getCurrentDate().dayOfYear();
     for (int row = 0; row < DEM.header->nrRows; row++)
     {
         for (int col = 0; col < DEM.header->nrCols; col++)
@@ -446,7 +450,7 @@ bool Crit3DProject::initializeCropFromDegreeDays(gis::Crit3DRasterGrid &myDegree
                     {
                         degreeDaysMap.value[row][col] = currentDegreeDay;
                         laiMap.value[row][col] = cropList[index].computeSimpleLAI(degreeDaysMap.value[row][col],
-                                                         gisSettings.startLocation.latitude, _currentDate.dayOfYear());
+                                                         gisSettings.startLocation.latitude, currentDoy);
                     }
                 }
             }
@@ -477,6 +481,7 @@ void Crit3DProject::dailyUpdateCropMaps(const QDate &myDate)
         degreeDaysMap.emptyGrid();
     }
 
+    int currentDoy = getCurrentDate().dayOfYear();
     for (int row = 0; row < DEM.header->nrRows; row++)
     {
         for (int col = 0; col < DEM.header->nrCols; col++)
@@ -493,7 +498,7 @@ void Crit3DProject::dailyUpdateCropMaps(const QDate &myDate)
                     float tmax = dailyTmaxMap.value[row][col];
                     if (! isEqual(tmin, dailyTminMap.header->flag) && ! isEqual(tmax, dailyTmaxMap.header->flag))
                     {
-                        double dailyDD = cropList[index].getDailyDegreeIncrease(tmin, tmax, _currentDate.dayOfYear());
+                        double dailyDD = cropList[index].getDailyDegreeIncrease(tmin, tmax, currentDoy);
                         if (! isEqual(dailyDD, NODATA))
                         {
                             if (isEqual(degreeDaysMap.value[row][col], degreeDaysMap.header->flag))
@@ -506,7 +511,7 @@ void Crit3DProject::dailyUpdateCropMaps(const QDate &myDate)
                             }
 
                             laiMap.value[row][col] = cropList[index].computeSimpleLAI(degreeDaysMap.value[row][col],
-                                                            gisSettings.startLocation.latitude, _currentDate.dayOfYear());
+                                                            gisSettings.startLocation.latitude, currentDoy);
                         }
                     }
                 }
@@ -1290,6 +1295,7 @@ bool Crit3DProject::loadCriteria3DProject(const QString &fileName)
     if (cropDbFileName != "") loadCropDatabase(cropDbFileName);
     if (treeCoverMapFileName != "") loadTreeCoverMap(treeCoverMapFileName);
 
+    QString projectName = getProjectName();
     if (projectName != "" && projectName != "default")
     {
         logInfo("Project " + projectName + " loaded");
@@ -1297,8 +1303,8 @@ bool Crit3DProject::loadCriteria3DProject(const QString &fileName)
 
     closeLogInfo();
 
-    isProjectLoaded = true;
-    return isProjectLoaded;
+    setProjectLoaded(true);
+    return true;
 }
 
 
@@ -1741,8 +1747,11 @@ bool Crit3DProject::computeSnowModel()
     }
     else
     {
-        /*+++++++++++ parallel computing ++++++++++++*/
-        unsigned int maxThreads = omp_get_max_threads();
+        unsigned int maxThreads = 1;
+        if (isParallelComputing())
+        {
+            maxThreads = omp_get_max_threads();
+        }
         omp_set_num_threads(static_cast<int>(maxThreads));
 
         #pragma omp parallel
@@ -1920,7 +1929,7 @@ bool Crit3DProject::updateDailyTemperatures()
 
 bool Crit3DProject::checkProcesses()
 {
-    if (! isProjectLoaded)
+    if (! isProjectLoaded())
     {
         errorString = ERROR_STR_MISSING_PROJECT;
         return false;
@@ -2112,8 +2121,8 @@ bool Crit3DProject::saveModelsState(QString &dirName)
     }
 
     char hourStr[3];
-    sprintf(hourStr, "%02d", _currentHour);
-    dirName = _currentDate.toString("yyyyMMdd") + "_H" + hourStr;
+    sprintf(hourStr, "%02d", getCurrentHour());
+    dirName = getCurrentDate().toString("yyyyMMdd") + "_H" + hourStr;
     QString currentStatePath = statePath + "/" + dirName;
     if (! QDir(currentStatePath).exists())
     {
@@ -3487,7 +3496,7 @@ int Crit3DProject::criteria3DShell()
 
     printCriteria3DVersion();
 
-    while (! requestedExit)
+        while (! isRequestedExit())
     {
         QString commandLine = getCommandLine("CRITERIA3D");
         if (commandLine != "")
@@ -3751,7 +3760,7 @@ int Crit3DProject::cmdList(const QList<QString> &argumentList)
     }
     else if (typeStr == "states")
     {
-        if (projectName == "default")
+        if (getProjectName() == "default")
         {
             errorString = "Open a Project before.";
             return CRIT3D_ERROR;
