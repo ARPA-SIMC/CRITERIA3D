@@ -508,7 +508,6 @@ namespace gis
     }
 
 
-
     void convertFlagToNodata(Crit3DRasterGrid& myGrid)
     {
         if (myGrid.header->flag == NODATA)

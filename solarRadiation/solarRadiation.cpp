@@ -908,10 +908,17 @@ bool computeRadiationRsun(Crit3DRadiationSettings* radSettings, float temperatur
 
 
     bool computeRadiationDEM(Crit3DRadiationSettings* radSettings, const gis::Crit3DRasterGrid& dem,
-                              Crit3DRadiationMaps* radiationMaps, const Crit3DTime& myTime)
+                              Crit3DRadiationMaps* radiationMaps, const Crit3DTime& myTime, bool isParallelComputing)
     {
         if (radSettings->getAlgorithm() != RADIATION_ALGORITHM_RSUN)
             return false;
+
+        unsigned int maxThreads = 1;
+        if (isParallelComputing)
+        {
+            maxThreads = omp_get_max_threads();
+        }
+        omp_set_num_threads(static_cast<int>(maxThreads));
 
         bool isOk = true;
         #pragma omp parallel for shared(isOk)
