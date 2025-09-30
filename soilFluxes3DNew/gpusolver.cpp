@@ -438,7 +438,7 @@ namespace soilFluxes3D::New
 
     double GPUSolver::computeTotalWaterContent_m()
     {
-        if(!nodeGrid.isinitialized)
+        if(!nodeGrid.isInitialized)
             return -1;
 
         double* d_waterContentVector = nullptr;

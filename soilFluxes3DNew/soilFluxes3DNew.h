@@ -27,9 +27,10 @@ namespace soilFluxes3D::New
     SF3Derror_t setHydraulicProperties(WRCModel waterRetentionCurve, meanType_t conductivityMeanType, float conductivityHorizVertRatio);
 
     //Set topology
+    SF3Derror_t setCulvert(uint64_t nodeIndex, double roughness, double slope, double width, double height);
     SF3Derror_t setNode(uint64_t index, double x, double y, double z, double volume_or_area, bool isSurface, boundaryType_t boundaryType, double slope = 0, double boundaryArea = 0);
     SF3Derror_t setNodeLink(uint64_t nodeIndex, uint64_t linkIndex, linkType_t direction, double interfaceArea);
-    /*TO DO*/ SF3Derror_t setCulvert(uint64_t nodeIndex, double roughness, double slope, double width, double height);
+    SF3Derror_t setNodeBoundary(uint64_t nodeIndex, boundaryType_t boundaryType, double slope, double boundaryArea);
 
     //Set soil data
     SF3Derror_t setNodeSoil(uint64_t nodeIndex, uint16_t soilIndex, uint16_t horizonIndex);
