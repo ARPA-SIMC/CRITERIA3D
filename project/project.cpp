@@ -37,31 +37,31 @@ Project::Project()
     quality = new Crit3DQuality();
     meteoPointsColorScale = new Crit3DColorScale();
     meteoGridDbHandler = nullptr;
-    formLog = nullptr;
 
-    // They not change after loading default settings
-    appPath = "";
-    defaultPath = "";
-    computeOnlyPoints = false;
+    _appPath = "";
+    _defaultPath = "";
+    _computeOnlyPoints = false;
+    _verboseStdoutLogging = true;
+
+    _formLog = nullptr;
 
     initializeProject();
 
     modality = MODE_GUI;
-
-    verboseStdoutLogging = true;
 }
 
 
 void Project::initializeProject()
 {
-    projectPath = "";
-    projectName = "";
-    isProjectLoaded = false;
-    requestedExit = false;
+    _projectPath = "";
+    _projectName = "";
+    _isProjectLoaded = false;
+    _isRequestedExit = false;
+    _isParallelComputing = true;
     logFileName = "";
     errorString = "";
     errorType = ERROR_NONE;
-    currentTileMap = "";
+    _currentTileMap = "";
 
     _currentVariable = noMeteoVar;
     _currentFrequency = noFrequency;
@@ -145,7 +145,7 @@ void Project::clearProject()
         delete proxyWidget;
     }
 
-    isProjectLoaded = false;
+    _isProjectLoaded = false;
 }
 
 
@@ -876,55 +876,21 @@ bool Project::loadParameters(QString parametersFileName)
 }
 
 
-void Project::setApplicationPath(QString myPath)
-{
-    this->appPath = myPath;
-}
-
-QString Project::getApplicationPath()
+QString Project::getApplicationPath() const
 {
     char* appImagePath = getenv("APPIMAGE");
     if (appImagePath != nullptr)
     {
         QDir d = QFileInfo(appImagePath).absoluteDir();
-        QString absolute = d.absolutePath()+"/";
+        QString absolute = d.absolutePath() + "/";
         return absolute;
     }
     else
     {
-        return this->appPath;
+        return _appPath;
     }
 }
 
-void Project::setDefaultPath(QString myPath)
-{
-    this->defaultPath = myPath;
-}
-
-QString Project::getDefaultPath()
-{
-    return this->defaultPath;
-}
-
-void Project::setProjectPath(QString myPath)
-{
-    this->projectPath = myPath;
-}
-
-QString Project::getProjectPath()
-{
-    return this->projectPath;
-}
-
-void Project::setCurrentVariable(meteoVariable variable)
-{
-    _currentVariable = variable;
-}
-
-meteoVariable Project::getCurrentVariable() const
-{
-    return _currentVariable;
-}
 
 void Project::setCurrentDate(QDate myDate)
 {
@@ -938,11 +904,6 @@ void Project::setCurrentDate(QDate myDate)
     }
 }
 
-QDate Project::getCurrentDate()
-{
-    return _currentDate;
-}
-
 void Project::setCurrentHour(int myHour)
 {
     _currentHour = myHour;
@@ -952,12 +913,8 @@ void Project::setCurrentHour(int myHour)
     }
 }
 
-int Project::getCurrentHour()
-{
-    return _currentHour;
-}
 
-Crit3DTime Project::getCrit3DCurrentTime()
+Crit3DTime Project::getCrit3DCurrentTime() const
 {
     if (_currentFrequency == hourly)
     {
@@ -970,7 +927,7 @@ Crit3DTime Project::getCrit3DCurrentTime()
 }
 
 
-QDateTime Project::getCurrentTime()
+QDateTime Project::getCurrentTime() const
 {
     QDateTime myDateTime;
     if (gisSettings.isUTC)
@@ -1525,10 +1482,8 @@ bool Project::loadAggregationdDB(QString dbName)
 bool Project::loadMeteoPointsData(const QDate& firstDate, const QDate& lastDate, bool loadHourly, bool loadDaily, bool showInfo)
 {
     //check
-    if (firstDate == QDate(1800,1,1) || lastDate == QDate(1800,1,1)) return false;
-
-    bool isDataOk = false;
-    int step = 0;
+    if (firstDate == QDate(1800,1,1) || lastDate == QDate(1800,1,1))
+        return false;
 
     QString infoStr = "Load meteo points data: " + firstDate.toString();
 
@@ -1537,10 +1492,16 @@ bool Project::loadMeteoPointsData(const QDate& firstDate, const QDate& lastDate,
         infoStr += " - " + lastDate.toString();
     }
 
+    int step = 0;
     if (showInfo)
     {
         step = setProgressBar(infoStr, nrMeteoPoints);
     }
+
+    Crit3DDate myFirstDate = getCrit3DDate(firstDate);
+    Crit3DDate myLastDate = getCrit3DDate(lastDate);
+    bool isDataOk = false;
+
     for (int i=0; i < nrMeteoPoints; i++)
     {
         if (showInfo)
@@ -1551,13 +1512,13 @@ bool Project::loadMeteoPointsData(const QDate& firstDate, const QDate& lastDate,
 
         if (loadHourly)
         {
-            if (meteoPointsDbHandler->loadHourlyData(getCrit3DDate(firstDate), getCrit3DDate(lastDate), meteoPoints[i]))
+            if (meteoPointsDbHandler->loadHourlyData(myFirstDate, myLastDate, meteoPoints[i]))
                 isDataOk = true;
         }
 
         if (loadDaily)
         {
-            if (meteoPointsDbHandler->loadDailyData(getCrit3DDate(firstDate), getCrit3DDate(lastDate), meteoPoints[i]))
+            if (meteoPointsDbHandler->loadDailyData(myFirstDate, myLastDate, meteoPoints[i]))
                 isDataOk = true;
         }
     }
@@ -1636,7 +1597,11 @@ bool Project::loadMeteoGridDailyData(const QDate &firstDate, const QDate &lastDa
 
     const auto &gridStructure = meteoGridDbHandler->gridStructure();
 
-    unsigned int maxThreads = omp_get_max_threads();
+    unsigned int maxThreads = 1;
+    if (_isParallelComputing)
+    {
+        maxThreads = omp_get_max_threads();
+    }
     omp_set_num_threads(static_cast<int>(maxThreads));
 
     int count = 0;
@@ -1717,7 +1682,11 @@ bool Project::loadMeteoGridHourlyData(QDateTime firstDateTime, QDateTime lastDat
 
     const auto &gridStructure = meteoGridDbHandler->gridStructure();
 
-    unsigned int maxThreads = omp_get_max_threads();
+    unsigned int maxThreads = 1;
+    if (_isParallelComputing)
+    {
+        maxThreads = omp_get_max_threads();
+    }
     omp_set_num_threads(static_cast<int>(maxThreads));
 
     int count = 0;
@@ -1786,7 +1755,11 @@ bool Project::loadMeteoGridMonthlyData(const QDate &firstDate, const QDate &last
 
     const auto &gridStructure = meteoGridDbHandler->gridStructure();
 
-    unsigned int maxThreads = omp_get_max_threads();
+    unsigned int maxThreads = 1;
+    if (_isParallelComputing)
+    {
+        maxThreads = omp_get_max_threads();
+    }
     omp_set_num_threads(static_cast<int>(maxThreads));
 
     int count = 0;
@@ -2102,7 +2075,7 @@ bool Project::writeTopographicDistanceMaps(bool onlyWithData, bool showInfo)
         return false;
     }
 
-    QString mapsFolder = projectPath + PATH_TD;
+    QString mapsFolder = _projectPath + PATH_TD;
     if (! QDir(mapsFolder).exists())
         QDir().mkdir(mapsFolder);
 
@@ -2189,7 +2162,7 @@ bool Project::loadTopographicDistanceMaps(bool onlyWithData, bool showInfo)
         return false;
     }
 
-    QString mapsFolder = projectPath + PATH_TD;
+    QString mapsFolder = _projectPath + PATH_TD;
     if (! QDir(mapsFolder).exists())
     {
         QDir().mkdir(mapsFolder);
@@ -2262,7 +2235,7 @@ bool Project::writeGlocalWeightsMaps(float windowWidth)
         return false;
     }
 
-    QString mapsFolder = projectPath + PATH_GLOCAL;
+    QString mapsFolder = _projectPath + PATH_GLOCAL;
     if (! QDir(mapsFolder).exists())
     {
         QDir().mkdir(mapsFolder);
@@ -2419,7 +2392,7 @@ bool Project::loadGlocalStationsAndCells(bool isGrid, QString fileNameStations)
 
 bool Project::loadGlocalWeightMaps(std::vector<Crit3DMacroArea> &myAreas, bool isGrid)
 {
-    QString mapsFolder = projectPath + PATH_GLOCAL;
+    QString mapsFolder = _projectPath + PATH_GLOCAL;
     if (! QDir(mapsFolder).exists())
     {
         errorString = "Glocal dir not found. Please create glocal weight maps";
@@ -2950,7 +2923,7 @@ bool Project::interpolationDem(meteoVariable myVar, const Crit3DTime& myTime, gi
     }
     else
     {
-        if (! interpolationRaster(interpolationPoints, interpolationSettings, meteoSettings, myRaster, DEM, myVar))
+        if (! interpolationRaster(interpolationPoints, interpolationSettings, meteoSettings, myRaster, DEM, myVar, _isParallelComputing))
         {
             errorString = "Error in function interpolationRaster.";
             return false;
@@ -3029,8 +3002,11 @@ bool Project::interpolationDemLocalDetrending(meteoVariable myVar, const Crit3DT
             return false;
         }
 
-        /******* parallel computing *******/
-        unsigned int maxThreads = omp_get_max_threads();
+        unsigned int maxThreads = 1;
+        if (_isParallelComputing)
+        {
+            maxThreads = omp_get_max_threads();
+        }
         omp_set_num_threads(static_cast<int>(maxThreads));
 
         #pragma omp parallel
@@ -3135,8 +3111,11 @@ bool Project::interpolationDemGlocalDetrending(meteoVariable myVar, const Crit3D
                 elevationPos = pos;
         }
 
-        /******* parallel computing *******/
-        unsigned int maxThreads = omp_get_max_threads();
+        unsigned int maxThreads = 1;
+        if (_isParallelComputing)
+        {
+            maxThreads = omp_get_max_threads();
+        }
         omp_set_num_threads(static_cast<int>(maxThreads));
 
         #pragma omp parallel
@@ -3267,7 +3246,7 @@ bool Project::interpolateDemRadiation(const Crit3DTime& myTime, gis::Crit3DRaste
     else
     {
         result = interpolationRaster(interpolationPoints, interpolationSettings, meteoSettings,
-                                     radiationMaps->transmissivityMap, DEM, atmTransmissivity);
+                                     radiationMaps->transmissivityMap, DEM, atmTransmissivity, _isParallelComputing);
     }
     if (! result)
     {
@@ -3282,7 +3261,7 @@ bool Project::interpolateDemRadiation(const Crit3DTime& myTime, gis::Crit3DRaste
     }
     else
     {
-        result = radiation::computeRadiationDEM(&radSettings, DEM, radiationMaps, myTime);
+        result = radiation::computeRadiationDEM(&radSettings, DEM, radiationMaps, myTime, _isParallelComputing);
     }
     if (! result)
     {
@@ -3705,9 +3684,9 @@ QString Project::getCompleteFileName(QString fileName, QString secondaryPath)
 }
 
 
-QString Project::getRelativePath(QString fileName)
+QString Project::getRelativePath(QString fileName) const
 {
-    if (!fileName.isEmpty() && fileName.at(0) != '.' && getFilePath(fileName) != "")
+    if (! fileName.isEmpty() && fileName.at(0) != '.' && getFilePath(fileName) != "")
     {
         QDir projectDir(getProjectPath());
         QString relativePath = projectDir.relativeFilePath(fileName);
@@ -3781,7 +3760,7 @@ bool Project::loadProjectSettings(QString settingsFileName)
             setProjectPath(newProjectPath);
         }
 
-        projectName = projectSettings->value("name").toString();
+        _projectName = projectSettings->value("name").toString();
         demFileName = projectSettings->value("dem").toString();
 
         dbPointsFileName = projectSettings->value("meteo_points").toString();
@@ -3797,14 +3776,14 @@ bool Project::loadProjectSettings(QString settingsFileName)
     projectSettings->beginGroup("settings");
         parametersFileName = projectSettings->value("parameters_file").toString();
         logFileName = projectSettings->value("log_file").toString();
-        verboseStdoutLogging = projectSettings->value("verbose_stdout_log", "true").toBool();
-        currentTileMap = projectSettings->value("tile_map").toString();
+        _verboseStdoutLogging = projectSettings->value("verbose_stdout_log", "true").toBool();
+        _currentTileMap = projectSettings->value("tile_map").toString();
     projectSettings->endGroup();
     return true;
 }
 
 
-bool Project::searchDefaultPath(QString* defaultPath)
+bool Project::searchDefaultPath(QString& defaultPath)
 {
     QString myPath = getApplicationPath();
     QString myRoot = QDir::rootPath();
@@ -3831,9 +3810,10 @@ bool Project::searchDefaultPath(QString* defaultPath)
         return false;
     }
 
-    *defaultPath = QDir::cleanPath(myPath) + "/DATA/";
+    defaultPath = QDir::cleanPath(myPath) + "/DATA/";
     return true;
 }
+
 
 Crit3DCrossValidationStatistics Project::getCrossValidationStatistics() const
 {
@@ -3881,7 +3861,7 @@ void Project::saveProjectSettings()
     saveProjectLocation();
 
     projectSettings->beginGroup("project");
-        projectSettings->setValue("name", projectName);
+        projectSettings->setValue("name", _projectName);
         projectSettings->setValue("dem", getRelativePath(demFileName));
         projectSettings->setValue("meteo_points", getRelativePath(dbPointsFileName));
         projectSettings->setValue("output_points", getRelativePath(outputPointsFileName));
@@ -4035,39 +4015,39 @@ void Project::createProject(QString path_, QString name_, QString description)
 {
     // name
     if (description != "")
-        projectName = description;
+        _projectName = description;
     else
-        projectName = name_;
+        _projectName = name_;
 
     // folder
     QString myPath = path_ + "/" + name_ + "/";
     if (! QDir(myPath).exists())
         QDir().mkdir(myPath);
 
-    projectPath = myPath;
+    _projectPath = myPath;
 
     // settings
     delete projectSettings;
-    projectSettings = new QSettings(projectPath + name_ + ".ini", QSettings::IniFormat);
+    projectSettings = new QSettings(_projectPath + name_ + ".ini", QSettings::IniFormat);
 
     // parametersSettings
     delete parametersSettings;
-    parametersFileName = projectPath + PATH_SETTINGS + "parameters.ini";
+    parametersFileName = _projectPath + PATH_SETTINGS + "parameters.ini";
     parametersSettings = new QSettings(parametersFileName, QSettings::IniFormat);
 
     saveProject();
 }
 
 
-bool Project::createDefaultProject(QString fileName)
+bool Project::createDefaultProject(const QString &fileName)
 {
-    QString path;
-    if (! searchDefaultPath(&path)) return false;
+    QString dataPath;
+    if (! searchDefaultPath(dataPath)) return false;
 
     QSettings* defaultSettings = new QSettings(fileName, QSettings::IniFormat);
 
     defaultSettings->beginGroup("project");
-        defaultSettings->setValue("path", path);
+        defaultSettings->setValue("path", dataPath);
         defaultSettings->setValue("name", "default");
     defaultSettings->endGroup();
 
@@ -4134,7 +4114,7 @@ bool Project::loadProject()
 
     if (dbAggregationFileName != "")
     {
-        if (! loadAggregationdDB(projectPath + "/" + dbAggregationFileName))
+        if (! loadAggregationdDB(_projectPath + "/" + dbAggregationFileName))
         {
             errorString = "load Aggregation DB failed";
             errorType = ERROR_DBPOINT;
@@ -4339,7 +4319,7 @@ void Project::showMeteoWidgetPoint(std::string idMeteoPoint, std::string namePoi
     else
     {
         bool isGrid = false;
-        Crit3DMeteoWidget* meteoWidgetPoint = new Crit3DMeteoWidget(isGrid, projectPath, meteoSettings);
+        Crit3DMeteoWidget* meteoWidgetPoint = new Crit3DMeteoWidget(isGrid, _projectPath, meteoSettings);
         int meteoWidgetId;
         if (! meteoWidgetPointList.isEmpty())
         {
@@ -4474,7 +4454,7 @@ void Project::showMeteoWidgetGrid(const std::string &idCell, const std::string &
     {
         int meteoWidgetId;
         bool isGrid = true;
-        Crit3DMeteoWidget* meteoWidgetGrid = new Crit3DMeteoWidget(isGrid, projectPath, meteoSettings);
+        Crit3DMeteoWidget* meteoWidgetGrid = new Crit3DMeteoWidget(isGrid, _projectPath, meteoSettings);
         if (! meteoWidgetGridList.isEmpty())
         {
              meteoWidgetId = meteoWidgetGridList[meteoWidgetGridList.size()-1]->getMeteoWidgetID()+1;
@@ -5058,12 +5038,12 @@ bool Project::writeOutputPointList(QString fileName)
 
 void Project::setComputeOnlyPoints(bool value)
 {
-    computeOnlyPoints = value;
+    _computeOnlyPoints = value;
 }
 
-bool Project::getComputeOnlyPoints()
+bool Project::getComputeOnlyPoints() const
 {
-    return computeOnlyPoints;
+    return _computeOnlyPoints;
 }
 
 bool Project::exportMeteoGridToRasterFlt(QString fileName, double cellSize)
@@ -5422,7 +5402,7 @@ bool Project::setLogFile(QString myFileName)
 
 void Project::logInfo(QString myStr)
 {
-    if (verboseStdoutLogging) {
+    if (_verboseStdoutLogging) {
         // standard output in all modalities
         std::cout << myStr.toStdString() << std::endl;
     }
@@ -5438,11 +5418,11 @@ void Project::logInfoGUI(QString myStr)
 {
     if (modality == MODE_GUI)
     {
-        if (formLog == nullptr)
+        if (_formLog == nullptr)
         {
-            formLog = new FormInfo();
+            _formLog = new FormInfo();
         }
-        formLog->showInfo(myStr);
+        _formLog->showInfo(myStr);
         qApp->processEvents();
     }
     else
@@ -5454,9 +5434,9 @@ void Project::logInfoGUI(QString myStr)
 
 void Project::closeLogInfo()
 {
-    if ((modality == MODE_GUI) && (formLog != nullptr))
+    if ((modality == MODE_GUI) && (_formLog != nullptr))
     {
-        formLog->close();
+        _formLog->close();
     }
 }
 
@@ -5519,11 +5499,11 @@ int Project::setProgressBar(QString myStr, int nrValues)
 {
     if (modality == MODE_GUI)
     {
-        if (formLog == nullptr)
+        if (_formLog == nullptr)
         {
-            formLog = new FormInfo();
+            _formLog = new FormInfo();
         }
-        return formLog->start(myStr, nrValues);
+        return _formLog->start(myStr, nrValues);
     }
     else
     {
@@ -5537,9 +5517,9 @@ void Project::updateProgressBar(int value)
 {
     if (modality == MODE_GUI)
     {
-        if (formLog != nullptr)
+        if (_formLog != nullptr)
         {
-            formLog->setValue(value);
+            _formLog->setValue(value);
         }
     }
     else
@@ -5553,9 +5533,9 @@ void Project::updateProgressBarText(QString myStr)
 {
     if (modality == MODE_GUI)
     {
-        if (formLog != nullptr)
+        if (_formLog != nullptr)
         {
-            formLog->setText(myStr);
+            _formLog->setText(myStr);
         }
     }
     else
@@ -5569,9 +5549,9 @@ void Project::closeProgressBar()
 {
     if (modality == MODE_GUI)
     {
-        if (formLog != nullptr)
+        if (_formLog != nullptr)
         {
-            formLog->close();
+            _formLog->close();
         }
     }
     else

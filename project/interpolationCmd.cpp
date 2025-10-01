@@ -260,15 +260,18 @@ bool checkProxyGridSeries(Crit3DInterpolationSettings &interpolationSettings, co
 
 bool interpolationRaster(std::vector <Crit3DInterpolationDataPoint> &dataPoints, Crit3DInterpolationSettings &interpolationSettings,
                          Crit3DMeteoSettings* meteoSettings, gis::Crit3DRasterGrid* outputGrid,
-                         gis::Crit3DRasterGrid& raster, meteoVariable variable)
+                         gis::Crit3DRasterGrid& raster, meteoVariable variable, bool isParallelComputing)
 {
     if (! outputGrid->initializeGrid(raster))
     {
         return false;
     }
 
-    /******* parallel computing *******/
-    unsigned int maxThreads = omp_get_max_threads();
+    unsigned int maxThreads = 1;
+    if (isParallelComputing)
+    {
+        maxThreads = omp_get_max_threads();
+    }
     omp_set_num_threads(static_cast<int>(maxThreads));
 
     #pragma omp parallel

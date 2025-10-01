@@ -32,6 +32,7 @@
 #include "solarRadiation.h"
 
 #include <math.h>
+#include <omp.h>
 
 
 Crit3DRadiationMaps::Crit3DRadiationMaps()
@@ -349,12 +350,12 @@ namespace radiation
      * \param sunPosition:  a pointer to a TsunPosition
      * \return result
      */
-    float clearSkyBeamHorizontal(float linke, TsunPosition* sunPosition)
+    float clearSkyBeamHorizontal(float linke, const TsunPosition& sunPosition)
     {       
         // Rayleigh optical thickness (Kasten, 1996)
         float rayleighThickness;
         // relative optical air mass corrected for pressure
-        float airMass = sunPosition->relOptAirMassCorr;
+        float airMass = sunPosition.relOptAirMassCorr;
 
         if (airMass <= 20)
             rayleighThickness = 1.f / (6.6296f + 1.7513f * airMass - 0.1202f * float(pow(airMass, 2))
@@ -362,7 +363,7 @@ namespace radiation
         else
             rayleighThickness = 1.f / (10.4f + 0.718f * airMass);
 
-        return sunPosition->extraIrradianceNormal * getSinDecimalDegree(sunPosition->elevation)
+        return sunPosition.extraIrradianceNormal * getSinDecimalDegree(sunPosition.elevation)
                 * float(exp(-0.8662f * linke * airMass * rayleighThickness));
     }
 
@@ -374,14 +375,14 @@ namespace radiation
      * \param sunPosition a pointer to a TsunPosition
      * \return result
      */
-    float clearSkyDiffuseHorizontal(float linke, TsunPosition* sunPosition)
+    float clearSkyDiffuseHorizontal(float linke, const TsunPosition& sunPosition)
     {
         double Fd;          /*!< [-] diffuse solar altitude function     */
         double Trd;         /*!< [-] transmission function               */
 
         Trd = -0.015843 + linke * (0.030543 + 0.0003797 * linke);
 
-        double sinElev = MAXVALUE(double(getSinDecimalDegree(sunPosition->elevation)), 0);
+        double sinElev = std::max(getSinDecimalDegree(double(sunPosition.elevation)), 0.);
         double A0 = 0.26463 + linke * (-0.061581 + 0.0031408 * linke);
         if ((A0 * Trd) < 0.0022)
         {
@@ -391,7 +392,7 @@ namespace radiation
         double A2 = -1.3025 + linke * (0.039231 + 0.0085079 * linke);
         Fd = A0 + A1 * sinElev + A2 * sinElev * sinElev;
 
-        return sunPosition->extraIrradianceNormal * float(Fd * Trd);
+        return sunPosition.extraIrradianceNormal * float(Fd * Trd);
     }
 
 
@@ -401,10 +402,10 @@ namespace radiation
      * \param sunPosition a pointer to a TsunPosition
      * \return result
      */
-    float clearSkyBeamInclined(float beamIrradianceHor, TsunPosition* sunPosition )
+    float clearSkyBeamInclined(float beamIrradianceHor, const TsunPosition& sunPosition)
     {
         /*! Bh: clear sky beam irradiance on a horizontal surface */
-        return (beamIrradianceHor * getSinDecimalDegree(sunPosition->incidence) / getSinDecimalDegree(sunPosition->elevationRefr)) ;
+        return (beamIrradianceHor * getSinDecimalDegree(sunPosition.incidence) / getSinDecimalDegree(sunPosition.elevationRefr)) ;
     }
 
 
@@ -416,7 +417,8 @@ namespace radiation
      * \param radPoint
      * \return result
      */
-    float clearSkyDiffuseInclined(float beamIrradianceHor, float diffuseIrradianceHor, TsunPosition* sunPosition, TradPoint* radPoint)
+    float clearSkyDiffuseInclined(float beamIrradianceHor, float diffuseIrradianceHor,
+                                  const TsunPosition& sunPosition, const TradPoint& radPoint)
     {
         //Bh                     beam irradiance on a horizontal surface                                     [W m-2]
         //Dh                     diffuse irradiance on a horizontal surface
@@ -427,19 +429,19 @@ namespace radiation
         double Kb;        /*!< amount of beam irradiance available [] */
         double Fg, r_sky, Fx, Aln;
         double n;
-        sinElev = MAXVALUE(getSinDecimalDegree(sunPosition->elevation), 0.001);
-        cosSlope = getCosDecimalDegree(float(radPoint->slope));
-        sinSlope = getSinDecimalDegree(float(radPoint->slope));
-        slopeRad = radPoint->slope * DEG_TO_RAD;
-        aspectRad = radPoint->aspect * DEG_TO_RAD;
-        elevRad = sunPosition->elevation * DEG_TO_RAD;
-        azimRad = sunPosition->azimuth * DEG_TO_RAD;
+        sinElev = MAXVALUE(getSinDecimalDegree(sunPosition.elevation), 0.001);
+        cosSlope = getCosDecimalDegree(radPoint.slope);
+        sinSlope = getSinDecimalDegree(radPoint.slope);
+        slopeRad = radPoint.slope * DEG_TO_RAD;
+        aspectRad = radPoint.aspect * DEG_TO_RAD;
+        elevRad = sunPosition.elevation * DEG_TO_RAD;
+        azimRad = sunPosition.azimuth * DEG_TO_RAD;
 
-        Kb = beamIrradianceHor / (sunPosition->extraIrradianceNormal * sinElev);
-        Fg = sinSlope - slopeRad * cosSlope - PI * getSinDecimalDegree(float(radPoint->slope / 2.0))
-                                                 * getSinDecimalDegree(float(radPoint->slope / 2.0));
+        Kb = beamIrradianceHor / (sunPosition.extraIrradianceNormal * sinElev);
+        Fg = sinSlope - slopeRad * cosSlope - PI * getSinDecimalDegree(radPoint.slope * 0.5)
+                                                 * getSinDecimalDegree(radPoint.slope * 0.5);
         r_sky = (1.0 + cosSlope) / 2.0;
-        if ((((sunPosition->shadow) || ((sunPosition)->incidence * DEG_TO_RAD) <= 0.1)) && (elevRad >= 0.0))
+        if ((((sunPosition.shadow) || ((sunPosition).incidence * DEG_TO_RAD) <= 0.1)) && (elevRad >= 0.0))
         {
             (n = 0.252271) ;
             Fx = r_sky + Fg * n ;
@@ -448,7 +450,7 @@ namespace radiation
         {
             n = 0.00263 - Kb * (0.712 + 0.6883 * Kb);
             //FT attenzione: crea discontinuita'
-            if (elevRad >= 0.1) (Fx = (n * Fg + r_sky) * (1 - Kb) + Kb * getSinDecimalDegree(sunPosition->incidence) / sinElev);
+            if (elevRad >= 0.1) (Fx = (n * Fg + r_sky) * (1 - Kb) + Kb * getSinDecimalDegree(sunPosition.incidence) / sinElev);
             //elevRad < 0.1
             else
             {
@@ -483,7 +485,7 @@ namespace radiation
     }
 
 
-    bool computeShadow(TradPoint* radPoint, TsunPosition* sunPosition, const gis::Crit3DRasterGrid& dem)
+    bool computeShadow(const TradPoint& radPoint, const TsunPosition& sunPosition, const gis::Crit3DRasterGrid& dem)
     {
         double sunMaskStepX, sunMaskStepY;
         double sunMaskStepZ, maxDeltaH;
@@ -500,14 +502,14 @@ namespace radiation
         inizializzazione a sole visibile
         */
 
-        x0 = radPoint->x;
-        y0 = radPoint->y;
-        z0 = radPoint->height;
+        x0 = radPoint.x;
+        y0 = radPoint.y;
+        z0 = radPoint.height;
 
-        sunMaskStepX = SHADOW_FACTOR * getSinDecimalDegree(sunPosition->azimuth) * dem.header->cellSize;
-        sunMaskStepY = SHADOW_FACTOR * getCosDecimalDegree(sunPosition->azimuth) * dem.header->cellSize;
-        cosElev = getCosDecimalDegree(sunPosition->elevation);
-        sinElev = getSinDecimalDegree(sunPosition->elevation);
+        sunMaskStepX = SHADOW_FACTOR * getSinDecimalDegree(sunPosition.azimuth) * dem.header->cellSize;
+        sunMaskStepY = SHADOW_FACTOR * getCosDecimalDegree(sunPosition.azimuth) * dem.header->cellSize;
+        cosElev = getCosDecimalDegree(sunPosition.elevation);
+        sinElev = getSinDecimalDegree(sunPosition.elevation);
         tgElev = sinElev / cosElev;
         sunMaskStepZ = dem.header->cellSize * SHADOW_FACTOR * tgElev;
 
@@ -569,16 +571,15 @@ namespace radiation
     }
 
 
-bool computeRadiationRsun(Crit3DRadiationSettings* radSettings, float temperature, float myPressure, Crit3DTime myTime,
+bool computeRadiationRsun(Crit3DRadiationSettings* radSettings, float temperature, float myPressure, const Crit3DTime& myTime,
                                float linke,float albedo, float clearSkyTransmissivity, float transmissivity,
-                               TsunPosition* sunPosition, TradPoint* radPoint, const gis::Crit3DRasterGrid& dem)
+                               TsunPosition& sunPosition, TradPoint& radPoint, const gis::Crit3DRasterGrid& dem)
     {
         int myYear, myMonth, myDay;
         int myHour, myMinute, mySecond;
         float Bhc, Bh;
         float Dhc, dH;
         float Ghc, Gh;
-        //float td, Tt;
         float globalTransmittance;  /*!<   real sky global irradiation coefficient (global transmittance) */
         float diffuseTransmittance; /*!<   real sky radPoint.diffuse irradiation coefficient (radPoint.diffuse transmittance) */
         float dhsOverGhs;           /*!<  ratio horizontal radPoint.diffuse over horizontal global */
@@ -599,40 +600,41 @@ bool computeRadiationRsun(Crit3DRadiationSettings* radSettings, float temperatur
         mySecond = int(localTime.getSeconds());
 
         /*! Surface pressure at sea level (millibars) (used for refraction correction and optical air mass) */
-        myPressure = PRESSURE_SEALEVEL * float(exp(-radPoint->height / RAYLEIGH_Z0));
+        myPressure = PRESSURE_SEALEVEL * float(exp(-radPoint.height / RAYLEIGH_Z0));
 
         /*! Ambient default dry-bulb temperature (degrees C) (used for refraction correction) */
         //should be passed
-        if (temperature == NODATA) temperature = TEMPERATURE_DEFAULT;
+        if (isEqual(temperature,NODATA))
+            temperature = TEMPERATURE_DEFAULT;
 
         /*! Sun position */
-        if (! computeSunPosition(float(radPoint->lon), float(radPoint->lat), radSettings->gisSettings->timeZone,
+        if (! computeSunPosition(float(radPoint.lon), float(radPoint.lat), radSettings->gisSettings->timeZone,
             myYear, myMonth, myDay, myHour, myMinute, mySecond,
-            temperature, myPressure, float(radPoint->aspect), float(radPoint->slope), sunPosition))
+            temperature, myPressure, float(radPoint.aspect), float(radPoint.slope), sunPosition))
             return false;
 
         /*! Shadowing */
-        isPointIlluminated = isIlluminated(float(localTime.time), (*sunPosition).rise, (*sunPosition).set, (*sunPosition).elevationRefr);
+        isPointIlluminated = isIlluminated(float(localTime.time), sunPosition.rise, sunPosition.set, sunPosition.elevationRefr);
         if (radSettings->getShadowing())
         {
-            if (gis::isOutOfGridXY(radPoint->x, radPoint->y, dem.header))
-                (*sunPosition).shadow = ! isPointIlluminated;
+            if (gis::isOutOfGridXY(radPoint.x, radPoint.y, dem.header))
+                sunPosition.shadow = ! isPointIlluminated;
             else
             {
                 if (isPointIlluminated)
-                    (*sunPosition).shadow = computeShadow(radPoint, sunPosition, dem);
+                    sunPosition.shadow = computeShadow(radPoint, sunPosition, dem);
                 else
-                    (*sunPosition).shadow = true;
+                    sunPosition.shadow = true;
             }
         }
 
         /*! Radiation */
         if (! isPointIlluminated)
         {
-            radPoint->beam = 0;
-            radPoint->diffuse = 0;
-            radPoint->reflected = 0;
-            radPoint->global = 0;
+            radPoint.beam = 0;
+            radPoint.diffuse = 0;
+            radPoint.reflected = 0;
+            radPoint.global = 0;
 
             return true;
         }
@@ -645,9 +647,9 @@ bool computeRadiationRsun(Crit3DRadiationSettings* radSettings, float temperatur
         {
             if (! radSettings->getRealSky()) transmissivity = clearSkyTransmissivity;
 
-            Gh = sunPosition->extraIrradianceHorizontal * transmissivity;
+            Gh = sunPosition.extraIrradianceHorizontal * transmissivity;
             separateTransmissivity (clearSkyTransmissivity, transmissivity, &diffuseTransmittance, &globalTransmittance);
-            dH = sunPosition->extraIrradianceHorizontal * diffuseTransmittance;
+            dH = sunPosition.extraIrradianceHorizontal * diffuseTransmittance;
         }
         else
         {
@@ -670,7 +672,7 @@ bool computeRadiationRsun(Crit3DRadiationSettings* radSettings, float temperatur
         }
 
         // shadowing
-        if ((!(*sunPosition).shadow) && ((*sunPosition).incidence > 0.))
+        if (!sunPosition.shadow && sunPosition.incidence > 0.)
             Bh = Gh - dH;
         else
         {
@@ -679,23 +681,23 @@ bool computeRadiationRsun(Crit3DRadiationSettings* radSettings, float temperatur
         }
 
         // inclined
-        if (radPoint->slope == 0)
+        if (radPoint.slope == 0)
         {
-            (*radPoint).beam = Bh;
-            (*radPoint).diffuse = dH;
-            (*radPoint).reflected = 0;
-            (*radPoint).global = Gh;
+            radPoint.beam = Bh;
+            radPoint.diffuse = dH;
+            radPoint.reflected = 0;
+            radPoint.global = Gh;
         }
         else
         {
-            if ((!(*sunPosition).shadow) && ((*sunPosition).incidence > 0.))
-                radPoint->beam = clearSkyBeamInclined(Bh, sunPosition);
+            if (!sunPosition.shadow && sunPosition.incidence > 0.)
+                radPoint.beam = clearSkyBeamInclined(Bh, sunPosition);
             else
-                radPoint->beam = 0;
+                radPoint.beam = 0;
 
-            radPoint->diffuse = clearSkyDiffuseInclined(Bh, dH, sunPosition, radPoint);
-            radPoint->reflected = getReflectedIrradiance(Bh, dH, albedo, float(radPoint->slope));
-            radPoint->global = radPoint->beam + radPoint->diffuse + radPoint->reflected;
+            radPoint.diffuse = clearSkyDiffuseInclined(Bh, dH, sunPosition, radPoint);
+            radPoint.reflected = getReflectedIrradiance(Bh, dH, albedo, float(radPoint.slope));
+            radPoint.global = radPoint.beam + radPoint.diffuse + radPoint.reflected;
         }
 
         return true;
@@ -752,11 +754,11 @@ bool computeRadiationRsun(Crit3DRadiationSettings* radSettings, float temperatur
 
         // Threshold: half of potential radiation at noon
         computeRadiationRsun(radSettings, TEMPERATURE_DEFAULT, PRESSURE_SEALEVEL, noonTime, linke, albedo,
-                                  clearSkyTransmissivity, clearSkyTransmissivity, &sunPosition, &radPoint, dem);
+                                  clearSkyTransmissivity, clearSkyTransmissivity, sunPosition, radPoint, dem);
         sumPotentialRadThreshold = float(radPoint.global * 0.5);
 
         computeRadiationRsun(radSettings, TEMPERATURE_DEFAULT, PRESSURE_SEALEVEL, myTime, linke, albedo,
-                                  clearSkyTransmissivity, clearSkyTransmissivity, &sunPosition, &radPoint, dem);
+                                  clearSkyTransmissivity, clearSkyTransmissivity, sunPosition, radPoint, dem);
         sumPotentialRad = float(radPoint.global);
 
         int backwardTimeStep,forwardTimeStep;
@@ -775,12 +777,12 @@ bool computeRadiationRsun(Crit3DRadiationSettings* radSettings, float temperatur
 
             computeRadiationRsun(radSettings, TEMPERATURE_DEFAULT, PRESSURE_SEALEVEL, backwardTime,
                                       linke, albedo, clearSkyTransmissivity, clearSkyTransmissivity,
-                                      &sunPosition, &radPoint, dem);
+                                      sunPosition, radPoint, dem);
             sumPotentialRad+= float(radPoint.global);
 
             computeRadiationRsun(radSettings, TEMPERATURE_DEFAULT, PRESSURE_SEALEVEL, forwardTime,
                                       linke, albedo, clearSkyTransmissivity, clearSkyTransmissivity,
-                                      &sunPosition, &radPoint, dem);
+                                      sunPosition, radPoint, dem);
             sumPotentialRad+= float(radPoint.global);
         }
 
@@ -791,9 +793,11 @@ bool computeRadiationRsun(Crit3DRadiationSettings* radSettings, float temperatur
     bool isGridPointComputable(Crit3DRadiationSettings* radSettings, int row, int col,
                                const gis::Crit3DRasterGrid& dem, Crit3DRadiationMaps* radiationMaps)
     {
-        if (isOutOfGridRowCol(row, col, dem)) return false;
+        if (gis::isOutOfGridRowCol(row, col, dem.header))
+            return false;
 
-        if (dem.value[row][col] == dem.header->flag) return false;
+        if (dem.value[row][col] == dem.header->flag)
+            return false;
 
         if ((radiationMaps->latMap->value[row][col] == radiationMaps->latMap->header->flag)
             || (radiationMaps->lonMap->value[row][col] == radiationMaps->lonMap->header->flag))
@@ -807,17 +811,18 @@ bool computeRadiationRsun(Crit3DRadiationSettings* radSettings, float temperatur
     }
 
 
-    bool computeRadiationDemPoint(Crit3DRadiationSettings* radSettings, const gis::Crit3DRasterGrid& myDem,
-                              Crit3DRadiationMaps* radiationMaps, TradPoint radPoint,
-                              int row, int col, const Crit3DTime& myTime)
+    bool computeRadiationDemPoint(Crit3DRadiationSettings* radSettings, Crit3DRadiationMaps* radiationMaps,
+                                  const gis::Crit3DRasterGrid& dem, const Crit3DTime& myTime, int row, int col, double height)
     {
+        TradPoint radPoint;
+        radPoint.height = height;
+        dem.getXY(row, col, radPoint.x, radPoint.y);
         radPoint.lat = radiationMaps->latMap->value[row][col];
         radPoint.lon = radiationMaps->lonMap->value[row][col];
         radPoint.slope = readSlope(radSettings, radiationMaps->slopeMap, row, col);
         radPoint.aspect = readAspect(radSettings, radiationMaps->aspectMap, row, col);
 
         float linke;
-
         if (radSettings->getLinkeMode() == PARAM_MODE_MONTHLY)
             linke = radSettings->getLinke(myTime.date.month-1);
         else
@@ -829,7 +834,7 @@ bool computeRadiationRsun(Crit3DRadiationSettings* radSettings, float temperatur
 
         TsunPosition sunPosition;
         if (! computeRadiationRsun(radSettings, TEMPERATURE_DEFAULT, PRESSURE_SEALEVEL, myTime,
-            linke, albedo, radSettings->getClearSky(), transmissivity, &sunPosition, &radPoint, myDem))
+                                  linke, albedo, radSettings->getClearSky(), transmissivity, sunPosition, radPoint, dem))
             return false;
 
         radiationMaps->sunElevationMap->value[row][col] = sunPosition.elevation;
@@ -865,8 +870,8 @@ bool computeRadiationRsun(Crit3DRadiationSettings* radSettings, float temperatur
         float albedo = readAlbedo(radSettings, myPoint);
 
         TsunPosition sunPosition;
-        if (!computeRadiationRsun(radSettings, TEMPERATURE_DEFAULT, PRESSURE_SEALEVEL, myTime,
-            linke, albedo, radSettings->getClearSky(), radSettings->getClearSky(), &sunPosition, radPoint, dem))
+        if (! computeRadiationRsun(radSettings, TEMPERATURE_DEFAULT, PRESSURE_SEALEVEL, myTime,
+            linke, albedo, radSettings->getClearSky(), radSettings->getClearSky(), sunPosition, *radPoint, dem))
             return false;
 
         return true;
@@ -895,31 +900,42 @@ bool computeRadiationRsun(Crit3DRadiationSettings* radSettings, float temperatur
 
         TsunPosition sunPosition;
         if (!computeRadiationRsun(radSettings, TEMPERATURE_DEFAULT, PRESSURE_SEALEVEL, myTime,
-            linke, albedo, radSettings->getClearSky(), transmissivity, &sunPosition, &radPoint, dem))
+            linke, albedo, radSettings->getClearSky(), transmissivity, sunPosition, radPoint, dem))
             return false;
 
         return true;
     }
 
 
-    bool computeRadiationDEM(Crit3DRadiationSettings* radSettings, const gis::Crit3DRasterGrid& myDem,
-                              Crit3DRadiationMaps* radiationMaps, const Crit3DTime& myTime)
+    bool computeRadiationDEM(Crit3DRadiationSettings* radSettings, const gis::Crit3DRasterGrid& dem,
+                              Crit3DRadiationMaps* radiationMaps, const Crit3DTime& myTime, bool isParallelComputing)
     {
         if (radSettings->getAlgorithm() != RADIATION_ALGORITHM_RSUN)
             return false;
 
-        for (int row = 0; row < myDem.header->nrRows; row++ )
+        unsigned int maxThreads = 1;
+        if (isParallelComputing)
         {
-            for (int col = 0; col < myDem.header->nrCols; col++)
-            {
-                if(isGridPointComputable(radSettings, row, col, myDem, radiationMaps))
-                {
-                    TradPoint radPoint;
-                    myDem.getXY(row, col, radPoint.x, radPoint.y);
-                    radPoint.height = myDem.value[row][col];
+            maxThreads = omp_get_max_threads();
+        }
+        omp_set_num_threads(static_cast<int>(maxThreads));
 
-                    if (! computeRadiationDemPoint(radSettings, myDem, radiationMaps, radPoint, row, col, myTime))
-                        return false;
+        bool isOk = true;
+        #pragma omp parallel for shared(isOk)
+        for (int row = 0; row < dem.header->nrRows; row++ )
+        {
+            if (! isOk) continue;
+
+            for (int col = 0; col < dem.header->nrCols; col++)
+            {
+                if (! isOk) continue;
+
+                float height = dem.value[row][col];
+                if (! isEqual(height, dem.header->flag))
+                {
+                    if (! computeRadiationDemPoint(radSettings, radiationMaps, dem, myTime, row, col, height))
+                        isOk = false;
+
                 }
             }
         }
@@ -953,31 +969,41 @@ bool computeRadiationRsun(Crit3DRadiationSettings* radSettings, float temperatur
     bool computeSunPosition(float lon, float lat, int timeZone,
                             int myYear,int myMonth, int myDay,
                             int myHour, int myMinute, int mySecond,
-                            float temp, float pressure, float aspect, float slope, TsunPosition *sunPosition)
+                            float temp, float pressure, float aspect, float slope, TsunPosition &sunPosition)
     {
-        float etrTilt;  /*!<  Extraterrestrial (top-of-atmosphere) global irradiance on a tilted surface (W m-2) */
-        float cosZen;   /*!<  Cosine of refraction corrected solar zenith angle */
-        float sbcf;     /*!<  Shadow-band correction factor */
-        float prime;    /*!<  Factor that normalizes Kt, Kn, etc. */
-        float unPrime;  /*!<  Factor that denormalizes Kt', Kn', etc. */
-        float  zenRef;  /*!<  Solar zenith angle, deg. from zenith, refracted */
-        int chk;
-        float sunCosIncidenceCompl; /*!<  cosine of (90 - incidence) */
-        float sunRiseMinutes;       /*!<  sunrise time [minutes from midnight] */
-        float sunSetMinutes;        /*!<  sunset time [minutes from midnight] */
+        //float etrTilt;              /*!<  Extraterrestrial (top-of-atmosphere) global irradiance on a tilted surface (W m-2) */
+        //float cosZen;               /*!<  Cosine of refraction corrected solar zenith angle */
+        //float zenRef;               /*!<  Solar zenith angle, deg. from zenith, refracted */
+        float sunCosIncidenceCompl;     /*!<  cosine of (90 - incidence) */
+        float sunRiseMinutes;           /*!<  sunrise time [minutes from midnight] */
+        float sunSetMinutes;            /*!<  sunset time [minutes from midnight] */
 
-        chk = RSUN_compute_solar_position(lon, lat, timeZone, myYear, myMonth, myDay, myHour, myMinute, mySecond, temp, pressure, aspect, slope, float(SBWID), float(SBRAD), float(SBSKY));
+        SolPosData solarPosition;
+
+        int chk = RSUN_compute_solar_position(solarPosition, lon, lat, timeZone, myYear, myMonth,
+                                              myDay, myHour, myMinute, mySecond, temp, pressure, aspect, slope,
+                                              float(SBWID), float(SBRAD), float(SBSKY));
         if (chk > 0)
         {
-           //setErrorMsg
+            // todo: report error
             return false;
         }
 
-        RSUN_get_results(&((*sunPosition).relOptAirMass), &((*sunPosition).relOptAirMassCorr), &((*sunPosition).azimuth), &sunCosIncidenceCompl, &cosZen, &((*sunPosition).elevation), &((*sunPosition).elevationRefr), &((*sunPosition).extraIrradianceHorizontal), &((*sunPosition).extraIrradianceNormal), &etrTilt, &prime, &sbcf, &sunRiseMinutes, &sunSetMinutes, &unPrime, &zenRef);
+        sunPosition.relOptAirMass       = solarPosition.amass;
+        sunPosition.relOptAirMassCorr   = solarPosition.ampress;
+        sunPosition.azimuth             = solarPosition.azim;
+        sunPosition.elevation           = solarPosition.elevetr;
+        sunPosition.elevationRefr       = solarPosition.elevref;
+        sunPosition.extraIrradianceHorizontal   = solarPosition.etr;
+        sunPosition.extraIrradianceNormal		= solarPosition.etrn;
+        sunCosIncidenceCompl            = solarPosition.cosinc;
+        sunRiseMinutes                  = solarPosition.sretr;
+        sunSetMinutes                   = solarPosition.ssetr;
 
-        (*sunPosition).incidence = float(MAXVALUE(0, RAD_TO_DEG * ((PI / 2.0) - acos(sunCosIncidenceCompl))));
-        (*sunPosition).rise = sunRiseMinutes * 60.f;
-        (*sunPosition).set = sunSetMinutes * 60.f;
+        sunPosition.incidence = float(MAXVALUE(0, RAD_TO_DEG * ((PI / 2.0) - acos(sunCosIncidenceCompl))));
+        sunPosition.rise = sunRiseMinutes * 60.f;
+        sunPosition.set = sunSetMinutes * 60.f;
+
         return true;
     }
 
@@ -1092,19 +1118,15 @@ bool computeRadiationRsun(Crit3DRadiationSettings* radSettings, float temperatur
         if (radSettings->getAlgorithm() != RADIATION_ALGORITHM_RSUN)
             return false;
 
-        TradPoint radPoint;
         int row, col;
         for (unsigned int i = 0; i < outputPoints.size(); i++)
         {
             if (outputPoints[i].active)
             {
                 dem.getRowCol(outputPoints[i].utm.x, outputPoints[i].utm.y, row, col);
-                dem.getXY(row, col, radPoint.x, radPoint.y);
-                radPoint.height = outputPoints[i].z;
-
                 if(isGridPointComputable(radSettings, row, col, dem, radiationMaps))
                 {
-                    if (! computeRadiationDemPoint(radSettings, dem, radiationMaps, radPoint, row, col, myTime))
+                    if (! computeRadiationDemPoint(radSettings, radiationMaps, dem, myTime, row, col, outputPoints[i].z))
                         return false;
                 }
             }
@@ -1168,7 +1190,7 @@ bool computeRadiationRsun(Crit3DRadiationSettings* radSettings, float temperatur
         float sumMeasuredRad = measuredRad[intervalCenter];
 
         computeRadiationRsun(radSettings, TEMPERATURE_DEFAULT, PRESSURE_SEALEVEL, myTime, linke, albedo,
-                                clearSkyTransmissivity, clearSkyTransmissivity, &sunPosition, &radPoint, dem);
+                                clearSkyTransmissivity, clearSkyTransmissivity, sunPosition, radPoint, dem);
 
         float sumPotentialRad = float(radPoint.global);
 
@@ -1184,7 +1206,7 @@ bool computeRadiationRsun(Crit3DRadiationSettings* radSettings, float temperatur
                 sumMeasuredRad += measuredRad[windowIndex];
                 computeRadiationRsun(radSettings, TEMPERATURE_DEFAULT, PRESSURE_SEALEVEL, backwardTime,
                                           linke, albedo, clearSkyTransmissivity, clearSkyTransmissivity,
-                                          &sunPosition, &radPoint, dem);
+                                          sunPosition, radPoint, dem);
                 sumPotentialRad += float(radPoint.global);
             }
             if (measuredRad[windowWidth-windowIndex-1] != NODATA)
@@ -1192,7 +1214,7 @@ bool computeRadiationRsun(Crit3DRadiationSettings* radSettings, float temperatur
                 sumMeasuredRad+= measuredRad[windowWidth-windowIndex-1];
                 computeRadiationRsun(radSettings, TEMPERATURE_DEFAULT, PRESSURE_SEALEVEL, forwardTime,
                                           linke, albedo, clearSkyTransmissivity, clearSkyTransmissivity,
-                                          &sunPosition, &radPoint, dem);
+                                          sunPosition, radPoint, dem);
                 sumPotentialRad+= float(radPoint.global);
             }
         }

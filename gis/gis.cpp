@@ -508,7 +508,6 @@ namespace gis
     }
 
 
-
     void convertFlagToNodata(Crit3DRasterGrid& myGrid)
     {
         if (myGrid.header->flag == NODATA)
@@ -724,6 +723,13 @@ namespace gis
     {
         if (  row < 0 || row >= myGrid.header->nrRows
            || col < 0 || col >= myGrid.header->nrCols) return true;
+        else return false;
+    }
+
+    bool isOutOfGridRowCol(int row, int col, Crit3DRasterHeader* header)
+    {
+        if (  row < 0 || row >= header->nrRows
+            || col < 0 || col >= header->nrCols) return true;
         else return false;
     }
 
