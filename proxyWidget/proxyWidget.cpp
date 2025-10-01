@@ -14,9 +14,9 @@
 
 
 
-Crit3DProxyWidget::Crit3DProxyWidget(Crit3DInterpolationSettings* _interpolationSettings, Crit3DMeteoPoint *meteoPoints, int nrMeteoPoints,
+Crit3DProxyWidget::Crit3DProxyWidget(Crit3DInterpolationSettings &_interpolationSettings, Crit3DMeteoPoint *meteoPoints, int nrMeteoPoints,
                                      frequencyType currentFrequency, QDate currentDate, int currentHour, Crit3DQuality *quality,
-                                     Crit3DInterpolationSettings* SQinterpolationSettings, Crit3DMeteoSettings *meteoSettings,
+                                     Crit3DInterpolationSettings &SQinterpolationSettings, Crit3DMeteoSettings *meteoSettings,
                                      Crit3DClimateParameters *climateParameters, bool checkSpatialQuality, int macroAreaNumber)
     :_interpolationSettings(_interpolationSettings), _meteoPoints(meteoPoints), _nrMeteoPoints(nrMeteoPoints),
     _currentFrequency(currentFrequency), _currentDate(currentDate), _currentHour(currentHour), _quality(quality),
@@ -56,7 +56,7 @@ Crit3DProxyWidget::Crit3DProxyWidget(Crit3DInterpolationSettings* _interpolation
     QLabel *variableLabel = new QLabel(tr("Variable"));
     QLabel *axisXLabel = new QLabel(tr("Axis X"));
 
-    std::vector<Crit3DProxy> proxy = _interpolationSettings->getCurrentProxy();
+    std::vector<Crit3DProxy> proxy = _interpolationSettings.getCurrentProxy();
 
     for(int i=0; i<int(proxy.size()); i++)
     {
@@ -174,9 +174,9 @@ Crit3DProxyWidget::~Crit3DProxyWidget()
 
 void Crit3DProxyWidget::changeProxyPos(const QString proxyName)
 {
-    for (int pos=0; pos < int(_interpolationSettings->getProxyNr()); pos++)
+    for (int pos=0; pos < int(_interpolationSettings.getProxyNr()); pos++)
     {
-        QString myProxy = QString::fromStdString(_interpolationSettings->getProxy(pos)->getName());
+        QString myProxy = QString::fromStdString(_interpolationSettings.getProxy(pos)->getName());
         if (myProxy == proxyName)
         {
             _proxyPos = pos;
@@ -185,6 +185,7 @@ void Crit3DProxyWidget::changeProxyPos(const QString proxyName)
     }
     plot();
 }
+
 
 void Crit3DProxyWidget::changeVar(const QString varName)
 {
@@ -293,7 +294,7 @@ void Crit3DProxyWidget::plot()
                                         _interpolationSettings, _meteoSettings, _climateParameters,
                                         _outInterpolationPoints, _checkSpatialQuality, errorStdStr);
 
-        detrending(_outInterpolationPoints, _interpolationSettings->getSelectedCombination(), _interpolationSettings, _climateParameters, myVar, getCurrentTime());
+        detrending(_outInterpolationPoints, _interpolationSettings.getSelectedCombination(), _interpolationSettings, _climateParameters, myVar, getCurrentTime());
     }
     else
     {
@@ -413,7 +414,7 @@ void Crit3DProxyWidget::climatologicalLRClicked(int toggled)
     {
         float zMax = getZmax(_outInterpolationPoints);
         float zMin = getZmin(_outInterpolationPoints);
-        float firstIntervalHeightValue = getFirstIntervalHeightValue(_outInterpolationPoints, _interpolationSettings->getUseLapseRateCode());
+        float firstIntervalHeightValue = getFirstIntervalHeightValue(_outInterpolationPoints, _interpolationSettings.getUseLapseRateCode());
         float lapseRate = _climateParameters->getClimateLapseRate(myVar, getCurrentTime());
         if (lapseRate == NODATA)
         {
@@ -444,23 +445,23 @@ void Crit3DProxyWidget::modelLRClicked(int toggled)
             float xMin = getZmin(_outInterpolationPoints);
             float xMax = getZmax(_outInterpolationPoints);
 
-            if (! _interpolationSettings->getUseMultipleDetrending())
+            if (! _interpolationSettings.getUseMultipleDetrending())
             {
-                if (!regressionOrography(_outInterpolationPoints,_interpolationSettings->getSelectedCombination(),
+                if (!regressionOrography(_outInterpolationPoints,_interpolationSettings.getSelectedCombination(),
                                          _interpolationSettings, _climateParameters, getCurrentTime(), myVar, _proxyPos))
                 {
                     return;
                 }
 
-                float lapseRateH0 = _interpolationSettings->getProxy(_proxyPos)->getLapseRateH0();
-                float lapseRateH1 = _interpolationSettings->getProxy(_proxyPos)->getLapseRateH1();
-                float lapseRateT0 = _interpolationSettings->getProxy(_proxyPos)->getLapseRateT0();
-                float lapseRateT1 = _interpolationSettings->getProxy(_proxyPos)->getLapseRateT1();
-                regressionSlope = _interpolationSettings->getProxy(_proxyPos)->getRegressionSlope();
+                float lapseRateH0 = _interpolationSettings.getProxy(_proxyPos)->getLapseRateH0();
+                float lapseRateH1 = _interpolationSettings.getProxy(_proxyPos)->getLapseRateH1();
+                float lapseRateT0 = _interpolationSettings.getProxy(_proxyPos)->getLapseRateT0();
+                float lapseRateT1 = _interpolationSettings.getProxy(_proxyPos)->getLapseRateT1();
+                regressionSlope = _interpolationSettings.getProxy(_proxyPos)->getRegressionSlope();
 
-                if (_interpolationSettings->getProxy(_proxyPos)->getInversionIsSignificative())
+                if (_interpolationSettings.getProxy(_proxyPos)->getInversionIsSignificative())
                 {
-                    if (xMin < _interpolationSettings->getProxy(_proxyPos)->getLapseRateH0())
+                    if (xMin < _interpolationSettings.getProxy(_proxyPos)->getLapseRateH0())
                     {
                         point.setX(xMin);
                         point.setY(lapseRateT0);
@@ -492,22 +493,22 @@ void Crit3DProxyWidget::modelLRClicked(int toggled)
                     point_vector.append(point);
                 }
 
-                if (_interpolationSettings->getProxy(_proxyPos)->getRegressionR2() != NODATA)
+                if (_interpolationSettings.getProxy(_proxyPos)->getRegressionR2() != NODATA)
                 {
-                    r2.setText(QString("%1").arg(_interpolationSettings->getProxy(_proxyPos)->getRegressionR2(), 0, 'f', 2));
+                    r2.setText(QString("%1").arg(_interpolationSettings.getProxy(_proxyPos)->getRegressionR2(), 0, 'f', 2));
                 }
                 lapseRate.setText(QString("%1").arg(regressionSlope*1000, 0, 'f', 2));
             }
-            else if (! _interpolationSettings->getUseLocalDetrending() && ! _interpolationSettings->getUseGlocalDetrending())
+            else if (! _interpolationSettings.getUseLocalDetrending() && ! _interpolationSettings.getUseGlocalDetrending())
             {
                 std::string errorStr;
 
                 setMultipleDetrendingHeightTemperatureRange(_interpolationSettings);
-                _interpolationSettings->setCurrentCombination(_interpolationSettings->getSelectedCombination());
-                _interpolationSettings->clearFitting();
+                _interpolationSettings.setCurrentCombination(_interpolationSettings.getSelectedCombination());
+                _interpolationSettings.clearFitting();
                 if (! multipleDetrendingElevationFitting(_proxyPos, _outInterpolationPoints, _interpolationSettings, myVar, errorStr, true)) return;
 
-                std::vector<std::vector<double>> parameters = _interpolationSettings->getFittingParameters();
+                std::vector<std::vector<double>> parameters = _interpolationSettings.getFittingParameters();
 
                 if (!parameters.empty() && !parameters.front().empty())
                 {
@@ -535,7 +536,7 @@ void Crit3DProxyWidget::modelLRClicked(int toggled)
         }
         else
         {
-            if (! _interpolationSettings->getUseMultipleDetrending())
+            if (! _interpolationSettings.getUseMultipleDetrending())
             {
                 float xMin = getProxyMinValue(_outInterpolationPoints, _proxyPos);
                 float xMax = getProxyMaxValue(_outInterpolationPoints, _proxyPos);
@@ -544,8 +545,8 @@ void Crit3DProxyWidget::modelLRClicked(int toggled)
                 {
                     return;
                 }
-                float regressionSlope = _interpolationSettings->getProxy(_proxyPos)->getRegressionSlope();
-                float regressionIntercept = _interpolationSettings->getProxy(_proxyPos)->getRegressionIntercept();
+                float regressionSlope = _interpolationSettings.getProxy(_proxyPos)->getRegressionSlope();
+                float regressionIntercept = _interpolationSettings.getProxy(_proxyPos)->getRegressionIntercept();
                 point.setX(xMin);
                 point.setY(regressionIntercept + regressionSlope * xMin);
                 point_vector.append(point);
@@ -553,14 +554,14 @@ void Crit3DProxyWidget::modelLRClicked(int toggled)
                 point.setY(regressionIntercept + regressionSlope * xMax);
                 point_vector.append(point);
 
-                float regressionR2 = _interpolationSettings->getProxy(_proxyPos)->getRegressionR2();
+                float regressionR2 = _interpolationSettings.getProxy(_proxyPos)->getRegressionR2();
                 if (regressionR2 != NODATA)
                 {
                     r2.setText(QString("%1").arg(regressionR2, 0, 'f', 2));
                 }
                 lapseRate.setText(QString("%1").arg(regressionSlope, 0, 'f', 2));
             }
-            else if (!_interpolationSettings->getUseLocalDetrending())
+            else if (!_interpolationSettings.getUseLocalDetrending())
             {
                 //TODO
             }
@@ -592,14 +593,14 @@ void Crit3DProxyWidget::addMacroAreaLR()
     chartView->cleanModelLapseRate();
     r2.clear();
     lapseRate.clear();
-    if (_macroAreaNumber >= 0 && _macroAreaNumber < (int)_interpolationSettings->getMacroAreas().size())
+    if (_macroAreaNumber >= 0 && _macroAreaNumber < _interpolationSettings.getMacroAreasSize())
     {
         std::string errorStr;
         setMultipleDetrendingHeightTemperatureRange(_interpolationSettings);
         glocalDetrendingFitting(_outInterpolationPoints, _interpolationSettings, myVar,errorStr);
 
         //plot
-        std::vector<std::vector<double>> myParameters = _interpolationSettings->getMacroAreas()[_macroAreaNumber].getParameters();
+        std::vector<std::vector<double>> myParameters = _interpolationSettings.getMacroArea(_macroAreaNumber).getParameters();
 
         if (myParameters.empty()) return;
         if (myParameters.front().size() < 4) return; //elevation is not significant

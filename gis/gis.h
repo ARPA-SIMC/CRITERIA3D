@@ -224,7 +224,12 @@
         void getRowColFromLonLat(const Crit3DLatLonHeader& myHeader, double lon, double lat, int *row, int *col);
 
         void getRowColFromLatLon(const Crit3DLatLonHeader &latLonHeader, const Crit3DGeoPoint& p, int *myRow, int *myCol);
+
         bool isOutOfGridRowCol(int myRow, int myCol, const Crit3DRasterGrid &rasterGrid);
+        bool isOutOfGridRowCol(int row, int col, Crit3DRasterHeader* header);
+        bool isOutOfGridXY(double x, double y, Crit3DRasterHeader* header);
+
+        bool isOutOfGridRowCol(int row, int col, const Crit3DLatLonHeader &header);
 
         void getUtmXYFromRowColSinglePrecision(const Crit3DRasterGrid& rasterGrid, int myRow, int myCol,float* myX,float* myY);
         void getUtmXYFromRowColSinglePrecision(const Crit3DRasterHeader& myHeader, int myRow, int myCol,float* myX,float* myY);
@@ -235,9 +240,6 @@
         void getLatLonFromRowCol(const Crit3DLatLonHeader &latLonHeader, const Crit3DRasterCell& v, Crit3DGeoPoint* p);
         float getValueFromXY(const Crit3DRasterGrid& rasterGrid, double x, double y);
         float getValueFromUTMPoint(const Crit3DRasterGrid& rasterGrid, Crit3DUtmPoint& utmPoint);
-
-        bool isOutOfGridXY(double x, double y, Crit3DRasterHeader* header);
-        bool isOutOfGridRowCol(int myRow, int myCol, const Crit3DLatLonHeader& header);
 
         bool isMinimum(const Crit3DRasterGrid& rasterGrid, bool isStrictMinumum, int row, int col);
         bool isMinimumOrNearMinimum(const Crit3DRasterGrid& rasterGrid, int row, int col);

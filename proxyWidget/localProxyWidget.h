@@ -15,10 +15,10 @@ class Crit3DLocalProxyWidget : public QWidget
 
 public:
     Crit3DLocalProxyWidget(double x, double y, double zDEM, double zGrid, gis::Crit3DGisSettings gisSettings,
-                           Crit3DInterpolationSettings* interpolationSettings, Crit3DMeteoPoint* meteoPoints,
+                           Crit3DInterpolationSettings &interpolationSettings, Crit3DMeteoPoint* meteoPoints,
                            int nrMeteoPoints, meteoVariable currentVariable, frequencyType currentFrequency,
                            QDate currentDate, int currentHour, Crit3DQuality* quality,
-                           Crit3DInterpolationSettings* SQinterpolationSettings, Crit3DMeteoSettings *meteoSettings,
+                           Crit3DInterpolationSettings &SQinterpolationSettings, Crit3DMeteoSettings *meteoSettings,
                            Crit3DClimateParameters *climateParameters, bool checkSpatialQuality);
 
     ~Crit3DLocalProxyWidget();
@@ -39,7 +39,7 @@ private:
     double _zGrid;
 
     gis::Crit3DGisSettings _gisSettings;
-    Crit3DInterpolationSettings* _interpolationSettings;
+    Crit3DInterpolationSettings _interpolationSettings;
 
     Crit3DMeteoPoint* _meteoPoints;
     int _nrMeteoPoints;
@@ -50,7 +50,7 @@ private:
     int _currentHour;
 
     Crit3DQuality* _quality;
-    Crit3DInterpolationSettings* _SQinterpolationSettings;
+    Crit3DInterpolationSettings _SQinterpolationSettings;
     Crit3DMeteoSettings *_meteoSettings;
     Crit3DClimateParameters *_climateParameters;
 
