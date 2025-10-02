@@ -152,7 +152,7 @@ namespace soilFluxes3D::New
     {
         balanceResult_t balanceResult;
 
-        for(uint8_t approxIdx = 0; approxIdx < _parameters.maxApproximationsNumber; ++approxIdx)
+        for(u8_t approxIdx = 0; approxIdx < _parameters.maxApproximationsNumber; ++approxIdx)
         {
             //Compute capacity vector elements
             computeCapacity(vectorC);
@@ -269,7 +269,7 @@ namespace soilFluxes3D::New
             heatCapacity *= nodeGrid.size[rowIdx];
 
             //Create matrix elements
-            uint8_t linkIdx = 1;
+            u8_t linkIdx = 1;
             bool isLinked = false;
 
             isLinked = computeHeatLinkFluxes(matrixA.values[rowIdx][linkIdx], matrixA.colIndeces[rowIdx][linkIdx], rowIdx, 0, timeStepHeat, timeStepWater);
@@ -282,7 +282,7 @@ namespace soilFluxes3D::New
                 linkIdx++;
 
             //Compute flux lateral
-            for(uint8_t latIdx = 0; latIdx < maxLateralLink; ++latIdx)
+            for(u8_t latIdx = 0; latIdx < maxLateralLink; ++latIdx)
             {
                 isLinked = computeHeatLinkFluxes(matrixA.values[rowIdx][linkIdx], matrixA.colIndeces[rowIdx][linkIdx], rowIdx, 2 + latIdx, timeStepHeat, timeStepWater);
                 if(isLinked)
@@ -293,7 +293,7 @@ namespace soilFluxes3D::New
 
             //Compute diagonal element
             double sumDP = 0., sumF0 = 0.;
-            for(uint8_t colIdx = 1; colIdx < matrixA.numColumns[rowIdx]; ++colIdx)
+            for(u8_t colIdx = 1; colIdx < matrixA.numColumns[rowIdx]; ++colIdx)
             {
                 sumDP += matrixA.values[rowIdx][colIdx] * _parameters.heatWeightFactor;
                 double dT0 = nodeGrid.heatData.oldTemperature[matrixA.colIndeces[rowIdx][colIdx]] - nodeGrid.heatData.oldTemperature[rowIdx];
@@ -312,7 +312,7 @@ namespace soilFluxes3D::New
             {
                 vectorB.values[rowIdx] /= matrixA.values[rowIdx][0];
 
-                for(uint8_t colIdx = 1; colIdx < matrixA.numColumns[rowIdx]; ++colIdx)
+                for(u8_t colIdx = 1; colIdx < matrixA.numColumns[rowIdx]; ++colIdx)
                     matrixA.values[rowIdx][colIdx] /= matrixA.values[rowIdx][0];
             }
         }
@@ -339,13 +339,13 @@ namespace soilFluxes3D::New
     }
 
 
-    bool CPUSolver::solveLinearSystem(uint8_t approximationNumber, processType computationType)
+    bool CPUSolver::solveLinearSystem(u8_t approximationNumber, processType computationType)
     {
         double currErrorNorm = 0., bestErrorNorm = static_cast<double>(std::numeric_limits<float>::max());
 
-        uint32_t currMaxIterationNum = calcCurrentMaxIterationNumber(approximationNumber);
+        u32_t currMaxIterationNum = calcCurrentMaxIterationNumber(approximationNumber);
 
-        for(uint32_t iterationNumber = 0; iterationNumber < currMaxIterationNum; ++iterationNumber)
+        for(u32_t iterationNumber = 0; iterationNumber < currMaxIterationNum; ++iterationNumber)
         {
             switch(computationType)
             {

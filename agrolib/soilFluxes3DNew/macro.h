@@ -14,6 +14,10 @@
     #define __STDCALL
 #endif
 
+//Generic macroes
+#define toStr(var) #var
+#define expStr(var) toStr(var)
+
 //Generic functions
 #define toUnderlyingT(enumValue) castToUnderlyingType(enumValue)
 
@@ -33,8 +37,8 @@
 #define deviceReset(ptr, count) resetDevicePointer(ptr, count)
 #define deviceFree(ptr) freeDevicePointer(ptr)
 
-#define moveToDevice(ptr, type, count) movePointerToDevice(ptr, count, moveStreams[(currStreamIdx++) % 32])
-#define moveToHost(ptr, type, count) movePointerToHost(ptr, count, moveStreams[(currStreamIdx++) % 32])
+#define moveToDevice(ptr, count) movePointerToDevice(ptr, count, moveStreams[(currStreamIdx++) % 32])
+#define moveToHost(ptr, count) movePointerToHost(ptr, count, moveStreams[(currStreamIdx++) % 32])
 
 //GPU Solver
 #define deviceSolverAlloc(ptr, count) solverDeviceCheckError(deviceAlloc(ptr, count), _status, SF3Derror_t::MemoryError)
@@ -42,8 +46,6 @@
 
 #define launchKernel(kernel, ...) launchGPUKernel(kernel, dim3(numBlocks), dim3(numThreadsPerBlock), __VA_ARGS__)
 #define cuspCheck(retValue) solverDeviceCheckError(retValue, _status, SF3Derror_t::SolverError)
-
-
 
 //CUDA runtime
 #ifdef CUDA_ENABLED
@@ -63,6 +65,16 @@
     #define SF3Dmin(v1, v2) std::min(v1, v2)
 #endif
 
+//openMP directives
+#ifdef _OPENMP  // Defined automatically when compiling with -fopenmp. Move to a custom macro?
+    #define __parfor            _Pragma(expStr(omp parallel for if(__ompStatus)))
+    #define __parforop(op, var) _Pragma(expStr(omp parallel for if(__ompStatus) reduction(op:var)))
+#else
+    #define __parfor
+    #define __parforsum(var)
+    #define __parformax(var)
+#endif
+
 
 //Log
 #ifdef MCR_ENABLED
@@ -77,7 +89,8 @@
 
 
 
-//TEMP
+
+/* OLD
 #define SF3DatomicMax(ptr, value) atomicMaxDouble(ptr, value)
 
 inline __cudaSpec void atomicMaxDouble(double *ptr, double value)
@@ -101,6 +114,6 @@ inline __cudaSpec void atomicMaxDouble(double *ptr, double value)
         *ptr = (*ptr > value) ? *ptr : value;
     #endif
 }
-
+*/
 
 #endif // SOILFLUXES3D_MACRO_H

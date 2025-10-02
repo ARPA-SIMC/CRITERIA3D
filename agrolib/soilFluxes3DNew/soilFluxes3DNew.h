@@ -7,7 +7,7 @@
 namespace soilFluxes3D::New
 {
     //Inizializazion and memory management
-    SF3Derror_t initializeSF3D(SF3Duint_t nrNodes, uint16_t nrLayers, uint8_t nrLateralLinks, bool isComputeWater, bool isComputeHeat, bool isComputeSolutes, heatFluxSaveMode_t HFsm = heatFluxSaveMode_t::None);
+    SF3Derror_t initializeSF3D(SF3Duint_t nrNodes, u16_t nrLayers, u8_t nrLateralLinks, bool isComputeWater, bool isComputeHeat, bool isComputeSolutes, heatFluxSaveMode_t HFsm = heatFluxSaveMode_t::None);
     SF3Derror_t initializeBalance();
     SF3Derror_t initializeLog(const std::string& logPath, const std::string& projectName);
 
@@ -16,14 +16,14 @@ namespace soilFluxes3D::New
 
     SF3Derror_t initializeHeatFlag(heatFluxSaveMode_t saveModeHeat, bool isComputeAdvectiveFlux, bool isComputeLatentHeat);
 
-    uint32_t setThreadsNumber(uint32_t nrThreads);
+    u32_t setThreadsNumber(u32_t nrThreads);
 
     //Create types
-    SF3Derror_t setSoilProperties(uint16_t nrSoil, uint16_t nrHorizon, double VG_alpha, double VG_n, double VG_m, double VG_he, double ThetaR, double ThetaS, double Ksat, double L, double organicMatter, double clay);
-    SF3Derror_t setSurfaceProperties(uint16_t surfaceIndex, double roughness);
+    SF3Derror_t setSoilProperties(u16_t nrSoil, u16_t nrHorizon, double VG_alpha, double VG_n, double VG_m, double VG_he, double ThetaR, double ThetaS, double Ksat, double L, double organicMatter, double clay);
+    SF3Derror_t setSurfaceProperties(u16_t surfaceIndex, double roughness);
 
     //Set core data
-    SF3Derror_t setNumericalParameters(double minDeltaT, double maxDeltaT, uint16_t maxIterationNumber, uint16_t maxApproximationsNumber, uint8_t ResidualToleranceExponent, uint8_t MBRThresholdExponent);
+    SF3Derror_t setNumericalParameters(double minDeltaT, double maxDeltaT, u16_t maxIterationNumber, u16_t maxApproximationsNumber, u8_t ResidualToleranceExponent, u8_t MBRThresholdExponent);
     SF3Derror_t setHydraulicProperties(WRCModel waterRetentionCurve, meanType_t conductivityMeanType, float conductivityHorizVertRatio);
 
     //Set topology
@@ -33,8 +33,8 @@ namespace soilFluxes3D::New
     SF3Derror_t setNodeBoundary(SF3Duint_t nodeIndex, boundaryType_t boundaryType, double slope, double boundaryArea);
 
     //Set soil data
-    SF3Derror_t setNodeSoil(SF3Duint_t nodeIndex, uint16_t soilIndex, uint16_t horizonIndex);
-    SF3Derror_t setNodeSurface(SF3Duint_t nodeIndex, uint16_t surfaceIndex);
+    SF3Derror_t setNodeSoil(SF3Duint_t nodeIndex, u16_t soilIndex, u16_t horizonIndex);
+    SF3Derror_t setNodeSurface(SF3Duint_t nodeIndex, u16_t surfaceIndex);
 
     //Set water data
     SF3Derror_t setNodePond(SF3Duint_t nodeIndex, double pond);

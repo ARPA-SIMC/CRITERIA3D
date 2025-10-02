@@ -46,13 +46,13 @@ namespace soilFluxes3D::Heat
             switch(simulationFlags.HFsaveMode)
             {
                 case heatFluxSaveMode_t::All:
-                    for(uint8_t lIdx = 0; lIdx < maxTotalLink; ++lIdx)
+                    for(u8_t lIdx = 0; lIdx < maxTotalLink; ++lIdx)
                         for(auto index : heatFluxIndeces)
                             hostFill(nodeGrid.linkData[lIdx].fluxes[toUnderlyingT(index)], nodeGrid.numNodes, noDataD);
                     break;
 
                 case heatFluxSaveMode_t::Total:
-                    for(uint8_t lIdx = 0; lIdx < maxTotalLink; ++lIdx)
+                    for(u8_t lIdx = 0; lIdx < maxTotalLink; ++lIdx)
                         hostFill(nodeGrid.linkData[lIdx].fluxes[toUnderlyingT(fluxTypes_t::HeatTotal)], nodeGrid.numNodes, noDataD);
                     break;
 
@@ -66,7 +66,7 @@ namespace soilFluxes3D::Heat
             switch(simulationFlags.HFsaveMode)
             {
                 case heatFluxSaveMode_t::All:
-                    for(uint8_t lIdx = 0; lIdx < maxTotalLink; ++lIdx)
+                    for(u8_t lIdx = 0; lIdx < maxTotalLink; ++lIdx)
                         for(auto index : waterFluxIndeces)
                             hostFill(nodeGrid.linkData[lIdx].fluxes[toUnderlyingT(index)], nodeGrid.numNodes, noDataD);
                     break;
@@ -83,14 +83,14 @@ namespace soilFluxes3D::Heat
     {
         #pragma omp parallel for    //Try swap loop order and/or use collapse(2)
         for (SF3Duint_t nIdx = 0; nIdx < nodeGrid.numNodes; ++nIdx)
-            for(uint8_t lIdx = 0; lIdx < maxTotalLink; ++lIdx)
+            for(u8_t lIdx = 0; lIdx < maxTotalLink; ++lIdx)
                 if(nodeGrid.linkData[lIdx].linkType[nIdx] !=  linkType_t::NoLink)
                     saveNodeWaterFluxes(nIdx, lIdx, dtHeat, dtWater);
 
         return SF3Derror_t::SF3Dok;
     }
 
-    SF3Derror_t saveNodeWaterFluxes(SF3Duint_t nIdx, uint8_t lIdx, double dtHeat, double dtWater)
+    SF3Derror_t saveNodeWaterFluxes(SF3Duint_t nIdx, u8_t lIdx, double dtHeat, double dtWater)
     {
         SF3Duint_t dIdx = nodeGrid.linkData[lIdx].linkIndex[nIdx];
 
@@ -133,13 +133,13 @@ namespace soilFluxes3D::Heat
 
         #pragma omp parallel for
         for (SF3Duint_t nIdx = 0; nIdx < nodeGrid.numNodes; ++nIdx)
-            for(uint8_t lIdx = 0; lIdx < maxTotalLink; ++lIdx)
+            for(u8_t lIdx = 0; lIdx < maxTotalLink; ++lIdx)
                 saveNodeHeatFluxes(nIdx, lIdx, dtHeat, dtWater);
 
         return SF3Derror_t::SF3Dok;
     }
 
-    SF3Derror_t saveNodeHeatFluxes(SF3Duint_t nIdx, uint8_t lIdx, double dtHeat, double dtWater)
+    SF3Derror_t saveNodeHeatFluxes(SF3Duint_t nIdx, u8_t lIdx, double dtHeat, double dtWater)
     {
         SF3Duint_t linkedIdx = nodeGrid.linkData[lIdx].linkIndex[nIdx];
         double matrixValue = getMatrixElement(nIdx, linkedIdx);
@@ -170,7 +170,7 @@ namespace soilFluxes3D::Heat
         return SF3Derror_t::SF3Dok;
     }
 
-    SF3Derror_t saveNodeHeatSpecificFlux(SF3Duint_t nIdx, uint8_t lIdx, fluxTypes_t fluxType, double fluxValue)
+    SF3Derror_t saveNodeHeatSpecificFlux(SF3Duint_t nIdx, u8_t lIdx, fluxTypes_t fluxType, double fluxValue)
     {
         if(simulationFlags.HFsaveMode == heatFluxSaveMode_t::None)
             return SF3Derror_t::ParameterError;
@@ -382,7 +382,7 @@ namespace soilFluxes3D::Heat
     }
 
 
-    bool computeHeatLinkFluxes(double& matrixElement, SF3Duint_t& matrixIndex, SF3Duint_t nodeIndex, uint8_t linkIndex, double dtHeat, double dtWater)
+    bool computeHeatLinkFluxes(double& matrixElement, SF3Duint_t& matrixIndex, SF3Duint_t nodeIndex, u8_t linkIndex, double dtHeat, double dtWater)
     {
         if(nodeGrid.linkData[linkIndex].linkType[nodeIndex] == linkType_t::NoLink)
             return false;
@@ -424,7 +424,7 @@ namespace soilFluxes3D::Heat
      * \param process: type of calculation that call the function [Water/Heat]
      * \return Thermal liquid flux [m3 s-1]
      */
-    double computeThermalLiquidFlux(SF3Duint_t nIdx, uint8_t lIdx, processType process, double dtHeat, double dtWater)
+    double computeThermalLiquidFlux(SF3Duint_t nIdx, u8_t lIdx, processType process, double dtHeat, double dtWater)
     {
         SF3Duint_t dIdx = nodeGrid.linkData[lIdx].linkIndex[nIdx];
         double srcAvgT, dstAvgT, srcAvgH, dstAvgH;
@@ -472,7 +472,7 @@ namespace soilFluxes3D::Heat
      * \param process: type of calculation that call the function [Water/Heat]
      * \return Thermal vapor flux [m3 s-1]
      */
-    double computeThermalVaporFlux(SF3Duint_t nIdx, uint8_t lIdx, processType process, double dtHeat, double dtWater)
+    double computeThermalVaporFlux(SF3Duint_t nIdx, u8_t lIdx, processType process, double dtHeat, double dtWater)
     {
         SF3Duint_t dIdx = nodeGrid.linkData[lIdx].linkIndex[nIdx];
         double srcAvgT, dstAvgT, srcAvgH, dstAvgH;
@@ -519,7 +519,7 @@ namespace soilFluxes3D::Heat
      * \param dtWater: time step for the water calculation [s]
      * \return Isothermal vapor flux [kg s-1]
      */
-    double computeIsothermalVaporFlux(SF3Duint_t nIdx, uint8_t lIdx, double dtHeat, double dtWater)
+    double computeIsothermalVaporFlux(SF3Duint_t nIdx, u8_t lIdx, double dtHeat, double dtWater)
     {
         SF3Duint_t dIdx = nodeGrid.linkData[lIdx].linkIndex[nIdx];
 
@@ -548,7 +548,7 @@ namespace soilFluxes3D::Heat
      * \param dtWater: time step for the water calculation [s]
      * \return Isothermal latent heat flux [W]
      */
-    double computeIsothermalLatentHeatFlux(SF3Duint_t nIdx, uint8_t lIdx, double dtHeat, double dtWater)
+    double computeIsothermalLatentHeatFlux(SF3Duint_t nIdx, u8_t lIdx, double dtHeat, double dtWater)
     {
         SF3Duint_t linkNodeIdx = nodeGrid.linkData[lIdx].linkIndex[nIdx];
 
@@ -566,7 +566,7 @@ namespace soilFluxes3D::Heat
      * \param dtWater: time step for the water calculation [s]
      * \return Advective liquid water heat flux [W]
      */
-    double computeAdvectiveFlux(SF3Duint_t nIdx, uint8_t lIdx)
+    double computeAdvectiveFlux(SF3Duint_t nIdx, u8_t lIdx)
     {
         SF3Duint_t linkedNodeIdx = nodeGrid.linkData[lIdx].linkIndex[nIdx];
 
@@ -603,7 +603,7 @@ namespace soilFluxes3D::Heat
         }
     }
 
-    double conduction(SF3Duint_t nIdx, uint8_t lIdx, double dtHeat, double dtWater)
+    double conduction(SF3Duint_t nIdx, u8_t lIdx, double dtHeat, double dtWater)
     {
         SF3Duint_t linkedNodeIdx = nodeGrid.linkData[lIdx].linkIndex[nIdx];
 
@@ -636,7 +636,7 @@ namespace soilFluxes3D::Heat
                 continue;
 
             double newXvalue = vectorB.values[rowIdx];
-            for(uint8_t colIdx = 1; colIdx < matrixA.numColumns[rowIdx]; ++colIdx)
+            for(u8_t colIdx = 1; colIdx < matrixA.numColumns[rowIdx]; ++colIdx)
                 newXvalue -= matrixA.values[rowIdx][colIdx] * vectorX.values[matrixA.colIndeces[rowIdx][colIdx]];
 
             double deltaX = std::fabs(newXvalue - vectorX.values[rowIdx]);
@@ -872,7 +872,7 @@ namespace soilFluxes3D::Heat
         //Aereodynamic conductance
         double K = noDataD;
 
-        for(uint8_t counter = 0; counter < 100; ++counter)
+        for(u8_t counter = 0; counter < 100; ++counter)
         {
             //Friction velocity [m s-1]
             double uStar = VON_KARMAN_CONST * windSpeed / (std::log((heightWind - zeroPlane + rMomentum) / rMomentum) + psiM);

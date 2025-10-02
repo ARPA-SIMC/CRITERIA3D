@@ -18,8 +18,9 @@
 namespace soilFluxes3D::New
 {
     using SF3Duint_t = std::uint32_t;
-    using uint8_t  = std::uint8_t;
-    using uint16_t = std::uint16_t;
+    using u8_t  = std::uint8_t;
+    using u16_t = std::uint16_t;
+    using u32_t = std::uint32_t;
 
     #define maxLateralLink 8
     #define maxTotalLink (maxLateralLink + 2)
@@ -27,30 +28,29 @@ namespace soilFluxes3D::New
 
     #define numTotalFluxTypes 9
 
-    #define noData 0
-
-    constexpr double noDataDouble_v = static_cast<double>(NODATA);
-    constexpr SF3Duint_t noDataUint_v = std::numeric_limits<SF3Duint_t>::max();
-    #define noDataD noDataDouble_v
-    #define noDataU noDataUint_v
+    constexpr double doubleNoData_v = static_cast<double>(NODATA);
+    constexpr SF3Duint_t uintNoData_v = std::numeric_limits<SF3Duint_t>::max();
+    #define noDataD doubleNoData_v
+    #define noDataU uintNoData_v
 
 
     //Math
-    enum class meanType_t : uint8_t {Arithmetic, Geometric, Logarithmic};
+    enum class meanType_t : u8_t {Arithmetic, Geometric, Logarithmic};
 
     //Error Status
-    enum class SF3Derror_t : uint8_t {SF3Dok, IndexError, MemoryError, TopographyError, BoundaryError, MissingDataError, ParameterError, SolverError, FileError};
+    enum class SF3Derror_t : u8_t {SF3Dok, IndexError, MemoryError, TopographyError, BoundaryError, MissingDataError, ParameterError, SolverError, FileError};
 
     //Process implemented
-    enum class processType : uint8_t {Water, Heat, Solutes};
+    enum class processType : u8_t {Water, Heat, Solutes};
 
     //Structure
-    enum class boundaryType_t : uint8_t {NoBoundary, Runoff, FreeDrainage, FreeLateraleDrainage, PrescribedTotalWaterPotential, Urban, Road, Culvert, HeatSurface, SoluteFlux};
-    enum class linkType_t : uint8_t {NoLink, Up, Down, Lateral};
+    enum class boundaryType_t : u8_t {NoBoundary, Runoff, FreeDrainage, FreeLateraleDrainage, PrescribedTotalWaterPotential, Urban, Road, Culvert, HeatSurface, SoluteFlux};
+    enum class linkType_t : u8_t {NoLink, Up, Down, Lateral};
 
     //Soil / surface
     struct soilData_t
     {
+        u16_t soilNumber, horizonNumber;
         double VG_alpha;            /*!< [m-1] Van Genutchen alpha parameter */
         double VG_n;                /*!< [-] Van Genutchen n parameter */
         double VG_m;                /*!< [-] Van Genutchen m parameter  ]0. , 1.[ */
@@ -78,7 +78,7 @@ namespace soilFluxes3D::New
     };
 
     //Water
-    enum class WRCModel : uint8_t {VanGenuchten, ModifiedVanGenuchten, Campbell};
+    enum class WRCModel : u8_t {VanGenuchten, ModifiedVanGenuchten, Campbell};
     struct waterData_t
     {
         double *saturationDegree = nullptr;   //Se
@@ -100,12 +100,9 @@ namespace soilFluxes3D::New
 
     struct culvertData_t
     {
-        bool isActive = false;
-        SF3Duint_t index = noData;
-        double width = noDataD;        /*!< [m] */
-        double height = noDataD;       /*!< [m] */
-        double roughness = noDataD;    /*!< [s m-1/3] Manning roughness */
-        double slope = noDataD;        /*!< [-] */
+        double width;        /*!< [m] */
+        double height;       /*!< [m] */
+        double roughness;    /*!< [s m-1/3] Manning roughness */
     };
 
     //Heat
@@ -121,7 +118,7 @@ namespace soilFluxes3D::New
     // ...
 
     //Simulation
-    enum class balanceResult_t {stepAccepted, stepRefused, stepHalved};
+    enum class balanceResult_t : u8_t {stepAccepted, stepRefused, stepHalved};
     struct balanceData_t
     {
         double waterStorage = 0.;
@@ -146,7 +143,7 @@ namespace soilFluxes3D::New
         heatFluxSaveMode_t HFsaveMode = heatFluxSaveMode_t::None;
     };
 
-    enum class fluxTypes_t : uint8_t {HeatTotal, HeatDiffusive, HeatLatentIsothermal, HeatLatentThermal, HeatAdvective, WaterLiquidIsothermal, WaterLiquidThermal, WaterVaporIsothermal, WaterVaporThermal};
+    enum class fluxTypes_t : u8_t {HeatTotal, HeatDiffusive, HeatLatentIsothermal, HeatLatentThermal, HeatAdvective, WaterLiquidIsothermal, WaterLiquidThermal, WaterVaporIsothermal, WaterVaporThermal};
     constexpr fluxTypes_t heatFluxIndeces[] = {fluxTypes_t::HeatTotal, fluxTypes_t::HeatDiffusive, fluxTypes_t::HeatLatentIsothermal, fluxTypes_t::HeatLatentThermal, fluxTypes_t::HeatAdvective};
     constexpr fluxTypes_t waterFluxIndeces[] = {fluxTypes_t::WaterLiquidIsothermal, fluxTypes_t::WaterLiquidThermal, fluxTypes_t::WaterVaporIsothermal, fluxTypes_t::WaterVaporThermal};
 
@@ -194,7 +191,7 @@ namespace soilFluxes3D::New
         double *radiativeFlux = nullptr;            /*!< [W m-2] boundary net radiative flux density */
         double *advectiveHeatFlux = nullptr;        /*!< [W m-2] boundary advective heat flux density  */
 
-        double *fixedTemperatureValue = nullptr;         /*!< [K] fixed temperature */
+        double *fixedTemperatureValue = nullptr;    /*!< [K] fixed temperature */
         double *fixedTemperatureDepth = nullptr;    /*!< [m] depth of fixed temperature layer */
     };
 
@@ -211,30 +208,29 @@ namespace soilFluxes3D::New
         bool *surfaceFlag = nullptr;                        //isSurface
 
         //Soil/surface properties pointers
-        uint16_t *soilRowIndeces = nullptr;                 //used for offsets in gpuCode
         soilSurface_ptr *soilSurfacePointers = nullptr;
 
         //Boundary data
         boundaryData_t boundaryData;
 
         //Link data
-        uint8_t *numLateralLink = nullptr;
+        u8_t *numLateralLink = nullptr;
         linkData_t linkData[maxTotalLink];
 
         //Water quantities
         waterData_t waterData;
 
-        //Culvert data
-        culvertData_t culvertData;
+        //Culvert pointers
+        culvertData_t* *culvertPtr = nullptr;
 
         //Heat and solutes quantities
         heatData_t heatData;
     };
 
     //Solver
-    enum class numericalMethod : uint8_t {Jacobi, GaussSeidel};
-    enum class solverType : uint8_t  {CPU, GPU};
-    enum class solverStatus : uint8_t {Error, Created, initialized, Launched, Terminated};
+    enum class numericalMethod : u8_t {Jacobi, GaussSeidel};
+    enum class solverType : u8_t  {CPU, GPU};
+    enum class solverStatus : u8_t {Error, Created, initialized, Launched, Terminated};
 
     struct SolverParameters
     {
@@ -245,8 +241,8 @@ namespace soilFluxes3D::New
         double deltaTmax = 600;     // [s]
         double deltaTcurr = noDataD;
 
-        uint16_t maxApproximationsNumber = 10;
-        uint16_t maxIterationsNumber = 200;
+        u16_t maxApproximationsNumber = 10;
+        u16_t maxIterationsNumber = 200;
 
         WRCModel waterRetentionCurveModel = WRCModel::ModifiedVanGenuchten;
         meanType_t meanType = meanType_t::Logarithmic;
@@ -258,7 +254,7 @@ namespace soilFluxes3D::New
         double instabilityFactor = 10.;     //used for evaluate stability
 
         bool enableOMP = true;
-        uint32_t numThreads = std::thread::hardware_concurrency();
+        u32_t numThreads = std::thread::hardware_concurrency();
     };
 
     //Move to a different location?

@@ -19,7 +19,7 @@ namespace soilFluxes3D::New
             void heatLoop(double timeStepHeat, double timeStepWater);
 
 
-            bool solveLinearSystem(uint8_t approximationNumber, processType computationType) override;
+            bool solveLinearSystem(u8_t approximationNumber, processType computationType) override;
 
         public:
             CPUSolver() : Solver(solverType::CPU, numericalMethod::Jacobi) {}
@@ -34,7 +34,7 @@ namespace soilFluxes3D::New
     {
         assert(rowIndex != colIndex);
         //assert(matrixA.values != nullptr);
-        uint8_t cpuColIdx;
+        u8_t cpuColIdx;
         for(cpuColIdx = 1; cpuColIdx < matrixA.numColumns[rowIndex]; ++cpuColIdx)
             if(matrixA.colIndeces[rowIndex][cpuColIdx] == colIndex)
                 break;
