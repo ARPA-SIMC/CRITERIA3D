@@ -39,7 +39,7 @@ namespace soilFluxes3D::New
             __cudaSpec meanType_t getMeanType() const noexcept;
 
             template<class Derived>
-            __cudaSpec double getMatrixElementValue(uint64_t rowIndex, uint64_t colIndex) const noexcept;
+            __cudaSpec double getMatrixElementValue(SF3Duint_t rowIndex, SF3Duint_t colIndex) const noexcept;
 
             virtual SF3Derror_t initialize() = 0;
             virtual SF3Derror_t run(double maxTimeStep, double &acceptedTimeStep, processType process) = 0;
@@ -116,7 +116,7 @@ namespace soilFluxes3D::New
     }
 
     template<class Derived>
-    __cudaSpec double Solver::getMatrixElementValue(uint64_t rowIndex, uint64_t colIndex) const noexcept
+    __cudaSpec double Solver::getMatrixElementValue(SF3Duint_t rowIndex, SF3Duint_t colIndex) const noexcept
     {
         return static_cast<const Derived*>(this)->getMatrixElementValue(rowIndex, colIndex);
     }

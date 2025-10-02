@@ -48,18 +48,18 @@ namespace soilFluxes3D::Log
 
         mxArray* matA = mxCreateStructMatrix(1, 1, 3, logData.matrixFieldsNames);
 
-        const uint64_t nnz = size * matrix.maxColumns;
+        const SF3Duint_t nnz = size * matrix.maxColumns;
         mxArray *rowIdx = mxCreateNumericMatrix(nnz, 1, mxUINT64_CLASS, mxREAL);
         mxArray *colIdx = mxCreateNumericMatrix(nnz, 1, mxUINT64_CLASS, mxREAL);
         mxArray *values = mxCreateNumericMatrix(nnz, 1, mxDOUBLE_CLASS, mxREAL);
 
-        uint64_t* rowPtr = static_cast<uint64_t*>(mxGetData(rowIdx));
-        uint64_t* colPtr = static_cast<uint64_t*>(mxGetData(colIdx));
+        SF3Duint_t* rowPtr = static_cast<SF3Duint_t*>(mxGetData(rowIdx));
+        SF3Duint_t* colPtr = static_cast<SF3Duint_t*>(mxGetData(colIdx));
         double* valPtr = static_cast<double*>(mxGetData(values));
 
-        uint64_t cnz = 0;
-        for(uint64_t rIdx = 0; rIdx < matrix.numRows; ++rIdx)
-            for(uint64_t cIdx = 0; cIdx < matrix.numColumns[rIdx]; ++cIdx)
+        SF3Duint_t cnz = 0;
+        for(SF3Duint_t rIdx = 0; rIdx < matrix.numRows; ++rIdx)
+            for(SF3Duint_t cIdx = 0; cIdx < matrix.numColumns[rIdx]; ++cIdx)
             {
                 rowPtr[cnz] = rIdx;
                 colPtr[cnz] = matrix.colIndeces[rIdx][cIdx];

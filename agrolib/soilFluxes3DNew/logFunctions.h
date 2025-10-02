@@ -99,7 +99,7 @@ namespace soilFluxes3D::Log
         else if constexpr (std::is_same_v<T, bool>) return mxLOGICAL_CLASS;
         else if constexpr (std::is_same_v<T, double>) return mxDOUBLE_CLASS;
         else if constexpr (std::is_same_v<T, int>) return mxINT32_CLASS;
-        else if constexpr (std::is_same_v<T, uint64_t>) return mxUINT64_CLASS;
+        else if constexpr (std::is_same_v<T, SF3Duint_t>) return mxUINT64_CLASS;
         else if constexpr (std::is_same_v<T, uint16_t>) return mxUINT16_CLASS;
         else if constexpr (std::is_same_v<T, uint8_t>) return mxUINT8_CLASS;
         else return mxUNKNOWN_CLASS;

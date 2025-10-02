@@ -2,6 +2,7 @@
 #define SOILFLUXES3D_TYPES_GPU_H
 
 #define NOMINMAX
+#include <cstdint>
 
 #include <cuda.h>
 #include <cuda_runtime.h>
@@ -10,6 +11,8 @@
 
 namespace soilFluxes3D::New
 {
+    using int64_t = std::int64_t;
+
     struct MatrixGPU
     {
         cusparseSpMatDescr_t cusparseDescriptor;
