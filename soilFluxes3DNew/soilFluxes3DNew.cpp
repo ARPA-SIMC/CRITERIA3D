@@ -523,11 +523,11 @@ namespace soilFluxes3D::New
         culvertData_t* culvertPtr = nullptr;
         for(std::size_t vIdx = 0; vIdx < culvertList.size(); ++vIdx)
         {
-            const culvertData_t& currCulvert = culvertList[vIdx];
+            culvertData_t& currCulvert = culvertList[vIdx];
             //Move to a index system for perfomance and flexibility
-            if(currCulvert.roughness == roughness && currCulvert.slope == slope && currCulvert.width == width && currCulvert.height == height)
+            if(currCulvert.roughness == roughness && currCulvert.width == width && currCulvert.height == height)
             {
-                cullvertPtr = &(currCulvert);
+                culvertPtr = &(currCulvert);
                 break;
             }
         }
@@ -539,11 +539,11 @@ namespace soilFluxes3D::New
             currCulvert.width = width;
             currCulvert.height = height;
             culvertList.push_back(currCulvert);
-            cullvertPtr = &(culvertList[culvertList.size() - 1]);
+            culvertPtr = &(culvertList[culvertList.size() - 1]);
         }
 
         //Set the culvertData_t pointer
-        nodeGrid.culvertPtr[nodeIndex] = cullvertPtr;
+        nodeGrid.culvertPtr[nodeIndex] = culvertPtr;
         return SF3Derror_t::SF3Dok;
 
     }
@@ -1179,7 +1179,7 @@ namespace soilFluxes3D::New
     {
         double totalBoundaryWaterFlow = 0.0;
 
-        #pragma omp parallel for if(__ompStatus) reduction(+:totalBoundaryWaterFlow)
+        __parforop(+, totalBoundaryWaterFlow)
         for (SF3Duint_t nodeIdx = 0; nodeIdx < nodeGrid.numNodes; ++nodeIdx)
             if (nodeGrid.boundaryData.boundaryType[nodeIdx] == boundaryType)
                 totalBoundaryWaterFlow += nodeGrid.boundaryData.waterFlowSum[nodeIdx];

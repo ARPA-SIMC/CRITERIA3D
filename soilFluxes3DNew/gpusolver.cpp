@@ -584,7 +584,7 @@ namespace soilFluxes3D::New
         cudaMemcpy(d_soilList, soilList.data(), soilSize, cudaMemcpyHostToDevice);
 
         //Update pointers in nodeGrid
-        #pragma omp parallel for if(_parameters.enableOMP)
+        __parforSolver
         for(SF3Duint_t nodeIndex = 0; nodeIndex < nodeGrid.numNodes; ++nodeIndex)
         {
             auto& pointer = nodeGrid.soilSurfacePointers[nodeIndex];
@@ -662,7 +662,7 @@ namespace soilFluxes3D::New
 
     SF3Derror_t GPUSolver::downMoveSoilSurfacePtr()
     {
-        #pragma omp parallel for if(_parameters.enableOMP)
+        __parforSolver
         for(SF3Duint_t nodeIndex = 0; nodeIndex < nodeGrid.numNodes; ++nodeIndex)
         {
             auto& pointer = nodeGrid.soilSurfacePointers[nodeIndex];

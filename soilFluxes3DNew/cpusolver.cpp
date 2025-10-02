@@ -89,7 +89,7 @@ namespace soilFluxes3D::New
             return SF3Derror_t::SolverError;
 
         //Destruct matrix variable
-        #pragma omp parallel for if(_parameters.enableOMP)
+        __parforSolver
         for (SF3Duint_t rowIdx = 0; rowIdx < matrixA.numRows; ++rowIdx)
         {
             hostSolverFree(matrixA.colIndeces[rowIdx]);
@@ -125,7 +125,7 @@ namespace soilFluxes3D::New
             std::memcpy(vectorX.values, nodeGrid.waterData.pressureHead, vectorX.numElements * sizeof(double));
 
             //Assign vectorC surface values and compute subsurface saturation degree
-            #pragma omp parallel for if(_parameters.enableOMP)
+            __parforSolver
             for (SF3Duint_t nodeIdx = 0; nodeIdx < nodeGrid.numNodes; ++nodeIdx)
             {
                 if(nodeGrid.surfaceFlag[nodeIdx])
@@ -171,7 +171,7 @@ namespace soilFluxes3D::New
 
             //Courant data reduction
             double tempMax = 0;
-            #pragma omp parallel for reduction(max:tempMax)
+            __parforopSolver(max, tempMax)
             for(SF3Duint_t idx = 0; idx < nodeGrid.numNodes; ++idx)
                 tempMax = SF3Dmax(tempMax, nodeGrid.waterData.partialCourantWaterLevels[idx]);
 
@@ -208,7 +208,7 @@ namespace soilFluxes3D::New
             std::memcpy(nodeGrid.waterData.pressureHead, vectorX.values, vectorX.numElements * sizeof(double));
 
             //Update degree of saturation   //TO DO: make a function
-            #pragma omp parallel for if(_parameters.enableOMP)
+            __parforSolver
             for (SF3Duint_t nodeIdx = 0; nodeIdx < nodeGrid.numNodes; ++nodeIdx)
                 if(!nodeGrid.surfaceFlag[nodeIdx])
                     nodeGrid.waterData.saturationDegree[nodeIdx] = computeNodeSe(nodeIdx);
@@ -235,7 +235,7 @@ namespace soilFluxes3D::New
         std::memcpy(nodeGrid.heatData.oldTemperature, nodeGrid.heatData.temperature, nodeGrid.numNodes * sizeof(double));
 
         //initialize vector C
-        #pragma omp parallel for if(_parameters.enableOMP)
+        __parforSolver
         for (SF3Duint_t nodeIdx = 0; nodeIdx < nodeGrid.numNodes; ++nodeIdx)
         {
             double nodeH = getNodeH_fromTimeSteps(nodeIdx, timeStepHeat, timeStepWater);
@@ -246,7 +246,7 @@ namespace soilFluxes3D::New
         //Compute linear system elements
         hostReset(nodeGrid.waterData.invariantFluxes, nodeGrid.numNodes);
 
-        #pragma omp parallel for if(_parameters.enableOMP)
+        __parforSolver
         for (SF3Duint_t rowIdx = 0; rowIdx < nodeGrid.numNodes; ++rowIdx)
         {
             double nodeT = nodeGrid.heatData.temperature[rowIdx];
