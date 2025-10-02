@@ -81,7 +81,7 @@ namespace soilFluxes3D::Heat
 
     SF3Derror_t saveWaterFluxValues(double dtHeat, double dtWater)
     {
-        #pragma omp parallel for    //Try swap loop order and/or use collapse(2)
+        __parfor    //Try swap loop order and/or use collapse(2)
         for (SF3Duint_t nIdx = 0; nIdx < nodeGrid.numNodes; ++nIdx)
             for(u8_t lIdx = 0; lIdx < maxTotalLink; ++lIdx)
                 if(nodeGrid.linkData[lIdx].linkType[nIdx] !=  linkType_t::NoLink)
@@ -131,7 +131,7 @@ namespace soilFluxes3D::Heat
         if(simulationFlags.HFsaveMode == heatFluxSaveMode_t::None)
             return SF3Derror_t::SF3Dok;
 
-        #pragma omp parallel for
+        __parfor
         for (SF3Duint_t nIdx = 0; nIdx < nodeGrid.numNodes; ++nIdx)
             for(u8_t lIdx = 0; lIdx < maxTotalLink; ++lIdx)
                 saveNodeHeatFluxes(nIdx, lIdx, dtHeat, dtWater);
@@ -189,7 +189,7 @@ namespace soilFluxes3D::Heat
         if(!simulationFlags.computeHeat)
             return SF3Derror_t::MissingDataError;
 
-        #pragma omp parallel for
+        __parfor
         for (SF3Duint_t nIdx = 0; nIdx < nodeGrid.numNodes; ++nIdx)
         {
             if(nodeGrid.boundaryData.boundaryType[nIdx] != boundaryType_t::HeatSurface)
@@ -215,7 +215,7 @@ namespace soilFluxes3D::Heat
         double* tempCourantValues = nullptr;
         hostAlloc(tempCourantValues, nodeGrid.numNodes);
 
-        #pragma omp parallel for
+        __parfor
         for(SF3Duint_t nodeIndex = 0; nodeIndex < nodeGrid.numNodes; ++nodeIndex)
         {
             if(!isHeatNode(nodeIndex))
@@ -296,7 +296,7 @@ namespace soilFluxes3D::Heat
         }
 
         //Reduction
-        #pragma omp parallel for reduction(max:heatBoundaryCourantValue)
+        __parforop(max, heatBoundaryCourantValue)
         for(SF3Duint_t nodeIndex = 0; nodeIndex < nodeGrid.numNodes; ++nodeIndex)
             heatBoundaryCourantValue = SF3Dmax(heatBoundaryCourantValue, tempCourantValues[nodeIndex]);
 
@@ -319,7 +319,7 @@ namespace soilFluxes3D::Heat
     double computeCurrentHeatStorage(double dtWater, double dtHeat)
     {
         double heatStorage = 0.;
-        #pragma omp parallel for if(__ompStatus) reduction(+:heatStorage)
+        __parforop(+, heatStorage)
         for (SF3Duint_t nodeIdx = 0; nodeIdx < nodeGrid.numNodes; ++nodeIdx)
         {
             double nodeH = (dtHeat != noDataD && dtWater != noDataD) ? getNodeH_fromTimeSteps(nodeIdx, dtHeat, dtWater) : nodeGrid.waterData.pressureHead[nodeIdx];
@@ -331,7 +331,7 @@ namespace soilFluxes3D::Heat
     double computeCurrentHeatSinkSource(double dtHeat)
     {
         double heatSinkSource = 0.;
-        #pragma omp parallel for if(__ompStatus) reduction(+:heatSinkSource)
+        __parforop(+, heatSinkSource)
         for (SF3Duint_t nodeIdx = 0; nodeIdx < nodeGrid.numNodes; ++nodeIdx)
             if(nodeGrid.heatData.heatFlux[nodeIdx] != 0.)
                 heatSinkSource += nodeGrid.heatData.heatFlux[nodeIdx] * dtHeat;

@@ -66,9 +66,11 @@
 #endif
 
 //openMP directives
-#ifdef _OPENMP  // Defined automatically when compiling with -fopenmp. Move to a custom macro?
-    #define __parfor            _Pragma(expStr(omp parallel for if(__ompStatus)))
-    #define __parforop(op, var) _Pragma(expStr(omp parallel for if(__ompStatus) reduction(op:var)))
+#ifdef _OPENMP  // Defined automatically when compiling with openmp flag. Move to a custom macro?
+    #define __parfor                    _Pragma(expStr(omp parallel for if(__ompStatus)))
+    #define __parforop(op, var)         _Pragma(expStr(omp parallel for if(__ompStatus) reduction(op:var)))
+    #define __parforSolver              _Pragma(expStr(omp parallel for if(_parameters.enableOMP)))
+    #define __parforopSolver(op, var)   _Pragma(expStr(omp parallel for if(_parameters.enableOMP) reduction(op:var)))
 #else
     #define __parfor
     #define __parforsum(var)
