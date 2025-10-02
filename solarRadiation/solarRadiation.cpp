@@ -33,6 +33,7 @@
 
 #include <math.h>
 #include <omp.h>
+#include <algorithm>
 
 
 Crit3DRadiationMaps::Crit3DRadiationMaps()
