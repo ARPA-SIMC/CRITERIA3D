@@ -19,27 +19,27 @@ namespace soilFluxes3D::Heat
 
     SF3Derror_t resetFluxValues(bool flagWater, bool flagHeat);
     SF3Derror_t saveWaterFluxValues(double dtHeat, double dtWater);
-    SF3Derror_t saveNodeWaterFluxes(SF3Duint_t nIdx, uint8_t lIdx, double dtHeat, double dtWater);
+    SF3Derror_t saveNodeWaterFluxes(SF3Duint_t nIdx, u8_t lIdx, double dtHeat, double dtWater);
     SF3Derror_t saveHeatFluxValues(double dtHeat, double dtWater);
-    SF3Derror_t saveNodeHeatFluxes(SF3Duint_t nIdx, uint8_t lIdx, double dtHeat, double dtWater);
-    SF3Derror_t saveNodeHeatSpecificFlux(SF3Duint_t nIdx, uint8_t lIdx, fluxTypes_t fluxType, double fluxValue);
+    SF3Derror_t saveNodeHeatFluxes(SF3Duint_t nIdx, u8_t lIdx, double dtHeat, double dtWater);
+    SF3Derror_t saveNodeHeatSpecificFlux(SF3Duint_t nIdx, u8_t lIdx, fluxTypes_t fluxType, double fluxValue);
 
     SF3Derror_t updateConductance();
 
     bool updateBoundaryHeatData(double maxTimeStep, double& actualTimeStep);
 
 
-    bool computeHeatLinkFluxes(double &matrixElement, SF3Duint_t &matrixIndex, SF3Duint_t nodeIndex, uint8_t linkIndex, double dtHeat, double dtWater);
+    bool computeHeatLinkFluxes(double &matrixElement, SF3Duint_t &matrixIndex, SF3Duint_t nodeIndex, u8_t linkIndex, double dtHeat, double dtWater);
 
 
-    double computeThermalLiquidFlux(SF3Duint_t nIdx, uint8_t lIdx, processType process, double dtHeat = noDataD, double dtWater = noDataD);
-    double computeThermalVaporFlux(SF3Duint_t nIdx, uint8_t lIdx, processType process, double dtHeat = noDataD, double dtWater = noDataD);
-    double computeIsothermalVaporFlux(SF3Duint_t nIdx, uint8_t lIdx, double dtHeat, double dtWater);
-    double computeIsothermalLatentHeatFlux(SF3Duint_t nIdx, uint8_t lIdx, double dtHeat, double dtWater);
-    double computeAdvectiveFlux(SF3Duint_t nIdx, uint8_t lIdx);     //originally double&: check if needed somewhere
+    double computeThermalLiquidFlux(SF3Duint_t nIdx, u8_t lIdx, processType process, double dtHeat = noDataD, double dtWater = noDataD);
+    double computeThermalVaporFlux(SF3Duint_t nIdx, u8_t lIdx, processType process, double dtHeat = noDataD, double dtWater = noDataD);
+    double computeIsothermalVaporFlux(SF3Duint_t nIdx, u8_t lIdx, double dtHeat, double dtWater);
+    double computeIsothermalLatentHeatFlux(SF3Duint_t nIdx, u8_t lIdx, double dtHeat, double dtWater);
+    double computeAdvectiveFlux(SF3Duint_t nIdx, u8_t lIdx);     //originally double&: check if needed somewhere
     double getLinkHeatFlux(const linkData_t &linkData, SF3Duint_t srcIndex, fluxTypes_t fluxType);
 
-    double conduction(SF3Duint_t nIdx, uint8_t lIdx, double dtHeat, double dtWater);
+    double conduction(SF3Duint_t nIdx, u8_t lIdx, double dtHeat, double dtWater);
 
     double GaussSeidelHeatCPU(VectorCPU& vectorX, const MatrixCPU& matrixA, const VectorCPU& vectorB);
 

@@ -20,8 +20,8 @@ namespace soilFluxes3D::New
             SolverParameters _parameters;
             double _bestMBRerror;
 
-            __cudaSpec uint32_t calcCurrentMaxIterationNumber(uint8_t approxNumber);
-            virtual bool solveLinearSystem(uint8_t approximationNumber, processType computationType) = 0;
+            __cudaSpec u32_t calcCurrentMaxIterationNumber(u8_t approxNumber);
+            virtual bool solveLinearSystem(u8_t approximationNumber, processType computationType) = 0;
 
         public:
             Solver(solverType type, numericalMethod method) : _type(type), _method(method) {}
@@ -46,11 +46,10 @@ namespace soilFluxes3D::New
             virtual SF3Derror_t clean() = 0;
     };
 
-    inline __cudaSpec uint32_t Solver::calcCurrentMaxIterationNumber(uint8_t approxNumber)
+    inline __cudaSpec u32_t Solver::calcCurrentMaxIterationNumber(u8_t approxNumber)
     {
-        uint32_t maxCurrIterNum = uint32_t((approxNumber + 1) * (float(_parameters.maxIterationsNumber) / float(_parameters.maxApproximationsNumber)));
-        return SF3Dmax(maxCurrIterNum, uint32_t(20));
-        //return SF3Dmax(maxCurrIterNum, static_cast<uint32_t>(_parameters.maxIterationsNumber));
+        u32_t maxCurrIterNum = static_cast<u32_t>((approxNumber + 1) * (static_cast<float>(_parameters.maxIterationsNumber) / static_cast<float>(_parameters.maxApproximationsNumber)));
+        return SF3Dmax(maxCurrIterNum, static_cast<u32_t>(20));
     }
 
     inline void Solver::updateParameters(const SolverParametersPartial &newParameters) noexcept

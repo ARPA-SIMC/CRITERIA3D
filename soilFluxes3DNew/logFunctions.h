@@ -47,7 +47,7 @@ namespace soilFluxes3D::Log
         static const char* fieldsNameArray[numElements] = {};
 
         for(const auto& [key, value] : map)
-            fieldsNameArray[static_cast<uint8_t>(key)] = value;
+            fieldsNameArray[static_cast<u8_t>(key)] = value;
 
         return fieldsNameArray;
     }
@@ -67,10 +67,10 @@ namespace soilFluxes3D::Log
         std::string projectName;
         std::string basePath;
         std::string timeData;
-        uint16_t fileCounter = 0;
-        uint16_t numStepDone = 0;
+        u16_t fileCounter = 0;
+        u16_t numStepDone = 0;
 
-        const uint16_t numApprox = 30;        //TO DO: legare alla memoria?
+        const u16_t numApprox = 30;        //TO DO: legare alla memoria?
         mxArray* mainStruct = nullptr;
 
         const char* masterFieldsNames[2] = {"projectName", "approxDataArray"};
@@ -82,7 +82,7 @@ namespace soilFluxes3D::Log
     SF3Derror_t initializeLogData(const std::string &logPath, const std::string &projectName);
     void initializeLogStructure();
     void createCurrStepLog(const MatrixCPU& matrix, const VectorCPU& vectorB, const VectorCPU& vectorX, bool stepResult);
-    void createBinData(uint16_t stepNum, const MatrixCPU& matrix, const VectorCPU& vectorB, const VectorCPU& vectorX);
+    void createBinData(u16_t stepNum, const MatrixCPU& matrix, const VectorCPU& vectorB, const VectorCPU& vectorX);
     SF3Derror_t writeLogFile();
 
     inline std::string customPadInteger(int number, std::streamsize totalDigits = 5)
@@ -100,13 +100,13 @@ namespace soilFluxes3D::Log
         else if constexpr (std::is_same_v<T, double>) return mxDOUBLE_CLASS;
         else if constexpr (std::is_same_v<T, int>) return mxINT32_CLASS;
         else if constexpr (std::is_same_v<T, SF3Duint_t>) return mxUINT64_CLASS;
-        else if constexpr (std::is_same_v<T, uint16_t>) return mxUINT16_CLASS;
-        else if constexpr (std::is_same_v<T, uint8_t>) return mxUINT8_CLASS;
+        else if constexpr (std::is_same_v<T, u16_t>) return mxUINT16_CLASS;
+        else if constexpr (std::is_same_v<T, u8_t>) return mxUINT8_CLASS;
         else return mxUNKNOWN_CLASS;
     }
 
     template<typename T>
-    inline void logVectorData(MATFile* file, const T* ptr, const size_t size, const char* name, const solverType deviceUsed)
+    inline void logVectorData(MATFile* file, const T* ptr, const std::size_t size, const char* name, const solverType deviceUsed)
     {
         constexpr mxClassID classT = getTypeClassID<T>();
         static_assert(classT != mxUNKNOWN_CLASS, "Type non encoded.");
@@ -194,7 +194,7 @@ namespace soilFluxes3D::Log
 
         //Link data
         // logVectDoubleGPU(nodeGrid.numLateralLink, uint8_t, nodeGrid.numNodes);
-        for(uint8_t idx = 0; idx < 10; ++idx)
+        for(u8_t idx = 0; idx < 10; ++idx)
         {
             std::string str = std::to_string(idx);
             // logVectDoubleGPU(nodeGrid.linkData[idx].linktype, linkType_t, nodeGrid.numNodes);

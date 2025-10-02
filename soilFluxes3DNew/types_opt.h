@@ -18,8 +18,8 @@ namespace soilFluxes3D::New
         std::optional<double> deltaTmax;
         std::optional<double> deltaTcurr;
 
-        std::optional<uint16_t> maxApproximationsNumber;
-        std::optional<uint16_t> maxIterationsNumber;
+        std::optional<u16_t> maxApproximationsNumber;
+        std::optional<u16_t> maxIterationsNumber;
 
         std::optional<WRCModel> waterRetentionCurveModel;
         std::optional<meanType_t> meanType;
@@ -31,7 +31,7 @@ namespace soilFluxes3D::New
         std::optional<double> instabilityFactor;
 
         std::optional<bool> enableOMP;
-        std::optional<uint32_t> numThreads;
+        std::optional<u32_t> numThreads;
     };
 }
 

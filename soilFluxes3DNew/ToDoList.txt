@@ -36,4 +36,3 @@ Questions:
 
  - why some heat loops run from index 1 (instead from index 0)?	-> if (not) an error fix loops in new/old version
 
- - Culvert is a single node structure: is correct or is a legacy code from 1D?

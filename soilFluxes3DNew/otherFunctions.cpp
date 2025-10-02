@@ -36,10 +36,10 @@ namespace soilFluxes3D::Math
         return (v1 == v2) ? v1 : (v1 - v2) / std::log(v1/v2);
     }
 
-    __cudaSpec double vectorNorm(double vector[], size_t size)
+    __cudaSpec double vectorNorm(double vector[], std::size_t size)
     {
         double norm = 0;
-        for (size_t idx = 0; idx < size; ++idx)
+        for (std::size_t idx = 0; idx < size; ++idx)
             norm += std::pow(vector[idx], 2);
 
         return std::sqrt(norm);

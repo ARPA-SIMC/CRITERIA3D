@@ -11,6 +11,6 @@ namespace soilFluxes3D::Math    //move to mathFunctions
     __cudaSpec double geometricMean(double v1, double v2);
     __cudaSpec double logaritmicMean(double v1, double v2);
 
-    __cudaSpec double vectorNorm(double vector[], size_t size);
+    __cudaSpec double vectorNorm(double vector[], std::size_t size);
 }
 #endif // OTHERFUNCTIONS_H

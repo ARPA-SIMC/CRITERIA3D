@@ -45,7 +45,7 @@ namespace soilFluxes3D::Water
             return SF3Derror_t::MemoryError;
 
         //Reset link water flows
-        for (uint8_t linkIndex = 0; linkIndex < maxTotalLink; ++linkIndex)
+        for (u8_t linkIndex = 0; linkIndex < maxTotalLink; ++linkIndex)
             hostReset(nodeGrid.linkData[linkIndex].waterFlowSum, nodeGrid.numNodes);
 
         //Reset boundary water flows
@@ -139,7 +139,7 @@ namespace soilFluxes3D::Water
      * \param parameters solver parameters
      * \return evaluations of water balance
      */
-    balanceResult_t evaluateWaterBalance(uint8_t approxNr, double& bestMBRerror, double deltaT, SolverParameters& parameters)
+    balanceResult_t evaluateWaterBalance(u8_t approxNr, double& bestMBRerror, double deltaT, SolverParameters& parameters)
     {
         computeCurrentMassBalance(deltaT);
 
@@ -206,7 +206,7 @@ namespace soilFluxes3D::Water
         for (SF3Duint_t nodeIndex = 0; nodeIndex < nodeGrid.numNodes; ++nodeIndex)
         {
             //Update link flows
-            for(uint8_t linkIndex = 0; linkIndex < maxTotalLink; ++linkIndex)
+            for(u8_t linkIndex = 0; linkIndex < maxTotalLink; ++linkIndex)
                 updateLinkFlux(nodeIndex, linkIndex, deltaT);
 
             //Update boundary flow
@@ -236,7 +236,7 @@ namespace soilFluxes3D::Water
         computeCurrentMassBalance(deltaT);
     }
 
-    __cudaSpec void updateLinkFlux(SF3Duint_t nodeIndex, uint8_t linkIndex, double deltaT)
+    __cudaSpec void updateLinkFlux(SF3Duint_t nodeIndex, u8_t linkIndex, double deltaT)
     {
         if(nodeGrid.linkData[linkIndex].linkType[nodeIndex] == linkType_t::NoLink)
             return;
@@ -272,12 +272,12 @@ namespace soilFluxes3D::Water
     }
 
     //TO DO: move to a CPUSolver method
-    void computeLinearSystemElement(MatrixCPU& matrixA, VectorCPU& vectorB, const VectorCPU& vectorC, uint8_t approxNum, double deltaT, double lateralVerticalRatio, meanType_t meanType)
+    void computeLinearSystemElement(MatrixCPU& matrixA, VectorCPU& vectorB, const VectorCPU& vectorC, u8_t approxNum, double deltaT, double lateralVerticalRatio, meanType_t meanType)
     {
         #pragma omp parallel for if(__ompStatus)
         for (SF3Duint_t rowIdx = 0; rowIdx < matrixA.numRows; ++rowIdx)
         {
-            uint8_t linkIdx = 1;
+            u8_t linkIdx = 1;
             bool isLinked;
 
             //Compute flux up
@@ -291,7 +291,7 @@ namespace soilFluxes3D::Water
                 linkIdx++;
 
             //Compute flux lateral
-            for(uint8_t latIdx = 0; latIdx < maxLateralLink; ++latIdx)
+            for(u8_t latIdx = 0; latIdx < maxLateralLink; ++latIdx)
             {
                 isLinked = computeLinkFluxes(matrixA.values[rowIdx][linkIdx], matrixA.colIndeces[rowIdx][linkIdx], rowIdx, 2 + latIdx, approxNum, deltaT, lateralVerticalRatio, linkType_t::Lateral, meanType);
                 if(isLinked)
@@ -304,7 +304,7 @@ namespace soilFluxes3D::Water
 
             //Compute diagonal element
             double sum = 0.;
-            for(uint8_t colIdx = 1; colIdx < matrixA.numColumns[rowIdx]; ++colIdx)
+            for(u8_t colIdx = 1; colIdx < matrixA.numColumns[rowIdx]; ++colIdx)
             {
                 sum += matrixA.values[rowIdx][colIdx];
                 matrixA.values[rowIdx][colIdx] *= -1.;
@@ -316,14 +316,14 @@ namespace soilFluxes3D::Water
             vectorB.values[rowIdx] = ((vectorC.values[rowIdx] / deltaT) * nodeGrid.waterData.oldPressureHeads[rowIdx]) + nodeGrid.waterData.waterFlow[rowIdx] + nodeGrid.waterData.invariantFluxes[rowIdx];
 
             //Preconditioning
-            for(uint8_t colIdx = 1; colIdx < matrixA.numColumns[rowIdx]; ++colIdx)
+            for(u8_t colIdx = 1; colIdx < matrixA.numColumns[rowIdx]; ++colIdx)
                 matrixA.values[rowIdx][colIdx] /= matrixA.values[rowIdx][0];
 
             vectorB.values[rowIdx] /= matrixA.values[rowIdx][0];
         }
     }
 
-    __cudaSpec bool computeLinkFluxes(double& matrixElement, SF3Duint_t& matrixIndex, SF3Duint_t nodeIndex, uint8_t linkIndex, uint8_t approxNum, double deltaT, double lateralVerticalRatio, linkType_t linkType, meanType_t meanType)
+    __cudaSpec bool computeLinkFluxes(double& matrixElement, SF3Duint_t& matrixIndex, SF3Duint_t nodeIndex, u8_t linkIndex, u8_t approxNum, double deltaT, double lateralVerticalRatio, linkType_t linkType, meanType_t meanType)
     {
         if(nodeGrid.linkData[linkIndex].linkType[nodeIndex] == linkType_t::NoLink)
             return false;
@@ -361,7 +361,7 @@ namespace soilFluxes3D::Water
         return true;
     }
 
-    __cudaSpec double runoff(SF3Duint_t rowIdx, SF3Duint_t colIdx, uint8_t approxNum, double deltaT, double flowArea)
+    __cudaSpec double runoff(SF3Duint_t rowIdx, SF3Duint_t colIdx, u8_t approxNum, double deltaT, double flowArea)
     {
         double flux_i = (nodeGrid.waterData.waterFlow[rowIdx] * deltaT) / nodeGrid.size[rowIdx];
         double flux_j = (nodeGrid.waterData.waterFlow[colIdx] * deltaT) / nodeGrid.size[colIdx];
@@ -488,7 +488,7 @@ namespace soilFluxes3D::Water
         #pragma omp parallel for if(__ompStatus) reduction(max:infinityNorm)
         for(SF3Duint_t rowIdx = 0; rowIdx < matrixA.numRows; ++rowIdx)
         {
-            for(uint8_t colIdx = 1; colIdx < matrixA.numColumns[rowIdx]; ++colIdx)
+            for(u8_t colIdx = 1; colIdx < matrixA.numColumns[rowIdx]; ++colIdx)
                 tempX[rowIdx] -= matrixA.values[rowIdx][colIdx] * vectorX.values[matrixA.colIndeces[rowIdx][colIdx]];
 
             if(nodeGrid.surfaceFlag[rowIdx] && tempX[rowIdx] < nodeGrid.z[rowIdx])
@@ -516,7 +516,7 @@ namespace soilFluxes3D::Water
         for (SF3Duint_t rowIdx = 0; rowIdx < matrixA.numRows; ++rowIdx)
         {
             double newCurrValue = vectorB.values[rowIdx];
-            for (uint8_t colIdx = 1; colIdx < matrixA.numColumns[rowIdx]; ++colIdx)
+            for (u8_t colIdx = 1; colIdx < matrixA.numColumns[rowIdx]; ++colIdx)
                 newCurrValue -= matrixA.values[rowIdx][colIdx] * vectorX.values[matrixA.colIndeces[rowIdx][colIdx]];
 
             if(nodeGrid.surfaceFlag[rowIdx] && newCurrValue < nodeGrid.z[rowIdx])
@@ -641,6 +641,52 @@ namespace soilFluxes3D::Water
                     nodeGrid.boundaryData.waterFlowRate[nodeIdx] = soilEvaporation;
                     break;
 
+                case boundaryType_t::Culvert:
+                    if(nodeGrid.culvertPtr[nodeIdx] == nullptr)
+                        assert(false); //? -> move to a break and/or throwing error?
+
+                    culvertData_t& nodeCulvert = *(nodeGrid.culvertPtr[nodeIdx]);
+                    double culvertHeight = nodeCulvert.height;
+                    double culvertWidth = nodeCulvert.width;
+                    double culvertRoughness = nodeCulvert.roughness;
+                    double culvertSlope = nodeGrid.boundaryData.boundarySlope[nodeIdx];
+
+                    double waterLevel = 0.5 * (nodeGrid.waterData.pressureHead[nodeIdx] - nodeGrid.waterData.oldPressureHeads[nodeIdx]) - nodeGrid.z[nodeIdx];
+                    double flow = 0.;
+
+                    if(waterLevel >= 1.5 * culvertHeight)
+                    {
+                        //Pressure flow (Hazen-Williams equation) (roughness = 70. - rough concrete)
+                        double equivalentDiameter = std::sqrt(4. * culvertWidth * culvertHeight / PI);
+                        flow = (70. * std::pow(culvertSlope, 0.54)) * std::pow(equivalentDiameter, 2.63) / 3.591;
+                    }
+                    else if(waterLevel >= culvertHeight)
+                    {
+                        //Mixed flow: open channel and pressure
+                        double wettedPerimeter = culvertWidth + 2. * culvertHeight;
+                        double hydraulicRadius = nodeGrid.boundaryData.boundarySize[nodeIdx] / wettedPerimeter;
+
+                        //Maximum Mannig flow [m3 s-1]
+                        double ManningFlow = (nodeGrid.boundaryData.boundarySize[nodeIdx] / culvertRoughness) * std::sqrt(culvertSlope) * std::pow(hydraulicRadius, 2./3.);
+                        //Pressure flow (Hazen-Williams equation) (roughness = 70. - rough concrete)
+                        double equivalentDiameter = std::sqrt(4. * culvertWidth * culvertHeight / PI);
+                        double pressureFlow = (70. * std::pow(culvertSlope, 0.54)) * std::pow(equivalentDiameter, 2.63) / 3.591;
+
+                        double weight = (waterLevel - culvertHeight) / (0.5 * culvertHeight);
+                        flow = weight * pressureFlow + (1. - weight) * ManningFlow;
+                    }
+                    else if(waterLevel > nodeGrid.waterData.pond[nodeIdx])
+                    {
+                        //Open channel flow
+                        double boundaryArea = culvertWidth * waterLevel;
+                        double wettedPerimeter = culvertWidth + 2. * waterLevel;
+                        double hydraulicRadius = boundaryArea / wettedPerimeter;
+
+                        flow = (boundaryArea / culvertRoughness) * std::sqrt(culvertSlope) * std::pow(hydraulicRadius, 2./3.);
+                    }
+
+                    nodeGrid.boundaryData.waterFlowRate[nodeIdx] = -flow;
+                    break;
                 default:
                     assert(false);
                     nodeGrid.boundaryData.waterFlowRate[nodeIdx] = 0.;
@@ -652,53 +698,6 @@ namespace soilFluxes3D::Water
             else
                 nodeGrid.waterData.waterFlow[nodeIdx] += nodeGrid.boundaryData.waterFlowRate[nodeIdx];
         }
-
-        //Culvert -> need to be moved in the switch block?
-        if(!nodeGrid.culvertData.isActive)
-            return;
-
-        SF3Duint_t culvertIndex = nodeGrid.culvertData.index;
-
-        double culvertHeight = nodeGrid.culvertData.height;
-        double culvertWidth = nodeGrid.culvertData.width;
-        double culvertRoughness = nodeGrid.culvertData.roughness;
-        double culvertSlope = nodeGrid.culvertData.slope;
-        double waterLevel = 0.5 * (nodeGrid.waterData.pressureHead[culvertIndex] - nodeGrid.waterData.oldPressureHeads[culvertIndex]) - nodeGrid.z[culvertIndex];
-        double flow = 0.;
-
-        if(waterLevel >= 1.5 * culvertHeight)
-        {
-            //Pressure flow (Hazen-Williams equation) (roughness = 70. - rough concrete)
-            double equivalentDiameter = std::sqrt(4. * culvertWidth * culvertHeight / PI);
-            flow = (70. * std::pow(culvertSlope, 0.54)) * std::pow(equivalentDiameter, 2.63) / 3.591;
-        }
-        else if(waterLevel >= culvertHeight)
-        {
-            //Mixed flow: open channel and pressure
-            double wettedPerimeter = culvertWidth + 2. * culvertHeight;
-            double hydraulicRadius = nodeGrid.boundaryData.boundarySize[culvertIndex] / wettedPerimeter;
-
-            //Maximum Mannig flow [m3 s-1]
-            double ManningFlow = (nodeGrid.boundaryData.boundarySize[culvertIndex] / culvertRoughness) * std::sqrt(culvertSlope) * std::pow(hydraulicRadius, 2./3.);
-            //Pressure flow (Hazen-Williams equation) (roughness = 70. - rough concrete)
-            double equivalentDiameter = std::sqrt(4. * culvertWidth * culvertHeight / PI);
-            double pressureFlow = (70. * std::pow(culvertSlope, 0.54)) * std::pow(equivalentDiameter, 2.63) / 3.591;
-
-            double weight = (waterLevel - culvertHeight) / (0.5 * culvertHeight);
-            flow = weight * pressureFlow + (1. - weight) * ManningFlow;
-        }
-        else if(waterLevel > nodeGrid.waterData.pond[culvertIndex])
-        {
-            //Open channel flow
-            double boundaryArea = culvertWidth * waterLevel;
-            double wettedPerimeter = culvertWidth + 2. * waterLevel;
-            double hydraulicRadius = boundaryArea / wettedPerimeter;
-
-            flow = (boundaryArea / culvertRoughness) * std::sqrt(culvertSlope) * std::pow(hydraulicRadius, 2./3.);
-        }
-
-        nodeGrid.boundaryData.waterFlowRate[culvertIndex] = - flow;
-        nodeGrid.waterData.waterFlow[culvertIndex] -= flow;
 
         return;
     }

@@ -37,14 +37,16 @@ namespace soilFluxes3D::New
     __cudaMngd simulationFlags_t simulationFlags;
     __cudaMngd balanceData_t balanceDataCurrentPeriod, balanceDataWholePeriod, balanceDataCurrentTimeStep, balanceDataPreviousTimeStep;
 
-    std::vector<std::vector<soilData_t>> soilList;
-    std::vector<surfaceData_t> surfaceList;
+    std::vector<std::vector<u16_t>> soil1DIndeces = {};
+    std::vector<soilData_t> soilList = {};
+    std::vector<surfaceData_t> surfaceList = {};
+    std::vector<culvertData_t> culvertList = {};
 
     /*!
      *  \brief initializes the node data grid and set simulation parameters
      *  \return Ok/Error
     */
-    SF3Derror_t initializeSF3D(SF3Duint_t nrNodes, uint16_t nrLayers, uint8_t nrLateralLinks, bool isComputeWater, bool isComputeHeat, bool isComputeSolutes, heatFluxSaveMode_t HFsm)
+    SF3Derror_t initializeSF3D(SF3Duint_t nrNodes, u16_t nrLayers, u8_t nrLateralLinks, bool isComputeWater, bool isComputeHeat, bool isComputeSolutes, heatFluxSaveMode_t HFsm)
     {
         //Cleans all the data structures
         SF3Derror_t cleanResult = cleanSF3D();
@@ -78,7 +80,6 @@ namespace soilFluxes3D::New
         hostAlloc(nodeGrid.surfaceFlag, nrNodes);
 
         //Soil/Surface data
-        hostAlloc(nodeGrid.soilRowIndeces, nrNodes);
         hostAlloc(nodeGrid.soilSurfacePointers, nrNodes);
 
         //Boundary data
@@ -112,7 +113,7 @@ namespace soilFluxes3D::New
 
         //Link data
         hostAlloc(nodeGrid.numLateralLink, nrNodes);
-        for(uint8_t linkIdx = 0; linkIdx < maxTotalLink; ++linkIdx)
+        for(u8_t linkIdx = 0; linkIdx < maxTotalLink; ++linkIdx)
         {
             hostAlloc(nodeGrid.linkData[linkIdx].linkType, nrNodes);    //NoLink is equal 0, automatic set with calloc
             hostAlloc(nodeGrid.linkData[linkIdx].linkIndex, nrNodes);;
@@ -125,7 +126,7 @@ namespace soilFluxes3D::New
             {
                 hostAlloc(nodeGrid.linkData[linkIdx].waterFlux, nrNodes);
                 hostAlloc(nodeGrid.linkData[linkIdx].vaporFlux, nrNodes);
-                for(uint8_t fluxIdx = 0; fluxIdx < numTotalFluxTypes; ++fluxIdx)     //maybe move to initHeatFlag
+                for(u8_t fluxIdx = 0; fluxIdx < numTotalFluxTypes; ++fluxIdx)     //maybe move to initHeatFlag
                     hostAlloc(nodeGrid.linkData[linkIdx].fluxes[fluxIdx], nrNodes);
             }
         }
@@ -143,6 +144,9 @@ namespace soilFluxes3D::New
             hostAlloc(nodeGrid.waterData.bestPressureHeads, nrNodes);
             hostAlloc(nodeGrid.waterData.invariantFluxes, nrNodes);
             hostAlloc(nodeGrid.waterData.partialCourantWaterLevels, nrNodes);
+
+            //Culvert pointers
+            hostAlloc(nodeGrid.culvertPtr, nrNodes);
         }
 
         //Heat data
@@ -228,7 +232,6 @@ namespace soilFluxes3D::New
         hostFree(nodeGrid.surfaceFlag);
 
         //Soil/Surface data
-        hostFree(nodeGrid.soilRowIndeces);
         hostFree(nodeGrid.soilSurfacePointers);
 
         //Boundary data
@@ -256,7 +259,7 @@ namespace soilFluxes3D::New
 
         //Link data
         hostFree(nodeGrid.numLateralLink);
-        for(uint8_t linkIdx = 0; linkIdx < maxTotalLink; ++linkIdx)
+        for(u8_t linkIdx = 0; linkIdx < maxTotalLink; ++linkIdx)
         {
             hostFree(nodeGrid.linkData[linkIdx].linkType);
             hostFree(nodeGrid.linkData[linkIdx].linkIndex);
@@ -265,7 +268,7 @@ namespace soilFluxes3D::New
             hostFree(nodeGrid.linkData[linkIdx].waterFlowSum);
             hostFree(nodeGrid.linkData[linkIdx].waterFlux);
             hostFree(nodeGrid.linkData[linkIdx].vaporFlux);
-            for(uint8_t fluxIdx = 0; fluxIdx < numTotalFluxTypes; ++fluxIdx)
+            for(u8_t fluxIdx = 0; fluxIdx < numTotalFluxTypes; ++fluxIdx)
                 hostFree(nodeGrid.linkData[linkIdx].fluxes[fluxIdx]);
         }
 
@@ -281,8 +284,8 @@ namespace soilFluxes3D::New
         hostFree(nodeGrid.waterData.invariantFluxes);
         hostFree(nodeGrid.waterData.partialCourantWaterLevels);
 
-        //Culvert data
-        nodeGrid.culvertData.isActive = false;
+        //Culvert pointers
+        hostFree(nodeGrid.culvertPtr);
 
         //Heat data
         hostFree(nodeGrid.heatData.temperature);
@@ -337,9 +340,9 @@ namespace soilFluxes3D::New
      *          if nrThreads < 1 or too large, hardware_concurrency get the number of logical processors
         \return setted number of threads
     */
-    uint32_t setThreadsNumber(uint32_t nrThreads)
+    u32_t setThreadsNumber(u32_t nrThreads)
     {
-        uint32_t nrHWthreads = std::thread::hardware_concurrency();
+        u32_t nrHWthreads = std::thread::hardware_concurrency();
         if (nrThreads < 1 || nrThreads > nrHWthreads)
             nrThreads = nrHWthreads;
 
@@ -365,31 +368,40 @@ namespace soilFluxes3D::New
      * \param L         [-]         tortuosity (Mualem equation)
      * \return Ok/Error
      */
-    SF3Derror_t setSoilProperties(uint16_t nrSoil, uint16_t nrHorizon, double VG_alpha, double VG_n, double VG_m, double VG_he, double ThetaR, double ThetaS, double Ksat, double L, double organicMatter, double clay)
+    SF3Derror_t setSoilProperties(u16_t nrSoil, u16_t nrHorizon, double VG_alpha, double VG_n, double VG_m, double VG_he, double ThetaR, double ThetaS, double Ksat, double L, double organicMatter, double clay)
     {
         if (VG_alpha <= 0 || (ThetaR < 0) || (ThetaR >= 1) || (ThetaS <= 0) || (ThetaS > 1) || (ThetaR > ThetaS))
             return SF3Derror_t::ParameterError;
 
-        if(nrSoil >= soilList.size())
-            soilList.resize(nrSoil + 1);
+        //Check duplicato
+        for(const auto& soil : soilList)
+            if(soil.soilNumber == nrSoil && soil.horizonNumber == nrHorizon)
+                return SF3Derror_t::ParameterError;
 
-        if(nrHorizon >= soilList[nrSoil].size())
-            soilList[nrSoil].resize(nrHorizon + 1);
+        //Creazione del nuovo elemento
+        soilData_t currSoil;
+        currSoil.VG_alpha = VG_alpha;
+        currSoil.VG_n = VG_n;
+        currSoil.VG_m = VG_m;
+        currSoil.VG_he = VG_he;
+        currSoil.VG_Sc = std::pow(1. + std::pow(VG_alpha * VG_he, VG_n), -VG_m);
+        currSoil.Theta_r = ThetaR;
+        currSoil.Theta_s = ThetaS;
+        currSoil.K_sat = Ksat;
+        currSoil.Mualem_L = L;
+        currSoil.organicMatter = organicMatter;
+        currSoil.clay = clay;
 
-        soilList[nrSoil][nrHorizon].VG_alpha = VG_alpha;
-        soilList[nrSoil][nrHorizon].VG_n = VG_n;
-        soilList[nrSoil][nrHorizon].VG_m = VG_m;
+        soilList.push_back(currSoil);
 
-        soilList[nrSoil][nrHorizon].VG_he = VG_he;
-        soilList[nrSoil][nrHorizon].VG_Sc = std::pow(1. + std::pow(VG_alpha * VG_he, VG_n), -VG_m);
+        //Set dell'indice
+        if(nrSoil >= soil1DIndeces.size())
+            soil1DIndeces.resize(nrSoil + 1);
 
-        soilList[nrSoil][nrHorizon].Theta_r = ThetaR;
-        soilList[nrSoil][nrHorizon].Theta_s = ThetaS;
-        soilList[nrSoil][nrHorizon].K_sat = Ksat;
-        soilList[nrSoil][nrHorizon].Mualem_L = L;
+        if(nrHorizon >= soil1DIndeces[nrSoil].size())
+            soil1DIndeces[nrSoil].resize(nrHorizon + 1);
 
-        soilList[nrSoil][nrHorizon].organicMatter = organicMatter;
-        soilList[nrSoil][nrHorizon].clay = clay;
+        soil1DIndeces[nrSoil][nrHorizon] = static_cast<u16_t>(soilList.size() - 1);
 
         return SF3Derror_t::SF3Dok;
     }
@@ -399,7 +411,7 @@ namespace soilFluxes3D::New
      * \param roughness [s m-1/3]   Manning roughness
      * \return Ok/Error
      */
-    SF3Derror_t setSurfaceProperties(uint16_t surfaceIndex, double roughness)
+    SF3Derror_t setSurfaceProperties(u16_t surfaceIndex, double roughness)
     {
         if(roughness < 0)
             return SF3Derror_t::ParameterError;
@@ -415,7 +427,7 @@ namespace soilFluxes3D::New
      *  \brief sets numerical parameters of the solver
      *  \return Ok/Error
     */
-    SF3Derror_t setNumericalParameters(double minDeltaT, double maxDeltaT, uint16_t maxIterationNumber, uint16_t maxApproximationsNumber, uint8_t ResidualToleranceExponent, uint8_t MBRThresholdExponent)
+    SF3Derror_t setNumericalParameters(double minDeltaT, double maxDeltaT, u16_t maxIterationNumber, u16_t maxApproximationsNumber, u8_t ResidualToleranceExponent, u8_t MBRThresholdExponent)
     {
         if (minDeltaT < 0.01)
             minDeltaT = 0.01;           // [s]
@@ -504,19 +516,36 @@ namespace soilFluxes3D::New
         if(nodeIndex >= nodeGrid.numNodes || !nodeGrid.surfaceFlag[nodeIndex])
             return SF3Derror_t::IndexError;
 
-        if(nodeGrid.culvertData.isActive && nodeGrid.culvertData.index != nodeIndex)
-            return SF3Derror_t::ParameterError;
-
-        nodeGrid.culvertData.index = nodeIndex;
-        nodeGrid.culvertData.roughness = roughness;
-        nodeGrid.culvertData.slope = slope;
-        nodeGrid.culvertData.width = width;
-        nodeGrid.culvertData.height = height;
-        nodeGrid.culvertData.isActive = true;
-
+        //Update boundary condition
         setNodeBoundary(nodeIndex, boundaryType_t::Culvert, slope, width*height);
 
+        //Obtain the culvertData_t pointer
+        culvertData_t* culvertPtr = nullptr;
+        for(std::size_t vIdx = 0; vIdx < culvertList.size(); ++vIdx)
+        {
+            const culvertData_t& currCulvert = culvertList[vIdx];
+            //Move to a index system for perfomance and flexibility
+            if(currCulvert.roughness == roughness && currCulvert.slope == slope && currCulvert.width == width && currCulvert.height == height)
+            {
+                cullvertPtr = &(currCulvert);
+                break;
+            }
+        }
+
+        if(!culvertPtr)
+        {
+            culvertData_t currCulvert;
+            currCulvert.roughness = roughness;
+            currCulvert.width = width;
+            currCulvert.height = height;
+            culvertList.push_back(currCulvert);
+            cullvertPtr = &(culvertList[culvertList.size() - 1]);
+        }
+
+        //Set the culvertData_t pointer
+        nodeGrid.culvertPtr[nodeIndex] = cullvertPtr;
         return SF3Derror_t::SF3Dok;
+
     }
 
 
@@ -545,15 +574,15 @@ namespace soilFluxes3D::New
         if(simulationFlags.computeWater)
         {
             nodeGrid.waterData.pond[index] = isSurface ? 0.0001f : noDataD;
-            nodeGrid.waterData.waterSinkSource[index] = 0.;                     //Maybe useless: 0. is the value set by calloc
+            nodeGrid.waterData.waterSinkSource[index] = 0.;
         }
 
         if(simulationFlags.computeHeat && !isSurface)
         {
             nodeGrid.heatData.temperature[index] = static_cast<double>(ZEROCELSIUS + 20);
             nodeGrid.heatData.oldTemperature[index] = static_cast<double>(ZEROCELSIUS + 20);
-            nodeGrid.heatData.heatFlux[index] = 0.;                             //Maybe useless: 0. is the value set by calloc
-            nodeGrid.heatData.heatSinkSource[index] = 0.;                       //Maybe useless: 0. is the value set by calloc
+            nodeGrid.heatData.heatFlux[index] = 0.;
+            nodeGrid.heatData.heatSinkSource[index] = 0.;
         }
 
         return SF3Derror_t::SF3Dok;
@@ -571,7 +600,7 @@ namespace soilFluxes3D::New
         if(nodeIndex >= nodeGrid.numNodes || linkIndex >= nodeGrid.numNodes)
             return SF3Derror_t::IndexError;
 
-        uint8_t idx;
+        u8_t idx;
         switch (direction)
         {
             case linkType_t::Up:
@@ -603,7 +632,7 @@ namespace soilFluxes3D::New
 
             nodeGrid.linkData[idx].fluxes[0][nodeIndex] = noDataD;
             if(simulationFlags.HFsaveMode == heatFluxSaveMode_t::All)
-                for(uint8_t fluxIdx = 1; fluxIdx < numTotalFluxTypes; ++fluxIdx)
+                for(u8_t fluxIdx = 1; fluxIdx < numTotalFluxTypes; ++fluxIdx)
                     nodeGrid.linkData[idx].fluxes[fluxIdx][nodeIndex] = noDataD;
         }
 
@@ -662,7 +691,7 @@ namespace soilFluxes3D::New
      * \param soilIndex, horizonIndex indeces of the soil type in the soil list
      * \return Ok/Error
      */
-    SF3Derror_t setNodeSoil(SF3Duint_t nodeIndex, uint16_t soilIndex, uint16_t horizonIndex)
+    SF3Derror_t setNodeSoil(SF3Duint_t nodeIndex, u16_t soilIndex, u16_t horizonIndex)
     {
         if(!nodeGrid.isInitialized)
             return SF3Derror_t::MemoryError;
@@ -670,14 +699,13 @@ namespace soilFluxes3D::New
         if(nodeIndex >= nodeGrid.numNodes)
             return SF3Derror_t::IndexError;
 
-        if(soilIndex >= soilList.size() || horizonIndex >= soilList[soilIndex].size())
+        if(nodeGrid.surfaceFlag[nodeIndex])
+            return SF3Derror_t::IndexError;
+
+        if(soilIndex >= soil1DIndeces.size() || horizonIndex >= soil1DIndeces[soilIndex].size())
             return SF3Derror_t::ParameterError;
 
-        if(nodeGrid.surfaceFlag[nodeIndex])
-            return SF3Derror_t::IndexError;      //surfaceFlags must be initialized before soil data
-
-        nodeGrid.soilRowIndeces[nodeIndex] = soilIndex;
-        nodeGrid.soilSurfacePointers[nodeIndex].soilPtr = &(soilList[soilIndex][horizonIndex]);
+        nodeGrid.soilSurfacePointers[nodeIndex].soilPtr = &(soilList[soil1DIndeces[soilIndex][horizonIndex]]);
         return SF3Derror_t::SF3Dok;
     }
 
@@ -687,7 +715,7 @@ namespace soilFluxes3D::New
      * \param surfaceIndex index of the surface type in the surface list
      * \return Ok/Error
      */
-    SF3Derror_t setNodeSurface(SF3Duint_t nodeIndex, uint16_t surfaceIndex)
+    SF3Derror_t setNodeSurface(SF3Duint_t nodeIndex, u16_t surfaceIndex)
     {
         if(!nodeGrid.isInitialized)
             return SF3Derror_t::MemoryError;
@@ -1055,7 +1083,7 @@ namespace soilFluxes3D::New
 
                 return nodeGrid.linkData[1].waterFlowSum[nodeIndex];
             case linkType_t::Lateral:
-                for(uint8_t linkIdx = 0; linkIdx < nodeGrid.numLateralLink[nodeIndex]; ++linkIdx)
+                for(u8_t linkIdx = 0; linkIdx < nodeGrid.numLateralLink[nodeIndex]; ++linkIdx)
                     if(nodeGrid.linkData[2 + linkIdx].linkIndex[nodeIndex] != noDataU)
                         maxFlow = SF3Dmax(maxFlow, nodeGrid.linkData[2 + linkIdx].waterFlowSum[nodeIndex]);
 
@@ -1078,7 +1106,7 @@ namespace soilFluxes3D::New
             return static_cast<double>(SF3Derror_t::IndexError);
 
         double sumFlow = 0.;
-        for(uint8_t linkIdx = 0; linkIdx < nodeGrid.numLateralLink[nodeIndex]; ++linkIdx)
+        for(u8_t linkIdx = 0; linkIdx < nodeGrid.numLateralLink[nodeIndex]; ++linkIdx)
             if(nodeGrid.linkData[2 + linkIdx].linkIndex[nodeIndex] != noDataU)
                 sumFlow += nodeGrid.linkData[2 + linkIdx].waterFlowSum[nodeIndex];
 
@@ -1098,7 +1126,7 @@ namespace soilFluxes3D::New
             return static_cast<double>(SF3Derror_t::IndexError);
 
         double sumFlow = 0.;
-        for(uint8_t linkIdx = 0; linkIdx < nodeGrid.numLateralLink[nodeIndex]; ++linkIdx)
+        for(u8_t linkIdx = 0; linkIdx < nodeGrid.numLateralLink[nodeIndex]; ++linkIdx)
             if((nodeGrid.linkData[2 + linkIdx].linkIndex[nodeIndex] != noDataU) && (nodeGrid.linkData[2 + linkIdx].waterFlowSum[nodeIndex] > 0))
                 sumFlow += nodeGrid.linkData[2 + linkIdx].waterFlowSum[nodeIndex];
 
@@ -1118,7 +1146,7 @@ namespace soilFluxes3D::New
             return static_cast<double>(SF3Derror_t::IndexError);
 
         double sumFlow = 0.;
-        for(uint8_t linkIdx = 0; linkIdx < nodeGrid.numLateralLink[nodeIndex]; ++linkIdx)
+        for(u8_t linkIdx = 0; linkIdx < nodeGrid.numLateralLink[nodeIndex]; ++linkIdx)
             if((nodeGrid.linkData[2 + linkIdx].linkIndex[nodeIndex] != noDataU) && (nodeGrid.linkData[2 + linkIdx].waterFlowSum[nodeIndex] < 0))
                 sumFlow += nodeGrid.linkData[2 + linkIdx].waterFlowSum[nodeIndex];
 
@@ -1505,7 +1533,7 @@ namespace soilFluxes3D::New
                 return getLinkHeatFlux(nodeGrid.linkData[1], nodeIndex, fluxType);
 
             case linkType_t::Lateral:
-                for(uint8_t linkIdx = 0; linkIdx < maxLateralLink; ++linkIdx)
+                for(u8_t linkIdx = 0; linkIdx < maxLateralLink; ++linkIdx)
                 {
                     double currFlux = getLinkHeatFlux(nodeGrid.linkData[2 + linkIdx], nodeIndex, fluxType);
                     if(currFlux > std::fabs(nodeMaxFlux))

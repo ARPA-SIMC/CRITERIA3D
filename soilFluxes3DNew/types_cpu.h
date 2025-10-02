@@ -8,8 +8,8 @@ namespace soilFluxes3D::New
     struct MatrixCPU
     {
         SF3Duint_t numRows;
-        uint8_t maxColumns = maxMatrixColumns;
-        uint8_t* numColumns = nullptr;
+        u8_t maxColumns = maxMatrixColumns;
+        u8_t* numColumns = nullptr;
         SF3Duint_t** colIndeces = nullptr;
         double** values = nullptr;
     };

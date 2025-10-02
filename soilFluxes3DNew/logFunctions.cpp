@@ -42,9 +42,9 @@ namespace soilFluxes3D::Log
         logData.numStepDone++;
     }
 
-    void createBinData(uint16_t stepNum, const MatrixCPU& matrix, const VectorCPU& vectorB, const VectorCPU& vectorX)
+    void createBinData(u16_t stepNum, const MatrixCPU& matrix, const VectorCPU& vectorB, const VectorCPU& vectorX)
     {
-        size_t size = static_cast<size_t>(matrix.numRows);
+        std::size_t size = static_cast<std::size_t>(matrix.numRows);
 
         mxArray* matA = mxCreateStructMatrix(1, 1, 3, logData.matrixFieldsNames);
 
