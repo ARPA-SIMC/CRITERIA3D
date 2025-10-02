@@ -1122,18 +1122,22 @@ int DLL_EXPORT __STDCALL setTemperature(long nodeIndex, double myT)
    // myT              [K] temperature
    //----------------------------------------------------------------------------------------------
 
-   if (nodeList == nullptr) return(MEMORY_ERROR);
+   if (nodeList == nullptr)
+       return MEMORY_ERROR;
 
-   if ((nodeIndex < 0) || (nodeIndex >= myStructure.nrNodes)) return(INDEX_ERROR);
+   if ((nodeIndex < 0) || (nodeIndex >= myStructure.nrNodes))
+       return INDEX_ERROR;
 
-   if ((myT < 200) || (myT > 500)) return(PARAMETER_ERROR);
+   if ((myT < 200) || (myT > 500))
+       return PARAMETER_ERROR;
 
-   if (! isHeatNode(nodeIndex)) return(MEMORY_ERROR);
+   if (! isHeatNode(nodeIndex))
+       return MEMORY_ERROR;
 
    nodeList[nodeIndex].extra->Heat->T = myT;
    nodeList[nodeIndex].extra->Heat->oldT = myT;
 
-   return(CRIT3D_OK);
+   return CRIT3D_OK;
 }
 
 /*!

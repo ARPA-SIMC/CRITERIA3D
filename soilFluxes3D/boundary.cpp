@@ -432,7 +432,7 @@ bool updateBoundaryHeat(double timeStep, double &reducedTimeStep)
 {
     double CourantHeatBoundary = 0;
 
-    for (long i = 1; i < myStructure.nrNodes; i++)
+    for (long i = 0; i < myStructure.nrNodes; i++)
     {
         if (isHeatNode(i))
         {
