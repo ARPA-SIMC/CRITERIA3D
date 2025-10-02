@@ -7,16 +7,16 @@ namespace soilFluxes3D::New
 {
     struct MatrixCPU
     {
-        uint64_t numRows;
+        SF3Duint_t numRows;
         uint8_t maxColumns = maxMatrixColumns;
         uint8_t* numColumns = nullptr;
-        uint64_t** colIndeces = nullptr;
+        SF3Duint_t** colIndeces = nullptr;
         double** values = nullptr;
     };
 
     struct VectorCPU
     {
-        uint64_t numElements;
+        SF3Duint_t numElements;
         double* values;
     };
 

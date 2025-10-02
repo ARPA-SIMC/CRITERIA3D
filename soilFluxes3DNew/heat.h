@@ -8,10 +8,10 @@ using namespace soilFluxes3D::New;
 
 namespace soilFluxes3D::Heat
 {
-    bool isHeatNode(uint64_t nodeIndex);
+    bool isHeatNode(SF3Duint_t nodeIndex);
 
     double computeCurrentHeatSinkSource(double dtHeat);
-    double computeCurrentHeatStorage(double dtWater = noData, double dtHeat = noData);
+    double computeCurrentHeatStorage(double dtWater = noDataD, double dtHeat = noDataD);
     SF3Derror_t initializeHeatBalance();
     void evaluateHeatBalance(double dtHeat, double dtWater);
     void updateHeatBalanceData();
@@ -19,45 +19,45 @@ namespace soilFluxes3D::Heat
 
     SF3Derror_t resetFluxValues(bool flagWater, bool flagHeat);
     SF3Derror_t saveWaterFluxValues(double dtHeat, double dtWater);
-    SF3Derror_t saveNodeWaterFluxes(uint64_t nIdx, uint8_t lIdx, double dtHeat, double dtWater);
+    SF3Derror_t saveNodeWaterFluxes(SF3Duint_t nIdx, uint8_t lIdx, double dtHeat, double dtWater);
     SF3Derror_t saveHeatFluxValues(double dtHeat, double dtWater);
-    SF3Derror_t saveNodeHeatFluxes(uint64_t nIdx, uint8_t lIdx, double dtHeat, double dtWater);
-    SF3Derror_t saveNodeHeatSpecificFlux(uint64_t nIdx, uint8_t lIdx, fluxTypes_t fluxType, double fluxValue);
+    SF3Derror_t saveNodeHeatFluxes(SF3Duint_t nIdx, uint8_t lIdx, double dtHeat, double dtWater);
+    SF3Derror_t saveNodeHeatSpecificFlux(SF3Duint_t nIdx, uint8_t lIdx, fluxTypes_t fluxType, double fluxValue);
 
     SF3Derror_t updateConductance();
 
     bool updateBoundaryHeatData(double maxTimeStep, double& actualTimeStep);
 
 
-    bool computeHeatLinkFluxes(double &matrixElement, uint64_t &matrixIndex, uint64_t nodeIndex, uint8_t linkIndex, double dtHeat, double dtWater);
+    bool computeHeatLinkFluxes(double &matrixElement, SF3Duint_t &matrixIndex, SF3Duint_t nodeIndex, uint8_t linkIndex, double dtHeat, double dtWater);
 
 
-    double computeThermalLiquidFlux(uint64_t nIdx, uint8_t lIdx, processType process, double dtHeat = noData, double dtWater = noData);
-    double computeThermalVaporFlux(uint64_t nIdx, uint8_t lIdx, processType process, double dtHeat = noData, double dtWater = noData);
-    double computeIsothermalVaporFlux(uint64_t nIdx, uint8_t lIdx, double dtHeat, double dtWater);
-    double computeIsothermalLatentHeatFlux(uint64_t nIdx, uint8_t lIdx, double dtHeat, double dtWater);
-    double computeAdvectiveFlux(uint64_t nIdx, uint8_t lIdx);     //originally double&: check if needed somewhere
-    double getLinkHeatFlux(const linkData_t &linkData, uint64_t srcIndex, fluxTypes_t fluxType);
+    double computeThermalLiquidFlux(SF3Duint_t nIdx, uint8_t lIdx, processType process, double dtHeat = noDataD, double dtWater = noDataD);
+    double computeThermalVaporFlux(SF3Duint_t nIdx, uint8_t lIdx, processType process, double dtHeat = noDataD, double dtWater = noDataD);
+    double computeIsothermalVaporFlux(SF3Duint_t nIdx, uint8_t lIdx, double dtHeat, double dtWater);
+    double computeIsothermalLatentHeatFlux(SF3Duint_t nIdx, uint8_t lIdx, double dtHeat, double dtWater);
+    double computeAdvectiveFlux(SF3Duint_t nIdx, uint8_t lIdx);     //originally double&: check if needed somewhere
+    double getLinkHeatFlux(const linkData_t &linkData, SF3Duint_t srcIndex, fluxTypes_t fluxType);
 
-    double conduction(uint64_t nIdx, uint8_t lIdx, double dtHeat, double dtWater);
+    double conduction(SF3Duint_t nIdx, uint8_t lIdx, double dtHeat, double dtWater);
 
     double GaussSeidelHeatCPU(VectorCPU& vectorX, const MatrixCPU& matrixA, const VectorCPU& vectorB);
 
-    double getNodeH_fromTimeSteps(uint64_t nodeIndex, double dtHeat, double dtWater);
+    double getNodeH_fromTimeSteps(SF3Duint_t nodeIndex, double dtHeat, double dtWater);
 
-    double computeNodeHeatSoilConductivity(uint64_t nodeIndex, double T, double h);
-    double computeNodeHeatAirConductivity(uint64_t nodeIndex, double T, double h);
-    double computeNodeThermalVaporConductivity(uint64_t nodeIndex, double T, double h);
-    double computeNodeIsothermalVaporConductivity(uint64_t nodeIndex, double T, double h);
-    double computeNodeHeatCapacity(uint64_t nodeIndex, double h, double T);
-    double computeNodeVaporThetaV(uint64_t nodeIndex, double h, double T);
-    double computeNodeAerodynamicConductance(uint64_t nodeIndex);
-    double computeNodeAtmosphericSensibleHeatFlux(uint64_t nodeIndex);
-    double computeNodeAtmosphericLatentHeatFlux(uint64_t nodeIndex);
-    double computeNodeAtmosphericLatentSurfaceWaterFlux(uint64_t nodeIndex);
+    double computeNodeHeatSoilConductivity(SF3Duint_t nodeIndex, double T, double h);
+    double computeNodeHeatAirConductivity(SF3Duint_t nodeIndex, double T, double h);
+    double computeNodeThermalVaporConductivity(SF3Duint_t nodeIndex, double T, double h);
+    double computeNodeIsothermalVaporConductivity(SF3Duint_t nodeIndex, double T, double h);
+    double computeNodeHeatCapacity(SF3Duint_t nodeIndex, double h, double T);
+    double computeNodeVaporThetaV(SF3Duint_t nodeIndex, double h, double T);
+    double computeNodeAerodynamicConductance(SF3Duint_t nodeIndex);
+    double computeNodeAtmosphericSensibleHeatFlux(SF3Duint_t nodeIndex);
+    double computeNodeAtmosphericLatentHeatFlux(SF3Duint_t nodeIndex);
+    double computeNodeAtmosphericLatentSurfaceWaterFlux(SF3Duint_t nodeIndex);
 
     //Move to soilPhysics (update comment in mathFunctions/physics.h
-    double estimateNodeBulkDensity(uint64_t nodeIndex);
+    double estimateNodeBulkDensity(SF3Duint_t nodeIndex);
     double estimateSoilParticleDensity(double organicMatter);
 
     double computeVapor_fromPsiTemp(double h, double T);

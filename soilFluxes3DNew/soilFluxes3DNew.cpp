@@ -24,12 +24,12 @@ using namespace soilFluxes3D::Heat;
 
 namespace soilFluxes3D::New
 {
+    //Solver objects
+    CPUSolver CPUSolverObject;
     #ifdef CUDA_ENABLED
         GPUSolver GPUSolverObject;
         bool CUDAactive = true;
     #endif
-
-    CPUSolver CPUSolverObject;
 
     //global variables
     __cudaMngd Solver* solver = nullptr;
@@ -44,7 +44,7 @@ namespace soilFluxes3D::New
      *  \brief initializes the node data grid and set simulation parameters
      *  \return Ok/Error
     */
-    SF3Derror_t initializeSF3D(uint64_t nrNodes, uint16_t nrLayers, uint8_t nrLateralLinks, bool isComputeWater, bool isComputeHeat, bool isComputeSolutes, heatFluxSaveMode_t HFsm)
+    SF3Derror_t initializeSF3D(SF3Duint_t nrNodes, uint16_t nrLayers, uint8_t nrLateralLinks, bool isComputeWater, bool isComputeHeat, bool isComputeSolutes, heatFluxSaveMode_t HFsm)
     {
         //Cleans all the data structures
         SF3Derror_t cleanResult = cleanSF3D();
@@ -71,87 +71,87 @@ namespace soilFluxes3D::New
             return SF3Derror_t::ParameterError;
 
         //Topology data
-        hostAlloc(nodeGrid.size, double, nrNodes);
-        hostAlloc(nodeGrid.x, double, nrNodes);
-        hostAlloc(nodeGrid.y, double, nrNodes);
-        hostAlloc(nodeGrid.z, double, nrNodes);
-        hostAlloc(nodeGrid.surfaceFlag, bool, nrNodes);
+        hostAlloc(nodeGrid.size, nrNodes);
+        hostAlloc(nodeGrid.x, nrNodes);
+        hostAlloc(nodeGrid.y, nrNodes);
+        hostAlloc(nodeGrid.z, nrNodes);
+        hostAlloc(nodeGrid.surfaceFlag, nrNodes);
 
         //Soil/Surface data
-        hostAlloc(nodeGrid.soilRowIndeces, uint16_t, nrNodes);
-        hostAlloc(nodeGrid.soilSurfacePointers, soilSurface_ptr, nrNodes);
+        hostAlloc(nodeGrid.soilRowIndeces, nrNodes);
+        hostAlloc(nodeGrid.soilSurfacePointers, nrNodes);
 
         //Boundary data
-        hostAlloc(nodeGrid.boundaryData.boundaryType, boundaryType_t, nrNodes); //NoBoundary is equal 0, automatic set with calloc
-        hostAlloc(nodeGrid.boundaryData.boundarySlope, double, nrNodes);
-        hostAlloc(nodeGrid.boundaryData.boundarySize, double, nrNodes);
+        hostAlloc(nodeGrid.boundaryData.boundaryType, nrNodes); //NoBoundary is equal 0, automatic set with calloc
+        hostAlloc(nodeGrid.boundaryData.boundarySlope, nrNodes);
+        hostAlloc(nodeGrid.boundaryData.boundarySize, nrNodes);
         if(isComputeWater)
         {
-            hostAlloc(nodeGrid.boundaryData.waterFlowRate, double, nrNodes);
-            hostAlloc(nodeGrid.boundaryData.waterFlowSum, double, nrNodes);
-            hostAlloc(nodeGrid.boundaryData.prescribedWaterPotential, double, nrNodes);
+            hostAlloc(nodeGrid.boundaryData.waterFlowRate, nrNodes);
+            hostAlloc(nodeGrid.boundaryData.waterFlowSum, nrNodes);
+            hostAlloc(nodeGrid.boundaryData.prescribedWaterPotential, nrNodes);
         }
         if(isComputeHeat)
         {
-            hostAlloc(nodeGrid.boundaryData.heightWind, double, nrNodes);
-            hostAlloc(nodeGrid.boundaryData.heightTemperature, double, nrNodes);
-            hostAlloc(nodeGrid.boundaryData.roughnessHeight, double, nrNodes);
-            hostAlloc(nodeGrid.boundaryData.aerodynamicConductance, double, nrNodes);
-            hostAlloc(nodeGrid.boundaryData.soilConductance, double, nrNodes);
-            hostAlloc(nodeGrid.boundaryData.temperature, double, nrNodes);
-            hostAlloc(nodeGrid.boundaryData.relativeHumidity, double, nrNodes);
-            hostAlloc(nodeGrid.boundaryData.windSpeed, double, nrNodes);
-            hostAlloc(nodeGrid.boundaryData.netIrradiance, double, nrNodes);
-            hostAlloc(nodeGrid.boundaryData.sensibleFlux, double, nrNodes);
-            hostAlloc(nodeGrid.boundaryData.latentFlux, double, nrNodes);
-            hostAlloc(nodeGrid.boundaryData.radiativeFlux, double, nrNodes);
-            hostAlloc(nodeGrid.boundaryData.advectiveHeatFlux, double, nrNodes);
-            hostAlloc(nodeGrid.boundaryData.fixedTemperatureValue, double, nrNodes);
-            hostAlloc(nodeGrid.boundaryData.fixedTemperatureDepth, double, nrNodes);
+            hostAlloc(nodeGrid.boundaryData.heightWind, nrNodes);
+            hostAlloc(nodeGrid.boundaryData.heightTemperature, nrNodes);
+            hostAlloc(nodeGrid.boundaryData.roughnessHeight, nrNodes);
+            hostAlloc(nodeGrid.boundaryData.aerodynamicConductance, nrNodes);
+            hostAlloc(nodeGrid.boundaryData.soilConductance, nrNodes);
+            hostAlloc(nodeGrid.boundaryData.temperature, nrNodes);
+            hostAlloc(nodeGrid.boundaryData.relativeHumidity, nrNodes);
+            hostAlloc(nodeGrid.boundaryData.windSpeed, nrNodes);
+            hostAlloc(nodeGrid.boundaryData.netIrradiance, nrNodes);
+            hostAlloc(nodeGrid.boundaryData.sensibleFlux, nrNodes);
+            hostAlloc(nodeGrid.boundaryData.latentFlux, nrNodes);
+            hostAlloc(nodeGrid.boundaryData.radiativeFlux, nrNodes);
+            hostAlloc(nodeGrid.boundaryData.advectiveHeatFlux, nrNodes);
+            hostAlloc(nodeGrid.boundaryData.fixedTemperatureValue, nrNodes);
+            hostAlloc(nodeGrid.boundaryData.fixedTemperatureDepth, nrNodes);
         }
 
         //Link data
-        hostAlloc(nodeGrid.numLateralLink, uint8_t, nrNodes);
+        hostAlloc(nodeGrid.numLateralLink, nrNodes);
         for(uint8_t linkIdx = 0; linkIdx < maxTotalLink; ++linkIdx)
         {
-            hostAlloc(nodeGrid.linkData[linkIdx].linkType, linkType_t, nrNodes);    //NoLink is equal 0, automatic set with calloc
-            hostAlloc(nodeGrid.linkData[linkIdx].linkIndex, uint64_t, nrNodes);;
-            hostAlloc(nodeGrid.linkData[linkIdx].interfaceArea, double, nrNodes);
+            hostAlloc(nodeGrid.linkData[linkIdx].linkType, nrNodes);    //NoLink is equal 0, automatic set with calloc
+            hostAlloc(nodeGrid.linkData[linkIdx].linkIndex, nrNodes);;
+            hostAlloc(nodeGrid.linkData[linkIdx].interfaceArea, nrNodes);
 
             if(isComputeWater)
-                hostAlloc(nodeGrid.linkData[linkIdx].waterFlowSum, double, nrNodes);
+                hostAlloc(nodeGrid.linkData[linkIdx].waterFlowSum, nrNodes);
 
             if(isComputeHeat)
             {
-                hostAlloc(nodeGrid.linkData[linkIdx].waterFlux, double, nrNodes);
-                hostAlloc(nodeGrid.linkData[linkIdx].vaporFlux, double, nrNodes);
+                hostAlloc(nodeGrid.linkData[linkIdx].waterFlux, nrNodes);
+                hostAlloc(nodeGrid.linkData[linkIdx].vaporFlux, nrNodes);
                 for(uint8_t fluxIdx = 0; fluxIdx < numTotalFluxTypes; ++fluxIdx)     //maybe move to initHeatFlag
-                    hostAlloc(nodeGrid.linkData[linkIdx].fluxes[fluxIdx], double, nrNodes);
+                    hostAlloc(nodeGrid.linkData[linkIdx].fluxes[fluxIdx], nrNodes);
             }
         }
 
         //Water data
         if(isComputeWater)
         {
-            hostAlloc(nodeGrid.waterData.saturationDegree, double, nrNodes);
-            hostAlloc(nodeGrid.waterData.waterConductivity, double, nrNodes);
-            hostAlloc(nodeGrid.waterData.waterFlow, double, nrNodes);
-            hostAlloc(nodeGrid.waterData.pressureHead, double, nrNodes);
-            hostAlloc(nodeGrid.waterData.waterSinkSource, double, nrNodes);
-            hostAlloc(nodeGrid.waterData.pond, double, nrNodes);
-            hostAlloc(nodeGrid.waterData.oldPressureHeads, double, nrNodes);
-            hostAlloc(nodeGrid.waterData.bestPressureHeads, double, nrNodes);
-            hostAlloc(nodeGrid.waterData.invariantFluxes, double, nrNodes);
-            hostAlloc(nodeGrid.waterData.partialCourantWaterLevels, double, nrNodes);
+            hostAlloc(nodeGrid.waterData.saturationDegree, nrNodes);
+            hostAlloc(nodeGrid.waterData.waterConductivity, nrNodes);
+            hostAlloc(nodeGrid.waterData.waterFlow, nrNodes);
+            hostAlloc(nodeGrid.waterData.pressureHead, nrNodes);
+            hostAlloc(nodeGrid.waterData.waterSinkSource, nrNodes);
+            hostAlloc(nodeGrid.waterData.pond, nrNodes);
+            hostAlloc(nodeGrid.waterData.oldPressureHeads, nrNodes);
+            hostAlloc(nodeGrid.waterData.bestPressureHeads, nrNodes);
+            hostAlloc(nodeGrid.waterData.invariantFluxes, nrNodes);
+            hostAlloc(nodeGrid.waterData.partialCourantWaterLevels, nrNodes);
         }
 
         //Heat data
         if(isComputeHeat)
         {
-            hostAlloc(nodeGrid.heatData.temperature, double, nrNodes);      //needs to be initialized with non-zero value?
-            hostAlloc(nodeGrid.heatData.oldTemperature, double, nrNodes);   //needs to be initialized with non-zero value?
-            hostAlloc(nodeGrid.heatData.heatFlux, double, nrNodes);
-            hostAlloc(nodeGrid.heatData.heatSinkSource, double, nrNodes);
+            hostAlloc(nodeGrid.heatData.temperature, nrNodes);      //needs to be initialized with non-zero value?
+            hostAlloc(nodeGrid.heatData.oldTemperature, nrNodes);   //needs to be initialized with non-zero value?
+            hostAlloc(nodeGrid.heatData.heatFlux, nrNodes);
+            hostAlloc(nodeGrid.heatData.heatSinkSource, nrNodes);
         }
         nodeGrid.isInitialized = true;
 
@@ -496,7 +496,7 @@ namespace soilFluxes3D::New
     }
 
 
-    SF3Derror_t setCulvert(uint64_t nodeIndex, double roughness, double slope, double width, double height)
+    SF3Derror_t setCulvert(SF3Duint_t nodeIndex, double roughness, double slope, double width, double height)
     {
         if(!nodeGrid.isInitialized)
             return SF3Derror_t::MemoryError;
@@ -524,7 +524,7 @@ namespace soilFluxes3D::New
      *  \brief sets the principal data of the index node
      *  \return Ok/Error
     */
-    SF3Derror_t setNode(uint64_t index, double x, double y, double z, double volume_or_area, bool isSurface, boundaryType_t boundaryType, double slope, double boundaryArea)
+    SF3Derror_t setNode(SF3Duint_t index, double x, double y, double z, double volume_or_area, bool isSurface, boundaryType_t boundaryType, double slope, double boundaryArea)
     {
         if(!nodeGrid.isInitialized)
             return SF3Derror_t::MemoryError;
@@ -544,7 +544,7 @@ namespace soilFluxes3D::New
 
         if(simulationFlags.computeWater)
         {
-            nodeGrid.waterData.pond[index] = isSurface ? 0.0001f : noData;
+            nodeGrid.waterData.pond[index] = isSurface ? 0.0001f : noDataD;
             nodeGrid.waterData.waterSinkSource[index] = 0.;                     //Maybe useless: 0. is the value set by calloc
         }
 
@@ -563,7 +563,7 @@ namespace soilFluxes3D::New
      *  \brief sets the data of the link from nodeIndex to linkIndex nodes
      *  \return Ok/Error
     */
-    SF3Derror_t setNodeLink(uint64_t nodeIndex, uint64_t linkIndex, linkType_t direction, double interfaceArea)
+    SF3Derror_t setNodeLink(SF3Duint_t nodeIndex, SF3Duint_t linkIndex, linkType_t direction, double interfaceArea)
     {
         if(!nodeGrid.isInitialized)
             return SF3Derror_t::MemoryError;
@@ -601,10 +601,10 @@ namespace soilFluxes3D::New
             nodeGrid.linkData[idx].waterFlux[nodeIndex] = 0.;
             nodeGrid.linkData[idx].vaporFlux[nodeIndex] = 0.;
 
-            nodeGrid.linkData[idx].fluxes[0][nodeIndex] = noData;
+            nodeGrid.linkData[idx].fluxes[0][nodeIndex] = noDataD;
             if(simulationFlags.HFsaveMode == heatFluxSaveMode_t::All)
                 for(uint8_t fluxIdx = 1; fluxIdx < numTotalFluxTypes; ++fluxIdx)
-                    nodeGrid.linkData[idx].fluxes[fluxIdx][nodeIndex] = noData;
+                    nodeGrid.linkData[idx].fluxes[fluxIdx][nodeIndex] = noDataD;
         }
 
         //TO DO: if(computeSolutes){}
@@ -616,7 +616,7 @@ namespace soilFluxes3D::New
      *  \brief sets the nodeIndex node boundary data
      *  \return Ok/Error
     */
-    SF3Derror_t setNodeBoundary(uint64_t nodeIndex, boundaryType_t boundaryType, double slope, double boundaryArea)
+    SF3Derror_t setNodeBoundary(SF3Duint_t nodeIndex, boundaryType_t boundaryType, double slope, double boundaryArea)
     {
         nodeGrid.boundaryData.boundaryType[nodeIndex] = boundaryType;
         if(boundaryType == boundaryType_t::NoBoundary)
@@ -628,28 +628,28 @@ namespace soilFluxes3D::New
         //TO DO: check if 0 is okay
         if(simulationFlags.computeWater)
         {
-            nodeGrid.boundaryData.waterFlowRate[nodeIndex] = noData;
-            nodeGrid.boundaryData.waterFlowSum[nodeIndex] = noData;
-            nodeGrid.boundaryData.prescribedWaterPotential[nodeIndex] = noData;
+            nodeGrid.boundaryData.waterFlowRate[nodeIndex] = noDataD;
+            nodeGrid.boundaryData.waterFlowSum[nodeIndex] = noDataD;
+            nodeGrid.boundaryData.prescribedWaterPotential[nodeIndex] = noDataD;
         }
 
         if(simulationFlags.computeHeat)
         {
-            nodeGrid.boundaryData.heightWind[nodeIndex] = noData;
-            nodeGrid.boundaryData.heightTemperature[nodeIndex] = noData;
-            nodeGrid.boundaryData.roughnessHeight[nodeIndex] = noData;
-            nodeGrid.boundaryData.aerodynamicConductance[nodeIndex] = noData;
-            nodeGrid.boundaryData.soilConductance[nodeIndex] = noData;
-            nodeGrid.boundaryData.temperature[nodeIndex] = noData;
-            nodeGrid.boundaryData.relativeHumidity[nodeIndex] = noData;
-            nodeGrid.boundaryData.windSpeed[nodeIndex] = noData;
-            nodeGrid.boundaryData.netIrradiance[nodeIndex] = noData;
-            nodeGrid.boundaryData.radiativeFlux[nodeIndex] = noData;
-            nodeGrid.boundaryData.latentFlux[nodeIndex] = noData;
-            nodeGrid.boundaryData.sensibleFlux[nodeIndex] = noData;
-            nodeGrid.boundaryData.advectiveHeatFlux[nodeIndex] = noData;
-            nodeGrid.boundaryData.fixedTemperatureValue[nodeIndex] = noData;
-            nodeGrid.boundaryData.fixedTemperatureDepth[nodeIndex] = noData;
+            nodeGrid.boundaryData.heightWind[nodeIndex] = noDataD;
+            nodeGrid.boundaryData.heightTemperature[nodeIndex] = noDataD;
+            nodeGrid.boundaryData.roughnessHeight[nodeIndex] = noDataD;
+            nodeGrid.boundaryData.aerodynamicConductance[nodeIndex] = noDataD;
+            nodeGrid.boundaryData.soilConductance[nodeIndex] = noDataD;
+            nodeGrid.boundaryData.temperature[nodeIndex] = noDataD;
+            nodeGrid.boundaryData.relativeHumidity[nodeIndex] = noDataD;
+            nodeGrid.boundaryData.windSpeed[nodeIndex] = noDataD;
+            nodeGrid.boundaryData.netIrradiance[nodeIndex] = noDataD;
+            nodeGrid.boundaryData.radiativeFlux[nodeIndex] = noDataD;
+            nodeGrid.boundaryData.latentFlux[nodeIndex] = noDataD;
+            nodeGrid.boundaryData.sensibleFlux[nodeIndex] = noDataD;
+            nodeGrid.boundaryData.advectiveHeatFlux[nodeIndex] = noDataD;
+            nodeGrid.boundaryData.fixedTemperatureValue[nodeIndex] = noDataD;
+            nodeGrid.boundaryData.fixedTemperatureDepth[nodeIndex] = noDataD;
         }
 
         return SF3Derror_t::SF3Dok;
@@ -662,7 +662,7 @@ namespace soilFluxes3D::New
      * \param soilIndex, horizonIndex indeces of the soil type in the soil list
      * \return Ok/Error
      */
-    SF3Derror_t setNodeSoil(uint64_t nodeIndex, uint16_t soilIndex, uint16_t horizonIndex)
+    SF3Derror_t setNodeSoil(SF3Duint_t nodeIndex, uint16_t soilIndex, uint16_t horizonIndex)
     {
         if(!nodeGrid.isInitialized)
             return SF3Derror_t::MemoryError;
@@ -687,7 +687,7 @@ namespace soilFluxes3D::New
      * \param surfaceIndex index of the surface type in the surface list
      * \return Ok/Error
      */
-    SF3Derror_t setNodeSurface(uint64_t nodeIndex, uint16_t surfaceIndex)
+    SF3Derror_t setNodeSurface(SF3Duint_t nodeIndex, uint16_t surfaceIndex)
     {
         if(!nodeGrid.isInitialized)
             return SF3Derror_t::MemoryError;
@@ -712,7 +712,7 @@ namespace soilFluxes3D::New
      * \param pond            maximum pond height [m]
      * \return Ok/Error
      */
-    SF3Derror_t setNodePond(uint64_t nodeIndex, double pond)
+    SF3Derror_t setNodePond(SF3Duint_t nodeIndex, double pond)
     {
         if(!nodeGrid.isInitialized)
             return SF3Derror_t::MemoryError;
@@ -732,7 +732,7 @@ namespace soilFluxes3D::New
      * \param waterContent  [m] surface - [m3 m-3] sub-surface
      * \return Ok/Error
      */
-    SF3Derror_t setNodeWaterContent(uint64_t nodeIndex, double waterContent)
+    SF3Derror_t setNodeWaterContent(SF3Duint_t nodeIndex, double waterContent)
     {
         if(!nodeGrid.isInitialized)
             return SF3Derror_t::MemoryError;
@@ -769,7 +769,7 @@ namespace soilFluxes3D::New
      * \param degreeOfSaturation  [-] (only sub-surface)
      * \return Ok/Error
      */
-    SF3Derror_t setNodeDegreeOfSaturation(uint64_t nodeIndex, double degreeOfSaturation)
+    SF3Derror_t setNodeDegreeOfSaturation(SF3Duint_t nodeIndex, double degreeOfSaturation)
     {
         if(!nodeGrid.isInitialized)
             return SF3Derror_t::MemoryError;
@@ -796,7 +796,7 @@ namespace soilFluxes3D::New
      * \param matricPotential  [m]
      * \return Ok/Error
      */
-    SF3Derror_t setNodeMatricPotential(uint64_t nodeIndex, double matricPotential)
+    SF3Derror_t setNodeMatricPotential(SF3Duint_t nodeIndex, double matricPotential)
     {
         if(!nodeGrid.isInitialized)
             return SF3Derror_t::MemoryError;
@@ -808,7 +808,7 @@ namespace soilFluxes3D::New
         nodeGrid.waterData.oldPressureHeads[nodeIndex] = nodeGrid.waterData.pressureHead[nodeIndex];
 
         nodeGrid.waterData.saturationDegree[nodeIndex] = nodeGrid.surfaceFlag[nodeIndex] ? 1. : computeNodeSe(nodeIndex);
-        nodeGrid.waterData.waterConductivity[nodeIndex] = nodeGrid.surfaceFlag[nodeIndex] ? noData : computeNodeK(nodeIndex);
+        nodeGrid.waterData.waterConductivity[nodeIndex] = nodeGrid.surfaceFlag[nodeIndex] ? noDataD : computeNodeK(nodeIndex);
 
         return SF3Derror_t::SF3Dok;
     }
@@ -818,7 +818,7 @@ namespace soilFluxes3D::New
      * \param totalPotential  [m]
      * \return Ok/Error
      */
-    SF3Derror_t setNodeTotalPotential(uint64_t nodeIndex, double totalPotential)
+    SF3Derror_t setNodeTotalPotential(SF3Duint_t nodeIndex, double totalPotential)
     {
         if(!nodeGrid.isInitialized)
             return SF3Derror_t::MemoryError;
@@ -830,7 +830,7 @@ namespace soilFluxes3D::New
         nodeGrid.waterData.oldPressureHeads[nodeIndex] = nodeGrid.waterData.pressureHead[nodeIndex];
 
         nodeGrid.waterData.saturationDegree[nodeIndex] = nodeGrid.surfaceFlag[nodeIndex] ? 1. : computeNodeSe(nodeIndex);
-        nodeGrid.waterData.waterConductivity[nodeIndex] = nodeGrid.surfaceFlag[nodeIndex] ? noData : computeNodeK(nodeIndex);
+        nodeGrid.waterData.waterConductivity[nodeIndex] = nodeGrid.surfaceFlag[nodeIndex] ? noDataD : computeNodeK(nodeIndex);
 
         return SF3Derror_t::SF3Dok;
     }
@@ -840,7 +840,7 @@ namespace soilFluxes3D::New
      * \param prescribedTotalPotential  [m]
      * \return Ok/Error
      */
-    SF3Derror_t setNodePrescribedTotalPotential(uint64_t nodeIndex, double prescribedTotalPotential)
+    SF3Derror_t setNodePrescribedTotalPotential(SF3Duint_t nodeIndex, double prescribedTotalPotential)
     {
         if(!nodeGrid.isInitialized)
             return SF3Derror_t::MemoryError;
@@ -861,7 +861,7 @@ namespace soilFluxes3D::New
      * \param waterSinkSource  [m3 sec-1]
      * \return Ok/Error
      */
-    SF3Derror_t setNodeWaterSinkSource(uint64_t nodeIndex, double waterSinkSource)
+    SF3Derror_t setNodeWaterSinkSource(SF3Duint_t nodeIndex, double waterSinkSource)
     {
         if(!nodeGrid.isInitialized)
             return SF3Derror_t::MemoryError;
@@ -878,7 +878,7 @@ namespace soilFluxes3D::New
      * \brief gets the nodeIndex node water content
      * \return surface water level [m] if surface, volumetric water content [m3 m-3] if subsurface
      */
-    double getNodeWaterContent(uint64_t nodeIndex)
+    double getNodeWaterContent(SF3Duint_t nodeIndex)
     {
         if(!nodeGrid.isInitialized)
             return static_cast<double>(SF3Derror_t::MemoryError);
@@ -894,7 +894,7 @@ namespace soilFluxes3D::New
      * \brief gets the nodeIndex sub-surface node maximum volumetric water content
      * \return theta_sat (maximum volumetric water content) [m3 m-3]
      */
-    double getNodeMaximumWaterContent(uint64_t nodeIndex)
+    double getNodeMaximumWaterContent(SF3Duint_t nodeIndex)
     {
         if(!nodeGrid.isInitialized)
             return static_cast<double>(SF3Derror_t::MemoryError);
@@ -912,7 +912,7 @@ namespace soilFluxes3D::New
      * \brief gets the nodeIndex node available water content
      * \return surface water level [m] if surface, volumetric water content [m3 m-3] if subsurface
      */
-    double getNodeAvailableWaterContent(uint64_t nodeIndex)
+    double getNodeAvailableWaterContent(SF3Duint_t nodeIndex)
     {
         if(!nodeGrid.isInitialized)
             return static_cast<double>(SF3Derror_t::MemoryError);
@@ -929,7 +929,7 @@ namespace soilFluxes3D::New
      * \param fieldCapacity //TO ASK: what is this?
      * \return water deficit    [m3 m-3] (0 at surface)
      */
-    double getNodeWaterDeficit(uint64_t nodeIndex, double fieldCapacity)
+    double getNodeWaterDeficit(SF3Duint_t nodeIndex, double fieldCapacity)
     {
         if(!nodeGrid.isInitialized)
             return static_cast<double>(SF3Derror_t::MemoryError);
@@ -948,7 +948,7 @@ namespace soilFluxes3D::New
      * \note for surface node return 0 if there is no water and 1 if water > 0.001
      * \return degree of saturation [-]
      */
-    double getNodeDegreeOfSaturation(uint64_t nodeIndex)
+    double getNodeDegreeOfSaturation(SF3Duint_t nodeIndex)
     {
         if(!nodeGrid.isInitialized)
             return static_cast<double>(SF3Derror_t::MemoryError);
@@ -969,7 +969,7 @@ namespace soilFluxes3D::New
      * \brief gets the nodeIndex node water conductivity
      * \return degree of saturation [-]
      */
-    double getNodeWaterConductivity(uint64_t nodeIndex)
+    double getNodeWaterConductivity(SF3Duint_t nodeIndex)
     {
         if(!nodeGrid.isInitialized)
             return static_cast<double>(SF3Derror_t::MemoryError);
@@ -984,7 +984,7 @@ namespace soilFluxes3D::New
      * \brief gets the nodeIndex node signed matric potential
      * \return matric potential     [m]
      */
-    double getNodeMatricPotential(uint64_t nodeIndex)
+    double getNodeMatricPotential(SF3Duint_t nodeIndex)
     {
         if(!nodeGrid.isInitialized)
             return static_cast<double>(SF3Derror_t::MemoryError);
@@ -999,7 +999,7 @@ namespace soilFluxes3D::New
      * \brief gets the nodeIndex node signed total potential
      * \return total potential     [m]
      */
-    double getNodeTotalPotential(uint64_t nodeIndex)
+    double getNodeTotalPotential(SF3Duint_t nodeIndex)
     {
         if(!nodeGrid.isInitialized)
             return static_cast<double>(SF3Derror_t::MemoryError);
@@ -1014,7 +1014,7 @@ namespace soilFluxes3D::New
      * \brief gets the nodeIndex surface node pond
      * \return surface pond     [m3]
      */
-    double getNodePond(uint64_t nodeIndex)
+    double getNodePond(SF3Duint_t nodeIndex)
     {
         if(!nodeGrid.isInitialized)
             return static_cast<double>(SF3Derror_t::MemoryError);
@@ -1033,7 +1033,7 @@ namespace soilFluxes3D::New
      * \param linkDirection    [Up/Down/Lateral]
      * \return integrated water flow     [m3]
      */
-    double getNodeMaxWaterFlow(uint64_t nodeIndex, linkType_t linkDirection)
+    double getNodeMaxWaterFlow(SF3Duint_t nodeIndex, linkType_t linkDirection)
     {
         if(!nodeGrid.isInitialized)
             return static_cast<double>(SF3Derror_t::MemoryError);
@@ -1045,18 +1045,18 @@ namespace soilFluxes3D::New
         switch (linkDirection)
         {
             case linkType_t::Up:
-                if(nodeGrid.linkData[0].linkIndex[nodeIndex] == UINTFLAG)
+                if(nodeGrid.linkData[0].linkIndex[nodeIndex] == noDataU)
                     return static_cast<double>(SF3Derror_t::IndexError);
 
                 return nodeGrid.linkData[0].waterFlowSum[nodeIndex];
             case linkType_t::Down:
-                if(nodeGrid.linkData[1].linkIndex[nodeIndex] == UINTFLAG)
+                if(nodeGrid.linkData[1].linkIndex[nodeIndex] == noDataU)
                     return static_cast<double>(SF3Derror_t::IndexError);
 
                 return nodeGrid.linkData[1].waterFlowSum[nodeIndex];
             case linkType_t::Lateral:
                 for(uint8_t linkIdx = 0; linkIdx < nodeGrid.numLateralLink[nodeIndex]; ++linkIdx)
-                    if(nodeGrid.linkData[2 + linkIdx].linkIndex[nodeIndex] != UINTFLAG)
+                    if(nodeGrid.linkData[2 + linkIdx].linkIndex[nodeIndex] != noDataU)
                         maxFlow = SF3Dmax(maxFlow, nodeGrid.linkData[2 + linkIdx].waterFlowSum[nodeIndex]);
 
                 return maxFlow;
@@ -1069,7 +1069,7 @@ namespace soilFluxes3D::New
      * \brief gets the total integrated lateral water flow from nodeIndex node
      * \return integrated water flow     [m3]
      */
-    double getNodeSumLateralWaterFlow(uint64_t nodeIndex)
+    double getNodeSumLateralWaterFlow(SF3Duint_t nodeIndex)
     {
         if(!nodeGrid.isInitialized)
             return static_cast<double>(SF3Derror_t::MemoryError);
@@ -1079,7 +1079,7 @@ namespace soilFluxes3D::New
 
         double sumFlow = 0.;
         for(uint8_t linkIdx = 0; linkIdx < nodeGrid.numLateralLink[nodeIndex]; ++linkIdx)
-            if(nodeGrid.linkData[2 + linkIdx].linkIndex[nodeIndex] != UINTFLAG)
+            if(nodeGrid.linkData[2 + linkIdx].linkIndex[nodeIndex] != noDataU)
                 sumFlow += nodeGrid.linkData[2 + linkIdx].waterFlowSum[nodeIndex];
 
         return sumFlow;
@@ -1089,7 +1089,7 @@ namespace soilFluxes3D::New
      * \brief gets the total integrated lateral water inflow from nodeIndex node
      * \return integrated water inflow     [m3]
      */
-    double getNodeSumLateralWaterFlowIn(uint64_t nodeIndex)
+    double getNodeSumLateralWaterFlowIn(SF3Duint_t nodeIndex)
     {
         if(!nodeGrid.isInitialized)
             return static_cast<double>(SF3Derror_t::MemoryError);
@@ -1099,7 +1099,7 @@ namespace soilFluxes3D::New
 
         double sumFlow = 0.;
         for(uint8_t linkIdx = 0; linkIdx < nodeGrid.numLateralLink[nodeIndex]; ++linkIdx)
-            if((nodeGrid.linkData[2 + linkIdx].linkIndex[nodeIndex] != UINTFLAG) && (nodeGrid.linkData[2 + linkIdx].waterFlowSum[nodeIndex] > 0))
+            if((nodeGrid.linkData[2 + linkIdx].linkIndex[nodeIndex] != noDataU) && (nodeGrid.linkData[2 + linkIdx].waterFlowSum[nodeIndex] > 0))
                 sumFlow += nodeGrid.linkData[2 + linkIdx].waterFlowSum[nodeIndex];
 
         return sumFlow;
@@ -1109,7 +1109,7 @@ namespace soilFluxes3D::New
      * \brief gets the total integrated lateral water outflow from nodeIndex node
      * \return integrated water outflow     [m3]
      */
-    double getNodeSumLateralWaterFlowOut(uint64_t nodeIndex)
+    double getNodeSumLateralWaterFlowOut(SF3Duint_t nodeIndex)
     {
         if(!nodeGrid.isInitialized)
             return static_cast<double>(SF3Derror_t::MemoryError);
@@ -1119,7 +1119,7 @@ namespace soilFluxes3D::New
 
         double sumFlow = 0.;
         for(uint8_t linkIdx = 0; linkIdx < nodeGrid.numLateralLink[nodeIndex]; ++linkIdx)
-            if((nodeGrid.linkData[2 + linkIdx].linkIndex[nodeIndex] != UINTFLAG) && (nodeGrid.linkData[2 + linkIdx].waterFlowSum[nodeIndex] < 0))
+            if((nodeGrid.linkData[2 + linkIdx].linkIndex[nodeIndex] != noDataU) && (nodeGrid.linkData[2 + linkIdx].waterFlowSum[nodeIndex] < 0))
                 sumFlow += nodeGrid.linkData[2 + linkIdx].waterFlowSum[nodeIndex];
 
         return sumFlow;
@@ -1129,7 +1129,7 @@ namespace soilFluxes3D::New
      * \brief gets the total integrated boundary water flow from nodeIndex node
      * \return integrated boundary water flow     [m3]
      */
-    double getNodeBoundaryWaterFlow(uint64_t nodeIndex)
+    double getNodeBoundaryWaterFlow(SF3Duint_t nodeIndex)
     {
         if(!nodeGrid.isInitialized)
             return static_cast<double>(SF3Derror_t::MemoryError);
@@ -1152,7 +1152,7 @@ namespace soilFluxes3D::New
         double totalBoundaryWaterFlow = 0.0;
 
         #pragma omp parallel for if(__ompStatus) reduction(+:totalBoundaryWaterFlow)
-        for (uint64_t nodeIdx = 0; nodeIdx < nodeGrid.numNodes; ++nodeIdx)
+        for (SF3Duint_t nodeIdx = 0; nodeIdx < nodeGrid.numNodes; ++nodeIdx)
             if (nodeGrid.boundaryData.boundaryType[nodeIdx] == boundaryType)
                 totalBoundaryWaterFlow += nodeGrid.boundaryData.waterFlowSum[nodeIdx];
 
@@ -1190,7 +1190,7 @@ namespace soilFluxes3D::New
      * \brief sets the nodeIndex node heat sink source
      * \return Ok/Error
      */
-    SF3Derror_t setNodeHeatSinkSource(uint64_t nodeIndex, double heatSinkSource)
+    SF3Derror_t setNodeHeatSinkSource(SF3Duint_t nodeIndex, double heatSinkSource)
     {
         if(!nodeGrid.isInitialized)
             return SF3Derror_t::MemoryError;
@@ -1207,7 +1207,7 @@ namespace soilFluxes3D::New
      * \brief sets the nodeIndex node temperature
      * \return Ok/Error
      */
-    SF3Derror_t setNodeTemperature(uint64_t nodeIndex, double temperature)
+    SF3Derror_t setNodeTemperature(SF3Duint_t nodeIndex, double temperature)
     {
         if(!nodeGrid.isInitialized)
             return SF3Derror_t::MemoryError;
@@ -1225,7 +1225,7 @@ namespace soilFluxes3D::New
      * \brief sets the nodeIndex node boundary fixed temperature
      * \return Ok/Error
      */
-    SF3Derror_t setNodeBoundaryFixedTemperature(uint64_t nodeIndex, double fixedTemperature, double depth)
+    SF3Derror_t setNodeBoundaryFixedTemperature(SF3Duint_t nodeIndex, double fixedTemperature, double depth)
     {
         if(!nodeGrid.isInitialized)
             return SF3Derror_t::MemoryError;
@@ -1247,7 +1247,7 @@ namespace soilFluxes3D::New
      * \brief sets the nodeIndex node boundary height wind
      * \return Ok/Error
      */
-    SF3Derror_t setNodeBoundaryHeightWind(uint64_t nodeIndex, double heightWind)
+    SF3Derror_t setNodeBoundaryHeightWind(SF3Duint_t nodeIndex, double heightWind)
     {
         if(!nodeGrid.isInitialized)
             return SF3Derror_t::MemoryError;
@@ -1267,7 +1267,7 @@ namespace soilFluxes3D::New
      * \brief sets the nodeIndex node boundary height temperature
      * \return Ok/Error
      */
-    SF3Derror_t setNodeBoundaryHeightTemperature(uint64_t nodeIndex, double heightTemperature)
+    SF3Derror_t setNodeBoundaryHeightTemperature(SF3Duint_t nodeIndex, double heightTemperature)
     {
         if(!nodeGrid.isInitialized)
             return SF3Derror_t::MemoryError;
@@ -1287,7 +1287,7 @@ namespace soilFluxes3D::New
      * \brief sets the nodeIndex node boundary net irradiance
      * \return Ok/Error
      */
-    SF3Derror_t setNodeBoundaryNetIrradiance(uint64_t nodeIndex, double netIrradiance)
+    SF3Derror_t setNodeBoundaryNetIrradiance(SF3Duint_t nodeIndex, double netIrradiance)
     {
         if(!nodeGrid.isInitialized)
             return SF3Derror_t::MemoryError;
@@ -1307,7 +1307,7 @@ namespace soilFluxes3D::New
      * \brief sets the nodeIndex node boundary temperature
      * \return Ok/Error
      */
-    SF3Derror_t setNodeBoundaryTemperature(uint64_t nodeIndex, double temperature)
+    SF3Derror_t setNodeBoundaryTemperature(SF3Duint_t nodeIndex, double temperature)
     {
         if(!nodeGrid.isInitialized)
             return SF3Derror_t::MemoryError;
@@ -1327,7 +1327,7 @@ namespace soilFluxes3D::New
      * \brief sets the nodeIndex node boundary relative humidity
      * \return Ok/Error
      */
-    SF3Derror_t setNodeBoundaryRelativeHumidity(uint64_t nodeIndex, double relativeHumidity)
+    SF3Derror_t setNodeBoundaryRelativeHumidity(SF3Duint_t nodeIndex, double relativeHumidity)
     {
         if(!nodeGrid.isInitialized)
             return SF3Derror_t::MemoryError;
@@ -1347,7 +1347,7 @@ namespace soilFluxes3D::New
      * \brief sets the nodeIndex node boundary roughness
      * \return Ok/Error
      */
-    SF3Derror_t setNodeBoundaryRoughness(uint64_t nodeIndex, double roughness)
+    SF3Derror_t setNodeBoundaryRoughness(SF3Duint_t nodeIndex, double roughness)
     {
         if(!nodeGrid.isInitialized)
             return SF3Derror_t::MemoryError;
@@ -1370,7 +1370,7 @@ namespace soilFluxes3D::New
      * \brief sets the nodeIndex node boundary wind speed
      * \return Ok/Error
      */
-    SF3Derror_t setNodeBoundaryWindSpeed(uint64_t nodeIndex, double windSpeed)
+    SF3Derror_t setNodeBoundaryWindSpeed(SF3Duint_t nodeIndex, double windSpeed)
     {
         if(!nodeGrid.isInitialized)
             return SF3Derror_t::MemoryError;
@@ -1393,7 +1393,7 @@ namespace soilFluxes3D::New
      * \brief gets the nodeIndex node temperature
      * \return temperature      [K]
      */
-    double getNodeTemperature(uint64_t nodeIndex)
+    double getNodeTemperature(SF3Duint_t nodeIndex)
     {
         if(!nodeGrid.isInitialized)
             return static_cast<double>(SF3Derror_t::MemoryError);
@@ -1411,7 +1411,7 @@ namespace soilFluxes3D::New
      * \brief gets the nodeIndex node heat conductivity
      * \return node heat conductivity       [W m-1 K-1]
      */
-    double getNodeHeatConductivity(uint64_t nodeIndex)
+    double getNodeHeatConductivity(SF3Duint_t nodeIndex)
     {
         if(!nodeGrid.isInitialized)
             return static_cast<double>(SF3Derror_t::MemoryError);
@@ -1430,7 +1430,7 @@ namespace soilFluxes3D::New
      * \brief gets the nodeIndex node vapor concentration
      * \return node vapor concentration     [kg m-3]
      */
-    double getNodeVapor(uint64_t nodeIndex)
+    double getNodeVapor(SF3Duint_t nodeIndex)
     {
         if(!nodeGrid.isInitialized)
             return static_cast<double>(SF3Derror_t::MemoryError);
@@ -1452,7 +1452,7 @@ namespace soilFluxes3D::New
      * \param pressureHead(?)   [m]
      * \return heat storage [J]
      */
-    double getNodeHeat(uint64_t nodeIndex, double h)
+    double getNodeHeat(SF3Duint_t nodeIndex, double h)
     {
         if(!nodeGrid.isInitialized)
             return static_cast<double>(SF3Derror_t::MemoryError);
@@ -1484,7 +1484,7 @@ namespace soilFluxes3D::New
      * \return instantaneous heat flux  [W]
      * \return water flux               [m3 s-1]
      */
-    double getNodeHeatFlux(uint64_t nodeIndex, linkType_t linkDirection, fluxTypes_t fluxType)
+    double getNodeHeatFlux(SF3Duint_t nodeIndex, linkType_t linkDirection, fluxTypes_t fluxType)
     {
         if(!nodeGrid.isInitialized)
             return static_cast<double>(SF3Derror_t::MemoryError);
@@ -1522,7 +1522,7 @@ namespace soilFluxes3D::New
      * \brief gets the nodeIndex node boundary heat advective flux
      * \return boundary advective heat flux     [W m-2]
      */
-    double getNodeBoundaryAdvectiveFlux(uint64_t nodeIndex)
+    double getNodeBoundaryAdvectiveFlux(SF3Duint_t nodeIndex)
     {
         if(!nodeGrid.isInitialized)
             return static_cast<double>(SF3Derror_t::MemoryError);
@@ -1543,7 +1543,7 @@ namespace soilFluxes3D::New
      * \brief gets the nodeIndex node boundary heat latent flux
      * \return boundary latent heat flux     [W m-2]
      */
-    double getNodeBoundaryLatentFlux(uint64_t nodeIndex)
+    double getNodeBoundaryLatentFlux(SF3Duint_t nodeIndex)
     {
         if(!nodeGrid.isInitialized)
             return static_cast<double>(SF3Derror_t::MemoryError);
@@ -1564,7 +1564,7 @@ namespace soilFluxes3D::New
      * \brief gets the nodeIndex node boundary heat radiative flux
      * \return boundary radiative heat flux     [W m-2]
      */
-    double getNodeBoundaryRadiativeFlux(uint64_t nodeIndex)
+    double getNodeBoundaryRadiativeFlux(SF3Duint_t nodeIndex)
     {
         if(!nodeGrid.isInitialized)
             return static_cast<double>(SF3Derror_t::MemoryError);
@@ -1585,7 +1585,7 @@ namespace soilFluxes3D::New
      * \brief gets the nodeIndex node boundary heat sensible flux
      * \return boundary sensible heat flux     [W m-2]
      */
-    double getNodeBoundarySensibleFlux(uint64_t nodeIndex)
+    double getNodeBoundarySensibleFlux(SF3Duint_t nodeIndex)
     {
         if(!nodeGrid.isInitialized)
             return static_cast<double>(SF3Derror_t::MemoryError);
@@ -1606,7 +1606,7 @@ namespace soilFluxes3D::New
      * \brief gets the nodeIndex node boundary heat aerodynamic conductance
      * \return boundary aerodynamic conductance     [m s-1]
      */
-    double getNodeBoundaryAerodynamicConductance(uint64_t nodeIndex)
+    double getNodeBoundaryAerodynamicConductance(SF3Duint_t nodeIndex)
     {
         if(!nodeGrid.isInitialized)
             return static_cast<double>(SF3Derror_t::MemoryError);
@@ -1627,7 +1627,7 @@ namespace soilFluxes3D::New
      * \brief gets the nodeIndex node boundary heat soil conductance
      * \return boundary soil conductance     [m s-1]
      */
-    double getNodeBoundarySoilConductance(uint64_t nodeIndex)
+    double getNodeBoundarySoilConductance(SF3Duint_t nodeIndex)
     {
         if(!nodeGrid.isInitialized)
             return static_cast<double>(SF3Derror_t::MemoryError);

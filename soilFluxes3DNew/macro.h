@@ -18,13 +18,13 @@
 #define toUnderlyingT(enumValue) castToUnderlyingType(enumValue)
 
 //CPU base
-#define hostAlloc(ptr, type, count) allocHostPointer(ptr, count)
+#define hostAlloc(ptr, count) allocHostPointer(ptr, count)
 #define hostFill(ptr, count, value) fillHostPointer(ptr, count, value)
 #define hostReset(ptr, count) resetHostPointer(ptr, count)
 #define hostFree(ptr) freeHostPointer(ptr)
 
 //CPU solver
-#define hostSolverAlloc(ptr, type, count) solverHostCheckError(hostAlloc(ptr, type, count), _status)
+#define hostSolverAlloc(ptr, count) solverHostCheckError(hostAlloc(ptr, count), _status)
 #define hostSolverFree(ptr) hostFree(ptr)
 
 
@@ -37,7 +37,7 @@
 #define moveToHost(ptr, type, count) movePointerToHost(ptr, count, moveStreams[(currStreamIdx++) % 32])
 
 //GPU Solver
-#define deviceSolverAlloc(ptr, type, count) solverDeviceCheckError(deviceAlloc(ptr, count), _status, SF3Derror_t::MemoryError)
+#define deviceSolverAlloc(ptr, count) solverDeviceCheckError(deviceAlloc(ptr, count), _status, SF3Derror_t::MemoryError)
 #define deviceSolverFree(ptr) solverDeviceCheckError(deviceFree(ptr), _status, SF3Derror_t::MemoryError)
 
 #define launchKernel(kernel, ...) launchGPUKernel(kernel, dim3(numBlocks), dim3(numThreadsPerBlock), __VA_ARGS__)

@@ -7,6 +7,7 @@
 #include <vector>
 #include <string>
 #include <type_traits>
+#include <limits>
 #include <thread>
 #include <omp.h>
 
@@ -16,6 +17,10 @@
 
 namespace soilFluxes3D::New
 {
+    using SF3Duint_t = std::uint32_t;
+    using uint8_t  = std::uint8_t;
+    using uint16_t = std::uint16_t;
+
     #define maxLateralLink 8
     #define maxTotalLink (maxLateralLink + 2)
     #define maxMatrixColumns (maxTotalLink + 1)
@@ -23,7 +28,11 @@ namespace soilFluxes3D::New
     #define numTotalFluxTypes 9
 
     #define noData 0
-    #define UINTFLAG UINT64_MAX
+
+    constexpr double noDataDouble_v = static_cast<double>(NODATA);
+    constexpr SF3Duint_t noDataUint_v = std::numeric_limits<SF3Duint_t>::max();
+    #define noDataD noDataDouble_v
+    #define noDataU noDataUint_v
 
 
     //Math
@@ -92,11 +101,11 @@ namespace soilFluxes3D::New
     struct culvertData_t
     {
         bool isActive = false;
-        uint64_t index = noData;
-        double width = noData;				/*!< [m] */
-        double height = noData;				/*!< [m] */
-        double roughness = noData;			/*!< [s m-1/3] Manning roughness */
-        double slope = noData;				/*!< [-] */
+        SF3Duint_t index = noData;
+        double width = noDataD;        /*!< [m] */
+        double height = noDataD;       /*!< [m] */
+        double roughness = noDataD;    /*!< [s m-1/3] Manning roughness */
+        double slope = noDataD;        /*!< [-] */
     };
 
     //Heat
@@ -144,7 +153,7 @@ namespace soilFluxes3D::New
     struct linkData_t
     {
         linkType_t *linkType = nullptr;
-        uint64_t *linkIndex = nullptr;      /*!< index of linked elements */
+        SF3Duint_t *linkIndex = nullptr;      /*!< index of linked elements */
         double *interfaceArea = nullptr;    /*!< interface area [m2] */
 
         //water data
@@ -193,8 +202,8 @@ namespace soilFluxes3D::New
     {
         bool isInitialized = false;
 
-        uint64_t numNodes = 0;
-        uint64_t numLayers = 0;
+        SF3Duint_t numNodes = 0;
+        SF3Duint_t numLayers = 0;
 
         //Topology data
         double *size = nullptr;                             //volume_area
@@ -234,7 +243,7 @@ namespace soilFluxes3D::New
 
         double deltaTmin = 1;       // [s]
         double deltaTmax = 600;     // [s]
-        double deltaTcurr = noData;
+        double deltaTcurr = noDataD;
 
         uint16_t maxApproximationsNumber = 10;
         uint16_t maxIterationsNumber = 200;

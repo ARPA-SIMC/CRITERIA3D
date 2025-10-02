@@ -26,7 +26,7 @@ namespace soilFluxes3D::New
         if(_status != solverStatus::Created)
             return SF3Derror_t::SolverError;
 
-        if(_parameters.deltaTcurr == noData)
+        if(_parameters.deltaTcurr == noDataD)
             _parameters.deltaTcurr = _parameters.deltaTmax;
 
         _parameters.enableOMP = true;                   //TO DO: (nodeGrid.numNodes > ...);
@@ -34,7 +34,7 @@ namespace soilFluxes3D::New
             omp_set_num_threads(static_cast<int>(_parameters.numThreads));
 
         numThreadsPerBlock = 64;                        //Must be multiple of warp-size(32)
-        numBlocks = (uint64_t) std::ceil((double) nodeGrid.numNodes / numThreadsPerBlock);
+        numBlocks = (SF3Duint_t) std::ceil((double) nodeGrid.numNodes / numThreadsPerBlock);
 
         cuspCheck(cusparseCreate(&libHandle));
 
@@ -42,33 +42,33 @@ namespace soilFluxes3D::New
         iterationMatrix.numRows = static_cast<int64_t>(nodeGrid.numNodes);
         iterationMatrix.numCols = static_cast<int64_t>(nodeGrid.numNodes);
         iterationMatrix.sliceSize = static_cast<int64_t>(numThreadsPerBlock);
-        uint64_t numSlice = numBlocks;
-        uint64_t tnv = numSlice * iterationMatrix.sliceSize * maxTotalLink;
+        SF3Duint_t numSlice = numBlocks;
+        SF3Duint_t tnv = numSlice * iterationMatrix.sliceSize * maxTotalLink;
         iterationMatrix.totValuesSize = static_cast<int64_t>(tnv);
 
-        deviceSolverAlloc(iterationMatrix.d_numColsInRow, uint16_t, iterationMatrix.numRows);
+        deviceSolverAlloc(iterationMatrix.d_numColsInRow, iterationMatrix.numRows);
 
         deviceSolverAlloc(iterationMatrix.d_offsets, int64_t, (numSlice + 1));
-        deviceSolverAlloc(iterationMatrix.d_columnIndeces, int64_t, tnv);
-        deviceSolverAlloc(iterationMatrix.d_values, double, tnv);
+        deviceSolverAlloc(iterationMatrix.d_columnIndeces, tnv);
+        deviceSolverAlloc(iterationMatrix.d_values, tnv);
 
-        deviceSolverAlloc(iterationMatrix.d_diagonalValues, double, iterationMatrix.numRows);
+        deviceSolverAlloc(iterationMatrix.d_diagonalValues, iterationMatrix.numRows);
 
         //initialize vectors data
         constantTerm.numElements = nodeGrid.numNodes;
-        deviceSolverAlloc(constantTerm.d_values, double, constantTerm.numElements);
+        deviceSolverAlloc(constantTerm.d_values, constantTerm.numElements);
 
         unknownTerm.numElements = nodeGrid.numNodes;
-        deviceSolverAlloc(unknownTerm.d_values, double, unknownTerm.numElements);
+        deviceSolverAlloc(unknownTerm.d_values, unknownTerm.numElements);
 
         tempSolution.numElements = nodeGrid.numNodes;
-        deviceSolverAlloc(tempSolution.d_values, double, tempSolution.numElements);
+        deviceSolverAlloc(tempSolution.d_values, tempSolution.numElements);
 
         //initialize cuSPARSE descriptor
         createCUsparseDescriptors();
 
         //initialize raw capacity vector
-        deviceSolverAlloc(d_Cvalues, double, nodeGrid.numNodes);
+        deviceSolverAlloc(d_Cvalues, nodeGrid.numNodes);
 
         _status = solverStatus::initialized;
         return SF3Derror_t::SF3Dok;
@@ -598,7 +598,7 @@ namespace soilFluxes3D::New
         cudaMemcpy(d_soilList, soilList1D.data(), soilSize, cudaMemcpyHostToDevice);
 
         #pragma omp parallel for if(_parameters.enableOMP)
-        for(uint64_t nodeIndex = 0; nodeIndex < nodeGrid.numNodes; ++nodeIndex)
+        for(SF3Duint_t nodeIndex = 0; nodeIndex < nodeGrid.numNodes; ++nodeIndex)
         {
             auto& pointer = nodeGrid.soilSurfacePointers[nodeIndex];
             ptrdiff_t currOffset;
@@ -694,7 +694,7 @@ namespace soilFluxes3D::New
         }
 
         #pragma omp parallel for if(_parameters.enableOMP)
-        for(uint64_t nodeIndex = 0; nodeIndex < nodeGrid.numNodes; ++nodeIndex)
+        for(SF3Duint_t nodeIndex = 0; nodeIndex < nodeGrid.numNodes; ++nodeIndex)
         {
             ptrdiff_t currOffset;
             if(nodeGrid.surfaceFlag[nodeIndex])
@@ -722,7 +722,7 @@ namespace soilFluxes3D::New
 
     __global__ void initializeCapacityAndSaturationDegree_k(double* vectorC)    //TO DO: refactor with host code in single __host__ __device__ function
     {
-        uint64_t nodeIdx = (blockIdx.x * blockDim.x) + threadIdx.x;
+        SF3Duint_t nodeIdx = (blockIdx.x * blockDim.x) + threadIdx.x;
         if(nodeIdx >= nodeGrid.numNodes)
             return;
 
@@ -734,7 +734,7 @@ namespace soilFluxes3D::New
 
     __global__ void computeCapacity_k(double* vectorC)                          //TO DO: merge with host code in single __host__ __device__ function
     {
-        uint64_t nodeIdx = (blockIdx.x * blockDim.x) + threadIdx.x;
+        SF3Duint_t nodeIdx = (blockIdx.x * blockDim.x) + threadIdx.x;
         if(nodeIdx >= nodeGrid.numNodes)
             return;
 
@@ -754,7 +754,7 @@ namespace soilFluxes3D::New
 
     __global__ void updateBoundaryWaterData_k(double deltaT)                    //TO DO: merge with host code in single __host__ __device__ function
     {
-        uint64_t nodeIdx = (blockIdx.x * blockDim.x) + threadIdx.x;
+        SF3Duint_t nodeIdx = (blockIdx.x * blockDim.x) + threadIdx.x;
         if(nodeIdx >= nodeGrid.numNodes)
             return;
 
@@ -834,7 +834,7 @@ namespace soilFluxes3D::New
 
     __global__ void computeNormalizedError(double *vectorNorm, double *vectorX, const double *previousX)
     {
-        uint64_t nodeIdx = (blockIdx.x * blockDim.x) + threadIdx.x;
+        SF3Duint_t nodeIdx = (blockIdx.x * blockDim.x) + threadIdx.x;
         if(nodeIdx >= nodeGrid.numNodes)
             return;
 
@@ -851,15 +851,15 @@ namespace soilFluxes3D::New
 
     __global__ void computeLinearSystemElement_k(MatrixGPU matrixA, VectorGPU vectorB, const double* Cvalues, uint8_t approxNum, double deltaT, double lateralVerticalRatio, meanType_t meanType)
     {
-        uint64_t sliceIdx = blockIdx.x;
-        uint64_t rowIdx = (blockIdx.x * blockDim.x) + threadIdx.x;
+        SF3Duint_t sliceIdx = blockIdx.x;
+        SF3Duint_t rowIdx = (blockIdx.x * blockDim.x) + threadIdx.x;
         if(rowIdx >= nodeGrid.numNodes)
             return;
 
-        uint64_t baseRowIndex = (sliceIdx * maxTotalLink * blockDim.x) + threadIdx.x;
+        SF3Duint_t baseRowIndex = (sliceIdx * maxTotalLink * blockDim.x) + threadIdx.x;
 
         uint32_t numLinks = 0;
-        uint64_t currentElementIndex = baseRowIndex, unsignedTmpColIdx = 0;
+        SF3Duint_t currentElementIndex = baseRowIndex, unsignedTmpColIdx = 0;
         bool isLinked;
 
         //Compute flux up
@@ -929,7 +929,7 @@ namespace soilFluxes3D::New
 
     __global__ void updateSaturationDegree_k()
     {
-        uint64_t nodeIdx = (blockIdx.x * blockDim.x) + threadIdx.x;
+        SF3Duint_t nodeIdx = (blockIdx.x * blockDim.x) + threadIdx.x;
         if(nodeIdx >= nodeGrid.numNodes)
             return;
 
@@ -939,7 +939,7 @@ namespace soilFluxes3D::New
 
     __global__ void updateWaterConductivity_k()
     {
-        uint64_t nodeIdx = (blockIdx.x * blockDim.x) + threadIdx.x;
+        SF3Duint_t nodeIdx = (blockIdx.x * blockDim.x) + threadIdx.x;
         if(nodeIdx >= nodeGrid.numNodes)
             return;
 
@@ -949,7 +949,7 @@ namespace soilFluxes3D::New
 
     __global__ void updateWaterFlows_k(double deltaT)
     {
-        uint64_t nodeIdx = (blockIdx.x * blockDim.x) + threadIdx.x;
+        SF3Duint_t nodeIdx = (blockIdx.x * blockDim.x) + threadIdx.x;
         if(nodeIdx >= nodeGrid.numNodes)
             return;
 
@@ -964,7 +964,7 @@ namespace soilFluxes3D::New
 
     __global__ void computeWaterContent_k(double* outVector)
     {
-        uint64_t nodeIdx = (blockIdx.x * blockDim.x) + threadIdx.x;
+        SF3Duint_t nodeIdx = (blockIdx.x * blockDim.x) + threadIdx.x;
         if(nodeIdx >= nodeGrid.numNodes)
             return;
 
