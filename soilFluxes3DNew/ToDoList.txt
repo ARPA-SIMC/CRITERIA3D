@@ -1,17 +1,10 @@
 Minor
- - Replace #pragma with _Pragma macro
-        - introduce and test "omp simd" and "omp atomic update" directives (if !MSVC)
-
- - Rework all cast operation to static/reinterpret cast
+ - introduce and test "omp simd" and "omp atomic update" directives (if !MSVC)
 
  - Combine temp "_m" - methods with the free functions + #ifdef structure and/or CRTP
  - Move switch/if block in solveLinearSystem to a constexpr map (pType, method <-> std::function)
 
- - Move all feature enabling with .pri file
-
- - MAYBE: move to 32 bit integer values
  - MAYBE: move to new[] allocation
- - MAYBE: implement 1D soil/surface vector/array structure
  - MAYBE: use #pragma once instead of #ifndef / #define
  - MAYBE: remove "using namespace" directive
 
@@ -20,9 +13,6 @@ Major
  	- Rename SF3D to SF3Dv1 and SF3Dnew to v2 (inline namespace?) or remove old version?
 	- Finalize variable names
 	- Complete debug checks -> Remove debug checks
-
- - Check if possibile to upgrade to newer c++ version) -> - if yes move getters to std::expected
-                                                          - if no discuss if move getters to std::variant
 
 Extra
  - Refactor loops outside of soilFluxes3D
