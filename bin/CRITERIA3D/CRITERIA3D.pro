@@ -9,29 +9,6 @@
 QT  += network widgets sql xml charts
 greaterThan(QT_MAJOR_VERSION, 5): QT += core5compat openglwidgets
 
-win32:{
-    QMAKE_CXXFLAGS += -openmp:llvm -GL
-    QMAKE_LFLAGS += -LTCG
-}
-unix:{
-    QMAKE_CXXFLAGS += -fopenmp -flto
-    QMAKE_LFLAGS += -fopenmp -flto
-}
-
-#temp log
-LIBS += -L"D:/App e giochi/MATLAB/R2024b/extern/lib/win64/microsoft" libmx.lib libmat.lib
-LIBS += -L"D:\App e giochi\MATLAB\R2024b\bin\win64"
-
-CUDA_DIR = $$(CUDA_PATH) #"D:\App e giochi\NVIDIA GPU Computing Toolkit\CUDA\v12.9"
-
-isEmpty(CUDA_DIR) {
-    message("CUDA_PATH non definita, salto configurazione CUDA")
-} else {
-    INCLUDEPATH  += $$CUDA_DIR/include
-    QMAKE_LIBDIR += $$CUDA_DIR/lib/x64
-    LIBS += -lcudart -lcuda -lcusparse
-}
-
 TEMPLATE = app
 TARGET = CRITERIA3D_SF3Dnew
 VERSION = 1.1.0
@@ -141,7 +118,6 @@ SOURCES += \
     main.cpp \
     viewer3D.cpp
 
-
 FORMS += mainwindow.ui
 
 DISTFILES += \
@@ -157,3 +133,6 @@ win32:
 {
     RC_ICONS = Criteria3D.ico
 }
+
+include($$absolute_path(../../bin/Makeall_CRITERIA3D/ConfigFlag.pri))
+include($$absolute_path(../../bin/Makeall_CRITERIA3D/ConfigExpr.pri))

@@ -12,21 +12,23 @@
 
 QT -= gui
 
-win32:{
-    QMAKE_CXXFLAGS += -openmp:llvm -GL
-    QMAKE_LFLAGS += -LTCG
-}
-unix:{
-    QMAKE_CXXFLAGS += -fopenmp #-flto
-    QMAKE_LFLAGS += -fopenmp #-flto
-}
-
 TEMPLATE = lib
 CONFIG += staticlib
 CONFIG += c++17
 CONFIG += debug_and_release
 
 INCLUDEPATH += $$absolute_path(../mathFunctions)
+
+unix:{
+    CONFIG(debug, debug|release) {
+        TARGET = debug/soilFluxes3DNew
+    } else {
+        TARGET = release/soilFluxes3DNew
+    }
+}
+win32:{
+    TARGET = soilFluxes3DNew
+}
 
 SOURCES += \
     cpusolver.cpp \
@@ -52,39 +54,19 @@ HEADERS += \
 DISTFILES += \
     ToDoList.txt
 
-unix:{
-    CONFIG(debug, debug|release) {
-        TARGET = debug/soilFluxes3DNew
-    } else {
-        TARGET = release/soilFluxes3DNew
-    }
-}
-win32:{
-    TARGET = soilFluxes3DNew
-}
 
+include($$absolute_path(../../bin/Makeall_CRITERIA3D/ConfigFlag.pri))
+include($$absolute_path(../../bin/Makeall_CRITERIA3D/ConfigExpr.pri))
 
-#CONFIG += MCR_CONFIG
-
-CONFIG(MCR_CONFIG) {
-    DEFINES += MCR_ENABLED
-
-    SOURCES += \
-        logFunctions.cpp
+contains(DEFINES, MCR_ENABLED) {
     HEADERS += \
         logFunctions.h
 
-    #LIBS += -L"D:/App e giochi/MATLAB/R2024b/extern/lib/win64/microsoft" libmx.lib libmat.lib
-    #LIBS += -L"D:/App e giochi/MATLAB/R2024b/bin/win64"
-
-    INCLUDEPATH += "D:/App e giochi/MATLAB/R2024b/extern/include"
+    SOURCES += \
+        logFunctions.cpp
 }
 
-#CONFIG += CUDA_CONFIG
-
-CONFIG(CUDA_CONFIG) {
-    DEFINES += CUDA_ENABLED
-
+contains(DEFINES, CUDA_ENABLED) {
     HEADERS += \
         gpusolver.h \
         types_gpu.h \
@@ -93,36 +75,8 @@ CONFIG(CUDA_CONFIG) {
         gpusolver.cpp \
 
     # CUDA settings
-    CUDA_DIR = $$(CUDA_PATH) #"D:\App e giochi\NVIDIA GPU Computing Toolkit\CUDA\v12.9"
-    CUDA_ARCH = sm_61
     CUDA_SOURCES += $$SOURCES
     SOURCES -= $$CUDA_SOURCES
-
-    INCLUDEPATH  += $$CUDA_DIR/include
-    QMAKE_LIBDIR += $$CUDA_DIR/lib/x64
-    LIBS += -lcudart -lcuda -lcusparse
-
-    QMAKE_CXXFLAGS -= -GL -flto
-    QMAKE_LFLAGS -= -LTCG -flto
-    HOST_C_FLAGS = $$join(QMAKE_CXXFLAGS,',','"','"')
-    HOST_L_FLAGS = $$join(QMAKE_LFLAGS,',','"','"')
-
-    HOST_DEFINES = $$join(DEFINES,' -D','-D')
-
-    cudaC_FLAGS = $$HOST_DEFINES -m64 -std=c++17
-    cudaL_FLAGS = -Wno-deprecated-gpu-targets -arch=sm_61
-
-    CONFIG(debug, debug|release) {
-        MSVCRT_LINK_FLAG = "/MDd"
-        SUBPATH = debug
-        cudaC_FLAGS += -g -G
-    } else {
-        MSVCRT_LINK_FLAG = "/MD"
-        SUBPATH = release
-    }
-
-    # Prepare the extra compiler configuration (taken from the nvidia forum - i'm not an expert in this part)
-    CUDA_INC = $$join(INCLUDEPATH,'" -I"','-I"','"')
 
     # Compile CUDA source files using NVCC
     cudaC.input = CUDA_SOURCES
