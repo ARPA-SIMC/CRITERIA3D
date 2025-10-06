@@ -1,32 +1,13 @@
 #ifndef SUNPOSITION_H
 #define SUNPOSITION_H
 
-/*!
- * \brief RSUN_compute_solar_position
- * \param longitude
- * \param latitude
- * \param timezone
- * \param year
- * \param month
- * \param day
- * \param hour
- * \param minute
- * \param second
- * \param temp
- * \param press
- * \param aspect
- * \param tilt
- * \param sbwid
- * \param sbrad
- * \param sbsky
- * \return
- */
+#include "solPos.h"
 
-long RSUN_compute_solar_position (
-                    float longitude, float latitude, int timezone,
-                    int year, int month, int day, int hour, int minute, int second,
-                    float temp, float press, float aspect, float tilt,
-                    float sbwid, float sbrad, float sbsky);
+
+long RSUN_compute_solar_position (struct SolPosData &pdat, float longitude, float latitude, int myTimezone,
+                                 int year, int month, int day, int hour, int minute, int second,
+                                 float temp, float press, float aspect, float tilt,
+                                 float sbwid, float sbrad, float sbsky);
 
 /*!
  * \brief RSUN_get_results
@@ -47,10 +28,10 @@ long RSUN_compute_solar_position (
  * \param unprime Factor that denormalizes Kt', Kn', etc.
  * \param zenref Solar zenith angle, deg. from zenith, refracted
  */
-void RSUN_get_results (
-                    float *amass, float *ampress, float *azim,
-                    float *cosinc, float *coszen, float *elevetr, float *elevref,
-                    float *etr, float *etrn, float *etrtilt, float *prime, float *sbcf,
-                    float *sunrise, float *sunset, float *unprime, float *zenref);
+void RSUN_get_results (SolPosData &pdat,
+                      float &amass, float &ampress, float &azim,
+                      float &cosinc, float &coszen, float &elevetr, float &elevref,
+                      float &etr, float &etrn, float &etrtilt, float &prime, float &sbcf,
+                      float &sunrise, float &sunset, float &unprime, float &zenref);
 
 #endif // SUNPOSITION_H

@@ -30,10 +30,8 @@
 #include "solPos.h"
 #include "sunPosition.h"
 
-struct posdata pd, *pdat; /*!< declare solpos data struct and a pointer for it */
 
-
-long RSUN_compute_solar_position (float longitude, float latitude, int myTimezone,
+long RSUN_compute_solar_position (struct SolPosData &pdat, float longitude, float latitude, int myTimezone,
                 int year, int month, int day, int hour, int minute, int second,
                 float temp, float press, float aspect, float tilt,
                 float sbwid, float sbrad, float sbsky)
@@ -49,76 +47,74 @@ long RSUN_compute_solar_position (float longitude, float latitude, int myTimezon
      - time: local time from your watch
      */
 
-    long retval;             /*!< to capture S_solpos return codes */
-
-    pdat = &pd;   /*!< point to the structure for convenience */
+    long retval;            /*!< to capture S_solpos return codes */
 
     /*! Initialize structure to default values. (Optional only if ALL input
        parameters are initialized in the calling code, which they are not
        in this example.) */
 
-    S_init(pdat);
+    S_init(&pdat);
 
-    pdat->longitude = longitude;        /*!< Note that latitude and longitude are  */
-    pdat->latitude  = latitude;         /*!<   in DECIMAL DEGREES, not Deg/Min/Sec */
-    pdat->timezone  = float(myTimezone);   /*!< DO NOT ADJUST FOR DAYLIGHT SAVINGS TIME. */
+    pdat.longitude = longitude;             /*!< Note that latitude and longitude are  */
+    pdat.latitude  = latitude;              /*!< in DECIMAL DEGREES, not Deg/Min/Sec   */
+    pdat.timezone  = float(myTimezone);     /*!< DO NOT ADJUST FOR DAYLIGHT SAVINGS TIME. */
 
-    pdat->year      = year;       /*!< The year */
-    pdat->function &= ~S_DOY;
-    pdat->month     = month;
-    pdat->day       = day;        /*!< the algorithm will compensate for leap year, so
-                                     you just count days). S_solpos can be
-                                     configured to accept day-of-the year */
+    pdat.year      = year;                  /*!< The year */
+    pdat.function &= ~S_DOY;
+    pdat.month     = month;
+    pdat.day       = day;                   /*!< the algorithm will compensate for leap year, so
+                                            you just count days). S_solpos can be
+                                            configured to accept day-of-the year */
 
-    /*! The time of day (STANDARD (GMT) time)*/
+    /*! The time of day (STANDARD (GMT) time) */
 
-    pdat->hour      = hour;
-    pdat->minute    = minute;
-    pdat->second    = second;
+    pdat.hour      = hour;
+    pdat.minute    = minute;
+    pdat.second    = second;
 
     /*! The temperature is used for the
        atmospheric refraction correction, and the pressure is used for the
        refraction correction and the pressure-corrected airmass. */
 
-    pdat->temp      = temp;
-    pdat->press     = press;
+    pdat.temp       = temp;
+    pdat.press      = press;
 
-    pdat->aspect	= aspect;
-    pdat->tilt		= tilt;
+    pdat.aspect     = aspect;
+    pdat.tilt		= tilt;
 
-    pdat->sbwid		= sbwid;
-    pdat->sbrad		= sbrad;
-    pdat->sbsky		= sbsky;
+    pdat.sbwid		= sbwid;
+    pdat.sbrad		= sbrad;
+    pdat.sbsky		= sbsky;
 
-    /*! perform the calculation */
-    retval = S_solpos (pdat);  /*!< S_solpos function call: returns long value */
+    /*! compute solar position */
+    retval = S_solpos(&pdat);
 
     return retval;
 }
 
 
-void RSUN_get_results (float *amass, float *ampress,
-                   float *azim, float *cosinc, float *coszen,
-                   float *elevetr, float *elevref,
-                   float *etr, float *etrn, float *etrtilt,
-                   float *prime, float *sbcf,
-                   float *sunrise, float *sunset,
-                   float *unprime, float *zenref)
+void RSUN_get_results (struct SolPosData &pdat, float &amass, float &ampress,
+                      float &azim, float &cosinc, float &coszen,
+                      float &elevetr, float &elevref,
+                      float &etr, float &etrn, float &etrtilt,
+                      float &prime, float &sbcf,
+                      float &sunrise, float &sunset,
+                      float &unprime, float &zenref)
 {
-    *amass		= pdat->amass;
-    *ampress	= pdat->ampress;
-    *azim		= pdat->azim;
-    *cosinc		= pdat->cosinc;
-    *coszen		= pdat->coszen;
-    *elevetr	= pdat->elevetr;
-    *elevref	= pdat->elevref;
-    *etr		= pdat->etr;
-    *etrn		= pdat->etrn;
-    *etrtilt	= pdat->etrtilt;
-    *prime		= pdat->prime;
-    *sbcf		= pdat->sbcf;
-    *sunrise	= pdat->sretr;
-    *sunset		= pdat->ssetr;
-    *unprime	= pdat->unprime;
-    *zenref		= pdat->zenref;
+    amass		= pdat.amass;
+    ampress     = pdat.ampress;
+    azim		= pdat.azim;
+    cosinc		= pdat.cosinc;
+    coszen		= pdat.coszen;
+    elevetr     = pdat.elevetr;
+    elevref     = pdat.elevref;
+    etr         = pdat.etr;
+    etrn		= pdat.etrn;
+    etrtilt     = pdat.etrtilt;
+    prime		= pdat.prime;
+    sbcf		= pdat.sbcf;
+    sunrise     = pdat.sretr;
+    sunset		= pdat.ssetr;
+    unprime     = pdat.unprime;
+    zenref		= pdat.zenref;
 }

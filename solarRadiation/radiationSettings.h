@@ -55,7 +55,7 @@
         float getLinke(int row, int col) const;
         float getLinke(const gis::Crit3DPoint &myPoint) const;
         void setLinke(float value);
-        float getLinke(int month);
+        float getLinke(int month) const;
         float getAlbedo() const;
         float getAlbedo(int row, int col) const;
         float getAlbedo(const gis::Crit3DPoint& myPoint) const;

@@ -12,10 +12,10 @@
 
 
 Crit3DLocalProxyWidget::Crit3DLocalProxyWidget(double x, double y, double zDEM, double zGrid, gis::Crit3DGisSettings gisSettings,
-                                               Crit3DInterpolationSettings* interpolationSettings, Crit3DMeteoPoint *meteoPoints,
+                                               Crit3DInterpolationSettings &interpolationSettings, Crit3DMeteoPoint *meteoPoints,
                                                int nrMeteoPoints, meteoVariable currentVariable, frequencyType currentFrequency,
                                                QDate currentDate, int currentHour, Crit3DQuality *quality,
-                                               Crit3DInterpolationSettings* SQinterpolationSettings, Crit3DMeteoSettings *meteoSettings,
+                                               Crit3DInterpolationSettings &SQinterpolationSettings, Crit3DMeteoSettings *meteoSettings,
                                                Crit3DClimateParameters *climateParameters, bool checkSpatialQuality)
     :_x(x), _y(y), _zDEM(zDEM), _zGrid(zGrid), _gisSettings(gisSettings), _interpolationSettings(interpolationSettings),
     _meteoPoints(meteoPoints), _nrMeteoPoints(nrMeteoPoints), _currentVariable(currentVariable), _currentFrequency(currentFrequency),
@@ -30,8 +30,8 @@ Crit3DLocalProxyWidget::Crit3DLocalProxyWidget(double x, double y, double zDEM, 
 
     QString windowTitle = "Local proxy analysis for point of coordinates (" + QString::number(localGeoPoint.latitude) + ", " + QString::number(localGeoPoint.longitude) + ")." + " z value: " + QString::number(zDEM) + " (DEM)";
 
-    if (_interpolationSettings->getUseGlocalDetrending())
-        windowTitle += ", macro area nr. " + QString::number(gis::getValueFromXY(*_interpolationSettings->getMacroAreasMap(), x, y));
+    if (_interpolationSettings.getUseGlocalDetrending())
+        windowTitle += ", macro area nr. " + QString::number(gis::getValueFromXY(*_interpolationSettings.getMacroAreasMap(), x, y));
 
     this->setWindowTitle(windowTitle); // + QString::number(zGrid) + " (Grid)");
     this->resize(1024, 700);
@@ -104,7 +104,7 @@ Crit3DLocalProxyWidget::Crit3DLocalProxyWidget(double x, double y, double zDEM, 
     par5.setMaximumHeight(25);
     par5.setEnabled(false);
 
-    std::vector<Crit3DProxy> proxy = _interpolationSettings->getCurrentProxy();
+    std::vector<Crit3DProxy> proxy = _interpolationSettings.getCurrentProxy();
 
     for(int i=0; i<int(proxy.size()); i++)
     {
@@ -229,9 +229,9 @@ Crit3DLocalProxyWidget::~Crit3DLocalProxyWidget()
 
 void Crit3DLocalProxyWidget::changeProxyPos(const QString proxyName)
 {
-    for (int pos=0; pos < int(_interpolationSettings->getProxyNr()); pos++)
+    for (int pos=0; pos < int(_interpolationSettings.getProxyNr()); pos++)
     {
-        QString myProxy = QString::fromStdString(_interpolationSettings->getProxy(pos)->getName());
+        QString myProxy = QString::fromStdString(_interpolationSettings.getProxy(pos)->getName());
         if (myProxy == proxyName)
         {
             proxyPos = pos;
@@ -349,7 +349,7 @@ void Crit3DLocalProxyWidget::plot()
     weightLabels.clear();
     int areaCode = NODATA;
 
-    if (_interpolationSettings->getUseLocalDetrending())
+    if (_interpolationSettings.getUseLocalDetrending())
     {
     if (detrended.isChecked())
     {
@@ -359,24 +359,25 @@ void Crit3DLocalProxyWidget::plot()
                                         _interpolationSettings, _meteoSettings, _climateParameters,
                                         outInterpolationPoints, _checkSpatialQuality, errorStdStr);
 
-        localSelection(outInterpolationPoints, subsetInterpolationPoints, _x, _y, *_interpolationSettings, false);
-        detrending(subsetInterpolationPoints, _interpolationSettings->getSelectedCombination(), _interpolationSettings, _climateParameters, myVar, getCurrentTime());
+        localSelection(outInterpolationPoints, subsetInterpolationPoints, _x, _y, _interpolationSettings, false);
+        detrending(subsetInterpolationPoints, _interpolationSettings.getSelectedCombination(), _interpolationSettings,
+                   _climateParameters, myVar, getCurrentTime());
     }
     else
     {
         checkAndPassDataToInterpolation(_quality, myVar, _meteoPoints, _nrMeteoPoints, getCurrentTime(), _SQinterpolationSettings,
                                         _interpolationSettings, _meteoSettings, _climateParameters,
                                         outInterpolationPoints, _checkSpatialQuality, errorStdStr);
-        localSelection(outInterpolationPoints, subsetInterpolationPoints, _x, _y, *_interpolationSettings, false);
+        localSelection(outInterpolationPoints, subsetInterpolationPoints, _x, _y, _interpolationSettings, false);
     }
     }
-    else if (_interpolationSettings->getUseGlocalDetrending())
+    else if (_interpolationSettings.getUseGlocalDetrending())
     {
 
-        areaCode = gis::getValueFromXY(*_interpolationSettings->getMacroAreasMap(), _x, _y);
-        if (areaCode < (int)_interpolationSettings->getMacroAreas().size())
+        areaCode = gis::getValueFromXY(*_interpolationSettings.getMacroAreasMap(), _x, _y);
+        if (areaCode < _interpolationSettings.getMacroAreasSize())
         {
-            Crit3DMacroArea myArea = _interpolationSettings->getMacroAreas()[areaCode];
+            Crit3DMacroArea myArea = _interpolationSettings.getMacroArea(areaCode);
             std::vector<int> stations = myArea.getMeteoPoints();
             if (detrended.isChecked())
             {
@@ -395,7 +396,8 @@ void Crit3DLocalProxyWidget::plot()
                         }
                 }
 
-                detrending(subsetInterpolationPoints, _interpolationSettings->getSelectedCombination(), _interpolationSettings, _climateParameters, myVar, getCurrentTime());
+                detrending(subsetInterpolationPoints, _interpolationSettings.getSelectedCombination(), _interpolationSettings,
+                           _climateParameters, myVar, getCurrentTime());
             }
             else
             {
@@ -553,7 +555,7 @@ void Crit3DLocalProxyWidget::climatologicalLRClicked(int toggled)
     {
         float zMax = getZmax(outInterpolationPoints);
         float zMin = getZmin(outInterpolationPoints);
-        float firstIntervalHeightValue = getFirstIntervalHeightValue(outInterpolationPoints, _interpolationSettings->getUseLapseRateCode());
+        float firstIntervalHeightValue = getFirstIntervalHeightValue(outInterpolationPoints, _interpolationSettings.getUseLapseRateCode());
         float lapseRate = _climateParameters->getClimateLapseRate(myVar, getCurrentTime());
         if (lapseRate == NODATA)
         {
@@ -584,23 +586,23 @@ void Crit3DLocalProxyWidget::modelLRClicked(int toggled)
     if (toggled && subsetInterpolationPoints.size() != 0)
     {
         int elevationPos = NODATA;
-        for (unsigned int pos=0; pos < _interpolationSettings->getSelectedCombination().getProxySize(); pos++)
+        for (unsigned int pos=0; pos < _interpolationSettings.getSelectedCombination().getProxySize(); pos++)
         {
-            if (getProxyPragaName(_interpolationSettings->getProxy(pos)->getName()) == proxyHeight)
+            if (getProxyPragaName(_interpolationSettings.getProxy(pos)->getName()) == proxyHeight)
                 elevationPos = pos;
         }
             std::string errorStr;
             setMultipleDetrendingHeightTemperatureRange(_interpolationSettings);
-            _interpolationSettings->setCurrentCombination(_interpolationSettings->getSelectedCombination());
-            _interpolationSettings->clearFitting();
-            if (_interpolationSettings->getUseLocalDetrending())
+            _interpolationSettings.setCurrentCombination(_interpolationSettings.getSelectedCombination());
+            _interpolationSettings.clearFitting();
+            if (_interpolationSettings.getUseLocalDetrending())
             {
                 if (! multipleDetrendingElevationFitting(elevationPos, subsetInterpolationPoints, _interpolationSettings, myVar, errorStr, true)) return;
             }
-            else if (_interpolationSettings->getUseGlocalDetrending())
+            else if (_interpolationSettings.getUseGlocalDetrending())
                 if (! multipleDetrendingElevationFitting(elevationPos, subsetInterpolationPoints, _interpolationSettings, myVar, errorStr, false)) return;
 
-            std::vector<std::vector<double>> parameters = _interpolationSettings->getFittingParameters();
+            std::vector<std::vector<double>> parameters = _interpolationSettings.getFittingParameters();
 
             if (comboAxisX.currentText() == "elevation")
             {
@@ -611,7 +613,7 @@ void Crit3DLocalProxyWidget::modelLRClicked(int toggled)
                         xMin = getZmin(subsetInterpolationPoints);
                         xMax = getZmax(subsetInterpolationPoints);
 
-                        if (_interpolationSettings->getUseMultipleDetrending())
+                        if (_interpolationSettings.getUseMultipleDetrending())
                         {
                             std::vector <double> xVector;
                             for (int m = xMin; m < xMax; m += 5)
@@ -629,8 +631,8 @@ void Crit3DLocalProxyWidget::modelLRClicked(int toggled)
                                 point_vector.append(point);
                             }
 
-                            if (_interpolationSettings->getProxy(elevationPos)->getRegressionR2() != NODATA)
-                                r2.setText(QString("%1").arg(_interpolationSettings->getProxy(elevationPos)->getRegressionR2(), 0, 'f', 3));
+                            if (_interpolationSettings.getProxy(elevationPos)->getRegressionR2() != NODATA)
+                                r2.setText(QString("%1").arg(_interpolationSettings.getProxy(elevationPos)->getRegressionR2(), 0, 'f', 3));
 
                             if (parameters.front().size() > 3)
                             {
@@ -654,8 +656,8 @@ void Crit3DLocalProxyWidget::modelLRClicked(int toggled)
                 //detrendingElevation(elevationPos, outInterpolationPoints, _interpolationSettings);
                 if (! multipleDetrendingOtherProxiesFitting(elevationPos, subsetInterpolationPoints, _interpolationSettings, myVar, errorStr)) return;
 
-                parameters = _interpolationSettings->getFittingParameters();
-                Crit3DProxyCombination myCombination = _interpolationSettings->getCurrentCombination();
+                parameters = _interpolationSettings.getFittingParameters();
+                Crit3DProxyCombination myCombination = _interpolationSettings.getCurrentCombination();
 
                 int pos = 0;
                 for (int i = 0; i < proxyPos + 1; i++)
@@ -665,7 +667,7 @@ void Crit3DLocalProxyWidget::modelLRClicked(int toggled)
                 xMin = getZmin(subsetInterpolationPoints);
                 xMax = getZmax(subsetInterpolationPoints);
 
-                if (_interpolationSettings->getUseMultipleDetrending() && pos < parameters.size())
+                if (_interpolationSettings.getUseMultipleDetrending() && pos < parameters.size())
                 {
                     std::vector <double> xVector;
                     for (int m = xMin; m < xMax; m += 5)
@@ -678,8 +680,8 @@ void Crit3DLocalProxyWidget::modelLRClicked(int toggled)
                         point_vector.append(point);
                     }
 
-                    if (_interpolationSettings->getProxy(proxyPos)->getRegressionR2() != NODATA)
-                        r2.setText(QString("%1").arg(_interpolationSettings->getProxy(proxyPos)->getRegressionR2(), 0, 'f', 3));
+                    if (_interpolationSettings.getProxy(proxyPos)->getRegressionR2() != NODATA)
+                        r2.setText(QString("%1").arg(_interpolationSettings.getProxy(proxyPos)->getRegressionR2(), 0, 'f', 3));
 
                     if (parameters[pos].size() == 2)
                     {
@@ -698,7 +700,7 @@ void Crit3DLocalProxyWidget::showParametersDetails()
 {
     QDialog myDialog;
     QTextBrowser textBrowser;
-    if (! _interpolationSettings->getUseGlocalDetrending())
+    if (! _interpolationSettings.getUseGlocalDetrending())
     {
         textBrowser.setText("Details available for glocal detrending only.");
     }
@@ -706,11 +708,11 @@ void Crit3DLocalProxyWidget::showParametersDetails()
     {
         myDialog.setWindowTitle("Glocal detrending details");
 
-        int areaCode = gis::getValueFromXY(*_interpolationSettings->getMacroAreasMap(), _x, _y);
+        int areaCode = gis::getValueFromXY(*_interpolationSettings.getMacroAreasMap(), _x, _y);
         std::string errorStdStr;
-        if (areaCode < (int)_interpolationSettings->getMacroAreas().size())
+        if (areaCode < _interpolationSettings.getMacroAreasSize())
         {
-            Crit3DMacroArea myArea = _interpolationSettings->getMacroAreas()[areaCode];
+            Crit3DMacroArea myArea = _interpolationSettings.getMacroArea(areaCode);
             std::vector<int> stations = myArea.getMeteoPoints();
 
             outInterpolationPoints.clear();
@@ -728,22 +730,22 @@ void Crit3DLocalProxyWidget::showParametersDetails()
             }
 
             setMultipleDetrendingHeightTemperatureRange(_interpolationSettings);
-            _interpolationSettings->setCurrentCombination(_interpolationSettings->getSelectedCombination());
-            _interpolationSettings->clearFitting();
+            _interpolationSettings.setCurrentCombination(_interpolationSettings.getSelectedCombination());
+            _interpolationSettings.clearFitting();
 
             multipleDetrendingMain(subsetInterpolationPoints, _interpolationSettings, myVar, errorStdStr);
 
-            std::vector<std::vector<double>> parameters = _interpolationSettings->getFittingParameters();
-            Crit3DProxyCombination myCombination = _interpolationSettings->getCurrentCombination();
+            std::vector<std::vector<double>> parameters = _interpolationSettings.getFittingParameters();
+            Crit3DProxyCombination myCombination = _interpolationSettings.getCurrentCombination();
             unsigned int significantProxyCounter = 0;
 
             if (! parameters.empty())
             {
                 textBrowser.append(QString("Parameters relative to macro area nr. " + QString::number(areaCode)));
                 int elevationPos = NODATA;
-                for (unsigned int pos=0; pos < _interpolationSettings->getSelectedCombination().getProxySize(); pos++)
+                for (unsigned int pos=0; pos < _interpolationSettings.getSelectedCombination().getProxySize(); pos++)
                 {
-                    if (getProxyPragaName(_interpolationSettings->getProxy(pos)->getName()) == proxyHeight)
+                    if (getProxyPragaName(_interpolationSettings.getProxy(pos)->getName()) == proxyHeight)
                         elevationPos = pos;
                 }
 
@@ -781,19 +783,19 @@ void Crit3DLocalProxyWidget::showParametersDetails()
 
                 std::vector<double> slopes;
                 double intercept = NODATA;
-                for (unsigned int pos=0; pos < _interpolationSettings->getSelectedCombination().getProxySize(); pos++)
+                for (unsigned int pos=0; pos < _interpolationSettings.getSelectedCombination().getProxySize(); pos++)
                 {
                     QString temp;
 
                     if (! myCombination.isProxyActive(pos))
-                        textBrowser.append("Proxy "+ QString::fromStdString(_interpolationSettings->getProxy(pos)->getName()) + " not active.");
+                        textBrowser.append("Proxy "+ QString::fromStdString(_interpolationSettings.getProxy(pos)->getName()) + " not active.");
                     else if (! myCombination.isProxySignificant(pos))
-                        textBrowser.append("Proxy "+ QString::fromStdString(_interpolationSettings->getProxy(pos)->getName()) + " not significant.");
+                        textBrowser.append("Proxy "+ QString::fromStdString(_interpolationSettings.getProxy(pos)->getName()) + " not significant.");
                     else if (myCombination.isProxyActive(pos) && myCombination.isProxySignificant(pos) &&
-                             getProxyPragaName(_interpolationSettings->getProxy(pos)->getName()) != proxyHeight &&
+                             getProxyPragaName(_interpolationSettings.getProxy(pos)->getName()) != proxyHeight &&
                              parameters.size() > significantProxyCounter)
                     {
-                        textBrowser.append("Proxy " + QString::fromStdString(_interpolationSettings->getProxy(pos)->getName()) + " significant.");
+                        textBrowser.append("Proxy " + QString::fromStdString(_interpolationSettings.getProxy(pos)->getName()) + " significant.");
                         slopes.push_back(parameters[significantProxyCounter][0]);
                         intercept = parameters[significantProxyCounter][1];
                         significantProxyCounter++;

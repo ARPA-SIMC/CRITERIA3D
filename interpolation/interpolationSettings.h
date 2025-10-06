@@ -8,6 +8,7 @@
     #ifndef GIS_H
         #include "gis.h"
     #endif
+    #include "statistics.h"
 
 
     std::string getKeyStringInterpolationMethod(TInterpolationMethod value);
@@ -59,7 +60,7 @@
         float getRegressionR2();
         void setRegressionSlope(float myValue);
         float getRegressionSlope();
-        double getValue(unsigned int pos, std::vector<double> proxyValues);
+        double getValue(unsigned int pos, std::vector<double> proxyValues) const;
         float getLapseRateH1() const;
         void setLapseRateH1(float value);
         float getLapseRateH0() const;
@@ -147,17 +148,19 @@
 
         void clear();
 
-        int getMeteoPointsNr()
+        int getMeteoPointsNr() const
         { return int(meteoPoints.size()); }
 
         void setMeteoPoints (std::vector<int> myMeteoPoints) { meteoPoints = myMeteoPoints; }
         std::vector<int> getMeteoPoints() const { return meteoPoints; }
 
         void setAreaCellsDEM (std::vector<float> myCells) { areaCellsDEM = myCells; }
-        std::vector<float> getAreaCellsDEM() const { return areaCellsDEM; }
+        const std::vector<float>& getAreaCellsDEM() const { return areaCellsDEM; }
+        int getAreaCellsDemSize() const { return int(areaCellsDEM.size()); }
 
         void setAreaCellsGrid (std::vector<float> myCells) { areaCellsGrid = myCells; }
         std::vector<float> getAreaCellsGrid() const { return areaCellsGrid; }
+        int getAreaCellsGridSize() const { return int(areaCellsGrid.size()); }
 
         void setParameters (std::vector<std::vector<double>> myParameters) { areaParameters = myParameters; }
         std::vector<std::vector<double>> getParameters() const { return areaParameters; }
@@ -229,102 +232,140 @@
 
         size_t getProxyNr() const { return currentProxy.size(); }
 
+        bool getUseThermalInversion() const { return (useThermalInversion);}
+
+        bool getUseExcludeStationsOutsideDEM() const { return (useExcludeStationsOutsideDEM); }
+
+        bool getUseTD() const { return (useTD && !useLocalDetrending);}
+
+        TInterpolationMethod getInterpolationMethod() const { return interpolationMethod;}
+
+        bool getUseLocalDetrending() const { return useLocalDetrending;}
+
+        bool getUseGlocalDetrending() const { return useGlocalDetrending;}
+
+        bool getUseDoNotRetrend() const { return useDoNotRetrend; }
+
+        bool getUseRetrendOnly() const { return useRetrendOnly; }
+
+        float getMaxHeightInversion() const { return maxHeightInversion; }
+
+        bool getUseDewPoint() const { return (useDewPoint);}
+
+        bool getPrecipitationAllZero() const { return precipitationAllZero; }
+
+        float getMinRegressionR2() const { return minRegressionR2; }
+
+        bool getUseLapseRateCode() const { return useLapseRateCode; }
+
+        bool getUseBestDetrending() const { return useBestDetrending; }
+
+        gis::Crit3DRasterGrid* getCurrentDEM() const { return currentDEM; }
+
+        std::vector<int> getMacroAreaNumber() const { return macroAreaNumbers; }
+
+        gis::Crit3DRasterGrid* getMacroAreasMap() const { return macroAreasMap; }
+
+        const std::vector<Crit3DMacroArea>& getMacroAreas() const { return macroAreas; }
+
+        const Crit3DMacroArea& getMacroArea(int index) const
+        {
+            if (index >= macroAreas.size())
+            {
+                return *(new(Crit3DMacroArea));
+            }
+            return macroAreas[index];
+        }
+
+        int getMacroAreasSize() const { return int(macroAreas.size()); }
+
+        aggregationMethod getMeteoGridAggrMethod() const { return meteoGridAggrMethod; }
+
+        int getMinPointsLocalDetrending() const { return minPointsLocalDetrending; }
+
+        int getIndexPointCV() const { return indexPointCV; }
+
+        bool getProxyLoaded() const { return proxyLoaded; }
+
+        const std::vector<float>& getKh_series() const { return Kh_series; }
+
+        const std::vector<float>& getKh_error_series() const { return Kh_error_series; }
+
+        int getTopoDist_maxKh() const { return topoDist_maxKh; }
+
+        int getTopoDist_Kh() const { return topoDist_Kh; }
+
+        Crit3DProxyCombination getSelectedCombination() const { return selectedCombination; }
+
+        unsigned getIndexHeight() const { return indexHeight; }
+
+        bool getUseInterpolatedTForRH() const { return useInterpolatedTForRH; }
+
+        bool getMeteoGridUpscaleFromDem() const { return meteoGridUpscaleFromDem; }
+
+        std::vector<double> getPointsRange() const { return pointsRange; }
+
+        std::vector<std::vector<double>> getFittingParameters() const { return fittingParameters; }
+
+        bool getUseMultipleDetrending() const { return useMultipleDetrending; }
+
+        float getPointsBoundingBoxArea() const { return pointsBoundingBoxArea; }
+
+        float getLocalRadius() const { return localRadius; }
+
         void addProxy(Crit3DProxy myProxy, bool isActive_);
-        double getProxyValue(unsigned pos, std::vector<double> proxyValues);
+        double getProxyValue(unsigned pos, std::vector<double> proxyValues) const;
         bool getCombination(int combinationInteger, Crit3DProxyCombination &outCombination);
-        int getProxyPosFromName(TProxyVar name);
+        int getProxyPosFromName(TProxyVar name) const;
 
         void setInterpolationMethod(TInterpolationMethod myValue);
-        TInterpolationMethod getInterpolationMethod();
-
         void setUseThermalInversion(bool myValue);
-        bool getUseThermalInversion();
-
-        bool getUseExcludeStationsOutsideDEM();
         void setUseExcludeStationsOutsideDEM(bool myValue);
-
         void setUseTD(bool myValue);
-        bool getUseTD();
-
         void setUseLocalDetrending(bool myValue);
-        bool getUseLocalDetrending();
-
         bool isGlocalReady(bool isGrid);
 		void setUseGlocalDetrending(bool myValue);
-        bool getUseGlocalDetrending();
         void setMacroAreasMap(gis::Crit3DRasterGrid *value);
-        gis::Crit3DRasterGrid *getMacroAreasMap();
-        std::vector<Crit3DMacroArea> getMacroAreas();
         void setMacroAreas(std::vector<Crit3DMacroArea> myAreas);
         void pushMacroAreaNumber(int number);
-        std::vector<int> getMacroAreaNumber();
+
         void clearMacroAreaNumber();
 
         void setUseDoNotRetrend(bool myValue);
-        bool getUseDoNotRetrend();
-
         void setUseRetrendOnly(bool myValue);
-        bool getUseRetrendOnly();
-
         void setUseDewPoint(bool myValue);
-        bool getUseDewPoint();
-
-        float getMaxHeightInversion();
-
-        bool getPrecipitationAllZero() const;
         void setPrecipitationAllZero(bool value);
-        float getMinRegressionR2() const;
         void setMinRegressionR2(float value);
-        bool getUseLapseRateCode() const;
         void setUseLapseRateCode(bool value);
-        bool getUseBestDetrending() const;
         void setUseBestDetrending(bool value);
-        aggregationMethod getMeteoGridAggrMethod() const;
         void setMeteoGridAggrMethod(const aggregationMethod &value);
-        float getShepardInitialRadius() const;
         void setShepardInitialRadius(float value);
-        int getIndexPointCV() const;
         void setIndexPointCV(int value);
-        gis::Crit3DRasterGrid *getCurrentDEM() const;
         void setCurrentDEM(gis::Crit3DRasterGrid *value);
-        int getTopoDist_maxKh() const;
         void setTopoDist_maxKh(int value);
-        int getTopoDist_Kh() const;
         void setTopoDist_Kh(int value);
         Crit3DProxyCombination getOptimalCombination() const;
         void setOptimalCombination(const Crit3DProxyCombination &value);
-        Crit3DProxyCombination getSelectedCombination() const;
         void setSelectedCombination(const Crit3DProxyCombination &value);
         void setActiveSelectedCombination(unsigned int index, bool isActive);
-        unsigned getIndexHeight() const;
         void setIndexHeight(unsigned value);
         Crit3DProxyCombination getCurrentCombination() const;
         void setCurrentCombination(Crit3DProxyCombination value);
         void setSignificantCurrentCombination(unsigned int index, bool isSignificant);
         std::vector<Crit3DProxy> getCurrentProxy() const;
         void setCurrentProxy(const std::vector<Crit3DProxy> &value);
-        bool getUseInterpolatedTForRH() const;
         void setUseInterpolatedTForRH(bool value);
-        bool getProxyLoaded() const;
         void setProxyLoaded(bool value);
-        const std::vector<float> &getKh_series() const;
         void setKh_series(const std::vector<float> &newKh_series);
-        const std::vector<float> &getKh_error_series() const;
         void setKh_error_series(const std::vector<float> &newKh_error_series);
         void addToKhSeries(float kh, float error);
         void initializeKhSeries();
-        bool getMeteoGridUpscaleFromDem() const;
         void setMeteoGridUpscaleFromDem(bool newMeteoGridUpscaleFromDem);
-        bool getUseMultipleDetrending() const;
         void setUseMultipleDetrending(bool newUseMultipleDetrending);
-        float getPointsBoundingBoxArea() const;
         void setPointsBoundingBoxArea(float newPointsBoundingBoxArea);
-        float getLocalRadius() const;
         void setLocalRadius(float newLocalRadius);
-        int getMinPointsLocalDetrending() const;
         void setMinPointsLocalDetrending(int newMinPointsLocalDetrending);
 
-        std::vector<std::vector <double>> getFittingParameters() const;
         std::vector<double> getProxyFittingParameters(int tempIndex);
         void setFittingParameters(const std::vector<std::vector <double>> &newFittingParameters);
         void addFittingParameters(const std::vector<std::vector<double> > &newFittingParameters);
@@ -335,7 +376,6 @@
         TFittingFunction getChosenElevationFunction();
         void setChosenElevationFunction(TFittingFunction chosenFunction);
         void setPointsRange(double min, double max);
-        std::vector<double> getPointsRange();
     };
 
 #endif // INTERPOLATIONSETTINGS_H

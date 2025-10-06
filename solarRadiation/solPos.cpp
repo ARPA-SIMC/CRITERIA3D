@@ -2,12 +2,12 @@
 *    Contains:
 *    S_solpos     (computes solar position and intensity from time and place)
 *
-*            INPUTS:     (via posdata struct) year, daynum, hour,
+*            INPUTS:     (via SolPosData struct) year, daynum, hour,
 *                        minute, second, latitude, longitude, timezone,
 *                        intervl
-*            OPTIONAL:   (via posdata struct) month, day, press, temp, tilt,
+*            OPTIONAL:   (via SolPosData struct) month, day, press, temp, tilt,
 *                        aspect, function
-*            OUTPUTS:    EVERY variable in the struct posdata
+*            OUTPUTS:    EVERY variable in the struct SolPosData
 *                            (defined in solpos.h)
 *
 *                       NOTE: Certain conditions exist during which some of
@@ -40,9 +40,9 @@
 *                       zenetr    limited to 99.0 degrees at night
 *
 *        S_init       (optional initialization for all input parameters in
-*                      the posdata struct)
-*           INPUTS:     struct posdata*
-*           OUTPUTS:    struct posdata*
+*                      the SolPosData struct)
+*           INPUTS:     struct SolPosData*
+*           OUTPUTS:    struct SolPosData*
 *
 *                     (Note: initializes the required S_solpos INPUTS above
 *                      to out-of-bounds conditions, forcing the user to
@@ -50,7 +50,7 @@
 *                      S_solpos inputs above to nominal values.)
 *
 *       S_Decode      (optional utility for decoding the S_solpos return code)
-*           INPUTS:     long integer S_solpos return value, struct posdata*
+*           INPUTS:     long integer S_solpos return value, struct SolPosData*
 *           OUTPUTS:    text to stderr
 *
 *    Usage:
@@ -59,14 +59,14 @@
 *              #include "solpos.h"
 *
 *         Function calls:
-*              S_init(struct posdata*)  [optional]
+*              S_init(struct SolPosData*)  [optional]
 *              .
 *              .
 *              [set time and location parameters before S_solpos call]
 *              .
 *              .
-*              int retval = S_solpos(struct posdata*)
-*              S_decode(int retval, struct posdata*) [optional]
+*              int retval = S_solpos(struct SolPosData*)
+*              S_decode(int retval, struct SolPosData*) [optional]
 *                  (Note: you should always look at the S_solpos return
 *                   value, which contains error codes. S_decode is one option
 *                   for examining these codes.  It can also serve as a
@@ -78,7 +78,7 @@
 *    25 March 1998
 *
 *    27 April 1999 REVISION:  Corrected leap year in S_date.
-*    13 January 2000 REVISION:  SMW converted to structure posdata parameter
+*    13 January 2000 REVISION:  SMW converted to structure SolPosData parameter
 *                               and subdivided into functions.
 *    01 February 2001 REVISION: SMW corrected ecobli calculation
 *                               (changed sign). Error is small (max 0.015 deg
@@ -126,22 +126,22 @@ struct trigdata
 * ============================================================================
 *    Local function prototypes
 ============================================================================*/
-static long int validate ( struct posdata *pdat);
-static void dom2doy( struct posdata *pdat );
-static void doy2dom( struct posdata *pdat );
-static void geometry ( struct posdata *pdat );
-static void zen_no_ref ( struct posdata *pdat, struct trigdata *tdat );
-static void ssha( struct posdata *pdat, struct trigdata *tdat );
-static void sbcf( struct posdata *pdat, struct trigdata *tdat );
-static void tst( struct posdata *pdat );
-static void srss( struct posdata *pdat );
-static void sazm( struct posdata *pdat, struct trigdata *tdat );
-static void refrac( struct posdata *pdat );
-static void amass( struct posdata *pdat );
-static void prime( struct posdata *pdat );
-static void etr( struct posdata *pdat );
-static void tilt( struct posdata *pdat );
-static void localtrig( struct posdata *pdat, struct trigdata *tdat );
+static long int validate ( struct SolPosData *pdat);
+static void dom2doy( struct SolPosData *pdat );
+static void doy2dom( struct SolPosData *pdat );
+static void geometry ( struct SolPosData *pdat );
+static void zen_no_ref ( struct SolPosData *pdat, struct trigdata *tdat );
+static void ssha( struct SolPosData *pdat, struct trigdata *tdat );
+static void sbcf( struct SolPosData *pdat, struct trigdata *tdat );
+static void tst( struct SolPosData *pdat );
+static void srss( struct SolPosData *pdat );
+static void sazm( struct SolPosData *pdat, struct trigdata *tdat );
+static void refrac( struct SolPosData *pdat );
+static void amass( struct SolPosData *pdat );
+static void prime( struct SolPosData *pdat );
+static void etr( struct SolPosData *pdat );
+static void tilt( struct SolPosData *pdat );
+static void localtrig( struct SolPosData *pdat, struct trigdata *tdat );
 
 
 /*============================================================================
@@ -151,7 +151,7 @@ static void localtrig( struct posdata *pdat, struct trigdata *tdat );
 *    intensity of the sun (theoretical maximum solar energy) from
 *    time and place on Earth.
 *
-*    Requires (from the struct posdata parameter):
+*    Requires (from the struct SolPosData parameter):
 *        Date and time:
 *            year
 *            daynum   (requirement depends on the S_DOY switch)
@@ -175,16 +175,16 @@ static void localtrig( struct posdata *pdat, struct trigdata *tdat );
 *        Function Switch (codes defined in solpos.h)
 *            function  DEFAULT S_ALL
 *
-*    Returns (via the struct posdata parameter):
-*        everything defined in the struct posdata in solpos.h.
+*    Returns (via the struct SolPosData parameter):
+*        everything defined in the struct SolPosData in solpos.h.
 *----------------------------------------------------------------------------*/
 /*!
  * \brief calculates the apparent solar position and the intensity of the sun (theoretical maximum solar energy) from time and place on Earth.
  *        adapted from the VAX solar libraries
- * \param pdat a pointer to a posdata struct
+ * \param pdat a pointer to a SolPosData struct
  * \return 0 if no errors occurs
  */
-long S_solpos (struct posdata *pdat)
+long S_solpos (SolPosData *pdat)
 {
   long int retval;
 
@@ -250,16 +250,16 @@ long S_solpos (struct posdata *pdat)
 
 /*!
 * \brief initiates all of the input parameters in the struct
-*    posdata passed to S_solpos().  Initialization is either to nominal
+*    SolPosData passed to S_solpos().  Initialization is either to nominal
 *    values or to out of range values, which forces the calling program to
 *    specify parameters->
 * *    NOTE: This function is optional if you initialize ALL input parameters
 *          in your calling code.  Note that the required parameters of date
 *          and location are deliberately initialized out of bounds to force
 *          the user to enter real-world values.
- * \param pdat a pointer to a posdata struct
+ * \param pdat a pointer to a SolPosData struct
  */
-void S_init(struct posdata *pdat)
+void S_init(SolPosData *pdat)
 {
   pdat->day       =    -99;   /*!<  Day of month (May 27 = 27, etc.) */
   pdat->daynum    =   -999;   /*!<  Day number (day of year; Feb 1 = 32 ) */
@@ -287,10 +287,10 @@ void S_init(struct posdata *pdat)
 
 /*!
  * \brief Validates the input parameters
- * \param pdat a pointer to a posdata struct
+ * \param pdat a pointer to a SolPosData struct
  * \return 0 if no errors occurs
  */
-static long int validate ( struct posdata *pdat)
+static long int validate ( struct SolPosData *pdat)
 {
   long int retval = 0;  /*!<  start with no errors */
 
@@ -358,18 +358,18 @@ static long int validate ( struct posdata *pdat)
 
 /*!
  * \brief Converts day-of-month to day-of-year
- *    Requires (from struct posdata parameter):
+ *    Requires (from struct SolPosData parameter):
 *            year
 *            month
 *            day
 *
-*    Returns (via the struct posdata parameter):
+*    Returns (via the struct SolPosData parameter):
 *            year
 *            daynum
  *
- * \param pdat a pointer to a posdata struct
+ * \param pdat a pointer to a SolPosData struct
  */
-static void dom2doy( struct posdata *pdat )
+static void dom2doy( struct SolPosData *pdat )
 {
   pdat->daynum = pdat->day + month_days[0][pdat->month];
 
@@ -383,18 +383,18 @@ static void dom2doy( struct posdata *pdat )
 
 /*!
  * \brief Computes the month/day from the day number.
-*    Requires (from struct posdata parameter):
+*    Requires (from struct SolPosData parameter):
 *        Year and day number:
 *            year
 *            daynum
 *
-*    Returns (via the struct posdata parameter):
+*    Returns (via the struct SolPosData parameter):
 *            year
 *            month
 *            day
- * \param pdat a pointer to a posdata struct
+ * \param pdat a pointer to a SolPosData struct
  */
-static void doy2dom(struct posdata *pdat)
+static void doy2dom(struct SolPosData *pdat)
 {
   int  imon;  /*!<  Month (month_days) array counter */
   int  leap;  /*!<  leap year switch */
@@ -420,9 +420,9 @@ static void doy2dom(struct posdata *pdat)
 
 /*!
  * \brief Does the underlying geometry for a given time and location
- * \param pdat a pointer to a posdata struct
+ * \param pdat a pointer to a SolPosData struct
  */
-static void geometry ( struct posdata *pdat )
+static void geometry ( struct SolPosData *pdat )
 {
   double bottom;      /*!<  denominator (bottom) of the fraction */
   double c2;          /*!<  cosine of d2 */
@@ -581,10 +581,10 @@ static void geometry ( struct posdata *pdat )
  * \brief ETR solar zenith angle
  *        Iqbal, M.  1983.  An Introduction to Solar Radiation.
  *        Academic Press, NY., page 15
- * \param pdat a pointer to a posdata struct
+ * \param pdat a pointer to a SolPosData struct
  * \param tdat
  */
-static void zen_no_ref ( struct posdata *pdat, struct trigdata *tdat )
+static void zen_no_ref ( struct SolPosData *pdat, struct trigdata *tdat )
 {
   float cz;          /*!<  cosine of the solar zenith angle */
 
@@ -613,10 +613,10 @@ static void zen_no_ref ( struct posdata *pdat, struct trigdata *tdat )
  * \brief Sunset hour angle, degrees
  *       Iqbal, M.  1983.  An Introduction to Solar Radiation.
  *           Academic Press, NY., page 16
- * \param pdat a pointer to a posdata struct
+ * \param pdat a pointer to a SolPosData struct
  * \param tdat
  */
-static void ssha( struct posdata *pdat, struct trigdata *tdat )
+static void ssha( struct SolPosData *pdat, struct trigdata *tdat )
 {
   float cssha;       /*!<  cosine of the sunset hour angle */
   float cdcl;        /*!<  ( cd * cl ) */
@@ -648,10 +648,10 @@ static void ssha( struct posdata *pdat, struct trigdata *tdat )
  * \brief Shadowband correction factor
  *        Drummond, A. J.  1956.  A contribution to absolute pyrheliometry.
  *        Q. J. R. Meteorol. Soc. 82, pp. 481-493
- * \param pdat a pointer to a posdata struct
+ * \param pdat a pointer to a SolPosData struct
  * \param tdat a pointer to a trigdata struct
  */
-static void sbcf( struct posdata *pdat, struct trigdata *tdat )
+static void sbcf( struct SolPosData *pdat, struct trigdata *tdat )
 {
   double p, t1, t2;   /*!<  used to compute sbcf */
 
@@ -676,9 +676,9 @@ static void sbcf( struct posdata *pdat, struct trigdata *tdat )
  * \brief TST -> True Solar Time = local standard time + TSTfix, time in minutes from midnight.
  *        Iqbal, M.  1983.  An Introduction to Solar Radiation.
  *        Academic Press, NY., page 13
- * \param pdat a pointer to a posdata struct
+ * \param pdat a pointer to a SolPosData struct
  */
-static void tst( struct posdata *pdat )
+static void tst( struct SolPosData *pdat )
 {
     pdat->tst    = ( 180.f + pdat->hrang ) * 4.f;
     pdat->tstfix =
@@ -702,9 +702,9 @@ static void tst( struct posdata *pdat )
 
 /*!
  * \brief Sunrise and sunset times (minutes from midnight)
- * \param pdat a pointer to a posdata struct
+ * \param pdat a pointer to a SolPosData struct
  */
-static void srss( struct posdata *pdat )
+static void srss( struct SolPosData *pdat )
 {
     if ( pdat->ssha <= 1.0 ) {
         pdat->sretr   =  2999.0;
@@ -725,10 +725,10 @@ static void srss( struct posdata *pdat )
  * \brief Solar azimuth angle
  *        Iqbal, M.  1983.  An Introduction to Solar Radiation.
  *        Academic Press, NY., page 15
- * \param pdat a pointer to a posdata struct
+ * \param pdat a pointer to a SolPosData struct
  * \param tdat a pointer to a trigdata struct
  */
-static void sazm( struct posdata *pdat, struct trigdata *tdat )
+static void sazm( struct SolPosData *pdat, struct trigdata *tdat )
 {
   float ca;          /*!<  cosine of the solar azimuth angle */
   float ce;          /*!<  cosine of the solar elevation */
@@ -761,9 +761,9 @@ static void sazm( struct posdata *pdat, struct trigdata *tdat )
  *            accuracy.
  *            SAND81-0761, Experimental Systems Operation Division 4721,
  *            Sandia National Laboratories, Albuquerque, NM.
- * \param pdat a pointer to a posdata struct
+ * \param pdat a pointer to a SolPosData struct
  */
-static void refrac( struct posdata *pdat )
+static void refrac( struct SolPosData *pdat )
 {
   double prestemp;    /*!< temporary pressure/temperature correction */
   double refcor;      /*!< temporary refraction correction */
@@ -810,9 +810,9 @@ static void refrac( struct posdata *pdat )
  *        Kasten, F. and Young, A.  1989.  Revised optical air mass
  *            tables and approximation formula.  Applied Optics 28 (22),
  *            pp. 4735-4738
- * \param pdat a pointer to a posdata struct
+ * \param pdat a pointer to a SolPosData struct
  */
-static void amass( struct posdata *pdat )
+static void amass( struct SolPosData *pdat )
 {
     if ( pdat->zenref > 93.0 )
     {
@@ -833,9 +833,9 @@ static void amass( struct posdata *pdat )
  *            Perez, R., P. Ineichen, Seals, R., & Zelenka, A.  1990.  Making
  *            full use of the clearness index for parameterizing hourly
  *            insolation conditions. Solar Energy 45 (2), pp. 111-114
- * \param pdat a pointer to a posdata struct
+ * \param pdat a pointer to a SolPosData struct
  */
-static void prime( struct posdata *pdat )
+static void prime( struct SolPosData *pdat )
 {
     pdat->unprime = float( 1.031 * exp ( -1.4 / ( 0.9 + 9.4 / pdat->amass )) + 0.1 );
     pdat->prime   = float( 1.0 / pdat->unprime );
@@ -844,9 +844,9 @@ static void prime( struct posdata *pdat )
 
 /*!
  * \brief Extraterrestrial (top-of-atmosphere) solar irradiance
- * \param pdat a pointer to a posdata struct
+ * \param pdat a pointer to a SolPosData struct
  */
-static void etr( struct posdata *pdat )
+static void etr( struct SolPosData *pdat )
 {
     if ( pdat->coszen > 0.0 ) {
         pdat->etrn = pdat->solcon * pdat->erv;
@@ -861,10 +861,10 @@ static void etr( struct posdata *pdat )
 
 /*!
  * \brief Does trig on internal variable used by several functions
- * \param pdat a pointer to a posdata struct
+ * \param pdat a pointer to a SolPosData struct
  * \param tdat a pointer to a trigdata struct
  */
-static void localtrig( struct posdata *pdat, struct trigdata *tdat )
+static void localtrig( struct SolPosData *pdat, struct trigdata *tdat )
 {
 /*! define masks to prevent calculation of uninitialized variables */
 #define SD_MASK ( L_ZENETR | L_SSHA | S_SBCF | S_SOLAZM )
@@ -892,9 +892,9 @@ static void localtrig( struct posdata *pdat, struct trigdata *tdat )
 
 /*!
  * \brief ETR on a tilted surface
- * \param pdat a pointer to a posdata struct
+ * \param pdat a pointer to a SolPosData struct
  */
-static void tilt( struct posdata *pdat )
+static void tilt( struct SolPosData *pdat )
 {
   double ca;          /*!< cosine of the solar azimuth angle */
   double cp;          /*!< cosine of the panel aspect */
@@ -929,10 +929,10 @@ static void tilt( struct posdata *pdat )
  *        Requires the long integer return value from S_solpos
  *        Returns descriptive text to stderr
  * \param code a error code
- * \param pdat a pointer to a posdata struct
+ * \param pdat a pointer to a SolPosData struct
  * \param logfile a pointer to a FILE
  */
-void S_decode(long code, struct posdata *pdat, FILE *logfile)
+void S_decode(long code, struct SolPosData *pdat, FILE *logfile)
 {
   if ( code & (1L << S_YEAR_ERROR) )
     fprintf(logfile, "S_decode ==> Please fix the year: %d [1950-2050]\n",
