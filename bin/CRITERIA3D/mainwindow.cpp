@@ -675,17 +675,18 @@ void MainWindow::drawMeteoPoints()
 
 void MainWindow::setProjectTileMap()
 {
-    if (myProject.currentTileMap != "")
+    QString currentTileMap = myProject.getCurrentTileMap().toUpper();
+    if (! currentTileMap.isEmpty())
     {
-        if (myProject.currentTileMap.toUpper() == "ESRI")
+        if (currentTileMap == "ESRI")
         {
             this->setTileMapSource(WebTileSource::ESRI_WorldImagery);
         }
-        else if (myProject.currentTileMap.toUpper() == "TERRAIN")
+        else if (currentTileMap == "TERRAIN")
         {
             this->setTileMapSource(WebTileSource::GOOGLE_Terrain);
         }
-        else if (myProject.currentTileMap.toUpper() == "GOOGLE")
+        else if (currentTileMap == "GOOGLE")
         {
             this->setTileMapSource(WebTileSource::GOOGLE_Hybrid_Satellite);
         }
@@ -705,9 +706,10 @@ void MainWindow::setProjectTileMap()
 void MainWindow::setTitle()
 {
     QString title = "CRITERIA3D  " + QString(CRITERIA3D_VERSION);
-    if (! myProject.projectName.isEmpty())
+    QString projectName = myProject.getProjectName();
+    if (! projectName.isEmpty())
     {
-        title += " - " + myProject.projectName;
+        title += " - " + projectName;
     }
 
     this->setWindowTitle(title);
@@ -1118,7 +1120,7 @@ void MainWindow::redrawMeteoPoints(visualizationType myType, bool updateColorSCa
             std::string errorStdStr;
             checkData(myProject.quality, currentVar,
                       myProject.meteoPoints, myProject.nrMeteoPoints, myProject.getCrit3DCurrentTime(),
-                      &(myProject.qualityInterpolationSettings), myProject.meteoSettings,
+                      myProject.qualityInterpolationSettings, myProject.meteoSettings,
                       &(myProject.climateParameters), myProject.checkSpatialQuality, errorStdStr);
 
             if (updateColorSCale)
@@ -3525,7 +3527,7 @@ void MainWindow::on_layerNrEdit_valueChanged(int layerIndex)
 
 void MainWindow::on_actionCriteria3D_load_state_triggered()
 {
-    if (! myProject.isProjectLoaded)
+    if (! myProject.isProjectLoaded())
     {
         myProject.logWarning(ERROR_STR_MISSING_PROJECT);
         return;
@@ -3566,7 +3568,7 @@ void MainWindow::on_actionCriteria3D_load_state_triggered()
 
 void MainWindow::on_actionCriteria3D_load_external_state_triggered()
 {
-    if (! myProject.isProjectLoaded)
+    if (! myProject.isProjectLoaded())
     {
         myProject.logWarning(ERROR_STR_MISSING_PROJECT);
         return;

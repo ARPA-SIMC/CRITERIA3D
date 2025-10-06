@@ -142,7 +142,7 @@ double Crit3DRothCplusplusMaps::getClay(int row, int col)
 }
 void Crit3DRothCplusplusMaps::setDepth(double myDepth, int row, int col)
 {
-    _depthMap->value[row][col] = myDepth;
+    _depthMap->value[row][col] = (float)myDepth;
 }
 
 double Crit3DRothCplusplusMaps::getDepth(int row, int col)
@@ -539,11 +539,11 @@ void Crit3DRothCplusplus::setStateVariables(int row, int col)
 
 void Crit3DRothCplusplus::getStateVariables(int row, int col)
 {
-    map.decomposablePlantMaterial->value[row][col] = decomposablePlantMatter;
-    map.resistantPlantMaterial->value[row][col] = resistantPlantMatter;
-    map.microbialBiomass->value[row][col] = microbialBiomass;
-    map.humifiedOrganicMatter->value[row][col] = humifiedOrganicMatter;
-    map.inertOrganicMatter->value[row][col] = inorganicMatter;
+    map.decomposablePlantMaterial->value[row][col] = (float)decomposablePlantMatter;
+    map.resistantPlantMaterial->value[row][col] = (float)resistantPlantMatter;
+    map.microbialBiomass->value[row][col] = (float)microbialBiomass;
+    map.humifiedOrganicMatter->value[row][col] = (float)humifiedOrganicMatter;
+    map.inertOrganicMatter->value[row][col] = (float)inorganicMatter;
     map.soilOrganicMatter->value[row][col] = soilOrganicCarbon;
 }
 

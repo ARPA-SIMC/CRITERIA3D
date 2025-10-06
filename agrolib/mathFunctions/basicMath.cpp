@@ -223,6 +223,20 @@
         return float(cos(double(angle) * DEG_TO_RAD));
     }
 
+    double getSinDecimalDegree(double angle)
+    {
+        while (angle > 360) angle -= 360 ;
+        while (angle < -360) angle +=360 ;
+        return sin(angle * DEG_TO_RAD);
+    }
+
+    double getCosDecimalDegree(double angle)
+    {
+        while (angle > 360) angle -= 360 ;
+        while (angle < -360) angle +=360 ;
+        return cos(angle * DEG_TO_RAD);
+    }
+
     double powerIntegerExponent(double base, int exponent)
     {
         if(exponent > 0)

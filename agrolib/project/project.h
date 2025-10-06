@@ -70,31 +70,32 @@
         Q_OBJECT
 
     private:
-        QString appPath;
-        QString defaultPath;
-        QString projectPath;
-        bool computeOnlyPoints;
-        FormInfo* formLog;
+        QString _appPath;
+        QString _defaultPath;
+        QString _projectPath;
+        QString _projectName;
+        QString _currentTileMap;
 
-        void clearMeteoPoints();
-        bool createDefaultProject(QString fileName);
-        bool searchDefaultPath(QString* defaultPath);
-
-        bool verboseStdoutLogging;
-
-    protected:
         frequencyType _currentFrequency;
         meteoVariable _currentVariable;
         QDate _currentDate;
         int _currentHour;
 
-    public:
-        QString projectName = "";
-        bool isProjectLoaded;
-        int modality;
-        QString currentTileMap;
+        bool _computeOnlyPoints;
+        bool _verboseStdoutLogging;
+        bool _isProjectLoaded;
+        bool _isRequestedExit;
+        bool _isParallelComputing;
 
-        bool requestedExit;
+        FormInfo* _formLog;
+
+        void clearMeteoPoints();
+        bool createDefaultProject(const QString &fileName);
+        bool searchDefaultPath(QString &defaultPath);
+
+    public:
+        int modality;
+
         QString errorString;
         int errorType;
 
@@ -193,23 +194,42 @@
         bool addProxyToProject(std::vector <Crit3DProxy> proxyList, std::deque <bool> proxyActive, std::vector <int> proxyOrder);
         void addProxyGridSeries(QString name_, std::vector <QString> gridNames, std::vector <unsigned> gridYears);
         void checkProxyForMultipleDetrending(Crit3DProxy &myProxy, bool isHeight);
+
+        bool isProjectLoaded() const { return _isProjectLoaded; }
+        void setProjectLoaded(bool value) {_isProjectLoaded = value; }
+
+        bool isRequestedExit() const { return _isRequestedExit; }
+        void setRequestedExit(bool value) {_isRequestedExit = value; }
+
+        bool isParallelComputing() const { return _isParallelComputing; }
+        void setParallelComputing(bool value) {_isParallelComputing = value; }
+
         void setCurrentDate(QDate myDate);
         void setCurrentHour(int myHour);
-        void setCurrentVariable(meteoVariable variable);
-        int getCurrentHour();
-        QDate getCurrentDate();
-        Crit3DTime getCrit3DCurrentTime();
-        QDateTime getCurrentTime();
-        meteoVariable getCurrentVariable() const;
+        int getCurrentHour() const { return _currentHour; }
+        QDate getCurrentDate() const { return _currentDate; }
+        Crit3DTime getCrit3DCurrentTime() const;
+        QDateTime getCurrentTime() const;
 
-        void setApplicationPath(QString myPath);
-        QString getApplicationPath();
-        void setDefaultPath(QString myPath);
-        QString getDefaultPath();
-        void setProjectPath(QString myPath);
-        QString getProjectPath();
-        QString getRelativePath(QString fileName);
+        void setProjectName(const QString &name) { _projectName = name; }
+        QString getProjectName() const { return _projectName; }
+
+        void setApplicationPath(QString myPath) { _appPath = myPath; }
+        QString getApplicationPath() const;
+
+        void setDefaultPath(QString myPath) { _defaultPath = myPath; }
+        QString getDefaultPath() const { return _defaultPath; }
+
+        void setProjectPath(QString myPath) { _projectPath = myPath; }
+        QString getProjectPath() const { return _projectPath; }
+
+        void setCurrentVariable(meteoVariable variable) { _currentVariable = variable; }
+        meteoVariable getCurrentVariable() const { return _currentVariable; }
+
+        QString getRelativePath(QString fileName) const;
         QString getCompleteFileName(QString fileName, QString secondaryPath);
+
+        QString getCurrentTileMap() const { return _currentTileMap; }
 
         bool setLogFile(QString myFileName);
 
@@ -248,10 +268,10 @@
         bool loadAggregationDBAsMeteoPoints(QString fileName);
         bool loadOutputPointsDB(QString dbName);
         bool newOutputPointsDB(QString dbName);
-        bool loadMeteoGridDailyData(QDate firstDate, QDate lastDate, bool showInfo);
-        bool loadMeteoGridHourlyData(QDateTime firstDate, QDateTime lastDate, bool showInfo);
-        bool loadMeteoGridMonthlyData(QDate firstDate, QDate lastDate, bool showInfo);
-        void loadMeteoGridData(QDate firstDate, QDate lastDate, bool showInfo);
+        bool loadMeteoGridDailyData(const QDate &firstDate, const QDate &lastDate, bool showInfo);
+        bool loadMeteoGridHourlyData(QDateTime firstDateTime, QDateTime lastDateTime, bool showInfo);
+        bool loadMeteoGridMonthlyData(const QDate &firstDate, const QDate &lastDate, bool showInfo);
+        void loadMeteoGridData(const QDate &firstDate, const QDate &lastDate, bool showInfo);
 
         QDateTime findDbPointLastTime();
         QDateTime findDbPointFirstTime();
@@ -276,7 +296,7 @@
         bool groupCellsInArea(std::vector<int> &areaPoints, int index, bool isGrid);
         bool writeGlocalWeightsMaps(float windowWidth);
 
-
+        bool checkGlocal(bool isGrid);
         bool checkInterpolation(meteoVariable myVar);
         bool checkInterpolationGrid(meteoVariable myVar);
         bool interpolationGrid(meteoVariable myVar, const Crit3DTime& myTime);
@@ -331,7 +351,7 @@
         int computeDefaultCellSizeFromMeteoGrid(float resolutionRatio);
 
         void setComputeOnlyPoints(bool value);
-        bool getComputeOnlyPoints();
+        bool getComputeOnlyPoints() const;
 
         bool waterTableImportLocation(const QString &csvFileName);
         bool waterTableImportDepths(const QString &csvDepthsFileName);
