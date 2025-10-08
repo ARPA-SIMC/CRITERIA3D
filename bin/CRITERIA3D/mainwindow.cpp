@@ -3573,8 +3573,11 @@ void MainWindow::on_actionCriteria3D_load_external_state_triggered()
         return;
     }
 
-    QString stateDirectory = QFileDialog::getExistingDirectory(this, tr("Open Directory"), "",
+    QString stateDirectory = QFileDialog::getExistingDirectory(this, tr("Open Directory"), myProject.getProjectPath(),
                                                                QFileDialog::ShowDirsOnly | QFileDialog::DontResolveSymlinks);
+    if (stateDirectory.isEmpty())
+        return;
+
     if (! myProject.loadModelState(stateDirectory))
     {
         myProject.logError();

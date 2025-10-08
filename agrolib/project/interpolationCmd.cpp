@@ -268,34 +268,32 @@ bool interpolationRaster(std::vector <Crit3DInterpolationDataPoint> &dataPoints,
     }
 
     unsigned int maxThreads = 1;
-    if (isParallelComputing)
+
     {
         maxThreads = omp_get_max_threads();
     }
     omp_set_num_threads(static_cast<int>(maxThreads));
 
-    #pragma omp parallel
+    std::vector<double> proxyValues(interpolationSettings.getProxyNr());
+
+    #pragma omp parallel for if (isParallelComputing) firstprivate(proxyValues)
+    for (long row = 0; row < outputGrid->header->nrRows ; row++)
     {
-        std::vector<double> proxyValues(interpolationSettings.getProxyNr());
-        #pragma omp for
-        for (long row = 0; row < outputGrid->header->nrRows ; row++)
+        for (long col = 0; col < outputGrid->header->nrCols; col++)
         {
-            for (long col = 0; col < outputGrid->header->nrCols; col++)
+            float z = raster.value[row][col];
+            if (! isEqual(z, outputGrid->header->flag))
             {
-                float z = raster.value[row][col];
-                if (! isEqual(z, outputGrid->header->flag))
+                float x, y;
+                gis::getUtmXYFromRowColSinglePrecision(*(outputGrid->header), row, col, &x, &y);
+
+                if (getUseDetrendingVar(variable))
                 {
-                    float x, y;
-                    gis::getUtmXYFromRowColSinglePrecision(*(outputGrid->header), row, col, &x, &y);
-
-                    if (getUseDetrendingVar(variable))
-                    {
-                        getProxyValuesXY(x, y, interpolationSettings, proxyValues);
-                    }
-
-                    outputGrid->value[row][col] = interpolate(dataPoints, interpolationSettings, meteoSettings,
-                                                              variable, x, y, z, proxyValues, true);
+                    getProxyValuesXY(x, y, interpolationSettings, proxyValues);
                 }
+
+                outputGrid->value[row][col] = interpolate(dataPoints, interpolationSettings, meteoSettings,
+                                                          variable, x, y, z, proxyValues, true);
             }
         }
     }

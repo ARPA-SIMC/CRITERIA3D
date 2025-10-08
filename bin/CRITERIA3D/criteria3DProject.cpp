@@ -1747,29 +1747,20 @@ bool Crit3DProject::computeSnowModel()
     }
     else
     {
-        unsigned int maxThreads = 1;
-        if (isParallelComputing())
-        {
-            maxThreads = omp_get_max_threads();
-        }
-        omp_set_num_threads(static_cast<int>(maxThreads));
+        Crit3DSnow snowPoint = snowModel;
 
-        #pragma omp parallel
+        #pragma omp parallel for if (isParallelComputing()) firstprivate(snowPoint)
+        for (int row = 0; row < DEM.header->nrRows; row++)
         {
-            Crit3DSnow snowPoint = snowModel;
-            #pragma omp for
-            for (int row = 0; row < DEM.header->nrRows; row++)
+            for (int col = 0; col < DEM.header->nrCols; col++)
             {
-                for (int col = 0; col < DEM.header->nrCols; col++)
+                if (! isEqual(DEM.value[row][col], DEM.header->flag))
                 {
-                    if (! isEqual(DEM.value[row][col], DEM.header->flag))
-                    {
-                        computeSnowPoint(snowPoint, row, col);
-                    }
-                    else
-                    {
-                        snowMaps.flagMapRowCol(row, col);
-                    }
+                    computeSnowPoint(snowPoint, row, col);
+                }
+                else
+                {
+                    snowMaps.flagMapRowCol(row, col);
                 }
             }
         }
@@ -2473,7 +2464,6 @@ bool Crit3DProject::loadModelState(QString statePath)
 
     std::string errorStr, fileName;
 
-    //TODO cambiare questo per rothC e hydrall
     bool isProcessesDefined = (isSnowInitialized || isCropInitialized || isCriteria3DInitialized
                                || isHydrallInitialized || isRothCInitialized);
 
@@ -2482,11 +2472,8 @@ bool Crit3DProject::loadModelState(QString statePath)
     QDir snowDir(snowPath);
     if (snowDir.exists() && (!isProcessesDefined || isSnowInitialized))
     {
-        if (! isSnowInitialized)
-        {
-            if (! initializeSnowModel())
-                return false;
-        }
+        if (! initializeSnowModel())
+            return false;
 
         gis::Crit3DRasterGrid *tmpRaster = new gis::Crit3DRasterGrid();
 
@@ -2743,8 +2730,8 @@ bool Crit3DProject::loadModelState(QString statePath)
 
 
         //other maps tbd
-
     }
+
     logInfo("Current date is: " + getCurrentDate().toString("yyyy-MM-dd") + " hour: " + QString::number(getCurrentHour()));
 
     return true;
