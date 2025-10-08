@@ -54,7 +54,7 @@ Crit3DQuality::Crit3DQuality()
     qualityTransmissivity = new quality::Range(0, 1);
 
     qualityDailyT = new quality::Range(-60, 60);
-    qualityDailyP = new quality::Range(0, 1000);        // [mm]
+    qualityDailyP = new quality::Range(0, 999);        // [mm]
     qualityDailyRH = new quality::Range(1, 104);
     qualityDailyWInt = new quality::Range(0, 150);
     qualityDailyWDir = new quality::Range(0, 360);

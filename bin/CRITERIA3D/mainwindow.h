@@ -243,6 +243,8 @@
 
         void on_actionAutomatic_state_saving_end_of_month_toggled(bool isChecked);
 
+        void on_buttonModel1hour_clicked();
+
     protected:
         /*!
          * \brief mouseReleaseEvent call moveCenter

@@ -2075,6 +2075,7 @@ void MainWindow::initializeGroupBoxModel()
 {
     ui->groupBoxModel->setEnabled(true);
     ui->buttonModelStart->setDisabled(true);
+    ui->buttonModel1hour->setDisabled(true);
     ui->buttonModelPause->setEnabled(true);
     ui->buttonModelStop->setEnabled(true);
 }
@@ -2085,6 +2086,7 @@ void MainWindow::on_buttonModelPause_clicked()
     myProject.isModelPaused = true;
 
     ui->buttonModelPause->setDisabled(true);
+    ui->buttonModel1hour->setEnabled(true);
     ui->buttonModelStart->setEnabled(true);
     ui->buttonModelStop->setEnabled(true);
 
@@ -2099,7 +2101,30 @@ void MainWindow::on_buttonModelStop_clicked()
 
     ui->buttonModelPause->setDisabled(true);
     ui->buttonModelStart->setDisabled(true);
+    ui->buttonModel1hour->setDisabled(true);
     ui->buttonModelStop->setDisabled(true);
+}
+
+
+void MainWindow::on_buttonModel1hour_clicked()
+{
+    ui->buttonModelPause->setEnabled(true);
+    ui->buttonModel1hour->setDisabled(true);
+    ui->buttonModelStart->setDisabled(true);
+    ui->buttonModelStop->setEnabled(true);
+
+    QDateTime firstTime = QDateTime(myProject.getCurrentDate(), QTime(myProject.getCurrentHour(), 0, 0), Qt::UTC);
+    QDateTime lastTime = firstTime.addSecs(3600);
+    firstTime = firstTime.addSecs(myProject.currentSeconds);
+
+    myProject.isModelPaused = false;
+    bool isRestart = true;
+    myProject.runModels(firstTime, lastTime, isRestart);
+
+    ui->buttonModelPause->setDisabled(true);
+    ui->buttonModel1hour->setEnabled(true);
+    ui->buttonModelStart->setEnabled(true);
+    ui->buttonModelStop->setEnabled(true);
 }
 
 
@@ -2108,6 +2133,7 @@ void MainWindow::on_buttonModelStart_clicked()
     if (myProject.isModelPaused)
     {
         ui->buttonModelPause->setEnabled(true);
+        ui->buttonModel1hour->setDisabled(true);
         ui->buttonModelStart->setDisabled(true);
         ui->buttonModelStop->setEnabled(true);
 

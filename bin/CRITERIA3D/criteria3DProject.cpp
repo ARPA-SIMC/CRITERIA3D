@@ -1162,14 +1162,18 @@ bool Crit3DProject::runModels(const QDateTime &firstTime, const QDateTime &lastT
         }
     }
 
-    if (isSaveEndOfRunState())
+    if (getCurrentTime() == modelLastTime)
     {
-        QString dirName;
-        saveModelsState(dirName);
+        if (isSaveEndOfRunState())
+        {
+            QString dirName;
+            saveModelsState(dirName);
+        }
+
+        logInfoGUI("Computation is finished.");
     }
 
     isModelRunning = false;
-    logInfoGUI("Computation is finished.");
 
     return true;
 }
