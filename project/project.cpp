@@ -110,6 +110,16 @@ void Project::initializeProject()
 
     proxyGridSeries.clear();
     proxyWidget = nullptr;
+
+    if (_isParallelComputing)
+    {
+        omp_set_num_threads(omp_get_max_threads());
+    }
+    else
+    {
+        omp_set_num_threads(1);
+    }
+
 }
 
 
@@ -1597,15 +1607,10 @@ bool Project::loadMeteoGridDailyData(const QDate &firstDate, const QDate &lastDa
 
     const auto &gridStructure = meteoGridDbHandler->gridStructure();
 
-    unsigned int maxThreads = 1;
-    if (_isParallelComputing)
-    {
-        maxThreads = omp_get_max_threads();
-    }
-    omp_set_num_threads(static_cast<int>(maxThreads));
-
     int count = 0;
-    #pragma omp parallel
+    int nrThreads = (_isParallelComputing ? omp_get_max_threads(): 1);
+
+    #pragma omp parallel if(_isParallelComputing)
     {
         std::string id;
         QString errorStr;
@@ -1615,11 +1620,6 @@ bool Project::loadMeteoGridDailyData(const QDate &firstDate, const QDate &lastDa
         #pragma omp for schedule(dynamic) reduction(+:count)
         for (int row = 0; row < gridStructure.header().nrRows; row++)
         {
-            if (showInfo && omp_get_thread_num() == 0)
-            {
-                updateProgressBar(count * maxThreads);
-            }
-
             for (int col = 0; col < gridStructure.header().nrCols; col++)
             {
                 if (meteoGridDbHandler->meteoGrid()->getMeteoPointActiveId(row, col, id))
@@ -1646,6 +1646,15 @@ bool Project::loadMeteoGridDailyData(const QDate &firstDate, const QDate &lastDa
                                                                                    firstDate, lastDate))
                             ++count;
                     }
+                }
+            }
+
+            // safe update
+            if (showInfo && omp_get_thread_num() == 0)
+            {
+                #pragma omp critical
+                {
+                    updateProgressBar(count * nrThreads);
                 }
             }
         }
@@ -1682,15 +1691,10 @@ bool Project::loadMeteoGridHourlyData(QDateTime firstDateTime, QDateTime lastDat
 
     const auto &gridStructure = meteoGridDbHandler->gridStructure();
 
-    unsigned int maxThreads = 1;
-    if (_isParallelComputing)
-    {
-        maxThreads = omp_get_max_threads();
-    }
-    omp_set_num_threads(static_cast<int>(maxThreads));
-
     int count = 0;
-    #pragma omp parallel
+    int nrThreads = (_isParallelComputing ? omp_get_max_threads(): 1);
+
+    #pragma omp parallel if(_isParallelComputing)
     {
         std::string id;
         QString myErrorStr;
@@ -1700,11 +1704,6 @@ bool Project::loadMeteoGridHourlyData(QDateTime firstDateTime, QDateTime lastDat
         #pragma omp for schedule(dynamic) reduction(+:count)
         for (int row = 0; row < gridStructure.header().nrRows; row++)
         {
-            if (showInfo && omp_get_thread_num() == 0)
-            {
-                updateProgressBar(count * maxThreads);
-            }
-
             for (int col = 0; col < gridStructure.header().nrCols; col++)
             {
                 if (meteoGridDbHandler->meteoGrid()->getMeteoPointActiveId(row, col, id))
@@ -1719,6 +1718,15 @@ bool Project::loadMeteoGridHourlyData(QDateTime firstDateTime, QDateTime lastDat
                         if (meteoGridDbHandler->loadGridHourlyDataFixedFields(myErrorStr, QString::fromStdString(id), firstDateTime, lastDateTime))
                             ++count;
                     }
+                }
+            }
+
+            // safe update
+            if (showInfo && omp_get_thread_num() == 0)
+            {
+                #pragma omp critical
+                {
+                    updateProgressBar(count * nrThreads);
                 }
             }
         }
@@ -1755,15 +1763,10 @@ bool Project::loadMeteoGridMonthlyData(const QDate &firstDate, const QDate &last
 
     const auto &gridStructure = meteoGridDbHandler->gridStructure();
 
-    unsigned int maxThreads = 1;
-    if (_isParallelComputing)
-    {
-        maxThreads = omp_get_max_threads();
-    }
-    omp_set_num_threads(static_cast<int>(maxThreads));
-
     int count = 0;
-    #pragma omp parallel
+    int nrThreads = (_isParallelComputing ? omp_get_max_threads(): 1);
+
+    #pragma omp parallel if (_isParallelComputing)
     {
         std::string id;
         QString myErrorStr;
@@ -1773,11 +1776,6 @@ bool Project::loadMeteoGridMonthlyData(const QDate &firstDate, const QDate &last
         #pragma omp for schedule(dynamic) reduction(+:count)
         for (int row = 0; row < gridStructure.header().nrRows; row++)
         {
-            if (showInfo && omp_get_thread_num() == 0)
-            {
-                updateProgressBar(count * maxThreads);
-            }
-
             for (int col = 0; col < this->meteoGridDbHandler->gridStructure().header().nrCols; col++)
             {
                 if (this->meteoGridDbHandler->meteoGrid()->getMeteoPointActiveId(row, col, id))
@@ -1794,6 +1792,15 @@ bool Project::loadMeteoGridMonthlyData(const QDate &firstDate, const QDate &last
 
                     if (isOk)
                         ++count;
+                }
+            }
+
+            // safe update
+            if (showInfo && omp_get_thread_num() == 0)
+            {
+                #pragma omp critical
+                {
+                    updateProgressBar(count * nrThreads);
                 }
             }
         }
@@ -3002,19 +3009,14 @@ bool Project::interpolationDemLocalDetrending(meteoVariable myVar, const Crit3DT
             return false;
         }
 
-        unsigned int maxThreads = 1;
-        if (_isParallelComputing)
-        {
-            maxThreads = omp_get_max_threads();
-        }
-        omp_set_num_threads(static_cast<int>(maxThreads));
+        Crit3DInterpolationSettings myInterpolationSettings = interpolationSettings;
+        std::vector<double> proxyValues(myInterpolationSettings.getProxyNr());
 
-        #pragma omp parallel
-        {
-            Crit3DInterpolationSettings myInterpolationSettings = interpolationSettings;
-            std::vector<double> proxyValues(myInterpolationSettings.getProxyNr());
+        //#pragma omp parallel
+        //{
 
-            #pragma omp for
+
+            #pragma omp parallel for private(myInterpolationSettings, proxyValues)
             for (long row = 0; row < myHeader.nrRows ; row++)
             {
                 for (long col = 0; col < myHeader.nrCols; col++)
@@ -3045,7 +3047,7 @@ bool Project::interpolationDemLocalDetrending(meteoVariable myVar, const Crit3DT
                     }
                 }
             }
-        }
+        //}
 
         if (! gis::updateMinMaxRasterGrid(myRaster))
             return false;
@@ -3110,13 +3112,6 @@ bool Project::interpolationDemGlocalDetrending(meteoVariable myVar, const Crit3D
             if (getProxyPragaName(interpolationSettings.getProxy(pos)->getName()) == proxyHeight)
                 elevationPos = pos;
         }
-
-        unsigned int maxThreads = 1;
-        if (_isParallelComputing)
-        {
-            maxThreads = omp_get_max_threads();
-        }
-        omp_set_num_threads(static_cast<int>(maxThreads));
 
         #pragma omp parallel
         {
