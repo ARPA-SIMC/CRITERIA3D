@@ -914,15 +914,9 @@ bool computeRadiationRsun(Crit3DRadiationSettings* radSettings, float temperatur
         if (radSettings->getAlgorithm() != RADIATION_ALGORITHM_RSUN)
             return false;
 
-        unsigned int maxThreads = 1;
-        if (isParallelComputing)
-        {
-            maxThreads = omp_get_max_threads();
-        }
-        omp_set_num_threads(static_cast<int>(maxThreads));
-
         bool isOk = true;
-        #pragma omp parallel for shared(isOk)
+
+        #pragma omp parallel for if (isParallelComputing) shared(isOk)
         for (int row = 0; row < dem.header->nrRows; row++ )
         {
             if (! isOk) continue;
@@ -936,7 +930,6 @@ bool computeRadiationRsun(Crit3DRadiationSettings* radSettings, float temperatur
                 {
                     if (! computeRadiationDemPoint(radSettings, radiationMaps, dem, myTime, row, col, height))
                         isOk = false;
-
                 }
             }
         }

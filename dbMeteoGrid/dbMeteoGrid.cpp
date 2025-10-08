@@ -2402,10 +2402,10 @@ bool Crit3DMeteoGridDbHandler::loadGridMonthlyData(QSqlDatabase &myDb, const QSt
         if (! getValue(qry.value("Value"), &value))
         {
             errorStr = "Missing Value";
-            return false;
+
         }
 
-        if (value == NODATA)
+        if (isEqual(value, NODATA))
             continue;
 
         meteoVariable variable = getMonthlyVarEnum(varCode);
