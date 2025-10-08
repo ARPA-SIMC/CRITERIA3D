@@ -1171,11 +1171,12 @@ void Project3D::runWaterFluxes3DModel(double totalTimeStep, bool isRestart)
 
         if (isModelPaused && currentSeconds < totalTimeStep)
         {
-            emit updateOutputSignal();
+            if (modality == MODE_GUI)
+                emit updateOutputSignal();
             return;
         }
 
-        if (showEachTimeStep)
+        if (modality == MODE_GUI && showEachTimeStep)
         {
             if (currentSeconds < totalTimeStep && int(currentSeconds / minimumShowTime) > currentStep)
             {
@@ -1186,7 +1187,8 @@ void Project3D::runWaterFluxes3DModel(double totalTimeStep, bool isRestart)
     }
 
     // refresh
-    emit updateOutputSignal();
+    if (modality == MODE_GUI)
+        emit updateOutputSignal();
 
     double runoff = soilFluxes3D::getBoundaryWaterSumFlow(BOUNDARY_RUNOFF);
     logInfo("runoff [m3]: " + QString::number(runoff));

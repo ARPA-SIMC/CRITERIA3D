@@ -143,6 +143,8 @@ MainWindow::MainWindow(QWidget *parent) :
     myProject.setComputeOnlyPoints(false);
     ui->flagOutputPoints_save_output->setChecked(myProject.isSaveOutputPoints());
     ui->flagCompute_only_points->setChecked(myProject.getComputeOnlyPoints());
+    ui->actionCriteria3D_parallel_computing->setChecked(myProject.isParallelComputing());
+    ui->actionCriteria3D_update_subHourly->setChecked(myProject.showEachTimeStep);
 
     this->setMouseTracking(true);
     this->setTitle();
@@ -914,7 +916,6 @@ void MainWindow::on_actionOpenProject_triggered()
         myProject.loadCriteria3DProject(myProject.getApplicationPath() + "default.ini");
     }
 
-    ui->actionCriteria3D_update_subHourly->setChecked(myProject.showEachTimeStep);
     ui->flagOutputPoints_save_output->setChecked(myProject.isSaveOutputPoints());
     ui->flagCompute_only_points->setChecked(myProject.getComputeOnlyPoints());
 
@@ -3508,6 +3509,12 @@ void MainWindow::on_actionCriteria3D_update_subHourly_triggered(bool isChecked)
 }
 
 
+void MainWindow::on_actionCriteria3D_parallel_computing_triggered(bool isChecked)
+{
+    myProject.setParallelComputing(isChecked);
+}
+
+
 void MainWindow::on_flag_increase_slope_triggered(bool isChecked)
 {
     myProject.increaseSlope = isChecked;
@@ -3812,4 +3819,5 @@ void MainWindow::on_actionAutomatic_state_saving_end_of_month_toggled(bool isChe
 {
     myProject.setSaveMonthlyState(isChecked);
 }
+
 

@@ -1293,7 +1293,7 @@
        <second>0</second>
        <year>1752</year>
        <month>8</month>
-       <day>31</day>
+       <day>30</day>
       </datetime>
      </property>
      <property name="maximumDate">
@@ -2011,6 +2011,7 @@
     <addaction name="actionCriteria3D_compute_next_hour"/>
     <addaction name="actionCriteria3D_run_models"/>
     <addaction name="separator"/>
+    <addaction name="actionCriteria3D_parallel_computing"/>
     <addaction name="actionCriteria3D_update_subHourly"/>
     <addaction name="flagSave_state_endRun"/>
     <addaction name="flagSave_state_daily_step"/>
@@ -2875,6 +2876,9 @@
    <property name="checkable">
     <bool>true</bool>
    </property>
+   <property name="checked">
+    <bool>true</bool>
+   </property>
    <property name="text">
     <string>Update sub hourly</string>
    </property>
@@ -3024,6 +3028,17 @@
    </property>
    <property name="text">
     <string>Automatic state saving (end of month)</string>
+   </property>
+  </action>
+  <action name="actionCriteria3D_parallel_computing">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="checked">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Parallel computing</string>
    </property>
   </action>
  </widget>

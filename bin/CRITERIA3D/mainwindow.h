@@ -161,6 +161,10 @@
         void on_actionCriteria3D_load_state_triggered();
         void on_actionCriteria3D_load_external_state_triggered();
         void on_actionCriteria3D_save_state_triggered();
+        void on_actionCriteria3D_set_processes_triggered();
+        void on_actionCriteria3D_waterFluxes_settings_triggered();
+        void on_actionCriteria3D_Water_content_summary_triggered();
+        void on_actionCriteria3D_parallel_computing_triggered(bool isChecked);
 
         void on_flagSave_state_daily_step_toggled(bool isChecked);
         void on_flagSave_state_endRun_triggered(bool isChecked);
@@ -215,15 +219,9 @@
 
         void on_actionCreate_new_land_use_map_triggered();
 
-        void on_actionCriteria3D_set_processes_triggered();
-
-        void on_actionCriteria3D_waterFluxes_settings_triggered();
-
         void on_actionView_SurfacePond_triggered();
 
         void on_actionSave_outputRaster_triggered();
-
-        void on_actionCriteria3D_Water_content_summary_triggered();
 
         void on_actionDEM_summary_triggered();
 
