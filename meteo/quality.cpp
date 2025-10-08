@@ -43,24 +43,24 @@ Crit3DQuality::Crit3DQuality()
 {
     qualityHourlyT = new quality::Range(-60, 60);
     qualityHourlyTd = new quality::Range(-60, 50);
-    qualityHourlyP = new quality::Range(0, 300);
+    qualityHourlyP = new quality::Range(0, 300);            // [mm]
     qualityHourlyRH = new quality::Range(1, 104);
     qualityHourlyWInt = new quality::Range(0, 150);
     qualityHourlyWDir = new quality::Range(0, 360);
     qualityHourlyGIrr = new quality::Range(-20, 1353);
-    qualityHourlyET0 = new quality::Range(0, 5);
+    qualityHourlyET0 = new quality::Range(0, 5);            // [mm]
     qualityHourlyleafWetness = new quality::Range(0, 1);
 
     qualityTransmissivity = new quality::Range(0, 1);
 
     qualityDailyT = new quality::Range(-60, 60);
-    qualityDailyP = new quality::Range(0, 999);        // [mm]
+    qualityDailyP = new quality::Range(0, 999);             // [mm]
     qualityDailyRH = new quality::Range(1, 104);
     qualityDailyWInt = new quality::Range(0, 150);
     qualityDailyWDir = new quality::Range(0, 360);
     qualityDailyGRad = new quality::Range(-20, 120);
-    qualityDailyET0 = new quality::Range(0, 20);        // [mm]
-    qualityDailyBIC = new quality::Range(-20, 1000);    // [mm]
+    qualityDailyET0 = new quality::Range(0, 20);            // [mm]
+    qualityDailyBIC = new quality::Range(-20, 999);         // [mm]
 
     initialize();
 }
