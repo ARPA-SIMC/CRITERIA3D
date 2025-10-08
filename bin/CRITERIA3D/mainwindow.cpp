@@ -2122,10 +2122,7 @@ void MainWindow::on_buttonModel1hour_clicked()
     bool isRestart = true;
     myProject.runModels(firstTime, lastTime, isRestart);
 
-    ui->buttonModelPause->setDisabled(true);
-    ui->buttonModel1hour->setEnabled(true);
-    ui->buttonModelStart->setEnabled(true);
-    ui->buttonModelStop->setEnabled(true);
+    on_buttonModelPause_clicked();
 }
 
 
@@ -2144,6 +2141,12 @@ void MainWindow::on_buttonModelStart_clicked()
         myProject.isModelPaused = false;
         bool isRestart = true;
         myProject.runModels(newFirstTime, myProject.modelLastTime, isRestart);
+
+        // computation finished
+        if (myProject.getCurrentTime() == myProject.modelLastTime)
+        {
+            on_buttonModelStop_clicked();
+        }
     }
     else
     {
