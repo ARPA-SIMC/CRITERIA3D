@@ -768,7 +768,7 @@ void Crit3DProject::assignETreal()
 
                     if (processes.computeRothC)
                     {
-                        // TODO save value maps come in saveStateVariables
+                        // TODO FT non è corretto (trasformare in mappa)
                         rothCModel.setPlantCover(currentLAI / currentCrop.LAImax);
                     }
                 }
@@ -1845,7 +1845,6 @@ void Crit3DProject::setHydrallVariables(Crit3DHydrall &myHydrallModel, int row, 
     int soilIndex = int(soilIndexMap.value[row][col]);
     if (soilIndex != NODATA)
     {
-        //TODO
         // the condition on this for cycle includes the check of existance of the layers
         for (unsigned int i = 0; ((i < nrLayers) && (soilList[soilIndex].getHorizonIndex(layerDepth[i]))!= NODATA); i++)
         {
@@ -1948,7 +1947,16 @@ bool Crit3DProject::checkProcesses()
         return false;
     }
 
-    if (processes.computeCrop || processes.computeWater)
+    if (processes.computeCrop)
+    {
+        if (! isCropInitialized)
+        {
+            errorString = ERROR_STR_INITIALIZE_CROP;
+            return false;
+        }
+    }
+
+    if (processes.computeWater)
     {
         if (! isCriteria3DInitialized)
         {
