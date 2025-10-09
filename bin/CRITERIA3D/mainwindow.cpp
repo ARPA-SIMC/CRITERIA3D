@@ -1640,7 +1640,7 @@ void MainWindow::on_actionView_Crop_degreeDays_triggered()
 {
     if (! myProject.isCropInitialized)
     {
-        myProject.logError("Initialize crop before.");
+        myProject.logWarning("Initialize crop model before.");
         return;
     }
 
@@ -1652,7 +1652,7 @@ void MainWindow::on_actionView_Crop_LAI_triggered()
 {
     if (! myProject.isCropInitialized)
     {
-        myProject.logError("Initialize crop before.");
+        myProject.logWarning("Initialize crop model before.");
         return;
     }
 
@@ -3751,6 +3751,10 @@ void MainWindow::on_actionDecomposable_plant_matter_triggered()
             myProject.logError("Error while loading decomposable plant matter.");
         }
     }
+    else
+    {
+        myProject.logWarning("Initialize RothC model before.");
+    }
 }
 
 
@@ -3768,6 +3772,10 @@ void MainWindow::on_actionResistant_plant_matter_triggered()
         {
             myProject.logError("Error while loading resistant plant matter.");
         }
+    }
+    else
+    {
+        myProject.logWarning("Initialize RothC model before.");
     }
 }
 
@@ -3787,6 +3795,10 @@ void MainWindow::on_actionMicrobial_biomass_triggered()
             myProject.logError("Error while loading microbial biomass.");
         }
     }
+    else
+    {
+        myProject.logWarning("Initialize RothC model before.");
+    }
 }
 
 
@@ -3805,6 +3817,10 @@ void MainWindow::on_actionHumified_organic_matter_triggered()
             myProject.logError("Error while loading humified organic matter.");
         }
     }
+    else
+    {
+        myProject.logWarning("Initialize RothC model before.");
+    }
 }
 
 
@@ -3822,6 +3838,10 @@ void MainWindow::on_actionSoil_organic_matter_triggered()
         {
             myProject.logError("Error while loading soil organic matter.");
         }
+    }
+    else
+    {
+        myProject.logWarning("Initialize RothC model before.");
     }
 }
 
