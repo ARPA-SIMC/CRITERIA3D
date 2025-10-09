@@ -276,6 +276,7 @@ bool Crit3DProject::initializeRothC()
         logInfo("Average BIC maps loaded from directory " + QString::fromStdString(rothCModel.BICMapFolderName));
 
     }
+
     isRothCInitialized = true;
     //todo
 
@@ -582,10 +583,12 @@ bool Crit3DProject::dailyUpdateHydrall(const QDate &myDate)
     return true;
 }
 
+
 bool Crit3DProject::updateRothC(const QDate &myDate)
 {
     rothCModel.isInitializing = false;
-    if (!processes.computeWater)
+
+    if (! processes.computeWater)
         rothCModel.isInitializing = true;
 
     if (myDate.day() == 1)
