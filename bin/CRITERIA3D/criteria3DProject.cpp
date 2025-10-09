@@ -672,6 +672,9 @@ void Crit3DProject::assignETreal()
 
     double area = DEM.header->cellSize * DEM.header->cellSize;
 
+    Crit3DHydrall myHydrallModel = hydrallModel;
+
+    #pragma omp parallel for if (isParallelComputing()) firstprivate(myHydrallModel)
     for (int row = 0; row < indexMap.at(0).header->nrRows; row++)
     {
         for (int col = 0; col < indexMap.at(0).header->nrCols; col++)
@@ -696,7 +699,6 @@ void Crit3DProject::assignETreal()
                 double evapFlow = area * (actualEvap / 1000.);                              // [m3 h-1]
                 totalEvaporation += evapFlow;                                               // [m3 h-1]
 
-
                 int forestIndex = NODATA;
                 int managementIndex = NODATA;
                 //hydrall only
@@ -713,7 +715,7 @@ void Crit3DProject::assignETreal()
                             forestIndex = (treeCoverIndex - managementIndex) / 10 - 1;
                         }
                     }
-                    hydrallModel.plant.management = managementIndex;
+                    myHydrallModel.plant.management = managementIndex;
                 }
 
                 int cropIndex = getLandUnitIndexRowCol(row, col);
@@ -725,7 +727,7 @@ void Crit3DProject::assignETreal()
                     else if (cropIndex != NODATA && (int)cropList.size() > cropIndex)
                         currentCrop = cropList[cropIndex];
                     else
-                        return; //todo check if ok
+                        continue;
 
                     double actualTransp = 0;
 
@@ -749,19 +751,21 @@ void Crit3DProject::assignETreal()
                             // compute root density
                             root::computeRootDensity3D(currentCrop, soilList[soilIndex], nrLayers, layerDepth, layerThickness);
                         }
-                        hydrallModel.soil.setRootDensity(currentCrop.roots.rootDensity);
-                        hydrallModel.plant.setLAICanopy(MAXVALUE(0, currentLAI));
-                        hydrallModel.plant.setLAICanopyMin(currentCrop.LAImin);
-                        hydrallModel.plant.setLAICanopyMax(currentCrop.LAImax);
+
+                        myHydrallModel.soil.setRootDensity(currentCrop.roots.rootDensity);
+                        myHydrallModel.plant.setLAICanopy(MAXVALUE(0, currentLAI));
+                        myHydrallModel.plant.setLAICanopyMin(currentCrop.LAImin);
+                        myHydrallModel.plant.setLAICanopyMax(currentCrop.LAImax);
 
                         int soilIndex = int(soilIndexMap.value[row][col]);
                         if (soilIndex != NODATA)
-                            computeHydrallModel(row, col, forestIndex);
+                            computeHydrallModel(myHydrallModel, row, col, forestIndex);
                     }
 
                     if (processes.computeRothC)
                     {
-                        rothCModel.setPlantCover(currentLAI/currentCrop.LAImax);
+                        // TODO save value maps come in saveStateVariables
+                        rothCModel.setPlantCover(currentLAI / currentCrop.LAImax);
                     }
                 }
             }
@@ -1775,7 +1779,7 @@ bool Crit3DProject::computeSnowModel()
 }
 
 
-bool Crit3DProject::computeHydrallModel(int row, int col, int forestIndex)
+bool Crit3DProject::computeHydrallModel(Crit3DHydrall &myHydrallModel, int row, int col, int forestIndex)
 {
     // check
     if (! hourlyMeteoMaps->getComputed())
@@ -1799,18 +1803,20 @@ bool Crit3DProject::computeHydrallModel(int row, int col, int forestIndex)
     setHydrallVariables(row, col, forestIndex);
 
     //read state variables from corresponding state maps
-    hydrallModel.setStateVariables(hydrallMaps, row, col);
+    myHydrallModel.setStateVariables(hydrallMaps, row, col);
 
     //compute
-    hydrallModel.computeHydrallPoint();
+    myHydrallModel.computeHydrallPoint();
 
     //check and save data
     //TODO CHECK NODATA
-    hydrallModel.getStateVariables(hydrallMaps, row, col);
-    hydrallModel.getPlantAndSoilVariables(hydrallMaps, row, col);
+    myHydrallModel.saveStateVariables(hydrallMaps, row, col);
+    // TODO clean
+    //myHydrallModel.getPlantAndSoilVariables(hydrallMaps, row, col);
 
     return true;
 }
+
 
 void Crit3DProject::setHydrallVariables(int row, int col, int forestIndex)
 {

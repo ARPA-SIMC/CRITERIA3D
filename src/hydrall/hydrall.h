@@ -225,14 +225,14 @@
         double wildfireDamage;
         int management;
 
-        void setLAICanopy(double myLAI) { leafAreaIndexCanopy = myLAI; };
-        double getLAICanopy() { return leafAreaIndexCanopy; };
+        void setLAICanopy(double myLAI) { leafAreaIndexCanopy = myLAI; }
+        double getLAICanopy() { return leafAreaIndexCanopy; }
 
-        void setLAICanopyMin(double myLAIMin) { leafAreaIndexCanopyMin = myLAIMin; };
-        double getLAICanopyMin() { return leafAreaIndexCanopyMin; };
+        void setLAICanopyMin(double myLAIMin) { leafAreaIndexCanopyMin = myLAIMin; }
+        double getLAICanopyMin() { return leafAreaIndexCanopyMin; }
 
-        void setLAICanopyMax(double myLAIMax) { leafAreaIndexCanopyMax = myLAIMax; };
-        double getLAICanopyMax() { return leafAreaIndexCanopyMax; };
+        void setLAICanopyMax(double myLAIMax) { leafAreaIndexCanopyMax = myLAIMax; }
+        double getLAICanopyMax() { return leafAreaIndexCanopyMax; }
 
     private:
         double leafAreaIndexCanopy;
@@ -263,8 +263,8 @@
         std::vector <double> bulkDensity;
         std::vector <double> waterPotential;
 
-        void setRootDensity(std::vector<double> myRD) { rootDensity = myRD; };
-        std::vector<double> getRootDensity() { return rootDensity; };
+        void setRootDensity(std::vector<double> myRD) { rootDensity = myRD; }
+        std::vector<double> getRootDensity() { return rootDensity; }
 
     private:
         std::vector <double> rootDensity;
@@ -443,9 +443,9 @@
         double understoreyAssimilationRate;
         double totalTranspirationRate; //molH2O m^-2 s^-1
 
-        double getOutputC() { return outputC; };
-        void setElevation(double myElevation) {elevation = myElevation;};
-        void setYear(int myYear) { year = myYear;};
+        double getOutputC() { return outputC; }
+        void setElevation(double myElevation) {elevation = myElevation;}
+        void setYear(int myYear) { year = myYear;}
 
         double moistureCorrectionFactorOld(int index);
         double moistureCorrectionFactor(int index);
@@ -485,10 +485,10 @@
         void optimal();
         void rootfind(double &allf, double &allr, double &alls, bool &sol);
 
-        void setStateVariables(Crit3DHydrallMaps &stateMap, int row, int col);
-        void getStateVariables(Crit3DHydrallMaps &stateMap, int row, int col);
+        void setStateVariables(const Crit3DHydrallMaps &stateMap, int row, int col);
+        void saveStateVariables(Crit3DHydrallMaps &stateMap, int row, int col);
 
-        void getPlantAndSoilVariables(Crit3DHydrallMaps &map, int row, int col);
+        //void getPlantAndSoilVariables(Crit3DHydrallMaps &map, int row, int col);
         void updateCriticalPsi();
         double cavitationConditions();
         double getFirewoodLostSurfacePercentage(double percentageSurfaceLostByFirewoodAtReferenceYear, int simulationYear);

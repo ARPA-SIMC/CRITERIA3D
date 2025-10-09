@@ -359,9 +359,9 @@ void Crit3DHydrallMaps::initialize(const gis::Crit3DRasterGrid& DEM)
             {
                 //TODO: change when initial biomass maps will be available
                 treeNetPrimaryProduction->value[i][j] = 0;
-                treeBiomassFoliage->value[i][j] = 0.1;
-                treeBiomassRoot->value[i][j] = 0.05;
-                treeBiomassSapwood->value[i][j] = 0.2;
+                treeBiomassFoliage->value[i][j] = 0.1f;
+                treeBiomassRoot->value[i][j] = 0.05f;
+                treeBiomassSapwood->value[i][j] = 0.2f;
                 understoreyNetPrimaryProduction->value[i][j] = 0;
                 understoreyBiomassFoliage->value[i][j] = 0;
                 understoreyBiomassRoot->value[i][j] = 0;
@@ -610,7 +610,7 @@ void Crit3DHydrall::setPlantVariables(int forestIndex, double chlorophyllContent
 
 }
 
-void Crit3DHydrall::setStateVariables(Crit3DHydrallMaps &stateMap, int row, int col)
+void Crit3DHydrall::setStateVariables(const Crit3DHydrallMaps &stateMap, int row, int col)
 {
     statePlant.treeNetPrimaryProduction = stateMap.treeNetPrimaryProduction->value[row][col];
     statePlant.understoreyNetPrimaryProduction = stateMap.understoreyNetPrimaryProduction->value[row][col];
@@ -671,28 +671,30 @@ void Crit3DHydrall::setSoilVariables(int iLayer, int currentNode,float checkFlag
     //soil.bulkDensityAverage = statistics::weighedMean(soil.nodeThickness,soil.bulkDensity);
 }
 
-void Crit3DHydrall::getStateVariables(Crit3DHydrallMaps &stateMap, int row, int col)
+
+void Crit3DHydrall::saveStateVariables(Crit3DHydrallMaps &stateMap, int row, int col)
 {
-    stateMap.treeNetPrimaryProduction->value[row][col] = statePlant.treeNetPrimaryProduction;
-    stateMap.understoreyNetPrimaryProduction->value[row][col] = statePlant.understoreyNetPrimaryProduction;
+    stateMap.treeNetPrimaryProduction->value[row][col] = (float)statePlant.treeNetPrimaryProduction;
+    stateMap.understoreyNetPrimaryProduction->value[row][col] = (float)statePlant.understoreyNetPrimaryProduction;
 
-    stateMap.treeBiomassFoliage->value[row][col] = statePlant.treeBiomassFoliage;
-    stateMap.understoreyBiomassFoliage->value[row][col] = statePlant.understoreyBiomassFoliage;
+    stateMap.treeBiomassFoliage->value[row][col] = (float)statePlant.treeBiomassFoliage;
+    stateMap.understoreyBiomassFoliage->value[row][col] = (float)statePlant.understoreyBiomassFoliage;
 
-    stateMap.treeBiomassRoot->value[row][col] = statePlant.treeBiomassRoot;
-    stateMap.understoreyBiomassRoot->value[row][col] = statePlant.understoreyBiomassRoot;
+    stateMap.treeBiomassRoot->value[row][col] = (float)statePlant.treeBiomassRoot;
+    stateMap.understoreyBiomassRoot->value[row][col] = (float)statePlant.understoreyBiomassRoot;
 
-    stateMap.treeBiomassSapwood->value[row][col] = statePlant.treeBiomassSapwood;
+    stateMap.treeBiomassSapwood->value[row][col] = (float)statePlant.treeBiomassSapwood;
 
-    stateMap.outputC->value[row][col] = outputC;
+    stateMap.outputC->value[row][col] = (float)outputC;
 }
 
+/*
 void Crit3DHydrall::getPlantAndSoilVariables(Crit3DHydrallMaps &map, int row, int col)
 {
     map.criticalSoilWaterPotential->value[row][col] = plant.psiSoilCritical;
     map.minLeafWaterPotential->value[row][col] = plant.psiLeafMinimum;
     map.criticalTranspiration->value[row][col] = plant.transpirationCritical;
-}
+}*/
 
 void Crit3DHydrall::radiationAbsorption()
 {
