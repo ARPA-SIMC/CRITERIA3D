@@ -704,7 +704,7 @@ void Crit3DProject::assignETreal()
                 {
                     int treeCoverIndex = getTreeCoverIndexRowCol(row,col);
 
-                    if (treeCoverIndex != -9999 && treeCoverIndex > 9)
+                    if (treeCoverIndex != NODATA && treeCoverIndex > 9)
                     {
                         std::string indexString = std::to_string(treeCoverIndex);
                         if (indexString.size() >= 2)
@@ -720,13 +720,12 @@ void Crit3DProject::assignETreal()
                 if ((cropIndex != NODATA && (int)cropList.size() > cropIndex) || (forestIndex != NODATA && forestIndex >= 0))
                 {
                     Crit3DCrop currentCrop;
-                    if (forestIndex != NODATA  && forestIndex >= 0)
+                    if (forestIndex != NODATA  && forestIndex >= 0 && (int)cropList.size() > forestIndex)
                         currentCrop = cropList[forestIndex];
                     else if (cropIndex != NODATA && (int)cropList.size() > cropIndex)
                         currentCrop = cropList[cropIndex];
                     else
                         return; //todo check if ok
-
 
                     double actualTransp = 0;
 

@@ -133,13 +133,13 @@ Crit3DHydrallPlant::Crit3DHydrallPlant()
     };
 
     tableEcophysiologicalParameters = {
-        {"LARCH",                            35.0, 6.0, false, 0.29, 1},
-        {"PICEA_ABIES",                       35.0, 6.0, false, 0.29, 1},
-        {"ABIES_ALBA",                      30.0, 6.0, false, 0.28, 1},
-        {"PINUS_SYLVESTRIS_SCOTCH_PINE",          30.0, 6.0, false, 0.29, 1},
-        {"PINUS_NIGRA",                         30.0, 6.0, false, 0.29, 1},
-        {"PINUS_PINEA",                 40.0, 7.0, true, 0.29, 1},
-        {"CONIFER",      30.0, 6.0, false, 0.29, 1},
+        {"LARCH",                            35.0, 6.0, false, 0.29, 0.8},
+        {"PICEA_ABIES",                       35.0, 6.0, false, 0.29, 0.8},
+        {"ABIES_ALBA",                      30.0, 6.0, false, 0.28, 0.8},
+        {"PINUS_SYLVESTRIS_SCOTCH_PINE",          30.0, 6.0, false, 0.29, 0.8},
+        {"PINUS_NIGRA",                         30.0, 6.0, false, 0.29, 0.8},
+        {"PINUS_PINEA",                 40.0, 7.0, true, 0.29, 0.8},
+        {"CONIFER",      30.0, 6.0, false, 0.29, 0.8},
         {"BEECH",                                     50.0, 8.0, false, 0.2, 0.4},
         {"QUERCUS_PETREA_ROBUR_PUBESCENS",       50.0, 8.0, false, 0.2, 0.4},
         {"QUERCUS_CERRIS_FRAINETTO_VALLONEA", 50.0, 8.0, false, 0.2, 0.4},
@@ -357,10 +357,11 @@ void Crit3DHydrallMaps::initialize(const gis::Crit3DRasterGrid& DEM)
         {
             if (! isEqual(DEM.value[i][j], DEM.header->flag))
             {
+                //TODO: change when initial biomass maps will be available
                 treeNetPrimaryProduction->value[i][j] = 0;
-                treeBiomassFoliage->value[i][j] = 0;
-                treeBiomassRoot->value[i][j] = 0;
-                treeBiomassSapwood->value[i][j] = 0;
+                treeBiomassFoliage->value[i][j] = 0.1;
+                treeBiomassRoot->value[i][j] = 0.05;
+                treeBiomassSapwood->value[i][j] = 0.2;
                 understoreyNetPrimaryProduction->value[i][j] = 0;
                 understoreyBiomassFoliage->value[i][j] = 0;
                 understoreyBiomassRoot->value[i][j] = 0;
@@ -1279,9 +1280,9 @@ void Crit3DHydrall::cumulatedResults()
         //DEBUG
         //std::cout << deltaTime.grossAssimilation * 10e6 << ", " << deltaTime.respiration * 10e6 << ", " << deltaTime.netAssimilation *10e6 << std::endl;
         std::ofstream myFile;
-        double stressMean = statistics::weighedMean(soil.getRootDensity(),soil.stressCoefficient);
         myFile.open("outputLAIetc.csv", std::ios_base::app);
-        myFile << deltaTime.grossAssimilation/HOUR_SECONDS*1e6 <<","<<deltaTime.respiration/HOUR_SECONDS*1e6<<","<<deltaTime.netAssimilation/HOUR_SECONDS*1e6<<","<< plant.getLAICanopy()<< "," << maxIterationNumber <<"\n";
+        //myFile << deltaTime.grossAssimilation/HOUR_SECONDS*1e6 <<","<<deltaTime.respiration/HOUR_SECONDS*1e6<<","<<deltaTime.netAssimilation/HOUR_SECONDS*1e6<<","<< plant.getLAICanopy()<< "," << maxIterationNumber <<"\n";
+        myFile << plant.getLAICanopy()<< "," <<deltaTime.grossAssimilation/HOUR_SECONDS*1e6 <<","<<deltaTime.respiration/HOUR_SECONDS*1e6<<","<<deltaTime.netAssimilation/HOUR_SECONDS*1e6<<","<< weatherVariable.myInstantTemp << "," << weatherVariable.prec <<"\n";
         myFile.close();
     }
     deltaTime.netAssimilation = deltaTime.netAssimilation*12/1000.0; // [KgC m-2] TODO da motiplicare dopo per CARBONFACTOR DA METTERE dopo convert to kg DM m-2
@@ -1559,40 +1560,53 @@ bool Crit3DHydrall::simplifiedGrowthStand()
 {
     const double understoreyAllocationCoefficientToRoot = 0.5;
     // understorey update TODO IMPORTANTE: SERVE CARBONFACTOR ANCHE QUI?
-    statePlant.understoreyBiomassFoliage = statePlant.understoreyNetPrimaryProduction * (1.-understoreyAllocationCoefficientToRoot);    //understorey growth: foliage...
-    statePlant.understoreyBiomassRoot = statePlant.understoreyNetPrimaryProduction * understoreyAllocationCoefficientToRoot;         //...and roots
+    statePlant.understoreyBiomassFoliage = statePlant.understoreyNetPrimaryProduction * (1.-understoreyAllocationCoefficientToRoot) / CARBONFACTOR;    //understorey growth: foliage...
+    statePlant.understoreyBiomassRoot = statePlant.understoreyNetPrimaryProduction * understoreyAllocationCoefficientToRoot / CARBONFACTOR;         //...and roots
 
     //outputC calculation for RothC model. necessario [t C/ha] ora in kgDM m-2
     //natural death
     outputC = statePlant.treeBiomassFoliage/plant.foliageLongevity + statePlant.treeBiomassSapwood/plant.sapwoodLongevity +
-              statePlant.treeBiomassRoot/plant.fineRootLongevity /CARBONFACTOR * 10;
+              statePlant.treeBiomassRoot/plant.fineRootLongevity * CARBONFACTOR * 10;
 
     statePlant.treeBiomassFoliage -= (statePlant.treeBiomassFoliage/plant.foliageLongevity);
     statePlant.treeBiomassSapwood -= (statePlant.treeBiomassSapwood/plant.sapwoodLongevity);
     statePlant.treeBiomassRoot -= (statePlant.treeBiomassRoot/plant.fineRootLongevity);
 
     //distributed wildfire loss
-    double distributedWildfireLoss = getFirewoodLostSurfacePercentage(0.002, year); //TODO: this parameter must be able to vary based on what if scenario
+    double distributedWildfireLoss = getFirewoodLostSurfacePercentage(0.02, year); //TODO: this parameter must be able to vary based on what if scenario
     statePlant.treeBiomassFoliage -= statePlant.treeBiomassFoliage * distributedWildfireLoss * 1; //foliage is completely lost in the event of a wildfire
     outputC += statePlant.treeBiomassRoot * distributedWildfireLoss * 1; //roots are preserved but dead and become input for carbon model
     statePlant.treeBiomassRoot -= statePlant.treeBiomassRoot * distributedWildfireLoss * 1;
-    outputC += statePlant.treeBiomassSapwood * distributedWildfireLoss * plant.wildfireDamage; //40% or 100% of sapwood is lost based on species
+    outputC += statePlant.treeBiomassSapwood * distributedWildfireLoss * plant.wildfireDamage; //40% or 80% of sapwood is lost based on species
     statePlant.treeBiomassSapwood -= statePlant.treeBiomassSapwood * distributedWildfireLoss * plant.wildfireDamage;
 
     //woodland management
-    plant.management = 1; //DEBUG //0 is non managed, 1 is coppice, 2 is high forest
+    plant.management = 1; //DEBUG //0 is non managed, 1 is coppice, 2 is high forest, 3 is plantation, 4 is urban forest
     double woodExtraction = 0;
 
     if (plant.management == 1) //coppice management produces mostly burning wood
+    {
         woodExtraction = 1./30;
+        outputC += statePlant.treeBiomassFoliage * woodExtraction; //foliage is left in the forest
+    }
     else if (plant.management == 2) //high forest management produces wood that stocks carbon for 35 years (IPCC) and is saved as a regional value
     {
         woodExtraction = 1./100;
         carbonStock += statePlant.treeBiomassSapwood * woodExtraction * 1./35;
+        outputC += statePlant.treeBiomassFoliage * woodExtraction; //foliage is left in the forest
+
+    }
+    else if (plant.management == 3)
+    {
+        //plantation
+    }
+    else if (plant.management == 4)
+    {
+        woodExtraction = 0.5;
     }
 
+    //if plant.management == 0, woodExtraction = 0
     statePlant.treeBiomassSapwood -= statePlant.treeBiomassSapwood * woodExtraction;
-    outputC += statePlant.treeBiomassFoliage * woodExtraction; //foliage is left in the forest?
     statePlant.treeBiomassFoliage -= statePlant.treeBiomassFoliage * woodExtraction;
     outputC += statePlant.treeBiomassRoot * woodExtraction; //dead roots become input for carbon model
     statePlant.treeBiomassRoot -= statePlant.treeBiomassRoot * woodExtraction;
@@ -1614,10 +1628,8 @@ bool Crit3DHydrall::simplifiedGrowthStand()
     //if (isFirstYearSimulation) è necessario?
 
     //computing root/shoot ratio based on values found in [Vitullo et al. 2007] and modified to account for water scarcity
-    double rootShootRatio;
     double alpha = 0.7;
-
-    rootShootRatio = MAXVALUE(MINVALUE(plant.rootShootRatioRef*(alpha*0.5 + 1), plant.rootShootRatioRef*(alpha*(1-weatherVariable.getYearlyPrec()/weatherVariable.getYearlyET0())+1)), plant.rootShootRatioRef);
+    double rootShootRatio = MAXVALUE(MINVALUE(plant.rootShootRatioRef*(alpha*0.5 + 1), plant.rootShootRatioRef*(alpha*(1-weatherVariable.getYearlyPrec()/weatherVariable.getYearlyET0())+1)), plant.rootShootRatioRef);
 
     allocationCoefficient.toFineRoots = rootShootRatio / (1 + rootShootRatio);
     allocationCoefficient.toFoliage = ( 1 - allocationCoefficient.toFineRoots ) * 0.05;
@@ -1642,8 +1654,6 @@ bool Crit3DHydrall::simplifiedGrowthStand()
 
 
     isFirstYearSimulation = false;
-    return true;
-
     return true;
 }
 
@@ -1839,6 +1849,7 @@ void Crit3DHydrall::rootfind(double &allf, double &allr, double &alls, bool &sol
 
 double Crit3DHydrall::getFirewoodLostSurfacePercentage(double percentageSurfaceLostByFirewoodAtReferenceYear, int simulationYear)
 {
+    //TODO check if percentage or ratio
     // for Emilia-Romagna region set percentageSurfaceLostByFirewoodAtReferenceYear=0.002
     // the function is based on the ISPRA projection
     double hazard;
