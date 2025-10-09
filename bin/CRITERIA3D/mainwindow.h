@@ -321,7 +321,6 @@
 
         bool isSoil(QPoint mapPos);
         void openSoilWidget(QPoint mapPos);
-        void showSoilMap();
 
         bool isLandUse(QPoint mapPos);
         void showLandUseMap();

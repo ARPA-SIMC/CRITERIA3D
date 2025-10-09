@@ -525,9 +525,9 @@ void Crit3DProject::dailyUpdateCropMaps(const QDate &myDate)
     dailyTmaxMap.emptyGrid();
 }
 
+
 bool Crit3DProject::dailyUpdateHydrall(const QDate &myDate)
 {
-
     //set daily variables like temp, co2
     if (myDate.dayOfYear() == 1)
     {
@@ -714,6 +714,7 @@ void Crit3DProject::assignETreal()
                         std::string indexString = std::to_string(treeCoverIndex);
                         if (indexString.size() >= 2)
                         {
+                            // TODO FT CT capire cos'è forest index
                             managementIndex = std::stoi(indexString.substr(indexString.size()-1, indexString.size()-1));
                             forestIndex = (treeCoverIndex - managementIndex) / 10 - 1;
                         }
@@ -1790,7 +1791,6 @@ bool Crit3DProject::computeHydrallModel(Crit3DHydrall &myHydrallModel, int row, 
         logError("Missing meteo maps.");
         return false;
     }
-
     if (! radiationMaps->getComputed())
     {
         logError("Missing radiation map.");
@@ -1803,7 +1803,7 @@ bool Crit3DProject::computeHydrallModel(Crit3DHydrall &myHydrallModel, int row, 
     }
 
     //set all necessary input variables
-    setHydrallVariables(row, col, forestIndex);
+    setHydrallVariables(myHydrallModel, row, col, forestIndex);
 
     //read state variables from corresponding state maps
     myHydrallModel.setStateVariables(hydrallMaps, row, col);
@@ -1814,6 +1814,7 @@ bool Crit3DProject::computeHydrallModel(Crit3DHydrall &myHydrallModel, int row, 
     //check and save data
     //TODO CHECK NODATA
     myHydrallModel.saveStateVariables(hydrallMaps, row, col);
+
     // TODO clean
     //myHydrallModel.getPlantAndSoilVariables(hydrallMaps, row, col);
 
@@ -1821,11 +1822,10 @@ bool Crit3DProject::computeHydrallModel(Crit3DHydrall &myHydrallModel, int row, 
 }
 
 
-void Crit3DProject::setHydrallVariables(int row, int col, int forestIndex)
+void Crit3DProject::setHydrallVariables(Crit3DHydrall &myHydrallModel, int row, int col, int forestIndex)
 {
-
     //hourly variables
-    hydrallModel.setHourlyVariables(double(hourlyMeteoMaps->mapHourlyTair->value[row][col]), double(radiationMaps->globalRadiationMap->value[row][col]),
+    myHydrallModel.setHourlyVariables(double(hourlyMeteoMaps->mapHourlyTair->value[row][col]), double(radiationMaps->globalRadiationMap->value[row][col]),
                                     double(hourlyMeteoMaps->mapHourlyPrec->value[row][col]), double(hourlyMeteoMaps->mapHourlyRelHum->value[row][col]),
                                     double(hourlyMeteoMaps->mapHourlyWindScalarInt->value[row][col]), double(radiationMaps->beamRadiationMap->value[row][col]),
                                     double(radiationMaps->diffuseRadiationMap->value[row][col]),
@@ -1835,11 +1835,10 @@ void Crit3DProject::setHydrallVariables(int row, int col, int forestIndex)
                                     mapLast30DaysTAvg.value[row][col],double(hourlyMeteoMaps->mapHourlyET0->value[row][col]));
 
     //TODO: plant height map
-    hydrallMaps.plantHeight.value[row][col] = 10;
-    double chlorophyllContent = 500; //da tabella
-    //treeCoverMap.value[row][col] = 0; //TODO treeSpeciesMap. valutare tabelle tra crop e tabella hydrall
+    hydrallMaps.plantHeight.value[row][col] = 10;   // [m]
+    double chlorophyllContent = 500;                // da tabella
 
-    hydrallModel.setPlantVariables(forestIndex, chlorophyllContent, hydrallMaps.plantHeight.value[row][col],
+    myHydrallModel.setPlantVariables(forestIndex, chlorophyllContent, hydrallMaps.plantHeight.value[row][col],
                                    hydrallMaps.minLeafWaterPotential->value[row][col]);
 
     // check soil
@@ -1847,12 +1846,10 @@ void Crit3DProject::setHydrallVariables(int row, int col, int forestIndex)
     if (soilIndex != NODATA)
     {
         //TODO
-
-
         // the condition on this for cycle includes the check of existance of the layers
         for (unsigned int i = 0; ((i < nrLayers) && (soilList[soilIndex].getHorizonIndex(layerDepth[i]))!= NODATA); i++)
         {
-            hydrallModel.setSoilVariables(i,indexMap.at(i).value[row][col],indexMap.at(i).header->flag,
+            myHydrallModel.setSoilVariables(i,indexMap.at(i).value[row][col],indexMap.at(i).header->flag,
                                           soilFluxes3D::getWaterContent(indexMap.at(i).value[row][col]),
                                           soilList[soilIndex].horizon[soilList[soilIndex].getHorizonIndex(layerDepth[i])].waterContentFC,
                                           soilList[soilIndex].horizon[soilList[soilIndex].getHorizonIndex(layerDepth[i])].waterContentWP,
@@ -1865,9 +1862,8 @@ void Crit3DProject::setHydrallVariables(int row, int col, int forestIndex)
                                           soilFluxes3D::getMatricPotential(indexMap.at(i).value[row][col]));
         }
     }
-
-    return;
 }
+
 
 bool Crit3DProject::computeRothCModel()
 {

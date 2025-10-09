@@ -1350,7 +1350,16 @@ void MainWindow::on_actionView_Boundary_triggered()
 
 void MainWindow::on_actionView_SoilMap_triggered()
 {
-    showSoilMap();
+    if (myProject.soilMap.isLoaded)
+    {
+        setColorScale(noMeteoVar, myProject.soilMap.colorScale);
+        setCurrentRasterOutput(&(myProject.soilMap));
+        ui->labelOutputRaster->setText("Soil");
+    }
+    else
+    {
+        myProject.logError("Load a soil map before.");
+    }
 }
 
 
@@ -1754,21 +1763,6 @@ bool MainWindow::isSoil(QPoint mapPos)
 }
 
 
-void MainWindow::showSoilMap()
-{
-    if (myProject.soilMap.isLoaded)
-    {
-        setColorScale(airTemperature, myProject.soilMap.colorScale);
-        setCurrentRasterOutput(&(myProject.soilMap));
-        ui->labelOutputRaster->setText("Soil");
-    }
-    else
-    {
-        myProject.logError("Load a soil map before.");
-    }
-}
-
-
 bool MainWindow::isLandUse(QPoint mapPos)
 {
     if (! myProject.landUseMap.isLoaded)
@@ -1783,7 +1777,7 @@ void MainWindow::showLandUseMap()
 {
     if (myProject.landUseMap.isLoaded)
     {
-        setColorScale(noMeteoTerrain, myProject.landUseMap.colorScale);
+        setColorScale(noMeteoVar, myProject.landUseMap.colorScale);
         setCurrentRasterOutput(&(myProject.landUseMap));
         ui->labelOutputRaster->setText("Land use");
     }
@@ -1943,7 +1937,7 @@ void MainWindow::on_actionLoad_soil_map_triggered()
 
     if (myProject.loadSoilMap(fileName))
     {
-        showSoilMap();
+        on_actionView_SoilMap_triggered();
     }
 }
 
@@ -3417,11 +3411,8 @@ void MainWindow::on_actionView_LandUseMap_triggered()
 
 void MainWindow::on_actionHide_LandUseMap_triggered()
 {
-    if (ui->labelOutputRaster->text() == "Land use")
-    {
-        setOutputRasterVisible(false);
-        refreshViewer3D();
-    }
+    setOutputRasterVisible(false);
+    refreshViewer3D();
 }
 
 
@@ -3725,13 +3716,13 @@ void MainWindow::on_actionTree_cover_map_triggered()
 {
     if (myProject.treeCoverMap.isLoaded)
     {
-        setColorScale(noMeteoTerrain, myProject.treeCoverMap.colorScale);
+        setColorScale(noMeteoVar, myProject.treeCoverMap.colorScale);
         setCurrentRasterOutput(&(myProject.treeCoverMap));
         ui->labelOutputRaster->setText("Tree cover");
     }
     else
     {
-        myProject.logError("Load a tree cover map before.");
+        myProject.logWarning("Load a tree cover map before.");
     }
 }
 

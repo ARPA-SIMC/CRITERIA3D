@@ -31,11 +31,11 @@
     */
 
     #define RESPIRATION_PARAMETER  0.00000147222 // to compute respiration
-    #define CARBONFACTOR 0.5           /*!< coeff for conversion of carbon into DM, kgC kgDM-1  */
-    #define GAMMA  66.2                /*!< psychrometer constant, Pa K-1  */
-    #define LATENT  43956              /*!< latent heat of vaporization, J mol-1  */
-    #define H2OMOLECULARWEIGHT  0.018  /*!< molecular weight of H2O, kg mol-1  */
-    #define OSS 21176                  /*!< oxygen part pressure in the atmosphere, Pa  */
+    #define CARBONFACTOR 0.5                /*!< coeff for conversion of carbon into DM, kgC kgDM-1  */
+    #define GAMMA  66.2                     /*!< psychrometer constant, Pa K-1  */
+    #define LATENT  43956                   /*!< latent heat of vaporization, J mol-1  */
+    #define H2OMOLECULARWEIGHT  0.018       /*!< molecular weight of H2O, kg mol-1  */
+    #define OSS 21176                       /*!< oxygen part pressure in the atmosphere, Pa  */
 
         /*!
         * Define additional photosynthetic parameters
@@ -59,12 +59,12 @@
         /*!
          * Define additional functional and structural parameters for stand and understorey
          */
-    #define      CONV       0.8             //    dry matter conversion efficiency (growth resp.)(-)
-    #define      MERCH      0.85            //    merchantable wood as fraction of stem biomass (-)
-    #define      RADRT      1.E-3           //    root radius (m)
-    #define      STH0       0.8561          //    intercept in self-thinning eq. (log(TREES) vs log(WST)) (m-2)
-    #define      STH1       1.9551          //    slope in self-thinning eq. (log(TREES) vs log(WST)) (kgDM-1)
-    #define      ALLRUND    0.5             //    coeff of allocation to roots in understorey (-)
+    #define      CONV       0.8             /*!< dry matter conversion efficiency (growth resp.)(-)  */
+    #define      MERCH      0.85            /*!< merchantable wood as fraction of stem biomass (-)   */
+    #define      RADRT      1.E-3           /*!< root radius (m)                                     */
+    #define      STH0       0.8561          /*!< intercept in self-thinning eq. (log(TREES) vs log(WST)) (m-2)   */
+    #define      STH1       1.9551          /*!< slope in self-thinning eq. (log(TREES) vs log(WST)) (kgDM-1)    */
+    #define      ALLRUND    0.5             /*!< coeff of allocation to roots in understorey (-)     */
 
         /*!
          * Define soil respiration parameters, partition soil C into young and old components
@@ -84,12 +84,12 @@
     #define NOT_INITIALIZED_VINE -1
 
     struct TecophysiologicalParameter {
-        std::string name; // name of the species
-        double Vcmo; // Max carboxylation rate at 25°C rate of RuBiSCO activity (PSII photosynthesis))
-        double mBallBerry; // empirical parameter of sensitivity to water stress to obtain stomatal closure
+        std::string name;       // name of the species
+        double Vcmo;            // Max carboxylation rate at 25°C rate of RuBiSCO activity (PSII photosynthesis))
+        double mBallBerry;      // empirical parameter of sensitivity to water stress to obtain stomatal closure
         bool isAmphystomatic;
-        double rootShootRatio; //ratio of C allocated to roots and C allocated to aboveground biomass
-        double wildfireDamage; //ratio of biomass lost in wildfire event
+        double rootShootRatio;  //ratio of C allocated to roots and C allocated to aboveground biomass
+        double wildfireDamage;  //ratio of biomass lost in wildfire event
     };
 
     struct TLAIparam {
@@ -100,14 +100,14 @@
 
     struct TLAIphenology{
         std::string name;
-        double emergence; // GDD with threshold 5°C
-        double increase;  // GDD with threshold 5°C
-        double decrease;  // GDD with threshold 5°C
+        double emergence;   // GDD with threshold 5°C
+        double increase;    // GDD with threshold 5°C
+        double decrease;    // GDD with threshold 5°C
     };
 
     struct TAnnualYield{
        std::string name;
-       double carbon; // annual carbon biomass
+       double carbon;       // annual carbon biomass
     };
 
     class Crit3DHydrallState
@@ -134,8 +134,9 @@
         double understoreyBiomassRoot; //SAVE
     };
 
-    class Crit3DHydrallWeatherDerivedVariable {
 
+    class Crit3DHydrallWeatherDerivedVariable
+    {
     public:
         Crit3DHydrallWeatherDerivedVariable();
 
@@ -149,20 +150,20 @@
         double myLongWaveIrradiance;
         double psychrometricConstant;
         double et0;
-
     };
 
-    class Crit3DHydrallWeatherVariable {
 
+    class Crit3DHydrallWeatherVariable
+    {
     public:
         Crit3DHydrallWeatherVariable();
 
         Crit3DHydrallWeatherDerivedVariable derived;
 
-        double getYearlyET0 () { return yearlyET0; };
-        void setYearlyET0 (double myET) { yearlyET0 = myET; };
-        double getYearlyPrec () { return yearlyPrec; };
-        void setYearlyPrec (double myPrec) { yearlyPrec = myPrec; };
+        double getYearlyET0 () { return yearlyET0; }
+        void setYearlyET0 (double myET) { yearlyET0 = myET; }
+        double getYearlyPrec () { return yearlyPrec; }
+        void setYearlyPrec (double myPrec) { yearlyPrec = myPrec; }
 
         double myInstantTemp;
         double prec;
@@ -170,21 +171,18 @@
         double relativeHumidity;
         double windSpeed;
         double atmosphericPressure;
-        //double meanDailyTemperature;
         double vaporPressureDeficit;
         double last30DaysTAvg;
         double meanDailyTemp;
 
-
     private:
         double yearlyET0;
         double yearlyPrec;
-
-
     };
 
-    class Crit3DHydrallEnvironmentalVariable {
 
+    class Crit3DHydrallEnvironmentalVariable
+    {
     public:
         Crit3DHydrallEnvironmentalVariable();
 
@@ -192,8 +190,9 @@
         double sineSolarElevation;
     };
 
-    class Crit3DHydrallPlant {
 
+    class Crit3DHydrallPlant
+    {
     public:
         Crit3DHydrallPlant();
 
@@ -238,10 +237,11 @@
         double leafAreaIndexCanopy;
         double leafAreaIndexCanopyMax;
         double leafAreaIndexCanopyMin;
-
     };
 
-    class Crit3DHydrallSoil {
+
+    class Crit3DHydrallSoil
+    {
     public:
         Crit3DHydrallSoil();
 
@@ -268,8 +268,8 @@
 
     private:
         std::vector <double> rootDensity;
-
     };
+
 
     class Crit3DHydrallBigLeaf
     {
@@ -290,8 +290,8 @@
         double compensationPoint, convexityFactorNonRectangularHyperbola ;
         double quantumYieldPS2 ;
         double assimilation,transpiration,stomatalConductance;
-
     };
+
 
     class Crit3DHydrallParameterWangLeuning
     {
@@ -319,7 +319,8 @@
     };
 
 
-    class Crit3DHydrallDeltaTimeOutputs {
+    class Crit3DHydrallDeltaTimeOutputs
+    {
     public:
         Crit3DHydrallDeltaTimeOutputs();
 
@@ -337,7 +338,9 @@
         double understoreyNetAssimilation;
     };
 
-    class Crit3DHydrallNitrogen {
+
+    class Crit3DHydrallNitrogen
+    {
     public:
         Crit3DHydrallNitrogen();
 
@@ -347,7 +350,9 @@
         double root;
     };
 
-    class Crit3DHydrallBiomass {
+
+    class Crit3DHydrallBiomass
+    {
     public:
         Crit3DHydrallBiomass();
 
@@ -357,7 +362,9 @@
         double fineRoot;
     };
 
-    class Crit3DHydrallAllocationCoefficient {
+
+    class Crit3DHydrallAllocationCoefficient
+    {
     public:
         Crit3DHydrallAllocationCoefficient();
 
@@ -400,7 +407,8 @@
     };
 
 
-    class Crit3DHydrall{
+    class Crit3DHydrall
+    {
     public:
 
         Crit3DHydrall();
@@ -451,11 +459,21 @@
         double moistureCorrectionFactor(int index);
         double understoreyRespiration();
         void radiationAbsorption();
-        void setSoilVariables(int iLayer, int currentNode, float checkFlag, double waterContent, double waterContentFC, double waterContentWP, double clay, double sand, double thickness, double bulkDensity, double waterContentSat, double kSat, double waterPotential);
-        void setHourlyVariables(double temp, double irradiance , double prec , double relativeHumidity , double windSpeed, double directIrradiance, double diffuseIrradiance, double cloudIndex, double atmosphericPressure, Crit3DDate currentDate, double sunElevation,double meanTemp30Days,double et0);
-        bool setWeatherVariables(double temp, double irradiance , double prec , double relativeHumidity , double windSpeed, double directIrradiance, double diffuseIrradiance, double cloudIndex, double atmosphericPressure, double meanTemp30Days,double et0);
+
+        void setSoilVariables(int iLayer, int currentNode, float checkFlag, double waterContent, double waterContentFC,
+                              double waterContentWP, double clay, double sand, double thickness, double bulkDensity,
+                              double waterContentSat, double kSat, double waterPotential);
+        void setHourlyVariables(double temp, double irradiance , double prec , double relativeHumidity ,
+                                double windSpeed, double directIrradiance, double diffuseIrradiance,
+                                double cloudIndex, double atmosphericPressure, Crit3DDate currentDate,
+                                double sunElevation,double meanTemp30Days,double et0);
+        bool setWeatherVariables(double temp, double irradiance , double prec , double relativeHumidity ,
+                                 double windSpeed, double directIrradiance, double diffuseIrradiance,
+                                 double cloudIndex, double atmosphericPressure, double meanTemp30Days,double et0);
+
         void setDerivedWeatherVariables(double directIrradiance, double diffuseIrradiance, double cloudIndex, double et0);
         void setPlantVariables(int forestIndex, double chlorophyllContent, double height, double psiMinimum);
+
         bool computeHydrallPoint();
         double getCO2(Crit3DDate myDate);
         //double getPressureFromElevation(double myTemperature, double myElevation);

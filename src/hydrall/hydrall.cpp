@@ -327,9 +327,8 @@ Crit3DHydrallMaps::Crit3DHydrallMaps()
 
     yearlyET0 = new gis::Crit3DRasterGrid;
     yearlyPrec = new gis::Crit3DRasterGrid;
-
-
 }
+
 
 void Crit3DHydrallMaps::initialize(const gis::Crit3DRasterGrid& DEM)
 {
@@ -388,14 +387,13 @@ bool Crit3DHydrall::computeHydrallPoint()
     //understorey.leafAreaIndex = MAXVALUE(LAIMIN,understoreyLeafAreaIndexMax* computeLAI(myDate));
 
     plant.setLAICanopy(plant.getLAICanopy() - plant.getLAICanopyMin());
-    plant.setLAICanopy(MAXVALUE(0,plant.getLAICanopy()));
+    plant.setLAICanopy(MAXVALUE(0, plant.getLAICanopy()));
     understorey.leafAreaIndex = 1;
     //plant.setLAICanopy(5); //DEBUG
     //plant.setLAICanopyMax(6); //DEBUG
-    plant.specificLeafArea = plant.getLAICanopyMax()/statePlant.treeBiomassFoliage;
+    plant.specificLeafArea = plant.getLAICanopyMax() / statePlant.treeBiomassFoliage;
 
     Crit3DHydrall::photosynthesisAndTranspiration();
-
 
     /* necessaria per ogni specie:
      *  il contenuto di clorofilla (g cm-2) il default è 500
@@ -408,6 +406,7 @@ bool Crit3DHydrall::computeHydrallPoint()
 
     return true;
 }
+
 
 double Crit3DHydrall::getCO2(Crit3DDate myDate)
 {
@@ -441,13 +440,18 @@ double Crit3DHydrall::computeLAI(Crit3DDate myDate)
         return LAIMAX;
 }
 
+
 void Crit3DHydrall::nullPhotosynthesis()
 {
     treeAssimilationRate = 0 ;
-    treeTranspirationRate.resize(soil.layersNr);
-    for (int i=0; i < soil.layersNr; i++)
-        treeTranspirationRate[i] = 0;
+    if (soil.layersNr != NODATA)
+    {
+        treeTranspirationRate.resize(soil.layersNr);
+        for (int i=0; i < soil.layersNr; i++)
+            treeTranspirationRate[i] = 0;
+    }
 }
+
 
 double Crit3DHydrall::photosynthesisAndTranspiration()
 {
@@ -468,12 +472,11 @@ double Crit3DHydrall::photosynthesisAndTranspiration()
         Crit3DHydrall::photosynthesisAndTranspirationUnderstorey();
     }
 
-
     Crit3DHydrall::cumulatedResults();
-
 
     return 0;
 }
+
 
 double Crit3DHydrall::photosynthesisAndTranspirationUnderstorey()
 {
@@ -494,13 +497,16 @@ double Crit3DHydrall::photosynthesisAndTranspirationUnderstorey()
 
         lightLimitedUnderstoreyAssimilation = understoreyLightUtilization * understorey.absorbedPAR / MC; //convert units from kgC m-2 s-1 into molC m-2 s-1
         double density=1.;
-        if (soil.layersNr > 1)
-            density = 1./(soil.layersNr-1);
-
-        for (int i = 1; i < soil.layersNr; i++)
+        if (soil.layersNr != NODATA)
         {
-            understoreyTranspirationRate.push_back(rootEfficiencyInWaterExtraction * understoreyBiomass.fineRoot * soil.stressCoefficient[i]*density);
-            cumulatedUnderstoreyTranspirationRate += understoreyTranspirationRate[i];
+            if (soil.layersNr > 1)
+                density = 1./(soil.layersNr-1);
+
+            for (int i = 1; i < soil.layersNr; i++)
+            {
+                understoreyTranspirationRate.push_back(rootEfficiencyInWaterExtraction * understoreyBiomass.fineRoot * soil.stressCoefficient[i]*density);
+                cumulatedUnderstoreyTranspirationRate += understoreyTranspirationRate[i];
+            }
         }
 
         cumulatedUnderstoreyTranspirationRate /= MH2O;  //convert units from kgH2O m-2 s-1 into molH2O m-2 s-1
@@ -601,13 +607,13 @@ void Crit3DHydrall::setPlantVariables(int forestIndex, double chlorophyllContent
     plant.psiLeafMinimum = psiMinimum;
     //plant.psiSoilCritical = psiCritical;
 
+    // TODO FT check con Cate (arriva indice 901)
+    forestIndex = 0;
     parameterWangLeuning.maxCarboxRate = plant.tableEcophysiologicalParameters[conversionTableVector[forestIndex]].Vcmo;
     plant.isAmphystomatic = plant.tableEcophysiologicalParameters[conversionTableVector[forestIndex]].isAmphystomatic;
     plant.rootShootRatioRef = plant.tableEcophysiologicalParameters[conversionTableVector[forestIndex]].rootShootRatio;
     plant.mBallBerry = plant.tableEcophysiologicalParameters[conversionTableVector[forestIndex]].mBallBerry;
     plant.wildfireDamage = plant.tableEcophysiologicalParameters[conversionTableVector[forestIndex]].wildfireDamage;
-
-
 }
 
 void Crit3DHydrall::setStateVariables(const Crit3DHydrallMaps &stateMap, int row, int col)
@@ -633,6 +639,7 @@ void Crit3DHydrall::setSoilVariables(int iLayer, int currentNode,float checkFlag
         soil.layersNr = 0;
     }
     (soil.layersNr)++;
+
     soil.waterContent.resize(soil.layersNr);
     soil.stressCoefficient.resize(soil.layersNr);
     soil.clay.resize(soil.layersNr);

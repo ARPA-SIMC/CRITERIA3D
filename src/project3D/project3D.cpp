@@ -1311,6 +1311,7 @@ int Project3D::getLandUnitIndexRowCol(int row, int col)
     return getLandUnitListIndex(id);
 }
 
+
 int Project3D::getTreeCoverIndexRowCol(int row, int col)
 {
     if (! treeCoverMap.isLoaded)
