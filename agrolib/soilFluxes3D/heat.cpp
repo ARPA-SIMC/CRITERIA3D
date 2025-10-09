@@ -40,7 +40,6 @@
 #include "header/soilFluxes3D.h"
 #include "header/boundary.h"
 
-//static double CourantHeatAdvective;
 
 bool isHeatNode(long i)
 {
@@ -51,6 +50,7 @@ bool isHeatNode(long i)
             ! nodeList[i].isSurface);
 }
 
+
 bool isHeatLinkedNode(TlinkedNode* myLink)
 {
     return (myStructure.computeHeat &&
@@ -59,28 +59,34 @@ bool isHeatLinkedNode(TlinkedNode* myLink)
             myLink->linkedExtra->heatFlux != nullptr);
 }
 
+
 double getH_timeStep(long i, double timeStep, double timeStepWater)
 {
     return (nodeList[i].H - nodeList[i].oldH) / timeStepWater * timeStep + nodeList[i].oldH;
 }
+
 
 // [J]
 double computeHeatStorage(double timeStepHeat, double timeStepWater)
 {
     double heatStorage = 0.;
     double myH;
-    for (long i = 1; i < myStructure.nrNodes; i++)
+    for (long i = 0; i < myStructure.nrNodes; i++)
     {
-        if (timeStepHeat != NODATA && timeStepWater != NODATA)
-            myH = getH_timeStep(i, timeStepHeat, timeStepWater);
-        else
-            myH = nodeList[i].H;
+        if (! nodeList[i].isSurface)
+        {
+            if (timeStepHeat != NODATA && timeStepWater != NODATA)
+                myH = getH_timeStep(i, timeStepHeat, timeStepWater);
+            else
+                myH = nodeList[i].H;
 
-        heatStorage += soilFluxes3D::getHeat(i, myH - nodeList[i].z);
+            heatStorage += soilFluxes3D::getHeat(i, myH - nodeList[i].z);
+        }
     }
 
     return heatStorage;
 }
+
 
 /*!
  * \brief computes sum of heat sink/source (J)
@@ -90,11 +96,15 @@ double computeHeatStorage(double timeStepHeat, double timeStepWater)
 double sumHeatFlow(double deltaT)
 {
     double sum = 0.0;
-    for (long n = 1; n < myStructure.nrNodes; n++)
+    for (long n = 0; n < myStructure.nrNodes; n++)
     {
-        if (nodeList[n].extra->Heat->Qh != 0.)
-            sum += nodeList[n].extra->Heat->Qh * deltaT;
+        if (! nodeList[n].isSurface)
+        {
+            if (nodeList[n].extra->Heat->Qh != 0.)
+                sum += nodeList[n].extra->Heat->Qh * deltaT;
+        }
     }
+
     return sum;
 }
 
@@ -164,6 +174,7 @@ float readHeatFlux(TlinkedNode* myLink, int fluxType)
         return NODATA;
 }
 
+
 void saveHeatFlux(TlinkedNode* myLink, int fluxType, double myValue)
 {
     if (! isHeatLinkedNode(myLink)) return;
@@ -178,6 +189,7 @@ void saveHeatFlux(TlinkedNode* myLink, int fluxType, double myValue)
     if (myStructure.saveHeatFluxesType == SAVE_HEATFLUXES_ALL)
         myLink->linkedExtra->heatFlux->fluxes[fluxType] = float(myValue);
 }
+
 
 /*!
  * \brief vapor volumetric water equivalent
@@ -480,8 +492,6 @@ double SoilHeatConductivity(long i, double T, double h)
  */
 double ThermalLiquidFlux(long i, TlinkedNode *myLink, int myProcess, double timeStep, double timeStepWater)
 {
-    // TODO inserire time step water per calcolo più preciso
-
     long j = (*myLink).index;
 
     // temperatures (K) and water potential (m)
@@ -497,8 +507,16 @@ double ThermalLiquidFlux(long i, TlinkedNode *myLink, int myProcess, double time
     {
         tavg = nodeList[i].extra->Heat->T;
         tavgLink = nodeList[j].extra->Heat->T;
-        havg = arithmeticMean(getH_timeStep(i, timeStep, timeStepWater), nodeList[i].oldH) - nodeList[i].z;
-        havgLink = arithmeticMean(getH_timeStep(j, timeStep, timeStepWater), nodeList[j].oldH) - nodeList[j].z;
+        if (timeStep != timeStepWater)
+        {
+            havg = arithmeticMean(getH_timeStep(i, timeStep, timeStepWater), nodeList[i].oldH) - nodeList[i].z;
+            havgLink = arithmeticMean(getH_timeStep(j, timeStep, timeStepWater), nodeList[j].oldH) - nodeList[j].z;
+        }
+        else
+        {
+            havg = arithmeticMean(nodeList[i].H, nodeList[i].oldH) - nodeList[i].z;
+            havgLink = arithmeticMean(nodeList[j].H, nodeList[j].oldH) - nodeList[j].z;
+        }
     }
     else
         return NODATA;
@@ -801,13 +819,15 @@ void saveWaterFluxes(double dtHeat, double dtWater)
 void saveNodeHeatFlux(long myIndex, TlinkedNode *myLink, double timeStep, double timeStepWater)
 // [W] heat flow between node nodeList[myIndex] and link node myLink
 {
-   if (! isHeatLinkedNode(myLink)) return;
+   if (! isHeatNode(myIndex) || ! isHeatLinkedNode(myLink))
+        return;
 
     long myLinkIndex = (*myLink).index;
     double myDiffHeat, myA;
 
     int j = 1;
-    while ((j < myStructure.maxNrColumns) && (A[myIndex][j].index != NOLINK) && (A[myIndex][j].index != myLinkIndex)) j++;
+    while ((j < myStructure.maxNrColumns) && (A[myIndex][j].index != NOLINK) && (A[myIndex][j].index != myLinkIndex))
+        j++;
 
     if (A[myIndex][j].index == myLinkIndex)
     {
@@ -841,20 +861,23 @@ void updateHeatFluxes(double timeStep, double timeStepWater)
 {
     if (myStructure.saveHeatFluxesType == SAVE_HEATFLUXES_NONE) return;
 
-    for (long i = 1; i < myStructure.nrNodes; i++)
+    for (long i = 0; i < myStructure.nrNodes; i++)
     {
-        if (nodeList[i].up.index != NOLINK)
-            if (nodeList[i].up.linkedExtra->heatFlux != nullptr)
-                saveNodeHeatFlux(i, &(nodeList[i].up), timeStep, timeStepWater);
+        if (! nodeList[i].isSurface)
+        {
+            if (nodeList[i].up.index != NOLINK)
+                if (nodeList[i].up.linkedExtra->heatFlux != nullptr)
+                    saveNodeHeatFlux(i, &(nodeList[i].up), timeStep, timeStepWater);
 
-        if (nodeList[i].down.index != NOLINK)
-            if (nodeList[i].down.linkedExtra->heatFlux != nullptr)
-                saveNodeHeatFlux(i, &(nodeList[i].down), timeStep, timeStepWater);
+            if (nodeList[i].down.index != NOLINK)
+                if (nodeList[i].down.linkedExtra->heatFlux != nullptr)
+                    saveNodeHeatFlux(i, &(nodeList[i].down), timeStep, timeStepWater);
 
-        for (short j = 0; j < myStructure.nrLateralLinks; j++)
-            if (nodeList[i].lateral[j].index != NOLINK)
-                if (nodeList[i].lateral[j].linkedExtra->heatFlux != nullptr)
-                    saveNodeHeatFlux(i, &(nodeList[i].lateral[j]), timeStep, timeStepWater);
+            for (short j = 0; j < myStructure.nrLateralLinks; j++)
+                if (nodeList[i].lateral[j].index != NOLINK)
+                    if (nodeList[i].lateral[j].linkedExtra->heatFlux != nullptr)
+                        saveNodeHeatFlux(i, &(nodeList[i].lateral[j]), timeStep, timeStepWater);
+        }
     }
 }
 
@@ -910,8 +933,11 @@ void updateBalanceHeatWholePeriod()
 
 void restoreHeat()
 {
-    for (long i = 1; i < myStructure.nrNodes; i++)
-        nodeList[i].extra->Heat->T = nodeList[i].extra->Heat->oldT;
+    for (long i = 0; i < myStructure.nrNodes; i++)
+    {
+        if (! nodeList[i].isSurface)
+            nodeList[i].extra->Heat->T = nodeList[i].extra->Heat->oldT;
+    }
 }
 
 void initializeHeatFluxes(bool initHeat, bool initWater)
@@ -920,7 +946,7 @@ void initializeHeatFluxes(bool initHeat, bool initWater)
     {
         initializeNodeHeatFlux(nodeList[n].up.linkedExtra, initHeat, initWater);
         initializeNodeHeatFlux(nodeList[n].down.linkedExtra, initHeat, initWater);
-        for (short i = 1; i < myStructure.nrLateralLinks; i++)
+        for (short i = 0; i < myStructure.nrLateralLinks; i++)
            initializeNodeHeatFlux(nodeList[n].lateral[i].linkedExtra, initHeat, initWater);
     }
 }
@@ -928,8 +954,11 @@ void initializeHeatFluxes(bool initHeat, bool initWater)
 double computeMaximumDeltaT()
 {
     double maxDeltaT = 0.;
-    for (long i = 1; i < myStructure.nrNodes; i++)
-        maxDeltaT = std::max(maxDeltaT, fabs(nodeList[i].extra->Heat->T - nodeList[i].extra->Heat->oldT));
+    for (long i = 0; i < myStructure.nrNodes; i++)
+    {
+        if (! nodeList[i].isSurface)
+            maxDeltaT = std::max(maxDeltaT, fabs(nodeList[i].extra->Heat->T - nodeList[i].extra->Heat->oldT));
+    }
 
     return maxDeltaT;
 }
@@ -937,7 +966,6 @@ double computeMaximumDeltaT()
 
 bool HeatComputation(double timeStepHeat, double timeStepWater)
 {
-	long i, j;
     double sum = 0;
     double sumFlow0 = 0;
     double myDeltaTemp0;
@@ -949,76 +977,85 @@ bool HeatComputation(double timeStepHeat, double timeStepWater)
     initializeHeatFluxes(true, false);
     //CourantHeatAdvective = 0.;
 
-    for (i = 1; i < myStructure.nrNodes; i++)
+    for (long i = 0; i < myStructure.nrNodes; ++i)
     {
-        A[i][0].index = i;
-        X[i] = nodeList[i].extra->Heat->T;
-        nodeList[i].extra->Heat->oldT = nodeList[i].extra->Heat->T;
+        if (! nodeList[i].isSurface)
+        {
+            A[i][0].index = i;
+            X[i] = nodeList[i].extra->Heat->T;
+            nodeList[i].extra->Heat->oldT = nodeList[i].extra->Heat->T;
 
-        myH = getH_timeStep(i, timeStepHeat, timeStepWater);
-        avgh = arithmeticMean(nodeList[i].oldH, myH) - nodeList[i].z;
-        C[i] = SoilHeatCapacity(i, avgh, nodeList[i].extra->Heat->T) * nodeList[i].volume_area;
+            myH = getH_timeStep(i, timeStepHeat, timeStepWater);
+            avgh = arithmeticMean(nodeList[i].oldH, myH) - nodeList[i].z;
+            C[i] = SoilHeatCapacity(i, avgh, nodeList[i].extra->Heat->T) * nodeList[i].volume_area;
+        }
     }
 
-    for (i = 1; i < myStructure.nrNodes; i++)
+    for (long i = 0; i < myStructure.nrNodes; ++i)
     {
-        invariantFlux[i] = 0.;
-
-        myH = getH_timeStep(i, timeStepHeat, timeStepWater);
-
-        // compute heat capacity temporal variation
-        // due to changes in water and vapor
-        dtheta = theta_from_sign_Psi(myH - nodeList[i].z, i) -
-                theta_from_sign_Psi(nodeList[i].oldH - nodeList[i].z, i);
-
-        heatCapacityVar = dtheta * HEAT_CAPACITY_WATER * nodeList[i].extra->Heat->T;
-
-        if (myStructure.computeHeatVapor)
+        if (! nodeList[i].isSurface)
         {
-            dthetav = VaporThetaV(myH - nodeList[i].z, nodeList[i].extra->Heat->T, i) -
-                    VaporThetaV(nodeList[i].oldH - nodeList[i].z, nodeList[i].extra->Heat->oldT, i);
-            heatCapacityVar += dthetav * HEAT_CAPACITY_AIR * nodeList[i].extra->Heat->T;
-            heatCapacityVar += dthetav * latentHeatVaporization(nodeList[i].extra->Heat->T - ZEROCELSIUS) * WATER_DENSITY;
-        }
+            invariantFlux[i] = 0.;
 
-        heatCapacityVar *= nodeList[i].volume_area;
+            myH = getH_timeStep(i, timeStepHeat, timeStepWater);
 
-        j = 1;
-        if (computeHeatFlux(i, j, &(nodeList[i].up), timeStepHeat, timeStepWater)) j++;
-        for (short l = 0; l < myStructure.nrLateralLinks; l++)
-            if (computeHeatFlux(i, j, &(nodeList[i].lateral[l]), timeStepHeat, timeStepWater)) j++;
-        if (computeHeatFlux(i, j, &(nodeList[i].down), timeStepHeat, timeStepWater)) j++;
+            // compute heat capacity temporal variation
+            // due to changes in water and vapor
+            dtheta = theta_from_sign_Psi(myH - nodeList[i].z, i) -
+                    theta_from_sign_Psi(nodeList[i].oldH - nodeList[i].z, i);
 
-        // closure
-        while (j < myStructure.maxNrColumns)
-            A[i][j++].index = NOLINK;
+            heatCapacityVar = dtheta * HEAT_CAPACITY_WATER * nodeList[i].extra->Heat->T;
 
-        j = 1;
-        sum = 0.;
-        sumFlow0 = 0;
+            if (myStructure.computeHeatVapor)
+            {
+                dthetav = VaporThetaV(myH - nodeList[i].z, nodeList[i].extra->Heat->T, i) -
+                        VaporThetaV(nodeList[i].oldH - nodeList[i].z, nodeList[i].extra->Heat->oldT, i);
+                heatCapacityVar += dthetav * HEAT_CAPACITY_AIR * nodeList[i].extra->Heat->T;
+                heatCapacityVar += dthetav * latentHeatVaporization(nodeList[i].extra->Heat->T - ZEROCELSIUS) * WATER_DENSITY;
+            }
 
-        while ((j < myStructure.maxNrColumns) && (A[i][j].index != NOLINK))
-        {
-            sum += A[i][j].val * myParameters.heatWeightingFactor;
-            myDeltaTemp0 = nodeList[A[i][j].index].extra->Heat->oldT - nodeList[i].extra->Heat->oldT;
-            sumFlow0 += A[i][j].val * (1. - myParameters.heatWeightingFactor) * myDeltaTemp0;
-            A[i][j++].val *= -(myParameters.heatWeightingFactor);
-        }
+            heatCapacityVar *= nodeList[i].volume_area;
 
-        /*! sum of diagonal elements */
-        avgh = arithmeticMean(nodeList[i].oldH, myH) - nodeList[i].z;
-        A[i][0].val = SoilHeatCapacity(i, avgh, nodeList[i].extra->Heat->T) * nodeList[i].volume_area / timeStepHeat + sum;
+            int j = 1;
+            if (computeHeatFlux(i, j, &(nodeList[i].up), timeStepHeat, timeStepWater))
+                j++;
+            for (short l = 0; l < myStructure.nrLateralLinks; l++)
+                if (computeHeatFlux(i, j, &(nodeList[i].lateral[l]), timeStepHeat, timeStepWater))
+                    j++;
+            if (computeHeatFlux(i, j, &(nodeList[i].down), timeStepHeat, timeStepWater))
+                j++;
 
-        /*! b vector (constant terms) */
-        b[i] = C[i] * nodeList[i].extra->Heat->oldT / timeStepHeat - heatCapacityVar / timeStepHeat + nodeList[i].extra->Heat->Qh + invariantFlux[i] + sumFlow0;
+            // closure
+            while (j < myStructure.maxNrColumns)
+                A[i][j++].index = NOLINK;
 
-        // preconditioning
-        if (A[i][0].val > 0)
-        {
-            b[i] /= A[i][0].val;
+
+            sum = 0.;
+            sumFlow0 = 0;
             j = 1;
             while ((j < myStructure.maxNrColumns) && (A[i][j].index != NOLINK))
-                A[i][j++].val /= A[i][0].val;
+            {
+                sum += A[i][j].val * myParameters.heatWeightingFactor;
+                myDeltaTemp0 = nodeList[A[i][j].index].extra->Heat->oldT - nodeList[i].extra->Heat->oldT;
+                sumFlow0 += A[i][j].val * (1. - myParameters.heatWeightingFactor) * myDeltaTemp0;
+                A[i][j++].val *= -(myParameters.heatWeightingFactor);
+            }
+
+            /*! sum of diagonal elements */
+            avgh = arithmeticMean(nodeList[i].oldH, myH) - nodeList[i].z;
+            A[i][0].val = SoilHeatCapacity(i, avgh, nodeList[i].extra->Heat->T) * nodeList[i].volume_area / timeStepHeat + sum;
+
+            /*! b vector (constant terms) */
+            b[i] = C[i] * nodeList[i].extra->Heat->oldT / timeStepHeat - heatCapacityVar / timeStepHeat + nodeList[i].extra->Heat->Qh + invariantFlux[i] + sumFlow0;
+
+            // preconditioning
+            if (A[i][0].val > 0)
+            {
+                b[i] /= A[i][0].val;
+                j = 1;
+                while ((j < myStructure.maxNrColumns) && (A[i][j].index != NOLINK))
+                    A[i][j++].val /= A[i][0].val;
+            }
         }
     }
 
@@ -1034,8 +1071,11 @@ bool HeatComputation(double timeStepHeat, double timeStepWater)
     int approximation = myParameters.maxApproximationsNumber - 1;
     solveLinearSystem(approximation, myParameters.ResidualTolerance, PROCESS_HEAT);
 
-    for (i = 1; i < myStructure.nrNodes; i++)
-        nodeList[i].extra->Heat->T = X[i];
+    for (long i = 0; i < myStructure.nrNodes; ++i)
+    {
+        if (! nodeList[i].isSurface)
+            nodeList[i].extra->Heat->T = X[i];
+    }
 
     computeHeatBalance(timeStepHeat, timeStepWater);
 
@@ -1043,9 +1083,12 @@ bool HeatComputation(double timeStepHeat, double timeStepWater)
 
     updateHeatFluxes(timeStepHeat, timeStepWater);
 
-	// save old temperatures
-    for (long n = 1; n < myStructure.nrNodes; n++)
-        nodeList[n].extra->Heat->oldT = nodeList[n].extra->Heat->T;
+    // store old temperatures
+    for (long i = 0; i < myStructure.nrNodes; ++i)
+    {
+        if (! nodeList[i].isSurface)
+            nodeList[i].extra->Heat->oldT = nodeList[i].extra->Heat->T;
+    }
 
     return true;
 }

@@ -1292,8 +1292,8 @@
        <minute>0</minute>
        <second>0</second>
        <year>1752</year>
-       <month>9</month>
-       <day>1</day>
+       <month>8</month>
+       <day>30</day>
       </datetime>
      </property>
      <property name="maximumDate">
@@ -1683,9 +1683,9 @@
     <widget class="QPushButton" name="buttonModelStart">
      <property name="geometry">
       <rect>
-       <x>120</x>
+       <x>130</x>
        <y>30</y>
-       <width>31</width>
+       <width>30</width>
        <height>28</height>
       </rect>
      </property>
@@ -1696,9 +1696,9 @@
     <widget class="QPushButton" name="buttonModelPause">
      <property name="geometry">
       <rect>
-       <x>50</x>
+       <x>30</x>
        <y>30</y>
-       <width>61</width>
+       <width>60</width>
        <height>28</height>
       </rect>
      </property>
@@ -1718,9 +1718,9 @@
     <widget class="QPushButton" name="buttonModelStop">
      <property name="geometry">
       <rect>
-       <x>160</x>
+       <x>165</x>
        <y>30</y>
-       <width>61</width>
+       <width>60</width>
        <height>28</height>
       </rect>
      </property>
@@ -1737,7 +1737,7 @@
     <widget class="QSpinBox" name="layerNrEdit">
      <property name="geometry">
       <rect>
-       <x>100</x>
+       <x>70</x>
        <y>70</y>
        <width>42</width>
        <height>24</height>
@@ -1756,7 +1756,7 @@
     <widget class="QLabel" name="labelLayer">
      <property name="geometry">
       <rect>
-       <x>40</x>
+       <x>10</x>
        <y>70</y>
        <width>51</width>
        <height>21</height>
@@ -1788,7 +1788,7 @@
     <widget class="QLineEdit" name="layerDepthEdit">
      <property name="geometry">
       <rect>
-       <x>150</x>
+       <x>120</x>
        <y>70</y>
        <width>71</width>
        <height>24</height>
@@ -1801,9 +1801,9 @@
     <widget class="QLabel" name="labelTime">
      <property name="geometry">
       <rect>
-       <x>10</x>
+       <x>9</x>
        <y>102</y>
-       <width>50</width>
+       <width>51</width>
        <height>21</height>
       </rect>
      </property>
@@ -1843,6 +1843,19 @@
       <bool>true</bool>
      </property>
     </widget>
+    <widget class="QPushButton" name="buttonModel1hour">
+     <property name="geometry">
+      <rect>
+       <x>95</x>
+       <y>30</y>
+       <width>36</width>
+       <height>28</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>&gt;1h</string>
+     </property>
+    </widget>
    </widget>
   </widget>
   <widget class="QMenuBar" name="menuBar">
@@ -1851,7 +1864,7 @@
      <x>0</x>
      <y>0</y>
      <width>1280</width>
-     <height>21</height>
+     <height>28</height>
     </rect>
    </property>
    <property name="palette">
@@ -1998,6 +2011,7 @@
     <addaction name="actionCriteria3D_compute_next_hour"/>
     <addaction name="actionCriteria3D_run_models"/>
     <addaction name="separator"/>
+    <addaction name="actionCriteria3D_parallel_computing"/>
     <addaction name="actionCriteria3D_update_subHourly"/>
     <addaction name="flagSave_state_endRun"/>
     <addaction name="flagSave_state_daily_step"/>
@@ -2862,6 +2876,9 @@
    <property name="checkable">
     <bool>true</bool>
    </property>
+   <property name="checked">
+    <bool>true</bool>
+   </property>
    <property name="text">
     <string>Update sub hourly</string>
    </property>
@@ -3011,6 +3028,17 @@
    </property>
    <property name="text">
     <string>Automatic state saving (end of month)</string>
+   </property>
+  </action>
+  <action name="actionCriteria3D_parallel_computing">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="checked">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Parallel computing</string>
    </property>
   </action>
  </widget>

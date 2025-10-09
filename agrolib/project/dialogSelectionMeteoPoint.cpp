@@ -24,6 +24,7 @@ DialogSelectionMeteoPoint::DialogSelectionMeteoPoint(bool isActive, bool isSelec
     selectionMode.addItem("id_point");
     selectionMode.addItem("altitude");
     selectionMode.addItem("DEM distance [m]");
+    selectionMode.addItem("orog_code");
     selectionLayout.addWidget(&selectionMode);
 
     selectionOperation.addItem("=");
@@ -145,6 +146,15 @@ void DialogSelectionMeteoPoint::selectionModeChanged()
         selectionItems.setVisible(false);
         editItems.setVisible(true);
         itemFromList = false;
+    }
+    else if(selectionMode.currentText() == "orog_code")
+    {
+        QList<QString> lapseRateCodeList = {"0", "1", "2"};
+        selectionOperation.addItem("=");
+        selectionOperation.addItem("!=");
+        selectionItems.addItems(lapseRateCodeList);
+        selectionItems.setVisible(true);
+        itemFromList = true;
     }
 }
 

@@ -143,6 +143,8 @@ MainWindow::MainWindow(QWidget *parent) :
     myProject.setComputeOnlyPoints(false);
     ui->flagOutputPoints_save_output->setChecked(myProject.isSaveOutputPoints());
     ui->flagCompute_only_points->setChecked(myProject.getComputeOnlyPoints());
+    ui->actionCriteria3D_parallel_computing->setChecked(myProject.isParallelComputing());
+    ui->actionCriteria3D_update_subHourly->setChecked(myProject.showEachTimeStep);
 
     this->setMouseTracking(true);
     this->setTitle();
@@ -914,7 +916,6 @@ void MainWindow::on_actionOpenProject_triggered()
         myProject.loadCriteria3DProject(myProject.getApplicationPath() + "default.ini");
     }
 
-    ui->actionCriteria3D_update_subHourly->setChecked(myProject.showEachTimeStep);
     ui->flagOutputPoints_save_output->setChecked(myProject.isSaveOutputPoints());
     ui->flagCompute_only_points->setChecked(myProject.getComputeOnlyPoints());
 
@@ -2075,6 +2076,7 @@ void MainWindow::initializeGroupBoxModel()
 {
     ui->groupBoxModel->setEnabled(true);
     ui->buttonModelStart->setDisabled(true);
+    ui->buttonModel1hour->setDisabled(true);
     ui->buttonModelPause->setEnabled(true);
     ui->buttonModelStop->setEnabled(true);
 }
@@ -2085,6 +2087,7 @@ void MainWindow::on_buttonModelPause_clicked()
     myProject.isModelPaused = true;
 
     ui->buttonModelPause->setDisabled(true);
+    ui->buttonModel1hour->setEnabled(true);
     ui->buttonModelStart->setEnabled(true);
     ui->buttonModelStop->setEnabled(true);
 
@@ -2099,7 +2102,27 @@ void MainWindow::on_buttonModelStop_clicked()
 
     ui->buttonModelPause->setDisabled(true);
     ui->buttonModelStart->setDisabled(true);
+    ui->buttonModel1hour->setDisabled(true);
     ui->buttonModelStop->setDisabled(true);
+}
+
+
+void MainWindow::on_buttonModel1hour_clicked()
+{
+    ui->buttonModelPause->setEnabled(true);
+    ui->buttonModel1hour->setDisabled(true);
+    ui->buttonModelStart->setDisabled(true);
+    ui->buttonModelStop->setEnabled(true);
+
+    QDateTime firstTime = QDateTime(myProject.getCurrentDate(), QTime(myProject.getCurrentHour(), 0, 0), Qt::UTC);
+    QDateTime lastTime = firstTime.addSecs(3600);
+    firstTime = firstTime.addSecs(myProject.currentSeconds);
+
+    myProject.isModelPaused = false;
+    bool isRestart = true;
+    myProject.runModels(firstTime, lastTime, isRestart);
+
+    on_buttonModelPause_clicked();
 }
 
 
@@ -2108,6 +2131,7 @@ void MainWindow::on_buttonModelStart_clicked()
     if (myProject.isModelPaused)
     {
         ui->buttonModelPause->setEnabled(true);
+        ui->buttonModel1hour->setDisabled(true);
         ui->buttonModelStart->setDisabled(true);
         ui->buttonModelStop->setEnabled(true);
 
@@ -2117,6 +2141,12 @@ void MainWindow::on_buttonModelStart_clicked()
         myProject.isModelPaused = false;
         bool isRestart = true;
         myProject.runModels(newFirstTime, myProject.modelLastTime, isRestart);
+
+        // computation finished
+        if (myProject.getCurrentTime() == myProject.modelLastTime)
+        {
+            on_buttonModelStop_clicked();
+        }
     }
     else
     {
@@ -3482,6 +3512,12 @@ void MainWindow::on_actionCriteria3D_update_subHourly_triggered(bool isChecked)
 }
 
 
+void MainWindow::on_actionCriteria3D_parallel_computing_triggered(bool isChecked)
+{
+    myProject.setParallelComputing(isChecked);
+}
+
+
 void MainWindow::on_flag_increase_slope_triggered(bool isChecked)
 {
     myProject.increaseSlope = isChecked;
@@ -3573,8 +3609,11 @@ void MainWindow::on_actionCriteria3D_load_external_state_triggered()
         return;
     }
 
-    QString stateDirectory = QFileDialog::getExistingDirectory(this, tr("Open Directory"), "",
+    QString stateDirectory = QFileDialog::getExistingDirectory(this, tr("Open Directory"), myProject.getProjectPath(),
                                                                QFileDialog::ShowDirsOnly | QFileDialog::DontResolveSymlinks);
+    if (stateDirectory.isEmpty())
+        return;
+
     if (! myProject.loadModelState(stateDirectory))
     {
         myProject.logError();
@@ -3783,4 +3822,5 @@ void MainWindow::on_actionAutomatic_state_saving_end_of_month_toggled(bool isChe
 {
     myProject.setSaveMonthlyState(isChecked);
 }
+
 

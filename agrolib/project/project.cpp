@@ -110,6 +110,16 @@ void Project::initializeProject()
 
     proxyGridSeries.clear();
     proxyWidget = nullptr;
+
+    if (_isParallelComputing)
+    {
+        omp_set_num_threads(omp_get_max_threads());
+    }
+    else
+    {
+        omp_set_num_threads(1);
+    }
+
 }
 
 
@@ -1597,15 +1607,10 @@ bool Project::loadMeteoGridDailyData(const QDate &firstDate, const QDate &lastDa
 
     const auto &gridStructure = meteoGridDbHandler->gridStructure();
 
-    unsigned int maxThreads = 1;
-    if (_isParallelComputing)
-    {
-        maxThreads = omp_get_max_threads();
-    }
-    omp_set_num_threads(static_cast<int>(maxThreads));
-
     int count = 0;
-    #pragma omp parallel
+    int nrThreads = (_isParallelComputing ? omp_get_max_threads(): 1);
+
+    #pragma omp parallel if(_isParallelComputing)
     {
         std::string id;
         QString errorStr;
@@ -1615,11 +1620,6 @@ bool Project::loadMeteoGridDailyData(const QDate &firstDate, const QDate &lastDa
         #pragma omp for schedule(dynamic) reduction(+:count)
         for (int row = 0; row < gridStructure.header().nrRows; row++)
         {
-            if (showInfo && omp_get_thread_num() == 0)
-            {
-                updateProgressBar(count * maxThreads);
-            }
-
             for (int col = 0; col < gridStructure.header().nrCols; col++)
             {
                 if (meteoGridDbHandler->meteoGrid()->getMeteoPointActiveId(row, col, id))
@@ -1646,6 +1646,15 @@ bool Project::loadMeteoGridDailyData(const QDate &firstDate, const QDate &lastDa
                                                                                    firstDate, lastDate))
                             ++count;
                     }
+                }
+            }
+
+            // safe update
+            if (showInfo && omp_get_thread_num() == 0)
+            {
+                #pragma omp critical
+                {
+                    updateProgressBar(count * nrThreads);
                 }
             }
         }
@@ -1682,15 +1691,10 @@ bool Project::loadMeteoGridHourlyData(QDateTime firstDateTime, QDateTime lastDat
 
     const auto &gridStructure = meteoGridDbHandler->gridStructure();
 
-    unsigned int maxThreads = 1;
-    if (_isParallelComputing)
-    {
-        maxThreads = omp_get_max_threads();
-    }
-    omp_set_num_threads(static_cast<int>(maxThreads));
-
     int count = 0;
-    #pragma omp parallel
+    int nrThreads = (_isParallelComputing ? omp_get_max_threads(): 1);
+
+    #pragma omp parallel if(_isParallelComputing)
     {
         std::string id;
         QString myErrorStr;
@@ -1700,11 +1704,6 @@ bool Project::loadMeteoGridHourlyData(QDateTime firstDateTime, QDateTime lastDat
         #pragma omp for schedule(dynamic) reduction(+:count)
         for (int row = 0; row < gridStructure.header().nrRows; row++)
         {
-            if (showInfo && omp_get_thread_num() == 0)
-            {
-                updateProgressBar(count * maxThreads);
-            }
-
             for (int col = 0; col < gridStructure.header().nrCols; col++)
             {
                 if (meteoGridDbHandler->meteoGrid()->getMeteoPointActiveId(row, col, id))
@@ -1719,6 +1718,15 @@ bool Project::loadMeteoGridHourlyData(QDateTime firstDateTime, QDateTime lastDat
                         if (meteoGridDbHandler->loadGridHourlyDataFixedFields(myErrorStr, QString::fromStdString(id), firstDateTime, lastDateTime))
                             ++count;
                     }
+                }
+            }
+
+            // safe update
+            if (showInfo && omp_get_thread_num() == 0)
+            {
+                #pragma omp critical
+                {
+                    updateProgressBar(count * nrThreads);
                 }
             }
         }
@@ -1755,15 +1763,10 @@ bool Project::loadMeteoGridMonthlyData(const QDate &firstDate, const QDate &last
 
     const auto &gridStructure = meteoGridDbHandler->gridStructure();
 
-    unsigned int maxThreads = 1;
-    if (_isParallelComputing)
-    {
-        maxThreads = omp_get_max_threads();
-    }
-    omp_set_num_threads(static_cast<int>(maxThreads));
-
     int count = 0;
-    #pragma omp parallel
+    int nrThreads = (_isParallelComputing ? omp_get_max_threads(): 1);
+
+    #pragma omp parallel if (_isParallelComputing)
     {
         std::string id;
         QString myErrorStr;
@@ -1773,11 +1776,6 @@ bool Project::loadMeteoGridMonthlyData(const QDate &firstDate, const QDate &last
         #pragma omp for schedule(dynamic) reduction(+:count)
         for (int row = 0; row < gridStructure.header().nrRows; row++)
         {
-            if (showInfo && omp_get_thread_num() == 0)
-            {
-                updateProgressBar(count * maxThreads);
-            }
-
             for (int col = 0; col < this->meteoGridDbHandler->gridStructure().header().nrCols; col++)
             {
                 if (this->meteoGridDbHandler->meteoGrid()->getMeteoPointActiveId(row, col, id))
@@ -1794,6 +1792,15 @@ bool Project::loadMeteoGridMonthlyData(const QDate &firstDate, const QDate &last
 
                     if (isOk)
                         ++count;
+                }
+            }
+
+            // safe update
+            if (showInfo && omp_get_thread_num() == 0)
+            {
+                #pragma omp critical
+                {
+                    updateProgressBar(count * nrThreads);
                 }
             }
         }
@@ -3002,47 +3009,37 @@ bool Project::interpolationDemLocalDetrending(meteoVariable myVar, const Crit3DT
             return false;
         }
 
-        unsigned int maxThreads = 1;
-        if (_isParallelComputing)
-        {
-            maxThreads = omp_get_max_threads();
-        }
-        omp_set_num_threads(static_cast<int>(maxThreads));
+        Crit3DInterpolationSettings myInterpolationSettings = interpolationSettings;
+        std::vector<double> proxyValues(myInterpolationSettings.getProxyNr());
 
-        #pragma omp parallel
+        #pragma omp parallel for if(_isParallelComputing) firstprivate(myInterpolationSettings, proxyValues)
+        for (long row = 0; row < myHeader.nrRows ; row++)
         {
-            Crit3DInterpolationSettings myInterpolationSettings = interpolationSettings;
-            std::vector<double> proxyValues(myInterpolationSettings.getProxyNr());
-
-            #pragma omp for
-            for (long row = 0; row < myHeader.nrRows ; row++)
+            for (long col = 0; col < myHeader.nrCols; col++)
             {
-                for (long col = 0; col < myHeader.nrCols; col++)
+                float z = DEM.value[row][col];
+                if (! isEqual(z, myHeader.flag))
                 {
-                    float z = DEM.value[row][col];
-                    if (! isEqual(z, myHeader.flag))
+                    double x, y;
+                    gis::getUtmXYFromRowCol(myHeader, row, col, &x, &y);
+
+                    if (getUseDetrendingVar(myVar))
                     {
-                        double x, y;
-                        gis::getUtmXYFromRowCol(myHeader, row, col, &x, &y);
-
-                        if (getUseDetrendingVar(myVar))
-                        {
-                            getProxyValuesXY(x, y, myInterpolationSettings, proxyValues);
-                        }
-
-                        std::vector <Crit3DInterpolationDataPoint> subsetInterpolationPoints;
-                        localSelection(interpolationPoints, subsetInterpolationPoints, x, y, myInterpolationSettings, false);
-
-                        preInterpolation(subsetInterpolationPoints, myInterpolationSettings, meteoSettings, &climateParameters,
-                                         meteoPoints, nrMeteoPoints, myVar, myTime, errorStdStr);
-
-                        myRaster->value[row][col] = interpolate(subsetInterpolationPoints, myInterpolationSettings, meteoSettings,
-                                                                myVar, x, y, z, proxyValues, true);
-                        myInterpolationSettings.clearFitting();
-                        myInterpolationSettings.setCurrentCombination(myInterpolationSettings.getSelectedCombination());
-
-                        subsetInterpolationPoints.clear();
+                        getProxyValuesXY(x, y, myInterpolationSettings, proxyValues);
                     }
+
+                    std::vector <Crit3DInterpolationDataPoint> subsetInterpolationPoints;
+                    localSelection(interpolationPoints, subsetInterpolationPoints, x, y, myInterpolationSettings, false);
+
+                    preInterpolation(subsetInterpolationPoints, myInterpolationSettings, meteoSettings, &climateParameters,
+                                     meteoPoints, nrMeteoPoints, myVar, myTime, errorStdStr);
+
+                    myRaster->value[row][col] = interpolate(subsetInterpolationPoints, myInterpolationSettings, meteoSettings,
+                                                            myVar, x, y, z, proxyValues, true);
+                    myInterpolationSettings.clearFitting();
+                    myInterpolationSettings.setCurrentCombination(myInterpolationSettings.getSelectedCombination());
+
+                    subsetInterpolationPoints.clear();
                 }
             }
         }
@@ -3111,74 +3108,64 @@ bool Project::interpolationDemGlocalDetrending(meteoVariable myVar, const Crit3D
                 elevationPos = pos;
         }
 
-        unsigned int maxThreads = 1;
-        if (_isParallelComputing)
-        {
-            maxThreads = omp_get_max_threads();
-        }
-        omp_set_num_threads(static_cast<int>(maxThreads));
+        Crit3DInterpolationSettings myInterpolationSettings = interpolationSettings;
+        std::vector<double> proxyValues(myInterpolationSettings.getProxyNr());
 
-        #pragma omp parallel
+        #pragma omp parallel for if (_isParallelComputing) firstprivate(myInterpolationSettings, proxyValues) shared(isOk)
+        for (int areaIndex = 0; areaIndex < myInterpolationSettings.getMacroAreasSize(); areaIndex++)
         {
-            Crit3DInterpolationSettings myInterpolationSettings = interpolationSettings;
-            std::vector<double> proxyValues(myInterpolationSettings.getProxyNr());
+            if (! isOk) continue;   // early skip if already failed
 
-            #pragma omp for
-            for (int areaIndex = 0; areaIndex < myInterpolationSettings.getMacroAreasSize(); areaIndex++)
+            // load macro area and its cells
+            Crit3DMacroArea macroArea = myInterpolationSettings.getMacroArea(areaIndex);
+            std::vector<float> areaCells = macroArea.getAreaCellsDEM();
+            std::vector<Crit3DInterpolationDataPoint> subsetInterpolationPoints;
+            double interpolatedValue = NODATA;
+
+            if (! areaCells.empty())
             {
-                if (! isOk) continue;   // early skip if already failed
+                macroAreaDetrending(macroArea, myVar, myInterpolationSettings, meteoSettings,
+                                    meteoPoints, interpolationPoints, subsetInterpolationPoints, elevationPos);
 
-                // load macro area and its cells
-                Crit3DMacroArea macroArea = myInterpolationSettings.getMacroArea(areaIndex);
-                std::vector<float> areaCells = macroArea.getAreaCellsDEM();
-                std::vector<Crit3DInterpolationDataPoint> subsetInterpolationPoints;
-                double interpolatedValue = NODATA;
-
-                if (! areaCells.empty())
+                // calculate value for every cell
+                for (std::size_t cellIndex = 0; cellIndex < areaCells.size(); cellIndex = cellIndex + 2)
                 {
-                    macroAreaDetrending(macroArea, myVar, myInterpolationSettings, meteoSettings,
-                                        meteoPoints, interpolationPoints, subsetInterpolationPoints, elevationPos);
+                    if (! isOk) break;   // early skip if already failed
 
-                    // calculate value for every cell
-                    for (std::size_t cellIndex = 0; cellIndex < areaCells.size(); cellIndex = cellIndex + 2)
+                    int row = int(areaCells[cellIndex] / DEM.header->nrCols);
+                    int col = int(areaCells[cellIndex]) % DEM.header->nrCols;
+
+                    float z = DEM.value[row][col];
+
+                    if (! isEqual(z, myHeader.flag))
                     {
-                        if (! isOk) break;   // early skip if already failed
+                        double x, y;
+                        gis::getUtmXYFromRowCol(myHeader, row, col, &x, &y);
 
-                        int row = int(areaCells[cellIndex] / DEM.header->nrCols);
-                        int col = int(areaCells[cellIndex]) % DEM.header->nrCols;
-
-                        float z = DEM.value[row][col];
-
-                        if (! isEqual(z, myHeader.flag))
+                        if (! getSignificantProxyValuesXY(x, y, myInterpolationSettings, proxyValues))
                         {
-                            double x, y;
-                            gis::getUtmXYFromRowCol(myHeader, row, col, &x, &y);
+                            myRaster->value[row][col] = NODATA;
+                            continue;
+                        }
 
-                            if (! getSignificantProxyValuesXY(x, y, myInterpolationSettings, proxyValues))
-                            {
-                                myRaster->value[row][col] = NODATA;
-                                continue;
-                            }
+                        interpolatedValue = interpolate(subsetInterpolationPoints, myInterpolationSettings, meteoSettings,
+                                                        myVar, x, y, z, proxyValues, true);
 
-                            interpolatedValue = interpolate(subsetInterpolationPoints, myInterpolationSettings, meteoSettings,
-                                                            myVar, x, y, z, proxyValues, true);
-
-                            if (! isEqual(interpolatedValue, NODATA))
+                        if (! isEqual(interpolatedValue, NODATA))
+                        {
+                            // protect writes if same cell could be touched by multiple threads
+                            #pragma omp critical
                             {
-                                // protect writes if same cell could be touched by multiple threads
-                                #pragma omp critical
-                                {
-                                    if (isEqual(myRaster->value[row][col], NODATA))
-                                        myRaster->value[row][col] = interpolatedValue * areaCells[cellIndex + 1];
-                                    else
-                                        myRaster->value[row][col] += interpolatedValue * areaCells[cellIndex + 1];
-                                }
+                                if (isEqual(myRaster->value[row][col], NODATA))
+                                    myRaster->value[row][col] = interpolatedValue * areaCells[cellIndex + 1];
+                                else
+                                    myRaster->value[row][col] += interpolatedValue * areaCells[cellIndex + 1];
                             }
-                            else
-                            {
-                                // cannot return directly; set flag instead
-                                isOk = false;
-                            }
+                        }
+                        else
+                        {
+                            // cannot return directly; set flag instead
+                            isOk = false;
                         }
                     }
                 }
