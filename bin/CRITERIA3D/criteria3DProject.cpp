@@ -1083,9 +1083,14 @@ bool Crit3DProject::runModels(const QDateTime &firstTime, const QDateTime &lastT
     {
         setCurrentDate(myDate);
 
-        if (processes.computeCrop)
+        // update crop at last hour of each day
+        // TODO FT check
+        if (processes.computeCrop && getCurrentHour() == 23)
         {
-            dailyUpdateCropMaps(myDate);
+            if (! isRestart || (currentSeconds == 0 || currentSeconds == 3600))
+            {
+                dailyUpdateCropMaps(myDate);
+            }
         }
 
         if (processes.computeWater)

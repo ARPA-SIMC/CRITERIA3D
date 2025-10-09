@@ -200,7 +200,6 @@ void Project3D::initializeProject3D()
     landUseMapFileName = "";
     treeCoverMapFileName = "";
 
-
     waterFluxesParameters.initialize();
 
     computationSoilDepth = 0.0;             // [m]
