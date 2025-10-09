@@ -476,7 +476,7 @@ void Crit3DProject::dailyUpdateCropMaps(const QDate &myDate)
     // reset the crop at the beginning of the new year
     if (myDate.dayOfYear() == firstDoy)
     {
-         logInfo("Reset crop...");
+        logInfo("Reset crop...");
 
         laiMap.emptyGrid();
         degreeDaysMap.emptyGrid();
@@ -1891,6 +1891,7 @@ bool Crit3DProject::updateDailyTemperatures()
     if (! dailyTminMap.isLoaded || ! dailyTmaxMap.isLoaded || ! hourlyMeteoMaps->mapHourlyTair->isLoaded)
         return false;
 
+    #pragma omp parallel for if (isParallelComputing())
     for (long row = 0; row < dailyTminMap.header->nrRows; row++)
     {
         for (long col = 0; col < dailyTminMap.header->nrCols; col++)
@@ -2008,21 +2009,18 @@ bool Crit3DProject::runModelHour(const QString& hourlyOutputPath, bool isRestart
         {
             if (! interpolateAndSaveHourlyMeteo(airTemperature, myDateTime, hourlyOutputPath, isSaveOutputRaster()))
                 return false;
-            qApp->processEvents();
 
             if (! interpolateAndSaveHourlyMeteo(precipitation, myDateTime, hourlyOutputPath, isSaveOutputRaster()))
                 return false;
-            qApp->processEvents();
 
             if (! interpolateAndSaveHourlyMeteo(airRelHumidity, myDateTime, hourlyOutputPath, isSaveOutputRaster()))
                 return false;
-            qApp->processEvents();
 
             if (! interpolateAndSaveHourlyMeteo(windScalarIntensity, myDateTime, hourlyOutputPath, isSaveOutputRaster()))
                 return false;
-            qApp->processEvents();
 
             hourlyMeteoMaps->setComputed(true);
+            qApp->processEvents();
         }
 
         if (processes.computeRadiation)
