@@ -177,16 +177,6 @@
       return 0;
     }
 
-    bool isEqual(float value1, float value2)
-    {
-        return (fabs(double(value1 - value2)) < EPSILON);
-    }
-
-    bool isEqual(double value1, double value2)
-    {
-        return (fabs(value1 - value2) < EPSILON);
-    }
-
     char* decimal_to_binary(unsigned int n, int nrBits)
     {
        int d, count;

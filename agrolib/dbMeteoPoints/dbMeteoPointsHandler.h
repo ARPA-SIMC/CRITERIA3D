@@ -33,14 +33,15 @@
 
         ~Crit3DMeteoPointsDbHandler();
 
-        QString getDbName() { return _db.databaseName(); }
-        QSqlDatabase getDb() const { return _db; }
+        QString getDbName() const { return _db.databaseName(); }
+        QSqlDatabase &getDb() { return _db; }
         void setDb(const QSqlDatabase &db) { _db = db; }
-        QString getErrorString() { return _errorStr; }
+        QString getErrorString() const { return _errorStr; }
         void setErrorString(QString str) { _errorStr = str; }
 
         QString getDatasetURL(QString dataset, bool &isOk);
         bool setAndOpenDb(QString dbname_);
+        bool openNewConnection(QSqlDatabase &myDb, const QString &dbName, const QString &connectionName);
 
         QList<QString> getAllDatasetsList();
         QList<QString> getDatasetsActive();
@@ -67,14 +68,15 @@
         bool getPropertiesGivenId(const QString &id, Crit3DMeteoPoint &meteoPoint,
                                   const gis::Crit3DGisSettings& gisSettings, QString& errorString);
 
-        bool loadDailyData(const Crit3DDate &firstDate, const Crit3DDate &lastDate, Crit3DMeteoPoint &meteoPoint);
+        bool loadDailyData(const QSqlDatabase &myDb, const Crit3DDate &firstDate, const Crit3DDate &lastDate, Crit3DMeteoPoint &meteoPoint);
 
         std::vector<float> loadDailyVar(meteoVariable variable, const Crit3DDate &dateStart,
                                         const Crit3DDate &dateEnd, const QString& idStr, QDate &firstDateDB);
 
-        std::vector<float> exportAllDataVar(QString *myError, frequencyType freq, meteoVariable variable, QString id, QDateTime myFirstTime, QDateTime myLastTime, std::vector<QString> &dateStr);
+        std::vector<float> exportAllDataVar(QString *myError, frequencyType freq, meteoVariable variable,
+                                            QString id, QDateTime myFirstTime, QDateTime myLastTime, std::vector<QString> &dateStr);
 
-        bool loadHourlyData(const Crit3DDate &firstDate, const Crit3DDate &lastDate, Crit3DMeteoPoint &meteoPoint);
+        bool loadHourlyData(const QSqlDatabase &myDb, const Crit3DDate &firstDate, const Crit3DDate &lastDate, Crit3DMeteoPoint &meteoPoint);
 
         std::vector<float> loadHourlyVar(meteoVariable variable, const QString& meteoPointId, const QDateTime& startTime,
                                          const QDateTime& endTime, QDateTime &firstDateDB, QString &myError);
