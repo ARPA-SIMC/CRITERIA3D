@@ -1,9 +1,13 @@
 #ifndef BASICMATH_H
 #define BASICMATH_H
 
+    #ifndef COMMONCONSTANTS_H
+        #include "commonConstants.h"
+    #endif
     #ifndef _VECTOR_
         #include <vector>
     #endif
+
     #ifndef POWER4
         #define POWER4(x) ((x) * (x) * (x) * (x))
     #endif
@@ -16,6 +20,12 @@
     #ifndef LOGICAL_IO
         #define LOGICAL_IO(logicCondition, val1, val2) ((logicCondition) ? (val1) : (val2))
     #endif
+
+    inline bool isEqual(float value1, float value2)
+        { return (fabs(static_cast<double>(value1) - static_cast<double>(value2)) < EPSILON); }
+
+    inline bool isEqual(double value1, double value2)
+        { return (fabs(value1 - value2) < EPSILON); }
 
     bool sameSignNoZero(float a, float b);
     bool sameSign(float a, float b);
@@ -35,8 +45,6 @@
     bool findLinesIntersection(float q1, float m1, float q2, float m2, float* x, float* y);
     bool findLinesIntersectionAboveThreshold(float q1, float m1, float q2, float m2, float myThreshold, float* x, float* y);
     int sgn(float v);
-    bool isEqual(float value1, float value2);
-    bool isEqual(double value1, double value2);
 
     char* decimal_to_binary(unsigned int n, int nrBits);
     float getSinDecimalDegree(float angle);

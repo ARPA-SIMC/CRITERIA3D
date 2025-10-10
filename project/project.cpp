@@ -1495,47 +1495,58 @@ bool Project::loadMeteoPointsData(const QDate& firstDate, const QDate& lastDate,
     if (firstDate == QDate(1800,1,1) || lastDate == QDate(1800,1,1))
         return false;
 
-    QString infoStr = "Load meteo points data: " + firstDate.toString();
-
-    if (firstDate != lastDate)
-    {
-        infoStr += " - " + lastDate.toString();
-    }
-
     int step = 0;
     if (showInfo)
     {
+        QString infoStr = "Load meteo points data: " + firstDate.toString();
+        if (firstDate != lastDate)
+            infoStr += " - " + lastDate.toString();
+
         step = setProgressBar(infoStr, nrMeteoPoints);
     }
 
     Crit3DDate myFirstDate = getCrit3DDate(firstDate);
     Crit3DDate myLastDate = getCrit3DDate(lastDate);
-    bool isDataOk = false;
 
-    for (int i=0; i < nrMeteoPoints; i++)
+    int nrDataOk = 0;
+    QString dbName = meteoPointsDbHandler->getDbName();
+    #pragma omp parallel if(_isParallelComputing)
     {
-        if (showInfo)
+        QSqlDatabase myDb;
+        meteoPointsDbHandler->openNewConnection(myDb, dbName, QString::number(omp_get_thread_num()));
+
+        #pragma omp for schedule(dynamic)
+        for (int i=0; i < nrMeteoPoints; ++i)
         {
-            if ((i % step) == 0)
+            bool localOk = false;
+
+            if (loadHourly)
+                localOk |= meteoPointsDbHandler->loadHourlyData(myDb, myFirstDate, myLastDate, meteoPoints[i]);
+
+            if (loadDaily)
+                localOk |= meteoPointsDbHandler->loadDailyData(myDb, myFirstDate, myLastDate, meteoPoints[i]);
+
+            if (localOk)
+            {
+                #pragma omp atomic
+                nrDataOk++;
+            }
+
+            // safe update
+            if (showInfo && omp_get_thread_num() == 0 && (i%step) == 0)
+            {
                 updateProgressBar(i);
+            }
         }
 
-        if (loadHourly)
-        {
-            if (meteoPointsDbHandler->loadHourlyData(myFirstDate, myLastDate, meteoPoints[i]))
-                isDataOk = true;
-        }
-
-        if (loadDaily)
-        {
-            if (meteoPointsDbHandler->loadDailyData(myFirstDate, myLastDate, meteoPoints[i]))
-                isDataOk = true;
-        }
+        myDb.close();
+        QSqlDatabase::removeDatabase(QString::number(omp_get_thread_num()));
     }
 
-    if (showInfo) closeProgressBar();
+    if (showInfo)
+        closeProgressBar();
 
-    return isDataOk;
+    return (nrDataOk > 0);
 }
 
 
@@ -1543,40 +1554,67 @@ bool Project::loadMeteoPointsData(const QDate &firstDate, const QDate &lastDate,
                                   bool loadHourly, bool loadDaily, const QString &dataset, bool showInfo)
 {
     //check
-    if (firstDate == QDate(1800,1,1) || lastDate == QDate(1800,1,1)) return false;
+    if (firstDate == QDate(1800,1,1) || lastDate == QDate(1800,1,1))
+        return false;
 
-    bool isData = false;
     int step = 0;
-
-    QString infoStr = "Load meteo points data: " + firstDate.toString();
-
-    if (firstDate != lastDate)
-        infoStr += " - " + lastDate.toString();
-
     if (showInfo)
     {
+        QString infoStr = "Load meteo points data: " + firstDate.toString();
+        if (firstDate != lastDate)
+            infoStr += " - " + lastDate.toString();
+
         step = setProgressBar(infoStr, nrMeteoPoints);
     }
 
-    for (int i=0; i < nrMeteoPoints; i++)
+    Crit3DDate myFirstDate = getCrit3DDate(firstDate);
+    Crit3DDate myLastDate = getCrit3DDate(lastDate);
+
+    int nrDataOk = 0;
+    QString dbName = meteoPointsDbHandler->getDbName();
+    #pragma omp parallel if(_isParallelComputing)
     {
-        if (showInfo)
+        QSqlDatabase myDb;
+        meteoPointsDbHandler->openNewConnection(myDb, dbName, QString::number(omp_get_thread_num()));
+
+        #pragma omp for schedule(dynamic)
+        for (int i=0; i < nrMeteoPoints; ++i)
         {
-            if ((i % step) == 0) updateProgressBar(i);
+            if (meteoPoints[i].dataset == dataset.toStdString())
+            {
+                bool localOk = false;
+
+                if (loadHourly)
+                    localOk |= meteoPointsDbHandler->loadHourlyData(myDb, myFirstDate, myLastDate, meteoPoints[i]);
+
+                if (loadDaily)
+                    localOk |= meteoPointsDbHandler->loadDailyData(myDb, myFirstDate, myLastDate, meteoPoints[i]);
+
+                if (localOk)
+                {
+                    #pragma omp atomic
+                    nrDataOk++;
+                }
+            }
+
+            // safe update
+            if (showInfo && omp_get_thread_num() == 0 && (i%step) == 0)
+            {
+                #pragma omp critical
+                {
+                    updateProgressBar(i);
+                }
+            }
         }
 
-        if (meteoPoints[i].dataset == dataset.toStdString())
-        {
-            if (loadHourly)
-                if (meteoPointsDbHandler->loadHourlyData(getCrit3DDate(firstDate), getCrit3DDate(lastDate), meteoPoints[i])) isData = true;
-
-            if (loadDaily)
-                if (meteoPointsDbHandler->loadDailyData(getCrit3DDate(firstDate), getCrit3DDate(lastDate), meteoPoints[i])) isData = true;
-        }
+        myDb.close();
+        QSqlDatabase::removeDatabase(QString::number(omp_get_thread_num()));
     }
 
-    if (showInfo) closeProgressBar();
-    return isData;
+    if (showInfo)
+        closeProgressBar();
+
+    return (nrDataOk > 0);
 }
 
 
@@ -4296,11 +4334,12 @@ void Project::showMeteoWidgetPoint(std::string idMeteoPoint, std::string namePoi
     mp.setLapseRateCode(lapseRateCode);
     mp.setDataset(dataset);
     mp.point.z = altitude;
+    QSqlDatabase db = meteoPointsDbHandler->getDb();
 
     if (isAppend)
     {
-        meteoPointsDbHandler->loadDailyData(getCrit3DDate(firstDaily), getCrit3DDate(lastDaily), mp);
-        meteoPointsDbHandler->loadHourlyData(getCrit3DDate(firstHourly.date()), getCrit3DDate(lastHourly.date()), mp);
+        meteoPointsDbHandler->loadDailyData(db, getCrit3DDate(firstDaily), getCrit3DDate(lastDaily), mp);
+        meteoPointsDbHandler->loadHourlyData(db, getCrit3DDate(firstHourly.date()), getCrit3DDate(lastHourly.date()), mp);
         meteoWidgetPointList[meteoWidgetPointList.size()-1]->drawMeteoPoint(mp, isAppend);
     }
     else
@@ -4320,8 +4359,8 @@ void Project::showMeteoWidgetPoint(std::string idMeteoPoint, std::string namePoi
         meteoWidgetPoint->setAllMeteoPointsPointer(meteoPoints, nrMeteoPoints);
         meteoWidgetPointList.append(meteoWidgetPoint);
         QObject::connect(meteoWidgetPoint, SIGNAL(closeWidgetPoint(int)), this, SLOT(deleteMeteoWidgetPoint(int)));
-        meteoPointsDbHandler->loadDailyData(getCrit3DDate(firstDaily), getCrit3DDate(lastDaily), mp);
-        meteoPointsDbHandler->loadHourlyData(getCrit3DDate(firstHourly.date()), getCrit3DDate(lastHourly.date()), mp);
+        meteoPointsDbHandler->loadDailyData(db, getCrit3DDate(firstDaily), getCrit3DDate(lastDaily), mp);
+        meteoPointsDbHandler->loadHourlyData(db, getCrit3DDate(firstHourly.date()), getCrit3DDate(lastHourly.date()), mp);
 
         if (hasDailyData)
         {
@@ -5242,6 +5281,8 @@ bool Project::exportMeteoPointsDailyDataCsv(bool isTPrec, QDate firstDate, QDate
         }
     }
 
+    QSqlDatabase myDb = meteoPointsDbHandler->getDb();
+
     for (int i = 0; i < nrMeteoPoints; i++)
     {
         QString id = QString::fromStdString(meteoPoints[i].id);
@@ -5254,7 +5295,7 @@ bool Project::exportMeteoPointsDailyDataCsv(bool isTPrec, QDate firstDate, QDate
         if (checkId)
         {
             // read data
-            if (! meteoPointsDbHandler->loadDailyData(getCrit3DDate(firstDate), getCrit3DDate(lastDate), meteoPoints[i]))
+            if (! meteoPointsDbHandler->loadDailyData(myDb, getCrit3DDate(firstDate), getCrit3DDate(lastDate), meteoPoints[i]))
             {
                 errorString = "Error in reading point id: " + id;
                 return false;
@@ -5732,9 +5773,10 @@ bool Project::waterTableAssignNearestMeteoPoint(bool isMeteoGridLoaded, double w
     {
         int assignNearestIndex;
         QDate lastDate = meteoPointsDbHandler->getLastDate(daily).date();
+        QSqlDatabase myDb = meteoPointsDbHandler->getDb();
+
         for (int i = 0; i < nrMeteoPoints; i++)
         {
-
             double utmX = meteoPoints[i].point.utm.x;
             double utmY = meteoPoints[i].point.utm.y;
             float myDistance = gis::computeDistance(wellUtmX, wellUtmY, utmX, utmY);
@@ -5742,7 +5784,7 @@ bool Project::waterTableAssignNearestMeteoPoint(bool isMeteoGridLoaded, double w
             {
                 if (myDistance < minimumDistance || minimumDistance == NODATA)
                 {
-                    meteoPointsDbHandler->loadDailyData(getCrit3DDate(firstMeteoDate), getCrit3DDate(lastDate), meteoPoints[i]);
+                    meteoPointsDbHandler->loadDailyData(myDb, getCrit3DDate(firstMeteoDate), getCrit3DDate(lastDate), meteoPoints[i]);
                     if (waterTableAssignMeteoData(&meteoPoints[i], firstMeteoDate))
                     {
                         minimumDistance = myDistance;
@@ -5752,6 +5794,7 @@ bool Project::waterTableAssignNearestMeteoPoint(bool isMeteoGridLoaded, double w
                 }
             }
         }
+
         if (isMeteoPointFound)
         {
             linkedMeteoPoint->id = meteoPoints[assignNearestIndex].id;
