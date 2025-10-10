@@ -32,6 +32,7 @@
 #include <thread>
 #include <float.h>
 
+#include "soilFluxes3D.h"
 #include "commonConstants.h"
 #include "types.h"
 #include "water.h"
@@ -455,9 +456,7 @@ bool computeWaterFluxes(double maxTime, double *acceptedTime)
         {
             nodeList[n].oldH = nodeList[n].H;
             X[n] = nodeList[n].H;
-        }
-
-        /*! assign Theta_e. For the surface nodes C = area */
+        }/*! assign Theta_e. For the surface nodes C = area */
         for (long n = 0; n < myStructure.nrNodes; n++)
         {
             if (nodeList[n].isSurface)
@@ -468,6 +467,7 @@ bool computeWaterFluxes(double maxTime, double *acceptedTime)
 
         /*! update boundary conditions */
         updateConductance();
+
         updateBoundaryWater(*acceptedTime);		//maybe useless: remove
         isStepOK = waterFlowComputation_stdTreads(*acceptedTime);
 

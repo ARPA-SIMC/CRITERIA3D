@@ -1130,7 +1130,7 @@ bool Crit3DProject::runModels(const QDateTime &firstTime, const QDateTime &lastT
 
             //Log SF3D data
             soilFluxes3D::New::closeLog();
-            logInfo("Daily sub version: 00\n");
+            logInfo("Daily sub version: 01\n");
 
             //rothC maps update must be done hourly, otherwise ETReal data are not stored
             if (processes.computeRothC || processes.computeHydrall)
@@ -1269,7 +1269,7 @@ bool Crit3DProject::loadCriteria3DProject(const QString &fileName)
     }
 
     //TO DO: integrate with a specific flag in the UI and/or a specific shell command
-    soilFluxes3D::New::initializeLog(getFilePath(getCompleteFileName(logFileName, PATH_LOG)).toStdString(), projectName.toStdString());
+    soilFluxes3D::New::initializeLog(getFilePath(getCompleteFileName(logFileName, PATH_LOG)).toStdString(), getProjectName().toStdString());
 
     if (meteoPointsLoaded)
     {

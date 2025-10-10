@@ -14,18 +14,6 @@ TARGET = CRITERIA3D_SF3Dnew
 VERSION = 1.2.0
 QMAKE_TARGET_COPYRIGHT = "\\251 2025 ARPAE ER - Climate Observatory"
 
-win32:{
-    QMAKE_CXXFLAGS += -openmp -GL
-    QMAKE_LFLAGS += -LTCG
-}
-unix:{
-    QMAKE_CXXFLAGS += -fopenmp #-flto
-    QMAKE_LFLAGS += -fopenmp #-flto
-}
-macx:{
-    QMAKE_CXXFLAGS += -fopenmp #-flto
-    QMAKE_LFLAGS += -fopenmp #-flto
-}
 
 CONFIG += debug_and_release
 CONFIG += c++17

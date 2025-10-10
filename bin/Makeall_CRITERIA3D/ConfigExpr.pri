@@ -6,16 +6,24 @@ CONFIG(OMP_CONFIG) {
         QMAKE_CXXFLAGS += -fopenmp
         QMAKE_LFLAGS += -fopenmp
     }
+    macx:{
+        QMAKE_CXXFLAGS += -fopenmp
+        QMAKE_LFLAGS += -fopenmp
+    }
 }
 
-CONFIG(OMP_CONFIG) {
+CONFIG(LTO_CONFIG) {
     win32:{
         QMAKE_CXXFLAGS += -GL
         QMAKE_LFLAGS += -LTCG
     }
     unix:{
-        QMAKE_CXXFLAGS += -flto
-        QMAKE_LFLAGS += -flto
+        QMAKE_CXXFLAGS += #-flto
+        QMAKE_LFLAGS += #-flto
+    }
+    macx:{
+        QMAKE_CXXFLAGS += #-flto
+        QMAKE_LFLAGS += #-flto
     }
 }
 

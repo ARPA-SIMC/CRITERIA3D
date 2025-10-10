@@ -97,5 +97,7 @@ namespace soilFluxes3D::New
     void computePeriod(double timePeriod);      //move to a SF3Derror_t return
     double computeStep(double maxTimeStep);
 
+    void logNew();
+
 }
 #endif // SOILFLUXES3DNEW_H

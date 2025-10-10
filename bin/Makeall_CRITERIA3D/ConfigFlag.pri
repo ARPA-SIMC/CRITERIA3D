@@ -12,3 +12,7 @@ CUDA_ARCH = sm_61
 # CONFIG += MCR_CONFIG
 MCR_PATH = "D:/App e giochi/MATLAB/R2024b/extern"
 
+include($$absolute_path(./ConfigExpr.pri))
+
+#parallel.pri
+#parallelDetails.pri

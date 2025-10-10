@@ -61,6 +61,11 @@ double *X1 = nullptr;
 std::vector<std::vector<Tsoil>> Soil_List;
 std::vector<Tsoil> Surface_List;
 
+#include<array>
+std::vector<std::vector<double>> vecPH_old, vecSe_old, vecIF_old, vecWK_old, vecwF_old, vecT_old, vecHF_old,
+                                vecBAK_old, vecBSK_old, vecBWF_old, vecBT_old, vecHK_old, vecHSS_old;
+std::vector<Tbalance> vecBAL_old;
+std::vector<std::array<std::vector<double>, 9>> vectorFluxesUp_old, vectorFluxesDown_old;
 
 namespace soilFluxes3D
 {
@@ -1059,6 +1064,119 @@ namespace soilFluxes3D
     }
 
 
+
+
+    void logOld()
+    {
+        int numNodesSave = 10;
+        std::vector<double> temp;
+
+        for(long n = 0; n < numNodesSave; n++)
+            temp.push_back(nodeList[n].H);
+        vecPH_old.push_back(temp);
+        temp.clear();
+
+        for(long n = 0; n < numNodesSave; n++)
+            temp.push_back(nodeList[n].Se);
+        vecSe_old.push_back(temp);
+        temp.clear();
+
+        for(long n = 0; n < numNodesSave; n++)
+            temp.push_back(nodeList[n].k);
+        vecWK_old.push_back(temp);
+        temp.clear();
+
+        for(long n = 0; n < numNodesSave; n++)
+            temp.push_back(nodeList[n].Qw);
+        vecwF_old.push_back(temp);
+        temp.clear();
+
+        for(long n = 0; n < numNodesSave; n++)
+            if(nodeList[n].extra != nullptr)
+                temp.push_back(nodeList[n].extra->Heat->T);
+            else
+                temp.push_back(NODATA);
+        vecT_old.push_back(temp);
+        temp.clear();
+
+        for(long n = 0; n < numNodesSave; n++)
+            if(nodeList[n].extra != nullptr)
+                temp.push_back(nodeList[n].extra->Heat->Qh);
+            else
+                temp.push_back(NODATA);
+        vecHF_old.push_back(temp);
+        temp.clear();
+
+        for(long n = 0; n < numNodesSave; n++)
+            if(nodeList[n].extra != nullptr)
+                temp.push_back(nodeList[n].extra->Heat->sinkSource);
+            else
+                temp.push_back(NODATA);
+        vecHSS_old.push_back(temp);
+        temp.clear();
+
+        for(long n = 0; n < numNodesSave; n++)
+            if(nodeList[n].boundary != nullptr)
+                temp.push_back(nodeList[n].boundary->Heat->aerodynamicConductance);
+            else
+                temp.push_back(NODATA);
+        vecBAK_old.push_back(temp);
+        temp.clear();
+
+        for(long n = 0; n < numNodesSave; n++)
+            if(nodeList[n].boundary != nullptr)
+                temp.push_back(nodeList[n].boundary->Heat->soilConductance);
+            else
+                temp.push_back(NODATA);
+        vecBSK_old.push_back(temp);
+        temp.clear();
+
+        for(long n = 0; n < numNodesSave; n++)
+            if(nodeList[n].boundary != nullptr)
+                temp.push_back(nodeList[n].boundary->waterFlow);
+            else
+                temp.push_back(NODATA);
+        vecBWF_old.push_back(temp);
+        temp.clear();
+
+        for(long n = 0; n < numNodesSave; n++)
+            if(nodeList[n].boundary != nullptr)
+                temp.push_back(nodeList[n].boundary->Heat->temperature);
+            else
+                temp.push_back(NODATA);
+        vecBT_old.push_back(temp);
+        temp.clear();
+
+
+        vecIF_old.emplace_back(invariantFlux, invariantFlux + myStructure.nrNodes);
+        vecBAL_old.push_back(balanceCurrentTimeStep);
+
+        std::array<std::vector<double>, 9> tempArr;
+        for(int index = 0; index < 9; ++index)
+        {
+            std::vector<double> tempV;
+            for(long n = 0; n < numNodesSave; n++)
+                if(nodeList[n].up.linkedExtra != nullptr && nodeList[n].up.linkedExtra->heatFlux != nullptr)
+                    tempV.push_back((double)nodeList[n].up.linkedExtra->heatFlux->fluxes[index]);
+                else
+                    tempV.push_back(0.);
+            tempArr[index] = tempV;
+        }
+        vectorFluxesUp_old.push_back(tempArr);
+
+        for(int index = 0; index < 9; ++index)
+        {
+            std::vector<double> tempV;
+            for(long n = 0; n < numNodesSave; n++)
+                if(nodeList[n].down.linkedExtra != nullptr && nodeList[n].down.linkedExtra->heatFlux != nullptr)
+                    tempV.push_back((double)nodeList[n].down.linkedExtra->heatFlux->fluxes[index]);
+                else
+                    tempV.push_back(0.);
+            tempArr[index] = tempV;
+        }
+        vectorFluxesDown_old.push_back(tempArr);
+    }
+
     /*!
      * \brief computeStep
      * compute a single step of water and heat fluxes
@@ -1072,11 +1190,15 @@ namespace soilFluxes3D
         if (myParameters.current_delta_t == NODATA)
             myParameters.current_delta_t = myParameters.delta_t_max;
 
+        /*temp*/ logOld();
+
         if (myStructure.computeHeat)
         {
             initializeHeatFluxes(false, true);
             updateConductance();
         }
+
+        /*temp*/ logOld();
 
         double dtWater, dtHeat;
         if (myStructure.computeWater)
@@ -1107,6 +1229,7 @@ namespace soilFluxes3D
                 }
 
                 HeatComputation(dtHeat, dtWater);
+
                 dtHeatSum += dtHeat;
             }
         }
