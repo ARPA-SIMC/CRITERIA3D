@@ -2,6 +2,7 @@
 #include <cassert>
 #include <iostream>
 
+#include "soilFluxes3DNew.h"
 #include "cpusolver.h"
 #include "soilPhysics.h"
 #include "water.h"
@@ -12,7 +13,7 @@ using namespace soilFluxes3D::Soil;
 using namespace soilFluxes3D::Water;
 using namespace soilFluxes3D::Heat;
 using namespace soilFluxes3D::Math;
-
+std::vector<double> tempCnew;
 namespace soilFluxes3D::New
 {
     extern __cudaMngd nodesData_t nodeGrid;
@@ -67,6 +68,7 @@ namespace soilFluxes3D::New
                 waterMainLoop(maxTimeStep, acceptedTimeStep);
                 break;
             case processType::Heat:
+                heatLoop(maxTimeStep, acceptedTimeStep);
                 break;
             case processType::Solutes:
                 throw std::runtime_error("Solutes not available with GPUSolver");
@@ -89,7 +91,7 @@ namespace soilFluxes3D::New
             return SF3Derror_t::SolverError;
 
         //Destruct matrix variable
-        __parforSolver
+        //__parfor(_parameters.enableOMP)
         for (SF3Duint_t rowIdx = 0; rowIdx < matrixA.numRows; ++rowIdx)
         {
             hostSolverFree(matrixA.colIndeces[rowIdx]);
@@ -125,7 +127,7 @@ namespace soilFluxes3D::New
             std::memcpy(vectorX.values, nodeGrid.waterData.pressureHead, vectorX.numElements * sizeof(double));
 
             //Assign vectorC surface values and compute subsurface saturation degree
-            __parforSolver
+            //__parfor(_parameters.enableOMP)
             for (SF3Duint_t nodeIdx = 0; nodeIdx < nodeGrid.numNodes; ++nodeIdx)
             {
                 if(nodeGrid.surfaceFlag[nodeIdx])
@@ -171,7 +173,7 @@ namespace soilFluxes3D::New
 
             //Courant data reduction
             double tempMax = 0;
-            __parforopSolver(max, tempMax)
+            //__parforop(_parameters.enableOMP, max, tempMax)
             for(SF3Duint_t idx = 0; idx < nodeGrid.numNodes; ++idx)
                 tempMax = SF3Dmax(tempMax, nodeGrid.waterData.partialCourantWaterLevels[idx]);
 
@@ -208,7 +210,7 @@ namespace soilFluxes3D::New
             std::memcpy(nodeGrid.waterData.pressureHead, vectorX.values, vectorX.numElements * sizeof(double));
 
             //Update degree of saturation   //TO DO: make a function
-            __parforSolver
+            //__parfor(_parameters.enableOMP)
             for (SF3Duint_t nodeIdx = 0; nodeIdx < nodeGrid.numNodes; ++nodeIdx)
                 if(!nodeGrid.surfaceFlag[nodeIdx])
                     nodeGrid.waterData.saturationDegree[nodeIdx] = computeNodeSe(nodeIdx);
@@ -235,20 +237,26 @@ namespace soilFluxes3D::New
         std::memcpy(nodeGrid.heatData.oldTemperature, nodeGrid.heatData.temperature, nodeGrid.numNodes * sizeof(double));
 
         //initialize vector C
-        __parforSolver
+        //__parfor(_parameters.enableOMP)
         for (SF3Duint_t nodeIdx = 0; nodeIdx < nodeGrid.numNodes; ++nodeIdx)
         {
+            if(nodeGrid.surfaceFlag[nodeIdx])
+                continue;
+
             double nodeH = getNodeH_fromTimeSteps(nodeIdx, timeStepHeat, timeStepWater);
-            double avgH = computeMean(nodeGrid.waterData.oldPressureHeads[nodeIdx], nodeH, meanType_t::Arithmetic);
+            double avgH = computeMean(nodeGrid.waterData.oldPressureHeads[nodeIdx], nodeH, meanType_t::Arithmetic) - nodeGrid.z[nodeIdx];
             vectorC.values[nodeIdx] = computeNodeHeatCapacity(nodeIdx, avgH, nodeGrid.heatData.temperature[nodeIdx]) * nodeGrid.size[nodeIdx];
         }
 
         //Compute linear system elements
         hostReset(nodeGrid.waterData.invariantFluxes, nodeGrid.numNodes);
 
-        __parforSolver
+        //__parfor(_parameters.enableOMP)
         for (SF3Duint_t rowIdx = 0; rowIdx < nodeGrid.numNodes; ++rowIdx)
         {
+            if(nodeGrid.surfaceFlag[rowIdx])
+                continue;
+
             double nodeT = nodeGrid.heatData.temperature[rowIdx];
             double nodeH = getNodeH_fromTimeSteps(rowIdx, timeStepHeat, timeStepWater);
 
@@ -260,7 +268,7 @@ namespace soilFluxes3D::New
             if(simulationFlags.computeHeatVapor)
             {
                 double dThetaV = computeNodeVaporThetaV(rowIdx, nodeH - nodeGrid.z[rowIdx], nodeT) -
-                                 computeNodeVaporThetaV(rowIdx, nodeH - nodeGrid.z[rowIdx], nodeGrid.heatData.oldTemperature[rowIdx]);
+                                 computeNodeVaporThetaV(rowIdx, nodeGrid.waterData.oldPressureHeads[rowIdx] - nodeGrid.z[rowIdx], nodeGrid.heatData.oldTemperature[rowIdx]);
 
                 heatCapacity += dThetaV * HEAT_CAPACITY_AIR * nodeT;
                 heatCapacity += dThetaV * computeLatentVaporizationHeat(nodeT - ZEROCELSIUS) * WATER_DENSITY;
@@ -272,6 +280,7 @@ namespace soilFluxes3D::New
             u8_t linkIdx = 1;
             bool isLinked = false;
 
+            //Compute flox up
             isLinked = computeHeatLinkFluxes(matrixA.values[rowIdx][linkIdx], matrixA.colIndeces[rowIdx][linkIdx], rowIdx, 0, timeStepHeat, timeStepWater);
             if(isLinked)
                 linkIdx++;
@@ -321,7 +330,10 @@ namespace soilFluxes3D::New
         solveLinearSystem(_parameters.maxApproximationsNumber - 1, processType::Heat);
 
         //Retrive new temperatures
-        std::memcpy(nodeGrid.heatData.temperature, vectorX.values, nodeGrid.numNodes * sizeof(double));
+        //__parfor(_parameters.enableOMP)
+        for (SF3Duint_t rowIdx = 0; rowIdx < nodeGrid.numNodes; ++rowIdx)
+            if(!nodeGrid.surfaceFlag[rowIdx])
+                nodeGrid.heatData.temperature[rowIdx] = vectorX.values[rowIdx];
 
         //Compute balance
         evaluateHeatBalance(timeStepHeat, timeStepWater);
@@ -333,7 +345,10 @@ namespace soilFluxes3D::New
         saveHeatFluxValues(timeStepHeat, timeStepWater);
 
         //Save new temperatures
-        std::memcpy(nodeGrid.heatData.oldTemperature, nodeGrid.heatData.temperature, nodeGrid.numNodes * sizeof(double));
+        //__parfor(_parameters.enableOMP)
+        for (SF3Duint_t rowIdx = 0; rowIdx < nodeGrid.numNodes; ++rowIdx)
+            if(!nodeGrid.surfaceFlag[rowIdx])
+                nodeGrid.heatData.oldTemperature[rowIdx] = nodeGrid.heatData.temperature[rowIdx];
 
         return;
     }

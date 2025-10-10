@@ -468,7 +468,6 @@ bool updateBoundaryHeat(double timeStep, double &reducedTimeStep)
                                                                         nodeList[i].boundary->Heat->latentFlux +
                                                                         nodeList[i].boundary->Heat->advectiveHeatFlux);
 
-
                 double heatCapacity, currentCourant;
                 // [J m-3 K-1]
                 heatCapacity = SoilHeatCapacity(i, nodeList[i].oldH, nodeList[i].extra->Heat->oldT);

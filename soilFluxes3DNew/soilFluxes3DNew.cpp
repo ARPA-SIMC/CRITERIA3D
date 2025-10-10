@@ -22,6 +22,12 @@ using namespace soilFluxes3D::Soil;
 using namespace soilFluxes3D::Water;
 using namespace soilFluxes3D::Heat;
 
+#include<array>
+std::vector<std::vector<double>> vecPH_new, vecSe_new, vecIF_new, vecWK_new, vecwF_new, vecT_new, vecHF_new,
+                                vecBAK_new, vecBSK_new, vecBWF_new, vecBT_new, vecHK_new, vecHSS_new;
+std::vector<std::array<std::vector<double>, numTotalFluxTypes>> vectorFluxesUp_new, vectorFluxesDown_new;
+std::vector<balanceData_t> vecBAL_new;
+
 namespace soilFluxes3D::New
 {
     //Solver objects
@@ -784,7 +790,7 @@ namespace soilFluxes3D::New
                 return SF3Derror_t::ParameterError;
 
             nodeGrid.waterData.saturationDegree[nodeIndex] = computeNodeSe_fromTheta(nodeIndex, waterContent);
-            nodeGrid.waterData.pressureHead[nodeIndex] = nodeGrid.z[nodeIndex] + computeNodePsi(nodeIndex);
+            nodeGrid.waterData.pressureHead[nodeIndex] = nodeGrid.z[nodeIndex] - computeNodePsi(nodeIndex);
             nodeGrid.waterData.oldPressureHeads[nodeIndex] = nodeGrid.waterData.pressureHead[nodeIndex];
             nodeGrid.waterData.waterConductivity[nodeIndex] = computeNodeK(nodeIndex);
         }
@@ -1179,7 +1185,7 @@ namespace soilFluxes3D::New
     {
         double totalBoundaryWaterFlow = 0.0;
 
-        __parforop(+, totalBoundaryWaterFlow)
+        //__parforop(__ompStatus, +, totalBoundaryWaterFlow)
         for (SF3Duint_t nodeIdx = 0; nodeIdx < nodeGrid.numNodes; ++nodeIdx)
             if (nodeGrid.boundaryData.boundaryType[nodeIdx] == boundaryType)
                 totalBoundaryWaterFlow += nodeGrid.boundaryData.waterFlowSum[nodeIdx];
@@ -1466,7 +1472,7 @@ namespace soilFluxes3D::New
         if(nodeIndex >= nodeGrid.numNodes)
             return static_cast<double>(SF3Derror_t::IndexError);
 
-        if(!simulationFlags.computeWater || !simulationFlags.computeHeat || simulationFlags.computeHeatVapor)
+        if(!simulationFlags.computeWater || !simulationFlags.computeHeat || !simulationFlags.computeHeatVapor)
             return static_cast<double>(SF3Derror_t::MissingDataError);
 
         double h = nodeGrid.waterData.pressureHead[nodeIndex] - nodeGrid.z[nodeIndex];
@@ -1477,7 +1483,7 @@ namespace soilFluxes3D::New
 
     /*!
      * \brief gets the nodeIndex node heat storage
-     * \param pressureHead(?)   [m]
+     * \param pressureHead  [m]
      * \return heat storage [J]
      */
     double getNodeHeat(SF3Duint_t nodeIndex, double h)
@@ -1558,7 +1564,7 @@ namespace soilFluxes3D::New
         if(nodeIndex >= nodeGrid.numNodes)
             return static_cast<double>(SF3Derror_t::IndexError);
 
-        if(!simulationFlags.computeWater || !simulationFlags.computeHeat || simulationFlags.computeHeatVapor)
+        if(!simulationFlags.computeWater || !simulationFlags.computeHeat || !simulationFlags.computeHeatVapor)
             return static_cast<double>(SF3Derror_t::MissingDataError);
 
         if(nodeGrid.boundaryData.boundaryType[nodeIndex] != boundaryType_t::HeatSurface)
@@ -1579,7 +1585,7 @@ namespace soilFluxes3D::New
         if(nodeIndex >= nodeGrid.numNodes)
             return static_cast<double>(SF3Derror_t::IndexError);
 
-        if(!simulationFlags.computeWater || !simulationFlags.computeHeat || simulationFlags.computeHeatVapor)
+        if(!simulationFlags.computeWater || !simulationFlags.computeHeat || !simulationFlags.computeHeatVapor)
             return static_cast<double>(SF3Derror_t::MissingDataError);
 
         if(nodeGrid.boundaryData.boundaryType[nodeIndex] != boundaryType_t::HeatSurface)
@@ -1600,7 +1606,7 @@ namespace soilFluxes3D::New
         if(nodeIndex >= nodeGrid.numNodes)
             return static_cast<double>(SF3Derror_t::IndexError);
 
-        if(!simulationFlags.computeWater || !simulationFlags.computeHeat || simulationFlags.computeHeatVapor)
+        if(!simulationFlags.computeHeat)
             return static_cast<double>(SF3Derror_t::MissingDataError);
 
         if(nodeGrid.boundaryData.boundaryType[nodeIndex] != boundaryType_t::HeatSurface)
@@ -1621,7 +1627,7 @@ namespace soilFluxes3D::New
         if(nodeIndex >= nodeGrid.numNodes)
             return static_cast<double>(SF3Derror_t::IndexError);
 
-        if(!simulationFlags.computeWater || !simulationFlags.computeHeat || simulationFlags.computeHeatVapor)
+        if(!simulationFlags.computeHeat)
             return static_cast<double>(SF3Derror_t::MissingDataError);
 
         if(nodeGrid.boundaryData.boundaryType[nodeIndex] != boundaryType_t::HeatSurface)
@@ -1642,7 +1648,7 @@ namespace soilFluxes3D::New
         if(nodeIndex >= nodeGrid.numNodes)
             return static_cast<double>(SF3Derror_t::IndexError);
 
-        if(!simulationFlags.computeWater || !simulationFlags.computeHeat || simulationFlags.computeHeatVapor)
+        if(!simulationFlags.computeHeat)
             return static_cast<double>(SF3Derror_t::MissingDataError);
 
         if(nodeGrid.boundaryData.boundaryType[nodeIndex] != boundaryType_t::HeatSurface)
@@ -1663,7 +1669,7 @@ namespace soilFluxes3D::New
         if(nodeIndex >= nodeGrid.numNodes)
             return static_cast<double>(SF3Derror_t::IndexError);
 
-        if(!simulationFlags.computeWater || !simulationFlags.computeHeat || simulationFlags.computeHeatVapor)
+        if(!simulationFlags.computeHeat)
             return static_cast<double>(SF3Derror_t::MissingDataError);
 
         if(nodeGrid.boundaryData.boundaryType[nodeIndex] != boundaryType_t::HeatSurface)
@@ -1713,6 +1719,39 @@ namespace soilFluxes3D::New
 
     }
 
+
+    void logNew()
+    {
+        SF3Duint_t numNodesSave = 10;
+        vecPH_new.emplace_back(nodeGrid.waterData.pressureHead, nodeGrid.waterData.pressureHead + numNodesSave);
+        vecSe_new.emplace_back(nodeGrid.waterData.saturationDegree, nodeGrid.waterData.saturationDegree + numNodesSave);
+        vecIF_new.emplace_back(nodeGrid.waterData.invariantFluxes, nodeGrid.waterData.invariantFluxes + numNodesSave);
+        vecWK_new.emplace_back(nodeGrid.waterData.waterConductivity, nodeGrid.waterData.waterConductivity + numNodesSave);
+        vecwF_new.emplace_back(nodeGrid.waterData.waterFlow, nodeGrid.waterData.waterFlow + numNodesSave);
+
+        vecT_new.emplace_back(nodeGrid.heatData.temperature, nodeGrid.heatData.temperature + numNodesSave);
+        vecHF_new.emplace_back(nodeGrid.heatData.heatFlux, nodeGrid.heatData.heatFlux + numNodesSave);
+
+        vecBAK_new.emplace_back(nodeGrid.boundaryData.aerodynamicConductance, nodeGrid.boundaryData.aerodynamicConductance + numNodesSave);
+        vecBSK_new.emplace_back(nodeGrid.boundaryData.soilConductance, nodeGrid.boundaryData.soilConductance + numNodesSave);
+        vecBWF_new.emplace_back(nodeGrid.boundaryData.waterFlowRate, nodeGrid.boundaryData.waterFlowRate + numNodesSave);
+        vecBT_new.emplace_back(nodeGrid.boundaryData.temperature, nodeGrid.boundaryData.temperature + numNodesSave);
+
+        vecHSS_new.emplace_back(nodeGrid.heatData.heatSinkSource, nodeGrid.heatData.heatSinkSource + numNodesSave);
+
+
+        vecBAL_new.push_back(balanceDataCurrentTimeStep);
+
+        std::array<std::vector<double>, numTotalFluxTypes> tempArr;
+        for(u8_t index = 0; index < numTotalFluxTypes; ++index)
+            tempArr[index] = std::vector<double>(nodeGrid.linkData[0].fluxes[index], nodeGrid.linkData[0].fluxes[index] + numNodesSave);
+        vectorFluxesUp_new.push_back(tempArr);
+
+        for(u8_t index = 0; index < numTotalFluxTypes; ++index)
+            tempArr[index] = std::vector<double>(nodeGrid.linkData[1].fluxes[index], nodeGrid.linkData[1].fluxes[index] + numNodesSave);
+        vectorFluxesDown_new.push_back(tempArr);
+    }
+
     /*!
      * \brief compute one simulation step
      * \details compute one step for active fluxes assuming constant meteo conditions
@@ -1721,11 +1760,15 @@ namespace soilFluxes3D::New
      */
     double computeStep(double maxTimeStep)
     {
+        /*temp*/ logNew();
+
         if(simulationFlags.computeHeat)
         {
             resetFluxValues(false, true);
             updateConductance();
         }
+
+        /*temp*/ logNew();
 
         double dtWater, dtHeat;
 
@@ -1733,6 +1776,9 @@ namespace soilFluxes3D::New
             solver->run(maxTimeStep, dtWater, processType::Water);
         else
             dtWater = SF3Dmin(maxTimeStep, solver->getMaxTimeStep());
+
+        vectorFluxesUp_new.clear();
+        vectorFluxesDown_new.clear();
 
         if(simulationFlags.computeHeat)
         {
@@ -1748,8 +1794,9 @@ namespace soilFluxes3D::New
                 while(!updateBoundaryHeatData(dtHeat, reducedTimeStep))
                     dtHeat = reducedTimeStep;
 
-
                 solver->run(dtHeat, dtWater, processType::Heat);
+
+                dtHeatAccumulator += dtHeat;
             }
         }
 

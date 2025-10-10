@@ -17,7 +17,7 @@ namespace soilFluxes3D::Heat
     void updateHeatBalanceData();
     void updateHeatBalanceDataWholePeriod();
 
-    SF3Derror_t resetFluxValues(bool flagWater, bool flagHeat);
+    SF3Derror_t resetFluxValues(bool flagHeat, bool flagWater);
     SF3Derror_t saveWaterFluxValues(double dtHeat, double dtWater);
     SF3Derror_t saveNodeWaterFluxes(SF3Duint_t nIdx, u8_t lIdx, double dtHeat, double dtWater);
     SF3Derror_t saveHeatFluxValues(double dtHeat, double dtWater);
@@ -54,6 +54,7 @@ namespace soilFluxes3D::Heat
     double computeNodeAerodynamicConductance(SF3Duint_t nodeIndex);
     double computeNodeAtmosphericSensibleHeatFlux(SF3Duint_t nodeIndex);
     double computeNodeAtmosphericLatentHeatFlux(SF3Duint_t nodeIndex);
+    double computeNodeAtmosphericLatentVaporFlux(SF3Duint_t nodeIndex);
     double computeNodeAtmosphericLatentSurfaceWaterFlux(SF3Duint_t nodeIndex);
 
     //Move to soilPhysics (update comment in mathFunctions/physics.h

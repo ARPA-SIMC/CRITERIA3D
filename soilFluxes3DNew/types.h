@@ -30,7 +30,7 @@ namespace soilFluxes3D::New
 
     constexpr double doubleNoData_v = static_cast<double>(NODATA);
     constexpr SF3Duint_t uintNoData_v = std::numeric_limits<SF3Duint_t>::max();
-    #define noDataD doubleNoData_v
+    #define noDataD 0. //doubleNoData_v
     #define noDataU uintNoData_v
 
 
@@ -44,7 +44,19 @@ namespace soilFluxes3D::New
     enum class processType : u8_t {Water, Heat, Solutes};
 
     //Structure
+    /*enum class boundaryType_t : u8_t {NoBoundary = BOUNDARY_NONE,
+                                       Runoff = BOUNDARY_RUNOFF,
+                                       FreeDrainage = BOUNDARY_FREEDRAINAGE,
+                                       FreeLateraleDrainage = BOUNDARY_FREELATERALDRAINAGE,
+                                       PrescribedTotalWaterPotential = BOUNDARY_PRESCRIBEDTOTALPOTENTIAL,
+                                       Urban = BOUNDARY_URBAN,
+                                       Road = BOUNDARY_ROAD,
+                                       Culvert = BOUNDARY_CULVERT,
+                                       HeatSurface = BOUNDARY_HEAT_SURFACE,
+                                       SoluteFlux = BOUNDARY_SOLUTEFLUX};*/
+
     enum class boundaryType_t : u8_t {NoBoundary, Runoff, FreeDrainage, FreeLateraleDrainage, PrescribedTotalWaterPotential, Urban, Road, Culvert, HeatSurface, SoluteFlux};
+
     enum class linkType_t : u8_t {NoLink, Up, Down, Lateral};
 
     //Soil / surface
