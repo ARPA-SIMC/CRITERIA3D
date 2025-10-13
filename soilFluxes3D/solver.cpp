@@ -341,38 +341,6 @@ double iterationThreads()
 }
 
 
-// double tempCUSPARSErun()
-// {
-//     logLinSyst.solver = typeSolver(Jacobi_cusparse);
-
-//     double infinityNorm = 0, currentNorm = 0;
-//     double psi = 0;
-
-//     double *newX = nullptr;
-//     runCUSPARSEiteration(A, b, X, newX, myStructure.nrNodes);
-
-//     #pragma omp parallel for firstprivate(currentNorm) shared(newX) reduction(max: infinityNorm)
-//     for (long i = 0; i < myStructure.nrNodes; i++)
-//     {
-//         // surface check (H cannot go below z)
-//         if (nodeList[i].isSurface && newX[i] < nodeList[i].z)
-//             newX[i] = nodeList[i].z;
-
-//         currentNorm = fabs(newX[i] - X[i]);
-
-//         psi = fabs(newX[i] - nodeList[i].z);
-//         if (psi > 1)
-//             currentNorm /= psi;
-
-//         if (currentNorm > infinityNorm)
-//             infinityNorm = currentNorm;
-
-//         X[i] = newX[i];
-//     }
-
-//     return infinityNorm;
-// }
-
 //-------------  SOLVER -------------
 
 bool solveLinearSystem(int approximation, double residualTolerance, int computationType)

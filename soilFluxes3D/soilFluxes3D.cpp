@@ -62,8 +62,8 @@ std::vector<std::vector<Tsoil>> Soil_List;
 std::vector<Tsoil> Surface_List;
 
 #include<array>
-std::vector<std::vector<double>> vecPH_old, vecSe_old, vecIF_old, vecWK_old, vecwF_old, vecT_old, vecHF_old,
-                                vecBAK_old, vecBSK_old, vecBWF_old, vecBT_old, vecHK_old, vecHSS_old;
+std::vector<std::vector<double>> vecPH_old, vecOPH_old, vecSe_old, vecIF_old, vecWK_old, vecwF_old, vecT_old, vecHF_old,
+                                vecBAK_old, vecBSK_old, vecBWF_old, vecBWS_old, vecBT_old, vecHK_old, vecHSS_old;
 std::vector<Tbalance> vecBAL_old;
 std::vector<std::array<std::vector<double>, 9>> vectorFluxesUp_old, vectorFluxesDown_old;
 
@@ -1077,6 +1077,11 @@ namespace soilFluxes3D
         temp.clear();
 
         for(long n = 0; n < numNodesSave; n++)
+            temp.push_back(nodeList[n].oldH);
+        vecOPH_old.push_back(temp);
+        temp.clear();
+
+        for(long n = 0; n < numNodesSave; n++)
             temp.push_back(nodeList[n].Se);
         vecSe_old.push_back(temp);
         temp.clear();
@@ -1115,7 +1120,7 @@ namespace soilFluxes3D
         vecHSS_old.push_back(temp);
         temp.clear();
 
-        for(long n = 0; n < numNodesSave; n++)
+        for(long n = 0; n < myStructure.nrNodes; n++)
             if(nodeList[n].boundary != nullptr)
                 temp.push_back(nodeList[n].boundary->Heat->aerodynamicConductance);
             else
@@ -1123,32 +1128,40 @@ namespace soilFluxes3D
         vecBAK_old.push_back(temp);
         temp.clear();
 
-        for(long n = 0; n < numNodesSave; n++)
+        for(long n = 0; n < myStructure.nrNodes; n++)
             if(nodeList[n].boundary != nullptr)
                 temp.push_back(nodeList[n].boundary->Heat->soilConductance);
-            else
-                temp.push_back(NODATA);
+            // else
+            //     temp.push_back(NODATA);
         vecBSK_old.push_back(temp);
         temp.clear();
 
-        for(long n = 0; n < numNodesSave; n++)
+        for(long n = 0; n < myStructure.nrNodes; n++)
             if(nodeList[n].boundary != nullptr)
                 temp.push_back(nodeList[n].boundary->waterFlow);
-            else
-                temp.push_back(NODATA);
+            // else
+            //     temp.push_back(NODATA);
         vecBWF_old.push_back(temp);
         temp.clear();
 
-        for(long n = 0; n < numNodesSave; n++)
+        for(long n = 0; n < myStructure.nrNodes; n++)
+            if(nodeList[n].boundary != nullptr)
+                temp.push_back(nodeList[n].boundary->sumBoundaryWaterFlow);
+            // else
+            //     temp.push_back(NODATA);
+        vecBWS_old.push_back(temp);
+        temp.clear();
+
+        for(long n = 0; n < myStructure.nrNodes; n++)
             if(nodeList[n].boundary != nullptr)
                 temp.push_back(nodeList[n].boundary->Heat->temperature);
-            else
-                temp.push_back(NODATA);
+            // else
+            //     temp.push_back(NODATA);
         vecBT_old.push_back(temp);
         temp.clear();
 
 
-        vecIF_old.emplace_back(invariantFlux, invariantFlux + myStructure.nrNodes);
+        vecIF_old.emplace_back(invariantFlux, invariantFlux + numNodesSave);
         vecBAL_old.push_back(balanceCurrentTimeStep);
 
         std::array<std::vector<double>, 9> tempArr;
@@ -1190,6 +1203,8 @@ namespace soilFluxes3D
         if (myParameters.current_delta_t == NODATA)
             myParameters.current_delta_t = myParameters.delta_t_max;
 
+        vectorFluxesDown_old.clear();
+        vectorFluxesUp_old.clear();
         /*temp*/ logOld();
 
         if (myStructure.computeHeat)
@@ -1212,9 +1227,13 @@ namespace soilFluxes3D
             dtWater = dtHeat;
         }
 
+        /*temp*/ logOld();
+
         if (myStructure.computeHeat)
         {
             saveWaterFluxes(dtHeat, dtWater);
+
+            /*temp*/ logOld();
 
             double dtHeatSum = 0;
             while (dtHeatSum < dtWater)
@@ -1228,12 +1247,17 @@ namespace soilFluxes3D
                     dtHeat = reducedTimeStep;
                 }
 
+                /*temp*/ logOld();
+
                 HeatComputation(dtHeat, dtWater);
+
+                /*temp*/ logOld();
 
                 dtHeatSum += dtHeat;
             }
         }
 
+        /*temp*/ logOld();
         return dtWater;
     }
 

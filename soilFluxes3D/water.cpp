@@ -32,7 +32,6 @@
 #include <thread>
 #include <float.h>
 
-#include "soilFluxes3D.h"
 #include "commonConstants.h"
 #include "types.h"
 #include "water.h"
@@ -41,6 +40,9 @@
 #include "balance.h"
 #include "boundary.h"
 #include "heat.h"
+
+#include "soilFluxes3D.h"
+using namespace soilFluxes3D;
 
 
 /*!
@@ -465,10 +467,16 @@ bool computeWaterFluxes(double maxTime, double *acceptedTime)
                 nodeList[n].Se = computeSe(unsigned(n));
         }
 
+        /*temp*/ logOld();
+
         /*! update boundary conditions */
         updateConductance();
 
+        /*temp*/ logOld();
+
         updateBoundaryWater(*acceptedTime);		//maybe useless: remove
+
+        /*temp*/ logOld();
         isStepOK = waterFlowComputation_stdTreads(*acceptedTime);
 
         if (!isStepOK)

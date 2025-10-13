@@ -38,7 +38,8 @@
 #include "solver.h"
 #include "soilFluxes3D.h"
 
-std::vector<double> tempCold;
+std::vector<std::vector<double>> tempCold, tempAold, tempBold, tempX0old;
+std::vector<double> tempvar;
 //static double CourantHeatAdvective;
 
 bool isHeatNode(long nodeIndex)
@@ -718,7 +719,6 @@ bool computeHeatFlux(long i, int myMatrixIndex, TlinkedNode *myLink, double time
     if (myStructure.computeHeatVapor)
     {
         myLatentFlux = IsothermalLatentHeatFlux(i, myLink, timeStep, timeStepWater);
-        tempCold.push_back(myLatentFlux);
         saveHeatFlux(myLink, HEATFLUX_LATENT_ISOTHERMAL, myLatentFlux);
     }
 
@@ -726,7 +726,6 @@ bool computeHeatFlux(long i, int myMatrixIndex, TlinkedNode *myLink, double time
     {
         double advectiveFluxCourant = 0;
         myAdvectiveFlux = AdvectiveFlux(i, myLink, advectiveFluxCourant);
-        tempCold.push_back(myAdvectiveFlux);
         saveHeatFlux(myLink, HEATFLUX_ADVECTIVE, myAdvectiveFlux);
 
         /*if (!isEqual(advectiveFluxCourant, 0))
@@ -991,9 +990,6 @@ bool HeatComputation(double timeStepHeat, double timeStepWater)
         dtheta = theta_from_sign_Psi(myH - nodeList[i].z, i) -
                 theta_from_sign_Psi(nodeList[i].oldH - nodeList[i].z, i);
 
-
-        tempCold.push_back(dtheta);
-
         heatCapacityVar = dtheta * HEAT_CAPACITY_WATER * nodeList[i].extra->Heat->T;
 
         if (myStructure.computeHeatVapor)
@@ -1005,8 +1001,6 @@ bool HeatComputation(double timeStepHeat, double timeStepWater)
         }
 
         heatCapacityVar *= nodeList[i].volume_area;
-
-        tempCold.push_back(heatCapacityVar);
 
         j = 1;
         if (computeHeatFlux(i, j, &(nodeList[i].up), timeStepHeat, timeStepWater))
@@ -1029,11 +1023,9 @@ bool HeatComputation(double timeStepHeat, double timeStepWater)
 
         while ((j < myStructure.maxNrColumns) && (A[i][j].index != NOLINK))
         {
-            tempCold.push_back(A[i][j].val);
             sum += A[i][j].val * myParameters.heatWeightingFactor;
             myDeltaTemp0 = nodeList[A[i][j].index].extra->Heat->oldT - nodeList[i].extra->Heat->oldT;
             sumFlow0 += A[i][j].val * (1. - myParameters.heatWeightingFactor) * myDeltaTemp0;
-            tempCold.push_back(sumFlow0);
             A[i][j++].val *= -(myParameters.heatWeightingFactor);
         }
 
@@ -1041,19 +1033,13 @@ bool HeatComputation(double timeStepHeat, double timeStepWater)
         avgh = arithmeticMean(nodeList[i].oldH, myH) - nodeList[i].z;
         A[i][0].val = SoilHeatCapacity(i, avgh, nodeList[i].extra->Heat->T) * nodeList[i].volume_area / timeStepHeat + sum;
 
-        tempCold.push_back(A[i][0].val);
-
-        tempCold.push_back(C[i]);
-        tempCold.push_back(nodeList[i].extra->Heat->oldT);
-        tempCold.push_back(timeStepHeat);
-        tempCold.push_back(nodeList[i].extra->Heat->Qh);
-        tempCold.push_back(invariantFlux[i]);
-
-
         /*! b vector (constant terms) */
+        tempvar.push_back(nodeList[i].extra->Heat->oldT);
+        tempvar.push_back(heatCapacityVar);
+        tempvar.push_back(nodeList[i].extra->Heat->Qh);
+        tempvar.push_back(invariantFlux[i]);
+        tempvar.push_back(sumFlow0);
         b[i] = C[i] * nodeList[i].extra->Heat->oldT / timeStepHeat - heatCapacityVar / timeStepHeat + nodeList[i].extra->Heat->Qh + invariantFlux[i] + sumFlow0;
-
-        tempCold.push_back(b[i]);
 
         // preconditioning
         if (A[i][0].val > 0)
@@ -1063,8 +1049,6 @@ bool HeatComputation(double timeStepHeat, double timeStepWater)
             while ((j < myStructure.maxNrColumns) && (A[i][j].index != NOLINK))
                 A[i][j++].val /= A[i][0].val;
         }
-
-        tempCold.push_back(NAN);
     }
 
     /*if (CourantHeatAdvective > 1.0 && timeStepHeat > myParameters.delta_t_min)

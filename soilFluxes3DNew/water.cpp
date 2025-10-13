@@ -127,7 +127,7 @@ namespace soilFluxes3D::Water
         balanceDataWholePeriod.waterMBE = deltaStorageHistorical - balanceDataWholePeriod.waterSinkSource;
 
         double referenceWater = SF3Dmax(0.001, std::fabs(balanceDataWholePeriod.waterSinkSource));
-        balanceDataCurrentTimeStep.waterMBR = balanceDataWholePeriod.waterMBE / referenceWater;
+        balanceDataWholePeriod.waterMBR = balanceDataWholePeriod.waterMBE / referenceWater;
 
         balanceDataCurrentPeriod.waterStorage = balanceDataCurrentTimeStep.waterStorage;
     }
@@ -256,7 +256,7 @@ namespace soilFluxes3D::Water
         //__parfor(__ompStatus)
         for (SF3Duint_t nodeIndex = 0; nodeIndex < nodeGrid.numNodes; ++nodeIndex)
         {
-            nodeGrid.waterData.invariantFluxes[nodeIndex] = 0.;
+            nodeGrid.waterData.invariantFluxes[nodeIndex] = 0.;     //move to memset
             if(nodeGrid.surfaceFlag[nodeIndex])
                 continue;
 
@@ -355,7 +355,7 @@ namespace soilFluxes3D::Water
         if(!simulationFlags.computeHeatVapor)
             return true;
 
-        double thermalVaporFlux = computeThermalVaporFlux(nodeIndex, linkIndex, processType::Water);
+        double thermalVaporFlux = computeThermalVaporFlux(nodeIndex, linkIndex, processType::Water) / WATER_DENSITY;
         nodeGrid.waterData.invariantFluxes[nodeIndex] += thermalVaporFlux;
 
         return true;
@@ -544,6 +544,7 @@ namespace soilFluxes3D::Water
         {
             //initialize: water sink.source
             nodeGrid.waterData.waterFlow[nodeIdx] = nodeGrid.waterData.waterSinkSource[nodeIdx];   //TO DO: evaluate move to a memcpy
+            double temp = nodeGrid.waterData.waterFlow[nodeIdx];
 
             if(nodeGrid.boundaryData.boundaryType[nodeIdx] == boundaryType_t::NoBoundary)
                 continue;
