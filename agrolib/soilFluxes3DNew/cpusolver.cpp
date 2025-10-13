@@ -13,7 +13,9 @@ using namespace soilFluxes3D::Soil;
 using namespace soilFluxes3D::Water;
 using namespace soilFluxes3D::Heat;
 using namespace soilFluxes3D::Math;
-std::vector<double> tempCnew;
+
+std::vector<std::vector<double>> tempCnew, tempAnew, tempBnew, tempX0new;
+std::vector<double> tempVar;
 namespace soilFluxes3D::New
 {
     extern __cudaMngd nodesData_t nodeGrid;
@@ -136,11 +138,17 @@ namespace soilFluxes3D::New
                     nodeGrid.waterData.saturationDegree[nodeIdx] = computeNodeSe(nodeIdx);
             }
 
+            /*temp*/ logNew();
+
             //Update aereodynamic and soil conductance
             updateConductance();
 
+            /*temp*/ logNew();
+
             //Update boundary
             updateBoundaryWaterData(acceptedTimeStep);
+
+            /*temp*/ logNew();
 
             //Effective computation step
             stepStatus = waterApproximationLoop(acceptedTimeStep);
@@ -291,7 +299,7 @@ namespace soilFluxes3D::New
                 linkIdx++;
 
             //Compute flux lateral
-            for(u8_t latIdx = 0; latIdx < maxLateralLink; ++latIdx)
+            for(u8_t latIdx = 0; latIdx < maxLateralLink; ++latIdx) //TO DO: implement real num lat links
             {
                 isLinked = computeHeatLinkFluxes(matrixA.values[rowIdx][linkIdx], matrixA.colIndeces[rowIdx][linkIdx], rowIdx, 2 + latIdx, timeStepHeat, timeStepWater);
                 if(isLinked)
@@ -313,7 +321,12 @@ namespace soilFluxes3D::New
             matrixA.values[rowIdx][0] = sumDP + (vectorC.values[rowIdx] / timeStepHeat);  //Check if C values is correct
 
             //Computeb element
-            vectorB.values[rowIdx] = (vectorC.values[rowIdx] / timeStepHeat) * nodeGrid.heatData.oldTemperature[rowIdx] - heatCapacity / timeStepHeat +
+            tempVar.push_back(nodeGrid.heatData.oldTemperature[rowIdx]);
+            tempVar.push_back(heatCapacity);
+            tempVar.push_back(nodeGrid.heatData.heatFlux[rowIdx]);
+            tempVar.push_back(nodeGrid.waterData.invariantFluxes[rowIdx]);
+            tempVar.push_back(sumF0);
+            vectorB.values[rowIdx] = vectorC.values[rowIdx] * nodeGrid.heatData.oldTemperature[rowIdx] / timeStepHeat - heatCapacity / timeStepHeat +
                                         nodeGrid.heatData.heatFlux[rowIdx] + nodeGrid.waterData.invariantFluxes[rowIdx] + sumF0;
 
             //Preconditioning

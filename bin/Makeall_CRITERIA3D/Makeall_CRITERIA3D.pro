@@ -11,9 +11,3 @@ SUBDIRS =       ../../agrolib/mathFunctions ../../agrolib/crit3dDate ../../agrol
                 ../CRITERIA3D
 
 CONFIG += ordered
-
-DISTFILES += \
-    ../../batchFiles/batchMonteleoneTest.txt \
-    ../../batchFiles/batchTest.txt \
-    ../../batchFiles/batchTestLinux.txt \
-    ../../batchFiles/batchTestList.txt

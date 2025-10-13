@@ -100,7 +100,6 @@ namespace soilFluxes3D::Heat
         //Flux value as saved in the iteration matrix for water process
         double matrixValue = getMatrixElement(nIdx, dIdx);
 
-        //
         double isothermalLiquidFlux = matrixValue * (scrAvgH - dstAvgH);
 
         bool deepLink = !nodeGrid.surfaceFlag[nIdx] && !nodeGrid.surfaceFlag[dIdx];
@@ -108,15 +107,15 @@ namespace soilFluxes3D::Heat
         double thermalLiquidFlux   = deepLink ? computeThermalLiquidFlux(nIdx, lIdx, processType::Heat, dtHeat, dtWater): 0.;
         double thermalVaporflux    = deepLink ? computeThermalVaporFlux(nIdx, lIdx, processType::Heat, dtHeat, dtWater) : 0.;
 
-        nodeGrid.linkData[lIdx].waterFlux[nIdx] = isothermalLiquidFlux - isothermalVaporFlux / WATER_DENSITY + thermalLiquidFlux;
-        nodeGrid.linkData[lIdx].vaporFlux[nIdx] = isothermalVaporFlux + thermalVaporflux;
+        nodeGrid.linkData[lIdx].waterFlux[nIdx] = static_cast<float>(isothermalLiquidFlux - isothermalVaporFlux / WATER_DENSITY + thermalLiquidFlux);
+        nodeGrid.linkData[lIdx].vaporFlux[nIdx] = static_cast<float>(isothermalVaporFlux + thermalVaporflux);
 
         if(simulationFlags.HFsaveMode == heatFluxSaveMode_t::All)
         {
-            nodeGrid.linkData[lIdx].fluxes[toUnderlyingT(fluxTypes_t::WaterLiquidIsothermal)][nIdx] = isothermalLiquidFlux;
-            nodeGrid.linkData[lIdx].fluxes[toUnderlyingT(fluxTypes_t::WaterLiquidThermal)][nIdx] = thermalLiquidFlux;
-            nodeGrid.linkData[lIdx].fluxes[toUnderlyingT(fluxTypes_t::WaterVaporIsothermal)][nIdx] = isothermalVaporFlux;
-            nodeGrid.linkData[lIdx].fluxes[toUnderlyingT(fluxTypes_t::WaterVaporThermal)][nIdx] = thermalVaporflux;
+            nodeGrid.linkData[lIdx].fluxes[toUnderlyingT(fluxTypes_t::WaterLiquidIsothermal)][nIdx] = static_cast<float>(isothermalLiquidFlux);
+            nodeGrid.linkData[lIdx].fluxes[toUnderlyingT(fluxTypes_t::WaterLiquidThermal)][nIdx] = static_cast<float>(thermalLiquidFlux);
+            nodeGrid.linkData[lIdx].fluxes[toUnderlyingT(fluxTypes_t::WaterVaporIsothermal)][nIdx] = static_cast<float>(isothermalVaporFlux);
+            nodeGrid.linkData[lIdx].fluxes[toUnderlyingT(fluxTypes_t::WaterVaporThermal)][nIdx] = static_cast<float>(thermalVaporflux);
         }
 
         return SF3Derror_t::SF3Dok;
@@ -145,9 +144,12 @@ namespace soilFluxes3D::Heat
 
     SF3Derror_t saveNodeHeatFluxes(SF3Duint_t nIdx, u8_t lIdx, double dtHeat, double dtWater)
     {
+        if(nodeGrid.linkData[lIdx].linkType[nIdx] == linkType_t::NoLink)
+            return SF3Derror_t::ParameterError;     //Check if is correct
+
         SF3Duint_t linkedIdx = nodeGrid.linkData[lIdx].linkIndex[nIdx];
 
-        if(!isHeatNode(nIdx) || !isHeatNode(linkedIdx)) //Add check linkType != noLink
+        if(!isHeatNode(nIdx) || !isHeatNode(linkedIdx))
             return SF3Derror_t::ParameterError;     //Check if is correct
 
         double matrixValue = getMatrixElement(nIdx, linkedIdx);
@@ -183,8 +185,10 @@ namespace soilFluxes3D::Heat
         if(simulationFlags.HFsaveMode == heatFluxSaveMode_t::None)
             return SF3Derror_t::ParameterError;
 
+        fluxValue = static_cast<float>(fluxValue);
+
         double& totalFlux = nodeGrid.linkData[lIdx].fluxes[toUnderlyingT(fluxTypes_t::HeatTotal)][nIdx];
-        totalFlux = (totalFlux == noDataD) ? fluxValue : totalFlux + fluxValue;
+        totalFlux = static_cast<float>((totalFlux == noDataD) ? fluxValue : totalFlux + fluxValue);
 
         if(simulationFlags.HFsaveMode == heatFluxSaveMode_t::All)
             nodeGrid.linkData[lIdx].fluxes[toUnderlyingT(fluxType)][nIdx] = fluxValue;
