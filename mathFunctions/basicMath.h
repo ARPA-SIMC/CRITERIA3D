@@ -7,6 +7,7 @@
     #ifndef _VECTOR_
         #include <vector>
     #endif
+    #include <math.h>
 
     #ifndef POWER4
         #define POWER4(x) ((x) * (x) * (x) * (x))
