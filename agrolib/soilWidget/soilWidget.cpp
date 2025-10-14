@@ -285,16 +285,17 @@ void Crit3DSoilWidget::setFittingMenu()
 }
 
 
-void Crit3DSoilWidget::setDbSoil(QSqlDatabase dbOpened, QString soilCode)
+bool Crit3DSoilWidget::initializeSoils()
 {
-    dbSoil = dbOpened;
-    QString errorStr;
+    if (! dbSoil.isOpen())
+        return false;
 
+    QString errorStr;
     // load default VG parameters
     if (! loadVanGenuchtenParameters(dbSoil, textureClassList, errorStr))
     {
         QMessageBox::critical(nullptr, "Error", "loadVanGenuchtenParameters\n" + errorStr);
-        return;
+        return false;
     }
 
     // load default geotechnics parameters (not mandatory)
@@ -308,7 +309,7 @@ void Crit3DSoilWidget::setDbSoil(QSqlDatabase dbOpened, QString soilCode)
     if (! getSoilList(dbSoil, soilStringList, errorStr))
     {
         QMessageBox::critical(nullptr, "Error", "getSoilList: " + errorStr);
-        return;
+        return false;
     }
 
     // show soil list
@@ -317,6 +318,23 @@ void Crit3DSoilWidget::setDbSoil(QSqlDatabase dbOpened, QString soilCode)
     {
         soilListComboBox.addItem(soilStringList[i]);
     }
+
+    saveChanges->setEnabled(true);
+    soilChanged = false;
+    isFitting = false;
+    wrDataTab->resetHorizonChanged();
+
+    return true;
+}
+
+
+
+void Crit3DSoilWidget::setDbSoil(QSqlDatabase &dbOpened, const QString &soilCode)
+{
+    dbSoil = dbOpened;
+
+    if (! initializeSoils())
+        return;
 
     soilListComboBox.setCurrentText(soilCode);
     show();
@@ -336,32 +354,7 @@ void Crit3DSoilWidget::on_actionOpenSoilDB()
         return;
     }
 
-    // load default VG parameters
-    if (! loadVanGenuchtenParameters(dbSoil, textureClassList, errorStr))
-    {
-        QMessageBox::critical(nullptr, "Error!", errorStr);
-        return;
-    }
-
-    // read soil list
-    QList<QString> soilStringList;
-    if (! getSoilList(dbSoil, soilStringList, errorStr))
-    {
-        QMessageBox::critical(nullptr, "Error!", errorStr);
-        return;
-    }
-
-    // show soil list
-    this->soilListComboBox.clear();
-    for (int i = 0; i < soilStringList.size(); i++)
-    {
-        this->soilListComboBox.addItem(soilStringList[i]);
-    }
-
-    saveChanges->setEnabled(true);
-    soilChanged = false;
-    isFitting = false;
-    wrDataTab->resetHorizonChanged();
+    initializeSoils();
 }
 
 
