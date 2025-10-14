@@ -529,6 +529,12 @@ bool Crit3DMeteoPointsDbHandler::deleteAllPointsFromDataset(QList<QString> datas
 }
 
 
+bool Crit3DMeteoPointsDbHandler::loadDailyData(const Crit3DDate &firstDate, const Crit3DDate &lastDate, Crit3DMeteoPoint &meteoPoint)
+{
+    return loadDailyData(_db, firstDate, lastDate, meteoPoint);
+}
+
+
 bool Crit3DMeteoPointsDbHandler::loadDailyData(const QSqlDatabase &myDb, const Crit3DDate &firstDate,
                                                const Crit3DDate &lastDate, Crit3DMeteoPoint &meteoPoint)
 {
@@ -589,6 +595,13 @@ bool Crit3DMeteoPointsDbHandler::loadDailyData(const QSqlDatabase &myDb, const C
     }
 
     return true;
+}
+
+
+bool Crit3DMeteoPointsDbHandler::loadHourlyData(const Crit3DDate &firstDate,
+                                                const Crit3DDate &lastDate, Crit3DMeteoPoint &meteoPoint)
+{
+    return loadHourlyData(_db, firstDate, lastDate, meteoPoint);
 }
 
 
