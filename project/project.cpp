@@ -1850,7 +1850,7 @@ bool Project::loadMeteoGridMonthlyData(const QDate &firstDate, const QDate &last
 
     if (count == 0 && errorString != "")
     {
-        logError("No Data Available: " + errorString);
+        logError("No Monthly Data Available: " + errorString);
         return false;
     }
 
