@@ -154,13 +154,13 @@ bool convertGdalRaster(GDALDataset* dataset, gis::Crit3DRasterGrid* myRaster, in
     if (dataType == "Float64")
     {
         // read 64 bit data
-        double* data = (double *) CPLMalloc(sizeof(double) * xSize * ySize);
-        CPLErr errGdal = band->RasterIO(GF_Read, 0, 0, xSize, ySize, data, xSize, ySize, GDT_Float64, 0, 0);
+        double* data_double = (double *) CPLMalloc(sizeof(double) * xSize * ySize);
+        CPLErr errGdal = band->RasterIO(GF_Read, 0, 0, xSize, ySize, data_double, xSize, ySize, GDT_Float64, 0, 0);
 
         if (errGdal > CE_Warning)
         {
             errorStr = "Error in RasterIO";
-            CPLFree(data);
+            CPLFree(data_double);
             return false;
         }
 
@@ -168,29 +168,29 @@ bool convertGdalRaster(GDALDataset* dataset, gis::Crit3DRasterGrid* myRaster, in
         for (int row = 0; row < myRaster->header->nrRows; row++)
             for (int col = 0; col < myRaster->header->nrCols; col++)
             {
-                if (isEqual(data[row*xSize+col], nodataValue))
+                if (isEqual(data_double[row*xSize+col], nodataValue))
                 {
                     myRaster->value[row][col] = myRaster->header->flag;
                 }
                 else
                 {
-                    myRaster->value[row][col] = float(data[row*xSize+col]);
+                    myRaster->value[row][col] = float(data_double[row*xSize+col]);
                 }
             }
 
         // free memory
-        CPLFree(data);
+        CPLFree(data_double);
     }
     else
     {
         // read 32 bit data
-        float* data = (float *) CPLMalloc(sizeof(float) * xSize * ySize);
-        CPLErr errGdal = band->RasterIO(GF_Read, 0, 0, xSize, ySize, data, xSize, ySize, GDT_Float32, 0, 0);
+        float* data_float = (float *) CPLMalloc(sizeof(float) * xSize * ySize);
+        CPLErr errGdal = band->RasterIO(GF_Read, 0, 0, xSize, ySize, data_float, xSize, ySize, GDT_Float32, 0, 0);
 
         if (errGdal > CE_Warning)
         {
             errorStr = "Error in RasterIO";
-            CPLFree(data);
+            CPLFree(data_float);
             return false;
         }
 
@@ -198,18 +198,18 @@ bool convertGdalRaster(GDALDataset* dataset, gis::Crit3DRasterGrid* myRaster, in
         for (int row = 0; row < myRaster->header->nrRows; row++)
             for (int col = 0; col < myRaster->header->nrCols; col++)
             {
-                if (isEqual(data[row*xSize+col], float(nodataValue)))
+                if (isEqual(data_float[row*xSize+col], (float)nodataValue))
                 {
                     myRaster->value[row][col] = myRaster->header->flag;
                 }
                 else
                 {
-                    myRaster->value[row][col] = data[row*xSize+col];
+                    myRaster->value[row][col] = data_float[row*xSize+col];
                 }
             }
 
         // free memory
-        CPLFree(data);
+        CPLFree(data_float);
     }
 
     // min & max
