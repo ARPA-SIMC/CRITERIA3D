@@ -28,9 +28,8 @@
 #include "cropDbTools.h"
 #include "project3D.h"
 #include "project.h"
+#include "old/old_soilFluxes3D.h"
 #include "soilFluxes3D.h"
-#include "soilFluxes3DNew.h"
-#include "types_cpu.h"
 #include "soilDbTools.h"
 #include <float.h>
 
@@ -38,7 +37,6 @@
 #include "utilities.h"
 #include "root.h"
 #include "gis.h"
-#include "soilPhysics.h"
 #include "meteo.h"
 
 #include <QUuid>

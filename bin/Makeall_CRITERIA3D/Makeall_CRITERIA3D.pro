@@ -1,6 +1,6 @@
 TEMPLATE = subdirs
 
-SUBDIRS =       ../../agrolib/mathFunctions ../../agrolib/crit3dDate ../../agrolib/soilFluxes3D ../../agrolib/soilFluxes3DNew \
+SUBDIRS =       ../../agrolib/mathFunctions ../../agrolib/crit3dDate ../../agrolib/soilFluxes3D \
                 ../../agrolib/gis ../../agrolib/meteo ../../agrolib/soil ../../agrolib/crop  \
                 ../../agrolib/utilities ../../agrolib/interpolation ../../agrolib/solarRadiation  \
                 ../../agrolib/waterTable ../../agrolib/dbMeteoPoints ../../agrolib/outputPoints \

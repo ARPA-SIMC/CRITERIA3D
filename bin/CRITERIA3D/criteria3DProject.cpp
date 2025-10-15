@@ -34,9 +34,8 @@
 #include "statistics.h"
 #include "project.h"
 #include "project3D.h"
+#include "old/old_soilFluxes3D.h"
 #include "soilFluxes3D.h"
-#include "soilFluxes3DNew.h"
-#include "soilPhysics.h"
 #include "hydrall.h"
 #include "physics.h"
 #include "shell.h"
@@ -2134,6 +2133,7 @@ bool Crit3DProject::saveModelsState(QString &dirName)
 
     char hourStr[3];
     sprintf(hourStr, "%02d", getCurrentHour());
+    //sprintf_s(hourStr, sizeof(hourStr), "%02d", getCurrentHour());
     dirName = getCurrentDate().toString("yyyyMMdd") + "_H" + hourStr;
     QString currentStatePath = statePath + "/" + dirName;
     if (! QDir(currentStatePath).exists())

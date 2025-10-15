@@ -1,5 +1,5 @@
+#include "old/old_soilFluxes3D.h"
 #include "soilFluxes3D.h"
-#include "soilFluxes3DNew.h"
 #include "dialogWaterFluxesSettings.h"
 
 #include <QtWidgets>

@@ -45,8 +45,8 @@
 #include "dialogModelProcesses.h"
 #include "utilities.h"
 #include "formText.h"
+#include "old/old_soilFluxes3D.h"
 #include "soilFluxes3D.h"
-#include "soilFluxes3DNew.h"
 
 #include <QTime>
 

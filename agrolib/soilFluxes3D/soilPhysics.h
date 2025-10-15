@@ -1,29 +1,34 @@
-#ifndef SOILPHYSICS_H
-#define SOILPHYSICS_H
+#pragma once
 
-    struct Tsoil;
+#include "macro.h"
+#include "types.h"
 
-    #ifndef MACRO_H
-        #include "macro.h"
-    #endif
+using namespace soilFluxes3D::v2;
 
-    double computeWaterConductivity(double Se, Tsoil *mySoil);
-    double computeSefromPsi_unsat(double psi, Tsoil *mySoil);
-     double theta_from_Se(unsigned long index);
-     double theta_from_Se (double Se, unsigned long index);
-    double theta_from_sign_Psi (double myPsi, unsigned long index);
-    double Se_from_theta (unsigned long index, double myTheta);
-    double psi_from_Se(unsigned long index);
-    double computeSe(unsigned long index);
-    double dTheta_dH(unsigned long index);
-    double dThetav_dH(unsigned long index, double temperature, double dTheta_dH);
-    double computeK(unsigned long index);
-    double compute_K_Mualem(double Ksat, double Se, double VG_Sc, double VG_m, double Mualem_L);
-    double getThetaMean(long i);
-     double getTheta(long i, double H);
-     double getHMean(long i);
-    double getPsiMean(long i);
-    double estimateBulkDensity(long i);
-    double getTMean(long i);
+namespace soilFluxes3D::v2::Soil
+{
+    __cudaSpec double computeNodeTheta(SF3Duint_t nodeIndex);
+    __cudaSpec double computeNodeTheta_fromSe(SF3Duint_t nodeIndex, double Se);
+    __cudaSpec double computeNodeTheta_fromSignedPsi(SF3Duint_t nodeIndex, double signedPsi);
 
-#endif  // SOILPHYSICS_H
+    __cudaSpec double computeNodeSe(SF3Duint_t nodeIndex);
+    __cudaSpec double computeNodeSe_unsat(SF3Duint_t nodeIndex);
+    __cudaSpec double computeNodeSe_fromPsi(SF3Duint_t nodeIndex, double psi);
+    __cudaSpec double computeNodeSe_fromTheta(SF3Duint_t nodeIndex, double theta);
+
+    __cudaSpec double computeNodePsi(SF3Duint_t nodeIndex);
+    /*not used*/ double computeNodePsi_fromSe(SF3Duint_t nodeIndex, double Se);
+
+    __cudaSpec double computeNodeK(SF3Duint_t nodeIndex);
+    __cudaSpec double computeMualemSoilConductivity(soilData_t& soilData, double Se);
+
+    __cudaSpec double computeNodedThetadH(SF3Duint_t nodeIndex);
+    __cudaSpec double computeNodedThetaVdH(SF3Duint_t nodeIndex, double temperature, double dThetadH);
+
+    __cudaSpec double getNodeMeanTemperature(SF3Duint_t nodeIndex);
+
+    __cudaSpec double getNodeSurfaceWaterFraction(SF3Duint_t nodeIndex);
+
+    __cudaSpec double nodeDistance2D(SF3Duint_t idx1, SF3Duint_t idx2);
+    __cudaSpec double nodeDistance3D(SF3Duint_t idx1, SF3Duint_t idx2);
+}

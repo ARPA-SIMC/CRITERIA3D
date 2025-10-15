@@ -1,116 +1,100 @@
-#ifndef SOILFLUXES3D
-#define SOILFLUXES3D
+#pragma once
 
-    #ifndef MACRO_H
-        #include "macro.h"
-    #endif
+#include "macro.h"
+#include "types.h"
 
-    #include <QString>
+namespace soilFluxes3D::v2
+{
+    //Inizializazion and memory management
+    SF3Derror_t initializeSF3D(SF3Duint_t nrNodes, u16_t nrLayers, u8_t nrLateralLinks, bool isComputeWater, bool isComputeHeat, bool isComputeSolutes, heatFluxSaveMode_t HFsm = heatFluxSaveMode_t::None);
+    SF3Derror_t initializeBalance();
+    SF3Derror_t initializeLog(const std::string& logPath, const std::string& projectName);
 
-    namespace soilFluxes3D::v1 {
+    SF3Derror_t cleanSF3D();
+    SF3Derror_t closeLog();
 
-    // TEST
-    __EXTERN  int DLL_EXPORT __STDCALL test();
+    SF3Derror_t initializeHeatFlag(heatFluxSaveMode_t saveModeHeat, bool isComputeAdvectiveFlux, bool isComputeLatentHeat);
 
-    // INITIALIZATION
-    __EXTERN  void DLL_EXPORT __STDCALL cleanMemory();
-    __EXTERN int DLL_EXPORT __STDCALL initializeFluxes(long nrNodes, int nrLayers, int nrLateralLinks, bool isComputeWater, bool isComputeHeat, bool isComputeSolutes);
-    __EXTERN  void DLL_EXPORT __STDCALL initializeHeat(short saveHeatFluxes_, bool computeAdvectiveHeat, bool computeLatentHeat);
+    u32_t setThreadsNumber(u32_t nrThreads);
 
-    __EXTERN int DLL_EXPORT __STDCALL setNumericalParameters(double minDeltaT, double maxDeltaT, int maxIterationNumber,
-                                                             int maxApproximationsNumber, int ResidualTolerance, double MBRThreshold);
+    //Create types
+    SF3Derror_t setSoilProperties(u16_t nrSoil, u16_t nrHorizon, double VG_alpha, double VG_n, double VG_m, double VG_he, double ThetaR, double ThetaS, double Ksat, double L, double organicMatter, double clay);
+    SF3Derror_t setSurfaceProperties(u16_t surfaceIndex, double roughness);
 
-    __EXTERN int DLL_EXPORT __STDCALL setThreadsNumber(int nrThreads);
+    //Set core data
+    SF3Derror_t setNumericalParameters(double minDeltaT, double maxDeltaT, u16_t maxIterationNumber, u16_t maxApproximationsNumber, u8_t ResidualToleranceExponent, u8_t MBRThresholdExponent);
+    SF3Derror_t setHydraulicProperties(WRCModel waterRetentionCurve, meanType_t conductivityMeanType, float conductivityHorizVertRatio);
 
-    // TOPOLOGY
-    __EXTERN int DLL_EXPORT __STDCALL setNode(long myIndex, float x, float y, double z, double volume_or_area,
-                                        bool isSurface, bool isBoundary, int boundaryType, float slope, float boundaryArea);
+    //Set topology
+    SF3Derror_t setCulvert(SF3Duint_t nodeIndex, double roughness, double slope, double width, double height);
+    SF3Derror_t setNode(SF3Duint_t index, double x, double y, double z, double volume_or_area, bool isSurface, boundaryType_t boundaryType, double slope = 0, double boundaryArea = 0);
+    SF3Derror_t setNodeLink(SF3Duint_t nodeIndex, SF3Duint_t linkIndex, linkType_t direction, double interfaceArea);
+    SF3Derror_t setNodeBoundary(SF3Duint_t nodeIndex, boundaryType_t boundaryType, double slope, double boundaryArea);
 
-    __EXTERN int DLL_EXPORT __STDCALL setNodeLink(long nodeIndex, long linkIndex, short direction, float S0);
+    //Set soil data
+    SF3Derror_t setNodeSoil(SF3Duint_t nodeIndex, u16_t soilIndex, u16_t horizonIndex);
+    SF3Derror_t setNodeSurface(SF3Duint_t nodeIndex, u16_t surfaceIndex);
 
-	__EXTERN int DLL_EXPORT __STDCALL setCulvert(long myIndex, double roughness, double slope, double width, double height);
+    //Set water data
+    SF3Derror_t setNodePond(SF3Duint_t nodeIndex, double pond);
+    SF3Derror_t setNodeWaterContent(SF3Duint_t nodeIndex, double waterContent);
+    SF3Derror_t setNodeDegreeOfSaturation(SF3Duint_t nodeIndex, double degreeOfSaturation);
+    SF3Derror_t setNodeMatricPotential(SF3Duint_t nodeIndex, double matricPotential);
+    /*not used*/ SF3Derror_t setNodeTotalPotential(SF3Duint_t nodeIndex, double totalPotential);
+    SF3Derror_t setNodeWaterSinkSource(SF3Duint_t nodeIndex, double waterSinkSource);
+    /*not used*/ SF3Derror_t setNodePrescribedTotalPotential(SF3Duint_t nodeIndex, double prescribedTotalPotential);
 
-    // SOIL
-    __EXTERN int DLL_EXPORT __STDCALL setSoilProperties(int nrSoil, int nrHorizon, double VG_alpha,
-                                        double VG_n, double VG_m, double VG_he,
-                                        double ThetaR, double ThetaS, double Ksat, double L,
-                                        double organicMatter, double clay);
+    //Get water data
+    double getNodeWaterContent(SF3Duint_t nodeIndex);
+    double getNodeMaximumWaterContent(SF3Duint_t nodeIndex);
+    double getNodeAvailableWaterContent(SF3Duint_t nodeIndex);
+    double getNodeWaterDeficit(SF3Duint_t nodeIndex, double fieldCapacity);
+    double getNodeDegreeOfSaturation(SF3Duint_t nodeIndex);
+    /*not used*/ double getNodeWaterConductivity(SF3Duint_t nodeIndex);
+    double getNodeMatricPotential(SF3Duint_t nodeIndex);
+    double getNodeTotalPotential(SF3Duint_t nodeIndex);
+    double getNodePond(SF3Duint_t nodeIndex);
+    /*not used*/ double getNodeMaxWaterFlow(SF3Duint_t nodeIndex, linkType_t linkDirection);
+    /*not used*/ double getNodeSumLateralWaterFlow(SF3Duint_t nodeIndex);
+    double getNodeSumLateralWaterFlowIn(SF3Duint_t nodeIndex);
+    double getNodeSumLateralWaterFlowOut(SF3Duint_t nodeIndex);
+    double getNodeBoundaryWaterFlow(SF3Duint_t nodeIndex);
 
-    __EXTERN int DLL_EXPORT __STDCALL setNodeSoil(long nodeIndex, int soilIndex, int horizonIndex);
+    double getTotalBoundaryWaterFlow(boundaryType_t boundaryType);
+    double getTotalWaterContent();
+    double getWaterStorage();
+    double getWaterMBR();
 
-    // SURFACE
-    __EXTERN int DLL_EXPORT __STDCALL setSurfaceProperties(int surfaceIndex, double Roughness);
-    __EXTERN int DLL_EXPORT __STDCALL setNodeSurface(long nodeIndex, int surfaceIndex);
-    __EXTERN int DLL_EXPORT __STDCALL setNodePond(long nodeIndex, double pond);
+    //Set heat data
+    SF3Derror_t setNodeHeatSinkSource(SF3Duint_t nodeIndex, double heatSinkSource);
+    SF3Derror_t setNodeTemperature(SF3Duint_t nodeIndex, double temperature);
+    SF3Derror_t setNodeBoundaryFixedTemperature(SF3Duint_t nodeIndex, double fixedTemperature, double depth);
+    SF3Derror_t setNodeBoundaryHeightWind(SF3Duint_t nodeIndex, double heightWind);
+    SF3Derror_t setNodeBoundaryHeightTemperature(SF3Duint_t nodeIndex, double heightTemperature);
+    SF3Derror_t setNodeBoundaryNetIrradiance(SF3Duint_t nodeIndex, double netIrradiance);
+    SF3Derror_t setNodeBoundaryTemperature(SF3Duint_t nodeIndex, double temperature);
+    SF3Derror_t setNodeBoundaryRelativeHumidity(SF3Duint_t nodeIndex, double relativeHumidity);
+    SF3Derror_t setNodeBoundaryRoughness(SF3Duint_t nodeIndex, double roughness);
+    SF3Derror_t setNodeBoundaryWindSpeed(SF3Duint_t nodeIndex, double windSpeed);
 
-    // WATER
-    __EXTERN int DLL_EXPORT __STDCALL setHydraulicProperties(int waterRetentionCurve, int conductivityMeanType, float conductivityHorizVertRatio);
-    __EXTERN int DLL_EXPORT __STDCALL setWaterContent(long index, double myWaterContent);
-    __EXTERN int DLL_EXPORT __STDCALL setDegreeOfSaturation(long nodeIndex, double degreeOfSaturation);
-    __EXTERN int DLL_EXPORT __STDCALL setMatricPotential(long index, double psi);
-    __EXTERN int DLL_EXPORT __STDCALL setTotalPotential(long index, double totalPotential);
-    __EXTERN int DLL_EXPORT __STDCALL setPrescribedTotalPotential(long index, double prescribedTotalPotential);
-    __EXTERN int DLL_EXPORT __STDCALL setWaterSinkSource(long index, double sinkSource);
+    //Get heat data
+    double getNodeTemperature(SF3Duint_t nodeIndex);
+    double getNodeHeatConductivity(SF3Duint_t nodeIndex);
+    double getNodeVapor(SF3Duint_t nodeIndex);
+    /*Rename?*/ double getNodeHeat(SF3Duint_t nodeIndex, double h);                                           //nodeHeatStorage
+    /*Rename?*/ double getNodeHeatFlux(SF3Duint_t nodeIndex, linkType_t linkDirection, fluxTypes_t fluxType); //nodeMaxHeatFlux
+    double getNodeBoundaryAdvectiveFlux(SF3Duint_t nodeIndex);
+    double getNodeBoundaryLatentFlux(SF3Duint_t nodeIndex);
+    double getNodeBoundaryRadiativeFlux(SF3Duint_t nodeIndex);
+    double getNodeBoundarySensibleFlux(SF3Duint_t nodeIndex);
+    double getNodeBoundaryAerodynamicConductance(SF3Duint_t nodeIndex);
+    double getNodeBoundarySoilConductance(SF3Duint_t nodeIndex);
+    double getHeatMBR();
+    double getHeatMBE();
 
-    __EXTERN double DLL_EXPORT __STDCALL getWaterContent(long nodeIndex);
-    __EXTERN double DLL_EXPORT __STDCALL getMaximumWaterContent(long nodeIndex);
-    __EXTERN double DLL_EXPORT __STDCALL getAvailableWaterContent(long nodeIndex);
-    __EXTERN double DLL_EXPORT __STDCALL getWaterDeficit(long index, double fieldCapacity);
-    __EXTERN double DLL_EXPORT __STDCALL getTotalWaterContent();
-    __EXTERN double DLL_EXPORT __STDCALL getDegreeOfSaturation(long nodeIndex);
-    __EXTERN double DLL_EXPORT __STDCALL getBoundaryWaterFlow(long nodeIndex);
-    __EXTERN double DLL_EXPORT __STDCALL getBoundaryWaterSumFlow(int boundaryType);
-    __EXTERN double DLL_EXPORT __STDCALL getMatricPotential(long nodeIndex);
-    __EXTERN double DLL_EXPORT __STDCALL getTotalPotential(long nodeIndex);
-    __EXTERN  double DLL_EXPORT __STDCALL getWaterMBR();
-    __EXTERN double DLL_EXPORT __STDCALL getWaterConductivity(long nodeIndex);
-    __EXTERN double DLL_EXPORT __STDCALL getWaterFlow(long nodeIndex, short direction);
-    __EXTERN double DLL_EXPORT __STDCALL getSumLateralWaterFlow(long nodeIndex);
-    __EXTERN double DLL_EXPORT __STDCALL getSumLateralWaterFlowIn(long nodeIndex);
-    __EXTERN double DLL_EXPORT __STDCALL getSumLateralWaterFlowOut(long nodeIndex);
-    __EXTERN  double DLL_EXPORT __STDCALL getWaterStorage();
-    __EXTERN double getPond(long nodeIndex);
+    //Computations
+    void computePeriod(double timePeriod);      //move to a SF3Derror_t return
+    double computeStep(double maxTimeStep);
 
-    // HEAT
-    __EXTERN int DLL_EXPORT __STDCALL setHeatSinkSource(long nodeIndex, double myHeatFlow);
-    __EXTERN int DLL_EXPORT __STDCALL setTemperature(long nodeIndex, double myT);
-    __EXTERN int DLL_EXPORT __STDCALL setHeatBoundaryHeightWind(long nodeIndex, double myHeight);
-    __EXTERN int DLL_EXPORT __STDCALL setHeatBoundaryHeightTemperature(long nodeIndex, double myHeight);
-    __EXTERN int DLL_EXPORT __STDCALL setHeatBoundaryTemperature(long nodeIndex, double myTemperature);
-    __EXTERN int DLL_EXPORT __STDCALL setHeatBoundaryRelativeHumidity(long nodeIndex, double myRelativeHumidity);
-    __EXTERN int DLL_EXPORT __STDCALL setHeatBoundaryRoughness(long nodeIndex, double myRoughness);
-    __EXTERN int DLL_EXPORT __STDCALL setHeatBoundaryWindSpeed(long nodeIndex, double myWindSpeed);
-    __EXTERN int DLL_EXPORT __STDCALL setHeatBoundaryNetIrradiance(long nodeIndex, double myNetIrradiance);
-    __EXTERN int DLL_EXPORT __STDCALL setFixedTemperature(long nodeIndex, double myT, double myDepth);
-
-    __EXTERN double DLL_EXPORT __STDCALL getTemperature(long nodeIndex);
-    __EXTERN double DLL_EXPORT __STDCALL getHeatConductivity(long nodeIndex);
-    __EXTERN double DLL_EXPORT __STDCALL getHeat(long nodeIndex, double h);
-    __EXTERN double DLL_EXPORT __STDCALL getNodeVapor(long nodeIndex);
-    __EXTERN float DLL_EXPORT __STDCALL getHeatFlux(long nodeIndex, short myDirection, int fluxType);
-    __EXTERN double DLL_EXPORT __STDCALL getBoundarySensibleFlux(long nodeIndex);
-    __EXTERN double DLL_EXPORT __STDCALL getBoundaryAdvectiveFlux(long nodeIndex);
-    __EXTERN double DLL_EXPORT __STDCALL getBoundaryLatentFlux(long nodeIndex);
-    __EXTERN double DLL_EXPORT __STDCALL getBoundaryRadiativeFlux(long nodeIndex);
-    __EXTERN double DLL_EXPORT __STDCALL getBoundaryAerodynamicConductance(long nodeIndex);
-    __EXTERN double DLL_EXPORT __STDCALL getBoundarySoilConductance(long nodeIndex);
-    __EXTERN  double DLL_EXPORT __STDCALL getHeatMBR();
-    __EXTERN  double DLL_EXPORT __STDCALL getHeatMBE();
-
-    // SOLUTES
-    // ...
-
-    // COMPUTATION
-    __EXTERN void DLL_EXPORT __STDCALL initializeBalance();
-    __EXTERN void DLL_EXPORT __STDCALL computePeriod(double timePeriod);
-	__EXTERN double DLL_EXPORT __STDCALL computeStep(double maxTime);
-
-    // LOG TEMP
-    __EXTERN QString getMatrixLog();
-    __EXTERN QString getVectorLog();
-    __EXTERN QString getLinSystLog();
-    //__EXTERN QString getCUDArun(int x);
-    void logOld();
+    void logNew();
 }
-
-#endif
