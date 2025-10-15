@@ -7,7 +7,7 @@
 
     #include <QString>
 
-    namespace soilFluxes3D {
+    namespace soilFluxes3D::v1 {
 
     // TEST
     __EXTERN  int DLL_EXPORT __STDCALL test();

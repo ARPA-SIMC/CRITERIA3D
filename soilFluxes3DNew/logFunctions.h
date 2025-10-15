@@ -17,9 +17,9 @@
 
 #include "types_cpu.h"
 
-using namespace soilFluxes3D::New;
+using namespace soilFluxes3D::v2;
 
-namespace soilFluxes3D::Log
+namespace soilFluxes3D::v2::Log
 {
     //Log system
     enum class approxFieldsKeys : uint8_t {matA, vecB, vecX, stepRes, numFields};

@@ -4,21 +4,21 @@
 #include <cassert>
 #include <iostream>
 
-using namespace soilFluxes3D::New;
-using namespace soilFluxes3D::Math;
+using namespace soilFluxes3D::v2;
+using namespace soilFluxes3D::v2::Math;
 
 //Temp
 #include "heat.h"
-using namespace soilFluxes3D::Heat;
+using namespace soilFluxes3D::v2::Heat;
 
-namespace soilFluxes3D::New
+namespace soilFluxes3D::v2
 {
     extern __cudaMngd nodesData_t nodeGrid;
     extern __cudaMngd Solver* solver;
     extern __cudaMngd simulationFlags_t simulationFlags;
 }
 
-namespace soilFluxes3D::Soil
+namespace soilFluxes3D::v2::Soil
 {
 
     /*!

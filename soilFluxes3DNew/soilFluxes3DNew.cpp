@@ -10,7 +10,7 @@
 
 #ifdef MCR_ENABLED
     #include "logFunctions.h"
-    using namespace soilFluxes3D::Log;
+    using namespace soilFluxes3D::v2::Log;
 #endif
 
 #include "cpusolver.h"
@@ -18,9 +18,9 @@
     #include "gpusolver.h"
 #endif
 
-using namespace soilFluxes3D::Soil;
-using namespace soilFluxes3D::Water;
-using namespace soilFluxes3D::Heat;
+using namespace soilFluxes3D::v2::Soil;
+using namespace soilFluxes3D::v2::Water;
+using namespace soilFluxes3D::v2::Heat;
 
 #include<array>
 std::vector<std::vector<double>> vecPH_new, vecOPH_new, vecSe_new, vecIF_new, vecWK_new, vecwF_new, vecT_new, vecHF_new,
@@ -28,7 +28,7 @@ std::vector<std::vector<double>> vecPH_new, vecOPH_new, vecSe_new, vecIF_new, ve
 std::vector<std::array<std::vector<double>, numTotalFluxTypes>> vectorFluxesUp_new, vectorFluxesDown_new;
 std::vector<balanceData_t> vecBAL_new;
 
-namespace soilFluxes3D::New
+namespace soilFluxes3D::v2
 {
     //Solver objects
     CPUSolver CPUSolverObject;

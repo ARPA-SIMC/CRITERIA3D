@@ -15,7 +15,7 @@
 
 #include "commonConstants.h"
 
-namespace soilFluxes3D::New
+namespace soilFluxes3D::v2
 {
     using SF3Duint_t = std::uint32_t;
     using u8_t  = std::uint8_t;

@@ -137,7 +137,7 @@ double computeAtmosphericLatentFlux(long nodeIndex)
     double BoundaryVapor = ConcVapSat * (nodeList[nodeIndex].boundary->Heat->relativeHumidity / 100.);
 
     // kg m-3
-    double myDeltaVapor = BoundaryVapor - soilFluxes3D::getNodeVapor(nodeIndex);
+    double myDeltaVapor = BoundaryVapor - soilFluxes3D::v1::getNodeVapor(nodeIndex);
 
     // m s-1
     double myTotalConductance = 1./((1./nodeList[nodeIndex].boundary->Heat->aerodynamicConductance) + (1. / nodeList[nodeIndex].boundary->Heat->soilConductance));

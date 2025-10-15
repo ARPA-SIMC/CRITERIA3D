@@ -3,7 +3,7 @@
 
 #include "types.h"
 
-namespace soilFluxes3D::New
+namespace soilFluxes3D::v2
 {
     struct MatrixCPU
     {

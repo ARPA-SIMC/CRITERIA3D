@@ -4,7 +4,7 @@
 #include "solver.h"
 #include "types_gpu.h"
 
-namespace soilFluxes3D::New
+namespace soilFluxes3D::v2
 {
     class GPUSolver : public Solver
     {
@@ -94,6 +94,6 @@ namespace soilFluxes3D::New
         return contextErrorType;
     }
 
-} // namespace soilFluxes3D::New
+} // namespace soilFluxes3D::v2
 
 #endif // SOILFLUXES3D_GPUSOLVER_H

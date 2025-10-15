@@ -78,7 +78,7 @@
 //Log
 #ifdef MCR_ENABLED
     #include "logFunctions.h"
-    using namespace soilFluxes3D::Log;
+    using namespace soilFluxes3D::v2::Log;
     #define logStruct logNodeGridStruct(nodeGrid, getSolverType())
     #define logSystem //createCurrStepLog(matrixA, vectorB, vectorX, isStepValid)
 #else

@@ -4,9 +4,9 @@
 #include "macro.h"
 #include "types.h"
 
-using namespace soilFluxes3D::New;
+using namespace soilFluxes3D::v2;
 
-namespace soilFluxes3D::Heat
+namespace soilFluxes3D::v2::Heat
 {
     bool isHeatNode(SF3Duint_t nodeIndex);
 

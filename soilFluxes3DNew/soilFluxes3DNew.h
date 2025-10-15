@@ -4,7 +4,7 @@
 #include "macro.h"
 #include "types.h"
 
-namespace soilFluxes3D::New
+namespace soilFluxes3D::v2
 {
     //Inizializazion and memory management
     SF3Derror_t initializeSF3D(SF3Duint_t nrNodes, u16_t nrLayers, u8_t nrLateralLinks, bool isComputeWater, bool isComputeHeat, bool isComputeSolutes, heatFluxSaveMode_t HFsm = heatFluxSaveMode_t::None);

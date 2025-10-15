@@ -1,6 +1,6 @@
 #include "logFunctions.h"
 
-namespace soilFluxes3D::Log
+namespace soilFluxes3D::v2::Log
 {
     logData_t logData;
 

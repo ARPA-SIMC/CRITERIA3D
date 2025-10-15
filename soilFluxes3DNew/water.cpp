@@ -14,12 +14,12 @@
 #define EPSILON_CUSTOM 0.00001
 #define DBL_EPSILON_CUSTOM 2.2204460492503131e-016
 
-using namespace soilFluxes3D::New;
-using namespace soilFluxes3D::Soil;
-using namespace soilFluxes3D::Math;
-using namespace soilFluxes3D::Heat;
+using namespace soilFluxes3D::v2;
+using namespace soilFluxes3D::v2::Soil;
+using namespace soilFluxes3D::v2::Math;
+using namespace soilFluxes3D::v2::Heat;
 
-namespace soilFluxes3D::New
+namespace soilFluxes3D::v2
 {
     extern __cudaMngd Solver* solver;
     extern __cudaMngd nodesData_t nodeGrid;
@@ -27,7 +27,7 @@ namespace soilFluxes3D::New
     extern __cudaMngd simulationFlags_t simulationFlags;
 }
 
-namespace soilFluxes3D::Water
+namespace soilFluxes3D::v2::Water
 {
     /*!
      * \brief initializes the water balance variables

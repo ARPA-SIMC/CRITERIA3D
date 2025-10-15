@@ -4,7 +4,7 @@
 #include <optional>
 #include "types_cpu.h"
 
-namespace soilFluxes3D::New
+namespace soilFluxes3D::v2
 {
     #define updateFromPartial(total, partial, field) {if (partial.field) {total.field = *partial.field;}}
 

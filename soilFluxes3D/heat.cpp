@@ -74,7 +74,7 @@ double computeHeatStorage(double timeStepHeat, double timeStepWater)
         else
             myH = nodeList[i].H;
 
-        heatStorage += soilFluxes3D::getHeat(i, myH - nodeList[i].z);
+        heatStorage += soilFluxes3D::v1::getHeat(i, myH - nodeList[i].z);
         vecO.push_back(myH);
         vecO.push_back(heatStorage);
     }

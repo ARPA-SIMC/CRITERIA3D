@@ -8,7 +8,7 @@
 #include "types_cpu.h"
 #include "macro.h"
 
-namespace soilFluxes3D::New
+namespace soilFluxes3D::v2
 {
     class Solver
     {

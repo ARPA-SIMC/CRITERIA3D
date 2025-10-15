@@ -1,9 +1,9 @@
 #include "otherFunctions.h"
 
 //TEMP
-using namespace soilFluxes3D::New;
+using namespace soilFluxes3D::v2;
 
-namespace soilFluxes3D::Math
+namespace soilFluxes3D::v2::Math
 {
     __cudaSpec double computeMean(double v1, double v2, meanType_t type)
     {

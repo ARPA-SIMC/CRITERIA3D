@@ -5,12 +5,12 @@
 #include "solver.h"
 #include "soilFluxes3DNew.h"
 
-using namespace soilFluxes3D::New;
-using namespace soilFluxes3D::Soil;
-using namespace soilFluxes3D::Water;
-using namespace soilFluxes3D::Math;
+using namespace soilFluxes3D::v2;
+using namespace soilFluxes3D::v2::Soil;
+using namespace soilFluxes3D::v2::Water;
+using namespace soilFluxes3D::v2::Math;
 
-namespace soilFluxes3D::New
+namespace soilFluxes3D::v2
 {
     extern __cudaMngd Solver* solver;
     extern __cudaMngd nodesData_t nodeGrid;
@@ -20,7 +20,7 @@ namespace soilFluxes3D::New
 
 std::vector<double> vecN;
 
-namespace soilFluxes3D::Heat
+namespace soilFluxes3D::v2::Heat
 {
     bool isHeatNode(SF3Duint_t nodeIndex)
     {
