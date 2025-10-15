@@ -136,4 +136,3 @@ win32:
 }
 
 include($$absolute_path(../../bin/Makeall_CRITERIA3D/ConfigFlag.pri))
-include($$absolute_path(../../bin/Makeall_CRITERIA3D/ConfigExpr.pri))

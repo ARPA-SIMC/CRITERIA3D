@@ -93,7 +93,7 @@ namespace soilFluxes3D::New
             return SF3Derror_t::SolverError;
 
         //Destruct matrix variable
-        //__parfor(_parameters.enableOMP)
+        __parfor(_parameters.enableOMP)
         for (SF3Duint_t rowIdx = 0; rowIdx < matrixA.numRows; ++rowIdx)
         {
             hostSolverFree(matrixA.colIndeces[rowIdx]);
@@ -129,7 +129,7 @@ namespace soilFluxes3D::New
             std::memcpy(vectorX.values, nodeGrid.waterData.pressureHead, vectorX.numElements * sizeof(double));
 
             //Assign vectorC surface values and compute subsurface saturation degree
-            //__parfor(_parameters.enableOMP)
+            __parfor(_parameters.enableOMP)
             for (SF3Duint_t nodeIdx = 0; nodeIdx < nodeGrid.numNodes; ++nodeIdx)
             {
                 if(nodeGrid.surfaceFlag[nodeIdx])
@@ -137,17 +137,13 @@ namespace soilFluxes3D::New
                 else
                     nodeGrid.waterData.saturationDegree[nodeIdx] = computeNodeSe(nodeIdx);
             }
-
             /*temp*/ logNew();
 
             //Update aereodynamic and soil conductance
             updateConductance();
 
-            /*temp*/ logNew();
-
             //Update boundary
             updateBoundaryWaterData(acceptedTimeStep);
-
             /*temp*/ logNew();
 
             //Effective computation step
@@ -168,6 +164,8 @@ namespace soilFluxes3D::New
             computeCapacity(vectorC);
             logStruct;
 
+            auto vC = std::vector<double>(vectorC.values, vectorC.values + vectorC.numElements);
+
             //Update boundary water
             updateBoundaryWaterData(deltaT);
             logStruct;
@@ -179,9 +177,12 @@ namespace soilFluxes3D::New
             //Compute linear system elements
             computeLinearSystemElement(matrixA, vectorB, vectorC, approxIdx, deltaT, _parameters.lateralVerticalRatio, _parameters.meanType);
 
+            auto vB = std::vector<double>(vectorB.values, vectorB.values + vectorB.numElements);
+            /*temp*/ logNew();
+
             //Courant data reduction
             double tempMax = 0;
-            //__parforop(_parameters.enableOMP, max, tempMax)
+            __parforop(_parameters.enableOMP, max, tempMax)
             for(SF3Duint_t idx = 0; idx < nodeGrid.numNodes; ++idx)
                 tempMax = SF3Dmax(tempMax, nodeGrid.waterData.partialCourantWaterLevels[idx]);
 
@@ -218,14 +219,18 @@ namespace soilFluxes3D::New
             std::memcpy(nodeGrid.waterData.pressureHead, vectorX.values, vectorX.numElements * sizeof(double));
 
             //Update degree of saturation   //TO DO: make a function
-            //__parfor(_parameters.enableOMP)
+            __parfor(_parameters.enableOMP)
             for (SF3Duint_t nodeIdx = 0; nodeIdx < nodeGrid.numNodes; ++nodeIdx)
                 if(!nodeGrid.surfaceFlag[nodeIdx])
                     nodeGrid.waterData.saturationDegree[nodeIdx] = computeNodeSe(nodeIdx);
 
+            /*temp*/ logNew();
+
             //Check water balance
             balanceResult = evaluateWaterBalance(approxIdx, _bestMBRerror, deltaT, _parameters);
             logStruct;
+
+            /*temp*/ logNew();
 
             if((balanceResult == balanceResult_t::stepAccepted) || (balanceResult == balanceResult_t::stepHalved))
                 return balanceResult;
@@ -245,7 +250,7 @@ namespace soilFluxes3D::New
         std::memcpy(nodeGrid.heatData.oldTemperature, nodeGrid.heatData.temperature, nodeGrid.numNodes * sizeof(double));
 
         //initialize vector C
-        //__parfor(_parameters.enableOMP)
+        __parfor(_parameters.enableOMP)
         for (SF3Duint_t nodeIdx = 0; nodeIdx < nodeGrid.numNodes; ++nodeIdx)
         {
             if(nodeGrid.surfaceFlag[nodeIdx])
@@ -259,7 +264,7 @@ namespace soilFluxes3D::New
         //Compute linear system elements
         hostReset(nodeGrid.waterData.invariantFluxes, nodeGrid.numNodes);
 
-        //__parfor(_parameters.enableOMP)
+        __parfor(_parameters.enableOMP)
         for (SF3Duint_t rowIdx = 0; rowIdx < nodeGrid.numNodes; ++rowIdx)
         {
             if(nodeGrid.surfaceFlag[rowIdx])
@@ -343,7 +348,7 @@ namespace soilFluxes3D::New
         solveLinearSystem(_parameters.maxApproximationsNumber - 1, processType::Heat);
 
         //Retrive new temperatures
-        //__parfor(_parameters.enableOMP)
+        __parfor(_parameters.enableOMP)
         for (SF3Duint_t rowIdx = 0; rowIdx < nodeGrid.numNodes; ++rowIdx)
             if(!nodeGrid.surfaceFlag[rowIdx])
                 nodeGrid.heatData.temperature[rowIdx] = vectorX.values[rowIdx];
@@ -358,7 +363,7 @@ namespace soilFluxes3D::New
         saveHeatFluxValues(timeStepHeat, timeStepWater);
 
         //Save new temperatures
-        //__parfor(_parameters.enableOMP)
+        __parfor(_parameters.enableOMP)
         for (SF3Duint_t rowIdx = 0; rowIdx < nodeGrid.numNodes; ++rowIdx)
             if(!nodeGrid.surfaceFlag[rowIdx])
                 nodeGrid.heatData.oldTemperature[rowIdx] = nodeGrid.heatData.temperature[rowIdx];
@@ -369,7 +374,7 @@ namespace soilFluxes3D::New
 
     bool CPUSolver::solveLinearSystem(u8_t approximationNumber, processType computationType)
     {
-        double currErrorNorm = 0., bestErrorNorm = static_cast<double>(std::numeric_limits<float>::max());
+        double currErrorNorm = 0., bestErrorNorm = 1.;
 
         u32_t currMaxIterationNum = calcCurrentMaxIterationNumber(approximationNumber);
 

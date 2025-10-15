@@ -385,8 +385,8 @@ bool waterFlowComputation_stdTreads(double deltaT)
 
             if (n == lastThread)
                 end = myStructure.nrNodes-1;
-
-            threadVector.push_back(std::thread(computeMatrixElements_thread, start, end, approximationNr, deltaT));
+            computeMatrixElements_thread(start, end, approximationNr, deltaT);
+            //threadVector.push_back(std::thread(computeMatrixElements_thread, start, end, approximationNr, deltaT));
         }
 
         // wait threads
@@ -394,6 +394,8 @@ bool waterFlowComputation_stdTreads(double deltaT)
             th.join();
 
         threadVector.clear();
+
+        /*temp*/ logOld();
 
         // check Courant
         if (CourantWater > 1. && deltaT > myParameters.delta_t_min)
@@ -424,8 +426,12 @@ bool waterFlowComputation_stdTreads(double deltaT)
                 nodeList[i].Se = computeSe(unsigned(i));
         }
 
+        /*temp*/ logOld();
+
         // check water balance
         isValidStep = waterBalance(deltaT, approximationNr);
+
+        /*temp*/ logOld();
 
         if (getForcedHalvedTime())
             return false;
@@ -472,11 +478,10 @@ bool computeWaterFluxes(double maxTime, double *acceptedTime)
         /*! update boundary conditions */
         updateConductance();
 
-        /*temp*/ logOld();
-
         updateBoundaryWater(*acceptedTime);		//maybe useless: remove
 
         /*temp*/ logOld();
+
         isStepOK = waterFlowComputation_stdTreads(*acceptedTime);
 
         if (!isStepOK)
