@@ -227,7 +227,7 @@ bool Crit3DRothCplusplus::computeRothCPoint()
     inputFYM *= 0.03; //t C month-1 ha-1
 
 
-    RothC(timeFact, plantCover);
+    RothC(timeFact, rothCplantCover);
     if (radioCarbon.isActive)
         double totalDelta = (std::exp(-totalRage/8035.0) - 1.0) * 1000;
 
@@ -764,7 +764,7 @@ int Crit3DRothCplusplus::main()
 
         totalRage = 0;
 
-        RothC(timeFact, plantCover);
+        RothC(timeFact, rothCplantCover);
 
         if (((k+1)%timeFact) == 0)
         {
@@ -797,7 +797,7 @@ int Crit3DRothCplusplus::main()
         inputFYM = data[i][7];
         //modernC = data[i][2]/100;
 
-        RothC(timeFact, plantCover);
+        RothC(timeFact, rothCplantCover);
 
         totalDelta = (std::exp(-totalRage/8035.0) - 1.0) * 1000;
 

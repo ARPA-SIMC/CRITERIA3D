@@ -270,7 +270,7 @@
 
         const Crit3DMacroArea& getMacroArea(int index) const
         {
-            if (index >= macroAreas.size())
+            if (index >= (int)macroAreas.size())
             {
                 return *(new(Crit3DMacroArea));
             }

@@ -170,31 +170,31 @@ public:
     double getInputC();
     void setInputC(double myInputC);
 
-    void setClay(double myClay) {clay = myClay;};
-    double getClay() {return clay;};
+    void setClay(double myClay) {clay = myClay;}
+    double getClay() {return clay;}
 
-    void setDepth(double myDepth) {depth=myDepth;};
-    double getDepth() {return depth;};
+    void setDepth(double myDepth) {depth=myDepth;}
+    double getDepth() {return depth;}
 
-    void setSWC(double mySWC) {SWC = mySWC;};
-    double getSWC() {return SWC; };
+    void setSWC(double mySWC) {SWC = mySWC;}
+    double getSWC() {return SWC; }
 
-    void setPlantCover(double myPC) {plantCover = myPC; };
-    double getPlantCover() { return plantCover; };
+    void setPlantCover(double myPC) {rothCplantCover = myPC; }
+    double getPlantCover() { return rothCplantCover; }
 
-    double getDPM() {return decomposablePlantMatter;};
-    double getRPM() {return resistantPlantMatter;};
-    double getBIO() {return microbialBiomass;};
-    double getHUM() {return humifiedOrganicMatter;};
-    double getIOM() {return inorganicMatter;};
-    double getSOC() {return soilOrganicCarbon;};
+    double getDPM() {return decomposablePlantMatter;}
+    double getRPM() {return resistantPlantMatter;}
+    double getBIO() {return microbialBiomass;}
+    double getHUM() {return humifiedOrganicMatter;}
+    double getIOM() {return inorganicMatter;}
+    double getSOC() {return soilOrganicCarbon;}
 
-    void setDPM(double myDPM) {decomposablePlantMatter = myDPM;};
-    void setRPM(double myRPM) {resistantPlantMatter = myRPM;};
-    void setBIO(double myBIO) {microbialBiomass = myBIO;};
-    void setHUM(double myHUM) {humifiedOrganicMatter = myHUM;};
-    void setIOM(double myIOM) {inorganicMatter = myIOM;};
-    void setSOC(double mySOC) {soilOrganicCarbon = mySOC;};
+    void setDPM(double myDPM) {decomposablePlantMatter = myDPM;}
+    void setRPM(double myRPM) {resistantPlantMatter = myRPM;}
+    void setBIO(double myBIO) {microbialBiomass = myBIO; }
+    void setHUM(double myHUM) {humifiedOrganicMatter = myHUM;}
+    void setIOM(double myIOM) {inorganicMatter = myIOM;}
+    void setSOC(double mySOC) {soilOrganicCarbon = mySOC;}
 
     void resetInputVariables();
     void setStateVariables(int row, int col);
@@ -221,7 +221,7 @@ private:
     double soilOrganicCarbon; //[t C /ha]
     double inputC; //[t C /ha]
     double inputFYM; //[t C /ha]
-    double plantCover; // formerly bool [-]
+    double rothCplantCover; // formerly bool [-]
 
     double decomposablePMResistantPMRatio; //[-]
     double totalRage;

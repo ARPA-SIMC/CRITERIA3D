@@ -31,6 +31,8 @@ bool Logger::setLog(QString path, QString fileName, bool addDateTime)
         {
             logFileName = path + "log/" + fileName + ".txt";
         }
+
+        logFileName = QDir().cleanPath(logFileName);
         file->setFileName(logFileName);
         std::cout << "Log file created: " << logFileName.toStdString() << std::endl;
         return file->open(QIODevice::WriteOnly | QIODevice::Text);

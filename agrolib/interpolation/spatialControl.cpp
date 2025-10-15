@@ -236,15 +236,14 @@ bool computeResidualsGlocalDetrending(meteoVariable myVar, const Crit3DMacroArea
             //peso della stazione nell'area attuale in base alla sua posizione
             int row, col;
             float weight = NODATA;
-            int temp = NODATA;
 
             //valido solo per DEM
             areaCells = myArea.getAreaCellsDEM();
-            std::string name = meteoPoints[meteoPointsList[i]].name;
-            std::string id = meteoPoints[meteoPointsList[i]].id;
+            //std::string name = meteoPoints[meteoPointsList[i]].name;
+            //std::string id = meteoPoints[meteoPointsList[i]].id;
 
             gis::getRowColFromXY(*(interpolationSettings.getCurrentDEM()->header), meteoPoints[meteoPointsList[i]].point.utm, &row, &col);
-            temp = interpolationSettings.getCurrentDEM()->header->nrCols*row + col;
+            //long temp = interpolationSettings.getCurrentDEM()->header->nrCols*row + col;
 
             /*for (int k = 0; k < (int)areaCells.size(); k = k + 2)
             {

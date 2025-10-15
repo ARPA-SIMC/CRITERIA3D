@@ -775,8 +775,8 @@ bool Crit3DMeteoPoint::setMeteoPointValueH(const Crit3DDate& myDate, int myHour,
     case windVectorIntensity:
     {
         float u = NODATA, v = NODATA;
-        computeWindCartesian(_obsDataH[iDay].windVecInt[j], _obsDataH[iDay].windVecDir[j], &u, &v);
         _obsDataH[iDay].windVecInt[j] = myValue;
+        computeWindCartesian(_obsDataH[iDay].windVecInt[j], _obsDataH[iDay].windVecDir[j], &u, &v);
         _obsDataH[iDay].windVecX[j] = u;
         _obsDataH[iDay].windVecY[j] = v;
         break;
@@ -785,8 +785,8 @@ bool Crit3DMeteoPoint::setMeteoPointValueH(const Crit3DDate& myDate, int myHour,
     case windVectorDirection:
     {
         float u = NODATA, v = NODATA;
-        computeWindCartesian(_obsDataH[iDay].windVecInt[j], _obsDataH[iDay].windVecDir[j], &u, &v);
         _obsDataH[iDay].windVecDir[j] = myValue;
+        computeWindCartesian(_obsDataH[iDay].windVecInt[j], _obsDataH[iDay].windVecDir[j], &u, &v);
         _obsDataH[iDay].windVecX[j] = u;
         _obsDataH[iDay].windVecY[j] = v;
         break;

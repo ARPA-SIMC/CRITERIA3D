@@ -144,6 +144,8 @@ MainWindow::MainWindow(QWidget *parent) :
     myProject.setComputeOnlyPoints(false);
     ui->flagOutputPoints_save_output->setChecked(myProject.isSaveOutputPoints());
     ui->flagCompute_only_points->setChecked(myProject.getComputeOnlyPoints());
+    ui->actionCriteria3D_parallel_computing->setChecked(myProject.isParallelComputing());
+    ui->actionCriteria3D_update_subHourly->setChecked(myProject.showEachTimeStep);
 
     this->setMouseTracking(true);
     this->setTitle();
@@ -915,12 +917,12 @@ void MainWindow::on_actionOpenProject_triggered()
         myProject.loadCriteria3DProject(myProject.getApplicationPath() + "default.ini");
     }
 
-    ui->actionCriteria3D_update_subHourly->setChecked(myProject.showEachTimeStep);
     ui->flagOutputPoints_save_output->setChecked(myProject.isSaveOutputPoints());
     ui->flagCompute_only_points->setChecked(myProject.getComputeOnlyPoints());
 
     drawProject();
 }
+
 
 void MainWindow::on_actionCloseProject_triggered()
 {
@@ -1350,7 +1352,16 @@ void MainWindow::on_actionView_Boundary_triggered()
 
 void MainWindow::on_actionView_SoilMap_triggered()
 {
-    showSoilMap();
+    if (myProject.soilMap.isLoaded)
+    {
+        setColorScale(noMeteoVar, myProject.soilMap.colorScale);
+        setCurrentRasterOutput(&(myProject.soilMap));
+        ui->labelOutputRaster->setText("Soil");
+    }
+    else
+    {
+        myProject.logError("Load a soil map before.");
+    }
 }
 
 
@@ -1640,7 +1651,7 @@ void MainWindow::on_actionView_Crop_degreeDays_triggered()
 {
     if (! myProject.isCropInitialized)
     {
-        myProject.logError("Initialize crop before.");
+        myProject.logWarning("Initialize crop model before.");
         return;
     }
 
@@ -1652,7 +1663,7 @@ void MainWindow::on_actionView_Crop_LAI_triggered()
 {
     if (! myProject.isCropInitialized)
     {
-        myProject.logError("Initialize crop before.");
+        myProject.logWarning("Initialize crop model before.");
         return;
     }
 
@@ -1754,21 +1765,6 @@ bool MainWindow::isSoil(QPoint mapPos)
 }
 
 
-void MainWindow::showSoilMap()
-{
-    if (myProject.soilMap.isLoaded)
-    {
-        setColorScale(airTemperature, myProject.soilMap.colorScale);
-        setCurrentRasterOutput(&(myProject.soilMap));
-        ui->labelOutputRaster->setText("Soil");
-    }
-    else
-    {
-        myProject.logError("Load a soil map before.");
-    }
-}
-
-
 bool MainWindow::isLandUse(QPoint mapPos)
 {
     if (! myProject.landUseMap.isLoaded)
@@ -1783,7 +1779,7 @@ void MainWindow::showLandUseMap()
 {
     if (myProject.landUseMap.isLoaded)
     {
-        setColorScale(noMeteoTerrain, myProject.landUseMap.colorScale);
+        setColorScale(noMeteoVar, myProject.landUseMap.colorScale);
         setCurrentRasterOutput(&(myProject.landUseMap));
         ui->labelOutputRaster->setText("Land use");
     }
@@ -1943,7 +1939,7 @@ void MainWindow::on_actionLoad_soil_map_triggered()
 
     if (myProject.loadSoilMap(fileName))
     {
-        showSoilMap();
+        on_actionView_SoilMap_triggered();
     }
 }
 
@@ -2076,6 +2072,7 @@ void MainWindow::initializeGroupBoxModel()
 {
     ui->groupBoxModel->setEnabled(true);
     ui->buttonModelStart->setDisabled(true);
+    ui->buttonModel1hour->setDisabled(true);
     ui->buttonModelPause->setEnabled(true);
     ui->buttonModelStop->setEnabled(true);
 }
@@ -2086,6 +2083,7 @@ void MainWindow::on_buttonModelPause_clicked()
     myProject.isModelPaused = true;
 
     ui->buttonModelPause->setDisabled(true);
+    ui->buttonModel1hour->setEnabled(true);
     ui->buttonModelStart->setEnabled(true);
     ui->buttonModelStop->setEnabled(true);
 
@@ -2100,7 +2098,27 @@ void MainWindow::on_buttonModelStop_clicked()
 
     ui->buttonModelPause->setDisabled(true);
     ui->buttonModelStart->setDisabled(true);
+    ui->buttonModel1hour->setDisabled(true);
     ui->buttonModelStop->setDisabled(true);
+}
+
+
+void MainWindow::on_buttonModel1hour_clicked()
+{
+    ui->buttonModelPause->setEnabled(true);
+    ui->buttonModel1hour->setDisabled(true);
+    ui->buttonModelStart->setDisabled(true);
+    ui->buttonModelStop->setEnabled(true);
+
+    QDateTime firstTime = QDateTime(myProject.getCurrentDate(), QTime(myProject.getCurrentHour(), 0, 0), Qt::UTC);
+    QDateTime lastTime = firstTime.addSecs(3600);
+    firstTime = firstTime.addSecs(myProject.currentSeconds);
+
+    myProject.isModelPaused = false;
+    bool isRestart = true;
+    myProject.runModels(firstTime, lastTime, isRestart);
+
+    on_buttonModelPause_clicked();
 }
 
 
@@ -2109,6 +2127,7 @@ void MainWindow::on_buttonModelStart_clicked()
     if (myProject.isModelPaused)
     {
         ui->buttonModelPause->setEnabled(true);
+        ui->buttonModel1hour->setDisabled(true);
         ui->buttonModelStart->setDisabled(true);
         ui->buttonModelStop->setEnabled(true);
 
@@ -2118,6 +2137,12 @@ void MainWindow::on_buttonModelStart_clicked()
         myProject.isModelPaused = false;
         bool isRestart = true;
         myProject.runModels(newFirstTime, myProject.modelLastTime, isRestart);
+
+        // computation finished
+        if (myProject.getCurrentTime() == myProject.modelLastTime)
+        {
+            on_buttonModelStop_clicked();
+        }
     }
     else
     {
@@ -2425,7 +2450,7 @@ void MainWindow::on_actionCriteria3D_Initialize_triggered()
         if (! myProject.initializeHydrall())
         {
             myProject.isHydrallInitialized = false;
-            myProject.logError("Couldn't initialize Hydrall model.");
+            myProject.logError("Couldn't initialize Hydrall model:\n" + myProject.errorString);
             return;
         }
     }
@@ -3394,11 +3419,8 @@ void MainWindow::on_actionView_LandUseMap_triggered()
 
 void MainWindow::on_actionHide_LandUseMap_triggered()
 {
-    if (ui->labelOutputRaster->text() == "Land use")
-    {
-        setOutputRasterVisible(false);
-        refreshViewer3D();
-    }
+    setOutputRasterVisible(false);
+    refreshViewer3D();
 }
 
 
@@ -3486,6 +3508,12 @@ void MainWindow::on_actionView_Factor_of_safety_minimum_triggered()
 void MainWindow::on_actionCriteria3D_update_subHourly_triggered(bool isChecked)
 {
     myProject.showEachTimeStep = isChecked;
+}
+
+
+void MainWindow::on_actionCriteria3D_parallel_computing_triggered(bool isChecked)
+{
+    myProject.setParallelComputing(isChecked);
 }
 
 
@@ -3580,8 +3608,11 @@ void MainWindow::on_actionCriteria3D_load_external_state_triggered()
         return;
     }
 
-    QString stateDirectory = QFileDialog::getExistingDirectory(this, tr("Open Directory"), "",
+    QString stateDirectory = QFileDialog::getExistingDirectory(this, tr("Open Directory"), myProject.getProjectPath(),
                                                                QFileDialog::ShowDirsOnly | QFileDialog::DontResolveSymlinks);
+    if (stateDirectory.isEmpty())
+        return;
+
     if (! myProject.loadModelState(stateDirectory))
     {
         myProject.logError();
@@ -3691,91 +3722,125 @@ void MainWindow::on_actionSave_outputRaster_triggered()
 
 void MainWindow::on_actionTree_cover_map_triggered()
 {
-
     if (myProject.treeCoverMap.isLoaded)
     {
-        setColorScale(noMeteoTerrain, myProject.treeCoverMap.colorScale);
+        setColorScale(noMeteoVar, myProject.treeCoverMap.colorScale);
         setCurrentRasterOutput(&(myProject.treeCoverMap));
         ui->labelOutputRaster->setText("Tree cover");
     }
     else
     {
-        myProject.logError("Load a tree cover map before.");
+        myProject.logWarning("Load a tree cover map before.");
     }
 }
 
 
 void MainWindow::on_actionDecomposable_plant_matter_triggered()
 {
-    if (myProject.rothCModel.map.decomposablePlantMaterial->isLoaded)
+    if (myProject.isRothCInitialized)
     {
-        setColorScale(noMeteoTerrain, myProject.rothCModel.map.decomposablePlantMaterial->colorScale);
-        setCurrentRasterOutput((myProject.rothCModel.map.decomposablePlantMaterial));
-        ui->labelOutputRaster->setText("Decomposable plant matter");
+        if (myProject.rothCModel.map.decomposablePlantMaterial->isLoaded)
+        {
+            setColorScale(noMeteoTerrain, myProject.rothCModel.map.decomposablePlantMaterial->colorScale);
+            setCurrentRasterOutput((myProject.rothCModel.map.decomposablePlantMaterial));
+            ui->labelOutputRaster->setText("Decomposable plant matter");
+        }
+        else
+        {
+            myProject.logError("Error while loading decomposable plant matter.");
+        }
     }
     else
     {
-        myProject.logError("Error while loading decomposable plant matter.");
+        myProject.logWarning("Initialize RothC model before.");
     }
 }
 
 
 void MainWindow::on_actionResistant_plant_matter_triggered()
 {
-    if (myProject.rothCModel.map.resistantPlantMaterial->isLoaded)
+    if (myProject.isRothCInitialized)
     {
-        setColorScale(noMeteoTerrain, myProject.rothCModel.map.resistantPlantMaterial->colorScale);
-        setCurrentRasterOutput((myProject.rothCModel.map.resistantPlantMaterial));
-        ui->labelOutputRaster->setText("Resistant plant matter");
+        if (myProject.rothCModel.map.resistantPlantMaterial->isLoaded)
+        {
+            setColorScale(noMeteoTerrain, myProject.rothCModel.map.resistantPlantMaterial->colorScale);
+            setCurrentRasterOutput((myProject.rothCModel.map.resistantPlantMaterial));
+            ui->labelOutputRaster->setText("Resistant plant matter");
+        }
+        else
+        {
+            myProject.logError("Error while loading resistant plant matter.");
+        }
     }
     else
     {
-        myProject.logError("Error while loading resistant plant matter.");
+        myProject.logWarning("Initialize RothC model before.");
     }
 }
 
 
 void MainWindow::on_actionMicrobial_biomass_triggered()
 {
-    if (myProject.rothCModel.map.microbialBiomass->isLoaded)
+    if (myProject.isRothCInitialized)
     {
-        setColorScale(noMeteoTerrain, myProject.rothCModel.map.microbialBiomass->colorScale);
-        setCurrentRasterOutput((myProject.rothCModel.map.microbialBiomass));
-        ui->labelOutputRaster->setText("Microbial biomass");
+        if (myProject.rothCModel.map.microbialBiomass->isLoaded)
+        {
+            setColorScale(noMeteoTerrain, myProject.rothCModel.map.microbialBiomass->colorScale);
+            setCurrentRasterOutput((myProject.rothCModel.map.microbialBiomass));
+            ui->labelOutputRaster->setText("Microbial biomass");
+        }
+        else
+        {
+            myProject.logError("Error while loading microbial biomass.");
+        }
     }
     else
     {
-        myProject.logError("Error while loading microbial biomass.");
+        myProject.logWarning("Initialize RothC model before.");
     }
 }
 
 
 void MainWindow::on_actionHumified_organic_matter_triggered()
 {
-    if (myProject.rothCModel.map.humifiedOrganicMatter->isLoaded)
+    if (myProject.isRothCInitialized)
     {
-        setColorScale(noMeteoTerrain, myProject.rothCModel.map.humifiedOrganicMatter->colorScale);
-        setCurrentRasterOutput((myProject.rothCModel.map.humifiedOrganicMatter));
-        ui->labelOutputRaster->setText("Humified organic matter");
+        if (myProject.rothCModel.map.humifiedOrganicMatter->isLoaded)
+        {
+            setColorScale(noMeteoTerrain, myProject.rothCModel.map.humifiedOrganicMatter->colorScale);
+            setCurrentRasterOutput((myProject.rothCModel.map.humifiedOrganicMatter));
+            ui->labelOutputRaster->setText("Humified organic matter");
+        }
+        else
+        {
+            myProject.logError("Error while loading humified organic matter.");
+        }
     }
     else
     {
-        myProject.logError("Error while loading humified organic matter.");
+        myProject.logWarning("Initialize RothC model before.");
     }
 }
 
 
 void MainWindow::on_actionSoil_organic_matter_triggered()
 {
-    if (myProject.rothCModel.map.soilOrganicMatter->isLoaded)
+    if (myProject.isRothCInitialized)
     {
-        setColorScale(noMeteoTerrain, myProject.rothCModel.map.soilOrganicMatter->colorScale);
-        setCurrentRasterOutput((myProject.rothCModel.map.soilOrganicMatter));
-        ui->labelOutputRaster->setText("Soil organic matter");
+        if (myProject.rothCModel.map.soilOrganicMatter->isLoaded)
+        {
+            setColorScale(noMeteoTerrain, myProject.rothCModel.map.soilOrganicMatter->colorScale);
+            setCurrentRasterOutput((myProject.rothCModel.map.soilOrganicMatter));
+            ui->labelOutputRaster->setText("Soil organic matter");
+        }
+        else
+        {
+            myProject.logError("Error while loading soil organic matter.");
+        }
     }
     else
     {
-        myProject.logError("Error while loading soil organic matter.");
+        myProject.logWarning("Initialize RothC model before.");
     }
 }
 
@@ -3790,4 +3855,5 @@ void MainWindow::on_actionAutomatic_state_saving_end_of_month_toggled(bool isChe
 {
     myProject.setSaveMonthlyState(isChecked);
 }
+
 
