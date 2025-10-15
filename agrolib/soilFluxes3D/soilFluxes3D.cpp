@@ -68,7 +68,7 @@ std::vector<Tbalance> vecBAL_old;
 std::vector<std::array<std::vector<double>, 9>> vectorFluxesUp_old, vectorFluxesDown_old;
 static int run = 0;
 
-namespace soilFluxes3D
+namespace soilFluxes3D::v1
 {
 
      int DLL_EXPORT __STDCALL test()

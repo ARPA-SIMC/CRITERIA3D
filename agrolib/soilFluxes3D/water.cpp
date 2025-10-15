@@ -42,7 +42,7 @@
 #include "heat.h"
 
 #include "soilFluxes3D.h"
-using namespace soilFluxes3D;
+using namespace soilFluxes3D::v1;
 
 
 /*!

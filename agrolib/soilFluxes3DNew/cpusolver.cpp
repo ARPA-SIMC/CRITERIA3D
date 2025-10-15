@@ -9,14 +9,14 @@
 #include "heat.h"
 #include "otherFunctions.h"
 
-using namespace soilFluxes3D::Soil;
-using namespace soilFluxes3D::Water;
-using namespace soilFluxes3D::Heat;
-using namespace soilFluxes3D::Math;
+using namespace soilFluxes3D::v2::Soil;
+using namespace soilFluxes3D::v2::Water;
+using namespace soilFluxes3D::v2::Heat;
+using namespace soilFluxes3D::v2::Math;
 
 std::vector<std::vector<double>> tempCnew, tempAnew, tempBnew, tempX0new;
 std::vector<double> tempVar;
-namespace soilFluxes3D::New
+namespace soilFluxes3D::v2
 {
     extern __cudaMngd nodesData_t nodeGrid;
     extern __cudaMngd simulationFlags_t simulationFlags;

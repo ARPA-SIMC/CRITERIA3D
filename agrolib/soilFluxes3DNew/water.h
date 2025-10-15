@@ -4,9 +4,9 @@
 #include "macro.h"
 #include "types_cpu.h"
 
-using namespace soilFluxes3D::New;
+using namespace soilFluxes3D::v2;
 
-namespace soilFluxes3D::Water
+namespace soilFluxes3D::v2::Water
 {
     //Water simulation functions
     SF3Derror_t initializeWaterBalance();

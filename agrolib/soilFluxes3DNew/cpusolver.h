@@ -3,7 +3,7 @@
 
 #include "solver.h"
 
-namespace soilFluxes3D::New
+namespace soilFluxes3D::v2
 {
     class CPUSolver : public Solver
     {
@@ -51,6 +51,6 @@ namespace soilFluxes3D::New
     }
 
 
-} // namespace soilFluxes3D::New
+} // namespace soilFluxes3D::v2
 
 #endif // SOILFLUXES3D_CPUSOLVER_H

@@ -7,12 +7,12 @@
 #include "heat.h"
 #include "otherFunctions.h"
 
-using namespace soilFluxes3D::Soil;
-using namespace soilFluxes3D::Math;
-using namespace soilFluxes3D::Heat;
-using namespace soilFluxes3D::Water;
+using namespace soilFluxes3D::v2::Soil;
+using namespace soilFluxes3D::v2::Math;
+using namespace soilFluxes3D::v2::Heat;
+using namespace soilFluxes3D::v2::Water;
 
-namespace soilFluxes3D::New
+namespace soilFluxes3D::v2
 {
     extern __cudaMngd Solver* solver;
     extern __cudaMngd nodesData_t nodeGrid;

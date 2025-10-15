@@ -4,8 +4,8 @@
 #include "macro.h"
 #include "types_cpu.h"
 
-using namespace soilFluxes3D::New;
-namespace soilFluxes3D::Soil
+using namespace soilFluxes3D::v2;
+namespace soilFluxes3D::v2::Soil
 {
     __cudaSpec double computeNodeTheta(SF3Duint_t nodeIndex);
     __cudaSpec double computeNodeTheta_fromSe(SF3Duint_t nodeIndex, double Se);

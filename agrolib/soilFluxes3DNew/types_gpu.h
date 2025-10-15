@@ -9,7 +9,7 @@
 #include <cusparse_v2.h>
 #include <cub/device/device_reduce.cuh>
 
-namespace soilFluxes3D::New
+namespace soilFluxes3D::v2
 {
     using int64_t = std::int64_t;
 
