@@ -1513,7 +1513,8 @@ bool Project::loadMeteoPointsData(const QDate& firstDate, const QDate& lastDate,
     #pragma omp parallel if(_isParallelComputing)
     {
         QSqlDatabase myDb;
-        meteoPointsDbHandler->openNewConnection(myDb, dbName, QString::number(omp_get_thread_num()));
+        QString connectionName = QString::number(omp_get_thread_num());
+        meteoPointsDbHandler->openNewConnection(myDb, dbName, connectionName);
 
         #pragma omp for schedule(dynamic)
         for (int i=0; i < nrMeteoPoints; ++i)
@@ -1540,7 +1541,7 @@ bool Project::loadMeteoPointsData(const QDate& firstDate, const QDate& lastDate,
         }
 
         myDb.close();
-        QSqlDatabase::removeDatabase(QString::number(omp_get_thread_num()));
+        myDb.removeDatabase(connectionName);
     }
 
     if (showInfo)

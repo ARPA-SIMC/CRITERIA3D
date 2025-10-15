@@ -593,6 +593,7 @@ bool Crit3DMeteoPointsDbHandler::loadDailyData(const QSqlDatabase &myDb, const C
             meteoPoint.setMeteoPointValueD(currentDate, variable, value);
         }
     }
+    query.clear();
 
     return true;
 }
@@ -662,6 +663,8 @@ bool Crit3DMeteoPointsDbHandler::loadHourlyData(const QSqlDatabase &myDb, const 
             meteoPoint.setMeteoPointValueH(dateTime.date, hour, minute, windVectorIntensity, value);
         }
     }
+
+    qry.clear();
 
     return true;
 }
