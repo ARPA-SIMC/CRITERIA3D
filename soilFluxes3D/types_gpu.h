@@ -1,5 +1,4 @@
-#ifndef SOILFLUXES3D_TYPES_GPU_H
-#define SOILFLUXES3D_TYPES_GPU_H
+#pragma once
 
 #define NOMINMAX
 #include <cstdint>
@@ -112,6 +111,4 @@ namespace soilFluxes3D::v2
         cudaError_t err = cudaDeviceSynchronize();
         return err;
     }
-
 }
-#endif // SOILFLUXES3D_TYPES_GPU_H

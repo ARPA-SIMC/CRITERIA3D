@@ -29,9 +29,9 @@
 #include <stdio.h>
 
 #include "commonConstants.h"
-#include "extra.h"
-#include "types.h"
-#include "macro.h"
+#include "old_extra.h"
+#include "old_types.h"
+#include "old_macro.h"
 
 
  void initializeExtraHeat(TCrit3DNodeHeat* myNodeExtraHeat)

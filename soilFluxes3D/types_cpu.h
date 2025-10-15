@@ -1,5 +1,4 @@
-#ifndef SOILFLUXES3D_TYPES_CPU_H
-#define SOILFLUXES3D_TYPES_CPU_H
+#pragma once
 
 #include "types.h"
 
@@ -65,6 +64,3 @@ namespace soilFluxes3D::v2
     }
 
 }
-
-
-#endif // SOILFLUXES3D_TYPES_CPU_H

@@ -5,6 +5,4 @@ Minor
  - Move switch/if block in solveLinearSystem to a constexpr map (pType, method <-> std::function)
 
  - MAYBE: move to new[] allocation
- - MAYBE: use #pragma once instead of #ifndef / #define
- - MAYBE: remove "using namespace" directive
 

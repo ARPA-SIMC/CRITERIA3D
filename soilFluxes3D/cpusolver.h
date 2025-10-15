@@ -1,7 +1,7 @@
-#ifndef SOILFLUXES3D_CPUSOLVER_H
-#define SOILFLUXES3D_CPUSOLVER_H
+#pragma once
 
 #include "solver.h"
+#include "types_cpu.h"
 
 namespace soilFluxes3D::v2
 {
@@ -49,8 +49,5 @@ namespace soilFluxes3D::v2
 
         return retError;
     }
+}
 
-
-} // namespace soilFluxes3D::v2
-
-#endif // SOILFLUXES3D_CPUSOLVER_H

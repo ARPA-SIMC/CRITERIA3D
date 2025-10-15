@@ -1,8 +1,9 @@
 #include <cstring>
 #include <cassert>
 #include <iostream>
+#include <omp.h>
 
-#include "soilFluxes3DNew.h"
+#include "soilFluxes3D.h"
 #include "cpusolver.h"
 #include "soilPhysics.h"
 #include "water.h"
@@ -122,7 +123,7 @@ namespace soilFluxes3D::v2
             acceptedTimeStep = SF3Dmin(_parameters.deltaTcurr, maxTimeStep);
 
             //Save instantaneus H values
-            std::memcpy(nodeGrid.waterData.oldPressureHeads, nodeGrid.waterData.pressureHead, nodeGrid.numNodes * sizeof(double));
+            std::memcpy(nodeGrid.waterData.oldPressureHead, nodeGrid.waterData.pressureHead, nodeGrid.numNodes * sizeof(double));
 
             //initialize the solution vector with the current pressure head
             assert(vectorX.numElements == nodeGrid.numNodes);
@@ -257,7 +258,7 @@ namespace soilFluxes3D::v2
                 continue;
 
             double nodeH = getNodeH_fromTimeSteps(nodeIdx, timeStepHeat, timeStepWater);
-            double avgH = computeMean(nodeGrid.waterData.oldPressureHeads[nodeIdx], nodeH, meanType_t::Arithmetic) - nodeGrid.z[nodeIdx];
+            double avgH = computeMean(nodeGrid.waterData.oldPressureHead[nodeIdx], nodeH, meanType_t::Arithmetic) - nodeGrid.z[nodeIdx];
             vectorC.values[nodeIdx] = computeNodeHeatCapacity(nodeIdx, avgH, nodeGrid.heatData.temperature[nodeIdx]) * nodeGrid.size[nodeIdx];
         }
 
@@ -274,14 +275,14 @@ namespace soilFluxes3D::v2
             double nodeH = getNodeH_fromTimeSteps(rowIdx, timeStepHeat, timeStepWater);
 
             double dTheta = computeNodeTheta_fromSignedPsi(rowIdx, nodeH - nodeGrid.z[rowIdx]) -
-                            computeNodeTheta_fromSignedPsi(rowIdx, nodeGrid.waterData.oldPressureHeads[rowIdx] - nodeGrid.z[rowIdx]);
+                            computeNodeTheta_fromSignedPsi(rowIdx, nodeGrid.waterData.oldPressureHead[rowIdx] - nodeGrid.z[rowIdx]);
 
             double heatCapacity = dTheta * HEAT_CAPACITY_WATER * nodeT;
 
             if(simulationFlags.computeHeatVapor)
             {
                 double dThetaV = computeNodeVaporThetaV(rowIdx, nodeH - nodeGrid.z[rowIdx], nodeT) -
-                                 computeNodeVaporThetaV(rowIdx, nodeGrid.waterData.oldPressureHeads[rowIdx] - nodeGrid.z[rowIdx], nodeGrid.heatData.oldTemperature[rowIdx]);
+                                 computeNodeVaporThetaV(rowIdx, nodeGrid.waterData.oldPressureHead[rowIdx] - nodeGrid.z[rowIdx], nodeGrid.heatData.oldTemperature[rowIdx]);
 
                 heatCapacity += dThetaV * HEAT_CAPACITY_AIR * nodeT;
                 heatCapacity += dThetaV * computeLatentVaporizationHeat(nodeT - ZEROCELSIUS) * WATER_DENSITY;

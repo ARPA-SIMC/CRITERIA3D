@@ -1,5 +1,4 @@
-#ifndef SOILFLUXES3D_LOGFUNCTIONS_H
-#define SOILFLUXES3D_LOGFUNCTIONS_H
+#pragma once
 
 #include <array>
 #include <utility>
@@ -211,8 +210,8 @@ namespace soilFluxes3D::v2::Log
         logVector(nodeGrid.waterData.waterSinkSource, nodeGrid.numNodes, formatName("wdWSS"));
         logVector(nodeGrid.waterData.pond, nodeGrid.numNodes, formatName("wdP"));
         logVector(nodeGrid.waterData.invariantFluxes, nodeGrid.numNodes, formatName("wdIF"));
-        logVector(nodeGrid.waterData.oldPressureHeads, nodeGrid.numNodes, formatName("wdOPH"));
-        logVector(nodeGrid.waterData.bestPressureHeads, nodeGrid.numNodes, formatName("wdBPH"));
+        logVector(nodeGrid.waterData.oldPressureHead, nodeGrid.numNodes, formatName("wdOPH"));
+        logVector(nodeGrid.waterData.bestPressureHead, nodeGrid.numNodes, formatName("wdBPH"));
         logVector(nodeGrid.waterData.partialCourantWaterLevels, nodeGrid.numNodes, formatName("wdPCWLs"));
         logVector(&(nodeGrid.waterData.CourantWaterLevel), 1, formatName("wdCWL"));
 
@@ -226,6 +225,3 @@ namespace soilFluxes3D::v2::Log
         matClose(binFile);
     }
 }
-
-
-#endif // SOILFLUXES3D_LOGFUNCTIONS_H

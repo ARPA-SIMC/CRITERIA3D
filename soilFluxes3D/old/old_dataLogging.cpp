@@ -1,6 +1,6 @@
 #include <QString>
-#include "soilFluxes3D.h"
-#include "types.h"
+#include "old_soilFluxes3D.h"
+#include "old_types.h"
 
 //void runCUSPARSEtest(double* &vecSol);
 

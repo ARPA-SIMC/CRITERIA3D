@@ -1,9 +1,7 @@
 #ifndef BALANCE_H
 #define BALANCE_H
 
-    #ifndef MACRO_H
-        #include "macro.h"
-    #endif
+    #include "old_macro.h"
 
     struct TlinkedNode;
 

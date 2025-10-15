@@ -30,12 +30,12 @@
 #include <algorithm>
 
 #include "commonConstants.h"
-#include "types.h"
-#include "balance.h"
-#include "soilPhysics.h"
-#include "boundary.h"
-#include "heat.h"
-#include "water.h"
+#include "old_types.h"
+#include "old_balance.h"
+#include "old_soilPhysics.h"
+#include "old_boundary.h"
+#include "old_heat.h"
+#include "old_water.h"
 
 
 Tbalance balanceCurrentTimeStep, balancePreviousTimeStep, balanceCurrentPeriod, balanceWholePeriod;

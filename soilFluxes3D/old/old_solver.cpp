@@ -31,8 +31,8 @@
 
 #include <omp.h>
 
-#include "types.h"
-#include "solver.h"
+#include "old_types.h"
+#include "old_solver.h"
 
  double square(double x)
 {

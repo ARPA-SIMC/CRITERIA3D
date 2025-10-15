@@ -1,7 +1,7 @@
 #ifndef PHYSICS_H
 #define PHYSICS_H
 
-    //Deprecated? Check soilPhysics.h and heat.h in soilFluxes3dNew lib
+    //Deprecated? Check soilPhysics.h and heat.h in soilFluxes3D lib
 
     #include <vector>
 

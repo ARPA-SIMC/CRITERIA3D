@@ -1,5 +1,4 @@
-#ifndef SOILFLUXES3D_GPUSOLVER_H
-#define SOILFLUXES3D_GPUSOLVER_H
+#pragma once
 
 #include "solver.h"
 #include "types_gpu.h"
@@ -93,7 +92,4 @@ namespace soilFluxes3D::v2
         status = solverStatus::Error;
         return contextErrorType;
     }
-
-} // namespace soilFluxes3D::v2
-
-#endif // SOILFLUXES3D_GPUSOLVER_H
+}

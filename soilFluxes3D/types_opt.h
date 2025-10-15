@@ -1,8 +1,7 @@
-#ifndef SOILFLUXES3D_TYPES_OPT_H
-#define SOILFLUXES3D_TYPES_OPT_H
+#pragma once
 
 #include <optional>
-#include "types_cpu.h"
+#include "types.h"
 
 namespace soilFluxes3D::v2
 {
@@ -34,6 +33,3 @@ namespace soilFluxes3D::v2
         std::optional<u32_t> numThreads;
     };
 }
-
-
-#endif // SOILFLUXES3D_TYPES_OPT_H

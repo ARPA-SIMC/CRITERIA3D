@@ -1,9 +1,7 @@
 #ifndef PARAMETERS_H
 #define PARAMETERS_H
 
-    #ifndef COMMONCONSTANTS_H
-        #include "commonConstants.h"
-    #endif
+    #include "commonConstants.h"
 
     struct TParameters
     {
