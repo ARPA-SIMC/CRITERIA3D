@@ -31,8 +31,8 @@
 #include "sunPosition.h"
 #include "solarRadiation.h"
 
-#include <math.h>
 #include <omp.h>
+#include <math.h>
 #include <algorithm>
 
 

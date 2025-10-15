@@ -3270,7 +3270,7 @@ bool Crit3DMeteoGridDbHandler::importDailyDataCsv(QString &errorStr, const QStri
 
     // delete old data
     QString varCodeStr;
-    for (int i = 0; i < varCodeList.size(); i++)
+    for (std::size_t i = 0; i < varCodeList.size(); i++)
     {
         varCodeStr += QString::number(varCodeList[i]);
         if (i < (varCodeList.size() -1))

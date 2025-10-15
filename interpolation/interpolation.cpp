@@ -131,7 +131,7 @@ unsigned sortPointsByDistance(unsigned maxNrPoints, const std::vector<Crit3DInte
     // initializes the indices list
     std::vector<int> indices;
     indices.reserve(pointList.size());
-    for (int i = 0; i < pointList.size(); ++i)
+    for (std::size_t i = 0; i < pointList.size(); ++i)
     {
         if (! isEqual(distances[i], 0) && ! isEqual(distances[i], NODATA))
             indices.push_back(i);
@@ -212,7 +212,7 @@ std::vector<float> computeDistances(meteoVariable myVar, const std::vector <Crit
     std::vector<float> distance;
     distance.resize(myPoints.size());
 
-    for (long i = 0; i < myPoints.size() ; i++)
+    for (std::size_t i = 0; i < myPoints.size() ; i++)
     {
         if (excludeSupplemental && ! checkLapseRateCode(myPoints[i].lapseRateCode, interpolationSettings.getUseLapseRateCode(), false))
         {
