@@ -92,12 +92,11 @@ namespace soilFluxes3D::New
         hostAlloc(nodeGrid.boundaryData.boundaryType, nrNodes); //NoBoundary is equal 0, automatic set with calloc
         hostAlloc(nodeGrid.boundaryData.boundarySlope, nrNodes);
         hostAlloc(nodeGrid.boundaryData.boundarySize, nrNodes);
-        if(isComputeWater)
-        {
-            hostAlloc(nodeGrid.boundaryData.waterFlowRate, nrNodes);
-            hostAlloc(nodeGrid.boundaryData.waterFlowSum, nrNodes);
-            hostAlloc(nodeGrid.boundaryData.prescribedWaterPotential, nrNodes);
-        }
+        //if(isComputeWater)
+        hostAlloc(nodeGrid.boundaryData.waterFlowRate, nrNodes);
+        hostAlloc(nodeGrid.boundaryData.waterFlowSum, nrNodes);
+        hostAlloc(nodeGrid.boundaryData.prescribedWaterPotential, nrNodes);
+        
         if(isComputeHeat)
         {
             hostAlloc(nodeGrid.boundaryData.heightWind, nrNodes);
@@ -125,8 +124,8 @@ namespace soilFluxes3D::New
             hostAlloc(nodeGrid.linkData[linkIdx].linkIndex, nrNodes);;
             hostAlloc(nodeGrid.linkData[linkIdx].interfaceArea, nrNodes);
 
-            if(isComputeWater)
-                hostAlloc(nodeGrid.linkData[linkIdx].waterFlowSum, nrNodes);
+            //if(isComputeWater)
+            hostAlloc(nodeGrid.linkData[linkIdx].waterFlowSum, nrNodes);
 
             if(isComputeHeat)
             {
@@ -137,23 +136,20 @@ namespace soilFluxes3D::New
             }
         }
 
-        //Water data
-        if(isComputeWater)
-        {
-            hostAlloc(nodeGrid.waterData.saturationDegree, nrNodes);
-            hostAlloc(nodeGrid.waterData.waterConductivity, nrNodes);
-            hostAlloc(nodeGrid.waterData.waterFlow, nrNodes);
-            hostAlloc(nodeGrid.waterData.pressureHead, nrNodes);
-            hostAlloc(nodeGrid.waterData.waterSinkSource, nrNodes);
-            hostAlloc(nodeGrid.waterData.pond, nrNodes);
-            hostAlloc(nodeGrid.waterData.oldPressureHeads, nrNodes);
-            hostAlloc(nodeGrid.waterData.bestPressureHeads, nrNodes);
-            hostAlloc(nodeGrid.waterData.invariantFluxes, nrNodes);
-            hostAlloc(nodeGrid.waterData.partialCourantWaterLevels, nrNodes);
+        //Water data    //if(isComputeWater)
+        hostAlloc(nodeGrid.waterData.saturationDegree, nrNodes);
+        hostAlloc(nodeGrid.waterData.waterConductivity, nrNodes);
+        hostAlloc(nodeGrid.waterData.waterFlow, nrNodes);
+        hostAlloc(nodeGrid.waterData.pressureHead, nrNodes);
+        hostAlloc(nodeGrid.waterData.waterSinkSource, nrNodes);
+        hostAlloc(nodeGrid.waterData.pond, nrNodes);
+        hostAlloc(nodeGrid.waterData.oldPressureHeads, nrNodes);
+        hostAlloc(nodeGrid.waterData.bestPressureHeads, nrNodes);
+        hostAlloc(nodeGrid.waterData.invariantFluxes, nrNodes);
+        hostAlloc(nodeGrid.waterData.partialCourantWaterLevels, nrNodes);
 
-            //Culvert pointers
-            hostAlloc(nodeGrid.culvertPtr, nrNodes);
-        }
+        //Culvert pointers
+        hostAlloc(nodeGrid.culvertPtr, nrNodes);
 
         //Heat data
         if(isComputeHeat)
@@ -1185,7 +1181,7 @@ namespace soilFluxes3D::New
     {
         double totalBoundaryWaterFlow = 0.0;
 
-        //__parforop(__ompStatus, +, totalBoundaryWaterFlow)
+        __parforop(__ompStatus, +, totalBoundaryWaterFlow)
         for (SF3Duint_t nodeIdx = 0; nodeIdx < nodeGrid.numNodes; ++nodeIdx)
             if (nodeGrid.boundaryData.boundaryType[nodeIdx] == boundaryType)
                 totalBoundaryWaterFlow += nodeGrid.boundaryData.waterFlowSum[nodeIdx];
@@ -1499,7 +1495,7 @@ namespace soilFluxes3D::New
 
         double nodeT = nodeGrid.heatData.temperature[nodeIndex];
         double nodeSize = nodeGrid.size[nodeIndex];
-        double nodeHeat = nodeT * nodeSize * computeNodeHeatCapacity(nodeIndex, h, nodeT);
+        double nodeHeat = computeNodeHeatCapacity(nodeIndex, h, nodeT) * nodeSize * nodeT;
 
         if(simulationFlags.computeWater && simulationFlags.computeHeatVapor)
         {
@@ -1703,6 +1699,11 @@ namespace soilFluxes3D::New
      */
     void computePeriod(double timePeriod)
     {
+        vecPH_new.clear(); vecOPH_new.clear(); vecSe_new.clear(); vecIF_new.clear(); vecWK_new.clear();
+        vecwF_new.clear(); vecT_new.clear(); vecHF_new.clear(); vecBAK_new.clear(); vecBSK_new.clear();
+        vecBWF_new.clear(); vecBWS_new.clear(); vecBT_new.clear(); vecHK_new.clear(); vecHSS_new.clear();
+
+        /*temp*/ logNew();
         double sumCurrentTime = 0.;
 
         balanceDataCurrentPeriod.waterSinkSource = 0.;
@@ -1716,11 +1717,14 @@ namespace soilFluxes3D::New
 
         if(simulationFlags.computeHeat)
             updateHeatBalanceDataWholePeriod();
+
+        /*temp*/ logNew();
     }
 
 
     void logNew()
     {
+        return;
         SF3Duint_t numNodesSave = 10;
         vecPH_new.emplace_back(nodeGrid.waterData.pressureHead, nodeGrid.waterData.pressureHead + numNodesSave);
         vecOPH_new.emplace_back(nodeGrid.waterData.oldPressureHeads, nodeGrid.waterData.oldPressureHeads + numNodesSave);
@@ -1729,19 +1733,22 @@ namespace soilFluxes3D::New
         vecWK_new.emplace_back(nodeGrid.waterData.waterConductivity, nodeGrid.waterData.waterConductivity + numNodesSave);
         vecwF_new.emplace_back(nodeGrid.waterData.waterFlow, nodeGrid.waterData.waterFlow + numNodesSave);
 
-        vecT_new.emplace_back(nodeGrid.heatData.temperature, nodeGrid.heatData.temperature + numNodesSave);
-        vecHF_new.emplace_back(nodeGrid.heatData.heatFlux, nodeGrid.heatData.heatFlux + numNodesSave);
+        if(simulationFlags.computeHeat)
+        {
+            vecT_new.emplace_back(nodeGrid.heatData.temperature, nodeGrid.heatData.temperature + numNodesSave);
+            vecHF_new.emplace_back(nodeGrid.heatData.heatFlux, nodeGrid.heatData.heatFlux + numNodesSave);
+        }
 
         std::vector<double> temp;
 
         for(int index = 0; index < nodeGrid.numNodes; ++index)
-            if(nodeGrid.boundaryData.boundaryType[index] != boundaryType_t::NoBoundary)
+            if(simulationFlags.computeHeat && nodeGrid.boundaryData.boundaryType[index] != boundaryType_t::NoBoundary)
                 temp.push_back(nodeGrid.boundaryData.aerodynamicConductance[index]);
         vecBAK_new.push_back(temp);
         temp.clear();
 
         for(int index = 0; index < nodeGrid.numNodes; ++index)
-            if(nodeGrid.boundaryData.boundaryType[index] != boundaryType_t::NoBoundary)
+            if(simulationFlags.computeHeat && nodeGrid.boundaryData.boundaryType[index] != boundaryType_t::NoBoundary)
                 temp.push_back(nodeGrid.boundaryData.soilConductance[index]);
         vecBSK_new.push_back(temp);
         temp.clear();
@@ -1759,17 +1766,20 @@ namespace soilFluxes3D::New
         temp.clear();
 
         for(int index = 0; index < nodeGrid.numNodes; ++index)
-            if(nodeGrid.boundaryData.boundaryType[index] != boundaryType_t::NoBoundary)
+            if(simulationFlags.computeHeat && nodeGrid.boundaryData.boundaryType[index] != boundaryType_t::NoBoundary)
                 temp.push_back(nodeGrid.boundaryData.temperature[index]);
         vecBT_new.push_back(temp);
         temp.clear();
 
 
-        vecHSS_new.emplace_back(nodeGrid.heatData.heatSinkSource, nodeGrid.heatData.heatSinkSource + numNodesSave);
-
-
         vecBAL_new.push_back(balanceDataCurrentTimeStep);
+        vecBAL_new.push_back(balanceDataWholePeriod);
 
+
+        if(!simulationFlags.computeHeat)
+            return;
+
+        vecHSS_new.emplace_back(nodeGrid.heatData.heatSinkSource, nodeGrid.heatData.heatSinkSource + numNodesSave);
         std::array<std::vector<double>, numTotalFluxTypes> tempArr;
         for(u8_t index = 0; index < numTotalFluxTypes; ++index)
             tempArr[index] = std::vector<double>(nodeGrid.linkData[0].fluxes[index], nodeGrid.linkData[0].fluxes[index] + numNodesSave);
@@ -1788,17 +1798,11 @@ namespace soilFluxes3D::New
      */
     double computeStep(double maxTimeStep)
     {
-        vectorFluxesDown_new.clear();
-        vectorFluxesUp_new.clear();
-        /*temp*/ logNew();
-
         if(simulationFlags.computeHeat)
         {
             resetFluxValues(false, true);
             updateConductance();
         }
-
-        /*temp*/ logNew();
 
         double dtWater, dtHeat;
 
@@ -1813,7 +1817,6 @@ namespace soilFluxes3D::New
         {
             dtHeat = dtWater;
             saveWaterFluxValues(dtHeat, dtWater);
-
             /*temp*/ logNew();
 
             double dtHeatAccumulator = 0.;
@@ -1825,8 +1828,6 @@ namespace soilFluxes3D::New
                 while(!updateBoundaryHeatData(dtHeat, reducedTimeStep))
                     dtHeat = reducedTimeStep;
 
-                /*temp*/ logNew();
-
                 solver->run(dtHeat, dtWater, processType::Heat);
 
                 /*temp*/ logNew();
@@ -1834,8 +1835,6 @@ namespace soilFluxes3D::New
                 dtHeatAccumulator += dtHeat;
             }
         }
-
-        /*temp*/ logNew();
         return dtWater;
     }
 

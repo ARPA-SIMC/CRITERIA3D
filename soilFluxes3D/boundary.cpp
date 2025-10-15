@@ -355,8 +355,11 @@ void updateBoundaryWater (double deltaT)
                 nodeList[i].boundary->waterFlow = evapFromSoil;
 
                 break;
+
+            case BOUNDARY_NONE:
+                continue;
             default:
-                return;
+                return; //error
         }
 
         // check epsilon

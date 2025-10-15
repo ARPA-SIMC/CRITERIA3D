@@ -41,6 +41,17 @@ namespace soilFluxes3D::Water
         balanceDataCurrentTimeStep.waterStorage = twc;
         balanceDataPreviousTimeStep.waterStorage = twc;
 
+        balanceDataCurrentTimeStep.waterSinkSource = 0.;
+        balanceDataPreviousTimeStep.waterSinkSource = 0.;
+        balanceDataCurrentPeriod.waterSinkSource = 0.;
+        balanceDataWholePeriod.waterSinkSource = 0.;
+
+        balanceDataCurrentTimeStep.waterMBR = 0.;
+        balanceDataWholePeriod.waterMBR = 0.;
+
+        balanceDataCurrentTimeStep.waterMBE = 0.;
+        balanceDataWholePeriod.waterMBE = 0.;
+
         if(!nodeGrid.isInitialized)
             return SF3Derror_t::MemoryError;
 
@@ -65,7 +76,7 @@ namespace soilFluxes3D::Water
 
         double sum = 0.0;
 
-        //__parforop(__ompStatus, +, sum)
+        __parforop(__ompStatus, +, sum)
         for (SF3Duint_t idx = 0; idx < nodeGrid.numNodes; ++idx)
         {
             double theta = nodeGrid.surfaceFlag[idx] ? (nodeGrid.waterData.pressureHead[idx] - nodeGrid.z[idx]) : computeNodeTheta(idx);
@@ -106,9 +117,9 @@ namespace soilFluxes3D::Water
      */
     double computeWaterSinkSourceFlowsSum(double deltaT)
     {
-        double sum = 0;
+        double sum = 0.;
 
-        //__parforop(__ompStatus, +, sum)
+        __parforop(__ompStatus, +, sum)
         for (SF3Duint_t idx = 0; idx < nodeGrid.numNodes; ++idx)
             if(nodeGrid.waterData.waterFlow[idx] != 0)
                 sum += nodeGrid.waterData.waterFlow[idx] * deltaT;
@@ -126,7 +137,7 @@ namespace soilFluxes3D::Water
         balanceDataCurrentPeriod.waterMBE = deltaStoragePeriod - balanceDataCurrentPeriod.waterSinkSource;
         balanceDataWholePeriod.waterMBE = deltaStorageHistorical - balanceDataWholePeriod.waterSinkSource;
 
-        double referenceWater = SF3Dmax(0.001, std::fabs(balanceDataWholePeriod.waterSinkSource));
+        double referenceWater = SF3Dmax(0.001, balanceDataWholePeriod.waterSinkSource);
         balanceDataWholePeriod.waterMBR = balanceDataWholePeriod.waterMBE / referenceWater;
 
         balanceDataCurrentPeriod.waterStorage = balanceDataCurrentTimeStep.waterStorage;
@@ -202,7 +213,7 @@ namespace soilFluxes3D::Water
         balanceDataCurrentPeriod.waterSinkSource += balanceDataCurrentTimeStep.waterSinkSource;
 
         /*! update sum of flow */
-        //__parfor(__ompStatus)
+        __parfor(__ompStatus)
         for (SF3Duint_t nodeIndex = 0; nodeIndex < nodeGrid.numNodes; ++nodeIndex)
         {
             //Update link flows
@@ -224,7 +235,7 @@ namespace soilFluxes3D::Water
     {
         std::memcpy(nodeGrid.waterData.pressureHead, nodeGrid.waterData.bestPressureHeads, nodeGrid.numNodes * sizeof(double));
 
-        //__parfor(__ompStatus)
+        __parfor(__ompStatus)
         for (SF3Duint_t nodeIndex = 0; nodeIndex < nodeGrid.numNodes; ++nodeIndex)
             if(!nodeGrid.surfaceFlag[nodeIndex])
             {
@@ -253,7 +264,7 @@ namespace soilFluxes3D::Water
 
     void computeCapacity(VectorCPU& vectorC)
     {
-        //__parfor(__ompStatus)
+        __parfor(__ompStatus)
         for (SF3Duint_t nodeIndex = 0; nodeIndex < nodeGrid.numNodes; ++nodeIndex)
         {
             nodeGrid.waterData.invariantFluxes[nodeIndex] = 0.;     //move to memset
@@ -274,7 +285,7 @@ namespace soilFluxes3D::Water
     //TO DO: move to a CPUSolver method
     void computeLinearSystemElement(MatrixCPU& matrixA, VectorCPU& vectorB, const VectorCPU& vectorC, u8_t approxNum, double deltaT, double lateralVerticalRatio, meanType_t meanType)
     {
-        //__parfor(__ompStatus)
+        __parfor(__ompStatus)
         for (SF3Duint_t rowIdx = 0; rowIdx < matrixA.numRows; ++rowIdx)
         {
             u8_t linkIdx = 1;
@@ -425,7 +436,7 @@ namespace soilFluxes3D::Water
 
         //Soil node saturated
         if(nodeGrid.waterData.pressureHead[soilNodeIdx] > nodeGrid.z[surfNodeIdx])
-                return (soilData.K_sat * boundaryFactor * flowArea) / cellDistance;
+            return (soilData.K_sat * boundaryFactor * flowArea) / cellDistance;
 
         double surfH = 0.5 * (nodeGrid.waterData.pressureHead[surfNodeIdx] + nodeGrid.waterData.oldPressureHeads[surfNodeIdx]);
         double soilH = 0.5 * (nodeGrid.waterData.pressureHead[soilNodeIdx] + nodeGrid.waterData.oldPressureHeads[soilNodeIdx]);
@@ -485,7 +496,7 @@ namespace soilFluxes3D::Water
         hostAlloc(tempX, vectorX.numElements);
         std::memcpy(tempX, vectorB.values, vectorB.numElements * sizeof(double));
 
-        //__parforop(__ompStatus, max, infinityNorm)
+        __parforop(__ompStatus, max, infinityNorm)
         for(SF3Duint_t rowIdx = 0; rowIdx < matrixA.numRows; ++rowIdx)
         {
             for(u8_t colIdx = 1; colIdx < matrixA.numColumns[rowIdx]; ++colIdx)
@@ -539,12 +550,11 @@ namespace soilFluxes3D::Water
 
     void updateBoundaryWaterData(double deltaT)
     {
-        //__parfor(__ompStatus)
+        __parfor(__ompStatus)
         for (SF3Duint_t nodeIdx = 0; nodeIdx < nodeGrid.numNodes; ++nodeIdx)
         {
             //initialize: water sink.source
-            nodeGrid.waterData.waterFlow[nodeIdx] = nodeGrid.waterData.waterSinkSource[nodeIdx];   //TO DO: evaluate move to a memcpy
-            double temp = nodeGrid.waterData.waterFlow[nodeIdx];
+            nodeGrid.waterData.waterFlow[nodeIdx] = nodeGrid.waterData.waterSinkSource[nodeIdx];
 
             if(nodeGrid.boundaryData.boundaryType[nodeIdx] == boundaryType_t::NoBoundary)
                 continue;

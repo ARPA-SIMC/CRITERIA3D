@@ -38,8 +38,7 @@
 #include "solver.h"
 #include "soilFluxes3D.h"
 
-std::vector<std::vector<double>> tempCold, tempAold, tempBold, tempX0old;
-std::vector<double> tempvar;
+std::vector<double> vecO;
 //static double CourantHeatAdvective;
 
 bool isHeatNode(long nodeIndex)
@@ -62,6 +61,7 @@ double getH_timeStep(long nodeIndex, double timeStep, double timeStepWater)
 // [J]
 double computeHeatStorage(double timeStepHeat, double timeStepWater)
 {
+    vecO.clear();
     double heatStorage = 0.;
     double myH;
     for (long i = 0; i < myStructure.nrNodes; i++)
@@ -75,6 +75,8 @@ double computeHeatStorage(double timeStepHeat, double timeStepWater)
             myH = nodeList[i].H;
 
         heatStorage += soilFluxes3D::getHeat(i, myH - nodeList[i].z);
+        vecO.push_back(myH);
+        vecO.push_back(heatStorage);
     }
 
     return heatStorage;
@@ -1034,11 +1036,6 @@ bool HeatComputation(double timeStepHeat, double timeStepWater)
         A[i][0].val = SoilHeatCapacity(i, avgh, nodeList[i].extra->Heat->T) * nodeList[i].volume_area / timeStepHeat + sum;
 
         /*! b vector (constant terms) */
-        tempvar.push_back(nodeList[i].extra->Heat->oldT);
-        tempvar.push_back(heatCapacityVar);
-        tempvar.push_back(nodeList[i].extra->Heat->Qh);
-        tempvar.push_back(invariantFlux[i]);
-        tempvar.push_back(sumFlow0);
         b[i] = C[i] * nodeList[i].extra->Heat->oldT / timeStepHeat - heatCapacityVar / timeStepHeat + nodeList[i].extra->Heat->Qh + invariantFlux[i] + sumFlow0;
 
         // preconditioning

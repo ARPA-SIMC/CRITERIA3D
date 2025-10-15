@@ -66,6 +66,7 @@ std::vector<std::vector<double>> vecPH_old, vecOPH_old, vecSe_old, vecIF_old, ve
                                 vecBAK_old, vecBSK_old, vecBWF_old, vecBWS_old, vecBT_old, vecHK_old, vecHSS_old;
 std::vector<Tbalance> vecBAL_old;
 std::vector<std::array<std::vector<double>, 9>> vectorFluxesUp_old, vectorFluxesDown_old;
+static int run = 0;
 
 namespace soilFluxes3D
 {
@@ -1040,6 +1041,7 @@ namespace soilFluxes3D
     }
 
 
+    std::vector<std::vector<double>> vB, vC;
     /*!
      * \brief computePeriod
      * compute water and heat fluxes for a time period (maximum 1 hour)
@@ -1048,6 +1050,12 @@ namespace soilFluxes3D
      */
     void DLL_EXPORT __STDCALL computePeriod(double timePeriod)
     {
+        run++; vB.clear(); vC.clear();
+        vecPH_old.clear(); vecOPH_old.clear(); vecSe_old.clear(); vecIF_old.clear(); vecWK_old.clear();
+        vecwF_old.clear(); vecT_old.clear(); vecHF_old.clear(); vecBAK_old.clear(); vecBSK_old.clear();
+        vecBWF_old.clear(); vecBWS_old.clear(); vecBT_old.clear(); vecHK_old.clear(); vecHSS_old.clear();
+
+        /*temp*/ logOld();
         double sumCurrentTime = 0.0;
 
         balanceCurrentPeriod.sinkSourceWater = 0.;
@@ -1061,6 +1069,8 @@ namespace soilFluxes3D
 
         if (myStructure.computeWater) updateBalanceWaterWholePeriod();
         if (myStructure.computeHeat) updateBalanceHeatWholePeriod();
+
+        /*temp*/ logOld();
     }
 
 
@@ -1068,6 +1078,10 @@ namespace soilFluxes3D
 
     void logOld()
     {
+        return;
+        vB.emplace_back(b, b + myStructure.nrNodes);
+        vC.emplace_back(C, C + myStructure.nrNodes);
+
         int numNodesSave = 10;
         std::vector<double> temp;
 
@@ -1099,37 +1113,37 @@ namespace soilFluxes3D
         for(long n = 0; n < numNodesSave; n++)
             if(nodeList[n].extra != nullptr)
                 temp.push_back(nodeList[n].extra->Heat->T);
-            else
-                temp.push_back(NODATA);
+            // else
+            //     temp.push_back(NODATA);
         vecT_old.push_back(temp);
         temp.clear();
 
         for(long n = 0; n < numNodesSave; n++)
             if(nodeList[n].extra != nullptr)
                 temp.push_back(nodeList[n].extra->Heat->Qh);
-            else
-                temp.push_back(NODATA);
+            // else
+            //     temp.push_back(NODATA);
         vecHF_old.push_back(temp);
         temp.clear();
 
         for(long n = 0; n < numNodesSave; n++)
             if(nodeList[n].extra != nullptr)
                 temp.push_back(nodeList[n].extra->Heat->sinkSource);
-            else
-                temp.push_back(NODATA);
+            // else
+            //     temp.push_back(NODATA);
         vecHSS_old.push_back(temp);
         temp.clear();
 
         for(long n = 0; n < myStructure.nrNodes; n++)
-            if(nodeList[n].boundary != nullptr)
+            if(nodeList[n].boundary != nullptr && nodeList[n].boundary->Heat != nullptr)
                 temp.push_back(nodeList[n].boundary->Heat->aerodynamicConductance);
-            else
-                temp.push_back(NODATA);
+            // else
+            //     temp.push_back(NODATA);
         vecBAK_old.push_back(temp);
         temp.clear();
 
         for(long n = 0; n < myStructure.nrNodes; n++)
-            if(nodeList[n].boundary != nullptr)
+            if(nodeList[n].boundary != nullptr && nodeList[n].boundary->Heat != nullptr)
                 temp.push_back(nodeList[n].boundary->Heat->soilConductance);
             // else
             //     temp.push_back(NODATA);
@@ -1153,7 +1167,7 @@ namespace soilFluxes3D
         temp.clear();
 
         for(long n = 0; n < myStructure.nrNodes; n++)
-            if(nodeList[n].boundary != nullptr)
+            if(nodeList[n].boundary != nullptr && nodeList[n].boundary->Heat != nullptr)
                 temp.push_back(nodeList[n].boundary->Heat->temperature);
             // else
             //     temp.push_back(NODATA);
@@ -1163,6 +1177,7 @@ namespace soilFluxes3D
 
         vecIF_old.emplace_back(invariantFlux, invariantFlux + numNodesSave);
         vecBAL_old.push_back(balanceCurrentTimeStep);
+        vecBAL_old.push_back(balanceWholePeriod);
 
         std::array<std::vector<double>, 9> tempArr;
         for(int index = 0; index < 9; ++index)
@@ -1203,17 +1218,11 @@ namespace soilFluxes3D
         if (myParameters.current_delta_t == NODATA)
             myParameters.current_delta_t = myParameters.delta_t_max;
 
-        vectorFluxesDown_old.clear();
-        vectorFluxesUp_old.clear();
-        /*temp*/ logOld();
-
         if (myStructure.computeHeat)
         {
             initializeHeatFluxes(false, true);
             updateConductance();
         }
-
-        /*temp*/ logOld();
 
         double dtWater, dtHeat;
         if (myStructure.computeWater)
@@ -1232,7 +1241,6 @@ namespace soilFluxes3D
         if (myStructure.computeHeat)
         {
             saveWaterFluxes(dtHeat, dtWater);
-
             /*temp*/ logOld();
 
             double dtHeatSum = 0;
@@ -1247,17 +1255,13 @@ namespace soilFluxes3D
                     dtHeat = reducedTimeStep;
                 }
 
-                /*temp*/ logOld();
-
                 HeatComputation(dtHeat, dtWater);
-
                 /*temp*/ logOld();
 
                 dtHeatSum += dtHeat;
             }
         }
 
-        /*temp*/ logOld();
         return dtWater;
     }
 
