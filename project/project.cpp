@@ -1491,8 +1491,11 @@ bool Project::loadAggregationdDB(QString dbName)
 
 bool Project::loadMeteoPointsData(const QDate& firstDate, const QDate& lastDate, bool loadHourly, bool loadDaily, bool showInfo)
 {
-    //check
-    if (firstDate == QDate(1800,1,1) || lastDate == QDate(1800,1,1))
+    if (! meteoPointsLoaded)
+        return false;
+
+    //check date
+    if (firstDate == QDate(1800, 1, 1) || lastDate == QDate(1800, 1, 1))
         return false;
 
     int step = 0;
