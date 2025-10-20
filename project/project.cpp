@@ -1654,7 +1654,8 @@ bool Project::loadMeteoGridDailyData(const QDate &firstDate, const QDate &lastDa
         std::string id;
         QString errorStr;
         QSqlDatabase myDb;
-        meteoGridDbHandler->openNewConnection(myDb, QString::number(omp_get_thread_num()), errorStr);
+        QString connectionName = QString::number(omp_get_thread_num());
+        meteoGridDbHandler->openNewConnection(myDb, connectionName, errorStr);
 
         #pragma omp for schedule(dynamic) reduction(+:count)
         for (int row = 0; row < gridStructure.header().nrRows; row++)
@@ -1699,6 +1700,7 @@ bool Project::loadMeteoGridDailyData(const QDate &firstDate, const QDate &lastDa
         }
 
         myDb.close();
+        myDb.removeDatabase(connectionName);
     }
 
     if (showInfo) closeProgressBar();
@@ -1738,7 +1740,8 @@ bool Project::loadMeteoGridHourlyData(QDateTime firstDateTime, QDateTime lastDat
         std::string id;
         QString myErrorStr;
         QSqlDatabase myDb;
-        meteoGridDbHandler->openNewConnection(myDb, QString::number(omp_get_thread_num()), myErrorStr);
+        QString connectionName = QString::number(omp_get_thread_num());
+        meteoGridDbHandler->openNewConnection(myDb, connectionName, myErrorStr);
 
         #pragma omp for schedule(dynamic) reduction(+:count)
         for (int row = 0; row < gridStructure.header().nrRows; row++)
@@ -1771,6 +1774,7 @@ bool Project::loadMeteoGridHourlyData(QDateTime firstDateTime, QDateTime lastDat
         }
 
         myDb.close();
+        myDb.removeDatabase(connectionName);
     }
 
     if (showInfo) closeProgressBar();
