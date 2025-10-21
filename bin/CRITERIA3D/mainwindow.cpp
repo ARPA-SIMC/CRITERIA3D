@@ -3712,20 +3712,6 @@ void MainWindow::on_actionSave_outputRaster_triggered()
     }
 }
 
-void MainWindow::on_actionTree_cover_map_triggered()
-{
-    if (myProject.treeCoverMap.isLoaded)
-    {
-        setColorScale(noMeteoVar, myProject.treeCoverMap.colorScale);
-        setCurrentRasterOutput(&(myProject.treeCoverMap));
-        ui->labelOutputRaster->setText("Tree cover");
-    }
-    else
-    {
-        myProject.logWarning("Load a tree cover map before.");
-    }
-}
-
 
 void MainWindow::on_actionDecomposable_plant_matter_triggered()
 {
@@ -3848,4 +3834,25 @@ void MainWindow::on_actionAutomatic_state_saving_end_of_month_toggled(bool isChe
     myProject.setSaveMonthlyState(isChecked);
 }
 
+
+void MainWindow::on_actionHide_TreeCover_map_triggered()
+{
+    setOutputRasterVisible(false);
+    refreshViewer3D();
+}
+
+
+void MainWindow::on_actionViewTree_cover_map_triggered()
+{
+    if (myProject.treeCoverMap.isLoaded)
+    {
+        setColorScale(noMeteoVar, myProject.treeCoverMap.colorScale);
+        setCurrentRasterOutput(&(myProject.treeCoverMap));
+        ui->labelOutputRaster->setText("Tree cover");
+    }
+    else
+    {
+        myProject.logWarning("Load a tree cover map before.");
+    }
+}
 

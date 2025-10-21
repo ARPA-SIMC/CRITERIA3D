@@ -239,6 +239,7 @@
   <property name="font">
    <font>
     <pointsize>10</pointsize>
+    <weight>50</weight>
     <bold>false</bold>
    </font>
   </property>
@@ -276,6 +277,7 @@
     <property name="font">
      <font>
       <pointsize>10</pointsize>
+      <weight>50</weight>
       <bold>false</bold>
      </font>
     </property>
@@ -524,6 +526,7 @@
     <property name="font">
      <font>
       <pointsize>9</pointsize>
+      <weight>50</weight>
       <bold>false</bold>
      </font>
     </property>
@@ -588,6 +591,7 @@
      <property name="font">
       <font>
        <pointsize>8</pointsize>
+       <weight>50</weight>
        <bold>false</bold>
       </font>
      </property>
@@ -614,6 +618,7 @@
      <property name="font">
       <font>
        <pointsize>9</pointsize>
+       <weight>50</weight>
        <bold>false</bold>
       </font>
      </property>
@@ -863,6 +868,7 @@
     <property name="font">
      <font>
       <pointsize>9</pointsize>
+      <weight>50</weight>
       <bold>false</bold>
      </font>
     </property>
@@ -927,6 +933,7 @@
      <property name="font">
       <font>
        <pointsize>8</pointsize>
+       <weight>50</weight>
        <bold>false</bold>
       </font>
      </property>
@@ -953,6 +960,7 @@
      <property name="font">
       <font>
        <pointsize>9</pointsize>
+       <weight>50</weight>
        <bold>false</bold>
       </font>
      </property>
@@ -1202,6 +1210,7 @@
     <property name="font">
      <font>
       <pointsize>9</pointsize>
+      <weight>50</weight>
       <bold>false</bold>
      </font>
     </property>
@@ -1263,6 +1272,7 @@
      <property name="font">
       <font>
        <pointsize>9</pointsize>
+       <weight>50</weight>
        <bold>false</bold>
       </font>
      </property>
@@ -1293,7 +1303,7 @@
        <second>0</second>
        <year>1752</year>
        <month>8</month>
-       <day>29</day>
+       <day>28</day>
       </datetime>
      </property>
      <property name="maximumDate">
@@ -1332,6 +1342,7 @@
      <property name="font">
       <font>
        <pointsize>9</pointsize>
+       <weight>50</weight>
        <bold>false</bold>
       </font>
      </property>
@@ -1358,6 +1369,7 @@
      <property name="font">
       <font>
        <pointsize>9</pointsize>
+       <weight>50</weight>
        <bold>false</bold>
       </font>
      </property>
@@ -1377,6 +1389,7 @@
      <property name="font">
       <font>
        <pointsize>8</pointsize>
+       <weight>50</weight>
        <bold>false</bold>
       </font>
      </property>
@@ -1668,6 +1681,7 @@
     <property name="font">
      <font>
       <pointsize>9</pointsize>
+      <weight>50</weight>
       <bold>false</bold>
      </font>
     </property>
@@ -1705,6 +1719,7 @@
      <property name="font">
       <font>
        <pointsize>8</pointsize>
+       <weight>50</weight>
        <bold>false</bold>
       </font>
      </property>
@@ -1727,6 +1742,7 @@
      <property name="font">
       <font>
        <pointsize>8</pointsize>
+       <weight>50</weight>
        <bold>false</bold>
       </font>
      </property>
@@ -1772,6 +1788,7 @@
      <property name="font">
       <font>
        <pointsize>9</pointsize>
+       <weight>50</weight>
        <bold>false</bold>
       </font>
      </property>
@@ -1817,6 +1834,7 @@
      <property name="font">
       <font>
        <pointsize>9</pointsize>
+       <weight>50</weight>
        <bold>false</bold>
       </font>
      </property>
@@ -1864,7 +1882,7 @@
      <x>0</x>
      <y>0</y>
      <width>1280</width>
-     <height>28</height>
+     <height>22</height>
     </rect>
    </property>
    <property name="palette">
@@ -2138,7 +2156,8 @@
      <addaction name="actionView_LandUseMap"/>
      <addaction name="actionHide_LandUseMap"/>
      <addaction name="separator"/>
-     <addaction name="actionTree_cover_map"/>
+     <addaction name="actionViewTree_cover_map"/>
+     <addaction name="actionHide_TreeCover_map"/>
     </widget>
     <widget class="QMenu" name="actionView_Crop">
      <property name="title">
@@ -2984,7 +3003,7 @@
     <string>Digital Elevation Model summary...</string>
    </property>
   </action>
-  <action name="actionTree_cover_map">
+  <action name="actionViewTree_cover_map">
    <property name="text">
     <string>Tree cover map</string>
    </property>
@@ -3039,6 +3058,11 @@
    </property>
    <property name="text">
     <string>Parallel computing</string>
+   </property>
+  </action>
+  <action name="actionHide_TreeCover_map">
+   <property name="text">
+    <string>Hide map</string>
    </property>
   </action>
  </widget>

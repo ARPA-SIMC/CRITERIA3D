@@ -225,8 +225,6 @@
 
         void on_actionDEM_summary_triggered();
 
-        void on_actionTree_cover_map_triggered();
-
         void on_actionDecomposable_plant_matter_triggered();
 
         void on_actionResistant_plant_matter_triggered();
@@ -242,6 +240,10 @@
         void on_actionAutomatic_state_saving_end_of_month_toggled(bool isChecked);
 
         void on_buttonModel1hour_clicked();
+
+        void on_actionHide_TreeCover_map_triggered();
+
+        void on_actionViewTree_cover_map_triggered();
 
     protected:
         /*!
