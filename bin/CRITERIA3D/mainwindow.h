@@ -245,6 +245,26 @@
 
         void on_actionViewTree_cover_map_triggered();
 
+        void on_actiontree_NPP_triggered();
+
+        void on_actionunderstorey_NPP_triggered();
+
+        void on_actiontree_foliage_biomass_triggered();
+
+        void on_actiontree_root_biomass_triggered();
+
+        void on_actiontree_sapwood_biomass_triggered();
+
+        void on_actionunderstorey_foliage_biomass_triggered();
+
+        void on_actionunderstorey_root_biomass_triggered();
+
+        void on_actionoutput_carbon_triggered();
+
+        void on_actioncumulated_yearly_ET0_triggered();
+
+        void on_actioncumulated_yearly_precipitation_triggered();
+
     protected:
         /*!
          * \brief mouseReleaseEvent call moveCenter

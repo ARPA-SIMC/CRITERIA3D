@@ -190,6 +190,20 @@ bool Crit3DProject::initializeRothC()
     if (! soilIndexMap.isLoaded)
         setSoilIndexMap();
 
+    rothCModel.conversionTableVector.resize(cropList.size(), NODATA);
+
+    for (unsigned int i = 0; i < cropList.size(); i++)
+    {
+        for (unsigned int j = 0; j < rothCModel.tableYield.size(); j++)
+        {
+            if (cropList[i].idCrop == rothCModel.tableYield[j].name)
+            {
+                rothCModel.conversionTableVector[i] = j;
+            }
+        }
+    }
+
+
     logInfo("Initializing RothC maps...");
 
     for (int row = 0; row < DEM.header->nrRows; row ++)
@@ -539,6 +553,7 @@ bool Crit3DProject::dailyUpdateHydrall(const QDate &myDate)
                 if (surfaceIndex != indexMap.at(0).header->flag)
                 {
                     //se firstDayOfYear, scrivi le mappe (mensili?) di LAI, biomassa, etc
+                    //TODO, togliere?
                     std::string myError;
                     if (! gis::writeEsriGrid(getCompleteFileName("treeNPP_"+myDate.toString("yyyyMMdd"), PATH_OUTPUT).toStdString(), hydrallMaps.treeNetPrimaryProduction, myError))
                     {
@@ -642,15 +657,35 @@ void Crit3DProject::setRothCVariables(int row, int col, int month)
 
     rothCModel.meteoVariable.setAvgBIC(rothCModel.map.getAvgBIC(row, col, month));
 
+    double inputCTable = NODATA;
+
+    if (! processes.computeHydrall || ! isEqual(hydrallModel.getOutputC(),NODATA)) //yield table must be used when initialising rothC or for first year of simulation of hydrall+rothC (hydrall still hasn't produced its first carbon output)
+    {
+        int treeCoverIndex = getTreeCoverIndexRowCol(row,col);
+        int managementIndex, forestIndex;
+
+        if (treeCoverIndex != NODATA && treeCoverIndex > 9)
+        {
+            std::string indexString = std::to_string(treeCoverIndex);
+            if (indexString.size() >= 2)
+            {
+                managementIndex = std::stoi(indexString.substr(indexString.size()-1, indexString.size()-1));
+                forestIndex = (treeCoverIndex - managementIndex) / 10 - 1;
+                inputCTable = rothCModel.tableYield[rothCModel.conversionTableVector[forestIndex]].carbon;
+            }
+        }
+    }
     //carbon input is taken from hydrall, otherwise TODO
     if (processes.computeHydrall && ! isEqual(hydrallModel.getOutputC(),NODATA))
-        rothCModel.setInputC(hydrallModel.getOutputC()); //read from hydrall (eventually from crop too?)  TODO CHECK
+        rothCModel.setInputC(hydrallModel.getOutputC()/12.0); //read from hydrall (eventually from crop too?). output used is from previous year and divided by 12 months
     else
-        rothCModel.setInputC(8); //TODO different species
+    {
+        rothCModel.setInputC(inputCTable/12.0);
+    }
 
     //swc comes from water model. during initialization phase, it is not used
     double SWC = NODATA;
-    if (! rothCModel.isInitializing)
+    if (! rothCModel.isInitializing && processes.computeWater && processes.computeHydrall)
     {
         SWC = 0;
         for (int i = 0; i < (int)hydrallModel.soil.waterContent.size(); i++)
