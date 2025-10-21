@@ -105,6 +105,7 @@ enum estimatedFunction {FUNCTION_CODE_SPHERICAL, FUNCTION_CODE_LINEAR, FUNCTION_
         void tridiagonalThomasAlgorithm (int n, double *subDiagonal, double *mainDiagonal, double *superDiagonal, double *constantTerm, double* output); // not working to be checked
 
         double computeR2(const std::vector<double>& obs, const std::vector<double>& sim);
+        double computeR2adjusted(const std::vector<double>& obs, const std::vector<double>& sim);
         double computeWeightedRMSE(const std::vector<double>& observed, const std::vector<double>& predicted);
         double computeWeighted_R2(const std::vector<double>& observed, const std::vector<double>& predicted, const std::vector<double>& weights);
         double computeWeighted_StandardError(const std::vector<double>& observed, const std::vector<double>& predicted, const std::vector<double>& weights, int nrPredictors);
