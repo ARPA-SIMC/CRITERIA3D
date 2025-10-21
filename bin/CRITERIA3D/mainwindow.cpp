@@ -922,6 +922,7 @@ void MainWindow::on_actionOpenProject_triggered()
     drawProject();
 }
 
+
 void MainWindow::on_actionCloseProject_triggered()
 {
     clearMeteoPoints_GUI();
@@ -2446,7 +2447,7 @@ void MainWindow::on_actionCriteria3D_Initialize_triggered()
         if (! myProject.initializeHydrall())
         {
             myProject.isHydrallInitialized = false;
-            myProject.logError("Couldn't initialize Hydrall model.");
+            myProject.logError("Couldn't initialize Hydrall model:\n" + myProject.errorString);
             return;
         }
     }

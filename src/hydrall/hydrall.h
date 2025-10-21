@@ -472,7 +472,7 @@
                                  double cloudIndex, double atmosphericPressure, double meanTemp30Days,double et0);
 
         void setDerivedWeatherVariables(double directIrradiance, double diffuseIrradiance, double cloudIndex, double et0);
-        void setPlantVariables(int forestIndex, double chlorophyllContent, double height, double psiMinimum);
+        bool setPlantVariables(int forestIndex, double chlorophyllContent, double height, double psiMinimum);
 
         bool computeHydrallPoint();
         double getCO2(Crit3DDate myDate);

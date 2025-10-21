@@ -671,6 +671,12 @@ bool Project3D::loadTreeCoverMap(const QString &fileName)
 
     treeCoverMapFileName = getCompleteFileName(fileName, PATH_GEO);
 
+    if (! QFile::exists(treeCoverMapFileName))
+    {
+        logError("The tree cover map doesn't exist: " + treeCoverMapFileName);
+        return false;
+    }
+
     std::string errorStr;
     gis::Crit3DRasterGrid raster;
     if (! gis::openRaster(treeCoverMapFileName.toStdString(), &raster, gisSettings.utmZone, errorStr))
@@ -1222,6 +1228,12 @@ bool Project3D::loadCropDatabase(const QString &fileName)
     }
 
     cropDbFileName = getCompleteFileName(fileName, PATH_SOIL);
+
+    if (! QFile::exists(cropDbFileName))
+    {
+        logError("The crop DB doesn't exist: " + cropDbFileName);
+        return false;
+    }
 
     QSqlDatabase dbCrop;
     dbCrop = QSqlDatabase::addDatabase("QSQLITE", QUuid::createUuid().toString());
@@ -2181,21 +2193,18 @@ double Project3D::assignTranspiration(int row, int col, Crit3DCrop &currentCrop,
 {
     // check lai and degree days
     if (currentLai < EPSILON || isEqual(currentDegreeDays, NODATA))
-    {
         return 0;       // [mm]
-    }
 
     // only surface
     if (nrLayers <= 1)
-    {
-        return 0;       // [mm]
-    }
+        return 0;
 
-    // check soil TODO FT improve
+    // check soil
     int soilIndex = int(soilIndexMap.value[row][col]);
     if (soilIndex == NODATA)
     {
-        return 0;       // [mm]
+        // TODO FT improve (no soil)
+        return 0;
     }
 
     // maximum transpiration
@@ -2204,27 +2213,20 @@ double Project3D::assignTranspiration(int row, int col, Crit3DCrop &currentCrop,
     double maxTranspiration = getPotentialTranspiration(et0, currentLai, kcMax);
 
     if (maxTranspiration < EPSILON)
-    {
         return 0;
-    }
 
     // compute root lenght
     currentCrop.computeRootLength3D(currentDegreeDays, soilList[soilIndex].totalDepth);
     if (currentCrop.roots.currentRootLength <= 0)
-    {
         return 0;
-    }
 
     // compute root density
     if (! root::computeRootDensity3D(currentCrop, soilList[soilIndex], nrLayers, layerDepth, layerThickness))
-    {
         return 0;
-    }
+
     // check root layers
     if (currentCrop.roots.firstRootLayer == NODATA || currentCrop.roots.lastRootLayer == NODATA)
-    {
         return 0;
-    }
 
     // initialize vectors
     std::vector<bool> isLayerStressed;
@@ -2242,7 +2244,7 @@ double Project3D::assignTranspiration(int row, int col, Crit3DCrop &currentCrop,
     double waterSurplusStressFraction = 0.5;                // [-]
     if (currentCrop.isWaterSurplusResistant())
     {
-        waterSurplusStressFraction = 0.0;
+        waterSurplusStressFraction = 0;
     }
 
     double rootDensityWithoutStress = 0.0;                   // [-]

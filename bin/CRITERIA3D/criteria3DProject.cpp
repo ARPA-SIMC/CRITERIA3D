@@ -714,7 +714,6 @@ void Crit3DProject::assignETreal()
                         std::string indexString = std::to_string(treeCoverIndex);
                         if (indexString.size() >= 2)
                         {
-                            // TODO FT CT capire cos'è forest index
                             managementIndex = std::stoi(indexString.substr(indexString.size()-1, indexString.size()-1));
                             forestIndex = (treeCoverIndex - managementIndex) / 10 - 1;
                         }
@@ -1308,8 +1307,11 @@ bool Crit3DProject::loadCriteria3DProject(const QString &fileName)
         loadLandUseMap(landUseMapFileName);
     }
 
-    if (cropDbFileName != "") loadCropDatabase(cropDbFileName);
-    if (treeCoverMapFileName != "") loadTreeCoverMap(treeCoverMapFileName);
+    if (! cropDbFileName.isEmpty())
+        loadCropDatabase(cropDbFileName);
+
+    if (! treeCoverMapFileName.isEmpty())
+        loadTreeCoverMap(treeCoverMapFileName);
 
     QString projectName = getProjectName();
     if (projectName != "" && projectName != "default")
@@ -1807,17 +1809,21 @@ bool Crit3DProject::computeHydrallModel(Crit3DHydrall &myHydrallModel, int row, 
         return false;
     }
 
-    //set all necessary input variables
-    setHydrallVariables(myHydrallModel, row, col, forestIndex);
+    // set all necessary input variables
+    if (! setHydrallVariables(myHydrallModel, row, col, forestIndex))
+    {
+        logError();
+        return false;
+    }
 
-    //read state variables from corresponding state maps
+    // read state variables from corresponding state maps
     myHydrallModel.setStateVariables(hydrallMaps, row, col);
 
-    //compute
+    // compute
     myHydrallModel.computeHydrallPoint();
 
-    //check and save data
-    //TODO CHECK NODATA
+    // check and save data
+    // TODO CHECK NODATA
     myHydrallModel.saveStateVariables(hydrallMaps, row, col);
 
     // TODO clean
@@ -1827,7 +1833,7 @@ bool Crit3DProject::computeHydrallModel(Crit3DHydrall &myHydrallModel, int row, 
 }
 
 
-void Crit3DProject::setHydrallVariables(Crit3DHydrall &myHydrallModel, int row, int col, int forestIndex)
+bool Crit3DProject::setHydrallVariables(Crit3DHydrall &myHydrallModel, int row, int col, int forestIndex)
 {
     //hourly variables
     myHydrallModel.setHourlyVariables(double(hourlyMeteoMaps->mapHourlyTair->value[row][col]), double(radiationMaps->globalRadiationMap->value[row][col]),
@@ -1843,8 +1849,12 @@ void Crit3DProject::setHydrallVariables(Crit3DHydrall &myHydrallModel, int row, 
     hydrallMaps.plantHeight.value[row][col] = 10;   // [m]
     double chlorophyllContent = 500;                // da tabella
 
-    myHydrallModel.setPlantVariables(forestIndex, chlorophyllContent, hydrallMaps.plantHeight.value[row][col],
-                                   hydrallMaps.minLeafWaterPotential->value[row][col]);
+    if (! myHydrallModel.setPlantVariables(forestIndex, chlorophyllContent, hydrallMaps.plantHeight.value[row][col],
+                                          hydrallMaps.minLeafWaterPotential->value[row][col]))
+    {
+        errorString = "Wrong forest index in hydrall model.";
+        return false;
+    }
 
     // check soil
     int soilIndex = int(soilIndexMap.value[row][col]);
@@ -1866,6 +1876,8 @@ void Crit3DProject::setHydrallVariables(Crit3DHydrall &myHydrallModel, int row, 
                                           soilFluxes3D::getMatricPotential(indexMap.at(i).value[row][col]));
         }
     }
+
+    return true;
 }
 
 

@@ -600,20 +600,23 @@ void Crit3DHydrall::setDerivedWeatherVariables(double directIrradiance, double d
     return;
 }
 
-void Crit3DHydrall::setPlantVariables(int forestIndex, double chlorophyllContent, double height, double psiMinimum)
+bool Crit3DHydrall::setPlantVariables(int forestIndex, double chlorophyllContent, double height, double psiMinimum)
 {
     plant.myChlorophyllContent = chlorophyllContent;
     plant.height = height;
     plant.psiLeafMinimum = psiMinimum;
     //plant.psiSoilCritical = psiCritical;
 
-    // TODO FT check con Cate (arriva indice 901)
-    forestIndex = 0;
+    if (forestIndex >= conversionTableVector.size())
+        return false;
+
     parameterWangLeuning.maxCarboxRate = plant.tableEcophysiologicalParameters[conversionTableVector[forestIndex]].Vcmo;
     plant.isAmphystomatic = plant.tableEcophysiologicalParameters[conversionTableVector[forestIndex]].isAmphystomatic;
     plant.rootShootRatioRef = plant.tableEcophysiologicalParameters[conversionTableVector[forestIndex]].rootShootRatio;
     plant.mBallBerry = plant.tableEcophysiologicalParameters[conversionTableVector[forestIndex]].mBallBerry;
     plant.wildfireDamage = plant.tableEcophysiologicalParameters[conversionTableVector[forestIndex]].wildfireDamage;
+
+    return true;
 }
 
 void Crit3DHydrall::setStateVariables(const Crit3DHydrallMaps &stateMap, int row, int col)

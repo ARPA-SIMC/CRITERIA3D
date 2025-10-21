@@ -125,7 +125,7 @@
         bool initializeSnowModel();
 
         bool computeHydrallModel(Crit3DHydrall &myHydrallModel, int row, int col, int forestIndex);
-        void setHydrallVariables(Crit3DHydrall &myHydrallModel, int row, int col, int forestIndex);
+        bool setHydrallVariables(Crit3DHydrall &myHydrallModel, int row, int col, int forestIndex);
 
         bool dailyUpdateHydrall(const QDate &myDate);
 
