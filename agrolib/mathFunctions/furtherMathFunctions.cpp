@@ -1172,7 +1172,7 @@ namespace interpolation
 
 
 
-    double computeR2(const std::vector<double>& obs,const std::vector<double>& sim)
+    double computeR2adjusted(const std::vector<double>& obs,const std::vector<double>& sim)
     {
         double R2=0;
         double meanObs=0;
@@ -1190,6 +1190,27 @@ namespace interpolation
             TSS += (obs[i]-meanObs)*(obs[i]-meanObs);
         }
         R2 = 1 - RSS/TSS;
+        return R2;
+    }
+
+    double computeR2(const std::vector<double>& obs,const std::vector<double>& sim)
+    {
+        double R2=0;
+        double meanObs=0;
+        double ESS=0;
+        double TSS=0;
+        for (int i=0;i<int(obs.size());i++)
+        {
+            meanObs += obs[i];
+        }
+        meanObs /= obs.size();
+        //compute RSS and TSS
+        for (int i=0;i<int(obs.size());i++)
+        {
+            ESS += (sim[i]-meanObs)*(sim[i]-meanObs);
+            TSS += (obs[i]-meanObs)*(obs[i]-meanObs);
+        }
+        R2 = ESS/TSS;
         return R2;
     }
 
@@ -1452,7 +1473,7 @@ namespace interpolation
             {
                 ySim[i]= func(x[i], parameters);
             }
-            R2 = computeR2(y,ySim);
+            R2 = computeR2adjusted(y,ySim);
             RMSE = computeRMSE(y, ySim);
 
             if (isEqual(bestRMSE, NODATA) || RMSE < bestRMSE)
@@ -1588,7 +1609,7 @@ namespace interpolation
         //{
         //ySim[i]= func(myFunc,x[i], parameters);
         //}
-        //R2 = computeR2(y,ySim);
+        //R2 = computeR2adjusted(y,ySim);
         return 1;
     }
 

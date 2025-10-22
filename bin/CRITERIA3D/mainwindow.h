@@ -225,8 +225,6 @@
 
         void on_actionDEM_summary_triggered();
 
-        void on_actionTree_cover_map_triggered();
-
         void on_actionDecomposable_plant_matter_triggered();
 
         void on_actionResistant_plant_matter_triggered();
@@ -242,6 +240,30 @@
         void on_actionAutomatic_state_saving_end_of_month_toggled(bool isChecked);
 
         void on_buttonModel1hour_clicked();
+
+        void on_actionHide_TreeCover_map_triggered();
+
+        void on_actionViewTree_cover_map_triggered();
+
+        void on_actiontree_NPP_triggered();
+
+        void on_actionunderstorey_NPP_triggered();
+
+        void on_actiontree_foliage_biomass_triggered();
+
+        void on_actiontree_root_biomass_triggered();
+
+        void on_actiontree_sapwood_biomass_triggered();
+
+        void on_actionunderstorey_foliage_biomass_triggered();
+
+        void on_actionunderstorey_root_biomass_triggered();
+
+        void on_actionoutput_carbon_triggered();
+
+        void on_actioncumulated_yearly_ET0_triggered();
+
+        void on_actioncumulated_yearly_precipitation_triggered();
 
     protected:
         /*!

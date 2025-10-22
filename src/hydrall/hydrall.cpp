@@ -104,33 +104,6 @@ Crit3DHydrallPlant::Crit3DHydrallPlant()
     transpirationCritical = NODATA; //(mol m-2 s-1)
     rootShootRatioRef = 0.33;
     mBallBerry = NODATA;
-    tableYield = {
-        {"LARCH", 1.0},
-        {"PICEA_ABIES", 4.2},
-        {"ABIES_ALBA",2.9},
-        {"PINUS_SYLVESTRIS_SCOTCH_PINE",1.6},
-        {"PINUS_NIGRA", 2.1},
-        {"PINUS_PINEA", 0.9},
-        {"CONIFER", 2.1},
-        {"BEECH",   2.2},
-        {"QUERCUS_PETREA_ROBUR_PUBESCENS", 1.1},
-        {"QUERCUS_CERRIS_FRAINETTO_VALLONEA", 1.3},
-        {"CASTINEA_SATIVA", 1.5},
-        {"CARPINUS_BETULUS_OTRYA_OXYCARPA", 1.4},
-        {"HYGROPHILOUS_FOREST", 1.5},
-        {"BROADLEAF", 1.5},
-        {"QUERCUS_ILEX", 2.7},
-        {"QUERCUS_SUBER", 0.6},
-        {"MEDITERRANEAN_EVERGREEN_TREE",0.7},
-        {"POPULUS_ARTIFICIAL", 1.5},
-        {"BROADLEAF_ARTIFICIAL", 1},
-        {"CONIFERS_ARTIFICIAL", 2.9},
-        {"SHRUB_SUBALPINE", 1},
-        {"SHRUB_TEMPERATE", 1},
-        {"SHRUB_MEDITERRANEAN", 0.6}
-        //These values are expressed as MgC ha-1. It indicates the carbon stock annual increment in aboveground tree biomass
-        // we consider that the same quantity is stocked in roots, foliage and shoots
-    };
 
     tableEcophysiologicalParameters = {
         {"LARCH",                            35.0, 6.0, false, 0.29, 0.8},

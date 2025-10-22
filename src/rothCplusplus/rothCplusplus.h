@@ -155,6 +155,11 @@ public:
 
 };
 
+struct TAnnualYield{
+    std::string name;
+    double carbon;       // annual carbon biomass
+};
+
 class Crit3DRothCplusplus{
 
 public:
@@ -164,6 +169,7 @@ public:
 
     void initialize();
     bool computeRothCPoint();
+    bool initializeRothCPoint();
     int main();
     bool loadAvgBIC(std::string errorStr);
 
@@ -210,6 +216,9 @@ public:
     bool isInitializing;
 
     std::string BICMapFolderName;
+
+    std::vector<int> conversionTableVector;
+    std::vector<TAnnualYield> tableYield;
 
 
 private:

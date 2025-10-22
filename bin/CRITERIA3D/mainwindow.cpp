@@ -3720,20 +3720,6 @@ void MainWindow::on_actionSave_outputRaster_triggered()
     }
 }
 
-void MainWindow::on_actionTree_cover_map_triggered()
-{
-    if (myProject.treeCoverMap.isLoaded)
-    {
-        setColorScale(noMeteoVar, myProject.treeCoverMap.colorScale);
-        setCurrentRasterOutput(&(myProject.treeCoverMap));
-        ui->labelOutputRaster->setText("Tree cover");
-    }
-    else
-    {
-        myProject.logWarning("Load a tree cover map before.");
-    }
-}
-
 
 void MainWindow::on_actionDecomposable_plant_matter_triggered()
 {
@@ -3856,4 +3842,245 @@ void MainWindow::on_actionAutomatic_state_saving_end_of_month_toggled(bool isChe
     myProject.setSaveMonthlyState(isChecked);
 }
 
+
+void MainWindow::on_actionHide_TreeCover_map_triggered()
+{
+    setOutputRasterVisible(false);
+    refreshViewer3D();
+}
+
+
+void MainWindow::on_actionViewTree_cover_map_triggered()
+{
+    if (myProject.treeCoverMap.isLoaded)
+    {
+        setColorScale(noMeteoVar, myProject.treeCoverMap.colorScale);
+        setCurrentRasterOutput(&(myProject.treeCoverMap));
+        ui->labelOutputRaster->setText("Tree cover");
+    }
+    else
+    {
+        myProject.logWarning("Load a tree cover map before.");
+    }
+}
+
+
+void MainWindow::on_actiontree_NPP_triggered()
+{
+    if (myProject.isHydrallInitialized)
+    {
+        if (myProject.hydrallMaps.treeNetPrimaryProduction->isLoaded)
+        {
+            setColorScale(noMeteoTerrain, myProject.hydrallMaps.treeNetPrimaryProduction->colorScale);
+            setCurrentRasterOutput((myProject.hydrallMaps.treeNetPrimaryProduction));
+            ui->labelOutputRaster->setText("Tree net primary production");
+        }
+        else
+        {
+            myProject.logError("Error while loading tree net primary production.");
+        }
+    }
+    else
+    {
+        myProject.logWarning("Initialize Hydrall model before.");
+    }
+}
+
+
+void MainWindow::on_actionunderstorey_NPP_triggered()
+{
+    if (myProject.isHydrallInitialized)
+    {
+        if (myProject.hydrallMaps.understoreyNetPrimaryProduction->isLoaded)
+        {
+            setColorScale(noMeteoTerrain, myProject.hydrallMaps.understoreyNetPrimaryProduction->colorScale);
+            setCurrentRasterOutput((myProject.hydrallMaps.understoreyNetPrimaryProduction));
+            ui->labelOutputRaster->setText("Understorey net primary production");
+        }
+        else
+        {
+            myProject.logError("Error while loading understorey net primary production.");
+        }
+    }
+    else
+    {
+        myProject.logWarning("Initialize Hydrall model before.");
+    }
+}
+
+
+void MainWindow::on_actiontree_foliage_biomass_triggered()
+{
+    if (myProject.isHydrallInitialized)
+    {
+        if (myProject.hydrallMaps.treeBiomassFoliage->isLoaded)
+        {
+            setColorScale(noMeteoTerrain, myProject.hydrallMaps.treeBiomassFoliage->colorScale);
+            setCurrentRasterOutput((myProject.hydrallMaps.treeBiomassFoliage));
+            ui->labelOutputRaster->setText("Tree foliage biomass");
+        }
+        else
+        {
+            myProject.logError("Error while loading tree foliage biomass.");
+        }
+    }
+    else
+    {
+        myProject.logWarning("Initialize Hydrall model before.");
+    }
+}
+
+
+void MainWindow::on_actiontree_root_biomass_triggered()
+{
+    if (myProject.isHydrallInitialized)
+    {
+        if (myProject.hydrallMaps.treeBiomassRoot->isLoaded)
+        {
+            setColorScale(noMeteoTerrain, myProject.hydrallMaps.treeBiomassRoot->colorScale);
+            setCurrentRasterOutput((myProject.hydrallMaps.treeBiomassRoot));
+            ui->labelOutputRaster->setText("Tree root biomass");
+        }
+        else
+        {
+            myProject.logError("Error while loading tree root biomass.");
+        }
+    }
+    else
+    {
+        myProject.logWarning("Initialize Hydrall model before.");
+    }
+}
+
+
+void MainWindow::on_actiontree_sapwood_biomass_triggered()
+{
+    if (myProject.isHydrallInitialized)
+    {
+        if (myProject.hydrallMaps.treeBiomassSapwood->isLoaded)
+        {
+            setColorScale(noMeteoTerrain, myProject.hydrallMaps.treeBiomassSapwood->colorScale);
+            setCurrentRasterOutput((myProject.hydrallMaps.treeBiomassSapwood));
+            ui->labelOutputRaster->setText("Tree sapwood biomass");
+        }
+        else
+        {
+            myProject.logError("Error while loading tree sapwood biomass.");
+        }
+    }
+    else
+    {
+        myProject.logWarning("Initialize Hydrall model before.");
+    }
+}
+
+
+void MainWindow::on_actionunderstorey_foliage_biomass_triggered()
+{
+    if (myProject.isHydrallInitialized)
+    {
+        if (myProject.hydrallMaps.understoreyBiomassFoliage->isLoaded)
+        {
+            setColorScale(noMeteoTerrain, myProject.hydrallMaps.understoreyBiomassFoliage->colorScale);
+            setCurrentRasterOutput((myProject.hydrallMaps.understoreyBiomassFoliage));
+            ui->labelOutputRaster->setText("Understorey foliage biomass");
+        }
+        else
+        {
+            myProject.logError("Error while loading understorey foliage biomass.");
+        }
+    }
+    else
+    {
+        myProject.logWarning("Initialize Hydrall model before.");
+    }
+}
+
+
+void MainWindow::on_actionunderstorey_root_biomass_triggered()
+{
+    if (myProject.isHydrallInitialized)
+    {
+        if (myProject.hydrallMaps.understoreyBiomassRoot->isLoaded)
+        {
+            setColorScale(noMeteoTerrain, myProject.hydrallMaps.understoreyBiomassRoot->colorScale);
+            setCurrentRasterOutput((myProject.hydrallMaps.understoreyBiomassRoot));
+            ui->labelOutputRaster->setText("Understorey root biomass");
+        }
+        else
+        {
+            myProject.logError("Error while loading understorey root biomass.");
+        }
+    }
+    else
+    {
+        myProject.logWarning("Initialize Hydrall model before.");
+    }
+}
+
+
+void MainWindow::on_actionoutput_carbon_triggered()
+{
+    if (myProject.isHydrallInitialized)
+    {
+        if (myProject.hydrallMaps.outputC->isLoaded)
+        {
+            setColorScale(noMeteoTerrain, myProject.hydrallMaps.outputC->colorScale);
+            setCurrentRasterOutput((myProject.hydrallMaps.outputC));
+            ui->labelOutputRaster->setText("Carbon output");
+        }
+        else
+        {
+            myProject.logError("Error while loading carbon output.");
+        }
+    }
+    else
+    {
+        myProject.logWarning("Initialize Hydrall model before.");
+    }
+}
+
+
+void MainWindow::on_actioncumulated_yearly_ET0_triggered()
+{
+    if (myProject.isHydrallInitialized)
+    {
+        if (myProject.hydrallMaps.yearlyET0->isLoaded)
+        {
+            setColorScale(noMeteoTerrain, myProject.hydrallMaps.yearlyET0->colorScale);
+            setCurrentRasterOutput((myProject.hydrallMaps.yearlyET0));
+            ui->labelOutputRaster->setText("Cumulated yearly ET0");
+        }
+        else
+        {
+            myProject.logError("Error while loading cumulated yearly ET0.");
+        }
+    }
+    else
+    {
+        myProject.logWarning("Initialize Hydrall model before.");
+    }
+}
+
+
+void MainWindow::on_actioncumulated_yearly_precipitation_triggered()
+{
+    if (myProject.isHydrallInitialized)
+    {
+        if (myProject.hydrallMaps.yearlyPrec->isLoaded)
+        {
+            setColorScale(noMeteoTerrain, myProject.hydrallMaps.yearlyPrec->colorScale);
+            setCurrentRasterOutput((myProject.hydrallMaps.yearlyPrec));
+            ui->labelOutputRaster->setText("Cumulated yearly prec");
+        }
+        else
+        {
+            myProject.logError("Error while loading understorey net primary production.");
+        }
+    }
+    else
+    {
+        myProject.logWarning("Initialize Hydrall model before.");
+    }
+}
 

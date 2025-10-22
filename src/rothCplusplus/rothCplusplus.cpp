@@ -170,6 +170,7 @@ void Crit3DRothCMeteoVariable::initialize()
     avgBIC = NODATA;
     prec = NODATA;
     waterLoss = NODATA;
+    std::vector<TAnnualYield> tableYield;
 }
 
 Crit3DRothCplusplus::Crit3DRothCplusplus()
@@ -204,6 +205,34 @@ void Crit3DRothCplusplus::initialize()
         std::ofstream myFile;
         myFile.open("RothC.csv");
     }
+
+    tableYield = {
+        {"LARCH", 1.0},
+        {"PICEA_ABIES", 4.2},
+        {"ABIES_ALBA",2.9},
+        {"PINUS_SYLVESTRIS_SCOTCH_PINE",1.6},
+        {"PINUS_NIGRA", 2.1},
+        {"PINUS_PINEA", 0.9},
+        {"CONIFER", 2.1},
+        {"BEECH",   2.2},
+        {"QUERCUS_PETREA_ROBUR_PUBESCENS", 1.1},
+        {"QUERCUS_CERRIS_FRAINETTO_VALLONEA", 1.3},
+        {"CASTINEA_SATIVA", 1.5},
+        {"CARPINUS_BETULUS_OTRYA_OXYCARPA", 1.4},
+        {"HYGROPHILOUS_FOREST", 1.5},
+        {"BROADLEAF", 1.5},
+        {"QUERCUS_ILEX", 2.7},
+        {"QUERCUS_SUBER", 0.6},
+        {"MEDITERRANEAN_EVERGREEN_TREE",0.7},
+        {"POPULUS_ARTIFICIAL", 1.5},
+        {"BROADLEAF_ARTIFICIAL", 1},
+        {"CONIFERS_ARTIFICIAL", 2.9},
+        {"SHRUB_SUBALPINE", 1},
+        {"SHRUB_TEMPERATE", 1},
+        {"SHRUB_MEDITERRANEAN", 0.6}
+        //These values are expressed as MgC ha-1. It indicates the carbon stock annual increment in aboveground tree biomass
+        // we consider that the same quantity is stocked in roots, foliage and shoots
+    };
 }
 
 bool Crit3DRothCplusplus::computeRothCPoint()
@@ -565,6 +594,12 @@ void Crit3DRothCplusplus::setInputC(double myInputC)
 double Crit3DRothCplusplus::getInputC()
 {
     return inputC;
+}
+
+bool Crit3DRothCplusplus::initializeRothCPoint()
+{
+
+    return true;
 }
 
 void Crit3DRothCMeteoVariable::setTemperature (double myTemperature)

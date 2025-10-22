@@ -1663,7 +1663,7 @@
        <second>0</second>
        <year>1752</year>
        <month>8</month>
-       <day>29</day>
+       <day>27</day>
       </datetime>
      </property>
      <property name="maximumDate">
@@ -2258,7 +2258,7 @@
      <x>0</x>
      <y>0</y>
      <width>1280</width>
-     <height>28</height>
+     <height>23</height>
     </rect>
    </property>
    <property name="palette">
@@ -2546,7 +2546,8 @@
      <addaction name="actionView_LandUseMap"/>
      <addaction name="actionHide_LandUseMap"/>
      <addaction name="separator"/>
-     <addaction name="actionTree_cover_map"/>
+     <addaction name="actionViewTree_cover_map"/>
+     <addaction name="actionHide_TreeCover_map"/>
     </widget>
     <widget class="QMenu" name="actionView_Crop">
      <property name="title">
@@ -2573,6 +2574,21 @@
      <addaction name="actionHumified_organic_matter"/>
      <addaction name="actionSoil_organic_matter"/>
     </widget>
+    <widget class="QMenu" name="menuHydrall_model">
+     <property name="title">
+      <string>Hydrall model</string>
+     </property>
+     <addaction name="actiontree_NPP"/>
+     <addaction name="actionunderstorey_NPP"/>
+     <addaction name="actiontree_foliage_biomass"/>
+     <addaction name="actiontree_root_biomass"/>
+     <addaction name="actiontree_sapwood_biomass"/>
+     <addaction name="actionunderstorey_foliage_biomass"/>
+     <addaction name="actionunderstorey_root_biomass"/>
+     <addaction name="actionoutput_carbon"/>
+     <addaction name="actioncumulated_yearly_ET0"/>
+     <addaction name="actioncumulated_yearly_precipitation"/>
+    </widget>
     <addaction name="actionShow_3D_viewer"/>
     <addaction name="separator"/>
     <addaction name="menuPoints"/>
@@ -2594,6 +2610,7 @@
     <addaction name="menuSlope_stability"/>
     <addaction name="separator"/>
     <addaction name="menuRothC_model"/>
+    <addaction name="menuHydrall_model"/>
    </widget>
    <widget class="QMenu" name="menuSolar_radiation_model_2">
     <property name="title">
@@ -3397,7 +3414,7 @@
     <string>Digital Elevation Model summary...</string>
    </property>
   </action>
-  <action name="actionTree_cover_map">
+  <action name="actionViewTree_cover_map">
    <property name="text">
     <string>Tree cover map</string>
    </property>
@@ -3452,6 +3469,64 @@
    </property>
    <property name="text">
     <string>Parallel computing</string>
+   </property>
+  </action>
+  <action name="actionHide_TreeCover_map">
+   <property name="text">
+    <string>Hide map</string>
+   </property>
+  </action>
+  <action name="actiontree_NPP">
+   <property name="text">
+    <string>tree NPP</string>
+   </property>
+  </action>
+  <action name="actionunderstorey_NPP">
+   <property name="text">
+    <string>understorey NPP</string>
+   </property>
+  </action>
+  <action name="actiontree_foliage_biomass">
+   <property name="text">
+    <string>tree foliage biomass</string>
+   </property>
+  </action>
+  <action name="actiontree_root_biomass">
+   <property name="text">
+    <string>tree root biomass</string>
+   </property>
+  </action>
+  <action name="actiontree_sapwood_biomass">
+   <property name="text">
+    <string>tree sapwood biomass</string>
+   </property>
+  </action>
+  <action name="actionunderstorey_foliage_biomass">
+   <property name="text">
+    <string>understorey foliage biomass</string>
+   </property>
+  </action>
+  <action name="actionunderstorey_root_biomass">
+   <property name="text">
+    <string>understorey root biomass</string>
+   </property>
+  </action>
+  <action name="actionoutput_carbon">
+   <property name="text">
+    <string>carbon output</string>
+   </property>
+   <property name="toolTip">
+    <string>carbon output</string>
+   </property>
+  </action>
+  <action name="actioncumulated_yearly_ET0">
+   <property name="text">
+    <string>cumulated yearly ET0</string>
+   </property>
+  </action>
+  <action name="actioncumulated_yearly_precipitation">
+   <property name="text">
+    <string>cumulated yearly precipitation</string>
    </property>
   </action>
  </widget>
