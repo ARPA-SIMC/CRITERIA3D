@@ -1492,8 +1492,11 @@ bool Project::loadAggregationdDB(QString dbName)
 
 bool Project::loadMeteoPointsData(const QDate& firstDate, const QDate& lastDate, bool loadHourly, bool loadDaily, bool showInfo)
 {
-    //check
-    if (firstDate == QDate(1800,1,1) || lastDate == QDate(1800,1,1))
+    if (! meteoPointsLoaded)
+        return false;
+
+    //check date
+    if (firstDate == QDate(1800, 1, 1) || lastDate == QDate(1800, 1, 1))
         return false;
 
     int step = 0;
@@ -1655,7 +1658,8 @@ bool Project::loadMeteoGridDailyData(const QDate &firstDate, const QDate &lastDa
         std::string id;
         QString errorStr;
         QSqlDatabase myDb;
-        meteoGridDbHandler->openNewConnection(myDb, QString::number(omp_get_thread_num()), errorStr);
+        QString connectionName = QString::number(omp_get_thread_num());
+        meteoGridDbHandler->openNewConnection(myDb, connectionName, errorStr);
 
         #pragma omp for schedule(dynamic) reduction(+:count)
         for (int row = 0; row < gridStructure.header().nrRows; row++)
@@ -1700,6 +1704,7 @@ bool Project::loadMeteoGridDailyData(const QDate &firstDate, const QDate &lastDa
         }
 
         myDb.close();
+        myDb.removeDatabase(connectionName);
     }
 
     if (showInfo) closeProgressBar();
@@ -1739,7 +1744,8 @@ bool Project::loadMeteoGridHourlyData(QDateTime firstDateTime, QDateTime lastDat
         std::string id;
         QString myErrorStr;
         QSqlDatabase myDb;
-        meteoGridDbHandler->openNewConnection(myDb, QString::number(omp_get_thread_num()), myErrorStr);
+        QString connectionName = QString::number(omp_get_thread_num());
+        meteoGridDbHandler->openNewConnection(myDb, connectionName, myErrorStr);
 
         #pragma omp for schedule(dynamic) reduction(+:count)
         for (int row = 0; row < gridStructure.header().nrRows; row++)
@@ -1772,6 +1778,7 @@ bool Project::loadMeteoGridHourlyData(QDateTime firstDateTime, QDateTime lastDat
         }
 
         myDb.close();
+        myDb.removeDatabase(connectionName);
     }
 
     if (showInfo) closeProgressBar();
