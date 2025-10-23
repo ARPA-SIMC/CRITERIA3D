@@ -1,6 +1,5 @@
 #include <cstring>
 #include <cassert>
-#include <iostream>
 #include <omp.h>
 
 #include "soilFluxes3D.h"

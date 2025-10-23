@@ -1,7 +1,3 @@
-#include <algorithm>
-#include <iostream>
-#include <new>
-
 #include "commonConstants.h"
 #include "soilFluxes3D.h"
 #include "soilPhysics.h"
@@ -17,6 +13,9 @@
 #ifdef CUDA_ENABLED
     #include "gpusolver.h"
 #endif
+
+#include <algorithm>
+#include <new>
 
 using namespace soilFluxes3D::v2::Soil;
 using namespace soilFluxes3D::v2::Water;
@@ -1453,7 +1452,7 @@ namespace soilFluxes3D::v2
      * \brief gets the nodeIndex node vapor concentration
      * \return node vapor concentration     [kg m-3]
      */
-    double getNodeVapor(SF3Duint_t nodeIndex)
+    __cudaSpec double getNodeVapor(SF3Duint_t nodeIndex)
     {
         if(!nodeGrid.isInitialized)
             return getDoubleErrorValue(SF3Derror_t::MemoryError);
