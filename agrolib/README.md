@@ -33,7 +33,7 @@ agrolib is released under the GNU LGPL license.
 - Fausto Tomei <ftomei@arpae.it>
 - Gabriele Antolini	 <gantolini@arpae.it>
 - Antonio Volta		<avolta@arpae.it>
-- Caterina Topscano <ctoscano@arpae.it>
+- Caterina Toscano <ctoscano@arpae.it>
 - Laura Costantini  <laura.costantini0@gmail.com>
 
 ### Contributions

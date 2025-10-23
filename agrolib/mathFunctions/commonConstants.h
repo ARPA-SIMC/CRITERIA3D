@@ -1,12 +1,14 @@
 #ifndef COMMONCONSTANTS_H
 #define COMMONCONSTANTS_H
 
+    #include <cfloat>
+
     #ifndef MINVALUE
-        #define MINVALUE(a, b) (((a) < (b))? (a) : (b))
+        #define MINVALUE(a, b) (((a) < (b)) ? (a) : (b))
     #endif
 
     #ifndef MAXVALUE
-        #define MAXVALUE(a, b) (((a) > (b))? (a) : (b))
+        #define MAXVALUE(a, b) (((a) > (b)) ? (a) : (b))
     #endif
 
     #ifndef BOUNDFUNCTION
@@ -22,7 +24,7 @@
     #endif
 
     #ifndef sgnVariable
-        #define sgnVariable(a) (((a) < 0 )? -1 : 1)
+        #define sgnVariable(a) (((a) < 0) ? -1 : 1)
     #endif
 
     #ifndef NODATA
@@ -122,7 +124,7 @@
     #define BOUNDARY_ROAD 11
     #define BOUNDARY_CULVERT 12
 
-    #define BOUNDARY_HEAT_SURFACE 10
+    #define BOUNDARY_HEAT_SURFACE 20
     #define BOUNDARY_SOLUTEFLUX 30
     #define BOUNDARY_NONE 99
 
@@ -202,7 +204,7 @@
     // [W m-1 K-1] thermal conductivity of water
     #define KH_H2O 0.57
     // [W m-1 K-1] average thermal conductivity of soil minerals (no quartz)
-    #define KH_mineral 2.5
+    #define mineralHK 2.5
 
     // [W m-2 K-4] Stefan-Boltzmann constant
     #define STEFAN_BOLTZMANN 5.670373E-8
@@ -255,6 +257,12 @@
 
 
     #define MINIMUM_PERCENTILE_DATA 3
+
+    //-----NEW COSTANT - TO DO: MOVE THEM IN THE APPROPRIATE SECTION
+    //boundary.cpp/computeSoilSurfaceResistance
+    #define THETAMIN 0.15
+    //boundary.cpp/updateBoundaryWater
+    #define EPSILON_RUNOFF 0.001        // [m] 1 mm
 
 
 #endif // COMMONCONSTANTS_H

@@ -243,7 +243,7 @@
    </font>
   </property>
   <property name="windowTitle">
-   <string/>
+   <string>CRITERIA-3D</string>
   </property>
   <property name="autoFillBackground">
    <bool>false</bool>
@@ -263,6 +263,259 @@
      <width>2000</width>
      <height>2000</height>
     </size>
+   </property>
+   <property name="palette">
+    <palette>
+     <active>
+      <colorrole role="WindowText">
+       <brush brushstyle="SolidPattern">
+        <color alpha="255">
+         <red>16</red>
+         <green>16</green>
+         <blue>16</blue>
+        </color>
+       </brush>
+      </colorrole>
+      <colorrole role="Button">
+       <brush brushstyle="SolidPattern">
+        <color alpha="255">
+         <red>248</red>
+         <green>248</green>
+         <blue>248</blue>
+        </color>
+       </brush>
+      </colorrole>
+      <colorrole role="Light">
+       <brush brushstyle="SolidPattern">
+        <color alpha="255">
+         <red>248</red>
+         <green>248</green>
+         <blue>248</blue>
+        </color>
+       </brush>
+      </colorrole>
+      <colorrole role="Midlight">
+       <brush brushstyle="SolidPattern">
+        <color alpha="255">
+         <red>248</red>
+         <green>248</green>
+         <blue>248</blue>
+        </color>
+       </brush>
+      </colorrole>
+      <colorrole role="Text">
+       <brush brushstyle="SolidPattern">
+        <color alpha="255">
+         <red>16</red>
+         <green>16</green>
+         <blue>16</blue>
+        </color>
+       </brush>
+      </colorrole>
+      <colorrole role="BrightText">
+       <brush brushstyle="SolidPattern">
+        <color alpha="255">
+         <red>248</red>
+         <green>248</green>
+         <blue>248</blue>
+        </color>
+       </brush>
+      </colorrole>
+      <colorrole role="ButtonText">
+       <brush brushstyle="SolidPattern">
+        <color alpha="255">
+         <red>16</red>
+         <green>16</green>
+         <blue>16</blue>
+        </color>
+       </brush>
+      </colorrole>
+      <colorrole role="Base">
+       <brush brushstyle="SolidPattern">
+        <color alpha="255">
+         <red>248</red>
+         <green>248</green>
+         <blue>248</blue>
+        </color>
+       </brush>
+      </colorrole>
+      <colorrole role="Window">
+       <brush brushstyle="SolidPattern">
+        <color alpha="255">
+         <red>248</red>
+         <green>248</green>
+         <blue>248</blue>
+        </color>
+       </brush>
+      </colorrole>
+      <colorrole role="AlternateBase">
+       <brush brushstyle="SolidPattern">
+        <color alpha="255">
+         <red>240</red>
+         <green>240</green>
+         <blue>240</blue>
+        </color>
+       </brush>
+      </colorrole>
+     </active>
+     <inactive>
+      <colorrole role="WindowText">
+       <brush brushstyle="SolidPattern">
+        <color alpha="255">
+         <red>16</red>
+         <green>16</green>
+         <blue>16</blue>
+        </color>
+       </brush>
+      </colorrole>
+      <colorrole role="Button">
+       <brush brushstyle="SolidPattern">
+        <color alpha="255">
+         <red>248</red>
+         <green>248</green>
+         <blue>248</blue>
+        </color>
+       </brush>
+      </colorrole>
+      <colorrole role="Light">
+       <brush brushstyle="SolidPattern">
+        <color alpha="255">
+         <red>248</red>
+         <green>248</green>
+         <blue>248</blue>
+        </color>
+       </brush>
+      </colorrole>
+      <colorrole role="Midlight">
+       <brush brushstyle="SolidPattern">
+        <color alpha="255">
+         <red>248</red>
+         <green>248</green>
+         <blue>248</blue>
+        </color>
+       </brush>
+      </colorrole>
+      <colorrole role="Text">
+       <brush brushstyle="SolidPattern">
+        <color alpha="255">
+         <red>16</red>
+         <green>16</green>
+         <blue>16</blue>
+        </color>
+       </brush>
+      </colorrole>
+      <colorrole role="BrightText">
+       <brush brushstyle="SolidPattern">
+        <color alpha="255">
+         <red>248</red>
+         <green>248</green>
+         <blue>248</blue>
+        </color>
+       </brush>
+      </colorrole>
+      <colorrole role="ButtonText">
+       <brush brushstyle="SolidPattern">
+        <color alpha="255">
+         <red>16</red>
+         <green>16</green>
+         <blue>16</blue>
+        </color>
+       </brush>
+      </colorrole>
+      <colorrole role="Base">
+       <brush brushstyle="SolidPattern">
+        <color alpha="255">
+         <red>248</red>
+         <green>248</green>
+         <blue>248</blue>
+        </color>
+       </brush>
+      </colorrole>
+      <colorrole role="Window">
+       <brush brushstyle="SolidPattern">
+        <color alpha="255">
+         <red>248</red>
+         <green>248</green>
+         <blue>248</blue>
+        </color>
+       </brush>
+      </colorrole>
+      <colorrole role="AlternateBase">
+       <brush brushstyle="SolidPattern">
+        <color alpha="255">
+         <red>240</red>
+         <green>240</green>
+         <blue>240</blue>
+        </color>
+       </brush>
+      </colorrole>
+     </inactive>
+     <disabled>
+      <colorrole role="Button">
+       <brush brushstyle="SolidPattern">
+        <color alpha="255">
+         <red>248</red>
+         <green>248</green>
+         <blue>248</blue>
+        </color>
+       </brush>
+      </colorrole>
+      <colorrole role="Light">
+       <brush brushstyle="SolidPattern">
+        <color alpha="255">
+         <red>248</red>
+         <green>248</green>
+         <blue>248</blue>
+        </color>
+       </brush>
+      </colorrole>
+      <colorrole role="Midlight">
+       <brush brushstyle="SolidPattern">
+        <color alpha="255">
+         <red>248</red>
+         <green>248</green>
+         <blue>248</blue>
+        </color>
+       </brush>
+      </colorrole>
+      <colorrole role="BrightText">
+       <brush brushstyle="SolidPattern">
+        <color alpha="255">
+         <red>248</red>
+         <green>248</green>
+         <blue>248</blue>
+        </color>
+       </brush>
+      </colorrole>
+      <colorrole role="Base">
+       <brush brushstyle="SolidPattern">
+        <color alpha="255">
+         <red>248</red>
+         <green>248</green>
+         <blue>248</blue>
+        </color>
+       </brush>
+      </colorrole>
+      <colorrole role="Window">
+       <brush brushstyle="SolidPattern">
+        <color alpha="255">
+         <red>248</red>
+         <green>248</green>
+         <blue>248</blue>
+        </color>
+       </brush>
+      </colorrole>
+      <colorrole role="AlternateBase">
+       <brush brushstyle="SolidPattern">
+        <color alpha="255">
+         <red>240</red>
+         <green>240</green>
+         <blue>240</blue>
+        </color>
+       </brush>
+      </colorrole>
+     </disabled>
+    </palette>
    </property>
    <widget class="QWidget" name="widgetMap" native="true">
     <property name="geometry">
@@ -298,21 +551,30 @@
     <property name="palette">
      <palette>
       <active>
+       <colorrole role="WindowText">
+        <brush brushstyle="SolidPattern">
+         <color alpha="255">
+          <red>16</red>
+          <green>16</green>
+          <blue>16</blue>
+         </color>
+        </brush>
+       </colorrole>
        <colorrole role="Button">
         <brush brushstyle="SolidPattern">
          <color alpha="255">
-          <red>255</red>
-          <green>255</green>
-          <blue>255</blue>
+          <red>248</red>
+          <green>248</green>
+          <blue>248</blue>
          </color>
         </brush>
        </colorrole>
        <colorrole role="Midlight">
         <brush brushstyle="SolidPattern">
          <color alpha="255">
-          <red>255</red>
-          <green>255</green>
-          <blue>255</blue>
+          <red>248</red>
+          <green>248</green>
+          <blue>248</blue>
          </color>
         </brush>
        </colorrole>
@@ -337,9 +599,9 @@
        <colorrole role="Window">
         <brush brushstyle="SolidPattern">
          <color alpha="255">
-          <red>255</red>
-          <green>255</green>
-          <blue>255</blue>
+          <red>248</red>
+          <green>248</green>
+          <blue>248</blue>
          </color>
         </brush>
        </colorrole>
@@ -355,9 +617,9 @@
        <colorrole role="AlternateBase">
         <brush brushstyle="SolidPattern">
          <color alpha="255">
-          <red>255</red>
-          <green>255</green>
-          <blue>255</blue>
+          <red>248</red>
+          <green>248</green>
+          <blue>248</blue>
          </color>
         </brush>
        </colorrole>
@@ -372,21 +634,30 @@
        </colorrole>
       </active>
       <inactive>
+       <colorrole role="WindowText">
+        <brush brushstyle="SolidPattern">
+         <color alpha="255">
+          <red>16</red>
+          <green>16</green>
+          <blue>16</blue>
+         </color>
+        </brush>
+       </colorrole>
        <colorrole role="Button">
         <brush brushstyle="SolidPattern">
          <color alpha="255">
-          <red>255</red>
-          <green>255</green>
-          <blue>255</blue>
+          <red>248</red>
+          <green>248</green>
+          <blue>248</blue>
          </color>
         </brush>
        </colorrole>
        <colorrole role="Midlight">
         <brush brushstyle="SolidPattern">
          <color alpha="255">
-          <red>255</red>
-          <green>255</green>
-          <blue>255</blue>
+          <red>248</red>
+          <green>248</green>
+          <blue>248</blue>
          </color>
         </brush>
        </colorrole>
@@ -411,9 +682,9 @@
        <colorrole role="Window">
         <brush brushstyle="SolidPattern">
          <color alpha="255">
-          <red>255</red>
-          <green>255</green>
-          <blue>255</blue>
+          <red>248</red>
+          <green>248</green>
+          <blue>248</blue>
          </color>
         </brush>
        </colorrole>
@@ -429,9 +700,9 @@
        <colorrole role="AlternateBase">
         <brush brushstyle="SolidPattern">
          <color alpha="255">
-          <red>255</red>
-          <green>255</green>
-          <blue>255</blue>
+          <red>248</red>
+          <green>248</green>
+          <blue>248</blue>
          </color>
         </brush>
        </colorrole>
@@ -449,18 +720,18 @@
        <colorrole role="Button">
         <brush brushstyle="SolidPattern">
          <color alpha="255">
-          <red>255</red>
-          <green>255</green>
-          <blue>255</blue>
+          <red>248</red>
+          <green>248</green>
+          <blue>248</blue>
          </color>
         </brush>
        </colorrole>
        <colorrole role="Midlight">
         <brush brushstyle="SolidPattern">
          <color alpha="255">
-          <red>255</red>
-          <green>255</green>
-          <blue>255</blue>
+          <red>248</red>
+          <green>248</green>
+          <blue>248</blue>
          </color>
         </brush>
        </colorrole>
@@ -482,12 +753,21 @@
          </color>
         </brush>
        </colorrole>
+       <colorrole role="Base">
+        <brush brushstyle="SolidPattern">
+         <color alpha="255">
+          <red>248</red>
+          <green>248</green>
+          <blue>248</blue>
+         </color>
+        </brush>
+       </colorrole>
        <colorrole role="Window">
         <brush brushstyle="SolidPattern">
          <color alpha="255">
-          <red>255</red>
-          <green>255</green>
-          <blue>255</blue>
+          <red>248</red>
+          <green>248</green>
+          <blue>248</blue>
          </color>
         </brush>
        </colorrole>
@@ -503,9 +783,9 @@
        <colorrole role="AlternateBase">
         <brush brushstyle="SolidPattern">
          <color alpha="255">
-          <red>255</red>
-          <green>255</green>
-          <blue>255</blue>
+          <red>248</red>
+          <green>248</green>
+          <blue>248</blue>
          </color>
         </brush>
        </colorrole>
@@ -534,7 +814,7 @@
      <string notr="true">Digital Elevation Model</string>
     </property>
     <property name="alignment">
-     <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
+     <set>Qt::AlignmentFlag::AlignLeading|Qt::AlignmentFlag::AlignLeft|Qt::AlignmentFlag::AlignVCenter</set>
     </property>
     <widget class="QSlider" name="opacitySliderRasterInput">
      <property name="enabled">
@@ -573,7 +853,7 @@
       <number>75</number>
      </property>
      <property name="orientation">
-      <enum>Qt::Horizontal</enum>
+      <enum>Qt::Orientation::Horizontal</enum>
      </property>
     </widget>
     <widget class="QWidget" name="colorScaleInputRaster" native="true">
@@ -637,6 +917,15 @@
     <property name="palette">
      <palette>
       <active>
+       <colorrole role="WindowText">
+        <brush brushstyle="SolidPattern">
+         <color alpha="255">
+          <red>16</red>
+          <green>16</green>
+          <blue>16</blue>
+         </color>
+        </brush>
+       </colorrole>
        <colorrole role="Button">
         <brush brushstyle="SolidPattern">
          <color alpha="255">
@@ -676,9 +965,9 @@
        <colorrole role="Window">
         <brush brushstyle="SolidPattern">
          <color alpha="255">
-          <red>255</red>
-          <green>255</green>
-          <blue>255</blue>
+          <red>248</red>
+          <green>248</green>
+          <blue>248</blue>
          </color>
         </brush>
        </colorrole>
@@ -711,6 +1000,15 @@
        </colorrole>
       </active>
       <inactive>
+       <colorrole role="WindowText">
+        <brush brushstyle="SolidPattern">
+         <color alpha="255">
+          <red>16</red>
+          <green>16</green>
+          <blue>16</blue>
+         </color>
+        </brush>
+       </colorrole>
        <colorrole role="Button">
         <brush brushstyle="SolidPattern">
          <color alpha="255">
@@ -750,9 +1048,9 @@
        <colorrole role="Window">
         <brush brushstyle="SolidPattern">
          <color alpha="255">
-          <red>255</red>
-          <green>255</green>
-          <blue>255</blue>
+          <red>248</red>
+          <green>248</green>
+          <blue>248</blue>
          </color>
         </brush>
        </colorrole>
@@ -821,12 +1119,21 @@
          </color>
         </brush>
        </colorrole>
+       <colorrole role="Base">
+        <brush brushstyle="SolidPattern">
+         <color alpha="255">
+          <red>248</red>
+          <green>248</green>
+          <blue>248</blue>
+         </color>
+        </brush>
+       </colorrole>
        <colorrole role="Window">
         <brush brushstyle="SolidPattern">
          <color alpha="255">
-          <red>255</red>
-          <green>255</green>
-          <blue>255</blue>
+          <red>248</red>
+          <green>248</green>
+          <blue>248</blue>
          </color>
         </brush>
        </colorrole>
@@ -873,7 +1180,7 @@
      <string notr="true">Variable map</string>
     </property>
     <property name="alignment">
-     <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
+     <set>Qt::AlignmentFlag::AlignLeading|Qt::AlignmentFlag::AlignLeft|Qt::AlignmentFlag::AlignVCenter</set>
     </property>
     <widget class="QSlider" name="opacitySliderRasterOutput">
      <property name="enabled">
@@ -912,7 +1219,7 @@
       <number>75</number>
      </property>
      <property name="orientation">
-      <enum>Qt::Horizontal</enum>
+      <enum>Qt::Orientation::Horizontal</enum>
      </property>
     </widget>
     <widget class="QWidget" name="colorScaleOutputRaster" native="true">
@@ -976,6 +1283,15 @@
     <property name="palette">
      <palette>
       <active>
+       <colorrole role="WindowText">
+        <brush brushstyle="SolidPattern">
+         <color alpha="255">
+          <red>16</red>
+          <green>16</green>
+          <blue>16</blue>
+         </color>
+        </brush>
+       </colorrole>
        <colorrole role="Button">
         <brush brushstyle="SolidPattern">
          <color alpha="255">
@@ -1006,18 +1322,36 @@
        <colorrole role="Mid">
         <brush brushstyle="SolidPattern">
          <color alpha="255">
-          <red>170</red>
-          <green>170</green>
-          <blue>170</blue>
+          <red>100</red>
+          <green>100</green>
+          <blue>100</blue>
+         </color>
+        </brush>
+       </colorrole>
+       <colorrole role="Text">
+        <brush brushstyle="SolidPattern">
+         <color alpha="255">
+          <red>16</red>
+          <green>16</green>
+          <blue>16</blue>
+         </color>
+        </brush>
+       </colorrole>
+       <colorrole role="ButtonText">
+        <brush brushstyle="SolidPattern">
+         <color alpha="255">
+          <red>16</red>
+          <green>16</green>
+          <blue>16</blue>
          </color>
         </brush>
        </colorrole>
        <colorrole role="Window">
         <brush brushstyle="SolidPattern">
          <color alpha="255">
-          <red>255</red>
-          <green>255</green>
-          <blue>255</blue>
+          <red>248</red>
+          <green>248</green>
+          <blue>248</blue>
          </color>
         </brush>
        </colorrole>
@@ -1050,6 +1384,15 @@
        </colorrole>
       </active>
       <inactive>
+       <colorrole role="WindowText">
+        <brush brushstyle="SolidPattern">
+         <color alpha="255">
+          <red>16</red>
+          <green>16</green>
+          <blue>16</blue>
+         </color>
+        </brush>
+       </colorrole>
        <colorrole role="Button">
         <brush brushstyle="SolidPattern">
          <color alpha="255">
@@ -1080,18 +1423,36 @@
        <colorrole role="Mid">
         <brush brushstyle="SolidPattern">
          <color alpha="255">
-          <red>170</red>
-          <green>170</green>
-          <blue>170</blue>
+          <red>100</red>
+          <green>100</green>
+          <blue>100</blue>
+         </color>
+        </brush>
+       </colorrole>
+       <colorrole role="Text">
+        <brush brushstyle="SolidPattern">
+         <color alpha="255">
+          <red>16</red>
+          <green>16</green>
+          <blue>16</blue>
+         </color>
+        </brush>
+       </colorrole>
+       <colorrole role="ButtonText">
+        <brush brushstyle="SolidPattern">
+         <color alpha="255">
+          <red>16</red>
+          <green>16</green>
+          <blue>16</blue>
          </color>
         </brush>
        </colorrole>
        <colorrole role="Window">
         <brush brushstyle="SolidPattern">
          <color alpha="255">
-          <red>255</red>
-          <green>255</green>
-          <blue>255</blue>
+          <red>248</red>
+          <green>248</green>
+          <blue>248</blue>
          </color>
         </brush>
        </colorrole>
@@ -1154,18 +1515,27 @@
        <colorrole role="Mid">
         <brush brushstyle="SolidPattern">
          <color alpha="255">
-          <red>170</red>
-          <green>170</green>
-          <blue>170</blue>
+          <red>100</red>
+          <green>100</green>
+          <blue>100</blue>
+         </color>
+        </brush>
+       </colorrole>
+       <colorrole role="Base">
+        <brush brushstyle="SolidPattern">
+         <color alpha="255">
+          <red>248</red>
+          <green>248</green>
+          <blue>248</blue>
          </color>
         </brush>
        </colorrole>
        <colorrole role="Window">
         <brush brushstyle="SolidPattern">
          <color alpha="255">
-          <red>255</red>
-          <green>255</green>
-          <blue>255</blue>
+          <red>248</red>
+          <green>248</green>
+          <blue>248</blue>
          </color>
         </brush>
        </colorrole>
@@ -1212,7 +1582,7 @@
      <string notr="true">Meteo Points</string>
     </property>
     <property name="alignment">
-     <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
+     <set>Qt::AlignmentFlag::AlignLeading|Qt::AlignmentFlag::AlignLeft|Qt::AlignmentFlag::AlignVCenter</set>
     </property>
     <widget class="QDateEdit" name="dateEdit">
      <property name="geometry">
@@ -1304,7 +1674,7 @@
       </date>
      </property>
      <property name="currentSection">
-      <enum>QDateTimeEdit::YearSection</enum>
+      <enum>QDateTimeEdit::Section::YearSection</enum>
      </property>
      <property name="displayFormat">
       <string>yyyy-MM-dd</string>
@@ -1442,6 +1812,15 @@
     <property name="palette">
      <palette>
       <active>
+       <colorrole role="WindowText">
+        <brush brushstyle="SolidPattern">
+         <color alpha="255">
+          <red>16</red>
+          <green>16</green>
+          <blue>16</blue>
+         </color>
+        </brush>
+       </colorrole>
        <colorrole role="Button">
         <brush brushstyle="SolidPattern">
          <color alpha="255">
@@ -1481,9 +1860,9 @@
        <colorrole role="Window">
         <brush brushstyle="SolidPattern">
          <color alpha="255">
-          <red>255</red>
-          <green>255</green>
-          <blue>255</blue>
+          <red>248</red>
+          <green>248</green>
+          <blue>248</blue>
          </color>
         </brush>
        </colorrole>
@@ -1516,6 +1895,15 @@
        </colorrole>
       </active>
       <inactive>
+       <colorrole role="WindowText">
+        <brush brushstyle="SolidPattern">
+         <color alpha="255">
+          <red>16</red>
+          <green>16</green>
+          <blue>16</blue>
+         </color>
+        </brush>
+       </colorrole>
        <colorrole role="Button">
         <brush brushstyle="SolidPattern">
          <color alpha="255">
@@ -1555,9 +1943,9 @@
        <colorrole role="Window">
         <brush brushstyle="SolidPattern">
          <color alpha="255">
-          <red>255</red>
-          <green>255</green>
-          <blue>255</blue>
+          <red>248</red>
+          <green>248</green>
+          <blue>248</blue>
          </color>
         </brush>
        </colorrole>
@@ -1626,12 +2014,21 @@
          </color>
         </brush>
        </colorrole>
+       <colorrole role="Base">
+        <brush brushstyle="SolidPattern">
+         <color alpha="255">
+          <red>248</red>
+          <green>248</green>
+          <blue>248</blue>
+         </color>
+        </brush>
+       </colorrole>
        <colorrole role="Window">
         <brush brushstyle="SolidPattern">
          <color alpha="255">
-          <red>255</red>
-          <green>255</green>
-          <blue>255</blue>
+          <red>248</red>
+          <green>248</green>
+          <blue>248</blue>
          </color>
         </brush>
        </colorrole>
@@ -1678,7 +2075,7 @@
      <string notr="true">Model run</string>
     </property>
     <property name="alignment">
-     <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
+     <set>Qt::AlignmentFlag::AlignLeading|Qt::AlignmentFlag::AlignLeft|Qt::AlignmentFlag::AlignVCenter</set>
     </property>
     <widget class="QPushButton" name="buttonModelStart">
      <property name="geometry">
@@ -1707,9 +2104,6 @@
        <pointsize>8</pointsize>
        <bold>false</bold>
       </font>
-     </property>
-     <property name="autoFillBackground">
-      <bool>true</bool>
      </property>
      <property name="text">
       <string>Pause</string>
@@ -1776,13 +2170,13 @@
       </font>
      </property>
      <property name="layoutDirection">
-      <enum>Qt::RightToLeft</enum>
+      <enum>Qt::LayoutDirection::RightToLeft</enum>
      </property>
      <property name="text">
       <string>Layer</string>
      </property>
      <property name="alignment">
-      <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+      <set>Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignTrailing|Qt::AlignmentFlag::AlignVCenter</set>
      </property>
     </widget>
     <widget class="QLineEdit" name="layerDepthEdit">
@@ -1798,7 +2192,7 @@
       <bool>true</bool>
      </property>
     </widget>
-    <widget class="QLabel" name="labelTime">
+    <widget class="QLabel" name="labelLayer_2">
      <property name="geometry">
       <rect>
        <x>9</x>
@@ -1821,13 +2215,13 @@
       </font>
      </property>
      <property name="layoutDirection">
-      <enum>Qt::RightToLeft</enum>
+      <enum>Qt::LayoutDirection::RightToLeft</enum>
      </property>
      <property name="text">
       <string>Time</string>
      </property>
      <property name="alignment">
-      <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+      <set>Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignTrailing|Qt::AlignmentFlag::AlignVCenter</set>
      </property>
     </widget>
     <widget class="QLineEdit" name="modelTimeEdit">
@@ -1869,8 +2263,28 @@
    </property>
    <property name="palette">
     <palette>
-     <active/>
-     <inactive/>
+     <active>
+      <colorrole role="ButtonText">
+       <brush brushstyle="SolidPattern">
+        <color alpha="255">
+         <red>16</red>
+         <green>16</green>
+         <blue>16</blue>
+        </color>
+       </brush>
+      </colorrole>
+     </active>
+     <inactive>
+      <colorrole role="ButtonText">
+       <brush brushstyle="SolidPattern">
+        <color alpha="255">
+         <red>16</red>
+         <green>16</green>
+         <blue>16</blue>
+        </color>
+       </brush>
+      </colorrole>
+     </inactive>
      <disabled/>
     </palette>
    </property>
@@ -1879,7 +2293,7 @@
    </property>
    <widget class="QMenu" name="menuFile">
     <property name="title">
-     <string>Fi&amp;le</string>
+     <string>File</string>
     </property>
     <widget class="QMenu" name="menuInput">
      <property name="title">
@@ -1887,7 +2301,7 @@
      </property>
      <widget class="QMenu" name="menuMeteo_points">
       <property name="title">
-       <string>Meteo points db</string>
+       <string>Meteo points</string>
       </property>
       <addaction name="actionNew_meteoPointsDB_from_csv"/>
       <addaction name="actionLoad_MeteoPoints"/>
@@ -1909,14 +2323,7 @@
       <addaction name="separator"/>
       <addaction name="actionCreate_new_land_use_map"/>
      </widget>
-     <widget class="QMenu" name="menuDigital_Elevation_Model">
-      <property name="title">
-       <string>Digital Elevation Model...</string>
-      </property>
-      <addaction name="actionLoad_DEM_"/>
-      <addaction name="actionExtract_sub_basin"/>
-     </widget>
-     <addaction name="menuDigital_Elevation_Model"/>
+     <addaction name="actionLoad_DEM"/>
      <addaction name="menuMeteo_points"/>
      <addaction name="menuSoil"/>
      <addaction name="menuLand_use"/>
@@ -2013,6 +2420,7 @@
     <addaction name="separator"/>
     <addaction name="actionCriteria3D_parallel_computing"/>
     <addaction name="actionCriteria3D_update_subHourly"/>
+    <addaction name="separator"/>
     <addaction name="flagSave_state_endRun"/>
     <addaction name="flagSave_state_daily_step"/>
     <addaction name="actionAutomatic_state_saving_end_of_year"/>
@@ -2302,6 +2710,11 @@
    <addaction name="menuGIS_settings"/>
   </widget>
   <widget class="QStatusBar" name="statusBar"/>
+  <action name="actionLoad_DEM">
+   <property name="text">
+    <string>Digital Elevation Model...</string>
+   </property>
+  </action>
   <action name="actionMapOpenStreetMap">
    <property name="checkable">
     <bool>true</bool>
@@ -2468,7 +2881,7 @@
   </action>
   <action name="actionLoad_MeteoPoints">
    <property name="text">
-    <string>Open db...</string>
+    <string>Open...</string>
    </property>
   </action>
   <action name="actionMeteoPointsImport_data">
@@ -2511,7 +2924,7 @@
   </action>
   <action name="actionNew_meteoPointsDB_from_csv">
    <property name="text">
-    <string>New db (from csv)...</string>
+    <string>New (from csv)...</string>
    </property>
   </action>
   <action name="actionSnow_settings">
@@ -2840,12 +3253,12 @@
   </action>
   <action name="actionLoad_soil_map">
    <property name="text">
-    <string>Load soil map...</string>
+    <string>Soil map...</string>
    </property>
   </action>
   <action name="actionLoad_soil_data">
    <property name="text">
-    <string>Load soil db...</string>
+    <string>Soil db...</string>
    </property>
   </action>
   <action name="actionLoad_land_use_map">

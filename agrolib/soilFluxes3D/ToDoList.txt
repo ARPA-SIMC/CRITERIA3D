@@ -1,0 +1,12 @@
+Minor
+ - introduce and test "omp simd" and "omp atomic update" directives (if !MSVC)
+
+ - Combine temp "_m" - methods with the free functions + #ifdef structure and/or CRTP
+ - Move switch/if block in solveLinearSystem to a constexpr map (processType, method <-> std::function)
+
+
+Post-merge
+ - implement a inline function for checking double error return values (need for heat)
+ - implement explicit double NaN error values for double getters
+ - implement typed error checks in caller code
+

@@ -126,6 +126,7 @@ void Project::initializeProject()
 void Project::clearProject()
 {
     if (logFile.is_open()) logFile.close();
+    if (dataFile.is_open()) dataFile.close();
 
     meteoPointsColorScale->setRange(NODATA, NODATA);
 
@@ -5423,30 +5424,46 @@ bool Project::setLogFile(QString myFileName)
     logFileName = logFilePath + myDate + "_" + endLogFileName;
 
     logFile.open(logFileName.toStdString().c_str());
-    if (logFile.is_open())
-    {
-        logInfo("LogFile = " + logFileName);
-        return true;
-    }
-    else
+    if (!logFile.is_open())
     {
         logError("Unable to open log file: " + logFileName);
         return false;
     }
+    logInfo("LogFile = " + logFileName);
+
+    //File temporaneo per il confronto dei dati di ciascuna iterazione
+    dataFileName = logFilePath + myDate + "_data_" + endLogFileName;
+    dataFile.open(dataFileName.toStdString().c_str());
+    if (!dataFile.is_open())
+    {
+        logError("Unable to open data file: " + logFileName);
+        return false;
+    }
+    logInfo("DataFile = " + logFileName);
+
+    return true;
 }
 
 
+
+void Project::logData(QString typeData, QString data)
+{
+    // standard output in all modalities
+    if(_verboseStdoutLogging)
+        std::cout << typeData.toStdString() << " logged" << std::endl;
+
+    if(dataFile.is_open())
+        dataFile << typeData.toStdString() << std::endl << data.toStdString() << std::endl;
+}
+
 void Project::logInfo(QString myStr)
 {
-    if (_verboseStdoutLogging) {
-        // standard output in all modalities
+    // standard output in all modalities
+    if (_verboseStdoutLogging)
         std::cout << myStr.toStdString() << std::endl;
-    }
 
-    if (logFile.is_open())
-    {
+    if(dataFile.is_open())
         logFile << myStr.toStdString() << std::endl;
-    }
 }
 
 
@@ -5455,9 +5472,8 @@ void Project::logInfoGUI(QString myStr)
     if (modality == MODE_GUI)
     {
         if (_formLog == nullptr)
-        {
             _formLog = new FormInfo();
-        }
+		
         _formLog->showInfo(myStr);
         qApp->processEvents();
     }
