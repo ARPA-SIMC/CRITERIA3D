@@ -25,7 +25,7 @@ namespace soilFluxes3D::v2
         public:
             Solver(solverType type, numericalMethod method) : _type(type), _method(method) {}
 
-            void updateParameters(const SolverParametersPartial &newParameters) noexcept;
+            void updateParameters(const SolverParametersPartial &newParameters);
             void setTimeStep(double timeStep) noexcept;
 
             __cudaSpec solverType getSolverType() const noexcept;
@@ -51,7 +51,7 @@ namespace soilFluxes3D::v2
         return SF3Dmax(maxCurrIterNum, static_cast<u32_t>(20));
     }
 
-    inline void Solver::updateParameters(const SolverParametersPartial &newParameters) noexcept
+    inline void Solver::updateParameters(const SolverParametersPartial &newParameters)
     {
         updateFromPartial(_parameters, newParameters, MBRThreshold);
         updateFromPartial(_parameters, newParameters, residualTolerance);

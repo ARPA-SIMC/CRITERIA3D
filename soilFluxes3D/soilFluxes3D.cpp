@@ -344,7 +344,8 @@ namespace soilFluxes3D::v2
 
         SolverParametersPartial paramTemp;
         paramTemp.numThreads = nrThreads;
-        solver->updateParameters(paramTemp);
+        if(solver)
+            solver->updateParameters(paramTemp);
 
         //Versione c++20
         //solver->updateParameters(SolverParametersPartial{.numThreads = nrThreads});
