@@ -10,7 +10,7 @@ CUDA_ARCH = sm_61
 
 #Enable SF3D '.mat' log functionality. MCR_path needs to be manually setted
 # CONFIG += MCR_CONFIG
-MCR_PATH = "D:/App e giochi/MATLAB/R2024b/extern"
+MCR_PATH = "SET Path!"
 
 include($$absolute_path(./parallelDetails.pri))
 
