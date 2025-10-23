@@ -342,7 +342,6 @@ namespace soilFluxes3D::v2
         if (nrThreads < 1 || nrThreads > nrHWthreads)
             nrThreads = nrHWthreads;
 
-
         SolverParametersPartial paramTemp;
         paramTemp.numThreads = nrThreads;
         solver->updateParameters(paramTemp);
@@ -904,10 +903,10 @@ namespace soilFluxes3D::v2
     double getNodeWaterContent(SF3Duint_t nodeIndex)
     {
         if(!nodeGrid.isInitialized)
-            return static_cast<double>(SF3Derror_t::MemoryError);
+            return getDoubleErrorValue(SF3Derror_t::MemoryError);
 
         if(nodeIndex >= nodeGrid.numNodes)
-            return static_cast<double>(SF3Derror_t::IndexError);
+            return getDoubleErrorValue(SF3Derror_t::IndexError);
 
         return nodeGrid.surfaceFlag[nodeIndex] ? (nodeGrid.waterData.pressureHead[nodeIndex] - nodeGrid.z[nodeIndex])
                                                : computeNodeTheta(nodeIndex);
@@ -920,13 +919,13 @@ namespace soilFluxes3D::v2
     double getNodeMaximumWaterContent(SF3Duint_t nodeIndex)
     {
         if(!nodeGrid.isInitialized)
-            return static_cast<double>(SF3Derror_t::MemoryError);
+            return getDoubleErrorValue(SF3Derror_t::MemoryError);
 
         if(nodeIndex >= nodeGrid.numNodes)
-            return static_cast<double>(SF3Derror_t::IndexError);
+            return getDoubleErrorValue(SF3Derror_t::IndexError);
 
         if(nodeGrid.surfaceFlag[nodeIndex])
-            return static_cast<double>(SF3Derror_t::IndexError);
+            return getDoubleErrorValue(SF3Derror_t::IndexError);
 
         return nodeGrid.soilSurfacePointers[nodeIndex].soilPtr->Theta_s;
     }
@@ -938,10 +937,10 @@ namespace soilFluxes3D::v2
     double getNodeAvailableWaterContent(SF3Duint_t nodeIndex)
     {
         if(!nodeGrid.isInitialized)
-            return static_cast<double>(SF3Derror_t::MemoryError);
+            return getDoubleErrorValue(SF3Derror_t::MemoryError);
 
         if(nodeIndex >= nodeGrid.numNodes)
-            return static_cast<double>(SF3Derror_t::IndexError);
+            return getDoubleErrorValue(SF3Derror_t::IndexError);
 
         return nodeGrid.surfaceFlag[nodeIndex] ? (nodeGrid.waterData.pressureHead[nodeIndex] - nodeGrid.z[nodeIndex])
                                                : SF3Dmax(0., computeNodeTheta(nodeIndex) - computeNodeTheta_fromSignedPsi(nodeIndex, -160));
@@ -955,10 +954,10 @@ namespace soilFluxes3D::v2
     double getNodeWaterDeficit(SF3Duint_t nodeIndex, double fieldCapacity)
     {
         if(!nodeGrid.isInitialized)
-            return static_cast<double>(SF3Derror_t::MemoryError);
+            return getDoubleErrorValue(SF3Derror_t::MemoryError);
 
         if(nodeIndex >= nodeGrid.numNodes)
-            return static_cast<double>(SF3Derror_t::IndexError);
+            return getDoubleErrorValue(SF3Derror_t::IndexError);
 
         if(nodeGrid.surfaceFlag[nodeIndex])
             return 0.;
@@ -974,10 +973,10 @@ namespace soilFluxes3D::v2
     double getNodeDegreeOfSaturation(SF3Duint_t nodeIndex)
     {
         if(!nodeGrid.isInitialized)
-            return static_cast<double>(SF3Derror_t::MemoryError);
+            return getDoubleErrorValue(SF3Derror_t::MemoryError);
 
         if(nodeIndex >= nodeGrid.numNodes)
-            return static_cast<double>(SF3Derror_t::IndexError);
+            return getDoubleErrorValue(SF3Derror_t::IndexError);
 
         if(!nodeGrid.surfaceFlag[nodeIndex])
             return nodeGrid.waterData.saturationDegree[nodeIndex];
@@ -995,10 +994,10 @@ namespace soilFluxes3D::v2
     double getNodeWaterConductivity(SF3Duint_t nodeIndex)
     {
         if(!nodeGrid.isInitialized)
-            return static_cast<double>(SF3Derror_t::MemoryError);
+            return getDoubleErrorValue(SF3Derror_t::MemoryError);
 
         if(nodeIndex >= nodeGrid.numNodes)
-            return static_cast<double>(SF3Derror_t::IndexError);
+            return getDoubleErrorValue(SF3Derror_t::IndexError);
 
         return nodeGrid.waterData.waterConductivity[nodeIndex];
     }
@@ -1010,10 +1009,10 @@ namespace soilFluxes3D::v2
     double getNodeMatricPotential(SF3Duint_t nodeIndex)
     {
         if(!nodeGrid.isInitialized)
-            return static_cast<double>(SF3Derror_t::MemoryError);
+            return getDoubleErrorValue(SF3Derror_t::MemoryError);
 
         if(nodeIndex >= nodeGrid.numNodes)
-            return static_cast<double>(SF3Derror_t::IndexError);
+            return getDoubleErrorValue(SF3Derror_t::IndexError);
 
         return nodeGrid.waterData.pressureHead[nodeIndex] - nodeGrid.z[nodeIndex];
     }
@@ -1025,10 +1024,10 @@ namespace soilFluxes3D::v2
     double getNodeTotalPotential(SF3Duint_t nodeIndex)
     {
         if(!nodeGrid.isInitialized)
-            return static_cast<double>(SF3Derror_t::MemoryError);
+            return getDoubleErrorValue(SF3Derror_t::MemoryError);
 
         if(nodeIndex >= nodeGrid.numNodes)
-            return static_cast<double>(SF3Derror_t::IndexError);
+            return getDoubleErrorValue(SF3Derror_t::IndexError);
 
         return nodeGrid.waterData.pressureHead[nodeIndex];
     }
@@ -1040,13 +1039,13 @@ namespace soilFluxes3D::v2
     double getNodePond(SF3Duint_t nodeIndex)
     {
         if(!nodeGrid.isInitialized)
-            return static_cast<double>(SF3Derror_t::MemoryError);
+            return getDoubleErrorValue(SF3Derror_t::MemoryError);
 
         if(nodeIndex >= nodeGrid.numNodes)
-            return static_cast<double>(SF3Derror_t::IndexError);
+            return getDoubleErrorValue(SF3Derror_t::IndexError);
 
         if(!nodeGrid.surfaceFlag[nodeIndex])
-            return static_cast<double>(SF3Derror_t::IndexError);
+            return getDoubleErrorValue(SF3Derror_t::IndexError);
 
         return nodeGrid.waterData.pond[nodeIndex];
     }
@@ -1059,22 +1058,22 @@ namespace soilFluxes3D::v2
     double getNodeMaxWaterFlow(SF3Duint_t nodeIndex, linkType_t linkDirection)
     {
         if(!nodeGrid.isInitialized)
-            return static_cast<double>(SF3Derror_t::MemoryError);
+            return getDoubleErrorValue(SF3Derror_t::MemoryError);
 
         if(nodeIndex >= nodeGrid.numNodes)
-            return static_cast<double>(SF3Derror_t::IndexError);
+            return getDoubleErrorValue(SF3Derror_t::IndexError);
 
         double maxFlow = 0.;
         switch (linkDirection)
         {
             case linkType_t::Up:
                 if(nodeGrid.linkData[0].linkIndex[nodeIndex] == noDataU)
-                    return static_cast<double>(SF3Derror_t::IndexError);
+                    return getDoubleErrorValue(SF3Derror_t::IndexError);
 
                 return nodeGrid.linkData[0].waterFlowSum[nodeIndex];
             case linkType_t::Down:
                 if(nodeGrid.linkData[1].linkIndex[nodeIndex] == noDataU)
-                    return static_cast<double>(SF3Derror_t::IndexError);
+                    return getDoubleErrorValue(SF3Derror_t::IndexError);
 
                 return nodeGrid.linkData[1].waterFlowSum[nodeIndex];
             case linkType_t::Lateral:
@@ -1084,7 +1083,7 @@ namespace soilFluxes3D::v2
 
                 return maxFlow;
             default:
-                return static_cast<double>(SF3Derror_t::IndexError);
+                return getDoubleErrorValue(SF3Derror_t::IndexError);
         }
     }
 
@@ -1095,10 +1094,10 @@ namespace soilFluxes3D::v2
     double getNodeSumLateralWaterFlow(SF3Duint_t nodeIndex)
     {
         if(!nodeGrid.isInitialized)
-            return static_cast<double>(SF3Derror_t::MemoryError);
+            return getDoubleErrorValue(SF3Derror_t::MemoryError);
 
         if(nodeIndex >= nodeGrid.numNodes)
-            return static_cast<double>(SF3Derror_t::IndexError);
+            return getDoubleErrorValue(SF3Derror_t::IndexError);
 
         double sumFlow = 0.;
         for(u8_t linkIdx = 0; linkIdx < nodeGrid.numLateralLink[nodeIndex]; ++linkIdx)
@@ -1115,10 +1114,10 @@ namespace soilFluxes3D::v2
     double getNodeSumLateralWaterFlowIn(SF3Duint_t nodeIndex)
     {
         if(!nodeGrid.isInitialized)
-            return static_cast<double>(SF3Derror_t::MemoryError);
+            return getDoubleErrorValue(SF3Derror_t::MemoryError);
 
         if(nodeIndex >= nodeGrid.numNodes)
-            return static_cast<double>(SF3Derror_t::IndexError);
+            return getDoubleErrorValue(SF3Derror_t::IndexError);
 
         double sumFlow = 0.;
         for(u8_t linkIdx = 0; linkIdx < nodeGrid.numLateralLink[nodeIndex]; ++linkIdx)
@@ -1135,10 +1134,10 @@ namespace soilFluxes3D::v2
     double getNodeSumLateralWaterFlowOut(SF3Duint_t nodeIndex)
     {
         if(!nodeGrid.isInitialized)
-            return static_cast<double>(SF3Derror_t::MemoryError);
+            return getDoubleErrorValue(SF3Derror_t::MemoryError);
 
         if(nodeIndex >= nodeGrid.numNodes)
-            return static_cast<double>(SF3Derror_t::IndexError);
+            return getDoubleErrorValue(SF3Derror_t::IndexError);
 
         double sumFlow = 0.;
         for(u8_t linkIdx = 0; linkIdx < nodeGrid.numLateralLink[nodeIndex]; ++linkIdx)
@@ -1155,13 +1154,13 @@ namespace soilFluxes3D::v2
     double getNodeBoundaryWaterFlow(SF3Duint_t nodeIndex)
     {
         if(!nodeGrid.isInitialized)
-            return static_cast<double>(SF3Derror_t::MemoryError);
+            return getDoubleErrorValue(SF3Derror_t::MemoryError);
 
         if(nodeIndex >= nodeGrid.numNodes)
-            return static_cast<double>(SF3Derror_t::IndexError);
+            return getDoubleErrorValue(SF3Derror_t::IndexError);
 
         if(nodeGrid.boundaryData.boundaryType[nodeIndex] == boundaryType_t::NoBoundary)
-            return static_cast<double>(SF3Derror_t::BoundaryError);
+            return getDoubleErrorValue(SF3Derror_t::BoundaryError);
 
         return nodeGrid.boundaryData.waterFlowSum[nodeIndex];
     }
@@ -1419,13 +1418,13 @@ namespace soilFluxes3D::v2
     double getNodeTemperature(SF3Duint_t nodeIndex)
     {
         if(!nodeGrid.isInitialized)
-            return static_cast<double>(SF3Derror_t::MemoryError);
+            return getDoubleErrorValue(SF3Derror_t::MemoryError);
 
         if(nodeIndex >= nodeGrid.numNodes)
-            return static_cast<double>(SF3Derror_t::IndexError);
+            return getDoubleErrorValue(SF3Derror_t::IndexError);
 
         if(!isHeatNode(nodeIndex))
-            return static_cast<double>(SF3Derror_t::TopographyError);
+            return getDoubleErrorValue(SF3Derror_t::TopographyError);
 
         return nodeGrid.heatData.temperature[nodeIndex];
     }
@@ -1437,13 +1436,13 @@ namespace soilFluxes3D::v2
     double getNodeHeatConductivity(SF3Duint_t nodeIndex)
     {
         if(!nodeGrid.isInitialized)
-            return static_cast<double>(SF3Derror_t::MemoryError);
+            return getDoubleErrorValue(SF3Derror_t::MemoryError);
 
         if(nodeIndex >= nodeGrid.numNodes)
-            return static_cast<double>(SF3Derror_t::IndexError);
+            return getDoubleErrorValue(SF3Derror_t::IndexError);
 
         if(!isHeatNode(nodeIndex))
-            return static_cast<double>(SF3Derror_t::TopographyError);
+            return getDoubleErrorValue(SF3Derror_t::TopographyError);
 
         return computeNodeHeatSoilConductivity(nodeIndex, nodeGrid.heatData.temperature[nodeIndex],
                                             nodeGrid.waterData.pressureHead[nodeIndex] - nodeGrid.z[nodeIndex]);
@@ -1456,13 +1455,13 @@ namespace soilFluxes3D::v2
     double getNodeVapor(SF3Duint_t nodeIndex)
     {
         if(!nodeGrid.isInitialized)
-            return static_cast<double>(SF3Derror_t::MemoryError);
+            return getDoubleErrorValue(SF3Derror_t::MemoryError);
 
         if(nodeIndex >= nodeGrid.numNodes)
-            return static_cast<double>(SF3Derror_t::IndexError);
+            return getDoubleErrorValue(SF3Derror_t::IndexError);
 
         if(!simulationFlags.computeWater || !simulationFlags.computeHeat || !simulationFlags.computeHeatVapor)
-            return static_cast<double>(SF3Derror_t::MissingDataError);
+            return getDoubleErrorValue(SF3Derror_t::MissingDataError);
 
         double h = nodeGrid.waterData.pressureHead[nodeIndex] - nodeGrid.z[nodeIndex];
         double T = nodeGrid.heatData.temperature[nodeIndex];
@@ -1478,13 +1477,13 @@ namespace soilFluxes3D::v2
     double getNodeHeatStorage(SF3Duint_t nodeIndex, double h)
     {
         if(!nodeGrid.isInitialized)
-            return static_cast<double>(SF3Derror_t::MemoryError);
+            return getDoubleErrorValue(SF3Derror_t::MemoryError);
 
         if(nodeIndex >= nodeGrid.numNodes)
-            return static_cast<double>(SF3Derror_t::IndexError);
+            return getDoubleErrorValue(SF3Derror_t::IndexError);
 
         if(!simulationFlags.computeHeat)
-            return static_cast<double>(SF3Derror_t::MissingDataError);
+            return getDoubleErrorValue(SF3Derror_t::MissingDataError);
 
         double nodeT = nodeGrid.heatData.temperature[nodeIndex];
         double nodeSize = nodeGrid.size[nodeIndex];
@@ -1510,13 +1509,13 @@ namespace soilFluxes3D::v2
     double getNodeHeatMaxFlux(SF3Duint_t nodeIndex, linkType_t linkDirection, fluxTypes_t fluxType)
     {
         if(!nodeGrid.isInitialized)
-            return static_cast<double>(SF3Derror_t::MemoryError);
+            return getDoubleErrorValue(SF3Derror_t::MemoryError);
 
         if(nodeIndex >= nodeGrid.numNodes)
-            return static_cast<double>(SF3Derror_t::IndexError);
+            return getDoubleErrorValue(SF3Derror_t::IndexError);
 
         if(!isHeatNode(nodeIndex))
-            return static_cast<double>(SF3Derror_t::TopographyError);
+            return getDoubleErrorValue(SF3Derror_t::TopographyError);
 
         double nodeMaxFlux = 0.;
         switch(linkDirection)
@@ -1537,7 +1536,7 @@ namespace soilFluxes3D::v2
                 return nodeMaxFlux;
 
             default:
-                return static_cast<double>(SF3Derror_t::IndexError);
+                return getDoubleErrorValue(SF3Derror_t::IndexError);
         }
     }
 
@@ -1548,16 +1547,16 @@ namespace soilFluxes3D::v2
     double getNodeBoundaryAdvectiveFlux(SF3Duint_t nodeIndex)
     {
         if(!nodeGrid.isInitialized)
-            return static_cast<double>(SF3Derror_t::MemoryError);
+            return getDoubleErrorValue(SF3Derror_t::MemoryError);
 
         if(nodeIndex >= nodeGrid.numNodes)
-            return static_cast<double>(SF3Derror_t::IndexError);
+            return getDoubleErrorValue(SF3Derror_t::IndexError);
 
         if(!simulationFlags.computeWater || !simulationFlags.computeHeat || !simulationFlags.computeHeatVapor)
-            return static_cast<double>(SF3Derror_t::MissingDataError);
+            return getDoubleErrorValue(SF3Derror_t::MissingDataError);
 
         if(nodeGrid.boundaryData.boundaryType[nodeIndex] != boundaryType_t::HeatSurface)
-            return static_cast<double>(SF3Derror_t::BoundaryError);
+            return getDoubleErrorValue(SF3Derror_t::BoundaryError);
 
         return nodeGrid.boundaryData.advectiveHeatFlux[nodeIndex];
     }
@@ -1569,16 +1568,16 @@ namespace soilFluxes3D::v2
     double getNodeBoundaryLatentFlux(SF3Duint_t nodeIndex)
     {
         if(!nodeGrid.isInitialized)
-            return static_cast<double>(SF3Derror_t::MemoryError);
+            return getDoubleErrorValue(SF3Derror_t::MemoryError);
 
         if(nodeIndex >= nodeGrid.numNodes)
-            return static_cast<double>(SF3Derror_t::IndexError);
+            return getDoubleErrorValue(SF3Derror_t::IndexError);
 
         if(!simulationFlags.computeWater || !simulationFlags.computeHeat || !simulationFlags.computeHeatVapor)
-            return static_cast<double>(SF3Derror_t::MissingDataError);
+            return getDoubleErrorValue(SF3Derror_t::MissingDataError);
 
         if(nodeGrid.boundaryData.boundaryType[nodeIndex] != boundaryType_t::HeatSurface)
-            return static_cast<double>(SF3Derror_t::BoundaryError);
+            return getDoubleErrorValue(SF3Derror_t::BoundaryError);
 
         return nodeGrid.boundaryData.latentFlux[nodeIndex];
     }
@@ -1590,16 +1589,16 @@ namespace soilFluxes3D::v2
     double getNodeBoundaryRadiativeFlux(SF3Duint_t nodeIndex)
     {
         if(!nodeGrid.isInitialized)
-            return static_cast<double>(SF3Derror_t::MemoryError);
+            return getDoubleErrorValue(SF3Derror_t::MemoryError);
 
         if(nodeIndex >= nodeGrid.numNodes)
-            return static_cast<double>(SF3Derror_t::IndexError);
+            return getDoubleErrorValue(SF3Derror_t::IndexError);
 
         if(!simulationFlags.computeHeat)
-            return static_cast<double>(SF3Derror_t::MissingDataError);
+            return getDoubleErrorValue(SF3Derror_t::MissingDataError);
 
         if(nodeGrid.boundaryData.boundaryType[nodeIndex] != boundaryType_t::HeatSurface)
-            return static_cast<double>(SF3Derror_t::BoundaryError);
+            return getDoubleErrorValue(SF3Derror_t::BoundaryError);
 
         return nodeGrid.boundaryData.radiativeFlux[nodeIndex];
     }
@@ -1611,16 +1610,16 @@ namespace soilFluxes3D::v2
     double getNodeBoundarySensibleFlux(SF3Duint_t nodeIndex)
     {
         if(!nodeGrid.isInitialized)
-            return static_cast<double>(SF3Derror_t::MemoryError);
+            return getDoubleErrorValue(SF3Derror_t::MemoryError);
 
         if(nodeIndex >= nodeGrid.numNodes)
-            return static_cast<double>(SF3Derror_t::IndexError);
+            return getDoubleErrorValue(SF3Derror_t::IndexError);
 
         if(!simulationFlags.computeHeat)
-            return static_cast<double>(SF3Derror_t::MissingDataError);
+            return getDoubleErrorValue(SF3Derror_t::MissingDataError);
 
         if(nodeGrid.boundaryData.boundaryType[nodeIndex] != boundaryType_t::HeatSurface)
-            return static_cast<double>(SF3Derror_t::BoundaryError);
+            return getDoubleErrorValue(SF3Derror_t::BoundaryError);
 
         return nodeGrid.boundaryData.sensibleFlux[nodeIndex];
     }
@@ -1632,16 +1631,16 @@ namespace soilFluxes3D::v2
     double getNodeBoundaryAerodynamicConductance(SF3Duint_t nodeIndex)
     {
         if(!nodeGrid.isInitialized)
-            return static_cast<double>(SF3Derror_t::MemoryError);
+            return getDoubleErrorValue(SF3Derror_t::MemoryError);
 
         if(nodeIndex >= nodeGrid.numNodes)
-            return static_cast<double>(SF3Derror_t::IndexError);
+            return getDoubleErrorValue(SF3Derror_t::IndexError);
 
         if(!simulationFlags.computeHeat)
-            return static_cast<double>(SF3Derror_t::MissingDataError);
+            return getDoubleErrorValue(SF3Derror_t::MissingDataError);
 
         if(nodeGrid.boundaryData.boundaryType[nodeIndex] != boundaryType_t::HeatSurface)
-            return static_cast<double>(SF3Derror_t::BoundaryError);
+            return getDoubleErrorValue(SF3Derror_t::BoundaryError);
 
         return nodeGrid.boundaryData.aerodynamicConductance[nodeIndex];
     }
@@ -1653,16 +1652,16 @@ namespace soilFluxes3D::v2
     double getNodeBoundarySoilConductance(SF3Duint_t nodeIndex)
     {
         if(!nodeGrid.isInitialized)
-            return static_cast<double>(SF3Derror_t::MemoryError);
+            return getDoubleErrorValue(SF3Derror_t::MemoryError);
 
         if(nodeIndex >= nodeGrid.numNodes)
-            return static_cast<double>(SF3Derror_t::IndexError);
+            return getDoubleErrorValue(SF3Derror_t::IndexError);
 
         if(!simulationFlags.computeHeat)
-            return static_cast<double>(SF3Derror_t::MissingDataError);
+            return getDoubleErrorValue(SF3Derror_t::MissingDataError);
 
         if(nodeGrid.boundaryData.boundaryType[nodeIndex] != boundaryType_t::HeatSurface)
-            return static_cast<double>(SF3Derror_t::BoundaryError);
+            return getDoubleErrorValue(SF3Derror_t::BoundaryError);
 
         return nodeGrid.boundaryData.soilConductance[nodeIndex];
     }

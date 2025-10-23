@@ -10,7 +10,7 @@ QT  += network widgets sql xml charts
 greaterThan(QT_MAJOR_VERSION, 5): QT += core5compat openglwidgets
 
 TEMPLATE = app
-TARGET = CRITERIA3D_SF3Dnew
+TARGET = CRITERIA3D
 VERSION = 1.2.0
 QMAKE_TARGET_COPYRIGHT = "\\251 2025 ARPAE ER - Climate Observatory"
 
@@ -19,7 +19,7 @@ CONFIG += debug_and_release
 CONFIG += c++17
 
 INCLUDEPATH +=  ./shared  \
-                ../../agrolib/soilFluxes3D ../../agrolib/soilFluxes3D \
+                ../../agrolib/soilFluxes3D \
                 ../../agrolib/crit3dDate ../../agrolib/mathFunctions \
                 ../../agrolib/crop ../../agrolib/soil ../../agrolib/meteo ../../agrolib/gis \
                 ../../agrolib/interpolation ../../agrolib/solarRadiation \

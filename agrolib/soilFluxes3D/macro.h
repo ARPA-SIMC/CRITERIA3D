@@ -54,7 +54,11 @@
 //openMP directives
 #ifdef _OPENMP  // Defined automatically when compiling with openmp flag. Move to a custom macro?
     #define __parfor(cond)              _Pragma(expStr(omp parallel for if(cond)))
-    #define __parforop(cond, op, var)   _Pragma(expStr(omp parallel for if(cond) reduction(op:var)))
+    #ifndef _MSVC_LANG
+        #define __parforop(cond, op, var)   _Pragma(expStr(omp parallel for if(cond) reduction(op:var)))
+    #else
+        #define __parforop(cond, op, var)
+    #endif
 #else
     #define __parfor(cond)
     #define __parforop(cond, op, var)

@@ -38,6 +38,60 @@ namespace soilFluxes3D { inline namespace v2
     //Error Status
     enum class SF3Derror_t : u8_t {SF3Dok, IndexError, MemoryError, TopographyError, BoundaryError, MissingDataError, ParameterError, SolverError, FileError};
 
+    inline constexpr double getDoubleErrorValue(const SF3Derror_t errorCode)
+    {
+        if(errorCode == SF3Derror_t::SF3Dok)
+            return 0;
+
+        switch(errorCode)
+        {
+            case SF3Derror_t::IndexError:
+                return static_cast<double>(INDEX_ERROR);
+            case SF3Derror_t::MemoryError:
+                return static_cast<double>(MEMORY_ERROR);
+            case SF3Derror_t::TopographyError:
+                return static_cast<double>(TOPOGRAPHY_ERROR);
+            case SF3Derror_t::BoundaryError:
+                return static_cast<double>(BOUNDARY_ERROR);
+            case SF3Derror_t::MissingDataError:
+                return static_cast<double>(MISSING_DATA_ERROR);
+            case SF3Derror_t::ParameterError:
+                return static_cast<double>(PARAMETER_ERROR);
+            default:
+                return static_cast<double>(INDEX_ERROR);
+        }
+
+    }
+    inline constexpr bool getSF3DerrorName(soilFluxes3D::SF3Derror_t errorCode, std::string& errorName)
+    {
+        if (errorCode == soilFluxes3D::SF3Derror_t::SF3Dok)
+            return false;
+
+        switch (errorCode)
+        {
+            case soilFluxes3D::SF3Derror_t::IndexError:
+                errorName = "index error";
+                break;
+            case soilFluxes3D::SF3Derror_t::MemoryError:
+                errorName = "memory error";
+                break;
+            case soilFluxes3D::SF3Derror_t::TopographyError:
+                errorName = "topography error";
+                break;
+            case soilFluxes3D::SF3Derror_t::BoundaryError:
+                errorName = "boundary error";
+                break;
+            case soilFluxes3D::SF3Derror_t::ParameterError:
+                errorName = "parameter error";
+                break;
+            default:
+                errorName = "generic error";
+            }
+
+        return true;
+    }
+
+
     //Process implemented
     enum class processType : u8_t {Water, Heat, Solutes};
 

@@ -1174,7 +1174,7 @@ bool Crit3DProject::runModels(const QDateTime &firstTime, const QDateTime &lastT
             }
 
             //Log SF3D data
-            soilFluxes3D::v2::closeLog();
+            soilFluxes3D::closeLog();
             logInfo("Daily sub version: 00\n");
 
             //rothC maps update must be done hourly, otherwise ETReal data are not stored
@@ -1318,7 +1318,7 @@ bool Crit3DProject::loadCriteria3DProject(const QString &fileName)
     }
 
     //TO DO: integrate with a specific flag in the UI and/or a specific shell command
-    soilFluxes3D::v2::initializeLog(getFilePath(getCompleteFileName(logFileName, PATH_LOG)).toStdString(), getProjectName().toStdString());
+    soilFluxes3D::initializeLog(getFilePath(getCompleteFileName(logFileName, PATH_LOG)).toStdString(), getProjectName().toStdString());
 
     if (meteoPointsLoaded)
     {
@@ -1906,15 +1906,8 @@ bool Crit3DProject::setHydrallVariables(Crit3DHydrall &myHydrallModel, int row, 
 		// the condition on this for cycle includes the check of existance of the layers
 		for (unsigned int i = 0; ((i < nrLayers) && (soilList[soilIndex].getHorizonIndex(layerDepth[i]))!= NODATA); i++)
 		{
-            if(soilFluxes3D::v1::getWaterContent(indexMap.at(i).value[row][col]) != soilFluxes3D::v2::getNodeWaterContent(indexMap.at(i).value[row][col]))
-				logError("ERROR: New code not equal - getWaterContent");
-
-            if(soilFluxes3D::v1::getMatricPotential(indexMap.at(i).value[row][col]) != soilFluxes3D::v2::getNodeMatricPotential(indexMap.at(i).value[row][col]))
-				logError("ERROR: New code not equal - getMatricPotential");
-
-			hydrallModel.setSoilVariables(i, indexMap.at(i).value[row][col], indexMap.at(i).header->flag,
-                                          //soilFluxes3D::v1::getWaterContent(indexMap.at(i).value[row][col]),
-                                          soilFluxes3D::v2::getNodeWaterContent(indexMap.at(i).value[row][col]),
+            hydrallModel.setSoilVariables(i, indexMap.at(i).value[row][col], indexMap.at(i).header->flag,
+                                          soilFluxes3D::getNodeWaterContent(indexMap.at(i).value[row][col]),
 										  soilList[soilIndex].horizon[soilList[soilIndex].getHorizonIndex(layerDepth[i])].waterContentFC,
 										  soilList[soilIndex].horizon[soilList[soilIndex].getHorizonIndex(layerDepth[i])].waterContentWP,
 										  soilList[soilIndex].horizon[soilList[soilIndex].getHorizonIndex(layerDepth[i])].texture.clay,
@@ -1923,8 +1916,7 @@ bool Crit3DProject::setHydrallVariables(Crit3DHydrall &myHydrallModel, int row, 
 										  soilList[soilIndex].horizon[soilList[soilIndex].getHorizonIndex(layerDepth[i])].bulkDensity,
 										  soilList[soilIndex].horizon[soilList[soilIndex].getHorizonIndex(layerDepth[i])].waterContentSAT,
 										  soilList[soilIndex].horizon[soilList[soilIndex].getHorizonIndex(layerDepth[i])].waterConductivity.kSat,
-                                          //soilFluxes3D::v1::getMatricPotential(indexMap.at(i).value[row][col]));
-                                          soilFluxes3D::v2::getNodeMatricPotential(indexMap.at(i).value[row][col]));
+                                          soilFluxes3D::getNodeMatricPotential(indexMap.at(i).value[row][col]));
 		}
 	}
     return true;
@@ -2995,12 +2987,11 @@ bool Crit3DProject::loadWaterPotentialState(QString waterPath)
 
                     if (! isEqual(waterPotential, NODATA))
                     {
-                        int myResult = soilFluxes3D::v1::setMatricPotential(index, waterPotential);
-                        auto myResultNew = soilFluxes3D::v2::setNodeMatricPotential(index, waterPotential);
-
-                        if (isCrit3dError(myResult, errorString))
+                        auto myResult = soilFluxes3D::setNodeMatricPotential(index, waterPotential);
+                        std::string errorName = "";
+                        if(soilFluxes3D::getSF3DerrorName(myResult, errorName))
                         {
-                            errorString = "Error in setMatricPotential: " + errorString + " in row:"
+                            errorString = "Error in setMatricPotential: " + QString::fromStdString(errorName) + " in row:"
                                           + QString::number(row) + " col:" + QString::number(col);
                             return false;
                         }
@@ -3967,9 +3958,8 @@ int Crit3DProject::cmdSetThreadsNr(const QList<QString> &argumentList)
     int nr = 0;
     if (argumentList.size() >= 2)
 		nr = argumentList.at(1).toInt();
-	
-    int threadNr = soilFluxes3D::v1::setThreadsNumber(nr);
-    auto threadNr2 = soilFluxes3D::v2::setThreadsNumber(nr);
+
+    auto threadNr = soilFluxes3D::setThreadsNumber(nr);
 	
     waterFluxesParameters.numberOfThreads = threadNr;
     std::cout << "Number of threads: " << threadNr << std::endl;

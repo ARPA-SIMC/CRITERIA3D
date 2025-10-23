@@ -189,7 +189,7 @@ double GaussSeidelWater_openMP()
     double currentNorm = 0.;
     double infinityNorm = 0;
 
-    #pragma omp parallel for firstprivate(currentNorm) reduction(max: infinityNorm)
+    //#pragma omp parallel for firstprivate(currentNorm) reduction(max: infinityNorm)
     for (long i = 0; i < myStructure.nrNodes; i++)
     {
         double newX = b[i];
@@ -233,7 +233,7 @@ double JacobiWater_openMP()
 
     double* newX = (double *) calloc(myStructure.nrNodes, sizeof(double));
 
-    #pragma omp parallel for firstprivate(currentNorm) shared(newX) reduction(max: infinityNorm)
+    //#pragma omp parallel for firstprivate(currentNorm) shared(newX) reduction(max: infinityNorm)
     for (long i = 0; i < myStructure.nrNodes; i++)
     {
         if (i==0) //inizializzazione stupida, da sistemare
