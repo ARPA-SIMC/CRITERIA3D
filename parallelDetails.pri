@@ -30,7 +30,7 @@ CONFIG(LTO_CONFIG) {
 
 CONFIG(CUDA_CONFIG) {
     # CUDA settings
-    CUDA_DIR = $$(CUDA_PATH) #"D:\App e giochi\NVIDIA GPU Computing Toolkit\CUDA\v12.9"
+    CUDA_DIR = $$(CUDA_PATH)
 
     isEmpty(CUDA_DIR) {
         message("CUDA_PATH non definita, salto configurazione CUDA")

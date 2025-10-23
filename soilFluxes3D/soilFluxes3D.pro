@@ -96,30 +96,30 @@ contains(DEFINES, CUDA_ENABLED) {
     QMAKE_EXTRA_COMPILERS += cudaL
 }
 
-#Old version (v1)
+# Old version (v1)
 
 SOURCES += \
-    old\old_boundary.cpp \
-    old\old_balance.cpp \
-    old\old_dataLogging.cpp \
-    old\old_water.cpp \
-    old\old_solver.cpp \
-    old\old_memory.cpp \
-    old\old_soilPhysics.cpp \
-    old\old_soilFluxes3D.cpp \
-    old\old_heat.cpp \
-    old\old_extra.cpp
+    old/old_boundary.cpp \
+    old/old_balance.cpp \
+    old/old_dataLogging.cpp \
+    old/old_water.cpp \
+    old/old_solver.cpp \
+    old/old_memory.cpp \
+    old/old_soilPhysics.cpp \
+    old/old_soilFluxes3D.cpp \
+    old/old_heat.cpp \
+    old/old_extra.cpp
 
 HEADERS += \
-    old\old_macro.h \
-    old\old_types.h \
-    old\old_parameters.h \
-    old\old_boundary.h \
-    old\old_balance.h \
-    old\old_water.h \
-    old\old_solver.h \
-    old\old_memory.h \
-    old\old_soilPhysics.h \
-    old\old_soilFluxes3D.h \
-    old\old_extra.h \
-    old\old_heat.h
+    old/old_macro.h \
+    old/old_types.h \
+    old/old_parameters.h \
+    old/old_boundary.h \
+    old/old_balance.h \
+    old/old_water.h \
+    old/old_solver.h \
+    old/old_memory.h \
+    old/old_soilPhysics.h \
+    old/old_soilFluxes3D.h \
+    old/old_extra.h \
+    old/old_heat.h
