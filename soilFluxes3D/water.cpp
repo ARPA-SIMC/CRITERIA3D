@@ -496,7 +496,10 @@ namespace soilFluxes3D::v2::Water
         hostAlloc(tempX, vectorX.numElements);
         std::memcpy(tempX, vectorB.values, vectorB.numElements * sizeof(double));
 
-        __parforop(__ompStatus, max, infinityNorm)
+        double* normVector = nullptr;
+        hostAlloc(normVector, vectorX.numElements);
+
+        __parfor(__ompStatus)
         for(SF3Duint_t rowIdx = 0; rowIdx < matrixA.numRows; ++rowIdx)
         {
             for(u8_t colIdx = 1; colIdx < matrixA.numColumns[rowIdx]; ++colIdx)
@@ -510,10 +513,15 @@ namespace soilFluxes3D::v2::Water
             double psi = std::fabs(tempX[rowIdx] - nodeGrid.z[rowIdx]);
             if(psi > 1.)
                 currentNorm /= psi;
-
-            if(currentNorm > infinityNorm)
-                infinityNorm = currentNorm;
+            
+            normVector[rowIdx] = currentNorm;
         }
+
+        __parforop(__ompStatus, max, infinityNorm)
+        for(SF3Duint_t rowIdx = 0; rowIdx < matrixA.numRows; ++rowIdx)
+            infinityNorm = SF3Dmax(infinityNorm, normVector[rowIdx]);
+
+        hostFree(normVector);
 
         std::memcpy(vectorX.values, tempX, vectorX.numElements * sizeof(double));
         hostFree(tempX);
