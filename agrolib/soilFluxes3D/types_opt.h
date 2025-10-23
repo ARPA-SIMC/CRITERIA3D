@@ -5,7 +5,7 @@
 
 namespace soilFluxes3D::v2
 {
-    #define updateFromPartial(total, partial, field) {if (partial.field) {total.field = *partial.field;}}
+    #define updateFromPartial(total, partial, field) if (partial.field) {total.field = *(partial.field);}
 
     //TO DO: remove not used fields
     struct SolverParametersPartial
