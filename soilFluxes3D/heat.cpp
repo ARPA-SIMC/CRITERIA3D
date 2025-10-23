@@ -1,11 +1,11 @@
-#include "heat.h"
-
 #include "soilFluxes3D.h"
+#include "heat.h"
 #include "solver.h"
 #include "types_cpu.h"
 #include "water.h"
 #include "soilPhysics.h"
 #include "otherFunctions.h"
+#include "commonConstants.h"
 
 using namespace soilFluxes3D::v2;
 using namespace soilFluxes3D::v2::Soil;
@@ -19,8 +19,6 @@ namespace soilFluxes3D::v2
     extern __cudaMngd balanceData_t balanceDataCurrentPeriod, balanceDataWholePeriod, balanceDataCurrentTimeStep, balanceDataPreviousTimeStep;
     extern __cudaMngd simulationFlags_t simulationFlags;
 }
-
-std::vector<double> vecN;
 
 namespace soilFluxes3D::v2::Heat
 {
@@ -346,7 +344,6 @@ namespace soilFluxes3D::v2::Heat
 
     double computeCurrentHeatStorage(double dtWater, double dtHeat)
     {
-        vecN.clear();
         double heatStorage = 0.;
         __parforop(__ompStatus, +, heatStorage)
         for (SF3Duint_t nodeIdx = 0; nodeIdx < nodeGrid.numNodes; ++nodeIdx)
@@ -355,9 +352,7 @@ namespace soilFluxes3D::v2::Heat
                 continue;
 
             double nodeH = (dtHeat != noDataD && dtWater != noDataD) ? getNodeH_fromTimeSteps(nodeIdx, dtHeat, dtWater) : nodeGrid.waterData.pressureHead[nodeIdx];
-            heatStorage += getNodeHeat(nodeIdx, nodeH - nodeGrid.z[nodeIdx]);
-            vecN.push_back(nodeH);
-            vecN.push_back(heatStorage);
+            heatStorage += getNodeHeatStorage(nodeIdx, nodeH - nodeGrid.z[nodeIdx]);
         }
         return heatStorage;
     }

@@ -395,8 +395,6 @@ bool waterFlowComputation_stdTreads(double deltaT)
 
         threadVector.clear();
 
-        /*temp*/ logOld();
-
         // check Courant
         if (CourantWater > 1. && deltaT > myParameters.delta_t_min)
         {
@@ -426,12 +424,8 @@ bool waterFlowComputation_stdTreads(double deltaT)
                 nodeList[i].Se = computeSe(unsigned(i));
         }
 
-        /*temp*/ logOld();
-
         // check water balance
         isValidStep = waterBalance(deltaT, approximationNr);
-
-        /*temp*/ logOld();
 
         if (getForcedHalvedTime())
             return false;
@@ -473,14 +467,10 @@ bool computeWaterFluxes(double maxTime, double *acceptedTime)
                 nodeList[n].Se = computeSe(unsigned(n));
         }
 
-        /*temp*/ logOld();
-
         /*! update boundary conditions */
         updateConductance();
 
         updateBoundaryWater(*acceptedTime);		//maybe useless: remove
-
-        /*temp*/ logOld();
 
         isStepOK = waterFlowComputation_stdTreads(*acceptedTime);
 

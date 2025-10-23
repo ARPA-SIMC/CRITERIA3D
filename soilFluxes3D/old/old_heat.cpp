@@ -38,7 +38,6 @@
 #include "old_solver.h"
 #include "old_soilFluxes3D.h"
 
-std::vector<double> vecO;
 //static double CourantHeatAdvective;
 
 bool isHeatNode(long nodeIndex)
@@ -61,7 +60,6 @@ double getH_timeStep(long nodeIndex, double timeStep, double timeStepWater)
 // [J]
 double computeHeatStorage(double timeStepHeat, double timeStepWater)
 {
-    vecO.clear();
     double heatStorage = 0.;
     double myH;
     for (long i = 0; i < myStructure.nrNodes; i++)
@@ -75,8 +73,6 @@ double computeHeatStorage(double timeStepHeat, double timeStepWater)
             myH = nodeList[i].H;
 
         heatStorage += soilFluxes3D::v1::getHeat(i, myH - nodeList[i].z);
-        vecO.push_back(myH);
-        vecO.push_back(heatStorage);
     }
 
     return heatStorage;

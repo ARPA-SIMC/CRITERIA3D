@@ -15,8 +15,6 @@ using namespace soilFluxes3D::v2::Water;
 using namespace soilFluxes3D::v2::Heat;
 using namespace soilFluxes3D::v2::Math;
 
-std::vector<std::vector<double>> tempCnew, tempAnew, tempBnew, tempX0new;
-std::vector<double> tempVar;
 namespace soilFluxes3D::v2
 {
     extern __cudaMngd nodesData_t nodeGrid;
@@ -138,14 +136,12 @@ namespace soilFluxes3D::v2
                 else
                     nodeGrid.waterData.saturationDegree[nodeIdx] = computeNodeSe(nodeIdx);
             }
-            /*temp*/ logNew();
 
             //Update aereodynamic and soil conductance
             updateConductance();
 
             //Update boundary
             updateBoundaryWaterData(acceptedTimeStep);
-            /*temp*/ logNew();
 
             //Effective computation step
             stepStatus = waterApproximationLoop(acceptedTimeStep);
@@ -165,8 +161,6 @@ namespace soilFluxes3D::v2
             computeCapacity(vectorC);
             logStruct;
 
-            auto vC = std::vector<double>(vectorC.values, vectorC.values + vectorC.numElements);
-
             //Update boundary water
             updateBoundaryWaterData(deltaT);
             logStruct;
@@ -177,9 +171,6 @@ namespace soilFluxes3D::v2
 
             //Compute linear system elements
             computeLinearSystemElement(matrixA, vectorB, vectorC, approxIdx, deltaT, _parameters.lateralVerticalRatio, _parameters.meanType);
-
-            auto vB = std::vector<double>(vectorB.values, vectorB.values + vectorB.numElements);
-            /*temp*/ logNew();
 
             //Courant data reduction
             double tempMax = 0;
@@ -225,13 +216,9 @@ namespace soilFluxes3D::v2
                 if(!nodeGrid.surfaceFlag[nodeIdx])
                     nodeGrid.waterData.saturationDegree[nodeIdx] = computeNodeSe(nodeIdx);
 
-            /*temp*/ logNew();
-
             //Check water balance
             balanceResult = evaluateWaterBalance(approxIdx, _bestMBRerror, deltaT, _parameters);
             logStruct;
-
-            /*temp*/ logNew();
 
             if((balanceResult == balanceResult_t::stepAccepted) || (balanceResult == balanceResult_t::stepHalved))
                 return balanceResult;
@@ -327,11 +314,6 @@ namespace soilFluxes3D::v2
             matrixA.values[rowIdx][0] = sumDP + (vectorC.values[rowIdx] / timeStepHeat);  //Check if C values is correct
 
             //Computeb element
-            tempVar.push_back(nodeGrid.heatData.oldTemperature[rowIdx]);
-            tempVar.push_back(heatCapacity);
-            tempVar.push_back(nodeGrid.heatData.heatFlux[rowIdx]);
-            tempVar.push_back(nodeGrid.waterData.invariantFluxes[rowIdx]);
-            tempVar.push_back(sumF0);
             vectorB.values[rowIdx] = vectorC.values[rowIdx] * nodeGrid.heatData.oldTemperature[rowIdx] / timeStepHeat - heatCapacity / timeStepHeat +
                                         nodeGrid.heatData.heatFlux[rowIdx] + nodeGrid.waterData.invariantFluxes[rowIdx] + sumF0;
 

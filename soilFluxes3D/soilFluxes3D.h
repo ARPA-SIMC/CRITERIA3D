@@ -3,7 +3,7 @@
 #include "macro.h"
 #include "types.h"
 
-namespace soilFluxes3D::v2
+namespace soilFluxes3D { inline namespace v2
 {
     //Inizializazion and memory management
     SF3Derror_t initializeSF3D(SF3Duint_t nrNodes, u16_t nrLayers, u8_t nrLateralLinks, bool isComputeWater, bool isComputeHeat, bool isComputeSolutes, heatFluxSaveMode_t HFsm = heatFluxSaveMode_t::None);
@@ -81,8 +81,8 @@ namespace soilFluxes3D::v2
     double getNodeTemperature(SF3Duint_t nodeIndex);
     double getNodeHeatConductivity(SF3Duint_t nodeIndex);
     double getNodeVapor(SF3Duint_t nodeIndex);
-    /*Rename?*/ double getNodeHeat(SF3Duint_t nodeIndex, double h);                                           //nodeHeatStorage
-    /*Rename?*/ double getNodeHeatFlux(SF3Duint_t nodeIndex, linkType_t linkDirection, fluxTypes_t fluxType); //nodeMaxHeatFlux
+    double getNodeHeatStorage(SF3Duint_t nodeIndex, double h);
+    double getNodeHeatMaxFlux(SF3Duint_t nodeIndex, linkType_t linkDirection, fluxTypes_t fluxType);
     double getNodeBoundaryAdvectiveFlux(SF3Duint_t nodeIndex);
     double getNodeBoundaryLatentFlux(SF3Duint_t nodeIndex);
     double getNodeBoundaryRadiativeFlux(SF3Duint_t nodeIndex);
@@ -95,6 +95,4 @@ namespace soilFluxes3D::v2
     //Computations
     void computePeriod(double timePeriod);      //move to a SF3Derror_t return
     double computeStep(double maxTimeStep);
-
-    void logNew();
-}
+}}
