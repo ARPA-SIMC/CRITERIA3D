@@ -31,14 +31,13 @@ namespace soilFluxes3D { inline namespace v2
     #define noDataD doubleNoData_v
     #define noDataU uintNoData_v
 
-
     //Math
     enum class meanType_t : u8_t {Arithmetic, Geometric, Logarithmic};
 
     //Error Status
     enum class SF3Derror_t : u8_t {SF3Dok, IndexError, MemoryError, TopographyError, BoundaryError, MissingDataError, ParameterError, SolverError, FileError};
 
-    inline constexpr double getDoubleErrorValue(const SF3Derror_t errorCode)
+    inline constexpr __cudaSpec double getDoubleErrorValue(const SF3Derror_t errorCode)
     {
         if(errorCode == SF3Derror_t::SF3Dok)
             return 0;
@@ -62,6 +61,7 @@ namespace soilFluxes3D { inline namespace v2
         }
 
     }
+
     inline constexpr bool getSF3DerrorName(soilFluxes3D::SF3Derror_t errorCode, std::string& errorName)
     {
         if (errorCode == soilFluxes3D::SF3Derror_t::SF3Dok)
@@ -90,7 +90,6 @@ namespace soilFluxes3D { inline namespace v2
 
         return true;
     }
-
 
     //Process implemented
     enum class processType : u8_t {Water, Heat, Solutes};
@@ -323,7 +322,7 @@ namespace soilFluxes3D { inline namespace v2
 
     //Move to a different location?
     template<typename E>
-    /*__cudaSpec*/ constexpr auto castToUnderlyingType(E value)
+    __cudaSpec constexpr auto castToUnderlyingType(E value)
     {
         static_assert(std::is_enum_v<E>, "type required to be enum to be casted");
         return static_cast<std::underlying_type_t<E>>(value);

@@ -1,12 +1,12 @@
-#include <cassert>
-#include <type_traits>
-#include <omp.h>
-
 #include "gpusolver.h"
 #include "soilPhysics.h"
 #include "water.h"
 #include "heat.h"
 #include "otherFunctions.h"
+
+#include <cassert>
+#include <type_traits>
+#include <omp.h>
 
 using namespace soilFluxes3D::v2::Soil;
 using namespace soilFluxes3D::v2::Math;

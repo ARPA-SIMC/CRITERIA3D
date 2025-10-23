@@ -2,7 +2,6 @@
 #include "solver.h"
 #include "otherFunctions.h"
 #include <cassert>
-#include <iostream>
 
 using namespace soilFluxes3D::v2;
 using namespace soilFluxes3D::v2::Math;

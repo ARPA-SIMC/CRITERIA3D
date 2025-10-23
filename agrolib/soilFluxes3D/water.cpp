@@ -1,10 +1,9 @@
-#include <cassert>
-#include <iostream>
-
 #ifdef CUDA_ENABLED
     #include "gpusolver.h"
 #endif
 #include "cpusolver.h"
+
+#include <cassert>
 
 #include "water.h"
 #include "soilPhysics.h"

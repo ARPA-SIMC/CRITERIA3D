@@ -1,12 +1,13 @@
 #pragma once
 
 #define NOMINMAX
-#include <cstdint>
 
 #include <cuda.h>
 #include <cuda_runtime.h>
 #include <cusparse_v2.h>
 #include <cub/device/device_reduce.cuh>
+
+#include <cstdint>
 
 namespace soilFluxes3D::v2
 {
