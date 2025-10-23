@@ -20,7 +20,6 @@
 #include "waterTableWidget.h"
 #include "utilities.h"
 
-
 #include <iostream>
 #include <QDir>
 #include <QFile>
@@ -1514,7 +1513,7 @@ bool Project::loadMeteoPointsData(const QDate& firstDate, const QDate& lastDate,
 
     int nrDataOk = 0;
     QString dbName = meteoPointsDbHandler->getDbName();
-    int nrThread = std::min(omp_get_num_threads(), nrMeteoPoints);
+    int nrThread = std::min(omp_get_max_threads(), nrMeteoPoints);
 
     #pragma omp parallel if(_isParallelComputing) num_threads(nrThread)
     {
