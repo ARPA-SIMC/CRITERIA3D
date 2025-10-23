@@ -1514,13 +1514,15 @@ bool Project::loadMeteoPointsData(const QDate& firstDate, const QDate& lastDate,
 
     int nrDataOk = 0;
     QString dbName = meteoPointsDbHandler->getDbName();
-    #pragma omp parallel if(_isParallelComputing)
+    int nrThread = std::min(omp_get_num_threads(), nrMeteoPoints);
+
+    #pragma omp parallel if(_isParallelComputing) num_threads(nrThread)
     {
         QSqlDatabase myDb;
         QString connectionName = QString::number(omp_get_thread_num());
         meteoPointsDbHandler->openNewConnection(myDb, dbName, connectionName);
 
-        #pragma omp for schedule(dynamic)
+        #pragma omp for schedule(dynamic) reduction(+:nrDataOk)
         for (int i=0; i < nrMeteoPoints; ++i)
         {
             bool localOk = false;
@@ -1532,10 +1534,7 @@ bool Project::loadMeteoPointsData(const QDate& firstDate, const QDate& lastDate,
                 localOk |= meteoPointsDbHandler->loadDailyData(myDb, myFirstDate, myLastDate, meteoPoints[i]);
 
             if (localOk)
-            {
-                #pragma omp atomic
                 nrDataOk++;
-            }
 
             // safe update
             if (showInfo && omp_get_thread_num() == 0 && (i%step) == 0)
