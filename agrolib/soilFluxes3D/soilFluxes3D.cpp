@@ -22,12 +22,6 @@ using namespace soilFluxes3D::v2::Soil;
 using namespace soilFluxes3D::v2::Water;
 using namespace soilFluxes3D::v2::Heat;
 
-#include<array>
-std::vector<std::vector<double>> vecPH_new, vecOPH_new, vecSe_new, vecIF_new, vecWK_new, vecwF_new, vecT_new, vecHF_new,
-                                vecBAK_new, vecBSK_new, vecBWF_new, vecBWS_new, vecBT_new, vecHK_new, vecHSS_new;
-std::vector<std::array<std::vector<double>, numTotalFluxTypes>> vectorFluxesUp_new, vectorFluxesDown_new;
-std::vector<balanceData_t> vecBAL_new;
-
 namespace soilFluxes3D::v2
 {
     //Solver objects
@@ -656,11 +650,10 @@ namespace soilFluxes3D::v2
         nodeGrid.boundaryData.boundarySlope[nodeIndex] = slope;
         nodeGrid.boundaryData.boundarySize[nodeIndex] = boundaryArea;
 
-        //TO DO: check if 0 is okay
         if(simulationFlags.computeWater)
         {
-            nodeGrid.boundaryData.waterFlowRate[nodeIndex] = noDataD;
-            nodeGrid.boundaryData.waterFlowSum[nodeIndex] = noDataD;
+            nodeGrid.boundaryData.waterFlowRate[nodeIndex] = 0.;
+            nodeGrid.boundaryData.waterFlowSum[nodeIndex] = 0.;
             nodeGrid.boundaryData.prescribedWaterPotential[nodeIndex] = noDataD;
         }
 
@@ -675,10 +668,10 @@ namespace soilFluxes3D::v2
             nodeGrid.boundaryData.relativeHumidity[nodeIndex] = noDataD;
             nodeGrid.boundaryData.windSpeed[nodeIndex] = noDataD;
             nodeGrid.boundaryData.netIrradiance[nodeIndex] = noDataD;
-            nodeGrid.boundaryData.radiativeFlux[nodeIndex] = noDataD;
-            nodeGrid.boundaryData.latentFlux[nodeIndex] = noDataD;
-            nodeGrid.boundaryData.sensibleFlux[nodeIndex] = noDataD;
-            nodeGrid.boundaryData.advectiveHeatFlux[nodeIndex] = noDataD;
+            nodeGrid.boundaryData.radiativeFlux[nodeIndex] = 0.;
+            nodeGrid.boundaryData.latentFlux[nodeIndex] = 0.;
+            nodeGrid.boundaryData.sensibleFlux[nodeIndex] = 0.;
+            nodeGrid.boundaryData.advectiveHeatFlux[nodeIndex] = 0.;
             nodeGrid.boundaryData.fixedTemperatureValue[nodeIndex] = noDataD;
             nodeGrid.boundaryData.fixedTemperatureDepth[nodeIndex] = noDataD;
         }
@@ -1482,7 +1475,7 @@ namespace soilFluxes3D::v2
      * \param pressureHead  [m]
      * \return heat storage [J]
      */
-    double getNodeHeat(SF3Duint_t nodeIndex, double h)
+    double getNodeHeatStorage(SF3Duint_t nodeIndex, double h)
     {
         if(!nodeGrid.isInitialized)
             return static_cast<double>(SF3Derror_t::MemoryError);
@@ -1514,7 +1507,7 @@ namespace soilFluxes3D::v2
      * \return instantaneous heat flux  [W]
      * \return water flux               [m3 s-1]
      */
-    double getNodeHeatFlux(SF3Duint_t nodeIndex, linkType_t linkDirection, fluxTypes_t fluxType)
+    double getNodeHeatMaxFlux(SF3Duint_t nodeIndex, linkType_t linkDirection, fluxTypes_t fluxType)
     {
         if(!nodeGrid.isInitialized)
             return static_cast<double>(SF3Derror_t::MemoryError);
@@ -1699,11 +1692,6 @@ namespace soilFluxes3D::v2
      */
     void computePeriod(double timePeriod)
     {
-        vecPH_new.clear(); vecOPH_new.clear(); vecSe_new.clear(); vecIF_new.clear(); vecWK_new.clear();
-        vecwF_new.clear(); vecT_new.clear(); vecHF_new.clear(); vecBAK_new.clear(); vecBSK_new.clear();
-        vecBWF_new.clear(); vecBWS_new.clear(); vecBT_new.clear(); vecHK_new.clear(); vecHSS_new.clear();
-
-        /*temp*/ logNew();
         double sumCurrentTime = 0.;
 
         balanceDataCurrentPeriod.waterSinkSource = 0.;
@@ -1718,76 +1706,7 @@ namespace soilFluxes3D::v2
         if(simulationFlags.computeHeat)
             updateHeatBalanceDataWholePeriod();
 
-        /*temp*/ logNew();
-    }
-
-
-    void logNew()
-    {
         return;
-        SF3Duint_t numNodesSave = 10;
-        vecPH_new.emplace_back(nodeGrid.waterData.pressureHead, nodeGrid.waterData.pressureHead + numNodesSave);
-        vecOPH_new.emplace_back(nodeGrid.waterData.oldPressureHead, nodeGrid.waterData.oldPressureHead + numNodesSave);
-        vecSe_new.emplace_back(nodeGrid.waterData.saturationDegree, nodeGrid.waterData.saturationDegree + numNodesSave);
-        vecIF_new.emplace_back(nodeGrid.waterData.invariantFluxes, nodeGrid.waterData.invariantFluxes + numNodesSave);
-        vecWK_new.emplace_back(nodeGrid.waterData.waterConductivity, nodeGrid.waterData.waterConductivity + numNodesSave);
-        vecwF_new.emplace_back(nodeGrid.waterData.waterFlow, nodeGrid.waterData.waterFlow + numNodesSave);
-
-        if(simulationFlags.computeHeat)
-        {
-            vecT_new.emplace_back(nodeGrid.heatData.temperature, nodeGrid.heatData.temperature + numNodesSave);
-            vecHF_new.emplace_back(nodeGrid.heatData.heatFlux, nodeGrid.heatData.heatFlux + numNodesSave);
-        }
-
-        std::vector<double> temp;
-
-        for(int index = 0; index < nodeGrid.numNodes; ++index)
-            if(simulationFlags.computeHeat && nodeGrid.boundaryData.boundaryType[index] != boundaryType_t::NoBoundary)
-                temp.push_back(nodeGrid.boundaryData.aerodynamicConductance[index]);
-        vecBAK_new.push_back(temp);
-        temp.clear();
-
-        for(int index = 0; index < nodeGrid.numNodes; ++index)
-            if(simulationFlags.computeHeat && nodeGrid.boundaryData.boundaryType[index] != boundaryType_t::NoBoundary)
-                temp.push_back(nodeGrid.boundaryData.soilConductance[index]);
-        vecBSK_new.push_back(temp);
-        temp.clear();
-
-        for(int index = 0; index < nodeGrid.numNodes; ++index)
-            if(nodeGrid.boundaryData.boundaryType[index] != boundaryType_t::NoBoundary)
-                temp.push_back(nodeGrid.boundaryData.waterFlowRate[index]);
-        vecBWF_new.push_back(temp);
-        temp.clear();
-
-        for(int index = 0; index < nodeGrid.numNodes; ++index)
-            if(nodeGrid.boundaryData.boundaryType[index] != boundaryType_t::NoBoundary)
-                temp.push_back(nodeGrid.boundaryData.waterFlowSum[index]);
-        vecBWS_new.push_back(temp);
-        temp.clear();
-
-        for(int index = 0; index < nodeGrid.numNodes; ++index)
-            if(simulationFlags.computeHeat && nodeGrid.boundaryData.boundaryType[index] != boundaryType_t::NoBoundary)
-                temp.push_back(nodeGrid.boundaryData.temperature[index]);
-        vecBT_new.push_back(temp);
-        temp.clear();
-
-
-        vecBAL_new.push_back(balanceDataCurrentTimeStep);
-        vecBAL_new.push_back(balanceDataWholePeriod);
-
-
-        if(!simulationFlags.computeHeat)
-            return;
-
-        vecHSS_new.emplace_back(nodeGrid.heatData.heatSinkSource, nodeGrid.heatData.heatSinkSource + numNodesSave);
-        std::array<std::vector<double>, numTotalFluxTypes> tempArr;
-        for(u8_t index = 0; index < numTotalFluxTypes; ++index)
-            tempArr[index] = std::vector<double>(nodeGrid.linkData[0].fluxes[index], nodeGrid.linkData[0].fluxes[index] + numNodesSave);
-        vectorFluxesUp_new.push_back(tempArr);
-
-        for(u8_t index = 0; index < numTotalFluxTypes; ++index)
-            tempArr[index] = std::vector<double>(nodeGrid.linkData[1].fluxes[index], nodeGrid.linkData[1].fluxes[index] + numNodesSave);
-        vectorFluxesDown_new.push_back(tempArr);
     }
 
     /*!
@@ -1811,13 +1730,10 @@ namespace soilFluxes3D::v2
         else
             dtWater = SF3Dmin(maxTimeStep, solver->getMaxTimeStep());
 
-        /*temp*/ logNew();
-
         if(simulationFlags.computeHeat)
         {
             dtHeat = dtWater;
             saveWaterFluxValues(dtHeat, dtWater);
-            /*temp*/ logNew();
 
             double dtHeatAccumulator = 0.;
             while(dtHeatAccumulator < dtWater)
@@ -1829,8 +1745,6 @@ namespace soilFluxes3D::v2
                     dtHeat = reducedTimeStep;
 
                 solver->run(dtHeat, dtWater, processType::Heat);
-
-                /*temp*/ logNew();
 
                 dtHeatAccumulator += dtHeat;
             }

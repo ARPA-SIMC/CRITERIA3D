@@ -13,7 +13,7 @@
 #include "macro.h"
 
 
-namespace soilFluxes3D::v2
+namespace soilFluxes3D { inline namespace v2
 {
     using SF3Duint_t = std::uint32_t;
     using u8_t  = std::uint8_t;
@@ -28,7 +28,7 @@ namespace soilFluxes3D::v2
 
     constexpr double doubleNoData_v = static_cast<double>(NODATA);
     constexpr SF3Duint_t uintNoData_v = std::numeric_limits<SF3Duint_t>::max();
-    #define noDataD 0. //doubleNoData_v
+    #define noDataD doubleNoData_v
     #define noDataU uintNoData_v
 
 
@@ -274,6 +274,6 @@ namespace soilFluxes3D::v2
         static_assert(std::is_enum_v<E>, "type required to be enum to be casted");
         return static_cast<std::underlying_type_t<E>>(value);
     }
-}
+}}
 
 #include "types_opt.h"

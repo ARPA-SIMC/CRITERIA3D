@@ -160,6 +160,7 @@ public:
     QAction *actionSoil_organic_matter;
     QAction *actionAutomatic_state_saving_end_of_year;
     QAction *actionAutomatic_state_saving_end_of_month;
+    QAction *actionCriteria3D_parallel_computing;
     QWidget *centralWidget;
     QWidget *widgetMap;
     QGroupBox *groupBoxDEM;
@@ -187,6 +188,7 @@ public:
     QLineEdit *layerDepthEdit;
     QLabel *labelLayer_2;
     QLineEdit *modelTimeEdit;
+    QPushButton *buttonModel1hour;
     QMenuBar *menuBar;
     QMenu *menuFile;
     QMenu *menuInput;
@@ -518,6 +520,7 @@ public:
         actionCriteria3D_update_subHourly = new QAction(MainWindow);
         actionCriteria3D_update_subHourly->setObjectName("actionCriteria3D_update_subHourly");
         actionCriteria3D_update_subHourly->setCheckable(true);
+        actionCriteria3D_update_subHourly->setChecked(true);
         actionView_Factor_of_safety = new QAction(MainWindow);
         actionView_Factor_of_safety->setObjectName("actionView_Factor_of_safety");
         actionView_DegreeOfSaturation_automatic_range = new QAction(MainWindow);
@@ -576,6 +579,10 @@ public:
         actionAutomatic_state_saving_end_of_month = new QAction(MainWindow);
         actionAutomatic_state_saving_end_of_month->setObjectName("actionAutomatic_state_saving_end_of_month");
         actionAutomatic_state_saving_end_of_month->setCheckable(true);
+        actionCriteria3D_parallel_computing = new QAction(MainWindow);
+        actionCriteria3D_parallel_computing->setObjectName("actionCriteria3D_parallel_computing");
+        actionCriteria3D_parallel_computing->setCheckable(true);
+        actionCriteria3D_parallel_computing->setChecked(true);
         centralWidget = new QWidget(MainWindow);
         centralWidget->setObjectName("centralWidget");
         centralWidget->setMinimumSize(QSize(0, 0));
@@ -850,7 +857,7 @@ public:
         dateEdit->setFont(font1);
         dateEdit->setDateTime(QDateTime(QDate(2090, 1, 1), QTime(0, 0, 0)));
         dateEdit->setMaximumDateTime(QDateTime(QDate(7999, 12, 31), QTime(23, 59, 59)));
-        dateEdit->setMinimumDateTime(QDateTime(QDate(1752, 9, 1), QTime(0, 0, 0)));
+        dateEdit->setMinimumDateTime(QDateTime(QDate(1752, 8, 29), QTime(0, 0, 0)));
         dateEdit->setMaximumDate(QDate(7999, 12, 31));
         dateEdit->setCurrentSection(QDateTimeEdit::Section::YearSection);
         dateEdit->setCalendarPopup(true);
@@ -931,24 +938,24 @@ public:
         groupBoxModel->setAlignment(Qt::AlignmentFlag::AlignLeading|Qt::AlignmentFlag::AlignLeft|Qt::AlignmentFlag::AlignVCenter);
         buttonModelStart = new QPushButton(groupBoxModel);
         buttonModelStart->setObjectName("buttonModelStart");
-        buttonModelStart->setGeometry(QRect(120, 30, 31, 28));
+        buttonModelStart->setGeometry(QRect(130, 30, 30, 28));
         buttonModelPause = new QPushButton(groupBoxModel);
         buttonModelPause->setObjectName("buttonModelPause");
-        buttonModelPause->setGeometry(QRect(50, 30, 61, 28));
+        buttonModelPause->setGeometry(QRect(30, 30, 60, 28));
         buttonModelPause->setFont(font2);
         buttonModelStop = new QPushButton(groupBoxModel);
         buttonModelStop->setObjectName("buttonModelStop");
-        buttonModelStop->setGeometry(QRect(160, 30, 61, 28));
+        buttonModelStop->setGeometry(QRect(165, 30, 60, 28));
         buttonModelStop->setFont(font2);
         layerNrEdit = new QSpinBox(groupBoxModel);
         layerNrEdit->setObjectName("layerNrEdit");
-        layerNrEdit->setGeometry(QRect(100, 70, 42, 24));
+        layerNrEdit->setGeometry(QRect(70, 70, 42, 24));
         layerNrEdit->setReadOnly(false);
         layerNrEdit->setMinimum(1);
         layerNrEdit->setMaximum(100);
         labelLayer = new QLabel(groupBoxModel);
         labelLayer->setObjectName("labelLayer");
-        labelLayer->setGeometry(QRect(40, 70, 51, 21));
+        labelLayer->setGeometry(QRect(10, 70, 51, 21));
         QPalette palette10;
         labelLayer->setPalette(palette10);
         labelLayer->setFont(font1);
@@ -956,11 +963,11 @@ public:
         labelLayer->setAlignment(Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignTrailing|Qt::AlignmentFlag::AlignVCenter);
         layerDepthEdit = new QLineEdit(groupBoxModel);
         layerDepthEdit->setObjectName("layerDepthEdit");
-        layerDepthEdit->setGeometry(QRect(150, 70, 71, 24));
+        layerDepthEdit->setGeometry(QRect(120, 70, 71, 24));
         layerDepthEdit->setReadOnly(true);
         labelLayer_2 = new QLabel(groupBoxModel);
         labelLayer_2->setObjectName("labelLayer_2");
-        labelLayer_2->setGeometry(QRect(10, 102, 50, 21));
+        labelLayer_2->setGeometry(QRect(9, 102, 51, 21));
         QPalette palette11;
         labelLayer_2->setPalette(palette11);
         labelLayer_2->setFont(font1);
@@ -970,10 +977,13 @@ public:
         modelTimeEdit->setObjectName("modelTimeEdit");
         modelTimeEdit->setGeometry(QRect(70, 102, 151, 24));
         modelTimeEdit->setReadOnly(true);
+        buttonModel1hour = new QPushButton(groupBoxModel);
+        buttonModel1hour->setObjectName("buttonModel1hour");
+        buttonModel1hour->setGeometry(QRect(95, 30, 36, 28));
         MainWindow->setCentralWidget(centralWidget);
         menuBar = new QMenuBar(MainWindow);
         menuBar->setObjectName("menuBar");
-        menuBar->setGeometry(QRect(0, 0, 1280, 22));
+        menuBar->setGeometry(QRect(0, 0, 1280, 28));
         QPalette palette12;
         palette12.setBrush(QPalette::ColorGroup::Active, QPalette::ColorRole::ButtonText, brush7);
         palette12.setBrush(QPalette::ColorGroup::Inactive, QPalette::ColorRole::ButtonText, brush7);
@@ -1128,6 +1138,7 @@ public:
         menu3DModel->addAction(actionCriteria3D_compute_next_hour);
         menu3DModel->addAction(actionCriteria3D_run_models);
         menu3DModel->addSeparator();
+        menu3DModel->addAction(actionCriteria3D_parallel_computing);
         menu3DModel->addAction(actionCriteria3D_update_subHourly);
         menu3DModel->addSeparator();
         menu3DModel->addAction(flagSave_state_endRun);
@@ -1408,6 +1419,7 @@ public:
         actionSoil_organic_matter->setText(QCoreApplication::translate("MainWindow", "Soil organic matter", nullptr));
         actionAutomatic_state_saving_end_of_year->setText(QCoreApplication::translate("MainWindow", "Automatic state saving (end of year)", nullptr));
         actionAutomatic_state_saving_end_of_month->setText(QCoreApplication::translate("MainWindow", "Automatic state saving (end of month)", nullptr));
+        actionCriteria3D_parallel_computing->setText(QCoreApplication::translate("MainWindow", "Parallel computing", nullptr));
 #if QT_CONFIG(tooltip)
         opacitySliderRasterInput->setToolTip(QCoreApplication::translate("MainWindow", "Raster opacity", nullptr));
 #endif // QT_CONFIG(tooltip)
@@ -1447,6 +1459,7 @@ public:
         buttonModelStop->setText(QCoreApplication::translate("MainWindow", "Stop", nullptr));
         labelLayer->setText(QCoreApplication::translate("MainWindow", "Layer", nullptr));
         labelLayer_2->setText(QCoreApplication::translate("MainWindow", "Time", nullptr));
+        buttonModel1hour->setText(QCoreApplication::translate("MainWindow", ">1h", nullptr));
         menuFile->setTitle(QCoreApplication::translate("MainWindow", "File", nullptr));
         menuInput->setTitle(QCoreApplication::translate("MainWindow", "Input", nullptr));
         menuMeteo_points->setTitle(QCoreApplication::translate("MainWindow", "Meteo points", nullptr));

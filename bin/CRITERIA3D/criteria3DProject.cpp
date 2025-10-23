@@ -1175,7 +1175,7 @@ bool Crit3DProject::runModels(const QDateTime &firstTime, const QDateTime &lastT
 
             //Log SF3D data
             soilFluxes3D::v2::closeLog();
-            logInfo("Daily sub version: 03\n");
+            logInfo("Daily sub version: 00\n");
 
             //rothC maps update must be done hourly, otherwise ETReal data are not stored
             if (processes.computeRothC || processes.computeHydrall)
@@ -1927,7 +1927,7 @@ bool Crit3DProject::setHydrallVariables(Crit3DHydrall &myHydrallModel, int row, 
                                           soilFluxes3D::v2::getNodeMatricPotential(indexMap.at(i).value[row][col]));
 		}
 	}
-    return;
+    return true;
 }
 
 

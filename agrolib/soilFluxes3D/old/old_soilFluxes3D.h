@@ -108,7 +108,6 @@
     __EXTERN QString getVectorLog();
     __EXTERN QString getLinSystLog();
     //__EXTERN QString getCUDArun(int x);
-    void logOld();
 }
 
 #endif
