@@ -110,15 +110,7 @@ void Project::initializeProject()
     proxyGridSeries.clear();
     proxyWidget = nullptr;
 
-    if (_isParallelComputing)
-    {
-        omp_set_num_threads(omp_get_max_threads());
-    }
-    else
-    {
-        omp_set_num_threads(1);
-    }
-
+    _isParallelComputing? omp_set_num_threads(omp_get_max_threads()) : omp_set_num_threads(1);
 }
 
 
@@ -1513,7 +1505,7 @@ bool Project::loadMeteoPointsData(const QDate& firstDate, const QDate& lastDate,
 
     int nrDataOk = 0;
     QString dbName = meteoPointsDbHandler->getDbName();
-    int nrThread = std::min(omp_get_max_threads(), nrMeteoPoints);
+    int nrThread = _isParallelComputing? std::min(omp_get_max_threads(), nrMeteoPoints) : 1;
 
     #pragma omp parallel if(_isParallelComputing) num_threads(nrThread)
     {
@@ -1543,7 +1535,13 @@ bool Project::loadMeteoPointsData(const QDate& firstDate, const QDate& lastDate,
         }
 
         myDb.close();
-        myDb.removeDatabase(connectionName);
+    }
+
+    // close connections
+    for (int i=0; i < nrThread; ++i)
+    {
+        QString connectionName = QString::number(i);
+        QSqlDatabase::removeDatabase(connectionName);
     }
 
     if (showInfo)
@@ -1553,7 +1551,7 @@ bool Project::loadMeteoPointsData(const QDate& firstDate, const QDate& lastDate,
 }
 
 
-bool Project::loadMeteoPointsData(const QDate &firstDate, const QDate &lastDate,
+bool Project::loadMeteoPointsData_singleDataset(const QDate &firstDate, const QDate &lastDate,
                                   bool loadHourly, bool loadDaily, const QString &dataset, bool showInfo)
 {
     //check
@@ -1575,12 +1573,15 @@ bool Project::loadMeteoPointsData(const QDate &firstDate, const QDate &lastDate,
 
     int nrDataOk = 0;
     QString dbName = meteoPointsDbHandler->getDbName();
-    #pragma omp parallel if(_isParallelComputing)
+    int nrThread = _isParallelComputing? std::min(omp_get_max_threads(), nrMeteoPoints) : 1;
+
+    #pragma omp parallel if(_isParallelComputing) num_threads(nrThread)
     {
         QSqlDatabase myDb;
-        meteoPointsDbHandler->openNewConnection(myDb, dbName, QString::number(omp_get_thread_num()));
+        QString connectionName = QString::number(omp_get_thread_num());
+        meteoPointsDbHandler->openNewConnection(myDb, dbName, connectionName);
 
-        #pragma omp for schedule(dynamic)
+        #pragma omp for schedule(dynamic) reduction(+:nrDataOk)
         for (int i=0; i < nrMeteoPoints; ++i)
         {
             if (meteoPoints[i].dataset == dataset.toStdString())
@@ -1594,24 +1595,24 @@ bool Project::loadMeteoPointsData(const QDate &firstDate, const QDate &lastDate,
                     localOk |= meteoPointsDbHandler->loadDailyData(myDb, myFirstDate, myLastDate, meteoPoints[i]);
 
                 if (localOk)
-                {
-                    #pragma omp atomic
                     nrDataOk++;
-                }
             }
 
             // safe update
             if (showInfo && omp_get_thread_num() == 0 && (i%step) == 0)
             {
-                #pragma omp critical
-                {
-                    updateProgressBar(i);
-                }
+                updateProgressBar(i);
             }
         }
 
         myDb.close();
-        QSqlDatabase::removeDatabase(QString::number(omp_get_thread_num()));
+    }
+
+    // close connections
+    for (int i=0; i < nrThread; ++i)
+    {
+        QString connectionName = QString::number(i);
+        QSqlDatabase::removeDatabase(connectionName);
     }
 
     if (showInfo)
@@ -1649,9 +1650,9 @@ bool Project::loadMeteoGridDailyData(const QDate &firstDate, const QDate &lastDa
     const auto &gridStructure = meteoGridDbHandler->gridStructure();
 
     int count = 0;
-    int nrThreads = (_isParallelComputing ? omp_get_max_threads(): 1);
+    int nrThreads = _isParallelComputing? std::min(omp_get_max_threads(), gridStructure.header().nrRows) : 1;
 
-    #pragma omp parallel if(_isParallelComputing)
+    #pragma omp parallel if(_isParallelComputing) num_threads(nrThreads)
     {
         std::string id;
         QString errorStr;
@@ -1694,18 +1695,22 @@ bool Project::loadMeteoGridDailyData(const QDate &firstDate, const QDate &lastDa
             // safe update
             if (showInfo && omp_get_thread_num() == 0)
             {
-                #pragma omp critical
-                {
-                    updateProgressBar(count * nrThreads);
-                }
+                updateProgressBar(count * nrThreads);
             }
         }
 
         myDb.close();
-        myDb.removeDatabase(connectionName);
     }
 
-    if (showInfo) closeProgressBar();
+    // close connections
+    for (int i=0; i < nrThreads; ++i)
+    {
+        QString connectionName = QString::number(i);
+        QSqlDatabase::removeDatabase(connectionName);
+    }
+
+    if (showInfo)
+        closeProgressBar();
 
     if (count == 0)
     {
@@ -1735,9 +1740,9 @@ bool Project::loadMeteoGridHourlyData(QDateTime firstDateTime, QDateTime lastDat
     const auto &gridStructure = meteoGridDbHandler->gridStructure();
 
     int count = 0;
-    int nrThreads = (_isParallelComputing ? omp_get_max_threads(): 1);
+    int nrThreads = _isParallelComputing? std::min(omp_get_max_threads(), gridStructure.header().nrRows) : 1;
 
-    #pragma omp parallel if(_isParallelComputing)
+    #pragma omp parallel if(_isParallelComputing) num_threads(nrThreads)
     {
         std::string id;
         QString myErrorStr;
@@ -1768,18 +1773,22 @@ bool Project::loadMeteoGridHourlyData(QDateTime firstDateTime, QDateTime lastDat
             // safe update
             if (showInfo && omp_get_thread_num() == 0)
             {
-                #pragma omp critical
-                {
-                    updateProgressBar(count * nrThreads);
-                }
+                updateProgressBar(count * nrThreads);
             }
         }
 
         myDb.close();
-        myDb.removeDatabase(connectionName);
     }
 
-    if (showInfo) closeProgressBar();
+    // close connections
+    for (int i=0; i < nrThreads; ++i)
+    {
+        QString connectionName = QString::number(i);
+        QSqlDatabase::removeDatabase(connectionName);
+    }
+
+    if (showInfo)
+        closeProgressBar();
 
     if (count == 0)
     {
