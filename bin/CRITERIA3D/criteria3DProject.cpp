@@ -1079,11 +1079,13 @@ bool Crit3DProject::startModels(const QDateTime &firstTime, const QDateTime &las
 
     logInfoGUI("Loading meteo data...");
     bool loadHourly = true;
-    if (! loadMeteoPointsData(firstTime.date().addDays(-1), lastTime.date().addDays(+1), loadHourly, false, false))
+    bool isdataLoaded = loadMeteoPointsData(firstTime.date().addDays(-1), lastTime.date().addDays(+1), loadHourly, false, false);
+    closeLogInfo();
+    if (! isdataLoaded)
     {
+        logError("No data available for this period.");
         return false;
     }
-    closeLogInfo();
 
     // initialize
     modelFirstTime = firstTime;

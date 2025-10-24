@@ -143,7 +143,7 @@ MainWindow::MainWindow(QWidget *parent) :
     myProject.setComputeOnlyPoints(false);
     ui->flagOutputPoints_save_output->setChecked(myProject.isSaveOutputPoints());
     ui->flagCompute_only_points->setChecked(myProject.getComputeOnlyPoints());
-    ui->actionCriteria3D_parallel_computing->setChecked(myProject.isParallelComputing());
+    ui->action_parallel_computing->setChecked(myProject.isParallelComputing());
     ui->actionCriteria3D_update_subHourly->setChecked(myProject.showEachTimeStep);
 
     this->setMouseTracking(true);
@@ -3504,12 +3504,6 @@ void MainWindow::on_actionCriteria3D_update_subHourly_triggered(bool isChecked)
 }
 
 
-void MainWindow::on_actionCriteria3D_parallel_computing_triggered(bool isChecked)
-{
-    myProject.setParallelComputing(isChecked);
-}
-
-
 void MainWindow::on_flag_increase_slope_triggered(bool isChecked)
 {
     myProject.increaseSlope = isChecked;
@@ -4111,6 +4105,10 @@ void MainWindow::on_actionInitialize_soil_carbon_content_triggered()
         myProject.clearRothCMaps();
     }
 
-
 }
 
+
+void MainWindow::on_action_parallel_computing_triggered(bool isChecked)
+{
+    myProject.setParallelComputing(isChecked);
+}

@@ -1503,9 +1503,9 @@ bool Project::loadMeteoPointsData(const QDate& firstDate, const QDate& lastDate,
     Crit3DDate myFirstDate = getCrit3DDate(firstDate);
     Crit3DDate myLastDate = getCrit3DDate(lastDate);
 
-    int nrDataOk = 0;
     QString dbName = meteoPointsDbHandler->getDbName();
     int nrThread = _isParallelComputing? std::min(omp_get_max_threads(), nrMeteoPoints) : 1;
+    std::vector<bool> isDataOk(nrMeteoPoints, false);
 
     #pragma omp parallel if(_isParallelComputing) num_threads(nrThread)
     {
@@ -1513,19 +1513,16 @@ bool Project::loadMeteoPointsData(const QDate& firstDate, const QDate& lastDate,
         QString connectionName = QString::number(omp_get_thread_num());
         meteoPointsDbHandler->openNewConnection(myDb, dbName, connectionName);
 
-        #pragma omp for schedule(dynamic) reduction(+:nrDataOk)
+        #pragma omp for schedule(dynamic)
         for (int i=0; i < nrMeteoPoints; ++i)
         {
-            bool localOk = false;
-
             if (loadHourly)
-                localOk |= meteoPointsDbHandler->loadHourlyData(myDb, myFirstDate, myLastDate, meteoPoints[i]);
+                if (meteoPointsDbHandler->loadHourlyData(myDb, myFirstDate, myLastDate, meteoPoints[i]))
+                    isDataOk[i] = true;
 
             if (loadDaily)
-                localOk |= meteoPointsDbHandler->loadDailyData(myDb, myFirstDate, myLastDate, meteoPoints[i]);
-
-            if (localOk)
-                nrDataOk++;
+                if (meteoPointsDbHandler->loadDailyData(myDb, myFirstDate, myLastDate, meteoPoints[i]))
+                    isDataOk[i] = true;
 
             // safe update
             if (showInfo && omp_get_thread_num() == 0 && (i%step) == 0)
@@ -1547,7 +1544,8 @@ bool Project::loadMeteoPointsData(const QDate& firstDate, const QDate& lastDate,
     if (showInfo)
         closeProgressBar();
 
-    return (nrDataOk > 0);
+    bool almostOneOk = std::any_of(isDataOk.begin(), isDataOk.end(), [](bool x){ return x; });
+    return almostOneOk;
 }
 
 
@@ -1571,9 +1569,9 @@ bool Project::loadMeteoPointsData_singleDataset(const QDate &firstDate, const QD
     Crit3DDate myFirstDate = getCrit3DDate(firstDate);
     Crit3DDate myLastDate = getCrit3DDate(lastDate);
 
-    int nrDataOk = 0;
     QString dbName = meteoPointsDbHandler->getDbName();
     int nrThread = _isParallelComputing? std::min(omp_get_max_threads(), nrMeteoPoints) : 1;
+    std::vector<bool> isDataOk(nrMeteoPoints, false);
 
     #pragma omp parallel if(_isParallelComputing) num_threads(nrThread)
     {
@@ -1581,21 +1579,18 @@ bool Project::loadMeteoPointsData_singleDataset(const QDate &firstDate, const QD
         QString connectionName = QString::number(omp_get_thread_num());
         meteoPointsDbHandler->openNewConnection(myDb, dbName, connectionName);
 
-        #pragma omp for schedule(dynamic) reduction(+:nrDataOk)
+        #pragma omp for schedule(dynamic)
         for (int i=0; i < nrMeteoPoints; ++i)
         {
             if (meteoPoints[i].dataset == dataset.toStdString())
             {
-                bool localOk = false;
-
                 if (loadHourly)
-                    localOk |= meteoPointsDbHandler->loadHourlyData(myDb, myFirstDate, myLastDate, meteoPoints[i]);
+                    if (meteoPointsDbHandler->loadHourlyData(myDb, myFirstDate, myLastDate, meteoPoints[i]))
+                        isDataOk[i] = true;
 
                 if (loadDaily)
-                    localOk |= meteoPointsDbHandler->loadDailyData(myDb, myFirstDate, myLastDate, meteoPoints[i]);
-
-                if (localOk)
-                    nrDataOk++;
+                    if (meteoPointsDbHandler->loadDailyData(myDb, myFirstDate, myLastDate, meteoPoints[i]))
+                        isDataOk[i] = true;
             }
 
             // safe update
@@ -1618,7 +1613,8 @@ bool Project::loadMeteoPointsData_singleDataset(const QDate &firstDate, const QD
     if (showInfo)
         closeProgressBar();
 
-    return (nrDataOk > 0);
+    bool almostOneOk = std::any_of(isDataOk.begin(), isDataOk.end(), [](bool x){ return x; });
+    return almostOneOk;
 }
 
 
