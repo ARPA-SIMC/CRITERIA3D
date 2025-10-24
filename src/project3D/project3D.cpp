@@ -433,16 +433,19 @@ bool Project3D::initialize3DModel()
         logError();
         return false;
     }
-    logInfo("Soil surface parameters initialized");
+    logInfo("Surface parameters initialized");
 
-    if (! setCrit3DSoils())
+    if (! waterFluxesParameters.computeOnlySurface)
     {
-        logError();
-        return false;
-    }
-    if (nrSoils > 0)
-    {
-        logInfo("Soils parameters initialized");
+        if (! setCrit3DSoils())
+        {
+            logError();
+            return false;
+        }
+        if (nrSoils > 0)
+        {
+            logInfo("Soils parameters initialized");
+        }
     }
 
     if (! setCrit3DTopography())
@@ -630,11 +633,11 @@ void Project3D::setIndexMaps()
                     else
                     {
                         // sub-surface (check land use and soil)
-                        int landUnitIndex = getLandUnitIndexRowCol(row, col);
-                        if (landUnitIndex != NODATA)
+                        int luIndex = getLandUnitIndexRowCol(row, col);
+                        if (luIndex != NODATA)
                         {
                             // ROAD is no soil
-                            if (landUnitList[landUnitIndex].landUseType != LANDUSE_ROAD)
+                            if (landUnitList.empty() || landUnitList[luIndex].landUseType != LANDUSE_ROAD)
                             {
                                 int soilIndex = getSoilIndex(row, col);
                                 if (isWithinSoil(soilIndex, layerDepth.at(layer)))
@@ -650,7 +653,6 @@ void Project3D::setIndexMaps()
                     }
                     else
                     {
-                        // test
                         indexMap.at(layer).value[row][col] = long(indexMap.at(layer).header->flag);
                     }
                 }
@@ -741,12 +743,10 @@ bool Project3D::setCrit3DSurfaces()
 }
 
 
-
 // thetaS and thetaR are already corrected for coarse fragments
 bool Project3D::setCrit3DSoils()
 {
     soil::Crit3DHorizon* myHorizon;
-    QString myError;
 
     for (unsigned int soilIndex = 0; soilIndex < nrSoils; soilIndex++)
     {
@@ -858,22 +858,19 @@ bool Project3D::setCrit3DTopography()
                             }
                             else
                             {
-                                bool isBoundary = false;
                                 auto boundaryType = soilFluxes3D::boundaryType_t::NoBoundary;
 
                                 // check on urban or road land use
-                                if (layer == 1)
+                                if (layer == 1 && ! landUnitList.empty())
                                 {
                                     int luIndex = getLandUnitIndexRowCol(row, col);
                                     if (landUnitList[luIndex].landUseType == LANDUSE_ROAD)
                                     {
                                         boundaryType = soilFluxes3D::boundaryType_t::Road;
-                                        isBoundary = true;
                                     }
                                     if (landUnitList[luIndex].landUseType == LANDUSE_URBAN)
                                     {
                                         boundaryType = soilFluxes3D::boundaryType_t::Urban;
-                                        isBoundary = true;
                                     }
                                 }
 
