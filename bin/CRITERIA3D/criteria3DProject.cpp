@@ -297,6 +297,31 @@ bool Crit3DProject::initializeRothC()
     return true;
 }
 
+//initializing soil carbon content without interpolating meteo data. using data of temperature and BIC averaged over the last 24 years
+bool Crit3DProject::initializeRothCSoilCarbonContent()
+{
+    for (int row = 0; row < DEM.header->nrRows; row ++)
+    {
+        for (int col = 0; col < DEM.header->nrCols; col++)
+        {
+            if (! isEqual(DEM.value[row][col], DEM.header->flag))
+            {
+                int soilIndex = int(soilIndexMap.value[row][col]);
+                if (soilIndex != NODATA)
+                {
+                    rothCModel.setClay(rothCModel.map.getClay(row, col));
+
+                    rothCModel.setStateVariables(row, col);
+                    rothCModel.initializeRothCSoilCarbonContent();
+                    rothCModel.getStateVariables(row, col);
+                }
+            }
+        }
+    }
+
+    return true;
+}
+
 double Crit3DProject::getRothCClayContent(int soilIndex)
 {
     std::vector<soil::Crit3DHorizon> horizonVector = soilList[soilIndex].horizon;

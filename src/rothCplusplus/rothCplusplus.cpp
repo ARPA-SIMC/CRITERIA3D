@@ -596,8 +596,53 @@ double Crit3DRothCplusplus::getInputC()
     return inputC;
 }
 
-bool Crit3DRothCplusplus::initializeRothCPoint()
+bool Crit3DRothCplusplus::initializeRothCSoilCarbonContent()
 {
+    soilOrganicCarbon = decomposablePlantMatter + resistantPlantMatter + microbialBiomass + humifiedOrganicMatter + inorganicMatter;
+
+    /*std::cout << "," << decomposablePlantMatter << ","<< resistantPlantMatter << ","<< microbialBiomass << ","
+              << humifiedOrganicMatter << ","<< inorganicMatter << ","<< soilOrganicCarbon << "\n";*/
+
+    unsigned int timeFact = 12; //TODO check
+
+    double modernC = 100;
+
+    inputFYM = 0.4; //kg C day-1 ha-1
+    inputFYM *= 0.03; //t C month-1 ha-1
+
+    std::vector<double> temp;
+    temp = {3.0,5.0,6.0,12.0,17.0,24.0,27.0,28.0,22.0,15.0,12.0,6.0};
+    std::vector<double> BIC;
+    BIC = {200.0,150.0,120.0,100.0,30.0,-40.0,-100.0,-170.0,80.0,120.0,130.0,140.0};
+
+    unsigned int k = -1;
+    int j = -1;
+    double test = 100.0;
+    double TOC0, TOC1;
+    //while (test > 1E-6)
+    while (j < 900) //soils are not considered to be in equilibrium. model is run for 70 years more or less
+    {
+        k = k + 1;
+        j = j + 1 ;
+
+        if( k == timeFact)
+            k = 0;
+
+        meteoVariable.setTemperature(temp[k]);
+        meteoVariable.setBIC(BIC[k]);
+
+        if (radioCarbon.isActive)
+            double totalDelta = (std::exp(-totalRage/8035.0) - 1) * 1000;
+
+        RothC(timeFact, rothCplantCover);
+
+        if (isEqual((k+1)%timeFact, 0.0))
+        {
+            TOC0 = TOC1;
+            TOC1 =decomposablePlantMatter+ resistantPlantMatter+microbialBiomass+humifiedOrganicMatter;
+            test = std::abs(TOC1-TOC0);
+        }
+    }
 
     return true;
 }

@@ -81,6 +81,7 @@
         bool initializeCropMaps();
         bool initializeHydrall();
         bool initializeRothC();
+        bool initializeRothCSoilCarbonContent();
         double getRothCClayContent(int soilIndex);
         void updateETAndPrecMaps();
         void dailyUpdateCropMaps(const QDate &myDate);

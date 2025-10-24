@@ -1293,7 +1293,7 @@
        <second>0</second>
        <year>1752</year>
        <month>8</month>
-       <day>27</day>
+       <day>26</day>
       </datetime>
      </property>
      <property name="maximumDate">
@@ -2008,6 +2008,7 @@
     <addaction name="actionCriteria3D_save_state"/>
     <addaction name="separator"/>
     <addaction name="actionCriteria3D_Initialize"/>
+    <addaction name="actionInitialize_soil_carbon_content"/>
     <addaction name="actionCriteria3D_compute_next_hour"/>
     <addaction name="actionCriteria3D_run_models"/>
     <addaction name="separator"/>
@@ -3114,6 +3115,11 @@
   <action name="actioncumulated_yearly_precipitation">
    <property name="text">
     <string>cumulated yearly precipitation</string>
+   </property>
+  </action>
+  <action name="actionInitialize_soil_carbon_content">
+   <property name="text">
+    <string>Initialize soil carbon content</string>
    </property>
   </action>
  </widget>

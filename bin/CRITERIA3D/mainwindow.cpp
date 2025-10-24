@@ -4077,3 +4077,40 @@ void MainWindow::on_actioncumulated_yearly_precipitation_triggered()
     }
 }
 
+
+void MainWindow::on_actionInitialize_soil_carbon_content_triggered()
+{
+    if (myProject.processes.computeRothC)
+    {
+        QString defaultPath = myProject.getDefaultPath() + PATH_GEO;
+        myProject.rothCModel.BICMapFolderName = QFileDialog::getExistingDirectory(this, tr("Open folder with monthly average BIC files"), defaultPath).toStdString();
+
+        if (myProject.rothCModel.BICMapFolderName.empty())
+            return;
+
+        myProject.rothCModel.temperatureMapFolderName = QFileDialog::getExistingDirectory(this, tr("Open folder with monthly average temperature files"), defaultPath).toStdString();
+
+        if (myProject.rothCModel.temperatureMapFolderName.empty())
+            return;
+
+
+
+        if (! myProject.initializeRothC())
+        {
+            myProject.isRothCInitialized = false;
+            myProject.logError("Couldn't initialize RothC model.");
+            return;
+        }
+
+        myProject.initializeRothCSoilCarbonContent();
+
+    }
+    else
+    {
+        myProject.logError("RothC model must be activated in order to initialize soil carbon content.");
+        myProject.clearRothCMaps();
+    }
+
+
+}
+

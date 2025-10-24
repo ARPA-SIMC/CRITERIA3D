@@ -265,6 +265,8 @@
 
         void on_actioncumulated_yearly_precipitation_triggered();
 
+        void on_actionInitialize_soil_carbon_content_triggered();
+
     protected:
         /*!
          * \brief mouseReleaseEvent call moveCenter
