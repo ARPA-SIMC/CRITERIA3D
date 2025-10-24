@@ -100,6 +100,7 @@
         int errorType;
 
         QString logFileName;
+        QString dataFileName;
         QString demFileName;
         QString dbPointsFileName;
         QString dbAggregationFileName;
@@ -109,6 +110,7 @@
         QString glocalMapName;
         QString glocalPointsName;
         std::ofstream logFile;
+        std::ofstream dataFile;
 
         // output points
         QString outputPointsFileName;
@@ -234,6 +236,8 @@
         void logInfo(QString myStr);
         void logInfoGUI(QString myStr);
         void closeLogInfo();
+
+        void logData(QString typeData, QString data);
 
         void logError(QString myStr);
         void logError();

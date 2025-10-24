@@ -14,24 +14,12 @@ TARGET = CRITERIA3D
 VERSION = 1.2.0
 QMAKE_TARGET_COPYRIGHT = "\\251 2025 ARPAE ER - Climate Observatory"
 
-win32:{
-    QMAKE_CXXFLAGS += -openmp -GL
-    QMAKE_LFLAGS += -LTCG
-}
-unix:{
-    QMAKE_CXXFLAGS += -fopenmp #-flto
-    QMAKE_LFLAGS += -fopenmp #-flto
-}
-macx:{
-    QMAKE_CXXFLAGS += -fopenmp #-flto
-    QMAKE_LFLAGS += -fopenmp #-flto
-}
 
 CONFIG += debug_and_release
 CONFIG += c++17
 
 INCLUDEPATH +=  ./shared  \
-                ../../agrolib/soilFluxes3D/header  \
+                ../../agrolib/soilFluxes3D \
                 ../../agrolib/crit3dDate ../../agrolib/mathFunctions \
                 ../../agrolib/crop ../../agrolib/soil ../../agrolib/meteo ../../agrolib/gis \
                 ../../agrolib/interpolation ../../agrolib/solarRadiation \
@@ -129,11 +117,14 @@ SOURCES += \
     main.cpp \
     viewer3D.cpp
 
-
 FORMS += mainwindow.ui
 
 DISTFILES += \
     Criteria3D.ico
+
+OTHER_FILES += \
+    ../../batchFiles/batchTest.txt \
+    ../../batchFiles/batchTestLinux.txt
 
 RESOURCES += Criteria3D.ico
 
@@ -141,3 +132,5 @@ win32:
 {
     RC_ICONS = Criteria3D.ico
 }
+
+include($$absolute_path(../../agrolib/parallel.pri))

@@ -2293,7 +2293,7 @@ void MainWindow::on_actionCriteria3D_waterFluxes_settings_triggered()
     {
         myProject.waterFluxesParameters.modelAccuracy = dialogWaterFluxes.accuracySlider->value();
         int nrThread = dialogWaterFluxes.getThreadsNumber();
-        nrThread = soilFluxes3D::setThreadsNumber(nrThread);                  // check
+        nrThread = soilFluxes3D::setThreadsNumber(nrThread);
         myProject.waterFluxesParameters.numberOfThreads = nrThread;
 
         if (myProject.isCriteria3DInitialized)
@@ -2563,7 +2563,7 @@ void MainWindow::on_actionCriteria3D_Water_content_summary_triggered()
     double soilArea = voxelArea * nrSoilVoxels;                                             // [m2]
     double soilAvgWC = soilWaterContent / soilArea * 1000;                                  // [mm]
 
-    double totalWaterContent = soilFluxes3D::getTotalWaterContent();                        // [m3]
+    double totalWaterContent = soilFluxes3D::getTotalWaterContent();                          // [m3]
 
     QString summaryStr = "WATER CONTENT SUMMARY\n\n";
 

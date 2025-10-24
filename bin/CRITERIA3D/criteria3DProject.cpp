@@ -35,12 +35,13 @@
 #include "project.h"
 #include "project3D.h"
 #include "soilFluxes3D.h"
-#include "soil.h"
 #include "hydrall.h"
 #include "physics.h"
 #include "shell.h"
 
 #include <iostream>
+#include <QVector3D>
+#include <cfloat>
 #include <omp.h>
 
 
@@ -78,7 +79,7 @@ bool Crit3DProject::initializeCriteria3DModel()
     if (! initialize3DModel())
     {
         clearWaterBalance3D();
-        errorString += "\nCriteria3D model is not initialized.";
+        errorString += "\nCriteria3D model is not initialized!";
         return false;
     }
 
@@ -1172,7 +1173,7 @@ bool Crit3DProject::runModels(const QDateTime &firstTime, const QDateTime &lastT
         {
             // create directory for hourly raster output
             currentOutputPath = getProjectPath() + PATH_OUTPUT + myDate.toString("yyyy/MM/dd/");
-            if (! QDir().mkpath(currentOutputPath))
+            if (!QDir().mkpath(currentOutputPath))
             {
                 logError("Creation of directory for hourly raster output failed:" + currentOutputPath);
                 setSaveOutputRaster(false);
@@ -1189,24 +1190,25 @@ bool Crit3DProject::runModels(const QDateTime &firstTime, const QDateTime &lastT
             if (currentSeconds == 0 || currentSeconds == 3600)
                 isRestart = false;
 
-            if (! runModelHour(currentOutputPath, isRestart))
+            if (!runModelHour(currentOutputPath, isRestart))
             {
                 isModelRunning = false;
                 logError();
                 return false;
             }
 
-            if (processes.computeRothC || processes.computeHydrall)
-            {
-                //rothC maps update must be done hourly
-                updateETAndPrecMaps();
+            //Log SF3D data
+            soilFluxes3D::closeLog();
+            logInfo("Daily sub version: 00\n");
 
-            }
+            //rothC maps update must be done hourly, otherwise ETReal data are not stored
+            if (processes.computeRothC || processes.computeHydrall)
+                updateETAndPrecMaps();
 
             // output points
             if (isSaveOutputPoints() && currentSeconds == 3600)
             {
-                if (! writeOutputPointsData())
+                if (!writeOutputPointsData())
                 {
                     isModelRunning = false;
                     logError();
@@ -1338,6 +1340,9 @@ bool Crit3DProject::loadCriteria3DProject(const QString &fileName)
         if (errorType != ERROR_DBGRID && errorType != ERROR_OUTPUTPOINTLIST)
             return false;
     }
+
+    //TO DO: integrate with a specific flag in the UI and/or a specific shell command
+    soilFluxes3D::initializeLog(getFilePath(getCompleteFileName(logFileName, PATH_LOG)).toStdString(), getProjectName().toStdString());
 
     if (meteoPointsLoaded)
     {
@@ -1920,23 +1925,24 @@ bool Crit3DProject::setHydrallVariables(Crit3DHydrall &myHydrallModel, int row, 
     int soilIndex = int(soilIndexMap.value[row][col]);
     if (soilIndex != NODATA)
     {
-        // the condition on this for cycle includes the check of existance of the layers
-        for (unsigned int i = 0; ((i < nrLayers) && (soilList[soilIndex].getHorizonIndex(layerDepth[i]))!= NODATA); i++)
-        {
-            myHydrallModel.setSoilVariables(i,indexMap.at(i).value[row][col],indexMap.at(i).header->flag,
-                                          soilFluxes3D::getWaterContent(indexMap.at(i).value[row][col]),
-                                          soilList[soilIndex].horizon[soilList[soilIndex].getHorizonIndex(layerDepth[i])].waterContentFC,
-                                          soilList[soilIndex].horizon[soilList[soilIndex].getHorizonIndex(layerDepth[i])].waterContentWP,
-                                          soilList[soilIndex].horizon[soilList[soilIndex].getHorizonIndex(layerDepth[i])].texture.clay,
-                                          soilList[soilIndex].horizon[soilList[soilIndex].getHorizonIndex(layerDepth[i])].texture.sand,
-                                          fabs(soilList[soilIndex].horizon[soilList[soilIndex].getHorizonIndex(layerDepth[i])].lowerDepth-soilList[soilIndex].horizon[soilList[soilIndex].getHorizonIndex(layerDepth[i])].upperDepth),
-                                          soilList[soilIndex].horizon[soilList[soilIndex].getHorizonIndex(layerDepth[i])].bulkDensity,
-                                          soilList[soilIndex].horizon[soilList[soilIndex].getHorizonIndex(layerDepth[i])].waterContentSAT,
-                                          soilList[soilIndex].horizon[soilList[soilIndex].getHorizonIndex(layerDepth[i])].waterConductivity.kSat,
-                                          soilFluxes3D::getMatricPotential(indexMap.at(i).value[row][col]));
-        }
-    }
+        //TODO
 
+		// the condition on this for cycle includes the check of existance of the layers
+		for (unsigned int i = 0; ((i < nrLayers) && (soilList[soilIndex].getHorizonIndex(layerDepth[i]))!= NODATA); i++)
+		{
+            hydrallModel.setSoilVariables(i, indexMap.at(i).value[row][col], indexMap.at(i).header->flag,
+                                          soilFluxes3D::getNodeWaterContent(indexMap.at(i).value[row][col]),
+										  soilList[soilIndex].horizon[soilList[soilIndex].getHorizonIndex(layerDepth[i])].waterContentFC,
+										  soilList[soilIndex].horizon[soilList[soilIndex].getHorizonIndex(layerDepth[i])].waterContentWP,
+										  soilList[soilIndex].horizon[soilList[soilIndex].getHorizonIndex(layerDepth[i])].texture.clay,
+										  soilList[soilIndex].horizon[soilList[soilIndex].getHorizonIndex(layerDepth[i])].texture.sand,
+										  fabs(soilList[soilIndex].horizon[soilList[soilIndex].getHorizonIndex(layerDepth[i])].lowerDepth-soilList[soilIndex].horizon[soilList[soilIndex].getHorizonIndex(layerDepth[i])].upperDepth),
+										  soilList[soilIndex].horizon[soilList[soilIndex].getHorizonIndex(layerDepth[i])].bulkDensity,
+										  soilList[soilIndex].horizon[soilList[soilIndex].getHorizonIndex(layerDepth[i])].waterContentSAT,
+										  soilList[soilIndex].horizon[soilList[soilIndex].getHorizonIndex(layerDepth[i])].waterConductivity.kSat,
+                                          soilFluxes3D::getNodeMatricPotential(indexMap.at(i).value[row][col]));
+		}
+	}
     return true;
 }
 
@@ -2171,7 +2177,6 @@ bool Crit3DProject::runModelHour(const QString& hourlyOutputPath, bool isRestart
         {
             logInfo("\nCompute soil fluxes: " + getCurrentTime().toString());
         }
-
         runWaterFluxes3DModel(3600, isRestart);
 
         qApp->processEvents();
@@ -2204,6 +2209,7 @@ bool Crit3DProject::saveModelsState(QString &dirName)
 
     char hourStr[3];
     sprintf(hourStr, "%02d", getCurrentHour());
+    //sprintf_s(hourStr, sizeof(hourStr), "%02d", getCurrentHour());
     dirName = getCurrentDate().toString("yyyyMMdd") + "_H" + hourStr;
     QString currentStatePath = statePath + "/" + dirName;
     if (! QDir(currentStatePath).exists())
@@ -3005,11 +3011,11 @@ bool Crit3DProject::loadWaterPotentialState(QString waterPath)
 
                     if (! isEqual(waterPotential, NODATA))
                     {
-                        int myResult = soilFluxes3D::setMatricPotential(index, waterPotential);
-
-                        if (isCrit3dError(myResult, errorString))
+                        auto myResult = soilFluxes3D::setNodeMatricPotential(index, waterPotential);
+                        std::string errorName = "";
+                        if(soilFluxes3D::getSF3DerrorName(myResult, errorName))
                         {
-                            errorString = "Error in setMatricPotential: " + errorString + " in row:"
+                            errorString = "Error in setMatricPotential: " + QString::fromStdString(errorName) + " in row:"
                                           + QString::number(row) + " col:" + QString::number(col);
                             return false;
                         }
@@ -3202,11 +3208,10 @@ bool Crit3DProject::writeOutputPointsData()
     return true;
 }
 
-
 void Crit3DProject::appendCriteria3DOutputValue(criteria3DVariable myVar, int row, int col,
                                                 const std::vector<int> &depthList, std::vector<float> &outputList)
 {
-    for (int l = 0; l < (int)depthList.size(); l++)
+    for (unsigned int l = 0; l < depthList.size(); l++)
     {
         float depth = depthList[l] * 0.01;                          // [cm] -> [m]
         int layerIndex = getSoilLayerIndex(depth);
@@ -3619,7 +3624,7 @@ int Crit3DProject::criteria3DBatch(const QString &scriptFileName)
         // Send "enter" to release application from the console
         // This is a hack, but if not used the console doesn't know the application has
         // returned. The "enter" key only sent if the console window is in focus.
-        if ( isConsoleForeground() )
+        if (isConsoleForeground())
             sendEnterKey();
     #endif
 
@@ -3637,13 +3642,13 @@ int Crit3DProject::executeScript(const QString &scriptFileName)
     logInfo("Execute script: " + scriptFileName + "\n");
 
     QFile scriptFile(scriptFileName);
-    if(! scriptFile.open (QIODevice::ReadOnly))
+    if(!scriptFile.open(QIODevice::ReadOnly))
     {
         errorString = "Error in opening: " + scriptFileName + " " + scriptFile.errorString();
         return CRIT3D_ERROR;
     }
 
-    while (! scriptFile.atEnd())
+    while (!scriptFile.atEnd())
     {
         QString cmdLine = scriptFile.readLine();
         QList<QString> argumentList = getArgumentList(cmdLine);
@@ -3976,10 +3981,10 @@ int Crit3DProject::cmdSetThreadsNr(const QList<QString> &argumentList)
 {
     int nr = 0;
     if (argumentList.size() >= 2)
-    {
-        nr = argumentList.at(1).toInt();
-    }
-    int threadNr = soilFluxes3D::setThreadsNumber(nr);
+		nr = argumentList.at(1).toInt();
+
+    auto threadNr = soilFluxes3D::setThreadsNumber(nr);
+	
     waterFluxesParameters.numberOfThreads = threadNr;
     std::cout << "Number of threads: " << threadNr << std::endl;
     std::cout << std::endl;
