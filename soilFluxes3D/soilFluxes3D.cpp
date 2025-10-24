@@ -364,7 +364,9 @@ namespace soilFluxes3D::v2
      * \param L         [-]         tortuosity (Mualem equation)
      * \return Ok/Error
      */
-    SF3Derror_t setSoilProperties(u16_t nrSoil, u16_t nrHorizon, double VG_alpha, double VG_n, double VG_m, double VG_he, double ThetaR, double ThetaS, double Ksat, double L, double organicMatter, double clay)
+    SF3Derror_t setSoilProperties(u16_t nrSoil, u8_t nrHorizon, double VG_alpha,
+                                  double VG_n, double VG_m, double VG_he, double ThetaR,
+                                  double ThetaS, double Ksat, double L, double organicMatter, double clay)
     {
         if (VG_alpha <= 0 || (ThetaR < 0) || (ThetaR >= 1) || (ThetaS <= 0) || (ThetaS > 1) || (ThetaR > ThetaS))
             return SF3Derror_t::ParameterError;
@@ -376,6 +378,8 @@ namespace soilFluxes3D::v2
 
         //Creazione del nuovo elemento
         soilData_t currSoil;
+        currSoil.soilNumber = nrSoil;
+        currSoil.horizonNumber = nrHorizon;
         currSoil.VG_alpha = VG_alpha;
         currSoil.VG_n = VG_n;
         currSoil.VG_m = VG_m;

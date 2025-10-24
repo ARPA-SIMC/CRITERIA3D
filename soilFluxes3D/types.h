@@ -113,7 +113,8 @@ namespace soilFluxes3D { inline namespace v2
     //Soil / surface
     struct soilData_t
     {
-        u16_t soilNumber, horizonNumber;
+        u16_t soilNumber;
+        u8_t horizonNumber;
         double VG_alpha;            /*!< [m-1] Van Genutchen alpha parameter */
         double VG_n;                /*!< [-] Van Genutchen n parameter */
         double VG_m;                /*!< [-] Van Genutchen m parameter  ]0. , 1.[ */

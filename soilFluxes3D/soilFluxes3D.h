@@ -18,7 +18,9 @@ namespace soilFluxes3D { inline namespace v2
     u32_t setThreadsNumber(u32_t nrThreads);
 
     //Create types
-    SF3Derror_t setSoilProperties(u16_t nrSoil, u16_t nrHorizon, double VG_alpha, double VG_n, double VG_m, double VG_he, double ThetaR, double ThetaS, double Ksat, double L, double organicMatter, double clay);
+    SF3Derror_t setSoilProperties(u16_t nrSoil, u8_t nrHorizon, double VG_alpha, double VG_n, double VG_m,
+                                  double VG_he, double ThetaR, double ThetaS, double Ksat, double L,
+                                  double organicMatter, double clay);
     SF3Derror_t setSurfaceProperties(u16_t surfaceIndex, double roughness);
 
     //Set core data
