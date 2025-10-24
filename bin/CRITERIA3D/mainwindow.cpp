@@ -2625,6 +2625,7 @@ void MainWindow::on_actionDEM_summary_triggered()
     QString summaryStr = "DIGITAL ELEVATION MODEL SUMMARY\n\n";
 
     summaryStr += "Number of pixels:  " + QString::number(nrVoxels) + "\n";
+    summaryStr += "Pixel size:  " + QString::number(myProject.DEM.header->cellSize) + " [m]\n";
     summaryStr += "Area:  " + QString::number(area, 'f', 0) + " [m2]\n";
     summaryStr += "Hectares:  " + QString::number(area / 10000., 'f', 2) + " [ha]\n";
     summaryStr += "Area (km2):  " + QString::number(area / 1000000, 'f', 3) + " [km2]\n";
