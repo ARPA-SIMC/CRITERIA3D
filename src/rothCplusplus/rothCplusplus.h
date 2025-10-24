@@ -169,7 +169,7 @@ public:
 
     void initialize();
     bool computeRothCPoint();
-    bool initializeRothCPoint();
+    bool initializeRothCSoilCarbonContent();
     int main();
     bool loadAvgBIC(std::string errorStr);
 
@@ -216,6 +216,7 @@ public:
     bool isInitializing;
 
     std::string BICMapFolderName;
+    std::string temperatureMapFolderName;
 
     std::vector<int> conversionTableVector;
     std::vector<TAnnualYield> tableYield;

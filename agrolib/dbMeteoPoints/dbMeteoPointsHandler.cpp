@@ -3,6 +3,7 @@
 #include "meteo.h"
 #include "utilities.h"
 #include "basicMath.h"
+#include "meteoPoint.h"
 
 #include <QtSql>
 
@@ -593,7 +594,6 @@ bool Crit3DMeteoPointsDbHandler::loadDailyData(const QSqlDatabase &myDb, const C
             meteoPoint.setMeteoPointValueD(currentDate, variable, value);
         }
     }
-    query.clear();
 
     return true;
 }
@@ -627,6 +627,7 @@ bool Crit3DMeteoPointsDbHandler::loadHourlyData(const QSqlDatabase &myDb, const 
 
     QString statement = QString( "SELECT * FROM `%1` WHERE date_time >= DATETIME('%2 01:00:00') AND date_time <= DATETIME('%3 00:00:00', '+1 day')")
                                  .arg(tableName, startDateStr, endDateStr);
+
     QSqlQuery qry(myDb);
     if(! qry.exec(statement) )
     {
@@ -663,8 +664,6 @@ bool Crit3DMeteoPointsDbHandler::loadHourlyData(const QSqlDatabase &myDb, const 
             meteoPoint.setMeteoPointValueH(dateTime.date, hour, minute, windVectorIntensity, value);
         }
     }
-
-    qry.clear();
 
     return true;
 }
@@ -913,22 +912,19 @@ std::map<int, meteoVariable> Crit3DMeteoPointsDbHandler::getMapIdMeteoVar() cons
 bool Crit3DMeteoPointsDbHandler::getPropertiesFromDb(QList<Crit3DMeteoPoint>& meteoPointsList,
                                         const gis::Crit3DGisSettings& gisSettings, QString& errorString)
 {
-    Crit3DMeteoPoint meteoPoint;
     QSqlQuery qry(_db);
-    bool isLocationOk;
-
     qry.prepare( "SELECT id_point, name, dataset, latitude, longitude, utm_x, utm_y, altitude, state, region, province, municipality, is_active, is_utc, orog_code from point_properties ORDER BY id_point" );
 
-    if(!qry.exec() )
+    if(! qry.exec() )
     {
-        errorString = qry.lastError().text();
+        errorString = "Error in reading point properties\n" + qry.lastError().text();
         return false;
     }
 
+    bool isLocationOk;
     while (qry.next())
     {
-        //initialize
-        meteoPoint = *(new Crit3DMeteoPoint());
+        Crit3DMeteoPoint meteoPoint;
 
         meteoPoint.id = qry.value("id_point").toString().toStdString();
         meteoPoint.name = qry.value("name").toString().toStdString();
