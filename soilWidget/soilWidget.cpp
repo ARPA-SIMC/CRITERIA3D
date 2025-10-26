@@ -272,6 +272,15 @@ Crit3DSoilWidget::Crit3DSoilWidget(const QString &imgPath)
 }
 
 
+Crit3DSoilWidget::~Crit3DSoilWidget()
+{
+    horizonsTab->resetAll();
+    wrDataTab->resetAll();
+    wrCurveTab->resetAll();
+    hydraConducCurveTab->resetAll();
+}
+
+
 void Crit3DSoilWidget::setFittingMenu()
 {
     bool isFittingActive = fittingOptions.useWaterRetentionData;

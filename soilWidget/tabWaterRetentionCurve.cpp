@@ -52,13 +52,13 @@ void TabWaterRetentionCurve::resetAll()
     // delete all Widgets
     barHorizons.clear();
 
-    if (!curveList.isEmpty())
+    if (! curveList.isEmpty())
     {
         qDeleteAll(curveList);
         curveList.clear();
     }
 
-    if (!curveMarkerMap.isEmpty())
+    if (! curveMarkerMap.isEmpty())
     {
         qDeleteAll(curveMarkerMap);
         curveMarkerMap.clear();
