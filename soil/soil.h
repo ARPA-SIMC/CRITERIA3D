@@ -140,10 +140,12 @@
 
             double fieldCapacity;               /*!<  [kPa]     */
             double wiltingPoint;                /*!<  [kPa]     */
+            double hygroscopicHumidity;         /*!<  [kPa]     */
 
             double waterContentSAT;             /*!<  [m3 m-3]*/
             double waterContentFC;              /*!<  [m3 m-3]*/
             double waterContentWP;              /*!<  [m3 m-3]*/
+            double waterContentHH;              /*!<  [m3 m-3]*/
 
             double PH;                          /*!<  [-]       */
             double CEC;                         /*!<  [meq/100g]*/
@@ -239,6 +241,7 @@
 
         double getFieldCapacity(double clayContent, soil::units unit);
         double getWiltingPoint(soil::units unit);
+        double getHygroscopicHumidity(soil::units unit);
 
         double kPaToMeters(double value);
         double metersTokPa(double value);
