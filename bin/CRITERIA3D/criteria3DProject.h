@@ -161,8 +161,10 @@
 
         void clearGeometry();
         bool initializeGeometry();
-        void shadowColor(const Crit3DColor &colorIn, Crit3DColor &colorOut, int row, int col);
+        void shadowDtmColor(const Crit3DColor &colorIn, Crit3DColor &colorOut, int row, int col);
         bool update3DColors(gis::Crit3DRasterGrid *rasterPointer = nullptr);
+        void getMixedColor(gis::Crit3DRasterGrid *rasterPointer, int row, int col,
+                           double variableRange, const Crit3DColor& dtmColor, Crit3DColor& otutColor);
 
         // SHELL
         int criteria3DShell();

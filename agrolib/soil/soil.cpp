@@ -152,10 +152,12 @@ namespace soil
 
         this->fieldCapacity = NODATA;
         this->wiltingPoint = NODATA;
+        this->hygroscopicHumidity = NODATA;
 
         this->waterContentSAT = NODATA;
         this->waterContentFC = NODATA;
         this->waterContentWP = NODATA;
+        this->waterContentHH = NODATA;
 
         this->PH = NODATA;
         this->CEC = NODATA;
@@ -498,11 +500,11 @@ namespace soil
 
 
     /*!
-     * \brief Field Capacity water potential as clay function
+     * \brief getFieldCapacity
      * \param horizon
      * \param unit [KPA | METER | CM]
      * \note author: Franco Zinoni
-     * \return water potential at field capacity (with sign)
+     * \return water potential at soil field capacity (with sign)
      */
     double getFieldCapacity(double clayContent, soil::units unit)
     {
@@ -536,20 +538,40 @@ namespace soil
 
 
     /*!
-     * \brief [m] WP = Wilting Point
+     * \brief getWiltingPoint
      * \param unit
-     * \return wilting point
+     * \return water potential at permanent wilting point for the plant
      */
     double getWiltingPoint(soil::units unit)
-    {           
+    {
+        double WP = -1600;      // [kPa]
         if (unit == KPA)
-            return -1600;
+            return WP;
         else if (unit == METER)
-            return kPaToMeters(-1600);
+            return kPaToMeters(WP);
         else if (unit == CM)
-            return kPaToCm(-1600);
+            return kPaToCm(WP);
         else
-            return(-1600);
+            return WP;
+    }
+
+
+    /*!
+     * \brief getHygroscopicHumidity
+     * \param unit
+     * \return water potential at soil hygroscopic humidity point
+     */
+    double getHygroscopicHumidity(soil::units unit)
+    {
+        double HH = -3000;      // [kPa]
+        if (unit == KPA)
+            return HH;
+        else if (unit == METER)
+            return kPaToMeters(HH);
+        else if (unit == CM)
+            return kPaToCm(HH);
+        else
+            return HH;
     }
 
 
@@ -965,10 +987,12 @@ namespace soil
 
         horizon.fieldCapacity = soil::getFieldCapacity(horizon.texture.clay, soil::KPA);
         horizon.wiltingPoint = soil::getWiltingPoint(soil::KPA);
+        horizon.hygroscopicHumidity = soil::getHygroscopicHumidity(soil::KPA);
 
         horizon.waterContentSAT = horizon.vanGenuchten.thetaS * horizon.getSoilFraction();
         horizon.waterContentFC = soil::thetaFromSignPsi(horizon.fieldCapacity, horizon) * horizon.getSoilFraction();
         horizon.waterContentWP = soil::thetaFromSignPsi(horizon.wiltingPoint, horizon) * horizon.getSoilFraction();
+        horizon.waterContentHH = soil::thetaFromSignPsi(horizon.hygroscopicHumidity, horizon) * horizon.getSoilFraction();
 
         return true;
     }
