@@ -101,18 +101,15 @@ double runoff(long i, long j, TlinkedNode *link, double deltaT, unsigned approxi
     double Hmax = std::max(Hi, Hj);
     double zmax = std::max(zi, zj);
     double Hs = Hmax - zmax;
-    if (Hs < 0.0001)
+    if (Hs < EPSILON)
         return 0.;
 
     // Land depression: remove?
     if ((Hi > Hj && zi < zj) || (Hj > Hi && zj < zi))
         Hs = std::min(Hs, dH);
 
-
     double cellDistance = distance2D(i, j);
     double slope = dH / cellDistance;
-    if (slope < EPSILON)
-        return 0.;
 
     double roughness = (nodeList[i].Soil->roughness + nodeList[j].Soil->roughness) * 0.5;
 
