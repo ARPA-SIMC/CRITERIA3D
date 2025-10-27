@@ -988,6 +988,9 @@ void Project::clearMeteoPoints()
         }
     }
     delete[] meteoPoints;
+
+    meteoPoints = nullptr;
+    nrMeteoPoints = 0;
 }
 
 
