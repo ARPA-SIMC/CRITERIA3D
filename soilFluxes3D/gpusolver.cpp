@@ -427,7 +427,7 @@ namespace soilFluxes3D::v2
         balanceDataCurrentTimeStep.waterMBE = deltaStorage - balanceDataCurrentTimeStep.waterSinkSource;
 
         // minimum reference water storage [m3] as % of current storage
-        double timePercentage = 0.01 * SF3Dmax(deltaT, 60.) / HOUR_SECONDS;
+        double timePercentage = 0.001 * SF3Dmax(deltaT, 60.) / HOUR_SECONDS;
         double minRefWaterStorage = balanceDataCurrentTimeStep.waterStorage * timePercentage;
         minRefWaterStorage = SF3Dmax(minRefWaterStorage, 0.001);
 
@@ -516,7 +516,7 @@ namespace soilFluxes3D::v2
 
         std::size_t currStreamIdx = 0;
 
-        upMoveSoilSurfacePtr();      //Need to be done before moving nodeGrid.surfaceFlag
+        upMoveVectorPtrs();      //Need to be done before moving nodeGrid.surfaceFlag
 
         //Topology Data
         moveToDevice(nodeGrid.size, nodeGrid.numNodes);
@@ -551,18 +551,35 @@ namespace soilFluxes3D::v2
         }
 
         //Water data
-        if(simulationFlags.computeWater)
+        moveToDevice(nodeGrid.waterData.saturationDegree, nodeGrid.numNodes);
+        moveToDevice(nodeGrid.waterData.waterConductivity, nodeGrid.numNodes);
+        moveToDevice(nodeGrid.waterData.waterFlow, nodeGrid.numNodes);
+        moveToDevice(nodeGrid.waterData.pressureHead, nodeGrid.numNodes);
+        moveToDevice(nodeGrid.waterData.waterSinkSource, nodeGrid.numNodes);
+        moveToDevice(nodeGrid.waterData.pond, nodeGrid.numNodes);
+        moveToDevice(nodeGrid.waterData.invariantFluxes, nodeGrid.numNodes);
+        moveToDevice(nodeGrid.waterData.oldPressureHead, nodeGrid.numNodes);
+        moveToDevice(nodeGrid.waterData.bestPressureHead, nodeGrid.numNodes);
+        moveToDevice(nodeGrid.waterData.partialCourantWaterLevels, nodeGrid.numNodes);
+
+        //Heat data
+        if(simulationFlags.computeHeat)
         {
-            moveToDevice(nodeGrid.waterData.saturationDegree, nodeGrid.numNodes);
-            moveToDevice(nodeGrid.waterData.waterConductivity, nodeGrid.numNodes);
-            moveToDevice(nodeGrid.waterData.waterFlow, nodeGrid.numNodes);
-            moveToDevice(nodeGrid.waterData.pressureHead, nodeGrid.numNodes);
-            moveToDevice(nodeGrid.waterData.waterSinkSource, nodeGrid.numNodes);
-            moveToDevice(nodeGrid.waterData.pond, nodeGrid.numNodes);
-            moveToDevice(nodeGrid.waterData.invariantFluxes, nodeGrid.numNodes);
-            moveToDevice(nodeGrid.waterData.oldPressureHead, nodeGrid.numNodes);
-            moveToDevice(nodeGrid.waterData.bestPressureHead, nodeGrid.numNodes);
-            moveToDevice(nodeGrid.waterData.partialCourantWaterLevels, nodeGrid.numNodes);
+            moveToDevice(nodeGrid.boundaryData.heightWind, nodeGrid.numNodes);
+            moveToDevice(nodeGrid.boundaryData.heightTemperature, nodeGrid.numNodes);
+            moveToDevice(nodeGrid.boundaryData.roughnessHeight, nodeGrid.numNodes);
+            moveToDevice(nodeGrid.boundaryData.aerodynamicConductance, nodeGrid.numNodes);
+            moveToDevice(nodeGrid.boundaryData.soilConductance, nodeGrid.numNodes);
+            moveToDevice(nodeGrid.boundaryData.temperature, nodeGrid.numNodes);
+            moveToDevice(nodeGrid.boundaryData.relativeHumidity, nodeGrid.numNodes);
+            moveToDevice(nodeGrid.boundaryData.windSpeed, nodeGrid.numNodes);
+            moveToDevice(nodeGrid.boundaryData.netIrradiance, nodeGrid.numNodes);
+            moveToDevice(nodeGrid.boundaryData.sensibleFlux, nodeGrid.numNodes);
+            moveToDevice(nodeGrid.boundaryData.latentFlux, nodeGrid.numNodes);
+            moveToDevice(nodeGrid.boundaryData.radiativeFlux, nodeGrid.numNodes);
+            moveToDevice(nodeGrid.boundaryData.advectiveHeatFlux, nodeGrid.numNodes);
+            moveToDevice(nodeGrid.boundaryData.fixedTemperatureValue, nodeGrid.numNodes);
+            moveToDevice(nodeGrid.boundaryData.fixedTemperatureDepth, nodeGrid.numNodes);
         }
 
         cudaDeviceSynchronize();
@@ -572,10 +589,11 @@ namespace soilFluxes3D::v2
         return SF3Derror_t::SF3Dok;
     }
 
-    SF3Derror_t GPUSolver::upMoveSoilSurfacePtr()
+    SF3Derror_t GPUSolver::upMoveVectorPtrs()
     {
-        static_assert(std::is_trivially_copyable<soilData_t>::value, "...");
-        static_assert(std::is_trivially_copyable<surfaceData_t>::value, "...");
+        static_assert(std::is_trivially_copyable<soilData_t>::value, "Soil structures are not trivially copyable");
+        static_assert(std::is_trivially_copyable<surfaceData_t>::value, "Surface structures are not trivially copyable");
+        static_assert(std::is_trivially_copyable<culvertData_t>::value, "Culvert structures are not trivially copyable");
 
         //Move surface data
         auto surfSize = surfaceList.size() * sizeof(surfaceData_t);
@@ -587,15 +605,28 @@ namespace soilFluxes3D::v2
         deviceSolverAlloc(d_soilList, soilList.size());
         cudaMemcpy(d_soilList, soilList.data(), soilSize, cudaMemcpyHostToDevice);
 
+        //Move Culvert data
+        auto culvSize = culvertList.size() * sizeof(culvertData_t);
+        isCulvertActive = (culvSize > 0);
+        if(isCulvertActive)
+        {
+            deviceSolverAlloc(d_culverList, culvertList.size());
+            cudaMemcpy(d_culverList, culvertList.data(), culvSize, cudaMemcpyHostToDevice);
+        }
+
         //Update pointers in nodeGrid
         __parfor(_parameters.enableOMP)
         for(SF3Duint_t nodeIndex = 0; nodeIndex < nodeGrid.numNodes; ++nodeIndex)
         {
-            auto& pointer = nodeGrid.soilSurfacePointers[nodeIndex];
+            auto& SSPointer = nodeGrid.soilSurfacePointers[nodeIndex];
             if(nodeGrid.surfaceFlag[nodeIndex])
-                pointer.surfacePtr = d_surfaceList + (pointer.surfacePtr - surfaceList.data());
+                SSPointer.surfacePtr = d_surfaceList + (SSPointer.surfacePtr - surfaceList.data());
             else
-                pointer.soilPtr = d_soilList + (pointer.soilPtr - soilList.data());
+                SSPointer.soilPtr = d_soilList + (SSPointer.soilPtr - soilList.data());
+
+            auto& CPointer = nodeGrid.culvertPtr[nodeIndex];
+            if(isCulvertActive && CPointer)
+                CPointer = d_culverList + (CPointer - culvertList.data());
         }
 
         return SF3Derror_t::SF3Dok;
@@ -618,7 +649,7 @@ namespace soilFluxes3D::v2
 
         //Soil/surface properties pointers
         moveToHost(nodeGrid.soilSurfacePointers, nodeGrid.numNodes);
-        downMoveSoilSurfacePtr();      //Need to be done after moving nodeGrid.surfaceFlag
+        downMoveVectorPtrs();      //Need to be done after moving nodeGrid.surfaceFlag
 
         //Boundary data
         moveToHost(nodeGrid.boundaryData.boundaryType, nodeGrid.numNodes);
@@ -643,18 +674,35 @@ namespace soilFluxes3D::v2
         }
 
         //Water data
-        if(simulationFlags.computeWater)
+        moveToHost(nodeGrid.waterData.saturationDegree, nodeGrid.numNodes);
+        moveToHost(nodeGrid.waterData.waterConductivity, nodeGrid.numNodes);
+        moveToHost(nodeGrid.waterData.waterFlow, nodeGrid.numNodes);
+        moveToHost(nodeGrid.waterData.pressureHead, nodeGrid.numNodes);
+        moveToHost(nodeGrid.waterData.waterSinkSource, nodeGrid.numNodes);
+        moveToHost(nodeGrid.waterData.pond, nodeGrid.numNodes);
+        moveToHost(nodeGrid.waterData.invariantFluxes, nodeGrid.numNodes);
+        moveToHost(nodeGrid.waterData.oldPressureHead, nodeGrid.numNodes);
+        moveToHost(nodeGrid.waterData.bestPressureHead, nodeGrid.numNodes);
+        moveToHost(nodeGrid.waterData.partialCourantWaterLevels, nodeGrid.numNodes);
+
+        //Heat data
+        if(simulationFlags.computeHeat)
         {
-            moveToHost(nodeGrid.waterData.saturationDegree, nodeGrid.numNodes);
-            moveToHost(nodeGrid.waterData.waterConductivity, nodeGrid.numNodes);
-            moveToHost(nodeGrid.waterData.waterFlow, nodeGrid.numNodes);
-            moveToHost(nodeGrid.waterData.pressureHead, nodeGrid.numNodes);
-            moveToHost(nodeGrid.waterData.waterSinkSource, nodeGrid.numNodes);
-            moveToHost(nodeGrid.waterData.pond, nodeGrid.numNodes);
-            moveToHost(nodeGrid.waterData.invariantFluxes, nodeGrid.numNodes);
-            moveToHost(nodeGrid.waterData.oldPressureHead, nodeGrid.numNodes);
-            moveToHost(nodeGrid.waterData.bestPressureHead, nodeGrid.numNodes);
-            moveToHost(nodeGrid.waterData.partialCourantWaterLevels, nodeGrid.numNodes);
+            moveToHost(nodeGrid.boundaryData.heightWind, nodeGrid.numNodes);
+            moveToHost(nodeGrid.boundaryData.heightTemperature, nodeGrid.numNodes);
+            moveToHost(nodeGrid.boundaryData.roughnessHeight, nodeGrid.numNodes);
+            moveToHost(nodeGrid.boundaryData.aerodynamicConductance, nodeGrid.numNodes);
+            moveToHost(nodeGrid.boundaryData.soilConductance, nodeGrid.numNodes);
+            moveToHost(nodeGrid.boundaryData.temperature, nodeGrid.numNodes);
+            moveToHost(nodeGrid.boundaryData.relativeHumidity, nodeGrid.numNodes);
+            moveToHost(nodeGrid.boundaryData.windSpeed, nodeGrid.numNodes);
+            moveToHost(nodeGrid.boundaryData.netIrradiance, nodeGrid.numNodes);
+            moveToHost(nodeGrid.boundaryData.sensibleFlux, nodeGrid.numNodes);
+            moveToHost(nodeGrid.boundaryData.latentFlux, nodeGrid.numNodes);
+            moveToHost(nodeGrid.boundaryData.radiativeFlux, nodeGrid.numNodes);
+            moveToHost(nodeGrid.boundaryData.advectiveHeatFlux, nodeGrid.numNodes);
+            moveToHost(nodeGrid.boundaryData.fixedTemperatureValue, nodeGrid.numNodes);
+            moveToHost(nodeGrid.boundaryData.fixedTemperatureDepth, nodeGrid.numNodes);
         }
 
         cudaDeviceSynchronize();
@@ -664,20 +712,27 @@ namespace soilFluxes3D::v2
         return SF3Derror_t::SF3Dok;
     }
 
-    SF3Derror_t GPUSolver::downMoveSoilSurfacePtr()
+    SF3Derror_t GPUSolver::downMoveVectorPtrs()
     {
         __parfor(_parameters.enableOMP)
         for(SF3Duint_t nodeIndex = 0; nodeIndex < nodeGrid.numNodes; ++nodeIndex)
         {
-            auto& pointer = nodeGrid.soilSurfacePointers[nodeIndex];
+            auto& SSPointer = nodeGrid.soilSurfacePointers[nodeIndex];
             if(nodeGrid.surfaceFlag[nodeIndex])
-                pointer.surfacePtr = surfaceList.data() + (pointer.surfacePtr - d_surfaceList);
+                SSPointer.surfacePtr = surfaceList.data() + (SSPointer.surfacePtr - d_surfaceList);
             else
-                pointer.soilPtr = soilList.data() + (pointer.soilPtr - d_soilList);
+                SSPointer.soilPtr = soilList.data() + (SSPointer.soilPtr - d_soilList);
+
+            auto& CPointer = nodeGrid.culvertPtr[nodeIndex];
+            if(isCulvertActive && CPointer)
+                CPointer = d_culverList + (CPointer - culvertList.data());
         }
 
         deviceSolverFree(d_surfaceList);
         deviceSolverFree(d_soilList);
+        if(isCulvertActive)
+            deviceSolverFree(d_culverList);
+
         return SF3Derror_t::SF3Dok;
     }
 

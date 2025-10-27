@@ -91,20 +91,24 @@ namespace soilFluxes3D::v2::Water
      */
     void computeCurrentMassBalance(double deltaT)
     {
+        // [m3]
         balanceDataCurrentTimeStep.waterStorage = computeTotalWaterContent();
+        // [m3]
         double deltaStorage = balanceDataCurrentTimeStep.waterStorage - balanceDataPreviousTimeStep.waterStorage;
-
+        // [m3]
         balanceDataCurrentTimeStep.waterSinkSource = computeWaterSinkSourceFlowsSum(deltaT);
+        //[ m3]
         balanceDataCurrentTimeStep.waterMBE = deltaStorage - balanceDataCurrentTimeStep.waterSinkSource;
 
         // minimum reference water storage [m3] as % of current storage
-        double timePercentage = 0.01 * SF3Dmax(deltaT, 60.) / HOUR_SECONDS;
+        double timePercentage = 0.001 * SF3Dmax(deltaT, 60.) / HOUR_SECONDS;
         double minRefWaterStorage = balanceDataCurrentTimeStep.waterStorage * timePercentage;
+        // minimum 1 liter
         minRefWaterStorage = SF3Dmax(minRefWaterStorage, 0.001);
 
-        // Reference water for computation of mass balance error ratio
+        // Reference water [m3] for computation of mass balance error ratio
         // when the water sink/source is too low, use the reference water storage
-        double referenceWater = SF3Dmax(std::fabs(balanceDataCurrentTimeStep.waterSinkSource), minRefWaterStorage);     // [m3]
+        double referenceWater = SF3Dmax(std::fabs(balanceDataCurrentTimeStep.waterSinkSource), minRefWaterStorage);
 
         balanceDataCurrentTimeStep.waterMBR = balanceDataCurrentTimeStep.waterMBE / referenceWater;
     }
@@ -172,7 +176,7 @@ namespace soilFluxes3D::v2::Water
             // }
 
             if((currCWL < parameters.CourantWaterThreshold) && (approxNr <= 3))
-                parameters.deltaTcurr = 2 * parameters.deltaTcurr;
+                parameters.deltaTcurr = std::min(parameters.deltaTmax, parameters.deltaTcurr * 2);
 
             return balanceResult_t::stepAccepted;
         }
@@ -371,6 +375,7 @@ namespace soilFluxes3D::v2::Water
         return true;
     }
 
+
     __cudaSpec double runoff(SF3Duint_t rowIdx, SF3Duint_t colIdx, u8_t approxNum, double deltaT, double flowArea)
     {
         double flux_i = (nodeGrid.waterData.waterFlow[rowIdx] * deltaT) / nodeGrid.size[rowIdx];
@@ -392,7 +397,7 @@ namespace soilFluxes3D::v2::Water
 
         double H_s = H_max - z_max;
 
-        if(H_s < 0.0001)
+        if(H_s < EPSILON_CUSTOM)
             return 0.;
 
         // Land depression
@@ -401,10 +406,6 @@ namespace soilFluxes3D::v2::Water
 
         double cellDistance = nodeDistance2D(rowIdx, colIdx);
         double slope = dH / cellDistance;
-
-        if(slope < EPSILON_CUSTOM)
-            return 0.;
-
         double roughness = 0.5 * (nodeGrid.soilSurfacePointers[rowIdx].surfacePtr->roughness + nodeGrid.soilSurfacePointers[colIdx].surfacePtr->roughness);
 
         double v = std::pow(H_s, 2./3.) * std::sqrt(slope) / roughness;
@@ -414,6 +415,7 @@ namespace soilFluxes3D::v2::Water
 
         return v * flowArea * H_s / dH;
     }
+
 
     __cudaSpec double infiltration(SF3Duint_t surfNodeIdx, SF3Duint_t soilNodeIdx, double deltaT, double flowArea, meanType_t meanType)
     {
