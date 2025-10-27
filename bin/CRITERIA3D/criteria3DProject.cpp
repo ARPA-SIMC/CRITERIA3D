@@ -743,7 +743,7 @@ void Crit3DProject::assignETreal()
 
     Crit3DHydrall myHydrallModel = hydrallModel;
 
-    #pragma omp parallel for if (isParallelComputing()) firstprivate(myHydrallModel)
+    #pragma omp parallel for if(isParallelComputing()) firstprivate(myHydrallModel) reduction(+:totalEvaporation, totalTranspiration)
     for (int row = 0; row < indexMap.at(0).header->nrRows; row++)
     {
         for (int col = 0; col < indexMap.at(0).header->nrCols; col++)
@@ -771,10 +771,10 @@ void Crit3DProject::assignETreal()
             totalEvaporation += evapFlow;                                               // [m3 h-1]
 
             int forestIndex = NODATA;
-            int managementIndex = NODATA;
             //hydrall only
             if (processes.computeHydrall)
             {
+                int managementIndex = NODATA;
                 int treeCoverIndex = getTreeCoverIndexRowCol(row,col);
 
                 if (treeCoverIndex != NODATA && treeCoverIndex > 9)
