@@ -730,7 +730,7 @@ namespace soilFluxes3D::v2
 
         deviceSolverFree(d_surfaceList);
         deviceSolverFree(d_soilList);
-        if(isCulvertAcitve)
+        if(isCulvertActive)
             deviceSolverFree(d_culverList);
 
         return SF3Derror_t::SF3Dok;
