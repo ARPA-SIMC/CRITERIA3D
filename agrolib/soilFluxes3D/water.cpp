@@ -91,20 +91,24 @@ namespace soilFluxes3D::v2::Water
      */
     void computeCurrentMassBalance(double deltaT)
     {
+        // [m3]
         balanceDataCurrentTimeStep.waterStorage = computeTotalWaterContent();
+        // [m3]
         double deltaStorage = balanceDataCurrentTimeStep.waterStorage - balanceDataPreviousTimeStep.waterStorage;
-
+        // [m3]
         balanceDataCurrentTimeStep.waterSinkSource = computeWaterSinkSourceFlowsSum(deltaT);
+        //[ m3]
         balanceDataCurrentTimeStep.waterMBE = deltaStorage - balanceDataCurrentTimeStep.waterSinkSource;
 
         // minimum reference water storage [m3] as % of current storage
-        double timePercentage = 0.01 * SF3Dmax(deltaT, 60.) / HOUR_SECONDS;
+        double timePercentage = 0.001 * SF3Dmax(deltaT, 60.) / HOUR_SECONDS;
         double minRefWaterStorage = balanceDataCurrentTimeStep.waterStorage * timePercentage;
+        // minimum 1 liter
         minRefWaterStorage = SF3Dmax(minRefWaterStorage, 0.001);
 
-        // Reference water for computation of mass balance error ratio
+        // Reference water [m3] for computation of mass balance error ratio
         // when the water sink/source is too low, use the reference water storage
-        double referenceWater = SF3Dmax(std::fabs(balanceDataCurrentTimeStep.waterSinkSource), minRefWaterStorage);     // [m3]
+        double referenceWater = SF3Dmax(std::fabs(balanceDataCurrentTimeStep.waterSinkSource), minRefWaterStorage);
 
         balanceDataCurrentTimeStep.waterMBR = balanceDataCurrentTimeStep.waterMBE / referenceWater;
     }
@@ -172,7 +176,7 @@ namespace soilFluxes3D::v2::Water
             // }
 
             if((currCWL < parameters.CourantWaterThreshold) && (approxNr <= 3))
-                parameters.deltaTcurr = 2 * parameters.deltaTcurr;
+                parameters.deltaTcurr = std::min(parameters.deltaTmax, parameters.deltaTcurr * 2);
 
             return balanceResult_t::stepAccepted;
         }
