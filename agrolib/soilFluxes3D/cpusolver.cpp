@@ -181,7 +181,7 @@ namespace soilFluxes3D::v2
             logStruct;
 
             //Check Courant
-            if((nodeGrid.waterData.CourantWaterLevel > 1.) && (deltaT > _parameters.deltaTmin))
+            if((nodeGrid.waterData.CourantWaterLevel > 1.1) && (deltaT > _parameters.deltaTmin))
             {
                 _parameters.deltaTcurr = SF3Dmax(_parameters.deltaTmin, _parameters.deltaTcurr / nodeGrid.waterData.CourantWaterLevel);
                 if(_parameters.deltaTcurr > 1.)
