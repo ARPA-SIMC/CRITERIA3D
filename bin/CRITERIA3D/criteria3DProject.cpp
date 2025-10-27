@@ -3422,55 +3422,56 @@ bool Crit3DProject::update3DColors(gis::Crit3DRasterGrid *rasterPointer)
         for (long col = 0; col < DEM.header->nrCols; col++)
         {
             z1 = DEM.getValueFromRowCol(row, col);
-            if (! isEqual(z1, DEM.header->flag))  
+            if (isEqual(z1, DEM.header->flag))
+                continue;
+
+            z3 = DEM.getValueFromRowCol(row+1, col+1);
+            if (isEqual(z3, DEM.header->flag))
+                continue;
+
+            dtmColor = DEM.colorScale->getColor(z1);
+            if (isShowVariable)
+                getMixedColor(rasterPointer, row, col, variableRange, *dtmColor, tmpColor);
+            else
+                tmpColor = *dtmColor;
+            shadowDtmColor(tmpColor, color1, row, col);
+
+            dtmColor = DEM.colorScale->getColor(z3);
+            if (isShowVariable)
+                getMixedColor(rasterPointer, row+1, col+1, variableRange, *dtmColor, tmpColor);
+            else
+                tmpColor = *dtmColor;
+
+            shadowDtmColor(tmpColor, color3, row+1, col+1);
+
+            z2 = DEM.getValueFromRowCol(row+1, col);
+            if (!isEqual(z2, DEM.header->flag))
             {
-                z3 = DEM.getValueFromRowCol(row+1, col+1);
-                if (! isEqual(z3, DEM.header->flag))
-                {
-                    dtmColor = DEM.colorScale->getColor(z1);
-                    if (isShowVariable)
-                        getMixedColor(rasterPointer, row, col, variableRange, *dtmColor, tmpColor);
-                    else
-                        tmpColor = *dtmColor;
-                    shadowDtmColor(tmpColor, color1, row, col);
+                dtmColor = DEM.colorScale->getColor(z2);
+                if (isShowVariable)
+                    getMixedColor(rasterPointer, row+1, col, variableRange, *dtmColor, tmpColor);
+                else
+                    tmpColor = *dtmColor;
+                shadowDtmColor(tmpColor, color2, row+1, col);
 
-                    dtmColor = DEM.colorScale->getColor(z3);
-                    if (isShowVariable)
-                        getMixedColor(rasterPointer, row+1, col+1, variableRange, *dtmColor, tmpColor);
-                    else
-                        tmpColor = *dtmColor;
-                    shadowDtmColor(tmpColor, color3, row+1, col+1);
+                openGlGeometry->setVertexColor(vertexIndex++, color1);
+                openGlGeometry->setVertexColor(vertexIndex++, color2);
+                openGlGeometry->setVertexColor(vertexIndex++, color3);
+            }
 
-                    z2 = DEM.getValueFromRowCol(row+1, col);
-                    if (! isEqual(z2, DEM.header->flag))
-                    {
-                        dtmColor = DEM.colorScale->getColor(z2);
-                        if (isShowVariable)
-                            getMixedColor(rasterPointer, row+1, col, variableRange, *dtmColor, tmpColor);
-                        else
-                            tmpColor = *dtmColor;
-                        shadowDtmColor(tmpColor, color2, row+1, col);
+            z2 = DEM.getValueFromRowCol(row, col+1);
+            if (!isEqual(z2, DEM.header->flag))
+            {
+                dtmColor = DEM.colorScale->getColor(z2);
+                if (isShowVariable)
+                    getMixedColor(rasterPointer, row, col+1, variableRange, *dtmColor, tmpColor);
+                else
+                    tmpColor = *dtmColor;
+                shadowDtmColor(tmpColor, color2, row, col+1);
 
-                        openGlGeometry->setVertexColor(vertexIndex++, color1);
-                        openGlGeometry->setVertexColor(vertexIndex++, color2);
-                        openGlGeometry->setVertexColor(vertexIndex++, color3);
-                    }
-
-                    z2 = DEM.getValueFromRowCol(row, col+1);
-                    if (! isEqual(z2, DEM.header->flag))
-                    {
-                        dtmColor = DEM.colorScale->getColor(z2);
-                        if (isShowVariable)
-                            getMixedColor(rasterPointer, row, col+1, variableRange, *dtmColor, tmpColor);
-                        else
-                            tmpColor = *dtmColor;
-                        shadowDtmColor(tmpColor, color2, row, col+1);
-
-                        openGlGeometry->setVertexColor(vertexIndex++, color3);
-                        openGlGeometry->setVertexColor(vertexIndex++, color2);
-                        openGlGeometry->setVertexColor(vertexIndex++, color1);
-                    }
-                }
+                openGlGeometry->setVertexColor(vertexIndex++, color3);
+                openGlGeometry->setVertexColor(vertexIndex++, color2);
+                openGlGeometry->setVertexColor(vertexIndex++, color1);
             }
         }
     }
@@ -3489,7 +3490,7 @@ int Crit3DProject::criteria3DShell()
 
     printCriteria3DVersion();
 
-        while (! isRequestedExit())
+    while (!isRequestedExit())
     {
         QString commandLine = getCommandLine("CRITERIA3D");
         if (commandLine != "")
