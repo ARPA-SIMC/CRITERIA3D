@@ -3345,7 +3345,7 @@ void Crit3DProject::shadowDtmColor(const Crit3DColor &colorIn, Crit3DColor &colo
 
     float slopeDegree = radiationMaps->slopeMap->getValueFromRowCol(row, col);
     if (isEqual(slopeDegree, radiationMaps->slopeMap->header->flag))
-        continue;
+        return;
 
     float slopeAmplification = 120.f / std::max(radiationMaps->slopeMap->maximum, 1.f);
     float shadow = -cos(aspect * DEG_TO_RAD) * std::max(6.f, slopeDegree * slopeAmplification);
