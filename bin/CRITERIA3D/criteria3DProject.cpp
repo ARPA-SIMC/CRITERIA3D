@@ -3559,7 +3559,7 @@ int Crit3DProject::executeScript(const QString &scriptFileName)
         return CRIT3D_ERROR;
     }
 
-    while (!scriptFile.atEnd())
+    while(!scriptFile.atEnd())
     {
         QString cmdLine = scriptFile.readLine();
         QList<QString> argumentList = getArgumentList(cmdLine);
