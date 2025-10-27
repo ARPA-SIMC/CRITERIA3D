@@ -3391,7 +3391,7 @@ void Crit3DProject::getMixedColor(gis::Crit3DRasterGrid *rasterPointer, int row,
         alpha = DEFAULT_ALPHA * pow(alpha, ALPHA_POW);
     }
 
-    mixColors(dtmColor, *variableColor, otutColor, alpha);
+    mixColors(dtmColor, *variableColor, otutColor, static_cast<float>(alpha));
 }
 
 
