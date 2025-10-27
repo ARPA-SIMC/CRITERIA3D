@@ -490,7 +490,7 @@ bool Project3D::initialize3DModel()
 bool Project3D::setAccuracy()
 {
     // maximum water velocity
-    double vMax = 5 + 5 * waterFluxesParameters.modelAccuracy;                      // [m s-1]
+    double vMax = 4 + 4 * waterFluxesParameters.modelAccuracy;                      // [m s-1]
 
     // minimum dT
     double minimumDeltaT = std::min(30.0, DEM.header->cellSize / vMax);             // [s]

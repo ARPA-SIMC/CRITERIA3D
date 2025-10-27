@@ -371,6 +371,7 @@ namespace soilFluxes3D::v2::Water
         return true;
     }
 
+
     __cudaSpec double runoff(SF3Duint_t rowIdx, SF3Duint_t colIdx, u8_t approxNum, double deltaT, double flowArea)
     {
         double flux_i = (nodeGrid.waterData.waterFlow[rowIdx] * deltaT) / nodeGrid.size[rowIdx];
@@ -392,7 +393,7 @@ namespace soilFluxes3D::v2::Water
 
         double H_s = H_max - z_max;
 
-        if(H_s < 0.0001)
+        if(H_s < EPSILON_CUSTOM)
             return 0.;
 
         // Land depression
@@ -401,10 +402,6 @@ namespace soilFluxes3D::v2::Water
 
         double cellDistance = nodeDistance2D(rowIdx, colIdx);
         double slope = dH / cellDistance;
-
-        if(slope < EPSILON_CUSTOM)
-            return 0.;
-
         double roughness = 0.5 * (nodeGrid.soilSurfacePointers[rowIdx].surfacePtr->roughness + nodeGrid.soilSurfacePointers[colIdx].surfacePtr->roughness);
 
         double v = std::pow(H_s, 2./3.) * std::sqrt(slope) / roughness;
@@ -414,6 +411,7 @@ namespace soilFluxes3D::v2::Water
 
         return v * flowArea * H_s / dH;
     }
+
 
     __cudaSpec double infiltration(SF3Duint_t surfNodeIdx, SF3Duint_t soilNodeIdx, double deltaT, double flowArea, meanType_t meanType)
     {
