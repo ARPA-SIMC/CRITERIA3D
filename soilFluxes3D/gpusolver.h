@@ -17,7 +17,8 @@ namespace soilFluxes3D::v2
             double* d_Cvalues = nullptr;
             surfaceData_t* d_surfaceList = nullptr;
             soilData_t* d_soilList = nullptr;
-            culvertData_t* d_culverData = nullptr;
+            bool isCulvertActive = false;
+            culvertData_t* d_culverList = nullptr;
 
             SF3Duint_t numThreadsPerBlock;
             SF3Duint_t numBlocks;
@@ -35,9 +36,9 @@ namespace soilFluxes3D::v2
             void restoreBestStep_m(double deltaT);
 
             SF3Derror_t upCopyData();               //TO DO: add heat and culvert data
-            SF3Derror_t upMoveSoilSurfacePtr();
+            SF3Derror_t upMoveVectorPtrs();
             SF3Derror_t downCopyData();             //TO DO: add heat and culvert data
-            SF3Derror_t downMoveSoilSurfacePtr();
+            SF3Derror_t downMoveVectorPtrs();
             SF3Derror_t createCUsparseDescriptors();
 
         public:
