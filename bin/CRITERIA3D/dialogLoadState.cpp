@@ -7,7 +7,7 @@ DialogLoadState::DialogLoadState(QList<QString> allStates)
     QVBoxLayout *mainLayout = new QVBoxLayout();
     QHBoxLayout *layoutOk = new QHBoxLayout;
 
-    for (int i=0; i<allStates.size(); i++)
+    for (int i = 0; i < allStates.size(); i++)
     {
         stateListComboBox.addItem(allStates[i]);
     }
