@@ -2,7 +2,7 @@
 CONFIG += OMP_CONFIG
 
 #Enable the link time optimization for the entire project.
-#CONFIG += LTO_CONFIG
+CONFIG += LTO_CONFIG
 
 #Enable SF3D GPU acceleration. If a CUDA Toolkit is not present in the system this flag will be ignored.
 #CONFIG += CUDA_CONFIG

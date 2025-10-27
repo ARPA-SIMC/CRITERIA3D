@@ -18,6 +18,9 @@ QMAKE_TARGET_COPYRIGHT = "\\251 2025 ARPAE ER - Climate Observatory"
 CONFIG += debug_and_release
 CONFIG += c++17
 
+# parallel computing settings
+include($$absolute_path(../../agrolib/parallel.pri))
+
 INCLUDEPATH +=  ./shared  \
                 ../../agrolib/soilFluxes3D \
                 ../../agrolib/crit3dDate ../../agrolib/mathFunctions \
@@ -133,4 +136,4 @@ win32:
     RC_ICONS = Criteria3D.ico
 }
 
-include($$absolute_path(../../agrolib/parallel.pri))
+
