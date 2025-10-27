@@ -211,51 +211,50 @@ bool Crit3DProject::initializeRothC()
     {
         for (int col = 0; col < DEM.header->nrCols; col++)
         {
-            if (! isEqual(DEM.value[row][col], DEM.header->flag))
+            if(isEqual(DEM.value[row][col], DEM.header->flag))
+                continue;
+
+            int soilIndex = int(soilIndexMap.value[row][col]);
+            if (soilIndex == NODATA)
+                continue;
+
+            rothCModel.map.setDepth(soilList[soilIndex].totalDepth, row, col);
+
+            double clayContent = 0;
+            unsigned int i;
+
+            if (! processes.computeWater)
             {
-                int soilIndex = int(soilIndexMap.value[row][col]);
-                if (soilIndex != NODATA)
+                rothCModel.map.setClay(getRothCClayContent(soilIndex), row, col);
+            }
+            else
+            {
+                for (i = 0; ((i < nrLayers) && (soilList[soilIndex].getHorizonIndex(layerDepth[i]))!= NODATA); i++)
                 {
-                    rothCModel.map.setDepth(soilList[soilIndex].totalDepth, row, col);
+                    clayContent += soilList[soilIndex].horizon[soilList[soilIndex].getHorizonIndex(layerDepth[i])].texture.clay;
+                }
 
-                    double clayContent = 0;
-                    unsigned int i;
+                if (i > 0)
+                    rothCModel.map.setClay(clayContent/i, row, col);
+            }
 
-                    if (! processes.computeWater)
-                    {
-                        rothCModel.map.setClay(getRothCClayContent(soilIndex), row, col);
-                    }
-                    else
-                    {
-                        for (i = 0; ((i < nrLayers) && (soilList[soilIndex].getHorizonIndex(layerDepth[i]))!= NODATA); i++)
-                        {
-                            clayContent += soilList[soilIndex].horizon[soilList[soilIndex].getHorizonIndex(layerDepth[i])].texture.clay;
-                        }
-
-                        if (i > 0)
-                            rothCModel.map.setClay(clayContent/i, row, col);
-                    }
-
-                    if (! processes.computeHydrall)
-                    {
-                        float height = DEM.value[row][col];
-                        if (! isEqual(height, DEM.header->flag))
-                        {
-                            mapLast30DaysTAvg.value[row][col] = 15.f; // initialize to 15°C
-                        }
-                    }
-
-                    rothCModel.map.decomposablePlantMaterial->value[row][col] = rothCModel.getDPM();
-                    rothCModel.map.resistantPlantMaterial->value[row][col] = rothCModel.getRPM();
-                    rothCModel.map.humifiedOrganicMatter->value[row][col] = rothCModel.getHUM();
-                    rothCModel.map.microbialBiomass->value[row][col] = rothCModel.getBIO();
-                    rothCModel.map.inertOrganicMatter->value[row][col] = rothCModel.getIOM();
-                    rothCModel.map.soilOrganicMatter->value[row][col] = rothCModel.getSOC();
-
+            if (! processes.computeHydrall)
+            {
+                float height = DEM.value[row][col];
+                if (! isEqual(height, DEM.header->flag))
+                {
+                    mapLast30DaysTAvg.value[row][col] = 15.f; // initialize to 15°C
                 }
             }
-        }
 
+            rothCModel.map.decomposablePlantMaterial->value[row][col] = rothCModel.getDPM();
+            rothCModel.map.resistantPlantMaterial->value[row][col] = rothCModel.getRPM();
+            rothCModel.map.humifiedOrganicMatter->value[row][col] = rothCModel.getHUM();
+            rothCModel.map.microbialBiomass->value[row][col] = rothCModel.getBIO();
+            rothCModel.map.inertOrganicMatter->value[row][col] = rothCModel.getIOM();
+            rothCModel.map.soilOrganicMatter->value[row][col] = rothCModel.getSOC();
+
+        }
     }
 
     if (! processes.computeWater) //TODO
@@ -305,18 +304,17 @@ bool Crit3DProject::initializeRothCSoilCarbonContent()
     {
         for (int col = 0; col < DEM.header->nrCols; col++)
         {
-            if (! isEqual(DEM.value[row][col], DEM.header->flag))
-            {
-                int soilIndex = int(soilIndexMap.value[row][col]);
-                if (soilIndex != NODATA)
-                {
-                    rothCModel.setClay(rothCModel.map.getClay(row, col));
+            if(isEqual(DEM.value[row][col], DEM.header->flag))
+                continue;
 
-                    rothCModel.setStateVariables(row, col);
-                    rothCModel.initializeRothCSoilCarbonContent();
-                    rothCModel.getStateVariables(row, col);
-                }
-            }
+            int soilIndex = int(soilIndexMap.value[row][col]);
+            if (soilIndex == NODATA)
+                continue;
+
+            rothCModel.setClay(rothCModel.map.getClay(row, col));
+            rothCModel.setStateVariables(row, col);
+            rothCModel.initializeRothCSoilCarbonContent();
+            rothCModel.getStateVariables(row, col);
         }
     }
 
@@ -383,67 +381,68 @@ bool Crit3DProject::initializeCropWithClimateData()
 
     QDate currentDate = getCurrentDate();
 
+    #pragma omp parallel for if(isParallelComputing())
     for (int row = 0; row < DEM.header->nrRows; row++)
     {
         for (int col = 0; col < DEM.header->nrCols; col++)
         {
             float height = DEM.value[row][col];
-            if (! isEqual(height, DEM.header->flag))
+            if (isEqual(height, DEM.header->flag))
+                continue;
+
+            int index = getLandUnitIndexRowCol(row, col);
+            if (!isCrop(index))
+                continue;
+
+            double degreeDays = 0;
+            int firstDoy = 1;
+            int lastDoy = currentDate.dayOfYear();
+
+            if (gisSettings.startLocation.latitude >= 0)
             {
-                int index = getLandUnitIndexRowCol(row, col);
-                if (isCrop(index))
+                // Northern hemisphere
+                firstDoy = 1;
+            }
+            else
+            {
+                // Southern hemisphere
+                if (currentDate.dayOfYear() >= 182)
                 {
-                    double degreeDays = 0;
-                    int firstDoy = 1;
-                    int lastDoy = currentDate.dayOfYear();
-
-                    if (gisSettings.startLocation.latitude >= 0)
-                    {
-                        // Northern hemisphere
-                        firstDoy = 1;
-                    }
-                    else
-                    {
-                        // Southern hemisphere
-                        if (currentDate.dayOfYear() >= 182)
-                        {
-                            firstDoy = 182;
-                        }
-                        else
-                        {
-                            firstDoy = -183;
-                        }
-                    }
-
-                    // daily cycle
-                    for (int doy = firstDoy; doy <= lastDoy; doy++)
-                    {
-                        int currentDoy = doy;
-                        int currentYear = currentDate.year();
-                        if (currentDoy <= 0)
-                        {
-                            currentYear--;
-                            currentDoy += 365;
-                        }
-                        Crit3DDate myDate = getDateFromDoy(currentYear, currentDoy);
-
-                        float tmin = climateParameters.getClimateVar(dailyAirTemperatureMin, myDate.month,
-                                                                     height, quality->getReferenceHeight());
-                        float tmax = climateParameters.getClimateVar(dailyAirTemperatureMax, myDate.month,
-                                                                     height, quality->getReferenceHeight());
-
-                        double currentDD = cropList[index].getDailyDegreeIncrease(tmin, tmax, currentDoy);
-                        if (! isEqual(currentDD, NODATA))
-                        {
-                            degreeDays += currentDD;
-                        }
-                    }
-
-                    degreeDaysMap.value[row][col] = float(degreeDays);
-                    laiMap.value[row][col] = cropList[index].computeSimpleLAI(degreeDays, gisSettings.startLocation.latitude,
-                                                                              currentDate.dayOfYear());
+                    firstDoy = 182;
+                }
+                else
+                {
+                    firstDoy = -183;
                 }
             }
+
+            // daily cycle
+            for (int doy = firstDoy; doy <= lastDoy; doy++)
+            {
+                int currentDoy = doy;
+                int currentYear = currentDate.year();
+                if (currentDoy <= 0)
+                {
+                    currentYear--;
+                    currentDoy += 365;
+                }
+                Crit3DDate myDate = getDateFromDoy(currentYear, currentDoy);
+
+                float tmin = climateParameters.getClimateVar(dailyAirTemperatureMin, myDate.month,
+                                                             height, quality->getReferenceHeight());
+                float tmax = climateParameters.getClimateVar(dailyAirTemperatureMax, myDate.month,
+                                                             height, quality->getReferenceHeight());
+
+                double currentDD = cropList[index].getDailyDegreeIncrease(tmin, tmax, currentDoy);
+                if (!isEqual(currentDD, NODATA))
+                {
+                    degreeDays += currentDD;
+                }
+            }
+
+            degreeDaysMap.value[row][col] = float(degreeDays);
+            laiMap.value[row][col] = cropList[index].computeSimpleLAI(degreeDays, gisSettings.startLocation.latitude,
+                                                                      currentDate.dayOfYear());
         }
     }
 
@@ -473,27 +472,29 @@ bool Crit3DProject::initializeCropFromDegreeDays(gis::Crit3DRasterGrid &myDegree
     }
 
     int currentDoy = getCurrentDate().dayOfYear();
+
+    #pragma omp parallel for if(isParallelComputing())
     for (int row = 0; row < DEM.header->nrRows; row++)
     {
         for (int col = 0; col < DEM.header->nrCols; col++)
         {
             float height = DEM.value[row][col];
-            if (! isEqual(height, DEM.header->flag))
+            if(isEqual(height, DEM.header->flag))
+                continue;
+
+            // field unit list and crop list have the same index
+            int index = getLandUnitIndexRowCol(row, col);
+            if (!isCrop(index))
+                continue;
+
+            double x, y;
+            gis::getUtmXYFromRowCol(*(DEM.header), row, col, &x, &y);
+            float currentDegreeDay = gis::getValueFromXY(myDegreeMap, x, y);
+            if (! isEqual(currentDegreeDay, myDegreeMap.header->flag))
             {
-                // field unit list and crop list have the same index
-                int index = getLandUnitIndexRowCol(row, col);
-                if (isCrop(index))
-                {
-                    double x, y;
-                    gis::getUtmXYFromRowCol(*(DEM.header), row, col, &x, &y);
-                    float currentDegreeDay = gis::getValueFromXY(myDegreeMap, x, y);
-                    if (! isEqual(currentDegreeDay, myDegreeMap.header->flag))
-                    {
-                        degreeDaysMap.value[row][col] = currentDegreeDay;
-                        laiMap.value[row][col] = cropList[index].computeSimpleLAI(degreeDaysMap.value[row][col],
-                                                         gisSettings.startLocation.latitude, currentDoy);
-                    }
-                }
+                degreeDaysMap.value[row][col] = currentDegreeDay;
+                laiMap.value[row][col] = cropList[index].computeSimpleLAI(degreeDaysMap.value[row][col],
+                                                 gisSettings.startLocation.latitude, currentDoy);
             }
         }
     }
@@ -523,40 +524,45 @@ void Crit3DProject::dailyUpdateCropMaps(const QDate &myDate)
     }
 
     int currentDoy = getCurrentDate().dayOfYear();
+
+    #pragma omp parallel for if(isParallelComputing())
     for (int row = 0; row < DEM.header->nrRows; row++)
     {
         for (int col = 0; col < DEM.header->nrCols; col++)
         {
             // is valid point
             float height = DEM.value[row][col];
-            if (! isEqual(height, DEM.header->flag))
-            {
-                // landUnit list and crop list have the same index
-                int index = getLandUnitIndexRowCol(row, col);
-                if (isCrop(index))
-                {
-                    float tmin = dailyTminMap.value[row][col];
-                    float tmax = dailyTmaxMap.value[row][col];
-                    if (! isEqual(tmin, dailyTminMap.header->flag) && ! isEqual(tmax, dailyTmaxMap.header->flag))
-                    {
-                        double dailyDD = cropList[index].getDailyDegreeIncrease(tmin, tmax, currentDoy);
-                        if (! isEqual(dailyDD, NODATA))
-                        {
-                            if (isEqual(degreeDaysMap.value[row][col], degreeDaysMap.header->flag))
-                            {
-                                degreeDaysMap.value[row][col] = float(dailyDD);
-                            }
-                            else
-                            {
-                                degreeDaysMap.value[row][col] += float(dailyDD);
-                            }
 
-                            laiMap.value[row][col] = cropList[index].computeSimpleLAI(degreeDaysMap.value[row][col],
-                                                            gisSettings.startLocation.latitude, currentDoy);
-                        }
-                    }
-                }
+            if (isEqual(height, DEM.header->flag))
+                continue;
+
+            // landUnit list and crop list have the same index
+            int index = getLandUnitIndexRowCol(row, col);
+            if(!isCrop(index))
+                continue;
+
+            float tmin = dailyTminMap.value[row][col];
+            float tmax = dailyTmaxMap.value[row][col];
+
+            if(isEqual(tmin, dailyTminMap.header->flag) || isEqual(tmax, dailyTmaxMap.header->flag))
+                continue;
+
+            double dailyDD = cropList[index].getDailyDegreeIncrease(tmin, tmax, currentDoy);
+
+            if (isEqual(dailyDD, NODATA))
+                continue;
+
+            if (isEqual(degreeDaysMap.value[row][col], degreeDaysMap.header->flag))
+            {
+                degreeDaysMap.value[row][col] = float(dailyDD);
             }
+            else
+            {
+                degreeDaysMap.value[row][col] += float(dailyDD);
+            }
+
+            laiMap.value[row][col] = cropList[index].computeSimpleLAI(degreeDaysMap.value[row][col],
+                                            gisSettings.startLocation.latitude, currentDoy);
         }
     }
 
@@ -569,54 +575,53 @@ void Crit3DProject::dailyUpdateCropMaps(const QDate &myDate)
 bool Crit3DProject::dailyUpdateHydrall(const QDate &myDate)
 {
     //set daily variables like temp, co2
-    if (myDate.dayOfYear() == 1)
+    if (myDate.dayOfYear() != 1)
+        return true;
+
+    for (int row = 0; row < indexMap.at(0).header->nrRows; row++)
     {
-        for (int row = 0; row < indexMap.at(0).header->nrRows; row++)
+        for (int col = 0; col < indexMap.at(0).header->nrCols; col++)
         {
-            for (int col = 0; col < indexMap.at(0).header->nrCols; col++)
+            int surfaceIndex = indexMap.at(0).value[row][col];
+            if(surfaceIndex == indexMap.at(0).header->flag)
+                continue;
+
+            //se firstDayOfYear, scrivi le mappe (mensili?) di LAI, biomassa, etc
+            //TODO, togliere?
+            std::string myError;
+            if (! gis::writeEsriGrid(getCompleteFileName("treeNPP_"+myDate.toString("yyyyMMdd"), PATH_OUTPUT).toStdString(), hydrallMaps.treeNetPrimaryProduction, myError))
             {
-                int surfaceIndex = indexMap.at(0).value[row][col];
-                if (surfaceIndex != indexMap.at(0).header->flag)
-                {
-                    //se firstDayOfYear, scrivi le mappe (mensili?) di LAI, biomassa, etc
-                    //TODO, togliere?
-                    std::string myError;
-                    if (! gis::writeEsriGrid(getCompleteFileName("treeNPP_"+myDate.toString("yyyyMMdd"), PATH_OUTPUT).toStdString(), hydrallMaps.treeNetPrimaryProduction, myError))
-                    {
-                        errorString = QString::fromStdString(myError);
-                        return false;
-                    }
+                errorString = QString::fromStdString(myError);
+                return false;
+            }
 
-                    if (! gis::writeEsriGrid(getCompleteFileName("understoreyNPP_"+myDate.toString("yyyyMMdd"), PATH_OUTPUT).toStdString(), hydrallMaps.understoreyNetPrimaryProduction, myError))
-                    {
-                        errorString = QString::fromStdString(myError);
-                        return false;
-                    }
+            if (! gis::writeEsriGrid(getCompleteFileName("understoreyNPP_"+myDate.toString("yyyyMMdd"), PATH_OUTPUT).toStdString(), hydrallMaps.understoreyNetPrimaryProduction, myError))
+            {
+                errorString = QString::fromStdString(myError);
+                return false;
+            }
 
 
-                    hydrallModel.setYear(myDate.year());
-                    hydrallModel.weatherVariable.setYearlyET0(hydrallMaps.yearlyET0->getValueFromRowCol(row, col));
-                    hydrallModel.weatherVariable.setYearlyPrec(hydrallMaps.yearlyPrec->getValueFromRowCol(row, col));
+            hydrallModel.setYear(myDate.year());
+            hydrallModel.weatherVariable.setYearlyET0(hydrallMaps.yearlyET0->getValueFromRowCol(row, col));
+            hydrallModel.weatherVariable.setYearlyPrec(hydrallMaps.yearlyPrec->getValueFromRowCol(row, col));
 
-                    hydrallModel.simplifiedGrowthStand(); // TODO quit this line - temporary position to prompt check
+            hydrallModel.simplifiedGrowthStand(); // TODO quit this line - temporary position to prompt check
 
-                    hydrallModel.resetStandVariables();
+            hydrallModel.resetStandVariables();
 
-                    hydrallMaps.yearlyPrec->value[row][col] = 0;
-                    hydrallMaps.yearlyET0->value[row][col] = 0;
+            hydrallMaps.yearlyPrec->value[row][col] = 0;
+            hydrallMaps.yearlyET0->value[row][col] = 0;
 
-                    if (myDate.month() == hydrallModel.firstMonthVegetativeSeason) //TODO
-                    {
-                        /* in case of the first day of the year
-                         * the algorithms devoted to allocate dry matter
-                         * into the biomass pools (foliage, sapwood and fine roots)
-                         * */
-                        //hydrallModel.growthStand();
-                        //hydrallModel.resetStandVariables();
-                        //grtree
-
-                    }
-                }
+            if (myDate.month() == hydrallModel.firstMonthVegetativeSeason) //TODO
+            {
+                /* in case of the first day of the year
+                 * the algorithms devoted to allocate dry matter
+                 * into the biomass pools (foliage, sapwood and fine roots)
+                 */
+                //hydrallModel.growthStand();
+                //hydrallModel.resetStandVariables();
+                //grtree
             }
         }
     }
@@ -629,39 +634,39 @@ bool Crit3DProject::updateRothC(const QDate &myDate)
 {
     rothCModel.isInitializing = false;
 
-    if (! processes.computeWater)
+    if (!processes.computeWater)
         rothCModel.isInitializing = true;
 
-    if (myDate.day() == 1)
+    if (myDate.day() != 1)
+        return true;
+
+    for (int row = 0; row < DEM.header->nrRows; row++)
     {
-        for (int row = 0; row < DEM.header->nrRows; row++)
+        for (int col = 0; col < DEM.header->nrCols; col++)
         {
-            for (int col = 0; col < DEM.header->nrCols; col++)
-            {
-                // is valid point
-                float height = DEM.value[row][col];
-                if (! isEqual(height, DEM.header->flag))
-                {
-                    setRothCVariables(row, col, myDate.month());
+            // is valid point
+            float height = DEM.value[row][col];
+            if (isEqual(height, DEM.header->flag))
+                continue;
 
-                    rothCModel.setStateVariables(row, col);
+            setRothCVariables(row, col, myDate.month());
 
-                    if (! rothCModel.checkCell())
-                    {
-                        //chiamata a rothC
-                        computeRothCModel();
+            rothCModel.setStateVariables(row, col);
 
-                        rothCModel.getStateVariables(row, col);
+            if (rothCModel.checkCell())
+                continue;
 
-                        //reset meteo maps
-                        monthlyPrec.value[row][col] = 0;
-                        monthlyET0.value[row][col] = 0;
+            //chiamata a rothC
+            computeRothCModel();
 
-                        //reset meteo variables and C input
-                        rothCModel.resetInputVariables();
-                    }
-                }
-            }
+            rothCModel.getStateVariables(row, col);
+
+            //reset meteo maps
+            monthlyPrec.value[row][col] = 0;
+            monthlyET0.value[row][col] = 0;
+
+            //reset meteo variables and C input
+            rothCModel.resetInputVariables();
         }
     }
 
@@ -685,7 +690,7 @@ void Crit3DProject::setRothCVariables(int row, int col, int month)
 
     double inputCTable = NODATA;
 
-    if (! processes.computeHydrall || ! isEqual(hydrallModel.getOutputC(),NODATA)) //yield table must be used when initialising rothC or for first year of simulation of hydrall+rothC (hydrall still hasn't produced its first carbon output)
+    if (! processes.computeHydrall || ! isEqual(hydrallModel.getOutputC(), NODATA)) //yield table must be used when initialising rothC or for first year of simulation of hydrall+rothC (hydrall still hasn't produced its first carbon output)
     {
         int treeCoverIndex = getTreeCoverIndexRowCol(row,col);
         int managementIndex, forestIndex;
@@ -744,93 +749,94 @@ void Crit3DProject::assignETreal()
         for (int col = 0; col < indexMap.at(0).header->nrCols; col++)
         {
             int surfaceIndex = indexMap.at(0).value[row][col];
-            if (surfaceIndex != indexMap.at(0).header->flag)
+
+            if (surfaceIndex == indexMap.at(0).header->flag)
+                continue;
+
+            double utmX, utmY;
+            DEM.getXY(row, col, utmX, utmY);
+            int soilIndex = getSoilListIndex(utmX, utmY);
+
+            float currentLAI = 0;          // Leaf Area Index [m3 m-3]
+            if (laiMap.isLoaded)
             {
-                double utmX, utmY;
-                DEM.getXY(row, col, utmX, utmY);
-                int soilIndex = getSoilListIndex(utmX, utmY);
+                float laiMapValue = laiMap.getValueFromRowCol(row, col);
+                if (! isEqual(laiMapValue, laiMap.header->flag))
+                    currentLAI = laiMapValue;
+            }
 
-                float currentLAI = 0;          // Leaf Area Index [m3 m-3]
-                if (laiMap.isLoaded)
+            // assigns actual evaporation
+            double actualEvap = assignEvaporation(row, col, currentLAI, soilIndex);     // [mm h-1]
+            double evapFlow = area * (actualEvap / 1000.);                              // [m3 h-1]
+            totalEvaporation += evapFlow;                                               // [m3 h-1]
+
+            int forestIndex = NODATA;
+            int managementIndex = NODATA;
+            //hydrall only
+            if (processes.computeHydrall)
+            {
+                int treeCoverIndex = getTreeCoverIndexRowCol(row,col);
+
+                if (treeCoverIndex != NODATA && treeCoverIndex > 9)
                 {
-                    float laiMapValue = laiMap.getValueFromRowCol(row, col);
-                    if (! isEqual(laiMapValue, laiMap.header->flag))
-                        currentLAI = laiMapValue;
+                    std::string indexString = std::to_string(treeCoverIndex);
+                    if (indexString.size() >= 2)
+                    {
+                        managementIndex = std::stoi(indexString.substr(indexString.size()-1, indexString.size()-1));
+                        forestIndex = (treeCoverIndex - managementIndex) / 10 - 1;
+                    }
+                }
+                myHydrallModel.plant.management = managementIndex;
+            }
+
+            int cropIndex = getLandUnitIndexRowCol(row, col);
+            if ((cropIndex != NODATA && (int)cropList.size() > cropIndex) || (forestIndex != NODATA && forestIndex >= 0))
+            {
+                Crit3DCrop currentCrop;
+                if (forestIndex != NODATA  && forestIndex >= 0 && (int)cropList.size() > forestIndex)
+                    currentCrop = cropList[forestIndex];
+                else if (cropIndex != NODATA && (int)cropList.size() > cropIndex)
+                    currentCrop = cropList[cropIndex];
+                else
+                    continue;
+
+                double actualTransp = 0;
+
+                // assigns actual transpiration
+                if (currentLAI > 0)
+                {
+                    float degreeDays = degreeDaysMap.value[row][col];
+                    actualTransp = assignTranspiration(row, col, currentCrop, currentLAI, degreeDays);          // [mm h-1]
+                    // TODO verificare che la traspirazione ottenuta da hydrall sia confrontabile e nel caso mettere un if che decida come computare la traspirazione
+                    double traspFlow = area * (actualTransp / 1000.);                                           // [m3 h-1] flux
+                    totalTranspiration += traspFlow;                                                            // [m3 h-1] flux
                 }
 
-                // assigns actual evaporation
-                double actualEvap = assignEvaporation(row, col, currentLAI, soilIndex);     // [mm h-1]
-                double evapFlow = area * (actualEvap / 1000.);                              // [m3 h-1]
-                totalEvaporation += evapFlow;                                               // [m3 h-1]
-
-                int forestIndex = NODATA;
-                int managementIndex = NODATA;
-                //hydrall only
-                if (processes.computeHydrall)
+                if (processes.computeHydrall && forestIndex != NODATA)
                 {
-                    int treeCoverIndex = getTreeCoverIndexRowCol(row,col);
-
-                    if (treeCoverIndex != NODATA && treeCoverIndex > 9)
+                    if (currentCrop.roots.rootDensity.empty())
                     {
-                        std::string indexString = std::to_string(treeCoverIndex);
-                        if (indexString.size() >= 2)
-                        {
-                            managementIndex = std::stoi(indexString.substr(indexString.size()-1, indexString.size()-1));
-                            forestIndex = (treeCoverIndex - managementIndex) / 10 - 1;
-                        }
+                        // compute root lenght
+                        currentCrop.computeRootLength3D(degreeDaysMap.value[row][col], soilList[soilIndex].totalDepth);
+
+                        // compute root density
+                        root::computeRootDensity3D(currentCrop, soilList[soilIndex], nrLayers, layerDepth, layerThickness);
                     }
-                    myHydrallModel.plant.management = managementIndex;
+
+                    myHydrallModel.soil.setRootDensity(currentCrop.roots.rootDensity);
+                    myHydrallModel.plant.setLAICanopy(MAXVALUE(0, currentLAI));
+                    myHydrallModel.plant.setLAICanopyMin(currentCrop.LAImin);
+                    myHydrallModel.plant.setLAICanopyMax(currentCrop.LAImax);
+
+                    int soilIndex = int(soilIndexMap.value[row][col]);
+                    if (soilIndex != NODATA)
+                        computeHydrallModel(myHydrallModel, row, col, forestIndex);
                 }
 
-                int cropIndex = getLandUnitIndexRowCol(row, col);
-                if ((cropIndex != NODATA && (int)cropList.size() > cropIndex) || (forestIndex != NODATA && forestIndex >= 0))
+                if (processes.computeRothC)
                 {
-                    Crit3DCrop currentCrop;
-                    if (forestIndex != NODATA  && forestIndex >= 0 && (int)cropList.size() > forestIndex)
-                        currentCrop = cropList[forestIndex];
-                    else if (cropIndex != NODATA && (int)cropList.size() > cropIndex)
-                        currentCrop = cropList[cropIndex];
-                    else
-                        continue;
-
-                    double actualTransp = 0;
-
-                    // assigns actual transpiration
-                    if (currentLAI > 0)
-                    {
-                        float degreeDays = degreeDaysMap.value[row][col];
-                        actualTransp = assignTranspiration(row, col, currentCrop, currentLAI, degreeDays);          // [mm h-1]
-                        // TODO verificare che la traspirazione ottenuta da hydrall sia confrontabile e nel caso mettere un if che decida come computare la traspirazione
-                        double traspFlow = area * (actualTransp / 1000.);                                           // [m3 h-1] flux
-                        totalTranspiration += traspFlow;                                                            // [m3 h-1] flux
-                    }
-
-                    if (processes.computeHydrall && forestIndex != NODATA)
-                    {
-                        if (currentCrop.roots.rootDensity.empty())
-                        {
-                            // compute root lenght
-                            currentCrop.computeRootLength3D(degreeDaysMap.value[row][col], soilList[soilIndex].totalDepth);
-
-                            // compute root density
-                            root::computeRootDensity3D(currentCrop, soilList[soilIndex], nrLayers, layerDepth, layerThickness);
-                        }
-
-                        myHydrallModel.soil.setRootDensity(currentCrop.roots.rootDensity);
-                        myHydrallModel.plant.setLAICanopy(MAXVALUE(0, currentLAI));
-                        myHydrallModel.plant.setLAICanopyMin(currentCrop.LAImin);
-                        myHydrallModel.plant.setLAICanopyMax(currentCrop.LAImax);
-
-                        int soilIndex = int(soilIndexMap.value[row][col]);
-                        if (soilIndex != NODATA)
-                            computeHydrallModel(myHydrallModel, row, col, forestIndex);
-                    }
-
-                    if (processes.computeRothC)
-                    {
-                        // TODO FT non è corretto (trasformare in mappa)
-                        rothCModel.setPlantCover(currentLAI / currentCrop.LAImax);
-                    }
+                    // TODO FT non è corretto (trasformare in mappa)
+                    rothCModel.setPlantCover(currentLAI / currentCrop.LAImax);
                 }
             }
         }
@@ -861,34 +867,34 @@ void Crit3DProject::assignPrecipitation()
         for (long col = 0; col < indexMap.at(0).header->nrCols; col++)
         {
             int surfaceIndex = indexMap.at(0).value[row][col];
-            if (surfaceIndex != indexMap.at(0).header->flag)
-            {
-                float prec = hourlyMeteoMaps->mapHourlyPrec->value[row][col];
-                if (! isEqual(prec, hourlyMeteoMaps->mapHourlyPrec->header->flag))
-                {
-                    float liquidWater = prec;
-                    if (processes.computeSnow && isSnowOk)
-                    {
-                        float currentSnowFall = snowFallMap->value[row][col];
-                        float currentSnowMelt = snowMeltMap->value[row][col];
-                        if (! isEqual(currentSnowFall, snowFallMap->header->flag)
-                            && ! isEqual(currentSnowMelt, snowMeltMap->header->flag) )
-                        {
-                            liquidWater = prec - currentSnowFall + currentSnowMelt;
-                        }
-                    }
-                    if (liquidWater > 0)
-                    {
-                        double flow = area * (liquidWater / 1000.);                         // [m3 h-1]
-                        totalPrecipitation += flow;                                         // [m3 h-1]
+            if (surfaceIndex == indexMap.at(0).header->flag)
+                continue;
 
-                        float precSurfaceWater = computeSoilCracking(row, col, liquidWater);
-                        double surfaceFlow = area * (precSurfaceWater / 1000.);             // [m3 h-1]
-                        if ((surfaceFlow / 3600.) > 0.)
-                        {
-                            waterSinkSource[surfaceIndex] += surfaceFlow / 3600.;           // [m3 s-1]
-                        }
-                    }
+            float prec = hourlyMeteoMaps->mapHourlyPrec->value[row][col];
+            if (isEqual(prec, hourlyMeteoMaps->mapHourlyPrec->header->flag))
+                continue;
+
+            float liquidWater = prec;
+            if (processes.computeSnow && isSnowOk)
+            {
+                float currentSnowFall = snowFallMap->value[row][col];
+                float currentSnowMelt = snowMeltMap->value[row][col];
+                if (! isEqual(currentSnowFall, snowFallMap->header->flag)
+                    && ! isEqual(currentSnowMelt, snowMeltMap->header->flag))
+                {
+                    liquidWater = prec - currentSnowFall + currentSnowMelt;
+                }
+            }
+            if (liquidWater > 0)
+            {
+                double flow = area * (liquidWater / 1000.);                         // [m3 h-1]
+                totalPrecipitation += flow;                                         // [m3 h-1]
+
+                float precSurfaceWater = computeSoilCracking(row, col, liquidWater);
+                double surfaceFlow = area * (precSurfaceWater / 1000.);             // [m3 h-1]
+                if ((surfaceFlow / 3600.) > 0.)
+                {
+                    waterSinkSource[surfaceIndex] += surfaceFlow / 3600.;           // [m3 s-1]
                 }
             }
         }
@@ -1160,12 +1166,9 @@ bool Crit3DProject::runModels(const QDateTime &firstTime, const QDateTime &lastT
             dailyUpdatePond();
         }
 
-        if (processes.computeRothC)
+        if (processes.computeRothC && myDate.day() == 1)
         {
-            if (myDate.day() == 1)
-            {
-                updateRothC(myDate);
-            }
+            updateRothC(myDate);
         }
 
         if (processes.computeHydrall)
@@ -1584,7 +1587,7 @@ bool Crit3DProject::check3DProject()
         if (! DEM.isLoaded)
             errorString = ERROR_STR_MISSING_DEM;
         else if (! meteoPointsLoaded)
-            errorString =  ERROR_STR_MISSING_DB;
+            errorString = ERROR_STR_MISSING_DB;
         return false;
     }
 
@@ -1723,27 +1726,25 @@ bool Crit3DProject::saveDailyOutput(QDate myDate, const QString& hourlyPath)
         logError("Creation daily output directory failed." );
         return false;
     }
-    else
-    {
-        logInfo("Aggregate daily meteo data");
-        Crit3DDate crit3DDate = getCrit3DDate(myDate);
 
-        aggregateAndSaveDailyMap(airTemperature, aggrMin, crit3DDate, dailyPath, hourlyPath);
-        aggregateAndSaveDailyMap(airTemperature, aggrMax, crit3DDate, dailyPath, hourlyPath);
-        aggregateAndSaveDailyMap(airTemperature, aggrAverage, crit3DDate, dailyPath,hourlyPath);
-        aggregateAndSaveDailyMap(precipitation, aggrSum, crit3DDate, dailyPath, hourlyPath);
-        aggregateAndSaveDailyMap(referenceEvapotranspiration, aggrSum, crit3DDate, dailyPath, hourlyPath);
-        aggregateAndSaveDailyMap(airRelHumidity, aggrMin, crit3DDate, dailyPath, hourlyPath);
-        aggregateAndSaveDailyMap(airRelHumidity, aggrMax, crit3DDate, dailyPath, hourlyPath);
-        aggregateAndSaveDailyMap(airRelHumidity, aggrAverage, crit3DDate, dailyPath, hourlyPath);
-        aggregateAndSaveDailyMap(globalIrradiance, aggrSum, crit3DDate, dailyPath, hourlyPath);
+    logInfo("Aggregate daily meteo data");
+    Crit3DDate crit3DDate = getCrit3DDate(myDate);
 
-        removeDirectory(hourlyPath);
+    aggregateAndSaveDailyMap(airTemperature, aggrMin, crit3DDate, dailyPath, hourlyPath);
+    aggregateAndSaveDailyMap(airTemperature, aggrMax, crit3DDate, dailyPath, hourlyPath);
+    aggregateAndSaveDailyMap(airTemperature, aggrAverage, crit3DDate, dailyPath,hourlyPath);
+    aggregateAndSaveDailyMap(precipitation, aggrSum, crit3DDate, dailyPath, hourlyPath);
+    aggregateAndSaveDailyMap(referenceEvapotranspiration, aggrSum, crit3DDate, dailyPath, hourlyPath);
+    aggregateAndSaveDailyMap(airRelHumidity, aggrMin, crit3DDate, dailyPath, hourlyPath);
+    aggregateAndSaveDailyMap(airRelHumidity, aggrMax, crit3DDate, dailyPath, hourlyPath);
+    aggregateAndSaveDailyMap(airRelHumidity, aggrAverage, crit3DDate, dailyPath, hourlyPath);
+    aggregateAndSaveDailyMap(globalIrradiance, aggrSum, crit3DDate, dailyPath, hourlyPath);
 
-        // save crop output
+    removeDirectory(hourlyPath);
 
-        // save water balance output
-    }
+    // save crop output
+
+    // save water balance output
 
     return true;
 }
@@ -1812,17 +1813,17 @@ bool Crit3DProject::computeSnowModel()
     {
         for (unsigned int i = 0; i < outputPoints.size(); i++)
         {
-            if (outputPoints[i].active)
-            {
-                double x = outputPoints[i].utm.x;
-                double y = outputPoints[i].utm.y;
+            if (!outputPoints[i].active)
+                continue;
 
-                int row, col;
-                DEM.getRowCol(x, y, row, col);
-                if (! gis::isOutOfGridRowCol(row, col, DEM))
-                {
-                    computeSnowPoint(snowModel, row, col);
-                }
+            double x = outputPoints[i].utm.x;
+            double y = outputPoints[i].utm.y;
+
+            int row, col;
+            DEM.getRowCol(x, y, row, col);
+            if (! gis::isOutOfGridRowCol(row, col, DEM))
+            {
+                computeSnowPoint(snowModel, row, col);
             }
         }
     }
@@ -1978,28 +1979,15 @@ bool Crit3DProject::updateDailyTemperatures()
         for (long col = 0; col < dailyTminMap.header->nrCols; col++)
         {
             float airT = hourlyMeteoMaps->mapHourlyTair->value[row][col];
-            if (! isEqual(airT, hourlyMeteoMaps->mapHourlyTair->header->flag))
-            {
-                float currentTmin = dailyTminMap.value[row][col];
-                if (isEqual (currentTmin, dailyTminMap.header->flag))
-                {
-                    dailyTminMap.value[row][col] = airT;
-                }
-                else
-                {
-                    dailyTminMap.value[row][col] = std::min(currentTmin, airT);
-                }
 
-                float currentTmax = dailyTmaxMap.value[row][col];
-                if (isEqual (currentTmax, dailyTmaxMap.header->flag))
-                {
-                    dailyTmaxMap.value[row][col] = airT;
-                }
-                else
-                {
-                    dailyTmaxMap.value[row][col] = std::max(currentTmax, airT);
-                }
-            }
+            if (isEqual(airT, hourlyMeteoMaps->mapHourlyTair->header->flag))
+                continue;
+
+            float currentTmin = dailyTminMap.value[row][col];
+            dailyTminMap.value[row][col] = isEqual(currentTmin, dailyTminMap.header->flag) ? airT : std::min(currentTmin, airT);
+
+            float currentTmax = dailyTmaxMap.value[row][col];
+            dailyTmaxMap.value[row][col] = isEqual(currentTmax, dailyTmaxMap.header->flag) ? airT : std::max(currentTmax, airT);
         }
     }
 
@@ -2021,55 +2009,39 @@ bool Crit3DProject::checkProcesses()
         return false;
     }
 
-    if (! (processes.computeRadiation || processes.computeMeteo ||
-          processes.computeCrop || processes.computeWater || processes.computeSnow
-          || processes.computeHydrall || processes.computeRothC))
+    if (!(processes.computeRadiation || processes.computeMeteo
+         || processes.computeCrop || processes.computeWater || processes.computeSnow
+         || processes.computeHydrall || processes.computeRothC))
     {
         errorString = ERROR_STR_MISSING_PROCESSES;
         return false;
     }
 
-    if (processes.computeCrop)
+    if (processes.computeCrop && !isCropInitialized)
     {
-        if (! isCropInitialized)
-        {
-            errorString = ERROR_STR_INITIALIZE_CROP;
-            return false;
-        }
+        errorString = ERROR_STR_INITIALIZE_CROP;
+        return false;
     }
 
-    if (processes.computeWater)
+    if (processes.computeWater && !isCriteria3DInitialized)
     {
-        if (! isCriteria3DInitialized)
-        {
-            errorString = ERROR_STR_INITIALIZE_3D;
-            return false;
-        }
+        errorString = ERROR_STR_INITIALIZE_3D;
+        return false;
     }
 
-    if (processes.computeSnow)
+    if (processes.computeSnow && !snowMaps.isInitialized && !initializeSnowModel())
     {
-        if (! snowMaps.isInitialized)
-        {
-            if (! initializeSnowModel())
-                return false;
-        }
+        return false;
     }
 
-    if (processes.computeHydrall)
+    if (processes.computeHydrall && !isHydrallInitialized)
     {
-        if (! isHydrallInitialized)
-        {
-            hydrallModel.initialize();
-        }
+        hydrallModel.initialize();
     }
 
-    if (processes.computeRothC)
+    if (processes.computeRothC && !isRothCInitialized)
     {
-        if (! isRothCInitialized)
-        {
-            initializeRothC();
-        }
+        initializeRothC();
     }
 
     return true;
@@ -2912,10 +2884,12 @@ bool Crit3DProject::loadWaterPotentialState(QString waterPath)
         int layer0, layer1;
         double w0, w1;
         int i = 0;
+
         while (currentDepthCm > depthList[i] && i < lastDepthIndex)
         {
             i++;
         }
+
         if (currentDepthCm == depthList[i])
         {
             layer0 = i;
@@ -2934,17 +2908,12 @@ bool Crit3DProject::loadWaterPotentialState(QString waterPath)
                 layer1 = i;
             }
         }
+
         int delta = depthList[layer1] - depthList[layer0];
-        if (delta == 0)
-        {
-            w0 = 1;
-            w1 = 0;
-        }
-        else
-        {
-            w0 = (currentDepthCm - depthList[layer0]) / delta;
-            w1 = 1 - w0;
-        }
+        bool deltaFlag = (delta == 0);
+
+        w0 = deltaFlag ? 1 : (currentDepthCm - depthList[layer0]) / delta;
+        w1 = deltaFlag ? 0 : 1 - w0;
 
         float flag = waterPotentialMapList.at(layer0)->header->flag;
         for (int row = 0; row < indexMap.at(layer).header->nrRows; row++)
@@ -2952,71 +2921,71 @@ bool Crit3DProject::loadWaterPotentialState(QString waterPath)
             for (int col = 0; col < indexMap.at(layer).header->nrCols; col++)
             {
                 long index = long(indexMap.at(layer).value[row][col]);
-                if (index != long(indexMap.at(layer).header->flag))
-                {
-                    double x, y;
-                    float waterPotential = NODATA;
+                if (index == long(indexMap.at(layer).header->flag))
+                    continue;
 
-                    gis::getUtmXYFromRowCol(*(indexMap.at(layer).header), row, col, &x, &y);
-                    float wp0 = gis::getValueFromXY(*(waterPotentialMapList.at(layer0)), x, y);
+                double x, y;
+                float waterPotential = NODATA;
+
+                gis::getUtmXYFromRowCol(*(indexMap.at(layer).header), row, col, &x, &y);
+                float wp0 = gis::getValueFromXY(*(waterPotentialMapList.at(layer0)), x, y);
+
+                if (! isEqual(wp0, flag))
+                {
+                    // valid value
+                    waterPotential = wp0;
+                    if (w1 > 0)
+                    {
+                        float wp1 = gis::getValueFromXY(*(waterPotentialMapList.at(layer1)), x, y);
+                        if (! isEqual(wp1, flag))
+                        {
+                            waterPotential = (w0 * wp0) + (w1 * wp1);
+                        }
+                    }
+                }
+                else
+                {
+                    // search first valid value
+                    int lastDataLayer = layer0 - 1;
+                    while (isEqual(wp0, flag) && lastDataLayer > 0)
+                    {
+                        wp0 = gis::getValueFromXY(*(waterPotentialMapList.at(lastDataLayer)), x, y);
+                        if (isEqual(wp0, flag))
+                        {
+                            lastDataLayer--;
+                        }
+                    }
+
+                    if (lastDataLayer == 0)
+                    {
+                        errorString = "Missing water potential data in row, col: "
+                                      + QString::number(row) + ", " +  QString::number(col);
+                        //return false;
+                    }
+
+                    double deltaDepth = (currentDepthCm - depthList[lastDataLayer]) / 100.;
+                    if ( (1. - deltaDepth/maxDepth) * 100 < meteoSettings->getMinimumPercentage())
+                    {
+                        errorString = "The water potential data is not enough to cover the data in row, col: "
+                                        + QString::number(row) + ", " +  QString::number(col);
+                        //return false;
+                    }
 
                     if (! isEqual(wp0, flag))
                     {
-                        // valid value
                         waterPotential = wp0;
-                        if (w1 > 0)
-                        {
-                            float wp1 = gis::getValueFromXY(*(waterPotentialMapList.at(layer1)), x, y);
-                            if (! isEqual(wp1, flag))
-                            {
-                                waterPotential = (w0 * wp0) + (w1 * wp1);
-                            }
-                        }
                     }
-                    else
+                }
+
+                if (! isEqual(waterPotential, NODATA))
+                {
+                    auto myResult = soilFluxes3D::setNodeMatricPotential(index, waterPotential);
+                    std::string errorName = "";
+                    if(soilFluxes3D::getSF3DerrorName(myResult, errorName))
                     {
-                        // search first valid value
-                        int lastDataLayer = layer0 - 1;
-                        while (isEqual(wp0, flag) && lastDataLayer > 0)
-                        {
-                            wp0 = gis::getValueFromXY(*(waterPotentialMapList.at(lastDataLayer)), x, y);
-                            if (isEqual(wp0, flag))
-                            {
-                                lastDataLayer--;
-                            }
-                        }
-
-                        if (lastDataLayer == 0)
-                        {
-                            errorString = "Missing water potential data in row, col: "
-                                          + QString::number(row) + ", " +  QString::number(col);
-                            //return false;
-                        }
-
-                        double deltaDepth = (currentDepthCm - depthList[lastDataLayer]) / 100.;
-                        if ( (1. - deltaDepth/maxDepth) * 100 < meteoSettings->getMinimumPercentage())
-                        {
-                            errorString = "The water potential data is not enough to cover the data in row, col: "
-                                            + QString::number(row) + ", " +  QString::number(col);
-                            //return false;
-                        }
-
-                        if (! isEqual(wp0, flag))
-                        {
-                            waterPotential = wp0;
-                        }
-                    }
-
-                    if (! isEqual(waterPotential, NODATA))
-                    {
-                        auto myResult = soilFluxes3D::setNodeMatricPotential(index, waterPotential);
-                        std::string errorName = "";
-                        if(soilFluxes3D::getSF3DerrorName(myResult, errorName))
-                        {
-                            errorString = "Error in setMatricPotential: " + QString::fromStdString(errorName) + " in row:"
-                                          + QString::number(row) + " col:" + QString::number(col);
-                            return false;
-                        }
+                        errorString = "Error in setMatricPotential: " + QString::fromStdString(errorName) + " in row:"
+                                      + QString::number(row) + " col:" + QString::number(col);
+                        return false;
                     }
                 }
             }
@@ -3037,67 +3006,67 @@ bool Crit3DProject::writeOutputPointsTables()
 
     for (unsigned int i = 0; i < outputPoints.size(); i++)
     {
-        if (outputPoints[i].active)
+        if (!outputPoints[i].active)
+            continue;
+
+        QString tableName = QString::fromStdString(outputPoints[i].id);
+        if (! outputPointsDbHandler->createTable(tableName, errorString))
+            return false;
+
+        if (processes.computeMeteo)
         {
-            QString tableName = QString::fromStdString(outputPoints[i].id);
-            if (! outputPointsDbHandler->createTable(tableName, errorString))
-                return false;
-
-            if (processes.computeMeteo)
+            if (! outputPointsDbHandler->addColumn(tableName, airTemperature, errorString)) return false;
+            if (! outputPointsDbHandler->addColumn(tableName, precipitation, errorString)) return false;
+            if (! outputPointsDbHandler->addColumn(tableName, airRelHumidity, errorString)) return false;
+            if (! outputPointsDbHandler->addColumn(tableName, windScalarIntensity, errorString)) return false;
+        }
+        if (processes.computeRadiation)
+        {
+            if (! outputPointsDbHandler->addColumn(tableName, atmTransmissivity, errorString)) return false;
+            if (! outputPointsDbHandler->addColumn(tableName, globalIrradiance, errorString)) return false;
+            if (! outputPointsDbHandler->addColumn(tableName, directIrradiance, errorString)) return false;
+            if (! outputPointsDbHandler->addColumn(tableName, diffuseIrradiance, errorString)) return false;
+            if (! outputPointsDbHandler->addColumn(tableName, reflectedIrradiance, errorString)) return false;
+        }
+        if (processes.computeSnow)
+        {
+            if (! outputPointsDbHandler->addColumn(tableName, snowWaterEquivalent, errorString)) return false;
+            if (! outputPointsDbHandler->addColumn(tableName, snowFall, errorString)) return false;
+            if (! outputPointsDbHandler->addColumn(tableName, snowMelt, errorString)) return false;
+            if (! outputPointsDbHandler->addColumn(tableName, snowSurfaceTemperature, errorString)) return false;
+            if (! outputPointsDbHandler->addColumn(tableName, snowSurfaceEnergy, errorString)) return false;
+            if (! outputPointsDbHandler->addColumn(tableName, snowInternalEnergy, errorString)) return false;
+            if (! outputPointsDbHandler->addColumn(tableName, sensibleHeat, errorString)) return false;
+            if (! outputPointsDbHandler->addColumn(tableName, latentHeat, errorString)) return false;
+        }
+        if (processes.computeWater)
+        {
+            for (int l = 0; l < (int)waterContentDepth.size(); l++)
             {
-                if (! outputPointsDbHandler->addColumn(tableName, airTemperature, errorString)) return false;
-                if (! outputPointsDbHandler->addColumn(tableName, precipitation, errorString)) return false;
-                if (! outputPointsDbHandler->addColumn(tableName, airRelHumidity, errorString)) return false;
-                if (! outputPointsDbHandler->addColumn(tableName, windScalarIntensity, errorString)) return false;
+                int depth_cm = waterContentDepth[l];
+                if (! outputPointsDbHandler->addCriteria3DColumn(tableName, volumetricWaterContent, depth_cm, errorString))
+                    return false;
             }
-            if (processes.computeRadiation)
+
+            for (int l = 0; l < (int)waterPotentialDepth.size(); l++)
             {
-                if (! outputPointsDbHandler->addColumn(tableName, atmTransmissivity, errorString)) return false;
-                if (! outputPointsDbHandler->addColumn(tableName, globalIrradiance, errorString)) return false;
-                if (! outputPointsDbHandler->addColumn(tableName, directIrradiance, errorString)) return false;
-                if (! outputPointsDbHandler->addColumn(tableName, diffuseIrradiance, errorString)) return false;
-                if (! outputPointsDbHandler->addColumn(tableName, reflectedIrradiance, errorString)) return false;
+                int depth_cm = waterPotentialDepth[l];
+                if (! outputPointsDbHandler->addCriteria3DColumn(tableName, waterMatricPotential, depth_cm, errorString))
+                    return false;
             }
-            if (processes.computeSnow)
+
+            for (int l = 0; l < (int)degreeOfSaturationDepth.size(); l++)
             {
-                if (! outputPointsDbHandler->addColumn(tableName, snowWaterEquivalent, errorString)) return false;
-                if (! outputPointsDbHandler->addColumn(tableName, snowFall, errorString)) return false;
-                if (! outputPointsDbHandler->addColumn(tableName, snowMelt, errorString)) return false;
-                if (! outputPointsDbHandler->addColumn(tableName, snowSurfaceTemperature, errorString)) return false;
-                if (! outputPointsDbHandler->addColumn(tableName, snowSurfaceEnergy, errorString)) return false;
-                if (! outputPointsDbHandler->addColumn(tableName, snowInternalEnergy, errorString)) return false;
-                if (! outputPointsDbHandler->addColumn(tableName, sensibleHeat, errorString)) return false;
-                if (! outputPointsDbHandler->addColumn(tableName, latentHeat, errorString)) return false;
+                int depth_cm = degreeOfSaturationDepth[l];
+                if (! outputPointsDbHandler->addCriteria3DColumn(tableName, degreeOfSaturation, depth_cm, errorString))
+                    return false;
             }
-            if (processes.computeWater)
+
+            for (int l = 0; l < (int)factorOfSafetyDepth.size(); l++)
             {
-                for (int l = 0; l < (int)waterContentDepth.size(); l++)
-                {
-                    int depth_cm = waterContentDepth[l];
-                    if (! outputPointsDbHandler->addCriteria3DColumn(tableName, volumetricWaterContent, depth_cm, errorString))
-                        return false;
-                }
-
-                for (int l = 0; l < (int)waterPotentialDepth.size(); l++)
-                {
-                    int depth_cm = waterPotentialDepth[l];
-                    if (! outputPointsDbHandler->addCriteria3DColumn(tableName, waterMatricPotential, depth_cm, errorString))
-                        return false;
-                }
-
-                for (int l = 0; l < (int)degreeOfSaturationDepth.size(); l++)
-                {
-                    int depth_cm = degreeOfSaturationDepth[l];
-                    if (! outputPointsDbHandler->addCriteria3DColumn(tableName, degreeOfSaturation, depth_cm, errorString))
-                        return false;
-                }
-
-                for (int l = 0; l < (int)factorOfSafetyDepth.size(); l++)
-                {
-                    int depth_cm = factorOfSafetyDepth[l];
-                    if (! outputPointsDbHandler->addCriteria3DColumn(tableName, factorOfSafety, depth_cm, errorString))
-                        return false;
-                }
+                int depth_cm = factorOfSafetyDepth[l];
+                if (! outputPointsDbHandler->addCriteria3DColumn(tableName, factorOfSafety, depth_cm, errorString))
+                    return false;
             }
         }
     }
@@ -3142,63 +3111,63 @@ bool Crit3DProject::writeOutputPointsData()
 
     for (unsigned int i = 0; i < outputPoints.size(); i++)
     {
-        if (outputPoints[i].active)
+        if (!outputPoints[i].active)
+            continue;
+
+        double x = outputPoints[i].utm.x;
+        double y = outputPoints[i].utm.y;
+        tableName = QString::fromStdString(outputPoints[i].id);
+
+        if (processes.computeMeteo)
         {
-            double x = outputPoints[i].utm.x;
-            double y = outputPoints[i].utm.y;
-            tableName = QString::fromStdString(outputPoints[i].id);
-
-            if (processes.computeMeteo)
-            {
-                meteoValuesList.push_back(hourlyMeteoMaps->mapHourlyTair->getValueFromXY(x, y));
-                meteoValuesList.push_back(hourlyMeteoMaps->mapHourlyPrec->getValueFromXY(x, y));
-                meteoValuesList.push_back(hourlyMeteoMaps->mapHourlyRelHum->getValueFromXY(x, y));
-                meteoValuesList.push_back(hourlyMeteoMaps->mapHourlyWindScalarInt->getValueFromXY(x, y));
-            }
-            if (processes.computeRadiation)
-            {
-                meteoValuesList.push_back(radiationMaps->transmissivityMap->getValueFromXY(x, y));
-                meteoValuesList.push_back(radiationMaps->globalRadiationMap->getValueFromXY(x, y));
-                meteoValuesList.push_back(radiationMaps->beamRadiationMap->getValueFromXY(x, y));
-                meteoValuesList.push_back(radiationMaps->diffuseRadiationMap->getValueFromXY(x, y));
-                meteoValuesList.push_back(radiationMaps->reflectedRadiationMap->getValueFromXY(x, y));
-            }
-            if (processes.computeSnow)
-            {
-                meteoValuesList.push_back(snowMaps.getSnowWaterEquivalentMap()->getValueFromXY(x, y));
-                meteoValuesList.push_back(snowMaps.getSnowFallMap()->getValueFromXY(x, y));
-                meteoValuesList.push_back(snowMaps.getSnowMeltMap()->getValueFromXY(x, y));
-                meteoValuesList.push_back(snowMaps.getSnowSurfaceTempMap()->getValueFromXY(x, y));
-                meteoValuesList.push_back(snowMaps.getSurfaceEnergyMap()->getValueFromXY(x, y));
-                meteoValuesList.push_back(snowMaps.getInternalEnergyMap()->getValueFromXY(x, y));
-                meteoValuesList.push_back(snowMaps.getSensibleHeatMap()->getValueFromXY(x, y));
-                meteoValuesList.push_back(snowMaps.getLatentHeatMap()->getValueFromXY(x, y));
-            }
-            if (processes.computeWater)
-            {
-                int row, col;
-                gis::getRowColFromXY((*DEM.header), x, y, &row, &col);
-
-                appendCriteria3DOutputValue(volumetricWaterContent, row, col, waterContentDepth, criteria3dValuesList);
-                appendCriteria3DOutputValue(waterMatricPotential, row, col, waterPotentialDepth, criteria3dValuesList);
-                appendCriteria3DOutputValue(degreeOfSaturation, row, col, degreeOfSaturationDepth, criteria3dValuesList);
-                appendCriteria3DOutputValue(factorOfSafety, row, col, factorOfSafetyDepth, criteria3dValuesList);
-            }
-
-            if (! outputPointsDbHandler->saveHourlyMeteoData(tableName, getCurrentTime(), meteoVarList, meteoValuesList, errorString))
-            {
-                return false;
-            }
-            if (! outputPointsDbHandler->saveHourlyCriteria3D_Data(tableName, getCurrentTime(), criteria3dValuesList,
-                                                                  waterContentDepth, waterPotentialDepth,
-                                                                  degreeOfSaturationDepth, factorOfSafetyDepth, errorString))
-            {
-                return false;
-            }
-
-            meteoValuesList.clear();
-            criteria3dValuesList.clear();
+            meteoValuesList.push_back(hourlyMeteoMaps->mapHourlyTair->getValueFromXY(x, y));
+            meteoValuesList.push_back(hourlyMeteoMaps->mapHourlyPrec->getValueFromXY(x, y));
+            meteoValuesList.push_back(hourlyMeteoMaps->mapHourlyRelHum->getValueFromXY(x, y));
+            meteoValuesList.push_back(hourlyMeteoMaps->mapHourlyWindScalarInt->getValueFromXY(x, y));
         }
+        if (processes.computeRadiation)
+        {
+            meteoValuesList.push_back(radiationMaps->transmissivityMap->getValueFromXY(x, y));
+            meteoValuesList.push_back(radiationMaps->globalRadiationMap->getValueFromXY(x, y));
+            meteoValuesList.push_back(radiationMaps->beamRadiationMap->getValueFromXY(x, y));
+            meteoValuesList.push_back(radiationMaps->diffuseRadiationMap->getValueFromXY(x, y));
+            meteoValuesList.push_back(radiationMaps->reflectedRadiationMap->getValueFromXY(x, y));
+        }
+        if (processes.computeSnow)
+        {
+            meteoValuesList.push_back(snowMaps.getSnowWaterEquivalentMap()->getValueFromXY(x, y));
+            meteoValuesList.push_back(snowMaps.getSnowFallMap()->getValueFromXY(x, y));
+            meteoValuesList.push_back(snowMaps.getSnowMeltMap()->getValueFromXY(x, y));
+            meteoValuesList.push_back(snowMaps.getSnowSurfaceTempMap()->getValueFromXY(x, y));
+            meteoValuesList.push_back(snowMaps.getSurfaceEnergyMap()->getValueFromXY(x, y));
+            meteoValuesList.push_back(snowMaps.getInternalEnergyMap()->getValueFromXY(x, y));
+            meteoValuesList.push_back(snowMaps.getSensibleHeatMap()->getValueFromXY(x, y));
+            meteoValuesList.push_back(snowMaps.getLatentHeatMap()->getValueFromXY(x, y));
+        }
+        if (processes.computeWater)
+        {
+            int row, col;
+            gis::getRowColFromXY((*DEM.header), x, y, &row, &col);
+
+            appendCriteria3DOutputValue(volumetricWaterContent, row, col, waterContentDepth, criteria3dValuesList);
+            appendCriteria3DOutputValue(waterMatricPotential, row, col, waterPotentialDepth, criteria3dValuesList);
+            appendCriteria3DOutputValue(degreeOfSaturation, row, col, degreeOfSaturationDepth, criteria3dValuesList);
+            appendCriteria3DOutputValue(factorOfSafety, row, col, factorOfSafetyDepth, criteria3dValuesList);
+        }
+
+        if (! outputPointsDbHandler->saveHourlyMeteoData(tableName, getCurrentTime(), meteoVarList, meteoValuesList, errorString))
+        {
+            return false;
+        }
+        if (! outputPointsDbHandler->saveHourlyCriteria3D_Data(tableName, getCurrentTime(), criteria3dValuesList,
+                                                              waterContentDepth, waterPotentialDepth,
+                                                              degreeOfSaturationDepth, factorOfSafetyDepth, errorString))
+        {
+            return false;
+        }
+
+        meteoValuesList.clear();
+        criteria3dValuesList.clear();
     }
 
     meteoVarList.clear();
@@ -3321,41 +3290,41 @@ bool Crit3DProject::initializeGeometry()
         for (long col = 0; col < DEM.header->nrCols; col++)
         {
             z1 = DEM.getValueFromRowCol(row, col);
-            if (! isEqual(z1, DEM.header->flag))
+            if (isEqual(z1, DEM.header->flag))
+                continue;
+
+            DEM.getXY(row, col, x, y);
+            p1 = gis::Crit3DPoint(x, y, z1);
+            c1 = DEM.colorScale->getColor(z1);
+            shadowDtmColor(*c1, sc1, row, col);
+
+            z3 = DEM.getValueFromRowCol(row+1, col+1);
+            if (isEqual(z3, DEM.header->flag))
+                continue;
+
+            DEM.getXY(row+1, col+1, x, y);
+            p3 = gis::Crit3DPoint(x, y, z3);
+            c3 = DEM.colorScale->getColor(z3);
+            shadowDtmColor(*c3, sc3, row+1, col+1);
+
+            z2 = DEM.getValueFromRowCol(row+1, col);
+            if (! isEqual(z2, DEM.header->flag))
             {
-                DEM.getXY(row, col, x, y);
-                p1 = gis::Crit3DPoint(x, y, z1);
-                c1 = DEM.colorScale->getColor(z1);
-                shadowDtmColor(*c1, sc1, row, col);
+                DEM.getXY(row+1, col, x, y);
+                p2 = gis::Crit3DPoint(x, y, z2);
+                c2 = DEM.colorScale->getColor(z2);
+                shadowDtmColor(*c2, sc2, row+1, col);
+                openGlGeometry->addTriangle(p1, p2, p3, sc1, sc2, sc3);
+            }
 
-                z3 = DEM.getValueFromRowCol(row+1, col+1);
-                if (! isEqual(z3, DEM.header->flag))
-                {
-                    DEM.getXY(row+1, col+1, x, y);
-                    p3 = gis::Crit3DPoint(x, y, z3);
-                    c3 = DEM.colorScale->getColor(z3);
-                    shadowDtmColor(*c3, sc3, row+1, col+1);
-
-                    z2 = DEM.getValueFromRowCol(row+1, col);
-                    if (! isEqual(z2, DEM.header->flag))
-                    {
-                        DEM.getXY(row+1, col, x, y);
-                        p2 = gis::Crit3DPoint(x, y, z2);
-                        c2 = DEM.colorScale->getColor(z2);
-                        shadowDtmColor(*c2, sc2, row+1, col);
-                        openGlGeometry->addTriangle(p1, p2, p3, sc1, sc2, sc3);
-                    }
-
-                    z2 = DEM.getValueFromRowCol(row, col+1);
-                    if (! isEqual(z2, DEM.header->flag))
-                    {
-                        DEM.getXY(row, col+1, x, y);
-                        p2 = gis::Crit3DPoint(x, y, z2);
-                        c2 = DEM.colorScale->getColor(z2);
-                        shadowDtmColor(*c2, sc2, row, col+1);
-                        openGlGeometry->addTriangle(p3, p2, p1, sc3, sc2, sc1);
-                    }
-                }
+            z2 = DEM.getValueFromRowCol(row, col+1);
+            if (! isEqual(z2, DEM.header->flag))
+            {
+                DEM.getXY(row, col+1, x, y);
+                p2 = gis::Crit3DPoint(x, y, z2);
+                c2 = DEM.colorScale->getColor(z2);
+                shadowDtmColor(*c2, sc2, row, col+1);
+                openGlGeometry->addTriangle(p3, p2, p1, sc3, sc2, sc1);
             }
         }
     }
@@ -3371,24 +3340,24 @@ void Crit3DProject::shadowDtmColor(const Crit3DColor &colorIn, Crit3DColor &colo
     colorOut.blue = colorIn.blue;
 
     float aspect = radiationMaps->aspectMap->getValueFromRowCol(row, col);
-    if (! isEqual(aspect, radiationMaps->aspectMap->header->flag))
-    {
-        float slopeDegree = radiationMaps->slopeMap->getValueFromRowCol(row, col);
-        if (! isEqual(slopeDegree, radiationMaps->slopeMap->header->flag))
-        {
-            float slopeAmplification = 120.f / std::max(radiationMaps->slopeMap->maximum, 1.f);
-            float shadow = -cos(aspect * DEG_TO_RAD) * std::max(6.f, slopeDegree * slopeAmplification);
+    if (isEqual(aspect, radiationMaps->aspectMap->header->flag))
+        return;
 
-            colorOut.red = std::min(255, std::max(0, int(colorOut.red + shadow)));
-            colorOut.green = std::min(255, std::max(0, int(colorOut.green + shadow)));
-            colorOut.blue = std::min(255, std::max(0, int(colorOut.blue + shadow)));
-            if (slopeDegree > openGlGeometry->artifactSlope())
-            {
-                colorOut.red = std::min(255, std::max(0, int((colorOut.red + 256) * 0.5)));
-                colorOut.green = std::min(255, std::max(0, int((colorOut.green + 256) * 0.5)));
-                colorOut.blue = std::min(255, std::max(0, int((colorOut.blue + 256) * 0.5)));
-            }
-        }
+    float slopeDegree = radiationMaps->slopeMap->getValueFromRowCol(row, col);
+    if (isEqual(slopeDegree, radiationMaps->slopeMap->header->flag))
+        return;
+
+    float slopeAmplification = 120.f / std::max(radiationMaps->slopeMap->maximum, 1.f);
+    float shadow = -cos(aspect * DEG_TO_RAD) * std::max(6.f, slopeDegree * slopeAmplification);
+
+    colorOut.red = std::min(255, std::max(0, int(colorOut.red + shadow)));
+    colorOut.green = std::min(255, std::max(0, int(colorOut.green + shadow)));
+    colorOut.blue = std::min(255, std::max(0, int(colorOut.blue + shadow)));
+    if (slopeDegree > openGlGeometry->artifactSlope())
+    {
+        colorOut.red = std::min(255, std::max(0, int((colorOut.red + 256) * 0.5)));
+        colorOut.green = std::min(255, std::max(0, int((colorOut.green + 256) * 0.5)));
+        colorOut.blue = std::min(255, std::max(0, int((colorOut.blue + 256) * 0.5)));
     }
 }
 
@@ -3400,30 +3369,29 @@ void Crit3DProject::getMixedColor(gis::Crit3DRasterGrid *rasterPointer, int row,
     const double ALPHA_POW = 0.2;
 
     float value = rasterPointer->getValueFromRowCol(row, col);
-    if (! isEqual(value, rasterPointer->header->flag))
-    {
-        Crit3DColor* variableColor = rasterPointer->colorScale->getColor(value);
-        double alpha = DEFAULT_ALPHA;
-
-        // check outliers
-        if (rasterPointer->colorScale->isHideMinimum())
-        {
-            if (value == 0 || value < rasterPointer->colorScale->minimum())
-                alpha = 0;
-        }
-        if (rasterPointer->colorScale->isTransparent())
-        {
-            double step = std::max(0., value - rasterPointer->colorScale->minimum());
-            alpha = std::min(1., step/variableRange);
-            alpha = DEFAULT_ALPHA * pow(alpha, ALPHA_POW);
-        }
-
-        mixColors(dtmColor, *variableColor, otutColor, alpha);
-    }
-    else
+    if (isEqual(value, rasterPointer->header->flag))
     {
         otutColor = dtmColor;
+        return;
     }
+
+    Crit3DColor* variableColor = rasterPointer->colorScale->getColor(value);
+    double alpha = DEFAULT_ALPHA;
+
+    // check outliers
+    if (rasterPointer->colorScale->isHideMinimum())
+    {
+        if (value == 0 || value < rasterPointer->colorScale->minimum())
+            alpha = 0;
+    }
+    if (rasterPointer->colorScale->isTransparent())
+    {
+        double step = std::max(0., value - rasterPointer->colorScale->minimum());
+        alpha = std::min(1., step/variableRange);
+        alpha = DEFAULT_ALPHA * pow(alpha, ALPHA_POW);
+    }
+
+    mixColors(dtmColor, *variableColor, otutColor, static_cast<float>(alpha));
 }
 
 
@@ -3454,55 +3422,56 @@ bool Crit3DProject::update3DColors(gis::Crit3DRasterGrid *rasterPointer)
         for (long col = 0; col < DEM.header->nrCols; col++)
         {
             z1 = DEM.getValueFromRowCol(row, col);
-            if (! isEqual(z1, DEM.header->flag))  
+            if (isEqual(z1, DEM.header->flag))
+                continue;
+
+            z3 = DEM.getValueFromRowCol(row+1, col+1);
+            if (isEqual(z3, DEM.header->flag))
+                continue;
+
+            dtmColor = DEM.colorScale->getColor(z1);
+            if (isShowVariable)
+                getMixedColor(rasterPointer, row, col, variableRange, *dtmColor, tmpColor);
+            else
+                tmpColor = *dtmColor;
+            shadowDtmColor(tmpColor, color1, row, col);
+
+            dtmColor = DEM.colorScale->getColor(z3);
+            if (isShowVariable)
+                getMixedColor(rasterPointer, row+1, col+1, variableRange, *dtmColor, tmpColor);
+            else
+                tmpColor = *dtmColor;
+
+            shadowDtmColor(tmpColor, color3, row+1, col+1);
+
+            z2 = DEM.getValueFromRowCol(row+1, col);
+            if (!isEqual(z2, DEM.header->flag))
             {
-                z3 = DEM.getValueFromRowCol(row+1, col+1);
-                if (! isEqual(z3, DEM.header->flag))
-                {
-                    dtmColor = DEM.colorScale->getColor(z1);
-                    if (isShowVariable)
-                        getMixedColor(rasterPointer, row, col, variableRange, *dtmColor, tmpColor);
-                    else
-                        tmpColor = *dtmColor;
-                    shadowDtmColor(tmpColor, color1, row, col);
+                dtmColor = DEM.colorScale->getColor(z2);
+                if (isShowVariable)
+                    getMixedColor(rasterPointer, row+1, col, variableRange, *dtmColor, tmpColor);
+                else
+                    tmpColor = *dtmColor;
+                shadowDtmColor(tmpColor, color2, row+1, col);
 
-                    dtmColor = DEM.colorScale->getColor(z3);
-                    if (isShowVariable)
-                        getMixedColor(rasterPointer, row+1, col+1, variableRange, *dtmColor, tmpColor);
-                    else
-                        tmpColor = *dtmColor;
-                    shadowDtmColor(tmpColor, color3, row+1, col+1);
+                openGlGeometry->setVertexColor(vertexIndex++, color1);
+                openGlGeometry->setVertexColor(vertexIndex++, color2);
+                openGlGeometry->setVertexColor(vertexIndex++, color3);
+            }
 
-                    z2 = DEM.getValueFromRowCol(row+1, col);
-                    if (! isEqual(z2, DEM.header->flag))
-                    {
-                        dtmColor = DEM.colorScale->getColor(z2);
-                        if (isShowVariable)
-                            getMixedColor(rasterPointer, row+1, col, variableRange, *dtmColor, tmpColor);
-                        else
-                            tmpColor = *dtmColor;
-                        shadowDtmColor(tmpColor, color2, row+1, col);
+            z2 = DEM.getValueFromRowCol(row, col+1);
+            if (!isEqual(z2, DEM.header->flag))
+            {
+                dtmColor = DEM.colorScale->getColor(z2);
+                if (isShowVariable)
+                    getMixedColor(rasterPointer, row, col+1, variableRange, *dtmColor, tmpColor);
+                else
+                    tmpColor = *dtmColor;
+                shadowDtmColor(tmpColor, color2, row, col+1);
 
-                        openGlGeometry->setVertexColor(vertexIndex++, color1);
-                        openGlGeometry->setVertexColor(vertexIndex++, color2);
-                        openGlGeometry->setVertexColor(vertexIndex++, color3);
-                    }
-
-                    z2 = DEM.getValueFromRowCol(row, col+1);
-                    if (! isEqual(z2, DEM.header->flag))
-                    {
-                        dtmColor = DEM.colorScale->getColor(z2);
-                        if (isShowVariable)
-                            getMixedColor(rasterPointer, row, col+1, variableRange, *dtmColor, tmpColor);
-                        else
-                            tmpColor = *dtmColor;
-                        shadowDtmColor(tmpColor, color2, row, col+1);
-
-                        openGlGeometry->setVertexColor(vertexIndex++, color3);
-                        openGlGeometry->setVertexColor(vertexIndex++, color2);
-                        openGlGeometry->setVertexColor(vertexIndex++, color1);
-                    }
-                }
+                openGlGeometry->setVertexColor(vertexIndex++, color3);
+                openGlGeometry->setVertexColor(vertexIndex++, color2);
+                openGlGeometry->setVertexColor(vertexIndex++, color1);
             }
         }
     }
@@ -3521,7 +3490,7 @@ int Crit3DProject::criteria3DShell()
 
     printCriteria3DVersion();
 
-        while (! isRequestedExit())
+    while (!isRequestedExit())
     {
         QString commandLine = getCommandLine("CRITERIA3D");
         if (commandLine != "")
