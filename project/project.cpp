@@ -1487,10 +1487,10 @@ bool Project::loadMeteoPointsData(const QDate& firstDate, const QDate& lastDate,
     Crit3DDate myLastDate = getCrit3DDate(lastDate);
 
     QString dbName = meteoPointsDbHandler->getDbName();
-    int nrThread = _isParallelComputing? std::min(omp_get_max_threads(), nrMeteoPoints) : 1;
+    int nrThreads = _isParallelComputing? std::min(omp_get_max_threads(), nrMeteoPoints) : 1;
     std::vector<bool> isDataOk(nrMeteoPoints, false);
 
-    #pragma omp parallel if(_isParallelComputing) num_threads(nrThread)
+    #pragma omp parallel if(_isParallelComputing) num_threads(nrThreads)
     {
         QSqlDatabase myDb;
         QString connectionName = QString::number(omp_get_thread_num());
@@ -1518,7 +1518,7 @@ bool Project::loadMeteoPointsData(const QDate& firstDate, const QDate& lastDate,
     }
 
     // close connections
-    for (int i=0; i < nrThread; ++i)
+    for (int i=0; i < nrThreads; ++i)
     {
         QString connectionName = QString::number(i);
         QSqlDatabase::removeDatabase(connectionName);

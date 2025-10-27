@@ -56,7 +56,9 @@ DISTFILES += \
     ToDoList.txt
 
 
+# parallel computing settings
 include($$absolute_path(../parallel.pri))
+
 
 contains(DEFINES, MCR_ENABLED) {
     HEADERS += \
@@ -97,7 +99,6 @@ contains(DEFINES, CUDA_ENABLED) {
 }
 
 # Old version (v1)
-
 SOURCES += \
     old/old_boundary.cpp \
     old/old_balance.cpp \
