@@ -736,14 +736,13 @@ void Crit3DProject::setRothCVariables(int row, int col, int month)
  */
 void Crit3DProject::assignETreal()
 {
-    totalEvaporation = 0;               // [m3 h-1]
-    totalTranspiration = 0;             // [m3 h-1]
-
-    double area = DEM.header->cellSize * DEM.header->cellSize;
+    double tmpTotalEvaporation = 0;               // [m3 h-1]
+    double tmpTotalTranspiration = 0;             // [m3 h-1]
+    double area = DEM.header->cellSize * DEM.header->cellSize;  // [m2]
 
     Crit3DHydrall myHydrallModel = hydrallModel;
 
-    #pragma omp parallel for if(isParallelComputing()) firstprivate(myHydrallModel) reduction(+:totalEvaporation, totalTranspiration)
+    #pragma omp parallel for if(isParallelComputing()) firstprivate(myHydrallModel) reduction(+:tmpTotalEvaporation, tmpTotalTranspiration)
     for (int row = 0; row < indexMap.at(0).header->nrRows; row++)
     {
         for (int col = 0; col < indexMap.at(0).header->nrCols; col++)
@@ -768,7 +767,7 @@ void Crit3DProject::assignETreal()
             // assigns actual evaporation
             double actualEvap = assignEvaporation(row, col, currentLAI, soilIndex);     // [mm h-1]
             double evapFlow = area * (actualEvap / 1000.);                              // [m3 h-1]
-            totalEvaporation += evapFlow;                                               // [m3 h-1]
+            tmpTotalEvaporation += evapFlow;                                               // [m3 h-1]
 
             int forestIndex = NODATA;
             //hydrall only
@@ -809,7 +808,7 @@ void Crit3DProject::assignETreal()
                     actualTransp = assignTranspiration(row, col, currentCrop, currentLAI, degreeDays);          // [mm h-1]
                     // TODO verificare che la traspirazione ottenuta da hydrall sia confrontabile e nel caso mettere un if che decida come computare la traspirazione
                     double traspFlow = area * (actualTransp / 1000.);                                           // [m3 h-1] flux
-                    totalTranspiration += traspFlow;                                                            // [m3 h-1] flux
+                    tmpTotalTranspiration += traspFlow;                                                            // [m3 h-1] flux
                 }
 
                 if (processes.computeHydrall && forestIndex != NODATA)
@@ -841,6 +840,9 @@ void Crit3DProject::assignETreal()
             }
         }
     }
+
+    totalEvaporation = tmpTotalEvaporation;             // [m3 h-1]
+    totalTranspiration = tmpTotalTranspiration;         // [m3 h-1]
 }
 
 
