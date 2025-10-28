@@ -397,6 +397,8 @@
         Crit3DHydrallMaps();
         ~Crit3DHydrallMaps();
 
+        void clear();
+
         void initialize(const gis::Crit3DRasterGrid& DEM);
     };
 

@@ -83,7 +83,9 @@ public:
     void cumulateBIC(double myBIC);
     double getBIC();
     void setAvgBIC(double myAvgBIC);
+    void setAvgTemp(double myAvgTemp);
     double getAvgBIC();
+    double getAvgTemp();
     void setWaterLoss(double myWaterLoss);
     void cumulateWaterLoss(double myWaterLoss);
     double getWaterLoss();
@@ -93,6 +95,7 @@ private:
     double prec;
     double BIC;
     double avgBIC;
+    double avgTemp;
     double waterLoss; //hourly water loss is temporarily stored here, then cumulated BIC is calculated
 };
 
@@ -113,6 +116,7 @@ public:
     gis::Crit3DRasterGrid* soilOrganicMatter; //[tC/ha]
 
     std::vector<gis::Crit3DRasterGrid*> avgBIC; //[mm?]
+    std::vector<gis::Crit3DRasterGrid*> avgTemp;//[C°]
     bool isInitialized;
 
     gis::Crit3DRasterGrid* getDPM() { return decomposablePlantMaterial; };
@@ -140,6 +144,10 @@ public:
     double getDepth(int row, int col);
 
     double getAvgBIC(int row, int col, int month);
+    double getAvgTemp(int row, int col, int month);
+
+    std::vector<double> getAvgBICVector(int row, int col);
+    std::vector<double> getAvgTempVector(int row, int col);
 };
 
 struct Crit3DRothCRadioCarbon {
@@ -169,9 +177,8 @@ public:
 
     void initialize();
     bool computeRothCPoint();
-    bool initializeRothCSoilCarbonContent();
+    bool initializeRothCSoilCarbonContent(std::vector<double> temp, std::vector<double> BIC);
     int main();
-    bool loadAvgBIC(std::string errorStr);
 
     double getInputC();
     void setInputC(double myInputC);
