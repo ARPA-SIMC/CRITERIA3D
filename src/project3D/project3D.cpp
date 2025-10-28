@@ -620,6 +620,8 @@ void Project3D::setIndexMaps()      //Improvable
     unsigned long currentIndex = 0;
     for (unsigned int layer = 0; layer < nrLayers; layer++)
     {
+        long noIndex = static_cast<long>(indexMap.at(layer).header->flag);
+
         indexMap.at(layer).initializeGrid(*(DEM.header));
 
         for (int row = 0; row < indexMap.at(layer).header->nrRows; row++)
@@ -662,7 +664,7 @@ void Project3D::setIndexMaps()      //Improvable
                 }
                 else
                 {
-                    indexMap.at(layer).value[row][col] = static_cast<long>(indexMap.at(layer).header->flag);
+                    indexMap.at(layer).value[row][col] = noIndex;
                 }
             }
         }
@@ -797,6 +799,7 @@ bool Project3D::setCrit3DTopography()
     {
         double volume = area * layerThickness[layer];
         float lateralArea;
+        long noIndex = static_cast<long>(indexMap.at(layer).header->flag);
 
         lateralArea = (layer == 0) ? DEM.header->cellSize : DEM.header->cellSize * layerThickness[layer];
 
@@ -805,8 +808,7 @@ bool Project3D::setCrit3DTopography()
             for (int col = 0; col < indexMap.at(layer).header->nrCols; col++)
             {
                 long index = static_cast<long>(indexMap.at(layer).value[row][col]);
-                long flag = static_cast<long>(indexMap.at(layer).header->flag);
-                if (index == flag)
+                if (index == noIndex)
                     continue;
 
                 double x, y;
@@ -890,7 +892,7 @@ bool Project3D::setCrit3DTopography()
                 if (layer > 0)
                 {
                     long linkIndex = indexMap.at(layer - 1).value[row][col];
-                    if (linkIndex == static_cast<long>(indexMap.at(layer + 1).header->flag))
+                    if (linkIndex == noIndex)
                         continue;
 
                     myResult = soilFluxes3D::setNodeLink(index, linkIndex, soilFluxes3D::linkType_t::Up, area);
@@ -906,7 +908,7 @@ bool Project3D::setCrit3DTopography()
                 if (layer < (nrLayers - 1) && isWithinSoil(soilIndex, layerDepth.at(size_t(layer + 1))))
                 {
                     long linkIndex = indexMap.at(layer + 1).value[row][col];
-                    if (linkIndex == static_cast<long>(indexMap.at(layer + 1).header->flag))
+                    if (linkIndex == noIndex)
                         continue;
 
                     myResult = soilFluxes3D::setNodeLink(index, linkIndex, soilFluxes3D::linkType_t::Down, area);
@@ -930,7 +932,7 @@ bool Project3D::setCrit3DTopography()
                             continue;
 
                         long linkIndex = indexMap.at(layer).value[row+i][col+j];
-                        if (linkIndex == static_cast<long>(indexMap.at(layer).header->flag))
+                        if (linkIndex == noIndex)
                             continue;
 
                         // eight lateral nodes: each is assigned half a side (conceptual octagon)
@@ -958,12 +960,14 @@ bool Project3D::initializeWaterContent()
 
     for (unsigned int layer = 0; layer < nrLayers; layer ++)
     {
+        long noIndex = static_cast<long>(indexMap.at(layer).header->flag);
+
         for (int row = 0; row < indexMap.at(layer).header->nrRows; row++)
         {
             for (int col = 0; col < indexMap.at(layer).header->nrCols; col++)
             {
                 long index = indexMap.at(layer).value[row][col];
-                if (index == static_cast<long>(indexMap.at(layer).header->flag))
+                if (index == noIndex)
                     continue;
 
                 if (layer == 0)
@@ -1015,12 +1019,14 @@ bool Project3D::setCrit3DNodeSoil()
 
     for (unsigned int layer = 0; layer < nrLayers; layer ++)
     {
+        long noIndex = static_cast<long>(indexMap.at(layer).header->flag);
+
         for (int row = 0; row < indexMap.at(layer).header->nrRows; row++)
         {
             for (int col = 0; col < indexMap.at(layer).header->nrCols; col++)
             {
                 long index = indexMap.at(layer).value[row][col];
-                if (index == static_cast<long>(indexMap.at(layer).header->flag))
+                if (index == noIndex)
                     continue;
 
                 if (layer == 0)
@@ -1100,12 +1106,14 @@ bool Project3D::initializeSoilMoisture(int month)
 
     for (unsigned int layer = 0; layer < nrLayers; layer++)
     {
+        long noIndex = static_cast<long>(indexMap.at(layer).header->flag);
+
         for (int row = 0; row < indexMap.at(size_t(layer)).header->nrRows; row++)
         {
             for (int col = 0; col < indexMap.at(size_t(layer)).header->nrCols; col++)
             {
                 index = indexMap.at(layer).value[row][col];
-                if (index == static_cast<long>(indexMap.at(layer).header->flag))
+                if (index == noIndex)
                     continue;
 
                 auto crit3dResult = soilFluxes3D::SF3Derror_t::SF3Dok;
