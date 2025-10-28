@@ -814,7 +814,7 @@
      <string notr="true">Digital Elevation Model</string>
     </property>
     <property name="alignment">
-     <set>Qt::AlignmentFlag::AlignLeading|Qt::AlignmentFlag::AlignLeft|Qt::AlignmentFlag::AlignVCenter</set>
+     <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
     </property>
     <widget class="QSlider" name="opacitySliderRasterInput">
      <property name="enabled">
@@ -853,7 +853,7 @@
       <number>75</number>
      </property>
      <property name="orientation">
-      <enum>Qt::Orientation::Horizontal</enum>
+      <enum>Qt::Horizontal</enum>
      </property>
     </widget>
     <widget class="QWidget" name="colorScaleInputRaster" native="true">
@@ -1180,7 +1180,7 @@
      <string notr="true">Variable map</string>
     </property>
     <property name="alignment">
-     <set>Qt::AlignmentFlag::AlignLeading|Qt::AlignmentFlag::AlignLeft|Qt::AlignmentFlag::AlignVCenter</set>
+     <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
     </property>
     <widget class="QSlider" name="opacitySliderRasterOutput">
      <property name="enabled">
@@ -1219,7 +1219,7 @@
       <number>75</number>
      </property>
      <property name="orientation">
-      <enum>Qt::Orientation::Horizontal</enum>
+      <enum>Qt::Horizontal</enum>
      </property>
     </widget>
     <widget class="QWidget" name="colorScaleOutputRaster" native="true">
@@ -1582,7 +1582,7 @@
      <string notr="true">Meteo Points</string>
     </property>
     <property name="alignment">
-     <set>Qt::AlignmentFlag::AlignLeading|Qt::AlignmentFlag::AlignLeft|Qt::AlignmentFlag::AlignVCenter</set>
+     <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
     </property>
     <widget class="QDateEdit" name="dateEdit">
      <property name="geometry">
@@ -1663,7 +1663,7 @@
        <second>0</second>
        <year>1752</year>
        <month>8</month>
-       <day>26</day>
+       <day>25</day>
       </datetime>
      </property>
      <property name="maximumDate">
@@ -1674,7 +1674,7 @@
       </date>
      </property>
      <property name="currentSection">
-      <enum>QDateTimeEdit::Section::YearSection</enum>
+      <enum>QDateTimeEdit::YearSection</enum>
      </property>
      <property name="displayFormat">
       <string>yyyy-MM-dd</string>
@@ -2075,7 +2075,7 @@
      <string notr="true">Model run</string>
     </property>
     <property name="alignment">
-     <set>Qt::AlignmentFlag::AlignLeading|Qt::AlignmentFlag::AlignLeft|Qt::AlignmentFlag::AlignVCenter</set>
+     <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
     </property>
     <widget class="QPushButton" name="buttonModelStart">
      <property name="geometry">
@@ -2170,13 +2170,13 @@
       </font>
      </property>
      <property name="layoutDirection">
-      <enum>Qt::LayoutDirection::RightToLeft</enum>
+      <enum>Qt::RightToLeft</enum>
      </property>
      <property name="text">
       <string>Layer</string>
      </property>
      <property name="alignment">
-      <set>Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignTrailing|Qt::AlignmentFlag::AlignVCenter</set>
+      <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
      </property>
     </widget>
     <widget class="QLineEdit" name="layerDepthEdit">
@@ -2215,13 +2215,13 @@
       </font>
      </property>
      <property name="layoutDirection">
-      <enum>Qt::LayoutDirection::RightToLeft</enum>
+      <enum>Qt::RightToLeft</enum>
      </property>
      <property name="text">
       <string>Time</string>
      </property>
      <property name="alignment">
-      <set>Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignTrailing|Qt::AlignmentFlag::AlignVCenter</set>
+      <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
      </property>
     </widget>
     <widget class="QLineEdit" name="modelTimeEdit">
@@ -2258,7 +2258,7 @@
      <x>0</x>
      <y>0</y>
      <width>1280</width>
-     <height>23</height>
+     <height>28</height>
     </rect>
    </property>
    <property name="palette">
@@ -2383,6 +2383,7 @@
     <addaction name="actionComputePeriod_meteoVariables"/>
     <addaction name="separator"/>
     <addaction name="actionProxy_analysis"/>
+    <addaction name="action_parallel_computing"/>
    </widget>
    <widget class="QMenu" name="menuGIS_settings">
     <property name="title">
@@ -2419,7 +2420,6 @@
     <addaction name="actionCriteria3D_compute_next_hour"/>
     <addaction name="actionCriteria3D_run_models"/>
     <addaction name="separator"/>
-    <addaction name="actionCriteria3D_parallel_computing"/>
     <addaction name="actionCriteria3D_update_subHourly"/>
     <addaction name="separator"/>
     <addaction name="flagSave_state_endRun"/>
@@ -3461,7 +3461,7 @@
     <string>Automatic state saving (end of month)</string>
    </property>
   </action>
-  <action name="actionCriteria3D_parallel_computing">
+  <action name="action_parallel_computing">
    <property name="checkable">
     <bool>true</bool>
    </property>

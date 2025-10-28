@@ -164,7 +164,6 @@
         void on_actionCriteria3D_set_processes_triggered();
         void on_actionCriteria3D_waterFluxes_settings_triggered();
         void on_actionCriteria3D_Water_content_summary_triggered();
-        void on_actionCriteria3D_parallel_computing_triggered(bool isChecked);
 
         void on_flagSave_state_daily_step_toggled(bool isChecked);
         void on_flagSave_state_endRun_triggered(bool isChecked);
@@ -266,6 +265,8 @@
         void on_actioncumulated_yearly_precipitation_triggered();
 
         void on_actionInitialize_soil_carbon_content_triggered();
+
+        void on_action_parallel_computing_triggered(bool isChecked);
 
     protected:
         /*!

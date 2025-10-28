@@ -155,7 +155,7 @@
 
     struct linSystData
     {
-        int numberApprox = NULL;
+        int numberApprox;
         std::vector<int> numberIterations;
         std::vector<int> maxNumberIterations;
         typeSolver solver;
