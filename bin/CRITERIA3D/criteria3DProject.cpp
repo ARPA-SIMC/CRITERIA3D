@@ -1083,8 +1083,6 @@ bool Crit3DProject::startModels(const QDateTime &firstTime, const QDateTime &las
         return false;
     }
 
-    // todo: struttura dati per memorizzare i tempi
-
     logInfoGUI("Loading meteo data...");
     bool loadHourly = true;
     bool isdataLoaded = loadMeteoPointsData(firstTime.date().addDays(-1), lastTime.date().addDays(+1), loadHourly, false, false);
@@ -1154,9 +1152,9 @@ bool Crit3DProject::runModels(const QDateTime &firstTime, const QDateTime &lastT
         setCurrentDate(myDate);
 
         // update crop at last hour of each day
-        // TODO FT check
         if (processes.computeCrop && getCurrentHour() == 23)
         {
+            // TODO FT check
             if (! isRestart || (currentSeconds == 0 || currentSeconds == 3600))
             {
                 dailyUpdateCropMaps(myDate);
@@ -1197,7 +1195,7 @@ bool Crit3DProject::runModels(const QDateTime &firstTime, const QDateTime &lastT
             if (currentSeconds == 0 || currentSeconds == 3600)
                 isRestart = false;
 
-            if (!runModelHour(currentOutputPath, isRestart))
+            if (! runModelHour(currentOutputPath, isRestart))
             {
                 isModelRunning = false;
                 logError();
@@ -1211,7 +1209,7 @@ bool Crit3DProject::runModels(const QDateTime &firstTime, const QDateTime &lastT
             // output points
             if (isSaveOutputPoints() && currentSeconds == 3600)
             {
-                if (!writeOutputPointsData())
+                if (! writeOutputPointsData())
                 {
                     isModelRunning = false;
                     logError();

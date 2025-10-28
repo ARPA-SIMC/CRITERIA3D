@@ -172,16 +172,19 @@ namespace soilFluxes3D::v2
             computeLinearSystemElement(matrixA, vectorB, vectorC, approxIdx, deltaT, _parameters.lateralVerticalRatio, _parameters.meanType);
 
             //Courant data reduction
-            double tempMax = 0;
-            __parforop(_parameters.enableOMP, max, tempMax)
+            double courantMax = 0;
+            __parforop(_parameters.enableOMP, max, courantMax)
             for(SF3Duint_t idx = 0; idx < nodeGrid.numNodes; ++idx)
-                tempMax = SF3Dmax(tempMax, nodeGrid.waterData.partialCourantWaterLevels[idx]);
+                courantMax = SF3Dmax(courantMax, nodeGrid.waterData.partialCourantWaterLevels[idx]);
 
-            nodeGrid.waterData.CourantWaterLevel = tempMax;
-            logStruct;
+            // more speed, less accuracy
+            if (_parameters.MBRThreshold > 0.001)
+                courantMax *= 0.5;
+
+            nodeGrid.waterData.CourantWaterLevel = courantMax;
 
             //Check Courant
-            if((nodeGrid.waterData.CourantWaterLevel > 1.1) && (deltaT > _parameters.deltaTmin))
+            if((nodeGrid.waterData.CourantWaterLevel > 1.) && (deltaT > _parameters.deltaTmin))
             {
                 _parameters.deltaTcurr = SF3Dmax(_parameters.deltaTmin, _parameters.deltaTcurr / nodeGrid.waterData.CourantWaterLevel);
                 if(_parameters.deltaTcurr > 1.)

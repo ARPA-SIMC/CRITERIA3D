@@ -2138,7 +2138,7 @@ void MainWindow::on_buttonModelStart_clicked()
         myProject.runModels(newFirstTime, myProject.modelLastTime, isRestart);
 
         // computation finished
-        if (myProject.getCurrentTime() == myProject.modelLastTime)
+        if (myProject.getCurrentTime() == myProject.modelLastTime && myProject.currentSeconds == HOUR_SECONDS)
         {
             on_buttonModelStop_clicked();
         }
@@ -2480,6 +2480,8 @@ void MainWindow::on_actionCriteria3D_Initialize_triggered()
     }
 
     initializeCriteria3DInterface();
+    updateOutputMap();
+
     myProject.logInfoGUI("The model is initialized.");
 }
 
