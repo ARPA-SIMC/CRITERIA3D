@@ -302,6 +302,26 @@ Crit3DHydrallMaps::Crit3DHydrallMaps()
     yearlyPrec = new gis::Crit3DRasterGrid;
 }
 
+void Crit3DHydrallMaps::clear()
+{
+    treeSpeciesMap.clear();
+    plantHeight.clear();
+    criticalSoilWaterPotential->clear();
+    criticalTranspiration->clear();
+    minLeafWaterPotential->clear();
+
+    treeNetPrimaryProduction->clear();
+    treeBiomassFoliage->clear();
+    treeBiomassRoot->clear();
+    treeBiomassSapwood->clear();
+    understoreyNetPrimaryProduction->clear();
+    understoreyBiomassFoliage->clear();
+    understoreyBiomassRoot->clear();
+
+    outputC->clear();
+    yearlyPrec->clear();
+    yearlyET0->clear();
+}
 
 void Crit3DHydrallMaps::initialize(const gis::Crit3DRasterGrid& DEM)
 {

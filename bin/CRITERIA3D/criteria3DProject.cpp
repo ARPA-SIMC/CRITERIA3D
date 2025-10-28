@@ -261,33 +261,7 @@ bool Crit3DProject::initializeRothC()
     {
         rothCModel.isInitializing = true;
 
-        std::string errorStr;
-        gis::Crit3DRasterGrid raster;
-
-        QDir myDir = QDir(QString::fromStdString(rothCModel.BICMapFolderName));
-        myDir.setNameFilters(QStringList("*.flt"));
-        QList<QString> fileList = myDir.entryList();
-        std::string fileNamePath;
-
-        if (fileList.size() != 12)
-        {
-            errorStr = "Insufficient number of files.";
-            logError("Average BIC maps load from directory " + QString::fromStdString(rothCModel.BICMapFolderName) + " failed.\n" + QString::fromStdString(errorStr));
-            return false;
-        }
-
-        for (unsigned int i = 0; i < 12; i++)
-        {
-            fileNamePath = rothCModel.BICMapFolderName + "/" + fileList[i].toStdString();
-            if (! gis::openRaster(fileNamePath, &raster, gisSettings.utmZone, errorStr))
-            {
-                logError("Average BIC map load failed: " + fileList[i] + "\n" + QString::fromStdString(errorStr));
-                return false;
-            }
-
-            gis::resampleGrid(raster, rothCModel.map.avgBIC[i], DEM.header, aggrPrevailing, 0);
-        }
-        logInfo("Average BIC maps loaded from directory " + QString::fromStdString(rothCModel.BICMapFolderName));
+        loadRothCBICMaps();
 
     }
 
@@ -300,6 +274,10 @@ bool Crit3DProject::initializeRothC()
 //initializing soil carbon content without interpolating meteo data. using data of temperature and BIC averaged over the last 24 years
 bool Crit3DProject::initializeRothCSoilCarbonContent()
 {
+    rothCModel.isInitializing = true;
+
+    loadRothCTempMaps();
+
     for (int row = 0; row < DEM.header->nrRows; row ++)
     {
         for (int col = 0; col < DEM.header->nrCols; col++)
@@ -312,11 +290,110 @@ bool Crit3DProject::initializeRothCSoilCarbonContent()
                 continue;
 
             rothCModel.setClay(rothCModel.map.getClay(row, col));
+            rothCModel.setInputC(getRothCYield(row, col));
+
             rothCModel.setStateVariables(row, col);
-            rothCModel.initializeRothCSoilCarbonContent();
+            rothCModel.initializeRothCSoilCarbonContent(rothCModel.map.getAvgTempVector(row, col), rothCModel.map.getAvgBICVector(row, col));
             rothCModel.getStateVariables(row, col);
+
         }
     }
+
+    return true;
+}
+
+double Crit3DProject::getRothCYield(int row, int col)
+{
+
+    int treeCoverIndex = getTreeCoverIndexRowCol(row,col);
+    int managementIndex, forestIndex;
+
+    if (treeCoverIndex != NODATA && treeCoverIndex > 9)
+    {
+        std::string indexString = std::to_string(treeCoverIndex);
+        if (indexString.size() >= 2)
+        {
+            managementIndex = std::stoi(indexString.substr(indexString.size()-1, indexString.size()-1));
+            forestIndex = (treeCoverIndex - managementIndex) / 10 - 1;
+
+            if (forestIndex < int(rothCModel.conversionTableVector.size()))
+                return rothCModel.tableYield[rothCModel.conversionTableVector[forestIndex]].carbon;
+            else
+                return NODATA;
+        }
+    }
+
+    return 0.1; //TODO: CROP..........
+
+
+}
+
+
+bool Crit3DProject::loadRothCTempMaps()
+{
+    std::string errorStr;
+    gis::Crit3DRasterGrid raster;
+    std::string fileNamePath;
+
+
+
+    QDir myDir = QDir(QString::fromStdString(rothCModel.temperatureMapFolderName));
+    myDir.setNameFilters(QStringList("*.flt"));
+    QList<QString> fileList = myDir.entryList();
+
+    if (fileList.size() != 12)
+    {
+        errorStr = "Insufficient number of files.";
+        logError("Average temperature maps load from directory " + QString::fromStdString(rothCModel.temperatureMapFolderName) + " failed.\n" + QString::fromStdString(errorStr));
+        return false;
+    }
+
+    for (unsigned int i = 0; i < 12; i++)
+    {
+        fileNamePath = rothCModel.temperatureMapFolderName + "/" + fileList[i].toStdString();
+        if (! gis::openRaster(fileNamePath, &raster, gisSettings.utmZone, errorStr))
+        {
+            logError("Average temperature map load failed: " + fileList[i] + "\n" + QString::fromStdString(errorStr));
+            return false;
+        }
+
+        gis::resampleGrid(raster, rothCModel.map.avgTemp[i], DEM.header, aggrPrevailing, 0);
+    }
+    logInfo("Average temperature maps loaded from directory " + QString::fromStdString(rothCModel.temperatureMapFolderName));
+
+    return true;
+
+}
+
+bool Crit3DProject::loadRothCBICMaps()
+{
+    std::string errorStr;
+    gis::Crit3DRasterGrid raster;
+
+    QDir myDir = QDir(QString::fromStdString(rothCModel.BICMapFolderName));
+    myDir.setNameFilters(QStringList("*.flt"));
+    QList<QString> fileList = myDir.entryList();
+    std::string fileNamePath;
+
+    if (fileList.size() != 12)
+    {
+        errorStr = "Insufficient number of files.";
+        logError("Average BIC maps load from directory " + QString::fromStdString(rothCModel.BICMapFolderName) + " failed.\n" + QString::fromStdString(errorStr));
+        return false;
+    }
+
+    for (unsigned int i = 0; i < 12; i++)
+    {
+        fileNamePath = rothCModel.BICMapFolderName + "/" + fileList[i].toStdString();
+        if (! gis::openRaster(fileNamePath, &raster, gisSettings.utmZone, errorStr))
+        {
+            logError("Average BIC map load failed: " + fileList[i] + "\n" + QString::fromStdString(errorStr));
+            return false;
+        }
+
+        gis::resampleGrid(raster, rothCModel.map.avgBIC[i], DEM.header, aggrPrevailing, 0);
+    }
+    logInfo("Average BIC maps loaded from directory " + QString::fromStdString(rothCModel.BICMapFolderName));
 
     return true;
 }
@@ -687,32 +764,23 @@ void Crit3DProject::setRothCVariables(int row, int col, int month)
     rothCModel.meteoVariable.setTemperature(mapLast30DaysTAvg.value[row][col]);
 
     rothCModel.meteoVariable.setAvgBIC(rothCModel.map.getAvgBIC(row, col, month));
+    rothCModel.meteoVariable.setAvgTemp(rothCModel.map.getAvgTemp(row, col, month));
 
     double inputCTable = NODATA;
 
-    if (! processes.computeHydrall || ! isEqual(hydrallModel.getOutputC(), NODATA)) //yield table must be used when initialising rothC or for first year of simulation of hydrall+rothC (hydrall still hasn't produced its first carbon output)
-    {
-        int treeCoverIndex = getTreeCoverIndexRowCol(row,col);
-        int managementIndex, forestIndex;
 
-        if (treeCoverIndex != NODATA && treeCoverIndex > 9)
-        {
-            std::string indexString = std::to_string(treeCoverIndex);
-            if (indexString.size() >= 2)
-            {
-                managementIndex = std::stoi(indexString.substr(indexString.size()-1, indexString.size()-1));
-                forestIndex = (treeCoverIndex - managementIndex) / 10 - 1;
-                inputCTable = rothCModel.tableYield[rothCModel.conversionTableVector[forestIndex]].carbon;
-            }
-        }
-    }
+    if (! processes.computeHydrall || ! isEqual(hydrallModel.getOutputC(),NODATA)) //yield table must be used when initialising rothC or for first year of simulation of hydrall+rothC (hydrall still hasn't produced its first carbon output)
+        inputCTable = getRothCYield(row, col);
+
     //carbon input is taken from hydrall, otherwise TODO
     if (processes.computeHydrall && ! isEqual(hydrallModel.getOutputC(),NODATA))
         rothCModel.setInputC(hydrallModel.getOutputC()/12.0); //read from hydrall (eventually from crop too?). output used is from previous year and divided by 12 months
-    else
+    else if (! isEqual(inputCTable,NODATA))
     {
         rothCModel.setInputC(inputCTable/12.0);
     }
+    else
+        rothCModel.setInputC(NODATA);
 
     //swc comes from water model. during initialization phase, it is not used
     double SWC = NODATA;
@@ -1623,6 +1691,10 @@ void Crit3DProject::clear3DProject()
     dailyTmaxMap.clear();
 
     degreeDaysMap.clear();
+    mapLast30DaysTAvg.clear();
+
+    rothCModel.map.clear();
+    hydrallMaps.clear();
 
     clearGeometry();
 

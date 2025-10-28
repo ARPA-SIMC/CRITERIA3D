@@ -4077,6 +4077,13 @@ void MainWindow::on_actioncumulated_yearly_precipitation_triggered()
 
 void MainWindow::on_actionInitialize_soil_carbon_content_triggered()
 {
+    if (myProject.processes.computeWater || myProject.processes.computeCrop || myProject.processes.computeHydrall || myProject.processes.computeSnow)
+    {
+        myProject.logError("Activate RothC and deactivate other processes to initialize soil carbon content.");
+        myProject.clearRothCMaps();
+        return;
+    }
+
     if (myProject.processes.computeRothC)
     {
         QString defaultPath = myProject.getDefaultPath() + PATH_GEO;
@@ -4100,7 +4107,6 @@ void MainWindow::on_actionInitialize_soil_carbon_content_triggered()
         }
 
         myProject.initializeRothCSoilCarbonContent();
-
     }
     else
     {

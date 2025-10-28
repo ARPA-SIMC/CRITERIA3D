@@ -78,9 +78,13 @@ void Crit3DRothCplusplusMaps::initialize(const gis::Crit3DRasterGrid& DEM)
     _clayMap = new gis::Crit3DRasterGrid;
 
     avgBIC.resize(12);
+    avgTemp.resize(12);
 
     for (unsigned int i = 0; i < 12; i++)
         avgBIC[i] = new gis::Crit3DRasterGrid;
+
+    for (unsigned int i = 0; i < 12; i++)
+        avgTemp[i] = new gis::Crit3DRasterGrid;
 
     decomposablePlantMaterial->initializeGrid(DEM);
     resistantPlantMaterial->initializeGrid(DEM);
@@ -94,6 +98,9 @@ void Crit3DRothCplusplusMaps::initialize(const gis::Crit3DRasterGrid& DEM)
 
     for (unsigned int i = 0; i < 12; i++)
         avgBIC[i]->initializeGrid(DEM);
+
+    for (unsigned int i = 0; i < 12; i++)
+        avgTemp[i]->initializeGrid(DEM);
 }
 
 
@@ -128,6 +135,12 @@ void Crit3DRothCplusplusMaps::clear()
             avgBIC[i]->clear();
 
     avgBIC.clear();
+
+    for (unsigned int i = 0; i < avgTemp.size(); i++)
+        if (avgTemp[i]!= nullptr)
+            avgTemp[i]->clear();
+
+    avgTemp.clear();
 }
 
 
@@ -158,6 +171,34 @@ double Crit3DRothCplusplusMaps::getAvgBIC(int row, int col, int month)
         return NODATA;
 }
 
+double Crit3DRothCplusplusMaps::getAvgTemp(int row, int col, int month)
+{
+    if (month < int(avgTemp.size()))
+        return avgTemp[month]->value[row][col];
+    else
+        return NODATA;
+}
+
+std::vector<double> Crit3DRothCplusplusMaps::getAvgTempVector(int row, int col)
+{
+    std::vector<double> temp(12);
+
+    for (unsigned int i = 0; i < 12; i++)
+        temp[i] = avgTemp[i]->getValueFromRowCol(row, col);
+
+    return temp;
+}
+
+std::vector<double> Crit3DRothCplusplusMaps::getAvgBICVector(int row, int col)
+{
+    std::vector<double> temp(12);
+
+    for (unsigned int i = 0; i < 12; i++)
+        temp[i] = avgBIC[i]->getValueFromRowCol(row, col);
+
+    return temp;
+}
+
 Crit3DRothCMeteoVariable::Crit3DRothCMeteoVariable()
 {
     initialize();
@@ -168,6 +209,7 @@ void Crit3DRothCMeteoVariable::initialize()
     temp = NODATA;
     BIC = NODATA;
     avgBIC = NODATA;
+    avgTemp = NODATA;
     prec = NODATA;
     waterLoss = NODATA;
     std::vector<TAnnualYield> tableYield;
@@ -596,7 +638,7 @@ double Crit3DRothCplusplus::getInputC()
     return inputC;
 }
 
-bool Crit3DRothCplusplus::initializeRothCSoilCarbonContent()
+bool Crit3DRothCplusplus::initializeRothCSoilCarbonContent(std::vector<double> temp, std::vector<double> BIC)
 {
     soilOrganicCarbon = decomposablePlantMatter + resistantPlantMatter + microbialBiomass + humifiedOrganicMatter + inorganicMatter;
 
@@ -610,10 +652,6 @@ bool Crit3DRothCplusplus::initializeRothCSoilCarbonContent()
     inputFYM = 0.4; //kg C day-1 ha-1
     inputFYM *= 0.03; //t C month-1 ha-1
 
-    std::vector<double> temp;
-    temp = {3.0,5.0,6.0,12.0,17.0,24.0,27.0,28.0,22.0,15.0,12.0,6.0};
-    std::vector<double> BIC;
-    BIC = {200.0,150.0,120.0,100.0,30.0,-40.0,-100.0,-170.0,80.0,120.0,130.0,140.0};
 
     unsigned int k = -1;
     int j = -1;
@@ -630,6 +668,7 @@ bool Crit3DRothCplusplus::initializeRothCSoilCarbonContent()
 
         meteoVariable.setTemperature(temp[k]);
         meteoVariable.setBIC(BIC[k]);
+
 
         if (radioCarbon.isActive)
             double totalDelta = (std::exp(-totalRage/8035.0) - 1) * 1000;
@@ -690,9 +729,19 @@ void Crit3DRothCMeteoVariable::setAvgBIC(double myAvgBIC)
     avgBIC = myAvgBIC;
 }
 
+void Crit3DRothCMeteoVariable::setAvgTemp(double myAvgTemp)
+{
+    avgTemp = myAvgTemp;
+}
+
 double Crit3DRothCMeteoVariable::getAvgBIC()
 {
     return avgBIC;
+}
+
+double Crit3DRothCMeteoVariable::getAvgTemp()
+{
+    return avgTemp;
 }
 
 void Crit3DRothCMeteoVariable::cumulateBIC(double myBIC)
