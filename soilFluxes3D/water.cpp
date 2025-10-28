@@ -411,7 +411,6 @@ namespace soilFluxes3D::v2::Water
         double v = std::pow(H_s, 2./3.) * std::sqrt(slope) / roughness;
 
         nodeGrid.waterData.partialCourantWaterLevels[rowIdx] = SF3Dmax(nodeGrid.waterData.partialCourantWaterLevels[rowIdx], v * deltaT / cellDistance);
-        //atomicMaxDouble(&(nodeGrid.waterData.CourantWaterLevel), nodeGrid.waterData.tempCourantVector[maxTotalLink*rowIdx + colIdx]);
 
         return v * flowArea * H_s / dH;
     }

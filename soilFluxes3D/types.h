@@ -298,7 +298,7 @@ namespace soilFluxes3D { inline namespace v2
 
     struct SolverParameters
     {
-        double MBRThreshold = 1e-4;
+        double MBRThreshold = 1e-3;
         double residualTolerance = 1e-10;
 
         double deltaTmin = 1;       // [s]
