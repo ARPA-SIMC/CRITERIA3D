@@ -28,6 +28,8 @@
             bool downloadHourlyData(const QDate &startDate, const QDate &endDate, const QString &dataset,
                                     const QList<QString> &stationList, const QList<int> &varList, QString &errorString);
 
+            QString getErrorString() const { return _dbMeteo->getErrorString(); }
+
         private:
             QList<QString> _datasetsList;
             DbArkimet* _dbMeteo;
