@@ -394,15 +394,15 @@ namespace soilFluxes3D::v2::Water
 
         double H_max = SF3Dmax(H_i, H_j);
         double z_max = SF3Dmax(z_i, z_j);
-
         double H_s = H_max - z_max;
 
         if(H_s < EPSILON_CUSTOM)
             return 0.;
 
-        // Land depression
-        if((H_i > H_j && z_i < z_j) || ((H_i < H_j && z_i > z_j)))
-            H_s = SF3Dmin(H_s, dH);
+        // Warning: cause underestimation of flow in lowland water bodies
+        // use only in land depressions (disabled: produces mass balance error)
+        //if((H_i > H_j && z_i < z_j) || ((H_i < H_j && z_i > z_j)))
+        H_s = SF3Dmin(H_s, dH);
 
         double cellDistance = nodeDistance2D(rowIdx, colIdx);
         double slope = dH / cellDistance;
