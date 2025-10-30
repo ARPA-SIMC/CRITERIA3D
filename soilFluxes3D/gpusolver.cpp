@@ -427,8 +427,9 @@ namespace soilFluxes3D::v2
         balanceDataCurrentTimeStep.waterMBE = deltaStorage - balanceDataCurrentTimeStep.waterSinkSource;
 
         // minimum reference water storage [m3] as % of current storage
-        double timePercentage = 0.001 * SF3Dmax(deltaT, 60.) / HOUR_SECONDS;
+        double timePercentage = 0.01 * SF3Dmax(deltaT, 30.) / HOUR_SECONDS;
         double minRefWaterStorage = balanceDataCurrentTimeStep.waterStorage * timePercentage;
+        // [m3] minimum 1 liter
         minRefWaterStorage = SF3Dmax(minRefWaterStorage, 0.001);
 
         // Reference water for computation of mass balance error ratio

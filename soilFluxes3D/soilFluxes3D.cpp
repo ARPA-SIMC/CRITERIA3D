@@ -41,11 +41,13 @@ namespace soilFluxes3D::v2
     std::vector<surfaceData_t> surfaceList = {};
     std::vector<culvertData_t> culvertList = {};
 
+
     /*!
      *  \brief initializes the node data grid and set simulation parameters
      *  \return Ok/Error
     */
-    SF3Derror_t initializeSF3D(SF3Duint_t nrNodes, u16_t nrLayers, u8_t nrLateralLinks, bool isComputeWater, bool isComputeHeat, bool isComputeSolutes, heatFluxSaveMode_t HFsm)
+    SF3Derror_t initializeSF3D(SF3Duint_t nrNodes, u16_t nrLayers, u8_t nrLateralLinks,
+                               bool isComputeWater, bool isComputeHeat, bool isComputeSolutes, heatFluxSaveMode_t HFsm)
     {
         //Cleans all the data structures
         SF3Derror_t cleanResult = cleanSF3D();
@@ -545,7 +547,6 @@ namespace soilFluxes3D::v2
         //Set the culvertData_t pointer
         nodeGrid.culvertPtr[nodeIndex] = culvertPtr;
         return SF3Derror_t::SF3Dok;
-
     }
 
 
@@ -553,7 +554,8 @@ namespace soilFluxes3D::v2
      *  \brief sets the principal data of the index node
      *  \return Ok/Error
     */
-    SF3Derror_t setNode(SF3Duint_t index, double x, double y, double z, double volume_or_area, bool isSurface, boundaryType_t boundaryType, double slope, double boundaryArea)
+    SF3Derror_t setNode(SF3Duint_t index, double x, double y, double z, double volume_or_area,
+                        bool isSurface, boundaryType_t boundaryType, double slope, double boundaryArea)
     {
         if(!nodeGrid.isInitialized)
             return SF3Derror_t::MemoryError;
