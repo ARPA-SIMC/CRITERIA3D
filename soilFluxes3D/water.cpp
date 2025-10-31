@@ -101,9 +101,9 @@ namespace soilFluxes3D::v2::Water
         balanceDataCurrentTimeStep.waterMBE = deltaStorage - balanceDataCurrentTimeStep.waterSinkSource;
 
         // minimum reference water storage [m3] as % of current storage
-        double timePercentage = 0.001 * SF3Dmax(deltaT, 60.) / HOUR_SECONDS;
+        double timePercentage = 0.01 * SF3Dmax(deltaT, 30.) / HOUR_SECONDS;
         double minRefWaterStorage = balanceDataCurrentTimeStep.waterStorage * timePercentage;
-        // minimum 1 liter
+        // [m3] minimum 1 liter
         minRefWaterStorage = SF3Dmax(minRefWaterStorage, 0.001);
 
         // Reference water [m3] for computation of mass balance error ratio
@@ -394,15 +394,15 @@ namespace soilFluxes3D::v2::Water
 
         double H_max = SF3Dmax(H_i, H_j);
         double z_max = SF3Dmax(z_i, z_j);
-
         double H_s = H_max - z_max;
 
         if(H_s < EPSILON_CUSTOM)
             return 0.;
 
-        // Land depression
-        if((H_i > H_j && z_i < z_j) || ((H_i < H_j && z_i > z_j)))
-            H_s = SF3Dmin(H_s, dH);
+        // Warning: cause underestimation of flow in lowland water bodies
+        // use only in land depressions (disabled: produces mass balance error)
+        //if((H_i > H_j && z_i < z_j) || ((H_i < H_j && z_i > z_j)))
+        H_s = SF3Dmin(H_s, dH);
 
         double cellDistance = nodeDistance2D(rowIdx, colIdx);
         double slope = dH / cellDistance;
