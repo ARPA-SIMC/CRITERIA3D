@@ -151,6 +151,7 @@
         double soilLayerThicknessGrowthFactor;  // [-] progressive growth factor of layer thicknesses
 
         double previousTotalWaterContent;       // [m3]
+        double totalMassBalanceError;           // [m3]
 
         // evaporation
         std::vector<double> evapCoeff;

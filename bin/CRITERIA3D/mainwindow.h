@@ -56,7 +56,7 @@
         // Menu File
         void on_actionOpenProject_triggered();
         void on_actionCloseProject_triggered();
-        void on_actionLoad_DEM__triggered();
+        void on_actionLoad_DEM_triggered();
         void on_actionExtract_sub_basin_triggered();
         void on_actionLoad_soil_map_triggered();
         void on_actionLoad_soil_data_triggered();

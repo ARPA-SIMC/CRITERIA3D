@@ -59,35 +59,6 @@ Crit3DProject::Crit3DProject() : Project3D()
 }
 
 
-bool Crit3DProject::initializeCriteria3DModel()
-{
-    if (! check3DProject())
-        return false;
-
-    clearWaterBalance3D();
-
-    if (! waterFluxesParameters.computeOnlySurface)
-    {
-        // it is necessary to reload the soils db (the fitting options may have changed)
-        if (! loadSoilDatabase(soilDbFileName))
-            return false;
-
-        if (! setSoilIndexMap())
-            return false;
-    }
-
-    if (! initialize3DModel())
-    {
-        clearWaterBalance3D();
-        errorString += "\nCriteria3D model is not initialized!";
-        return false;
-    }
-
-    isCriteria3DInitialized = true;
-    return true;
-}
-
-
 void Crit3DProject::clearCropMaps()
 {
     laiMap.clear();
@@ -2892,9 +2863,9 @@ bool Crit3DProject::loadWaterPotentialState(QString waterPath)
     if (! isCriteria3DInitialized)
     {
         logWarning("The water flow model will be initialized with the current settings.");
-        if (! initializeCriteria3DModel())
+        if (! initialize3DModel())
         {
-            logError();
+            clearWaterBalance3D();
             return false;
         }
     }

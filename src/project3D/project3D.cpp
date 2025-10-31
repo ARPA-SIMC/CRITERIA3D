@@ -212,6 +212,7 @@ void Project3D::initializeProject3D()
 
     currentSeconds = 0;                 // [s]
     previousTotalWaterContent = 0;      // [m3]
+    totalMassBalanceError = 0;          // [m3]
 
     totalPrecipitation = 0;
     totalEvaporation = 0;
@@ -346,11 +347,23 @@ bool Project3D::initialize3DModel()
 {
     logInfo("Initialize 3D model...");
 
-    // check soil
-    if (! waterFluxesParameters.computeOnlySurface && (!soilMap.isLoaded || soilList.size() == 0))
+    clearWaterBalance3D();
+
+    // soil
+    if (! waterFluxesParameters.computeOnlySurface)
     {
-        logInfo("WARNING: soil map or soil db is missing: only surface fluxes will be computed.");
-        waterFluxesParameters.computeOnlySurface = true;
+        // it is necessary to reload the soils db (the fitting options may have changed)
+        if (! loadSoilDatabase(soilDbFileName))
+        {
+            logError();
+            return false;
+        }
+
+        if (! setSoilIndexMap())
+        {
+            logError();
+            return false;
+        }
     }
 
     // check crop
@@ -482,7 +495,11 @@ bool Project3D::initialize3DModel()
         return false;
     }
 
+    totalMassBalanceError = 0;      // [m3]
+    isCriteria3DInitialized = true;
+
     logInfo("3D water balance initialized");
+
     return true;
 }
 
@@ -1221,6 +1238,9 @@ void Project3D::runWaterFluxes3DModel(double totalTimeStep, bool isRestart)
 	double surfaceArea = DEM.header->cellSize * DEM.header->cellSize * nrSurfaceNodes;      // [m2]
     double error_mm = massBalanceError / surfaceArea * 1000;                                // [mm]
     logInfo("Mass balance error [mm]: " + QString::number(error_mm));
+
+    totalMassBalanceError += massBalanceError;
+    logInfo("Total mass balance error [m3]: " + QString::number(totalMassBalanceError, 'f', 7));
 }
 
 

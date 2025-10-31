@@ -75,8 +75,6 @@
 
         Crit3DProject();
 
-        bool initializeCriteria3DModel();
-
         void clearCropMaps();
         bool initializeCropMaps();
         bool initializeHydrall();

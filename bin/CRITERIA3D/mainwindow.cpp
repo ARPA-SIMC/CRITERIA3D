@@ -872,7 +872,7 @@ void MainWindow::on_timeEdit_valueChanged(int myHour)
 }
 
 
-void MainWindow::on_actionLoad_DEM__triggered()
+void MainWindow::on_actionLoad_DEM_triggered()
 {
     QString demPath = myProject.getDefaultPath() + PATH_DEM;
     QString fileName = QFileDialog::getOpenFileName(this, tr("Open Digital Elevation Model"), demPath,
@@ -2424,9 +2424,9 @@ void MainWindow::on_actionCriteria3D_Initialize_triggered()
             }
         }
 
-        if (! myProject.initializeCriteria3DModel())
+        if (! myProject.initialize3DModel())
         {
-            myProject.logError();
+            myProject.clearWaterBalance3D();
             return;
         }
     }
@@ -4121,3 +4121,4 @@ void MainWindow::on_action_parallel_computing_triggered(bool isChecked)
 {
     myProject.setParallelComputing(isChecked);
 }
+
