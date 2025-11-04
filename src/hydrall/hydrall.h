@@ -217,6 +217,7 @@
         double mBallBerry;
         double wildfireDamage;
         int management;
+        double subCanopyTemperature;
 
         void setLAICanopy(double myLAI) { leafAreaIndexCanopy = myLAI; }
         double getLAICanopy() { return leafAreaIndexCanopy; }

@@ -963,6 +963,12 @@ void Crit3DHydrall::aerodynamicalCoupling()
             // Aerodynamic conductance for heat exchange (mol m-2 s-1)
             dummy =	(weatherVariable.atmosphericPressure/R_GAS)/(weatherVariable.myInstantTemp + ZEROCELSIUS);// conversion factor m s-1 into mol m-2 s-1
             aerodynamicConductanceForHeat =  ((canopyAerodynamicConductanceToMomentum*leafBoundaryLayerConductance)/(canopyAerodynamicConductanceToMomentum + leafBoundaryLayerConductance)) * dummy ; //whole canopy
+            double aerodynamicResistance= 1e6;  // numerical fallback
+            if (aerodynamicConductanceForHeat > 1e-9)
+            {
+                //double T_K = weatherVariable.myInstantTemp + ZEROCELSIUS;
+                aerodynamicResistance = 1. / (dummy * aerodynamicConductanceForHeat);
+            }
             sunlit.aerodynamicConductanceHeatExchange = aerodynamicConductanceForHeat * sunlit.leafAreaIndex/plant.getLAICanopy() ;//sunlit big-leaf
             shaded.aerodynamicConductanceHeatExchange = aerodynamicConductanceForHeat - sunlit.aerodynamicConductanceHeatExchange ; //  shaded big-leaf
             // Canopy radiative conductance (mol m-2 s-1)
@@ -1004,6 +1010,7 @@ void Crit3DHydrall::aerodynamicalCoupling()
 
             // Sensible heat flux from the whole canopy
             sensibleHeat = HEAT_CAPACITY_AIR_MOLAR * (sunlit.aerodynamicConductanceHeatExchange*sunlitDeltaTemp + shaded.aerodynamicConductanceHeatExchange*shadedDeltaTemp);
+            plant.subCanopyTemperature = weatherVariable.myInstantTemp - sensibleHeat * aerodynamicResistance/(AIR_DENSITY * HEAT_CAPACITY_AIR);
         }
 
         if (plant.isAmphystomatic) aerodynamicConductanceToCO2 = 0.78 * aerodynamicConductanceForHeat; //amphystomatous species. Ratio of diffusivities from Wang & Leuning 1998
