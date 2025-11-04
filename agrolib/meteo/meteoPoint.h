@@ -153,7 +153,7 @@
             bool existDailyData() { return ! obsDataD.empty(); }
             bool existHourlyData() { return (nrObsDataDaysH > 0); }
 
-            float getMeteoPointValueH(const Crit3DDate& myDate, int myHour, int myMinutes, meteoVariable myVar);
+            float getMeteoPointValueH(const Crit3DDate& myDate, int myHour, int myMinutes, meteoVariable myVar) const;
             bool setMeteoPointValueH(const Crit3DDate& myDate, int myHour, int myMinutes, meteoVariable myVar, float myValue);
             float getMeteoPointValueD(const Crit3DDate& myDate, meteoVariable myVar, Crit3DMeteoSettings* meteoSettings) const;
             float getMeteoPointValueD(const Crit3DDate& myDate, meteoVariable myVar) const;
@@ -161,7 +161,7 @@
             bool getMeteoPointValueDayH(const Crit3DDate& myDate, TObsDataH *&hourlyValues);
             Crit3DDate getMeteoPointHourlyValuesDate(int index) const;
             float getMeteoPointValue(const Crit3DTime& myTime, meteoVariable myVar, Crit3DMeteoSettings *meteoSettings);
-            float getMeteoPointValueM(const Crit3DDate &myDate, meteoVariable myVar);
+            float getMeteoPointValueM(const Crit3DDate &myDate, meteoVariable myVar) const;
             bool setMeteoPointValueM(const Crit3DDate &myDate, meteoVariable myVar, float myValue);
 
             float getProxyValue(unsigned pos);
