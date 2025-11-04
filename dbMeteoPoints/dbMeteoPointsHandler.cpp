@@ -1701,6 +1701,25 @@ bool Crit3DMeteoPointsDbHandler::deleteAllPointsFromGeoPointList(const QList<gis
 */
 
 
+bool Crit3DMeteoPointsDbHandler::isActivePoint(const QString& pointId)
+{
+    QSqlQuery qry(_db);
+    qry.prepare("SELECT is_active FROM point_properties WHERE id_point = :id_point");
+    qry.bindValue(":id_point", pointId);
+
+    if (! qry.exec()) {
+        _errorStr = "SQL error in isActivePoint: " + qry.lastError().text();
+        return false;
+    }
+
+    if (qry.next()) {
+        return qry.value(0).toBool();
+    }
+
+    return false;
+}
+
+
 bool Crit3DMeteoPointsDbHandler::setActiveStatePointList(const QList<QString>& pointList, bool activeState)
 {
     _errorStr = "";
