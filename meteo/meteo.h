@@ -339,8 +339,8 @@
     double tDewFromRelHum(double RH, double T);
 
     float computeDailyBIC(float prec, float etp);
-    float dailyThermalRange(float Tmin, float Tmax);
-    float dailyAverageT(float Tmin, float Tmax);
+    float dailyThermalRange(float tMin, float tMax);
+    float dailyAverageT(float tMin, float tMax);
     float dailyEtpHargreaves(float Tmin, float Tmax, Crit3DDate date, double latitude, Crit3DMeteoSettings *meteoSettings);
     float dewPoint(float relHumAir, float tempAir);
     bool computeLeafWetness(double prec, double relHumidity, short* leafW);

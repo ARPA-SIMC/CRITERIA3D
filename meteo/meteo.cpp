@@ -351,47 +351,44 @@ double dailyExtrRadiation(double myLat, int myDoy)
     return SOLAR_CONSTANT * DAY_SECONDS / 1000000. * dr / PI * (OmegaS * sin(Phi) * sin(delta) + cos(Phi) * cos(delta) * sin(OmegaS));
 }
 
+
 float computeDailyBIC(float prec, float etp)
 {
-
     Crit3DQuality qualityCheck;
 
-    // TODO nella versione vb ammessi anche i qualitySuspectData, questo tipo per ora non è stato implementato
     quality::qualityType qualityPrec = qualityCheck.syntacticQualitySingleValue(dailyPrecipitation, prec);
     quality::qualityType qualityETP = qualityCheck.syntacticQualitySingleValue(dailyReferenceEvapotranspirationHS, etp);
+
     if (qualityPrec == quality::accepted && qualityETP == quality::accepted)
-    {
-            return (prec - etp);
-    }
+        return (prec - etp);
     else
         return NODATA;
-
 }
 
-float dailyThermalRange(float Tmin, float Tmax)
-{
 
+float dailyThermalRange(float tMin, float tMax)
+{
     Crit3DQuality qualityCheck;
 
-    // TODO nella versione vb ammessi anche i qualitySuspectData, questo tipo per ora non è stato implementato
-    quality::qualityType qualityTmin = qualityCheck.syntacticQualitySingleValue(dailyAirTemperatureMin, Tmin);
-    quality::qualityType qualityTmax = qualityCheck.syntacticQualitySingleValue(dailyAirTemperatureMax, Tmax);
+    quality::qualityType qualityTmin = qualityCheck.syntacticQualitySingleValue(dailyAirTemperatureMin, tMin);
+    quality::qualityType qualityTmax = qualityCheck.syntacticQualitySingleValue(dailyAirTemperatureMax, tMax);
+
     if (qualityTmin  == quality::accepted && qualityTmax == quality::accepted)
-        return (Tmax - Tmin);
+        return (tMax - tMin);
     else
         return NODATA;
-
 }
 
-float dailyAverageT(float Tmin, float Tmax)
+
+float dailyAverageT(float tMin, float tMax)
 {
         Crit3DQuality qualityCheck;
 
-        // TODO nella versione vb ammessi anche i qualitySuspectData, questo tipo per ora non è stato implementato
-        quality::qualityType qualityTmin = qualityCheck.syntacticQualitySingleValue(dailyAirTemperatureMin, Tmin);
-        quality::qualityType qualityTmax = qualityCheck.syntacticQualitySingleValue(dailyAirTemperatureMax, Tmax);
+        quality::qualityType qualityTmin = qualityCheck.syntacticQualitySingleValue(dailyAirTemperatureMin, tMin);
+        quality::qualityType qualityTmax = qualityCheck.syntacticQualitySingleValue(dailyAirTemperatureMax, tMax);
+
         if (qualityTmin  == quality::accepted && qualityTmax == quality::accepted)
-            return ( (Tmin + Tmax) / 2) ;
+            return (tMin + tMax) * 0.5f;
         else
             return NODATA;
 }
