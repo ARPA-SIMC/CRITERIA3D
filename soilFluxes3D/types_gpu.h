@@ -8,23 +8,24 @@
 #include <cub/device/device_reduce.cuh>
 
 #include <cstdint>
+#include "types.h"
 
 namespace soilFluxes3D::v2
 {
-    using int64_t = std::int64_t;
+    using i64_t = std::int64_t;
 
     struct MatrixGPU
     {
         cusparseSpMatDescr_t cusparseDescriptor;
 
-        int64_t numRows;
-        int64_t numCols;
+        i64_t numRows;
+        i64_t numCols;
         uint16_t* d_numColsInRow = nullptr;
-        int64_t numNonZeroElement;
-        int64_t totValuesSize;
-        int64_t sliceSize;
-        int64_t* d_offsets = nullptr;
-        int64_t* d_columnIndeces = nullptr;
+        i64_t numNonZeroElement;
+        i64_t totValuesSize;
+        i64_t sliceSize;
+        i64_t* d_offsets = nullptr;
+        i64_t* d_columnIndeces = nullptr;
         double* d_values = nullptr;
         double* d_diagonalValues = nullptr;
         const cusparseIndexType_t offsetType = CUSPARSE_INDEX_64I;
@@ -36,7 +37,7 @@ namespace soilFluxes3D::v2
     struct VectorGPU
     {
         cusparseDnVecDescr_t cusparseDescriptor;
-        int64_t numElements;
+        i64_t numElements;
         double *d_values = nullptr;
         const cudaDataType valueType = CUDA_R_64F;
     };
@@ -61,6 +62,30 @@ namespace soilFluxes3D::v2
     }
 
     template<typename T>
+    __global__ void fillDevicePointer(T*& ptr, const std::size_t count, const T value)
+    {
+        if(ptr == nullptr)
+            return;
+
+        SF3Duint_t idx = (blockIdx.x * blockDim.x) + threadIdx.x;
+        if(idx >= count)
+            return;
+
+        ptr[idx] = value;
+        return;
+    }
+
+    template<typename T>
+    inline cudaError_t resetDevicePointer(T*& ptr, const std::size_t count)
+    {
+        if(ptr == nullptr)
+            return cudaErrorIllegalAddress;
+
+        cudaError_t err = cudaMemset(ptr, 0, count * sizeof(T));
+        return err;
+    }
+
+    template<typename T>
     inline cudaError_t freeDevicePointer(T*& ptr)
     {
         if(ptr == nullptr)
@@ -74,14 +99,20 @@ namespace soilFluxes3D::v2
         return err;
     }
 
-    template<typename T>
-    inline cudaError_t resetDevicePointer(T*& ptr, const std::size_t count)
+    template<typename T, typename Func>
+    __global__ void conditionalCopyDevicePointer(T*& dst, const T*& src, const std::size_t count, Func cond)
     {
-        if(ptr == nullptr)
-            return cudaErrorIllegalAddress;
+        if(src == nullptr || dst == nullptr)
+            return;
 
-        cudaError_t err = cudaMemset(ptr, 0, count * sizeof(T));
-        return err;
+        SF3Duint_t idx = (blockIdx.x * blockDim.x) + threadIdx.x;
+        if(idx >= count)
+            return;
+
+        if(cond(idx))
+            dst[idx] = src[idx];
+
+        return;
     }
 
 

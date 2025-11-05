@@ -25,6 +25,9 @@ namespace soilFluxes3D::v2
 
             void waterMainLoop(double maxTimeStep, double& acceptedTimeStep);
             balanceResult_t waterApproximationLoop(double deltaT);
+
+            void heatLoop(double timeStepHeat, double timeStepWater);
+
             bool solveLinearSystem(u8_t approximationNumber, processType computationType) override;
 
             //TEMP: maybe can be unified with CPU code in single __host__ __device__ function
@@ -35,9 +38,11 @@ namespace soilFluxes3D::v2
             void acceptStep_m(double deltaT);
             void restoreBestStep_m(double deltaT);
 
-            SF3Derror_t upCopyData();               //TO DO: add heat and culvert data
+            SF3Derror_t resetFluxValues_m(bool flagHeat, bool flagWater);
+
+            SF3Derror_t upCopyData();
             SF3Derror_t upMoveVectorPtrs();
-            SF3Derror_t downCopyData();             //TO DO: add heat and culvert data
+            SF3Derror_t downCopyData();
             SF3Derror_t downMoveVectorPtrs();
             SF3Derror_t createCUsparseDescriptors();
 

@@ -19,9 +19,14 @@
 
 
 //GPU base
+#define launchKernel(kernel, ...) launchGPUKernel(kernel, dim3(numBlocks), dim3(numThreadsPerBlock), __VA_ARGS__)
+
 #define deviceAlloc(ptr, count) allocDevicePointer(ptr, count)
+#define deviceFill(ptr, count, value) launchKernel(fillDevicePointer, ptr, count, value)
 #define deviceReset(ptr, count) resetDevicePointer(ptr, count)
 #define deviceFree(ptr) freeDevicePointer(ptr)
+
+#define deviceConditionalCopy(dst, src, count, condition) launchKernel(conditionalCopyDevicePointer, dst, src, count, condition)
 
 #define moveToDevice(ptr, count) movePointerToDevice(ptr, count, moveStreams[(currStreamIdx++) % 32])
 #define moveToHost(ptr, count) movePointerToHost(ptr, count, moveStreams[(currStreamIdx++) % 32])
@@ -30,7 +35,6 @@
 #define deviceSolverAlloc(ptr, count) solverDeviceCheckError(deviceAlloc(ptr, count), _status, SF3Derror_t::MemoryError)
 #define deviceSolverFree(ptr) solverDeviceCheckError(deviceFree(ptr), _status, SF3Derror_t::MemoryError)
 
-#define launchKernel(kernel, ...) launchGPUKernel(kernel, dim3(numBlocks), dim3(numThreadsPerBlock), __VA_ARGS__)
 #define cuspCheck(retValue) solverDeviceCheckError(retValue, _status, SF3Derror_t::SolverError)
 
 //CUDA runtime
