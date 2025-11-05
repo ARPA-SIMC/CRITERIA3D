@@ -157,7 +157,6 @@ Crit3DProxyWidget::Crit3DProxyWidget(Crit3DInterpolationSettings &_interpolation
     connect(updateStations, &QAction::triggered, this, [=](){ this->plot(); });
     connect(changeLeftAxis, &QAction::triggered, this, &Crit3DProxyWidget::on_actionChangeLeftAxis);
 
-
     if (currentFrequency != noFrequency)
     {
         plot();
@@ -302,13 +301,13 @@ void Crit3DProxyWidget::plot()
                                         _interpolationSettings, _meteoSettings, _climateParameters,
                                         _outInterpolationPoints, _checkSpatialQuality, errorStdStr);
     }
-    QList<QPointF> pointListPrimary, pointListSecondary, pointListSupplemental, pointListMarked;
+    QList<QPointF> pointListPrimary, pointListSecondary, pointListSupplemental, pointListMarked, zeroLine;
     QMap< QString, QPointF > idPointMap1;
     QMap< QString, QPointF > idPointMap2;
     QMap< QString, QPointF > idPointMap3;
     QMap< QString, QPointF > idPointMapMarked;
-
     QPointF point;
+
     for (int i = 0; i < int(_outInterpolationPoints.size()); i++)
     {
         float proxyVal = _outInterpolationPoints[i].getProxyValue(_proxyPos);
@@ -321,7 +320,6 @@ void Crit3DProxyWidget::plot()
             QString text = "id: " + QString::fromStdString(_meteoPoints[_outInterpolationPoints[i].index].id) + "\n"
                            + "name: " + QString::fromStdString(_meteoPoints[_outInterpolationPoints[i].index].name) + "\n"
                            + "province: " + QString::fromStdString(_meteoPoints[_outInterpolationPoints[i].index].province);
-
             if (_outInterpolationPoints[i].isMarked)
             {
                 pointListMarked.append(point);
@@ -342,17 +340,34 @@ void Crit3DProxyWidget::plot()
                 pointListSupplemental.append(point);
                 idPointMap3.insert(text, point);
             }
+            point.setY(0);
+            zeroLine.append(point);
         }
     }
 
     chartView->setIdPointMap(idPointMap1, idPointMap2, idPointMap3, idPointMapMarked);
-    chartView->drawScatterSeries(pointListPrimary, pointListSecondary, pointListSupplemental, pointListMarked);
+    chartView->drawScatterSeries(pointListPrimary, pointListSecondary, pointListSupplemental, pointListMarked, zeroLine);
 
     chartView->axisX->setTitleText(comboAxisX.currentText());
     chartView->axisY->setTitleText(comboVariable.currentText());
 
     chartView->axisY->setMin(floor(chartView->axisY->min()));
     chartView->axisY->setMax(ceil(chartView->axisY->max()));
+/*
+    if (chartView->axisY->min() <= 0 && chartView->axisY->max() >= 0)
+    {
+        if (chartView->chart()->series().contains(zeroLine))
+        {
+            chartView->chart()->removeSeries(zeroLine);
+        }
+        chartView->chart()->addSeries(zeroLine);
+        zeroLine->attachAxis(chartView->axisX);
+        zeroLine->attachAxis(chartView->axisY);
+
+
+    }
+
+*/
 
     if (comboAxisX.currentText() == "elevation")
 /*    {
