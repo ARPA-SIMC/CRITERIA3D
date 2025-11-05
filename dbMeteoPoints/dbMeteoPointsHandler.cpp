@@ -542,7 +542,7 @@ bool Crit3DMeteoPointsDbHandler::loadDailyData(const QSqlDatabase &myDb, const C
     }
 
     int numberOfDays = difference(firstDate, lastDate) + 1;
-    meteoPoint.initializeObsDataD(numberOfDays, firstDate);
+    meteoPoint.obsDataD.clear();
 
     QString firstDateStr = QString::fromStdString(firstDate.toISOString());
     QString lastDateStr = QString::fromStdString(lastDate.toISOString());
@@ -562,11 +562,19 @@ bool Crit3DMeteoPointsDbHandler::loadDailyData(const QSqlDatabase &myDb, const C
     QSqlQuery query(myDb);
     if(! query.exec(statement))
     {
-        return false;
         _errorStr = query.lastError().text();
+        return false;
     }
 
-    while (query.next())
+    if (! query.next())
+    {
+        _errorStr = "No data.";
+        return false;
+    }
+
+    meteoPoint.initializeObsDataD(numberOfDays, firstDate);
+
+    do
     {
         // date
         Crit3DDate currentDate(query.value(0).toString().toStdString());
@@ -588,7 +596,7 @@ bool Crit3DMeteoPointsDbHandler::loadDailyData(const QSqlDatabase &myDb, const C
         {
             meteoPoint.setMeteoPointValueD(currentDate, variable, value);
         }
-    }
+    } while (query.next());
 
     return true;
 }
