@@ -7,10 +7,15 @@
 ChartView::ChartView(QWidget *parent) :
     QChartView(new QChart(), parent)
 {
+    QPen pen;
+    zeroSeries = new QLineSeries();
+    zeroSeries->setName("zero");
+    zeroSeries->setPen(pen);
+    zeroSeries->setColor(Qt::gray);
+
     series1 = new QScatterSeries();
     series1->setName("Primary");
     series1->setMarkerShape(QScatterSeries::MarkerShapeCircle);
-    QPen pen;
     pen.setColor(Qt::black);
     series1->setPen(pen);
     series1->setColor(Qt::white);
@@ -80,10 +85,15 @@ void ChartView::cleanScatterSeries()
         chart()->removeSeries(seriesMarked);
         seriesMarked->clear();
     }
+    if (chart()->series().contains(zeroSeries))
+    {
+        chart()->removeSeries(zeroSeries);
+        zeroSeries->clear();
+    }
 }
 
 void ChartView::drawScatterSeries(const QList<QPointF> &pointListPrimary, const QList<QPointF> &pointListSecondary,
-                                  const QList<QPointF> &pointListSupplemental, const QList<QPointF> &pointListMarked)
+                                  const QList<QPointF> &pointListSupplemental, const QList<QPointF> &pointListMarked, const QList<QPointF> &zeroLine )
 {
     for (int i = 0; i < pointListPrimary.size(); i++)
     {
@@ -100,6 +110,10 @@ void ChartView::drawScatterSeries(const QList<QPointF> &pointListPrimary, const 
     for (int i = 0; i < pointListMarked.size(); i++)
     {
         seriesMarked->append(pointListMarked[i]);
+    }
+    for (int i = 0; i < zeroLine.size(); i++)
+    {
+        zeroSeries->append(zeroLine[i]);
     }
 
     QList<QPointF> pointList;
@@ -128,7 +142,12 @@ void ChartView::drawScatterSeries(const QList<QPointF> &pointListPrimary, const 
     axisX->setMin(xMin - deltaX);
     axisY->setMax(yMax + deltaY);
     axisY->setMin(yMin - deltaY);
-
+    if (axisY->min() <= 0 && axisY->max() >= 0)
+    {
+        chart()->addSeries(zeroSeries);
+        zeroSeries->attachAxis(axisX);
+        zeroSeries->attachAxis(axisY);
+    }
     chart()->addSeries(series1);
     chart()->addSeries(series2);
     chart()->addSeries(series3);
@@ -150,6 +169,16 @@ void ChartView::drawScatterSeries(const QList<QPointF> &pointListPrimary, const 
     connect(series2, &QScatterSeries::hovered, this, &ChartView::tooltipScatterSeries);
     connect(series3, &QScatterSeries::hovered, this, &ChartView::tooltipScatterSeries);
     connect(seriesMarked, &QScatterSeries::hovered, this, &ChartView::tooltipScatterSeries);
+
+    foreach(QLegendMarker* marker, chart()->legend()->markers())
+    {
+        if (marker->series()->name() == "zero")
+        {
+            marker->setVisible(false);
+            marker->series()->setVisible(true);
+        }
+    }
+
 }
 
 void ChartView::cleanClimLapseRate()
