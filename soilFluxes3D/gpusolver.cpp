@@ -884,7 +884,7 @@ namespace soilFluxes3D::v2
         SF3Duint_t currentElementIndex = baseRowIndex, unsignedTmpColIdx = 0;
         bool isLinked;
 
-        //Compute flux up
+        // flux up
         isLinked = computeLinkFluxes(matrixA.d_values[currentElementIndex], unsignedTmpColIdx, rowIdx, 0, approxNum, deltaT, lateralVerticalRatio, linkType_t::Up, meanType);
         if(isLinked)
         {
@@ -893,7 +893,7 @@ namespace soilFluxes3D::v2
             currentElementIndex += blockDim.x;
         }
 
-        //Compute flox down
+        // flux down
         isLinked = computeLinkFluxes(matrixA.d_values[currentElementIndex], unsignedTmpColIdx, rowIdx, 1, approxNum, deltaT, lateralVerticalRatio, linkType_t::Down, meanType);
         if(isLinked)
         {
@@ -902,7 +902,7 @@ namespace soilFluxes3D::v2
             currentElementIndex += blockDim.x;
         }
 
-        //Compute flux lateral
+        // flux lateral
         for(u32_t latIdx = 0; latIdx < maxLateralLink; ++latIdx)
         {
             isLinked = computeLinkFluxes(matrixA.d_values[currentElementIndex], unsignedTmpColIdx, rowIdx, 2 + latIdx, approxNum, deltaT, lateralVerticalRatio, linkType_t::Lateral, meanType);
