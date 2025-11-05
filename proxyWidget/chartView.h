@@ -21,7 +21,8 @@ public:
 
     void cleanScatterSeries();
     void drawScatterSeries(const QList<QPointF> &pointListPrimary, const QList<QPointF> &pointListSecondary,
-                           const QList<QPointF> &pointListSupplemental, const QList<QPointF> &pointListMarked);
+                           const QList<QPointF> &pointListSupplemental, const QList<QPointF> &pointListMarked, const QList<QPointF> &zeroLine = QList<QPointF>() );
+
     void cleanClimLapseRate();
     void drawClimLapseRate(QPointF firstPoint, QPointF lastPoint);
     void cleanModelLapseRate();
@@ -32,6 +33,7 @@ public:
     void setProvince(const std::string &province);
 
 private:
+    QLineSeries *zeroSeries;
     QScatterSeries *series1;
     QScatterSeries *series2;
     QScatterSeries *series3;
