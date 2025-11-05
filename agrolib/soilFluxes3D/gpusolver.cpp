@@ -41,12 +41,12 @@ namespace soilFluxes3D::v2
         cuspCheck(cusparseCreate(&libHandle));
 
         //initialize matrix data
-        iterationMatrix.numRows = static_cast<int64_t>(nodeGrid.numNodes);
-        iterationMatrix.numCols = static_cast<int64_t>(nodeGrid.numNodes);
-        iterationMatrix.sliceSize = static_cast<int64_t>(numThreadsPerBlock);
+        iterationMatrix.numRows = static_cast<i64_t>(nodeGrid.numNodes);
+        iterationMatrix.numCols = static_cast<i64_t>(nodeGrid.numNodes);
+        iterationMatrix.sliceSize = static_cast<i64_t>(numThreadsPerBlock);
         SF3Duint_t numSlice = numBlocks;
         SF3Duint_t tnv = numSlice * iterationMatrix.sliceSize * maxTotalLink;
-        iterationMatrix.totValuesSize = static_cast<int64_t>(tnv);
+        iterationMatrix.totValuesSize = static_cast<i64_t>(tnv);
 
         deviceSolverAlloc(iterationMatrix.d_numColsInRow, iterationMatrix.numRows);
 
@@ -78,25 +78,25 @@ namespace soilFluxes3D::v2
 
     SF3Derror_t GPUSolver::createCUsparseDescriptors()
     {
-        int64_t *d_nnz = nullptr;
-        cudaMalloc((void**) &d_nnz, sizeof(int64_t));
+        i64_t *d_nnz = nullptr;
+        cudaMalloc((void**) &d_nnz, sizeof(i64_t));
 
         void* d_tempStorage = nullptr;
         std::size_t tempStorageSize = 0;
         cub::DeviceReduce::Sum(d_tempStorage, tempStorageSize, iterationMatrix.d_numColsInRow, d_nnz, iterationMatrix.numRows);
         cudaMalloc(&d_tempStorage, tempStorageSize);
         cub::DeviceReduce::Sum(d_tempStorage, tempStorageSize, iterationMatrix.d_numColsInRow, d_nnz, iterationMatrix.numRows);
-        cudaMemcpy(&(iterationMatrix.numNonZeroElement), d_nnz, sizeof(int64_t), cudaMemcpyDeviceToHost);
+        cudaMemcpy(&(iterationMatrix.numNonZeroElement), d_nnz, sizeof(i64_t), cudaMemcpyDeviceToHost);
 
         cudaFree(d_tempStorage);
         cudaFree(d_nnz);
 
         //Setup offsets vector
-        int64_t* h_offsets = static_cast<int64_t*>(std::calloc((numBlocks + 1), sizeof(int64_t)));
-        for (int64_t idx = 0; idx < (numBlocks + 1); ++idx)
+        i64_t* h_offsets = static_cast<i64_t*>(std::calloc((numBlocks + 1), sizeof(i64_t)));
+        for (i64_t idx = 0; idx < (numBlocks + 1); ++idx)
             h_offsets[idx] = idx * numThreadsPerBlock * maxTotalLink;
 
-        cudaMemcpy(iterationMatrix.d_offsets, h_offsets, (numBlocks + 1) * sizeof(int64_t), cudaMemcpyHostToDevice);
+        cudaMemcpy(iterationMatrix.d_offsets, h_offsets, (numBlocks + 1) * sizeof(i64_t), cudaMemcpyHostToDevice);
 
 
         //Create matrix descriptor
@@ -281,6 +281,40 @@ namespace soilFluxes3D::v2
         }
 
         return balanceResult;
+    }
+
+    void GPUSolver::heatLoop(double timeStepHeat, double timeStepWater)
+    {
+        resetFluxValues_m(true, false);
+
+        //initialize vector X
+        cudaMemcpy(unknownTerm.d_values, nodeGrid.heatData.temperature, nodeGrid.numNodes * sizeof(double), cudaMemcpyDeviceToDevice);
+        //Save current temperatures
+        cudaMemcpy(nodeGrid.heatData.oldTemperature, nodeGrid.heatData.temperature, nodeGrid.numNodes * sizeof(double), cudaMemcpyDeviceToDevice);
+
+        //inizialize vector C
+        /*TO DO*/ //launchKernel(computeHeatCapacity_k, d_Cvalues);
+
+        //Compute linear system elements
+        deviceReset(nodeGrid.waterData.invariantFluxes, nodeGrid.numNodes);
+
+        /*TO DO*/ //launchKernel(computeHeatLinearSystemElements_k, iterationMatrix, constantTerm, d_Cvalues, approxIdx, deltaT, _parameters.lateralVerticalRatio, _parameters.meanType);
+
+        solveLinearSystem(_parameters.maxApproximationsNumber - 1, processType::Heat);
+
+        //Retrive new temperatures
+        deviceConditionalCopy(nodeGrid.heatData.temperature, unknownTerm.d_values, nodeGrid.numNodes,
+                              [](std::size_t idx){return !nodeGrid.surfaceFlag[idx];});
+
+        /*TO DO*/ //evaluateHeatBalance_m(timeStepHeat, timeStepWater);
+        /*TO DO*/ //updateHeatBalanceData_m();
+        /*TO DO*/ //saveHeatFluxValues_m(timeStepHeat, timeStepWater);
+
+        //Save new temperatures
+        deviceConditionalCopy(nodeGrid.heatData.oldTemperature, nodeGrid.heatData.temperature, nodeGrid.numNodes,
+                              [](std::size_t idx){return !nodeGrid.surfaceFlag[idx];});
+
+        return;
     }
 
     bool GPUSolver::solveLinearSystem(u8_t approximationNumber, processType computationType) //Implemented only Jacobi Water
@@ -505,9 +539,50 @@ namespace soilFluxes3D::v2
         computeCurrentMassBalance_m(deltaT);
     }
 
+    SF3Derror_t GPUSolver::resetFluxValues_m(bool flagHeat, bool flagWater)
+    {
+        if(!simulationFlags.computeHeat)
+            return SF3Derror_t::MissingDataError;
+
+        if(flagHeat)
+        {
+            switch(simulationFlags.HFsaveMode)
+            {
+            case heatFluxSaveMode_t::All:
+                for(u8_t lIdx = 0; lIdx < maxTotalLink; ++lIdx)
+                    for(auto index : heatFluxIndeces)
+                        deviceFill(nodeGrid.linkData[lIdx].fluxes[toUnderlyingT(index)], nodeGrid.numNodes, noDataD);
+                break;
+
+            case heatFluxSaveMode_t::Total:
+                for(u8_t lIdx = 0; lIdx < maxTotalLink; ++lIdx)
+                    deviceFill(nodeGrid.linkData[lIdx].fluxes[toUnderlyingT(fluxTypes_t::HeatTotal)], nodeGrid.numNodes, noDataD);
+                break;
+
+            default:
+                break;
+            }
+        }
+
+        if(flagWater)
+        {
+            switch(simulationFlags.HFsaveMode)
+            {
+            case heatFluxSaveMode_t::All:
+                for(u8_t lIdx = 0; lIdx < maxTotalLink; ++lIdx)
+                    for(auto index : waterFluxIndeces)
+                        deviceFill(nodeGrid.linkData[lIdx].fluxes[toUnderlyingT(index)], nodeGrid.numNodes, noDataD);
+                break;
+
+            default:
+                break;
+            }
+        }
+
+        return SF3Derror_t::SF3Dok;
+    }
 
     //------------------------------- MOVE FUNCTIONS -------------------------------
-
     SF3Derror_t GPUSolver::upCopyData()
     {
         //Streams creations
@@ -542,13 +617,22 @@ namespace soilFluxes3D::v2
 
         //Link data
         moveToDevice(nodeGrid.numLateralLink, nodeGrid.numNodes);
-        for(u8_t idx = 0; idx < maxTotalLink; ++idx)
+        for(u8_t lIdx = 0; lIdx < maxTotalLink; ++lIdx)
         {
-            moveToDevice(nodeGrid.linkData[idx].linkType, nodeGrid.numNodes);
-            moveToDevice(nodeGrid.linkData[idx].linkIndex, nodeGrid.numNodes);
-            moveToDevice(nodeGrid.linkData[idx].interfaceArea, nodeGrid.numNodes);
-            if(simulationFlags.computeWater)
-                moveToDevice(nodeGrid.linkData[idx].waterFlowSum, nodeGrid.numNodes);
+            moveToDevice(nodeGrid.linkData[lIdx].linkType, nodeGrid.numNodes);
+            moveToDevice(nodeGrid.linkData[lIdx].linkIndex, nodeGrid.numNodes);
+            moveToDevice(nodeGrid.linkData[lIdx].interfaceArea, nodeGrid.numNodes);
+
+            //if(simulationFlags.computeWater)
+            moveToDevice(nodeGrid.linkData[lIdx].waterFlowSum, nodeGrid.numNodes);
+
+            if(simulationFlags.computeHeat)
+            {
+                moveToDevice(nodeGrid.linkData[lIdx].waterFlux, nodeGrid.numNodes);
+                moveToDevice(nodeGrid.linkData[lIdx].vaporFlux, nodeGrid.numNodes);
+                for(u8_t fIdx = 0; fIdx < numTotalFluxTypes; ++fIdx)
+                    moveToDevice(nodeGrid.linkData[lIdx].fluxes[fIdx], nodeGrid.numNodes);
+            }
         }
 
         //Water data
@@ -670,8 +754,17 @@ namespace soilFluxes3D::v2
             moveToHost(nodeGrid.linkData[idx].linkType, nodeGrid.numNodes);
             moveToHost(nodeGrid.linkData[idx].linkIndex, nodeGrid.numNodes);
             moveToHost(nodeGrid.linkData[idx].interfaceArea, nodeGrid.numNodes);
-            if(simulationFlags.computeWater)
-                moveToHost(nodeGrid.linkData[idx].waterFlowSum, nodeGrid.numNodes);
+
+            //if(simulationFlags.computeWater)
+            moveToHost(nodeGrid.linkData[idx].waterFlowSum, nodeGrid.numNodes);
+
+            if(simulationFlags.computeHeat)
+            {
+                moveToHost(nodeGrid.linkData[lIdx].waterFlux, nodeGrid.numNodes);
+                moveToHost(nodeGrid.linkData[lIdx].vaporFlux, nodeGrid.numNodes);
+                for(u8_t fIdx = 0; fIdx < numTotalFluxTypes; ++fIdx)
+                    moveToHost(nodeGrid.linkData[lIdx].fluxes[fIdx], nodeGrid.numNodes);
+            }
         }
 
         //Water data
@@ -888,7 +981,7 @@ namespace soilFluxes3D::v2
         isLinked = computeLinkFluxes(matrixA.d_values[currentElementIndex], unsignedTmpColIdx, rowIdx, 0, approxNum, deltaT, lateralVerticalRatio, linkType_t::Up, meanType);
         if(isLinked)
         {
-            matrixA.d_columnIndeces[currentElementIndex] = static_cast<int64_t>(unsignedTmpColIdx);
+            matrixA.d_columnIndeces[currentElementIndex] = static_cast<i64_t>(unsignedTmpColIdx);
             numLinks++;
             currentElementIndex += blockDim.x;
         }
@@ -897,7 +990,7 @@ namespace soilFluxes3D::v2
         isLinked = computeLinkFluxes(matrixA.d_values[currentElementIndex], unsignedTmpColIdx, rowIdx, 1, approxNum, deltaT, lateralVerticalRatio, linkType_t::Down, meanType);
         if(isLinked)
         {
-            matrixA.d_columnIndeces[currentElementIndex] = static_cast<int64_t>(unsignedTmpColIdx);
+            matrixA.d_columnIndeces[currentElementIndex] = static_cast<i64_t>(unsignedTmpColIdx);
             numLinks++;
             currentElementIndex += blockDim.x;
         }
@@ -908,7 +1001,7 @@ namespace soilFluxes3D::v2
             isLinked = computeLinkFluxes(matrixA.d_values[currentElementIndex], unsignedTmpColIdx, rowIdx, 2 + latIdx, approxNum, deltaT, lateralVerticalRatio, linkType_t::Lateral, meanType);
             if(isLinked)
             {
-                matrixA.d_columnIndeces[currentElementIndex] = static_cast<int64_t>(unsignedTmpColIdx);
+                matrixA.d_columnIndeces[currentElementIndex] = static_cast<i64_t>(unsignedTmpColIdx);
                 numLinks++;
                 currentElementIndex += blockDim.x;
             }
@@ -993,4 +1086,5 @@ namespace soilFluxes3D::v2
         double theta = nodeGrid.surfaceFlag[nodeIdx] ? (nodeGrid.waterData.pressureHead[nodeIdx] - nodeGrid.z[nodeIdx]) : computeNodeTheta(nodeIdx);
         outVector[nodeIdx] = theta * nodeGrid.size[nodeIdx];
     }
+
 }
