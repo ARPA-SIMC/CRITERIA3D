@@ -47,7 +47,7 @@ CONFIG(CUDA_CONFIG) {
 
         HOST_DEFINES = $$join(DEFINES,' -D','-D')
 
-        cudaC_FLAGS = $$HOST_DEFINES -m64 -std=c++17
+        cudaC_FLAGS = $$HOST_DEFINES -m64 -std=c++17 --extended-lambda
         cudaL_FLAGS = -Wno-deprecated-gpu-targets -arch=$$CUDA_ARCH
 
         CONFIG(debug, debug|release) {
