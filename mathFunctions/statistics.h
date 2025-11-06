@@ -20,7 +20,7 @@
 
     enum aggregationMethod {noAggrMethod, aggrAverage, aggrMedian, aggrStdDeviation, aggrMin, aggrMax, aggrSum, aggrPrevailing, aggrIntegral, aggrCenter, aggr95Perc};
 
-    float statisticalElab(meteoComputation elab, float param, std::vector<float> values, int nValues, float rainfallThreshold);
+    float statisticalElab(meteoComputation elab, float param, std::vector<float> values, int nValues, float myRainfallThreshold);
 
     namespace statistics
     {

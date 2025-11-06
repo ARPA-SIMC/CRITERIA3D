@@ -141,7 +141,7 @@ MeteoTab::MeteoTab(Crit3DMeteoSettings *meteoSettings)
     minimumPercentageEdit.setValidator(doubleValPerc);
     minimumPercentageEdit.setText(QString::number(meteoSettings->getMinimumPercentage()));
 
-    QLabel *rainfallThreshold = new QLabel(tr("minimum value for valid precipitation [mm]:"));
+    QLabel *rainfallThresholdLabel = new QLabel(tr("minimum value for valid precipitation [mm]:"));
     QDoubleValidator *doubleValThreshold = new QDoubleValidator( 0.0, 20.0, 5, this );
     doubleValThreshold->setNotation(QDoubleValidator::StandardNotation);
     rainfallThresholdEdit.setFixedWidth(EDIT_SIZE);
@@ -185,7 +185,7 @@ MeteoTab::MeteoTab(Crit3DMeteoSettings *meteoSettings)
     mainLayout->addWidget(minimumPercentage);
     mainLayout->addWidget(&minimumPercentageEdit);
 
-    mainLayout->addWidget(rainfallThreshold);
+    mainLayout->addWidget(rainfallThresholdLabel);
     mainLayout->addWidget(&rainfallThresholdEdit);
 
     mainLayout->addWidget(thomThreshold);
