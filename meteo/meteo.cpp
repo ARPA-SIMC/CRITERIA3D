@@ -34,6 +34,8 @@
 #include "meteo.h"
 #include "color.h"
 
+//test
+
 Crit3DMeteoSettings::Crit3DMeteoSettings()
 {
     initialize();
