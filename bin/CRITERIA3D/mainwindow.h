@@ -268,6 +268,8 @@
 
         void on_action_parallel_computing_triggered(bool isChecked);
 
+        void on_actionOpenShell_triggered();
+
     protected:
         /*!
          * \brief mouseReleaseEvent call moveCenter

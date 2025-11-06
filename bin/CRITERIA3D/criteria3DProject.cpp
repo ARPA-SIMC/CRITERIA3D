@@ -3647,11 +3647,9 @@ int Crit3DProject::executeCommand(const QList<QString> &argumentList)
 
 int Crit3DProject::printCriteria3DCommandList()
 {
-    //QList<QString> list = getSharedCommandList();
-    QList<QString> list;
+    QList<QString> list = getSharedCommandList();
 
     // criteria3D commands
-    list.append("?               | ListCommands");
     list.append("Version         | Criteria3DVersion");
     list.append("Ls              | List");
     list.append("Proj            | OpenProject");
@@ -3659,7 +3657,6 @@ int Crit3DProject::printCriteria3DCommandList()
     list.append("Thread          | SetThreadNr");
     list.append("Run             | RunModels");
     list.append("Save            | SaveState");
-    list.append("Quit            | Exit");
 
     std::cout << "Available Console commands:" << std::endl;
     std::cout << "(short          | long version)" << std::endl << std::endl;

@@ -1663,7 +1663,7 @@
        <second>0</second>
        <year>1752</year>
        <month>8</month>
-       <day>25</day>
+       <day>24</day>
       </datetime>
      </property>
      <property name="maximumDate">
@@ -2362,6 +2362,8 @@
     <addaction name="menuInput"/>
     <addaction name="separator"/>
     <addaction name="menuOutput"/>
+    <addaction name="separator"/>
+    <addaction name="actionOpenShell"/>
    </widget>
    <widget class="QMenu" name="menuDataSpatialization">
     <property name="title">
@@ -3533,6 +3535,11 @@
   <action name="actionInitialize_soil_carbon_content">
    <property name="text">
     <string>Initialize soil carbon content</string>
+   </property>
+  </action>
+  <action name="actionOpenShell">
+   <property name="text">
+    <string>Shell..</string>
    </property>
   </action>
  </widget>
