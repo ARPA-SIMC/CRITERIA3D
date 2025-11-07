@@ -10,7 +10,7 @@
     enum meteoComputation { average, stdDev, sum, maxInList, minInList, timeIntegration,
                             differenceWithThreshold, lastDayBelowThreshold,
                             sumAbove, avgAbove, stdDevAbove,
-                            percentile, median, freqPositive,
+                            percentile, percentileRainThreshold, median, freqPositive,
                             daysAbove, daysBelow, consecutiveDaysAbove, consecutiveDaysBelow,
                             prevailingWindDir,
                             trend, mannKendall,
@@ -20,7 +20,7 @@
 
     enum aggregationMethod {noAggrMethod, aggrAverage, aggrMedian, aggrStdDeviation, aggrMin, aggrMax, aggrSum, aggrPrevailing, aggrIntegral, aggrCenter, aggr95Perc};
 
-    float statisticalElab(meteoComputation elab, float param, std::vector<float> values, int nValues, float myRainfallThreshold);
+    float statisticalElab(meteoComputation elab, float param, std::vector<float> values, int nValues, float myPrecThreshold);
 
     namespace statistics
     {

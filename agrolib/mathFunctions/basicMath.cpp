@@ -510,6 +510,39 @@
             return NODATA;
         }
 
+        // warning: if isSortValues is true, list will be modified
+        float percentileAboveThreshold(std::vector<float>& list, int& nrList, float perc, float threshold, bool isSortValues)
+        {
+            // check
+            if (nrList < MINIMUM_PERCENTILE_DATA || (perc <= 0) || (perc > 100)) return NODATA;
+            perc /= 100.f;
+
+            if (isSortValues)
+            {
+                // remove nodata
+                list.erase(std::remove(list.begin(), list.end(), float(NODATA)), list.end());
+
+                // remove under threshold
+                list.erase(std::remove_if(list.begin(), list.end(), [threshold](const float& x) {return x < threshold; }), list.end());
+
+                // sort
+                std::sort(list.begin(), list.end());
+
+                nrList = int(list.size());
+                // check on data presence
+                if (nrList < MINIMUM_PERCENTILE_DATA) return NODATA;
+            }
+
+            float rank = float(nrList) * perc -1;
+
+            // return percentile
+            if ((int(rank) + 1) > (nrList - 1))
+                return list[unsigned(nrList - 1)];
+            else if (rank < 0)
+                return list[0];
+            else
+                return ((rank - int(rank)) * (list[unsigned(rank) + 1] - list[unsigned(rank)])) + list[unsigned(rank)];
+        }
 
         // warning: if isSortValues is true, list will be modified
         float mode(std::vector<float> &list, int* nrList, bool isSortValues)
