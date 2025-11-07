@@ -881,7 +881,7 @@ void Crit3DHydrall::aerodynamicalCoupling()
         // taken from Hydrall Model, Magnani UNIBO
         static double A = 0.0067;
         static double BETA = 3.0;
-        static double KARM = 0.41;
+        //static double KARM = 0.41;
         double heightReference , roughnessLength,zeroPlaneDisplacement, sensibleHeat, frictionVelocity, windSpeedTopCanopy;
         double canopyAerodynamicConductanceToMomentum, aerodynamicConductanceToCO2, dummy, sunlitDeltaTemp,shadedDeltaTemp;
         double leafBoundaryLayerConductance;
@@ -903,7 +903,7 @@ void Crit3DHydrall::aerodynamicalCoupling()
 
         // Initialize sensible heat flux and friction velocity
         sensibleHeat = sunlit.isothermalNetRadiation + shaded.isothermalNetRadiation ;
-        frictionVelocity = MAXVALUE(1.0e-4,KARM*windSpeed/log((heightReference-zeroPlaneDisplacement)/roughnessLength));
+        frictionVelocity = MAXVALUE(1.0e-4,VON_KARMAN_CONST*windSpeed/log((heightReference-zeroPlaneDisplacement)/roughnessLength));
 
         short i = 0 ;
         double sensibleHeatOld = NODATA;
@@ -926,7 +926,7 @@ void Crit3DHydrall::aerodynamicalCoupling()
             double moninObukhovLength,zeta,deviationFunctionForMomentum,deviationFunctionForHeat,radiativeConductance,totalConductanceToHeatExchange,stomatalConductanceWater ;
 
             moninObukhovLength = -(POWER3(frictionVelocity))*HEAT_CAPACITY_AIR_MOLAR*weatherVariable.atmosphericPressure;
-            moninObukhovLength /= (R_GAS*(KARM*9.8*sensibleHeat));
+            moninObukhovLength /= (R_GAS*(VON_KARMAN_CONST*9.8*sensibleHeat));
 
             zeta = MINVALUE((heightReference-zeroPlaneDisplacement)/moninObukhovLength,0.25) ;
 
@@ -949,11 +949,12 @@ void Crit3DHydrall::aerodynamicalCoupling()
                 deviationFunctionForMomentum = deviationFunctionForHeat = - 5*zeta ;
             }
             //friction velocity
-            frictionVelocity = KARM*windSpeed/(log((heightReference-zeroPlaneDisplacement)/roughnessLength) - deviationFunctionForMomentum);
+            frictionVelocity = VON_KARMAN_CONST*windSpeed/(log((heightReference-zeroPlaneDisplacement)/roughnessLength) - deviationFunctionForMomentum);
             frictionVelocity = MAXVALUE(frictionVelocity,1.0e-4);
+            plant.frictionVelocity = frictionVelocity;
 
             // Wind speed at canopy top	(m s-1)
-            windSpeedTopCanopy = (frictionVelocity/KARM) * log((plant.height - zeroPlaneDisplacement)/roughnessLength);
+            windSpeedTopCanopy = (frictionVelocity/VON_KARMAN_CONST) * log((plant.height - zeroPlaneDisplacement)/roughnessLength);
             windSpeedTopCanopy = MAXVALUE(windSpeedTopCanopy,1.0e-4);
 
             // Average leaf boundary-layer conductance cumulated over the canopy (m s-1)
@@ -1009,7 +1010,7 @@ void Crit3DHydrall::aerodynamicalCoupling()
 
 
             // Sensible heat flux from the whole canopy
-            sensibleHeat = HEAT_CAPACITY_AIR_MOLAR * (sunlit.aerodynamicConductanceHeatExchange*sunlitDeltaTemp + shaded.aerodynamicConductanceHeatExchange*shadedDeltaTemp);
+            plant.sensibleHeat = sensibleHeat = HEAT_CAPACITY_AIR_MOLAR * (sunlit.aerodynamicConductanceHeatExchange*sunlitDeltaTemp + shaded.aerodynamicConductanceHeatExchange*shadedDeltaTemp);
             plant.subCanopyTemperature = weatherVariable.myInstantTemp - sensibleHeat * aerodynamicResistance/(AIR_DENSITY * HEAT_CAPACITY_AIR);
         }
 
@@ -1027,6 +1028,108 @@ void Crit3DHydrall::aerodynamicalCoupling()
         shaded.leafTemperature = sunlit.leafTemperature = weatherVariable.myInstantTemp + ZEROCELSIUS;
     }
 }
+
+// --- Funzione pressione di vapore saturo (Pa) ---
+double es(double T)
+{
+    return 611.2 * exp(17.67 * T / (T + 243.5));
+}
+
+// --- Umidità specifica da e (Pa) ---
+double q_from_e(double e)
+{
+    return 0.622 * e / (P_air - 0.378 * e);
+}
+
+// --- e da q (Pa) ---
+double e_from_q(double q)
+{
+    return (q * P_air) / (0.622 + 0.378 * q);
+}
+
+// --- Function psi_h (Paulson) ---
+double psi_h(double zeta)
+{
+    if (zeta < 0.0)
+    {
+        double x = pow(1.0 - 16.0 * zeta, 0.25);
+        return 2.0 * log((1.0 + x * x) / 2.0);
+    }
+    else if (zeta > 0.0)
+    {
+        return -5.0 * zeta;
+    }
+    else
+    {
+        return 0.0;
+    }
+}
+
+// --- Lunghezza Monin–Obukhov ---
+double computeL(double ustar, double TairK, double H) {
+    if (fabs(H) < 1e-6) return 1e12; // neutral
+    double term = H / (AIR_DENSITY * CP);
+    if (fabs(term) < 1e-9) return 1e12;
+    return - (pow(ustar, 3) * TairK) / (VON_KARMAN_CONST * GRAVITY * term);
+}
+
+// --- Resistenza aerodinamica ---
+double compute_ra(double zref, double h, double uz, double psi_h_val) {
+    double d = 0.67 * h;
+    double z0 = 0.1 * h;
+    double logTerm = log((zref - d) / z0) - psi_h_val;
+    return (logTerm * logTerm) / (VON_KARMAN_CONST * VON_KARMAN_CONST * uz);
+}
+
+// --- Temperatura sotto chioma ---
+double compute_Tunder(double Tair, double ra, double H) {
+    return Tair - (H * ra) / (AIR_DENSITY * CP);
+}
+
+// --- Umidità relativa sotto chioma ---
+double compute_RH_under(double Tair, double RH_air, double ra, double LE) {
+    // Calcolo e e q iniziali
+    double e_air = (RH_air / 100.0) * es(Tair);
+    double q_air = q_from_e(e_air);
+
+    // Variazione umidità specifica per effetto del flusso latente
+    double dq = (LE * ra) / (AIR_DENSITY * 2.45e6);
+    double q_under = std::min(q_air + dq, q_from_e(es(Tair))); // saturazione limite
+
+    // Calcolo nuova pressione di vapore e RH
+    double e_under = e_from_q(q_under);
+    double RH_under = 100.0 * e_under / es(Tair);
+    return std::min(RH_under, 100.0);
+}
+
+void Crit3DHydrall::understoreyTemperatureAndRelativeHumidity()
+{
+
+    double upperCanopyAirTemperature = weatherVariable.myInstantTemp;           // °C aria sopra chioma
+    double upperCanopyRH = weatherVariable.relativeHumidity;         // % aria sopra chioma
+    double referenceHeightWindSpeed = weatherVariable.windSpeed;              // m/s vento a zref
+    double referenceHeight = 10.0;           // m altezza misura vento
+    double canopyHeight = 15.0;               // m altezza chioma
+    //double Rn = 400.0;            // W/m2 radiazione netta sotto chioma
+    //double LE = 250.0;            // W/m2 flusso latente
+    //double G = 0.0;               // W/m2 calore nel suolo
+    double sensibleHeat = plant.sensibleHeat;
+    double uStar = plant.frictionVelocity;
+    double L = computeL(uStar, upperCanopyAirTemperature+273.15, plant.sensibleHeat);
+    double zeta = (referenceHeight - 0.67 * canopyHeight) / L;
+    double psiH = psi_h(zeta);
+    double atmPressure=weatherVariable.atmosphericPressure;
+
+    // --- Resistenza aerodinamica ---
+    double ra = compute_ra(referenceHeight, canopyHeight, referenceHeightWindSpeed, psiH);
+
+    // --- Temperatura e umidità sotto chioma ---
+    double Tunder = compute_Tunder(upperCanopyAirTemperature, ra, sensibleHeat);
+    //double RH_under = compute_RH_under(upperCanopyAirTemperature, upperCanopyRH, ra, LE);        // friction velocity [m/s]
+
+}
+
+
 
 double  Crit3DHydrall::leafWidth()
 {

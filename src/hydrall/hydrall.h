@@ -29,7 +29,7 @@
     /*!
      * Assign physical and miscellaneous constants
     */
-
+    #define KARM  0.41
     #define RESPIRATION_PARAMETER  0.00000147222 // to compute respiration
     #define CARBONFACTOR 0.5                /*!< coeff for conversion of carbon into DM, kgC kgDM-1  */
     #define GAMMA  66.2                     /*!< psychrometer constant, Pa K-1  */
@@ -197,6 +197,8 @@
         std::vector<TLAIphenology> phenologyLAI;
         double myChlorophyllContent;
         double height; // in cm
+        double frictionVelocity;
+        double sensibleHeat;
         double hydraulicResistancePerFoliageArea; //(MPa s m2 m-3)
         double myLeafWidth;
         bool isAmphystomatic;
@@ -480,6 +482,7 @@
         double photosynthesisAndTranspirationUnderstorey();
         void leafTemperature();
         void aerodynamicalCoupling();
+        void understoreyTemperatureAndRelativeHumidity();
         void preliminaryComputations(double diffuseIncomingPAR, double diffuseReflectionCoefficientPAR, double directIncomingPAR, double directReflectionCoefficientPAR,
                                                      double diffuseIncomingNIR, double diffuseReflectionCoefficientNIR, double directIncomingNIR, double directReflectionCoefficientNIR,
                                      double scatteringCoefPAR, double scatteringCoefNIR, std::vector<double> &dum);
