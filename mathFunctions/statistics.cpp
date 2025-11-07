@@ -37,7 +37,7 @@
 #include "furtherMathFunctions.h"
 
 
-float statisticalElab(meteoComputation elab, float param, std::vector<float> values, int nValues, float myRainfallThreshold)
+float statisticalElab(meteoComputation elab, float param, std::vector<float> values, int nValues, float myPrecThreshold)
 {
     switch(elab)
     {
@@ -63,6 +63,8 @@ float statisticalElab(meteoComputation elab, float param, std::vector<float> val
             return statistics::countConsecutive(values, nValues, param, false);
         case percentile:
             return sorting::percentile(values, nValues, param, true);
+        case percentileRainThreshold:
+            return sorting::percentileAboveThreshold(values, nValues, param, myPrecThreshold, true);
         case freqPositive:
             return statistics::frequencyPositive(values, nValues);
         case prevailingWindDir:
@@ -77,7 +79,7 @@ float statisticalElab(meteoComputation elab, float param, std::vector<float> val
         case erosivityFactorElab:
             return erosivityFactor(values, nValues);
         case rainIntensityElab:
-            return rainIntensity(values, nValues, myRainfallThreshold);
+            return rainIntensity(values, nValues, myPrecThreshold);
         case stdDev:
             return statistics::standardDeviation(values, nValues);
         case timeIntegration:

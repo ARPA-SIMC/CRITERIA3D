@@ -64,6 +64,7 @@
         void quicksortAscendingFloat(std::vector<float> &values, unsigned int first, unsigned int last);
         float percentile(std::vector<float>& list, int& nrList, float perc, bool sortValues);
         float percentileRank(std::vector<float> &list, float value, bool isSortValues);
+        float percentileAboveThreshold(std::vector<float>& list, int& nrList, float perc, float threshold, bool isSortValues);
         float mode(std::vector<float> &list, int* nrList, bool isSortValues);
     }
 
