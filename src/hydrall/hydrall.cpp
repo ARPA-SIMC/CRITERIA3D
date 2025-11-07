@@ -1028,7 +1028,7 @@ void Crit3DHydrall::aerodynamicalCoupling()
         shaded.leafTemperature = sunlit.leafTemperature = weatherVariable.myInstantTemp + ZEROCELSIUS;
     }
 }
-
+/*
 // --- Funzione pressione di vapore saturo (Pa) ---
 double es(double T)
 {
@@ -1128,7 +1128,7 @@ void Crit3DHydrall::understoreyTemperatureAndRelativeHumidity()
     //double RH_under = compute_RH_under(upperCanopyAirTemperature, upperCanopyRH, ra, LE);        // friction velocity [m/s]
 
 }
-
+*/
 
 
 double  Crit3DHydrall::leafWidth()
