@@ -231,6 +231,8 @@
     // [m2 s-1] vapor diffusivity at standard conditions
     #define	 VAPOR_DIFFUSIVITY0 0.0000212
 
+    #define LATENT_HEAT_VAPORIZATION 2.45e6;  // latent heat of vaporization [J/kg]
+
     // [Pa] default atmospheric pressure at sea level
     //#define SEA_LEVEL_PRESSURE 101325.
 
