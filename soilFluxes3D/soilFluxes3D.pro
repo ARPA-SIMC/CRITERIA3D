@@ -55,7 +55,6 @@ HEADERS += \
 DISTFILES += \
     ToDoList.txt
 
-
 # parallel computing settings
 include($$absolute_path(../parallel.pri))
 

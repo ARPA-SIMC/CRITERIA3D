@@ -311,9 +311,8 @@ float erosivityFactor(std::vector<float> values, int nValues)
 }
 
 
-float rainIntensity(std::vector<float> values, int nValues, float rainfallThreshold)
+float rainIntensity(std::vector<float> values, int nValues, float myRainfallThreshold)
 {
-
     if (nValues == 0)
         return NODATA;
 
@@ -324,10 +323,10 @@ float rainIntensity(std::vector<float> values, int nValues, float rainfallThresh
     {
         if (values[i] != NODATA)
         {
-            if (values[i] > rainfallThreshold)
+            if (values[i] >= myRainfallThreshold)
             {
-                rainyDays = rainyDays + 1;
-                rainySum = rainySum + values[i];
+                rainyDays++;
+                rainySum += values[i];
             }
         }
     }
@@ -336,7 +335,6 @@ float rainIntensity(std::vector<float> values, int nValues, float rainfallThresh
         return 0;
     else
         return rainySum / rainyDays;
-
 }
 
 

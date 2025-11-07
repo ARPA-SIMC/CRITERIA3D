@@ -37,7 +37,7 @@
 #include "furtherMathFunctions.h"
 
 
-float statisticalElab(meteoComputation elab, float param, std::vector<float> values, int nValues, float rainfallThreshold)
+float statisticalElab(meteoComputation elab, float param, std::vector<float> values, int nValues, float myRainfallThreshold)
 {
     switch(elab)
     {
@@ -77,7 +77,7 @@ float statisticalElab(meteoComputation elab, float param, std::vector<float> val
         case erosivityFactorElab:
             return erosivityFactor(values, nValues);
         case rainIntensityElab:
-            return rainIntensity(values, nValues, rainfallThreshold);
+            return rainIntensity(values, nValues, myRainfallThreshold);
         case stdDev:
             return statistics::standardDeviation(values, nValues);
         case timeIntegration:

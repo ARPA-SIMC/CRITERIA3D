@@ -321,7 +321,6 @@ namespace soilFluxes3D { inline namespace v2
         u32_t numThreads = std::thread::hardware_concurrency();
     };
 
-    //Move to a different location?
     template<typename E>
     __cudaSpec constexpr auto castToUnderlyingType(E value)
     {

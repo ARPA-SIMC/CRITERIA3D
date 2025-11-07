@@ -186,12 +186,14 @@ QList<QString> getSharedCommandList()
 {
     QList<QString> cmdList;
 
+    cmdList.append("?               | ListCommands");
+    cmdList.append("Quit            | Exit");
+    cmdList.append("Log             | SetLogFile");
     cmdList.append("DEM             | LoadDEM");
     cmdList.append("Point           | LoadPoints");
     cmdList.append("Grid            | LoadGrid");
-    cmdList.append("Log             | SetLogFile");
-    cmdList.append("Quit            | Exit");
     cmdList.append("DailyCsv        | ExportDailyDataCsv");
+    cmdList.append("HourlyCsv       | ExportHourlyDataCsv");
 
     return cmdList;
 }
@@ -471,6 +473,29 @@ int cmdExportDailyDataCsv(Project* myProject, QList<QString> argumentList)
 }
 
 
+int cmdExportHourlyDataCsv(Project* myProject, QList<QString> argumentList)
+{
+    QString outputPath = myProject->getProjectPath() + PATH_OUTPUT;
+
+    if (argumentList.size() < 2)
+    {
+        QString usage = "Usage:\n"
+                        "ExportHourlyDataCsv -v:variableList [-TPREC] [-t:type] -d1:firstDate [-d2:lastDate] [-l:idList] [-p:outputPath]\n"
+                        "-v         list of comma separated variables (varname: TAVG, PREC, RHAVG, RAD, ... TODO) \n"
+                        "-TPREC     export Tavg, Prec \n"
+                        "-t         type: GRID|POINTS (default: GRID) \n"
+                        "-d1, -d2   date format: YYYY-MM-DD (default: lastDate = yesterday) \n"
+                        "-l         list of output points or cells filename  (default: ALL active cells/points) \n"
+                        "-p         output Path (default: " + outputPath + ") \n";
+        myProject->logInfo(usage);
+        return PRAGA_OK;
+    }
+
+    return PRAGA_OK;
+}
+
+
+
 int executeSharedCommand(Project* myProject, QList<QString> argumentList, bool* isCommandFound)
 {
     *isCommandFound = false;
@@ -507,6 +532,11 @@ int executeSharedCommand(Project* myProject, QList<QString> argumentList, bool* 
     {
         *isCommandFound = true;
         return cmdExportDailyDataCsv(myProject, argumentList);
+    }
+    else if (command == "HOURLYCSV" || command == "EXPORTHOURLYDATACSV")
+    {
+        *isCommandFound = true;
+        return cmdExportHourlyDataCsv(myProject, argumentList);
     }
 
     return NOT_SHARED_COMMAND;

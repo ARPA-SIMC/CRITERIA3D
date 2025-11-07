@@ -291,28 +291,31 @@ namespace soilFluxes3D::v2::Water
         __parfor(__ompStatus)
         for (SF3Duint_t rowIdx = 0; rowIdx < matrixA.numRows; ++rowIdx)
         {
-            u8_t linkIdx = 1;
+            u8_t colIdx = 1;
             bool isLinked;
 
-            //Compute flux up
-            isLinked = computeLinkFluxes(matrixA.values[rowIdx][linkIdx], matrixA.colIndeces[rowIdx][linkIdx], rowIdx, 0, approxNum, deltaT, lateralVerticalRatio, linkType_t::Up, meanType);
+            // flux up
+            u8_t linkIndex = 0;
+            isLinked = computeLinkFluxes(matrixA.values[rowIdx][colIdx], matrixA.colIndeces[rowIdx][colIdx], rowIdx, linkIndex, approxNum, deltaT, lateralVerticalRatio, linkType_t::Up, meanType);
             if(isLinked)
-                linkIdx++;
+                colIdx++;
 
-            //Compute flox down
-            isLinked = computeLinkFluxes(matrixA.values[rowIdx][linkIdx], matrixA.colIndeces[rowIdx][linkIdx], rowIdx, 1, approxNum, deltaT, lateralVerticalRatio, linkType_t::Down, meanType);
-            if(isLinked)
-                linkIdx++;
-
-            //Compute flux lateral
+            // flux lateral
             for(u8_t latIdx = 0; latIdx < maxLateralLink; ++latIdx)
             {
-                isLinked = computeLinkFluxes(matrixA.values[rowIdx][linkIdx], matrixA.colIndeces[rowIdx][linkIdx], rowIdx, 2 + latIdx, approxNum, deltaT, lateralVerticalRatio, linkType_t::Lateral, meanType);
+                linkIndex = 2 + latIdx;
+                isLinked = computeLinkFluxes(matrixA.values[rowIdx][colIdx], matrixA.colIndeces[rowIdx][colIdx], rowIdx, linkIndex, approxNum, deltaT, lateralVerticalRatio, linkType_t::Lateral, meanType);
                 if(isLinked)
-                    linkIdx++;
+                    colIdx++;
             }
 
-            matrixA.numColumns[rowIdx] = linkIdx;
+            // flux down
+            linkIndex = 1;
+            isLinked = computeLinkFluxes(matrixA.values[rowIdx][colIdx], matrixA.colIndeces[rowIdx][colIdx], rowIdx, linkIndex, approxNum, deltaT, lateralVerticalRatio, linkType_t::Down, meanType);
+            if(isLinked)
+                colIdx++;
+
+            matrixA.numColumns[rowIdx] = colIdx;
 
             //TO DO: need to fill the not used columns of the row?
 

@@ -22,7 +22,7 @@
                                   double roughnessHeight, double airTemperature, double windSpeed);
     double aerodynamicConductanceOpenwater(double myHeight, double myWaterBodySurface, double myAirTemperature, double myWindSpeed10);
     float erosivityFactor(std::vector<float> values, int nValues);
-    float rainIntensity(std::vector<float> values, int nValues, float rainfallThreshold);
+    float rainIntensity(std::vector<float> values, int nValues, float myRainfallThreshold);
     int windPrevailingDir(std::vector<float> intensity, std::vector<float> dir, int nValues, bool useIntensity);
     float timeIntegrationFunction(std::vector<float> values, float timeStep);
 
