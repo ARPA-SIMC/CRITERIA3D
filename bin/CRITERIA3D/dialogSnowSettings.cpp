@@ -9,7 +9,7 @@ DialogSnowSettings::DialogSnowSettings(QWidget *parent) : QDialog(parent)
     QGridLayout *layoutSettings = new QGridLayout();
     QHBoxLayout *layoutOk = new QHBoxLayout();
 
-    QLabel *rainfallThreshold = new QLabel(tr("All rainfall at temperature [°C] > "));
+    QLabel *rainfallThresholdLabel = new QLabel(tr("All rainfall at temperature [°C] > "));
     rainfallThresholdValue = new QLineEdit();
     rainfallThresholdValue->setFixedWidth(70);
 
@@ -59,7 +59,7 @@ DialogSnowSettings::DialogSnowSettings(QWidget *parent) : QDialog(parent)
     snowDampingDepthValue->setValidator(doubleAlbedoVal);
     snowDampingDepthValue->setFixedWidth(70);
 
-    layoutSettings->addWidget(rainfallThreshold, 0 , 0);
+    layoutSettings->addWidget(rainfallThresholdLabel, 0 , 0);
     layoutSettings->addWidget(rainfallThresholdValue, 0 , 1);
     layoutSettings->addWidget(snowThreshold, 1 , 0);
     layoutSettings->addWidget(snowThresholdValue, 1 , 1);
@@ -143,13 +143,13 @@ bool DialogSnowSettings::checkWrongValues()
 {
     bool ok;
 
-    double rainfallThreshold = QLocale().toDouble(rainfallThresholdValue->text(), &ok);
+    double _rainfallThreshold = QLocale().toDouble(rainfallThresholdValue->text(), &ok);
     if (!ok)
     {
         QMessageBox::information(nullptr, "Wrong value", "Max. temperature with snow value is not a number");
         return false;
     }
-    if ((rainfallThreshold < 0.0) || (rainfallThreshold > 4.0))
+    if ((_rainfallThreshold < 0.0) || (_rainfallThreshold > 4.0))
     {
         QMessageBox::information(nullptr, "Wrong value", "Max. temperature with snow should be in [0:4]");
         return false;

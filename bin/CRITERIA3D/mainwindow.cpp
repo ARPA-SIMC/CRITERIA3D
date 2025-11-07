@@ -4122,3 +4122,11 @@ void MainWindow::on_action_parallel_computing_triggered(bool isChecked)
     myProject.setParallelComputing(isChecked);
 }
 
+
+void MainWindow::on_actionOpenShell_triggered()
+{
+    myProject.modality = MODE_CONSOLE;
+    myProject.criteria3DShell();
+    myProject.modality = MODE_GUI;
+}
+

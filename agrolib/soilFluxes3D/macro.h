@@ -20,17 +20,23 @@
 
 //GPU base
 #define deviceAlloc(ptr, count) allocDevicePointer(ptr, count)
+#define deviceFill(ptr, count, value) fillDevicePointer(ptr, count, value)
 #define deviceReset(ptr, count) resetDevicePointer(ptr, count)
 #define deviceFree(ptr) freeDevicePointer(ptr)
 
+#define deviceConditionalCopy(dst, src, count, condition) conditionalCopyDevicePointer(dst, src, count, condition)
+#define deviceSum(ptr, count) reduceDeviceVector<reduceOperation_t::Sum>(ptr, count)
+#define deviceMax(ptr, count) reduceDeviceVector<reduceOperation_t::Max>(ptr, count)
+
 #define moveToDevice(ptr, count) movePointerToDevice(ptr, count, moveStreams[(currStreamIdx++) % 32])
 #define moveToHost(ptr, count) movePointerToHost(ptr, count, moveStreams[(currStreamIdx++) % 32])
+
+#define launchKernel(kernel, ...) launchGPUKernel(kernel, dim3(numBlocks), dim3(numThreadsPerBlock), __VA_ARGS__)
 
 //GPU Solver
 #define deviceSolverAlloc(ptr, count) solverDeviceCheckError(deviceAlloc(ptr, count), _status, SF3Derror_t::MemoryError)
 #define deviceSolverFree(ptr) solverDeviceCheckError(deviceFree(ptr), _status, SF3Derror_t::MemoryError)
 
-#define launchKernel(kernel, ...) launchGPUKernel(kernel, dim3(numBlocks), dim3(numThreadsPerBlock), __VA_ARGS__)
 #define cuspCheck(retValue) solverDeviceCheckError(retValue, _status, SF3Derror_t::SolverError)
 
 //CUDA runtime
