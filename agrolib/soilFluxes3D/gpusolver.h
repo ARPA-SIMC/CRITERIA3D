@@ -84,7 +84,7 @@ namespace soilFluxes3D::v2
     __global__ void computeCapacityHeat_k(double *Cvalues, double timeStepHeat, double timeStepWater);
 
     __global__ void computeWaterLinearSystemElement_k(MatrixGPU matrixA, VectorGPU vectorB, const double* Cvalues, u8_t approxNum, double deltaT, double lateralVerticalRatio, meanType_t meanType);
-    __global__ void computeHeatLinearSystemElement_k(MatrixGPU matrixA, VectorGPU vectorB, const double* Cvalues, double deltaT, double lateralVerticalRatio, meanType_t meanType);
+    __global__ void computeHeatLinearSystemElement_k(MatrixGPU matrixA, VectorGPU vectorB, const double* Cvalues, double timeStepHeat, double timeStepWater);
 
     __global__ void computeNormalizedError(double *vectorNorm, double *vectorX, const double *previousX);
 
@@ -94,8 +94,9 @@ namespace soilFluxes3D::v2
     __global__ void computeWaterContent_k(double* outVector);
 
     __global__ void computeCurrentHeatSinkSource_k(double* d_heatSinkSourceVector, double dtHeat);
-    __global__ void computeCurrentHeatStorage_k(double* d_heatSinkSourceVector, double dtWater,double dtHeat);
+    __global__ void computeCurrentHeatStorage_k(double* d_heatSinkSourceVector, double = noDataD, double dtHeat = noDataD);
 
+    __global__ void saveHeatFluxValues_k(double dtHeat, double dtWater);
 
     template<typename deviceError_t>
     inline SF3Derror_t solverDeviceCheckError(deviceError_t retError, solverStatus& status, const SF3Derror_t contextErrorType)

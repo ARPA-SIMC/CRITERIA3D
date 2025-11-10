@@ -1481,7 +1481,7 @@ namespace soilFluxes3D::v2
      * \param pressureHead  [m]
      * \return heat storage [J]
      */
-    double getNodeHeatStorage(SF3Duint_t nodeIndex, double h)
+    __cudaSpec double getNodeHeatStorage(SF3Duint_t nodeIndex, double h)
     {
         if(!nodeGrid.isInitialized)
             return getDoubleErrorValue(SF3Derror_t::MemoryError);
