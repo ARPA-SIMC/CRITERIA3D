@@ -82,19 +82,6 @@ QualityTab::QualityTab(Crit3DQuality *quality)
     referenceClimateHeightEdit.setValidator(doubleValHeight);
     referenceClimateHeightEdit.setText(QString::number(quality->getReferenceHeight()));
 
-    QLabel *deltaTSuspect = new QLabel(tr("difference in temperature in climatological control (suspect value) [degC]:"));
-    QDoubleValidator *doubleValT = new QDoubleValidator( -100.0, 100.0, 5, this );
-    doubleValT->setNotation(QDoubleValidator::StandardNotation);
-    deltaTSuspectEdit.setFixedWidth(EDIT_SIZE);
-    deltaTSuspectEdit.setValidator(doubleValT);
-    deltaTSuspectEdit.setText(QString::number(quality->getDeltaTSuspect()));
-
-
-    QLabel *deltaTWrong = new QLabel(tr("difference in temperature in climatological control (wrong value) [degC]:"));
-    deltaTWrongEdit.setFixedWidth(EDIT_SIZE);
-    deltaTWrongEdit.setValidator(doubleValT);
-    deltaTWrongEdit.setText(QString::number(quality->getDeltaTWrong()));
-
     QLabel *humidityTolerance = new QLabel(tr("instrumental maximum allowed relative humidity [%]:"));
     humidityToleranceEdit.setFixedWidth(EDIT_SIZE);
     QDoubleValidator *doubleValPerc = new QDoubleValidator( 0.0, 100.0, 5, this );
@@ -114,12 +101,6 @@ QualityTab::QualityTab(Crit3DQuality *quality)
     QVBoxLayout *mainLayout = new QVBoxLayout;
     mainLayout->addWidget(referenceClimateHeight);
     mainLayout->addWidget(&referenceClimateHeightEdit);
-
-    mainLayout->addWidget(deltaTSuspect);
-    mainLayout->addWidget(&deltaTSuspectEdit);
-
-    mainLayout->addWidget(deltaTWrong);
-    mainLayout->addWidget(&deltaTWrongEdit);
 
     mainLayout->addWidget(humidityTolerance);
     mainLayout->addWidget(&humidityToleranceEdit);
@@ -279,18 +260,6 @@ bool DialogSettings::acceptValues()
         return false;
     }
 
-    if (qualityTab->deltaTSuspectEdit.text().isEmpty())
-    {
-        QMessageBox::information(nullptr, "Missing Parameter", "insert difference in temperature suspect value");
-        return false;
-    }
-
-    if (qualityTab->deltaTWrongEdit.text().isEmpty())
-    {
-        QMessageBox::information(nullptr, "Missing Parameter", "insert difference in temperature wrong value");
-        return false;
-    }
-
     if (qualityTab->humidityToleranceEdit.text().isEmpty())
     {
         QMessageBox::information(nullptr, "Missing Parameter", "instrumental maximum allowed relative humidity");
@@ -336,8 +305,6 @@ bool DialogSettings::acceptValues()
     project_->gisSettings.isUTC = projectTab->utc.isChecked();
 
     project_->quality->setReferenceHeight(qualityTab->referenceClimateHeightEdit.text().toFloat());
-    project_->quality->setDeltaTSuspect(qualityTab->deltaTSuspectEdit.text().toFloat());
-    project_->quality->setDeltaTWrong(qualityTab->deltaTWrongEdit.text().toFloat());
     project_->quality->setRelHumTolerance(qualityTab->humidityToleranceEdit.text().toFloat());
     project_->quality->setWaterTableMaximumDepth(qualityTab->waterTableDepthEdit.text().toFloat());
 
