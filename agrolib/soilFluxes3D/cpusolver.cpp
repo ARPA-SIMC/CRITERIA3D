@@ -33,13 +33,13 @@ namespace soilFluxes3D::v2
 
         //initialize matrix structure
         matrixA.numRows = nodeGrid.numNodes;
-        hostSolverAlloc(matrixA.numColumns, matrixA.numRows);
-        hostSolverAlloc(matrixA.colIndeces, matrixA.numRows);
+        hostSolverAlloc(matrixA.numColsInRow, matrixA.numRows);
+        hostSolverAlloc(matrixA.columnIndeces, matrixA.numRows);
         hostSolverAlloc(matrixA.values, matrixA.numRows);
 
         for (SF3Duint_t rowIdx = 0; rowIdx < matrixA.numRows; ++rowIdx)
         {
-            hostSolverAlloc(matrixA.colIndeces[rowIdx], matrixA.maxColumns);
+            hostSolverAlloc(matrixA.columnIndeces[rowIdx], matrixA.maxColumns);
             hostSolverAlloc(matrixA.values[rowIdx], matrixA.maxColumns);
         }
 
@@ -94,11 +94,11 @@ namespace soilFluxes3D::v2
         __parfor(_parameters.enableOMP)
         for (SF3Duint_t rowIdx = 0; rowIdx < matrixA.numRows; ++rowIdx)
         {
-            hostSolverFree(matrixA.colIndeces[rowIdx]);
+            hostSolverFree(matrixA.columnIndeces[rowIdx]);
             hostSolverFree(matrixA.values[rowIdx]);
         }
-        hostSolverFree(matrixA.numColumns);
-        hostSolverFree(matrixA.colIndeces);
+        hostSolverFree(matrixA.numColsInRow);
+        hostSolverFree(matrixA.columnIndeces);
         hostSolverFree(matrixA.values);
 
         //Destruct matrix variable
@@ -284,35 +284,35 @@ namespace soilFluxes3D::v2
             bool isLinked = false;
 
             //Compute flox up
-            isLinked = computeHeatLinkFluxes(matrixA.values[rowIdx][linkIdx], matrixA.colIndeces[rowIdx][linkIdx], rowIdx, 0, timeStepHeat, timeStepWater);
+            isLinked = computeHeatLinkFluxes(matrixA.values[rowIdx][linkIdx], matrixA.columnIndeces[rowIdx][linkIdx], rowIdx, 0, timeStepHeat, timeStepWater);
             if(isLinked)
                 linkIdx++;
 
             //Compute flox down
-            isLinked = computeHeatLinkFluxes(matrixA.values[rowIdx][linkIdx], matrixA.colIndeces[rowIdx][linkIdx], rowIdx, 1, timeStepHeat, timeStepWater);
+            isLinked = computeHeatLinkFluxes(matrixA.values[rowIdx][linkIdx], matrixA.columnIndeces[rowIdx][linkIdx], rowIdx, 1, timeStepHeat, timeStepWater);
             if(isLinked)
                 linkIdx++;
 
             //Compute flux lateral
             for(u8_t latIdx = 0; latIdx < maxLateralLink; ++latIdx) //TO DO: implement real num lat links
             {
-                isLinked = computeHeatLinkFluxes(matrixA.values[rowIdx][linkIdx], matrixA.colIndeces[rowIdx][linkIdx], rowIdx, 2 + latIdx, timeStepHeat, timeStepWater);
+                isLinked = computeHeatLinkFluxes(matrixA.values[rowIdx][linkIdx], matrixA.columnIndeces[rowIdx][linkIdx], rowIdx, 2 + latIdx, timeStepHeat, timeStepWater);
                 if(isLinked)
                     linkIdx++;
             }
 
-            matrixA.numColumns[rowIdx] = linkIdx; //TO DO: need to fill the not used columns of the row?
+            matrixA.numColsInRow[rowIdx] = linkIdx; //TO DO: need to fill the not used columns of the row?
 
             //Compute diagonal element
             double sumDP = 0., sumF0 = 0.;
-            for(u8_t colIdx = 1; colIdx < matrixA.numColumns[rowIdx]; ++colIdx)
+            for(u8_t colIdx = 1; colIdx < matrixA.numColsInRow[rowIdx]; ++colIdx)
             {
                 sumDP += matrixA.values[rowIdx][colIdx] * _parameters.heatWeightFactor;
-                double dT0 = nodeGrid.heatData.oldTemperature[matrixA.colIndeces[rowIdx][colIdx]] - nodeGrid.heatData.oldTemperature[rowIdx];
+                double dT0 = nodeGrid.heatData.oldTemperature[matrixA.columnIndeces[rowIdx][colIdx]] - nodeGrid.heatData.oldTemperature[rowIdx];
                 sumF0 += matrixA.values[rowIdx][colIdx] * (1. - _parameters.heatWeightFactor) * dT0;
                 matrixA.values[rowIdx][colIdx] *= -(_parameters.heatWeightFactor);
             }
-            matrixA.colIndeces[rowIdx][0] = rowIdx;
+            matrixA.columnIndeces[rowIdx][0] = rowIdx;
             matrixA.values[rowIdx][0] = sumDP + (vectorC.values[rowIdx] / timeStepHeat);  //Check if C values is correct
 
             //Computeb element
@@ -324,7 +324,7 @@ namespace soilFluxes3D::v2
             {
                 vectorB.values[rowIdx] /= matrixA.values[rowIdx][0];
 
-                for(u8_t colIdx = 1; colIdx < matrixA.numColumns[rowIdx]; ++colIdx)
+                for(u8_t colIdx = 1; colIdx < matrixA.numColsInRow[rowIdx]; ++colIdx)
                     matrixA.values[rowIdx][colIdx] /= matrixA.values[rowIdx][0];
             }
         }
