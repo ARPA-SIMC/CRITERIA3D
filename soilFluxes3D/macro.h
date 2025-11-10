@@ -70,7 +70,6 @@
     #define __parforop(cond, op, var)
 #endif
 
-
 //Log
 #ifdef MCR_ENABLED
     #include "logFunctions.h"

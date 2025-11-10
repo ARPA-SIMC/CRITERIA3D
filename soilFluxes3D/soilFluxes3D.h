@@ -83,7 +83,7 @@ namespace soilFluxes3D { inline namespace v2
     double getNodeTemperature(SF3Duint_t nodeIndex);
     double getNodeHeatConductivity(SF3Duint_t nodeIndex);
     __cudaSpec double getNodeVapor(SF3Duint_t nodeIndex);
-    double getNodeHeatStorage(SF3Duint_t nodeIndex, double h);
+    __cudaSpec double getNodeHeatStorage(SF3Duint_t nodeIndex, double h);
     double getNodeHeatMaxFlux(SF3Duint_t nodeIndex, linkType_t linkDirection, fluxTypes_t fluxType);
     double getNodeBoundaryAdvectiveFlux(SF3Duint_t nodeIndex);
     double getNodeBoundaryLatentFlux(SF3Duint_t nodeIndex);
