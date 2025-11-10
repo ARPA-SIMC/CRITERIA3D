@@ -34,8 +34,8 @@ namespace soilFluxes3D::v2
         assert(rowIndex != colIndex);
         //assert(matrixA.values != nullptr);
         u8_t cpuColIdx;
-        for(cpuColIdx = 1; cpuColIdx < matrixA.numColumns[rowIndex]; ++cpuColIdx)
-            if(matrixA.colIndeces[rowIndex][cpuColIdx] == colIndex)
+        for(cpuColIdx = 1; cpuColIdx < matrixA.numColsInRow[rowIndex]; ++cpuColIdx)
+            if(matrixA.columnIndeces[rowIndex][cpuColIdx] == colIndex)
                 break;
 
         return matrixA.values[rowIndex][cpuColIdx] * matrixA.values[rowIndex][0];

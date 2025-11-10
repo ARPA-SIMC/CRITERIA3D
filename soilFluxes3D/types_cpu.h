@@ -8,8 +8,8 @@ namespace soilFluxes3D::v2
     {
         SF3Duint_t numRows;
         u8_t maxColumns = maxMatrixColumns;
-        u8_t* numColumns = nullptr;
-        SF3Duint_t** colIndeces = nullptr;
+        u8_t* numColsInRow = nullptr;
+        SF3Duint_t** columnIndeces = nullptr;
         double** values = nullptr;
     };
 
