@@ -172,14 +172,14 @@ namespace soilFluxes3D::v2
     template<typename T>
     struct ReduceOpWrapper<reduceOperation_t::Max, T>
     {
-        static void apply(void* temp, std::size_t& tempSize, const T* in, T* out, std::size_t n, cudaStream_t s)
+        static void apply(void* temp, std::size_t& tempSize, const T* in, T* out, std::size_t n)
         {
             cub::DeviceReduce::Max(temp, tempSize, in, out, n);
         }
     };
 
     template<reduceOperation_t op, typename T>
-    inline T reduceDeviceVector(T*& d_ptr, const std::size_t size)
+    inline T reduceDeviceVector(const T* d_ptr, const std::size_t size)
     {
         T *d_value = nullptr, h_value = 0;
 

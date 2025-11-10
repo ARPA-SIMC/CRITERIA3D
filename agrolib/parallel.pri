@@ -13,4 +13,3 @@ CUDA_ARCH = sm_61
 MCR_PATH = "SET Path!"
 
 include($$absolute_path(./parallelDetails.pri))
-
