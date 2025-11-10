@@ -324,7 +324,7 @@
         std::vector <float> tdMinLapseRate;
         std::vector <float> tdMaxLapseRate;
 
-        float getClimateLapseRate(meteoVariable myVar, Crit3DTime myTime);
+        float getClimateLapseRate(meteoVariable myVar, const Crit3DTime& myTime);
         float getClimateLapseRate(meteoVariable myVar, int month);
         float getClimateVar(meteoVariable myVar, int month, float height, float refHeight);
     };
@@ -341,7 +341,7 @@
     float computeDailyBIC(float prec, float etp);
     float dailyThermalRange(float tMin, float tMax);
     float dailyAverageT(float tMin, float tMax);
-    float dailyEtpHargreaves(float Tmin, float Tmax, Crit3DDate date, double latitude, Crit3DMeteoSettings *meteoSettings);
+    float dailyEtpHargreaves(float Tmin, float Tmax, const Crit3DDate& date, double latitude, Crit3DMeteoSettings *meteoSettings);
     float dewPoint(float relHumAir, float tempAir);
     bool computeLeafWetness(double prec, double relHumidity, short* leafW);
 
@@ -364,12 +364,12 @@
 
     std::string getVariableString(meteoVariable myVar);
     std::string getUnitFromVariable(meteoVariable var);
-    std::string getKeyStringMeteoMap(std::map<std::string, meteoVariable> map, meteoVariable value);
-    meteoVariable getKeyMeteoVarMeteoMap(std::map<meteoVariable,std::string> map, const std::string &value);
-    meteoVariable getKeyMeteoVarMeteoMapWithoutUnderscore(std::map<meteoVariable,std::string> map, const std::string& value);
+    std::string getKeyStringMeteoMap(const std::map<std::string, meteoVariable>& map, meteoVariable value);
+    meteoVariable getKeyMeteoVarMeteoMap(const std::map<meteoVariable,std::string>& map, const std::string &value);
+    meteoVariable getKeyMeteoVarMeteoMapWithoutUnderscore(const std::map<meteoVariable,std::string>& map, const std::string& value);
 
-    meteoVariable getMeteoVar(std::string varString);
-    meteoVariable getHourlyMeteoVar(std::string varString);
+    meteoVariable getMeteoVar(const std::string& varString);
+    meteoVariable getHourlyMeteoVar(const std::string &varString);
     std::string getMeteoVarName(meteoVariable var);
 
     std::string getCriteria3DVarName(criteria3DVariable var);
