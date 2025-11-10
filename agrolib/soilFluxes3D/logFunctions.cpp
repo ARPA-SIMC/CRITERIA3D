@@ -59,10 +59,10 @@ namespace soilFluxes3D::v2::Log
 
         SF3Duint_t cnz = 0;
         for(SF3Duint_t rIdx = 0; rIdx < matrix.numRows; ++rIdx)
-            for(SF3Duint_t cIdx = 0; cIdx < matrix.numColumns[rIdx]; ++cIdx)
+            for(SF3Duint_t cIdx = 0; cIdx < matrix.numColsInRow[rIdx]; ++cIdx)
             {
                 rowPtr[cnz] = rIdx;
-                colPtr[cnz] = matrix.colIndeces[rIdx][cIdx];
+                colPtr[cnz] = matrix.columnIndeces[rIdx][cIdx];
                 valPtr[cnz] = matrix.values[rIdx][cIdx];
                 cnz++;
             }

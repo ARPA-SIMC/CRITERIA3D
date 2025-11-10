@@ -672,8 +672,8 @@ namespace soilFluxes3D::v2::Heat
                 continue;
 
             double newXvalue = vectorB.values[rowIdx];
-            for(u8_t colIdx = 1; colIdx < matrixA.numColumns[rowIdx]; ++colIdx)
-                newXvalue -= matrixA.values[rowIdx][colIdx] * vectorX.values[matrixA.colIndeces[rowIdx][colIdx]];
+            for(u8_t colIdx = 1; colIdx < matrixA.numColsInRow[rowIdx]; ++colIdx)
+                newXvalue -= matrixA.values[rowIdx][colIdx] * vectorX.values[matrixA.columnIndeces[rowIdx][colIdx]];
 
             double deltaX = std::fabs(newXvalue - vectorX.values[rowIdx]);
             vectorX.values[rowIdx] = newXvalue;

@@ -296,7 +296,7 @@ namespace soilFluxes3D::v2::Water
 
             // flux up
             u8_t linkIndex = 0;
-            isLinked = computeLinkFluxes(matrixA.values[rowIdx][colIdx], matrixA.colIndeces[rowIdx][colIdx], rowIdx, linkIndex, approxNum, deltaT, lateralVerticalRatio, linkType_t::Up, meanType);
+            isLinked = computeLinkFluxes(matrixA.values[rowIdx][colIdx], matrixA.columnIndeces[rowIdx][colIdx], rowIdx, linkIndex, approxNum, deltaT, lateralVerticalRatio, linkType_t::Up, meanType);
             if(isLinked)
                 colIdx++;
 
@@ -304,36 +304,36 @@ namespace soilFluxes3D::v2::Water
             for(u8_t latIdx = 0; latIdx < maxLateralLink; ++latIdx)
             {
                 linkIndex = 2 + latIdx;
-                isLinked = computeLinkFluxes(matrixA.values[rowIdx][colIdx], matrixA.colIndeces[rowIdx][colIdx], rowIdx, linkIndex, approxNum, deltaT, lateralVerticalRatio, linkType_t::Lateral, meanType);
+                isLinked = computeLinkFluxes(matrixA.values[rowIdx][colIdx], matrixA.columnIndeces[rowIdx][colIdx], rowIdx, linkIndex, approxNum, deltaT, lateralVerticalRatio, linkType_t::Lateral, meanType);
                 if(isLinked)
                     colIdx++;
             }
 
             // flux down
             linkIndex = 1;
-            isLinked = computeLinkFluxes(matrixA.values[rowIdx][colIdx], matrixA.colIndeces[rowIdx][colIdx], rowIdx, linkIndex, approxNum, deltaT, lateralVerticalRatio, linkType_t::Down, meanType);
+            isLinked = computeLinkFluxes(matrixA.values[rowIdx][colIdx], matrixA.columnIndeces[rowIdx][colIdx], rowIdx, linkIndex, approxNum, deltaT, lateralVerticalRatio, linkType_t::Down, meanType);
             if(isLinked)
                 colIdx++;
 
-            matrixA.numColumns[rowIdx] = colIdx;
+            matrixA.numColsInRow[rowIdx] = colIdx;
 
             //TO DO: need to fill the not used columns of the row?
 
             //Compute diagonal element
             double sum = 0.;
-            for(u8_t colIdx = 1; colIdx < matrixA.numColumns[rowIdx]; ++colIdx)
+            for(u8_t colIdx = 1; colIdx < matrixA.numColsInRow[rowIdx]; ++colIdx)
             {
                 sum += matrixA.values[rowIdx][colIdx];
                 matrixA.values[rowIdx][colIdx] *= -1.;
             }
-            matrixA.colIndeces[rowIdx][0] = rowIdx;
+            matrixA.columnIndeces[rowIdx][0] = rowIdx;
             matrixA.values[rowIdx][0] = (vectorC.values[rowIdx] / deltaT) + sum;
 
             //Compute b element
             vectorB.values[rowIdx] = ((vectorC.values[rowIdx] / deltaT) * nodeGrid.waterData.oldPressureHead[rowIdx]) + nodeGrid.waterData.waterFlow[rowIdx] + nodeGrid.waterData.invariantFluxes[rowIdx];
 
             //Preconditioning
-            for(u8_t colIdx = 1; colIdx < matrixA.numColumns[rowIdx]; ++colIdx)
+            for(u8_t colIdx = 1; colIdx < matrixA.numColsInRow[rowIdx]; ++colIdx)
                 matrixA.values[rowIdx][colIdx] /= matrixA.values[rowIdx][0];
 
             vectorB.values[rowIdx] /= matrixA.values[rowIdx][0];
@@ -505,8 +505,8 @@ namespace soilFluxes3D::v2::Water
         __parfor(__ompStatus)
         for(SF3Duint_t rowIdx = 0; rowIdx < matrixA.numRows; ++rowIdx)
         {
-            for(u8_t colIdx = 1; colIdx < matrixA.numColumns[rowIdx]; ++colIdx)
-                tempX[rowIdx] -= matrixA.values[rowIdx][colIdx] * vectorX.values[matrixA.colIndeces[rowIdx][colIdx]];
+            for(u8_t colIdx = 1; colIdx < matrixA.numColsInRow[rowIdx]; ++colIdx)
+                tempX[rowIdx] -= matrixA.values[rowIdx][colIdx] * vectorX.values[matrixA.columnIndeces[rowIdx][colIdx]];
 
             if(nodeGrid.surfaceFlag[rowIdx] && tempX[rowIdx] < nodeGrid.z[rowIdx])
                 tempX[rowIdx] = nodeGrid.z[rowIdx];
@@ -538,8 +538,8 @@ namespace soilFluxes3D::v2::Water
         for (SF3Duint_t rowIdx = 0; rowIdx < matrixA.numRows; ++rowIdx)
         {
             double newCurrValue = vectorB.values[rowIdx];
-            for (u8_t colIdx = 1; colIdx < matrixA.numColumns[rowIdx]; ++colIdx)
-                newCurrValue -= matrixA.values[rowIdx][colIdx] * vectorX.values[matrixA.colIndeces[rowIdx][colIdx]];
+            for (u8_t colIdx = 1; colIdx < matrixA.numColsInRow[rowIdx]; ++colIdx)
+                newCurrValue -= matrixA.values[rowIdx][colIdx] * vectorX.values[matrixA.columnIndeces[rowIdx][colIdx]];
 
             if(nodeGrid.surfaceFlag[rowIdx] && newCurrValue < nodeGrid.z[rowIdx])
                 newCurrValue = nodeGrid.z[rowIdx];
