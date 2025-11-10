@@ -11,9 +11,6 @@
     // default
     // [m]
     #define DEF_VALUE_REF_HEIGHT 300
-    // [°C]
-    #define DEF_VALUE_DELTA_T_SUSP 13
-    #define DEF_VALUE_DELTA_T_WRONG 26
     // [%]
     #define DEF_VALUE_REL_HUM_TOLERANCE 102
     // [cm]
@@ -65,8 +62,6 @@
         quality::Range* qualityDailyBIC;
 
         float referenceHeight;
-        float deltaTSuspect;
-        float deltaTWrong;
         float relHumTolerance;
         float waterTableMaximumDepth;
 
@@ -85,12 +80,6 @@
 
         float getReferenceHeight() const { return referenceHeight; }
         void setReferenceHeight(float value) { referenceHeight = value; }
-
-        float getDeltaTSuspect() const { return deltaTSuspect; }
-        void setDeltaTSuspect(float value) { deltaTSuspect = value; }
-
-        float getDeltaTWrong() const { return deltaTWrong; }
-        void setDeltaTWrong(float value) { deltaTWrong = value; }
 
         float getRelHumTolerance() const { return relHumTolerance; }
         void setRelHumTolerance(float value) { relHumTolerance = value; }

@@ -744,14 +744,6 @@ bool Project::loadParameters(QString parametersFileName)
             {
                 quality->setReferenceHeight(parametersSettings->value("reference_height").toFloat());
             }
-            if (parametersSettings->contains("delta_temperature_suspect") && !parametersSettings->value("delta_temperature_suspect").toString().isEmpty())
-            {
-                quality->setDeltaTSuspect(parametersSettings->value("delta_temperature_suspect").toFloat());
-            }
-            if (parametersSettings->contains("delta_temperature_wrong") && !parametersSettings->value("delta_temperature_wrong").toString().isEmpty())
-            {
-                quality->setDeltaTWrong(parametersSettings->value("delta_temperature_wrong").toFloat());
-            }
             if (parametersSettings->contains("relhum_tolerance") && !parametersSettings->value("relhum_tolerance").toString().isEmpty())
             {
                 quality->setRelHumTolerance(parametersSettings->value("relhum_tolerance").toFloat());
@@ -1807,7 +1799,8 @@ bool Project::loadMeteoGridMonthlyData(const QDate &firstDate, const QDate &last
         std::string id;
         QString myErrorStr;
         QSqlDatabase myDb;
-        meteoGridDbHandler->openNewConnection(myDb, QString::number(omp_get_thread_num()), myErrorStr);
+        QString connectionName = QString::number(omp_get_thread_num());
+        meteoGridDbHandler->openNewConnection(myDb, connectionName, myErrorStr);
 
         #pragma omp for schedule(dynamic) reduction(+:count)
         for (int row = 0; row < gridStructure.header().nrRows; row++)
@@ -1842,6 +1835,13 @@ bool Project::loadMeteoGridMonthlyData(const QDate &firstDate, const QDate &last
         }
 
         myDb.close();
+    }
+
+    // close connections
+    for (int i=0; i < nrThreads; ++i)
+    {
+        QString connectionName = QString::number(i);
+        QSqlDatabase::removeDatabase(connectionName);
     }
 
     if(showInfo)
@@ -3970,8 +3970,6 @@ void Project::saveGenericParameters()
 
     parametersSettings->beginGroup("quality");
         parametersSettings->setValue("reference_height", QString::number(quality->getReferenceHeight()));
-        parametersSettings->setValue("delta_temperature_suspect", QString::number(quality->getDeltaTSuspect()));
-        parametersSettings->setValue("delta_temperature_wrong", QString::number(quality->getDeltaTWrong()));
         parametersSettings->setValue("relhum_tolerance", QString::number(quality->getRelHumTolerance()));
         parametersSettings->setValue("water_table_maximum_depth", QString::number(quality->getWaterTableMaximumDepth()));
     parametersSettings->endGroup();
