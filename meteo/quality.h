@@ -87,13 +87,17 @@
         float getWaterTableMaximumDepth() const { return waterTableMaximumDepth; }
         void setWaterTableMaximumDepth(float value) { waterTableMaximumDepth = value; }
 
-        quality::qualityType checkFastValueDaily_SingleValue(meteoVariable myVar, Crit3DClimateParameters *climateParam, float myValue, int month, float height);
+        quality::qualityType checkFastValueDaily_SingleValue(meteoVariable myVar, Crit3DClimateParameters *climateParam,
+                                                             float myValue, int month, float height);
 
-        bool wrongValueDaily_SingleValue(meteoVariable myVar, Crit3DClimateParameters *climateParam, float myValue, int month, float height);
+        bool wrongValueDaily_SingleValue(meteoVariable myVar, Crit3DClimateParameters *climateParam,
+                                         float myValue, int month, float height);
 
-        quality::qualityType checkFastValueHourly_SingleValue(meteoVariable myVar, Crit3DClimateParameters* climateParam, float myValue, int month, float height);
+        quality::qualityType checkFastValueHourly_SingleValue(meteoVariable myVar, Crit3DClimateParameters* climateParam,
+                                                              float myValue, int month, float height);
 
-        bool wrongValueHourly_SingleValue(meteoVariable myVar, Crit3DClimateParameters* climateParam, float myValue, int month, float height);
+        bool wrongValueHourly_SingleValue(meteoVariable myVar, Crit3DClimateParameters* climateParam,
+                                          float myValue, int month, float height);
 
     };
 

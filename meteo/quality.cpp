@@ -27,13 +27,12 @@
 #include "basicMath.h"
 #include "quality.h"
 #include "meteoPoint.h"
+#include "meteo.h"
 
 
 void Crit3DQuality::initialize()
 {
     referenceHeight = DEF_VALUE_REF_HEIGHT;
-    deltaTSuspect = DEF_VALUE_DELTA_T_SUSP;
-    deltaTWrong = DEF_VALUE_DELTA_T_WRONG;
     relHumTolerance = DEF_VALUE_REL_HUM_TOLERANCE;
     waterTableMaximumDepth = DEF_VALUE_WATERTABLE_MAX_DEPTH;
 }
@@ -227,22 +226,27 @@ bool Crit3DQuality::wrongValueDaily_SingleValue(meteoVariable myVar, Crit3DClima
         float tmaxClima = climateParam->getClimateVar(dailyAirTemperatureMax, month, height, getReferenceHeight());
 
         if (isEqual(tminClima, NODATA) || isEqual(tmaxClima, NODATA))
-            return false;
+        {
+            return (myValue < qualityDailyT->getMin() || myValue > qualityDailyT->getMax());
+        }
 
         if (myVar == dailyAirTemperatureMin)
         {
-            if (myValue < tminClima - getDeltaTWrong() ||
-                myValue > tminClima + getDeltaTWrong()) return true;
+            if (myValue < qualityDailyT->getMin() + tminClima ||
+                myValue > qualityDailyT->getMax() + tminClima)
+                return true;
         }
         else if (myVar == dailyAirTemperatureAvg)
         {
-            if (myValue < tminClima - getDeltaTWrong() ||
-                myValue > tmaxClima + getDeltaTWrong()) return true;
+            if (myValue < qualityDailyT->getMin() + tminClima ||
+                myValue > qualityDailyT->getMax() + tmaxClima)
+                return true;
         }
         else if (myVar == dailyAirTemperatureMax)
         {
-            if (myValue < tmaxClima - getDeltaTWrong() ||
-                myValue > tmaxClima + getDeltaTWrong()) return true;
+            if (myValue < qualityDailyT->getMin() + tmaxClima ||
+                myValue > qualityDailyT->getMax() + tmaxClima)
+                return true;
         }
     }
     else
@@ -273,68 +277,35 @@ quality::qualityType Crit3DQuality::checkFastValueHourly_SingleValue(meteoVariab
 bool Crit3DQuality::wrongValueHourly_SingleValue(meteoVariable myVar, Crit3DClimateParameters* climateParam,
                                                  float myValue, int month, float height)
 {
-    float tminClima = NODATA;
-    float tmaxClima = NODATA;
-    float tdminClima = NODATA;
-    float tdmaxClima = NODATA;
-
-    if (myVar == airTemperature)
+    switch (myVar)
     {
-        tminClima = climateParam->getClimateVar(dailyAirTemperatureMin, month, height, getReferenceHeight());
-        tmaxClima = climateParam->getClimateVar(dailyAirTemperatureMax, month, height, getReferenceHeight());
+    case airTemperature:
+    {
+        float tminClima = climateParam->getClimateVar(dailyAirTemperatureMin, month, height, getReferenceHeight());
+        float tmaxClima = climateParam->getClimateVar(dailyAirTemperatureMax, month, height, getReferenceHeight());
         if (isEqual(tminClima, NODATA) || isEqual(tmaxClima, NODATA))
             return false;
-    }
-    if (myVar == airRelHumidity || myVar == airDewTemperature)
-    {
-        tdminClima = climateParam->getClimateVar(dailyAirRelHumidityMin, month, height, getReferenceHeight());
-        tdmaxClima = climateParam->getClimateVar(dailyAirRelHumidityMax, month, height, getReferenceHeight());
-        if ( isEqual(tdminClima, NODATA) || isEqual(tdmaxClima, NODATA))
-            return false;
+
+        if (myValue < qualityHourlyT->getMin() + tminClima ||
+            myValue > qualityHourlyT->getMax() + tmaxClima)
+            return true;
+        break;
     }
 
-    if (myVar == airTemperature)
+    case airDewTemperature:
     {
-        if (myValue < tminClima + qualityHourlyT->getMin() ||
-            myValue > tmaxClima + qualityHourlyT->getMax()) return true;
-    }
-    else if (myVar == precipitation)
-    {
-        if (myValue < qualityHourlyP->getMin() ||
-            myValue > qualityHourlyP->getMax()) return true;
-    }
-    else if (myVar == airRelHumidity)
-    {
-        if (myValue < qualityHourlyRH->getMin() ||
-            myValue > qualityHourlyRH->getMax()) return true;
-    }
-    else if (myVar == airDewTemperature)
-    {
-        if ( (! isEqual(myValue, NODATA)) &&
-            (myValue < (tdminClima + qualityHourlyTd->getMin()) || myValue > (tdmaxClima + qualityHourlyTd->getMax())) )
+        float tdminClima = climateParam->getClimateVar(dailyAirRelHumidityMin, month, height, getReferenceHeight());
+        float tdmaxClima = climateParam->getClimateVar(dailyAirRelHumidityMax, month, height, getReferenceHeight());
+        if (isEqual(tdminClima, NODATA) || isEqual(tdmaxClima, NODATA))
+            return false;
+
+        if (myValue < qualityHourlyTd->getMin() + tdminClima ||
+            myValue > qualityHourlyTd->getMax() + tdmaxClima)
             return true;
+        break;
     }
-    else if (myVar == windVectorIntensity || myVar == windScalarIntensity || myVar == windVectorX || myVar == windVectorY)
-    {
-        if (myValue < qualityDailyWInt->getMin() ||
-            myValue > qualityDailyWInt->getMax()) return true;
-    }
-    else if (myVar == windVectorDirection)
-    {
-        if (myValue < qualityHourlyWDir->getMin() ||
-            myValue > qualityHourlyWDir->getMax()) return true;
-    }
-    else if (myVar == globalIrradiance)
-    {
-        if (myValue < qualityHourlyRH->getMin() ||
-            myValue > qualityHourlyRH->getMax()) return true;
-    }
-    else if (myVar == leafWetness)
-    {
-        if (myValue < qualityHourlyleafWetness->getMin() ||
-            myValue > qualityHourlyleafWetness->getMax()) return true;
-    }
-    else
+
+    default:
     {
         quality::Range* qualityRange = getQualityRange(myVar);
         if (qualityRange != nullptr)
@@ -342,6 +313,7 @@ bool Crit3DQuality::wrongValueHourly_SingleValue(meteoVariable myVar, Crit3DClim
             if (myValue < qualityRange->getMin() || myValue > qualityRange->getMax())
                 return true;
         }
+    }
     }
 
     return false;
