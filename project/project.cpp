@@ -1405,7 +1405,7 @@ bool Project::newMeteoGridDB(QString xmlName)
 
     Crit3DMeteoGridStructure structure = this->meteoGridDbHandler->meteoGrid()->gridStructure();
 
-    if (! this->meteoGridDbHandler->writeCellProperties(structure.nrRow(), structure.nrCol(), errorString))
+    if (! this->meteoGridDbHandler->writeCellProperties(structure, errorString))
         return false;
 
     if (! this->meteoGridDbHandler->meteoGrid()->createRasterGrid())
