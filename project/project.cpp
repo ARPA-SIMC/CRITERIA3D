@@ -3918,6 +3918,8 @@ void Project::saveInterpolationParameters()
         parametersSettings->setValue("thermalInversion", interpolationSettings.getUseThermalInversion());
         parametersSettings->setValue("minRegressionR2", QString::number(double(interpolationSettings.getMinRegressionR2())));
         parametersSettings->setValue("min_points_local_detrending", QString::number(int(interpolationSettings.getMinPointsLocalDetrending())));
+        parametersSettings->setValue("glocalMapName", glocalMapName);
+        parametersSettings->setValue("glocalPointsName", glocalPointsName);
     parametersSettings->endGroup();
 
 
