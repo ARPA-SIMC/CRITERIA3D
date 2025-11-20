@@ -1286,7 +1286,8 @@ bool Crit3DMeteoGridDbHandler::loadCellProperties(QString &errorStr)
             if (row < _meteoGrid->gridStructure().header().nrRows
                 && col < _meteoGrid->gridStructure().header().nrCols)
             {
-                _meteoGrid->fillMeteoPoint(row, col, code.toStdString(), name.toStdString(), dataset, height, active);
+                double x, y;
+                _meteoGrid->fillMeteoPoint(row, col, code.toStdString(), name.toStdString(), dataset, height, active, x, y);
             }
             else
             {
@@ -1306,8 +1307,8 @@ bool Crit3DMeteoGridDbHandler::newCellProperties(QString &errorStr)
     QString table = "CellsProperties";
     QString statement = QString("CREATE TABLE `%1`"
                                 "(`Code` varchar(6) NOT NULL PRIMARY KEY, `Name` varchar(50), "
-                                "`Row` INT, `Col` INT, `X` DOUBLE(16,2) DEFAULT 0.00, `Y` "
-                                "DOUBLE(16,2) DEFAULT 0.00, `Height` DOUBLE(16,2) DEFAULT 0.00, `Active` INT)").arg(table);
+                                "`Row` INT, `Col` INT, `X` DOUBLE(16,2), `Y` "
+                                "DOUBLE(16,2), `Height` DOUBLE(16,2), `Active` INT)").arg(table);
     if(! qry.exec(statement))
     {
         errorStr = qry.lastError().text();
@@ -1318,25 +1319,26 @@ bool Crit3DMeteoGridDbHandler::newCellProperties(QString &errorStr)
 }
 
 
-bool Crit3DMeteoGridDbHandler::writeCellProperties(int nRows, int nCols, QString &errorStr)
+bool Crit3DMeteoGridDbHandler::writeCellProperties(Crit3DMeteoGridStructure myStructure, QString &errorStr)
 {
     QSqlQuery qry(_db);
     QString table = "CellsProperties";
     int id = 0;
 
     std::string dataset = _connection.name.toStdString();
-    QString statement = QString(("INSERT INTO `%1` (`Code`, `Name`, `Row`, `Col`, `Active`) VALUES ")).arg(table);
+    QString statement = QString(("INSERT INTO `%1` (`Code`, `Row`, `Col`,`X`,`Y`, `Active`) VALUES ")).arg(table);
+    QString myCode;
+    double x, y;
 
     // standard QGis: first value at top left
-    for (int col = 0; col<nCols; col++)
+    for (int col = 0; col < myStructure.nrCol(); col++)
     {
-        for (int row = nRows-1; row>=0; row--)
+        for (int row = myStructure.nrRow() - 1; row>=0; row--)
         {
             id = id + 1;
-            statement += QString(" ('%1','%2','%3','%4',1),").arg(id, 6, 10, QChar('0')).arg(id, 6, 10, QChar('0')).arg(row).arg(col);
-            _meteoGrid->fillMeteoPoint(row, col, QString("%1").arg(id, 6, 10, QChar('0')).toStdString(),
-                                       QString("%1").arg(id, 6, 10, QChar('0')).toStdString(),
-                                       dataset, 0, 1);
+            myCode = QString("%1").arg(id, 6, 10, QChar('0'));
+            _meteoGrid->fillMeteoPoint(row, col, myCode.toStdString(), "", dataset, NODATA, 1, x ,y);
+            statement += QString(" ('%1','%2','%3','%4','%5',1),").arg(myCode).arg(row).arg(col).arg(x).arg(y);
         }
     }
     statement = statement.left(statement.length() - 1);
@@ -1458,7 +1460,8 @@ bool Crit3DMeteoGridDbHandler::loadIdMeteoProperties(QString &errorStr, const QS
             if (row < _meteoGrid->gridStructure().header().nrRows
                 && col < _meteoGrid->gridStructure().header().nrCols)
             {
-                _meteoGrid->fillMeteoPoint(row, col, code.toStdString(), name.toStdString(), dataset, height, active);
+                double x, y;
+                _meteoGrid->fillMeteoPoint(row, col, code.toStdString(), name.toStdString(), dataset, height, active, x, y);
             }
             else
             {

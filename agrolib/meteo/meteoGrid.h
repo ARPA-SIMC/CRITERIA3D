@@ -114,7 +114,7 @@
             void initMeteoPoints(int nRow, int nCol);
 
             void fillMeteoPoint(unsigned int row, unsigned int col, const std::string &code, const std::string &name,
-                                const std::string &dataset, int height, bool active);
+                                const std::string &dataset, int height, bool active, double &utmx, double &utmy);
             void fillCurrentDailyValue(Crit3DDate date, meteoVariable variable, Crit3DMeteoSettings *meteoSettings);
             void fillCurrentHourlyValue(Crit3DDate date, int hour, int minute, meteoVariable variable);
             void fillCurrentMonthlyValue(Crit3DDate date, meteoVariable variable);

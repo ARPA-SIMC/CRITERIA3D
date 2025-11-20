@@ -276,7 +276,7 @@ void Crit3DMeteoGrid::setActive(unsigned int row,unsigned int col, bool active)
 
 // for visualization raster
 void Crit3DMeteoGrid::fillMeteoPoint(unsigned int row, unsigned int col, const std::string& code, const std::string& name,
-                                     const std::string& dataset, int height, bool active)
+                                     const std::string& dataset, int height, bool active, double& utmx, double& utmy)
 {
     _meteoPoints[row][col]->id = code;
     _meteoPoints[row][col]->name = name;
@@ -290,7 +290,7 @@ void Crit3DMeteoGrid::fillMeteoPoint(unsigned int row, unsigned int col, const s
         {
             _meteoPoints[row][col]->point.utm.x = _gridStructure.header().llCorner.longitude + _gridStructure.header().dx * (col + 0.5);
             _meteoPoints[row][col]->point.utm.y = _gridStructure.header().llCorner.latitude + _gridStructure.header().dy * (row + 0.5);
-            gis::utmToLatLon(_gisSettings.utmZone, _gisSettings.startLocation.latitude, _meteoPoints[row][col]->point.utm.x, _meteoPoints[row][col]->point.utm.y, &(_meteoPoints[row][col]->latitude), &(_meteoPoints[row][col]->longitude));
+            gis::utmToLatLon(_gisSettings.utmZone, _gisSettings.startLocation.latitude, _meteoPoints[row][col]->point.utm.x, _meteoPoints[row][col]->point.utm.y, &(_meteoPoints[row][col]->latitude), &(_meteoPoints[row][col]->longitude));    
         }
         else
         {
@@ -303,6 +303,9 @@ void Crit3DMeteoGrid::fillMeteoPoint(unsigned int row, unsigned int col, const s
             _meteoPoints[row][col]->point.utm.x = utmPoint.x;
             _meteoPoints[row][col]->point.utm.y = utmPoint.y;
         }
+
+        utmx = _meteoPoints[row][col]->point.utm.x;
+        utmy = _meteoPoints[row][col]->point.utm.y;
     }
 }
 
