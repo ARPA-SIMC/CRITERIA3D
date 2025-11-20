@@ -15,8 +15,8 @@
     /*!
      * heat of fusion for ice at 0 °C
     */
-    #define LATENT_HEAT_FUSION  335.            /*!<  [kJ kg-1] */
-    #define LATENT_HEAT_VAPORIZATION 2500.      /*!<  [kJ kg-1] */
+    #define LATENT_HEAT_FUSION_KJ  335.            /*!<  [kJ kg-1] */
+    #define LATENT_HEAT_VAPORIZATION_KJ 2500.      /*!<  [kJ kg-1] (at 0°C) */
 
     #define SNOW_SPECIFIC_HEAT 2.1              /*!<  [KJ kg-1 °C-1] */
     #define SOIL_SPECIFIC_HEAT 1.4              /*!<  [KJ kg-1 °C-1] wet soil */

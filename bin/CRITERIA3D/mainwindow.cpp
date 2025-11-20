@@ -2225,8 +2225,7 @@ void MainWindow::on_actionSnow_settings_triggered()
 
     bool isSnow = true;
     bool isWater = false;
-    bool isSoilCrack = false;
-    if (! myProject.writeCriteria3DParameters(isSnow, isWater, isSoilCrack))
+    if (! myProject.writeCriteria3DParameters(isSnow, isWater))
     {
         myProject.logError("Error writing snow parameters");
     }
@@ -2272,20 +2271,27 @@ void MainWindow::on_actionCriteria3D_waterFluxes_settings_triggered()
     dialogWaterFluxes.useInitialWaterPotential->setChecked(myProject.waterFluxesParameters.isInitialWaterPotential);
     dialogWaterFluxes.useInitialDegreeOfSaturation->setChecked(! myProject.waterFluxesParameters.isInitialWaterPotential);
 
+    // computation depth
+    if (myProject.waterFluxesParameters.computeOnlySurface)
+        dialogWaterFluxes.setOnlySurface(true);
+    else if (myProject.waterFluxesParameters.computeAllSoilDepth)
+        dialogWaterFluxes.setAllSoilDepth(true);
+    else
+        dialogWaterFluxes.setImposedDepth(true);
+
     dialogWaterFluxes.setImposedComputationDepth(myProject.waterFluxesParameters.imposedComputationDepth);
 
+    // boundary conditions
+    dialogWaterFluxes.setFreeCatchmentRunoff(myProject.waterFluxesParameters.freeCatchmentRunoff);
+    dialogWaterFluxes.setFreeLateralDrainage(myProject.waterFluxesParameters.freeLateralDrainage);
+    dialogWaterFluxes.setFreeBottomDrainage(myProject.waterFluxesParameters.freeBottomDrainage);
+
+    dialogWaterFluxes.setUseWaterRetentionFitting(myProject.fittingOptions.useWaterRetentionData);
+    dialogWaterFluxes.setConductivityHVRatio(myProject.waterFluxesParameters.conductivityHorizVertRatio);
+
+    // accuracy
     dialogWaterFluxes.accuracySlider->setValue(myProject.waterFluxesParameters.modelAccuracy);
     dialogWaterFluxes.setThreadsNumber(myProject.waterFluxesParameters.numberOfThreads);
-
-    if (myProject.waterFluxesParameters.computeOnlySurface)
-        dialogWaterFluxes.onlySurface->setChecked(true);
-    else if (myProject.waterFluxesParameters.computeAllSoilDepth)
-        dialogWaterFluxes.allSoilDepth->setChecked(true);
-    else
-        dialogWaterFluxes.imposedDepth->setChecked(true);
-
-    dialogWaterFluxes.useWaterRetentionFitting->setChecked(myProject.fittingOptions.useWaterRetentionData);
-    dialogWaterFluxes.setConductivityHVRatio(myProject.waterFluxesParameters.conductivityHorizVertRatio);
 
     dialogWaterFluxes.exec();
 
@@ -2304,15 +2310,22 @@ void MainWindow::on_actionCriteria3D_waterFluxes_settings_triggered()
 
     if (dialogWaterFluxes.result() == QDialog::Accepted)
     {
+        // initial conditions
         myProject.waterFluxesParameters.initialWaterPotential = dialogWaterFluxes.getInitialWaterPotential();
         myProject.waterFluxesParameters.initialDegreeOfSaturation = dialogWaterFluxes.getInitialDegreeOfSaturation();
         myProject.waterFluxesParameters.isInitialWaterPotential = dialogWaterFluxes.useInitialWaterPotential->isChecked();
 
         myProject.waterFluxesParameters.conductivityHorizVertRatio = dialogWaterFluxes.getConductivityHVRatio();
 
+        // computation depth
         myProject.waterFluxesParameters.imposedComputationDepth = dialogWaterFluxes.getImposedComputationDepth();
-        myProject.waterFluxesParameters.computeOnlySurface = dialogWaterFluxes.onlySurface->isChecked();
-        myProject.waterFluxesParameters.computeAllSoilDepth = dialogWaterFluxes.allSoilDepth->isChecked();
+        myProject.waterFluxesParameters.computeOnlySurface = dialogWaterFluxes.getOnlySurface();
+        myProject.waterFluxesParameters.computeAllSoilDepth = dialogWaterFluxes.getAllSoilDepth();
+
+        // boundary conditions
+        myProject.waterFluxesParameters.freeCatchmentRunoff = dialogWaterFluxes.getFreeCatchmentRunoff();
+        myProject.waterFluxesParameters.freeLateralDrainage = dialogWaterFluxes.getFreeLateralDrainage();
+        myProject.waterFluxesParameters.freeBottomDrainage = dialogWaterFluxes.getFreeBottomDrainage();
 
         myProject.waterFluxesParameters.modelAccuracy = dialogWaterFluxes.accuracySlider->value();
 
@@ -2326,12 +2339,11 @@ void MainWindow::on_actionCriteria3D_waterFluxes_settings_triggered()
             myProject.setAccuracy();
         }
 
-        myProject.fittingOptions.useWaterRetentionData = dialogWaterFluxes.useWaterRetentionFitting->isChecked();
+        myProject.fittingOptions.useWaterRetentionData = dialogWaterFluxes.getUseWaterRetentionFitting();
 
         bool isWater = true;
         bool isSnow = false;
-        bool isSoilCrack = false;
-        if (! myProject.writeCriteria3DParameters(isSnow, isWater, isSoilCrack))
+        if (! myProject.writeCriteria3DParameters(isSnow, isWater))
         {
             myProject.logError("Error writing soil fluxes parameters");
         }

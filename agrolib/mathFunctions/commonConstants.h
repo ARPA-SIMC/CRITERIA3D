@@ -115,7 +115,6 @@
     // maximum soil depth for evaporation computation [m]
     #define MAX_EVAPORATION_DEPTH 0.25
 
-    //#define BOUNDARY_SURFACE 1
     #define BOUNDARY_RUNOFF 2
     #define BOUNDARY_FREEDRAINAGE 3
     #define BOUNDARY_FREELATERALDRAINAGE 4
@@ -231,7 +230,8 @@
     // [m2 s-1] vapor diffusivity at standard conditions
     #define	 VAPOR_DIFFUSIVITY0 0.0000212
 
-    #define LATENT_HEAT_VAPORIZATION 2.45e6;  // latent heat of vaporization [J/kg]
+    // [J kg-1] latent heat of vaporization
+    #define LATENT_HEAT_VAPORIZATION 2.45e6;
 
     // [Pa] default atmospheric pressure at sea level
     //#define SEA_LEVEL_PRESSURE 101325.

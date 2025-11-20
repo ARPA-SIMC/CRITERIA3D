@@ -229,7 +229,7 @@ void Crit3DSnow::computeSnowBrooksModel()
             prevLWaterContent = previousSWE * snowParameters.snowWaterHoldingCapacity / (1 - snowParameters.snowWaterHoldingCapacity);
 
             // Pag. 53 formula 3.23
-            prevInternalEnergy = -previousSWE * 0.001 * LATENT_HEAT_FUSION * WATER_DENSITY;
+            prevInternalEnergy = -previousSWE * 0.001 * LATENT_HEAT_FUSION_KJ * WATER_DENSITY;
 
             prevSurfaceTemp = std::min(prevSurfaceTemp, 0.);
             prevSurfaceEnergy = computeSurfaceEnergySnow(prevSurfaceTemp, std::min(previousSWE, snowParameters.skinThickness));
@@ -374,7 +374,7 @@ void Crit3DSnow::computeSnowBrooksModel()
 
     // latent heat pag. 51 (3.19)
     // FT tolta WATER_DENSITY dall'eq. (non corrispondevano le unità di misura)
-    QVaporGradient = 3600. * (LATENT_HEAT_VAPORIZATION + LATENT_HEAT_FUSION)
+    QVaporGradient = 3600. * (LATENT_HEAT_VAPORIZATION_KJ + LATENT_HEAT_FUSION_KJ)
             * (airActualVapDensity - waterActualVapDensity) / aerodynamicResistance;
 
     // TODO serve formula diversa quando non c'è neve
@@ -394,7 +394,7 @@ void Crit3DSnow::computeSnowBrooksModel()
     if (previousSWE > EPSILON)
     {
         // pag. 51 (3.21) [mm]
-        sublimation = QVaporGradient / (LATENT_HEAT_FUSION + LATENT_HEAT_VAPORIZATION);
+        sublimation = QVaporGradient / (LATENT_HEAT_FUSION_KJ + LATENT_HEAT_VAPORIZATION_KJ);
 
         if (sublimation < 0)
         {
@@ -413,7 +413,7 @@ void Crit3DSnow::computeSnowBrooksModel()
      *  and ice that melts (heat removed from the snow pack)
      *  pag.53 (3.25)
     */
-    double w = (prevInternalEnergy + QTotal) / (LATENT_HEAT_FUSION * WATER_DENSITY);    // [m]
+    double w = (prevInternalEnergy + QTotal) / (LATENT_HEAT_FUSION_KJ * WATER_DENSITY);    // [m]
     if (w < 0)
     {
         /*! freeze
@@ -436,7 +436,7 @@ void Crit3DSnow::computeSnowBrooksModel()
     /*! latent heat exchange in the snow pack [kJ m-2]
      *  pag.53 (3.23) modificata (errore nel denominatore)
      */
-    double Qr = (freeze_melt / 1000.) * LATENT_HEAT_FUSION * WATER_DENSITY;
+    double Qr = (freeze_melt / 1000.) * LATENT_HEAT_FUSION_KJ * WATER_DENSITY;
 
     /*! Internal energy [kJ m-2] */
     _internalEnergy = prevInternalEnergy + QTotal + Qr;

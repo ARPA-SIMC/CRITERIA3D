@@ -1561,7 +1561,7 @@ bool Crit3DProject::loadCriteria3DParameters()
 }
 
 
-bool Crit3DProject::writeCriteria3DParameters(bool isSnow, bool isWater, bool isSoilCrack)
+bool Crit3DProject::writeCriteria3DParameters(bool isSnow, bool isWater)
 {
     QString fileName = getCompleteFileName(parametersFileName, PATH_SETTINGS);
     if (! QFile(fileName).exists() || ! QFileInfo(fileName).isFile())
@@ -1604,13 +1604,9 @@ bool Crit3DProject::writeCriteria3DParameters(bool isSnow, bool isWater, bool is
 
         parametersSettings->setValue("soilWaterFluxes/modelAccuracy", waterFluxesParameters.modelAccuracy);
         parametersSettings->setValue("soilWaterFluxes/numberOfThreads", waterFluxesParameters.numberOfThreads);
-    }
 
-    if (isSoilCrack)
-    {
         // TODO parametri soil crack
         // parametersSettings->setValue("soilCracking/ ", );
-
     }
 
     parametersSettings->sync();
