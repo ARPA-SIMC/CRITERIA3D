@@ -50,10 +50,14 @@ HEADERS += \
     types.h \
     types_cpu.h \
     types_opt.h \
-    water.h
+    water.h \
+    linealia/linealia.hpp
+
+LIBS += -L$$PWD/linealia -lliblinealia
 
 DISTFILES += \
-    ToDoList.txt
+    ToDoList.txt \
+    linealia/commandList.txt
 
 # parallel computing settings
 include($$absolute_path(../parallel.pri))
