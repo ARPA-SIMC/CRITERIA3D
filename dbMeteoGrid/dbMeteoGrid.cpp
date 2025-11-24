@@ -4208,6 +4208,69 @@ bool Crit3DMeteoGridDbHandler::saveDailyDataCsv(const QString &csvFileName, cons
 }
 
 
+bool Crit3DMeteoGridDbHandler::saveHourlyDataCsv(const QString &csvFileName, const QList<meteoVariable> &variableList,
+                                                const QDate &firstDate, const QDate &lastDate,
+                                                unsigned row, unsigned col, QString &errorStr)
+{
+    // create csv file
+    QFile outputFile(csvFileName);
+    bool isOk = outputFile.open(QIODevice::WriteOnly | QFile::Truncate);
+    if (! isOk)
+    {
+        errorStr = "Open CSV failed: " + csvFileName;
+        return false;
+    }
+
+    // write header
+    QTextStream outStream(&outputFile);
+    outStream << "Date" << "," << "Hour";
+    for (int i = 0; i < variableList.size(); i++)
+    {
+        if (variableList[i] != noMeteoVar)
+        {
+            std::string varName = getMeteoVarName(variableList[i]);
+            std::string unit = getUnitFromVariable(variableList[i]);
+            QString VarString = QString::fromStdString(varName + " (" + unit + ")");
+            outStream << "," + VarString;
+        }
+    }
+    outStream << "\n";
+
+    // write data
+    QDate currentDate = firstDate;
+    while (currentDate < lastDate)
+    {
+        for (int myHour = 1; myHour < 25; myHour++)
+        {
+            outStream << currentDate.toString("yyyy-MM-dd");
+            QString hourString = QString::number(myHour);
+            hourString = hourString.rightJustified(2, QChar('0'));
+            outStream << "," << hourString;
+
+            for (int i = 0; i < variableList.size(); i++)
+            {
+                if (variableList[i] != noMeteoVar)
+                {
+                    float value = _meteoGrid->meteoPointPointer(row, col)->getMeteoPointValueH(getCrit3DDate(currentDate), myHour, 0, variableList[i]);
+                    QString valueString = "";
+                    if (value != NODATA)
+                        valueString = QString::number(value);
+
+                    outStream << "," << valueString;
+                }
+            }
+
+            outStream << "\n";
+        }
+        currentDate = currentDate.addDays(1);
+    }
+
+    outputFile.close();
+    return true;
+}
+
+
+
 /*!
  * \brief ExportDailyDataCsv
  * export gridded daily meteo data to csv files
@@ -4334,6 +4397,145 @@ bool Crit3DMeteoGridDbHandler::exportDailyDataCsv(const QList<meteoVariable> &va
 
     return true;
 }
+
+
+
+
+
+/*!
+ * \brief ExportHourlyDataCsv
+ * export gridded Hourly meteo data to csv files
+ * \param variableList      list of meteo variables
+ * \param idListFileName    text file of cells id list by columns - default (empty): ALL cells
+ * \param outputPath        path for output files
+ * \return true on success, false otherwise
+ */
+bool Crit3DMeteoGridDbHandler::exportHourlyDataCsv(const QList<meteoVariable> &variableList, const QDate &firstDate,
+                                                  const QDate &lastDate, const QString &idListFileName,
+                                                  QString &outputPath, QString &errorStr)
+{
+    errorStr = "";
+
+    // check output path
+    if (outputPath == "")
+    {
+        errorStr = "Missing output path.";
+        return false;
+    }
+
+    QDir outDir(outputPath);
+    // make directory
+    if (! outDir.exists())
+    {
+        if (! outDir.mkpath(outputPath))
+        {
+            errorStr = "Wrong output path, unable to create directory: " + outputPath;
+            return false;
+        }
+    }
+    outputPath = outDir.absolutePath();
+
+    bool isList = (! idListFileName.isEmpty());
+    QList<QString> idList;
+    if (isList)
+    {
+        if (! QFile::exists(idListFileName))
+        {
+            errorStr = "The ID list does not exist: " + idListFileName;
+            return false;
+        }
+
+        idList = readListSingleColumn(idListFileName, errorStr);
+        if (errorStr != "")
+            return false;
+
+        if (idList.size() == 0)
+        {
+            errorStr = "The ID list is empty: " + idListFileName;
+            return false;
+        }
+    }
+
+    QDateTime firstDateTime(firstDate, QTime(1,0,0), Qt::UTC);
+    QDateTime lastDateTime(lastDate, QTime(0,0,0), Qt::UTC);
+
+    int nrValidCells = 0;
+    for (int row = 0; row < gridStructure().header().nrRows; row++)
+    {
+        for (int col = 0; col < gridStructure().header().nrCols; col++)
+        {
+            QString id = QString::fromStdString(meteoGrid()->meteoPoints()[row][col]->id);
+            if (idList.contains(id) || (! isList && meteoGrid()->meteoPoints()[row][col]->active))
+            {
+                // read data
+                if (gridStructure().isEnsemble())
+                {
+                    for (int i = 1; i <= gridStructure().nrMembers(); i++)
+                    {
+                        if (loadGridHourlyDataEnsemble(errorStr, id, i, firstDateTime, lastDateTime))
+                        {
+                            QString csvFileName = outputPath + "/" + id + "_" + QString::number(i) + ".csv";
+
+                            if (saveHourlyDataCsv(csvFileName, variableList, firstDate, lastDate, row, col, errorStr))
+                            {
+                                nrValidCells++;
+                            }
+                            else
+                            {
+                                std::cout << errorStr.toStdString();
+                            }
+                        }
+                        else
+                        {
+                            std::cout << errorStr.toStdString();
+                        }
+                    }
+                }
+                else
+                {
+                    bool isOk;
+                    if (gridStructure().isFixedFields())
+                    {
+                        isOk = loadGridHourlyDataFixedFields(errorStr, id, firstDateTime, lastDateTime);
+                    }
+                    else
+                    {
+
+
+                        isOk = loadGridHourlyData(db(), id, firstDateTime, lastDateTime, errorStr);
+
+                    }
+
+                    if (isOk)
+                    {
+                        nrValidCells++;
+                    }
+                    else
+                    {
+                        std::cout << "Error in reading cell id: " << id.toStdString() << "\n";
+                        continue;
+                    }
+
+                    QString csvFileName = outputPath + "/" + id + ".csv";
+                    if (! saveHourlyDataCsv(csvFileName, variableList, firstDate, lastDate, row, col, errorStr))
+                    {
+                        std::cout << errorStr.toStdString();
+                    }
+                }
+            }
+        }
+    }
+
+    if (nrValidCells == 0)
+    {
+        errorStr = "No valid cell.";
+        return false;
+    }
+
+    return true;
+}
+
+
 
 
 bool Crit3DMeteoGridDbHandler::MeteoGridToRasterFlt(double cellSize, const gis::Crit3DGisSettings& gisSettings, gis::Crit3DRasterGrid& myGrid)
