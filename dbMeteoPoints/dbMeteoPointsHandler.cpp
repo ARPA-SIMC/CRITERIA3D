@@ -563,12 +563,14 @@ bool Crit3DMeteoPointsDbHandler::loadDailyData(const QSqlDatabase &myDb, const C
     if(! query.exec(statement))
     {
         _errorStr = query.lastError().text();
+        meteoPoint.nrObsDataDaysD = 0;
         return false;
     }
 
     if (! query.next())
     {
         _errorStr = "No data.";
+        meteoPoint.nrObsDataDaysD = 0;
         return false;
     }
 
@@ -622,7 +624,6 @@ bool Crit3DMeteoPointsDbHandler::loadHourlyData(const QSqlDatabase &myDb, const 
     // initialize obs data
     int numberOfDays = difference(firstDate, lastDate) + 1;
     int myHourlyFraction = 1;
-    meteoPoint.initializeObsDataH(myHourlyFraction, numberOfDays, firstDate);
 
     QString startDateStr = QString::fromStdString(firstDate.toISOString());
     QString endDateStr = QString::fromStdString(lastDate.toISOString());
@@ -635,11 +636,24 @@ bool Crit3DMeteoPointsDbHandler::loadHourlyData(const QSqlDatabase &myDb, const 
     if(! qry.exec(statement) )
     {
         _errorStr = qry.lastError().text();
+        meteoPoint.nrObsDataDaysH = 0;
+        meteoPoint.cleanObsDataH();
         return false;
     }
 
     Crit3DTime dateTime;
-    while (qry.next())
+
+    if (! qry.next())
+    {
+        _errorStr = "No data.";
+        meteoPoint.nrObsDataDaysH = 0;
+        meteoPoint.cleanObsDataH();
+        return false;
+    }
+
+    meteoPoint.initializeObsDataH(myHourlyFraction, numberOfDays, firstDate);
+
+    do
     {
         if (! getValueCrit3DTime(qry.value(0), &dateTime))
             continue;
@@ -666,7 +680,7 @@ bool Crit3DMeteoPointsDbHandler::loadHourlyData(const QSqlDatabase &myDb, const 
         {
             meteoPoint.setMeteoPointValueH(dateTime.date, hour, minute, windVectorIntensity, value);
         }
-    }
+    } while (qry.next());
 
     return true;
 }
