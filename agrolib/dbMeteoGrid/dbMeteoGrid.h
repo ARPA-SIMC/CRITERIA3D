@@ -205,9 +205,13 @@
 
         bool setActiveStateCellsInList(QString &errorStr, const QList<QString> &idList, bool activeState);
 
+        bool saveHourlyDataCsv(const QString &csvFileName, const QList<meteoVariable> &variableList,
+                               const QDate &firstDate, const QDate &lastDate,unsigned row, unsigned col, QString &errorStr);
         bool saveDailyDataCsv(const QString &csvFileName, const QList<meteoVariable> &variableList,
                               const QDate &firstDate, const QDate &lastDate, unsigned row, unsigned col, QString &errorStr);
 
+        bool exportHourlyDataCsv(const QList<meteoVariable> &variableList, const QDate &firstDate,
+                                const QDate &lastDate, const QString &idListFileName, QString &outputPath, QString &errorStr);
         bool exportDailyDataCsv(const QList<meteoVariable> &variableList, const QDate &firstDate,
                                 const QDate &lastDate, const QString &idListFileName, QString &outputPath, QString &errorStr);
 
