@@ -396,20 +396,6 @@ bool Crit3DMeteoPointsDbHandler::existTable(const Crit3DMeteoPoint &meteoPoint, 
     return existTable(_db, meteoPoint, myFrequency);
 }
 
-/*
-bool Crit3DMeteoPointsDbHandler::existData(const QSqlDatabase &myDb, const Crit3DMeteoPoint &meteoPoint, frequencyType myFrequency)
-{
-    QSqlQuery query(myDb);
-    QString tableName = QString::fromStdString(meteoPoint.id) + ((myFrequency == daily) ?  "_D" : "_H");
-    QString statement = QString("SELECT 1 FROM `%1`").arg(tableName);
-
-    if (query.exec(statement))
-        if (query.next())
-            return true;
-
-    return false;
-}
-*/
 
 bool Crit3DMeteoPointsDbHandler::existTable(const QSqlDatabase &myDb, const Crit3DMeteoPoint &meteoPoint, frequencyType myFrequency)
 {
@@ -554,10 +540,6 @@ bool Crit3DMeteoPointsDbHandler::loadDailyData(const QSqlDatabase &myDb, const C
         return false;
     }
 
-    // check table
-    if (! existTable(myDb, meteoPoint, daily))
-        return false;
-
     int numberOfDays = difference(firstDate, lastDate) + 1;
     meteoPoint.obsDataD.clear();
 
@@ -630,20 +612,14 @@ bool Crit3DMeteoPointsDbHandler::loadHourlyData(const Crit3DDate &firstDate,
 bool Crit3DMeteoPointsDbHandler::loadHourlyData(const QSqlDatabase &myDb, const Crit3DDate &firstDate,
                                                 const Crit3DDate &lastDate, Crit3DMeteoPoint &meteoPoint)
 {
+    meteoPoint.cleanObsDataH();
+
     // check dates
     if (firstDate > lastDate)
     {
         _errorStr = "wrong dates: firstDate > lastDate";
         return false;
     }
-
-    // check table
-    if (! existTable(myDb, meteoPoint, hourly))
-        return false;
-
-    // initialize obs data
-    int numberOfDays = difference(firstDate, lastDate) + 1;
-    int myHourlyFraction = 1;
 
     QString startDateStr = QString::fromStdString(firstDate.toISOString());
     QString endDateStr = QString::fromStdString(lastDate.toISOString());
@@ -656,23 +632,21 @@ bool Crit3DMeteoPointsDbHandler::loadHourlyData(const QSqlDatabase &myDb, const 
     if(! qry.exec(statement) )
     {
         _errorStr = qry.lastError().text();
-        meteoPoint.nrObsDataDaysH = 0;
-        meteoPoint.cleanObsDataH();
         return false;
     }
-
-    Crit3DTime dateTime;
 
     if (! qry.next())
     {
         _errorStr = "No data.";
-        meteoPoint.nrObsDataDaysH = 0;
-        meteoPoint.cleanObsDataH();
         return false;
     }
 
+    // initialize obs data
+    int numberOfDays = difference(firstDate, lastDate) + 1;
+    int myHourlyFraction = 1;
     meteoPoint.initializeObsDataH(myHourlyFraction, numberOfDays, firstDate);
 
+    Crit3DTime dateTime;
     do
     {
         if (! getValueCrit3DTime(qry.value(0), &dateTime))
