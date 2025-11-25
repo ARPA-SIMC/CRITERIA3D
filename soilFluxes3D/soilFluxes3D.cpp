@@ -332,12 +332,12 @@ namespace soilFluxes3D::v2
         return SF3Derror_t::SF3Dok;
     }
 
+
     /*!
      *  \brief sets number of threads for parallel computing.
      *          if nrThreads < 1 or too large, hardware_concurrency get the number of logical processors
         \return setted number of threads
     */
-    // TODO enableOmp
     u32_t setThreadsNumber(u32_t nrThreads)
     {
         u32_t nrHWthreads = std::thread::hardware_concurrency();
@@ -347,12 +347,16 @@ namespace soilFluxes3D::v2
         SolverParametersPartial paramTemp;
         paramTemp.numThreads = nrThreads;
         if(solver)
+        {
             solver->updateParameters(paramTemp);
+            CPUSolverObject.setThreads();
+        }
 
         //Versione c++20
         //solver->updateParameters(SolverParametersPartial{.numThreads = nrThreads});
         return nrThreads;
     }
+
 
     /*!
      * \brief sets the soil properties of the nrSoil-nrHorizon soil type

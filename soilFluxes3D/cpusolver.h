@@ -27,6 +27,7 @@ namespace soilFluxes3D::v2
             SF3Derror_t initialize() override;
             SF3Derror_t run(double maxTimeStep, double &acceptedTimeStep, processType process) override;
             SF3Derror_t clean() override;
+            void setThreads();
     };
 
     inline __cudaSpec double CPUSolver::getMatrixElementValue(SF3Duint_t rowIndex, SF3Duint_t colIndex) const noexcept

@@ -391,11 +391,17 @@ QDateTime Crit3DMeteoPointsDbHandler::getLastDate(frequencyType frequency, const
 }
 
 
-bool Crit3DMeteoPointsDbHandler::existData(const Crit3DMeteoPoint &meteoPoint, frequencyType myFreq)
+bool Crit3DMeteoPointsDbHandler::existData(const Crit3DMeteoPoint &meteoPoint, frequencyType myFrequency)
 {
-    QSqlQuery query(_db);
-    QString tableName = QString::fromStdString(meteoPoint.id) + ((myFreq == daily) ?  "_D" : "_H");
-    QString statement = QString( "SELECT 1 FROM `%1`").arg(tableName);
+    return existData(_db, meteoPoint, myFrequency);
+}
+
+
+bool Crit3DMeteoPointsDbHandler::existData(const QSqlDatabase &myDb, const Crit3DMeteoPoint &meteoPoint, frequencyType myFrequency)
+{
+    QSqlQuery query(myDb);
+    QString tableName = QString::fromStdString(meteoPoint.id) + ((myFrequency == daily) ?  "_D" : "_H");
+    QString statement = QString("SELECT 1 FROM `%1`").arg(tableName);
 
     if (query.exec(statement))
         if (query.next())
@@ -541,6 +547,9 @@ bool Crit3DMeteoPointsDbHandler::loadDailyData(const QSqlDatabase &myDb, const C
         return false;
     }
 
+    if (! existData(myDb, meteoPoint, daily))
+        return false;
+
     int numberOfDays = difference(firstDate, lastDate) + 1;
     meteoPoint.obsDataD.clear();
 
@@ -618,6 +627,9 @@ bool Crit3DMeteoPointsDbHandler::loadHourlyData(const QSqlDatabase &myDb, const 
         _errorStr = "wrong dates: firstDate > lastDate";
         return false;
     }
+
+    if (! existData(myDb, meteoPoint, hourly))
+        return false;
 
     // initialize obs data
     int numberOfDays = difference(firstDate, lastDate) + 1;
