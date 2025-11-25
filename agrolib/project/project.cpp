@@ -2127,10 +2127,6 @@ bool Project::writeTopographicDistanceMaps(bool onlyWithData, bool showInfo)
         infoStep = setProgressBar(infoStr, nrMeteoPoints);
     }
 
-    std::string myError;
-    std::string fileName;
-    gis::Crit3DRasterGrid myMap;
-
     for (int i=0; i < nrMeteoPoints; i++)
     {
         if (showInfo && (i % infoStep == 0))
@@ -2139,8 +2135,8 @@ bool Project::writeTopographicDistanceMaps(bool onlyWithData, bool showInfo)
         if (!meteoPoints[i].active)
             continue;
 
-        bool isSelected = onlyWithData ? (meteoPointsDbHandler->existData(meteoPoints[i], daily)
-                                            || meteoPointsDbHandler->existData(meteoPoints[i], hourly))
+        bool isSelected = onlyWithData ? (meteoPointsDbHandler->existTable(meteoPoints[i], daily)
+                                            || meteoPointsDbHandler->existTable(meteoPoints[i], hourly))
                                        : true;
 
         if (isSelected && !writeTopographicDistanceMap(i, DEM, mapsFolder))
@@ -2218,8 +2214,8 @@ bool Project::loadTopographicDistanceMaps(bool onlyWithData, bool showInfo)
         if (!meteoPoints[i].active)
             continue;
 
-        bool isSelected = onlyWithData ? (meteoPointsDbHandler->existData(meteoPoints[i], daily)
-                                          || meteoPointsDbHandler->existData(meteoPoints[i], hourly))
+        bool isSelected = onlyWithData ? (meteoPointsDbHandler->existTable(meteoPoints[i], daily)
+                                          || meteoPointsDbHandler->existTable(meteoPoints[i], hourly))
                                        : true;
 
         if(!isSelected)

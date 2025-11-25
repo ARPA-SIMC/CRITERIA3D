@@ -2880,7 +2880,8 @@ void MainWindow::on_actionPoints_deactivate_with_no_data_triggered()
         myProject.updateProgressBar(i);
         if (myProject.meteoPoints[i].active)
         {
-            bool existData = myProject.meteoPointsDbHandler->existData(myProject.meteoPoints[i], daily) || myProject.meteoPointsDbHandler->existData(myProject.meteoPoints[i], hourly);
+            bool existData = myProject.meteoPointsDbHandler->existTable(myProject.meteoPoints[i], daily)
+                             || myProject.meteoPointsDbHandler->existTable(myProject.meteoPoints[i], hourly);
             if (! existData)
             {
                 pointList.append(QString::fromStdString(myProject.meteoPoints[i].id));
