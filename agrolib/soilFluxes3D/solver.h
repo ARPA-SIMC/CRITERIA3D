@@ -69,6 +69,7 @@ namespace soilFluxes3D::v2
         updateFromPartial(_parameters, newParameters, enableOMP);
         updateFromPartial(_parameters, newParameters, numThreads);
     }
+
     inline void Solver::setTimeStep(double timeStep) noexcept
     {
         if(timeStep < _parameters.deltaTmin)

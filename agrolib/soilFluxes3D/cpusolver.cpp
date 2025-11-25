@@ -112,6 +112,12 @@ namespace soilFluxes3D::v2
         return SF3Derror_t::SF3Dok;
     }
 
+    void CPUSolver::setThreads()
+    {
+        if(_parameters.enableOMP)
+            omp_set_num_threads(static_cast<int>(_parameters.numThreads));
+    }
+
     void CPUSolver::waterMainLoop(double maxTimeStep, double &acceptedTimeStep)
     {
         balanceResult_t stepStatus = balanceResult_t::stepRefused;

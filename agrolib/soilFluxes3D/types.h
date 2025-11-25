@@ -301,8 +301,8 @@ namespace soilFluxes3D { inline namespace v2
         double MBRThreshold = 1e-3;
         double residualTolerance = 1e-10;
 
-        double deltaTmin = 1;       // [s]
-        double deltaTmax = 600;     // [s]
+        double deltaTmin = 1;           // [s]
+        double deltaTmax = 600;         // [s]
         double deltaTcurr = noDataD;
 
         u16_t maxApproximationsNumber = 10;
@@ -311,11 +311,11 @@ namespace soilFluxes3D { inline namespace v2
         WRCModel waterRetentionCurveModel = WRCModel::ModifiedVanGenuchten;
         meanType_t meanType = meanType_t::Logarithmic;
 
-        float lateralVerticalRatio = 10.;    //why float?
-        double heatWeightFactor = 0.5;      //???
+        double lateralVerticalRatio = 10.;
+        double heatWeightFactor = 0.5;          //???
 
-        double CourantWaterThreshold = 0.5; //used for evaluate stability
-        double instabilityFactor = 10.;     //used for evaluate stability
+        double CourantWaterThreshold = 0.5;     //used for evaluate stability
+        double instabilityFactor = 10.;         //used for evaluate stability
 
         bool enableOMP = true;
         u32_t numThreads = std::thread::hardware_concurrency();
