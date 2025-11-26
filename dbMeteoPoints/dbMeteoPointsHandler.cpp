@@ -535,10 +535,7 @@ bool Crit3DMeteoPointsDbHandler::loadDailyData(const QSqlDatabase &myDb, const C
 {
     // check dates
     if (firstDate > lastDate)
-    {
-        _errorStr = "wrong dates: first > last";
         return false;
-    }
 
     int numberOfDays = difference(firstDate, lastDate) + 1;
     meteoPoint.obsDataD.clear();
@@ -614,10 +611,7 @@ bool Crit3DMeteoPointsDbHandler::loadHourlyData(const QSqlDatabase &myDb, const 
 
     // check dates
     if (firstDate > lastDate)
-    {
-        _errorStr = "wrong dates: firstDate > lastDate";
         return false;
-    }
 
     QString startDateStr = QString::fromStdString(firstDate.toISOString());
     QString endDateStr = QString::fromStdString(lastDate.toISOString());

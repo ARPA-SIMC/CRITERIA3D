@@ -115,12 +115,24 @@
         void clear();
         void addProxyActive(bool value) { _isActiveList.push_back(value); }
         void setProxyActive(unsigned index, bool value) { _isActiveList[index] = value; }
-        bool isProxyActive(unsigned index) { return _isActiveList[index]; }
+        bool isProxyActive(unsigned index)
+        {
+            if (index < _isActiveList.size())
+                return _isActiveList[index];
+            else
+                return false;
+        }
         std::vector<bool> getActiveList() { return _isActiveList; }
 
         void addProxySignificant(bool value) { _isSignificantList.push_back(value); }
         void setProxySignificant(unsigned index, bool value) { _isSignificantList[index] = value; }
-        bool isProxySignificant(unsigned index) { return _isSignificantList[index]; }
+        bool isProxySignificant(unsigned index)
+        {
+            if (index < _isSignificantList.size())
+                return _isSignificantList[index];
+            else
+                return false;
+        }
 
         void resetCombination(unsigned int size);
         void setAllActiveToFalse();
