@@ -45,19 +45,19 @@
 
     bool preInterpolation(std::vector<Crit3DInterpolationDataPoint> &myPoints,
                           Crit3DInterpolationSettings &interpolationSettings, Crit3DMeteoSettings *meteoSettings,
-                          Crit3DClimateParameters* climateParameters, Crit3DMeteoPoint *meteoPoints,
-                          int nrMeteoPoints, meteoVariable myVar, Crit3DTime myTime, std::string &errorStr);
+                          Crit3DClimateParameters* climateParameters, std::vector<Crit3DMeteoPoint> &meteoPoints,
+                          meteoVariable myVar, Crit3DTime myTime, std::string &errorStr);
 
-    void topographicDistanceOptimize(meteoVariable myVar, Crit3DMeteoPoint* meteoPoints, int nrMeteoPoints,
+    void topographicDistanceOptimize(meteoVariable myVar, std::vector<Crit3DMeteoPoint> &meteoPoints,
                                      const std::vector<Crit3DInterpolationDataPoint> &interpolationPoints,
                                      Crit3DInterpolationSettings &interpolationSettings, Crit3DMeteoSettings* meteoSettings);
 
-    double topographicDistanceInternalFunction(meteoVariable myVar, Crit3DMeteoPoint* meteoPoints, int nrMeteoPoints,
+    double topographicDistanceInternalFunction(meteoVariable myVar, std::vector<Crit3DMeteoPoint> &meteoPoints,
                                                const std::vector<Crit3DInterpolationDataPoint> &interpolationPoints,
-                                               Crit3DInterpolationSettings &interpolationSettings,
-                                               Crit3DMeteoSettings* meteoSettings, double khFloat);
+                                               Crit3DInterpolationSettings &interpolationSettings, Crit3DMeteoSettings* meteoSettings,
+                                               double khFloat);
 
-    double goldenSectionSearch(meteoVariable myVar, Crit3DMeteoPoint* meteoPoints, int nrMeteoPoints,
+    double goldenSectionSearch(meteoVariable myVar, std::vector<Crit3DMeteoPoint> &meteoPoints,
                                const std::vector<Crit3DInterpolationDataPoint> &interpolationPoints,
                                Crit3DInterpolationSettings &interpolationSettings,
                                Crit3DMeteoSettings* meteoSettings, double a, double b);
@@ -108,7 +108,8 @@
 
     bool macroAreaDetrending(const Crit3DMacroArea &myArea, meteoVariable myVar,
                              Crit3DInterpolationSettings &interpolationSettings, Crit3DMeteoSettings* meteoSettings,
-                             Crit3DMeteoPoint *meteoPoints, const std::vector<Crit3DInterpolationDataPoint> &interpolationPoints,
+                             const std::vector<Crit3DMeteoPoint> &meteoPoints,
+                             const std::vector <Crit3DInterpolationDataPoint> &interpolationPoints,
                              std::vector <Crit3DInterpolationDataPoint> &subsetInterpolationPoints, int elevationPos);
 
     bool multipleDetrendingMain(std::vector <Crit3DInterpolationDataPoint> &myPoints,
@@ -149,23 +150,23 @@
                              Crit3DClimateParameters* climateParameters,
                              Crit3DTime myTime, meteoVariable myVar, int orogProxyPos);
 
-    void optimalDetrending(meteoVariable myVar, Crit3DMeteoPoint* meteoPoints, int nrMeteoPoints,
+    void optimalDetrending(meteoVariable myVar, std::vector<Crit3DMeteoPoint> &meteoPoints,
                            std::vector<Crit3DInterpolationDataPoint> &outInterpolationPoints,
                            Crit3DInterpolationSettings &interpolationSettings, Crit3DMeteoSettings* meteoSettings,
                            Crit3DClimateParameters* climateParameters, const Crit3DTime &myTime);
 
-    std::vector<float> computeDistances(meteoVariable myVar, const std::vector <Crit3DInterpolationDataPoint> &myPoints,
+    std::vector<float> computeDistances(meteoVariable myVar, const std::vector<Crit3DInterpolationDataPoint> &myPoints,
                                         const Crit3DInterpolationSettings &interpolationSettings,
                                         float x, float y, float z, bool excludeSupplemental);
 
-    bool localSelection(const std::vector <Crit3DInterpolationDataPoint> &inputPoints,
+    bool localSelection(const std::vector<Crit3DInterpolationDataPoint> &inputPoints,
                         std::vector <Crit3DInterpolationDataPoint> &selectedPoints,
                         float x, float y, Crit3DInterpolationSettings &interpolationSettings, bool excludeSupplemental);
 
-    bool proxyValidity(std::vector <Crit3DInterpolationDataPoint> &myPoints, int proxyPos,
+    bool proxyValidity(std::vector<Crit3DInterpolationDataPoint> &myPoints, int proxyPos,
                        float stdDevThreshold, double &avg, double &stdDev);
 
-    bool proxyValidityWeighted(std::vector <Crit3DInterpolationDataPoint> &myPoints, int proxyPos,
+    bool proxyValidityWeighted(std::vector<Crit3DInterpolationDataPoint> &myPoints, int proxyPos,
                                float stdDevThreshold);
 
     bool setMultipleDetrendingHeightTemperatureRange(Crit3DInterpolationSettings &interpolationSettings);

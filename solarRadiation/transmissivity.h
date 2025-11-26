@@ -12,10 +12,10 @@
     float computePointTransmissivity(const gis::Crit3DPoint& myPoint, Crit3DTime myTime, float* measuredRad,
                                  int windowWidth, int timeStepSecond, const gis::Crit3DRasterGrid& myDEM);
 
-    bool computeTransmissivity(Crit3DRadiationSettings *mySettings, Crit3DMeteoPoint* meteoPoints, int nrMeteoPoints, int intervalWidth,
-                                Crit3DTime myTime, const gis::Crit3DRasterGrid& myDEM);
+    bool computeTransmissivity(Crit3DRadiationSettings *mySettings, std::vector<Crit3DMeteoPoint> &meteoPoints,
+                               int intervalWidth, Crit3DTime myTime, const gis::Crit3DRasterGrid& myDEM);
 
-    bool computeTransmissivityFromTRange(Crit3DMeteoPoint* meteoPoints, int nrMeteoPoints, Crit3DTime currentTime);
+    bool computeTransmissivityFromTRange(std::vector<Crit3DMeteoPoint> &meteoPoints, Crit3DTime currentTime);
 
 
 #endif // TRANSMISSIVITY_H

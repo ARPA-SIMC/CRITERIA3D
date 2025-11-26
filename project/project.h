@@ -120,8 +120,7 @@
         QSettings* projectSettings;
 
         bool meteoPointsLoaded;
-        int nrMeteoPoints;
-        Crit3DMeteoPoint* meteoPoints;
+        std::vector<Crit3DMeteoPoint> meteoPoints;
         std::vector<gis::Crit3DOutputPoint> outputPoints;
         std::vector<Well> wellPoints;
 

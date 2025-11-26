@@ -14,16 +14,16 @@
 
 
 
-Crit3DProxyWidget::Crit3DProxyWidget(Crit3DInterpolationSettings &_interpolationSettings, Crit3DMeteoPoint *meteoPoints, int nrMeteoPoints,
+Crit3DProxyWidget::Crit3DProxyWidget(Crit3DInterpolationSettings &_interpolationSettings, const std::vector<Crit3DMeteoPoint> meteoPoints,
                                      frequencyType currentFrequency, QDate currentDate, int currentHour, Crit3DQuality *quality,
                                      Crit3DInterpolationSettings &SQinterpolationSettings, Crit3DMeteoSettings *meteoSettings,
                                      Crit3DClimateParameters *climateParameters, bool checkSpatialQuality, int macroAreaNumber)
-    :_interpolationSettings(_interpolationSettings), _meteoPoints(meteoPoints), _nrMeteoPoints(nrMeteoPoints),
+    :_interpolationSettings(_interpolationSettings), _meteoPoints(meteoPoints),
     _currentFrequency(currentFrequency), _currentDate(currentDate), _currentHour(currentHour), _quality(quality),
     _SQinterpolationSettings(SQinterpolationSettings), _meteoSettings(meteoSettings), _checkSpatialQuality(checkSpatialQuality),
     _macroAreaNumber(macroAreaNumber), _climateParameters(climateParameters)
 {
-    this->setWindowTitle("Proxy analysis over " + QString::number(nrMeteoPoints) +  " points");
+    this->setWindowTitle("Proxy analysis over " + QString::number(meteoPoints.size()) +  " points");
     this->resize(1024, 700);
     this->setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Preferred);
     this->setAttribute(Qt::WA_DeleteOnClose);
@@ -289,7 +289,7 @@ void Crit3DProxyWidget::plot()
     {
         _outInterpolationPoints.clear();
 
-        checkAndPassDataToInterpolation(_quality, myVar, _meteoPoints, _nrMeteoPoints, getCurrentTime(), _SQinterpolationSettings,
+        checkAndPassDataToInterpolation(_quality, myVar, _meteoPoints, getCurrentTime(), _SQinterpolationSettings,
                                         _interpolationSettings, _meteoSettings, _climateParameters,
                                         _outInterpolationPoints, _checkSpatialQuality, errorStdStr);
 
@@ -297,7 +297,7 @@ void Crit3DProxyWidget::plot()
     }
     else
     {
-        checkAndPassDataToInterpolation(_quality, myVar, _meteoPoints, _nrMeteoPoints, getCurrentTime(), _SQinterpolationSettings,
+        checkAndPassDataToInterpolation(_quality, myVar, _meteoPoints, getCurrentTime(), _SQinterpolationSettings,
                                         _interpolationSettings, _meteoSettings, _climateParameters,
                                         _outInterpolationPoints, _checkSpatialQuality, errorStdStr);
     }
