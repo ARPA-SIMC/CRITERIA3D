@@ -725,11 +725,12 @@ bool Project3D::setLateralBoundary()
 {
     if (! DEM.isLoaded)
     {
-        logError("Missing Digital Elevation Model.");
+        logError(ERROR_STR_MISSING_DEM);
         return false;
     }
 
     boundaryMap.initializeGrid(DEM);
+
     for (int row = 0; row < boundaryMap.header->nrRows; row++)
     {
         for (int col = 0; col < boundaryMap.header->nrCols; col++)

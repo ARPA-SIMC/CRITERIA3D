@@ -35,9 +35,9 @@ DialogWaterFluxesSettings::DialogWaterFluxesSettings()
 
     // computation depth [m]
     QGroupBox* depthGroupBox = new QGroupBox("Computation depth");
-    onlySurface = new QRadioButton("Only surface");
-    allSoilDepth = new QRadioButton("Total soil depth");
-    imposedDepth = new QRadioButton("Imposed computation depth [m]");
+    onlySurfaceButton = new QRadioButton("Only surface");
+    allSoilDepthButton = new QRadioButton("Total soil depth");
+    imposedDepthButton = new QRadioButton("Imposed computation depth [m]");
 
     imposedComputationDepthEdit = new QLineEdit();
     imposedComputationDepthEdit->setFixedWidth(50);
@@ -46,11 +46,23 @@ DialogWaterFluxesSettings::DialogWaterFluxesSettings()
     imposedComputationDepthEdit->setValidator(imposedDepthValidator);
 
     QGridLayout *layoutDepth = new QGridLayout();
-    layoutDepth->addWidget(onlySurface, 0, 0);
-    layoutDepth->addWidget(allSoilDepth, 1, 0);
-    layoutDepth->addWidget(imposedDepth, 2, 0);
+    layoutDepth->addWidget(onlySurfaceButton, 0, 0);
+    layoutDepth->addWidget(allSoilDepthButton, 1, 0);
+    layoutDepth->addWidget(imposedDepthButton, 2, 0);
     layoutDepth->addWidget(imposedComputationDepthEdit, 2, 1);
     depthGroupBox->setLayout(layoutDepth);
+
+    // boundary consitions
+    QGroupBox* boundaryGroupBox = new QGroupBox("Boundary conditions");
+    freeCatchmentRunoffBox = new QCheckBox("Free catchment runoff");
+    freeLateralDrainageBox = new QCheckBox("Free lateral drainage");
+    freeBottomDrainageBox = new QCheckBox("Free bottom drainage");
+
+    QGridLayout *layoutBoundary = new QGridLayout();
+    layoutBoundary->addWidget(freeCatchmentRunoffBox, 0, 0);
+    layoutBoundary->addWidget(freeLateralDrainageBox, 1, 0);
+    layoutBoundary->addWidget(freeBottomDrainageBox, 2, 0);
+    boundaryGroupBox->setLayout(layoutBoundary);
 
     // soil properties
     useWaterRetentionFitting = new QRadioButton("Use water retention data");
@@ -104,6 +116,7 @@ DialogWaterFluxesSettings::DialogWaterFluxesSettings()
     QVBoxLayout *mainLayout = new QVBoxLayout();
     mainLayout->addWidget(initialConditionsGroupBox);
     mainLayout->addWidget(depthGroupBox);
+    mainLayout->addWidget(boundaryGroupBox);
     mainLayout->addWidget(soilGroupBox);
     mainLayout->addWidget(accuracyGroupBox);
     mainLayout->addWidget(buttonBox);

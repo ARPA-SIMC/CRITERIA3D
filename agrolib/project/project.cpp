@@ -67,8 +67,7 @@ void Project::initializeProject()
     _currentDate.setDate(1800,1,1);
     _currentHour = 12;
 
-    nrMeteoPoints = 0;
-    meteoPoints = nullptr;
+    meteoPoints.clear();
     meteoPointsDbHandler = nullptr;
     outputPointsDbHandler = nullptr;
     meteoGridDbHandler = nullptr;
@@ -103,7 +102,11 @@ void Project::initializeProject()
     currentDbOutputFileName = "";
 	glocalMapName = "";
     glocalPointsName = "";
+
     meteoPointsLoaded = false;
+    isMeteoPointsDaily = false;
+    isMeteoPointsHourly = false;
+
     meteoGridLoaded = false;
     loadGridDataAtStart = false;
 
@@ -929,9 +932,9 @@ void Project::getMeteoPointsRange(float& minimum, float& maximum, bool useNotAct
     if (_currentFrequency == noFrequency || _currentVariable == noMeteoVar)
         return;
 
-    for (int i = 0; i < nrMeteoPoints; i++)
+    for (int i = 0; i < meteoPoints.size(); i++)
     {
-        if (!meteoPoints[i].active && !useNotActivePoints)
+        if (! meteoPoints[i].active && ! useNotActivePoints)
             continue;
 
         float v = meteoPoints[i].currentValue;
@@ -952,23 +955,14 @@ void Project::getMeteoPointsRange(float& minimum, float& maximum, bool useNotAct
 
 void Project::cleanMeteoPointsData()
 {
-    if (nrMeteoPoints <= 0 || meteoPoints == nullptr)
-        return;
-
-    for (int i = 0; i < nrMeteoPoints; i++)
+    for (int i = 0; i < meteoPoints.size(); i++)
         meteoPoints[i].cleanAllData();
 }
 
+
 void Project::clearMeteoPoints()
 {
-    if (nrMeteoPoints <= 0 || meteoPoints == nullptr)
-    {
-        nrMeteoPoints = 0;
-        meteoPoints = nullptr;
-        return;
-    }
-
-    for (int i = 0; i < nrMeteoPoints; i++)
+    for (int i = 0; i < meteoPoints.size(); i++)
     {
         meteoPoints[i].cleanAllData();
         meteoPoints[i].proxyValues.clear();
@@ -979,10 +973,8 @@ void Project::clearMeteoPoints()
             delete meteoPoints[i].topographicDistance;
         }
     }
-    delete[] meteoPoints;
 
-    meteoPoints = nullptr;
-    nrMeteoPoints = 0;
+    meteoPoints.clear();
 }
 
 
@@ -998,6 +990,8 @@ void Project::closeMeteoPointsDB()
 
     dbPointsFileName = "";
     meteoPointsLoaded = false;
+    isMeteoPointsDaily = false;
+    isMeteoPointsHourly = false;
 }
 
 
@@ -1108,21 +1102,21 @@ bool Project::loadMeteoPointsDB(QString fileName)
 
     dbPointsFileName = fileName;
     QString dbName = getCompleteFileName(fileName, PATH_METEOPOINT);
-    if(!QFile(dbName).exists())
+    if(! QFile(dbName).exists())
     {
         errorString = "Meteo points DB does not exists:\n" + dbName;
         return false;
     }
 
     meteoPointsDbHandler = new Crit3DMeteoPointsDbHandler(dbName);
-    if(!meteoPointsDbHandler->getErrorString().isEmpty())
+    if(! meteoPointsDbHandler->getErrorString().isEmpty())
     {
         errorString = meteoPointsDbHandler->getErrorString();
         closeMeteoPointsDB();
         return false;
     }
 
-    if(!meteoPointsDbHandler->loadVariableProperties())
+    if(! meteoPointsDbHandler->loadVariableProperties())
     {
         errorString = meteoPointsDbHandler->getErrorString();
         closeMeteoPointsDB();
@@ -1131,15 +1125,14 @@ bool Project::loadMeteoPointsDB(QString fileName)
 
     QList<Crit3DMeteoPoint> listMeteoPoints;
     errorString = "";
-    if(!meteoPointsDbHandler->getPropertiesFromDb(listMeteoPoints, gisSettings, errorString))
+    if(! meteoPointsDbHandler->getPropertiesFromDb(listMeteoPoints, gisSettings, errorString))
     {
         errorString = "Error in reading the table point_properties\n" + errorString;
         closeMeteoPointsDB();
         return false;
     }
 
-    nrMeteoPoints = listMeteoPoints.size();
-    if(nrMeteoPoints == 0)
+    if(listMeteoPoints.size() == 0)
     {
         errorString = "Missing data in the table point_properties\n" + errorString;
         closeMeteoPointsDB();
@@ -1153,9 +1146,9 @@ bool Project::loadMeteoPointsDB(QString fileName)
         errorString = "";
     }
 
-    meteoPoints = new Crit3DMeteoPoint[unsigned(nrMeteoPoints)];
+    meteoPoints.resize(listMeteoPoints.size());
 
-    for (int i=0; i < nrMeteoPoints; i++)
+    for (int i=0; i < meteoPoints.size(); i++)
         meteoPoints[i] = listMeteoPoints[i];
 
     listMeteoPoints.clear();
@@ -1232,8 +1225,7 @@ bool Project::loadAggregationDBAsMeteoPoints(QString fileName)
         return false;
     }
 
-    nrMeteoPoints = listMeteoPoints.size();
-    if (nrMeteoPoints == 0)
+    if (listMeteoPoints.size() == 0)
     {
         errorString = "Missing data in the table 'point_properties'\n" + errorString;
         closeMeteoPointsDB();
@@ -1247,18 +1239,16 @@ bool Project::loadAggregationDBAsMeteoPoints(QString fileName)
         errorString = "";
     }
 
-    meteoPoints = new Crit3DMeteoPoint[unsigned(nrMeteoPoints)];
-
-    for (int i=0; i < nrMeteoPoints; i++)
-        meteoPoints[i] = listMeteoPoints[i];
-
+    // copy data
+    for (int i=0; i < meteoPoints.size(); i++)
+        meteoPoints.push_back(listMeteoPoints[i]);
     listMeteoPoints.clear();
 
     // find dates
     meteoPointsDbLastTime = findDbPointLastTime();
     meteoPointsDbFirstTime.setSecsSinceEpoch(0);
 
-    if (!meteoPointsDbLastTime.isNull())
+    if (! meteoPointsDbLastTime.isNull())
     {
         bool isHour00 = (meteoPointsDbLastTime.time().hour() == 00);
         auto currentDate = isHour00 ? meteoPointsDbLastTime.date().addDays(-1) : meteoPointsDbLastTime.date();
@@ -1405,7 +1395,7 @@ bool Project::newMeteoGridDB(QString xmlName)
 
     Crit3DMeteoGridStructure structure = this->meteoGridDbHandler->meteoGrid()->gridStructure();
 
-    if (! this->meteoGridDbHandler->writeCellProperties(structure.nrRow(), structure.nrCol(), errorString))
+    if (! this->meteoGridDbHandler->writeCellProperties(structure, errorString))
         return false;
 
     if (! this->meteoGridDbHandler->meteoGrid()->createRasterGrid())
@@ -1469,6 +1459,7 @@ bool Project::loadMeteoPointsData(const QDate& firstDate, const QDate& lastDate,
         return false;
 
     int step = 0;
+    int nrMeteoPoints = (int)meteoPoints.size();
     if (showInfo)
     {
         QString infoStr = "Load meteo points data: " + firstDate.toString();
@@ -1494,11 +1485,11 @@ bool Project::loadMeteoPointsData(const QDate& firstDate, const QDate& lastDate,
         #pragma omp for schedule(dynamic)
         for (int i=0; i < nrMeteoPoints; ++i)
         {
-            if (loadHourly)
+            if (loadHourly && isMeteoPointsHourly)
                 if (meteoPointsDbHandler->loadHourlyData(myDb, myFirstDate, myLastDate, meteoPoints[i]))
                     isDataOk[i] = true;
 
-            if (loadDaily)
+            if (loadDaily && isMeteoPointsDaily)
                 if (meteoPointsDbHandler->loadDailyData(myDb, myFirstDate, myLastDate, meteoPoints[i]))
                     isDataOk[i] = true;
 
@@ -1535,6 +1526,7 @@ bool Project::loadMeteoPointsData_singleDataset(const QDate &firstDate, const QD
         return false;
 
     int step = 0;
+    int nrMeteoPoints = (int)meteoPoints.size();
     if (showInfo)
     {
         QString infoStr = "Load meteo points data: " + firstDate.toString();
@@ -1862,20 +1854,17 @@ QDateTime Project::findDbPointLastTime()
     QDateTime lastTime;
     lastTime.setTimeZone(QTimeZone::utc());
 
-    QDateTime lastDateD;
-    lastDateD.setTimeZone(QTimeZone::utc());
-    lastDateD = meteoPointsDbHandler->getLastDate(daily);
+    QDateTime lastDateD = meteoPointsDbHandler->getLastDate(daily);
     if (! lastDateD.isNull())
     {
+        isMeteoPointsDaily = true;
         lastTime = lastDateD;
     }
 
-    QDateTime lastDateH;
-    lastDateH.setTimeZone(QTimeZone::utc());
-    lastDateH = meteoPointsDbHandler->getLastDate(hourly);
-
-    if (!lastDateH.isNull())
+    QDateTime lastDateH = meteoPointsDbHandler->getLastDate(hourly);
+    if (! lastDateH.isNull())
     {
+        isMeteoPointsHourly = true;
         if (!lastDateD.isNull())
         {
             lastTime = (lastDateD > lastDateH) ? lastDateD : lastDateH;
@@ -1918,7 +1907,7 @@ QDateTime Project::findDbPointFirstTime()
 
 void Project::checkMeteoPointsDEM()
 {
-    for (int i=0; i < nrMeteoPoints; i++)
+    for (int i=0; i < meteoPoints.size(); i++)
     {
         if (! gis::isOutOfGridXY(meteoPoints[i].point.utm.x, meteoPoints[i].point.utm.y, DEM.header)
                 && (! isEqual(gis::getValueFromXY(DEM, meteoPoints[i].point.utm.x, meteoPoints[i].point.utm.y), DEM.header->flag)))
@@ -2073,7 +2062,7 @@ bool Project::readProxyValues()
 {
     QSqlDatabase myDb = this->meteoPointsDbHandler->getDb();
 
-    for (int i = 0; i < this->nrMeteoPoints; i++)
+    for (int i = 0; i < this->meteoPoints.size(); i++)
     {
         if (!readPointProxyValues(&(this->meteoPoints[i]), &myDb))
             return false;
@@ -2104,7 +2093,7 @@ bool Project::updateProxy()
 
 bool Project::writeTopographicDistanceMaps(bool onlyWithData, bool showInfo)
 {
-    if (nrMeteoPoints == 0)
+    if (meteoPoints.size() == 0)
     {
         logError(ERROR_STR_MISSING_DB);
         return false;
@@ -2124,14 +2113,10 @@ bool Project::writeTopographicDistanceMaps(bool onlyWithData, bool showInfo)
     int infoStep = 0;
     if (showInfo)
     {
-        infoStep = setProgressBar(infoStr, nrMeteoPoints);
+        infoStep = setProgressBar(infoStr, (int)meteoPoints.size());
     }
 
-    std::string myError;
-    std::string fileName;
-    gis::Crit3DRasterGrid myMap;
-
-    for (int i=0; i < nrMeteoPoints; i++)
+    for (int i=0; i < meteoPoints.size(); i++)
     {
         if (showInfo && (i % infoStep == 0))
             updateProgressBar(i);
@@ -2139,8 +2124,8 @@ bool Project::writeTopographicDistanceMaps(bool onlyWithData, bool showInfo)
         if (!meteoPoints[i].active)
             continue;
 
-        bool isSelected = onlyWithData ? (meteoPointsDbHandler->existData(meteoPoints[i], daily)
-                                            || meteoPointsDbHandler->existData(meteoPoints[i], hourly))
+        bool isSelected = onlyWithData ? (meteoPointsDbHandler->existTable(meteoPoints[i], daily)
+                                            || meteoPointsDbHandler->existTable(meteoPoints[i], hourly))
                                        : true;
 
         if (isSelected && !writeTopographicDistanceMap(i, DEM, mapsFolder))
@@ -2155,7 +2140,7 @@ bool Project::writeTopographicDistanceMaps(bool onlyWithData, bool showInfo)
 
 bool Project::writeTopographicDistanceMap(int pointIndex, const gis::Crit3DRasterGrid& demMap, QString pathTd)
 {
-    if (nrMeteoPoints == 0)
+    if (meteoPoints.size() == 0)
     {
         logError(ERROR_STR_MISSING_DB);
         return false;
@@ -2188,7 +2173,7 @@ bool Project::writeTopographicDistanceMap(int pointIndex, const gis::Crit3DRaste
 
 bool Project::loadTopographicDistanceMaps(bool onlyWithData, bool showInfo)
 {
-    if (nrMeteoPoints == 0)
+    if (meteoPoints.size() == 0)
     {
         logError(ERROR_STR_MISSING_DB);
         return false;
@@ -2204,13 +2189,13 @@ bool Project::loadTopographicDistanceMaps(bool onlyWithData, bool showInfo)
     if (showInfo)
     {
         QString infoStr = "Loading topographic distance maps...";
-        infoStep = setProgressBar(infoStr, nrMeteoPoints);
+        infoStep = setProgressBar(infoStr, (int)meteoPoints.size());
     }
 
     std::string myError;
     std::string fileName;
 
-    for (int i = 0; i < nrMeteoPoints; i++)
+    for (int i = 0; i < meteoPoints.size(); i++)
     {
         if (showInfo && (i % infoStep == 0))
                 updateProgressBar(i);
@@ -2218,8 +2203,8 @@ bool Project::loadTopographicDistanceMaps(bool onlyWithData, bool showInfo)
         if (!meteoPoints[i].active)
             continue;
 
-        bool isSelected = onlyWithData ? (meteoPointsDbHandler->existData(meteoPoints[i], daily)
-                                          || meteoPointsDbHandler->existData(meteoPoints[i], hourly))
+        bool isSelected = onlyWithData ? (meteoPointsDbHandler->existTable(meteoPoints[i], daily)
+                                          || meteoPointsDbHandler->existTable(meteoPoints[i], hourly))
                                        : true;
 
         if(!isSelected)
@@ -2385,7 +2370,7 @@ bool Project::loadGlocalStationsAndCells(bool isGrid, QString fileNameStations)
         for (unsigned k = 0; k < areaPoints[j].size(); k++)
         {
             // controlla se id si trova nel vettore areaPoints[j] e salva l'indice del meteopoint
-            for (int i = 0; i < nrMeteoPoints; i++)
+            for (int i = 0; i < meteoPoints.size(); i++)
                 if (areaPoints[j][k] == meteoPoints[i].id)
                 {
                     temp.push_back(i);
@@ -2635,7 +2620,7 @@ void Project::passInterpolatedTemperatureToHumidityPoints(Crit3DTime myTime, Cri
     float airRelHum, airT;
     int row, col;
 
-    for (int i = 0; i < nrMeteoPoints; i++)
+    for (int i = 0; i < meteoPoints.size(); i++)
     {
         airRelHum = meteoPoints[i].getMeteoPointValue(myTime, airRelHumidity, meteoSettings);
         airT = meteoPoints[i].getMeteoPointValue(myTime, airTemperature, meteoSettings);
@@ -2658,7 +2643,7 @@ void Project::passGridTemperatureToHumidityPoints(Crit3DTime myTime, Crit3DMeteo
     int row, col;
     double lat, lon;
 
-    for (int i = 0; i < nrMeteoPoints; i++)
+    for (int i = 0; i < meteoPoints.size(); i++)
     {
         airRelHum = meteoPoints[i].getMeteoPointValue(myTime, airRelHumidity, meteoSettings);
         airT = meteoPoints[i].getMeteoPointValue(myTime, airTemperature, meteoSettings);
@@ -2744,7 +2729,7 @@ bool Project::computeStatisticsCrossValidation()
     std::vector <float> obs;
     std::vector <float> pre;
 
-    for (int i = 0; i < nrMeteoPoints; i++)
+    for (int i = 0; i < meteoPoints.size(); i++)
     {
         if (!meteoPoints[i].active)
             continue;
@@ -2847,7 +2832,7 @@ bool Project::interpolationCv(meteoVariable myVar, const Crit3DTime& myTime)
     std::string errorStdStr;
 
     // check quality and pass data to interpolation
-    if (! checkAndPassDataToInterpolation(quality, myVar, meteoPoints, nrMeteoPoints, myTime,
+    if (! checkAndPassDataToInterpolation(quality, myVar, meteoPoints, myTime,
                                          qualityInterpolationSettings, interpolationSettings, meteoSettings,
                                          &climateParameters, interpolationPoints,
                                          checkSpatialQuality, errorStdStr))
@@ -2860,7 +2845,7 @@ bool Project::interpolationCv(meteoVariable myVar, const Crit3DTime& myTime)
         interpolationSettings.clearFitting();
 
     if (! interpolationSettings.getUseLocalDetrending() && ! preInterpolation(interpolationPoints, interpolationSettings, meteoSettings, &climateParameters,
-                          meteoPoints, nrMeteoPoints, myVar, myTime, errorStdStr))
+                          meteoPoints, myVar, myTime, errorStdStr))
     {
         logError("Error in function preInterpolation:\n" + QString::fromStdString(errorStdStr));
         return false;
@@ -2868,7 +2853,7 @@ bool Project::interpolationCv(meteoVariable myVar, const Crit3DTime& myTime)
 
     if (! interpolationSettings.getUseLocalDetrending() && ! interpolationSettings.getUseGlocalDetrending())
     {
-        if (! computeResiduals(myVar, meteoPoints, nrMeteoPoints, interpolationPoints, interpolationSettings, meteoSettings, interpolationSettings.getUseExcludeStationsOutsideDEM(), true))
+        if (! computeResiduals(myVar, meteoPoints, interpolationPoints, interpolationSettings, meteoSettings, interpolationSettings.getUseExcludeStationsOutsideDEM(), true))
             return false;
     }
     else if (interpolationSettings.getUseGlocalDetrending())
@@ -2896,7 +2881,7 @@ bool Project::interpolationCv(meteoVariable myVar, const Crit3DTime& myTime)
             return false;
         }
 
-        if (! computeResidualsLocalDetrending(myVar, myTime, meteoPoints, nrMeteoPoints, interpolationPoints,
+        if (! computeResidualsLocalDetrending(myVar, myTime, meteoPoints, interpolationPoints,
                                              interpolationSettings, meteoSettings, &climateParameters, true, true))
             return false;
     }
@@ -2916,7 +2901,7 @@ bool Project::interpolationDem(meteoVariable myVar, const Crit3DTime& myTime, gi
     std::string errorStdStr;
 
     // check quality and pass data to interpolation
-    if (! checkAndPassDataToInterpolation(quality, myVar, meteoPoints, nrMeteoPoints, myTime,
+    if (! checkAndPassDataToInterpolation(quality, myVar, meteoPoints, myTime,
                                          qualityInterpolationSettings, interpolationSettings, meteoSettings, &climateParameters, interpolationPoints,
                                          checkSpatialQuality, errorStdStr))
     {
@@ -2927,7 +2912,7 @@ bool Project::interpolationDem(meteoVariable myVar, const Crit3DTime& myTime, gi
 
     // detrending, checking precipitation and optimizing td parametersSettings
     if (! preInterpolation(interpolationPoints, interpolationSettings, meteoSettings,
-                         &climateParameters, meteoPoints, nrMeteoPoints, myVar, myTime, errorStdStr))
+                         &climateParameters, meteoPoints, myVar, myTime, errorStdStr))
     {
         errorString = "Error in function preInterpolation:\n" + QString::fromStdString(errorStdStr);
         return false;
@@ -2964,9 +2949,9 @@ bool Project::interpolationDemLocalDetrending(meteoVariable myVar, const Crit3DT
     std::vector <Crit3DInterpolationDataPoint> interpolationPoints;
     std::string errorStdStr;
 
-    if (! checkAndPassDataToInterpolation(quality, myVar, meteoPoints, nrMeteoPoints, myTime,
-                                         qualityInterpolationSettings, interpolationSettings, meteoSettings, &climateParameters, interpolationPoints,
-                                         checkSpatialQuality, errorStdStr))
+    if (! checkAndPassDataToInterpolation(quality, myVar, meteoPoints, myTime, qualityInterpolationSettings,
+                                          interpolationSettings, meteoSettings, &climateParameters, interpolationPoints,
+                                            checkSpatialQuality, errorStdStr))
     {
         errorString = "No data available: " + QString::fromStdString(getVariableString(myVar))
                       + "\n" + QString::fromStdString(errorStdStr);
@@ -2996,7 +2981,7 @@ bool Project::interpolationDemLocalDetrending(meteoVariable myVar, const Crit3DT
             std::vector <Crit3DInterpolationDataPoint> subsetInterpolationPoints;
             localSelection(interpolationPoints, subsetInterpolationPoints, x, y, interpolationSettings, false); //CT supplementari vengono usate anche in interpolate?
             if (!preInterpolation(subsetInterpolationPoints, interpolationSettings, meteoSettings, &climateParameters,
-                                  meteoPoints, nrMeteoPoints, myVar, myTime, errorStdStr))
+                                  meteoPoints, myVar, myTime, errorStdStr))
             {
                 errorString = "Error in function preInterpolation:\n" + QString::fromStdString(errorStdStr);
                 return false;
@@ -3043,7 +3028,7 @@ bool Project::interpolationDemLocalDetrending(meteoVariable myVar, const Crit3DT
                 localSelection(interpolationPoints, subsetInterpolationPoints, x, y, myInterpolationSettings, false);
 
                 preInterpolation(subsetInterpolationPoints, myInterpolationSettings, meteoSettings, &climateParameters,
-                                 meteoPoints, nrMeteoPoints, myVar, myTime, errorStdStr);
+                                 meteoPoints, myVar, myTime, errorStdStr);
 
                 myRaster->value[row][col] = interpolate(subsetInterpolationPoints, myInterpolationSettings, meteoSettings,
                                                         myVar, x, y, z, proxyValues, true);
@@ -3066,16 +3051,16 @@ bool Project::interpolationDemLocalDetrending(meteoVariable myVar, const Crit3DT
 
 bool Project::interpolationDemGlocalDetrending(meteoVariable myVar, const Crit3DTime& myTime, gis::Crit3DRasterGrid *myRaster)
 {
-    if (!getUseDetrendingVar(myVar) || !interpolationSettings.getUseGlocalDetrending())
+    if (! getUseDetrendingVar(myVar) || ! interpolationSettings.getUseGlocalDetrending())
         return false;
 
     // pass data to interpolation
     std::vector <Crit3DInterpolationDataPoint> interpolationPoints;
     std::string errorStdStr;
 
-    if (! checkAndPassDataToInterpolation(quality, myVar, meteoPoints, nrMeteoPoints, myTime,
-                                         qualityInterpolationSettings, interpolationSettings, meteoSettings, &climateParameters, interpolationPoints,
-                                         checkSpatialQuality, errorStdStr))
+    if (! checkAndPassDataToInterpolation(quality, myVar, meteoPoints, myTime, qualityInterpolationSettings,
+                                            interpolationSettings, meteoSettings, &climateParameters, interpolationPoints,
+                                            checkSpatialQuality, errorStdStr))
     {
         errorString = "No data available: " + QString::fromStdString(getVariableString(myVar))
                       + "\n" + QString::fromStdString(errorStdStr);
@@ -3087,7 +3072,7 @@ bool Project::interpolationDemGlocalDetrending(meteoVariable myVar, const Crit3D
 
     // obtain fitting parameters and combination for every macro area
     if (! preInterpolation(interpolationPoints, interpolationSettings, meteoSettings, &climateParameters,
-                          meteoPoints, nrMeteoPoints, myVar, myTime, errorStdStr))
+                          meteoPoints, myVar, myTime, errorStdStr))
     {
         errorString = "Error in function preInterpolation:\n" + QString::fromStdString(errorStdStr);
         return false;
@@ -3203,10 +3188,10 @@ bool Project::interpolateDemRadiation(const Crit3DTime& myTime, gis::Crit3DRaste
     int intervalWidth = radiation::estimateTransmissivityWindow(&radSettings, DEM, mapCenter, myTime, int(HOUR_SECONDS));
 
     // at least a meteoPoint with transmissivity data
-    if (! computeTransmissivity(&radSettings, meteoPoints, nrMeteoPoints, intervalWidth, myTime, DEM))
+    if (! computeTransmissivity(&radSettings, meteoPoints, intervalWidth, myTime, DEM))
     {
         // TODO: add flag to parametersSettings. Could be NOT wanted
-        if (! computeTransmissivityFromTRange(meteoPoints, nrMeteoPoints, myTime))
+        if (! computeTransmissivityFromTRange(meteoPoints, myTime))
         {
             logError("Error in function interpolateDemRadiation: cannot compute transmissivity.");
             return false;
@@ -3216,7 +3201,7 @@ bool Project::interpolateDemRadiation(const Crit3DTime& myTime, gis::Crit3DRaste
     bool result;
     std::string errorStdStr;
 
-    result = checkAndPassDataToInterpolation(quality, atmTransmissivity, meteoPoints, nrMeteoPoints,
+    result = checkAndPassDataToInterpolation(quality, atmTransmissivity, meteoPoints,
                                           myTime, qualityInterpolationSettings, interpolationSettings,
                                           meteoSettings, &climateParameters,
                                           interpolationPoints, checkSpatialQuality, errorStdStr);
@@ -3226,7 +3211,7 @@ bool Project::interpolateDemRadiation(const Crit3DTime& myTime, gis::Crit3DRaste
         return false;
     }
     if (! preInterpolation(interpolationPoints, interpolationSettings, meteoSettings, &climateParameters,
-                            meteoPoints, nrMeteoPoints, atmTransmissivity, myTime, errorStdStr))
+                            meteoPoints, atmTransmissivity, myTime, errorStdStr))
     {
         logError("Error in function preInterpolation:\n" + QString::fromStdString(errorStdStr));
         return false;
@@ -3280,7 +3265,7 @@ bool Project::checkInterpolation(meteoVariable myVar)
         return false;
     }
 
-    if (nrMeteoPoints == 0)
+    if (meteoPoints.size() == 0)
     {
         logError(ERROR_STR_MISSING_DB);
         return false;
@@ -3298,7 +3283,7 @@ bool Project::checkInterpolation(meteoVariable myVar)
 
 bool Project::checkInterpolationGrid(meteoVariable myVar)
 {
-    if (nrMeteoPoints == 0)
+    if (meteoPoints.size() == 0)
     {
         logError(ERROR_STR_MISSING_DB);
         return false;
@@ -3400,9 +3385,9 @@ bool Project::interpolationGrid(meteoVariable myVar, const Crit3DTime& myTime)
         interpolationSettings.clearFitting();
 
     // check quality and pass data to interpolation
-    if (! checkAndPassDataToInterpolation(quality, myVar, meteoPoints, nrMeteoPoints, myTime,
-                                         qualityInterpolationSettings, interpolationSettings, meteoSettings, &climateParameters, interpolationPoints,
-                                         checkSpatialQuality, errorStdStr))
+    if (! checkAndPassDataToInterpolation(quality, myVar, meteoPoints, myTime, qualityInterpolationSettings,
+                                          interpolationSettings, meteoSettings, &climateParameters, interpolationPoints,
+                                          checkSpatialQuality, errorStdStr))
     {
         logError("No data available: " + QString::fromStdString(getVariableString(myVar)));
         return false;
@@ -3413,7 +3398,7 @@ bool Project::interpolationGrid(meteoVariable myVar, const Crit3DTime& myTime)
     if (! interpolationSettings.getUseLocalDetrending())
     {
         if (! preInterpolation(interpolationPoints, interpolationSettings, meteoSettings,
-                              &climateParameters, meteoPoints, nrMeteoPoints, myVar, myTime, errorStdStr))
+                              &climateParameters, meteoPoints, myVar, myTime, errorStdStr))
         {
             logError("Error in function preInterpolation:\n" + QString::fromStdString(errorStdStr));
             return false;
@@ -3484,7 +3469,7 @@ bool Project::interpolationGrid(meteoVariable myVar, const Crit3DTime& myTime)
                         std::vector <Crit3DInterpolationDataPoint> subsetInterpolationPoints;
                         localSelection(interpolationPoints, subsetInterpolationPoints, myX, myY, interpolationSettings, false); //CT supplementari usate anche in interpolate?
                         if (! preInterpolation(subsetInterpolationPoints, interpolationSettings, meteoSettings,
-                                              &climateParameters, meteoPoints, nrMeteoPoints, myVar, myTime, errorStdStr))
+                                              &climateParameters, meteoPoints, myVar, myTime, errorStdStr))
                         {
                             logError("Error in function preInterpolation:\n" + QString::fromStdString(errorStdStr));
                             return false;
@@ -3652,7 +3637,7 @@ bool Project::interpolationGrid(meteoVariable myVar, const Crit3DTime& myTime)
 float Project::meteoDataConsistency(meteoVariable myVar, const Crit3DTime& timeIni, const Crit3DTime& timeFin)
 {
     float dataConsistency = 0.0;
-    for (int i = 0; i < nrMeteoPoints; i++)
+    for (int i = 0; i < meteoPoints.size(); i++)
     {
         dataConsistency = MAXVALUE(dataConsistency, meteoPoints[i].obsDataConsistencyH(myVar, timeIni, timeFin));
     }
@@ -3918,6 +3903,8 @@ void Project::saveInterpolationParameters()
         parametersSettings->setValue("thermalInversion", interpolationSettings.getUseThermalInversion());
         parametersSettings->setValue("minRegressionR2", QString::number(double(interpolationSettings.getMinRegressionR2())));
         parametersSettings->setValue("min_points_local_detrending", QString::number(int(interpolationSettings.getMinPointsLocalDetrending())));
+        parametersSettings->setValue("glocalMapName", glocalMapName);
+        parametersSettings->setValue("glocalPointsName", glocalPointsName);
     parametersSettings->endGroup();
 
 
@@ -4326,7 +4313,7 @@ void Project::showMeteoWidgetPoint(std::string idMeteoPoint, std::string namePoi
             meteoWidgetId = 0;
         }
         meteoWidgetPoint->setMeteoWidgetID(meteoWidgetId);
-        meteoWidgetPoint->setAllMeteoPointsPointer(meteoPoints, nrMeteoPoints);
+        meteoWidgetPoint->setAllMeteoPoints(meteoPoints);
         meteoWidgetPointList.append(meteoWidgetPoint);
         QObject::connect(meteoWidgetPoint, SIGNAL(closeWidgetPoint(int)), this, SLOT(deleteMeteoWidgetPoint(int)));
         meteoPointsDbHandler->loadDailyData(db, getCrit3DDate(firstDaily), getCrit3DDate(lastDaily), mp);
@@ -4588,39 +4575,30 @@ void Project::deleteProxyWidget()
 
 void Project::showProxyGraph(int macroAreaNumber)
 {
-    Crit3DMeteoPoint* meteoPointsSelected;
-    int nSelected = 0;
-    for (int i = 0; i < nrMeteoPoints; i++)
+    std::vector<Crit3DMeteoPoint> meteoPointsSelected;
+    for (int i = 0; i < meteoPoints.size(); i++)
     {
         if (meteoPoints[i].selected)
         {
-            nSelected = nSelected + 1;
+            meteoPointsSelected.push_back(meteoPoints[i]);
         }
     }
-    if (nSelected == 0)
+
+    if (meteoPointsSelected.empty())
     {
-        proxyWidget = new Crit3DProxyWidget(interpolationSettings, meteoPoints, nrMeteoPoints, _currentFrequency,
+        // no point selected: ALL points
+        proxyWidget = new Crit3DProxyWidget(interpolationSettings, meteoPoints, _currentFrequency,
                                             _currentDate, _currentHour, quality, qualityInterpolationSettings,
                                             meteoSettings, &climateParameters, checkSpatialQuality, macroAreaNumber);
     }
     else
     {
-        meteoPointsSelected = new Crit3DMeteoPoint[unsigned(nSelected)];
-        int posMpSelected = 0;
-        for (int i = 0; i < nrMeteoPoints; i++)
-        {
-            if (meteoPoints[i].selected)
-            {
-                meteoPointsSelected[posMpSelected] = meteoPoints[i];
-                posMpSelected = posMpSelected + 1;
-            }
-        }
-        proxyWidget = new Crit3DProxyWidget(interpolationSettings, meteoPointsSelected, nSelected, _currentFrequency,
+        proxyWidget = new Crit3DProxyWidget(interpolationSettings, meteoPointsSelected, _currentFrequency,
                                             _currentDate, _currentHour, quality, qualityInterpolationSettings,
                                             meteoSettings, &climateParameters, checkSpatialQuality, macroAreaNumber);
     }
+
     QObject::connect(proxyWidget, SIGNAL(closeProxyWidget()), this, SLOT(deleteProxyWidget()));
-    return;
 }
 
 
@@ -4646,7 +4624,7 @@ void Project::showLocalProxyGraph(gis::Crit3DGeoPoint myPoint)
         return;
 
     localProxyWidget = new Crit3DLocalProxyWidget(myUtm.x, myUtm.y, myZDEM, myZGrid, this->gisSettings, interpolationSettings,
-                                                  meteoPoints, nrMeteoPoints, _currentVariable, _currentFrequency,
+                                                  meteoPoints, _currentVariable, _currentFrequency,
                                                   _currentDate, _currentHour, quality, qualityInterpolationSettings,
                                                   meteoSettings, &climateParameters, checkSpatialQuality);
 }
@@ -4654,7 +4632,7 @@ void Project::showLocalProxyGraph(gis::Crit3DGeoPoint myPoint)
 
 void Project::clearSelectedPoints()
 {
-    for (int i = 0; i < nrMeteoPoints; i++)
+    for (int i = 0; i < meteoPoints.size(); i++)
     {
         meteoPoints[i].selected = false;
     }
@@ -4679,7 +4657,7 @@ bool Project::setActiveStateSelectedPoints(bool isActive)
     }
 
     QList<QString> selectedPointList;
-    for (int i = 0; i < nrMeteoPoints; i++)
+    for (int i = 0; i < meteoPoints.size(); i++)
     {
         if (meteoPoints[i].selected)
         {
@@ -4722,7 +4700,7 @@ bool Project::setActiveStatePointList(QString fileName, bool isActive)
 
     for (int j = 0; j < pointList.size(); j++)
     {
-        for (int i = 0; i < nrMeteoPoints; i++)
+        for (int i = 0; i < meteoPoints.size(); i++)
         {
             if (meteoPoints[i].id == pointList[j].toStdString())
             {
@@ -4775,8 +4753,9 @@ bool Project::setActiveStateWithCriteria(bool isActive)
         }
 
         QList<QString> points;
-        setProgressBar("Checking distance...", nrMeteoPoints);
-        for (int i = 0; i < nrMeteoPoints; i++)
+        setProgressBar("Checking distance...", (int)meteoPoints.size());
+
+        for (int i = 0; i < meteoPoints.size(); i++)
         {
             updateProgressBar(i);
             if(!meteoPoints[i].active)
@@ -4832,7 +4811,7 @@ bool Project::setActiveStateWithCriteria(bool isActive)
 
 bool Project::setMarkedFromPointList(QString fileName)
 {
-    for (int i = 0; i < nrMeteoPoints; i++)
+    for (int i = 0; i < meteoPoints.size(); i++)
     {
         meteoPoints[i].marked = false;
     }
@@ -4846,7 +4825,7 @@ bool Project::setMarkedFromPointList(QString fileName)
 
     for (int j = 0; j < pointList.size(); j++)
     {
-        for (int i = 0; i < nrMeteoPoints; i++)
+        for (int i = 0; i < meteoPoints.size(); i++)
         {
             if (meteoPoints[i].id == pointList[j].toStdString())
             {
@@ -4860,7 +4839,7 @@ bool Project::setMarkedFromPointList(QString fileName)
 
 bool Project::setMarkedPointsOfMacroArea(int areaNumber, bool viewNotActivePoints)
 {
-    for (int i = 0; i < nrMeteoPoints; i++)
+    for (int i = 0; i < meteoPoints.size(); i++)
     {
         meteoPoints[i].marked = false;
     }
@@ -5257,7 +5236,7 @@ bool Project::exportMeteoPointsDailyDataCsv(bool isTPrec, QDate firstDate, QDate
 
     QSqlDatabase myDb = meteoPointsDbHandler->getDb();
 
-    for (int i = 0; i < nrMeteoPoints; i++)
+    for (int i = 0; i < meteoPoints.size(); i++)
     {
         QString id = QString::fromStdString(meteoPoints[i].id);
         bool checkId = false;
@@ -5362,6 +5341,152 @@ bool Project::exportMeteoPointsDailyDataCsv(bool isTPrec, QDate firstDate, QDate
     return true;
 }
 
+/*!
+ * \brief ExportHourlyDataCsv
+ * export hourly meteo data to csv files
+ * \param isTPrec           save only variables: Tmin, Tmax, Tavg, Prec
+ * \param idListFileName    filename of ID point list (list by columns)
+ * if idListFile == ""      save ALL active meteo points
+ * \param outputPath        path for output files
+ * \return true on success, false otherwise
+ */
+bool Project::exportMeteoPointsHourlyDataCsv(bool isTPrec, QDate firstDate, QDate lastDate, QString idListFileName, QString outputPath)
+{
+    errorString = "";
+    if (! meteoPointsLoaded)
+    {
+        errorString = "No meteo points loaded.";
+        return false;
+    }
+
+    // check output path
+    QDir outDir(outputPath);
+    if (! outDir.exists())
+    {
+        if (! outDir.mkpath(outputPath))
+        {
+            errorString = "Wrong outputPath, unable to create this directory: " + outputPath;
+            return false;
+        }
+    }
+    outputPath = outDir.absolutePath();
+
+    // check ID list
+    bool isList = (idListFileName != "");
+    QList<QString> idList;
+    if (isList)
+    {
+        if (! QFile::exists(idListFileName))
+        {
+            errorString = "The ID list file does not exist: " + idListFileName;
+            return false;
+        }
+
+        idList = readListSingleColumn(idListFileName, errorString);
+        if (errorString != "")
+            return false;
+
+        if (idList.size() == 0)
+        {
+            errorString = "The ID list file is empty: " + idListFileName;
+            return false;
+        }
+    }
+
+    QSqlDatabase myDb = meteoPointsDbHandler->getDb();
+
+    for (int i = 0; i < meteoPoints.size(); i++)
+    {
+        QString id = QString::fromStdString(meteoPoints[i].id);
+        bool checkId = false;
+        if (! isList && meteoPoints[i].active)
+            checkId = true;
+        if ( isList && idList.contains(id))
+            checkId = true;
+
+        if (checkId)
+        {
+            // read data
+            if (! meteoPointsDbHandler->loadHourlyData(myDb, getCrit3DDate(firstDate), getCrit3DDate(lastDate), meteoPoints[i]))
+            {
+                errorString = "Error in reading point id: " + id;
+                return false;
+            }
+
+            // create csv file
+            QString csvFileName = outputPath + "/" + id + ".csv";
+            QFile outputFile(csvFileName);
+            bool isOk = outputFile.open(QIODevice::WriteOnly | QFile::Truncate);
+            if (! isOk)
+            {
+                errorString = "Open output CSV failed: " + csvFileName;
+                return false;
+            }
+
+            // set header
+            QTextStream out(&outputFile);
+            out << "Date-hour, Tmin (C), Tmax (C), Tavg (C), Prec (mm)";
+            if (isTPrec)
+                out << "\n";
+            else
+                out << "RHmin (%), RHmax (%), RHavg (%), Windspeed (m/s), Rad (MJ)\n";
+
+            // save data
+            QDate currentDate = firstDate;
+            while (currentDate <= lastDate)
+            {
+                Crit3DDate myDate = getCrit3DDate(currentDate);
+
+                for (int myHour = 1; myHour < 25; myHour++)
+                {
+                    QString min = ":00:00";
+                    QString hourString = QString::number(myHour);
+                    out << currentDate.toString("yyyy-MM-dd") << " " << hourString << min;
+
+                    float tavg = meteoPoints[i].getMeteoPointValueH(myDate, myHour, 0, airTemperature);
+                    QString tavgStr = "";
+                    if (tavg != NODATA)
+                        tavgStr = QString::number(tavg);
+
+                    float prec = meteoPoints[i].getMeteoPointValueH(myDate, myHour, 0, precipitation);
+                    QString precStr = "";
+                    if (prec != NODATA)
+                        precStr = QString::number(prec);
+
+                    out << "," << tavgStr << "," << precStr;
+
+                    if (isTPrec)
+                        out << "\n";
+                    else
+                    {
+                        float rhavg = meteoPoints[i].getMeteoPointValueD(myDate, airRelHumidity);
+                        QString rhavgStr = "";
+                        if (rhavg != NODATA)
+                            rhavgStr = QString::number(rhavg);
+
+                        float w_scal_int = meteoPoints[i].getMeteoPointValueD(myDate, windScalarIntensity);
+                        QString w_scal_intStr = "";
+                        if (w_scal_int != NODATA)
+                            w_scal_intStr = QString::number(w_scal_int);
+
+                        float rad = meteoPoints[i].getMeteoPointValueD(myDate, globalIrradiance);
+                        QString radStr = "";
+                        if (rad != NODATA)
+                            radStr = QString::number(rad);
+
+                        out << "," << rhavgStr << "," << w_scal_intStr << "," << radStr << "\n";
+                    }
+
+                }
+                currentDate = currentDate.addDays(1);
+            }
+
+            outputFile.close();
+        }
+    }
+
+    return true;
+}
 
 /* ---------------------------------------------
  * LOG functions
@@ -5635,14 +5760,14 @@ bool Project::waterTableComputeSingleWell(int indexWell)
     double wellUtmY = wellPoints[indexWell].getUtmY();
     Crit3DMeteoPoint linkedMeteoPoint;
 
-    bool isMeteoGridLoaded;
-    if (this->meteoGridDbHandler != nullptr)
+    bool isMeteoGrid;
+    if (meteoGridDbHandler != nullptr)
     {
-        isMeteoGridLoaded = true;
+        isMeteoGrid = true;
     }
-    else if (meteoPoints != nullptr)
+    else if (! meteoPoints.empty())
     {
-        isMeteoGridLoaded = false;
+        isMeteoGrid = false;
     }
     else
     {
@@ -5651,7 +5776,7 @@ bool Project::waterTableComputeSingleWell(int indexWell)
     }
 
     QString idStr = wellPoints[indexWell].getId();
-    if (! waterTableAssignNearestMeteoPoint(isMeteoGridLoaded, wellUtmX, wellUtmY, firstMeteoDate, &linkedMeteoPoint))
+    if (! waterTableAssignNearestMeteoPoint(isMeteoGrid, wellUtmX, wellUtmY, firstMeteoDate, &linkedMeteoPoint))
     {
         logError("Missing weather data near well: " + idStr);
         return false;
@@ -5764,7 +5889,7 @@ bool Project::waterTableAssignNearestMeteoPoint(bool isMeteoGridLoaded, double w
         QDate lastDate = meteoPointsDbHandler->getLastDate(daily).date();
         QSqlDatabase myDb = meteoPointsDbHandler->getDb();
 
-        for (int i = 0; i < nrMeteoPoints; i++)
+        for (int i = 0; i < meteoPoints.size(); i++)
         {
             double utmX = meteoPoints[i].point.utm.x;
             double utmY = meteoPoints[i].point.utm.y;
@@ -5879,10 +6004,10 @@ bool Project::assignAltitudeToAggregationPoints()
     aggregationDEM = new(gis::Crit3DRasterGrid);
     gis::resampleGrid(DEM, aggregationDEM, aggregationRaster->header, aggrAverage, 0.1f);
 
-    setProgressBar("Compute altitude..", nrMeteoPoints);
+    setProgressBar("Compute altitude..", (int)meteoPoints.size());
 
     // compute average altitude from aggregation DEM
-    for (int i = 0; i < nrMeteoPoints; i++)
+    for (int i = 0; i < meteoPoints.size(); i++)
     {
         QString idStr = QString::fromStdString(meteoPoints[i].id);
         QList<QString> idList = idStr.split('_');
@@ -5937,9 +6062,9 @@ bool Project::assignAltitudeToMeteoPoints(double boundarySize)
     QSqlDatabase meteoPointsDb = meteoPointsDbHandler->getDb();
 
     // compute average altitude from DEM
-    setProgressBar("Compute altitude..", nrMeteoPoints);
+    setProgressBar("Compute altitude..", (int)meteoPoints.size());
 
-    for (int i = 0; i < nrMeteoPoints; i++)
+    for (int i = 0; i < meteoPoints.size(); i++)
     {
         QString idStr = QString::fromStdString(meteoPoints[i].id);
         DEM.getRowCol(meteoPoints[i].point.utm.x, meteoPoints[i].point.utm.y, row, col);
@@ -5972,7 +6097,7 @@ bool Project::assignAltitudeToMeteoPoints(double boundarySize)
 void Project::getMeteoPointsCurrentValues(std::vector<float> &validValues)
 {
     // user has selected a set of points
-    for (int i = 0; i < nrMeteoPoints; i++)
+    for (int i = 0; i < meteoPoints.size(); i++)
     {
         if (meteoPoints[i].active && meteoPoints[i].selected)
         {
@@ -5986,7 +6111,7 @@ void Project::getMeteoPointsCurrentValues(std::vector<float> &validValues)
     // no selection: all points
     if (validValues.size() == 0)
     {
-        for (int i = 0; i < nrMeteoPoints; i++)
+        for (int i = 0; i < meteoPoints.size(); i++)
         {
             if (meteoPoints[i].active && meteoPoints[i].currentValue != NODATA)
             {
@@ -6016,7 +6141,7 @@ bool Project::selectPointList(const QList<QString> &pointList)
         return false;
 
     int nrValidPoints = 0;
-    for (int i = 0; i < nrMeteoPoints; i++)
+    for (int i = 0; i < meteoPoints.size(); i++)
     {
         if (pointList.contains(QString::fromStdString(meteoPoints[i].id)))
         {
@@ -6076,8 +6201,10 @@ bool Project::setSelectedStateWithCriteria()
             logError(ERROR_STR_MISSING_DEM);
             return false;
         }
-        setProgressBar("Checking distance...", nrMeteoPoints);
-        for (int i = 0; i < nrMeteoPoints; i++)
+
+        setProgressBar("Checking distance...", (int)meteoPoints.size());
+
+        for (int i = 0; i < meteoPoints.size(); i++)
         {
             updateProgressBar(i);
             if (meteoPoints[i].selected)
@@ -6134,7 +6261,7 @@ bool Project::setSelectedStateWithCriteria()
 
 bool Project::readVmArkimetData(const QList<QString> &vmFileList, frequencyType frequency, bool isPrec0024)
 {
-    if(nrMeteoPoints == 0)
+    if(meteoPoints.size() == 0)
     {
         errorString = ERROR_STR_MISSING_DB;
         return false;
@@ -6191,7 +6318,7 @@ bool Project::computeResidualsAndStatisticsGlocalDetrending(meteoVariable myVar,
             elevationPos = pos;
     }
 
-    for (int j = 0; j < nrMeteoPoints; j++)
+    for (int j = 0; j < meteoPoints.size(); j++)
     {
         meteoPoints[j].residual = NODATA;
     }
@@ -6227,7 +6354,7 @@ bool Project::showMeteoWidgetMultiplePoints()
     std::vector<double> altitude;
     std::vector<std::string> lapseRateCode;
 
-    for (int i = 0; i < nrMeteoPoints; i++)
+    for (int i = 0; i < meteoPoints.size(); i++)
     {
         if (meteoPoints[i].selected)
         {

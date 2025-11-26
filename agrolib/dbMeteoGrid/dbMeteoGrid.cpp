@@ -1286,7 +1286,8 @@ bool Crit3DMeteoGridDbHandler::loadCellProperties(QString &errorStr)
             if (row < _meteoGrid->gridStructure().header().nrRows
                 && col < _meteoGrid->gridStructure().header().nrCols)
             {
-                _meteoGrid->fillMeteoPoint(row, col, code.toStdString(), name.toStdString(), dataset, height, active);
+                double x, y;
+                _meteoGrid->fillMeteoPoint(row, col, code.toStdString(), name.toStdString(), dataset, height, active, x, y);
             }
             else
             {
@@ -1306,8 +1307,8 @@ bool Crit3DMeteoGridDbHandler::newCellProperties(QString &errorStr)
     QString table = "CellsProperties";
     QString statement = QString("CREATE TABLE `%1`"
                                 "(`Code` varchar(6) NOT NULL PRIMARY KEY, `Name` varchar(50), "
-                                "`Row` INT, `Col` INT, `X` DOUBLE(16,2) DEFAULT 0.00, `Y` "
-                                "DOUBLE(16,2) DEFAULT 0.00, `Height` DOUBLE(16,2) DEFAULT 0.00, `Active` INT)").arg(table);
+                                "`Row` INT, `Col` INT, `X` DOUBLE(16,2), `Y` "
+                                "DOUBLE(16,2), `Height` DOUBLE(16,2), `Active` INT)").arg(table);
     if(! qry.exec(statement))
     {
         errorStr = qry.lastError().text();
@@ -1318,25 +1319,26 @@ bool Crit3DMeteoGridDbHandler::newCellProperties(QString &errorStr)
 }
 
 
-bool Crit3DMeteoGridDbHandler::writeCellProperties(int nRows, int nCols, QString &errorStr)
+bool Crit3DMeteoGridDbHandler::writeCellProperties(Crit3DMeteoGridStructure myStructure, QString &errorStr)
 {
     QSqlQuery qry(_db);
     QString table = "CellsProperties";
     int id = 0;
 
     std::string dataset = _connection.name.toStdString();
-    QString statement = QString(("INSERT INTO `%1` (`Code`, `Name`, `Row`, `Col`, `Active`) VALUES ")).arg(table);
+    QString statement = QString(("INSERT INTO `%1` (`Code`, `Row`, `Col`,`X`,`Y`, `Active`) VALUES ")).arg(table);
+    QString myCode;
+    double x, y;
 
     // standard QGis: first value at top left
-    for (int col = 0; col<nCols; col++)
+    for (int col = 0; col < myStructure.nrCol(); col++)
     {
-        for (int row = nRows-1; row>=0; row--)
+        for (int row = myStructure.nrRow() - 1; row>=0; row--)
         {
             id = id + 1;
-            statement += QString(" ('%1','%2','%3','%4',1),").arg(id, 6, 10, QChar('0')).arg(id, 6, 10, QChar('0')).arg(row).arg(col);
-            _meteoGrid->fillMeteoPoint(row, col, QString("%1").arg(id, 6, 10, QChar('0')).toStdString(),
-                                       QString("%1").arg(id, 6, 10, QChar('0')).toStdString(),
-                                       dataset, 0, 1);
+            myCode = QString("%1").arg(id, 6, 10, QChar('0'));
+            _meteoGrid->fillMeteoPoint(row, col, myCode.toStdString(), "", dataset, NODATA, 1, x ,y);
+            statement += QString(" ('%1','%2','%3','%4','%5',1),").arg(myCode).arg(row).arg(col).arg(x).arg(y);
         }
     }
     statement = statement.left(statement.length() - 1);
@@ -1458,7 +1460,8 @@ bool Crit3DMeteoGridDbHandler::loadIdMeteoProperties(QString &errorStr, const QS
             if (row < _meteoGrid->gridStructure().header().nrRows
                 && col < _meteoGrid->gridStructure().header().nrCols)
             {
-                _meteoGrid->fillMeteoPoint(row, col, code.toStdString(), name.toStdString(), dataset, height, active);
+                double x, y;
+                _meteoGrid->fillMeteoPoint(row, col, code.toStdString(), name.toStdString(), dataset, height, active, x, y);
             }
             else
             {
@@ -4205,6 +4208,69 @@ bool Crit3DMeteoGridDbHandler::saveDailyDataCsv(const QString &csvFileName, cons
 }
 
 
+bool Crit3DMeteoGridDbHandler::saveHourlyDataCsv(const QString &csvFileName, const QList<meteoVariable> &variableList,
+                                                const QDate &firstDate, const QDate &lastDate,
+                                                unsigned row, unsigned col, QString &errorStr)
+{
+    // create csv file
+    QFile outputFile(csvFileName);
+    bool isOk = outputFile.open(QIODevice::WriteOnly | QFile::Truncate);
+    if (! isOk)
+    {
+        errorStr = "Open CSV failed: " + csvFileName;
+        return false;
+    }
+
+    // write header
+    QTextStream outStream(&outputFile);
+    outStream << "Date" << "," << "Hour";
+    for (int i = 0; i < variableList.size(); i++)
+    {
+        if (variableList[i] != noMeteoVar)
+        {
+            std::string varName = getMeteoVarName(variableList[i]);
+            std::string unit = getUnitFromVariable(variableList[i]);
+            QString VarString = QString::fromStdString(varName + " (" + unit + ")");
+            outStream << "," + VarString;
+        }
+    }
+    outStream << "\n";
+
+    // write data
+    QDate currentDate = firstDate;
+    while (currentDate < lastDate)
+    {
+        for (int myHour = 1; myHour < 25; myHour++)
+        {
+            outStream << currentDate.toString("yyyy-MM-dd");
+            QString hourString = QString::number(myHour);
+            hourString = hourString.rightJustified(2, QChar('0'));
+            outStream << "," << hourString;
+
+            for (int i = 0; i < variableList.size(); i++)
+            {
+                if (variableList[i] != noMeteoVar)
+                {
+                    float value = _meteoGrid->meteoPointPointer(row, col)->getMeteoPointValueH(getCrit3DDate(currentDate), myHour, 0, variableList[i]);
+                    QString valueString = "";
+                    if (value != NODATA)
+                        valueString = QString::number(value);
+
+                    outStream << "," << valueString;
+                }
+            }
+
+            outStream << "\n";
+        }
+        currentDate = currentDate.addDays(1);
+    }
+
+    outputFile.close();
+    return true;
+}
+
+
+
 /*!
  * \brief ExportDailyDataCsv
  * export gridded daily meteo data to csv files
@@ -4331,6 +4397,145 @@ bool Crit3DMeteoGridDbHandler::exportDailyDataCsv(const QList<meteoVariable> &va
 
     return true;
 }
+
+
+
+
+
+/*!
+ * \brief ExportHourlyDataCsv
+ * export gridded Hourly meteo data to csv files
+ * \param variableList      list of meteo variables
+ * \param idListFileName    text file of cells id list by columns - default (empty): ALL cells
+ * \param outputPath        path for output files
+ * \return true on success, false otherwise
+ */
+bool Crit3DMeteoGridDbHandler::exportHourlyDataCsv(const QList<meteoVariable> &variableList, const QDate &firstDate,
+                                                  const QDate &lastDate, const QString &idListFileName,
+                                                  QString &outputPath, QString &errorStr)
+{
+    errorStr = "";
+
+    // check output path
+    if (outputPath == "")
+    {
+        errorStr = "Missing output path.";
+        return false;
+    }
+
+    QDir outDir(outputPath);
+    // make directory
+    if (! outDir.exists())
+    {
+        if (! outDir.mkpath(outputPath))
+        {
+            errorStr = "Wrong output path, unable to create directory: " + outputPath;
+            return false;
+        }
+    }
+    outputPath = outDir.absolutePath();
+
+    bool isList = (! idListFileName.isEmpty());
+    QList<QString> idList;
+    if (isList)
+    {
+        if (! QFile::exists(idListFileName))
+        {
+            errorStr = "The ID list does not exist: " + idListFileName;
+            return false;
+        }
+
+        idList = readListSingleColumn(idListFileName, errorStr);
+        if (errorStr != "")
+            return false;
+
+        if (idList.size() == 0)
+        {
+            errorStr = "The ID list is empty: " + idListFileName;
+            return false;
+        }
+    }
+
+    QDateTime firstDateTime(firstDate, QTime(1,0,0), Qt::UTC);
+    QDateTime lastDateTime(lastDate, QTime(0,0,0), Qt::UTC);
+
+    int nrValidCells = 0;
+    for (int row = 0; row < gridStructure().header().nrRows; row++)
+    {
+        for (int col = 0; col < gridStructure().header().nrCols; col++)
+        {
+            QString id = QString::fromStdString(meteoGrid()->meteoPoints()[row][col]->id);
+            if (idList.contains(id) || (! isList && meteoGrid()->meteoPoints()[row][col]->active))
+            {
+                // read data
+                if (gridStructure().isEnsemble())
+                {
+                    for (int i = 1; i <= gridStructure().nrMembers(); i++)
+                    {
+                        if (loadGridHourlyDataEnsemble(errorStr, id, i, firstDateTime, lastDateTime))
+                        {
+                            QString csvFileName = outputPath + "/" + id + "_" + QString::number(i) + ".csv";
+
+                            if (saveHourlyDataCsv(csvFileName, variableList, firstDate, lastDate, row, col, errorStr))
+                            {
+                                nrValidCells++;
+                            }
+                            else
+                            {
+                                std::cout << errorStr.toStdString();
+                            }
+                        }
+                        else
+                        {
+                            std::cout << errorStr.toStdString();
+                        }
+                    }
+                }
+                else
+                {
+                    bool isOk;
+                    if (gridStructure().isFixedFields())
+                    {
+                        isOk = loadGridHourlyDataFixedFields(errorStr, id, firstDateTime, lastDateTime);
+                    }
+                    else
+                    {
+
+
+                        isOk = loadGridHourlyData(db(), id, firstDateTime, lastDateTime, errorStr);
+
+                    }
+
+                    if (isOk)
+                    {
+                        nrValidCells++;
+                    }
+                    else
+                    {
+                        std::cout << "Error in reading cell id: " << id.toStdString() << "\n";
+                        continue;
+                    }
+
+                    QString csvFileName = outputPath + "/" + id + ".csv";
+                    if (! saveHourlyDataCsv(csvFileName, variableList, firstDate, lastDate, row, col, errorStr))
+                    {
+                        std::cout << errorStr.toStdString();
+                    }
+                }
+            }
+        }
+    }
+
+    if (nrValidCells == 0)
+    {
+        errorStr = "No valid cell.";
+        return false;
+    }
+
+    return true;
+}
+
+
 
 
 bool Crit3DMeteoGridDbHandler::MeteoGridToRasterFlt(double cellSize, const gis::Crit3DGisSettings& gisSettings, gis::Crit3DRasterGrid& myGrid)

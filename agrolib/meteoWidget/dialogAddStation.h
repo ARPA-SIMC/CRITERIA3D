@@ -15,13 +15,11 @@ private:
 
     QComboBox* _listActiveStationsWidget;
     QLineEdit* _singleValueEdit;
-    Crit3DMeteoPoint* _allMeteoPointsPointer;
     QListWidget* _listNearStationsWidget;
-
-    int _nrAllMeteoPoints;
+    std::vector<Crit3DMeteoPoint> _allMeteoPoints;
 
 public:
-    DialogAddStation(const QList<QString> &activeStationsList, Crit3DMeteoPoint *allMeteoPointsPointer, int nrAllMeteoPoints);
+    DialogAddStation(const QList<QString> &activeStationsList, const std::vector<Crit3DMeteoPoint> &allMeteoPoints);
 
     double getSingleValue();
     void searchStations();

@@ -196,6 +196,6 @@
     };
 
 
-    bool isSelectionPointsActive(Crit3DMeteoPoint* meteoPoints,int nrMeteoPoints);
+    bool isSelectionPointsActive(const std::vector<Crit3DMeteoPoint> &meteoPoints);
 
 #endif // METEOPOINT_H

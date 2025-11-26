@@ -13,10 +13,10 @@
         Q_OBJECT
 
         public:
-        Crit3DProxyWidget(Crit3DInterpolationSettings &interpolationSettings, Crit3DMeteoPoint* meteoPoints, int nrMeteoPoints,
-                          frequencyType currentFrequency, QDate currentDate, int currentHour, Crit3DQuality* quality,
-                          Crit3DInterpolationSettings &SQinterpolationSettings, Crit3DMeteoSettings *meteoSettings,
-                          Crit3DClimateParameters *climateParameters, bool checkSpatialQuality, int macroAreaNumber);
+        Crit3DProxyWidget(Crit3DInterpolationSettings &_interpolationSettings, const std::vector<Crit3DMeteoPoint> meteoPoints,
+                              frequencyType currentFrequency, QDate currentDate, int currentHour, Crit3DQuality *quality,
+                              Crit3DInterpolationSettings &SQinterpolationSettings, Crit3DMeteoSettings *meteoSettings,
+                              Crit3DClimateParameters *climateParameters, bool checkSpatialQuality, int macroAreaNumber);
 
             ~Crit3DProxyWidget() override;
             void closeEvent(QCloseEvent *event) override;
@@ -31,8 +31,7 @@
 
     private:
             Crit3DInterpolationSettings _interpolationSettings;
-            Crit3DMeteoPoint* _meteoPoints;
-            int _nrMeteoPoints;
+            std::vector<Crit3DMeteoPoint> _meteoPoints;
             frequencyType _currentFrequency;
             QDate _currentDate;
             int _currentHour;

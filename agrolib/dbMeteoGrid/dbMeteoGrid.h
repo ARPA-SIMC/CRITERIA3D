@@ -108,7 +108,7 @@
 
         bool loadCellProperties(QString &errorStr);
         bool newCellProperties(QString &errorStr);
-        bool writeCellProperties(int nRows, int nCols, QString &errorStr);
+        bool writeCellProperties(Crit3DMeteoGridStructure myStructure, QString &errorStr);
         bool loadIdMeteoProperties(QString &errorStr, const QString &idMeteo);
         bool updateMeteoGridDate(QString &errorStr);
 
@@ -205,9 +205,13 @@
 
         bool setActiveStateCellsInList(QString &errorStr, const QList<QString> &idList, bool activeState);
 
+        bool saveHourlyDataCsv(const QString &csvFileName, const QList<meteoVariable> &variableList,
+                               const QDate &firstDate, const QDate &lastDate,unsigned row, unsigned col, QString &errorStr);
         bool saveDailyDataCsv(const QString &csvFileName, const QList<meteoVariable> &variableList,
                               const QDate &firstDate, const QDate &lastDate, unsigned row, unsigned col, QString &errorStr);
 
+        bool exportHourlyDataCsv(const QList<meteoVariable> &variableList, const QDate &firstDate,
+                                const QDate &lastDate, const QString &idListFileName, QString &outputPath, QString &errorStr);
         bool exportDailyDataCsv(const QList<meteoVariable> &variableList, const QDate &firstDate,
                                 const QDate &lastDate, const QString &idListFileName, QString &outputPath, QString &errorStr);
 

@@ -44,10 +44,11 @@ float computePointTransmissivitySamani(float tmin, float tmax, float samaniCoeff
 }
 
 
-bool computeTransmissivity(Crit3DRadiationSettings* mySettings, Crit3DMeteoPoint* meteoPoints, int nrMeteoPoints, int intervalWidth,
-                          Crit3DTime myTime, const gis::Crit3DRasterGrid& myDEM)
+bool computeTransmissivity(Crit3DRadiationSettings *mySettings, std::vector<Crit3DMeteoPoint> &meteoPoints,
+                           int intervalWidth, Crit3DTime myTime, const gis::Crit3DRasterGrid& myDEM)
 {
-    if (nrMeteoPoints <= 0) return false;
+    if (meteoPoints.empty())
+        return false;
 
     int hourlyFraction = meteoPoints[0].hourlyFraction;
     int deltaSeconds = 3600 / hourlyFraction;
@@ -63,7 +64,7 @@ bool computeTransmissivity(Crit3DRadiationSettings* mySettings, Crit3DMeteoPoint
 
     gis::Crit3DPoint myPoint;
 
-    for (int i = 0; i < nrMeteoPoints; i++)
+    for (int i = 0; i < meteoPoints.size(); i++)
     {
         float myRad = meteoPoints[i].getMeteoPointValueH(myTime.date, myTime.getHour(),
                                                          myTime.getMinutes(), globalIrradiance);
@@ -100,9 +101,10 @@ bool computeTransmissivity(Crit3DRadiationSettings* mySettings, Crit3DMeteoPoint
 }
 
 
-bool computeTransmissivityFromTRange(Crit3DMeteoPoint* meteoPoints, int nrMeteoPoints, Crit3DTime currentTime)
+bool computeTransmissivityFromTRange(std::vector<Crit3DMeteoPoint> &meteoPoints, Crit3DTime currentTime)
 {
-    if (nrMeteoPoints <= 0) return false;
+    if (meteoPoints.empty())
+        return false;
 
     int hourlyFraction = meteoPoints[0].hourlyFraction;
     int deltaSeconds = 3600 / hourlyFraction;
@@ -113,7 +115,7 @@ bool computeTransmissivityFromTRange(Crit3DMeteoPoint* meteoPoints, int nrMeteoP
 
     int counterValidPoints = 0;
 
-    for (int i = 0; i < nrMeteoPoints; i++)
+    for (int i = 0; i < meteoPoints.size(); i++)
     {
         bool isValidTRange = false;
 

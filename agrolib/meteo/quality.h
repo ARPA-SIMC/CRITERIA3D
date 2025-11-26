@@ -74,7 +74,7 @@
 
         quality::Range* getQualityRange(meteoVariable myVar);
 
-        void syntacticQualityControl(meteoVariable myVar, Crit3DMeteoPoint* meteoPoints, int nrMeteoPoints);
+        void syntacticQualityControl(meteoVariable myVar, std::vector<Crit3DMeteoPoint> &meteoPoints);
 
         quality::qualityType syntacticQualitySingleValue(meteoVariable myVar, float myValue);
 
