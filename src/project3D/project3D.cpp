@@ -1221,26 +1221,26 @@ void Project3D::runWaterFluxes3DModel(double totalTimeStep, bool isRestart)
         emit updateOutputSignal();
 
     double runoff = soilFluxes3D::getTotalBoundaryWaterFlow(soilFluxes3D::boundaryType_t::Runoff);
-    logInfo("runoff [m3]: " + QString::number(runoff, 'f', 7));
+    logInfo("runoff [m3]: " + QString::number(runoff));
 
     double freeDrainage = soilFluxes3D::getTotalBoundaryWaterFlow(soilFluxes3D::boundaryType_t::FreeDrainage);
-    logInfo("free drainage [m3]: " + QString::number(freeDrainage, 'f', 7));
+    logInfo("free drainage [m3]: " + QString::number(freeDrainage));
 
     double lateralDrainage = soilFluxes3D::getTotalBoundaryWaterFlow(soilFluxes3D::boundaryType_t::FreeLateraleDrainage);
-    logInfo("lateral drainage [m3]: " + QString::number(lateralDrainage, 'f', 7));
+    logInfo("lateral drainage [m3]: " + QString::number(lateralDrainage));
 
     double forecastWaterContent = previousTotalWaterContent + runoff + freeDrainage + lateralDrainage
                                   + totalPrecipitation - totalEvaporation - totalTranspiration;
     double currentWaterContent = soilFluxes3D::getTotalWaterContent();
     double massBalanceError = currentWaterContent - forecastWaterContent;
 
-    logInfo("Mass balance error [m3]: " + QString::number(massBalanceError, 'f', 7));
+    logInfo("Mass balance error [m3]: " + QString::number(massBalanceError));
 	double surfaceArea = DEM.header->cellSize * DEM.header->cellSize * nrSurfaceNodes;      // [m2]
     double error_mm = massBalanceError / surfaceArea * 1000;                                // [mm]
     logInfo("Mass balance error [mm]: " + QString::number(error_mm));
 
     totalMassBalanceError += massBalanceError;
-    logInfo("Total mass balance error [m3]: " + QString::number(totalMassBalanceError, 'f', 7));
+    logInfo("Total mass balance error [m3]: " + QString::number(totalMassBalanceError));
 }
 
 
