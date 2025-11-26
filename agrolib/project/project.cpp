@@ -102,7 +102,11 @@ void Project::initializeProject()
     currentDbOutputFileName = "";
 	glocalMapName = "";
     glocalPointsName = "";
+
     meteoPointsLoaded = false;
+    isMeteoPointsDaily = false;
+    isMeteoPointsHourly = false;
+
     meteoGridLoaded = false;
     loadGridDataAtStart = false;
 
@@ -986,6 +990,8 @@ void Project::closeMeteoPointsDB()
 
     dbPointsFileName = "";
     meteoPointsLoaded = false;
+    isMeteoPointsDaily = false;
+    isMeteoPointsHourly = false;
 }
 
 
@@ -1479,11 +1485,11 @@ bool Project::loadMeteoPointsData(const QDate& firstDate, const QDate& lastDate,
         #pragma omp for schedule(dynamic)
         for (int i=0; i < nrMeteoPoints; ++i)
         {
-            if (loadHourly)
+            if (loadHourly && isMeteoPointsHourly)
                 if (meteoPointsDbHandler->loadHourlyData(myDb, myFirstDate, myLastDate, meteoPoints[i]))
                     isDataOk[i] = true;
 
-            if (loadDaily)
+            if (loadDaily && isMeteoPointsDaily)
                 if (meteoPointsDbHandler->loadDailyData(myDb, myFirstDate, myLastDate, meteoPoints[i]))
                     isDataOk[i] = true;
 
@@ -1848,20 +1854,17 @@ QDateTime Project::findDbPointLastTime()
     QDateTime lastTime;
     lastTime.setTimeZone(QTimeZone::utc());
 
-    QDateTime lastDateD;
-    lastDateD.setTimeZone(QTimeZone::utc());
-    lastDateD = meteoPointsDbHandler->getLastDate(daily);
+    QDateTime lastDateD = meteoPointsDbHandler->getLastDate(daily);
     if (! lastDateD.isNull())
     {
+        isMeteoPointsDaily = true;
         lastTime = lastDateD;
     }
 
-    QDateTime lastDateH;
-    lastDateH.setTimeZone(QTimeZone::utc());
-    lastDateH = meteoPointsDbHandler->getLastDate(hourly);
-
-    if (!lastDateH.isNull())
+    QDateTime lastDateH = meteoPointsDbHandler->getLastDate(hourly);
+    if (! lastDateH.isNull())
     {
+        isMeteoPointsHourly = true;
         if (!lastDateD.isNull())
         {
             lastTime = (lastDateD > lastDateH) ? lastDateD : lastDateH;
