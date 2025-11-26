@@ -2,8 +2,8 @@
 #include "commonConstants.h"
 #include "gis.h"
 
-DialogAddStation::DialogAddStation(const QList<QString> &activeStationsList, Crit3DMeteoPoint *allMeteoPointsPointer, int nrAllMeteoPoints)
-    : _activeStationsList(activeStationsList), _allMeteoPointsPointer(allMeteoPointsPointer), _nrAllMeteoPoints(nrAllMeteoPoints)
+DialogAddStation::DialogAddStation(const QList<QString> &activeStationsList, const std::vector<Crit3DMeteoPoint> &allMeteoPoints)
+    : _activeStationsList(activeStationsList), _allMeteoPoints(allMeteoPoints)
 {
     setWindowTitle("Add stations");
 
@@ -81,21 +81,21 @@ void DialogAddStation::searchStations()
         return;
     }
 
-    for (int i=0; i < _nrAllMeteoPoints; i++)
+    for (int i=0; i < _allMeteoPoints.size(); i++)
     {
-        if (myStation == _allMeteoPointsPointer[i].name)
+        if (myStation == _allMeteoPoints[i].name)
         {
-            Crit3DMeteoPoint myStationMp = _allMeteoPointsPointer[i];
+            Crit3DMeteoPoint myStationMp = _allMeteoPoints[i];
             double X0 = myStationMp.point.utm.x;
             double Y0 = myStationMp.point.utm.y;
 
             _nearStationsList.clear();
-            for (int j=0; j < _nrAllMeteoPoints; j++)
+            for (int j=0; j < _allMeteoPoints.size(); j++)
             {
-                double computedDistance = gis::computeDistance(X0, Y0, _allMeteoPointsPointer[j].point.utm.x, _allMeteoPointsPointer[j].point.utm.y);
+                double computedDistance = gis::computeDistance(X0, Y0, _allMeteoPoints[j].point.utm.x, _allMeteoPoints[j].point.utm.y);
                 if (computedDistance <= chosenDistance)
                 {
-                    _nearStationsList.append(QString::fromStdString(_allMeteoPointsPointer[j].name));
+                    _nearStationsList.append(QString::fromStdString(_allMeteoPoints[j].name));
                 }
             }
 

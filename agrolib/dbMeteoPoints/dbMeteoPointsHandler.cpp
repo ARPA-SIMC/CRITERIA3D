@@ -561,14 +561,12 @@ bool Crit3DMeteoPointsDbHandler::loadDailyData(const QSqlDatabase &myDb, const C
     QSqlQuery query(myDb);
     if(! query.exec(statement))
     {
-        _errorStr = query.lastError().text();
         meteoPoint.nrObsDataDaysD = 0;
         return false;
     }
 
     if (! query.next())
     {
-        _errorStr = "No data.";
         meteoPoint.nrObsDataDaysD = 0;
         return false;
     }
@@ -630,16 +628,10 @@ bool Crit3DMeteoPointsDbHandler::loadHourlyData(const QSqlDatabase &myDb, const 
 
     QSqlQuery qry(myDb);
     if(! qry.exec(statement) )
-    {
-        _errorStr = qry.lastError().text();
         return false;
-    }
 
     if (! qry.next())
-    {
-        _errorStr = "No data.";
         return false;
-    }
 
     // initialize obs data
     int numberOfDays = difference(firstDate, lastDate) + 1;

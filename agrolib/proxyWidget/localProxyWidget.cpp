@@ -12,13 +12,14 @@
 
 
 Crit3DLocalProxyWidget::Crit3DLocalProxyWidget(double x, double y, double zDEM, double zGrid, gis::Crit3DGisSettings gisSettings,
-                                               Crit3DInterpolationSettings &interpolationSettings, Crit3DMeteoPoint *meteoPoints,
-                                               int nrMeteoPoints, meteoVariable currentVariable, frequencyType currentFrequency,
+                                               Crit3DInterpolationSettings &interpolationSettings,
+                                               const std::vector<Crit3DMeteoPoint> meteoPoints,
+                                               meteoVariable currentVariable, frequencyType currentFrequency,
                                                QDate currentDate, int currentHour, Crit3DQuality *quality,
                                                Crit3DInterpolationSettings &SQinterpolationSettings, Crit3DMeteoSettings *meteoSettings,
                                                Crit3DClimateParameters *climateParameters, bool checkSpatialQuality)
     :_x(x), _y(y), _zDEM(zDEM), _zGrid(zGrid), _gisSettings(gisSettings), _interpolationSettings(interpolationSettings),
-    _meteoPoints(meteoPoints), _nrMeteoPoints(nrMeteoPoints), _currentVariable(currentVariable), _currentFrequency(currentFrequency),
+    _meteoPoints(meteoPoints), _currentVariable(currentVariable), _currentFrequency(currentFrequency),
     _currentDate(currentDate), _currentHour(currentHour), _quality(quality), _SQinterpolationSettings(SQinterpolationSettings),
     _meteoSettings(meteoSettings), _climateParameters(climateParameters), _checkSpatialQuality(checkSpatialQuality)
 {
@@ -355,7 +356,7 @@ void Crit3DLocalProxyWidget::plot()
     {
         outInterpolationPoints.clear();
 
-        checkAndPassDataToInterpolation(_quality, myVar, _meteoPoints, _nrMeteoPoints, getCurrentTime(), _SQinterpolationSettings,
+        checkAndPassDataToInterpolation(_quality, myVar, _meteoPoints, getCurrentTime(), _SQinterpolationSettings,
                                         _interpolationSettings, _meteoSettings, _climateParameters,
                                         outInterpolationPoints, _checkSpatialQuality, errorStdStr);
 
@@ -365,7 +366,7 @@ void Crit3DLocalProxyWidget::plot()
     }
     else
     {
-        checkAndPassDataToInterpolation(_quality, myVar, _meteoPoints, _nrMeteoPoints, getCurrentTime(), _SQinterpolationSettings,
+        checkAndPassDataToInterpolation(_quality, myVar, _meteoPoints, getCurrentTime(), _SQinterpolationSettings,
                                         _interpolationSettings, _meteoSettings, _climateParameters,
                                         outInterpolationPoints, _checkSpatialQuality, errorStdStr);
         localSelection(outInterpolationPoints, subsetInterpolationPoints, _x, _y, _interpolationSettings, false);
@@ -383,7 +384,7 @@ void Crit3DLocalProxyWidget::plot()
             {
                 outInterpolationPoints.clear();
 
-                checkAndPassDataToInterpolation(_quality, myVar, _meteoPoints, _nrMeteoPoints, getCurrentTime(), _SQinterpolationSettings,
+                checkAndPassDataToInterpolation(_quality, myVar, _meteoPoints, getCurrentTime(), _SQinterpolationSettings,
                                                 _interpolationSettings, _meteoSettings, _climateParameters,
                                                 outInterpolationPoints, _checkSpatialQuality, errorStdStr);
 
@@ -402,7 +403,7 @@ void Crit3DLocalProxyWidget::plot()
             else
             {
                 outInterpolationPoints.clear();
-                checkAndPassDataToInterpolation(_quality, myVar, _meteoPoints, _nrMeteoPoints, getCurrentTime(), _SQinterpolationSettings,
+                checkAndPassDataToInterpolation(_quality, myVar, _meteoPoints, getCurrentTime(), _SQinterpolationSettings,
                                                 _interpolationSettings, _meteoSettings, _climateParameters,
                                                 outInterpolationPoints, _checkSpatialQuality, errorStdStr);
 
@@ -716,7 +717,7 @@ void Crit3DLocalProxyWidget::showParametersDetails()
             std::vector<int> stations = myArea.getMeteoPoints();
 
             outInterpolationPoints.clear();
-            checkAndPassDataToInterpolation(_quality, myVar, _meteoPoints, _nrMeteoPoints, getCurrentTime(), _SQinterpolationSettings,
+            checkAndPassDataToInterpolation(_quality, myVar, _meteoPoints, getCurrentTime(), _SQinterpolationSettings,
                                             _interpolationSettings, _meteoSettings, _climateParameters,
                                             outInterpolationPoints, _checkSpatialQuality, errorStdStr);
 

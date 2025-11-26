@@ -143,7 +143,7 @@ quality::Range* Crit3DQuality::getQualityRange(meteoVariable myVar)
 }
 
 
-void Crit3DQuality::syntacticQualityControl(meteoVariable myVar, Crit3DMeteoPoint* meteoPoints, int nrMeteoPoints)
+void Crit3DQuality::syntacticQualityControl(meteoVariable myVar, std::vector<Crit3DMeteoPoint> &meteoPoints)
 {
     float qualityMin = NODATA;
     float qualityMax = NODATA;
@@ -155,10 +155,12 @@ void Crit3DQuality::syntacticQualityControl(meteoVariable myVar, Crit3DMeteoPoin
         qualityMax = myRange->getMax();
     }
 
-    for (int i = 0; i < nrMeteoPoints; i++)
+    for (int i = 0; i < meteoPoints.size(); i++)
     {
         if (isEqual(meteoPoints[i].currentValue, NODATA))
+        {
             meteoPoints[i].quality = quality::missing_data;
+        }
         else
         {
             if (myRange == nullptr)
@@ -168,9 +170,13 @@ void Crit3DQuality::syntacticQualityControl(meteoVariable myVar, Crit3DMeteoPoin
             else
             {
                 if (meteoPoints[i].currentValue < qualityMin || meteoPoints[i].currentValue > qualityMax)
+                {
                     meteoPoints[i].quality = quality::wrong_syntactic;
+                }
                 else
+                {
                     meteoPoints[i].quality = quality::accepted;
+                }
             }
         }
     }
