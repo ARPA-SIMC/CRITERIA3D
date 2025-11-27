@@ -826,8 +826,9 @@ float shepardSearchNeighbour(const std::vector<Crit3DInterpolationDataPoint> &in
         }
     }
 
+    //commentato per discontinuità
     // If the points are too few, double the check radius
-    if (firstNeighbourPoints.size() < SHEPARD_MIN_NRPOINTS)
+    /*if (firstNeighbourPoints.size() < SHEPARD_MIN_NRPOINTS)
     {
         float doubleRadius = shepardInitialRadius * 2;
         for (unsigned int i=0; i < inputPoints.size(); i++)
@@ -840,7 +841,7 @@ float shepardSearchNeighbour(const std::vector<Crit3DInterpolationDataPoint> &in
             }
         }
         shepardInitialRadius = doubleRadius;
-    }
+    }*/
 
     float radius;
 
