@@ -131,7 +131,7 @@ unsigned sortPointsByDistance(unsigned maxNrPoints, const std::vector<Crit3DInte
     // initializes the indices list
     std::vector<int> indices;
     indices.reserve(pointList.size());
-    for (std::size_t i = 0; i < pointList.size(); ++i)
+    for (int i = 0; i < (int)pointList.size(); ++i)
     {
         if (! isEqual(distances[i], 0) && ! isEqual(distances[i], NODATA))
             indices.push_back(i);
