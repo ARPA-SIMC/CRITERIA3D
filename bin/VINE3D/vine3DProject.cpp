@@ -55,7 +55,7 @@ void Vine3DProject::initializeVine3DProject()
 
 void Vine3DProject::clearVine3DProject()
 {
-    if (isProjectLoaded)
+    if (isProjectLoaded())
     {
         logInfo("Close Project");
         dbVine3D.close();
@@ -80,7 +80,6 @@ void Vine3DProject::loadVine3DSettings()
 
     projectSettings->beginGroup("settings");
 
-        computationSoilDepth = projectSettings->value("soil_depth").toDouble();
         computeDiseases = projectSettings->value("compute_diseases").toBool();
 
     projectSettings->endGroup();
@@ -132,6 +131,9 @@ bool Vine3DProject::loadVine3DProject(QString projectFileName)
     if (! loadProject())
         return false;
 
+    if (! loadProject3DParameters())
+        return false;
+
     logInfo("Initialize DEM and project maps...");
 
     vine3DMapsH = new Vine3DHourlyMaps(DEM);
@@ -143,17 +145,6 @@ bool Vine3DProject::loadVine3DProject(QString projectFileName)
     {
         logError();
         return false;
-    }
-
-    waterFluxesParameters.computeOnlySurface = false;
-    if (computationSoilDepth > 0)
-    {
-        waterFluxesParameters.imposedComputationDepth = computationSoilDepth;
-        waterFluxesParameters.computeAllSoilDepth = false;
-    }
-    else
-    {
-        waterFluxesParameters.computeAllSoilDepth = true;
     }
 
     // vine database
@@ -214,7 +205,7 @@ bool Vine3DProject::loadVine3DProject(QString projectFileName)
     }
 
     logInfo("Project loaded");
-    isProjectLoaded = true;
+    setProjectLoaded(true);
 
     return true;
 }
@@ -398,6 +389,46 @@ bool Vine3DProject::loadFieldBook()
             }
         }
     }
+
+    return true;
+}
+
+
+bool Vine3DProject::writeCriteria3DParameters()
+{
+    QString fileName = getCompleteFileName(parametersFileName, PATH_SETTINGS);
+    if (! QFile(fileName).exists() || ! QFileInfo(fileName).isFile())
+    {
+        logError("Missing parametersSettings file: " + fileName);
+        return false;
+    }
+    if (parametersSettings == nullptr)
+    {
+        logError("parametersSettings is null");
+        return false;
+    }
+
+    parametersSettings->setValue("soilWaterFluxes/isInitialWaterPotential", waterFluxesParameters.isInitialWaterPotential);
+    parametersSettings->setValue("soilWaterFluxes/initialWaterPotential", waterFluxesParameters.initialWaterPotential);
+    parametersSettings->setValue("soilWaterFluxes/initialDegreeOfSaturation", waterFluxesParameters.initialDegreeOfSaturation);
+
+    parametersSettings->setValue("soilWaterFluxes/computeOnlySurface", waterFluxesParameters.computeOnlySurface);
+    parametersSettings->setValue("soilWaterFluxes/computeAllSoilDepth", waterFluxesParameters.computeAllSoilDepth);
+    parametersSettings->setValue("soilWaterFluxes/imposedComputationDepth", waterFluxesParameters.imposedComputationDepth);
+
+    parametersSettings->setValue("soilWaterFluxes/conductivityHorizVertRatio", waterFluxesParameters.conductivityHorizVertRatio);
+
+    parametersSettings->setValue("soilWaterFluxes/freeCatchmentRunoff", waterFluxesParameters.freeCatchmentRunoff);
+    parametersSettings->setValue("soilWaterFluxes/freeBottomDrainage", waterFluxesParameters.freeBottomDrainage);
+    parametersSettings->setValue("soilWaterFluxes/freeLateralDrainage", waterFluxesParameters.freeLateralDrainage);
+
+    parametersSettings->setValue("soilWaterFluxes/modelAccuracy", waterFluxesParameters.modelAccuracy);
+    parametersSettings->setValue("soilWaterFluxes/numberOfThreads", waterFluxesParameters.numberOfThreads);
+
+    // TODO parametri soil crack
+    // parametersSettings->setValue("soilCracking/ ", );
+
+    parametersSettings->sync();
 
     return true;
 }
@@ -684,8 +715,8 @@ bool Vine3DProject::loadDBPoints()
         return(false);
     }
 
-    nrMeteoPoints = query.size();
-    meteoPoints = new Crit3DMeteoPoint[nrMeteoPoints];
+    meteoPoints.size() = query.size();
+    meteoPoints = new Crit3DMeteoPoint[meteoPoints.size()];
 
     //read values
     int i = 0;
@@ -716,7 +747,7 @@ bool Vine3DProject::loadDBPoints()
 
     if (dbVine3D.isOpen())
     {
-        for (int i = 0; i < this->nrMeteoPoints; i++)
+        for (int i = 0; i < this->meteoPoints.size(); i++)
         {
             if (! readPointProxyValues(&(this->meteoPoints[i]), &(this->dbVine3D)))
             {
@@ -778,7 +809,7 @@ bool Vine3DProject::loadObsDataSubHourly(int indexPoint, meteoVariable myVar, QD
     QString queryString;
     float myValue;
 
-    if (nrMeteoPoints <= indexPoint)
+    if (meteoPoints.size() <= indexPoint)
     {
         logError("Function loadObsData: wrong point index");
         return(false);
@@ -835,7 +866,7 @@ bool Vine3DProject::loadObsDataHourly(int indexPoint, QDate d1, QDate d2, QStrin
     bool isValid;
     bool dataAvailable = false;
 
-    if (nrMeteoPoints <= indexPoint)
+    if (meteoPoints.size() <= indexPoint)
     {
         logError("Function loadObsDataHourly: wrong point index");
         return(false);
@@ -918,7 +949,7 @@ bool Vine3DProject::loadObsDataHourlyVar(int indexPoint, meteoVariable myVar, QD
     int* varIndices;
     bool dataAvailable=false;
 
-    if (nrMeteoPoints <= indexPoint)
+    if (meteoPoints.size() <= indexPoint)
     {
         logError("Function loadObsDataBoundary: wrong point index");
         return(false);
@@ -1014,10 +1045,10 @@ bool Vine3DProject::loadObsDataAllPoints(QDate d1, QDate d2, bool showInfo)
     if (showInfo)
     {
         infoStr = "Loading data from " + d1.toString() + " to " + d2.toString();
-        setProgressBar(infoStr, nrMeteoPoints);
+        setProgressBar(infoStr, meteoPoints.size());
     }
 
-    for (int i = 0; i < nrMeteoPoints; i++)
+    for (int i = 0; i < meteoPoints.size(); i++)
     {
         if (showInfo)
             if ((i % step) == 0)
@@ -1065,7 +1096,7 @@ bool Vine3DProject::loadObsDataAllPointsVar(meteoVariable myVar, QDate d1, QDate
     Crit3DDate dateIni = getCrit3DDate(d1);
     Crit3DDate dateFin = getCrit3DDate(d2);
 
-    for (int i = 0; i < nrMeteoPoints; i++)
+    for (int i = 0; i < meteoPoints.size(); i++)
     {
         if (! meteoPoints[i].isDateIntervalLoadedH(dateIni,dateFin))
             meteoPoints[i].initializeObsDataH(hourlyFraction, nrDays, dateIni);
@@ -1102,7 +1133,7 @@ float Vine3DProject::getTimeStep()
 
 bool Vine3DProject::runModels(QDateTime firstTime, QDateTime lastTime, bool saveOutput)
 {
-    if (! isProjectLoaded)
+    if (! isProjectLoaded())
     {
         logError("Load a project before.");
         return false;
@@ -1404,8 +1435,6 @@ bool Vine3DProject::computeVine3DWaterSinkSource()
     long surfaceIndex, nodeIndex;
     double prec, waterSource;
     double transp, flow;
-    int myResult;
-    QString myError;
 
     //initialize
     totalPrecipitation = 0;
@@ -1492,12 +1521,7 @@ bool Vine3DProject::computeVine3DWaterSinkSource()
 
     for (unsigned long i = 0; i < nrNodes; i++)
     {
-        myResult = soilFluxes3D::setWaterSinkSource(signed(i), waterSinkSource.at(i));
-        if (isCrit3dError(myResult, myError))
-        {
-            logError("waterBalanceSinkSource:" + myError);
-            return false;
-        }
+        soilFluxes3D::setNodeWaterSinkSource(i, waterSinkSource.at(i));
     }
 
     return true;
@@ -1573,15 +1597,15 @@ void Vine3DProject::updateWaterBalanceMaps()
                 do
                 {
                     nodeIndex = long(indexMap.at(size_t(layer)).value[row][col]);
-                    flow = soilFluxes3D::getSumLateralWaterFlowIn(nodeIndex);
-                    outputWaterBalanceMaps->waterInflowMap->value[row][col] += float(flow * 1000); //liters
+                    flow = soilFluxes3D::getNodeSumLateralWaterFlowIn(nodeIndex);
+                    outputWaterBalanceMaps->waterInflowMap->value[row][col] += float(flow * 1000);  // liters
 
                     layer++;
                 } while (layer < nrLayers && isWithinSoil(soilIndex, layerDepth.at(size_t(layer))));
 
                 nodeIndex = long(indexMap.at(size_t(--layer)).value[row][col]);
 
-                flow = soilFluxes3D::getBoundaryWaterFlow(nodeIndex); //m3
+                flow = soilFluxes3D::getNodeBoundaryWaterFlow(nodeIndex);   // m3
                 flow_mm = flow * 1000 / area;
                 outputWaterBalanceMaps->bottomDrainageMap->value[row][col] -= float(flow_mm);
             }

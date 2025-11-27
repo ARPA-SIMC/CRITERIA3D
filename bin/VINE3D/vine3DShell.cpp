@@ -112,7 +112,7 @@ bool Vine3DProject::vine3dShell()
     openNewConsole();
 #endif
 
-    while (! requestedExit)
+    while (! isRequestedExit())
     {
         QString commandLine = getCommandLine("VINE3D");
         if (commandLine != "")

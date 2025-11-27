@@ -173,6 +173,7 @@
 
         void initializeProject3D();
         bool loadProject3DSettings();
+        bool loadProject3DParameters();
 
         void clearProject3D();
         void clearWaterBalance3D();

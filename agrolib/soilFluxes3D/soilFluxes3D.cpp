@@ -349,7 +349,9 @@ namespace soilFluxes3D::v2
         if(solver)
         {
             solver->updateParameters(paramTemp);
-            CPUSolverObject.setThreads();
+            #ifndef CUDA_ENABLED
+                CPUSolverObject.setThreads();
+            #endif
         }
 
         //Versione c++20

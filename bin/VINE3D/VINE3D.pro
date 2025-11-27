@@ -14,9 +14,12 @@ greaterThan(QT_MAJOR_VERSION, 5): QT += core5compat
 TARGET = VINE3D
 TEMPLATE = app
 
-DEFINES += VINE3D
+CONFIG += c++17
 
-INCLUDEPATH +=  ../../agrolib/crit3dDate ../../agrolib/mathFunctions ../../agrolib/soilFluxes3D/header \
+# parallel computing settings
+include($$absolute_path(../../agrolib/parallel.pri))
+
+INCLUDEPATH +=  ../../agrolib/crit3dDate ../../agrolib/mathFunctions ../../agrolib/soilFluxes3D \
                 ../../agrolib/gis ../../agrolib/meteo ../../agrolib/interpolation \
                 ../../agrolib/solarRadiation ../../agrolib/soil  \
                 ../../agrolib/crop  ../../agrolib/outputPoints \

@@ -208,7 +208,7 @@ bool getSoilSurfaceMoisture(Vine3DProject* myProject, gis::Crit3DRasterGrid* out
 
                     if (layer == 0)
                     {
-                        sumWater = soilFluxes3D::getWaterContent(nodeIndex);
+                        sumWater = soilFluxes3D::getNodeWaterContent(nodeIndex);
                         minWater = 0.0;
                         maxWater = 0.0;
                     }
@@ -216,7 +216,7 @@ bool getSoilSurfaceMoisture(Vine3DProject* myProject, gis::Crit3DRasterGrid* out
                     {
                         if (int(myProject->indexMap.at(size_t(layer)).value[row][col]) != int(myProject->indexMap.at(size_t(layer)).header->flag))
                         {
-                            waterContent = soilFluxes3D::getWaterContent(nodeIndex);                        //[m^3 m^-3]
+                            waterContent = soilFluxes3D::getNodeWaterContent(nodeIndex);                        //[m^3 m^-3]
                             sumWater += waterContent * myProject->layerThickness.at(size_t(layer));
                             wiltingPoint = getSoilVar(myProject, 0, layer, soil::soilWaterContentWP);       //[m^3 m^-3]
                             minWater += wiltingPoint * myProject->layerThickness.at(size_t(layer));         //[m]
@@ -263,7 +263,7 @@ bool getRootZoneAWCmap(Vine3DProject* myProject, gis::Crit3DRasterGrid* outputMa
                         {
                             if (myProject->grapevine.getRootDensity(&(myProject->modelCases[caseIndex]), layer) > 0.0)
                             {
-                                awc = soilFluxes3D::getAvailableWaterContent(nodeIndex);  //[m3 m-3]
+                                awc = soilFluxes3D::getNodeAvailableWaterContent(nodeIndex);  //[m3 m-3]
                                 if (awc != NODATA)
                                 {
                                     thickness = myProject->layerThickness[layer] * 1000.0;  //[mm]

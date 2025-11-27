@@ -1381,18 +1381,16 @@ bool Crit3DProject::loadCriteria3DProject(const QString &fileName)
             return false;
     }
 
-    //TO DO: integrate with a specific flag in the UI and/or a specific shell command
+    if (! loadCriteria3DParameters())
+        return false;
+
+    //TODO: integrate with a specific flag in the UI and/or a specific shell command
     soilFluxes3D::initializeLog(getFilePath(getCompleteFileName(logFileName, PATH_LOG)).toStdString(), getProjectName().toStdString());
 
     if (meteoPointsLoaded)
     {
         logInfoGUI("Check meteopoints first date...");
         meteoPointsDbFirstTime = findDbPointFirstTime();
-    }
-
-    if (! loadCriteria3DParameters())
-    {
-        return false;
     }
 
     // soil map and data
@@ -1433,17 +1431,9 @@ bool Crit3DProject::loadCriteria3DProject(const QString &fileName)
 
 bool Crit3DProject::loadCriteria3DParameters()
 {
-    QString fileName = getCompleteFileName(parametersFileName, PATH_SETTINGS);
-    if (! QFile(fileName).exists() || ! QFileInfo(fileName).isFile())
-    {
-        logError("Missing parameters file: " + fileName);
+    if (! loadProject3DParameters())
         return false;
-    }
-    if (parametersSettings == nullptr)
-    {
-        logError("parametersSettings is null");
-        return false;
-    }
+
     Q_FOREACH (QString group, parametersSettings->childGroups())
     {
         if (group == "snow")
@@ -1479,84 +1469,8 @@ bool Crit3DProject::loadCriteria3DParameters()
             }
             parametersSettings->endGroup();
         }
-
-        if (group == "soilWaterFluxes")
-        {
-            parametersSettings->beginGroup(group);
-
-            if (parametersSettings->contains("isInitialWaterPotential") && ! parametersSettings->value("isInitialWaterPotential").toString().isEmpty())
-            {
-                waterFluxesParameters.isInitialWaterPotential = parametersSettings->value("isInitialWaterPotential").toBool();
-            }
-
-            if (parametersSettings->contains("initialWaterPotential") && ! parametersSettings->value("initialWaterPotential").toString().isEmpty())
-            {
-                waterFluxesParameters.initialWaterPotential = parametersSettings->value("initialWaterPotential").toDouble();
-            }
-
-            if (parametersSettings->contains("initialDegreeOfSaturation") && ! parametersSettings->value("initialDegreeOfSaturation").toString().isEmpty())
-            {
-                waterFluxesParameters.initialDegreeOfSaturation = parametersSettings->value("initialDegreeOfSaturation").toDouble();
-            }
-
-            if (parametersSettings->contains("computeOnlySurface") && ! parametersSettings->value("computeOnlySurface").toString().isEmpty())
-            {
-                waterFluxesParameters.computeOnlySurface = parametersSettings->value("computeOnlySurface").toBool();
-            }
-
-            if (parametersSettings->contains("computeAllSoilDepth") && ! parametersSettings->value("computeAllSoilDepth").toString().isEmpty())
-            {
-                waterFluxesParameters.computeAllSoilDepth = parametersSettings->value("computeAllSoilDepth").toBool();
-            }
-
-            if (parametersSettings->contains("imposedComputationDepth") && ! parametersSettings->value("imposedComputationDepth").toString().isEmpty())
-            {
-                waterFluxesParameters.imposedComputationDepth = parametersSettings->value("imposedComputationDepth").toDouble();
-            }
-
-            if (parametersSettings->contains("conductivityHorizVertRatio") && ! parametersSettings->value("conductivityHorizVertRatio").toString().isEmpty())
-            {
-                waterFluxesParameters.conductivityHorizVertRatio = parametersSettings->value("conductivityHorizVertRatio").toDouble();
-            }
-
-            if (parametersSettings->contains("freeCatchmentRunoff") && ! parametersSettings->value("freeCatchmentRunoff").toString().isEmpty())
-            {
-                waterFluxesParameters.freeCatchmentRunoff = parametersSettings->value("freeCatchmentRunoff").toBool();
-            }
-
-            if (parametersSettings->contains("freeBottomDrainage") && ! parametersSettings->value("freeBottomDrainage").toString().isEmpty())
-            {
-                waterFluxesParameters.freeBottomDrainage = parametersSettings->value("freeBottomDrainage").toBool();
-            }
-
-            if (parametersSettings->contains("freeLateralDrainage") && ! parametersSettings->value("freeLateralDrainage").toString().isEmpty())
-            {
-                waterFluxesParameters.freeLateralDrainage = parametersSettings->value("freeLateralDrainage").toBool();
-            }
-
-            if (parametersSettings->contains("modelAccuracy") && ! parametersSettings->value("modelAccuracy").toString().isEmpty())
-            {
-                waterFluxesParameters.modelAccuracy = parametersSettings->value("modelAccuracy").toInt();
-            }
-
-            if (parametersSettings->contains("numberOfThreads") && ! parametersSettings->value("numberOfThreads").toString().isEmpty())
-            {
-                waterFluxesParameters.numberOfThreads = parametersSettings->value("numberOfThreads").toInt();
-            }
-
-            parametersSettings->endGroup();
-        }
-
-        if (group == "soilCracking")
-        {
-            parametersSettings->beginGroup(group);
-
-            // TODO parametri soil crack
-
-            parametersSettings->endGroup();
-
-        }
     }
+
     return true;
 }
 

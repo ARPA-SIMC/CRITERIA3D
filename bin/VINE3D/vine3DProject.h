@@ -110,6 +110,8 @@
 
         bool setModelCasesMap();
 
+        bool writeCriteria3DParameters();
+
         bool readFieldQuery(QSqlQuery &myQuery, int &idField, GrapevineLanduse &landuse, int &vineIndex, int &trainingIndex, float &maxLaiGrass,  float &maxIrrigationRate);
         bool setField(int fieldIndex, int fieldId, GrapevineLanduse landuse, int soilIndex, int vineIndex, int trainingIndex,
                             float maxLaiGrass,  float maxIrrigationRate);

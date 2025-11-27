@@ -10,6 +10,7 @@
 #include "dialogSelection.h"
 #include "formTimePeriod.h"
 #include "dialogWaterFluxesSettings.h"
+#include "soilFluxes3D.h"
 
 #include "mainWindow.h"
 #include "ui_mainWindow.h"
@@ -232,7 +233,7 @@ void MainWindow::renderDEM()
 void MainWindow::drawMeteoPoints()
 {
     resetMeteoPointMarkers();
-    if (! myProject.meteoPointsLoaded || myProject.nrMeteoPoints == 0)
+    if (! myProject.meteoPointsLoaded || myProject.meteoPoints.size() == 0)
     {
         ui->groupBoxMeteoPoints->setEnabled(false);
         return;
@@ -274,7 +275,7 @@ void MainWindow::on_mnuFileOpenProject_triggered()
 
 void MainWindow::on_actionRun_models_triggered()
 {
-    if (! myProject.isProjectLoaded)
+    if (! myProject.isProjectLoaded())
     {
         myProject.logError("Load a project before.");
         return;
@@ -407,11 +408,11 @@ void MainWindow::redrawMeteoPoints(visualizationType myType, bool updateColorSCa
 {
     currentPointsVisualization = myType;
 
-    if (myProject.nrMeteoPoints == 0)
+    if (myProject.meteoPoints.empty())
         return;
 
     // hide all meteo points
-    for (int i = 0; i < myProject.nrMeteoPoints; i++)
+    for (int i = 0; i < myProject.meteoPoints.size(); i++)
         meteoPointList[i]->setVisible(false);
 
     meteoPointsLegend->setVisible(true);
@@ -427,7 +428,7 @@ void MainWindow::redrawMeteoPoints(visualizationType myType, bool updateColorSCa
         case showLocation:
         {
             this->ui->actionShowPointsLocation->setChecked(true);
-            for (int i = 0; i < myProject.nrMeteoPoints; i++)
+            for (int i = 0; i < myProject.meteoPoints.size(); i++)
             {
                     myProject.meteoPoints[i].currentValue = NODATA;
                     meteoPointList[i]->setFillColor(QColor(Qt::white));
@@ -448,8 +449,8 @@ void MainWindow::redrawMeteoPoints(visualizationType myType, bool updateColorSCa
             // quality control
             std::string errorStdStr;
             checkData(myProject.quality, myProject.getCurrentVariable(),
-                      myProject.meteoPoints, myProject.nrMeteoPoints, myProject.getCrit3DCurrentTime(),
-                      &myProject.qualityInterpolationSettings, myProject.meteoSettings,
+                      myProject.meteoPoints, myProject.getCrit3DCurrentTime(),
+                      myProject.qualityInterpolationSettings, myProject.meteoSettings,
                       &(myProject.climateParameters), myProject.checkSpatialQuality, errorStdStr);
 
             if (updateColorSCale)
@@ -464,7 +465,7 @@ void MainWindow::redrawMeteoPoints(visualizationType myType, bool updateColorSCa
             setColorScale(myProject.getCurrentVariable(), myProject.meteoPointsColorScale);
 
             Crit3DColor *myColor;
-            for (int i = 0; i < myProject.nrMeteoPoints; i++)
+            for (int i = 0; i < myProject.meteoPoints.size(); i++)
             {
                 if (int(myProject.meteoPoints[i].currentValue) != NODATA)
                 {
@@ -499,7 +500,7 @@ void MainWindow::redrawMeteoPoints(visualizationType myType, bool updateColorSCa
 void MainWindow::addMeteoPoints()
 {
     myProject.clearSelectedPoints();
-    for (int i = 0; i < myProject.nrMeteoPoints; i++)
+    for (int i = 0; i < myProject.meteoPoints.size(); i++)
     {
         StationMarker* point = new StationMarker(5.0, true, QColor(Qt::white));
 
@@ -733,55 +734,89 @@ void MainWindow::on_actionShow_model_cases_map_triggered()
 }
 
 
-
 void MainWindow::on_actionCriteria3D_settings_triggered()
 {
     DialogWaterFluxesSettings dialogWaterFluxes;
     dialogWaterFluxes.setInitialWaterPotential(myProject.waterFluxesParameters.initialWaterPotential);
     dialogWaterFluxes.setInitialDegreeOfSaturation(myProject.waterFluxesParameters.initialDegreeOfSaturation);
 
-    dialogWaterFluxes.setConductivityHVRatio(myProject.waterFluxesParameters.conductivityHorizVertRatio);
+    dialogWaterFluxes.useInitialWaterPotential->setChecked(myProject.waterFluxesParameters.isInitialWaterPotential);
+    dialogWaterFluxes.useInitialDegreeOfSaturation->setChecked(! myProject.waterFluxesParameters.isInitialWaterPotential);
+
+    // computation depth
+    if (myProject.waterFluxesParameters.computeOnlySurface)
+        dialogWaterFluxes.setOnlySurface(true);
+    else if (myProject.waterFluxesParameters.computeAllSoilDepth)
+        dialogWaterFluxes.setAllSoilDepth(true);
+    else
+        dialogWaterFluxes.setImposedDepth(true);
 
     dialogWaterFluxes.setImposedComputationDepth(myProject.waterFluxesParameters.imposedComputationDepth);
 
+    // boundary conditions
+    dialogWaterFluxes.setFreeCatchmentRunoff(myProject.waterFluxesParameters.freeCatchmentRunoff);
+    dialogWaterFluxes.setFreeLateralDrainage(myProject.waterFluxesParameters.freeLateralDrainage);
+    dialogWaterFluxes.setFreeBottomDrainage(myProject.waterFluxesParameters.freeBottomDrainage);
+
+    dialogWaterFluxes.setUseWaterRetentionFitting(myProject.fittingOptions.useWaterRetentionData);
+    dialogWaterFluxes.setConductivityHVRatio(myProject.waterFluxesParameters.conductivityHorizVertRatio);
+
+    // accuracy
     dialogWaterFluxes.accuracySlider->setValue(myProject.waterFluxesParameters.modelAccuracy);
-
-    if (myProject.waterFluxesParameters.computeOnlySurface)
-        dialogWaterFluxes.onlySurface->setChecked(true);
-    else if (myProject.waterFluxesParameters.computeAllSoilDepth)
-        dialogWaterFluxes.allSoilDepth->setChecked(true);
-    else
-        dialogWaterFluxes.imposedDepth->setChecked(true);
-
-    dialogWaterFluxes.useWaterRetentionFitting->setChecked(myProject.fittingOptions.useWaterRetentionData);
+    dialogWaterFluxes.setThreadsNumber(myProject.waterFluxesParameters.numberOfThreads);
 
     dialogWaterFluxes.exec();
 
     if (dialogWaterFluxes.isUpdateAccuracy())
     {
         myProject.waterFluxesParameters.modelAccuracy = dialogWaterFluxes.accuracySlider->value();
+        int nrThread = dialogWaterFluxes.getThreadsNumber();
+        nrThread = soilFluxes3D::setThreadsNumber(nrThread);
+        myProject.waterFluxesParameters.numberOfThreads = nrThread;
+
+        if (myProject.isCriteria3DInitialized)
+        {
+            myProject.setAccuracy();
+        }
     }
 
     if (dialogWaterFluxes.result() == QDialog::Accepted)
     {
+        // initial conditions
         myProject.waterFluxesParameters.initialWaterPotential = dialogWaterFluxes.getInitialWaterPotential();
         myProject.waterFluxesParameters.initialDegreeOfSaturation = dialogWaterFluxes.getInitialDegreeOfSaturation();
+        myProject.waterFluxesParameters.isInitialWaterPotential = dialogWaterFluxes.useInitialWaterPotential->isChecked();
+
         myProject.waterFluxesParameters.conductivityHorizVertRatio = dialogWaterFluxes.getConductivityHVRatio();
 
+        // computation depth
         myProject.waterFluxesParameters.imposedComputationDepth = dialogWaterFluxes.getImposedComputationDepth();
-        myProject.waterFluxesParameters.computeOnlySurface = dialogWaterFluxes.onlySurface->isChecked();
-        myProject.waterFluxesParameters.computeAllSoilDepth = dialogWaterFluxes.allSoilDepth->isChecked();
+        myProject.waterFluxesParameters.computeOnlySurface = dialogWaterFluxes.getOnlySurface();
+        myProject.waterFluxesParameters.computeAllSoilDepth = dialogWaterFluxes.getAllSoilDepth();
+
+        // boundary conditions
+        myProject.waterFluxesParameters.freeCatchmentRunoff = dialogWaterFluxes.getFreeCatchmentRunoff();
+        myProject.waterFluxesParameters.freeLateralDrainage = dialogWaterFluxes.getFreeLateralDrainage();
+        myProject.waterFluxesParameters.freeBottomDrainage = dialogWaterFluxes.getFreeBottomDrainage();
 
         myProject.waterFluxesParameters.modelAccuracy = dialogWaterFluxes.accuracySlider->value();
 
-        myProject.fittingOptions.useWaterRetentionData = dialogWaterFluxes.useWaterRetentionFitting->isChecked();
+        // check nr of threads
+        int threadNumber = dialogWaterFluxes.getThreadsNumber();
+        threadNumber = soilFluxes3D::setThreadsNumber(threadNumber);
+        myProject.waterFluxesParameters.numberOfThreads = threadNumber;
 
-        /*if (! myProject.writeCriteria3DParameters())
+        if (myProject.isCriteria3DInitialized)
+        {
+            myProject.setAccuracy();
+        }
+
+        myProject.fittingOptions.useWaterRetentionData = dialogWaterFluxes.getUseWaterRetentionFitting();
+
+        if (! myProject.writeCriteria3DParameters())
         {
             myProject.logError("Error writing soil fluxes parameters");
-        }*/
-
-        // layer thickness
+        }
     }
 }
 

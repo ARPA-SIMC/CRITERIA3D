@@ -279,6 +279,12 @@ void Project3D::clearWaterBalance3D()
 
 bool Project3D::loadProject3DSettings()
 {
+    if (projectSettings == nullptr)
+    {
+        logError("projectSettings is not loaded");
+        return false;
+    }
+
     projectSettings->beginGroup("project");
 
     // soil db
@@ -338,6 +344,97 @@ bool Project3D::loadProject3DSettings()
     }
 
     projectSettings->endGroup();
+
+    return true;
+}
+
+
+bool Project3D::loadProject3DParameters()
+{
+    if (parametersSettings == nullptr)
+    {
+        logError("parameters are not loaded");
+        return false;
+    }
+
+    Q_FOREACH (QString group, parametersSettings->childGroups())
+    {
+        if (group == "soilWaterFluxes")
+        {
+            parametersSettings->beginGroup(group);
+
+            if (parametersSettings->contains("isInitialWaterPotential") && ! parametersSettings->value("isInitialWaterPotential").toString().isEmpty())
+            {
+                waterFluxesParameters.isInitialWaterPotential = parametersSettings->value("isInitialWaterPotential").toBool();
+            }
+
+            if (parametersSettings->contains("initialWaterPotential") && ! parametersSettings->value("initialWaterPotential").toString().isEmpty())
+            {
+                waterFluxesParameters.initialWaterPotential = parametersSettings->value("initialWaterPotential").toDouble();
+            }
+
+            if (parametersSettings->contains("initialDegreeOfSaturation") && ! parametersSettings->value("initialDegreeOfSaturation").toString().isEmpty())
+            {
+                waterFluxesParameters.initialDegreeOfSaturation = parametersSettings->value("initialDegreeOfSaturation").toDouble();
+            }
+
+            if (parametersSettings->contains("computeOnlySurface") && ! parametersSettings->value("computeOnlySurface").toString().isEmpty())
+            {
+                waterFluxesParameters.computeOnlySurface = parametersSettings->value("computeOnlySurface").toBool();
+            }
+
+            if (parametersSettings->contains("computeAllSoilDepth") && ! parametersSettings->value("computeAllSoilDepth").toString().isEmpty())
+            {
+                waterFluxesParameters.computeAllSoilDepth = parametersSettings->value("computeAllSoilDepth").toBool();
+            }
+
+            if (parametersSettings->contains("imposedComputationDepth") && ! parametersSettings->value("imposedComputationDepth").toString().isEmpty())
+            {
+                waterFluxesParameters.imposedComputationDepth = parametersSettings->value("imposedComputationDepth").toDouble();
+            }
+
+            if (parametersSettings->contains("conductivityHorizVertRatio") && ! parametersSettings->value("conductivityHorizVertRatio").toString().isEmpty())
+            {
+                waterFluxesParameters.conductivityHorizVertRatio = parametersSettings->value("conductivityHorizVertRatio").toDouble();
+            }
+
+            if (parametersSettings->contains("freeCatchmentRunoff") && ! parametersSettings->value("freeCatchmentRunoff").toString().isEmpty())
+            {
+                waterFluxesParameters.freeCatchmentRunoff = parametersSettings->value("freeCatchmentRunoff").toBool();
+            }
+
+            if (parametersSettings->contains("freeBottomDrainage") && ! parametersSettings->value("freeBottomDrainage").toString().isEmpty())
+            {
+                waterFluxesParameters.freeBottomDrainage = parametersSettings->value("freeBottomDrainage").toBool();
+            }
+
+            if (parametersSettings->contains("freeLateralDrainage") && ! parametersSettings->value("freeLateralDrainage").toString().isEmpty())
+            {
+                waterFluxesParameters.freeLateralDrainage = parametersSettings->value("freeLateralDrainage").toBool();
+            }
+
+            if (parametersSettings->contains("modelAccuracy") && ! parametersSettings->value("modelAccuracy").toString().isEmpty())
+            {
+                waterFluxesParameters.modelAccuracy = parametersSettings->value("modelAccuracy").toInt();
+            }
+
+            if (parametersSettings->contains("numberOfThreads") && ! parametersSettings->value("numberOfThreads").toString().isEmpty())
+            {
+                waterFluxesParameters.numberOfThreads = parametersSettings->value("numberOfThreads").toInt();
+            }
+
+            parametersSettings->endGroup();
+        }
+
+        if (group == "soilCracking")
+        {
+            parametersSettings->beginGroup(group);
+
+            // TODO parametri soil crack
+
+            parametersSettings->endGroup();
+        }
+    }
 
     return true;
 }
