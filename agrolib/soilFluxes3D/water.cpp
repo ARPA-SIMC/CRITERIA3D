@@ -101,7 +101,7 @@ namespace soilFluxes3D::v2::Water
         balanceDataCurrentTimeStep.waterMBE = deltaStorage - balanceDataCurrentTimeStep.waterSinkSource;
 
         // minimum reference water storage [m3] as % of current storage
-        double timePercentage = 0.01 * SF3Dmax(deltaT, 30.) / HOUR_SECONDS;
+        double timePercentage = 0.005 * SF3Dmax(deltaT, 30.) / HOUR_SECONDS;
         double minRefWaterStorage = balanceDataCurrentTimeStep.waterStorage * timePercentage;
         // [m3] minimum 1 liter
         minRefWaterStorage = SF3Dmax(minRefWaterStorage, 0.001);
@@ -166,14 +166,6 @@ namespace soilFluxes3D::v2::Water
 
             //Check Stability (Courant)
             double currCWL = nodeGrid.waterData.CourantWaterLevel;
-            // if((currCWL < parameters.CourantWaterThreshold) && (approxNr <= 3) && (currMBRerror < (0.5 * parameters.MBRThreshold)))
-            // {
-            //     //increase deltaT
-            //     parameters.deltaTcurr = (currCWL < 0.5) ? (2 * parameters.deltaTcurr) : (parameters.deltaTcurr / currCWL);
-            //     parameters.deltaTcurr = SF3Dmin(parameters.deltaTcurr, parameters.deltaTmax);
-            //     if(parameters.deltaTcurr > 1.)
-            //         parameters.deltaTcurr = std::floor(parameters.deltaTcurr);
-            // }
 
             if((currCWL < parameters.CourantWaterThreshold) && (approxNr <= 3))
                 parameters.deltaTcurr = std::min(parameters.deltaTmax, parameters.deltaTcurr * 2);
