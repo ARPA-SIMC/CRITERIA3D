@@ -893,13 +893,13 @@ void Crit3DProject::assignPrecipitation()
     double area = DEM.header->cellSize * DEM.header->cellSize;
 
     gis::Crit3DRasterGrid *snowFallMap, *snowMeltMap;
-    bool isSnowOk = false;
+    bool isSnow = false;
     if (processes.computeSnow)
     {
         snowFallMap = snowMaps.getSnowFallMap();
         snowMeltMap = snowMaps.getSnowMeltMap();
         if (snowFallMap != nullptr && snowMeltMap != nullptr)
-            isSnowOk = true;
+            isSnow = true;
     }
 
     // precipitation
@@ -916,7 +916,7 @@ void Crit3DProject::assignPrecipitation()
                 continue;
 
             float liquidWater = prec;
-            if (processes.computeSnow && isSnowOk)
+            if (isSnow)
             {
                 float currentSnowFall = snowFallMap->value[row][col];
                 float currentSnowMelt = snowMeltMap->value[row][col];

@@ -953,7 +953,7 @@ bool Project3D::setCrit3DTopography()
                     // LAST SOIL LAYER
                     if (layer == (nrLayers - 1) || ! isWithinSoil(soilIndex, layerDepth.at(size_t(layer+1))))
                     {
-                        if (waterFluxesParameters.freeLateralDrainage)
+                        if (waterFluxesParameters.freeBottomDrainage)
                         {
                             float boundaryArea = area;
                             myResult = soilFluxes3D::setNode(index, x, y, z, volume, false, soilFluxes3D::boundaryType_t::FreeDrainage, 0, boundaryArea);
@@ -966,7 +966,7 @@ bool Project3D::setCrit3DTopography()
                     else
                     {
                         // SUB-SURFACE
-                        if (int(boundaryMap.value[row][col]) == BOUNDARY_RUNOFF)
+                        if (int(boundaryMap.value[row][col]) == BOUNDARY_RUNOFF && waterFluxesParameters.freeLateralDrainage)
                         {
                             // TODO problema se è urban o road
                             float boundaryArea = lateralArea;

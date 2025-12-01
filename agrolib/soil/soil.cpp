@@ -938,15 +938,16 @@ namespace soil
         // Ksat = saturated water conductivity [cm day-1]
         if (horizon.dbData.kSat != NODATA && horizon.dbData.kSat > 0)
         {
+            double refKSat = soil::estimateSaturatedConductivity(horizon, horizon.bulkDensity);
             // check ksat value
-            if (horizon.dbData.kSat < (horizon.waterConductivity.kSat / 100))
+            if (horizon.dbData.kSat < (refKSat / 100.))
             {
-                horizon.waterConductivity.kSat /= 100;
+                horizon.waterConductivity.kSat = refKSat / 100.;
                 errorStr = "Ksat is out of class limits.";
             }
-            else if (horizon.dbData.kSat > (horizon.waterConductivity.kSat * 100))
+            else if (horizon.dbData.kSat > (refKSat * 100.))
             {
-                horizon.waterConductivity.kSat *= 100;
+                horizon.waterConductivity.kSat = refKSat * 100.;
                 errorStr = "Ksat is out of class limits.";
             }
             else
