@@ -199,7 +199,6 @@ namespace soilFluxes3D::v2
                 return balanceResult_t::stepHalved;
             }
 
-
             //Try solve linear system
             bool isStepValid = solveLinearSystem(approxIdx, processType::Water);
             logStruct;
@@ -208,7 +207,7 @@ namespace soilFluxes3D::v2
             logSystem;
 
             //Reduce step tipe if system resolution failed
-            if((!isStepValid) && (deltaT > _parameters.deltaTmin))
+            if((! isStepValid) && (deltaT > _parameters.deltaTmin))
             {
                 _parameters.deltaTcurr = SF3Dmax(_parameters.deltaTmin, _parameters.deltaTcurr / 2.);
                 return balanceResult_t::stepHalved;

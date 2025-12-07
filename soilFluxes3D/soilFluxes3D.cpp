@@ -461,8 +461,8 @@ namespace soilFluxes3D::v2
 
         if (ResidualToleranceExponent < 5)
             ResidualToleranceExponent = 5;
-        if (ResidualToleranceExponent > 16)
-            ResidualToleranceExponent = 16;
+        if (ResidualToleranceExponent > 12)
+            ResidualToleranceExponent = 12;
 
         if (MBRThresholdExponent < 1)
             MBRThresholdExponent = 1;
