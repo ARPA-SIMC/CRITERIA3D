@@ -3400,7 +3400,7 @@ bool Project::interpolationGrid(meteoVariable myVar, const Crit3DTime& myTime)
         if (! preInterpolation(interpolationPoints, interpolationSettings, meteoSettings,
                               &climateParameters, meteoPoints, myVar, myTime, errorStdStr))
         {
-            logError("Error in function preInterpolation:\n" + QString::fromStdString(errorStdStr));
+            errorString = ("Error in function preInterpolation:\n" + QString::fromStdString(errorStdStr));
             return false;
         }
         myCombination = interpolationSettings.getCurrentCombination();
@@ -3593,8 +3593,10 @@ bool Project::interpolationGrid(meteoVariable myVar, const Crit3DTime& myTime)
 
                     double temp = interpolate(subsetInterpolationPoints, interpolationSettings, meteoSettings, myVar, myX, myY, myZ, proxyValues, true);
                     if (isEqual(temp, NODATA))
+                    {
+                        errorString = "Error in interpolation. Check the glocal related files, rewrite the weight maps, reload the project and try again.";
                         return false;
-
+                    }
                     interpolatedValue = interpolate(subsetInterpolationPoints, interpolationSettings, meteoSettings, myVar, myX, myY, myZ, proxyValues, true)
                                     * areaCells[cellIndex + 1];
                 }
