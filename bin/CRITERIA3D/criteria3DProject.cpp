@@ -3775,7 +3775,7 @@ int Crit3DProject::cmdSaveCurrentState()
 
 void usage_cmdRunModels()
 {
-    std::cout << "Usage: RunModels <YYYY-MM-DD> <HH> | [ONE_DAY] | [ONE_WEEK] | [ONE_MONTH]" << std::endl;
+    std::cout << "Usage: RunModels <YYYY-MM-DD> <HH> | [ONE_HOUR]|[SIX_HOURS]|[ONE_DAY]|[ONE_WEEK]|[ONE_MONTH]" << std::endl;
 }
 
 int Crit3DProject::cmdRunModels(const QList<QString> &argumentList)
@@ -3788,10 +3788,18 @@ int Crit3DProject::cmdRunModels(const QList<QString> &argumentList)
 
     // first time: next hour
     QDateTime firstTime = getCurrentTime();
-    QDateTime lastTime = getCurrentTime();;
     firstTime = firstTime.addSecs(HOUR_SECONDS);
 
-    if (argumentList.at(1).toUpper() == "ONE_DAY")
+    QDateTime lastTime = getCurrentTime();
+    if (argumentList.at(1).toUpper() == "ONE_HOUR")
+    {
+        lastTime = lastTime.addSecs(HOUR_SECONDS);
+    }
+    else if (argumentList.at(1).toUpper() == "SIX_HOURS")
+    {
+        lastTime = lastTime.addSecs(HOUR_SECONDS * 6);
+    }
+    else if (argumentList.at(1).toUpper() == "ONE_DAY")
     {
         lastTime = lastTime.addDays(1);
     }
@@ -3803,14 +3811,11 @@ int Crit3DProject::cmdRunModels(const QList<QString> &argumentList)
     {
         lastTime = lastTime.addMonths(1);
     }
-    else
+    else if (argumentList.size() >= 3)
     {
         QString dateStr, hourStr;
-        if (argumentList.size() >= 3)
-        {
-            dateStr = argumentList.at(1);
-            hourStr = argumentList.at(2);
-        }
+        dateStr = argumentList.at(1);
+        hourStr = argumentList.at(2);
 
         int lastHour = hourStr.toInt();
         if ((lastHour < 0) || (lastHour > 23))
@@ -3828,6 +3833,12 @@ int Crit3DProject::cmdRunModels(const QList<QString> &argumentList)
             usage_cmdRunModels();
             return CRIT3D_OK;
         }
+    }
+    else
+    {
+        std::cout << "Wrong time parameters!" << std::endl;
+        usage_cmdRunModels();
+        return CRIT3D_OK;
     }
 
     // run models
