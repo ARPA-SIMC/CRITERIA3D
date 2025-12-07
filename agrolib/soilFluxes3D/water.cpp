@@ -101,7 +101,7 @@ namespace soilFluxes3D::v2::Water
         balanceDataCurrentTimeStep.waterMBE = deltaStorage - balanceDataCurrentTimeStep.waterSinkSource;
 
         // minimum reference water storage [m3] as % of current storage
-        double timePercentage = 0.005 * SF3Dmax(deltaT, 30.) / HOUR_SECONDS;
+        double timePercentage = 0.005 * SF3Dmax(deltaT, 1.0) / HOUR_SECONDS;
         double minRefWaterStorage = balanceDataCurrentTimeStep.waterStorage * timePercentage;
         // [m3] minimum 1 liter
         minRefWaterStorage = SF3Dmax(minRefWaterStorage, 0.001);
@@ -165,9 +165,7 @@ namespace soilFluxes3D::v2::Water
             acceptStep(deltaT);
 
             //Check Stability (Courant)
-            double currCWL = nodeGrid.waterData.CourantWaterLevel;
-
-            if((currCWL < parameters.CourantWaterThreshold) && (approxNr <= 3))
+            if((nodeGrid.waterData.CourantWaterLevel < parameters.CourantWaterThreshold) && (approxNr <= 3))
                 parameters.deltaTcurr = std::min(parameters.deltaTmax, parameters.deltaTcurr * 2);
 
             return balanceResult_t::stepAccepted;
@@ -485,16 +483,13 @@ namespace soilFluxes3D::v2::Water
 
     double JacobiWaterCPU(VectorCPU& vectorX, const MatrixCPU& matrixA, const VectorCPU& vectorB)
     {
-        double infinityNorm = -1;
-
         double* tempX = nullptr;
         hostAlloc(tempX, vectorX.numElements);
         std::memcpy(tempX, vectorB.values, vectorB.numElements * sizeof(double));
 
-        double* normVector = nullptr;
-        hostAlloc(normVector, vectorX.numElements);
+        double sumNorm = 0;
 
-        __parfor(__ompStatus)
+        __parforop(__ompStatus, +, sumNorm)
         for(SF3Duint_t rowIdx = 0; rowIdx < matrixA.numRows; ++rowIdx)
         {
             for(u8_t colIdx = 1; colIdx < matrixA.numColsInRow[rowIdx]; ++colIdx)
@@ -509,19 +504,17 @@ namespace soilFluxes3D::v2::Water
             if(psi > 1.)
                 currentNorm /= psi;
             
-            normVector[rowIdx] = currentNorm;
+            sumNorm += currentNorm;
         }
 
-        __parforop(__ompStatus, max, infinityNorm)
-        for(SF3Duint_t rowIdx = 0; rowIdx < matrixA.numRows; ++rowIdx)
-            infinityNorm = SF3Dmax(infinityNorm, normVector[rowIdx]);
-
-        hostFree(normVector);
+        double infinityNorm = sumNorm / matrixA.numRows;
 
         std::memcpy(vectorX.values, tempX, vectorX.numElements * sizeof(double));
         hostFree(tempX);
+
         return infinityNorm;
     }
+
 
     double GaussSeidelWaterCPU(VectorCPU& vectorX, const MatrixCPU &matrixA, const VectorCPU& vectorB)
     {
