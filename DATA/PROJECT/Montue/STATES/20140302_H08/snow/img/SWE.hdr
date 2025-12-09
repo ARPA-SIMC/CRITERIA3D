@@ -1,0 +1,12 @@
+ENVI
+description = {raster grid}
+samples = 194
+lines = 123
+bands = 1
+header offset = 0
+file type = ENVI Standard
+data type = 4
+interleave = bsq
+byte order = 0
+data ignore value = -9999
+map info = {UTM, 1, 1, 521616.000000, 4989775.000000, 1, 1, 32, North, WGS-84, units=Meters}
