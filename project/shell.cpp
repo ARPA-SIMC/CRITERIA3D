@@ -173,13 +173,6 @@ QList<QString> getArgumentList(const QString &commandLine)
 
 QString getCommandLine(const QString &programName)
 {
-    /*std::string commandLine;
-
-    std::cout << programName.toStdString() << ">" << std::flush;
-    std::getline(std::cin, commandLine);
-
-    return QString::fromStdString(commandLine);*/
-
     QTextStream in(stdin);
     QTextStream out(stdout);
 
@@ -199,6 +192,7 @@ QList<QString> getSharedCommandList()
     cmdList.append("DEM             | LoadDEM");
     cmdList.append("Point           | LoadPoints");
     cmdList.append("Grid            | LoadGrid");
+    cmdList.append("Parallel        | SetParallelComputing");
     cmdList.append("DailyCsv        | ExportDailyDataCsv");
     cmdList.append("HourlyCsv       | ExportHourlyDataCsv");
 
@@ -209,6 +203,31 @@ QList<QString> getSharedCommandList()
 int cmdExit(Project* myProject)
 {
     myProject->setRequestedExit(true);
+    return PRAGA_OK;
+}
+
+
+int cmdSetParallelComputing(Project* myProject, QList<QString> argumentList)
+{
+    if (argumentList.size() < 2)
+    {
+        // default: true
+        myProject->setParallelComputing(true);
+        myProject->logInfo("Parallel computing is enabled.");
+        return PRAGA_OK;
+    }
+
+    if (argumentList[1].toUpper() == "TRUE")
+    {
+        myProject->setParallelComputing(true);
+        myProject->logInfo("Parallel computing is enabled.");
+    }
+    else
+    {
+        myProject->setParallelComputing(false);
+        myProject->logInfo("Parallel computing is disabled.");
+    }
+
     return PRAGA_OK;
 }
 
@@ -692,6 +711,11 @@ int executeSharedCommand(Project* myProject, QList<QString> argumentList, bool* 
     {
         *isCommandFound = true;
         return cmdSetLogFile(myProject, argumentList);
+    }
+    else if (command == "PARALLEL" || command == "SETPARALLELCOMPUTING")
+    {
+        *isCommandFound = true;
+        return cmdSetParallelComputing(myProject, argumentList);
     }
     else if (command == "DAILYCSV" || command == "EXPORTDAILYDATACSV")
     {
