@@ -173,12 +173,19 @@ QList<QString> getArgumentList(const QString &commandLine)
 
 QString getCommandLine(const QString &programName)
 {
-    std::string commandLine;
+    /*std::string commandLine;
 
-    std::cout.flush() << programName.toStdString() << ">";
+    std::cout << programName.toStdString() << ">" << std::flush;
     std::getline(std::cin, commandLine);
 
-    return QString::fromStdString(commandLine);
+    return QString::fromStdString(commandLine);*/
+
+    QTextStream in(stdin);
+    QTextStream out(stdout);
+
+    out << programName << ">" << Qt::flush;
+
+    return in.readLine();
 }
 
 
