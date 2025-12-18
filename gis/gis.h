@@ -302,6 +302,8 @@
 
         bool rasterSummary(Crit3DRasterGrid *myGrid, int &nrValids, float &avgValue, std::string &error);
 
+        bool deleteRangeOfValuesRaster(gis::Crit3DRasterGrid* refRaster, float minValue, float maxValue, gis::Crit3DRasterGrid* outputRaster);
+
         float getNeighboursMinimumValue(const Crit3DRasterGrid& raster, int row, int col);
         bool extractBasin(const Crit3DRasterGrid& inputRaster, Crit3DRasterGrid& outputRaster, double xClosure, double yClosure);
         void cleanRasterEmptyFrame(const Crit3DRasterGrid& inputRaster, Crit3DRasterGrid& outputRaster);
