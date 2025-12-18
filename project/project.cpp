@@ -1240,7 +1240,7 @@ bool Project::loadAggregationDBAsMeteoPoints(QString fileName)
     }
 
     // copy data
-    for (int i=0; i < meteoPoints.size(); i++)
+    for (int i=0; i < listMeteoPoints.size(); i++)
         meteoPoints.push_back(listMeteoPoints[i]);
     listMeteoPoints.clear();
 
