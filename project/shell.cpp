@@ -173,11 +173,9 @@ QList<QString> getArgumentList(const QString &commandLine)
 
 QString getCommandLine(const QString &programName)
 {
+    std::cout << programName.toStdString() << ">" << std::flush;
+
     QTextStream in(stdin);
-    QTextStream out(stdout);
-
-    out << programName << ">" << Qt::flush;
-
     return in.readLine();
 }
 
