@@ -1488,10 +1488,11 @@ bool Project::loadMeteoPointsData(const QDate& firstDate, const QDate& lastDate,
             if (loadHourly && isMeteoPointsHourly)
                 if (meteoPointsDbHandler->loadHourlyData(myDb, myFirstDate, myLastDate, meteoPoints[i]))
                     isDataOk[i] = true;
-
             if (loadDaily && isMeteoPointsDaily)
+            {
                 if (meteoPointsDbHandler->loadDailyData(myDb, myFirstDate, myLastDate, meteoPoints[i]))
                     isDataOk[i] = true;
+            }
 
             // safe update
             if (showInfo && omp_get_thread_num() == 0 && (i%step) == 0)
@@ -1514,6 +1515,7 @@ bool Project::loadMeteoPointsData(const QDate& firstDate, const QDate& lastDate,
         closeProgressBar();
 
     bool almostOneOk = std::any_of(isDataOk.begin(), isDataOk.end(), [](bool x){ return x; });
+
     return almostOneOk;
 }
 
