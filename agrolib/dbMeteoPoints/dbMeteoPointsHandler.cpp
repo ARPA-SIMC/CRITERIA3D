@@ -248,9 +248,9 @@ QDateTime Crit3DMeteoPointsDbHandler::getLastDate(frequencyType frequency)
         dayHour = "H";
 
     QSqlQuery qry(_db);
+
     qry.prepare( "SELECT name FROM sqlite_master WHERE type='table' AND name like :dayHour ESCAPE '^'");
     qry.bindValue(":dayHour",  "%^_" + dayHour  + "%");
-
     QDateTime lastDateTime;
     if(! qry.exec() )
     {
@@ -304,7 +304,9 @@ QDateTime Crit3DMeteoPointsDbHandler::getLastDate(frequencyType frequency)
             continue;
 
         if (! lastDateTime.isValid() || dateTime > lastDateTime)
+        {
             lastDateTime = dateTime;
+        }
     }
 
     return lastDateTime;

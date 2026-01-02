@@ -2629,7 +2629,7 @@ std::vector<float> Crit3DMeteoGridDbHandler::exportAllDataVar(QString &errorStr,
         tableName = _tableDaily.prefix + id + _tableDaily.postFix;
         startDate = myFirstTime.date().toString("yyyy-MM-dd");
         endDate = myLastTime.date().toString("yyyy-MM-dd");
-        statement = QString( "SELECT * FROM `%1` WHERE VariableCode = '%2' AND `%3` >= '%4' AND `%3`<= '%5'")
+        statement = QString( "SELECT * FROM `%1` WHERE VariableCode = '%2' AND `%3` >= '%4' AND `%3`<= '%5' ORDER BY `%3` ASC")
                         .arg(tableName).arg(idVar).arg(_tableDaily.fieldTime).arg(startDate).arg(endDate);
     }
     else if (freq == hourly)
@@ -2643,7 +2643,7 @@ std::vector<float> Crit3DMeteoGridDbHandler::exportAllDataVar(QString &errorStr,
         tableName = _tableHourly.prefix + id + _tableHourly.postFix;
         startDate = myFirstTime.date().toString("yyyy-MM-dd") + " " + myFirstTime.time().toString("hh:mm");
         endDate = myLastTime.date().toString("yyyy-MM-dd") + " " + myLastTime.time().toString("hh:mm");
-        statement = QString( "SELECT * FROM `%1` WHERE VariableCode = '%2' AND `%3` >= '%4' AND `%3`<= '%5'")
+        statement = QString( "SELECT * FROM `%1` WHERE VariableCode = '%2' AND `%3` >= '%4' AND `%3`<= '%5' ORDER BY `%3` ASC")
                         .arg(tableName).arg(idVar).arg(_tableHourly.fieldTime, startDate, endDate);
     }
     else
