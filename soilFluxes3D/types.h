@@ -214,16 +214,16 @@ namespace soilFluxes3D { inline namespace v2
     struct linkData_t
     {
         linkType_t *linkType = nullptr;
-        SF3Duint_t *linkIndex = nullptr;      /*!< index of linked elements */
-        double *interfaceArea = nullptr;    /*!< interface area [m2] */
+        SF3Duint_t *linkIndex = nullptr;        /*!< index of linked elements */
+        double *interfaceArea = nullptr;        /*!< interface area [m2] */
 
         //water data
-        double *waterFlowSum = nullptr;     /*!< [m3] sum of flow(i,j) */
+        double *waterFlowSum = nullptr;         /*!< [m3] sum of flow(i,j) */
 
         //heat data
-        double *waterFlux = nullptr;                    /*!< [m3 s-1] water volume flux*/
-        double *vaporFlux = nullptr;                    /*!< [kg s-1] vapor mass flux*/
-        double *fluxes[numTotalFluxTypes] = {nullptr};   /*!< [W] for heat fluxes; [m3 s-1] for water fluxes */
+        double *waterFlux = nullptr;                        /*!< [m3 s-1] water volume flux*/
+        double *vaporFlux = nullptr;                        /*!< [kg s-1] vapor mass flux*/
+        double *fluxes[numTotalFluxTypes] = {nullptr};      /*!< [W] for heat fluxes; [m3 s-1] for water fluxes */
     };
 
     //Boundary
