@@ -371,14 +371,18 @@ namespace soilFluxes3D::v2::Water
 
     __cudaSpec double runoff(SF3Duint_t rowIdx, SF3Duint_t colIdx, u8_t approxNum, double deltaT, double flowSide)
     {
-        double flux_i = (nodeGrid.waterData.waterFlow[rowIdx] * deltaT) / nodeGrid.size[rowIdx];
-        double flux_j = (nodeGrid.waterData.waterFlow[colIdx] * deltaT) / nodeGrid.size[colIdx];
+        double H_i = nodeGrid.waterData.pressureHead[rowIdx];
+        double H_j =  nodeGrid.waterData.pressureHead[colIdx];
 
-        double H_i = (approxNum != 0) ? nodeGrid.waterData.pressureHead[rowIdx] : nodeGrid.waterData.oldPressureHead[rowIdx] + 0.5 * flux_i;
-        double H_j = (approxNum != 0) ? nodeGrid.waterData.pressureHead[colIdx] : nodeGrid.waterData.oldPressureHead[colIdx] + 0.5 * flux_j;
+        if (approxNum == 0)
+        {
+            double flux_i = (nodeGrid.waterData.waterFlow[rowIdx] * deltaT) / nodeGrid.size[rowIdx];
+            double flux_j = (nodeGrid.waterData.waterFlow[colIdx] * deltaT) / nodeGrid.size[colIdx];
+            H_i += 0.33 * flux_i;
+            H_j += 0.33 * flux_j;
+        }
 
         double dH = std::fabs(H_i - H_j);
-
         if(dH < DBL_EPSILON_CUSTOM)
             return 0.;
 
@@ -387,8 +391,8 @@ namespace soilFluxes3D::v2::Water
 
         double H_max = SF3Dmax(H_i, H_j);
         double z_max = SF3Dmax(z_i, z_j);
-        double H_s = H_max - z_max;
 
+        double H_s = H_max - z_max;
         if(H_s < EPSILON_CUSTOM)
             return 0.;
 
