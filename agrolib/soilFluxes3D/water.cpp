@@ -369,7 +369,7 @@ namespace soilFluxes3D::v2::Water
     }
 
 
-    __cudaSpec double runoff(SF3Duint_t rowIdx, SF3Duint_t colIdx, u8_t approxNum, double deltaT, double flowArea)
+    __cudaSpec double runoff(SF3Duint_t rowIdx, SF3Duint_t colIdx, u8_t approxNum, double deltaT, double flowSide)
     {
         double flux_i = (nodeGrid.waterData.waterFlow[rowIdx] * deltaT) / nodeGrid.size[rowIdx];
         double flux_j = (nodeGrid.waterData.waterFlow[colIdx] * deltaT) / nodeGrid.size[colIdx];
@@ -405,7 +405,8 @@ namespace soilFluxes3D::v2::Water
 
         nodeGrid.waterData.partialCourantWaterLevels[rowIdx] = SF3Dmax(nodeGrid.waterData.partialCourantWaterLevels[rowIdx], v * deltaT / cellDistance);
 
-        return v * flowArea * H_s / dH;
+        double flowArea = flowSide * H_s;       // [m2]
+        return v * flowArea / dH;
     }
 
 
