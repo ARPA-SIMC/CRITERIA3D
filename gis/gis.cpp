@@ -1811,6 +1811,32 @@ namespace gis
     }
 
 
+    bool deleteRangeOfValuesRaster(gis::Crit3DRasterGrid* refRaster, float minValue, float maxValue, gis::Crit3DRasterGrid* outputRaster)
+    {
+        if (refRaster == nullptr || outputRaster == nullptr)
+            return false;
+
+        outputRaster->initializeGrid(*(refRaster->header));
+
+        for (long row = 0; row < refRaster->header->nrRows; row++)
+        {
+            for (long col = 0; col < refRaster->header->nrCols; col++)
+            {
+                float value = refRaster->value[row][col];
+                if (! isEqual(value, refRaster->header->flag))
+                {
+                    if (value < minValue || value > maxValue)
+                    {
+                        outputRaster->value[row][col] = value;
+                    }
+                }
+            }
+        }
+
+        return true;
+    }
+
+
     // return nr of valid cells and avg value
     bool rasterSummary(Crit3DRasterGrid *myGrid, int &nrValids, float &avgValue, std::string &error)
     {

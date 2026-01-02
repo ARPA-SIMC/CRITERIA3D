@@ -26,6 +26,7 @@
     int cmdSetLogFile(Project* myProject, QList<QString> argumentList);
     int cmdExportDailyDataCsv(Project* myProject, QList<QString> argumentList);
     int cmdExportHourlyDataCsv(Project* myProject, QList<QString> argumentList);
+    int cmdSetParallelComputing(Project* myProject, QList<QString> argumentList);
     int cmdExit(Project* myProject);
 
 

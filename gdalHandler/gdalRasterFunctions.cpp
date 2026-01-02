@@ -133,6 +133,11 @@ bool convertGdalRaster(GDALDataset* dataset, gis::Crit3DRasterGrid* myRaster, in
         qDebug() << "Missing NODATA: will be set on minimum value.";
         nodataValue = adfMinMax[0];
     }
+    if ((nodataValue < adfMinMax[0] || nodataValue > adfMinMax[1]) && (adfMinMax[0] <= -9999))
+    {
+        qDebug() << "Wrong NODATA: will be set on minimum value.";
+        nodataValue = adfMinMax[0];
+    }
     qDebug() << "Nodata =" << QString::number(nodataValue);
 
     // initialize raster
