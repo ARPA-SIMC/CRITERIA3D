@@ -10,8 +10,8 @@
 #include "heat.h"
 #include "otherFunctions.h"
 
-#define EPSILON_CUSTOM 0.00001
-#define DBL_EPSILON_CUSTOM 2.2204460492503131e-016
+// [m] 1 micron
+#define EPSILON_METER 0.000001
 
 using namespace soilFluxes3D::v2;
 using namespace soilFluxes3D::v2::Soil;
@@ -383,7 +383,7 @@ namespace soilFluxes3D::v2::Water
         }
 
         double dH = std::fabs(H_i - H_j);
-        if(dH < DBL_EPSILON_CUSTOM)
+        if(dH < EPSILON_METER)
             return 0.;
 
         double z_i = nodeGrid.z[rowIdx] + nodeGrid.waterData.pond[rowIdx];
@@ -393,7 +393,7 @@ namespace soilFluxes3D::v2::Water
         double z_max = SF3Dmax(z_i, z_j);
 
         double H_s = H_max - z_max;
-        if(H_s < EPSILON_CUSTOM)
+        if(H_s < EPSILON_METER)
             return 0.;
 
         // Warning: cause underestimation of flow in lowland water bodies
