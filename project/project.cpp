@@ -2460,6 +2460,18 @@ bool Project::loadGlocalWeightMaps(std::vector<Crit3DMacroArea> &myAreas, bool i
             return false;
         }
 
+        //se  griglia, fai resampling del file
+        gis::Crit3DRasterGrid *newMacroAreasGrid = new gis::Crit3DRasterGrid();
+        if (isGrid)
+        {
+            float cellSize = computeDefaultCellSizeFromMeteoGrid(1);
+            gis::Crit3DRasterGrid meteoGridRaster;
+            if (! meteoGridDbHandler->MeteoGridToRasterFlt(cellSize, gisSettings, meteoGridRaster))
+                return false;
+
+            gis::resampleGrid(*macroAreasGrid, newMacroAreasGrid, meteoGridRaster.header, aggrAverage, 0);
+        }
+
         for (int row = 0; row < nrRows; row++)
         {
             for (int col = 0; col < nrCols; col++)
@@ -2468,13 +2480,16 @@ bool Project::loadGlocalWeightMaps(std::vector<Crit3DMacroArea> &myAreas, bool i
                 {
                     myX = meteoGridDbHandler->meteoGrid()->meteoPoints()[row][col]->point.utm.x;
                     myY = meteoGridDbHandler->meteoGrid()->meteoPoints()[row][col]->point.utm.y;
+                    myValue = gis::getValueFromXY(*newMacroAreasGrid, myX, myY);
+
                 }
                 else
+                {
                     DEM.getXY(row, col, myX, myY);
+                    myValue = macroAreasGrid->getValueFromXY(myX, myY); //solo per dem
+                }
 
-                myValue = macroAreasGrid->getValueFromXY(myX, myY);
-
-                if (!isEqual(myValue, NODATA) && !isEqual(myValue, 0))
+                if (! isEqual(myValue, NODATA) && ! isEqual(myValue, 0))
                 {
                     areaCells.push_back(row*nrCols+col);
                     areaCells.push_back(myValue);
