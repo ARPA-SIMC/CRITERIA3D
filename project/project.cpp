@@ -3597,8 +3597,11 @@ bool Project::interpolationGrid(meteoVariable myVar, const Crit3DTime& myTime)
                                 proxyValues[i] = double(proxyValue);
                             else
                             {
-                                proxyFlag = false;
-                                break;
+                                // CT utilizza la quota letta dalla griglia se il proxy value relativo alla quota è NODATA (è corretto?)
+                                if (getProxyPragaName(interpolationSettings.getProxy(i)->getName()) == proxyHeight && ! isEqual(myZ, NODATA))
+                                    proxyValues[i] = myZ;
+                                else
+                                    proxyFlag = false;
                             }
                         }
 
