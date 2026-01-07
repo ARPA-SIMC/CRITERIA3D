@@ -183,9 +183,10 @@ namespace soilFluxes3D::v2
             for(SF3Duint_t idx = 0; idx < nodeGrid.numNodes; ++idx)
                 courantMax = SF3Dmax(courantMax, nodeGrid.waterData.partialCourantWaterLevels[idx]);
 
-            // more speed, less accuracy
-            if (_parameters.MBRThreshold > 0.01)
-                courantMax *= 0.5;
+            // more speed, less accuracy (disabled)
+            /*if (_parameters.MBRThreshold > 0.01)
+                courantMax *= 0.5
+            */
 
             nodeGrid.waterData.CourantWaterLevel = courantMax;
 
