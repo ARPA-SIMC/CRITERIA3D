@@ -2594,6 +2594,7 @@ bool Crit3DProject::loadModelState(QString statePath)
             return false;
         }
 
+        totalMassBalanceError = 0.;
         processes.setComputeWater(true);
     }
 
