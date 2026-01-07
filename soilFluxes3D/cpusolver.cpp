@@ -159,6 +159,7 @@ namespace soilFluxes3D::v2
     balanceResult_t CPUSolver::waterApproximationLoop(double deltaT)
     {
         balanceResult_t balanceResult = balanceResult_t::stepRefused;
+        _bestMBRerror = noDataD;
 
         for(u8_t approxIdx = 0; approxIdx < _parameters.maxApproximationsNumber; ++approxIdx)
         {
