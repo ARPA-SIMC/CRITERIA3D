@@ -772,8 +772,9 @@ bool setColorScale(meteoVariable variable, Crit3DColorScale *colorScale)
 
     switch(variable)
     {
-        case airTemperature: case dailyAirTemperatureAvg: case dailyAirTemperatureMax:
-        case dailyAirTemperatureMin: case dailyAirTemperatureRange:
+        case airTemperature: case dailyAirTemperatureAvg:
+        case dailyAirTemperatureMax: case dailyAirTemperatureMin: case dailyAirTemperatureRange:
+        case monthlyAirTemperatureAvg: case monthlyAirTemperatureMax: case monthlyAirTemperatureMin:
         case airDewTemperature:
         case snowSurfaceTemperature:
         case dailyHeatingDegreeDays:
@@ -787,9 +788,9 @@ bool setColorScale(meteoVariable variable, Crit3DColorScale *colorScale)
         case thom: case dailyThomMax: case dailyThomAvg: case dailyThomHoursAbove: case dailyThomDaytime: case dailyThomNighttime:
             setRelativeHumidityScale(colorScale);
             break;
-        case precipitation: case dailyPrecipitation: case referenceEvapotranspiration:
-        case dailyReferenceEvapotranspirationHS: case dailyReferenceEvapotranspirationPM: case actualEvaporation:
-        case snowFall: case snowWaterEquivalent: case snowLiquidWaterContent: case snowMelt:
+        case precipitation: case dailyPrecipitation: case monthlyPrecipitation:
+        case referenceEvapotranspiration: case dailyReferenceEvapotranspirationHS: case dailyReferenceEvapotranspirationPM:
+        case actualEvaporation: case snowFall: case snowWaterEquivalent: case snowLiquidWaterContent: case snowMelt:
         case dailyWaterTableDepth:
             setPrecipitationScale(colorScale);
             if (variable == precipitation || variable == snowFall || variable == snowWaterEquivalent
@@ -803,7 +804,7 @@ bool setColorScale(meteoVariable variable, Crit3DColorScale *colorScale)
             setGrayScale(colorScale);
             reverseColorScale(colorScale);
             break;
-        case dailyBIC:
+        case dailyBIC: case monthlyBIC:
             setCenteredScale(colorScale);
             break;
         case globalIrradiance: case directIrradiance: case diffuseIrradiance: case reflectedIrradiance:
