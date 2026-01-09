@@ -185,18 +185,28 @@ namespace soilFluxes3D::v2
                 courantMax = SF3Dmax(courantMax, nodeGrid.waterData.partialCourantWaterLevels[idx]);
 
             // more speed, less accuracy (disabled)
-            /*if (_parameters.MBRThreshold > 0.01)
-                courantMax *= 0.5
-            */
+            if (_parameters.MBRThreshold > 0.01)
+                courantMax *= 0.5;
 
             nodeGrid.waterData.CourantWaterLevel = courantMax;
 
-            //Check Courant
-            if((nodeGrid.waterData.CourantWaterLevel > 1.) && (deltaT > _parameters.deltaTmin))
+            // check Courant
+            if((nodeGrid.waterData.CourantWaterLevel > 1.001) && (deltaT > _parameters.deltaTmin))
             {
-                _parameters.deltaTcurr = SF3Dmax(_parameters.deltaTmin, _parameters.deltaTcurr / nodeGrid.waterData.CourantWaterLevel);
-                if(_parameters.deltaTcurr > 1.)
-                    _parameters.deltaTcurr = std::floor(_parameters.deltaTcurr);
+                _parameters.deltaTcurr /= nodeGrid.waterData.CourantWaterLevel;
+
+                int multiply = 0;
+                while (_parameters.deltaTcurr < 1.)
+                {
+                    _parameters.deltaTcurr *= 10.;
+                    ++multiply;
+                }
+                _parameters.deltaTcurr = std::floor(_parameters.deltaTcurr);
+
+                for (int i = 0; i < multiply; i++)
+                    _parameters.deltaTcurr /= 10.;
+
+                _parameters.deltaTcurr = SF3Dmax(_parameters.deltaTmin, _parameters.deltaTcurr);
 
                 return balanceResult_t::stepHalved;
             }
