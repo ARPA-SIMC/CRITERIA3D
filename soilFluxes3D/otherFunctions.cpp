@@ -1,6 +1,5 @@
 #include "otherFunctions.h"
 
-//TEMP
 using namespace soilFluxes3D::v2;
 
 namespace soilFluxes3D::v2::Math
@@ -22,7 +21,7 @@ namespace soilFluxes3D::v2::Math
 
     __cudaSpec double arithmeticMean(double v1, double v2)
     {
-        return (v1 + v2) / 2;
+        return (v1 + v2) * 0.5;
     }
 
     __cudaSpec double geometricMean(double v1, double v2)
@@ -44,4 +43,5 @@ namespace soilFluxes3D::v2::Math
 
         return std::sqrt(norm);
     }
+
 } //namespace
