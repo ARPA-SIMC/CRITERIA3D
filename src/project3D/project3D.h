@@ -150,9 +150,6 @@
         std::vector <double> layerThickness;    // [m]
         double soilLayerThicknessGrowthFactor;  // [-] progressive growth factor of layer thicknesses
 
-        double previousTotalWaterContent;       // [m3]
-        double totalMassBalanceError;           // [m3]
-
         // evaporation
         std::vector<double> evapCoeff;
         std::vector<double> layerEvapCoeff;
@@ -162,6 +159,10 @@
         double totalPrecipitation;              // [m3 h-1]
         double totalEvaporation;                // [m3 h-1]
         double totalTranspiration;              // [m3 h-1]
+
+        // balance
+        double previousTotalWaterContent;       // [m3]
+        double totalMassBalanceError;           // [m3]
 
         // specific outputs
         std::vector<int> waterContentDepth;

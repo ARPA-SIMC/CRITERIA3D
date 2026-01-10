@@ -1719,7 +1719,7 @@ double Project3D::getSoilLayerBottom(unsigned int i)
 // soil layer index from soildepth [m]
 int Project3D::getSoilLayerIndex(double depth)
 {
-    int layer = 0;
+    unsigned int layer = 0;
     while (depth > getSoilLayerBottom(layer))
     {
         if (layer == nrLayers-1)
