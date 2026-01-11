@@ -373,6 +373,8 @@
 
         bool getProjectList(QList<QString> &projectList);
 
+        bool addOutputPoint(double myLat = NODATA, double myLon = NODATA);
+
     private slots:
         void deleteMeteoWidgetPoint(int id);
         void deleteMeteoWidgetGrid(int id);

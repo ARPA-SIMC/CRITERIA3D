@@ -19,6 +19,7 @@
 #include "dialogSummary.h"
 #include "waterTableWidget.h"
 #include "utilities.h"
+#include "dialogNewPoint.h"
 
 #include <iostream>
 #include <QDir>
@@ -284,6 +285,45 @@ void Project::checkProxyForMultipleDetrending(Crit3DProxy &myProxy, bool isHeigh
     }
 
     return;
+}
+
+
+bool Project::addOutputPoint(double myLat, double myLon)
+{
+    if (! DEM.isLoaded)
+    {
+        logError(ERROR_STR_MISSING_DEM);
+        return false;
+    }
+
+    if (outputPointsFileName.isEmpty())
+    {
+        logError("Load an output point list before");
+        return false;
+    }
+
+    // initialize idList
+    QList<QString> idPoints;
+    for (unsigned int i = 0; i < outputPoints.size(); i++)
+    {
+        idPoints.append(QString::fromStdString(outputPoints[i].id));
+    }
+
+    // set new point dialog
+    DialogNewPoint newPointDialog(idPoints, gisSettings, &(DEM), myLat, myLon);
+
+    if (newPointDialog.result() == QDialog::Accepted)
+    {
+        gis::Crit3DOutputPoint newPoint;
+        newPoint.initialize(newPointDialog.getId().toStdString(), true, newPointDialog.getLat(), newPointDialog.getLon(),
+                            newPointDialog.getHeight(), gisSettings.utmZone);
+        outputPoints.push_back(newPoint);
+
+        if (! writeOutputPointList(outputPointsFileName))
+            return false;
+    }
+
+    return true;
 }
 
 
@@ -1309,7 +1349,8 @@ bool Project::newOutputPointsDB(QString dbName)
 
 bool Project::loadOutputPointsDB(QString dbName)
 {
-    if (dbName == "") return false;
+    if (dbName == "")
+        return false;
 
     closeOutputPointsDB();
 
@@ -3771,6 +3812,8 @@ bool Project::loadProjectSettings(QString settingsFileName)
         dbPointsFileName = projectSettings->value("meteo_points").toString();
 
         outputPointsFileName = projectSettings->value("output_points").toString();
+        currentDbOutputFileName = projectSettings->value("output_db").toString();
+
         dbAggregationFileName = projectSettings->value("aggregation_points").toString();
 
         dbGridXMLFileName = projectSettings->value("meteo_grid").toString();
