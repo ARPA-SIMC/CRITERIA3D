@@ -1,8 +1,10 @@
 #include "dialogNewPoint.h"
 #include "basicMath.h"
+#include "commonConstants.h"
 
 
-DialogNewPoint::DialogNewPoint(const QList<QString>& _idList, const gis::Crit3DGisSettings& _gisSettings, gis::Crit3DRasterGrid* _DEMptr)
+DialogNewPoint::DialogNewPoint(const QList<QString>& _idList, const gis::Crit3DGisSettings& _gisSettings,
+                               gis::Crit3DRasterGrid* _DEMptr, double myLat, double myLon)
 :idList(_idList), gisSettings(_gisSettings), DEMpointer(_DEMptr)
 {
     setWindowTitle("New point");
@@ -85,21 +87,45 @@ DialogNewPoint::DialogNewPoint(const QList<QString>& _idList, const gis::Crit3DG
     mainLayout->addLayout(layoutOk);
     setLayout(mainLayout);
 
-    connect(&computeUTMButton, &QPushButton::clicked, [=](){ computeUTM(); });
-    connect(&getFromDEMButton, &QPushButton::clicked, [=](){ getFromDEM(); });
+    connect(&computeUTMButton, &QPushButton::clicked, [=](){ computeLatLonFromUTM(); });
+    connect(&getFromDEMButton, &QPushButton::clicked, [=](){ getHeightFromDEM(); });
 
     connect(&buttonBox, &QDialogButtonBox::accepted, [=](){ this->done(QDialog::Accepted); });
     connect(&buttonBox, &QDialogButtonBox::rejected, [=](){ this->done(QDialog::Rejected); });
 
+    setlatLon(myLat, myLon);
+
     exec();
 }
+
 
 DialogNewPoint::~DialogNewPoint()
 {
     close();
 }
 
-void DialogNewPoint::computeUTM()
+
+void DialogNewPoint::setlatLon(double myLat, double myLon)
+{
+    if (isEqual(myLat, NODATA) || isEqual(myLon, NODATA))
+        return;
+
+    lat.setText(QString::number(myLat, 'g', 8));
+    lon.setText(QString::number(myLon, 'g', 8));
+
+    gis::Crit3DUtmPoint utmPoint;
+    gis::Crit3DGeoPoint latLonPoint(myLat, myLon);
+    gis::getUtmFromLatLon(gisSettings.utmZone, latLonPoint, &utmPoint);
+
+    float demValue = gis::getValueFromXY(*DEMpointer, utmPoint.x, utmPoint.y);
+    if (! isEqual(demValue, DEMpointer->header->flag))
+    {
+        height.setText(QString::number(demValue));
+    }
+}
+
+
+void DialogNewPoint::computeLatLonFromUTM()
 {
     if (utmx.text().isEmpty() || utmy.text().isEmpty())
         return;
@@ -110,7 +136,8 @@ void DialogNewPoint::computeUTM()
     lon.setText(QString::number(myLon));
 }
 
-void DialogNewPoint::getFromDEM()
+
+void DialogNewPoint::getHeightFromDEM()
 {
     if (DEMpointer == nullptr)
         return;
@@ -144,6 +171,7 @@ void DialogNewPoint::getFromDEM()
         height.setText(QString::number(demValue));
     }
 }
+
 
 void DialogNewPoint::done(int res)
 {

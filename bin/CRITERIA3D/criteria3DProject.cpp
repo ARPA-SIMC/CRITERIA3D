@@ -1248,6 +1248,7 @@ bool Crit3DProject::runModels(const QDateTime &firstTime, const QDateTime &lastT
             // output points
             if (isSaveOutputPoints() && currentSeconds == 3600)
             {
+                logInfo("Write output points data...");
                 if (! writeOutputPointsData())
                 {
                     isModelRunning = false;
@@ -1415,6 +1416,11 @@ bool Crit3DProject::loadCriteria3DProject(const QString &fileName)
 
     if (! treeCoverMapFileName.isEmpty())
         loadTreeCoverMap(treeCoverMapFileName);
+
+    if (! currentDbOutputFileName.isEmpty())
+    if (loadOutputPointsDB(currentDbOutputFileName))
+        if (! outputPointsFileName.isEmpty())
+            setSaveOutputPoints(true);
 
     QString projectName = getProjectName();
     if (projectName != "" && projectName != "default")

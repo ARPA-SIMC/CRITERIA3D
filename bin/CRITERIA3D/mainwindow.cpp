@@ -422,6 +422,8 @@ bool MainWindow::contextMenuRequested(QPoint localPos)
         if (isInsideDEM(mapPos))
         {
             contextMenu.addSeparator();
+            contextMenu.addAction("Add output point...");
+            nrItems++;
             contextMenu.addAction("Extract the basin from this point");
             nrItems++;
         }
@@ -443,6 +445,17 @@ bool MainWindow::contextMenuRequested(QPoint localPos)
             {
                 myProject.logError("Load soil database before.");
             }
+        }
+
+        if (selection->text().contains("Add output point..."))
+        {
+            Position geoPos = mapView->mapToScene(mapPos);
+            /*gis::Crit3DUtmPoint utmPoint;
+            gis::Crit3DGeoPoint geoPoint(geoPos.latitude(), geoPos.longitude());
+            gis::getUtmFromLatLon(myProject.gisSettings.utmZone, geoPoint, &utmPoint);*/
+
+            if (myProject.addOutputPoint(geoPos.latitude(), geoPos.longitude()))
+                addOutputPointsGUI();
         }
 
         if (selection->text().contains("Extract the basin"))
@@ -3249,13 +3262,20 @@ void MainWindow::on_actionOutputDB_new_triggered()
     myProject.newOutputPointsDB(dbName);
 }
 
+
 void MainWindow::on_actionOutputDB_open_triggered()
 {
     QString dbName = QFileDialog::getOpenFileName(this, tr("Open output db"), myProject.getProjectPath() + PATH_OUTPUT, tr("DB files (*.db)"));
 
-    if (dbName == "") return;
+    if (dbName == "")
+        return;
 
-    myProject.loadOutputPointsDB(dbName);
+    if (myProject.loadOutputPointsDB(dbName))
+        if (! myProject.outputPointsFileName.isEmpty())
+        {
+            myProject.setSaveOutputPoints(true);
+            ui->flagOutputPoints_save_output->setChecked(true);
+        }
 }
 
 
@@ -3294,31 +3314,8 @@ void MainWindow::on_actionLoad_OutputPoints_triggered()
 
 void MainWindow::on_actionOutputPoints_add_triggered()
 {
-    if (myProject.outputPointsFileName.isEmpty())
-    {
-        myProject.logError("Load an output point list before");
-        return;
-    }
-
-    QList<QString> idPoints;
-    for (unsigned int i = 0; i < myProject.outputPoints.size(); i++)
-    {
-        idPoints.append(QString::fromStdString(myProject.outputPoints[i].id));
-    }
-
-    gis::Crit3DRasterGrid myGrid;
-    DialogNewPoint newPointDialog(idPoints, myProject.gisSettings, &(myProject.DEM));
-    if (newPointDialog.result() == QDialog::Accepted)
-    {
-        gis::Crit3DOutputPoint newPoint;
-        newPoint.initialize(newPointDialog.getId().toStdString(), true, newPointDialog.getLat(), newPointDialog.getLon(), newPointDialog.getHeight(), myProject.gisSettings.utmZone);
-        myProject.outputPoints.push_back(newPoint);
-        if (!myProject.writeOutputPointList(myProject.outputPointsFileName))
-        {
-            return;
-        }
+    if (myProject.addOutputPoint())
         addOutputPointsGUI();
-    }
 }
 
 

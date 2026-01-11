@@ -36,10 +36,10 @@
 
         bool saveHourlyCriteria3D_Data(const QString &tableName, const QDateTime& myTime,
                                        const std::vector<float>& values,
-                                       const std::vector<int>& waterContentDepth,
-                                       const std::vector<int>& waterPotentialDepth,
-                                       const std::vector<int>& degreeOfSaturationDepth,
-                                       const std::vector<int>& factorOfSafetyDepth,
+                                       const std::vector<int>& waterContentDepthList,
+                                       const std::vector<int>& waterPotentialDepthList,
+                                       const std::vector<int>& degreeOfSaturationDepthList,
+                                       const std::vector<int>& factorOfSafetyDepthList,
                                        QString &errorStr);
 
         void appendCriteria3DOutputValue(criteria3DVariable myVar, const std::vector<int> &depthList,
