@@ -168,27 +168,47 @@ namespace soilFluxes3D::v2::Water
 
         double currMBRerror = std::fabs(balanceDataCurrentTimeStep.waterMBR);
 
-        //Optimal error
+        // critical error management
+        if (std::isnan(currMBRerror))
+        {
+            if(deltaT > parameters.deltaTmin)
+            {
+                parameters.deltaTcurr = SF3Dmax(parameters.deltaTcurr / 2, parameters.deltaTmin);
+                return balanceResult_t::stepHalved;
+            }
+            else if (approxNr > 0)
+            {
+                restoreBestStep(deltaT);
+                acceptStep(deltaT);
+                return balanceResult_t::stepAccepted;
+            }
+            else
+            {
+                return balanceResult_t::stepNan;
+            }
+        }
+
+        // the error is less than the required threshold
         if(currMBRerror < parameters.MBRThreshold)
         {
             acceptStep(deltaT);
 
-            //Check Stability (Courant)
+            // increase deltaT if system is stable (check Courant)
             if((nodeGrid.waterData.CourantWaterLevel < parameters.CourantWaterThreshold) && (approxNr <= 3))
                 parameters.deltaTcurr = std::min(parameters.deltaTmax, parameters.deltaTcurr * 2);
 
             return balanceResult_t::stepAccepted;
         }
 
-        //Good error or first approximation
+        // error improves or it is the first approximation
         if (approxNr == 0 || currMBRerror < bestMBRerror)
         {
             saveBestStep();
             bestMBRerror = currMBRerror;
         }
 
-        //Critical error (unstable system) or last approximation
-        if (approxNr == (parameters.maxApproximationsNumber - 1) || currMBRerror > (bestMBRerror * parameters.instabilityFactor))
+        // error gets worse (the system is unstable) or it is last approximation
+        if (currMBRerror > (bestMBRerror * parameters.instabilityFactor) || approxNr == (parameters.maxApproximationsNumber - 1))
         {
             if(deltaT > parameters.deltaTmin)
             {
@@ -257,11 +277,6 @@ namespace soilFluxes3D::v2::Water
         SF3Duint_t linkedNodeIndex = nodeGrid.linkData[linkIndex].linkIndex[nodeIndex];
         double matrixValue = getMatrixElement(nodeIndex, linkedNodeIndex);
         nodeGrid.linkData[linkIndex].waterFlowSum[nodeIndex] += matrixValue * (nodeGrid.waterData.pressureHead[nodeIndex] - nodeGrid.waterData.pressureHead[linkedNodeIndex]) * deltaT;
-    }
-
-    void restorePressureHead() //TO DO: remove
-    {
-        std::memcpy(nodeGrid.waterData.pressureHead, nodeGrid.waterData.oldPressureHead, nodeGrid.numNodes * sizeof(double));
     }
 
     void computeCapacity(VectorCPU& vectorC)

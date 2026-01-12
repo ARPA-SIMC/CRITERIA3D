@@ -13,7 +13,7 @@ namespace soilFluxes3D::v2
 
             VectorCPU vectorC;
 
-            void waterMainLoop(double maxTimeStep, double& acceptedTimeStep);
+            bool waterMainLoop(double maxTimeStep, double& acceptedTimeStep);
             balanceResult_t waterApproximationLoop(double deltaT);
 
             void heatLoop(double timeStepHeat, double timeStepWater);

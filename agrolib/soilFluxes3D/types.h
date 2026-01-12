@@ -182,7 +182,7 @@ namespace soilFluxes3D { inline namespace v2
     // ...
 
     //Simulation
-    enum class balanceResult_t : u8_t {stepAccepted, stepRefused, stepHalved};
+    enum class balanceResult_t : u8_t {stepAccepted, stepRefused, stepHalved, stepNan};
     struct balanceData_t
     {
         double waterStorage = 0.;

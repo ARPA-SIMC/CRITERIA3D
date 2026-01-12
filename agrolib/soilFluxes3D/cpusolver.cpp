@@ -65,7 +65,8 @@ namespace soilFluxes3D::v2
         switch (process)
         {
             case processType::Water:
-                waterMainLoop(maxTimeStep, acceptedTimeStep);
+                if (! waterMainLoop(maxTimeStep, acceptedTimeStep))
+                    return SF3Derror_t::SolverError;
                 break;
             case processType::Heat:
                 heatLoop(maxTimeStep, acceptedTimeStep);
@@ -81,6 +82,7 @@ namespace soilFluxes3D::v2
         _status = solverStatus::initialized;
         return SF3Derror_t::SF3Dok;
     }
+
 
     SF3Derror_t CPUSolver::clean()
     {
@@ -118,9 +120,11 @@ namespace soilFluxes3D::v2
             omp_set_num_threads(static_cast<int>(_parameters.numThreads));
     }
 
-    void CPUSolver::waterMainLoop(double maxTimeStep, double &acceptedTimeStep)
+
+    bool CPUSolver::waterMainLoop(double maxTimeStep, double &acceptedTimeStep)
     {
         balanceResult_t stepStatus = balanceResult_t::stepRefused;
+
         while(stepStatus != balanceResult_t::stepAccepted)
         {
             acceptedTimeStep = SF3Dmin(_parameters.deltaTcurr, maxTimeStep);
@@ -142,19 +146,28 @@ namespace soilFluxes3D::v2
                     nodeGrid.waterData.saturationDegree[nodeIdx] = computeNodeSe(nodeIdx);
             }
 
-            //Update aereodynamic and soil conductance
+            // update aereodynamic and soil conductance
             updateConductance();
 
-            //Update boundary
+            // update boundary water
             updateBoundaryWaterData(acceptedTimeStep);
 
-            //Effective computation step
+            // main computation
             stepStatus = waterApproximationLoop(acceptedTimeStep);
 
             if(stepStatus != balanceResult_t::stepAccepted)
-                restorePressureHead();
+            {
+                // restore old pressureHead
+                std::memcpy(nodeGrid.waterData.pressureHead, nodeGrid.waterData.oldPressureHead, nodeGrid.numNodes * sizeof(double));
+            }
+
+            if (stepStatus == balanceResult_t::stepNan)
+                return false;
         }
+
+        return true;
     }
+
 
     balanceResult_t CPUSolver::waterApproximationLoop(double deltaT)
     {
@@ -237,15 +250,15 @@ namespace soilFluxes3D::v2
 
             //Check water balance
             balanceResult = evaluateWaterBalance(approxIdx, _bestMBRerror, deltaT, _parameters);
-            logStruct;
 
-            if((balanceResult == balanceResult_t::stepAccepted) || (balanceResult == balanceResult_t::stepHalved))
+            if((balanceResult == balanceResult_t::stepAccepted) || (balanceResult == balanceResult_t::stepHalved)
+                || (balanceResult == balanceResult_t::stepNan))
                 return balanceResult;
-
         }
 
         return balanceResult;
     }
+
 
     void CPUSolver::heatLoop(double timeStepHeat, double timeStepWater)
     {

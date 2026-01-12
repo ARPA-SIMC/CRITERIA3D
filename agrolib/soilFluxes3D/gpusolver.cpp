@@ -195,8 +195,12 @@ namespace soilFluxes3D::v2
             //Effective computation step
             stepStatus = waterApproximationLoop(acceptedTimeStep);
 
-            if(stepStatus != balanceResult_t::stepAccepted)  //old restorePressureHead();
-                cudaMemcpy(nodeGrid.waterData.pressureHead, nodeGrid.waterData.oldPressureHead, nodeGrid.numNodes * sizeof(double), cudaMemcpyDeviceToDevice);
+            if(stepStatus != balanceResult_t::stepAccepted)
+            {
+                //  restore old pressureHead
+                cudaMemcpy(nodeGrid.waterData.pressureHead, nodeGrid.waterData.oldPressureHead,
+                           nodeGrid.numNodes * sizeof(double), cudaMemcpyDeviceToDevice);
+            }
         }
     }
 
