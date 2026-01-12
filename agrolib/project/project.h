@@ -100,7 +100,6 @@
         int errorType;
 
         QString logFileName;
-        QString dataFileName;
         QString demFileName;
         QString dbPointsFileName;
         QString dbAggregationFileName;
