@@ -26,6 +26,9 @@ namespace soilFluxes3D::v2::Soil
      */
     __cudaSpec double computeNodeTheta(SF3Duint_t nodeIndex)
     {
+        if(nodeGrid.surfaceFlag[nodeIndex])
+            return 1.;
+
         return computeNodeTheta_fromSe(nodeIndex, nodeGrid.waterData.saturationDegree[nodeIndex]);
     }
 
@@ -35,7 +38,6 @@ namespace soilFluxes3D::v2::Soil
      */
     __cudaSpec double computeNodeTheta_fromSe(SF3Duint_t nodeIndex, double Se)
     {
-        assert(!nodeGrid.surfaceFlag[nodeIndex]);   //TO DO: is needed?
         soilData_t& nodeSoil = *(nodeGrid.soilSurfacePointers[nodeIndex].soilPtr);
         return (Se * (nodeSoil.Theta_s - nodeSoil.Theta_r)) + nodeSoil.Theta_r;
     }
