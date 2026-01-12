@@ -5586,19 +5586,8 @@ bool Project::setLogFile(QString myFileName)
     }
     logInfo("LogFile = " + logFileName);
 
-    //File temporaneo per il confronto dei dati di ciascuna iterazione
-    dataFileName = logFilePath + myDate + "_data_" + endLogFileName;
-    dataFile.open(dataFileName.toStdString().c_str());
-    if (!dataFile.is_open())
-    {
-        logError("Unable to open data file: " + logFileName);
-        return false;
-    }
-    logInfo("DataFile = " + logFileName);
-
     return true;
 }
-
 
 
 void Project::logData(QString typeData, QString data)
