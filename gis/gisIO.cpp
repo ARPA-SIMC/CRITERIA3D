@@ -101,6 +101,13 @@ string upperCase(const string &myStr)
     return upperCaseStr;
 }
 
+string lowerCase(const string &myStr)
+{
+    string lowerCaseStr = myStr;
+    transform(myStr.begin(), myStr.end(), lowerCaseStr.begin(), ::tolower);
+    return lowerCaseStr;
+}
+
 
 namespace gis
     {
@@ -494,30 +501,44 @@ namespace gis
     {
         if (rasterGrid == nullptr)
             return false;
+
         rasterGrid->clear();
 
-        if( gis::readEsriGridHeader(fileName, rasterGrid->header, errorStr) )
+        // file extension
+        std::string fileExtension = "";
+        if (fileName.size() > 4)
         {
-            // check suffix
-            std::size_t found = fileName.rfind(".flt");
-            string fltFileName;
-            if (found != std::string::npos)
-            {
-                fltFileName = fileName;
-            }
-            else
+            std::string suffix = fileName.substr(fileName.size() - 4);
+            if (suffix[0] == '.')
+                fileExtension = lowerCase(suffix);
+        }
+
+        if (fileExtension.empty() || fileExtension == ".flt")
+        {
+            // float grid (.hdr and .flt files)
+            if(! gis::readEsriGridHeader(fileName, rasterGrid->header, errorStr))
+                return false;
+
+            std::string fltFileName = fileName;
+            if (fileExtension.empty())
             {
                 fltFileName = fileName + ".flt";
             }
 
-            if (gis::readRasterFloatData(fltFileName, rasterGrid, errorStr))
-            {
-                gis::updateMinMaxRasterGrid(rasterGrid);
-                rasterGrid->isLoaded = true;
-            }
+            if (! gis::readRasterFloatData(fltFileName, rasterGrid, errorStr))
+                return false;
+        }
+        else if (fileExtension == ".asc")
+        {
+            // ascii grid
+            if (! gis::readEsriGridAscii(fileName, rasterGrid, errorStr))
+                return false;
         }
 
-        return rasterGrid->isLoaded;
+        gis::updateMinMaxRasterGrid(rasterGrid);
+        rasterGrid->isLoaded = true;
+
+        return true;
     }
 
 
@@ -544,6 +565,117 @@ namespace gis
 
 
     /*!
+     * \brief Read a ASCII grid file (.asc)
+     * \param fileName    string
+     * \param rasterGrid  Crit3DRasterGrid pointer
+     * \param errorStr    string
+     * \return true on success, false otherwise
+     */
+    bool readEsriGridAscii(const std::string &fileName, gis::Crit3DRasterGrid *rasterGrid, std::string &errorStr)
+    {
+        string myLine, myKey, upKey, valueStr;
+        int nrKeys = 0;
+
+        // open file
+        ifstream  myFile(fileName.c_str());
+
+        if (myFile.fail())
+        {
+            errorStr = "Wrong or missing file: " + fileName;
+            return false;
+        }
+
+        // read header
+        bool isHeader = true;
+        while (myFile.good() && isHeader)
+        {
+            getline (myFile, myLine);
+            if (splitKeyValue(myLine, myKey, valueStr))
+            {
+                upKey = upperCase(myKey);
+
+                if ((upKey == "NCOLS") || (upKey == "NROWS") || (upKey == "CELLSIZE")
+                    ||    (upKey == "XLLCORNER") || (upKey == "YLLCORNER")
+                    ||    (upKey == "NODATA_VALUE") || (upKey == "NODATA"))
+                    nrKeys++;
+
+                if (upKey == "NCOLS")
+                    rasterGrid->header->nrCols = stoi(valueStr);
+
+                else if (upKey == "NROWS")
+                    rasterGrid->header->nrRows = stoi(valueStr);
+
+                else if (upKey == "DATATYPE")
+                {
+                    // non standard key - derived from envi
+                    rasterGrid->header->nrBytes = stoi(valueStr);
+                    if (rasterGrid->header->nrBytes > 4)
+                    {
+                        errorStr = "Wrong data type:" + valueStr + " The maximum allowed is 4 (float).";
+                        return false;
+                    }
+                }
+
+                else if (upKey == "XLLCORNER")
+                {
+                    // LLCORNER = Lower Left corner
+                    rasterGrid->header->llCorner.x = stod(valueStr);
+                }
+
+                else if (upKey == "YLLCORNER")
+                    rasterGrid->header->llCorner.y = stod(valueStr);
+
+                else if (upKey == "CELLSIZE")
+                    rasterGrid->header->cellSize = stod(valueStr);
+
+                else if ((upKey == "NODATA_VALUE") || (upKey == "NODATA"))
+                    rasterGrid->header->flag = stof(valueStr);
+
+                else
+                    isHeader = false;
+            }
+        }
+
+        if (nrKeys < 6)
+        {
+            myFile.close();
+            errorStr = "Missing keys in header file.";
+            return false;
+        }
+
+        if (! rasterGrid->initializeGrid())
+        {
+            errorStr = "Memory error: file too big.";
+            return false;
+        }
+
+        // read values
+        int row = 0;
+        while (myFile.good())
+        {
+            istringstream myStream(myLine);
+
+            float number;
+            int col = 0;
+            while (myStream >> number)
+            {
+                if (row < rasterGrid->header->nrRows && col < rasterGrid->header->nrCols)
+                    rasterGrid->value[row][col] = number;
+                ++col;
+            }
+
+            getline (myFile, myLine);
+            ++row;
+        }
+        myFile.close();
+
+        rasterGrid->isLoaded = true;
+
+        return true;
+    }
+
+
+    /*!
      * \brief Read a ESRI/ENVI float raster (header and data)
      * \return true on success, false otherwise
      */
@@ -556,12 +688,16 @@ namespace gis
         }
 
         std::string fileNameWithoutExt = fileName.substr(0, fileName.size() - 4);
-        std::string fileExtension = fileName.substr(fileName.size() - 4);
+        std::string fileExtension = lowerCase(fileName.substr(fileName.size() - 4));
 
         bool isOk = false;
         if (fileExtension == ".flt")
         {
             isOk = gis::readEsriGrid(fileNameWithoutExt, rasterGrid, errorStr);
+        }
+        else if (fileExtension == ".asc")
+        {
+            isOk = gis::readEsriGridAscii(fileName, rasterGrid, errorStr);
         }
         else if (fileExtension == ".img")
         {
@@ -569,7 +705,7 @@ namespace gis
         }
         else
         {
-            errorStr = "Wrong suffix: .flt or .img are allowed.";
+            errorStr = "Format allowed: .flt, .img, .asc";
             isOk = false;
         }
 
