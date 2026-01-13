@@ -90,6 +90,7 @@
         bool isAmphystomatic;
         double rootShootRatio;  //ratio of C allocated to roots and C allocated to aboveground biomass
         double wildfireDamage;  //ratio of biomass lost in wildfire event
+        double clumpingParameter; // from 0 to 1, < 1 for needles
     };
 
     struct TLAIparam {
@@ -220,6 +221,7 @@
         double wildfireDamage;
         int management;
         double subCanopyTemperature;
+        double clumpingParameter;
 
         void setLAICanopy(double myLAI) { leafAreaIndexCanopy = myLAI; }
         double getLAICanopy() { return leafAreaIndexCanopy; }

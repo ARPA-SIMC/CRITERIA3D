@@ -106,29 +106,29 @@ Crit3DHydrallPlant::Crit3DHydrallPlant()
     mBallBerry = NODATA;
 
     tableEcophysiologicalParameters = {
-        {"LARCH",                            35.0, 6.0, false, 0.29, 0.8},
-        {"PICEA_ABIES",                       35.0, 6.0, false, 0.29, 0.8},
-        {"ABIES_ALBA",                      30.0, 6.0, false, 0.28, 0.8},
-        {"PINUS_SYLVESTRIS_SCOTCH_PINE",          30.0, 6.0, false, 0.29, 0.8},
-        {"PINUS_NIGRA",                         30.0, 6.0, false, 0.29, 0.8},
-        {"PINUS_PINEA",                 40.0, 7.0, true, 0.29, 0.8},
-        {"CONIFER",      30.0, 6.0, false, 0.29, 0.8},
-        {"BEECH",                                     50.0, 8.0, false, 0.2, 0.4},
-        {"QUERCUS_PETREA_ROBUR_PUBESCENS",       50.0, 8.0, false, 0.2, 0.4},
-        {"QUERCUS_CERRIS_FRAINETTO_VALLONEA", 50.0, 8.0, false, 0.2, 0.4},
-        {"CASTINEA_SATIVA",                                  50.0, 8.0, false, 0.28, 0.4},
-        {"CARPINUS_BETULUS_OTRYA_OXYCARPA",                         50.0, 8.0, false, 0.26, 0.4},
-        {"HYGROPHILOUS_FOREST",                             60.0, 9.0, false, 0.22, 0.4},
-        {"BROADLEAF",                    50.0, 8.0, false, 0.22, 0.4},
-        {"QUERCUS_ILEX",                                     40.0, 7.0, true, 0.2, 0.4},
-        {"QUERCUS_SUBER",                                   40.0, 7.0, true, 0.2, 0.4},
-        {"MEDITERRANEAN_EVERGREEN_TREE",      40.0, 7.0, true, 0.22, 1},
-        {"POPULUS_ARTIFICIAL",                        70.0, 9.0, false, 0.21, 0.4},
-        {"BROADLEAF_ARTIFICIAL",             60.0, 8.0, false, 0.24, 0.4},
-        {"CONIFERS_ARTIFICIAL",                     40.0, 6.0, false, 0.29, 0.4},
-        {"SHRUB_SUBALPINE",                         40.0, 7.0, false, 0.33, 1},
-        {"SHRUB_TEMPERATE",                40.0, 7.0, false, 0.33, 1},
-        {"SHRUB_MEDITERRANEAN",             40.0, 8.0, true, 0.33, 1} //TODO: check some of these values
+        {"LARCH",                            35.0, 6.0, false, 0.29, 0.8, 0.8},
+        {"PICEA_ABIES",                       35.0, 6.0, false, 0.29, 0.8, 0.8},
+        {"ABIES_ALBA",                      30.0, 6.0, false, 0.28, 0.8, 0.8},
+        {"PINUS_SYLVESTRIS_SCOTCH_PINE",          30.0, 6.0, false, 0.29, 0.8, 0.8},
+        {"PINUS_NIGRA",                         30.0, 6.0, false, 0.29, 0.8, 0.8},
+        {"PINUS_PINEA",                 40.0, 7.0, true, 0.29, 0.8, 0.8},
+        {"CONIFER",      30.0, 6.0, false, 0.29, 0.8, 0.8},
+        {"BEECH",                                     50.0, 8.0, false, 0.2, 0.4, 1},
+        {"QUERCUS_PETREA_ROBUR_PUBESCENS",       50.0, 8.0, false, 0.2, 0.4, 1},
+        {"QUERCUS_CERRIS_FRAINETTO_VALLONEA", 50.0, 8.0, false, 0.2, 0.4, 1},
+        {"CASTINEA_SATIVA",                                  50.0, 8.0, false, 0.28, 0.4, 1},
+        {"CARPINUS_BETULUS_OTRYA_OXYCARPA",                         50.0, 8.0, false, 0.26, 0.4,1 },
+        {"HYGROPHILOUS_FOREST",                             60.0, 9.0, false, 0.22, 0.4, 1},
+        {"BROADLEAF",                    50.0, 8.0, false, 0.22, 0.4, 1},
+        {"QUERCUS_ILEX",                                     40.0, 7.0, true, 0.2, 0.4, 1},
+        {"QUERCUS_SUBER",                                   40.0, 7.0, true, 0.2, 0.4, 1},
+        {"MEDITERRANEAN_EVERGREEN_TREE",      40.0, 7.0, true, 0.22, 1, 0.8},
+        {"POPULUS_ARTIFICIAL",                        70.0, 9.0, false, 0.21, 0.4, 1},
+        {"BROADLEAF_ARTIFICIAL",             60.0, 8.0, false, 0.24, 0.4, 1},
+        {"CONIFERS_ARTIFICIAL",                     40.0, 6.0, false, 0.29, 0.4, 0.8},
+        {"SHRUB_SUBALPINE",                         40.0, 7.0, false, 0.33, 1, 1},
+        {"SHRUB_TEMPERATE",                40.0, 7.0, false, 0.33, 1, 1},
+        {"SHRUB_MEDITERRANEAN",             40.0, 8.0, true, 0.33, 1, 1} //TODO: check some of these values
     };
 
 
@@ -608,6 +608,7 @@ bool Crit3DHydrall::setPlantVariables(int forestIndex, double chlorophyllContent
     plant.rootShootRatioRef = plant.tableEcophysiologicalParameters[conversionTableVector[forestIndex]].rootShootRatio;
     plant.mBallBerry = plant.tableEcophysiologicalParameters[conversionTableVector[forestIndex]].mBallBerry;
     plant.wildfireDamage = plant.tableEcophysiologicalParameters[conversionTableVector[forestIndex]].wildfireDamage;
+    plant.clumpingParameter = plant.tableEcophysiologicalParameters[conversionTableVector[forestIndex]].clumpingParameter;
 
     return true;
 }
@@ -705,7 +706,7 @@ void Crit3DHydrall::radiationAbsorption()
 
     // TODO chiedere a Magnani questi parametri
     static double   leafAbsorbanceNIR= 0.2;
-    static double   clumpingParameter = 1.0 ; // from 0 to 1 <1 for needles
+    //static double   clumpingParameter = 1.0 ; // from 0 to 1 <1 for needles
     double  diffuseLightSector1K = 0.5;
     double diffuseLightSector2K = 0.5;
     double diffuseLightSector3K = 0.5;
@@ -737,8 +738,8 @@ void Crit3DHydrall::radiationAbsorption()
         //diffuseLightExtinctionCoefficient.global = (diffuseLightSector1K+diffuseLightSector2K+diffuseLightSector3K)/3;
     //}
         //Include effects of leaf clumping (see Goudriaan & van Laar 1994, p 110)
-    directLightExtinctionCoefficient.global  *= clumpingParameter ;//direct light
-    diffuseLightExtinctionCoefficient.global *= clumpingParameter ;//diffuse light
+    directLightExtinctionCoefficient.global  *= plant.clumpingParameter ;//direct light
+    diffuseLightExtinctionCoefficient.global *= plant.clumpingParameter ;//diffuse light
     //Based on approximation by Goudriaan 1977 (in Goudriaan & van Laar 1994)
     double exponent= -pow(10,0.28 + 0.63*log10(plant.myChlorophyllContent*0.85/1000));
     leafAbsorbancePAR = 1 - pow(10,exponent);//from Agusti et al (1994), Eq. 1, assuming Chl a = 0.85 Chl (a+b)
