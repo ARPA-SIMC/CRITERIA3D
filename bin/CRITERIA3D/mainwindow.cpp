@@ -889,12 +889,13 @@ void MainWindow::on_actionLoad_DEM_triggered()
 {
     QString demPath = myProject.getDefaultPath() + PATH_DEM;
     QString fileName = QFileDialog::getOpenFileName(this, tr("Open Digital Elevation Model"), demPath,
-                                    tr("ESRI float (*.flt);; ENVI image (*.img)"));
+                                    tr("ESRI float (*.flt);; ESRI ascii (*.asc);; ENVI image (*.img)"));
     if (fileName == "") return;
 
     clearRaster_GUI();
 
-    if (! myProject.loadDEM(fileName)) return;
+    if (! myProject.loadDEM(fileName))
+        return;
 
     renderDEM();
 }
