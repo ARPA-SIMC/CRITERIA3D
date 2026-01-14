@@ -1109,7 +1109,7 @@ bool Project::loadDEM(const QString &fileName)
     if (hourlyMeteoMaps != nullptr) hourlyMeteoMaps->clear();
     hourlyMeteoMaps = new Crit3DHourlyMeteoMaps(DEM);
 
-    //reset aggregationPoints meteoGrid
+    // reset aggregationPoints meteoGrid
     if (meteoGridDbHandler != nullptr)
     {
         meteoGridDbHandler->meteoGrid()->setIsAggregationDefined(false);
@@ -1122,11 +1122,11 @@ bool Project::loadDEM(const QString &fileName)
     if (! updateProxy())
         return false;
 
-    //set interpolation settings DEM
+    // set interpolation settings DEM
     interpolationSettings.setCurrentDEM(&DEM);
     qualityInterpolationSettings.setCurrentDEM(&DEM);
 
-    //check points position with respect to DEM
+    // check points position with respect to DEM
     checkMeteoPointsDEM();
 
     return true;
@@ -5598,19 +5598,8 @@ bool Project::setLogFile(QString myFileName)
     }
     logInfo("LogFile = " + logFileName);
 
-    //File temporaneo per il confronto dei dati di ciascuna iterazione
-    dataFileName = logFilePath + myDate + "_data_" + endLogFileName;
-    dataFile.open(dataFileName.toStdString().c_str());
-    if (!dataFile.is_open())
-    {
-        logError("Unable to open data file: " + logFileName);
-        return false;
-    }
-    logInfo("DataFile = " + logFileName);
-
     return true;
 }
-
 
 
 void Project::logData(QString typeData, QString data)
