@@ -1547,6 +1547,11 @@ double Crit3DHydrall::plantRespiration()
     //calcolo temperatureMoistureFactor che deve passare per media del moisture ?
     double temperatureFactor = Crit3DHydrall::temperatureFunction(weatherVariable.myInstantTemp + ZEROCELSIUS);
 
+    /*std::ofstream myFile;
+    myFile.open("outputRespiration.csv", std::ios_base::app);
+    //myFile << deltaTime.grossAssimilation/HOUR_SECONDS*1e6 <<","<<deltaTime.respiration/HOUR_SECONDS*1e6<<","<<deltaTime.netAssimilation/HOUR_SECONDS*1e6<<","<< plant.getLAICanopy()<< "," << maxIterationNumber <<"\n";
+    myFile << temperatureFactor << ",";*/
+
     std::vector<double> moistureFactorVector(soil.layersNr-1);
     std::vector<double> nodeThicknessRealSoil(soil.layersNr-1);
     for (int i = 1; i < soil.layersNr; i++)
@@ -1556,7 +1561,8 @@ double Crit3DHydrall::plantRespiration()
     }
     double moistureFactor = statistics::weighedMean(soil.nodeThickness, moistureFactorVector);
 
-
+    //myFile << moistureFactor << ",";
+    //moistureFactor = 1;
     // Adjust for temperature effects
     leafRespiration *= BOUNDFUNCTION(0,1,temperatureFactor*moistureFactor) ;
     sapwoodRespiration *= BOUNDFUNCTION(0,1,temperatureFactor*moistureFactor);
@@ -1567,11 +1573,15 @@ double Crit3DHydrall::plantRespiration()
 
     soil.temperature = Crit3DHydrall::soilTemperatureModel();
     moistureFactor = statistics::weighedMeanMultifactor(linearValues, weights, moistureFactorVector);
+    /*myFile << moistureFactor << "\n";
+    moistureFactor = 1;*/
     //rootRespiration *= MAXVALUE(0,MINVALUE(1,Crit3DHydrall::temperatureMoistureFunction(soil.temperature + ZEROCELSIUS))) ;
     rootRespiration *= BOUNDFUNCTION(0,1,temperatureFactor*moistureFactor);
     // canopy respiration (sapwood+fine roots)
     totalRespiration =(leafRespiration + sapwoodRespiration + rootRespiration);
 
+
+    //myFile.close();
 
     //TODO understorey respiration
 
