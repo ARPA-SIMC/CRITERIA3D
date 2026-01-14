@@ -3474,10 +3474,11 @@ bool Project::interpolationGrid(meteoVariable myVar, const Crit3DTime& myTime)
         }
     }
 
-    // proxy aggregation
-    std::vector <gis::Crit3DRasterGrid*> meteoGridProxies;
+    // proxy aggregation DA TOGLIERE
+    /*std::vector <gis::Crit3DRasterGrid*> meteoGridProxies;
     if (getUseDetrendingVar(myVar))
-        if (! meteoGridAggregateProxy(meteoGridProxies)) return false;
+        if (! meteoGridAggregateProxy(meteoGridProxies)) return false;*/
+
 
     frequencyType freq = getVarFrequency(myVar);
 
@@ -3505,7 +3506,7 @@ bool Project::interpolationGrid(meteoVariable myVar, const Crit3DTime& myTime)
                 {
                     proxyIndex = 0;
 
-                    for (i = 0; i < interpolationSettings.getProxyNr(); i++)
+                    /*for (i = 0; i < interpolationSettings.getProxyNr(); i++)
                     {
                         proxyValues[i] = NODATA;
 
@@ -3520,6 +3521,11 @@ bool Project::interpolationGrid(meteoVariable myVar, const Crit3DTime& myTime)
                         }
 
                         proxyIndex++;
+                    }*/
+
+                    for (int p = 0; p < meteoGridDbHandler->meteoGrid()->meteoPoints()[row][col]->proxyValues.size(); p++)
+                    {
+                        proxyValues[p] = (double(meteoGridDbHandler->meteoGrid()->meteoPoints()[row][col]->proxyValues[p]));
                     }
 
                     if (interpolationSettings.getUseLocalDetrending())
@@ -3631,7 +3637,7 @@ bool Project::interpolationGrid(meteoVariable myVar, const Crit3DTime& myTime)
                         if(!interpolationSettings.getCurrentCombination().isProxyActive(i))
                             continue;
 
-                        if (proxyIndex < meteoGridProxies.size())
+                        /*if (proxyIndex < meteoGridProxies.size())
                         {
                             float proxyValue = gis::getValueFromXY(*meteoGridProxies[proxyIndex], myX, myY);
                             if (proxyValue != meteoGridProxies[proxyIndex]->header->flag)
@@ -3644,7 +3650,13 @@ bool Project::interpolationGrid(meteoVariable myVar, const Crit3DTime& myTime)
                                 else
                                     proxyFlag = false;
                             }
-                        }
+                        }*/
+
+
+                        proxyValues[i] = (double(meteoGridDbHandler->meteoGrid()->meteoPoints()[row][col]->proxyValues[i]));
+
+                        if (isEqual(proxyValues[i], NODATA))
+                            proxyFlag = false;
 
                         proxyIndex++;
                     }

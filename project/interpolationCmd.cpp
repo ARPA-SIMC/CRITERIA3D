@@ -222,6 +222,98 @@ bool interpolateProxyGridSeries(const Crit3DProxyGridSeries& mySeries, QDate myD
     return true;
 }
 
+bool modifiedInterpolateProxyGridSeries(const Crit3DProxyGridSeries& mySeries, QDate myDate, const gis::Crit3DRasterGrid& gridBase,
+                                gis::Crit3DRasterGrid *gridOut, QString &errorStr)
+{
+    errorStr = "";
+    std::vector <QString> gridNames = mySeries.getGridName();
+    std::vector <int> gridYears = mySeries.getGridYear();
+    size_t nrGrids = gridNames.size();
+
+    gis::Crit3DRasterGrid tmpGrid;
+    std::string myError;
+
+    //se non c'è serie ma solo una griglia avviene ricampionamento. ciò non deve accadere
+    if (nrGrids == 1)
+    {
+        if (! gis::readEsriGrid(gridNames[0].toStdString(), &tmpGrid, myError))
+        {
+            errorStr = QString::fromStdString(myError);
+            return false;
+        }
+
+        gridOut->copyGrid(tmpGrid);
+        //gis::resampleGrid(tmpGrid, gridOut, gridBase.header, aggrAverage, 0);
+        return true;
+    }
+
+    unsigned first, second;
+
+    //in base all'anno corrente, si devono idetificare le griglie A e B
+    for (second = 0; second < nrGrids; second++)
+        if (myDate.year() <= gridYears[second]) break;
+
+    if (second == 0)
+    {
+        second = 1;
+        first = 0;
+    }
+    else if (second == nrGrids)
+    {
+        first = unsigned(nrGrids) - 2;
+        second = unsigned(nrGrids) - 1;
+    }
+    else
+        first = second - 1;
+
+    // load grids
+    gis::Crit3DRasterGrid firstGrid, secondGrid;
+    if (! gis::readEsriGrid(gridNames[first].toStdString(), &firstGrid, myError))
+    {
+        errorStr = QString::fromStdString(myError);
+        return false;
+    }
+
+    if (! gis::readEsriGrid(gridNames[second].toStdString(), &secondGrid, myError))
+    {
+        errorStr = QString::fromStdString(myError);
+        return false;
+    }
+
+    firstGrid.setMapTime(getCrit3DTime(QDate(gridYears[first],1,1), 0));
+    secondGrid.setMapTime(getCrit3DTime(QDate(gridYears[second],1,1), 0));
+
+    // use first as reference if different resolution when resampling
+    if (! gis::compareGrids(firstGrid, secondGrid))
+    {
+        tmpGrid = secondGrid;
+        secondGrid.clear();
+        gis::resampleGrid(tmpGrid, &secondGrid, firstGrid.header, aggrAverage, 0);
+        tmpGrid.initializeGrid();
+    }
+
+    float myMin = MINVALUE(firstGrid.minimum, secondGrid.minimum);
+    float myMax = MAXVALUE(firstGrid.maximum, secondGrid.maximum);
+
+    //interpolazione tra griglia A e B
+    if (! gis::temporalYearlyInterpolation(firstGrid, secondGrid, myDate.year(), myMin, myMax, &tmpGrid))
+    {
+        errorStr = "Error interpolating proxy grid series";
+        return false;
+    }
+
+    //resampling (non deve accadere)
+    //gis::resampleGrid(tmpGrid, gridOut, gridBase.header, aggrAverage, 0);
+    gridOut->copyGrid(tmpGrid);
+    gridOut->setMapTime(tmpGrid.getMapTime());
+
+    firstGrid.clear();
+    secondGrid.clear();
+    tmpGrid.clear();
+
+    return true;
+}
+
 
 bool checkProxyGridSeries(Crit3DInterpolationSettings &interpolationSettings, const gis::Crit3DRasterGrid& gridBase,
                           std::vector <Crit3DProxyGridSeries> myProxySeries, QDate myDate, QString &errorStr)
@@ -239,7 +331,7 @@ bool checkProxyGridSeries(Crit3DInterpolationSettings &interpolationSettings, co
                 if (myProxySeries[j].getGridName().size() > 0)
                 {
                     gridOut = new gis::Crit3DRasterGrid();
-                    if (! interpolateProxyGridSeries(myProxySeries[j], myDate, gridBase, gridOut, errorStr))
+                    if (! modifiedInterpolateProxyGridSeries(myProxySeries[j], myDate, gridBase, gridOut, errorStr))
                     {
                         errorStr = "Error in interpolate proxy gris series: " + errorStr;
                         gridOut->clear();
