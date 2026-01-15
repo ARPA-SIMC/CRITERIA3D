@@ -881,6 +881,7 @@ void Crit3DMeteoGrid::assignCellProxyValues(unsigned row, unsigned col, gis::Cri
             }
 
         }
+
         float aggrValue = 0;
         if (! aggrProxyValues.empty())
         {
@@ -888,13 +889,148 @@ void Crit3DMeteoGrid::assignCellProxyValues(unsigned row, unsigned col, gis::Cri
             {
                 aggrValue += aggrProxyValues[k];
             }
+            _meteoPoints[row][col]->proxyValues.push_back(aggrValue/aggrProxyValues.size());
         }
         else
         {
             aggrValue = NODATA;
+            _meteoPoints[row][col]->proxyValues.push_back(aggrValue);
         }
 
-        _meteoPoints[row][col]->proxyValues.push_back(aggrValue/aggrProxyValues.size());
+
+    }
+}
+
+void Crit3DMeteoGrid::assignGridGlocalWeightValues(gis::Crit3DRasterGrid* myRaster, int areaIndex)
+{
+    bool excludeNoData = true;
+
+    for (unsigned row = 0; row < unsigned(_gridStructure.header().nrRows); row++)
+        for (unsigned col = 0; col < unsigned(_gridStructure.header().nrCols); col++)
+            if (_meteoPoints[row][col]->active)
+            {
+                double weight = computeAggrCellGlocalWeightValue(row, col, myRaster, excludeNoData);
+
+                if (! isEqual(weight, NODATA))
+                    _meteoPoints[row][col]->glocalWeights[areaIndex] = weight;
+            }
+
+    return;
+}
+
+double Crit3DMeteoGrid::computeAggrCellGlocalWeightValue(unsigned row, unsigned col, gis::Crit3DRasterGrid* myRaster, bool excludeNoData)
+{
+
+    gis::Crit3DUtmPoint utmLL, utmUR;
+    gis::Crit3DUtmPoint utmPoint;
+    gis::Crit3DUtmPoint v[4];
+    std::vector<float> aggrWeightValues;
+
+    if (_gridStructure.isTIN())
+    {
+        //TO DO
+    }
+    else
+    {
+        if (_gridStructure.isUTM())
+        {
+            utmLL.x = _meteoPoints[row][col]->point.utm.x - (_gridStructure.header().dx / 2) + (myRaster->header->cellSize / 2);
+            utmUR.x = _meteoPoints[row][col]->point.utm.x + (_gridStructure.header().dx / 2);
+            utmLL.y = _meteoPoints[row][col]->point.utm.y - (_gridStructure.header().dy / 2) + (myRaster->header->cellSize / 2);
+            utmUR.y = _meteoPoints[row][col]->point.utm.y + (_gridStructure.header().dy / 2);
+
+            for (double x = utmLL.x; x < utmUR.x; x=x+myRaster->header->cellSize)
+            {
+                for (double y = utmLL.y; x < utmUR.y; y=y+myRaster->header->cellSize)
+                {
+                    if (!excludeNoData || gis::getValueFromXY(*myRaster, x, y) != myRaster->header->flag )
+                    {
+                        aggrWeightValues.push_back(gis::getValueFromXY(*myRaster, x, y));
+                    }
+                }
+            }
+        }
+        else
+        {
+
+            gis::Crit3DGeoPoint pointLatLon0;
+            gis::Crit3DGeoPoint pointLatLon;
+            gis::Crit3DLatLonHeader latLonHeader;
+            double utmX, utmY;
+
+            pointLatLon0.latitude = _gridStructure.header().llCorner.latitude + row * _gridStructure.header().dy;
+            pointLatLon0.longitude = _gridStructure.header().llCorner.longitude + col * _gridStructure.header().dx;
+            gis::getUtmFromLatLon(_gisSettings.utmZone, pointLatLon0, &utmPoint);
+            v[0] = utmPoint;
+
+            pointLatLon.latitude = pointLatLon0.latitude + _gridStructure.header().dy;
+            pointLatLon.longitude = pointLatLon0.longitude;
+            gis::getUtmFromLatLon(_gisSettings.utmZone, pointLatLon, &utmPoint);
+            v[1] = utmPoint;
+
+            pointLatLon.latitude = pointLatLon0.latitude + _gridStructure.header().dy;
+            pointLatLon.longitude = pointLatLon0.longitude + _gridStructure.header().dx;
+            gis::getUtmFromLatLon(_gisSettings.utmZone, pointLatLon, &utmPoint);
+            v[2] = utmPoint;
+
+            pointLatLon.latitude = pointLatLon0.latitude;
+            pointLatLon.longitude = pointLatLon0.longitude + _gridStructure.header().dx;
+            gis::getUtmFromLatLon(_gisSettings.utmZone, pointLatLon, &utmPoint);
+            v[3] = utmPoint;
+
+            utmLL.x = MINVALUE(v[0].x, v[1].x);
+            utmLL.y = MINVALUE(v[0].y, v[3].y);
+            utmUR.x = MAXVALUE(v[2].x, v[3].x);
+            utmUR.y = MAXVALUE(v[1].y, v[2].y);
+
+            latLonHeader.llCorner.latitude = pointLatLon0.latitude;
+            latLonHeader.llCorner.longitude = pointLatLon0.longitude;
+            latLonHeader.dx = _gridStructure.header().dx;
+            latLonHeader.dy = _gridStructure.header().dy;
+            latLonHeader.nrRows = 1;
+            latLonHeader.nrCols = 1;
+
+            gis::Crit3DRasterCell rasterLL, rasterUR;
+
+            myRaster->getRowCol( utmLL.x, utmLL.y, rasterLL.row, rasterLL.col);
+            myRaster->getRowCol(utmUR.x, utmUR.y, rasterUR.row, rasterUR.col);
+
+            if ( ((rasterUR.row >= 0) && (rasterUR.row < myRaster->header->nrRows)) || ((rasterLL.row >= 0) && (rasterLL.row < myRaster->header->nrRows))
+                || ((rasterUR.col >= 0) && (rasterUR.col < myRaster->header->nrCols)) || ((rasterLL.col >= 0) && ( rasterLL.col < myRaster->header->nrCols)))
+            {
+                for (int rasterRow = rasterUR.row; rasterRow <= rasterLL.row; rasterRow++)
+                {
+                    for (int rasterCol = rasterLL.col; rasterCol <= rasterUR.col; rasterCol++)
+                    {
+                        gis::getUtmXYFromRowCol(*(myRaster->header), rasterRow, rasterCol, &utmX, &utmY);
+                        gis::getLatLonFromUtm(_gisSettings, utmX, utmY, &pointLatLon.latitude, &pointLatLon.longitude);
+
+                        if (pointLatLon.isInsideGrid(latLonHeader))
+                        {
+                            if (!excludeNoData || myRaster->getValueFromRowCol(rasterRow, rasterCol) != myRaster->header->flag )
+                            {
+                                aggrWeightValues.push_back(myRaster->getValueFromRowCol(rasterRow, rasterCol));
+                            }
+                        }
+                    }
+                }
+            }
+
+        }
+        float aggrValue = 0;
+        if (! aggrWeightValues.empty())
+        {
+            for (int k = 0; k < aggrWeightValues.size(); k++)
+            {
+                aggrValue += aggrWeightValues[k];
+            }
+        }
+        else
+        {
+            return NODATA;
+        }
+
+        return aggrValue/aggrWeightValues.size();
     }
 }
 

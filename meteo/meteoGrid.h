@@ -139,6 +139,9 @@
             void assignGridProxyValues(gis::Crit3DRasterGrid* myRaster);
             void assignCellProxyValues(unsigned row, unsigned col, gis::Crit3DRasterGrid* myRaster, bool excludeNoData);
 
+            void assignGridGlocalWeightValues(gis::Crit3DRasterGrid* myRaster, int areaIndex);
+            double computeAggrCellGlocalWeightValue(unsigned row, unsigned col, gis::Crit3DRasterGrid* myRaster, bool excludeNoData);
+
             bool getIsElabValue() const;
             void setIsElabValue(bool isElabValue);
 
