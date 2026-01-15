@@ -5623,7 +5623,7 @@ void Project::logInfo(QString myStr)
     if (_verboseStdoutLogging)
         std::cout << myStr.toStdString() << std::endl;
 
-    if(dataFile.is_open())
+    if(logFile.is_open())
         logFile << myStr.toStdString() << std::endl;
 }
 
