@@ -67,7 +67,7 @@ QString getIdCropFromClass(const QSqlDatabase &dbCrop, QString cropClassTable, Q
     {
         if (query.lastError().isValid())
             errorStr = query.lastError().text();
-        return "";
+        return idCropClass;
     }
 
     QString idCrop;

@@ -87,6 +87,7 @@ void Crit3DMeteoPoint::clear()
     proxyValues.clear();
     lapseRateCode = primary;
     topographicDistance = nullptr;
+    glocalWeights.clear();
 }
 
 

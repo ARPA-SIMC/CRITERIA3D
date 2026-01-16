@@ -520,7 +520,7 @@ int CriteriaOutputProject::createCsvFile()
     // write output
     QString idCase;
     QString idCropClass;
-    int step = compUnitList.size() * 0.01;
+    int step = std::max(1, int(compUnitList.size() * 0.01));
 
     // list of data tables
     QList<QString> dataTables = dbData.tables();
