@@ -117,6 +117,7 @@
             std::vector <float> proxyValues;
             lapseRateCodeType lapseRateCode;
             gis::Crit3DRasterGrid* topographicDistance;
+            std::vector<float> glocalWeights;
 
             Crit3DMeteoPoint();
             void clear();

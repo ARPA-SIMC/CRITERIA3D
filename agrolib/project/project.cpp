@@ -2037,9 +2037,10 @@ bool Project::loadProxyGrids()
 
         if (! myGrid->isLoaded && fileName != "")
         {
-            gis::Crit3DRasterGrid proxyGrid;
+            gis::Crit3DRasterGrid* proxyGrid = new gis::Crit3DRasterGrid;
             std::string myError;
-            if (DEM.isLoaded && gis::readEsriGrid(fileName.toStdString(), &proxyGrid, myError))
+            //resampling on DEM must be done only when interpolating on DEM or on grid with upscale from DEM option activated
+            /*if (DEM.isLoaded && gis::readEsriGrid(fileName.toStdString(), &proxyGrid, myError))
             {
                 gis::Crit3DRasterGrid* resGrid = new gis::Crit3DRasterGrid();
                 gis::resampleGrid(proxyGrid, resGrid, DEM.header, aggrAverage, 0);
@@ -2050,9 +2051,20 @@ bool Project::loadProxyGrids()
                 errorString = "Error loading raster proxy:\n" + fileName
                         + "\nHow to fix it: check the proxy section in the parameters.ini";
                 return false;
+            }*/
+
+            if (gis::readEsriGrid(fileName.toStdString(), proxyGrid, myError))
+            {
+                //cambiare
+                myProxy->setGrid(proxyGrid);
+            }
+            else
+            {
+                errorString = "Error loading raster proxy:\n" + fileName
+                        + "\nHow to fix it: check the proxy section in the parameters.ini";
+                return false;
             }
 
-            proxyGrid.clear();
         }
 
         closeLogInfo();
@@ -2505,13 +2517,17 @@ bool Project::loadGlocalWeightMaps(std::vector<Crit3DMacroArea> &myAreas, bool i
         gis::Crit3DRasterGrid *newMacroAreasGrid = new gis::Crit3DRasterGrid();
         if (isGrid)
         {
-            float cellSize = computeDefaultCellSizeFromMeteoGrid(1);
-            gis::Crit3DRasterGrid meteoGridRaster;
-            if (! meteoGridDbHandler->MeteoGridToRasterFlt(cellSize, gisSettings, meteoGridRaster))
-                return false;
+            for (unsigned row = 0; row < unsigned(meteoGridDbHandler->gridStructure().header().nrRows); row++)
+                    for (unsigned col = 0; col < unsigned(meteoGridDbHandler->gridStructure().header().nrCols); col++)
+                        if (meteoGridDbHandler->meteoGrid()->meteoPoints()[row][col]->active)
+                        {
+                            meteoGridDbHandler->meteoGrid()->meteoPoints()[row][col]->glocalWeights.resize(myAreas.size());
+                        }
 
-            gis::resampleGrid(*macroAreasGrid, newMacroAreasGrid, meteoGridRaster.header, aggrAverage, 0);
+            meteoGridDbHandler->meteoGrid()->assignGridGlocalWeightValues(macroAreasGrid, i);
+            //
         }
+
 
         for (int row = 0; row < nrRows; row++)
         {
@@ -2519,9 +2535,8 @@ bool Project::loadGlocalWeightMaps(std::vector<Crit3DMacroArea> &myAreas, bool i
             {
                 if (isGrid)
                 {
-                    myX = meteoGridDbHandler->meteoGrid()->meteoPoints()[row][col]->point.utm.x;
-                    myY = meteoGridDbHandler->meteoGrid()->meteoPoints()[row][col]->point.utm.y;
-                    myValue = gis::getValueFromXY(*newMacroAreasGrid, myX, myY);
+                    if (meteoGridDbHandler->meteoGrid()->meteoPoints()[row][col]->active)
+                        myValue = meteoGridDbHandler->meteoGrid()->meteoPoints()[row][col]->glocalWeights[i];
 
                 }
                 else
@@ -2530,6 +2545,7 @@ bool Project::loadGlocalWeightMaps(std::vector<Crit3DMacroArea> &myAreas, bool i
                     myValue = macroAreasGrid->getValueFromXY(myX, myY); //solo per dem
                 }
 
+
                 if (! isEqual(myValue, NODATA) && ! isEqual(myValue, 0))
                 {
                     areaCells.push_back(row*nrCols+col);
@@ -2537,6 +2553,7 @@ bool Project::loadGlocalWeightMaps(std::vector<Crit3DMacroArea> &myAreas, bool i
                 }
             }
         }
+
 
         if (areaCells.size() > 0)
             nrAreasWithCells++;
@@ -3634,7 +3651,7 @@ bool Project::interpolationGrid(meteoVariable myVar, const Crit3DTime& myTime)
                     {
                         proxyValues[i] = NODATA;
 
-                        if(!interpolationSettings.getCurrentCombination().isProxyActive(i))
+                        if(!interpolationSettings.getCurrentCombination().isProxySignificant(i))
                             continue;
 
                         /*if (proxyIndex < meteoGridProxies.size())
