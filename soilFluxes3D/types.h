@@ -159,7 +159,6 @@ namespace soilFluxes3D { inline namespace v2
 
         //Courant data
         double *partialCourantWaterLevels = nullptr;
-        double CourantWaterLevel = 0.;
     };
 
     struct culvertData_t
@@ -265,6 +264,8 @@ namespace soilFluxes3D { inline namespace v2
 
         SF3Duint_t numNodes = 0;
         SF3Duint_t numLayers = 0;
+
+        double CourantWaterLevel = 0.;
 
         //Topology data
         double *size = nullptr;                             //volume_area
