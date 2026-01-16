@@ -217,19 +217,19 @@ namespace soilFluxes3D::v2
             launchKernel(updateBoundaryWaterData_k, deltaT);
 
             //Reset Courant data
-            nodeGrid.waterData.CourantWaterLevel = 0.;
+            nodeGrid.CourantWaterLevel = 0.;
             deviceReset(nodeGrid.waterData.partialCourantWaterLevels, nodeGrid.numNodes);
 
             //Compute linear system elements
             launchKernel(computeWaterLinearSystemElement_k, iterationMatrix, constantTerm, d_Cvalues, approxIdx, deltaT, _parameters.lateralVerticalRatio, _parameters.meanType);
 
             //Courant data reduction
-            nodeGrid.waterData.CourantWaterLevel = deviceMax(nodeGrid.waterData.partialCourantWaterLevels, nodeGrid.numNodes);
+            nodeGrid.CourantWaterLevel = deviceMax(nodeGrid.waterData.partialCourantWaterLevels, nodeGrid.numNodes);
 
             //Check Courant
-            if((nodeGrid.waterData.CourantWaterLevel > 1.) && (deltaT > _parameters.deltaTmin))
+            if((nodeGrid.CourantWaterLevel > 1.01) && (deltaT > _parameters.deltaTmin))
             {
-                _parameters.deltaTcurr = SF3Dmax(_parameters.deltaTmin, _parameters.deltaTcurr / nodeGrid.waterData.CourantWaterLevel);
+                _parameters.deltaTcurr = SF3Dmax(_parameters.deltaTmin, _parameters.deltaTcurr / nodeGrid.CourantWaterLevel);
                 if(_parameters.deltaTcurr > 1.)
                     _parameters.deltaTcurr = std::floor(_parameters.deltaTcurr);
 
@@ -379,18 +379,8 @@ namespace soilFluxes3D::v2
             acceptStep_m(deltaT);
 
             //Check Stability (Courant)
-            double currCWL = nodeGrid.waterData.CourantWaterLevel;
-            // if((currCWL < _parameters.CourantWaterThreshold) && (approxNr <= 3) && (currMBRerror < (0.5 * _parameters.MBRThreshold)))
-            // {
-            //     //increase deltaT
-            //     _parameters.deltaTcurr = (currCWL < 0.5) ? (2 * _parameters.deltaTcurr) : (_parameters.deltaTcurr / currCWL);
-            //     _parameters.deltaTcurr = SF3Dmin(_parameters.deltaTcurr, _parameters.deltaTmax);
-            //     if(_parameters.deltaTcurr > 1.)
-            //         _parameters.deltaTcurr = std::floor(_parameters.deltaTcurr);
-            // }
-
-            if((currCWL < _parameters.CourantWaterThreshold) && (approxNr <= 3))
-                _parameters.deltaTcurr = 2 * _parameters.deltaTcurr;
+            if((nodeGrid.CourantWaterLevel < _parameters.CourantWaterThreshold) && (approxNr <= 3))
+                _parameters.deltaTcurr = SF3Dmin(_parameters.deltaTmax, _parameters.deltaTcurr * 2);
 
             return balanceResult_t::stepAccepted;
         }

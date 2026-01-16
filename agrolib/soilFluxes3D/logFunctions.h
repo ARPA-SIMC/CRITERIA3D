@@ -213,7 +213,7 @@ namespace soilFluxes3D::v2::Log
         logVector(nodeGrid.waterData.oldPressureHead, nodeGrid.numNodes, formatName("wdOPH"));
         logVector(nodeGrid.waterData.bestPressureHead, nodeGrid.numNodes, formatName("wdBPH"));
         logVector(nodeGrid.waterData.partialCourantWaterLevels, nodeGrid.numNodes, formatName("wdPCWLs"));
-        logVector(&(nodeGrid.waterData.CourantWaterLevel), 1, formatName("wdCWL"));
+        logVector(&(nodeGrid.CourantWaterLevel), 1, formatName("wdCWL"));
 
         // logVector(vectBdata, nodeGrid.numNodes, formatName("vectB"));
         // logVector(vectXdata, nodeGrid.numNodes, formatName("vectX"));
