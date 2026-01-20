@@ -52,7 +52,6 @@ HEADERS += \
     solver.h \
     types.h \
     types_cpu.h \
-    types_opt.h \
     water.h
 
 DISTFILES += \
