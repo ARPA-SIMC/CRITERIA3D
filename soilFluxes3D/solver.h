@@ -63,9 +63,6 @@ namespace soilFluxes3D::v2
         updateFromPartial(_parameters, newParameters, waterRetentionCurveModel);
         updateFromPartial(_parameters, newParameters, meanType);
         updateFromPartial(_parameters, newParameters, lateralVerticalRatio);
-        updateFromPartial(_parameters, newParameters, heatWeightFactor);
-        updateFromPartial(_parameters, newParameters, CourantWaterThreshold);
-        updateFromPartial(_parameters, newParameters, instabilityFactor);
         updateFromPartial(_parameters, newParameters, enableOMP);
         updateFromPartial(_parameters, newParameters, numThreads);
     }

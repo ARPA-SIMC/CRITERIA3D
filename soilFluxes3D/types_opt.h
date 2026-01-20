@@ -7,7 +7,6 @@ namespace soilFluxes3D::v2
 {
     #define updateFromPartial(total, partial, field) if (partial.field) {total.field = *(partial.field);}
 
-    //TO DO: remove not used fields
     struct SolverParametersPartial
     {
         std::optional<double> MBRThreshold;
@@ -24,10 +23,6 @@ namespace soilFluxes3D::v2
         std::optional<meanType_t> meanType;
 
         std::optional<float> lateralVerticalRatio;
-        std::optional<double> heatWeightFactor;
-
-        std::optional<double> CourantWaterThreshold;
-        std::optional<double> instabilityFactor;
 
         std::optional<bool> enableOMP;
         std::optional<u32_t> numThreads;
