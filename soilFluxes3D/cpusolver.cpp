@@ -185,7 +185,7 @@ namespace soilFluxes3D::v2
             logStruct;
 
             //Reset Courant data
-            nodeGrid.waterData.CourantWaterLevel = 0.;
+            nodeGrid.CourantWaterLevel = 0.;
             std::memset(nodeGrid.waterData.partialCourantWaterLevels, 0, nodeGrid.numNodes * sizeof(double));
 
             //Compute linear system elements
@@ -201,12 +201,12 @@ namespace soilFluxes3D::v2
             if (_parameters.MBRThreshold > 0.01)
                 courantMax *= 0.5;
 
-            nodeGrid.waterData.CourantWaterLevel = courantMax;
+            nodeGrid.CourantWaterLevel = courantMax;
 
             // check Courant
-            if((nodeGrid.waterData.CourantWaterLevel > 1.01) && (deltaT > _parameters.deltaTmin))
+            if((nodeGrid.CourantWaterLevel > 1.01) && (deltaT > _parameters.deltaTmin))
             {
-                _parameters.deltaTcurr /= nodeGrid.waterData.CourantWaterLevel;
+                _parameters.deltaTcurr /= nodeGrid.CourantWaterLevel;
 
                 int multiply = 0;
                 while (_parameters.deltaTcurr < 10.)
