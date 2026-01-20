@@ -155,7 +155,7 @@ void Crit3DQuality::syntacticQualityControl(meteoVariable myVar, std::vector<Cri
         qualityMax = myRange->getMax();
     }
 
-    for (int i = 0; i < meteoPoints.size(); i++)
+    for (int i = 0; i < (int)meteoPoints.size(); i++)
     {
         if (isEqual(meteoPoints[i].currentValue, NODATA))
         {

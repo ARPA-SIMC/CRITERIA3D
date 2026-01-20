@@ -14,7 +14,7 @@ QT -= gui
 
 TEMPLATE = lib
 CONFIG += staticlib
-CONFIG += c++17
+CONFIG += c++11 c++14 c++17
 CONFIG += debug_and_release
 
 INCLUDEPATH += $$absolute_path(../mathFunctions)

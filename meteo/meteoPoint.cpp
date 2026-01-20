@@ -1449,7 +1449,7 @@ float Crit3DMeteoPoint::getPercValueVariable(const Crit3DDate &firstDate, const 
 
 bool isSelectionPointsActive(const std::vector<Crit3DMeteoPoint> &meteoPoints)
 {
-    for (int i = 0; i < meteoPoints.size(); i++)
+    for (int i = 0; i < (int)meteoPoints.size(); i++)
     {
         if (meteoPoints[i].selected)
             return true;
