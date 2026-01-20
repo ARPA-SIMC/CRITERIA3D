@@ -81,7 +81,7 @@ void DialogAddStation::searchStations()
         return;
     }
 
-    for (int i=0; i < _allMeteoPoints.size(); i++)
+    for (int i=0; i < (int)_allMeteoPoints.size(); i++)
     {
         if (myStation == _allMeteoPoints[i].name)
         {
@@ -90,7 +90,7 @@ void DialogAddStation::searchStations()
             double Y0 = myStationMp.point.utm.y;
 
             _nearStationsList.clear();
-            for (int j=0; j < _allMeteoPoints.size(); j++)
+            for (int j=0; j < (int)_allMeteoPoints.size(); j++)
             {
                 double computedDistance = gis::computeDistance(X0, Y0, _allMeteoPoints[j].point.utm.x, _allMeteoPoints[j].point.utm.y);
                 if (computedDistance <= chosenDistance)
