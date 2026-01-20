@@ -899,30 +899,28 @@ namespace soilFluxes3D::v2::Heat
         double psiM = 0.;
         double psiH = 0.;
 
-        //Volumetric specific heat of air [J m-3 K-1]
+        // Volumetric specific heat of air [J m-3 K-1]
         double cH = computeAirVolumetricSpecificHeat(computePressure_fromAltitude(heightWind), airTemperature);
 
-        double dH = 1000;
         bool isFirstIteration = true;
-
-        //Aereodynamic conductance
-        double K = noDataD;
-
+        double dH = 1000;           // [W m-2]
+        double oldH = noDataD;      // [W m-2]
+        double K = noDataD;         // [m s-1]
         for(u8_t counter = 0; counter < 100; ++counter)
         {
-            //Friction velocity [m s-1]
+            // Friction velocity [m s-1]
             double uStar = VON_KARMAN_CONST * windSpeed / (std::log((heightWind - zeroPlane + rMomentum) / rMomentum) + psiM);
 
+            // Aereodynamic conductance [m s-1]
             K = VON_KARMAN_CONST * uStar / (std::log((heightTemperature - zeroPlane + rHeat) / rHeat) + psiH);
 
-            //Sensible heat flux [W m-2]
+            // Sensible heat flux [W m-2]
             double H = K * cH * (soilSurfaceTemperature - airTemperature);
-            double oldH;
 
-            //Stability parameter
+            // Stability parameter
             double sP = -VON_KARMAN_CONST * heightWind * GRAVITY * H / (cH * airTemperature * (std::pow(uStar, 3)));
 
-            //Check stability
+            // Check stability
             if(sP > 0)
             {
                 psiH = 6 * std::log(1 + sP);
@@ -934,14 +932,16 @@ namespace soilFluxes3D::v2::Heat
                 psiM = 0.6 * psiH;
             }
 
-            //Check firstIteration
             if(isFirstIteration)
+            {
                 isFirstIteration = false;
+            }
             else
+            {
                 dH = std::fabs(H - oldH);
-
-            if(dH < 0.01)
-                break;
+                if(dH < 0.01)
+                    break;
+            }
 
             oldH = H;
         }
