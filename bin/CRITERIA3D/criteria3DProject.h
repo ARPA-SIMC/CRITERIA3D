@@ -78,6 +78,7 @@
         void clearCropMaps();
         bool initializeCropMaps();
         bool initializeHydrall();
+        bool initializeHydrallConversionVector();
         bool initializeRothC();
         bool initializeRothCSoilCarbonContent();
         bool loadRothCTempMaps();

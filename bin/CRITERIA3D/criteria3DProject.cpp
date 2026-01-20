@@ -105,6 +105,27 @@ bool Crit3DProject::initializeHydrall()
     //TODO fare anche clear hydrall maps
     mapLast30DaysTAvg.initializeGrid(DEM);
 
+    initializeHydrallConversionVector();
+
+    for (int row = 0; row < DEM.header->nrRows; row++)
+    {
+        for (int col = 0; col < DEM.header->nrCols; col++)
+        {
+            float height = DEM.value[row][col];
+            if (! isEqual(height, DEM.header->flag))
+            {
+                mapLast30DaysTAvg.value[row][col] = 15.f; // initialize to 15°C
+            }
+        }
+    }
+
+    isHydrallInitialized = true;
+
+    return true;
+}
+
+bool Crit3DProject::initializeHydrallConversionVector()
+{
     //inizializzare un vettore che rimandi ai valori dei parametri ecofisiologici per hydrall che attraverso gli indici della croplist
 
     //approccio alternativo sarebbe avere nelle tabelle tipo tableEcophysiologicalParameters un id che corrisponde all'indice letto da .flt di copertura forestaoe
@@ -124,20 +145,6 @@ bool Crit3DProject::initializeHydrall()
             }
         }
     }
-
-    for (int row = 0; row < DEM.header->nrRows; row++)
-    {
-        for (int col = 0; col < DEM.header->nrCols; col++)
-        {
-            float height = DEM.value[row][col];
-            if (! isEqual(height, DEM.header->flag))
-            {
-                mapLast30DaysTAvg.value[row][col] = 15.f; // initialize to 15°C
-            }
-        }
-    }
-
-    isHydrallInitialized = true;
 
     return true;
 }
@@ -1869,11 +1876,10 @@ bool Crit3DProject::setHydrallVariables(Crit3DHydrall &myHydrallModel, int row, 
                                     mapLast30DaysTAvg.value[row][col],double(hourlyMeteoMaps->mapHourlyET0->value[row][col]));
 
     //TODO: plant height map
-    hydrallMaps.plantHeight.value[row][col] = 10;   // [m]
+    hydrallMaps.plantHeight->value[row][col] = 10;   // [m]
     double chlorophyllContent = 500;                // da tabella
 
-    if (! myHydrallModel.setPlantVariables(forestIndex, chlorophyllContent, hydrallMaps.plantHeight.value[row][col],
-                                          hydrallMaps.minLeafWaterPotential->value[row][col]))
+    if (! myHydrallModel.setPlantVariables(forestIndex, chlorophyllContent, hydrallMaps.plantHeight->value[row][col]))
     {
         errorString = "Wrong forest index in hydrall model.";
         return false;
@@ -2426,6 +2432,18 @@ bool Crit3DProject::saveHydrallState(const QString &currentStatePath)
         return false;
     }
 
+    if (!gis::writeEsriGrid((hydrallPath+"/treeHeight").toStdString(), hydrallMaps.plantHeight, errorStr))
+    {
+        logError("Error saving tree height map: " + QString::fromStdString(errorStr));
+        return false;
+    }
+
+    if (!gis::writeEsriGrid((hydrallPath+"/outputC").toStdString(), hydrallMaps.outputC, errorStr))
+    {
+        logError("Error saving carbon output map: " + QString::fromStdString(errorStr));
+        return false;
+    }
+
     //other maps tbd
 
     return true;
@@ -2657,6 +2675,9 @@ bool Crit3DProject::loadModelState(QString statePath)
             return false;
         }
         gis::resampleGrid(*tmpRaster, rothCModel.map.soilOrganicMatter, DEM.header, aggrAverage, 0.1f);
+
+        processes.setComputeRothC(true);
+        this->isRothCInitialized = true;
     }
 
     //hydrall model
@@ -2754,6 +2775,29 @@ bool Crit3DProject::loadModelState(QString statePath)
             return false;
         }
         gis::resampleGrid(*tmpRaster, &mapLast30DaysTAvg, DEM.header, aggrAverage, 0.1f);
+
+        fileName = hydrallPath.toStdString() + "/treeHeight";
+        if (! gis::readEsriGrid(fileName, tmpRaster, errorStr))
+        {
+            errorString = "Wrong hydrall tree height map:\n" + QString::fromStdString(errorStr);
+            hydrallMaps.isInitialized = false;
+            return false;
+        }
+        gis::resampleGrid(*tmpRaster, hydrallMaps.plantHeight, DEM.header, aggrAverage, 0.1f);
+
+        fileName = hydrallPath.toStdString() + "/outputC";
+        if (! gis::readEsriGrid(fileName, tmpRaster, errorStr))
+        {
+            errorString = "Wrong hydrall carbon output map:\n" + QString::fromStdString(errorStr);
+            hydrallMaps.isInitialized = false;
+            return false;
+        }
+        gis::resampleGrid(*tmpRaster, hydrallMaps.outputC, DEM.header, aggrAverage, 0.1f);
+
+        initializeHydrallConversionVector();
+
+        processes.setComputeHydrall(true);
+        this->isHydrallInitialized = true;
 
 
         //other maps tbd

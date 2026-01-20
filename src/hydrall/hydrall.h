@@ -381,7 +381,7 @@
         //sapwood, foliage, fine root
         bool isInitialized;
         gis::Crit3DRasterGrid treeSpeciesMap;
-        gis::Crit3DRasterGrid plantHeight;
+        gis::Crit3DRasterGrid* plantHeight;
         gis::Crit3DRasterGrid* criticalTranspiration;
         gis::Crit3DRasterGrid* criticalSoilWaterPotential;
         gis::Crit3DRasterGrid* minLeafWaterPotential;
@@ -473,7 +473,7 @@
                                  double cloudIndex, double atmosphericPressure, double meanTemp30Days,double et0);
 
         void setDerivedWeatherVariables(double directIrradiance, double diffuseIrradiance, double cloudIndex, double et0);
-        bool setPlantVariables(int forestIndex, double chlorophyllContent, double height, double psiMinimum);
+        bool setPlantVariables(int forestIndex, double chlorophyllContent, double height);
 
         bool computeHydrallPoint();
         double getCO2(Crit3DDate myDate);

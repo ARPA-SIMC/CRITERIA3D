@@ -298,6 +298,8 @@ Crit3DHydrallMaps::Crit3DHydrallMaps()
     criticalTranspiration = new gis::Crit3DRasterGrid;
     minLeafWaterPotential = new gis::Crit3DRasterGrid;
 
+    plantHeight = new gis::Crit3DRasterGrid;
+
     yearlyET0 = new gis::Crit3DRasterGrid;
     yearlyPrec = new gis::Crit3DRasterGrid;
 }
@@ -305,7 +307,7 @@ Crit3DHydrallMaps::Crit3DHydrallMaps()
 void Crit3DHydrallMaps::clear()
 {
     treeSpeciesMap.clear();
-    plantHeight.clear();
+    plantHeight->clear();
     criticalSoilWaterPotential->clear();
     criticalTranspiration->clear();
     minLeafWaterPotential->clear();
@@ -326,7 +328,7 @@ void Crit3DHydrallMaps::clear()
 void Crit3DHydrallMaps::initialize(const gis::Crit3DRasterGrid& DEM)
 {
     treeSpeciesMap.initializeGrid(DEM);
-    plantHeight.initializeGrid(DEM); //TODO
+    plantHeight->initializeGrid(DEM); //TODO
     criticalSoilWaterPotential->initializeGrid(DEM);
     criticalTranspiration->initializeGrid(DEM);
     minLeafWaterPotential->initializeGrid(DEM);
@@ -593,11 +595,11 @@ void Crit3DHydrall::setDerivedWeatherVariables(double directIrradiance, double d
     return;
 }
 
-bool Crit3DHydrall::setPlantVariables(int forestIndex, double chlorophyllContent, double height, double psiMinimum)
+bool Crit3DHydrall::setPlantVariables(int forestIndex, double chlorophyllContent, double height)
 {
     plant.myChlorophyllContent = chlorophyllContent;
     plant.height = height;
-    plant.psiLeafMinimum = psiMinimum;
+    //plant.psiLeafMinimum = psiMinimum;
     //plant.psiSoilCritical = psiCritical;
 
     if (forestIndex >= conversionTableVector.size())
