@@ -611,7 +611,7 @@ bool Project3D::setAccuracy()
 
     // Mass Balance Ratio precision (digit at which error is accepted)
     int massBalanceRatioDigit = waterFluxesParameters.modelAccuracy;
-    int toleranceDigit = 6 + waterFluxesParameters.modelAccuracy;
+    int toleranceDigit = 7 + waterFluxesParameters.modelAccuracy;
 
     soilFluxes3D::setNumericalParameters(minimumDeltaT, 3600, 100, 10, toleranceDigit, massBalanceRatioDigit);
 

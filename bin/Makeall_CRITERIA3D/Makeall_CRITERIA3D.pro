@@ -11,3 +11,5 @@ SUBDIRS =       ../../agrolib/mathFunctions ../../agrolib/crit3dDate ../../agrol
                 ../CRITERIA3D
 
 CONFIG += ordered
+
+QMAKE_CXXFLAGS += -march=skylake-avx512
