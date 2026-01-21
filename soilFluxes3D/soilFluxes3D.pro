@@ -14,10 +14,13 @@ QT -= gui
 
 TEMPLATE = lib
 CONFIG += staticlib
-CONFIG += c++11 c++14 c++17
 CONFIG += debug_and_release
+CONFIG += c++11 c++14 c++17
 
-INCLUDEPATH += $$absolute_path(../mathFunctions)
+# parallel computing settings
+include($$absolute_path(../parallel.pri))
+
+INCLUDEPATH += ../mathFunctions
 
 unix:{
     CONFIG(debug, debug|release) {
@@ -49,14 +52,10 @@ HEADERS += \
     solver.h \
     types.h \
     types_cpu.h \
-    types_opt.h \
     water.h
 
 DISTFILES += \
     ToDoList.txt
-
-# parallel computing settings
-include($$absolute_path(../parallel.pri))
 
 
 contains(DEFINES, MCR_ENABLED) {
