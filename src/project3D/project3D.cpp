@@ -1291,6 +1291,7 @@ void Project3D::runWaterFluxes3DModel(double totalTimeStep, bool isRestart)
 
     double minimumShowTime = 1;         // [s]
     int lastShowStep = int(currentSeconds / minimumShowTime);
+    double previuosSeconds = currentSeconds;
 
     while (currentSeconds < totalTimeStep)
     {
@@ -1311,6 +1312,12 @@ void Project3D::runWaterFluxes3DModel(double totalTimeStep, bool isRestart)
                 lastShowStep = currentStep;
                 emit updateOutputSignal();
             }
+        }
+
+        if (currentSeconds < totalTimeStep && (currentSeconds - previuosSeconds) >= 600)
+        {
+            logInfo("minutes: " + QString::number(currentSeconds / 60.));
+            previuosSeconds = currentSeconds;
         }
     }
 
