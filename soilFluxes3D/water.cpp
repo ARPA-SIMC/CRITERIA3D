@@ -194,8 +194,8 @@ namespace soilFluxes3D::v2::Water
             acceptStep(deltaT);
 
             // increase deltaT if system is stable (check Courant)
-            if((nodeGrid.waterData.CourantWaterLevel < parameters.CourantWaterThreshold) && (approxNr <= 3))
-                parameters.deltaTcurr = std::min(parameters.deltaTmax, parameters.deltaTcurr * 2);
+            if((nodeGrid.CourantWaterLevel < parameters.CourantWaterThreshold) && (approxNr <= 3))
+                parameters.deltaTcurr = SF3Dmin(parameters.deltaTmax, parameters.deltaTcurr * 2);
 
             return balanceResult_t::stepAccepted;
         }
