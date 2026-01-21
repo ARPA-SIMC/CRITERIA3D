@@ -650,12 +650,12 @@ bool Project::loadParameters(QString parametersFileName)
             else if (parametersSettings->contains("linke_monthly"))
             {
                 QList<QString> myLinkeStr = parametersSettings->value("linke_monthly").toStringList();
-
+                bool isOk = true;
                 if (myLinkeStr.size() < 12)
                 {
                     logInfo("Incomplete monthly Linke values");
                     errorString = "Incomplete monthly Linke values";
-                    return false;
+                    isOk = false;
                 }
 
                 for (int p = 0; p < myLinkeStr.size(); p++)
@@ -664,11 +664,11 @@ bool Project::loadParameters(QString parametersFileName)
                     {
                         errorString = "Invalid monthly Linke value.";
                         logInfo("Invalid monthly Linke value.");
-                        return false;
+                        isOk = false;
+                        break;
                     }
                 }
-
-                radSettings.setLinkeMonthly(StringListToFloat(myLinkeStr));
+                if (isOk) radSettings.setLinkeMonthly(StringListToFloat(myLinkeStr));
             }            
 
             if (parametersSettings->contains("albedo_monthly"))
