@@ -1314,9 +1314,12 @@ void Project3D::runWaterFluxes3DModel(double totalTimeStep, bool isRestart)
             }
         }
 
-        if (currentSeconds < totalTimeStep && (currentSeconds - previuosSeconds) >= 600)
+        if (currentSeconds < (totalTimeStep-300) && (currentSeconds - previuosSeconds) >= 600)
         {
-            logInfo("minutes: " + QString::number(currentSeconds / 60.));
+            int minutes = int(currentSeconds / 60.);
+            double seconds = currentSeconds - (minutes * 60);
+            logInfo(QDateTime::currentDateTime().toString(Qt::ISODate)
+                    + " minutes: " + QString::number(minutes) + "::" + QString::number(seconds));
             previuosSeconds = currentSeconds;
         }
     }
