@@ -232,7 +232,7 @@ void WebTileSource::handleNetworkRequestFinished()
     if (!image->loadFromData(bytes))
     {
         delete image;
-        qWarning() << "Failed to make QImage from network bytes";
+        //qWarning() << "Failed to make QImage from network bytes";
         return;
     }
 
