@@ -14,6 +14,7 @@
 #include <QSqlError>
 #include <QSqlRecord>
 #include <QTextStream>
+#include <QUuid>
 
 
 Crit3DMeteoGridDbHandler::Crit3DMeteoGridDbHandler()
@@ -1053,7 +1054,7 @@ bool Crit3DMeteoGridDbHandler::openDatabase(QString &errorStr)
     {
         if (_connection.provider.toUpper() == "MYSQL")
         {
-            _db = QSqlDatabase::addDatabase("QMYSQL", "grid");
+            _db = QSqlDatabase::addDatabase("QMYSQL", QUuid::createUuid().toString());
         }
 
         _db.setHostName(_connection.server);
@@ -1098,7 +1099,7 @@ bool Crit3DMeteoGridDbHandler::newDatabase(QString &errorStr)
 {
     if (_connection.provider.toUpper() == "MYSQL")
     {
-        _db = QSqlDatabase::addDatabase("QMYSQL");
+        _db = QSqlDatabase::addDatabase("QMYSQL", QUuid::createUuid().toString());
     }
 
     _db.setHostName(_connection.server);

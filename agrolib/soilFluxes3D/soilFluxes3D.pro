@@ -14,12 +14,12 @@ QT -= gui
 
 TEMPLATE = lib
 CONFIG += staticlib
-CONFIG += debug_and_release
-CONFIG += c++11 c++14 c++17
+CONFIG += c++17
 
 # parallel computing settings
 include($$absolute_path(../parallel.pri))
 
+CONFIG += debug_and_release
 INCLUDEPATH += ../mathFunctions
 
 unix:{
