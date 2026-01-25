@@ -108,7 +108,7 @@ namespace soilFluxes3D::v2::Water
         currentBalance.waterMBE = deltaStorage - currentBalance.waterSinkSource;
 
         // minimum reference water storage [m3] as % of current storage
-        double timePercentage = 0.005 * SF3Dmax(deltaT, 10.0) / HOUR_SECONDS;
+        double timePercentage = 0.005 * SF3Dmax(deltaT, 6.0) / HOUR_SECONDS;
         double minRefWaterStorage = currentBalance.waterStorage * timePercentage;
         // [m3] minimum 1 liter
         minRefWaterStorage = SF3Dmax(minRefWaterStorage, 0.001);
@@ -397,6 +397,10 @@ namespace soilFluxes3D::v2::Water
 
     __cudaSpec double runoff(SF3Duint_t rowIdx, SF3Duint_t colIdx, u8_t approxNum, double deltaT, double flowSide)
     {
+        double currentDH = std::fabs(nodeGrid.waterData.pressureHead[rowIdx] - nodeGrid.waterData.pressureHead[colIdx]);
+        if(currentDH < EPSILON_METER)
+            return 0.;
+
         double H_i = 0.5 * (nodeGrid.waterData.pressureHead[rowIdx] + nodeGrid.waterData.oldPressureHead[rowIdx]);
         double H_j = 0.5 * (nodeGrid.waterData.pressureHead[colIdx] + nodeGrid.waterData.oldPressureHead[colIdx]);
 
@@ -405,13 +409,9 @@ namespace soilFluxes3D::v2::Water
             // rainfall
             double flux_i = (nodeGrid.waterData.waterFlow[rowIdx] * deltaT) / nodeGrid.size[rowIdx];
             double flux_j = (nodeGrid.waterData.waterFlow[colIdx] * deltaT) / nodeGrid.size[colIdx];
-            H_i += 0.5 * flux_i;
-            H_j += 0.5 * flux_j;
+            H_i += 0.33 * flux_i;
+            H_j += 0.33 * flux_j;
         }
-
-        double dH = std::fabs(H_i - H_j);
-        if(dH < EPSILON_METER)
-            return 0.;
 
         double z_i = nodeGrid.z[rowIdx] + nodeGrid.waterData.pond[rowIdx];
         double z_j = nodeGrid.z[colIdx] + nodeGrid.waterData.pond[colIdx];
@@ -419,6 +419,7 @@ namespace soilFluxes3D::v2::Water
         double H_max = SF3Dmax(H_i, H_j);
         double z_max = SF3Dmax(z_i, z_j);
 
+        // water flux height [m]
         double H_s = H_max - z_max;
         if(H_s < EPSILON_METER)
             return 0.;
@@ -429,6 +430,7 @@ namespace soilFluxes3D::v2::Water
         //H_s = SF3Dmin(H_s, dH);
 
         double cellDistance = nodeDistance2D(rowIdx, colIdx);
+        double dH = std::fabs(H_i - H_j);
         double slope = dH / cellDistance;
         double roughness = 0.5 * (nodeGrid.soilSurfacePointers[rowIdx].surfacePtr->roughness + nodeGrid.soilSurfacePointers[colIdx].surfacePtr->roughness);
 
@@ -437,7 +439,6 @@ namespace soilFluxes3D::v2::Water
         nodeGrid.waterData.partialCourantWaterLevels[rowIdx] = SF3Dmax(nodeGrid.waterData.partialCourantWaterLevels[rowIdx], v * deltaT / cellDistance);
 
         double flowArea = flowSide * H_s;       // [m2]
-        double currentDH = std::fabs(nodeGrid.waterData.pressureHead[rowIdx] - nodeGrid.waterData.pressureHead[colIdx]);
         return v * flowArea / currentDH;
     }
 

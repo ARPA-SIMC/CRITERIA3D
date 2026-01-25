@@ -4,6 +4,9 @@ CONFIG += OMP_CONFIG
 #Enable the link time optimization for the entire project.
 CONFIG += LTO_CONFIG
 
+#Enable the optimization for skylake-avx512 (only for maialinux Arpae)
+#CONFIG += AVX512_CONFIG
+
 #Enable SF3D GPU acceleration. If a CUDA Toolkit is not present in the system this flag will be ignored.
 #CONFIG += CUDA_CONFIG
 CUDA_ARCH = sm_61

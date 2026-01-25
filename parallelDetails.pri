@@ -1,3 +1,10 @@
+CONFIG(AVX512_CONFIG) {
+    unix:!macx:!clang: {
+        QMAKE_CFLAGS   += -march=skylake-avx512
+        QMAKE_CXXFLAGS += -march=skylake-avx512
+    }
+}
+
 CONFIG(OMP_CONFIG) {
     win32:{
         QMAKE_CXXFLAGS += -openmp:llvm
