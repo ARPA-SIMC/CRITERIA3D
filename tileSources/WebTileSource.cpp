@@ -66,7 +66,7 @@ quint8 WebTileSource::minZoomLevel(QPointF ll)
 quint8 WebTileSource::maxZoomLevel(QPointF ll)
 {
     Q_UNUSED(ll)
-    return 18;
+    return 21;
 }
 
 QString WebTileSource::name() const
