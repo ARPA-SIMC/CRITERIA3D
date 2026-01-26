@@ -270,6 +270,9 @@
 
         void on_actionOpenShell_triggered();
 
+        void on_flag_area_selection_triggered(bool isChecked);
+        void on_flag_point_selection_triggered(bool isChecked);
+
     protected:
         /*!
          * \brief mouseReleaseEvent call moveCenter
@@ -312,13 +315,15 @@
         QActionGroup *showPointsGroup;
 
         visualizationType currentPointsVisualization;
-        criteria3DVariable current3DVariable;
-        int current3DlayerIndex;
+        criteria3DVariable _current3DVariable;
+        int _current3DlayerIndex;
 
-        bool view3DVariable;
-        bool viewNotActivePoints;
-        bool viewOutputPoints;
-        bool viewNotActiveOutputPoints;
+        bool _view3DVariable;
+        bool _viewNotActivePoints;
+        bool _viewOutputPoints;
+        bool _viewNotActiveOutputPoints;
+        bool _isAreaSelection;
+        bool _isPointSelection;
 
         Crit3DSoilWidget *soilWidget;
 
@@ -328,7 +333,7 @@
         QPoint getMapPos(const QPoint& pos);
         bool isInsideMap(const QPoint& pos);
 
-        bool updateSelection(const QPoint& position);
+        bool updatePointsSelection(const QPoint& position);
         void updateCurrentVariable();
         void updateDateTime();
         void updateModelTime();
