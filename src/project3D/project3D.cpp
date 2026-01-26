@@ -1959,11 +1959,13 @@ bool Project3D::getTotalSurfaceWaterContent(double &wcSum, long &nrVoxels)
 
 /*!
  * \brief getTotalSoilWaterContent
+ * \param
+ * isMaximum: required water content at saturation
  * \return
  * wcSum: [m3] sum of soil water content
  * nrVoxels: [-] number of valid voxels
  */
-bool Project3D::getTotalSoilWaterContent(double &wcSum, long &nrVoxels)
+bool Project3D::getTotalSoilWaterContent(double &wcSum, long &nrVoxels, bool isMaximum)
 {
     errorString = "";
     if (! isCriteria3DInitialized)
@@ -1974,11 +1976,12 @@ bool Project3D::getTotalSoilWaterContent(double &wcSum, long &nrVoxels)
 
     nrVoxels = 0;
     wcSum = 0.;
-    double voxelArea = DEM.header->cellSize * DEM.header->cellSize;                 // [m2]
+    double voxelArea = DEM.header->cellSize * DEM.header->cellSize;         // [m2]
 
     for (unsigned layer = 1; layer < nrLayers; layer++)
     {
-        double volume = voxelArea * layerThickness[layer];                          // [m3]
+        double volume = voxelArea * layerThickness[layer];                  // [m3]
+        double currentDepth = layerDepth[layer];
 
         for (int row = 0; row < indexMap.at(layer).header->nrRows; row++)
         {
@@ -1988,12 +1991,26 @@ bool Project3D::getTotalSoilWaterContent(double &wcSum, long &nrVoxels)
                 if (nodeIndex == static_cast<long>(indexMap.at(layer).header->flag))
                     continue;
 
-                double volWaterContent = getCriteria3DVar(volumetricWaterContent, nodeIndex);    // [m3 m-3]
+                int soilIndex = getSoilIndex(row, col);
+                if (soilIndex == NODATA)
+                    continue;
+
+                int horizonIndex = soilList[soilIndex].getHorizonIndex(currentDepth);
+                if (horizonIndex == NODATA)
+                    continue;
+
+                criteria3DVariable required3DVar = volumetricWaterContent;
+                if (isMaximum)
+                    required3DVar = maximumVolumetricWaterContent;
+
+                double volWaterContent = getCriteria3DVar(required3DVar, nodeIndex);    // [m3 m-3]
 
                 if (isEqual(volWaterContent, NODATA))
                     continue;
 
-                wcSum += volWaterContent * volume;        // [m3]
+                double soilFraction = 1.0 - soilList[soilIndex].horizon[horizonIndex].coarseFragments;
+
+                wcSum += volWaterContent * volume * soilFraction;                       // [m3]
                 if (layer == 1)
                     nrVoxels++;
             }
