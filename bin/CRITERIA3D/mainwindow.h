@@ -311,6 +311,7 @@
         ColorLegend *meteoPointsLegend;
 
         RubberBand *rubberBand;
+        QRect rubberBandRect;
 
         QActionGroup *showPointsGroup;
 
@@ -333,7 +334,8 @@
         QPoint getMapPos(const QPoint& pos);
         bool isInsideMap(const QPoint& pos);
 
-        bool updatePointsSelection(const QPoint& position);
+        bool getRubberBandRect(const QPoint& position, bool& isAdd);
+        bool updatePointsSelection(bool isAdd);
         void updateCurrentVariable();
         void updateDateTime();
         void updateModelTime();

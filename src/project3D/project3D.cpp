@@ -1922,25 +1922,34 @@ bool Project3D::computeCriteria3DMap(gis::Crit3DRasterGrid &outputRaster, criter
  * wcSum: [m3] sum of surface water content
  * nrVoxels: [-] number of valid voxels
  */
-bool Project3D::getTotalSurfaceWaterContent(double &wcSum, long &nrVoxels)
+bool Project3D::getTotalSurfaceWaterContent(double &wcSum, long &nrVoxels, int row0, int col0, int row1, int col1)
 {
     errorString = "";
-    if (!isCriteria3DInitialized)
+    if (! isCriteria3DInitialized)
     {
         errorString = ERROR_STR_INITIALIZE_3D;
         return false;
     }
 
+    gis::Crit3DRasterHeader* header = indexMap.at(0).header;
+    long flag = static_cast<long>(header->flag);
+    double voxelArea = header->cellSize * header->cellSize;                 // [m2]
+
+    // default: all map
+    if (row1 == NODATA || col1 == NODATA)
+    {
+        row1 = header->nrRows - 1;
+        col1 = header->nrCols - 1;
+    }
+
     nrVoxels = 0;
     wcSum = 0.;
-    double voxelArea = DEM.header->cellSize * DEM.header->cellSize;                 // [m2]
-
-    for (int row = 0; row < indexMap.at(0).header->nrRows; row++)
+    for (int row = row0; row <= row1; row++)
     {
-        for (int col = 0; col < indexMap.at(0).header->nrCols; col++)
+        for (int col = col0; col <= col1 ; col++)
         {
             long surfaceNodeIndex = indexMap.at(0).value[row][col];
-            if (surfaceNodeIndex == static_cast<long>(indexMap.at(0).header->flag))
+            if (surfaceNodeIndex == flag)
                 continue;
 
             double surfaceWC = getCriteria3DVar(volumetricWaterContent, surfaceNodeIndex);    // [m]
@@ -1965,7 +1974,7 @@ bool Project3D::getTotalSurfaceWaterContent(double &wcSum, long &nrVoxels)
  * wcSum: [m3] sum of soil water content
  * nrVoxels: [-] number of valid voxels
  */
-bool Project3D::getTotalSoilWaterContent(double &wcSum, long &nrVoxels, bool isMaximum)
+bool Project3D::getTotalSoilWaterContent(double &wcSum, long &nrVoxels, bool isMaximum, int row0, int col0, int row1, int col1)
 {
     errorString = "";
     if (! isCriteria3DInitialized)
@@ -1976,19 +1985,28 @@ bool Project3D::getTotalSoilWaterContent(double &wcSum, long &nrVoxels, bool isM
 
     nrVoxels = 0;
     wcSum = 0.;
-    double voxelArea = DEM.header->cellSize * DEM.header->cellSize;         // [m2]
+    gis::Crit3DRasterHeader* header = indexMap.at(0).header;
+    long flag = static_cast<long>(header->flag);
+    double voxelArea = header->cellSize * header->cellSize;                 // [m2]
+
+    // default: all map
+    if (row1 == NODATA || col1 == NODATA)
+    {
+        row1 = header->nrRows - 1;
+        col1 = header->nrCols - 1;
+    }
 
     for (unsigned layer = 1; layer < nrLayers; layer++)
     {
         double volume = voxelArea * layerThickness[layer];                  // [m3]
         double currentDepth = layerDepth[layer];
 
-        for (int row = 0; row < indexMap.at(layer).header->nrRows; row++)
+        for (int row = row0; row <= row1; row++)
         {
-            for (int col = 0; col < indexMap.at(layer).header->nrCols; col++)
+            for (int col = col0; col <= col1; col++)
             {
                 long nodeIndex = indexMap.at(layer).value[row][col];
-                if (nodeIndex == static_cast<long>(indexMap.at(layer).header->flag))
+                if (nodeIndex == flag)
                     continue;
 
                 int soilIndex = getSoilIndex(row, col);
