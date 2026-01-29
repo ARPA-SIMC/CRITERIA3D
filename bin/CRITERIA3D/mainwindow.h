@@ -392,6 +392,7 @@
         void loadMeteoPointsDataSingleDay(const QDate &date, bool showInfo);
 
         void initializeCriteria3DInterface();
+        void loadState(const QString &stateDirectory);
     };
 
     bool selectDates(QDateTime &firstTime, QDateTime &lastTime);

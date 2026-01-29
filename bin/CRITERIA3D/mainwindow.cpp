@@ -3654,7 +3654,25 @@ void MainWindow::on_layerNrEdit_valueChanged(int layerIndex)
     showCriteria3DVariable(_current3DVariable, layerIndex, isRangeFixed, isHideMinimum,
                            myProject.criteria3DMap.colorScale->minimum(),
                            myProject.criteria3DMap.colorScale->maximum());
+}
 
+
+void MainWindow::loadState(const QString &stateDirectory)
+{
+    if (stateDirectory.isEmpty())
+        return;
+
+    if (! myProject.loadModelState(stateDirectory))
+    {
+        myProject.logError();
+        return;
+    }
+
+    initializeCriteria3DInterface();
+    updateOutputMap();
+
+    loadMeteoPointsDataSingleDay(myProject.getCurrentDate(), true);
+    redrawMeteoPoints(currentPointsVisualization, true);
 }
 
 
@@ -3685,17 +3703,7 @@ void MainWindow::on_actionCriteria3D_load_state_triggered()
         return;
 
     QString stateDirectory = statesPath + dialogLoadState.getSelectedState();
-    if (! myProject.loadModelState(stateDirectory))
-    {
-        myProject.logError();
-        return;
-    }
-
-    initializeCriteria3DInterface();
-    updateOutputMap();
-
-    loadMeteoPointsDataSingleDay(myProject.getCurrentDate(), true);
-    redrawMeteoPoints(currentPointsVisualization, true);
+    loadState(stateDirectory);
 }
 
 
@@ -3715,19 +3723,7 @@ void MainWindow::on_actionCriteria3D_load_external_state_triggered()
 
     QString stateDirectory = QFileDialog::getExistingDirectory(this, tr("Open Directory"), myProject.getProjectPath(),
                                                                QFileDialog::ShowDirsOnly | QFileDialog::DontResolveSymlinks);
-    if (stateDirectory.isEmpty())
-        return;
-
-    if (! myProject.loadModelState(stateDirectory))
-    {
-        myProject.logError();
-        return;
-    }
-
-    updateDateTime();
-    initializeCriteria3DInterface();
-    loadMeteoPointsDataSingleDay(myProject.getCurrentDate(), true);
-    redrawMeteoPoints(currentPointsVisualization, true);
+    loadState(stateDirectory);
 }
 
 
