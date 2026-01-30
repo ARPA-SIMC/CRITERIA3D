@@ -67,7 +67,7 @@
 
     struct TsunPosition
     {
-        float hourDecimal;
+        //float hourDecimal;
         float rise;                     /*!<  Sunrise time, from midnight, local, WITHOUT refraction [s] */
         float set;                      /*!<  Sunset time, from midnight, local, WITHOUT refraction [s] */
         float azimuth;                  /*!<  Solar azimuth angle [degrees, N=0, E=90, S=180, W = 270] */

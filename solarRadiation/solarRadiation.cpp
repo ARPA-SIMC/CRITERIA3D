@@ -354,18 +354,20 @@ namespace radiation
     float clearSkyBeamHorizontal(float linke, const TsunPosition& sunPosition)
     {       
         // Rayleigh optical thickness (Kasten, 1996)
-        float rayleighThickness;
+        double rayleighThickness;
         // relative optical air mass corrected for pressure
-        float airMass = sunPosition.relOptAirMassCorr;
+        double airMass = double(sunPosition.relOptAirMassCorr);
 
         if (airMass <= 20)
-            rayleighThickness = 1.f / (6.6296f + 1.7513f * airMass - 0.1202f * float(pow(airMass, 2))
-                                       + 0.0065f * float(pow(airMass, 3)) - 0.00013f * float(pow(airMass, 4)));
+            rayleighThickness = 1. / (6.6296 + 1.7513 * airMass - 0.1202 * airMass * airMass
+                                       + 0.0065 * pow(airMass, 3) - 0.00013 * pow(airMass, 4));
         else
-            rayleighThickness = 1.f / (10.4f + 0.718f * airMass);
+            rayleighThickness = 1. / (10.4 + 0.718 * airMass);
 
-        return sunPosition.extraIrradianceNormal * getSinDecimalDegree(sunPosition.elevation)
-                * float(exp(-0.8662f * linke * airMass * rayleighThickness));
+        double horizontalBeam = double(sunPosition.extraIrradianceNormal) * double(getSinDecimalDegree(sunPosition.elevation))
+                * exp(-0.8662 * linke * airMass * rayleighThickness);
+
+        return float(horizontalBeam);
     }
 
 
