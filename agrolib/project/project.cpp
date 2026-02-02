@@ -653,8 +653,8 @@ bool Project::loadParameters(QString parametersFileName)
                 bool isOk = true;
                 if (myLinkeStr.size() < 12)
                 {
-                    logInfo("Incomplete monthly Linke values");
-                    errorString = "Incomplete monthly Linke values";
+                    //logInfo("Incomplete monthly Linke values");
+                    //errorString = "Incomplete monthly Linke values";
                     isOk = false;
                 }
 
@@ -662,8 +662,8 @@ bool Project::loadParameters(QString parametersFileName)
                 {
                     if (isEqual(myLinkeStr[p].toDouble(), NODATA))
                     {
-                        errorString = "Invalid monthly Linke value.";
-                        logInfo("Invalid monthly Linke value.");
+                        //errorString = "Invalid monthly Linke value.";
+                        //logInfo("Invalid monthly Linke value.");
                         isOk = false;
                         break;
                     }

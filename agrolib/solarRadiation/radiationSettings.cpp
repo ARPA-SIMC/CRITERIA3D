@@ -148,7 +148,7 @@ float Crit3DRadiationSettings::getLinke(const gis::Crit3DPoint& myPoint) const
 
 float Crit3DRadiationSettings::getLinke(int month) const
 {
-    if (LinkeMonthly.size() == 12 && month > 0 && month < 13)
+    if (LinkeMonthly.size() == 12 && month > 0 && month < 12)
         return LinkeMonthly[month];
     else
         return linke;
