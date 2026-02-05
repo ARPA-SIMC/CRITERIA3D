@@ -4915,17 +4915,24 @@ bool Project::setActiveStateWithCriteria(bool isActive)
 }
 
 
-bool Project::setMarkedFromPointList(QString fileName)
+bool Project::setMarkedFromPointList(QString fileName, bool isAdd)
 {
-    for (int i = 0; i < meteoPoints.size(); i++)
+    if (! isAdd)
     {
-        meteoPoints[i].marked = false;
+        for (int i = 0; i < meteoPoints.size(); i++)
+        {
+            meteoPoints[i].marked = false;
+        }
     }
 
     QList<QString> pointList = readListSingleColumn(fileName, errorString);
     if (pointList.size() == 0)
     {
-        logError();
+        if (! errorString.isEmpty())
+            logError();
+        else
+            logWarning("Point list is empty.");
+
         return false;
     }
 
@@ -4936,12 +4943,14 @@ bool Project::setMarkedFromPointList(QString fileName)
             if (meteoPoints[i].id == pointList[j].toStdString())
             {
                 meteoPoints[i].marked = true;
+                break;
             }
         }
     }
 
     return true;
 }
+
 
 bool Project::setMarkedPointsOfMacroArea(int areaNumber, bool viewNotActivePoints)
 {
