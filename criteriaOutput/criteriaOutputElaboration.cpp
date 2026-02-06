@@ -291,7 +291,7 @@ bool writeDtxToDB(QSqlDatabase db, QString idCase, std::vector<double>& dt30,
 int writeCsvOutputUnit(const QString &idCase, const QString &idCropClass, const QList<QString> &dataTables,
                        QSqlDatabase &dbData, QSqlDatabase &dbCrop, QSqlDatabase &dbClimateData,
                        const QDate &dateComputation, const CriteriaOutputVariable &outputVariable,
-                       const QString &csvFileName, QString &errorStr)
+                       const QString &csvFileName, int &nrMissingData, QString &errorStr)
 {
     // IRRI RATIO (parameter for elaboration on IRRIGATION variable)
     float irriRatio = NODATA;
@@ -311,6 +311,7 @@ int writeCsvOutputUnit(const QString &idCase, const QString &idCropClass, const 
 
     double result = NODATA;
     int periodTDX = NODATA;
+    nrMissingData = 0;
 
     // check if table for idCase exist (skip otherwise)
     if (! dataTables.contains(idCase))
@@ -396,6 +397,7 @@ int writeCsvOutputUnit(const QString &idCase, const QString &idCropClass, const 
             if (selectRes == ERROR_DB_INCOMPLETE_DATA)
             {
                 result = NODATA;
+                ++nrMissingData;
             }
             else if(selectRes != CRIT1D_OK)
             {
@@ -421,6 +423,7 @@ int writeCsvOutputUnit(const QString &idCase, const QString &idCropClass, const 
             if (DTXRes == ERROR_DB_INCOMPLETE_DATA)
             {
                 result = NODATA;
+                ++nrMissingData;
             }
             else if (DTXRes != CRIT1D_OK)
             {
@@ -612,7 +615,6 @@ int selectSimpleVar(QSqlDatabase& db, QString idCase, QString varName, QString c
             return ERROR_DB_INCOMPLETE_DATA;
         }
     }
-
 
     QString statement = QString("SELECT %1(`%2`) FROM `%3` WHERE DATE >= '%4' AND DATE <= '%5'")
                     .arg(computation, varName, idCase, firstDate.toString("yyyy-MM-dd"), lastDate.toString("yyyy-MM-dd"));

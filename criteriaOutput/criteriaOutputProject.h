@@ -40,7 +40,7 @@
     #define ERROR_MAPS -85
     #define ERROR_MISSING_GDAL -100
 
-    #define CRITERIA_VERSION "v2.0.0 (2026)"
+    #define CRITERIA_OUTPUT_VERSION "v2.0.1 (2026)"
 
 
     class CriteriaOutputProject
