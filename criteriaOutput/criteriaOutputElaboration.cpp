@@ -585,30 +585,27 @@ int writeCsvOutputUnit(const QString &idCase, const QString &idCropClass, const 
 int selectSimpleVar(QSqlDatabase& db, QString idCase, QString varName, QString computation,
                     QDate firstDate, QDate lastDate, float irriRatio, std::vector<float>& resultVector, QString& errorStr)
 {
-
     QSqlQuery qry(db);
-    int count = 0;
-    QString statement;
-    float result = NODATA;
 
     // check nr of values
-    if (computation != "")
+    if (! computation.isEmpty())
     {
-        statement = QString("SELECT COUNT(`%1`) FROM `%2` WHERE DATE >= '%3' AND DATE <= '%4'")
+        QString statement = QString("SELECT COUNT(`%1`) FROM `%2` WHERE DATE >= '%3' AND DATE <= '%4'")
                         .arg(varName, idCase, firstDate.toString("yyyy-MM-dd"), lastDate.toString("yyyy-MM-dd"));
-        if( !qry.exec(statement) )
+        if(! qry.exec(statement))
         {
             errorStr = "Wrong variable: " + varName + "\n" + qry.lastError().text();
             return ERROR_OUTPUT_VARIABLES;
         }
 
         qry.first();
-        if (!qry.isValid())
+        if (! qry.isValid())
         {
             errorStr = qry.lastError().text();
             return ERROR_OUTPUT_VARIABLES ;
         }
 
+        int count;
         getValue(qry.value(0), &count);
         if (count < firstDate.daysTo(lastDate)+1)
         {
@@ -616,10 +613,10 @@ int selectSimpleVar(QSqlDatabase& db, QString idCase, QString varName, QString c
         }
     }
 
-    count = 0;
-    statement = QString("SELECT %1(`%2`) FROM `%3` WHERE DATE >= '%4' AND DATE <= '%5'")
+
+    QString statement = QString("SELECT %1(`%2`) FROM `%3` WHERE DATE >= '%4' AND DATE <= '%5'")
                     .arg(computation, varName, idCase, firstDate.toString("yyyy-MM-dd"), lastDate.toString("yyyy-MM-dd"));
-    if( !qry.exec(statement) )
+    if(! qry.exec(statement))
     {
         if (varName.left(2) == "DT")
         {
@@ -634,16 +631,18 @@ int selectSimpleVar(QSqlDatabase& db, QString idCase, QString varName, QString c
     }
 
     qry.first();
-    if (!qry.isValid())
+    if (! qry.isValid())
     {
         errorStr = "Missing data:\n" + statement;
         return ERROR_DB_MISSING_DATA ;
     }
 
+    int count = 0;
+    float result = NODATA;
     do
     {
         getValue(qry.value(0), &result);
-        count = count+1;
+        ++count;
         if (varName == "IRRIGATION")
         {
             result = result * irriRatio;
@@ -653,7 +652,7 @@ int selectSimpleVar(QSqlDatabase& db, QString idCase, QString varName, QString c
     while(qry.next());
 
     // check for simple queries
-    if (computation == "")
+    if (computation.isEmpty())
     {
         if (count < firstDate.daysTo(lastDate)+1)
         {
