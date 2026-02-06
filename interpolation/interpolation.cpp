@@ -1417,7 +1417,8 @@ void detrending(std::vector <Crit3DInterpolationDataPoint> &myPoints, Crit3DProx
 bool proxyValidity(std::vector <Crit3DInterpolationDataPoint> &myPoints, int proxyPos, float stdDevThreshold, double &avg, double &stdDev)
 {
     std::vector<float> proxyValues;
-    const int MIN_NR = 10;
+    //const int MIN_NR = 10;
+    const int MIN_NR = 5;
 
     avg = NODATA;
     stdDev = NODATA;
@@ -1457,16 +1458,17 @@ bool proxyValidity(std::vector <Crit3DInterpolationDataPoint> &myPoints, int pro
 bool proxyValidityWeighted(std::vector <Crit3DInterpolationDataPoint> &myPoints, int proxyPos, float stdDevThreshold)
 {
     double stdDev;
-    std::vector<float> proxyValues;
+
 
     std::vector<double> data, weights;
-    data.resize(myPoints.size());
-    weights.resize(myPoints.size());
 
     for (unsigned i = 0; i < myPoints.size(); i++)
     {
-        data[i] = myPoints[i].getProxyValue(proxyPos);
-        weights[i] = myPoints[i].regressionWeight;
+        if (! isEqual(myPoints[i].getProxyValue(proxyPos), NODATA))
+        {
+            data.push_back(myPoints[i].getProxyValue(proxyPos));
+            weights.push_back(myPoints[i].regressionWeight);
+        }
     }
 
 
@@ -1876,8 +1878,9 @@ bool multipleDetrendingElevationFitting(int elevationPos, std::vector <Crit3DInt
 
     // proxy spatial variability and minimum points number for local detrending
     bool isValid = false;
+    double avg, stdDev;
 
-    isValid = proxyValidityWeighted(elevationPoints, elevationPos, interpolationSettings.getProxy(elevationPos)->getStdDevThreshold());
+    isValid = proxyValidity(elevationPoints, elevationPos, interpolationSettings.getProxy(elevationPos)->getStdDevThreshold(), avg, stdDev);
     if (interpolationSettings.getUseLocalDetrending()) isValid = (isValid && elevationPoints.size() >= unsigned(interpolationSettings.getMinPointsLocalDetrending()));
 
     interpolationSettings.setSignificantCurrentCombination(elevationPos, isValid);
@@ -1994,24 +1997,25 @@ bool multipleDetrendingOtherProxiesFitting(int elevationPos, std::vector <Crit3D
     //lapse rate code
     std::vector <Crit3DInterpolationDataPoint> othersPoints = myPoints;
     vector<Crit3DInterpolationDataPoint>::iterator it = othersPoints.begin();
-    while (it != othersPoints.end())
+    /*while (it != othersPoints.end())
     {
         if (!checkLapseRateCode(it->lapseRateCode, interpolationSettings.getUseLapseRateCode(), false))
             it = othersPoints.erase(it);
         else
             it++;
-    }
+    }*/
 
     // proxy spatial variability (1st step)
     // this is done before check of incomplete to keep as many points as possible
     unsigned validNr;
     validNr = 0;
+    double avg, stdDev;
 
     for (int pos=0; pos < proxyNr; pos++)
     {
         if (pos != elevationPos && myCombination.isProxyActive(pos))
         {
-            if (proxyValidityWeighted(othersPoints, pos, interpolationSettings.getProxy(pos)->getStdDevThreshold()))
+            if (proxyValidity(othersPoints, pos, interpolationSettings.getProxy(pos)->getStdDevThreshold(), avg, stdDev))
             {
                 interpolationSettings.setSignificantCurrentCombination(pos, true);
                 validNr++;
@@ -2085,7 +2089,7 @@ bool multipleDetrendingOtherProxiesFitting(int elevationPos, std::vector <Crit3D
     {
         if (pos != elevationPos && myCombination.isProxyActive(pos))
         {
-            if (proxyValidityWeighted(othersPoints, pos, interpolationSettings.getProxy(pos)->getStdDevThreshold()))
+            if (proxyValidity(othersPoints, pos, interpolationSettings.getProxy(pos)->getStdDevThreshold(), avg, stdDev))
             {
                 interpolationSettings.setSignificantCurrentCombination(pos, true);
                 validNr++;
