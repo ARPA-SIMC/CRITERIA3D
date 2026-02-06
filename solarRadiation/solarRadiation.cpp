@@ -675,12 +675,12 @@ bool computeRadiationRsun(Crit3DRadiationSettings* radSettings, float temperatur
         }
 
         // shadowing
-        if (!sunPosition.shadow && sunPosition.incidence > 0.)
+        if (! sunPosition.shadow && sunPosition.incidence > 0.)
             Bh = Gh - dH;
         else
         {
             Bh = 0;
-            Gh = dH; // approximation (portion of shadowed sky should be considered)
+            Gh = dH;    // approximation (portion of shadowed sky should be considered)
         }
 
         // inclined
