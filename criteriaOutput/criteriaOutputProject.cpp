@@ -561,7 +561,7 @@ int CriteriaOutputProject::createCsvFile()
 
     if (totalMissingData > 0)
     {
-        logger.writeInfo("***WARNING***\nCases with missing data: " + QString::number(totalMissingData));
+        logger.writeInfo("WARNING! Cases with missing data: " + QString::number(totalMissingData));
     }
 
     return CRIT1D_OK;
