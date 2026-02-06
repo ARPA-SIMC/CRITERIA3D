@@ -1932,9 +1932,18 @@ bool multipleDetrendingElevationFitting(int elevationPos, std::vector <Crit3DInt
 
     interpolationSettings.getProxy(elevationPos)->setRegressionR2(float(R2));
 
-    std::vector<std::vector<double>> newParameters;
-    newParameters.push_back(parameters);
-    interpolationSettings.addFittingParameters(newParameters);
+    if (! isEqual(R2, NODATA) || ! isVectorNodataOrZero(parameters))
+    {
+        std::vector<std::vector<double>> newParameters;
+        newParameters.push_back(parameters);
+        interpolationSettings.addFittingParameters(newParameters);
+    }
+    else
+    {
+        Crit3DProxyCombination myCombination =  interpolationSettings.getCurrentCombination();
+        myCombination.setProxySignificant(elevationPos, false);
+        interpolationSettings.setCurrentCombination(myCombination);
+    }
 
     return true;
 }
@@ -2169,33 +2178,46 @@ void detrendingOtherProxies(int elevationPos, std::vector<Crit3DInterpolationDat
 
     std::vector<std::vector<double>> fullParameters = parameters;
     std::vector<std::function<double(double, std::vector<double>&)>> fullFunc = myFunc;
+    bool proxyComplete = true;
 
     // detrending
     float detrendValue;
-    for (unsigned int i = 0; i < myPoints.size(); i++)
+    vector<Crit3DInterpolationDataPoint>::iterator it = myPoints.begin();
+    while (it != myPoints.end())
     {
         proxyValues.clear();
+        proxyComplete = true;
 
         for (int pos=0; pos < int(interpolationSettings.getProxyNr()); pos++)
         {
-            if (pos != elevationPos && interpolationSettings.getCurrentCombination().isProxyActive(pos) && interpolationSettings.getCurrentCombination().isProxySignificant(pos))
+            if (pos != elevationPos && interpolationSettings.getCurrentCombination().isProxyActive(pos) &&
+                interpolationSettings.getCurrentCombination().isProxySignificant(pos) &&
+                proxyComplete)
             {
-                proxyValue = myPoints[i].getProxyValue(pos);
+                proxyValue = it->getProxyValue(pos);
                 if (! isEqual(proxyValue, NODATA))
                     proxyValues.push_back(double(proxyValue));
                 else
                 {
-                    parameters.erase(parameters.begin()+proxyValues.size());
-                    myFunc.erase(myFunc.begin()+proxyValues.size());
+
+                    //parameters.erase(parameters.begin()+proxyValues.size());
+                    //myFunc.erase(myFunc.begin()+proxyValues.size());
+                    proxyComplete = false;
                 }
             }
         }
 
-        detrendValue = float(functionSum(myFunc, proxyValues, parameters));
-        myPoints[i].value -= detrendValue;
+        if (proxyComplete)
+        {
+            detrendValue = float(functionSum(myFunc, proxyValues, parameters));
+            it->value -= detrendValue;
+            it++;
+        }
+        else it = myPoints.erase(it);
 
         myFunc = fullFunc;
         parameters = fullParameters;
+
     }
 }
 
@@ -2657,3 +2679,14 @@ float getFirstIntervalHeightValue(std::vector <Crit3DInterpolationDataPoint> &my
     return getFirstIntervalHeightValue;
 }
 
+
+bool isVectorNodataOrZero(std::vector <double> myVector)
+{
+    bool myFlag = false;
+    for (int i = 0; i < myVector.size(); i++)
+    {
+        if (isEqual(myVector[i], NODATA) || isEqual(myVector[i], 0))    myFlag = true;
+    }
+
+    return myFlag;
+}

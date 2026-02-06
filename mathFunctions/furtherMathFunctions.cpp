@@ -1512,7 +1512,7 @@ namespace interpolation
             parameters[j] = bestParameters[j];
         }
 
-        if (bestR2 < 0)
+        if (bestR2 < 0 && (RMSEindex != NODATA))
         {
             parameters = firstGuessCombinations[RMSEindex];
             fittingMarquardt_nDimension(func,parametersMin,
