@@ -2032,24 +2032,33 @@ bool multipleDetrendingOtherProxiesFitting(int elevationPos, std::vector <Crit3D
     // exclude points with incomplete proxies
     unsigned i;
     bool isValid;
+    bool atLeastOneProxy;
     float proxyValue;
     it = myPoints.begin();
 
     while (it != myPoints.end())
     {
         isValid = true;
+        atLeastOneProxy = false;
         for (int pos=0; pos < proxyNr; pos++)
             if (pos != elevationPos && myCombination.isProxyActive(pos) && interpolationSettings.getCurrentCombination().isProxySignificant(pos))
             {
                 proxyValue = it->getProxyValue(pos);
-                if (proxyValue == NODATA)
+                if (isEqual(proxyValue, NODATA))
                 {
                     isValid = false;
                     break;
                 }
+
+                if (! isEqual(proxyValue, 0))
+                {
+                    atLeastOneProxy = true;
+                }
             }
 
-        if (! isValid)
+
+
+        if (! isValid || ! atLeastOneProxy)
         {
             it = myPoints.erase(it);
         }
