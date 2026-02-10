@@ -317,7 +317,7 @@ bool shapeFromCsv(const Crit3DShapeHandler &refShapeFile, const QString &csvFile
                     }
                     if (! writeOK)
                     {
-                        errorStr = "Error in write this cases: " + idCase;
+                        errorStr = "Error in writing case: " + idCase + "\n*** Value: " + valueToWrite;
                         outputShapeFile.close();
                         csvFile.close();
                         return false;
@@ -331,7 +331,8 @@ bool shapeFromCsv(const Crit3DShapeHandler &refShapeFile, const QString &csvFile
     outputShapeFile.close();
     csvFile.close();
 
-    std::cout << " done.\n";
+    std::cout << " done." << std::endl;
+
     return true;
 }
 

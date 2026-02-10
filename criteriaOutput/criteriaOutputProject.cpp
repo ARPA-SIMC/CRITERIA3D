@@ -525,13 +525,15 @@ int CriteriaOutputProject::createCsvFile()
     // list of data tables
     QList<QString> dataTables = dbData.tables();
 
+    int totalMissingData = 0;
     for (unsigned int i=0; i < compUnitList.size(); i++)
     {
         idCase = compUnitList[i].idCase;
         idCropClass = compUnitList[i].idCropClass;
 
+        int nrMissingData;
         myResult = writeCsvOutputUnit(idCase, idCropClass, dataTables, dbData, dbCrop, dbClimateData,
-                                      dateComputation, outputVariable, outputCsvFileName, projectError);
+                                      dateComputation, outputVariable, outputCsvFileName, nrMissingData, projectError);
         if (myResult != CRIT1D_OK)
         {
             if (QFile(outputCsvFileName).exists() && i == 0)
@@ -539,8 +541,11 @@ int CriteriaOutputProject::createCsvFile()
                 // delete empty file
                 QDir().remove(outputCsvFileName);
             }
+
             return myResult;
         }
+
+        totalMissingData += nrMissingData;
 
         // counter
         if (i % step == 0)
@@ -552,6 +557,11 @@ int CriteriaOutputProject::createCsvFile()
         {
             std::cout << "100\n";
         }
+    }
+
+    if (totalMissingData > 0)
+    {
+        logger.writeInfo("WARNING! Cases with missing data: " + QString::number(totalMissingData));
     }
 
     return CRIT1D_OK;
@@ -595,15 +605,11 @@ int CriteriaOutputProject::createShapeFile()
     {
         QDir().mkdir(outputShapeFilePath);
     }
+
     if (! shapeFromCsv(inputShape, outputCsvFileName, fieldListFileName, outputShapeFileName, projectError))
     {
         return ERROR_SHAPEFILE;
     }
-    /*
-    if (! shapeComputation(outputShapeFileName, computationListFileName, projectError))
-    {
-        return ERROR_SHAPEFILE;
-    }*/
 
     return CRIT1D_OK;
 }
@@ -1318,8 +1324,9 @@ int CriteriaOutputProject::createCsvFileFromGUI(const QDate &dateComputation, co
         QString idCase = compUnitList[i].idCase;
         QString idCropClass = compUnitList[i].idCropClass;
 
+        int nrMissingData = 0;
         myResult = writeCsvOutputUnit(idCase, idCropClass, dataTables, dbData, dbCrop, dbClimateData,
-                                      dateComputation, outputVariable, csvFileName, projectError);
+                                      dateComputation, outputVariable, csvFileName, nrMissingData, projectError);
         if (myResult != CRIT1D_OK)
         {
             if (QFile(csvFileName).exists() && i == 0)
