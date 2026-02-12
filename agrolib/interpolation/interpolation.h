@@ -186,4 +186,6 @@
                                         std::vector <std::vector<double>> &paramDelta, std::vector <std::vector<double>> &paramFirstGuess,
                                         std::string &errorStr);
 
+    bool isVectorNodataOrZero(std::vector <double> myVector);
+
 #endif // INTERPOLATION_H
