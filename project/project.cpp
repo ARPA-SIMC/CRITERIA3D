@@ -1496,7 +1496,7 @@ bool Project::loadAggregationDB(QString dbName)
 
     aggregationDbHandler = new Crit3DAggregationsDbHandler(dbName);
 
-    if (! aggregationDbHandler->isError())
+    if (aggregationDbHandler->isError())
     {
         errorString = aggregationDbHandler->error();
         return false;

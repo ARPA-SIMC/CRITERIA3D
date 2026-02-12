@@ -285,7 +285,6 @@ int cmdOpenAggregationDB(Project* myProject, QList<QString> argumentList)
 
     if (! myProject->loadAggregationDB(filename))
     {
-        myProject->logError();
         return ERROR_DBAGGREGATION;
     }
 
