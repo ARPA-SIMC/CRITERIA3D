@@ -84,17 +84,25 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->labelInputRaster->setText("");
     ui->labelOutputRaster->setText("");
     ui->flagSave_state_daily_step->setChecked(false);
-    this->viewNotActivePoints = true;
-    ui->flagView_not_active_points->setChecked(this->viewNotActivePoints);
-    this->viewOutputPoints = true;
-    this->viewNotActiveOutputPoints = true;
-    ui->flagView_not_active_outputPoints->setChecked(this->viewNotActiveOutputPoints);
-    this->currentPointsVisualization = notShown;
 
-    current3DlayerIndex = 0;
-    view3DVariable = false;
+    _viewNotActivePoints = true;
+    ui->flagView_not_active_points->setChecked(_viewNotActivePoints);
+
+    _viewOutputPoints = true;
+    _viewNotActiveOutputPoints = true;
+    ui->flagView_not_active_outputPoints->setChecked(_viewNotActiveOutputPoints);
+
+    currentPointsVisualization = notShown;
+
+    _current3DlayerIndex = 0;
+    _view3DVariable = false;
 
     ui->flagView_values->setChecked(false);
+
+    _isAreaSelection = false;
+    ui->flag_area_selection->setChecked(_isAreaSelection);
+    _isPointSelection = false;
+    ui->flag_point_selection->setChecked(_isPointSelection);
 
     // show menu
     showPointsGroup = new QActionGroup(this);
@@ -205,7 +213,7 @@ void MainWindow::updateOutputMap()
 
     if (myProject.isCriteria3DInitialized)
     {
-        myProject.computeCriteria3DMap(myProject.criteria3DMap, current3DVariable, current3DlayerIndex);
+        myProject.computeCriteria3DMap(myProject.criteria3DMap, _current3DVariable, _current3DlayerIndex);
     }
 
     emit rasterOutput->redrawRequested();
@@ -250,17 +258,20 @@ void MainWindow::mouseMove(QPoint eventPos)
 }
 
 
-bool MainWindow::updateSelection(const QPoint& position)
+bool MainWindow::getRubberBandRect(const QPoint& position, bool& isAdd)
 {
-    if (rubberBand == nullptr || !rubberBand->isActive || !rubberBand->isVisible() )
+    if (rubberBand == nullptr || ! rubberBand->isVisible())
+    {
+        rubberBandRect.setWidth(0);
+        rubberBandRect.setHeight(0);
         return false;
+    }
 
     QPoint lastCornerOffset = getMapPos(position);
     QPoint firstCornerOffset = rubberBand->getOrigin() - QPoint(MAPBORDER, MAPBORDER);
-    QPoint pixelTopLeft;
-    QPoint pixelBottomRight;
-    bool isAdd = false;
+    QPoint pixelTopLeft, pixelBottomRight;
 
+    isAdd = false;
     if (firstCornerOffset.y() > lastCornerOffset.y())
     {
         if (firstCornerOffset.x() > lastCornerOffset.x())
@@ -296,13 +307,21 @@ bool MainWindow::updateSelection(const QPoint& position)
         }
     }
 
-    QPointF topLeft = this->mapView->mapToScene(pixelTopLeft);
-    QPointF bottomRight = this->mapView->mapToScene(pixelBottomRight);
-    QRectF rectF(topLeft, bottomRight);
+    rubberBandRect.setTopLeft(pixelTopLeft);
+    rubberBandRect.setBottomRight(pixelBottomRight);
+    return true;
+}
+
+
+bool MainWindow::updatePointsSelection(bool isAdd)
+{
+    QRectF rubberBandRectGeo;
+    rubberBandRectGeo.setTopLeft(mapView->mapToScene(rubberBandRect.topLeft()));
+    rubberBandRectGeo.setBottomRight(mapView->mapToScene(rubberBandRect.bottomRight()));
 
     for (int i = 0; i < meteoPointList.size(); i++)
     {
-        if (rectF.contains(meteoPointList[i]->longitude(), meteoPointList[i]->latitude()))
+        if (rubberBandRectGeo.contains(meteoPointList[i]->longitude(), meteoPointList[i]->latitude()))
         {
             if (isAdd)
             {
@@ -317,7 +336,7 @@ bool MainWindow::updateSelection(const QPoint& position)
 
     for (int i = 0; i < outputPointList.size(); i++)
     {
-        if (rectF.contains(outputPointList[i]->longitude(), outputPointList[i]->latitude()))
+        if (rubberBandRectGeo.contains(outputPointList[i]->longitude(), outputPointList[i]->latitude()))
         {
             if (isAdd)
             {
@@ -330,6 +349,7 @@ bool MainWindow::updateSelection(const QPoint& position)
         }
     }
 
+    rubberBandRect.setSize(QSize(0,0));
     rubberBand->isActive = false;
     rubberBand->hide();
 
@@ -339,11 +359,26 @@ bool MainWindow::updateSelection(const QPoint& position)
 
 void MainWindow::mouseReleaseEvent(QMouseEvent *event)
 {
-    this->updateMaps();
-    if (this->updateSelection(event->pos()))
+    updateMaps();
+
+    if (event->button() == Qt::RightButton)
     {
-        this->redrawMeteoPoints(currentPointsVisualization, false);
-        this->redrawOutputPoints();
+        bool isAdd;
+        if (getRubberBandRect(event->pos(), isAdd))
+        {
+            if (_isPointSelection)
+            {
+                if (updatePointsSelection(isAdd))
+                {
+                    redrawMeteoPoints(currentPointsVisualization, false);
+                    redrawOutputPoints();
+                }
+            }
+            else if (_isAreaSelection)
+            {
+                rubberBand->isActive = false;
+            }
+        }
     }
 }
 
@@ -372,19 +407,22 @@ void MainWindow::mousePressEvent(QMouseEvent *event)
 {
     if (event->button() == Qt::RightButton)
     {
+        if (_isAreaSelection || _isPointSelection)
+        {
+            if (rubberBand != nullptr)
+            {
+                QPoint mapPos = getMapPos(event->pos());
+                QPoint widgetPos = mapPos + QPoint(MAPBORDER, MAPBORDER);
+                rubberBand->setOrigin(widgetPos);
+                rubberBand->setGeometry(QRect(widgetPos, QSize()));
+                rubberBand->isActive = true;
+                rubberBand->show();
+                return;
+            }
+        }
+
         if (contextMenuRequested(event->pos()))
             return;
-
-        if (rubberBand != nullptr)
-        {
-            QPoint mapPos = getMapPos(event->pos());
-            QPoint widgetPos = mapPos + QPoint(MAPBORDER, MAPBORDER);
-            rubberBand->setOrigin(widgetPos);
-            rubberBand->setGeometry(QRect(widgetPos, QSize()));
-            rubberBand->isActive = true;
-            rubberBand->show();
-            return;
-        }
     }
 }
 
@@ -1035,7 +1073,7 @@ void MainWindow::redrawOutputPoints()
 {
     for (int i = 0; i < int(myProject.outputPoints.size()); i++)
     {
-        outputPointList[i]->setVisible(this->viewOutputPoints);
+        outputPointList[i]->setVisible(_viewOutputPoints);
 
         if (myProject.outputPoints[unsigned(i)].selected)
         {
@@ -1050,7 +1088,7 @@ void MainWindow::redrawOutputPoints()
             else
             {
                 outputPointList[i]->setFillColor(QColor(Qt::red));
-                if (! this->viewNotActiveOutputPoints)
+                if (! _viewNotActiveOutputPoints)
                 {
                     outputPointList[i]->setVisible(false);
                 }
@@ -1118,7 +1156,7 @@ void MainWindow::redrawMeteoPoints(visualizationType myType, bool updateColorSCa
                 }
 
                 // hide not active points
-                bool isVisible = (myProject.meteoPoints[i].active || viewNotActivePoints);
+                bool isVisible = (myProject.meteoPoints[i].active || _viewNotActivePoints);
                 meteoPointList[i]->setVisible(isVisible);
             }
 
@@ -1141,7 +1179,7 @@ void MainWindow::redrawMeteoPoints(visualizationType myType, bool updateColorSCa
             if (updateColorSCale)
             {
                 float minimum, maximum;
-                myProject.getMeteoPointsRange(minimum, maximum, viewNotActivePoints);
+                myProject.getMeteoPointsRange(minimum, maximum, _viewNotActivePoints);
 
                 myProject.meteoPointsColorScale->setRange(minimum, maximum);
             }
@@ -1156,10 +1194,15 @@ void MainWindow::redrawMeteoPoints(visualizationType myType, bool updateColorSCa
                 {
                     if (myProject.meteoPoints[i].quality == quality::accepted)
                     {
-                        meteoPointList[i]->setRadius(5);
+                        if (myProject.meteoPoints[i].selected)
+                            meteoPointList[i]->setRadius(8);
+                        else
+                            meteoPointList[i]->setRadius(5);
+
                         Crit3DColor *myColor = myProject.meteoPointsColorScale->getColor(myProject.meteoPoints[i].currentValue);
                         meteoPointList[i]->setFillColor(QColor(myColor->red, myColor->green, myColor->blue));
                         meteoPointList[i]->setOpacity(1.0);
+
                         if (isWindVector)
                             drawWindVector(i);
                     }
@@ -1176,7 +1219,7 @@ void MainWindow::redrawMeteoPoints(visualizationType myType, bool updateColorSCa
                     meteoPointList[i]->setToolTip();
 
                     // hide not active points
-                    bool isVisible = (myProject.meteoPoints[i].active || viewNotActivePoints);
+                    bool isVisible = (myProject.meteoPoints[i].active || _viewNotActivePoints);
                     meteoPointList[i]->setVisible(isVisible);
                 }
             }
@@ -1268,7 +1311,7 @@ void MainWindow::setCurrentRasterOutput(gis::Crit3DRasterGrid *rasterPointer)
 
     refreshViewer3D();
 
-    view3DVariable = (rasterPointer == &(myProject.criteria3DMap));
+    _view3DVariable = (rasterPointer == &(myProject.criteria3DMap));
 }
 
 
@@ -1295,7 +1338,7 @@ void MainWindow::on_actionProjectSettings_triggered()
 
 void MainWindow::on_flagView_not_active_points_toggled(bool isChecked)
 {
-    this->viewNotActivePoints = isChecked;
+    _viewNotActivePoints = isChecked;
     redrawMeteoPoints(currentPointsVisualization, true);
 }
 
@@ -2567,43 +2610,104 @@ void MainWindow::on_actionCriteria3D_run_models_triggered()
 
 void MainWindow::on_actionCriteria3D_Water_content_summary_triggered()
 {
-    double voxelArea = myProject.DEM.header->cellSize * myProject.DEM.header->cellSize;     // [m2]
+    if (! myProject.isCriteria3DInitialized)
+    {
+        myProject.logError(ERROR_STR_INITIALIZE_3D);
+        return;
+    }
+
+    gis::Crit3DRasterHeader* header = myProject.indexMap.at(0).header;
+    double voxelArea = header->cellSize * header->cellSize;                     // [m2]
+
+    // default: all map
+    int row0 = 0;
+    int col0 = 0;
+    int row1 = header->nrRows - 1;
+    int col1 = header->nrCols - 1;
+
+    // selection
+    bool isSelection = false;
+    if (rubberBandRect.width() > 1)
+    {
+        double utmX, utmY;
+        QPointF topLeft = mapView->mapToScene(rubberBandRect.topLeft());
+
+        gis::getUtmFromLatLon(myProject.gisSettings, topLeft.y(), topLeft.x(), &utmX, &utmY);
+        if (gis::isOutOfGridXY(utmX, utmY, header))
+        {
+            myProject.logWarning("selection is out of map");
+            return;
+        }
+        gis::getRowColFromXY(*header, utmX, utmY, &row0, &col0);
+
+        QPointF bottomRight = mapView->mapToScene(rubberBandRect.bottomRight());
+        gis::getUtmFromLatLon(myProject.gisSettings, bottomRight.y(), bottomRight.x(), &utmX, &utmY);
+        if (gis::isOutOfGridXY(utmX, utmY, header))
+        {
+            myProject.logWarning("selection is out of map");
+            return;
+        }
+        gis::getRowColFromXY(*header, utmX, utmY, &row1, &col1);
+        isSelection = true;
+    }
 
     // SURFACE
-    double surfaceWaterContent = 0;                                                         // [m3]
+    double surfaceWaterContent = 0;     // [m3]
     long nrSurfaceVoxels = 0;
-    if (! myProject.getTotalSurfaceWaterContent(surfaceWaterContent, nrSurfaceVoxels))
+    if (! myProject.getTotalSurfaceWaterContent(surfaceWaterContent, nrSurfaceVoxels, row0, col0, row1, col1))
     {
         myProject.logError();
         return;
     }
-    double surfaceArea = voxelArea * nrSurfaceVoxels;                                       // [m2]
-    double surfaceAvgLevel = surfaceWaterContent / surfaceArea * 1000;                      // [mm]
+    double surfaceArea = voxelArea * nrSurfaceVoxels;                       // [m2]
+    double surfaceAvgLevel = surfaceWaterContent / surfaceArea * 1000.;     // [mm]
 
     // SOIL
-    double soilWaterContent = 0;                                                            // [m3]
     long nrSoilVoxels = 0;
-    if (! myProject.getTotalSoilWaterContent(soilWaterContent, nrSoilVoxels))
+    double maximumWaterContent = 0.;    // [m3]
+    bool isMaximum = true;
+    if (! myProject.getTotalSoilWaterContent(maximumWaterContent, nrSoilVoxels, isMaximum, row0, col0, row1, col1))
     {
         myProject.logError();
         return;
     }
-    double soilArea = voxelArea * nrSoilVoxels;                                             // [m2]
-    double soilAvgWC = soilWaterContent / soilArea * 1000;                                  // [mm]
+    double soilWaterContent = 0;        // [m3]
+    isMaximum = false;
+    if (! myProject.getTotalSoilWaterContent(soilWaterContent, nrSoilVoxels, isMaximum, row0, col0, row1, col1))
+    {
+        myProject.logError();
+        return;
+    }
 
-    double totalWaterContent = soilFluxes3D::getTotalWaterContent();                          // [m3]
+    // TOTAL
+    double totalWaterContent = soilFluxes3D::getTotalWaterContent();  // [m3]
+    int nrDecimals = (totalWaterContent <= 1.) ? 1: 2;
 
     QString summaryStr = "WATER CONTENT SUMMARY\n\n";
 
-    summaryStr += "Total water content: " + QString::number(totalWaterContent, 'f', 1) + " [m3]\n";
+    summaryStr += "Total water content (full area): " + QString::number(totalWaterContent, 'f', nrDecimals) + " [m3]\n";
     summaryStr += "-------------------------------------------\n";
-    summaryStr += "Surface area: " + QString::number(surfaceArea / 10000, 'f', 1) + " [hectares]\n";
-    summaryStr += "Surface water content: " + QString::number(surfaceWaterContent, 'f', 1) + " [m3]\n";
-    summaryStr += "Surface average water level: " + QString::number(surfaceAvgLevel, 'f', 1) + " [mm]\n";
+    if (isSelection)
+    {
+        summaryStr += "SELECTED AREA\n";
+        summaryStr += "-------------------------------------------\n";
+    }
+
+    summaryStr += "Surface area: " + QString::number(surfaceArea / 10000., 'f', 3) + " [hectares]\n";
+    summaryStr += "Surface water content: " + QString::number(surfaceWaterContent, 'f', nrDecimals) + " [m3]\n";
+    summaryStr += "Surface average water level: " + QString::number(surfaceAvgLevel, 'f', 2) + " [mm]\n";
     summaryStr += "-------------------------------------------\n";
-    summaryStr += "Soil area: " + QString::number(soilArea / 10000, 'f', 1) + " [hectares]\n";
-    summaryStr += "Soil water content: " + QString::number(soilWaterContent, 'f', 1) + " [m3]\n";
-    summaryStr += "Soil average water content: " + QString::number(soilAvgWC, 'f', 1) + " [mm]\n";
+
+    double soilArea = voxelArea * nrSoilVoxels;  // [m2]
+    if (soilArea > 0)
+    {
+        summaryStr += "Soil area: " + QString::number(soilArea / 10000., 'f', 3) + " [hectares]\n";
+        summaryStr += "Soil water content: " + QString::number(soilWaterContent, 'f', nrDecimals) + " [m3]\n";
+        summaryStr += "Maximum soil water content: " + QString::number(maximumWaterContent, 'f', nrDecimals) + " [m3]\n";
+
+        double soilAvgWC = soilWaterContent / soilArea * 1000.;
+        summaryStr += "Soil average water content: " + QString::number(soilAvgWC, 'f', 2) + " [mm]\n";
+    }
 
     myProject.logInfoGUI(summaryStr);
 }
@@ -2681,14 +2785,14 @@ void MainWindow::showCriteria3DVariable(criteria3DVariable var, int layerIndex, 
         return;
     }
 
-    current3DVariable = var;
-    current3DlayerIndex = layerIndex;
+    _current3DVariable = var;
+    _current3DlayerIndex = layerIndex;
 
     myProject.criteria3DMap.colorScale->setFixedRange(false);
     myProject.criteria3DMap.colorScale->setHideMinimum(false);
     myProject.criteria3DMap.colorScale->setTransparent(false);
 
-    if (current3DVariable == volumetricWaterContent)
+    if (_current3DVariable == volumetricWaterContent)
     {
         if (layerIndex == 0)
         {
@@ -2706,24 +2810,24 @@ void MainWindow::showCriteria3DVariable(criteria3DVariable var, int layerIndex, 
             ui->labelOutputRaster->setText("Volumetric water content [m3 m-3]");
         }
     }
-    else if (current3DVariable == degreeOfSaturation)
+    else if (_current3DVariable == degreeOfSaturation)
     {
         setTemperatureScale(myProject.criteria3DMap.colorScale);
         reverseColorScale(myProject.criteria3DMap.colorScale);
         ui->labelOutputRaster->setText("Degree of saturation [-]");
     }
-    else if (current3DVariable == waterMatricPotential)
+    else if (_current3DVariable == waterMatricPotential)
     {
         setTemperatureScale(myProject.criteria3DMap.colorScale);
         reverseColorScale(myProject.criteria3DMap.colorScale);
         ui->labelOutputRaster->setText("Water matric potential [m]");
     }
-    else if (current3DVariable == factorOfSafety || current3DVariable == minimumFactorOfSafety)
+    else if (_current3DVariable == factorOfSafety || _current3DVariable == minimumFactorOfSafety)
     {
         setSlopeStabilityScale(myProject.criteria3DMap.colorScale);
         ui->labelOutputRaster->setText("Factor of safety [-]");
     }
-    else if (current3DVariable == surfacePond)
+    else if (_current3DVariable == surfacePond)
     {
         setSurfaceWaterScale(myProject.criteria3DMap.colorScale);
         ui->labelOutputRaster->setText("Surface maximum pond [mm]");
@@ -3070,13 +3174,13 @@ void MainWindow::on_actionPoints_delete_data_not_active_triggered()
 
 void MainWindow::on_flagHide_outputPoints_toggled(bool isChecked)
 {
-    viewOutputPoints = !isChecked;
+    _viewOutputPoints = !isChecked;
     redrawOutputPoints();
 }
 
 void MainWindow::on_flagView_not_active_outputPoints_toggled(bool isChecked)
 {
-    viewNotActiveOutputPoints = isChecked;
+    _viewNotActiveOutputPoints = isChecked;
     redrawOutputPoints();
 }
 
@@ -3547,10 +3651,28 @@ void MainWindow::on_layerNrEdit_valueChanged(int layerIndex)
     bool isRangeFixed = myProject.criteria3DMap.colorScale->isFixedRange();
     bool isHideMinimum = myProject.criteria3DMap.colorScale->isHideMinimum();
 
-    showCriteria3DVariable(current3DVariable, layerIndex, isRangeFixed, isHideMinimum,
+    showCriteria3DVariable(_current3DVariable, layerIndex, isRangeFixed, isHideMinimum,
                            myProject.criteria3DMap.colorScale->minimum(),
                            myProject.criteria3DMap.colorScale->maximum());
+}
 
+
+void MainWindow::loadState(const QString &stateDirectory)
+{
+    if (stateDirectory.isEmpty())
+        return;
+
+    if (! myProject.loadModelState(stateDirectory))
+    {
+        myProject.logError();
+        return;
+    }
+
+    initializeCriteria3DInterface();
+    updateOutputMap();
+
+    loadMeteoPointsDataSingleDay(myProject.getCurrentDate(), true);
+    redrawMeteoPoints(currentPointsVisualization, true);
 }
 
 
@@ -3581,17 +3703,7 @@ void MainWindow::on_actionCriteria3D_load_state_triggered()
         return;
 
     QString stateDirectory = statesPath + dialogLoadState.getSelectedState();
-    if (! myProject.loadModelState(stateDirectory))
-    {
-        myProject.logError();
-        return;
-    }
-
-    initializeCriteria3DInterface();
-    updateOutputMap();
-
-    loadMeteoPointsDataSingleDay(myProject.getCurrentDate(), true);
-    redrawMeteoPoints(currentPointsVisualization, true);
+    loadState(stateDirectory);
 }
 
 
@@ -3611,19 +3723,7 @@ void MainWindow::on_actionCriteria3D_load_external_state_triggered()
 
     QString stateDirectory = QFileDialog::getExistingDirectory(this, tr("Open Directory"), myProject.getProjectPath(),
                                                                QFileDialog::ShowDirsOnly | QFileDialog::DontResolveSymlinks);
-    if (stateDirectory.isEmpty())
-        return;
-
-    if (! myProject.loadModelState(stateDirectory))
-    {
-        myProject.logError();
-        return;
-    }
-
-    updateDateTime();
-    initializeCriteria3DInterface();
-    loadMeteoPointsDataSingleDay(myProject.getCurrentDate(), true);
-    redrawMeteoPoints(currentPointsVisualization, true);
+    loadState(stateDirectory);
 }
 
 
@@ -4139,5 +4239,27 @@ void MainWindow::on_actionOpenShell_triggered()
     myProject.modality = MODE_CONSOLE;
     myProject.criteria3DShell();
     myProject.modality = MODE_GUI;
+}
+
+
+void MainWindow::on_flag_area_selection_triggered(bool isChecked)
+{
+    _isAreaSelection = isChecked;
+    if (isChecked)
+    {
+        ui->flag_point_selection->setChecked(false);
+        _isPointSelection = false;
+    }
+}
+
+
+void MainWindow::on_flag_point_selection_triggered(bool isChecked)
+{
+    _isPointSelection = isChecked;
+    if (isChecked)
+    {
+        ui->flag_area_selection->setChecked(false);
+        _isAreaSelection = false;
+    }
 }
 

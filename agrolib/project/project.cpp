@@ -650,13 +650,25 @@ bool Project::loadParameters(QString parametersFileName)
             else if (parametersSettings->contains("linke_monthly"))
             {
                 QList<QString> myLinkeStr = parametersSettings->value("linke_monthly").toStringList();
+                bool isOk = true;
                 if (myLinkeStr.size() < 12)
                 {
-                    errorString = "Incomplete monthly Linke values";
-                    return  false;
+                    //logInfo("Incomplete monthly Linke values");
+                    //errorString = "Incomplete monthly Linke values";
+                    isOk = false;
                 }
 
-                radSettings.setLinkeMonthly(StringListToFloat(myLinkeStr));
+                for (int p = 0; p < myLinkeStr.size(); p++)
+                {
+                    if (isEqual(myLinkeStr[p].toDouble(), NODATA))
+                    {
+                        //errorString = "Invalid monthly Linke value.";
+                        //logInfo("Invalid monthly Linke value.");
+                        isOk = false;
+                        break;
+                    }
+                }
+                if (isOk) radSettings.setLinkeMonthly(StringListToFloat(myLinkeStr));
             }            
 
             if (parametersSettings->contains("albedo_monthly"))
@@ -4903,17 +4915,24 @@ bool Project::setActiveStateWithCriteria(bool isActive)
 }
 
 
-bool Project::setMarkedFromPointList(QString fileName)
+bool Project::setMarkedFromPointList(QString fileName, bool isAdd)
 {
-    for (int i = 0; i < meteoPoints.size(); i++)
+    if (! isAdd)
     {
-        meteoPoints[i].marked = false;
+        for (int i = 0; i < meteoPoints.size(); i++)
+        {
+            meteoPoints[i].marked = false;
+        }
     }
 
     QList<QString> pointList = readListSingleColumn(fileName, errorString);
     if (pointList.size() == 0)
     {
-        logError();
+        if (! errorString.isEmpty())
+            logError();
+        else
+            logWarning("Point list is empty.");
+
         return false;
     }
 
@@ -4924,12 +4943,14 @@ bool Project::setMarkedFromPointList(QString fileName)
             if (meteoPoints[i].id == pointList[j].toStdString())
             {
                 meteoPoints[i].marked = true;
+                break;
             }
         }
     }
 
     return true;
 }
+
 
 bool Project::setMarkedPointsOfMacroArea(int areaNumber, bool viewNotActivePoints)
 {

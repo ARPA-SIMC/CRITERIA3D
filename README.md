@@ -1,3 +1,8 @@
+[![Build Status](https://simc.arpae.it/moncic-ci/CRITERIA3D/rocky8.png)](https://simc.arpae.it/moncic-ci/CRITERIA3D/)
+[![Build Status](https://simc.arpae.it/moncic-ci/CRITERIA3D/rocky9.png)](https://simc.arpae.it/moncic-ci/CRITERIA3D/)
+[![Build Status](https://simc.arpae.it/moncic-ci/CRITERIA3D/fedora40.png)](https://simc.arpae.it/moncic-ci/CRITERIA3D/)
+[![Build Status](https://simc.arpae.it/moncic-ci/CRITERIA3D/fedora42.png)](https://simc.arpae.it/moncic-ci/CRITERIA3D/)
+
 # CRITERIA-3D
 CRITERIA-3D is a three-dimensional water balance for small catchments.  
 It includes a numerical solution for three-dimensional water and heat flow in the soil, coupled surface and subsurface flow, meteorological data interpolation, radiation budget, crop development and crop water uptake. It needs hourly meteo data as input (air temperature, precipitation, solar irradiance, air relative humidity, wind speed).  

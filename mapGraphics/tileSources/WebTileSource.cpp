@@ -66,7 +66,7 @@ quint8 WebTileSource::minZoomLevel(QPointF ll)
 quint8 WebTileSource::maxZoomLevel(QPointF ll)
 {
     Q_UNUSED(ll)
-    return 18;
+    return 21;
 }
 
 QString WebTileSource::name() const
@@ -232,7 +232,7 @@ void WebTileSource::handleNetworkRequestFinished()
     if (!image->loadFromData(bytes))
     {
         delete image;
-        qWarning() << "Failed to make QImage from network bytes";
+        //qWarning() << "Failed to make QImage from network bytes";
         return;
     }
 

@@ -885,7 +885,7 @@ void Crit3DMeteoGrid::assignCellProxyValues(unsigned row, unsigned col, gis::Cri
         float aggrValue = 0;
         if (! aggrProxyValues.empty())
         {
-            for (int k = 0; k < aggrProxyValues.size(); k++)
+            for (int k = 0; k < (int)aggrProxyValues.size(); k++)
             {
                 aggrValue += aggrProxyValues[k];
             }
@@ -1014,7 +1014,7 @@ double Crit3DMeteoGrid::computeAggrCellGlocalWeightValue(unsigned row, unsigned 
         return NODATA;
 
     double aggrValue = 0;
-    for (int k = 0; k < aggrWeightValues.size(); k++)
+    for (int k = 0; k < (int)aggrWeightValues.size(); k++)
     {
         aggrValue += aggrWeightValues[k];
     }

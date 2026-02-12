@@ -2887,6 +2887,7 @@ bool Crit3DProject::loadWaterPotentialState(QString waterPath)
         waterPotentialMapList.push_back(currentWaterPotentialMap);
     }
 
+    std::string errorName = "";
     for (unsigned int layer = 0; layer < nrLayers; layer ++)
     {
         int currentDepthCm = int(round(layerDepth[layer] * 100));
@@ -2925,7 +2926,9 @@ bool Crit3DProject::loadWaterPotentialState(QString waterPath)
         w0 = deltaFlag ? 1 : (currentDepthCm - depthList[layer0]) / delta;
         w1 = deltaFlag ? 0 : 1 - w0;
 
+        double x, y;
         float flag = waterPotentialMapList.at(layer0)->header->flag;
+
         for (int row = 0; row < indexMap.at(layer).header->nrRows; row++)
         {
             for (int col = 0; col < indexMap.at(layer).header->nrCols; col++)
@@ -2934,7 +2937,6 @@ bool Crit3DProject::loadWaterPotentialState(QString waterPath)
                 if (index == long(indexMap.at(layer).header->flag))
                     continue;
 
-                double x, y;
                 float waterPotential = NODATA;
 
                 gis::getUtmXYFromRowCol(*(indexMap.at(layer).header), row, col, &x, &y);
@@ -2990,7 +2992,6 @@ bool Crit3DProject::loadWaterPotentialState(QString waterPath)
                 if (! isEqual(waterPotential, NODATA))
                 {
                     auto myResult = soilFluxes3D::setNodeMatricPotential(index, waterPotential);
-                    std::string errorName = "";
                     if(soilFluxes3D::getSF3DerrorName(myResult, errorName))
                     {
                         errorString = "Error in setMatricPotential: " + QString::fromStdString(errorName) + " in row:"

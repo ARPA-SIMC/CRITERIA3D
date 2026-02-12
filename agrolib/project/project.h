@@ -336,7 +336,7 @@
         bool selectPointList(const QList<QString> &pointList);
         bool setActiveStateWithCriteria(bool isActive);
         bool setSelectedStateWithCriteria();
-        bool setMarkedFromPointList(QString fileName);
+        bool setMarkedFromPointList(QString fileName, bool isAdd);
         bool setMarkedPointsOfMacroArea(int areaNumber, bool viewNotActivePoints);
         bool deleteMeteoPoints(const QList<QString>& pointList);
         bool deleteMeteoPointsData(const QList<QString>& pointList);

@@ -9,9 +9,6 @@
 
     float computePointTransmissivitySamani(float tmin, float tmax, float samaniCoeff);
 
-    float computePointTransmissivity(const gis::Crit3DPoint& myPoint, Crit3DTime myTime, float* measuredRad,
-                                 int windowWidth, int timeStepSecond, const gis::Crit3DRasterGrid& myDEM);
-
     bool computeTransmissivity(Crit3DRadiationSettings *mySettings, std::vector<Crit3DMeteoPoint> &meteoPoints,
                                int intervalWidth, Crit3DTime myTime, const gis::Crit3DRasterGrid& myDEM);
 

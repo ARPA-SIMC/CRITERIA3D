@@ -1469,6 +1469,18 @@ namespace interpolation
                                         parametersDelta,maxIterationsNr,
                                         myEpsilon,x,y);
 
+            bool rangeFlag = true;
+            for (i=0;i<parameters.size();i++)
+            {
+                if (parameters[i] < parametersMin[i] || parameters[i] > parametersMax[i])
+                {
+                    rangeFlag = false;
+                    break;
+                }
+            }
+
+            if (! rangeFlag) continue;
+
             for (i=0;i<nrData;i++)
             {
                 ySim[i]= func(x[i], parameters);

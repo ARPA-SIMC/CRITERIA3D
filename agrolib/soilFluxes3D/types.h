@@ -8,6 +8,7 @@
 #include <type_traits>
 #include <limits>
 #include <thread>
+#include <optional>
 
 #include "commonConstants.h"
 #include "macro.h"
@@ -318,6 +319,29 @@ namespace soilFluxes3D { inline namespace v2
         static_assert(std::is_enum_v<E>, "type required to be enum to be casted");
         return static_cast<std::underlying_type_t<E>>(value);
     }
+
+
+    struct SolverParametersPartial
+    {
+        std::optional<double> MBRThreshold;
+        std::optional<double> residualTolerance;
+
+        std::optional<double> deltaTmin;
+        std::optional<double> deltaTmax;
+        std::optional<double> deltaTcurr;
+
+        std::optional<u16_t> maxApproximationsNumber;
+        std::optional<u16_t> maxIterationsNumber;
+
+        std::optional<WRCModel> waterRetentionCurveModel;
+        std::optional<meanType_t> meanType;
+
+        std::optional<float> lateralVerticalRatio;
+
+        std::optional<bool> enableOMP;
+        std::optional<u32_t> numThreads;
+    };
+
+    #define updateFromPartial(total, partial, field) if (partial.field) {total.field = *(partial.field);}
 }}
 
-#include "types_opt.h"

@@ -104,7 +104,7 @@ QMap<QString, QString> Download::getArmiketIdList(QList<QString> datasetList)
 
     if (reply->error() != QNetworkReply::NoError)
     {
-            qDebug() << "Network Error: " << reply->error();
+            qDebug() << "Network Error: " <<  reply->errorString();
             return idList;
     }
     else
@@ -271,7 +271,7 @@ bool Download::getPointPropertiesFromId(const QString &id, int utmZone, Crit3DMe
 
     if (reply->error() != QNetworkReply::NoError)
     {
-            qDebug() << "Network Error: " << reply->error();
+            qDebug() << "Network Error: " <<  reply->errorString();
             result = false;
     }
     else
@@ -455,7 +455,7 @@ bool Download::downloadDailyData(const QDate &startDate, const QDate &endDate, c
 
         if (reply->error() != QNetworkReply::NoError)
         {
-            errorString = "Network Error";
+            errorString = "Network Error" + reply->errorString();
             return false;
         }
 
@@ -621,7 +621,7 @@ bool Download::downloadHourlyData(const QDate &startDate, const QDate &endDate, 
 
         if (reply->error() != QNetworkReply::NoError)
         {
-                errorString = "Network Error";
+                errorString = "Network Error"  + reply->errorString();
                 delete reply;
                 delete manager;
                 return false;

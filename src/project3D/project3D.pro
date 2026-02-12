@@ -15,6 +15,8 @@ CONFIG += c++17
 
 #DEFINES += _CRT_SECURE_NO_WARNINGS
 
+# parallel computing settings
+include($$absolute_path(../../agrolib/parallel.pri))
 
 unix:{
     CONFIG(debug, debug|release) {
@@ -41,4 +43,3 @@ SOURCES += \
 HEADERS += \
     project3D.h \
     dialogWaterFluxesSettings.h
-
