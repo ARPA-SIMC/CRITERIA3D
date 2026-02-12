@@ -19,6 +19,25 @@
 #endif
 
 
+QList<QString> getSharedCommandList()
+{
+    QList<QString> cmdList;
+
+    cmdList.append("?               | ListCommands");
+    cmdList.append("Quit            | Exit");
+    cmdList.append("Log             | SetLogFile");
+    cmdList.append("DEM             | LoadDEM");
+    cmdList.append("Point           | LoadPoints");
+    cmdList.append("Grid            | LoadGrid");
+    cmdList.append("aggrDB          | LoadAggregationDB");
+    cmdList.append("Parallel        | SetParallelComputing");
+    cmdList.append("DailyCsv        | ExportDailyDataCsv");
+    cmdList.append("HourlyCsv       | ExportHourlyDataCsv");
+
+    return cmdList;
+}
+
+
 bool attachOutputToConsole()
 {
     #ifdef _WIN32
@@ -180,24 +199,6 @@ QString getCommandLine(const QString &programName)
 }
 
 
-QList<QString> getSharedCommandList()
-{
-    QList<QString> cmdList;
-
-    cmdList.append("?               | ListCommands");
-    cmdList.append("Quit            | Exit");
-    cmdList.append("Log             | SetLogFile");
-    cmdList.append("DEM             | LoadDEM");
-    cmdList.append("Point           | LoadPoints");
-    cmdList.append("Grid            | LoadGrid");
-    cmdList.append("Parallel        | SetParallelComputing");
-    cmdList.append("DailyCsv        | ExportDailyDataCsv");
-    cmdList.append("HourlyCsv       | ExportHourlyDataCsv");
-
-    return cmdList;
-}
-
-
 int cmdExit(Project* myProject)
 {
     myProject->setRequestedExit(true);
@@ -251,11 +252,12 @@ int cmdLoadDEM(Project* myProject, QList<QString> argumentList)
     }
 }
 
+
 int cmdOpenDbPoint(Project* myProject, QList<QString> argumentList)
 {
     if (argumentList.size() < 2)
     {
-        myProject->errorString = "Missing db point name";
+        myProject->errorString = "Missing db point filename";
         return PRAGA_INVALID_COMMAND;
     }
 
@@ -269,6 +271,27 @@ int cmdOpenDbPoint(Project* myProject, QList<QString> argumentList)
 
     return PRAGA_OK;
 }
+
+
+int cmdOpenAggregationDB(Project* myProject, QList<QString> argumentList)
+{
+    if (argumentList.size() < 2)
+    {
+        myProject->errorString = "Missing aggregation db filename";
+        return PRAGA_INVALID_COMMAND;
+    }
+
+    QString filename = argumentList.at(1);
+
+    if (! myProject->loadAggregationDB(filename))
+    {
+        myProject->logError();
+        return ERROR_DBAGGREGATION;
+    }
+
+    return PRAGA_OK;
+}
+
 
 int cmdLoadMeteoGrid(Project* myProject, QList<QString> argumentList)
 {
@@ -673,10 +696,9 @@ int cmdExportHourlyDataCsv(Project* myProject, QList<QString> argumentList)
         }
     }
 
-
-
     return PRAGA_OK;
 }
+
 
 int executeSharedCommand(Project* myProject, QList<QString> argumentList, bool* isCommandFound)
 {
@@ -699,6 +721,11 @@ int executeSharedCommand(Project* myProject, QList<QString> argumentList, bool* 
     {
         *isCommandFound = true;
         return cmdOpenDbPoint(myProject, argumentList);
+    }
+    else if (command == "AGGRDB" || command == "LOADAGGREGATIONDB")
+    {
+        *isCommandFound = true;
+        return cmdOpenAggregationDB(myProject, argumentList);
     }
     else if (command == "GRID" || command == "LOADGRID")
     {

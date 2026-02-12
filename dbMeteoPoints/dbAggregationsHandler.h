@@ -24,6 +24,7 @@
         QString error() const { return _error; }
         QString name() const { return _db.databaseName(); }
         QSqlDatabase db() const { return _db; }
+        bool isError() const {return ! _error.isEmpty();}
 
         std::map<int, meteoVariable> mapIdMeteoVar() const { return _mapIdMeteoVar; }
 

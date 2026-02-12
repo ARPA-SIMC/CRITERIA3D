@@ -55,6 +55,7 @@
     #define ERROR_DBPOINT 3
     #define ERROR_DBGRID 4
     #define ERROR_OUTPUTPOINTLIST 5
+    #define ERROR_DBAGGREGATION 6
 
     #define ERROR_STR_MISSING_DB "Load a meteo points database before."
     #define ERROR_STR_MISSING_DEM "Load a Digital Elevation Model (DEM) before."
@@ -264,7 +265,7 @@
         bool loadMeteoGridDB(QString xmlName);
         bool newMeteoGridDB(QString xmlName);
         bool deleteMeteoGridDB();
-        bool loadAggregationdDB(QString dbName);
+        bool loadAggregationDB(QString dbName);
         bool loadAggregationDBAsMeteoPoints(QString fileName);
         bool loadOutputPointsDB(QString dbName);
         bool newOutputPointsDB(QString dbName);

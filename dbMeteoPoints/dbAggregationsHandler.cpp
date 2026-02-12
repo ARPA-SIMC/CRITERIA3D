@@ -22,8 +22,11 @@ Crit3DAggregationsDbHandler::Crit3DAggregationsDbHandler(QString dbname)
     _db.setDatabaseName(dbname);
 
     if (!_db.open())
+    {
        _error = _db.lastError().text();
+    }
 }
+
 
 Crit3DAggregationsDbHandler::~Crit3DAggregationsDbHandler()
 {
@@ -351,13 +354,13 @@ bool Crit3DAggregationsDbHandler::loadVariableProperties()
 
     QString tableName = "variable_properties";
     int id_variable;
-    QString variable;
+    QString variableStr;
     std::string stdVar;
     meteoVariable meteoVar;
     std::pair<std::map<int, meteoVariable>::iterator,bool> ret;
 
     QString statement = QString( "SELECT * FROM `%1` ").arg(tableName);
-    if( !qry.exec(statement) )
+    if(! qry.exec(statement) )
     {
         _error = qry.lastError().text();
         return false;
@@ -367,8 +370,8 @@ bool Crit3DAggregationsDbHandler::loadVariableProperties()
         while (qry.next())
         {
             getValue(qry.value("id_variable"), &id_variable);
-            getValue(qry.value("variable"), &variable);
-            stdVar = variable.toStdString();
+            getValue(qry.value("variable"), &variableStr);
+            stdVar = variableStr.toStdString();
 
             meteoVar = getKeyMeteoVarMeteoMap(MapDailyMeteoVarToString, stdVar);
             if (meteoVar == noMeteoVar)
@@ -378,14 +381,15 @@ bool Crit3DAggregationsDbHandler::loadVariableProperties()
 
             if (meteoVar != noMeteoVar)
             {
-                ret = _mapIdMeteoVar.insert(std::pair<int, meteoVariable>(id_variable,meteoVar));
+                ret = _mapIdMeteoVar.insert(std::pair<int, meteoVariable>(id_variable, meteoVar));
                 if (ret.second==false)
                 {
-                    _error = "element 'z' already existed";
+                    _error = "element " + variableStr + " already present.";
                 }
             }
         }
     }
+
     return true;
 }
 

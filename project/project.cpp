@@ -1480,24 +1480,36 @@ bool Project::deleteMeteoGridDB()
 }
 
 
-bool Project::loadAggregationdDB(QString dbName)
+bool Project::loadAggregationDB(QString dbName)
 {
-    if (dbName == "") return false;
+    if (dbName == "")
+    {
+        errorString = "Missing db filename.";
+        return false;
+    }
+
+    if (aggregationDbHandler != nullptr)
+        delete aggregationDbHandler;
 
     dbAggregationFileName = dbName;
     dbName = getCompleteFileName(dbName, PATH_PROJECT);
 
     aggregationDbHandler = new Crit3DAggregationsDbHandler(dbName);
-    if (aggregationDbHandler->error() != "")
+
+    if (! aggregationDbHandler->isError())
     {
-        logError(aggregationDbHandler->error());
+        errorString = aggregationDbHandler->error();
         return false;
     }
+
     if (! aggregationDbHandler->loadVariableProperties())
     {
+        errorString = aggregationDbHandler->error();
         return false;
     }
+
     aggregationPath = QFileInfo(dbAggregationFileName).absolutePath();
+
     return true;
 }
 
@@ -4202,7 +4214,7 @@ bool Project::loadProject()
 
     if (dbAggregationFileName != "")
     {
-        if (! loadAggregationdDB(_projectPath + "/" + dbAggregationFileName))
+        if (! loadAggregationDB(_projectPath + "/" + dbAggregationFileName))
         {
             errorString = "load Aggregation DB failed";
             errorType = ERROR_DBPOINT;
