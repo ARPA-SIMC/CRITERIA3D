@@ -398,6 +398,7 @@
         gis::Crit3DRasterGrid* understoreyBiomassRoot; //SAVE
 
         gis::Crit3DRasterGrid* outputC;
+        gis::Crit3DRasterGrid* carbonStock;
 
         Crit3DHydrallMaps();
         ~Crit3DHydrallMaps();
@@ -443,7 +444,6 @@
 
         double annualGrossStandGrowth;
         double internalCarbonStorage ; // [kgC m-2]
-        double carbonStock;
 
         //gasflux results
         std::vector<double> treeTranspirationRate;          //molH2O m^-2 s^-1
@@ -455,6 +455,7 @@
         double getOutputC() { return outputC; }
         void setElevation(double myElevation) {elevation = myElevation;}
         void setYear(int myYear) { year = myYear;}
+        double getCarbonStock() { return carbonStock; }
 
         double moistureCorrectionFactorOld(int index);
         double moistureCorrectionFactor(int index);
@@ -514,6 +515,7 @@
         double getFirewoodLostSurfacePercentage(double percentageSurfaceLostByFirewoodAtReferenceYear, int simulationYear);
 
     private:
+        double carbonStock;
         double outputC;
         double elevation;
         int year;

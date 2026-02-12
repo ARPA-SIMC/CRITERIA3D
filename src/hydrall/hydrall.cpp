@@ -302,6 +302,8 @@ Crit3DHydrallMaps::Crit3DHydrallMaps()
 
     yearlyET0 = new gis::Crit3DRasterGrid;
     yearlyPrec = new gis::Crit3DRasterGrid;
+
+    carbonStock = new gis::Crit3DRasterGrid;
 }
 
 void Crit3DHydrallMaps::clear()
@@ -321,6 +323,7 @@ void Crit3DHydrallMaps::clear()
     understoreyBiomassRoot->clear();
 
     outputC->clear();
+    carbonStock->clear();
     yearlyPrec->clear();
     yearlyET0->clear();
 }
@@ -342,6 +345,7 @@ void Crit3DHydrallMaps::initialize(const gis::Crit3DRasterGrid& DEM)
     understoreyBiomassRoot->initializeGrid(DEM);
 
     outputC->initializeGrid(DEM);
+    carbonStock->initializeGrid(DEM);
     yearlyPrec->initializeGrid(DEM);
     yearlyET0->initializeGrid(DEM);
 
@@ -362,6 +366,7 @@ void Crit3DHydrallMaps::initialize(const gis::Crit3DRasterGrid& DEM)
                 outputC->value[i][j] = 0;
                 yearlyPrec->value[i][j] = 0;
                 yearlyET0->value[i][j] = 0;
+                carbonStock->value[i][j] = 0 ;
 
             }
         }
@@ -629,6 +634,7 @@ void Crit3DHydrall::setStateVariables(const Crit3DHydrallMaps &stateMap, int row
     statePlant.treeBiomassSapwood = stateMap.treeBiomassSapwood->value[row][col];
 
     outputC = stateMap.outputC->value[row][col];
+    carbonStock = stateMap.carbonStock->value[row][col];
 }
 
 void Crit3DHydrall::setSoilVariables(int iLayer, int currentNode,float checkFlag, double waterContent, double waterContentFC, double waterContentWP,double clay, double sand,double thickness,double bulkDensity,double waterContentSat, double kSat, double waterPotential)
@@ -692,6 +698,7 @@ void Crit3DHydrall::saveStateVariables(Crit3DHydrallMaps &stateMap, int row, int
     stateMap.treeBiomassSapwood->value[row][col] = (float)statePlant.treeBiomassSapwood;
 
     stateMap.outputC->value[row][col] = (float)outputC;
+    stateMap.carbonStock->value[row][col] = (float)carbonStock;
 }
 
 /*
@@ -1709,7 +1716,7 @@ bool Crit3DHydrall::simplifiedGrowthStand()
     statePlant.treeBiomassSapwood -= statePlant.treeBiomassSapwood * distributedWildfireLoss * plant.wildfireDamage;
 
     //woodland management
-    plant.management = 1; //DEBUG //0 is non managed, 1 is coppice, 2 is high forest, 3 is plantation, 4 is urban forest
+    plant.management = 1; //DEBUG //0 is non managed, 1 is coppice, 2 is high forest, 3 is plantation, 4 is urban forest, 5 is arboricoltura policiclica
     double woodExtraction = 0;
 
     if (plant.management == 1) //coppice management produces mostly burning wood
@@ -1727,10 +1734,17 @@ bool Crit3DHydrall::simplifiedGrowthStand()
     else if (plant.management == 3)
     {
         //plantation
+        woodExtraction =
+        carbonStock += statePlant.treeBiomassSapwood * woodExtraction * 1./35;
+
     }
     else if (plant.management == 4)
     {
         woodExtraction = 0.5;
+    }
+    else if (plant.management == 5)
+    {
+        //policiclico
     }
 
     //if plant.management == 0, woodExtraction = 0

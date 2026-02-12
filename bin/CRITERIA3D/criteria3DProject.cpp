@@ -2444,6 +2444,12 @@ bool Crit3DProject::saveHydrallState(const QString &currentStatePath)
         return false;
     }
 
+    if (!gis::writeEsriGrid((hydrallPath+"/carbonStock").toStdString(), hydrallMaps.carbonStock, errorStr))
+    {
+        logError("Error saving carbon stock map: " + QString::fromStdString(errorStr));
+        return false;
+    }
+
     //other maps tbd
 
     return true;
@@ -2785,14 +2791,14 @@ bool Crit3DProject::loadModelState(QString statePath)
         }
         gis::resampleGrid(*tmpRaster, hydrallMaps.plantHeight, DEM.header, aggrAverage, 0.1f);
 
-        fileName = hydrallPath.toStdString() + "/outputC";
+        fileName = hydrallPath.toStdString() + "/carbonStock";
         if (! gis::readEsriGrid(fileName, tmpRaster, errorStr))
         {
-            errorString = "Wrong hydrall carbon output map:\n" + QString::fromStdString(errorStr);
+            errorString = "Wrong hydrall carbon stock map:\n" + QString::fromStdString(errorStr);
             hydrallMaps.isInitialized = false;
             return false;
         }
-        gis::resampleGrid(*tmpRaster, hydrallMaps.outputC, DEM.header, aggrAverage, 0.1f);
+        gis::resampleGrid(*tmpRaster, hydrallMaps.carbonStock, DEM.header, aggrAverage, 0.1f);
 
         initializeHydrallConversionVector();
 
