@@ -257,7 +257,7 @@ int cmdOpenDbPoint(Project* myProject, QList<QString> argumentList)
 {
     if (argumentList.size() < 2)
     {
-        myProject->errorString = "Missing db point filename";
+        myProject->errorString = "Missing DB point filename.";
         return PRAGA_INVALID_COMMAND;
     }
 
@@ -277,7 +277,7 @@ int cmdOpenAggregationDB(Project* myProject, QList<QString> argumentList)
 {
     if (argumentList.size() < 2)
     {
-        myProject->errorString = "Missing aggregation db filename";
+        myProject->errorString = "Missing DB aggregation file name.";
         return PRAGA_INVALID_COMMAND;
     }
 
@@ -297,8 +297,7 @@ int cmdLoadMeteoGrid(Project* myProject, QList<QString> argumentList)
 {
     if (argumentList.size() < 2)
     {
-        myProject->errorString = "Missing grid file name";
-        // TODO: USAGE
+        myProject->errorString = "Missing Grid file name.";
         return PRAGA_MISSING_FILE;
     }
     else
@@ -320,8 +319,7 @@ int cmdSetLogFile(Project* myProject, QList<QString> argumentList)
 {
     if (argumentList.size() < 2)
     {
-        myProject->errorString = "Missing log file name";
-        // TODO: USAGE
+        myProject->errorString = "Missing Log file name.";
         return PRAGA_INVALID_COMMAND;
     }
     else

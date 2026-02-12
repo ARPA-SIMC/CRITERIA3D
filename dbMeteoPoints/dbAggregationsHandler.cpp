@@ -434,7 +434,7 @@ QList<QString> Crit3DAggregationsDbHandler::getAggregations()
 
     if (aggregationList.isEmpty())
     {
-        _error = "aggregation table is empty.";
+        _error = "Aggregation table is empty.";
     }
 
     return aggregationList;
