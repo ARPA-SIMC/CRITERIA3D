@@ -25,7 +25,6 @@
 #include "commonConstants.h"
 #include "basicMath.h"
 #include "snowMaps.h"
-#include "gis.h"
 
 
 Crit3DSnowMaps::Crit3DSnowMaps()
@@ -40,6 +39,7 @@ Crit3DSnowMaps::Crit3DSnowMaps()
 
     _snowFallMap = new gis::Crit3DRasterGrid;
     _snowMeltMap = new gis::Crit3DRasterGrid;
+    _deltaSWEMap = new gis::Crit3DRasterGrid;
     _sensibleHeatMap = new gis::Crit3DRasterGrid;
     _latentHeatMap = new gis::Crit3DRasterGrid;
 
@@ -68,6 +68,7 @@ void Crit3DSnowMaps::clear()
 
     _snowFallMap->clear();
     _snowMeltMap->clear();
+    _deltaSWEMap->clear();
     _sensibleHeatMap->clear();
     _latentHeatMap->clear();
 
@@ -82,6 +83,7 @@ void Crit3DSnowMaps::initializeSnowMaps(const gis::Crit3DRasterGrid &dtm, double
 {
     _snowFallMap->initializeGrid(dtm);
     _snowMeltMap->initializeGrid(dtm);
+    _deltaSWEMap->initializeGrid(dtm);
     _sensibleHeatMap->initializeGrid(dtm);
     _latentHeatMap->initializeGrid(dtm);
 
@@ -118,6 +120,7 @@ void Crit3DSnowMaps::updateMapRowCol(Crit3DSnow &snowPoint, int row, int col)
 
     _snowFallMap->value[row][col] = float(snowPoint.getSnowFall());
     _snowMeltMap->value[row][col] = float(snowPoint.getSnowMelt());
+    _deltaSWEMap->value[row][col] = float(snowPoint.getDeltaSWE());
     _sensibleHeatMap->value[row][col] = float(snowPoint.getSensibleHeat());
     _latentHeatMap->value[row][col] = float(snowPoint.getLatentHeat());
 }
@@ -135,6 +138,7 @@ void Crit3DSnowMaps::flagMapRowCol(int row, int col)
 
     _snowFallMap->value[row][col] = _snowFallMap->header->flag;
     _snowMeltMap->value[row][col] = _snowMeltMap->header->flag;
+    _deltaSWEMap->value[row][col] = _deltaSWEMap->header->flag;
     _sensibleHeatMap->value[row][col] = _sensibleHeatMap->header->flag;
     _latentHeatMap->value[row][col] = _latentHeatMap->header->flag;
 }
@@ -152,6 +156,7 @@ void Crit3DSnowMaps::updateRangeMaps()
 
     gis::updateMinMaxRasterGrid(_snowFallMap);
     gis::updateMinMaxRasterGrid(_snowMeltMap);
+    gis::updateMinMaxRasterGrid(_deltaSWEMap);
     gis::updateMinMaxRasterGrid(_sensibleHeatMap);
     gis::updateMinMaxRasterGrid(_latentHeatMap);
 }
@@ -201,72 +206,14 @@ void Crit3DSnowMaps::resetSnowModel(double skinThickness)
 
                 _internalEnergyMap->value[row][col] = float(computeInternalEnergy(_initSoilPackTemp, surfaceBulkDensity, initSWE/1000.));
 
-                // output
+                // output map
                 _snowFallMap->value[row][col] = 0;
                 _snowMeltMap->value[row][col] = 0;
+                _deltaSWEMap->value[row][col] = 0;
                 _sensibleHeatMap->value[row][col] = 0;
                 _latentHeatMap->value[row][col] = 0;
             }
         }
     }
-}
-
-
-// --------------------------- output ----------------------------
-
-gis::Crit3DRasterGrid* Crit3DSnowMaps::getSnowWaterEquivalentMap()
-{
-    return _snowWaterEquivalentMap;
-}
-
-gis::Crit3DRasterGrid* Crit3DSnowMaps::getIceContentMap()
-{
-    return _iceContentMap;
-}
-
-gis::Crit3DRasterGrid* Crit3DSnowMaps::getLWContentMap()
-{
-    return _liquidWaterContentMap;
-}
-
-gis::Crit3DRasterGrid* Crit3DSnowMaps::getInternalEnergyMap()
-{
-    return _internalEnergyMap;
-}
-
-gis::Crit3DRasterGrid* Crit3DSnowMaps::getSurfaceEnergyMap()
-{
-    return _surfaceEnergyMap;
-}
-
-gis::Crit3DRasterGrid* Crit3DSnowMaps::getSnowSurfaceTempMap()
-{
-    return _snowSurfaceTempMap;
-}
-
-gis::Crit3DRasterGrid* Crit3DSnowMaps::getAgeOfSnowMap()
-{
-    return _ageOfSnowMap;
-}
-
-
-gis::Crit3DRasterGrid* Crit3DSnowMaps::getSnowFallMap()
-{
-    return _snowFallMap;
-}
-
-gis::Crit3DRasterGrid* Crit3DSnowMaps::getSnowMeltMap()
-{
-    return _snowMeltMap;
-}
-
-gis::Crit3DRasterGrid* Crit3DSnowMaps::getSensibleHeatMap()
-{
-    return _sensibleHeatMap;
-}
-
-gis::Crit3DRasterGrid* Crit3DSnowMaps::getLatentHeatMap()
-{
-    return _latentHeatMap;
 }
 

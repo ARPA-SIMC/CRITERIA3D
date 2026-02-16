@@ -24,6 +24,7 @@
     #define SOIL_DAMPING_DEPTH 0.3              /*!<  [m] */
     #define SNOW_MINIMUM_HEIGHT 1.              /*!<  [mm] */
 
+    #include "commonConstants.h"
 
     class Crit3DSnowParameters
     {
@@ -38,7 +39,7 @@
 
         Crit3DSnowParameters();
 
-        void initialize();
+        void initializeSnowParameters();
     };
 
 
@@ -49,35 +50,41 @@
 
         Crit3DSnow();
 
-        void initialize();
+        void initializeSnow();
 
         void setSnowInputData(double temp, double prec, double relHum, double windInt, double globalRad,
                           double beamRad, double transmissivity, double clearSkyTransmissivity, double waterContent);
 
-        bool checkValidPoint();
+        bool isSnowPointValid();
         void computeSnowFall();
         void computeSnowBrooksModel();
 
-        double getSnowFall();
-        double getSnowMelt();
-        double getSensibleHeat();
-        double getLatentHeat();
+        double getSnowFall() { return _precSnow; }
+        double getSnowMelt() { return MAXVALUE(_snowMelt, 0); }
+        double getDeltaSWE() { return _deltaSWE; }
+        double getSensibleHeat() { return _sensibleHeat; }
+        double getLatentHeat() { return _latentHeat; }
 
-        double getSnowWaterEquivalent();
-        double getIceContent();
-        double getLiquidWaterContent();
-        double getInternalEnergy();
-        double getSurfaceEnergy();
-        double getSnowSurfaceTemp();
-        double getAgeOfSnow();
+        double getSnowWaterEquivalent() { return _snowWaterEquivalent; }
+        void setSnowWaterEquivalent(double value) { _snowWaterEquivalent = value; }
 
-        void setSnowWaterEquivalent(float value);
-        void setIceContent(float value);
-        void setLiquidWaterContent(float value);
-        void setInternalEnergy(float value);
-        void setSurfaceEnergy(float value);
-        void setSnowSurfaceTemp(float value);
-        void setAgeOfSnow(float value);
+        double getIceContent() { return _iceContent; }
+        void setIceContent(double value) { _iceContent = value; }
+
+        double getLiquidWaterContent() { return _liquidWaterContent; }
+        void setLiquidWaterContent(double value) { _liquidWaterContent = value; }
+
+        double getInternalEnergy() { return _internalEnergy; }
+        void setInternalEnergy(double value) { _internalEnergy = value; }
+
+        double getSurfaceEnergy() { return _surfaceEnergy; }
+        void setSurfaceEnergy(double value) { _surfaceEnergy = value; }
+
+        double getSnowSurfaceTemp() { return _surfaceTemp; }
+        void setSnowSurfaceTemp(float value) { _surfaceTemp = double(value); }
+
+        double getAgeOfSnow() { return _ageOfSnow; }
+        void setAgeOfSnow(float value) { _ageOfSnow = double(value); }
 
     private:
         // input
@@ -96,6 +103,7 @@
         double _precRain;                   /*!<   [mm] */
         double _precSnow;                   /*!<   [mm] */
         double _snowMelt;                   /*!<   [mm] */
+        double _deltaSWE;                   /*!<   [mm] */
         double _sensibleHeat;               /*!<   [kJ m-2] */
         double _latentHeat;                 /*!<   [kJ m-2] */
 

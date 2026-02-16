@@ -1579,7 +1579,7 @@ double Crit3DProject::getSoilVar(int soilIndex, int layerIndex, soil::soilVariab
 void Crit3DProject::clear3DProject()
 {
     snowMaps.clear();
-    snowModel.initialize();
+    snowModel.initializeSnow();
 
     dailyTminMap.clear();
     dailyTmaxMap.clear();

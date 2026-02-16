@@ -27,18 +27,19 @@
 
         void updateRangeMaps();
 
-        gis::Crit3DRasterGrid* getSnowWaterEquivalentMap();
-        gis::Crit3DRasterGrid* getIceContentMap();
-        gis::Crit3DRasterGrid* getLWContentMap();
-        gis::Crit3DRasterGrid* getInternalEnergyMap();
-        gis::Crit3DRasterGrid* getSurfaceEnergyMap();
-        gis::Crit3DRasterGrid* getSnowSurfaceTempMap();
-        gis::Crit3DRasterGrid* getAgeOfSnowMap();
+        gis::Crit3DRasterGrid* getSnowWaterEquivalentMap() {return _snowWaterEquivalentMap; }
+        gis::Crit3DRasterGrid* getIceContentMap() { return _iceContentMap; }
+        gis::Crit3DRasterGrid* getLWContentMap() { return _liquidWaterContentMap; }
+        gis::Crit3DRasterGrid* getInternalEnergyMap() { return _internalEnergyMap; }
+        gis::Crit3DRasterGrid* getSurfaceEnergyMap() { return _surfaceEnergyMap; }
+        gis::Crit3DRasterGrid* getSnowSurfaceTempMap() { return _snowSurfaceTempMap; }
+        gis::Crit3DRasterGrid* getAgeOfSnowMap() { return _ageOfSnowMap; }
 
-        gis::Crit3DRasterGrid* getSnowFallMap();
-        gis::Crit3DRasterGrid* getSnowMeltMap();
-        gis::Crit3DRasterGrid* getSensibleHeatMap();
-        gis::Crit3DRasterGrid* getLatentHeatMap();
+        gis::Crit3DRasterGrid* getSnowFallMap() {return _snowFallMap;}
+        gis::Crit3DRasterGrid* getSnowMeltMap() {return _snowMeltMap;}
+        gis::Crit3DRasterGrid* getDeltaSWEMap() {return _deltaSWEMap;}
+        gis::Crit3DRasterGrid* getSensibleHeatMap() {return _sensibleHeatMap;}
+        gis::Crit3DRasterGrid* getLatentHeatMap() {return _latentHeatMap;}
 
     private:
         gis::Crit3DRasterGrid* _snowWaterEquivalentMap;
@@ -51,6 +52,7 @@
 
         gis::Crit3DRasterGrid* _snowFallMap;
         gis::Crit3DRasterGrid* _snowMeltMap;
+        gis::Crit3DRasterGrid* _deltaSWEMap;
         gis::Crit3DRasterGrid* _sensibleHeatMap;
         gis::Crit3DRasterGrid* _latentHeatMap;
 

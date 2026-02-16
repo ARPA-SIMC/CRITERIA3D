@@ -25,7 +25,6 @@
 #include <algorithm>
 #include <math.h>
 
-#include "commonConstants.h"
 #include "basicMath.h"
 #include "meteo.h"
 #include "snow.h"
@@ -33,32 +32,32 @@
 
 Crit3DSnowParameters::Crit3DSnowParameters()
 {
-    initialize();
+    initializeSnowParameters();
 }
 
 
-void Crit3DSnowParameters::initialize()
+void Crit3DSnowParameters::initializeSnowParameters()
 {
     // default values
-    skinThickness = 0.02;               /*!<  [m]   */ // VERSIONI DIVERSE IN BROOKS: 3mm (nel testo), 2-3cm (nel codice)
-    soilAlbedo = 0.2;                   /*!<  [-] bare soil */
+    skinThickness = 0.02;               /*!<  [m]   */  // VERSIONI DIVERSE IN BROOKS: 3mm (nel testo), 2-3cm (nel codice)
+    soilAlbedo = 0.2;                   /*!<  [-]   */  // bare soil
     snowVegetationHeight = 1;           /*!<  [m]   */
     snowWaterHoldingCapacity = 0.05;    /*!<  [-]   */
     tempMaxWithSnow = 2;                /*!<  [°C]  */
     tempMinWithRain = -0.5;             /*!<  [°C]  */
-    snowSurfaceDampingDepth = 0.05;     /*!<  [m]   */ // VERSIONI DIVERSE IN BROOKS: 0.05 - 0.15
+    snowSurfaceDampingDepth = 0.05;     /*!<  [m]   */  // VERSIONI DIVERSE IN BROOKS: 0.05 - 0.15
 }
 
 
 Crit3DSnow::Crit3DSnow()
 {
-    initialize();
+    initializeSnow();
 }
 
 
-void Crit3DSnow::initialize()
+void Crit3DSnow::initializeSnow()
 {
-    snowParameters.initialize();
+    snowParameters.initializeSnowParameters();
 
     // input
     _airT = NODATA;
@@ -75,6 +74,7 @@ void Crit3DSnow::initialize()
     _precSnow = NODATA;
     _precRain = NODATA;
     _snowMelt = NODATA;
+    _deltaSWE = NODATA;
     _sensibleHeat = NODATA;
     _latentHeat = NODATA;
     _evaporation = NODATA;
@@ -104,19 +104,17 @@ void Crit3DSnow::setSnowInputData(double temp, double prec, double relHum, doubl
 }
 
 
-bool Crit3DSnow::checkValidPoint()
+bool Crit3DSnow::isSnowPointValid()
 {
-    if ( int(_airT) == int(NODATA)
-        || int(_prec) == int(NODATA)
-        || int(_globalRadiation) == int(NODATA)
-        || int(_beamRadiation) == int(NODATA)
-        || int(_snowWaterEquivalent) == int(NODATA)
-        || int(_surfaceTemp) == int(NODATA) )
-    {
+    if (   isEqual(_airT, NODATA)
+        || isEqual(_prec, NODATA)
+        || isEqual(_globalRadiation, NODATA)
+        || isEqual(_beamRadiation, NODATA)
+        || isEqual(_snowWaterEquivalent, NODATA)
+        || isEqual(_surfaceTemp, NODATA) )
         return false;
-    }
-
-    return true;
+    else
+        return true;
 }
 
 
@@ -166,16 +164,13 @@ void Crit3DSnow::computeSnowBrooksModel()
     double sublimation;                          /*!<   [mm]       */
     double aerodynamicResistance;                /*!<   [s m-1]    */
 
-    double const ONE_HOUR = 1./24.;
-
     // free water
     bool isWater = false;
     if (_surfaceWaterContent > 100. )     /*!<  [mm]  acqua libera (fiumi - torrenti) */
             isWater = true;
 
-    if (isWater || (! checkValidPoint()))
+    if (isWater || (! isSnowPointValid()))
     {
-        _snowMelt = NODATA;
         _iceContent = NODATA;
         _liquidWaterContent = NODATA;
         _snowWaterEquivalent = NODATA;
@@ -186,9 +181,11 @@ void Crit3DSnow::computeSnowBrooksModel()
         _precSnow = NODATA;
         _precRain = NODATA;
         _snowMelt = NODATA;
+        _deltaSWE = NODATA;
         _sensibleHeat = NODATA;
         _latentHeat = NODATA;
         _evaporation = NODATA;
+
         return;
     }
 
@@ -471,6 +468,7 @@ void Crit3DSnow::computeSnowBrooksModel()
 
     /*! Snow water equivalent */
     _snowWaterEquivalent = _iceContent + _liquidWaterContent;
+    _deltaSWE = _snowWaterEquivalent - previousSWE;
 
     /*! surface energy [kJ m-2] and surface temperature [°C] */
     double surfaceEnergySnow;
@@ -504,100 +502,15 @@ void Crit3DSnow::computeSnowBrooksModel()
     else
     {
         if (_ageOfSnow == NODATA || _precSnow > EPSILON)
+        {
             _ageOfSnow = 0;
+        }
         else
-            _ageOfSnow += ONE_HOUR;
+        {
+            double oneHour = 1. / 24.;
+            _ageOfSnow += oneHour;
+        }
     }
-}
-
-
-double Crit3DSnow::getSnowFall()
-{
-    return _precSnow;
-}
-
-double Crit3DSnow::getSnowMelt()
-{
-    return MAXVALUE(_snowMelt, 0);
-}
-
-
-double Crit3DSnow::getSensibleHeat()
-{
-    return _sensibleHeat;
-}
-
-double Crit3DSnow::getLatentHeat()
-{
-    return _latentHeat;
-}
-
-double Crit3DSnow::getSnowWaterEquivalent()
-{
-    return _snowWaterEquivalent;
-}
-void Crit3DSnow::setSnowWaterEquivalent(float value)
-{
-    _snowWaterEquivalent = double(value);
-}
-
-double Crit3DSnow::getIceContent()
-{
-    return _iceContent;
-}
-void Crit3DSnow::setIceContent(float value)
-{
-    _iceContent = double(value);
-}
-
-double Crit3DSnow::getLiquidWaterContent()
-{
-    return _liquidWaterContent;
-}
-
-void Crit3DSnow::setLiquidWaterContent(float value)
-{
-    _liquidWaterContent = double(value);
-}
-
-double Crit3DSnow::getInternalEnergy()
-{
-    return _internalEnergy;
-}
-
-void Crit3DSnow::setInternalEnergy(float value)
-{
-    _internalEnergy = double(value);
-}
-
-double Crit3DSnow::getSurfaceEnergy()
-{
-    return _surfaceEnergy;
-}
-
-void Crit3DSnow::setSurfaceEnergy(float value)
-{
-    _surfaceEnergy = double(value);
-}
-
-double Crit3DSnow::getSnowSurfaceTemp()
-{
-    return _surfaceTemp;
-}
-
-void Crit3DSnow::setSnowSurfaceTemp(float value)
-{
-    _surfaceTemp = double(value);
-}
-
-double Crit3DSnow::getAgeOfSnow()
-{
-    return _ageOfSnow;
-}
-
-void Crit3DSnow::setAgeOfSnow(float value)
-{
-    _ageOfSnow = double(value);
 }
 
 
@@ -641,7 +554,6 @@ double aerodynamicResistanceCampbell77(bool isSnow , double zRefWind, double win
     return log1 * log2 / (VON_KARMAN_CONST * VON_KARMAN_CONST * windSpeed);
 }
 
-
 // pag. 54 (3.29)
 double computeInternalEnergy(double soilTemperature, int bulkDensity, double swe)
 {
@@ -649,18 +561,15 @@ double computeInternalEnergy(double soilTemperature, int bulkDensity, double swe
                                   + bulkDensity * SOIL_SPECIFIC_HEAT * SOIL_DAMPING_DEPTH );
 }
 
-
 double computeInternalEnergySoil(double soilTemperature, int bulkDensity)
 {
     return soilTemperature * bulkDensity * SOIL_SPECIFIC_HEAT * SOIL_DAMPING_DEPTH;
 }
 
-
 double computeSurfaceEnergySnow(double surfaceTemperature, double skinThickness)
 {
     return surfaceTemperature * WATER_DENSITY * SNOW_SPECIFIC_HEAT * skinThickness;
 }
-
 
 double computeSurfaceEnergySoil(double surfaceTemperature, double skinThickness)
 {
