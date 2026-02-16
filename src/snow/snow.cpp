@@ -465,7 +465,8 @@ void Crit3DSnow::computeSnowBrooksModel()
     else
     {
         _liquidWaterContent = prevLWaterContent + _precRain + _surfaceWaterContent - freeze_melt;    // [mm]
-        _liquidWaterContent = std::min(std::max(_liquidWaterContent, 0.), _iceContent * waterHoldingCapacity);
+        _liquidWaterContent = std::max(_liquidWaterContent, 0.);
+        _liquidWaterContent = std::min(_liquidWaterContent, _iceContent * waterHoldingCapacity);
     }
 
     /*! Snow water equivalent */
