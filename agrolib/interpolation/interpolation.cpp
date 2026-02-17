@@ -384,7 +384,7 @@ bool regressionSimpleT(std::vector <Crit3DInterpolationDataPoint> &myPoints, Cri
     myProxyOrog->setRegressionR2(r2);
 
     // only pre-inversion data
-    if (slope > 0 && myVar != elaboration)
+    if (slope > 0 && myVar != elaborationVar)
     {
         myProxyOrog->setInversionLapseRate(slope);
 
@@ -1195,7 +1195,7 @@ bool isThermal(meteoVariable myVar)
         myVar == dailyAirTemperatureMax ||
         myVar == dailyAirTemperatureMin ||
         myVar == dailyReferenceEvapotranspirationHS ||
-        myVar == elaboration )
+        myVar == elaborationVar )
         return true;
     else
         return false;
@@ -1210,7 +1210,7 @@ bool getUseDetrendingVar(meteoVariable myVar)
         myVar == dailyAirTemperatureMax ||
         myVar == dailyAirTemperatureMin ||
         myVar == dailyReferenceEvapotranspirationHS ||
-        myVar == elaboration )
+        myVar == elaborationVar )
 
         return true;
     else

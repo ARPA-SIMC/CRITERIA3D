@@ -1609,6 +1609,12 @@ void MainWindow::showSnowVariable(meteoVariable var)
         setOutputMeteoVariable(snowWaterEquivalent, myProject.snowMaps.getSnowWaterEquivalentMap());
         break;
 
+    case snowVariation:
+        setOutputMeteoVariable(snowVariation, myProject.snowMaps.getDeltaSWEMap());
+        rasterOutput->getRasterPointer()->colorScale->setRange(-5., 5.);
+        rasterOutput->getRasterPointer()->colorScale->setFixedRange(true);
+        break;
+
     case snowSurfaceTemperature:
         setOutputMeteoVariable(snowSurfaceTemperature, myProject.snowMaps.getSnowSurfaceTempMap());
         break;
@@ -1653,6 +1659,11 @@ void MainWindow::showSnowVariable(meteoVariable var)
 void MainWindow::on_actionView_Snow_water_equivalent_triggered()
 {
     showSnowVariable(snowWaterEquivalent);
+}
+
+void MainWindow::on_actionView_SWE_variation_triggered()
+{
+    showSnowVariable(snowVariation);
 }
 
 void MainWindow::on_actionView_Snow_surface_temperature_triggered()
@@ -2790,6 +2801,7 @@ void MainWindow::showCriteria3DVariable(criteria3DVariable var, int layerIndex, 
 
     myProject.criteria3DMap.colorScale->setFixedRange(false);
     myProject.criteria3DMap.colorScale->setHideMinimum(false);
+    myProject.criteria3DMap.colorScale->setHideZero(false);
     myProject.criteria3DMap.colorScale->setTransparent(false);
 
     if (_current3DVariable == volumetricWaterContent)
@@ -2799,6 +2811,7 @@ void MainWindow::showCriteria3DVariable(criteria3DVariable var, int layerIndex, 
             // SURFACE
             setSurfaceWaterScale(myProject.criteria3DMap.colorScale);
             myProject.criteria3DMap.colorScale->setHideMinimum(true);
+            myProject.criteria3DMap.colorScale->setHideZero(true);
             myProject.criteria3DMap.colorScale->setTransparent(true);
             ui->labelOutputRaster->setText("Surface water content [mm]");
         }

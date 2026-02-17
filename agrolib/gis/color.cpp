@@ -58,6 +58,7 @@ Crit3DColorScale::Crit3DColorScale()
     _isFixedRange = false;
     _isHideMinimum = false;
     _isTransparent = false;
+    _isHideZero = 0;
 
     _classification = classificationMethod::EqualInterval;
 }

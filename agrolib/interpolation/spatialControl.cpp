@@ -418,7 +418,7 @@ bool checkData(Crit3DQuality* myQuality, meteoVariable myVar, std::vector<Crit3D
     if (meteoPoints.empty())
         return false;
 
-    if (myVar == elaboration)
+    if (myVar == elaborationVar)
     {
         // assign data
         for (int i = 0; i < meteoPoints.size(); i++)
@@ -430,7 +430,7 @@ bool checkData(Crit3DQuality* myQuality, meteoVariable myVar, std::vector<Crit3D
                 meteoPoints[i].quality = quality::missing_data;
         }
     }
-    else if (myVar == anomaly)
+    else if (myVar == anomalyVar)
     {
         // assign data
         for (int i = 0; i < meteoPoints.size(); i++)

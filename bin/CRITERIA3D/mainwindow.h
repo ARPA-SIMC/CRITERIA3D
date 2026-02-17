@@ -273,6 +273,8 @@
         void on_flag_area_selection_triggered(bool isChecked);
         void on_flag_point_selection_triggered(bool isChecked);
 
+        void on_actionView_SWE_variation_triggered();
+
     protected:
         /*!
          * \brief mouseReleaseEvent call moveCenter

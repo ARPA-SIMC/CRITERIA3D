@@ -100,10 +100,10 @@
                     leafWetness, dailyLeafWetness, atmPressure,
                     referenceEvapotranspiration, dailyReferenceEvapotranspirationHS, monthlyReferenceEvapotranspirationHS, dailyReferenceEvapotranspirationPM, actualEvaporation,
                     dailyBIC, monthlyBIC, dailyHeatingDegreeDays, dailyCoolingDegreeDays,
-                    snowWaterEquivalent, snowFall, snowSurfaceTemperature, snowInternalEnergy, snowSurfaceEnergy,
-                    snowAge, snowLiquidWaterContent, snowMelt, sensibleHeat, latentHeat,
+                    snowWaterEquivalent, snowFall, snowMelt, snowVariation, snowSurfaceTemperature, snowInternalEnergy,
+                    snowSurfaceEnergy, snowAge, snowLiquidWaterContent, sensibleHeat, latentHeat,
                     dailyWaterTableDepth, leafAreaIndex,
-                    anomaly, elaboration, cvResidual, noMeteoTerrain,
+                    cvResidual, noMeteoTerrain, anomalyVar, elaborationVar,
                     noMeteoVar};
 
 
@@ -144,8 +144,8 @@
       { "DAILY_DEGREEDAYS_HEATING", dailyHeatingDegreeDays },
       { "DAILY_DEGREEDAYS_COOLING", dailyCoolingDegreeDays },
       { "DAILY_WATER_TABLE_DEPTH", dailyWaterTableDepth },
-      { "ELABORATION", elaboration },
-      { "ANOMALY", anomaly }
+      { "ELABORATION", elaborationVar },
+      { "ANOMALY", anomalyVar }
     };
 
     const std::map<meteoVariable, std::string> MapDailyMeteoVarToString = {
@@ -179,8 +179,8 @@
       { dailyHeatingDegreeDays, "DAILY_DEGREEDAYS_HEATING" },
       { dailyCoolingDegreeDays, "DAILY_DEGREEDAYS_COOLING" },
       { dailyWaterTableDepth, "DAILY_WATER_TABLE_DEPTH" },
-      { elaboration, "ELABORATION" },
-      { anomaly, "ANOMALY" },
+      { elaborationVar, "ELABORATION" },
+      { anomalyVar, "ANOMALY" },
       { noMeteoVar, "NO_VARIABLE" }
     };
 

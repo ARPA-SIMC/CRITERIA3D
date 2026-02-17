@@ -780,7 +780,7 @@ bool setColorScale(meteoVariable variable, Crit3DColorScale *colorScale)
         case dailyHeatingDegreeDays:
             setTemperatureScale(colorScale);
             break;
-        case elaboration:
+        case elaborationVar:
             setDefaultScale(colorScale);
             break;
         case airRelHumidity: case dailyAirRelHumidityAvg: case dailyAirRelHumidityMax:
@@ -788,17 +788,19 @@ bool setColorScale(meteoVariable variable, Crit3DColorScale *colorScale)
         case thom: case dailyThomMax: case dailyThomAvg: case dailyThomHoursAbove: case dailyThomDaytime: case dailyThomNighttime:
             setRelativeHumidityScale(colorScale);
             break;
-        case precipitation: case dailyPrecipitation: case monthlyPrecipitation:
-        case referenceEvapotranspiration: case dailyReferenceEvapotranspirationHS: case dailyReferenceEvapotranspirationPM:
-        case actualEvaporation: case snowFall: case snowWaterEquivalent: case snowLiquidWaterContent: case snowMelt:
+        case precipitation:
+        case snowWaterEquivalent: case snowMelt: case snowFall: case snowLiquidWaterContent:
+            setPrecipitationScale(colorScale);
+            colorScale->setHideZero(true);
+            colorScale->setHideMinimum(true);
+            colorScale->setTransparent(true);
+            break;
+        case dailyPrecipitation: case monthlyPrecipitation:
+        case referenceEvapotranspiration: case dailyReferenceEvapotranspirationHS:
+        case dailyReferenceEvapotranspirationPM: case actualEvaporation:
         case dailyWaterTableDepth:
             setPrecipitationScale(colorScale);
-            if (variable == precipitation || variable == snowFall || variable == snowWaterEquivalent
-                || variable == snowLiquidWaterContent || variable == snowMelt)
-            {
-                colorScale->setHideMinimum(true);
-                colorScale->setTransparent(true);
-            }
+            colorScale->setHideZero(true);
             break;  
         case snowAge:
             setGrayScale(colorScale);
@@ -813,14 +815,21 @@ bool setColorScale(meteoVariable variable, Crit3DColorScale *colorScale)
         case sensibleHeat: case latentHeat:
             setRadiationScale(colorScale);
             break;
-        case windVectorIntensity: case windScalarIntensity: case windVectorX: case windVectorY: case dailyWindVectorIntensityAvg: case dailyWindVectorIntensityMax: case dailyWindScalarIntensityAvg: case dailyWindScalarIntensityMax:
+        case windVectorIntensity: case windScalarIntensity: case windVectorX: case windVectorY:
+        case dailyWindVectorIntensityAvg: case dailyWindVectorIntensityMax:
+        case dailyWindScalarIntensityAvg: case dailyWindScalarIntensityMax:
         case atmPressure:
             setWindIntensityScale(colorScale);
             break;
         case leafAreaIndex:
             setLAIScale(colorScale);
             break;
-        case anomaly:
+        case snowVariation:
+            setAnomalyScale(colorScale);
+            reverseColorScale(colorScale);
+            colorScale->setHideZero(true);
+            break;
+        case anomalyVar:
             setAnomalyScale(colorScale);
             break;
         case noMeteoTerrain:
@@ -915,6 +924,8 @@ std::string getVariableString(meteoVariable myVar)
         return "Snow fall (mm)";
     else if (myVar == snowMelt)
         return "Snowmelt (mm)";
+    else if (myVar == snowVariation)
+        return "Variation in SWE (mm)";
     else if (myVar == snowLiquidWaterContent)
         return "Snow liquid water content (mm)";
     else if (myVar == snowAge)
@@ -934,9 +945,9 @@ std::string getVariableString(meteoVariable myVar)
     else if (myVar == leafAreaIndex)
             return "Leaf area index (m2 m-2)";
 
-    else if (myVar == elaboration)
+    else if (myVar == elaborationVar)
         return "Elaboration";
-    else if (myVar == anomaly)
+    else if (myVar == anomalyVar)
         return "Anomaly";
     else if (myVar == noMeteoTerrain)
         return "Elevation (m)";

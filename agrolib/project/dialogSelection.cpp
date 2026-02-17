@@ -110,9 +110,9 @@ meteoVariable chooseColorScale()
     else if (Wind.isChecked())
         return windScalarIntensity;
     else if (Anomaly.isChecked())
-        return anomaly;
+        return anomalyVar;
     else
-        return noMeteoTerrain;
+        return noMeteoVar;
 }
 
 

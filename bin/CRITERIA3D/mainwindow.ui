@@ -239,7 +239,6 @@
   <property name="font">
    <font>
     <pointsize>10</pointsize>
-    <weight>50</weight>
     <bold>false</bold>
    </font>
   </property>
@@ -584,7 +583,6 @@
     <property name="font">
      <font>
       <pointsize>10</pointsize>
-      <weight>50</weight>
       <bold>false</bold>
      </font>
     </property>
@@ -887,7 +885,6 @@
     <property name="font">
      <font>
       <pointsize>9</pointsize>
-      <weight>50</weight>
       <bold>false</bold>
      </font>
     </property>
@@ -952,7 +949,6 @@
      <property name="font">
       <font>
        <pointsize>8</pointsize>
-       <weight>50</weight>
        <bold>false</bold>
       </font>
      </property>
@@ -979,7 +975,6 @@
      <property name="font">
       <font>
        <pointsize>9</pointsize>
-       <weight>50</weight>
        <bold>false</bold>
       </font>
      </property>
@@ -1283,7 +1278,6 @@
     <property name="font">
      <font>
       <pointsize>9</pointsize>
-      <weight>50</weight>
       <bold>false</bold>
      </font>
     </property>
@@ -1348,7 +1342,6 @@
      <property name="font">
       <font>
        <pointsize>8</pointsize>
-       <weight>50</weight>
        <bold>false</bold>
       </font>
      </property>
@@ -1375,7 +1368,6 @@
      <property name="font">
       <font>
        <pointsize>9</pointsize>
-       <weight>50</weight>
        <bold>false</bold>
       </font>
      </property>
@@ -1733,7 +1725,6 @@
     <property name="font">
      <font>
       <pointsize>9</pointsize>
-      <weight>50</weight>
       <bold>false</bold>
      </font>
     </property>
@@ -1795,7 +1786,6 @@
      <property name="font">
       <font>
        <pointsize>9</pointsize>
-       <weight>50</weight>
        <bold>false</bold>
       </font>
      </property>
@@ -1826,7 +1816,7 @@
        <second>0</second>
        <year>1752</year>
        <month>8</month>
-       <day>24</day>
+       <day>23</day>
       </datetime>
      </property>
      <property name="maximumDate">
@@ -1865,7 +1855,6 @@
      <property name="font">
       <font>
        <pointsize>9</pointsize>
-       <weight>50</weight>
        <bold>false</bold>
       </font>
      </property>
@@ -1892,7 +1881,6 @@
      <property name="font">
       <font>
        <pointsize>9</pointsize>
-       <weight>50</weight>
        <bold>false</bold>
       </font>
      </property>
@@ -1912,7 +1900,6 @@
      <property name="font">
       <font>
        <pointsize>8</pointsize>
-       <weight>50</weight>
        <bold>false</bold>
       </font>
      </property>
@@ -2258,7 +2245,6 @@
     <property name="font">
      <font>
       <pointsize>9</pointsize>
-      <weight>50</weight>
       <bold>false</bold>
      </font>
     </property>
@@ -2296,7 +2282,6 @@
      <property name="font">
       <font>
        <pointsize>8</pointsize>
-       <weight>50</weight>
        <bold>false</bold>
       </font>
      </property>
@@ -2316,7 +2301,6 @@
      <property name="font">
       <font>
        <pointsize>8</pointsize>
-       <weight>50</weight>
        <bold>false</bold>
       </font>
      </property>
@@ -2362,7 +2346,6 @@
      <property name="font">
       <font>
        <pointsize>9</pointsize>
-       <weight>50</weight>
        <bold>false</bold>
       </font>
      </property>
@@ -2408,7 +2391,6 @@
      <property name="font">
       <font>
        <pointsize>9</pointsize>
-       <weight>50</weight>
        <bold>false</bold>
       </font>
      </property>
@@ -2456,7 +2438,7 @@
      <x>0</x>
      <y>0</y>
      <width>1280</width>
-     <height>22</height>
+     <height>28</height>
     </rect>
    </property>
    <property name="palette">
@@ -2706,6 +2688,7 @@
      <addaction name="separator"/>
      <addaction name="actionView_Snow_liquid_water_content"/>
      <addaction name="actionView_Snow_age"/>
+     <addaction name="actionView_SWE_variation"/>
     </widget>
     <widget class="QMenu" name="menuSolar_radiation_model">
      <property name="title">
@@ -3770,6 +3753,11 @@
    </property>
    <property name="text">
     <string>Point selection</string>
+   </property>
+  </action>
+  <action name="actionView_SWE_variation">
+   <property name="text">
+    <string>SWE variation</string>
    </property>
   </action>
  </widget>

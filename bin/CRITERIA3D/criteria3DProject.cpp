@@ -3389,18 +3389,17 @@ void Crit3DProject::getMixedColor(gis::Crit3DRasterGrid *rasterPointer, int row,
     Crit3DColor* variableColor = rasterPointer->colorScale->getColor(value);
     double alpha = DEFAULT_ALPHA;
 
-    // check outliers
-    if (rasterPointer->colorScale->isHideMinimum())
-    {
-        if (value == 0 || value < rasterPointer->colorScale->minimum())
-            alpha = 0;
-    }
     if (rasterPointer->colorScale->isTransparent())
     {
         double step = std::max(0., value - rasterPointer->colorScale->minimum());
         alpha = std::min(1., step/variableRange);
         alpha = DEFAULT_ALPHA * pow(alpha, ALPHA_POW);
     }
+
+    // check outliers
+    if ( (rasterPointer->colorScale->isHideMinimum() && value < rasterPointer->colorScale->minimum())
+        || (rasterPointer->colorScale->isHideZero() && isEqual(value, 0.f)) )
+            alpha = 0;
 
     mixColors(dtmColor, *variableColor, otutColor, static_cast<float>(alpha));
 }
