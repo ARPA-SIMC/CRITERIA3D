@@ -239,6 +239,7 @@
   <property name="font">
    <font>
     <pointsize>10</pointsize>
+    <weight>50</weight>
     <bold>false</bold>
    </font>
   </property>
@@ -583,6 +584,7 @@
     <property name="font">
      <font>
       <pointsize>10</pointsize>
+      <weight>50</weight>
       <bold>false</bold>
      </font>
     </property>
@@ -885,6 +887,7 @@
     <property name="font">
      <font>
       <pointsize>9</pointsize>
+      <weight>50</weight>
       <bold>false</bold>
      </font>
     </property>
@@ -949,6 +952,7 @@
      <property name="font">
       <font>
        <pointsize>8</pointsize>
+       <weight>50</weight>
        <bold>false</bold>
       </font>
      </property>
@@ -975,6 +979,7 @@
      <property name="font">
       <font>
        <pointsize>9</pointsize>
+       <weight>50</weight>
        <bold>false</bold>
       </font>
      </property>
@@ -1278,6 +1283,7 @@
     <property name="font">
      <font>
       <pointsize>9</pointsize>
+      <weight>50</weight>
       <bold>false</bold>
      </font>
     </property>
@@ -1342,6 +1348,7 @@
      <property name="font">
       <font>
        <pointsize>8</pointsize>
+       <weight>50</weight>
        <bold>false</bold>
       </font>
      </property>
@@ -1368,6 +1375,7 @@
      <property name="font">
       <font>
        <pointsize>9</pointsize>
+       <weight>50</weight>
        <bold>false</bold>
       </font>
      </property>
@@ -1725,6 +1733,7 @@
     <property name="font">
      <font>
       <pointsize>9</pointsize>
+      <weight>50</weight>
       <bold>false</bold>
      </font>
     </property>
@@ -1786,6 +1795,7 @@
      <property name="font">
       <font>
        <pointsize>9</pointsize>
+       <weight>50</weight>
        <bold>false</bold>
       </font>
      </property>
@@ -1855,6 +1865,7 @@
      <property name="font">
       <font>
        <pointsize>9</pointsize>
+       <weight>50</weight>
        <bold>false</bold>
       </font>
      </property>
@@ -1881,6 +1892,7 @@
      <property name="font">
       <font>
        <pointsize>9</pointsize>
+       <weight>50</weight>
        <bold>false</bold>
       </font>
      </property>
@@ -1900,6 +1912,7 @@
      <property name="font">
       <font>
        <pointsize>8</pointsize>
+       <weight>50</weight>
        <bold>false</bold>
       </font>
      </property>
@@ -2245,6 +2258,7 @@
     <property name="font">
      <font>
       <pointsize>9</pointsize>
+      <weight>50</weight>
       <bold>false</bold>
      </font>
     </property>
@@ -2282,6 +2296,7 @@
      <property name="font">
       <font>
        <pointsize>8</pointsize>
+       <weight>50</weight>
        <bold>false</bold>
       </font>
      </property>
@@ -2301,6 +2316,7 @@
      <property name="font">
       <font>
        <pointsize>8</pointsize>
+       <weight>50</weight>
        <bold>false</bold>
       </font>
      </property>
@@ -2346,6 +2362,7 @@
      <property name="font">
       <font>
        <pointsize>9</pointsize>
+       <weight>50</weight>
        <bold>false</bold>
       </font>
      </property>
@@ -2391,6 +2408,7 @@
      <property name="font">
       <font>
        <pointsize>9</pointsize>
+       <weight>50</weight>
        <bold>false</bold>
       </font>
      </property>
@@ -2438,7 +2456,7 @@
      <x>0</x>
      <y>0</y>
      <width>1280</width>
-     <height>28</height>
+     <height>22</height>
     </rect>
    </property>
    <property name="palette">
@@ -2677,6 +2695,7 @@
       <string>Snow model</string>
      </property>
      <addaction name="actionView_Snow_water_equivalent"/>
+     <addaction name="actionView_SWE_variation"/>
      <addaction name="actionView_Snow_fall"/>
      <addaction name="actionView_Snowmelt"/>
      <addaction name="separator"/>
@@ -2688,7 +2707,6 @@
      <addaction name="separator"/>
      <addaction name="actionView_Snow_liquid_water_content"/>
      <addaction name="actionView_Snow_age"/>
-     <addaction name="actionView_SWE_variation"/>
     </widget>
     <widget class="QMenu" name="menuSolar_radiation_model">
      <property name="title">
@@ -3149,12 +3167,12 @@
   </action>
   <action name="actionView_Snow_fall">
    <property name="text">
-    <string>Snow fall</string>
+    <string>Snow fall (hourly)</string>
    </property>
   </action>
   <action name="actionView_Snow_surface_internal_energy">
    <property name="text">
-    <string>Energy content surface layer</string>
+    <string>Energy content (surface layer)</string>
    </property>
   </action>
   <action name="flagSave_state_daily_step">
@@ -3198,12 +3216,12 @@
   </action>
   <action name="actionView_Snow_age">
    <property name="text">
-    <string>Age of snow</string>
+    <string>Age of snow (days)</string>
    </property>
   </action>
   <action name="actionView_Snowmelt">
    <property name="text">
-    <string>Snowmelt</string>
+    <string>Snowmelt (hourly)</string>
    </property>
   </action>
   <action name="actionRadiation_run_model">
@@ -3410,12 +3428,12 @@
   </action>
   <action name="actionView_Snow_sensible_heat">
    <property name="text">
-    <string>Sensible heat</string>
+    <string>Sensible heat flux (hourly)</string>
    </property>
   </action>
   <action name="actionView_Snow_latent_heat">
    <property name="text">
-    <string>Latent heat</string>
+    <string>Latent heat flux (hourly)</string>
    </property>
   </action>
   <action name="actionTopographicDistanceMapWrite">
@@ -3757,7 +3775,7 @@
   </action>
   <action name="actionView_SWE_variation">
    <property name="text">
-    <string>SWE variation</string>
+    <string>SWE variation (hourly)</string>
    </property>
   </action>
  </widget>

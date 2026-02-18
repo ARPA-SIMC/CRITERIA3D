@@ -44,6 +44,8 @@
         #include "geoMap.h"
     #endif
 
+    #define MAPBORDER 10
+
     struct RowCol
     {
         int row;

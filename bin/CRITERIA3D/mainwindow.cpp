@@ -52,9 +52,6 @@
 
 extern Crit3DProject myProject;
 
-#define MAPBORDER 10
-#define TOOLSWIDTH 270
-
 
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
@@ -166,6 +163,7 @@ void MainWindow::resizeEvent(QResizeEvent * event)
     Q_UNUSED(event)
 
     const int INFOHEIGHT = 42;
+    const int TOOLSWIDTH = 270;
 
     int stepY = (this->height() - INFOHEIGHT) / 40;
     int x1 = this->width() - TOOLSWIDTH - MAPBORDER;
