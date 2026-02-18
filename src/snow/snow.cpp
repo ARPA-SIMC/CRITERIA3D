@@ -218,7 +218,7 @@ void Crit3DSnow::computeSnowBrooksModel()
     if (previousSWE > 0)
     {
         /*--------------------------------------------------------------------
-        // controlli di coerenza per eventuali modifiche manuali su mappa SWE
+        // aggiorna le variabili dopo modifiche manuali su mappa SWE
         // -------------------------------------------------------------------*/
         if (prevIceContent <= 0 && prevLWaterContent <= 0)
         {
@@ -231,7 +231,7 @@ void Crit3DSnow::computeSnowBrooksModel()
             prevSurfaceTemp = std::min(prevSurfaceTemp, 0.);
             prevSurfaceEnergy = computeSurfaceEnergySnow(prevSurfaceTemp, std::min(previousSWE, snowParameters.skinThickness));
 
-            _ageOfSnow = 1;
+            _ageOfSnow = 1;     // avvenuto il giorno prima
         }
 
         /*! check on sum */
@@ -495,21 +495,23 @@ void Crit3DSnow::computeSnowBrooksModel()
     _surfaceTemp = (surfaceTempSnow * snowFraction) + surfaceTempSoil * (1 - snowFraction);
 
     /*! _ageOfSnow [days] */
-    if (_snowWaterEquivalent < EPSILON)
+    if (_snowWaterEquivalent > EPSILON)
     {
-        _ageOfSnow = NODATA;
-    }
-    else
-    {
-        if (_ageOfSnow == NODATA || _precSnow > EPSILON)
+        if (_ageOfSnow == NODATA || _precSnow > 0.1)
         {
+            // new snowfall
             _ageOfSnow = 0;
         }
         else
         {
+            // no snowfall, increase age
             double oneHour = 1. / 24.;
             _ageOfSnow += oneHour;
         }
+    }
+    else
+    {
+        _ageOfSnow = NODATA;
     }
 }
 
