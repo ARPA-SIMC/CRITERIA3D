@@ -363,7 +363,6 @@ bool RasterUtmObject::drawRaster(QPainter* painter)
                 col2++;
             }
 
-            // raster value
             float value = _rasterPointer->value[rowCenter][colCenter];
 
             // check NODATA value (transparent)
@@ -371,12 +370,12 @@ bool RasterUtmObject::drawRaster(QPainter* painter)
                 continue;
 
             // check minimum (transparent)
-            if (_rasterPointer->colorScale->isHideMinimum())
-            {
-                // prec or surface water content
-                if (value < 0.1 || value <= _rasterPointer->colorScale->minimum())
-                    continue;
-            }
+            if (_rasterPointer->colorScale->isHideMinimum() && value <= _rasterPointer->colorScale->minimum())
+                continue;
+
+            // check zero (transparent)
+            if (_rasterPointer->colorScale->isHideZero() && fabs(value) < 0.1)
+                continue;
 
             // set color
             myColor = _rasterPointer->colorScale->getColor(value);

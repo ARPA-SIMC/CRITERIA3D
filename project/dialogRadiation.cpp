@@ -26,7 +26,7 @@ DialogRadiation::DialogRadiation(Project* myProject)
     comboLinkeMode = new QComboBox();
     landUseLinke = new QComboBox();
     groupLinke = new QGroupBox("Linke turbidity factor");
-    editLinke = new QLineEdit(QLocale().toString(project_->radSettings.getLinke()));
+    editLinke = new QLineEdit(QLocale().toString(project_->radSettings.getLinkeDefault()));
     buttonLinke = new QPushButton("Load Linke map...");
     editLinkeMap = new QLineEdit();
     comboAlbedoMode = new QComboBox();
@@ -429,7 +429,7 @@ void DialogRadiation::accept()
     if (linkeMode == PARAM_MODE_MONTHLY)
         project_->radSettings.setLandUse(landUse);
 
-    if (linke != NODATA) project_->radSettings.setLinke(linke);
+    if (linke != NODATA) project_->radSettings.setLinkeDefault(linke);
     if (albedo != NODATA) project_->radSettings.setAlbedo(albedo);
     if (tilt != NODATA) project_->radSettings.setTilt(tilt);
     if (aspect != NODATA) project_->radSettings.setAspect(aspect);

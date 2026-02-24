@@ -44,7 +44,7 @@ void Crit3DRadiationSettings::initialize()
     realSky = true;
     shadowing = true;
     linkeMode = PARAM_MODE_FIXED;
-    linke = 4.f;
+    linkeDefault = 4.f;
     albedoMode = PARAM_MODE_FIXED;
     albedo = 0.2f;
     tiltMode = TILT_TYPE_DEM;
@@ -110,14 +110,20 @@ void Crit3DRadiationSettings::setShadowing(bool value)
     shadowing = value;
 }
 
-float Crit3DRadiationSettings::getLinke() const
+float Crit3DRadiationSettings::getLinkeDefault() const
 {
-    return linke;
+    return linkeDefault;
+}
+
+void Crit3DRadiationSettings::setLinkeDefault(float value)
+{
+    linkeDefault = value;
 }
 
 float Crit3DRadiationSettings::getLinke(int row, int col) const
 {
-    if (linkeMode == PARAM_MODE_FIXED) return linke;
+    if (linkeMode == PARAM_MODE_FIXED)
+        return linkeDefault;
 
     float myLinke = NODATA;
 
@@ -130,7 +136,8 @@ float Crit3DRadiationSettings::getLinke(int row, int col) const
 
 float Crit3DRadiationSettings::getLinke(const gis::Crit3DPoint& myPoint) const
 {
-    if (linkeMode == PARAM_MODE_FIXED) return linke;
+    if (linkeMode == PARAM_MODE_FIXED)
+        return linkeDefault;
 
     float myLinke = NODATA;
 
@@ -148,15 +155,13 @@ float Crit3DRadiationSettings::getLinke(const gis::Crit3DPoint& myPoint) const
 
 float Crit3DRadiationSettings::getLinke(int month) const
 {
-    if (LinkeMonthly.size() == 12 && month > 0 && month < 12)
+    if (linkeMode == PARAM_MODE_FIXED)
+        return linkeDefault;
+
+    if (month >= 0 && month < 12 && LinkeMonthly.size() > month)
         return LinkeMonthly[month];
     else
-        return linke;
-}
-
-void Crit3DRadiationSettings::setLinke(float value)
-{
-    linke = value;
+        return linkeDefault;
 }
 
 float Crit3DRadiationSettings::getAlbedo() const

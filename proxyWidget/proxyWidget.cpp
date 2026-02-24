@@ -190,11 +190,11 @@ void Crit3DProxyWidget::changeVar(const QString varName)
 {
     if (varName == "ELABORATION")
     {
-        myVar = elaboration;
+        myVar = elaborationVar;
     }
     else if (varName == "ANOMALY")
     {
-        myVar = anomaly;
+        myVar = anomalyVar;
     }
     else
     {

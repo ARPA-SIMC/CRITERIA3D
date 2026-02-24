@@ -32,8 +32,6 @@
 #include <math.h>
 #include <QMenu>
 
-#define MAPBORDER 10
-
 
 RasterObject::RasterObject(MapGraphicsView* _view, MapGraphicsObject *parent) :
     MapGraphicsObject(true, parent)

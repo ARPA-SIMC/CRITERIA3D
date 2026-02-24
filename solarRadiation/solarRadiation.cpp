@@ -207,13 +207,14 @@ namespace radiation
         return output;
     }
 
+
     float readLinke(Crit3DRadiationSettings* radSettings)
     {
         float output = NODATA;
         switch(radSettings->getLinkeMode())
         {
             case PARAM_MODE_FIXED:
-                output = radSettings->getLinke();
+                output = radSettings->getLinkeDefault();
                 break;
 
             case PARAM_MODE_MAP:
@@ -221,26 +222,11 @@ namespace radiation
                  break;
 
             default:
-                output = radSettings->getLinke();
+                output = radSettings->getLinkeDefault();
         }
         return output;
     }
 
-    void readLinke(Crit3DRadiationSettings* radSettings, std::vector<float> &linkeMonthly)
-    {
-        switch(radSettings->getLinkeMode())
-        {
-
-        case PARAM_MODE_MONTHLY:
-            linkeMonthly = radSettings->getLinkeMonthly();
-
-            break;
-        case PARAM_MODE_FIXED:
-        case PARAM_MODE_MAP:
-            break;
-        }
-        return;
-    }
 
     float readLinke(Crit3DRadiationSettings* radSettings, int row, int col)
     {
@@ -248,7 +234,7 @@ namespace radiation
         switch(radSettings->getLinkeMode())
         {
             case PARAM_MODE_FIXED:
-                output = radSettings->getLinke();
+                output = radSettings->getLinkeDefault();
                 break;
 
             case PARAM_MODE_MAP:
@@ -261,13 +247,14 @@ namespace radiation
         return output;
     }
 
+
     float readLinke(Crit3DRadiationSettings* radSettings, const gis::Crit3DPoint& point)
     {
         float output = NODATA;
         switch(radSettings->getLinkeMode())
         {
             case PARAM_MODE_FIXED:
-                output = radSettings->getLinke();
+                output = radSettings->getLinkeDefault();
                 break;
 
             case PARAM_MODE_MAP:
@@ -748,7 +735,8 @@ bool computeRadiationRsun(Crit3DRadiationSettings* radSettings, float temperatur
         clearSkyTransmissivity = radSettings->getClearSky();
 
         // noon
-        Crit3DTime noonTime = myTime;
+        Crit3DTime noonTime;
+        noonTime.date = myTime.date;
         noonTime.time = 12*3600;
         if (radSettings->gisSettings->isUTC)
         {

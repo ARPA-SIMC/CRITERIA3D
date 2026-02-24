@@ -69,7 +69,10 @@ float findThreshold(meteoVariable myVar, Crit3DMeteoSettings* meteoSettings,
         threshold += distWeight + stdDev * (nrStdDev + 1.f);
     }
     else if (myVar == atmTransmissivity)
-        threshold = MAXVALUE(stdDev * nrStdDev, 0.25f);
+    {
+        distWeight = minDistance / 5000.f;
+        threshold = std::max(stdDev * std::max(nrStdDev, distWeight), 0.3f);
+    }
     else
         threshold = stdDev * nrStdDev;
 
@@ -418,7 +421,7 @@ bool checkData(Crit3DQuality* myQuality, meteoVariable myVar, std::vector<Crit3D
     if (meteoPoints.empty())
         return false;
 
-    if (myVar == elaboration)
+    if (myVar == elaborationVar)
     {
         // assign data
         for (int i = 0; i < meteoPoints.size(); i++)
@@ -430,7 +433,7 @@ bool checkData(Crit3DQuality* myQuality, meteoVariable myVar, std::vector<Crit3D
                 meteoPoints[i].quality = quality::missing_data;
         }
     }
-    else if (myVar == anomaly)
+    else if (myVar == anomalyVar)
     {
         // assign data
         for (int i = 0; i < meteoPoints.size(); i++)

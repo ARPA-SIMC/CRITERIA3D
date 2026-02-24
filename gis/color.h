@@ -26,6 +26,7 @@
         double _minimum, _maximum;
         bool _isFixedRange;
         bool _isHideMinimum;
+        bool _isHideZero;
         bool _isTransparent;
         int _classification;
 
@@ -59,6 +60,9 @@
 
         void setTransparent(bool transparent) { _isTransparent = transparent; }
         bool isTransparent() { return _isTransparent; }
+
+        void setHideZero(bool isHideZero) { _isHideZero = isHideZero; }
+        bool isHideZero() { return _isHideZero; }
     };
 
     bool setDefaultScale(Crit3DColorScale* myScale);
