@@ -616,7 +616,7 @@ bool Project::loadParameters(QString parametersFileName)
                 radSettings.setShadowing(parametersSettings->value("shadowing").toBool());
 
             if (parametersSettings->contains("linke"))
-                radSettings.setLinke(parametersSettings->value("linke").toFloat());
+                radSettings.setLinkeDefault(parametersSettings->value("linke").toFloat());
 
             if (parametersSettings->contains("albedo"))
                 radSettings.setAlbedo(parametersSettings->value("albedo").toFloat());
@@ -3987,7 +3987,7 @@ void Project::saveRadiationParameters()
         parametersSettings->setValue("tilt_mode", QString::fromStdString(getKeyStringTiltMode(radSettings.getTiltMode())));
         parametersSettings->setValue("real_sky", radSettings.getRealSky());
         parametersSettings->setValue("shadowing", radSettings.getShadowing());
-        parametersSettings->setValue("linke", QString::number(double(radSettings.getLinke())));
+        parametersSettings->setValue("linke", QString::number(double(radSettings.getLinkeDefault())));
         parametersSettings->setValue("albedo", QString::number(double(radSettings.getAlbedo())));
         parametersSettings->setValue("tilt", QString::number(double(radSettings.getTilt())));
         parametersSettings->setValue("aspect", QString::number(double(radSettings.getAspect())));

@@ -69,7 +69,10 @@ float findThreshold(meteoVariable myVar, Crit3DMeteoSettings* meteoSettings,
         threshold += distWeight + stdDev * (nrStdDev + 1.f);
     }
     else if (myVar == atmTransmissivity)
-        threshold = MAXVALUE(stdDev * nrStdDev, 0.25f);
+    {
+        distWeight = minDistance / 5000.f;
+        threshold = std::max(stdDev * std::max(nrStdDev, distWeight), 0.3f);
+    }
     else
         threshold = stdDev * nrStdDev;
 
