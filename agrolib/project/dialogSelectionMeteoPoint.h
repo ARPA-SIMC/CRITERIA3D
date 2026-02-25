@@ -10,8 +10,8 @@ class DialogSelectionMeteoPoint : public QDialog
     Q_OBJECT
 
 private:
-    bool isActive;
-    bool isSelect;
+    QString _type;
+    bool _isSelect;
     QList<QString> municipalityList;
     QList<QString> provinceList;
     QList<QString> regionList;
@@ -26,7 +26,7 @@ private:
 
 
 public:
-    DialogSelectionMeteoPoint(bool isActive, bool isSelect, Crit3DMeteoPointsDbHandler* meteoPointsDbHandler);
+    DialogSelectionMeteoPoint(QString type, bool isSelect, Crit3DMeteoPointsDbHandler* meteoPointsDbHandler);
     QString getSelection();
     QString getOperation();
     QString getItem();

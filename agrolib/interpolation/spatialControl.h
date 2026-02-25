@@ -4,9 +4,6 @@
     #ifndef QUALITY_H
         #include "quality.h"
     #endif
-    #ifndef METEO_H
-        #include "meteo.h"
-    #endif
     #ifndef METEOPOINT_H
         #include "meteoPoint.h"
     #endif
