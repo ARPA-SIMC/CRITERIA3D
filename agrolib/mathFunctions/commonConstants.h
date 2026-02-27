@@ -252,8 +252,8 @@
         #define EPSILON 0.00001
     #endif
     #define EULER 2.718281828459
-    #define DEG_TO_RAD 0.0174532925
-    #define RAD_TO_DEG 57.2957795
+    #define DEG_TO_RAD 0.01745329252
+    #define RAD_TO_DEG 57.295779513
     #define SQRT_2 1.41421356237
     #define GOLDEN_SECTION 1.6180339887499
 

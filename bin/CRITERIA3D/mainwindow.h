@@ -353,12 +353,12 @@
 
         bool checkMapVariable(bool isComputed);
 
-        bool isInsideDEM(QPoint mapPos);
+        bool isInsideDEM(Position geoPos);
 
-        bool isSoil(QPoint mapPos);
-        void openSoilWidget(QPoint mapPos);
+        bool isSoil(Position geoPos);
+        void openSoilWidget(Position geoPos);
 
-        bool isLandUse(QPoint mapPos);
+        bool isLandUse(Position geoPos);
         void showLandUseMap();
 
         bool contextMenuRequested(QPoint localPos);

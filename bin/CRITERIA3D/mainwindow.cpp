@@ -427,16 +427,17 @@ void MainWindow::mousePressEvent(QMouseEvent *event)
 
 bool MainWindow::contextMenuRequested(QPoint localPos)
 {
-    QMenu contextMenu;
-    int nrItems = 0;
-
     QPoint mapPos = getMapPos(localPos);
     if (! isInsideMap(mapPos))
         return false;
 
+    Position geoPos = mapView->mapToScene(mapPos);
+    QMenu contextMenu;
+    int nrItems = 0;
+
     if (myProject.soilMap.isLoaded)
     {
-        if (isSoil(mapPos))
+        if (isSoil(geoPos))
         {
             contextMenu.addAction("View soil data");
             nrItems++;
@@ -444,7 +445,7 @@ bool MainWindow::contextMenuRequested(QPoint localPos)
     }
     if (myProject.landUseMap.isLoaded && myProject.landUnitList.size() != 0)
     {
-        if (isLandUse(mapPos))
+        if (isLandUse(geoPos))
         {
             contextMenu.addAction("View land use");
             nrItems++;
@@ -455,12 +456,14 @@ bool MainWindow::contextMenuRequested(QPoint localPos)
 
     if (myProject.DEM.isLoaded)
     {
-        if (isInsideDEM(mapPos))
+        if (isInsideDEM(geoPos))
         {
             contextMenu.addSeparator();
             contextMenu.addAction("Add output point...");
             nrItems++;
             contextMenu.addAction("Extract the basin from this point");
+            nrItems++;
+            contextMenu.addAction("Compute the water runoff path");
             nrItems++;
         }
     }
@@ -475,7 +478,7 @@ bool MainWindow::contextMenuRequested(QPoint localPos)
         if (selection->text().contains("View soil data"))
         {
             if (myProject.nrSoils > 0) {
-                openSoilWidget(mapPos);
+                openSoilWidget(geoPos);
             }
             else
             {
@@ -485,11 +488,6 @@ bool MainWindow::contextMenuRequested(QPoint localPos)
 
         if (selection->text().contains("Add output point..."))
         {
-            Position geoPos = mapView->mapToScene(mapPos);
-            /*gis::Crit3DUtmPoint utmPoint;
-            gis::Crit3DGeoPoint geoPoint(geoPos.latitude(), geoPos.longitude());
-            gis::getUtmFromLatLon(myProject.gisSettings.utmZone, geoPoint, &utmPoint);*/
-
             if (myProject.addOutputPoint(geoPos.latitude(), geoPos.longitude()))
                 addOutputPointsGUI();
         }
@@ -497,7 +495,6 @@ bool MainWindow::contextMenuRequested(QPoint localPos)
         if (selection->text().contains("Extract the basin"))
         {
             double x, y;
-            Position geoPos = mapView->mapToScene(mapPos);
             gis::latLonToUtmForceZone(myProject.gisSettings.utmZone, geoPos.latitude(), geoPos.longitude(), &x, &y);
 
             // extract basin
@@ -523,9 +520,23 @@ bool MainWindow::contextMenuRequested(QPoint localPos)
             }
         }
 
+        if (selection->text().contains("water runoff path"))
+        {
+            double x, y;
+            gis::latLonToUtmForceZone(myProject.gisSettings.utmZone, geoPos.latitude(), geoPos.longitude(), &x, &y);
+
+            if (! gis::computeWaterRunoffPath(myProject.DEM, myProject.criteria3DMap, x, y))
+            {
+                myProject.logWarning("Wrong start point.");
+                return false;
+            }
+
+            setAnomalyScale(myProject.criteria3DMap.colorScale);
+            setCurrentRasterOutput(&myProject.criteria3DMap);
+        }
+
         if (selection->text().contains("View land use"))
         {
-            Position geoPos = mapView->mapToScene(mapPos);
             int id = myProject.getLandUnitIdGeo(geoPos.latitude(), geoPos.longitude());
             if (id != NODATA)
             {
@@ -553,7 +564,6 @@ bool MainWindow::contextMenuRequested(QPoint localPos)
 
         if (selection->text().contains("View crop"))
         {
-            Position geoPos = mapView->mapToScene(mapPos);
             int id = myProject.getLandUnitIdGeo(geoPos.latitude(), geoPos.longitude());
             if (id != NODATA)
             {
@@ -985,9 +995,10 @@ void MainWindow::on_actionCloseProject_triggered()
 
 QPoint MainWindow::getMapPos(const QPoint& pos)
 {
-    QPoint mapPoint;
     int x0 = ui->widgetMap->x();
     int y0 = ui->widgetMap->y() + ui->menuBar->height();
+
+    QPoint mapPoint;
     mapPoint.setX(pos.x() - x0 - MAPBORDER);
     mapPoint.setY(pos.y() - y0 - MAPBORDER);
 
@@ -999,10 +1010,9 @@ bool MainWindow::isInsideMap(const QPoint& pos)
     if (pos.x() > 0 && pos.y() > 0 &&
         pos.x() < (mapView->width() - MAPBORDER*2) &&
         pos.y() < (mapView->height() - MAPBORDER*2) )
-    {
         return true;
-    }
-    else return false;
+    else
+        return false;
 }
 
 
@@ -1802,13 +1812,12 @@ void MainWindow::setTileMapSource(WebTileSource::WebTileType tileSource)
 
 // --------------- SOIL AND LAND USE --------------------------------
 
-bool MainWindow::isInsideDEM(QPoint mapPos)
+bool MainWindow::isInsideDEM(Position geoPos)
 {
     if (! myProject.DEM.isLoaded)
         return false;
 
     double x, y;
-    Position geoPos = mapView->mapToScene(mapPos);
     gis::latLonToUtmForceZone(myProject.gisSettings.utmZone, geoPos.latitude(), geoPos.longitude(), &x, &y);
 
     float value = myProject.DEM.getValueFromXY(x, y);
@@ -1816,13 +1825,12 @@ bool MainWindow::isInsideDEM(QPoint mapPos)
 }
 
 
-bool MainWindow::isSoil(QPoint mapPos)
+bool MainWindow::isSoil(Position geoPos)
 {
     if (! myProject.soilMap.isLoaded)
         return false;
 
     double x, y;
-    Position geoPos = mapView->mapToScene(mapPos);
     gis::latLonToUtmForceZone(myProject.gisSettings.utmZone, geoPos.latitude(), geoPos.longitude(), &x, &y);
 
     int idSoil = myProject.getSoilMapId(x, y);
@@ -1830,12 +1838,11 @@ bool MainWindow::isSoil(QPoint mapPos)
 }
 
 
-bool MainWindow::isLandUse(QPoint mapPos)
+bool MainWindow::isLandUse(Position geoPos)
 {
     if (! myProject.landUseMap.isLoaded)
         return false;
 
-    Position geoPos = mapView->mapToScene(mapPos);
     return (myProject.getLandUnitIdGeo(geoPos.latitude(), geoPos.longitude()) != NODATA);
 }
 
@@ -1855,10 +1862,9 @@ void MainWindow::showLandUseMap()
 }
 
 
-void MainWindow::openSoilWidget(QPoint mapPos)
+void MainWindow::openSoilWidget(Position geoPos)
 {
     double x, y;
-    Position geoPos = mapView->mapToScene(mapPos);
     gis::latLonToUtmForceZone(myProject.gisSettings.utmZone, geoPos.latitude(), geoPos.longitude(), &x, &y);
     QString soilCode = myProject.getSoilCode(x, y);
 
