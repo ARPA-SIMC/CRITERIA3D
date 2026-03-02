@@ -2150,7 +2150,7 @@ bool Crit3DMeteoPointsDbHandler::setJointStations(const QString& idPoint, const 
 }
 
 
-bool Crit3DMeteoPointsDbHandler::getPointListWithCriteria(QList<QString> &selectedPointsList, const QString &condition)
+bool Crit3DMeteoPointsDbHandler::getPointListWithCriteria(QList<QString> &pointsList, const QString &condition)
 {
     QSqlQuery qry(_db);
     QString queryString;
@@ -2165,7 +2165,7 @@ bool Crit3DMeteoPointsDbHandler::getPointListWithCriteria(QList<QString> &select
 
     while (qry.next()) {
         QString idPoint = qry.value("id_point").toString();;
-        selectedPointsList.append(idPoint);
+        pointsList.append(idPoint);
     }
 
     return true;

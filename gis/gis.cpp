@@ -2194,4 +2194,19 @@ namespace gis
     }
 
 
+    bool computeWaterRunoffPath(const Crit3DRasterGrid& inputRaster, Crit3DRasterGrid& outputRaster, double xStart, double yStart)
+    {
+        outputRaster.initializeGrid(inputRaster);
+
+        // set first value
+        int row, col;
+        inputRaster.getRowCol(xStart, yStart, row, col);
+        if (! inputRaster.isOutOfGrid(row, col))
+            outputRaster.value[row][col] = 0.;
+
+        // todo
+
+        return true;
+    }
+
 }

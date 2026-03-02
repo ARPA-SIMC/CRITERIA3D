@@ -309,6 +309,8 @@
         bool extractBasin(const Crit3DRasterGrid& inputRaster, Crit3DRasterGrid& outputRaster, double xClosure, double yClosure);
         void cleanRasterEmptyFrame(const Crit3DRasterGrid& inputRaster, Crit3DRasterGrid& outputRaster);
 
+        bool computeWaterRunoffPath(const Crit3DRasterGrid& inputRaster, Crit3DRasterGrid& outputRaster, double xStart, double yStart);
+
         bool writeEsriGridHeader(const std::string &fileName, gis::Crit3DRasterHeader *header, std::string &errorStr);
         bool writeEsriGridFlt(const std::string &fileName, Crit3DRasterGrid* myGrid, std::string &errorStr);
     }
