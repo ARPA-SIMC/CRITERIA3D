@@ -1902,6 +1902,8 @@ bool MainWindow::loadMeteoPointsDB_GUI(QString dbName)
 
     if (success)
         drawMeteoPoints();
+    else
+        myProject.logError();
 
     return success;
 }
@@ -1910,7 +1912,9 @@ void MainWindow::on_actionLoad_MeteoPoints_triggered()
 {
     QString meteoPointsPath = myProject.getDefaultPath() + PATH_METEOPOINT;
     QString dbName = QFileDialog::getOpenFileName(this, tr("Open meteo points DB"), meteoPointsPath, tr("DB files (*.db)"));
-    if (dbName != "") this->loadMeteoPointsDB_GUI(dbName);
+
+    if (! dbName.isEmpty())
+        loadMeteoPointsDB_GUI(dbName);
 }
 
 
@@ -3152,8 +3156,7 @@ void MainWindow::on_actionPoints_delete_data_selected_triggered()
         myProject.logError("Failed to delete data.");
     }
 
-    loadMeteoPointsDataSingleDay(myProject.getCurrentDate(), true);
-    redrawMeteoPoints(currentPointsVisualization, true);
+    loadMeteoPointsDB_GUI(myProject.dbPointsFileName);
 }
 
 
@@ -3185,9 +3188,9 @@ void MainWindow::on_actionPoints_delete_data_not_active_triggered()
         myProject.logError("Failed to delete data.");
     }
 
-    loadMeteoPointsDataSingleDay(myProject.getCurrentDate(), true);
-    redrawMeteoPoints(currentPointsVisualization, true);
+    loadMeteoPointsDB_GUI(myProject.dbPointsFileName);
 }
+
 
 void MainWindow::on_flagHide_outputPoints_toggled(bool isChecked)
 {
