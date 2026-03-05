@@ -1560,9 +1560,9 @@ bool Project::loadMeteoPointsData(const QDate& firstDate, const QDate& lastDate,
             }
 
             // safe update
-            if (showInfo && omp_get_thread_num() == 0 && (i%step) == 0)
+            if (showInfo && omp_get_thread_num() == 0 && ((i*nrThreads)%step) == 0)
             {
-                updateProgressBar(i);
+                updateProgressBar(i*nrThreads);
             }
         }
 
