@@ -254,9 +254,16 @@ bool Crit3DCrop::updateLAI(double latitude, unsigned int nrLayers, int currentDo
     else
     {
         if (type == GRASS)
+        {
             // grass cut
             if (degreeDays >= degreeDaysIncrease)
+            {
+                int oldDaysSinceIrr = daysSinceIrrigation;
                 resetCrop(nrLayers);
+                // grass cut does not reset the irrigation
+                daysSinceIrrigation = oldDaysSinceIrr;
+            }
+        }
 
         if (degreeDays > 0)
             myLai = leafDevelopment::getLAICriteria(this, degreeDays);
@@ -434,13 +441,13 @@ void Crit3DCrop::resetCrop(unsigned int nrLayers)
             roots.rootDensity[i] = 0;
     }
 
-    isEmerged = false;
+    if (isSowingCrop())
+        isEmerged = false;
 
     if (isLiving)
     {
         degreeDays = 0;
 
-        // LAI
         LAI = LAImin;
         LAIpreviousDay = LAImin;
         if (type == TREE)
@@ -458,8 +465,8 @@ void Crit3DCrop::resetCrop(unsigned int nrLayers)
         roots.rootDepth = NODATA;
     }
 
-    LAIstartSenescence = NODATA;
     daysSinceIrrigation = NODATA;
+    LAIstartSenescence = NODATA;
 }
 
 
@@ -775,7 +782,7 @@ double Crit3DCrop::computeTranspiration(double maxTranspiration, const std::vect
     {
         // [mm]
         waterSurplusThreshold = soilLayers[i].SAT - (WSS * (soilLayers[i].SAT - soilLayers[i].FC));
-
+        // [-]
         thetaWP = soil::thetaFromSignPsi(-soil::cmTokPa(psiLeaf), *(soilLayers[i].horizonPtr));
         // [mm]
         cropWP = thetaWP * soilLayers[i].thickness * soilLayers[i].soilFraction * 1000.;
