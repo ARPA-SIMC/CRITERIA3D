@@ -52,7 +52,8 @@ HEADERS += \
     solver.h \
     types.h \
     types_cpu.h \
-    water.h
+    water.h \
+    linealia.h
 
 DISTFILES += \
     ToDoList.txt
