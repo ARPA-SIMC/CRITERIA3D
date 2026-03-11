@@ -37,11 +37,10 @@ bool openDbSoil(const QString &dbSoilName, QSqlDatabase &dbSoil, QString &errorS
 
 bool loadGeotechnicsParameters(const QSqlDatabase &dbSoil, std::vector<soil::Crit3DGeotechnicsClass> &geotechnicsClassList, QString &errorStr)
 {
-    QString queryString = "SELECT id_class, effective_cohesion, friction_angle ";
-    queryString        += "FROM geotechnics ORDER BY id_class";
+    QString queryString = "SELECT id_class, effective_cohesion, friction_angle FROM geotechnics ORDER BY id_class";
+    QSqlQuery query(dbSoil);
 
-    QSqlQuery query = dbSoil.exec(queryString);
-    if (query.lastError().text() != "")
+    if (! query.exec(queryString))
     {
         errorStr = query.lastError().text();
         return false;
