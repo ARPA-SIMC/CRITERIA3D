@@ -8,6 +8,7 @@
 #include "water.h"
 #include "heat.h"
 #include "otherFunctions.h"
+#include "linealia.h"
 
 using namespace soilFluxes3D::v2::Soil;
 using namespace soilFluxes3D::v2::Water;
@@ -176,22 +177,20 @@ namespace soilFluxes3D::v2
 
         for(u8_t approxIdx = 0; approxIdx < _parameters.maxApproximationsNumber; ++approxIdx)
         {
-            //Compute capacity vector elements
+            // compute capacity vector elements
             computeCapacity(vectorC);
-            logStruct;
 
-            //Update boundary water
+            // update boundary water
             updateBoundaryWaterData(deltaT);
-            logStruct;
 
-            //Reset Courant data
+            // reset Courant data
             nodeGrid.CourantWaterLevel = 0.;
             std::memset(nodeGrid.waterData.partialCourantWaterLevels, 0, nodeGrid.numNodes * sizeof(double));
 
-            //Compute linear system elements
+            // compute linear system elements
             computeLinearSystemElement(matrixA, vectorB, vectorC, approxIdx, deltaT, _parameters.lateralVerticalRatio, _parameters.meanType);
 
-            //Courant data reduction
+            // set max Courant
             double courantMax = 0;
             __parforop(_parameters.enableOMP, max, courantMax)
             for(SF3Duint_t idx = 0; idx < nodeGrid.numNodes; ++idx)
@@ -203,7 +202,7 @@ namespace soilFluxes3D::v2
 
             nodeGrid.CourantWaterLevel = courantMax;
 
-            // check Courant
+            // check Courant condition
             if((nodeGrid.CourantWaterLevel > 1.01) && (deltaT > _parameters.deltaTmin))
             {
                 _parameters.deltaTcurr /= nodeGrid.CourantWaterLevel;
@@ -224,31 +223,28 @@ namespace soilFluxes3D::v2
                 return balanceResult_t::stepHalved;
             }
 
-            //Try solve linear system
+            // try solve linear system
             bool isStepValid = solveLinearSystem(approxIdx, processType::Water);
-            logStruct;
+            //bool isStepValid = linealSolver();
 
-            //Log system data
-            logSystem;
-
-            //Reduce step tipe if system resolution failed
+            // reduce step time if system resolution failed
             if((! isStepValid) && (deltaT > _parameters.deltaTmin))
             {
                 _parameters.deltaTcurr = SF3Dmax(_parameters.deltaTmin, _parameters.deltaTcurr / 2.);
                 return balanceResult_t::stepHalved;
             }
 
-            //Update potential
+            // update water potential
             assert(vectorX.numElements == nodeGrid.numNodes);
             std::memcpy(nodeGrid.waterData.pressureHead, vectorX.values, vectorX.numElements * sizeof(double));
 
-            //Update degree of saturation   //TO DO: make a function
+            // update degree of saturation
             __parfor(_parameters.enableOMP)
             for (SF3Duint_t nodeIdx = 0; nodeIdx < nodeGrid.numNodes; ++nodeIdx)
                 if(!nodeGrid.surfaceFlag[nodeIdx])
                     nodeGrid.waterData.saturationDegree[nodeIdx] = computeNodeSe(nodeIdx);
 
-            //Check water balance
+            // check water balance
             balanceResult = evaluateWaterBalance(approxIdx, _bestMBRerror, deltaT, _parameters);
 
             if((balanceResult == balanceResult_t::stepAccepted) || (balanceResult == balanceResult_t::stepHalved)
@@ -345,7 +341,7 @@ namespace soilFluxes3D::v2
             matrixA.columnIndeces[rowIdx][0] = rowIdx;
             matrixA.values[rowIdx][0] = sumDP + (vectorC.values[rowIdx] / timeStepHeat);  //Check if C values is correct
 
-            //Computeb element
+            //Compute b element
             vectorB.values[rowIdx] = vectorC.values[rowIdx] * nodeGrid.heatData.oldTemperature[rowIdx] / timeStepHeat - heatCapacity / timeStepHeat +
                                         nodeGrid.heatData.heatFlux[rowIdx] + nodeGrid.waterData.invariantFluxes[rowIdx] + sumF0;
 
@@ -384,6 +380,31 @@ namespace soilFluxes3D::v2
                 nodeGrid.heatData.oldTemperature[rowIdx] = nodeGrid.heatData.temperature[rowIdx];
 
         return;
+    }
+
+
+    bool CPUSolver::linealSolver()
+    {
+        LinealExecutionParams executionParams;
+        LinealiaIterativeSolverParams solverParams;
+        LinealiaRelaxedParams relaxationParams;
+        LinealiaIterativeResult linealResult;
+
+        LinealiaMatrix matrix;
+        matrix.num_rows = matrixA.numRows;
+        matrix.num_columns = matrixA.numColsInRow;
+        matrix.column_indices = matrixA.columnIndeces;
+        matrix.values = matrixA.values;
+
+        LinealiaVector linVectorX, linVectorB;
+        linVectorX.num_elements = vectorX.numElements;
+        linVectorX.values = vectorX.values;
+        linVectorB.num_elements = vectorB.numElements;
+        linVectorB.values = vectorB.values;
+
+        //linealResult = linealia_solve_sor(matrix, linVectorX, linVectorB, executionParams, solverParams, relaxationParams);
+
+        return true;
     }
 
 

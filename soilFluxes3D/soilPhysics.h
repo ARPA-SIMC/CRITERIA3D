@@ -20,9 +20,9 @@ namespace soilFluxes3D::v2::Soil
     /*not used*/ double computeNodePsi_fromSe(SF3Duint_t nodeIndex, double Se);
 
     __cudaSpec double computeNodeK(SF3Duint_t nodeIndex);
-    __cudaSpec double computeMualemSoilConductivity(soilData_t& soilData, double Se);
+    __cudaSpec double computeMualemSoilConductivity(const soilData_t &soil, double Se);
 
-    __cudaSpec double computeNodedThetadH(SF3Duint_t nodeIndex);
+    __cudaSpec double computeNode_dTheta_dH(SF3Duint_t nodeIndex);
     __cudaSpec double computeNodedThetaVdH(SF3Duint_t nodeIndex, double temperature, double dThetadH);
 
     __cudaSpec double getNodeMeanTemperature(SF3Duint_t nodeIndex);

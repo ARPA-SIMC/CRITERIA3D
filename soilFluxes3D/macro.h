@@ -75,7 +75,7 @@
     #include "logFunctions.h"
     using namespace soilFluxes3D::v2::Log;
     #define logStruct logNodeGridStruct(nodeGrid, getSolverType())
-    #define logSystem //createCurrStepLog(matrixA, vectorB, vectorX, isStepValid)
+    #define logSystem createCurrStepLog(matrixA, vectorB, vectorX, isStepValid)
 #else
     #define logStruct
     #define logSystem
