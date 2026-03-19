@@ -3,6 +3,7 @@
 #include "soilPhysics.h"
 #include "water.h"
 #include "heat.h"
+#include "linealia.h"
 
 #ifdef MCR_ENABLED
     #include "logFunctions.h"
