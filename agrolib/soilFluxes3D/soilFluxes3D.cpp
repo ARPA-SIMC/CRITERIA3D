@@ -132,7 +132,7 @@ namespace soilFluxes3D::v2
             }
         }
 
-        //Water data    //if(isComputeWater)
+        //Water data
         hostAlloc(nodeGrid.waterData.saturationDegree, nrNodes);
         hostAlloc(nodeGrid.waterData.waterConductivity, nrNodes);
         hostAlloc(nodeGrid.waterData.waterFlow, nrNodes);

@@ -258,28 +258,28 @@ namespace soilFluxes3D { inline namespace v2
 
         double CourantWaterLevel = 0.;
 
-        //Topology data
-        double *size = nullptr;                             //volume_area
-        double *x = nullptr, *y = nullptr, *z = nullptr;    //x, y, z
-        bool *surfaceFlag = nullptr;                        //isSurface
+        // Topology data
+        double *size = nullptr;                             // volume_area
+        double *x = nullptr, *y = nullptr, *z = nullptr;    // x, y, z
+        bool *surfaceFlag = nullptr;                        // isSurface
 
-        //Soil/surface properties pointers
+        // Soil/surface properties pointers
         soilSurface_ptr *soilSurfacePointers = nullptr;
 
-        //Boundary data
+        // Boundary data
         boundaryData_t boundaryData;
 
-        //Link data
+        // Link data
         u8_t *numLateralLink = nullptr;
         linkData_t linkData[maxTotalLink];
 
-        //Water quantities
+        // Water quantities
         waterData_t waterData;
 
-        //Culvert pointers
+        // Culvert pointers
         culvertData_t* *culvertPtr = nullptr;
 
-        //Heat and solutes quantities
+        // Heat and solutes quantities
         heatData_t heatData;
     };
 

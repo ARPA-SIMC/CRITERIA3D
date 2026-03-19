@@ -281,17 +281,21 @@ namespace soilFluxes3D::v2::Water
 
     void computeCapacity(VectorCPU& vectorC)
     {
+        if(simulationFlags.computeHeat)
+        {
+            std::memset(nodeGrid.waterData.invariantFluxes, 0, nodeGrid.numNodes * sizeof(double));
+        }
+
         __parfor(__ompStatus)
         for (SF3Duint_t nodeIndex = 0; nodeIndex < nodeGrid.numNodes; ++nodeIndex)
         {
-            nodeGrid.waterData.invariantFluxes[nodeIndex] = 0.;     //move to memset
             if(nodeGrid.surfaceFlag[nodeIndex])
                 continue;
 
-            //Compute hydraulic conductivity
+            // hydraulic conductivity
             nodeGrid.waterData.waterConductivity[nodeIndex] = computeNodeK(nodeIndex);
 
-            double dThetadH = computeNodedThetadH(nodeIndex);
+            double dThetadH = computeNode_dTheta_dH(nodeIndex);
             vectorC.values[nodeIndex] = nodeGrid.size[nodeIndex] * dThetadH;
 
             if(simulationFlags.computeHeat && simulationFlags.computeHeatVapor)
@@ -333,7 +337,7 @@ namespace soilFluxes3D::v2::Water
 
             //TO DO: need to fill the not used columns of the row?
 
-            //Compute diagonal element
+            // Compute diagonal element
             double sum = 0.;
             for(u8_t colIdx = 1; colIdx < matrixA.numColsInRow[rowIdx]; ++colIdx)
             {
@@ -343,10 +347,10 @@ namespace soilFluxes3D::v2::Water
             matrixA.columnIndeces[rowIdx][0] = rowIdx;
             matrixA.values[rowIdx][0] = (vectorC.values[rowIdx] / deltaT) + sum;
 
-            //Compute b element
+            // Compute b element
             vectorB.values[rowIdx] = ((vectorC.values[rowIdx] / deltaT) * nodeGrid.waterData.oldPressureHead[rowIdx]) + nodeGrid.waterData.waterFlow[rowIdx] + nodeGrid.waterData.invariantFluxes[rowIdx];
 
-            //Preconditioning
+            // Preconditioning
             for(u8_t colIdx = 1; colIdx < matrixA.numColsInRow[rowIdx]; ++colIdx)
                 matrixA.values[rowIdx][colIdx] /= matrixA.values[rowIdx][0];
 

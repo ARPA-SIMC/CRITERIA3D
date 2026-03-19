@@ -19,6 +19,7 @@ namespace soilFluxes3D::v2
             void heatLoop(double timeStepHeat, double timeStepWater);
 
             bool solveLinearSystem(u8_t approximationNumber, processType computationType) override;
+            bool linealSolver();
 
         public:
             CPUSolver() : Solver(solverType::CPU, numericalMethod::Jacobi) {}
