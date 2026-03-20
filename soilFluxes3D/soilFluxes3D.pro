@@ -38,6 +38,7 @@ win32:{
 SOURCES += \
     cpusolver.cpp \
     heat.cpp \
+    lineal/linealiaLib.cpp \
     otherFunctions.cpp \
     soilFluxes3D.cpp \
     soilPhysics.cpp \
@@ -47,6 +48,7 @@ SOURCES += \
 HEADERS += \
     cpusolver.h \
     heat.h \
+    lineal/linealiaLib.h \
     macro.h \
     otherFunctions.h \
     soilFluxes3D.h \

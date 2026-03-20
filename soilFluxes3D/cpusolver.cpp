@@ -9,6 +9,7 @@
 #include "heat.h"
 #include "otherFunctions.h"
 #include "linealia.h"
+#include "linealiaLib.h"
 
 using namespace soilFluxes3D::v2::Soil;
 using namespace soilFluxes3D::v2::Water;
@@ -386,25 +387,27 @@ namespace soilFluxes3D::v2
     bool CPUSolver::linealSolver()
     {
         LinealExecutionParams executionParams;
-        LinealiaIterativeSolverParams solverParams;
-        LinealiaRelaxedParams relaxationParams;
-        LinealiaIterativeResult linealResult;
+        LinealiaIterativeSolverParams iterativeParams;
+        LinealiaRelaxedParams relaxParams;
 
-        LinealiaMatrix matrix;
-        matrix.num_rows = matrixA.numRows;
-        matrix.num_columns = matrixA.numColsInRow;
-        matrix.column_indices = matrixA.columnIndeces;
-        matrix.values = matrixA.values;
+        LinealiaMatrix A;
+        A.num_rows = matrixA.numRows;
+        A.num_columns = matrixA.numColsInRow;
+        A.column_indices = matrixA.columnIndeces;
+        A.values = matrixA.values;
 
-        LinealiaVector linVectorX, linVectorB;
-        linVectorX.num_elements = vectorX.numElements;
-        linVectorX.values = vectorX.values;
-        linVectorB.num_elements = vectorB.numElements;
-        linVectorB.values = vectorB.values;
+        LinealiaVector x, b;
+        x.num_elements = vectorX.numElements;
+        x.values = vectorX.values;
+        b.num_elements = vectorB.numElements;
+        b.values = vectorB.values;
 
-        //linealResult = linealia_solve_sor(matrix, linVectorX, linVectorB, executionParams, solverParams, relaxationParams);
+        LinealiaIterativeResult result = LinealiaLib::instance().solveCG(A, x, b, executionParams, iterativeParams);
 
-        return true;
+        if (result.reason == LINEALIA_STOP_ITERATIONS)
+            return false;
+        else
+            return true;
     }
 
 
