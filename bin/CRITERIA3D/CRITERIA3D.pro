@@ -21,7 +21,7 @@ CONFIG += c++17
 include($$absolute_path(../../agrolib/parallel.pri))
 
 INCLUDEPATH +=  ./shared  \
-                ../../agrolib/soilFluxes3D \
+                ../../agrolib/soilFluxes3D  ../../agrolib/soilFluxes3D/lineal  \
                 ../../agrolib/crit3dDate ../../agrolib/mathFunctions \
                 ../../agrolib/crop ../../agrolib/soil ../../agrolib/meteo ../../agrolib/gis \
                 ../../agrolib/interpolation ../../agrolib/solarRadiation \

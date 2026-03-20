@@ -6,6 +6,7 @@
 #include "criteria3DProject.h"
 #include "shell.h"
 #include "mainGUI.h"
+#include "linealiaLib.h"
 
 
 Crit3DProject myProject;
@@ -43,6 +44,10 @@ bool checkEnvironmentConsole(QString criteria3dHome)
 
 int main(int argc, char *argv[])
 {
+    // lineal library (dynamic linking)
+    /*if (! LinealiaLib::instance().load())
+        return -1;*/
+
     // set modality (default: GUI)
     myProject.modality = MODE_GUI;
 

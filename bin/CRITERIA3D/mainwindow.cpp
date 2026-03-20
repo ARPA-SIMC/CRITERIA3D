@@ -2185,7 +2185,7 @@ void MainWindow::on_buttonModel1hour_clicked()
     ui->buttonModelStart->setDisabled(true);
     ui->buttonModelStop->setEnabled(true);
 
-    QDateTime firstTime = QDateTime(myProject.getCurrentDate(), QTime(myProject.getCurrentHour(), 0, 0), Qt::UTC);
+    QDateTime firstTime = QDateTime(myProject.getCurrentDate(), QTime(myProject.getCurrentHour(), 0, 0), QTimeZone::UTC);
     QDateTime lastTime = firstTime.addSecs(3600);
     firstTime = firstTime.addSecs(myProject.currentSeconds);
 
@@ -2206,7 +2206,7 @@ void MainWindow::on_buttonModelStart_clicked()
         ui->buttonModelStart->setDisabled(true);
         ui->buttonModelStop->setEnabled(true);
 
-        QDateTime newFirstTime = QDateTime(myProject.getCurrentDate(), QTime(myProject.getCurrentHour(), 0, 0), Qt::UTC);
+        QDateTime newFirstTime = QDateTime(myProject.getCurrentDate(), QTime(myProject.getCurrentHour(), 0, 0), QTimeZone::UTC);
         newFirstTime = newFirstTime.addSecs(myProject.currentSeconds);
 
         myProject.isModelPaused = false;
