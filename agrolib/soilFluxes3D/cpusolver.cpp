@@ -9,7 +9,6 @@
 #include "heat.h"
 #include "otherFunctions.h"
 #include "linealia.h"
-#include "linealiaLib.h"
 
 using namespace soilFluxes3D::v2::Soil;
 using namespace soilFluxes3D::v2::Water;
@@ -224,9 +223,13 @@ namespace soilFluxes3D::v2
                 return balanceResult_t::stepHalved;
             }
 
-            // try solve linear system
-            bool isStepValid = solveLinearSystem(approxIdx, processType::Water);
-            //bool isStepValid = linealSolver();
+            // solve linear system
+            bool isStepValid;
+            #ifdef LINEAL
+                isStepValid = linealSolver();
+            #else
+                isStepValid = solveLinearSystem(approxIdx, processType::Water);
+            #endif
 
             // reduce step time if system resolution failed
             if((! isStepValid) && (deltaT > _parameters.deltaTmin))
@@ -383,7 +386,7 @@ namespace soilFluxes3D::v2
         return;
     }
 
-
+    #ifdef LINEAL
     bool CPUSolver::linealSolver()
     {
         LinealExecutionParams executionParams;
@@ -402,13 +405,14 @@ namespace soilFluxes3D::v2
         b.num_elements = vectorB.numElements;
         b.values = vectorB.values;
 
-        LinealiaIterativeResult result = LinealiaLib::instance().solveCG(A, x, b, executionParams, iterativeParams);
+        LinealiaIterativeResult result = linealInstance.solveCG(A, x, b, executionParams, iterativeParams);
 
         if (result.reason == LINEALIA_STOP_ITERATIONS)
             return false;
         else
             return true;
     }
+    #endif
 
 
     bool CPUSolver::solveLinearSystem(u8_t approximationNumber, processType computationType)

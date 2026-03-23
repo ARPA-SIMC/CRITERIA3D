@@ -2,6 +2,7 @@
 
 #include "solver.h"
 #include "types_cpu.h"
+#include "linealiaLib.h"
 
 namespace soilFluxes3D::v2
 {
@@ -10,8 +11,11 @@ namespace soilFluxes3D::v2
         private:
             MatrixCPU matrixA;
             VectorCPU vectorB, vectorX;
-
             VectorCPU vectorC;
+
+            #ifdef LINEAL
+                static LinealiaLib linealInstance;
+            #endif
 
             bool waterMainLoop(double maxTimeStep, double& acceptedTimeStep);
             balanceResult_t waterApproximationLoop(double deltaT);

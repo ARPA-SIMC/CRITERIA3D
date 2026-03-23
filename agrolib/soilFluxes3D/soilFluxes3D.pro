@@ -20,9 +20,9 @@ CONFIG += c++17
 include($$absolute_path(../parallel.pri))
 
 CONFIG += debug_and_release
-INCLUDEPATH += ../mathFunctions  $$PWD/lineal
+INCLUDEPATH += ../mathFunctions  ./lineal
 
-LIBS += -L$$PWD/lineal -llinealia
+#DEFINES += LINEAL
 
 unix:{
     CONFIG(debug, debug|release) {
