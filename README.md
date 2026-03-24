@@ -43,9 +43,6 @@ After successful compilation:
 Locate the executable in the build folder  
 Run it directly from Qt Creator or your system file explorer.
 
-## How to compile VINE3D
-Follow the same steps of CRITERIA-3D, using the project  *bin/Makeall_CRITERIA3D/Makeall_VINE3D.pro*
-
 ## soilFluxes3D library 
 agrolib/soilFluxed3D is a numerical solution of flow equations of water and heat in the soil, in a three-dimensional domain.  
 Surface water flow is described by the two-dimensional parabolic approximation of the St. Venant equation, using Manning’s equation of motion. Subsurface water flow is described by the three-dimensional Richards’ equation for the unsaturated zone and by three-dimensional Darcy’s law for the saturated zone, using an integrated finite difference formulation. The available boundary conditions are surface runoff, culvert runoff, free drainage (lateral or deep) and prescribed total potential.  
