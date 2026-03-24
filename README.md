@@ -3,13 +3,33 @@
 [![Build Status](https://simc.arpae.it/moncic-ci/CRITERIA3D/fedora40.png)](https://simc.arpae.it/moncic-ci/CRITERIA3D/)
 [![Build Status](https://simc.arpae.it/moncic-ci/CRITERIA3D/fedora42.png)](https://simc.arpae.it/moncic-ci/CRITERIA3D/)
 
-# CRITERIA-3D
-CRITERIA-3D is a three-dimensional water balance for small catchments.  
-It includes a numerical solution for three-dimensional water and heat flow in the soil, coupled surface and subsurface flow, meteorological data interpolation, radiation budget, crop development and crop water uptake. It needs hourly meteo data as input (air temperature, precipitation, solar irradiance, air relative humidity, wind speed).  
+## Overview
+**CRITERIA‑3D** is a three-dimensional hydrological model designed for small catchments.   
+
+It includes a numerical solution for three-dimensional water and heat flow in the soil, coupled surface and subsurface flow, meteorological data interpolation, radiation budget, crop development and crop water uptake, slope stability analysis.  
+It needs hourly meteo data as input (air temperature, precipitation, solar irradiance, air relative humidity, wind speed).   
+
+See [last release](https://github.com/ARPA-SIMC/CRITERIA3D/releases) to download precompiled binaries.
 
 ![](https://github.com/ARPA-SIMC/CRITERIA3D/blob/master/DOC/img/ravone.png)
 
-See this [paper](https://github.com/ARPA-SIMC/CRITERIA3D/blob/master/DOC/CRITERIA3D.pdf) for more technical information, [user guide](https://github.com/ARPA-SIMC/CRITERIA3D/blob/master/DOC/CRITERIA3D_user_manual.pdf) for user documentation and [last release](https://github.com/ARPA-SIMC/CRITERIA3D/releases) to download precompiled binaries.
+## Key Features
+- 3D water flow simulation in both surface and subsurface layers.
+- radiation budget
+- canopy development and water uptake
+- snow accumulation and melt model
+- slope stability analysis
+- hourly meteorological data interpolation
+
+## Applications
+CRITERIA‑3D can be used by:
+- Hydrologists and environmental engineers for catchment water balance studies.
+- Researchers analyzing surface-subsurface interactions and hydrological processes.
+- Civil planners for land management and flood risk assessment.
+
+## Documentation & References
+Detailed technical documentation is available in the `DOC` folder.
+For scientific background and model formulation, see [CRITERIA‑3D model description](https://github.com/ARPA-SIMC/CRITERIA3D/blob/master/DOC/CRITERIA3D.pdf)  
 
 CRITERIA is operational at [Arpae](https://www.arpae.it/it/temi-ambientali/meteo/scopri-di-piu/strumenti-di-modellistica/criteria/criteria-modello-di-bilancio-idrico) Emilia-Romagna. It has been used in several international projects (Vintage, Highlander, Arcadia) and it is reported in the [International Soil Modeling Consortium](https://soil-modeling.org/resources-links/model-portal/criteria).
 
