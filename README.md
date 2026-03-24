@@ -6,7 +6,10 @@
 # CRITERIA-3D
 CRITERIA-3D is a three-dimensional water balance for small catchments.  
 It includes a numerical solution for three-dimensional water and heat flow in the soil, coupled surface and subsurface flow, meteorological data interpolation, radiation budget, crop development and crop water uptake. It needs hourly meteo data as input (air temperature, precipitation, solar irradiance, air relative humidity, wind speed).  
-See [CRITERIA3D paper](https://github.com/ARPA-SIMC/CRITERIA3D/blob/master/DOC/CRITERIA3D.pdf) for more information. 
+
+See [CRITERIA3D](https://github.com/ARPA-SIMC/CRITERIA3D/blob/master/DOC/CRITERIA3D.pdf) for more technical information, [user guide](https://github.com/ARPA-SIMC/CRITERIA1D/blob/master/DOC/CRITERIA3D_user_manual.pdfl) for user documentation and [last release](https://github.com/ARPA-SIMC/CRITERIA3D/releases) to download precompiled binaries.
+
+CRITERIA is operational at [Arpae Emilia-Romagna](https://www.arpae.it/it/temi-ambientali/meteo/scopri-di-piu/strumenti-di-modellistica/criteria/criteria-modello-di-bilancio-idrico). It has been used in several international projects (Vintage, Highlander, Arcadia) and it is reported in the [International Soil Modeling Consortium](https://soil-modeling.org/resources-links/model-portal/criteria).
 
 ![](https://github.com/ARPA-SIMC/CRITERIA3D/blob/master/DOC/img/CRITERIA3D.png)
 
