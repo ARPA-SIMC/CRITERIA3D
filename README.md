@@ -10,16 +10,35 @@ See [CRITERIA3D paper](https://github.com/ARPA-SIMC/CRITERIA3D/blob/master/DOC/C
 
 ![](https://github.com/ARPA-SIMC/CRITERIA3D/blob/master/DOC/img/CRITERIA3D.png)
 
-## How to compile CRITERIA-3D
-Dependencies:
-- [Qt libraries](https://www.qt.io/download-qt-installer): Qt 5.x or following is needed (download also QtCharts).
-- Only for Qt 6.x : download also *Qt5 Compatibility Module*
+## Step-by-Step Compilation Guide
+#### 1️⃣ Install required software
 
-Build (with Qt Creator):
-1) Build the project  *MapGraphics/MapGraphics.pro* 
-2) Build the project  *bin/Makeall_CRITERIA3D/Makeall_CRITERIA3D.pro*
+Make sure you have:  
+- **Qt 5.x or later**  
+- **QtCharts module** (install with Qt)  
+- **Qt5 Compatibility module** (Only for Qt 6.x)
 
-Warning: deselect the flag 'Shadow build' in 'Build settings' of the Qt Creator, for both the projects *MapGraphics.pro* and *Makeall_CRITERIA3D.pro*
+Also, install **Qt Creator** (the IDE for building Qt projects).
+
+#### 2️⃣ Build projects in Qt Creator  
+
+Open and build the **MapGraphics** (GUI) project:    
+`\MapGraphics\MapGraphics.pro`  
+Go to Build → Build Project
+
+Open and build the **main** project:  
+`\bin\Makeall_CRITERIA3D\Makeall_CRITERIA3D.pro`  
+Build it the same way
+
+#### ⚠️ Important Tips
+- Always build MapGraphics.pro first, then the main project.
+- For both projects, go to **Projects → Build Settings** in Qt Creator and **uncheck “Shadow build”**. This prevents common compilation errors.
+
+#### 3️⃣ Run CRITERIA-3D  
+
+After successful compilation:  
+Locate the executable in the build folder  
+Run it directly from Qt Creator or your system file explorer.
 
 ## How to compile VINE3D
 Follow the same steps of CRITERIA-3D, using the project  *bin/Makeall_CRITERIA3D/Makeall_VINE3D.pro*
