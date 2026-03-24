@@ -13,10 +13,6 @@ namespace soilFluxes3D::v2
             VectorCPU vectorB, vectorX;
             VectorCPU vectorC;
 
-            #ifdef LINEAL
-                static LinealiaLib linealInstance;
-            #endif
-
             bool waterMainLoop(double maxTimeStep, double& acceptedTimeStep);
             balanceResult_t waterApproximationLoop(double deltaT);
 
