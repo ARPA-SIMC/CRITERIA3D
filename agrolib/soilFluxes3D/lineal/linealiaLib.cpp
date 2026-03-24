@@ -1,4 +1,4 @@
-#include "LinealiaLib.h"
+#include "linealiaLib.h"
 #include <QDebug>
 
 LinealiaLib& LinealiaLib::instance() {
