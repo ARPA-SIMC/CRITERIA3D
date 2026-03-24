@@ -392,6 +392,7 @@ namespace soilFluxes3D::v2
         LinealExecutionParams executionParams;
         LinealiaIterativeSolverParams iterativeParams;
         LinealiaRelaxedParams relaxParams;
+        LinealiaPcgAmgParams pcgAmgParams;
 
         LinealiaMatrix A;
         A.num_rows = matrixA.numRows;
@@ -405,7 +406,7 @@ namespace soilFluxes3D::v2
         b.num_elements = vectorB.numElements;
         b.values = vectorB.values;
 
-        LinealiaIterativeResult result = linealInstance.solveCG(A, x, b, executionParams, iterativeParams);
+        LinealiaIterativeResult result = LinealiaLib::instance().solveCG(A, x, b, executionParams, iterativeParams);
 
         if (result.reason == LINEALIA_STOP_ITERATIONS)
             return false;

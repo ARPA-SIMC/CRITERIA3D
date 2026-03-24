@@ -2143,8 +2143,8 @@ bool Crit3DProject::saveModelsState(QString &dirName)
     }
 
     char hourStr[3];
-    sprintf(hourStr, "%02d", getCurrentHour());
-    //sprintf_s(hourStr, sizeof(hourStr), "%02d", getCurrentHour());
+    //sprintf(hourStr, "%02d", getCurrentHour());
+    snprintf(hourStr, sizeof(hourStr), "%02d", getCurrentHour());
     dirName = getCurrentDate().toString("yyyyMMdd") + "_H" + hourStr;
     QString currentStatePath = statePath + "/" + dirName;
     if (! QDir(currentStatePath).exists())
