@@ -54,7 +54,7 @@ Crit3DProject::Crit3DProject() : Project3D()
     _saveYearlyState = false;
     _saveMonthlyState = false;
 
-    modelFirstTime.setTimeSpec(Qt::UTC);
+    modelFirstTime.setTimeZone(QTimeZone::UTC);
     modelLastTime.setTimeSpec(Qt::UTC);
 }
 
