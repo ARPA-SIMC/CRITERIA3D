@@ -16,6 +16,7 @@ namespace soilFluxes3D { inline namespace v2
     SF3Derror_t initializeHeatFlag(heatFluxSaveMode_t saveModeHeat, bool isComputeAdvectiveFlux, bool isComputeLatentHeat);
 
     u32_t setThreadsNumber(u32_t nrThreads);
+    void setUseLineal(bool value);
 
     //Create types
     SF3Derror_t setSoilProperties(u16_t nrSoil, u8_t nrHorizon, double VG_alpha, double VG_n, double VG_m,

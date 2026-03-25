@@ -100,6 +100,7 @@
         bool showEachTimeStep;
         bool increaseSlope;
 
+        bool isLinealFound;
         bool isModelRunning, isModelPaused, isModelStopped;
 
         Crit3DProcesses processes;

@@ -44,12 +44,6 @@ bool checkEnvironmentConsole(QString criteria3dHome)
 
 int main(int argc, char *argv[])
 {
-    #ifdef LINEAL
-        // lineal library (dynamic linking)
-        if (! LinealiaLib::instance().load())
-            return -1;
-    #endif
-
     // set modality (default: GUI)
     myProject.modality = MODE_GUI;
 
@@ -82,6 +76,11 @@ int main(int argc, char *argv[])
             myProject.modality = MODE_CONSOLE;
         }
     }
+
+    // lineal library (dynamic linking)
+    myProject.isLinealFound = LinealiaLib::instance().load();
+    if (myProject.isLinealFound)
+        myProject.logInfo("Use Lineal: TRUE");
 
     if (myProject.modality == MODE_GUI)
     {

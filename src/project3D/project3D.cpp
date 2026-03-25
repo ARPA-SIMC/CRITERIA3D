@@ -614,6 +614,10 @@ bool Project3D::setAccuracy()
     int toleranceDigit = 7 + waterFluxesParameters.modelAccuracy;
 
     soilFluxes3D::setNumericalParameters(minimumDeltaT, 3600, 100, 10, toleranceDigit, massBalanceRatioDigit);
+    // todo checkbox (method?)
+    soilFluxes3D::setUseLineal(isLinealFound);
+    if (isLinealFound)
+        logInfo("Use Lineal: TRUE");
 
     // parallel computing
     waterFluxesParameters.numberOfThreads = soilFluxes3D::setThreadsNumber(waterFluxesParameters.numberOfThreads);

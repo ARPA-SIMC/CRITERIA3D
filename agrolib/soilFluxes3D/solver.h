@@ -25,6 +25,8 @@ namespace soilFluxes3D::v2
         public:
             Solver(solverType type, numericalMethod method) : _method(method), _type(type) {}
 
+            bool useLineal = false;
+
             void updateParameters(const SolverParametersPartial &newParameters);
             void setTimeStep(double timeStep) noexcept;
 
