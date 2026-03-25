@@ -16,9 +16,10 @@ BuildRequires:  qt6-qtbase
 BuildRequires:  qt6-qtbase-devel
 BuildRequires:  qt6-qtcharts
 BuildRequires:  qt6-qtcharts-devel
+BuildRequires:  qt6-qt5compat
+BuildRequires:  qt6-qt5compat-devel
 
 Requires:       qt6-qtbase-mysql
-Requires: 		qt6-qt5compat
 
 %description
 CRITERIA-3D is a three-dimensional agro-hydrological model for small catchments.
