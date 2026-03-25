@@ -13,7 +13,8 @@ bool LinealiaLib::load() {
     if (lib.isLoaded())
         return true;
 
-    if (!lib.load()) {
+    if (!lib.load())
+    {
         qDebug() << "Error in loading Lineal dll:" << lib.errorString();
         return false;
     }

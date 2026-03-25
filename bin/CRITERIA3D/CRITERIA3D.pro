@@ -17,7 +17,7 @@ QMAKE_TARGET_COPYRIGHT = "\\251 2026 ARPAE ER - Climate Observatory"
 CONFIG += debug_and_release
 CONFIG += c++17
 
-#DEFINES += LINEAL
+DEFINES += LINEAL
 
 # parallel computing settings
 include($$absolute_path(../../agrolib/parallel.pri))
