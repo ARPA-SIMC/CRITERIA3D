@@ -22,7 +22,7 @@ include($$absolute_path(../parallel.pri))
 CONFIG += debug_and_release
 INCLUDEPATH += ../mathFunctions  ./lineal
 
-#DEFINES += LINEAL
+DEFINES += LINEAL
 
 unix:{
     CONFIG(debug, debug|release) {

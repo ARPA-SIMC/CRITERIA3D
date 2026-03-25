@@ -1,6 +1,7 @@
 #include <cstring>
 #include <cassert>
 #include <omp.h>
+#include <iostream>
 
 #include "soilFluxes3D.h"
 #include "cpusolver.h"
@@ -405,6 +406,21 @@ namespace soilFluxes3D::v2
         x.values = vectorX.values;
         b.num_elements = vectorB.numElements;
         b.values = vectorB.values;
+
+        std::cout << "A:\n";
+        for (uint32_t i = 0; i < A.num_rows; ++i)
+        {
+            std::cout << i << ": ";
+            const auto nrCols = A.num_columns[i];
+            for (uint32_t j = 0; j < nrCols; ++j)
+            {
+                if (j > 0)
+                    std::cout << ", ";
+
+                std::cout << A.column_indices[i][j] << ":" << A.values[i][j];
+            }
+            std::cout << "\n";
+        }
 
         LinealiaIterativeResult result = LinealiaLib::instance().solveCG(A, x, b, executionParams, iterativeParams);
 
