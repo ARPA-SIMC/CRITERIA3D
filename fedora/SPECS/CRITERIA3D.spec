@@ -32,12 +32,12 @@ crop development and crop water uptake. It needs hourly meteo data as input
 
 %build
 pushd mapGraphics
-qmake-qt6 MapGraphics.pro -spec linux-g++-64 CONFIG+=release CONFIG+=force_debug_info CONFIG+=c++17 CONFIG+=qtquickcompiler
+qmake6 MapGraphics.pro -spec linux-g++-64 CONFIG+=release CONFIG+=force_debug_info CONFIG+=c++17 CONFIG+=qtquickcompiler
 make
 popd
 
 pushd bin/Makeall_CRITERIA3D
-qmake-qt6 Makeall_CRITERIA3D.pro -spec linux-g++-64 CONFIG+=release CONFIG+=force_debug_info CONFIG+=c++17 CONFIG+=qtquickcompiler
+qmake6 Makeall_CRITERIA3D.pro -spec linux-g++-64 CONFIG+=release CONFIG+=force_debug_info CONFIG+=c++17 CONFIG+=qtquickcompiler
 make qmake_all
 make
 popd
