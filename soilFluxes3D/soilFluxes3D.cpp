@@ -360,6 +360,16 @@ namespace soilFluxes3D::v2
 
 
     /*!
+     *  \brief sets use of linealia library
+    */
+    void setUseLineal(bool value)
+    {
+        if(solver)
+            solver->useLineal = value;
+    }
+
+
+    /*!
      * \brief sets the soil properties of the nrSoil-nrHorizon soil type
      * \param VG_alpha  [m-1]       Van Genutchen alpha parameter (warning: usually is kPa-1 in literature)
      * \param VG_n      [-]         Van Genutchen n parameter (1, 10]

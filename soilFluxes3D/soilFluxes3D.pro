@@ -22,8 +22,6 @@ include($$absolute_path(../parallel.pri))
 CONFIG += debug_and_release
 INCLUDEPATH += ../mathFunctions  ./lineal
 
-DEFINES += LINEAL
-
 unix:{
     CONFIG(debug, debug|release) {
         TARGET = debug/soilFluxes3D

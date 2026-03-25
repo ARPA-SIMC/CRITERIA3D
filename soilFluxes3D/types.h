@@ -61,7 +61,6 @@ namespace soilFluxes3D { inline namespace v2
             default:
                 return static_cast<double>(INDEX_ERROR);
         }
-
     }
 
     inline constexpr bool getSF3DerrorName(soilFluxes3D::SF3Derror_t errorCode, std::string& errorName)
@@ -304,12 +303,13 @@ namespace soilFluxes3D { inline namespace v2
         meanType_t meanType = meanType_t::Logarithmic;
 
         double lateralVerticalRatio = 10.;
-        double heatWeightFactor = 0.5;          //???
+        double heatWeightFactor = 0.5;
 
-        double CourantWaterThreshold = 0.5;     //used for evaluate stability
-        double instabilityFactor = 10.;         //used for evaluate stability
+        double CourantWaterThreshold = 0.5;     // used for evaluate stability
+        double instabilityFactor = 10.;         // used for evaluate stability
 
         bool enableOMP = true;
+
         u32_t numThreads = std::thread::hardware_concurrency();
     };
 

@@ -226,11 +226,10 @@ namespace soilFluxes3D::v2
 
             // solve linear system
             bool isStepValid;
-            #ifdef LINEAL
+            if (useLineal)
                 isStepValid = linealSolver();
-            #else
+            else
                 isStepValid = solveLinearSystem(approxIdx, processType::Water);
-            #endif
 
             // reduce step time if system resolution failed
             if((! isStepValid) && (deltaT > _parameters.deltaTmin))
@@ -387,7 +386,7 @@ namespace soilFluxes3D::v2
         return;
     }
 
-    #ifdef LINEAL
+
     bool CPUSolver::linealSolver()
     {
         LinealExecutionParams executionParams;
@@ -407,29 +406,10 @@ namespace soilFluxes3D::v2
         b.num_elements = vectorB.numElements;
         b.values = vectorB.values;
 
-        std::cout << "A:\n";
-        for (uint32_t i = 0; i < A.num_rows; ++i)
-        {
-            std::cout << i << ": ";
-            const auto nrCols = A.num_columns[i];
-            for (uint32_t j = 0; j < nrCols; ++j)
-            {
-                if (j > 0)
-                    std::cout << ", ";
+        LinealiaLib::instance().solvePCG_AMG_SSOR(A, x, b, executionParams, iterativeParams, pcgAmgParams);
 
-                std::cout << A.column_indices[i][j] << ":" << A.values[i][j];
-            }
-            std::cout << "\n";
-        }
-
-        LinealiaIterativeResult result = LinealiaLib::instance().solveCG(A, x, b, executionParams, iterativeParams);
-
-        if (result.reason == LINEALIA_STOP_ITERATIONS)
-            return false;
-        else
-            return true;
+        return true;
     }
-    #endif
 
 
     bool CPUSolver::solveLinearSystem(u8_t approximationNumber, processType computationType)

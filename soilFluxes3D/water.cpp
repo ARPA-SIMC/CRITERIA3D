@@ -339,10 +339,10 @@ namespace soilFluxes3D::v2::Water
 
             // Compute diagonal element
             double sum = 0.;
-            for(u8_t colIdx = 1; colIdx < matrixA.numColsInRow[rowIdx]; ++colIdx)
+            for(u8_t j = 1; j < matrixA.numColsInRow[rowIdx]; ++j)
             {
-                sum += matrixA.values[rowIdx][colIdx];
-                matrixA.values[rowIdx][colIdx] *= -1.;
+                sum += matrixA.values[rowIdx][j];
+                matrixA.values[rowIdx][j] *= -1.;
             }
             matrixA.columnIndeces[rowIdx][0] = rowIdx;
             matrixA.values[rowIdx][0] = (vectorC.values[rowIdx] / deltaT) + sum;
@@ -351,10 +351,11 @@ namespace soilFluxes3D::v2::Water
             vectorB.values[rowIdx] = ((vectorC.values[rowIdx] / deltaT) * nodeGrid.waterData.oldPressureHead[rowIdx]) + nodeGrid.waterData.waterFlow[rowIdx] + nodeGrid.waterData.invariantFluxes[rowIdx];
 
             // Preconditioning
-            for(u8_t colIdx = 1; colIdx < matrixA.numColsInRow[rowIdx]; ++colIdx)
-                matrixA.values[rowIdx][colIdx] /= matrixA.values[rowIdx][0];
+            for(u8_t j = 1; j < matrixA.numColsInRow[rowIdx]; ++j)
+                matrixA.values[rowIdx][j] /= matrixA.values[rowIdx][0];
 
             vectorB.values[rowIdx] /= matrixA.values[rowIdx][0];
+            matrixA.values[rowIdx][0] = 1.;
         }
     }
 
