@@ -15,6 +15,7 @@ namespace soilFluxes3D::v2
 
             bool waterMainLoop(double maxTimeStep, double& acceptedTimeStep);
             balanceResult_t waterApproximationLoop(double deltaT);
+            bool checkCourant(double deltaT);
 
             void heatLoop(double timeStepHeat, double timeStepWater);
 

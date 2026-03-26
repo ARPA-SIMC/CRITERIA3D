@@ -171,6 +171,48 @@ namespace soilFluxes3D::v2
     }
 
 
+    bool CPUSolver::checkCourant(double deltaT)
+    {
+        // search maximum Courant number
+        double courantMax = 0;
+        __parforop(_parameters.enableOMP, max, courantMax)
+            for(SF3Duint_t idx = 0; idx < nodeGrid.numNodes; ++idx)
+            courantMax = SF3Dmax(courantMax, nodeGrid.waterData.partialCourantWaterLevels[idx]);
+
+        // more speed, less accuracy
+        if (_parameters.MBRThreshold > 0.01)
+            courantMax *= 0.5;
+
+        nodeGrid.CourantWaterLevel = courantMax;
+
+        // check Courant condition
+        if(nodeGrid.CourantWaterLevel < 1.01 || deltaT <= _parameters.deltaTmin)
+        {
+            return true;
+        }
+
+        // update deltaT
+        {
+            _parameters.deltaTcurr /= nodeGrid.CourantWaterLevel;
+
+            int multiply = 0;
+            while (_parameters.deltaTcurr < 10.)
+            {
+                _parameters.deltaTcurr *= 10.;
+                ++multiply;
+            }
+            _parameters.deltaTcurr = std::floor(_parameters.deltaTcurr);
+
+            for (int i = 0; i < multiply; i++)
+                _parameters.deltaTcurr /= 10.;
+
+            _parameters.deltaTcurr = SF3Dmax(_parameters.deltaTmin, _parameters.deltaTcurr);
+        }
+
+        return false;
+    }
+
+
     balanceResult_t CPUSolver::waterApproximationLoop(double deltaT)
     {
         balanceResult_t balanceResult = balanceResult_t::stepRefused;
@@ -191,36 +233,8 @@ namespace soilFluxes3D::v2
             // compute linear system elements
             computeLinearSystemElement(matrixA, vectorB, vectorC, approxIdx, deltaT, _parameters.lateralVerticalRatio, _parameters.meanType);
 
-            // set max Courant
-            double courantMax = 0;
-            __parforop(_parameters.enableOMP, max, courantMax)
-            for(SF3Duint_t idx = 0; idx < nodeGrid.numNodes; ++idx)
-                courantMax = SF3Dmax(courantMax, nodeGrid.waterData.partialCourantWaterLevels[idx]);
-
-            // more speed, less accuracy
-            if (_parameters.MBRThreshold > 0.01)
-                courantMax *= 0.5;
-
-            nodeGrid.CourantWaterLevel = courantMax;
-
-            // check Courant condition
-            if((nodeGrid.CourantWaterLevel > 1.01) && (deltaT > _parameters.deltaTmin))
+            if (! checkCourant(deltaT))
             {
-                _parameters.deltaTcurr /= nodeGrid.CourantWaterLevel;
-
-                int multiply = 0;
-                while (_parameters.deltaTcurr < 10.)
-                {
-                    _parameters.deltaTcurr *= 10.;
-                    ++multiply;
-                }
-                _parameters.deltaTcurr = std::floor(_parameters.deltaTcurr);
-
-                for (int i = 0; i < multiply; i++)
-                    _parameters.deltaTcurr /= 10.;
-
-                _parameters.deltaTcurr = SF3Dmax(_parameters.deltaTmin, _parameters.deltaTcurr);
-
                 return balanceResult_t::stepHalved;
             }
 
@@ -382,8 +396,6 @@ namespace soilFluxes3D::v2
         for (SF3Duint_t rowIdx = 0; rowIdx < nodeGrid.numNodes; ++rowIdx)
             if(!nodeGrid.surfaceFlag[rowIdx])
                 nodeGrid.heatData.oldTemperature[rowIdx] = nodeGrid.heatData.temperature[rowIdx];
-
-        return;
     }
 
 
@@ -398,7 +410,8 @@ namespace soilFluxes3D::v2
         iterativeParams.max_iterations = maxNrIteration;
         iterativeParams.max_relative_residual_norm = _parameters.residualTolerance;
 
-        //LinealiaPcgAmgParams pcgAmgParams;
+        LinealiaRelaxedPreconditionerParams relPcgParams;
+        LinealiaPcgAmgParams pcgAmgParams;
 
         LinealiaMatrix A;
         A.num_rows = matrixA.numRows;
@@ -413,8 +426,24 @@ namespace soilFluxes3D::v2
         b.values = vectorB.values;
 
         LinealiaLib::instance().solveCG(A, x, b, executionParams, iterativeParams);
+        //LinealiaLib::instance().solvePCG_SOR(A, x, b, executionParams, iterativeParams, relPcgParams);
+        //LinealiaLib::instance().solvePCG_AMG_SOR(A, x, b, executionParams, iterativeParams, pcgAmgParams);
 
-        return true;
+        // check surface potential (must be >= 0)
+        bool isStepValid = true;
+        __parfor(_parameters.enableOMP)
+        for(SF3Duint_t row = 0; row < matrixA.numRows; ++row)
+        {
+            if(nodeGrid.surfaceFlag[row] && x.values[row] < nodeGrid.z[row])
+            {
+                if (x.values[row] < (nodeGrid.z[row]-0.001))
+                    isStepValid = false;
+
+                x.values[row] = nodeGrid.z[row];
+            }
+        }
+
+        return isStepValid;
     }
 
 
