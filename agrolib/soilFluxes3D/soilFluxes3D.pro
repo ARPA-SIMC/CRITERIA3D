@@ -34,9 +34,9 @@ win32:{
 }
 
 SOURCES += \
+    lineal/linealiaLib.cpp \
     cpusolver.cpp \
     heat.cpp \
-    lineal/linealiaLib.cpp \
     otherFunctions.cpp \
     soilFluxes3D.cpp \
     soilPhysics.cpp \
@@ -44,9 +44,10 @@ SOURCES += \
 
 
 HEADERS += \
+    lineal/linealia.hpp \
+    lineal/linealiaLib.h \
     cpusolver.h \
     heat.h \
-    lineal/linealiaLib.h \
     macro.h \
     otherFunctions.h \
     soilFluxes3D.h \
@@ -54,9 +55,7 @@ HEADERS += \
     solver.h \
     types.h \
     types_cpu.h \
-    water.h \
-    ./lineal/linealia.h
-
+    water.h
 
 
 DISTFILES += \

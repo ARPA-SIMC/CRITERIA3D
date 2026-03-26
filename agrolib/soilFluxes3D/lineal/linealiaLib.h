@@ -4,7 +4,7 @@
 #pragma once
 
 #include <QLibrary>
-#include "linealia.h"
+#include "linealia.hpp"
 
 class LinealiaLib {
 public:
