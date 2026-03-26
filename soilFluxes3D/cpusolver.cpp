@@ -9,7 +9,7 @@
 #include "water.h"
 #include "heat.h"
 #include "otherFunctions.h"
-#include "linealia.h"
+#include "linealia.hpp"
 
 using namespace soilFluxes3D::v2::Soil;
 using namespace soilFluxes3D::v2::Water;
@@ -227,7 +227,7 @@ namespace soilFluxes3D::v2
             // solve linear system
             bool isStepValid;
             if (useLineal)
-                isStepValid = linealSolver();
+                isStepValid = linealSolver(approxIdx);
             else
                 isStepValid = solveLinearSystem(approxIdx, processType::Water);
 
@@ -387,12 +387,18 @@ namespace soilFluxes3D::v2
     }
 
 
-    bool CPUSolver::linealSolver()
+    bool CPUSolver::linealSolver(u8_t approximationNr)
     {
+        u32_t maxNrIteration = calcCurrentMaxIterationNumber(approximationNr);
+
         LinealExecutionParams executionParams;
+        executionParams.log = 0;
+
         LinealiaIterativeSolverParams iterativeParams;
-        LinealiaRelaxedParams relaxParams;
-        LinealiaPcgAmgParams pcgAmgParams;
+        iterativeParams.max_iterations = maxNrIteration;
+        iterativeParams.max_relative_residual_norm = _parameters.residualTolerance;
+
+        //LinealiaPcgAmgParams pcgAmgParams;
 
         LinealiaMatrix A;
         A.num_rows = matrixA.numRows;
@@ -406,17 +412,17 @@ namespace soilFluxes3D::v2
         b.num_elements = vectorB.numElements;
         b.values = vectorB.values;
 
-        LinealiaLib::instance().solvePCG_AMG_SSOR(A, x, b, executionParams, iterativeParams, pcgAmgParams);
+        LinealiaLib::instance().solveCG(A, x, b, executionParams, iterativeParams);
 
         return true;
     }
 
 
-    bool CPUSolver::solveLinearSystem(u8_t approximationNumber, processType computationType)
+    bool CPUSolver::solveLinearSystem(u8_t approximationNr, processType computationType)
     {
         double currErrorNorm = 0., bestErrorNorm = 1.;
 
-        u32_t currMaxIterationNum = calcCurrentMaxIterationNumber(approximationNumber);
+        u32_t currMaxIterationNum = calcCurrentMaxIterationNumber(approximationNr);
 
         for(u32_t iterationNumber = 0; iterationNumber < currMaxIterationNum; ++iterationNumber)
         {
