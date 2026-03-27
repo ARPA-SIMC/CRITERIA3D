@@ -2617,6 +2617,8 @@ bool Crit3DProject::loadModelState(QString statePath)
     QDir waterDir(waterPath);
     if (waterDir.exists() && (!isProcessesDefined || isCriteria3DInitialized))
     {
+        processes.setComputeWater(true);
+
         if (! loadWaterPotentialState(waterPath))
         {
             isCriteria3DInitialized = false;
@@ -2625,7 +2627,6 @@ bool Crit3DProject::loadModelState(QString statePath)
         }
 
         totalMassBalanceError = 0.;
-        processes.setComputeWater(true);
     }
 
     //rothC model

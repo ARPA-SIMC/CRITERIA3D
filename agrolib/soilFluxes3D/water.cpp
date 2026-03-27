@@ -313,7 +313,6 @@ namespace soilFluxes3D::v2::Water
 
         SF3Duint_t index = nodeGrid.linkData[linkIndex].linkIndex[nodeIndex];
         double flowArea = nodeGrid.linkData[linkIndex].interfaceArea[nodeIndex];
-        matrixIndex = index;
 
         if (! nodeGrid.surfaceFlag[nodeIndex] && ! nodeGrid.surfaceFlag[index])
             matrixElement = redistribution(nodeIndex, index, lateralVerticalRatio, flowArea, linkType, meanType);
@@ -325,6 +324,8 @@ namespace soilFluxes3D::v2::Water
             matrixElement = infiltration(index, nodeIndex, approxNum, deltaT, flowArea, meanType);
         else
             return false;
+
+        matrixIndex = index;
 
         // heat
         if(simulationFlags.computeHeat && ! nodeGrid.surfaceFlag[nodeIndex] && ! nodeGrid.surfaceFlag[index])
