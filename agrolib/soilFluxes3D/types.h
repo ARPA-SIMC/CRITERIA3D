@@ -148,7 +148,7 @@ namespace soilFluxes3D { inline namespace v2
         double *bestPressureHead = nullptr;   //bestH
 
         //Courant data
-        double *partialCourantWaterLevels = nullptr;
+        double *partialCourantWater = nullptr;
     };
 
     struct culvertData_t
@@ -248,14 +248,15 @@ namespace soilFluxes3D { inline namespace v2
         double *fixedTemperatureDepth = nullptr;    /*!< [m] depth of fixed temperature layer */
     };
 
+
     struct nodesData_t
     {
         bool isInitialized = false;
 
-        SF3Duint_t numNodes = 0;
-        SF3Duint_t numLayers = 0;
+        SF3Duint_t nrNodes = 0;
+        SF3Duint_t nrSurfaceNodes = 0;
 
-        double CourantWaterLevel = 0.;
+        double CourantWater = 0.;
 
         // Topology data
         double *size = nullptr;                             // volume_area

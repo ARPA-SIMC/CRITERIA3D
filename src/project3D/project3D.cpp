@@ -528,7 +528,9 @@ bool Project3D::initialize3DModel()
     logInfo("Lateral boundary computed");
 
     // initialize soil fluxes
-    auto myResult = soilFluxes3D::initializeSF3D(static_cast<soilFluxes3D::SF3Duint_t>(nrNodes), static_cast<soilFluxes3D::u16_t>(nrLayers), nrLateralLink, true, false, false);
+    auto myResult = soilFluxes3D::initializeSF3D(static_cast<soilFluxes3D::SF3Duint_t>(nrNodes),
+                                                 static_cast<soilFluxes3D::SF3Duint_t>(nrSurfaceNodes),
+                                                 nrLateralLink, processes.computeWater, processes.computeHeat, false);
     std::string errorName = "";
     if(soilFluxes3D::getSF3DerrorName(myResult, errorName))
     {

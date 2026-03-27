@@ -27,7 +27,6 @@ namespace soilFluxes3D::v2::Water
 
     void computeCapacity(VectorCPU& vectorC);
 
-    void computeLinearSystemElement(MatrixCPU &matrixA, VectorCPU& vectorB, const VectorCPU& vectorC, u8_t approxNum, double deltaT, double lateralVerticalRatio, meanType_t meanType);
     __cudaSpec bool computeLinkFluxes(double &matrixElement, SF3Duint_t &matrixIndex, SF3Duint_t nodeIndex, u8_t linkIndex, u8_t approxNum, double deltaT, double lateralVerticalRatio, linkType_t linkType, meanType_t meanType);
 
     __cudaSpec double runoff(SF3Duint_t rowIdx, SF3Duint_t colIdx, u8_t approxNum, double deltaT, double flowSide);

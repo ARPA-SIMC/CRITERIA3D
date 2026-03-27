@@ -15,6 +15,11 @@ namespace soilFluxes3D::v2
 
             bool waterMainLoop(double maxTimeStep, double& acceptedTimeStep);
             balanceResult_t waterApproximationLoop(double deltaT);
+
+            bool isLinked(bool& isPrevious, double& matrixElement, SF3Duint_t &matrixIndex, SF3Duint_t nodeIndex, u8_t linkIndex);
+            void computeLinearSystemElement(SF3Duint_t row, u8_t approxNum, double deltaT);
+            void preconditioningMatrix();
+
             bool checkCourant(double deltaT);
 
             void heatLoop(double timeStepHeat, double timeStepWater);
@@ -24,6 +29,7 @@ namespace soilFluxes3D::v2
 
         public:
             CPUSolver() : Solver(solverType::CPU, numericalMethod::Jacobi) {}
+
             __cudaSpec double getMatrixElementValue(SF3Duint_t rowIndex, SF3Duint_t colIndex) const noexcept;
 
             SF3Derror_t initialize() override;

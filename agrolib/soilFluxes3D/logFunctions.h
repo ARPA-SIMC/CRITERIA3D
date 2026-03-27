@@ -175,52 +175,52 @@ namespace soilFluxes3D::v2::Log
         logVector(&(++logsCounter), 1, formatName("logIndex"));
 
         //Topology Data
-        logVector(nodeGrid.size, nodeGrid.numNodes, formatName("size"));
-        logVector(nodeGrid.x, nodeGrid.numNodes, formatName("x"));
-        logVector(nodeGrid.y, nodeGrid.numNodes, formatName("y"));
-        logVector(nodeGrid.z, nodeGrid.numNodes, formatName("z"));
+        logVector(nodeGrid.size, nodeGrid.nrNodes, formatName("size"));
+        logVector(nodeGrid.x, nodeGrid.nrNodes, formatName("x"));
+        logVector(nodeGrid.y, nodeGrid.nrNodes, formatName("y"));
+        logVector(nodeGrid.z, nodeGrid.nrNodes, formatName("z"));
 
         //Soil/surface properties pointers
-        // logVectDoubleGPU(nodeGrid.soilSurfacePointers, soilSurface_ptr, nodeGrid.numNodes);
+        // logVectDoubleGPU(nodeGrid.soilSurfacePointers, soilSurface_ptr, nodeGrid.nrNodes);
 
         //Boundary data
-        // logVectDoubleGPU(nodeGrid.boundaryData.boundaryType, boundaryType_t, nodeGrid.numNodes);
-        logVector(nodeGrid.boundaryData.boundarySlope, nodeGrid.numNodes, formatName("bSlope"));
-        logVector(nodeGrid.boundaryData.boundarySize, nodeGrid.numNodes, formatName("bSize"));
-        logVector(nodeGrid.boundaryData.waterFlowRate, nodeGrid.numNodes, formatName("bWFR"));
-        logVector(nodeGrid.boundaryData.waterFlowSum, nodeGrid.numNodes, formatName("bWFS"));
-        logVector(nodeGrid.boundaryData.prescribedWaterPotential, nodeGrid.numNodes, formatName("bPWP"));
+        // logVectDoubleGPU(nodeGrid.boundaryData.boundaryType, boundaryType_t, nodeGrid.nrNodes);
+        logVector(nodeGrid.boundaryData.boundarySlope, nodeGrid.nrNodes, formatName("bSlope"));
+        logVector(nodeGrid.boundaryData.boundarySize, nodeGrid.nrNodes, formatName("bSize"));
+        logVector(nodeGrid.boundaryData.waterFlowRate, nodeGrid.nrNodes, formatName("bWFR"));
+        logVector(nodeGrid.boundaryData.waterFlowSum, nodeGrid.nrNodes, formatName("bWFS"));
+        logVector(nodeGrid.boundaryData.prescribedWaterPotential, nodeGrid.nrNodes, formatName("bPWP"));
 
         //Link data
-        // logVectDoubleGPU(nodeGrid.numLateralLink, uint8_t, nodeGrid.numNodes);
+        // logVectDoubleGPU(nodeGrid.numLateralLink, uint8_t, nodeGrid.nrNodes);
         for(u8_t idx = 0; idx < 10; ++idx)
         {
             std::string str = std::to_string(idx);
-            // logVectDoubleGPU(nodeGrid.linkData[idx].linktype, linkType_t, nodeGrid.numNodes);
-            // logVectDoubleGPU(nodeGrid.linkData[idx].linkIndex, uint64_t, nodeGrid.numNodes);
-            logVector(nodeGrid.linkData[idx].interfaceArea, nodeGrid.numNodes, formatName(("l" + str + "IA").c_str()));
-            logVector(nodeGrid.linkData[idx].waterFlowSum, nodeGrid.numNodes, formatName(("l" + str + "WFS").c_str()));
+            // logVectDoubleGPU(nodeGrid.linkData[idx].linktype, linkType_t, nodeGrid.nrNodes);
+            // logVectDoubleGPU(nodeGrid.linkData[idx].linkIndex, uint64_t, nodeGrid.nrNodes);
+            logVector(nodeGrid.linkData[idx].interfaceArea, nodeGrid.nrNodes, formatName(("l" + str + "IA").c_str()));
+            logVector(nodeGrid.linkData[idx].waterFlowSum, nodeGrid.nrNodes, formatName(("l" + str + "WFS").c_str()));
         }
 
         //Water data
-        logVector(nodeGrid.waterData.saturationDegree, nodeGrid.numNodes, formatName("wdSA"));
-        logVector(nodeGrid.waterData.waterConductivity, nodeGrid.numNodes, formatName("wdWC"));
-        logVector(nodeGrid.waterData.waterFlow, nodeGrid.numNodes, formatName("wdWF"));
-        logVector(nodeGrid.waterData.pressureHead, nodeGrid.numNodes, formatName("wdPH"));
-        logVector(nodeGrid.waterData.waterSinkSource, nodeGrid.numNodes, formatName("wdWSS"));
-        logVector(nodeGrid.waterData.pond, nodeGrid.numNodes, formatName("wdP"));
-        logVector(nodeGrid.waterData.invariantFluxes, nodeGrid.numNodes, formatName("wdIF"));
-        logVector(nodeGrid.waterData.oldPressureHead, nodeGrid.numNodes, formatName("wdOPH"));
-        logVector(nodeGrid.waterData.bestPressureHead, nodeGrid.numNodes, formatName("wdBPH"));
-        logVector(nodeGrid.waterData.partialCourantWaterLevels, nodeGrid.numNodes, formatName("wdPCWLs"));
-        logVector(&(nodeGrid.CourantWaterLevel), 1, formatName("wdCWL"));
+        logVector(nodeGrid.waterData.saturationDegree, nodeGrid.nrNodes, formatName("wdSA"));
+        logVector(nodeGrid.waterData.waterConductivity, nodeGrid.nrNodes, formatName("wdWC"));
+        logVector(nodeGrid.waterData.waterFlow, nodeGrid.nrNodes, formatName("wdWF"));
+        logVector(nodeGrid.waterData.pressureHead, nodeGrid.nrNodes, formatName("wdPH"));
+        logVector(nodeGrid.waterData.waterSinkSource, nodeGrid.nrNodes, formatName("wdWSS"));
+        logVector(nodeGrid.waterData.pond, nodeGrid.nrNodes, formatName("wdP"));
+        logVector(nodeGrid.waterData.invariantFluxes, nodeGrid.nrNodes, formatName("wdIF"));
+        logVector(nodeGrid.waterData.oldPressureHead, nodeGrid.nrNodes, formatName("wdOPH"));
+        logVector(nodeGrid.waterData.bestPressureHead, nodeGrid.nrNodes, formatName("wdBPH"));
+        logVector(nodeGrid.waterData.partialCourantWater, nodeGrid.nrSurfaceNodes, formatName("wdPCWLs"));
+        logVector(&(nodeGrid.CourantWater), 1, formatName("wdCWL"));
 
-        // logVector(vectBdata, nodeGrid.numNodes, formatName("vectB"));
-        // logVector(vectXdata, nodeGrid.numNodes, formatName("vectX"));
-        // logVector(vectCdata, nodeGrid.numNodes, formatName("vectC"));
+        // logVector(vectBdata, nodeGrid.nrNodes, formatName("vectB"));
+        // logVector(vectXdata, nodeGrid.nrNodes, formatName("vectX"));
+        // logVector(vectCdata, nodeGrid.nrNodes, formatName("vectC"));
 
         // logVector(matrixStruct.d_values, matrixStruct.totValuesSize, formatName("matA_values"));
-        // logVector(matrixStruct.d_diagonalValues, nodeGrid.numNodes, formatName("matA_diagValues"));
+        // logVector(matrixStruct.d_diagonalValues, nodeGrid.nrNodes, formatName("matA_diagValues"));
 
         matClose(binFile);
     }
