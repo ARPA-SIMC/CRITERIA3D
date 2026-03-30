@@ -403,7 +403,7 @@ namespace soilFluxes3D::v2::Water
         switch(nodeGrid.boundaryData.boundaryType[soilNodeIdx])
         {
             case boundaryType_t::Urban:
-                boundaryFactor = 0.1;
+                boundaryFactor = 0.33;
                 break;
             case boundaryType_t::Road:
                 return 0.;
@@ -422,12 +422,12 @@ namespace soilFluxes3D::v2::Water
         double currentFlowRate = nodeGrid.waterData.waterFlow[surfNodeIdx] / nodeGrid.size[surfNodeIdx];    // [m s-1]
 
         double maxInfRate = surfaceWater / deltaT;      // [m s-1]
-        maxInfRate += (approxNum == 0)? currentFlowRate : currentFlowRate * 0.5;
+        maxInfRate += (approxNum == 0)? currentFlowRate: currentFlowRate * 0.5;
 
-        if(maxInfRate < DBL_EPSILON)
+        if(maxInfRate < 1e-12)
             return 0.;
 
-        double dH = surfH - soilH;
+        double dH = SF3Dmax(surfH - soilH, 1e-12);
         double maxK = maxInfRate * (cellDistance / dH);
         double meanK = computeMean(soilData.K_sat, nodeGrid.waterData.waterConductivity[soilNodeIdx], meanType);
 

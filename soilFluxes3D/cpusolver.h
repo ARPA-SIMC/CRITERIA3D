@@ -18,8 +18,10 @@ namespace soilFluxes3D::v2
 
             bool isLinked(bool& isPrevious, double& matrixElement, SF3Duint_t &matrixIndex, SF3Duint_t nodeIndex, u8_t linkIndex);
             void computeLinearSystemElement(SF3Duint_t row, u8_t approxNum, double deltaT);
+            void computeDiagonalElement(SF3Duint_t row, double deltaT);
             void preconditioningMatrix();
 
+            bool checkSurfaceElements(double deltaT);
             bool checkCourant(double deltaT);
 
             void heatLoop(double timeStepHeat, double timeStepWater);

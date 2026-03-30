@@ -171,13 +171,68 @@ namespace soilFluxes3D::v2
     }
 
 
+    bool CPUSolver::checkSurfaceElements(double deltaT)
+    {
+        //__parforop(_parameters.enableOMP, max, courantMax)
+        for(SF3Duint_t index = 0; index <  nodeGrid.nrSurfaceNodes; ++index)
+        {
+            double x = vectorB.values[index];
+            for(u8_t j = 1; j < matrixA.numColsInRow[index]; ++j)
+            {
+                double value = matrixA.values[index][j];
+                if (value != 0.)
+                    x -= value * vectorX.values[matrixA.columnIndeces[index][j]];
+            }
+            x /= matrixA.values[index][0];
+
+            double h = x - nodeGrid.z[index];
+            // avoid negative potentials
+            if(h < -0.0001)
+            {
+                double h0 = vectorX.values[index] - nodeGrid.z[index];
+                double ratio = 0.;
+                if (std::abs(h0) > EPSILON)
+                    ratio = std::max(0., 1. - std::abs(h / h0));
+
+                for(u8_t j = 1; j < matrixA.numColsInRow[index]; ++j)
+                {
+                    double value = matrixA.values[index][j];
+                    if (value != 0.)
+                    {
+                        // reduces water sinks
+                        SF3Duint_t linked = matrixA.columnIndeces[index][j];
+                        if (vectorX.values[linked] < vectorX.values[index])
+                        {
+                            matrixA.values[index][j] = value * ratio;
+
+                            // symmetric value in linked row
+                            for (u8_t k = 1; k < matrixA.numColsInRow[linked]; ++k)
+                            {
+                                if (matrixA.columnIndeces[linked][k] == index)
+                                {
+                                    matrixA.values[linked][k] = matrixA.values[index][j];
+                                    break;
+                                }
+                            }
+                            computeDiagonalElement(linked, deltaT);
+                        }
+                    }
+                }
+                computeDiagonalElement(index, deltaT);
+            }
+        }
+
+        return true;
+    }
+
+
     bool CPUSolver::checkCourant(double deltaT)
     {
         // search maximum Courant number
         double courantMax = 0;
         __parforop(_parameters.enableOMP, max, courantMax)
-        for(SF3Duint_t idx = 0; idx < nodeGrid.nrSurfaceNodes; ++idx)
-            courantMax = SF3Dmax(courantMax, nodeGrid.waterData.partialCourantWater[idx]);
+        for(SF3Duint_t i = 0; i < nodeGrid.nrSurfaceNodes; ++i)
+            courantMax = SF3Dmax(courantMax, nodeGrid.waterData.partialCourantWater[i]);
 
         // more speed, less accuracy
         if (_parameters.MBRThreshold > 0.01)
@@ -253,6 +308,19 @@ namespace soilFluxes3D::v2
     }
 
 
+    void CPUSolver::computeDiagonalElement(SF3Duint_t row, double deltaT)
+    {
+        u8_t nrElements = matrixA.numColsInRow[row];
+        auto& rowValues = matrixA.values[row];
+
+        double sum = 0.;
+        for (size_t col = 1; col < nrElements; ++col)
+            sum += rowValues[col];
+
+        rowValues[0] = (vectorC.values[row] / deltaT) + sum;
+    }
+
+
     void CPUSolver::computeLinearSystemElement(SF3Duint_t row, u8_t approxNum, double deltaT)
     {
         u8_t col = 1;
@@ -283,15 +351,13 @@ namespace soilFluxes3D::v2
 
         matrixA.numColsInRow[row] = col;
 
-        // Compute diagonal element
-        double sum = 0.;
+        // diagonal
+        computeDiagonalElement(row, deltaT);
         for(u8_t col = 1; col < matrixA.numColsInRow[row]; ++col)
         {
-            sum += matrixA.values[row][col];
             matrixA.values[row][col] *= -1.;
         }
         matrixA.columnIndeces[row][0] = row;
-        matrixA.values[row][0] = (vectorC.values[row] / deltaT) + sum;
 
         // Compute b element
         vectorB.values[row] = ((vectorC.values[row] / deltaT) * nodeGrid.waterData.oldPressureHead[row])
@@ -327,9 +393,10 @@ namespace soilFluxes3D::v2
 
                 if (! checkCourant(deltaT))
                 {
-                    // Courant failed
+                    // Courant condition is failed: reduces time step
                     return balanceResult_t::stepHalved;
                 }
+                checkSurfaceElements(deltaT);
 
                 // soil elements
                 __parfor(_parameters.enableOMP)
@@ -535,12 +602,14 @@ namespace soilFluxes3D::v2
 
         // check surface potential (must be >= 0)
         bool isStepValid = true;
-        __parfor(_parameters.enableOMP)
+        #pragma omp parallel for reduction(&&:isStepValid) if(_parameters.enableOMP)
         for(SF3Duint_t row = 0; row < nodeGrid.nrSurfaceNodes; ++row)
         {
-            if(nodeGrid.surfaceFlag[row] && x.values[row] < nodeGrid.z[row])
+            double diff = nodeGrid.z[row] - x.values[row];
+            if (diff > 0)
             {
-                if (x.values[row] < (nodeGrid.z[row]-0.001))
+                if (diff > 1e-3)
+                    // error is too high
                     isStepValid = false;
 
                 x.values[row] = nodeGrid.z[row];
