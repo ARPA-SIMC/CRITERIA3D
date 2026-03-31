@@ -239,7 +239,7 @@ void Crit3DOpenGLWidget::initializeGL()
 
 void Crit3DOpenGLWidget::paintGL()
 {
-    //glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     m_camera.setToIdentity();
     m_camera.translate(0, 0, -m_zoom);

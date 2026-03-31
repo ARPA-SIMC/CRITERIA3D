@@ -251,7 +251,7 @@ namespace soilFluxes3D::v2
             _parameters.deltaTcurr /= nodeGrid.CourantWater;
 
             int multiply = 0;
-            while (_parameters.deltaTcurr < 10.)
+            while (_parameters.deltaTcurr < 1.)
             {
                 _parameters.deltaTcurr *= 10.;
                 ++multiply;
