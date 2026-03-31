@@ -21,7 +21,7 @@ namespace soilFluxes3D::v2::Soil
 {
 
     /*!
-     * \brief Computes nodeIndex node volumetric water content as function of the node degree of saturation
+     * \brief Computes node volumetric water content as function of the node degree of saturation
      * \return theta (volumetric water content)     [m3 m-3]
      */
     __cudaSpec double computeNodeTheta(SF3Duint_t nodeIndex)
@@ -33,7 +33,7 @@ namespace soilFluxes3D::v2::Soil
     }
 
     /*!
-     * \brief Computes nodeIndex node volumetric water content as function of degree of saturation
+     * \brief Computes node volumetric water content as function of degree of saturation
      * \return theta (volumetric water content)     [m3 m-3]
      */
     __cudaSpec double computeNodeTheta_fromSe(SF3Duint_t nodeIndex, double Se)
@@ -44,7 +44,7 @@ namespace soilFluxes3D::v2::Soil
 
 
     /*!
-     * \brief Computes nodeIndex node volumetric water content as function of signed water potential
+     * \brief Computes node volumetric water content as function of signed water potential
      * \param signedPsi (signed water potential)    [m]
      * \return theta (volumetric water content)     [m3 m-3]
      */
@@ -61,8 +61,9 @@ namespace soilFluxes3D::v2::Soil
         return computeNodeTheta_fromSe(nodeIndex, computeNodeSe_fromPsi(nodeIndex, std::fabs(signedPsi)));
     }
 
+
     /*!
-     * \brief Computes nodeIndex node degree of saturation as function of the node matric potential
+     * \brief Computes node degree of saturation as function of the node matric potential
      * \return Se (degree of saturation)     [-]
      */
     __cudaSpec double computeNodeSe(SF3Duint_t nodeIndex)
@@ -70,6 +71,7 @@ namespace soilFluxes3D::v2::Soil
         bool isSaturated = nodeGrid.waterData.pressureHead[nodeIndex] >= nodeGrid.z[nodeIndex];
         return isSaturated ? 1. : computeNodeSe_unsat(nodeIndex);
     }
+
 
     /*!
      * \brief Computes unsaturated nodeIndex node degree of saturation as function of the node matric potential
@@ -81,30 +83,41 @@ namespace soilFluxes3D::v2::Soil
         return computeNodeSe_fromPsi(nodeIndex, nodePsi);
     }
 
+
     /*!
-     * \brief Computes unsaturated nodeIndex node degree of saturation as function of matric potential
-     * \param psi (matric potential)        [m]
+     * \brief Computes unsaturated node degree of saturation as function of matric potential
+     * \param psi (matric potential)        [m] (positive values)
      * \return Se (degree of saturation)    [-]
      */
     __cudaSpec double computeNodeSe_fromPsi(SF3Duint_t nodeIndex, double psi)
     {
-        soilData_t& nodeSoil = *(nodeGrid.soilSurfacePointers[nodeIndex].soilPtr);
-        WRCModel model = solver->getWRCModel();
-        switch(model)
+        soilData_t& soil = *(nodeGrid.soilSurfacePointers[nodeIndex].soilPtr);
+        const WRCModel model = solver->getWRCModel();
+
+        // local cache
+        const double alpha = soil.VG_alpha;
+        const double n     = soil.VG_n;
+        const double m     = soil.VG_m;
+
+        switch (model)
         {
-            case WRCModel::VanGenuchten:
-                return std::pow(1. + std::pow(nodeSoil.VG_alpha * psi, nodeSoil.VG_n), -nodeSoil.VG_m);
-                break;
-            case WRCModel::ModifiedVanGenuchten:
-                return (psi <= nodeSoil.VG_he) ? 1. : std::pow(1. + std::pow(nodeSoil.VG_alpha * psi, nodeSoil.VG_n), -nodeSoil.VG_m) * (1. / nodeSoil.VG_Sc);
-                break;
-            default:
-                return noDataD;
+        case WRCModel::VanGenuchten:
+            return std::pow(1.0 + std::pow(alpha * psi, n), -m);
+
+        case WRCModel::ModifiedVanGenuchten:
+            if (psi <= soil.VG_he)
+                return 1.0;
+            else
+                return std::pow(1.0 + std::pow(alpha * psi, n), -m) * (1.0 / soil.VG_Sc);
+
+        default:
+            return noDataD;
         }
     }
 
+
     /*!
-     * \brief Computes nodeIndex node degree of saturation as a function of input volumetric water content
+     * \brief Computes node degree of saturation as a function of input volumetric water content
      * \param theta (volumetric water content)      [m3 m-3]
      * \return Se (degree of saturation)     [-]
      */
@@ -122,7 +135,7 @@ namespace soilFluxes3D::v2::Soil
     }
 
     /*!
-     * \brief Computes nodeIndex node water potential as a function of node degree of saturation
+     * \brief Computes node water potential as a function of node degree of saturation
      * \return psi (water potential)     [m]
      */
     __cudaSpec double computeNodePsi(SF3Duint_t nodeIndex)
@@ -146,7 +159,7 @@ namespace soilFluxes3D::v2::Soil
     }
 
     /*!
-     * \brief Computes nodeIndex node soil water total (liquid + vapor) conductivity
+     * \brief Computes node soil water total (liquid + vapor) conductivity
      * \return K (water conductivity)   [m s-1]
      */
     __cudaSpec double computeNodeK(SF3Duint_t nodeIndex)
@@ -159,35 +172,48 @@ namespace soilFluxes3D::v2::Soil
         return k;
     }
 
+
     /*!
      * \brief Computes hydraulic conductivity as function of soil parameters and degree of saturation
      * \details K(Se) = Ksat * Se^L * {1 - [1 - Se^(1/m)]^m}^2
      * \warning very low values are possible (as e-12)
      * \return K (hydraulic conductivity)   [m s-1]
      */
-    __cudaSpec double computeMualemSoilConductivity(soilData_t &soilData, double Se)
+    __cudaSpec double computeMualemSoilConductivity(const soilData_t &soil, double Se)
     {
-        if(Se >= 1.)
-            return soilData.K_sat;
+        if (Se >= 1.0)
+            return soil.K_sat;
 
-        double temp, tNum, tDen;
+        double inv_m = 1.0 / soil.VG_m;
+        double temp;
+
         WRCModel model = solver->getWRCModel();
-        switch(model)
+        switch (model)
         {
             case WRCModel::VanGenuchten:
-                temp = 1. - std::pow(1. - std::pow(Se, 1. / soilData.VG_m), soilData.VG_m);
+            {
+                double Se_pow = std::pow(Se, inv_m);
+                temp = 1.0 - std::pow(1.0 - Se_pow, soil.VG_m);
                 break;
+            }
             case WRCModel::ModifiedVanGenuchten:
-                tNum = 1. - std::pow(1. - std::pow(Se * soilData.VG_Sc, 1. / soilData.VG_m), soilData.VG_m);
-                tDen = 1. - std::pow(1. - std::pow(soilData.VG_Sc, 1. / soilData.VG_m), soilData.VG_m);
+            {
+                double SeSc_pow = std::pow(Se * soil.VG_Sc, inv_m);
+                double Sc_pow   = std::pow(soil.VG_Sc, inv_m);
+
+                double tNum = 1.0 - std::pow(1.0 - SeSc_pow, soil.VG_m);
+                double tDen = 1.0 - std::pow(1.0 - Sc_pow, soil.VG_m);
+
                 temp = tNum / tDen;
                 break;
+            }
             default:
                 return noDataD;
         }
 
-        return soilData.K_sat * std::pow(Se, soilData.Mualem_L) * std::pow(temp, 2.);
+        return soil.K_sat * std::pow(Se, soil.Mualem_L) * (temp * temp);
     }
+
 
     /*!
      * \brief Compute the derivative of water volumetric content respect to the water potential
@@ -196,44 +222,63 @@ namespace soilFluxes3D::v2::Soil
      *                  and dSe/dH = -sgn(H-z) * alpha * n * m * (1 / Sc) * [1 + (alpha * |H - z|)^n]^(-m-1) * (alpha * |H-z|)^(n-1)    if Modified VanGenuchten
      * \return dTheta/dH    [m-1]
      */
-    __cudaSpec double computeNodedThetadH(SF3Duint_t nodeIndex)
+    __cudaSpec double computeNode_dTheta_dH(SF3Duint_t nodeIndex)
     {
-        soilData_t& nodeSoil = *(nodeGrid.soilSurfacePointers[nodeIndex].soilPtr);
+        soilData_t& soil = *(nodeGrid.soilSurfacePointers[nodeIndex].soilPtr);
 
-        double psiCurr = std::fabs(SF3Dmin(0., nodeGrid.waterData.pressureHead[nodeIndex] - nodeGrid.z[nodeIndex]));
-        double psiPrev = std::fabs(SF3Dmin(0., nodeGrid.waterData.oldPressureHead[nodeIndex] - nodeGrid.z[nodeIndex]));
+        // local cache
+        const double pressure    = nodeGrid.waterData.pressureHead[nodeIndex];
+        const double oldPressure = nodeGrid.waterData.oldPressureHead[nodeIndex];
+        const double z           = nodeGrid.z[nodeIndex];
 
-        WRCModel model = solver->getWRCModel();
-        switch(model)
+        // positive values of psi
+        const double psiCurr = std::fabs(SF3Dmin(0.0, pressure - z));
+        const double psiPrev = std::fabs(SF3Dmin(0.0, oldPressure - z));
+
+        const WRCModel model = solver->getWRCModel();
+
+        // saturated
+        if (model == WRCModel::VanGenuchten)
         {
-            case WRCModel::VanGenuchten:
-                if((psiCurr == 0.) && (psiPrev == 0.))
-                    return 0.;
-                break;
-            case WRCModel::ModifiedVanGenuchten:
-                if((psiCurr <= nodeSoil.VG_he) && (psiPrev <= nodeSoil.VG_he))
-                    return 0.;
-                break;
-            default:
-                break;
+            if (psiCurr == 0.0 && psiPrev == 0.0)
+                return 0.0;
+        }
+        else if (model == WRCModel::ModifiedVanGenuchten)
+        {
+            if (psiCurr <= soil.VG_he && psiPrev <= soil.VG_he)
+                return 0.0;
         }
 
-        double dSedH;
-        if(psiCurr == psiPrev)
+        double dSe_dH;
+
+        // same value
+        if (std::fabs(psiCurr - psiPrev) < 1e-12)
         {
-            dSedH = nodeSoil.VG_alpha * nodeSoil.VG_n * nodeSoil.VG_m * std::pow(1. + std::pow(nodeSoil.VG_alpha * psiCurr, nodeSoil.VG_n), -(nodeSoil.VG_m + 1.)) * std::pow(nodeSoil.VG_alpha * psiCurr, nodeSoil.VG_n - 1.);
-            if(model == WRCModel::ModifiedVanGenuchten)
-                dSedH *= (1. / nodeSoil.VG_Sc);
+            const double n = soil.VG_n;
+            const double x = soil.VG_alpha * psiCurr;
+
+            const double x_pow_n = std::pow(x, n);
+            const double one_plus = 1. + x_pow_n;
+
+            const double term1 = std::pow(one_plus, -(soil.VG_m + 1.));
+            const double term2 = std::pow(x, n - 1.);
+
+            dSe_dH = soil.VG_alpha * n * soil.VG_m * term1 * term2;
+
+            if (model == WRCModel::ModifiedVanGenuchten)
+                dSe_dH *= (1. / soil.VG_Sc);
         }
         else
         {
-            double thetaCurr = computeNodeSe_fromPsi(nodeIndex, psiCurr);
-            double thetaPrev = computeNodeSe_fromPsi(nodeIndex, psiPrev);
-            dSedH = std::fabs((thetaCurr - thetaPrev) / (nodeGrid.waterData.pressureHead[nodeIndex] - nodeGrid.waterData.oldPressureHead[nodeIndex]));
+            const double thetaCurr = computeNodeSe_fromPsi(nodeIndex, psiCurr);
+            const double thetaPrev = computeNodeSe_fromPsi(nodeIndex, psiPrev);
+
+            dSe_dH = std::fabs((thetaCurr - thetaPrev) / (pressure - oldPressure));
         }
 
-        return dSedH * (nodeSoil.Theta_s - nodeSoil.Theta_r);
+        return dSe_dH * (soil.Theta_s - soil.Theta_r);
     }
+
 
     /*!
      * \brief Compute the derivative of the vapor volumetric content respect to the water potential

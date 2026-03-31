@@ -5,8 +5,11 @@
 
 namespace soilFluxes3D { inline namespace v2
 {
-    //Inizializazion and memory management
-    SF3Derror_t initializeSF3D(SF3Duint_t nrNodes, u16_t nrLayers, u8_t nrLateralLinks, bool isComputeWater, bool isComputeHeat, bool isComputeSolutes, heatFluxSaveMode_t HFsm = heatFluxSaveMode_t::None);
+    // Initialization and memory management
+    SF3Derror_t initializeSF3D(SF3Duint_t nrNodes, SF3Duint_t nrSurfaceNodes, u8_t nrLateralLinks,
+                           bool isComputeWater, bool isComputeHeat, bool isComputeSolutes,
+                           heatFluxSaveMode_t HFsm = heatFluxSaveMode_t::None);
+
     SF3Derror_t initializeBalance();
     SF3Derror_t initializeLog(const std::string& logPath, const std::string& projectName);
 
@@ -16,6 +19,7 @@ namespace soilFluxes3D { inline namespace v2
     SF3Derror_t initializeHeatFlag(heatFluxSaveMode_t saveModeHeat, bool isComputeAdvectiveFlux, bool isComputeLatentHeat);
 
     u32_t setThreadsNumber(u32_t nrThreads);
+    void setUseLineal(bool value);
 
     //Create types
     SF3Derror_t setSoilProperties(u16_t nrSoil, u8_t nrHorizon, double VG_alpha, double VG_n, double VG_m,
@@ -42,9 +46,9 @@ namespace soilFluxes3D { inline namespace v2
     SF3Derror_t setNodeWaterContent(SF3Duint_t nodeIndex, double waterContent);
     SF3Derror_t setNodeDegreeOfSaturation(SF3Duint_t nodeIndex, double degreeOfSaturation);
     SF3Derror_t setNodeMatricPotential(SF3Duint_t nodeIndex, double matricPotential);
-    /*not used*/ SF3Derror_t setNodeTotalPotential(SF3Duint_t nodeIndex, double totalPotential);
+    SF3Derror_t setNodeTotalPotential(SF3Duint_t nodeIndex, double totalPotential);
     SF3Derror_t setNodeWaterSinkSource(SF3Duint_t nodeIndex, double waterSinkSource);
-    /*not used*/ SF3Derror_t setNodePrescribedTotalPotential(SF3Duint_t nodeIndex, double prescribedTotalPotential);
+    SF3Derror_t setNodePrescribedTotalPotential(SF3Duint_t nodeIndex, double prescribedTotalPotential);
 
     //Get water data
     double getNodeWaterContent(SF3Duint_t nodeIndex);
@@ -52,16 +56,15 @@ namespace soilFluxes3D { inline namespace v2
     double getNodeAvailableWaterContent(SF3Duint_t nodeIndex);
     double getNodeWaterDeficit(SF3Duint_t nodeIndex, double fieldCapacity);
     double getNodeDegreeOfSaturation(SF3Duint_t nodeIndex);
-    /*not used*/ double getNodeWaterConductivity(SF3Duint_t nodeIndex);
+    double getNodeWaterConductivity(SF3Duint_t nodeIndex);
     double getNodeMatricPotential(SF3Duint_t nodeIndex);
     double getNodeTotalPotential(SF3Duint_t nodeIndex);
     double getNodePond(SF3Duint_t nodeIndex);
-    /*not used*/ double getNodeMaxWaterFlow(SF3Duint_t nodeIndex, linkType_t linkDirection);
-    /*not used*/ double getNodeSumLateralWaterFlow(SF3Duint_t nodeIndex);
+    double getNodeMaxWaterFlow(SF3Duint_t nodeIndex, linkType_t linkDirection);
+    double getNodeSumLateralWaterFlow(SF3Duint_t nodeIndex);
     double getNodeSumLateralWaterFlowIn(SF3Duint_t nodeIndex);
     double getNodeSumLateralWaterFlowOut(SF3Duint_t nodeIndex);
     double getNodeBoundaryWaterFlow(SF3Duint_t nodeIndex);
-
     double getTotalBoundaryWaterFlow(boundaryType_t boundaryType);
     double getTotalWaterContent();
     double getWaterStorage();

@@ -28,7 +28,7 @@ bool loadWaterTableLocationCsv(const QString &csvFileName, std::vector<Well> &we
     QList<QString> headerItems = line.split(",");
     if (headerItems.size() != nrRequiredFields)
     {
-        errorStr = "Wrong data! Required ID, utmX, utmY or ID, lat, lon.";
+        errorStr = "Wrong data! Required [ID, utmX, utmY] or [ID, lat, lon]";
         return false;
     }
     if (headerItems[1].toUpper() == "LAT")
@@ -154,11 +154,11 @@ bool loadWaterTableDepthCsv(const QString &csvFileName, std::vector<Well> &wellL
         QList<QString> headerItems = line.split(",");
         if (headerItems.size() != nrRequiredFields)
         {
-            errorStr = "Wrong data! Required well ID, date, depth.";
+            errorStr = "Wrong data! Required [ID, date, depth].";
             return false;
         }
 
-        while (!in.atEnd())
+        while (! in.atEnd())
         {
             line = in.readLine();
             QList<QString> items = line.split(",");
@@ -216,6 +216,8 @@ bool loadWaterTableDepthCsv(const QString &csvFileName, std::vector<Well> &wellL
     if (validLines == 0)
     {
         errorStr = "Wrong water table depth:\n" + csvFileName;
+        errorStr += "\nThe separator must be a comma.";
+        errorStr += "\nThe date format must be yyyy-mm-dd.";
         return false;
     }
 
