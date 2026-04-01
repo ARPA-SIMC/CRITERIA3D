@@ -52,7 +52,7 @@ DialogWaterFluxesSettings::DialogWaterFluxesSettings()
     layoutDepth->addWidget(imposedComputationDepthEdit, 2, 1);
     depthGroupBox->setLayout(layoutDepth);
 
-    // boundary consitions
+    // boundary conditions
     QGroupBox* boundaryGroupBox = new QGroupBox("Boundary conditions");
     freeCatchmentRunoffBox = new QCheckBox("Free catchment runoff");
     freeLateralDrainageBox = new QCheckBox("Free lateral drainage");
@@ -80,6 +80,9 @@ DialogWaterFluxesSettings::DialogWaterFluxesSettings()
 
     QGroupBox* soilGroupBox = new QGroupBox("Soil properties");
     soilGroupBox->setLayout(soilLayout);
+
+    // numerical solution
+
 
     // model accuracy
     _isUpdateAccuracy = false;

@@ -10,21 +10,31 @@
     class DialogWaterFluxesSettings : public QDialog
     {
     private:
+        // initial conditions
         QLineEdit *initialWaterPotentialEdit;
         QLineEdit *initialDegreeOfSaturationEdit;
-        QLineEdit *imposedComputationDepthEdit;
-        QLineEdit *conductivityHVRatioEdit;
-        QLineEdit *threadsNumberEdit;
 
+        // soil depth
         QRadioButton *onlySurfaceButton;
         QRadioButton *allSoilDepthButton;
         QRadioButton *imposedDepthButton;
-        QRadioButton *useWaterRetentionFitting;
+        QLineEdit *imposedComputationDepthEdit;
 
+        // soil properties
+        QRadioButton *useWaterRetentionFitting;
+        QLineEdit *conductivityHVRatioEdit;
+
+        // boundary conditions
         QCheckBox *freeCatchmentRunoffBox;
         QCheckBox *freeLateralDrainageBox;
         QCheckBox *freeBottomDrainageBox;
 
+        // numerical solution
+        QCheckBox *useLineal;
+        QRadioButton *conjugateGradient;
+        QRadioButton *pgc_sor;
+        QRadioButton *pcg_amg_sor;
+        QLineEdit *threadsNumberEdit;
         bool _isUpdateAccuracy;
 
     private slots :
@@ -39,6 +49,14 @@
         QSlider *accuracySlider;
 
         DialogWaterFluxesSettings();
+
+        void setUseLineal(bool value)
+        {
+            useLineal->setChecked(value);
+            conjugateGradient->setVisible(value);
+            pgc_sor->setVisible(value);
+            pcg_amg_sor->setVisible(value);
+        }
 
         int getThreadsNumber() const
         { return threadsNumberEdit->text().toInt(); }

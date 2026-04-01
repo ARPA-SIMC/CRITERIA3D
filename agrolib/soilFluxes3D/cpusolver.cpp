@@ -273,11 +273,32 @@ namespace soilFluxes3D::v2
         __parfor(_parameters.enableOMP)
         for (SF3Duint_t row = 0; row < matrixA.numRows; ++row)
         {
-            for(u8_t col = 1; col < matrixA.numColsInRow[row]; ++col)
-                matrixA.values[row][col] /= matrixA.values[row][0];
+            auto& rowValues = matrixA.values[row];
+            const u8_t nrCols = matrixA.numColsInRow[row];
+            const double invDiag = 1.0 / matrixA.values[row][0];
 
-            vectorB.values[row] /= matrixA.values[row][0];
-            matrixA.values[row][0] = 1.;
+            // Normalize off-diagonal elements
+            u8_t nrLinkedFluxes = 0;
+            for(u8_t col = 1; col < nrCols; ++col)
+            {
+                if (rowValues[col] != 0.0)
+                {
+                    rowValues[col] *= invDiag;
+                    ++nrLinkedFluxes;
+                }
+            }
+
+            // normalize RHS
+            vectorB.values[row] *= invDiag;
+
+            // set diagonal to 1
+            rowValues[0] = 1.0;
+
+            // handle isolated node (only diagonal term)
+            if (nrLinkedFluxes == 0)
+            {
+                vectorX.values[row] = vectorB.values[row];
+            }
         }
     }
 
@@ -396,7 +417,7 @@ namespace soilFluxes3D::v2
                     // Courant condition is failed: reduces time step
                     return balanceResult_t::stepHalved;
                 }
-                checkSurfaceElements(deltaT);
+                //checkSurfaceElements(deltaT);
 
                 // soil elements
                 __parfor(_parameters.enableOMP)
@@ -603,16 +624,18 @@ namespace soilFluxes3D::v2
         // check surface potential (must be >= 0)
         bool isStepValid = true;
         #pragma omp parallel for reduction(&&:isStepValid) if(_parameters.enableOMP)
-        for(SF3Duint_t row = 0; row < nodeGrid.nrSurfaceNodes; ++row)
+        for (SF3Duint_t row = 0; row < nodeGrid.nrSurfaceNodes; ++row)
         {
-            double diff = nodeGrid.z[row] - x.values[row];
-            if (diff > 0)
+            double& xVal = x.values[row];
+            const double zVal = nodeGrid.z[row];
+            const double diff = zVal - xVal;
+
+            if (diff > 0.)
             {
                 if (diff > 1e-3)
-                    // error is too high
                     isStepValid = false;
 
-                x.values[row] = nodeGrid.z[row];
+                xVal = zVal;
             }
         }
 
