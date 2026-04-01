@@ -81,6 +81,8 @@ int main(int argc, char *argv[])
     myProject.isLinealFound = LinealiaLib::instance().load();
     if (myProject.isLinealFound)
         myProject.logInfo("Use Lineal: TRUE");
+    else
+        myProject.logInfo("Warning: lineal library NOT found.");
 
     if (myProject.modality == MODE_GUI)
     {

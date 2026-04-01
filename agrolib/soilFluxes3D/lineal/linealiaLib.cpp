@@ -1,5 +1,6 @@
 #include "linealiaLib.h"
 #include <QDebug>
+#include <iostream>
 
 LinealiaLib& LinealiaLib::instance() {
     static LinealiaLib instance;
@@ -15,7 +16,7 @@ bool LinealiaLib::load() {
 
     if (!lib.load())
     {
-        qDebug() << "Error in loading Lineal dll:" << lib.errorString();
+        std::cout << "Error in loading Lineal dll: " << lib.errorString().toStdString() << std::endl;
         return false;
     }
 
