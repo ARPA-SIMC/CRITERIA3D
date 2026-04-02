@@ -297,7 +297,8 @@ static long int validate ( struct SolPosData *pdat)
   /*!  No absurd dates, please. */
   if ( pdat->function & L_GEOM )
   {
-    if ( (pdat->year < 1950) || (pdat->year > 2050) ) /*!<  limits of algoritm */
+    // FT modified: original was 2050
+    if ( (pdat->year < 1950) || (pdat->year > 2100) ) /*!<  limits of algoritm */
       retval |= (1L << S_YEAR_ERROR);
     if ( !(pdat->function & S_DOY) && ((pdat->month < 1) || (pdat->month > 12)))
       retval |= (1L << S_MONTH_ERROR);
