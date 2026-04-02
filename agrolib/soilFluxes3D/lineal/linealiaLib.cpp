@@ -16,7 +16,7 @@ bool LinealiaLib::load() {
 
     if (!lib.load())
     {
-        std::cout << "Error in loading Lineal dll: " << lib.errorString().toStdString() << std::endl;
+        //std::cout << "Error in loading Lineal dll: " << lib.errorString().toStdString() << std::endl;
         return false;
     }
 
