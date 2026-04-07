@@ -1755,7 +1755,7 @@ namespace soilFluxes3D::v2
                 dtHeat = std::min(dtHeat, dtWater - dtHeatAccumulator);
 
                 double reducedTimeStep;
-                while(!updateBoundaryHeatData(dtHeat, reducedTimeStep))
+                while(! updateBoundaryHeatData(dtHeat, reducedTimeStep))
                     dtHeat = reducedTimeStep;
 
                 solver->run(dtHeat, dtWater, processType::Heat);

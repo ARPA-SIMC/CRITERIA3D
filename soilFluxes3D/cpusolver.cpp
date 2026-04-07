@@ -519,12 +519,12 @@ namespace soilFluxes3D::v2
             u8_t linkIdx = 1;
             bool isLinked = false;
 
-            //Compute flox up
+            //Compute flux up
             isLinked = computeHeatLinkFluxes(matrixA.values[rowIdx][linkIdx], matrixA.columnIndeces[rowIdx][linkIdx], rowIdx, 0, timeStepHeat, timeStepWater);
             if(isLinked)
                 linkIdx++;
 
-            //Compute flox down
+            //Compute flux down
             isLinked = computeHeatLinkFluxes(matrixA.values[rowIdx][linkIdx], matrixA.columnIndeces[rowIdx][linkIdx], rowIdx, 1, timeStepHeat, timeStepWater);
             if(isLinked)
                 linkIdx++;
@@ -666,7 +666,7 @@ namespace soilFluxes3D::v2
             if(currErrorNorm < _parameters.residualTolerance)
                 break;
 
-            if(currErrorNorm > (bestErrorNorm * 10))
+            if(computationType == processType::Water && currErrorNorm > (bestErrorNorm * 10))
                 return false;
 
             if(currErrorNorm < bestErrorNorm)

@@ -370,24 +370,30 @@ namespace soilFluxes3D::v2::Heat
         return heatSinkSource;
     }
 
+
     void evaluateHeatBalance(double dtHeat, double dtWater)
     {
+        __cudaMngd balanceData_t currentHeatBalance;
+
         //Heat sink/source
         double heatSinkSource = computeCurrentHeatSinkSource(dtHeat);
-        balanceDataCurrentTimeStep.heatSinkSource = heatSinkSource;
+        currentHeatBalance.heatSinkSource = heatSinkSource;
 
         //Heat storage
         double heatStorage = computeCurrentHeatStorage(dtWater, dtHeat);
-        balanceDataCurrentTimeStep.heatStorage = heatStorage;
+        currentHeatBalance.heatStorage = heatStorage;
 
         //Heat MBE
-        double deltaHeatStorage = balanceDataCurrentTimeStep.heatStorage - balanceDataPreviousTimeStep.heatStorage;
-        balanceDataCurrentTimeStep.heatMBE = deltaHeatStorage - balanceDataCurrentTimeStep.heatSinkSource;
+        double deltaHeatStorage = currentHeatBalance.heatStorage - balanceDataPreviousTimeStep.heatStorage;
+        currentHeatBalance.heatMBE = deltaHeatStorage - currentHeatBalance.heatSinkSource;
 
-        //Heat MBR
-        double referenceHeat = SF3Dmax(1., std::fabs(balanceDataCurrentTimeStep.heatSinkSource));
-        balanceDataCurrentTimeStep.heatMBR = balanceDataCurrentTimeStep.heatMBE / referenceHeat;
+        //Heat MBR (minimum 1 Joule)
+        double referenceHeat = SF3Dmax(1., std::fabs(currentHeatBalance.heatSinkSource));
+        currentHeatBalance.heatMBR = currentHeatBalance.heatMBE / referenceHeat;
+
+        balanceDataCurrentTimeStep = currentHeatBalance;
     }
+
 
     void updateHeatBalanceData()
     {
