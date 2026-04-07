@@ -2756,7 +2756,6 @@ bool Crit3DMeteoWidget::computeTooltipLineSeries(QLineSeries *series, QPointF po
                     return false;
                 }
             }
-
         }
 
         if (_currentFrequency == daily)
