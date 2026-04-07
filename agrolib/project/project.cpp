@@ -2538,7 +2538,6 @@ bool Project::loadGlocalWeightMaps(std::vector<Crit3DMacroArea> &myAreas, bool i
         }
 
         //se  griglia, fai resampling del file
-        gis::Crit3DRasterGrid *newMacroAreasGrid = new gis::Crit3DRasterGrid();
         if (isGrid)
         {
             for (unsigned row = 0; row < unsigned(meteoGridDbHandler->gridStructure().header().nrRows); row++)
@@ -2548,10 +2547,8 @@ bool Project::loadGlocalWeightMaps(std::vector<Crit3DMacroArea> &myAreas, bool i
                             meteoGridDbHandler->meteoGrid()->meteoPoints()[row][col]->glocalWeights.resize(myAreas.size());
                         }
 
-            meteoGridDbHandler->meteoGrid()->assignGridGlocalWeightValues(macroAreasGrid, i);
-            //
+            meteoGridDbHandler->meteoGrid()->assignGridGlocalWeightValues(macroAreasGrid, (int)i);
         }
-
 
         for (int row = 0; row < nrRows; row++)
         {
@@ -2561,14 +2558,12 @@ bool Project::loadGlocalWeightMaps(std::vector<Crit3DMacroArea> &myAreas, bool i
                 {
                     if (meteoGridDbHandler->meteoGrid()->meteoPoints()[row][col]->active)
                         myValue = meteoGridDbHandler->meteoGrid()->meteoPoints()[row][col]->glocalWeights[i];
-
                 }
                 else
                 {
                     DEM.getXY(row, col, myX, myY);
                     myValue = macroAreasGrid->getValueFromXY(myX, myY); //solo per dem
                 }
-
 
                 if (! isEqual(myValue, NODATA) && ! isEqual(myValue, 0))
                 {
@@ -2577,7 +2572,6 @@ bool Project::loadGlocalWeightMaps(std::vector<Crit3DMacroArea> &myAreas, bool i
                 }
             }
         }
-
 
         if (areaCells.size() > 0)
             nrAreasWithCells++;
@@ -2599,6 +2593,7 @@ bool Project::loadGlocalWeightMaps(std::vector<Crit3DMacroArea> &myAreas, bool i
 
     return true;
 }
+
 
 bool Project::loadGlocalStationsCsv(QString fileName, std::vector<std::vector<std::string>> &areaPoints)
 {
@@ -6490,6 +6485,7 @@ bool Project::showMeteoWidgetMultiplePoints()
 
     return true;
 }
+
 
 bool Project::getProjectList(QList<QString> &projectList)
 {

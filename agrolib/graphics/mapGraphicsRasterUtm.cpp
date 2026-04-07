@@ -31,6 +31,7 @@
 #include "basicMath.h"
 #include "color.h"
 #include "geoMap.h"
+#include "gis.h"
 
 #include <math.h>
 #include <QMenu>
@@ -234,24 +235,34 @@ bool RasterUtmObject::getCurrentWindow(gis::Crit3DRasterWindow* rasterWindow)
 
     // get current view extent
     gis::Crit3DUtmPoint bottomleft, topRight;
-    gis::getUtmFromLatLon(_utmZone, this->_geoMap->bottomLeft, &bottomleft);
-    gis::getUtmFromLatLon(_utmZone, this->_geoMap->topRight, &topRight);
+    gis::getUtmFromLatLon(_utmZone, _geoMap->bottomLeft, &bottomleft);
+    gis::getUtmFromLatLon(_utmZone, _geoMap->topRight, &topRight);
 
     int row0, row1, col0, col1;
     gis::Crit3DRasterHeader utmHeader = *_rasterPointer->header;
     gis::getRowColFromXY(utmHeader, bottomleft, &row0, &col0);
     gis::getRowColFromXY(utmHeader, topRight, &row1, &col1);
-    col0 -= 2;
-    row1--;
 
     // check if current window is out of map
     if (((col0 < 0) && (col1 < 0))
-    || ((row0 < 0) && (row1 < 0))
-    || ((col0 >= utmHeader.nrCols) && (col1 >= utmHeader.nrCols))
-    || ((row0 >= utmHeader.nrRows) && (row1 >= utmHeader.nrRows)))
+        || ((row0 < 0) && (row1 < 0))
+        || ((col0 >= utmHeader.nrCols) && (col1 >= utmHeader.nrCols))
+        || ((row0 >= utmHeader.nrRows) && (row1 >= utmHeader.nrRows)))
     {
         return false;
     }
+
+    // check topLeft
+    gis::Crit3DGeoPoint geoTopLeft;
+    gis::Crit3DUtmPoint topLeft;
+    int rowTmp, colTmp;
+    geoTopLeft.latitude = _geoMap->topRight.latitude;
+    geoTopLeft.longitude =  _geoMap->bottomLeft.longitude;
+    gis::getUtmFromLatLon(_utmZone, geoTopLeft, &topLeft);
+    gis::getRowColFromXY(utmHeader, topLeft, &rowTmp, &colTmp);
+
+    col0 = std::min(col0, colTmp);
+    row1 = std::min(row1, rowTmp);
 
     // fix extent
     row0 = std::min(utmHeader.nrRows-1, std::max(0, row0));
