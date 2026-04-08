@@ -76,6 +76,11 @@ float findThreshold(meteoVariable myVar, Crit3DMeteoSettings* meteoSettings,
         distWeight = minDistance / 5000.f;
         threshold = std::max(stdDev * std::max(nrStdDev, distWeight), 0.3f);
     }
+    else if (myVar == atmPressure)
+    {
+        zWeight = avgDeltaZ / 50.f;
+        threshold = zWeight + stdDev * nrStdDev;
+    }
     else
         threshold = stdDev * nrStdDev;
 

@@ -282,6 +282,7 @@
         { {dailyWaterTableDepth,snowWaterEquivalent,snowFall,snowMelt,snowLiquidWaterContent}, "mm"} ,
         { {snowSurfaceTemperature}, "C"} ,
         { {snowInternalEnergy,snowSurfaceEnergy,sensibleHeat,latentHeat}, "kJ m-2"} ,
+        { {atmPressure}, "hPa"} ,
     };
 
 
