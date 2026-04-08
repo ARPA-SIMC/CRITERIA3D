@@ -778,6 +778,7 @@ bool setColorScale(meteoVariable variable, Crit3DColorScale *colorScale)
         case airDewTemperature:
         case snowSurfaceTemperature:
         case dailyHeatingDegreeDays:
+        case atmPressure:
             setTemperatureScale(colorScale);
             break;
         case elaborationVar:
@@ -818,7 +819,6 @@ bool setColorScale(meteoVariable variable, Crit3DColorScale *colorScale)
         case windVectorIntensity: case windScalarIntensity: case windVectorX: case windVectorY:
         case dailyWindVectorIntensityAvg: case dailyWindVectorIntensityMax:
         case dailyWindScalarIntensityAvg: case dailyWindScalarIntensityMax:
-        case atmPressure:
             setWindIntensityScale(colorScale);
             break;
         case leafAreaIndex:
@@ -886,6 +886,8 @@ std::string getVariableString(meteoVariable myVar)
         return "Solar net irradiance (W m-2)";
     else if (myVar == atmTransmissivity)
         return "Atmospheric transmissivity [-]";
+    else if (myVar == atmPressure)
+        return "Atmospheric pressure [hPa]";
     else if (myVar == windVectorIntensity)
         return "Wind vector intensity (m s-1)";
     else if (myVar == windVectorDirection)

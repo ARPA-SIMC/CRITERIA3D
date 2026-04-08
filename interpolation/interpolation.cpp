@@ -1210,8 +1210,8 @@ bool getUseDetrendingVar(meteoVariable myVar)
         myVar == dailyAirTemperatureMax ||
         myVar == dailyAirTemperatureMin ||
         myVar == dailyReferenceEvapotranspirationHS ||
+        myVar == atmPressure ||
         myVar == elaborationVar )
-
         return true;
     else
         return false;

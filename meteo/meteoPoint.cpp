@@ -138,6 +138,7 @@ void Crit3DMeteoPoint::initializeObsDataH(int myHourlyFraction, int numberOfDays
         _obsDataH[i].windScalInt = new float[nrDailyValues];
         _obsDataH[i].leafW = new int[nrDailyValues];
         _obsDataH[i].transmissivity = new float[nrDailyValues];
+        _obsDataH[i].pressure = new float[nrDailyValues];
 
         for (unsigned int j = 0; j < nrDailyValues; j++)
         {
@@ -155,6 +156,7 @@ void Crit3DMeteoPoint::initializeObsDataH(int myHourlyFraction, int numberOfDays
             _obsDataH[i].windScalInt[j] = NODATA;
             _obsDataH[i].leafW[j] = NODATA;
             _obsDataH[i].transmissivity[j] = NODATA;
+            _obsDataH[i].pressure[j] = NODATA;
         }
         ++myDate;
     }
@@ -188,6 +190,7 @@ void Crit3DMeteoPoint::initializeObsDataHFromMp(int myHourlyFraction, int number
                 _obsDataH[i].windScalInt[j] = data[i].windScalInt[j];
                 _obsDataH[i].leafW[j] = data[i].leafW[j];
                 _obsDataH[i].transmissivity[j] = data[i].transmissivity[j];
+                _obsDataH[i].pressure[j] = data[i].pressure[j];
             }
             ++myDate;
         }
@@ -348,6 +351,8 @@ void Crit3DMeteoPoint::emptyVarObsDataH(meteoVariable myVar, const Crit3DDate& m
                     _obsDataH[i].transmissivity[j] = NODATA;
 				else if (myVar == referenceEvapotranspiration)
                     _obsDataH[i].et0[j] = NODATA;
+                else if (myVar == atmPressure)
+                    _obsDataH[i].pressure[j] = NODATA;
 			}
 }
 
@@ -391,6 +396,8 @@ void Crit3DMeteoPoint::emptyVarObsDataH(meteoVariable myVar, const Crit3DDate& d
                 _obsDataH[i].transmissivity[j] = NODATA;
 			else if (myVar == referenceEvapotranspiration)
                 _obsDataH[i].et0[j] = NODATA;
+            else if (myVar == atmPressure)
+                _obsDataH[i].pressure[j] = NODATA;
         }
 }
 
@@ -419,6 +426,7 @@ void Crit3DMeteoPoint::emptyObsDataH(const Crit3DDate& date1, const Crit3DDate& 
             _obsDataH[i].leafW[j] = NODATA;
             _obsDataH[i].transmissivity[j] = NODATA;
             _obsDataH[i].et0[j] = NODATA;
+            _obsDataH[i].pressure[j] = NODATA;
         }
 }
 
@@ -667,6 +675,8 @@ void Crit3DMeteoPoint::cleanObsDataH()
             delete [] _obsDataH[i].windVecDir;
             delete [] _obsDataH[i].leafW;
             delete [] _obsDataH[i].transmissivity;
+            delete [] _obsDataH[i].et0;
+            delete [] _obsDataH[i].pressure;
         }
         delete [] _obsDataH;
     }
@@ -799,6 +809,10 @@ bool Crit3DMeteoPoint::setMeteoPointValueH(const Crit3DDate& myDate, int myHour,
 
     case atmTransmissivity:
         _obsDataH[iDay].transmissivity[j] = myValue;
+        break;
+
+    case atmPressure:
+        _obsDataH[iDay].pressure[j] = myValue;
         break;
 
     default:
@@ -988,6 +1002,8 @@ float Crit3DMeteoPoint::getMeteoPointValueH(const Crit3DDate& myDate, int myHour
         return float(_obsDataH[i].leafW[j]);
     else if (myVar == atmTransmissivity)
         return (_obsDataH[i].transmissivity[j]);
+    else if (myVar == atmPressure)
+        return (_obsDataH[i].pressure[j]);
     else
     {
         return NODATA;
