@@ -115,7 +115,8 @@
         void on_actionView_Factor_of_safety_minimum_triggered();
 
         void on_actionView_DegreeOfSaturation_automatic_range_triggered();
-        void on_actionView_DegreeOfSaturation_fixed_range_triggered();
+        void on_actionView_DegreeOfSaturation_Current_depth_triggered();
+        void on_actionView_DegreeOfSaturation_Avg_triggered();
 
         void on_actionView_SurfaceWaterContent_automatic_range_triggered();
         void on_actionView_SurfaceWaterContent_fixed_range_triggered();

@@ -234,6 +234,7 @@
 
         bool computeCriteria3DMap(gis::Crit3DRasterGrid &outputRaster, criteria3DVariable var, int layerIndex);
         bool computeMinimumFoS(gis::Crit3DRasterGrid &outputRaster);
+        bool computeAvgDegreeOfSaturation(gis::Crit3DRasterGrid &outputRaster);
 
         float computeFactorOfSafety(int row, int col, unsigned int layerIndex);
 
@@ -242,7 +243,7 @@
     };
 
     bool isCrit3dError(int result, QString &error);
-    double getCriteria3DVar(criteria3DVariable myVar, long nodeIndex);
+    double getCriteria3DVar(criteria3DVariable variable, long nodeIndex);
     bool setCriteria3DVar(criteria3DVariable myVar, long nodeIndex, double myValue);
 
     QString getOutputNameDaily(QString varName, QString notes, QDate myDate);

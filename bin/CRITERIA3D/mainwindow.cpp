@@ -2831,7 +2831,7 @@ void MainWindow::showCriteria3DVariable(criteria3DVariable var, int layerIndex, 
             ui->labelOutputRaster->setText("Volumetric water content [m3 m-3]");
         }
     }
-    else if (_current3DVariable == degreeOfSaturation)
+    else if (_current3DVariable == degreeOfSaturation, avgDegreeOfSaturation)
     {
         setTemperatureScale(myProject.criteria3DMap.colorScale);
         reverseColorScale(myProject.criteria3DMap.colorScale);
@@ -3616,10 +3616,16 @@ void MainWindow::on_actionView_DegreeOfSaturation_automatic_range_triggered()
 }
 
 
-void MainWindow::on_actionView_DegreeOfSaturation_fixed_range_triggered()
+void MainWindow::on_actionView_DegreeOfSaturation_Current_depth_triggered()
 {
     int layerIndex = ui->layerNrEdit->value();
     showCriteria3DVariable(degreeOfSaturation, layerIndex, true, false, 0.2, 1.0);
+}
+
+
+void MainWindow::on_actionView_DegreeOfSaturation_Avg_triggered()
+{
+    showCriteria3DVariable(avgDegreeOfSaturation, NODATA, true, false, 0.2, 1.0);
 }
 
 

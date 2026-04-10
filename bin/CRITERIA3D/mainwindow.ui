@@ -1817,7 +1817,7 @@
        <second>0</second>
        <year>1752</year>
        <month>8</month>
-       <day>22</day>
+       <day>21</day>
       </datetime>
      </property>
      <property name="maximumDate">
@@ -2743,8 +2743,15 @@
       <property name="title">
        <string>Degree of saturation</string>
       </property>
+      <widget class="QMenu" name="menuFixed_range">
+       <property name="title">
+        <string>Fixed range</string>
+       </property>
+       <addaction name="actionView_DegreeOfSaturation_Current_depth"/>
+       <addaction name="actionView_DegreeOfSaturation_Avg"/>
+      </widget>
       <addaction name="actionView_DegreeOfSaturation_automatic_range"/>
-      <addaction name="actionView_DegreeOfSaturation_fixed_range"/>
+      <addaction name="menuFixed_range"/>
      </widget>
      <addaction name="menuSurface_water_content"/>
      <addaction name="actionView_SurfacePond"/>
@@ -3538,11 +3545,6 @@
     <string>Automatic range</string>
    </property>
   </action>
-  <action name="actionView_DegreeOfSaturation_fixed_range">
-   <property name="text">
-    <string>Fixed range</string>
-   </property>
-  </action>
   <action name="actionCriteria3D_load_state">
    <property name="text">
     <string>Load state...</string>
@@ -3776,6 +3778,16 @@
   <action name="actionView_SWE_variation">
    <property name="text">
     <string>SWE variation (hourly)</string>
+   </property>
+  </action>
+  <action name="actionView_DegreeOfSaturation_Current_depth">
+   <property name="text">
+    <string>Current depth</string>
+   </property>
+  </action>
+  <action name="actionView_DegreeOfSaturation_Avg">
+   <property name="text">
+    <string>Average over soil depth</string>
    </property>
   </action>
  </widget>

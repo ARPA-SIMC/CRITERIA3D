@@ -86,6 +86,7 @@ bool loadVanGenuchtenParameters(const QSqlDatabase &dbSoil, std::vector<soil::Cr
     queryString        += "FROM van_genuchten ORDER BY id_texture";
 
     QSqlQuery query = dbSoil.exec(queryString);
+
     query.last();
     int tableSize = query.at() + 1;     //SQLITE doesn't support SIZE
 
