@@ -37,19 +37,21 @@ QString getIdCropFromName(const QSqlDatabase &dbCrop, QString cropName, QString 
     errorStr = "";
     QString queryString = "SELECT * FROM crop WHERE crop_name='" + cropName +"' COLLATE NOCASE";
 
-    QSqlQuery query = dbCrop.exec(queryString);
-    query.last();
+    QSqlQuery query(dbCrop);
+    query.prepare(queryString);
 
-    if (! query.isValid())
+    if(! query.exec())
     {
         errorStr = query.lastError().text();
         return "";
     }
 
-    QString idCrop;
-    getValue(query.value("id_crop"), &idCrop);
+    query.last();
 
-    return idCrop;
+    QString idCropStr;
+    getValue(query.value("id_crop"), &idCropStr);
+
+    return idCropStr;
 }
 
 
@@ -60,20 +62,24 @@ QString getIdCropFromClass(const QSqlDatabase &dbCrop, QString cropClassTable, Q
                           + " WHERE " + cropClassField + " = '" + idCropClass + "'"
                           + " COLLATE NOCASE";
 
-    QSqlQuery query = dbCrop.exec(queryString);
-    query.last();
+    QSqlQuery query(dbCrop);
+    query.prepare(queryString);
 
-    if (! query.isValid())
+    if(! query.exec())
     {
         if (query.lastError().isValid())
+        {
             errorStr = query.lastError().text();
+        }
         return idCropClass;
     }
 
-    QString idCrop;
-    getValue(query.value("id_crop"), &idCrop);
+    query.last();
 
-    return idCrop;
+    QString idCropStr;
+    getValue(query.value("id_crop"), &idCropStr);
+
+    return idCropStr;
 }
 
 

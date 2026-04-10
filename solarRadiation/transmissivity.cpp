@@ -64,7 +64,7 @@ bool computeTransmissivity(Crit3DRadiationSettings *mySettings, std::vector<Crit
 
     gis::Crit3DPoint myPoint;
 
-    for (int i = 0; i < meteoPoints.size(); i++)
+    for (size_t i = 0; i < meteoPoints.size(); i++)
     {
         float myRad = meteoPoints[i].getMeteoPointValueH(myTime.date, myTime.getHour(),
                                                          myTime.getMinutes(), globalIrradiance);
@@ -115,7 +115,7 @@ bool computeTransmissivityFromTRange(std::vector<Crit3DMeteoPoint> &meteoPoints,
 
     int counterValidPoints = 0;
 
-    for (int i = 0; i < meteoPoints.size(); i++)
+    for (size_t i = 0; i < meteoPoints.size(); i++)
     {
         bool isValidTRange = false;
 
