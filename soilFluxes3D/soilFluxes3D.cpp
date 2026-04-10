@@ -928,7 +928,7 @@ namespace soilFluxes3D::v2
     }
 
     /*!
-     * \brief gets the nodeIndex sub-surface node maximum volumetric water content
+     * \brief gets the soil node maximum volumetric water content
      * \return theta_sat (maximum volumetric water content) [m3 m-3]
      */
     double getNodeMaximumWaterContent(SF3Duint_t nodeIndex)
@@ -944,6 +944,26 @@ namespace soilFluxes3D::v2
 
         return nodeGrid.soilSurfacePointers[nodeIndex].soilPtr->Theta_s;
     }
+
+
+    /*!
+     * \brief gets the soil node minimum volumetric water content
+     * \return theta_r (minimum volumetric water content) [m3 m-3]
+     */
+    double getNodeMinimumWaterContent(SF3Duint_t nodeIndex)
+    {
+        if(!nodeGrid.isInitialized)
+            return getDoubleErrorValue(SF3Derror_t::MemoryError);
+
+        if(nodeIndex >= nodeGrid.nrNodes)
+            return getDoubleErrorValue(SF3Derror_t::IndexError);
+
+        if(nodeGrid.surfaceFlag[nodeIndex])
+            return getDoubleErrorValue(SF3Derror_t::IndexError);
+
+        return nodeGrid.soilSurfacePointers[nodeIndex].soilPtr->Theta_r;
+    }
+
 
     /*!
      * \brief gets the nodeIndex node available water content
