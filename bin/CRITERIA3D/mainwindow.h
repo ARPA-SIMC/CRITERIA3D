@@ -37,12 +37,15 @@
 
     private slots:
 
-        void mouseMove(QPoint eventPos);
+        // slots for connect
+        void mouseMove(const QPoint &eventPos);
         void updateMaps();
         void updateOutputMap();
 
-        void callNewMeteoWidget(std::string id, std::string name, std::string dataset, double altitude, std::string lapseRateCode, bool isGrid);
-        void callAppendMeteoWidget(std::string id, std::string name, std::string dataset, double altitude, std::string lapseRateCode, bool isGrid);
+        void callNewMeteoWidget(std::string id, std::string name, std::string dataset, double altitude,
+                                std::string lapseRateCode, bool isGrid);
+        void callAppendMeteoWidget(std::string id, std::string name, std::string dataset, double altitude,
+                                   std::string lapseRateCode, bool isGrid);
 
         void on_dateEdit_dateChanged(const QDate &date);
         void on_timeEdit_valueChanged(int myHour);
@@ -396,9 +399,8 @@
 
         void initializeCriteria3DInterface();
         void loadState(const QString &stateDirectory);
+        bool selectDates(QDateTime &firstTime, QDateTime &lastTime);
     };
-
-    bool selectDates(QDateTime &firstTime, QDateTime &lastTime);
 
 
 #endif // MAINWINDOW_H

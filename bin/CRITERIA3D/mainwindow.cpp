@@ -62,20 +62,20 @@ MainWindow::MainWindow(QWidget *parent) :
     viewer3D = nullptr;
 
     // Set the MapGraphics Scene and View
-    this->mapScene = new MapGraphicsScene(this);
-    this->mapView = new MapGraphicsView(mapScene, this->ui->widgetMap);
+    mapScene = new MapGraphicsScene(this);
+    mapView = new MapGraphicsView(mapScene, ui->widgetMap);
 
-    this->rubberBand = new RubberBand(QRubberBand::Rectangle, this->mapView);
+    rubberBand = new RubberBand(QRubberBand::Rectangle, mapView);
 
-    this->inputRasterColorLegend = new ColorLegend(ui->colorScaleInputRaster);
-    this->inputRasterColorLegend->resize(ui->colorScaleInputRaster->size());
+    inputRasterColorLegend = new ColorLegend(ui->colorScaleInputRaster);
+    inputRasterColorLegend->resize(ui->colorScaleInputRaster->size());
 
-    this->outputRasterColorLegend = new ColorLegend(this->ui->colorScaleOutputRaster);
-    this->outputRasterColorLegend->resize(ui->colorScaleOutputRaster->size());
+    outputRasterColorLegend = new ColorLegend(ui->colorScaleOutputRaster);
+    outputRasterColorLegend->resize(ui->colorScaleOutputRaster->size());
 
-    this->meteoPointsLegend = new ColorLegend(ui->colorScaleMeteoPoints);
-    this->meteoPointsLegend->resize(ui->colorScaleMeteoPoints->size());
-    this->meteoPointsLegend->colorScale = myProject.meteoPointsColorScale;
+    meteoPointsLegend = new ColorLegend(ui->colorScaleMeteoPoints);
+    meteoPointsLegend->resize(ui->colorScaleMeteoPoints->size());
+    meteoPointsLegend->colorScale = myProject.meteoPointsColorScale;
 
     // initialize
     ui->labelInputRaster->setText("");
@@ -109,31 +109,32 @@ MainWindow::MainWindow(QWidget *parent) :
     showPointsGroup->addAction(ui->actionView_PointsCurrentVariable);
     showPointsGroup->setEnabled(false);
 
-    this->setTileMapSource(WebTileSource::GOOGLE_Terrain);
+    setTileMapSource(WebTileSource::GOOGLE_Terrain);
 
     // Set start size and position
-    this->startCenter = new Position (myProject.gisSettings.startLocation.longitude,
+    startCenter = new Position (myProject.gisSettings.startLocation.longitude,
                                      myProject.gisSettings.startLocation.latitude, 0.0);
-    this->mapView->setZoomLevel(8);
-    this->mapView->centerOn(startCenter->lonLat());
-    connect(this->mapView, SIGNAL(zoomLevelChanged(quint8)), this, SLOT(updateMaps()));
-    connect(this->mapView, SIGNAL(mouseMoveSignal(QPoint)), this, SLOT(mouseMove(QPoint)));
+    mapView->setZoomLevel(8);
+    mapView->centerOn(startCenter->lonLat());
+    connect(mapView, SIGNAL(zoomLevelChanged(quint8)), this, SLOT(updateMaps()));
+    connect(mapView, SIGNAL(mouseMoveSignal(QPoint)), this, SLOT(mouseMove(QPoint)));
+    connect(&myProject, SIGNAL(updateOutputSignal), this, SLOT(updateOutputMap));
 
     // Set raster objects
-    this->rasterDEM = new RasterUtmObject(this->mapView);
-    this->rasterDEM->setOpacity(this->ui->opacitySliderRasterInput->value() / 100.0);
-    this->rasterDEM->setColorLegend(this->inputRasterColorLegend);
-    this->rasterDEM->setVisible(false);
-    this->mapView->scene()->addObject(this->rasterDEM);
+    rasterDEM = new RasterUtmObject(mapView);
+    rasterDEM->setOpacity(ui->opacitySliderRasterInput->value() / 100.0);
+    rasterDEM->setColorLegend(inputRasterColorLegend);
+    rasterDEM->setVisible(false);
+    mapView->scene()->addObject(rasterDEM);
 
-    this->rasterOutput = new RasterUtmObject(this->mapView);
-    this->rasterOutput->setOpacity(this->ui->opacitySliderRasterOutput->value() / 100.0);
-    this->rasterOutput->setColorLegend(this->outputRasterColorLegend);
-    this->rasterOutput->setVisible(false);
-    this->mapView->scene()->addObject(this->rasterOutput);
+    rasterOutput = new RasterUtmObject(mapView);
+    rasterOutput->setOpacity(ui->opacitySliderRasterOutput->value() / 100.0);
+    rasterOutput->setColorLegend(outputRasterColorLegend);
+    rasterOutput->setVisible(false);
+    mapView->scene()->addObject(rasterOutput);
 
-    this->updateCurrentVariable();
-    this->updateDateTime();
+    updateCurrentVariable();
+    updateDateTime();
 
     myProject.setSaveDailyState(false);
     ui->flagSave_state_daily_step->setChecked(myProject.isSaveDailyState());
@@ -151,10 +152,8 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->action_parallel_computing->setChecked(myProject.isParallelComputing());
     ui->actionCriteria3D_update_subHourly->setChecked(myProject.showEachTimeStep);
 
-    this->setMouseTracking(true);
-    this->setTitle();
-
-    connect(&myProject, &Crit3DProject::updateOutputSignal, this, &MainWindow::updateOutputMap);
+    setMouseTracking(true);
+    setTitle();
 }
 
 
@@ -165,12 +164,12 @@ void MainWindow::resizeEvent(QResizeEvent * event)
     const int INFOHEIGHT = 42;
     const int TOOLSWIDTH = 270;
 
-    int stepY = (this->height() - INFOHEIGHT) / 40;
-    int x1 = this->width() - TOOLSWIDTH - MAPBORDER;
+    int stepY = (height() - INFOHEIGHT) / 40;
+    int x1 = width() - TOOLSWIDTH - MAPBORDER;
     int dy = ui->groupBoxModel->height() + ui->groupBoxMeteoPoints->height() + ui->groupBoxDEM->height() + ui->groupBoxVariableMap->height() + stepY*3;
-    int y1 = (this->height() - INFOHEIGHT - dy) / 2;
+    int y1 = (height() - INFOHEIGHT - dy) / 2;
 
-    ui->widgetMap->setGeometry(0, 0, x1, this->height() - INFOHEIGHT);
+    ui->widgetMap->setGeometry(0, 0, x1, height() - INFOHEIGHT);
     mapView->resize(ui->widgetMap->size());
 
     ui->groupBoxModel->move(x1, y1);
@@ -187,7 +186,8 @@ void MainWindow::resizeEvent(QResizeEvent * event)
 
     ui->groupBoxVariableMap->move(x1, y1);
     ui->groupBoxVariableMap->resize(TOOLSWIDTH, ui->groupBoxVariableMap->height());
-    this->updateMaps();
+
+    updateMaps();
 }
 
 
@@ -223,9 +223,10 @@ void MainWindow::updateOutputMap()
 }
 
 
-void MainWindow::mouseMove(QPoint eventPos)
+void MainWindow::mouseMove(const QPoint &eventPos)
 {
-    if (! isInsideMap(eventPos)) return;
+    if (! isInsideMap(eventPos))
+        return;
 
     // rubber band
     if (rubberBand != nullptr && rubberBand->isActive)
@@ -235,24 +236,24 @@ void MainWindow::mouseMove(QPoint eventPos)
         return;
     }
 
-    Position pos = this->mapView->mapToScene(eventPos);
+    Position geoPos = mapView->mapToScene(eventPos);
 
-    QString infoStr = "Lat:" + QString::number(pos.latitude(), 'g', 7) + " Lon:" + QString::number(pos.longitude(), 'g', 7);
+    QString infoStr = "Lat:" + QString::number(geoPos.latitude(), 'g', 7) + " Lon:" + QString::number(geoPos.longitude(), 'g', 7);
 
     if (rasterOutput->visible())
     {
-        float value = rasterOutput->getValue(pos);
+        float value = rasterOutput->getValue(geoPos);
         if (! isEqual(value, NODATA))
             infoStr += "  Value:" + QString::number(double(value));
     }
     else if (rasterDEM->visible())
     {
-        float value = rasterDEM->getValue(pos);
+        float value = rasterDEM->getValue(geoPos);
         if (! isEqual(value, NODATA))
             infoStr += "  DEM value:" + QString::number(double(value));
     }
 
-    this->ui->statusBar->showMessage(infoStr);
+    ui->statusBar->showMessage(infoStr);
 }
 
 
@@ -386,18 +387,20 @@ void MainWindow::mouseDoubleClickEvent(QMouseEvent * event)
     QPoint mapPos = getMapPos(event->pos());
     if (! isInsideMap(mapPos)) return;
 
-    Position newCenter = this->mapView->mapToScene(mapPos);
+    Position newCenter = mapView->mapToScene(mapPos);
 
     if (event->button() == Qt::LeftButton)
     {
-        this->mapView->zoomIn();
+        mapView->zoomIn();
     }
     else if (event->button() == Qt::RightButton)
     {
-        this->mapView->zoomOut();
+        mapView->zoomOut();
     }
 
-    this->mapView->centerOn(newCenter.lonLat());
+    mapView->centerOn(newCenter.lonLat());
+
+    updateMaps();
 }
 
 
@@ -610,8 +613,8 @@ void MainWindow::addOutputPointsGUI()
         point->setLatitude(myProject.outputPoints[i].latitude);
         point->setLongitude(myProject.outputPoints[i].longitude);
 
-        this->outputPointList.append(point);
-        this->mapView->scene()->addObject(this->outputPointList[i]);
+        outputPointList.append(point);
+        mapView->scene()->addObject(outputPointList[i]);
         outputPointList[i]->setToolTip();
     }
 
@@ -668,8 +671,8 @@ void MainWindow::addMeteoPoints()
         point->setQuality(myProject.meteoPoints[i].quality);
         point->setLapseRateCode(myProject.meteoPoints[i].lapseRateCode);
 
-        this->meteoPointList.append(point);
-        this->mapView->scene()->addObject(this->meteoPointList[i]);
+        meteoPointList.append(point);
+        mapView->scene()->addObject(meteoPointList[i]);
 
         point->setToolTip();
         connect(point, SIGNAL(newStationClicked(std::string, std::string, std::string, double, std::string, bool)), this, SLOT(callNewMeteoWidget(std::string, std::string, std::string, double, std::string, bool)));
@@ -740,25 +743,25 @@ void MainWindow::setProjectTileMap()
     {
         if (currentTileMap == "ESRI")
         {
-            this->setTileMapSource(WebTileSource::ESRI_WorldImagery);
+            setTileMapSource(WebTileSource::ESRI_WorldImagery);
         }
         else if (currentTileMap == "TERRAIN")
         {
-            this->setTileMapSource(WebTileSource::GOOGLE_Terrain);
+            setTileMapSource(WebTileSource::GOOGLE_Terrain);
         }
         else if (currentTileMap == "GOOGLE")
         {
-            this->setTileMapSource(WebTileSource::GOOGLE_Hybrid_Satellite);
+            setTileMapSource(WebTileSource::GOOGLE_Hybrid_Satellite);
         }
         else
         {
-            this->setTileMapSource(WebTileSource::OPEN_STREET_MAP);
+            setTileMapSource(WebTileSource::OPEN_STREET_MAP);
         }
     }
     else
     {
         // default: Google terrain
-        this->setTileMapSource(WebTileSource::GOOGLE_Terrain);
+        setTileMapSource(WebTileSource::GOOGLE_Terrain);
     }
 }
 
@@ -772,17 +775,17 @@ void MainWindow::setTitle()
         title += " - " + projectName;
     }
 
-    this->setWindowTitle(title);
+    setWindowTitle(title);
 }
 
 
 void MainWindow::drawProject()
 {
-    this->setProjectTileMap();
+    setProjectTileMap();
 
     if (myProject.DEM.isLoaded)
     {
-        this->renderDEM();
+        renderDEM();
     }
     else
     {
@@ -792,11 +795,11 @@ void MainWindow::drawProject()
         mapView->setZoomLevel(8);
     }
 
-    this->drawMeteoPoints();
+    drawMeteoPoints();
 
-    this->addOutputPointsGUI();
+    addOutputPointsGUI();
 
-    this->setTitle();
+    setTitle();
 }
 
 
@@ -836,20 +839,20 @@ void MainWindow::renderDEM()
     ui->opacitySliderRasterInput->setEnabled(true);
     ui->opacitySliderRasterOutput->setEnabled(true);
 
-    this->setCurrentRasterInput(&(myProject.DEM));
+    setCurrentRasterInput(&(myProject.DEM));
     ui->labelInputRaster->setText(QString::fromStdString(getVariableString(noMeteoTerrain)));
 
     // center map
-    Position center = this->rasterDEM->getRasterCenter();
+    Position center = rasterDEM->getRasterCenter();
     mapView->centerOn(center.longitude(), center.latitude());
 
     // resize map
-    double size = double(this->rasterDEM->getRasterMaxSize());
+    double size = double(rasterDEM->getRasterMaxSize());
     size = log2(1000 / size);
     mapView->setZoomLevel(quint8(size));
     mapView->centerOn(center.longitude(), center.latitude());
 
-    this->updateMaps();
+    updateMaps();
 }
 
 
@@ -857,8 +860,8 @@ void MainWindow::renderDEM()
 
 void MainWindow::updateDateTime()
 {
-    this->ui->dateEdit->setDate(myProject.getCurrentDate());
-    this->ui->timeEdit->setValue(myProject.getCurrentHour()); 
+    ui->dateEdit->setDate(myProject.getCurrentDate());
+    ui->timeEdit->setValue(myProject.getCurrentHour());
 }
 
 
@@ -887,7 +890,7 @@ void MainWindow::updateModelTime()
     QDateTime currentDateTime;
     currentDateTime.setDate(date);
     currentDateTime.setTime(QTime(hour, minutes, seconds));
-    this->ui->modelTimeEdit->setText(currentDateTime.toString("yyyy-MM-dd HH:mm:ss"));
+    ui->modelTimeEdit->setText(currentDateTime.toString("yyyy-MM-dd HH:mm:ss"));
 }
 
 
@@ -911,12 +914,12 @@ void MainWindow::on_dateEdit_dateChanged(const QDate &date)
 
 void MainWindow::on_dayBeforeButton_clicked()
 {
-    this->ui->dateEdit->setDate(this->ui->dateEdit->date().addDays(-1));
+    ui->dateEdit->setDate(ui->dateEdit->date().addDays(-1));
 }
 
 void MainWindow::on_dayAfterButton_clicked()
 {
-    this->ui->dateEdit->setDate(this->ui->dateEdit->date().addDays(1));
+    ui->dateEdit->setDate(ui->dateEdit->date().addDays(1));
 }
 
 void MainWindow::on_timeEdit_valueChanged(int myHour)
@@ -993,6 +996,7 @@ void MainWindow::on_actionCloseProject_triggered()
     drawProject();
 }
 
+
 QPoint MainWindow::getMapPos(const QPoint& pos)
 {
     int x0 = ui->widgetMap->x();
@@ -1004,6 +1008,7 @@ QPoint MainWindow::getMapPos(const QPoint& pos)
 
     return mapPoint;
 }
+
 
 bool MainWindow::isInsideMap(const QPoint& pos)
 {
@@ -1126,12 +1131,12 @@ void MainWindow::redrawMeteoPoints(visualizationType myType, bool updateColorSCa
         case notShown:
         {
             meteoPointsLegend->setVisible(false);
-            this->ui->actionView_PointsHide->setChecked(true);
+            ui->actionView_PointsHide->setChecked(true);
             break;
         }
         case showLocation:
         {
-            this->ui->actionView_PointsLocation->setChecked(true);
+            ui->actionView_PointsLocation->setChecked(true);
 
             for (int i = 0; i < (int)myProject.meteoPoints.size(); i++)
             {
@@ -1176,7 +1181,7 @@ void MainWindow::redrawMeteoPoints(visualizationType myType, bool updateColorSCa
         {
             meteoVariable currentVar = myProject.getCurrentVariable();
 
-            this->ui->actionView_PointsCurrentVariable->setChecked(true);
+            ui->actionView_PointsCurrentVariable->setChecked(true);
             // quality control
             std::string errorStdStr;
             checkData(myProject.quality, currentVar,
@@ -1238,7 +1243,7 @@ void MainWindow::redrawMeteoPoints(visualizationType myType, bool updateColorSCa
         default:
         {
             meteoPointsLegend->setVisible(false);
-            this->ui->actionView_PointsHide->setChecked(true);
+            ui->actionView_PointsHide->setChecked(true);
             break;
         }
     }
@@ -1247,19 +1252,19 @@ void MainWindow::redrawMeteoPoints(visualizationType myType, bool updateColorSCa
 
 void MainWindow::on_opacitySliderRasterInput_sliderMoved(int position)
 {
-    this->rasterDEM->setOpacity(position / 100.0);
+    rasterDEM->setOpacity(position / 100.0);
 }
 
 void MainWindow::on_opacitySliderRasterOutput_sliderMoved(int position)
 {
-    this->rasterOutput->setOpacity(position / 100.0);
+    rasterOutput->setOpacity(position / 100.0);
 }
 
 void MainWindow::on_variableButton_clicked()
 {
     myProject.setCurrentVariable(chooseMeteoVariable(myProject));
-    this->currentPointsVisualization = showCurrentVariable;
-    this->updateCurrentVariable();
+    currentPointsVisualization = showCurrentVariable;
+    updateCurrentVariable();
 }
 
 void MainWindow::setInputRasterVisible(bool isVisible)
@@ -1336,7 +1341,7 @@ void MainWindow::on_actionProjectSettings_triggered()
         {
             startCenter->setLatitude(myProject.gisSettings.startLocation.latitude);
             startCenter->setLongitude(myProject.gisSettings.startLocation.longitude);
-            this->mapView->centerOn(startCenter->lonLat());
+            mapView->centerOn(startCenter->lonLat());
         }
     }
 }
@@ -1750,27 +1755,27 @@ void MainWindow::on_actionView_Crop_LAI_triggered()
 
 void MainWindow::on_actionMapTerrain_triggered()
 {
-    this->setTileMapSource(WebTileSource::GOOGLE_Terrain);
+    setTileMapSource(WebTileSource::GOOGLE_Terrain);
 }
 
 void MainWindow::on_actionMapOpenStreetMap_triggered()
 {
-    this->setTileMapSource(WebTileSource::OPEN_STREET_MAP);
+    setTileMapSource(WebTileSource::OPEN_STREET_MAP);
 }
 
 void MainWindow::on_actionMapESRISatellite_triggered()
 {
-    this->setTileMapSource(WebTileSource::ESRI_WorldImagery);
+    setTileMapSource(WebTileSource::ESRI_WorldImagery);
 }
 
 void MainWindow::on_actionMapGoogle_satellite_triggered()
 {
-    this->setTileMapSource(WebTileSource::GOOGLE_Satellite);
+    setTileMapSource(WebTileSource::GOOGLE_Satellite);
 }
 
 void MainWindow::on_actionMapGoogle_hybrid_satellite_triggered()
 {
-    this->setTileMapSource(WebTileSource::GOOGLE_Hybrid_Satellite);
+    setTileMapSource(WebTileSource::GOOGLE_Hybrid_Satellite);
 }
 
 void MainWindow::setTileMapSource(WebTileSource::WebTileType tileSource)
@@ -1806,7 +1811,7 @@ void MainWindow::setTileMapSource(WebTileSource::WebTileType tileSource)
     // set tiles source
     QSharedPointer<WebTileSource> myTiles(new WebTileSource(tileSource), &QObject::deleteLater);
 
-    this->mapView->setTileSource(myTiles);
+    mapView->setTileSource(myTiles);
 }
 
 
@@ -2100,7 +2105,7 @@ void MainWindow::on_actionComputePeriod_meteoVariables_triggered()
 
 // ------------------------ MODEL CYCLE ---------------------------
 
-bool selectDates(QDateTime &firstTime, QDateTime &lastTime)
+bool MainWindow::selectDates(QDateTime &firstTime, QDateTime &lastTime)
 {
     if (! myProject.meteoPointsLoaded)
     {
@@ -2254,7 +2259,7 @@ void MainWindow::on_actionRadiation_compute_current_hour_triggered()
     if (! setRadiationAsCurrentVariable())
         return;
 
-    this->interpolateCurrentVariable();
+    interpolateCurrentVariable();
 }
 
 void MainWindow::on_actionRadiation_run_model_triggered()
@@ -2987,7 +2992,7 @@ void MainWindow::on_actionPoints_activate_with_criteria_triggered()
         // reload meteoPoint, point properties table is changed
         QString dbName = myProject.dbPointsFileName;
         myProject.closeMeteoPointsDB();
-        this->loadMeteoPointsDB_GUI(dbName);
+        loadMeteoPointsDB_GUI(dbName);
     }
 }
 
@@ -2999,7 +3004,7 @@ void MainWindow::on_actionPoints_deactivate_with_criteria_triggered()
         // reload meteoPoint, point properties table is changed
         QString dbName = myProject.dbPointsFileName;
         myProject.closeMeteoPointsDB();
-        this->loadMeteoPointsDB_GUI(dbName);
+        loadMeteoPointsDB_GUI(dbName);
     }
 }
 
@@ -3529,7 +3534,7 @@ void MainWindow::on_actionLoad_land_use_map_triggered()
         if (! myProject.DEM.isLoaded)
         {
             // resize map
-            double size = double(this->rasterOutput->getRasterMaxSize());
+            double size = double(rasterOutput->getRasterMaxSize());
             size = log2(1000 / size);
             mapView->setZoomLevel(quint8(size));
 
