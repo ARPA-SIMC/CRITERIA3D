@@ -3619,13 +3619,13 @@ void MainWindow::on_actionView_DegreeOfSaturation_automatic_range_triggered()
 void MainWindow::on_actionView_DegreeOfSaturation_Current_depth_triggered()
 {
     int layerIndex = ui->layerNrEdit->value();
-    showCriteria3DVariable(degreeOfSaturation, layerIndex, true, false, 0.2, 1.0);
+    showCriteria3DVariable(degreeOfSaturation, layerIndex, true, false, 0.1, 1.0);
 }
 
 
 void MainWindow::on_actionView_DegreeOfSaturation_Avg_triggered()
 {
-    showCriteria3DVariable(avgDegreeOfSaturation, NODATA, true, false, 0.2, 1.0);
+    showCriteria3DVariable(avgDegreeOfSaturation, NODATA, true, false, 0.1, 1.0);
 }
 
 
