@@ -1769,10 +1769,10 @@ namespace soilFluxes3D::v2
             dtHeat = dtWater;
             saveWaterFluxValues(dtHeat, dtWater);
 
-            double dtHeatAccumulator = 0.;
-            while(dtHeatAccumulator < dtWater)
+            double dtHeatSum = 0.;
+            while(dtHeatSum < dtWater)
             {
-                dtHeat = std::min(dtHeat, dtWater - dtHeatAccumulator);
+                dtHeat = std::min(dtHeat, dtWater - dtHeatSum);
 
                 double reducedTimeStep;
                 while(! updateBoundaryHeatData(dtHeat, reducedTimeStep))
@@ -1780,7 +1780,7 @@ namespace soilFluxes3D::v2
 
                 solver->run(dtHeat, dtWater, processType::Heat);
 
-                dtHeatAccumulator += dtHeat;
+                dtHeatSum += dtHeat;
             }
         }
 
