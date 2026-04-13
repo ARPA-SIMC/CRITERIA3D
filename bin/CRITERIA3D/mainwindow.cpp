@@ -118,7 +118,7 @@ MainWindow::MainWindow(QWidget *parent) :
     mapView->centerOn(startCenter->lonLat());
     connect(mapView, SIGNAL(zoomLevelChanged(quint8)), this, SLOT(updateMaps()));
     connect(mapView, SIGNAL(mouseMoveSignal(QPoint)), this, SLOT(mouseMove(QPoint)));
-    connect(&myProject, SIGNAL(updateOutputSignal()), this, SLOT(updateOutputMap));
+    connect(&myProject, SIGNAL(updateOutputSignal()), this, SLOT(updateOutputMap()));
 
     // Set raster objects
     rasterDEM = new RasterUtmObject(mapView);
