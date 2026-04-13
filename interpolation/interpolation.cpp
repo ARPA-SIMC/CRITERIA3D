@@ -1210,8 +1210,8 @@ bool getUseDetrendingVar(meteoVariable myVar)
         myVar == dailyAirTemperatureMax ||
         myVar == dailyAirTemperatureMin ||
         myVar == dailyReferenceEvapotranspirationHS ||
+        myVar == atmPressure ||
         myVar == elaborationVar )
-
         return true;
     else
         return false;
@@ -2696,7 +2696,7 @@ float getFirstIntervalHeightValue(std::vector <Crit3DInterpolationDataPoint> &my
 bool isVectorNodataOrZero(std::vector <double> myVector)
 {
     bool myFlag = false;
-    for (int i = 0; i < myVector.size(); i++)
+    for (size_t i = 0; i < myVector.size(); i++)
     {
         if (isEqual(myVector[i], NODATA) || isEqual(myVector[i], 0))    myFlag = true;
     }

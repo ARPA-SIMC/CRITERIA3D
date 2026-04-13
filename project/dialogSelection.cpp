@@ -219,6 +219,7 @@ meteoVariable chooseMeteoVariable(Project &myProject)
     QRadioButton WX("Wind vector component X");
     QRadioButton WY("Wind vector component Y");
     QRadioButton LW("Leaf wetness");
+    QRadioButton AtmPress("Atmospheric pressure");
 
     QRadioButton MTavg("Average air temperature");
     QRadioButton MTmin("Minimum air temperature");
@@ -298,6 +299,7 @@ meteoVariable chooseMeteoVariable(Project &myProject)
         layoutVariable.addWidget(&WX);
         layoutVariable.addWidget(&WY);
         layoutVariable.addWidget(&LW);
+        layoutVariable.addWidget(&AtmPress);
 
         if (myCurrentVar == airTemperature)
             T.setChecked(true);
@@ -325,6 +327,8 @@ meteoVariable chooseMeteoVariable(Project &myProject)
             WY.setChecked(true);
         else if (myCurrentVar == leafWetness)
             LW.setChecked(true);
+        else if (myCurrentVar == atmPressure)
+            AtmPress.setChecked(true);
     }
     else if (myProject.getCurrentFrequency() == monthly)
     {
@@ -436,6 +440,8 @@ meteoVariable chooseMeteoVariable(Project &myProject)
            return (leafWetness);
        else if (ET0PMh.isChecked())
            return (referenceEvapotranspiration);
+       else if (AtmPress.isChecked())
+           return (atmPressure);
    }
 
    if (myProject.getCurrentFrequency() == monthly)
