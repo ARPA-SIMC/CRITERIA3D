@@ -34,11 +34,11 @@ namespace soilFluxes3D::v2::Water
      */
     SF3Derror_t initializeWaterBalance()
     {
-        double twc = computeTotalWaterContent();
-        balanceDataWholePeriod.waterStorage = twc;
-        balanceDataCurrentPeriod.waterStorage = twc;
-        balanceDataCurrentTimeStep.waterStorage = twc;
-        balanceDataPreviousTimeStep.waterStorage = twc;
+        double currentWC = computeTotalWaterContent();
+        balanceDataWholePeriod.waterStorage = currentWC;
+        balanceDataCurrentPeriod.waterStorage = currentWC;
+        balanceDataCurrentTimeStep.waterStorage = currentWC;
+        balanceDataPreviousTimeStep.waterStorage = currentWC;
 
         balanceDataCurrentTimeStep.waterSinkSource = 0.;
         balanceDataPreviousTimeStep.waterSinkSource = 0.;
