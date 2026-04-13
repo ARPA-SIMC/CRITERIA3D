@@ -8,13 +8,13 @@ LinealiaLib& LinealiaLib::instance() {
 }
 
 LinealiaLib::LinealiaLib()
-    : lib("linealia") {}
+    : lib("liblinealia") {}
 
 bool LinealiaLib::load() {
     if (lib.isLoaded())
         return true;
 
-    if (!lib.load())
+    if (! lib.load())
     {
         //std::cout << "Error in loading Lineal dll: " << lib.errorString().toStdString() << std::endl;
         return false;
