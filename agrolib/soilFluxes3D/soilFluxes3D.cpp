@@ -366,6 +366,14 @@ namespace soilFluxes3D::v2
             solver->useLineal = value;
     }
 
+    /*!
+     *  \brief sets lineal method
+    */
+    void setLinealMethod(int value)
+    {
+        if(solver)
+            solver->linealMethod = value;
+    }
 
     /*!
      * \brief sets the soil properties of the nrSoil-nrHorizon soil type

@@ -82,17 +82,17 @@ DialogWaterFluxesSettings::DialogWaterFluxesSettings()
     soilGroupBox->setLayout(soilLayout);
 
     // numerical solution
-    QGroupBox* numericalGroupBox = new QGroupBox("Numerical solution");
-    useLineal = new QCheckBox("Use linealia library");
+    QGroupBox* numericalGroupBox = new QGroupBox("Numerical solution (Lineal)");
+    useLineal = new QCheckBox("Use linealia");
     conjugateGradient = new QRadioButton("Conjugate gradient");
     pgc_sor = new QRadioButton("Preconditioned conjugate gradient");
     pcg_amg_sor = new QRadioButton("AMG preconditioned conjugate gradient");
 
-    QVBoxLayout *numericalLayout = new QVBoxLayout();
-    numericalLayout->addWidget(useLineal);
-    numericalLayout->addWidget(conjugateGradient);
-    numericalLayout->addWidget(pgc_sor);
-    numericalLayout->addWidget(pcg_amg_sor);
+    QGridLayout *numericalLayout = new QGridLayout();
+    numericalLayout->addWidget(useLineal, 0, 0);
+    numericalLayout->addWidget(conjugateGradient, 0, 1);
+    numericalLayout->addWidget(pgc_sor, 1, 1);
+    numericalLayout->addWidget(pcg_amg_sor, 2, 1);
     numericalGroupBox->setLayout(numericalLayout);
 
     // model accuracy

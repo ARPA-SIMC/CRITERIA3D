@@ -58,6 +58,32 @@
             pcg_amg_sor->setVisible(value);
         }
 
+        void setLinealUse(bool value) { useLineal->setChecked(value); }
+
+        bool getUseLineal() const { return useLineal->isChecked(); }
+
+        void setLinealMethod(int value)
+        {
+            if (value == 0)
+                conjugateGradient->setChecked(true);
+            else if (value == 1)
+                pgc_sor->setChecked(true);
+            else if (value == 2)
+                pcg_amg_sor->setChecked(true);
+        }
+
+        int getLinealMethod() const
+        {
+            if (conjugateGradient->isChecked())
+                return 0;
+            else if (pgc_sor->isChecked())
+                return 1;
+            else if (pcg_amg_sor->isChecked())
+                return 2;
+            else
+                return 1;
+        }
+
         int getThreadsNumber() const
         { return threadsNumberEdit->text().toInt(); }
 
@@ -67,7 +93,7 @@
                 onlySurfaceButton->setChecked(isChecked);
         }
 
-        bool getOnlySurface()
+        bool getOnlySurface() const
         {
             if (onlySurfaceButton != nullptr)
                 return onlySurfaceButton->isChecked();
@@ -80,7 +106,7 @@
                 allSoilDepthButton->setChecked(isChecked);
         }
 
-        bool getAllSoilDepth()
+        bool getAllSoilDepth() const
         {
             if (allSoilDepthButton != nullptr)
                 return allSoilDepthButton->isChecked();
@@ -93,7 +119,7 @@
                 imposedDepthButton->setChecked(isChecked);
         }
 
-        bool getImposedDepth()
+        bool getImposedDepth() const
         {
             if (imposedDepthButton != nullptr)
                 return imposedDepthButton->isChecked();
@@ -106,7 +132,7 @@
                 useWaterRetentionFitting->setChecked(isChecked);
         }
 
-        bool getUseWaterRetentionFitting()
+        bool getUseWaterRetentionFitting() const
         {
             if (useWaterRetentionFitting != nullptr)
                 return useWaterRetentionFitting->isChecked();
@@ -119,7 +145,7 @@
                 freeCatchmentRunoffBox->setChecked(isChecked);
         }
 
-        bool getFreeCatchmentRunoff()
+        bool getFreeCatchmentRunoff() const
         {
             if (freeCatchmentRunoffBox != nullptr)
                 return freeCatchmentRunoffBox->isChecked();
@@ -132,7 +158,7 @@
                 freeLateralDrainageBox->setChecked(isChecked);
         }
 
-        bool getFreeLateralDrainage()
+        bool getFreeLateralDrainage() const
         {
             if (freeLateralDrainageBox != nullptr)
                 return freeLateralDrainageBox->isChecked();
@@ -145,7 +171,7 @@
                 freeBottomDrainageBox->setChecked(isChecked);
         }
 
-        bool getFreeBottomDrainage()
+        bool getFreeBottomDrainage() const
         {
             if (freeBottomDrainageBox != nullptr)
                 return freeBottomDrainageBox->isChecked();

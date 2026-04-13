@@ -51,6 +51,7 @@ WaterFluxesParameters::WaterFluxesParameters()
 void WaterFluxesParameters::initialize()
 {
     useLineal = false;
+    linealMethod = 1;
 
     // boundary conditions
     freeCatchmentRunoff = true;
@@ -618,13 +619,19 @@ bool Project3D::setAccuracy()
     int toleranceDigit = 7 + waterFluxesParameters.modelAccuracy;
 
     soilFluxes3D::setNumericalParameters(minimumDeltaT, 3600, 100, 10, toleranceDigit, massBalanceRatioDigit);
-    // todo checkbox (method?)
+
+    // Lineal
     soilFluxes3D::setUseLineal(waterFluxesParameters.useLineal);
     if (waterFluxesParameters.useLineal)
+    {
+        soilFluxes3D::setLinealMethod(waterFluxesParameters.linealMethod);
         logInfo("Use Lineal: TRUE");
-
-    // parallel computing
-    waterFluxesParameters.numberOfThreads = soilFluxes3D::setThreadsNumber(waterFluxesParameters.numberOfThreads);
+    }
+    else
+    {
+        // parallel computing
+        waterFluxesParameters.numberOfThreads = soilFluxes3D::setThreadsNumber(waterFluxesParameters.numberOfThreads);
+    }
 
     return true;
 }

@@ -25,6 +25,8 @@
     {
     public:
         bool useLineal;
+        int linealMethod;
+
         bool computeOnlySurface;
         bool computeAllSoilDepth;
 

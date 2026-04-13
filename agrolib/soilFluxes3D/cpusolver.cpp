@@ -642,9 +642,20 @@ namespace soilFluxes3D::v2
         b.num_elements = vectorB.numElements;
         b.values = vectorB.values;
 
-        LinealiaLib::instance().solveCG(A, x, b, executionParams, iterativeParams);
-        //LinealiaLib::instance().solvePCG_SOR(A, x, b, executionParams, iterativeParams, relPcgParams);
-        //LinealiaLib::instance().solvePCG_AMG_SOR(A, x, b, executionParams, iterativeParams, pcgAmgParams);
+        switch (linealMethod) {
+        case 0:
+            LinealiaLib::instance().solveCG(A, x, b, executionParams, iterativeParams);
+            break;
+        case 1:
+            LinealiaLib::instance().solvePCG_SOR(A, x, b, executionParams, iterativeParams, relPcgParams);
+            break;
+        case 2:
+            LinealiaLib::instance().solvePCG_AMG_SOR(A, x, b, executionParams, iterativeParams, pcgAmgParams);
+            break;
+        default:
+            LinealiaLib::instance().solvePCG_SOR(A, x, b, executionParams, iterativeParams, relPcgParams);
+            break;
+        }
 
         // check surface potential (must be >= 0)
         bool isStepValid = true;

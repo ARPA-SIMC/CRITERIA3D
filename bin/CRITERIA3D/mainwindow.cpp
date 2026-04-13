@@ -2346,7 +2346,16 @@ void MainWindow::on_actionCriteria3D_set_processes_triggered()
 void MainWindow::on_actionCriteria3D_waterFluxes_settings_triggered()
 {
     DialogWaterFluxesSettings dialogWaterFluxes;
+
+    // lineal
     dialogWaterFluxes.setLinealAvailable(myProject.isLinealFound);
+    if (myProject.isLinealFound)
+    {
+        dialogWaterFluxes.setLinealUse(myProject.waterFluxesParameters.useLineal);
+        dialogWaterFluxes.setLinealMethod(myProject.waterFluxesParameters.linealMethod);
+    }
+
+    // initial conditions
     dialogWaterFluxes.setInitialWaterPotential(myProject.waterFluxesParameters.initialWaterPotential);
     dialogWaterFluxes.setInitialDegreeOfSaturation(myProject.waterFluxesParameters.initialDegreeOfSaturation);
 
@@ -2409,6 +2418,9 @@ void MainWindow::on_actionCriteria3D_waterFluxes_settings_triggered()
         myProject.waterFluxesParameters.freeLateralDrainage = dialogWaterFluxes.getFreeLateralDrainage();
         myProject.waterFluxesParameters.freeBottomDrainage = dialogWaterFluxes.getFreeBottomDrainage();
 
+        // numerical solution
+        myProject.waterFluxesParameters.useLineal = dialogWaterFluxes.getUseLineal();
+        myProject.waterFluxesParameters.linealMethod = dialogWaterFluxes.getLinealMethod();
         myProject.waterFluxesParameters.modelAccuracy = dialogWaterFluxes.accuracySlider->value();
 
         // check nr of threads
