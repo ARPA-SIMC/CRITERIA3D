@@ -15,6 +15,7 @@ enum LinealiaIterativeStopReason {
   LINEALIA_STOP_RESIDUAL_NORM,
   LINEALIA_STOP_ITERATIONS,
 };
+
 struct LinealiaIterativeResult {
   LinealiaIterativeStopReason reason;
   size_t iteration;
@@ -57,10 +58,12 @@ struct LinealiaRelaxedParams {
   // The relaxation factor, commonly called ω (1 by default, i.e. SOR→Gauß-Seidel)
   double relax = 1.0;
 };
+
 LinealiaIterativeResult linealia_solve_sor(LinealiaMatrix lhs, LinealiaVector sol,
                                            LinealiaVector rhs, LinealExecutionParams eparams,
                                            LinealiaIterativeSolverParams iparams,
                                            LinealiaRelaxedParams sparams);
+
 LinealiaIterativeResult linealia_solve_ssor(LinealiaMatrix lhs, LinealiaVector sol,
                                             LinealiaVector rhs, LinealExecutionParams eparams,
                                             LinealiaIterativeSolverParams iparams,
@@ -76,12 +79,12 @@ struct LinealiaRelaxedPreconditionerParams {
   // The number of SOR iterations to apply per CG iteration
   size_t iterations = 2;
 };
-LinealiaIterativeResult
-linealia_solve_pcg_sor(LinealiaMatrix lhs, LinealiaVector sol, LinealiaVector rhs,
+
+LinealiaIterativeResult linealia_solve_pcg_sor(LinealiaMatrix lhs, LinealiaVector sol, LinealiaVector rhs,
                        LinealExecutionParams eparams, LinealiaIterativeSolverParams iparams,
                        LinealiaRelaxedPreconditionerParams preconditioner_params);
-LinealiaIterativeResult
-linealia_solve_pcg_ssor(LinealiaMatrix lhs, LinealiaVector sol, LinealiaVector rhs,
+
+LinealiaIterativeResult linealia_solve_pcg_ssor(LinealiaMatrix lhs, LinealiaVector sol, LinealiaVector rhs,
                         LinealExecutionParams eparams, LinealiaIterativeSolverParams iparams,
                         LinealiaRelaxedPreconditionerParams preconditioner_params);
 
@@ -89,6 +92,7 @@ struct AmgAggregateSizeRange {
   size_t min;
   size_t max;
 };
+
 struct LinealiaPcgAmgParams {
   // The AMG relaxation factor
   double amg_relax = 0.6;
@@ -111,11 +115,13 @@ struct LinealiaPcgAmgParams {
   // The number of SOR smoother iterations to apply
   size_t smoother_iterations = 2;
 };
+
 LinealiaIterativeResult linealia_solve_pcg_amg_sor(LinealiaMatrix lhs, LinealiaVector sol,
                                                    LinealiaVector rhs,
                                                    LinealExecutionParams eparams,
                                                    LinealiaIterativeSolverParams iparams,
                                                    LinealiaPcgAmgParams sparams);
+
 LinealiaIterativeResult linealia_solve_pcg_amg_ssor(LinealiaMatrix lhs, LinealiaVector sol,
                                                     LinealiaVector rhs,
                                                     LinealExecutionParams eparams,
