@@ -78,7 +78,7 @@ float findThreshold(meteoVariable myVar, Crit3DMeteoSettings* meteoSettings,
     }
     else if (myVar == atmPressure)
     {
-        zWeight = avgDeltaZ / 50.f;
+        zWeight = avgDeltaZ / 10.f;
         threshold = zWeight + stdDev * nrStdDev;
     }
     else
