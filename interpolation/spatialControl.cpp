@@ -361,7 +361,7 @@ bool spatialQualityControl(meteoVariable myVar, std::vector<Crit3DMeteoPoint> &m
                     stdDev = MAXVALUE(stdDev, myValue/100.f);
                     if (fabs(myResidual) > findThreshold(myVar, meteoSettings, myValue, stdDev, 2, avgDeltaZ, minDist))
                     {
-                        listIndex.push_back(i);
+                        listIndex.push_back(int(i));
                         meteoPoints[i].quality = quality::wrong_spatial;
                     }
                 }
@@ -513,7 +513,7 @@ bool passDataToInterpolation(const std::vector<Crit3DMeteoPoint> &meteoPoints,
         {
             Crit3DInterpolationDataPoint myPoint;
 
-            myPoint.index = i;
+            myPoint.index = int(i);
             myPoint.value = meteoPoints[i].currentValue;
             myPoint.point->utm.x = meteoPoints[i].point.utm.x;
             myPoint.point->utm.y = meteoPoints[i].point.utm.y;
