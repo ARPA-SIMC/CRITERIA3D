@@ -1879,6 +1879,10 @@ bool Project3D::computeCriteria3DMap(gis::Crit3DRasterGrid &outputRaster, criter
     {
         return computeMinimumFoS(outputRaster);
     }
+    if (var == avgDegreeOfSaturation)
+    {
+        return computeAvgDegreeOfSaturation(outputRaster);
+    }
 
     // check layer
     if (layerIndex >= int(indexMap.size()) || layerIndex == NODATA)
@@ -2027,7 +2031,9 @@ bool Project3D::getTotalSoilWaterContent(double &wcSum, long &nrVoxels, bool isM
 
                 criteria3DVariable required3DVar = volumetricWaterContent;
                 if (isMaximum)
-                    required3DVar = maximumVolumetricWaterContent;
+                {
+                    required3DVar = maxVolumetricWaterContent;
+                }
 
                 double volWaterContent = getCriteria3DVar(required3DVar, nodeIndex);    // [m3 m-3]
 
@@ -2042,6 +2048,58 @@ bool Project3D::getTotalSoilWaterContent(double &wcSum, long &nrVoxels, bool isM
             }
         }
     }
+
+    return true;
+}
+
+
+bool Project3D::computeAvgDegreeOfSaturation(gis::Crit3DRasterGrid &outputRaster)
+{
+    outputRaster.initializeGrid(*(indexMap.at(0).header));
+
+    for (int row = 0; row < indexMap.at(0).header->nrRows; row++)
+    {
+        for (int col = 0; col < indexMap.at(0).header->nrCols; col++)
+        {
+            // initialize
+            outputRaster.value[row][col] = outputRaster.header->flag;
+            // check surface node
+            long nodeIndex = indexMap.at(0).value[row][col];
+            if (nodeIndex == indexMap.at(0).header->flag)
+                continue;
+
+            double thetaS = 0;
+            double thetaR = 0;
+            double sumWC = 0;
+            for (unsigned int layer = 1; layer < nrLayers; layer++)
+            {
+                // check node
+                long nodeIndex = indexMap.at(layer).value[row][col];
+                if (nodeIndex == indexMap.at(layer).header->flag)
+                    continue;
+
+                double currentVWC = getCriteria3DVar(volumetricWaterContent, nodeIndex);    // [m3 m-3]
+                if (isEqual(currentVWC, NODATA))
+                    continue;
+
+                double thickness = layerThickness[layer];  // [m]
+                sumWC += currentVWC * thickness;
+
+                double currentThetaR = getCriteria3DVar(minVolumetricWaterContent, nodeIndex);    // [m3 m-3]
+                thetaR += currentThetaR * thickness;
+
+                double currentThetaS = getCriteria3DVar(maxVolumetricWaterContent, nodeIndex);    // [m3 m-3]
+                thetaS += currentThetaS * thickness;
+            }
+
+            if (sumWC > 0)
+            {
+                outputRaster.value[row][col] = (sumWC - thetaR) / (thetaS - thetaR);
+            }
+        }
+    }
+
+    gis::updateMinMaxRasterGrid(&outputRaster);
 
     return true;
 }
@@ -2548,9 +2606,7 @@ float Project3D::computeFactorOfSafety(int row, int col, unsigned int layerIndex
     // check node
     long nodeIndex = indexMap.at(layerIndex).value[row][col];
     if (nodeIndex == indexMap.at(layerIndex).header->flag)
-    {
         return NODATA;
-    }
 
     // check horizon
     int soilIndex = getSoilIndex(row, col);
@@ -2676,66 +2732,60 @@ bool isCrit3dError(int result, QString& error)
 }
 
 
-double getCriteria3DVar(criteria3DVariable myVar, long nodeIndex)
+double getCriteria3DVar(criteria3DVariable variable, long nodeIndex)
 {
     double crit3dVar;
 
-    if (myVar == volumetricWaterContent)
+    switch (variable)
     {
+    case volumetricWaterContent:
         crit3dVar = soilFluxes3D::getNodeWaterContent(nodeIndex);
-    }
-    else if (myVar == maximumVolumetricWaterContent)
-    {
+        break;
+    case minVolumetricWaterContent:
+        crit3dVar = soilFluxes3D::getNodeMinimumWaterContent(nodeIndex);
+        break;
+    case maxVolumetricWaterContent:
         crit3dVar = soilFluxes3D::getNodeMaximumWaterContent(nodeIndex);
-    }
-    else if (myVar == availableWaterContent)
-    {
+        break;
+    case availableWaterContent:
         crit3dVar = soilFluxes3D::getNodeAvailableWaterContent(nodeIndex);
-    }
-    else if (myVar == waterTotalPotential)
-    {
+        break;
+    case waterTotalPotential:
         crit3dVar = soilFluxes3D::getNodeTotalPotential(nodeIndex);
-    }
-    else if (myVar == waterMatricPotential)
-    {
+        break;
+    case waterMatricPotential:
         crit3dVar = soilFluxes3D::getNodeMatricPotential(nodeIndex);
-    }
-    else if (myVar == degreeOfSaturation)
-    {
+        break;
+    case degreeOfSaturation:
         crit3dVar = soilFluxes3D::getNodeDegreeOfSaturation(nodeIndex);
-    }
-    else if (myVar == waterInflow)
-    {
+        break;
+    case waterInflow:
         crit3dVar = soilFluxes3D::getNodeSumLateralWaterFlowIn(nodeIndex) * 1000;
-    }
-    else if (myVar == waterOutflow)
-    {
+        break;
+    case waterOutflow:
         crit3dVar = soilFluxes3D::getNodeSumLateralWaterFlowOut(nodeIndex) * 1000;
-    }
-    else if (myVar == waterDeficit)
+        break;
+    case waterDeficit:
     {
         // TODO leggere horizon per field capacity
         double fieldCapacity = 3.0;
         crit3dVar = soilFluxes3D::getNodeWaterDeficit(nodeIndex, fieldCapacity);
+        break;
     }
-    else if (myVar == surfacePond)
-    {
+    case surfacePond:
         crit3dVar = soilFluxes3D::getNodePond(nodeIndex) * 1000;
-    }
-    else
-    {
+        break;
+    default:
         crit3dVar = MISSING_DATA_ERROR;
+        break;
     }
 
     // check result
-    if (crit3dVar == INDEX_ERROR || crit3dVar == MEMORY_ERROR || crit3dVar == TOPOGRAPHY_ERROR || crit3dVar == MISSING_DATA_ERROR)
-    {
+    if (crit3dVar == INDEX_ERROR || crit3dVar == MEMORY_ERROR
+        || crit3dVar == TOPOGRAPHY_ERROR || crit3dVar == MISSING_DATA_ERROR)
         return NODATA;
-    }
-    else
-    {
-        return crit3dVar;
-    }
+
+    return crit3dVar;
 }
 
 

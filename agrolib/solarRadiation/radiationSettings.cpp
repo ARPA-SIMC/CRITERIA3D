@@ -158,7 +158,7 @@ float Crit3DRadiationSettings::getLinke(int month) const
     if (linkeMode == PARAM_MODE_FIXED)
         return linkeDefault;
 
-    if (month >= 0 && month < 12 && LinkeMonthly.size() > month)
+    if (month >= 0 && month < 12 && month < (int)LinkeMonthly.size())
         return LinkeMonthly[month];
     else
         return linkeDefault;

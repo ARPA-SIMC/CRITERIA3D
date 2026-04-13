@@ -1438,7 +1438,6 @@ namespace interpolation
                                            std::vector <double>& x ,std::vector<double>& y,
                                            std::vector<std::vector<double>> firstGuessCombinations)
     {
-        int i,j;
         int nrData = int(y.size());
         int nrParameters = int(parameters.size());
 
@@ -1448,19 +1447,19 @@ namespace interpolation
         double bestRMSE = NODATA;
         int RMSEindex = NODATA;
         double R2, RMSE;
-        std::vector <double> R2Previous(nrMinima,NODATA);
+        std::vector<double> R2Previous(nrMinima, NODATA);
         std::vector<double> ySim(nrData);
 
         double maxZ = x.front();
 
-        for (int k = 0; k < (int)x.size(); k++)
+        for (size_t k = 0; k < x.size(); k++)
         {
-            if (x[k] > maxZ) maxZ = x[k]; //look for max elevation station
+            // search max elevation
+            if (x[k] > maxZ) maxZ = x[k];
         }
 
-        bool isValid = 1;
+        bool isValid = true;
 
-        //grigliato
         for (int k = 0; k < int(firstGuessCombinations.size()); k++)
         {
             parameters = firstGuessCombinations[k];
@@ -1470,7 +1469,7 @@ namespace interpolation
                                         myEpsilon,x,y);
 
             bool rangeFlag = true;
-            for (i=0;i<parameters.size();i++)
+            for (size_t i=0; i < parameters.size(); i++)
             {
                 if (parameters[i] < parametersMin[i] || parameters[i] > parametersMax[i])
                 {
@@ -1479,12 +1478,14 @@ namespace interpolation
                 }
             }
 
-            if (! rangeFlag) continue;
+            if (! rangeFlag)
+                continue;
 
-            for (i=0;i<nrData;i++)
+            for (int i=0; i < nrData; i++)
             {
                 ySim[i]= func(x[i], parameters);
             }
+
             R2 = computeR2adjusted(y,ySim);
             RMSE = computeRMSE(y, ySim);
 
@@ -1495,11 +1496,14 @@ namespace interpolation
             }
 
             if (parameters.size() > 4)
-                isValid = ((parameters[0] + parameters[2]) < maxZ); //double inversion only: check whether second inversion point is above last available station
+            {
+                // double inversion only: check whether second inversion point is above last available station
+                isValid = ((parameters[0] + parameters[2]) < maxZ);
+            }
 
             if (isEqual(bestR2, NODATA) || (R2 > (bestR2 + deltaR2) && isValid))
             {
-                for (j=0; j<nrParameters; j++)
+                for (int j=0; j < nrParameters; j++)
                 {
                     bestParameters[j] = parameters[j];
                 }
@@ -1507,7 +1511,7 @@ namespace interpolation
             }
         }
 
-        for (j=0; j<nrParameters; j++)
+        for (int j=0; j<nrParameters; j++)
         {
             parameters[j] = bestParameters[j];
         }

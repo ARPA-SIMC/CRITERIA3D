@@ -1037,7 +1037,7 @@ float Crit3DProject::computeSoilCracking(int row, int col, float precipitation)
 
         double soilFraction = 1.0 - soilList[soilIndex].horizon[horizonIndex].coarseFragments;
         double VWC = getCriteria3DVar(volumetricWaterContent, nodeIndex);               // [m3 m-3]
-        double maxVWC = getCriteria3DVar(maximumVolumetricWaterContent, nodeIndex);     // [m3 m-3]
+        double maxVWC = getCriteria3DVar(maxVolumetricWaterContent, nodeIndex);         // [m3 m-3]
 
         voidsVolumeSum += (maxVWC - VWC) * soilFraction;
         nrData++;

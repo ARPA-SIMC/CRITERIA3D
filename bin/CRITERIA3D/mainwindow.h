@@ -37,12 +37,15 @@
 
     private slots:
 
-        void mouseMove(QPoint eventPos);
+        // slots for connect
+        void mouseMove(const QPoint &eventPos);
         void updateMaps();
         void updateOutputMap();
 
-        void callNewMeteoWidget(std::string id, std::string name, std::string dataset, double altitude, std::string lapseRateCode, bool isGrid);
-        void callAppendMeteoWidget(std::string id, std::string name, std::string dataset, double altitude, std::string lapseRateCode, bool isGrid);
+        void callNewMeteoWidget(std::string id, std::string name, std::string dataset, double altitude,
+                                std::string lapseRateCode, bool isGrid);
+        void callAppendMeteoWidget(std::string id, std::string name, std::string dataset, double altitude,
+                                   std::string lapseRateCode, bool isGrid);
 
         void on_dateEdit_dateChanged(const QDate &date);
         void on_timeEdit_valueChanged(int myHour);
@@ -115,7 +118,8 @@
         void on_actionView_Factor_of_safety_minimum_triggered();
 
         void on_actionView_DegreeOfSaturation_automatic_range_triggered();
-        void on_actionView_DegreeOfSaturation_fixed_range_triggered();
+        void on_actionView_DegreeOfSaturation_Current_depth_triggered();
+        void on_actionView_DegreeOfSaturation_Avg_triggered();
 
         void on_actionView_SurfaceWaterContent_automatic_range_triggered();
         void on_actionView_SurfaceWaterContent_fixed_range_triggered();
@@ -395,9 +399,8 @@
 
         void initializeCriteria3DInterface();
         void loadState(const QString &stateDirectory);
+        bool selectDates(QDateTime &firstTime, QDateTime &lastTime);
     };
-
-    bool selectDates(QDateTime &firstTime, QDateTime &lastTime);
 
 
 #endif // MAINWINDOW_H

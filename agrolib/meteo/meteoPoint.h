@@ -33,6 +33,7 @@
         float* windVecDir;
         int* leafW;
         float* transmissivity;
+        float* pressure;
     };
 
     struct TObsDataD {
