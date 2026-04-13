@@ -24,7 +24,7 @@ namespace soilFluxes3D::v2
             bool checkSurfaceElements(double deltaT);
             bool checkCourant(double deltaT);
 
-            void heatLoop(double timeStepHeat, double timeStepWater);
+            bool heatLoop(double timeStepHeat, double timeStepWater);
 
             bool solveLinearSystem(u8_t approximationNr, processType computationType) override;
             bool linealSolver(u8_t approximationNr);

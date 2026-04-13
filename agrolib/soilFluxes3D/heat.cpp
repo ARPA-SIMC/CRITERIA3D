@@ -370,24 +370,26 @@ namespace soilFluxes3D::v2::Heat
         return heatSinkSource;
     }
 
+
     void evaluateHeatBalance(double dtHeat, double dtWater)
     {
-        //Heat sink/source
+        // Heat sink/source
         double heatSinkSource = computeCurrentHeatSinkSource(dtHeat);
         balanceDataCurrentTimeStep.heatSinkSource = heatSinkSource;
 
-        //Heat storage
+        // Heat storage
         double heatStorage = computeCurrentHeatStorage(dtWater, dtHeat);
         balanceDataCurrentTimeStep.heatStorage = heatStorage;
 
-        //Heat MBE
+        // Heat MBE
         double deltaHeatStorage = balanceDataCurrentTimeStep.heatStorage - balanceDataPreviousTimeStep.heatStorage;
         balanceDataCurrentTimeStep.heatMBE = deltaHeatStorage - balanceDataCurrentTimeStep.heatSinkSource;
 
-        //Heat MBR
-        double referenceHeat = SF3Dmax(1., std::fabs(balanceDataCurrentTimeStep.heatSinkSource));
+        // Heat MBR (minimum 1 Joule)
+        double referenceHeat = SF3Dmax(heatStorage * 1e-6, std::fabs(balanceDataCurrentTimeStep.heatSinkSource));
         balanceDataCurrentTimeStep.heatMBR = balanceDataCurrentTimeStep.heatMBE / referenceHeat;
     }
+
 
     void updateHeatBalanceData()
     {
