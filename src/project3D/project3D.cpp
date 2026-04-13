@@ -50,6 +50,8 @@ WaterFluxesParameters::WaterFluxesParameters()
 
 void WaterFluxesParameters::initialize()
 {
+    useLineal = false;
+
     // boundary conditions
     freeCatchmentRunoff = true;
     freeLateralDrainage = true;
@@ -617,8 +619,8 @@ bool Project3D::setAccuracy()
 
     soilFluxes3D::setNumericalParameters(minimumDeltaT, 3600, 100, 10, toleranceDigit, massBalanceRatioDigit);
     // todo checkbox (method?)
-    soilFluxes3D::setUseLineal(isLinealFound);
-    if (isLinealFound)
+    soilFluxes3D::setUseLineal(waterFluxesParameters.useLineal);
+    if (waterFluxesParameters.useLineal)
         logInfo("Use Lineal: TRUE");
 
     // parallel computing

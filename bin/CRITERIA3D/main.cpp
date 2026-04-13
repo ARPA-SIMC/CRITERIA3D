@@ -80,7 +80,7 @@ int main(int argc, char *argv[])
     // lineal library (dynamic linking)
     myProject.isLinealFound = LinealiaLib::instance().load();
     if (! myProject.isLinealFound)
-        myProject.logInfo("WARNING: the “linealia” library was not found, or some dependencies are missing.");
+        myProject.logInfo("WARNING: the 'linealia' library was not found, or some dependencies are missing.");
 
     if (myProject.modality == MODE_GUI)
     {
