@@ -8,7 +8,7 @@ LinealiaLib& LinealiaLib::instance() {
 }
 
 LinealiaLib::LinealiaLib()
-    : lib("liblinealia") {}
+    : lib("linealia") {}
 
 bool LinealiaLib::load() {
     if (lib.isLoaded())

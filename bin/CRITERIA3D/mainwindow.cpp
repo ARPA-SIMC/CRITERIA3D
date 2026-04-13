@@ -2346,6 +2346,7 @@ void MainWindow::on_actionCriteria3D_set_processes_triggered()
 void MainWindow::on_actionCriteria3D_waterFluxes_settings_triggered()
 {
     DialogWaterFluxesSettings dialogWaterFluxes;
+    dialogWaterFluxes.setLinealAvailable(myProject.isLinealFound);
     dialogWaterFluxes.setInitialWaterPotential(myProject.waterFluxesParameters.initialWaterPotential);
     dialogWaterFluxes.setInitialDegreeOfSaturation(myProject.waterFluxesParameters.initialDegreeOfSaturation);
 

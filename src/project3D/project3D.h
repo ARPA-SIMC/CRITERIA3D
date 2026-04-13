@@ -24,6 +24,7 @@
     class WaterFluxesParameters
     {
     public:
+        bool useLineal;
         bool computeOnlySurface;
         bool computeAllSoilDepth;
 
