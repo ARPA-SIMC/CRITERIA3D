@@ -54,8 +54,13 @@ Crit3DProject::Crit3DProject() : Project3D()
     _saveYearlyState = false;
     _saveMonthlyState = false;
 
-    modelFirstTime.setTimeSpec(Qt::UTC);
-    modelLastTime.setTimeSpec(Qt::UTC);
+    #if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
+        modelFirstTime.setTimeZone(QTimeZone::UTC);
+        modelLastTime.setTimeZone(QTimeZone::UTC);
+    #else
+        modelFirstTime.setTimeSpec(Qt::UTC);
+        modelLastTime.setTimeSpec(Qt::UTC);
+    #endif
 }
 
 
@@ -1531,6 +1536,8 @@ bool Crit3DProject::writeCriteria3DParameters(bool isSnow, bool isWater)
 
         parametersSettings->setValue("soilWaterFluxes/modelAccuracy", waterFluxesParameters.modelAccuracy);
         parametersSettings->setValue("soilWaterFluxes/numberOfThreads", waterFluxesParameters.numberOfThreads);
+        parametersSettings->setValue("soilWaterFluxes/useLineal", waterFluxesParameters.useLineal);
+        parametersSettings->setValue("soilWaterFluxes/linealmethod", waterFluxesParameters.linealMethod);
 
         // TODO parametri soil crack
         // parametersSettings->setValue("soilCracking/ ", );
@@ -2497,10 +2504,19 @@ bool Crit3DProject::loadModelState(QString statePath)
 
     // set current date/hour
     QString stateStr = getFileName(statePath);
-    int year = stateStr.mid(0,4).toInt();
-    int month = stateStr.mid(4,2).toInt();
-    int day = stateStr.mid(6,2).toInt();
-    int hour = stateStr.mid(10,2).toInt();
+    int year, month, day, hour;
+    #if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
+        year = stateStr.sliced(0, 4).toInt();
+        month = stateStr.sliced(4, 2).toInt();
+        day = stateStr.sliced(6, 2).toInt();
+        hour = stateStr.sliced(10, 2).toInt();
+    #else
+        year = stateStr.mid(0, 4).toInt();
+        month = stateStr.mid(4, 2).toInt();
+        day = stateStr.mid(6, 2).toInt();
+        hour = stateStr.mid(10, 2).toInt();
+    #endif
+
     if (hour == 24)
     {
         setCurrentDate(QDate(year, month, day).addDays(1));
@@ -3496,7 +3512,7 @@ bool Crit3DProject::update3DColors(gis::Crit3DRasterGrid *rasterPointer)
 int Crit3DProject::criteria3DShell()
 {
     #ifdef _WIN32
-        openNewConsole();
+        openWinConsole();
     #endif
 
     printCriteria3DVersion();
@@ -3519,7 +3535,7 @@ int Crit3DProject::criteria3DShell()
     }
 
     #ifdef _WIN32
-        closeConsole();
+        closeWinConsole();
     #endif
 
     return CRIT3D_OK;

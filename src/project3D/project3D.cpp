@@ -426,6 +426,16 @@ bool Project3D::loadProject3DParameters()
                 waterFluxesParameters.numberOfThreads = parametersSettings->value("numberOfThreads").toInt();
             }
 
+            if (parametersSettings->contains("useLineal") && ! parametersSettings->value("useLineal").toString().isEmpty())
+            {
+                waterFluxesParameters.useLineal = parametersSettings->value("useLineal").toBool();
+            }
+
+            if (parametersSettings->contains("linealMethod") && ! parametersSettings->value("linealMethod").toString().isEmpty())
+            {
+                waterFluxesParameters.linealMethod = parametersSettings->value("linealMethod").toInt();
+            }
+
             parametersSettings->endGroup();
         }
 
