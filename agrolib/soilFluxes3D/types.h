@@ -307,7 +307,7 @@ namespace soilFluxes3D { inline namespace v2
         double heatWeightFactor = 0.5;
 
         double CourantWaterThreshold = 0.5;     // used for evaluate stability
-        double instabilityFactor = 10.;         // used for evaluate stability
+        double instabilityFactor = 5.;          // used for evaluate stability
 
         bool enableOMP = true;
 

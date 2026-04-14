@@ -2849,7 +2849,7 @@ void MainWindow::showCriteria3DVariable(criteria3DVariable var, int layerIndex, 
             ui->labelOutputRaster->setText("Volumetric water content [m3 m-3]");
         }
     }
-    else if (_current3DVariable == degreeOfSaturation, avgDegreeOfSaturation)
+    else if (_current3DVariable == degreeOfSaturation || _current3DVariable == avgDegreeOfSaturation)
     {
         setTemperatureScale(myProject.criteria3DMap.colorScale);
         reverseColorScale(myProject.criteria3DMap.colorScale);
