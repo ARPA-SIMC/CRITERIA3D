@@ -108,7 +108,7 @@ namespace soilFluxes3D::v2::Water
         currentBalance.waterMBE = deltaStorage - currentBalance.waterSinkSource;
 
         // minimum reference water storage [m3] as % of current storage
-        double timePercentage = 0.001 * SF3Dmax(deltaT, 6.0) / HOUR_SECONDS;
+        double timePercentage = 0.001 * SF3Dmax(deltaT, 30.0) / HOUR_SECONDS;
         double minRefWaterStorage = currentBalance.waterStorage * timePercentage;
         // [m3] minimum 1 liter
         minRefWaterStorage = SF3Dmax(minRefWaterStorage, 0.001);
@@ -347,8 +347,8 @@ namespace soilFluxes3D::v2::Water
 
     __cudaSpec double runoff(SF3Duint_t row, SF3Duint_t col, u8_t approxNum, double deltaT, double flowSide)
     {
-        double currentDH = std::fabs(nodeGrid.waterData.pressureHead[row] - nodeGrid.waterData.pressureHead[col]);
-        if(currentDH < EPSILON_METER)
+        double currentDH = std::abs(nodeGrid.waterData.pressureHead[row] - nodeGrid.waterData.pressureHead[col]);
+        if(currentDH < 1e-6)
             return 0.;
 
         double H_i = 0.5 * (nodeGrid.waterData.pressureHead[row] + nodeGrid.waterData.oldPressureHead[row]);
@@ -384,7 +384,7 @@ namespace soilFluxes3D::v2::Water
         double slope = dH / cellDistance;
         double roughness = 0.5 * (nodeGrid.soilSurfacePointers[row].surfacePtr->roughness + nodeGrid.soilSurfacePointers[col].surfacePtr->roughness);
 
-        double v = std::pow(H_s, 2./3.) * std::sqrt(slope) / roughness;         // [m s-1]
+        double v = std::pow(H_s, 2./3.) * std::sqrt(slope) / roughness;         // [m s-1] Manning equation
 
         nodeGrid.waterData.partialCourantWater[row] = SF3Dmax(nodeGrid.waterData.partialCourantWater[row], v * deltaT / cellDistance);
 

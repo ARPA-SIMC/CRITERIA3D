@@ -288,13 +288,14 @@ namespace soilFluxes3D::v2
         {
             auto& rowValues = matrixA.values[row];
             const u8_t nrCols = matrixA.numColsInRow[row];
-            const double invDiag = 1.0 / matrixA.values[row][0];
+            const double diag = rowValues[0];
+            const double invDiag = 1.0 / diag;
 
             // Normalize off-diagonal elements
             u8_t nrLinkedFluxes = 0;
             for(u8_t col = 1; col < nrCols; ++col)
             {
-                if (rowValues[col] != 0.0)
+                if (std::abs(rowValues[col]) > 1e-14)
                 {
                     rowValues[col] *= invDiag;
                     ++nrLinkedFluxes;
@@ -418,7 +419,7 @@ namespace soilFluxes3D::v2
 
             // compute linear system
             {
-                // suface elements
+                // surface elements
                 __parfor(_parameters.enableOMP)
                 for (SF3Duint_t row = 0; row < nodeGrid.nrSurfaceNodes; ++row)
                 {
@@ -427,7 +428,7 @@ namespace soilFluxes3D::v2
 
                 if (! checkCourant(deltaT))
                 {
-                    // Courant condition is failed: reduces time step
+                    // Courant condition is failed -> reduces time step
                     return balanceResult_t::stepHalved;
                 }
                 //checkSurfaceElements(deltaT);
@@ -657,25 +658,17 @@ namespace soilFluxes3D::v2
             break;
         }
 
-        // check surface potential (must be >= 0)
-        bool isStepValid = true;
-        #pragma omp parallel for reduction(&&:isStepValid) if(_parameters.enableOMP)
+        // check surface total potential (must be >= z)
+        #pragma omp parallel for if(_parameters.enableOMP) schedule(static)
         for (SF3Duint_t row = 0; row < nodeGrid.nrSurfaceNodes; ++row)
         {
-            double& xVal = x.values[row];
-            const double zVal = nodeGrid.z[row];
-            const double diff = zVal - xVal;
-
-            if (diff > 0.)
+            if (nodeGrid.z[row] > x.values[row])
             {
-                if (diff > 1e-3)
-                    isStepValid = false;
-
-                xVal = zVal;
+                x.values[row] = nodeGrid.z[row];
             }
         }
 
-        return isStepValid;
+        return true;
     }
 
 
