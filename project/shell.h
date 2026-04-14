@@ -8,8 +8,8 @@
     class Project;
 
     bool attachOutputToConsole();
-    void openNewConsole();
-    bool closeConsole();
+    void openWinConsole();
+    void closeWinConsole();
     void sendEnterKey(void);
     bool isConsoleForeground();
 
