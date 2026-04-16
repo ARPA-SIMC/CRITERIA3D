@@ -3596,6 +3596,12 @@ void MainWindow::on_actionView_SurfaceWaterContent_automatic_range_triggered()
 
 void MainWindow::on_actionView_SurfaceWaterContent_fixed_range_triggered()
 {
+    if (! myProject.isCriteria3DInitialized)
+    {
+        myProject.logWarning("Initialize water fluxes before.");
+        return;
+    }
+
     // choose minimum
     float minimum = 0;
     QString valueStr = editValue("Choose minimum value [mm]", QString::number(minimum));

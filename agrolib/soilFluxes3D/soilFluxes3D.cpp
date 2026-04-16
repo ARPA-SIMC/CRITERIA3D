@@ -143,6 +143,7 @@ namespace soilFluxes3D::v2
         hostAlloc(nodeGrid.waterData.invariantFluxes, nrNodes);
         // only surface
         hostAlloc(nodeGrid.waterData.partialCourantWater, nrSurfaceNodes);
+        hostAlloc(nodeGrid.waterData.isSurfaceError, nrSurfaceNodes);
         // hostAlloc(nodeGrid.culvertPtr, nrSurfaceNodes);
 
         // Heat data
@@ -279,6 +280,7 @@ namespace soilFluxes3D::v2
         hostFree(nodeGrid.waterData.bestPressureHead);
         hostFree(nodeGrid.waterData.invariantFluxes);
         hostFree(nodeGrid.waterData.partialCourantWater);
+        hostFree(nodeGrid.waterData.isSurfaceError);
 
         //Culvert pointers
         //hostFree(nodeGrid.culvertPtr);
@@ -773,8 +775,8 @@ namespace soilFluxes3D::v2
     }
 
     /*!
-     * \brief sets the nodeIndex node water content and updates node pressure head and saturation degree accordingly
-     * \param waterContent  [m] surface - [m3 m-3] sub-surface
+     * \brief sets the node water content and updates node pressure head and saturation degree accordingly
+     * \param waterContent: water level on surface [m] - volumetric water content in the sub-surface [m3 m-3]
      * \return Ok/Error
      */
     SF3Derror_t setNodeWaterContent(SF3Duint_t nodeIndex, double waterContent)
@@ -790,6 +792,7 @@ namespace soilFluxes3D::v2
 
         if(nodeGrid.surfaceFlag[nodeIndex])
         {
+            // surface water level [m]
             nodeGrid.waterData.pressureHead[nodeIndex] = nodeGrid.z[nodeIndex] + waterContent;
             nodeGrid.waterData.oldPressureHead[nodeIndex] = nodeGrid.waterData.pressureHead[nodeIndex];
             nodeGrid.waterData.saturationDegree[nodeIndex] = 1.;
@@ -797,6 +800,7 @@ namespace soilFluxes3D::v2
         }
         else
         {
+            // volumetric water content in the sub-surface [m3 m-3]
             if(waterContent > 1.)
                 return SF3Derror_t::ParameterError;
 

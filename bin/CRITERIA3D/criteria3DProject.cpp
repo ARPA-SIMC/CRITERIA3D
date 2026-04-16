@@ -955,10 +955,9 @@ void Crit3DProject::assignPrecipitation()
 }
 
 
-// Water infiltration into soil cracks
-// input: precipitation [mm]
-// output: water remaining on the surface [mm]
-// after infiltration into soil cracks
+// Water seeping into soil cracks
+// input: [mm] precipitation
+// output: [mm] residual surface water after infiltration into soil cracks
 // use waterSinkSource to set the infiltration
 float Crit3DProject::computeSoilCracking(int row, int col, float precipitation)
 {
