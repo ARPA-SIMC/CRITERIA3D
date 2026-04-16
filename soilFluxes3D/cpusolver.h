@@ -16,7 +16,7 @@ namespace soilFluxes3D::v2
             bool waterMainLoop(double maxTimeStep, double& acceptedTimeStep);
             balanceResult_t waterApproximationLoop(double deltaT);
 
-            bool isLinked(bool& isPrevious, double& matrixElement, SF3Duint_t &matrixIndex, SF3Duint_t nodeIndex, u8_t linkIndex);
+            //bool isLinked(bool& isPrevious, double& matrixElement, SF3Duint_t &matrixIndex, SF3Duint_t nodeIndex, u8_t linkIndex);
             void computeLinearSystemElement(SF3Duint_t row, u8_t approxNum, double deltaT);
             void computeDiagonalElement(SF3Duint_t row, double deltaT);
             void preconditioningMatrix();

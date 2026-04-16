@@ -388,7 +388,7 @@ namespace soilFluxes3D::v2
         //Good error or first approximation
         if (approxNr == 0 || currMBRerror < bestMBRerror)
         {
-            //saveBestStep();
+            // save best step
             cudaMemcpy(nodeGrid.waterData.bestPressureHead, nodeGrid.waterData.pressureHead, nodeGrid.nrNodes * sizeof(double), cudaMemcpyDeviceToDevice);
             bestMBRerror = currMBRerror;
         }

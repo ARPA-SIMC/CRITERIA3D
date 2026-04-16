@@ -241,25 +241,19 @@ namespace soilFluxes3D::v2
 
     bool CPUSolver::checkCourant(double deltaT)
     {
-        // search maximum Courant number
+        // search the maximum Courant number
         double courantMax = 0;
         __parforop(_parameters.enableOMP, max, courantMax)
         for(SF3Duint_t i = 0; i < nodeGrid.nrSurfaceNodes; ++i)
             courantMax = SF3Dmax(courantMax, nodeGrid.waterData.partialCourantWater[i]);
 
-        // more speed, less accuracy
-        if (_parameters.MBRThreshold > 0.01)
-            courantMax *= 0.5;
-
         nodeGrid.CourantWater = courantMax;
 
         // check Courant condition
         if(nodeGrid.CourantWater < 1.01 || deltaT <= _parameters.deltaTmin)
-        {
             return true;
-        }
 
-        // Courant condition failed: update deltaT
+        // condition is failed: update deltaT based on the Courant number
         {
             _parameters.deltaTcurr /= nodeGrid.CourantWater;
 
@@ -317,6 +311,7 @@ namespace soilFluxes3D::v2
     }
 
 
+    /*
     bool CPUSolver::isLinked(bool& isPrevious, double& matrixElement, SF3Duint_t& matrixIndex,
                              SF3Duint_t nodeIndex, u8_t linkIndex)
     {
@@ -340,7 +335,7 @@ namespace soilFluxes3D::v2
         }
 
         return false;
-    }
+    }*/
 
 
     void CPUSolver::computeDiagonalElement(SF3Duint_t row, double deltaT)
@@ -362,7 +357,7 @@ namespace soilFluxes3D::v2
 
         // flux up
         u8_t linkIndex = 0;
-        if ( computeLinkFluxes(matrixA.values[row][col], matrixA.columnIndeces[row][col], row,
+        if (computeLinkFluxes(matrixA.values[row][col], matrixA.columnIndeces[row][col], row,
                               linkIndex, approxNum, deltaT, _parameters.lateralVerticalRatio,
                               linkType_t::Up, _parameters.meanType) )
             col++;
@@ -371,7 +366,7 @@ namespace soilFluxes3D::v2
         for(u8_t latIdx = 0; latIdx < maxLateralLink; ++latIdx)
         {
             linkIndex = 2 + latIdx;
-            if ( computeLinkFluxes(matrixA.values[row][col], matrixA.columnIndeces[row][col], row,
+            if (computeLinkFluxes(matrixA.values[row][col], matrixA.columnIndeces[row][col], row,
                                 linkIndex, approxNum, deltaT, _parameters.lateralVerticalRatio,
                                 linkType_t::Lateral, _parameters.meanType) )
                 col++;
@@ -405,6 +400,9 @@ namespace soilFluxes3D::v2
         balanceResult_t balanceResult = balanceResult_t::stepRefused;
         _bestMBRerror = noDataD;
 
+        // initialize surface check
+        std::memset(nodeGrid.waterData.isSurfaceError, false, nodeGrid.nrSurfaceNodes * sizeof(bool));
+
         for(u8_t approxIdx = 0; approxIdx < _parameters.maxApproximationsNumber; ++approxIdx)
         {
             // compute capacity vector elements
@@ -431,7 +429,6 @@ namespace soilFluxes3D::v2
                     // Courant condition is failed -> reduces time step
                     return balanceResult_t::stepHalved;
                 }
-                //checkSurfaceElements(deltaT);
 
                 // soil elements
                 __parfor(_parameters.enableOMP)
@@ -443,6 +440,9 @@ namespace soilFluxes3D::v2
 
             // preconditioning the matrix
             preconditioningMatrix();
+
+            // reset surface check
+            std::memset(nodeGrid.waterData.isSurfaceError, false, nodeGrid.nrSurfaceNodes * sizeof(bool));
 
             // solve linear system
             bool isStepValid;
@@ -619,13 +619,13 @@ namespace soilFluxes3D::v2
 
     bool CPUSolver::linealSolver(u8_t approximationNr)
     {
-        u32_t maxNrIteration = calcCurrentMaxIterationNumber(approximationNr);
+        u32_t nrIterationMax = calcCurrentMaxIterationNumber(approximationNr);
 
         LinealExecutionParams executionParams;
         executionParams.log = 0;
 
         LinealiaIterativeSolverParams iterativeParams;
-        iterativeParams.max_iterations = maxNrIteration;
+        iterativeParams.max_iterations = nrIterationMax;
         iterativeParams.max_relative_residual_norm = _parameters.residualTolerance;
 
         LinealiaRelaxedPreconditionerParams relPcgParams;
@@ -643,28 +643,34 @@ namespace soilFluxes3D::v2
         b.num_elements = vectorB.numElements;
         b.values = vectorB.values;
 
+        LinealiaIterativeResult result;
+
         switch (linealMethod) {
         case 0:
-            LinealiaLib::instance().solveCG(A, x, b, executionParams, iterativeParams);
+            result = LinealiaLib::instance().solveCG(A, x, b, executionParams, iterativeParams);
             break;
         case 1:
-            LinealiaLib::instance().solvePCG_SOR(A, x, b, executionParams, iterativeParams, relPcgParams);
+            result = LinealiaLib::instance().solvePCG_SOR(A, x, b, executionParams, iterativeParams, relPcgParams);
             break;
         case 2:
-            LinealiaLib::instance().solvePCG_AMG_SOR(A, x, b, executionParams, iterativeParams, pcgAmgParams);
+            result = LinealiaLib::instance().solvePCG_AMG_SOR(A, x, b, executionParams, iterativeParams, pcgAmgParams);
             break;
         default:
-            LinealiaLib::instance().solvePCG_SOR(A, x, b, executionParams, iterativeParams, relPcgParams);
+            result = LinealiaLib::instance().solvePCG_SOR(A, x, b, executionParams, iterativeParams, relPcgParams);
             break;
         }
 
-        // check surface total potential (must be >= z)
+        // Check surface water level (it must be ≥ 0)
         #pragma omp parallel for if(_parameters.enableOMP) schedule(static)
         for (SF3Duint_t row = 0; row < nodeGrid.nrSurfaceNodes; ++row)
         {
-            if (nodeGrid.z[row] > x.values[row])
+            double elevation = nodeGrid.z[row];
+            double waterLevel = x.values[row] - elevation;
+            if (waterLevel < 0.)
             {
-                x.values[row] = nodeGrid.z[row];
+                x.values[row] = elevation;
+                if (waterLevel <= -2e-5)   // half liter in 5x5 m grid
+                    nodeGrid.waterData.isSurfaceError[row] = true;
             }
         }
 

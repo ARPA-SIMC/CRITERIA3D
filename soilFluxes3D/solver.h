@@ -51,7 +51,7 @@ namespace soilFluxes3D::v2
     inline __cudaSpec u32_t Solver::calcCurrentMaxIterationNumber(u8_t approxNumber)
     {
         u32_t maxCurrIterNum = static_cast<u32_t>((approxNumber + 1) * (static_cast<float>(_parameters.maxIterationsNumber) / static_cast<float>(_parameters.maxApproximationsNumber)));
-        return SF3Dmax(maxCurrIterNum, static_cast<u32_t>(20));
+        return SF3Dmax(maxCurrIterNum, static_cast<u32_t>(25));
     }
 
     inline void Solver::updateParameters(const SolverParametersPartial &newParameters)

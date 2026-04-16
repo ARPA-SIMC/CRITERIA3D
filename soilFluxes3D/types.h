@@ -135,20 +135,21 @@ namespace soilFluxes3D { inline namespace v2
     enum class WRCModel : u8_t {VanGenuchten, ModifiedVanGenuchten, Campbell};
     struct waterData_t
     {
-        double *saturationDegree = nullptr;   //Se
-        double *waterConductivity = nullptr;  //k
-        double *waterFlow = nullptr;          //Qw
-        double *pressureHead = nullptr;       //H
-        double *waterSinkSource = nullptr;    //waterSinkSource
-        double *pond = nullptr;               //pond
-        double *invariantFluxes = nullptr;    //invariantFlux
+        double *saturationDegree = nullptr;     // [-]
+        double *waterConductivity = nullptr;    // [m s-1]
+        double *waterFlow = nullptr;            // [m3 s-1]
+        double *pressureHead = nullptr;         // [m]
+        double *waterSinkSource = nullptr;      // [m3 s-1]
+        double *pond = nullptr;                 // [m]
+        double *invariantFluxes = nullptr;      // [m3 s-1]
 
-        //Temp variables
-        double *oldPressureHead = nullptr;    //oldH
-        double *bestPressureHead = nullptr;   //bestH
+        // temporary variables
+        double *oldPressureHead = nullptr;      // [m]
+        double *bestPressureHead = nullptr;     // [m]
 
-        //Courant data
+        // only surface (Courant and surface check)
         double *partialCourantWater = nullptr;
+        bool *isSurfaceError = nullptr;
     };
 
     struct culvertData_t
@@ -307,7 +308,7 @@ namespace soilFluxes3D { inline namespace v2
         double heatWeightFactor = 0.5;
 
         double CourantWaterThreshold = 0.5;     // used for evaluate stability
-        double instabilityFactor = 5.;          // used for evaluate stability
+        double instabilityFactor = 10.;         // used for evaluate stability
 
         bool enableOMP = true;
 
