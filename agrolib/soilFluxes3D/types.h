@@ -147,9 +147,8 @@ namespace soilFluxes3D { inline namespace v2
         double *oldPressureHead = nullptr;      // [m]
         double *bestPressureHead = nullptr;     // [m]
 
-        // only surface (Courant and surface check)
+        // only surface (Courant)
         double *partialCourantWater = nullptr;
-        bool *isSurfaceError = nullptr;
     };
 
     struct culvertData_t

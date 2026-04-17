@@ -19,7 +19,6 @@ namespace soilFluxes3D::v2
 
 namespace soilFluxes3D::v2::Soil
 {
-
     /*!
      * \brief Computes node volumetric water content as function of the node degree of saturation
      * \return theta (volumetric water content)     [m3 m-3]

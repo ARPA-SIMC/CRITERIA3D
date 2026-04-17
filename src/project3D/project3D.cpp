@@ -621,16 +621,18 @@ bool Project3D::setAccuracy()
     // modelAccuracy: minimum 1, default: 3, maximum 5
 
     // maximum water velocity
-    double vMax = 5 + 5 * waterFluxesParameters.modelAccuracy;                      // [m s-1]
+    double vMax = 5 + 5 * waterFluxesParameters.modelAccuracy;                      // [m s-1] default: 20
 
     // minimum dT
-    double minimumDeltaT = std::min(30.0, DEM.header->cellSize / vMax);             // [s]
+    double minimumDeltaT = std::min(6.0, DEM.header->cellSize / vMax);              // [s]
 
     // Mass Balance Ratio precision (digit at which error is accepted)
-    int massBalanceRatioDigit = waterFluxesParameters.modelAccuracy;                // default: 3
-    int toleranceDigit = 7 + waterFluxesParameters.modelAccuracy;                   // default: 10
+    short massBalanceRatioDigit = waterFluxesParameters.modelAccuracy;              // [-] default: 3
+    short toleranceDigit = 7 + waterFluxesParameters.modelAccuracy;                 // [-] default: 10
 
-    soilFluxes3D::setNumericalParameters(minimumDeltaT, 3600, 200, 10, toleranceDigit, massBalanceRatioDigit);
+    short maxIterationNr = 150;
+    short maxApproximationNr = 10;
+    soilFluxes3D::setNumericalParameters(minimumDeltaT, 3600, maxIterationNr, maxApproximationNr, toleranceDigit, massBalanceRatioDigit);
 
     // Lineal
     soilFluxes3D::setUseLineal(waterFluxesParameters.useLineal);
