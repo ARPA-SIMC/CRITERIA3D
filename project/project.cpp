@@ -968,10 +968,15 @@ QDateTime Project::getCurrentTime() const
     QDateTime myDateTime;
     if (gisSettings.isUTC)
     {
-        myDateTime.setTimeZone(QTimeZone::utc());
+        #if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
+            myDateTime.setTimeZone(QTimeZone::UTC);
+        #else
+            myDateTime.setTimeSpec(Qt::UTC);
+        #endif
     }
 
     myDateTime.setDate(_currentDate);
+    myDateTime.setTime(QTime(0, 0, 0));
     return myDateTime.addSecs(_currentHour * HOUR_SECONDS);
 }
 
