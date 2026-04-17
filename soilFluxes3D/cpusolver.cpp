@@ -623,6 +623,7 @@ namespace soilFluxes3D::v2
         iterativeParams.max_relative_residual_norm = _parameters.residualTolerance;
 
         LinealiaRelaxedParams relaxParams;
+
         LinealiaRelaxedPreconditionerParams relPcgParams;
         LinealiaPcgAmgParams pcgAmgParams;
 
