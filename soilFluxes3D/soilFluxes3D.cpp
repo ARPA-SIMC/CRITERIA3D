@@ -143,8 +143,7 @@ namespace soilFluxes3D::v2
         hostAlloc(nodeGrid.waterData.invariantFluxes, nrNodes);
         // only surface
         hostAlloc(nodeGrid.waterData.partialCourantWater, nrSurfaceNodes);
-        hostAlloc(nodeGrid.waterData.isSurfaceError, nrSurfaceNodes);
-        // hostAlloc(nodeGrid.culvertPtr, nrSurfaceNodes);
+        //hostAlloc(nodeGrid.culvertPtr, nrSurfaceNodes);
 
         // Heat data
         if(isComputeHeat)
@@ -280,7 +279,6 @@ namespace soilFluxes3D::v2
         hostFree(nodeGrid.waterData.bestPressureHead);
         hostFree(nodeGrid.waterData.invariantFluxes);
         hostFree(nodeGrid.waterData.partialCourantWater);
-        hostFree(nodeGrid.waterData.isSurfaceError);
 
         //Culvert pointers
         //hostFree(nodeGrid.culvertPtr);

@@ -318,7 +318,7 @@ namespace soilFluxes3D::v2::Water
         else if(! isNodeSoil  && ! isLinkedSoil)
             matrixElement = runoff(nodeIndex, linkedNodeindex, approxNum, deltaT, flowArea);
         else
-            matrixElement = infiltration(nodeIndex, linkedNodeindex, approxNum, deltaT, flowArea, meanType);
+            matrixElement = infiltration(nodeIndex, linkedNodeindex, deltaT, flowArea, meanType);
 
         matrixIndex = linkedNodeindex;
 
@@ -383,17 +383,12 @@ namespace soilFluxes3D::v2::Water
 
         nodeGrid.waterData.partialCourantWater[i] = SF3Dmax(nodeGrid.waterData.partialCourantWater[i], v * deltaT / cellDistance);
 
-        // reduces velocity at nodes with water level error (applies from the second approximation)
-        if (nodeGrid.waterData.isSurfaceError[i] || nodeGrid.waterData.isSurfaceError[j])
-            v *= 0.5;
-
         double flowArea = flowSide * H_s;       // [m2]
-        return v * flowArea / currentDH;
+        return (v * flowArea) / currentDH;
     }
 
 
-    __cudaSpec double infiltration(SF3Duint_t i, SF3Duint_t j, u8_t approxNr,
-                                   double deltaT, double flowArea, meanType_t meanType)
+    __cudaSpec double infiltration(SF3Duint_t i, SF3Duint_t j, double deltaT, double flowArea, meanType_t meanType)
     {
         SF3Duint_t surfNodeIdx = i;
         SF3Duint_t soilNodeIdx = j;
@@ -426,11 +421,7 @@ namespace soilFluxes3D::v2::Water
         double soilH = 0.5 * (nodeGrid.waterData.pressureHead[soilNodeIdx] + nodeGrid.waterData.oldPressureHead[soilNodeIdx]);
 
         double surfaceWater = SF3Dmax(surfH - nodeGrid.z[surfNodeIdx], 0.);     // [m]
-        double maxInfRate = surfaceWater / deltaT;      // [m s-1]
-
-        //double currentFlowRate = nodeGrid.waterData.waterFlow[surfNodeIdx] / nodeGrid.size[surfNodeIdx];    // [m s-1]
-        //maxInfRate += (approxNum == 0)? currentFlowRate: currentFlowRate * 0.5;
-
+        double maxInfRate = surfaceWater / deltaT;                              // [m s-1]
         if(maxInfRate < 1e-10)
             return 0.;
 
@@ -485,11 +476,7 @@ namespace soilFluxes3D::v2::Water
                 double elevation = nodeGrid.z[row];
                 double waterLevel = tempX[row] - elevation;
                 if (waterLevel < 0.)
-                {
                     tempX[row] = elevation;
-                    if (waterLevel <= -2e-5)   // half liter in 5x5 m grid
-                        nodeGrid.waterData.isSurfaceError[row] = true;
-                }
             }
 
             double currentNorm = std::fabs(tempX[row] - vectorX.values[row]);
