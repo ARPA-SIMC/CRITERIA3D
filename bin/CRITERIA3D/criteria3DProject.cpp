@@ -544,7 +544,7 @@ bool Crit3DProject::initializeCropFromDegreeDays(gis::Crit3DRasterGrid &myDegree
 
             // field unit list and crop list have the same index
             int index = getLandUnitIndexRowCol(row, col);
-            if (!isCrop(index))
+            if (! isCrop(index))
                 continue;
 
             double x, y;
@@ -1187,6 +1187,7 @@ bool Crit3DProject::runModels(const QDateTime &firstTime, const QDateTime &lastT
             radiationMaps->initialize();
         }
 
+        logInfo("\nComputation start: " + QDateTime::currentDateTime().toString(Qt::ISODate));
         isModelRunning = true;
     }
 
@@ -1295,7 +1296,7 @@ bool Crit3DProject::runModels(const QDateTime &firstTime, const QDateTime &lastT
             saveModelsState(dirName);
         }
 
-        logInfoGUI("Computation is finished.");
+        logInfo("\nComputation end: " + QDateTime::currentDateTime().toString(Qt::ISODate));
     }
 
     isModelRunning = false;
@@ -2514,7 +2515,7 @@ bool Crit3DProject::loadModelState(QString statePath)
         month = stateStr.mid(4, 2).toInt();
         day = stateStr.mid(6, 2).toInt();
         hour = stateStr.mid(10, 2).toInt();
-    #endif
+    #endif  
 
     if (hour == 24)
     {
@@ -2526,6 +2527,8 @@ bool Crit3DProject::loadModelState(QString statePath)
         setCurrentDate(QDate(year, month, day));
         setCurrentHour(hour);
     }
+
+    logInfo("\nLoad state of " + getCurrentDate().toString("yyyy-MM-dd") + " H"+ QString::number(getCurrentHour()));
 
     std::string errorStr, fileName;
 

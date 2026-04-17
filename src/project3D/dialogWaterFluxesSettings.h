@@ -31,6 +31,7 @@
 
         // numerical solution
         QCheckBox *useLineal;
+        QRadioButton *GaussSeidel;
         QRadioButton *conjugateGradient;
         QRadioButton *pgc_sor;
         QRadioButton *pcg_amg_sor;
@@ -65,21 +66,25 @@
         void setLinealMethod(int value)
         {
             if (value == 0)
-                conjugateGradient->setChecked(true);
+                GaussSeidel->setChecked(true);
             else if (value == 1)
-                pgc_sor->setChecked(true);
+                conjugateGradient->setChecked(true);
             else if (value == 2)
+                pgc_sor->setChecked(true);
+            else if (value == 3)
                 pcg_amg_sor->setChecked(true);
         }
 
         int getLinealMethod() const
         {
-            if (conjugateGradient->isChecked())
+            if (GaussSeidel->isChecked())
                 return 0;
-            else if (pgc_sor->isChecked())
+            if (conjugateGradient->isChecked())
                 return 1;
-            else if (pcg_amg_sor->isChecked())
+            else if (pgc_sor->isChecked())
                 return 2;
+            else if (pcg_amg_sor->isChecked())
+                return 3;
             else
                 return 1;
         }

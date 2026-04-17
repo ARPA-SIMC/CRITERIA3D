@@ -466,8 +466,8 @@ namespace soilFluxes3D::v2
         if (maxDeltaT < minDeltaT)
             maxDeltaT = minDeltaT;
 
-        if (maxIterationNumber < 10)
-            maxIterationNumber = 10;
+        if (maxIterationNumber < 20)
+            maxIterationNumber = 20;
         if (maxIterationNumber > MAX_NUMBER_ITERATIONS)
             maxIterationNumber = MAX_NUMBER_ITERATIONS;
 
@@ -483,8 +483,8 @@ namespace soilFluxes3D::v2
 
         if (MBRThresholdExponent < 1)
             MBRThresholdExponent = 1;
-        if (MBRThresholdExponent > 6)
-            MBRThresholdExponent = 6;
+        if (MBRThresholdExponent > 9)
+            MBRThresholdExponent = 9;
 
         SolverParametersPartial paramTemp;
         paramTemp.MBRThreshold = std::pow(10.0, -MBRThresholdExponent);

@@ -242,7 +242,7 @@
 
         void on_actionAutomatic_state_saving_end_of_month_toggled(bool isChecked);
 
-        void on_buttonModel1hour_clicked();
+        void on_buttonModel_1hour_clicked();
 
         void on_actionHide_TreeCover_map_triggered();
 

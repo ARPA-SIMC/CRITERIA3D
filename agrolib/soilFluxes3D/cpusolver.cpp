@@ -628,6 +628,7 @@ namespace soilFluxes3D::v2
         iterativeParams.max_iterations = nrIterationMax;
         iterativeParams.max_relative_residual_norm = _parameters.residualTolerance;
 
+        LinealiaRelaxedParams relaxParams;
         LinealiaRelaxedPreconditionerParams relPcgParams;
         LinealiaPcgAmgParams pcgAmgParams;
 
@@ -647,12 +648,15 @@ namespace soilFluxes3D::v2
 
         switch (linealMethod) {
         case 0:
-            result = LinealiaLib::instance().solveCG(A, x, b, executionParams, iterativeParams);
+            result = LinealiaLib::instance().solveSOR(A, x, b, executionParams, iterativeParams, relaxParams);
             break;
         case 1:
-            result = LinealiaLib::instance().solvePCG_SOR(A, x, b, executionParams, iterativeParams, relPcgParams);
+            result = LinealiaLib::instance().solveCG(A, x, b, executionParams, iterativeParams);
             break;
         case 2:
+            result = LinealiaLib::instance().solvePCG_SOR(A, x, b, executionParams, iterativeParams, relPcgParams);
+            break;
+        case 3:
             result = LinealiaLib::instance().solvePCG_AMG_SOR(A, x, b, executionParams, iterativeParams, pcgAmgParams);
             break;
         default:

@@ -84,15 +84,17 @@ DialogWaterFluxesSettings::DialogWaterFluxesSettings()
     // numerical solution
     QGroupBox* numericalGroupBox = new QGroupBox("Numerical solution (Lineal)");
     useLineal = new QCheckBox("Use linealia");
+    GaussSeidel = new QRadioButton("Gauss-Seidel");
     conjugateGradient = new QRadioButton("Conjugate gradient");
     pgc_sor = new QRadioButton("Preconditioned conjugate gradient");
     pcg_amg_sor = new QRadioButton("AMG preconditioned conjugate gradient");
 
     QGridLayout *numericalLayout = new QGridLayout();
     numericalLayout->addWidget(useLineal, 0, 0);
-    numericalLayout->addWidget(conjugateGradient, 0, 1);
-    numericalLayout->addWidget(pgc_sor, 1, 1);
-    numericalLayout->addWidget(pcg_amg_sor, 2, 1);
+    numericalLayout->addWidget(GaussSeidel, 0, 1);
+    numericalLayout->addWidget(conjugateGradient, 1, 1);
+    numericalLayout->addWidget(pgc_sor, 2, 1);
+    numericalLayout->addWidget(pcg_amg_sor, 3, 1);
     numericalGroupBox->setLayout(numericalLayout);
 
     // model accuracy
