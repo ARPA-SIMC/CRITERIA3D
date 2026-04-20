@@ -969,7 +969,7 @@ QDateTime Project::getCurrentTime() const
     if (gisSettings.isUTC)
     {
         #if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
-            myDateTime.setTimeZone(QTimeZone::UTC);
+            myDateTime.setTimeZone(QTimeZone::utc());
         #else
             myDateTime.setTimeSpec(Qt::UTC);
         #endif
