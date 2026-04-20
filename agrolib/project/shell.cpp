@@ -138,9 +138,10 @@ void openWinConsole()
     AllocConsole();
 
     // redirect STDIO
-    freopen("CONOUT$", "w", stdout);
-    freopen("CONOUT$", "w", stderr);
-    freopen("CONIN$", "r", stdin);
+    FILE* fp;
+    freopen_s(&fp, "CONOUT$", "w", stdout);
+    freopen_s(&fp, "CONOUT$", "w", stderr);
+    freopen_s(&fp, "CONIN$", "r", stdin);
 
     // syncronize C++ streams
     std::ios::sync_with_stdio(true);
