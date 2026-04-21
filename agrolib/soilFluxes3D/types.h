@@ -95,7 +95,7 @@ namespace soilFluxes3D { inline namespace v2
     //Process implemented
     enum class processType : u8_t {Water, Heat, Solutes};
 
-    enum class boundaryType_t : u8_t {NoBoundary, Runoff, FreeDrainage, FreeLateraleDrainage,
+    enum class boundaryType_t : u8_t {NoBoundary, Runoff, FreeDrainage, FreeLateralDrainage,
                                     PrescribedTotalWaterPotential, Urban, Road, Culvert, HeatSurface, SoluteFlux};
 
     enum class linkType_t : u8_t {NoLink, Up, Down, Lateral};
@@ -303,7 +303,7 @@ namespace soilFluxes3D { inline namespace v2
         WRCModel waterRetentionCurveModel = WRCModel::ModifiedVanGenuchten;
         meanType_t meanType = meanType_t::Logarithmic;
 
-        double lateralVerticalRatio = 10.;
+        double lateralVerticalRatio = 4.;       // [-] default
         double heatWeightFactor = 0.5;
 
         double CourantWaterThreshold = 0.5;     // used for evaluate stability

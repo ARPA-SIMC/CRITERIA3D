@@ -343,11 +343,15 @@ namespace soilFluxes3D::v2
         if (nrThreads < 1 || nrThreads > nrHWthreads)
             nrThreads = nrHWthreads;
 
-        SolverParametersPartial paramTemp;
-        paramTemp.numThreads = nrThreads;
         if(solver)
         {
+            SolverParametersPartial paramTemp;
+            paramTemp.numThreads = nrThreads;
+            if (nrThreads == 1)
+                paramTemp.enableOMP = false;
+
             solver->updateParameters(paramTemp);
+
             #ifndef CUDA_ENABLED
                 CPUSolverObject.setThreads();
             #endif

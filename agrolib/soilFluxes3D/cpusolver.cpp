@@ -30,7 +30,7 @@ namespace soilFluxes3D::v2
         if(_parameters.deltaTcurr == noDataD)
             _parameters.deltaTcurr = _parameters.deltaTmax;
 
-        _parameters.enableOMP = true;       //TO DO: (nodeGrid.nrNodes > ...);
+        _parameters.enableOMP = true;
         if(_parameters.enableOMP)
             omp_set_num_threads(static_cast<int>(_parameters.numThreads));
 
@@ -144,14 +144,14 @@ namespace soilFluxes3D::v2
         {
             acceptedTimeStep = SF3Dmin(_parameters.deltaTcurr, maxTimeStep);
 
-            //Save instantaneus H values
+            // save instantaneus H values
             std::memcpy(nodeGrid.waterData.oldPressureHead, nodeGrid.waterData.pressureHead, nodeGrid.nrNodes * sizeof(double));
 
-            //initialize the solution vector with the current pressure head
+            // initialize the solution vector with the current pressure head
             assert(vectorX.numElements == nodeGrid.nrNodes);
             std::memcpy(vectorX.values, nodeGrid.waterData.pressureHead, vectorX.numElements * sizeof(double));
 
-            //Assign vectorC surface values and compute subsurface saturation degree
+            // sssign vectorC surface values and compute subsurface saturation degree
             __parfor(_parameters.enableOMP)
             for (SF3Duint_t nodeIdx = 0; nodeIdx < nodeGrid.nrNodes; ++nodeIdx)
             {
@@ -162,10 +162,8 @@ namespace soilFluxes3D::v2
             }
 
             // update aereodynamic and soil conductance
-            updateConductance();
-
-            // update boundary water
-            updateBoundaryWaterData(acceptedTimeStep);
+            if(simulationFlags.computeHeat)
+                updateConductance();
 
             // main computation
             stepStatus = waterApproximationLoop(acceptedTimeStep);
@@ -363,9 +361,9 @@ namespace soilFluxes3D::v2
             col++;
 
         // flux lateral
-        for(u8_t latIdx = 0; latIdx < maxLateralLink; ++latIdx)
+        for(u8_t l = 0; l < nodeGrid.numLateralLink[row]; ++l)
         {
-            linkIndex = 2 + latIdx;
+            linkIndex = l + 2;
             if (computeLinkFluxes(matrixA.values[row][col], matrixA.columnIndeces[row][col], row,
                                 linkIndex, approxNum, deltaT, _parameters.lateralVerticalRatio,
                                 linkType_t::Lateral, _parameters.meanType) )
@@ -706,4 +704,4 @@ namespace soilFluxes3D::v2
         return true;
     }
 
-} // namespace
+} // end namespace

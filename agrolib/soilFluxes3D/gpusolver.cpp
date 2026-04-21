@@ -32,7 +32,7 @@ namespace soilFluxes3D::v2
         if(_parameters.deltaTcurr == noDataD)
             _parameters.deltaTcurr = _parameters.deltaTmax;
 
-        _parameters.enableOMP = true;                           //TO DO: (nodeGrid.nrNodes > ...);
+        _parameters.enableOMP = true;
         if(_parameters.enableOMP)
             omp_set_num_threads(static_cast<int>(_parameters.numThreads));
 
@@ -187,10 +187,8 @@ namespace soilFluxes3D::v2
             launchKernel(initializeCapacityAndSaturationDegree_k, d_Cvalues);
 
             //Update aereodynamic and soil conductance
-            updateConductance();
-
-            //Update boundary
-            launchKernel(updateBoundaryWaterData_k, acceptedTimeStep);
+            if(simulationFlags.computeHeat)
+                updateConductance();
 
             //Effective computation step
             stepStatus = waterApproximationLoop(acceptedTimeStep);
@@ -865,7 +863,7 @@ namespace soilFluxes3D::v2
                 nodeGrid.boundaryData.waterFlowRate[nodeIdx] = -nodeGrid.waterData.waterConductivity[nodeIdx] * nodeGrid.linkData[0].interfaceArea[nodeIdx];
                 break;
 
-            case boundaryType_t::FreeLateraleDrainage:
+            case boundaryType_t::FreeLateralDrainage:
                 //Darcy gradient = slope
                 nodeGrid.boundaryData.waterFlowRate[nodeIdx] = -nodeGrid.waterData.waterConductivity[nodeIdx] * nodeGrid.boundaryData.boundarySize[nodeIdx]
                                                                * nodeGrid.boundaryData.boundarySlope[nodeIdx] * (*solver).getLVRatio();
@@ -970,9 +968,10 @@ namespace soilFluxes3D::v2
         }
 
         // flux lateral
-        for(u32_t latIdx = 0; latIdx < maxLateralLink; ++latIdx)
+        for(u32_t l = 0; l < nodeGrid.numLateralLink[row]; ++l)
         {
-            isLinked = computeLinkFluxes(matrixA.d_values[currentElementIndex], unsignedTmpColIdx, rowIdx, 2 + latIdx, approxNum, deltaT, lateralVerticalRatio, linkType_t::Lateral, meanType);
+            u8_t linkIndex = l + 2;
+            isLinked = computeLinkFluxes(matrixA.d_values[currentElementIndex], unsignedTmpColIdx, rowIdx, linkIndex, approxNum, deltaT, lateralVerticalRatio, linkType_t::Lateral, meanType);
             if(isLinked)
             {
                 matrixA.d_columnIndeces[currentElementIndex] = static_cast<i64_t>(unsignedTmpColIdx);
