@@ -655,7 +655,7 @@ namespace soilFluxes3D::v2
             result = LinealiaLib::instance().solvePCG_AMG_SOR(A, x, b, executionParams, iterativeParams, pcgAmgParams);
             break;
         default:
-            result = LinealiaLib::instance().solvePCG_SOR(A, x, b, executionParams, iterativeParams, relPcgParams);
+            result = LinealiaLib::instance().solveSSOR(A, x, b, executionParams, iterativeParams, relaxParams);
             break;
         }
 
