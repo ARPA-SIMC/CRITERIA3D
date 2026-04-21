@@ -212,7 +212,7 @@ namespace soilFluxes3D::v2::Heat
 
     SF3Derror_t updateConductance()
     {
-        if(!simulationFlags.computeHeat)
+        if(! simulationFlags.computeHeat)
             return SF3Derror_t::MissingDataError;
 
         __parfor(__ompStatus)
@@ -220,8 +220,6 @@ namespace soilFluxes3D::v2::Heat
         {
             if(nodeGrid.boundaryData.boundaryType[nIdx] != boundaryType_t::HeatSurface)
                 continue;
-
-            //check if is a heat node?
 
             nodeGrid.boundaryData.aerodynamicConductance[nIdx] = computeNodeAerodynamicConductance(nIdx);
 

@@ -295,7 +295,10 @@ namespace soilFluxes3D::v2::Water
             vectorC.values[nodeIndex] = nodeGrid.size[nodeIndex] * dThetadH;
 
             if(simulationFlags.computeHeat && simulationFlags.computeHeatVapor)
-                vectorC.values[nodeIndex] += nodeGrid.size[nodeIndex] * computeNodedThetaVdH(nodeIndex, getNodeMeanTemperature(nodeIndex), dThetadH);
+            {
+                vectorC.values[nodeIndex] += nodeGrid.size[nodeIndex]
+                                             * computeNodedThetaVdH(nodeIndex, getNodeMeanTemperature(nodeIndex), dThetadH);
+            }
         }
     }
 
@@ -564,7 +567,7 @@ namespace soilFluxes3D::v2::Water
                     nodeGrid.boundaryData.waterFlowRate[nodeIdx] = - nodeGrid.waterData.waterConductivity[nodeIdx] * nodeGrid.linkData[0].interfaceArea[nodeIdx];
                     break;
 
-                case boundaryType_t::FreeLateraleDrainage:
+                case boundaryType_t::FreeLateralDrainage:
                     //Darcy gradient = slope
                     nodeGrid.boundaryData.waterFlowRate[nodeIdx] = - nodeGrid.waterData.waterConductivity[nodeIdx] * nodeGrid.boundaryData.boundarySize[nodeIdx]
                                                                             * nodeGrid.boundaryData.boundarySlope[nodeIdx] * solver->getLVRatio();
@@ -685,8 +688,6 @@ namespace soilFluxes3D::v2::Water
             else
                 nodeGrid.waterData.waterFlow[nodeIdx] += nodeGrid.boundaryData.waterFlowRate[nodeIdx];
         }
-
-        return;
     }
 
     __cudaSpec double getMatrixElement(SF3Duint_t rowIndex, SF3Duint_t columnIndex)
