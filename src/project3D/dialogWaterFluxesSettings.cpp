@@ -87,7 +87,7 @@ DialogWaterFluxesSettings::DialogWaterFluxesSettings()
     GaussSeidel = new QRadioButton("Gauss-Seidel");
     conjugateGradient = new QRadioButton("Conjugate gradient");
     pgc_sor = new QRadioButton("Preconditioned conjugate gradient");
-    pcg_amg_sor = new QRadioButton("AMG preconditioned conjugate gradient");
+    pcg_amg_sor = new QRadioButton("MAMGO precond. conjugate gradient");
 
     QGridLayout *numericalLayout = new QGridLayout();
     numericalLayout->addWidget(useLineal, 0, 0);

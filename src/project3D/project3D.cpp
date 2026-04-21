@@ -51,7 +51,7 @@ WaterFluxesParameters::WaterFluxesParameters()
 void WaterFluxesParameters::initialize()
 {
     useLineal = false;
-    linealMethod = 1;
+    linealMethod = 0;
 
     // boundary conditions
     freeCatchmentRunoff = true;
