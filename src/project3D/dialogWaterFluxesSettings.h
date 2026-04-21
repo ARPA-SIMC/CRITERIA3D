@@ -54,6 +54,7 @@
         void setLinealAvailable(bool value)
         {
             useLineal->setVisible(value);
+            GaussSeidel->setVisible(value);
             conjugateGradient->setVisible(value);
             pgc_sor->setVisible(value);
             pcg_amg_sor->setVisible(value);
