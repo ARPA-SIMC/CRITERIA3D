@@ -1004,7 +1004,7 @@ bool Project3D::setCrit3DTopography()
                         {
                             // TODO problema se è urban o road
                             float boundaryArea = lateralArea;
-                            myResult = soilFluxes3D::setNode(index, x, y, z, volume, false, soilFluxes3D::boundaryType_t::FreeLateraleDrainage,
+                            myResult = soilFluxes3D::setNode(index, x, y, z, volume, false, soilFluxes3D::boundaryType_t::FreeLateralDrainage,
                                                              boundarySlope, boundaryArea);
                         }
                         else
@@ -1367,7 +1367,7 @@ void Project3D::runWaterFluxes3DModel(double totalTimeStep, bool isRestart)
     double freeDrainage = soilFluxes3D::getTotalBoundaryWaterFlow(soilFluxes3D::boundaryType_t::FreeDrainage);
     logInfo("free drainage [m3]: " + QString::number(freeDrainage));
 
-    double lateralDrainage = soilFluxes3D::getTotalBoundaryWaterFlow(soilFluxes3D::boundaryType_t::FreeLateraleDrainage);
+    double lateralDrainage = soilFluxes3D::getTotalBoundaryWaterFlow(soilFluxes3D::boundaryType_t::FreeLateralDrainage);
     logInfo("lateral drainage [m3]: " + QString::number(lateralDrainage));
 
     double forecastWaterContent = previousTotalWaterContent + runoff + freeDrainage + lateralDrainage
