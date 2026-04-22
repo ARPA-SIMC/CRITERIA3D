@@ -33,6 +33,6 @@ namespace soilFluxes3D::v2::Water
     __cudaSpec double redistribution(SF3Duint_t i, SF3Duint_t j, double lateralVerticalRatio,
                                      double flowArea, linkType_t linkType, meanType_t meanType);
 
-    double JacobiWaterCPU(VectorCPU& vectorX, const MatrixCPU &matrixA, const VectorCPU& vectorB);
+    double JacobiWaterCPU(VectorCPU& vectorX, VectorCPU &vectorNewX, const MatrixCPU &matrixA, const VectorCPU& vectorB);
     double GaussSeidelWaterCPU(VectorCPU& vectorX, const MatrixCPU &matrixA, const VectorCPU& vectorB);
 }

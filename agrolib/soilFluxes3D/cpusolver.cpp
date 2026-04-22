@@ -50,6 +50,9 @@ namespace soilFluxes3D::v2
         vectorX.numElements = nodeGrid.nrNodes;
         hostSolverAlloc(vectorX.values, vectorX.numElements);
 
+        vectorNewX.numElements = nodeGrid.nrNodes;
+        hostSolverAlloc(vectorNewX.values, vectorNewX.numElements);
+
         vectorB.numElements = nodeGrid.nrNodes;
         hostSolverAlloc(vectorB.values, vectorB.numElements);
 
@@ -120,6 +123,7 @@ namespace soilFluxes3D::v2
 
         //Destruct matrix variable
         hostSolverFree(vectorX.values);
+        hostSolverFree(vectorNewX.values);
 
         hostSolverFree(vectorB.values);
 
@@ -682,7 +686,7 @@ namespace soilFluxes3D::v2
             switch(computationType)
             {
                 case processType::Water:
-                    currErrorNorm = JacobiWaterCPU(vectorX, matrixA, vectorB);
+                    currErrorNorm = JacobiWaterCPU(vectorX, vectorNewX, matrixA, vectorB);
                     break;
                 case processType::Heat:
                     currErrorNorm = GaussSeidelHeatCPU(vectorX, matrixA, vectorB);
