@@ -10,7 +10,7 @@ namespace soilFluxes3D::v2
     {
         private:
             MatrixCPU matrixA;
-            VectorCPU vectorB, vectorX;
+            VectorCPU vectorB, vectorX, vectorNewX;
             VectorCPU vectorC;
 
             bool waterMainLoop(double maxTimeStep, double& acceptedTimeStep);

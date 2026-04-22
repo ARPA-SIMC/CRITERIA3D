@@ -459,44 +459,42 @@ namespace soilFluxes3D::v2::Water
     }
 
 
-    double JacobiWaterCPU(VectorCPU& vectorX, const MatrixCPU& matrixA, const VectorCPU& vectorB)
+    double JacobiWaterCPU(VectorCPU& vectorX, VectorCPU& vectorNewX, const MatrixCPU& matrixA, const VectorCPU& vectorB)
     {
-        double* tempX = nullptr;
-        hostAlloc(tempX, vectorX.numElements);
-        std::memcpy(tempX, vectorB.values, vectorB.numElements * sizeof(double));
-
         double sumNorm = 0;
 
-        __parforop(__ompStatus, +, sumNorm)
+        #pragma omp parallel for if(__ompStatus) schedule(static) reduction(+:sumNorm)
         for(SF3Duint_t row = 0; row < matrixA.numRows; ++row)
         {
-            for(u8_t col = 1; col < matrixA.numColsInRow[row]; ++col)
-                tempX[row] -= matrixA.values[row][col] * vectorX.values[matrixA.columnIndeces[row][col]];
+            double x_new = vectorB.values[row];
 
-            // check surface water level (it must be <= 0)
-            if (nodeGrid.surfaceFlag[row])
+            const uint32_t nrCols = matrixA.numColsInRow[row];
+            for(uint32_t col = 1; col < nrCols; ++col)
             {
-                double elevation = nodeGrid.z[row];
-                double waterLevel = tempX[row] - elevation;
-                if (waterLevel < 0.)
-                    tempX[row] = elevation;
+                const uint32_t index = matrixA.columnIndeces[row][col];
+                const double A = matrixA.values[row][col];
+                x_new -= A * vectorX.values[index];
             }
 
-            double currentNorm = std::fabs(tempX[row] - vectorX.values[row]);
+            // check surface water level (it must be <= 0)
+            const double z_i = nodeGrid.z[row];
+            if (row < nodeGrid.nrSurfaceNodes)
+                x_new = std::max(x_new, z_i);
 
-            double psi = std::fabs(tempX[row] - nodeGrid.z[row]);
-            if(psi > 1.)
-                currentNorm /= psi;
+            const double x_old = vectorX.values[row];
+            double currentNorm = std::fabs(x_new - x_old);
+
+            double psi = std::fabs(x_new - z_i);
+            if (psi > 1.)
+                currentNorm *= (1. / psi);
             
             sumNorm += currentNorm;
+            vectorNewX.values[row] = x_new;
         }
 
-        double infinityNorm = sumNorm / matrixA.numRows;
+        std::swap(vectorNewX.values, vectorX.values);
 
-        std::memcpy(vectorX.values, tempX, vectorX.numElements * sizeof(double));
-        hostFree(tempX);
-
-        return infinityNorm;
+        return sumNorm / matrixA.numRows;
     }
 
 
