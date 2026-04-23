@@ -1213,6 +1213,7 @@ bool Project::loadMeteoPointsDB(QString fileName)
     // find dates
     logInfoGUI("Check meteopoints last date...");
     meteoPointsDbLastTime = findDbPointLastTime();
+    QString tmp = meteoPointsDbLastTime.toString("yyyy-MM-dd hh");
     meteoPointsDbFirstTime.setSecsSinceEpoch(0);
 
     if(! meteoPointsDbLastTime.isNull())

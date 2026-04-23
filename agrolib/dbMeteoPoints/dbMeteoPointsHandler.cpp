@@ -216,17 +216,17 @@ QDateTime Crit3DMeteoPointsDbHandler::getFirstDate(frequencyType frequency)
         QDateTime dateTime;
         if (frequency == daily)
         {
-            const QDate date = QDate::fromString(dateStr, QStringLiteral("yyyy-MM-dd"));
-            if (! date.isValid())
+            const QDate parsedDate = QDate::fromString(dateStr, QStringLiteral("yyyy-MM-dd"));
+            if (! parsedDate.isValid())
                 continue;
-            dateTime = QDateTime(date, QTime(0, 0), Qt::UTC);
+            dateTime = QDateTime(parsedDate, QTime(0, 0), Qt::UTC);
         }
         else if (frequency == hourly)
         {
-            const QDateTime parsed = QDateTime::fromString(dateStr, QStringLiteral("yyyy-MM-dd HH:mm:ss"));
-            if (! parsed.isValid())
+            const QDateTime parsedDate = QDateTime::fromString(dateStr, QStringLiteral("yyyy-MM-dd HH:mm:ss"));
+            if (! parsedDate.isValid())
                 continue;
-            dateTime = parsed.toUTC();
+            dateTime = QDateTime(parsedDate.date(), parsedDate.time(), Qt::UTC);
         }
         else
             continue;
@@ -298,7 +298,7 @@ QDateTime Crit3DMeteoPointsDbHandler::getLastDate(frequencyType frequency)
             const QDateTime parsedDate = QDateTime::fromString(lastDateStr, QStringLiteral("yyyy-MM-dd HH:mm:ss"));
             if (! parsedDate.isValid())
                 continue;
-            currentLastDateTime = parsedDate.toUTC();
+            currentLastDateTime = QDateTime(parsedDate.date(), parsedDate.time(), Qt::UTC);
         }
         else
             continue;
