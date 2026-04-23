@@ -276,20 +276,13 @@ namespace soilFluxes3D::v2::Water
 
     void computeCapacity(VectorCPU& vectorC)
     {
-        if(simulationFlags.computeHeat)
-        {
-            std::memset(nodeGrid.waterData.invariantFluxes, 0, nodeGrid.nrNodes * sizeof(double));
-        }
-
         __parfor(__ompStatus)
-        for (SF3Duint_t nodeIndex = 0; nodeIndex < nodeGrid.nrNodes; ++nodeIndex)
+        for (SF3Duint_t nodeIndex = nodeGrid.nrSurfaceNodes; nodeIndex < nodeGrid.nrNodes; ++nodeIndex)
         {
-            if(nodeGrid.surfaceFlag[nodeIndex])
-                continue;
-
             // hydraulic conductivity
             nodeGrid.waterData.waterConductivity[nodeIndex] = computeNodeK(nodeIndex);
 
+            // capacity vector
             double dThetadH = computeNode_dTheta_dH(nodeIndex);
             vectorC.values[nodeIndex] = nodeGrid.size[nodeIndex] * dThetadH;
 
@@ -527,6 +520,11 @@ namespace soilFluxes3D::v2::Water
 
     void updateBoundaryWaterData(double deltaT)
     {
+        if(simulationFlags.computeHeat)
+        {
+            std::memset(nodeGrid.waterData.invariantFluxes, 0, nodeGrid.nrNodes * sizeof(double));
+        }
+
         __parfor(__ompStatus)
         for (SF3Duint_t nodeIdx = 0; nodeIdx < nodeGrid.nrNodes; ++nodeIdx)
         {
@@ -600,7 +598,7 @@ namespace soilFluxes3D::v2::Water
                     double soilEvaporation;
                     soilEvaporation = computeNodeAtmosphericLatentVaporFlux(nodeIdx) / WATER_DENSITY * nodeGrid.linkData[0].interfaceArea[nodeIdx];
 
-                    if(surfaceWaterFraction > 0.) //check isUpLinked superfluo.
+                    if(surfaceWaterFraction > 0.)
                     {
                         double surfEvaporation = computeNodeAtmosphericLatentSurfaceWaterFlux(upIndex) / WATER_DENSITY * nodeGrid.linkData[0].interfaceArea[nodeIdx];
 

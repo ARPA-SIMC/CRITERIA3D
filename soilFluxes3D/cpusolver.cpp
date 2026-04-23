@@ -144,25 +144,28 @@ namespace soilFluxes3D::v2
     {
         balanceResult_t stepStatus = balanceResult_t::stepRefused;
 
+        // reset invariant fluxes
+        std::memset(nodeGrid.waterData.invariantFluxes, 0, nodeGrid.nrNodes * sizeof(double));
+
+        // surface capacity = cell size
+        std::memcpy(vectorC.values, nodeGrid.size, nodeGrid.nrSurfaceNodes * sizeof(double));
+
         while(stepStatus != balanceResult_t::stepAccepted)
         {
             acceptedTimeStep = SF3Dmin(_parameters.deltaTcurr, maxTimeStep);
 
-            // save instantaneus H values
+            // save current potential
             std::memcpy(nodeGrid.waterData.oldPressureHead, nodeGrid.waterData.pressureHead, nodeGrid.nrNodes * sizeof(double));
 
             // initialize the solution vector with the current pressure head
             assert(vectorX.numElements == nodeGrid.nrNodes);
             std::memcpy(vectorX.values, nodeGrid.waterData.pressureHead, vectorX.numElements * sizeof(double));
 
-            // sssign vectorC surface values and compute subsurface saturation degree
+            // compute subsurface degree of saturation
             __parfor(_parameters.enableOMP)
-            for (SF3Duint_t nodeIdx = 0; nodeIdx < nodeGrid.nrNodes; ++nodeIdx)
+            for (SF3Duint_t nodeIdx = nodeGrid.nrSurfaceNodes; nodeIdx < nodeGrid.nrNodes; ++nodeIdx)
             {
-                if(nodeGrid.surfaceFlag[nodeIdx])
-                    vectorC.values[nodeIdx] = nodeGrid.size[nodeIdx];
-                else
-                    nodeGrid.waterData.saturationDegree[nodeIdx] = computeNodeSe(nodeIdx);
+                nodeGrid.waterData.saturationDegree[nodeIdx] = computeNodeSe(nodeIdx);
             }
 
             // update aereodynamic and soil conductance
@@ -172,14 +175,15 @@ namespace soilFluxes3D::v2
             // main computation
             stepStatus = waterApproximationLoop(acceptedTimeStep);
 
+            // error in solver
+            if (stepStatus == balanceResult_t::stepNan)
+                return false;
+
             if(stepStatus != balanceResult_t::stepAccepted)
             {
                 // restore old pressureHead
                 std::memcpy(nodeGrid.waterData.pressureHead, nodeGrid.waterData.oldPressureHead, nodeGrid.nrNodes * sizeof(double));
             }
-
-            if (stepStatus == balanceResult_t::stepNan)
-                return false;
         }
 
         return true;
