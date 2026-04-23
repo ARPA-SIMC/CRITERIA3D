@@ -1811,8 +1811,8 @@ namespace gis
     }
 
 
-    // substitute values of reference raster with values of mask raster
-    bool substituteRasterWithRaster(gis::Crit3DRasterGrid* refRaster, gis::Crit3DRasterGrid* maskRaster, gis::Crit3DRasterGrid* outputRaster)
+    // replace the values ​​of the reference raster with the values ​​of the mask raster
+    bool replaceRasterValues(gis::Crit3DRasterGrid* refRaster, gis::Crit3DRasterGrid* maskRaster, gis::Crit3DRasterGrid* outputRaster)
     {
         if (refRaster == nullptr || maskRaster == nullptr || outputRaster == nullptr)
             return false;
