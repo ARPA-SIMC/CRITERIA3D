@@ -1215,7 +1215,7 @@ bool Project::loadMeteoPointsDB(QString fileName)
     meteoPointsDbLastTime = findDbPointLastTime();
     meteoPointsDbFirstTime.setSecsSinceEpoch(0);
 
-    if(!meteoPointsDbLastTime.isNull())
+    if(! meteoPointsDbLastTime.isNull())
     {
         bool isHour00 = (meteoPointsDbLastTime.time().hour() == 00);
         auto currentDate = isHour00 ? meteoPointsDbLastTime.date().addDays(-1) : meteoPointsDbLastTime.date();
@@ -1923,57 +1923,51 @@ bool Project::loadMeteoGridMonthlyData(const QDate &firstDate, const QDate &last
 
 QDateTime Project::findDbPointLastTime()
 {
-    QDateTime lastTime;
-    lastTime.setTimeZone(QTimeZone::utc());
+    QDateTime lastDateTime;
 
     QDateTime lastDateD = meteoPointsDbHandler->getLastDate(daily);
     if (! lastDateD.isNull())
     {
         isMeteoPointsDaily = true;
-        lastTime = lastDateD;
+        lastDateTime = lastDateD;
     }
 
     QDateTime lastDateH = meteoPointsDbHandler->getLastDate(hourly);
     if (! lastDateH.isNull())
     {
         isMeteoPointsHourly = true;
-        if (!lastDateD.isNull())
+        if (! lastDateD.isNull())
         {
-            lastTime = (lastDateD > lastDateH) ? lastDateD : lastDateH;
+            lastDateTime = (lastDateD > lastDateH) ? lastDateD : lastDateH;
         }
         else
         {
-            lastTime = lastDateH;
+            lastDateTime = lastDateH;
         }
     }
 
-    return lastTime;
+    return lastDateTime;
 }
 
 
 QDateTime Project::findDbPointFirstTime()
 {
-    QDateTime firstTime;
-    firstTime.setTimeZone(QTimeZone::utc());
+    QDateTime firstDateTime;
 
-    QDateTime firstDateD;
-    firstDateD.setTimeZone(QTimeZone::utc());
-    firstDateD = meteoPointsDbHandler->getFirstDate(daily);
-    if (! firstDateD.isNull()) firstTime = firstDateD;
+    QDateTime firstDateD = meteoPointsDbHandler->getFirstDate(daily);
+    if (! firstDateD.isNull())
+        firstDateTime = firstDateD;
 
-    QDateTime firstDateH;
-    firstDateH.setTimeZone(QTimeZone::utc());
-    firstDateH = meteoPointsDbHandler->getFirstDate(hourly);
-
+    QDateTime firstDateH = meteoPointsDbHandler->getFirstDate(hourly);
     if (! firstDateH.isNull())
     {
-        if (! firstTime.isNull())
-            firstTime = (firstDateD < firstDateH) ? firstDateD : firstDateH;
+        if (! firstDateTime.isNull())
+            firstDateTime = (firstDateD < firstDateH) ? firstDateD : firstDateH;
         else
-            firstTime = firstDateH;
+            firstDateTime = firstDateH;
     }
 
-    return firstTime;
+    return firstDateTime;
 }
 
 
@@ -2203,7 +2197,7 @@ bool Project::writeTopographicDistanceMaps(bool onlyWithData, bool showInfo)
     for (size_t i=0; i < meteoPoints.size(); i++)
     {
         if (showInfo && (i % infoStep == 0))
-            updateProgressBar(i);
+            updateProgressBar(int(i));
 
         if (!meteoPoints[i].active)
             continue;
@@ -2212,7 +2206,7 @@ bool Project::writeTopographicDistanceMaps(bool onlyWithData, bool showInfo)
                                             || meteoPointsDbHandler->existTable(meteoPoints[i], hourly))
                                        : true;
 
-        if (isSelected && !writeTopographicDistanceMap(i, DEM, mapsFolder))
+        if (isSelected && ! writeTopographicDistanceMap(int(i), DEM, mapsFolder))
                 return false;
     }
 
@@ -2221,6 +2215,7 @@ bool Project::writeTopographicDistanceMaps(bool onlyWithData, bool showInfo)
 
     return true;
 }
+
 
 bool Project::writeTopographicDistanceMap(int pointIndex, const gis::Crit3DRasterGrid& demMap, QString pathTd)
 {
@@ -2255,6 +2250,7 @@ bool Project::writeTopographicDistanceMap(int pointIndex, const gis::Crit3DRaste
     return true;
 }
 
+
 bool Project::loadTopographicDistanceMaps(bool onlyWithData, bool showInfo)
 {
     if (meteoPoints.size() == 0)
@@ -2282,7 +2278,7 @@ bool Project::loadTopographicDistanceMaps(bool onlyWithData, bool showInfo)
     for (size_t i = 0; i < meteoPoints.size(); i++)
     {
         if (showInfo && (i % infoStep == 0))
-                updateProgressBar(i);
+                updateProgressBar(int(i));
 
         if (!meteoPoints[i].active)
             continue;
@@ -2297,7 +2293,7 @@ bool Project::loadTopographicDistanceMaps(bool onlyWithData, bool showInfo)
         fileName = mapsFolder.toStdString() + "TD_" + QFileInfo(demFileName).baseName().toStdString() + "_" + meteoPoints[i].id;
         if (!QFile::exists(QString::fromStdString(fileName + ".flt")))
         {
-            if (!writeTopographicDistanceMap(i, DEM, mapsFolder))
+            if (! writeTopographicDistanceMap(int(i), DEM, mapsFolder))
                 return false;
 
             if (showInfo)
@@ -2317,6 +2313,7 @@ bool Project::loadTopographicDistanceMaps(bool onlyWithData, bool showInfo)
 
     return true;
 }
+
 
 bool Project::writeGlocalWeightsMaps(float windowWidth)
 {
@@ -2457,7 +2454,7 @@ bool Project::loadGlocalStationsAndCells(bool isGrid, QString fileNameStations)
             for (size_t i = 0; i < meteoPoints.size(); i++)
                 if (areaPoints[j][k] == meteoPoints[i].id)
                 {
-                    temp.push_back(i);
+                    temp.push_back(int(i));
                     break;
                 }
         }
@@ -4874,7 +4871,7 @@ bool Project::setActiveStateWithCriteria(bool isActive)
 
         for (size_t i = 0; i < meteoPoints.size(); i++)
         {
-            updateProgressBar(i);
+            updateProgressBar(int(i));
             if(! meteoPoints[i].active)
             {
                 float distance = gis::closestDistanceFromGrid(meteoPoints[i].point, DEM);
@@ -6001,7 +5998,7 @@ bool Project::waterTableAssignNearestMeteoPoint(bool isMeteoGridLoaded, double w
     }
     else
     {
-        int assignNearestIndex;
+        unsigned assignNearestIndex;
         QDate lastDate = meteoPointsDbHandler->getLastDate(daily).date();
         QSqlDatabase myDb = meteoPointsDbHandler->getDb();
 
@@ -6020,7 +6017,7 @@ bool Project::waterTableAssignNearestMeteoPoint(bool isMeteoGridLoaded, double w
                 {
                     minimumDistance = myDistance;
                     isMeteoPointFound = true;
-                    assignNearestIndex = i;
+                    assignNearestIndex = unsigned(i);
                 }
             }
         }
@@ -6147,10 +6144,11 @@ bool Project::assignAltitudeToAggregationPoints()
 
         // update point properties
         float altitude = statistics::mean(values);
-        QString query = QString("UPDATE point_properties SET altitude = %1 WHERE id_point = '%2'").arg(altitude).arg(idStr);
-        aggregationDbHandler->db().exec(query);
+        QString queryStr = QString("UPDATE point_properties SET altitude = %1 WHERE id_point = '%2'").arg(altitude).arg(idStr);
+        QSqlQuery query(aggregationDbHandler->db());
+        query.exec(queryStr);
 
-        updateProgressBar(i);
+        updateProgressBar(int(i));
     }
 
     closeMeteoPointsDB();
@@ -6200,10 +6198,11 @@ bool Project::assignAltitudeToMeteoPoints(double boundarySize)
 
         // update point properties (NODATA if no value)
         float altitude = statistics::mean(values);
-        QString query = QString("UPDATE point_properties SET altitude = %1 WHERE id_point = '%2'").arg(altitude).arg(idStr);
-        meteoPointsDb.exec(query);
+        QString queryStr = QString("UPDATE point_properties SET altitude = %1 WHERE id_point = '%2'").arg(altitude).arg(idStr);
+        QSqlQuery query(meteoPointsDb);
+        query.exec(queryStr);
 
-        updateProgressBar(i);
+        updateProgressBar(int(i));
     }
 
     return true;
@@ -6321,7 +6320,7 @@ bool Project::setSelectedStateWithCriteria(bool isSelect, bool isShowVariable)
 
         for (size_t i = 0; i < meteoPoints.size(); i++)
         {
-            updateProgressBar(i);
+            updateProgressBar(int(i));
             if (meteoPoints[i].selected)
                 continue;
 
@@ -6398,8 +6397,8 @@ bool Project::readVmArkimetData(const QList<QString> &vmFileList, frequencyType 
         return false;
     }
 
-    setProgressBar("Loading data...", (int)vmFileList.size());
-    for (size_t i=0; i < vmFileList.size(); i++)
+    setProgressBar("Loading data...", vmFileList.size());
+    for (int i=0; i < vmFileList.size(); i++)
     {
         updateProgressBar(i);
         if (frequency == daily)

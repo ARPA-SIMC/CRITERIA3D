@@ -279,33 +279,33 @@ QDateTime Crit3DMeteoPointsDbHandler::getLastDate(frequencyType frequency)
         if (! qry.next())
             continue;
 
-        const QString dateStr = qry.value(0).toString().trimmed();
-        if (dateStr.isEmpty())
+        const QString lastDateStr = qry.value(0).toString().trimmed();
+        if (lastDateStr.isEmpty())
             continue;
 
-        QDateTime dateTime;
+        QDateTime currentLastDateTime;
         if (frequency == daily)
         {
             // parse directly, avoiding multiple temporaries
-            const QDate date = QDate::fromString(dateStr, QStringLiteral("yyyy-MM-dd"));
-            if (! date.isValid())
+            const QDate parsedDate = QDate::fromString(lastDateStr, QStringLiteral("yyyy-MM-dd"));
+            if (parsedDate.isValid())
                 continue;
-            dateTime = QDateTime(date, QTime(12, 0), Qt::UTC);
+            currentLastDateTime = QDateTime(parsedDate, QTime(12, 0), Qt::UTC);
         }
         else if (frequency == hourly)
         {
             // safer parsing using fromString
-            const QDateTime parsed = QDateTime::fromString(dateStr, QStringLiteral("yyyy-MM-dd HH:mm:ss"));
-            if (! parsed.isValid())
+            const QDateTime parsedDate = QDateTime::fromString(lastDateStr, QStringLiteral("yyyy-MM-dd HH:mm:ss"));
+            if (! parsedDate.isValid())
                 continue;
-            dateTime = parsed.toUTC();
+            currentLastDateTime = parsedDate.toUTC();
         }
         else
             continue;
 
-        if (! lastDateTime.isValid() || dateTime > lastDateTime)
+        if (! lastDateTime.isValid() || currentLastDateTime > lastDateTime)
         {
-            lastDateTime = dateTime;
+            lastDateTime = currentLastDateTime;
         }
     }
 

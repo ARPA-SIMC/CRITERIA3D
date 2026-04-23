@@ -168,7 +168,7 @@ namespace soilFluxes3D::v2::Water
 
         double currMBRerror = std::fabs(balanceDataCurrentTimeStep.waterMBR);
 
-        // critical error management
+        // critical error
         if (std::isnan(currMBRerror))
         {
             if(deltaT > parameters.deltaTmin)
@@ -200,10 +200,9 @@ namespace soilFluxes3D::v2::Water
             return balanceResult_t::stepAccepted;
         }
 
-        // error improves or it is the first approximation
+        // store best step
         if (approxNr == 0 || currMBRerror < bestMBRerror)
         {
-            // save best step
             std::memcpy(nodeGrid.waterData.bestPressureHead, nodeGrid.waterData.pressureHead, nodeGrid.nrNodes * sizeof(double));
             bestMBRerror = currMBRerror;
         }
