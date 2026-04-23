@@ -125,6 +125,7 @@ void MapGraphicsShapeObject::drawShape(QPainter* myPainter)
         QPen myPen;
         if (i != _selectedShape)
         {
+            // grey
             myPen.setColor(QColor(64, 64, 64));
             myPen.setWidth(1);
         }
@@ -132,9 +133,11 @@ void MapGraphicsShapeObject::drawShape(QPainter* myPainter)
         {
             if (_isSelectedRed)
                 myPen.setColor(QColor(255, 0, 0));
-            else
+            else {
+                // black
                 myPen.setColor(QColor(0, 0, 0));
-            myPen.setWidth(4);
+            }
+            myPen.setWidth(2);
         }
         myPainter->setPen(myPen);
         myPainter->setBrush(Qt::NoBrush);
