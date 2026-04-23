@@ -1811,6 +1811,34 @@ namespace gis
     }
 
 
+    // substitute values of reference raster with values of mask raster
+    bool substituteRasterWithRaster(gis::Crit3DRasterGrid* refRaster, gis::Crit3DRasterGrid* maskRaster, gis::Crit3DRasterGrid* outputRaster)
+    {
+        if (refRaster == nullptr || maskRaster == nullptr || outputRaster == nullptr)
+            return false;
+
+        outputRaster->initializeGrid(*(refRaster->header));
+
+        double x, y;
+        float maskValue;
+        for (long row = 0; row < refRaster->header->nrRows; row++)
+        {
+            for (long col = 0; col < refRaster->header->nrCols; col++)
+            {
+                gis::getUtmXYFromRowCol(refRaster->header, row, col, &x, &y);
+                maskValue = maskRaster->getValueFromXY(x, y);
+                if (! isEqual(maskValue, maskRaster->header->flag))
+                    outputRaster->value[row][col] = maskValue;
+                else
+                    outputRaster->value[row][col] = refRaster->value[row][col];
+            }
+        }
+
+        gis::updateMinMaxRasterGrid(outputRaster);
+        return true;
+    }
+
+
     bool deleteRangeOfValuesRaster(gis::Crit3DRasterGrid* refRaster, float minValue, float maxValue, gis::Crit3DRasterGrid* outputRaster)
     {
         if (refRaster == nullptr || outputRaster == nullptr)
