@@ -950,20 +950,6 @@ void MainWindow::on_actionLoad_DEM_triggered()
 }
 
 
-void MainWindow::on_actionExtract_sub_basin_triggered()
-{
-    if (! myProject.DEM.isLoaded)
-    {
-        myProject.logWarning(ERROR_STR_MISSING_DEM);
-        return;
-    }
-
-    //myProject.logInfoGUI("Select the basin closing point.");
-    myProject.logWarning("This feature will be available soon.");
-
-}
-
-
 void MainWindow::on_actionOpenProject_triggered()
 {
     QString projectPath = myProject.getDefaultPath() + PATH_PROJECT;
@@ -981,6 +967,8 @@ void MainWindow::on_actionOpenProject_triggered()
 
     ui->flagOutputPoints_save_output->setChecked(myProject.isSaveOutputPoints());
     ui->flagCompute_only_points->setChecked(myProject.getComputeOnlyPoints());
+
+    myProject.showEachTimeStep = ui->actionCriteria3D_update_subHourly->isChecked();
 
     drawProject();
 }
@@ -4316,4 +4304,5 @@ void MainWindow::on_flag_point_selection_triggered(bool isChecked)
         _isAreaSelection = false;
     }
 }
+
 

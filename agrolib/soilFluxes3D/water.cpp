@@ -10,8 +10,8 @@
 #include "heat.h"
 #include "otherFunctions.h"
 
-// [m] 10 micron
-#define EPSILON_METER 0.00001
+// [m] 1 micrometre
+#define EPSILON_METER 0.000001
 
 using namespace soilFluxes3D::v2;
 using namespace soilFluxes3D::v2::Soil;
@@ -417,7 +417,7 @@ namespace soilFluxes3D::v2::Water
 
         double surfaceWater = SF3Dmax(surfH - nodeGrid.z[surfNodeIdx], 0.);     // [m]
         double maxInfRate = surfaceWater / deltaT;                              // [m s-1]
-        if(maxInfRate < 1e-10)
+        if(maxInfRate < 3e-10)  // 1 micrometre/hour
             return 0.;
 
         double dH = SF3Dmax(surfH - soilH, 1e-12);
@@ -528,8 +528,17 @@ namespace soilFluxes3D::v2::Water
         __parfor(__ompStatus)
         for (SF3Duint_t nodeIdx = 0; nodeIdx < nodeGrid.nrNodes; ++nodeIdx)
         {
-            //initialize: water sink.source
+            // initialize flow: water sink/source
             nodeGrid.waterData.waterFlow[nodeIdx] = nodeGrid.waterData.waterSinkSource[nodeIdx];
+
+            // check on surface negative flux (i.e. evaporation)
+            if (nodeGrid.surfaceFlag[nodeIdx] && nodeGrid.waterData.waterFlow[nodeIdx] < 0)
+            {
+                double avgH = 0.5 * (nodeGrid.waterData.pressureHead[nodeIdx] + nodeGrid.waterData.oldPressureHead[nodeIdx]);
+                double h_s = SF3Dmax(0., avgH - nodeGrid.z[nodeIdx]);                       // [m]
+                double maxSurfaceFlux = -h_s * nodeGrid.size[nodeIdx] / deltaT;             // [m3 s-1]
+                nodeGrid.waterData.waterFlow[nodeIdx] = SF3Dmax(nodeGrid.waterData.waterFlow[nodeIdx], maxSurfaceFlux);
+            }
 
             if(nodeGrid.boundaryData.boundaryType[nodeIdx] == boundaryType_t::NoBoundary)
                 continue;

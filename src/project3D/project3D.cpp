@@ -2348,7 +2348,7 @@ bool Project3D::initializeEvaporationCoefficient()
 
     // assign layers coefficient
     double coeffSum = 0;
-    for (unsigned int layer=1; layer <= unsigned(lastEvapLayer); layer++)
+    for (int layer=1; layer <= lastEvapLayer; layer++)
     {
         double depthCoeff = std::max((layerDepth[layer] - layerDepth[1]) / (MAX_EVAPORATION_DEPTH - layerDepth[1]), 0.0);
         // evaporation coefficient: 1 at depthMin, ~0.1 at MAX_EVAPORATION_DEPTH
@@ -2358,10 +2358,11 @@ bool Project3D::initializeEvaporationCoefficient()
         coeffSum += layerEvapCoeff[layer];
     }
 
-    // normalize layer coefficients
-    for (unsigned int layer=1; layer <= unsigned(lastEvapLayer); layer++)
+    // normalize coefficients
+    double invCoeffSum = 1.0 / coeffSum;
+    for (int layer=1; layer <= lastEvapLayer; layer++)
     {
-        layerEvapCoeff[layer] /= coeffSum;
+        layerEvapCoeff[layer] *= invCoeffSum;
     }
 
     return true;
@@ -2435,7 +2436,7 @@ double Project3D::assignEvaporation(int row, int col, double lai, int soilIndex)
             double layerEvaporation = std::min(evapAvailableWater, residualEvaporation * layerEvapCoeff[layer]);
             if (layerEvaporation > EPSILON)
             {
-                double flow = area * (layerEvaporation / 1000.) / 3600.;        // [m3 s-1]
+                double flow = area * (layerEvaporation / 1000.) / 3600.;    // [m3 s-1]
 
                 waterSinkSource[nodeIndex] -= flow;                         // [m3 s-1]
                 actualEvaporationSum += layerEvaporation;                   // [mm]
