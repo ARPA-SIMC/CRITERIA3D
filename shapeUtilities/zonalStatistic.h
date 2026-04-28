@@ -15,13 +15,17 @@
                                                               std::vector<int> &categories, std::vector<int> &vectorNull);
 
     bool zonalStatisticsShape(Crit3DShapeHandler &shapeRef, Crit3DShapeHandler &shapeVal,
-                              std::vector<std::vector<int> > &matrix, std::vector<int>& vectorNull,
-                              std::string valField, std::string valFieldOutput, std::string aggregationType,
-                              double threshold, std::string &errorStr);
+                              const std::vector<std::vector<int>> &matrix, std::vector<int> &vectorNull,
+                              const std::string &valField, const std::string &valFieldOutput,
+                              const std::string &aggregationType, double threshold, std::string &errorStr);
 
     bool zonalStatisticsShapeMajority(Crit3DShapeHandler &shapeRef, Crit3DShapeHandler &shapeVal,
-                              std::vector<std::vector<int> > &matrix, std::vector<int> &vectorNull,
-                              std::string valField, std::string valFieldOutput,
-                              double threshold, std::string &errorStr);
+                                      const std::vector <std::vector<int>> &matrix, std::vector<int> &vectorNull,
+                                      const std::string &valField, const std::string &fieldOutput,
+                                      double threshold, std::string &errorStr);
+
+    bool zonalStatisticsShapeMajorityCategories(Crit3DShapeHandler &shapeRef, const std::vector<int> &categories,
+                                                const std::vector <std::vector<int>> &matrix, std::vector<int> &vectorNull,
+                                                const std::string &fieldName, double threshold, std::string &errorStr);
 
 #endif // ZONALSTATISTIC_H

@@ -531,9 +531,8 @@ bool Crit3DShapeHandler::addShape(std::string type, std::vector<double> coordina
 }
 
 
-bool Crit3DShapeHandler::addField(const char * fieldName, int type, int nWidth, int nDecimals )
+bool Crit3DShapeHandler::addField(const char *fieldName, int type, int nWidth, int nDecimals)
 {
-
     DBFFieldType DBFtype;
     if (type == 0)
     {
@@ -560,9 +559,7 @@ bool Crit3DShapeHandler::addField(const char * fieldName, int type, int nWidth, 
         return true;
     }
     else
-    {
         return false;
-    }
 }
 
 
