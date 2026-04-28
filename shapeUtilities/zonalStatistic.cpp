@@ -1,13 +1,17 @@
 #include <float.h>
 #include <algorithm>
 #include <math.h>
+#include <unordered_map>
 
 #include "commonConstants.h"
 #include "basicMath.h"
 #include "shapeToRaster.h"
 #include "zonalStatistic.h"
+#include "gis.h"
+#include "shapeHandler.h"
 
-std::vector <std::vector<int> > computeMatrixAnalysis(Crit3DShapeHandler &shapeRef, Crit3DShapeHandler &shapeVal,
+
+std::vector <std::vector<int>> computeMatrixAnalysis(Crit3DShapeHandler &shapeRef, Crit3DShapeHandler &shapeVal,
                           gis::Crit3DRasterGrid &rasterRef, gis::Crit3DRasterGrid &rasterVal, std::vector<int> &vectorNull)
 {
     unsigned int nrRefShapes = unsigned(shapeRef.getShapeCount());
@@ -18,39 +22,97 @@ std::vector <std::vector<int> > computeMatrixAnalysis(Crit3DShapeHandler &shapeR
     vectorNull.resize(nrRefShapes, 0);
     std::vector <std::vector<int>> matrix(nrRefShapes, std::vector<int>(nrValShapes, 0));
 
+    double x, y;
+    int rowVal, colVal;
+    int flagRef = int(rasterRef.header->flag);
+    int flagVal = int(rasterVal.header->flag);
     for (int row = 0; row < rasterRef.header->nrRows; row++)
     {
-       for (int col = 0; col < rasterRef.header->nrCols; col++)
-       {
-           int refIndex = int(rasterRef.value[row][col]);
-           if (refIndex != NODATA && refIndex < signed(nrRefShapes))
-           {
-               double x, y;
-               rasterRef.getXY(row, col, x, y);
-               if (! gis::isOutOfGridXY(x, y, rasterVal.header))
-               {
-                    int rowVal, colVal;
-                    gis::getRowColFromXY(*(rasterVal.header), x, y, &rowVal, &colVal);
+        for (int col = 0; col < rasterRef.header->nrCols; col++)
+        {
+            int refIndex = int(rasterRef.value[row][col]);
+            if (refIndex != flagRef && refIndex >= 0 && refIndex < signed(nrRefShapes))
+            {
+                rasterRef.getXY(row, col, x, y);
+                if (gis::isOutOfGridXY(x, y, rasterVal.header))
+                {
+                    vectorNull[unsigned(refIndex)]++;
+                    continue;
+                }
 
-                    int valIndex = int(rasterVal.value[rowVal][colVal]);
-                    if (valIndex != NODATA && valIndex < signed(nrValShapes))
-                    {
-                        matrix[unsigned(refIndex)][unsigned(valIndex)]++;
-                    }
-                    else
-                    {
-                        vectorNull[unsigned(refIndex)]++;
-                    }
-               }
-               else
-               {
-                   vectorNull[unsigned(refIndex)]++;
-               }
-           }
-       }
-   }
+                gis::getRowColFromXY(*(rasterVal.header), x, y, rowVal, colVal);
+
+                int valIndex = int(rasterVal.value[rowVal][colVal]);
+                if (valIndex != flagVal && valIndex >= 0 && valIndex < signed(nrValShapes))
+                {
+                    matrix[unsigned(refIndex)][unsigned(valIndex)]++;
+                }
+                else
+                    vectorNull[unsigned(refIndex)]++;
+            }
+        }
+    }
 
    return matrix;
+}
+
+
+std::vector <std::vector<int>> computeMatrixAnalysisRaster(const Crit3DShapeHandler &shapeRef, const gis::Crit3DRasterGrid &rasterVal,
+                                                           std::vector<int> &categories, std::vector<int> &vectorNull)
+{
+    unsigned int nrRefShapes = unsigned(shapeRef.getShapeCount());
+
+    // extract categories from rasterVal
+    categories.clear();
+    categories = gis::extractUniqueValues(rasterVal);
+    size_t nrCategories = categories.size();
+    // unordered map is faster for search
+    std::unordered_map<int, int> categoryIndex;
+    for (unsigned int i = 0; i < nrCategories; ++i) {
+        categoryIndex[categories[i]] = i;
+    }
+
+    // create reference raster from shapefile (same header of rasterVal)
+    gis::Crit3DRasterGrid rasterRef;
+    rasterRef.initializeGrid(*(rasterVal.header));
+    fillRasterWithShapeNumber(rasterRef, shapeRef);
+
+    // analysis matrix
+    vectorNull.clear();
+    vectorNull.resize(nrRefShapes, 0);
+    std::vector <std::vector<int>> matrix(nrRefShapes, std::vector<int>(nrCategories, 0));
+
+    int flagInt = int(rasterRef.header->flag);
+    for (int row = 0; row < rasterRef.header->nrRows; row++)
+    {
+        for (int col = 0; col < rasterRef.header->nrCols; col++)
+        {
+            int refIndex = int(rasterRef.value[row][col]);
+            if (refIndex != flagInt && refIndex >= 0 && refIndex < static_cast<int>(nrRefShapes))
+            {
+                int valueInt = int(rasterVal.value[row][col]);
+                if (valueInt == flagInt)
+                {
+                    vectorNull[refIndex]++;
+                    continue;
+                }
+
+                auto it = categoryIndex.find(valueInt);
+
+                if (it != categoryIndex.end())
+                {
+                    int valIndex = it->second;
+                    matrix[refIndex][valIndex]++;
+                }
+                else
+                {
+                    vectorNull[refIndex]++;
+                }
+            }
+        }
+    }
+
+    return matrix;
 }
 
 

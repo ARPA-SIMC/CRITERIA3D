@@ -27,6 +27,8 @@
 
 #include <math.h>
 #include <algorithm>
+#include <set>
+#include <unordered_set>
 
 #include "commonConstants.h"
 #include "basicMath.h"
@@ -689,10 +691,16 @@ namespace gis
     }
 
 
-    void getRowColFromXY(const Crit3DRasterHeader& myHeader, double myX, double myY, int *row, int *col)
+    void getRowColFromXY(const Crit3DRasterHeader& myHeader, double x, double y, int *row, int *col)
     {
-        *row = (myHeader.nrRows - 1) - int(floor((myY - myHeader.llCorner.y) / myHeader.cellSize));
-        *col = int(floor((myX - myHeader.llCorner.x) / myHeader.cellSize));
+        *row = (myHeader.nrRows - 1) - int(floor((y - myHeader.llCorner.y) / myHeader.cellSize));
+        *col = int(floor((x - myHeader.llCorner.x) / myHeader.cellSize));
+    }
+
+    void getRowColFromXY(const Crit3DRasterHeader& myHeader, double x, double y, int& row, int& col)
+    {
+        row = (myHeader.nrRows - 1) - int(floor((y - myHeader.llCorner.y) / myHeader.cellSize));
+        col = int(floor((x - myHeader.llCorner.x) / myHeader.cellSize));
     }
 
     void getRowColFromXY(const Crit3DRasterHeader& myHeader, const Crit3DUtmPoint& p, int *row, int *col)
@@ -1900,6 +1908,26 @@ namespace gis
         validValues.clear();
 
         return true;
+    }
+
+
+    // assume integer values (categories)
+    std::vector<int> extractUniqueValues(const Crit3DRasterGrid& raster)
+    {
+        std::set<int> uniqueValues;
+        int flagInt = int(raster.header->flag);
+
+        for (int row = 0; row < raster.header->nrRows; row++)
+        {
+            for (int col = 0; col < raster.header->nrCols; col++)
+            {
+                int valueInt = int(raster.value[row][col]);
+                if (valueInt != flagInt)
+                uniqueValues.insert(valueInt);
+            }
+        }
+
+        return std::vector<int>(uniqueValues.begin(), uniqueValues.end());
     }
 
 
