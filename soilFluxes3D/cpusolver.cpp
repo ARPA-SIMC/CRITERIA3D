@@ -288,18 +288,12 @@ namespace soilFluxes3D::v2
         {
             auto& rowValues = matrixA.values[row];
             const u8_t nrCols = matrixA.numColsInRow[row];
-            const double diag = rowValues[0];
-            const double invDiag = 1.0 / diag;
+            const double invDiag = 1.0 / rowValues[0];
 
-            // Normalize off-diagonal elements
-            u8_t nrLinkedFluxes = 0;
+            // normalize off-diagonal elements
             for(u8_t col = 1; col < nrCols; ++col)
             {
-                if (std::abs(rowValues[col]) > 1e-14)
-                {
-                    rowValues[col] *= invDiag;
-                    ++nrLinkedFluxes;
-                }
+                rowValues[col] *= invDiag;
             }
 
             // normalize RHS
@@ -307,12 +301,6 @@ namespace soilFluxes3D::v2
 
             // set diagonal to 1
             rowValues[0] = 1.0;
-
-            // handle isolated node (only diagonal term)
-            if (nrLinkedFluxes == 0)
-            {
-                vectorX.values[row] = vectorB.values[row];
-            }
         }
     }
 
@@ -629,6 +617,8 @@ namespace soilFluxes3D::v2
         iterativeParams.max_relative_residual_norm = _parameters.residualTolerance;
 
         LinealiaRelaxedParams relaxParams;
+        // over-relaxation
+        //relaxParams.relax = 1.2;
 
         LinealiaRelaxedPreconditionerParams relPcgParams;
         LinealiaPcgAmgParams pcgAmgParams;
