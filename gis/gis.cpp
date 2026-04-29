@@ -532,30 +532,35 @@ namespace gis
 
     bool updateMinMaxRasterGrid(Crit3DRasterGrid* myGrid)
     {
-        float myValue;
+        int nRows = myGrid->header->nrRows;
+        int nCols = myGrid->header->nrCols;
+        float flag = myGrid->header->flag;
+
         bool isFirstValue = true;
         float minimum = NODATA;
         float maximum = NODATA;
 
-        for (int row = 0; row < myGrid->header->nrRows; row++)
-            for (int col = 0; col < myGrid->header->nrCols; col++)
+        for (int row = 0; row < nRows; row++)
+        {
+            float* rowPtr = myGrid->value[row];
+            for (int col = 0; col < nCols; col++)
             {
-                myValue = myGrid->value[row][col];
-                if (! isEqual(myValue, myGrid->header->flag)  && ! isEqual(myValue, NODATA))
+                float value = rowPtr[col];
+                if (!isEqual(value, flag) && !isEqual(value, NODATA))
                 {
                     if (isFirstValue)
                     {
-                        minimum = myValue;
-                        maximum = myValue;
+                        minimum = maximum = value;
                         isFirstValue = false;
                     }
                     else
                     {
-                        if (myValue < minimum) minimum = myValue;
-                        else if (myValue > maximum) maximum = myValue;
+                        if (value < minimum) minimum = value;
+                        else if (value > maximum) maximum = value;
                     }
                 }
             }
+        }
 
         /*!  no values */
         if (isFirstValue)
@@ -2184,51 +2189,74 @@ namespace gis
         // *** step 3: clean the basin (removes points relating to other basins)
         cleanBasin(inputRaster, basinRaster, xClosure, yClosure);
 
-        // *** step 5: delete empty edges
-        cleanRasterEmptyFrame(basinRaster, outputRaster);
+        // *** step 5: delete empty frame
+        std::string errorStr;
+        resizeRasterCutEmptyFrame(&basinRaster, &outputRaster, errorStr);
 
         return true;
     }
 
 
     /*!
-     * \brief remove the empty edges of a smaller raster
+     * \brief remove the empty edges of a raster
      */
-    void cleanRasterEmptyFrame(const Crit3DRasterGrid& inputRaster, Crit3DRasterGrid& outputRaster)
+    bool resizeRasterCutEmptyFrame(const Crit3DRasterGrid *inputRaster, Crit3DRasterGrid *outputRaster, std::string &errorStr)
     {
-        int row0 = inputRaster.header->nrRows-1;
+        int row0 = inputRaster->header->nrRows-1;
         int row1 = 0;
-        int col0 = inputRaster.header->nrCols-1;
+        int col0 = inputRaster->header->nrCols-1;
         int col1 = 0;
 
+        bool containsData = false;
+        float flag = inputRaster->header->flag;
+
         // search range of valid values
-        for (int row = 0; row < inputRaster.header->nrRows; row++)
-            for (int col = 0; col < inputRaster.header->nrCols; col++)
-                if (! isEqual(inputRaster.value[row][col], inputRaster.header->flag))
+        for (int row = 0; row < inputRaster->header->nrRows; row++)
+            for (int col = 0; col < inputRaster->header->nrCols; col++)
+                if (! isEqual(inputRaster->value[row][col], flag))
                 {
                     row0 = std::min(row0, row);
                     row1 = std::max(row1, row);
                     col0 = std::min(col0, col);
                     col1 = std::max(col1, col);
+                    containsData = true;
                 }
 
+        if (! containsData)
+        {
+            errorStr = "Raster contains only empty values.";
+            return false;
+        }
+
+        const int newRows = row1 - row0 + 1;
+        const int newCols = col1 - col0 + 1;
+
+        if (inputRaster->header->nrRows == newRows && inputRaster->header->nrCols == newCols)
+        {
+            errorStr = "There is no empty frame to crop.";
+            return false;
+        }
+
         // set header
-        outputRaster.header->flag = inputRaster.header->flag;
-        outputRaster.header->cellSize = inputRaster.header->cellSize;
+        outputRaster->header->flag = flag;
+        outputRaster->header->cellSize = inputRaster->header->cellSize;
 
-        outputRaster.header->nrRows = row1 - row0 +1;
-        outputRaster.header->nrCols = col1 - col0 +1;
+        outputRaster->header->nrRows = newRows;
+        outputRaster->header->nrCols = newCols;
 
-        outputRaster.header->llCorner.x = inputRaster.header->llCorner.x + col0 * outputRaster.header->cellSize;
-        int deltaRow = inputRaster.header->nrRows - row1 -1;
-        outputRaster.header->llCorner.y = inputRaster.header->llCorner.y + deltaRow * outputRaster.header->cellSize;
+        outputRaster->header->llCorner.x = inputRaster->header->llCorner.x + col0 * outputRaster->header->cellSize;
+        int deltaRow = inputRaster->header->nrRows - row1 -1;
+        outputRaster->header->llCorner.y = inputRaster->header->llCorner.y + deltaRow * outputRaster->header->cellSize;
 
-        outputRaster.initializeGrid();
+        outputRaster->initializeGrid();
 
         // move the data
-        for (int row = 0; row < outputRaster.header->nrRows; row++)
-            for (int col = 0; col < outputRaster.header->nrCols; col++)
-                outputRaster.value[row][col] = inputRaster.value[row+row0][col+col0];
+        for (int row = 0; row < outputRaster->header->nrRows; row++)
+            for (int col = 0; col < outputRaster->header->nrCols; col++)
+                outputRaster->value[row][col] = inputRaster->value[row+row0][col+col0];
+
+        updateMinMaxRasterGrid(outputRaster);
+        return true;
     }
 
 

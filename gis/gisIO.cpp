@@ -358,22 +358,37 @@ namespace gis
             return false;
         }
 
+        const int nRows = rasterGrid->header->nrRows;
+        const int nCols = rasterGrid->header->nrCols;
+
         if (rasterGrid->header->nrBytes == 4)
         {
             // float
-            for (int row = 0; row < rasterGrid->header->nrRows; row++)
+            std::vector<float> buffer(nRows * nCols);
+
+            if (fread(buffer.data(), sizeof(float), buffer.size(), filePointer) != buffer.size())
             {
-                fread (rasterGrid->value[row], sizeof(float), unsigned(rasterGrid->header->nrCols), filePointer);
+                error = "Error reading raster data.";
+                fclose(filePointer);
+                return false;
+            }
+
+            for (int row = 0; row < nRows; row++)
+            {
+                float* dst = rasterGrid->value[row];
+                const float* src = &buffer[row * nCols];
+
+                std::memcpy(dst, src, nCols * sizeof(float));
             }
         }
         else if (rasterGrid->header->nrBytes == 1)
         {
             // byte
-            unsigned char *rowValues = new unsigned char[unsigned(rasterGrid->header->nrCols)];
-            for (int row = 0; row < rasterGrid->header->nrRows; row++)
+            unsigned char *rowValues = new unsigned char[nCols];
+            for (int row = 0; row < nRows; row++)
             {
-                fread (rowValues, sizeof(unsigned char), unsigned(rasterGrid->header->nrCols), filePointer);
-                for(int col = 0; col < rasterGrid->header->nrCols; col++)
+                fread (rowValues, sizeof(unsigned char), nCols, filePointer);
+                for(int col = 0; col < nCols; col++)
                 {
                     rasterGrid->value[row][col] = float(rowValues[col]);
                 }
@@ -383,11 +398,11 @@ namespace gis
         else if (rasterGrid->header->nrBytes == 2)
         {
             // short
-            short int *rowValues = new short int[unsigned(rasterGrid->header->nrCols)];
-            for (int row = 0; row < rasterGrid->header->nrRows; row++)
+            short int *rowValues = new short int[nCols];
+            for (int row = 0; row < nRows; row++)
             {
-                fread (rowValues, sizeof(short int), unsigned(rasterGrid->header->nrCols), filePointer);
-                for(int col = 0; col < rasterGrid->header->nrCols; col++)
+                fread (rowValues, sizeof(short int), nCols, filePointer);
+                for(int col = 0; col < nCols; col++)
                 {
                     rasterGrid->value[row][col] = float(rowValues[col]);
                 }
