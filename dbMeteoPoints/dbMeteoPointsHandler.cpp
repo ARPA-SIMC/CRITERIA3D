@@ -247,22 +247,23 @@ QDateTime Crit3DMeteoPointsDbHandler::getLastDate(frequencyType frequency)
     else if (frequency == hourly)
         dayHour = "H";
 
-    QSqlQuery qry(_db);
+    QSqlQuery tableQry(_db);
+    QSqlQuery maxQry(_db);
 
-    qry.prepare( "SELECT name FROM sqlite_master WHERE type='table' AND name like :dayHour ESCAPE '^'");
-    qry.bindValue(":dayHour",  "%^_" + dayHour  + "%");
+    tableQry.prepare( "SELECT name FROM sqlite_master WHERE type='table' AND name like :dayHour ESCAPE '^'");
+    tableQry.bindValue(":dayHour",  "%^_" + dayHour  + "%");
     QDateTime lastDateTime;
-    if(! qry.exec() )
+    if(! tableQry.exec() )
     {
-        _errorStr = qry.lastError().text();
+        _errorStr = tableQry.lastError().text();
         return lastDateTime;
     }
 
     // table list
     QList<QString> tableList;
-    while (qry.next())
+    while (tableQry.next())
     {
-        QString table = qry.value(0).toString();
+        QString table = tableQry.value(0).toString();
         tableList << table;
     }
 
@@ -273,13 +274,13 @@ QDateTime Crit3DMeteoPointsDbHandler::getLastDate(frequencyType frequency)
         const QString& table = tableList.at(i);
         const QString statement = QStringLiteral("SELECT MAX(date_time) FROM `%1`").arg(table);
 
-        if (! qry.exec(statement))
+        if (! maxQry.exec(statement))
             continue;
 
-        if (! qry.next())
+        if (! maxQry.next())
             continue;
 
-        const QString lastDateStr = qry.value(0).toString().trimmed();
+        const QString lastDateStr = maxQry.value(0).toString().trimmed();
         if (lastDateStr.isEmpty())
             continue;
 
@@ -288,7 +289,7 @@ QDateTime Crit3DMeteoPointsDbHandler::getLastDate(frequencyType frequency)
         {
             // parse directly, avoiding multiple temporaries
             const QDate parsedDate = QDate::fromString(lastDateStr, QStringLiteral("yyyy-MM-dd"));
-            if (parsedDate.isValid())
+            if (! parsedDate.isValid())
                 continue;
             currentLastDateTime = QDateTime(parsedDate, QTime(12, 0), Qt::UTC);
         }
