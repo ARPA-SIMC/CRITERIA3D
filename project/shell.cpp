@@ -5,6 +5,7 @@
 #include "dbMeteoGrid.h"
 #include "utilities.h"
 
+#include <cstdio>
 #include <iostream>
 #include <sstream>
 
@@ -93,16 +94,6 @@ bool attachOutputToConsole()
 }
 
 
-bool closeConsole()
-{
-    #ifdef _WIN32
-        FreeConsole();
-    #endif
-
-    return true;
-}
-
-
 bool isConsoleForeground()
 {
     #ifdef _WIN32
@@ -135,25 +126,52 @@ void sendEnterKey(void)
 }
 
 
-void openNewConsole()
+void openWinConsole()
 {
-    #ifdef _WIN32
-        // detach from the current console window
-        // if launched from a console window, that will still run waiting for the new console (below) to close
-        // it is useful to detach from Qt Creator's <Application output> panel
-        FreeConsole();
+#ifdef _WIN32
+    // detach from the current console window
+    // if launched from a console window, that will still run waiting for the new console (below) to close
+    // it is useful to detach from Qt Creator's <Application output> panel
+    FreeConsole();
 
-        // create a separate new console window
-        AllocConsole();
+    // create a separate new console window
+    AllocConsole();
 
-        // attach the new console to this application's process
-        AttachConsole(GetCurrentProcessId());
+    // redirect STDIO
+    FILE* fp;
+    freopen_s(&fp, "CONOUT$", "w", stdout);
+    freopen_s(&fp, "CONOUT$", "w", stderr);
+    freopen_s(&fp, "CONIN$", "r", stdin);
 
-        // reopen the std I/O streams to redirect I/O to the new console
-        freopen("CON", "w", stdout);
-        freopen("CON", "w", stderr);
-        freopen("CON", "r", stdin);
-    #endif
+    // syncronize C++ streams
+    std::ios::sync_with_stdio(true);
+
+    // clear stream
+    std::cout.clear();
+    std::cin.clear();
+
+    // UTF-8 support (useful for Qt)
+    SetConsoleOutputCP(CP_UTF8);
+    SetConsoleCP(CP_UTF8);
+#endif
+}
+
+
+void closeWinConsole()
+{
+#ifdef _WIN32
+    // stream flush
+    fflush(stdout);
+    fflush(stderr);
+
+    std::cout.flush();
+    std::cerr.flush();
+
+    // detach console
+    FreeConsole();
+
+    qDebug() << "Return to Qt output";
+#endif
 }
 
 

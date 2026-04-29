@@ -20,7 +20,7 @@ CONFIG += c++17
 include($$absolute_path(../parallel.pri))
 
 CONFIG += debug_and_release
-INCLUDEPATH += ../mathFunctions
+INCLUDEPATH += ../mathFunctions  ./lineal
 
 unix:{
     CONFIG(debug, debug|release) {
@@ -34,6 +34,7 @@ win32:{
 }
 
 SOURCES += \
+    lineal/linealiaLib.cpp \
     cpusolver.cpp \
     heat.cpp \
     otherFunctions.cpp \
@@ -43,6 +44,8 @@ SOURCES += \
 
 
 HEADERS += \
+    lineal/linealia.hpp \
+    lineal/linealiaLib.h \
     cpusolver.h \
     heat.h \
     macro.h \
@@ -52,8 +55,8 @@ HEADERS += \
     solver.h \
     types.h \
     types_cpu.h \
-    water.h \
-    linealia.h
+    water.h
+
 
 DISTFILES += \
     ToDoList.txt
@@ -96,3 +99,4 @@ contains(DEFINES, CUDA_ENABLED) {
     cudaL.depend_command = $$CUDA_DIR/bin/nvcc -g -G -MD $CUDA_INC $NVCC_FLAGS ${QMAKE_FILE_NAME}         #seems not necessary
     QMAKE_EXTRA_COMPILERS += cudaL
 }
+

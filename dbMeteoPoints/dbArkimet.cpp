@@ -103,9 +103,9 @@ QList<int> DbArkimet::getId(QString VarName)
 
     QString myQuery = QString("SELECT `id_arkimet` FROM `variable_properties` WHERE `variable`='%1'").arg(VarName);
 
-    if( !qry.exec(myQuery))
+    if(! qry.exec(myQuery))
     {
-        this->setErrorString("Error in execute query:\n" + myQuery + "\n" + qry.lastError().text());
+        setErrorString("Error in execute query:\n" + myQuery + "\n" + qry.lastError().text());
     }
     else
     {
@@ -151,7 +151,7 @@ QList<int> DbArkimet::getHourlyVar()
     QList<int> hourlyVarList;
     QSqlQuery qry(_db);
 
-    qry.prepare( "SELECT id_arkimet FROM variable_properties WHERE frequency < 86400" );
+    qry.prepare( "SELECT id_arkimet FROM variable_properties WHERE frequency <= 3600" );
 
     if(! qry.exec() )
     {

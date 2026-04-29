@@ -2756,7 +2756,6 @@ bool Crit3DMeteoWidget::computeTooltipLineSeries(QLineSeries *series, QPointF po
                     return false;
                 }
             }
-
         }
 
         if (_currentFrequency == daily)
@@ -2948,12 +2947,11 @@ void Crit3DMeteoWidget::editBar()
             }
         }
     }
-
 }
+
 
 void Crit3DMeteoWidget::handleMarkerClicked()
 {
-
     QLegendMarker* marker = qobject_cast<QLegendMarker*> (sender());
 
     // Toggle visibility of series
@@ -2966,13 +2964,9 @@ void Crit3DMeteoWidget::handleMarkerClicked()
     // change marker alpha, if series is not visible
     qreal alpha;
     if (isVisible)
-    {
         alpha = 0.5;
-    }
     else
-    {
         alpha = 1.0;
-    }
 
     QColor color;
     QBrush brush = marker->labelBrush();
@@ -2992,7 +2986,6 @@ void Crit3DMeteoWidget::handleMarkerClicked()
     color.setAlphaF(alpha);
     pen.setColor(color);
     marker->setPen(pen);
-
 }
 
 void Crit3DMeteoWidget::closeEvent(QCloseEvent *event)
@@ -3053,8 +3046,8 @@ void Crit3DMeteoWidget::on_actionExportGraph()
         chartView->render(paint);
 
         QFile file(fileName);
-        file.open(QIODevice::WriteOnly);
-        buffer.save(&file, "PNG");
+        if (file.open(QIODevice::WriteOnly))
+            buffer.save(&file, "PNG");
     }
 }
 
@@ -3066,17 +3059,17 @@ void Crit3DMeteoWidget::on_actionRemoveStation()
     {
         QString stationId = QString::fromStdString(_meteoPoints[mp].id);
         QString stationsName = QString::fromStdString(_meteoPoints[mp].name);
-        QString station = stationId+"_"+stationsName;
+        QString station = stationId + "_" + stationsName;
         allStations << station;
     }
     DialogRemoveStation selectStation(allStations);
     if (selectStation.result() == QDialog::Accepted)
     {
         QList<QString> stationsToRemoveList = selectStation.getSelectedStations();
-        for (int n=0; n<stationsToRemoveList.size();n++)
+        for (int n=0; n < stationsToRemoveList.size(); n++)
         {
             QString id = stationsToRemoveList[n].split("_")[0];
-            for (int indexMp=0; indexMp<_meteoPoints.size();indexMp++)
+            for (int indexMp=0; indexMp < _meteoPoints.size(); indexMp++)
             {
                 if (_meteoPoints[indexMp].id == id.toStdString())
                 {
@@ -3089,6 +3082,7 @@ void Crit3DMeteoWidget::on_actionRemoveStation()
         redraw();
     }
 }
+
 
 void Crit3DMeteoWidget::on_actionAddStation()
 {
@@ -3138,10 +3132,12 @@ void Crit3DMeteoWidget::on_actionInfoPoint()
             infoStr = QString("Point: <b> %1 </b> <br/> ID: %2 <br/> dataset: %3 <br/> altitude: %4 m <br/> lapse rate code: %5")
                           .arg(stationsName, stationId, dataset, altitude, lapseRateName);
         }
+
         QTextEdit* plainTextEdit = new QTextEdit(infoStr);
         plainTextEdit->setReadOnly(true);
         layout->addWidget(plainTextEdit);
     }
+
     infoWindow.setLayout(layout);
     infoWindow.exec();
 }

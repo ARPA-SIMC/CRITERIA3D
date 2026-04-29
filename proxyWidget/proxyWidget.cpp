@@ -13,7 +13,6 @@
 #include <QColorDialog>
 
 
-
 Crit3DProxyWidget::Crit3DProxyWidget(Crit3DInterpolationSettings &_interpolationSettings, const std::vector<Crit3DMeteoPoint> meteoPoints,
                                      frequencyType currentFrequency, QDate currentDate, int currentHour, Crit3DQuality *quality,
                                      Crit3DInterpolationSettings &SQinterpolationSettings, Crit3DMeteoSettings *meteoSettings,
@@ -23,7 +22,7 @@ Crit3DProxyWidget::Crit3DProxyWidget(Crit3DInterpolationSettings &_interpolation
     _SQinterpolationSettings(SQinterpolationSettings), _meteoSettings(meteoSettings), _checkSpatialQuality(checkSpatialQuality),
     _macroAreaNumber(macroAreaNumber), _climateParameters(climateParameters)
 {
-    this->setWindowTitle("Proxy analysis over " + QString::number(meteoPoints.size()) +  " points");
+    this->setWindowTitle("Proxy analysis on " + QString::number(meteoPoints.size()) +  " points");
     this->resize(1024, 700);
     this->setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Preferred);
     this->setAttribute(Qt::WA_DeleteOnClose);

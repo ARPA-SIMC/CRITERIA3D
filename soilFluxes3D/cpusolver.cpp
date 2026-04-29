@@ -1,6 +1,7 @@
 #include <cstring>
 #include <cassert>
 #include <omp.h>
+#include <iostream>
 
 #include "soilFluxes3D.h"
 #include "cpusolver.h"
@@ -8,6 +9,7 @@
 #include "water.h"
 #include "heat.h"
 #include "otherFunctions.h"
+#include "linealia.hpp"
 
 using namespace soilFluxes3D::v2::Soil;
 using namespace soilFluxes3D::v2::Water;
@@ -18,6 +20,7 @@ namespace soilFluxes3D::v2
 {
     extern __cudaMngd nodesData_t nodeGrid;
     extern __cudaMngd simulationFlags_t simulationFlags;
+    extern __cudaMngd balanceData_t balanceDataCurrentTimeStep;
 
     SF3Derror_t CPUSolver::initialize()
     {
@@ -27,12 +30,12 @@ namespace soilFluxes3D::v2
         if(_parameters.deltaTcurr == noDataD)
             _parameters.deltaTcurr = _parameters.deltaTmax;
 
-        _parameters.enableOMP = true;       //TO DO: (nodeGrid.numNodes > ...);
+        _parameters.enableOMP = true;
         if(_parameters.enableOMP)
             omp_set_num_threads(static_cast<int>(_parameters.numThreads));
 
         //initialize matrix structure
-        matrixA.numRows = nodeGrid.numNodes;
+        matrixA.numRows = nodeGrid.nrNodes;
         hostSolverAlloc(matrixA.numColsInRow, matrixA.numRows);
         hostSolverAlloc(matrixA.columnIndeces, matrixA.numRows);
         hostSolverAlloc(matrixA.values, matrixA.numRows);
@@ -44,13 +47,16 @@ namespace soilFluxes3D::v2
         }
 
         //initialize vector data
-        vectorX.numElements = nodeGrid.numNodes;
+        vectorX.numElements = nodeGrid.nrNodes;
         hostSolverAlloc(vectorX.values, vectorX.numElements);
 
-        vectorB.numElements = nodeGrid.numNodes;
+        vectorNewX.numElements = nodeGrid.nrNodes;
+        hostSolverAlloc(vectorNewX.values, vectorNewX.numElements);
+
+        vectorB.numElements = nodeGrid.nrNodes;
         hostSolverAlloc(vectorB.values, vectorB.numElements);
 
-        vectorC.numElements = nodeGrid.numNodes;
+        vectorC.numElements = nodeGrid.nrNodes;
         hostSolverAlloc(vectorC.values, vectorC.numElements);
 
         _status = solverStatus::initialized;
@@ -69,8 +75,20 @@ namespace soilFluxes3D::v2
                     return SF3Derror_t::SolverError;
                 break;
             case processType::Heat:
-                heatLoop(maxTimeStep, acceptedTimeStep);
+            {
+                double dtHeat = maxTimeStep;
+                double dtWater = acceptedTimeStep;
+                double sumHeatTime = 0;
+                while (sumHeatTime < maxTimeStep)
+                {
+                    dtHeat = SF3Dmin(dtHeat, maxTimeStep - sumHeatTime);
+                    if (! heatLoop(dtHeat, dtWater))
+                        dtHeat *= 0.5;
+                    else
+                        sumHeatTime += dtHeat;
+                }
                 break;
+            }
             case processType::Solutes:
                 throw std::runtime_error("Solutes not available with GPUSolver");
                 break;
@@ -105,6 +123,7 @@ namespace soilFluxes3D::v2
 
         //Destruct matrix variable
         hostSolverFree(vectorX.values);
+        hostSolverFree(vectorNewX.values);
 
         hostSolverFree(vectorB.values);
 
@@ -125,47 +144,260 @@ namespace soilFluxes3D::v2
     {
         balanceResult_t stepStatus = balanceResult_t::stepRefused;
 
+        // reset invariant fluxes
+        std::memset(nodeGrid.waterData.invariantFluxes, 0, nodeGrid.nrNodes * sizeof(double));
+
+        // surface capacity = cell size
+        std::memcpy(vectorC.values, nodeGrid.size, nodeGrid.nrSurfaceNodes * sizeof(double));
+
         while(stepStatus != balanceResult_t::stepAccepted)
         {
             acceptedTimeStep = SF3Dmin(_parameters.deltaTcurr, maxTimeStep);
 
-            //Save instantaneus H values
-            std::memcpy(nodeGrid.waterData.oldPressureHead, nodeGrid.waterData.pressureHead, nodeGrid.numNodes * sizeof(double));
+            // save current potential
+            std::memcpy(nodeGrid.waterData.oldPressureHead, nodeGrid.waterData.pressureHead, nodeGrid.nrNodes * sizeof(double));
 
-            //initialize the solution vector with the current pressure head
-            assert(vectorX.numElements == nodeGrid.numNodes);
+            // initialize the solution vector with the current pressure head
+            assert(vectorX.numElements == nodeGrid.nrNodes);
             std::memcpy(vectorX.values, nodeGrid.waterData.pressureHead, vectorX.numElements * sizeof(double));
 
-            //Assign vectorC surface values and compute subsurface saturation degree
+            // compute subsurface degree of saturation
             __parfor(_parameters.enableOMP)
-            for (SF3Duint_t nodeIdx = 0; nodeIdx < nodeGrid.numNodes; ++nodeIdx)
+            for (SF3Duint_t nodeIdx = nodeGrid.nrSurfaceNodes; nodeIdx < nodeGrid.nrNodes; ++nodeIdx)
             {
-                if(nodeGrid.surfaceFlag[nodeIdx])
-                    vectorC.values[nodeIdx] = nodeGrid.size[nodeIdx];
-                else
-                    nodeGrid.waterData.saturationDegree[nodeIdx] = computeNodeSe(nodeIdx);
+                nodeGrid.waterData.saturationDegree[nodeIdx] = computeNodeSe(nodeIdx);
             }
 
             // update aereodynamic and soil conductance
-            updateConductance();
-
-            // update boundary water
-            updateBoundaryWaterData(acceptedTimeStep);
+            if(simulationFlags.computeHeat)
+                updateConductance();
 
             // main computation
             stepStatus = waterApproximationLoop(acceptedTimeStep);
 
+            // error in solver
+            if (stepStatus == balanceResult_t::stepNan)
+                return false;
+
             if(stepStatus != balanceResult_t::stepAccepted)
             {
                 // restore old pressureHead
-                std::memcpy(nodeGrid.waterData.pressureHead, nodeGrid.waterData.oldPressureHead, nodeGrid.numNodes * sizeof(double));
+                std::memcpy(nodeGrid.waterData.pressureHead, nodeGrid.waterData.oldPressureHead, nodeGrid.nrNodes * sizeof(double));
             }
-
-            if (stepStatus == balanceResult_t::stepNan)
-                return false;
         }
 
         return true;
+    }
+
+
+    bool CPUSolver::checkSurfaceElements(double deltaT)
+    {
+        //__parforop(_parameters.enableOMP, max, courantMax)
+        for(SF3Duint_t index = 0; index <  nodeGrid.nrSurfaceNodes; ++index)
+        {
+            double x = vectorB.values[index];
+            for(u8_t j = 1; j < matrixA.numColsInRow[index]; ++j)
+            {
+                double value = matrixA.values[index][j];
+                if (value != 0.)
+                    x -= value * vectorX.values[matrixA.columnIndeces[index][j]];
+            }
+            x /= matrixA.values[index][0];
+
+            double h = x - nodeGrid.z[index];
+            // avoid negative potentials
+            if(h < -0.0001)
+            {
+                double h0 = vectorX.values[index] - nodeGrid.z[index];
+                double ratio = 0.;
+                if (std::abs(h0) > EPSILON)
+                    ratio = std::max(0., 1. - std::abs(h / h0));
+
+                for(u8_t j = 1; j < matrixA.numColsInRow[index]; ++j)
+                {
+                    double value = matrixA.values[index][j];
+                    if (value != 0.)
+                    {
+                        // reduces water sinks
+                        SF3Duint_t linked = matrixA.columnIndeces[index][j];
+                        if (vectorX.values[linked] < vectorX.values[index])
+                        {
+                            matrixA.values[index][j] = value * ratio;
+
+                            // symmetric value in linked row
+                            for (u8_t k = 1; k < matrixA.numColsInRow[linked]; ++k)
+                            {
+                                if (matrixA.columnIndeces[linked][k] == index)
+                                {
+                                    matrixA.values[linked][k] = matrixA.values[index][j];
+                                    break;
+                                }
+                            }
+                            computeDiagonalElement(linked, deltaT);
+                        }
+                    }
+                }
+                computeDiagonalElement(index, deltaT);
+            }
+        }
+
+        return true;
+    }
+
+
+    bool CPUSolver::checkCourant(double deltaT)
+    {
+        // search the maximum Courant number
+        double courantMax = 0;
+        __parforop(_parameters.enableOMP, max, courantMax)
+        for(SF3Duint_t i = 0; i < nodeGrid.nrSurfaceNodes; ++i)
+            courantMax = SF3Dmax(courantMax, nodeGrid.waterData.partialCourantWater[i]);
+
+        nodeGrid.CourantWater = courantMax;
+
+        // check Courant condition
+        if(nodeGrid.CourantWater < 1.01 || deltaT <= _parameters.deltaTmin)
+            return true;
+
+        // condition is failed: update deltaT based on the Courant number
+        {
+            _parameters.deltaTcurr /= nodeGrid.CourantWater;
+
+            int multiply = 0;
+            while (_parameters.deltaTcurr < 1.)
+            {
+                _parameters.deltaTcurr *= 10.;
+                ++multiply;
+            }
+            _parameters.deltaTcurr = std::floor(_parameters.deltaTcurr);
+
+            for (int i = 0; i < multiply; i++)
+                _parameters.deltaTcurr /= 10.;
+
+            _parameters.deltaTcurr = SF3Dmax(_parameters.deltaTmin, _parameters.deltaTcurr);
+        }
+
+        return false;
+    }
+
+
+    void CPUSolver::preconditioningMatrix()
+    {
+        __parfor(_parameters.enableOMP)
+        for (SF3Duint_t row = 0; row < matrixA.numRows; ++row)
+        {
+            auto& rowValues = matrixA.values[row];
+            const u8_t nrCols = matrixA.numColsInRow[row];
+            const double diag = rowValues[0];
+            const double invDiag = 1.0 / diag;
+
+            // Normalize off-diagonal elements
+            u8_t nrLinkedFluxes = 0;
+            for(u8_t col = 1; col < nrCols; ++col)
+            {
+                if (std::abs(rowValues[col]) > 1e-14)
+                {
+                    rowValues[col] *= invDiag;
+                    ++nrLinkedFluxes;
+                }
+            }
+
+            // normalize RHS
+            vectorB.values[row] *= invDiag;
+
+            // set diagonal to 1
+            rowValues[0] = 1.0;
+
+            // handle isolated node (only diagonal term)
+            if (nrLinkedFluxes == 0)
+            {
+                vectorX.values[row] = vectorB.values[row];
+            }
+        }
+    }
+
+
+    /*
+    bool CPUSolver::isLinked(bool& isPrevious, double& matrixElement, SF3Duint_t& matrixIndex,
+                             SF3Duint_t nodeIndex, u8_t linkIndex)
+    {
+        if(nodeGrid.linkData[linkIndex].linkType[nodeIndex] == linkType_t::NoLink)
+            return false;
+
+        SF3Duint_t index = nodeGrid.linkData[linkIndex].linkIndex[nodeIndex];
+        isPrevious = (index < nodeIndex);
+
+        if (! isPrevious)
+            return true;
+
+        for (u8_t j = 1; j < matrixA.numColsInRow[index]; ++j)
+        {
+            if (matrixA.columnIndeces[index][j] == nodeIndex)
+            {
+                matrixElement = matrixA.values[index][j];
+                matrixIndex = index;
+                return true;
+            }
+        }
+
+        return false;
+    }*/
+
+
+    void CPUSolver::computeDiagonalElement(SF3Duint_t row, double deltaT)
+    {
+        u8_t nrElements = matrixA.numColsInRow[row];
+        auto& rowValues = matrixA.values[row];
+
+        double sum = 0.;
+        for (size_t col = 1; col < nrElements; ++col)
+            sum += rowValues[col];
+
+        rowValues[0] = (vectorC.values[row] / deltaT) + sum;
+    }
+
+
+    void CPUSolver::computeLinearSystemElement(SF3Duint_t row, u8_t approxNum, double deltaT)
+    {
+        u8_t col = 1;
+
+        // flux up
+        u8_t linkIndex = 0;
+        if (computeLinkFluxes(matrixA.values[row][col], matrixA.columnIndeces[row][col], row,
+                              linkIndex, approxNum, deltaT, _parameters.lateralVerticalRatio,
+                              linkType_t::Up, _parameters.meanType) )
+            col++;
+
+        // flux lateral
+        for(u8_t l = 0; l < nodeGrid.numLateralLink[row]; ++l)
+        {
+            linkIndex = l + 2;
+            if (computeLinkFluxes(matrixA.values[row][col], matrixA.columnIndeces[row][col], row,
+                                linkIndex, approxNum, deltaT, _parameters.lateralVerticalRatio,
+                                linkType_t::Lateral, _parameters.meanType) )
+                col++;
+        }
+
+        // flux down
+        linkIndex = 1;
+        if (computeLinkFluxes(matrixA.values[row][col], matrixA.columnIndeces[row][col], row,
+                                linkIndex, approxNum, deltaT, _parameters.lateralVerticalRatio,
+                                linkType_t::Down, _parameters.meanType))
+            col++;
+
+        matrixA.numColsInRow[row] = col;
+
+        // diagonal
+        computeDiagonalElement(row, deltaT);
+        for(u8_t col = 1; col < matrixA.numColsInRow[row]; ++col)
+        {
+            matrixA.values[row][col] *= -1.;
+        }
+        matrixA.columnIndeces[row][0] = row;
+
+        // Compute b element
+        vectorB.values[row] = ((vectorC.values[row] / deltaT) * nodeGrid.waterData.oldPressureHead[row])
+                              + nodeGrid.waterData.waterFlow[row] + nodeGrid.waterData.invariantFluxes[row];
     }
 
 
@@ -176,79 +408,67 @@ namespace soilFluxes3D::v2
 
         for(u8_t approxIdx = 0; approxIdx < _parameters.maxApproximationsNumber; ++approxIdx)
         {
-            //Compute capacity vector elements
+            // compute capacity vector elements
             computeCapacity(vectorC);
-            logStruct;
 
-            //Update boundary water
+            // update boundary water
             updateBoundaryWaterData(deltaT);
-            logStruct;
 
-            //Reset Courant data
-            nodeGrid.CourantWaterLevel = 0.;
-            std::memset(nodeGrid.waterData.partialCourantWaterLevels, 0, nodeGrid.numNodes * sizeof(double));
+            // reset Courant data to zero
+            nodeGrid.CourantWater = 0.;
+            std::memset(nodeGrid.waterData.partialCourantWater, 0, nodeGrid.nrSurfaceNodes * sizeof(double));
 
-            //Compute linear system elements
-            computeLinearSystemElement(matrixA, vectorB, vectorC, approxIdx, deltaT, _parameters.lateralVerticalRatio, _parameters.meanType);
-
-            //Courant data reduction
-            double courantMax = 0;
-            __parforop(_parameters.enableOMP, max, courantMax)
-            for(SF3Duint_t idx = 0; idx < nodeGrid.numNodes; ++idx)
-                courantMax = SF3Dmax(courantMax, nodeGrid.waterData.partialCourantWaterLevels[idx]);
-
-            // more speed, less accuracy
-            if (_parameters.MBRThreshold > 0.01)
-                courantMax *= 0.5;
-
-            nodeGrid.CourantWaterLevel = courantMax;
-
-            // check Courant
-            if((nodeGrid.CourantWaterLevel > 1.01) && (deltaT > _parameters.deltaTmin))
+            // compute linear system
             {
-                _parameters.deltaTcurr /= nodeGrid.CourantWaterLevel;
-
-                int multiply = 0;
-                while (_parameters.deltaTcurr < 10.)
+                // surface elements
+                __parfor(_parameters.enableOMP)
+                for (SF3Duint_t row = 0; row < nodeGrid.nrSurfaceNodes; ++row)
                 {
-                    _parameters.deltaTcurr *= 10.;
-                    ++multiply;
+                    computeLinearSystemElement(row, approxIdx, deltaT);
                 }
-                _parameters.deltaTcurr = std::floor(_parameters.deltaTcurr);
 
-                for (int i = 0; i < multiply; i++)
-                    _parameters.deltaTcurr /= 10.;
+                if (! checkCourant(deltaT))
+                {
+                    // Courant condition is failed -> reduces time step
+                    return balanceResult_t::stepHalved;
+                }
 
-                _parameters.deltaTcurr = SF3Dmax(_parameters.deltaTmin, _parameters.deltaTcurr);
-
-                return balanceResult_t::stepHalved;
+                // soil elements
+                __parfor(_parameters.enableOMP)
+                for (SF3Duint_t row = nodeGrid.nrSurfaceNodes; row < matrixA.numRows; ++row)
+                {
+                    computeLinearSystemElement(row, approxIdx, deltaT);
+                }
             }
 
-            //Try solve linear system
-            bool isStepValid = solveLinearSystem(approxIdx, processType::Water);
-            logStruct;
+            // preconditioning the matrix
+            preconditioningMatrix();
 
-            //Log system data
-            logSystem;
+            // solve linear system
+            bool isStepValid;
+            if (useLineal)
+                isStepValid = linealSolver(approxIdx);
+            else
+                isStepValid = solveLinearSystem(approxIdx, processType::Water);
 
-            //Reduce step tipe if system resolution failed
+            // reduce time step if system resolution failed
             if((! isStepValid) && (deltaT > _parameters.deltaTmin))
             {
                 _parameters.deltaTcurr = SF3Dmax(_parameters.deltaTmin, _parameters.deltaTcurr / 2.);
                 return balanceResult_t::stepHalved;
             }
 
-            //Update potential
-            assert(vectorX.numElements == nodeGrid.numNodes);
+            // update water potential
+            assert(vectorX.numElements == nodeGrid.nrNodes);
             std::memcpy(nodeGrid.waterData.pressureHead, vectorX.values, vectorX.numElements * sizeof(double));
 
-            //Update degree of saturation   //TO DO: make a function
+            // update degree of saturation
             __parfor(_parameters.enableOMP)
-            for (SF3Duint_t nodeIdx = 0; nodeIdx < nodeGrid.numNodes; ++nodeIdx)
-                if(!nodeGrid.surfaceFlag[nodeIdx])
+            for (SF3Duint_t nodeIdx = nodeGrid.nrSurfaceNodes; nodeIdx < nodeGrid.nrNodes; ++nodeIdx)
+                if(! nodeGrid.surfaceFlag[nodeIdx])
                     nodeGrid.waterData.saturationDegree[nodeIdx] = computeNodeSe(nodeIdx);
 
-            //Check water balance
+            // check water balance
             balanceResult = evaluateWaterBalance(approxIdx, _bestMBRerror, deltaT, _parameters);
 
             if((balanceResult == balanceResult_t::stepAccepted) || (balanceResult == balanceResult_t::stepHalved)
@@ -260,18 +480,18 @@ namespace soilFluxes3D::v2
     }
 
 
-    void CPUSolver::heatLoop(double timeStepHeat, double timeStepWater)
+    bool CPUSolver::heatLoop(double timeStepHeat, double timeStepWater)
     {
         resetFluxValues(true, false);
 
         //initialize vector X
-        std::memcpy(vectorX.values, nodeGrid.heatData.temperature, nodeGrid.numNodes * sizeof(double));
+        std::memcpy(vectorX.values, nodeGrid.heatData.temperature, nodeGrid.nrNodes * sizeof(double));
         //Save current temperatures
-        std::memcpy(nodeGrid.heatData.oldTemperature, nodeGrid.heatData.temperature, nodeGrid.numNodes * sizeof(double));
+        std::memcpy(nodeGrid.heatData.oldTemperature, nodeGrid.heatData.temperature, nodeGrid.nrNodes * sizeof(double));
 
         //initialize vector C
         __parfor(_parameters.enableOMP)
-        for (SF3Duint_t nodeIdx = 0; nodeIdx < nodeGrid.numNodes; ++nodeIdx)
+        for (SF3Duint_t nodeIdx = 0; nodeIdx < nodeGrid.nrNodes; ++nodeIdx)
         {
             if(nodeGrid.surfaceFlag[nodeIdx])
                 continue;
@@ -282,10 +502,10 @@ namespace soilFluxes3D::v2
         }
 
         //Compute linear system elements
-        hostReset(nodeGrid.waterData.invariantFluxes, nodeGrid.numNodes);
+        hostReset(nodeGrid.waterData.invariantFluxes, nodeGrid.nrNodes);
 
         __parfor(_parameters.enableOMP)
-        for (SF3Duint_t rowIdx = 0; rowIdx < nodeGrid.numNodes; ++rowIdx)
+        for (SF3Duint_t rowIdx = 0; rowIdx < nodeGrid.nrNodes; ++rowIdx)
         {
             if(nodeGrid.surfaceFlag[rowIdx])
                 continue;
@@ -313,17 +533,17 @@ namespace soilFluxes3D::v2
             u8_t linkIdx = 1;
             bool isLinked = false;
 
-            //Compute flox up
+            // Compute flux up
             isLinked = computeHeatLinkFluxes(matrixA.values[rowIdx][linkIdx], matrixA.columnIndeces[rowIdx][linkIdx], rowIdx, 0, timeStepHeat, timeStepWater);
             if(isLinked)
                 linkIdx++;
 
-            //Compute flox down
+            // Compute flux down
             isLinked = computeHeatLinkFluxes(matrixA.values[rowIdx][linkIdx], matrixA.columnIndeces[rowIdx][linkIdx], rowIdx, 1, timeStepHeat, timeStepWater);
             if(isLinked)
                 linkIdx++;
 
-            //Compute flux lateral
+            // Compute flux lateral
             for(u8_t latIdx = 0; latIdx < maxLateralLink; ++latIdx) //TO DO: implement real num lat links
             {
                 isLinked = computeHeatLinkFluxes(matrixA.values[rowIdx][linkIdx], matrixA.columnIndeces[rowIdx][linkIdx], rowIdx, 2 + latIdx, timeStepHeat, timeStepWater);
@@ -333,7 +553,7 @@ namespace soilFluxes3D::v2
 
             matrixA.numColsInRow[rowIdx] = linkIdx; //TO DO: need to fill the not used columns of the row?
 
-            //Compute diagonal element
+            // Compute diagonal elements
             double sumDP = 0., sumF0 = 0.;
             for(u8_t colIdx = 1; colIdx < matrixA.numColsInRow[rowIdx]; ++colIdx)
             {
@@ -345,11 +565,11 @@ namespace soilFluxes3D::v2
             matrixA.columnIndeces[rowIdx][0] = rowIdx;
             matrixA.values[rowIdx][0] = sumDP + (vectorC.values[rowIdx] / timeStepHeat);  //Check if C values is correct
 
-            //Computeb element
+            // Compute b elements
             vectorB.values[rowIdx] = vectorC.values[rowIdx] * nodeGrid.heatData.oldTemperature[rowIdx] / timeStepHeat - heatCapacity / timeStepHeat +
                                         nodeGrid.heatData.heatFlux[rowIdx] + nodeGrid.waterData.invariantFluxes[rowIdx] + sumF0;
 
-            //Preconditioning
+            // Preconditioning
             if(matrixA.values[rowIdx][0] > 0)
             {
                 vectorB.values[rowIdx] /= matrixA.values[rowIdx][0];
@@ -359,46 +579,118 @@ namespace soilFluxes3D::v2
             }
         }
 
-        //Solve linear system
+        // Solve linear system
         solveLinearSystem(_parameters.maxApproximationsNumber - 1, processType::Heat);
 
-        //Retrive new temperatures
+        // Store new temperatures
         __parfor(_parameters.enableOMP)
-        for (SF3Duint_t rowIdx = 0; rowIdx < nodeGrid.numNodes; ++rowIdx)
-            if(!nodeGrid.surfaceFlag[rowIdx])
+        for (SF3Duint_t rowIdx = 0; rowIdx < nodeGrid.nrNodes; ++rowIdx)
+            if(! nodeGrid.surfaceFlag[rowIdx])
                 nodeGrid.heatData.temperature[rowIdx] = vectorX.values[rowIdx];
 
-        //Compute balance
+        // Compute balance
         evaluateHeatBalance(timeStepHeat, timeStepWater);
+        if (fabs(balanceDataCurrentTimeStep.heatMBR) > 1.0 && timeStepHeat > (_parameters.deltaTmin * 10.0))
+        {
+            // restore old temperatures
+            __parfor(_parameters.enableOMP)
+            for (SF3Duint_t rowIdx = 0; rowIdx < nodeGrid.nrNodes; ++rowIdx)
+                if(! nodeGrid.surfaceFlag[rowIdx])
+                    nodeGrid.heatData.temperature[rowIdx] = nodeGrid.heatData.oldTemperature[rowIdx];
 
-        //Update balance
+            return false;
+        }
+
+        // Update balance
         updateHeatBalanceData();
 
-        //Update heat fluxes
+        // Update heat fluxes
         saveHeatFluxValues(timeStepHeat, timeStepWater);
 
-        //Save new temperatures
+        // Save new temperatures
         __parfor(_parameters.enableOMP)
-        for (SF3Duint_t rowIdx = 0; rowIdx < nodeGrid.numNodes; ++rowIdx)
-            if(!nodeGrid.surfaceFlag[rowIdx])
+        for (SF3Duint_t rowIdx = 0; rowIdx < nodeGrid.nrNodes; ++rowIdx)
+            if(! nodeGrid.surfaceFlag[rowIdx])
                 nodeGrid.heatData.oldTemperature[rowIdx] = nodeGrid.heatData.temperature[rowIdx];
 
-        return;
+        return true;
     }
 
 
-    bool CPUSolver::solveLinearSystem(u8_t approximationNumber, processType computationType)
+    bool CPUSolver::linealSolver(u8_t approximationNr)
+    {
+        u32_t nrIterationMax = calcCurrentMaxIterationNumber(approximationNr);
+
+        LinealExecutionParams executionParams;
+        executionParams.log = 0;
+
+        LinealiaIterativeSolverParams iterativeParams;
+        iterativeParams.max_iterations = nrIterationMax;
+        iterativeParams.max_relative_residual_norm = _parameters.residualTolerance;
+
+        LinealiaRelaxedParams relaxParams;
+
+        LinealiaRelaxedPreconditionerParams relPcgParams;
+        LinealiaPcgAmgParams pcgAmgParams;
+
+        LinealiaMatrix A;
+        A.num_rows = matrixA.numRows;
+        A.num_columns = matrixA.numColsInRow;
+        A.column_indices = matrixA.columnIndeces;
+        A.values = matrixA.values;
+
+        LinealiaVector x, b;
+        x.num_elements = vectorX.numElements;
+        x.values = vectorX.values;
+        b.num_elements = vectorB.numElements;
+        b.values = vectorB.values;
+
+        LinealiaIterativeResult result;
+
+        switch (linealMethod) {
+        case 0:
+            result = LinealiaLib::instance().solveSSOR(A, x, b, executionParams, iterativeParams, relaxParams);
+            break;
+        case 1:
+            result = LinealiaLib::instance().solveCG(A, x, b, executionParams, iterativeParams);
+            break;
+        case 2:
+            result = LinealiaLib::instance().solvePCG_SOR(A, x, b, executionParams, iterativeParams, relPcgParams);
+            break;
+        case 3:
+            result = LinealiaLib::instance().solvePCG_AMG_SOR(A, x, b, executionParams, iterativeParams, pcgAmgParams);
+            break;
+        default:
+            result = LinealiaLib::instance().solveSSOR(A, x, b, executionParams, iterativeParams, relaxParams);
+            break;
+        }
+
+        // Check surface water level (it must be ≥ 0)
+        #pragma omp parallel for if(_parameters.enableOMP) schedule(static)
+        for (SF3Duint_t row = 0; row < nodeGrid.nrSurfaceNodes; ++row)
+        {
+            double elevation = nodeGrid.z[row];
+            double waterLevel = x.values[row] - elevation;
+            if (waterLevel < 0.)
+                x.values[row] = elevation;
+        }
+
+        return true;
+    }
+
+
+    bool CPUSolver::solveLinearSystem(u8_t approximationNr, processType computationType)
     {
         double currErrorNorm = 0., bestErrorNorm = 1.;
 
-        u32_t currMaxIterationNum = calcCurrentMaxIterationNumber(approximationNumber);
+        u32_t currMaxIterationNum = calcCurrentMaxIterationNumber(approximationNr);
 
         for(u32_t iterationNumber = 0; iterationNumber < currMaxIterationNum; ++iterationNumber)
         {
             switch(computationType)
             {
                 case processType::Water:
-                    currErrorNorm = JacobiWaterCPU(vectorX, matrixA, vectorB);
+                    currErrorNorm = JacobiWaterCPU(vectorX, vectorNewX, matrixA, vectorB);
                     break;
                 case processType::Heat:
                     currErrorNorm = GaussSeidelHeatCPU(vectorX, matrixA, vectorB);
@@ -410,7 +702,7 @@ namespace soilFluxes3D::v2
             if(currErrorNorm < _parameters.residualTolerance)
                 break;
 
-            if(currErrorNorm > (bestErrorNorm * 10))
+            if(computationType == processType::Water && currErrorNorm > (bestErrorNorm * 10))
                 return false;
 
             if(currErrorNorm < bestErrorNorm)
@@ -420,4 +712,4 @@ namespace soilFluxes3D::v2
         return true;
     }
 
-} // namespace
+} // end namespace

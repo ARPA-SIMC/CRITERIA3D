@@ -2,6 +2,7 @@
 
 #include "solver.h"
 #include "types_cpu.h"
+#include "linealiaLib.h"
 
 namespace soilFluxes3D::v2
 {
@@ -9,19 +10,27 @@ namespace soilFluxes3D::v2
     {
         private:
             MatrixCPU matrixA;
-            VectorCPU vectorB, vectorX;
-
+            VectorCPU vectorB, vectorX, vectorNewX;
             VectorCPU vectorC;
 
             bool waterMainLoop(double maxTimeStep, double& acceptedTimeStep);
             balanceResult_t waterApproximationLoop(double deltaT);
 
-            void heatLoop(double timeStepHeat, double timeStepWater);
+            void computeLinearSystemElement(SF3Duint_t row, u8_t approxNum, double deltaT);
+            void computeDiagonalElement(SF3Duint_t row, double deltaT);
+            void preconditioningMatrix();
 
-            bool solveLinearSystem(u8_t approximationNumber, processType computationType) override;
+            bool checkSurfaceElements(double deltaT);
+            bool checkCourant(double deltaT);
+
+            bool heatLoop(double timeStepHeat, double timeStepWater);
+
+            bool solveLinearSystem(u8_t approximationNr, processType computationType) override;
+            bool linealSolver(u8_t approximationNr);
 
         public:
             CPUSolver() : Solver(solverType::CPU, numericalMethod::Jacobi) {}
+
             __cudaSpec double getMatrixElementValue(SF3Duint_t rowIndex, SF3Duint_t colIndex) const noexcept;
 
             SF3Derror_t initialize() override;

@@ -61,7 +61,6 @@ namespace soilFluxes3D { inline namespace v2
             default:
                 return static_cast<double>(INDEX_ERROR);
         }
-
     }
 
     inline constexpr bool getSF3DerrorName(soilFluxes3D::SF3Derror_t errorCode, std::string& errorName)
@@ -96,7 +95,7 @@ namespace soilFluxes3D { inline namespace v2
     //Process implemented
     enum class processType : u8_t {Water, Heat, Solutes};
 
-    enum class boundaryType_t : u8_t {NoBoundary, Runoff, FreeDrainage, FreeLateraleDrainage,
+    enum class boundaryType_t : u8_t {NoBoundary, Runoff, FreeDrainage, FreeLateralDrainage,
                                     PrescribedTotalWaterPotential, Urban, Road, Culvert, HeatSurface, SoluteFlux};
 
     enum class linkType_t : u8_t {NoLink, Up, Down, Lateral};
@@ -136,20 +135,20 @@ namespace soilFluxes3D { inline namespace v2
     enum class WRCModel : u8_t {VanGenuchten, ModifiedVanGenuchten, Campbell};
     struct waterData_t
     {
-        double *saturationDegree = nullptr;   //Se
-        double *waterConductivity = nullptr;  //k
-        double *waterFlow = nullptr;          //Qw
-        double *pressureHead = nullptr;       //H
-        double *waterSinkSource = nullptr;    //waterSinkSource
-        double *pond = nullptr;               //pond
-        double *invariantFluxes = nullptr;    //invariantFlux
+        double *saturationDegree = nullptr;     // [-]
+        double *waterConductivity = nullptr;    // [m s-1]
+        double *waterFlow = nullptr;            // [m3 s-1]
+        double *pressureHead = nullptr;         // [m]
+        double *waterSinkSource = nullptr;      // [m3 s-1]
+        double *pond = nullptr;                 // [m]
+        double *invariantFluxes = nullptr;      // [m3 s-1]
 
-        //Temp variables
-        double *oldPressureHead = nullptr;    //oldH
-        double *bestPressureHead = nullptr;   //bestH
+        // temporary variables
+        double *oldPressureHead = nullptr;      // [m]
+        double *bestPressureHead = nullptr;     // [m]
 
-        //Courant data
-        double *partialCourantWaterLevels = nullptr;
+        // only surface (Courant)
+        double *partialCourantWater = nullptr;
     };
 
     struct culvertData_t
@@ -249,37 +248,38 @@ namespace soilFluxes3D { inline namespace v2
         double *fixedTemperatureDepth = nullptr;    /*!< [m] depth of fixed temperature layer */
     };
 
+
     struct nodesData_t
     {
         bool isInitialized = false;
 
-        SF3Duint_t numNodes = 0;
-        SF3Duint_t numLayers = 0;
+        SF3Duint_t nrNodes = 0;
+        SF3Duint_t nrSurfaceNodes = 0;
 
-        double CourantWaterLevel = 0.;
+        double CourantWater = 0.;
 
-        //Topology data
-        double *size = nullptr;                             //volume_area
-        double *x = nullptr, *y = nullptr, *z = nullptr;    //x, y, z
-        bool *surfaceFlag = nullptr;                        //isSurface
+        // Topology data
+        double *size = nullptr;                             // volume_area
+        double *x = nullptr, *y = nullptr, *z = nullptr;    // x, y, z
+        bool *surfaceFlag = nullptr;                        // isSurface
 
-        //Soil/surface properties pointers
+        // Soil/surface properties pointers
         soilSurface_ptr *soilSurfacePointers = nullptr;
 
-        //Boundary data
+        // Boundary data
         boundaryData_t boundaryData;
 
-        //Link data
+        // Link data
         u8_t *numLateralLink = nullptr;
         linkData_t linkData[maxTotalLink];
 
-        //Water quantities
+        // Water quantities
         waterData_t waterData;
 
-        //Culvert pointers
+        // Culvert pointers
         culvertData_t* *culvertPtr = nullptr;
 
-        //Heat and solutes quantities
+        // Heat and solutes quantities
         heatData_t heatData;
     };
 
@@ -303,13 +303,14 @@ namespace soilFluxes3D { inline namespace v2
         WRCModel waterRetentionCurveModel = WRCModel::ModifiedVanGenuchten;
         meanType_t meanType = meanType_t::Logarithmic;
 
-        double lateralVerticalRatio = 10.;
-        double heatWeightFactor = 0.5;          //???
+        double lateralVerticalRatio = 4.;       // [-] default
+        double heatWeightFactor = 0.5;
 
-        double CourantWaterThreshold = 0.5;     //used for evaluate stability
-        double instabilityFactor = 10.;         //used for evaluate stability
+        double CourantWaterThreshold = 0.5;     // used for evaluate stability
+        double instabilityFactor = 10.;         // used for evaluate stability
 
         bool enableOMP = true;
+
         u32_t numThreads = std::thread::hardware_concurrency();
     };
 

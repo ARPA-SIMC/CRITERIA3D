@@ -63,12 +63,12 @@ namespace soilFluxes3D::v2::Heat
                 case heatFluxSaveMode_t::All:
                     for(u8_t lIdx = 0; lIdx < maxTotalLink; ++lIdx)
                         for(auto index : heatFluxIndeces)
-                            hostFill(nodeGrid.linkData[lIdx].fluxes[toUnderlyingT(index)], nodeGrid.numNodes, noDataD);
+                            hostFill(nodeGrid.linkData[lIdx].fluxes[toUnderlyingT(index)], nodeGrid.nrNodes, noDataD);
                     break;
 
                 case heatFluxSaveMode_t::Total:
                     for(u8_t lIdx = 0; lIdx < maxTotalLink; ++lIdx)
-                        hostFill(nodeGrid.linkData[lIdx].fluxes[toUnderlyingT(fluxTypes_t::HeatTotal)], nodeGrid.numNodes, noDataD);
+                        hostFill(nodeGrid.linkData[lIdx].fluxes[toUnderlyingT(fluxTypes_t::HeatTotal)], nodeGrid.nrNodes, noDataD);
                     break;
 
                 default:
@@ -83,7 +83,7 @@ namespace soilFluxes3D::v2::Heat
                 case heatFluxSaveMode_t::All:
                     for(u8_t lIdx = 0; lIdx < maxTotalLink; ++lIdx)
                         for(auto index : waterFluxIndeces)
-                            hostFill(nodeGrid.linkData[lIdx].fluxes[toUnderlyingT(index)], nodeGrid.numNodes, noDataD);
+                            hostFill(nodeGrid.linkData[lIdx].fluxes[toUnderlyingT(index)], nodeGrid.nrNodes, noDataD);
                     break;
 
                 default:
@@ -97,7 +97,7 @@ namespace soilFluxes3D::v2::Heat
     SF3Derror_t saveWaterFluxValues(double dtHeat, double dtWater)
     {
         __parfor(__ompStatus)    //Try swap loop order and/or use collapse(2)
-        for (SF3Duint_t nIdx = 0; nIdx < nodeGrid.numNodes; ++nIdx)
+        for (SF3Duint_t nIdx = 0; nIdx < nodeGrid.nrNodes; ++nIdx)
             for(u8_t lIdx = 0; lIdx < maxTotalLink; ++lIdx)
                 if(nodeGrid.linkData[lIdx].linkType[nIdx] != linkType_t::NoLink)
                     saveNodeWaterFluxes(nIdx, lIdx, dtHeat, dtWater);
@@ -145,7 +145,7 @@ namespace soilFluxes3D::v2::Heat
             return SF3Derror_t::SF3Dok;
 
         __parfor(__ompStatus)
-        for (SF3Duint_t nIdx = 0; nIdx < nodeGrid.numNodes; ++nIdx)
+        for (SF3Duint_t nIdx = 0; nIdx < nodeGrid.nrNodes; ++nIdx)
         {
             if(nodeGrid.surfaceFlag[nIdx])
                 continue;
@@ -212,16 +212,14 @@ namespace soilFluxes3D::v2::Heat
 
     SF3Derror_t updateConductance()
     {
-        if(!simulationFlags.computeHeat)
+        if(! simulationFlags.computeHeat)
             return SF3Derror_t::MissingDataError;
 
         __parfor(__ompStatus)
-        for (SF3Duint_t nIdx = 0; nIdx < nodeGrid.numNodes; ++nIdx)
+        for (SF3Duint_t nIdx = 0; nIdx < nodeGrid.nrNodes; ++nIdx)
         {
             if(nodeGrid.boundaryData.boundaryType[nIdx] != boundaryType_t::HeatSurface)
                 continue;
-
-            //check if is a heat node?
 
             nodeGrid.boundaryData.aerodynamicConductance[nIdx] = computeNodeAerodynamicConductance(nIdx);
 
@@ -239,10 +237,10 @@ namespace soilFluxes3D::v2::Heat
     {
         double heatBoundaryCourantValue = 0.;
         double* tempCourantValues = nullptr;
-        hostAlloc(tempCourantValues, nodeGrid.numNodes);
+        hostAlloc(tempCourantValues, nodeGrid.nrNodes);
 
         __parfor(__ompStatus)
-        for(SF3Duint_t nodeIndex = 0; nodeIndex < nodeGrid.numNodes; ++nodeIndex)
+        for(SF3Duint_t nodeIndex = 0; nodeIndex < nodeGrid.nrNodes; ++nodeIndex)
         {
             if(!isHeatNode(nodeIndex))
                 continue;
@@ -322,7 +320,7 @@ namespace soilFluxes3D::v2::Heat
 
         //Reduction
         __parforop(__ompStatus, max, heatBoundaryCourantValue)
-        for(SF3Duint_t nodeIndex = 0; nodeIndex < nodeGrid.numNodes; ++nodeIndex)
+        for(SF3Duint_t nodeIndex = 0; nodeIndex < nodeGrid.nrNodes; ++nodeIndex)
             heatBoundaryCourantValue = SF3Dmax(heatBoundaryCourantValue, tempCourantValues[nodeIndex]);
 
         hostFree(tempCourantValues);
@@ -344,7 +342,7 @@ namespace soilFluxes3D::v2::Heat
     {
         double heatStorage = 0.;
         __parforop(__ompStatus, +, heatStorage)
-        for (SF3Duint_t nodeIdx = 0; nodeIdx < nodeGrid.numNodes; ++nodeIdx)
+        for (SF3Duint_t nodeIdx = 0; nodeIdx < nodeGrid.nrNodes; ++nodeIdx)
         {
             if(nodeGrid.surfaceFlag[nodeIdx])
                 continue;
@@ -359,7 +357,7 @@ namespace soilFluxes3D::v2::Heat
     {
         double heatSinkSource = 0.;
         __parforop(__ompStatus, +, heatSinkSource)
-        for (SF3Duint_t nodeIdx = 0; nodeIdx < nodeGrid.numNodes; ++nodeIdx)
+        for (SF3Duint_t nodeIdx = 0; nodeIdx < nodeGrid.nrNodes; ++nodeIdx)
         {
             if(nodeGrid.surfaceFlag[nodeIdx])
                 continue;
@@ -370,24 +368,26 @@ namespace soilFluxes3D::v2::Heat
         return heatSinkSource;
     }
 
+
     void evaluateHeatBalance(double dtHeat, double dtWater)
     {
-        //Heat sink/source
+        // Heat sink/source
         double heatSinkSource = computeCurrentHeatSinkSource(dtHeat);
         balanceDataCurrentTimeStep.heatSinkSource = heatSinkSource;
 
-        //Heat storage
+        // Heat storage
         double heatStorage = computeCurrentHeatStorage(dtWater, dtHeat);
         balanceDataCurrentTimeStep.heatStorage = heatStorage;
 
-        //Heat MBE
+        // Heat MBE
         double deltaHeatStorage = balanceDataCurrentTimeStep.heatStorage - balanceDataPreviousTimeStep.heatStorage;
         balanceDataCurrentTimeStep.heatMBE = deltaHeatStorage - balanceDataCurrentTimeStep.heatSinkSource;
 
-        //Heat MBR
-        double referenceHeat = SF3Dmax(1., std::fabs(balanceDataCurrentTimeStep.heatSinkSource));
+        // Heat MBR (minimum 1 Joule)
+        double referenceHeat = SF3Dmax(heatStorage * 1e-6, std::fabs(balanceDataCurrentTimeStep.heatSinkSource));
         balanceDataCurrentTimeStep.heatMBR = balanceDataCurrentTimeStep.heatMBE / referenceHeat;
     }
+
 
     void updateHeatBalanceData()
     {
