@@ -164,6 +164,7 @@ namespace gis
         nrCols = 0;
         nrBytes = 4;
         cellSize = NODATA;
+        invCellSize = NODATA;
         flag = NODATA;
     }
 
@@ -281,6 +282,7 @@ namespace gis
         header->nrCols = 0;
         header->nrBytes = 4;
         header->cellSize = NODATA;
+        header->invCellSize = NODATA;
         header->llCorner.initialize();
 
         isLoaded = false;
@@ -345,6 +347,7 @@ namespace gis
 
         // avg value (usually not used, this is a raster value container for a lat lon grid)
         header->cellSize = (latLonHeader.dx + latLonHeader.dy) * 0.5;
+        header->invCellSize = 1.0 / header->cellSize;
 
         return initializeGrid(header->flag);
     }
@@ -473,16 +476,30 @@ namespace gis
     }
 
 
-    void Crit3DRasterGrid::getRowCol(double x, double y, int& row, int& col) const
+    /*void Crit3DRasterGrid::getRowCol_old(double x, double y, int& row, int& col) const
     {
         row = (header->nrRows - 1) - int(floor((y - header->llCorner.y) / header->cellSize));
         col = int(floor((x - header->llCorner.x) / header->cellSize));
+    }*/
+
+    // faster
+    void Crit3DRasterGrid::getRowCol(double x, double y, int& row, int& col) const
+    {
+        const auto* h = header;
+
+        const int r = int((y - h->llCorner.y) * h->invCellSize);
+        const int c = int((x - h->llCorner.x) * h->invCellSize);
+
+        row = (h->nrRows - 1) - r;
+        col = c;
     }
 
-
+    // faster
     bool Crit3DRasterGrid::isOutOfGrid(int row, int col) const
     {
-        return (row < 0 || row > (header->nrRows - 1) || col < 0 || col > header->nrCols - 1);
+        // it works because if row is < 0 it becomes a huge unsigned → out of range
+        return (unsigned(row) >= unsigned(header->nrRows) ||
+                unsigned(col) >= unsigned(header->nrCols));
     }
 
 
@@ -494,12 +511,24 @@ namespace gis
             return (isEqual(value[row][col], header->flag));
     }
 
-    float Crit3DRasterGrid::getValueFromRowCol(int row, int col) const
+    /*float Crit3DRasterGrid::getValueFromRowCol_old(int row, int col) const
     {
         if (isOutOfGrid(row, col))
             return header->flag;
         else
             return value[row][col];
+    }*/
+
+    // faster
+    float Crit3DRasterGrid::getValueFromRowCol(int row, int col) const
+    {
+        const auto* h = header;
+
+        if (unsigned(row) >= unsigned(h->nrRows) ||
+            unsigned(col) >= unsigned(h->nrCols))
+            return h->flag;
+
+        return value[row][col];
     }
 
     float Crit3DRasterGrid::getValueFromXY(double x, double y) const
@@ -2240,6 +2269,7 @@ namespace gis
         // set header
         outputRaster->header->flag = flag;
         outputRaster->header->cellSize = inputRaster->header->cellSize;
+        outputRaster->header->invCellSize = inputRaster->header->invCellSize;
 
         outputRaster->header->nrRows = newRows;
         outputRaster->header->nrCols = newCols;

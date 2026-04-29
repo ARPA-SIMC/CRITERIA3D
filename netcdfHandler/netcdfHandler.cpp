@@ -624,6 +624,7 @@ bool NetCDFHandler::readProperties(string fileName)
             dataGrid.header->llCorner.x = latLonHeader.llCorner.longitude;
             // avg value (not used)
             dataGrid.header->cellSize = (latLonHeader.dx + latLonHeader.dy) * 0.5;
+            dataGrid.header->invCellSize = 1.0 / dataGrid.header->cellSize;
             dataGrid.initializeGrid(0);
         }
     }
@@ -651,6 +652,8 @@ bool NetCDFHandler::readProperties(string fileName)
                 metadata << "\nWarning! dx != dy" << endl;
 
             dataGrid.header->cellSize = double(x[1]-x[0]);
+            dataGrid.header->invCellSize = 1.0 / dataGrid.header->cellSize;
+
             dataGrid.header->llCorner.x = double(x[0]);
 
             isYincreasing = (y[1] > y[0]);

@@ -116,6 +116,7 @@
             int nrCols;
             int nrBytes;
             double cellSize;
+            double invCellSize;
             float flag;
             Crit3DUtmPoint llCorner;
 

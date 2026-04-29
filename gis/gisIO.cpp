@@ -178,8 +178,10 @@ namespace gis
                     header->llCorner.y = stod(valueStr);
 
                 else if (upKey == "CELLSIZE")
+                {
                     header->cellSize = stod(valueStr);
-
+                    header->invCellSize = 1.0 / header->cellSize;
+                }
                 else if ((upKey == "NODATA_VALUE") || (upKey == "NODATA"))
                     header->flag = stof(valueStr);
             }
@@ -302,6 +304,7 @@ namespace gis
                     }
 
                     header->cellSize = stod(infoStr[5]);
+                    header->invCellSize = 1.0 / header->cellSize;
                     header->llCorner.x = stod(infoStr[3]);
                     double yTopLeftcorner = stod(infoStr[4]);
                     header->llCorner.y = yTopLeftcorner - (header->nrRows * header->cellSize);
@@ -641,8 +644,10 @@ namespace gis
                     rasterGrid->header->llCorner.y = stod(valueStr);
 
                 else if (upKey == "CELLSIZE")
+                {
                     rasterGrid->header->cellSize = stod(valueStr);
-
+                    rasterGrid->header->invCellSize = 1.0 / rasterGrid->header->cellSize;
+                }
                 else if ((upKey == "NODATA_VALUE") || (upKey == "NODATA"))
                     rasterGrid->header->flag = stof(valueStr);
 
@@ -860,6 +865,7 @@ namespace gis
         double ymax = floor(max(v[2].y, v[3].y)) +1.;
 
         utmHeader->cellSize = cellSize;
+        utmHeader->invCellSize = 1.0 / cellSize;
         utmHeader->nrCols = int(floor((xmax-xmin)/utmHeader->cellSize) + 1);
         utmHeader->nrRows = int(floor((ymax-ymin)/utmHeader->cellSize) + 1);
         utmHeader->llCorner.x = xmin;

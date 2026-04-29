@@ -3648,9 +3648,9 @@ bool Project::interpolationGrid(meteoVariable myVar, const Crit3DTime& myTime)
 
                 if (getUseDetrendingVar(myVar))
                 {
-                    proxyIndex = 0;
+                    /*proxyIndex = 0;
 
-                    /*for (i = 0; i < interpolationSettings.getProxyNr(); i++)
+                    for (i = 0; i < interpolationSettings.getProxyNr(); i++)
                     {
                         proxyValues[i] = NODATA;
 
