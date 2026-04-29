@@ -1997,13 +1997,13 @@ bool multipleDetrendingOtherProxiesFitting(int elevationPos, std::vector <Crit3D
     //lapse rate code
     std::vector <Crit3DInterpolationDataPoint> othersPoints = myPoints;
     vector<Crit3DInterpolationDataPoint>::iterator it = othersPoints.begin();
-    /*while (it != othersPoints.end())
+    while (it != othersPoints.end())
     {
         if (!checkLapseRateCode(it->lapseRateCode, interpolationSettings.getUseLapseRateCode(), false))
             it = othersPoints.erase(it);
         else
             it++;
-    }*/
+    }
 
     // proxy spatial variability (1st step)
     // this is done before check of incomplete to keep as many points as possible
