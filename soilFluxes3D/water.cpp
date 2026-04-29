@@ -10,8 +10,8 @@
 #include "heat.h"
 #include "otherFunctions.h"
 
-// [m] 10 micron
-#define EPSILON_METER 0.00001
+// [m] 1 micrometre
+#define EPSILON_METER 0.000001
 
 using namespace soilFluxes3D::v2;
 using namespace soilFluxes3D::v2::Soil;
@@ -385,19 +385,19 @@ namespace soilFluxes3D::v2::Water
 
     __cudaSpec double infiltration(SF3Duint_t i, SF3Duint_t j, double deltaT, double flowArea, meanType_t meanType)
     {
-        SF3Duint_t surfNodeIdx = i;
-        SF3Duint_t soilNodeIdx = j;
+        SF3Duint_t surfNodeIndex = i;
+        SF3Duint_t soilNodeIndex = j;
         if (nodeGrid.surfaceFlag[j])
         {
-            surfNodeIdx = j;
-            soilNodeIdx = i;
+            surfNodeIndex = j;
+            soilNodeIndex = i;
         }
 
-        double cellDistance = nodeGrid.z[surfNodeIdx] - nodeGrid.z[soilNodeIdx];
-        soilData_t& soilData = *(nodeGrid.soilSurfacePointers[soilNodeIdx].soilPtr);
+        double cellDistance = nodeGrid.z[surfNodeIndex] - nodeGrid.z[soilNodeIndex];
+        soilData_t& soilData = *(nodeGrid.soilSurfacePointers[soilNodeIndex].soilPtr);
 
         double boundaryFactor = 1.;
-        switch(nodeGrid.boundaryData.boundaryType[soilNodeIdx])
+        switch(nodeGrid.boundaryData.boundaryType[soilNodeIndex])
         {
             case boundaryType_t::Urban:
                 boundaryFactor = 0.33;
@@ -409,20 +409,27 @@ namespace soilFluxes3D::v2::Water
         }
 
         // The soil node is saturated
-        if(nodeGrid.waterData.pressureHead[soilNodeIdx] > nodeGrid.z[surfNodeIdx])
+        if(nodeGrid.waterData.pressureHead[soilNodeIndex] > nodeGrid.z[surfNodeIndex])
             return (soilData.K_sat * boundaryFactor * flowArea) / cellDistance;
 
-        double surfH = 0.5 * (nodeGrid.waterData.pressureHead[surfNodeIdx] + nodeGrid.waterData.oldPressureHead[surfNodeIdx]);
-        double soilH = 0.5 * (nodeGrid.waterData.pressureHead[soilNodeIdx] + nodeGrid.waterData.oldPressureHead[soilNodeIdx]);
+        double surfH = 0.5 * (nodeGrid.waterData.pressureHead[surfNodeIndex] + nodeGrid.waterData.oldPressureHead[surfNodeIndex]);
+        double soilH = 0.5 * (nodeGrid.waterData.pressureHead[soilNodeIndex] + nodeGrid.waterData.oldPressureHead[soilNodeIndex]);
 
-        double surfaceWater = SF3Dmax(surfH - nodeGrid.z[surfNodeIdx], 0.);     // [m]
-        double maxInfRate = surfaceWater / deltaT;                              // [m s-1]
-        if(maxInfRate < 1e-10)
+        double surfaceWater = SF3Dmax(surfH - nodeGrid.z[surfNodeIndex], 0.);           // [m]
+        double surfaceBoundaryFlow = nodeGrid.waterData.waterFlow[surfNodeIndex];       // [m3 s-1]
+        if (surfaceBoundaryFlow < 0.)
+        {
+            double boundary_m = (surfaceBoundaryFlow * deltaT) / nodeGrid.size[surfNodeIndex];
+            surfaceWater = SF3Dmax(0., surfaceWater + boundary_m);                       // [m]
+        }
+
+        double maxInfRate = surfaceWater / deltaT;                                      // [m s-1]
+        if(maxInfRate < 2.78e-11)   // 0.0001 mm/hour
             return 0.;
 
         double dH = SF3Dmax(surfH - soilH, 1e-12);
         double maxK = maxInfRate * (cellDistance / dH);
-        double meanK = computeMean(soilData.K_sat, nodeGrid.waterData.waterConductivity[soilNodeIdx], meanType);
+        double meanK = computeMean(soilData.K_sat, nodeGrid.waterData.waterConductivity[soilNodeIndex], meanType);
 
         return (SF3Dmin(boundaryFactor * meanK, maxK) * flowArea) / cellDistance;
     }
@@ -528,8 +535,17 @@ namespace soilFluxes3D::v2::Water
         __parfor(__ompStatus)
         for (SF3Duint_t nodeIdx = 0; nodeIdx < nodeGrid.nrNodes; ++nodeIdx)
         {
-            //initialize: water sink.source
+            // initialize flow: water sink/source
             nodeGrid.waterData.waterFlow[nodeIdx] = nodeGrid.waterData.waterSinkSource[nodeIdx];
+
+            // check on surface negative flux (i.e. evaporation)
+            if (nodeGrid.surfaceFlag[nodeIdx] && nodeGrid.waterData.waterFlow[nodeIdx] < 0)
+            {
+                double avgH = 0.5 * (nodeGrid.waterData.pressureHead[nodeIdx] + nodeGrid.waterData.oldPressureHead[nodeIdx]);
+                double h_s = SF3Dmax(0., avgH - nodeGrid.z[nodeIdx]);                       // [m]
+                double maxSurfaceFlux = -h_s * nodeGrid.size[nodeIdx] / deltaT;             // [m3 s-1]
+                nodeGrid.waterData.waterFlow[nodeIdx] = SF3Dmax(nodeGrid.waterData.waterFlow[nodeIdx], maxSurfaceFlux);
+            }
 
             if(nodeGrid.boundaryData.boundaryType[nodeIdx] == boundaryType_t::NoBoundary)
                 continue;

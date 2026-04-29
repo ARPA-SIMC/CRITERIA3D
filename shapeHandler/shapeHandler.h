@@ -96,8 +96,8 @@
         std::string getFilepath() const { return m_filepath; }
         void setFilepath(std::string filename) { m_filepath = filename; }
 
-        int nWidthField(int fieldIndex) { return m_dbf->panFieldSize[fieldIndex]; }
-        int nDecimalsField(int fieldIndex) { return m_dbf->panFieldDecimals[fieldIndex]; }
+        int nWidthField(int fieldIndex) const { return m_dbf->panFieldSize[fieldIndex]; }
+        int nDecimalsField(int fieldIndex) const { return m_dbf->panFieldDecimals[fieldIndex]; }
 
         int getNrParts() const { return m_parts; }
         int getNrHoles() const { return m_holes; }

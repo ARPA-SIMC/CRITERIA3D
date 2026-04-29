@@ -218,7 +218,8 @@
         void convertFlagToNodata(Crit3DRasterGrid& myGrid);
         bool updateColorScale(Crit3DRasterGrid* rasterGrid, int row0, int col0, int row1, int col1);
 
-        void getRowColFromXY(const Crit3DRasterHeader& myHeader, double myX, double myY, int *row, int *col);
+        void getRowColFromXY(const Crit3DRasterHeader& myHeader, double x, double y, int *row, int *col);
+        void getRowColFromXY(const Crit3DRasterHeader& myHeader, double x, double y, int& row, int& col);
         void getRowColFromXY(const Crit3DRasterHeader& myHeader, const Crit3DUtmPoint& p, int *row, int *col);
         void getRowColFromXY(const Crit3DRasterHeader& myHeader, const Crit3DUtmPoint& p, Crit3DRasterCell* v);
         void getRowColFromLonLat(const Crit3DLatLonHeader& myHeader, double lon, double lat, int *row, int *col);
@@ -314,6 +315,8 @@
 
         bool writeEsriGridHeader(const std::string &fileName, gis::Crit3DRasterHeader *header, std::string &errorStr);
         bool writeEsriGridFlt(const std::string &fileName, Crit3DRasterGrid* myGrid, std::string &errorStr);
+
+        std::vector<int> extractUniqueValues(const Crit3DRasterGrid& raster);
     }
 
 

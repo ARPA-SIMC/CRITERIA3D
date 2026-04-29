@@ -1,13 +1,17 @@
 #include <float.h>
 #include <algorithm>
 #include <math.h>
+#include <unordered_map>
 
 #include "commonConstants.h"
 #include "basicMath.h"
 #include "shapeToRaster.h"
 #include "zonalStatistic.h"
+#include "gis.h"
+#include "shapeHandler.h"
 
-std::vector <std::vector<int> > computeMatrixAnalysis(Crit3DShapeHandler &shapeRef, Crit3DShapeHandler &shapeVal,
+
+std::vector <std::vector<int>> computeMatrixAnalysis(Crit3DShapeHandler &shapeRef, Crit3DShapeHandler &shapeVal,
                           gis::Crit3DRasterGrid &rasterRef, gis::Crit3DRasterGrid &rasterVal, std::vector<int> &vectorNull)
 {
     unsigned int nrRefShapes = unsigned(shapeRef.getShapeCount());
@@ -18,46 +22,104 @@ std::vector <std::vector<int> > computeMatrixAnalysis(Crit3DShapeHandler &shapeR
     vectorNull.resize(nrRefShapes, 0);
     std::vector <std::vector<int>> matrix(nrRefShapes, std::vector<int>(nrValShapes, 0));
 
+    double x, y;
+    int rowVal, colVal;
+    int flagRef = int(rasterRef.header->flag);
+    int flagVal = int(rasterVal.header->flag);
     for (int row = 0; row < rasterRef.header->nrRows; row++)
     {
-       for (int col = 0; col < rasterRef.header->nrCols; col++)
-       {
-           int refIndex = int(rasterRef.value[row][col]);
-           if (refIndex != NODATA && refIndex < signed(nrRefShapes))
-           {
-               double x, y;
-               rasterRef.getXY(row, col, x, y);
-               if (! gis::isOutOfGridXY(x, y, rasterVal.header))
-               {
-                    int rowVal, colVal;
-                    gis::getRowColFromXY(*(rasterVal.header), x, y, &rowVal, &colVal);
+        for (int col = 0; col < rasterRef.header->nrCols; col++)
+        {
+            int refIndex = int(rasterRef.value[row][col]);
+            if (refIndex != flagRef && refIndex >= 0 && refIndex < signed(nrRefShapes))
+            {
+                rasterRef.getXY(row, col, x, y);
+                if (gis::isOutOfGridXY(x, y, rasterVal.header))
+                {
+                    vectorNull[unsigned(refIndex)]++;
+                    continue;
+                }
 
-                    int valIndex = int(rasterVal.value[rowVal][colVal]);
-                    if (valIndex != NODATA && valIndex < signed(nrValShapes))
-                    {
-                        matrix[unsigned(refIndex)][unsigned(valIndex)]++;
-                    }
-                    else
-                    {
-                        vectorNull[unsigned(refIndex)]++;
-                    }
-               }
-               else
-               {
-                   vectorNull[unsigned(refIndex)]++;
-               }
-           }
-       }
-   }
+                gis::getRowColFromXY(*(rasterVal.header), x, y, rowVal, colVal);
+
+                int valIndex = int(rasterVal.value[rowVal][colVal]);
+                if (valIndex != flagVal && valIndex >= 0 && valIndex < signed(nrValShapes))
+                {
+                    matrix[unsigned(refIndex)][unsigned(valIndex)]++;
+                }
+                else
+                    vectorNull[unsigned(refIndex)]++;
+            }
+        }
+    }
 
    return matrix;
 }
 
 
+std::vector <std::vector<int>> computeMatrixAnalysisRaster(const Crit3DShapeHandler &shapeRef, const gis::Crit3DRasterGrid &rasterVal,
+                                                           std::vector<int> &categories, std::vector<int> &vectorNull)
+{
+    unsigned int nrRefShapes = unsigned(shapeRef.getShapeCount());
+
+    // extract categories from rasterVal
+    categories.clear();
+    categories = gis::extractUniqueValues(rasterVal);
+    size_t nrCategories = categories.size();
+    // unordered map is faster for search
+    std::unordered_map<int, int> categoryIndex;
+    for (unsigned int i = 0; i < nrCategories; ++i) {
+        categoryIndex[categories[i]] = i;
+    }
+
+    // create reference raster from shapefile (same header of rasterVal)
+    gis::Crit3DRasterGrid rasterRef;
+    rasterRef.initializeGrid(*(rasterVal.header));
+    fillRasterWithShapeNumber(rasterRef, shapeRef);
+
+    // analysis matrix
+    vectorNull.clear();
+    vectorNull.resize(nrRefShapes, 0);
+    std::vector <std::vector<int>> matrix(nrRefShapes, std::vector<int>(nrCategories, 0));
+
+    int flagInt = int(rasterRef.header->flag);
+    for (int row = 0; row < rasterRef.header->nrRows; row++)
+    {
+        for (int col = 0; col < rasterRef.header->nrCols; col++)
+        {
+            int refIndex = int(rasterRef.value[row][col]);
+            if (refIndex != flagInt && refIndex >= 0 && refIndex < static_cast<int>(nrRefShapes))
+            {
+                int valueInt = int(rasterVal.value[row][col]);
+                if (valueInt == flagInt)
+                {
+                    vectorNull[refIndex]++;
+                    continue;
+                }
+
+                auto it = categoryIndex.find(valueInt);
+
+                if (it != categoryIndex.end())
+                {
+                    int valIndex = it->second;
+                    matrix[refIndex][valIndex]++;
+                }
+                else
+                {
+                    vectorNull[refIndex]++;
+                }
+            }
+        }
+    }
+
+    return matrix;
+}
+
+
 bool zonalStatisticsShape(Crit3DShapeHandler& shapeRef, Crit3DShapeHandler& shapeVal,
-                          std::vector <std::vector<int> > &matrix, std::vector<int> &vectorNull,
-                          std::string valField, std::string valFieldOutput, std::string aggregationType,
-                          double threshold, std::string& errorStr)
+                          const std::vector <std::vector<int>> &matrix, std::vector<int> &vectorNull,
+                          const std::string &valField, const std::string &valFieldOutput,
+                          const std::string &aggregationType, double threshold, std::string& errorStr)
 {
     // check if valField exists
     int fieldIndex = shapeVal.getDBFFieldIndex(valField.c_str());
@@ -178,9 +240,9 @@ bool zonalStatisticsShape(Crit3DShapeHandler& shapeRef, Crit3DShapeHandler& shap
 }
 
 
-bool zonalStatisticsShapeMajority(Crit3DShapeHandler &shapeRef, Crit3DShapeHandler &shapeVal,
-                          std::vector <std::vector<int> >&matrix, std::vector<int> &vectorNull,
-                          std::string valField, std::string valFieldOutput,
+bool zonalStatisticsShapeMajority_old(Crit3DShapeHandler &shapeRef, Crit3DShapeHandler &shapeVal,
+                          const std::vector <std::vector<int>> &matrix, std::vector<int> &vectorNull,
+                          const std::string &valField, const std::string &fieldOutput,
                           double threshold, std::string &errorStr)
 {
     // check if valField exists
@@ -190,10 +252,20 @@ bool zonalStatisticsShapeMajority(Crit3DShapeHandler &shapeRef, Crit3DShapeHandl
         errorStr = shapeVal.getFilepath() + "has not field called " + valField.c_str();
         return false;
     }
+    DBFFieldType fieldType = shapeVal.getFieldType(fieldIndex);
 
     // add new field to shapeRef
-    DBFFieldType fieldType = shapeVal.getFieldType(fieldIndex);
-    shapeRef.addField(valFieldOutput.c_str(), fieldType, shapeVal.nWidthField(fieldIndex), shapeVal.nDecimalsField(fieldIndex));
+    if (! shapeRef.existField(fieldOutput))
+    {
+        if (! shapeRef.addField(fieldOutput.c_str(), fieldType, shapeVal.nWidthField(fieldIndex),
+                               shapeVal.nDecimalsField(fieldIndex)) )
+        {
+            errorStr = "error writing new field: " + fieldOutput;
+            return false;
+        }
+    }
+
+    int fieldOutputIndex = shapeRef.getDBFFieldIndex(fieldOutput.c_str());
 
     unsigned int nrRefShapes = unsigned(shapeRef.getShapeCount());
     unsigned int nrValShapes = unsigned(shapeVal.getShapeCount());
@@ -202,7 +274,6 @@ bool zonalStatisticsShapeMajority(Crit3DShapeHandler &shapeRef, Crit3DShapeHandl
     std::vector<double> vectorValuesDouble;
     std::vector<int> vectorValuesInt;
     std::vector<int> vectorNrElements;
-    std::vector<int> validPoints(nrRefShapes, 0);
 
     for (unsigned int row = 0; row < nrRefShapes; row++)
     {
@@ -210,6 +281,7 @@ bool zonalStatisticsShapeMajority(Crit3DShapeHandler &shapeRef, Crit3DShapeHandl
         vectorValuesDouble.clear();
         vectorValuesInt.clear();
         vectorNrElements.clear();
+        int validPoints = 0;
 
         for (unsigned int col = 0; col < nrValShapes; col++)
         {
@@ -227,7 +299,7 @@ bool zonalStatisticsShapeMajority(Crit3DShapeHandler &shapeRef, Crit3DShapeHandl
                     {
                         if (fieldType == FTInteger)
                         {
-                            validPoints[row] += nrPoints;
+                            validPoints += nrPoints;
                             std::vector<int>::iterator it;
                             it = std::find (vectorValuesInt.begin(), vectorValuesInt.end(), value);
                             if ( it == vectorValuesInt.end())
@@ -244,7 +316,7 @@ bool zonalStatisticsShapeMajority(Crit3DShapeHandler &shapeRef, Crit3DShapeHandl
                         }
                         else if (fieldType == FTDouble)
                         {
-                            validPoints[row] += nrPoints;
+                            validPoints += nrPoints;
                             std::vector<double>::iterator it;
                             it = std::find (vectorValuesDouble.begin(), vectorValuesDouble.end(), value);
                             if ( it == vectorValuesDouble.end())
@@ -270,7 +342,7 @@ bool zonalStatisticsShapeMajority(Crit3DShapeHandler &shapeRef, Crit3DShapeHandl
                     }
                     else
                     {
-                        validPoints[row] += nrPoints;
+                        validPoints += nrPoints;
                         std::vector<std::string>::iterator it;
                         it = std::find (vectorValuesString.begin(), vectorValuesString.end(), strValue);
                         if ( it == vectorValuesString.end())
@@ -289,13 +361,12 @@ bool zonalStatisticsShapeMajority(Crit3DShapeHandler &shapeRef, Crit3DShapeHandl
             }
         }
 
-        // check valid values
+        // check validity
         bool isValid = false;
-        if (validPoints[row] > 0)
+        if ((validPoints + vectorNull[row]) > 0)
         {
-            double validPercentage = double(validPoints[row]) / double(validPoints[row] + vectorNull[row]);
-            if (validPercentage >= threshold)
-                isValid = true;
+            double validPercentage = double(validPoints) / double(validPoints + vectorNull[row]);
+            isValid = (validPercentage >= threshold);
         }
 
         if (! isValid)
@@ -303,15 +374,15 @@ bool zonalStatisticsShapeMajority(Crit3DShapeHandler &shapeRef, Crit3DShapeHandl
             // write NODATA or null string
             if (fieldType == FTInteger)
             {
-                shapeRef.writeIntAttribute(signed(row), shapeRef.getDBFFieldIndex(valFieldOutput.c_str()), NODATA);
+                shapeRef.writeIntAttribute(signed(row), fieldOutputIndex, NODATA);
             }
             else if (fieldType == FTDouble)
             {
-                shapeRef.writeDoubleAttribute(signed(row), shapeRef.getDBFFieldIndex(valFieldOutput.c_str()), NODATA);
+                shapeRef.writeDoubleAttribute(signed(row), fieldOutputIndex, NODATA);
             }
             else if (fieldType == FTString)
             {
-                shapeRef.writeStringAttribute(signed(row), shapeRef.getDBFFieldIndex(valFieldOutput.c_str()), "");
+                shapeRef.writeStringAttribute(signed(row), fieldOutputIndex, "");
             }
         }
         else
@@ -330,15 +401,15 @@ bool zonalStatisticsShapeMajority(Crit3DShapeHandler &shapeRef, Crit3DShapeHandl
 
             if (fieldType == FTInteger)
             {
-                shapeRef.writeIntAttribute(signed(row), shapeRef.getDBFFieldIndex(valFieldOutput.c_str()), vectorValuesInt[index]);
+                shapeRef.writeIntAttribute(signed(row), fieldOutputIndex, vectorValuesInt[index]);
             }
             else if (fieldType == FTDouble)
             {
-                shapeRef.writeDoubleAttribute(signed(row), shapeRef.getDBFFieldIndex(valFieldOutput.c_str()), vectorValuesDouble[index]);
+                shapeRef.writeDoubleAttribute(signed(row), fieldOutputIndex, vectorValuesDouble[index]);
             }
             else if (fieldType == FTString)
             {
-                shapeRef.writeStringAttribute(signed(row), shapeRef.getDBFFieldIndex(valFieldOutput.c_str()), vectorValuesString[index].c_str());
+                shapeRef.writeStringAttribute(signed(row), fieldOutputIndex, vectorValuesString[index].c_str());
             }
         }
     }
@@ -347,7 +418,246 @@ bool zonalStatisticsShapeMajority(Crit3DShapeHandler &shapeRef, Crit3DShapeHandl
     vectorValuesDouble.clear();
     vectorValuesInt.clear();
     vectorNrElements.clear();
-    validPoints.clear();
+
+    // close and re-open to write also the last shape
+    shapeRef.close();
+    shapeRef.open(shapeRef.getFilepath());
+
+    return true;
+}
+
+
+bool zonalStatisticsShapeMajority( Crit3DShapeHandler &shapeRef, Crit3DShapeHandler &shapeVal,
+        const std::vector<std::vector<int>> &matrix, std::vector<int> &vectorNull,
+        const std::string &valField, const std::string &fieldOutput,
+        double threshold, std::string &errorStr)
+{
+    // ----------------------------
+    // CHECK INPUT FIELD
+    // ----------------------------
+    int fieldIndex = shapeVal.getDBFFieldIndex(valField.c_str());
+    if (fieldIndex == -1)
+    {
+        errorStr = shapeVal.getFilepath() + " has not field called " + valField;
+        return false;
+    }
+
+    DBFFieldType fieldType = shapeVal.getFieldType(fieldIndex);
+    bool isNumeric = (fieldType == FTInteger || fieldType == FTDouble);
+
+    // ----------------------------
+    // CREATE OUTPUT FIELD
+    // ----------------------------
+    if (!shapeRef.existField(fieldOutput))
+    {
+        if (!shapeRef.addField(fieldOutput.c_str(),
+                               fieldType,
+                               shapeVal.nWidthField(fieldIndex),
+                               shapeVal.nDecimalsField(fieldIndex)))
+        {
+            errorStr = "error writing new field: " + fieldOutput;
+            return false;
+        }
+    }
+
+    int fieldOutputIndex = shapeRef.getDBFFieldIndex(fieldOutput.c_str());
+
+    const unsigned int nrRefShapes = shapeRef.getShapeCount();
+    const unsigned int nrValShapes = shapeVal.getShapeCount();
+
+    for (unsigned int row = 0; row < nrRefShapes; ++row)
+    {
+        long validPoints = 0;
+        std::unordered_map<std::string, long> freqStr;
+        std::unordered_map<int, long> freqInt;
+        std::unordered_map<double, long> freqDouble;
+
+        for (unsigned int col = 0; col < nrValShapes; ++col)
+        {
+            int nrPoints = matrix[row][col];
+            if (nrPoints <= 0) continue;
+
+            if (isNumeric)
+            {
+                double value = shapeVal.getNumericValue(col, fieldIndex);
+
+                if (isEqual(value, NODATA))
+                {
+                    vectorNull[row] += nrPoints;
+                    continue;
+                }
+
+                validPoints += nrPoints;
+
+                if (fieldType == FTInteger)
+                {
+                    freqInt[(int)value] += nrPoints;
+                }
+                else
+                {
+                    freqDouble[value] += nrPoints;
+                }
+            }
+            else // STRING
+            {
+                std::string value = shapeVal.readStringAttribute(col, fieldIndex);
+
+                if (value.empty() || value == "-9999" || value == "******")
+                {
+                    vectorNull[row] += nrPoints;
+                    continue;
+                }
+
+                validPoints += nrPoints;
+                freqStr[value] += nrPoints;
+            }
+        }
+
+        // ----------------------------
+        // VALIDITY CHECK
+        // ----------------------------
+        bool isValid = false;
+
+        if ((validPoints + vectorNull[row]) > 0)
+        {
+            double perc = double(validPoints) /
+                          double(validPoints + vectorNull[row]);
+
+            isValid = (perc >= threshold);
+        }
+
+        if (! isValid)
+        {
+            if (fieldType == FTInteger)
+                shapeRef.writeIntAttribute(row, fieldOutputIndex, NODATA);
+            else if (fieldType == FTDouble)
+                shapeRef.writeDoubleAttribute(row, fieldOutputIndex, NODATA);
+            else
+                shapeRef.writeStringAttribute(row, fieldOutputIndex, "");
+
+            continue;
+        }
+
+        // ----------------------------
+        // FIND MAJORITY
+        // ----------------------------
+        long maxCount = 0;
+
+        if (fieldType == FTInteger)
+        {
+            int majority = NODATA;
+
+            for (const auto &p : freqInt)
+            {
+                if (p.second > maxCount)
+                {
+                    maxCount = p.second;
+                    majority = p.first;
+                }
+            }
+
+            shapeRef.writeIntAttribute(row, fieldOutputIndex, majority);
+        }
+        else if (fieldType == FTDouble)
+        {
+            double majority = NODATA;
+
+            for (const auto &p : freqDouble)
+            {
+                if (p.second > maxCount)
+                {
+                    maxCount = p.second;
+                    majority = p.first;
+                }
+            }
+
+            shapeRef.writeDoubleAttribute(row, fieldOutputIndex, majority);
+        }
+        else // STRING
+        {
+            std::string majority = "";
+
+            for (const auto &p : freqStr)
+            {
+                if (p.second > maxCount)
+                {
+                    maxCount = p.second;
+                    majority = p.first;
+                }
+            }
+
+            shapeRef.writeStringAttribute(row, fieldOutputIndex, majority.c_str());
+        }
+    }
+
+    // close and re-open to write also the last shape
+    shapeRef.close();
+    shapeRef.open(shapeRef.getFilepath());
+
+    return true;
+}
+
+
+// warning: categories must be integer values
+bool zonalStatisticsShapeMajorityCategories(Crit3DShapeHandler &shapeRef, const std::vector<int> &categories,
+                                  const std::vector <std::vector<int>> &matrix, std::vector<int> &vectorNull,
+                                  const std::string &fieldName, double threshold, std::string &errorStr)
+{
+    if (! shapeRef.existField(fieldName))
+    {
+        // add new integer field to shapeRef
+        if (! shapeRef.addField(fieldName.c_str(), FTInteger, 6, 0))
+        {
+            errorStr = "error writing new field: " + fieldName;
+            return false;
+        }
+    }
+    int fieldIndex = shapeRef.getDBFFieldIndex(fieldName.c_str());
+
+    const unsigned int nrRefShapes = shapeRef.getShapeCount();
+    const size_t nrCategories = categories.size();
+
+    for (unsigned int row = 0; row < nrRefShapes; row++)
+    {
+        long totalValid = 0;
+        int maxCount = 0;
+        int majorityValue = NODATA;
+        const auto& rowMatrix = matrix[row];
+
+        for (unsigned int col = 0; col < nrCategories; ++col)
+        {
+            int count = rowMatrix[col];
+
+            if (count > 0)
+            {
+                totalValid += count;
+
+                if (count > maxCount)
+                {
+                    maxCount = count;
+                    majorityValue = categories[col];
+                }
+            }
+        }
+
+        // check validity
+        bool isValid = false;
+        if ((totalValid + vectorNull[row]) > 0)
+        {
+            double percentage = double(totalValid) / double(totalValid + vectorNull[row]);
+            isValid = (percentage >= threshold);
+        }
+
+        if (isValid)
+        {
+            shapeRef.writeIntAttribute(row, fieldIndex, majorityValue);
+        }
+        else
+        {
+            // write NODATA
+            shapeRef.writeIntAttribute(row, fieldIndex, NODATA);
+        }
+    }
 
     // close and re-open to write also the last shape
     shapeRef.close();
