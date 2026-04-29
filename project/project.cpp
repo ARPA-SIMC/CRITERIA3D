@@ -4214,7 +4214,7 @@ bool Project::loadProject()
 
     if (dbAggregationFileName != "")
     {
-        if (! loadAggregationDB(_projectPath + "/" + dbAggregationFileName))
+        if (! loadAggregationDB(getCompleteFileName(dbAggregationFileName, PATH_PROJECT)))
         {
             errorString = "load Aggregation DB failed";
             errorType = ERROR_DBPOINT;

@@ -52,12 +52,12 @@ Crit3DLocalProxyWidget::Crit3DLocalProxyWidget(double x, double y, double zDEM, 
     QHBoxLayout *parametersListLayoutDown = new QHBoxLayout;
     QVBoxLayout *parametersListLayout = new QVBoxLayout;
 
-    detrended.setText("Detrended data");
+    detrended.setText("Detrended data (height only)");
     modelLR.setText("Model lapse rate");
     stationWeights.setText("See weight of stations");
 
     //temporaneamente disattivati
-    detrended.setVisible(false);
+    detrended.setVisible(true);
     QLabel *r2Label = new QLabel(tr("R2"));
 
     r2.setMaximumWidth(60);
@@ -397,8 +397,34 @@ void Crit3DLocalProxyWidget::plot()
                         }
                 }
 
-                detrending(subsetInterpolationPoints, _interpolationSettings.getSelectedCombination(), _interpolationSettings,
-                           _climateParameters, myVar, getCurrentTime());
+                //detrending(subsetInterpolationPoints, _interpolationSettings.getSelectedCombination(), _interpolationSettings,
+                //           _climateParameters, myVar, getCurrentTime());
+                //only detrend height proxy
+                int elevationPos = NODATA;
+                for (unsigned int pos=0; pos < _interpolationSettings.getSelectedCombination().getProxySize(); pos++)
+                {
+                    if (getProxyPragaName(_interpolationSettings.getProxy(pos)->getName()) == proxyHeight)
+                        elevationPos = pos;
+                }
+                std::string errorStr;
+                setMultipleDetrendingHeightTemperatureRange(_interpolationSettings);
+                _interpolationSettings.setCurrentCombination(_interpolationSettings.getSelectedCombination());
+                _interpolationSettings.clearFitting();
+                if (_interpolationSettings.getUseLocalDetrending())
+                {
+                    if (! multipleDetrendingElevationFitting(elevationPos, subsetInterpolationPoints, _interpolationSettings, myVar, errorStr, true)) return;
+                }
+                else if (_interpolationSettings.getUseGlocalDetrending())
+                    if (! multipleDetrendingElevationFitting(elevationPos, subsetInterpolationPoints, _interpolationSettings, myVar, errorStr, false)) return;
+
+                std::vector<std::vector<double>> parameters = _interpolationSettings.getFittingParameters();
+
+                // detrending
+                if (elevationPos != NODATA && _interpolationSettings.getCurrentCombination().isProxyActive(elevationPos) && _interpolationSettings.getCurrentCombination().isProxySignificant(elevationPos))
+                {
+                    detrendingElevation(elevationPos, subsetInterpolationPoints, _interpolationSettings);
+                }
+
             }
             else
             {
