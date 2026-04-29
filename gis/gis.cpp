@@ -786,7 +786,7 @@ namespace gis
             p->latitude = latLonHeader.llCorner.latitude + latLonHeader.dy * (latLonHeader.nrRows - v.row - 0.5);
     }
 
-    float getValueFromUTMPoint(const Crit3DRasterGrid& myGrid, Crit3DUtmPoint& utmPoint)
+    float getValueFromUTMPoint(const Crit3DRasterGrid& myGrid, const Crit3DUtmPoint& utmPoint)
     {
         return getValueFromXY(myGrid, utmPoint.x, utmPoint.y);
     }

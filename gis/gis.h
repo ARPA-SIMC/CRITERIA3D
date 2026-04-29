@@ -240,7 +240,7 @@
         void getLatLonFromRowCol(const Crit3DLatLonHeader &latLonHeader, int myRow, int myCol, double* lat, double* lon);
         void getLatLonFromRowCol(const Crit3DLatLonHeader &latLonHeader, const Crit3DRasterCell& v, Crit3DGeoPoint* p);
         float getValueFromXY(const Crit3DRasterGrid& rasterGrid, double x, double y);
-        float getValueFromUTMPoint(const Crit3DRasterGrid& rasterGrid, Crit3DUtmPoint& utmPoint);
+        float getValueFromUTMPoint(const Crit3DRasterGrid& rasterGrid, const Crit3DUtmPoint &utmPoint);
 
         bool isMinimum(const Crit3DRasterGrid& rasterGrid, bool isStrictMinumum, int row, int col);
         bool isMinimumOrNearMinimum(const Crit3DRasterGrid& rasterGrid, int row, int col);
