@@ -178,8 +178,10 @@ namespace gis
                     header->llCorner.y = stod(valueStr);
 
                 else if (upKey == "CELLSIZE")
+                {
                     header->cellSize = stod(valueStr);
-
+                    header->invCellSize = 1.0 / header->cellSize;
+                }
                 else if ((upKey == "NODATA_VALUE") || (upKey == "NODATA"))
                     header->flag = stof(valueStr);
             }
@@ -302,6 +304,7 @@ namespace gis
                     }
 
                     header->cellSize = stod(infoStr[5]);
+                    header->invCellSize = 1.0 / header->cellSize;
                     header->llCorner.x = stod(infoStr[3]);
                     double yTopLeftcorner = stod(infoStr[4]);
                     header->llCorner.y = yTopLeftcorner - (header->nrRows * header->cellSize);
@@ -338,65 +341,84 @@ namespace gis
      * \brief Read a ESRI/ENVI float data file (.flt or .img)
      * \param fileName      string name file
      * \param rasterGrid    Crit3DRasterGrid pointer
-     * \param error         string
+     * \param errorStr         string
      * \return true on success, false otherwise
      */
-    bool readRasterFloatData(const string &fileName, gis::Crit3DRasterGrid *rasterGrid, string &error)
+    bool readRasterFloatData(const std::string &fileName, Crit3DRasterGrid *rasterGrid, std::string &errorStr)
     {
         FILE* filePointer;
 
         if (! rasterGrid->initializeGrid())
         {
-            error = "Memory error: file too big.";
+            errorStr = "Memory error: file too big.";
             return false;
         }
 
         filePointer = fopen (fileName.c_str(), "rb" );
         if (filePointer == nullptr)
         {
-            error = "Error in opening raster file.";
+            errorStr = "Error in opening raster file.";
             return false;
         }
 
-        if (rasterGrid->header->nrBytes == 4)
+        const int nRows = rasterGrid->header->nrRows;
+        const int nCols = rasterGrid->header->nrCols;
+        const int bytes = rasterGrid->header->nrBytes;
+
+        std::vector<int16_t> buffer16;
+        std::vector<unsigned char> buffer8;
+        if (bytes == 2) buffer16.resize(nCols);
+        if (bytes == 1) buffer8.resize(nCols);
+
+        for (int row = 0; row < nRows; row++)
         {
-            // float
-            for (int row = 0; row < rasterGrid->header->nrRows; row++)
+            float* dst = rasterGrid->value[row];
+
+            if (bytes == 4)
             {
-                fread (rasterGrid->value[row], sizeof(float), unsigned(rasterGrid->header->nrCols), filePointer);
-            }
-        }
-        else if (rasterGrid->header->nrBytes == 1)
-        {
-            // byte
-            unsigned char *rowValues = new unsigned char[unsigned(rasterGrid->header->nrCols)];
-            for (int row = 0; row < rasterGrid->header->nrRows; row++)
-            {
-                fread (rowValues, sizeof(unsigned char), unsigned(rasterGrid->header->nrCols), filePointer);
-                for(int col = 0; col < rasterGrid->header->nrCols; col++)
+                // float
+                if (fread(dst, sizeof(float), nCols, filePointer) != nCols)
                 {
-                    rasterGrid->value[row][col] = float(rowValues[col]);
+                    errorStr = "Error reading raster data.";
+                    fclose(filePointer);
+                    return false;
                 }
             }
-            delete[] rowValues;
-        }
-        else if (rasterGrid->header->nrBytes == 2)
-        {
-            // short
-            short int *rowValues = new short int[unsigned(rasterGrid->header->nrCols)];
-            for (int row = 0; row < rasterGrid->header->nrRows; row++)
+            else if (bytes == 2)
             {
-                fread (rowValues, sizeof(short int), unsigned(rasterGrid->header->nrCols), filePointer);
-                for(int col = 0; col < rasterGrid->header->nrCols; col++)
+                // short
+                if (fread(buffer16.data(), sizeof(int16_t), nCols, filePointer) != nCols)
                 {
-                    rasterGrid->value[row][col] = float(rowValues[col]);
+                    errorStr = "Error reading raster data.";
+                    fclose(filePointer);
+                    return false;
                 }
+
+                for (int col = 0; col < nCols; col++)
+                    dst[col] = static_cast<float>(buffer16[col]);
             }
-            delete[] rowValues;
+            else if (bytes == 1)
+            {
+                // byte
+                if (fread(buffer8.data(), 1, nCols, filePointer) != nCols)
+                {
+                    errorStr = "Error reading raster data.";
+                    fclose(filePointer);
+                    return false;
+                }
+
+                for (int col = 0; col < nCols; col++)
+                    dst[col] = static_cast<float>(buffer8[col]);
+            }
+            else
+            {
+                errorStr = "Unsupported raster format.";
+                fclose(filePointer);
+                return false;
+            }
         }
 
         fclose (filePointer);
-
         return true;
     }
 
@@ -408,7 +430,7 @@ namespace gis
      * \param errorStr      error string
      * \return true on success, false otherwise
      */
-    bool writeEsriGridHeader(const std::string &fileName, gis::Crit3DRasterHeader *header, std::string &errorStr)
+    bool writeEsriGridHeader(const std::string &fileName, Crit3DRasterHeader *header, std::string &errorStr)
     {
         std::string myFileName = fileName + ".hdr";
         std::ofstream myFile (myFileName.c_str());
@@ -626,8 +648,10 @@ namespace gis
                     rasterGrid->header->llCorner.y = stod(valueStr);
 
                 else if (upKey == "CELLSIZE")
+                {
                     rasterGrid->header->cellSize = stod(valueStr);
-
+                    rasterGrid->header->invCellSize = 1.0 / rasterGrid->header->cellSize;
+                }
                 else if ((upKey == "NODATA_VALUE") || (upKey == "NODATA"))
                     rasterGrid->header->flag = stof(valueStr);
 
@@ -845,6 +869,7 @@ namespace gis
         double ymax = floor(max(v[2].y, v[3].y)) +1.;
 
         utmHeader->cellSize = cellSize;
+        utmHeader->invCellSize = 1.0 / cellSize;
         utmHeader->nrCols = int(floor((xmax-xmin)/utmHeader->cellSize) + 1);
         utmHeader->nrRows = int(floor((ymax-ymin)/utmHeader->cellSize) + 1);
         utmHeader->llCorner.x = xmin;

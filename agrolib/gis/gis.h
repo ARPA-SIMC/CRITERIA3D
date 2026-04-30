@@ -116,6 +116,7 @@
             int nrCols;
             int nrBytes;
             double cellSize;
+            double invCellSize;
             float flag;
             Crit3DUtmPoint llCorner;
 
@@ -240,7 +241,7 @@
         void getLatLonFromRowCol(const Crit3DLatLonHeader &latLonHeader, int myRow, int myCol, double* lat, double* lon);
         void getLatLonFromRowCol(const Crit3DLatLonHeader &latLonHeader, const Crit3DRasterCell& v, Crit3DGeoPoint* p);
         float getValueFromXY(const Crit3DRasterGrid& rasterGrid, double x, double y);
-        float getValueFromUTMPoint(const Crit3DRasterGrid& rasterGrid, Crit3DUtmPoint& utmPoint);
+        float getValueFromUTMPoint(const Crit3DRasterGrid& rasterGrid, const Crit3DUtmPoint &utmPoint);
 
         bool isMinimum(const Crit3DRasterGrid& rasterGrid, bool isStrictMinumum, int row, int col);
         bool isMinimumOrNearMinimum(const Crit3DRasterGrid& rasterGrid, int row, int col);
@@ -309,12 +310,14 @@
 
         float getNeighboursMinimumValue(const Crit3DRasterGrid& raster, int row, int col);
         bool extractBasin(const Crit3DRasterGrid& inputRaster, Crit3DRasterGrid& outputRaster, double xClosure, double yClosure);
-        void cleanRasterEmptyFrame(const Crit3DRasterGrid& inputRaster, Crit3DRasterGrid& outputRaster);
+        bool resizeRasterCutEmptyFrame(const Crit3DRasterGrid *inputRaster, Crit3DRasterGrid *outputRaster, std::string &errorStr);
 
         bool computeWaterRunoffPath(const Crit3DRasterGrid& inputRaster, Crit3DRasterGrid& outputRaster, double xStart, double yStart);
 
-        bool writeEsriGridHeader(const std::string &fileName, gis::Crit3DRasterHeader *header, std::string &errorStr);
+        bool writeEsriGridHeader(const std::string &fileName, Crit3DRasterHeader *header, std::string &errorStr);
         bool writeEsriGridFlt(const std::string &fileName, Crit3DRasterGrid* myGrid, std::string &errorStr);
+
+        bool readRasterFloatData(const std::string &fileName, Crit3DRasterGrid *rasterGrid, std::string &errorStr);
 
         std::vector<int> extractUniqueValues(const Crit3DRasterGrid& raster);
     }

@@ -152,18 +152,18 @@
 
         unsigned long           getVertexCount() const;
         const Point<double>*	getVertices() const;
-        Point<double>           getVertex(unsigned int index);
+        Point<double>           getVertex(unsigned int index) const;
         Box<double>             getBounds() const;
 
         std::vector<Part>		getParts() const;
         ShapeObject::Part       getPart(unsigned int indexPart) const;
         unsigned int            getPartCount() const;
-        bool                    isHole(unsigned int n);
-        double                  polygonArea(Part* part);
-        bool                    isClockWise(Part *part);
-        bool                    pointInPart(double x, double y, unsigned int indexPart);
-        bool                    pointInPolygon(double x, double y);
-        int                     getIndexPart(double x, double y);
+        bool                    isHole(unsigned int n) const;
+        double                  polygonArea(Part* part) const;
+        bool                    isClockWise(Part *part) const;
+        bool                    pointInPart(double x, double y, unsigned int indexPart) const;
+        bool                    pointInPolygon(double x, double y) const;
+        int                     getIndexPart(double x, double y) const;
     };
 
     std::string getShapeTypeAsString(int shapeType);

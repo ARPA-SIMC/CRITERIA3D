@@ -27,6 +27,8 @@
 #include <QSqlQuery>
 #include <QMessageBox>
 #include <string>
+#include <unordered_map>
+
 #include <omp.h>
 
 
@@ -1985,9 +1987,131 @@ void Project::checkMeteoPointsDEM()
 }
 
 
+bool Project::readProxyValues()
+{
+    if (! meteoPointsDbHandler)
+        return false;
+
+    QSqlDatabase db = meteoPointsDbHandler->getDb();
+
+    std::unordered_map<std::string, std::unordered_map<std::string, float>> proxyCache;
+
+    int nrProxy = int(interpolationSettings.getProxyNr());
+    std::vector<std::string> fieldList(nrProxy);
+
+    for (auto& p : meteoPoints)
+        p.proxyValues.resize(nrProxy);
+
+    bool isOk = false;
+
+    // load cache
+    for (int i = 0; i < nrProxy; i++)
+    {
+        Crit3DProxy* proxy = interpolationSettings.getProxy(i);
+
+        std::string field = proxy->getProxyField();
+        std::string table = proxy->getProxyTable();
+        fieldList[i] = field;
+
+        if (field.empty() || table.empty())
+            continue;
+
+        QSqlQuery qry(db);
+        QString statement = QString("SELECT id_point, %1 FROM %2")
+                           .arg(QString::fromStdString(field), QString::fromStdString(table));
+
+        if (! qry.exec(statement))
+            continue;
+
+        while (qry.next())
+        {
+            std::string id = qry.value(0).toString().toStdString();
+            float val = qry.value(1).toFloat(&isOk);
+
+            if (isOk)
+                proxyCache[field][id] = val;
+        }
+    }
+
+    // fill points
+    for (size_t i = 0; i < meteoPoints.size(); i++)
+    {
+        const std::string& id = meteoPoints[i].id;
+
+        for (int j = 0; j < nrProxy; j++)
+        {
+            float value = NODATA;
+
+            const std::string& field = fieldList[j];
+            if (! field.empty())
+            {
+                // search value
+                auto itTable = proxyCache.find(field);
+                if (itTable != proxyCache.end())
+                {
+                    auto& innerMap = itTable->second;
+
+                    auto itVal = innerMap.find(id);
+                    if (itVal != innerMap.end())
+                    {
+                        value = itVal->second;
+                    }
+                }
+            }
+
+            meteoPoints[i].proxyValues[j] = value;
+        }
+    }
+
+    // use grid values
+    const size_t nrPoints = meteoPoints.size();
+    for (int j = 0; j < nrProxy; j++)
+    {
+        Crit3DProxy* proxy = interpolationSettings.getProxy(j);
+        gis::Crit3DRasterGrid* proxyGrid = proxy->getGrid();
+        if (proxyGrid == nullptr || ! proxyGrid->isLoaded)
+        {
+            errorString = "Error in proxy grid: " + QString::fromStdString(proxy->getGridName());
+            return false;
+        }
+        float flag = proxyGrid->header->flag;
+
+        for (size_t i = 0; i < nrPoints; i++)
+        {
+            auto& meteoPoint = meteoPoints[i];
+
+            if (! isEqual(meteoPoint.proxyValues[j], NODATA))
+                continue;
+
+            float value = proxyGrid->getValueFromXY(meteoPoint.point.utm.x, meteoPoint.point.utm.y);
+
+            if (! isEqual(value, flag))
+                meteoPoint.proxyValues[j] = value;
+        }
+    }
+
+    return true;
+}
+
+
+/*
+bool Project::readProxyValues()
+{
+    QSqlDatabase myDb = meteoPointsDbHandler->getDb();
+
+    for (size_t i = 0; i < meteoPoints.size(); i++)
+    {
+        if (! readPointProxyValues(&(meteoPoints[i]), &myDb))
+            return false;
+    }
+
+    return true;
+}
+
 bool Project::readPointProxyValues(Crit3DMeteoPoint* myPoint, QSqlDatabase* myDb)
 {
-    if (myPoint == nullptr) return false;
+    if (myPoint == nullptr)
+        return false;
 
     QSqlQuery qry(*myDb);
 
@@ -2001,6 +2125,7 @@ bool Project::readPointProxyValues(Crit3DMeteoPoint* myPoint, QSqlDatabase* myDb
     nrProxy = int(interpolationSettings.getProxyNr());
     myPoint->proxyValues.resize(unsigned(nrProxy));
 
+    bool isOk;
     for (unsigned int i=0; i < unsigned(nrProxy); i++)
     {
         myPoint->proxyValues[i] = NODATA;
@@ -2016,11 +2141,12 @@ bool Project::readPointProxyValues(Crit3DMeteoPoint* myPoint, QSqlDatabase* myDb
             statement = QString("SELECT %1 FROM %2 WHERE id_point = '%3'").arg(proxyField, proxyTable, QString::fromStdString((*myPoint).id));
             if(qry.exec(statement))
             {
-                qry.last();
-                if (qry.value(proxyField) != "")
+                qry.next();
+                if (qry.value(0).isValid())
                 {
-                    if (! qry.value(proxyField).isNull())
-                        myPoint->proxyValues[i] = qry.value(proxyField).toFloat();
+                    float value = qry.value(0).toFloat(&isOk);
+                    if (isOk)
+                        myPoint->proxyValues[i] = value;
                 }
             }
         }
@@ -2043,7 +2169,7 @@ bool Project::readPointProxyValues(Crit3DMeteoPoint* myPoint, QSqlDatabase* myDb
     }
 
     return true;
-}
+}*/
 
 
 bool Project::loadProxyGrids()
@@ -2132,19 +2258,6 @@ bool Project::loadRadiationGrids()
             }
             radSettings.setAlbedoMap(grdAlbedo);
         }
-    }
-
-    return true;
-}
-
-bool Project::readProxyValues()
-{
-    QSqlDatabase myDb = this->meteoPointsDbHandler->getDb();
-
-    for (size_t i = 0; i < this->meteoPoints.size(); i++)
-    {
-        if (!readPointProxyValues(&(this->meteoPoints[i]), &myDb))
-            return false;
     }
 
     return true;
@@ -3513,12 +3626,6 @@ bool Project::interpolationGrid(meteoVariable myVar, const Crit3DTime& myTime)
         }
     }
 
-    // proxy aggregation DA TOGLIERE
-    /*std::vector <gis::Crit3DRasterGrid*> meteoGridProxies;
-    if (getUseDetrendingVar(myVar))
-        if (! meteoGridAggregateProxy(meteoGridProxies)) return false;*/
-
-
     frequencyType freq = getVarFrequency(myVar);
 
     float myX, myY, myZ;
@@ -3543,9 +3650,9 @@ bool Project::interpolationGrid(meteoVariable myVar, const Crit3DTime& myTime)
 
                 if (getUseDetrendingVar(myVar))
                 {
-                    proxyIndex = 0;
+                    /*proxyIndex = 0;
 
-                    /*for (i = 0; i < interpolationSettings.getProxyNr(); i++)
+                    for (i = 0; i < interpolationSettings.getProxyNr(); i++)
                     {
                         proxyValues[i] = NODATA;
 
@@ -5297,6 +5404,7 @@ int Project::computeDefaultCellSizeFromMeteoGrid(float resolutionRatio)
     int cellSize = gis::getGeoCellSizeFromLatLonHeader(gisSettings, &latlonHeader);
 
     cellSize *= resolutionRatio;
+
     // round cellSize
     int nTimes = int(floor(log10(cellSize)));
     int roundValue = int(round(cellSize / pow(10, nTimes)));

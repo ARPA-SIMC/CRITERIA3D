@@ -146,6 +146,7 @@ bool convertGdalRaster(GDALDataset* dataset, gis::Crit3DRasterGrid* myRaster, in
     myRaster->header->nrCols = xSize;
     myRaster->header->nrRows = ySize;
     myRaster->header->cellSize = adfGeoTransform[1];
+    myRaster->header->invCellSize = 1.0 / myRaster->header->cellSize;
     myRaster->header->llCorner.x = adfGeoTransform[0];
     myRaster->header->llCorner.y = adfGeoTransform[3] - myRaster->header->cellSize * myRaster->header->nrRows;
     myRaster->header->flag = float(NODATA);

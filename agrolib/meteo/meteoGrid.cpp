@@ -199,12 +199,14 @@ bool Crit3DMeteoGrid::createRasterGrid()
     if (_gridStructure.isUTM())
     {
         dataMeteoGrid.header->cellSize = _gridStructure.header().dx;
+        dataMeteoGrid.header->invCellSize = 1.0 / dataMeteoGrid.header->cellSize;
         dataMeteoGrid.header->llCorner.x = _gridStructure.header().llCorner.longitude;
         dataMeteoGrid.header->llCorner.y = _gridStructure.header().llCorner.latitude;
     }
     else
     {
         dataMeteoGrid.header->cellSize = NODATA;
+        dataMeteoGrid.header->invCellSize = NODATA;
         dataMeteoGrid.header->llCorner.x = NODATA;
         dataMeteoGrid.header->llCorner.y = NODATA;
     }
