@@ -27,6 +27,8 @@
 #include <QSqlQuery>
 #include <QMessageBox>
 #include <string>
+#include <unordered_map>
+
 #include <omp.h>
 
 
@@ -5402,6 +5404,7 @@ int Project::computeDefaultCellSizeFromMeteoGrid(float resolutionRatio)
     int cellSize = gis::getGeoCellSizeFromLatLonHeader(gisSettings, &latlonHeader);
 
     cellSize *= resolutionRatio;
+
     // round cellSize
     int nTimes = int(floor(log10(cellSize)));
     int roundValue = int(round(cellSize / pow(10, nTimes)));
