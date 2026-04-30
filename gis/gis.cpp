@@ -2288,6 +2288,7 @@ namespace gis
             for (int col = 0; col < outputRaster->header->nrCols; col++)
                 outputRaster->value[row][col] = inputRaster->value[row+row0][col+col0];
 
+        outputRaster->isLoaded = true;
         updateMinMaxRasterGrid(outputRaster);
         return true;
     }
