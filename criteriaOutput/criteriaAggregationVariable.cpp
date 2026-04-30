@@ -1,18 +1,15 @@
 #include "commonConstants.h"
 #include "criteriaAggregationVariable.h"
+
 #include <QFile>
 #include <QTextStream>
 
 
-CriteriaAggregationVariable::CriteriaAggregationVariable()
-{
-}
-
-bool CriteriaAggregationVariable::parserAggregationVariable(QString fileName, QString &error)
+bool CriteriaAggregationVariable::parserAggregationVariable(const QString fileName, QString &errorStr)
 {
     QFile fileCsv(fileName);
     if ( !fileCsv.open(QFile::ReadOnly | QFile::Text) ) {
-        error = "File not exists";
+        errorStr = "File not exists";
         return false;
     }
     else
@@ -34,14 +31,14 @@ bool CriteriaAggregationVariable::parserAggregationVariable(QString fileName, QS
             QList<QString> items = line.split(",");
             if (items.size() < REQUIREDAGGREGATIONINFO)
             {
-                error = "invalid output format CSV, missing reference data";
+                errorStr = "invalid output format CSV, missing reference data";
                 return false;
             }
 
             int pos = int(header.indexOf("output variable (csv)"));
             if (pos == -1)
             {
-                error = "missing output variable";
+                errorStr = "missing output variable";
                 return false;
             }
 
@@ -49,14 +46,14 @@ bool CriteriaAggregationVariable::parserAggregationVariable(QString fileName, QS
             outputVarName.push_back(items[pos].toUpper().trimmed());
             if (outputVarName.isEmpty())
             {
-                error = "missing output variable";
+                errorStr = "missing output variable";
                 return false;
             }
 
             pos = int(header.indexOf("input field (shape)"));
             if (pos == -1)
             {
-                error = "missing input field (shape)";
+                errorStr = "missing input field (shape)";
                 return false;
             }
 
@@ -64,14 +61,14 @@ bool CriteriaAggregationVariable::parserAggregationVariable(QString fileName, QS
             inputFieldName.push_back(items[pos].toUpper().trimmed());
             if (inputFieldName.isEmpty())
             {
-                error = "missing input field";
+                errorStr = "missing input field";
                 return false;
             }
 
             pos = int(header.indexOf("computation"));
             if (pos == -1)
             {
-                error = "missing computation";
+                errorStr = "missing computation";
                 return false;
             }
 
@@ -79,14 +76,11 @@ bool CriteriaAggregationVariable::parserAggregationVariable(QString fileName, QS
             aggregationType.push_back(items[pos].toUpper().trimmed());
             if (aggregationType.isEmpty())
             {
-                error = "missing computation";
+                errorStr = "missing computation";
                 return false;
             }
         }
     }
-    if (outputVarName.isEmpty())
-    {
-        return false;
-    }
-    return true;
+
+    return ! outputVarName.isEmpty();
 }

@@ -18,8 +18,8 @@
         QList<int> param1;
         QList<int> param2;
 
-        CriteriaOutputVariable();
-        bool parserOutputVariable(QString fileName, QString &error);
+        CriteriaOutputVariable() {}
+        bool parserOutputVariable(const QString &fileName, QString &errorStr);
     };
 
 #endif // CRITERIAOUTPUTVARIABLE_H

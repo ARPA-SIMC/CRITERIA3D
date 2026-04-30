@@ -38,6 +38,7 @@ bool initializeRasterFromShape(const Crit3DShapeHandler &shapeHandler, gis::Crit
     xmin = round(xmin * 10.) * 0.1;
     ymin = round(ymin * 10.) * 0.1;
     header.cellSize = cellSize;
+    header.invCellSize = 1.0 / cellSize;
     header.llCorner.x = xmin;
     header.llCorner.y = ymin;
     header.nrRows = int(floor((ymax - ymin) / cellSize)) + 1;

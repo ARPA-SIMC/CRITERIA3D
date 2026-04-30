@@ -987,9 +987,9 @@ int CriteriaOutputProject::createNetcdf()
         projectError = "Missing 'cellsize' in group [maps]";
         return ERROR_SETTINGS_MISSINGDATA;
     }
-    bool isNumberOk;
-    int cellSize = mapCellSize.toInt(&isNumberOk, 10);
-    if (!isNumberOk)
+    bool isOk;
+    int cellSize = mapCellSize.toInt(&isOk);
+    if (! isOk)
     {
         projectError = "Invalid cellsize (it must be an integer): " + mapCellSize;
         return ERROR_SETTINGS_MISSINGDATA;
@@ -1046,9 +1046,9 @@ int CriteriaOutputProject::createNetcdf()
 }
 
 
-bool CriteriaOutputProject::convertShapeToNetcdf(Crit3DShapeHandler &shapeHandler, std::string outputFileName,
-                                                 std::string field, std::string variableName, std::string variableUnit, double cellSize,
-                                                 const Crit3DDate &computationDate, int nrDays)
+bool CriteriaOutputProject::convertShapeToNetcdf(Crit3DShapeHandler &shapeHandler, const std::string outputFileName,
+                                                 const std::string field, const std::string variableName, const std::string variableUnit,
+                                                 double cellSize, const Crit3DDate &computationDate, int nrDays)
 {
     if (! shapeHandler.getIsWGS84())
     {
@@ -1083,6 +1083,7 @@ bool CriteriaOutputProject::convertShapeToNetcdf(Crit3DShapeHandler &shapeHandle
     dataRaster.header->llCorner.y = latLonHeader.llCorner.latitude;
     dataRaster.header->llCorner.x = latLonHeader.llCorner.longitude;
     dataRaster.header->cellSize = (latLonHeader.dx + latLonHeader.dy) * 0.5;
+    dataRaster.header->invCellSize = 1.0 / dataRaster.header->cellSize;
     dataRaster.initializeGrid(latLonHeader.flag);
 
     // assign lat lon values

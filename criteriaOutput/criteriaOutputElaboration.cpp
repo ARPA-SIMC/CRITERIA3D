@@ -10,7 +10,8 @@
 #include <QSqlRecord>
 #include <QTextStream>
 
-int computeAllDtxUnit(QSqlDatabase db, QString idCase, QString &errorStr)
+
+int computeAllDtxUnit(const QSqlDatabase &db, const QString &idCase, QString &errorStr)
 {
     // check if table exist (skip otherwise)
     if (! db.tables().contains(idCase))
@@ -128,7 +129,7 @@ int computeAllDtxUnit(QSqlDatabase db, QString idCase, QString &errorStr)
 }
 
 
-int computeAllDtxPeriod(QSqlDatabase db, QString idCase, unsigned int period, std::vector<double>& dtx, QString& errorStr)
+int computeAllDtxPeriod(const QSqlDatabase &db, const QString &idCase, unsigned int period, std::vector<double>& dtx, QString& errorStr)
 {
     // read all data
     QSqlQuery qry(db);
@@ -211,8 +212,8 @@ QString getNumberStr(double value)
 }
 
 
-bool writeDtxToDB(QSqlDatabase db, QString idCase, std::vector<double>& dt30,
-                  std::vector<double>& dt90, std::vector<double>& dt180, QString& errorStr)
+bool writeDtxToDB(const QSqlDatabase &db, const QString &idCase, const std::vector<double> &dt30,
+                  const std::vector<double> &dt90, const std::vector<double> &dt180, QString& errorStr)
 {
     QSqlQuery qry(db);
     qry.prepare("SELECT * FROM " + idCase);
@@ -289,7 +290,7 @@ bool writeDtxToDB(QSqlDatabase db, QString idCase, std::vector<double>& dt30,
 
 
 int writeCsvOutputUnit(const QString &idCase, const QString &idCropClass, const QList<QString> &dataTables,
-                       QSqlDatabase &dbData, QSqlDatabase &dbCrop, QSqlDatabase &dbClimateData,
+                       const QSqlDatabase &dbData, const QSqlDatabase &dbCrop, const QSqlDatabase &dbClimateData,
                        const QDate &dateComputation, const CriteriaOutputVariable &outputVariable,
                        const QString &csvFileName, int &nrMissingData, QString &errorStr)
 {
@@ -585,8 +586,8 @@ int writeCsvOutputUnit(const QString &idCase, const QString &idCropClass, const 
 
 
 // TODO: possibile problema con computation != "" e valori pari a -9999
-int selectSimpleVar(QSqlDatabase& db, QString idCase, QString varName, QString computation,
-                    QDate firstDate, QDate lastDate, float irriRatio, std::vector<float>& resultVector, QString& errorStr)
+int selectSimpleVar(const QSqlDatabase &db, const QString &idCase, const QString &varName, const QString &computation,
+                    const QDate &firstDate, const QDate &lastDate, float irriRatio, std::vector<float>& resultVector, QString& errorStr)
 {
     QSqlQuery qry(db);
 
@@ -667,18 +668,20 @@ int selectSimpleVar(QSqlDatabase& db, QString idCase, QString varName, QString c
 }
 
 
-int computeDTX(QSqlDatabase &db, QString idCase, int period, QString computation,
-               QDate firstDate, QDate lastDate, std::vector<float>& resultVector, QString &errorStr)
+int computeDTX(const QSqlDatabase &db, const QString &idCase, int period, const QString &computation,
+               const QDate &firstDate, const QDate &lastDate, std::vector<float>& resultVector, QString &errorStr)
 {
     QSqlQuery qry(db);
     QString statement;
-    double result = NODATA;
-    std::vector<float> dtx;
     int count = 0;
     int count2 = 0;
     float var1, var2;
     QDate end = firstDate;
     QDate start;
+
+    double result = NODATA;
+    std::vector<float> dtx;
+
     while (end <= lastDate)
     {
         start = end.addDays(-period+1);
@@ -756,8 +759,8 @@ int computeDTX(QSqlDatabase &db, QString idCase, int period, QString computation
 }
 
 
-int writeCsvAggrFromShape(Crit3DShapeHandler &refShapeFile, QString csvFileName,
-                          QDate dateComputation, QList<QString> outputVarName, QString shapeField, QString &errorStr)
+int writeCsvAggrFromShape(Crit3DShapeHandler &refShapeFile, const QString &csvFileName, const QDate &dateComputation,
+                          const QList<QString> &outputVarName, const QString &shapeField, QString &errorStr)
 {
     QList<QList<QString>> valuesFromShape;
     // write CSV
@@ -847,7 +850,7 @@ int writeCsvAggrFromShape(Crit3DShapeHandler &refShapeFile, QString csvFileName,
 }
 
 
-int orderCsvByField(QString csvFileName, QString field, QString &errorStr)
+int orderCsvByField(const QString &csvFileName, const QString &field, QString &errorStr)
 {
     QFile fileCsv;
     fileCsv.setFileName(csvFileName);
