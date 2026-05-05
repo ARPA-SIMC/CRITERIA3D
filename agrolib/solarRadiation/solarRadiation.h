@@ -53,12 +53,14 @@
                                 float temp, float pressure, float aspect, float slope,
                                 TsunPosition &mySunPosition);
 
-        int estimateTransmissivityWindow(Crit3DRadiationSettings* mySettings, const gis::Crit3DRasterGrid& myDEM,
-                                         const gis::Crit3DPoint &myPoint, Crit3DTime myTime, int timeStepSecond);
+        bool computeShadow(const TradPoint& radPoint, const TsunPosition& sunPosition, const gis::Crit3DRasterGrid& myDem);
 
-        bool computeRadiationRsun(Crit3DRadiationSettings* radSettings, float temperature, float myPressure, const Crit3DTime& myTime,
-                                  float linke,float albedo, float clearSkyTransmissivity, float transmissivity,
-                                  TsunPosition& sunPosition, TradPoint& radPoint, const gis::Crit3DRasterGrid& dem);
+        int estimateTransmissivityWindow(Crit3DRadiationSettings* radSettings, const gis::Crit3DPoint &myPoint,
+                                         const Crit3DTime &myTime, const gis::Crit3DRasterGrid &myDem, int timeStepSecond);
+
+        bool computeRadiationRsun(Crit3DRadiationSettings* radSettings, float temperature, const Crit3DTime& myTime,
+                                  float linke, float albedo, float clearSkyTransmissivity, float transmissivity,
+                                  TsunPosition &sunPosition, TradPoint &radPoint, const gis::Crit3DRasterGrid& dem);
 
         bool computeRadiationDEM(Crit3DRadiationSettings *radSettings, const gis::Crit3DRasterGrid& dem,
                                  Crit3DRadiationMaps* radiationMaps, const Crit3DTime& myTime, bool isParallelComputing);

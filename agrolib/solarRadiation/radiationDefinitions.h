@@ -1,6 +1,9 @@
 #ifndef RADIATIONDEFINITIONS_H
 #define RADIATIONDEFINITIONS_H
 
+    #ifndef COMMONCONSTANTS_H
+        #include "commonConstants.h"
+    #endif
     #ifndef _STRING_
         #include <string>
     #endif
@@ -83,18 +86,18 @@
 
     struct TradPoint
     {
-        double x;
-        double y;
-        double height;
-        double lat;
-        double lon;
-        double slope;
-        double aspect;
-        double beam;
-        double diffuse;
-        double reflected;
-        double global;
-        double transmissivity;
+        double x = NODATA;
+        double y = NODATA;
+        double height = NODATA;
+        double lat = NODATA;
+        double lon = NODATA;
+        double slope = NODATA;
+        double aspect = NODATA;
+        double beam = NODATA;
+        double diffuse = NODATA;
+        double reflected = NODATA;
+        double global = NODATA;
+        double transmissivity = NODATA;
     };
 
     struct TelabRadPoint

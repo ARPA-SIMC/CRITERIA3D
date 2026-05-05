@@ -278,9 +278,12 @@
         bool prevailingMap(const Crit3DRasterGrid& inputMap,  Crit3DRasterGrid *outputMap);
         float prevailingValue(const std::vector<float> &valueList);
 
-        bool clipRasterWithRaster(gis::Crit3DRasterGrid* refRaster, gis::Crit3DRasterGrid* maskRaster, gis::Crit3DRasterGrid* outputRaster);
+        bool clipRasterWithRaster(const Crit3DRasterGrid* refRaster, const Crit3DRasterGrid* maskRaster, Crit3DRasterGrid* outputRaster);
 
-        bool replaceRasterValues(gis::Crit3DRasterGrid* refRaster, gis::Crit3DRasterGrid* maskRaster, gis::Crit3DRasterGrid* outputRaster);
+        bool replaceRasterValues(const Crit3DRasterGrid* refRaster, const Crit3DRasterGrid* maskRaster, Crit3DRasterGrid* outputRaster);
+
+        bool cropRaster(const Crit3DRasterGrid *inputRaster, Crit3DRasterGrid *outputRaster,
+                        int zoneNumber, const Crit3DGeoPoint &geo1, const Crit3DGeoPoint &geo2);
 
         bool computeLatLonMaps(const gis::Crit3DRasterGrid& rasterGrid,
                                gis::Crit3DRasterGrid* latMap, gis::Crit3DRasterGrid* lonMap,

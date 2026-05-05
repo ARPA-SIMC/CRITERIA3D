@@ -66,6 +66,7 @@ std::vector <std::vector<int>> computeMatrixAnalysisRaster(const Crit3DShapeHand
     categories.clear();
     categories = gis::extractUniqueValues(rasterVal);
     size_t nrCategories = categories.size();
+
     // unordered map is faster for search
     std::unordered_map<int, int> categoryIndex;
     for (unsigned int i = 0; i < nrCategories; ++i) {
