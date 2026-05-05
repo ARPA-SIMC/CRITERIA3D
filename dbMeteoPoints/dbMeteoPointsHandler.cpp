@@ -144,8 +144,6 @@ void Crit3DMeteoPointsDbHandler::setDatasetsActive(QString active)
 }
 
 
-
-
 QList<QString> Crit3DMeteoPointsDbHandler::getAllDatasetsList()
 {
     QList<QString> datasetList;
