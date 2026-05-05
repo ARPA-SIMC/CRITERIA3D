@@ -1782,7 +1782,7 @@ namespace gis
     }
 
 
-    bool clipRasterWithRaster(gis::Crit3DRasterGrid* refRaster, gis::Crit3DRasterGrid* maskRaster, gis::Crit3DRasterGrid* outputRaster)
+    bool clipRasterWithRaster(const Crit3DRasterGrid *refRaster, const Crit3DRasterGrid *maskRaster, Crit3DRasterGrid *outputRaster)
     {
         if (refRaster == nullptr || maskRaster == nullptr || outputRaster == nullptr)
             return false;
@@ -1857,7 +1857,7 @@ namespace gis
 
 
     // replace the values ​​of the reference raster with the values ​​of the mask raster
-    bool replaceRasterValues(gis::Crit3DRasterGrid* refRaster, gis::Crit3DRasterGrid* maskRaster, gis::Crit3DRasterGrid* outputRaster)
+    bool replaceRasterValues(const Crit3DRasterGrid *refRaster, const Crit3DRasterGrid *maskRaster, Crit3DRasterGrid *outputRaster)
     {
         if (refRaster == nullptr || maskRaster == nullptr || outputRaster == nullptr)
             return false;
@@ -2230,6 +2230,63 @@ namespace gis
 
 
     /*!
+     * \brief crop raster using bounding box
+     */
+    bool cropRaster(const Crit3DRasterGrid *inputRaster, Crit3DRasterGrid *outputRaster,
+                    int zoneNumber, const Crit3DGeoPoint &geo1, const Crit3DGeoPoint &geo2)
+    {
+        gis::Crit3DUtmPoint p1, p2;
+        gis::getUtmFromLatLon(zoneNumber, geo1, &p1);
+        gis::getUtmFromLatLon(zoneNumber, geo2, &p2);
+
+        int row1, col1, row2, col2;
+        inputRaster->getRowCol(p1.x, p1.y, row1, col1);
+        inputRaster->getRowCol(p2.x, p2.y, row2, col2);
+
+        int r0 = std::min(row1, row2);
+        int r1 = std::max(row1, row2);
+        int c0 = std::min(col1, col2);
+        int c1 = std::max(col1, col2);
+
+        r0 = std::clamp(r0, 0, inputRaster->header->nrRows - 1);
+        r1 = std::clamp(r1, 0, inputRaster->header->nrRows - 1);
+        c0 = std::clamp(c0, 0, inputRaster->header->nrCols - 1);
+        c1 = std::clamp(c1, 0, inputRaster->header->nrCols - 1);
+
+        if (r1 <= r0 || c1 <= c0)
+            return false;
+
+        int newRows = r1 - r0 + 1;
+        int newCols = c1 - c0 + 1;
+
+        // set header
+        outputRaster->header->flag = inputRaster->header->flag;
+        outputRaster->header->cellSize = inputRaster->header->cellSize;
+        outputRaster->header->invCellSize = inputRaster->header->invCellSize;
+
+        outputRaster->header->nrRows = newRows;
+        outputRaster->header->nrCols = newCols;
+
+        outputRaster->header->llCorner.x = inputRaster->header->llCorner.x + c0 * outputRaster->header->cellSize;
+
+        int deltaRow = inputRaster->header->nrRows - r1 - 1;
+        outputRaster->header->llCorner.y = inputRaster->header->llCorner.y + deltaRow * outputRaster->header->cellSize;
+
+        outputRaster->initializeGrid();
+
+        // move the data
+        for (int r = 0; r < newRows; r++)
+            for (int c = 0; c < newCols; c++)
+                outputRaster->value[r][c] = inputRaster->value[r + r0][c + c0];
+
+        outputRaster->isLoaded = true;
+        updateMinMaxRasterGrid(outputRaster);
+
+        return true;
+    }
+
+
+    /*!
      * \brief remove the empty edges of a raster
      */
     bool resizeRasterCutEmptyFrame(const Crit3DRasterGrid *inputRaster, Crit3DRasterGrid *outputRaster, std::string &errorStr)
@@ -2288,6 +2345,7 @@ namespace gis
             for (int col = 0; col < outputRaster->header->nrCols; col++)
                 outputRaster->value[row][col] = inputRaster->value[row+row0][col+col0];
 
+        outputRaster->isLoaded = true;
         updateMinMaxRasterGrid(outputRaster);
         return true;
     }
