@@ -461,8 +461,10 @@ namespace radiation
 
 
     /*!
-     * \brief Diffuse irradiance on an inclined surface (Muneer, 1990)               [W m-2]
-     * clean function
+     * \brief Diffuse irradiance on an inclined surface (Muneer, 1990)  [W m-2]
+     * new function (clean)
+     * Bh     beam irradiance on a horizontal surface                   [W m-2]
+     * Dh     diffuse irradiance on a horizontal surface                [W m-2]
      */
     double clearSkyDiffuseInclined(double Bh, double Dh,
                                    const TsunPosition& sun,
