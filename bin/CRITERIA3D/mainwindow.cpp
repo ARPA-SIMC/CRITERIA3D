@@ -4305,4 +4305,3 @@ void MainWindow::on_flag_point_selection_triggered(bool isChecked)
     }
 }
 
-

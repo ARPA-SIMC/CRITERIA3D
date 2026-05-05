@@ -278,6 +278,8 @@
 
         void on_actionView_SWE_variation_triggered();
 
+        void on_flag_point_selection_triggered();
+
     protected:
         /*!
          * \brief mouseReleaseEvent call moveCenter
