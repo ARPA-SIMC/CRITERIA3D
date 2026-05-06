@@ -11,8 +11,8 @@
 #include "meteo.h"
 
 
-float findThreshold(meteoVariable myVar, Crit3DMeteoSettings* meteoSettings,
-                    float value, float stdDev, float nrStdDev, float avgDeltaZ, float minDistance)
+float getSpatialThresholdVar(meteoVariable myVar, Crit3DMeteoSettings* meteoSettings,
+                             float value, float stdDev, int nrStdDev, float avgDeltaZ, float minDistance)
 {
     float zWeight, distWeight, threshold;
 
@@ -63,18 +63,18 @@ float findThreshold(meteoVariable myVar, Crit3DMeteoSettings* meteoSettings,
     {
         threshold = 500;
         distWeight = minDistance / 5000.f;
-        threshold += distWeight + stdDev * (nrStdDev + 1.f);
+        threshold += distWeight + stdDev * (nrStdDev + 1);
     }
     else if (myVar ==  dailyGlobalRadiation)
     {
         threshold = 10;
         distWeight = minDistance / 5000.f;
-        threshold += distWeight + stdDev * (nrStdDev + 1.f);
+        threshold += distWeight + stdDev * (nrStdDev + 1);
     }
     else if (myVar == atmTransmissivity)
     {
-        distWeight = minDistance / 5000.f;
-        threshold = std::max(stdDev * std::max(nrStdDev, distWeight), 0.3f);
+        distWeight = minDistance / 20000.f;
+        threshold = std::clamp(distWeight + stdDev * nrStdDev, 0.3f, 0.8f);
     }
     else if (myVar == atmPressure)
     {
@@ -359,7 +359,7 @@ bool spatialQualityControl(meteoVariable myVar, std::vector<Crit3DMeteoPoint> &m
                     myValue = meteoPoints[i].currentValue;
                     myResidual = meteoPoints[i].residual;
                     stdDev = MAXVALUE(stdDev, myValue/100.f);
-                    if (fabs(myResidual) > findThreshold(myVar, meteoSettings, myValue, stdDev, 2, avgDeltaZ, minDist))
+                    if (fabs(myResidual) > getSpatialThresholdVar(myVar, meteoSettings, myValue, stdDev, 2, avgDeltaZ, minDist))
                     {
                         listIndex.push_back(int(i));
                         meteoPoints[i].quality = quality::wrong_spatial;
@@ -405,7 +405,7 @@ bool spatialQualityControl(meteoVariable myVar, std::vector<Crit3DMeteoPoint> &m
 
                         myValue = meteoPoints[listIndex[i]].currentValue;
 
-                        if (fabs(myResidual) > findThreshold(myVar, meteoSettings, myValue, stdDev, 3, avgDeltaZ, minDist))
+                        if (fabs(myResidual) > getSpatialThresholdVar(myVar, meteoSettings, myValue, stdDev, 3, avgDeltaZ, minDist))
                             meteoPoints[listIndex[i]].quality = quality::wrong_spatial;
                         else
                             meteoPoints[listIndex[i]].quality = quality::accepted;

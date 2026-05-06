@@ -44,7 +44,7 @@ float computePointTransmissivitySamani(float tmin, float tmax, float samaniCoeff
 }
 
 
-bool computeTransmissivity(Crit3DRadiationSettings *mySettings, std::vector<Crit3DMeteoPoint> &meteoPoints,
+bool computeTransmissivity_old(Crit3DRadiationSettings *mySettings, std::vector<Crit3DMeteoPoint> &meteoPoints,
                            int intervalWidth, Crit3DTime myTime, const gis::Crit3DRasterGrid& myDEM)
 {
     if (meteoPoints.empty())
@@ -101,6 +101,66 @@ bool computeTransmissivity(Crit3DRadiationSettings *mySettings, std::vector<Crit
 }
 
 
+bool computeTransmissivity(Crit3DRadiationSettings *settings, std::vector<Crit3DMeteoPoint> &meteoPoints,
+                           int intervalWidth, const Crit3DTime &time, const gis::Crit3DRasterGrid& dem)
+{
+    if (meteoPoints.empty() || intervalWidth % 2 != 1)
+        return false;
+
+    int dt = 3600 / meteoPoints[0].hourlyFraction;
+
+    int half = (intervalWidth - 1) / 2;
+    int halfSec = half * dt;
+
+    std::vector<float> obsRad(intervalWidth);
+    int nrValidPoints = 0;
+
+    for (auto &mp : meteoPoints)
+    {
+        float currentRad = mp.getMeteoPointValueH(time.date, time.getHour(), time.getMinutes(), globalIrradiance);
+
+        if (isEqual(currentRad, NODATA))
+            continue;
+
+        // set time to start interval
+        Crit3DTime t = time.addSeconds(-halfSec);
+
+        int validSamples = 0;
+        for (int i = 0; i < intervalWidth; ++i)
+        {
+            obsRad[i] = mp.getMeteoPointValueH(t.date, t.getHour(), t.getMinutes(), globalIrradiance);
+
+            if (! isEqual(obsRad[i], NODATA))
+                validSamples++;
+
+            t = t.addSeconds(dt);
+        }
+
+        // quality check
+        if (validSamples < intervalWidth * 0.66)
+            continue;
+
+        // geometry
+        gis::Crit3DPoint point;
+        point.utm.x = mp.point.utm.x;
+        point.utm.y = mp.point.utm.y;
+        point.z     = mp.point.z;
+
+        // compute transmissivity
+        float transmissivity = radiation::computePointTransmissivity(settings, point, time, obsRad.data(), intervalWidth, dt, dem);
+
+        // store
+        mp.setMeteoPointValueH(time.date, time.getHour(), time.getMinutes(), atmTransmissivity, transmissivity);
+
+        if (! isEqual(transmissivity, NODATA))
+            nrValidPoints++;
+    }
+
+    return (nrValidPoints > 0);
+}
+
+
+// estimates from temperatures
 bool computeTransmissivityFromTRange(std::vector<Crit3DMeteoPoint> &meteoPoints, Crit3DTime currentTime)
 {
     if (meteoPoints.empty())

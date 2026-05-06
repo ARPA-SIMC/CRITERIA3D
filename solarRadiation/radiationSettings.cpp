@@ -46,6 +46,7 @@ void Crit3DRadiationSettings::initialize()
     linkeMode = PARAM_MODE_FIXED;
     linkeDefault = 4.f;
     albedoMode = PARAM_MODE_FIXED;
+    // default (media tra prati/foresta/urbano/suolo nudo)
     albedo = 0.2f;
     tiltMode = TILT_TYPE_DEM;
     tilt = 0;
@@ -184,7 +185,8 @@ float Crit3DRadiationSettings::getAlbedo(int row, int col) const
 
 float Crit3DRadiationSettings::getAlbedo(const gis::Crit3DPoint& myPoint) const
 {
-    if (albedoMode == PARAM_MODE_FIXED) return albedo;
+    if (albedoMode == PARAM_MODE_FIXED)
+        return albedo;
 
     float myAlbedo = NODATA;
 
