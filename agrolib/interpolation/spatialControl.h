@@ -50,4 +50,7 @@ bool checkAndPassDataToInterpolation(Crit3DQuality* myQuality, meteoVariable myV
                                Crit3DInterpolationSettings &interpolationSettings, Crit3DMeteoSettings* meteoSettings,
                                Crit3DClimateParameters* climateParameters, const Crit3DTime &myTime, std::string &errorStr);
 
+    float getSpatialThresholdVar(meteoVariable myVar, Crit3DMeteoSettings* meteoSettings,
+                                 float value, float stdDev, int nrStdDev, float avgDeltaZ, float minDistance);
+
 #endif // SPATIALCONTROL_H

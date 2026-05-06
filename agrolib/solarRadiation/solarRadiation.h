@@ -58,9 +58,9 @@
         int estimateTransmissivityWindow(Crit3DRadiationSettings* radSettings, const gis::Crit3DPoint &myPoint,
                                          const Crit3DTime &myTime, const gis::Crit3DRasterGrid &myDem, int timeStepSecond);
 
-        bool computeRadiationRsun(Crit3DRadiationSettings* radSettings, float temperature, const Crit3DTime& myTime,
-                                  float linke, float albedo, float clearSkyTransmissivity, float transmissivity,
-                                  TsunPosition &sunPosition, TradPoint &radPoint, const gis::Crit3DRasterGrid& dem);
+        bool computeRadiationRsun(Crit3DRadiationSettings* radSettings, double temperature, const Crit3DTime& myTime,
+                                  double linke, double albedo, double clearSkyTransmissivity, double transmissivity,
+                                  TsunPosition &sunPosition, TradPoint& radPoint, const gis::Crit3DRasterGrid& dem);
 
         bool computeRadiationDEM(Crit3DRadiationSettings *radSettings, const gis::Crit3DRasterGrid& dem,
                                  Crit3DRadiationMaps* radiationMaps, const Crit3DTime& myTime, bool isParallelComputing);
@@ -74,13 +74,14 @@
 
         void updateRadiationMaps(Crit3DRadiationMaps* radiationMaps, const Crit3DTime &myTime);
 
-        float computePointTransmissivity(Crit3DRadiationSettings *mySettings, const gis::Crit3DPoint& myPoint, Crit3DTime myTime, float* measuredRad,
+        float computePointTransmissivity(Crit3DRadiationSettings *mySettings, const gis::Crit3DPoint& myPoint, const Crit3DTime myTime, float* measuredRad,
                                          int windowWidth, int timeStepSecond, const gis::Crit3DRasterGrid& myDEM);
 
         bool isGridPointComputable(Crit3DRadiationSettings* mySettings, int row, int col, const gis::Crit3DRasterGrid& myDEM, Crit3DRadiationMaps* radiationMaps);
 
         bool computeRadiationRSunMeteoPoint(Crit3DRadiationSettings* radSettings, const gis::Crit3DRasterGrid& dem,
                                                  Crit3DMeteoPoint* myMeteoPoint, TradPoint radPoint, const Crit3DTime& myTime);
+
         bool computeRadiationPotentialRSunMeteoPoint(Crit3DRadiationSettings* radSettings, const gis::Crit3DRasterGrid& dem,
                                   Crit3DMeteoPoint* myMeteoPoint, float slope, float aspect, const Crit3DTime& myTime, TradPoint *radPoint);
     }
