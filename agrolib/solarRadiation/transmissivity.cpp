@@ -29,6 +29,7 @@
 #include "radiationSettings.h"
 #include "solarRadiation.h"
 #include "basicMath.h"
+#include "meteo.h"
 #include <math.h>
 
 
@@ -120,7 +121,11 @@ bool computeTransmissivity(Crit3DRadiationSettings *settings, std::vector<Crit3D
         float currentRad = mp.getMeteoPointValueH(time.date, time.getHour(), time.getMinutes(), globalIrradiance);
 
         if (isEqual(currentRad, NODATA))
+        {
+            // no transmissivity data
+            mp.setMeteoPointValueH(time.date, time.getHour(), time.getMinutes(), atmTransmissivity, NODATA);
             continue;
+        }
 
         // set time to start interval
         Crit3DTime t = time.addSeconds(-halfSec);
@@ -138,7 +143,11 @@ bool computeTransmissivity(Crit3DRadiationSettings *settings, std::vector<Crit3D
 
         // quality check
         if (validSamples < intervalWidth * 0.66)
+        {
+            // no correct transmissivity data
+            mp.setMeteoPointValueH(time.date, time.getHour(), time.getMinutes(), atmTransmissivity, NODATA);
             continue;
+        }
 
         // geometry
         gis::Crit3DPoint point;
