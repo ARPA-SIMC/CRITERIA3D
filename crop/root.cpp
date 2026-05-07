@@ -252,64 +252,69 @@ namespace root
      * \note author: Franco Zinoni
      * \return densityThinLayers [-] (vector)
      */
-    void cardioidDistribution(double shapeFactor, unsigned int nrLayersWithRoot,
+    bool cardioidDistribution(double shapeFactor, unsigned int nrLayersWithRoot,
                               unsigned int nrUpperLayersWithoutRoot, unsigned int totalLayers,
                               std::vector<double> &densityThinLayers)
     {
-        unsigned int i;
-        std::vector<double> lunette, lunetteDensity;
-        lunette.resize(nrLayersWithRoot);
-        lunetteDensity.resize(nrLayersWithRoot*2);
+        // initialize
+        densityThinLayers.assign(totalLayers, 0.0);
+
+        // check
+        if (nrLayersWithRoot == 0)
+            return true;
+
+        if (nrUpperLayersWithoutRoot + nrLayersWithRoot > totalLayers)
+            return false;
+
+        shapeFactor = std::clamp(shapeFactor, 1.0, 2.0);
+
+        std::vector<double> lunette(nrLayersWithRoot);
+        std::vector<double> lunetteDensity(nrLayersWithRoot * 2);
 
         double sinAlfa, cosAlfa, alfa;
-        double halfPI = PI / 2.;
-        for (i = 0; i < nrLayersWithRoot; i++)
+        double halfPI = PI / 2.0;
+
+        for (unsigned int i = 0; i < nrLayersWithRoot; ++i)
         {
-            sinAlfa = 1 - double(i+1) / double(nrLayersWithRoot);
-            cosAlfa = MAXVALUE(sqrt(1 - pow(sinAlfa, 2)), 0.0001);
-            alfa = atan(sinAlfa/cosAlfa);
-            lunette[i] = (halfPI - alfa - sinAlfa*cosAlfa) / PI;
+            sinAlfa = 1.0 - double(i+1.0) / double(nrLayersWithRoot);
+            double v = std::max(0.0, 1.0 - sinAlfa * sinAlfa);
+            cosAlfa = std::max(std::sqrt(v), 0.0001);
+            alfa = atan2(sinAlfa, cosAlfa);
+            lunette[i] = (halfPI - alfa - sinAlfa * cosAlfa) / PI;
         }
 
         lunetteDensity[0] = lunette[0];
         lunetteDensity[2*nrLayersWithRoot - 1] = lunetteDensity[0];
-        for (i = 1; i < nrLayersWithRoot; i++)
+
+        for (unsigned int i = 1; i < nrLayersWithRoot; ++i)
         {
             lunetteDensity[i] = lunette[i] - lunette[i-1];
             lunetteDensity[2*nrLayersWithRoot -i -1] = lunetteDensity[i];
         }
 
         // cardioid deformation
-        double LiMin,Limax,k,rootDensitySum ;
-        LiMin = -log(0.2) / nrLayersWithRoot;
-        Limax = -log(0.05) / nrLayersWithRoot;
+        double liMin = -std::log(0.2) / nrLayersWithRoot;
+        double liMax = -std::log(0.05) / nrLayersWithRoot;
 
-        k = LiMin + (Limax - LiMin) * (shapeFactor-1);         // TODO verify
+        double k = liMin + (liMax - liMin) * (shapeFactor-1);
 
-        rootDensitySum = 0 ;
-        for (i = 0; i < (2*nrLayersWithRoot); i++)
+        double rootDensitySum = 0.;
+        for (unsigned int i = 0; i < 2 * nrLayersWithRoot; ++i)
         {
-            lunetteDensity[i] *= exp(-k*(i+0.5));
+            lunetteDensity[i] *= std::exp(-k * (i + 0.5));
             rootDensitySum += lunetteDensity[i];
         }
 
         // normalize
-        for (i = 0; i < (2*nrLayersWithRoot); i++)
-        {
+        for (unsigned int i = 0; i < (2*nrLayersWithRoot); ++i)
             lunetteDensity[i] /= rootDensitySum;
-        }
 
-        for  (i = 0; i < totalLayers; i++)
-        {
-            densityThinLayers[i] = 0;
-        }
-        for (i = 0; i < nrLayersWithRoot; i++)
+        for (unsigned int i = 0; i < nrLayersWithRoot; ++i)
         {
             densityThinLayers[nrUpperLayersWithoutRoot+i] = lunetteDensity[2*i] + lunetteDensity[2*i+1];
         }
 
-        lunette.clear();
-        lunetteDensity.clear();
+        return true;
     }
 
 
@@ -508,13 +513,15 @@ namespace root
             return false;
         }
 
-        // Initialize
-        myCrop.roots.rootDensity.clear();
-        myCrop.roots.rootDensity.resize(nrLayers);
-        for (unsigned int i = 0; i < nrLayers; i++)
+        // check vector size
+        if (layerDepth.size() < nrLayers ||
+            layerThickness.size() < nrLayers)
         {
-            myCrop.roots.rootDensity[i] = 0.0;
+            return false;
         }
+
+        // initialize root density
+        myCrop.roots.rootDensity.assign(nrLayers, 0.0);
 
         if (myCrop.roots.currentRootLength <= 0 )
             return true;
@@ -536,29 +543,24 @@ namespace root
         if (numberOfRootedLayers == 0)
             return true;
 
+        // initialize thin layers density
+        std::vector<double> densityThinLayers(nrAtoms, 0.0);
+
         // check nr of thin layers
         if ((numberOfTopUnrootedLayers + numberOfRootedLayers) > nrAtoms)
         {
             numberOfRootedLayers = nrAtoms - numberOfTopUnrootedLayers;
         }
 
-        // initialize thin layers density
-        std::vector<double> densityThinLayers;
-        densityThinLayers.resize(nrAtoms);
-        for (int i=0; i < nrAtoms; i++)
-        {
-            densityThinLayers[i] = 0.;
-        }
-
         if (myCrop.roots.rootShape == CARDIOID_DISTRIBUTION)
         {
             cardioidDistribution(myCrop.roots.shapeDeformation, numberOfRootedLayers,
-                                 numberOfTopUnrootedLayers, signed(nrAtoms), densityThinLayers);
+                                 numberOfTopUnrootedLayers, nrAtoms, densityThinLayers);
         }
         else if (myCrop.roots.rootShape == CYLINDRICAL_DISTRIBUTION)
         {
             cylindricalDistribution(myCrop.roots.shapeDeformation, numberOfRootedLayers,
-                                    numberOfTopUnrootedLayers, signed(nrAtoms), densityThinLayers);
+                                    numberOfTopUnrootedLayers, nrAtoms, densityThinLayers);
         }
 
         double maxLayerDepth = layerDepth[nrLayers-1] + layerThickness[nrLayers-1] * 0.5;
@@ -586,6 +588,7 @@ namespace root
         if (rootDensitySum <= EPSILON)
             return true;
 
+
         double rootDensitySumSubset = 0.;
         for (unsigned int l=0 ; l < nrLayers; l++)
         {
@@ -598,29 +601,32 @@ namespace root
         }
 
         // normalize root density
-        if (rootDensitySumSubset != rootDensitySum)
+        if (rootDensitySumSubset > EPSILON &&
+            std::abs(rootDensitySumSubset - rootDensitySum) > EPSILON)
         {
             double ratio = rootDensitySum / rootDensitySumSubset;
-            for (unsigned int l=0 ; l < nrLayers; l++)
+
+            for (unsigned int l = 0; l < nrLayers; ++l)
             {
                 myCrop.roots.rootDensity[l] *= ratio;
             }
         }
 
-        // find first and last root layers
-        myCrop.roots.firstRootLayer = 0;
-        unsigned int layer = 0;
-        while (layer < nrLayers && myCrop.roots.rootDensity[layer] == 0.0)
-        {
-            layer++;
-            (myCrop.roots.firstRootLayer)++;
-        }
+        // find and last root layers
+        myCrop.roots.firstRootLayer = NODATA;
+        myCrop.roots.lastRootLayer = NODATA;
 
-        myCrop.roots.lastRootLayer = myCrop.roots.firstRootLayer;
-        while (layer < nrLayers && myCrop.roots.rootDensity[layer] != 0.0)
+        for (unsigned int l = 0; l < nrLayers; ++l)
         {
-            myCrop.roots.lastRootLayer = signed(layer);
-            layer++;
+            if (myCrop.roots.rootDensity[l] > EPSILON)
+            {
+                if (myCrop.roots.firstRootLayer == NODATA)
+                {
+                    myCrop.roots.firstRootLayer = static_cast<int>(l);
+                }
+
+                myCrop.roots.lastRootLayer = static_cast<int>(l);
+            }
         }
 
         return true;
