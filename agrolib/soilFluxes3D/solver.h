@@ -3,6 +3,7 @@
 #include <cstdlib>
 #include <cassert>
 #include <stdexcept>
+#include <algorithm>
 
 #include "types.h"
 #include "macro.h"

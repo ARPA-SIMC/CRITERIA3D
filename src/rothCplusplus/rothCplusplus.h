@@ -52,14 +52,6 @@
 #ifndef ROTHCPLUSPLUS_H
 #define ROTHCPLUSPLUS_H
 
-/*
-#ifndef COMMONCONSTANTS_H
-#include "commonConstants.h"
-#endif
-#ifndef CRIT3DDATE_H
-#include "crit3dDate.h"
-#endif
-*/
 #ifndef GIS_H
 #include "gis.h"
 #endif
@@ -115,24 +107,24 @@ public:
     gis::Crit3DRasterGrid* inertOrganicMatter; //[tC/ha]
     gis::Crit3DRasterGrid* soilOrganicMatter; //[tC/ha]
 
-    std::vector<gis::Crit3DRasterGrid*> avgBIC; //[mm?]
-    std::vector<gis::Crit3DRasterGrid*> avgTemp;//[C°]
+    std::vector<gis::Crit3DRasterGrid*> avgBIC;     //[mm?]
+    std::vector<gis::Crit3DRasterGrid*> avgTemp;    //[C°]
     bool isInitialized;
 
-    gis::Crit3DRasterGrid* getDPM() { return decomposablePlantMaterial; };
-    gis::Crit3DRasterGrid* getRPM() { return resistantPlantMaterial; };
-    gis::Crit3DRasterGrid* getBIO() { return microbialBiomass; };
-    gis::Crit3DRasterGrid* getHUM() { return humifiedOrganicMatter; };
-    gis::Crit3DRasterGrid* getSOC() { return soilOrganicMatter; };
+    gis::Crit3DRasterGrid* getDPM() { return decomposablePlantMaterial; }
+    gis::Crit3DRasterGrid* getRPM() { return resistantPlantMaterial; }
+    gis::Crit3DRasterGrid* getBIO() { return microbialBiomass; }
+    gis::Crit3DRasterGrid* getHUM() { return humifiedOrganicMatter; }
+    gis::Crit3DRasterGrid* getSOC() { return soilOrganicMatter; }
 
-    void setDPMRowCol(double myDPM, int row, int col) { decomposablePlantMaterial->value[row][col] = myDPM; };
-    void setRPMRowCol(double myRPM, int row, int col) { resistantPlantMaterial->value[row][col] = myRPM; };
-    void setBIORowCol(double myBIO, int row, int col) { microbialBiomass->value[row][col] = myBIO; };
-    void setHUMRowCol(double myHUM, int row, int col) { humifiedOrganicMatter->value[row][col] = myHUM; };
-    void setIOMRowCol(double myIOM, int row, int col) { inertOrganicMatter->value[row][col] = myIOM; };
-    void setSOCRowCol(double mySOC, int row, int col) { soilOrganicMatter->value[row][col] = mySOC; };
+    void setDPMRowCol(double myDPM, int row, int col) { decomposablePlantMaterial->value[row][col] = (float)myDPM; }
+    void setRPMRowCol(double myRPM, int row, int col) { resistantPlantMaterial->value[row][col] = (float)myRPM; }
+    void setBIORowCol(double myBIO, int row, int col) { microbialBiomass->value[row][col] = (float)myBIO; }
+    void setHUMRowCol(double myHUM, int row, int col) { humifiedOrganicMatter->value[row][col] = (float)myHUM; }
+    void setIOMRowCol(double myIOM, int row, int col) { inertOrganicMatter->value[row][col] = (float)myIOM; }
+    void setSOCRowCol(double mySOC, int row, int col) { soilOrganicMatter->value[row][col] = (float)mySOC; }
 
-    Crit3DRothCplusplusMaps() {};
+    Crit3DRothCplusplusMaps() {}
     //~Crit3DRothCplusplusMaps();
 
     void initialize(const gis::Crit3DRasterGrid& DEM);

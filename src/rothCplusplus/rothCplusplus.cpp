@@ -56,7 +56,7 @@
 #include <sstream>
 #include <vector>
 #include <cmath>
-//#include <math.h>
+#include <algorithm>
 
 
 #include "basicMath.h"
@@ -146,7 +146,7 @@ void Crit3DRothCplusplusMaps::clear()
 
 void Crit3DRothCplusplusMaps::setClay(double myClay, int row, int col)
 {
-    _clayMap->value[row][col] = myClay;
+    _clayMap->value[row][col] = (float)myClay;
 }
 
 double Crit3DRothCplusplusMaps::getClay(int row, int col)
@@ -615,7 +615,7 @@ void Crit3DRothCplusplus::getStateVariables(int row, int col)
     map.microbialBiomass->value[row][col] = (float)microbialBiomass;
     map.humifiedOrganicMatter->value[row][col] = (float)humifiedOrganicMatter;
     map.inertOrganicMatter->value[row][col] = (float)inorganicMatter;
-    map.soilOrganicMatter->value[row][col] = soilOrganicCarbon;
+    map.soilOrganicMatter->value[row][col] = (float)soilOrganicCarbon;
 }
 
 bool Crit3DRothCplusplus::checkCell()

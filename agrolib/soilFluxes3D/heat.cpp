@@ -6,6 +6,7 @@
 #include "soilPhysics.h"
 #include "otherFunctions.h"
 #include "commonConstants.h"
+#include <algorithm>
 
 using namespace soilFluxes3D::v2;
 using namespace soilFluxes3D::v2::Soil;

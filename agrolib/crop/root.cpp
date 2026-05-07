@@ -29,6 +29,7 @@
 
 
 #include <math.h>
+#include <algorithm>
 
 #include "commonConstants.h"
 #include "gammaFunction.h"
@@ -249,7 +250,7 @@ namespace root
      * \brief Compute root density distribution (cardioid)
      * \param shapeFactor: deformation factor [-]
      * \note author: Franco Zinoni
-     * \return densityThinLayers [-] (array)
+     * \return densityThinLayers [-] (vector)
      */
     void cardioidDistribution(double shapeFactor, unsigned int nrLayersWithRoot,
                               unsigned int nrUpperLayersWithoutRoot, unsigned int totalLayers,
