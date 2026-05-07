@@ -33,6 +33,7 @@
 #include "commonConstants.h"
 #include "development.h"
 #include "crop.h"
+#include <algorithm>
 
 
 namespace leafDevelopment
