@@ -325,10 +325,21 @@ int getMonthFromDoy(int doy, int year)
     return month;
 }
 
-
+/* old version
 static inline long floordiv(long a, long b)
 {
     return (a - (a < 0 ? b - 1 : 0)) / b;
+}*/
+
+static inline long floordiv(long a, long b)
+{
+    long q = a / b;
+    long r = a % b;
+
+    if (r != 0 && ((r > 0) != (b > 0)))
+        --q;
+
+    return q;
 }
 
 inline long getJulianDay(int day, int month, int year)
@@ -344,7 +355,7 @@ inline long getJulianDay(int day, int month, int year)
      */
     const long a = floordiv(14 - month, 12);
     const long y = year + 4800 - a;
-    const int  m = month + 12 * a - 3;
+    const long m = month + 12 * a - 3;
     return day + floordiv(153 * m + 2, 5) + 365 * y + floordiv(y, 4) - floordiv(y, 100) + floordiv(y, 400) - 32045;
 }
 
