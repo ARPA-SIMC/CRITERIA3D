@@ -168,7 +168,7 @@ static void localtrig( struct SolPosData *pdat, struct trigdata *tdat );
 *            timezone
 *        Atmospheric pressure and temperature:
 *            press     DEFAULT 1013.0 mb
-*            temp      DEFAULT 10.0 degrees C
+*            temp      DEFAULT 15.0 degrees C
 *        Tilt of flat surface that receives solar energy:
 *            aspect    DEFAULT 180 (South)
 *            tilt      DEFAULT 0 (Horizontal)
