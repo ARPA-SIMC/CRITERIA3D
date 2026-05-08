@@ -666,8 +666,8 @@ namespace gis
 
     double computeDistancePoint(Crit3DUtmPoint* p0, Crit3DUtmPoint *p1)
     {
-        double dx = p1->x - p0->x;
-        double dy = p1->y - p0->y;
+        const double dx = p1->x - p0->x;
+        const double dy = p1->y - p0->y;
 
         return sqrt(dx * dx + dy * dy);
     }
@@ -675,24 +675,24 @@ namespace gis
 
     float computeDistance(int x1, int y1, int x2, int y2)
     {
-        float dx = float(x2 - x1);
-        float dy = float(y2 - y1);
+        const float dx = float(x2 - x1);
+        const float dy = float(y2 - y1);
 
         return sqrtf(dx * dx + dy * dy);
     }
 
     float computeDistance(float x1, float y1, float x2, float y2)
     {
-        float dx = x2 - x1;
-        float dy = y2 - y1;
+        const float dx = x2 - x1;
+        const float dy = y2 - y1;
 
         return sqrtf(dx * dx + dy * dy);
     }
 
     double computeDistance(double x1, double y1, double x2, double y2)
     {
-        double dx = x2 - x1;
-        double dy = y2 - y1;
+        const double dx = x2 - x1;
+        const double dy = y2 - y1;
 
         return sqrt(dx * dx + dy * dy);
     }
@@ -995,14 +995,17 @@ namespace gis
     /*!
      * \brief Converts UTM coords to Lat/Lng.  Equations from USGS Bulletin 1532.
      * \param zoneNumber
-     * \param referenceLat
-     * \param utmEasting: East Longitudes are positive, West longitudes are negative.
-     * \param utmNorthing: North latitudes are positive, South latitudes are negative.
+     * \param referenceLat: [degree] offset used for southern hemisphere
+     * \param utmEasting:   [m] East Longitudes are positive, West longitudes are negative.
+     * \param utmNorthing:  [m] North latitudes are positive, South latitudes are negative.
      * \param lat in decimal degrees.
      * \param lon in decimal degrees.
      */
     void utmToLatLon(int zoneNumber, double referenceLat, double utmEasting, double utmNorthing, double *lat, double *lon)
     {
+        if (!lat || !lon)
+            return;
+
         double ae, e1, eccSquared, eccPrimeSquared, n1, t1, c1, r1, d, m, x, y;
         double longOrigin , mu , phi1Rad;
         static double ellipsoidK0 = 0.9996;
@@ -1110,7 +1113,8 @@ namespace gis
     bool computeSlopeAspectMaps(const gis::Crit3DRasterGrid& dem,
                                 gis::Crit3DRasterGrid* slopeMap, gis::Crit3DRasterGrid* aspectMap)
     {
-        if (! dem.isLoaded) return false;
+        if (!dem.isLoaded || !slopeMap || !aspectMap)
+            return false;
 
         double dz_dx, dz_dy;
         double lateral_distance = dem.header->cellSize * sqrt(2);
@@ -1209,6 +1213,85 @@ namespace gis
 
         aspectMap->isLoaded = true;
         slopeMap->isLoaded = true;
+
+        return true;
+    }
+
+
+    // Horn (3x3 standard)
+    // TODO controllare
+    bool computeSlopeAspectMaps_NEW(const gis::Crit3DRasterGrid& dem,
+                                gis::Crit3DRasterGrid* slopeMap,
+                                gis::Crit3DRasterGrid* aspectMap)
+    {
+        if (!dem.isLoaded || !slopeMap || !aspectMap)
+            return false;
+
+        const double cellSize = dem.header->cellSize;
+
+        slopeMap->initializeGrid(dem);
+        aspectMap->initializeGrid(dem);
+
+        double flag = double(dem.header->flag);
+
+        for (int row = 0; row < dem.header->nrRows; ++row)
+        {
+            for (int col = 0; col < dem.header->nrCols; ++col)
+            {
+                const double value = dem.value[row][col];
+
+                if (isEqual(value, flag))
+                    continue;
+
+                if (isBoundary(dem, row, col))
+                    continue;
+
+                const double z1 = dem.value[row-1][col-1];
+                const double z2 = dem.value[row-1][col];
+                const double z3 = dem.value[row-1][col+1];
+                const double z4 = dem.value[row][col-1];
+
+                const double z6 = dem.value[row][col+1];
+                const double z7 = dem.value[row+1][col-1];
+                const double z8 = dem.value[row+1][col];
+                const double z9 = dem.value[row+1][col+1];
+
+                // Horn derivatives
+                const double dzdx =
+                    ((z3 + 2*z6 + z9) - (z1 + 2*z4 + z7)) / (8.0 * cellSize);
+
+                const double dzdy =
+                    ((z7 + 2*z8 + z9) - (z1 + 2*z2 + z3)) / (8.0 * cellSize);
+
+                if (std::abs(dzdx) < EPSILON && std::abs(dzdy) < EPSILON)
+                {
+                    slopeMap->value[row][col] = 0;
+                    aspectMap->value[row][col] = aspectMap->header->flag;
+                    continue;
+                }
+
+                // slope
+                const double slopeRad = std::atan(std::sqrt(dzdx*dzdx + dzdy*dzdy));
+
+                slopeMap->value[row][col] = float(slopeRad * RAD_TO_DEG);
+
+                // aspect
+                double aspect = std::atan2(dzdy, -dzdx);
+
+                // convert to GIS compass (0 = North, clockwise)
+                aspect = aspect * RAD_TO_DEG;
+                if (aspect < 0)
+                    aspect += 360.0;
+
+                aspectMap->value[row][col] = (float)aspect;
+            }
+        }
+
+        gis::updateMinMaxRasterGrid(slopeMap);
+        gis::updateMinMaxRasterGrid(aspectMap);
+
+        slopeMap->isLoaded = true;
+        aspectMap->isLoaded = true;
 
         return true;
     }
