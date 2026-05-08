@@ -17,21 +17,21 @@
     #endif
 
     /*! Surface pressure at sea level (millibars) (used for refraction correction and optical air mass) */
-    #define PRESSURE_SEALEVEL 1013
+    #define PRESSURE_SEALEVEL 1013.0
     /*! Ambient default dry-bulb temperature (degrees C) (used for refraction correction) */
-    #define TEMPERATURE_DEFAULT 15
+    #define TEMPERATURE_DEFAULT 15.0
     /*! scale height of Rayleigh atmosphere near the Earth surface */
     #define RAYLEIGH_Z0 8434.5
 
     /*! Eppley shadow band width (cm) */
-    #define SBWID 7.6f
+    #define SBWID 7.6
     /*! Eppley shadow band radius (cm) */
-    #define SBRAD 31.7f
+    #define SBRAD 31.7
     /*! Drummond factor for partly cloudy skies */
-    #define SBSKY 0.04f
+    #define SBSKY 0.04
 
-    #define CLEAR_SKY_TRANSMISSIVITY_DEFAULT     0.75f
-    #define SHADOW_FACTOR 1
+    #define CLEAR_SKY_TRANSMISSIVITY_DEFAULT     0.75
+    #define SHADOW_FACTOR 1.0
 
     enum TradiationAlgorithm{RADIATION_ALGORITHM_RSUN = 0};
     enum TradiationRealSkyAlgorithm{RADIATION_REALSKY_TOTALTRANSMISSIVITY, RADIATION_REALSKY_LINKE};
