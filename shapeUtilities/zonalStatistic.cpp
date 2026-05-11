@@ -600,6 +600,193 @@ bool zonalStatisticsShapeMajority( Crit3DShapeHandler &shapeRef, Crit3DShapeHand
 
 
 // warning: categories must be integer values
+bool zonalStatisticsShapeMajorityCategories_proportional(Crit3DShapeHandler &shapeRef, const std::vector<int> &categories,
+                                            const std::vector <std::vector<int>> &matrix, std::vector<int> &vectorNull,
+                                            const std::string &fieldName, double threshold, std::string &errorStr)
+{
+    const unsigned int nrRefShapes = shapeRef.getShapeCount();
+    const size_t nrCategories = categories.size();
+    std::vector<bool> isShapeValid(nrRefShapes, false);
+    std::vector<long> nrOfVotes(nrCategories, 0);
+
+    long nrValidVotes = 0;
+    int nrValidSeats = 0;
+
+    for (unsigned int row = 0; row < nrRefShapes; row++)
+    {
+        const auto& rowMatrix = matrix[row];
+        long currentValidSum = 0;
+
+        for (unsigned int col = 0; col < nrCategories; ++col)
+        {
+            int count = rowMatrix[col];
+
+            if (count > 0)
+                currentValidSum += count;
+        }
+
+        if ((currentValidSum + vectorNull[row]) > 0)
+        {
+            double validPercentage = double(currentValidSum) / double(currentValidSum + vectorNull[row]);
+            isShapeValid[row] = (validPercentage >= threshold);
+
+            if (isShapeValid[row])
+            {
+                nrValidVotes += currentValidSum;
+                nrValidSeats++;
+                for (unsigned int col = 0; col < nrCategories; ++col)
+                {
+                    nrOfVotes[col] += rowMatrix[col];
+                }
+            }
+        }
+    }
+
+    // check nr of seats
+    if (nrValidSeats == 0)
+    {
+        errorStr = "No valid data.";
+        return false;
+    }
+
+    std::vector<int> nrOfSeats(nrCategories, 0);
+    std::vector<double> remains(nrCategories, 0);
+    double nrOfVotesPerSeat = double(nrValidVotes) / double(nrValidSeats);
+    int nrOfSeatsAssigned = 0;
+
+    for (unsigned int col = 0; col < nrCategories; ++col)
+    {
+        nrOfSeats[col] = int(std::floor(double(nrOfVotes[col]) / nrOfVotesPerSeat));
+        nrOfSeatsAssigned += nrOfSeats[col];
+        remains[col] = nrOfVotes[col] - nrOfSeats[col] * nrOfVotesPerSeat;
+    }
+
+    while (nrOfSeatsAssigned < nrValidSeats)
+    {
+        double maxRemain = 0.0;
+        int index = NODATA;
+        for (unsigned int col = 0; col < nrCategories; ++col)
+        {
+            if (remains[col] > maxRemain)
+            {
+                maxRemain = remains[col];
+                index = col;
+            }
+        }
+
+        if (index != NODATA)
+        {
+            nrOfSeatsAssigned++;
+            nrOfSeats[index]++;
+            remains[index] = 0.0;
+        }
+        else
+            break;
+    }
+
+    // check nr of seats
+    if (nrOfSeatsAssigned != nrValidSeats)
+    {
+        errorStr = "error in assign value.";
+        return false;
+    }
+
+    struct SeatVote
+    {
+        int row;
+        int col;
+        int votes;
+    };
+
+    std::vector<SeatVote> allVotes;
+
+    // collect only valid shapes
+    for (size_t row = 0; row < nrRefShapes; ++row)
+    {
+        if (! isShapeValid[row])
+            continue;
+
+        for (size_t col = 0; col < nrCategories; ++col)
+        {
+            allVotes.push_back({ static_cast<int>(row), static_cast<int>(col), matrix[row][col] });
+        }
+    }
+
+    // sort descending by votes
+    std::sort(allVotes.begin(), allVotes.end(),
+              [](const SeatVote& a, const SeatVote& b)
+              {
+                  return a.votes > b.votes;
+              });
+
+    // assigned category for each shape
+    std::vector<int> assignedCategory(nrRefShapes, NODATA);
+
+    // assigned seats count
+    std::vector<int> assignedSeats(nrCategories, 0);
+
+    int totalAssignedSeats = 0;
+
+    // greedy assignment
+    for (const auto& item : allVotes)
+    {
+        // already assigned shape
+        if (assignedCategory[item.row] != NODATA)
+            continue;
+
+        // category already completed
+        if (assignedSeats[item.col] >= nrOfSeats[item.col])
+            continue;
+
+        // assign seat
+        assignedCategory[item.row] = categories[item.col];
+
+        assignedSeats[item.col]++;
+        totalAssignedSeats++;
+
+        // all seats assigned
+        if (totalAssignedSeats >= nrValidSeats)
+            break;
+    }
+
+    // check assigned
+    if (totalAssignedSeats != nrValidSeats)
+    {
+        errorStr = "Error assigning valid shapes.";
+        return false;
+    }
+
+    for (size_t col = 0; col < nrCategories; ++col)
+    {
+        if (assignedSeats[col] != nrOfSeats[col])
+        {
+            errorStr = "Error in category assignment.";
+            return false;
+        }
+    }
+
+    if (! shapeRef.existField(fieldName))
+    {
+        // if it does not exist, add a new (integer) field to shapeRef
+        if (! shapeRef.addField(fieldName.c_str(), FTInteger, 6, 0))
+        {
+            errorStr = "error writing new field: " + fieldName;
+            return false;
+        }
+    }
+
+    int fieldIndex = shapeRef.getDBFFieldIndex(fieldName.c_str());
+
+    for (unsigned int row = 0; row < nrRefShapes; ++row)
+    {
+        shapeRef.writeIntAttribute(row, fieldIndex, assignedCategory[row]);
+    }
+
+    return true;
+}
+
+
+// warning: categories must be integer values
 bool zonalStatisticsShapeMajorityCategories(Crit3DShapeHandler &shapeRef, const std::vector<int> &categories,
                                   const std::vector <std::vector<int>> &matrix, std::vector<int> &vectorNull,
                                   const std::string &fieldName, double threshold, std::string &errorStr)

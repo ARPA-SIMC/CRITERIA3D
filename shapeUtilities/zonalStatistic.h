@@ -28,4 +28,8 @@
                                                 const std::vector <std::vector<int>> &matrix, std::vector<int> &vectorNull,
                                                 const std::string &fieldName, double threshold, std::string &errorStr);
 
+    bool zonalStatisticsShapeMajorityCategories_proportional(Crit3DShapeHandler &shapeRef, const std::vector<int> &categories,
+                                                             const std::vector <std::vector<int>> &matrix, std::vector<int> &vectorNull,
+                                                             const std::string &fieldName, double threshold, std::string &errorStr);
+
 #endif // ZONALSTATISTIC_H
