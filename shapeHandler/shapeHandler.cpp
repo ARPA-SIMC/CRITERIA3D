@@ -273,7 +273,8 @@ bool Crit3DShapeHandler::setUTMzone(std::string prjFileName)
 
 bool Crit3DShapeHandler::getShape(int index, ShapeObject &shape) const
 {
-    if ((m_handle == nullptr) || (m_dbf == nullptr)) return false;
+    if ((m_handle == nullptr) || (m_dbf == nullptr))
+        return false;
 
     SHPObject *obj = SHPReadObject(m_handle, index);
     shape.assign(obj);

@@ -184,6 +184,7 @@ bool zonalStatisticsShape(Crit3DShapeHandler& shapeRef, Crit3DShapeHandler& shap
             }
         }
 
+
         // check percentage of valid values
         bool isValid = false;
         if (validPoints[row] > 0)
@@ -599,53 +600,67 @@ bool zonalStatisticsShapeMajority( Crit3DShapeHandler &shapeRef, Crit3DShapeHand
 }
 
 
-// warning: categories must be integer values
-bool zonalStatisticsShapeMajorityCategories_proportional(Crit3DShapeHandler &shapeRef, const std::vector<int> &categories,
-                                            const std::vector <std::vector<int>> &matrix, std::vector<int> &vectorNull,
+// assign values to shape proportional to raster distribution (Hare-Niemeyer method)
+// warning: the categories must be integer values
+bool zonalStatisticsShapeCategories_proportional(Crit3DShapeHandler &shapeRef, const std::vector<int> &categories,
+                                            const std::vector <std::vector<int>> &matrix, double cellSize,
                                             const std::string &fieldName, double threshold, std::string &errorStr)
 {
     const unsigned int nrRefShapes = shapeRef.getShapeCount();
     const size_t nrCategories = categories.size();
+
     std::vector<bool> isShapeValid(nrRefShapes, false);
     std::vector<long> nrOfVotes(nrCategories, 0);
 
     long nrValidVotes = 0;
     int nrValidSeats = 0;
+    double pixelArea = cellSize * cellSize;
 
     for (unsigned int row = 0; row < nrRefShapes; row++)
     {
         const auto& rowMatrix = matrix[row];
-        long currentValidSum = 0;
+        long nrCurrentValues = 0;
 
         for (unsigned int col = 0; col < nrCategories; ++col)
         {
             int count = rowMatrix[col];
 
             if (count > 0)
-                currentValidSum += count;
+                nrCurrentValues += count;
         }
 
-        if ((currentValidSum + vectorNull[row]) > 0)
+        if (nrCurrentValues > 0)
         {
-            double validPercentage = double(currentValidSum) / double(currentValidSum + vectorNull[row]);
-            isShapeValid[row] = (validPercentage >= threshold);
-
-            if (isShapeValid[row])
+            ShapeObject currentShape;
+            if (! shapeRef.getShape(row, currentShape))
             {
-                nrValidVotes += currentValidSum;
+                errorStr = "wrong shape.";
+                return false;
+            }
+
+            double totalArea = currentShape.getTotalArea();
+            if (isEqual(totalArea, 0.0))
+                continue;
+
+            double validAreaPercentage = (nrCurrentValues * pixelArea) / totalArea;
+
+            if (validAreaPercentage >= threshold)
+            {
+                isShapeValid[row] = true;
                 nrValidSeats++;
+
+                nrValidVotes += nrCurrentValues;
+
                 for (unsigned int col = 0; col < nrCategories; ++col)
-                {
                     nrOfVotes[col] += rowMatrix[col];
-                }
             }
         }
     }
 
     // check nr of seats
-    if (nrValidSeats == 0)
+    if (nrValidSeats == 0 || nrValidVotes == 0)
     {
-        errorStr = "No valid data.";
+        errorStr = "Not enough valid data.";
         return false;
     }
 
@@ -664,24 +679,23 @@ bool zonalStatisticsShapeMajorityCategories_proportional(Crit3DShapeHandler &sha
     while (nrOfSeatsAssigned < nrValidSeats)
     {
         double maxRemain = 0.0;
-        int index = NODATA;
+        int indexMax = NODATA;
+
         for (unsigned int col = 0; col < nrCategories; ++col)
         {
             if (remains[col] > maxRemain)
             {
                 maxRemain = remains[col];
-                index = col;
+                indexMax = col;
             }
         }
 
-        if (index != NODATA)
-        {
-            nrOfSeatsAssigned++;
-            nrOfSeats[index]++;
-            remains[index] = 0.0;
-        }
-        else
+        if (indexMax == NODATA)
             break;
+
+        nrOfSeatsAssigned++;
+        nrOfSeats[indexMax]++;
+        remains[indexMax] = 0.0;
     }
 
     // check nr of seats
@@ -698,9 +712,10 @@ bool zonalStatisticsShapeMajorityCategories_proportional(Crit3DShapeHandler &sha
         int votes;
     };
 
+    // collect votes
     std::vector<SeatVote> allVotes;
+    allVotes.reserve(nrRefShapes  * nrCategories);
 
-    // collect only valid shapes
     for (size_t row = 0; row < nrRefShapes; ++row)
     {
         if (! isShapeValid[row])
@@ -708,61 +723,113 @@ bool zonalStatisticsShapeMajorityCategories_proportional(Crit3DShapeHandler &sha
 
         for (size_t col = 0; col < nrCategories; ++col)
         {
-            allVotes.push_back({ static_cast<int>(row), static_cast<int>(col), matrix[row][col] });
+            allVotes.push_back({
+                static_cast<int>(row),
+                static_cast<int>(col),
+                matrix[row][col]
+            });
         }
     }
 
-    // sort descending by votes
+    // sort votes descending
     std::sort(allVotes.begin(), allVotes.end(),
-              [](const SeatVote& a, const SeatVote& b)
-              {
-                  return a.votes > b.votes;
-              });
+          [](const SeatVote& a, const SeatVote& b)
+          {
+              return a.votes > b.votes;
+          });
 
-    // assigned category for each shape
-    std::vector<int> assignedCategory(nrRefShapes, NODATA);
-
-    // assigned seats count
-    std::vector<int> assignedSeats(nrCategories, 0);
-
-    int totalAssignedSeats = 0;
-
-    // greedy assignment
-    for (const auto& item : allVotes)
+    struct CategoryPriority
     {
-        // already assigned shape
-        if (assignedCategory[item.row] != NODATA)
-            continue;
+        int col;
+        int seats;
+        long totalVotes;
+    };
 
-        // category already completed
-        if (assignedSeats[item.col] >= nrOfSeats[item.col])
-            continue;
-
-        // assign seat
-        assignedCategory[item.row] = categories[item.col];
-
-        assignedSeats[item.col]++;
-        totalAssignedSeats++;
-
-        // all seats assigned
-        if (totalAssignedSeats >= nrValidSeats)
-            break;
-    }
-
-    // check assigned
-    if (totalAssignedSeats != nrValidSeats)
-    {
-        errorStr = "Error assigning valid shapes.";
-        return false;
-    }
+    // collect priorities
+    std::vector<CategoryPriority> categoryPriority;
 
     for (size_t col = 0; col < nrCategories; ++col)
     {
-        if (assignedSeats[col] != nrOfSeats[col])
+        if (nrOfSeats[col] > 0)
         {
-            errorStr = "Error in category assignment.";
-            return false;
+            categoryPriority.push_back({
+                static_cast<int>(col),
+                nrOfSeats[col],
+                nrOfVotes[col]
+            });
         }
+    }
+
+    // sort priorities: weaker categories first
+    std::sort(categoryPriority.begin(), categoryPriority.end(),
+          [](const auto& a, const auto& b)
+          {
+              if (a.seats != b.seats)
+                  return a.seats < b.seats;
+              return a.totalVotes < b.totalVotes;
+          });
+
+    // split votes by category
+    std::vector<std::vector<SeatVote>> categoryVotes(nrCategories);
+    for (const auto& vote : allVotes)
+    {
+        categoryVotes[vote.col].push_back(vote);
+    }
+
+    // ----------------------------------------
+    // assignment (round robin)
+    // ----------------------------------------
+    std::vector<int> assignedCategory(nrRefShapes, NODATA);
+    std::vector<int> assignedSeats(nrCategories, 0);
+
+    // current scanning index for each category
+    std::vector<size_t> currentIndex(nrCategories, 0);
+
+    long totalAssignedSeats = 0;
+    bool assignedSomething = true;
+
+    while (assignedSomething && totalAssignedSeats < nrValidSeats)
+    {
+        assignedSomething = false;
+
+        for (const auto& cat : categoryPriority)
+        {
+            const int col = cat.col;
+
+            // category already full
+            if (assignedSeats[col] >= nrOfSeats[col])
+                continue;
+
+            auto& votes = categoryVotes[col];
+            size_t& index = currentIndex[col];
+
+            // search next valid shape
+            while (index < votes.size())
+            {
+                const SeatVote& vote = votes[index];
+                ++index;
+
+                // shape already assigned
+                if (assignedCategory[vote.row] != NODATA)
+                    continue;
+
+                // assign value
+                assignedCategory[vote.row] = categories[col];
+
+                assignedSeats[col]++;
+                totalAssignedSeats++;
+
+                assignedSomething = true;
+                break;
+            }
+        }
+    }
+
+    // check
+    if (totalAssignedSeats < nrValidSeats)
+    {
+        errorStr = "Error assigning some valid shapes.";
+        return false;
     }
 
     if (! shapeRef.existField(fieldName))
@@ -787,8 +854,8 @@ bool zonalStatisticsShapeMajorityCategories_proportional(Crit3DShapeHandler &sha
 
 
 // warning: categories must be integer values
-bool zonalStatisticsShapeMajorityCategories(Crit3DShapeHandler &shapeRef, const std::vector<int> &categories,
-                                  const std::vector <std::vector<int>> &matrix, std::vector<int> &vectorNull,
+bool zonalStatisticsShapeCategories_majority(Crit3DShapeHandler &shapeRef, const std::vector<int> &categories,
+                                  const std::vector <std::vector<int>> &matrix, double cellSize,
                                   const std::string &fieldName, double threshold, std::string &errorStr)
 {
     if (! shapeRef.existField(fieldName))
@@ -800,14 +867,16 @@ bool zonalStatisticsShapeMajorityCategories(Crit3DShapeHandler &shapeRef, const 
             return false;
         }
     }
+
     int fieldIndex = shapeRef.getDBFFieldIndex(fieldName.c_str());
 
     const unsigned int nrRefShapes = shapeRef.getShapeCount();
     const size_t nrCategories = categories.size();
+    double pixelArea = cellSize * cellSize;
 
     for (unsigned int row = 0; row < nrRefShapes; row++)
     {
-        long totalValid = 0;
+        long nrCurrentValues = 0;
         int maxCount = 0;
         int majorityValue = NODATA;
         const auto& rowMatrix = matrix[row];
@@ -818,7 +887,7 @@ bool zonalStatisticsShapeMajorityCategories(Crit3DShapeHandler &shapeRef, const 
 
             if (count > 0)
             {
-                totalValid += count;
+                nrCurrentValues += count;
 
                 if (count > maxCount)
                 {
@@ -830,10 +899,24 @@ bool zonalStatisticsShapeMajorityCategories(Crit3DShapeHandler &shapeRef, const 
 
         // check validity
         bool isValid = false;
-        if ((totalValid + vectorNull[row]) > 0)
+
+        if (nrCurrentValues > 0)
         {
-            double percentage = double(totalValid) / double(totalValid + vectorNull[row]);
-            isValid = (percentage >= threshold);
+            ShapeObject currentShape;
+
+            if (! shapeRef.getShape(row, currentShape))
+            {
+                errorStr = "Wrong shape.";
+                return false;
+            }
+
+            double totalArea = currentShape.getTotalArea();
+            if (isEqual(totalArea, 0.0))
+                continue;
+
+            double validAreaPercentage = (nrCurrentValues * pixelArea) / totalArea;
+
+            isValid = (validAreaPercentage >= threshold);
         }
 
         if (isValid)
@@ -842,7 +925,6 @@ bool zonalStatisticsShapeMajorityCategories(Crit3DShapeHandler &shapeRef, const 
         }
         else
         {
-            // write NODATA
             shapeRef.writeIntAttribute(row, fieldIndex, NODATA);
         }
     }
