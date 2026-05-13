@@ -123,7 +123,7 @@ bool prepareFieldsList(const QString &keyVariable, QMap<QString, QList<QString>>
  * \return true if all is correct
 */
 bool shapeFromCsv(const Crit3DShapeHandler &refShapeFile, const QString &csvFileName,
-                  const QString &fieldListFileName, QString &outputFileName, QString &errorStr)
+                  const QString &fieldListFileName, const QString &outputFileName, QString &errorStr)
 {
     int defaultStringLenght = 20;
     int defaultDoubleLenght = 10;
@@ -146,17 +146,17 @@ bool shapeFromCsv(const Crit3DShapeHandler &refShapeFile, const QString &csvFile
 
     // make a copy of shapefile and return cloned shapefile complete path
     QString refShapeFileName = QString::fromStdString(refShapeFile.getFilepath());
-    outputFileName = cloneShapeFile(refShapeFileName, outputFileName);
-    if (outputFileName == "")
+    QString newFileName = cloneShapeFile(refShapeFileName, outputFileName);
+    if (newFileName.isEmpty())
     {
-        errorStr = "Error in create/open shapefile: " + outputFileName;
+        errorStr = "Error in create shapefile: " + outputFileName;
         return false;
     }
 
     Crit3DShapeHandler outputShapeFile;
-    if (! outputShapeFile.open(outputFileName.toStdString()))
+    if (! outputShapeFile.open(newFileName.toStdString()))
     {
-        errorStr = "Load shapefile failed: " + outputFileName;
+        errorStr = "Load shapefile failed: " + newFileName;
         return false;
     }
 

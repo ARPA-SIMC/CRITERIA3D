@@ -24,6 +24,7 @@
 */
 
 #include <algorithm>
+#include <random>
 #include <math.h>
 
 #include "commonConstants.h"
@@ -141,6 +142,29 @@ unsigned int Crit3DColorScale::getColorIndex(float value)
     else if (_classification == classificationMethod::EqualInterval)
         return unsigned(float(_nrColors-1) * ((value - _minimum) / (_maximum - _minimum)));
     else return 0;
+}
+
+
+bool setRandomColors(Crit3DColorScale* myScale)
+{
+    if (! myScale)
+        return false;
+
+    myScale->initialize(64, 64);
+
+    std::random_device rd;
+    std::mt19937 gen(rd());
+    std::uniform_int_distribution<int> dist(0, 255);
+
+    for (size_t i = 0; i < myScale->keyColor.size(); ++i)
+    {
+        int r = dist(gen);
+        int g = dist(gen);
+        int b = dist(gen);
+        myScale->keyColor[i] = Crit3DColor(r, g, b);
+    }
+
+    return myScale->classify();
 }
 
 

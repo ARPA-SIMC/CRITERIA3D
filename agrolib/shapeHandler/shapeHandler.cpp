@@ -90,18 +90,17 @@ bool Crit3DShapeHandler::open(std::string filename)
     SHPGetInfo(m_handle, &m_count, &m_type, nullptr, nullptr);
     m_fields = m_dbf->nFields;
 
-    char *fieldNamePtr =  new char[XBASE_FLDNAME_LEN_READ];
+    std::vector<char> fieldName(XBASE_FLDNAME_LEN_READ + 1);
     DBFFieldType fieldType;
 
     m_fieldsList.clear();
     m_fieldsTypeList.clear();
     for (int i = 0; i < m_fields; i++)
     {
-        fieldType = DBFGetFieldInfo( m_dbf, i, fieldNamePtr, nullptr, nullptr);
-        m_fieldsList.push_back(std::string(fieldNamePtr));
+        fieldType = DBFGetFieldInfo( m_dbf, i, fieldName.data(), nullptr, nullptr);
+        m_fieldsList.push_back(std::string(fieldName.data()));
         m_fieldsTypeList.push_back(fieldType);
     }
-    delete[] fieldNamePtr;
 
     // check if WGS84 PROJ and set UTM
     std::string filePrj = filename;
@@ -274,7 +273,8 @@ bool Crit3DShapeHandler::setUTMzone(std::string prjFileName)
 
 bool Crit3DShapeHandler::getShape(int index, ShapeObject &shape) const
 {
-    if ((m_handle == nullptr) || (m_dbf == nullptr)) return false;
+    if ((m_handle == nullptr) || (m_dbf == nullptr))
+        return false;
 
     SHPObject *obj = SHPReadObject(m_handle, index);
     shape.assign(obj);

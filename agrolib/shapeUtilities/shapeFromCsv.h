@@ -12,6 +12,6 @@
     bool getShapeFieldList(const QString &fileName, QMap<QString, QList<QString>>& fieldList, QString &error);
 
     bool shapeFromCsv(const Crit3DShapeHandler &refShapeFile, const QString &csvFileName,
-                      const QString &fieldListFileName, QString &outputFileName, QString &errorStr);
+                      const QString &fieldListFileName, const QString &outputFileName, QString &errorStr);
 
 #endif // SHAPEFROMCSV_H

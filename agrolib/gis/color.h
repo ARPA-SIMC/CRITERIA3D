@@ -66,6 +66,7 @@
     };
 
     bool setDefaultScale(Crit3DColorScale* myScale);
+    bool setRandomColors(Crit3DColorScale* myScale);
     bool setDTMScale(Crit3DColorScale* myScale);
     bool setTemperatureScale(Crit3DColorScale* myScale);
     bool setSlopeStabilityScale(Crit3DColorScale* myScale);
