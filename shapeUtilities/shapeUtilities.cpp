@@ -9,7 +9,7 @@
  * \brief make a copy of shapefile (delete old version)
  * and return filename of the cloned shapefile
  */
-QString cloneShapeFile(QString refFileName, QString newFileName)
+QString cloneShapeFile(const QString &refFileName, const QString &newFileName)
 {
     QFileInfo refFileInfo(refFileName);
     QFileInfo newFileInfo(newFileName);
@@ -38,11 +38,12 @@ QString cloneShapeFile(QString refFileName, QString newFileName)
     return newFile + ".shp";
 }
 
+
 /*! copyShapeFile
  * \brief make a copy of shapefile (keep original version)
  * and return filename of the cloned shapefile
  */
-QString copyShapeFile(QString refFileName, QString newFileName)
+QString copyShapeFile(const QString &refFileName, const QString &newFileName)
 {
     QFileInfo refFileInfo(refFileName);
     QFileInfo newFileInfo(newFileName);
@@ -89,7 +90,7 @@ bool cleanShapeFile(Crit3DShapeHandler &shapeHandler)
 
 // shape1 and shape2 must have the same polygons and IDs
 bool computeAnomaly(Crit3DShapeHandler *shapeAnomaly, Crit3DShapeHandler *shape1, Crit3DShapeHandler *shape2,
-                    std::string id, std::string field1, std::string field2, QString fileName, QString &errorStr)
+                    const std::string &idStr, const std::string &field1, const std::string &field2, const QString &fileName, QString &errorStr)
 {
     QString newShapeFileName = cloneShapeFile(QString::fromStdString(shape1->getFilepath()), fileName);
     if (newShapeFileName == "")
@@ -109,7 +110,7 @@ bool computeAnomaly(Crit3DShapeHandler *shapeAnomaly, Crit3DShapeHandler *shape1
     for (int i = 0; i < nrFields; i++)
     {
         std::string fieldName = shape1->getFieldName(i);
-        if (fieldName != id)
+        if (fieldName != idStr)
         {
             int fieldPos = shapeAnomaly->getFieldPos(fieldName);
             if (fieldPos != -1)

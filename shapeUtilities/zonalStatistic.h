@@ -24,8 +24,12 @@
                                       const std::string &valField, const std::string &fieldOutput,
                                       double threshold, std::string &errorStr);
 
-    bool zonalStatisticsShapeMajorityCategories(Crit3DShapeHandler &shapeRef, const std::vector<int> &categories,
-                                                const std::vector <std::vector<int>> &matrix, std::vector<int> &vectorNull,
+    bool zonalStatisticsShapeCategories_majority(Crit3DShapeHandler &shapeRef, const std::vector<int> &categories,
+                                                const std::vector <std::vector<int>> &matrix, double cellSize,
                                                 const std::string &fieldName, double threshold, std::string &errorStr);
+
+    bool zonalStatisticsShapeCategories_proportional(Crit3DShapeHandler &shapeRef, const std::vector<int> &categories,
+                                                    const std::vector <std::vector<int>> &matrix, double cellSize,
+                                                    const std::string &fieldName, double threshold, std::string &errorStr);
 
 #endif // ZONALSTATISTIC_H

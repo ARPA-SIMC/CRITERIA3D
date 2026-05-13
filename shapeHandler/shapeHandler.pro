@@ -27,6 +27,7 @@ win32:{
 
 TEMPLATE = lib
 CONFIG += staticlib
+CONFIG += c++11 c++14 c++17
 
 DEFINES += _CRT_SECURE_NO_WARNINGS
 

@@ -5,48 +5,58 @@
 #include <QtSql>
 
 
-bool getCropIdList(const QSqlDatabase &dbCrop, QList<QString>& cropIdList, QString& errorStr)
+bool getCropIdList(const QSqlDatabase &dbCrop, QList<QString> &cropIdList, QString &errorStr)
 {
-    QSqlQuery query(dbCrop);
-    query.prepare( "SELECT id_crop FROM crop");
+    errorStr.clear();
+    cropIdList.clear();
 
-    if(! query.exec())
+    QSqlQuery query(dbCrop);
+
+    if (! query.exec("SELECT id_crop FROM crop"))
     {
         errorStr = query.lastError().text();
         return false;
     }
 
-    query.first();
-    do
+    while (query.next())
     {
-        QString cropId;
-        getValue(query.value("id_crop"), &cropId);
-        if (cropId != "")
+        QString cropId = query.value(0).toString();
+
+        if (! cropId.isEmpty())
         {
             cropIdList.append(cropId);
         }
     }
-    while( query.next() );
 
     return true;
 }
 
 
-QString getIdCropFromName(const QSqlDatabase &dbCrop, QString cropName, QString &errorStr)
+QString getIdCropFromName(const QSqlDatabase &dbCrop, const QString &cropName, QString& errorStr)
 {
-    errorStr = "";
-    QString queryString = "SELECT * FROM crop WHERE crop_name='" + cropName +"' COLLATE NOCASE";
-
+    errorStr.clear();
     QSqlQuery query(dbCrop);
-    query.prepare(queryString);
 
-    if(! query.exec())
+    QString queryString = QString("SELECT id_crop FROM crop WHERE crop_name COLLATE NOCASE = :cropName ");
+    if (! query.prepare(queryString))
     {
         errorStr = query.lastError().text();
-        return "";
+        return {};
     }
 
-    query.last();
+    query.bindValue(":cropName", cropName);
+
+    if (! query.exec())
+    {
+        errorStr = query.lastError().text();
+        return {};
+    }
+
+    if (! query.next())
+    {
+        errorStr = "Missing id_crop for crop name: " + cropName;
+        return {};
+    }
 
     QString idCropStr;
     getValue(query.value("id_crop"), &idCropStr);
@@ -55,128 +65,197 @@ QString getIdCropFromName(const QSqlDatabase &dbCrop, QString cropName, QString 
 }
 
 
-QString getIdCropFromClass(const QSqlDatabase &dbCrop, QString cropClassTable, QString cropClassField, QString idCropClass, QString &errorStr)
+QString getIdCropFromClass(const QSqlDatabase &dbCrop, const QString &cropClassTable,
+                           const QString &cropClassField, const QString &idCropClass, QString &errorStr)
 {
-    errorStr = "";
-    QString queryString = "SELECT * FROM " + cropClassTable
-                          + " WHERE " + cropClassField + " = '" + idCropClass + "'"
-                          + " COLLATE NOCASE";
+    errorStr.clear();
 
     QSqlQuery query(dbCrop);
-    query.prepare(queryString);
 
-    if(! query.exec())
+    QString queryString = QString("SELECT id_crop FROM %1 WHERE %2 = :idCropClass COLLATE NOCASE")
+                                .arg(cropClassTable, cropClassField);
+
+    if (! query.prepare(queryString))
     {
-        if (query.lastError().isValid())
-        {
-            errorStr = query.lastError().text();
-        }
-        return idCropClass;
+        errorStr = query.lastError().text();
+        return {};
     }
 
-    query.last();
+    query.bindValue(":idCropClass", idCropClass);
 
-    QString idCropStr;
-    getValue(query.value("id_crop"), &idCropStr);
+    if (! query.exec())
+    {
+        errorStr = query.lastError().text();
+        return {};
+    }
 
-    return idCropStr;
+    if (! query.next())
+    {
+        errorStr = "Missing id_crop for crop class: " + idCropClass;
+        return {};
+    }
+
+    return query.value("id_crop").toString();
 }
 
 
-QString getIdCropFromField(const QSqlDatabase &dbCrop, QString cropClassTable, QString cropIdField, int cropId, QString &errorStr)
+QString getIdCropFromField(const QSqlDatabase &dbCrop, const QString &cropClassTable,
+                           const QString &cropIdField, int cropIdNumber, QString &errorStr)
 {
-    errorStr = "";
-    QString queryString = "SELECT * FROM " + cropClassTable + " WHERE " + cropIdField + " = " + QString::number(cropId);
+    errorStr.clear();
 
-    QSqlQuery query = dbCrop.exec(queryString);
-    query.last();
+    QSqlQuery query(dbCrop);
 
-    if (! query.isValid())
+    QString queryString = QString("SELECT id_crop FROM %1 WHERE %2 = :cropId")
+                                    .arg(cropClassTable, cropIdField);
+
+    if (! query.prepare(queryString))
     {
-        if (query.lastError().isValid())
-            errorStr = query.lastError().text();
-        return "";
+        errorStr = query.lastError().text();
+        return {};
     }
 
-    QString idCrop;
-    getValue(query.value("id_crop"), &idCrop);
+    query.bindValue(":cropId", cropIdNumber);
 
-    return idCrop;
+    if (! query.exec())
+    {
+        errorStr = query.lastError().text();
+        return {};
+    }
+
+    if (! query.next())
+    {
+        errorStr = "Missing id crop for crop nr: " + QString::number(cropIdNumber);
+        return {};
+    }
+
+    return query.value("id_crop").toString();
 }
 
 
-float getIrriRatioFromCropClass(const QSqlDatabase &dbCrop, QString cropClassTable, QString cropClassField, QString idCropClass, QString &errorStr)
+float getIrriRatioFromCropClass(const QSqlDatabase &dbCrop, const QString &cropClassTable,
+                                const QString &cropClassField, const QString &idCropClass, QString &errorStr)
 {
-    errorStr = "";
+    errorStr.clear();
 
-    QString queryString = "SELECT irri_ratio FROM " + cropClassTable + " WHERE " + cropClassField + " = '" + idCropClass + "'";
+    QSqlQuery query(dbCrop);
 
-    QSqlQuery query = dbCrop.exec(queryString);
-    query.last();
+    QString queryString = QString("SELECT irri_ratio FROM %1 WHERE %2 = :idCropClass")
+                                    .arg(cropClassTable, cropClassField);
 
-    if (! query.isValid())
+    if (! query.prepare(queryString))
     {
-        if (query.lastError().isValid())
-            errorStr = query.lastError().text();
-        return(NODATA);
+        errorStr = query.lastError().text();
+        return NODATA;
+    }
+
+    query.bindValue(":idCropClass", idCropClass);
+
+    if (! query.exec())
+    {
+        errorStr = query.lastError().text();
+        return NODATA;
+    }
+
+    if (! query.next())
+    {
+        errorStr = "Missing irri_ratio for crop class: " + idCropClass;
+        return NODATA;
+    }
+
+    bool isNumber = false;
+    float irriRatio = query.value("irri_ratio").toFloat(&isNumber);
+
+    if (! isNumber)
+    {
+        errorStr = "Wrong irri_ratio value for crop class: " + idCropClass;
+        return NODATA;
+    }
+
+    return irriRatio;
+}
+
+
+float getIrriRatioFromCropId(const QSqlDatabase &dbCrop, const QString &cropClassTable,
+                             const QString &cropIdField, int cropIdNumber, QString &errorStr)
+{
+    errorStr.clear();
+
+    QSqlQuery query(dbCrop);
+
+    QString queryString = QString("SELECT irri_ratio FROM %1 WHERE %2 = :cropId")
+                              .arg(cropClassTable, cropIdField);
+
+    if (! query.prepare(queryString))
+    {
+        errorStr = query.lastError().text();
+        return NODATA;
+    }
+
+    query.bindValue(":cropId", cropIdNumber);
+
+    if (! query.exec())
+    {
+        errorStr = query.lastError().text();
+        return NODATA;
+    }
+
+    if (! query.next())
+    {
+        errorStr = "Missing irri_ratio for crop nr. " + QString::number(cropIdNumber);
+        return NODATA;
     }
 
     float irriRatio = 0;
-
-    if (getValue(query.value("irri_ratio"), &irriRatio))
-        return irriRatio;
-    else
-        return NODATA;
-}
-
-
-float getIrriRatioFromCropId(const QSqlDatabase &dbCrop, QString cropClassTable, QString cropIdField, int cropId, QString &errorStr)
-{
-    errorStr = "";
-
-    QString queryString = "SELECT irri_ratio FROM " + cropClassTable + " WHERE " + cropIdField + " = " + QString::number(cropId);
-
-    QSqlQuery query = dbCrop.exec(queryString);
-    query.last();
-
-    if (! query.isValid())
+    if (! getValue(query.value("irri_ratio"), &irriRatio))
     {
-        if (query.lastError().isValid())
-            errorStr = query.lastError().text();
-        return(NODATA);
+        errorStr = "Invalid irri_ratio value";
+        return NODATA;
     }
 
-    float irriRatio = 0;
-
-    if (getValue(query.value("irri_ratio"), &irriRatio))
-        return irriRatio;
-    else
-        return NODATA;
+    return irriRatio;
 }
 
 
-bool getCropListFromType(const QSqlDatabase &dbCrop, QString cropType, QList<QString>& cropList, QString& errorStr)
+bool getCropListFromType(const QSqlDatabase &dbCrop, const QString &cropType,
+                         QList<QString> &cropList, QString &errorStr)
 {
-    QString queryString = "SELECT id_crop FROM crop WHERE type = '" + cropType + "'";
+    errorStr.clear();
+    cropList.clear();
 
-    QSqlQuery query = dbCrop.exec(queryString);
-    query.last();
-    if (! query.isValid())
+    QSqlQuery query(dbCrop);
+    query.setForwardOnly(true);
+
+    const QString queryString = "SELECT id_crop FROM crop WHERE type = :cropType";
+
+    if (! query.prepare(queryString))
     {
-        if (query.lastError().isValid())
-            errorStr = "Error in reading crop list from type: " + cropType + "\n" + query.lastError().text();
-        else
-            errorStr = "Missing crop type: " + cropType;
-
+        errorStr = query.lastError().text();
         return false;
     }
 
-    query.first();
-    do
+    query.bindValue(":cropType", cropType);
+
+    if (! query.exec())
     {
-        cropList.append(query.value("id_crop").toString());
+        errorStr = "Error reading crop list from crop type: " + cropType + "\n"
+                   + query.lastError().text();
+        return false;
     }
-    while (query.next());
+
+    while (query.next())
+    {
+        const QString cropId = query.value(0).toString();
+
+        if (! cropId.isEmpty())
+            cropList.append(cropId);
+    }
+
+    if (cropList.isEmpty())
+    {
+        errorStr = "Missing crop type: " + cropType;
+        return false;
+    }
 
     return true;
 }

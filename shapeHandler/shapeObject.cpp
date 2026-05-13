@@ -21,6 +21,7 @@
 #include <string.h>
 #include "shapeObject.h"
 #include "commonConstants.h"
+#include "basicMath.h"
 
 
 unsigned int ShapeObject::getPartCount() const
@@ -119,7 +120,7 @@ void ShapeObject::assign(const SHPObject* obj)
             }
 
             // assign if the part is an hole
-            if (!isClockWise(part))
+            if (! isClockWise(*part))
             {
                 part->hole = true;
             }
@@ -220,16 +221,27 @@ ShapeObject::Part ShapeObject::getPart(unsigned int indexPart) const
 }
 
 
-double ShapeObject::polygonArea(Part* part) const
+double ShapeObject::getTotalArea() const
+{
+    double sumArea = 0.0;
+
+    for (unsigned int i = 0; i < parts.size(); ++i)
+    {
+        auto currentPart = getPart(i);
+        sumArea += std::abs(polygonArea(currentPart));
+    }
+
+    return sumArea;
+}
+
+
+double ShapeObject::polygonArea(Part& part) const
 {
     double area = 0.0;
     unsigned long i, j;
 
-    if (part == nullptr)
-        return NODATA;
-
-    unsigned long offSet = part->offset;
-    unsigned long length = part->length;
+    unsigned long offSet = part.offset;
+    unsigned long length = part.length;
 
     for (i = 0; i < length; i++)
     {
@@ -241,7 +253,7 @@ double ShapeObject::polygonArea(Part* part) const
 }
 
 
-bool ShapeObject::isClockWise(Part* part) const
+bool ShapeObject::isClockWise(Part &part) const
 {
     return polygonArea(part) < 0;
 }

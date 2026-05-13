@@ -226,41 +226,49 @@ double Crit3DCrop::computeSimpleLAI(double myDegreeDays, double latitude, int cu
 
 bool Crit3DCrop::updateLAI(double latitude, unsigned int nrLayers, int currentDoy)
 {
-    double degreeDaysLai = 0;
-    double myLai = 0;
+    double myLai = 0.0;
+    double degreeDaysLai = 0.0;
 
     if (isSowingCrop())
     {
-        if (! isEmerged)
+        // =========================
+        // SOWN CROPS
+        // =========================
+        if (!isEmerged)
         {
             if (degreeDays < degreeDaysEmergence)
-                return true;
-            else if (currentDoy - sowingDoy >= MIN_EMERGENCE_DAYS)
             {
-                isEmerged = true;
-                degreeDaysLai = degreeDays - degreeDaysEmergence;
-            }
-            else
+                LAIpreviousDay = LAI;
+                LAI = 0.0;
                 return true;
+            }
+
+            if (currentDoy - sowingDoy < MIN_EMERGENCE_DAYS)
+            {
+                LAIpreviousDay = LAI;
+                LAI = 0.0;
+                return true;
+            }
+
+            isEmerged = true;
         }
-        else
-        {
-            degreeDaysLai = degreeDays - degreeDaysEmergence;
-        }
+
+        degreeDaysLai = degreeDays - degreeDaysEmergence;
 
         if (degreeDaysLai > 0)
             myLai = leafDevelopment::getLAICriteria(this, degreeDaysLai);
     }
     else
     {
+        // =========================
+        // NON SOWN CROPS (grass, trees, etc.)
+        // =========================
         if (type == GRASS)
         {
-            // grass cut
             if (degreeDays >= degreeDaysIncrease)
             {
                 int oldDaysSinceIrr = daysSinceIrrigation;
                 resetCrop(nrLayers);
-                // grass cut does not reset the irrigation
                 daysSinceIrrigation = oldDaysSinceIrr;
             }
         }
@@ -272,29 +280,33 @@ bool Crit3DCrop::updateLAI(double latitude, unsigned int nrLayers, int currentDo
 
         if (type == TREE)
         {
-            bool isLeafFall;
-            if (latitude > 0)   // north
-            {
-                isLeafFall = (currentDoy >= doyStartSenescence);
-            }
-            else                // south
-            {
-                isLeafFall = ((currentDoy >= doyStartSenescence) && (currentDoy < 182));
-            }
+            bool isLeafFall = false;
+
+            if (latitude > 0)
+                isLeafFall = (currentDoy >= doyStartSenescence);                        // north
+            else
+                isLeafFall = (currentDoy >= doyStartSenescence && currentDoy < 182);    // south
 
             if (isLeafFall)
             {
                 if (currentDoy == doyStartSenescence || int(LAIstartSenescence) == int(NODATA))
+                {
                     LAIstartSenescence = myLai;
+                }
                 else
-                    myLai = leafDevelopment::getLAISenescence(LAImin, LAIstartSenescence, currentDoy - doyStartSenescence);
+                {
+                    myLai = leafDevelopment::getLAISenescence(LAImin, LAIstartSenescence,
+                                                            currentDoy - doyStartSenescence);
+                }
             }
 
             myLai += LAIgrass;
         }
     }
+
     LAIpreviousDay = LAI;
     LAI = myLai;
+
     return true;
 }
 
@@ -686,31 +698,38 @@ void Crit3DCrop::computeRootLength3D(double currentDegreeDays, double totalSoilD
  *  shrubland (0.56), grassland (0.50), and needleleaf forest (0.45)"
  *  \return covered surface fraction [-]
  */
-double Crit3DCrop::getCoveredSurfaceFraction()
+double Crit3DCrop::getCoveredSurfaceFraction() const
 {
-    if (idCrop == "" || ! isLiving || LAI < EPSILON) return 0;
+    if (idCrop.empty() || !isLiving || LAI < EPSILON)
+        return 0;
 
-    double k = 0.6;      // [-] light extinction coefficient
+    // [-] light extinction coefficient
+    const double k = 0.6;
+
     return 1 - exp(-k * LAI);
 }
 
 
-double Crit3DCrop::getMaxEvaporation(double ET0)
+double Crit3DCrop::getMaxEvaporation(double ET0) const
 {
-    double evapMax = ET0 * (1.0 - getCoveredSurfaceFraction());
+    const double bareFraction = 1.0 - getCoveredSurfaceFraction();
+
+    const double evapMax = ET0 * bareFraction;
+
     // TODO check evaporation on wet bare soil
     return evapMax * 0.67;
 }
 
 
-double Crit3DCrop::getMaxTranspiration(double ET0)
+double Crit3DCrop::getMaxTranspiration(double ET0) const
 {
-    if (idCrop == "" || ! isLiving || LAI < EPSILON)
+    if (idCrop.empty() || !isLiving || LAI < EPSILON)
         return 0;
 
-    double coverSurfFraction = getCoveredSurfaceFraction();
-    double kcFactor = 1 + (kcMax - 1) * coverSurfFraction;
-    return ET0 * coverSurfFraction * kcFactor;
+    const double coverFraction = getCoveredSurfaceFraction();
+    const double kcFactor = 1.0 + (kcMax - 1.0) * coverFraction;
+
+    return ET0 * coverFraction * kcFactor;
 }
 
 
@@ -744,41 +763,38 @@ double Crit3DCrop::computeTranspiration(double maxTranspiration, const std::vect
                                         double& waterStress, double& waterExcessStress)
 {
     // check
-    if (idCrop == "" || ! isLiving) return 0;
-    if (roots.rootDepth <= roots.rootDepthMin) return 0;
-    if (roots.firstRootLayer == NODATA) return 0;
-    if (maxTranspiration < EPSILON) return 0;
+    if (idCrop.empty() || ! isLiving)
+        return 0.0;
+    if (roots.rootDepth <= roots.rootDepthMin)
+        return 0.0;
+    if (roots.firstRootLayer == NODATA)
+        return 0.0;
+    if (maxTranspiration < EPSILON)
+        return 0.0;
 
     double thetaWP;                                 // [m3 m-3] volumetric water content at Wilting Point
     double cropWP;                                  // [mm] wilting point specific for crop
     double waterSurplusThreshold;                   // [mm] water surplus stress threshold
     double waterScarcityThreshold;                  // [mm] water scarcity stress threshold
-    double WSS;                                     // [] water surplus stress
 
-    double TRs=0.0;                                 // [mm] actual transpiration with only water scarsity stress
-    double TRe=0.0;                                 // [mm] actual transpiration with only water surplus stress
+    double transpStressOnly = 0.0;                  // [mm] actual transpiration with only water scarsity stress
+    double transpExcessOnly = 0.0;                  // [mm] actual transpiration with only water surplus stress
     double totRootDensityWithoutStress = 0.0;       // [-]
     double redistribution = 0.0;                    // [mm]
 
-    // initialize
-    unsigned int nrLayers = unsigned(soilLayers.size());
+    // water surplus stress [-]
+    const double WSS = isWaterSurplusResistant() ? 0.0 : 0.5;
+
+    const unsigned nrLayers = static_cast<unsigned>(soilLayers.size());
 
     // initialize vectors
-    std::vector<bool> isLayerStressed;
-    isLayerStressed.resize(nrLayers);
-    for (unsigned int i = 0; i < nrLayers; i++)
-    {
-        isLayerStressed[i] = false;
-        layerTranspiration[i] = 0;
-    }
+    std::vector<bool> isLayerStressed(nrLayers, false);
 
-    // water surplus
-    if (isWaterSurplusResistant())
-        WSS = 0.0;
-    else
-        WSS = 0.5;
+    std::fill(layerTranspiration.begin(),
+              layerTranspiration.end(),
+              0.0);
 
-    for (unsigned int i = unsigned(roots.firstRootLayer); i <= unsigned(roots.lastRootLayer); i++)
+    for (int i = roots.firstRootLayer; i <= roots.lastRootLayer; ++i)
     {
         // [mm]
         waterSurplusThreshold = soilLayers[i].SAT - (WSS * (soilLayers[i].SAT - soilLayers[i].FC));
@@ -790,20 +806,25 @@ double Crit3DCrop::computeTranspiration(double maxTranspiration, const std::vect
         // [mm]
         waterScarcityThreshold = soilLayers[i].FC - fRAW * (soilLayers[i].FC - cropWP);
 
+        // =====================
+        // WATER SURPLUS
+        // =====================
         if ((soilLayers[i].waterContent - waterSurplusThreshold) > EPSILON)
         {
-            // WATER SURPLUS
             layerTranspiration[i] = maxTranspiration * roots.rootDensity[i] *
                                     ((soilLayers[i].SAT - soilLayers[i].waterContent)
                                      / (soilLayers[i].SAT - waterSurplusThreshold));
 
-            TRe += layerTranspiration[i];
-            TRs += maxTranspiration * roots.rootDensity[i];
+            transpExcessOnly += layerTranspiration[i];
+            transpStressOnly += maxTranspiration * roots.rootDensity[i];
             isLayerStressed[i] = true;
         }
+
+        // =====================
+        // WATER SCARCITY
+        // =====================
         else if (soilLayers[i].waterContent < waterScarcityThreshold)
         {
-            // WATER SCARSITY
             if (soilLayers[i].waterContent <= cropWP)
             {
                 layerTranspiration[i] = 0;
@@ -814,17 +835,20 @@ double Crit3DCrop::computeTranspiration(double maxTranspiration, const std::vect
                                         ((soilLayers[i].waterContent - cropWP) / (waterScarcityThreshold - cropWP));
             }
 
-            TRs += layerTranspiration[i];
-            TRe += maxTranspiration * roots.rootDensity[i];
+            transpStressOnly += layerTranspiration[i];
+            transpExcessOnly += maxTranspiration * roots.rootDensity[i];
             isLayerStressed[i] = true;
         }
+
+        // =====================
+        // NORMAL CONDITIONS
+        // =====================
         else
         {
-            // normal conditions
             layerTranspiration[i] = maxTranspiration * roots.rootDensity[i];
 
-            TRs += layerTranspiration[i];
-            TRe += layerTranspiration[i];
+            transpStressOnly += layerTranspiration[i];
+            transpExcessOnly += layerTranspiration[i];
 
             if ((soilLayers[i].waterContent - layerTranspiration[i]) > waterScarcityThreshold)
             {
@@ -839,7 +863,7 @@ double Crit3DCrop::computeTranspiration(double maxTranspiration, const std::vect
     }
 
     // WATER STRESS [-]
-    double firstWaterStress = 1 - (TRs / maxTranspiration);
+    double firstWaterStress = 1 - (transpStressOnly / maxTranspiration);
 
     // Hydraulic redistribution
     // the movement of water from moist to dry soil through plant roots
@@ -849,24 +873,24 @@ double Crit3DCrop::computeTranspiration(double maxTranspiration, const std::vect
         // redistribution acts on not stressed roots
         redistribution = std::min(firstWaterStress, totRootDensityWithoutStress) * maxTranspiration;
 
-        for (int i = roots.firstRootLayer; i <= roots.lastRootLayer; i++)
+        for (int i = roots.firstRootLayer; i <= roots.lastRootLayer; ++i)
         {
             if (! isLayerStressed[i])
             {
-                double addLayerTransp = redistribution * (roots.rootDensity[unsigned(i)] / totRootDensityWithoutStress);
-                layerTranspiration[unsigned(i)] += addLayerTransp;
-                TRs += addLayerTransp;
+                double addLayerTransp = redistribution * (roots.rootDensity[i] / totRootDensityWithoutStress);
+                layerTranspiration[i] += addLayerTransp;
+                transpStressOnly += addLayerTransp;
             }
         }
     }
 
-    waterStress = 1 - (TRs / maxTranspiration);
-    waterExcessStress = 1 - (TRe / maxTranspiration);
+    waterStress = 1 - (transpStressOnly  / maxTranspiration);
+    waterExcessStress = 1 - (transpExcessOnly / maxTranspiration);
 
     double actualTranspiration = 0;
-    for (int i = roots.firstRootLayer; i <= roots.lastRootLayer; i++)
+    for (int i = roots.firstRootLayer; i <= roots.lastRootLayer; ++i)
     {
-        actualTranspiration += layerTranspiration[unsigned(i)];
+        actualTranspiration += layerTranspiration[static_cast<unsigned>(i)];
     }
 
     return actualTranspiration;

@@ -154,13 +154,14 @@
         const Point<double>*	getVertices() const;
         Point<double>           getVertex(unsigned int index) const;
         Box<double>             getBounds() const;
+        double                  getTotalArea() const;
 
         std::vector<Part>		getParts() const;
-        ShapeObject::Part       getPart(unsigned int indexPart) const;
+        Part                    getPart(unsigned int indexPart) const;
         unsigned int            getPartCount() const;
         bool                    isHole(unsigned int n) const;
-        double                  polygonArea(Part* part) const;
-        bool                    isClockWise(Part *part) const;
+        double                  polygonArea(Part& part) const;
+        bool                    isClockWise(Part& part) const;
         bool                    pointInPart(double x, double y, unsigned int indexPart) const;
         bool                    pointInPolygon(double x, double y) const;
         int                     getIndexPart(double x, double y) const;
