@@ -102,9 +102,9 @@
         bool restore(const Crit3DDate &myDate, double latitude, const std::vector<soil::Crit1DLayer> &soilLayers,
                      double currentWaterTable, std::string &myError);
 
-        double getCoveredSurfaceFraction();
-        double getMaxEvaporation(double ET0);
-        double getMaxTranspiration(double ET0);
+        double getCoveredSurfaceFraction() const;
+        double getMaxEvaporation(double ET0) const;
+        double getMaxTranspiration(double ET0) const;
         double getSurfaceWaterPonding() const;
 
         double getCropWaterDeficit(const std::vector<soil::Crit1DLayer> & soilLayers);
