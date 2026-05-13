@@ -1191,7 +1191,7 @@ namespace gis
         double aspect = atan2(dz_dy, dz_dx);
 
         /*! 0° = north, clockwise */
-        aspect = 90.0 - aspect * RAD_TO_DEG;
+        aspect = aspect * RAD_TO_DEG;
         if (aspect < 0)
             aspect += 360;
 
@@ -1202,7 +1202,6 @@ namespace gis
 
 
     // Horn (3x3 standard)
-    // TODO controllare
     bool computeSlopeAspectMaps(const gis::Crit3DRasterGrid& dem,
                                 gis::Crit3DRasterGrid* slopeMap,
                                 gis::Crit3DRasterGrid* aspectMap)
@@ -1265,7 +1264,7 @@ namespace gis
                 double aspect = std::atan2(dzdy, -dzdx);
 
                 // convert to GIS compass (0 = North, clockwise)
-                aspect = aspect * RAD_TO_DEG;
+                aspect = 90.0 - aspect * RAD_TO_DEG;
                 if (aspect < 0)
                     aspect += 360.0;
 
