@@ -1110,7 +1110,7 @@ namespace gis
     }
 
 
-    bool computeSlopeAspectMaps(const gis::Crit3DRasterGrid& dem,
+    bool computeSlopeAspectMaps_OLD(const gis::Crit3DRasterGrid& dem,
                                 gis::Crit3DRasterGrid* slopeMap, gis::Crit3DRasterGrid* aspectMap)
     {
         if (!dem.isLoaded || !slopeMap || !aspectMap)
@@ -1220,7 +1220,7 @@ namespace gis
 
     // Horn (3x3 standard)
     // TODO controllare
-    bool computeSlopeAspectMaps_NEW(const gis::Crit3DRasterGrid& dem,
+    bool computeSlopeAspectMaps(const gis::Crit3DRasterGrid& dem,
                                 gis::Crit3DRasterGrid* slopeMap,
                                 gis::Crit3DRasterGrid* aspectMap)
     {
