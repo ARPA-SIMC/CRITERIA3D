@@ -1191,7 +1191,7 @@ namespace gis
         double aspect = atan2(dz_dy, dz_dx);
 
         /*! 0° = north, clockwise */
-        aspect = aspect * RAD_TO_DEG;
+        aspect = 90.0 + aspect * RAD_TO_DEG;
         if (aspect < 0)
             aspect += 360;
 
