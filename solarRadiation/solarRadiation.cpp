@@ -944,7 +944,8 @@ namespace radiation
 
 
     bool computeRadiationDemPoint(Crit3DRadiationSettings* radSettings, Crit3DRadiationMaps* radiationMaps,
-                                  const gis::Crit3DRasterGrid& dem, const Crit3DTime& myTime, int row, int col, double height)
+                                  const gis::Crit3DRasterGrid& dem, const Crit3DTime& myTime,
+                                  int row, int col, double height)
     {
         TradPoint radPoint;
         radPoint.height = height;
@@ -960,13 +961,14 @@ namespace radiation
         else
             linke = readLinke(radSettings, row, col);
 
-        float albedo = readAlbedo(radSettings, row, col);
+        const float albedo = readAlbedo(radSettings, row, col);
 
-        float transmissivity = radiationMaps->transmissivityMap->value[row][col];
+        const float transmissivity = radiationMaps->transmissivityMap->value[row][col];
 
         TsunPosition sunPosition;
         if (! computeRadiationRsun(radSettings, TEMPERATURE_DEFAULT, myTime,
-                                  linke, albedo, radSettings->getClearSky(), transmissivity, sunPosition, radPoint, dem))
+                                  linke, albedo, radSettings->getClearSky(), transmissivity,
+                                  sunPosition, radPoint, dem))
             return false;
 
         radiationMaps->sunElevationMap->value[row][col] = sunPosition.elevationRefr;
@@ -1046,22 +1048,17 @@ namespace radiation
         if (radSettings->getAlgorithm() != RADIATION_ALGORITHM_RSUN)
             return false;
 
-        bool isOk = true;
+        const float flag = dem.header->flag;
 
-        #pragma omp parallel for if (isParallelComputing) shared(isOk)
-        for (int row = 0; row < dem.header->nrRows; row++ )
+        #pragma omp parallel for if (isParallelComputing)
+        for (int row = 0; row < dem.header->nrRows; ++row)
         {
-            if (! isOk) continue;
-
-            for (int col = 0; col < dem.header->nrCols; col++)
+            for (int col = 0; col < dem.header->nrCols; ++col)
             {
-                if (! isOk) continue;
-
-                float height = dem.value[row][col];
-                if (! isEqual(height, dem.header->flag))
+                const float height = dem.value[row][col];
+                if (! isEqual(height, flag))
                 {
-                    if (! computeRadiationDemPoint(radSettings, radiationMaps, dem, myTime, row, col, height))
-                        isOk = false;
+                    computeRadiationDemPoint(radSettings, radiationMaps, dem, myTime, row, col, height);
                 }
             }
         }
