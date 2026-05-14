@@ -1120,9 +1120,9 @@ namespace gis
 
         const float z = dem.getValueFromRowCol(row, col);
         if (isEqual(z, flag))
-            return false;;
+            return false;
 
-        double lateral_distance = dem.header->cellSize * sqrt(2);
+        const double cellSize = dem.header->cellSize;
 
         /*! compute dz/dy */
         double dz = 0;
@@ -1137,20 +1137,14 @@ namespace gis
                     if (! isEqual(z1, flag))
                     {
                         dz += i * (z - z1);
-                        if (j == 0)
-                            dy += dem.header->cellSize;
-                        else
-                            dy += lateral_distance;
+                        dy += cellSize;
                     }
                 }
             }
         }
 
-        double dz_dy;
-        if (dy > 0)
-            dz_dy = dz / dy;
-        else
-            dz_dy = EPSILON;
+        dy = std::max(dy, EPSILON);
+        const double dz_dy = dz / dy;
 
         /*! compute dz/dx */
         dz = 0;
@@ -1164,34 +1158,25 @@ namespace gis
                     float z1 = dem.getValueFromRowCol(row+i, col+j);
                     if (! isEqual(z1, flag))
                     {
-                        dz = dz + j * (z - z1);
-                        if (i == 0)
-                            dx += dem.header->cellSize;
-                        else
-                            dx += lateral_distance;
+                        dz += j * (z - z1);
+                        dx += cellSize;
                     }
                 }
             }
         }
 
-        double dz_dx;
-        if (dx > 0)
-            dz_dx = dz / dx;
-        else
-            dz_dx = EPSILON;
+        dx = std::max(dx, EPSILON);
+        double dz_dx = dz / dx;
 
         /*! slope in degrees */
         double slope = atan(sqrt(dz_dx * dz_dx + dz_dy * dz_dy)) * RAD_TO_DEG;
         slopeMap->value[row][col] = float(slope);
 
-        /*! avoid arctan to infinite */
-        if (dz_dx == 0.) dz_dx = EPSILON;
-
         /*! compute with zero to east */
-        double aspect = atan2(dz_dy, dz_dx);
+        double aspect = atan2(-dz_dy, dz_dx);
 
         /*! 0° = north, clockwise */
-        aspect = 90.0 + aspect * RAD_TO_DEG;
+        aspect = 90.0 - aspect * RAD_TO_DEG;
         if (aspect < 0)
             aspect += 360;
 

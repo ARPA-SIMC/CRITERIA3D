@@ -26,6 +26,7 @@
 #include <iostream>
 #include <math.h>
 #include <algorithm>
+#include <unordered_map>
 
 #include "commonConstants.h"
 #include "basicMath.h"
@@ -844,117 +845,111 @@ bool setColorScale(meteoVariable variable, Crit3DColorScale *colorScale)
 }
 
 
+static const std::unordered_map<meteoVariable, std::string> variableStringMap =
+    {
+        {airTemperature, "Air temperature (°C)"},
+        {dailyAirTemperatureAvg, "Air temperature (°C)"},
+        {monthlyAirTemperatureAvg, "Monthly air temperature (°C)"},
+
+        {dailyAirTemperatureMax, "Maximum air temperature (°C)"},
+        {monthlyAirTemperatureMax, "Monthly maximum air temperature (°C)"},
+
+        {dailyAirTemperatureMin, "Minimum air temperature (°C)"},
+        {monthlyAirTemperatureMin, "Monthly minimum air temperature (°C)"},
+
+        {dailyAirTemperatureRange, "Air temperature range (°C)"},
+
+        {airRelHumidity, "Air relative humidity (%)"},
+        {dailyAirRelHumidityAvg, "Air relative humidity (%)"},
+
+        {dailyAirRelHumidityMax, "Maximum relative humidity (%)"},
+        {dailyAirRelHumidityMin, "Minimum relative humidity (%)"},
+
+        {airDewTemperature, "Air dew temperature (°C)"},
+
+        {thom, "Thom index ()"},
+        {dailyThomAvg, "Thom index ()"},
+        {dailyThomDaytime, "Day Thom index ()"},
+        {dailyThomNighttime, "Night Thom index ()"},
+        {dailyThomHoursAbove, "Hours with Thom index above (h)"},
+
+        {dailyPrecipitation, "Precipitation (mm)"},
+        {precipitation, "Precipitation (mm)"},
+        {monthlyPrecipitation, "Monthly precipitation (mm)"},
+
+        {dailyGlobalRadiation, "Solar radiation (MJ m-2)"},
+        {monthlyGlobalRadiation, "Monthly solar radiation (MJ m-2)"},
+
+        {globalIrradiance, "Global solar irradiance (W m-2)"},
+        {directIrradiance, "Direct solar irradiance (W m-2)"},
+        {diffuseIrradiance, "Diffuse solar irradiance (W m-2)"},
+        {reflectedIrradiance, "Reflected solar irradiance (W m-2)"},
+        {netIrradiance, "Solar net irradiance (W m-2)"},
+
+        {atmTransmissivity, "Atmospheric transmissivity [-]"},
+        {atmPressure, "Atmospheric pressure [hPa]"},
+
+        {windVectorIntensity, "Wind vector intensity (m s-1)"},
+        {windVectorDirection, "Wind vector direction (deg)"},
+        {windVectorX, "Wind vector component X (m s-1)"},
+        {windVectorY, "Wind vector component Y (m s-1)"},
+        {windScalarIntensity, "Wind scalar intensity (m s-1)"},
+
+        {dailyWindVectorIntensityAvg, "Average wind vector intensity (m s-1)"},
+        {dailyWindVectorIntensityMax, "Maximum wind vector intensity (m s-1)"},
+        {dailyWindVectorDirectionPrevailing, "Prevailing wind direction (deg)"},
+
+        {dailyWindScalarIntensityAvg, "Average wind scalar intensity (m s-1)"},
+        {dailyWindScalarIntensityMax, "Maximum wind scalar intensity (m s-1)"},
+
+        {referenceEvapotranspiration, "Reference evapotranspiration (mm)"},
+        {dailyReferenceEvapotranspirationHS, "Reference evapotranspiration HS (mm)"},
+        {dailyReferenceEvapotranspirationPM, "Reference evapotranspiration PM (mm)"},
+        {monthlyReferenceEvapotranspirationHS, "Monthly reference evapotranspiration HS (mm)"},
+
+        {actualEvaporation, "Actual evaporation (mm)"},
+
+        {leafWetness, "Leaf wetness (h)"},
+        {dailyLeafWetness, "Leaf wetness (h)"},
+
+        {dailyBIC, "Hydroclimatic balance (mm)"},
+        {monthlyBIC, "Monthly hydroclimatic balance (mm)"},
+
+        {dailyWaterTableDepth, "Water table depth (mm)"},
+
+        {snowWaterEquivalent, "Snow water equivalent (mm)"},
+        {snowFall, "Snow fall (mm)"},
+        {snowMelt, "Snowmelt (mm)"},
+        {snowVariation, "Variation in SWE (mm)"},
+        {snowLiquidWaterContent, "Snow liquid water content (mm)"},
+        {snowAge, "Snow age (days)"},
+
+        {snowSurfaceTemperature, "Surface temperature (°C)"},
+        {snowInternalEnergy, "Energy content (kJ m-2)"},
+        {snowSurfaceEnergy, "Energy content surface layer (kJ m-2)"},
+
+        {sensibleHeat, "Sensible heat (kJ m-2)"},
+        {latentHeat, "Latent heat (kJ m-2)"},
+
+        {dailyHeatingDegreeDays, "Heating degree days (°D)"},
+
+        {leafAreaIndex, "Leaf area index (m2 m-2)"},
+
+        {elaborationVar, "Elaboration"},
+        {anomalyVar, "Anomaly"},
+
+        {noMeteoTerrain, "Elevation (m)"}
+};
+
+
 std::string getVariableString(meteoVariable myVar)
 {
-    if (myVar == airTemperature || myVar == dailyAirTemperatureAvg || myVar == monthlyAirTemperatureAvg)
-        return "Air temperature (°C)";
-    else if (myVar == dailyAirTemperatureMax || myVar == monthlyAirTemperatureMax)
-        return "Maximum air temperature (°C)";
-    else if (myVar == dailyAirTemperatureMin || myVar == monthlyAirTemperatureMin)
-        return "Minimum air temperature (°C)";
-    else if (myVar == dailyAirTemperatureRange)
-        return "Air temperature range (°C)";
-    else if (myVar == airRelHumidity || myVar == dailyAirRelHumidityAvg)
-        return "Air relative humidity (%)";
-    else if (myVar == dailyAirRelHumidityMax)
-        return "Maximum relative humidity (%)";
-    else if (myVar == dailyAirRelHumidityMin)
-        return "Minimum relative humidity (%)";
-    else if (myVar == airDewTemperature)
-        return "Air dew temperature (°C)";
-    else if (myVar == thom || myVar == dailyThomAvg)
-        return "Thom index ()";
-    else if (myVar == dailyThomDaytime)
-        return "Day Thom index ()";
-    else if (myVar == dailyThomNighttime)
-        return "Night Thom index ()";
-    else if (myVar == dailyThomHoursAbove)
-        return "Hours with Thom index above (h)";
-    else if ((myVar == dailyPrecipitation ||  myVar == precipitation || myVar == monthlyPrecipitation))
-        return "Precipitation (mm)";
-    else if (myVar == dailyGlobalRadiation || myVar == monthlyGlobalRadiation)
-        return "Solar radiation (MJ m-2)";
-    else if (myVar == globalIrradiance)
-        return "Global solar irradiance (W m-2)";
-    else if (myVar == directIrradiance)
-        return "Direct solar irradiance (W m-2)";
-    else if (myVar == diffuseIrradiance)
-        return "Diffuse solar irradiance (W m-2)";
-    else if (myVar == reflectedIrradiance)
-        return "Reflected solar irradiance (W m-2)";
-    else if (myVar == netIrradiance)
-        return "Solar net irradiance (W m-2)";
-    else if (myVar == atmTransmissivity)
-        return "Atmospheric transmissivity [-]";
-    else if (myVar == atmPressure)
-        return "Atmospheric pressure [hPa]";
-    else if (myVar == windVectorIntensity)
-        return "Wind vector intensity (m s-1)";
-    else if (myVar == windVectorDirection)
-        return "Wind vector direction (deg)";
-    else if (myVar == windVectorX)
-        return "Wind vector component X (m s-1)";
-    else if (myVar == windVectorY)
-        return "Wind vector component Y (m s-1)";
-    else if (myVar == windScalarIntensity)
-        return "Wind scalar intensity (m s-1)";
-    else if (myVar == dailyWindVectorIntensityAvg)
-        return "Average wind vector intensity (m s-1)";
-    else if (myVar == dailyWindVectorIntensityMax)
-        return "Maximum wind vector intensity (m s-1)";
-    else if (myVar == dailyWindVectorDirectionPrevailing)
-        return "Prevailing wind direction (deg)";
-    else if (myVar == dailyWindScalarIntensityAvg)
-        return "Average wind scalar intensity (m s-1)";
-    else if (myVar == dailyWindScalarIntensityMax)
-        return "Maximum wind scalar intensity (m s-1)";
-    else if (myVar == referenceEvapotranspiration ||
-             myVar == dailyReferenceEvapotranspirationHS ||
-             myVar == monthlyReferenceEvapotranspirationHS ||
-             myVar == dailyReferenceEvapotranspirationPM ||
-             myVar == actualEvaporation)
-        return "Reference evapotranspiration (mm)";
-    else if (myVar == leafWetness || myVar == dailyLeafWetness)
-        return "Leaf wetness (h)";
-    else if (myVar == dailyBIC || myVar == monthlyBIC)
-        return "Hydroclimatic balance (mm)";
-    else if (myVar == dailyWaterTableDepth)
-        return "Water table depth (mm)";
-    else if (myVar == snowWaterEquivalent)
-        return "Snow water equivalent (mm)";
-    else if (myVar == snowFall)
-        return "Snow fall (mm)";
-    else if (myVar == snowMelt)
-        return "Snowmelt (mm)";
-    else if (myVar == snowVariation)
-        return "Variation in SWE (mm)";
-    else if (myVar == snowLiquidWaterContent)
-        return "Snow liquid water content (mm)";
-    else if (myVar == snowAge)
-        return "Snow age (days)";
-    else if (myVar == snowSurfaceTemperature)
-        return "Surface temperature (°C)";
-    else if (myVar == snowInternalEnergy)
-        return "Energy content (kJ m-2)";
-    else if (myVar == snowSurfaceEnergy)
-        return "Energy content surface layer (kJ m-2)";
-    else if (myVar == sensibleHeat)
-        return "Sensible heat (kJ m-2)";
-    else if (myVar == latentHeat)
-        return "Latent heat (kJ m-2)";
-    else if (myVar == dailyHeatingDegreeDays)
-        return "Heating degree days (°D)";
-    else if (myVar == leafAreaIndex)
-            return "Leaf area index (m2 m-2)";
+    auto it = variableStringMap.find(myVar);
 
-    else if (myVar == elaborationVar)
-        return "Elaboration";
-    else if (myVar == anomalyVar)
-        return "Anomaly";
-    else if (myVar == noMeteoTerrain)
-        return "Elevation (m)";
-    else
-        return "No variable";
+    if (it != variableStringMap.end())
+        return it->second;
+
+    return "No variable.";
 }
 
 

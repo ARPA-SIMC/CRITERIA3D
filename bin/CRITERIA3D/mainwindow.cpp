@@ -2231,9 +2231,10 @@ void MainWindow::on_actionRadiation_settings_triggered()
     myDialogRadiation->close();
 }
 
+
 bool MainWindow::setRadiationAsCurrentVariable()
 {
-    if ((int)myProject.meteoPoints.size() == 0)
+    if (myProject.meteoPoints.empty())
     {
         myProject.logError(ERROR_STR_MISSING_DB);
         return false;
