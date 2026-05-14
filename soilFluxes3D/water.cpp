@@ -551,6 +551,7 @@ namespace soilFluxes3D::v2::Water
                 continue;
 
             nodeGrid.boundaryData.waterFlowRate[nodeIdx] = 0;   //TO DO: evaluate move to a memset
+
             switch(nodeGrid.boundaryData.boundaryType[nodeIdx])
             {
                 case boundaryType_t::Runoff:
