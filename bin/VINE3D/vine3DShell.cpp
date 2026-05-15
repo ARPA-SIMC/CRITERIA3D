@@ -109,7 +109,7 @@ bool Vine3DProject::cmdRunModels(QStringList argumentList)
 bool Vine3DProject::vine3dShell()
 {
 #ifdef _WIN32
-    openNewConsole();
+    openWinConsole();
 #endif
 
     while (! isRequestedExit())

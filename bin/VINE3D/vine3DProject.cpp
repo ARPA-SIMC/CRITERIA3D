@@ -1146,6 +1146,9 @@ bool Vine3DProject::runModels(QDateTime firstTime, QDateTime lastTime, bool save
         return false;
     }
 
+    // model accuracy
+    setAccuracy();
+
     QDir myDir;
     QString myOutputPathDaily, myOutputPathHourly;
     bool isInitialState;
