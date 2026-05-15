@@ -798,12 +798,14 @@ bool setColorScale(meteoVariable variable, Crit3DColorScale *colorScale)
             colorScale->setTransparent(true);
             break;
         case dailyPrecipitation: case monthlyPrecipitation:
+            setPrecipitationScale(colorScale);
+            colorScale->setHideZero(true);
+            break;
         case referenceEvapotranspiration: case dailyReferenceEvapotranspirationHS:
         case dailyReferenceEvapotranspirationPM: case actualEvaporation:
         case dailyWaterTableDepth:
             setPrecipitationScale(colorScale);
-            colorScale->setHideZero(true);
-            break;  
+            break;
         case snowAge:
             setGrayScale(colorScale);
             reverseColorScale(colorScale);

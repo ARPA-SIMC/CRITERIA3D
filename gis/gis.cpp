@@ -1111,22 +1111,21 @@ namespace gis
 
 
     bool computeSlopeAspectBoundary(const gis::Crit3DRasterGrid& dem, gis::Crit3DRasterGrid* slopeMap,
-                                    gis::Crit3DRasterGrid* aspectMap, int row, int col)
+                                    gis::Crit3DRasterGrid* aspectMap, float z, int row, int col)
     {
         if (!dem.isLoaded || !slopeMap || !aspectMap)
             return false;
 
         float flag = dem.header->flag;
-
-        const float z = dem.getValueFromRowCol(row, col);
         if (isEqual(z, flag))
             return false;
 
         const double cellSize = dem.header->cellSize;
 
-        /*! compute dz/dy */
-        double dz = 0;
-        double dy = 0;
+        // compute dz/dy
+        double dz = 0.0;
+        double dy = 0.0;
+        double dx = 0.0;
         for (int i = -1; i <= 1; ++i)
         {
             if (i != 0)
@@ -1146,9 +1145,9 @@ namespace gis
         dy = std::max(dy, EPSILON);
         const double dz_dy = dz / dy;
 
-        /*! compute dz/dx */
-        dz = 0;
-        double dx = 0;
+        // compute dz/dx
+        dz = 0.0;
+        dx = 0.0;
         for (int j=-1; j <=1; j++)
         {
             if (j != 0)
@@ -1168,14 +1167,14 @@ namespace gis
         dx = std::max(dx, EPSILON);
         double dz_dx = dz / dx;
 
-        /*! slope in degrees */
+        // slope in degrees
         double slope = atan(sqrt(dz_dx * dz_dx + dz_dy * dz_dy)) * RAD_TO_DEG;
         slopeMap->value[row][col] = float(slope);
 
-        /*! compute with zero to east */
+        // compute with zero to east
         double aspect = atan2(-dz_dy, dz_dx);
 
-        /*! 0° = north, clockwise */
+        // aspect in degrees: 0° = north, clockwise
         aspect = 90.0 - aspect * RAD_TO_DEG;
         if (aspect < 0)
             aspect += 360;
@@ -1199,20 +1198,20 @@ namespace gis
         slopeMap->initializeGrid(dem);
         aspectMap->initializeGrid(dem);
 
-        double flag = double(dem.header->flag);
+        const float flag = dem.header->flag;
 
         for (int row = 0; row < dem.header->nrRows; ++row)
         {
             for (int col = 0; col < dem.header->nrCols; ++col)
             {
-                const double value = dem.value[row][col];
+                const float z = dem.value[row][col];
 
-                if (isEqual(value, flag))
+                if (isEqual(z, flag))
                     continue;
 
                 if (isBoundary(dem, row, col))
                 {
-                    computeSlopeAspectBoundary(dem, slopeMap, aspectMap, row, col);
+                    computeSlopeAspectBoundary(dem, slopeMap, aspectMap, z, row, col);
                     continue;
                 }
 
@@ -1235,8 +1234,8 @@ namespace gis
 
                 if (std::abs(dzdx) < EPSILON && std::abs(dzdy) < EPSILON)
                 {
-                    slopeMap->value[row][col] = 0;
-                    aspectMap->value[row][col] = aspectMap->header->flag;
+                    slopeMap->value[row][col] = 0.0;
+                    aspectMap->value[row][col] = 0.0;
                     continue;
                 }
 
