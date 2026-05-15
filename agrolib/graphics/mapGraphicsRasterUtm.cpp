@@ -329,8 +329,8 @@ int RasterUtmObject::getCurrentStep(const gis::Crit3DRasterWindow& rasterWindow)
 
 bool RasterUtmObject::drawRaster(QPainter* painter)
 {
-    if (_rasterPointer == nullptr) return false;
-    if (! _rasterPointer->isLoaded) return false;
+    if (! _rasterPointer || ! _rasterPointer->isLoaded)
+        return false;
 
     gis::Crit3DRasterWindow rasterWindow;
     if (! getCurrentWindow(&rasterWindow))
@@ -347,50 +347,52 @@ bool RasterUtmObject::drawRaster(QPainter* painter)
         roundColorScale(_rasterPointer->colorScale, 4, true);
     }
 
-    int step = getCurrentStep(rasterWindow);
+    const int step = getCurrentStep(rasterWindow);
+
+    const float flag = _rasterPointer->header->flag;
+    const double minimum = _rasterPointer->colorScale->minimum();
+    const bool isHideMinimum = _rasterPointer->colorScale->isHideMinimum();
+    const bool isHideZero = _rasterPointer->colorScale->isHideZero();
+    const int lastRow = _rasterPointer->header->nrRows - 1;
+    const int lastCol = _rasterPointer->header->nrCols - 1;
 
     // draw
     painter->setPen(Qt::NoPen);
     QPointF geoPoint[4];
     QPointF pixel[4];
-    Crit3DColor* myColor;
-    QColor myQColor;
-
     for (int row1 = rasterWindow.v[0].row; row1 <= rasterWindow.v[1].row; row1 += step)
     {
-        int row2 = std::min(row1 + step, _rasterPointer->header->nrRows-1);
-        int rowCenter = floor((row1 + row2) * 0.5);
+        int row2 = std::min(row1 + step, lastRow);
+        const int rowCenter = (row1 + row2) * 0.5;
+        // latlon raster have one extra cell
         if (row2 == row1)
-        {
             row2++;
-        }
 
         for (int col1 = rasterWindow.v[0].col; col1 <= rasterWindow.v[1].col; col1 += step)
         {
-            int col2 = std::min(col1 + step, _rasterPointer->header->nrCols-1);
-            int colCenter = floor((col1 + col2) * 0.5);
+            int col2 = std::min(col1 + step, lastCol);
+            const int colCenter = (col1 + col2) * 0.5;
+            // latlon raster have one extra cell
             if (col2 == col1)
-            {
                 col2++;
-            }
 
-            float value = _rasterPointer->value[rowCenter][colCenter];
+            const float value = _rasterPointer->value[rowCenter][colCenter];
 
             // check NODATA value (transparent)
-            if (isEqual(value, _rasterPointer->header->flag) || isEqual(value, NODATA))
+            if (isEqual(value, flag) || isEqual(value, NODATA))
                 continue;
 
             // check minimum (transparent)
-            if (_rasterPointer->colorScale->isHideMinimum() && value <= _rasterPointer->colorScale->minimum())
+            if (isHideMinimum && value < minimum)
                 continue;
 
             // check zero (transparent)
-            if (_rasterPointer->colorScale->isHideZero() && fabs(value) < 0.1)
+            if (isHideZero && value < 0.01)
                 continue;
 
             // set color
-            myColor = _rasterPointer->colorScale->getColor(value);
-            myQColor = QColor(myColor->red, myColor->green, myColor->blue);
+            Crit3DColor* myColor = _rasterPointer->colorScale->getColor(value);
+            const QColor myQColor = QColor(myColor->red, myColor->green, myColor->blue);
             painter->setBrush(myQColor);
 
             // set polygon
