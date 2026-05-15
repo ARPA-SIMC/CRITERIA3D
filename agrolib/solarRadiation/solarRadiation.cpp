@@ -730,7 +730,7 @@ namespace radiation
         if (isEqual(temperature, NODATA))
             temperature = TEMPERATURE_DEFAULT;
 
-        /*! Surface pressure at sea level (millibars = hPa) (used for refraction correction and optical air mass) */
+        /*! Surface pressure (millibars = hPa) (used for refraction correction and optical air mass) */
         double pressure = pressureFromAltitude(radPoint.height) * 0.01;
 
         /*! Sun position */
