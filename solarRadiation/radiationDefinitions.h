@@ -19,7 +19,7 @@
     /*! Surface pressure at sea level (millibars) (used for refraction correction and optical air mass) */
     #define PRESSURE_SEALEVEL 1013.0
     /*! Ambient default dry-bulb temperature (degrees C) (used for refraction correction) */
-    #define TEMPERATURE_DEFAULT 15.0
+    #define TEMPERATURE_DEFAULT 10.0
     /*! scale height of Rayleigh atmosphere near the Earth surface */
     #define RAYLEIGH_Z0 8434.5
 

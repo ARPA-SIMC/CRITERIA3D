@@ -824,6 +824,7 @@ static void amass( struct SolPosData *pdat )
     {
         pdat->amass = 1.0f / float(cos(raddeg * pdat->zenref) + 0.50572f * pow ((96.07995f - pdat->zenref),-1.6364f));
 
+        // pressure-corrected air mass
         pdat->ampress   = pdat->amass * pdat->press / 1013.0f;
     }
 }
