@@ -2179,7 +2179,7 @@ void MainWindow::on_buttonModel_1hour_clicked()
     ui->buttonModelStop->setEnabled(true);
 
     QDateTime firstTime;
-    #if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
+    #if QT_VERSION >= QT_VERSION_CHECK(6, 10, 0)
         firstTime = QDateTime(myProject.getCurrentDate(), QTime(myProject.getCurrentHour(), 0, 0), QTimeZone::UTC);
     #else
         firstTime = QDateTime(myProject.getCurrentDate(), QTime(myProject.getCurrentHour(), 0, 0), Qt::UTC);

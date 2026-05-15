@@ -54,7 +54,7 @@ Crit3DProject::Crit3DProject() : Project3D()
     _saveYearlyState = false;
     _saveMonthlyState = false;
 
-    #if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
+    #if QT_VERSION >= QT_VERSION_CHECK(6, 10, 0)
         modelFirstTime.setTimeZone(QTimeZone::UTC);
         modelLastTime.setTimeZone(QTimeZone::UTC);
     #else
