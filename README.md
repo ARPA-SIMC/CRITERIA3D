@@ -1,7 +1,7 @@
-[![Build Status](https://simc.arpae.it/moncic-ci/CRITERIA3D/rocky8.png)](https://simc.arpae.it/moncic-ci/CRITERIA3D/)
 [![Build Status](https://simc.arpae.it/moncic-ci/CRITERIA3D/rocky9.png)](https://simc.arpae.it/moncic-ci/CRITERIA3D/)
-[![Build Status](https://simc.arpae.it/moncic-ci/CRITERIA3D/fedora40.png)](https://simc.arpae.it/moncic-ci/CRITERIA3D/)
+[![Build Status](https://simc.arpae.it/moncic-ci/CRITERIA3D/rocky10.png)](https://simc.arpae.it/moncic-ci/CRITERIA3D/)
 [![Build Status](https://simc.arpae.it/moncic-ci/CRITERIA3D/fedora42.png)](https://simc.arpae.it/moncic-ci/CRITERIA3D/)
+[![Build Status](https://simc.arpae.it/moncic-ci/CRITERIA3D/fedora44.png)](https://simc.arpae.it/moncic-ci/CRITERIA3D/)
 
 ## Overview
 **CRITERIA‑3D** is a three-dimensional hydrological model designed for small catchments.   
