@@ -1,3 +1,4 @@
 version: 2
 exclude_images:
   - name: ubuntu:jammy
+  - name: rocky:8
