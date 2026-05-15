@@ -955,10 +955,12 @@ void Crit3DProject::assignPrecipitation()
 }
 
 
-// Water seeping into soil cracks
-// input: [mm] precipitation
-// output: [mm] residual surface water after infiltration into soil cracks
-// use waterSinkSource to set the infiltration
+/*!
+ * \brief computeSoilCracking
+ * Water seeping into soil cracks
+ * \param precipitation [mm]
+ * \return residual surface water after infiltration into soil cracks [mm]
+ */
 float Crit3DProject::computeSoilCracking(int row, int col, float precipitation)
 {
     const double MAX_CRACKING_DEPTH = 0.6;              // [m]
@@ -966,48 +968,46 @@ float Crit3DProject::computeSoilCracking(int row, int col, float precipitation)
     const double MAX_VOID_VOLUME = 0.20;                // [m3 m-3]
     const double MIN_FINE_FRACTION = 0.5;               // [m3 m-3]
     const double MIN_FINE_LAYER_DEPTH = 0.2;            // [m]
+    const double STORAGE_PER_CM = 0.5;                  // [mm cm-1] (0.5 mm of water for each cm of soil)
 
     // check soil
-    int soilIndex = getSoilIndex(row, col);
+    const int soilIndex = getSoilIndex(row, col);
     if (soilIndex == NODATA)
         return precipitation;
 
     // check surface
-    long surfaceNodeIndex = indexMap.at(0).value[row][col];
+    const long surfaceNodeIndex = indexMap.at(0).value[row][col];
     if (surfaceNodeIndex == NODATA)
         return precipitation;
 
     // check pond
-    double currentPond = getCriteria3DVar(surfacePond, surfaceNodeIndex);       // [mm]
-    double minimumPond = currentPond;                                           // [mm]
+    const double minimumPond = getCriteria3DVar(surfacePond, surfaceNodeIndex);     // [mm]
     if (precipitation <= minimumPond)
         return precipitation;
 
     // check soil depth
-    double soilDepth = std::min(computationSoilDepth, soilList[soilIndex].totalDepth);
+    const double soilDepth = std::min(computationSoilDepth, soilList[soilIndex].totalDepth);
     if (soilDepth <= MIN_FINE_LAYER_DEPTH)
         return precipitation;
 
     // check fine fraction (clay)
-    bool isFineFraction = true;
     int lastFineHorizon = NODATA;
-    unsigned int h = 0;
     double maxDepth = std::min(soilDepth, MAX_CRACKING_DEPTH);   // [m]
-    while (h < soilList[soilIndex].nrHorizons && soilList[soilIndex].horizon[h].upperDepth < maxDepth && isFineFraction)
-    {
-        soil::Crit3DHorizon horizon = soilList[soilIndex].horizon[h];
 
-        double fineFraction = (horizon.texture.clay + horizon.texture.silt * 0.5) / 100
+    unsigned int h = 0;
+    while (h < soilList[soilIndex].nrHorizons
+           && soilList[soilIndex].horizon[h].upperDepth < maxDepth)
+    {
+        const soil::Crit3DHorizon& horizon = soilList[soilIndex].horizon[h];
+
+        const double fineFraction = (horizon.texture.clay + horizon.texture.silt * 0.5) / 100
                               * (1 - horizon.coarseFragments) * (1 - horizon.organicMatter);
+
         if (fineFraction < MIN_FINE_FRACTION)
-        {
-            isFineFraction = false;
-        }
-        else
-        {
-            lastFineHorizon = h;
-            h++;
-        }
+            break;
+
+        lastFineHorizon = h;
+        ++h;
     }
 
     if (lastFineHorizon == NODATA)
@@ -1021,17 +1021,18 @@ float Crit3DProject::computeSoilCracking(int row, int col, float precipitation)
         return precipitation;
 
     // compute the volume of voids
-    double stepDepth = 0.05;                // [m]
+    const double stepDepth = 0.05;          // [m]
     double currentDepth = stepDepth;        // [m]
     double voidsVolumeSum = 0;              // [m3 m-3]
-    int nrData = 0;
+
+    int nrOfData = 0;
     while (currentDepth <= maxDepth)
     {
-        int layerIndex = getSoilLayerIndex(currentDepth);
+        const int layerIndex = getSoilLayerIndex(currentDepth);
         if (layerIndex == NODATA)
             break;
 
-        long nodeIndex = indexMap.at(layerIndex).value[row][col];
+        const long nodeIndex = indexMap.at(layerIndex).value[row][col];
         if (nodeIndex == NODATA)
             break;
 
@@ -1039,65 +1040,66 @@ float Crit3DProject::computeSoilCracking(int row, int col, float precipitation)
         if (horizonIndex == NODATA)
             break;
 
-        double soilFraction = 1.0 - soilList[soilIndex].horizon[horizonIndex].coarseFragments;
-        double VWC = getCriteria3DVar(volumetricWaterContent, nodeIndex);               // [m3 m-3]
-        double maxVWC = getCriteria3DVar(maxVolumetricWaterContent, nodeIndex);         // [m3 m-3]
+        const double soilFraction = 1.0 - soilList[soilIndex].horizon[horizonIndex].coarseFragments;
 
-        voidsVolumeSum += (maxVWC - VWC) * soilFraction;
-        nrData++;
+        const double VWC = getCriteria3DVar(volumetricWaterContent, nodeIndex);               // [m3 m-3]
+        const double maxVWC = getCriteria3DVar(maxVolumetricWaterContent, nodeIndex);         // [m3 m-3]
+
+        const double voidVolume = std::max(0.0, maxVWC - VWC);
+        voidsVolumeSum += voidVolume * soilFraction;
+
+        ++nrOfData;
 
         currentDepth += stepDepth;
     }
 
-    if (nrData == 0)
+    if (nrOfData == 0)
         return precipitation;
 
-    double avgVoidVolume = voidsVolumeSum / nrData;              // [m3 m-3]
+    const double avgVoidVolume = voidsVolumeSum / nrOfData;     // [m3 m-3]
     if (avgVoidVolume <= MIN_VOID_VOLUME)
         return precipitation;
 
     // THERE IS A SOIL CRACK
-    double crackRatio = std::min(1.0, (avgVoidVolume - MIN_VOID_VOLUME) / (MAX_VOID_VOLUME - MIN_VOID_VOLUME));
+    const double crackRatio = std::clamp((avgVoidVolume - MIN_VOID_VOLUME) /
+                                         (MAX_VOID_VOLUME - MIN_VOID_VOLUME), 0.0, 1.0);
 
-    double maxInfiltration = precipitation * crackRatio;        // [mm]
-    double surfaceWater = precipitation - maxInfiltration;      // [mm]
-    surfaceWater = std::max(surfaceWater, minimumPond);
-    double downWater = precipitation - surfaceWater;            // [mm]
+    const double maxInfiltration = precipitation * crackRatio;                      // [mm]
+    double surfaceWater = std::max(precipitation - maxInfiltration, minimumPond);   // [mm]
+    double downWater = std::max(0.0, precipitation - surfaceWater);                 // [mm]
 
-    int lastLayer = getSoilLayerIndex(maxDepth);
+    const int lastLayer = getSoilLayerIndex(maxDepth);
+    if (lastLayer == NODATA)
+        return precipitation;
+
     double area = DEM.header->cellSize * DEM.header->cellSize;  // [m2]
 
-    // accumulation on the crack bottom (0.5 mm of water for each soil cm)
-    for (int l = lastLayer; l > 0; l--)
+    // accumulation on the crack bottom
+    for (int l = lastLayer; l > 0; --l)
     {
         if (downWater <= 0)
             break;
 
-        long nodeIndex = indexMap.at(l).value[row][col];
+        const long nodeIndex = indexMap.at(l).value[row][col];
         if (nodeIndex != indexMap.at(l).header->flag)
         {
-            double layerThick_cm = layerThickness[l] * 100;         // [cm]
-            double layerWater = layerThick_cm * 0.5;                // [mm]
+            const double layerThick_cm = layerThickness[l] * 100;   // [cm]
+            double layerWater = layerThick_cm * STORAGE_PER_CM;     // [mm]
             layerWater = std::min(layerWater, downWater);
 
-            double flow = area * (layerWater / 1000.);              // [m3 h-1]
-            if ((flow / 3600.) > 0.)
+            const double flow = area * (layerWater / 1000.);        // [m3 h-1]
+            const double flowRate = flow / 3600.;                   // [m3 s-1]
+
+            if (flowRate > 0.)
             {
-                waterSinkSource[nodeIndex] += flow / 3600.;         // [m3 s-1]
+                waterSinkSource[nodeIndex] += flowRate;
                 downWater -= layerWater;                            // [mm]
             }
         }
     }
 
-    if (downWater > 0)
-    {
-        // remaining water
-        return surfaceWater + downWater;
-    }
-    else
-    {
-        return surfaceWater;
-    }
+    // remaining water
+    return surfaceWater + downWater;
 }
 
 
