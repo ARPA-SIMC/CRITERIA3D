@@ -38,7 +38,7 @@ bool gdalShapeToRaster(QString shapeFileName, QString shapeField, QString resolu
     // projection
     char *pszProjection = nullptr;
     OGRSpatialReference srs;
-    OGRSpatialReference * pOrigSrs = shapeDataset->GetLayer(0)->GetSpatialRef();
+    const OGRSpatialReference * pOrigSrs = shapeDataset->GetLayer(0)->GetSpatialRef();
     if ( pOrigSrs )
     {
         srs = *pOrigSrs;
