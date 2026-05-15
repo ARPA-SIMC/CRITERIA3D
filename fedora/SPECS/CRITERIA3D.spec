@@ -4,7 +4,7 @@
 %{!?srcarchivename: %global srcarchivename %{name}-%{version}-%{releaseno}}
 
 Name:           CRITRIA3D
-Version:        1.3.1
+Version:        1.3.2
 Release:        %{releaseno}%{?dist}
 Summary:        three-dimensional agro-hydrological model
 
@@ -54,6 +54,8 @@ cp -a bin/CRITERIA3D %{buildroot}/%{_bindir}/
 
 
 %changelog
+* Fri May 15 2026 Fausto Tomei <ftomei@arpae.it> - 1.3.2-1
+- Release 1.3.2
 * Wed Mar 25 2026 Fausto Tomei <ftomei@arpae.it> - 1.3.1
 - Release 1.3.1
 * Thu Jun 26 2025 Fausto Tomei <ftomei@arpae.it> - 1.1.0
