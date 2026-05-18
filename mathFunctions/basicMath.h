@@ -59,12 +59,14 @@
     {
         void quicksortAscendingInteger(int *x,int first, int last);
         void quicksortDescendingInteger(int *x, int first,int last);
-        void quicksortAscendingIntegerWithParameters(std::vector<int> &x, std::vector<float> &values, unsigned first, unsigned last);
-        void quicksortAscendingDouble(double *x, int first,int last);
-        void quicksortAscendingFloat(std::vector<float> &values, unsigned int first, unsigned int last);
-        float percentile(std::vector<float>& list, int& nrList, float perc, bool sortValues);
+        void quicksortAscendingIntegerWithParameters(std::vector<int> &x, std::vector<float> &values,
+                                                     int first, int last);
+
+        float percentile(std::vector<float>& list, int& nrList, double percentage, bool sortValues);
         float percentileRank(std::vector<float> &list, float value, bool isSortValues);
-        float percentileAboveThreshold(std::vector<float>& list, int& nrList, float perc, float threshold, bool isSortValues);
+        float percentileAboveThreshold(std::vector<float>& list, int& nrList, float percentage,
+                                       float threshold, bool isSortValues);
+
         float mode(std::vector<float> &list, int* nrList, bool isSortValues);
     }
 

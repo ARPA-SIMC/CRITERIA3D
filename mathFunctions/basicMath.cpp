@@ -249,334 +249,274 @@
 
     namespace sorting
     {
-        void quicksortAscendingInteger(int *x, int first,int last)
+    void quicksortAscendingInteger(int* x, int first, int last)
         {
-           int pivot,j,temp,i;
+            int i = first;
+            int j = last;
+            int pivot = x[(first + last) / 2];
 
-           if(first<last)
-           {
-                pivot=first;
-                i=first;
-                j=last;
-
-                while(i<j){
-                    while(i<last && x[i] <= x[pivot])
-                        i++;
-                    while(x[j]>x[pivot])
-                        j--;
-                    if(i<j){
-                        temp=x[i];
-                         x[i]=x[j];
-                         x[j]=temp;
-                    }
-                }
-                temp=x[pivot];
-                x[pivot]=x[j];
-                x[j]=temp;
-                quicksortAscendingInteger(x,first,j-1);
-                quicksortAscendingInteger(x,j+1,last);
-            }
-        }
-
-        void quicksortAscendingIntegerWithParameters(std::vector<int> &x, std::vector<float> &values, unsigned first, unsigned last)
-        {
-           int tmpIndex;
-           unsigned l, r;
-           float tmpVal, pivot;
-
-           if(first<last)
-           {
-               // only 2 elements
-               if (last-first == 1)
-               {
-                   if (values[first] > values[last])
-                   {
-                       //swap
-                       tmpIndex = x[last];
-                       tmpVal = values[last];
-                       values[last] = values[first];
-                       values[first] = tmpVal;
-                       x[last]= x[first];
-                       x[first] = tmpIndex;
-                       return;
-                   }
-               }
-               unsigned posPivot = (last - first) / 2 + first;
-               pivot = values[posPivot];
-               if (values[last] < pivot)
-               {
-                   //swap
-                   tmpIndex = x[last];
-                   tmpVal = values[last];
-                   values[last] = values[posPivot];
-                   values[posPivot] = tmpVal;
-                   x[last]= x[posPivot];
-                   x[posPivot] = tmpIndex;
-               }
-               l=first;
-               r=last;
-
-               while(l<r)
-               {
-                   if (values[l] < pivot)
-                   {
-                         l = l + 1;
-                   }
-                   else if (values[r] >= pivot)
-                   {
-                       r = r -1;
-                   }
-                   else
-                   {
-                       //swap
-                       tmpIndex = x[r];
-                       tmpVal = values[r];
-                       values[r] = values[l];
-                       values[l] = tmpVal;
-                       x[r]= x[l];
-                       x[l] = tmpIndex;
-                   }
-               }
-               if (l > first)
-               {
-                   l = l - 1;
-               }
-               else
-               {
-                   //swap
-                   tmpIndex = x[posPivot];
-                   tmpVal = values[posPivot];
-                   values[posPivot] = values[first];
-                   values[first] = tmpVal;
-                   x[posPivot]= x[first];
-                   x[first] = tmpIndex;
-
-                   r = r + 1;
-               }
-
-               quicksortAscendingIntegerWithParameters(x,values,first,l);
-               quicksortAscendingIntegerWithParameters(x,values,r,last);
-            }
-        }
-
-        void quicksortAscendingDouble(double *x, int first,int last)
-        {
-           int pivot,j,i;
-            double temp;
-
-            if(first<last)
+            while (i <= j)
             {
-                pivot=first;
-                i=first;
-                j=last;
+                while (x[i] < pivot)
+                    i++;
 
-                while(i<j){
-                    while(i<last && x[i]<=x[pivot])
-                        i++;
-                    while(x[j]>x[pivot])
-                        j--;
-                    if(i<j){
-                        temp=x[i];
-                         x[i]=x[j];
-                         x[j]=temp;
-                    }
-                }
-                temp=x[pivot];
-                x[pivot]=x[j];
-                x[j]=temp;
-                quicksortAscendingDouble(x,first,j-1);
-                quicksortAscendingDouble(x,j+1,last);
-            }
-        }
+                while (x[j] > pivot)
+                    j--;
 
-
-        void quicksortAscendingFloat(std::vector<float> &values, unsigned int first, unsigned int last)
-        {
-            unsigned int pivot,j,i;
-            float temp;
-
-            if(first<last)
-            {
-                pivot=first;
-                i=first;
-                j=last;
-
-                while(i<j)
+                if (i <= j)
                 {
-                    while(i<last && values[i] <= values[pivot]) i++;
-                    while(values[j] > values[pivot]) j--;
-                    if(i<j)
-                    {
-                        temp = values[i];
-                        values[i] = values[j];
-                        values[j] = temp;
-                    }
+                    std::swap(x[i], x[j]);
+                    i++;
+                    j--;
                 }
-                temp = values[pivot];
-                values[pivot] = values[j];
-                values[j] = temp;
-                if (j > first)
-                    quicksortAscendingFloat(values, first, j-1);
-                if (j < last)
-                    quicksortAscendingFloat(values, j+1, last);
             }
+
+            if (first < j)
+                quicksortAscendingInteger(x, first, j);
+
+            if (i < last)
+                quicksortAscendingInteger(x, i, last);
         }
 
 
         void quicksortDescendingInteger(int *x, int first,int last)
         {
-            int temp;
-            quicksortAscendingInteger(x,first,last);
-            //temp = x[first];
-            for (int i = first ; i < (last/2) ; i++)
-            {
-                //swap
-                temp = x[i];
-                x[i]= x[last-i];
-                x[last-i] = temp;
-            }
+            quicksortAscendingInteger(x, first, last);
+
+            for (int i = first; i < (last/2); i++)
+                std::swap(x[i], x[last-i]);
         }
 
 
-        // warning: if isSortValues is true, list will be modified
-        float percentile(std::vector<float>& list, int& nrList, float perc, bool isSortValues)
+        void quicksortAscendingIntegerWithParameters(std::vector<int>& x, std::vector<float>& values,
+                                                     int first, int last)
+        {
+            int i = first;
+            int j = last;
+
+            float pivot = values[(first + last) / 2];
+
+            while (i <= j)
+            {
+                while (values[i] < pivot)
+                    i++;
+
+                while (values[j] > pivot)
+                    j--;
+
+                if (i <= j)
+                {
+                    std::swap(values[i], values[j]);
+                    std::swap(x[i], x[j]);
+
+                    i++;
+                    j--;
+                }
+            }
+
+            if (first < j)
+                quicksortAscendingIntegerWithParameters(x, values, first, j);
+
+            if (i < last)
+                quicksortAscendingIntegerWithParameters(x, values, i, last);
+        }
+
+
+        // isSortValues == true: list will be modified
+        // isSortValues == false: list must already be sorted ascending and not contain NODATA values
+        float percentile(std::vector<float>& list, int& nrList, double percentage, bool isSortValues)
         {
             // check
-            if (nrList < MINIMUM_PERCENTILE_DATA || (perc <= 0) || (perc > 100)) return NODATA;
-            perc /= 100.f;
+            if (list.size() < MINIMUM_PERCENTILE_DATA || (percentage <= 0.0) || (percentage > 100.0))
+                return NODATA;
+
+            percentage /= 100.f;
 
             if (isSortValues)
             {
                 // remove nodata
-                list.erase(std::remove(list.begin(), list.end(), float(NODATA)), list.end());
+                list.erase(std::remove_if(list.begin(), list.end(),
+                            [](float v){ return isEqual(v, NODATA); }),
+                            list.end());
 
                 // sort
                 std::sort(list.begin(), list.end());
 
                 nrList = int(list.size());
+
                 // check on data presence
-                if (nrList < MINIMUM_PERCENTILE_DATA) return NODATA;
+                if (nrList < MINIMUM_PERCENTILE_DATA)
+                    return NODATA;
             }
 
-            float rank = float(nrList) * perc -1;
+            double rank = nrList * percentage - 1.0;
 
             // return percentile
-            if ((int(rank) + 1) > (nrList - 1))
-                return list[unsigned(nrList - 1)];
-            else if (rank < 0)
+            if (rank < 0.0)
                 return list[0];
-            else
-                return ((rank - int(rank)) * (list[unsigned(rank) + 1] - list[unsigned(rank)])) + list[unsigned(rank)];
+
+            int low = static_cast<int>(rank);
+
+            if (low >= (nrList - 1))
+                return list[nrList - 1];
+
+            double frac = rank - low;
+
+            return float(list[low] + frac * (list[low + 1] - list[low]));
         }
 
 
-        // warning: if isSortValues is true, list will be modified
+        // isSortValues == true: list will be modified
+        // isSortValues == false: list must already be sorted ascending and not contain NODATA values
+        // this implementation uses convention: rank = (i+1)/N
         float percentileRank(std::vector<float>& list, float value, bool isSortValues)
         {
+            if (list.size() < MINIMUM_PERCENTILE_DATA)
+                return NODATA;
+
             if (isSortValues)
             {
                 // remove nodata
-                list.erase(std::remove(list.begin(), list.end(), float(NODATA)), list.end());
+                list.erase(std::remove_if(list.begin(), list.end(),
+                            [](float v){ return isEqual(v, NODATA); }),
+                            list.end());
 
                 // check on data presence
-                if (list.size() < MINIMUM_PERCENTILE_DATA) return NODATA;
+                if (list.size() < MINIMUM_PERCENTILE_DATA)
+                    return NODATA;
 
                 // sort
                 std::sort(list.begin(), list.end());
             }
 
-            float nrValuesF = float(list.size());
-            unsigned int lastIndex = unsigned(list.size() - 1);
+            const int n = static_cast<int>(list.size());
+            const int lastIndex = n - 1;
 
             // return rank
-            if (value <= list[0]) return 0;
-            if (value >= list[lastIndex]) return 100;
+            if (value <= list[0])
+                return 0.0;
+            if (value >= list[lastIndex])
+                return 100.0;
 
-            for (unsigned int i = 0; i < list.size(); i++)
+            for (size_t i = 0; i < list.size(); i++)
             {
+                double rank = double(i + 1) / double(n);
+
                 if (isEqual(value, list[i]))
                 {
-                    float rank = float(i + 1) / nrValuesF;
-                    return rank * 100.f;
+                    return float(rank * 100.0);
                 }
-                if (i < lastIndex && list[i] < value && list[i+1] > value)
+
+                if (i < lastIndex && list[i] < value && list[i + 1] > value)
                 {
-                    float rank = float(i + 1) / nrValuesF;
-                    rank += (value - list[i]) / (list[i+1] - list[i]) / nrValuesF;
-                    return rank * 100.f;
+                    double delta = list[i + 1] - list[i];
+
+                    if (std::abs(delta) < 1e-12)
+                        return float(rank * 100.0);
+
+                    rank += (value - list[i]) / delta / double(n);
+
+                    return float(rank * 100.0);
                 }
             }
 
             return NODATA;
         }
 
+
         // warning: if isSortValues is true, list will be modified
-        float percentileAboveThreshold(std::vector<float>& list, int& nrList, float perc, float threshold, bool isSortValues)
+        // if isSortValues == false:
+        // - list must already be sorted ascending
+        // - list must not contain NODATA
+        // - list must contain only values >= threshold
+        float percentileAboveThreshold(std::vector<float>& list, int& nrList,
+                                       float percentage, float threshold, bool isSortValues)
         {
+            nrList = std::min<int>(nrList, static_cast<int>(list.size()));
+
             // check
-            if (nrList < MINIMUM_PERCENTILE_DATA || (perc <= 0) || (perc > 100)) return NODATA;
-            perc /= 100.f;
+            if (nrList < MINIMUM_PERCENTILE_DATA || (percentage <= 0) || (percentage > 100))
+                return NODATA;
+
+            percentage /= 100.f;
 
             if (isSortValues)
             {
                 // remove nodata
-                list.erase(std::remove(list.begin(), list.end(), float(NODATA)), list.end());
+                list.erase(std::remove_if(list.begin(), list.end(),
+                            [](float v){ return isEqual(v, NODATA); }),
+                            list.end());
 
                 // remove under threshold
-                list.erase(std::remove_if(list.begin(), list.end(), [threshold](const float& x) {return x < threshold; }), list.end());
+                list.erase(std::remove_if(list.begin(), list.end(), [threshold](const float& x)
+                                          {return x < threshold; }), list.end());
 
                 // sort
                 std::sort(list.begin(), list.end());
 
                 nrList = int(list.size());
+
                 // check on data presence
-                if (nrList < MINIMUM_PERCENTILE_DATA) return NODATA;
+                if (nrList < MINIMUM_PERCENTILE_DATA)
+                    return NODATA;
             }
 
-            float rank = float(nrList) * perc -1;
+            float rank = nrList * percentage - 1.f;
 
-            // return percentile
-            if ((int(rank) + 1) > (nrList - 1))
-                return list[unsigned(nrList - 1)];
-            else if (rank < 0)
+            if (rank < 0.f)
                 return list[0];
-            else
-                return ((rank - int(rank)) * (list[unsigned(rank) + 1] - list[unsigned(rank)])) + list[unsigned(rank)];
+
+            int low = static_cast<int>(rank);
+
+            if (low >= nrList - 1)
+                return list[nrList - 1];
+
+            float frac = rank - low;
+
+            return list[low] + frac * (list[low + 1] - list[low]);
         }
+
 
         // warning: if isSortValues is true, list will be modified
         float mode(std::vector<float> &list, int* nrList, bool isSortValues)
         {
+            if (list.empty() || *nrList <= 0)
+                return NODATA;
 
             if (isSortValues)
             {
                 // clean nodata
                 std::vector<float> cleanList;
-                for (unsigned int i = 0; i < unsigned(*nrList); i++)
+
+                for (int i = 0; i < *nrList; i++)
                 {
-                    if (int(list[i]) != int(NODATA))
-                    {
+                    if (! isEqual(list[i], NODATA))
                         cleanList.push_back(list[i]);
-                    }
                 }
 
-                // sort
-                quicksortAscendingFloat(cleanList, 0, unsigned(cleanList.size() - 1));
+                if (cleanList.empty())
+                {
+                    *nrList = 0;
+                    return NODATA;
+                }
 
-                // switch
-                *nrList = int(cleanList.size());
-                list.clear();
+                std::sort(cleanList.begin(), cleanList.end());
+
                 list = cleanList;
+                *nrList = static_cast<int>(cleanList.size());
             }
 
-            //finding max frequency
+            // find max frequency
             int max_count = 1;
-            float res = list[0];
             int count = 1;
-            for (unsigned int i = 1; i < unsigned(*nrList); i++)
+            float res = list[0];
+
+            for (int i = 1; i < *nrList; i++)
             {
                 if (isEqual(list[i], list[i - 1]))
+                {
                     count++;
+                }
                 else
                 {
                     if (count > max_count)
@@ -591,12 +531,10 @@
             // when the last element is most frequent
             if (count > max_count)
             {
-                max_count = count;
-                res = list[unsigned(*nrList) - 1];
+                res = list[*nrList - 1];
             }
 
             return res;
         }
-
     }
 
