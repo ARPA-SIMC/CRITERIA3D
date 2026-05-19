@@ -399,16 +399,16 @@ namespace soil
 
     double estimateSpecificDensity(double organicMatter)
     {
-        if (int(organicMatter) == int(NODATA))
+        if (isEqual(organicMatter, NODATA))
         {
             organicMatter = MINIMUM_ORGANIC_MATTER;
         }
 
         /*! Driessen (1986) */
-        // return 1 / ((1 - organicMatter) / QUARTZ_DENSITY + organicMatter / 1.43);
+        // return 1.0 / ((1.0 - organicMatter) / QUARTZ_DENSITY + organicMatter / 1.43);
 
         /*! Rühlmann et al. (2006) */
-        return 1 / ((1 - organicMatter) / QUARTZ_DENSITY + organicMatter / (1.127 + 0.373*organicMatter));
+        return 1.0 / ((1.0 - organicMatter) / QUARTZ_DENSITY + organicMatter / (1.127 + 0.373*organicMatter));
     }
 
 
@@ -420,34 +420,46 @@ namespace soil
             totalPorosity = (horizon.vanGenuchten.refThetaS);
         }
 
-        double specificDensity = estimateSpecificDensity(horizon.organicMatter);
-        double refBulkDensity = (1 - totalPorosity) * specificDensity;
+        totalPorosity = std::clamp(totalPorosity, 0.0, 1.0);
+
+        const double specificDensity = estimateSpecificDensity(horizon.organicMatter);
+
+        if (isEqual(specificDensity, NODATA) || specificDensity <= 0.0)
+            return NODATA;
+
+        double bulkDensity = (1 - totalPorosity) * specificDensity;
 
         // increase/decrease with depth, reference theta sat at 30cm
         if (increaseWithDepth)
         {
-            double depth = (horizon.upperDepth + horizon.lowerDepth) * 0.5;
-            double depthCoeff = (depth - 0.30) * 0.05;
-            refBulkDensity *= (1.0 + depthCoeff);
+            const double REFERENCE_DEPTH = 0.3;                                         // [m]
+            const double depth = (horizon.upperDepth + horizon.lowerDepth) * 0.5;       // [m]
+
+            const double depthCoeff = (depth - REFERENCE_DEPTH) * 0.05;
+            const double correctionFactor = std::max(0.0, 1.0 + depthCoeff);
+
+            bulkDensity *= correctionFactor;
         }
 
-        return refBulkDensity;
+        return bulkDensity;
     }
 
 
     double estimateTotalPorosity(const Crit3DHorizon &horizon, double bulkDensity)
     {
-        if (int(bulkDensity) == int(NODATA)) return NODATA;
+        if (isEqual(bulkDensity, NODATA))
+            return NODATA;
 
-        double specificDensity = estimateSpecificDensity(horizon.organicMatter);
-        return 1 - (bulkDensity /specificDensity);
+        const double specificDensity = estimateSpecificDensity(horizon.organicMatter);
+        return 1.0 - (bulkDensity / specificDensity);
     }
 
 
     double estimateThetaSat(const Crit3DHorizon &horizon, double bulkDensity)
     {
         double totalPorosity = estimateTotalPorosity(horizon, bulkDensity);
-        if (int(totalPorosity) == int(NODATA))
+
+        if (isEqual(totalPorosity, NODATA))
             return NODATA;
         else
             return totalPorosity;
@@ -456,19 +468,20 @@ namespace soil
 
     double estimateSaturatedConductivity(const Crit3DHorizon &horizon, double bulkDensity)
     {
-        if (int(bulkDensity) == int(NODATA)) return NODATA;
+        if (isEqual(bulkDensity, NODATA))
+            return NODATA;
 
-        double refTotalPorosity = horizon.vanGenuchten.refThetaS;
-        double specificDensity = estimateSpecificDensity(horizon.organicMatter);
-        double refBulkDensity = (1 - refTotalPorosity) * specificDensity;
+        const double refTotalPorosity = horizon.vanGenuchten.refThetaS;
+        const double specificDensity = estimateSpecificDensity(horizon.organicMatter);
+        const double refBulkDensity = (1.0 - refTotalPorosity) * specificDensity;
 
         if (bulkDensity <= refBulkDensity)
             return horizon.waterConductivity.kSat;
         else
         {
             // soil compaction
-            double ratio = 1 - (bulkDensity / refBulkDensity);
-            return horizon.waterConductivity.kSat * exp(10*ratio);
+            const double ratio = 1 - (bulkDensity / refBulkDensity);
+            return horizon.waterConductivity.kSat * exp(10.0 * ratio);
         }
     }
 
@@ -676,14 +689,21 @@ namespace soil
      */
     double waterConductivity(double Se, const Crit3DHorizon &horizon)
     {
-        if (Se >= 1.) return(horizon.waterConductivity.kSat);
+        if (Se >= 1.)
+            return(horizon.waterConductivity.kSat);
 
-        double myTmp = NODATA;
+        Se = std::clamp(Se, 0.0, 1.0);
 
-        double myNumerator = 1. - pow(1. - pow(Se * horizon.vanGenuchten.sc, 1.0 / horizon.vanGenuchten.m), horizon.vanGenuchten.m);
-        myTmp = myNumerator / (1. - pow(1. - pow(horizon.vanGenuchten.sc, 1.0 / horizon.vanGenuchten.m), horizon.vanGenuchten.m));
+        const double m  = horizon.vanGenuchten.m;
+        const double sc = horizon.vanGenuchten.sc;
 
-        return (horizon.waterConductivity.kSat * pow(Se, horizon.waterConductivity.l) * pow(myTmp , 2.0));
+        const double numerator = 1.0 - pow(1.0 - pow(Se * sc, 1.0 / m), m);
+
+        const double denominator = 1.0 - pow(1.0 - pow(sc, 1.0 / m), m);
+
+        const double relativeTerm = numerator / denominator;
+
+        return (horizon.waterConductivity.kSat * pow(Se, horizon.waterConductivity.l) * pow(relativeTerm, 2.0));
     }
 
 
