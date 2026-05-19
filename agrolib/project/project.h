@@ -359,8 +359,11 @@
         bool waterTableImportDepths(const QString &csvDepthsFileName);
         bool waterTableComputeSingleWell(int indexWell);
         void waterTableShowSingleWell(const WaterTable &waterTable, const QString &idWell);
-        bool waterTableAssignNearestMeteoPoint(bool isMeteoGridLoaded, double wellUtmX, double wellUtmY, QDate firstMeteoDate, Crit3DMeteoPoint* linkedMeteoPoint);
-        bool waterTableAssignMeteoData(Crit3DMeteoPoint* linkedMeteoPoint, QDate firstMeteoDate);
+
+        bool waterTableAssignNearestMeteoPoint(bool isMeteoGrid, double wellUtmX, double wellUtmY,
+                                               const QDate &firstMeteoDate, Crit3DMeteoPoint* linkedMeteoPoint);
+
+        bool waterTableAssignMeteoData(Crit3DMeteoPoint* linkedMeteoPoint, const QDate &firstMeteoDate);
 
         bool assignAltitudeToAggregationPoints();
         bool assignAltitudeToMeteoPoints(double boundarySize);

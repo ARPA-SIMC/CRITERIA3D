@@ -5981,16 +5981,9 @@ bool Project::waterTableComputeSingleWell(int indexWell)
     double wellUtmY = wellPoints[indexWell].getUtmY();
     Crit3DMeteoPoint linkedMeteoPoint;
 
-    bool isMeteoGrid;
-    if (meteoGridDbHandler != nullptr)
-    {
-        isMeteoGrid = true;
-    }
-    else if (! meteoPoints.empty())
-    {
-        isMeteoGrid = false;
-    }
-    else
+    bool isMeteoGrid = (meteoGridDbHandler);
+
+    if (! isMeteoGrid && meteoPoints.empty())
     {
         logError(ERROR_STR_MISSING_POINT_GRID);
         return false;
@@ -6045,12 +6038,13 @@ void Project::waterTableShowSingleWell(const WaterTable &waterTable, const QStri
 }
 
 
-bool Project::waterTableAssignNearestMeteoPoint(bool isMeteoGridLoaded, double wellUtmX, double wellUtmY, QDate firstMeteoDate, Crit3DMeteoPoint* linkedMeteoPoint)
+bool Project::waterTableAssignNearestMeteoPoint(bool isMeteoGrid, double wellUtmX, double wellUtmY,
+                                                const QDate &firstMeteoDate, Crit3DMeteoPoint* linkedMeteoPoint)
 {
     float minimumDistance = NODATA;
     bool isMeteoPointFound = false;
 
-    if (isMeteoGridLoaded)
+    if (isMeteoGrid)
     {
         std::string assignNearestId;
         unsigned int assignNearestRow;
@@ -6145,7 +6139,7 @@ bool Project::waterTableAssignNearestMeteoPoint(bool isMeteoGridLoaded, double w
 }
 
 
-bool Project::waterTableAssignMeteoData(Crit3DMeteoPoint* linkedMeteoPoint, QDate firstMeteoDate)
+bool Project::waterTableAssignMeteoData(Crit3DMeteoPoint* linkedMeteoPoint, const QDate &firstMeteoDate)
 {
     QDate lastMeteoDate;
     lastMeteoDate.setDate(linkedMeteoPoint->getLastDailyData().year, linkedMeteoPoint->getLastDailyData().month, linkedMeteoPoint->getLastDailyData().day); // ultimo dato disponibile
