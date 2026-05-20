@@ -16,19 +16,21 @@
     public:
         Crit3DGeometry();
 
-        void clear();
+        void clearGeometry();
 
-        const GLfloat *getVertices() const { return m_vertices.data(); }
-        const GLubyte *getColors() const { return m_colors.data(); }
+        const GLfloat *getVertices() const  { return m_vertices.data(); }
+        const GLubyte *getColors() const    { return m_colors.data(); }
 
-        long dataCount() const { return long(m_vertices.size()); }
-        long vertexCount() const { return long(m_vertices.size()) / 3; }
-        float defaultDistance() const { return std::max(m_dx, m_dy); }
-        float magnify() const { return m_magnify; }
-        int artifactSlope() const { return m_artifactSlope; }
+        long dataCount() const          { return long(m_vertices.size()); }
+        long vertexCount() const        { return long(m_vertices.size()) / 3; }
+        int colorCount() const          { return int(m_colors.size()); }
+        float defaultDistance() const   { return std::max(m_dx, m_dy); }
+        float magnify() const           { return m_magnify; }
+        int artifactSlope() const       { return m_artifactSlope; }
+
+        void setArtifactSlope(int artifactSlope)    { m_artifactSlope = artifactSlope; }
 
         void setMagnify(float magnify);
-        void setArtifactSlope(int artifactSlope){ m_artifactSlope = artifactSlope; }
         void setCenter(float x, float y, float z);
         void setDimension(float dx, float dy);
 

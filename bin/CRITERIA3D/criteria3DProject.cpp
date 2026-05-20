@@ -3279,7 +3279,7 @@ void Crit3DProject::clearGeometry()
 {
     if (openGlGeometry != nullptr)
     {
-        openGlGeometry->clear();
+        openGlGeometry->clearGeometry();
         delete openGlGeometry;
         openGlGeometry = nullptr;
     }
