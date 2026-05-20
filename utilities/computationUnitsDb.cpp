@@ -56,40 +56,46 @@ ComputationUnitsDB::~ComputationUnitsDB()
 }
 
 
-bool ComputationUnitsDB::writeListToCompUnitsTable(QList<QString> &idCase, QList<QString> &idCrop,
-                                                   QList<QString> &idMeteo, QList<QString> &idSoil,
-                                                   QList<double> &hectares, QString &error)
+bool ComputationUnitsDB::writeListToCompUnitsTable(const QList<QString> &idCase, const QList<QString> &idCrop,
+                                                   const QList<QString> &idMeteo, const QList<QString> &idSoil,
+                                                   const QList<QString> &idWaterTable, const QList<double> &hectares,
+                                                   QString &error)
 {
     QSqlQuery qry(_db);
-    qry.prepare("CREATE TABLE computational_units (ID_CASE TEXT, ID_CROP TEXT, ID_METEO TEXT, ID_SOIL TEXT, HECTARES NUMERIC, PRIMARY KEY(ID_CASE))");
-    if( !qry.exec() )
+    qry.prepare("CREATE TABLE IF NOT EXISTS computational_units (ID_CASE TEXT, ID_CROP TEXT, ID_METEO TEXT, "
+                " ID_SOIL TEXT, ID_WATERTABLE TEXT, HECTARES NUMERIC, PRIMARY KEY(ID_CASE))");
+
+    if(! qry.exec() )
     {
         error = qry.lastError().text();
         return false;
     }
-    qry.clear();
 
-    QString myQuery = "INSERT INTO computational_units (ID_CASE, ID_CROP, ID_METEO, ID_SOIL, HECTARES) VALUES ";
+    const int lastIndex = idCase.size() - 1;
+
+    QString queryStr = "INSERT INTO computational_units (ID_CASE, ID_CROP, ID_METEO, ID_SOIL, ID_WATERTABLE, HECTARES) VALUES ";
 
     for (int i = 0; i < idCase.size(); i++)
     {
-        myQuery += "('" + idCase[i] + "','" + idCrop[i] + "','" + idMeteo[i] + "','" + idSoil[i];
-        myQuery += "','" + QString::number(hectares[i]) +"')";
-        if (i < (idCase.size()-1))
-            myQuery += ",";
+        queryStr += "('" + idCase[i] + "','" + idCrop[i] + "','" + idMeteo[i] + "','" + idSoil[i] + "','";
+
+        if (i < idWaterTable.size())
+            queryStr += idWaterTable[i];
+
+        queryStr += "','" + QString::number(hectares[i]) +"')";
+
+        if (i < lastIndex)
+            queryStr += ",";
     }
 
-    if( !qry.exec(myQuery))
+    qry.clear();
+    if(! qry.exec(queryStr))
     {
         error = qry.lastError().text();
-        myQuery.clear();
         return false;
     }
-    else
-    {
-        myQuery.clear();
-        return true;
-    }
+
+    return true;
 }
 
 
