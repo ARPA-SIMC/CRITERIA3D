@@ -59,39 +59,92 @@ ComputationUnitsDB::~ComputationUnitsDB()
 bool ComputationUnitsDB::writeListToCompUnitsTable(const QList<QString> &idCase, const QList<QString> &idCrop,
                                                    const QList<QString> &idMeteo, const QList<QString> &idSoil,
                                                    const QList<QString> &idWaterTable, const QList<double> &hectares,
-                                                   QString &error)
+                                                   QString &errorStr)
 {
-    QSqlQuery qry(_db);
-    qry.prepare("CREATE TABLE IF NOT EXISTS computational_units (ID_CASE TEXT, ID_CROP TEXT, ID_METEO TEXT, "
-                " ID_SOIL TEXT, ID_WATERTABLE TEXT, HECTARES NUMERIC, PRIMARY KEY(ID_CASE))");
-
-    if(! qry.exec() )
+    // check size
+    if (idCase.size() != idCrop.size() ||
+        idCase.size() != idMeteo.size() ||
+        idCase.size() != idSoil.size() ||
+        idCase.size() != hectares.size())
     {
-        error = qry.lastError().text();
+        errorStr = "Input list sizes mismatch.";
         return false;
     }
 
-    const int lastIndex = idCase.size() - 1;
+    QSqlQuery qry(_db);
+    qry.prepare(
+        "CREATE TABLE IF NOT EXISTS computational_units ("
+        "ID_CASE TEXT PRIMARY KEY, "
+        "ID_CROP TEXT, "
+        "ID_METEO TEXT, "
+        "ID_SOIL TEXT, "
+        "ID_WATERTABLE TEXT, "
+        "HECTARES NUMERIC, "
+        "use_water_table INTEGER DEFAULT 1, "
+        "numerical_solution INTEGER DEFAULT 0)");
 
-    QString queryStr = "INSERT INTO computational_units (ID_CASE, ID_CROP, ID_METEO, ID_SOIL, ID_WATERTABLE, HECTARES) VALUES ";
-
-    for (int i = 0; i < idCase.size(); i++)
+    if(! qry.exec() )
     {
-        queryStr += "('" + idCase[i] + "','" + idCrop[i] + "','" + idMeteo[i] + "','" + idSoil[i] + "','";
-
-        if (i < idWaterTable.size())
-            queryStr += idWaterTable[i];
-
-        queryStr += "','" + QString::number(hectares[i]) +"')";
-
-        if (i < lastIndex)
-            queryStr += ",";
+        errorStr = qry.lastError().text();
+        return false;
     }
 
-    qry.clear();
-    if(! qry.exec(queryStr))
+    // SINGLE BULK INSERT
+    QString queryStr =
+        "INSERT INTO computational_units ("
+        "ID_CASE, ID_CROP, ID_METEO, ID_SOIL, HECTARES, "
+        "ID_WATERTABLE, use_water_table) VALUES ";
+
+    QStringList rows;
+
+    const int n = idCase.size();
+
+    for (int i = 0; i < n; ++i)
     {
-        error = qry.lastError().text();
+        rows << "(?, ?, ?, ?, ?, ?, ?)";
+    }
+
+    queryStr += rows.join(",");
+
+    if (! _db.transaction())
+    {
+        errorStr = _db.lastError().text();
+        return false;
+    }
+
+    qry.prepare(queryStr);
+
+    for (int i = 0; i < n; ++i)
+    {
+        qry.addBindValue(idCase[i]);
+        qry.addBindValue(idCrop[i]);
+        qry.addBindValue(idMeteo[i]);
+        qry.addBindValue(idSoil[i]);
+        qry.addBindValue(hectares[i]);
+
+        // watertable on/off
+        if (i < idWaterTable.size())
+        {
+            qry.addBindValue(idWaterTable[i]);
+            qry.addBindValue(1);
+        }
+        else
+        {
+            qry.addBindValue(QString());
+            qry.addBindValue(0);
+        }
+    }
+
+    if (! qry.exec())
+    {
+        _db.rollback();
+        errorStr = qry.lastError().text();
+        return false;
+    }
+
+    if (! _db.commit())
+    {
+        errorStr = _db.lastError().text();
         return false;
     }
 
@@ -100,7 +153,7 @@ bool ComputationUnitsDB::writeListToCompUnitsTable(const QList<QString> &idCase,
 
 
 // load computation units list
-bool ComputationUnitsDB::readComputationUnitList(std::vector<Crit1DCompUnit> &unitList, QString &error)
+bool ComputationUnitsDB::readComputationUnitList(std::vector<Crit1DCompUnit> &unitList, QString &errorStr)
 {
     QString compUnitsTable = "computational_units";
     QList<QString> fieldList = getFields(&_db, compUnitsTable);
@@ -122,9 +175,9 @@ bool ComputationUnitsDB::readComputationUnitList(std::vector<Crit1DCompUnit> &un
     {
         if (query.lastError().nativeErrorCode() != "")
         {
-            error = "Error in reading computational units.\n" + query.lastError().text();
+            errorStr = "Error in reading computational units.\n" + query.lastError().text();
         }
-        else error = "Missing computational units data";
+        else errorStr = "Missing computational units data";
 
         return false;
     }
@@ -181,14 +234,14 @@ bool ComputationUnitsDB::readComputationUnitList(std::vector<Crit1DCompUnit> &un
 }
 
 
-bool readComputationUnitList(QString dbComputationUnitsName, std::vector<Crit1DCompUnit> &unitList, QString &error)
+bool readComputationUnitList(QString dbComputationUnitsName, std::vector<Crit1DCompUnit> &unitList, QString &errorStr)
 {
-    ComputationUnitsDB dbCompUnits(dbComputationUnitsName, error);
-    if (error != "")
+    ComputationUnitsDB dbCompUnits(dbComputationUnitsName, errorStr);
+    if (errorStr != "")
     {
         return false;
     }
-    if (! dbCompUnits.readComputationUnitList(unitList, error))
+    if (! dbCompUnits.readComputationUnitList(unitList, errorStr))
     {
         return false;
     }
