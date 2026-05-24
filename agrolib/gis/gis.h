@@ -312,7 +312,7 @@
         bool deleteRangeOfValuesRaster(gis::Crit3DRasterGrid* refRaster, float minValue, float maxValue, gis::Crit3DRasterGrid* outputRaster);
 
         float getNeighboursMinimumValue(const Crit3DRasterGrid& raster, int row, int col);
-        bool extractBasin(const Crit3DRasterGrid& inputRaster, Crit3DRasterGrid& outputRaster, double xClosure, double yClosure);
+
         bool resizeRasterCutEmptyFrame(const Crit3DRasterGrid *inputRaster, Crit3DRasterGrid *outputRaster, std::string &errorStr);
 
         bool computeWaterRunoffPath(const Crit3DRasterGrid& inputRaster, Crit3DRasterGrid& outputRaster, double xStart, double yStart);

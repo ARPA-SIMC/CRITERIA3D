@@ -46,6 +46,7 @@
 #include "utilities.h"
 #include "formText.h"
 #include "soilFluxes3D.h"
+#include "watershed.h"
 
 #include <QTime>
 
@@ -512,6 +513,7 @@ bool MainWindow::contextMenuRequested(QPoint localPos)
             QString completeFileName = QFileDialog::getSaveFileName(this, tr("Save basin raster"), "", tr("ESRI float (*.flt)"));
             if (completeFileName.isEmpty())
                 return false;
+
             std::string fileName = completeFileName.left(completeFileName.size() - 4).toStdString();
 
             // save map
