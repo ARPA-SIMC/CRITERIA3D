@@ -41,7 +41,7 @@ void StationMarker::setToolTip()
                             .arg(name, idpoint, dataset, altitude, region, province, municipality, lapseRateName);
 
     double value = currentValue();
-    if (! isEqual(value, NODATA) || isMarked())
+    if (! isEqual(value, NODATA))
     {
         QString valueStr;
         if (fabs(value) <= 1)
