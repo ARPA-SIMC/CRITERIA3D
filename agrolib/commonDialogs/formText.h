@@ -1,7 +1,8 @@
 #ifndef FORMTEXT_H
 #define FORMTEXT_H
 
-    #include <QtWidgets>
+    #include <QDialog>
+    #include <QLineEdit>
 
     class FormText : public QDialog
     {
@@ -11,9 +12,10 @@
         QLineEdit textEdit;
 
     public:
-        FormText(QString title, QString text);
+        FormText(const QString &title, const QString &text);
 
-        QString getText() const;
+        QString getText() const
+        { return textEdit.text(); }
     };
 
 #endif // FORMTEXT_H
