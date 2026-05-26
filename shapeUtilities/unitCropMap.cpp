@@ -224,8 +224,10 @@ bool writeUcmListToDb(Crit3DShapeHandler &shapeHandler, QString dbName, QString 
         return false;
     }
 
-    QList<QString> idCase, idCrop, idMeteo, idSoil;
+    QList<QString> idCase, idCrop, idMeteo, idSoil, idWaterTable;
     QList<double> ha;
+
+    bool isWaterTable = (shapeHandler.getFieldPos("ID_WT") != -1);
 
     for (int i = 0; i < nrShape; i++)
     {
@@ -244,6 +246,10 @@ bool writeUcmListToDb(Crit3DShapeHandler &shapeHandler, QString dbName, QString 
             idCrop << QString::fromStdString(shapeHandler.getStringValue(signed(i), "ID_CROP"));
             idMeteo << QString::fromStdString(shapeHandler.getStringValue(signed(i), "ID_METEO"));
             idSoil << QString::fromStdString(shapeHandler.getStringValue(signed(i), "ID_SOIL"));
+
+            if (isWaterTable)
+                idWaterTable << QString::fromStdString(shapeHandler.getStringValue(signed(i), "ID_WT"));
+
             ha << hectares;
         }
         else
@@ -261,6 +267,6 @@ bool writeUcmListToDb(Crit3DShapeHandler &shapeHandler, QString dbName, QString 
     if (errorStr != "")
         return false;
 
-    return compUnitsDb.writeListToCompUnitsTable(idCase, idCrop, idMeteo, idSoil, ha, errorStr);
+    return compUnitsDb.writeListToCompUnitsTable(idCase, idCrop, idMeteo, idSoil, idWaterTable, ha, errorStr);
 
 }

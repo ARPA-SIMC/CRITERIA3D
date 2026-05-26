@@ -148,12 +148,14 @@ void RasterUtmObject::paint(QPainter *painter, const QStyleOptionGraphicsItem *o
 \brief convert a point in geo (lat,lon) coordinates
  in pixel (local object) coordinates
 */
-QPointF RasterUtmObject::getPixel(const QPointF &geoPoint)
+QPointF RasterUtmObject::getPixel(const QPointF &geoPoint) const
 {
     QPointF mapPixel = _view->tileSource()->ll2qgs(geoPoint, _view->zoomLevel());
+
     QPointF pixel;
     pixel.setX(mapPixel.x() - _refCenterPixel.x());
     pixel.setY(_refCenterPixel.y() - mapPixel.y());
+
     return pixel;
 }
 
@@ -162,10 +164,11 @@ QPointF RasterUtmObject::getPixel(const QPointF &geoPoint)
  * \brief getValue
  * \return return the raster value at a lat lon position
  */
-float RasterUtmObject::getValue(Position& pos)
+float RasterUtmObject::getValue(Position& pos) const
 {
-    if (_rasterPointer == nullptr)
+    if (! _rasterPointer)
         return NODATA;
+
     if (! _rasterPointer->isLoaded)
         return NODATA;
 
@@ -173,7 +176,7 @@ float RasterUtmObject::getValue(Position& pos)
     gis::Crit3DGeoPoint geoPoint(pos.latitude(), pos.longitude());
     gis::getUtmFromLatLon(_utmZone, geoPoint, &utmPoint);
 
-    float value = _rasterPointer->getValueFromXY(utmPoint.x, utmPoint.y);
+    const float value = _rasterPointer->getValueFromXY(utmPoint.x, utmPoint.y);
 
     if (isEqual(value, _rasterPointer->header->flag))
         return NODATA;
@@ -186,7 +189,7 @@ float RasterUtmObject::getValue(Position& pos)
  * \brief getCurrentCenter
  * \return the current center of mapView (lat, lon)
  */
-Position RasterUtmObject::getCurrentCenter()
+Position RasterUtmObject::getCurrentCenter() const
 {
     Position center;
     center.setLatitude(_geoMap->referencePoint.latitude);
@@ -200,11 +203,12 @@ Position RasterUtmObject::getCurrentCenter()
  * \brief getRasterCenter
  * \return the center of the raster (lat, lon)
  */
-Position RasterUtmObject::getRasterCenter()
+Position RasterUtmObject::getRasterCenter() const
 {
+    const int rowCenter = _latRaster.header->nrRows * 0.5;
+    const int colCenter = _latRaster.header->nrCols * 0.5;
+
     Position center;
-    int rowCenter = _latRaster.header->nrRows * 0.5;
-    int colCenter = _latRaster.header->nrCols * 0.5;
     center.setLatitude(_latRaster.value[rowCenter][colCenter]);
     center.setLongitude(_lonRaster.value[rowCenter][colCenter]);
 
@@ -216,7 +220,7 @@ Position RasterUtmObject::getRasterCenter()
  * \brief getRasterMaxSize
  * \return the maximum size of the raster in decimal degrees (width or height)
  */
-double RasterUtmObject::getRasterMaxSize()
+double RasterUtmObject::getRasterMaxSize() const
 {
     return MAXVALUE(_latLonHeader.nrRows * _latLonHeader.dy, _latLonHeader.nrCols * _latLonHeader.dx);
 }
