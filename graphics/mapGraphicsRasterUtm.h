@@ -72,17 +72,17 @@
 
         gis::Crit3DRasterGrid* getRasterPointer() { return _rasterPointer; }
 
-        float getValue(Position& pos);
+        float getValue(Position& pos) const;
 
-        Position getCurrentCenter();
-        Position getRasterCenter();
-        QPointF getPixel(const QPointF &geoPoint);
-        gis::Crit3DLatLonHeader getLatLonHeader() { return _latLonHeader; }
+        Position getCurrentCenter() const;
+        Position getRasterCenter() const;
+        QPointF getPixel(const QPointF &geoPoint) const;
+        gis::Crit3DLatLonHeader getLatLonHeader() const { return _latLonHeader; }
 
         // degrees
-        double getRasterMaxSize();
-        double getSizeX() { return _latLonHeader.nrCols * _latLonHeader.dx; }
-        double getSizeY() { return _latLonHeader.nrRows * _latLonHeader.dy; }
+        double getRasterMaxSize() const;
+        double getSizeX() const { return _latLonHeader.nrCols * _latLonHeader.dx; }
+        double getSizeY() const { return _latLonHeader.nrRows * _latLonHeader.dy; }
 
         void updateCenter();
 
