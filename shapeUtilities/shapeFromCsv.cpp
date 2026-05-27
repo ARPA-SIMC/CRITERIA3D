@@ -154,7 +154,7 @@ bool shapeFromCsv(const Crit3DShapeHandler &refShapeFile, const QString &csvFile
     }
 
     Crit3DShapeHandler outputShapeFile;
-    if (! outputShapeFile.open(newFileName.toStdString()))
+    if (! outputShapeFile.open(newFileName.toStdString(), true))
     {
         errorStr = "Load shapefile failed: " + newFileName;
         return false;

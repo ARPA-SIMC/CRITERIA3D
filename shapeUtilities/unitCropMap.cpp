@@ -17,7 +17,7 @@ bool computeUcmPrevailing(Crit3DShapeHandler &shapeUCM, Crit3DShapeHandler &shap
     QString refFileName = QString::fromStdString(shapeCrop.getFilepath());
     QString ucmShapeFileName = cloneShapeFile(refFileName, ucmFileName);
 
-    if (! shapeUCM.open(ucmShapeFileName.toStdString()))
+    if (! shapeUCM.open(ucmShapeFileName.toStdString(), true))
     {
         errorStr = "Load shapefile failed: " + ucmShapeFileName.toStdString();
         return false;

@@ -62,7 +62,8 @@ QString copyShapeFile(const QString &refFileName, const QString &newFileName)
 
 bool cleanShapeFile(Crit3DShapeHandler &shapeHandler)
 {
-    if (! shapeHandler.existRecordDeleted()) return true;
+    if (! shapeHandler.existRecordDeleted())
+        return true;
 
     QFileInfo fileInfo(QString::fromStdString(shapeHandler.getFilepath()));
     QString refFile = fileInfo.absolutePath() + "/" + fileInfo.baseName();
@@ -84,7 +85,7 @@ bool cleanShapeFile(Crit3DShapeHandler &shapeHandler)
     QFile::copy(tmpFile + ".shx", refFile + ".shx");
     QFile::remove(tmpFile + ".shx");
 
-    return shapeHandler.open(shapeHandler.getFilepath());
+    return shapeHandler.open(shapeHandler.getFilepath(), false);
 }
 
 
@@ -99,7 +100,7 @@ bool computeAnomaly(Crit3DShapeHandler *shapeAnomaly, Crit3DShapeHandler *shape1
         return false;
     }
 
-    if (! shapeAnomaly->open(newShapeFileName.toStdString()))
+    if (! shapeAnomaly->open(newShapeFileName.toStdString(), true))
     {
         errorStr = "Error in create/open shapefile: " + newShapeFileName;
         return false;
