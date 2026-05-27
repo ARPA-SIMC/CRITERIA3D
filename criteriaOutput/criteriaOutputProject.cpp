@@ -920,6 +920,8 @@ int CriteriaOutputProject::createAggregationFile(bool isReorder)
     bool isOk = false;
     for(int i=0; i < aggregationVariable.outputVarName.size(); i++)
     {
+        logger.writeInfo(aggregationVariable.outputVarName[i]);
+
         std::string error;
         if (aggregationVariable.aggregationType[i] == "MAJORITY")
         {

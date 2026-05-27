@@ -233,10 +233,6 @@ bool zonalStatisticsShape(Crit3DShapeHandler& shapeRef, Crit3DShapeHandler& shap
         }
     }
 
-    // close and re-open to write also the last shape
-    shapeRef.close();
-    shapeRef.open(shapeRef.getFilepath(), false);
-
     return true;
 }
 
@@ -927,10 +923,6 @@ bool zonalStatisticsShapeCategories_majority(Crit3DShapeHandler &shapeRef, const
             shapeRef.writeIntAttribute(row, fieldIndex, NODATA);
         }
     }
-
-    // close and re-open to write also the last shape
-    shapeRef.close();
-    shapeRef.open(shapeRef.getFilepath(), false);
 
     return true;
 }
