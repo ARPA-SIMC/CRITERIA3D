@@ -503,9 +503,10 @@ bool MainWindow::contextMenuRequested(QPoint localPos)
 
             // extract basin
             gis::Crit3DRasterGrid basinRaster;
-            if (! gis::extractBasin(myProject.DEM, basinRaster, x, y))
+            std::string errorStr;
+            if (! gis::extractBasin(myProject.DEM, basinRaster, x, y, errorStr))
             {
-                myProject.logWarning("Wrong closure point.");
+                myProject.logWarning("Wrong closure point: " + QString::fromStdString(errorStr));
                 return false;
             }
 
@@ -517,7 +518,6 @@ bool MainWindow::contextMenuRequested(QPoint localPos)
             std::string fileName = completeFileName.left(completeFileName.size() - 4).toStdString();
 
             // save map
-            std::string errorStr;
             if (! gis::writeEsriGrid(fileName, &basinRaster, errorStr))
             {
                 myProject.logError(QString::fromStdString(errorStr));
