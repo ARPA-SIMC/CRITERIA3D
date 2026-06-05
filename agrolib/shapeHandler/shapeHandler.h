@@ -35,12 +35,13 @@
 
         std::string errorString;
 
-        bool open(std::string filename);
-        bool openDBF(std::string filename);
-        bool openSHP(std::string filename);
+        bool open(const std::string &filename, bool isWrite);
+        bool openDBF(const std::string &filename);
+        bool openSHP(const std::string &filename);
         void newShapeFile(std::string filename, int nShapeType);
-        bool isWGS84Proj(std::string prjFileName);
-        bool setUTMzone(std::string prjFileName);
+        bool isWGS84Proj(const std::string &prjFileName);
+        bool setUTMzone(const std::string &prjFileName);
+
         void close();
         void closeDBF();
         void closeSHP();

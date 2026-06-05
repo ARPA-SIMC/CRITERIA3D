@@ -53,6 +53,8 @@
         QDateTime getFirstDate(frequencyType frequency, const std::string& idMeteoPoint);
         QDateTime getLastDate(frequencyType frequency, const std::string& idMeteoPoint);
 
+        bool hasData(frequencyType frequency, const std::string &idMeteoPoint) const;
+
         bool existTable(const Crit3DMeteoPoint &meteoPoint, frequencyType myFrequency);
         bool existTable(const QSqlDatabase &myDb, const Crit3DMeteoPoint &meteoPoint, frequencyType myFrequency);
 

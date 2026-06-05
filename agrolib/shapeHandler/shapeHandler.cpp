@@ -83,21 +83,25 @@ void Crit3DShapeHandler::closeSHP()
 }
 
 
-bool Crit3DShapeHandler::open(std::string filename)
+bool Crit3DShapeHandler::open(const std::string &filename, bool isWrite)
 {
     close();
 
-    m_handle = SHPOpen(filename.c_str(), "r+b");
+    std::string pszAccess = "rb";   // default: only read
+    if (isWrite)
+        pszAccess = "r+b";          // read/write
+
+    m_handle = SHPOpen(filename.c_str(), pszAccess.c_str());
     if (! m_handle)
     {
-        errorString = "failed to open (read/write) the shapefile";
+        errorString = "failed to open .shp file";
         return false;
     }
 
-    m_dbf = DBFOpen(filename.c_str(), "r+b");
+    m_dbf = DBFOpen(filename.c_str(), pszAccess.c_str());
     if (! m_dbf)
     {
-        errorString = "failed to open (read/write) the shapefile";
+        errorString = "failed to open .dbf file";
         close();
         return false;
     }
@@ -105,7 +109,7 @@ bool Crit3DShapeHandler::open(std::string filename)
     SHPGetInfo(m_handle, &m_count, &m_type, m_minBound, m_maxBound);
     m_fields = m_dbf->nFields;
 
-    if (m_count < 0)
+    if (m_count <= 0)
     {
         errorString = "Wrong shapefile (no shapes)";
         close();
@@ -135,7 +139,6 @@ bool Crit3DShapeHandler::open(std::string filename)
 
     // save holes inside parts
     ShapeObject myShape;
-    Point<double> point;
 
     m_parts = 0;
     m_holes = 0;
@@ -144,7 +147,8 @@ bool Crit3DShapeHandler::open(std::string filename)
 
     for (int i = 0; i < m_count; ++i)
     {
-        getShape(i, myShape);
+        if (! getShape(i, myShape))
+            continue;
 
         const auto& shapeParts = myShape.getParts();
 
@@ -158,15 +162,17 @@ bool Crit3DShapeHandler::open(std::string filename)
             // holes
             if (shapeParts[j].hole)
             {
-                m_holes++;
-
                 // check first point
                 unsigned long offset = shapeParts[j].offset;
-                point = myShape.getVertex(offset);
-                int index = myShape.getIndexPart(point.x, point.y);
-                if (index != NODATA)
+                if (offset < myShape.getVertexCount())
                 {
-                    holes[i][unsigned(index)].push_back(j);
+                    Point<double> point = myShape.getVertex(offset);
+                    int index = myShape.getIndexPart(point.x, point.y);
+                    if (index != NODATA && index >= 0 && static_cast<unsigned>(index) < nrParts)
+                    {
+                        holes[i][index].push_back(j);
+                        m_holes++;
+                    }
                 }
             }
         }
@@ -198,7 +204,7 @@ void Crit3DShapeHandler::newShapeFile(std::string filename, int nShapeType)
 }
 
 
-bool Crit3DShapeHandler::openDBF(std::string filename)
+bool Crit3DShapeHandler::openDBF(const std::string &filename)
 {
     closeDBF();
     m_dbf = DBFOpen(filename.c_str(), "r+b");
@@ -224,7 +230,7 @@ bool Crit3DShapeHandler::openDBF(std::string filename)
 }
 
 
-bool Crit3DShapeHandler::openSHP(std::string filename)
+bool Crit3DShapeHandler::openSHP(const std::string &filename)
 {
     closeSHP();
     m_handle = SHPOpen(filename.c_str(), "r+b");
@@ -235,7 +241,7 @@ bool Crit3DShapeHandler::openSHP(std::string filename)
 }
 
 
-bool Crit3DShapeHandler::isWGS84Proj(std::string prjFileName)
+bool Crit3DShapeHandler::isWGS84Proj(const std::string &prjFileName)
 {
     std::ifstream prjFile (prjFileName);
     std::string line;
@@ -269,7 +275,7 @@ bool Crit3DShapeHandler::isWGS84Proj(std::string prjFileName)
 }
 
 
-bool Crit3DShapeHandler::setUTMzone(std::string prjFileName)
+bool Crit3DShapeHandler::setUTMzone(const std::string &prjFileName)
 {
     std::ifstream prjFile (prjFileName);
     std::string line;
