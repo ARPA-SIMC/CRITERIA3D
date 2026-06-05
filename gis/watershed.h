@@ -31,8 +31,15 @@
         void cleanBasin_simple(const Crit3DRasterGrid& dem, Crit3DRasterGrid& outputRaster,
                                double xClosure, double yClosure);
 
+        void removeDisconnectedAreas(Crit3DRasterGrid& basinRaster, int rowClosure, int colClosure);
+
+        bool addTerrainDepressions(const Crit3DRasterGrid& dem, Crit3DRasterGrid& basinRaster);
+
+        bool extractBasin_singleStep(Crit3DRasterGrid& dem, Crit3DRasterGrid& outputRaster,
+                                     double xClosure, double yClosure, std::string& errorStr);
+
         bool extractBasin(const Crit3DRasterGrid& dem, Crit3DRasterGrid& outputRaster,
-                        double xClosure, double yClosure);
+                          double xClosure, double yClosure, std::string &errorStr);
     }
 
 

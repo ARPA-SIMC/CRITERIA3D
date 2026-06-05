@@ -2107,7 +2107,8 @@ namespace gis
 
 
     /*!
-     * \brief remove the empty edges of a raster
+     * \brief resizeRasterCutEmptyFrame
+     * remove the empty edges of a raster
      */
     bool resizeRasterCutEmptyFrame(const Crit3DRasterGrid* inputRaster,
                                    Crit3DRasterGrid* outputRaster, std::string& errorStr)
@@ -2167,12 +2168,6 @@ namespace gis
 
         const int newRows = row1 - row0 + 1;
         const int newCols = col1 - col0 + 1;
-
-        if (newRows == rows && newCols == cols)
-        {
-            errorStr = "There is no empty frame to crop.";
-            return false;
-        }
 
         // copy entire header first
         *outH = *inH;

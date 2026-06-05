@@ -43,20 +43,21 @@ namespace gis
      * \brief extractBasin_singleStep
      * extract a basin from a digital terrain model, starting from the closure point (xClosure, yClosure)
      */
-    bool extractBasin_singleStep(Crit3DRasterGrid& inputRaster, Crit3DRasterGrid& outputRaster, double xClosure, double yClosure)
+    bool extractBasin_singleStep(Crit3DRasterGrid& dem, Crit3DRasterGrid& outputRaster,
+                             double xClosure, double yClosure, std::string& errorStr)
     {
         // check closure point
-        float refValue = inputRaster.getValueFromXY(xClosure, yClosure);
-        if (isEqual(refValue, inputRaster.header->flag))
+        const float refValue = dem.getValueFromXY(xClosure, yClosure);
+        if (isEqual(refValue, dem.header->flag))
             return false;
 
         // initialize new raster (basin)
         Crit3DRasterGrid basinRaster;
-        basinRaster.initializeGrid(*inputRaster.header);
+        basinRaster.initializeGrid(*dem.header);
 
         // set first value
         int rowClosure, colClosure;
-        inputRaster.getRowCol(xClosure, yClosure, rowClosure, colClosure);
+        dem.getRowCol(xClosure, yClosure, rowClosure, colClosure);
         basinRaster.value[rowClosure][colClosure] = refValue;
 
         // initialize queue
@@ -67,15 +68,17 @@ namespace gis
         // *** step 1: adds points with higher topographic elevation
 
         float rasterValue, basinValue;
-        int side = 5;
+        const int side = 3;
+        const float flag = basinRaster.header->flag;
+
         while (! rowList.empty())
         {
-            for (int i=0; i < (int)rowList.size(); i++)
+            for (size_t i=0; i < rowList.size(); ++i)
             {
-                int row = rowList[i];
-                int col = colList[i];
-                refValue = basinRaster.value[row][col];
-                if (! isEqual(refValue, basinRaster.header->flag))
+                const int row = rowList[i];
+                const int col = colList[i];
+                const float currentElevation = basinRaster.value[row][col];
+                if (! isEqual(currentElevation, flag))
                 {
                     for (int r = -side; r <= side; r++)
                     {
@@ -83,11 +86,11 @@ namespace gis
                         {
                             if (r != 0 || c != 0)
                             {
-                                rasterValue = inputRaster.getValueFromRowCol(row+r, col+c);
-                                if (! isEqual(rasterValue, inputRaster.header->flag) && (rasterValue >= refValue))
+                                rasterValue = dem.getValueFromRowCol(row+r, col+c);
+                                if (! isEqual(rasterValue, dem.header->flag) && (rasterValue >= currentElevation))
                                 {
                                     basinValue = basinRaster.getValueFromRowCol(row+r, col+c);
-                                    if (isEqual(basinValue, basinRaster.header->flag))
+                                    if (isEqual(basinValue, flag))
                                     {
                                         newRowList.push_back(row+r);
                                         newColList.push_back(col+c);
@@ -100,8 +103,8 @@ namespace gis
                 }
             }
 
-            rowList = newRowList;
-            colList = newColList;
+            rowList.swap(newRowList);
+            colList.swap(newColList);
             newRowList.clear();
             newColList.clear();
         }
@@ -109,17 +112,54 @@ namespace gis
         rowList.clear();
         colList.clear();
 
-        // *** step 2: adds terrain depressions
+        // *** step 2: add terrain depressions
 
+        addTerrainDepressions(dem, basinRaster);
+
+        // *** step 3: clean the basin
+
+        // 3.1) remove points relating to other basins
+        cleanBasin_simple(dem, basinRaster, xClosure, yClosure);
+
+        // 3.2) remove disconnected areas
+        removeDisconnectedAreas(basinRaster, rowClosure, colClosure);
+
+        // 3.3) delete empty frames and copy the output raster
+        if (! resizeRasterCutEmptyFrame(&basinRaster, &outputRaster, errorStr))
+            return false;
+
+        return true;
+    }
+
+
+    /*!
+    * \brief addTerrainDepressions
+    * add terrain depressions to a extracted basin
+    * warning: basinRaster and dem must have the same header
+    */
+    bool addTerrainDepressions(const Crit3DRasterGrid& dem, Crit3DRasterGrid& basinRaster)
+    {
+        if (basinRaster.header->nrRows != dem.header->nrRows ||
+            basinRaster.header->nrCols != dem.header->nrCols)
+        {
+            return false;
+        }
+
+        const float flag = basinRaster.header->flag;
+
+        // initialize queue
+        std::vector<int> rowList, colList, newRowList, newColList;
+
+        // mark all empty cells on the border
         for (int row = 0; row < basinRaster.header->nrRows; row++)
         {
             // left and right edge
-            if (isEqual(basinRaster.value[row][0], basinRaster.header->flag))
+            if (isEqual(basinRaster.value[row][0], flag))
             {
                 rowList.push_back(row);
                 colList.push_back(0);
             }
-            if (isEqual(basinRaster.value[row][basinRaster.header->nrCols-1], basinRaster.header->flag))
+            if (isEqual(basinRaster.value[row][basinRaster.header->nrCols-1], flag))
             {
                 rowList.push_back(row);
                 colList.push_back(basinRaster.header->nrCols-1);
@@ -129,35 +169,33 @@ namespace gis
         for (int col = 0; col < basinRaster.header->nrCols; col++)
         {
             // top and bottom edge
-            if (isEqual(basinRaster.value[0][col], basinRaster.header->flag))
+            if (isEqual(basinRaster.value[0][col], flag))
             {
                 rowList.push_back(0);
                 colList.push_back(col);
             }
-            if (isEqual(basinRaster.value[basinRaster.header->nrRows-1][col], basinRaster.header->flag))
+            if (isEqual(basinRaster.value[basinRaster.header->nrRows-1][col], flag))
             {
                 rowList.push_back(basinRaster.header->nrRows-1);
                 colList.push_back(col);
             }
         }
 
-        // initialize new raster (boundaries)
-        Crit3DRasterGrid boundariesRaster;
-        boundariesRaster.initializeGrid(*inputRaster.header);
+        // flood-fill all empty cells connected to borders
+        gis::Crit3DRasterGrid boundariesRaster;
+        boundariesRaster.initializeGrid(*basinRaster.header);
 
-        for (int i=0; i < (int)rowList.size(); i++)
+        for (size_t i=0; i < rowList.size(); ++i)
         {
             boundariesRaster.value[rowList[i]][colList[i]] = 1;
         }
 
-        // adds empty points
-        float boundaryValue;
         while (! rowList.empty())
         {
-            for (int i=0; i < (int)rowList.size(); i++)
+            for (size_t i=0; i < rowList.size(); ++i)
             {
-                int row = rowList[i];
-                int col = colList[i];
+                const int row = rowList[i];
+                const int col = colList[i];
                 for (int r = -1; r <= 1; r++)
                 {
                     for (int c = -1; c <= 1; c++)
@@ -166,10 +204,9 @@ namespace gis
                         {
                             if (! basinRaster.isOutOfGrid(row+r, col+c))
                             {
-                                basinValue = basinRaster.value[row+r][col+c];
-                                if (isEqual(basinValue, basinRaster.header->flag))
+                                if (isEqual(basinRaster.value[row+r][col+c], flag))
                                 {
-                                    boundaryValue = boundariesRaster.value[row+r][col+c];
+                                    const float boundaryValue = boundariesRaster.value[row+r][col+c];
                                     if (isEqual(boundaryValue, boundariesRaster.header->flag))
                                     {
                                         newRowList.push_back(row+r);
@@ -182,8 +219,9 @@ namespace gis
                     }
                 }
             }
-            rowList = newRowList;
-            colList = newColList;
+
+            rowList.swap(newRowList);
+            colList.swap(newColList);
             newRowList.clear();
             newColList.clear();
         }
@@ -193,25 +231,192 @@ namespace gis
         {
             for (int col = 0; col < basinRaster.header->nrCols; col++)
             {
-                basinValue = basinRaster.value[row][col];
-                boundaryValue = boundariesRaster.value[row][col];
-                if (isEqual(basinValue, basinRaster.header->flag) && isEqual(boundaryValue, boundariesRaster.header->flag))
+                const float basinValue = basinRaster.value[row][col];
+                const float boundaryValue = boundariesRaster.value[row][col];
+                if (isEqual(basinValue, flag) && isEqual(boundaryValue, boundariesRaster.header->flag))
                 {
-                    rasterValue = inputRaster.value[row][col];
-                    basinRaster.value[row][col] = rasterValue;
+                    basinRaster.value[row][col] = dem.value[row][col];
                 }
             }
         }
 
-        // *** step 3: clean the basin
+        return true;
+    }
 
-        // a) removes points relating to other basins
-        cleanBasin_simple(inputRaster, basinRaster, xClosure, yClosure);
 
-        // b) delete empty frame
-        std::string errorStr;
-        if (! resizeRasterCutEmptyFrame(&basinRaster, &outputRaster, errorStr))
-            return false;
+    /*!
+    * \brief removeDisconnected
+    * keeps only the connected component of raster containing the closure point
+    */
+    void removeDisconnectedAreas(Crit3DRasterGrid& basinRaster, int rowClosure, int colClosure)
+    {
+        const float flag = basinRaster.header->flag;
+
+        // safety check
+        if (basinRaster.isOutOfGrid(rowClosure, colClosure))
+            return;
+
+        if (isEqual(basinRaster.value[rowClosure][colClosure], flag))
+            return;
+
+        // raster of connected cells
+        Crit3DRasterGrid connectedRaster;
+        connectedRaster.initializeGrid(*basinRaster.header);
+
+        // flood-fill queue
+        std::vector<int> rowList, colList;
+        std::vector<int> newRowList, newColList;
+
+        rowList.push_back(rowClosure);
+        colList.push_back(colClosure);
+
+        connectedRaster.value[rowClosure][colClosure] = 1;
+
+        while (! rowList.empty())
+        {
+            for (size_t i = 0; i < rowList.size(); ++i)
+            {
+                const int row = rowList[i];
+                const int col = colList[i];
+
+                for (int r = -1; r <= 1; ++r)
+                {
+                    for (int c = -1; c <= 1; ++c)
+                    {
+                        if (r == 0 && c == 0)
+                            continue;
+
+                        const int newRow = row + r;
+                        const int newCol = col + c;
+
+                        if (basinRaster.isOutOfGrid(newRow, newCol))
+                            continue;
+
+                        // must belong to basin
+                        if (isEqual(basinRaster.value[newRow][newCol], flag))
+                            continue;
+
+                        // already visited
+                        if (isEqual(connectedRaster.value[newRow][newCol], 1))
+                            continue;
+
+                        connectedRaster.value[newRow][newCol] = 1;
+
+                        newRowList.push_back(newRow);
+                        newColList.push_back(newCol);
+                    }
+                }
+            }
+
+            rowList.swap(newRowList);
+            colList.swap(newColList);
+
+            newRowList.clear();
+            newColList.clear();
+        }
+
+        // remove disconnected islands
+        for (int row = 0; row < basinRaster.header->nrRows; ++row)
+        {
+            for (int col = 0; col < basinRaster.header->nrCols; ++col)
+            {
+                if (! isEqual(basinRaster.value[row][col], flag))
+                {
+                    if (! isEqual(connectedRaster.value[row][col], 1))
+                    {
+                        basinRaster.value[row][col] = flag;
+                    }
+                }
+            }
+        }
+    }
+
+
+    /*!
+    * \brief cleanBasin
+    * removes points relating to other basins, starting from closure point
+    */
+    void cleanBasin_simple(const Crit3DRasterGrid& dem, Crit3DRasterGrid& outputRaster,
+                           double xClosure, double yClosure)
+    {
+        const double threshold = outputRaster.header->cellSize * 3.0;
+        const float flag = outputRaster.header->flag;
+
+        for (int row = 0; row < outputRaster.header->nrRows; row++)
+        {
+            for (int col = 0; col < outputRaster.header->nrCols; col++)
+            {
+                float refValue = outputRaster.value[row][col];
+
+                if (! isEqual(refValue, flag))
+                {
+                    int lastRow = row;
+                    int lastCol = col;
+                    bool isNewPoint = true;
+
+                    // descends following the minimum height
+                    while (isNewPoint)
+                    {
+                        isNewPoint = false;
+                        const int currentRow = lastRow;
+                        const int currentCol = lastCol;
+                        double x, y;
+                        dem.getXY(currentRow, currentCol, x, y);
+
+                        if (computeDistance(x, y, xClosure, yClosure) > threshold)
+                        {
+                            for (int r = -1; r <= 1; r++)
+                            {
+                                for (int c = -1; c <= 1; c++)
+                                {
+                                    if (r != 0 || c != 0)
+                                    {
+                                        const float currentElevation = dem.getValueFromRowCol(currentRow + r, currentCol + c);
+                                        if (! isEqual(currentElevation, dem.header->flag) && (currentElevation < refValue))
+                                        {
+                                            refValue = currentElevation;
+                                            lastRow = currentRow+r;
+                                            lastCol = currentCol+c;
+                                            isNewPoint = true;
+                                        }
+                                    }
+                                }
+                            }
+                        }
+
+                        // remove the origin point if the last point of path is outside the basin
+                        if (isNewPoint && isEqual(outputRaster.value[lastRow][lastCol], flag))
+                        {
+                            outputRaster.value[row][col] = flag;
+                            isNewPoint = false;
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+
+    /*!
+     * \brief extractBasin
+     * extract a basin from a digital terrain model, starting from the closure point (x, y)
+     */
+    bool extractBasin(const Crit3DRasterGrid& dem, Crit3DRasterGrid& outputRaster,
+                      double xClosure, double yClosure, std::string& errorStr)
+    {
+        // initialize basin raster with dem
+        Crit3DRasterGrid basinRaster;
+        basinRaster.copyGrid(dem);
+
+        int nrExtraction = 3;
+        for (int i = 0; i < nrExtraction; i++)
+        {
+            if (! extractBasin_singleStep(basinRaster, outputRaster, xClosure, yClosure, errorStr))
+                return false;
+
+            if (i < nrExtraction-1)
+                basinRaster.copyGrid(outputRaster);
+        }
 
         return true;
     }
@@ -389,88 +594,6 @@ namespace gis
         if (! resizeRasterCutEmptyFrame(&basinRaster, &outputRaster, errorStr))
         {
             return false;
-        }
-
-        return true;
-    }
-
-
-    // removes points relating to other basins
-    void cleanBasin_simple(const Crit3DRasterGrid& dem, Crit3DRasterGrid& outputRaster,
-                           double xClosure, double yClosure)
-    {
-        double threshold = outputRaster.header->cellSize * 3.0;
-
-        for (int row = 0; row < outputRaster.header->nrRows; row++)
-        {
-            for (int col = 0; col < outputRaster.header->nrCols; col++)
-            {
-                if (! isEqual(outputRaster.value[row][col], outputRaster.header->flag))
-                {
-                    float refValue = outputRaster.value[row][col];
-
-                    int lastRow = row;
-                    int lastCol = col;
-                    bool isNewPoint = true;
-                    double x, y;
-
-                    // descends following the maximum slope
-                    while (isNewPoint)
-                    {
-                        isNewPoint = false;
-                        int currentRow = lastRow;
-                        int currentCol = lastCol;
-                        dem.getXY(currentRow, currentCol, x, y);
-
-                        if (computeDistance(x, y, xClosure, yClosure) > threshold)
-                        {
-                            for (int r = -1; r <= 1; r++)
-                            {
-                                for (int c = -1; c <= 1; c++)
-                                {
-                                    if (r != 0 || c != 0)
-                                    {
-                                        float rasterValue = dem.getValueFromRowCol(currentRow+r, currentCol+c);
-                                        if (! isEqual(rasterValue, dem.header->flag) && (rasterValue < refValue))
-                                        {
-                                            refValue = rasterValue;
-                                            lastRow = currentRow+r;
-                                            lastCol = currentCol+c;
-                                            isNewPoint = true;
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    }
-
-                    // remove the origin point if the last point of path is outside the basin
-                    if (isEqual(outputRaster.value[lastRow][lastCol], outputRaster.header->flag))
-                    {
-                        outputRaster.value[row][col] = outputRaster.header->flag;
-                    }
-                }
-            }
-        }
-    }
-
-
-    /*!
-     * \brief extractBasin
-     * extract a basin from a digital terrain model, starting from the closure point (xClosure, yClosure)
-     */
-    bool extractBasin(const Crit3DRasterGrid& dem, Crit3DRasterGrid& outputRaster, double xClosure, double yClosure)
-    {
-        // initialize new raster (basin)
-        Crit3DRasterGrid basinRaster;
-        basinRaster.copyGrid(dem);
-
-        for (int i = 0; i < 3; i++)
-        {
-            if (! extractBasin_singleStep(basinRaster, outputRaster, xClosure, yClosure))
-                return false;
-
-            basinRaster.copyGrid(outputRaster);
         }
 
         return true;
