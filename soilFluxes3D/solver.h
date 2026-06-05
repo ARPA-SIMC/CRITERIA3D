@@ -33,6 +33,7 @@ namespace soilFluxes3D::v2
 
             void updateParameters(const SolverParametersPartial &newParameters);
             void setTimeStep(double timeStep) noexcept;
+            double getTimeStep() const {return _parameters.deltaTcurr;}
 
             __cudaSpec solverType getSolverType() const noexcept;
             __cudaSpec WRCModel getWRCModel() const noexcept;
