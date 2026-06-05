@@ -47,8 +47,8 @@
         double maximum() { return _maximum; }
         void setMaximum(double max) { _maximum = max; }
 
-        Crit3DColor* getColor(float myValue);
-        unsigned int getColorIndex(float myValue);
+        Crit3DColor* getColor(double myValue);
+        unsigned int getColorIndex(double myValue) const;
 
         bool setRange(float minimum, float maximum);
 
