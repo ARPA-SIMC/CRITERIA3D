@@ -645,6 +645,7 @@ bool Project3D::setAccuracy()
     {
         // parallel computing
         waterFluxesParameters.numberOfThreads = soilFluxes3D::setThreadsNumber(waterFluxesParameters.numberOfThreads);
+        logInfo("Use Lineal: FALSE");
     }
 
     return true;

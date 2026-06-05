@@ -173,7 +173,7 @@ namespace soilFluxes3D::v2::Water
         {
             if(deltaT > parameters.deltaTmin)
             {
-                parameters.deltaTcurr = SF3Dmax(parameters.deltaTcurr / 2, parameters.deltaTmin);
+                parameters.deltaTcurr = SF3Dmax(parameters.deltaTcurr * 0.5, parameters.deltaTmin);
                 return balanceResult_t::stepHalved;
             }
             else if (approxNr > 0)
@@ -212,7 +212,7 @@ namespace soilFluxes3D::v2::Water
         {
             if(deltaT > parameters.deltaTmin)
             {
-                parameters.deltaTcurr = SF3Dmax(parameters.deltaTcurr / 2, parameters.deltaTmin);
+                parameters.deltaTcurr = SF3Dmax(parameters.deltaTcurr * 0.5, parameters.deltaTmin);
                 return balanceResult_t::stepHalved;
             }
 

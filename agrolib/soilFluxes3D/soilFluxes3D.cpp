@@ -493,7 +493,7 @@ namespace soilFluxes3D::v2
         paramTemp.residualTolerance = std::pow(10.0, -ResidualToleranceExponent);
         paramTemp.deltaTmin = minDeltaT;
         paramTemp.deltaTmax = maxDeltaT;
-        paramTemp.deltaTcurr = maxDeltaT;
+        paramTemp.deltaTcurr = solver->getTimeStep();
         paramTemp.maxApproximationsNumber = maxApproximationsNumber;
         paramTemp.maxIterationsNumber = maxIterationNumber;
         solver->updateParameters(paramTemp);
