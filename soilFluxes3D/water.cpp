@@ -10,8 +10,8 @@
 #include "heat.h"
 #include "otherFunctions.h"
 
-// [m] 1 micrometre
-#define EPSILON_METER 0.000001
+// [m] 10 micrometres
+#define EPSILON_METER 0.00001
 
 using namespace soilFluxes3D::v2;
 using namespace soilFluxes3D::v2::Soil;
@@ -193,8 +193,10 @@ namespace soilFluxes3D::v2::Water
         {
             acceptStep(deltaT);
 
-            // increase deltaT if system is stable (check Courant)
-            if((nodeGrid.CourantWater < parameters.CourantWaterThreshold) && (approxNr <= 3))
+            // increases time step if the mass balance error is low and Courant is below the threshold
+            if( approxNr < 3
+                && currMBRerror < parameters.MBRThreshold * 0.1
+                && nodeGrid.CourantWater < parameters.CourantWaterThreshold )
                 parameters.deltaTcurr = SF3Dmin(parameters.deltaTmax, parameters.deltaTcurr * 2);
 
             return balanceResult_t::stepAccepted;
@@ -309,11 +311,17 @@ namespace soilFluxes3D::v2::Water
         double flowArea = nodeGrid.linkData[linkIndex].interfaceArea[nodeIndex];
 
         if (isNodeSoil && isLinkedSoil)
+        {
             matrixElement = redistribution(nodeIndex, linkedNodeindex, lateralVerticalRatio, flowArea, linkType, meanType);
+        }
         else if(! isNodeSoil  && ! isLinkedSoil)
-            matrixElement = runoff(nodeIndex, linkedNodeindex, approxNum, deltaT, flowArea);
+        {
+            matrixElement = runoffConductance(nodeIndex, linkedNodeindex, approxNum, deltaT, flowArea);
+        }
         else
+        {
             matrixElement = infiltration(nodeIndex, linkedNodeindex, deltaT, flowArea, meanType);
+        }
 
         matrixIndex = linkedNodeindex;
 
@@ -331,27 +339,28 @@ namespace soilFluxes3D::v2::Water
             }
         }
 
-        return (matrixElement != 0.);
+        return (matrixElement != 0.0);
     }
 
 
-    __cudaSpec double runoff(SF3Duint_t i, SF3Duint_t j, u8_t approxNum, double deltaT, double flowSide)
+    __cudaSpec double runoff_old(SF3Duint_t i, SF3Duint_t j, u8_t approxNum, double deltaT, double flowSide)
     {
-        double currentDH = std::abs(nodeGrid.waterData.pressureHead[i] - nodeGrid.waterData.pressureHead[j]);
-        if(currentDH < 1e-6)
-            return 0.;
-
+        // total water potential [m]
         double H_i = 0.5 * (nodeGrid.waterData.pressureHead[i] + nodeGrid.waterData.oldPressureHead[i]);
         double H_j = 0.5 * (nodeGrid.waterData.pressureHead[j] + nodeGrid.waterData.oldPressureHead[j]);
 
-        if (approxNum == 0 && nodeGrid.waterData.waterFlow[i] > 0)
+        // rainfall predictor coefficient (first approximation)
+        if (approxNum == 0)
         {
-            // rainfall
-            double flux_i = (nodeGrid.waterData.waterFlow[i] * deltaT) / nodeGrid.size[i];
-            double flux_j = (nodeGrid.waterData.waterFlow[j] * deltaT) / nodeGrid.size[j];
-            H_i += 0.33 * flux_i;
-            H_j += 0.33 * flux_j;
+            if (nodeGrid.waterData.waterFlow[i] > 0)
+                H_i += 0.5 * (nodeGrid.waterData.waterFlow[i] * deltaT) / nodeGrid.size[i];
+            if (nodeGrid.waterData.waterFlow[j] > 0)
+                H_j += 0.5 * (nodeGrid.waterData.waterFlow[j] * deltaT) / nodeGrid.size[j];
         }
+
+        double dH = abs(H_i - H_j);
+        if(dH < EPSILON_METER)
+            return 0.0;
 
         double z_i = nodeGrid.z[i] + nodeGrid.waterData.pond[i];
         double z_j = nodeGrid.z[j] + nodeGrid.waterData.pond[j];
@@ -359,10 +368,10 @@ namespace soilFluxes3D::v2::Water
         double H_max = SF3Dmax(H_i, H_j);
         double z_max = SF3Dmax(z_i, z_j);
 
-        // water flux height [m]
+        // height of free water surface [m]
         double H_s = H_max - z_max;
         if(H_s < EPSILON_METER)
-            return 0.;
+            return 0.0;
 
         // Warning: cause underestimation of flow in lowland water bodies
         // use only in land depressions (disabled: produces mass balance error)
@@ -370,16 +379,111 @@ namespace soilFluxes3D::v2::Water
         //H_s = SF3Dmin(H_s, dH);
 
         double cellDistance = nodeDistance2D(i, j);
-        double dH = std::fabs(H_i - H_j);
         double slope = dH / cellDistance;
-        double roughness = 0.5 * (nodeGrid.soilSurfacePointers[i].surfacePtr->roughness + nodeGrid.soilSurfacePointers[j].surfacePtr->roughness);
+        double roughness = 0.5 * (nodeGrid.soilSurfacePointers[i].surfacePtr->roughness
+                                  + nodeGrid.soilSurfacePointers[j].surfacePtr->roughness);
+        if (roughness <= 0.0)
+            return 0.0;
 
-        double v = std::pow(H_s, 2./3.) * std::sqrt(slope) / roughness;         // [m s-1] Manning equation
+        // Manning equation
+        // cbrt is equivalent to pow(H_s, 2/3)
+        double v = cbrt(H_s * H_s) * sqrt(slope) / roughness;         // [m s-1]
 
         nodeGrid.waterData.partialCourantWater[i] = SF3Dmax(nodeGrid.waterData.partialCourantWater[i], v * deltaT / cellDistance);
 
         double flowArea = flowSide * H_s;       // [m2]
-        return (v * flowArea) / currentDH;
+
+        // surface conductance
+        return (v * flowArea) / dH;      // [m2 s-1]
+    }
+
+
+    /*!
+     * \brief runoffConductance
+     * Compute the surface runoff conductance between two adjacent nodes
+     * using the Manning-Strickler equation (diffusive wave approximation).
+     * The conductance K_{ij} is defined such that the volumetric flux between nodes i and j:
+     * Q_{ij} = K_{ij} * Delta H
+     * where Delta H = |H_i - H_j| is the hydraulic head difference.
+     * Hydraulic heads are time-averaged using a Crank-Nicolson scheme
+     * \param deltaT:   [s] Time step
+     * \param flowSide: [m] Length of the shared cell face (flow-face width)
+     * \return Surface runoff conductance K_{ij} [m² s⁻¹]
+     */
+    __cudaSpec double runoffConductance(SF3Duint_t i, SF3Duint_t j, u8_t approxNum, double deltaT, double flowSide)
+    {
+        // -------------------------
+        // 1. temporal averaging (Crank-Nicolson)
+        // -------------------------
+
+        // total water potential [m]
+        double Hi = 0.5 * (nodeGrid.waterData.pressureHead[i] + nodeGrid.waterData.oldPressureHead[i]);
+        double Hj = 0.5 * (nodeGrid.waterData.pressureHead[j] + nodeGrid.waterData.oldPressureHead[j]);
+
+        if (approxNum == 0)
+        {
+            // rainfall predictor coefficient (first approximation)
+            if (nodeGrid.waterData.waterFlow[i] > 0)
+                Hi += 0.5 * nodeGrid.waterData.waterFlow[i] * deltaT / nodeGrid.size[i];
+
+            if (nodeGrid.waterData.waterFlow[j] > 0)
+                Hj += 0.5 * nodeGrid.waterData.waterFlow[j] * deltaT / nodeGrid.size[j];
+        }
+
+        // -------------------------
+        // 2. topographic control
+        // -------------------------
+
+        double zi = nodeGrid.z[i] + nodeGrid.waterData.pond[i];
+        double zj = nodeGrid.z[j] + nodeGrid.waterData.pond[j];
+
+        double Hmax = SF3Dmax(Hi, Hj);
+        double zmax = SF3Dmax(zi, zj);
+
+        // height of free water surface [m]
+        double Hs = Hmax - zmax;
+        if (Hs <= EPSILON_METER)
+            return 0.0;
+
+        // -------------------------
+        // 3. geometry
+        // -------------------------
+
+        double dxy = nodeDistance2D(i, j);
+        if (dxy <= 0.0)
+            return 0.0;
+
+        // [s m-1/3] Manning roughness
+        double roughness = 0.5 * (nodeGrid.soilSurfacePointers[i].surfacePtr->roughness +
+                                  nodeGrid.soilSurfacePointers[j].surfacePtr->roughness);
+        if (roughness <= 0.0)
+            return 0.0;
+
+        // -------------------------
+        // 4. Manning diffusive-wave
+        // -------------------------
+
+        double A = flowSide * Hs;                       // [m²]
+
+        // cbrt is equivalent to pow(H_s, 2/3)
+        double Hs_2_3 = cbrt(Hs * Hs);
+
+        double Kij = A * Hs_2_3 / (roughness * dxy);    // [m² s⁻¹]
+
+        // -------------------------
+        // 5. Courant
+        // -------------------------
+
+        double dH = abs(Hi - Hj);
+        double slope = (dH > EPSILON_METER) ? dH / dxy : 0.0;
+
+        // [m s-1] Manning velocity
+        double v = Hs_2_3 * sqrt(slope) / roughness;
+
+        nodeGrid.waterData.partialCourantWater[i] = SF3Dmax(nodeGrid.waterData.partialCourantWater[i], v * deltaT / dxy );
+
+        // Surface runoff conductance [m² s⁻¹]
+        return Kij;
     }
 
 

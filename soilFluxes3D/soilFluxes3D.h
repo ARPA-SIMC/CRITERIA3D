@@ -24,7 +24,7 @@ namespace soilFluxes3D { inline namespace v2
 
     //Create types
     SF3Derror_t setSoilProperties(u16_t nrSoil, u8_t nrHorizon, double VG_alpha, double VG_n, double VG_m,
-                                  double VG_he, double ThetaR, double ThetaS, double Ksat, double L,
+                                  double VG_he, double thetaR, double thetaS, double kSat, double MualemL,
                                   double organicMatter, double clay);
     SF3Derror_t setSurfaceProperties(u16_t surfaceIndex, double roughness);
 

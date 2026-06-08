@@ -36,7 +36,7 @@ namespace soilFluxes3D::v2
     __cudaMngd simulationFlags_t simulationFlags;
     __cudaMngd balanceData_t balanceDataCurrentPeriod, balanceDataWholePeriod, balanceDataCurrentTimeStep, balanceDataPreviousTimeStep;
 
-    std::vector<std::vector<u16_t>> soil1DIndeces = {};
+    std::vector<std::vector<u16_t>> soil1DIndices = {};
     std::vector<soilData_t> soilList = {};
     std::vector<surfaceData_t> surfaceList = {};
     std::vector<culvertData_t> culvertList = {};
@@ -379,31 +379,45 @@ namespace soilFluxes3D::v2
             solver->linealMethod = value;
     }
 
+
     /*!
-     * \brief sets the soil properties of the nrSoil-nrHorizon soil type
+     * \brief sets the soil properties of the [nrSoil, nrHorizon] horizon
      * \param VG_alpha  [m-1]       Van Genutchen alpha parameter (warning: usually is kPa-1 in literature)
      * \param VG_n      [-]         Van Genutchen n parameter (1, 10]
      * \param VG_m      [-]         Van Genutchen m parameter (0, 1)
      * \param VG_he     [m]         Van Genutchen air-entry potential for modified formulation
-     * \param ThetaR    [m3 m-3]    residual water content
-     * \param ThetaS    [m3 m-3]    saturated water content
-     * \param Ksat      [m s-1]     saturated hydraulic conductivity
-     * \param L         [-]         tortuosity (Mualem equation)
+     * \param thetaR    [m3 m-3]    residual water content
+     * \param thetaS    [m3 m-3]    saturated water content
+     * \param kSat      [m s-1]     saturated hydraulic conductivity
+     * \param MualemL         [-]         tortuosity (Mualem equation)
      * \return Ok/Error
      */
     SF3Derror_t setSoilProperties(u16_t nrSoil, u8_t nrHorizon, double VG_alpha,
-                                  double VG_n, double VG_m, double VG_he, double ThetaR,
-                                  double ThetaS, double Ksat, double L, double organicMatter, double clay)
+                                  double VG_n, double VG_m, double VG_he, double thetaR,
+                                  double thetaS, double kSat, double MualemL, double organicMatter, double clay)
     {
-        if (VG_alpha <= 0 || (ThetaR < 0) || (ThetaR >= 1) || (ThetaS <= 0) || (ThetaS > 1) || (ThetaR > ThetaS))
+        if ( VG_alpha <= 0 || VG_n <= 1.0
+            || VG_m <= 0.0 || VG_m >= 1.0
+            || VG_he < 0.0 || kSat <= 0.0
+            || thetaR < 0.0 || thetaR >= 1.0
+            || thetaS <= 0.0 || thetaS > 1.0
+            || thetaR > thetaS )
+        {
             return SF3Derror_t::ParameterError;
+        }
 
-        //Check duplicato
+        // Check if it has already been defined
         for(const auto& soil : soilList)
             if(soil.soilNumber == nrSoil && soil.horizonNumber == nrHorizon)
                 return SF3Derror_t::ParameterError;
 
-        //Creazione del nuovo elemento
+        // check index
+        constexpr auto maxSoilIndex = std::numeric_limits<u16_t>::max();
+
+        if(soilList.size() > maxSoilIndex)
+            return SF3Derror_t::MemoryError;
+
+        // Create new soil
         soilData_t currSoil;
         currSoil.soilNumber = nrSoil;
         currSoil.horizonNumber = nrHorizon;
@@ -412,29 +426,31 @@ namespace soilFluxes3D::v2
         currSoil.VG_m = VG_m;
         currSoil.VG_he = VG_he;
         currSoil.VG_Sc = std::pow(1. + std::pow(VG_alpha * VG_he, VG_n), -VG_m);
-        currSoil.Theta_r = ThetaR;
-        currSoil.Theta_s = ThetaS;
-        currSoil.K_sat = Ksat;
-        currSoil.Mualem_L = L;
+        currSoil.Theta_r = thetaR;
+        currSoil.Theta_s = thetaS;
+        currSoil.K_sat = kSat;
+        currSoil.Mualem_L = MualemL;
         currSoil.organicMatter = organicMatter;
         currSoil.clay = clay;
 
+        // set indices
+        if(nrSoil >= soil1DIndices.size())
+            soil1DIndices.resize(nrSoil + 1);
+
+        if(nrHorizon >= soil1DIndices[nrSoil].size())
+            soil1DIndices[nrSoil].resize(nrHorizon + 1);
+
+        // insert new soil
         soilList.push_back(currSoil);
 
-        //Set dell'indice
-        if(nrSoil >= soil1DIndeces.size())
-            soil1DIndeces.resize(nrSoil + 1);
-
-        if(nrHorizon >= soil1DIndeces[nrSoil].size())
-            soil1DIndeces[nrSoil].resize(nrHorizon + 1);
-
-        soil1DIndeces[nrSoil][nrHorizon] = static_cast<u16_t>(soilList.size() - 1);
+        soil1DIndices[nrSoil][nrHorizon] = static_cast<u16_t>(soilList.size() - 1);
 
         return SF3Derror_t::SF3Dok;
     }
 
+
     /*!
-     * \brief sets the surface properties of the surfaceIndex surface type
+     * \brief sets the surface properties
      * \param roughness [s m-1/3]   Manning roughness
      * \return Ok/Error
      */
@@ -450,11 +466,13 @@ namespace soilFluxes3D::v2
         return SF3Derror_t::SF3Dok;
     }
 
+
     /*!
      *  \brief sets numerical parameters of the solver
      *  \return Ok/Error
     */
-    SF3Derror_t setNumericalParameters(double minDeltaT, double maxDeltaT, u16_t maxIterationNumber, u16_t maxApproximationsNumber, u8_t ResidualToleranceExponent, u8_t MBRThresholdExponent)
+    SF3Derror_t setNumericalParameters(double minDeltaT, double maxDeltaT, u16_t maxIterationNumber,
+                                       u16_t maxApproximationsNumber, u8_t ResidualToleranceExponent, u8_t MBRThresholdExponent)
     {
         if (minDeltaT < 0.01)
             minDeltaT = 0.01;           // [s]
@@ -590,7 +608,7 @@ namespace soilFluxes3D::v2
 
         nodeGrid.surfaceFlag[index] = isSurface;
 
-        //Boundary data
+        // boundary data
         setNodeBoundary(index, boundaryType, slope, boundaryArea);
 
         if(simulationFlags.computeWater)
@@ -609,6 +627,7 @@ namespace soilFluxes3D::v2
 
         return SF3Derror_t::SF3Dok;
     }
+
 
     /*!
      *  \brief sets the data of the link from nodeIndex to linkIndex nodes
@@ -723,10 +742,10 @@ namespace soilFluxes3D::v2
         if(nodeGrid.surfaceFlag[nodeIndex])
             return SF3Derror_t::IndexError;
 
-        if(soilIndex >= soil1DIndeces.size() || horizonIndex >= soil1DIndeces[soilIndex].size())
+        if(soilIndex >= soil1DIndices.size() || horizonIndex >= soil1DIndices[soilIndex].size())
             return SF3Derror_t::ParameterError;
 
-        nodeGrid.soilSurfacePointers[nodeIndex].soilPtr = &(soilList[soil1DIndeces[soilIndex][horizonIndex]]);
+        nodeGrid.soilSurfacePointers[nodeIndex].soilPtr = &(soilList[soil1DIndices[soilIndex][horizonIndex]]);
         return SF3Derror_t::SF3Dok;
     }
 
