@@ -753,8 +753,10 @@ using namespace std;
         {
             logLogisticCDF = std::exp(s) / (1. + std::exp(s));
         }
-
-        return (MAXVALUE(logLogisticCDF-0.0000001,0));
+        if (logLogisticCDF > 0.1)
+            return logLogisticCDF-0.00000001;
+        else
+            return logLogisticCDF;
     }
 
     double weibullCDF(double x, double lambda, double kappa)
