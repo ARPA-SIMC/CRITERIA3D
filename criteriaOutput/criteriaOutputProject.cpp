@@ -585,7 +585,7 @@ int CriteriaOutputProject::createShapeFile()
 
     Crit3DShapeHandler inputShape;
 
-    if (! inputShape.open(ucmFileName.toStdString()))
+    if (! inputShape.open(ucmFileName.toStdString(), false))
     {
         projectError = "Wrong UCM shapefile: " + ucmFileName;
         return ERROR_SHAPEFILE;
@@ -844,7 +844,7 @@ int CriteriaOutputProject::createAggregationFile(bool isReorder)
 
     Crit3DShapeHandler shapeVal, shapeRef;
 
-    if (! shapeVal.open(outputShapeFileName.toStdString()))
+    if (! shapeVal.open(outputShapeFileName.toStdString(), false))
     {
         projectError = "Load shapefile failed: " + outputShapeFileName;
         return ERROR_SHAPEFILE;
@@ -863,7 +863,7 @@ int CriteriaOutputProject::createAggregationFile(bool isReorder)
 
     QString outputAggrShapeFileName = cloneShapeFile(aggregationShapeFileName, outputAggrShapePath);
 
-    if (!shapeRef.open(outputAggrShapeFileName.toStdString()))
+    if (! shapeRef.open(outputAggrShapeFileName.toStdString(), true))
     {
         projectError = "Load shapefile failed: " + outputAggrShapeFileName;
         return ERROR_SHAPEFILE;
@@ -920,6 +920,8 @@ int CriteriaOutputProject::createAggregationFile(bool isReorder)
     bool isOk = false;
     for(int i=0; i < aggregationVariable.outputVarName.size(); i++)
     {
+        logger.writeInfo(aggregationVariable.outputVarName[i]);
+
         std::string error;
         if (aggregationVariable.aggregationType[i] == "MAJORITY")
         {
@@ -1010,7 +1012,7 @@ int CriteriaOutputProject::createNetcdf()
     logger.writeInfo("EXPORT TO NETCDF");
 
     Crit3DShapeHandler shapeHandler;
-    if (!shapeHandler.open(outputShapeFileName.toStdString()))
+    if (! shapeHandler.open(outputShapeFileName.toStdString(), false))
     {
         projectError = "Load shapefile failed: " + outputShapeFileName;
         return ERROR_SHAPEFILE;
@@ -1108,27 +1110,27 @@ bool CriteriaOutputProject::convertShapeToNetcdf(Crit3DShapeHandler &shapeHandle
     }
 
     // create netcdf
-    NetCDFHandler myNetCDF;
-    myNetCDF.createNewFile(outputFileName);
+    NetCDFHandler netCDF;
+    netCDF.createNewFile(outputFileName);
 
     std::string title = projectName.toStdString();
 
-    if (! myNetCDF.writeMetadata(latLonHeader, title, variableName, variableUnit,
+    if (! netCDF.writeMetadata(latLonHeader, title, variableName, variableUnit,
                                 computationDate, nrDays, NODATA, NODATA))
     {
         projectError = "Error in write metadata to netcdf.";
-        myNetCDF.close();
+        netCDF.close();
         return false;
     }
 
-    if (! myNetCDF.writeData_NoTime(dataRaster))
+    if (! netCDF.writeData_NoTime(dataRaster))
     {
         projectError = "Error in write data to netcdf.";
-        myNetCDF.close();
+        netCDF.close();
         return false;
     }
 
-    myNetCDF.close();
+    netCDF.close();
 
     return true;
 }
@@ -1346,7 +1348,7 @@ int CriteriaOutputProject::createShapeFileFromGUI()
 {
     Crit3DShapeHandler inputShape;
 
-    if (! inputShape.open(ucmFileName.toStdString()))
+    if (! inputShape.open(ucmFileName.toStdString(), false))
     {
         projectError = "Wrong shapefile: " + ucmFileName;
         return ERROR_SHAPEFILE;

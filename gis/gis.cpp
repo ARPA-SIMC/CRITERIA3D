@@ -2049,238 +2049,6 @@ namespace gis
     }
 
 
-    // removes points relating to other basins
-    void cleanBasin(const Crit3DRasterGrid& inputRaster, Crit3DRasterGrid& basinRaster, double xClosure, double yClosure)
-    {
-        double threshold = basinRaster.header->cellSize * 3.0;
-
-        for (int row = 0; row < basinRaster.header->nrRows; row++)
-        {
-            for (int col = 0; col < basinRaster.header->nrCols; col++)
-            {
-                if (! isEqual(basinRaster.value[row][col], basinRaster.header->flag))
-                {
-                    float refValue = basinRaster.value[row][col];
-
-                    int lastRow = row;
-                    int lastCol = col;
-                    bool isNewPoint = true;
-                    double x, y;
-
-                    // descends following the maximum slope
-                    while (isNewPoint)
-                    {
-                        isNewPoint = false;
-                        int currentRow = lastRow;
-                        int currentCol = lastCol;
-                        inputRaster.getXY(currentRow, currentCol, x, y);
-
-                        if (computeDistance(x, y, xClosure, yClosure) > threshold)
-                        {
-                            for (int r = -1; r <= 1; r++)
-                            {
-                                for (int c = -1; c <= 1; c++)
-                                {
-                                    if (r != 0 || c != 0)
-                                    {
-                                        float rasterValue = inputRaster.getValueFromRowCol(currentRow+r, currentCol+c);
-                                        if (! isEqual(rasterValue, inputRaster.header->flag) && (rasterValue < refValue))
-                                        {
-                                            refValue = rasterValue;
-                                            lastRow = currentRow+r;
-                                            lastCol = currentCol+c;
-                                            isNewPoint = true;
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    }
-
-                    // remove the origin point if the last point of path is outside the basin
-                    if (isEqual(basinRaster.value[lastRow][lastCol], basinRaster.header->flag))
-                    {
-                        basinRaster.value[row][col] = basinRaster.header->flag;
-                    }
-                }
-            }
-        }
-    }
-
-
-    /*!
-     * \brief extract a basin from a digital terrain model, starting from the closure point (xClosure, yClosure)
-     */
-    bool extractBasin_singleStep(Crit3DRasterGrid& inputRaster, Crit3DRasterGrid& outputRaster, double xClosure, double yClosure)
-    {
-        // check closure point
-        float refValue = inputRaster.getValueFromXY(xClosure, yClosure);
-        if (isEqual(refValue, inputRaster.header->flag))
-            return false;
-
-        // initialize new raster (basin)
-        Crit3DRasterGrid basinRaster;
-        basinRaster.initializeGrid(*inputRaster.header);
-
-        // set first value
-        int rowClosure, colClosure;
-        inputRaster.getRowCol(xClosure, yClosure, rowClosure, colClosure);
-        basinRaster.value[rowClosure][colClosure] = refValue;
-
-        // initialize queue
-        std::vector<int> rowList, colList, newRowList, newColList;
-        rowList.push_back(rowClosure);
-        colList.push_back(colClosure);
-
-        // *** step 1: adds points with higher topographic elevation
-
-        float rasterValue, basinValue;
-        int side = 5;
-        while (! rowList.empty())
-        {
-            for (int i=0; i < (int)rowList.size(); i++)
-            {
-                int row = rowList[i];
-                int col = colList[i];
-                refValue = basinRaster.value[row][col];
-                if (! isEqual(refValue, basinRaster.header->flag))
-                {
-                    for (int r = -side; r <= side; r++)
-                    {
-                        for (int c = -side; c <= side; c++)
-                        {
-                            if (r != 0 || c != 0)
-                            {
-                                rasterValue = inputRaster.getValueFromRowCol(row+r, col+c);
-                                if (! isEqual(rasterValue, inputRaster.header->flag) && (rasterValue >= refValue))
-                                {
-                                    basinValue = basinRaster.getValueFromRowCol(row+r, col+c);
-                                    if (isEqual(basinValue, basinRaster.header->flag))
-                                    {
-                                        newRowList.push_back(row+r);
-                                        newColList.push_back(col+c);
-                                        basinRaster.value[row+r][col+c] = rasterValue;
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-
-            rowList = newRowList;
-            colList = newColList;
-            newRowList.clear();
-            newColList.clear();
-        }
-
-        rowList.clear();
-        colList.clear();
-
-        // *** step 2: adds terrain depressions
-
-        for (int row = 0; row < basinRaster.header->nrRows; row++)
-        {
-            // left and right edge
-            if (isEqual(basinRaster.value[row][0], basinRaster.header->flag))
-            {
-                rowList.push_back(row);
-                colList.push_back(0);
-            }
-            if (isEqual(basinRaster.value[row][basinRaster.header->nrCols-1], basinRaster.header->flag))
-            {
-                rowList.push_back(row);
-                colList.push_back(basinRaster.header->nrCols-1);
-            }
-        }
-        for (int col = 0; col < basinRaster.header->nrCols; col++)
-        {
-            // top and bottom edge
-            if (isEqual(basinRaster.value[0][col], basinRaster.header->flag))
-            {
-                rowList.push_back(0);
-                colList.push_back(col);
-            }
-            if (isEqual(basinRaster.value[basinRaster.header->nrRows-1][col], basinRaster.header->flag))
-            {
-                rowList.push_back(basinRaster.header->nrRows-1);
-                colList.push_back(col);
-            }
-        }
-
-        // initialize new raster (boundaries)
-        Crit3DRasterGrid boundariesRaster;
-        boundariesRaster.initializeGrid(*inputRaster.header);
-
-        for (int i=0; i < (int)rowList.size(); i++)
-        {
-            boundariesRaster.value[rowList[i]][colList[i]] = 1;
-        }
-
-        // adds empty points
-        float boundaryValue;
-        while (! rowList.empty())
-        {
-            for (int i=0; i < (int)rowList.size(); i++)
-            {
-                int row = rowList[i];
-                int col = colList[i];
-                for (int r = -1; r <= 1; r++)
-                {
-                    for (int c = -1; c <= 1; c++)
-                    {
-                        if (r != 0 || c != 0)
-                        {
-                            if (! basinRaster.isOutOfGrid(row+r, col+c))
-                            {
-                                basinValue = basinRaster.value[row+r][col+c];
-                                if (isEqual(basinValue, basinRaster.header->flag))
-                                {
-                                    boundaryValue = boundariesRaster.value[row+r][col+c];
-                                    if (isEqual(boundaryValue, boundariesRaster.header->flag))
-                                    {
-                                        newRowList.push_back(row+r);
-                                        newColList.push_back(col+c);
-                                        boundariesRaster.value[row+r][col+c] = 1;
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-            rowList = newRowList;
-            colList = newColList;
-            newRowList.clear();
-            newColList.clear();
-        }
-
-        // adds terrain depressions
-        for (int row = 0; row < basinRaster.header->nrRows; row++)
-        {
-            for (int col = 0; col < basinRaster.header->nrCols; col++)
-            {
-                basinValue = basinRaster.value[row][col];
-                boundaryValue = boundariesRaster.value[row][col];
-                if (isEqual(basinValue, basinRaster.header->flag) && isEqual(boundaryValue, boundariesRaster.header->flag))
-                {
-                    rasterValue = inputRaster.value[row][col];
-                    basinRaster.value[row][col] = rasterValue;
-                }
-            }
-        }
-
-        // *** step 3: clean the basin (removes points relating to other basins)
-        cleanBasin(inputRaster, basinRaster, xClosure, yClosure);
-
-        // *** step 5: delete empty frame
-        std::string errorStr;
-        resizeRasterCutEmptyFrame(&basinRaster, &outputRaster, errorStr);
-
-        return true;
-    }
-
-
     /*!
      * \brief crop raster using bounding box
      */
@@ -2305,24 +2073,24 @@ namespace gis
         c0 = std::clamp(c0, 0, inputRaster->header->nrCols - 1);
         c1 = std::clamp(c1, 0, inputRaster->header->nrCols - 1);
 
-        if (r1 <= r0 || c1 <= c0)
+        if (r1 < r0 || c1 < c0)
             return false;
+
+        // set header
+        auto *outH = outputRaster->header;
+        auto *inHeader  = inputRaster->header;
+
+        outH->flag        = inHeader->flag;
+        outH->cellSize    = inHeader->cellSize;
+        outH->invCellSize = inHeader->invCellSize;
 
         int newRows = r1 - r0 + 1;
         int newCols = c1 - c0 + 1;
+        outH->nrRows = newRows;
+        outH->nrCols = newCols;
 
-        // set header
-        outputRaster->header->flag = inputRaster->header->flag;
-        outputRaster->header->cellSize = inputRaster->header->cellSize;
-        outputRaster->header->invCellSize = inputRaster->header->invCellSize;
-
-        outputRaster->header->nrRows = newRows;
-        outputRaster->header->nrCols = newCols;
-
-        outputRaster->header->llCorner.x = inputRaster->header->llCorner.x + c0 * outputRaster->header->cellSize;
-
-        int deltaRow = inputRaster->header->nrRows - r1 - 1;
-        outputRaster->header->llCorner.y = inputRaster->header->llCorner.y + deltaRow * outputRaster->header->cellSize;
+        outH->llCorner.x = inHeader->llCorner.x + c0 * inHeader->cellSize;
+        outH->llCorner.y = inHeader->llCorner.y + (inHeader->nrRows - r1 - 1) * inHeader->cellSize;
 
         outputRaster->initializeGrid();
 
@@ -2339,29 +2107,58 @@ namespace gis
 
 
     /*!
-     * \brief remove the empty edges of a raster
+     * \brief resizeRasterCutEmptyFrame
+     * remove the empty edges of a raster
      */
-    bool resizeRasterCutEmptyFrame(const Crit3DRasterGrid *inputRaster, Crit3DRasterGrid *outputRaster, std::string &errorStr)
+    bool resizeRasterCutEmptyFrame(const Crit3DRasterGrid* inputRaster,
+                                   Crit3DRasterGrid* outputRaster, std::string& errorStr)
     {
-        int row0 = inputRaster->header->nrRows-1;
+        // check
+        if (inputRaster == nullptr ||
+            outputRaster == nullptr)
+        {
+            errorStr = "Invalid raster pointer.";
+            return false;
+        }
+
+        if (inputRaster == outputRaster)
+        {
+            errorStr = "Input and output raster must differ.";
+            return false;
+        }
+
+        const auto* inH = inputRaster->header;
+        auto* outH = outputRaster->header;
+
+        const int rows = inH->nrRows;
+        const int cols = inH->nrCols;
+
+        const float flag = inH->flag;
+
+        int row0 = rows - 1;
         int row1 = 0;
-        int col0 = inputRaster->header->nrCols-1;
+        int col0 = cols - 1;
         int col1 = 0;
 
         bool containsData = false;
-        float flag = inputRaster->header->flag;
 
-        // search range of valid values
-        for (int row = 0; row < inputRaster->header->nrRows; row++)
-            for (int col = 0; col < inputRaster->header->nrCols; col++)
-                if (! isEqual(inputRaster->value[row][col], flag))
+        // search valid-data bounds
+        for (int r = 0; r < rows; ++r)
+        {
+            for (int c = 0; c < cols; ++c)
+            {
+                if (! isEqual(inputRaster->value[r][c], flag))
                 {
-                    row0 = std::min(row0, row);
-                    row1 = std::max(row1, row);
-                    col0 = std::min(col0, col);
-                    col1 = std::max(col1, col);
+                    row0 = std::min(row0, r);
+                    row1 = std::max(row1, r);
+
+                    col0 = std::min(col0, c);
+                    col1 = std::max(col1, c);
+
                     containsData = true;
                 }
+            }
+        }
 
         if (! containsData)
         {
@@ -2372,66 +2169,30 @@ namespace gis
         const int newRows = row1 - row0 + 1;
         const int newCols = col1 - col0 + 1;
 
-        if (inputRaster->header->nrRows == newRows && inputRaster->header->nrCols == newCols)
-        {
-            errorStr = "There is no empty frame to crop.";
-            return false;
-        }
+        // copy entire header first
+        *outH = *inH;
 
-        // set header
-        outputRaster->header->flag = flag;
-        outputRaster->header->cellSize = inputRaster->header->cellSize;
-        outputRaster->header->invCellSize = inputRaster->header->invCellSize;
+        // set new values
+        outH->nrRows = newRows;
+        outH->nrCols = newCols;
 
-        outputRaster->header->nrRows = newRows;
-        outputRaster->header->nrCols = newCols;
-
-        outputRaster->header->llCorner.x = inputRaster->header->llCorner.x + col0 * outputRaster->header->cellSize;
-        int deltaRow = inputRaster->header->nrRows - row1 -1;
-        outputRaster->header->llCorner.y = inputRaster->header->llCorner.y + deltaRow * outputRaster->header->cellSize;
+        outH->llCorner.x = inH->llCorner.x + col0 * inH->cellSize;
+        outH->llCorner.y = inH->llCorner.y + (inH->nrRows - row1 - 1) * inH->cellSize;
 
         outputRaster->initializeGrid();
 
-        // move the data
-        for (int row = 0; row < outputRaster->header->nrRows; row++)
-            for (int col = 0; col < outputRaster->header->nrCols; col++)
-                outputRaster->value[row][col] = inputRaster->value[row+row0][col+col0];
+        // copy values
+        for (int r = 0; r < newRows; ++r)
+        {
+            for (int c = 0; c < newCols; ++c)
+            {
+                outputRaster->value[r][c] =
+                    inputRaster->value[r + row0][c + col0];
+            }
+        }
 
         outputRaster->isLoaded = true;
         updateMinMaxRasterGrid(outputRaster);
-        return true;
-    }
-
-
-    bool extractBasin(const Crit3DRasterGrid& inputRaster, Crit3DRasterGrid& outputRaster, double xClosure, double yClosure)
-    {
-        // initialize new raster (basin)
-        Crit3DRasterGrid basinRaster;
-        basinRaster.copyGrid(inputRaster);
-
-        for (int i = 0; i < 2; i++)
-        {
-            if (! extractBasin_singleStep(basinRaster, outputRaster, xClosure, yClosure))
-                return false;
-
-            basinRaster.copyGrid(outputRaster);
-        }
-
-        return true;
-    }
-
-
-    bool computeWaterRunoffPath(const Crit3DRasterGrid& inputRaster, Crit3DRasterGrid& outputRaster, double xStart, double yStart)
-    {
-        outputRaster.initializeGrid(inputRaster);
-
-        // set first value
-        int row, col;
-        inputRaster.getRowCol(xStart, yStart, row, col);
-        if (! inputRaster.isOutOfGrid(row, col))
-            outputRaster.value[row][col] = 0.;
-
-        // todo
 
         return true;
     }

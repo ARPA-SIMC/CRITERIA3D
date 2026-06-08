@@ -184,7 +184,6 @@ bool zonalStatisticsShape(Crit3DShapeHandler& shapeRef, Crit3DShapeHandler& shap
             }
         }
 
-
         // check percentage of valid values
         bool isValid = false;
         if (validPoints[row] > 0)
@@ -233,10 +232,6 @@ bool zonalStatisticsShape(Crit3DShapeHandler& shapeRef, Crit3DShapeHandler& shap
             shapeRef.writeDoubleAttribute(int(shapeIndex), fieldIndex, valueToSave);
         }
     }
-
-    // close and re-open to write also the last shape
-    shapeRef.close();
-    shapeRef.open(shapeRef.getFilepath());
 
     return true;
 }
@@ -423,7 +418,7 @@ bool zonalStatisticsShapeMajority_old(Crit3DShapeHandler &shapeRef, Crit3DShapeH
 
     // close and re-open to write also the last shape
     shapeRef.close();
-    shapeRef.open(shapeRef.getFilepath());
+    shapeRef.open(shapeRef.getFilepath(), false);
 
     return true;
 }
@@ -594,7 +589,7 @@ bool zonalStatisticsShapeMajority( Crit3DShapeHandler &shapeRef, Crit3DShapeHand
 
     // close and re-open to write also the last shape
     shapeRef.close();
-    shapeRef.open(shapeRef.getFilepath());
+    shapeRef.open(shapeRef.getFilepath(), false);
 
     return true;
 }
@@ -928,10 +923,6 @@ bool zonalStatisticsShapeCategories_majority(Crit3DShapeHandler &shapeRef, const
             shapeRef.writeIntAttribute(row, fieldIndex, NODATA);
         }
     }
-
-    // close and re-open to write also the last shape
-    shapeRef.close();
-    shapeRef.open(shapeRef.getFilepath());
 
     return true;
 }

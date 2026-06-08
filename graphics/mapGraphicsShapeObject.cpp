@@ -114,39 +114,40 @@ void MapGraphicsShapeObject::setPolygon(unsigned int i, unsigned int j, QPolygon
 
 void MapGraphicsShapeObject::drawShape(QPainter* myPainter)
 {
-    QPolygonF polygon;
-    QPainterPath* path;
-    QPainterPath* inner;
-    QColor color;
-    std::vector<unsigned int> myHoles;
+    if (! myPainter)
+        return;
+
+    static const QColor gray(64,64,64);
+    static const QColor red(Qt::red);
+    static const QColor black(Qt::black);
 
     for (unsigned long i = 0; i < _nrShapes; i++)
     {
         QPen myPen;
         if (i != _selectedShape)
         {
-            // grey
-            myPen.setColor(QColor(64, 64, 64));
+            myPen.setColor(gray);
             myPen.setWidth(1);
         }
         else
         {
             if (_isSelectedRed)
-                myPen.setColor(QColor(255, 0, 0));
-            else {
-                // black
-                myPen.setColor(QColor(0, 0, 0));
-            }
+                myPen.setColor(red);
+            else
+                myPen.setColor(black);
+
             myPen.setWidth(2);
         }
+
         myPainter->setPen(myPen);
         myPainter->setBrush(Qt::NoBrush);
 
         if (_isFill && values[i] != NODATA)
         {
             Crit3DColor* myColor = colorScale->getColor(values[i]);
-            color = QColor(myColor->red, myColor->green, myColor->blue);
+            QColor color(myColor->red, myColor->green, myColor->blue);
             myPainter->setBrush(color);
+
             if (i != _selectedShape)
             {
                 myPainter->setPen(color);
@@ -162,37 +163,32 @@ void MapGraphicsShapeObject::drawShape(QPainter* myPainter)
                     || geoBounds[i][j].v0.lat > geoMap->topRight.latitude
                     || geoBounds[i][j].v1.lon < geoMap->bottomLeft.longitude
                     || geoBounds[i][j].v1.lat < geoMap->bottomLeft.latitude)
-            {
                 continue;
-            }
 
+            QPolygonF polygon;
             setPolygon(i, j, &polygon);
 
-            myHoles = shapePointer->getHoles(i, j);
+            std::vector<unsigned int> myHoles = shapePointer->getHoles(i, j);
 
-            if (myHoles.size() == 0)
+            if (myHoles.empty())
             {
                 myPainter->drawPolygon(polygon);
             }
             else
             {
-                path = new QPainterPath();
-                path->addPolygon(polygon);
+                QPainterPath path;
+                path.setFillRule(Qt::OddEvenFill);
 
-                // holes
-                inner = new QPainterPath();
-                for (unsigned int k = 0; k < myHoles.size(); k++)
+                path.addPolygon(polygon);
+
+                for (unsigned int k = 0; k < myHoles.size(); ++k)
                 {
                     setPolygon(i, myHoles[k], &polygon);
-                    inner->addPolygon(polygon);
+                    path.addPolygon(polygon);
                 }
 
-                myPainter->drawPath(path->subtracted(*inner));
-
-                delete inner;
-                delete path;
+                myPainter->drawPath(path);
             }
-            myHoles.clear();
         }
     }
 }

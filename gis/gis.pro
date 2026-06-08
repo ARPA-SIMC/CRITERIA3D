@@ -31,9 +31,11 @@ INCLUDEPATH += ../mathFunctions ../crit3dDate
 SOURCES += gis.cpp \
     gisIO.cpp \
     color.cpp \
-    geoMap.cpp
+    geoMap.cpp \
+    watershed.cpp
 
 HEADERS += gis.h \
     color.h \
     gisIO.h \
-    geoMap.h
+    geoMap.h \
+    watershed.h

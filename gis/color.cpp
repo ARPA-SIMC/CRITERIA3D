@@ -126,22 +126,37 @@ bool Crit3DColorScale::classify()
 }
 
 
-Crit3DColor* Crit3DColorScale::getColor(float value)
+Crit3DColor* Crit3DColorScale::getColor(double value)
 {
     unsigned int index = getColorIndex(value);
     return &color[index];
 }
 
 
-unsigned int Crit3DColorScale::getColorIndex(float value)
+unsigned int Crit3DColorScale::getColorIndex(double value) const
 {
+    if (_nrColors == 0)
+        return 0;
+
+    if (_nrColors == 1 || _maximum <= _minimum)
+        return 0;
+
     if (value <= _minimum)
         return 0;
-    else if (value >= _maximum)
-        return _nrColors-1;
-    else if (_classification == classificationMethod::EqualInterval)
-        return unsigned(float(_nrColors-1) * ((value - _minimum) / (_maximum - _minimum)));
-    else return 0;
+
+    if (value >= _maximum)
+        return _nrColors - 1;
+
+    if (_classification == classificationMethod::EqualInterval)
+    {
+        return static_cast<unsigned int>((_nrColors - 1) *
+                                         (value - _minimum) / (_maximum - _minimum));
+    }
+    else
+    {
+        // todo other classificationMethod
+        return 0;
+    }
 }
 
 
@@ -161,6 +176,7 @@ bool setRandomColors(Crit3DColorScale* myScale)
         int r = dist(gen);
         int g = dist(gen);
         int b = dist(gen);
+
         myScale->keyColor[i] = Crit3DColor(r, g, b);
     }
 
