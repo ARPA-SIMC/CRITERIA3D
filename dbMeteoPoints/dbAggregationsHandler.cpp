@@ -257,7 +257,7 @@ bool Crit3DAggregationsDbHandler::existIdPoint(const QString& idPoint)
 }
 
 
-bool Crit3DAggregationsDbHandler::writeAggregationPointProperties(const QString &aggrType, const std::vector<int> &idZoneVector,
+bool Crit3DAggregationsDbHandler::writeAggregationPointProperties(const QString &aggregationType, const std::vector<int> &idZoneVector,
                                                                   const std::vector<double> &lonVector, const std::vector<double> &latVector)
 {
     if (! _db.tables().contains(QLatin1String("point_properties")) )
@@ -268,7 +268,7 @@ bool Crit3DAggregationsDbHandler::writeAggregationPointProperties(const QString 
     QSqlQuery qry(_db);
     for (int i = 0; i < (int)idZoneVector.size(); i++)
     {
-        QString id = QString::number(idZoneVector[i]) + "_" + aggrType;
+        QString id = QString::number(idZoneVector[i]) + "_" + aggregationType;
         QString name = id;
 
         if (! existIdPoint(id))
