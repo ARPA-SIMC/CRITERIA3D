@@ -1155,13 +1155,15 @@ namespace statistics
         *r2 = float((SUMres - SUM_dy) / SUMres);
     }
 
+
     /*! Variance */
     float variance(float *myList, int nrList)
     {
+        if (nrList <= 1)
+            return NODATA;
+
         float myMean, myDiff, squareDiff;
         int i, nrValidValues;
-
-        if (nrList <= 1) return NODATA;
 
         myMean = mean(myList,nrList);
 
@@ -1183,12 +1185,14 @@ namespace statistics
             return NODATA;
     }
 
+
     float variance(std::vector<float> myList, int nrList)
     {
+        if (nrList <= 1)
+            return NODATA;
+
         float myMean, myDiff, squareDiff;
         int i, nrValidValues;
-
-        if (nrList <= 1) return NODATA;
 
         myMean = mean(myList);
 
@@ -1210,12 +1214,14 @@ namespace statistics
             return NODATA;
     }
 
+
     double variance(std::vector<double> myList, int nrList)
     {
+        if (nrList <= 1)
+            return NODATA;
+
         double myMean, myDiff, squareDiff;
         int i, nrValidValues;
-
-        if (nrList <= 1) return NODATA;
 
         myMean = mean(myList);
 
@@ -1239,10 +1245,11 @@ namespace statistics
 
     double variance(double *myList, int nrList)
     {
+        if (nrList <= 1)
+            return NODATA;
+
         double myMean, myDiff, squareDiff;
         int i, nrValidValues;
-
-        if (nrList <= 1) return NODATA;
 
         myMean = mean(myList,nrList);
 
@@ -1266,10 +1273,12 @@ namespace statistics
 
     float mean(float *myList, int nrList)
     {
-        float sum=0.;
+        if (nrList < 1)
+            return NODATA;
+
+        float sum = 0.;
         int i, nrValidValues;
 
-        if (nrList < 1) return NODATA;
         nrValidValues = 0;
 
         for (i = 0; i < nrList; i++)
@@ -1314,7 +1323,8 @@ namespace statistics
 
     double mean(std::vector<double> list)
     {
-        if (list.size() < 1) return NODATA;
+        if (list.size() < 1)
+            return NODATA;
 
         int nrValidValues = 0;
         double sum=0;
@@ -1337,10 +1347,12 @@ namespace statistics
 
     double mean(double *myList, int nrList)
     {
-        double sum=0.;
+        if (nrList < 1)
+            return NODATA;
+
+        double sum = 0.0;
         int i, nrValidValues;
 
-        if (nrList < 1) return NODATA;
         nrValidValues = 0;
 
         for (i = 0; i < nrList; i++)
@@ -1360,22 +1372,42 @@ namespace statistics
 
     float standardDeviation(float *myList, int nrList)
     {
-        return sqrtf(variance(myList,nrList));
+        float myVariance = variance(myList, nrList);
+
+        if (isEqual(myVariance, NODATA))
+            return NODATA;
+
+        return sqrtf(myVariance);
     }
 
     float standardDeviation(std::vector<float> myList, int nrList)
     {
-        return sqrtf(variance(myList,nrList));
+        float myVariance = variance(myList, nrList);
+
+        if (isEqual(myVariance, NODATA))
+            return NODATA;
+
+        return sqrtf(myVariance);
     }
 
     double standardDeviation(std::vector<double> myList, int nrList)
     {
-        return sqrt(variance(myList, nrList));
+        double myVariance = variance(myList, nrList);
+
+        if (isEqual(myVariance, NODATA))
+            return NODATA;
+
+        return sqrt(myVariance);
     }
 
     double standardDeviation(double *myList, int nrList)
     {
-        return sqrt(variance(myList,nrList));
+        double myVariance = variance(myList, nrList);
+
+        if (isEqual(myVariance, NODATA))
+            return NODATA;
+
+        return sqrt(myVariance);
     }
 
     /*! covariance */
