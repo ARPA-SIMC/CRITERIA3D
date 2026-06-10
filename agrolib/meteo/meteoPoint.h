@@ -48,6 +48,7 @@
         float globRad;
         float et0_hs;
         float et0_pm;
+        float bic;
         float dd_heating;
         float dd_cooling;
         float windVecIntAvg;
@@ -191,6 +192,7 @@
             float getPercValueVariable(const Crit3DDate &firstDate, const Crit3DDate &lastDate, meteoVariable dailyMeteoVar);
 
             bool getDailyDataCsv_TPrec(std::string &outStr);
+            float getDailyET0_HS(const TObsDataD &dailyData, const Crit3DDate &myDate, Crit3DMeteoSettings* meteoSettings) const;
 
     private:
             TObsDataH *_obsDataH;

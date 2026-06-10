@@ -14,6 +14,8 @@
 float getSpatialThresholdVar(meteoVariable myVar, Crit3DMeteoSettings* meteoSettings,
                              float value, float stdDev, int nrStdDev, float avgDeltaZ, float minDistance)
 {
+    const float PREC_THRESHOLD = 1000.;
+
     float zWeight, distWeight, threshold;
 
     if (   myVar == precipitation
@@ -23,7 +25,7 @@ float getSpatialThresholdVar(meteoVariable myVar, Crit3DMeteoSettings* meteoSett
         if (value <= meteoSettings->getRainfallThreshold())
             threshold = std::max(5.f, distWeight + stdDev * (nrStdDev + 1));
         else
-            return 900.f;
+            return PREC_THRESHOLD;
     }
     else if (   myVar == airTemperature
              || myVar == airDewTemperature
@@ -80,6 +82,10 @@ float getSpatialThresholdVar(meteoVariable myVar, Crit3DMeteoSettings* meteoSett
     {
         zWeight = avgDeltaZ / 10.f;
         threshold = zWeight + stdDev * nrStdDev;
+    }
+    else if (myVar == dailyBIC)
+    {
+        threshold = PREC_THRESHOLD;
     }
     else
         threshold = stdDev * nrStdDev;

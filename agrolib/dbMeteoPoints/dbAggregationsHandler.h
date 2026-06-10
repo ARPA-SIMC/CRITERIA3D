@@ -34,7 +34,7 @@
         void initAggregatedTables(const std::vector<int> &idZoneVector, const QString &aggrType, const QString &periodType,
                                   const QDate &startDate, const QDate &endDate, meteoVariable variable);
 
-        bool writeAggregationPointProperties(const QString &aggrType, const std::vector<int> &idZoneVector,
+        bool writeAggregationPointProperties(const QString &aggregationType, const std::vector<int> &idZoneVector,
                                              const std::vector<double> &lonVector, const std::vector<double> &latVector);
 
         bool saveAggregationData(const std::vector<int> &idZoneVector, const QString &aggrType,

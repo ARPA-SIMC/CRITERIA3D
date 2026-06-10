@@ -811,7 +811,8 @@ bool setColorScale(meteoVariable variable, Crit3DColorScale *colorScale)
             reverseColorScale(colorScale);
             break;
         case dailyBIC: case monthlyBIC:
-            setCenteredScale(colorScale);
+            setPrecipitationScale(colorScale);
+            reverseColorScale(colorScale);
             break;
         case globalIrradiance: case directIrradiance: case diffuseIrradiance: case reflectedIrradiance:
         case netIrradiance: case dailyGlobalRadiation: case atmTransmissivity:
