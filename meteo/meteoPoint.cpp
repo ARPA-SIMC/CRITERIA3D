@@ -221,6 +221,7 @@ void Crit3DMeteoPoint::initializeObsDataD(unsigned int numberOfDays, const Crit3
         obsDataD[i].globRad = NODATA;
         obsDataD[i].et0_hs = NODATA;
         obsDataD[i].et0_pm = NODATA;
+        obsDataD[i].bic = NODATA;
         obsDataD[i].dd_heating = NODATA;
         obsDataD[i].dd_cooling = NODATA;
         obsDataD[i].windVecIntAvg = NODATA;
@@ -240,26 +241,9 @@ void Crit3DMeteoPoint::initializeObsDataDFromMp(unsigned int numberOfDays, const
     Crit3DDate myDate = firstDate;
     for (unsigned int i = 0; i < numberOfDays; i++)
     {
+        obsDataD[i] = meteoPoint.obsDataD[i];
         obsDataD[i].date = myDate;
-        obsDataD[i].tMax = meteoPoint.obsDataD[i].tMax;
-        obsDataD[i].tMin = meteoPoint.obsDataD[i].tMin;
-        obsDataD[i].tAvg = meteoPoint.obsDataD[i].tAvg;
-        obsDataD[i].prec = meteoPoint.obsDataD[i].prec;
-        obsDataD[i].rhMax = meteoPoint.obsDataD[i].rhMax;
-        obsDataD[i].rhMin = meteoPoint.obsDataD[i].rhMin;
-        obsDataD[i].rhAvg = meteoPoint.obsDataD[i].rhAvg;
-        obsDataD[i].globRad = meteoPoint.obsDataD[i].globRad;
-        obsDataD[i].et0_hs = meteoPoint.obsDataD[i].et0_hs;
-        obsDataD[i].et0_pm = meteoPoint.obsDataD[i].et0_pm;
-        obsDataD[i].dd_heating = meteoPoint.obsDataD[i].dd_heating;
-        obsDataD[i].dd_cooling = meteoPoint.obsDataD[i].dd_cooling;
-        obsDataD[i].windVecIntAvg = meteoPoint.obsDataD[i].windVecIntAvg;
-        obsDataD[i].windVecIntMax = meteoPoint.obsDataD[i].windVecIntMax;
-        obsDataD[i].windVecDirPrev = meteoPoint.obsDataD[i].windVecDirPrev;
-        obsDataD[i].windScalIntAvg = meteoPoint.obsDataD[i].windScalIntAvg;
-        obsDataD[i].windScalIntMax = meteoPoint.obsDataD[i].windScalIntMax;
-        obsDataD[i].leafW = meteoPoint.obsDataD[i].leafW;
-        obsDataD[i].waterTable = meteoPoint.obsDataD[i].waterTable;
+
         ++myDate;
     }
 }
@@ -469,6 +453,8 @@ void Crit3DMeteoPoint::emptyVarObsDataD(meteoVariable myVar, const Crit3DDate& d
             obsDataD[i].et0_hs = NODATA;
         else if (myVar == dailyReferenceEvapotranspirationPM)
             obsDataD[i].et0_pm = NODATA;
+        else if (myVar == dailyBIC)
+            obsDataD[i].bic = NODATA;
         else if (myVar == dailyLeafWetness)
             obsDataD[i].leafW = NODATA;
         else if (myVar == dailyHeatingDegreeDays)
@@ -501,6 +487,7 @@ void Crit3DMeteoPoint::emptyObsDataD(const Crit3DDate& date1, const Crit3DDate& 
         obsDataD[i].windVecDirPrev = NODATA;
         obsDataD[i].et0_hs = NODATA;
         obsDataD[i].et0_pm = NODATA;
+        obsDataD[i].bic = NODATA;
         obsDataD[i].dd_heating = NODATA;
         obsDataD[i].dd_cooling = NODATA;
         obsDataD[i].leafW = NODATA;
@@ -853,6 +840,8 @@ bool Crit3DMeteoPoint::setMeteoPointValueD(const Crit3DDate& myDate, meteoVariab
         obsDataD[i].et0_hs = myValue; break;
     case dailyReferenceEvapotranspirationPM:
         obsDataD[i].et0_pm = myValue; break;
+    case dailyBIC:
+        obsDataD[i].bic = myValue; break;
     case dailyHeatingDegreeDays:
         obsDataD[i].dd_heating = myValue; break;
     case dailyCoolingDegreeDays:
@@ -1064,6 +1053,23 @@ Crit3DDate Crit3DMeteoPoint::getFirstDailyData() const
 }
 
 
+float Crit3DMeteoPoint::getDailyET0_HS(const TObsDataD &dailyData, const Crit3DDate &myDate, Crit3DMeteoSettings* meteoSettings) const
+{
+    float et0 = dailyData.et0_hs;
+    if (isEqual(et0, NODATA) && meteoSettings->getAutomaticET0HS())
+    {
+        if (! isEqual(dailyData.tMin, NODATA) && ! isEqual(dailyData.tMax, NODATA))
+        {
+            et0 = float(ET0_Hargreaves(meteoSettings->getTransSamaniCoefficient(),
+                                       latitude, getDoyFromDate(myDate),
+                                       dailyData.tMax, dailyData.tMin));
+        }
+    }
+
+    return et0;
+}
+
+
 float Crit3DMeteoPoint::getMeteoPointValueD(const Crit3DDate &myDate, meteoVariable myVar, Crit3DMeteoSettings* meteoSettings) const
 {
     //check
@@ -1098,23 +1104,26 @@ float Crit3DMeteoPoint::getMeteoPointValueD(const Crit3DDate &myDate, meteoVaria
         return (obsDataD[i].rhAvg);
     else if (myVar == dailyGlobalRadiation)
         return (obsDataD[i].globRad);
-    else if (myVar == dailyReferenceEvapotranspirationHS || myVar == dailyBIC)
+    else if (myVar == dailyReferenceEvapotranspirationHS)
     {
-        float et0 = NODATA;
-        if (! isEqual(obsDataD[i].et0_hs, NODATA))
-            et0 = obsDataD[i].et0_hs;
-        else if (meteoSettings->getAutomaticET0HS() && !isEqual(obsDataD[i].tMin, NODATA) && !isEqual(obsDataD[i].tMax, NODATA))
-            et0 = float(ET0_Hargreaves(meteoSettings->getTransSamaniCoefficient(), latitude,
-                                        getDoyFromDate(myDate), obsDataD[i].tMax, obsDataD[i].tMin));
+        return getDailyET0_HS(obsDataD[i], myDate, meteoSettings);
+    }
+    else if (myVar == dailyBIC)
+    {
+        float bic = obsDataD[i].bic;
 
-        if (myVar == dailyReferenceEvapotranspirationHS)
-            return et0;
-        else
+        if (isEqual(bic, NODATA))
         {
-            float prec = NODATA;
-            prec = obsDataD[i].prec;
-            return computeDailyBIC(prec, et0);
+            float et0 = getDailyET0_HS(obsDataD[i], myDate, meteoSettings);
+
+            if (! isEqual(et0, NODATA))
+            {
+                float prec = obsDataD[i].prec;
+                bic = computeDailyBIC(prec, et0);
+            }
         }
+
+        return bic;
     }
     else if (myVar == dailyReferenceEvapotranspirationPM)
         return (obsDataD[i].et0_pm);
@@ -1172,6 +1181,8 @@ float Crit3DMeteoPoint::getMeteoPointValueD(const Crit3DDate &myDate, meteoVaria
         return obsDataD[i].et0_hs;
     else if (myVar == dailyReferenceEvapotranspirationPM)
         return (obsDataD[i].et0_pm);
+    else if (myVar == dailyBIC)
+        return obsDataD[i].bic;
     else if (myVar == dailyHeatingDegreeDays)
         return obsDataD[i].dd_heating;
     else if (myVar == dailyCoolingDegreeDays)
